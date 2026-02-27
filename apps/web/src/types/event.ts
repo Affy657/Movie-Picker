@@ -1,0 +1,62 @@
+export interface EventData {
+  _id: string;
+  title: string;
+  date: string;
+  time: string;
+  slug: string;
+  isHost?: boolean;
+  terminé?: boolean;
+  closedAt?: string | null;
+  winnerMovie?: MovieData | null;
+}
+
+export interface MovieData {
+  _id: string;
+  eventId: string;
+  participantId: string | { _id: string; pseudo: string };
+  tmdbId: number;
+  title: string;
+  year: string;
+  posterPath: string | null;
+  proposerPseudo: string;
+  score: number;
+  up: number;
+  down: number;
+}
+
+export interface ParticipantData {
+  _id: string;
+  eventId: string;
+  pseudo: string;
+}
+
+const PARTICIPANT_KEY = 'moviepicker_participant_';
+
+export function getStoredParticipant(slug: string): { participantId: string; pseudo: string } | null {
+  try {
+    const raw = sessionStorage.getItem(PARTICIPANT_KEY + slug);
+    if (!raw) return null;
+    const data = JSON.parse(raw) as { participantId: string; pseudo: string };
+    return data.participantId && data.pseudo ? data : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredParticipant(slug: string, participantId: string, pseudo: string): void {
+  sessionStorage.setItem(PARTICIPANT_KEY + slug, JSON.stringify({ participantId, pseudo }));
+}
+
+const HOST_KEY = 'moviepicker_host_';
+
+export function getStoredHostToken(slug: string): string | null {
+  try {
+    return sessionStorage.getItem(HOST_KEY + slug);
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredHostToken(slug: string, token: string): void {
+  sessionStorage.setItem(HOST_KEY + slug, token);
+}
