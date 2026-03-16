@@ -1,6 +1,6 @@
 # CI/CD Movie Picker – build, tests (lint), déploiement API (GCP) et front (AWS)
 # Déclenché sur push vers main (déploiements) et sur tout push (build/lint).
-# Secrets à configurer : voir docs/deploy-cicd.md
+# Secrets à configurer : voir docs/mvp/deploy-cicd.md
 
 name: CI/CD
 
@@ -42,6 +42,9 @@ jobs:
 
       - name: Lint
         run: pnpm run lint
+
+      - name: Test
+        run: pnpm run test
 
       - name: Build
         run: pnpm run build

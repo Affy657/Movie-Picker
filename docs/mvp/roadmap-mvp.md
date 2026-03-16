@@ -1,7 +1,7 @@
 # Movie Picker – Roadmap MVP (carte de suivi)
 
 Suite de tâches à suivre de maintenant jusqu'à la fin du MVP.  
-Références : [spec-technique.md](spec-technique.md), [features-list.md](features-list.md) (Features list).
+Références : [spec-technique.md](../spec-technique.md), [features-list.md](../features-list.md) (Features list).
 
 Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant l'ordre des sections.
 
@@ -9,7 +9,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ## 1. Prérequis
 
-> **Guide détaillé :** [PREREQUIS.md](PREREQUIS.md) – instructions et liens pour chaque point.
+> **Guide détaillé :** [PREREQUIS.md](../../PREREQUIS.md) – instructions et liens pour chaque point.
 
 - [x] Créer / avoir un dépôt GitHub pour le projet
 - [x] Avoir un compte AWS (accès S3, CloudFront)
@@ -149,15 +149,29 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ## 15. Monitoring et documentation
 
-- [ ] Vérifier que les logs de l'API sont visibles (Cloud Logging GCP)
-- [ ] Vérifier / configurer un minimum de métriques (Cloud Run, CloudFront)
-- [ ] Rédiger le README : but du projet, architecture, services utilisés, instructions de déploiement
-- [ ] Ajouter un schéma d'architecture (diagramme)
+- [x] Vérifier que les logs de l'API sont visibles (Cloud Logging GCP)
+- [x] Vérifier / configurer un minimum de métriques (Cloud Run, CloudFront)
+- [x] Rédiger le README : but du projet, architecture, services utilisés, instructions de déploiement
+- [x] Ajouter un schéma d'architecture (diagramme)
+
+> **Doc :** [monitoring.md](monitoring.md) – où voir les logs (Cloud Logging) et les métriques (Cloud Run, CloudFront). [architecture.md](architecture.md) – schéma d'architecture (Mermaid).
 
 ---
 
 ## 16. MVP terminé
 
-- [ ] Parcours complet testé : créer un event → copier le lien → rejoindre avec un pseudo → proposer des films → voter → lancer la roue → clôturer
-- [ ] Vérifier que la consigne Ynov est couverte (front et back sur AWS et GCP, CI/CD, monitoring, doc)
-- [ ] Préparer la soutenance (présentation 15–20 min)
+- [x] Parcours complet testé : créer un event → copier le lien → rejoindre avec un pseudo → proposer des films → voter → lancer la roue → clôturer
+- [x] Vérifier que la consigne Ynov est couverte (front et back sur AWS et GCP, CI/CD, monitoring, doc)
+- [x] Préparer la soutenance (présentation 15–20 min)
+
+> **Docs :** [test-parcours-mvp.md](test-parcours-mvp.md) – checklist du parcours complet à valider avant la soutenance. [verification-consigne-ynov.md](verification-consigne-ynov.md) – vérification que la consigne Ynov est couverte. [soutenance.md](soutenance.md) – guide pour la présentation 15–20 min (structure, démo, points à montrer).
+
+---
+
+## Bonus. Tests automatisés
+
+- [x] Tests API (Vitest + supertest + mongodb-memory-server) : health, création event, join, parcours complet
+- [x] Tests front (Vitest + React Testing Library + jsdom) : au moins la page d'accueil
+- [x] Script `pnpm test` à la racine (Turbo) et exécution des tests dans la CI (job Build & Lint)
+
+> **En local :** `pnpm test`. **CI :** les tests s'exécutent à chaque push/PR avant le build. Voir [deploy-cicd.md](deploy-cicd.md) § 4.
