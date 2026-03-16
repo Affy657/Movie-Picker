@@ -126,10 +126,10 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ## 13. Déploiement Front (AWS)
 
-- [ ] Build de l'app React (variable `VITE_API_URL` pointant vers l'URL Cloud Run)
-- [ ] Créer un bucket S3 pour héberger le build statique
-- [ ] Configurer CloudFront : origine S3, HTTPS, URL par défaut, `index.html` en root object, erreurs 403/404 → `/index.html` (SPA)
-- [ ] Déployer le build sur S3 et vérifier l'accès via l'URL CloudFront
+- [x] Build de l'app React (variable `VITE_API_URL` pointant vers l'URL Cloud Run)
+- [x] Créer un bucket S3 pour héberger le build statique
+- [x] Configurer CloudFront : origine S3, HTTPS, URL par défaut, `index.html` en root object, erreurs 403/404 → `/index.html` (SPA)
+- [x] Déployer le build sur S3 et vérifier l'accès via l'URL CloudFront
 
 > **Doc :** [deploy-aws-front.md](deploy-aws-front.md) – build avec `VITE_API_URL`, S3, CloudFront, commandes de déploiement.
 
@@ -137,11 +137,13 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ## 14. CI/CD (GitHub Actions)
 
-- [ ] Créer un workflow : sur push (ex. main), lancer les tests (si présents), build des deux apps
-- [ ] Ajouter le job de build de l'image Docker de l'API et push vers Artifact Registry (GCP)
-- [ ] Ajouter le job de déploiement vers Cloud Run (API)
-- [ ] Ajouter le job de déploiement du front (upload S3, invalidation CloudFront si besoin)
-- [ ] Stocker les secrets nécessaires (AWS, GCP, TMDB, MONGODB_URI) dans les secrets du repo
+- [x] Créer un workflow : sur push (ex. main), lancer les tests (si présents), build des deux apps
+- [x] Ajouter le job de build de l'image Docker de l'API et push vers Artifact Registry (GCP)
+- [x] Ajouter le job de déploiement vers Cloud Run (API)
+- [x] Ajouter le job de déploiement du front (upload S3, invalidation CloudFront si besoin)
+- [x] Stocker les secrets nécessaires (AWS, GCP, TMDB, MONGODB_URI) dans les secrets du repo
+
+> **Doc :** [deploy-cicd.md](deploy-cicd.md) – workflow, secrets à configurer, dépannage.
 
 ---
 

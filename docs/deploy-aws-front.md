@@ -4,6 +4,8 @@ Le front React est servi en statique : build Vite uploadé sur S3, exposé via C
 
 Référence : [spec-technique.md](spec-technique.md) (front sur AWS, API sur GCP).
 
+**Déjà créé le bucket et la distribution ?** → Applique la **section 3** (stratégie S3), puis **section 5** (upload du build) et **section 6** (vérification). **Important :** sans **Default root object** = `index.html` dans CloudFront (Paramètres généraux), l’URL racine renvoie « Access Denied » ; sans les **custom error responses** 403/404 → `/index.html`, les routes type `/s/xxx` ne marchent pas (section 4).
+
 ---
 
 ## 1. Build avec l’URL de l’API (Cloud Run)
@@ -27,8 +29,19 @@ VITE_API_URL=https://VOTRE_SERVICE.run.app pnpm build
 
 Exemple si ton API Cloud Run est `https://api-xxxxx-ew.a.run.app` :
 
+**Linux / macOS / Git Bash :**
 ```bash
-VITE_API_URL=https://api-xxxxx-ew.a.run.app pnpm build
+# Depuis la racine
+VITE_API_URL=https://api-xxxxx-ew.a.run.app pnpm --filter web build
+
+# Ou depuis apps/web
+cd apps/web && VITE_API_URL=https://api-xxxxx-ew.a.run.app pnpm build
+```
+
+**Windows (PowerShell) :**
+```powershell
+cd apps\web
+$env:VITE_API_URL="https://api-xxxxx-ew.a.run.app"; pnpm build
 ```
 
 Le build est généré dans **`apps/web/dist/`** (fichiers statiques : `index.html`, `assets/`, etc.).
@@ -96,9 +109,40 @@ Pour que seul CloudFront puisse lire le bucket (pas d’accès direct S3), on ut
    - Méthodes autorisées : GET, HEAD, OPTIONS (suffisant pour du statique).
    - Cache policy : **CachingOptimized** ou **CachingDisabled** pour tester.
 4. **Paramètres par défaut de la distribution** :
-   - **Default root object** : `index.html` (obligatoire pour une SPA).
-   - **Custom error responses** (pour React Router en mode SPA) : ajouter une réponse d’erreur pour **HTTP 403** et **HTTP 404** avec **Response page path** = `/index.html` et **HTTP response code** = **200**. Ainsi, les chemins comme `/s/abc123` renvoient `index.html` et le routeur React gère la page.
+   - **Default root object** : **`index.html`** — obligatoire, sans ça l’URL racine affiche « Access Denied ».
+   - **Custom error responses** : voir la section détaillée ci‑dessous.
 5. Créer la distribution. Noter l’**URL de la distribution** (ex. `https://d1234abcd.cloudfront.net`).
+
+### 4.1. Custom error responses (détail) — obligatoire pour la SPA
+
+Sans ces réponses personnalisées, quand on ouvre une URL comme `https://xxx.cloudfront.net/s/abc123` ou qu’on rafraîchit la page sur une route, CloudFront demande à S3 le fichier `/s/abc123`. Ce fichier n’existe pas → S3 renvoie **403** (ou 404). L’utilisateur voit une erreur au lieu de l’app React. En redirigeant 403 et 404 vers `index.html` avec un code 200, CloudFront renvoie toujours la SPA ; React Router affiche ensuite la bonne page selon l’URL.
+
+**Où les configurer :** CloudFront → ta distribution → onglet **Erreurs** (ou **Error pages**).
+
+**À ajouter : deux entrées.**
+
+| Paramètre | 1re entrée (403) | 2e entrée (404) |
+|-----------|------------------|------------------|
+| **HTTP error code** | 403 | 404 |
+| **Customize error response** | Oui | Oui |
+| **Response page path** | `/index.html` | `/index.html` |
+| **HTTP response code** | 200 | 200 |
+| **Error caching TTL** | 300 (ou 0 pour tester) | 300 (ou 0 pour tester) |
+
+**Étapes dans la console :**
+
+1. Aller dans [CloudFront](https://console.aws.amazon.com/cloudfront/) → sélectionner ta distribution.
+2. Onglet **Erreurs** (Error pages).
+3. **Créer une réponse d’erreur personnalisée** :
+   - **Code d’erreur HTTP** : `403`.
+   - **Personnaliser la réponse d’erreur** : Oui.
+   - **Chemin de la page de réponse** : `/index.html`.
+   - **Code de réponse HTTP** : `200`.
+   - **Durée de mise en cache (TTL)** : `300` secondes (ou `0` pour désactiver le cache des erreurs en test).
+   - Enregistrer.
+4. Répéter pour **404** : mêmes valeurs (chemin `/index.html`, code de réponse `200`).
+
+Après modification, la distribution se redéploie (quelques minutes). Ensuite, les URLs comme `/s/xxx` ou un refresh sur une route doivent afficher l’app au lieu d’une page d’erreur.
 
 ---
 
@@ -127,15 +171,25 @@ aws s3 sync apps/web/dist/ s3://movie-picker-web/ --delete
 
 ## 7. Résumé des commandes (build + déploiement)
 
+**Build (PowerShell)** :
+```powershell
+cd apps\web
+$env:VITE_API_URL="https://VOTRE_API_CLOUD_RUN.run.app"; pnpm build
+```
+
+**Build (Linux / macOS / Git Bash)** :
 ```bash
-# 1. Build du front (depuis la racine ou apps/web)
 cd apps/web
 VITE_API_URL=https://VOTRE_API_CLOUD_RUN.run.app pnpm build
+```
 
-# 2. Upload S3 (depuis la racine)
+**Upload S3** (depuis la racine du repo, remplacer le nom du bucket) :
+```bash
 aws s3 sync apps/web/dist/ s3://movie-picker-web/ --delete
+```
 
-# 3. Invalidation CloudFront (optionnel, pour vider le cache après un nouveau déploiement)
+**Invalidation CloudFront** (optionnel, après un nouveau déploiement) :
+```bash
 aws cloudfront create-invalidation --distribution-id ID_DISTRIBUTION --paths "/*"
 ```
 
@@ -143,6 +197,7 @@ aws cloudfront create-invalidation --distribution-id ID_DISTRIBUTION --paths "/*
 
 ## 8. Dépannage
 
-- **Page blanche ou 403** : vérifier que **Default root object** = `index.html` et que les **custom error responses** 403/404 renvoient `/index.html` avec code 200.
+- **« Access Denied » sur l’URL racine** : définir **Default root object** = `index.html` (CloudFront → distribution → **Paramètres généraux** → Modifier).
+- **Page blanche, 403 ou 404 quand on ouvre `/s/xxx` ou qu’on rafraîchit une page** : configurer les **custom error responses** (section 4.1) : CloudFront → distribution → onglet **Erreurs** → créer deux réponses (403 et 404) avec **Chemin de la page** = `/index.html` et **Code de réponse HTTP** = `200`. Attendre la fin du déploiement de la distribution.
 - **Les appels API échouent** : vérifier que le build a été fait avec la bonne `VITE_API_URL` (URL Cloud Run en HTTPS). Rebuilder si besoin.
 - **CORS** : l’API (Cloud Run) a CORS activé (`origin: true`) ; si tu utilises un domaine personnalisé pour le front, vérifier que l’origine est autorisée côté API si besoin.

@@ -8,6 +8,8 @@ Application pour organiser des soirées film : créer un event, partager le lien
 - **[Spec technique](docs/spec-technique.md)** – Stack, cloud, CI/CD
 - **[Features list](docs/features-list.md)** – Fonctionnalités par version (MVP, V1, V2, V3)
 - **[Consigne Ynov](docs/consigne-dev-cloud-ynov.md)** – Projet cloud
+- **[Déploiement API (GCP)](docs/deploy-gcp-api.md)** – Docker, Artifact Registry, Cloud Run
+- **[Déploiement Front (AWS)](docs/deploy-aws-front.md)** – Build, S3, CloudFront
 
 ## Prérequis
 
