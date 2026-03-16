@@ -22,7 +22,7 @@ Dans **GitHub** → dépôt → **Settings** → **Secrets and variables** → *
 
 | Secret | Description |
 |--------|-------------|
-| `AWS_ACCESS_KEY_ID` | Clé d’accès d’un utilisateur IAM avec droits S3 (PutObject, DeleteObject) et CloudFront (CreateInvalidation). |
+| `AWS_ACCESS_KEY_ID` | Clé d’accès d’un utilisateur IAM avec droits S3 (ListBucket, PutObject, GetObject, DeleteObject) et CloudFront (CreateInvalidation). Voir section 5 (politique IAM). |
 | `AWS_SECRET_ACCESS_KEY` | Secret associé à la clé ci‑dessus. |
 | `AWS_S3_BUCKET` | Nom du bucket S3 qui héberge le front (ex. `movie-picker-web`). |
 | `VITE_API_URL` | URL HTTPS de l’API Cloud Run (ex. `https://movie-picker-api-xxxxx-ew.a.run.app`). Utilisée au **build** du front pour les appels API. |
@@ -62,9 +62,39 @@ Le roadmap prévoit des tests (si présents). Pour l’instant, le workflow exé
   run: pnpm run test
 ```
 
-## 5. Dépannage
+## 5. Politique IAM pour l'utilisateur AWS (S3 + CloudFront)
+
+L'utilisateur IAM doit avoir **s3:ListBucket** sur le bucket (obligatoire pour `aws s3 sync --delete`). Exemple de stratégie (remplacer `NOM_DU_BUCKET`, `ID_DISTRIBUTION`, `ID_COMPTE_AWS`) :
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": "arn:aws:s3:::NOM_DU_BUCKET"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
+      "Resource": "arn:aws:s3:::NOM_DU_BUCKET/*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["cloudfront:CreateInvalidation", "cloudfront:GetInvalidation"],
+      "Resource": "arn:aws:cloudfront::ID_COMPTE_AWS:distribution/ID_DISTRIBUTION"
+    }
+  ]
+}
+```
+
+IAM → Utilisateurs → ton utilisateur → Ajouter des autorisations → Créer une stratégie (JSON) puis l'attacher.
+
+## 6. Dépannage
 
 - **Erreur d’auth GCP** : vérifier que `GCP_SA_KEY` est le JSON complet du compte de service et que le compte a bien *Artifact Registry Writer* et *Cloud Run Admin*.
 - **Cloud Run « Container failed to start »** : vérifier que `MONGODB_URI` et `TMDB_API_KEY` sont bien renseignés dans les secrets (et qu’ils sont valides).
 - **Front ne pointe pas vers la bonne API** : vérifier que `VITE_API_URL` est exactement l’URL HTTPS de ton service Cloud Run (sans slash final).
+- **S3 « not authorized to perform: s3:ListBucket »** : ajouter **s3:ListBucket** sur `arn:aws:s3:::NOM_DU_BUCKET` (sans `/*`) dans la stratégie IAM. Voir section 5.
 - **S3 / CloudFront** : vérifier les droits IAM de l’utilisateur dont les clés sont dans `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` (S3 + CloudFront).

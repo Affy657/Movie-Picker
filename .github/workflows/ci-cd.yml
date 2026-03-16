@@ -12,6 +12,7 @@ on:
 
 env:
   NODE_VERSION: "22"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   # pnpm : lu depuis packageManager du package.json (pnpm@10.0.0)
   # Configurables via Variables du dépôt (Settings → Variables)
   GCP_REGION: europe-west1
