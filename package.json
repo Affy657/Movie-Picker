@@ -11,6 +11,7 @@
     "format": "prettier --write \"apps/**/*.{ts,tsx,json}\"",
     "format:check": "prettier --check \"apps/**/*.{ts,tsx,json}\"",
     "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage",
     "test:e2e": "playwright test",
     "test:e2e:ci": "cross-env VITE_API_URL=http://127.0.0.1:5010 pnpm --filter web build && cross-env CI=1 pnpm run test:e2e"
   },

@@ -1,3 +1,4 @@
+using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.CreateEvent;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
