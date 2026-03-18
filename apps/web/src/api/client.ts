@@ -31,7 +31,7 @@ function ensureApiIsNotFrontOrigin(url: string): void {
       throw new Error(
         "Configuration incorrecte : l'URL de l'API pointe vers ce site au lieu de l'API. " +
           "Vérifiez le secret VITE_API_URL (doit être l'URL Cloud Run, ex. https://xxx.run.app). " +
-          "Puis redéployez le front et faites un rechargement forcé (Ctrl+Shift+R)."
+          'Puis redéployez le front et faites un rechargement forcé (Ctrl+Shift+R).'
       );
     }
   } catch (e) {
