@@ -1,11 +1,13 @@
 # Déploiement API sur GCP (Cloud Run)
 
+L'API déployée est **ASP.NET Core (.NET)**. Le Dockerfile est dans `apps/api-dotnet/MoviePicker.Api/Dockerfile`.
+
 ## 1. Dockerfile
 
-Le Dockerfile est dans `apps/api/Dockerfile`. Build **depuis la racine du repo** :
+Build **depuis la racine du repo** :
 
 ```bash
-docker build -f apps/api/Dockerfile -t movie-picker-api .
+docker build -f apps/api-dotnet/MoviePicker.Api/Dockerfile -t movie-picker-api apps/api-dotnet/MoviePicker.Api
 ```
 
 ## 2. Artifact Registry (GCP)
@@ -16,7 +18,7 @@ docker build -f apps/api/Dockerfile -t movie-picker-api .
 
 ```bash
 # 1. Construire l'image (obligatoire avant tag/push)
-docker build -f apps/api/Dockerfile -t movie-picker-api .
+docker build -f apps/api-dotnet/MoviePicker.Api/Dockerfile -t movie-picker-api apps/api-dotnet/MoviePicker.Api
 
 # 2. Tagger pour Artifact Registry
 docker tag movie-picker-api europe-west1-docker.pkg.dev/movie-picker-2026/movie-picker/api:latest

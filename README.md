@@ -12,7 +12,7 @@ Application pour organiser des soirées film : créer un event, partager le lien
 ## Architecture
 
 - **Front** : React (Vite, TypeScript), hébergé sur **AWS** (S3 + CloudFront).
-- **Back** : API Express (Node.js, TypeScript), déployée sur **GCP** (Cloud Run, image Docker dans Artifact Registry).
+- **Back** : API ASP.NET Core (C#, .NET 10), déployée sur **GCP** (Cloud Run, image Docker dans Artifact Registry).
 - **Données** : MongoDB Atlas. **Externe** : API TMDB (films).
 - **CI/CD** : GitHub Actions (build, déploiement API + front à chaque push sur `main`).
 
@@ -56,37 +56,27 @@ Application pour organiser des soirées film : créer un event, partager le lien
 
 ## Prérequis
 
-- Node.js ≥ 20, pnpm, MongoDB (et Docker optionnel). Vérification : `node scripts/check-prereqs.js`
+- **Node.js** ≥ 20, **pnpm** (front), **.NET 10 SDK** (API), MongoDB (et Docker optionnel). Vérification : `node scripts/check-prereqs.js` et `dotnet --version`.
 
 ## Démarrage
 
-1. Copier `apps/api/.env.example` en `apps/api/.env` et renseigner `MONGODB_URI` (et `TMDB_API_KEY` pour la recherche de films).
+1. Créer un `.env` à la racine avec `MONGODB_URI` et `TMDB_API_KEY` (l'API .NET le charge). Optionnel : `apps/web/.env` pour `VITE_API_URL`.
 2. À la racine du repo :
 
 ```bash
 pnpm install
-pnpm build            # build api + web
-pnpm dev              # lance api + web en mode dev
-pnpm dev:api          # API seule (port 4000)
-pnpm dev:web          # Front seule (port 5173)
-pnpm lint             # vérification TypeScript (api + web)
-pnpm test             # tests API (Vitest + supertest) + tests front (Vitest + React Testing Library)
+pnpm build            # build front
+pnpm dev:api-dotnet   # API .NET (port 4000)
+pnpm dev:web          # Front (port 5173)
+pnpm lint             # lint front
+pnpm test             # tests front
 ```
 
-**Lancer l’API en production** (après `pnpm build`) :
-
-```bash
-pnpm --filter api start   # depuis la racine
-# ou depuis apps/api : pnpm start
-```
-
-- **API** : par défaut sur le port 4000 (ou la variable `PORT`). Doc Swagger : **http://localhost:4000/api-docs** (ou **http://localhost:4000/api-docs/**). Si l’API utilise un autre port, regarde le message au démarrage (« API listening on http://localhost:… ») et adapte l’URL.
-- **Web** : par défaut sur le port 5173 (Vite).
-
-**API (section 3)** : `POST /events`, `GET /events/slug/:slug`, `GET /events/:id`, `POST /events/:idOrSlug/join`. Hôte identifié par `?host=<token>` ou cookie.
+- **API** : port 4000 — http://localhost:4000/ , /health , /swagger
+- **Web** : port 5173 (Vite). Voir [contrat API](docs/migration-dotnet/contrat-api-reference.md). Hôte : `?host=<token>` ou cookie.
 
 ## Structure
 
-- `apps/api` – API Express (TypeScript), MongoDB, TMDB
-- `apps/web` – Front React (Vite, TypeScript)
+- `apps/api-dotnet/` – API ASP.NET Core (C#), MongoDB, TMDB
+- `apps/web/` – Front React (Vite, TypeScript)
 - `docs/` – Documentation du projet

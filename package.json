@@ -4,11 +4,10 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "dev:api": "turbo run dev --filter=api",
     "dev:web": "turbo run dev --filter=web",
-    "dev:api-dotnet": "dotnet run --project apps/api-dotnet/MoviePicker.Api",
+    "dev:api-dotnet": "dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj",
     "lint": "turbo run lint",
-    "lint:eslint": "eslint apps/api/src apps/web/src --ext .ts,.tsx",
+    "lint:eslint": "eslint apps/web/src --ext .ts,.tsx",
     "format": "prettier --write \"apps/**/*.{ts,tsx,json}\"",
     "format:check": "prettier --check \"apps/**/*.{ts,tsx,json}\"",
     "test": "turbo run test"

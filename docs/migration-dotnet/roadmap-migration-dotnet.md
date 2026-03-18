@@ -1,4 +1,4 @@
-# Movie Picker – Roadmap migration back .NET
+﻿# Movie Picker – Roadmap migration back .NET
 
 Suite de tâches pour migrer l'API Node.js/Express vers **ASP.NET Core (C#)** sans modifier le front ni les fonctionnalités. À exécuter **après** la livraison du MVP et **avant** le développement des features V1.
 
@@ -106,7 +106,7 @@ Guide détaillé : **[validation-et-bascule.md](validation-et-bascule.md)** (par
 - [ ] Comparer les réponses (JSON) avec l’API Node pour les mêmes scénarios (health, events, movies, wheel)
 - [ ] Déployer l’API .NET sur Cloud Run (nouvelle révision) et faire pointer le front vers cette révision (ou remplacer l’ancienne révision)
 - [ ] Valider le parcours en production avec le front existant
-- [ ] Désactiver / retirer l’ancienne API Node (supprimer ou archiver `apps/api`, adapter le monorepo pour ne plus builder l’API Node)
+- [x] Désactiver / retirer l’ancienne API Node (supprimé `apps/api`, monorepo et CI adaptés)
 
 ---
 
