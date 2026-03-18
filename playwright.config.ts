@@ -30,7 +30,7 @@ export default defineConfig({
       : [
           {
             command:
-              'cross-env E2E_STUB_TMDB=1 MONGODB_URI= ASPNETCORE_URLS=http://127.0.0.1:5010 dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj',
+              'cross-env E2E_STUB_TMDB=1 MONGODB_URI= ASPNETCORE_URLS=http://127.0.0.1:5010 dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj --no-launch-profile',
             cwd: '.',
             url: 'http://127.0.0.1:5010/health',
             reuseExistingServer: true,

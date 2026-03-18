@@ -97,8 +97,14 @@ jobs:
       - run: pnpm exec playwright install chromium --with-deps
       - name: E2E (API en arrière-plan + Playwright)
         run: |
-          E2E_STUB_TMDB=1 MONGODB_URI= ASPNETCORE_URLS=http://127.0.0.1:5010 dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj --no-build -c Release &
-          for i in $(seq 1 45); do curl -sf http://127.0.0.1:5010/health && break; sleep 2; done
+          # --no-launch-profile : sinon launchSettings.json force le port 4000 et ignore ASPNETCORE_URLS
+          E2E_STUB_TMDB=1 MONGODB_URI= ASPNETCORE_URLS=http://127.0.0.1:5010 dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj --no-build -c Release --no-launch-profile &
+          ready=0
+          for i in $(seq 1 45); do
+            curl -sf http://127.0.0.1:5010/health && ready=1 && break
+            sleep 2
+          done
+          test "$ready" = 1 || (echo "::error::API introuvable sur :5010 (vérifiez --no-launch-profile)"; exit 1)
           CI=1 pnpm run test:e2e
 
   docker-api:

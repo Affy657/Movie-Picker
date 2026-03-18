@@ -62,7 +62,7 @@ Fichiers notables : `App.test.tsx` (routes via **`AppRoutes`**), `EventDetail.te
    cross-env VITE_API_URL=http://127.0.0.1:5010 pnpm --filter web build
    ```
 
-2. Lancer les tests (le config démarre l’API avec stub TMDB + `vite preview` sur le `dist`) :
+2. Lancer les tests (le config démarre l’API sur **:5010** avec `--no-launch-profile`, sinon `launchSettings.json` impose le port 4000 et le front ne joint pas l’API) :
 
    ```bash
    pnpm run test:e2e
