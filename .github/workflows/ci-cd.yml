@@ -176,10 +176,9 @@ jobs:
 
       - name: Sync build to S3
         run: |
-          # Pas de --delete : garder les anciens assets pour éviter page blanche (404 sur /assets/xxx.js
-          # renvoie index.html en SPA → le navigateur reçoit du HTML au lieu de JS → MIME error)
           aws s3 sync apps/web/dist/ s3://${{ secrets.AWS_S3_BUCKET }}/
           aws s3 cp s3://${{ secrets.AWS_S3_BUCKET }}/index.html s3://${{ secrets.AWS_S3_BUCKET }}/index.html --metadata-directive REPLACE --cache-control "no-cache, no-store, must-revalidate" --content-type "text/html"
+          aws s3 cp s3://${{ secrets.AWS_S3_BUCKET }}/assets/index.js s3://${{ secrets.AWS_S3_BUCKET }}/assets/index.js --metadata-directive REPLACE --cache-control "no-cache, must-revalidate" --content-type "application/javascript"
 
       - name: Invalidate CloudFront cache
         if: vars.AWS_CLOUDFRONT_DISTRIBUTION_ID != ''
