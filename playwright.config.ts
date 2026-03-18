@@ -16,22 +16,32 @@ export default defineConfig({
     baseURL: 'http://127.0.0.1:5174',
     trace: 'on-first-retry',
   },
-  webServer: [
-    {
-      command: process.env.CI
-        ? 'cross-env E2E_STUB_TMDB=1 MONGODB_URI= ASPNETCORE_URLS=http://127.0.0.1:5010 dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj --no-build -c Release'
-        : 'cross-env E2E_STUB_TMDB=1 MONGODB_URI= ASPNETCORE_URLS=http://127.0.0.1:5010 dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj',
-      cwd: '.',
-      url: 'http://127.0.0.1:5010/health',
-      reuseExistingServer: !process.env.CI,
-      timeout: process.env.CI ? 60_000 : 120_000,
-    },
-    {
-      command: 'pnpm exec vite preview --host 127.0.0.1 --port 5174 --strictPort',
-      cwd: 'apps/web',
-      url: 'http://127.0.0.1:5174',
-      reuseExistingServer: !process.env.CI,
-      timeout: 60_000,
-    },
-  ],
+  webServer:
+    process.env.CI
+      ? [
+          {
+            command: 'pnpm exec vite preview --host 127.0.0.1 --port 5174 --strictPort',
+            cwd: 'apps/web',
+            url: 'http://127.0.0.1:5174',
+            reuseExistingServer: false,
+            timeout: 60_000,
+          },
+        ]
+      : [
+          {
+            command:
+              'cross-env E2E_STUB_TMDB=1 MONGODB_URI= ASPNETCORE_URLS=http://127.0.0.1:5010 dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj',
+            cwd: '.',
+            url: 'http://127.0.0.1:5010/health',
+            reuseExistingServer: true,
+            timeout: 120_000,
+          },
+          {
+            command: 'pnpm exec vite preview --host 127.0.0.1 --port 5174 --strictPort',
+            cwd: 'apps/web',
+            url: 'http://127.0.0.1:5174',
+            reuseExistingServer: true,
+            timeout: 60_000,
+          },
+        ],
 });

@@ -59,11 +59,20 @@ Pistes d’amélioration **techniques** (sécurité, structure, DX, robustesse) 
 
 ---
 
+## 6. Nom de domaine
+
+| Amélioration | Action |
+|--------------|--------|
+| **Mettre en place un nom de domaine** | Remplacer les URLs par défaut (CloudFront, Cloud Run) par un domaine dédié (ex. `app.moviepicker.fr`, `api.moviepicker.fr`). **Front** : domaine personnalisé sur la distribution CloudFront (certificat ACM si AWS) ou via le fournisseur de domaine (CNAME vers CloudFront). **API** : domaine personnalisé sur Cloud Run (mapping du domaine vers le service) + certificat géré par GCP. Mettre à jour `VITE_API_URL` et CORS (`ALLOWED_ORIGINS`) avec la nouvelle origine. Utile pour la communication (partage de liens), le SEO et une image plus pro avant la V1. |
+
+---
+
 ## Ordre suggéré (avant / tout début V1)
 
 1. **Sécurité** : CORS en prod, rate limiting, puis Secret Manager (peut être fait en parallèle du dev V1).
 2. **API** : préfixe `/v1` + validation env au démarrage (rapide, évite les mauvaises surprises).
-3. **Front** : hooks `useEvent` / `useMovies` + type `ApiError` + message “Réessayer” sur erreur chargement films (facilite les features V1).
-4. **Ensuite** : cache (React Query/SWR), mode sombre, configs partagés, pnpm audit.
+3. **Nom de domaine** : configurer un domaine pour le front et l’API (CloudFront + Cloud Run), puis mettre à jour `VITE_API_URL` et CORS.
+4. **Front** : hooks `useEvent` / `useMovies` + type `ApiError` + message “Réessayer” sur erreur chargement films (facilite les features V1).
+5. **Ensuite** : cache (React Query/SWR), mode sombre, configs partagés, pnpm audit.
 
 Les points “Basse priorité” de [ameliorations-bonnes-pratiques.md](ameliorations-bonnes-pratiques.md) (Swagger détaillé, skip link, etc.) peuvent être traités pendant la V1 si le temps le permet.
