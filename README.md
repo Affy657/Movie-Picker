@@ -51,6 +51,8 @@ Application pour organiser des soirées film : créer un event, partager le lien
 - **[Test parcours MVP](docs/mvp/test-parcours-mvp.md)** – Checklist de test du parcours complet
 - **[Vérification consigne Ynov](docs/mvp/verification-consigne-ynov.md)** – Couverture des critères du projet
 - **[Soutenance](docs/mvp/soutenance.md)** – Guide pour la présentation 15–20 min
+- **[Améliorations / bonnes pratiques](docs/mvp/ameliorations-bonnes-pratiques.md)** – Pistes de refacto, sécurité, tests, qualité
+- **[Migration back .NET](docs/migration-dotnet/)** – [Contexte et périmètre](docs/migration-dotnet/contexte-et-perimetre.md), [Roadmap migration](docs/migration-dotnet/roadmap-migration-dotnet.md) (étape entre MVP et V1)
 
 ## Prérequis
 

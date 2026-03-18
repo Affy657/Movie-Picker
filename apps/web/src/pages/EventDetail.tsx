@@ -26,10 +26,14 @@ export default function EventDetail() {
   const [movies, setMovies] = useState<MovieData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [participant, setParticipant] = useState<{ participantId: string; pseudo: string } | null>(null);
+  const [participant, setParticipant] = useState<{ participantId: string; pseudo: string } | null>(
+    null
+  );
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const eventUrl = slug ? `/events/slug/${slug}${hostToken ? `?host=${encodeURIComponent(hostToken)}` : ''}` : '';
+  const eventUrl = slug
+    ? `/events/slug/${slug}${hostToken ? `?host=${encodeURIComponent(hostToken)}` : ''}`
+    : '';
 
   const loadEvent = useCallback(async () => {
     if (!slug) return;
@@ -39,7 +43,11 @@ export default function EventDetail() {
       return data;
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Erreur';
-      setError(msg.includes('introuvable') || msg.includes('404') ? 'Cette soirée n\'existe pas ou a été supprimée.' : msg);
+      setError(
+        msg.includes('introuvable') || msg.includes('404')
+          ? "Cette soirée n'existe pas ou a été supprimée."
+          : msg
+      );
       return null;
     }
   }, [slug, eventUrl]);
@@ -71,35 +79,51 @@ export default function EventDetail() {
     loadMovies();
   }, [loadEvent, loadMovies]);
 
-  if (loading) return <main className="page"><p>Chargement…</p></main>;
+  if (loading)
+    return (
+      <main className="page">
+        <p>Chargement…</p>
+      </main>
+    );
   if (error) {
     return (
       <main className="page">
         <p className="error">{error}</p>
-        <Link to="/" className="btn">Retour à l&apos;accueil</Link>
+        <Link to="/" className="btn">
+          Retour à l&apos;accueil
+        </Link>
       </main>
     );
   }
   if (!event) return null;
 
   const dateFormatted = `${event.date} à ${event.time}`;
-  const shareUrl = shareUrlFromState ?? (slug ? `${window.location.origin}/s/${slug}${hostToken ? `?host=${encodeURIComponent(hostToken)}` : ''}` : '');
+  const shareUrl =
+    shareUrlFromState ??
+    (slug
+      ? `${window.location.origin}/s/${slug}${hostToken ? `?host=${encodeURIComponent(hostToken)}` : ''}`
+      : '');
   const needsJoin = !event.terminé && !participant;
   const showContent = event.terminé || participant;
 
   return (
     <main className="page page-event">
       <header className="event-header">
-        <Link to="/" className="back-link">← Accueil</Link>
+        <Link to="/" className="back-link">
+          ← Accueil
+        </Link>
         <h1>{event.title}</h1>
         <p className="event-meta">{dateFormatted}</p>
         {event.terminé && <p className="badge badge-finished">Soirée terminée</p>}
-        {event.isHost && shareUrl && (
-          <ShareLink url={shareUrl} />
-        )}
+        {event.isHost && shareUrl && <ShareLink url={shareUrl} />}
       </header>
 
-      {needsJoin && <JoinForm slug={slug!} onJoined={(participantId, pseudo) => setParticipant({ participantId, pseudo })} />}
+      {needsJoin && (
+        <JoinForm
+          slug={slug!}
+          onJoined={(participantId, pseudo) => setParticipant({ participantId, pseudo })}
+        />
+      )}
 
       {showContent && (
         <>
@@ -116,7 +140,14 @@ export default function EventDetail() {
             {actionError && (
               <div className="error error-dismiss" role="alert">
                 <span>{actionError}</span>
-                <button type="button" className="btn-link" onClick={() => setActionError(null)} aria-label="Fermer">×</button>
+                <button
+                  type="button"
+                  className="btn-link"
+                  onClick={() => setActionError(null)}
+                  aria-label="Fermer"
+                >
+                  ×
+                </button>
               </div>
             )}
             <MovieList

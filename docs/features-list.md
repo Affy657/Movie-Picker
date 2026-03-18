@@ -188,6 +188,29 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 
 ---
 
+## Migration back .NET (étape entre MVP et V1)
+
+**Objectif** : remplacer l’API Node.js/Express par une API **ASP.NET Core (C#)** sans changer les fonctionnalités ni le front. Le contrat API (routes, JSON) reste identique pour que le front React et le déploiement (Cloud Run, S3/CloudFront) continuent de fonctionner.
+
+### Périmètre technique
+
+- Nouveau projet **ASP.NET Core Web API** (ex. `apps/api-dotnet` ou remplacement de `apps/api`).
+- **Mêmes routes et contrats** : POST/GET events, join, movies (liste, ajout, vote, suppression), wheel, close ; format JSON inchangé.
+- **MongoDB** : mêmes collections (events, participants, movies, votes) avec **MongoDB.Driver**.
+- **TMDB** : appel côté serveur (HttpClient), clé en variable d’environnement.
+- **Docker** : image .NET (mcr.microsoft.com/dotnet/aspnet), build `dotnet publish`.
+- **CI/CD** : adapter le workflow (build .NET, push image, déploiement Cloud Run) ; le front et l’URL de l’API restent identiques.
+
+### Livrables
+
+- [ ] Contrat API documenté (OpenAPI/Swagger) aligné sur l’API actuelle.
+- [ ] API .NET déployée sur Cloud Run, même comportement que le MVP (parcours complet testé).
+- [ ] Ancienne API Node retirée ou désactivée après validation.
+
+**Référence** : [docs/migration-dotnet/](migration-dotnet/) – [Contexte et périmètre](migration-dotnet/contexte-et-perimetre.md), [Roadmap migration .NET](migration-dotnet/roadmap-migration-dotnet.md).
+
+---
+
 ## V1 – Features
 
 **Objectif** : compte utilisateur, config hôte, réactions, confort de partage et de lecture.

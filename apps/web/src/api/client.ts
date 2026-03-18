@@ -24,7 +24,11 @@ export async function fetchApi<T>(path: string, options?: RequestInit): Promise<
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    const isNetwork = typeof msg === 'string' && (msg.toLowerCase().includes('fetch') || msg.toLowerCase().includes('network') || e instanceof TypeError);
+    const isNetwork =
+      typeof msg === 'string' &&
+      (msg.toLowerCase().includes('fetch') ||
+        msg.toLowerCase().includes('network') ||
+        e instanceof TypeError);
     throw new Error(isNetwork ? NETWORK_ERROR_MSG : msg);
   }
   if (!res.ok) {

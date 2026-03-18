@@ -16,7 +16,7 @@ export async function loadEvent(req: Request, res: Response, next: NextFunction)
     ? await Event.findById(idOrSlug)
     : await Event.findOne({ slug: idOrSlug });
   if (!event) {
-    res.status(404).json({ error: 'Soirée introuvable' });
+    next(new AppError('Soirée introuvable', 404));
     return;
   }
   req.event = event as IEventDoc;

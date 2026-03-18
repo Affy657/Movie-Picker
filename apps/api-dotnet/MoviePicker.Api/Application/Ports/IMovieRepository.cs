@@ -1,0 +1,14 @@
+using MoviePicker.Api.Domain.Entities;
+
+namespace MoviePicker.Api.Application.Ports;
+
+public interface IMovieRepository
+{
+    Task<Movie?> GetByIdAsync(string movieId, CancellationToken ct = default);
+    Task<Movie?> GetByIdAndEventIdAsync(string movieId, string eventId, CancellationToken ct = default);
+    Task<IReadOnlyList<Movie>> ListByEventIdAsync(string eventId, CancellationToken ct = default);
+    Task<bool> ExistsByEventAndTmdbIdAsync(string eventId, int tmdbId, CancellationToken ct = default);
+    Task<bool> ExistsByEventAndTitleCaseInsensitiveAsync(string eventId, string title, CancellationToken ct = default);
+    Task<Movie> InsertAsync(Movie movie, CancellationToken ct = default);
+    Task DeleteAsync(string movieId, CancellationToken ct = default);
+}

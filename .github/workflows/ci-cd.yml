@@ -1,4 +1,4 @@
-# CI/CD Movie Picker – build, tests (lint), déploiement API (GCP) et front (AWS)
+# CI/CD Movie Picker – build, tests (lint), déploiement API .NET (GCP) et front (AWS)
 # Déclenché sur push vers main (déploiements) et sur tout push (build/lint).
 # Secrets à configurer : voir docs/mvp/deploy-cicd.md
 
@@ -12,9 +12,8 @@ on:
 
 env:
   NODE_VERSION: "22"
+  DOTNET_VERSION: "10.0.x"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  # pnpm : lu depuis packageManager du package.json (pnpm@10.0.0)
-  # Configurables via Variables du dépôt (Settings → Variables)
   GCP_REGION: europe-west1
   GCP_ARTIFACT_REPO: movie-picker
   CLOUD_RUN_SERVICE_NAME: movie-picker-api
@@ -37,17 +36,31 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint
+      - name: Lint (TypeScript)
         run: pnpm run lint
+
+      - name: Lint (ESLint)
+        run: pnpm run lint:eslint
+
+      - name: Format (Prettier)
+        run: pnpm run format:check
 
       - name: Test
         run: pnpm run test
 
-      - name: Build
-        run: pnpm run build
+      - name: Build web
+        run: pnpm run build --filter=web
+
+      - name: Build API .NET
+        run: dotnet publish apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj -c Release
 
   # --- Build image Docker API et push Artifact Registry (GCP) ---
   docker-api:
@@ -76,9 +89,9 @@ jobs:
         run: |
           gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
 
-      - name: Build Docker image (API)
+      - name: Build Docker image (API .NET)
         run: |
-          docker build -f apps/api/Dockerfile -t movie-picker-api .
+          docker build -f apps/api-dotnet/MoviePicker.Api/Dockerfile -t movie-picker-api apps/api-dotnet/MoviePicker.Api
 
       - name: Tag and push to Artifact Registry
         run: |

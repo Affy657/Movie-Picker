@@ -6,10 +6,19 @@
     "dev": "turbo run dev",
     "dev:api": "turbo run dev --filter=api",
     "dev:web": "turbo run dev --filter=web",
+    "dev:api-dotnet": "dotnet run --project apps/api-dotnet/MoviePicker.Api",
     "lint": "turbo run lint",
+    "lint:eslint": "eslint apps/api/src apps/web/src --ext .ts,.tsx",
+    "format": "prettier --write \"apps/**/*.{ts,tsx,json}\"",
+    "format:check": "prettier --check \"apps/**/*.{ts,tsx,json}\"",
     "test": "turbo run test"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.4.2",
     "turbo": "^2.3.0"
   },
   "packageManager": "pnpm@10.0.0",

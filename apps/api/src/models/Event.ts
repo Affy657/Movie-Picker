@@ -8,8 +8,8 @@ export interface IEventConfig {
 
 export interface IEventDoc extends Document {
   title: string;
-  date: string;   // YYYY-MM-DD
-  time: string;   // HH:mm
+  date: string; // YYYY-MM-DD
+  time: string; // HH:mm
   hostToken: string;
   slug: string;
   config?: IEventConfig;

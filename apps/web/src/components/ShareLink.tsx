@@ -21,7 +21,13 @@ export default function ShareLink({ url }: ShareLinkProps) {
     <div className="share-link">
       <label className="label">Lien à partager</label>
       <div className="share-link-row">
-        <input type="text" className="input input-readonly" readOnly value={url} aria-label="Lien de partage" />
+        <input
+          type="text"
+          className="input input-readonly"
+          readOnly
+          value={url}
+          aria-label="Lien de partage"
+        />
         <button type="button" className="btn" onClick={copy}>
           {copied ? 'Copié !' : 'Copier le lien'}
         </button>

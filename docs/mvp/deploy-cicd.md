@@ -2,8 +2,8 @@
 
 Le workflow CI/CD (`.github/workflows/ci-cd.yml`) assure :
 
-- **À chaque push / PR** : install, lint, **tests**, build des deux apps (api + web).
-- **Sur push vers `main` (ou `master`)** : build de l'image Docker de l'API, push vers Artifact Registry (GCP), déploiement sur Cloud Run, build du front avec l'URL de l'API, upload S3 et invalidation CloudFront.
+- **À chaque push / PR** : install, lint, **tests**, build du front (web) et build de l’**API .NET** (`dotnet publish`).
+- **Sur push vers `main` (ou `master`)** : build de l’image Docker de l’**API .NET** (Dockerfile dans `apps/api-dotnet/MoviePicker.Api`), push vers Artifact Registry (GCP), déploiement sur Cloud Run, build du front avec l’URL de l’API, upload S3 et invalidation CloudFront.
 
 ## 1. Secrets à configurer dans le dépôt GitHub
 
@@ -48,17 +48,16 @@ Tout se configure depuis **Settings** → **Secrets and variables** → **Action
 
 ## 3. Ordre d'exécution (push sur main)
 
-1. **build-and-lint** : `pnpm install`, `pnpm run lint`, **`pnpm run test`**, `pnpm run build`.
-2. **docker-api** : build de l'image depuis `apps/api/Dockerfile`, tag, push vers Artifact Registry (`api:sha` et `api:latest`).
-3. **deploy-api** : `gcloud run deploy` avec l'image taguée par le commit, variables `MONGODB_URI` et `TMDB_API_KEY`.
+1. **build-and-lint** : `pnpm install`, `pnpm run lint`, **`pnpm run test`**, build du front (`pnpm run build --filter=web`), build de l’API .NET (`dotnet publish` sur `apps/api-dotnet/MoviePicker.Api`).
+2. **docker-api** : build de l’image depuis `apps/api-dotnet/MoviePicker.Api/Dockerfile`, tag, push vers Artifact Registry (`api:sha` et `api:latest`).
+3. **deploy-api** : `gcloud run deploy` avec l’image .NET taguée par le commit, variables `MONGODB_URI` et `TMDB_API_KEY`.
 4. **deploy-front** : build du front avec `VITE_API_URL`, `aws s3 sync` vers le bucket, puis invalidation CloudFront si `AWS_CLOUDFRONT_DISTRIBUTION_ID` est défini.
 
 ## 4. Tests
 
-Les tests sont exécutés dans le job **build-and-lint** : `pnpm run test` (Turbo lance les tests de l'API et du front).
+Les tests sont exécutés dans le job **build-and-lint** : `pnpm run test` (Turbo lance les tests du front ; l’API déployée est .NET, les tests Node de l’ancienne API peuvent encore exister dans le monorepo).
 
-- **API** : Vitest + supertest + mongodb-memory-server ; tests d'intégration (health, création event, join, parcours complet).
-- **Web** : Vitest + React Testing Library + jsdom ; tests de composants (ex. page d'accueil).
+- **Web** : Vitest + React Testing Library + jsdom ; tests de composants (ex. page d’accueil).
 
 En local : `pnpm test` à la racine, ou `pnpm --filter api test` / `pnpm --filter web test`.
 

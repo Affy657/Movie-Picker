@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { IEventDoc } from '../models/Event';
+import { AppError } from './errorHandler';
 
 declare global {
   namespace Express {
@@ -24,15 +25,15 @@ export function getHostToken(req: Request): string | undefined {
  * Middleware : vérifie que l'appelant est l'hôte de l'event (req.event doit être chargé avant).
  * Répond 403 si le token hôte est absent ou invalide.
  */
-export function requireHost(req: Request, res: Response, next: NextFunction): void {
+export function requireHost(req: Request, _res: Response, next: NextFunction): void {
   const event = req.event;
   if (!event) {
-    res.status(500).json({ error: 'Event not loaded' });
+    next(new AppError('Event not loaded', 500));
     return;
   }
   const token = getHostToken(req);
   if (!token || token !== event.hostToken) {
-    res.status(403).json({ error: 'Réservé à l\'hôte de la soirée' });
+    next(new AppError("Réservé à l'hôte de la soirée", 403));
     return;
   }
   next();

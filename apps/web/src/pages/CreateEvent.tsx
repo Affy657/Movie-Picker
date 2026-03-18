@@ -33,7 +33,9 @@ export default function CreateEvent() {
         body: JSON.stringify({ title, date, time }),
       });
       const url = `${window.location.origin}/s/${res.slug}${res.hostToken ? `?host=${encodeURIComponent(res.hostToken)}` : ''}`;
-      navigate(`/s/${res.slug}?host=${encodeURIComponent(res.hostToken)}`, { state: { shareUrl: url, justCreated: true } });
+      navigate(`/s/${res.slug}?host=${encodeURIComponent(res.hostToken)}`, {
+        state: { shareUrl: url, justCreated: true },
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur');
     } finally {
@@ -43,7 +45,9 @@ export default function CreateEvent() {
 
   return (
     <main className="page">
-      <Link to="/" className="back-link">← Accueil</Link>
+      <Link to="/" className="back-link">
+        ← Accueil
+      </Link>
       <h1>Créer une soirée</h1>
       <form onSubmit={handleSubmit} className="form">
         {error && <p className="error">{error}</p>}

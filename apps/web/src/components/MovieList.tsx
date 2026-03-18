@@ -23,9 +23,7 @@ export default function MovieList({
   refresh,
 }: MovieListProps) {
   if (movies.length === 0) {
-    return (
-      <p className="placeholder">Aucun film proposé pour l&apos;instant.</p>
-    );
+    return <p className="placeholder">Aucun film proposé pour l&apos;instant.</p>;
   }
 
   return (
@@ -41,7 +39,9 @@ export default function MovieList({
             )}
             <div className="movie-info">
               <h3 className="movie-title">{m.title}</h3>
-              <p className="movie-meta">{m.year} · Proposé par {m.proposerPseudo}</p>
+              <p className="movie-meta">
+                {m.year} · Proposé par {m.proposerPseudo}
+              </p>
               {isMine && <span className="badge badge-me">C&apos;est moi</span>}
               {!terminé && participantId && (
                 <div className="movie-actions">

@@ -5,9 +5,7 @@
     "description": "API REST pour l'application Movie Picker (soirées film, propositions, votes, roue).",
     "version": "0.0.1"
   },
-  "servers": [
-    { "url": "http://localhost:4000", "description": "Développement" }
-  ],
+  "servers": [{ "url": "http://localhost:4000", "description": "Développement" }],
   "paths": {
     "/health": {
       "get": {
@@ -113,7 +111,13 @@
         "summary": "Détail d'un event par slug",
         "parameters": [
           { "name": "idOrSlug", "in": "path", "required": true, "schema": { "type": "string" } },
-          { "name": "host", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Token hôte pour isHost" }
+          {
+            "name": "host",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Token hôte pour isHost"
+          }
         ],
         "responses": {
           "200": {

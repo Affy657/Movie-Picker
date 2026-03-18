@@ -94,8 +94,12 @@ describe('POST /events/:idOrSlug/join', () => {
       .post('/events')
       .send({ title: 'Event idem', date: FUTURE_DATE, time: '21:00' });
     const slug = create.body.slug;
-    await request(app).post('/events/' + slug + '/join').send({ pseudo: 'Bob' });
-    const res = await request(app).post('/events/' + slug + '/join').send({ pseudo: 'Bob' });
+    await request(app)
+      .post('/events/' + slug + '/join')
+      .send({ pseudo: 'Bob' });
+    const res = await request(app)
+      .post('/events/' + slug + '/join')
+      .send({ pseudo: 'Bob' });
     expect(res.status).toBe(200);
     expect(res.body.message).toContain('Déjà inscrit');
   });
@@ -109,11 +113,15 @@ describe('Parcours complet : event → join → movie → vote → wheel → clo
     expect(createEvent.status).toBe(201);
     const { slug, hostToken } = createEvent.body;
 
-    const join = await request(app).post('/events/' + slug + '/join').send({ pseudo: 'Host' });
+    const join = await request(app)
+      .post('/events/' + slug + '/join')
+      .send({ pseudo: 'Host' });
     expect(join.status).toBe(201);
     const hostParticipantId = join.body._id;
 
-    const join2 = await request(app).post('/events/' + slug + '/join').send({ pseudo: 'Invité' });
+    const join2 = await request(app)
+      .post('/events/' + slug + '/join')
+      .send({ pseudo: 'Invité' });
     expect(join2.status).toBe(201);
     const guestParticipantId = join2.body._id;
 

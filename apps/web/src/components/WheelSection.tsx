@@ -106,12 +106,7 @@ export default function WheelSection({
       )}
 
       {showClose && (
-        <button
-          type="button"
-          className="btn btn-close"
-          onClick={closeEvent}
-          disabled={loading}
-        >
+        <button type="button" className="btn btn-close" onClick={closeEvent} disabled={loading}>
           Clôturer la soirée
         </button>
       )}

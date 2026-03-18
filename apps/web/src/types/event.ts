@@ -32,7 +32,9 @@ export interface ParticipantData {
 
 const PARTICIPANT_KEY = 'moviepicker_participant_';
 
-export function getStoredParticipant(slug: string): { participantId: string; pseudo: string } | null {
+export function getStoredParticipant(
+  slug: string
+): { participantId: string; pseudo: string } | null {
   try {
     const raw = sessionStorage.getItem(PARTICIPANT_KEY + slug);
     if (!raw) return null;

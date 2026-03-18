@@ -1,0 +1,101 @@
+using MongoDB.Bson;
+using MongoDB.Driver;
+using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Entities;
+
+namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
+
+public sealed class MongoVoteRepository : IVoteRepository
+{
+    private readonly IMongoCollection<VoteDocument> _collection;
+
+    public MongoVoteRepository(IMongoDatabase database)
+    {
+        _collection = database.GetCollection<VoteDocument>("votes");
+    }
+
+    public async Task DeleteByMovieIdAsync(string movieId, CancellationToken ct = default)
+    {
+        await _collection.DeleteManyAsync(x => x.MovieId == movieId, cancellationToken: ct);
+    }
+
+    public async Task<Vote> UpsertAsync(Vote vote, CancellationToken ct = default)
+    {
+        var now = DateTime.UtcNow;
+        var filter = Builders<VoteDocument>.Filter.And(
+            Builders<VoteDocument>.Filter.Eq(x => x.MovieId, vote.MovieId),
+            Builders<VoteDocument>.Filter.Eq(x => x.ParticipantId, vote.ParticipantId));
+
+        var update = Builders<VoteDocument>.Update
+            .Set(x => x.EventId, vote.EventId)
+            .Set(x => x.Value, vote.Value)
+            .Set(x => x.UpdatedAt, now)
+            .SetOnInsert(x => x.MovieId, vote.MovieId)
+            .SetOnInsert(x => x.ParticipantId, vote.ParticipantId)
+            .SetOnInsert(x => x.CreatedAt, now);
+
+        await _collection.UpdateOneAsync(filter, update, new UpdateOptions { IsUpsert = true }, cancellationToken: ct);
+
+        var doc = await _collection.Find(filter).FirstAsync(ct);
+        return VoteMapper.ToDomain(doc);
+    }
+
+    public async Task<IReadOnlyDictionary<string, VoteScoreAggregate>> AggregateScoresByMovieIdsAsync(
+        IReadOnlyCollection<string> movieIds,
+        CancellationToken ct = default)
+    {
+        if (movieIds.Count == 0)
+            return new Dictionary<string, VoteScoreAggregate>();
+
+        var oids = new List<ObjectId>();
+        foreach (var id in movieIds)
+        {
+            if (ObjectId.TryParse(id, out var oid))
+                oids.Add(oid);
+        }
+
+        if (oids.Count == 0)
+            return new Dictionary<string, VoteScoreAggregate>();
+
+        var pipeline = new[]
+        {
+            new BsonDocument("$match", new BsonDocument("movieId", new BsonDocument("$in", new BsonArray(oids)))),
+            new BsonDocument(
+                "$group",
+                new BsonDocument
+                {
+                    { "_id", "$movieId" },
+                    { "score", new BsonDocument("$sum", "$value") },
+                    {
+                        "up",
+                        new BsonDocument(
+                            "$sum",
+                            new BsonDocument(
+                                "$cond",
+                                new BsonArray { new BsonDocument("$eq", new BsonArray { "$value", 1 }), 1, 0 }))
+                    },
+                    {
+                        "down",
+                        new BsonDocument(
+                            "$sum",
+                            new BsonDocument(
+                                "$cond",
+                                new BsonArray { new BsonDocument("$eq", new BsonArray { "$value", -1 }), 1, 0 }))
+                    }
+                })
+        };
+
+        var results = await _collection.Aggregate<BsonDocument>(pipeline).ToListAsync(ct);
+        var dict = new Dictionary<string, VoteScoreAggregate>();
+        foreach (var r in results)
+        {
+            var id = r["_id"].AsObjectId.ToString();
+            dict[id] = new VoteScoreAggregate(
+                r["score"].ToInt32(),
+                r["up"].ToInt32(),
+                r["down"].ToInt32());
+        }
+
+        return dict;
+    }
+}

@@ -15,7 +15,12 @@ interface AddMovieFormProps {
   disabled?: boolean;
 }
 
-export default function AddMovieForm({ slug, participantId, onAdded, disabled }: AddMovieFormProps) {
+export default function AddMovieForm({
+  slug,
+  participantId,
+  onAdded,
+  disabled,
+}: AddMovieFormProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<TmdbResult[]>([]);
   const [searching, setSearching] = useState(false);
@@ -28,7 +33,9 @@ export default function AddMovieForm({ slug, participantId, onAdded, disabled }:
     setSearching(true);
     setResults([]);
     try {
-      const list = await fetchApi<TmdbResult[]>(`/movies/search?q=${encodeURIComponent(query.trim())}`);
+      const list = await fetchApi<TmdbResult[]>(
+        `/movies/search?q=${encodeURIComponent(query.trim())}`
+      );
       setResults(list ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Recherche indisponible');
@@ -89,7 +96,9 @@ export default function AddMovieForm({ slug, participantId, onAdded, disabled }:
               ) : (
                 <div className="poster-placeholder">Affiche</div>
               )}
-              <span>{r.title} ({r.year})</span>
+              <span>
+                {r.title} ({r.year})
+              </span>
               <button
                 type="button"
                 className="btn btn-sm btn-primary"

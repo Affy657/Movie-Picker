@@ -18,10 +18,12 @@ export default function JoinForm({ slug, onJoined }: JoinFormProps) {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetchApi<ParticipantData | { participant: ParticipantData; message: string }>(
-        `/events/${slug}/join`,
-        { method: 'POST', body: JSON.stringify({ pseudo: pseudo.trim() }) }
-      );
+      const res = await fetchApi<
+        ParticipantData | { participant: ParticipantData; message: string }
+      >(`/events/${slug}/join`, {
+        method: 'POST',
+        body: JSON.stringify({ pseudo: pseudo.trim() }),
+      });
       const participant = 'participant' in res ? res.participant : res;
       const id = participant._id;
       setStoredParticipant(slug, id, participant.pseudo);
