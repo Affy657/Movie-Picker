@@ -2,28 +2,27 @@ import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { axe } from 'vitest-axe';
-import { toHaveNoViolations } from 'vitest-axe/matchers.js';
 import Home from './Home';
 import CreateEvent from './CreateEvent';
 
-expect.extend({ toHaveNoViolations });
-
 describe('accessibilité (axe)', () => {
-  it('Home n’a pas de violations critiques', async () => {
+  it('Home n’a pas de violations', async () => {
     const { container } = render(
       <MemoryRouter>
         <Home />
       </MemoryRouter>
     );
-    expect(await axe(container)).toHaveNoViolations();
+    const results = await axe(container);
+    expect(results.violations, results.violations.map((v) => v.description).join('\n')).toHaveLength(0);
   });
 
-  it('CreateEvent n’a pas de violations critiques', async () => {
+  it('CreateEvent n’a pas de violations', async () => {
     const { container } = render(
       <MemoryRouter>
         <CreateEvent />
       </MemoryRouter>
     );
-    expect(await axe(container)).toHaveNoViolations();
+    const results = await axe(container);
+    expect(results.violations, results.violations.map((v) => v.description).join('\n')).toHaveLength(0);
   });
 });

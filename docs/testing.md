@@ -38,7 +38,7 @@ Guide centralisé de la stratégie de tests (front, API .NET, E2E, CI).
 
 - **MSW** : `EventDetail`, `AddMovieForm` — requêtes vers `http://127.0.0.1:3999` (`vitest.config.ts` → `env.VITE_API_URL`).
 - **vi.mock(`fetchApi`)** : CreateEvent, JoinForm.
-- **Accessibilité** : `vitest-axe` + `expect.extend({ toHaveNoViolations })` — Home, CreateEvent (`a11y.test.tsx`).
+- **Accessibilité** : `vitest-axe` — Home, CreateEvent (`a11y.test.tsx`) ; assertion `expect(results.violations).toHaveLength(0)` (évite les soucis de typage du matcher `toHaveNoViolations`).
 - **Seuils couverture (v8)** : `lines ≥ 48 %`, `functions ≥ 68 %`, `branches ≥ 55 %` (voir `apps/web/vitest.config.ts`).
 
 Fichiers notables : `App.test.tsx` (routes via **`AppRoutes`**), `EventDetail.test.tsx`, `ShareLink.test.tsx`.
