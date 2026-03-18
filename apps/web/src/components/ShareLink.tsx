@@ -2,9 +2,10 @@ import { useState } from 'react';
 
 interface ShareLinkProps {
   url: string;
+  label?: string;
 }
 
-export default function ShareLink({ url }: ShareLinkProps) {
+export default function ShareLink({ url, label = 'Lien à partager' }: ShareLinkProps) {
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
@@ -19,7 +20,7 @@ export default function ShareLink({ url }: ShareLinkProps) {
 
   return (
     <div className="share-link">
-      <label className="label">Lien à partager</label>
+      <label className="label">{label}</label>
       <div className="share-link-row">
         <input
           type="text"

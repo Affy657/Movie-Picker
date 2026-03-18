@@ -203,11 +203,11 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 
 ### Livrables
 
-- [ ] Contrat API documenté (OpenAPI/Swagger) aligné sur l’API actuelle.
-- [ ] API .NET déployée sur Cloud Run, même comportement que le MVP (parcours complet testé).
-- [ ] Ancienne API Node retirée ou désactivée après validation.
+- [x] Contrat API documenté (OpenAPI/Swagger) aligné sur l’API actuelle.
+- [x] API .NET déployée sur Cloud Run, même comportement que le MVP (parcours complet testé).
+- [x] Ancienne API Node retirée ou désactivée après validation.
 
-**Référence** : [docs/migration-dotnet/](migration-dotnet/) – [Contexte et périmètre](migration-dotnet/contexte-et-perimetre.md), [Roadmap migration .NET](migration-dotnet/roadmap-migration-dotnet.md).
+**Le back .NET est la base pour la V1** (comptes, config, réactions). Référence : [docs/migration-dotnet/](migration-dotnet/) – [Roadmap migration](migration-dotnet/roadmap-migration-dotnet.md), [Architecture API .NET](migration-dotnet/architecture-api-dotnet.md).
 
 ---
 

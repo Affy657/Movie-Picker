@@ -2,7 +2,7 @@
 
 Document complémentaire à [contrat-api-openapi.json](contrat-api-openapi.json). Tout doit rester **identique** côté URLs, JSON et codes HTTP pour ne pas casser le front React.
 
-**Code source de vérité :** `apps/api/src/routes/`, `apps/api/src/middleware/`, modèles Mongoose.
+**Référence :** API .NET `apps/api-dotnet/MoviePicker.Api` ; contrat aligné sur l’ancienne API Node (mêmes routes et JSON).
 
 ---
 

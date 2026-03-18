@@ -196,8 +196,8 @@ gcloud run deploy movie-picker-api --image europe-west1-docker.pkg.dev/PROJECT_I
 
 **À faire seulement après** validation complète en production (parcours OK avec le front sur l’API .NET).
 
-- **Option A – Archiver** : déplacer `apps/api` vers `apps/api-node-archive` (ou autre) et mettre à jour les références dans le monorepo (pnpm workspace, docs, CI si des jobs pointaient encore vers l’API Node).
-- **Option B – Supprimer** : supprimer le dossier `apps/api` ; retirer du `pnpm-workspace.yaml` et de la doc toute mention de l’API Node ; adapter le workflow CI/CD pour ne plus lancer de tests/build Node sur l’API (déjà fait en étape 9 pour le build ; filtrer `pnpm run test` si besoin pour exclure `api`).
+- **Option A – Archiver** : (non applicable : suppression effectuée.)
+- **Option B – Supprimer** : fait — dossier `apps/api` supprimé ; n'utilisent plus que l'API .NET.
 
 Après retrait : l’API déployée et utilisée par le front est uniquement l’API .NET.
 
@@ -209,4 +209,4 @@ Après retrait : l’API déployée et utilisée par le front est uniquement l�
 - [ ] Réponses JSON et codes HTTP comparés avec l’API Node pour les mêmes scénarios (health, events, movies, wheel, close).
 - [ ] API .NET déployée sur Cloud Run (nouvelle révision) ; front pointe déjà vers cette URL.
 - [ ] Parcours validé en production avec le front existant.
-- [ ] Ancienne API Node désactivée / retirée (archiver ou supprimer `apps/api`, adapter monorepo et CI).
+- [x] Ancienne API Node désactivée / retirée (supprimé `apps/api`, monorepo et CI adaptés).

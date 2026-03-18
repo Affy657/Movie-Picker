@@ -98,13 +98,21 @@ export default function EventDetail() {
   if (!event) return null;
 
   const dateFormatted = `${event.date} à ${event.time}`;
-  const shareUrl =
-    shareUrlFromState ??
-    (slug
-      ? `${window.location.origin}/s/${slug}${hostToken ? `?host=${encodeURIComponent(hostToken)}` : ''}`
-      : '');
+  // Lien invités : sans token hôte (à partager). Lien hôte : avec ?host= (ne pas partager).
+  const shareUrlGuests = shareUrlFromState ?? (slug ? `${window.location.origin}/s/${slug}` : '');
+  const shareUrlHost =
+    slug && hostToken
+      ? `${window.location.origin}/s/${slug}?host=${encodeURIComponent(hostToken)}`
+      : '';
   const needsJoin = !event.terminé && !participant;
   const showContent = event.terminé || participant;
+
+  // Actualisation automatique tant que la soirée n'est pas terminée (les autres voient les changements)
+  useEffect(() => {
+    if (event.terminé || !slug) return;
+    const interval = setInterval(refreshAll, 5000);
+    return () => clearInterval(interval);
+  }, [slug, event.terminé, refreshAll]);
 
   return (
     <main className="page page-event">
@@ -115,7 +123,10 @@ export default function EventDetail() {
         <h1>{event.title}</h1>
         <p className="event-meta">{dateFormatted}</p>
         {event.terminé && <p className="badge badge-finished">Soirée terminée</p>}
-        {event.isHost && shareUrl && <ShareLink url={shareUrl} />}
+        {event.isHost && shareUrlGuests && <ShareLink url={shareUrlGuests} />}
+        {event.isHost && shareUrlHost && (
+          <ShareLink url={shareUrlHost} label="Votre lien hôte (ne pas partager)" />
+        )}
       </header>
 
       {needsJoin && (

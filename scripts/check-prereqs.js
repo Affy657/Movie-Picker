@@ -2,12 +2,13 @@
  * Vérification des prérequis locaux pour Movie Picker (roadmap MVP – section 1).
  * À lancer avec : node scripts/check-prereqs.js
  *
- * Vérifie : Node 20, pnpm, Docker, Git
+ * Vérifie : Node 20, pnpm, .NET 10 (API), Docker, Git
  */
 
 const { execSync } = require('child_process');
 
 const MIN_NODE_MAJOR = 20;
+const MIN_DOTNET_MAJOR = 10;
 
 function run(cmd, opts = {}) {
   try {
@@ -31,6 +32,14 @@ function checkPnpm() {
   return { ok: true, msg: `pnpm ${out}` };
 }
 
+function checkDotnet() {
+  const out = run('dotnet --version');
+  if (out == null) return { ok: false, msg: 'SDK .NET non trouvé (API back)' };
+  const major = parseInt(out.split('.')[0], 10);
+  const ok = major >= MIN_DOTNET_MAJOR;
+  return { ok, msg: ok ? `.NET ${out} (OK)` : `.NET ${out} – requis: ${MIN_DOTNET_MAJOR}.x pour l'API` };
+}
+
 function checkDocker() {
   const out = run('docker -v');
   if (out == null) return { ok: false, msg: 'Docker non trouvé ou non démarré' };
@@ -46,6 +55,7 @@ function checkGit() {
 const checks = [
   { name: 'Node 20', fn: checkNode },
   { name: 'pnpm', fn: checkPnpm },
+  { name: '.NET 10 (API)', fn: checkDotnet },
   { name: 'Docker', fn: checkDocker },
   { name: 'Git', fn: checkGit },
 ];

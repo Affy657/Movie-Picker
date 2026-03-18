@@ -11,14 +11,14 @@ Référence : [consigne-dev-cloud-ynov.md](consigne-dev-cloud-ynov.md).
 | Domaine | Choix |
 |--------|--------|
 | **Front** | React (TypeScript strict) |
-| **Back** | Node.js + Express.js (TypeScript strict) |
-| **Architecture** | Monolithic, containerized (Express API in one Docker image) |
+| **Back** | ASP.NET Core (C#, .NET 10) |
+| **Architecture** | Monolithic, containerized (API .NET in one Docker image) |
 | **CI/CD** | GitHub Actions |
 | **Cloud** | At least one service on **AWS** and one on **GCP** (required). |
 
 - **Language** : TypeScript strict for the whole codebase (front + API).
 - **AWS** : S3 + CloudFront — store and serve the React build. Default CloudFront URL for MVP (no custom domain).
-- **GCP** : Cloud Run — run the Express API container. Docker image in **Artifact Registry (GCP)**. Default Cloud Run URL for MVP.
+- **GCP** : Cloud Run — run the ASP.NET Core API container. Docker image in **Artifact Registry (GCP)**. Default Cloud Run URL for MVP.
 - **Repo** : Turborepo monorepo (front + back in one repo). **Package manager** : **pnpm**.
 
 ---
@@ -27,8 +27,8 @@ Référence : [consigne-dev-cloud-ynov.md](consigne-dev-cloud-ynov.md).
 
 | Exigence | Couverture |
 |----------|------------|
-| App full-stack, langage maîtrisé | React + Express.js, TypeScript strict |
-| Architecture claire (monolithique conteneurisée ou microservices) | Monolithic, containerized (Express in Docker) |
+| App full-stack, langage maîtrisé | React (TypeScript) + ASP.NET Core (C#) |
+| Architecture claire (monolithique conteneurisée ou microservices) | Monolithic, containerized (API .NET in Docker) |
 | Au moins un service managé | MongoDB Atlas (DB) ; S3+CloudFront + Cloud Run (hosting) |
 | App accessible publiquement | Front and API on default CloudFront + Cloud Run URLs |
 | Performances (CDN, load balancing…) | CloudFront as CDN for the front |
@@ -46,7 +46,7 @@ Référence : [consigne-dev-cloud-ynov.md](consigne-dev-cloud-ynov.md).
 **Front (React, TypeScript strict)**  
 Pages: home, create event, event detail (movies, votes, wheel). Mobile-first, responsive. Deployed on S3 + CloudFront.
 
-**Back (Express.js, TypeScript strict)**  
+**Back (ASP.NET Core, C#)**  
 REST API: events, participants, movies, votes, wheel draw. Host auth via token (query or cookie). Deployed on Cloud Run (Docker image from Artifact Registry).
 
 **Database (MongoDB Atlas)**  

@@ -170,13 +170,12 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ## 17. Migration back .NET (entre MVP et V1)
 
-Étape **optionnelle** : remplacer l’API Node.js/Express par une API **ASP.NET Core (C#)** sans changer le front ni les fonctionnalités. À faire **après** la soutenance MVP et **avant** le développement des features V1.
-
-- [ ] Documenter le contrat API actuel (OpenAPI/Swagger) comme référence
-- [ ] Créer le projet ASP.NET Core Web API (mêmes routes, même JSON)
-- [ ] Implémenter events, participants, movies, votes, wheel, close + MongoDB + TMDB
-- [ ] Adapter Dockerfile et CI/CD (build .NET, push image, déploiement Cloud Run)
-- [ ] Valider le parcours complet avec le front inchangé ; retirer l’ancienne API Node
+**Terminée.** L'API est désormais **ASP.NET Core (C#)** ; le front et le déploiement sont inchangés.
+- [x] Documenter le contrat API actuel (OpenAPI/Swagger) comme référence
+- [x] Créer le projet ASP.NET Core Web API (mêmes routes, même JSON)
+- [x] Implémenter events, participants, movies, votes, wheel, close + MongoDB + TMDB
+- [x] Adapter Dockerfile et CI/CD (build .NET, push image, déploiement Cloud Run)
+- [x] Valider le parcours complet avec le front inchangé ; retirer l’ancienne API Node
 
 > **Doc :** [../migration-dotnet/contexte-et-perimetre.md](../migration-dotnet/contexte-et-perimetre.md) – avantages/inconvénients, recommandations, périmètre. [Roadmap migration .NET](../migration-dotnet/roadmap-migration-dotnet.md) – suivi détaillé des tâches. Voir aussi [features-list.md](../features-list.md) § Migration back .NET.
 

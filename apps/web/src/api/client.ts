@@ -40,7 +40,7 @@ function ensureApiIsNotFrontOrigin(url: string): void {
 }
 
 const NETWORK_ERROR_MSG =
-  'Impossible de joindre l’API. Vérifiez que l’API est démarrée (pnpm dev:api) et votre connexion.';
+  'Impossible de joindre l’API. Vérifiez que l’API est démarrée (pnpm dev:api-dotnet) et votre connexion.';
 
 export async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
   const url = apiUrl(path);

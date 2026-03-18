@@ -8,8 +8,8 @@ Ce document permet de vérifier que le projet Movie Picker couvre tous les point
 
 | Exigence | Couverture | Où le vérifier |
 |----------|------------|-----------------|
-| Application dans un langage maîtrisé | **Node.js** (Express) + **React** (JavaScript/TypeScript), **TypeScript strict** partout | `apps/api`, `apps/web`, [spec-technique.md](../spec-technique.md) |
-| Architecture claire (monolithique conteneurisée ou microservices) | **Monolithique conteneurisée** : API Express dans une image Docker, un seul service back | [architecture.md](architecture.md), [spec-technique.md](../spec-technique.md) |
+| Application dans un langage maîtrisé | **ASP.NET Core (C#)** + **React** (TypeScript strict) | `apps/api-dotnet`, `apps/web`, [spec-technique.md](../spec-technique.md) |
+| Architecture claire (monolithique conteneurisée ou microservices) | **Monolithique conteneurisée** : API .NET dans une image Docker, un seul service back | [architecture.md](architecture.md), [architecture-api-dotnet.md](../migration-dotnet/architecture-api-dotnet.md) |
 | Au moins un service managé | **MongoDB Atlas** (DB) ; **S3** (stockage build) ; **CloudFront** (CDN) ; **Cloud Run** (compute) | [README.md](../../README.md) § Services utilisés |
 | Application accessible publiquement | Front : URL **CloudFront** ; API : URL **Cloud Run** (HTTPS) | Déploiement effectif, [deploy-gcp-api.md](deploy-gcp-api.md), [deploy-aws-front.md](deploy-aws-front.md) |
 | Performances (CDN, load balancing…) | **CloudFront** en CDN pour le front ; Cloud Run gère la charge côté API | [deploy-aws-front.md](deploy-aws-front.md), [architecture.md](architecture.md) |
@@ -60,7 +60,7 @@ Ce document permet de vérifier que le projet Movie Picker couvre tous les point
 | Livrable | Statut |
 |----------|--------|
 | Application web full-stack fonctionnelle sur le cloud | ✅ Front (AWS) + API (GCP) déployés |
-| Dépôt Git clair et structuré | ✅ Monorepo Turborepo, `apps/api`, `apps/web`, `docs/` |
+| Dépôt Git clair et structuré | ✅ Monorepo Turborepo, `apps/api-dotnet`, `apps/web`, `docs/` |
 | Documentation technique (README, schémas, déploiement) | ✅ README, architecture.md, deploy-*.md, monitoring.md |
 | Soutenance 15–20 min | ✅ Guide dans [soutenance.md](soutenance.md) ; à préparer en slides / démo |
 

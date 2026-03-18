@@ -11,7 +11,7 @@ Répartition indicative :
 | Partie | Durée | Contenu |
 |--------|--------|--------|
 | Introduction & but du projet | 2 min | Contexte, objectif (soirées film, partage, votes, roue). |
-| Architecture & stack | 3–4 min | Schéma, choix techniques (React, Express, TypeScript), répartition AWS / GCP. |
+| Architecture & stack | 3–4 min | Schéma, choix techniques (React, ASP.NET Core, TypeScript/C#), répartition AWS / GCP. |
 | Démo en direct | 4–5 min | Parcours complet : créer un event → partager le lien → rejoindre → proposer des films → voter → lancer la roue → clôturer. |
 | Déploiement & CI/CD | 3–4 min | Où tourne l'app (URLs), pipeline GitHub Actions (build, Docker, Cloud Run, S3, CloudFront). |
 | Monitoring & observabilité | 2 min | Où voir les logs (Cloud Logging), métriques (Cloud Run, CloudFront). |
@@ -29,7 +29,7 @@ Répartition indicative :
 ## 2. Architecture & stack
 
 - Montrer le **schéma d'architecture** ([architecture.md](architecture.md)) : utilisateur → CloudFront/S3 (front) et Cloud Run (API) ; MongoDB Atlas, TMDB ; GitHub Actions.
-- Citer les **choix** : TypeScript strict, monorepo Turborepo, front sur **AWS** (S3 + CloudFront), back sur **GCP** (Cloud Run), base MongoDB Atlas.
+- Citer les **choix** : React (TypeScript), API ASP.NET Core (C#), monorepo Turborepo, front sur **AWS** (S3 + CloudFront), back sur **GCP** (Cloud Run), base MongoDB Atlas.
 - Souligner que **front et back sont sur des clouds différents** (exigence Ynov).
 
 ---

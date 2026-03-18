@@ -31,6 +31,8 @@ Synthèse des pistes d’amélioration pour aligner le projet avec les bonnes pr
 
 **État actuel :** Tests d’intégration API (parcours complet), un test front (Home). Pas de couverture mesurée.
 
+**Plan d'action détaillé :** [../plan-tests-stack.md](../plan-tests-stack.md) (phases 1 à 4 : unit API .NET, intégration API, composants + unit front, couverture + CI).
+
 **À faire :**
 - **API** : ajouter des tests pour 403 (requireHost sans / mauvais token), 409 (doublon film), 400 (event terminé), et pour `GET /movies/search` (mock TMDB). Tests unitaires des middlewares (loadEvent, requireHost, eventStatus) et du service TMDB (mock fetch).
 - **Web** : tests de composants (EventDetail, CreateEvent, JoinForm, AddMovieForm, WheelSection) avec mocks de `fetchApi` ou MSW.

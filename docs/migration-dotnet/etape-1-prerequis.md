@@ -51,7 +51,7 @@ Au moins une source (ex. `https://api.nuget.org/v3/index.json`) doit être confi
 
 Avant de migrer, il faut pouvoir **comparer** les réponses entre l’API Node et la future API .NET.
 
-- [x] **API Node** : `apps/api` démarre correctement (`pnpm run dev` ou équivalent).
+- [x] **API .NET** : `apps/api-dotnet/MoviePicker.Api` démarre (`dotnet run` ou `pnpm dev:api-dotnet`).
 - [x] **Front** : `apps/web` fonctionne et appelle l’API.
 - [x] **MongoDB** : base accessible (Atlas ou local), variable `MONGODB_URI` configurée.
 - [x] **TMDB** : clé API configurée (`TMDB_API_KEY`) pour la recherche de films.

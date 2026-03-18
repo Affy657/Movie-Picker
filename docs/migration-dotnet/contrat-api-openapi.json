@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Movie Picker API",
-    "description": "Référence migration .NET — aligné sur `apps/api` (Node). Erreurs : `{ \"error\": \"message\" }`. Token hôte : query `?host=` ou cookie `moviepicker_host`. Ordre routes ASP.NET : enregistrer `GET /events/slug/{id}` avant `GET /events/{id}` pour ne pas matcher \"slug\" comme id.",
+    "description": "Référence API .NET — contrat aligné sur l’ancienne API Node. Erreurs : `{ \"error\": \"message\" }`. Token hôte : query `?host=` ou cookie `moviepicker_host`. Ordre routes ASP.NET : enregistrer `GET /events/slug/{id}` avant `GET /events/{id}` pour ne pas matcher \"slug\" comme id.",
     "version": "0.0.1-migration"
   },
   "servers": [{ "url": "http://localhost:4000", "description": "Développement" }],

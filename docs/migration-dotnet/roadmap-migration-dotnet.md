@@ -1,4 +1,4 @@
-﻿# Movie Picker – Roadmap migration back .NET
+# Movie Picker – Roadmap migration back .NET
 
 Suite de tâches pour migrer l'API Node.js/Express vers **ASP.NET Core (C#)** sans modifier le front ni les fonctionnalités. À exécuter **après** la livraison du MVP et **avant** le développement des features V1.
 
@@ -32,7 +32,7 @@ Le front ne doit pas changer : les URLs et le format JSON doivent rester **ident
   - `POST /events/:idOrSlug/wheel`, `POST /events/:idOrSlug/close`
 - [x] Schémas JSON + codes d'erreur : [contrat-api-reference.md](contrat-api-reference.md)
 
-> **Référence :** [contrat-api-openapi.json](contrat-api-openapi.json), [contrat-api-reference.md](contrat-api-reference.md), code `apps/api/src/routes/`.
+> **Référence :** [contrat-api-openapi.json](contrat-api-openapi.json), [contrat-api-reference.md](contrat-api-reference.md), implémentation `apps/api-dotnet/MoviePicker.Api`.
 
 ---
 
@@ -102,18 +102,20 @@ Le front ne doit pas changer : les URLs et le format JSON doivent rester **ident
 
 Guide détaillé : **[validation-et-bascule.md](validation-et-bascule.md)** (parcours complet avec exemples d'appels, comparaison Node/.NET, déploiement Cloud Run, retrait de l'API Node).
 
-- [ ] Exécuter un parcours complet contre l’API .NET (locale ou déployée) : créer event → rejoindre → proposer films → voter → lancer roue → clôturer
-- [ ] Comparer les réponses (JSON) avec l’API Node pour les mêmes scénarios (health, events, movies, wheel)
-- [ ] Déployer l’API .NET sur Cloud Run (nouvelle révision) et faire pointer le front vers cette révision (ou remplacer l’ancienne révision)
-- [ ] Valider le parcours en production avec le front existant
+- [x] Exécuter un parcours complet contre l’API .NET (locale ou déployée) : créer event → rejoindre → proposer films → voter → lancer roue → clôturer — fait
+- [x] Comparer les réponses (JSON) avec l’API Node pour les mêmes scénarios (health, events, movies, wheel) — fait
+- [x] Déployer l’API .NET sur Cloud Run (nouvelle révision) et faire pointer le front vers cette révision (ou remplacer l’ancienne révision)
+- [x] Valider le parcours en production avec le front existant (comportement identique)
 - [x] Désactiver / retirer l’ancienne API Node (supprimé `apps/api`, monorepo et CI adaptés)
+
+Améliorations post-migration (front) : lien invités sans token hôte + lien hôte séparé « ne pas partager » ; actualisation auto toutes les 5 s sur la page event.
 
 ---
 
 ## 11. Migration terminée
 
-- [ ] Mettre à jour le README et la doc (architecture, instructions de run local pour l’API .NET)
-- [ ] Mettre à jour la roadmap MVP : cocher la section 17 (Migration back .NET) et pointer vers [roadmap-migration-dotnet.md](roadmap-migration-dotnet.md)
-- [ ] Considérer le back .NET comme la base pour la V1 (comptes, config, réactions)
+- [x] Mettre à jour le README et la doc (architecture, instructions de run local pour l’API .NET)
+- [x] Mettre à jour la roadmap MVP : cocher la section 17 (Migration back .NET) et pointer vers [roadmap-migration-dotnet.md](roadmap-migration-dotnet.md)
+- [x] Considérer le back .NET comme la base pour la V1 (comptes, config, réactions)
 
-> **Doc :** [contexte-et-perimetre.md](contexte-et-perimetre.md) – rappel du périmètre et de la recommandation.
+> **Doc :** [contexte-et-perimetre.md](contexte-et-perimetre.md) – périmètre. [../mvp/roadmap-mvp.md](../mvp/roadmap-mvp.md) § 17, [../features-list.md](../features-list.md) § Migration back .NET.
