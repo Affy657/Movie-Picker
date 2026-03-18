@@ -27,6 +27,19 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors(ServiceCollectionExtensions.CorsPolicyFront);
 app.UseAuthorization();
+
+// Toujours renvoyer du JSON pour 404 (éviter une page HTML en prod)
+app.UseStatusCodePages(async context =>
+{
+    if (context.HttpContext.Response.StatusCode == 404 &&
+        !context.HttpContext.Response.HasStarted &&
+        string.IsNullOrEmpty(context.HttpContext.Response.ContentType))
+    {
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsync("{\"error\":\"Ressource introuvable\"}");
+    }
+});
+
 app.MapControllers();
 
 app.MapGet("/", () => Results.Json(new

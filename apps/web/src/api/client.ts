@@ -1,10 +1,21 @@
 /**
  * URL de base de l'API (variable d'environnement au build).
  * En dev : VITE_API_URL ou fallback http://localhost:4000
+ * Doit être une URL absolue avec protocole (ex. https://xxx.run.app), pas un chemin relatif.
  */
-const API_BASE =
-  (typeof import.meta.env !== 'undefined' && import.meta.env?.VITE_API_URL) ||
-  'http://localhost:4000';
+function getApiBase(): string {
+  const raw =
+    (typeof import.meta.env !== 'undefined' && import.meta.env?.VITE_API_URL) ||
+    'http://localhost:4000';
+  const base = (typeof raw === 'string' ? raw : '').trim();
+  // Si pas de protocole, le navigateur traite comme chemin relatif → requête vers le site au lieu de l'API
+  if (base && !/^https?:\/\//i.test(base)) {
+    return `https://${base.replace(/^\//, '')}`;
+  }
+  return base || 'http://localhost:4000';
+}
+
+const API_BASE = getApiBase();
 
 export function apiUrl(path: string): string {
   const p = path.startsWith('/') ? path : `/${path}`;
@@ -31,10 +42,24 @@ export async function fetchApi<T>(path: string, options?: RequestInit): Promise<
         e instanceof TypeError);
     throw new Error(isNetwork ? NETWORK_ERROR_MSG : msg);
   }
+  const contentType = res.headers.get('content-type') ?? '';
+  const isJson = contentType.includes('application/json');
+  const text = await res.text();
+
   if (!res.ok) {
-    const err = (await res.json().catch(() => ({ error: res.statusText }))) as { error?: string };
+    if (!isJson && text.trimStart().startsWith('<')) {
+      throw new Error(
+        "L’API a renvoyé du HTML au lieu de JSON. Vérifiez que VITE_API_URL pointe vers l’URL de l’API (ex. Cloud Run), pas vers le site web."
+      );
+    }
+    const err = (isJson ? JSON.parse(text) : { error: res.statusText }) as { error?: string };
     throw new Error(err.error ?? `HTTP ${res.status}`);
   }
   if (res.status === 204) return undefined as T;
-  return res.json() as Promise<T>;
+  if (!isJson && text.trimStart().startsWith('<')) {
+    throw new Error(
+      "L’API a renvoyé du HTML au lieu de JSON. Vérifiez que VITE_API_URL pointe vers l’URL de l’API (ex. Cloud Run), pas vers le site web."
+    );
+  }
+  return JSON.parse(text) as Promise<T>;
 }
