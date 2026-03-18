@@ -3,7 +3,7 @@ using MongoDB.Bson;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
-internal static class EventDocumentMapper
+public static class EventDocumentMapper
 {
     public static Event ToDomain(EventDocument doc)
     {

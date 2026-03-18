@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Version>1.0.0</Version>
     <AssemblyName>MoviePicker.Api</AssemblyName>
+    <InternalsVisibleTo>MoviePicker.Api.Tests</InternalsVisibleTo>
   </PropertyGroup>
 
   <ItemGroup>

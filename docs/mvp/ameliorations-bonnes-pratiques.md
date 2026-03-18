@@ -29,15 +29,14 @@ Synthèse des pistes d’amélioration pour aligner le projet avec les bonnes pr
 
 ## 3. Tests
 
-**État actuel :** Tests d’intégration API (parcours complet), un test front (Home). Pas de couverture mesurée.
+**État actuel (stack .NET + React) :** tests unitaires API (handlers, TMDB mock, mappers, filtres), intégration HTTP (WebApplicationFactory, repos en mémoire), contrat OpenAPI ; front Vitest + MSW (EventDetail, AddMovieForm) + mocks fetchApi (CreateEvent, JoinForm) ; E2E Playwright (parcours critique avec stub TMDB) ; couverture Vitest (seuils) + Coverlet en CI ; jobs CI parallèles (lint, web, API, E2E).
 
-**Plan d'action détaillé :** [../plan-tests-stack.md](../plan-tests-stack.md) (phases 1 à 4 : unit API .NET, intégration API, composants + unit front, couverture + CI).
+**Plan / détail :** [../plan-tests-stack.md](../plan-tests-stack.md) · **Commandes :** [../testing.md](../testing.md).
 
-**À faire :**
-- **API** : ajouter des tests pour 403 (requireHost sans / mauvais token), 409 (doublon film), 400 (event terminé), et pour `GET /movies/search` (mock TMDB). Tests unitaires des middlewares (loadEvent, requireHost, eventStatus) et du service TMDB (mock fetch).
-- **Web** : tests de composants (EventDetail, CreateEvent, JoinForm, AddMovieForm, WheelSection) avec mocks de `fetchApi` ou MSW.
-- **Hooks** : extraire `useEvent(slug)`, `useMovies(slug)` pour faciliter les tests et la réutilisation.
-- **Couverture** : activer la couverture Vitest (`coverage`) et fixer un seuil minimal en CI (ex. 70 %).
+**À faire (évolution) :**
+- **Hooks** : extraire `useEvent(slug)`, `useMovies(slug)` pour faciliter tests et réutilisation (toujours optionnel).
+- **Couverture** : relever progressivement les seuils Vitest (objectif long terme ~70 % lignes sur le front).
+- **API Node historique** : si du code Express reste dans le repo, aligner ou retirer les anciens tests associés.
 
 ---
 
@@ -86,15 +85,17 @@ Synthèse des pistes d’amélioration pour aligner le projet avec les bonnes pr
 ## 8. CI/CD
 
 - **Branches** : normaliser sur une seule branche principale (main ou master) pour éviter la duplication des déploiements.
-- **Turbo** : la tâche `test` peut ne pas dépendre du build pour l’API (exécution via Vitest/tsx) pour accélérer la boucle.
-- **Validation env** : au démarrage de l’API, valider toutes les variables d’environnement requises (MONGODB_URI, etc.) et quitter proprement avec un message clair si une variable manque.
+- **Workflow actuel** : jobs **lint**, **test-web** (Vitest + artefact couverture), **test-api** (unitaires + intégration .NET + Coverlet), **test-e2e** (Playwright) ; déploiements Docker / front après succès. Voir [deploy-cicd.md](deploy-cicd.md) et [testing.md](../testing.md).
+- **Turbo** : la tâche `test` front ne dépend pas du build API .NET.
+- **Validation env** : au démarrage de l’API, valider les variables requises (MONGODB_URI en prod, etc.) et quitter avec un message clair si une variable manque.
 
 ---
 
 ## Fait (déjà appliqué)
 
-- **Erreurs API** : les middlewares `loadEvent`, `requireHost`, `requireEventNotFinished` utilisent désormais systématiquement `next(new AppError(...))` au lieu de `res.status().json()`. Le format des réponses d’erreur est unifié via le error handler.
-- **ESLint + Prettier** : config à la racine (`.eslintrc.cjs`, `.prettierrc`), scripts `lint:eslint`, `format`, `format:check`. La CI exécute ESLint et Prettier (check) en plus du lint TypeScript.
+- **Erreurs API (stack Node historique)** : middlewares unifiés via `next(new AppError(...))` où applicable.
+- **ESLint + Prettier** : config racine ; CI exécute ESLint et Prettier (check) + lint TypeScript front.
+- **Tests stack .NET + React** : unitaires + intégration API, contrat OpenAPI, Vitest (MSW, a11y), E2E Playwright, couverture et pipeline décrits dans [plan-tests-stack.md](../plan-tests-stack.md) et [testing.md](../testing.md).
 
 ---
 
@@ -105,7 +106,7 @@ Synthèse des pistes d’amélioration pour aligner le projet avec les bonnes pr
 | Haute | Erreurs API (next(AppError) partout) | Cohérence, maintenabilité |
 | Haute | CORS + helmet + rate limiting | Sécurité |
 | Moyenne | ESLint + Prettier + CI | Qualité, lisibilité |
-| Moyenne | Tests (403, 409, search, composants) | Robustesse |
+| Moyenne | Tests (extensions, hooks, seuils couverture) | Robustesse |
 | Moyenne | Hooks + cache front | Évolutivité, perfs |
 | Basse | configs/ partagés, /v1, Swagger | Organisation, évolution API |
 | Basse | Accessibilité (live, focus, skip) | UX, conformité |

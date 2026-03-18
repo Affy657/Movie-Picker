@@ -31,7 +31,7 @@ Ce document permet de vérifier que le projet Movie Picker couvre tous les point
 
 | Exigence | Couverture | Où le vérifier |
 |----------|------------|-----------------|
-| Pipeline CI/CD : tests, build, déploiement | **GitHub Actions** : lint, **tests**, build des deux apps ; build image Docker ; push Artifact Registry ; déploiement Cloud Run ; build front + upload S3 + invalidation CloudFront | [.github/workflows/ci-cd.yml](../../.github/workflows/ci-cd.yml), [deploy-cicd.md](deploy-cicd.md) |
+| Pipeline CI/CD : tests, build, déploiement | **GitHub Actions** : lint ; tests **web** (Vitest + couverture), **API .NET** (unitaires + intégration + Coverlet), **E2E Playwright** ; sur `main` : image Docker, Cloud Run, build front, S3, CloudFront | [.github/workflows/ci-cd.yml](../../.github/workflows/ci-cd.yml), [deploy-cicd.md](deploy-cicd.md), [../testing.md](../testing.md) |
 | Outil type GitHub Actions / GitLab CI | **GitHub Actions** | `.github/workflows/ci-cd.yml` |
 
 ---

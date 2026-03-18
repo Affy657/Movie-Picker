@@ -79,6 +79,13 @@ export default function EventDetail() {
     loadMovies();
   }, [loadEvent, loadMovies]);
 
+  const eventTerminé = event?.terminé;
+  useEffect(() => {
+    if (!slug || loading || error || !event || eventTerminé) return;
+    const interval = setInterval(refreshAll, 5000);
+    return () => clearInterval(interval);
+  }, [slug, loading, error, event, eventTerminé, refreshAll]);
+
   if (loading)
     return (
       <main className="page">
@@ -106,13 +113,6 @@ export default function EventDetail() {
       : '';
   const needsJoin = !event.terminé && !participant;
   const showContent = event.terminé || participant;
-
-  // Actualisation automatique tant que la soirée n'est pas terminée (les autres voient les changements)
-  useEffect(() => {
-    if (event.terminé || !slug) return;
-    const interval = setInterval(refreshAll, 5000);
-    return () => clearInterval(interval);
-  }, [slug, event.terminé, refreshAll]);
 
   return (
     <main className="page page-event">

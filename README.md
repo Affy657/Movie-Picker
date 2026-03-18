@@ -14,7 +14,7 @@ Application pour organiser des soirées film : créer un event, partager le lien
 - **Front** : React (Vite, TypeScript), hébergé sur **AWS** (S3 + CloudFront).
 - **Back** : API ASP.NET Core (C#, .NET 10), déployée sur **GCP** (Cloud Run, image Docker dans Artifact Registry).
 - **Données** : MongoDB Atlas. **Externe** : API TMDB (films).
-- **CI/CD** : GitHub Actions (build, déploiement API + front à chaque push sur `main`).
+- **CI/CD** : GitHub Actions (lint, tests web + API + E2E Playwright, puis déploiement sur `main`).
 
 → **[Schéma d’architecture](docs/mvp/architecture.md)** (diagramme Mermaid).
 
@@ -37,6 +37,8 @@ Application pour organiser des soirées film : créer un event, partager le lien
 ## Documentation
 
 - **[Spec technique](docs/spec-technique.md)** – Stack, cloud, CI/CD
+- **[Tests](docs/testing.md)** – Vitest, API .NET, Playwright, CI (référence rapide)
+- **[Plan tests](docs/plan-tests-stack.md)** – Phases, livrables, état d’avancement
 - **[Features list](docs/features-list.md)** – Fonctionnalités par version (MVP, V1, V2, V3)
 - **[Consigne Ynov](docs/consigne-dev-cloud-ynov.md)** – Projet cloud
 
@@ -69,7 +71,10 @@ pnpm build            # build front
 pnpm dev:api-dotnet   # API .NET (port 4000)
 pnpm dev:web          # Front (port 5173)
 pnpm lint             # lint front
-pnpm test             # tests front
+pnpm test             # tests front (Turbo)
+dotnet test apps/api-dotnet/MoviePicker.Api.Tests/MoviePicker.Api.Tests.csproj      # API unitaires
+dotnet test apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj  # API intégration
+pnpm run test:e2e:ci  # E2E (build front + Playwright) — voir docs/testing.md
 ```
 
 - **API** : port 4000 — http://localhost:4000/ , /health , /swagger

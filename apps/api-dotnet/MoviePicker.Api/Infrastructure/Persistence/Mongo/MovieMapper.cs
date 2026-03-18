@@ -2,7 +2,7 @@ using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
-internal static class MovieMapper
+public static class MovieMapper
 {
     public static Movie ToDomain(MovieDocument d) => new()
     {

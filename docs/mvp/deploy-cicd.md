@@ -1,9 +1,11 @@
 # CI/CD – GitHub Actions
 
-Le workflow CI/CD (`.github/workflows/ci-cd.yml`) assure :
+Le workflow (`.github/workflows/ci-cd.yml`) assure :
 
-- **À chaque push / PR** : install, lint, **tests**, build du front (web) et build de l’**API .NET** (`dotnet publish`).
-- **Sur push vers `main` (ou `master`)** : build de l’image Docker de l’**API .NET** (Dockerfile dans `apps/api-dotnet/MoviePicker.Api`), push vers Artifact Registry (GCP), déploiement sur Cloud Run, build du front avec l’URL de l’API, upload S3 et invalidation CloudFront.
+- **À chaque push / PR** : job **lint** (TypeScript, ESLint, Prettier), puis en parallèle **test-web** (Vitest + couverture, artefact `coverage-web`), **test-api** (tests unitaires + intégration .NET + Coverlet, artefact `coverage-api-unit`), **test-e2e** (build front avec `VITE_API_URL` locale + **Playwright**).
+- **Sur push vers `main` (ou `master`)** : après succès des trois jobs de test — image Docker API → Artifact Registry → Cloud Run ; build front prod (`VITE_API_URL` secret) → S3 + invalidation CloudFront.
+
+Détail des commandes et de la structure des tests : **[../testing.md](../testing.md)**.
 
 ## 1. Secrets à configurer dans le dépôt GitHub
 
@@ -48,18 +50,22 @@ Tout se configure depuis **Settings** → **Secrets and variables** → **Action
 
 ## 3. Ordre d'exécution (push sur main)
 
-1. **build-and-lint** : `pnpm install`, `pnpm run lint`, **`pnpm run test`**, build du front (`pnpm run build --filter=web`), build de l’API .NET (`dotnet publish` sur `apps/api-dotnet/MoviePicker.Api`).
-2. **docker-api** : build de l’image depuis `apps/api-dotnet/MoviePicker.Api/Dockerfile`, tag, push vers Artifact Registry (`api:sha` et `api:latest`).
-3. **deploy-api** : `gcloud run deploy` avec l’image .NET taguée par le commit, variables `MONGODB_URI` et `TMDB_API_KEY`.
-4. **deploy-front** : build du front avec `VITE_API_URL`, `aws s3 sync` vers le bucket, puis invalidation CloudFront si `AWS_CLOUDFRONT_DISTRIBUTION_ID` est défini.
+1. **lint** → puis **test-web**, **test-api**, **test-e2e** (parallèles).
+2. **docker-api** (si main/master) : image depuis `apps/api-dotnet/MoviePicker.Api/Dockerfile`, push Artifact Registry.
+3. **deploy-api** : Cloud Run avec `MONGODB_URI`, `TMDB_API_KEY`.
+4. **deploy-front** : build front avec secret `VITE_API_URL`, S3, invalidation CloudFront.
 
 ## 4. Tests
 
-Les tests sont exécutés dans le job **build-and-lint** : `pnpm run test` (Turbo lance les tests du front ; l’API déployée est .NET, les tests Node de l’ancienne API peuvent encore exister dans le monorepo).
+| Job | Contenu |
+|-----|---------|
+| **test-web** | Vitest (composants, pages, MSW, a11y), couverture, artefact HTML |
+| **test-api** | `MoviePicker.Api.Tests` + Coverlet ; `MoviePicker.Api.IntegrationTests` (Mongo vide = mémoire) |
+| **test-e2e** | Build front `VITE_API_URL=http://127.0.0.1:5010` + Playwright (API avec `E2E_STUB_TMDB=1`) |
 
-- **Web** : Vitest + React Testing Library + jsdom ; tests de composants (ex. page d’accueil).
+Référence complète : [testing.md](../testing.md), [plan-tests-stack.md](../plan-tests-stack.md).
 
-En local : `pnpm test` à la racine, ou `pnpm --filter api test` / `pnpm --filter web test`.
+En local : `pnpm test`, `pnpm run test:coverage --filter=web`, `dotnet test …`, `pnpm run test:e2e:ci`.
 
 ## 5. Politique IAM pour l'utilisateur AWS (S3 + CloudFront)
 

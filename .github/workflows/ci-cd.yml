@@ -1,6 +1,4 @@
-# CI/CD Movie Picker – build, tests (lint), déploiement API .NET (GCP) et front (AWS)
-# Déclenché sur push vers main (déploiements) et sur tout push (build/lint).
-# Secrets à configurer : voir docs/mvp/deploy-cicd.md
+# CI/CD Movie Picker — lint, tests parallèles (web, API, E2E), couverture, déploiements
 
 name: CI/CD
 
@@ -19,82 +17,104 @@ env:
   CLOUD_RUN_SERVICE_NAME: movie-picker-api
 
 jobs:
-  # --- Build et vérifications (à chaque push / PR) ---
-  build-and-lint:
-    name: Build & Lint
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint
+      - run: pnpm run lint:eslint
+      - run: pnpm run format:check
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+  test-web:
+    name: Tests front + couverture
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run test --filter=web
+      - run: pnpm run test:coverage --filter=web
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-web
+          path: apps/web/coverage
+          if-no-files-found: warn
+
+  test-api:
+    name: Tests API .NET + couverture
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Tests unitaires + couverture
+        run: |
+          dotnet test apps/api-dotnet/MoviePicker.Api.Tests/MoviePicker.Api.Tests.csproj -c Debug \
+            --collect:"XPlat Code Coverage" --results-directory ./coverage-unit
+        env:
+          MONGODB_URI: ""
+      - name: Tests intégration
+        run: dotnet test apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj -c Debug --verbosity normal
+        env:
+          MONGODB_URI: ""
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-api-unit
+          path: coverage-unit
+          if-no-files-found: warn
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+  test-e2e:
+    name: E2E Playwright
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - run: pnpm install --frozen-lockfile
+      - run: VITE_API_URL=http://127.0.0.1:5010 pnpm --filter web build
+      - run: pnpm exec playwright install chromium --with-deps
+      - run: CI=1 pnpm run test:e2e
 
-      - name: Lint (TypeScript)
-        run: pnpm run lint
-
-      - name: Lint (ESLint)
-        run: pnpm run lint:eslint
-
-      - name: Format (Prettier)
-        run: pnpm run format:check
-
-      - name: Test
-        run: pnpm run test
-
-      - name: Build web
-        run: pnpm run build --filter=web
-
-      - name: Build API .NET
-        run: dotnet publish apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj -c Release
-
-  # --- Build image Docker API et push Artifact Registry (GCP) ---
   docker-api:
     name: Docker API → Artifact Registry
     runs-on: ubuntu-latest
-    needs: build-and-lint
+    needs: [test-web, test-api, test-e2e]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     permissions:
       contents: read
       id-token: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+      - uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-
-      - name: Configure Docker for Artifact Registry
-        run: |
-          gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
-
-      - name: Build Docker image (API .NET)
-        run: |
-          docker build -f apps/api-dotnet/MoviePicker.Api/Dockerfile -t movie-picker-api apps/api-dotnet/MoviePicker.Api
-
-      - name: Tag and push to Artifact Registry
-        run: |
+      - run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
+      - run: docker build -f apps/api-dotnet/MoviePicker.Api/Dockerfile -t movie-picker-api apps/api-dotnet/MoviePicker.Api
+      - run: |
           IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPO }}/api:${{ github.sha }}"
           IMAGE_LATEST="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPO }}/api:latest"
           docker tag movie-picker-api "$IMAGE"
@@ -102,7 +122,6 @@ jobs:
           docker push "$IMAGE"
           docker push "$IMAGE_LATEST"
 
-  # --- Déploiement API sur Cloud Run ---
   deploy-api:
     name: Deploy API → Cloud Run
     runs-on: ubuntu-latest
@@ -112,18 +131,13 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+      - uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+      - uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-
-      - name: Deploy to Cloud Run
-        run: |
+      - run: |
           gcloud run deploy ${{ env.CLOUD_RUN_SERVICE_NAME }} \
             --image ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPO }}/api:${{ github.sha }} \
             --region ${{ env.GCP_REGION }} \
@@ -131,64 +145,46 @@ jobs:
             --allow-unauthenticated \
             --set-env-vars "MONGODB_URI=${{ secrets.MONGODB_URI }},TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}"
 
-  # --- Build front et déploiement S3 + CloudFront ---
   deploy-front:
     name: Deploy Front → S3 & CloudFront
     runs-on: ubuntu-latest
-    needs: build-and-lint
+    needs: [test-web, test-api, test-e2e]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build web (with API URL for production)
-        run: |
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: |
           if [ -z "$VITE_API_URL" ]; then
-            echo "::error::VITE_API_URL (secret) est vide. Définissez l'URL Cloud Run (ex. https://xxx.run.app) dans Settings → Secrets."
+            echo "::error::VITE_API_URL (secret) est vide."
             exit 1
           fi
           if echo "$VITE_API_URL" | grep -qE 'cloudfront\.net|amazonaws'; then
-            echo "::error::VITE_API_URL ne doit pas être l'URL du site (CloudFront/S3) mais l'URL de l'API (Cloud Run)."
+            echo "::error::VITE_API_URL doit être l'URL de l'API (Cloud Run)."
             exit 1
           fi
           pnpm --filter web build
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION || 'eu-west-1' }}
-
-      - name: Sync build to S3
-        run: |
+      - run: |
           aws s3 sync apps/web/dist/ s3://${{ secrets.AWS_S3_BUCKET }}/
           aws s3 cp s3://${{ secrets.AWS_S3_BUCKET }}/index.html s3://${{ secrets.AWS_S3_BUCKET }}/index.html --metadata-directive REPLACE --cache-control "no-cache, no-store, must-revalidate" --content-type "text/html"
           aws s3 cp s3://${{ secrets.AWS_S3_BUCKET }}/assets/index.js s3://${{ secrets.AWS_S3_BUCKET }}/assets/index.js --metadata-directive REPLACE --cache-control "no-cache, must-revalidate" --content-type "application/javascript"
-
-      - name: Invalidate CloudFront cache
-        if: vars.AWS_CLOUDFRONT_DISTRIBUTION_ID != ''
+      - if: vars.AWS_CLOUDFRONT_DISTRIBUTION_ID != ''
         run: |
           INV_ID=$(aws cloudfront create-invalidation \
             --distribution-id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
             --paths "/*" \
             --query 'Invalidation.Id' --output text)
-          echo "Waiting for invalidation $INV_ID..."
           aws cloudfront wait invalidation-completed \
             --distribution-id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
             --id "$INV_ID"
-          echo "Invalidation completed."

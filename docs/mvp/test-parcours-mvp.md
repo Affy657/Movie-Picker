@@ -1,6 +1,8 @@
 # Parcours complet MVP – Checklist de test
 
-À valider avant la soutenance : parcours utilisateur de bout en bout sur l'application déployée (URL CloudFront + API Cloud Run).
+À valider avant la soutenance : parcours utilisateur de bout en bout sur l'application **déployée** (URL CloudFront + API Cloud Run).
+
+**Complément automatisé (CI / local) :** le même type de parcours est couvert par des **tests E2E Playwright** (`e2e/critical-flow.spec.ts`, stub TMDB) et par les tests d’intégration API — voir [../testing.md](../testing.md).
 
 ---
 

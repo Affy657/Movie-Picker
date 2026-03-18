@@ -14,6 +14,7 @@ using MoviePicker.Api.Application.UseCases.VoteMovie;
 using MoviePicker.Api.Infrastructure.Tmdb;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 
 namespace MoviePicker.Api.Infrastructure;
 
@@ -43,22 +44,32 @@ public static class ServiceCollectionExtensions
 
         var mongoUri = configuration["MONGODB_URI"] ?? string.Empty;
         if (string.IsNullOrWhiteSpace(mongoUri))
-            throw new InvalidOperationException("MONGODB_URI est requis. Voir configuration.");
-
-        var mongoUrl = new MongoUrl(mongoUri);
-        services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoUrl));
-        services.AddSingleton(sp =>
         {
-            var client = sp.GetRequiredService<IMongoClient>();
-            return client.GetDatabase(mongoUrl.DatabaseName ?? "moviepicker");
-        });
+            // Mode test / in-memory : pas de MongoDB
+            services.AddSingleton<IEventRepository, InMemoryEventRepository>();
+            services.AddSingleton<IParticipantRepository, InMemoryParticipantRepository>();
+            services.AddSingleton<IMovieRepository, InMemoryMovieRepository>();
+            services.AddSingleton<IVoteRepository, InMemoryVoteRepository>();
+        }
+        else
+        {
+            var mongoUrl = new MongoUrl(mongoUri);
+            services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoUrl));
+            services.AddSingleton<IMongoDatabase>(sp =>
+            {
+                var client = sp.GetRequiredService<IMongoClient>();
+                return client.GetDatabase(mongoUrl.DatabaseName ?? "moviepicker");
+            });
+            services.AddScoped<IEventRepository, MongoEventRepository>();
+            services.AddScoped<IParticipantRepository, MongoParticipantRepository>();
+            services.AddScoped<IMovieRepository, MongoMovieRepository>();
+            services.AddScoped<IVoteRepository, MongoVoteRepository>();
+        }
 
-        services.AddScoped<IEventRepository, MongoEventRepository>();
-        services.AddScoped<IParticipantRepository, MongoParticipantRepository>();
-        services.AddScoped<IMovieRepository, MongoMovieRepository>();
-        services.AddScoped<IVoteRepository, MongoVoteRepository>();
-
-        services.AddHttpClient<ITmdbMovieSearch, TmdbMovieSearch>();
+        if (string.Equals(configuration["E2E_STUB_TMDB"], "1", StringComparison.Ordinal))
+            services.AddSingleton<ITmdbMovieSearch, StubTmdbMovieSearch>();
+        else
+            services.AddHttpClient<ITmdbMovieSearch, TmdbMovieSearch>();
 
         services.AddHttpContextAccessor();
         services.AddScoped<IHostTokenAccessor, HostTokenAccessor>();

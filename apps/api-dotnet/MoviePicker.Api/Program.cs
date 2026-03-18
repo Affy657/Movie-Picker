@@ -50,3 +50,6 @@ app.MapGet("/", () => Results.Json(new
 }));
 
 app.Run();
+
+/// <summary>Point d'entrée exposé pour les tests d'intégration (WebApplicationFactory).</summary>
+public partial class Program { }
