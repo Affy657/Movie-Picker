@@ -49,7 +49,7 @@ export async function fetchApi<T>(path: string, options?: RequestInit): Promise<
   if (!res.ok) {
     if (!isJson && text.trimStart().startsWith('<')) {
       throw new Error(
-        "L’API a renvoyé du HTML au lieu de JSON. Vérifiez que VITE_API_URL pointe vers l’URL de l’API (ex. Cloud Run), pas vers le site web."
+        'L’API a renvoyé du HTML au lieu de JSON. Vérifiez que VITE_API_URL pointe vers l’URL de l’API (ex. Cloud Run), pas vers le site web.'
       );
     }
     const err = (isJson ? JSON.parse(text) : { error: res.statusText }) as { error?: string };
@@ -58,7 +58,7 @@ export async function fetchApi<T>(path: string, options?: RequestInit): Promise<
   if (res.status === 204) return undefined as T;
   if (!isJson && text.trimStart().startsWith('<')) {
     throw new Error(
-      "L’API a renvoyé du HTML au lieu de JSON. Vérifiez que VITE_API_URL pointe vers l’URL de l’API (ex. Cloud Run), pas vers le site web."
+      'L’API a renvoyé du HTML au lieu de JSON. Vérifiez que VITE_API_URL pointe vers l’URL de l’API (ex. Cloud Run), pas vers le site web.'
     );
   }
   return JSON.parse(text) as Promise<T>;
