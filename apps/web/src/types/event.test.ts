@@ -31,10 +31,7 @@ describe('event storage', () => {
     });
     it('setStoredHostToken appelle setItem avec la clé et la valeur', () => {
       setStoredHostToken(slug, 'token123');
-      expect(sessionStorage.setItem).toHaveBeenCalledWith(
-        'moviepicker_host_' + slug,
-        'token123'
-      );
+      expect(sessionStorage.setItem).toHaveBeenCalledWith('moviepicker_host_' + slug, 'token123');
     });
   });
 

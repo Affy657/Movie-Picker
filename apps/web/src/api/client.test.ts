@@ -44,7 +44,9 @@ describe('fetchApi', () => {
   });
 
   it('erreur réseau renvoie message dédié', async () => {
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new TypeError('fetch failed'));
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+      new TypeError('fetch failed')
+    );
     await expect(fetchApi('/events')).rejects.toThrow(/API|connexion|impossible/i);
   });
 

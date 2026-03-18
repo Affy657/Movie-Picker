@@ -8,7 +8,10 @@ const mockSetStoredParticipant = vi.fn();
 vi.mock('../api/client', () => ({ fetchApi: (...args: unknown[]) => mockFetchApi(...args) }));
 vi.mock('../types/event', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../types/event')>();
-  return { ...actual, setStoredParticipant: (...args: unknown[]) => mockSetStoredParticipant(...args) };
+  return {
+    ...actual,
+    setStoredParticipant: (...args: unknown[]) => mockSetStoredParticipant(...args),
+  };
 });
 
 describe('JoinForm', () => {

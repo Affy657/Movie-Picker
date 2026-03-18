@@ -41,9 +41,7 @@ export function createJoinHandler(slug: string) {
 export function createSearchAndAddHandlers(slug: string) {
   return [
     http.get(`${TEST_API_BASE}/movies/search`, () =>
-      HttpResponse.json([
-        { id: 100, title: 'Film Test', year: '2024', posterPath: null },
-      ])
+      HttpResponse.json([{ id: 100, title: 'Film Test', year: '2024', posterPath: null }])
     ),
     http.post(`${TEST_API_BASE}/events/${slug}/movies`, async () =>
       HttpResponse.json({ _id: 'm-new', title: 'Film Test' }, { status: 201 })

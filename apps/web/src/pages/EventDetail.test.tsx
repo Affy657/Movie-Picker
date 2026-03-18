@@ -64,11 +64,15 @@ describe('EventDetail (MSW)', () => {
   it('après rejoindre, affiche la section Films et permet de proposer un film', async () => {
     const user = userEvent.setup();
     renderEventDetail(`/s/${slug}`);
-    await waitFor(() => expect(screen.getByRole('heading', { name: /rejoindre/i })).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: /rejoindre/i })).toBeInTheDocument()
+    );
     await user.type(screen.getByLabelText(/pseudo/i), 'Bob');
     await user.click(screen.getByRole('button', { name: /rejoindre/i }));
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: /^films$/i })).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: /^films$/i })).toBeInTheDocument()
+    );
     await user.type(screen.getByPlaceholderText(/rechercher un film/i), 'Test');
     await user.click(screen.getByRole('button', { name: /^rechercher$/i }));
     await waitFor(() => expect(screen.getByText(/film test/i)).toBeInTheDocument());

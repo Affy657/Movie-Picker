@@ -13,7 +13,10 @@ describe('accessibilité (axe)', () => {
       </MemoryRouter>
     );
     const results = await axe(container);
-    expect(results.violations, results.violations.map((v) => v.description).join('\n')).toHaveLength(0);
+    expect(
+      results.violations,
+      results.violations.map((v) => v.description).join('\n')
+    ).toHaveLength(0);
   });
 
   it('CreateEvent n’a pas de violations', async () => {
@@ -23,6 +26,9 @@ describe('accessibilité (axe)', () => {
       </MemoryRouter>
     );
     const results = await axe(container);
-    expect(results.violations, results.violations.map((v) => v.description).join('\n')).toHaveLength(0);
+    expect(
+      results.violations,
+      results.violations.map((v) => v.description).join('\n')
+    ).toHaveLength(0);
   });
 });
