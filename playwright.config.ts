@@ -18,12 +18,13 @@ export default defineConfig({
   },
   webServer: [
     {
-      command:
-        'cross-env E2E_STUB_TMDB=1 MONGODB_URI= ASPNETCORE_URLS=http://127.0.0.1:5010 dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj',
+      command: process.env.CI
+        ? 'cross-env E2E_STUB_TMDB=1 MONGODB_URI= ASPNETCORE_URLS=http://127.0.0.1:5010 dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj --no-build -c Release'
+        : 'cross-env E2E_STUB_TMDB=1 MONGODB_URI= ASPNETCORE_URLS=http://127.0.0.1:5010 dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj',
       cwd: '.',
       url: 'http://127.0.0.1:5010/health',
       reuseExistingServer: !process.env.CI,
-      timeout: 180_000,
+      timeout: process.env.CI ? 60_000 : 120_000,
     },
     {
       command: 'pnpm exec vite preview --host 127.0.0.1 --port 5174 --strictPort',

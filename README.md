@@ -39,6 +39,7 @@ Application pour organiser des soirées film : créer un event, partager le lien
 - **[Spec technique](docs/spec-technique.md)** – Stack, cloud, CI/CD
 - **[Tests](docs/testing.md)** – Vitest, API .NET, Playwright, CI (référence rapide)
 - **[Plan tests](docs/plan-tests-stack.md)** – Phases, livrables, état d’avancement
+- **[Améliorations stack avant V1](docs/mvp/ameliorations-stack-avant-v1.md)** – Sécurité, /v1, hooks, cache, CI
 - **[Features list](docs/features-list.md)** – Fonctionnalités par version (MVP, V1, V2, V3)
 - **[Consigne Ynov](docs/consigne-dev-cloud-ynov.md)** – Projet cloud
 

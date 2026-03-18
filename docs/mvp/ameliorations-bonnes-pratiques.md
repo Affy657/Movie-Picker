@@ -111,4 +111,5 @@ Synthèse des pistes d’amélioration pour aligner le projet avec les bonnes pr
 | Basse | configs/ partagés, /v1, Swagger | Organisation, évolution API |
 | Basse | Accessibilité (live, focus, skip) | UX, conformité |
 
-Ce document peut servir de **checklist** pour les prochaines itérations (V1, refacto). Les points “Haute” et “Moyenne” sont les plus rentables pour un projet déjà en production.
+Ce document peut servir de **checklist** pour les prochaines itérations (V1, refacto).  
+**→ Améliorations stack avant V1 :** [ameliorations-stack-avant-v1.md](ameliorations-stack-avant-v1.md) (sécurité, /v1, hooks, cache, CI). Les points “Haute” et “Moyenne” sont les plus rentables pour un projet déjà en production.

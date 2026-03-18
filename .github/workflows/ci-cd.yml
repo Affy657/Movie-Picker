@@ -92,6 +92,7 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       - run: pnpm install --frozen-lockfile
+      - run: dotnet build apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj -c Release
       - run: VITE_API_URL=http://127.0.0.1:5010 pnpm --filter web build
       - run: pnpm exec playwright install chromium --with-deps
       - run: CI=1 pnpm run test:e2e
