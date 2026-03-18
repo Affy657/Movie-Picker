@@ -1,4 +1,4 @@
-# CI/CD Movie Picker — lint, tests parallèles (web, API, E2E), couverture, déploiements
+# CI/CD Movie Picker — lint, tests web + API, couverture, déploiements (E2E Playwright : local uniquement)
 
 name: CI/CD
 
@@ -77,40 +77,10 @@ jobs:
           path: coverage-unit
           if-no-files-found: warn
 
-  test-e2e:
-    name: E2E Playwright
-    needs: lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-      - run: pnpm install --frozen-lockfile
-      - run: dotnet build apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj -c Release
-      - run: VITE_API_URL=http://127.0.0.1:5010 pnpm --filter web build
-      - run: pnpm exec playwright install chromium --with-deps
-      - name: E2E (API en arrière-plan + Playwright)
-        run: |
-          # --no-launch-profile : sinon launchSettings.json force le port 4000 et ignore ASPNETCORE_URLS
-          E2E_STUB_TMDB=1 MONGODB_URI= ASPNETCORE_URLS=http://127.0.0.1:5010 dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj --no-build -c Release --no-launch-profile &
-          ready=0
-          for i in $(seq 1 45); do
-            curl -sf http://127.0.0.1:5010/health && ready=1 && break
-            sleep 2
-          done
-          test "$ready" = 1 || (echo "::error::API introuvable sur :5010 (vérifiez --no-launch-profile)"; exit 1)
-          CI=1 pnpm run test:e2e
-
   docker-api:
     name: Docker API → Artifact Registry
     runs-on: ubuntu-latest
-    needs: [test-web, test-api, test-e2e]
+    needs: [test-web, test-api]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     permissions:
       contents: read
@@ -159,7 +129,7 @@ jobs:
   deploy-front:
     name: Deploy Front → S3 & CloudFront
     runs-on: ubuntu-latest
-    needs: [test-web, test-api, test-e2e]
+    needs: [test-web, test-api]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     steps:
       - uses: actions/checkout@v4

@@ -35,7 +35,7 @@ Référence : [consigne-dev-cloud-ynov.md](consigne-dev-cloud-ynov.md).
 | Front et back sur des PaaS/IaaS **différents** | Front on AWS (S3+CloudFront), Back on GCP (Cloud Run) |
 | Au moins un service AWS et un GCP | AWS: S3 + CloudFront ; GCP: Cloud Run |
 | Variables d'environnement / secrets | TMDB key, DB URL, session secret via env / Secret Manager GCP |
-| CI/CD : tests, build, déploiement | GitHub Actions : lint, tests web (Vitest + couverture), tests API .NET (unit + intégration + Coverlet), E2E Playwright, puis build image, deploy |
+| CI/CD : tests, build, déploiement | GitHub Actions : lint, tests web + API .NET, puis build image, deploy |
 | Monitoring & observabilité | CloudWatch (AWS), Cloud Monitoring / Logging (GCP) |
 | Documentation | README, architecture diagram, deployment steps |
 
@@ -58,7 +58,7 @@ Collections: `events` (id, title, date, time, hostToken, config), `participants`
 
 **Deployment & ops**  
 - Env vars and secrets (e.g. Secret Manager GCP). HTTPS.  
-- CI/CD: GitHub Actions — parallèle **lint** / **test-web** / **test-api** / **test-e2e** ; artefacts couverture ; sur `main`, Docker API, Cloud Run, build front, S3, CloudFront. Voir [testing.md](testing.md).  
+- CI/CD: GitHub Actions — **lint**, **test-web**, **test-api** ; sur `main`, Docker, Cloud Run, front. Voir [testing.md](testing.md).  
 - Monitoring: default AWS/GCP tools (CloudWatch, Cloud Monitoring / Logging).
 
 ---

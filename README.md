@@ -14,7 +14,7 @@ Application pour organiser des soirées film : créer un event, partager le lien
 - **Front** : React (Vite, TypeScript), hébergé sur **AWS** (S3 + CloudFront).
 - **Back** : API ASP.NET Core (C#, .NET 10), déployée sur **GCP** (Cloud Run, image Docker dans Artifact Registry).
 - **Données** : MongoDB Atlas. **Externe** : API TMDB (films).
-- **CI/CD** : GitHub Actions (lint, tests web + API + E2E Playwright, puis déploiement sur `main`).
+- **CI/CD** : GitHub Actions (lint, tests web + API, puis déploiement sur `main`). E2E Playwright optionnel en local.
 
 → **[Schéma d’architecture](docs/mvp/architecture.md)** (diagramme Mermaid).
 

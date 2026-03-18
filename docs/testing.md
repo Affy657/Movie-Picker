@@ -13,7 +13,7 @@ Guide centralisé de la stratégie de tests (front, API .NET, E2E, CI).
 | Couverture front | `pnpm run test:coverage --filter=web` (rapport HTML dans `apps/web/coverage/`) |
 | API unitaires | `dotnet test apps/api-dotnet/MoviePicker.Api.Tests/MoviePicker.Api.Tests.csproj` |
 | API intégration + contrat OpenAPI | `dotnet test apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj` — sans Mongo : `MONGODB_URI` vide (repos en mémoire) |
-| E2E Playwright | `pnpm run test:e2e` (après build front, voir ci-dessous) ou **`pnpm run test:e2e:ci`** (build + E2E) |
+| E2E Playwright | **Hors CI** (trop long / fragile) : en local, `pnpm run test:e2e` ou **`pnpm run test:e2e:ci`** après `pnpm exec playwright install chromium` |
 | Tous les tests unitaires front (Turbo) | `pnpm run test` |
 
 **Local .NET :** arrêter l’API si elle tourne pour éviter un verrou sur l’exe lors du build.
@@ -70,7 +70,7 @@ Fichiers notables : `App.test.tsx` (routes via **`AppRoutes`**), `EventDetail.te
 
    **Tout-en-un :** `pnpm run test:e2e:ci`
 
-3. Première installation : `pnpm exec playwright install chromium` (souvent `--with-deps` sur Linux CI).
+3. Première installation : `pnpm exec playwright install chromium` (souvent `--with-deps` sur Linux).
 
 Scénario principal (`e2e/critical-flow.spec.ts`) : création soirée → hôte + invité rejoignent → recherche stub → ajout film → hôte lance la roue → affichage du gagnant.
 
@@ -85,11 +85,10 @@ Fichier : **`.github/workflows/ci-cd.yml`**.
 | **lint** | `pnpm install`, lint TS, ESLint, Prettier check |
 | **test-web** | Vitest + couverture ; artefact **`coverage-web`** |
 | **test-api** | Tests unitaires .NET + Coverlet (artefact **`coverage-api-unit`**) + tests intégration |
-| **test-e2e** | Build front (`VITE_API_URL=http://127.0.0.1:5010`), Playwright Chromium |
-| **docker-api** | (push `main`/`master` uniquement) image Docker → Artifact Registry |
-| **deploy-api** / **deploy-front** | Après succès des jobs de test |
+| **docker-api** | (push `main`/`master`) image Docker → Artifact Registry |
+| **deploy-api** / **deploy-front** | Après **test-web** + **test-api** |
 
-Les **PR** exécutent lint + web + API + E2E. Les **déploiements** ne partent que si ces étapes passent.
+Les **E2E Playwright** ne sont **pas** lancés en CI (durée, navigateurs, sensibilité env). Le parcours critique reste couvert par les **tests d’intégration API** ; l’E2E est optionnel en local.
 
 Détail secrets et variables : [mvp/deploy-cicd.md](mvp/deploy-cicd.md).
 

@@ -1,6 +1,6 @@
 # Plan d’action – Tests (stack Movie Picker)
 
-Plan pour les tests **API .NET**, **front React**, **E2E Playwright**, couverture et CI.
+Plan pour les tests **API .NET**, **front React**, couverture et CI ; **E2E Playwright** optionnel en local.
 
 **Guide opérationnel :** [testing.md](testing.md)  
 **Référence bonnes pratiques :** [ameliorations-bonnes-pratiques.md](mvp/ameliorations-bonnes-pratiques.md) § 3.
@@ -14,7 +14,7 @@ Plan pour les tests **API .NET**, **front React**, **E2E Playwright**, couvertur
 | 1 | Tests unitaires API (handlers, TMDB, mappers, filtres) | `dotnet test` projet `MoviePicker.Api.Tests` |
 | 2 | Intégration HTTP + contrat OpenAPI | `MoviePicker.Api.IntegrationTests` |
 | 3 | Composants front, MSW, a11y, client/storage | Vitest + seuils couverture |
-| 4 | Couverture + CI parallèle + E2E | Workflow GitHub Actions |
+| 4 | Couverture + CI parallèle | Workflow GitHub Actions (E2E hors CI) |
 
 ---
 
@@ -55,8 +55,8 @@ Plan pour les tests **API .NET**, **front React**, **E2E Playwright**, couvertur
 - [x] **Vitest** : provider v8, seuils **lines 48 %**, **functions 68 %**, **branches 55 %** (`apps/web/vitest.config.ts`).
 - [x] **Coverlet** sur tests unitaires API ; artefact CI `coverage-api-unit`.
 - [x] Artefact couverture front : `coverage-web`.
-- [x] Jobs parallèles : **lint** → **test-web**, **test-api**, **test-e2e** ; déploiements après succès commun.
-- [x] **E2E** : Playwright + **`E2E_STUB_TMDB=1`** (`StubTmdbMovieSearch`) pour parcours stable sans TMDB réel.
+- [x] Jobs parallèles : **lint** → **test-web**, **test-api** ; déploiements après succès.
+- [ ] **E2E CI** : volontairement **non** (durée, navigateurs) ; parcours critique couvert par intégration API. E2E Playwright disponible en local (`e2e/`, stub TMDB).
 
 ---
 
@@ -70,7 +70,7 @@ Plan pour les tests **API .NET**, **front React**, **E2E Playwright**, couvertur
 | Stub TMDB E2E | `E2E_STUB_TMDB=1`, `Infrastructure/Tmdb/StubTmdbMovieSearch.cs` |
 | Tests front | `apps/web/src/**/*.test.{ts,tsx}` |
 | MSW | `apps/web/src/mocks/handlers.ts` |
-| E2E | `e2e/`, `playwright.config.ts`, `pnpm run test:e2e` / `test:e2e:ci` |
+| E2E (local) | `e2e/`, `pnpm run test:e2e` / `test:e2e:ci` — pas en CI |
 | CI | `.github/workflows/ci-cd.yml` |
 | Doc runbook | [testing.md](testing.md) |
 

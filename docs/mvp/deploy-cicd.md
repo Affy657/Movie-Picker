@@ -2,7 +2,7 @@
 
 Le workflow (`.github/workflows/ci-cd.yml`) assure :
 
-- **À chaque push / PR** : job **lint** (TypeScript, ESLint, Prettier), puis en parallèle **test-web** (Vitest + couverture, artefact `coverage-web`), **test-api** (tests unitaires + intégration .NET + Coverlet, artefact `coverage-api-unit`), **test-e2e** (build front avec `VITE_API_URL` locale + **Playwright**).
+- **À chaque push / PR** : job **lint**, puis en parallèle **test-web** (Vitest + couverture), **test-api** (unitaires + intégration .NET + Coverlet). Les **E2E Playwright** ne sont pas exécutés en CI (voir [../testing.md](../testing.md)).
 - **Sur push vers `main` (ou `master`)** : après succès des trois jobs de test — image Docker API → Artifact Registry → Cloud Run ; build front prod (`VITE_API_URL` secret) → S3 + invalidation CloudFront.
 
 Détail des commandes et de la structure des tests : **[../testing.md](../testing.md)**.
@@ -50,7 +50,7 @@ Tout se configure depuis **Settings** → **Secrets and variables** → **Action
 
 ## 3. Ordre d'exécution (push sur main)
 
-1. **lint** → puis **test-web**, **test-api**, **test-e2e** (parallèles).
+1. **lint** → puis **test-web**, **test-api** (parallèles).
 2. **docker-api** (si main/master) : image depuis `apps/api-dotnet/MoviePicker.Api/Dockerfile`, push Artifact Registry.
 3. **deploy-api** : Cloud Run avec `MONGODB_URI`, `TMDB_API_KEY`.
 4. **deploy-front** : build front avec secret `VITE_API_URL`, S3, invalidation CloudFront.
@@ -61,11 +61,9 @@ Tout se configure depuis **Settings** → **Secrets and variables** → **Action
 |-----|---------|
 | **test-web** | Vitest (composants, pages, MSW, a11y), couverture, artefact HTML |
 | **test-api** | `MoviePicker.Api.Tests` + Coverlet ; `MoviePicker.Api.IntegrationTests` (Mongo vide = mémoire) |
-| **test-e2e** | Build front `VITE_API_URL=http://127.0.0.1:5010` + Playwright (API avec `E2E_STUB_TMDB=1`) |
-
 Référence complète : [testing.md](../testing.md), [plan-tests-stack.md](../plan-tests-stack.md).
 
-En local : `pnpm test`, `pnpm run test:coverage --filter=web`, `dotnet test …`, `pnpm run test:e2e:ci`.
+En local : `pnpm test`, `pnpm run test:coverage --filter=web`, `dotnet test …` ; E2E optionnel : `pnpm run test:e2e:ci`.
 
 ## 5. Politique IAM pour l'utilisateur AWS (S3 + CloudFront)
 

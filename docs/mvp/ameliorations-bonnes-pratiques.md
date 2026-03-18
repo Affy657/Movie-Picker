@@ -29,7 +29,7 @@ Synthèse des pistes d’amélioration pour aligner le projet avec les bonnes pr
 
 ## 3. Tests
 
-**État actuel (stack .NET + React) :** tests unitaires API (handlers, TMDB mock, mappers, filtres), intégration HTTP (WebApplicationFactory, repos en mémoire), contrat OpenAPI ; front Vitest + MSW (EventDetail, AddMovieForm) + mocks fetchApi (CreateEvent, JoinForm) ; E2E Playwright (parcours critique avec stub TMDB) ; couverture Vitest (seuils) + Coverlet en CI ; jobs CI parallèles (lint, web, API, E2E).
+**État actuel (stack .NET + React) :** tests unitaires API (handlers, TMDB mock, mappers, filtres), intégration HTTP (WebApplicationFactory, repos en mémoire), contrat OpenAPI ; front Vitest + MSW (EventDetail, AddMovieForm) + mocks fetchApi (CreateEvent, JoinForm) ; E2E Playwright (parcours critique avec stub TMDB) ; couverture Vitest (seuils) + Coverlet en CI ; jobs CI parallèles (lint, web, API) ; E2E Playwright hors CI.
 
 **Plan / détail :** [../plan-tests-stack.md](../plan-tests-stack.md) · **Commandes :** [../testing.md](../testing.md).
 
@@ -85,7 +85,7 @@ Synthèse des pistes d’amélioration pour aligner le projet avec les bonnes pr
 ## 8. CI/CD
 
 - **Branches** : normaliser sur une seule branche principale (main ou master) pour éviter la duplication des déploiements.
-- **Workflow actuel** : jobs **lint**, **test-web** (Vitest + artefact couverture), **test-api** (unitaires + intégration .NET + Coverlet), **test-e2e** (Playwright) ; déploiements Docker / front après succès. Voir [deploy-cicd.md](deploy-cicd.md) et [testing.md](../testing.md).
+- **Workflow actuel** : jobs **lint**, **test-web**, **test-api** ; déploiements après succès. E2E : local uniquement. Voir [deploy-cicd.md](deploy-cicd.md) et [testing.md](../testing.md).
 - **Turbo** : la tâche `test` front ne dépend pas du build API .NET.
 - **Validation env** : au démarrage de l’API, valider les variables requises (MONGODB_URI en prod, etc.) et quitter avec un message clair si une variable manque.
 

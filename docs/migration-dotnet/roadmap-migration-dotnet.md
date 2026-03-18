@@ -120,4 +120,4 @@ Améliorations post-migration (front) : lien invités sans token hôte + lien h�
 
 > **Doc :** [contexte-et-perimetre.md](contexte-et-perimetre.md) – périmètre. [../mvp/roadmap-mvp.md](../mvp/roadmap-mvp.md) § 17, [../features-list.md](../features-list.md) § Migration back .NET.
 
-**Tests (post-migration)** : suite Vitest + MSW + Playwright E2E, tests unitaires/intégration .NET, contrat OpenAPI, CI parallèle — [../testing.md](../testing.md), [../plan-tests-stack.md](../plan-tests-stack.md).
+**Tests (post-migration)** : Vitest + MSW, unitaires/intégration .NET, contrat OpenAPI ; E2E Playwright optionnel en local — [../testing.md](../testing.md), [../plan-tests-stack.md](../plan-tests-stack.md).

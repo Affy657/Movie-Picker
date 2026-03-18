@@ -88,7 +88,7 @@ Liste de tout ce qu'il y a dans le site (vision cible), puis UX/UI, cas limites 
 - **Rate limiting** : limitation du nombre de créations de soirées, propositions et votes par IP (ou par session) pour éviter les abus et le spam.
 - **Sécurité technique** : communication en **HTTPS** ; mots de passe stockés hashés (bcrypt, Argon2 ou équivalent), jamais en clair ; clé API films (TMDB/OMDB) utilisée **côté serveur uniquement** (pas d'exposition au client).
 - **Environnement / déploiement** : variables d'environnement pour la config (URL de l'API, clé TMDB/OMDB, secret de session, URL front, connexion BDD) ; documentation des étapes de déploiement (voir consigne du projet).
-- **CI/CD** : lint, tests automatisés (front Vitest + couverture, API .NET unitaires + intégration + Coverlet, E2E Playwright), build, déploiement — voir [testing.md](testing.md), [plan-tests-stack.md](plan-tests-stack.md), [mvp/deploy-cicd.md](mvp/deploy-cicd.md).
+- **CI/CD** : lint, tests (front Vitest + couverture, API .NET unitaires + intégration + Coverlet), build, déploiement ; E2E navigateur optionnel en local — voir [testing.md](testing.md), [mvp/deploy-cicd.md](mvp/deploy-cicd.md).
 - **Monitoring** : logs, métriques (créations, votes, tirages).
 
 ---
