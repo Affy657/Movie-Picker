@@ -154,7 +154,16 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build web (with API URL for production)
-        run: pnpm --filter web build
+        run: |
+          if [ -z "$VITE_API_URL" ]; then
+            echo "::error::VITE_API_URL (secret) est vide. Définissez l'URL Cloud Run (ex. https://xxx.run.app) dans Settings → Secrets."
+            exit 1
+          fi
+          if echo "$VITE_API_URL" | grep -qE 'cloudfront\.net|amazonaws'; then
+            echo "::error::VITE_API_URL ne doit pas être l'URL du site (CloudFront/S3) mais l'URL de l'API (Cloud Run)."
+            exit 1
+          fi
+          pnpm --filter web build
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
 

@@ -22,11 +22,29 @@ export function apiUrl(path: string): string {
   return `${API_BASE.replace(/\/$/, '')}${p}`;
 }
 
+/** Vérifie que l'API ne pointe pas vers le même site (CloudFront) — erreur de config au build. */
+function ensureApiIsNotFrontOrigin(url: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const apiOrigin = new URL(url).origin;
+    if (apiOrigin === window.location.origin) {
+      throw new Error(
+        "Configuration incorrecte : l'URL de l'API pointe vers ce site au lieu de l'API. " +
+          "Vérifiez le secret VITE_API_URL (doit être l'URL Cloud Run, ex. https://xxx.run.app). " +
+          "Puis redéployez le front et faites un rechargement forcé (Ctrl+Shift+R)."
+      );
+    }
+  } catch (e) {
+    if (e instanceof Error && e.message.startsWith('Configuration incorrecte')) throw e;
+  }
+}
+
 const NETWORK_ERROR_MSG =
   'Impossible de joindre l’API. Vérifiez que l’API est démarrée (pnpm dev:api) et votre connexion.';
 
 export async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
   const url = apiUrl(path);
+  ensureApiIsNotFrontOrigin(url);
   let res: Response;
   try {
     res = await fetch(url, {
