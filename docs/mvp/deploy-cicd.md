@@ -126,6 +126,7 @@ IAM → Utilisateurs → ton utilisateur → Ajouter des autorisations → Crée
 ## 6. Dépannage
 
 - **Erreur d'auth GCP** : vérifier que `GCP_SA_KEY` est le JSON complet du compte de service et que le compte a bien *Artifact Registry Writer* et *Cloud Run Admin*.
+- **« Secret Manager API has not been used… or it is disabled »** au déploiement Cloud Run : activer l’API sur le projet — [console Secret Manager API](https://console.cloud.google.com/apis/library/secretmanager.googleapis.com) → **Enable**, ou `gcloud services enable secretmanager.googleapis.com --project=TON_PROJECT_ID`. Le workflow **deploy-api** exécute aussi cette commande (idempotent) si le compte de `GCP_SA_KEY` peut activer des services ; sinon fait-le une fois à la main (propriétaire / *Editor*), attends 1–2 min, relance le job. Détail : [deploy-gcp-api.md](deploy-gcp-api.md) § 2.
 - **Cloud Run « Container failed to start »** : vérifier les secrets **Secret Manager** (`MONGODB_URI`, `TMDB_API_KEY`), les IAM **Secret Accessor** (runtime + déploiement), et la variable **`ALLOWED_ORIGINS`** (obligatoire hors dev ; sinon l’API refuse de démarrer).
 - **Deploy API « permission denied » sur secrets** : accorder **Secret Manager Secret Accessor** sur `MONGODB_URI` et `TMDB_API_KEY` au compte de service de **GCP_SA_KEY** et au compte d’exécution Cloud Run.
 - **Front ne pointe pas vers la bonne API** : vérifier que `VITE_API_URL` est exactement l'URL HTTPS de ton service Cloud Run (sans slash final).

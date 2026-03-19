@@ -10,7 +10,20 @@ Build **depuis la racine du repo** :
 docker build -f apps/api-dotnet/MoviePicker.Api/Dockerfile -t movie-picker-api apps/api-dotnet/MoviePicker.Api
 ```
 
-## 2. Artifact Registry (GCP)
+## 2. Prérequis API GCP — Secret Manager
+
+Le déploiement Cloud Run avec **`--set-secrets`** (CI/CD ou `gcloud run deploy`) exige que l’**API Secret Manager** soit **activée** sur le projet.
+
+- **Console** : [activer Secret Manager API](https://console.cloud.google.com/apis/library/secretmanager.googleapis.com) (choisir le bon projet), bouton **Enable**.
+- **CLI** (compte avec droit d’activer des services, ex. *Editor* sur le projet) :
+
+```bash
+gcloud services enable secretmanager.googleapis.com --project=VOTRE_PROJECT_ID
+```
+
+Si l’API vient d’être activée, attendre **1–2 minutes** avant de relancer le déploiement.
+
+## 3. Artifact Registry (GCP)
 
 1. Créer un dépôt d'images dans [Artifact Registry](https://console.cloud.google.com/artifacts).
 2. Exemple : région `europe-west1`, dépôt `movie-picker`.
@@ -34,7 +47,7 @@ gcloud auth login
 gcloud auth configure-docker europe-west1-docker.pkg.dev
 ```
 
-## 3. Cloud Run
+## 4. Cloud Run
 
 1. [Cloud Run](https://console.cloud.google.com/run) → Créer un service.
 2. Choisir l'image depuis Artifact Registry.
@@ -44,11 +57,11 @@ gcloud auth configure-docker europe-west1-docker.pkg.dev
 
 **Sécurité (résumé)** : CORS restreint, rate limiting sur création d’event / join / recherche films, en-têtes `X-Content-Type-Options` / `X-Frame-Options` — voir code dans `Program.cs` et `Infrastructure/Web/`.
 
-## 4. Vérification
+## 5. Vérification
 
 Appeler `https://VOTRE_URL/health` : la réponse doit être `{"status":"ok","service":"movie-picker-api"}`.
 
-## 5. Dépannage : « Container failed to start and listen on the port »
+## 6. Dépannage : « Container failed to start and listen on the port »
 
 - **MongoDB** : fournir `MONGODB_URI` via Secret Manager (ou variable d’environnement en dev). Sans connexion Mongo valable en prod, le comportement dépend de la config (voir roadmap § 24 pour validation stricte au démarrage).
 - **`ALLOWED_ORIGINS`** : obligatoire en production ; sinon exception au démarrage.

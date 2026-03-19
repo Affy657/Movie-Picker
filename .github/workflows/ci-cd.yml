@@ -139,6 +139,8 @@ jobs:
       - uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: Activer l’API Secret Manager (obligatoire pour --set-secrets ; idempotent)
+        run: gcloud services enable secretmanager.googleapis.com --project="${{ secrets.GCP_PROJECT_ID }}"
       - name: Deploy Cloud Run (secrets GCP + CORS)
         env:
           # Variables (recommandé) ou Secret de secours si tu as tout mis dans Secrets
