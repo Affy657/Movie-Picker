@@ -2,7 +2,8 @@
 
 Stack, cloud, CI/CD, base de données.  
 Pour les features par version, voir [features-list.md](features-list.md).  
-Référence : [consigne-dev-cloud-ynov.md](dev%20cloud%20ynov/consigne-dev-cloud-ynov.md).
+Référence : [consigne-dev-cloud-ynov.md](dev%20cloud%20ynov/consigne-dev-cloud-ynov.md).  
+Outils CLI (GCP, AWS, GitHub, stack locale) : [outils-environnement.md](outils-environnement.md).
 
 ---
 

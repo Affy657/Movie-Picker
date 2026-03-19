@@ -1,40 +1,35 @@
-# Mises à jour de dépendances (roadmap § 26) — PR hebdomadaires à examiner / merger.
+# Mises à jour de dépendances (roadmap § 26)
+# Politique « peu de PRs » : calendrier mensuel + une PR groupée par écosystème
+# (évite la pluie de PR au premier run ou chaque semaine).
 version: 2
 updates:
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: weekly
-      day: monday
-    open-pull-requests-limit: 8
+      interval: monthly
+    open-pull-requests-limit: 3
     groups:
-      web-vite:
+      # Monorepo pnpm (racine + workspace apps/*) → un seul bump npm par cycle
+      npm-all:
         patterns:
-          - "vite"
-          - "@vitejs/*"
-          - "vitest"
-          - "@vitest/*"
-      web-react:
-        patterns:
-          - "react"
-          - "react-dom"
-          - "@types/react*"
-      eslint-prettier:
-        patterns:
-          - "eslint*"
-          - "@typescript-eslint/*"
-          - "prettier"
+          - "*"
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
-      day: monday
-    open-pull-requests-limit: 5
+      interval: monthly
+    open-pull-requests-limit: 2
+    groups:
+      actions-all:
+        patterns:
+          - "*"
 
   - package-ecosystem: nuget
     directory: /apps/api-dotnet
     schedule:
-      interval: weekly
-      day: monday
-    open-pull-requests-limit: 5
+      interval: monthly
+    open-pull-requests-limit: 2
+    groups:
+      nuget-all:
+        patterns:
+          - "*"

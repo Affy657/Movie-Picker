@@ -98,7 +98,7 @@ Tout se configure depuis **Settings** → **Secrets and variables** → **Action
 ### Audit npm et Dependabot (§ 26)
 
 - **`pnpm audit --audit-level=high`** : exécuté à la fin du job **Lint** (échec si vulnérabilité **high** ou **critical**). En local : `pnpm run audit` à la racine.
-- **Dependabot** : fichier `.github/dependabot.yml` — PR hebdomadaires pour **npm** (racine / monorepo pnpm), **GitHub Actions** et **NuGet** (`apps/api-dotnet`). Merger ou ajuster selon les besoins ; cela couvre le suivi des dépendances prévu roadmap.
+- **Dependabot** : fichier `.github/dependabot.yml` — vérification **mensuelle**, mises à jour **groupées** (une PR par écosystème : npm monorepo, Actions, NuGet) pour limiter le nombre de PR. Merger ou ajuster selon les besoins ; cela couvre le suivi des dépendances prévu roadmap.
 
 ## 4. Tests
 

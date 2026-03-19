@@ -48,6 +48,7 @@ Application pour organiser des soirées film : créer un event, partager le lien
 | [Déploiement GCP / AWS](docs/mvp/deploy-gcp-api.md), [deploy-aws-front](docs/mvp/deploy-aws-front.md) | Première mise en prod |
 | [Monitoring](docs/mvp/monitoring.md) | Logs, métriques |
 | [Consigne Ynov](docs/dev%20cloud%20ynov/consigne-dev-cloud-ynov.md) | Exigences projet |
+| [Outils & environnement](docs/outils-environnement.md) | CLI GCP / AWS / GitHub, stack locale, scripts |
 
 ## Prérequis
 
