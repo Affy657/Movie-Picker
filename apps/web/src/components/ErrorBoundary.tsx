@@ -33,8 +33,8 @@ export class ErrorBoundary extends Component<Props, State> {
             {this.state.error.message}
           </p>
           <p className="muted">
-            Vous pouvez recharger la page ou retourner à l&apos;accueil. Si le problème persiste, essayez de vider le
-            cache du navigateur.
+            Vous pouvez recharger la page ou retourner à l&apos;accueil. Si le problème persiste,
+            essayez de vider le cache du navigateur.
           </p>
           <div className="error-boundary-actions">
             <button

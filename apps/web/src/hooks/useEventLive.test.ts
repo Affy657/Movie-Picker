@@ -22,7 +22,9 @@ describe('useEventLive / polling helpers', () => {
   });
 
   it('event query : poll si actif', () => {
-    expect(getLivePollingRefetchIntervalForEventQuery(activeEvent)).toBe(EVENT_LIVE_POLL_INTERVAL_MS);
+    expect(getLivePollingRefetchIntervalForEventQuery(activeEvent)).toBe(
+      EVENT_LIVE_POLL_INTERVAL_MS
+    );
   });
 
   it('movies query : pas de poll si disabled ou sans event ou terminé', () => {
@@ -38,9 +40,7 @@ describe('useEventLive / polling helpers', () => {
   });
 
   it('useEventLive expose strategy polling et interval films', () => {
-    const { result } = renderHook(() =>
-      useEventLive(activeEvent, { moviesQueryEnabled: true })
-    );
+    const { result } = renderHook(() => useEventLive(activeEvent, { moviesQueryEnabled: true }));
     expect(result.current.strategy).toBe('polling');
     expect(result.current.pollIntervalMs).toBe(EVENT_LIVE_POLL_INTERVAL_MS);
     expect(result.current.moviesRefetchInterval).toBe(EVENT_LIVE_POLL_INTERVAL_MS);
