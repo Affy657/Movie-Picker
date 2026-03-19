@@ -45,7 +45,7 @@ echo -n 'votre_cle_tmdb' | gcloud secrets create TMDB_API_KEY --data-file=-
 
 3. **Accès au déploiement** : le compte de service dont la clé est `GCP_SA_KEY` doit aussi pouvoir utiliser ces secrets au moment du `gcloud run deploy` (**Secret Accessor** sur les mêmes secrets).
 
-4. **CORS** : ajouter la variable de dépôt **`ALLOWED_ORIGINS`** (onglet **Variables**, pas Secrets) : l’**origine** exacte du front (ex. `https://d1234567890.cloudfront.net`, **sans** slash final). Plusieurs origines : séparées par des **virgules**. Si elle est vide, le job **deploy-api** échoue volontairement.
+4. **CORS** : ajouter **`ALLOWED_ORIGINS`** — de préférence en **variable** de dépôt (onglet **Variables**), ou en **secret** du même nom si tout est déjà dans Secrets. Valeur = **origine** exacte du front (ex. `https://d1234567890.cloudfront.net`, **sans** slash final). Plusieurs origines : **virgules**. Si vide, le job **deploy-api** échoue (message d’erreur dans les logs avec le chemin GitHub).
 
 ### Variables (Settings → Variables)
 
@@ -53,7 +53,7 @@ Tu peux configurer le workflow sans toucher au YAML en ajoutant des **Variables*
 
 | Variable | Description | Défaut |
 |----------|-------------|--------|
-| **`ALLOWED_ORIGINS`** | **Obligatoire pour deploy-api** : origine(s) du front pour CORS (ex. `https://xxx.cloudfront.net`). Virgule si plusieurs. | — |
+| **`ALLOWED_ORIGINS`** | **Obligatoire pour deploy-api** : origine(s) du front pour CORS (ex. `https://xxx.cloudfront.net`). Virgule si plusieurs. **Variable** ou **secret** (le workflow prend la variable, sinon le secret). | — |
 | `AWS_REGION` | Région AWS pour S3/CloudFront. | `eu-west-1` |
 | `AWS_CLOUDFRONT_DISTRIBUTION_ID` | ID de la distribution CloudFront (invalidation du cache). Si vide, l'étape d'invalidation est ignorée. | — |
 | `GCP_REGION` | Région GCP (modifier le workflow si besoin). | `europe-west1` |

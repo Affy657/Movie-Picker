@@ -140,9 +140,16 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
       - name: Deploy Cloud Run (secrets GCP + CORS)
+        env:
+          # Variables (recommandé) ou Secret de secours si tu as tout mis dans Secrets
+          ALLOWED_ORIGINS_VARS: ${{ vars.ALLOWED_ORIGINS }}
+          ALLOWED_ORIGINS_SECRET: ${{ secrets.ALLOWED_ORIGINS }}
         run: |
-          if [ -z "${{ vars.ALLOWED_ORIGINS }}" ]; then
-            echo "::error::Variable ALLOWED_ORIGINS (Actions → Variables) est vide. Ex. https://d1234567890.cloudfront.net (origine du front, sans slash final)."
+          CORS="${ALLOWED_ORIGINS_VARS:-$ALLOWED_ORIGINS_SECRET}"
+          if [ -z "$CORS" ]; then
+            echo "::error::ALLOWED_ORIGINS est vide. Définis-la au choix :"
+            echo "::error::  • GitHub → Settings → Secrets and variables → Actions → Variables → New repository variable : ALLOWED_ORIGINS = https://TON_ID.cloudfront.net (sans slash final ; plusieurs origines : virgules)"
+            echo "::error::  • ou Secret du même nom (ALLOWED_ORIGINS) si tu préfères."
             exit 1
           fi
           gcloud run deploy ${{ env.CLOUD_RUN_SERVICE_NAME }} \
@@ -151,7 +158,7 @@ jobs:
             --platform managed \
             --allow-unauthenticated \
             --set-secrets "MONGODB_URI=MONGODB_URI:latest,TMDB_API_KEY=TMDB_API_KEY:latest" \
-            --set-env-vars "ALLOWED_ORIGINS=${{ vars.ALLOWED_ORIGINS }}"
+            --set-env-vars "ALLOWED_ORIGINS=$CORS"
 
   deploy-front:
     name: Deploy Front → S3 & CloudFront
