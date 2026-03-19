@@ -19,6 +19,7 @@ out/
 .env.development
 .env.production
 *.pem
+.tmp-gcp-secret
 
 # IDE and OS
 .idea/

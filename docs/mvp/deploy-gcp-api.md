@@ -23,6 +23,10 @@ gcloud services enable secretmanager.googleapis.com --project=VOTRE_PROJECT_ID
 
 Si l’API vient d’être activée, attendre **1–2 minutes** avant de relancer le déploiement.
 
+### IAM : qui peut lire les secrets au runtime ?
+
+Cloud Run injecte les secrets référencés par `--set-secrets` dans le conteneur. Le **compte de service de la révision** (souvent le compte Compute par défaut `PROJECT_NUMBER-compute@developer.gserviceaccount.com`) doit avoir **`roles/secretmanager.secretAccessor`** sur chaque secret, sinon le déploiement échoue avec *Permission denied on secret* pour ce compte. Ce n’est **pas** résolu en activant seulement l’API Secret Manager — il faut une **liaison IAM** sur les secrets (voir [deploy-cicd.md](deploy-cicd.md) § 1 bis, étape 2).
+
 ## 3. Artifact Registry (GCP)
 
 1. Créer un dépôt d'images dans [Artifact Registry](https://console.cloud.google.com/artifacts).

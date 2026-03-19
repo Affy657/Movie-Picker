@@ -41,7 +41,28 @@ echo -n 'mongodb+srv://...' | gcloud secrets create MONGODB_URI --data-file=-
 echo -n 'votre_cle_tmdb' | gcloud secrets create TMDB_API_KEY --data-file=-
 ```
 
-2. **Accès en exécution** : le compte de service **runtime** de Cloud Run (souvent `PROJECT_NUMBER-compute@developer.gserviceaccount.com`) doit avoir le rôle **Secret Manager Secret Accessor** sur chaque secret (Console GCP → Secret Manager → secret → onglet *Autorisations*, ou `gcloud secrets add-iam-policy-binding`).
+2. **Accès en exécution (obligatoire — erreur fréquente après activation de l’API)** : ce n’est **pas** le même sujet que d’activer l’API Secret Manager. Au déploiement, Google vérifie que le **compte de service de la révision Cloud Run** peut **lire** les secrets. Par défaut, c’est souvent le compte **Compute Engine par défaut** :  
+   `PROJECT_NUMBER-compute@developer.gserviceaccount.com`  
+   (le `PROJECT_NUMBER` s’affiche dans le message d’erreur CI, ex. `353234044853-compute@developer.gserviceaccount.com`). Il doit avoir **`roles/secretmanager.secretAccessor`** sur **`MONGODB_URI`** et **`TMDB_API_KEY`** (ou au niveau projet).
+
+   **Console** : [Secret Manager](https://console.cloud.google.com/security/secret-manager) → ouvrir chaque secret → **Autorisations** → **Accorder l’accès** → principal = ce compte de service → rôle **Secret Manager Secret Accessor**.
+
+   **CLI** (remplacer `VOTRE_PROJECT_ID` ; optionnel : récupérer le numéro avec `gcloud projects describe VOTRE_PROJECT_ID --format='value(projectNumber)'`) :
+
+```bash
+PROJECT="VOTRE_PROJECT_ID"
+NUM="$(gcloud projects describe "$PROJECT" --format='value(projectNumber)')"
+SA="${NUM}-compute@developer.gserviceaccount.com"
+
+for S in MONGODB_URI TMDB_API_KEY; do
+  gcloud secrets add-iam-policy-binding "$S" \
+    --project="$PROJECT" \
+    --member="serviceAccount:${SA}" \
+    --role="roles/secretmanager.secretAccessor"
+done
+```
+
+   Si ton service Cloud Run utilise un **compte de service dédié** (`gcloud run services describe … --format='value(spec.template.spec.serviceAccountName)'`), accorde **Secret Accessor** à **ce** compte-là, pas forcément au `-compute@`.
 
 3. **Accès au déploiement** : le compte de service dont la clé est `GCP_SA_KEY` doit aussi pouvoir utiliser ces secrets au moment du `gcloud run deploy` (**Secret Accessor** sur les mêmes secrets).
 
@@ -128,7 +149,7 @@ IAM → Utilisateurs → ton utilisateur → Ajouter des autorisations → Crée
 - **Erreur d'auth GCP** : vérifier que `GCP_SA_KEY` est le JSON complet du compte de service et que le compte a bien *Artifact Registry Writer* et *Cloud Run Admin*.
 - **« Secret Manager API has not been used… or it is disabled »** au déploiement Cloud Run : activer l’API sur le projet — [console Secret Manager API](https://console.cloud.google.com/apis/library/secretmanager.googleapis.com) → **Enable**, ou `gcloud services enable secretmanager.googleapis.com --project=TON_PROJECT_ID`. Le workflow **deploy-api** exécute aussi cette commande (idempotent) si le compte de `GCP_SA_KEY` peut activer des services ; sinon fait-le une fois à la main (propriétaire / *Editor*), attends 1–2 min, relance le job. Détail : [deploy-gcp-api.md](deploy-gcp-api.md) § 2.
 - **Cloud Run « Container failed to start »** : vérifier les secrets **Secret Manager** (`MONGODB_URI`, `TMDB_API_KEY`), les IAM **Secret Accessor** (runtime + déploiement), et la variable **`ALLOWED_ORIGINS`** (obligatoire hors dev ; sinon l’API refuse de démarrer).
-- **Deploy API « permission denied » sur secrets** : accorder **Secret Manager Secret Accessor** sur `MONGODB_URI` et `TMDB_API_KEY` au compte de service de **GCP_SA_KEY** et au compte d’exécution Cloud Run.
+- **Deploy API « permission denied » sur secrets** (`Revision service account … must be granted … Secret Accessor`) : l’erreur cite un compte du type `NNNN-compute@developer.gserviceaccount.com` — c’est le **runtime** Cloud Run, pas GitHub. Accorder **`roles/secretmanager.secretAccessor`** sur **`MONGODB_URI`** et **`TMDB_API_KEY`** à **ce** compte (voir § 1 bis, étape 2). Vérifier aussi **GCP_SA_KEY** si le message parle du compte de déploiement.
 - **Front ne pointe pas vers la bonne API** : vérifier que `VITE_API_URL` est exactement l'URL HTTPS de ton service Cloud Run (sans slash final).
 - **S3 « not authorized to perform: s3:ListBucket »** : voir ci‑dessous.
 - **S3 / CloudFront** : vérifier les droits IAM de l'utilisateur dont les clés sont dans `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` (S3 + CloudFront).
