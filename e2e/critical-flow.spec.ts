@@ -1,9 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Parcours critique', () => {
-  test('créer soirée → invité rejoint → propose film → hôte lance la roue', async ({
-    browser,
-  }) => {
+  test('créer soirée → invité rejoint → propose film → hôte lance la roue', async ({ browser }) => {
     const hostPage = await browser.newPage();
     const guestPage = await browser.newPage();
 
@@ -30,7 +28,10 @@ test.describe('Parcours critique', () => {
     await guestPage.getByPlaceholder(/rechercher un film/i).fill('stub');
     await guestPage.getByRole('button', { name: /^rechercher$/i }).click();
     await expect(guestPage.getByText(/film e2e stub/i)).toBeVisible();
-    await guestPage.getByRole('button', { name: /^ajouter$/i }).first().click();
+    await guestPage
+      .getByRole('button', { name: /^ajouter$/i })
+      .first()
+      .click();
 
     await expect(hostPage.getByText(/film e2e stub/i)).toBeVisible({ timeout: 15_000 });
 

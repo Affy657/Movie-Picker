@@ -3,13 +3,14 @@
 Suite de tâches à suivre de maintenant jusqu'à la fin du MVP.  
 Références : [spec-technique.md](../spec-technique.md), [features-list.md](../features-list.md) (Features list).
 
-Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant l'ordre des sections.
+Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant l'ordre des sections.  
+**Après le MVP (§ 16)** : migration .NET (§ 17), puis **§ 18–22** (qualité, tests, CI, E2E local — livrés). **§ 23–28** : pistes stack **avant la V1**. **§ 29–32** : compléments robustesse (correlation ID, erreurs JSON, front, `dotnet format`, contrat OpenAPI). **§ 28** : nom de domaine.
 
 ---
 
 ## 1. Prérequis
 
-> **Guide détaillé :** [PREREQUIS.md](../../PREREQUIS.md) – instructions et liens pour chaque point.
+> **Prérequis :** [README racine](../../README.md) (section *Prérequis*), `node scripts/check-prereqs.js`, `dotnet --version`.
 
 - [x] Créer / avoir un dépôt GitHub pour le projet
 - [x] Avoir un compte AWS (accès S3, CloudFront)
@@ -137,7 +138,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ## 14. CI/CD (GitHub Actions)
 
-- [x] Créer un workflow : sur push (ex. main), lancer les tests (si présents), build des deux apps
+- [x] Créer un workflow : sur push (ex. `master`), lancer les tests (si présents), build des deux apps
 - [x] Ajouter le job de build de l'image Docker de l'API et push vers Artifact Registry (GCP)
 - [x] Ajouter le job de déploiement vers Cloud Run (API)
 - [x] Ajouter le job de déploiement du front (upload S3, invalidation CloudFront si besoin)
@@ -154,7 +155,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 - [x] Rédiger le README : but du projet, architecture, services utilisés, instructions de déploiement
 - [x] Ajouter un schéma d'architecture (diagramme)
 
-> **Doc :** [monitoring.md](monitoring.md) – où voir les logs (Cloud Logging) et les métriques (Cloud Run, CloudFront). [architecture.md](architecture.md) – schéma d'architecture (Mermaid).
+> **Doc :** [monitoring.md](monitoring.md) – où voir les logs (Cloud Logging) et les métriques (Cloud Run, CloudFront). [Schéma d'architecture](../dev%20cloud%20ynov/architecture.md) (Mermaid).
 
 ---
 
@@ -164,7 +165,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 - [x] Vérifier que la consigne Ynov est couverte (front et back sur AWS et GCP, CI/CD, monitoring, doc)
 - [x] Préparer la soutenance (présentation 15–20 min)
 
-> **Docs :** [test-parcours-mvp.md](test-parcours-mvp.md) – checklist du parcours complet à valider avant la soutenance. [verification-consigne-ynov.md](verification-consigne-ynov.md) – vérification que la consigne Ynov est couverte. [soutenance.md](soutenance.md) – guide pour la présentation 15–20 min (structure, démo, points à montrer).
+> **Docs :** [README racine](../../README.md) (démarrage, commandes de test). [Consigne Ynov](../dev%20cloud%20ynov/consigne-dev-cloud-ynov.md). [deploy-cicd.md](deploy-cicd.md) (CI, couverture).
 
 ---
 
@@ -177,14 +178,160 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 - [x] Adapter Dockerfile et CI/CD (build .NET, push image, déploiement Cloud Run)
 - [x] Valider le parcours complet avec le front inchangé ; retirer l’ancienne API Node
 
-> **Doc :** [../migration-dotnet/contexte-et-perimetre.md](../migration-dotnet/contexte-et-perimetre.md) – avantages/inconvénients, recommandations, périmètre. [Roadmap migration .NET](../migration-dotnet/roadmap-migration-dotnet.md) – suivi détaillé des tâches. Voir aussi [features-list.md](../features-list.md) § Migration back .NET.
+> **Doc :** [architecture-api-dotnet.md](../architecture-api-dotnet.md) (contrat : Swagger + `OpenApiContractTests.cs`). Contexte migration : [features-list.md](../features-list.md) § *Migration back .NET*.
 
 ---
 
-## Bonus. Tests automatisés
+## Post-MVP (après § 16–17) — livrés
 
-- [x] Tests API (Vitest + supertest + mongodb-memory-server) : health, création event, join, parcours complet
-- [x] Tests front (Vitest + React Testing Library + jsdom) : au moins la page d'accueil
-- [x] Script `pnpm test` à la racine (Turbo) et exécution des tests dans la CI (job Build & Lint)
+Travaux réalisés après la clôture fonctionnelle du MVP et la migration .NET, regroupés par thème.
 
-> **En local :** `pnpm test`. **CI :** les tests s'exécutent à chaque push/PR avant le build. Voir [deploy-cicd.md](deploy-cicd.md) § 4.
+---
+
+### 18. Qualité du code (lint & format)
+
+- [x] **ESLint** (`@typescript-eslint`) à la racine, script `lint:eslint`
+- [x] **Prettier** (`.prettierrc`), scripts `format` / `format:check`
+- [x] CI : exécution ESLint + Prettier check dans le job **lint** (en plus du `tsc --noEmit` front)
+
+> Suite qualité avant V1 : § **29–32** (correlation ID, erreurs JSON, front, C#, OpenAPI).
+
+---
+
+### 19. Tests automatisés — API .NET
+
+- [x] Projet **`MoviePicker.Api.Tests`** (xUnit, Moq, Coverlet) : tous les handlers (CreateEvent, Join, GetDetail, AddMovie, Vote, DeleteMovie, ListMovies, LaunchWheel, Close)
+- [x] Tests **TmdbMovieSearch** (HttpClient mocké)
+- [x] Tests mappers Mongo + **MoviePickerExceptionFilter**
+- [x] **Builders** de test (`EventEntityBuilder`, `CreateEventRequestBuilder`)
+- [x] Projet **`MoviePicker.Api.IntegrationTests`** (WebApplicationFactory, repos **en mémoire** si `MONGODB_URI` vide) : parcours HTTP critique (health, create, join, films, vote, roue, close)
+- [x] **Contrat OpenAPI** : test sur `/swagger/v1/swagger.json` (chemins `/health`, `POST /events`, etc.)
+- [x] **Stub TMDB** (`E2E_STUB_TMDB=1`) pour scénarios E2E locaux
+
+> Voir [deploy-cicd.md](deploy-cicd.md) § 4 (tests en CI), [README racine](../../README.md) (commandes locales).
+
+---
+
+### 20. Tests automatisés — Front (React)
+
+- [x] **Vitest** + Testing Library : Home, CreateEvent, JoinForm, MovieList, WheelSection, **EventDetail**, **AddMovieForm**, **ShareLink**, routes via **`AppRoutes`**
+- [x] **MSW** pour EventDetail / AddMovieForm ; **vi.mock** `fetchApi` pour CreateEvent / JoinForm
+- [x] Tests **client API** (`fetchApi`, erreurs) et **storage** (`sessionStorage` event)
+- [x] **Accessibilité** : `vitest-axe` sur Home et CreateEvent
+- [x] **Seuils de couverture** Vitest (v8) dans `vitest.config.ts`
+- [x] Correctif **EventDetail** : effet de polling (rafraîchissement 5 s) placé **avant** les retours conditionnels (règles des hooks React)
+
+---
+
+### 21. CI/CD — Pipeline parallèle & couverture
+
+- [x] Jobs séparés après **lint** : **test-web** (Vitest + `test:coverage` via Turbo), **test-api** (unitaires + intégration .NET + collecte Coverlet)
+- [x] Artefacts **couverture** (`coverage-web`, `coverage-api-unit`)
+- [x] Script racine **`test:coverage`** + tâche Turbo **`test:coverage`**
+- [x] Déploiements (**docker-api**, **deploy-front**) conditionnés à **test-web** + **test-api** uniquement (E2E Playwright **hors CI** : durée / fragilité)
+
+> Voir [deploy-cicd.md](deploy-cicd.md), [.github/workflows/ci-cd.yml](../../.github/workflows/ci-cd.yml).
+
+---
+
+### 22. E2E navigateur (optionnel, local)
+
+- [x] **Playwright** : scénario `e2e/critical-flow.spec.ts` (création → join → film → roue)
+- [x] Config **`playwright.config.ts`** : API sur `:5010` avec **`--no-launch-profile`** (sinon port 4000 depuis launchSettings)
+- [ ] Exécution **manuelle** en local : `pnpm run test:e2e` / `test:e2e:ci` après `pnpm exec playwright install chromium` — **non bloquant** en CI
+
+---
+
+## Avant V1 — pistes stack (à faire)
+
+Issues techniques à traiter avant ou en parallèle du début du dev V1. Les features produit V1 restent dans [features-list.md](../features-list.md). Compléments techniques : § **29–32**.
+
+---
+
+### 23. Sécurité (priorité haute)
+
+- [x] **CORS en production** : ne plus autoriser toutes les origines ; variable `ALLOWED_ORIGINS` (liste séparée par virgules), fallback permissif en dev uniquement (CloudFront + localhost)
+- [x] **Rate limiting** : limiter par IP (ou clé) sur `POST /events`, `POST …/join`, `GET …/movies/search` (abus, coût TMDB) — middleware ASP.NET ou package type AspNetCoreRateLimit
+- [x] **Secrets en prod** : migrer `MONGODB_URI`, `TMDB_API_KEY` vers **GCP Secret Manager** ; Cloud Run référence les secrets (pas de valeurs en clair dans la CI)
+- [x] **En-têtes de sécurité** : au minimum `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` (ou `SAMEORIGIN` si iframe nécessaire)
+
+---
+
+### 24. API .NET (structure et robustesse)
+
+- [x] **Préfixe `/v1`** : monter les controllers sous `/api/v1` (ou routes équivalentes) ; ajuster une fois `VITE_API_URL` / base côté front
+- [x] **Validation des variables au démarrage** : en production, échouer au démarrage si `MONGODB_URI` vide (message clair) au lieu du mode in-memory implicite
+- [x] **Swagger** : `ProducesResponseType` sur les endpoints principaux pour documenter 4xx/5xx
+- [x] **Logging structuré** : logs exploitables dans Cloud Logging (JSON, niveaux cohérents, durées / erreurs handlers)
+
+---
+
+### 25. Front React (préparer la V1)
+
+- [x] **Hooks** `useEvent(slug)` / `useMovies(slug)` : extraire fetch + state depuis `EventDetail` (tests, Config V1, cache)
+- [x] **Cache / données serveur** : **React Query** ou **SWR** pour event + movies (refetch, loading/error centralisés, base pour mise à jour temps réel V1)
+- [x] **Type erreur API** : `ApiError` (ex. `{ message: string; code?: number }`) côté client pour affichage et « Réessayer »
+- [x] **Liste films vide (erreur)** : si le chargement échoue, message explicite + bouton « Réessayer » (pas seulement liste vide)
+- [x] **Mode sombre** : thème (CSS variables ou context) pour anticiper la V1 sans gros refactor
+
+---
+
+### 26. CI/CD et qualité
+
+- [x] **Branche principale unique** : **`master`** en CI (branche par défaut du dépôt) ; voir [`.github/workflows/ci-cd.yml`](../../.github/workflows/ci-cd.yml)
+- [x] **pnpm audit** : étape CI `pnpm audit --audit-level=high` (optionnel : bloquer sur critique)
+- [x] **Dépendances** : traiter alertes Dependabot / Renovate et tenir à jour deps (front, outils de build)
+
+---
+
+### 27. Organisation du monorepo
+
+- [x] **`configs/` partagés** : tsconfig de base et/ou ESLint/Prettier partagés ; les apps `extends` pour éviter la duplication
+- [x] **Documentation des env** : `.env.example` (racine + `apps/web/`), secrets et variables déploiement dans [deploy-cicd.md](deploy-cicd.md)
+
+---
+
+### 28. Nom de domaine
+
+- [ ] **Domaine dédié** : remplacer URLs par défaut CloudFront / Cloud Run par ex. `app.*` et `api.*` — certificat ACM (front), mapping + cert GCP (Cloud Run) ; mettre à jour `VITE_API_URL` et **CORS** (`ALLOWED_ORIGINS`)
+
+---
+
+### 29. API .NET — Correlation ID et erreurs JSON cohérentes
+
+- [x] **Correlation ID** : accepter ou générer un identifiant de requête (ex. en-tête `X-Request-Id` / `X-Correlation-Id`), le renvoyer dans la réponse si pertinent et l’inclure dans les **logs structurés** (filtrage Cloud Logging).
+- [x] **Erreurs JSON homogènes** : même enveloppe pour validation, 404 route, rate limiting, exceptions métier (ex. `{ "error": "...", "code"?: ... }` ou convention unique documentée dans le code / Swagger) pour simplifier le client.
+
+---
+
+### 30. Front React — solidité avant V1 (complément au § 25)
+
+> Le § 25 est livré (hooks, React Query, `ApiError`, retry films, thème). Ci-dessous : renforcement avant features V1 (auth, config, temps réel).
+
+- [x] **Error boundary** : limite globale ou par route pour éviter écran blanc sur erreur React non gérée.
+- [x] **Abstraction « live »** : couche dédiée (ex. hook `useEventLive` / provider) pour isoler le polling actuel et permettre un passage ultérieur à SSE / WebSocket sans réécrire toute la page event.
+- [x] **Découpage `EventDetail`** : extraire des sections ou composants dédiés (films, roue, partage, erreurs d’action) pour limiter la complexité avant la config hôte V1.
+
+---
+
+### 31. Qualité C# — `dotnet format` et analyzers
+
+- [x] **`dotnet format`** (vérification, voire fix en CI) aligné sur `.editorconfig` / conventions du repo.
+- [x] **Analyzers / avertissements** : politique explicite (corriger, supprimer bruit, ou `TreatWarningsAsErrors` sur un sous-ensemble) pour éviter la dérive avant V1.
+
+---
+
+### 32. Contrat OpenAPI — CI et artefact
+
+- [x] **Export OpenAPI en CI** : générer ou récupérer `swagger.json` (ex. depuis l’app au build ou étape dédiée) et publier un **artefact** GitHub Actions (traçabilité des versions d’API).
+- [x] **Gouvernance** : maintenir les tests de contrat existants (`OpenApiContractTests`) ; documenter toute option de **codegen** types TS côté front dans [architecture-api-dotnet.md](../architecture-api-dotnet.md) ou README si besoin.
+
+---
+
+> **Ordre suggéré** : 1) sécurité (§ 23) ; 2) API `/v1` + validation env (§ 24) ; 3) nom de domaine + CORS (§ 28) ; 4) front MVP livré (§ 25) puis compléments § 30 ; 5) correlation ID + erreurs JSON (§ 29) ; 6) `dotnet format` / analyzers (§ 31) ; 7) artefact OpenAPI CI (§ 32). **Staging** pré-prod : [features-list.md](../features-list.md) § V3.
+
+---
+
+## Ancien bonus (stack Node, obsolète)
+
+> Remplacé par les **§ 18–22** (post-MVP livré). L’ancienne API Node et ses tests Vitest/supertest ont été retirés au profit de l’API .NET. **Pistes avant V1 : § 23–32.**

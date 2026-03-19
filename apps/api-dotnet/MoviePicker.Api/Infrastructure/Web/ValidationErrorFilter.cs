@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -18,7 +19,8 @@ public sealed class ValidationErrorFilter : IActionFilter
         if (string.IsNullOrEmpty(message))
             message = "Validation échouée";
 
-        context.Result = new BadRequestObjectResult(new { error = message });
+        context.Result = new BadRequestObjectResult(
+            ApiErrorResponse.FromHttpContext(context.HttpContext, StatusCodes.Status400BadRequest, message));
     }
 
     public void OnActionExecuted(ActionExecutedContext context) { }

@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { apiUrl, fetchApi } from './client';
+import { ApiError } from './apiError';
 
 describe('apiUrl', () => {
-  it('préfixe avec la base et forme un chemin valide', () => {
-    expect(apiUrl('/events')).toMatch(/^https?:\/\/.+\/events$/);
-    expect(apiUrl('events')).toMatch(/\/events$/);
+  it('préfixe avec la base, version /api/v1, et forme un chemin valide', () => {
+    expect(apiUrl('/events')).toMatch(/^https?:\/\/.+\/api\/v1\/events$/);
+    expect(apiUrl('events')).toMatch(/\/api\/v1\/events$/);
+    expect(apiUrl('/health')).toMatch(/\/health$/);
   });
 });
 
@@ -13,14 +15,23 @@ describe('fetchApi', () => {
     vi.stubGlobal('fetch', vi.fn());
   });
 
-  it('réponse 4xx renvoie une erreur avec le message', async () => {
+  it('réponse 4xx renvoie une ApiError avec message et code', async () => {
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: false,
       status: 404,
       headers: new Headers({ 'content-type': 'application/json' }),
       text: () => Promise.resolve(JSON.stringify({ error: 'Soirée introuvable' })),
     });
-    await expect(fetchApi('/events/slug/x')).rejects.toThrow('Soirée introuvable');
+    try {
+      await fetchApi('/events/slug/x');
+      expect.fail('fetchApi aurait dû lever');
+    } catch (e) {
+      expect(ApiError.is(e)).toBe(true);
+      if (ApiError.is(e)) {
+        expect(e.message).toBe('Soirée introuvable');
+        expect(e.code).toBe(404);
+      }
+    }
   });
 
   it('réponse 5xx renvoie une erreur', async () => {

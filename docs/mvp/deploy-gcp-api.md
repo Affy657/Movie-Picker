@@ -38,8 +38,11 @@ gcloud auth configure-docker europe-west1-docker.pkg.dev
 
 1. [Cloud Run](https://console.cloud.google.com/run) → Créer un service.
 2. Choisir l'image depuis Artifact Registry.
-3. Variables d'environnement : `MONGODB_URI`, `TMDB_API_KEY` (et `PORT` si besoin).
-4. Déployer. L'API sera accessible en HTTPS sur l'URL fournie par Cloud Run.
+3. **Secrets (recommandé)** : référencer **`MONGODB_URI`** et **`TMDB_API_KEY`** depuis [Secret Manager](https://console.cloud.google.com/security/secret-manager) (pas de valeurs sensibles en variables d'environnement en clair). Voir [deploy-cicd.md](deploy-cicd.md) § 1 bis.
+4. **Variable d'environnement** : **`ALLOWED_ORIGINS`** = origine(s) du front (ex. `https://xxx.cloudfront.net`), virgules si plusieurs. **Obligatoire** en production : sans elle, l'API ne démarre pas.
+5. Déployer. L'API sera accessible en HTTPS sur l'URL fournie par Cloud Run.
+
+**Sécurité (résumé)** : CORS restreint, rate limiting sur création d’event / join / recherche films, en-têtes `X-Content-Type-Options` / `X-Frame-Options` — voir code dans `Program.cs` et `Infrastructure/Web/`.
 
 ## 4. Vérification
 
@@ -47,6 +50,7 @@ Appeler `https://VOTRE_URL/health` : la réponse doit être `{"status":"ok","ser
 
 ## 5. Dépannage : « Container failed to start and listen on the port »
 
-- **Définir `MONGODB_URI`** dans Cloud Run (Variables d'environnement du service). Sans elle, l'API quitte au démarrage avant d'écouter sur le port.
+- **MongoDB** : fournir `MONGODB_URI` via Secret Manager (ou variable d’environnement en dev). Sans connexion Mongo valable en prod, le comportement dépend de la config (voir roadmap § 24 pour validation stricte au démarrage).
+- **`ALLOWED_ORIGINS`** : obligatoire en production ; sinon exception au démarrage.
 - L'API écoute sur la variable **`PORT`** (fournie par Cloud Run, en général 8080) et sur **0.0.0.0**.
 - Consulter les logs dans Cloud Run (ou Cloud Logging) pour voir l'erreur exacte au démarrage.

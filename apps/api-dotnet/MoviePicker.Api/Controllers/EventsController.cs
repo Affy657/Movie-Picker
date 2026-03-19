@@ -1,20 +1,25 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.CloseEvent;
 using MoviePicker.Api.Application.UseCases.CreateEvent;
 using MoviePicker.Api.Application.UseCases.GetEventDetail;
 using MoviePicker.Api.Application.UseCases.JoinEvent;
 using MoviePicker.Api.Application.UseCases.LaunchWheel;
+using MoviePicker.Api.Infrastructure.Web;
 
 namespace MoviePicker.Api.Controllers;
 
 [ApiController]
-[Route("events")]
+[Route(ApiRoutePrefix.V1 + "/events")]
+[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 public sealed class EventsController : ControllerBase
 {
     [HttpPost]
+    [EnableRateLimiting(RateLimitingExtensions.CreateEventPolicy)]
     [ProducesResponseType(typeof(CreateEventResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Create(
         [FromBody] CreateEventRequest request,
         [FromServices] ICreateEventHandler handler,
@@ -54,10 +59,12 @@ public sealed class EventsController : ControllerBase
     }
 
     [HttpPost("{idOrSlug}/join")]
+    [EnableRateLimiting(RateLimitingExtensions.JoinEventPolicy)]
     [ProducesResponseType(typeof(ParticipantResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(JoinEventResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Join(
         string idOrSlug,
         [FromBody] JoinEventRequest request,

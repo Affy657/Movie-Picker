@@ -1,6 +1,6 @@
+using MongoDB.Bson;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
-using MongoDB.Bson;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.Infrastructure.Persistence.Mongo;

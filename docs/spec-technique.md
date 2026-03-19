@@ -2,7 +2,7 @@
 
 Stack, cloud, CI/CD, base de données.  
 Pour les features par version, voir [features-list.md](features-list.md).  
-Référence : [consigne-dev-cloud-ynov.md](consigne-dev-cloud-ynov.md).
+Référence : [consigne-dev-cloud-ynov.md](dev%20cloud%20ynov/consigne-dev-cloud-ynov.md).
 
 ---
 
@@ -19,7 +19,7 @@ Référence : [consigne-dev-cloud-ynov.md](consigne-dev-cloud-ynov.md).
 - **Language** : TypeScript strict for the whole codebase (front + API).
 - **AWS** : S3 + CloudFront — store and serve the React build. Default CloudFront URL for MVP (no custom domain).
 - **GCP** : Cloud Run — run the ASP.NET Core API container. Docker image in **Artifact Registry (GCP)**. Default Cloud Run URL for MVP.
-- **Repo** : Turborepo monorepo (front + back in one repo). **Package manager** : **pnpm**.
+- **Repo** : Turborepo monorepo (front + back in one repo). **Package manager** : **pnpm**. Configs TypeScript / ESLint / Prettier partagées dans **`configs/`** (voir [configs/README.md](../configs/README.md)). **Variables d’environnement** : `.env.example` à la racine, `apps/web/.env.example`, détail déploiement dans [mvp/deploy-cicd.md](mvp/deploy-cicd.md).
 
 ---
 
@@ -37,7 +37,7 @@ Référence : [consigne-dev-cloud-ynov.md](consigne-dev-cloud-ynov.md).
 | Variables d'environnement / secrets | TMDB key, DB URL, session secret via env / Secret Manager GCP |
 | CI/CD : tests, build, déploiement | GitHub Actions : lint, tests web + API .NET, puis build image, deploy |
 | Monitoring & observabilité | CloudWatch (AWS), Cloud Monitoring / Logging (GCP) |
-| Documentation | README, architecture diagram, deployment steps |
+| Documentation | README, [architecture MVP](dev%20cloud%20ynov/architecture.md), [mvp/deploy-cicd.md](mvp/deploy-cicd.md), [spec-technique.md](spec-technique.md) |
 
 ---
 
@@ -58,7 +58,7 @@ Collections: `events` (id, title, date, time, hostToken, config), `participants`
 
 **Deployment & ops**  
 - Env vars and secrets (e.g. Secret Manager GCP). HTTPS.  
-- CI/CD: GitHub Actions — **lint**, **test-web**, **test-api** ; sur `main`, Docker, Cloud Run, front. Voir [testing.md](testing.md).  
+- CI/CD: GitHub Actions — **lint**, **test-web**, **test-api** ; sur `master`, Docker, Cloud Run, front. Voir [mvp/deploy-cicd.md](mvp/deploy-cicd.md).  
 - Monitoring: default AWS/GCP tools (CloudWatch, Cloud Monitoring / Logging).
 
 ---

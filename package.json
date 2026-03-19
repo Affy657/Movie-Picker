@@ -7,13 +7,17 @@
     "dev:web": "turbo run dev --filter=web",
     "dev:api-dotnet": "dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj",
     "lint": "turbo run lint",
-    "lint:eslint": "eslint apps/web/src --ext .ts,.tsx",
-    "format": "prettier --write \"apps/**/*.{ts,tsx,json}\"",
-    "format:check": "prettier --check \"apps/**/*.{ts,tsx,json}\"",
+    "lint:eslint": "eslint \"apps/web/src/**/*.{ts,tsx}\"",
+    "format": "prettier --write \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts",
+    "format:check": "prettier --check \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts",
+    "format:dotnet": "dotnet format apps/api-dotnet/MoviePicker.slnx --verbosity minimal",
+    "format:dotnet:check": "dotnet format apps/api-dotnet/MoviePicker.slnx --verify-no-changes --verbosity minimal",
+    "openapi:export": "node scripts/export-openapi.cjs",
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
     "test:e2e": "playwright test",
-    "test:e2e:ci": "cross-env VITE_API_URL=http://127.0.0.1:5010 pnpm --filter web build && cross-env CI=1 pnpm run test:e2e"
+    "test:e2e:ci": "cross-env VITE_API_URL=http://127.0.0.1:5010 pnpm --filter \"./apps/web\" run build && cross-env CI=1 pnpm run test:e2e",
+    "audit": "pnpm audit --audit-level=high"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

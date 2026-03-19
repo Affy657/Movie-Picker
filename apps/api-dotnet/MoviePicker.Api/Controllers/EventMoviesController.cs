@@ -4,11 +4,13 @@ using MoviePicker.Api.Application.UseCases.AddMovie;
 using MoviePicker.Api.Application.UseCases.DeleteMovie;
 using MoviePicker.Api.Application.UseCases.ListMovies;
 using MoviePicker.Api.Application.UseCases.VoteMovie;
+using MoviePicker.Api.Infrastructure.Web;
 
 namespace MoviePicker.Api.Controllers;
 
 [ApiController]
-[Route("events/{idOrSlug}/movies")]
+[Route(ApiRoutePrefix.V1 + "/events/{idOrSlug}/movies")]
+[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 public sealed class EventMoviesController : ControllerBase
 {
     [HttpGet]

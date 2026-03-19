@@ -1,0 +1,40 @@
+# Mises à jour de dépendances (roadmap § 26) — PR hebdomadaires à examiner / merger.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 8
+    groups:
+      web-vite:
+        patterns:
+          - "vite"
+          - "@vitejs/*"
+          - "vitest"
+          - "@vitest/*"
+      web-react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react*"
+      eslint-prettier:
+        patterns:
+          - "eslint*"
+          - "@typescript-eslint/*"
+          - "prettier"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: nuget
+    directory: /apps/api-dotnet
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5

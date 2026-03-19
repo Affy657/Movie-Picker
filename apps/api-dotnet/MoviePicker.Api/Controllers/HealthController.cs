@@ -4,6 +4,7 @@ using MoviePicker.Api.Contracts;
 namespace MoviePicker.Api.Controllers;
 
 [ApiController]
+[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 public sealed class HealthController : ControllerBase
 {
     [HttpGet("health")]

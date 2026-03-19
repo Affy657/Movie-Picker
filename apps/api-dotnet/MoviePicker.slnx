@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj" />
+  <Project Path="MoviePicker.Api.Tests/MoviePicker.Api.Tests.csproj" />
+  <Project Path="MoviePicker.Api/MoviePicker.Api.csproj" />
+</Solution>

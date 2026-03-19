@@ -1,18 +1,23 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useSearchParams, useLocation, Link } from 'react-router-dom';
-import { fetchApi } from '../api/client';
-import type { EventData, MovieData } from '../types/event';
+import { useQueryClient } from '@tanstack/react-query';
 import { getStoredParticipant, getStoredHostToken, setStoredHostToken } from '../types/event';
+import { queryKeys } from '../hooks/queryKeys';
+import { useEvent } from '../hooks/useEvent';
+import { useMovies } from '../hooks/useMovies';
+import { useEventLive } from '../hooks/useEventLive';
 import JoinForm from '../components/JoinForm';
-import ShareLink from '../components/ShareLink';
-import MovieList from '../components/MovieList';
-import AddMovieForm from '../components/AddMovieForm';
 import WheelSection from '../components/WheelSection';
+import EventDetailHeader from './event-detail/EventDetailHeader';
+import EventMoviesLoadError from './event-detail/EventMoviesLoadError';
+import EventMoviesSection from './event-detail/EventMoviesSection';
+import { friendlyEventError } from './event-detail/friendlyEventError';
 
 export default function EventDetail() {
   const { slug } = useParams<{ slug: string }>();
   const [searchParams] = useSearchParams();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const hostFromUrl = searchParams.get('host');
   const hostFromStorage = slug ? getStoredHostToken(slug) : null;
   const hostToken = hostFromUrl ?? hostFromStorage;
@@ -22,181 +27,104 @@ export default function EventDetail() {
     if (slug && hostFromUrl) setStoredHostToken(slug, hostFromUrl);
   }, [slug, hostFromUrl]);
 
-  const [event, setEvent] = useState<EventData | null>(null);
-  const [movies, setMovies] = useState<MovieData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const eventQuery = useEvent(slug, hostToken);
+  const event = eventQuery.data ?? null;
+
+  const moviesQueryEnabled = !!slug && eventQuery.isSuccess;
+  const { moviesRefetchInterval } = useEventLive(event ?? undefined, { moviesQueryEnabled });
+
+  const moviesQuery = useMovies(slug, {
+    enabled: moviesQueryEnabled,
+    refetchInterval: moviesRefetchInterval,
+  });
+
+  const movies = moviesQuery.data ?? [];
+
   const [participant, setParticipant] = useState<{ participantId: string; pseudo: string } | null>(
     null
   );
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const eventUrl = slug
-    ? `/events/slug/${slug}${hostToken ? `?host=${encodeURIComponent(hostToken)}` : ''}`
-    : '';
-
-  const loadEvent = useCallback(async () => {
-    if (!slug) return;
-    try {
-      const data = await fetchApi<EventData>(eventUrl);
-      setEvent(data);
-      return data;
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Erreur';
-      setError(
-        msg.includes('introuvable') || msg.includes('404')
-          ? "Cette soirée n'existe pas ou a été supprimée."
-          : msg
-      );
-      return null;
-    }
-  }, [slug, eventUrl]);
-
-  const loadMovies = useCallback(async () => {
-    if (!slug) return;
-    try {
-      const list = await fetchApi<MovieData[]>(`/events/${slug}/movies`);
-      setMovies(Array.isArray(list) ? list : []);
-    } catch {
-      setMovies([]);
-    }
+  useEffect(() => {
+    if (slug) setParticipant(getStoredParticipant(slug));
   }, [slug]);
 
-  useEffect(() => {
-    if (!slug) return;
-    setLoading(true);
-    setError(null);
-    setParticipant(getStoredParticipant(slug));
-    loadEvent()
-      .then(() => loadMovies())
-      .finally(() => setLoading(false));
-  }, [slug, loadEvent, loadMovies]);
-
   const refreshAll = useCallback(() => {
-    loadEvent().then((data) => {
-      if (data?.winnerMovie) setEvent((e) => (e ? { ...e, winnerMovie: data.winnerMovie } : null));
-    });
-    loadMovies();
-  }, [loadEvent, loadMovies]);
+    if (!slug) return;
+    void queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
+  }, [slug, hostToken, queryClient]);
 
-  const eventTerminé = event?.terminé;
-  useEffect(() => {
-    if (!slug || loading || error || !event || eventTerminé) return;
-    const interval = setInterval(refreshAll, 5000);
-    return () => clearInterval(interval);
-  }, [slug, loading, error, event, eventTerminé, refreshAll]);
+  if (!slug) return null;
 
-  if (loading)
+  if (eventQuery.isPending) {
     return (
       <main className="page">
         <p>Chargement…</p>
       </main>
     );
-  if (error) {
+  }
+
+  if (eventQuery.isError) {
+    const errorMessage = friendlyEventError(eventQuery.error);
     return (
       <main className="page">
-        <p className="error">{error}</p>
+        <p className="error">{errorMessage}</p>
         <Link to="/" className="btn">
           Retour à l&apos;accueil
         </Link>
       </main>
     );
   }
+
   if (!event) return null;
 
   const dateFormatted = `${event.date} à ${event.time}`;
-  // Lien invités : sans token hôte (à partager). Lien hôte : avec ?host= (ne pas partager).
-  const shareUrlGuests = shareUrlFromState ?? (slug ? `${window.location.origin}/s/${slug}` : '');
-  const shareUrlHost =
-    slug && hostToken
-      ? `${window.location.origin}/s/${slug}?host=${encodeURIComponent(hostToken)}`
-      : '';
+  const shareUrlGuests = shareUrlFromState ?? `${window.location.origin}/s/${slug}`;
+  const shareUrlHost = hostToken
+    ? `${window.location.origin}/s/${slug}?host=${encodeURIComponent(hostToken)}`
+    : '';
   const needsJoin = !event.terminé && !participant;
   const showContent = event.terminé || participant;
 
   return (
     <main className="page page-event">
-      <header className="event-header">
-        <Link to="/" className="back-link">
-          ← Accueil
-        </Link>
-        <h1>{event.title}</h1>
-        <p className="event-meta">{dateFormatted}</p>
-        {event.terminé && <p className="badge badge-finished">Soirée terminée</p>}
-        {event.isHost && shareUrlGuests && <ShareLink url={shareUrlGuests} />}
-        {event.isHost && shareUrlHost && (
-          <ShareLink url={shareUrlHost} label="Votre lien hôte (ne pas partager)" />
-        )}
-      </header>
+      <EventDetailHeader
+        title={event.title}
+        dateFormatted={dateFormatted}
+        terminé={!!event.terminé}
+        isHost={!!event.isHost}
+        shareUrlGuests={shareUrlGuests}
+        shareUrlHost={shareUrlHost}
+      />
+
+      {moviesQuery.isError && (
+        <EventMoviesLoadError error={moviesQuery.error} onRetry={() => void moviesQuery.refetch()} />
+      )}
 
       {needsJoin && (
         <JoinForm
-          slug={slug!}
+          slug={slug}
           onJoined={(participantId, pseudo) => setParticipant({ participantId, pseudo })}
         />
       )}
 
       {showContent && (
         <>
-          <section className="section section-movies" aria-label="Films proposés">
-            <h2>Films</h2>
-            {!event.terminé && participant && (
-              <AddMovieForm
-                slug={slug!}
-                participantId={participant.participantId}
-                onAdded={refreshAll}
-                disabled={event.terminé}
-              />
-            )}
-            {actionError && (
-              <div className="error error-dismiss" role="alert">
-                <span>{actionError}</span>
-                <button
-                  type="button"
-                  className="btn-link"
-                  onClick={() => setActionError(null)}
-                  aria-label="Fermer"
-                >
-                  ×
-                </button>
-              </div>
-            )}
-            <MovieList
-              movies={movies}
-              participantId={participant?.participantId ?? null}
-              terminé={!!event.terminé}
-              onVote={async (movieId, value) => {
-                if (!participant) return;
-                setActionError(null);
-                try {
-                  await fetchApi(`/events/${slug}/movies/${movieId}/vote`, {
-                    method: 'POST',
-                    body: JSON.stringify({ participantId: participant.participantId, value }),
-                  });
-                } catch (e) {
-                  setActionError(e instanceof Error ? e.message : 'Erreur lors du vote');
-                  throw e;
-                }
-              }}
-              onRemove={async (movieId) => {
-                if (!participant) return;
-                setActionError(null);
-                try {
-                  await fetchApi(`/events/${slug}/movies/${movieId}`, {
-                    method: 'DELETE',
-                    body: JSON.stringify({ participantId: participant.participantId }),
-                  });
-                } catch (e) {
-                  setActionError(e instanceof Error ? e.message : 'Erreur lors de la suppression');
-                  throw e;
-                }
-              }}
-              refresh={refreshAll}
-            />
-          </section>
+          <EventMoviesSection
+            slug={slug}
+            event={event}
+            participant={participant}
+            movies={movies}
+            moviesQuery={moviesQuery}
+            actionError={actionError}
+            onDismissActionError={() => setActionError(null)}
+            setActionError={setActionError}
+            refreshAll={refreshAll}
+          />
 
           <WheelSection
-            slug={slug!}
+            slug={slug}
             event={event}
             moviesCount={movies.length}
             hostToken={hostToken}

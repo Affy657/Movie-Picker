@@ -1,0 +1,9 @@
+<Project>
+  <!-- Roadmap § 31 : analyzers SDK + style au build ; EditorConfig dans ce dossier. -->
+  <PropertyGroup>
+    <AnalysisLevel>8.0</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- Async non attendu : erreur de build (bugs subtils). Le reste : EditorConfig + CI -warnaserror. -->
+    <WarningsAsErrors>$(WarningsAsErrors);CS4014</WarningsAsErrors>
+  </PropertyGroup>
+</Project>

@@ -16,9 +16,11 @@ public sealed class MoviePickerExceptionFilter : IExceptionFilter
 
     public void OnException(ExceptionContext context)
     {
+        var http = context.HttpContext;
+
         if (context.Exception is MoviePickerException ex)
         {
-            context.Result = new JsonResult(new { error = ex.Message })
+            context.Result = new JsonResult(ApiErrorResponse.FromHttpContext(http, ex.StatusCode, ex.Message))
             {
                 StatusCode = ex.StatusCode
             };
@@ -28,7 +30,8 @@ public sealed class MoviePickerExceptionFilter : IExceptionFilter
 
         if (context.Exception is ArgumentException or InvalidOperationException)
         {
-            context.Result = new JsonResult(new { error = context.Exception.Message })
+            context.Result = new JsonResult(
+                ApiErrorResponse.FromHttpContext(http, (int)HttpStatusCode.BadRequest, context.Exception.Message))
             {
                 StatusCode = (int)HttpStatusCode.BadRequest
             };
@@ -37,7 +40,8 @@ public sealed class MoviePickerExceptionFilter : IExceptionFilter
         }
 
         var message = _env.IsDevelopment() ? context.Exception.Message : "Une erreur interne s'est produite.";
-        context.Result = new JsonResult(new { error = message })
+        context.Result = new JsonResult(
+            ApiErrorResponse.FromHttpContext(http, (int)HttpStatusCode.InternalServerError, message))
         {
             StatusCode = (int)HttpStatusCode.InternalServerError
         };

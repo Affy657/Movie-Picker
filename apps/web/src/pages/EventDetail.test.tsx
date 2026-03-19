@@ -4,8 +4,9 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { setupServer } from 'msw/node';
 import EventDetail from './EventDetail';
+import { AppTestProviders } from '../test-utils/queryWrapper';
 import {
-  TEST_API_BASE,
+  TEST_API_V1,
   createEventDetailHandlers,
   createJoinHandler,
   createSearchAndAddHandlers,
@@ -14,11 +15,13 @@ import { http, HttpResponse } from 'msw';
 
 function renderEventDetail(initialPath: string) {
   return render(
-    <MemoryRouter initialEntries={[initialPath]}>
-      <Routes>
-        <Route path="/s/:slug" element={<EventDetail />} />
-      </Routes>
-    </MemoryRouter>
+    <AppTestProviders>
+      <MemoryRouter initialEntries={[initialPath]}>
+        <Routes>
+          <Route path="/s/:slug" element={<EventDetail />} />
+        </Routes>
+      </MemoryRouter>
+    </AppTestProviders>
   );
 }
 
@@ -40,10 +43,10 @@ describe('EventDetail (MSW)', () => {
 
   it('affiche une erreur si la soirée est introuvable (404)', async () => {
     server.use(
-      http.get(`${TEST_API_BASE}/events/slug/:s`, () =>
+      http.get(`${TEST_API_V1}/events/slug/:s`, () =>
         HttpResponse.json({ error: 'introuvable' }, { status: 404 })
       ),
-      http.get(`${TEST_API_BASE}/events/:s/movies`, () => HttpResponse.json([]))
+      http.get(`${TEST_API_V1}/events/:s/movies`, () => HttpResponse.json([]))
     );
     renderEventDetail(`/s/inconnu`);
     await waitFor(() => {
@@ -59,6 +62,22 @@ describe('EventDetail (MSW)', () => {
     });
     expect(screen.getByText('Lien à partager')).toBeInTheDocument();
     expect(screen.getByText('Votre lien hôte (ne pas partager)')).toBeInTheDocument();
+  });
+
+  it('affiche erreur films + Réessayer si le chargement des films échoue', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/events/:slug/movies`, () =>
+        HttpResponse.json({ error: 'Service indisponible' }, { status: 503 })
+      )
+    );
+    renderEventDetail(`/s/${slug}`);
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /réessayer/i })).toBeInTheDocument();
+    });
+    expect(screen.getByText(/indisponible|Service/i)).toBeInTheDocument();
   });
 
   it('après rejoindre, affiche la section Films et permet de proposer un film', async () => {

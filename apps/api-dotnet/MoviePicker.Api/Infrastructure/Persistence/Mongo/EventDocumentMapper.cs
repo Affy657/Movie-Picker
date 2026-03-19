@@ -1,5 +1,5 @@
-using MoviePicker.Api.Domain.Entities;
 using MongoDB.Bson;
+using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 

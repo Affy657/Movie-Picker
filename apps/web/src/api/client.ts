@@ -1,3 +1,5 @@
+import { ApiError } from './apiError';
+
 /**
  * URL de base de l'API (variable d'environnement au build).
  * En dev : VITE_API_URL ou fallback http://localhost:4000
@@ -17,9 +19,17 @@ function getApiBase(): string {
 
 const API_BASE = getApiBase();
 
+/** Préfixe versionné aligné sur l’API .NET (`ApiRoutePrefix.V1`). */
+export const API_VERSION_PREFIX = '/api/v1';
+
 export function apiUrl(path: string): string {
   const p = path.startsWith('/') ? path : `/${path}`;
-  return `${API_BASE.replace(/\/$/, '')}${p}`;
+  const base = API_BASE.replace(/\/$/, '');
+  // Chemins déjà versionnés ou hors API métier (tests / intégrations manuelles)
+  if (p.startsWith('/api/') || p === '/health') {
+    return `${base}${p}`;
+  }
+  return `${base}${API_VERSION_PREFIX}${p}`;
 }
 
 /** Vérifie que l'API ne pointe pas vers le même site (CloudFront) — erreur de config au build. */
@@ -28,14 +38,15 @@ function ensureApiIsNotFrontOrigin(url: string): void {
   try {
     const apiOrigin = new URL(url).origin;
     if (apiOrigin === window.location.origin) {
-      throw new Error(
+      throw new ApiError(
         "Configuration incorrecte : l'URL de l'API pointe vers ce site au lieu de l'API. " +
           "Vérifiez le secret VITE_API_URL (doit être l'URL Cloud Run, ex. https://xxx.run.app). " +
-          'Puis redéployez le front et faites un rechargement forcé (Ctrl+Shift+R).'
+          'Puis redéployez le front et faites un rechargement forcé (Ctrl+Shift+R).',
+        { code: 0 }
       );
     }
   } catch (e) {
-    if (e instanceof Error && e.message.startsWith('Configuration incorrecte')) throw e;
+    if (ApiError.is(e) && e.message.startsWith('Configuration incorrecte')) throw e;
   }
 }
 
@@ -58,7 +69,7 @@ export async function fetchApi<T>(path: string, options?: RequestInit): Promise<
       (msg.toLowerCase().includes('fetch') ||
         msg.toLowerCase().includes('network') ||
         e instanceof TypeError);
-    throw new Error(isNetwork ? NETWORK_ERROR_MSG : msg);
+    throw new ApiError(isNetwork ? NETWORK_ERROR_MSG : msg, { code: 0 });
   }
   const contentType = res.headers.get('content-type') ?? '';
   const isJson = contentType.includes('application/json');
@@ -66,17 +77,19 @@ export async function fetchApi<T>(path: string, options?: RequestInit): Promise<
 
   if (!res.ok) {
     if (!isJson && text.trimStart().startsWith('<')) {
-      throw new Error(
-        'L’API a renvoyé du HTML au lieu de JSON. Vérifiez que VITE_API_URL pointe vers l’URL de l’API (ex. Cloud Run), pas vers le site web.'
+      throw new ApiError(
+        'L’API a renvoyé du HTML au lieu de JSON. Vérifiez que VITE_API_URL pointe vers l’URL de l’API (ex. Cloud Run), pas vers le site web.',
+        { code: res.status }
       );
     }
     const err = (isJson ? JSON.parse(text) : { error: res.statusText }) as { error?: string };
-    throw new Error(err.error ?? `HTTP ${res.status}`);
+    throw new ApiError(err.error ?? `HTTP ${res.status}`, { code: res.status });
   }
   if (res.status === 204) return undefined as T;
   if (!isJson && text.trimStart().startsWith('<')) {
-    throw new Error(
-      'L’API a renvoyé du HTML au lieu de JSON. Vérifiez que VITE_API_URL pointe vers l’URL de l’API (ex. Cloud Run), pas vers le site web.'
+    throw new ApiError(
+      'L’API a renvoyé du HTML au lieu de JSON. Vérifiez que VITE_API_URL pointe vers l’URL de l’API (ex. Cloud Run), pas vers le site web.',
+      { code: res.status }
     );
   }
   return JSON.parse(text) as Promise<T>;

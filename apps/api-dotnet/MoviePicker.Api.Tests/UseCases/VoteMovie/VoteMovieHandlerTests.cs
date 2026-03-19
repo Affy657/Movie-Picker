@@ -1,10 +1,10 @@
+using Moq;
 using MoviePicker.Api.Application.DTOs;
-using MoviePicker.Api.Application.UseCases.VoteMovie;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.VoteMovie;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Tests.Builders;
-using Moq;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.VoteMovie;

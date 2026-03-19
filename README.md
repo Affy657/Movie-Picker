@@ -14,9 +14,9 @@ Application pour organiser des soirées film : créer un event, partager le lien
 - **Front** : React (Vite, TypeScript), hébergé sur **AWS** (S3 + CloudFront).
 - **Back** : API ASP.NET Core (C#, .NET 10), déployée sur **GCP** (Cloud Run, image Docker dans Artifact Registry).
 - **Données** : MongoDB Atlas. **Externe** : API TMDB (films).
-- **CI/CD** : GitHub Actions (lint, tests web + API, puis déploiement sur `main`). E2E Playwright optionnel en local.
+- **CI/CD** : GitHub Actions (lint, tests web + API, puis déploiement sur `master`). E2E Playwright optionnel en local.
 
-→ **[Schéma d’architecture](docs/mvp/architecture.md)** (diagramme Mermaid).
+→ **[Schéma d’architecture](docs/dev%20cloud%20ynov/architecture.md)** (diagramme Mermaid).
 
 ## Services utilisés
 
@@ -32,30 +32,22 @@ Application pour organiser des soirées film : créer un event, partager le lien
 ## Déploiement
 
 - **Premier déploiement / manuel** : voir [Déploiement API (GCP)](docs/mvp/deploy-gcp-api.md) et [Déploiement Front (AWS)](docs/mvp/deploy-aws-front.md).
-- **CI/CD (GitHub Actions)** : à chaque push sur `main`, build + déploiement automatique. Configuration : [deploy-cicd.md](docs/mvp/deploy-cicd.md).
+- **CI/CD (GitHub Actions)** : à chaque push sur `master`, build + déploiement automatique. Configuration : [deploy-cicd.md](docs/mvp/deploy-cicd.md).
 
 ## Documentation
 
-- **[Spec technique](docs/spec-technique.md)** – Stack, cloud, CI/CD
-- **[Tests](docs/testing.md)** – Vitest, API .NET, Playwright, CI (référence rapide)
-- **[Plan tests](docs/plan-tests-stack.md)** – Phases, livrables, état d’avancement
-- **[Améliorations stack avant V1](docs/mvp/ameliorations-stack-avant-v1.md)** – Sécurité, /v1, hooks, cache, CI
-- **[Features list](docs/features-list.md)** – Fonctionnalités par version (MVP, V1, V2, V3)
-- **[Consigne Ynov](docs/consigne-dev-cloud-ynov.md)** – Projet cloud
+À garder sous la main :
 
-**Documentation MVP** (dossier [docs/mvp/](docs/mvp/)) :
-
-- **[Roadmap MVP](docs/mvp/roadmap-mvp.md)** – Carte de suivi des tâches
-- **[Architecture](docs/mvp/architecture.md)** – Schéma (diagramme)
-- **[Déploiement API (GCP)](docs/mvp/deploy-gcp-api.md)** – Docker, Artifact Registry, Cloud Run
-- **[Déploiement Front (AWS)](docs/mvp/deploy-aws-front.md)** – Build, S3, CloudFront
-- **[CI/CD](docs/mvp/deploy-cicd.md)** – GitHub Actions, secrets, variables
-- **[Monitoring](docs/mvp/monitoring.md)** – Logs (Cloud Logging), métriques (Cloud Run, CloudFront)
-- **[Test parcours MVP](docs/mvp/test-parcours-mvp.md)** – Checklist de test du parcours complet
-- **[Vérification consigne Ynov](docs/mvp/verification-consigne-ynov.md)** – Couverture des critères du projet
-- **[Soutenance](docs/mvp/soutenance.md)** – Guide pour la présentation 15–20 min
-- **[Améliorations / bonnes pratiques](docs/mvp/ameliorations-bonnes-pratiques.md)** – Pistes de refacto, sécurité, tests, qualité
-- **[Migration back .NET](docs/migration-dotnet/)** – [Contexte et périmètre](docs/migration-dotnet/contexte-et-perimetre.md), [Roadmap migration](docs/migration-dotnet/roadmap-migration-dotnet.md), [Architecture API .NET](docs/migration-dotnet/architecture-api-dotnet.md) (run local, couches)
+| | |
+|--|--|
+| [Spec technique](docs/spec-technique.md) | Stack, cloud |
+| [CI/CD](docs/mvp/deploy-cicd.md) | Workflow, secrets, tests en CI |
+| [Roadmap MVP](docs/mvp/roadmap-mvp.md) | Suivi des tâches |
+| [Features](docs/features-list.md) | MVP, V1… |
+| [API .NET](docs/architecture-api-dotnet.md) | Couches ; contrat : Swagger en dev, `OpenApiContractTests.cs` |
+| [Déploiement GCP / AWS](docs/mvp/deploy-gcp-api.md), [deploy-aws-front](docs/mvp/deploy-aws-front.md) | Première mise en prod |
+| [Monitoring](docs/mvp/monitoring.md) | Logs, métriques |
+| [Consigne Ynov](docs/dev%20cloud%20ynov/consigne-dev-cloud-ynov.md) | Exigences projet |
 
 ## Prérequis
 
@@ -63,7 +55,7 @@ Application pour organiser des soirées film : créer un event, partager le lien
 
 ## Démarrage
 
-1. Créer un `.env` à la racine avec `MONGODB_URI` et `TMDB_API_KEY` (l'API .NET le charge). Optionnel : `apps/web/.env` pour `VITE_API_URL`.
+1. Copier **`.env.example`** → **`.env`** à la racine et renseigner `MONGODB_URI` / `TMDB_API_KEY` (l’API .NET charge `.env` en remontant depuis le répertoire courant). Optionnel : `apps/web/.env` pour `VITE_API_URL` (voir `apps/web/.env.example`). En **Production** / Docker, l’API exige aussi **`ALLOWED_ORIGINS`** (origines CORS du front, virgules si plusieurs) ; en **Development**, `localhost` / `127.0.0.1` sont autorisés sans cette variable. **Secrets / variables déploiement** : [docs/mvp/deploy-cicd.md](docs/mvp/deploy-cicd.md).
 2. À la racine du repo :
 
 ```bash
@@ -72,17 +64,21 @@ pnpm build            # build front
 pnpm dev:api-dotnet   # API .NET (port 4000)
 pnpm dev:web          # Front (port 5173)
 pnpm lint             # lint front
+pnpm run format:dotnet:check  # style C# (après restore : dotnet restore apps/api-dotnet/MoviePicker.slnx)
+pnpm run openapi:export       # OpenAPI JSON → artifacts/openapi-v1.json (Swashbuckle CLI, § 32)
 pnpm test             # tests front (Turbo)
 dotnet test apps/api-dotnet/MoviePicker.Api.Tests/MoviePicker.Api.Tests.csproj      # API unitaires
 dotnet test apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj  # API intégration
-pnpm run test:e2e:ci  # E2E (build front + Playwright) — voir docs/testing.md
+pnpm run test:e2e:ci  # E2E (build front + Playwright) — voir e2e/ et playwright.config.ts
 ```
 
 - **API** : port 4000 — http://localhost:4000/ , /health , /swagger
-- **Web** : port 5173 (Vite). Voir [contrat API](docs/migration-dotnet/contrat-api-reference.md). Hôte : `?host=<token>` ou cookie.
+- **Web** : port 5173 (Vite), **TanStack React Query** (event / films), thème clair-sombre (`ThemeContext`). Préfixe API `/api/v1` (voir client front). Hôte : `?host=<token>` ou cookie.
 
 ## Structure
 
 - `apps/api-dotnet/` – API ASP.NET Core (C#), MongoDB, TMDB
 - `apps/web/` – Front React (Vite, TypeScript)
-- `docs/` – Documentation du projet
+- `docs/` – Documentation (spec, roadmap, déploiement, architecture)
+
+Branche par défaut : **`master`** (CI/CD — voir [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml)).

@@ -2,8 +2,9 @@
 #   docker build -t movie-picker-api-dotnet -f apps/api-dotnet/MoviePicker.Api/Dockerfile apps/api-dotnet/MoviePicker.Api
 #
 # Variables d'environnement (Cloud Run / run local) :
-#   MONGODB_URI  (requis)
-#   TMDB_API_KEY (optionnel)
+#   MONGODB_URI  (requis) — en prod GCP : Secret Manager → référence Cloud Run
+#   TMDB_API_KEY (optionnel) — en prod GCP : Secret Manager
+#   ALLOWED_ORIGINS (requis hors Development) : origines CORS du front, virgules (ex. https://xxx.cloudfront.net)
 #   ASPNETCORE_ENVIRONMENT (optionnel, défaut Production)
 #   PORT (Cloud Run injecte 8080 ; Kestrel écoute 8080 via ASPNETCORE_URLS)
 

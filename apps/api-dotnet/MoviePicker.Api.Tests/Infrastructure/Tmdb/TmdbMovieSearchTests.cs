@@ -1,10 +1,10 @@
 using System.Net;
 using Microsoft.Extensions.Options;
-using MoviePicker.Api.Configuration;
-using MoviePicker.Api.Infrastructure.Tmdb;
-using MoviePicker.Api.Application.Ports;
 using Moq;
 using Moq.Protected;
+using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Configuration;
+using MoviePicker.Api.Infrastructure.Tmdb;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.Infrastructure.Tmdb;

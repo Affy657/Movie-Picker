@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
 import AddMovieForm from './AddMovieForm';
-import { TEST_API_BASE, createSearchAndAddHandlers } from '../mocks/handlers';
+import { TEST_API_V1, createSearchAndAddHandlers } from '../mocks/handlers';
 import { http, HttpResponse } from 'msw';
 
 describe('AddMovieForm (MSW)', () => {
@@ -31,7 +31,7 @@ describe('AddMovieForm (MSW)', () => {
 
   it('affiche une erreur si la recherche échoue', async () => {
     server.use(
-      http.get(`${TEST_API_BASE}/movies/search`, () =>
+      http.get(`${TEST_API_V1}/movies/search`, () =>
         HttpResponse.json({ error: 'TMDB down' }, { status: 503 })
       )
     );

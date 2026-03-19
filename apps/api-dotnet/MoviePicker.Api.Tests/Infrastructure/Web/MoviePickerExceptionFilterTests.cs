@@ -1,12 +1,12 @@
 using System.Net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Web;
 using Xunit;
@@ -47,9 +47,12 @@ public sealed class MoviePickerExceptionFilterTests
         Assert.NotNull(result);
         Assert.Equal(404, result!.StatusCode);
         var data = result.Value;
-        var errorProp = data?.GetType().GetProperty("error");
+        var errorProp = data?.GetType().GetProperty(nameof(ApiErrorResponse.Error));
         Assert.NotNull(errorProp);
         Assert.Equal("Soirée introuvable", errorProp.GetValue(data)?.ToString());
+        var codeProp = data?.GetType().GetProperty(nameof(ApiErrorResponse.Code));
+        Assert.NotNull(codeProp);
+        Assert.Equal(404, codeProp.GetValue(data));
     }
 
     [Fact]
@@ -90,7 +93,7 @@ public sealed class MoviePickerExceptionFilterTests
         filter.OnException(context);
 
         var result = context.Result as JsonResult;
-        var errorProp = result?.Value?.GetType().GetProperty("error");
+        var errorProp = result?.Value?.GetType().GetProperty(nameof(ApiErrorResponse.Error));
         Assert.Equal("Secret detail", errorProp?.GetValue(result!.Value)?.ToString());
     }
 
@@ -106,8 +109,10 @@ public sealed class MoviePickerExceptionFilterTests
         var result = context.Result as JsonResult;
         Assert.NotNull(result);
         Assert.Equal((int)HttpStatusCode.InternalServerError, result!.StatusCode);
-        var errorProp = result.Value?.GetType().GetProperty("error");
+        var errorProp = result.Value?.GetType().GetProperty(nameof(ApiErrorResponse.Error));
         Assert.NotNull(errorProp);
         Assert.NotNull(errorProp.GetValue(result.Value));
+        var codeProp = result.Value?.GetType().GetProperty(nameof(ApiErrorResponse.Code));
+        Assert.Equal(500, codeProp?.GetValue(result.Value));
     }
 }

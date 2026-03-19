@@ -1,6 +1,5 @@
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Infrastructure.Web;
 using MoviePicker.Api.Application.UseCases.AddMovie;
 using MoviePicker.Api.Application.UseCases.CloseEvent;
 using MoviePicker.Api.Application.UseCases.CreateEvent;
@@ -11,10 +10,11 @@ using MoviePicker.Api.Application.UseCases.LaunchWheel;
 using MoviePicker.Api.Application.UseCases.ListMovies;
 using MoviePicker.Api.Application.UseCases.SearchMovies;
 using MoviePicker.Api.Application.UseCases.VoteMovie;
-using MoviePicker.Api.Infrastructure.Tmdb;
 using MoviePicker.Api.Configuration;
-using MoviePicker.Api.Infrastructure.Persistence.Mongo;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
+using MoviePicker.Api.Infrastructure.Persistence.Mongo;
+using MoviePicker.Api.Infrastructure.Tmdb;
+using MoviePicker.Api.Infrastructure.Web;
 
 namespace MoviePicker.Api.Infrastructure;
 
@@ -22,7 +22,10 @@ public static class ServiceCollectionExtensions
 {
     internal const string CorsPolicyFront = "Front";
 
-    public static IServiceCollection AddMoviePicker(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddMoviePicker(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        IHostEnvironment environment)
     {
         services
             .AddOptions<MoviePickerOptions>()
@@ -36,11 +39,7 @@ public static class ServiceCollectionExtensions
         services.AddCors(o =>
             o.AddPolicy(
                 CorsPolicyFront,
-                p =>
-                    p.SetIsOriginAllowed(_ => true)
-                        .AllowAnyMethod()
-                        .AllowAnyHeader()
-                        .AllowCredentials()));
+                p => p.ConfigureMoviePickerCors(configuration, environment)));
 
         var mongoUri = configuration["MONGODB_URI"] ?? string.Empty;
         if (string.IsNullOrWhiteSpace(mongoUri))

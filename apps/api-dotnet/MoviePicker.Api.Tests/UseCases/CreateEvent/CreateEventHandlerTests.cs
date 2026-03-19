@@ -1,9 +1,9 @@
+using Moq;
 using MoviePicker.Api.Application.DTOs;
-using MoviePicker.Api.Application.UseCases.CreateEvent;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.CreateEvent;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Tests.Builders;
-using Moq;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.CreateEvent;

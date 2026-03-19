@@ -1,7 +1,22 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useState } from 'react';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import Home from './pages/Home';
 import CreateEvent from './pages/CreateEvent';
 import EventDetail from './pages/EventDetail';
+
+function createAppQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: 1,
+        staleTime: 0,
+      },
+    },
+  });
+}
 
 /** Routes de l’app (pour tests avec MemoryRouter). */
 export function AppRoutes() {
@@ -14,11 +29,27 @@ export function AppRoutes() {
   );
 }
 
-function App() {
+/** Error boundary par « page » : `key={pathname}` remonte le boundary au changement de route (roadmap § 30). */
+function AppRoutesWithErrorBoundary() {
+  const location = useLocation();
   return (
-    <BrowserRouter>
+    <ErrorBoundary key={location.pathname}>
       <AppRoutes />
-    </BrowserRouter>
+    </ErrorBoundary>
+  );
+}
+
+function App() {
+  const [queryClient] = useState(() => createAppQueryClient());
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <BrowserRouter>
+          <AppRoutesWithErrorBoundary />
+        </BrowserRouter>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 

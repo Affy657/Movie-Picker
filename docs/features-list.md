@@ -88,7 +88,7 @@ Liste de tout ce qu'il y a dans le site (vision cible), puis UX/UI, cas limites 
 - **Rate limiting** : limitation du nombre de créations de soirées, propositions et votes par IP (ou par session) pour éviter les abus et le spam.
 - **Sécurité technique** : communication en **HTTPS** ; mots de passe stockés hashés (bcrypt, Argon2 ou équivalent), jamais en clair ; clé API films (TMDB/OMDB) utilisée **côté serveur uniquement** (pas d'exposition au client).
 - **Environnement / déploiement** : variables d'environnement pour la config (URL de l'API, clé TMDB/OMDB, secret de session, URL front, connexion BDD) ; documentation des étapes de déploiement (voir consigne du projet).
-- **CI/CD** : lint, tests (front Vitest + couverture, API .NET unitaires + intégration + Coverlet), build, déploiement ; E2E navigateur optionnel en local — voir [testing.md](testing.md), [mvp/deploy-cicd.md](mvp/deploy-cicd.md).
+- **CI/CD** : lint, tests (front Vitest + couverture, API .NET unitaires + intégration + Coverlet), build, déploiement ; E2E navigateur optionnel en local — voir [mvp/deploy-cicd.md](mvp/deploy-cicd.md).
 - **Monitoring** : logs, métriques (créations, votes, tirages).
 
 ---
@@ -207,7 +207,7 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 - [x] API .NET déployée sur Cloud Run, même comportement que le MVP (parcours complet testé).
 - [x] Ancienne API Node retirée ou désactivée après validation.
 
-**Le back .NET est la base pour la V1** (comptes, config, réactions). Référence : [docs/migration-dotnet/](migration-dotnet/) – [Roadmap migration](migration-dotnet/roadmap-migration-dotnet.md), [Architecture API .NET](migration-dotnet/architecture-api-dotnet.md).
+**Le back .NET est la base pour la V1** (comptes, config, réactions). Référence : [architecture-api-dotnet.md](architecture-api-dotnet.md), [mvp/roadmap-mvp.md](mvp/roadmap-mvp.md) § 17 (contrat : Swagger en dev, `OpenApiContractTests.cs`).
 
 ---
 
@@ -245,6 +245,7 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 - Accessibilité (contraste, clavier, labels).
 - Pages d'erreur dédiées (404, 500).
 - Crédits API (TMDB/OMDB), mention cookies/confidentialité.
+- **Environnement de staging** : second déploiement (ex. service Cloud Run + build front dédiés, ou URL préfixée) pour valider avant production ; secrets, `VITE_API_URL`, `ALLOWED_ORIGINS` et base de données de test — reprendre le modèle décrit dans [mvp/deploy-cicd.md](mvp/deploy-cicd.md).
 - Bonus cloud : autoscaling, IaC (Terraform/CloudFormation), multi-région, etc.
 
 ---
@@ -272,3 +273,4 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 | Calendrier .ics, compte à rebours | ❌ | ❌ | ✅ | – |
 | Historique soirées passées | ❌ | ❌ | ✅ | – |
 | Accessibilité, crédits API, cookies | ❌ | ❌ | ❌ | ✅ |
+| Environnement staging (pré-prod) | ❌ | ❌ | ❌ | ✅ |

@@ -1,0 +1,24 @@
+# Convention C# API .NET (dotnet format + analyzers, roadmap § 31)
+root = true
+
+[*]
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.cs]
+indent_size = 4
+indent_style = space
+
+# Style .NET (dotnet format)
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+
+# Naming / design : choix domaine volontaires (handlers, entité Event, tests xUnit avec _)
+dotnet_diagnostic.CA1707.severity = none
+dotnet_diagnostic.CA1711.severity = none
+dotnet_diagnostic.CA1716.severity = none
+
+# LoggerMessage source-gen : hors périmètre MVP ; évite bruit CA1848/CA1873 sur middleware
+dotnet_diagnostic.CA1848.severity = none
+dotnet_diagnostic.CA1873.severity = none
