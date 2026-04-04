@@ -16,31 +16,24 @@ export default defineConfig({
     baseURL: 'http://127.0.0.1:5174',
     trace: 'on-first-retry',
   },
-  webServer: process.env.CI
-    ? [
-        {
-          command: 'pnpm exec vite preview --host 127.0.0.1 --port 5174 --strictPort',
-          cwd: 'apps/web',
-          url: 'http://127.0.0.1:5174',
-          reuseExistingServer: false,
-          timeout: 60_000,
-        },
-      ]
-    : [
-        {
-          command:
-            'cross-env E2E_STUB_TMDB=1 MONGODB_URI= ASPNETCORE_URLS=http://127.0.0.1:5010 dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj --no-launch-profile',
-          cwd: '.',
-          url: 'http://127.0.0.1:5010/health',
-          reuseExistingServer: true,
-          timeout: 120_000,
-        },
-        {
-          command: 'pnpm exec vite preview --host 127.0.0.1 --port 5174 --strictPort',
-          cwd: 'apps/web',
-          url: 'http://127.0.0.1:5174',
-          reuseExistingServer: true,
-          timeout: 60_000,
-        },
-      ],
+  // Même chaîne en local et avec CI=1 (test:e2e:ci) : API stub TMDB + preview Vite.
+  // --no-launch-profile évite le port 4000 des launchSettings ; sans profil, ASPNETCORE_* doit forcer Development
+  // sinon ProductionStartupValidation exige ALLOWED_ORIGINS + MONGODB_URI.
+  webServer: [
+    {
+      command:
+        'cross-env E2E_STUB_TMDB=1 MONGODB_URI= ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://127.0.0.1:5010 dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj --no-launch-profile',
+      cwd: '.',
+      url: 'http://127.0.0.1:5010/health',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+    },
+    {
+      command: 'pnpm exec vite preview --host 127.0.0.1 --port 5174 --strictPort',
+      cwd: 'apps/web',
+      url: 'http://127.0.0.1:5174',
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+    },
+  ],
 });

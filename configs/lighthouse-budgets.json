@@ -1,0 +1,9 @@
+{
+  "minimumScores": {
+    "performance": 65,
+    "accessibility": 90,
+    "best-practices": 85,
+    "seo": 85
+  },
+  "notes": "Roadmap MVP §34 — scores sur 100. Performance volontairement basse au départ (réseau / machine locale) ; relever après optimisation si besoin."
+}

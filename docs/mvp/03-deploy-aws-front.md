@@ -2,7 +2,7 @@
 
 Le front React est servi en statique : build Vite uploadé sur S3, exposé via CloudFront en HTTPS.
 
-Référence : [spec-technique.md](../spec-technique.md) (front sur AWS, API sur GCP).
+Référence : [01-spec-technique.md](../01-spec-technique.md) (front sur AWS, API sur GCP).
 
 **Déjà créé le bucket et la distribution ?** → Applique la **section 3** (stratégie S3), puis **section 5** (upload du build) et **section 6** (vérification). **Important :** sans **Default root object** = `index.html` dans CloudFront (Paramètres généraux), l'URL racine renvoie « Access Denied » ; sans les **custom error responses** 403/404 → `/index.html`, les routes type `/s/xxx` ne marchent pas (section 4).
 

@@ -2,8 +2,8 @@
 
 **Nom du projet : Movie Picker.**
 
-Liste des fonctionnalités (spécification complète du site + découpage par version MVP, V1, V2, V3).  
-Pour la partie technique (stack, cloud, CI/CD), voir [spec-technique.md](spec-technique.md).
+Liste des fonctionnalités (spécification complète du site + découpage **MVP**, **V1**, **V2**, et un **backlog** non daté).  
+Pour la vue synthétique stack / cloud, voir [01-spec-technique.md](01-spec-technique.md). Le détail opérationnel du MVP : [mvp/01-roadmap-mvp.md](mvp/01-roadmap-mvp.md).
 
 ---
 
@@ -58,6 +58,8 @@ Liste de tout ce qu'il y a dans le site (vision cible), puis UX/UI, cas limites 
 - **Qui a proposé** : pour chaque film, affichage du **pseudo** du participant qui l'a proposé ; badge « C'est moi » sur ses propres propositions.
 - **Cache des posters** : après un appel à l'API films, les URLs ou images des posters sont stockées (bucket ou BDD) pour limiter les appels et accélérer l'affichage des films déjà vus.
 - **Doublons** : détection des films déjà proposés (même titre ou même ID TMDB) ; message « Déjà proposé » et blocage ou avertissement si quelqu'un tente d'ajouter un doublon.
+- **Disponibilité streaming / VOD légale** : pastilles ou liens via TMDB *watch providers* (région ex. FR) sur la recherche ou la fiche film ; mention que l’info est indicative.
+- **Déjà vu par d’autres participants** : lors de l’ajout d’un film, indication si des participants de la soirée l’ont déjà marqué comme vu (réactions ou agrégat serveur).
 - **Liste des films proposés** : affichage avec poster, titre, année, type (film ou série si « Séries OK » activé), note moyenne, bande-annonce, qui a proposé (pseudo), score (up/down), réactions (voir ci‑dessous).
 - **Upvote / Downvote** : chaque participant peut voter une fois par film (selon la config de l'hôte).
 - **Réactions** (en plus du up/down vote) : chaque participant peut poser **une ou plusieurs réactions** par film, selon la config de l'hôte. Exemples : « J'ai déjà vu ce film », « J'aimerais bien le voir », « Pas envie », « Masterpiece », « Je m'en fous » (liste configurable ou prédéfinie selon le thème).
@@ -88,7 +90,7 @@ Liste de tout ce qu'il y a dans le site (vision cible), puis UX/UI, cas limites 
 - **Rate limiting** : limitation du nombre de créations de soirées, propositions et votes par IP (ou par session) pour éviter les abus et le spam.
 - **Sécurité technique** : communication en **HTTPS** ; mots de passe stockés hashés (bcrypt, Argon2 ou équivalent), jamais en clair ; clé API films (TMDB/OMDB) utilisée **côté serveur uniquement** (pas d'exposition au client).
 - **Environnement / déploiement** : variables d'environnement pour la config (URL de l'API, clé TMDB/OMDB, secret de session, URL front, connexion BDD) ; documentation des étapes de déploiement (voir consigne du projet).
-- **CI/CD** : lint, tests (front Vitest + couverture, API .NET unitaires + intégration + Coverlet), build, déploiement ; E2E navigateur optionnel en local — voir [mvp/deploy-cicd.md](mvp/deploy-cicd.md).
+- **CI/CD** : lint, tests (front Vitest + couverture, API .NET unitaires + intégration + Coverlet), build, déploiement ; E2E navigateur optionnel en local — voir [mvp/04-deploy-cicd.md](mvp/04-deploy-cicd.md).
 - **Monitoring** : logs, métriques (créations, votes, tirages).
 
 ---
@@ -145,46 +147,46 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 
 ---
 
-# Partie 2 – Roadmap par version (MVP, V1, V2, V3)
+# Partie 2 – Roadmap par version (MVP, V1, V2) et backlog
 
 ## Principes
 
-- **MVP** : parcours minimal utilisable (créer soirée → partager → proposer films → voter → roue) + tous les critères techniques Ynov.
-- **V1, V2, V3** : ajouts progressifs de la spec complète, sans casser le cœur métier.
+- **MVP** : parcours minimal utilisable **et** livrables plateforme / qualité alignés sur la consigne (voir deux sous-sections ci‑dessous). Détail des tâches : [mvp/01-roadmap-mvp.md](mvp/01-roadmap-mvp.md).
+- **V1, V2** : releases produit progressives sur la spec complète, sans casser le cœur métier.
+- **Backlog** : idées et sujets **non planifiés** sur une date de release (tri régulier ; peut migrer vers une V3+ ou rester en sommeil).
 - **Architecture extensible** : modèles et composants prévus pour accueillir les features suivantes sans refacto majeur.
 
 ---
 
 ## MVP – Features produit
 
-**Objectif** : application démoable avec le parcours Movie Picker minimal.
+**Objectif** : application démoable avec le parcours Movie Picker minimal (équivalent roadmap [mvp/01-roadmap-mvp.md](mvp/01-roadmap-mvp.md) § 7–11 et parcours § 16).
 
-### Création et accès
+- **Navigation & shell** : pages accueil, création de soirée, détail soirée (`/s/:slug`) ; interface **mobile-first** puis responsive ; client API avec base URL au build (`VITE_API_URL`).
+- **Création & accès** : créer une soirée (titre, date, heure obligatoires) ; lien de partage unique + « Copier le lien » ; rejoindre avec **pseudo** obligatoire ; **hôte** identifié par `?host=…` ou cookie, seul habilité à lancer la roue et clôturer.
+- **Films** : proposition via recherche titre → API TMDB côté serveur (minimum **titre, année, poster**) ; liste avec **qui a proposé** ; **doublons** refusés (id API ou titre) ; **upvote / downvote** (un vote par participant et par film) ; retirer sa proposition tant que la roue n’a pas été lancée.
+- **UX chargement & erreurs** : indicateurs de chargement pour le détail soirée et la liste des films ; en cas d’échec réseau ou API, **message explicite** et action **« Réessayer »** (pas de liste vide silencieuse).
+- **Synchronisation légère** : rafraîchissement automatique (**polling**, intervalle fixe côté app) des données soirée et films pour voir les autres participants sans recharger la page ; base React Query / couche « live » en vue du temps réel V1.
+- **Roue** : bouton « Lancer la roue » (hôte uniquement) ; tirage parmi les films (tous ou score > 0, règle fixe MVP) ; animation puis film gagnant ; « Clôturer la soirée » ; 0 film → message + roue désactivée ; 1 film → gagnant direct (animation optionnelle / courte).
+- **Expiration & lecture seule** : soirée **terminée** à date/heure (ou date de fin optionnelle) ; UI en lecture seule avec message adapté ; **blocage des écritures** côté API une fois terminé (aligné roadmap § 6).
 
-- Créer une soirée : titre, date, heure (obligatoires).
-- Lien de partage unique (ex. `/s/abc123`) ; bouton « Copier le lien ».
-- Rejoindre via le lien ; saisie d'un **pseudo** (obligatoire) pour cette soirée.
-- Identification de l'**hôte** : token dans l'URL (ex. `?host=xxx`) ou cookie après création ; seul l'hôte peut lancer la roue et clôturer.
+---
 
-### Films
+## MVP – Plateforme, qualité et livrables Ynov
 
-- Proposer un film : recherche par titre → API TMDB/OMDB côté serveur → **titre, année, poster** (minimum).
-- Liste des films proposés avec poster, titre, année, **qui a proposé** (pseudo).
-- **Doublons** : refus d'ajouter un film déjà proposé (même id API ou titre).
-- **Upvote / Downvote** : un vote par participant par film.
-- Retirer sa proposition (par le proposant, tant que la roue n'a pas été lancée).
+**Objectif** : mettre en production, sécuriser, tester, documenter et industrialiser le MVP — **hors** périmètre métier de **MVP – Features produit**.
 
-### Roue
+> Détail opérationnel : [mvp/01-roadmap-mvp.md](mvp/01-roadmap-mvp.md) (§ 1–16, post-MVP § 18–36, staging § 35, gate V1 § 36). Déploiements & secrets : [mvp/04-deploy-cicd.md](mvp/04-deploy-cicd.md).
 
-- Bouton « Lancer la roue » (visible uniquement pour l'hôte).
-- Tirage parmi les films proposés (tous ou score > 0, au choix fixe pour le MVP).
-- Animation simple (roue qui tourne puis s'arrête sur un film).
-- Affichage du film gagnant ; bouton « Clôturer la soirée » (hôte).
-- Cas 0 film : message « Aucun film », bouton roue désactivé. Cas 1 film : affichage direct du gagnant.
-
-### Sécurité et durée de vie
-
-- Expiration basique : soirée « terminée » après la date/heure de la soirée (ou champ optionnel « date de fin »). Page en lecture seule avec message « Soirée terminée » si expirée.
+- **Infra & déploiement** : API **Docker** sur **GCP Cloud Run** ; front statique **AWS S3** + **CloudFront** (SPA, fallback `index.html`) ; **GitHub Actions** (build, tests, image API, déploiements) ; variables et secrets documentés.
+- **Sécurité prod** : **HTTPS** ; **CORS** avec `ALLOWED_ORIGINS` ; **rate limiting** (création soirée, join, recherche films) ; secrets via **GCP Secret Manager** (pas de valeurs en clair côté prod) ; en-têtes `X-Content-Type-Options`, `X-Frame-Options`, etc.
+- **Qualité code** : ESLint + Prettier (front) ; `dotnet format` + analyzers (API .NET) ; `pnpm audit` en CI.
+- **Tests** : API — unitaires, intégration, **contrat OpenAPI** (`OpenApiContractTests`), Coverlet en CI ; front — Vitest + Testing Library, couverture, **axe** sur pages clés ; **Playwright** E2E en local (hors CI ou non bloquant).
+- **API .NET** : préfixe **`/api/v1`** ; Swagger et **export OpenAPI** en CI (artefact) ; validation config au démarrage en prod ; **logging structuré**, **correlation ID**, **erreurs JSON** homogènes.
+- **Front — solidité** : **TanStack Query** (ou équivalent) pour données serveur ; **error boundary** ; couche **« live »** (polling) isolée pour évolution V1 (SSE/WebSocket).
+- **Observabilité & doc** : logs (ex. Cloud Logging), métriques minimales Cloud Run / CloudFront ; **README**, schéma d’architecture, [mvp/05-monitoring.md](mvp/05-monitoring.md).
+- **Vérification locale** : **`pnpm run verify:local`** — voir [scripts/verify-local.cjs](../scripts/verify-local.cjs).
+- **Avant la V1 produit** : **Lighthouse** sur build (budgets, CI non bloquant si retenu) ; **staging** pré-prod ; **nom de domaine** ([mvp/06-domaine-personnalise.md](mvp/06-domaine-personnalise.md)) ; gate **§ 36** (périmètre V1, auth, contrat API).
 
 ---
 
@@ -207,29 +209,33 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 - [x] API .NET déployée sur Cloud Run, même comportement que le MVP (parcours complet testé).
 - [x] Ancienne API Node retirée ou désactivée après validation.
 
-**Le back .NET est la base pour la V1** (comptes, config, réactions). Référence : [architecture-api-dotnet.md](architecture-api-dotnet.md), [mvp/roadmap-mvp.md](mvp/roadmap-mvp.md) § 17 (contrat : Swagger en dev, `OpenApiContractTests.cs`).
+**Le back .NET est la base pour la V1** (comptes, config, réactions). Référence : [02-architecture-api-dotnet.md](02-architecture-api-dotnet.md), [mvp/01-roadmap-mvp.md](mvp/01-roadmap-mvp.md) § 17 (contrat : Swagger en dev, `OpenApiContractTests.cs`).
 
 ---
 
 ## V1 – Features
 
-**Objectif** : compte utilisateur, config hôte, réactions, confort de partage et de lecture.
+**Objectif** : compte utilisateur (sans reset email), config hôte, réactions, confort de partage et de lecture, enrichissement film léger côté découverte.
 
-- **Compte utilisateur** : inscription (email, mot de passe, pseudo par défaut), connexion, déconnexion. Mot de passe oublié (lien par email).
+
+- **Compte utilisateur** : inscription (email, mot de passe, pseudo par défaut), connexion, déconnexion. *Mot de passe oublié (email) reporté en V2* pour alléger la charge (transport email, sécurité, templates).
 - **Mes soirées** : liste persistante pour les utilisateurs connectés ; reconnaissance de l'hôte par compte en plus du token.
 - **Config par l'hôte** : page Paramètres (thème, expiration, limite de propositions, type de roue aléatoire/pondérée). Réactions autorisées : choix des réactions disponibles en plus du up/down.
 - **Réactions** : en plus du vote, réactions type « J'ai déjà vu », « J'aimerais bien », etc. (liste configurable par l'hôte).
 - **Partage** : QR code ; « Copier le lien » (déjà en MVP).
 - **Mise à jour en direct** : polling (ou WebSocket) pour voir les nouveaux films et votes sans recharger.
 - **Interface** : mode sombre/clair (préférence locale ou compte).
-- **Technique** : cache des posters (bucket ou BDD) ; rate limiting basique ; table `users`, `reactions` ; routes auth et config.
+- **Disponibilité streaming / VOD légale** : intégration TMDB *watch providers* (région ex. FR), pastilles ou liens sur recherche / fiche film, cache API, texte indicatif pour l’utilisateur.
+- **Indicateur « déjà vu » (autres participants)** : à l’ajout d’un film (ou sur la carte), afficher si des participants de la soirée l’ont déjà marqué comme vu (réactions ou agrégat côté API).
+- **Technique** : cache des posters (bucket ou BDD) ; table `users`, `reactions` ; routes auth et config ; endpoints / agrégats nécessaires pour watch providers et l’indicateur « déjà vu ». (Le **rate limiting** de base est déjà couvert par le MVP plateforme ; ajuster les règles si les nouveaux endpoints l’exigent.)
 
 ---
 
 ## V2 – Features
 
-**Objectif** : contenu film riche, options de soirée, historique, UX avancée.
+**Objectif** : contenu film riche, options de soirée, historique, UX avancée, récupération de compte.
 
+- **Compte** : **mot de passe oublié** — lien « Réinitialiser le mot de passe » sur la page de connexion ; email avec lien sécurisé (voir Partie 1, *Compte utilisateur*).
 - **Films** : note moyenne (API), bande-annonce (lien), durée si disponible ; option « Séries OK / pas OK » (config hôte).
 - **Soirée** : lieu, description ; compte à rebours ; lien « Ajouter au calendrier » (.ics).
 - **Config** : limite de participants, plage de votes (configurable).
@@ -239,21 +245,22 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 
 ---
 
-## V3 – Features (optionnel / bonus)
+## Backlog (non priorisé sur une release)
+
+> Piste pour plus tard : pas d’engagement de version. À retravailler lors d’un tri (certaines entrées pourront aller dans une **v3+** si tu réintroduis un numéro de version).
 
 - Suppression du compte, export des données.
-- Accessibilité (contraste, clavier, labels).
+- Accessibilité étendue (audit global, clavier, labels systématiques).
 - Pages d'erreur dédiées (404, 500).
 - Crédits API (TMDB/OMDB), mention cookies/confidentialité.
-- **Environnement de staging** : second déploiement (ex. service Cloud Run + build front dédiés, ou URL préfixée) pour valider avant production ; secrets, `VITE_API_URL`, `ALLOWED_ORIGINS` et base de données de test — reprendre le modèle décrit dans [mvp/deploy-cicd.md](mvp/deploy-cicd.md).
 - Bonus cloud : autoscaling, IaC (Terraform/CloudFormation), multi-région, etc.
 
 ---
 
 ## Récapitulatif par version
 
-| Bloc | MVP | V1 | V2 | V3 |
-|------|-----|----|----|-----|
+| Bloc | MVP | V1 | V2 | Backlog |
+|------|-----|----|----|---------|
 | Créer soirée (titre, date, heure) | ✅ | – | Lieu, description | – |
 | Lien partage + Copier lien | ✅ | – | – | – |
 | Rejoindre + pseudo | ✅ | – | – | – |
@@ -265,12 +272,14 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 | Roue (lancer, animation, résultat, clôturer) | ✅ | – | – | – |
 | Config hôte (thème, expiration, limites, roue, réactions) | ❌ (expiration basique) | ✅ | Limite participants, plage votes | – |
 | Expiration / soirée terminée | ✅ (basique) | – | – | – |
-| Compte utilisateur | ❌ | ✅ | – | Suppression, export |
+| Compte utilisateur | ❌ | Inscription, connexion, déconnexion | Mot de passe oublié (email) | Suppression, export |
 | QR code | ❌ | ✅ | – | – |
 | Mise à jour en direct | ❌ | ✅ | – | – |
 | Mode sombre, vue grille/liste, hors-ligne | ❌ | Mode sombre | Grille/liste, hors-ligne | – |
-| Cache posters, rate limiting | ❌ | ✅ | – | – |
+| Rate limiting & garde-fous API prod | ✅ (MVP plateforme) | – | – | – |
+| Cache posters (bucket / BDD) | ❌ | ✅ | – | – |
+| Disponibilité streaming / VOD (TMDB) | ❌ | ✅ | – | – |
+| Indication « déjà vu » (autres participants) | ❌ | ✅ | – | – |
 | Calendrier .ics, compte à rebours | ❌ | ❌ | ✅ | – |
 | Historique soirées passées | ❌ | ❌ | ✅ | – |
-| Accessibilité, crédits API, cookies | ❌ | ❌ | ❌ | ✅ |
-| Environnement staging (pré-prod) | ❌ | ❌ | ❌ | ✅ |
+| Accessibilité étendue, crédits API, cookies, bonus cloud | ❌ | ❌ | ❌ | ✅ |

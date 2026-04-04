@@ -25,7 +25,7 @@ Si l’API vient d’être activée, attendre **1–2 minutes** avant de relance
 
 ### IAM : qui peut lire les secrets au runtime ?
 
-Cloud Run injecte les secrets référencés par `--set-secrets` dans le conteneur. Le **compte de service de la révision** (souvent le compte Compute par défaut `PROJECT_NUMBER-compute@developer.gserviceaccount.com`) doit avoir **`roles/secretmanager.secretAccessor`** sur chaque secret, sinon le déploiement échoue avec *Permission denied on secret* pour ce compte. Ce n’est **pas** résolu en activant seulement l’API Secret Manager — il faut une **liaison IAM** sur les secrets (voir [deploy-cicd.md](deploy-cicd.md) § 1 bis, étape 2).
+Cloud Run injecte les secrets référencés par `--set-secrets` dans le conteneur. Le **compte de service de la révision** (souvent le compte Compute par défaut `PROJECT_NUMBER-compute@developer.gserviceaccount.com`) doit avoir **`roles/secretmanager.secretAccessor`** sur chaque secret, sinon le déploiement échoue avec *Permission denied on secret* pour ce compte. Ce n’est **pas** résolu en activant seulement l’API Secret Manager — il faut une **liaison IAM** sur les secrets (voir [04-deploy-cicd.md](04-deploy-cicd.md) § 1 bis, étape 2).
 
 ## 3. Artifact Registry (GCP)
 
@@ -55,7 +55,7 @@ gcloud auth configure-docker europe-west1-docker.pkg.dev
 
 1. [Cloud Run](https://console.cloud.google.com/run) → Créer un service.
 2. Choisir l'image depuis Artifact Registry.
-3. **Secrets (recommandé)** : référencer **`MONGODB_URI`** et **`TMDB_API_KEY`** depuis [Secret Manager](https://console.cloud.google.com/security/secret-manager) (pas de valeurs sensibles en variables d'environnement en clair). Voir [deploy-cicd.md](deploy-cicd.md) § 1 bis.
+3. **Secrets (recommandé)** : référencer **`MONGODB_URI`** et **`TMDB_API_KEY`** depuis [Secret Manager](https://console.cloud.google.com/security/secret-manager) (pas de valeurs sensibles en variables d'environnement en clair). Voir [04-deploy-cicd.md](04-deploy-cicd.md) § 1 bis.
 4. **Variable d'environnement** : **`ALLOWED_ORIGINS`** = origine(s) du front (ex. `https://xxx.cloudfront.net`), virgules si plusieurs. **Obligatoire** en production : sans elle, l'API ne démarre pas.
 5. Déployer. L'API sera accessible en HTTPS sur l'URL fournie par Cloud Run.
 

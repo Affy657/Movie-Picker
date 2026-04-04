@@ -1,10 +1,9 @@
 # Movie Picker – Roadmap MVP (carte de suivi)
 
 Suite de tâches à suivre de maintenant jusqu'à la fin du MVP.  
-Références : [spec-technique.md](../spec-technique.md), [features-list.md](../features-list.md) (Features list).
+Références : [01-spec-technique.md](../01-spec-technique.md), [03-features-list.md](../03-features-list.md) (Features list).
 
 Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant l'ordre des sections.  
-**Après le MVP (§ 16)** : migration .NET (§ 17), puis **§ 18–22** (qualité, tests, CI, E2E local — livrés). **§ 23–28** : pistes stack **avant la V1**. **§ 29–32** : compléments robustesse (correlation ID, erreurs JSON, front, `dotnet format`, contrat OpenAPI). **§ 28** : nom de domaine.
 
 ---
 
@@ -121,7 +120,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 - [x] Configurer Cloud Run : déployer l'image, définir les variables d'environnement (MONGODB_URI, TMDB_API_KEY, etc.)
 - [x] Vérifier que l'API répond en HTTPS sur l'URL Cloud Run
 
-> **Doc :** [deploy-gcp-api.md](deploy-gcp-api.md) – build Docker et étapes Artifact Registry / Cloud Run.
+> **Doc :** [02-deploy-gcp-api.md](02-deploy-gcp-api.md) – build Docker et étapes Artifact Registry / Cloud Run.
 
 ---
 
@@ -132,7 +131,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 - [x] Configurer CloudFront : origine S3, HTTPS, URL par défaut, `index.html` en root object, erreurs 403/404 → `/index.html` (SPA)
 - [x] Déployer le build sur S3 et vérifier l'accès via l'URL CloudFront
 
-> **Doc :** [deploy-aws-front.md](deploy-aws-front.md) – build avec `VITE_API_URL`, S3, CloudFront, commandes de déploiement.
+> **Doc :** [03-deploy-aws-front.md](03-deploy-aws-front.md) – build avec `VITE_API_URL`, S3, CloudFront, commandes de déploiement.
 
 ---
 
@@ -144,7 +143,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 - [x] Ajouter le job de déploiement du front (upload S3, invalidation CloudFront si besoin)
 - [x] Stocker les secrets nécessaires (AWS, GCP, TMDB, MONGODB_URI) dans les secrets du repo
 
-> **Doc :** [deploy-cicd.md](deploy-cicd.md) – workflow, secrets à configurer, dépannage.
+> **Doc :** [04-deploy-cicd.md](04-deploy-cicd.md) – workflow, secrets à configurer, dépannage.
 
 ---
 
@@ -155,7 +154,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 - [x] Rédiger le README : but du projet, architecture, services utilisés, instructions de déploiement
 - [x] Ajouter un schéma d'architecture (diagramme)
 
-> **Doc :** [monitoring.md](monitoring.md) – où voir les logs (Cloud Logging) et les métriques (Cloud Run, CloudFront). [Schéma d'architecture](../dev%20cloud%20ynov/architecture.md) (Mermaid).
+> **Doc :** [05-monitoring.md](05-monitoring.md) – où voir les logs (Cloud Logging) et les métriques (Cloud Run, CloudFront). [Schéma d'architecture](../dev%20cloud%20ynov/02-architecture.md) (Mermaid).
 
 ---
 
@@ -165,7 +164,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 - [x] Vérifier que la consigne Ynov est couverte (front et back sur AWS et GCP, CI/CD, monitoring, doc)
 - [x] Préparer la soutenance (présentation 15–20 min)
 
-> **Docs :** [README racine](../../README.md) (démarrage, commandes de test). [Consigne Ynov](../dev%20cloud%20ynov/consigne-dev-cloud-ynov.md). [deploy-cicd.md](deploy-cicd.md) (CI, couverture).
+> **Docs :** [README racine](../../README.md) (démarrage, commandes de test). [Consigne Ynov](../dev%20cloud%20ynov/01-consigne-dev-cloud-ynov.md). [04-deploy-cicd.md](04-deploy-cicd.md) (CI, couverture).
 
 ---
 
@@ -178,7 +177,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 - [x] Adapter Dockerfile et CI/CD (build .NET, push image, déploiement Cloud Run)
 - [x] Valider le parcours complet avec le front inchangé ; retirer l’ancienne API Node
 
-> **Doc :** [architecture-api-dotnet.md](../architecture-api-dotnet.md) (contrat : Swagger + `OpenApiContractTests.cs`). Contexte migration : [features-list.md](../features-list.md) § *Migration back .NET*.
+> **Doc :** [02-architecture-api-dotnet.md](../02-architecture-api-dotnet.md) (contrat : Swagger + `OpenApiContractTests.cs`). Contexte migration : [03-features-list.md](../03-features-list.md) § *Migration back .NET*.
 
 ---
 
@@ -208,7 +207,7 @@ Travaux réalisés après la clôture fonctionnelle du MVP et la migration .NET,
 - [x] **Contrat OpenAPI** : test sur `/swagger/v1/swagger.json` (chemins `/health`, `POST /events`, etc.)
 - [x] **Stub TMDB** (`E2E_STUB_TMDB=1`) pour scénarios E2E locaux
 
-> Voir [deploy-cicd.md](deploy-cicd.md) § 4 (tests en CI), [README racine](../../README.md) (commandes locales).
+> Voir [04-deploy-cicd.md](04-deploy-cicd.md) § 4 (tests en CI), [README racine](../../README.md) (commandes locales).
 
 ---
 
@@ -230,7 +229,7 @@ Travaux réalisés après la clôture fonctionnelle du MVP et la migration .NET,
 - [x] Script racine **`test:coverage`** + tâche Turbo **`test:coverage`**
 - [x] Déploiements (**docker-api**, **deploy-front**) conditionnés à **test-web** + **test-api** uniquement (E2E Playwright **hors CI** : durée / fragilité)
 
-> Voir [deploy-cicd.md](deploy-cicd.md), [.github/workflows/ci-cd.yml](../../.github/workflows/ci-cd.yml).
+> Voir [04-deploy-cicd.md](04-deploy-cicd.md), [.github/workflows/ci-cd.yml](../../.github/workflows/ci-cd.yml).
 
 ---
 
@@ -238,13 +237,7 @@ Travaux réalisés après la clôture fonctionnelle du MVP et la migration .NET,
 
 - [x] **Playwright** : scénario `e2e/critical-flow.spec.ts` (création → join → film → roue)
 - [x] Config **`playwright.config.ts`** : API sur `:5010` avec **`--no-launch-profile`** (sinon port 4000 depuis launchSettings)
-- [ ] Exécution **manuelle** en local : `pnpm run test:e2e` / `test:e2e:ci` après `pnpm exec playwright install chromium` — **non bloquant** en CI
-
----
-
-## Avant V1 — pistes stack (à faire)
-
-Issues techniques à traiter avant ou en parallèle du début du dev V1. Les features produit V1 restent dans [features-list.md](../features-list.md). Compléments techniques : § **29–32**.
+- [x] **Exécution manuelle en local** : après `pnpm exec playwright install chromium`, lancer `pnpm run test:e2e` ou `pnpm run test:e2e:ci` (voir [README racine](../../README.md), dossier `e2e/`). **Hors CI** : les E2E ne sont pas dans le workflow GitHub Actions — **non bloquant** pour merger.
 
 ---
 
@@ -287,13 +280,13 @@ Issues techniques à traiter avant ou en parallèle du début du dev V1. Les fea
 ### 27. Organisation du monorepo
 
 - [x] **`configs/` partagés** : tsconfig de base et/ou ESLint/Prettier partagés ; les apps `extends` pour éviter la duplication
-- [x] **Documentation des env** : `.env.example` (racine + `apps/web/`), secrets et variables déploiement dans [deploy-cicd.md](deploy-cicd.md)
+- [x] **Documentation des env** : `.env.example` (racine + `apps/web/`), secrets et variables déploiement dans [04-deploy-cicd.md](04-deploy-cicd.md)
 
 ---
 
 ### 28. Nom de domaine
 
-- [ ] **Domaine dédié** : remplacer URLs par défaut CloudFront / Cloud Run par ex. `app.*` et `api.*` — certificat ACM (front), mapping + cert GCP (Cloud Run) ; mettre à jour `VITE_API_URL` et **CORS** (`ALLOWED_ORIGINS`)
+- [ ] **Domaine dédié** : remplacer URLs par défaut CloudFront / Cloud Run par ex. `app.*` et `api.*` — certificat ACM (front), mapping + cert GCP (Cloud Run) ; mettre à jour `VITE_API_URL` et **CORS** (`ALLOWED_ORIGINS`) — procédure : [06-domaine-personnalise.md](06-domaine-personnalise.md)
 
 ---
 
@@ -324,14 +317,44 @@ Issues techniques à traiter avant ou en parallèle du début du dev V1. Les fea
 ### 32. Contrat OpenAPI — CI et artefact
 
 - [x] **Export OpenAPI en CI** : générer ou récupérer `swagger.json` (ex. depuis l’app au build ou étape dédiée) et publier un **artefact** GitHub Actions (traçabilité des versions d’API).
-- [x] **Gouvernance** : maintenir les tests de contrat existants (`OpenApiContractTests`) ; documenter toute option de **codegen** types TS côté front dans [architecture-api-dotnet.md](../architecture-api-dotnet.md) ou README si besoin.
+- [x] **Gouvernance** : maintenir les tests de contrat existants (`OpenApiContractTests`) ; documenter toute option de **codegen** types TS côté front dans [02-architecture-api-dotnet.md](../02-architecture-api-dotnet.md) ou README si besoin.
 
 ---
 
-> **Ordre suggéré** : 1) sécurité (§ 23) ; 2) API `/v1` + validation env (§ 24) ; 3) nom de domaine + CORS (§ 28) ; 4) front MVP livré (§ 25) puis compléments § 30 ; 5) correlation ID + erreurs JSON (§ 29) ; 6) `dotnet format` / analyzers (§ 31) ; 7) artefact OpenAPI CI (§ 32). **Staging** pré-prod : [features-list.md](../features-list.md) § V3.
+### 33. Système agentique (initialisation dans le projet)
+
+> Objectif : donner aux assistants IA (Cursor, CLI, futurs agents) un **socle cohérent** pour travailler sur le monorepo sans réinventer les conventions à chaque session. Non bloquant pour le MVP produit ; utile avant d’industrialiser la V1.
+
+- [x] **Règles persistantes** : créer ou compléter **`.cursor/rules`** (ou `AGENTS.md` à la racine) avec : stack (React / .NET / pnpm), chemins clés (`apps/web`, `apps/api-dotnet`), exigences CI (lint, `dotnet format`, audits), et renvois vers la doc ([01-spec-technique.md](../01-spec-technique.md), [04-deploy-cicd.md](04-deploy-cicd.md), [02-architecture-api-dotnet.md](../02-architecture-api-dotnet.md)).
+- [x] **Outils & environnement** : pointer explicitement vers [04-outils-environnement.md](../04-outils-environnement.md) dans ces règles (CLI `gcloud` / `aws` / `gh`, principe « auth = machine locale »).
+- [x] **Périmètre agent** : documenter ce qui est **interdit ou sensible** sans validation humaine (secrets, prod DB, `.env`, modification IAM cloud) et ce qui est **encouragé** (tests avant push, format, PR petites).
+- [x] **Optionnel** : **skills** Cursor réutilisables (déploiement, export OpenAPI, sync secrets GCP) si l’équipe standardise des procédures ; ou scripts documentés dans `scripts/` + README.
 
 ---
 
-## Ancien bonus (stack Node, obsolète)
+### 34. Lighthouse (performances, accessibilité, SEO)
 
-> Remplacé par les **§ 18–22** (post-MVP livré). L’ancienne API Node et ses tests Vitest/supertest ont été retirés au profit de l’API .NET. **Pistes avant V1 : § 23–32.**
+> Complète les tests **axe** existants ([a11y.test.tsx](../../apps/web/src/pages/a11y.test.tsx)) par une mesure **navigateur** (Core Web Vitals, bonnes pratiques, SEO) sur le build réel du front.
+
+- [x] **Dépendances & script** : `pnpm run lighthouse` à la racine — build `web`, sert `apps/web/dist` avec `serve -s`, Lighthouse sur `/`, `/new`, `/s/lighthouse-smoke` ([scripts/lighthouse-run.mjs](../../scripts/lighthouse-run.mjs)) — routes alignées sur `App.tsx` (`/new`, pas `/create`).
+- [x] **Seuils** : [configs/lighthouse-budgets.json](../../configs/lighthouse-budgets.json) (performance, accessibilité, bonnes pratiques, SEO) ; meta description + Open Graph dans [index.html](../../apps/web/index.html) pour le score SEO.
+- [x] **CI** : job **lighthouse** dans [`.github/workflows/ci-cd.yml`](../../.github/workflows/ci-cd.yml) (après `test-web`), **`continue-on-error: true`**, artefact `lighthouse-reports` ; Chrome via `browser-actions/setup-chrome` — détail dans [04-deploy-cicd.md](04-deploy-cicd.md).
+
+---
+
+### 35. Staging et consolidation agentique
+
+> Pré-production et finalisation de l’outillage dev (MCP / règles). Les enrichissements **films** (watch providers, indicateur « déjà vu ») font partie du périmètre **V1** dans [03-features-list.md](../03-features-list.md).
+
+- [ ] **Environnement staging (pré-prod)** : second déploiement API + front (ex. Cloud Run + S3/CloudFront), secrets, `VITE_API_URL` et `ALLOWED_ORIGINS` dédiés, workflow ou déclencheur CI ; documenter dans [04-deploy-cicd.md](04-deploy-cicd.md).
+- [ ] **Système agentique (rappel)** : finaliser le **§ 33** (règles `.cursor` / `AGENTS.md`, périmètre MCP).
+
+---
+
+### 36. Bascule « features produit » (gate)
+
+> Quand **toutes** les cases ci‑dessous sont cochées, enchaîner sur [03-features-list.md](../03-features-list.md) (V1 : comptes, config, réactions, watch providers, indicateur « déjà vu », etc. ; reset mot de passe en **V2**) et créer la roadmap dans `docs/v1-…/` selon [00-roadmaps-par-version.md](../00-roadmaps-par-version.md).
+
+- [ ] **Périmètre V1 priorisé** : première salve de fonctionnalités choisie (ordre de build, hors scope explicite) pour éviter le scope creep.
+- [ ] **Auth & modèle utilisateur** : choix technique documenté (ex. Identity, JWT + refresh, cookies session) et impact **MongoDB** / nouvelles collections — mise à jour de [02-architecture-api-dotnet.md](../02-architecture-api-dotnet.md) **ou** doc dédiée **avant** d’ouvrir trop de routes « compte ».
+- [ ] **Contrat API V1** : esquisse des nouveaux endpoints (auth, profil, config soirée…) et mise à jour prévue du flux **OpenAPI** / `OpenApiContractTests` pour les endpoints critiques.

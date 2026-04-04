@@ -2,7 +2,7 @@
 
 Le workflow (`.github/workflows/ci-cd.yml`) assure :
 
-- **À chaque push / PR** : job **lint** (ESLint, Prettier, **`dotnet format`** sur `MoviePicker.slnx`, **`dotnet build -warnaserror`** API, export **OpenAPI** `artifacts/openapi-v1.json` + artefact **`openapi-v1`**, `pnpm audit`), puis en parallèle **test-web** (Vitest + couverture), **test-api** (unitaires + intégration .NET + Coverlet). Les **E2E Playwright** ne sont pas exécutés en CI (option local : `pnpm run test:e2e` / `test:e2e:ci`).
+- **À chaque push / PR** : job **lint** (ESLint, Prettier, **`dotnet format`** sur `MoviePicker.slnx`, **`dotnet build -warnaserror`** API, export **OpenAPI** `artifacts/openapi-v1.json` + artefact **`openapi-v1`**, `pnpm audit`), puis en parallèle **test-web** (Vitest + couverture), **test-api** (unitaires + intégration .NET + Coverlet). Après **test-web**, job **lighthouse** (mesure perf / a11y / SEO sur le build Vite, `continue-on-error: true`, artefact **`lighthouse-reports`**) — roadmap § 34. Les **E2E Playwright** ne sont pas exécutés en CI (option local : `pnpm run test:e2e` / `test:e2e:ci`).
 - **Sur push vers `master`** (branche par défaut du dépôt, voir commentaire en tête de [`.github/workflows/ci-cd.yml`](../../.github/workflows/ci-cd.yml)) : après **lint** (dont `pnpm audit --audit-level=high`), **test-web**, **test-api** — image Docker API → Artifact Registry → Cloud Run (**secrets** `MONGODB_URI` / `TMDB_API_KEY` via **Secret Manager** + variable **`ALLOWED_ORIGINS`** pour le CORS) ; build front prod (`VITE_API_URL` secret) → S3 + invalidation CloudFront.
 
 Variables d’environnement **local** : `.env.example` à la racine, `apps/web/.env.example`. **Cloud Run / GitHub** : tableau des secrets et variables dans ce fichier (§ 1).
@@ -90,7 +90,7 @@ Tout se configure depuis **Settings** → **Secrets and variables** → **Action
 
 ## 3. Ordre d'exécution (push sur `master`)
 
-1. **lint** (tsc, ESLint, Prettier, **`pnpm audit --audit-level=high`**) → puis **test-web**, **test-api** (parallèles).
+1. **lint** (tsc, ESLint, Prettier, **`pnpm audit --audit-level=high`**) → puis **test-web**, **test-api** (parallèles) → **lighthouse** (non bloquant, après test-web).
 2. **docker-api** (push `master` uniquement) : image depuis `apps/api-dotnet/MoviePicker.Api/Dockerfile`, push Artifact Registry.
 3. **deploy-api** : Cloud Run avec `--set-secrets` (`MONGODB_URI`, `TMDB_API_KEY` depuis Secret Manager) et `--set-env-vars ALLOWED_ORIGINS=…` (variable GitHub).
 4. **deploy-front** : build front avec secret `VITE_API_URL`, S3, invalidation CloudFront.
@@ -106,7 +106,36 @@ Tout se configure depuis **Settings** → **Secrets and variables** → **Action
 |-----|---------|
 | **test-web** | Vitest (composants, pages, MSW, a11y), couverture, artefact HTML |
 | **test-api** | `MoviePicker.Api.Tests` + Coverlet ; `MoviePicker.Api.IntegrationTests` (Mongo vide = mémoire) |
-En local : `pnpm test`, `pnpm run test:coverage --filter=web`, `dotnet test …` ; E2E optionnel : `pnpm run test:e2e:ci`.
+| **lighthouse** | Build front + Lighthouse sur `/`, `/new`, `/s/…` ; seuils [configs/lighthouse-budgets.json](../configs/lighthouse-budgets.json) ; échec du job n’empêche pas le merge (`continue-on-error`) |
+
+En local : `pnpm test`, `pnpm run test:coverage --filter=web`, `pnpm run lighthouse` (Node **≥ 22** recommandé, Chrome installé), `dotnet test …` ; E2E optionnel : `pnpm run test:e2e:ci`.
+
+### Lighthouse — qu’est-ce que c’est ? (vérification manuelle)
+
+**Lighthouse** est un outil Google qui lance **un vrai Chrome en mode headless**, sert le **build de prod** du front (`apps/web/dist`), puis mesure plusieurs catégories (souvent affichées sur 0–100) :
+
+- **Performance** : temps de chargement, réactivité (lié aux Core Web Vitals).
+- **Accessibilité** : contrastes, noms accessibles, rôles ARIA — complète les tests **axe** des composants.
+- **Bonnes pratiques** : HTTPS simulé en local, erreurs console, sécurité côté front.
+- **SEO** : balises title/description, métadonnées sociales (Open Graph), etc.
+
+Ce n’est **pas** un test fonctionnel (« le bouton crée bien un event ») : ça juge surtout la **qualité perçue** de la page telle qu’un utilisateur la reçoit.
+
+**Comment le lancer chez toi**
+
+1. À la racine du dépôt : `pnpm run lighthouse`.
+2. Prérequis : **Node ≥ 22** (recommandé pour la version de Lighthouse du projet), **Chrome / Chromium** installé (le script le détecte via `chrome-provider`).
+3. Le script : build `web`, démarre un petit serveur statique sur le dossier `dist`, ouvre les routes `/`, `/new`, `/s/lighthouse-smoke`, compare les scores aux seuils de [`configs/lighthouse-budgets.json`](../../configs/lighthouse-budgets.json).
+
+**Où voir le résultat**
+
+- Dossier **`artifacts/lighthouse/`** (souvent listé dans `.gitignore`) : fichiers **HTML** par URL — ouvre-les dans le navigateur pour le rapport détaillé (audit, recommandations, captures).
+- En **CI** : après un run, télécharge l’artefact **`lighthouse-reports`** sur la page du workflow GitHub Actions (même contenu).
+
+**Si ça échoue**
+
+- Lis le message dans le terminal (score en dessous du seuil, Chrome introuvable, port occupé).
+- Pour la CI : le job est en **`continue-on-error: true`** — la PR n’est pas bloquée, mais l’artefact permet de constater la régression.
 
 ## 5. Politique IAM pour l'utilisateur AWS (S3 + CloudFront)
 
@@ -147,7 +176,7 @@ IAM → Utilisateurs → ton utilisateur → Ajouter des autorisations → Crée
 ## 6. Dépannage
 
 - **Erreur d'auth GCP** : vérifier que `GCP_SA_KEY` est le JSON complet du compte de service et que le compte a bien *Artifact Registry Writer* et *Cloud Run Admin*.
-- **« Secret Manager API has not been used… or it is disabled »** au déploiement Cloud Run : activer l’API sur le projet — [console Secret Manager API](https://console.cloud.google.com/apis/library/secretmanager.googleapis.com) → **Enable**, ou `gcloud services enable secretmanager.googleapis.com --project=TON_PROJECT_ID`. Le workflow **deploy-api** exécute aussi cette commande (idempotent) si le compte de `GCP_SA_KEY` peut activer des services ; sinon fait-le une fois à la main (propriétaire / *Editor*), attends 1–2 min, relance le job. Détail : [deploy-gcp-api.md](deploy-gcp-api.md) § 2.
+- **« Secret Manager API has not been used… or it is disabled »** au déploiement Cloud Run : activer l’API sur le projet — [console Secret Manager API](https://console.cloud.google.com/apis/library/secretmanager.googleapis.com) → **Enable**, ou `gcloud services enable secretmanager.googleapis.com --project=TON_PROJECT_ID`. Le workflow **deploy-api** exécute aussi cette commande (idempotent) si le compte de `GCP_SA_KEY` peut activer des services ; sinon fait-le une fois à la main (propriétaire / *Editor*), attends 1–2 min, relance le job. Détail : [02-deploy-gcp-api.md](02-deploy-gcp-api.md) § 2.
 - **Cloud Run « Container failed to start »** : vérifier les secrets **Secret Manager** (`MONGODB_URI`, `TMDB_API_KEY`), les IAM **Secret Accessor** (runtime + déploiement), et la variable **`ALLOWED_ORIGINS`** (obligatoire hors dev ; sinon l’API refuse de démarrer).
 - **Deploy API « permission denied » sur secrets** (`Revision service account … must be granted … Secret Accessor`) : l’erreur cite un compte du type `NNNN-compute@developer.gserviceaccount.com` — c’est le **runtime** Cloud Run, pas GitHub. Accorder **`roles/secretmanager.secretAccessor`** sur **`MONGODB_URI`** et **`TMDB_API_KEY`** à **ce** compte (voir § 1 bis, étape 2). Vérifier aussi **GCP_SA_KEY** si le message parle du compte de déploiement.
 - **Front ne pointe pas vers la bonne API** : vérifier que `VITE_API_URL` est exactement l'URL HTTPS de ton service Cloud Run (sans slash final).

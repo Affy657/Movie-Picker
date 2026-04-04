@@ -64,4 +64,4 @@ flowchart TB
 3. **API** → lit/écrit MongoDB, appelle TMDB pour les films.
 4. **CI/CD** : à chaque push sur `master`, GitHub Actions build l'API .NET (Docker), pousse l'image vers Artifact Registry, déploie sur Cloud Run, build le front, uploade sur S3, invalide le cache CloudFront.
 
-Pour l'architecture détaillée de l'API .NET (hexagonale, couches), voir [architecture-api-dotnet.md](../architecture-api-dotnet.md).
+Pour l'architecture détaillée de l'API .NET (hexagonale, couches), voir [02-architecture-api-dotnet.md](../02-architecture-api-dotnet.md).

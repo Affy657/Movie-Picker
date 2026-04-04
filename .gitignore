@@ -50,3 +50,7 @@ blob-report/
 
 # Misc
 *.local
+
+# Cursor
+.cursor/
+Agents.md

@@ -21,7 +21,7 @@ Sans authentification ou sans droits sur le bon projet, les mêmes outils peuven
 | **`gh`** | Issues, PR, secrets/variables du dépôt (noms uniquement), déclencher ou suivre les workflows | `gh auth status` |
 | **`git`** | Branches, commits, push déclenchant la CI | `git --version` |
 
-Références détaillées : [deploy-cicd.md](mvp/deploy-cicd.md), [deploy-gcp-api.md](mvp/deploy-gcp-api.md), [deploy-aws-front.md](mvp/deploy-aws-front.md).
+Références détaillées : [04-deploy-cicd.md](mvp/04-deploy-cicd.md), [02-deploy-gcp-api.md](mvp/02-deploy-gcp-api.md), [03-deploy-aws-front.md](mvp/03-deploy-aws-front.md).
 
 ## CLI build & tests (stack du repo)
 
@@ -39,6 +39,7 @@ Prérequis : voir [README](../README.md) § Prérequis et `node scripts/check-pr
 | Script | Usage |
 |--------|--------|
 | [`scripts/sync-gcp-secrets-from-env.mjs`](../scripts/sync-gcp-secrets-from-env.mjs) | Créer ou mettre à jour `MONGODB_URI` et `TMDB_API_KEY` dans **Secret Manager** à partir du `.env` local (ne pas commiter `.env`). Ex. : `node scripts/sync-gcp-secrets-from-env.mjs TON_PROJECT_ID` |
+| [`scripts/verify-local.cjs`](../scripts/verify-local.cjs) | Vérification locale proche de la CI : `pnpm run verify:local` à la racine |
 
 ## IDE / assistant (Cursor)
 

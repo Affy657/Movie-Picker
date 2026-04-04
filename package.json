@@ -17,16 +17,21 @@
     "test:coverage": "turbo run test:coverage",
     "test:e2e": "playwright test",
     "test:e2e:ci": "cross-env VITE_API_URL=http://127.0.0.1:5010 pnpm --filter \"./apps/web\" run build && cross-env CI=1 pnpm run test:e2e",
-    "audit": "pnpm audit --audit-level=high"
+    "audit": "pnpm audit --audit-level=high",
+    "verify:local": "node scripts/verify-local.cjs",
+    "lighthouse": "node scripts/lighthouse-run.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@typescript-eslint/eslint-plugin": "^8.57.1",
     "@typescript-eslint/parser": "^8.57.1",
+    "chrome-launcher": "^1.2.1",
     "cross-env": "^10.1.0",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.2",
+    "lighthouse": "^13.0.3",
     "prettier": "^3.8.1",
+    "serve": "14",
     "turbo": "^2.8.19"
   },
   "packageManager": "pnpm@10.0.0",

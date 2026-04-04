@@ -1,5 +1,5 @@
 # CI/CD Movie Picker — lint, tests web + API, couverture, déploiements (E2E Playwright : local uniquement)
-# Branche par défaut : **master** (CI/CD sur cette branche uniquement — voir docs/mvp/deploy-cicd.md).
+# Branche par défaut : **master** (CI/CD sur cette branche uniquement — voir docs/mvp/04-deploy-cicd.md).
 
 name: CI/CD
 
@@ -97,6 +97,28 @@ jobs:
         with:
           name: coverage-api-unit
           path: coverage-unit
+          if-no-files-found: warn
+
+  lighthouse:
+    name: Lighthouse front (rapport, non bloquant)
+    needs: test-web
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - uses: browser-actions/setup-chrome@v1
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lighthouse
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-reports
+          path: artifacts/lighthouse
           if-no-files-found: warn
 
   docker-api:
