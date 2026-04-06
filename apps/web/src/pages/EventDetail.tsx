@@ -31,16 +31,15 @@ export default function EventDetail() {
   const eventQuery = useEvent(slug, hostToken);
   const event = eventQuery.data ?? null;
 
-  const documentTitle =
-    !slug
-      ? APP_DOCUMENT_TITLE
-      : eventQuery.isPending
-        ? pageTitle('Chargement')
-        : eventQuery.isError
-          ? pageTitle('Soirée introuvable')
-          : event
-            ? pageTitle(event.title)
-            : APP_DOCUMENT_TITLE;
+  const documentTitle = !slug
+    ? APP_DOCUMENT_TITLE
+    : eventQuery.isPending
+      ? pageTitle('Chargement')
+      : eventQuery.isError
+        ? pageTitle('Soirée introuvable')
+        : event
+          ? pageTitle(event.title)
+          : APP_DOCUMENT_TITLE;
   useDocumentTitle(documentTitle);
 
   const moviesQueryEnabled = !!slug && eventQuery.isSuccess;
