@@ -177,13 +177,14 @@ jobs:
             echo "::error::  • ou Secret du même nom (ALLOWED_ORIGINS) si tu préfères."
             exit 1
           fi
+          # --set-env-vars dict parsing treats ':' and ',' specially; ^##^ sets an alternate delimiter (gcloud topic escaping).
           gcloud run deploy ${{ env.CLOUD_RUN_SERVICE_NAME }} \
             --image ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPO }}/api:${{ github.sha }} \
             --region ${{ env.GCP_REGION }} \
             --platform managed \
             --allow-unauthenticated \
             --set-secrets "MONGODB_URI=MONGODB_URI:latest,TMDB_API_KEY=TMDB_API_KEY:latest" \
-            --set-env-vars "ALLOWED_ORIGINS=$CORS"
+            --set-env-vars "^##^ALLOWED_ORIGINS=$CORS"
 
   deploy-front:
     name: Deploy Front → S3 & CloudFront
