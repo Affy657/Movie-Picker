@@ -78,7 +78,7 @@ dotnet test apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.Int
 pnpm exec playwright install chromium  # une fois : binaire navigateur pour Playwright
 pnpm run test:e2e   # E2E : build d’abord avec VITE_API_URL=http://127.0.0.1:5010 (voir playwright.config.ts)
 pnpm run test:e2e:ci  # E2E recommandé : build web + Playwright (API .NET stub TMDB démarrée par Playwright sur :5010)
-pnpm run lighthouse   # Lighthouse sur le build web (§ 34) — Node ≥ 22 + Chrome ; rapports dans artifacts/lighthouse/
+pnpm run lighthouse   # Lighthouse sur le build web (§ 35) — Node ≥ 22 + Chrome ; rapports dans artifacts/lighthouse/
 ```
 
 - **API** : port 4000 — http://localhost:4000/ , /health , /swagger

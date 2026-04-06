@@ -20,4 +20,4 @@ Le **MVP** reste historisé dans [mvp/01-roadmap-mvp.md](mvp/01-roadmap-mvp.md) 
 
 | Dossier | Statut |
 |---------|--------|
-| *(aucune pour l’instant ; à créer plus tard, ex. `v1-produit/`)* | — |
+| [v1-produit/](v1-produit/01-roadmap-v1.md) | Roadmap V1 produit (carte de suivi) |

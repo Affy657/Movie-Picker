@@ -12,6 +12,7 @@ import EventDetailHeader from './event-detail/EventDetailHeader';
 import EventMoviesLoadError from './event-detail/EventMoviesLoadError';
 import EventMoviesSection from './event-detail/EventMoviesSection';
 import { friendlyEventError } from './event-detail/friendlyEventError';
+import { APP_DOCUMENT_TITLE, pageTitle, useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function EventDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -29,6 +30,18 @@ export default function EventDetail() {
 
   const eventQuery = useEvent(slug, hostToken);
   const event = eventQuery.data ?? null;
+
+  const documentTitle =
+    !slug
+      ? APP_DOCUMENT_TITLE
+      : eventQuery.isPending
+        ? pageTitle('Chargement')
+        : eventQuery.isError
+          ? pageTitle('Soirée introuvable')
+          : event
+            ? pageTitle(event.title)
+            : APP_DOCUMENT_TITLE;
+  useDocumentTitle(documentTitle);
 
   const moviesQueryEnabled = !!slug && eventQuery.isSuccess;
   const { moviesRefetchInterval } = useEventLive(event ?? undefined, { moviesQueryEnabled });

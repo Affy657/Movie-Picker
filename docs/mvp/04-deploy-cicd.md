@@ -2,7 +2,7 @@
 
 Le workflow (`.github/workflows/ci-cd.yml`) assure :
 
-- **À chaque push / PR** : job **lint** (ESLint, Prettier, **`dotnet format`** sur `MoviePicker.slnx`, **`dotnet build -warnaserror`** API, export **OpenAPI** `artifacts/openapi-v1.json` + artefact **`openapi-v1`**, `pnpm audit`), puis en parallèle **test-web** (Vitest + couverture), **test-api** (unitaires + intégration .NET + Coverlet). Après **test-web**, job **lighthouse** (mesure perf / a11y / SEO sur le build Vite, `continue-on-error: true`, artefact **`lighthouse-reports`**) — roadmap § 34. Les **E2E Playwright** ne sont pas exécutés en CI (option local : `pnpm run test:e2e` / `test:e2e:ci`).
+- **À chaque push / PR** : job **lint** (ESLint, Prettier, **`dotnet format`** sur `MoviePicker.slnx`, **`dotnet build -warnaserror`** API, export **OpenAPI** `artifacts/openapi-v1.json` + artefact **`openapi-v1`**, `pnpm audit`), puis en parallèle **test-web** (Vitest + couverture), **test-api** (unitaires + intégration .NET + Coverlet). Après **test-web**, job **lighthouse** (mesure perf / a11y / SEO sur le build Vite, `continue-on-error: true`, artefact **`lighthouse-reports`**) — roadmap § 35. Les **E2E Playwright** ne sont pas exécutés en CI (option local : `pnpm run test:e2e` / `test:e2e:ci`).
 - **Sur push vers `master`** (branche par défaut du dépôt, voir commentaire en tête de [`.github/workflows/ci-cd.yml`](../../.github/workflows/ci-cd.yml)) : après **lint** (dont `pnpm audit --audit-level=high`), **test-web**, **test-api** — image Docker API → Artifact Registry → Cloud Run (**secrets** `MONGODB_URI` / `TMDB_API_KEY` via **Secret Manager** + variable **`ALLOWED_ORIGINS`** pour le CORS) ; build front prod (`VITE_API_URL` secret) → S3 + invalidation CloudFront.
 
 Variables d’environnement **local** : `.env.example` à la racine, `apps/web/.env.example`. **Cloud Run / GitHub** : tableau des secrets et variables dans ce fichier (§ 1).
@@ -66,7 +66,7 @@ done
 
 3. **Accès au déploiement** : le compte de service dont la clé est `GCP_SA_KEY` doit aussi pouvoir utiliser ces secrets au moment du `gcloud run deploy` (**Secret Accessor** sur les mêmes secrets).
 
-4. **CORS** : ajouter **`ALLOWED_ORIGINS`** — de préférence en **variable** de dépôt (onglet **Variables**), ou en **secret** du même nom si tout est déjà dans Secrets. Valeur = **origine** exacte du front (ex. `https://d1234567890.cloudfront.net`, **sans** slash final). Plusieurs origines : **virgules**. Si vide, le job **deploy-api** échoue (message d’erreur dans les logs avec le chemin GitHub).
+4. **CORS** : ajouter **`ALLOWED_ORIGINS`** — de préférence en **variable** de dépôt (onglet **Variables**), ou en **secret** du même nom si tout est déjà dans Secrets. Valeur = **origine** exacte du front (ex. `https://d1234567890.cloudfront.net`, **sans** slash final). Plusieurs origines : **virgules**. Si l’apex (`https://movie-picker.fr`) ou `www` doit rester autorisé en plus de `https://web.movie-picker.fr`, les ajouter dans la même liste (exemple commenté dans **`.env.example`** à la racine). Si vide, le job **deploy-api** échoue (message d’erreur dans les logs avec le chemin GitHub).
 
 ### Variables (Settings → Variables)
 

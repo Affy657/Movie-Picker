@@ -286,7 +286,7 @@ Travaux réalisés après la clôture fonctionnelle du MVP et la migration .NET,
 
 ### 28. Nom de domaine
 
-- [ ] **Domaine dédié** : remplacer URLs par défaut CloudFront / Cloud Run par ex. `app.*` et `api.*` — certificat ACM (front), mapping + cert GCP (Cloud Run) ; mettre à jour `VITE_API_URL` et **CORS** (`ALLOWED_ORIGINS`) — procédure : [06-domaine-personnalise.md](06-domaine-personnalise.md)
+- [x] **Domaine dédié** : remplacer URLs par défaut CloudFront / Cloud Run par ex. `web.*` / `api.*` — certificat ACM (front, **us-east-1**), mapping + cert GCP (Cloud Run) ; `VITE_API_URL` et **CORS** (`ALLOWED_ORIGINS`) — procédure : [06-domaine-personnalise.md](06-domaine-personnalise.md).
 
 ---
 
@@ -332,7 +332,18 @@ Travaux réalisés après la clôture fonctionnelle du MVP et la migration .NET,
 
 ---
 
-### 34. Lighthouse (performances, accessibilité, SEO)
+### 34. Favicon et titres de page (identité navigateur)
+
+> Aligné [03-features-list.md](../03-features-list.md) (MVP – plateforme : favicon + `document.title`). Complète l’identité visuelle des onglets et favoris (au lieu de l’icône générique du navigateur).
+
+- [x] **Favicon** : ajouter un fichier dans [`apps/web/public/`](../../apps/web/public/) (`favicon.ico` et/ou `favicon.svg`, éventuellement PNG 32×32) ; référencer explicitement dans [`apps/web/index.html`](../../apps/web/index.html) (`<link rel="icon" …>`) si Vite ne le déduit pas seul.
+- [x] **`document.title` par route** : titres distincts pour l’accueil, la création de soirée et le détail soirée (inclure le titre de l’événement ou le slug quand les données sont chargées) — ex. `useEffect` sur les pages, petite utilitaire, ou librairie type `react-helmet-async` si le projet standardise là-dessus. Implémentation : [`useDocumentTitle`](../../apps/web/src/hooks/useDocumentTitle.ts) + `pageTitle()` sur Home, CreateEvent, EventDetail.
+- [x] **Vérification build / prod** : après `pnpm run build`, `favicon.svg` est dans `apps/web/dist` ; après déploiement, confirmer le `Content-Type` du favicon et les titres en navigation client (check manuel une fois en prod).
+- [ ] *(Optionnel)* **`apple-touch-icon`** : une icône 180×180 pour l’ajout à l’écran d’accueil iOS — hors périmètre PWA complet (voir backlog [03-features-list.md](../03-features-list.md)).
+
+---
+
+### 35. Lighthouse (performances, accessibilité, SEO)
 
 > Complète les tests **axe** existants ([a11y.test.tsx](../../apps/web/src/pages/a11y.test.tsx)) par une mesure **navigateur** (Core Web Vitals, bonnes pratiques, SEO) sur le build réel du front.
 
@@ -342,19 +353,19 @@ Travaux réalisés après la clôture fonctionnelle du MVP et la migration .NET,
 
 ---
 
-### 35. Staging et consolidation agentique
+### 36. Redirection racine et référencement (SEO)
 
-> Pré-production et finalisation de l’outillage dev (MCP / règles). Les enrichissements **films** (watch providers, indicateur « déjà vu ») font partie du périmètre **V1** dans [03-features-list.md](../03-features-list.md).
+> Après le sous-domaine du front (**`web.…`**, voir [06-domaine-personnalise.md](06-domaine-personnalise.md)) : faire pointer l’**apex** (`movie-picker.fr`) vers **`https://web.…`** et couvrir les bases pour l’indexation (Search Console, etc.).
 
-- [ ] **Environnement staging (pré-prod)** : second déploiement API + front (ex. Cloud Run + S3/CloudFront), secrets, `VITE_API_URL` et `ALLOWED_ORIGINS` dédiés, workflow ou déclencheur CI ; documenter dans [04-deploy-cicd.md](04-deploy-cicd.md).
-- [ ] **Système agentique (rappel)** : finaliser le **§ 33** (règles `.cursor` / `AGENTS.md`, périmètre MCP).
+**Côté dépôt (sans DNS / GSC / secrets GitHub)**
 
----
+- [x] **Indexation non bloquée** : [`apps/web/public/robots.txt`](../../apps/web/public/robots.txt) — `Allow: /`, pas de `Disallow: /` ; pas de meta **`noindex`** sur la home ([`index.html`](../../apps/web/index.html)).
+- [x] **Sitemap statique** : [`apps/web/public/sitemap.xml`](../../apps/web/public/sitemap.xml) (`/` et `/new`, URL canoniques `https://web.movie-picker.fr/…`) + ligne **`Sitemap:`** dans `robots.txt` — à enregistrer dans Search Console après validation de la propriété.
+- [x] **Canonique & partage** : `link rel="canonical"` + `og:url` + `og:locale` dans [`index.html`](../../apps/web/index.html) (alignés sur le domaine doc).
+- [x] **Exemple CORS multi-origines** : commentaire dans [`.env.example`](../../.env.example) pour `ALLOWED_ORIGINS` (web + apex + `www`, sans slash final).
 
-### 36. Bascule « features produit » (gate)
+**À faire par le mainteneur (comptes DNS / cloud / Google)**
 
-> Quand **toutes** les cases ci‑dessous sont cochées, enchaîner sur [03-features-list.md](../03-features-list.md) (V1 : comptes, config, réactions, watch providers, indicateur « déjà vu », etc. ; reset mot de passe en **V2**) et créer la roadmap dans `docs/v1-…/` selon [00-roadmaps-par-version.md](../00-roadmaps-par-version.md).
-
-- [ ] **Périmètre V1 priorisé** : première salve de fonctionnalités choisie (ordre de build, hors scope explicite) pour éviter le scope creep.
-- [ ] **Auth & modèle utilisateur** : choix technique documenté (ex. Identity, JWT + refresh, cookies session) et impact **MongoDB** / nouvelles collections — mise à jour de [02-architecture-api-dotnet.md](../02-architecture-api-dotnet.md) **ou** doc dédiée **avant** d’ouvrir trop de routes « compte ».
-- [ ] **Contrat API V1** : esquisse des nouveaux endpoints (auth, profil, config soirée…) et mise à jour prévue du flux **OpenAPI** / `OpenApiContractTests` pour les endpoints critiques.
+- [ ] **Redirection apex** : `https://movie-picker.fr` (et éventuellement `www`) → **`https://web.movie-picker.fr`** en **301** de préférence (OVH redirection ou CloudFront + fonction — détail : [07-redirection-racine-et-referencement.md](07-redirection-racine-et-referencement.md)).
+- [ ] **CORS en prod** : reporter la valeur voulue dans la **variable / secret GitHub** `ALLOWED_ORIGINS` (et redéployer l’API) — reprendre l’exemple `.env.example` si besoin ; voir [07-redirection-racine-et-referencement.md](07-redirection-racine-et-referencement.md).
+- [ ] **Search Console** : propriété validée (ex. TXT DNS), inspection / demande d’indexation de la home, dépôt du sitemap `https://web.movie-picker.fr/sitemap.xml` une fois le front déployé.

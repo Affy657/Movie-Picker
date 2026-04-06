@@ -25,6 +25,7 @@ Les fichiers **numérotés** (`01-…`, `02-…`) indiquent un **ordre de lectur
 | [04-deploy-cicd.md](mvp/04-deploy-cicd.md) | GitHub Actions, secrets |
 | [05-monitoring.md](mvp/05-monitoring.md) | Logs et métriques |
 | [06-domaine-personnalise.md](mvp/06-domaine-personnalise.md) | Domaine custom (CloudFront + Cloud Run), CORS, § 28 MVP |
+| [07-redirection-racine-et-referencement.md](mvp/07-redirection-racine-et-referencement.md) | Redirection `movie-picker.fr` → `web.…`, SEO / Search Console, § 36 MVP |
 
 ## `docs/dev cloud ynov/`
 

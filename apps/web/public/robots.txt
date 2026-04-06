@@ -1,0 +1,5 @@
+# Domaine prod — voir docs/mvp/07-redirection-racine-et-referencement.md (adapter si fork / autre hôte).
+User-agent: *
+Allow: /
+
+Sitemap: https://web.movie-picker.fr/sitemap.xml

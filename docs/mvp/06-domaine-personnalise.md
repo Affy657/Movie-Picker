@@ -224,6 +224,12 @@ Ce texte vient du front quand l’appel **`fetch`** vers l’API échoue (résea
 
 ---
 
+## Suite possible
+
+- Redirection **`movie-picker.fr`** → **`web.movie-picker.fr`** et bases **SEO** : [07-redirection-racine-et-referencement.md](07-redirection-racine-et-referencement.md) (roadmap § 36).
+
+---
+
 ## Rappel utile
 
 L’URL **`.cloudfront.net`** continue d’exister en interne : tu ajoutes un **alias** (`web.movie-picker.fr`) vers la même distribution. Tu ne « renommes » pas CloudFront ; tu poses un **nom lisible** dessus via DNS + certificat.

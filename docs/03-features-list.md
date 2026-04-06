@@ -16,6 +16,7 @@ Liste de tout ce qu'il y a dans le site (vision cible), puis UX/UI, cas limites 
 ### Création et gestion des soirées
 - **Créer une soirée** : titre, date, heure, **lieu** (optionnel : adresse ou lien Google Maps), description (optionnelle).
 - **Lien de partage** : URL unique par événement (ex. `https://app.com/s/abc123`) à envoyer par message.
+- **Aperçu du lien partagé** (messageries, réseaux) : balises **Open Graph / Twitter Cards** (titre, description, image) pour un extrait lisible lors du collage de l’URL. Une SPA qui sert le même `index.html` pour toutes les routes donne souvent un aperçu **générique** ; un aperçu **dynamique** (titre de la soirée, éventuellement compteur de participants) suppose HTML généré par URL (SSR, prerender, fonction edge, etc.) — voir [mvp/07-redirection-racine-et-referencement.md](mvp/07-redirection-racine-et-referencement.md). **Confidentialité** : tout indicateur dans l’aperçu (ex. nombre de participants) doit être **explicitement acceptable** pour l’hôte / la visibilité de l’événement.
 - **Lien « Copier le lien »** : bouton qui copie l'URL de la soirée dans le presse-papier pour partager en un clic.
 - **QR code** : génération d'un QR code pointant vers l'URL de la soirée ; affichage sur la page (hôte et participants) pour rejoindre facilement depuis le téléphone.
 - **Modifier une soirée** : titre, date, heure, lieu, description (par le créateur).
@@ -48,6 +49,7 @@ Liste de tout ce qu'il y a dans le site (vision cible), puis UX/UI, cas limites 
 - **Pseudo par soirée** : en rejoignant (ou en ouvrant la soirée), chaque participant choisit un **pseudo** affiché à côté de ses propositions, votes et réactions pour cette soirée uniquement.
 - **Voir les détails de la soirée** : titre, date, **lieu** (si renseigné), thème, liste des films proposés, votes, réactions, bouton « Lancer la roue » (visible uniquement pour l'hôte).
 - **Compte à rebours** : affichage « Dans X jours » ou « Dans X heures » jusqu'à la date/heure de la soirée (et éventuellement « C'est ce soir » / « En cours »).
+- **Rappels / notifications** : alerter avant la soirée (ex. « dans 1 h »). Les canaux possibles vont du **léger** (bannière **in-app** tant que l’utilisateur a la soirée ouverte) au **calendrier** (fichier .ics avec rappel géré par l’OS) jusqu’au **push navigateur** ou **e-mail**, qui supposent **consentement**, infra et en général **compte / e-mail** — voir découpage MVP / V1 / V2 / backlog ci-dessous. Fiabilité : date, heure et **fuseau** (ou convention explicite) de l’événement.
 - **Lien « Ajouter au calendrier »** : bouton qui génère un fichier .ics (ou lien Google Calendar / Outlook) pour ajouter la soirée à son agenda (titre, date, heure, lieu).
 - **Mise à jour en direct** : les nouvelles propositions, votes et réactions s'affichent sans recharger la page (WebSocket ou polling) ; idem pour le résultat de la roue quand l'hôte la lance.
 
@@ -76,6 +78,8 @@ Liste de tout ce qu'il y a dans le site (vision cible), puis UX/UI, cas limites 
 - **Expiration du lien** : configurée par l'hôte ; après expiration, lecture seule ou message « Soirée terminée ».
 
 ### Interface et confort
+- **Favicon et onglet** : **icône du site** (favicon) visible dans l’onglet du navigateur et les favoris, plutôt que l’icône générique ; **titre de page** (`document.title`) cohérent par route (accueil, soirée, etc.).
+- **Internationalisation (i18n)** : plusieurs **langues d’interface** ; formats date/nombre selon la locale ; alignement des métadonnées **TMDB** sur la langue choisie quand c’est pertinent. **Planification** : éviter les chaînes en dur dans le nouveau code (clés / fichiers de traduction) pour limiter le coût d’ajout d’une langue ; livraison d’une **deuxième langue** (ex. anglais) peut suivre une fois les libellés du MVP stabilisés.
 - **Mode sombre / clair** : toggle dans l'interface (préférence stockée en local, ou sur le compte si connecté).
 - **Vue grille / liste** : bascule entre affichage en **grille** (posters, cartes) et en **liste** (texte compact, moins d'images) pour la liste des films de la soirée.
 - **Mode hors-ligne léger** : mise en cache de la dernière vue de la soirée (données + assets) ; affichage basique possible sans réseau (lecture seule, avec indication « Données en cache »). En mode hors-ligne, pas de mise à jour en direct ; les données affichées sont celles du dernier chargement.
@@ -176,7 +180,7 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 
 **Objectif** : mettre en production, sécuriser, tester, documenter et industrialiser le MVP — **hors** périmètre métier de **MVP – Features produit**.
 
-> Détail opérationnel : [mvp/01-roadmap-mvp.md](mvp/01-roadmap-mvp.md) (§ 1–16, post-MVP § 18–36, staging § 35, gate V1 § 36). Déploiements & secrets : [mvp/04-deploy-cicd.md](mvp/04-deploy-cicd.md).
+> Détail opérationnel : [mvp/01-roadmap-mvp.md](mvp/01-roadmap-mvp.md) (§ 1–16, post-MVP § 18–36). Déploiements & secrets : [mvp/04-deploy-cicd.md](mvp/04-deploy-cicd.md).
 
 - **Infra & déploiement** : API **Docker** sur **GCP Cloud Run** ; front statique **AWS S3** + **CloudFront** (SPA, fallback `index.html`) ; **GitHub Actions** (build, tests, image API, déploiements) ; variables et secrets documentés.
 - **Sécurité prod** : **HTTPS** ; **CORS** avec `ALLOWED_ORIGINS` ; **rate limiting** (création soirée, join, recherche films) ; secrets via **GCP Secret Manager** (pas de valeurs en clair côté prod) ; en-têtes `X-Content-Type-Options`, `X-Frame-Options`, etc.
@@ -186,7 +190,8 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 - **Front — solidité** : **TanStack Query** (ou équivalent) pour données serveur ; **error boundary** ; couche **« live »** (polling) isolée pour évolution V1 (SSE/WebSocket).
 - **Observabilité & doc** : logs (ex. Cloud Logging), métriques minimales Cloud Run / CloudFront ; **README**, schéma d’architecture, [mvp/05-monitoring.md](mvp/05-monitoring.md).
 - **Vérification locale** : **`pnpm run verify:local`** — voir [scripts/verify-local.cjs](../scripts/verify-local.cjs).
-- **Avant la V1 produit** : **Lighthouse** sur build (budgets, CI non bloquant si retenu) ; **staging** pré-prod ; **nom de domaine** ([mvp/06-domaine-personnalise.md](mvp/06-domaine-personnalise.md)) ; gate **§ 36** (périmètre V1, auth, contrat API).
+- **Identité navigateur** : **favicon** (dossier `public/` ou assets Vite) ; **`document.title`** sur les routes principales pour l’onglet et le partage basique — tâches : [mvp/01-roadmap-mvp.md](mvp/01-roadmap-mvp.md) § **34**.
+- **Avant la V1 produit** : **Lighthouse** sur build (roadmap § **35**, budgets, CI non bloquant si retenu) ; **nom de domaine** ([mvp/06-domaine-personnalise.md](mvp/06-domaine-personnalise.md)) ; **redirection apex + SEO** ([mvp/07-redirection-racine-et-referencement.md](mvp/07-redirection-racine-et-referencement.md), roadmap § **36**) ; documenter la **limitation SPA** sur les aperçus de liens (OG statiques vs dynamiques, aligné § V1 ci-dessous) ; périmètre et plan V1 : [03-features-list.md](03-features-list.md) (V1) et [00-roadmaps-par-version.md](00-roadmaps-par-version.md) quand tu crées `docs/v1-…/`.
 
 ---
 
@@ -223,11 +228,14 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 - **Config par l'hôte** : page Paramètres (thème, expiration, limite de propositions, type de roue aléatoire/pondérée). Réactions autorisées : choix des réactions disponibles en plus du up/down.
 - **Réactions** : en plus du vote, réactions type « J'ai déjà vu », « J'aimerais bien », etc. (liste configurable par l'hôte).
 - **Partage** : QR code ; « Copier le lien » (déjà en MVP).
+- **Aperçu de lien partagé (Open Graph / Twitter Cards)** : métadonnées **dynamiques** pour l’URL d’une soirée (titre de l’événement, description courte, image marque ou visuel fixe) lorsque l’**infra** permet de servir du HTML ou des meta **par URL** aux crawlers (sinon rester sur OG **statiques** et consigner la limite — [mvp/07-redirection-racine-et-referencement.md](mvp/07-redirection-racine-et-referencement.md)). **Option hôte** : afficher ou non des indicateurs sensibles dans l’aperçu (ex. **nombre de participants**) ; défaut prudent si l’événement est « privé par lien ».
+- **Rappels légers** : **bannière in-app** ou message sur la page soirée lorsque l’heure de début est proche (utilisateur déjà sur l’app / la soirée ouverte) — sans push ni e-mail.
+- **Préparation i18n** : convention sur les textes UI (pas de chaînes en dur sur les **nouveaux** écrans V1) pour faciliter une **2e langue** en V2 ; la langue UI reste au minimum **FR** tant que la traduction n’est pas livrée.
 - **Mise à jour en direct** : polling (ou WebSocket) pour voir les nouveaux films et votes sans recharger.
 - **Interface** : mode sombre/clair (préférence locale ou compte).
 - **Disponibilité streaming / VOD légale** : intégration TMDB *watch providers* (région ex. FR), pastilles ou liens sur recherche / fiche film, cache API, texte indicatif pour l’utilisateur.
 - **Indicateur « déjà vu » (autres participants)** : à l’ajout d’un film (ou sur la carte), afficher si des participants de la soirée l’ont déjà marqué comme vu (réactions ou agrégat côté API).
-- **Technique** : cache des posters (bucket ou BDD) ; table `users`, `reactions` ; routes auth et config ; endpoints / agrégats nécessaires pour watch providers et l’indicateur « déjà vu ». (Le **rate limiting** de base est déjà couvert par le MVP plateforme ; ajuster les règles si les nouveaux endpoints l’exigent.)
+- **Technique** : cache des posters (bucket ou BDD) ; table `users`, `reactions` ; routes auth et config ; endpoints / agrégats nécessaires pour watch providers et l’indicateur « déjà vu » ; si OG **dynamiques** : mécanisme serveur ou edge (HTML ou meta injectées) + éventuel **endpoint résumé événement** lisible par les crawlers. (Le **rate limiting** de base est déjà couvert par le MVP plateforme ; ajuster les règles si les nouveaux endpoints l’exigent.)
 
 ---
 
@@ -237,7 +245,8 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 
 - **Compte** : **mot de passe oublié** — lien « Réinitialiser le mot de passe » sur la page de connexion ; email avec lien sécurisé (voir Partie 1, *Compte utilisateur*).
 - **Films** : note moyenne (API), bande-annonce (lien), durée si disponible ; option « Séries OK / pas OK » (config hôte).
-- **Soirée** : lieu, description ; compte à rebours ; lien « Ajouter au calendrier » (.ics).
+- **Soirée** : lieu, description ; compte à rebours ; lien « Ajouter au calendrier » (.ics) — constitue aussi un **rappel** côté agenda (OS / Google / Outlook), complémentaire aux notifications in-app V1.
+- **Internationalisation** : **deuxième langue UI** (ex. anglais), sélecteur de langue, persistance de la préférence (local ou compte) ; appels TMDB avec paramètre de **langue** aligné sur la locale choisie.
 - **Config** : limite de participants, plage de votes (configurable).
 - **Historique** : filtre « Soirées passées », affichage du film gagnant et liste en lecture seule.
 - **Interface** : vue grille / liste ; mode hors-ligne léger (cache dernière vue).
@@ -254,6 +263,9 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 - Pages d'erreur dédiées (404, 500).
 - Crédits API (TMDB/OMDB), mention cookies/confidentialité.
 - Bonus cloud : autoscaling, IaC (Terraform/CloudFormation), multi-région, etc.
+- **Notifications hors session** : **push navigateur** et/ou **e-mail** pour rappels avant soirée (ex. 1 h avant), **préférences** par utilisateur — dépend d’une base **consentement**, d’infra (file d’envoi, jobs planifiés) et en pratique du **compte / e-mail** opérationnel (voir V2 mot de passe oublié comme socle e-mail si retenu).
+- **i18n étendue** : langues supplémentaires au-delà de la 2e langue V2, variantes régionales fines, RTL si besoin.
+- **PWA** : manifest, icônes multi-tailles, splash — hors favicon MVP (déjà couvert).
 
 ---
 
@@ -282,4 +294,8 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 | Indication « déjà vu » (autres participants) | ❌ | ✅ | – | – |
 | Calendrier .ics, compte à rebours | ❌ | ❌ | ✅ | – |
 | Historique soirées passées | ❌ | ❌ | ✅ | – |
+| Favicon, titres de page (`document.title`) | ✅ (plateforme) | – | – | – |
+| Aperçu lien partagé (OG / Twitter : statique vs dynamique) | Limite SPA documentée | Dynamique si infra OK + règle confidentialité | – | – |
+| Rappels (in-app / calendrier / push-email) | ❌ | In-app léger | .ics + compte à rebours | Push, e-mail (hors session) |
+| Internationalisation (i18n) | ❌ | Préparation (conventions texte) | 2e langue + TMDB | Langues +, RTL… |
 | Accessibilité étendue, crédits API, cookies, bonus cloud | ❌ | ❌ | ❌ | ✅ |

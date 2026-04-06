@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
 import ThemeToggle from '../components/ThemeToggle';
+import { APP_DOCUMENT_TITLE, useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function Home() {
+  useDocumentTitle(APP_DOCUMENT_TITLE);
+
   return (
     <main className="page">
       <div className="page-header-row">

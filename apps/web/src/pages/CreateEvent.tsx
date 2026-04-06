@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { fetchApi } from '../api/client';
+import { pageTitle, useDocumentTitle } from '../hooks/useDocumentTitle';
 import type { EventData } from '../types/event';
 
 interface CreateResponse extends EventData {
@@ -16,6 +17,8 @@ function getDefaultDate(): string {
 }
 
 export default function CreateEvent() {
+  useDocumentTitle(pageTitle('Nouvelle soirée'));
+
   const navigate = useNavigate();
   const [title, setTitle] = useState(isDev ? 'Soirée test' : '');
   const [date, setDate] = useState(isDev ? getDefaultDate() : '');

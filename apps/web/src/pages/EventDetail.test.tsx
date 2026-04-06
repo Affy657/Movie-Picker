@@ -12,6 +12,7 @@ import {
   createSearchAndAddHandlers,
 } from '../mocks/handlers';
 import { http, HttpResponse } from 'msw';
+import { pageTitle } from '../hooks/useDocumentTitle';
 
 function renderEventDetail(initialPath: string) {
   return render(
@@ -52,6 +53,7 @@ describe('EventDetail (MSW)', () => {
     await waitFor(() => {
       expect(screen.getByText(/n'existe pas|introuvable/i)).toBeInTheDocument();
     });
+    expect(document.title).toBe(pageTitle('Soirée introuvable'));
   });
 
   it('en tant qu’hôte affiche les deux liens de partage', async () => {
@@ -60,6 +62,7 @@ describe('EventDetail (MSW)', () => {
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     });
+    expect(document.title).toBe(pageTitle('Soirée démo'));
     expect(screen.getByText('Lien à partager')).toBeInTheDocument();
     expect(screen.getByText('Votre lien hôte (ne pas partager)')).toBeInTheDocument();
   });
