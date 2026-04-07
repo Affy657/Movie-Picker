@@ -21,3 +21,4 @@ Le **MVP** reste historisé dans [mvp/01-roadmap-mvp.md](mvp/01-roadmap-mvp.md) 
 | Dossier | Statut |
 |---------|--------|
 | [v1-produit/](v1-produit/01-roadmap-v1.md) | Roadmap V1 produit (carte de suivi) |
+| [v1-produit/02-deploiement-secrets-et-ci-v1.md](v1-produit/02-deploiement-secrets-et-ci-v1.md) | Tutoriel GCP/GitHub : secret Data Protection auth V1 |

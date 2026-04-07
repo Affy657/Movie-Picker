@@ -6,6 +6,7 @@ namespace MoviePicker.Api.IntegrationTests;
 
 /// <summary>
 /// Contrat minimal : le document OpenAPI expose les chemins attendus (évite les régressions de surface API).
+/// Inventaire des routes V1 à couvrir : docs/02-architecture-api-dotnet.md § « Surface API prévue en V1 ».
 /// </summary>
 public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationFactory>
 {
