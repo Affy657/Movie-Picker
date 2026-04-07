@@ -3,6 +3,9 @@
 Suite de tâches pour livrer la **V1 produit** après le MVP et la migration API .NET.  
 Références : [01-spec-technique.md](../01-spec-technique.md), [03-features-list.md](../03-features-list.md) (§ *V1 – Features*), [02-architecture-api-dotnet.md](../02-architecture-api-dotnet.md).
 
+Tutoriel **actions humaines** (GCP, GitHub, `.env`) : [02-deploiement-secrets-et-ci-v1.md](02-deploiement-secrets-et-ci-v1.md).  
+**Règle** : ne cocher une case que quand la tâche est **terminée** (y compris ce que l’humain doit faire sur les cloud). Un doc tutoriel seul ne suffit pas.
+
 Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant l’ordre des sections.
 
 **Ordre logique** : cadrage (§ 1) → modèle de données (§ 2) → API auth puis « mes soirées » / hôte compte (§ 3–4) → config hôte avant réactions (§ 5–6) → enrichissement films & posters côté API (§ 7–8) → shell, auth et pages front (§ 9–14) → live, rappels (§ 15–16) → OG / i18n transverses (§ 17–18) → qualité, déploiement, recette (§ 19–21).
@@ -15,9 +18,9 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 > **Base** : parcours MVP opérationnel (front + API .NET + MongoDB + déploiement). Voir [mvp/01-roadmap-mvp.md](../mvp/01-roadmap-mvp.md) § 16–17.
 
-- [ ] Valider le **choix auth** (sessions cookie serveur vs JWT stateless, durée de session) et le documenter dans [02-architecture-api-dotnet.md](../02-architecture-api-dotnet.md)
-- [ ] Prévoir **secrets** : clé de signature / cookie (ex. `AUTH_SECRET` ou équivalent) dans **GCP Secret Manager** + variables Cloud Run — aligner [mvp/04-deploy-cicd.md](../mvp/04-deploy-cicd.md)
-- [ ] Lister les **nouveaux endpoints** et impacts **OpenAPI** / `OpenApiContractTests` avant implémentation massive
+- [x] Valider le **choix auth** (sessions cookie serveur vs JWT stateless, durée de session) et le documenter dans [02-architecture-api-dotnet.md](../02-architecture-api-dotnet.md)
+- [x] Prévoir **secrets** : clé de signature / cookie (Data Protection) dans **GCP Secret Manager** + Cloud Run — [02-deploiement-secrets-et-ci-v1.md](02-deploiement-secrets-et-ci-v1.md)
+- [x] Lister les **nouveaux endpoints** et impacts **OpenAPI** / `OpenApiContractTests` avant implémentation massive
 
 ---
 
@@ -158,7 +161,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 > **Contrainte** : une SPA seule sert souvent les mêmes meta — pour un aperçu **riche par URL**, prévoir HTML ou meta **par route** (SSR, prerender, **fonction edge**, sous-domaine dédié, etc.). Voir [mvp/07-redirection-racine-et-referencement.md](../mvp/07-redirection-racine-et-referencement.md).
 
-- [ ] Choisir l’**approche infra** (CloudFront Function, Lambda@Edge, petite page serveur, autre) et la documenter dans ce dossier ou `docs/mvp/07-…` si transverse
+- [ ] Choisir l’**approche infra** (CloudFront Function, Lambda@Edge, petite page serveur, autre) et la documenter **dans ce dossier** (ex. section § 6 de [02-deploiement-secrets-et-ci-v1.md](02-deploiement-secrets-et-ci-v1.md) ou nouveau fichier `03-…` ici). Contexte SEO / redirection : lecture seule [mvp/07-redirection-racine-et-referencement.md](../mvp/07-redirection-racine-et-referencement.md)
 - [ ] Endpoint ou page **résumé événement** lisible par les crawlers (titre, description courte, image marque ou visuel fixe)
 - [ ] **Option confidentialité** (hôte) : autoriser ou non des indicateurs sensibles (ex. nombre de participants) dans l’aperçu — **défaut prudent** pour soirée « privée par lien »
 - [ ] Si l’infra dynamique n’est pas prête : **rester sur OG statiques** et tracer la limitation (pas de régression SEO racine)
@@ -184,7 +187,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ## 20. Déploiement et observabilité
 
-- [ ] Variables d’environnement et secrets (auth, bucket posters si applicable) documentés dans [mvp/04-deploy-cicd.md](../mvp/04-deploy-cicd.md)
+- [ ] Variables d’environnement et secrets (auth, bucket posters si applicable) documentés dans [02-deploiement-secrets-et-ci-v1.md](02-deploiement-secrets-et-ci-v1.md) (§ 3–5)
 - [ ] **CORS** / `ALLOWED_ORIGINS` si nouvelles origines (ex. sous-domaine OG)
 - [ ] **Cookies / sessions** (si cookie auth) : attributs **Secure**, **HttpOnly**, **SameSite** ; politique **CSRF** si cookie en cross-site — documenter dans [02-architecture-api-dotnet.md](../02-architecture-api-dotnet.md)
 - [ ] **Rate limiting** : revoir les plafonds pour les **nouveaux endpoints** (auth, config, réactions, TMDB enrichie) — prolongement note « technique » [03-features-list.md](../03-features-list.md) § V1
@@ -215,7 +218,8 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 | Sujet | Document |
 |--------|-----------|
 | MVP & post-MVP technique | [mvp/01-roadmap-mvp.md](../mvp/01-roadmap-mvp.md) |
-| CI, secrets | [mvp/04-deploy-cicd.md](../mvp/04-deploy-cicd.md) |
+| CI / déploiement **base MVP** (lecture) | [mvp/04-deploy-cicd.md](../mvp/04-deploy-cicd.md) |
+| **Secrets, CI et runtime — V1** (procédures) | [02-deploiement-secrets-et-ci-v1.md](02-deploiement-secrets-et-ci-v1.md) |
 | API .NET, couches | [02-architecture-api-dotnet.md](../02-architecture-api-dotnet.md) |
 | Périmètre fonctionnel V1 | [03-features-list.md](../03-features-list.md) § *V1 – Features* |
 | Index versions | [00-roadmaps-par-version.md](../00-roadmaps-par-version.md) |

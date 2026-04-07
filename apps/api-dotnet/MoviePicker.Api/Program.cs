@@ -7,6 +7,8 @@ EnvLoader.LoadFromEnvFileIfExists();
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddSharedDataProtection();
+
 builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
 
 if (!builder.Environment.IsDevelopment())
