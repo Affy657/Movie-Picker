@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.GetEventDetail;
@@ -9,15 +10,18 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
     private readonly IEventRepository _eventRepository;
     private readonly IMovieRepository _movieRepository;
     private readonly IHostTokenAccessor _hostTokenAccessor;
+    private readonly ICurrentUserAccessor _currentUserAccessor;
 
     public GetEventDetailHandler(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
-        IHostTokenAccessor hostTokenAccessor)
+        IHostTokenAccessor hostTokenAccessor,
+        ICurrentUserAccessor currentUserAccessor)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _hostTokenAccessor = hostTokenAccessor;
+        _currentUserAccessor = currentUserAccessor;
     }
 
     public async Task<EventDetailResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
@@ -26,7 +30,8 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             ?? throw new NotFoundException("Soirée introuvable");
 
         var token = _hostTokenAccessor.GetHostToken();
-        var isHost = !string.IsNullOrEmpty(token) && token == evt.HostToken;
+        var currentUserId = _currentUserAccessor.GetUserId();
+        var isHost = EventHost.IsHost(evt, token, currentUserId);
         var terminé = evt.IsFinished(DateTimeOffset.UtcNow);
 
         WinnerMovieResponse? winner = null;
@@ -57,7 +62,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             Date = evt.Date,
             Time = evt.Time,
             Slug = evt.Slug,
-            Config = evt.Config is not null ? new { evt.Config.Theme, evt.Config.EndDate, evt.Config.MaxProposalsPerParticipant } : null,
+            Config = EventConfigResponse.FromEvent(evt),
             ClosedAt = evt.ClosedAt,
             WinnerMovieId = evt.WinnerMovieId,
             CreatedAt = evt.CreatedAt,

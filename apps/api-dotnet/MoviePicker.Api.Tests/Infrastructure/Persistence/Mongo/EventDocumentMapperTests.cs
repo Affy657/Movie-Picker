@@ -38,6 +38,33 @@ public sealed class EventDocumentMapperTests
         Assert.Null(domain.WinnerMovieId);
         Assert.Equal(new DateTimeOffset(2020, 1, 1, 0, 0, 0, TimeSpan.Zero), domain.CreatedAt);
         Assert.Equal(new DateTimeOffset(2020, 1, 2, 0, 0, 0, TimeSpan.Zero), domain.UpdatedAt);
+        Assert.Null(domain.CreatorUserId);
+    }
+
+    [Fact]
+    public void ToDomain_And_ToDocument_RoundTrip_CreatorUserId()
+    {
+        var doc = new EventDocument
+        {
+            Id = "evt1",
+            Title = "Soirée",
+            Date = "2030-01-01",
+            Time = "20:00",
+            HostToken = "ht",
+            Slug = "s",
+            CreatorUserId = "507f1f77bcf86cd799439011",
+            Config = null,
+            ClosedAt = null,
+            WinnerMovieId = null,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        var domain = EventDocumentMapper.ToDomain(doc);
+        Assert.Equal("507f1f77bcf86cd799439011", domain.CreatorUserId);
+
+        var back = EventDocumentMapper.ToDocument(domain);
+        Assert.Equal(doc.CreatorUserId, back.CreatorUserId);
     }
 
     [Fact]
@@ -95,5 +122,60 @@ public sealed class EventDocumentMapperTests
         Assert.Equal(evt.Id, back.Id);
         Assert.Equal(evt.Config?.Theme, back.Config?.Theme);
         Assert.Equal(evt.Config?.MaxProposalsPerParticipant, back.Config?.MaxProposalsPerParticipant);
+        Assert.Equal(WheelMode.StrictRandom, back.Config?.WheelMode);
+    }
+
+    [Fact]
+    public void ToDomain_WithWheelModeAndReactions_RoundTrips()
+    {
+        var evt = new Event
+        {
+            Id = "evt1",
+            Title = "Soirée",
+            Date = "2030-01-01",
+            Time = "20:00",
+            HostToken = "ht",
+            Slug = "s",
+            Config = new EventConfig
+            {
+                WheelMode = WheelMode.WeightedByVotes,
+                AllowedReactionIds = new[] { "already_seen", "meh" }
+            },
+            ClosedAt = null,
+            WinnerMovieId = null,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        var doc = EventDocumentMapper.ToDocument(evt);
+        var back = EventDocumentMapper.ToDomain(doc);
+        Assert.Equal(WheelMode.WeightedByVotes, back.Config?.WheelMode);
+        Assert.Equal(new[] { "already_seen", "meh" }, back.Config?.AllowedReactionIds);
+    }
+
+    [Fact]
+    public void ToDomain_MaxProposalsAsInt64_ReadsValue()
+    {
+        var config = new BsonDocument
+        {
+            ["maxProposalsPerParticipant"] = 7L
+        };
+        var doc = new EventDocument
+        {
+            Id = "evt1",
+            Title = "Soirée",
+            Date = "2030-01-01",
+            Time = "20:00",
+            HostToken = "ht",
+            Slug = "s",
+            Config = config,
+            ClosedAt = null,
+            WinnerMovieId = null,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        var domain = EventDocumentMapper.ToDomain(doc);
+
+        Assert.Equal(7, domain.Config?.MaxProposalsPerParticipant);
     }
 }

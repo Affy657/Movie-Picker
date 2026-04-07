@@ -1,3 +1,4 @@
+using System.Linq;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
@@ -18,6 +19,16 @@ public sealed class MongoParticipantRepository : IParticipantRepository
     {
         var doc = await _collection
             .Find(x => x.EventId == eventId && x.Pseudo == pseudo)
+            .FirstOrDefaultAsync(ct);
+        return doc is null ? null : ToDomain(doc);
+    }
+
+    public async Task<Participant?> FindByEventAndUserIdAsync(string eventId, string userId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return null;
+        var doc = await _collection
+            .Find(x => x.EventId == eventId && x.UserId == userId)
             .FirstOrDefaultAsync(ct);
         return doc is null ? null : ToDomain(doc);
     }
@@ -49,6 +60,7 @@ public sealed class MongoParticipantRepository : IParticipantRepository
             Id = ObjectId.GenerateNewId().ToString(),
             EventId = participant.EventId,
             Pseudo = participant.Pseudo,
+            UserId = string.IsNullOrWhiteSpace(participant.UserId) ? null : participant.UserId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -56,11 +68,24 @@ public sealed class MongoParticipantRepository : IParticipantRepository
         return ToDomain(doc);
     }
 
+    public async Task<IReadOnlyList<string>> ListDistinctEventIdsByUserIdAsync(string userId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return Array.Empty<string>();
+
+        var ids = await _collection
+            .Find(x => x.UserId == userId)
+            .Project(x => x.EventId)
+            .ToListAsync(ct);
+        return ids.Distinct().ToList();
+    }
+
     private static Participant ToDomain(ParticipantDocument doc) => new()
     {
         Id = doc.Id,
         EventId = doc.EventId,
         Pseudo = doc.Pseudo,
+        UserId = doc.UserId,
         CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero),
         UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)
     };

@@ -8,15 +8,18 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
     private readonly IEventRepository _eventRepository;
     private readonly IMovieRepository _movieRepository;
     private readonly IVoteRepository _voteRepository;
+    private readonly IReactionRepository _reactionRepository;
 
     public DeleteMovieHandler(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
-        IVoteRepository voteRepository)
+        IVoteRepository voteRepository,
+        IReactionRepository reactionRepository)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _voteRepository = voteRepository;
+        _reactionRepository = reactionRepository;
     }
 
     public async Task HandleAsync(string idOrSlug, string movieId, string participantId, CancellationToken ct = default)
@@ -25,10 +28,10 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
             ?? throw new NotFoundException("Soirée introuvable");
 
         if (evt.IsFinished(DateTimeOffset.UtcNow))
-            throw new BadRequestException("Soirée terminée. Lecture seule.");
+            throw new ConflictException("Soirée terminée. Lecture seule.");
 
         if (!string.IsNullOrEmpty(evt.WinnerMovieId))
-            throw new BadRequestException("La roue a déjà été lancée, suppression impossible");
+            throw new ConflictException("La roue a déjà été lancée, suppression impossible");
 
         var movie = await _movieRepository.GetByIdAndEventIdAsync(movieId, evt.Id, ct);
         if (movie is null)
@@ -38,6 +41,7 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
             throw new ForbiddenException("Seul le participant qui a proposé peut retirer ce film");
 
         await _voteRepository.DeleteByMovieIdAsync(movieId, ct);
+        await _reactionRepository.DeleteByMovieIdAsync(evt.Id, movieId, ct);
         await _movieRepository.DeleteAsync(movieId, ct);
     }
 }

@@ -49,6 +49,14 @@ public sealed class MongoMovieRepository : IMovieRepository
         return count > 0;
     }
 
+    public async Task<int> CountByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default)
+    {
+        var count = await _collection.CountDocumentsAsync(
+            x => x.EventId == eventId && x.ParticipantId == participantId,
+            cancellationToken: ct);
+        return (int)count;
+    }
+
     public async Task<Movie> InsertAsync(Movie movie, CancellationToken ct = default)
     {
         var doc = MovieMapper.ToDocument(movie);

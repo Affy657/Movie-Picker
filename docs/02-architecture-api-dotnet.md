@@ -125,6 +125,8 @@ En cas d’erreur attendue (ex. ressource introuvable), le cas d’usage peut le
 | `Controllers/` | Points d’entrée HTTP. |
 | `Program.cs` | Assemblage de l’application (pipeline, enregistrement des services). |
 
+**MongoDB (V1 § données)** : collections \`users\` (email unique en minuscules, \`passwordHash\`, \`displayName\`, \`uiTheme\` : \`system\` / \`light\` / \`dark\`), \`events\` avec \`creatorUserId\` optionnel (hôte sans compte inchangé : \`hostToken\`), \`participants\` avec \`userId\` optionnel, \`reactions\` (V1 §6 : \`eventId\`, \`movieId\`, \`participantId\`, \`reactionId\`). Index assurés au démarrage par \`MongoIndexInitializer\` : email unique sur \`users\`, \`events.creatorUserId\` sparse, \`participants\` combinaison \`eventId\`+\`userId\` unique partielle (présence de \`userId\`) + index sparse sur \`userId\`, \`reactions\` unique composé \`eventId\`+\`movieId\`+\`participantId\`+\`reactionId\` + index \`movieId\`.
+
 Ce document ne décrit que l’**architecture** ; le contrat HTTP : préfixe **`/api/v1`**, document OpenAPI via **Swagger** en développement (`/swagger/v1/swagger.json`), et tests de non-régression du schéma dans **`MoviePicker.Api.IntegrationTests/OpenApiContractTests.cs`**.
 
 ### Authentification utilisateur (V1) — choix technique
@@ -142,7 +144,13 @@ Décision validée pour la **V1** (voir [v1-produit/01-roadmap-v1.md](v1-produit
 | **Déconnexion** | **POST** `/api/v1/auth/logout` : suppression (ou invalidation) de l’enregistrement de session en MongoDB + suppression du cookie côté réponse. |
 | **Parallèle avec l’hôte MVP** | Le **jeton hôte** (`?host=` / cookie `moviepicker_host`) reste le mécanisme MVP pour les utilisateurs **sans compte**. La **reconnaissance hôte par compte** (`creatorUserId`) et la précédence token vs compte sont décrites en roadmap V1 § 4 et implémentées avec les routes « mes soirées ». |
 
+**Précédence hôte (V1 § 4)** : `isHost` sur le détail d’événement est vrai si **l’une** des conditions est remplie : (1) le **jeton hôte** présent dans la requête (query ou cookie `moviepicker_host`) correspond au `hostToken` de la soirée — quelle que soit l’identité du compte connecté (comportement MVP : détention du lien) ; (2) l’utilisateur **authentifié** est le **créateur** (`creatorUserId` = id du compte). Les deux peuvent être vraies en même temps. Un utilisateur connecté qui n’est **ni** créateur **ni** porteur du bon jeton n’est pas hôte.
+
 **Secrets** : clé(s) **Data Protection** partagées entre **toutes les instances** Cloud Run (sinon les cookies ne sont pas déchiffrables après scale ou nouvelle révision). Procédure : [v1-produit/02-deploiement-secrets-et-ci-v1.md](v1-produit/02-deploiement-secrets-et-ci-v1.md) § 1–2 (secret **`AUTH_DATAPROTECTION_KEYRING`**).
+
+### Auth (V1 § 3) — implémenté
+
+Routes **`/api/v1/auth`** : `POST …/register`, `POST …/login`, `POST …/logout`, `GET|PATCH …/me`. Cookie **`moviepicker_auth`** ; contenu serveur via **`ITicketStore`** : collection **`auth_sessions`** (Mongo) ou stockage mémoire (tests / sans `MONGODB_URI`). Hash mot de passe : **`IPasswordHasher`** sur l’entité **`User`** (Identity). Enums JSON exposés en **chaînes camelCase** (ex. `uiTheme`). **CSRF** (cross-origin + cookie) : à câbler côté front selon la stratégie § 1 ; pas d’anti-forgery formulaire sur ces endpoints pour l’instant.
 
 ### Surface API prévue en V1 (avant implémentation massive)
 
@@ -151,11 +159,11 @@ Liste de référence pour le contrat **OpenAPI**, les **`ProducesResponseType`**
 | Zone | Verbes / ressources (indicatif) | Notes contrat / tests |
 |------|----------------------------------|------------------------|
 | **Auth** | `POST …/auth/register`, `POST …/auth/login`, `POST …/auth/logout`, `GET …/auth/me`, `PATCH …/auth/me` | Schémas corps / erreurs (validation, 401, 409 email) ; rate limiting documenté ; pas de fuite d’infos inutiles sur l’inscription. |
-| **Événements + compte** | Extension `POST …/events`, `POST …/events/{id}/join`, `GET …/me/events` (ou équivalent « mes soirées ») | Champs `creatorUserId` / `userId` participant ; compatibilité création / join **sans** compte. |
+| **Événements + compte** | Extension `POST …/events`, `POST …/events/{id}/join`, `GET …/events/mine` (« mes soirées ») | Champs `creatorUserId` / `userId` participant ; compatibilité création / join **sans** compte. |
 | **Détail événement** | Comportement hôte si `creatorUserId` = utilisateur connecté (en plus du host token) | Documenter réponses et codes ; précédence token vs compte (doc + éventuellement en-tête ou erreur métier). |
-| **Config soirée** | `GET` / `PATCH` ou `PUT` … `/events/{id}/config` | Schéma `events.config` ; réponses 403 non-hôte, 409 si soirée figée. |
-| **Réactions** | `POST` / `DELETE` (ou toggle), `GET` agrégats par film | Cohérence avec liste de réactions autorisées dans la config. |
-| **TMDB enrichi** | Extension des DTOs recherche / détail (watch providers, etc.) | Champs optionnels documentés ; pas d’exposition de clé TMDB. |
+| **Config soirée** | `GET` / `PATCH` … `/api/v1/events/{idOrSlug}/config` (V1 §5) | Schéma `events.config` : `theme`, `endDate`, `maxProposalsPerParticipant` (0 = illimité en PATCH), `wheelMode` (`strictRandom` \| `weightedByVotes`), `allowedReactionIds` (clés catalogue : `already_seen`, `want_to_watch`, `not_interested`, `masterpiece`, `meh`) ; **403** non-hôte, **409** si soirée terminée ou roue déjà lancée (`winnerMovieId`). |
+| **Réactions** (V1 §6) | `GET|POST` `/api/v1/events/{idOrSlug}/movies/{movieId}/reactions`, `DELETE` `…/reactions/{reactionId}` (corps JSON `participantId`, comme la suppression de film) ; agrégats aussi dans `GET …/movies` (`reactions[]` par film, `count` = total, `pseudos` plafonnés) | Collection Mongo **`reactions`** ; index unique `(eventId, movieId, participantId, reactionId)` ; respect de **`allowedReactionIds`** (`ReactionPolicy`) ; **POST** idempotent si même réaction ; **429** sur mutations via `reactions-mutation`. |
+| **TMDB enrichi (V1 §7)** | `GET /api/v1/movies/search` renvoie un objet `{ items, watchProvidersRegion, disclaimer, tmdbAttributionUrl }` : note moyenne TMDB (`voteAverage`), pastilles **watch providers** (région `TMDB_WATCH_REGION`, défaut **FR**), lien page « où regarder » TMDB ; enrichissement limité aux **N** premiers résultats (`TMDB_SEARCH_MAX_PROVIDER_LOOKUPS`, défaut 10). `GET …/events/{idOrSlug}/movies` enrichit chaque film (vote + providers + `tmdbWatchPageUrl`) avec **cache mémoire** par `(région, tmdbId)` — TTL `TMDB_ENRICHMENT_CACHE_HOURS` (défaut 24), parallélisme plafonné par `TMDB_LIST_ENRICHMENT_MAX_PARALLEL` (défaut 4). Panne réseau TMDB sur la recherche → **503** (`ServiceUnavailableException`), message générique. Texte indicatif : constante serveur `TmdbIndicativeCopy` / champ `disclaimer` ; pas d’exposition de la clé API TMDB. |
 | **Cache posters** | Éventuellement routes internes ou champs enrichis sur les films | Si URL signée ou proxy, documenter dans OpenAPI ce qui est public. |
 
 À chaque ajout de route : mettre à jour **Swagger**, regénérer **`artifacts/openapi-v1.json`** si besoin, et compléter **`OpenApiContractTests`** (chemins critiques, comme pour `/health` et `/api/v1/events` aujourd’hui).
@@ -163,6 +171,8 @@ Liste de référence pour le contrat **OpenAPI**, les **`ProducesResponseType`**
 ### Erreurs HTTP (enveloppe unique, roadmap § 29)
 
 Réponses d’erreur JSON : `{ "error": string, "code": number (HTTP), "requestId": string? }` (`requestId` omis si absent du contexte). En-tête réponse **`X-Request-Id`** (réutilise `X-Request-Id` / `X-Correlation-Id` entrant si valide, sinon UUID). Même format pour : filtres d’exception / validation, **404** sans route (`StatusCodePages`), **429** (rate limiting). CORS : `X-Request-Id` exposé au navigateur (`Access-Control-Expose-Headers`).
+
+**409 Conflict** : état de la ressource incompatible avec l’opération (ex. soirée terminée ou roue déjà lancée pour une écriture, limite de propositions atteinte, doublon film). Les erreurs de **validation de requête** (corps mal formé) restent en **400**.
 
 ### Qualité C# (roadmap § 31)
 

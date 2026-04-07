@@ -1,4 +1,6 @@
 using System.Net;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using Moq.Protected;
@@ -13,12 +15,15 @@ public sealed class TmdbMovieSearchTests
 {
     private static HttpClient CreateHttpClient(HttpMessageHandler handler) => new(handler) { BaseAddress = new Uri("https://api.themoviedb.org") };
 
+    private static TmdbMovieSearch CreateSut(HttpClient client, IOptions<MoviePickerOptions> options) =>
+        new(client, options, new MemoryCache(new MemoryCacheOptions()), NullLogger<TmdbMovieSearch>.Instance);
+
     [Fact]
     public async Task SearchAsync_NoApiKey_ThrowsInvalidOperationException()
     {
         var options = Options.Create(new MoviePickerOptions { TmdbApiKey = null });
         var client = CreateHttpClient(new Mock<HttpMessageHandler>().Object);
-        var sut = new TmdbMovieSearch(client, options);
+        var sut = CreateSut(client, options);
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => sut.SearchAsync("inception"));
         Assert.Contains("TMDB_API_KEY", ex.Message);
@@ -29,7 +34,7 @@ public sealed class TmdbMovieSearchTests
     {
         var options = Options.Create(new MoviePickerOptions { TmdbApiKey = "   " });
         var client = CreateHttpClient(new Mock<HttpMessageHandler>().Object);
-        var sut = new TmdbMovieSearch(client, options);
+        var sut = CreateSut(client, options);
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => sut.SearchAsync("x"));
         Assert.Contains("TMDB_API_KEY", ex.Message);
@@ -44,7 +49,7 @@ public sealed class TmdbMovieSearchTests
             .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
             .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{}") });
         var client = CreateHttpClient(mockHandler.Object);
-        var sut = new TmdbMovieSearch(client, options);
+        var sut = CreateSut(client, options);
 
         var result = await sut.SearchAsync("   ");
 
@@ -62,6 +67,7 @@ public sealed class TmdbMovieSearchTests
                   "id": 27205,
                   "title": "Inception",
                   "release_date": "2010-07-16",
+                  "vote_average": 8.8,
                   "poster_path": "/9gk7adHYeDvHkCSEqAvQNLV5ur4.jpg"
                 },
                 {
@@ -79,7 +85,7 @@ public sealed class TmdbMovieSearchTests
             .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
             .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json) });
         var client = CreateHttpClient(mockHandler.Object);
-        var sut = new TmdbMovieSearch(client, options);
+        var sut = CreateSut(client, options);
 
         var result = await sut.SearchAsync("inception");
 
@@ -88,11 +94,13 @@ public sealed class TmdbMovieSearchTests
         Assert.Equal(27205, first.Id);
         Assert.Equal("Inception", first.Title);
         Assert.Equal("2010", first.Year);
+        Assert.Equal(8.8, first.VoteAverage);
         Assert.Equal("https://image.tmdb.org/t/p/w154/9gk7adHYeDvHkCSEqAvQNLV5ur4.jpg", first.PosterPath);
         var second = result[1];
         Assert.Equal(78, second.Id);
         Assert.Equal("Blade Runner", second.Title);
         Assert.Equal("1982", second.Year);
+        Assert.Null(second.VoteAverage);
         Assert.Null(second.PosterPath);
     }
 
@@ -105,7 +113,7 @@ public sealed class TmdbMovieSearchTests
             .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
             .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{}") });
         var client = CreateHttpClient(mockHandler.Object);
-        var sut = new TmdbMovieSearch(client, options);
+        var sut = CreateSut(client, options);
 
         var result = await sut.SearchAsync("xyz");
 
@@ -121,7 +129,7 @@ public sealed class TmdbMovieSearchTests
             .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
             .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable) { Content = new StringContent("Unavailable") });
         var client = CreateHttpClient(mockHandler.Object);
-        var sut = new TmdbMovieSearch(client, options);
+        var sut = CreateSut(client, options);
 
         await Assert.ThrowsAsync<HttpRequestException>(() => sut.SearchAsync("inception"));
     }
@@ -137,7 +145,7 @@ public sealed class TmdbMovieSearchTests
             .Callback<HttpRequestMessage, CancellationToken>((req, _) => capturedRequest = req)
             .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{\"results\":[]}") });
         var client = CreateHttpClient(mockHandler.Object);
-        var sut = new TmdbMovieSearch(client, options);
+        var sut = CreateSut(client, options);
 
         await sut.SearchAsync("matrix");
 
@@ -148,5 +156,123 @@ public sealed class TmdbMovieSearchTests
         Assert.Contains("api_key=my-secret-key", uri);
         Assert.Contains("query=matrix", uri);
         Assert.Contains("language=fr-FR", uri);
+    }
+
+    [Fact]
+    public async Task GetEnrichmentAsync_NoApiKey_ReturnsNull()
+    {
+        var options = Options.Create(new MoviePickerOptions { TmdbApiKey = null });
+        var client = CreateHttpClient(new Mock<HttpMessageHandler>().Object);
+        var sut = CreateSut(client, options);
+
+        var r = await sut.GetEnrichmentAsync(550, "FR");
+
+        Assert.Null(r);
+    }
+
+    [Fact]
+    public async Task GetEnrichmentAsync_CachesSecondCall_SingleHttpPair()
+    {
+        var movieJson = """{"vote_average": 8.4}""";
+        var watchJson = """
+            {
+              "id": 550,
+              "results": {
+                "FR": {
+                  "link": "https://www.themoviedb.org/movie/550/watch?locale=FR",
+                  "flatrate": [
+                    {
+                      "logo_path": "/netflix.png",
+                      "provider_id": 8,
+                      "provider_name": "Netflix",
+                      "display_priority": 0
+                    }
+                  ]
+                }
+              }
+            }
+            """;
+        var options = Options.Create(new MoviePickerOptions { TmdbApiKey = "key", TmdbEnrichmentCacheHours = 1 });
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Returns<HttpRequestMessage, CancellationToken>(
+                (req, _) =>
+                {
+                    var u = req.RequestUri?.AbsolutePath ?? "";
+                    var body = u.Contains("/watch/providers", StringComparison.Ordinal) ? watchJson : movieJson;
+                    return Task.FromResult(
+                        new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(body) });
+                });
+        var client = CreateHttpClient(mockHandler.Object);
+        var sut = CreateSut(client, options);
+
+        var a = await sut.GetEnrichmentAsync(550, "FR");
+        var b = await sut.GetEnrichmentAsync(550, "FR");
+
+        Assert.NotNull(a);
+        Assert.NotNull(b);
+        Assert.Equal(8.4, a!.VoteAverage);
+        Assert.Single(a.WatchProviders);
+        Assert.Equal("Netflix", a.WatchProviders[0].ProviderName);
+        Assert.Equal("flatrate", a.WatchProviders[0].MonetizationType);
+        Assert.Contains("themoviedb.org", a.TmdbWatchPageUrl ?? "", StringComparison.OrdinalIgnoreCase);
+        mockHandler.Protected().Verify(
+            "SendAsync",
+            Times.Exactly(2),
+            ItExpr.IsAny<HttpRequestMessage>(),
+            ItExpr.IsAny<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetEnrichmentAsync_SameProviderInFlatrateAndRent_KeepsFlatrate()
+    {
+        var movieJson = """{"vote_average": 6.0}""";
+        var watchJson = """
+            {
+              "id": 1,
+              "results": {
+                "FR": {
+                  "link": "https://www.themoviedb.org/movie/1/watch",
+                  "flatrate": [
+                    {
+                      "logo_path": "/a.png",
+                      "provider_id": 8,
+                      "provider_name": "Netflix",
+                      "display_priority": 0
+                    }
+                  ],
+                  "rent": [
+                    {
+                      "logo_path": "/a.png",
+                      "provider_id": 8,
+                      "provider_name": "Netflix",
+                      "display_priority": 0
+                    }
+                  ]
+                }
+              }
+            }
+            """;
+        var options = Options.Create(new MoviePickerOptions { TmdbApiKey = "key", TmdbEnrichmentCacheHours = 1 });
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Returns<HttpRequestMessage, CancellationToken>(
+                (req, _) =>
+                {
+                    var u = req.RequestUri?.AbsolutePath ?? "";
+                    var body = u.Contains("/watch/providers", StringComparison.Ordinal) ? watchJson : movieJson;
+                    return Task.FromResult(
+                        new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(body) });
+                });
+        var client = CreateHttpClient(mockHandler.Object);
+        var sut = CreateSut(client, options);
+
+        var a = await sut.GetEnrichmentAsync(1, "FR");
+
+        Assert.NotNull(a);
+        var p = Assert.Single(a!.WatchProviders);
+        Assert.Equal("flatrate", p.MonetizationType);
     }
 }

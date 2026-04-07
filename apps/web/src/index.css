@@ -446,6 +446,102 @@ body {
   margin-top: 0.5rem;
 }
 
+.search-result-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.search-result-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.search-result-title {
+  font-size: 0.9375rem;
+  line-height: 1.35;
+}
+
+.tmdb-vote {
+  color: var(--color-meta);
+  font-size: 0.875rem;
+  font-weight: normal;
+}
+
+.watch-provider-chips {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.watch-provider-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+  background: var(--color-input-readonly);
+  border: 1px solid var(--color-border-subtle);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.watch-provider-chip-logo {
+  border-radius: 4px;
+  object-fit: contain;
+}
+
+.watch-provider-chip-name {
+  max-width: 8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.movie-card-providers {
+  margin-top: 0.25rem;
+}
+
+.tmdb-watch-link {
+  font-size: 0.8125rem;
+  color: var(--color-primary);
+  text-decoration: none;
+  align-self: flex-start;
+}
+
+.tmdb-watch-link:hover {
+  text-decoration: underline;
+}
+
+.tmdb-indicative-footer {
+  margin: 0.75rem 0 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-placeholder);
+}
+
+.tmdb-indicative-footer a {
+  color: var(--color-primary);
+}
+
+.search-tmdb-footer,
+.movie-list-tmdb-footer {
+  margin-top: 0.5rem;
+}
+
+.tmdb-region-hint {
+  margin: 0.35rem 0 0 0;
+  font-size: 0.75rem;
+  color: var(--color-placeholder);
+}
+
 @media (min-width: 640px) {
   .page {
     padding: 1.5rem;

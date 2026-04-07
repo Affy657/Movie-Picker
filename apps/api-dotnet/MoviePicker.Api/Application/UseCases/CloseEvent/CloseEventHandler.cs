@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -9,11 +10,16 @@ public sealed class CloseEventHandler : ICloseEventHandler
 {
     private readonly IEventRepository _eventRepository;
     private readonly IHostTokenAccessor _hostTokenAccessor;
+    private readonly ICurrentUserAccessor _currentUserAccessor;
 
-    public CloseEventHandler(IEventRepository eventRepository, IHostTokenAccessor hostTokenAccessor)
+    public CloseEventHandler(
+        IEventRepository eventRepository,
+        IHostTokenAccessor hostTokenAccessor,
+        ICurrentUserAccessor currentUserAccessor)
     {
         _eventRepository = eventRepository;
         _hostTokenAccessor = hostTokenAccessor;
+        _currentUserAccessor = currentUserAccessor;
     }
 
     public async Task<CloseEventResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
@@ -22,7 +28,8 @@ public sealed class CloseEventHandler : ICloseEventHandler
             ?? throw new NotFoundException("Soirée introuvable");
 
         var token = _hostTokenAccessor.GetHostToken();
-        if (string.IsNullOrEmpty(token) || token != evt.HostToken)
+        var userId = _currentUserAccessor.GetUserId();
+        if (!EventHost.IsHost(evt, token, userId))
             throw new ForbiddenException("Réservé à l'hôte de la soirée");
 
         if (evt.ClosedAt.HasValue)
@@ -39,6 +46,7 @@ public sealed class CloseEventHandler : ICloseEventHandler
             Time = evt.Time,
             HostToken = evt.HostToken,
             Slug = evt.Slug,
+            CreatorUserId = evt.CreatorUserId,
             Config = evt.Config,
             ClosedAt = now,
             WinnerMovieId = evt.WinnerMovieId,
@@ -57,7 +65,7 @@ public sealed class CloseEventHandler : ICloseEventHandler
         Date = e.Date,
         Time = e.Time,
         Slug = e.Slug,
-        Config = e.Config is not null ? new { e.Config.Theme, e.Config.EndDate, e.Config.MaxProposalsPerParticipant } : null,
+        Config = EventConfigResponse.FromEvent(e),
         ClosedAt = e.ClosedAt,
         WinnerMovieId = e.WinnerMovieId,
         CreatedAt = e.CreatedAt,

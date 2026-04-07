@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Linq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
 
@@ -23,7 +24,21 @@ public sealed class InMemoryEventRepository : IEventRepository
     public Task<Event> AddAsync(Event evt, CancellationToken ct = default)
     {
         var id = string.IsNullOrEmpty(evt.Id) ? Guid.NewGuid().ToString("N")[..24] : evt.Id;
-        var created = new Event { Id = id, Title = evt.Title, Date = evt.Date, Time = evt.Time, HostToken = evt.HostToken, Slug = evt.Slug, Config = evt.Config, ClosedAt = evt.ClosedAt, WinnerMovieId = evt.WinnerMovieId, CreatedAt = evt.CreatedAt, UpdatedAt = evt.UpdatedAt };
+        var created = new Event
+        {
+            Id = id,
+            Title = evt.Title,
+            Date = evt.Date,
+            Time = evt.Time,
+            HostToken = evt.HostToken,
+            Slug = evt.Slug,
+            CreatorUserId = evt.CreatorUserId,
+            Config = evt.Config,
+            ClosedAt = evt.ClosedAt,
+            WinnerMovieId = evt.WinnerMovieId,
+            CreatedAt = evt.CreatedAt,
+            UpdatedAt = evt.UpdatedAt
+        };
         _byId[id] = created;
         if (!string.IsNullOrEmpty(created.Slug))
             _bySlug[created.Slug] = created;
@@ -36,5 +51,35 @@ public sealed class InMemoryEventRepository : IEventRepository
         if (!string.IsNullOrEmpty(evt.Slug))
             _bySlug[evt.Slug] = evt;
         return Task.FromResult(evt);
+    }
+
+    public Task<IReadOnlyList<Event>> ListByCreatorUserIdAsync(string creatorUserId, int limit, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(creatorUserId) || limit <= 0)
+            return Task.FromResult<IReadOnlyList<Event>>(Array.Empty<Event>());
+
+        var list = _byId.Values
+            .Where(e => e.CreatorUserId == creatorUserId)
+            .OrderByDescending(e => e.UpdatedAt)
+            .Take(limit)
+            .ToList();
+        return Task.FromResult<IReadOnlyList<Event>>(list);
+    }
+
+    public Task<IReadOnlyList<Event>> ListByIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default)
+    {
+        if (eventIds.Count == 0)
+            return Task.FromResult<IReadOnlyList<Event>>(Array.Empty<Event>());
+
+        var list = new List<Event>();
+        foreach (var id in eventIds.Distinct())
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                continue;
+            if (_byId.TryGetValue(id, out var e))
+                list.Add(e);
+        }
+
+        return Task.FromResult<IReadOnlyList<Event>>(list);
     }
 }

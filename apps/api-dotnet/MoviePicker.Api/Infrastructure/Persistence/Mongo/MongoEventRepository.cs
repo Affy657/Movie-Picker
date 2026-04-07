@@ -48,4 +48,30 @@ public sealed class MongoEventRepository : IEventRepository
         await _collection.ReplaceOneAsync(x => x.Id == evt.Id, doc, cancellationToken: ct);
         return EventDocumentMapper.ToDomain(doc);
     }
+
+    public async Task<IReadOnlyList<Event>> ListByCreatorUserIdAsync(string creatorUserId, int limit, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(creatorUserId) || limit <= 0)
+            return Array.Empty<Event>();
+
+        var docs = await _collection
+            .Find(x => x.CreatorUserId == creatorUserId)
+            .SortByDescending(x => x.UpdatedAt)
+            .Limit(limit)
+            .ToListAsync(ct);
+        return docs.ConvertAll(EventDocumentMapper.ToDomain);
+    }
+
+    public async Task<IReadOnlyList<Event>> ListByIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default)
+    {
+        if (eventIds.Count == 0)
+            return Array.Empty<Event>();
+
+        var ids = eventIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
+        if (ids.Count == 0)
+            return Array.Empty<Event>();
+
+        var docs = await _collection.Find(x => ids.Contains(x.Id)).ToListAsync(ct);
+        return docs.ConvertAll(EventDocumentMapper.ToDomain);
+    }
 }

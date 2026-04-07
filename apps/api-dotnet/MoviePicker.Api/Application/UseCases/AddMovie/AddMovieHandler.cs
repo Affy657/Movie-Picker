@@ -27,7 +27,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
             ?? throw new NotFoundException("Soirée introuvable");
 
         if (evt.IsFinished(DateTimeOffset.UtcNow))
-            throw new BadRequestException("Soirée terminée. Lecture seule.");
+            throw new ConflictException("Soirée terminée. Lecture seule.");
 
         var poster = string.IsNullOrWhiteSpace(request.PosterPath) ? null : request.PosterPath.Trim();
         if (poster is not null && !Uri.TryCreate(poster, UriKind.Absolute, out _))
@@ -42,6 +42,14 @@ public sealed class AddMovieHandler : IAddMovieHandler
 
         if (await _movieRepository.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, request.Title.Trim(), ct))
             throw new ConflictException("Un film avec ce titre a déjà été proposé");
+
+        var maxProp = evt.Config?.MaxProposalsPerParticipant;
+        if (maxProp is > 0)
+        {
+            var count = await _movieRepository.CountByEventAndParticipantAsync(evt.Id, participant.Id, ct);
+            if (count >= maxProp)
+                throw new ConflictException($"Limite de {maxProp} proposition(s) par participant atteinte.");
+        }
 
         var now = DateTimeOffset.UtcNow;
         var movie = new Movie
@@ -73,7 +81,8 @@ public sealed class AddMovieHandler : IAddMovieHandler
             ProposerPseudo = participant.Pseudo,
             Score = 0,
             Up = 0,
-            Down = 0
+            Down = 0,
+            Reactions = Array.Empty<MovieReactionAggregateResponse>()
         };
     }
 }

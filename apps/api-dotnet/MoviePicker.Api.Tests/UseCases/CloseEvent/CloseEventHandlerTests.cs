@@ -11,6 +11,7 @@ public sealed class CloseEventHandlerTests
 {
     private readonly Mock<IEventRepository> _eventRepo;
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor;
+    private readonly Mock<ICurrentUserAccessor> _currentUser;
     private readonly CloseEventHandler _sut;
 
     private static Event ActiveEvent(string hostToken = "ht1") => new()
@@ -29,7 +30,9 @@ public sealed class CloseEventHandlerTests
     {
         _eventRepo = new Mock<IEventRepository>();
         _hostTokenAccessor = new Mock<IHostTokenAccessor>();
-        _sut = new CloseEventHandler(_eventRepo.Object, _hostTokenAccessor.Object);
+        _currentUser = new Mock<ICurrentUserAccessor>();
+        _currentUser.Setup(c => c.GetUserId()).Returns((string?)null);
+        _sut = new CloseEventHandler(_eventRepo.Object, _hostTokenAccessor.Object, _currentUser.Object);
     }
 
     [Fact]
@@ -94,5 +97,31 @@ public sealed class CloseEventHandlerTests
         Assert.Equal("Soirée clôturée.", result.Message);
         Assert.NotNull(captured);
         Assert.NotNull(captured.ClosedAt);
+    }
+
+    [Fact]
+    public async Task HandleAsync_CreatorWithoutHostToken_Succeeds()
+    {
+        var evt = new Event
+        {
+            Id = "evt1",
+            Title = "Soirée",
+            Date = "2030-01-01",
+            Time = "20:00",
+            Slug = "soiree",
+            HostToken = "ht1",
+            CreatorUserId = "user-1",
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
+        _currentUser.Setup(c => c.GetUserId()).Returns("user-1");
+        _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+
+        var result = await _sut.HandleAsync("evt1");
+
+        Assert.Equal("Soirée clôturée.", result.Message);
     }
 }

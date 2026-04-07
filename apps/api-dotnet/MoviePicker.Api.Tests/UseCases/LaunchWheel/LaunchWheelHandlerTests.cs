@@ -11,7 +11,9 @@ public sealed class LaunchWheelHandlerTests
 {
     private readonly Mock<IEventRepository> _eventRepo;
     private readonly Mock<IMovieRepository> _movieRepo;
+    private readonly Mock<IVoteRepository> _voteRepo;
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor;
+    private readonly Mock<ICurrentUserAccessor> _currentUserAccessor;
     private readonly LaunchWheelHandler _sut;
 
     private static Event ActiveEvent(string hostToken = "ht1") => new()
@@ -30,8 +32,18 @@ public sealed class LaunchWheelHandlerTests
     {
         _eventRepo = new Mock<IEventRepository>();
         _movieRepo = new Mock<IMovieRepository>();
+        _voteRepo = new Mock<IVoteRepository>();
         _hostTokenAccessor = new Mock<IHostTokenAccessor>();
-        _sut = new LaunchWheelHandler(_eventRepo.Object, _movieRepo.Object, _hostTokenAccessor.Object);
+        _currentUserAccessor = new Mock<ICurrentUserAccessor>();
+        _currentUserAccessor.Setup(c => c.GetUserId()).Returns((string?)null);
+        _voteRepo.Setup(r => r.AggregateScoresByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, VoteScoreAggregate>());
+        _sut = new LaunchWheelHandler(
+            _eventRepo.Object,
+            _movieRepo.Object,
+            _voteRepo.Object,
+            _hostTokenAccessor.Object,
+            _currentUserAccessor.Object);
     }
 
     [Fact]
@@ -72,18 +84,18 @@ public sealed class LaunchWheelHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
 
-        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1"));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1"));
         Assert.Contains("terminée", ex.Message);
     }
 
     [Fact]
-    public async Task HandleAsync_EventAlreadyClosed_ThrowsBadRequestException()
+    public async Task HandleAsync_EventAlreadyClosed_ThrowsConflictException()
     {
         var evt = new Event { Id = "evt1", Title = "Soirée", Date = "2030-01-01", Time = "20:00", Slug = "soiree", HostToken = "ht1", ClosedAt = DateTimeOffset.UtcNow, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
 
-        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1"));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1"));
         Assert.Contains("terminée", ex.Message);
     }
 
@@ -123,5 +135,36 @@ public sealed class LaunchWheelHandlerTests
         Assert.NotNull(captured);
         Assert.Equal("mov1", captured.WinnerMovieId);
         Assert.Contains("gagnant direct", result.Message);
+    }
+
+    [Fact]
+    public async Task HandleAsync_CreatorWithoutHostToken_Succeeds()
+    {
+        var evt = new Event
+        {
+            Id = "evt1",
+            Title = "Soirée",
+            Date = "2030-01-01",
+            Time = "20:00",
+            Slug = "soiree",
+            HostToken = "ht1",
+            CreatorUserId = "u1",
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        var movies = new List<Movie>
+        {
+            new() { Id = "mov1", EventId = evt.Id, ParticipantId = "p1", TmdbId = 1, Title = "A", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
+        };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
+        _currentUserAccessor.Setup(c => c.GetUserId()).Returns("u1");
+        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movies);
+        _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+
+        var result = await _sut.HandleAsync("evt1");
+
+        Assert.Equal("mov1", result.Winner.Id);
     }
 }

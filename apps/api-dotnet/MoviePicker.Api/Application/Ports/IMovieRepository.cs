@@ -9,6 +9,7 @@ public interface IMovieRepository
     Task<IReadOnlyList<Movie>> ListByEventIdAsync(string eventId, CancellationToken ct = default);
     Task<bool> ExistsByEventAndTmdbIdAsync(string eventId, int tmdbId, CancellationToken ct = default);
     Task<bool> ExistsByEventAndTitleCaseInsensitiveAsync(string eventId, string title, CancellationToken ct = default);
+    Task<int> CountByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default);
     Task<Movie> InsertAsync(Movie movie, CancellationToken ct = default);
     Task DeleteAsync(string movieId, CancellationToken ct = default);
 }

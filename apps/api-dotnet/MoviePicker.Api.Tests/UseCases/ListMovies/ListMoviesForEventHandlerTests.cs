@@ -1,6 +1,8 @@
+using Microsoft.Extensions.Options;
 using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.ListMovies;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
@@ -13,6 +15,8 @@ public sealed class ListMoviesForEventHandlerTests
     private readonly Mock<IMovieRepository> _movieRepo;
     private readonly Mock<IVoteRepository> _voteRepo;
     private readonly Mock<IParticipantRepository> _participantRepo;
+    private readonly Mock<IReactionRepository> _reactionRepo;
+    private readonly Mock<ITmdbMovieSearch> _tmdb;
     private readonly ListMoviesForEventHandler _sut;
 
     private static Event ActiveEvent() => new()
@@ -33,7 +37,17 @@ public sealed class ListMoviesForEventHandlerTests
         _movieRepo = new Mock<IMovieRepository>();
         _voteRepo = new Mock<IVoteRepository>();
         _participantRepo = new Mock<IParticipantRepository>();
-        _sut = new ListMoviesForEventHandler(_eventRepo.Object, _movieRepo.Object, _voteRepo.Object, _participantRepo.Object);
+        _reactionRepo = new Mock<IReactionRepository>();
+        _tmdb = new Mock<ITmdbMovieSearch>();
+        var opts = Options.Create(new MoviePickerOptions { TmdbApiKey = null });
+        _sut = new ListMoviesForEventHandler(
+            _eventRepo.Object,
+            _movieRepo.Object,
+            _voteRepo.Object,
+            _participantRepo.Object,
+            _reactionRepo.Object,
+            _tmdb.Object,
+            opts);
     }
 
     [Fact]
@@ -63,6 +77,9 @@ public sealed class ListMoviesForEventHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movies);
         _voteRepo.Setup(r => r.AggregateScoresByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(scores);
+        _reactionRepo
+            .Setup(r => r.AggregateByMovieIdsAsync(evt.Id, It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, IReadOnlyList<ReactionKindAggregate>>());
         _participantRepo.Setup(r => r.GetPseudosByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(pseudos);
 
         var result = await _sut.HandleAsync("evt1");
@@ -78,6 +95,8 @@ public sealed class ListMoviesForEventHandlerTests
         Assert.Equal("Film B", b.Title);
         Assert.Equal("Bob", b.ProposerPseudo);
         Assert.Equal(-1, b.Score);
+        Assert.Empty(a.Reactions);
+        Assert.Empty(b.Reactions);
     }
 
     [Fact]
@@ -87,10 +106,72 @@ public sealed class ListMoviesForEventHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(new List<Movie>());
         _voteRepo.Setup(r => r.AggregateScoresByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, VoteScoreAggregate>());
+        _reactionRepo
+            .Setup(r => r.AggregateByMovieIdsAsync(evt.Id, It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, IReadOnlyList<ReactionKindAggregate>>());
         _participantRepo.Setup(r => r.GetPseudosByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, string>());
 
         var result = await _sut.HandleAsync("evt1");
 
         Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithTmdbKey_EnrichesFromGetEnrichmentAsync()
+    {
+        var evt = ActiveEvent();
+        var movies = new List<Movie>
+        {
+            new()
+            {
+                Id = "mov1",
+                EventId = evt.Id,
+                ParticipantId = "p1",
+                TmdbId = 42,
+                Title = "Film A",
+                Year = "2020",
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow
+            }
+        };
+        var offers = new[]
+        {
+            new TmdbWatchProviderOffer(8, "Netflix", "https://image.tmdb.org/t/p/w45/x.png", "flatrate"),
+        };
+        var enrichment = new TmdbMovieEnrichment(7.2, offers, "https://www.themoviedb.org/movie/42/watch");
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movies);
+        _voteRepo.Setup(r => r.AggregateScoresByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, VoteScoreAggregate> { ["mov1"] = new(0, 0, 0) });
+        _reactionRepo
+            .Setup(r => r.AggregateByMovieIdsAsync(evt.Id, It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, IReadOnlyList<ReactionKindAggregate>>());
+        _participantRepo.Setup(r => r.GetPseudosByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, string> { ["p1"] = "Alice" });
+        _tmdb
+            .Setup(t => t.GetEnrichmentAsync(42, "FR", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(enrichment);
+
+        var sutWithKey = new ListMoviesForEventHandler(
+            _eventRepo.Object,
+            _movieRepo.Object,
+            _voteRepo.Object,
+            _participantRepo.Object,
+            _reactionRepo.Object,
+            _tmdb.Object,
+            Options.Create(
+                new MoviePickerOptions
+                {
+                    TmdbApiKey = "k",
+                    TmdbWatchProvidersRegion = "FR",
+                }));
+
+        var result = await sutWithKey.HandleAsync("evt1");
+
+        var m = Assert.Single(result);
+        Assert.Equal(7.2, m.VoteAverage);
+        Assert.Equal("https://www.themoviedb.org/movie/42/watch", m.TmdbWatchPageUrl);
+        var p = Assert.Single(m.WatchProviders);
+        Assert.Equal(8, p.ProviderId);
+        Assert.Equal("Netflix", p.Name);
+        Assert.Equal("flatrate", p.Type);
     }
 }

@@ -1,11 +1,25 @@
 import { useState } from 'react';
 import { fetchApi } from '../api/client';
+import { formatTmdbVote } from '../utils/formatTmdbVote';
+import type { WatchProviderOffer } from '../types/event';
+import TmdbIndicativeFooter from './TmdbIndicativeFooter';
+import WatchProviderChips from './WatchProviderChips';
 
-interface TmdbResult {
+interface MovieSearchItem {
   id: number;
   title: string;
   year: string;
   posterPath: string | null;
+  voteAverage?: number | null;
+  watchProviders?: WatchProviderOffer[];
+  tmdbWatchPageUrl?: string | null;
+}
+
+interface MovieSearchListResponse {
+  items: MovieSearchItem[];
+  watchProvidersRegion: string;
+  disclaimer: string;
+  tmdbAttributionUrl: string;
 }
 
 interface AddMovieFormProps {
@@ -22,7 +36,11 @@ export default function AddMovieForm({
   disabled,
 }: AddMovieFormProps) {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<TmdbResult[]>([]);
+  const [results, setResults] = useState<MovieSearchItem[]>([]);
+  const [searchMeta, setSearchMeta] = useState<Pick<
+    MovieSearchListResponse,
+    'disclaimer' | 'watchProvidersRegion' | 'tmdbAttributionUrl'
+  > | null>(null);
   const [searching, setSearching] = useState(false);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,11 +50,22 @@ export default function AddMovieForm({
     setError(null);
     setSearching(true);
     setResults([]);
+    setSearchMeta(null);
     try {
-      const list = await fetchApi<TmdbResult[]>(
+      const body = await fetchApi<MovieSearchListResponse | MovieSearchItem[]>(
         `/movies/search?q=${encodeURIComponent(query.trim())}`
       );
-      setResults(list ?? []);
+      if (Array.isArray(body)) {
+        setResults(body);
+        setSearchMeta(null);
+      } else {
+        setResults(body.items ?? []);
+        setSearchMeta({
+          disclaimer: body.disclaimer,
+          watchProvidersRegion: body.watchProvidersRegion,
+          tmdbAttributionUrl: body.tmdbAttributionUrl,
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Recherche indisponible');
     } finally {
@@ -44,7 +73,7 @@ export default function AddMovieForm({
     }
   };
 
-  const addMovie = async (r: TmdbResult) => {
+  const addMovie = async (r: MovieSearchItem) => {
     setError(null);
     setAdding(true);
     try {
@@ -59,6 +88,7 @@ export default function AddMovieForm({
         }),
       });
       setResults([]);
+      setSearchMeta(null);
       setQuery('');
       onAdded();
     } catch (err) {
@@ -88,28 +118,65 @@ export default function AddMovieForm({
       </div>
       {error && <p className="error">{error}</p>}
       {results.length > 0 && (
-        <ul className="search-results">
-          {results.map((r) => (
-            <li key={r.id} className="search-result-item">
-              {r.posterPath ? (
-                <img src={r.posterPath} alt="" width={46} height={69} />
-              ) : (
-                <div className="poster-placeholder">Affiche</div>
-              )}
-              <span>
-                {r.title} ({r.year})
-              </span>
-              <button
-                type="button"
-                className="btn btn-sm btn-primary"
-                onClick={() => addMovie(r)}
-                disabled={adding}
-              >
-                Ajouter
-              </button>
-            </li>
-          ))}
-        </ul>
+        <>
+          {searchMeta?.watchProvidersRegion ? (
+            <p className="tmdb-region-hint">
+              Disponibilités indicatives · région {searchMeta.watchProvidersRegion}
+            </p>
+          ) : null}
+          <ul className="search-results">
+            {results.map((r) => {
+              const voteLabel = formatTmdbVote(r.voteAverage);
+              const providers = r.watchProviders ?? [];
+              return (
+                <li key={r.id} className="search-result-item">
+                  {r.posterPath ? (
+                    <img src={r.posterPath} alt="" width={46} height={69} />
+                  ) : (
+                    <div className="poster-placeholder">Affiche</div>
+                  )}
+                  <div className="search-result-body">
+                    <div className="search-result-title-row">
+                      <span className="search-result-title">
+                        {r.title} ({r.year})
+                        {voteLabel ? (
+                          <span className="tmdb-vote" title="Note moyenne TMDB (indicatif)">
+                            {' '}
+                            · TMDB {voteLabel}
+                          </span>
+                        ) : null}
+                      </span>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-primary"
+                        onClick={() => addMovie(r)}
+                        disabled={adding}
+                      >
+                        Ajouter
+                      </button>
+                    </div>
+                    <WatchProviderChips providers={providers} />
+                    {r.tmdbWatchPageUrl ? (
+                      <a
+                        className="tmdb-watch-link"
+                        href={r.tmdbWatchPageUrl}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                      >
+                        Voir les options sur TMDB
+                      </a>
+                    ) : null}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          <TmdbIndicativeFooter
+            disclaimer={searchMeta?.disclaimer}
+            tmdbUrl={searchMeta?.tmdbAttributionUrl}
+            className="tmdb-indicative-footer search-tmdb-footer"
+          />
+        </>
       )}
     </div>
   );

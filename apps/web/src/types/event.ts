@@ -10,6 +10,14 @@ export interface EventData {
   winnerMovie?: MovieData | null;
 }
 
+/** Offre VOD/streaming TMDB (région configurée côté API, ex. FR). */
+export interface WatchProviderOffer {
+  providerId: number;
+  name: string;
+  logoPath: string | null;
+  type: string;
+}
+
 export interface MovieData {
   _id: string;
   eventId: string;
@@ -22,6 +30,9 @@ export interface MovieData {
   score: number;
   up: number;
   down: number;
+  voteAverage?: number | null;
+  watchProviders?: WatchProviderOffer[];
+  tmdbWatchPageUrl?: string | null;
 }
 
 export interface ParticipantData {

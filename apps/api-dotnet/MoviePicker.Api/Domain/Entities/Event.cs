@@ -8,6 +8,10 @@ public sealed class Event
     public string Time { get; init; } = string.Empty;  // HH:mm
     public string HostToken { get; init; } = string.Empty;
     public string Slug { get; init; } = string.Empty;
+
+    /// <summary>Créateur connecté (V1). Les hôtes sans compte restent identifiés par <see cref="HostToken"/> uniquement.</summary>
+    public string? CreatorUserId { get; init; }
+
     public EventConfig? Config { get; init; }
     public DateTimeOffset? ClosedAt { get; init; }
     public string? WinnerMovieId { get; init; }
@@ -37,4 +41,12 @@ public sealed class EventConfig
     public string? Theme { get; init; }
     public DateTimeOffset? EndDate { get; init; }
     public int? MaxProposalsPerParticipant { get; init; }
+
+    /// <summary>Mode de tirage roue. Défaut : <see cref="WheelMode.StrictRandom"/>.</summary>
+    public WheelMode WheelMode { get; init; } = WheelMode.StrictRandom;
+
+    /// <summary>
+    /// Identifiants de réactions autorisées (hors up/down). <see langword="null"/> = pas de restriction explicite (toutes les réactions connues pourront s’appliquer en V1 §6).
+    /// </summary>
+    public IReadOnlyList<string>? AllowedReactionIds { get; init; }
 }

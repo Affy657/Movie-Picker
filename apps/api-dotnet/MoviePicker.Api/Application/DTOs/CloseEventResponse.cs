@@ -11,7 +11,7 @@ public sealed class CloseEventResponse
     public string Date { get; init; } = string.Empty;
     public string Time { get; init; } = string.Empty;
     public string Slug { get; init; } = string.Empty;
-    public object? Config { get; init; }
+    public EventConfigResponse? Config { get; init; }
     public DateTimeOffset? ClosedAt { get; init; }
     public string? WinnerMovieId { get; init; }
     public DateTimeOffset CreatedAt { get; init; }

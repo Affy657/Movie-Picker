@@ -14,11 +14,12 @@ public sealed class CreateEventHandler : ICreateEventHandler
         _eventRepository = eventRepository;
     }
 
-    public async Task<CreateEventResponse> HandleAsync(CreateEventRequest request, CancellationToken ct = default)
+    public async Task<CreateEventResponse> HandleAsync(CreateEventRequest request, string? creatorUserId, CancellationToken ct = default)
     {
         var slug = SlugGenerator.NewSlug();
         var hostToken = SlugGenerator.NewHostToken();
         var now = DateTimeOffset.UtcNow;
+        var ownerId = string.IsNullOrWhiteSpace(creatorUserId) ? null : creatorUserId;
 
         var evt = new Event
         {
@@ -28,6 +29,7 @@ public sealed class CreateEventHandler : ICreateEventHandler
             Time = request.Time,
             HostToken = hostToken,
             Slug = slug,
+            CreatorUserId = ownerId,
             Config = null,
             ClosedAt = null,
             WinnerMovieId = null,

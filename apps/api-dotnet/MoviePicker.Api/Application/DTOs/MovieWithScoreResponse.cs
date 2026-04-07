@@ -42,4 +42,19 @@ public sealed class MovieWithScoreResponse
 
     [JsonPropertyName("down")]
     public int Down { get; init; }
+
+    /// <summary>Agrégats de réactions (V1 §6) ; liste vide si aucune.</summary>
+    [JsonPropertyName("reactions")]
+    public IReadOnlyList<MovieReactionAggregateResponse> Reactions { get; init; } = Array.Empty<MovieReactionAggregateResponse>();
+
+    /// <summary>Note moyenne TMDB (indicatif, V1 §7).</summary>
+    [JsonPropertyName("voteAverage")]
+    public double? VoteAverage { get; init; }
+
+    [JsonPropertyName("watchProviders")]
+    public IReadOnlyList<WatchProviderOfferResponse> WatchProviders { get; init; } =
+        Array.Empty<WatchProviderOfferResponse>();
+
+    [JsonPropertyName("tmdbWatchPageUrl")]
+    public string? TmdbWatchPageUrl { get; init; }
 }

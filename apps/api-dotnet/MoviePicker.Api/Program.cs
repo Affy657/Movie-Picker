@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.HttpOverrides;
 using MoviePicker.Api.Infrastructure;
 using MoviePicker.Api.Infrastructure.Web;
@@ -26,6 +27,7 @@ if (!builder.Environment.IsDevelopment())
 }
 
 builder.Services.AddMoviePicker(builder.Configuration, builder.Environment);
+builder.Services.AddMoviePickerAuthentication();
 builder.Services.AddMoviePickerRateLimiter(builder.Environment);
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
@@ -40,7 +42,11 @@ builder.Services
         o.Filters.Add<ValidationErrorFilter>();
         o.Filters.Add<MoviePickerExceptionFilter>();
     })
-    .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase);
+    .AddJsonOptions(o =>
+    {
+        o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -75,6 +81,7 @@ app.UseRouting();
 app.UseMiddleware<StructuredHttpRequestLoggingMiddleware>();
 app.UseCors(ServiceCollectionExtensions.CorsPolicyFront);
 app.UseRateLimiter();
+app.UseAuthentication();
 app.UseAuthorization();
 
 // Toujours renvoyer du JSON pour 404 (éviter une page HTML en prod)

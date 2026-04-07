@@ -40,13 +40,13 @@ public sealed class VoteMovieHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_EventFinished_ThrowsBadRequestException()
+    public async Task HandleAsync_EventFinished_ThrowsConflictException()
     {
         var evt = new Event { Id = "evt1", Title = "Soirée", Date = "2000-01-01", Time = "20:00", Slug = "soiree", HostToken = "ht", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         var request = new VoteRequest { ParticipantId = "p123456789012345678901234", Value = 1 };
 
-        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", "mov1", request));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", "mov1", request));
         Assert.Contains("terminée", ex.Message);
     }
 

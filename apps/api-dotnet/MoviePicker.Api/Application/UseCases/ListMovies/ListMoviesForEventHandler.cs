@@ -1,5 +1,10 @@
+using System.Collections.Concurrent;
+using Microsoft.Extensions.Options;
+using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Reactions;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.ListMovies;
@@ -10,17 +15,26 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
     private readonly IMovieRepository _movieRepository;
     private readonly IVoteRepository _voteRepository;
     private readonly IParticipantRepository _participantRepository;
+    private readonly IReactionRepository _reactionRepository;
+    private readonly ITmdbMovieSearch _tmdbMovieSearch;
+    private readonly MoviePickerOptions _options;
 
     public ListMoviesForEventHandler(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
         IVoteRepository voteRepository,
-        IParticipantRepository participantRepository)
+        IParticipantRepository participantRepository,
+        IReactionRepository reactionRepository,
+        ITmdbMovieSearch tmdbMovieSearch,
+        IOptions<MoviePickerOptions> options)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _voteRepository = voteRepository;
         _participantRepository = participantRepository;
+        _reactionRepository = reactionRepository;
+        _tmdbMovieSearch = tmdbMovieSearch;
+        _options = options.Value;
     }
 
     public async Task<IReadOnlyList<MovieWithScoreResponse>> HandleAsync(string idOrSlug, CancellationToken ct = default)
@@ -31,13 +45,43 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         var movies = await _movieRepository.ListByEventIdAsync(evt.Id, ct);
         var movieIds = movies.Select(m => m.Id).ToList();
         var scores = await _voteRepository.AggregateScoresByMovieIdsAsync(movieIds, ct);
-        var participantIds = movies.Select(m => m.ParticipantId).Distinct().ToList();
+        var reactionAgg = await _reactionRepository.AggregateByMovieIdsAsync(evt.Id, movieIds, ct);
+        var reactionParticipantIds = reactionAgg.Values
+            .SelectMany(v => v.SelectMany(x => x.ParticipantIds))
+            .Distinct()
+            .ToList();
+        var participantIds = movies.Select(m => m.ParticipantId).Concat(reactionParticipantIds).Distinct().ToList();
         var pseudos = await _participantRepository.GetPseudosByIdsAsync(participantIds, ct);
+
+        var enrichmentByTmdb = new ConcurrentDictionary<int, TmdbMovieEnrichment?>();
+        if (!string.IsNullOrWhiteSpace(_options.TmdbApiKey))
+        {
+            var region = string.IsNullOrWhiteSpace(_options.TmdbWatchProvidersRegion)
+                ? "FR"
+                : _options.TmdbWatchProvidersRegion.Trim().ToUpperInvariant();
+            var distinctTmdb = movies.Select(x => x.TmdbId).Distinct().ToList();
+            var parallel = Math.Clamp(_options.TmdbListEnrichmentMaxParallelism, 1, 16);
+            await Parallel.ForEachAsync(
+                    distinctTmdb,
+                    new ParallelOptions { MaxDegreeOfParallelism = parallel, CancellationToken = ct },
+                    async (tmdbId, c) =>
+                    {
+                        var enr = await _tmdbMovieSearch.GetEnrichmentAsync(tmdbId, region, c);
+                        enrichmentByTmdb[tmdbId] = enr;
+                    })
+                .ConfigureAwait(false);
+        }
 
         return movies.Select(m =>
         {
             scores.TryGetValue(m.Id, out var s);
             pseudos.TryGetValue(m.ParticipantId, out var pseudo);
+            IReadOnlyList<MovieReactionAggregateResponse> reactionResponses = Array.Empty<MovieReactionAggregateResponse>();
+            if (reactionAgg.TryGetValue(m.Id, out var rows))
+                reactionResponses = ReactionAggregateMapper.ToMovieReactionResponses(rows, pseudos);
+
+            enrichmentByTmdb.TryGetValue(m.TmdbId, out var enr);
+
             return new MovieWithScoreResponse
             {
                 Id = m.Id,
@@ -52,7 +96,11 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
                 ProposerPseudo = pseudo ?? string.Empty,
                 Score = s.Score,
                 Up = s.Up,
-                Down = s.Down
+                Down = s.Down,
+                Reactions = reactionResponses,
+                VoteAverage = enr?.VoteAverage,
+                WatchProviders = enr is null ? Array.Empty<WatchProviderOfferResponse>() : WatchProviderMapping.ToDto(enr.WatchProviders),
+                TmdbWatchPageUrl = enr?.TmdbWatchPageUrl
             };
         }).ToList();
     }

@@ -12,6 +12,7 @@ public sealed class DeleteMovieHandlerTests
     private readonly Mock<IEventRepository> _eventRepo;
     private readonly Mock<IMovieRepository> _movieRepo;
     private readonly Mock<IVoteRepository> _voteRepo;
+    private readonly Mock<IReactionRepository> _reactionRepo;
     private readonly DeleteMovieHandler _sut;
 
     private static Event ActiveEvent() => new()
@@ -31,7 +32,8 @@ public sealed class DeleteMovieHandlerTests
         _eventRepo = new Mock<IEventRepository>();
         _movieRepo = new Mock<IMovieRepository>();
         _voteRepo = new Mock<IVoteRepository>();
-        _sut = new DeleteMovieHandler(_eventRepo.Object, _movieRepo.Object, _voteRepo.Object);
+        _reactionRepo = new Mock<IReactionRepository>();
+        _sut = new DeleteMovieHandler(_eventRepo.Object, _movieRepo.Object, _voteRepo.Object, _reactionRepo.Object);
     }
 
     [Fact]
@@ -44,22 +46,22 @@ public sealed class DeleteMovieHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_EventFinished_ThrowsBadRequestException()
+    public async Task HandleAsync_EventFinished_ThrowsConflictException()
     {
         var evt = new Event { Id = "evt1", Title = "Soirée", Date = "2000-01-01", Time = "20:00", Slug = "soiree", HostToken = "ht", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
-        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", "mov1", "p123456789012345678901234"));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", "mov1", "p123456789012345678901234"));
         Assert.Contains("terminée", ex.Message);
     }
 
     [Fact]
-    public async Task HandleAsync_WheelAlreadyLaunched_ThrowsBadRequestException()
+    public async Task HandleAsync_WheelAlreadyLaunched_ThrowsConflictException()
     {
         var evt = new Event { Id = "evt1", Title = "Soirée", Date = "2030-01-01", Time = "20:00", Slug = "soiree", HostToken = "ht", WinnerMovieId = "mov0", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
-        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", "mov1", "p123456789012345678901234"));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", "mov1", "p123456789012345678901234"));
         Assert.Contains("roue", ex.Message);
     }
 
@@ -98,6 +100,7 @@ public sealed class DeleteMovieHandlerTests
         await _sut.HandleAsync("evt1", "mov1", participantId);
 
         _voteRepo.Verify(r => r.DeleteByMovieIdAsync("mov1", It.IsAny<CancellationToken>()), Times.Once);
+        _reactionRepo.Verify(r => r.DeleteByMovieIdAsync("evt1", "mov1", It.IsAny<CancellationToken>()), Times.Once);
         _movieRepo.Verify(r => r.DeleteAsync("mov1", It.IsAny<CancellationToken>()), Times.Once);
     }
 }

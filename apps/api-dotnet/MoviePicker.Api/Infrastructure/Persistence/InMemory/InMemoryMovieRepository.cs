@@ -38,6 +38,16 @@ public sealed class InMemoryMovieRepository : IMovieRepository
         lock (list) { return Task.FromResult(list.Any(m => string.Equals(m.Title, t, StringComparison.OrdinalIgnoreCase))); }
     }
 
+    public Task<int> CountByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default)
+    {
+        var list = _byEventId.GetOrAdd(eventId, _ => new List<Movie>());
+        lock (list)
+        {
+            var n = list.Count(m => m.ParticipantId == participantId);
+            return Task.FromResult(n);
+        }
+    }
+
     public Task<Movie> InsertAsync(Movie movie, CancellationToken ct = default)
     {
         var id = string.IsNullOrEmpty(movie.Id) ? Guid.NewGuid().ToString("N")[..24] : movie.Id;

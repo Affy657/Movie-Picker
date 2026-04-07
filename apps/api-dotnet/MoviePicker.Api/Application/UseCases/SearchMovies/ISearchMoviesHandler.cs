@@ -1,8 +1,8 @@
-using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.DTOs;
 
 namespace MoviePicker.Api.Application.UseCases.SearchMovies;
 
 public interface ISearchMoviesHandler
 {
-    Task<IReadOnlyList<TmdbSearchItem>> HandleAsync(string query, CancellationToken ct = default);
+    Task<MovieSearchListResponse> HandleAsync(string query, CancellationToken ct = default);
 }

@@ -16,6 +16,11 @@ public sealed class ParticipantDocument
     [BsonElement("pseudo")]
     public string Pseudo { get; set; } = string.Empty;
 
+    [BsonElement("userId")]
+    [BsonIgnoreIfNull]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string? UserId { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 

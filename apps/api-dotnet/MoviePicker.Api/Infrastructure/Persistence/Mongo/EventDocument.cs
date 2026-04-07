@@ -24,6 +24,11 @@ public sealed class EventDocument
     [BsonElement("slug")]
     public string Slug { get; set; } = string.Empty;
 
+    [BsonElement("creatorUserId")]
+    [BsonIgnoreIfNull]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string? CreatorUserId { get; set; }
+
     [BsonElement("config")]
     public BsonDocument? Config { get; set; }
 

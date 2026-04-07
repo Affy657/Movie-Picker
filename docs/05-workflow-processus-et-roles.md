@@ -20,8 +20,8 @@ flowchart LR
     F --> R
   end
   subgraph phase3 [Phase 3 - Vibe coding]
-    I[Implémentation + règle expert]
-    V[task-verifier]
+    I[Implémentation + mp-stack / couche]
+    V[mp-task-verifier]
     I --> V
   end
   R --> I
@@ -34,8 +34,8 @@ flowchart LR
 | Objectif | Challenge des idées, alternatives, puis **mise au propre** ordonnée par version / sprint. |
 |----------|---------------------------------------------------------------------------------------------|
 | **Source de vérité** | [03-features-list.md](03-features-list.md) + [01-spec-technique.md](01-spec-technique.md) |
-| **Cursor (recommandé)** | Sous-agent **`product-brainstorm`** : contexte isolé, `readonly`, adapté au volume d’exploration ([sous-agents](https://cursor.com/fr/docs/subagents)). Invocation : `/product-brainstorm` ou demande explicite dans le chat. |
-| **Ensuite** | Skill **`brainstorm-to-features`** (`/brainstorm-to-features` ou invocation Agent) pour produire une structure must/should/could prête à coller dans la features list. |
+| **Cursor (recommandé)** | Sous-agent **`mp-product-brainstorm`** : contexte isolé, `readonly`, adapté au volume d’exploration ([sous-agents](https://cursor.com/fr/docs/subagents)). Invocation : `/mp-product-brainstorm` ou demande explicite dans le chat. |
+| **Ensuite** | Skill **`mp-brainstorm-to-features`** (`/mp-brainstorm-to-features` ou invocation Agent) pour produire une structure must/should/could prête à coller dans la features list. |
 | **Règle optionnelle** | `role-product-owner.mdc` — cadrage / priorisation quand tu restes dans le chat principal sans déléguer. |
 
 **Bonnes pratiques** : une conversation (ou sous-agent) par **session d’idées** ; évite de mélanger avec du code.
@@ -47,7 +47,7 @@ flowchart LR
 | Objectif | Pour une version choisie (ex. V1), une **roadmap exécutable** façon [mvp/01-roadmap-mvp.md](mvp/01-roadmap-mvp.md), dans son **propre dossier**. |
 |----------|--------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Emplacement** | `docs/v{n}-{slug}/` — convention [00-roadmaps-par-version.md](00-roadmaps-par-version.md) ; roadmap principale `01-roadmap-v{n}.md` ; modèle [v0-template-version/01-roadmap-vx.md](v0-template-version/01-roadmap-vx.md). |
-| **Cursor** | Skill **`version-roadmap-draft`** pour générer / structurer `01-roadmap-v{n}.md` + fichiers `NN-nom-v{n}.md` si besoin (même idée que les liens `deploy-*.md` du MVP). |
+| **Cursor** | Skill **`mp-version-roadmap-draft`** (`/mp-version-roadmap-draft` ou invocation Agent) pour générer / structurer `01-roadmap-v{n}.md` + fichiers `NN-nom-v{n}.md` si besoin (même idée que les liens `deploy-*.md` du MVP). |
 | **Humain** | Tu coches au fil de l’eau ; tu ajoutes en bas les **refactos** / features opportunistes non prévues au départ. |
 
 ---
@@ -56,10 +56,10 @@ flowchart LR
 
 | Objectif | Implémenter étape par étape la roadmap, avec une **identité d’expert** alignée sur la couche touchée. |
 |----------|----------------------------------------------------------------------------------------------------------|
-| **Expertise back (.cs)** | Règle **`role-dotnet-backend`** — s’applique quand tu travailles sous `apps/api-dotnet/` ([règles + globs](https://cursor.com/fr/docs/rules)). Tu peux aussi l’**attacher manuellement** (`@role-dotnet-backend`) pour une tâche back même si les globs ne matchent pas encore. |
-| **Expertise front (.ts/.tsx)** | Règle **`role-frontend-react`** — idem pour `apps/web/`. |
-| **Généraliste** | `role-senior-developer.mdc` si la tâche touche les deux ou la doc / scripts. |
-| **Garde-fous** | `movie-picker-guardrails.mdc` + stack : toujours en vigueur sur le dépôt. |
+| **Expertise back (.cs)** | Règle **`mp-dotnet`** — globs `apps/api-dotnet/**/*.cs` ([règles](https://cursor.com/fr/docs/rules)). Attache manuelle `@mp-dotnet` si besoin. |
+| **Expertise front (.ts/.tsx)** | Règle **`mp-web`** — globs `apps/web/**/*.{ts,tsx}`. |
+| **Généraliste** | `role-senior-developer.mdc` si la tâche touche les deux, la doc ou les scripts. |
+| **Garde-fous** | `mp-guardrails.mdc` + `mp-stack.mdc` + `mp-tools.mdc` : toujours en vigueur sur le dépôt. |
 
 **Tâche manuelle** : si la roadmap pointe vers `docs/v{n}-slug/NN-….md` (suffixe `-v{n}` aligné sur le dossier), tu ou l’agent suivez la procédure **avant** ou **à la place** d’un changement de code.
 
@@ -71,10 +71,10 @@ Tu veux un **challenge** du travail fait, tests, conventions, absence de dette �
 
 | Mécanisme | Rôle |
 |-----------|------|
-| **Sous-agent `task-verifier`** | Relecture **sceptique**, lancement / prescription de tests, contrat OpenAPI, conventions. `model: fast`, `readonly: true` — contexte séparé ([sous-agents](https://cursor.com/fr/docs/subagents)). Invocation : `/task-verifier` après la tâche. |
+| **Sous-agent `mp-task-verifier`** | Relecture **sceptique**, vérifs **alignées CI** (lint, format, OpenAPI, audit, tests web + API), possibilité de **mettre à jour dépendances** / lockfile si nécessaire. `model: fast`, **`readonly: false`** pour exécuter le terminal et éditer les manifests. **Obligatoire avant tout `git push` par un agent.** Invocation : `/mp-task-verifier` ([sous-agents](https://cursor.com/fr/docs/subagents)). |
 | **Gate humain** | `pnpm run verify:local` avant push (déjà documenté dans [AGENTS.md](../AGENTS.md)). |
 
-**Flux typique** : implémentation dans le chat (avec règle expert) → **`/task-verifier`** → corrections si besoin → tu coches la case sur `01-roadmap-v{n}.md`.
+**Flux typique** : implémentation dans le chat (règles mp-stack / mp-dotnet / mp-web) → **`/mp-task-verifier`** → corrections si besoin → push (agent) **uniquement** après rapport OK → tu coches la case sur `01-roadmap-v{n}.md`.
 
 ---
 
@@ -82,20 +82,22 @@ Tu veux un **challenge** du travail fait, tests, conventions, absence de dette �
 
 | Phase | Outil principal | Fichiers |
 |--------|------------------|----------|
-| Brainstorm | Sous-agent `product-brainstorm` | `.cursor/agents/product-brainstorm.md` |
-| Structurer → features list | Skill `brainstorm-to-features` | `.cursor/skills/brainstorm-to-features/` |
-| Roadmap version | Skill `version-roadmap-draft` | `docs/v{n}-{slug}/` |
-| Code back | Règle `role-dotnet-backend` | `.cursor/rules/role-dotnet-backend.mdc` |
-| Code front | Règle `role-frontend-react` | `.cursor/rules/role-frontend-react.mdc` |
-| Fin de tâche | Sous-agent `task-verifier` | `.cursor/agents/task-verifier.md` |
+| Brainstorm | Sous-agent `mp-product-brainstorm` | `.cursor/agents/mp-product-brainstorm.md` |
+| Structurer → features list | Skill `mp-brainstorm-to-features` | `.cursor/skills/mp-brainstorm-to-features/` |
+| Roadmap version | Skill `mp-version-roadmap-draft` | `docs/v{n}-{slug}/` |
+| Code back | Règle `mp-dotnet` | `.cursor/rules/mp-dotnet.mdc` |
+| Code front | Règle `mp-web` | `.cursor/rules/mp-web.mdc` |
+| Outils CLI / cloud | Règle `mp-tools` | `.cursor/rules/mp-tools.mdc` |
+| Fin de tâche | Sous-agent `mp-task-verifier` | `.cursor/agents/mp-task-verifier.md` |
+| Revue code (optionnel) | Sous-agent `mp-code-reviewer` | `.cursor/agents/mp-code-reviewer.md` |
 
 ---
 
 ## Rappels
 
 - **Skills** : invoqués via `/` dans le chat Agent quand ils sont découverts ([doc Skills](https://cursor.com/fr/docs/skills)).
-- **Règles** : `Always` / `Intelligent` / fichiers / **manuel via @** — les rôles `role-*` ici sont surtout **manuels** ou **fichiers** ([doc Règles](https://cursor.com/fr/docs/rules)).
-- Les **sous-agents** coûtent plus de contexte si tu en lances beaucoup en parallèle ; pour une tâche simple, un seul `task-verifier` à la fin suffit souvent.
+- **Règles** : `Always` / fichiers / **manuel via @** — `mp-dotnet` / `mp-web` suivent les **globs** ; `role-product-owner` et `role-senior-developer` sont surtout **manuels** ([doc Règles](https://cursor.com/fr/docs/rules)).
+- Les **sous-agents** coûtent plus de contexte si tu en lances beaucoup en parallèle ; pour une tâche simple, un seul `mp-task-verifier` à la fin suffit souvent.
 
 ---
 

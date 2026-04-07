@@ -32,9 +32,9 @@ public sealed class CreateEventHandlerTests
         _eventRepo
             .Setup(r => r.AddAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .Callback<Event, CancellationToken>((e, _) => captured = e)
-            .ReturnsAsync((Event e, CancellationToken _) => new Event { Id = "evt123", Title = e.Title, Date = e.Date, Time = e.Time, HostToken = e.HostToken, Slug = e.Slug, Config = e.Config, ClosedAt = e.ClosedAt, WinnerMovieId = e.WinnerMovieId, CreatedAt = e.CreatedAt, UpdatedAt = e.UpdatedAt });
+            .ReturnsAsync((Event e, CancellationToken _) => new Event { Id = "evt123", Title = e.Title, Date = e.Date, Time = e.Time, HostToken = e.HostToken, Slug = e.Slug, CreatorUserId = e.CreatorUserId, Config = e.Config, ClosedAt = e.ClosedAt, WinnerMovieId = e.WinnerMovieId, CreatedAt = e.CreatedAt, UpdatedAt = e.UpdatedAt });
 
-        var result = await _sut.HandleAsync(request);
+        var result = await _sut.HandleAsync(request, null);
 
         Assert.NotNull(captured);
         Assert.Equal("Soirée film", captured.Title);
@@ -42,6 +42,7 @@ public sealed class CreateEventHandlerTests
         Assert.Equal("20:00", captured.Time);
         Assert.False(string.IsNullOrEmpty(captured.Slug));
         Assert.False(string.IsNullOrEmpty(captured.HostToken));
+        Assert.Null(captured.CreatorUserId);
         Assert.NotNull(result);
         Assert.Equal("evt123", result.Id);
         Assert.Equal(captured.Slug, result.Slug);
@@ -65,11 +66,41 @@ public sealed class CreateEventHandlerTests
         _eventRepo
             .Setup(r => r.AddAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .Callback<Event, CancellationToken>((e, _) => captured = e)
-            .ReturnsAsync((Event e, CancellationToken _) => new Event { Id = "id", Title = e.Title, Date = e.Date, Time = e.Time, HostToken = e.HostToken, Slug = e.Slug, Config = e.Config, ClosedAt = e.ClosedAt, WinnerMovieId = e.WinnerMovieId, CreatedAt = e.CreatedAt, UpdatedAt = e.UpdatedAt });
+            .ReturnsAsync((Event e, CancellationToken _) => new Event { Id = "id", Title = e.Title, Date = e.Date, Time = e.Time, HostToken = e.HostToken, Slug = e.Slug, CreatorUserId = e.CreatorUserId, Config = e.Config, ClosedAt = e.ClosedAt, WinnerMovieId = e.WinnerMovieId, CreatedAt = e.CreatedAt, UpdatedAt = e.UpdatedAt });
 
-        await _sut.HandleAsync(request);
+        await _sut.HandleAsync(request, null);
 
         Assert.NotNull(captured);
         Assert.Equal("Titre", captured.Title);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithCreatorUserId_SetsCreatorUserIdOnEvent()
+    {
+        var request = new CreateEventRequest { Title = "T", Date = "2025-01-01", Time = "12:00" };
+        Event? captured = null;
+        _eventRepo
+            .Setup(r => r.AddAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .Callback<Event, CancellationToken>((e, _) => captured = e)
+            .ReturnsAsync((Event e, CancellationToken _) => new Event
+            {
+                Id = "id",
+                Title = e.Title,
+                Date = e.Date,
+                Time = e.Time,
+                HostToken = e.HostToken,
+                Slug = e.Slug,
+                CreatorUserId = e.CreatorUserId,
+                Config = e.Config,
+                ClosedAt = e.ClosedAt,
+                WinnerMovieId = e.WinnerMovieId,
+                CreatedAt = e.CreatedAt,
+                UpdatedAt = e.UpdatedAt
+            });
+
+        await _sut.HandleAsync(request, "user-99");
+
+        Assert.NotNull(captured);
+        Assert.Equal("user-99", captured.CreatorUserId);
     }
 }

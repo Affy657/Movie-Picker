@@ -26,22 +26,22 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ## 2. Données – Utilisateurs et lien avec les soirées
 
-- [ ] Créer la collection / modèle **`users`** (email unique, hash mot de passe, pseudo par défaut, dates création / MAJ)
-- [ ] Étendre **`events`** : `creatorUserId` (ou équivalent) optionnel, tout en conservant la compatibilité **hôte par token** pour les utilisateurs sans compte
-- [ ] Étendre **`participants`** : `userId` optionnel (liaison compte ↔ participation à une soirée)
-- [ ] Champs **préférences compte** (si retenu) : ex. **thème UI** clair / sombre / système — pour la persistance « locale ou compte » ([03-features-list.md](../03-features-list.md) § V1 *Interface*)
-- [ ] Index MongoDB pertinents (email, `creatorUserId`, `userId` + event) et règles de cohérence (un user ne double pas la même soirée sans intention produit)
+- [x] Créer la collection / modèle **`users`** (email unique, hash mot de passe, pseudo par défaut, dates création / MAJ)
+- [x] Étendre **`events`** : `creatorUserId` (ou équivalent) optionnel, tout en conservant la compatibilité **hôte par token** pour les utilisateurs sans compte
+- [x] Étendre **`participants`** : `userId` optionnel (liaison compte ↔ participation à une soirée)
+- [x] Champs **préférences compte** (si retenu) : ex. **thème UI** clair / sombre / système — pour la persistance « locale ou compte » ([03-features-list.md](../03-features-list.md) § V1 *Interface*)
+- [x] Index MongoDB pertinents (email, `creatorUserId`, `userId` + event) et règles de cohérence (un user ne double pas la même soirée sans intention produit)
 
 ---
 
 ## 3. API – Inscription, connexion, déconnexion
 
-- [ ] **POST** inscription : email, mot de passe, pseudo par défaut — validation (email, complexité mot de passe), réponse sans fuite d’infos inutiles
-- [ ] **POST** connexion : émission session / token selon le choix § 1
-- [ ] **POST** déconnexion : invalidation côté serveur si sessions stockées, ou stratégie documentée si JWT
-- [ ] **GET** profil minimal (pseudo, email masqué si besoin) pour le front ; **PATCH** profil si besoin (ex. pseudo par défaut, **préférence thème** — aligné § 2)
-- [ ] **Rate limiting** sur routes auth (compléter la politique MVP) — anti brute-force
-- [ ] Mettre à jour **Swagger** (`ProducesResponseType`) et **tests** unitaires / intégration sur ces routes
+- [x] **POST** inscription : email, mot de passe, pseudo par défaut — validation (email, complexité mot de passe), réponse sans fuite d’infos inutiles
+- [x] **POST** connexion : émission session / token selon le choix § 1
+- [x] **POST** déconnexion : invalidation côté serveur si sessions stockées, ou stratégie documentée si JWT
+- [x] **GET** profil minimal (pseudo, email masqué si besoin) pour le front ; **PATCH** profil si besoin (ex. pseudo par défaut, **préférence thème** — aligné § 2)
+- [x] **Rate limiting** sur routes auth (compléter la politique MVP) — anti brute-force
+- [x] Mettre à jour **Swagger** (`ProducesResponseType`) et **tests** unitaires / intégration sur ces routes
 
 > **Hors V1** : réinitialisation mot de passe par e-mail → **V2** ([03-features-list.md](../03-features-list.md)).
 
@@ -49,39 +49,39 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ## 4. API – « Mes soirées » et reconnaissance hôte par compte
 
-- [ ] **POST** création d’événement : si **Authorization** / session valide, renseigner **`creatorUserId`** (sans casser la création anonyme MVP)
-- [ ] **POST** rejoindre : si utilisateur connecté, renseigner **`participants.userId`** (pseudo soirée toujours requis ou prérempli — règle produit)
-- [ ] **GET** liste des soirées pour l’utilisateur connecté : créées **et** auxquelles il a participé (pagination ou limite raisonnable)
-- [ ] Lors du **détail event** : si `creatorUserId` correspond au user connecté, traiter comme **hôte** (en plus du `hostToken` / cookie existant)
-- [ ] Documenter la **précédence** token hôte vs compte (cas : utilisateur connecté mais pas le créateur, lien avec `?host=` d’un autre — règle métier claire)
+- [x] **POST** création d’événement : si **Authorization** / session valide, renseigner **`creatorUserId`** (sans casser la création anonyme MVP)
+- [x] **POST** rejoindre : si utilisateur connecté, renseigner **`participants.userId`** (pseudo soirée toujours requis ou prérempli — règle produit)
+- [x] **GET** liste des soirées pour l’utilisateur connecté : créées **et** auxquelles il a participé (pagination ou limite raisonnable)
+- [x] Lors du **détail event** : si `creatorUserId` correspond au user connecté, traiter comme **hôte** (en plus du `hostToken` / cookie existant)
+- [x] Documenter la **précédence** token hôte vs compte (cas : utilisateur connecté mais pas le créateur, lien avec `?host=` d’un autre — règle métier claire)
 
 ---
 
 ## 5. API – Configuration de la soirée (hôte)
 
-- [ ] Définir / figer le schéma **`events.config`** (JSON) : **thème / tag** d’ambiance (affichage côté front : bandeau ou couleur — § 12), expiration du lien (si distincte de la logique MVP actuelle), **limite de propositions** par participant, **mode roue** (aléatoire strict vs pondéré), **ensemble des réactions autorisées** (liste ids ou clés)
-- [ ] **GET** config (lecture) : accessible selon règles produit (hôte + participants pour transparence, ou hôte seul pour certains champs — à trancher)
-- [ ] **PATCH** ou **PUT** config : **réservé hôte** ; validation des valeurs ; refus si soirée terminée / roue déjà lancée selon règles choisies
-- [ ] Adapter la **logique métier** existante : ajout de film, votes, lancement roue pour respecter **limites** et **mode roue**
-- [ ] Tests ciblés (unitaires + intégration) sur les garde-fous config
+- [x] Définir / figer le schéma **`events.config`** (JSON) : **thème / tag** d’ambiance (affichage côté front : bandeau ou couleur — § 12), expiration du lien (si distincte de la logique MVP actuelle), **limite de propositions** par participant, **mode roue** (aléatoire strict vs pondéré), **ensemble des réactions autorisées** (liste ids ou clés)
+- [x] **GET** config (lecture) : accessible selon règles produit (hôte + participants pour transparence, ou hôte seul pour certains champs — à trancher)
+- [x] **PATCH** ou **PUT** config : **réservé hôte** ; validation des valeurs ; refus si soirée terminée / roue déjà lancée selon règles choisies
+- [x] Adapter la **logique métier** existante : ajout de film, votes, lancement roue pour respecter **limites** et **mode roue**
+- [x] Tests ciblés (unitaires + intégration) sur les garde-fous config
 
 ---
 
 ## 6. API – Réactions
 
-- [ ] Modèle **`reactions`** (ou embed selon choix d’archi) : event, film, participant, type de réaction, contrainte **une ou plusieurs par film** selon spec / config hôte
-- [ ] **POST** / **DELETE** (ou toggle) réaction — respect de la liste **autorisée** par l’hôte
-- [ ] **GET** agrégats par film (compteurs, éventuellement pseudos) pour alimenter le front
-- [ ] **Indicateur « déjà vu » (autres participants)** : exploiter les réactions (ou agrégat dédié) pour exposer un booléen / compteur lors de l’**ajout** ou sur la fiche film — comme décrit en [03-features-list.md](../03-features-list.md)
+- [x] Modèle **`reactions`** (ou embed selon choix d’archi) : event, film, participant, type de réaction, contrainte **une ou plusieurs par film** selon spec / config hôte
+- [x] **POST** / **DELETE** (ou toggle) réaction — respect de la liste **autorisée** par l’hôte
+- [x] **GET** agrégats par film (compteurs, éventuellement pseudos) pour alimenter le front
+- [x] **Indicateur « déjà vu » (autres participants)** : exploiter les réactions (ou agrégat dédié) pour exposer un booléen / compteur lors de l’**ajout** ou sur la fiche film — comme décrit en [03-features-list.md](../03-features-list.md) *(compteur `already_seen` + pseudos dans `reactions[]` sur liste films / GET agrégats ; le front peut déduire « autres » par rapport au participant courant)*
 
 ---
 
 ## 7. API – Films enrichis (TMDB)
 
-- [ ] **Watch providers** (région ex. **FR**) : enrichir recherche ou détail film avec pastilles / liens ; **cache** ou TTL pour limiter les appels TMDB
-- [ ] Champs additionnels si déjà partiellement là : **note moyenne** TMDB sur la carte (si pas déjà satisfaisant côté MVP)
-- [ ] Mention **indicative** pour l’utilisateur (copy UI + doc) — conformité / attribution TMDB ([03-features-list.md](../03-features-list.md) backlog crédits si besoin)
-- [ ] **Front** : afficher **pastilles ou liens** watch providers sur la **recherche** et/ou la **carte film** (données § 7), avec le même ton « indicatif »
+- [x] **Watch providers** (région ex. **FR**) : enrichir recherche ou détail film avec pastilles / liens ; **cache** ou TTL pour limiter les appels TMDB
+- [x] Champs additionnels si déjà partiellement là : **note moyenne** TMDB sur la carte (si pas déjà satisfaisant côté MVP)
+- [x] Mention **indicative** pour l’utilisateur (copy UI + doc) — conformité / attribution TMDB ([03-features-list.md](../03-features-list.md) backlog crédits si besoin)
+- [x] **Front** : afficher **pastilles ou liens** watch providers sur la **recherche** et/ou la **carte film** (données § 7), avec le même ton « indicatif »
 
 ---
 

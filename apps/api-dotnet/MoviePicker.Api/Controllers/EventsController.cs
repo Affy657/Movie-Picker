@@ -1,11 +1,15 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.CloseEvent;
 using MoviePicker.Api.Application.UseCases.CreateEvent;
+using MoviePicker.Api.Application.UseCases.EventConfiguration;
 using MoviePicker.Api.Application.UseCases.GetEventDetail;
 using MoviePicker.Api.Application.UseCases.JoinEvent;
 using MoviePicker.Api.Application.UseCases.LaunchWheel;
+using MoviePicker.Api.Application.UseCases.ListMyEvents;
 using MoviePicker.Api.Infrastructure.Web;
 
 namespace MoviePicker.Api.Controllers;
@@ -30,8 +34,61 @@ public sealed class EventsController : ControllerBase
         if (string.IsNullOrWhiteSpace(request.Date) || string.IsNullOrWhiteSpace(request.Time))
             return BadRequest(new { error = "date et time requis" });
 
-        var result = await handler.HandleAsync(request, ct);
+        var creatorUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var result = await handler.HandleAsync(
+            request,
+            string.IsNullOrEmpty(creatorUserId) ? null : creatorUserId,
+            ct);
         return CreatedAtAction(nameof(GetBySlug), new { idOrSlug = result.Slug }, result);
+    }
+
+    [HttpGet("mine")]
+    [Authorize]
+    [ProducesResponseType(typeof(MyEventsListResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ListMine(
+        [FromServices] IListMyEventsHandler handler,
+        [FromQuery] int? limit,
+        CancellationToken ct)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var result = await handler.HandleAsync(userId, limit, ct);
+        return Ok(result);
+    }
+
+    [HttpGet("{idOrSlug}/config")]
+    [ProducesResponseType(typeof(EventConfigResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetConfig(
+        string idOrSlug,
+        [FromServices] IGetEventConfigHandler handler,
+        CancellationToken ct)
+    {
+        var result = await handler.HandleAsync(idOrSlug, ct);
+        return Ok(result);
+    }
+
+    [HttpPatch("{idOrSlug}/config")]
+    [EnableRateLimiting(RateLimitingExtensions.PatchEventConfigPolicy)]
+    [ProducesResponseType(typeof(EventConfigResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> PatchConfig(
+        string idOrSlug,
+        [FromBody] PatchEventConfigRequest request,
+        [FromServices] IPatchEventConfigHandler handler,
+        CancellationToken ct)
+    {
+        if (request is null)
+            return BadRequest(new { error = "corps requis" });
+        var result = await handler.HandleAsync(idOrSlug, request, ct);
+        return Ok(result);
     }
 
     [HttpGet("slug/{idOrSlug}")]
@@ -64,6 +121,7 @@ public sealed class EventsController : ControllerBase
     [ProducesResponseType(typeof(JoinEventResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Join(
         string idOrSlug,
@@ -74,7 +132,12 @@ public sealed class EventsController : ControllerBase
         if (request is null || string.IsNullOrWhiteSpace(request.Pseudo))
             return BadRequest(new { error = "pseudo requis" });
 
-        var result = await handler.HandleAsync(idOrSlug, request, ct);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var result = await handler.HandleAsync(
+            idOrSlug,
+            request,
+            string.IsNullOrEmpty(userId) ? null : userId,
+            ct);
 
         if (result.IsNew)
             return Created(string.Empty, result.Participant);
@@ -87,6 +150,7 @@ public sealed class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Wheel(
         string idOrSlug,
         [FromServices] ILaunchWheelHandler handler,

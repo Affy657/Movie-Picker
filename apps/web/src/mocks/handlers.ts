@@ -46,7 +46,25 @@ export function createJoinHandler(slug: string) {
 export function createSearchAndAddHandlers(slug: string) {
   return [
     http.get(`${V1}/movies/search`, () =>
-      HttpResponse.json([{ id: 100, title: 'Film Test', year: '2024', posterPath: null }])
+      HttpResponse.json({
+        items: [
+          {
+            id: 100,
+            title: 'Film Test',
+            year: '2024',
+            posterPath: null,
+            voteAverage: 7.5,
+            watchProviders: [
+              { providerId: 8, name: 'Netflix MSW', logoPath: null, type: 'flatrate' },
+            ],
+            tmdbWatchPageUrl: 'https://www.themoviedb.org/movie/100/watch',
+          },
+        ],
+        watchProvidersRegion: 'FR',
+        disclaimer:
+          'Les notes et les offres de visionnage (streaming / VOD) sont indicatives, issues de The Movie Database (TMDB). Les services disponibles peuvent varier.',
+        tmdbAttributionUrl: 'https://www.themoviedb.org/',
+      })
     ),
     http.post(`${V1}/events/${slug}/movies`, async () =>
       HttpResponse.json({ _id: 'm-new', title: 'Film Test' }, { status: 201 })

@@ -1,4 +1,7 @@
 import type { MovieData } from '../types/event';
+import { formatTmdbVote } from '../utils/formatTmdbVote';
+import TmdbIndicativeFooter from './TmdbIndicativeFooter';
+import WatchProviderChips from './WatchProviderChips';
 
 interface MovieListProps {
   movies: MovieData[];
@@ -14,6 +17,15 @@ function getParticipantId(m: MovieData): string {
   return typeof p === 'object' && p !== null && '_id' in p ? (p as { _id: string })._id : String(p);
 }
 
+function hasTmdbEnrichment(m: MovieData): boolean {
+  const providers = m.watchProviders;
+  return (
+    (m.voteAverage != null && !Number.isNaN(m.voteAverage)) ||
+    (!!providers && providers.length > 0) ||
+    !!m.tmdbWatchPageUrl
+  );
+}
+
 export default function MovieList({
   movies,
   participantId,
@@ -26,56 +38,85 @@ export default function MovieList({
     return <p className="placeholder">Aucun film proposé pour l&apos;instant.</p>;
   }
 
+  const showTmdbFooter = movies.some(hasTmdbEnrichment);
+
   return (
-    <ul className="movie-list">
-      {movies.map((m) => {
-        const isMine = participantId && getParticipantId(m) === participantId;
-        return (
-          <li key={m._id} className="movie-card">
-            {m.posterPath ? (
-              <img src={m.posterPath} alt="" className="movie-poster" width={92} height={138} />
-            ) : (
-              <div className="movie-poster movie-poster-placeholder">Affiche</div>
-            )}
-            <div className="movie-info">
-              <h3 className="movie-title">{m.title}</h3>
-              <p className="movie-meta">
-                {m.year} · Proposé par {m.proposerPseudo}
-              </p>
-              {isMine && <span className="badge badge-me">C&apos;est moi</span>}
-              {!terminé && participantId && (
-                <div className="movie-actions">
-                  <button
-                    type="button"
-                    className="btn btn-sm"
-                    onClick={() => onVote(m._id, 1).then(refresh)}
-                    title="Upvote"
+    <div className="movie-list-wrap">
+      <ul className="movie-list">
+        {movies.map((m) => {
+          const isMine = participantId && getParticipantId(m) === participantId;
+          const voteLabel = formatTmdbVote(m.voteAverage);
+          const providers = m.watchProviders ?? [];
+          return (
+            <li key={m._id} className="movie-card">
+              {m.posterPath ? (
+                <img src={m.posterPath} alt="" className="movie-poster" width={92} height={138} />
+              ) : (
+                <div className="movie-poster movie-poster-placeholder">Affiche</div>
+              )}
+              <div className="movie-info">
+                <h3 className="movie-title">{m.title}</h3>
+                <p className="movie-meta">
+                  {m.year} · Proposé par {m.proposerPseudo}
+                  {voteLabel ? (
+                    <span className="tmdb-vote" title="Note moyenne TMDB (indicatif)">
+                      {' '}
+                      · TMDB {voteLabel}
+                    </span>
+                  ) : null}
+                </p>
+                <WatchProviderChips
+                  providers={providers}
+                  className="watch-provider-chips movie-card-providers"
+                />
+                {m.tmdbWatchPageUrl ? (
+                  <a
+                    className="tmdb-watch-link"
+                    href={m.tmdbWatchPageUrl}
+                    target="_blank"
+                    rel="noreferrer noopener"
                   >
-                    ↑ {m.up}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-sm"
-                    onClick={() => onVote(m._id, -1).then(refresh)}
-                    title="Downvote"
-                  >
-                    ↓ {m.down}
-                  </button>
-                  {isMine && (
+                    Où regarder (TMDB)
+                  </a>
+                ) : null}
+                {isMine && <span className="badge badge-me">C&apos;est moi</span>}
+                {!terminé && participantId && (
+                  <div className="movie-actions">
                     <button
                       type="button"
-                      className="btn btn-sm btn-danger"
-                      onClick={() => onRemove(m._id).then(refresh)}
+                      className="btn btn-sm"
+                      onClick={() => onVote(m._id, 1).then(refresh)}
+                      title="Upvote"
                     >
-                      Retirer
+                      ↑ {m.up}
                     </button>
-                  )}
-                </div>
-              )}
-            </div>
-          </li>
-        );
-      })}
-    </ul>
+                    <button
+                      type="button"
+                      className="btn btn-sm"
+                      onClick={() => onVote(m._id, -1).then(refresh)}
+                      title="Downvote"
+                    >
+                      ↓ {m.down}
+                    </button>
+                    {isMine && (
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-danger"
+                        onClick={() => onRemove(m._id).then(refresh)}
+                      >
+                        Retirer
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      {showTmdbFooter ? (
+        <TmdbIndicativeFooter className="tmdb-indicative-footer movie-list-tmdb-footer" />
+      ) : null}
+    </div>
   );
 }

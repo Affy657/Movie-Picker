@@ -14,9 +14,18 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
                 ? Array.Empty<TmdbSearchItem>()
                 : new[]
                 {
-                    new TmdbSearchItem(999_001, "Film E2E Stub", "2024", null),
-                    new TmdbSearchItem(999_002, "Autre film test", "2023", null),
+                    new TmdbSearchItem(999_001, "Film E2E Stub", "2024", null, 8.1),
+                    new TmdbSearchItem(999_002, "Autre film test", "2023", null, 7.0),
                 };
         return Task.FromResult(list);
+    }
+
+    public Task<TmdbMovieEnrichment?> GetEnrichmentAsync(int tmdbId, string region, CancellationToken ct = default)
+    {
+        var offers = new[]
+        {
+            new TmdbWatchProviderOffer(8, "Netflix Stub", null, "flatrate"),
+        };
+        return Task.FromResult<TmdbMovieEnrichment?>(new TmdbMovieEnrichment(8.0, offers, null));
     }
 }

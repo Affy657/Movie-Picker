@@ -16,13 +16,28 @@ public sealed class JoinEventHandler : IJoinEventHandler
         _participantRepository = participantRepository;
     }
 
-    public async Task<JoinEventResult> HandleAsync(string idOrSlug, JoinEventRequest request, CancellationToken ct = default)
+    public async Task<JoinEventResult> HandleAsync(string idOrSlug, JoinEventRequest request, string? authenticatedUserId, CancellationToken ct = default)
     {
         var evt = await _eventRepository.GetByIdOrSlugAsync(idOrSlug, ct)
             ?? throw new NotFoundException("Soirée introuvable");
 
         if (evt.IsFinished(DateTimeOffset.UtcNow))
-            throw new BadRequestException("Soirée terminée. Lecture seule.");
+            throw new ConflictException("Soirée terminée. Lecture seule.");
+
+        var userId = string.IsNullOrWhiteSpace(authenticatedUserId) ? null : authenticatedUserId;
+        if (userId is not null)
+        {
+            var alreadyLinked = await _participantRepository.FindByEventAndUserIdAsync(evt.Id, userId, ct);
+            if (alreadyLinked is not null)
+            {
+                return new JoinEventResult
+                {
+                    Participant = Map(alreadyLinked),
+                    IsNew = false,
+                    Message = "Déjà inscrit avec ce compte"
+                };
+            }
+        }
 
         var pseudo = request.Pseudo.Trim();
         var existing = await _participantRepository.FindByEventAndPseudoAsync(evt.Id, pseudo, ct);
@@ -43,6 +58,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
             Id = string.Empty,
             EventId = evt.Id,
             Pseudo = pseudo,
+            UserId = userId,
             CreatedAt = now,
             UpdatedAt = now
         };

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.SearchMovies;
 using MoviePicker.Api.Infrastructure.Web;
 
@@ -13,7 +13,7 @@ public sealed class MoviesSearchController : ControllerBase
 {
     [HttpGet("search")]
     [EnableRateLimiting(RateLimitingExtensions.SearchMoviesPolicy)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(MovieSearchListResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Search(

@@ -13,7 +13,7 @@ Les fichiers **numérotés** (`01-…`, `02-…`) indiquent un **ordre de lectur
 | [02-architecture-api-dotnet.md](02-architecture-api-dotnet.md) | API .NET, couches, OpenAPI |
 | [03-features-list.md](03-features-list.md) | Features MVP (produit + plateforme), V1, V2, backlog |
 | [04-outils-environnement.md](04-outils-environnement.md) | CLI, machine locale, scripts |
-| [05-workflow-processus-et-roles.md](05-workflow-processus-et-roles.md) | Flux idées → features → roadmap version → vibe code → *task-verifier* (Cursor rules / skills / subagents) |
+| [05-workflow-processus-et-roles.md](05-workflow-processus-et-roles.md) | Flux idées → features → roadmap version → vibe code → *mp-task-verifier* (Cursor rules / skills / subagents) |
 
 ## `docs/mvp/`
 

@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Linq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
 
@@ -8,6 +9,7 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
 {
     private readonly ConcurrentDictionary<string, Participant> _byId = new();
     private readonly ConcurrentDictionary<(string EventId, string Pseudo), string> _eventPseudoToId = new();
+    private readonly ConcurrentDictionary<(string EventId, string UserId), string> _eventUserToId = new();
 
     public Task<Participant?> FindByEventAndPseudoAsync(string eventId, string pseudo, CancellationToken ct = default)
     {
@@ -24,6 +26,16 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
         return Task.FromResult<Participant?>(null);
     }
 
+    public Task<Participant?> FindByEventAndUserIdAsync(string eventId, string userId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return Task.FromResult<Participant?>(null);
+        var key = (eventId, userId);
+        if (_eventUserToId.TryGetValue(key, out var id) && _byId.TryGetValue(id, out var p))
+            return Task.FromResult<Participant?>(p);
+        return Task.FromResult<Participant?>(null);
+    }
+
     public Task<IReadOnlyDictionary<string, string>> GetPseudosByIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default)
     {
         var dict = new Dictionary<string, string>();
@@ -36,9 +48,32 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
     public Task<Participant> AddAsync(Participant participant, CancellationToken ct = default)
     {
         var id = string.IsNullOrEmpty(participant.Id) ? Guid.NewGuid().ToString("N")[..24] : participant.Id;
-        var created = new Participant { Id = id, EventId = participant.EventId, Pseudo = participant.Pseudo, CreatedAt = participant.CreatedAt, UpdatedAt = participant.UpdatedAt };
+        var created = new Participant
+        {
+            Id = id,
+            EventId = participant.EventId,
+            Pseudo = participant.Pseudo,
+            UserId = participant.UserId,
+            CreatedAt = participant.CreatedAt,
+            UpdatedAt = participant.UpdatedAt
+        };
         _byId[id] = created;
         _eventPseudoToId[(created.EventId, created.Pseudo)] = id;
+        if (!string.IsNullOrWhiteSpace(created.UserId))
+            _eventUserToId[(created.EventId, created.UserId!)] = id;
         return Task.FromResult(created);
+    }
+
+    public Task<IReadOnlyList<string>> ListDistinctEventIdsByUserIdAsync(string userId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return Task.FromResult<IReadOnlyList<string>>(Array.Empty<string>());
+
+        var ids = _byId.Values
+            .Where(p => p.UserId == userId)
+            .Select(p => p.EventId)
+            .Distinct()
+            .ToList();
+        return Task.FromResult<IReadOnlyList<string>>(ids);
     }
 }

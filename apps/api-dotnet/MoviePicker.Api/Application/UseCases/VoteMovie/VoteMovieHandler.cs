@@ -30,7 +30,7 @@ public sealed class VoteMovieHandler : IVoteMovieHandler
             ?? throw new NotFoundException("Soirée introuvable");
 
         if (evt.IsFinished(DateTimeOffset.UtcNow))
-            throw new BadRequestException("Soirée terminée. Lecture seule.");
+            throw new ConflictException("Soirée terminée. Lecture seule.");
 
         var movie = await _movieRepository.GetByIdAndEventIdAsync(movieId, evt.Id, ct);
         if (movie is null)

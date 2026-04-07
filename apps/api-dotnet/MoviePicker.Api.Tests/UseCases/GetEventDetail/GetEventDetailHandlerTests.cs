@@ -12,6 +12,7 @@ public sealed class GetEventDetailHandlerTests
     private readonly Mock<IEventRepository> _eventRepo;
     private readonly Mock<IMovieRepository> _movieRepo;
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor;
+    private readonly Mock<ICurrentUserAccessor> _currentUserAccessor;
     private readonly GetEventDetailHandler _sut;
 
     private static Event Event(string hostToken = "ht1") => new()
@@ -31,7 +32,13 @@ public sealed class GetEventDetailHandlerTests
         _eventRepo = new Mock<IEventRepository>();
         _movieRepo = new Mock<IMovieRepository>();
         _hostTokenAccessor = new Mock<IHostTokenAccessor>();
-        _sut = new GetEventDetailHandler(_eventRepo.Object, _movieRepo.Object, _hostTokenAccessor.Object);
+        _currentUserAccessor = new Mock<ICurrentUserAccessor>();
+        _currentUserAccessor.Setup(c => c.GetUserId()).Returns((string?)null);
+        _sut = new GetEventDetailHandler(
+            _eventRepo.Object,
+            _movieRepo.Object,
+            _hostTokenAccessor.Object,
+            _currentUserAccessor.Object);
     }
 
     [Fact]
@@ -96,5 +103,77 @@ public sealed class GetEventDetailHandlerTests
         Assert.NotNull(result.WinnerMovie);
         Assert.Equal("mov1", result.WinnerMovie.Id);
         Assert.Equal("Inception", result.WinnerMovie.Title);
+    }
+
+    [Fact]
+    public async Task HandleAsync_CreatorUserMatchesCurrentUser_SetsIsHostTrueWithoutToken()
+    {
+        var evt = new Event
+        {
+            Id = "evt1",
+            Title = "Soirée",
+            Date = "2030-01-01",
+            Time = "20:00",
+            Slug = "soiree",
+            HostToken = "secret",
+            CreatorUserId = "user-42",
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
+        _currentUserAccessor.Setup(c => c.GetUserId()).Returns("user-42");
+
+        var result = await _sut.HandleAsync("evt1");
+
+        Assert.True(result.IsHost);
+    }
+
+    [Fact]
+    public async Task HandleAsync_LoggedInButNotCreatorAndWrongToken_SetsIsHostFalse()
+    {
+        var evt = new Event
+        {
+            Id = "evt1",
+            Title = "Soirée",
+            Date = "2030-01-01",
+            Time = "20:00",
+            Slug = "soiree",
+            HostToken = "real",
+            CreatorUserId = "other-user",
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("wrong");
+        _currentUserAccessor.Setup(c => c.GetUserId()).Returns("not-creator");
+
+        var result = await _sut.HandleAsync("evt1");
+
+        Assert.False(result.IsHost);
+    }
+
+    [Fact]
+    public async Task HandleAsync_MatchingHostToken_SetsIsHostTrueEvenIfNotCreator()
+    {
+        var evt = new Event
+        {
+            Id = "evt1",
+            Title = "Soirée",
+            Date = "2030-01-01",
+            Time = "20:00",
+            Slug = "soiree",
+            HostToken = "tok",
+            CreatorUserId = "alice",
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("tok");
+        _currentUserAccessor.Setup(c => c.GetUserId()).Returns("bob");
+
+        var result = await _sut.HandleAsync("evt1");
+
+        Assert.True(result.IsHost);
     }
 }
