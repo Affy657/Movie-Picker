@@ -27,12 +27,12 @@
     "@typescript-eslint/parser": "^8.58.0",
     "chrome-launcher": "^1.2.1",
     "cross-env": "^10.1.0",
-    "eslint": "^8.57.1",
-    "eslint-config-prettier": "^9.1.2",
-    "lighthouse": "^13.0.3",
+    "eslint": "^10.2.0",
+    "eslint-config-prettier": "^10.1.8",
+    "lighthouse": "^13.1.0",
     "prettier": "^3.8.1",
     "serve": "^14.2.6",
-    "turbo": "^2.9.3"
+    "turbo": "^2.9.4"
   },
   "packageManager": "pnpm@10.0.0",
   "engines": {
