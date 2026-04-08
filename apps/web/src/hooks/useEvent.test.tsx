@@ -17,6 +17,13 @@ const server = setupServer(
       isHost: false,
       terminé: false,
       winnerMovie: null,
+      config: {
+        theme: null,
+        endDate: null,
+        maxProposalsPerParticipant: null,
+        wheelMode: 'strictRandom',
+        allowedReactionIds: null,
+      },
     })
   )
 );

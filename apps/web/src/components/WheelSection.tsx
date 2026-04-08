@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { fetchApi } from '../api/client';
 import type { EventData, MovieData } from '../types/event';
 
@@ -24,6 +24,11 @@ export default function WheelSection({
   const [spinning, setSpinning] = useState(false);
   const [winner, setWinner] = useState<MovieData | null>(event.winnerMovie ?? null);
   const isHost = event.isHost ?? !!hostToken;
+
+  const winnerId = event.winnerMovie?._id;
+  useEffect(() => {
+    setWinner(event.winnerMovie ?? null);
+  }, [winnerId]);
 
   const baseUrl = `/events/${slug}`;
   const query = hostToken ? `?host=${encodeURIComponent(hostToken)}` : '';

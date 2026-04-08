@@ -16,6 +16,7 @@ public static class RateLimitingExtensions
     public const string AuthLoginPolicy = "auth-login";
     public const string PatchEventConfigPolicy = "patch-event-config";
     public const string ReactionsMutationPolicy = "reactions-mutation";
+    public const string PostersPolicy = "posters-get";
 
     public static IServiceCollection AddMoviePickerRateLimiter(this IServiceCollection services, IHostEnvironment environment)
     {
@@ -48,6 +49,7 @@ public static class RateLimitingExtensions
                 options.AddPolicy(AuthLoginPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(PatchEventConfigPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(ReactionsMutationPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
+                options.AddPolicy(PostersPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 return;
             }
 
@@ -58,6 +60,7 @@ public static class RateLimitingExtensions
             options.AddPolicy(AuthLoginPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 30, windowMinutes: 1));
             options.AddPolicy(PatchEventConfigPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 40, windowMinutes: 1));
             options.AddPolicy(ReactionsMutationPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 120, windowMinutes: 1));
+            options.AddPolicy(PostersPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 300, windowMinutes: 1));
         });
 
         return services;

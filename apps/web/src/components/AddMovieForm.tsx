@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { fetchApi } from '../api/client';
+import { posterImageSrc } from '../utils/posterUrl';
 import { formatTmdbVote } from '../utils/formatTmdbVote';
-import type { WatchProviderOffer } from '../types/event';
+import type { MovieData, WatchProviderOffer } from '../types/event';
+import { othersAlreadySeenHint } from '../utils/movieReactions';
 import TmdbIndicativeFooter from './TmdbIndicativeFooter';
 import WatchProviderChips from './WatchProviderChips';
 
@@ -25,6 +27,9 @@ interface MovieSearchListResponse {
 interface AddMovieFormProps {
   slug: string;
   participantId: string;
+  /** Pour l’indication « déjà vu par d’autres » sur une fiche déjà proposée. */
+  participantPseudo?: string;
+  existingMovies?: MovieData[];
   onAdded: () => void;
   disabled?: boolean;
 }
@@ -32,6 +37,8 @@ interface AddMovieFormProps {
 export default function AddMovieForm({
   slug,
   participantId,
+  participantPseudo,
+  existingMovies = [],
   onAdded,
   disabled,
 }: AddMovieFormProps) {
@@ -128,10 +135,15 @@ export default function AddMovieForm({
             {results.map((r) => {
               const voteLabel = formatTmdbVote(r.voteAverage);
               const providers = r.watchProviders ?? [];
+              const posterSrc = posterImageSrc(r.posterPath);
+              const alreadyListed = existingMovies.find((m) => m.tmdbId === r.id);
+              const seenHint = alreadyListed
+                ? othersAlreadySeenHint(alreadyListed.reactions, participantPseudo)
+                : null;
               return (
                 <li key={r.id} className="search-result-item">
-                  {r.posterPath ? (
-                    <img src={r.posterPath} alt="" width={46} height={69} />
+                  {posterSrc ? (
+                    <img src={posterSrc} alt="" width={46} height={69} />
                   ) : (
                     <div className="poster-placeholder">Affiche</div>
                   )}
@@ -150,11 +162,20 @@ export default function AddMovieForm({
                         type="button"
                         className="btn btn-sm btn-primary"
                         onClick={() => addMovie(r)}
-                        disabled={adding}
+                        disabled={adding || !!alreadyListed}
+                        title={
+                          alreadyListed ? 'Ce film est déjà dans la liste de la soirée' : undefined
+                        }
                       >
-                        Ajouter
+                        {alreadyListed ? 'Déjà listé' : 'Ajouter'}
                       </button>
                     </div>
+                    {alreadyListed ? (
+                      <p className="search-result-duplicate hint">
+                        Déjà proposé dans cette soirée.
+                        {seenHint ? <> {seenHint}</> : null}
+                      </p>
+                    ) : null}
                     <WatchProviderChips providers={providers} />
                     {r.tmdbWatchPageUrl ? (
                       <a

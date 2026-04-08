@@ -16,4 +16,7 @@ public sealed class MyEventSummaryDto
     public DateTimeOffset UpdatedAt { get; init; }
     public bool IsCreator { get; init; }
     public bool IsParticipant { get; init; }
+
+    /// <summary><c>upcoming</c> | <c>live</c> | <c>finished</c> — affichage liste « mes soirées ».</summary>
+    public string Lifecycle { get; init; } = string.Empty;
 }

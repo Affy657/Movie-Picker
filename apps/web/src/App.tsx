@@ -2,10 +2,18 @@ import { useState } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { AuthProvider } from './contexts/AuthContext';
+import UserThemeSync from './components/UserThemeSync';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import AppShell from './components/AppShell';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import Home from './pages/Home';
 import CreateEvent from './pages/CreateEvent';
 import EventDetail from './pages/EventDetail';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import AccountPage from './pages/AccountPage';
+import MyEventsPage from './pages/MyEventsPage';
 
 function createAppQueryClient() {
   return new QueryClient({
@@ -22,9 +30,22 @@ function createAppQueryClient() {
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/new" element={<CreateEvent />} />
-      <Route path="/s/:slug" element={<EventDetail />} />
+      <Route element={<AppShell />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/new" element={<CreateEvent />} />
+        <Route path="/connexion" element={<LoginPage />} />
+        <Route path="/inscription" element={<RegisterPage />} />
+        <Route path="/compte" element={<AccountPage />} />
+        <Route
+          path="/mes-soirees"
+          element={
+            <ProtectedRoute>
+              <MyEventsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/s/:slug" element={<EventDetail />} />
+      </Route>
     </Routes>
   );
 }
@@ -45,9 +66,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <BrowserRouter>
-          <AppRoutesWithErrorBoundary />
-        </BrowserRouter>
+        <AuthProvider>
+          <UserThemeSync />
+          <BrowserRouter>
+            <AppRoutesWithErrorBoundary />
+          </BrowserRouter>
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

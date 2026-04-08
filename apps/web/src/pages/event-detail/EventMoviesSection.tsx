@@ -5,6 +5,7 @@ import type { EventData, MovieData } from '../../types/event';
 import AddMovieForm from '../../components/AddMovieForm';
 import MovieList from '../../components/MovieList';
 import EventActionErrorBanner from './EventActionErrorBanner';
+import { effectiveAllowedReactionIds } from '../../utils/movieReactions';
 
 export type EventMoviesSectionProps = {
   slug: string;
@@ -33,6 +34,7 @@ export default function EventMoviesSection({
   refreshAll,
 }: EventMoviesSectionProps) {
   const terminé = !!event.terminé;
+  const allowedReactionIds = effectiveAllowedReactionIds(event.config?.allowedReactionIds);
 
   return (
     <section className="section section-movies" aria-label="Films proposés">
@@ -41,6 +43,8 @@ export default function EventMoviesSection({
         <AddMovieForm
           slug={slug}
           participantId={participant.participantId}
+          participantPseudo={participant.pseudo}
+          existingMovies={movies}
           onAdded={refreshAll}
           disabled={terminé}
         />
@@ -56,8 +60,12 @@ export default function EventMoviesSection({
       {moviesQuery.isSuccess && (
         <MovieList
           movies={movies}
+          slug={slug}
+          allowedReactionIds={allowedReactionIds}
           participantId={participant?.participantId ?? null}
+          participantPseudo={participant?.pseudo ?? null}
           terminé={terminé}
+          onReactionError={(msg) => setActionError(msg)}
           onVote={async (movieId, value) => {
             if (!participant) return;
             setActionError(null);

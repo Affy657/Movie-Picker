@@ -29,4 +29,15 @@ describe('App (routes)', () => {
     await user.click(screen.getByRole('link', { name: /créer une soirée/i }));
     expect(await screen.findByRole('heading', { name: /créer une soirée/i })).toBeInTheDocument();
   });
+
+  it('route /mes-soirees redirige vers la connexion sans session', async () => {
+    render(
+      <AppTestProviders>
+        <MemoryRouter initialEntries={['/mes-soirees']}>
+          <AppRoutes />
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+    expect(await screen.findByRole('heading', { name: /^connexion$/i })).toBeInTheDocument();
+  });
 });

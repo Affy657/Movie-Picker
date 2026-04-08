@@ -11,6 +11,13 @@ const baseEvent: EventData = {
   slug: 'soiree',
   isHost: false,
   terminé: false,
+  config: {
+    theme: null,
+    endDate: null,
+    maxProposalsPerParticipant: null,
+    wheelMode: 'strictRandom',
+    allowedReactionIds: null,
+  },
 };
 
 describe('WheelSection', () => {
@@ -56,26 +63,55 @@ describe('WheelSection', () => {
     expect(screen.getByRole('button', { name: /lancer la roue/i })).toBeInTheDocument();
   });
 
+  const sampleWinner = {
+    _id: 'm1',
+    eventId: 'e1',
+    participantId: 'p1',
+    tmdbId: 1,
+    title: 'Inception',
+    year: '2010',
+    posterPath: null,
+    proposerPseudo: 'Alice',
+    score: 0,
+    up: 0,
+    down: 0,
+  };
+
   it('affiche le film gagnant quand winner est présent', () => {
     render(
       <WheelSection
         slug="soiree"
         event={{
           ...baseEvent,
-          winnerMovie: {
-            _id: 'm1',
-            eventId: 'e1',
-            participantId: 'p1',
-            tmdbId: 1,
-            title: 'Inception',
-            year: '2010',
-            posterPath: null,
-            proposerPseudo: 'Alice',
-            score: 0,
-            up: 0,
-            down: 0,
-          },
+          winnerMovie: sampleWinner,
         }}
+        moviesCount={1}
+        hostToken={null}
+        onWheelDone={vi.fn()}
+        onCloseDone={vi.fn()}
+      />
+    );
+    expect(screen.getByText(/film gagnant/i)).toBeInTheDocument();
+    expect(screen.getByText('Inception')).toBeInTheDocument();
+  });
+
+  it('met à jour le gagnant quand winnerMovie arrive (ex. polling live)', () => {
+    const { rerender } = render(
+      <WheelSection
+        slug="soiree"
+        event={baseEvent}
+        moviesCount={1}
+        hostToken={null}
+        onWheelDone={vi.fn()}
+        onCloseDone={vi.fn()}
+      />
+    );
+    expect(screen.queryByText('Inception')).not.toBeInTheDocument();
+
+    rerender(
+      <WheelSection
+        slug="soiree"
+        event={{ ...baseEvent, winnerMovie: sampleWinner }}
         moviesCount={1}
         hostToken={null}
         onWheelDone={vi.fn()}

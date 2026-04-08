@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.Posters;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -13,19 +14,22 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
     private readonly IVoteRepository _voteRepository;
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
+    private readonly IPosterImageStore _posterImageStore;
 
     public LaunchWheelHandler(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
         IVoteRepository voteRepository,
         IHostTokenAccessor hostTokenAccessor,
-        ICurrentUserAccessor currentUserAccessor)
+        ICurrentUserAccessor currentUserAccessor,
+        IPosterImageStore posterImageStore)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _voteRepository = voteRepository;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
+        _posterImageStore = posterImageStore;
     }
 
     public async Task<WheelResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
@@ -79,6 +83,10 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
             ? "Un seul film proposé : gagnant direct."
             : "Roue lancée.";
 
+        if (winner.PosterPath is not null &&
+            TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(winner.PosterPath, out var wNorm))
+            await _posterImageStore.RegisterTmdbSourceAsync(wNorm, ct);
+        var winnerPoster = _posterImageStore.ToPublicPosterPath(winner.PosterPath);
         return new WheelResponse
         {
             Winner = new WinnerMovieResponse
@@ -89,7 +97,7 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
                 TmdbId = winner.TmdbId,
                 Title = winner.Title,
                 Year = winner.Year,
-                PosterPath = winner.PosterPath,
+                PosterPath = winnerPoster,
                 CreatedAt = winner.CreatedAt,
                 UpdatedAt = winner.UpdatedAt
             },

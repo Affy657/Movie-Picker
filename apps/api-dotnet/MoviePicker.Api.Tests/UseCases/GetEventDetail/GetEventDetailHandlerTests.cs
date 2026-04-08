@@ -13,6 +13,7 @@ public sealed class GetEventDetailHandlerTests
     private readonly Mock<IMovieRepository> _movieRepo;
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor;
     private readonly Mock<ICurrentUserAccessor> _currentUserAccessor;
+    private readonly Mock<IPosterImageStore> _posterStore;
     private readonly GetEventDetailHandler _sut;
 
     private static Event Event(string hostToken = "ht1") => new()
@@ -34,11 +35,18 @@ public sealed class GetEventDetailHandlerTests
         _hostTokenAccessor = new Mock<IHostTokenAccessor>();
         _currentUserAccessor = new Mock<ICurrentUserAccessor>();
         _currentUserAccessor.Setup(c => c.GetUserId()).Returns((string?)null);
+        _posterStore = new Mock<IPosterImageStore>();
+        _posterStore.Setup(s => s.ToPublicPosterPath(It.IsAny<string?>())).Returns((string? u) => u);
+        _posterStore.Setup(s => s.RegisterTmdbSourceAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _posterStore
+            .Setup(s => s.RegisterTmdbSourcesAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         _sut = new GetEventDetailHandler(
             _eventRepo.Object,
             _movieRepo.Object,
             _hostTokenAccessor.Object,
-            _currentUserAccessor.Object);
+            _currentUserAccessor.Object,
+            _posterStore.Object);
     }
 
     [Fact]

@@ -61,6 +61,7 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
         CreatedAt = e.CreatedAt,
         UpdatedAt = e.UpdatedAt,
         IsCreator = isCreator,
-        IsParticipant = isParticipant
+        IsParticipant = isParticipant,
+        Lifecycle = MyEventListLifecycle.Compute(e, DateTimeOffset.UtcNow)
     };
 }

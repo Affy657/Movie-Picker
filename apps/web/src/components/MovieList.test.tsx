@@ -38,11 +38,15 @@ describe('MovieList', () => {
     render(
       <MovieList
         movies={[]}
+        slug="s"
+        allowedReactionIds={[]}
         participantId={null}
+        participantPseudo={null}
         terminé={false}
         onVote={vi.fn()}
         onRemove={vi.fn()}
         refresh={vi.fn()}
+        onReactionError={vi.fn()}
       />
     );
     expect(screen.getByText(/aucun film proposé/i)).toBeInTheDocument();
@@ -52,11 +56,15 @@ describe('MovieList', () => {
     render(
       <MovieList
         movies={movies}
+        slug="s"
+        allowedReactionIds={[]}
         participantId={null}
+        participantPseudo={null}
         terminé={false}
         onVote={vi.fn()}
         onRemove={vi.fn()}
         refresh={vi.fn()}
+        onReactionError={vi.fn()}
       />
     );
     expect(screen.getByText('Inception')).toBeInTheDocument();
@@ -65,16 +73,46 @@ describe('MovieList', () => {
     expect(screen.getByText(/Proposé par Bob/)).toBeInTheDocument();
   });
 
+  it('affiche l’indication déjà vu par d’autres lorsque les agrégats le permettent', () => {
+    const withSeen: MovieData[] = [
+      {
+        ...movies[0]!,
+        proposerPseudo: 'Charlie',
+        reactions: [{ reactionId: 'already_seen', count: 2, pseudos: ['Alice', 'Bob'] }],
+      },
+    ];
+    render(
+      <MovieList
+        movies={withSeen}
+        slug="s"
+        allowedReactionIds={[]}
+        participantId="p0"
+        participantPseudo="Bob"
+        terminé={false}
+        onVote={vi.fn()}
+        onRemove={vi.fn()}
+        refresh={vi.fn()}
+        onReactionError={vi.fn()}
+      />
+    );
+    expect(screen.getByText(/Déjà vu par d'autres/i)).toBeInTheDocument();
+    expect(screen.getByText(/Déjà vu par d'autres : Alice/)).toBeInTheDocument();
+  });
+
   it('affiche les boutons vote up/down quand pas terminé et participantId', async () => {
     const onVote = vi.fn().mockResolvedValue(undefined);
     render(
       <MovieList
         movies={movies}
+        slug="s"
+        allowedReactionIds={[]}
         participantId="p0"
+        participantPseudo={null}
         terminé={false}
         onVote={onVote}
         onRemove={vi.fn()}
         refresh={vi.fn()}
+        onReactionError={vi.fn()}
       />
     );
     const upButtons = screen.getAllByTitle('Upvote');

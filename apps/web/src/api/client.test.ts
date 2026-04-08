@@ -70,5 +70,9 @@ describe('fetchApi', () => {
     });
     const data = await fetchApi<{ slug: string }>('/events', { method: 'POST', body: '{}' });
     expect(data).toEqual({ slug: 'abc', hostToken: 'ht' });
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ credentials: 'include' })
+    );
   });
 });

@@ -1,4 +1,6 @@
+using System.Net.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
@@ -20,6 +22,7 @@ using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
+using MoviePicker.Api.Infrastructure.Posters;
 using MoviePicker.Api.Infrastructure.Tmdb;
 using MoviePicker.Api.Infrastructure.Web;
 
@@ -49,6 +52,13 @@ public static class ServiceCollectionExtensions
                     opts.TmdbSearchMaxWatchProviderLookups = maxLp;
                 if (int.TryParse(cfg["TMDB_LIST_ENRICHMENT_MAX_PARALLEL"], out var par) && par > 0)
                     opts.TmdbListEnrichmentMaxParallelism = Math.Min(par, 16);
+                var posterEn = cfg["POSTER_CACHE_ENABLED"];
+                opts.PosterCacheEnabled = string.IsNullOrWhiteSpace(posterEn)
+                    || (posterEn != "0" && !posterEn.Equals("false", StringComparison.OrdinalIgnoreCase));
+                if (int.TryParse(cfg["POSTER_CACHE_TTL_DAYS"], out var pttl) && pttl > 0)
+                    opts.PosterCacheTtlDays = pttl;
+                if (int.TryParse(cfg["POSTER_CACHE_MAX_BYTES"], out var pmax) && pmax >= 4096)
+                    opts.PosterCacheMaxBytes = pmax;
             });
 
         services.AddMemoryCache();
@@ -92,6 +102,23 @@ public static class ServiceCollectionExtensions
         else
             services.AddHttpClient<ITmdbMovieSearch, TmdbMovieSearch>();
 
+        services.AddHttpClient(
+                PosterFetchHttp.ClientName,
+                client =>
+                {
+                    client.Timeout = TimeSpan.FromSeconds(20);
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd("MoviePicker-Api/1.0");
+                })
+            .ConfigurePrimaryHttpMessageHandler(
+                static () => new SocketsHttpHandler { AllowAutoRedirect = false });
+
+        if (!GetPosterCacheEnabledFlag(configuration))
+            services.AddSingleton<IPosterImageStore, DisabledPosterImageStore>();
+        else if (string.IsNullOrWhiteSpace(mongoUri))
+            services.AddSingleton<IPosterImageStore, MemoryPosterImageStore>();
+        else
+            services.AddSingleton<IPosterImageStore, MongoPosterImageStore>();
+
         services.AddHttpContextAccessor();
         services.AddScoped<IHostTokenAccessor, HostTokenAccessor>();
         services.AddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
@@ -123,5 +150,13 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<MoviePickerExceptionFilter>();
 
         return services;
+    }
+
+    private static bool GetPosterCacheEnabledFlag(IConfiguration configuration)
+    {
+        var raw = configuration["POSTER_CACHE_ENABLED"];
+        if (string.IsNullOrWhiteSpace(raw))
+            return true;
+        return raw != "0" && !raw.Equals("false", StringComparison.OrdinalIgnoreCase);
     }
 }

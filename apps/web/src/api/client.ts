@@ -53,14 +53,22 @@ function ensureApiIsNotFrontOrigin(url: string): void {
 const NETWORK_ERROR_MSG =
   'Impossible de joindre l’API. Vérifiez que l’API est démarrée (pnpm dev:api-dotnet) et votre connexion.';
 
+/** Requêtes JSON vers l’API ; `credentials: 'include'` pour la session cookie httpOnly (auth V1). */
 export async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
   const url = apiUrl(path);
   ensureApiIsNotFrontOrigin(url);
   let res: Response;
   try {
+    const headers: Record<string, string> = {
+      ...(options?.headers as Record<string, string> | undefined),
+    };
+    if (options?.body != null && options.body !== '') {
+      headers['Content-Type'] = 'application/json';
+    }
     res = await fetch(url, {
       ...options,
-      headers: { 'Content-Type': 'application/json', ...options?.headers },
+      credentials: 'include',
+      headers,
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);

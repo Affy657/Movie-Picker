@@ -1,20 +1,30 @@
-import { describe, it, expect } from 'vitest';
-import { render } from '@testing-library/react';
+import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
+import { render, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { setupServer } from 'msw/node';
 import { axe } from 'vitest-axe';
-import { AppTestProviders } from '../test-utils/queryWrapper';
+import { AppTestProviders, createTestQueryClient } from '../test-utils/queryWrapper';
+import { authMeGuestHandler } from '../mocks/handlers';
 import Home from './Home';
 import CreateEvent from './CreateEvent';
 
 describe('accessibilité (axe)', () => {
+  const server = setupServer(authMeGuestHandler);
+
+  beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
+  afterEach(() => server.resetHandlers());
+  afterAll(() => server.close());
+
   it('Home n’a pas de violations', async () => {
+    const queryClient = createTestQueryClient();
     const { container } = render(
-      <AppTestProviders>
+      <AppTestProviders client={queryClient}>
         <MemoryRouter>
           <Home />
         </MemoryRouter>
       </AppTestProviders>
     );
+    await waitFor(() => expect(queryClient.isFetching()).toBe(0));
     const results = await axe(container);
     expect(
       results.violations,
@@ -23,13 +33,15 @@ describe('accessibilité (axe)', () => {
   });
 
   it('CreateEvent n’a pas de violations', async () => {
+    const queryClient = createTestQueryClient();
     const { container } = render(
-      <AppTestProviders>
+      <AppTestProviders client={queryClient}>
         <MemoryRouter>
           <CreateEvent />
         </MemoryRouter>
       </AppTestProviders>
     );
+    await waitFor(() => expect(queryClient.isFetching()).toBe(0));
     const results = await axe(container);
     expect(
       results.violations,

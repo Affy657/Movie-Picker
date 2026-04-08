@@ -1,5 +1,11 @@
 /** Clés React Query centralisées (invalidation, tests). */
 export const queryKeys = {
+  auth: {
+    me: ['auth', 'me'] as const,
+  },
+  myEvents: {
+    list: ['events', 'mine'] as const,
+  },
   event: {
     all: ['event'] as const,
     detail: (slug: string, hostToken: string | null) =>

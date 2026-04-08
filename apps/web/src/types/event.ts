@@ -1,3 +1,23 @@
+/** Aligné sur l’enum API `WheelMode` (JSON camelCase). */
+export type WheelMode = 'strictRandom' | 'weightedByVotes';
+
+/** Aligné sur `EventConfigResponse` (API). */
+export interface EventConfigData {
+  theme: string | null;
+  endDate: string | null;
+  maxProposalsPerParticipant: number | null;
+  wheelMode: WheelMode;
+  allowedReactionIds: string[] | null;
+}
+
+export const DEFAULT_EVENT_CONFIG: EventConfigData = {
+  theme: null,
+  endDate: null,
+  maxProposalsPerParticipant: null,
+  wheelMode: 'strictRandom',
+  allowedReactionIds: null,
+};
+
 export interface EventData {
   _id: string;
   title: string;
@@ -8,6 +28,8 @@ export interface EventData {
   terminé?: boolean;
   closedAt?: string | null;
   winnerMovie?: MovieData | null;
+  /** Toujours présent sur l’API à jour ; défaut local si absent (tests / vieux mocks). */
+  config?: EventConfigData;
 }
 
 /** Offre VOD/streaming TMDB (région configurée côté API, ex. FR). */
@@ -16,6 +38,13 @@ export interface WatchProviderOffer {
   name: string;
   logoPath: string | null;
   type: string;
+}
+
+/** Agrégat aligné sur `MovieReactionAggregateResponse` (API). */
+export interface MovieReactionAggregate {
+  reactionId: string;
+  count: number;
+  pseudos: string[];
 }
 
 export interface MovieData {
@@ -33,6 +62,8 @@ export interface MovieData {
   voteAverage?: number | null;
   watchProviders?: WatchProviderOffer[];
   tmdbWatchPageUrl?: string | null;
+  /** Agrégats de réactions (liste vide si aucune). */
+  reactions?: MovieReactionAggregate[];
 }
 
 export interface ParticipantData {

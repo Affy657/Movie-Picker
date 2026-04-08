@@ -7,8 +7,15 @@
 
 const { execSync } = require('child_process');
 
-const MIN_NODE_MAJOR = 20;
 const MIN_DOTNET_MAJOR = 10;
+
+/** Aligné sur engines de eslint@10 (Vite 8 proche) : ^20.19.0 || ^22.13.0 || >=24 */
+function nodeVersionOk(major, minor, patch) {
+  if (major >= 24) return true;
+  if (major === 22) return minor > 13 || (minor === 13 && patch >= 0);
+  if (major === 20) return minor > 19 || (minor === 19 && patch >= 0);
+  return false;
+}
 
 function run(cmd, opts = {}) {
   try {
@@ -21,9 +28,13 @@ function run(cmd, opts = {}) {
 function checkNode() {
   const raw = process.version;
   if (!raw || !raw.startsWith('v')) return { ok: false, msg: 'Node non détecté' };
-  const major = parseInt(raw.slice(1).split('.')[0], 10);
-  const ok = major >= MIN_NODE_MAJOR;
-  return { ok, msg: ok ? `Node ${raw} (OK)` : `Node ${raw} – requis: ${MIN_NODE_MAJOR}.x` };
+  const parts = raw.slice(1).split('.');
+  const major = parseInt(parts[0], 10);
+  const minor = parseInt(parts[1] || '0', 10);
+  const patch = parseInt(parts[2] || '0', 10);
+  const ok = nodeVersionOk(major, minor, patch);
+  const required = '20.19+, 22.13+, ou 24+ (ESLint 10 / chaîne front)';
+  return { ok, msg: ok ? `Node ${raw} (OK)` : `Node ${raw} – requis: ${required}` };
 }
 
 function checkPnpm() {
@@ -53,7 +64,7 @@ function checkGit() {
 }
 
 const checks = [
-  { name: 'Node 20', fn: checkNode },
+  { name: 'Node (20.19+ / 22.13+ / 24+)', fn: checkNode },
   { name: 'pnpm', fn: checkPnpm },
   { name: '.NET 10 (API)', fn: checkDotnet },
   { name: 'Docker', fn: checkDocker },

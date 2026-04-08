@@ -17,6 +17,7 @@ public sealed class ListMoviesForEventHandlerTests
     private readonly Mock<IParticipantRepository> _participantRepo;
     private readonly Mock<IReactionRepository> _reactionRepo;
     private readonly Mock<ITmdbMovieSearch> _tmdb;
+    private readonly Mock<IPosterImageStore> _posterStore;
     private readonly ListMoviesForEventHandler _sut;
 
     private static Event ActiveEvent() => new()
@@ -39,6 +40,12 @@ public sealed class ListMoviesForEventHandlerTests
         _participantRepo = new Mock<IParticipantRepository>();
         _reactionRepo = new Mock<IReactionRepository>();
         _tmdb = new Mock<ITmdbMovieSearch>();
+        _posterStore = new Mock<IPosterImageStore>();
+        _posterStore.Setup(s => s.ToPublicPosterPath(It.IsAny<string?>())).Returns((string? u) => u);
+        _posterStore.Setup(s => s.RegisterTmdbSourceAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _posterStore
+            .Setup(s => s.RegisterTmdbSourcesAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         var opts = Options.Create(new MoviePickerOptions { TmdbApiKey = null });
         _sut = new ListMoviesForEventHandler(
             _eventRepo.Object,
@@ -47,6 +54,7 @@ public sealed class ListMoviesForEventHandlerTests
             _participantRepo.Object,
             _reactionRepo.Object,
             _tmdb.Object,
+            _posterStore.Object,
             opts);
     }
 
@@ -157,6 +165,7 @@ public sealed class ListMoviesForEventHandlerTests
             _participantRepo.Object,
             _reactionRepo.Object,
             _tmdb.Object,
+            _posterStore.Object,
             Options.Create(
                 new MoviePickerOptions
                 {

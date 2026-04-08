@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.Posters;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -10,15 +11,18 @@ public sealed class AddMovieHandler : IAddMovieHandler
     private readonly IEventRepository _eventRepository;
     private readonly IMovieRepository _movieRepository;
     private readonly IParticipantRepository _participantRepository;
+    private readonly IPosterImageStore _posterImageStore;
 
     public AddMovieHandler(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
-        IParticipantRepository participantRepository)
+        IParticipantRepository participantRepository,
+        IPosterImageStore posterImageStore)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _participantRepository = participantRepository;
+        _posterImageStore = posterImageStore;
     }
 
     public async Task<MovieWithScoreResponse> HandleAsync(string idOrSlug, AddMovieRequest request, CancellationToken ct = default)
@@ -30,8 +34,12 @@ public sealed class AddMovieHandler : IAddMovieHandler
             throw new ConflictException("Soirée terminée. Lecture seule.");
 
         var poster = string.IsNullOrWhiteSpace(request.PosterPath) ? null : request.PosterPath.Trim();
-        if (poster is not null && !Uri.TryCreate(poster, UriKind.Absolute, out _))
-            throw new BadRequestException("posterPath doit être une URL absolue ou null");
+        if (poster is not null && !IsAcceptablePosterPath(poster))
+            throw new BadRequestException("posterPath doit être une URL https absolue, un chemin /api/v1/posters/… ou null");
+
+        if (poster is not null && TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(poster, out var norm))
+            await _posterImageStore.RegisterTmdbSourceAsync(norm, ct);
+        poster = _posterImageStore.ToPublicPosterPath(poster);
 
         var participant = await _participantRepository.FindByIdAndEventIdAsync(request.ParticipantId, evt.Id, ct);
         if (participant is null)
@@ -84,5 +92,12 @@ public sealed class AddMovieHandler : IAddMovieHandler
             Down = 0,
             Reactions = Array.Empty<MovieReactionAggregateResponse>()
         };
+    }
+
+    private static bool IsAcceptablePosterPath(string p)
+    {
+        if (Uri.TryCreate(p, UriKind.Absolute, out var u) && u.Scheme == Uri.UriSchemeHttps)
+            return true;
+        return TmdbPosterUrlNormalizer.TryParsePosterKey(p, out _);
     }
 }

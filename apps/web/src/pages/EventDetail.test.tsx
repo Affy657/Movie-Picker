@@ -7,6 +7,7 @@ import EventDetail from './EventDetail';
 import { AppTestProviders } from '../test-utils/queryWrapper';
 import {
   TEST_API_V1,
+  authMeGuestHandler,
   createEventDetailHandlers,
   createJoinHandler,
   createSearchAndAddHandlers,
@@ -30,6 +31,7 @@ describe('EventDetail (MSW)', () => {
   const slug = 'soiree-msw';
 
   const server = setupServer(
+    authMeGuestHandler,
     ...createEventDetailHandlers({ slug, title: 'Soirée démo' }),
     createJoinHandler(slug),
     ...createSearchAndAddHandlers(slug)
@@ -56,6 +58,16 @@ describe('EventDetail (MSW)', () => {
     expect(document.title).toBe(pageTitle('Soirée introuvable'));
   });
 
+  it('affiche le lien invité et le QR pour un simple participant (sans token hôte)', async () => {
+    renderEventDetail(`/s/${slug}`);
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
+    });
+    expect(screen.getByText('Lien à partager')).toBeInTheDocument();
+    expect(screen.getByText('QR code invitation')).toBeInTheDocument();
+    expect(screen.queryByText('Votre lien hôte (ne pas partager)')).not.toBeInTheDocument();
+  });
+
   it('en tant qu’hôte affiche les deux liens de partage', async () => {
     const token = 'host-secret-token';
     renderEventDetail(`/s/${slug}?host=${encodeURIComponent(token)}`);
@@ -65,6 +77,22 @@ describe('EventDetail (MSW)', () => {
     expect(document.title).toBe(pageTitle('Soirée démo'));
     expect(screen.getByText('Lien à partager')).toBeInTheDocument();
     expect(screen.getByText('Votre lien hôte (ne pas partager)')).toBeInTheDocument();
+  });
+
+  it('en tant qu’hôte affiche le bandeau thème et le panneau paramètres', async () => {
+    const token = 'host-secret-token';
+    server.use(
+      ...createEventDetailHandlers({ slug, title: 'Soirée démo', theme: 'Comédie noire' }),
+      createJoinHandler(slug),
+      ...createSearchAndAddHandlers(slug)
+    );
+    renderEventDetail(`/s/${slug}?host=${encodeURIComponent(token)}`);
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
+    });
+    expect(screen.getByText('Comédie noire')).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: /Thème de soirée/i })).toBeInTheDocument();
+    expect(screen.getByText('Paramètres de la soirée')).toBeInTheDocument();
   });
 
   it('affiche erreur films + Réessayer si le chargement des films échoue', async () => {

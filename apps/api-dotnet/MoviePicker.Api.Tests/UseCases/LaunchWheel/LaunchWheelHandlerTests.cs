@@ -14,6 +14,7 @@ public sealed class LaunchWheelHandlerTests
     private readonly Mock<IVoteRepository> _voteRepo;
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor;
     private readonly Mock<ICurrentUserAccessor> _currentUserAccessor;
+    private readonly Mock<IPosterImageStore> _posterStore;
     private readonly LaunchWheelHandler _sut;
 
     private static Event ActiveEvent(string hostToken = "ht1") => new()
@@ -38,12 +39,19 @@ public sealed class LaunchWheelHandlerTests
         _currentUserAccessor.Setup(c => c.GetUserId()).Returns((string?)null);
         _voteRepo.Setup(r => r.AggregateScoresByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<string, VoteScoreAggregate>());
+        _posterStore = new Mock<IPosterImageStore>();
+        _posterStore.Setup(s => s.ToPublicPosterPath(It.IsAny<string?>())).Returns((string? u) => u);
+        _posterStore.Setup(s => s.RegisterTmdbSourceAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _posterStore
+            .Setup(s => s.RegisterTmdbSourcesAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         _sut = new LaunchWheelHandler(
             _eventRepo.Object,
             _movieRepo.Object,
             _voteRepo.Object,
             _hostTokenAccessor.Object,
-            _currentUserAccessor.Object);
+            _currentUserAccessor.Object,
+            _posterStore.Object);
     }
 
     [Fact]

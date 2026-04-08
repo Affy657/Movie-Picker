@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.Posters;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -11,17 +12,20 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
     private readonly IMovieRepository _movieRepository;
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
+    private readonly IPosterImageStore _posterImageStore;
 
     public GetEventDetailHandler(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
         IHostTokenAccessor hostTokenAccessor,
-        ICurrentUserAccessor currentUserAccessor)
+        ICurrentUserAccessor currentUserAccessor,
+        IPosterImageStore posterImageStore)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
+        _posterImageStore = posterImageStore;
     }
 
     public async Task<EventDetailResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
@@ -40,6 +44,10 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             var wm = await _movieRepository.GetByIdAsync(evt.WinnerMovieId, ct);
             if (wm is not null)
             {
+                if (wm.PosterPath is not null &&
+                    TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(wm.PosterPath, out var pNorm))
+                    await _posterImageStore.RegisterTmdbSourceAsync(pNorm, ct);
+                var posterOut = _posterImageStore.ToPublicPosterPath(wm.PosterPath);
                 winner = new WinnerMovieResponse
                 {
                     Id = wm.Id,
@@ -48,7 +56,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
                     TmdbId = wm.TmdbId,
                     Title = wm.Title,
                     Year = wm.Year,
-                    PosterPath = wm.PosterPath,
+                    PosterPath = posterOut,
                     CreatedAt = wm.CreatedAt,
                     UpdatedAt = wm.UpdatedAt
                 };

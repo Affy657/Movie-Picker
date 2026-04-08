@@ -8,8 +8,8 @@
     "dev:api-dotnet": "dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj",
     "lint": "turbo run lint",
     "lint:eslint": "eslint \"apps/web/src/**/*.{ts,tsx}\"",
-    "format": "prettier --write \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts",
-    "format:check": "prettier --check \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts",
+    "format": "prettier --write \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts eslint.config.mjs",
+    "format:check": "prettier --check \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts eslint.config.mjs",
     "format:dotnet": "dotnet format apps/api-dotnet/MoviePicker.slnx --verbosity minimal",
     "format:dotnet:check": "dotnet format apps/api-dotnet/MoviePicker.slnx --verify-no-changes --verbosity minimal",
     "openapi:export": "node scripts/export-openapi.cjs",
@@ -22,21 +22,22 @@
     "lighthouse": "node scripts/lighthouse-run.mjs"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.59.1",
-    "@typescript-eslint/eslint-plugin": "^8.58.0",
-    "@typescript-eslint/parser": "^8.58.0",
     "chrome-launcher": "^1.2.1",
     "cross-env": "^10.1.0",
-    "eslint": "^8.57.1",
-    "eslint-config-prettier": "^9.1.2",
-    "lighthouse": "^13.0.3",
+    "eslint": "^10.2.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.4.0",
+    "lighthouse": "^13.1.0",
     "prettier": "^3.8.1",
     "serve": "^14.2.6",
-    "turbo": "^2.9.3"
+    "turbo": "^2.9.5",
+    "typescript-eslint": "^8.58.1"
   },
   "packageManager": "pnpm@10.0.0",
   "engines": {
-    "node": ">=20"
+    "node": "^20.19.0 || ^22.13.0 || >=24"
   },
   "pnpm": {
     "overrides": {

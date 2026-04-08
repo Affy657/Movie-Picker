@@ -8,11 +8,16 @@ import { useMovies } from '../hooks/useMovies';
 import { useEventLive } from '../hooks/useEventLive';
 import JoinForm from '../components/JoinForm';
 import WheelSection from '../components/WheelSection';
+import EventThemeBanner from '../components/EventThemeBanner';
+import HostEventSettingsPanel from '../components/HostEventSettingsPanel';
 import EventDetailHeader from './event-detail/EventDetailHeader';
 import EventMoviesLoadError from './event-detail/EventMoviesLoadError';
 import EventMoviesSection from './event-detail/EventMoviesSection';
 import { friendlyEventError } from './event-detail/friendlyEventError';
 import { APP_DOCUMENT_TITLE, pageTitle, useDocumentTitle } from '../hooks/useDocumentTitle';
+import { themeHueFromLabel } from '../utils/eventThemeHue';
+import { formatEventStartInUserTimezone } from '../utils/eventScheduled';
+import EventStartReminderBanner from '../components/EventStartReminderBanner';
 
 export default function EventDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -91,16 +96,25 @@ export default function EventDetail() {
 
   if (!event) return null;
 
-  const dateFormatted = `${event.date} à ${event.time}`;
+  const dateFormatted =
+    formatEventStartInUserTimezone(event.date, event.time) ?? `${event.date} à ${event.time}`;
   const shareUrlGuests = shareUrlFromState ?? `${window.location.origin}/s/${slug}`;
   const shareUrlHost = hostToken
     ? `${window.location.origin}/s/${slug}?host=${encodeURIComponent(hostToken)}`
     : '';
   const needsJoin = !event.terminé && !participant;
   const showContent = event.terminé || participant;
+  const themeHue = themeHueFromLabel(event.config?.theme);
 
   return (
-    <main className="page page-event">
+    <main
+      className="page page-event"
+      style={themeHue == null ? undefined : { borderTop: `3px solid hsl(${themeHue} 48% 42%)` }}
+    >
+      <EventThemeBanner theme={event.config?.theme} />
+      {!event.terminé && (
+        <EventStartReminderBanner date={event.date} time={event.time} terminé={!!event.terminé} />
+      )}
       <EventDetailHeader
         title={event.title}
         dateFormatted={dateFormatted}
@@ -109,6 +123,7 @@ export default function EventDetail() {
         shareUrlGuests={shareUrlGuests}
         shareUrlHost={shareUrlHost}
       />
+      {event.isHost && <HostEventSettingsPanel slug={slug} hostToken={hostToken} event={event} />}
 
       {moviesQuery.isError && (
         <EventMoviesLoadError

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.Posters;
 using MoviePicker.Api.Application.UseCases.Reactions;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Exceptions;
@@ -17,6 +18,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
     private readonly IParticipantRepository _participantRepository;
     private readonly IReactionRepository _reactionRepository;
     private readonly ITmdbMovieSearch _tmdbMovieSearch;
+    private readonly IPosterImageStore _posterImageStore;
     private readonly MoviePickerOptions _options;
 
     public ListMoviesForEventHandler(
@@ -26,6 +28,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         IParticipantRepository participantRepository,
         IReactionRepository reactionRepository,
         ITmdbMovieSearch tmdbMovieSearch,
+        IPosterImageStore posterImageStore,
         IOptions<MoviePickerOptions> options)
     {
         _eventRepository = eventRepository;
@@ -34,6 +37,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         _participantRepository = participantRepository;
         _reactionRepository = reactionRepository;
         _tmdbMovieSearch = tmdbMovieSearch;
+        _posterImageStore = posterImageStore;
         _options = options.Value;
     }
 
@@ -72,7 +76,17 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
                 .ConfigureAwait(false);
         }
 
-        return movies.Select(m =>
+        var tmdbSources = new List<string>();
+        foreach (var m in movies)
+        {
+            if (TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(m.PosterPath, out var src))
+                tmdbSources.Add(src);
+        }
+
+        await _posterImageStore.RegisterTmdbSourcesAsync(tmdbSources, ct);
+
+        var list = new List<MovieWithScoreResponse>(movies.Count);
+        foreach (var m in movies)
         {
             scores.TryGetValue(m.Id, out var s);
             pseudos.TryGetValue(m.ParticipantId, out var pseudo);
@@ -81,27 +95,31 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
                 reactionResponses = ReactionAggregateMapper.ToMovieReactionResponses(rows, pseudos);
 
             enrichmentByTmdb.TryGetValue(m.TmdbId, out var enr);
+            var posterOut = _posterImageStore.ToPublicPosterPath(m.PosterPath);
 
-            return new MovieWithScoreResponse
-            {
-                Id = m.Id,
-                EventId = m.EventId,
-                ParticipantId = m.ParticipantId,
-                TmdbId = m.TmdbId,
-                Title = m.Title,
-                Year = m.Year,
-                PosterPath = m.PosterPath,
-                CreatedAt = m.CreatedAt,
-                UpdatedAt = m.UpdatedAt,
-                ProposerPseudo = pseudo ?? string.Empty,
-                Score = s.Score,
-                Up = s.Up,
-                Down = s.Down,
-                Reactions = reactionResponses,
-                VoteAverage = enr?.VoteAverage,
-                WatchProviders = enr is null ? Array.Empty<WatchProviderOfferResponse>() : WatchProviderMapping.ToDto(enr.WatchProviders),
-                TmdbWatchPageUrl = enr?.TmdbWatchPageUrl
-            };
-        }).ToList();
+            list.Add(
+                new MovieWithScoreResponse
+                {
+                    Id = m.Id,
+                    EventId = m.EventId,
+                    ParticipantId = m.ParticipantId,
+                    TmdbId = m.TmdbId,
+                    Title = m.Title,
+                    Year = m.Year,
+                    PosterPath = posterOut,
+                    CreatedAt = m.CreatedAt,
+                    UpdatedAt = m.UpdatedAt,
+                    ProposerPseudo = pseudo ?? string.Empty,
+                    Score = s.Score,
+                    Up = s.Up,
+                    Down = s.Down,
+                    Reactions = reactionResponses,
+                    VoteAverage = enr?.VoteAverage,
+                    WatchProviders = enr is null ? Array.Empty<WatchProviderOfferResponse>() : WatchProviderMapping.ToDto(enr.WatchProviders),
+                    TmdbWatchPageUrl = enr?.TmdbWatchPageUrl
+                });
+        }
+
+        return list;
     }
 }

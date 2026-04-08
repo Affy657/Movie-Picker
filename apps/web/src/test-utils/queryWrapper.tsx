@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactElement, ReactNode } from 'react';
+import { AuthProvider } from '../contexts/AuthContext';
 import { ThemeProvider } from '../contexts/ThemeContext';
 
 /** QueryClient adapté aux tests (pas de retry → MSW déterministe). */
@@ -39,7 +40,9 @@ export function AppTestProviders({
 }) {
   return (
     <QueryClientWrapper client={client}>
-      <ThemeProvider>{children}</ThemeProvider>
+      <ThemeProvider>
+        <AuthProvider>{children}</AuthProvider>
+      </ThemeProvider>
     </QueryClientWrapper>
   );
 }

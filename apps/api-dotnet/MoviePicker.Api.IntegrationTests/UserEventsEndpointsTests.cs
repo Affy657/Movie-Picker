@@ -107,6 +107,7 @@ public sealed class UserEventsEndpointsTests : IClassFixture<MoviePickerApplicat
         Assert.Equal(2, list!.Events.Count);
         Assert.Contains(list.Events, e => e.Title == "Ma soirée" && e.IsCreator);
         Assert.Contains(list.Events, e => e.Title == "S anonyme" && e.IsParticipant && !e.IsCreator);
+        Assert.All(list.Events, e => Assert.False(string.IsNullOrWhiteSpace(e.Lifecycle)));
     }
 
     [Fact]

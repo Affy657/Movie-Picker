@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import ThemeToggle from '../components/ThemeToggle';
 import { APP_DOCUMENT_TITLE, useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function Home() {
@@ -9,7 +8,6 @@ export default function Home() {
     <main className="page">
       <div className="page-header-row">
         <h1>Movie Picker</h1>
-        <ThemeToggle />
       </div>
       <p className="lead">Choisissez le film de la soirée à plusieurs.</p>
       <nav className="nav-actions">

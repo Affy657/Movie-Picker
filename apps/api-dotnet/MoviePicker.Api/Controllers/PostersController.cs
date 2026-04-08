@@ -1,0 +1,34 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.Posters;
+using MoviePicker.Api.Infrastructure.Web;
+
+namespace MoviePicker.Api.Controllers;
+
+[ApiController]
+[Route(ApiRoutePrefix.V1 + "/posters")]
+public sealed class PostersController : ControllerBase
+{
+    /// <summary>Affiche TMDB mise en cache (lazy fetch). Clé = SHA-256 hex (64) de l’URL TMDB normalisée.</summary>
+    [HttpGet("{posterKey}")]
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingExtensions.PostersPolicy)]
+    [Produces("image/jpeg", "image/png", "image/webp")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Get(string posterKey, [FromServices] IPosterImageStore store, CancellationToken ct)
+    {
+        var k = posterKey.ToLowerInvariant();
+        if (!TmdbPosterUrlNormalizer.IsValidPosterKey(k))
+            return NotFound();
+
+        var blob = await store.GetByKeyAsync(k, ct);
+        if (blob is null)
+            return NotFound();
+
+        Response.Headers.CacheControl = "public,max-age=86400";
+        return File(blob.Data, blob.ContentType);
+    }
+}

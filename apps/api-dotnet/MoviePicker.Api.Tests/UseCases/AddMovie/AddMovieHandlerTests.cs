@@ -13,6 +13,7 @@ public sealed class AddMovieHandlerTests
     private readonly Mock<IEventRepository> _eventRepo;
     private readonly Mock<IMovieRepository> _movieRepo;
     private readonly Mock<IParticipantRepository> _participantRepo;
+    private readonly Mock<IPosterImageStore> _posterStore;
     private readonly AddMovieHandler _sut;
 
     private static Event ActiveEvent() => new()
@@ -41,7 +42,13 @@ public sealed class AddMovieHandlerTests
         _eventRepo = new Mock<IEventRepository>();
         _movieRepo = new Mock<IMovieRepository>();
         _participantRepo = new Mock<IParticipantRepository>();
-        _sut = new AddMovieHandler(_eventRepo.Object, _movieRepo.Object, _participantRepo.Object);
+        _posterStore = new Mock<IPosterImageStore>();
+        _posterStore.Setup(s => s.ToPublicPosterPath(It.IsAny<string?>())).Returns((string? u) => u);
+        _posterStore.Setup(s => s.RegisterTmdbSourceAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _posterStore
+            .Setup(s => s.RegisterTmdbSourcesAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _sut = new AddMovieHandler(_eventRepo.Object, _movieRepo.Object, _participantRepo.Object, _posterStore.Object);
     }
 
     [Fact]

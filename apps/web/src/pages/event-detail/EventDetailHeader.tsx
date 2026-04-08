@@ -30,10 +30,10 @@ export default function EventDetailHeader({
       <h1>{title}</h1>
       <p className="event-meta">{dateFormatted}</p>
       {terminé && <p className="badge badge-finished">Soirée terminée</p>}
-      {isHost && shareUrlGuests && <ShareLink url={shareUrlGuests} />}
-      {isHost && shareUrlHost && (
+      {shareUrlGuests ? <ShareLink url={shareUrlGuests} showQr /> : null}
+      {isHost && shareUrlHost ? (
         <ShareLink url={shareUrlHost} label="Votre lien hôte (ne pas partager)" />
-      )}
+      ) : null}
     </header>
   );
 }
