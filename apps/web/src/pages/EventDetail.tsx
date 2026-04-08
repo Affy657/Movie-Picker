@@ -98,10 +98,7 @@ export default function EventDetail() {
 
   const dateFormatted =
     formatEventStartInUserTimezone(event.date, event.time) ?? `${event.date} à ${event.time}`;
-  const shareUrlGuests = shareUrlFromState ?? `${window.location.origin}/s/${slug}`;
-  const shareUrlHost = hostToken
-    ? `${window.location.origin}/s/${slug}?host=${encodeURIComponent(hostToken)}`
-    : '';
+  const shareUrl = shareUrlFromState ?? `${window.location.origin}/s/${slug}`;
   const needsJoin = !event.terminé && !participant;
   const showContent = event.terminé || participant;
   const themeHue = themeHueFromLabel(event.config?.theme);
@@ -119,9 +116,7 @@ export default function EventDetail() {
         title={event.title}
         dateFormatted={dateFormatted}
         terminé={!!event.terminé}
-        isHost={!!event.isHost}
-        shareUrlGuests={shareUrlGuests}
-        shareUrlHost={shareUrlHost}
+        shareUrl={shareUrl}
       />
       {event.isHost && <HostEventSettingsPanel slug={slug} hostToken={hostToken} event={event} />}
 

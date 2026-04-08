@@ -24,7 +24,7 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
     [Fact]
     public async Task GetConfig_ReturnsDefaults_WhenNoConfigStored()
     {
-        var client = _factory.CreateClient();
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var create = await client.PostAsJsonAsync(
             "/api/v1/events",
             new { title = "C", date = "2035-06-01", time = "20:00" });
@@ -42,16 +42,15 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
     [Fact]
     public async Task PatchConfig_AsHost_UpdatesAndGetReflects()
     {
-        var client = _factory.CreateClient();
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var create = await client.PostAsJsonAsync(
             "/api/v1/events",
             new { title = "Cfg", date = "2035-06-01", time = "20:00" });
         var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(created);
 
-        var hostQ = Uri.EscapeDataString(created!.HostToken);
         var patch = await client.PatchAsJsonAsync(
-            $"/api/v1/events/{created.Slug}/config?host={hostQ}",
+            $"/api/v1/events/{created!.Slug}/config",
             new
             {
                 theme = "Horreur",
@@ -75,14 +74,15 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
     [Fact]
     public async Task PatchConfig_WithoutHost_Returns403()
     {
-        var client = _factory.CreateClient();
-        var create = await client.PostAsJsonAsync(
+        var owner = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
+        var create = await owner.PostAsJsonAsync(
             "/api/v1/events",
             new { title = "X", date = "2035-06-01", time = "20:00" });
         var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(created);
 
-        var patch = await client.PatchAsJsonAsync(
+        var stranger = _factory.CreateClient();
+        var patch = await stranger.PatchAsJsonAsync(
             $"/api/v1/events/{created!.Slug}/config",
             new { theme = "Y" });
         Assert.Equal(HttpStatusCode.Forbidden, patch.StatusCode);
@@ -91,14 +91,13 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
     [Fact]
     public async Task PatchConfig_AfterWheel_Returns409()
     {
-        var client = _factory.CreateClient();
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var create = await client.PostAsJsonAsync(
             "/api/v1/events",
             new { title = "Wheel", date = "2035-06-01", time = "20:00" });
         var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(created);
         var slug = created!.Slug;
-        var hostQ = Uri.EscapeDataString(created.HostToken);
 
         var join = await client.PostAsJsonAsync($"/api/v1/events/{slug}/join", new { pseudo = "P" });
         join.EnsureSuccessStatusCode();
@@ -122,11 +121,11 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
         var movieJson = await add.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
         var movieId = movieJson.GetProperty("_id").GetString()!;
 
-        var wheel = await client.PostAsync($"/api/v1/events/{slug}/wheel?host={hostQ}", null);
+        var wheel = await client.PostAsync($"/api/v1/events/{slug}/wheel", null);
         wheel.EnsureSuccessStatusCode();
 
         var patch = await client.PatchAsJsonAsync(
-            $"/api/v1/events/{slug}/config?host={hostQ}",
+            $"/api/v1/events/{slug}/config",
             new { theme = "Too late" });
         Assert.Equal(HttpStatusCode.Conflict, patch.StatusCode);
     }
@@ -134,16 +133,15 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
     [Fact]
     public async Task PatchConfig_InvalidEndDate_Returns400()
     {
-        var client = _factory.CreateClient();
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var create = await client.PostAsJsonAsync(
             "/api/v1/events",
             new { title = "Bad date", date = "2035-06-01", time = "20:00" });
         var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(created);
-        var hostQ = Uri.EscapeDataString(created!.HostToken);
 
         var patch = await client.PatchAsJsonAsync(
-            $"/api/v1/events/{created.Slug}/config?host={hostQ}",
+            $"/api/v1/events/{created!.Slug}/config",
             new { endDate = "not-a-date" });
         Assert.Equal(HttpStatusCode.BadRequest, patch.StatusCode);
     }

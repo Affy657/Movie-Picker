@@ -36,14 +36,13 @@ Application pour organiser des soirées film : créer un event, partager le lien
 
 ## Documentation
 
-La base lisible sans explorer tout le dépôt est sous **`docs/`** : voir [docs/README.md](docs/README.md) (cinq fiches à la racine de ce dossier + le reste en sous-répertoires).
+La base lisible sans explorer tout le dépôt est sous **`docs/`** : voir [docs/README.md](docs/README.md) (quatre fiches à la racine de ce dossier ; **setup local** = ce README, sections *Prérequis* et *Démarrage*).
 
 | | |
 |--|--|
 | [docs/product-spec.md](docs/product-spec.md) | Produit, stack, critères formation, MVP |
 | [docs/architecture.md](docs/architecture.md) | Vue système, dépôt, contrat API |
 | [docs/features.md](docs/features.md) | Vision fonctionnelle, planification |
-| [docs/developer-setup.md](docs/developer-setup.md) | Environnement local, secrets rappel |
 | [docs/operations-overview.md](docs/operations-overview.md) | Hébergement, CI/CD |
 | [AGENTS.md](AGENTS.md) | Assistants IA (`.cursor/`) |
 

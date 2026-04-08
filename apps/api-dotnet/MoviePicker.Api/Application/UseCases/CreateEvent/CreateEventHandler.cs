@@ -1,6 +1,7 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Domain.Services;
 
 namespace MoviePicker.Api.Application.UseCases.CreateEvent;
@@ -8,18 +9,28 @@ namespace MoviePicker.Api.Application.UseCases.CreateEvent;
 public sealed class CreateEventHandler : ICreateEventHandler
 {
     private readonly IEventRepository _eventRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly IParticipantRepository _participantRepository;
 
-    public CreateEventHandler(IEventRepository eventRepository)
+    public CreateEventHandler(
+        IEventRepository eventRepository,
+        IUserRepository userRepository,
+        IParticipantRepository participantRepository)
     {
         _eventRepository = eventRepository;
+        _userRepository = userRepository;
+        _participantRepository = participantRepository;
     }
 
     public async Task<CreateEventResponse> HandleAsync(CreateEventRequest request, string? creatorUserId, CancellationToken ct = default)
     {
+        if (string.IsNullOrWhiteSpace(creatorUserId))
+            throw new UnauthorizedException("La création d’une soirée nécessite un compte connecté.");
+
         var slug = SlugGenerator.NewSlug();
         var hostToken = SlugGenerator.NewHostToken();
         var now = DateTimeOffset.UtcNow;
-        var ownerId = string.IsNullOrWhiteSpace(creatorUserId) ? null : creatorUserId;
+        var ownerId = creatorUserId.Trim();
 
         var evt = new Event
         {
@@ -39,6 +50,25 @@ public sealed class CreateEventHandler : ICreateEventHandler
 
         var created = await _eventRepository.AddAsync(evt, ct);
 
+        var user = await _userRepository.GetByIdAsync(ownerId, ct)
+            ?? throw new NotFoundException("Utilisateur introuvable");
+        var pseudo = string.IsNullOrWhiteSpace(user.DisplayName)
+            ? user.Email.Split('@')[0]
+            : user.DisplayName.Trim();
+        if (string.IsNullOrEmpty(pseudo))
+            pseudo = "Participant";
+
+        var participant = new Participant
+        {
+            Id = string.Empty,
+            EventId = created.Id,
+            Pseudo = pseudo,
+            UserId = ownerId,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+        var createdParticipant = await _participantRepository.AddAsync(participant, ct);
+
         return new CreateEventResponse
         {
             Id = created.Id,
@@ -46,10 +76,19 @@ public sealed class CreateEventHandler : ICreateEventHandler
             Date = created.Date,
             Time = created.Time,
             Slug = created.Slug,
-            HostToken = created.HostToken,
             ShareUrl = $"/s/{created.Slug}",
             CreatedAt = created.CreatedAt,
-            UpdatedAt = created.UpdatedAt
+            UpdatedAt = created.UpdatedAt,
+            CreatorParticipant = MapParticipant(createdParticipant)
         };
     }
+
+    private static ParticipantResponse MapParticipant(Participant p) => new()
+    {
+        Id = p.Id,
+        EventId = p.EventId,
+        Pseudo = p.Pseudo,
+        CreatedAt = p.CreatedAt,
+        UpdatedAt = p.UpdatedAt
+    };
 }

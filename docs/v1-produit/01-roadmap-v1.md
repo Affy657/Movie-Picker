@@ -8,7 +8,7 @@ Tutoriel **actions humaines** (GCP, GitHub, `.env`) : [02-deploiement-secrets-et
 
 Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant l’ordre des sections.
 
-**Ordre logique** : cadrage (§ 1) → modèle de données (§ 2) → API auth puis « mes soirées » / hôte compte (§ 3–4) → config hôte avant réactions (§ 5–6) → enrichissement films & posters côté API (§ 7–8) → shell, auth et pages front (§ 9–14) → live, rappels (§ 15–16) → OG / i18n transverses (§ 17–18) → qualité, déploiement, recette (§ 19–21) → sécurité CI : Sonar (§ 22), NuGet (§ 23), image Docker (§ 24), secrets (§ 25).
+**Ordre logique** : cadrage (§ 1) → modèle de données (§ 2) → API auth puis « mes soirées » / hôte compte (§ 3–4) → config hôte avant réactions (§ 5–6) → enrichissement films & posters côté API (§ 7–8) → shell, auth et pages front (§ 9–14) → live, rappels (§ 15–16) → **§ 16 bis — parcours créateur & watch providers** → OG / i18n transverses (§ 17–18) → qualité, déploiement, recette (§ 19–21) → sécurité CI : Sonar (§ 22), NuGet (§ 23), image Docker (§ 24), secrets (§ 25).
 
 > **Hors périmètre V1** (cf. features list) : mot de passe oublié par e-mail (**V2**), lieu / description soirée avancée, .ics / compte à rebours dédié (**V2**), vue grille-liste / hors-ligne (**V2**), **limite de participants** et **plage de votes** configurables (**V2**).
 
@@ -154,6 +154,18 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 - [x] Bannière ou message lorsque l’heure de début est proche (**utilisateur sur la page soirée** — pas de push / e-mail en V1) — *`EventStartReminderBanner` : fenêtre 30 min, minuteur léger*
 - [x] Gestion fuseau / affichage cohérent avec date-heure stockée — *`utils/eventScheduled` : même instant UTC que l’API ; en-tête + rappel en heure locale navigateur*
+
+---
+
+## 16 bis. Parcours créateur (compte obligatoire) / lien hôte / fournisseurs streaming « abonnement »
+
+> **But** : simplifier le produit pour la création de soirée (compte requis) et clarifier le partage ; n’afficher que les offres de visionnage *abonnement* (SVOD / flatrate TMDB), pas location ni achat.
+
+- [x] **Création de soirée** : **compte obligatoire** ; après **POST** création réussie, l’utilisateur est **automatiquement participant** (pseudo = pseudo compte ou règle documentée) — pas d’écran « rejoindre » pour le créateur.
+- [x] **API** : **POST** `/api/v1/events` réservé aux utilisateurs authentifiés (**401** sinon) ; réponse incluant **`creatorParticipant`** pour le front (session / stockage local).
+- [x] **Lien « hôte » à partager** : ne plus afficher de lien « réservé hôte » dans l’UI ; `hostToken` **conservé en base** pour l’instant (roue / détail inchangés côté API si lien ancien) ; actions hôte via **session** quand `creatorUserId` correspond.
+- [x] **Front** : route **Créer une soirée** protégée ; après création, redirection `/s/:slug` **sans** `?host=` ; stockage participant créateur ; QR / copie **uniquement** sur l’URL invité.
+- [x] **Watch providers TMDB** : uniquement **`flatrate`** (abonnement), exclusion **`rent`** / **`buy`** côté API ; tests .NET ajustés.
 
 ---
 

@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MoviePicker.Api.Application.DTOs;
-using MoviePicker.Api.Infrastructure.Web;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -20,23 +19,6 @@ public sealed class UserEventsEndpointsTests : IClassFixture<MoviePickerApplicat
     private readonly MoviePickerApplicationFactory _factory;
 
     public UserEventsEndpointsTests(MoviePickerApplicationFactory factory) => _factory = factory;
-
-    private static void ApplySessionCookie(HttpClient client, HttpResponseMessage response)
-    {
-        if (!response.Headers.TryGetValues("Set-Cookie", out var headers))
-            return;
-        foreach (var header in headers)
-        {
-            var prefix = AuthConstants.CookieName + "=";
-            if (header.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-            {
-                var pair = header.Split(';')[0].Trim();
-                client.DefaultRequestHeaders.Remove("Cookie");
-                client.DefaultRequestHeaders.Add("Cookie", pair);
-                return;
-            }
-        }
-    }
 
     [Fact]
     public async Task GetMine_WithoutSession_Returns401()
@@ -55,7 +37,7 @@ public sealed class UserEventsEndpointsTests : IClassFixture<MoviePickerApplicat
             "/api/v1/auth/register",
             new RegisterRequest { Email = email, Password = "abcd1234", DisplayName = "Hôte" });
         Assert.Equal(HttpStatusCode.Created, reg.StatusCode);
-        ApplySessionCookie(client, reg);
+        IntegrationTestAuth.ApplySessionCookie(client, reg);
 
         var create = await client.PostAsJsonAsync(
             "/api/v1/events",
@@ -74,24 +56,18 @@ public sealed class UserEventsEndpointsTests : IClassFixture<MoviePickerApplicat
     [Fact]
     public async Task Mine_ListsCreatedAndJoinedDistinctEvents()
     {
-        var hostClient = _factory.CreateClient();
-        var anonClient = _factory.CreateClient();
+        var creatorAClient = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "CreatorA");
+        var hostClient = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Hoster");
 
-        var hostEmail = $"h{Guid.NewGuid():N}@test.local";
-        var hostReg = await hostClient.PostAsJsonAsync(
-            "/api/v1/auth/register",
-            new RegisterRequest { Email = hostEmail, Password = "abcd1234", DisplayName = "Hoster" });
-        ApplySessionCookie(hostClient, hostReg);
-
-        var anonCreate = await anonClient.PostAsJsonAsync(
+        var shared = await creatorAClient.PostAsJsonAsync(
             "/api/v1/events",
-            new { title = "S anonyme", date = "2035-07-01", time = "21:00" });
-        Assert.Equal(HttpStatusCode.Created, anonCreate.StatusCode);
-        var anonEvt = await anonCreate.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
-        Assert.NotNull(anonEvt);
+            new { title = "S partagée", date = "2035-07-01", time = "21:00" });
+        Assert.Equal(HttpStatusCode.Created, shared.StatusCode);
+        var sharedEvt = await shared.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
+        Assert.NotNull(sharedEvt);
 
         var join = await hostClient.PostAsJsonAsync(
-            $"/api/v1/events/{anonEvt!.Slug}/join",
+            $"/api/v1/events/{sharedEvt!.Slug}/join",
             new { pseudo = "InvitéHost" });
         Assert.Equal(HttpStatusCode.Created, join.StatusCode);
 
@@ -106,7 +82,7 @@ public sealed class UserEventsEndpointsTests : IClassFixture<MoviePickerApplicat
         Assert.NotNull(list);
         Assert.Equal(2, list!.Events.Count);
         Assert.Contains(list.Events, e => e.Title == "Ma soirée" && e.IsCreator);
-        Assert.Contains(list.Events, e => e.Title == "S anonyme" && e.IsParticipant && !e.IsCreator);
+        Assert.Contains(list.Events, e => e.Title == "S partagée" && e.IsParticipant && !e.IsCreator);
         Assert.All(list.Events, e => Assert.False(string.IsNullOrWhiteSpace(e.Lifecycle)));
     }
 
@@ -118,12 +94,13 @@ public sealed class UserEventsEndpointsTests : IClassFixture<MoviePickerApplicat
         var reg = await client.PostAsJsonAsync(
             "/api/v1/auth/register",
             new RegisterRequest { Email = email, Password = "abcd1234", DisplayName = "J" });
-        ApplySessionCookie(client, reg);
+        IntegrationTestAuth.ApplySessionCookie(client, reg);
 
-        var other = _factory.CreateClient();
+        var other = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Autre");
         var otherCreate = await other.PostAsJsonAsync(
             "/api/v1/events",
             new { title = "Autre", date = "2035-10-01", time = "20:00" });
+        otherCreate.EnsureSuccessStatusCode();
         var otherEvt = await otherCreate.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(otherEvt);
 

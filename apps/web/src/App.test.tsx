@@ -17,7 +17,7 @@ describe('App (routes)', () => {
     expect(screen.getByRole('heading', { name: /movie picker/i })).toBeInTheDocument();
   });
 
-  it('route /new affiche la création de soirée', async () => {
+  it('route /new depuis l’accueil exige une connexion', async () => {
     const user = userEvent.setup();
     render(
       <AppTestProviders>
@@ -27,7 +27,11 @@ describe('App (routes)', () => {
       </AppTestProviders>
     );
     await user.click(screen.getByRole('link', { name: /créer une soirée/i }));
-    expect(await screen.findByRole('heading', { name: /créer une soirée/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /^connexion$/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /créer un compte/i })).toHaveAttribute(
+      'href',
+      '/inscription?returnTo=%2Fnew'
+    );
   });
 
   it('route /mes-soirees redirige vers la connexion sans session', async () => {

@@ -68,7 +68,7 @@ describe('EventDetail (MSW)', () => {
     expect(screen.queryByText('Votre lien hôte (ne pas partager)')).not.toBeInTheDocument();
   });
 
-  it('en tant qu’hôte affiche les deux liens de partage', async () => {
+  it('en tant qu’hôte n’affiche plus de lien « hôte » séparé (seul le lien public)', async () => {
     const token = 'host-secret-token';
     renderEventDetail(`/s/${slug}?host=${encodeURIComponent(token)}`);
     await waitFor(() => {
@@ -76,7 +76,7 @@ describe('EventDetail (MSW)', () => {
     });
     expect(document.title).toBe(pageTitle('Soirée démo'));
     expect(screen.getByText('Lien à partager')).toBeInTheDocument();
-    expect(screen.getByText('Votre lien hôte (ne pas partager)')).toBeInTheDocument();
+    expect(screen.queryByText('Votre lien hôte (ne pas partager)')).not.toBeInTheDocument();
   });
 
   it('en tant qu’hôte affiche le bandeau thème et le panneau paramètres', async () => {

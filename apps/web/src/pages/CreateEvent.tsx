@@ -1,12 +1,20 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { fetchApi } from '../api/client';
 import { pageTitle, useDocumentTitle } from '../hooks/useDocumentTitle';
-import type { EventData } from '../types/event';
+import { queryKeys } from '../hooks/queryKeys';
+import { setStoredParticipant } from '../types/event';
 
-interface CreateResponse extends EventData {
+interface CreatorParticipant {
+  _id: string;
+  pseudo: string;
+}
+
+interface CreateResponse {
+  slug: string;
   shareUrl: string;
-  hostToken: string;
+  creatorParticipant?: CreatorParticipant;
 }
 
 const isDev = import.meta.env.DEV;
@@ -20,6 +28,7 @@ export default function CreateEvent() {
   useDocumentTitle(pageTitle('Nouvelle soirée'));
 
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [title, setTitle] = useState(isDev ? 'Soirée test' : '');
   const [date, setDate] = useState(isDev ? getDefaultDate() : '');
   const [time, setTime] = useState(isDev ? '20:00' : '');
@@ -35,9 +44,13 @@ export default function CreateEvent() {
         method: 'POST',
         body: JSON.stringify({ title, date, time }),
       });
-      const url = `${window.location.origin}/s/${res.slug}${res.hostToken ? `?host=${encodeURIComponent(res.hostToken)}` : ''}`;
-      navigate(`/s/${res.slug}?host=${encodeURIComponent(res.hostToken)}`, {
-        state: { shareUrl: url, justCreated: true },
+      const publicUrl = `${window.location.origin}/s/${res.slug}`;
+      if (res.creatorParticipant) {
+        setStoredParticipant(res.slug, res.creatorParticipant._id, res.creatorParticipant.pseudo);
+      }
+      void queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
+      navigate(`/s/${res.slug}`, {
+        state: { shareUrl: publicUrl, justCreated: true },
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur');

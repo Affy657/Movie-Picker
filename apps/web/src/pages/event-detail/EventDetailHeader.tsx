@@ -6,19 +6,11 @@ export type EventDetailHeaderProps = {
   title: string;
   dateFormatted: string;
   terminé: boolean;
-  isHost: boolean;
-  shareUrlGuests: string;
-  shareUrlHost: string;
+  /** URL publique à partager avec les invités (QR + copier). */
+  shareUrl: string;
 };
 
-export default function EventDetailHeader({
-  title,
-  dateFormatted,
-  terminé,
-  isHost,
-  shareUrlGuests,
-  shareUrlHost,
-}: EventDetailHeaderProps) {
+export default function EventDetailHeader({ title, dateFormatted, terminé, shareUrl }: EventDetailHeaderProps) {
   return (
     <header className="event-header">
       <div className="event-header-top">
@@ -30,10 +22,7 @@ export default function EventDetailHeader({
       <h1>{title}</h1>
       <p className="event-meta">{dateFormatted}</p>
       {terminé && <p className="badge badge-finished">Soirée terminée</p>}
-      {shareUrlGuests ? <ShareLink url={shareUrlGuests} showQr /> : null}
-      {isHost && shareUrlHost ? (
-        <ShareLink url={shareUrlHost} label="Votre lien hôte (ne pas partager)" />
-      ) : null}
+      {shareUrl ? <ShareLink url={shareUrl} showQr /> : null}
     </header>
   );
 }

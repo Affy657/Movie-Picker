@@ -141,9 +141,8 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
             if (regionObj.TryGetProperty("link", out var linkEl) && linkEl.ValueKind == JsonValueKind.String)
                 watchPageUrl = linkEl.GetString();
 
+            // Uniquement l’abonnement (SVOD) — pas location / achat à l’unité
             AppendProviders(regionObj, "flatrate", "flatrate", offers);
-            AppendProviders(regionObj, "rent", "rent", offers);
-            AppendProviders(regionObj, "buy", "buy", offers);
         }
 
         var deduped = DedupeProviders(offers);
@@ -175,7 +174,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         }
     }
 
-    /// <summary>Garde un type par fournisseur : flatrate &gt; rent &gt; buy.</summary>
+    /// <summary>Garde un type par fournisseur (uniquement offres <c>flatrate</c> collectées aujourd’hui).</summary>
     private static IReadOnlyList<TmdbWatchProviderOffer> DedupeProviders(List<TmdbWatchProviderOffer> offers)
     {
         var best = new Dictionary<int, TmdbWatchProviderOffer>();

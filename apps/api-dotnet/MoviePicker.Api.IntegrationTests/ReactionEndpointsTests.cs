@@ -23,8 +23,8 @@ public sealed class ReactionEndpointsTests : IClassFixture<MoviePickerApplicatio
     [Fact]
     public async Task PostReaction_ListMoviesAndGetAggregates_ShowCounts_AndDelete()
     {
-        var client = _factory.CreateClient();
-        var create = await client.PostAsJsonAsync(
+        var host = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
+        var create = await host.PostAsJsonAsync(
             "/api/v1/events",
             new { title = "Réactions", date = "2036-01-01", time = "20:00" });
         create.EnsureSuccessStatusCode();
@@ -32,21 +32,23 @@ public sealed class ReactionEndpointsTests : IClassFixture<MoviePickerApplicatio
         Assert.NotNull(created);
         var slug = created!.Slug;
 
-        var join1 = await client.PostAsJsonAsync($"/api/v1/events/{slug}/join", new { pseudo = "Alice" });
+        var aliceClient = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Alice");
+        var join1 = await aliceClient.PostAsJsonAsync($"/api/v1/events/{slug}/join", new { pseudo = "Alice" });
         join1.EnsureSuccessStatusCode();
         var j1El = await join1.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
         var pid1 = j1El.TryGetProperty("_id", out var id1)
             ? id1.GetString()!
             : j1El.GetProperty("participant").GetProperty("_id").GetString()!;
 
-        var join2 = await client.PostAsJsonAsync($"/api/v1/events/{slug}/join", new { pseudo = "Bob" });
+        var bobClient = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Bob");
+        var join2 = await bobClient.PostAsJsonAsync($"/api/v1/events/{slug}/join", new { pseudo = "Bob" });
         join2.EnsureSuccessStatusCode();
         var j2El = await join2.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
         var pid2 = j2El.TryGetProperty("_id", out var id2)
             ? id2.GetString()!
             : j2El.GetProperty("participant").GetProperty("_id").GetString()!;
 
-        var add = await client.PostAsJsonAsync(
+        var add = await host.PostAsJsonAsync(
             $"/api/v1/events/{slug}/movies",
             new
             {
@@ -60,17 +62,17 @@ public sealed class ReactionEndpointsTests : IClassFixture<MoviePickerApplicatio
         var movie = await add.Content.ReadFromJsonAsync<MovieWithScoreResponse>(JsonOptions);
         Assert.NotNull(movie);
 
-        var post1 = await client.PostAsJsonAsync(
+        var post1 = await host.PostAsJsonAsync(
             $"/api/v1/events/{slug}/movies/{movie!.Id}/reactions",
             new { participantId = pid1, reactionId = "already_seen" });
         Assert.Equal(HttpStatusCode.OK, post1.StatusCode);
 
-        var post2 = await client.PostAsJsonAsync(
+        var post2 = await host.PostAsJsonAsync(
             $"/api/v1/events/{slug}/movies/{movie.Id}/reactions",
             new { participantId = pid2, reactionId = "already_seen" });
         Assert.Equal(HttpStatusCode.OK, post2.StatusCode);
 
-        var list = await client.GetAsync($"/api/v1/events/{slug}/movies");
+        var list = await host.GetAsync($"/api/v1/events/{slug}/movies");
         list.EnsureSuccessStatusCode();
         var movies = await list.Content.ReadFromJsonAsync<List<MovieWithScoreResponse>>(JsonOptions);
         Assert.NotNull(movies);
@@ -79,20 +81,20 @@ public sealed class ReactionEndpointsTests : IClassFixture<MoviePickerApplicatio
         Assert.Equal("already_seen", agg.ReactionId);
         Assert.Equal(2, agg.Count);
 
-        var getAgg = await client.GetAsync($"/api/v1/events/{slug}/movies/{movie.Id}/reactions");
+        var getAgg = await host.GetAsync($"/api/v1/events/{slug}/movies/{movie.Id}/reactions");
         getAgg.EnsureSuccessStatusCode();
         var aggBody = await getAgg.Content.ReadFromJsonAsync<MovieReactionsResponse>(JsonOptions);
         Assert.NotNull(aggBody);
         Assert.Equal(movie.Id, aggBody!.MovieId);
         Assert.Equal(2, Assert.Single(aggBody.Reactions).Count);
 
-        var del = await client.SendAsync(new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/events/{slug}/movies/{movie.Id}/reactions/already_seen")
+        var del = await host.SendAsync(new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/events/{slug}/movies/{movie.Id}/reactions/already_seen")
         {
             Content = JsonContent.Create(new { participantId = pid1 }, options: JsonOptions)
         });
         Assert.Equal(HttpStatusCode.NoContent, del.StatusCode);
 
-        var list2 = await client.GetAsync($"/api/v1/events/{slug}/movies");
+        var list2 = await host.GetAsync($"/api/v1/events/{slug}/movies");
         var movies2 = await list2.Content.ReadFromJsonAsync<List<MovieWithScoreResponse>>(JsonOptions);
         var row2 = Assert.Single(movies2!);
         Assert.Single(row2.Reactions);
@@ -102,10 +104,11 @@ public sealed class ReactionEndpointsTests : IClassFixture<MoviePickerApplicatio
     [Fact]
     public async Task PostReaction_Duplicate_IsIdempotent()
     {
-        var client = _factory.CreateClient();
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var create = await client.PostAsJsonAsync(
             "/api/v1/events",
             new { title = "Idem", date = "2036-03-01", time = "20:00" });
+        create.EnsureSuccessStatusCode();
         var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(created);
         var slug = created!.Slug;
@@ -141,7 +144,7 @@ public sealed class ReactionEndpointsTests : IClassFixture<MoviePickerApplicatio
     [Fact]
     public async Task PostReaction_UnknownId_Returns400()
     {
-        var client = _factory.CreateClient();
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var create = await client.PostAsJsonAsync(
             "/api/v1/events",
             new { title = "BadRx", date = "2036-04-01", time = "20:00" });
@@ -170,17 +173,16 @@ public sealed class ReactionEndpointsTests : IClassFixture<MoviePickerApplicatio
     [Fact]
     public async Task PostReaction_WhenNotInAllowedList_Returns400()
     {
-        var client = _factory.CreateClient();
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var create = await client.PostAsJsonAsync(
             "/api/v1/events",
             new { title = "R2", date = "2036-02-01", time = "20:00" });
         var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(created);
         var slug = created!.Slug;
-        var hostQ = Uri.EscapeDataString(created.HostToken);
 
         await client.PatchAsJsonAsync(
-            $"/api/v1/events/{slug}/config?host={hostQ}",
+            $"/api/v1/events/{slug}/config",
             new { allowedReactionIds = new[] { "meh" } });
 
         var join = await client.PostAsJsonAsync($"/api/v1/events/{slug}/join", new { pseudo = "P" });

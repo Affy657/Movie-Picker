@@ -4,15 +4,18 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import CreateEvent from './CreateEvent';
 import { pageTitle } from '../hooks/useDocumentTitle';
+import { QueryClientWrapper } from '../test-utils/queryWrapper';
 
 const mockFetchApi = vi.fn();
 vi.mock('../api/client', () => ({ fetchApi: (...args: unknown[]) => mockFetchApi(...args) }));
 
 function RenderCreateEvent() {
   return render(
-    <MemoryRouter>
-      <CreateEvent />
-    </MemoryRouter>
+    <QueryClientWrapper>
+      <MemoryRouter>
+        <CreateEvent />
+      </MemoryRouter>
+    </QueryClientWrapper>
   );
 }
 
@@ -35,8 +38,8 @@ describe('CreateEvent', () => {
     const user = userEvent.setup();
     mockFetchApi.mockResolvedValueOnce({
       slug: 'abc123',
-      hostToken: 'ht-secret',
       shareUrl: '/s/abc123',
+      creatorParticipant: { _id: 'p-new', pseudo: 'Vitest' },
     });
     RenderCreateEvent();
     const titleInput = screen.getByLabelText(/titre/i);

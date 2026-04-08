@@ -20,9 +20,11 @@ namespace MoviePicker.Api.Controllers;
 public sealed class EventsController : ControllerBase
 {
     [HttpPost]
+    [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.CreateEventPolicy)]
     [ProducesResponseType(typeof(CreateEventResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Create(
         [FromBody] CreateEventRequest request,
@@ -35,10 +37,10 @@ public sealed class EventsController : ControllerBase
             return BadRequest(new { error = "date et time requis" });
 
         var creatorUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var result = await handler.HandleAsync(
-            request,
-            string.IsNullOrEmpty(creatorUserId) ? null : creatorUserId,
-            ct);
+        if (string.IsNullOrEmpty(creatorUserId))
+            return Unauthorized();
+
+        var result = await handler.HandleAsync(request, creatorUserId, ct);
         return CreatedAtAction(nameof(GetBySlug), new { idOrSlug = result.Slug }, result);
     }
 

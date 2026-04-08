@@ -2,23 +2,27 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
+using MoviePicker.Api.Application.DTOs;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
 
 public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFactory>
 {
-    private readonly HttpClient _client;
+    private readonly MoviePickerApplicationFactory _factory;
 
-    public CriticalPathTests(MoviePickerApplicationFactory factory)
+    public CriticalPathTests(MoviePickerApplicationFactory factory) => _factory = factory;
+
+    private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        _client = factory.CreateClient();
-    }
+        PropertyNameCaseInsensitive = true
+    };
 
     [Fact]
     public async Task GetHealth_Returns200_WithExpectedBody()
     {
-        var res = await _client.GetAsync("/health");
+        var client = _factory.CreateClient();
+        var res = await client.GetAsync("/health");
         res.EnsureSuccessStatusCode();
         Assert.Equal(HttpStatusCode.OK, res.StatusCode);
         var json = await res.Content.ReadFromJsonAsync<JsonElement>();
@@ -27,45 +31,55 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
     }
 
     [Fact]
-    public async Task PostEvents_CreatesEvent_Returns201_WithSlugAndHostToken()
+    public async Task PostEvents_WithoutSession_Returns401()
     {
+        var client = _factory.CreateClient();
         var body = new { title = "Soirée test", date = "2030-12-31", time = "20:00" };
-        var res = await _client.PostAsJsonAsync("/api/v1/events", body);
+        var res = await client.PostAsJsonAsync("/api/v1/events", body);
+        Assert.Equal(HttpStatusCode.Unauthorized, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostEvents_WithSession_CreatesEvent_Returns201_WithSlugAndCreatorParticipant()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Créateur");
+        var body = new { title = "Soirée test", date = "2030-12-31", time = "20:00" };
+        var res = await client.PostAsJsonAsync("/api/v1/events", body);
         Assert.Equal(HttpStatusCode.Created, res.StatusCode);
-        var json = await res.Content.ReadFromJsonAsync<JsonElement>();
-        var slug = json.GetProperty("slug").GetString();
-        var hostToken = json.GetProperty("hostToken").GetString();
-        Assert.False(string.IsNullOrEmpty(slug));
-        Assert.False(string.IsNullOrEmpty(hostToken));
-        Assert.Equal("/s/" + slug, json.GetProperty("shareUrl").GetString());
+        var created = await res.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
+        Assert.NotNull(created);
+        Assert.False(string.IsNullOrEmpty(created!.Slug));
+        Assert.Equal("/s/" + created.Slug, created.ShareUrl);
+        Assert.NotNull(created.CreatorParticipant);
+        Assert.False(string.IsNullOrEmpty(created.CreatorParticipant!.Id));
+        Assert.Equal("Créateur", created.CreatorParticipant.Pseudo);
     }
 
     [Fact]
     public async Task FullCriticalPath_Create_Join_AddMovie_Vote_Wheel_Close()
     {
-        // 1. Créer l'événement
-        var createBody = new { title = "Soirée intégration", date = "2030-06-15", time = "19:00" };
-        var createRes = await _client.PostAsJsonAsync("/api/v1/events", createBody);
-        createRes.EnsureSuccessStatusCode();
-        var createJson = await createRes.Content.ReadFromJsonAsync<JsonElement>();
-        var slug = createJson.GetProperty("slug").GetString()!;
-        var hostToken = createJson.GetProperty("hostToken").GetString()!;
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "HôteIntégration");
 
-        // 2. Détail avec host
-        var detailRes = await _client.GetAsync($"/api/v1/events/slug/{slug}?host={Uri.EscapeDataString(hostToken)}");
+        var createBody = new { title = "Soirée intégration", date = "2030-06-15", time = "19:00" };
+        var createRes = await client.PostAsJsonAsync("/api/v1/events", createBody);
+        createRes.EnsureSuccessStatusCode();
+        var created = await createRes.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
+        Assert.NotNull(created);
+        var slug = created!.Slug;
+        var detailRes = await client.GetAsync($"/api/v1/events/slug/{slug}");
         detailRes.EnsureSuccessStatusCode();
         var detailJson = await detailRes.Content.ReadFromJsonAsync<JsonElement>();
         Assert.True(detailJson.GetProperty("isHost").GetBoolean());
 
-        // 3. Rejoindre
-        var joinRes = await _client.PostAsJsonAsync($"/api/v1/events/{slug}/join", new { pseudo = "Alice" });
+        var joinRes = await client.PostAsJsonAsync($"/api/v1/events/{slug}/join", new { pseudo = "Alice" });
         Assert.True(joinRes.StatusCode == HttpStatusCode.Created || joinRes.StatusCode == HttpStatusCode.OK);
         var joinJson = await joinRes.Content.ReadFromJsonAsync<JsonElement>();
-        var participantId = joinJson.TryGetProperty("_id", out var idEl) ? idEl.GetString() : joinJson.GetProperty("participant").GetProperty("_id").GetString();
+        var participantId = joinJson.TryGetProperty("_id", out var idEl)
+            ? idEl.GetString()
+            : joinJson.GetProperty("participant").GetProperty("_id").GetString();
         Assert.False(string.IsNullOrEmpty(participantId));
 
-        // 4. Ajouter un film
-        var addMovieRes = await _client.PostAsJsonAsync($"/api/v1/events/{slug}/movies", new
+        var addMovieRes = await client.PostAsJsonAsync($"/api/v1/events/{slug}/movies", new
         {
             tmdbId = 27205,
             title = "Inception",
@@ -77,32 +91,31 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
         var movieJson = await addMovieRes.Content.ReadFromJsonAsync<JsonElement>();
         var movieId = movieJson.GetProperty("_id").GetString()!;
 
-        // 5. Vote
-        var voteRes = await _client.PostAsJsonAsync($"/api/v1/events/{slug}/movies/{movieId}/vote", new { participantId, value = 1 });
+        var voteRes = await client.PostAsJsonAsync($"/api/v1/events/{slug}/movies/{movieId}/vote", new { participantId, value = 1 });
         voteRes.EnsureSuccessStatusCode();
 
-        // 6. Lancer la roue (avec hostToken)
-        var wheelRes = await _client.PostAsync($"/api/v1/events/{slug}/wheel?host={Uri.EscapeDataString(hostToken)}", null);
+        var wheelRes = await client.PostAsync($"/api/v1/events/{slug}/wheel", null);
         wheelRes.EnsureSuccessStatusCode();
         var wheelJson = await wheelRes.Content.ReadFromJsonAsync<JsonElement>();
         Assert.NotNull(wheelJson.GetProperty("winner").GetProperty("title").GetString());
 
-        // 7. Clôturer (avec hostToken)
-        var closeRes = await _client.PostAsync($"/api/v1/events/{slug}/close?host={Uri.EscapeDataString(hostToken)}", null);
+        var closeRes = await client.PostAsync($"/api/v1/events/{slug}/close", null);
         closeRes.EnsureSuccessStatusCode();
     }
 
     [Fact]
     public async Task GetEventDetail_UnknownSlug_Returns404()
     {
-        var res = await _client.GetAsync("/api/v1/events/slug/slug-inexistant-xyz");
+        var client = _factory.CreateClient();
+        var res = await client.GetAsync("/api/v1/events/slug/slug-inexistant-xyz");
         Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
     }
 
     [Fact]
     public async Task PostJoin_UnknownSlug_Returns404()
     {
-        var res = await _client.PostAsJsonAsync("/api/v1/events/slug-inexistant/join", new { pseudo = "Bob" });
+        var client = _factory.CreateClient();
+        var res = await client.PostAsJsonAsync("/api/v1/events/slug-inexistant/join", new { pseudo = "Bob" });
         Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
     }
 }

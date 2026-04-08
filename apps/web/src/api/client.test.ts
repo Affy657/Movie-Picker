@@ -66,10 +66,19 @@ describe('fetchApi', () => {
       ok: true,
       status: 200,
       headers: new Headers({ 'content-type': 'application/json' }),
-      text: () => Promise.resolve(JSON.stringify({ slug: 'abc', hostToken: 'ht' })),
+      text: () =>
+        Promise.resolve(
+          JSON.stringify({
+            slug: 'abc',
+            creatorParticipant: { _id: 'p1', eventId: 'e1', pseudo: 'Tester', createdAt: '', updatedAt: '' },
+          })
+        ),
     });
     const data = await fetchApi<{ slug: string }>('/events', { method: 'POST', body: '{}' });
-    expect(data).toEqual({ slug: 'abc', hostToken: 'ht' });
+    expect(data).toEqual({
+      slug: 'abc',
+      creatorParticipant: { _id: 'p1', eventId: 'e1', pseudo: 'Tester', createdAt: '', updatedAt: '' },
+    });
     expect(globalThis.fetch).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({ credentials: 'include' })
