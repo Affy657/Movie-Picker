@@ -16,7 +16,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 - [x] Avoir un compte GCP (accès Cloud Run, Artifact Registry)
 - [x] Créer un cluster MongoDB Atlas et récupérer l'URI de connexion
 - [x] Obtenir une clé API TMDB
-- [x] Vérifier l'environnement local : Node 20, pnpm, Docker, Git → `node scripts/check-prereqs.js`
+- [x] Vérifier l'environnement local : Node 20.19+ / 22.13+ / 24+, pnpm, Docker, Git → `node scripts/check-prereqs.js`
 
 ---
 

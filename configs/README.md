@@ -4,7 +4,7 @@
 |---------|--------|
 | `tsconfig.base.json` | Options TypeScript communes (strict, module, etc.). Étendu par `apps/web/tsconfig.json`. |
 | `tsconfig.node.json` | Config pour les outils Node (ex. `vite.config.ts`). Étendu par `apps/web/tsconfig.node.json`. |
-| `eslint.base.cjs` | Règles ESLint + Prettier. La racine du repo charge ce fichier via `.eslintrc.cjs` (`extends`). |
+| `../eslint.config.mjs` (racine) | ESLint 9 **flat config** + `typescript-eslint` + Prettier (`eslint-config-prettier`). |
 | `prettier.config.cjs` | Style Prettier unique. Réexporté par `prettier.config.cjs` à la **racine** du dépôt (Prettier ne remonte pas automatiquement depuis `apps/` vers `configs/`). |
 
 Les scripts racine `pnpm run format` / `format:check` incluent aussi `configs/**`, `e2e/**` et `playwright.config.ts` pour garder le même style partout.

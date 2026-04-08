@@ -1,5 +1,16 @@
 import { useState } from 'react';
-import QRCode from 'react-qr-code';
+import QRCodeImport from 'react-qr-code';
+
+/**
+ * Interop CJS / bundler : `default` peut être `{ QRCode, default }` au lieu du forwardRef → React #130.
+ */
+const QRCode =
+  typeof QRCodeImport === 'object' &&
+  QRCodeImport !== null &&
+  'QRCode' in QRCodeImport &&
+  !('$$typeof' in QRCodeImport)
+    ? (QRCodeImport as unknown as { QRCode: typeof QRCodeImport }).QRCode
+    : QRCodeImport;
 
 interface ShareLinkProps {
   url: string;

@@ -54,3 +54,7 @@ blob-report/
 # Cursor
 .cursor/
 Agents.md
+
+# Docs
+docs/
+Readme.md

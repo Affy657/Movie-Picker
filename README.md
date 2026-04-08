@@ -36,27 +36,20 @@ Application pour organiser des soirées film : créer un event, partager le lien
 
 ## Documentation
 
-[Index des fichiers numérotés](docs/README.md) — ordre de lecture suggéré par dossier.
-
-À garder sous la main :
+La base lisible sans explorer tout le dépôt est sous **`docs/`** : voir [docs/README.md](docs/README.md) (cinq fiches à la racine de ce dossier + le reste en sous-répertoires).
 
 | | |
 |--|--|
-| [Spec technique](docs/01-spec-technique.md) | Stack, cloud |
-| [CI/CD](docs/mvp/04-deploy-cicd.md) | Workflow, secrets, tests en CI |
-| [Roadmap MVP](docs/mvp/01-roadmap-mvp.md) | Suivi des tâches |
-| [Features](docs/03-features-list.md) | MVP, V1… |
-| [API .NET](docs/02-architecture-api-dotnet.md) | Couches ; contrat : Swagger en dev, `OpenApiContractTests.cs` |
-| [Déploiement GCP / AWS](docs/mvp/02-deploy-gcp-api.md), [03-deploy-aws-front](docs/mvp/03-deploy-aws-front.md) | Première mise en prod |
-| [Monitoring](docs/mvp/05-monitoring.md) | Logs, métriques |
-| [Consigne Ynov](docs/dev%20cloud%20ynov/01-consigne-dev-cloud-ynov.md) | Exigences projet |
-| [Outils & environnement](docs/04-outils-environnement.md) | CLI GCP / AWS / GitHub, stack locale, scripts |
-| [AGENTS.md](AGENTS.md) | Point d’entrée assistants IA (+ `.cursor/rules/`) |
-| [RNCP 39583 — grilles](docs/RNCP/README.md) | Expert en développement logiciel (évaluation) |
+| [docs/product-spec.md](docs/product-spec.md) | Produit, stack, critères formation, MVP |
+| [docs/architecture.md](docs/architecture.md) | Vue système, dépôt, contrat API |
+| [docs/features.md](docs/features.md) | Vision fonctionnelle, planification |
+| [docs/developer-setup.md](docs/developer-setup.md) | Environnement local, secrets rappel |
+| [docs/operations-overview.md](docs/operations-overview.md) | Hébergement, CI/CD |
+| [AGENTS.md](AGENTS.md) | Assistants IA (`.cursor/`) |
 
 ## Prérequis
 
-- **Node.js** ≥ 20, **pnpm** (front), **.NET 10 SDK** (API), MongoDB (et Docker optionnel). Vérification : `node scripts/check-prereqs.js` et `dotnet --version`.
+- **Node.js** 20.19+, 22.13+, ou 24+ (**pnpm** pour le front), **.NET 10 SDK** (API), MongoDB (et Docker optionnel). Vérification : `node scripts/check-prereqs.js` et `dotnet --version`.
 
 ## Démarrage
 

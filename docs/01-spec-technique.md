@@ -20,7 +20,7 @@ Outils CLI (GCP, AWS, GitHub, stack locale) : [04-outils-environnement.md](04-ou
 - **Language** : TypeScript strict for the whole codebase (front + API).
 - **AWS** : S3 + CloudFront — store and serve the React build. Default CloudFront URL for MVP (no custom domain).
 - **GCP** : Cloud Run — run the ASP.NET Core API container. Docker image in **Artifact Registry (GCP)**. Default Cloud Run URL for MVP.
-- **Repo** : Turborepo monorepo (front + back in one repo). **Package manager** : **pnpm**. Configs TypeScript / ESLint / Prettier partagées dans **`configs/`** (voir [configs/README.md](../configs/README.md)). **Variables d’environnement** : `.env.example` à la racine, `apps/web/.env.example`, détail déploiement dans [mvp/04-deploy-cicd.md](mvp/04-deploy-cicd.md).
+- **Repo** : Turborepo monorepo (front + back in one repo). **Package manager** : **pnpm**. **ESLint 9** (flat config) à la racine (`eslint.config.mjs`) ; TypeScript / Prettier partagés via **`configs/`** (voir [configs/README.md](../configs/README.md)). **Variables d’environnement** : `.env.example` à la racine, `apps/web/.env.example`, détail déploiement dans [mvp/04-deploy-cicd.md](mvp/04-deploy-cicd.md).
 
 ---
 

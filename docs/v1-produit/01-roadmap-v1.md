@@ -8,7 +8,7 @@ Tutoriel **actions humaines** (GCP, GitHub, `.env`) : [02-deploiement-secrets-et
 
 Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant l’ordre des sections.
 
-**Ordre logique** : cadrage (§ 1) → modèle de données (§ 2) → API auth puis « mes soirées » / hôte compte (§ 3–4) → config hôte avant réactions (§ 5–6) → enrichissement films & posters côté API (§ 7–8) → shell, auth et pages front (§ 9–14) → live, rappels (§ 15–16) → OG / i18n transverses (§ 17–18) → qualité, déploiement, recette (§ 19–21).
+**Ordre logique** : cadrage (§ 1) → modèle de données (§ 2) → API auth puis « mes soirées » / hôte compte (§ 3–4) → config hôte avant réactions (§ 5–6) → enrichissement films & posters côté API (§ 7–8) → shell, auth et pages front (§ 9–14) → live, rappels (§ 15–16) → OG / i18n transverses (§ 17–18) → qualité, déploiement, recette (§ 19–21) → sécurité CI : Sonar (§ 22), NuGet (§ 23), image Docker (§ 24), secrets (§ 25).
 
 > **Hors périmètre V1** (cf. features list) : mot de passe oublié par e-mail (**V2**), lieu / description soirée avancée, .ics / compte à rebours dédié (**V2**), vue grille-liste / hors-ligne (**V2**), **limite de participants** et **plage de votes** configurables (**V2**).
 
@@ -87,73 +87,73 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ## 8. API – Cache des posters
 
-- [ ] Stratégie : **bucket** (S3 ou GCS) ou **stockage Mongo** (références URL) — choix documenté
-- [ ] À l’**ajout** ou au premier affichage : récupération, stockage, URL servie par l’API ou CDN
-- [ ] Politique d’**expiration** / taille / types MIME ; pas d’exposition de la clé TMDB côté client
+- [x] Stratégie : **bucket** (S3 ou GCS) ou **stockage Mongo** (références URL) — choix documenté
+- [x] À l’**ajout** ou au premier affichage : récupération, stockage, URL servie par l’API ou CDN
+- [x] Politique d’**expiration** / taille / types MIME ; pas d’exposition de la clé TMDB côté client
 
 ---
 
 ## 9. Front – Navigation et shell V1
 
-- [ ] Ajouter les entrées **Compte** / **Connexion** / **Inscription** et **Mes soirées** (menu ou barre basse, **mobile-first** — [03-features-list.md](../03-features-list.md) UX)
-- [ ] Routes protégées : redirection vers connexion si action réservée au compte
-- [ ] Conserver le parcours **sans compte** (lien + pseudo) inchangé pour les invités
+- [x] Ajouter les entrées **Compte** / **Connexion** / **Inscription** et **Mes soirées** (menu ou barre basse, **mobile-first** — [03-features-list.md](../03-features-list.md) UX)
+- [x] Routes protégées : redirection vers connexion si action réservée au compte
+- [x] Conserver le parcours **sans compte** (lien + pseudo) inchangé pour les invités
 
 ---
 
 ## 10. Front – Auth (pages et états)
 
-- [ ] Pages **Inscription** et **Connexion** (formulaires accessibles, messages d’erreur API via `ApiError` / convention existante)
-- [ ] **Déconnexion** depuis le menu / profil
-- [ ] Persistance session (cookie httpOnly gérée par le navigateur ou stockage token selon choix API) — cohérent avec le client `fetchApi`
-- [ ] **Pré-remplissage pseudo** à la jointure d’une soirée si connecté (pseudo compte modifiable)
-- [ ] **Thème clair / sombre** : le MVP a déjà un mode sombre — en V1, **persister la préférence** « local **ou** compte » ([03-features-list.md](../03-features-list.md)) : lecture au chargement, sauvegarde sur le profil si connecté (API § 3 / modèle § 2)
+- [x] Pages **Inscription** et **Connexion** (formulaires accessibles, messages d’erreur API via `ApiError` / convention existante)
+- [x] **Déconnexion** depuis le menu / profil
+- [x] Persistance session (cookie httpOnly gérée par le navigateur ou stockage token selon choix API) — cohérent avec le client `fetchApi`
+- [x] **Pré-remplissage pseudo** à la jointure d’une soirée si connecté (pseudo compte modifiable)
+- [x] **Thème clair / sombre** : le MVP a déjà un mode sombre — en V1, **persister la préférence** « local **ou** compte » ([03-features-list.md](../03-features-list.md)) : lecture au chargement, sauvegarde sur le profil si connecté (API § 3 / modèle § 2)
 
 ---
 
 ## 11. Front – Mes soirées
 
-- [ ] Page liste : soirées **créées** et **rejointes**, états visuels (à venir, en cours, terminée)
-- [ ] Liens vers `/s/:slug` ; rappel du rôle hôte si applicable
+- [x] Page liste : soirées **créées** et **rejointes**, états visuels (à venir, en cours, terminée)
+- [x] Liens vers `/s/:slug` ; rappel du rôle hôte si applicable
 
 ---
 
 ## 12. Front – Paramètres hôte (config soirée)
 
-- [ ] Page ou panneau **Paramètres** accessible **uniquement** à l’hôte depuis le détail soirée
-- [ ] Formulaires : thème, expiration, limite propositions, mode roue, **sélection des réactions** disponibles
-- [ ] **Reflet visuel pour tous** : bandeau, couleur d’accent ou libellé du **thème de soirée** sur la page détail (lecture **GET** config ou champs déjà dans le détail event)
-- [ ] Sauvegarde via API § 5 ; feedback succès / erreur ; désactivation si soirée non modifiable
+- [x] Page ou panneau **Paramètres** accessible **uniquement** à l’hôte depuis le détail soirée
+- [x] Formulaires : thème, expiration, limite propositions, mode roue, **sélection des réactions** disponibles
+- [x] **Reflet visuel pour tous** : bandeau, couleur d’accent ou libellé du **thème de soirée** sur la page détail (lecture **GET** config ou champs déjà dans le détail event)
+- [x] Sauvegarde via API § 5 ; feedback succès / erreur ; désactivation si soirée non modifiable
 
 ---
 
 ## 13. Front – Réactions et affichage « déjà vu »
 
-- [ ] UI réactions sur chaque film (icônes / compteurs) selon config
-- [ ] Affichage **« déjà vu par d’autres »** à l’ajout ou sur la carte (données § 6)
-- [ ] États loading / erreur alignés sur TanStack Query + couche live existante
+- [x] UI réactions sur chaque film (icônes / compteurs) selon config
+- [x] Affichage **« déjà vu par d’autres »** à l’ajout ou sur la carte (données § 6)
+- [x] États loading / erreur alignés sur TanStack Query + couche live existante
 
 ---
 
 ## 14. Front – Partage : QR code
 
-- [ ] Génération **QR code** pointant vers l’URL de la soirée (librairie légère, test mobile)
-- [ ] Visible pour **hôte et participants** (cf. spec) — emplacement UI sans encombrer le mobile
+- [x] Génération **QR code** pointant vers l’URL de la soirée (librairie légère, test mobile)
+- [x] Visible pour **hôte et participants** (cf. spec) — emplacement UI sans encombrer le mobile
 
 ---
 
 ## 15. Front – Mise à jour « live »
 
-- [ ] Remplacer ou compléter le **polling** actuel par **SSE** ou **WebSocket** si la charge / UX le justifie ; sinon **affiner** l’intervalle et l’invalidation React Query
-- [ ] Synchroniser **réactions**, **votes**, **films**, **résultat roue** sans rechargement manuel
-- [ ] Isoler dans la couche **`useEventLive`** (ou équivalent) pour limiter les régressions
+- [x] Remplacer ou compléter le **polling** actuel par **SSE** ou **WebSocket** si la charge / UX le justifie ; sinon **affiner** l’intervalle et l’invalidation React Query — *mémo V1 : polling affiné par phase (à venir / en cours), pas de SSE sans endpoint API*
+- [x] Synchroniser **réactions**, **votes**, **films**, **résultat roue** sans rechargement manuel — *polling + invalidations après mutations ; roue : sync `winnerMovie` depuis le détail événement*
+- [x] Isoler dans la couche **`useEventLive`** (ou équivalent) pour limiter les régressions
 
 ---
 
 ## 16. Front – Rappels légers in-app
 
-- [ ] Bannière ou message lorsque l’heure de début est proche (**utilisateur sur la page soirée** — pas de push / e-mail en V1)
-- [ ] Gestion fuseau / affichage cohérent avec date-heure stockée
+- [x] Bannière ou message lorsque l’heure de début est proche (**utilisateur sur la page soirée** — pas de push / e-mail en V1) — *`EventStartReminderBanner` : fenêtre 30 min, minuteur léger*
+- [x] Gestion fuseau / affichage cohérent avec date-heure stockée — *`utils/eventScheduled` : même instant UTC que l’API ; en-tête + rappel en heure locale navigateur*
 
 ---
 
@@ -202,6 +202,46 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 - [ ] **QR code** + **rappel in-app** validés sur mobile
 - [ ] **OG dynamiques** : livrés **ou** explicitement reportés avec doc de la limite
 - [ ] Mettre à jour [03-features-list.md](../03-features-list.md) et le tableau des versions dans [00-roadmaps-par-version.md](../00-roadmaps-par-version.md) si besoin
+
+---
+
+## 22. Sécurité CI — Sonar (analyse statique)
+
+> **Objectif** : qualité / SAST sur le code via **SonarCloud** ou **SonarQube**, avec **quality gate** sur les PR ou `master`.
+
+- [ ] Créer le projet Sonar (organisation / clé projet SonarCloud ou instance SonarQube) et lier le dépôt GitHub
+- [ ] Déposer **`SONAR_TOKEN`** (et si besoin **`SONAR_HOST_URL`** pour SonarQube) dans **GitHub → Secrets** ; ne jamais committer de jetons — documenter les noms dans [02-deploiement-secrets-et-ci-v1.md](02-deploiement-secrets-et-ci-v1.md) si la CI V1 y est décrite
+- [ ] Ajouter l’analyse en CI (`.github/workflows/ci-cd.yml` ou job dédié) : **SonarScanner** / action **SonarCloud** pour le **monorepo** — au minimum **API .NET** (`apps/api-dotnet`) et **front** (`apps/web`), ou configuration multi-module selon la doc Sonar
+- [ ] Brancher les **rapports de couverture** (**`dotnet test`** / **Vitest**) vers Sonar si la gate doit inclure la couverture
+- [ ] Définir une **Quality Gate** : la CI **échoue** si la gate est rouge (bugs, vulnérabilités, security hotspots selon seuils retenus)
+- [ ] Documenter brièvement (branche analysée, secrets Sonar, comportement sur PR) dans [02-deploiement-secrets-et-ci-v1.md](02-deploiement-secrets-et-ci-v1.md) ou [02-architecture-api-dotnet.md](../02-architecture-api-dotnet.md)
+
+---
+
+## 23. Sécurité CI — Dépendances NuGet (API .NET)
+
+> **Objectif** : détecter les paquets .NET vulnérables en CI — **complète** `pnpm audit` côté Node (**déjà** en job `lint`) ; **distinct** de Sonar.
+
+- [ ] Après **`dotnet restore`** sur la solution, exécuter **`dotnet list package --vulnerable`** (ajouter **`--include-transitive`** si l’équipe veut couvrir les transitifs)
+- [ ] **Faire échouer** le job si des vulnérabilités **high/critical** (ou seuil documenté) ; noter la politique dans [02-deploiement-secrets-et-ci-v1.md](02-deploiement-secrets-et-ci-v1.md) ou [mvp/04-deploy-cicd.md](../mvp/04-deploy-cicd.md) si pertinent
+
+---
+
+## 24. Sécurité CI — Image Docker (API)
+
+> **Objectif** : réduire les CVE dans l’image poussée vers Artifact Registry / Cloud Run.
+
+- [ ] Après **`docker build`** de l’API, lancer un **scan CVE** (**Trivy**, **Grype** ou équivalent) sur l’image taguée localement
+- [ ] **Faire échouer** le pipeline au-delà du seuil retenu **avant** `docker push` ; documenter seuil et outil choisi (ex. section CI dans [02-deploiement-secrets-et-ci-v1.md](02-deploiement-secrets-et-ci-v1.md))
+
+---
+
+## 25. Sécurité CI — Secrets et anti-fuite
+
+> **Objectif** : limiter les secrets commités et réagir vite si fuite.
+
+- [ ] Activer ou vérifier **GitHub Secret scanning** (et **push protection** si disponible) sur le dépôt ; définir une **procédure de rotation** si alerte
+- [ ] Option CI : **Gitleaks** ou **TruffleHog** sur le dépôt ou le diff PR — **échec** si finding confirmé ; complément au scanning hébergé GitHub
 
 ---
 

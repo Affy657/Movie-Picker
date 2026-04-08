@@ -262,7 +262,8 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 - Accessibilité étendue (audit global, clavier, labels systématiques).
 - Pages d'erreur dédiées (404, 500).
 - Crédits API (TMDB/OMDB), mention cookies/confidentialité.
-- Bonus cloud : autoscaling, IaC (Terraform/CloudFormation), multi-région, etc.
+- **Terraform (IaC)** : ajouter un **environnement staging** (AWS **S3 + CloudFront**, GCP **Cloud Run + Artifact Registry**, IAM associé) calqué sur la prod, sans recréer la stack à la main ; **state** distant, **secrets** hors repo ; la CI ne fait que pousser build / image sur ces ressources une fois provisionnées.
+- Bonus cloud : autoscaling, autres IaC (CloudFormation, Pulumi), multi-région, etc.
 - **Notifications hors session** : **push navigateur** et/ou **e-mail** pour rappels avant soirée (ex. 1 h avant), **préférences** par utilisateur — dépend d’une base **consentement**, d’infra (file d’envoi, jobs planifiés) et en pratique du **compte / e-mail** opérationnel (voir V2 mot de passe oublié comme socle e-mail si retenu).
 - **i18n étendue** : langues supplémentaires au-delà de la 2e langue V2, variantes régionales fines, RTL si besoin.
 - **PWA** : manifest, icônes multi-tailles, splash — hors favicon MVP (déjà couvert).
@@ -298,4 +299,4 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 | Aperçu lien partagé (OG / Twitter : statique vs dynamique) | Limite SPA documentée | Dynamique si infra OK + règle confidentialité | – | – |
 | Rappels (in-app / calendrier / push-email) | ❌ | In-app léger | .ics + compte à rebours | Push, e-mail (hors session) |
 | Internationalisation (i18n) | ❌ | Préparation (conventions texte) | 2e langue + TMDB | Langues +, RTL… |
-| Accessibilité étendue, crédits API, cookies, bonus cloud | ❌ | ❌ | ❌ | ✅ |
+| Accessibilité étendue, crédits API, cookies, bonus cloud (dont staging via Terraform) | ❌ | ❌ | ❌ | ✅ |

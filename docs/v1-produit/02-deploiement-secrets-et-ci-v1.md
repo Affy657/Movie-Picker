@@ -56,4 +56,16 @@ Optionnel : définir **`AUTH_DATAPROTECTION_KEYRING`** = contenu XML (une ligne 
 
 ---
 
-**Plus tard** : `ALLOWED_ORIGINS` si nouvelle origine ; bucket affiches ; CORS / cookies prod.
+**Plus tard** : `ALLOWED_ORIGINS` si nouvelle origine ; CORS / cookies prod.
+
+## 5. Cache affiches (V1 §8) — variables runtime API
+
+Pas de secret dédié : les affiches TMDB sont publiques. Variables optionnelles :
+
+| Variable | Rôle |
+|----------|------|
+| `POSTER_CACHE_ENABLED` | `0` ou `false` désactive le cache (JSON reprend les URLs `image.tmdb.org`). Sinon activé (défaut). |
+| `POSTER_CACHE_TTL_DAYS` | Durée logique de fraîcheur (défaut **30**). |
+| `POSTER_CACHE_MAX_BYTES` | Taille max acceptée par image (défaut **524288**). |
+
+Avec **MongoDB**, les binaires sont dans la collection **`poster_cache`**. Une évolution **bucket GCS/S3** peut remplacer le stockage sans changer le contrat `posterPath` côté client (URL absolue ou chemin `/api/v1/posters/…` préfixé par `VITE_API_URL` au front).
