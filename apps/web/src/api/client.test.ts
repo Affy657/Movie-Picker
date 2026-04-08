@@ -70,14 +70,26 @@ describe('fetchApi', () => {
         Promise.resolve(
           JSON.stringify({
             slug: 'abc',
-            creatorParticipant: { _id: 'p1', eventId: 'e1', pseudo: 'Tester', createdAt: '', updatedAt: '' },
+            creatorParticipant: {
+              _id: 'p1',
+              eventId: 'e1',
+              pseudo: 'Tester',
+              createdAt: '',
+              updatedAt: '',
+            },
           })
         ),
     });
     const data = await fetchApi<{ slug: string }>('/events', { method: 'POST', body: '{}' });
     expect(data).toEqual({
       slug: 'abc',
-      creatorParticipant: { _id: 'p1', eventId: 'e1', pseudo: 'Tester', createdAt: '', updatedAt: '' },
+      creatorParticipant: {
+        _id: 'p1',
+        eventId: 'e1',
+        pseudo: 'Tester',
+        createdAt: '',
+        updatedAt: '',
+      },
     });
     expect(globalThis.fetch).toHaveBeenCalledWith(
       expect.any(String),

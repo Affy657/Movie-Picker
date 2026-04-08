@@ -28,6 +28,10 @@ public static class EventDocumentMapper
             var wheelMode = ParseWheelMode(
                 doc.Config.TryGetElement("wheelMode", out var wEl) ? wEl.Value.ToString() : null);
 
+            var richShare = doc.Config.TryGetElement("richSharePreview", out var rspEl)
+                && rspEl.Value.IsBoolean
+                && rspEl.Value.AsBoolean;
+
             config = new EventConfig
             {
                 Theme = doc.Config.TryGetElement("theme", out var t) ? t.Value.ToString() : null,
@@ -36,7 +40,8 @@ public static class EventDocumentMapper
                     ? ReadOptionalInt32(mEl.Value)
                     : null,
                 WheelMode = wheelMode,
-                AllowedReactionIds = allowedIds
+                AllowedReactionIds = allowedIds,
+                RichSharePreview = richShare
             };
         }
 
@@ -72,6 +77,8 @@ public static class EventDocumentMapper
             config["wheelMode"] = ToWheelModeString(evt.Config.WheelMode);
             if (evt.Config.AllowedReactionIds is not null)
                 config["allowedReactionIds"] = new BsonArray(evt.Config.AllowedReactionIds);
+            if (evt.Config.RichSharePreview)
+                config["richSharePreview"] = true;
         }
 
         return new EventDocument

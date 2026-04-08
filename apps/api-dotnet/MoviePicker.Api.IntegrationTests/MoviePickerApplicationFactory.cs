@@ -18,7 +18,8 @@ public sealed class MoviePickerApplicationFactory : WebApplicationFactory<Progra
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["MONGODB_URI"] = "", // force in-memory repositories
-                ["TMDB_API_KEY"] = "test-key" // évite ServiceUnavailable sur la recherche
+                ["TMDB_API_KEY"] = "test-key", // évite ServiceUnavailable sur la recherche
+                ["PUBLIC_WEB_BASE_URL"] = "https://web.integration.test"
             });
         });
     }

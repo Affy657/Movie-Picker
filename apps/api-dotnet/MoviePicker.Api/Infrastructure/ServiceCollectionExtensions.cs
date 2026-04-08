@@ -10,6 +10,7 @@ using MoviePicker.Api.Application.UseCases.CloseEvent;
 using MoviePicker.Api.Application.UseCases.CreateEvent;
 using MoviePicker.Api.Application.UseCases.DeleteMovie;
 using MoviePicker.Api.Application.UseCases.EventConfiguration;
+using MoviePicker.Api.Application.UseCases.EventSharePreview;
 using MoviePicker.Api.Application.UseCases.GetEventDetail;
 using MoviePicker.Api.Application.UseCases.JoinEvent;
 using MoviePicker.Api.Application.UseCases.LaunchWheel;
@@ -59,6 +60,9 @@ public static class ServiceCollectionExtensions
                     opts.PosterCacheTtlDays = pttl;
                 if (int.TryParse(cfg["POSTER_CACHE_MAX_BYTES"], out var pmax) && pmax >= 4096)
                     opts.PosterCacheMaxBytes = pmax;
+                var webBase = cfg["PUBLIC_WEB_BASE_URL"];
+                if (!string.IsNullOrWhiteSpace(webBase))
+                    opts.PublicWebBaseUrl = webBase.Trim().TrimEnd('/');
             });
 
         services.AddMemoryCache();
@@ -125,6 +129,7 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<ICreateEventHandler, CreateEventHandler>();
         services.AddScoped<IGetEventDetailHandler, GetEventDetailHandler>();
+        services.AddScoped<IGetEventSharePreviewHtmlHandler, GetEventSharePreviewHtmlHandler>();
         services.AddScoped<IGetEventConfigHandler, GetEventConfigHandler>();
         services.AddScoped<IPatchEventConfigHandler, PatchEventConfigHandler>();
         services.AddScoped<IJoinEventHandler, JoinEventHandler>();

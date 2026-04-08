@@ -10,7 +10,12 @@ export type EventDetailHeaderProps = {
   shareUrl: string;
 };
 
-export default function EventDetailHeader({ title, dateFormatted, terminé, shareUrl }: EventDetailHeaderProps) {
+export default function EventDetailHeader({
+  title,
+  dateFormatted,
+  terminé,
+  shareUrl,
+}: EventDetailHeaderProps) {
   return (
     <header className="event-header">
       <div className="event-header-top">

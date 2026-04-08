@@ -98,4 +98,18 @@ public sealed class PatchEventConfigHandlerTests
             _sut.HandleAsync("s", new PatchEventConfigRequest { AllowedReactionIds = new[] { "nope" } }));
         Assert.Contains("inconnue", ex.Message);
     }
+
+    [Fact]
+    public async Task HandleAsync_RichSharePreview_Updates()
+    {
+        var evt = Evt();
+        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
+        _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+
+        var res = await _sut.HandleAsync("s", new PatchEventConfigRequest { RichSharePreview = true });
+
+        Assert.True(res.RichSharePreview);
+    }
 }

@@ -16,8 +16,6 @@ Application pour organiser des soirées film : créer un event, partager le lien
 - **Données** : MongoDB Atlas. **Externe** : API TMDB (films).
 - **CI/CD** : GitHub Actions (lint, tests web + API, puis déploiement sur `master`). E2E Playwright optionnel en local.
 
-→ **[Schéma d’architecture](docs/dev%20cloud%20ynov/02-architecture.md)** (diagramme Mermaid).
-
 ## Services utilisés
 
 | Fournisseur | Service | Rôle |
@@ -31,20 +29,7 @@ Application pour organiser des soirées film : créer un event, partager le lien
 
 ## Déploiement
 
-- **Premier déploiement / manuel** : voir [Déploiement API (GCP)](docs/mvp/02-deploy-gcp-api.md) et [Déploiement Front (AWS)](docs/mvp/03-deploy-aws-front.md).
-- **CI/CD (GitHub Actions)** : à chaque push sur `master`, build + déploiement automatique. Configuration : [04-deploy-cicd.md](docs/mvp/04-deploy-cicd.md).
-
-## Documentation
-
-La base lisible sans explorer tout le dépôt est sous **`docs/`** : voir [docs/README.md](docs/README.md) (quatre fiches à la racine de ce dossier ; **setup local** = ce README, sections *Prérequis* et *Démarrage*).
-
-| | |
-|--|--|
-| [docs/product-spec.md](docs/product-spec.md) | Produit, stack, critères formation, MVP |
-| [docs/architecture.md](docs/architecture.md) | Vue système, dépôt, contrat API |
-| [docs/features.md](docs/features.md) | Vision fonctionnelle, planification |
-| [docs/operations-overview.md](docs/operations-overview.md) | Hébergement, CI/CD |
-| [AGENTS.md](AGENTS.md) | Assistants IA (`.cursor/`) |
+- **CI/CD (GitHub Actions)** : à chaque push sur `master`, build + déploiement automatique (voir `.github/workflows/ci-cd.yml`).
 
 ## Prérequis
 
@@ -52,7 +37,7 @@ La base lisible sans explorer tout le dépôt est sous **`docs/`** : voir [docs/
 
 ## Démarrage
 
-1. Copier **`.env.example`** → **`.env`** à la racine et renseigner `MONGODB_URI` / `TMDB_API_KEY` (l’API .NET charge `.env` en remontant depuis le répertoire courant). Optionnel : `apps/web/.env` pour `VITE_API_URL` (voir `apps/web/.env.example`). En **Production** / Docker, l’API exige aussi **`ALLOWED_ORIGINS`** (origines CORS du front, virgules si plusieurs) ; en **Development**, `localhost` / `127.0.0.1` sont autorisés sans cette variable. **Secrets / variables déploiement** : [docs/mvp/04-deploy-cicd.md](docs/mvp/04-deploy-cicd.md).
+1. Copier **`.env.example`** → **`.env`** à la racine et renseigner `MONGODB_URI` / `TMDB_API_KEY` (l’API .NET charge `.env` en remontant depuis le répertoire courant). Optionnel : `apps/web/.env` pour `VITE_API_URL` (voir `apps/web/.env.example`). En **Production** / Docker, l’API exige aussi **`ALLOWED_ORIGINS`** (origines CORS du front, virgules si plusieurs) ; en **Development**, `localhost` / `127.0.0.1` sont autorisés sans cette variable.
 2. À la racine du repo :
 
 ```bash
@@ -80,6 +65,5 @@ pnpm run lighthouse   # Lighthouse sur le build web (§ 35) — Node ≥ 22 + Ch
 
 - `apps/api-dotnet/` – API ASP.NET Core (C#), MongoDB, TMDB
 - `apps/web/` – Front React (Vite, TypeScript)
-- `docs/` – Documentation (spec, roadmap, déploiement, architecture)
 
 Branche par défaut : **`master`** (CI/CD — voir [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml)).

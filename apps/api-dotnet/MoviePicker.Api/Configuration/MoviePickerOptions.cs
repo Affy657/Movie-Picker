@@ -2,7 +2,8 @@ namespace MoviePicker.Api.Configuration;
 
 /// <summary>
 /// Variables d'environnement : MONGODB_URI (obligatoire dès branchement Mongo), TMDB_API_KEY (optionnel),
-/// ALLOWED_ORIGINS (obligatoire hors Development — liste d'origines CORS séparées par des virgules).
+/// ALLOWED_ORIGINS (obligatoire hors Development — liste d'origines CORS séparées par des virgules),
+/// PUBLIC_WEB_BASE_URL (optionnel — Open Graph / page share-preview).
 /// </summary>
 public sealed class MoviePickerOptions
 {
@@ -30,4 +31,9 @@ public sealed class MoviePickerOptions
 
     /// <summary>Taille max d’une image acceptée (octets). Variable : <c>POSTER_CACHE_MAX_BYTES</c>.</summary>
     public int PosterCacheMaxBytes { get; set; } = 524_288;
+
+    /// <summary>
+    /// URL canonique du front (HTTPS, sans slash final), pour <c>og:url</c> / partage soirée. Variable : <c>PUBLIC_WEB_BASE_URL</c> (ex. <c>https://web.movie-picker.fr</c>).
+    /// </summary>
+    public string PublicWebBaseUrl { get; set; } = "https://web.movie-picker.fr";
 }

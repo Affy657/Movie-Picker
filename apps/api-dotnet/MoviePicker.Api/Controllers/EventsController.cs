@@ -6,6 +6,7 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.CloseEvent;
 using MoviePicker.Api.Application.UseCases.CreateEvent;
 using MoviePicker.Api.Application.UseCases.EventConfiguration;
+using MoviePicker.Api.Application.UseCases.EventSharePreview;
 using MoviePicker.Api.Application.UseCases.GetEventDetail;
 using MoviePicker.Api.Application.UseCases.JoinEvent;
 using MoviePicker.Api.Application.UseCases.LaunchWheel;
@@ -91,6 +92,22 @@ public sealed class EventsController : ControllerBase
             return BadRequest(new { error = "corps requis" });
         var result = await handler.HandleAsync(idOrSlug, request, ct);
         return Ok(result);
+    }
+
+    /// <summary>HTML avec Open Graph pour crawlers (messageries, réseaux). Branchement CloudFront recommandé — voir doc déploiement V1 § MP-17.</summary>
+    [HttpGet("slug/{idOrSlug}/share-preview")]
+    [Produces("text/html")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetSharePreview(
+        string idOrSlug,
+        [FromServices] IGetEventSharePreviewHtmlHandler handler,
+        CancellationToken ct)
+    {
+        var apiBase = $"{Request.Scheme}://{Request.Host.Value}{Request.PathBase.Value}";
+        var html = await handler.BuildHtmlAsync(idOrSlug, apiBase, ct);
+        Response.Headers.CacheControl = "public, max-age=120";
+        return Content(html, "text/html; charset=utf-8");
     }
 
     [HttpGet("slug/{idOrSlug}")]

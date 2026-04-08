@@ -23,6 +23,7 @@ const baseEvent: EventData = {
     maxProposalsPerParticipant: null,
     wheelMode: 'strictRandom',
     allowedReactionIds: null,
+    richSharePreview: false,
   },
 };
 
@@ -42,6 +43,7 @@ describe('HostEventSettingsPanel', () => {
         const body = (await request.json()) as Record<string, unknown>;
         expect(body.theme).toBe('SF');
         expect(body.wheelMode).toBe('strictRandom');
+        expect(body.richSharePreview).toBe(false);
         expect(Array.isArray(body.allowedReactionIds)).toBe(true);
         return HttpResponse.json({
           theme: 'SF',
@@ -49,6 +51,7 @@ describe('HostEventSettingsPanel', () => {
           maxProposalsPerParticipant: null,
           wheelMode: 'strictRandom',
           allowedReactionIds: body.allowedReactionIds,
+          richSharePreview: false,
         });
       })
     );
@@ -65,6 +68,37 @@ describe('HostEventSettingsPanel', () => {
 
     await waitFor(() => expect(patched).toBe(true));
     await waitFor(() => expect(screen.getByText(/enregistrés/i)).toBeInTheDocument());
+  });
+
+  it('envoie richSharePreview true quand la case est cochée', async () => {
+    const user = userEvent.setup();
+    let seenRich: boolean | undefined;
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        seenRich = body.richSharePreview === true;
+        return HttpResponse.json({
+          theme: 'SF',
+          endDate: null,
+          maxProposalsPerParticipant: null,
+          wheelMode: 'strictRandom',
+          allowedReactionIds: body.allowedReactionIds,
+          richSharePreview: true,
+        });
+      })
+    );
+
+    render(
+      <QueryClientWrapper client={createTestQueryClient()}>
+        <HostEventSettingsPanel slug={slug} hostToken={null} event={baseEvent} />
+      </QueryClientWrapper>
+    );
+
+    await user.click(screen.getByText('Paramètres de la soirée'));
+    await user.click(screen.getByRole('checkbox', { name: /aperçu de lien détaillé/i }));
+    await user.click(screen.getByRole('button', { name: /^enregistrer$/i }));
+
+    await waitFor(() => expect(seenRich).toBe(true));
   });
 
   it('désactive le formulaire si la roue a été lancée', async () => {

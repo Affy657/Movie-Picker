@@ -8,6 +8,8 @@ export interface EventConfigData {
   maxProposalsPerParticipant: number | null;
   wheelMode: WheelMode;
   allowedReactionIds: string[] | null;
+  /** Aperçu de lien détaillé (Open Graph) — défaut API : false. */
+  richSharePreview?: boolean;
 }
 
 export const DEFAULT_EVENT_CONFIG: EventConfigData = {
@@ -16,6 +18,7 @@ export const DEFAULT_EVENT_CONFIG: EventConfigData = {
   maxProposalsPerParticipant: null,
   wheelMode: 'strictRandom',
   allowedReactionIds: null,
+  richSharePreview: false,
 };
 
 export interface EventData {

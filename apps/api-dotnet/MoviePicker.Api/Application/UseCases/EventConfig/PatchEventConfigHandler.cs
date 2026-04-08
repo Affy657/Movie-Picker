@@ -46,7 +46,8 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
             || request.EndDate is not null
             || request.MaxProposalsPerParticipant.HasValue
             || request.WheelMode.HasValue
-            || request.AllowedReactionIds is not null;
+            || request.AllowedReactionIds is not null
+            || request.RichSharePreview.HasValue;
 
         if (!hasChange)
             return EventConfigResponse.FromEvent(evt);
@@ -102,13 +103,18 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
             allowed = list;
         }
 
+        var richShare = current.RichSharePreview;
+        if (request.RichSharePreview.HasValue)
+            richShare = request.RichSharePreview.Value;
+
         var nextConfig = new EventConfig
         {
             Theme = theme,
             EndDate = endDate,
             MaxProposalsPerParticipant = maxProp,
             WheelMode = wheelMode,
-            AllowedReactionIds = allowed
+            AllowedReactionIds = allowed,
+            RichSharePreview = richShare
         };
 
         var now = DateTimeOffset.UtcNow;

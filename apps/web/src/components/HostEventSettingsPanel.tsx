@@ -29,6 +29,7 @@ function normalizeConfig(c: EventConfigData | undefined): EventConfigData {
       c?.maxProposalsPerParticipant ?? DEFAULT_EVENT_CONFIG.maxProposalsPerParticipant,
     wheelMode: c?.wheelMode ?? DEFAULT_EVENT_CONFIG.wheelMode,
     allowedReactionIds: c?.allowedReactionIds ?? DEFAULT_EVENT_CONFIG.allowedReactionIds,
+    richSharePreview: c?.richSharePreview ?? DEFAULT_EVENT_CONFIG.richSharePreview,
   };
 }
 
@@ -63,6 +64,7 @@ export default function HostEventSettingsPanel({
   const [reactionSel, setReactionSel] = useState<Set<ReactionCatalogId>>(() =>
     allowedToSelectedSet(cfg.allowedReactionIds)
   );
+  const [richSharePreview, setRichSharePreview] = useState(() => !!cfg.richSharePreview);
   const [flashOk, setFlashOk] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -75,6 +77,7 @@ export default function HostEventSettingsPanel({
     );
     setWheelMode(next.wheelMode);
     setReactionSel(allowedToSelectedSet(next.allowedReactionIds));
+    setRichSharePreview(!!next.richSharePreview);
     setFormError(null);
   }, [event.config]);
 
@@ -140,6 +143,7 @@ export default function HostEventSettingsPanel({
       maxProposalsPerParticipant,
       wheelMode,
       allowedReactionIds,
+      richSharePreview,
     });
   };
 
@@ -231,6 +235,24 @@ export default function HostEventSettingsPanel({
             <option value="strictRandom">Aléatoire strict (égalité)</option>
             <option value="weightedByVotes">Pondéré par les votes</option>
           </select>
+        </div>
+
+        <div className="host-field">
+          <label className="label reaction-check-label">
+            <input
+              id="host-cfg-rich-share"
+              type="checkbox"
+              checked={richSharePreview}
+              onChange={(e) => setRichSharePreview(e.target.checked)}
+              disabled={locked || mutation.isPending}
+            />{' '}
+            Aperçu de lien détaillé (messageries / réseaux)
+          </label>
+          <p className="hint">
+            Désactivé par défaut : le titre et les détails de la soirée ne sont pas exposés dans
+            l’aperçu du lien. Si vous cochez, activez aussi le branchement CloudFront décrit dans la
+            doc déploiement (MP-17), sinon le partage reste générique côté URL <code>/s/…</code>.
+          </p>
         </div>
 
         <fieldset

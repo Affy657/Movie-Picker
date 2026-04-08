@@ -10,6 +10,9 @@ public sealed class EventConfigResponse
     public WheelMode WheelMode { get; init; }
     public IReadOnlyList<string>? AllowedReactionIds { get; init; }
 
+    /// <summary>Aperçu Open Graph « riche » (titre soirée, détails) — désactivé par défaut.</summary>
+    public bool RichSharePreview { get; init; }
+
     public static EventConfigResponse FromEvent(Event evt)
     {
         var c = evt.Config;
@@ -19,7 +22,8 @@ public sealed class EventConfigResponse
             EndDate = c?.EndDate,
             MaxProposalsPerParticipant = c?.MaxProposalsPerParticipant,
             WheelMode = c?.WheelMode ?? WheelMode.StrictRandom,
-            AllowedReactionIds = c?.AllowedReactionIds
+            AllowedReactionIds = c?.AllowedReactionIds,
+            RichSharePreview = c?.RichSharePreview ?? false
         };
     }
 }
@@ -42,4 +46,7 @@ public sealed class PatchEventConfigRequest
     public int? MaxProposalsPerParticipant { get; init; }
     public WheelMode? WheelMode { get; init; }
     public IReadOnlyList<string>? AllowedReactionIds { get; init; }
+
+    /// <summary>Si présent, active ou désactive l’aperçu de partage détaillé (Open Graph).</summary>
+    public bool? RichSharePreview { get; init; }
 }
