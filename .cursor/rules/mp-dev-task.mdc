@@ -1,0 +1,72 @@
+---
+description: Tâche de dev — posture senior, best practices, front React/TS, API .NET, roadmap
+alwaysApply: false
+---
+
+# Tâche de développement (Movie Picker)
+
+## Posture
+
+Agir en **développeur senior expert** des technos utilisées (React/TS, .NET/C#, MongoDB). **Ne jamais créer de legacy** : chaque ligne commitée doit pouvoir être relue dans 6 mois sans archéologie.
+
+- **Lire le code existant avant de coder** : s'aligner sur les conventions en place (nommage, structure de fichiers, patterns) plutôt qu'inventer un nouveau style.
+- **Principe de moindre surprise** : préférer les solutions standard et évidentes aux solutions "intelligentes" ou exotiques.
+- **Code idiomatique** : écrire du TypeScript comme du TypeScript, du C# comme du C# — exploiter les idiomes du langage plutôt que transposer des habitudes d'un autre écosystème.
+- **Séparation des responsabilités** : chaque fonction, composant ou classe fait une seule chose bien.
+- **Nommage explicite** : le nom suffit à comprendre l'intention ; pas d'abréviations cryptiques.
+- **Types stricts** : exploiter le système de types au maximum pour attraper les bugs à la compilation.
+- **Justification** : si un choix de design est non-trivial, un commentaire d'une ligne expliquant le *pourquoi* (jamais le *quoi*).
+
+## Périmètre et priorités
+
+- Implémenter **sans élargir** le périmètre produit ; comportement aligné **spec / features list** ; edge cases couverts.
+- **Contrat HTTP** : toute route ou DTO public → Swagger (`ProducesResponseType` / schémas), **`OpenApiContractTests`**, **`pnpm run openapi:export`** → `artifacts/openapi-v1.json`, client front `/api/v1` cohérent.
+- **Qualité** : tests pertinents pour le comportement livré ; pas de refactor hors demande ; changements **petits et reviewables** ; pas de code mort, pas de TODO orphelins.
+- Ambiguïté produit ou scope large : clarifier avec l'humain ou invoquer **`mp-po`** avant de coder.
+
+## Sécurité & robustesse
+
+- **Validation des entrées** : ne jamais faire confiance aux données entrantes, côté front comme côté API.
+- **Gestion d'erreurs explicite** : pas de `catch` vide ni d'erreurs avalées silencieusement ; propager ou logger avec contexte.
+- **Pas de données sensibles** dans les logs, les réponses d'erreur ou le code versionné.
+- **Cas limites** : null, listes vides, timeouts, erreurs réseau — les gérer systématiquement, pas en afterthought.
+
+## Front — `apps/web`
+
+- **Stack** : React, Vite, TypeScript strict, **TanStack Query**.
+- **Données** : couche client API typée ; pas de `fetch` ad hoc hors patterns existants.
+- **UX** : erreurs typées (`ApiError`) ; loading / retry cohérents.
+- **Tests** : Vitest + Testing Library ; seuils dans `vitest.config.ts`.
+- **Accessibilité** : patterns existants ; `vitest-axe` si une page change fortement.
+- **Structure** : un composant = un fichier, nom PascalCase aligné sur l'export ; hooks dans `hooks/`, services API dans la couche client existante.
+- **Performance** : éviter les re-renders inutiles (mémoisation quand pertinent, clés stables dans les listes, pas de création d'objets/fonctions inline dans le JSX sans raison).
+
+**Anti-patterns front** :
+- `any` ou assertion `as` sans raison documentée.
+- Copier-coller de logique plutôt qu'extraire un hook ou une fonction utilitaire.
+- `catch` vide ou `console.log` comme seule gestion d'erreur.
+- Magic strings / magic numbers sans constante nommée.
+- Refactor large non demandé ; contournement des conventions API du dépôt.
+
+## API .NET — `apps/api-dotnet`
+
+- **Architecture** : couches domaine / application / infrastructure / entrée HTTP ; préfixe public aligné sur le reste du projet.
+- **HTTP** : routes sous `/api/v1` ; toute surface publique documentée et couverte par les tests de contrat comme aujourd'hui.
+- **Tests** : `MoviePicker.Api.Tests`, `MoviePicker.Api.IntegrationTests` ; `MONGODB_URI` vide si le mode mémoire suffit.
+- **Nommage** : contrôleurs, services et DTOs nommés de manière cohérente avec l'existant (conventions .NET standard).
+- **Performance** : requêtes MongoDB avec projection et index en tête ; pas de N+1 ; `async`/`await` partout sur l'I/O.
+
+**Anti-patterns API** :
+- `dynamic` ou `object` sans raison documentée.
+- Élargir le scope sans accord produit.
+- Assouplir validation ou CORS en prod sans revue explicite (limites dans **mp-guardrails**).
+- Retourner des détails d'exception internes dans les réponses HTTP.
+- Requêtes sans filtre ni pagination sur des collections potentiellement volumineuses.
+
+## Si la demande vient d'une roadmap ou d'un ticket sprint
+
+1. **Tests** : couvrir les chemins métier livrés (handlers + intégration HTTP côté API, Vitest/RTL côté front selon la zone). Pas de « feature sans tests » sans justification dans le fil.
+2. **Traçabilité** : si comportement ou contrat change, OpenAPI + export + `OpenApiContractTests` à jour ; README / commentaires ciblés si auth ou erreurs évoluent.
+3. **Roadmap** : ne cocher une case **qu'après** implémentation **et** tests **et** contrat OpenAPI alignés.
+
+**Anti-patterns** : route ou DTO public sans test minimal ; export OpenAPI désynchronisé ; case roadmap cochée trop tôt.

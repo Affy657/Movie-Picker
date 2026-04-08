@@ -50,11 +50,3 @@ blob-report/
 
 # Misc
 *.local
-
-# Cursor
-.cursor/
-Agents.md
-
-# Docs
-docs/
-Readme.md
