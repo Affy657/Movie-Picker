@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc.Testing;
 using MoviePicker.Api.Application.DTOs;
 using Xunit;
@@ -16,6 +17,13 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
+    };
+
+    private static readonly JsonSerializerOptions JsonConfigOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
     };
 
     [Fact]
@@ -101,6 +109,82 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
 
         var closeRes = await client.PostAsync($"/api/v1/events/{slug}/close", null);
         closeRes.EnsureSuccessStatusCode();
+    }
+
+    /// <summary>
+    /// Parcours V1 roadmap §20 : session (login après inscription) → création liée au compte → PATCH config → GET config (persistance) → réaction.
+    /// </summary>
+    [Fact]
+    public async Task V1Flow_Login_CreateEvent_PatchConfig_PostReaction()
+    {
+        var email = $"v1flow{Guid.NewGuid():N}@test.local";
+        const string password = "abcd1234";
+
+        var registerClient = _factory.CreateClient();
+        var reg = await registerClient.PostAsJsonAsync(
+            "/api/v1/auth/register",
+            new RegisterRequest
+            {
+                Email = email,
+                Password = password,
+                DisplayName = "FlowV1"
+            });
+        reg.EnsureSuccessStatusCode();
+
+        var client = _factory.CreateClient();
+        var login = await client.PostAsJsonAsync(
+            "/api/v1/auth/login",
+            new LoginRequest { Email = email, Password = password });
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        IntegrationTestAuth.ApplySessionCookie(client, login);
+
+        var createRes = await client.PostAsJsonAsync(
+            "/api/v1/events",
+            new { title = "Soirée V1 flow", date = "2031-06-01", time = "20:00" });
+        createRes.EnsureSuccessStatusCode();
+        var created = await createRes.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
+        Assert.NotNull(created);
+        var slug = created!.Slug;
+        var creatorPid = created.CreatorParticipant?.Id;
+        Assert.False(string.IsNullOrEmpty(creatorPid));
+
+        var patch = await client.PatchAsJsonAsync(
+            $"/api/v1/events/{slug}/config",
+            new
+            {
+                theme = "Science-fiction",
+                allowedReactionIds = new[] { "already_seen", "meh" }
+            });
+        patch.EnsureSuccessStatusCode();
+
+        var getCfg = await client.GetAsync($"/api/v1/events/{slug}/config");
+        getCfg.EnsureSuccessStatusCode();
+        var cfg = await getCfg.Content.ReadFromJsonAsync<EventConfigResponse>(JsonConfigOptions);
+        Assert.NotNull(cfg);
+        Assert.Equal("Science-fiction", cfg!.Theme);
+        Assert.NotNull(cfg.AllowedReactionIds);
+        Assert.Equal(2, cfg.AllowedReactionIds!.Count);
+        Assert.Contains("already_seen", cfg.AllowedReactionIds);
+        Assert.Contains("meh", cfg.AllowedReactionIds);
+
+        var addMovie = await client.PostAsJsonAsync(
+            $"/api/v1/events/{slug}/movies",
+            new
+            {
+                tmdbId = 303,
+                title = "Film flow",
+                year = "2021",
+                posterPath = (string?)null,
+                participantId = creatorPid
+            });
+        addMovie.EnsureSuccessStatusCode();
+        var movie = await addMovie.Content.ReadFromJsonAsync<MovieWithScoreResponse>(JsonOptions);
+        Assert.NotNull(movie);
+
+        var rx = await client.PostAsJsonAsync(
+            $"/api/v1/events/{slug}/movies/{movie!.Id}/reactions",
+            new { participantId = creatorPid, reactionId = "already_seen" });
+        Assert.Equal(HttpStatusCode.OK, rx.StatusCode);
     }
 
     [Fact]

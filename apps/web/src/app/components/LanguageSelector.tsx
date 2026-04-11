@@ -1,5 +1,11 @@
 import clsx from 'clsx';
-import { useLocale, useTranslation, SUPPORTED_LOCALES, LOCALE_LABELS, isLocaleCode } from '@/shared/i18n';
+import {
+  useLocale,
+  useTranslation,
+  SUPPORTED_LOCALES,
+  LOCALE_LABELS,
+  isLocaleCode,
+} from '@/shared/i18n';
 import styles from './LanguageSelector.module.css';
 
 export default function LanguageSelector({

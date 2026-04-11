@@ -7,9 +7,31 @@
   gap: 0.35rem;
 }
 
+.listItem {
+  list-style: none;
+  display: inline-flex;
+  margin: 0;
+  padding: 0;
+}
+
+.chipLink {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.chipLink:hover {
+  filter: brightness(1.06);
+}
+
+.chipLink:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .compact {
   gap: 0.35rem;
-  margin-top: 0.2rem;
+  margin-top: 0.1rem;
 }
 
 .chip {
@@ -42,12 +64,12 @@
 }
 
 .compact .chipLogoOnly {
-  padding: 0.1rem 0;
+  padding: 0;
 }
 
 /**
  * Cadre rectangulaire : les logos TMDB « watch provider » sont souvent des wordmarks larges ;
- * un carré minuscule les écrasait. object-fit: contain garde le logo entier lisible.
+ * object-fit: contain garde le logo entier lisible.
  */
 .logoFrame {
   display: flex;
@@ -62,21 +84,45 @@
   background: var(--color-border-subtle);
 }
 
+/*
+ * Compact : cadre carré (les logos TMDB « app » sont souvent carrés ; un rectangle large
+ * laissait du vide sur les côtés). Même inset sur les 4 côtés.
+ */
 .logoFrameCompact {
-  width: 6.25rem;
-  height: 2.5rem;
-  padding: 0.25rem 0.45rem;
+  position: relative;
+  display: block;
+  width: 2.75rem;
+  height: 2.75rem;
+  box-sizing: border-box;
+  padding: 0;
   border-radius: 4px;
+  background: var(--color-input-readonly);
+  border: 1px solid var(--color-border-subtle);
 }
 
-.logo {
+.logoInset {
+  position: absolute;
+  inset: 0.2rem;
+  pointer-events: none;
+}
+
+.logoImg {
+  display: block;
   max-width: 100%;
   max-height: 100%;
   width: auto;
   height: auto;
   object-fit: contain;
   object-position: center;
-  display: block;
+}
+
+.logoFrameCompact .logoInset .logoImg {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+  object-position: center;
 }
 
 .chipName {

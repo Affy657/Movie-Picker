@@ -67,7 +67,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<LocaleContextValue>(
     () => ({ locale, setLocale, tmdbLanguage }),
-    [locale, setLocale, tmdbLanguage],
+    [locale, setLocale, tmdbLanguage]
   );
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;

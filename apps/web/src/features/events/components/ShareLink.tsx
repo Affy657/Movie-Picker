@@ -29,7 +29,11 @@ interface ShareLinkProps {
   centeredActions?: boolean;
 }
 
-export default function ShareLink({ url, showQr = false, centeredActions = false }: ShareLinkProps) {
+export default function ShareLink({
+  url,
+  showQr = false,
+  centeredActions = false,
+}: ShareLinkProps) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const copyTimerRef = useRef<number | undefined>(undefined);

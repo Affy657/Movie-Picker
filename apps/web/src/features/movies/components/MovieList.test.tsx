@@ -3,6 +3,11 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import MovieList from '@/features/movies/components/MovieList';
 import type { MovieData } from '@/shared/types/movie';
+import { LocaleProvider } from '@/shared/i18n';
+
+function renderWithLocale(ui: React.ReactElement) {
+  return render(<LocaleProvider>{ui}</LocaleProvider>);
+}
 
 const movies: MovieData[] = [
   {
@@ -35,7 +40,7 @@ const movies: MovieData[] = [
 
 describe('MovieList', () => {
   it('affiche un placeholder si liste vide', () => {
-    render(
+    renderWithLocale(
       <MovieList
         movies={[]}
         slug="s"
@@ -53,7 +58,7 @@ describe('MovieList', () => {
   });
 
   it('affiche la liste des films avec titre et score', () => {
-    render(
+    renderWithLocale(
       <MovieList
         movies={movies}
         slug="s"
@@ -81,7 +86,7 @@ describe('MovieList', () => {
         reactions: [{ reactionId: 'already_seen', count: 2, pseudos: ['Alice', 'Bob'] }],
       },
     ];
-    render(
+    renderWithLocale(
       <MovieList
         movies={withSeen}
         slug="s"
@@ -101,7 +106,7 @@ describe('MovieList', () => {
 
   it('affiche les boutons vote up/down quand pas terminé et participantId', async () => {
     const onVote = vi.fn().mockResolvedValue(undefined);
-    render(
+    renderWithLocale(
       <MovieList
         movies={movies}
         slug="s"

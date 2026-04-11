@@ -26,7 +26,7 @@ describe('useTranslation', () => {
         const localeCtx = useLocale();
         return { ...translation, setLocale: localeCtx.setLocale };
       },
-      { wrapper: Wrapper },
+      { wrapper: Wrapper }
     );
 
     act(() => result.current.setLocale('en'));

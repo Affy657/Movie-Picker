@@ -201,11 +201,11 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ## 20. Tests, contrat et qualité
 
-- [ ] **Tests .NET** : nouveaux handlers (auth, config, réactions, agrégats watch providers / cache posters si testables)
-- [ ] **Tests intégration** : parcours connexion → création soirée liée au compte → config → réaction
-- [ ] **OpenAPI** : schémas à jour ; **export CI** et `OpenApiContractTests`
-- [ ] **Front** : Vitest / RTL sur pages auth, mes soirées, paramètres hôte, composants réactions / QR / **watch providers** / **thème soirée** / **préférence thème UI**
-- [ ] **`pnpm run verify:local`** avant merge majeur V1
+- [x] **Tests .NET** : nouveaux handlers (auth, config, réactions, agrégats watch providers / cache posters si testables)
+- [x] **Tests intégration** : parcours connexion → création soirée liée au compte → config → réaction
+- [x] **OpenAPI** : schémas à jour ; **export CI** et `OpenApiContractTests`
+- [x] **Front** : Vitest / RTL sur pages auth, mes soirées, paramètres hôte, composants réactions / QR / **watch providers** / **thème soirée** / **préférence thème UI**
+- [x] **`pnpm run verify:local`** avant merge majeur V1
 
 ---
 

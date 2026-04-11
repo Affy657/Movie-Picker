@@ -16,6 +16,7 @@ Agir en **développeur senior expert** des technos utilisées (React/TS, .NET/C#
 - **Nommage explicite** : le nom suffit à comprendre l'intention ; pas d'abréviations cryptiques.
 - **Types stricts** : exploiter le système de types au maximum pour attraper les bugs à la compilation.
 - **Justification** : si un choix de design est non-trivial, un commentaire d'une ligne expliquant le *pourquoi* (jamais le *quoi*).
+- **Peu de prose dans le code** : ne pas décrire le fonctionnement évident en commentaires ou docstrings ; réserver le texte aux cas réellement pertinents (non-évidence, invariant métier, contournement documenté, sécurité, compat API).
 
 ## Périmètre et priorités
 

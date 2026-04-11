@@ -65,14 +65,16 @@ export const fr = {
       languageLabel: 'Langue',
       themeHint: 'Clair, sombre ou selon votre appareil.',
       guestLead: 'Connectez-vous ou créez un compte pour garder vos soirées.',
-      guestHint: 'Vous pouvez aussi continuer en invité\u00a0: créez ou rejoignez une soirée via le lien partagé.',
+      guestHint:
+        'Vous pouvez aussi continuer en invité\u00a0: créez ou rejoignez une soirée via le lien partagé.',
       saveSuccess: 'Modifications enregistrées.',
       fallbackError: 'Enregistrement impossible.',
       logoutButton: 'Se déconnecter',
       loginCta: 'Se connecter',
       registerCta: 'Créer un compte',
       sessionTitle: 'Session',
-      sessionHint: 'La session est maintenue par un cookie sécurisé (httpOnly) émis par l\u2019API.',
+      sessionHint:
+        'La session est maintenue par un cookie sécurisé (httpOnly) émis par l\u2019API.',
       saving: 'Enregistrement\u2026',
       guestNavAriaLabel: 'Connexion et inscription',
     },
@@ -189,6 +191,12 @@ export const fr = {
       regionHint: 'Disponibilités indicatives \u00b7 région {{region}}',
       posterPlaceholder: 'Affiche',
       tmdbVoteHint: 'Note moyenne TMDB (indicatif)',
+      liveSearchMinCharsHint: 'Tapez au moins {{min}} caractères pour lancer une recherche.',
+      a11ySearching: 'Recherche en cours\u2026',
+      a11yResultsCount: '{{count}} résultat(s)',
+      a11yNoResults: 'Aucun résultat pour cette recherche.',
+      noResultsForQuery: 'Aucun film ne correspond à « {{query}} ».',
+      resultsListAria: 'Résultats de la recherche',
     },
     list: {
       emptyPlaceholder: "Aucun film proposé pour l'instant.",
@@ -200,8 +208,6 @@ export const fr = {
       removeError: 'Suppression impossible',
       myBadge: "C'est moi",
       tmdbVoteTitle: 'Note moyenne TMDB (indicatif)',
-      watchLinkLabel: 'Où regarder (TMDB)',
-      watchLinkSearch: 'Voir les options sur TMDB',
       sectionLabel: 'Films proposés',
       loadingPlaceholder: 'Chargement des films\u2026',
     },
@@ -215,6 +221,15 @@ export const fr = {
     tmdb: {
       disclaimer:
         'Les notes et les offres de visionnage (streaming / VOD) sont indicatives, issues de The Movie Database (TMDB). Les services disponibles peuvent varier.',
+    },
+    watchProviders: {
+      listAria: 'Offres de visionnage indicatives',
+      typeFlatrate: 'Abonnement',
+      typeRent: 'Location',
+      typeBuy: 'Achat',
+      chipAria: '{{provider}} ({{type}})',
+      chipLinkAria:
+        '{{provider}} — {{type}}. Ouvrir sur TMDB la page « où regarder ce film » (nouvel onglet).',
     },
   },
 

@@ -8,7 +8,7 @@ function renderSelector() {
   return render(
     <LocaleProvider>
       <LanguageSelector />
-    </LocaleProvider>,
+    </LocaleProvider>
   );
 }
 

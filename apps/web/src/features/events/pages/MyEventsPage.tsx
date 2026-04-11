@@ -176,7 +176,9 @@ export default function MyEventsPage() {
       <PageLayout className={styles.layout}>
         <h1 className="visually-hidden">{t('events.myEvents.title')}</h1>
         <p className="error">{getErrorMessage(error, t('events.myEvents.fallbackError'))}</p>
-        <Link to={withReturnTo(ROUTES.login, ROUTES.myEvents)}>{t('events.myEvents.reconnectLink')}</Link>
+        <Link to={withReturnTo(ROUTES.login, ROUTES.myEvents)}>
+          {t('events.myEvents.reconnectLink')}
+        </Link>
       </PageLayout>
     );
   }
@@ -211,7 +213,10 @@ export default function MyEventsPage() {
           />
         </>
       )}
-      <nav className={`nav-actions ${styles.ctaNav}`} aria-label={t('events.myEvents.actionsNavLabel')}>
+      <nav
+        className={`nav-actions ${styles.ctaNav}`}
+        aria-label={t('events.myEvents.actionsNavLabel')}
+      >
         <Link to={ROUTES.createEvent} className={`btn btn-primary ${styles.ctaButton}`}>
           {t('events.myEvents.createCta')}
         </Link>

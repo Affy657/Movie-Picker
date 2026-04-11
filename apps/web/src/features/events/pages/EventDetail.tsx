@@ -53,7 +53,9 @@ export default function EventDetail() {
   if (eventQuery.isPending) {
     return (
       <PageLayout>
-        <p className="placeholder" aria-busy="true">Chargement…</p>
+        <p className="placeholder" aria-busy="true">
+          Chargement…
+        </p>
       </PageLayout>
     );
   }
@@ -62,7 +64,9 @@ export default function EventDetail() {
     const errorMessage = friendlyEventError(eventQuery.error);
     return (
       <PageLayout>
-        <p className="error" role="alert">{errorMessage}</p>
+        <p className="error" role="alert">
+          {errorMessage}
+        </p>
         <Link to={ROUTES.home} className="btn">
           Retour à l&apos;accueil
         </Link>

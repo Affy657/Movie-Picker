@@ -169,8 +169,16 @@ export default function HostEventSettingsPanel({
           Cette soirée n&apos;est plus modifiable (terminée ou roue déjà lancée).
         </p>
       )}
-      {flashOk && <p className={styles.successBanner} role="status" aria-live="polite">Paramètres enregistrés.</p>}
-      {formError && <p className="error" role="alert">{formError}</p>}
+      {flashOk && (
+        <p className={styles.successBanner} role="status" aria-live="polite">
+          Paramètres enregistrés.
+        </p>
+      )}
+      {formError && (
+        <p className="error" role="alert">
+          {formError}
+        </p>
+      )}
       <form className={`form ${styles.form}`} onSubmit={onSubmit}>
         <div className={styles.field}>
           <label className="label" htmlFor="host-cfg-theme">

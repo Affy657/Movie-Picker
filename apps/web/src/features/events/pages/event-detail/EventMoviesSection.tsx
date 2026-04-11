@@ -66,10 +66,7 @@ export default function EventMoviesSection({
     [slug, participant, setActionError, refreshAll]
   );
 
-  const handleReactionError = useCallback(
-    (msg: string) => setActionError(msg),
-    [setActionError]
-  );
+  const handleReactionError = useCallback((msg: string) => setActionError(msg), [setActionError]);
 
   return (
     <section className="section section-movies" aria-label="Films proposés">
@@ -89,7 +86,9 @@ export default function EventMoviesSection({
       )}
 
       {moviesQuery.isPending && !moviesQuery.isError && (
-        <p className="placeholder" aria-busy="true">Chargement des films…</p>
+        <p className="placeholder" aria-busy="true">
+          Chargement des films…
+        </p>
       )}
 
       {moviesQuery.isSuccess && (

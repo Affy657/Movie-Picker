@@ -21,7 +21,7 @@ describe('useAsyncAction', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it("capture les erreurs ApiError et expose le message", async () => {
+  it('capture les erreurs ApiError et expose le message', async () => {
     const action = vi.fn().mockRejectedValue(new ApiError('Interdit', { code: 403 }));
     const { result } = renderHook(() => useAsyncAction(action));
 
@@ -33,7 +33,7 @@ describe('useAsyncAction', () => {
     expect(result.current.loading).toBe(false);
   });
 
-  it("expose Error.message pour une erreur Error standard", async () => {
+  it('expose Error.message pour une erreur Error standard', async () => {
     const action = vi.fn().mockRejectedValue(new Error('boom'));
     const { result } = renderHook(() => useAsyncAction(action, 'Erreur personnalisée'));
 
@@ -44,7 +44,7 @@ describe('useAsyncAction', () => {
     expect(result.current.error).toBe('boom');
   });
 
-  it("utilise le fallback pour une valeur non-Error (ex. string)", async () => {
+  it('utilise le fallback pour une valeur non-Error (ex. string)', async () => {
     const action = vi.fn().mockRejectedValue('crash brut');
     const { result } = renderHook(() => useAsyncAction(action, 'Erreur personnalisée'));
 
@@ -69,10 +69,7 @@ describe('useAsyncAction', () => {
   });
 
   it("réinitialise l'erreur avant chaque exécution", async () => {
-    const action = vi
-      .fn()
-      .mockRejectedValueOnce(new Error('first'))
-      .mockResolvedValueOnce('ok');
+    const action = vi.fn().mockRejectedValueOnce(new Error('first')).mockResolvedValueOnce('ok');
     const { result } = renderHook(() => useAsyncAction(action));
 
     await act(async () => {

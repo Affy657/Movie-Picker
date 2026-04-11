@@ -4,6 +4,7 @@ import { getParticipantId } from '@/shared/utils/movieParticipant';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
 import { othersAlreadySeenHint } from '@/shared/utils/movieReactions';
+import { isSafeTmdbWatchPageUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
 import TmdbIndicativeFooter from '@/features/movies/components/TmdbIndicativeFooter';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import MovieReactionBar from '@/features/movies/components/MovieReactionBar';
@@ -40,7 +41,7 @@ function hasTmdbEnrichment(m: MovieData): boolean {
   return (
     (m.voteAverage != null && !Number.isNaN(m.voteAverage)) ||
     (!!providers && providers.length > 0) ||
-    !!m.tmdbWatchPageUrl
+    isSafeTmdbWatchPageUrl(m.tmdbWatchPageUrl)
   );
 }
 
@@ -61,6 +62,7 @@ const MovieCard = memo(function MovieCard({
   const voteLabel = formatTmdbVote(m.voteAverage);
   const providers = m.watchProviders ?? [];
   const posterSrc = posterImageSrc(m.posterPath);
+  const safeTmdbWatchUrl = isSafeTmdbWatchPageUrl(m.tmdbWatchPageUrl) ? m.tmdbWatchPageUrl : null;
 
   return (
     <li className={styles.card}>
@@ -88,24 +90,13 @@ const MovieCard = memo(function MovieCard({
             ) : null}
           </p>
         ) : null}
-        <p className={`${styles.meta} ${styles.metaProposer}`}>
-          Proposé par {m.proposerPseudo}
-        </p>
+        <p className={`${styles.meta} ${styles.metaProposer}`}>Proposé par {m.proposerPseudo}</p>
         <WatchProviderChips
           providers={providers}
           variant="compact"
           className={styles.cardProviders}
+          watchPageUrl={safeTmdbWatchUrl}
         />
-        {m.tmdbWatchPageUrl ? (
-          <a
-            className="tmdb-watch-link"
-            href={m.tmdbWatchPageUrl}
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            Où regarder (TMDB)
-          </a>
-        ) : null}
         {seenHint ? <p className={styles.seenHint}>{seenHint}</p> : null}
         <MovieReactionBar
           slug={slug}

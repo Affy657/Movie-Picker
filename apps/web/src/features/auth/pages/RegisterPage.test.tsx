@@ -1,0 +1,71 @@
+import { describe, it, expect, beforeAll, afterEach, afterAll, beforeEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { setupServer } from 'msw/node';
+import { http, HttpResponse } from 'msw';
+import RegisterPage from '@/features/auth/pages/RegisterPage';
+import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { TEST_API_V1 } from '@/mocks/handlers';
+
+function renderRegister(initialPath = '/inscription') {
+  return render(
+    <AppTestProviders>
+      <MemoryRouter initialEntries={[initialPath]}>
+        <Routes>
+          <Route path="/inscription" element={<RegisterPage />} />
+          <Route path="/" element={<h1>Accueil après inscription</h1>} />
+        </Routes>
+      </MemoryRouter>
+    </AppTestProviders>
+  );
+}
+
+describe('RegisterPage (MSW)', () => {
+  const server = setupServer();
+  let sessionActive = false;
+
+  beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+  beforeEach(() => {
+    sessionActive = false;
+    localStorage.setItem('moviepicker-locale', 'fr');
+  });
+  afterEach(() => {
+    server.resetHandlers();
+    sessionActive = false;
+  });
+  afterAll(() => server.close());
+
+  it('inscription réussie puis navigation vers returnTo', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        sessionActive
+          ? HttpResponse.json({
+              userId: 'u-reg',
+              displayName: 'Sam',
+              emailMasked: 's***@test.local',
+              uiTheme: 'system',
+            })
+          : HttpResponse.json({ error: '401' }, { status: 401 })
+      ),
+      http.post(`${TEST_API_V1}/auth/register`, async () => {
+        sessionActive = true;
+        return HttpResponse.json({}, { status: 201 });
+      })
+    );
+
+    renderRegister('/inscription?returnTo=%2F');
+
+    await user.type(screen.getByLabelText(/pseudo affiché/i), 'Sam');
+    await user.type(screen.getByLabelText(/^e-mail$/i), 'sam@test.local');
+    await user.type(screen.getByLabelText(/^mot de passe$/i), 'abcd1234');
+    await user.click(screen.getByRole('button', { name: /créer mon compte/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: 'Accueil après inscription' })
+      ).toBeInTheDocument();
+    });
+  });
+});

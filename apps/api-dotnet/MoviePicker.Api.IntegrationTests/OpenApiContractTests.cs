@@ -48,5 +48,7 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
         var schemas = doc.RootElement.GetProperty("components").GetProperty("schemas");
         Assert.True(schemas.TryGetProperty("MovieSearchListResponse", out _));
         Assert.True(schemas.TryGetProperty("MovieSearchItemResponse", out _));
+        Assert.True(schemas.TryGetProperty("WatchProviderOfferResponse", out _));
+        Assert.True(schemas.TryGetProperty("EventConfigResponse", out _));
     }
 }

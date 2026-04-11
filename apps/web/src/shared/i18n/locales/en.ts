@@ -184,6 +184,12 @@ export const en: Locale = {
       regionHint: 'Indicative availability \u00b7 region {{region}}',
       posterPlaceholder: 'Poster',
       tmdbVoteHint: 'TMDB average rating (indicative)',
+      liveSearchMinCharsHint: 'Type at least {{min}} characters to search.',
+      a11ySearching: 'Searching\u2026',
+      a11yResultsCount: '{{count}} result(s)',
+      a11yNoResults: 'No results for this search.',
+      noResultsForQuery: 'No movies match “{{query}}”.',
+      resultsListAria: 'Search results',
     },
     list: {
       emptyPlaceholder: 'No movies suggested yet.',
@@ -195,8 +201,6 @@ export const en: Locale = {
       removeError: 'Remove failed',
       myBadge: 'Mine',
       tmdbVoteTitle: 'TMDB average rating (indicative)',
-      watchLinkLabel: 'Where to watch (TMDB)',
-      watchLinkSearch: 'See options on TMDB',
       sectionLabel: 'Suggested movies',
       loadingPlaceholder: 'Loading movies\u2026',
     },
@@ -210,6 +214,15 @@ export const en: Locale = {
     tmdb: {
       disclaimer:
         'Ratings and streaming availability are indicative, sourced from The Movie Database (TMDB). Available services may vary.',
+    },
+    watchProviders: {
+      listAria: 'Indicative streaming availability',
+      typeFlatrate: 'Subscription',
+      typeRent: 'Rent',
+      typeBuy: 'Buy',
+      chipAria: '{{provider}} ({{type}})',
+      chipLinkAria:
+        '{{provider}} — {{type}}. Open TMDB’s “where to watch” page for this movie (new tab).',
     },
   },
 

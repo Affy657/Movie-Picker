@@ -44,18 +44,28 @@ export default function AccountPage() {
   }, [user]);
 
   const logoutAction = useCallback(() => logout(), [logout]);
-  const { run: runLogout, loading: loggingOut, error: logoutError } = useAsyncAction(logoutAction, t('auth.logout.fallbackError'));
+  const {
+    run: runLogout,
+    loading: loggingOut,
+    error: logoutError,
+  } = useAsyncAction(logoutAction, t('auth.logout.fallbackError'));
 
   const saveAction = useCallback(async () => {
     await patchProfile({ displayName: displayName.trim() });
     setSavedAt(Date.now());
   }, [patchProfile, displayName]);
-  const { run: runSave, loading: saving, error } = useAsyncAction(saveAction, t('auth.account.fallbackError'));
+  const {
+    run: runSave,
+    loading: saving,
+    error,
+  } = useAsyncAction(saveAction, t('auth.account.fallbackError'));
 
   if (isLoading) {
     return (
       <PageLayout>
-        <p className="placeholder" aria-busy="true">{t('auth.account.loadingPlaceholder')}</p>
+        <p className="placeholder" aria-busy="true">
+          {t('auth.account.loadingPlaceholder')}
+        </p>
       </PageLayout>
     );
   }
@@ -135,7 +145,9 @@ export default function AccountPage() {
       <section className="section section--panel" aria-labelledby="session-heading">
         <h2 id="session-heading">{t('auth.account.sessionTitle')}</h2>
         {logoutError && (
-          <p className="error" role="alert">{logoutError}</p>
+          <p className="error" role="alert">
+            {logoutError}
+          </p>
         )}
         <div className="nav-actions">
           <button

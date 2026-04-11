@@ -58,6 +58,8 @@ pnpm run test:e2e:ci  # E2E recommandé : build web + Playwright (API .NET stub 
 pnpm run lighthouse   # Lighthouse sur le build web (§ 35) — Node ≥ 22 + Chrome ; rapports dans artifacts/lighthouse/
 ```
 
+**Override pnpm (`basic-ftp`)** : à la racine, `package.json` force une version patchée de **basic-ftp** (dépendance transitive de **lighthouse**) pour que `pnpm audit --audit-level=high` (CI / `verify:local`) reste vert en attendant une chaîne à jour en amont. Réévaluer lors d’une montée majeure de Lighthouse.
+
 - **API** : port 4000 — http://localhost:4000/ , /health , /swagger
 - **Web** : port 5173 (Vite), **TanStack React Query** (event / films), thème clair-sombre (`ThemeContext`). Préfixe API `/api/v1` (voir client front). Hôte : `?host=<token>` ou cookie.
 

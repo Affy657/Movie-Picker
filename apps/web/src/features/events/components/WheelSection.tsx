@@ -84,7 +84,11 @@ export default function WheelSection({
       )}
 
       {winner && (
-        <div className={clsx(styles.result, spinning && styles.spinning)} role="status" aria-live="polite">
+        <div
+          className={clsx(styles.result, spinning && styles.spinning)}
+          role="status"
+          aria-live="polite"
+        >
           <p className={styles.winnerLabel}>Film gagnant</p>
           <p className={styles.winnerTitle}>{winner.title}</p>
           <p className={styles.winnerMeta}>{winner.year}</p>
