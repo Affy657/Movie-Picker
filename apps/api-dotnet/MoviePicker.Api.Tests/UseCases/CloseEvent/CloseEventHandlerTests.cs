@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.CloseEvent;
@@ -32,7 +33,7 @@ public sealed class CloseEventHandlerTests
         _hostTokenAccessor = new Mock<IHostTokenAccessor>();
         _currentUser = new Mock<ICurrentUserAccessor>();
         _currentUser.Setup(c => c.GetUserId()).Returns((string?)null);
-        _sut = new CloseEventHandler(_eventRepo.Object, _hostTokenAccessor.Object, _currentUser.Object);
+        _sut = new CloseEventHandler(_eventRepo.Object, _hostTokenAccessor.Object, _currentUser.Object, NullLogger<CloseEventHandler>.Instance);
     }
 
     [Fact]

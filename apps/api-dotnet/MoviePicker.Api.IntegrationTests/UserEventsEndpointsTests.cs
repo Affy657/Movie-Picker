@@ -110,18 +110,17 @@ public sealed class UserEventsEndpointsTests : IClassFixture<MoviePickerApplicat
             $"/api/v1/events/{otherEvt!.Slug}/join",
             new { pseudo = "Premier" });
         Assert.Equal(HttpStatusCode.Created, first.StatusCode);
-        var p1 = await first.Content.ReadFromJsonAsync<ParticipantResponse>(JsonOptions);
+        var p1 = await first.Content.ReadFromJsonAsync<JoinEventResult>(JsonOptions);
         Assert.NotNull(p1);
+        Assert.True(p1!.IsNew);
 
         var second = await client.PostAsJsonAsync(
             $"/api/v1/events/{otherEvt.Slug}/join",
             new { pseudo = "AutrePseudo" });
         Assert.Equal(HttpStatusCode.OK, second.StatusCode);
-        using var doc = JsonDocument.Parse(await second.Content.ReadAsStringAsync());
-        var participant = doc.RootElement.GetProperty("participant");
-        var pid = participant.TryGetProperty("_id", out var idEl)
-            ? idEl.GetString()
-            : participant.GetProperty("id").GetString();
-        Assert.Equal(p1!.Id, pid);
+        var p2 = await second.Content.ReadFromJsonAsync<JoinEventResult>(JsonOptions);
+        Assert.NotNull(p2);
+        Assert.False(p2!.IsNew);
+        Assert.Equal(p1.Participant.Id, p2.Participant.Id);
     }
 }

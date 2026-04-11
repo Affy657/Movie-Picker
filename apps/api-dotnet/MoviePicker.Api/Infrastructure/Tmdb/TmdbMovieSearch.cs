@@ -116,7 +116,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         await Task.WhenAll(movieTask, watchTask).ConfigureAwait(false);
 
         double? voteAverage = null;
-        var movieRes = await movieTask.ConfigureAwait(false);
+        using var movieRes = await movieTask.ConfigureAwait(false);
         if (movieRes.IsSuccessStatusCode)
         {
             await using var movieStream = await movieRes.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
@@ -127,7 +127,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
 
         string? watchPageUrl = null;
         var offers = new List<TmdbWatchProviderOffer>();
-        var watchRes = await watchTask.ConfigureAwait(false);
+        using var watchRes = await watchTask.ConfigureAwait(false);
         if (watchRes.IsSuccessStatusCode)
         {
             await using var watchStream = await watchRes.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);

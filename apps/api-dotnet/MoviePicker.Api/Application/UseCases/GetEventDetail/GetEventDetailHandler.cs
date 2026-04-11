@@ -34,13 +34,12 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
 
     public async Task<EventDetailResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
     {
-        var evt = await _eventRepository.GetByIdOrSlugAsync(idOrSlug, ct)
-            ?? throw new NotFoundException("Soirée introuvable");
+        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
         var token = _hostTokenAccessor.GetHostToken();
         var currentUserId = _currentUserAccessor.GetUserId();
         var isHost = EventHost.IsHost(evt, token, currentUserId);
-        var terminé = evt.IsFinished(DateTimeOffset.UtcNow);
+        var isFinished = evt.IsFinished(DateTimeOffset.UtcNow);
 
         WinnerMovieResponse? winner = null;
         if (!string.IsNullOrEmpty(evt.WinnerMovieId))
@@ -52,18 +51,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
                     TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(wm.PosterPath, out var pNorm))
                     await _posterImageStore.RegisterTmdbSourceAsync(pNorm, ct);
                 var posterOut = _posterImageStore.ToPublicPosterPath(wm.PosterPath);
-                winner = new WinnerMovieResponse
-                {
-                    Id = wm.Id,
-                    EventId = wm.EventId,
-                    ParticipantId = wm.ParticipantId,
-                    TmdbId = wm.TmdbId,
-                    Title = wm.Title,
-                    Year = wm.Year,
-                    PosterPath = posterOut,
-                    CreatedAt = wm.CreatedAt,
-                    UpdatedAt = wm.UpdatedAt
-                };
+                winner = WinnerMovieResponse.FromDomain(wm, posterOut);
             }
         }
 
@@ -72,7 +60,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         {
             var p = await _participantRepository.FindByEventAndUserIdAsync(evt.Id, currentUserId, ct);
             if (p is not null)
-                myParticipant = MapMyParticipant(p);
+                myParticipant = ParticipantResponse.FromDomain(p);
         }
 
         return new EventDetailResponse
@@ -88,18 +76,10 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             CreatedAt = evt.CreatedAt,
             UpdatedAt = evt.UpdatedAt,
             IsHost = isHost,
-            Terminé = terminé,
+            IsFinished = isFinished,
             WinnerMovie = winner,
             MyParticipant = myParticipant
         };
     }
 
-    private static ParticipantResponse MapMyParticipant(Participant p) => new()
-    {
-        Id = p.Id,
-        EventId = p.EventId,
-        Pseudo = p.Pseudo,
-        CreatedAt = p.CreatedAt,
-        UpdatedAt = p.UpdatedAt
-    };
 }

@@ -1,9 +1,8 @@
 /**
- * Mapping layer between raw MongoDB-style API responses (_id, terminé)
- * and clean domain types (id, isFinished).
+ * Mapping layer between raw MongoDB-style API responses (_id)
+ * and clean domain types (id).
  *
- * This isolates the front from the persistence format (Option B of the refactoring plan § 12.9).
- * When the API is updated to return clean field names, remove this module.
+ * This isolates the front from the persistence format.
  */
 
 import type { EventData } from '@/shared/types/event';
@@ -18,7 +17,7 @@ type RawParticipantData = Omit<ParticipantData, 'id'> & { _id: string };
 
 type RawEventData = Omit<EventData, 'id' | 'isFinished' | 'myParticipant' | 'winnerMovie'> & {
   _id: string;
-  terminé?: boolean;
+  isFinished?: boolean;
   myParticipant?: { _id: string; pseudo: string } | null;
   winnerMovie?: RawMovieData | null;
 };
@@ -38,11 +37,11 @@ export function mapParticipantData(raw: RawParticipantData): ParticipantData {
 }
 
 export function mapEventData(raw: RawEventData): EventData {
-  const { _id, terminé, myParticipant, winnerMovie, ...rest } = raw;
+  const { _id, isFinished, myParticipant, winnerMovie, ...rest } = raw;
   return {
     ...rest,
     id: _id,
-    isFinished: terminé ?? false,
+    isFinished: isFinished ?? false,
     myParticipant: myParticipant
       ? { id: myParticipant._id, pseudo: myParticipant.pseudo }
       : myParticipant,

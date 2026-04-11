@@ -8,7 +8,7 @@ public enum UiThemePreference
     Dark = 2
 }
 
-public sealed class User
+public sealed record User
 {
     public string Id { get; init; } = string.Empty;
     public string Email { get; init; } = string.Empty;

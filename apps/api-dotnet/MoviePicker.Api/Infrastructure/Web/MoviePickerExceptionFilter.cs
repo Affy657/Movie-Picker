@@ -1,6 +1,7 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Infrastructure.Web;
@@ -20,18 +21,22 @@ public sealed class MoviePickerExceptionFilter : IExceptionFilter
 
         if (context.Exception is MoviePickerException ex)
         {
-            context.Result = new JsonResult(ApiErrorResponse.FromHttpContext(http, ex.StatusCode, ex.Message))
+            var statusCode = ToHttpStatus(ex.Kind);
+            context.Result = new JsonResult(ApiErrorResponse.FromHttpContext(http, statusCode, ex.Message))
             {
-                StatusCode = ex.StatusCode
+                StatusCode = statusCode
             };
             context.ExceptionHandled = true;
             return;
         }
 
-        if (context.Exception is ArgumentException or InvalidOperationException)
+        if (context.Exception is ArgumentException)
         {
+            var argMessage = _env.IsDevelopment()
+                ? context.Exception.Message
+                : "Paramètre invalide.";
             context.Result = new JsonResult(
-                ApiErrorResponse.FromHttpContext(http, (int)HttpStatusCode.BadRequest, context.Exception.Message))
+                ApiErrorResponse.FromHttpContext(http, (int)HttpStatusCode.BadRequest, argMessage))
             {
                 StatusCode = (int)HttpStatusCode.BadRequest
             };
@@ -47,4 +52,15 @@ public sealed class MoviePickerExceptionFilter : IExceptionFilter
         };
         context.ExceptionHandled = true;
     }
+
+    private static int ToHttpStatus(ErrorKind kind) => kind switch
+    {
+        ErrorKind.InvalidInput => StatusCodes.Status400BadRequest,
+        ErrorKind.Unauthorized => StatusCodes.Status401Unauthorized,
+        ErrorKind.Forbidden => StatusCodes.Status403Forbidden,
+        ErrorKind.NotFound => StatusCodes.Status404NotFound,
+        ErrorKind.Conflict => StatusCodes.Status409Conflict,
+        ErrorKind.ServiceUnavailable => StatusCodes.Status503ServiceUnavailable,
+        _ => StatusCodes.Status500InternalServerError
+    };
 }

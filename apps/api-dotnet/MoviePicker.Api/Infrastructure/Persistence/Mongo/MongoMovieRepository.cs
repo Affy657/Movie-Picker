@@ -61,9 +61,7 @@ public sealed class MongoMovieRepository : IMovieRepository
     {
         var doc = MovieMapper.ToDocument(movie);
         if (string.IsNullOrEmpty(doc.Id))
-            doc.Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString();
-        doc.CreatedAt = DateTime.UtcNow;
-        doc.UpdatedAt = doc.CreatedAt;
+            doc.Id = ObjectId.GenerateNewId().ToString();
         await _collection.InsertOneAsync(doc, cancellationToken: ct);
         return MovieMapper.ToDomain(doc);
     }

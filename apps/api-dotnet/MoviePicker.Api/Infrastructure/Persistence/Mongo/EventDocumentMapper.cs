@@ -1,4 +1,3 @@
-using MongoDB.Bson;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
@@ -10,38 +9,16 @@ public static class EventDocumentMapper
         EventConfig? config = null;
         if (doc.Config is not null)
         {
-            DateTimeOffset? endDate = null;
-            if (doc.Config.TryGetElement("endDate", out var endEl) && endEl.Value.IsValidDateTime)
-                endDate = endEl.Value.ToUniversalTime();
-
-            IReadOnlyList<string>? allowedIds = null;
-            if (doc.Config.TryGetElement("allowedReactionIds", out var reactEl) && reactEl.Value.IsBsonArray)
-            {
-                var arr = reactEl.Value.AsBsonArray;
-                allowedIds = arr
-                    .Where(x => x.IsString)
-                    .Select(x => x.AsString)
-                    .Where(s => s.Length > 0)
-                    .ToList();
-            }
-
-            var wheelMode = ParseWheelMode(
-                doc.Config.TryGetElement("wheelMode", out var wEl) ? wEl.Value.ToString() : null);
-
-            var richShare = doc.Config.TryGetElement("richSharePreview", out var rspEl)
-                && rspEl.Value.IsBoolean
-                && rspEl.Value.AsBoolean;
-
             config = new EventConfig
             {
-                Theme = doc.Config.TryGetElement("theme", out var t) ? t.Value.ToString() : null,
-                EndDate = endDate,
-                MaxProposalsPerParticipant = doc.Config.TryGetElement("maxProposalsPerParticipant", out var mEl)
-                    ? ReadOptionalInt32(mEl.Value)
+                Theme = doc.Config.Theme,
+                EndDate = doc.Config.EndDate.HasValue
+                    ? new DateTimeOffset(doc.Config.EndDate.Value, TimeSpan.Zero)
                     : null,
-                WheelMode = wheelMode,
-                AllowedReactionIds = allowedIds,
-                RichSharePreview = richShare
+                MaxProposalsPerParticipant = doc.Config.MaxProposalsPerParticipant,
+                WheelMode = ParseWheelMode(doc.Config.WheelMode),
+                AllowedReactionIds = doc.Config.AllowedReactionIds?.Where(s => s.Length > 0).ToList(),
+                RichSharePreview = doc.Config.RichSharePreview
             };
         }
 
@@ -64,21 +41,18 @@ public static class EventDocumentMapper
 
     public static EventDocument ToDocument(Event evt)
     {
-        BsonDocument? config = null;
+        EventConfigDocument? config = null;
         if (evt.Config is not null)
         {
-            config = new BsonDocument();
-            if (evt.Config.Theme is { } theme)
-                config["theme"] = theme;
-            if (evt.Config.EndDate is { } endDate)
-                config["endDate"] = endDate.UtcDateTime;
-            if (evt.Config.MaxProposalsPerParticipant is { } max)
-                config["maxProposalsPerParticipant"] = max;
-            config["wheelMode"] = ToWheelModeString(evt.Config.WheelMode);
-            if (evt.Config.AllowedReactionIds is not null)
-                config["allowedReactionIds"] = new BsonArray(evt.Config.AllowedReactionIds);
-            if (evt.Config.RichSharePreview)
-                config["richSharePreview"] = true;
+            config = new EventConfigDocument
+            {
+                Theme = evt.Config.Theme,
+                EndDate = evt.Config.EndDate?.UtcDateTime,
+                MaxProposalsPerParticipant = evt.Config.MaxProposalsPerParticipant,
+                WheelMode = ToWheelModeString(evt.Config.WheelMode),
+                AllowedReactionIds = evt.Config.AllowedReactionIds?.ToList(),
+                RichSharePreview = evt.Config.RichSharePreview
+            };
         }
 
         return new EventDocument
@@ -96,22 +70,6 @@ public static class EventDocumentMapper
             CreatedAt = evt.CreatedAt.UtcDateTime,
             UpdatedAt = evt.UpdatedAt.UtcDateTime
         };
-    }
-
-    /// <summary>Lit un entier positif depuis BSON (Int32 ou Int64), sinon null.</summary>
-    private static int? ReadOptionalInt32(BsonValue value)
-    {
-        if (value.IsInt32)
-            return value.AsInt32;
-        if (value.IsInt64)
-        {
-            var l = value.AsInt64;
-            if (l < int.MinValue || l > int.MaxValue)
-                return null;
-            return (int)l;
-        }
-
-        return null;
     }
 
     private static WheelMode ParseWheelMode(string? raw) =>

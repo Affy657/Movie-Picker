@@ -19,11 +19,16 @@ public sealed class MongoEventRepository : IEventRepository
         if (string.IsNullOrWhiteSpace(idOrSlug))
             return null;
 
-        EventDocument? doc = null;
+        var filters = new List<FilterDefinition<EventDocument>>
+        {
+            Builders<EventDocument>.Filter.Eq(x => x.Slug, idOrSlug)
+        };
+
         if (ObjectId.TryParse(idOrSlug, out _))
-            doc = await _collection.Find(x => x.Id == idOrSlug).FirstOrDefaultAsync(ct);
-        if (doc is null)
-            doc = await _collection.Find(x => x.Slug == idOrSlug).FirstOrDefaultAsync(ct);
+            filters.Add(Builders<EventDocument>.Filter.Eq(x => x.Id, idOrSlug));
+
+        var filter = Builders<EventDocument>.Filter.Or(filters);
+        var doc = await _collection.Find(filter).FirstOrDefaultAsync(ct);
 
         return doc is null ? null : EventDocumentMapper.ToDomain(doc);
     }
@@ -34,9 +39,6 @@ public sealed class MongoEventRepository : IEventRepository
         if (string.IsNullOrEmpty(doc.Id))
             doc.Id = ObjectId.GenerateNewId().ToString();
 
-        doc.CreatedAt = DateTime.UtcNow;
-        doc.UpdatedAt = doc.CreatedAt;
-
         await _collection.InsertOneAsync(doc, cancellationToken: ct);
         return EventDocumentMapper.ToDomain(doc);
     }
@@ -44,7 +46,6 @@ public sealed class MongoEventRepository : IEventRepository
     public async Task<Event> UpdateAsync(Event evt, CancellationToken ct = default)
     {
         var doc = EventDocumentMapper.ToDocument(evt);
-        doc.UpdatedAt = DateTime.UtcNow;
         await _collection.ReplaceOneAsync(x => x.Id == evt.Id, doc, cancellationToken: ct);
         return EventDocumentMapper.ToDomain(doc);
     }

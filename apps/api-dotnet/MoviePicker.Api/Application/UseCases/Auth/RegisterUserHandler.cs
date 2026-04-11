@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
@@ -10,11 +11,13 @@ public sealed class RegisterUserHandler : IRegisterUserHandler
 {
     private readonly IUserRepository _users;
     private readonly IPasswordHasher<User> _passwordHasher;
+    private readonly ILogger<RegisterUserHandler> _logger;
 
-    public RegisterUserHandler(IUserRepository users, IPasswordHasher<User> passwordHasher)
+    public RegisterUserHandler(IUserRepository users, IPasswordHasher<User> passwordHasher, ILogger<RegisterUserHandler> logger)
     {
         _users = users;
         _passwordHasher = passwordHasher;
+        _logger = logger;
     }
 
     public async Task<RegisterResponse> HandleAsync(RegisterRequest request, CancellationToken ct = default)
@@ -34,27 +37,15 @@ public sealed class RegisterUserHandler : IRegisterUserHandler
         var now = DateTimeOffset.UtcNow;
         var draft = new User
         {
-            Id = string.Empty,
             Email = email,
-            PasswordHash = string.Empty,
             DisplayName = request.DisplayName.Trim(),
-            UiTheme = UiThemePreference.System,
             CreatedAt = now,
             UpdatedAt = now
         };
-        var hash = _passwordHasher.HashPassword(draft, request.Password);
-        var user = new User
-        {
-            Id = string.Empty,
-            Email = email,
-            PasswordHash = hash,
-            DisplayName = draft.DisplayName,
-            UiTheme = draft.UiTheme,
-            CreatedAt = now,
-            UpdatedAt = now
-        };
+        var user = draft with { PasswordHash = _passwordHasher.HashPassword(draft, request.Password) };
 
         var created = await _users.AddAsync(user, ct);
+        _logger.LogInformation("User registered: {UserId}", created.Id);
         return new RegisterResponse { UserId = created.Id, DisplayName = created.DisplayName };
     }
 }

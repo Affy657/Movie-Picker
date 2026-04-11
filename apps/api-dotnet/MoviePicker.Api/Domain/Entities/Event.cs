@@ -1,11 +1,11 @@
 namespace MoviePicker.Api.Domain.Entities;
 
-public sealed class Event
+public sealed record Event
 {
     public string Id { get; init; } = string.Empty;
     public string Title { get; init; } = string.Empty;
-    public string Date { get; init; } = string.Empty;   // YYYY-MM-DD
-    public string Time { get; init; } = string.Empty;  // HH:mm
+    public string Date { get; init; } = string.Empty;
+    public string Time { get; init; } = string.Empty;
     public string HostToken { get; init; } = string.Empty;
     public string Slug { get; init; } = string.Empty;
 
@@ -36,7 +36,7 @@ public sealed class Event
     }
 }
 
-public sealed class EventConfig
+public sealed record EventConfig
 {
     public string? Theme { get; init; }
     public DateTimeOffset? EndDate { get; init; }

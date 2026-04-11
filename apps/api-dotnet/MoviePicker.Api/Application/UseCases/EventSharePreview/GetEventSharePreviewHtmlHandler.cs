@@ -5,7 +5,6 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.Posters;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
-using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.EventSharePreview;
 
@@ -30,8 +29,7 @@ public sealed class GetEventSharePreviewHtmlHandler : IGetEventSharePreviewHtmlH
 
     public async Task<string> BuildHtmlAsync(string idOrSlug, string apiPublicBaseUrl, CancellationToken ct = default)
     {
-        var evt = await _events.GetByIdOrSlugAsync(idOrSlug, ct)
-            ?? throw new NotFoundException("Soirée introuvable");
+        var evt = await _events.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
         var webBase = string.IsNullOrWhiteSpace(_options.PublicWebBaseUrl)
             ? "https://web.movie-picker.fr"

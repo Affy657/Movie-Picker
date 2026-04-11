@@ -16,7 +16,7 @@ const server = setupServer(
       time: '20:00',
       slug: params.slug,
       isHost: false,
-      terminé: false,
+      isFinished: false,
       winnerMovie: null,
       config: {
         theme: null,

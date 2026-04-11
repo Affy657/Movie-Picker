@@ -2,10 +2,10 @@ namespace MoviePicker.Api.Domain.Exceptions;
 
 public abstract class MoviePickerException : Exception
 {
-    public int StatusCode { get; }
+    public ErrorKind Kind { get; }
 
-    protected MoviePickerException(string message, int statusCode) : base(message)
+    protected MoviePickerException(string message, ErrorKind kind) : base(message)
     {
-        StatusCode = statusCode;
+        Kind = kind;
     }
 }

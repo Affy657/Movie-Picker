@@ -28,10 +28,9 @@ export default function JoinForm({ slug, onJoined }: JoinFormProps) {
       throw new Error('Indique un pseudo pour rejoindre.');
     }
     const res = await joinEvent(slug, pseudoToSend);
-    const participant = 'participant' in res ? res.participant : res;
-    const id = participant.id;
-    setStoredParticipant(slug, id, participant.pseudo);
-    onJoined(id, participant.pseudo);
+    const { id } = res.participant;
+    setStoredParticipant(slug, id, res.participant.pseudo);
+    onJoined(id, res.participant.pseudo);
   }, [user, pseudo, isGuest, slug, onJoined]);
 
   const { run: submit, loading, error } = useAsyncAction(joinAction, 'Impossible de rejoindre');

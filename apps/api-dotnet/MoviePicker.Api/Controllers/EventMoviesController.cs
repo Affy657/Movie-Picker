@@ -51,13 +51,10 @@ public sealed class EventMoviesController : ControllerBase
     public async Task<IActionResult> Delete(
         string idOrSlug,
         string movieId,
-        [FromBody] DeleteMovieRequest? body,
+        [FromBody] DeleteMovieRequest body,
         [FromServices] IDeleteMovieHandler handler,
         CancellationToken ct)
     {
-        if (body is null || string.IsNullOrEmpty(body.ParticipantId))
-            return BadRequest(new { error = "participantId requis" });
-
         await handler.HandleAsync(idOrSlug, movieId, body.ParticipantId, ct);
         return NoContent();
     }
@@ -120,13 +117,10 @@ public sealed class EventMoviesController : ControllerBase
         string idOrSlug,
         string movieId,
         string reactionId,
-        [FromBody] RemoveReactionRequest? request,
+        [FromBody] RemoveReactionRequest request,
         [FromServices] IRemoveReactionHandler handler,
         CancellationToken ct)
     {
-        if (request is null || string.IsNullOrEmpty(request.ParticipantId))
-            return BadRequest(new { error = "participantId requis" });
-
         await handler.HandleAsync(idOrSlug, movieId, reactionId, request.ParticipantId, ct);
         return NoContent();
     }

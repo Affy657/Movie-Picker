@@ -30,7 +30,8 @@ public sealed class EventDocument
     public string? CreatorUserId { get; set; }
 
     [BsonElement("config")]
-    public BsonDocument? Config { get; set; }
+    [BsonIgnoreIfNull]
+    public EventConfigDocument? Config { get; set; }
 
     [BsonElement("closedAt")]
     public DateTime? ClosedAt { get; set; }
@@ -44,4 +45,31 @@ public sealed class EventDocument
 
     [BsonElement("updatedAt")]
     public DateTime UpdatedAt { get; set; }
+}
+
+[BsonIgnoreExtraElements]
+public sealed class EventConfigDocument
+{
+    [BsonElement("theme")]
+    [BsonIgnoreIfNull]
+    public string? Theme { get; set; }
+
+    [BsonElement("endDate")]
+    [BsonIgnoreIfNull]
+    public DateTime? EndDate { get; set; }
+
+    [BsonElement("maxProposalsPerParticipant")]
+    [BsonIgnoreIfNull]
+    public int? MaxProposalsPerParticipant { get; set; }
+
+    [BsonElement("wheelMode")]
+    public string WheelMode { get; set; } = "strictRandom";
+
+    [BsonElement("allowedReactionIds")]
+    [BsonIgnoreIfNull]
+    public List<string>? AllowedReactionIds { get; set; }
+
+    [BsonElement("richSharePreview")]
+    [BsonIgnoreIfDefault]
+    public bool RichSharePreview { get; set; }
 }

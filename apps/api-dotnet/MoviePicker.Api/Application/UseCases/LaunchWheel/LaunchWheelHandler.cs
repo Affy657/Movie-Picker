@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.Posters;
@@ -15,6 +16,7 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IPosterImageStore _posterImageStore;
+    private readonly ILogger<LaunchWheelHandler> _logger;
 
     public LaunchWheelHandler(
         IEventRepository eventRepository,
@@ -22,7 +24,8 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         IVoteRepository voteRepository,
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
-        IPosterImageStore posterImageStore)
+        IPosterImageStore posterImageStore,
+        ILogger<LaunchWheelHandler> logger)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
@@ -30,12 +33,12 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _posterImageStore = posterImageStore;
+        _logger = logger;
     }
 
     public async Task<WheelResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
     {
-        var evt = await _eventRepository.GetByIdOrSlugAsync(idOrSlug, ct)
-            ?? throw new NotFoundException("Soirée introuvable");
+        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
         var token = _hostTokenAccessor.GetHostToken();
         var userId = _currentUserAccessor.GetUserId();
@@ -61,23 +64,10 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
             Random.Shared);
 
         var now = DateTimeOffset.UtcNow;
-        var updated = new Event
-        {
-            Id = evt.Id,
-            Title = evt.Title,
-            Date = evt.Date,
-            Time = evt.Time,
-            HostToken = evt.HostToken,
-            Slug = evt.Slug,
-            CreatorUserId = evt.CreatorUserId,
-            Config = evt.Config,
-            ClosedAt = evt.ClosedAt,
-            WinnerMovieId = winner.Id,
-            CreatedAt = evt.CreatedAt,
-            UpdatedAt = now
-        };
+        var updated = evt with { WinnerMovieId = winner.Id, UpdatedAt = now };
 
         await _eventRepository.UpdateAsync(updated, ct);
+        _logger.LogInformation("Wheel launched for event {EventId}, winner: {MovieId} (mode: {WheelMode})", evt.Id, winner.Id, mode);
 
         var message = movies.Count == 1
             ? "Un seul film proposé : gagnant direct."
@@ -89,18 +79,7 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         var winnerPoster = _posterImageStore.ToPublicPosterPath(winner.PosterPath);
         return new WheelResponse
         {
-            Winner = new WinnerMovieResponse
-            {
-                Id = winner.Id,
-                EventId = winner.EventId,
-                ParticipantId = winner.ParticipantId,
-                TmdbId = winner.TmdbId,
-                Title = winner.Title,
-                Year = winner.Year,
-                PosterPath = winnerPoster,
-                CreatedAt = winner.CreatedAt,
-                UpdatedAt = winner.UpdatedAt
-            },
+            Winner = WinnerMovieResponse.FromDomain(winner, winnerPoster),
             Message = message
         };
     }

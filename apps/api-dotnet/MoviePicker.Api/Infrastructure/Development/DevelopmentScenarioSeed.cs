@@ -301,25 +301,14 @@ internal static class DevelopmentScenarioSeed
         EventConfig? config = null,
         DateTimeOffset? closedAt = null,
         string? winnerMovieId = null,
-        DateTimeOffset? updatedAt = null)
-    {
-        var now = DateTimeOffset.UtcNow;
-        return new Event
+        DateTimeOffset? updatedAt = null) =>
+        e with
         {
-            Id = e.Id,
-            Title = e.Title,
-            Date = e.Date,
-            Time = e.Time,
-            HostToken = e.HostToken,
-            Slug = e.Slug,
-            CreatorUserId = e.CreatorUserId,
             Config = config ?? e.Config,
             ClosedAt = closedAt ?? e.ClosedAt,
             WinnerMovieId = winnerMovieId ?? e.WinnerMovieId,
-            CreatedAt = e.CreatedAt,
-            UpdatedAt = updatedAt ?? now
+            UpdatedAt = updatedAt ?? DateTimeOffset.UtcNow
         };
-    }
 
     private static string FormatDate(DateTimeOffset utc) =>
         utc.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);

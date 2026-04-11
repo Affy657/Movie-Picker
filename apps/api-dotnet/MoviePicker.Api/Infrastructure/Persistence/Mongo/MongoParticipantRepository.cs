@@ -1,4 +1,3 @@
-using System.Linq;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
@@ -20,7 +19,7 @@ public sealed class MongoParticipantRepository : IParticipantRepository
         var doc = await _collection
             .Find(x => x.EventId == eventId && x.Pseudo == pseudo)
             .FirstOrDefaultAsync(ct);
-        return doc is null ? null : ToDomain(doc);
+        return doc is null ? null : ParticipantDocumentMapper.ToDomain(doc);
     }
 
     public async Task<Participant?> FindByEventAndUserIdAsync(string eventId, string userId, CancellationToken ct = default)
@@ -30,13 +29,13 @@ public sealed class MongoParticipantRepository : IParticipantRepository
         var doc = await _collection
             .Find(x => x.EventId == eventId && x.UserId == userId)
             .FirstOrDefaultAsync(ct);
-        return doc is null ? null : ToDomain(doc);
+        return doc is null ? null : ParticipantDocumentMapper.ToDomain(doc);
     }
 
     public async Task<Participant?> FindByIdAndEventIdAsync(string participantId, string eventId, CancellationToken ct = default)
     {
         var doc = await _collection.Find(x => x.Id == participantId && x.EventId == eventId).FirstOrDefaultAsync(ct);
-        return doc is null ? null : ToDomain(doc);
+        return doc is null ? null : ParticipantDocumentMapper.ToDomain(doc);
     }
 
     public async Task<IReadOnlyDictionary<string, string>> GetPseudosByIdsAsync(
@@ -55,17 +54,30 @@ public sealed class MongoParticipantRepository : IParticipantRepository
 
     public async Task<Participant> AddAsync(Participant participant, CancellationToken ct = default)
     {
-        var doc = new ParticipantDocument
+        var doc = ParticipantDocumentMapper.ToDocument(participant);
+        if (string.IsNullOrEmpty(doc.Id))
+            doc.Id = ObjectId.GenerateNewId().ToString();
+
+        try
         {
-            Id = ObjectId.GenerateNewId().ToString(),
-            EventId = participant.EventId,
-            Pseudo = participant.Pseudo,
-            UserId = string.IsNullOrWhiteSpace(participant.UserId) ? null : participant.UserId,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-        await _collection.InsertOneAsync(doc, cancellationToken: ct);
-        return ToDomain(doc);
+            await _collection.InsertOneAsync(doc, cancellationToken: ct);
+            return ParticipantDocumentMapper.ToDomain(doc);
+        }
+        catch (MongoWriteException ex) when (ex.WriteError?.Category == ServerErrorCategory.DuplicateKey)
+        {
+            var byPseudo = await FindByEventAndPseudoAsync(participant.EventId, participant.Pseudo, ct);
+            if (byPseudo is not null)
+                return byPseudo;
+
+            if (!string.IsNullOrWhiteSpace(participant.UserId))
+            {
+                var byUser = await FindByEventAndUserIdAsync(participant.EventId, participant.UserId, ct);
+                if (byUser is not null)
+                    return byUser;
+            }
+
+            throw;
+        }
     }
 
     public async Task<IReadOnlyList<string>> ListDistinctEventIdsByUserIdAsync(string userId, CancellationToken ct = default)
@@ -79,14 +91,4 @@ public sealed class MongoParticipantRepository : IParticipantRepository
             .ToListAsync(ct);
         return ids.Distinct().ToList();
     }
-
-    private static Participant ToDomain(ParticipantDocument doc) => new()
-    {
-        Id = doc.Id,
-        EventId = doc.EventId,
-        Pseudo = doc.Pseudo,
-        UserId = doc.UserId,
-        CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero),
-        UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)
-    };
 }

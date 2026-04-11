@@ -54,7 +54,11 @@ describe('JoinForm', () => {
     mockFetchApi.mockImplementation(async (path: string) => {
       if (path === '/auth/me') return profile;
       if (path === '/events/soiree/join')
-        return { _id: 'p1', eventId: 'e1', pseudo: 'ProfilCompte' };
+        return {
+          participant: { _id: 'p1', eventId: 'e1', pseudo: 'ProfilCompte' },
+          isNew: true,
+          message: '',
+        };
       throw new Error(`fetchApi inattendu: ${path}`);
     });
     render(
@@ -86,7 +90,12 @@ describe('JoinForm', () => {
     const user = userEvent.setup();
     mockFetchApi.mockImplementation(async (path: string) => {
       if (path === '/auth/me') throw new ApiError('Non authentifié', { code: 401 });
-      if (path === '/events/soiree/join') return { _id: 'p1', eventId: 'e1', pseudo: 'Alice' };
+      if (path === '/events/soiree/join')
+        return {
+          participant: { _id: 'p1', eventId: 'e1', pseudo: 'Alice' },
+          isNew: true,
+          message: '',
+        };
       throw new Error(`fetchApi inattendu: ${path}`);
     });
     render(

@@ -1,6 +1,6 @@
 namespace MoviePicker.Api.Domain.Entities;
 
-public sealed class Participant
+public sealed record Participant
 {
     public string Id { get; init; } = string.Empty;
     public string EventId { get; init; } = string.Empty;

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.LaunchWheel;
@@ -51,7 +52,8 @@ public sealed class LaunchWheelHandlerTests
             _voteRepo.Object,
             _hostTokenAccessor.Object,
             _currentUserAccessor.Object,
-            _posterStore.Object);
+            _posterStore.Object,
+            NullLogger<LaunchWheelHandler>.Instance);
     }
 
     [Fact]

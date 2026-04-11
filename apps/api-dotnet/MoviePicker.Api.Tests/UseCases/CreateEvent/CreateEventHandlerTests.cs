@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
@@ -21,7 +22,7 @@ public sealed class CreateEventHandlerTests
         _eventRepo = new Mock<IEventRepository>();
         _userRepo = new Mock<IUserRepository>();
         _participantRepo = new Mock<IParticipantRepository>();
-        _sut = new CreateEventHandler(_eventRepo.Object, _userRepo.Object, _participantRepo.Object);
+        _sut = new CreateEventHandler(_eventRepo.Object, _userRepo.Object, _participantRepo.Object, NullLogger<CreateEventHandler>.Instance);
     }
 
     [Fact]

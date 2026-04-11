@@ -34,9 +34,13 @@ public sealed class MongoVoteRepository : IVoteRepository
             .SetOnInsert(x => x.ParticipantId, vote.ParticipantId)
             .SetOnInsert(x => x.CreatedAt, now);
 
-        await _collection.UpdateOneAsync(filter, update, new UpdateOptions { IsUpsert = true }, cancellationToken: ct);
+        var options = new FindOneAndUpdateOptions<VoteDocument>
+        {
+            IsUpsert = true,
+            ReturnDocument = ReturnDocument.After
+        };
 
-        var doc = await _collection.Find(filter).FirstAsync(ct);
+        var doc = await _collection.FindOneAndUpdateAsync(filter, update, options, ct);
         return VoteMapper.ToDomain(doc);
     }
 

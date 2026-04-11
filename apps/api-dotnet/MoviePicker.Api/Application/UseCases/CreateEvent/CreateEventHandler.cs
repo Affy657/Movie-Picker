@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
@@ -11,15 +12,18 @@ public sealed class CreateEventHandler : ICreateEventHandler
     private readonly IEventRepository _eventRepository;
     private readonly IUserRepository _userRepository;
     private readonly IParticipantRepository _participantRepository;
+    private readonly ILogger<CreateEventHandler> _logger;
 
     public CreateEventHandler(
         IEventRepository eventRepository,
         IUserRepository userRepository,
-        IParticipantRepository participantRepository)
+        IParticipantRepository participantRepository,
+        ILogger<CreateEventHandler> logger)
     {
         _eventRepository = eventRepository;
         _userRepository = userRepository;
         _participantRepository = participantRepository;
+        _logger = logger;
     }
 
     public async Task<CreateEventResponse> HandleAsync(CreateEventRequest request, string? creatorUserId, CancellationToken ct = default)
@@ -49,6 +53,7 @@ public sealed class CreateEventHandler : ICreateEventHandler
         };
 
         var created = await _eventRepository.AddAsync(evt, ct);
+        _logger.LogInformation("Event created: {EventId} by user {UserId}", created.Id, ownerId);
 
         var user = await _userRepository.GetByIdAsync(ownerId, ct)
             ?? throw new NotFoundException("Utilisateur introuvable");
@@ -79,16 +84,7 @@ public sealed class CreateEventHandler : ICreateEventHandler
             ShareUrl = $"/s/{created.Slug}",
             CreatedAt = created.CreatedAt,
             UpdatedAt = created.UpdatedAt,
-            CreatorParticipant = MapParticipant(createdParticipant)
+            CreatorParticipant = ParticipantResponse.FromDomain(createdParticipant)
         };
     }
-
-    private static ParticipantResponse MapParticipant(Participant p) => new()
-    {
-        Id = p.Id,
-        EventId = p.EventId,
-        Pseudo = p.Pseudo,
-        CreatedAt = p.CreatedAt,
-        UpdatedAt = p.UpdatedAt
-    };
 }

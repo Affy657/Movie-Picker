@@ -32,11 +32,6 @@ public sealed class EventsController : ControllerBase
         [FromServices] ICreateEventHandler handler,
         CancellationToken ct)
     {
-        if (request is null || string.IsNullOrWhiteSpace(request.Title))
-            return BadRequest(new { error = "title requis" });
-        if (string.IsNullOrWhiteSpace(request.Date) || string.IsNullOrWhiteSpace(request.Time))
-            return BadRequest(new { error = "date et time requis" });
-
         var creatorUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(creatorUserId))
             return Unauthorized();
@@ -88,8 +83,6 @@ public sealed class EventsController : ControllerBase
         [FromServices] IPatchEventConfigHandler handler,
         CancellationToken ct)
     {
-        if (request is null)
-            return BadRequest(new { error = "corps requis" });
         var result = await handler.HandleAsync(idOrSlug, request, ct);
         return Ok(result);
     }
@@ -122,21 +115,9 @@ public sealed class EventsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("{idOrSlug}")]
-    [ProducesResponseType(typeof(EventDetailResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetByIdOrSlug(
-        string idOrSlug,
-        [FromServices] IGetEventDetailHandler handler,
-        CancellationToken ct)
-    {
-        var result = await handler.HandleAsync(idOrSlug, ct);
-        return Ok(result);
-    }
-
     [HttpPost("{idOrSlug}/join")]
     [EnableRateLimiting(RateLimitingExtensions.JoinEventPolicy)]
-    [ProducesResponseType(typeof(ParticipantResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(JoinEventResult), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(JoinEventResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -148,9 +129,6 @@ public sealed class EventsController : ControllerBase
         [FromServices] IJoinEventHandler handler,
         CancellationToken ct)
     {
-        if (request is null || string.IsNullOrWhiteSpace(request.Pseudo))
-            return BadRequest(new { error = "pseudo requis" });
-
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var result = await handler.HandleAsync(
             idOrSlug,
@@ -159,9 +137,9 @@ public sealed class EventsController : ControllerBase
             ct);
 
         if (result.IsNew)
-            return Created(string.Empty, result.Participant);
+            return Created(string.Empty, result);
 
-        return Ok(new { participant = result.Participant, message = result.Message });
+        return Ok(result);
     }
 
     [HttpPost("{idOrSlug}/wheel")]

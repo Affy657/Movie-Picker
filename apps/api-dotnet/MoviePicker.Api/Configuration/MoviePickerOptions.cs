@@ -20,16 +20,16 @@ public sealed class MoviePickerOptions
     /// <summary>Nombre max de résultats recherche enrichis en providers (limite appels TMDB à froid).</summary>
     public int TmdbSearchMaxWatchProviderLookups { get; set; } = 10;
 
-    /// <summary>Parallélisme max pour enrichissement TMDB sur la liste films d’une soirée. Variable : <c>TMDB_LIST_ENRICHMENT_MAX_PARALLEL</c>.</summary>
+    /// <summary>Parallélisme max pour enrichissement TMDB (recherche et liste films). Clampé à [1, 16] à l'usage. Variable : <c>TMDB_LIST_ENRICHMENT_MAX_PARALLEL</c>.</summary>
     public int TmdbListEnrichmentMaxParallelism { get; set; } = 4;
 
-    /// <summary>Active le cache d’affiches (Mongo ou mémoire). Variable : <c>POSTER_CACHE_ENABLED</c> (<c>0</c> / <c>false</c> pour désactiver).</summary>
+    /// <summary>Active le cache d'affiches (Mongo ou mémoire). Variable : <c>POSTER_CACHE_ENABLED</c> (<c>0</c> / <c>false</c> pour désactiver).</summary>
     public bool PosterCacheEnabled { get; set; } = true;
 
     /// <summary>Durée de conservation logique des affiches (jours). Variable : <c>POSTER_CACHE_TTL_DAYS</c>.</summary>
     public int PosterCacheTtlDays { get; set; } = 30;
 
-    /// <summary>Taille max d’une image acceptée (octets). Variable : <c>POSTER_CACHE_MAX_BYTES</c>.</summary>
+    /// <summary>Taille max d'une image acceptée (octets). Variable : <c>POSTER_CACHE_MAX_BYTES</c>.</summary>
     public int PosterCacheMaxBytes { get; set; } = 524_288;
 
     /// <summary>

@@ -21,10 +21,7 @@ public sealed class RegisterRequest
 
 public sealed class RegisterResponse
 {
-    [JsonPropertyName("userId")]
     public string UserId { get; init; } = string.Empty;
-
-    [JsonPropertyName("displayName")]
     public string DisplayName { get; init; } = string.Empty;
 }
 
@@ -40,26 +37,17 @@ public sealed class LoginRequest
 
 public sealed class LoginResponse
 {
-    [JsonPropertyName("userId")]
     public string UserId { get; init; } = string.Empty;
-
-    [JsonPropertyName("displayName")]
     public string DisplayName { get; init; } = string.Empty;
 }
 
 public sealed class UserProfileResponse
 {
-    [JsonPropertyName("userId")]
     public string UserId { get; init; } = string.Empty;
-
-    [JsonPropertyName("displayName")]
     public string DisplayName { get; init; } = string.Empty;
 
     /// <summary>E-mail partiellement masqué (aperçu compte).</summary>
-    [JsonPropertyName("emailMasked")]
     public string EmailMasked { get; init; } = string.Empty;
-
-    [JsonPropertyName("uiTheme")]
     public UiThemePreference UiTheme { get; init; }
 }
 

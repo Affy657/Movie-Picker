@@ -27,8 +27,7 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
         PatchEventConfigRequest request,
         CancellationToken ct = default)
     {
-        var evt = await _events.GetByIdOrSlugAsync(idOrSlug, ct)
-            ?? throw new NotFoundException("Soirée introuvable");
+        var evt = await _events.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
         var token = _hostTokenAccessor.GetHostToken();
         var userId = _currentUserAccessor.GetUserId();
@@ -118,21 +117,7 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
         };
 
         var now = DateTimeOffset.UtcNow;
-        var updated = new Event
-        {
-            Id = evt.Id,
-            Title = evt.Title,
-            Date = evt.Date,
-            Time = evt.Time,
-            HostToken = evt.HostToken,
-            Slug = evt.Slug,
-            CreatorUserId = evt.CreatorUserId,
-            Config = nextConfig,
-            ClosedAt = evt.ClosedAt,
-            WinnerMovieId = evt.WinnerMovieId,
-            CreatedAt = evt.CreatedAt,
-            UpdatedAt = now
-        };
+        var updated = evt with { Config = nextConfig, UpdatedAt = now };
 
         var saved = await _events.UpdateAsync(updated, ct);
         return EventConfigResponse.FromEvent(saved);

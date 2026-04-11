@@ -18,8 +18,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
 
     public async Task<JoinEventResult> HandleAsync(string idOrSlug, JoinEventRequest request, string? authenticatedUserId, CancellationToken ct = default)
     {
-        var evt = await _eventRepository.GetByIdOrSlugAsync(idOrSlug, ct)
-            ?? throw new NotFoundException("Soirée introuvable");
+        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
         if (evt.IsFinished(DateTimeOffset.UtcNow))
             throw new ConflictException("Soirée terminée. Lecture seule.");
@@ -32,7 +31,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
             {
                 return new JoinEventResult
                 {
-                    Participant = Map(alreadyLinked),
+                    Participant = ParticipantResponse.FromDomain(alreadyLinked),
                     IsNew = false,
                     Message = "Déjà inscrit avec ce compte"
                 };
@@ -46,7 +45,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
         {
             return new JoinEventResult
             {
-                Participant = Map(existing),
+                Participant = ParticipantResponse.FromDomain(existing),
                 IsNew = false,
                 Message = "Déjà inscrit avec ce pseudo"
             };
@@ -67,18 +66,10 @@ public sealed class JoinEventHandler : IJoinEventHandler
 
         return new JoinEventResult
         {
-            Participant = Map(created),
+            Participant = ParticipantResponse.FromDomain(created),
             IsNew = true,
             Message = string.Empty
         };
     }
 
-    private static ParticipantResponse Map(Participant p) => new()
-    {
-        Id = p.Id,
-        EventId = p.EventId,
-        Pseudo = p.Pseudo,
-        CreatedAt = p.CreatedAt,
-        UpdatedAt = p.UpdatedAt
-    };
 }

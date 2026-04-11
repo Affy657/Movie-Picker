@@ -42,14 +42,10 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
         if (request.UiTheme is not null)
             theme = ParseTheme(request.UiTheme);
 
-        var updated = new User
+        var updated = user with
         {
-            Id = user.Id,
-            Email = user.Email,
-            PasswordHash = user.PasswordHash,
             DisplayName = displayName,
             UiTheme = theme,
-            CreatedAt = user.CreatedAt,
             UpdatedAt = DateTimeOffset.UtcNow
         };
 

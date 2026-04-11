@@ -1,6 +1,6 @@
 namespace MoviePicker.Api.Domain.Entities;
 
-public sealed class Reaction
+public sealed record Reaction
 {
     public string Id { get; init; } = string.Empty;
     public string EventId { get; init; } = string.Empty;

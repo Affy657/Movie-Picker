@@ -1,4 +1,3 @@
-using MongoDB.Bson;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
 using Xunit;
@@ -70,11 +69,11 @@ public sealed class EventDocumentMapperTests
     [Fact]
     public void ToDomain_WithConfig_MapsConfig()
     {
-        var config = new BsonDocument
+        var config = new EventConfigDocument
         {
-            ["theme"] = "SF",
-            ["endDate"] = new DateTime(2030, 6, 1, 22, 0, 0, DateTimeKind.Utc),
-            ["maxProposalsPerParticipant"] = 5
+            Theme = "SF",
+            EndDate = new DateTime(2030, 6, 1, 22, 0, 0, DateTimeKind.Utc),
+            MaxProposalsPerParticipant = 5
         };
         var doc = new EventDocument
         {
@@ -153,11 +152,11 @@ public sealed class EventDocumentMapperTests
     }
 
     [Fact]
-    public void ToDomain_MaxProposalsAsInt64_ReadsValue()
+    public void ToDomain_MaxProposals_ReadsValue()
     {
-        var config = new BsonDocument
+        var config = new EventConfigDocument
         {
-            ["maxProposalsPerParticipant"] = 7L
+            MaxProposalsPerParticipant = 7
         };
         var doc = new EventDocument
         {

@@ -30,8 +30,7 @@ public sealed class RemoveReactionHandler : IRemoveReactionHandler
         string participantId,
         CancellationToken ct = default)
     {
-        var evt = await _eventRepository.GetByIdOrSlugAsync(idOrSlug, ct)
-            ?? throw new NotFoundException("Soirée introuvable");
+        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
         if (evt.IsFinished(DateTimeOffset.UtcNow))
             throw new ConflictException("Soirée terminée. Lecture seule.");

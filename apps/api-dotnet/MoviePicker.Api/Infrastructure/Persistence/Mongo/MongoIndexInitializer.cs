@@ -23,6 +23,8 @@ public sealed class MongoIndexInitializer : IHostedService
             await EnsureUserIndexesAsync(cancellationToken);
             await EnsureEventIndexesAsync(cancellationToken);
             await EnsureParticipantIndexesAsync(cancellationToken);
+            await EnsureMovieIndexesAsync(cancellationToken);
+            await EnsureVoteIndexesAsync(cancellationToken);
             await EnsureAuthSessionIndexesAsync(cancellationToken);
             await EnsureReactionIndexesAsync(cancellationToken);
         }
@@ -47,15 +49,47 @@ public sealed class MongoIndexInitializer : IHostedService
     private async Task EnsureEventIndexesAsync(CancellationToken ct)
     {
         var col = _database.GetCollection<EventDocument>("events");
+        var slug = new CreateIndexModel<EventDocument>(
+            Builders<EventDocument>.IndexKeys.Ascending(x => x.Slug),
+            new CreateIndexOptions { Name = "events_slug_unique", Unique = true });
         var creator = new CreateIndexModel<EventDocument>(
             Builders<EventDocument>.IndexKeys.Ascending(x => x.CreatorUserId),
             new CreateIndexOptions { Name = "events_creatorUserId", Sparse = true });
-        await col.Indexes.CreateOneAsync(creator, cancellationToken: ct);
+        await col.Indexes.CreateManyAsync(new[] { slug, creator }, ct);
+    }
+
+    private async Task EnsureMovieIndexesAsync(CancellationToken ct)
+    {
+        var col = _database.GetCollection<MovieDocument>("movies");
+        var byEvent = new CreateIndexModel<MovieDocument>(
+            Builders<MovieDocument>.IndexKeys.Ascending(x => x.EventId),
+            new CreateIndexOptions { Name = "movies_eventId" });
+        var byEventTmdb = new CreateIndexModel<MovieDocument>(
+            Builders<MovieDocument>.IndexKeys.Ascending(x => x.EventId).Ascending(x => x.TmdbId),
+            new CreateIndexOptions { Name = "movies_eventId_tmdbId_unique", Unique = true });
+        await col.Indexes.CreateManyAsync(new[] { byEvent, byEventTmdb }, ct);
+    }
+
+    private async Task EnsureVoteIndexesAsync(CancellationToken ct)
+    {
+        var col = _database.GetCollection<VoteDocument>("votes");
+        var byMovie = new CreateIndexModel<VoteDocument>(
+            Builders<VoteDocument>.IndexKeys.Ascending(x => x.MovieId),
+            new CreateIndexOptions { Name = "votes_movieId" });
+        var unique = new CreateIndexModel<VoteDocument>(
+            Builders<VoteDocument>.IndexKeys
+                .Ascending(x => x.EventId)
+                .Ascending(x => x.MovieId)
+                .Ascending(x => x.ParticipantId),
+            new CreateIndexOptions { Name = "votes_event_movie_participant_unique", Unique = true });
+        await col.Indexes.CreateManyAsync(new[] { byMovie, unique }, ct);
     }
 
     private async Task EnsureParticipantIndexesAsync(CancellationToken ct)
     {
         var col = _database.GetCollection<ParticipantDocument>("participants");
+
+        await DropIndexIfExistsAsync(col, "participants_eventId_pseudo", ct);
 
         var eventUserUnique = new CreateIndexModel<ParticipantDocument>(
             Builders<ParticipantDocument>.IndexKeys.Ascending(x => x.EventId).Ascending(x => x.UserId),
@@ -70,7 +104,11 @@ public sealed class MongoIndexInitializer : IHostedService
             Builders<ParticipantDocument>.IndexKeys.Ascending(x => x.UserId),
             new CreateIndexOptions { Name = "participants_userId", Sparse = true });
 
-        await col.Indexes.CreateManyAsync(new[] { eventUserUnique, byUser }, ct);
+        var eventPseudo = new CreateIndexModel<ParticipantDocument>(
+            Builders<ParticipantDocument>.IndexKeys.Ascending(x => x.EventId).Ascending(x => x.Pseudo),
+            new CreateIndexOptions { Name = "participants_eventId_pseudo_unique", Unique = true });
+
+        await col.Indexes.CreateManyAsync(new[] { eventUserUnique, byUser, eventPseudo }, ct);
     }
 
     private async Task EnsureAuthSessionIndexesAsync(CancellationToken ct)
@@ -105,5 +143,11 @@ public sealed class MongoIndexInitializer : IHostedService
             Builders<ReactionDocument>.IndexKeys.Ascending(x => x.MovieId),
             new CreateIndexOptions { Name = "reactions_movieId" });
         await col.Indexes.CreateManyAsync(new[] { unique, byMovie }, ct);
+    }
+
+    private static async Task DropIndexIfExistsAsync<T>(IMongoCollection<T> col, string name, CancellationToken ct)
+    {
+        try { await col.Indexes.DropOneAsync(name, ct); }
+        catch (MongoCommandException ex) when (ex.Code == MongoErrorCodes.IndexNotFound) { }
     }
 }

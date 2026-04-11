@@ -57,21 +57,28 @@ export function fetchMyEventsList(): Promise<MyEventsListResponse> {
   return fetchApi<MyEventsListResponse>('/events/mine');
 }
 
-export type JoinEventResponse = ParticipantData | { participant: ParticipantData; message: string };
+export type JoinEventResponse = {
+  participant: ParticipantData;
+  isNew: boolean;
+  message: string;
+};
 
-type RawJoinEventResponse =
-  | RawParticipantData
-  | { participant: RawParticipantData; message: string };
+type RawJoinEventResponse = {
+  participant: RawParticipantData;
+  isNew: boolean;
+  message: string;
+};
 
 export async function joinEvent(slug: string, pseudo: string): Promise<JoinEventResponse> {
   const raw = await fetchApi<RawJoinEventResponse>(`/events/${slug}/join`, {
     method: 'POST',
     body: JSON.stringify({ pseudo }),
   });
-  if ('participant' in raw) {
-    return { participant: mapParticipantData(raw.participant), message: raw.message };
-  }
-  return mapParticipantData(raw);
+  return {
+    participant: mapParticipantData(raw.participant),
+    isNew: raw.isNew,
+    message: raw.message,
+  };
 }
 
 export function patchEventConfig(

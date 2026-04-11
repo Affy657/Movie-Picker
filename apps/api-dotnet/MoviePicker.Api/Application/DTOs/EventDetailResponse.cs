@@ -17,7 +17,7 @@ public sealed class EventDetailResponse
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
     public bool IsHost { get; init; }
-    public bool Terminé { get; init; }
+    public bool IsFinished { get; init; }
     public WinnerMovieResponse? WinnerMovie { get; init; }
 
     /// <summary>Participant lié au compte connecté pour cette soirée, si applicable.</summary>

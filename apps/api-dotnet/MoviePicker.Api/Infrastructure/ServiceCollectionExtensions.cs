@@ -1,24 +1,8 @@
-using System.Net.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Application.UseCases.AddMovie;
-using MoviePicker.Api.Application.UseCases.Auth;
-using MoviePicker.Api.Application.UseCases.CloseEvent;
-using MoviePicker.Api.Application.UseCases.CreateEvent;
-using MoviePicker.Api.Application.UseCases.DeleteMovie;
-using MoviePicker.Api.Application.UseCases.EventConfiguration;
-using MoviePicker.Api.Application.UseCases.EventSharePreview;
-using MoviePicker.Api.Application.UseCases.GetEventDetail;
-using MoviePicker.Api.Application.UseCases.JoinEvent;
-using MoviePicker.Api.Application.UseCases.LaunchWheel;
-using MoviePicker.Api.Application.UseCases.ListMovies;
-using MoviePicker.Api.Application.UseCases.ListMyEvents;
-using MoviePicker.Api.Application.UseCases.Reactions;
-using MoviePicker.Api.Application.UseCases.SearchMovies;
-using MoviePicker.Api.Application.UseCases.VoteMovie;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Development;
@@ -128,29 +112,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IHostTokenAccessor, HostTokenAccessor>();
         services.AddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
 
-        services.AddScoped<ICreateEventHandler, CreateEventHandler>();
-        services.AddScoped<IGetEventDetailHandler, GetEventDetailHandler>();
-        services.AddScoped<IGetEventSharePreviewHtmlHandler, GetEventSharePreviewHtmlHandler>();
-        services.AddScoped<IGetEventConfigHandler, GetEventConfigHandler>();
-        services.AddScoped<IPatchEventConfigHandler, PatchEventConfigHandler>();
-        services.AddScoped<IJoinEventHandler, JoinEventHandler>();
-        services.AddScoped<IListMyEventsHandler, ListMyEventsHandler>();
-        services.AddScoped<ISearchMoviesHandler, SearchMoviesHandler>();
-        services.AddScoped<IListMoviesForEventHandler, ListMoviesForEventHandler>();
-        services.AddScoped<IAddMovieHandler, AddMovieHandler>();
-        services.AddScoped<IDeleteMovieHandler, DeleteMovieHandler>();
-        services.AddScoped<IVoteMovieHandler, VoteMovieHandler>();
-        services.AddScoped<IAddReactionHandler, AddReactionHandler>();
-        services.AddScoped<IRemoveReactionHandler, RemoveReactionHandler>();
-        services.AddScoped<IGetMovieReactionsHandler, GetMovieReactionsHandler>();
-        services.AddScoped<ILaunchWheelHandler, LaunchWheelHandler>();
-        services.AddScoped<ICloseEventHandler, CloseEventHandler>();
-
         services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
-        services.AddScoped<IRegisterUserHandler, RegisterUserHandler>();
-        services.AddScoped<ILoginUserHandler, LoginUserHandler>();
-        services.AddScoped<IGetUserProfileHandler, GetUserProfileHandler>();
-        services.AddScoped<IPatchUserProfileHandler, PatchUserProfileHandler>();
+        RegisterHandlers(services);
 
         services.AddSingleton<ValidationErrorFilter>();
         services.AddSingleton<MoviePickerExceptionFilter>();
@@ -171,5 +134,27 @@ public static class ServiceCollectionExtensions
         if (string.IsNullOrWhiteSpace(raw))
             return true;
         return raw != "0" && !raw.Equals("false", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Convention-based handler registration: scans the assembly for classes whose name
+    /// ends with "Handler" and implements a matching I{ClassName} interface.
+    /// </summary>
+    private static void RegisterHandlers(IServiceCollection services)
+    {
+        var handlerNamespace = "MoviePicker.Api.Application.UseCases";
+        var types = typeof(ServiceCollectionExtensions).Assembly.GetTypes()
+            .Where(t => t is { IsClass: true, IsAbstract: false }
+                        && t.Namespace is not null
+                        && t.Namespace.StartsWith(handlerNamespace, StringComparison.Ordinal)
+                        && t.Name.EndsWith("Handler", StringComparison.Ordinal));
+
+        foreach (var type in types)
+        {
+            var iface = type.GetInterfaces()
+                .FirstOrDefault(i => i.Name == $"I{type.Name}");
+            if (iface is not null)
+                services.AddScoped(iface, type);
+        }
     }
 }

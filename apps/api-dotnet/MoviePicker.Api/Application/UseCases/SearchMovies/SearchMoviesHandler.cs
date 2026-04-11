@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
@@ -37,24 +38,34 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
             ? "FR"
             : _options.TmdbWatchProvidersRegion.Trim().ToUpperInvariant();
         var maxLookups = Math.Clamp(_options.TmdbSearchMaxWatchProviderLookups, 0, 20);
+        var maxParallelism = Math.Clamp(_options.TmdbListEnrichmentMaxParallelism, 1, 16);
+
+        var enrichments = new ConcurrentDictionary<int, TmdbMovieEnrichment?>();
+        var toEnrich = rows.Take(maxLookups).Select(r => r.Id).Distinct().ToList();
+        if (toEnrich.Count > 0)
+        {
+            await Parallel.ForEachAsync(
+                    toEnrich,
+                    new ParallelOptions { MaxDegreeOfParallelism = maxParallelism, CancellationToken = ct },
+                    async (tmdbId, c) =>
+                    {
+                        enrichments[tmdbId] = await _tmdb.GetEnrichmentAsync(tmdbId, region, c);
+                    })
+                .ConfigureAwait(false);
+        }
 
         var items = new List<MovieSearchItemResponse>(rows.Count);
-        for (var i = 0; i < rows.Count; i++)
+        foreach (var row in rows)
         {
-            var row = rows[i];
             IReadOnlyList<WatchProviderOfferResponse> providers = Array.Empty<WatchProviderOfferResponse>();
             string? watchPage = null;
             double? vote = row.VoteAverage;
 
-            if (i < maxLookups)
+            if (enrichments.TryGetValue(row.Id, out var enr) && enr is not null)
             {
-                var enr = await _tmdb.GetEnrichmentAsync(row.Id, region, ct);
-                if (enr is not null)
-                {
-                    providers = WatchProviderMapping.ToDto(enr.WatchProviders);
-                    watchPage = enr.TmdbWatchPageUrl;
-                    vote ??= enr.VoteAverage;
-                }
+                providers = WatchProviderMapping.ToDto(enr.WatchProviders);
+                watchPage = enr.TmdbWatchPageUrl;
+                vote ??= enr.VoteAverage;
             }
 
             items.Add(

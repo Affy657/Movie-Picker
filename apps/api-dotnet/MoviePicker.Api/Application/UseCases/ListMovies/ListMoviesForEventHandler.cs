@@ -43,8 +43,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
 
     public async Task<IReadOnlyList<MovieWithScoreResponse>> HandleAsync(string idOrSlug, CancellationToken ct = default)
     {
-        var evt = await _eventRepository.GetByIdOrSlugAsync(idOrSlug, ct)
-            ?? throw new NotFoundException("Soirée introuvable");
+        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
         var movies = await _movieRepository.ListByEventIdAsync(evt.Id, ct);
         var movieIds = movies.Select(m => m.Id).ToList();
