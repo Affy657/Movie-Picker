@@ -1,0 +1,189 @@
+﻿/* Utilitaires typographiques globaux */
+.lead {
+  font-size: 1.2rem;
+  color: var(--color-text-muted);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.nav-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* Boutons */
+.btn {
+  display: inline-block;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  min-height: 40px;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  letter-spacing: 0.01em;
+}
+
+.btn:not(.btn-primary):hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  color: var(--color-primary-contrast);
+}
+
+.btn-danger:hover {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Lien retour */
+.back-link {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  color: var(--color-primary);
+  text-decoration: none;
+  font-size: 0.9375rem;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+button.back-link-button {
+  font: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+/* Sections */
+.section {
+  margin-bottom: 2rem;
+}
+
+.section h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem 0;
+  color: var(--color-section-heading);
+  letter-spacing: -0.01em;
+}
+
+/* États textuels */
+.placeholder {
+  color: var(--color-placeholder);
+  font-size: 0.9375rem;
+  margin: 0;
+}
+
+.hint {
+  font-size: 0.875rem;
+  color: var(--color-placeholder);
+  margin: 0.5rem 0 0 0;
+}
+
+.error {
+  color: var(--color-error);
+  margin-bottom: 1rem;
+}
+
+.movies-load-error p {
+  margin-top: 0;
+}
+
+.error-dismiss {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.muted {
+  font-size: 0.9rem;
+  color: var(--color-meta);
+  margin: 0.75rem 0 1rem;
+}
+
+.error-boundary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.error .btn-link {
+  padding: 0 0.35em;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--color-error);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.error .btn-link:hover {
+  color: var(--color-error-hover);
+}
+
+/* Formulaires */
+.form {
+  margin-top: 0.5rem;
+}
+
+.label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  color: var(--color-section-heading);
+}
+
+.input {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  font-size: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 1rem;
+  min-height: 44px;
+  background: var(--color-input-readonly);
+  color: var(--color-text);
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 22%, transparent);
+  background: var(--color-surface);
+}
+
+.select {
+  cursor: pointer;
+  appearance: auto;
+}
+
+.input-readonly {
+  background: var(--color-input-readonly);
+}

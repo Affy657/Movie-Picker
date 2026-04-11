@@ -1,0 +1,97 @@
+/* Remplit la zone sous le header (AppShell) et centre le bloc hero + grille verticalement */
+.landing {
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  max-width: var(--layout-max-landing);
+  margin-inline: auto;
+  padding-block: clamp(1rem, 3vh, 2rem);
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 1.6rem;
+  padding: 0 0.25rem;
+}
+
+.title {
+  margin: 0 0 0.75rem;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--color-text);
+}
+
+.tagline {
+  margin: 0 auto 1.35rem;
+  max-width: 28rem;
+  font-size: 1.05rem;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+}
+
+.cta {
+  justify-content: center;
+}
+
+.featureGrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .featureGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem 2rem;
+  }
+}
+
+.feature {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  margin: 0;
+  padding: 1rem 1.1rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+}
+
+.featureIcon {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  line-height: 1;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+}
+
+.featureBody {
+  min-width: 0;
+}
+
+.featureTitle {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+}
+
+.featureText {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+}

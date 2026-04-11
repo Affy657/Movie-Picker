@@ -1,0 +1,47 @@
+.reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+}
+
+.readOnly {
+  gap: 0.25rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  line-height: 1.2;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: inherit;
+}
+
+.chipText {
+  font-size: 0.75rem;
+  max-width: 7.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chipCount {
+  font-size: 0.7rem;
+  font-weight: 600;
+  opacity: 0.85;
+  padding: 0 0.15rem;
+}
+
+.chipActive {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+}
+
+.chipReadonly {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  opacity: 0.95;
+}

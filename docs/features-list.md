@@ -267,6 +267,9 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 - **Notifications hors session** : **push navigateur** et/ou **e-mail** pour rappels avant soirée (ex. 1 h avant), **préférences** par utilisateur — dépend d’une base **consentement**, d’infra (file d’envoi, jobs planifiés) et en pratique du **compte / e-mail** opérationnel (voir V2 mot de passe oublié comme socle e-mail si retenu).
 - **i18n étendue** : langues supplémentaires au-delà de la 2e langue V2, variantes régionales fines, RTL si besoin.
 - **PWA** : manifest, icônes multi-tailles, splash — hors favicon MVP (déjà couvert).
+- **Monitoring applicatif (ex. Sentry ou équivalent)** : capture d’erreurs et exceptions **front** (React) et **API** (.NET), regroupement des incidents, contexte (release, environnement), éventuellement **performance** (transactions, traces) ; complément aux logs structurés et métriques infra déjà visés en MVP plateforme ; définir **sampling**, **PII** (pas d’email en clair dans les breadcrumbs sans nécessité) et politique de rétention.
+- **Analytics produit & KPIs (ex. PostHog, Plausible, Amplitude, Mixpanel ou stack open source)** : mesure d’usage et de valeur (ex. créations de soirées, joins, votes, lancements de roue, clôtures), funnels, rétention, éventuels tableaux de bord internes ; **alignement RGPD** : base légale, bandeau / consentement si cookies ou identifiants non strictement nécessaires, documentation dans la politique de confidentialité (voir entrées backlog « cookies / confidentialité »).
+- **Footer global** : pied de page sur le shell de l’app avec liens **LinkedIn**, **GitHub**, portfolio ou autres réseaux / contact ; cohérent **mobile-first** (lisible, zones tactiles) ; peut regrouper plus tard crédits TMDB et liens légaux si retenus.
 
 ---
 
@@ -298,5 +301,7 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 | Favicon, titres de page (`document.title`) | ✅ (plateforme) | – | – | – |
 | Aperçu lien partagé (OG / Twitter : statique vs dynamique) | Limite SPA documentée | Dynamique si infra OK + règle confidentialité | – | – |
 | Rappels (in-app / calendrier / push-email) | ❌ | In-app léger | .ics + compte à rebours | Push, e-mail (hors session) |
-| Internationalisation (i18n) | ❌ | Préparation (conventions texte) | 2e langue + TMDB | Langues +, RTL… |
+| Internationalisation (i18n) | ❌ | Préparation (conventions texte) | ✅ 2e langue (EN) + sélecteur + TMDB | Langues +, RTL… |
 | Accessibilité étendue, crédits API, cookies, bonus cloud (dont staging via Terraform) | ❌ | ❌ | ❌ | ✅ |
+| Sentry (ou équivalent) + analytics / KPIs produit | Logs / métriques infra (MVP plateforme) | – | – | ✅ |
+| Footer (LinkedIn, GitHub, liens perso / crédits futurs) | ❌ | ❌ | ❌ | ✅ |

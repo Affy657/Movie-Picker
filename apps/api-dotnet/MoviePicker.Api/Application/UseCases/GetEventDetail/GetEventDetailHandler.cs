@@ -2,6 +2,7 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.Posters;
 using MoviePicker.Api.Domain;
+using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.GetEventDetail;
@@ -10,6 +11,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
 {
     private readonly IEventRepository _eventRepository;
     private readonly IMovieRepository _movieRepository;
+    private readonly IParticipantRepository _participantRepository;
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IPosterImageStore _posterImageStore;
@@ -17,12 +19,14 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
     public GetEventDetailHandler(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
+        IParticipantRepository participantRepository,
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
         IPosterImageStore posterImageStore)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
+        _participantRepository = participantRepository;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _posterImageStore = posterImageStore;
@@ -63,6 +67,14 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             }
         }
 
+        ParticipantResponse? myParticipant = null;
+        if (!string.IsNullOrEmpty(currentUserId))
+        {
+            var p = await _participantRepository.FindByEventAndUserIdAsync(evt.Id, currentUserId, ct);
+            if (p is not null)
+                myParticipant = MapMyParticipant(p);
+        }
+
         return new EventDetailResponse
         {
             Id = evt.Id,
@@ -77,7 +89,17 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             UpdatedAt = evt.UpdatedAt,
             IsHost = isHost,
             Terminé = terminé,
-            WinnerMovie = winner
+            WinnerMovie = winner,
+            MyParticipant = myParticipant
         };
     }
+
+    private static ParticipantResponse MapMyParticipant(Participant p) => new()
+    {
+        Id = p.Id,
+        EventId = p.EventId,
+        Pseudo = p.Pseudo,
+        CreatedAt = p.CreatedAt,
+        UpdatedAt = p.UpdatedAt
+    };
 }

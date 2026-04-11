@@ -1,0 +1,40 @@
+﻿/* Utilitaires boutons (partagés entre composants) */
+.btn-sm {
+  padding: 0.4rem 1rem;
+  font-size: 0.875rem;
+  min-height: 36px;
+}
+
+.btn-danger {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+/* Utilitaires TMDB (partagés entre MovieList et AddMovieForm) */
+.tmdb-vote {
+  color: var(--color-meta);
+  font-size: 0.875rem;
+  font-weight: normal;
+}
+
+.tmdb-watch-link {
+  font-size: 0.8125rem;
+  color: var(--color-primary);
+  text-decoration: none;
+  align-self: flex-start;
+}
+
+.tmdb-watch-link:hover {
+  text-decoration: underline;
+}
+
+.tmdb-indicative-footer {
+  margin: 0.75rem 0 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-placeholder);
+}
+
+.tmdb-indicative-footer a {
+  color: var(--color-primary);
+}

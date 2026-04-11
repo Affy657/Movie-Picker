@@ -1,0 +1,108 @@
+.root {
+  margin: 0 0 1.25rem 0;
+  padding: 0;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  list-style: none;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 0.4rem;
+  transition: transform 0.15s ease;
+}
+
+.root[open] .summary::before {
+  transform: rotate(90deg);
+}
+
+.lead,
+.locked,
+.form {
+  padding: 0 1rem 1rem;
+  margin: 0;
+}
+
+.lead {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  margin-top: -0.25rem;
+}
+
+.locked {
+  font-size: 0.9rem;
+  color: var(--color-error);
+  margin-bottom: 0.5rem;
+}
+
+.form {
+  padding-top: 0.25rem;
+}
+
+.field :global(.input) {
+  margin-bottom: 0.35rem;
+}
+
+.field :global(.hint) {
+  margin-top: 0;
+  margin-bottom: 0.85rem;
+}
+
+.select {
+  cursor: pointer;
+}
+
+.fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 0.5rem 0;
+}
+
+.fieldset :global(.label) {
+  margin-bottom: 0.35rem;
+}
+
+.fieldsetHint {
+  margin-bottom: 0.5rem !important;
+}
+
+.reactionList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.reactionList li {
+  margin-bottom: 0.35rem;
+}
+
+.checkLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.successBanner {
+  color: var(--color-wheel-label);
+  background: var(--color-wheel-bg);
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin: 0 1rem 0.75rem;
+}

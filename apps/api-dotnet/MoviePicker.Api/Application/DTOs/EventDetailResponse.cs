@@ -19,4 +19,7 @@ public sealed class EventDetailResponse
     public bool IsHost { get; init; }
     public bool Terminé { get; init; }
     public WinnerMovieResponse? WinnerMovie { get; init; }
+
+    /// <summary>Participant lié au compte connecté pour cette soirée, si applicable.</summary>
+    public ParticipantResponse? MyParticipant { get; init; }
 }

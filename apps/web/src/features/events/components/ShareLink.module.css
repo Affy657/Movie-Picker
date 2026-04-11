@@ -1,0 +1,68 @@
+.root {
+  margin-top: 1rem;
+}
+
+.rootCentered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0.6rem;
+}
+
+.actionsCentered {
+  justify-content: center;
+}
+
+/* Même hiérarchie que le primaire : contour accent, poids visuel proche du bouton Partager */
+.btnQr {
+  border: 2px solid var(--color-primary);
+  color: var(--color-primary);
+  background: transparent;
+  font-weight: 600;
+}
+
+.btnQr:hover {
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border-color: var(--color-primary-hover);
+  color: var(--color-primary-hover);
+}
+
+.qrPanel {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-elevated, var(--color-surface));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.qrPanelCentered {
+  align-items: center;
+  align-self: stretch;
+  max-width: 20rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.qrCanvas {
+  padding: 0.5rem;
+  background: #fff;
+  border-radius: 8px;
+  line-height: 0;
+}
+
+.qrHint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-meta);
+  max-width: 18rem;
+}

@@ -1,0 +1,29 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.6rem 0.85rem;
+  margin: 0 0 0.85rem 0;
+  border-radius: 8px;
+  border-left: 4px solid hsl(var(--event-theme-hue, 200) 50% 42%);
+  background: hsl(var(--event-theme-hue, 200) 42% 94%);
+}
+
+:global([data-theme='dark']) .root {
+  background: hsl(var(--event-theme-hue, 200) 35% 18%);
+  border-left-color: hsl(var(--event-theme-hue, 200) 55% 52%);
+}
+
+.kicker {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-meta);
+}
+
+.title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-text);
+}

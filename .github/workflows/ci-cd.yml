@@ -199,6 +199,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Build Vite : un seul bundle JS + CSS hashés dans apps/web/dist (imports @import CSS inclus).
       - run: |
           if [ -z "$VITE_API_URL" ]; then
             echo "::error::VITE_API_URL (secret) est vide."

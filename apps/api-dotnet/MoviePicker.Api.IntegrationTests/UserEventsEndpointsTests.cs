@@ -51,6 +51,8 @@ public sealed class UserEventsEndpointsTests : IClassFixture<MoviePickerApplicat
         var body = await detail.Content.ReadFromJsonAsync<EventDetailResponse>(JsonOptions);
         Assert.NotNull(body);
         Assert.True(body!.IsHost);
+        Assert.NotNull(body.MyParticipant);
+        Assert.Equal("Hôte", body.MyParticipant!.Pseudo);
     }
 
     [Fact]

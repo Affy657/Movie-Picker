@@ -1,0 +1,44 @@
+.result {
+  padding: 1rem 1.15rem;
+  background: var(--color-wheel-bg);
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+  border: none;
+  box-shadow: none;
+}
+
+.spinning {
+  animation: wheel-reveal 1.2s ease-out;
+}
+
+@keyframes wheel-reveal {
+  0% { opacity: 0.3; transform: scale(0.95); }
+  60% { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.winnerLabel {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.875rem;
+  color: var(--color-wheel-label);
+}
+
+.winnerTitle {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.winnerMeta {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.875rem;
+  color: var(--color-placeholder);
+}
+
+.btnWheel {
+  margin-bottom: 0.5rem;
+}
+
+.btnClose {
+  margin-top: 0.5rem;
+}

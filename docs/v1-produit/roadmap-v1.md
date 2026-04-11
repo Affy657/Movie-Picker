@@ -6,7 +6,7 @@ Suite de tâches pour livrer la **V1 produit** après le MVP et la migration API
 
 Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant l’ordre des sections.
 
-**Ordre logique** : cadrage (§ 1) → modèle de données (§ 2) → API auth puis « mes soirées » / hôte compte (§ 3–4) → config hôte avant réactions (§ 5–6) → enrichissement films & posters côté API (§ 7–8) → shell, auth et pages front (§ 9–14) → live, rappels (§ 15–16) → **§ 16 bis — parcours créateur & watch providers** → OG / i18n transverses (§ 17–18) → qualité, déploiement, recette (§ 19–21) → sécurité CI : Sonar (§ 22), NuGet (§ 23), image Docker (§ 24), secrets (§ 25).
+**Ordre logique** : cadrage (§ 1) → modèle de données (§ 2) → API auth puis « mes soirées » / hôte compte (§ 3–4) → config hôte avant réactions (§ 5–6) → enrichissement films & posters côté API (§ 7–8) → shell, auth et pages front (§ 9–14) → live, rappels (§ 15–16) → **§ 16 bis — parcours créateur & watch providers** → OG (§ 17) → **utilisateurs de test / seed local (§ 18)** → i18n (§ 19) → qualité, déploiement, recette (§ 20–22) → sécurité CI : Sonar (§ 23), NuGet (§ 24), image Docker (§ 25), secrets (§ 26).
 
 > **Hors périmètre V1** (cf. features list du dépôt) : mot de passe oublié par e-mail (**V2**), lieu / description soirée avancée, .ics / compte à rebours dédié (**V2**), vue grille-liste / hors-ligne (**V2**), **limite de participants** et **plage de votes** configurables (**V2**).
 
@@ -178,14 +178,28 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ---
 
-## 18. Préparation i18n
+## 18. Utilisateurs de test et données de démo en local (seed Development)
 
-- [ ] Convention : **pas de chaînes en dur** sur les **nouveaux** écrans V1 (clés + fichier de traduction ou hook préparatoire)
-- [ ] Langue UI **FR** livrée ; **deuxième langue** reportée en **V2** (features list)
+> **But** : accélérer les tests manuels et les parcours V1 sans enchaîner inscription / création de soirées à la main. **Uniquement** en environnement **Development** ; jamais exécuté en Production.
+
+- [x] **Seed au démarrage API** : compte principal configurable + **deux utilisateurs additionnels** (ex. Alice / Bob) via `appsettings.Development.json` / variables `DevelopmentSeed__*`
+- [x] **Soirées d’exemple** pour le compte principal (titres préfixés) et **scénarios démo** idempotents : hôte + invités connectés, config d’événement (thème, limite propositions, mode roue, réactions, partage riche), films TMDB, votes, réactions, retrait de film, tirage roue + soirée clôturée avec gagnant
+- [x] **Documentation** : README (identifiants et description des scénarios), `.env.example` ; tests d’intégration sans pollution (désactivation partielle du seed lourd dans `MoviePickerApplicationFactory`)
 
 ---
 
-## 19. Tests, contrat et qualité
+## 19. Préparation i18n
+
+- [x] Convention : **pas de chaînes en dur** sur les **nouveaux** écrans V1 (clés + fichier de traduction ou hook préparatoire) — *`shared/i18n/` : locale FR (`locales/fr.ts`), fonction typée `t()` avec dot-notation et interpolation `{{var}}`, tests unitaires ; convention documentée dans le header du fichier locale*
+- [x] Langue UI **FR** livrée ; **deuxième langue** reportée en **V2** (features list) — *locale FR exhaustive couvrant common, nav, auth, events, movies, errors, theme ; migration des écrans existants progressive, V2 ajoutera react-intl ou i18next*
+- [x] **V2 — Deuxième langue UI (anglais)** — *`locales/en.ts` : traduction complète miroir de `fr.ts` ; type `Locale` élargi via `DeepStringify` pour accepter les valeurs EN ; registre `locales/index.ts` (`LocaleCode`, `LOCALE_LABELS`, `SUPPORTED_LOCALES`)*
+- [x] **V2 — Sélecteur de langue** — *`LocaleContext.tsx` : React Context + Provider avec détection `navigator.language` ; `useTranslation.ts` : hook `t()` lié au contexte ; `LanguageSelector.tsx` : `<select>` intégré dans le header AppShell ; `<html lang>` synchronisé*
+- [x] **V2 — Persistance préférence** — *localStorage (`moviepicker-locale`) lu au montage, écrit à chaque changement ; détection navigateur comme fallback ; préparé pour sync compte (backend à venir)*
+- [x] **V2 — TMDB aligné sur la locale** — *`tmdbLanguage` (ex. `fr-FR`, `en-US`) exposé par `useLocale()` ; `searchMovies()` transmet `?lang=` au backend ; `AddMovieForm` utilise `tmdbLanguage` pour chaque recherche*
+
+---
+
+## 20. Tests, contrat et qualité
 
 - [ ] **Tests .NET** : nouveaux handlers (auth, config, réactions, agrégats watch providers / cache posters si testables)
 - [ ] **Tests intégration** : parcours connexion → création soirée liée au compte → config → réaction
@@ -195,7 +209,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ---
 
-## 20. Déploiement et observabilité
+## 21. Déploiement et observabilité
 
 - [ ] Variables d’environnement et secrets (auth, bucket posters si applicable) documentés pour l’équipe (README, `.env.example`, procédure secrets)
 - [ ] **CORS** / `ALLOWED_ORIGINS` si nouvelles origines (ex. sous-domaine OG)
@@ -205,7 +219,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ---
 
-## 21. V1 terminée
+## 22. V1 terminée
 
 - [ ] Parcours **compte** : inscription → connexion → créer / rejoindre → **Mes soirées**
 - [ ] Parcours **hôte** : config (thème, limites, roue, réactions) → invités avec réactions / **bandeau ou style thème soirée** / watch providers / affichage posters (cache si activé)
@@ -215,7 +229,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ---
 
-## 22. Sécurité CI — Sonar (analyse statique)
+## 23. Sécurité CI — Sonar (analyse statique)
 
 > **Objectif** : qualité / SAST sur le code via **SonarCloud** ou **SonarQube**, avec **quality gate** sur les PR ou `master`.
 
@@ -228,7 +242,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ---
 
-## 23. Sécurité CI — Dépendances NuGet (API .NET)
+## 24. Sécurité CI — Dépendances NuGet (API .NET)
 
 > **Objectif** : détecter les paquets .NET vulnérables en CI — **complète** `pnpm audit` côté Node (**déjà** en job `lint`) ; **distinct** de Sonar.
 
@@ -237,7 +251,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ---
 
-## 24. Sécurité CI — Image Docker (API)
+## 25. Sécurité CI — Image Docker (API)
 
 > **Objectif** : réduire les CVE dans l’image poussée vers Artifact Registry / Cloud Run.
 
@@ -246,7 +260,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ---
 
-## 25. Sécurité CI — Secrets et anti-fuite
+## 26. Sécurité CI — Secrets et anti-fuite
 
 > **Objectif** : limiter les secrets commités et réagir vite si fuite.
 

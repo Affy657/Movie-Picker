@@ -4,6 +4,7 @@ using MoviePicker.Api.Application.UseCases.GetEventDetail;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
+using ParticipantEntity = MoviePicker.Api.Domain.Entities.Participant;
 
 namespace MoviePicker.Api.Tests.UseCases.GetEventDetail;
 
@@ -11,6 +12,7 @@ public sealed class GetEventDetailHandlerTests
 {
     private readonly Mock<IEventRepository> _eventRepo;
     private readonly Mock<IMovieRepository> _movieRepo;
+    private readonly Mock<IParticipantRepository> _participantRepo;
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor;
     private readonly Mock<ICurrentUserAccessor> _currentUserAccessor;
     private readonly Mock<IPosterImageStore> _posterStore;
@@ -32,6 +34,10 @@ public sealed class GetEventDetailHandlerTests
     {
         _eventRepo = new Mock<IEventRepository>();
         _movieRepo = new Mock<IMovieRepository>();
+        _participantRepo = new Mock<IParticipantRepository>();
+        _participantRepo
+            .Setup(r => r.FindByEventAndUserIdAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ParticipantEntity?)null);
         _hostTokenAccessor = new Mock<IHostTokenAccessor>();
         _currentUserAccessor = new Mock<ICurrentUserAccessor>();
         _currentUserAccessor.Setup(c => c.GetUserId()).Returns((string?)null);
@@ -44,6 +50,7 @@ public sealed class GetEventDetailHandlerTests
         _sut = new GetEventDetailHandler(
             _eventRepo.Object,
             _movieRepo.Object,
+            _participantRepo.Object,
             _hostTokenAccessor.Object,
             _currentUserAccessor.Object,
             _posterStore.Object);
@@ -183,5 +190,33 @@ public sealed class GetEventDetailHandlerTests
         var result = await _sut.HandleAsync("evt1");
 
         Assert.True(result.IsHost);
+    }
+
+    [Fact]
+    public async Task HandleAsync_LoggedInWithParticipantRow_SetsMyParticipant()
+    {
+        var evt = Event();
+        var now = DateTimeOffset.UtcNow;
+        var part = new ParticipantEntity
+        {
+            Id = "part-1",
+            EventId = evt.Id,
+            Pseudo = "Alice",
+            UserId = "user-1",
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
+        _currentUserAccessor.Setup(c => c.GetUserId()).Returns("user-1");
+        _participantRepo
+            .Setup(r => r.FindByEventAndUserIdAsync(evt.Id, "user-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(part);
+
+        var result = await _sut.HandleAsync("evt1");
+
+        Assert.NotNull(result.MyParticipant);
+        Assert.Equal("part-1", result.MyParticipant.Id);
+        Assert.Equal("Alice", result.MyParticipant.Pseudo);
     }
 }

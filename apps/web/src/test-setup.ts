@@ -1,13 +1,13 @@
 import '@testing-library/jest-dom/vitest';
 import { vi } from 'vitest';
 
-/** jsdom : `getComputedStyle(elt, pseudoElt)` n’est pas implémenté ; axe l’utilise pour le contraste. */
+/** jsdom : `getComputedStyle(elt, pseudoElt)` n'est pas implémenté ; axe l'utilise pour le contraste. */
 const getComputedStyleOrig = window.getComputedStyle.bind(window);
 window.getComputedStyle = (elt: Element, _pseudoElt?: string | null): CSSStyleDeclaration =>
   getComputedStyleOrig(elt);
 
 /**
- * axe-core appelle `getContext('2d')` pour analyser le contraste ; jsdom ne l’implémente pas.
+ * axe-core appelle `getContext('2d')` pour analyser le contraste ; jsdom ne l'implémente pas.
  * Stub minimal sans dépendance native `canvas`.
  */
 const canvas2dStub = {
@@ -22,7 +22,10 @@ HTMLCanvasElement.prototype.getContext = function mockCanvasGetContext(
   return null;
 } as HTMLCanvasElement['getContext'];
 
-/** ThemeProvider / prefers-color-scheme (jsdom n’implémente pas matchMedia). */
+/** i18n : forcer la locale FR par défaut en test (JSDOM expose navigator.language = "en"). */
+localStorage.setItem('moviepicker-locale', 'fr');
+
+/** ThemeProvider / prefers-color-scheme (jsdom n'implémente pas matchMedia). */
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   configurable: true,

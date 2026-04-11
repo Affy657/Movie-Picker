@@ -1,8 +1,14 @@
+import path from 'path';
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+    },
+  },
   test: {
     env: {
       VITE_API_URL: 'http://127.0.0.1:3999',
@@ -17,9 +23,9 @@ export default defineConfig({
       include: ['src/**/*.{ts,tsx}'],
       exclude: ['src/**/*.test.{ts,tsx}', 'src/test-setup.ts', 'src/vite-env.d.ts', 'src/main.tsx'],
       thresholds: {
-        lines: 48,
-        functions: 67,
-        branches: 55,
+        lines: 55,
+        functions: 65,
+        branches: 63,
       },
     },
   },

@@ -21,6 +21,7 @@ using MoviePicker.Api.Application.UseCases.SearchMovies;
 using MoviePicker.Api.Application.UseCases.VoteMovie;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Infrastructure.Development;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
 using MoviePicker.Api.Infrastructure.Posters;
@@ -153,6 +154,13 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<ValidationErrorFilter>();
         services.AddSingleton<MoviePickerExceptionFilter>();
+
+        if (environment.IsDevelopment())
+        {
+            services.Configure<DevelopmentSeedOptions>(
+                configuration.GetSection(DevelopmentSeedOptions.SectionName));
+            services.AddHostedService<DevelopmentDataSeedHostedService>();
+        }
 
         return services;
     }

@@ -1,0 +1,169 @@
+﻿/* Mobile-first — variables thème (clair / sombre, roadmap § 25) */
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --layout-max: 600px;
+  --layout-max-landing: 960px;
+}
+
+:root,
+[data-theme='light'] {
+  --color-bg: #edf1f5;
+  --color-surface: #ffffff;
+  --color-nav-bg: #ffffff;
+  --color-nav-shadow: rgba(0, 0, 0, 0.08);
+  --color-text: #1a1f2e;
+  --color-text-muted: #4a5568;
+  --color-text-secondary: #4a5568; /* alias de --color-text-muted, utilisé par LanguageSelector */
+  --color-meta: #718096;
+  --color-border: #d0d7e3;
+  --color-border-subtle: #e2e8f0;
+  --color-section-heading: #2d3748;
+  --color-placeholder: #a0aec0;
+  --color-error: #c53030;
+  --color-error-hover: #9b2c2c;
+  --color-primary: #2b6cb0;
+  --color-primary-hover: #2c5282;
+  --color-primary-contrast: #ffffff;
+  --color-badge-finished-bg: #edf2f7;
+  --color-badge-finished-text: #4a5568;
+  --color-badge-upcoming-bg: #fffbeb;
+  --color-badge-upcoming-text: #92400e;
+  --color-badge-live-bg: #f0fff4;
+  --color-badge-live-text: #276749;
+  --color-badge-host-bg: #faf5ff;
+  --color-badge-host-text: #553c9a;
+  --color-badge-me-bg: #ebf8ff;
+  --color-badge-me-text: #2b6cb0;
+  --color-wheel-bg: #f0fff4;
+  --color-wheel-label: #276749;
+  --color-poster-placeholder: #e2e8f0;
+  --color-input-readonly: #f7fafc;
+  --color-accent: var(--color-primary);
+}
+
+[data-theme='dark'] {
+  --color-bg: #0b1622;
+  --color-surface: #151f2e;
+  --color-nav-bg: #0b1622;
+  --color-nav-shadow: rgba(0, 0, 0, 0.4);
+  --color-text: #e8edf5;
+  --color-text-muted: #a9b8cc;
+  --color-text-secondary: #a9b8cc; /* alias de --color-text-muted */
+  --color-meta: #7a90a8;
+  --color-border: #2a3a50;
+  --color-border-subtle: #1e2d40;
+  --color-section-heading: #d4e0ef;
+  --color-placeholder: #5a7591;
+  --color-error: #fc8181;
+  --color-error-hover: #feb2b2;
+  --color-primary: #02a9ff;
+  --color-primary-hover: #33baff;
+  --color-primary-contrast: #ffffff;
+  --color-badge-finished-bg: #1e2d40;
+  --color-badge-finished-text: #c8d6e8;
+  --color-badge-upcoming-bg: #2d1f00;
+  --color-badge-upcoming-text: #fbbf24;
+  --color-badge-live-bg: #00271a;
+  --color-badge-live-text: #4ade80;
+  --color-badge-host-bg: #1e0a3c;
+  --color-badge-host-text: #c4b5fd;
+  --color-badge-me-bg: #021e38;
+  --color-badge-me-text: #7dd3fc;
+  --color-wheel-bg: #00271a;
+  --color-wheel-label: #4ade80;
+  --color-poster-placeholder: #1e2d40;
+  --color-input-readonly: #0e1825;
+  --color-accent: var(--color-primary);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+body {
+  margin: 0;
+  font-family: 'Overpass', system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+/* PageLayout — hauteur viewport gérée par AppShell (flex) pour éviter le scroll fantôme */
+.page {
+  padding: 1.5rem 1rem 1rem;
+  max-width: var(--layout-max);
+  margin: 0 auto;
+}
+
+/* Détail soirée — colonne un peu plus large, toujours centrée */
+.page.page-event {
+  max-width: min(42rem, 100%);
+}
+
+/*
+ * Panneaux cartes de la page Compte uniquement (AccountPage.tsx — plusieurs sections).
+ * Styles globaux ici car pas de CSS module sur cette page.
+ */
+.section--panel {
+  padding: 1rem 1.15rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.25rem;
+}
+
+.section--panel:last-of-type {
+  margin-bottom: 0;
+}
+
+/* Compte — cohérence champs, lisibilité des aides */
+.section--panel .form .label {
+  margin-bottom: 0.45rem;
+}
+
+.section--panel .form > select.btn + .label,
+.section--panel .form > button.btn + .label {
+  margin-top: 0.65rem;
+}
+
+.section--panel .form > select.btn,
+.section--panel .form > button.btn:not([type='submit']) {
+  margin-bottom: 0.2rem;
+}
+
+.section--panel .hint {
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.section--panel .btn {
+  border-radius: var(--radius-md);
+}
+
+.section--panel .btn-danger {
+  padding-inline: 1.2rem;
+  min-height: 44px;
+}
+
+[data-theme='dark'] .section--panel .input {
+  border-color: #3d546e;
+}
+
+@media (min-width: 640px) {
+  .page {
+    padding: 1.5rem;
+  }
+}

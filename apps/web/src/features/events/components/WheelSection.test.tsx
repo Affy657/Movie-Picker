@@ -1,0 +1,124 @@
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import WheelSection from '@/features/events/components/WheelSection';
+import type { EventData } from '@/features/events/types';
+
+const baseEvent: EventData = {
+  id: 'e1',
+  title: 'Soirée',
+  date: '2030-01-01',
+  time: '20:00',
+  slug: 'soiree',
+  isHost: false,
+  isFinished: false,
+  config: {
+    theme: null,
+    endDate: null,
+    maxProposalsPerParticipant: null,
+    wheelMode: 'strictRandom',
+    allowedReactionIds: null,
+  },
+};
+
+describe('WheelSection', () => {
+  it('affiche le titre Roue', () => {
+    render(
+      <WheelSection
+        slug="soiree"
+        event={baseEvent}
+        moviesCount={0}
+        hostToken={null}
+        onWheelDone={vi.fn()}
+        onCloseDone={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('heading', { name: /roue/i })).toBeInTheDocument();
+  });
+
+  it('affiche le placeholder si aucun film et pas hôte', () => {
+    render(
+      <WheelSection
+        slug="soiree"
+        event={baseEvent}
+        moviesCount={0}
+        hostToken={null}
+        onWheelDone={vi.fn()}
+        onCloseDone={vi.fn()}
+      />
+    );
+    expect(screen.getByText(/aucun film.*proposez/i)).toBeInTheDocument();
+  });
+
+  it('affiche le bouton Lancer la roue pour l’hôte avec des films', () => {
+    render(
+      <WheelSection
+        slug="soiree"
+        event={{ ...baseEvent, isHost: true }}
+        moviesCount={2}
+        hostToken="ht"
+        onWheelDone={vi.fn()}
+        onCloseDone={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('button', { name: /lancer la roue/i })).toBeInTheDocument();
+  });
+
+  const sampleWinner = {
+    id: 'm1',
+    eventId: 'e1',
+    participantId: 'p1',
+    tmdbId: 1,
+    title: 'Inception',
+    year: '2010',
+    posterPath: null,
+    proposerPseudo: 'Alice',
+    score: 0,
+    up: 0,
+    down: 0,
+  };
+
+  it('affiche le film gagnant quand winner est présent', () => {
+    render(
+      <WheelSection
+        slug="soiree"
+        event={{
+          ...baseEvent,
+          winnerMovie: sampleWinner,
+        }}
+        moviesCount={1}
+        hostToken={null}
+        onWheelDone={vi.fn()}
+        onCloseDone={vi.fn()}
+      />
+    );
+    expect(screen.getByText(/film gagnant/i)).toBeInTheDocument();
+    expect(screen.getByText('Inception')).toBeInTheDocument();
+  });
+
+  it('met à jour le gagnant quand winnerMovie arrive (ex. polling live)', () => {
+    const { rerender } = render(
+      <WheelSection
+        slug="soiree"
+        event={baseEvent}
+        moviesCount={1}
+        hostToken={null}
+        onWheelDone={vi.fn()}
+        onCloseDone={vi.fn()}
+      />
+    );
+    expect(screen.queryByText('Inception')).not.toBeInTheDocument();
+
+    rerender(
+      <WheelSection
+        slug="soiree"
+        event={{ ...baseEvent, winnerMovie: sampleWinner }}
+        moviesCount={1}
+        hostToken={null}
+        onWheelDone={vi.fn()}
+        onCloseDone={vi.fn()}
+      />
+    );
+    expect(screen.getByText(/film gagnant/i)).toBeInTheDocument();
+    expect(screen.getByText('Inception')).toBeInTheDocument();
+  });
+});

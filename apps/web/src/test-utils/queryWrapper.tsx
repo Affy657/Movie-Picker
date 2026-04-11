@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactElement, ReactNode } from 'react';
-import { AuthProvider } from '../contexts/AuthContext';
-import { ThemeProvider } from '../contexts/ThemeContext';
+import { AuthProvider } from '@/features/auth/contexts/AuthContext';
+import { ThemeProvider } from '@/shared/contexts/ThemeContext';
+import { LocaleProvider } from '@/shared/i18n';
 
 /** QueryClient adapté aux tests (pas de retry → MSW déterministe). */
 export function createTestQueryClient() {
@@ -30,7 +31,7 @@ export function withQueryClient(element: ReactElement, client?: QueryClient) {
   return <QueryClientWrapper client={client}>{element}</QueryClientWrapper>;
 }
 
-/** React Query + thème (pages qui utilisent ThemeToggle ou données serveur). */
+/** React Query + thème + locale (pages qui utilisent ThemeToggle, LanguageSelector ou données serveur). */
 export function AppTestProviders({
   children,
   client,
@@ -40,9 +41,11 @@ export function AppTestProviders({
 }) {
   return (
     <QueryClientWrapper client={client}>
-      <ThemeProvider>
-        <AuthProvider>{children}</AuthProvider>
-      </ThemeProvider>
+      <LocaleProvider>
+        <ThemeProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </ThemeProvider>
+      </LocaleProvider>
     </QueryClientWrapper>
   );
 }
