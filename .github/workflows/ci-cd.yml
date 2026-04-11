@@ -45,7 +45,7 @@ jobs:
         env:
           SKIP_OPENAPI_BUILD: '1'
         run: node scripts/export-openapi.cjs
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: openapi-v1
           path: artifacts/openapi-v1.json
@@ -67,7 +67,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run test --filter=web
       - run: pnpm run test:coverage --filter=web
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: coverage-web
           path: apps/web/coverage
@@ -92,7 +92,7 @@ jobs:
         run: dotnet test apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj -c Debug --verbosity normal
         env:
           MONGODB_URI: ""
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: coverage-api-unit
           path: coverage-unit
@@ -113,7 +113,7 @@ jobs:
       - uses: browser-actions/setup-chrome@v2
       - run: pnpm install --frozen-lockfile
       - run: pnpm run lighthouse
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: lighthouse-reports
