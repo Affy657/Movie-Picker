@@ -30,6 +30,7 @@ Application pour organiser des soirées film : créer un event, partager le lien
 ## Déploiement
 
 - **CI/CD (GitHub Actions)** : à chaque push sur `master`, build + déploiement automatique (voir `.github/workflows/ci-cd.yml`).
+- **V1 (secrets, CORS, cookies, rate limits, logs)** : [`docs/v1-produit/02-deploiement-secrets-et-ci-v1.md`](docs/v1-produit/02-deploiement-secrets-et-ci-v1.md) si besoin au-delà du README / `.env.example`.
 
 ## Prérequis
 

@@ -20,14 +20,16 @@ public sealed class StructuredHttpRequestLoggingMiddleware(
         {
             sw.Stop();
             var endpoint = context.GetEndpoint()?.DisplayName;
+            var routeKind = ObservabilityRouteKind.ForPath(context.Request.Path);
             logger.LogInformation(
-                "HTTP {HttpMethod} {Path}{QueryString} → {StatusCode} en {ElapsedMs} ms ({Endpoint})",
+                "HTTP {HttpMethod} {Path}{QueryString} → {StatusCode} en {ElapsedMs} ms ({Endpoint}) [kind={ApiRouteKind}]",
                 context.Request.Method,
                 context.Request.Path.Value,
                 context.Request.QueryString.HasValue ? context.Request.QueryString.Value : string.Empty,
                 context.Response.StatusCode,
                 sw.ElapsedMilliseconds,
-                endpoint ?? "n/a");
+                endpoint ?? "n/a",
+                routeKind);
         }
     }
 }

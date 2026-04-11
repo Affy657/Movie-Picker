@@ -211,21 +211,21 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ## 21. Déploiement et observabilité
 
-- [ ] Variables d’environnement et secrets (auth, bucket posters si applicable) documentés pour l’équipe (README, `.env.example`, procédure secrets)
-- [ ] **CORS** / `ALLOWED_ORIGINS` si nouvelles origines (ex. sous-domaine OG)
-- [ ] **Cookies / sessions** (si cookie auth) : attributs **Secure**, **HttpOnly**, **SameSite** ; politique **CSRF** si cookie en cross-site — à documenter avec le choix auth
-- [ ] **Rate limiting** : revoir les plafonds pour les **nouveaux endpoints** (auth, config, réactions, TMDB enrichie) — prolongement note « technique » features list § V1
-- [ ] Logs structurés : corrélation sur les routes auth et config (prolongement MVP § 29)
+- [x] Variables d’environnement et secrets (auth, bucket posters si applicable) documentés pour l’équipe (README, `.env.example`, procédure secrets)
+- [x] **CORS** / `ALLOWED_ORIGINS` si nouvelles origines (ex. sous-domaine OG)
+- [x] **Cookies / sessions** (si cookie auth) : attributs **Secure**, **HttpOnly**, **SameSite** ; politique **CSRF** si cookie en cross-site — à documenter avec le choix auth
+- [x] **Rate limiting** : revoir les plafonds pour les **nouveaux endpoints** (auth, config, réactions, TMDB enrichie) — prolongement note « technique » features list § V1
+- [x] Logs structurés : corrélation sur les routes auth et config (prolongement MVP § 29)
 
 ---
 
 ## 22. V1 terminée
 
-- [ ] Parcours **compte** : inscription → connexion → créer / rejoindre → **Mes soirées**
-- [ ] Parcours **hôte** : config (thème, limites, roue, réactions) → invités avec réactions / **bandeau ou style thème soirée** / watch providers / affichage posters (cache si activé)
-- [ ] **QR code** + **rappel in-app** validés sur mobile
+- [x] Parcours **compte** : inscription → connexion → créer / rejoindre → **Mes soirées**
+- [x] Parcours **hôte** : config (thème, limites, roue, réactions) → invités avec réactions / **bandeau ou style thème soirée** / watch providers / affichage posters (cache si activé)
+- [x] **QR code** + **rappel in-app** validés sur mobile
 - [x] **OG dynamiques** : livrés **ou** explicitement reportés avec doc de la limite
-- [ ] Mettre à jour la features list du dépôt et tout index roadmaps par version si le dépôt en contient un
+- [x] Mettre à jour la features list du dépôt et tout index roadmaps par version si le dépôt en contient un
 
 ---
 

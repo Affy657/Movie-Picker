@@ -3,7 +3,7 @@
 **Nom du projet : Movie Picker.**
 
 Liste des fonctionnalités (spécification complète du site + découpage **MVP**, **V1**, **V2**, et un **backlog** non daté).  
-Pour la vue synthétique stack / cloud, voir [01-spec-technique.md](01-spec-technique.md). Le détail opérationnel du MVP : [mvp/01-roadmap-mvp.md](mvp/01-roadmap-mvp.md).
+Pour la vue synthétique stack / cloud, voir [01-spec-technique.md](01-spec-technique.md). Roadmaps : MVP [mvp/01-roadmap-mvp.md](mvp/01-roadmap-mvp.md), V1 [v1-produit/roadmap-v1.md](v1-produit/roadmap-v1.md).
 
 ---
 
@@ -25,7 +25,7 @@ Liste de tout ce qu'il y a dans le site (vision cible), puis UX/UI, cas limites 
 - **Historique** : page « Soirées passées » ou filtre « terminées » ; pour chaque soirée clôturée, affichage du film gagnant et de la liste des films en lecture seule.
 
 ### Compte utilisateur
-- **Créer un compte** : inscription optionnelle (email, mot de passe, éventuellement pseudo par défaut). La participation aux soirées reste possible **sans compte** (pseudo par soirée uniquement).
+- **Créer un compte** : inscription (email, mot de passe, éventuellement pseudo par défaut). **V1** : la **création d’une soirée** exige un compte ; **rejoindre** une soirée reste possible **sans compte** (pseudo par soirée uniquement).
 - **Se connecter / Se déconnecter** : connexion par email + mot de passe ; déconnexion depuis le menu ou la page profil.
 - **Mot de passe oublié** : lien « Réinitialiser le mot de passe » sur la page de connexion ; envoi d'un email avec lien sécurisé pour définir un nouveau mot de passe.
 - **Avec un compte** : la liste « Mes soirées » (créées ou auxquelles j'ai participé) est persistante et synchronisée sur tous les appareils ; l'hôte peut être reconnu via son compte en plus du lien avec token ; possibilité de pré-remplir le pseudo avec le pseudo du compte quand on rejoint une soirée.
@@ -94,7 +94,7 @@ Liste de tout ce qu'il y a dans le site (vision cible), puis UX/UI, cas limites 
 - **Rate limiting** : limitation du nombre de créations de soirées, propositions et votes par IP (ou par session) pour éviter les abus et le spam.
 - **Sécurité technique** : communication en **HTTPS** ; mots de passe stockés hashés (bcrypt, Argon2 ou équivalent), jamais en clair ; clé API films (TMDB/OMDB) utilisée **côté serveur uniquement** (pas d'exposition au client).
 - **Environnement / déploiement** : variables d'environnement pour la config (URL de l'API, clé TMDB/OMDB, secret de session, URL front, connexion BDD) ; documentation des étapes de déploiement (voir consigne du projet).
-- **CI/CD** : lint, tests (front Vitest + couverture, API .NET unitaires + intégration + Coverlet), build, déploiement ; E2E navigateur optionnel en local — voir [mvp/04-deploy-cicd.md](mvp/04-deploy-cicd.md).
+- **CI/CD** : lint, tests (front Vitest + couverture, API .NET unitaires + intégration + Coverlet), build, déploiement ; E2E navigateur optionnel en local — voir [README à la racine du dépôt](../README.md) et [`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml).
 - **Monitoring** : logs, métriques (créations, votes, tirages).
 
 ---
@@ -180,7 +180,7 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 
 **Objectif** : mettre en production, sécuriser, tester, documenter et industrialiser le MVP — **hors** périmètre métier de **MVP – Features produit**.
 
-> Détail opérationnel : [mvp/01-roadmap-mvp.md](mvp/01-roadmap-mvp.md) (§ 1–16, post-MVP § 18–36). Déploiements & secrets : [mvp/04-deploy-cicd.md](mvp/04-deploy-cicd.md).
+> Détail opérationnel : [mvp/01-roadmap-mvp.md](mvp/01-roadmap-mvp.md) (§ 1–16, post-MVP § 18–36). Déploiements & secrets : [README à la racine du dépôt](../README.md) et [`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml).
 
 - **Infra & déploiement** : API **Docker** sur **GCP Cloud Run** ; front statique **AWS S3** + **CloudFront** (SPA, fallback `index.html`) ; **GitHub Actions** (build, tests, image API, déploiements) ; variables et secrets documentés.
 - **Sécurité prod** : **HTTPS** ; **CORS** avec `ALLOWED_ORIGINS` ; **rate limiting** (création soirée, join, recherche films) ; secrets via **GCP Secret Manager** (pas de valeurs en clair côté prod) ; en-têtes `X-Content-Type-Options`, `X-Frame-Options`, etc.
@@ -191,7 +191,7 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 - **Observabilité & doc** : logs (ex. Cloud Logging), métriques minimales Cloud Run / CloudFront ; **README**, schéma d’architecture, [mvp/05-monitoring.md](mvp/05-monitoring.md).
 - **Vérification locale** : **`pnpm run verify:local`** — voir [scripts/verify-local.cjs](../scripts/verify-local.cjs).
 - **Identité navigateur** : **favicon** (dossier `public/` ou assets Vite) ; **`document.title`** sur les routes principales pour l’onglet et le partage basique — tâches : [mvp/01-roadmap-mvp.md](mvp/01-roadmap-mvp.md) § **34**.
-- **Avant la V1 produit** : **Lighthouse** sur build (roadmap § **35**, budgets, CI non bloquant si retenu) ; **nom de domaine** ([mvp/06-domaine-personnalise.md](mvp/06-domaine-personnalise.md)) ; **redirection apex + SEO** ([mvp/07-redirection-racine-et-referencement.md](mvp/07-redirection-racine-et-referencement.md), roadmap § **36**) ; documenter la **limitation SPA** sur les aperçus de liens (OG statiques vs dynamiques, aligné § V1 ci-dessous) ; périmètre et plan V1 : [03-features-list.md](03-features-list.md) (V1) et [00-roadmaps-par-version.md](00-roadmaps-par-version.md) quand tu crées `docs/v1-…/`.
+- **Avant la V1 produit** : **Lighthouse** sur build (roadmap § **35**, budgets, CI non bloquant si retenu) ; **nom de domaine** ([mvp/06-domaine-personnalise.md](mvp/06-domaine-personnalise.md)) ; **redirection apex + SEO** ([mvp/07-redirection-racine-et-referencement.md](mvp/07-redirection-racine-et-referencement.md), roadmap § **36**) ; documenter la **limitation SPA** sur les aperçus de liens (OG statiques vs dynamiques, aligné § V1 ci-dessous) ; périmètre et plan V1 : cette **features list** (section V1) et [v1-produit/roadmap-v1.md](v1-produit/roadmap-v1.md).
 
 ---
 
@@ -214,7 +214,7 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 - [x] API .NET déployée sur Cloud Run, même comportement que le MVP (parcours complet testé).
 - [x] Ancienne API Node retirée ou désactivée après validation.
 
-**Le back .NET est la base pour la V1** (comptes, config, réactions). Référence : [02-architecture-api-dotnet.md](02-architecture-api-dotnet.md), [mvp/01-roadmap-mvp.md](mvp/01-roadmap-mvp.md) § 17 (contrat : Swagger en dev, `OpenApiContractTests.cs`).
+**Le back .NET est la base pour la V1** (comptes, config, réactions). Référence : [architecture.md](architecture.md), [mvp/01-roadmap-mvp.md](mvp/01-roadmap-mvp.md) § 17 (contrat : Swagger en dev, `OpenApiContractTests.cs`).
 
 ---
 
@@ -222,8 +222,8 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 
 **Objectif** : compte utilisateur (sans reset email), config hôte, réactions, confort de partage et de lecture, enrichissement film léger côté découverte.
 
-
-- **Compte utilisateur** : inscription (email, mot de passe, pseudo par défaut), connexion, déconnexion. *Mot de passe oublié (email) reporté en V2* pour alléger la charge (transport email, sécurité, templates).
+- **Création de soirée** : **compte obligatoire** (pas de création anonyme) ; après création, le créateur est participant avec son pseudo compte ; lien partagé **sans** `?host=` — aligné roadmap V1 § 16 bis.
+- **Compte utilisateur** : inscription (email, mot de passe, pseudo par défaut), connexion, déconnexion. *Mot de passe oublié (email) reporté en V2* pour alléger la charge (transport email, sécurité, templates). **Rejoindre** une soirée reste possible **sans compte** (pseudo invité).
 - **Mes soirées** : liste persistante pour les utilisateurs connectés ; reconnaissance de l'hôte par compte en plus du token.
 - **Config par l'hôte** : page Paramètres (thème, expiration, limite de propositions, type de roue aléatoire/pondérée). Réactions autorisées : choix des réactions disponibles en plus du up/down.
 - **Réactions** : en plus du vote, réactions type « J'ai déjà vu », « J'aimerais bien », etc. (liste configurable par l'hôte).
@@ -235,7 +235,7 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 - **Interface** : mode sombre/clair (préférence locale ou compte).
 - **Disponibilité streaming / VOD légale** : intégration TMDB *watch providers* (région ex. FR), pastilles ou liens sur recherche / fiche film, cache API, texte indicatif pour l’utilisateur.
 - **Indicateur « déjà vu » (autres participants)** : à l’ajout d’un film (ou sur la carte), afficher si des participants de la soirée l’ont déjà marqué comme vu (réactions ou agrégat côté API).
-- **Technique** : cache des posters (bucket ou BDD) ; table `users`, `reactions` ; routes auth et config ; endpoints / agrégats nécessaires pour watch providers et l’indicateur « déjà vu » ; si OG **dynamiques** : mécanisme serveur ou edge (HTML ou meta injectées) + éventuel **endpoint résumé événement** lisible par les crawlers. (Le **rate limiting** de base est déjà couvert par le MVP plateforme ; ajuster les règles si les nouveaux endpoints l’exigent.)
+- **Technique** : cache des posters (bucket ou BDD) ; table `users`, `reactions` ; routes auth et config ; endpoints / agrégats nécessaires pour watch providers et l’indicateur « déjà vu » ; si OG **dynamiques** : mécanisme serveur ou edge (HTML ou meta injectées) + éventuel **endpoint résumé événement** lisible par les crawlers. **Rate limiting** (prod, par IP / minute, fenêtre 1 min) : création soirée 20 ; join 60 ; recherche films 40 ; inscription 10 ; login 30 ; PATCH config 40 ; mutations réactions 120 ; GET affiches cache 300 — détail et ajustements : [`docs/v1-produit/02-deploiement-secrets-et-ci-v1.md`](v1-produit/02-deploiement-secrets-et-ci-v1.md) § 5.
 
 ---
 
@@ -277,7 +277,7 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 
 | Bloc | MVP | V1 | V2 | Backlog |
 |------|-----|----|----|---------|
-| Créer soirée (titre, date, heure) | ✅ | – | Lieu, description | – |
+| Créer soirée (titre, date, heure) | ✅ (MVP : anonyme) | Compte obligatoire | Lieu, description | – |
 | Lien partage + Copier lien | ✅ | – | – | – |
 | Rejoindre + pseudo | ✅ | – | – | – |
 | Hôte (token / cookie) | ✅ | + compte | – | – |
