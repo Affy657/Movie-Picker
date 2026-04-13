@@ -5,8 +5,17 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import MyEventsPage from '@/features/events/pages/MyEventsPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
-import { TEST_API_V1 } from '@/mocks/handlers';
+import { authMeGuestHandler, createEventDetailHandlers, TEST_API_V1 } from '@/mocks/handlers';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
+
+function clearGuestParticipantKeys() {
+  const toRemove: string[] = [];
+  for (let i = 0; i < sessionStorage.length; i++) {
+    const k = sessionStorage.key(i);
+    if (k?.startsWith('moviepicker_participant_')) toRemove.push(k);
+  }
+  for (const k of toRemove) sessionStorage.removeItem(k);
+}
 
 function renderMyEvents() {
   return render(
@@ -24,7 +33,10 @@ describe('MyEventsPage (MSW)', () => {
   const server = setupServer();
 
   beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
-  afterEach(() => server.resetHandlers());
+  afterEach(() => {
+    server.resetHandlers();
+    clearGuestParticipantKeys();
+  });
   afterAll(() => server.close());
 
   it('affiche les sections, badges d’état et lien hôte', async () => {
@@ -111,5 +123,91 @@ describe('MyEventsPage (MSW)', () => {
     expect(within(hostedSection).queryByText(/Soirée passée/i)).not.toBeInTheDocument();
 
     expect(document.title).toBe(pageTitle('Mes soirées'));
+  });
+
+  it('invité : liste les soirées rejointes (session) sans bouton créer', async () => {
+    const slug = 'soiree-invite';
+    sessionStorage.setItem(
+      `moviepicker_participant_${slug}`,
+      JSON.stringify({ participantId: 'p-guest', pseudo: 'Invité' })
+    );
+
+    server.use(
+      authMeGuestHandler,
+      ...createEventDetailHandlers({ slug, title: 'Soirée chez Kim' })
+    );
+
+    renderMyEvents();
+
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: /Soirée chez Kim/i })).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('link', { name: /Créer une soirée/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Se connecter/i })).toHaveAttribute(
+      'href',
+      expect.stringContaining('connexion')
+    );
+
+    sessionStorage.removeItem(`moviepicker_participant_${slug}`);
+  });
+
+  it('invité : message dédié si aucune soirée enregistrée ne charge', async () => {
+    const slug = 'slug-introuvable';
+    sessionStorage.setItem(
+      `moviepicker_participant_${slug}`,
+      JSON.stringify({ participantId: 'p1', pseudo: 'X' })
+    );
+
+    server.use(
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/events/slug/${slug}`, () =>
+        HttpResponse.json({ error: 'Not found' }, { status: 404 })
+      )
+    );
+
+    renderMyEvents();
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/Aucune soirée enregistrée ici/i);
+    expect(screen.getByRole('button', { name: /réessayer/i })).toBeInTheDocument();
+
+    sessionStorage.removeItem(`moviepicker_participant_${slug}`);
+  });
+
+  it('invité : bandeau si une soirée sur deux ne charge pas', async () => {
+    const ok = 'soiree-ok';
+    const ko = 'soiree-ko';
+    sessionStorage.setItem(
+      `moviepicker_participant_${ok}`,
+      JSON.stringify({ participantId: 'p1', pseudo: 'A' })
+    );
+    sessionStorage.setItem(
+      `moviepicker_participant_${ko}`,
+      JSON.stringify({ participantId: 'p2', pseudo: 'B' })
+    );
+
+    server.use(
+      authMeGuestHandler,
+      ...createEventDetailHandlers({ slug: ok, title: 'Soirée OK' }),
+      http.get(`${TEST_API_V1}/events/slug/${ko}`, () =>
+        HttpResponse.json({ error: 'Not found' }, { status: 404 })
+      )
+    );
+
+    renderMyEvents();
+
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: /Soirée OK/i })).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/Certaines soirées mémorisées/i)).toBeInTheDocument();
+    expect(screen.getByText(/\(\s*1\s*\)/)).toBeInTheDocument();
+
+    sessionStorage.removeItem(`moviepicker_participant_${ok}`);
+    sessionStorage.removeItem(`moviepicker_participant_${ko}`);
   });
 });

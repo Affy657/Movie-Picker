@@ -4,6 +4,7 @@ import { postEventClose, postEventWheel } from '@/features/events/api/eventsApi'
 import { getErrorMessage } from '@/shared/api/apiError';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
+import { useTranslation } from '@/shared/i18n';
 import styles from './WheelSection.module.css';
 
 const SPIN_ANIMATION_MS = 1500;
@@ -25,11 +26,12 @@ export default function WheelSection({
   onWheelDone,
   onCloseDone,
 }: WheelSectionProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [spinning, setSpinning] = useState(false);
   const [winner, setWinner] = useState<MovieData | null>(event.winnerMovie ?? null);
-  const isHost = event.isHost ?? !!hostToken;
+  const isHost = event.isHost === true || (event.isHost == null && !!hostToken);
   const spinTimerRef = useRef<number | undefined>(undefined);
 
   useEffect(() => () => clearTimeout(spinTimerRef.current), []);
@@ -50,7 +52,7 @@ export default function WheelSection({
       spinTimerRef.current = window.setTimeout(() => setSpinning(false), SPIN_ANIMATION_MS);
       onWheelDone();
     } catch (err) {
-      setError(getErrorMessage(err, 'Tirage impossible'));
+      setError(getErrorMessage(err, t('events.wheel.launchError')));
       setSpinning(false);
     } finally {
       setLoading(false);
@@ -64,7 +66,7 @@ export default function WheelSection({
       await postEventClose(slug, hostToken);
       onCloseDone();
     } catch (err) {
-      setError(getErrorMessage(err, 'Clôture impossible'));
+      setError(getErrorMessage(err, t('events.wheel.closeError')));
     } finally {
       setLoading(false);
     }
@@ -74,9 +76,15 @@ export default function WheelSection({
   const showRelancer = isHost && !event.isFinished && winner && moviesCount > 0;
   const showClose = isHost && !event.isFinished && (winner || event.closedAt);
 
+  if (!isHost && !winner) {
+    return null;
+  }
+
+  const sectionTitle = isHost ? t('events.wheel.title') : t('events.wheel.viewerTitle');
+
   return (
-    <section className="section" aria-label="Roue">
-      <h2>Roue</h2>
+    <section className="section" aria-label={sectionTitle}>
+      <h2>{sectionTitle}</h2>
       {error && (
         <p className="error" role="alert">
           {error}
@@ -89,14 +97,14 @@ export default function WheelSection({
           role="status"
           aria-live="polite"
         >
-          <p className={styles.winnerLabel}>Film gagnant</p>
+          <p className={styles.winnerLabel}>{t('events.wheel.winnerLabel')}</p>
           <p className={styles.winnerTitle}>{winner.title}</p>
           <p className={styles.winnerMeta}>{winner.year}</p>
         </div>
       )}
 
-      {moviesCount === 0 && !winner && (
-        <p className="placeholder">Aucun film. Proposez au moins un film pour lancer la roue.</p>
+      {moviesCount === 0 && !winner && isHost && (
+        <p className="placeholder">{t('events.wheel.emptyPlaceholder')}</p>
       )}
 
       {canLaunch && !winner && (
@@ -106,7 +114,7 @@ export default function WheelSection({
           onClick={() => void launchWheel()}
           disabled={loading}
         >
-          {loading ? 'Tirage…' : 'Lancer la roue'}
+          {loading ? t('events.wheel.spinning') : t('events.wheel.launchButton')}
         </button>
       )}
 
@@ -117,7 +125,7 @@ export default function WheelSection({
           onClick={() => void launchWheel()}
           disabled={loading}
         >
-          {loading ? 'Tirage…' : 'Relancer la roue'}
+          {loading ? t('events.wheel.spinning') : t('events.wheel.relaunchButton')}
         </button>
       )}
 
@@ -128,7 +136,7 @@ export default function WheelSection({
           onClick={() => void closeEvent()}
           disabled={loading}
         >
-          Clôturer la soirée
+          {t('events.wheel.closeButton')}
         </button>
       )}
     </section>

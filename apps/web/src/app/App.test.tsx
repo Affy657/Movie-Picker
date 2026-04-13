@@ -35,8 +35,9 @@ describe('App (routes)', () => {
     );
   });
 
-  it('route /mes-soirees redirige vers la connexion sans session', async () => {
+  it('route /mes-soirees accessible sans compte (liste invité)', async () => {
     renderRoutes(['/mes-soirees']);
-    expect(await screen.findByRole('heading', { name: /^connexion$/i })).toBeInTheDocument();
+    expect(await screen.findByText(/Aucune soirée enregistrée sur cet appareil/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /^Mes soirées$/i })).toBeInTheDocument();
   });
 });

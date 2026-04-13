@@ -43,7 +43,7 @@ Application pour organiser des soirées film : créer un event, partager le lien
 
 ```bash
 pnpm install
-pnpm build            # build front
+pnpm build            # build front (Turbo) : le paquet `web` lance `tsc`, `vite build` puis un grep sur `dist/assets/*.js` pour éviter d’embarquer les identifiants du compte dev rapide (`apps/web/scripts/check-prod-bundle-secrets.mjs`). Un `vite build` lancé à la main dans `apps/web` sans ce script ne fait pas ce contrôle.
 pnpm dev:api-dotnet   # API .NET (port 4000)
 pnpm dev:web          # Front (port 5173)
 pnpm lint             # lint front

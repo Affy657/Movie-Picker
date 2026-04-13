@@ -1,4 +1,5 @@
 import { fetchApi } from '@/shared/api/client';
+import { ApiError } from '@/shared/api/apiError';
 import {
   mapEventData,
   mapParticipantData,
@@ -11,8 +12,11 @@ import type {
   EventConfigData,
   EventConfigPatchPayload,
   EventData,
+  MyEventSummary,
   MyEventsListResponse,
 } from '@/features/events/types';
+import { getStoredParticipant, listStoredParticipantSlugs } from '@/features/events/storage';
+import { guestJoinedEventLifecycle } from '@/shared/utils/guestJoinedEventLifecycle';
 import type { MovieData, ParticipantData } from '@/shared/types/movie';
 
 function hostQuery(hostToken: string | null): string {
@@ -55,6 +59,55 @@ export async function createEvent(body: CreateEventBody): Promise<CreateEventRes
 
 export function fetchMyEventsList(): Promise<MyEventsListResponse> {
   return fetchApi<MyEventsListResponse>('/events/mine');
+}
+
+/**
+ * Marqueur réservé — MyEvents (invité) affiche un message i18n dédié.
+ * @see MyEventsPage
+ */
+export const GUEST_JOINED_EVENTS_ALL_FAILED = 'MP_GUEST_JOINED_ALL_FAILED';
+
+/** Soirées rejointes sans compte : slugs en session + GET public `/events/slug/{slug}`. */
+export async function fetchGuestJoinedEventsSummaries(): Promise<MyEventsListResponse> {
+  const slugs = listStoredParticipantSlugs();
+  if (slugs.length === 0) return { events: [] };
+
+  const results = await Promise.all(
+    slugs.map(async (slug) => {
+      try {
+        const stored = getStoredParticipant(slug);
+        if (!stored) return null;
+        const ev = await fetchEventBySlug(slug, null);
+        const summary: MyEventSummary = {
+          id: ev.id,
+          slug: ev.slug,
+          title: ev.title,
+          date: ev.date,
+          time: ev.time,
+          createdAt: '',
+          updatedAt: '',
+          isCreator: false,
+          isParticipant: true,
+          lifecycle: guestJoinedEventLifecycle(ev),
+        };
+        return summary;
+      } catch {
+        return null;
+      }
+    })
+  );
+
+  const events = results.filter((x): x is MyEventSummary => x != null);
+  const failCount = results.filter((r) => r === null).length;
+
+  if (slugs.length > 0 && events.length === 0) {
+    throw new ApiError(GUEST_JOINED_EVENTS_ALL_FAILED, { code: 0 });
+  }
+
+  return {
+    events,
+    guestSkippedCount: failCount > 0 ? failCount : undefined,
+  };
 }
 
 export type JoinEventResponse = {

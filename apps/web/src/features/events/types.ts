@@ -38,4 +38,6 @@ export interface MyEventSummary {
 
 export interface MyEventsListResponse {
   events: MyEventSummary[];
+  /** Invité : nombre de slugs en session pour lesquels le détail n’a pas pu être chargé. */
+  guestSkippedCount?: number;
 }

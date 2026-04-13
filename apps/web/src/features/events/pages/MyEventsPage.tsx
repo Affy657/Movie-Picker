@@ -2,7 +2,11 @@ import { useEffect, useMemo } from 'react';
 import clsx from 'clsx';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { fetchMyEventsList } from '@/features/events/api/eventsApi';
+import {
+  fetchGuestJoinedEventsSummaries,
+  fetchMyEventsList,
+  GUEST_JOINED_EVENTS_ALL_FAILED,
+} from '@/features/events/api/eventsApi';
 import PageLayout from '@/shared/components/PageLayout';
 import { ApiError, getErrorMessage } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
@@ -12,7 +16,9 @@ import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
 import type { MyEventLifecycle } from '@/shared/types/event';
 import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
 import { formatMyEventsListDate } from '@/shared/utils/formatMyEventsListDate';
+import { parseEventLocalStartMs } from '@/shared/utils/eventScheduleLocal';
 import { withReturnTo, ROUTES } from '@/app/routes';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
 import styles from './MyEventsPage.module.css';
 
 const badgeClassMap: Record<string, string | undefined> = {
@@ -26,15 +32,7 @@ function isFinishedEvent(ev: MyEventSummary): boolean {
 }
 
 function eventDateTimeMs(ev: MyEventSummary): number {
-  const parts = ev.date.split('-').map((p) => parseInt(p, 10));
-  const timeParts = (ev.time ?? '00:00').split(':').map((p) => parseInt(p, 10));
-  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return 0;
-  const y = parts[0]!;
-  const mo = parts[1]!;
-  const d = parts[2]!;
-  const h = Number.isNaN(timeParts[0]!) ? 0 : timeParts[0]!;
-  const mi = Number.isNaN(timeParts[1]!) ? 0 : timeParts[1]!;
-  return new Date(y, mo - 1, d, h, mi).getTime();
+  return parseEventLocalStartMs(ev.date, ev.time ?? '00:00') ?? 0;
 }
 
 function sortActiveChrono(a: MyEventSummary, b: MyEventSummary): number {
@@ -127,38 +125,69 @@ function EventListBlock({
   );
 }
 
+function partitionMyEvents(events: MyEventSummary[]) {
+  const hostedList = events.filter((e) => e.isCreator);
+  const joinedList = events.filter((e) => !e.isCreator && e.isParticipant);
+
+  const hostedActive = [...hostedList.filter((e) => !isFinishedEvent(e))].sort(sortActiveChrono);
+  const joinedActive = [...joinedList.filter((e) => !isFinishedEvent(e))].sort(sortActiveChrono);
+
+  const history = [
+    ...hostedList.filter((e) => isFinishedEvent(e)),
+    ...joinedList.filter((e) => isFinishedEvent(e)),
+  ].sort(sortHistoryChrono);
+
+  return { hostedActive, joinedActive, historyEvents: history };
+}
+
 export default function MyEventsPage() {
   const { t } = useTranslation();
   useDocumentTitle(pageTitle(t('events.myEvents.title')));
   const queryClient = useQueryClient();
+  const { user, isLoading: authLoading } = useAuth();
 
-  const { data, isLoading, isError, error } = useQuery({
+  const loggedInQuery = useQuery({
     queryKey: queryKeys.myEvents.list,
     queryFn: () => fetchMyEventsList(),
+    enabled: !authLoading && !!user,
     retry: false,
   });
 
+  const guestQuery = useQuery({
+    queryKey: queryKeys.myEvents.guestJoined,
+    queryFn: () => fetchGuestJoinedEventsSummaries(),
+    enabled: !authLoading && !user,
+    retry: false,
+  });
+
+  const activeQuery = user ? loggedInQuery : guestQuery;
+
   useEffect(() => {
-    if (!isError || !ApiError.is(error) || error.code !== 401) return;
+    if (!user) return;
+    if (!loggedInQuery.isError || !ApiError.is(loggedInQuery.error)) return;
+    if (loggedInQuery.error.code !== 401) return;
     queryClient.setQueryData(queryKeys.auth.me, null);
     void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
-  }, [isError, error, queryClient]);
+  }, [user, loggedInQuery.isError, loggedInQuery.error, queryClient]);
 
-  const { hostedActive, joinedActive, historyEvents } = useMemo(() => {
-    const events = data?.events ?? [];
-    const hostedList = events.filter((e) => e.isCreator);
-    const joinedList = events.filter((e) => !e.isCreator && e.isParticipant);
+  const { hostedActive, joinedActive, historyEvents } = useMemo(
+    () => partitionMyEvents(activeQuery.data?.events ?? []),
+    [activeQuery.data?.events]
+  );
 
-    const hostedActive = [...hostedList.filter((e) => !isFinishedEvent(e))].sort(sortActiveChrono);
-    const joinedActive = [...joinedList.filter((e) => !isFinishedEvent(e))].sort(sortActiveChrono);
+  const isLoading = authLoading || activeQuery.isLoading;
+  const isError = activeQuery.isError;
+  const error = activeQuery.error;
 
-    const history = [
-      ...hostedList.filter((e) => isFinishedEvent(e)),
-      ...joinedList.filter((e) => isFinishedEvent(e)),
-    ].sort(sortHistoryChrono);
-
-    return { hostedActive, joinedActive, historyEvents: history };
-  }, [data?.events]);
+  const loadErrorMessage =
+    error == null
+      ? ''
+      : ApiError.is(error) && error.message === GUEST_JOINED_EVENTS_ALL_FAILED
+        ? t('events.myEvents.guestAllFailedError')
+        : getErrorMessage(
+            error,
+            user ? t('events.myEvents.fallbackError') : t('events.myEvents.guestFallbackError')
+          );
 
   if (isLoading) {
     return (
@@ -175,21 +204,44 @@ export default function MyEventsPage() {
     return (
       <PageLayout className={styles.layout}>
         <h1 className="visually-hidden">{t('events.myEvents.title')}</h1>
-        <p className="error">{getErrorMessage(error, t('events.myEvents.fallbackError'))}</p>
-        <Link to={withReturnTo(ROUTES.login, ROUTES.myEvents)}>
-          {t('events.myEvents.reconnectLink')}
-        </Link>
+        <p className="error" role="alert">
+          {loadErrorMessage}
+        </p>
+        {user ? (
+          <Link to={withReturnTo(ROUTES.login, ROUTES.myEvents)}>
+            {t('events.myEvents.reconnectLink')}
+          </Link>
+        ) : (
+          <nav className="nav-actions" aria-label={t('events.myEvents.guestErrorActionsLabel')}>
+            <button type="button" className="btn btn-primary" onClick={() => void activeQuery.refetch()}>
+              {t('common.retry')}
+            </button>
+            <Link to={withReturnTo(ROUTES.login, ROUTES.myEvents)} className="btn">
+              {t('events.myEvents.guestLoginCta')}
+            </Link>
+            <Link to={withReturnTo(ROUTES.register, ROUTES.myEvents)} className="btn">
+              {t('events.myEvents.guestRegisterCta')}
+            </Link>
+          </nav>
+        )}
       </PageLayout>
     );
   }
 
-  const total = (data?.events ?? []).length;
+  const total = (activeQuery.data?.events ?? []).length;
+  const guestSkipped = !user ? (activeQuery.data?.guestSkippedCount ?? 0) : 0;
+  const emptyLead = user ? t('events.myEvents.emptyDescription') : t('events.myEvents.emptyDescriptionGuest');
 
   return (
     <PageLayout className={styles.layout}>
       <h1 className={styles.pageTitle}>{t('events.myEvents.title')}</h1>
+      {guestSkipped > 0 ? (
+        <p className="muted" role="status">
+          {t('events.myEvents.guestPartialSkipped', { count: guestSkipped })}
+        </p>
+      ) : null}
       {total === 0 ? (
-        <p className="lead">{t('events.myEvents.emptyDescription')}</p>
+        <p className="lead">{emptyLead}</p>
       ) : (
         <>
           <EventListBlock
@@ -213,14 +265,31 @@ export default function MyEventsPage() {
           />
         </>
       )}
-      <nav
-        className={`nav-actions ${styles.ctaNav}`}
-        aria-label={t('events.myEvents.actionsNavLabel')}
-      >
-        <Link to={ROUTES.createEvent} className={`btn btn-primary ${styles.ctaButton}`}>
-          {t('events.myEvents.createCta')}
-        </Link>
-      </nav>
+      {user ? (
+        <nav
+          className={`nav-actions ${styles.ctaNav}`}
+          aria-label={t('events.myEvents.actionsNavLabel')}
+        >
+          <Link to={ROUTES.createEvent} className={`btn btn-primary ${styles.ctaButton}`}>
+            {t('events.myEvents.createCta')}
+          </Link>
+        </nav>
+      ) : (
+        <nav
+          className={`nav-actions ${styles.ctaNav}`}
+          aria-label={t('events.myEvents.guestActionsNavLabel')}
+        >
+          <Link
+            to={withReturnTo(ROUTES.login, ROUTES.myEvents)}
+            className={`btn btn-primary ${styles.ctaButton}`}
+          >
+            {t('events.myEvents.guestLoginCta')}
+          </Link>
+          <Link to={withReturnTo(ROUTES.register, ROUTES.myEvents)} className="btn">
+            {t('events.myEvents.guestRegisterCta')}
+          </Link>
+        </nav>
+      )}
     </PageLayout>
   );
 }

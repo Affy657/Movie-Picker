@@ -1,0 +1,10 @@
+.devQuickLogin {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.devQuickLoginHint {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+}

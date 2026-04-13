@@ -117,48 +117,48 @@ body {
 /*
  * Panneaux cartes de la page Compte uniquement (AccountPage.tsx — plusieurs sections).
  * Styles globaux ici car pas de CSS module sur cette page.
+ * `.section.section--panel` : spécificité > `.section` (02-forms) pour les marges du panneau.
  */
-.section--panel {
-  padding: 1rem 1.15rem;
+.section.section--panel {
+  padding: 1.15rem 1.2rem;
   background: var(--color-surface);
   border-radius: var(--radius-md);
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
-.section--panel:last-of-type {
+/* Dernier bloc de la page connectée uniquement (invité : nav + texte suivent → pas :last-child). */
+.page > .section.section--panel:last-child {
   margin-bottom: 0;
 }
 
 /* Compte — cohérence champs, lisibilité des aides */
-.section--panel .form .label {
+.section.section--panel .form .label {
   margin-bottom: 0.45rem;
 }
 
-.section--panel .form > select.btn + .label,
-.section--panel .form > button.btn + .label {
+.section.section--panel .form > select.btn + .label {
   margin-top: 0.65rem;
 }
 
-.section--panel .form > select.btn,
-.section--panel .form > button.btn:not([type='submit']) {
-  margin-bottom: 0.2rem;
+.section.section--panel .form > select.btn {
+  margin-bottom: 0.35rem;
 }
 
-.section--panel .hint {
+.section.section--panel .hint {
   color: var(--color-text-muted);
   line-height: 1.45;
 }
 
-.section--panel .btn {
+.section.section--panel .btn {
   border-radius: var(--radius-md);
 }
 
-.section--panel .btn-danger {
+.section.section--panel .btn-danger {
   padding-inline: 1.2rem;
   min-height: 44px;
 }
 
-[data-theme='dark'] .section--panel .input {
+[data-theme='dark'] .section.section--panel .input {
   border-color: #3d546e;
 }
 

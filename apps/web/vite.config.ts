@@ -2,12 +2,22 @@ import path from 'path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig({
+const devQuickLoginStub = path.resolve(__dirname, 'src/features/auth/devQuickLoginCredentials.stub.ts');
+
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, 'src'),
-    },
+    alias: [
+      ...(mode === 'production'
+        ? [
+            {
+              find: '@/features/auth/devQuickLoginCredentials',
+              replacement: devQuickLoginStub,
+            },
+          ]
+        : []),
+      { find: '@', replacement: path.resolve(__dirname, 'src') },
+    ],
   },
   server: {
     port: 5173,
@@ -23,4 +33,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

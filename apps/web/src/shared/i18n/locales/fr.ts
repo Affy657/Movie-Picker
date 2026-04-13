@@ -33,7 +33,7 @@ export const fr = {
   auth: {
     login: {
       title: 'Connexion',
-      description: 'Connecte-toi pour créer des soirées et retrouver tes participations.',
+      description: 'Acc\u00e9dez \u00e0 vos soir\u00e9es et \u00e0 votre profil.',
       emailLabel: 'E-mail',
       passwordLabel: 'Mot de passe',
       submit: 'Se connecter',
@@ -41,40 +41,42 @@ export const fr = {
       fallbackError: 'Connexion impossible.',
       registerPrompt: 'Pas encore de compte ?',
       registerLink: 'Créer un compte',
+      devQuickButton: 'Compte dev (local)',
+      devQuickHint: 'Visible uniquement en d\u00e9veloppement.',
+      devQuickAriaLabel: 'Connexion rapide compte d\u00e9veloppeur (local uniquement)',
     },
     register: {
       title: 'Inscription',
-      description: 'Créer un compte pour organiser des soirées et retrouver ton historique.',
+      description: 'Cr\u00e9ez un compte pour retrouver vos soir\u00e9es.',
       emailLabel: 'E-mail',
       passwordLabel: 'Mot de passe',
       passwordHint: 'Au moins 8 caractères',
-      pseudoLabel: 'Pseudo affiché',
-      submit: "S'inscrire",
-      submitting: 'Inscription\u2026',
+      passwordRulesHint:
+        '8 caract\u00e8res minimum, au moins une lettre et un chiffre.',
+      passwordRulesError:
+        'Le mot de passe doit faire au moins 8 caract\u00e8res et inclure au moins une lettre et un chiffre.',
+      pseudoLabel: 'Pseudo',
+      submit: 'Cr\u00e9er mon compte',
+      submitting: 'Cr\u00e9ation\u2026',
       fallbackError: 'Inscription impossible.',
-      loginPrompt: 'Déjà un compte ?',
+      loginPrompt: 'D\u00e9j\u00e0 inscrit ?',
       loginLink: 'Se connecter',
     },
     account: {
       title: 'Compte',
       loadingPlaceholder: 'Chargement du profil\u2026',
-      pseudoLabel: 'Pseudo affiché',
+      pseudoLabel: 'Pseudo',
       profileTitle: 'Profil',
       themeLabel: 'Thème de l\u2019interface',
       preferencesTitle: 'Préférences',
       languageLabel: 'Langue',
-      themeHint: 'Clair, sombre ou selon votre appareil.',
       guestLead: 'Connectez-vous ou créez un compte pour garder vos soirées.',
-      guestHint:
-        'Vous pouvez aussi continuer en invité\u00a0: créez ou rejoignez une soirée via le lien partagé.',
       saveSuccess: 'Modifications enregistrées.',
       fallbackError: 'Enregistrement impossible.',
       logoutButton: 'Se déconnecter',
       loginCta: 'Se connecter',
       registerCta: 'Créer un compte',
       sessionTitle: 'Session',
-      sessionHint:
-        'La session est maintenue par un cookie sécurisé (httpOnly) émis par l\u2019API.',
       saving: 'Enregistrement\u2026',
       guestNavAriaLabel: 'Connexion et inscription',
     },
@@ -130,6 +132,18 @@ export const fr = {
       hostBadge: 'H\u00f4te',
       hostBadgeTitle: 'Vous organisez cette soir\u00e9e',
       historySection: 'Historique',
+      emptyDescriptionGuest:
+        'Aucune soir\u00e9e enregistr\u00e9e sur cet appareil. Ouvrez un lien d\u2019invitation pour rejoindre une soir\u00e9e : elle appara\u00eetra ici.',
+      guestActionsNavLabel: 'Compte et cr\u00e9ation de soir\u00e9e',
+      guestLoginCta: 'Se connecter',
+      guestRegisterCta: 'Cr\u00e9er un compte',
+      guestFallbackError:
+        'Impossible de charger vos soir\u00e9es. V\u00e9rifiez la connexion puis r\u00e9essayez.',
+      guestAllFailedError:
+        'Aucune soir\u00e9e enregistr\u00e9e ici n\u2019a pu \u00eatre charg\u00e9e. R\u00e9essayez ou ouvrez \u00e0 nouveau un lien d\u2019invitation.',
+      guestPartialSkipped:
+        'Certaines soir\u00e9es m\u00e9moris\u00e9es sur cet appareil n\u2019ont pas pu \u00eatre affich\u00e9es ({{count}}).',
+      guestErrorActionsLabel: 'Actions apr\u00e8s erreur de chargement',
     },
     share: {
       shareButton: 'Partager',
@@ -156,6 +170,8 @@ export const fr = {
     },
     wheel: {
       title: 'Roue',
+      /** Titre quand l’utilisateur ne peut pas lancer la roue (invité) mais voit le résultat. */
+      viewerTitle: 'R\u00e9sultat du tirage',
       emptyPlaceholder: 'Aucun film. Proposez au moins un film pour lancer la roue.',
       winnerLabel: 'Film gagnant',
       launchButton: 'Lancer la roue',

@@ -25,7 +25,6 @@ function PreferencesSection() {
           {t('auth.account.themeLabel')}
         </label>
         <ThemeToggle id="account-theme" />
-        <p className="hint">{t('auth.account.themeHint')}</p>
       </div>
     </section>
   );
@@ -86,7 +85,6 @@ export default function AccountPage() {
             {t('auth.account.registerCta')}
           </Link>
         </nav>
-        <p className="muted">{t('auth.account.guestHint')}</p>
       </PageLayout>
     );
   }
@@ -102,8 +100,6 @@ export default function AccountPage() {
       <p className="muted">
         <span>{user.emailMasked}</span>
       </p>
-
-      <PreferencesSection />
 
       <section className="section section--panel" aria-labelledby="profile-heading">
         <h2 id="profile-heading">{t('auth.account.profileTitle')}</h2>
@@ -142,6 +138,8 @@ export default function AccountPage() {
         </form>
       </section>
 
+      <PreferencesSection />
+
       <section className="section section--panel" aria-labelledby="session-heading">
         <h2 id="session-heading">{t('auth.account.sessionTitle')}</h2>
         {logoutError && (
@@ -159,7 +157,6 @@ export default function AccountPage() {
             {loggingOut ? t('auth.logout.submitting') : t('auth.account.logoutButton')}
           </button>
         </div>
-        <p className="hint">{t('auth.account.sessionHint')}</p>
       </section>
     </PageLayout>
   );

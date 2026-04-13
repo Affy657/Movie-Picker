@@ -1,49 +1,54 @@
 import clsx from 'clsx';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useTheme } from '@/shared/contexts/ThemeContext';
+import type { UiThemePreference } from '@/shared/types/theme';
 import { useTranslation } from '@/shared/i18n';
-import { getNextUiPreference } from '@/shared/utils/uiThemePreference';
+import { isUiThemePreference } from '@/shared/utils/uiThemePreference';
 import styles from './ThemeToggle.module.css';
+
+const THEME_OPTIONS: readonly UiThemePreference[] = ['light', 'dark', 'system'];
 
 export default function ThemeToggle({
   className = '',
   id,
 }: {
   className?: string;
-  /** Si défini, le libellé visible doit utiliser `htmlFor={id}` ; sinon `aria-label` dynamique seul. */
+  /** Si défini, le libellé visible doit utiliser `htmlFor={id}` ; sinon `aria-label` seul. */
   id?: string;
 }) {
-  const { preference, resolvedTheme, setUiPreference } = useTheme();
+  const { preference, setUiPreference } = useTheme();
   const { user, patchProfile } = useAuth();
   const { t } = useTranslation();
 
-  const label =
-    preference === 'system'
-      ? `Auto (${resolvedTheme === 'dark' ? t('theme.dark') : t('theme.light')})`
-      : preference === 'dark'
-        ? t('theme.dark')
-        : t('theme.light');
-
-  const handleClick = () => {
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (!isUiThemePreference(value)) return;
     const prev = preference;
-    const next = getNextUiPreference(prev);
-    setUiPreference(next);
+    setUiPreference(value);
     if (user) {
-      void patchProfile({ uiTheme: next }).catch(() => {
+      void patchProfile({ uiTheme: value }).catch(() => {
         setUiPreference(prev);
       });
     }
   };
 
   return (
-    <button
-      type="button"
+    <select
       id={id}
       className={clsx('btn', styles.root, className)}
-      onClick={handleClick}
-      aria-label={id ? undefined : label}
+      value={preference}
+      onChange={handleChange}
+      aria-label={id ? undefined : t('auth.account.themeLabel')}
     >
-      {label}
-    </button>
+      {THEME_OPTIONS.map((code) => (
+        <option key={code} value={code}>
+          {code === 'light'
+            ? t('theme.light')
+            : code === 'dark'
+              ? t('theme.dark')
+              : t('theme.system')}
+        </option>
+      ))}
+    </select>
   );
 }

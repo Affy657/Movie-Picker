@@ -57,7 +57,7 @@ describe('RegisterPage (MSW)', () => {
 
     renderRegister('/inscription?returnTo=%2F');
 
-    await user.type(screen.getByLabelText(/pseudo affiché/i), 'Sam');
+    await user.type(screen.getByLabelText(/^pseudo$/i), 'Sam');
     await user.type(screen.getByLabelText(/^e-mail$/i), 'sam@test.local');
     await user.type(screen.getByLabelText(/^mot de passe$/i), 'abcd1234');
     await user.click(screen.getByRole('button', { name: /créer mon compte/i }));
@@ -67,5 +67,31 @@ describe('RegisterPage (MSW)', () => {
         screen.getByRole('heading', { name: 'Accueil après inscription' })
       ).toBeInTheDocument();
     });
+  });
+
+  it('n’appelle pas l’API si le mot de passe ne contient pas de chiffre', async () => {
+    const user = userEvent.setup();
+    let registerPosts = 0;
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({ error: '401' }, { status: 401 })
+      ),
+      http.post(`${TEST_API_V1}/auth/register`, async () => {
+        registerPosts += 1;
+        return HttpResponse.json({}, { status: 201 });
+      })
+    );
+
+    renderRegister('/inscription?returnTo=%2F');
+
+    await user.type(screen.getByLabelText(/^pseudo$/i), 'Sam');
+    await user.type(screen.getByLabelText(/^e-mail$/i), 'sam@test.local');
+    await user.type(screen.getByLabelText(/^mot de passe$/i), 'abcdefgh');
+    await user.click(screen.getByRole('button', { name: /créer mon compte/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+    });
+    expect(registerPosts).toBe(0);
   });
 });

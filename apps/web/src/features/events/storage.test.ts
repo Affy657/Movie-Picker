@@ -4,6 +4,7 @@ import {
   setStoredHostToken,
   getStoredParticipant,
   setStoredParticipant,
+  listStoredParticipantSlugs,
 } from '@/features/events/storage';
 
 describe('event storage', () => {
@@ -56,6 +57,28 @@ describe('event storage', () => {
         'moviepicker_participant_' + slug,
         JSON.stringify({ participantId: 'p1', pseudo: 'Alice' })
       );
+    });
+  });
+
+  describe('listStoredParticipantSlugs', () => {
+    it('retourne les slugs avec participant valide', () => {
+      const store: Record<string, string> = {
+        moviepicker_participant_alpha: JSON.stringify({ participantId: 'p1', pseudo: 'A' }),
+        moviepicker_participant_beta: JSON.stringify({ participantId: 'p2', pseudo: 'B' }),
+        other_key: 'x',
+      };
+      const keys = Object.keys(store);
+      vi.stubGlobal('sessionStorage', {
+        get length() {
+          return keys.length;
+        },
+        key: (i: number) => keys[i] ?? null,
+        getItem: (k: string) => store[k] ?? null,
+        setItem: vi.fn(),
+        removeItem: vi.fn(),
+        clear: vi.fn(),
+      });
+      expect(listStoredParticipantSlugs().sort()).toEqual(['alpha', 'beta']);
     });
   });
 });

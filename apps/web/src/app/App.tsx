@@ -57,14 +57,7 @@ export function AppRoutes() {
         <Route path={ROUTES.login} element={<LoginPage />} />
         <Route path={ROUTES.register} element={<RegisterPage />} />
         <Route path={ROUTES.account} element={<AccountPage />} />
-        <Route
-          path={ROUTES.myEvents}
-          element={
-            <ProtectedRoute>
-              <MyEventsPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path={ROUTES.myEvents} element={<MyEventsPage />} />
         <Route path={ROUTES.eventDetailPattern} element={<EventDetail />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

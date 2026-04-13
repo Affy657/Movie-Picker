@@ -5,6 +5,7 @@ export const queryKeys = {
   },
   myEvents: {
     list: ['events', 'mine'] as const,
+    guestJoined: ['events', 'guest-joined'] as const,
   },
   event: {
     all: ['event'] as const,

@@ -31,6 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const invalidateSession = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
     await queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
+    await queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.guestJoined });
   }, [queryClient]);
 
   const { data: user = null, isLoading } = useQuery({
@@ -67,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await postAuthLogout();
       queryClient.setQueryData(queryKeys.auth.me, null);
       await queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.guestJoined });
     },
   });
 

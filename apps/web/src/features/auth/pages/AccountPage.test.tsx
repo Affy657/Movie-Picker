@@ -63,9 +63,9 @@ describe('AccountPage (MSW)', () => {
     });
 
     expect(screen.getByRole('heading', { name: 'Préférences' })).toBeInTheDocument();
-    const themeBtn = screen.getByRole('button', { name: 'Thème de l\u2019interface' });
+    const themeSelect = screen.getByLabelText('Thème de l\u2019interface');
 
-    await user.click(themeBtn);
+    await user.selectOptions(themeSelect, 'dark');
     await waitFor(() => expect(patchedTheme).toBe('dark'));
   });
 });

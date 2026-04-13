@@ -65,4 +65,40 @@ describe('LoginPage (MSW)', () => {
       expect(screen.getByRole('heading', { name: 'Accueil test' })).toBeInTheDocument();
     });
   });
+
+  it('en dev : bouton compte dev et connexion sans saisie', async () => {
+    expect(import.meta.env.DEV).toBe(true);
+    const user = userEvent.setup();
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        sessionActive
+          ? HttpResponse.json({
+              userId: 'u-dev',
+              displayName: 'Utilisateur dev',
+              emailMasked: 'd***@test.local',
+              uiTheme: 'system',
+            })
+          : HttpResponse.json({ error: '401' }, { status: 401 })
+      ),
+      http.post(`${TEST_API_V1}/auth/login`, async ({ request }) => {
+        const body = (await request.json()) as { email?: string; password?: string };
+        expect(body.email).toBe('dev@test.local');
+        expect(body.password).toBe('DevTest123!');
+        sessionActive = true;
+        return HttpResponse.json({});
+      })
+    );
+
+    renderLogin('/connexion?returnTo=%2F');
+    const devBtn = screen.getByRole('button', {
+      name: /connexion rapide compte développeur/i,
+    });
+    expect(devBtn).toBeInTheDocument();
+
+    await user.click(devBtn);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Accueil test' })).toBeInTheDocument();
+    });
+  });
 });
