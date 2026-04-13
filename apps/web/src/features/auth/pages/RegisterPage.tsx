@@ -28,7 +28,11 @@ export default function RegisterPage() {
     navigate(returnTo, { replace: true });
   }, [email, password, displayName, register, navigate, returnTo]);
 
-  const { run: submit, loading, error } = useAsyncAction(registerAction, t('auth.register.fallbackError'));
+  const {
+    run: submit,
+    loading,
+    error,
+  } = useAsyncAction(registerAction, t('auth.register.fallbackError'));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,9 +50,7 @@ export default function RegisterPage() {
         <form
           onSubmit={handleSubmit}
           className="form"
-          aria-describedby={
-            rulesError || error ? 'register-form-error' : undefined
-          }
+          aria-describedby={rulesError || error ? 'register-form-error' : undefined}
         >
           {(rulesError || error) && (
             <p id="register-form-error" className="error" role="alert">

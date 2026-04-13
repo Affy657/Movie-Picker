@@ -37,7 +37,9 @@ describe('App (routes)', () => {
 
   it('route /mes-soirees accessible sans compte (liste invité)', async () => {
     renderRoutes(['/mes-soirees']);
-    expect(await screen.findByText(/Aucune soirée enregistrée sur cet appareil/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Aucune soirée enregistrée sur cet appareil/i)
+    ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /^Mes soirées$/i })).toBeInTheDocument();
   });
 });

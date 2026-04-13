@@ -51,8 +51,7 @@ export const fr = {
       emailLabel: 'E-mail',
       passwordLabel: 'Mot de passe',
       passwordHint: 'Au moins 8 caractères',
-      passwordRulesHint:
-        '8 caract\u00e8res minimum, au moins une lettre et un chiffre.',
+      passwordRulesHint: '8 caract\u00e8res minimum, au moins une lettre et un chiffre.',
       passwordRulesError:
         'Le mot de passe doit faire au moins 8 caract\u00e8res et inclure au moins une lettre et un chiffre.',
       pseudoLabel: 'Pseudo',

@@ -2,7 +2,10 @@ import path from 'path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-const devQuickLoginStub = path.resolve(__dirname, 'src/features/auth/devQuickLoginCredentials.stub.ts');
+const devQuickLoginStub = path.resolve(
+  __dirname,
+  'src/features/auth/devQuickLoginCredentials.stub.ts'
+);
 
 export default defineConfig(({ mode }) => ({
   plugins: [react()],

@@ -134,8 +134,7 @@ export const en: Locale = {
       guestFallbackError: 'Could not load your events. Check your connection and try again.',
       guestAllFailedError:
         'None of the events saved on this device could be loaded. Retry or open an invite link again.',
-      guestPartialSkipped:
-        'Some events saved on this device could not be shown ({{count}}).',
+      guestPartialSkipped: 'Some events saved on this device could not be shown ({{count}}).',
       guestErrorActionsLabel: 'Actions after a load error',
     },
     share: {

@@ -39,7 +39,11 @@ export default function LoginPage() {
     [email, password, login, navigate, returnTo]
   );
 
-  const { run: submit, loading, error } = useAsyncAction(loginAction, t('auth.login.fallbackError'));
+  const {
+    run: submit,
+    loading,
+    error,
+  } = useAsyncAction(loginAction, t('auth.login.fallbackError'));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,9 +109,7 @@ export default function LoginPage() {
               >
                 {t('auth.login.devQuickButton')}
               </button>
-              <p className={`muted ${styles.devQuickLoginHint}`}>
-                {t('auth.login.devQuickHint')}
-              </p>
+              <p className={`muted ${styles.devQuickLoginHint}`}>{t('auth.login.devQuickHint')}</p>
             </div>
           ) : null}
         </form>

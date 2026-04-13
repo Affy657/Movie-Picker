@@ -213,7 +213,11 @@ export default function MyEventsPage() {
           </Link>
         ) : (
           <nav className="nav-actions" aria-label={t('events.myEvents.guestErrorActionsLabel')}>
-            <button type="button" className="btn btn-primary" onClick={() => void activeQuery.refetch()}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => void activeQuery.refetch()}
+            >
               {t('common.retry')}
             </button>
             <Link to={withReturnTo(ROUTES.login, ROUTES.myEvents)} className="btn">
@@ -230,7 +234,9 @@ export default function MyEventsPage() {
 
   const total = (activeQuery.data?.events ?? []).length;
   const guestSkipped = !user ? (activeQuery.data?.guestSkippedCount ?? 0) : 0;
-  const emptyLead = user ? t('events.myEvents.emptyDescription') : t('events.myEvents.emptyDescriptionGuest');
+  const emptyLead = user
+    ? t('events.myEvents.emptyDescription')
+    : t('events.myEvents.emptyDescriptionGuest');
 
   return (
     <PageLayout className={styles.layout}>
