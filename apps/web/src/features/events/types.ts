@@ -34,6 +34,8 @@ export interface MyEventSummary {
   isParticipant: boolean;
   /** Présent sur API à jour ; normaliser côté UI si absent. */
   lifecycle?: MyEventLifecycle | string;
+  participantCount?: number;
+  movieCount?: number;
 }
 
 export interface MyEventsListResponse {

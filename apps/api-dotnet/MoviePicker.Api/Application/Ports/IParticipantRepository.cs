@@ -14,4 +14,9 @@ public interface IParticipantRepository
 
     /// <summary>Identifiants d’événements où le compte est inscrit (participants avec <c>userId</c>).</summary>
     Task<IReadOnlyList<string>> ListDistinctEventIdsByUserIdAsync(string userId, CancellationToken ct = default);
+
+    Task<int> CountByEventIdAsync(string eventId, CancellationToken ct = default);
+
+    /// <summary>Nombre de participants par <c>eventId</c> (clés absentes = 0).</summary>
+    Task<IReadOnlyDictionary<string, int>> CountByEventIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default);
 }

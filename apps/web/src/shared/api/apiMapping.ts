@@ -20,6 +20,8 @@ type RawEventData = Omit<EventData, 'id' | 'isFinished' | 'myParticipant' | 'win
   isFinished?: boolean;
   myParticipant?: { _id: string; pseudo: string } | null;
   winnerMovie?: RawMovieData | null;
+  participantCount?: number;
+  movieCount?: number;
 };
 
 export function mapMovieData(raw: RawMovieData): MovieData {

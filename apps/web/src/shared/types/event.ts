@@ -31,4 +31,8 @@ export interface EventData {
   config?: EventConfigData;
   /** Participant du compte connecté pour cette soirée (détail événement authentifié). */
   myParticipant?: { id: string; pseudo: string } | null;
+  /** Nombre de participants (détail / liste à jour). */
+  participantCount?: number;
+  /** Nombre de films proposés (détail / liste à jour). */
+  movieCount?: number;
 }

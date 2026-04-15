@@ -53,6 +53,8 @@ public sealed class UserEventsEndpointsTests : IClassFixture<MoviePickerApplicat
         Assert.True(body!.IsHost);
         Assert.NotNull(body.MyParticipant);
         Assert.Equal("Hôte", body.MyParticipant!.Pseudo);
+        Assert.True(body.ParticipantCount >= 1);
+        Assert.True(body.MovieCount >= 0);
     }
 
     [Fact]
@@ -86,6 +88,14 @@ public sealed class UserEventsEndpointsTests : IClassFixture<MoviePickerApplicat
         Assert.Contains(list.Events, e => e.Title == "Ma soirée" && e.IsCreator);
         Assert.Contains(list.Events, e => e.Title == "S partagée" && e.IsParticipant && !e.IsCreator);
         Assert.All(list.Events, e => Assert.False(string.IsNullOrWhiteSpace(e.Lifecycle)));
+
+        var ownedRow = list.Events.Single(e => e.Title == "Ma soirée");
+        Assert.True(ownedRow.ParticipantCount >= 1);
+        Assert.True(ownedRow.MovieCount >= 0);
+
+        var sharedRow = list.Events.Single(e => e.Title == "S partagée");
+        Assert.True(sharedRow.ParticipantCount >= 2);
+        Assert.True(sharedRow.MovieCount >= 0);
     }
 
     [Fact]

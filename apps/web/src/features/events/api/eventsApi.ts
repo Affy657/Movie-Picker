@@ -89,6 +89,8 @@ export async function fetchGuestJoinedEventsSummaries(): Promise<MyEventsListRes
           isCreator: false,
           isParticipant: true,
           lifecycle: guestJoinedEventLifecycle(ev),
+          participantCount: ev.participantCount,
+          movieCount: ev.movieCount,
         };
         return summary;
       } catch {

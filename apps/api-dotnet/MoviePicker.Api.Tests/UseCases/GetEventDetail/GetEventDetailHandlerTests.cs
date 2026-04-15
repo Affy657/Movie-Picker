@@ -47,6 +47,12 @@ public sealed class GetEventDetailHandlerTests
         _posterStore
             .Setup(s => s.RegisterTmdbSourcesAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
+        _participantRepo
+            .Setup(r => r.CountByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+        _movieRepo
+            .Setup(r => r.CountByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
         _sut = new GetEventDetailHandler(
             _eventRepo.Object,
             _movieRepo.Object,
@@ -218,5 +224,24 @@ public sealed class GetEventDetailHandlerTests
         Assert.NotNull(result.MyParticipant);
         Assert.Equal("part-1", result.MyParticipant.Id);
         Assert.Equal("Alice", result.MyParticipant.Pseudo);
+    }
+
+    [Fact]
+    public async Task HandleAsync_IncludesParticipantAndMovieCounts()
+    {
+        var evt = Event();
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
+        _participantRepo
+            .Setup(r => r.CountByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(12);
+        _movieRepo
+            .Setup(r => r.CountByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(4);
+
+        var result = await _sut.HandleAsync("evt1");
+
+        Assert.Equal(12, result.ParticipantCount);
+        Assert.Equal(4, result.MovieCount);
     }
 }

@@ -143,6 +143,10 @@ export const fr = {
       guestPartialSkipped:
         'Certaines soir\u00e9es m\u00e9moris\u00e9es sur cet appareil n\u2019ont pas pu \u00eatre affich\u00e9es ({{count}}).',
       guestErrorActionsLabel: 'Actions apr\u00e8s erreur de chargement',
+      joinedCountOne: '1 participant',
+      joinedCountMany: '{{count}} participants',
+      movieProposedOne: '1 film propos\u00e9',
+      movieProposedMany: '{{count}} films propos\u00e9s',
     },
     share: {
       shareButton: 'Partager',

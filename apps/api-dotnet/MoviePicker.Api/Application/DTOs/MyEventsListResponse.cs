@@ -19,4 +19,8 @@ public sealed class MyEventSummaryDto
 
     /// <summary><c>upcoming</c> | <c>live</c> | <c>finished</c> — affichage liste « mes soirées ».</summary>
     public string Lifecycle { get; init; } = string.Empty;
+
+    public int ParticipantCount { get; init; }
+
+    public int MovieCount { get; init; }
 }

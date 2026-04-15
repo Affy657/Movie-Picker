@@ -22,4 +22,8 @@ public sealed class EventDetailResponse
 
     /// <summary>Participant lié au compte connecté pour cette soirée, si applicable.</summary>
     public ParticipantResponse? MyParticipant { get; init; }
+
+    public int ParticipantCount { get; init; }
+
+    public int MovieCount { get; init; }
 }

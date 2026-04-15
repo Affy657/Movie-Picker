@@ -63,6 +63,8 @@ describe('MyEventsPage (MSW)', () => {
               isCreator: true,
               isParticipant: true,
               lifecycle: 'upcoming',
+              participantCount: 4,
+              movieCount: 2,
             },
             {
               id: 'e2',
@@ -75,6 +77,8 @@ describe('MyEventsPage (MSW)', () => {
               isCreator: false,
               isParticipant: true,
               lifecycle: 'live',
+              participantCount: 6,
+              movieCount: 1,
             },
             {
               id: 'e3',
@@ -87,6 +91,8 @@ describe('MyEventsPage (MSW)', () => {
               isCreator: true,
               isParticipant: true,
               lifecycle: 'finished',
+              participantCount: 2,
+              movieCount: 5,
             },
           ],
         })
@@ -105,8 +111,10 @@ describe('MyEventsPage (MSW)', () => {
 
     const hostedLink = screen.getByRole('link', { name: /Chez moi/i });
     expect(hostedLink).toHaveAttribute('href', '/s/ma-soiree');
+    expect(within(hostedLink.closest('li')!).getByText(/4 participants/)).toBeInTheDocument();
+    expect(within(hostedLink.closest('li')!).getByText(/2 films propos/)).toBeInTheDocument();
     expect(screen.getAllByText('Hôte').length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText('À venir')).toBeInTheDocument();
+    expect(within(hostedLink.closest('li')!).getByText('À venir')).toBeInTheDocument();
 
     const joinedLink = screen.getByRole('link', { name: /Chez Bob/i });
     expect(joinedLink).toHaveAttribute('href', '/s/autre');
@@ -142,6 +150,10 @@ describe('MyEventsPage (MSW)', () => {
     await waitFor(() => {
       expect(screen.getByRole('link', { name: /Soirée chez Kim/i })).toBeInTheDocument();
     });
+
+    const guestLink = screen.getByRole('link', { name: /Soirée chez Kim/i });
+    expect(within(guestLink.closest('li')!).getByText(/3 participants/)).toBeInTheDocument();
+    expect(within(guestLink.closest('li')!).getByText(/2 films propos/)).toBeInTheDocument();
 
     expect(screen.queryByRole('link', { name: /Créer une soirée/i })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Se connecter/i })).toHaveAttribute(

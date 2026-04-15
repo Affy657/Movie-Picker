@@ -1,3 +1,4 @@
+using System.Linq;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
@@ -90,5 +91,30 @@ public sealed class MongoParticipantRepository : IParticipantRepository
             .Project(x => x.EventId)
             .ToListAsync(ct);
         return ids.Distinct().ToList();
+    }
+
+    public async Task<int> CountByEventIdAsync(string eventId, CancellationToken ct = default)
+    {
+        var c = await _collection.CountDocumentsAsync(x => x.EventId == eventId, cancellationToken: ct);
+        return (int)c;
+    }
+
+    public async Task<IReadOnlyDictionary<string, int>> CountByEventIdsAsync(
+        IReadOnlyCollection<string> eventIds,
+        CancellationToken ct = default)
+    {
+        if (eventIds.Count == 0)
+            return new Dictionary<string, int>();
+
+        var filter = Builders<ParticipantDocument>.Filter.In(x => x.EventId, eventIds);
+        var groups = await _collection.Aggregate()
+            .Match(filter)
+            .Group(doc => doc.EventId, g => new { EventId = g.Key, Count = g.Count() })
+            .ToListAsync(ct);
+
+        var map = eventIds.Distinct().ToDictionary(id => id, _ => 0);
+        foreach (var row in groups)
+            map[row.EventId] = row.Count;
+        return map;
     }
 }

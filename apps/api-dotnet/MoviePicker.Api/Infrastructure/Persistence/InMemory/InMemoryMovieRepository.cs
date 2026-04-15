@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Linq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
 
@@ -68,5 +69,28 @@ public sealed class InMemoryMovieRepository : IMovieRepository
             }
         }
         return Task.CompletedTask;
+    }
+
+    public Task<int> CountByEventIdAsync(string eventId, CancellationToken ct = default)
+    {
+        if (!_byEventId.TryGetValue(eventId, out var list))
+            return Task.FromResult(0);
+        lock (list) { return Task.FromResult(list.Count); }
+    }
+
+    public Task<IReadOnlyDictionary<string, int>> CountByEventIdsAsync(
+        IReadOnlyCollection<string> eventIds,
+        CancellationToken ct = default)
+    {
+        var map = eventIds.Distinct().ToDictionary(id => id, _ => 0);
+        foreach (var id in map.Keys.ToList())
+        {
+            if (_byEventId.TryGetValue(id, out var list))
+            {
+                lock (list) { map[id] = list.Count; }
+            }
+        }
+
+        return Task.FromResult<IReadOnlyDictionary<string, int>>(map);
     }
 }

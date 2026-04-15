@@ -12,4 +12,9 @@ public interface IMovieRepository
     Task<int> CountByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default);
     Task<Movie> InsertAsync(Movie movie, CancellationToken ct = default);
     Task DeleteAsync(string movieId, CancellationToken ct = default);
+
+    Task<int> CountByEventIdAsync(string eventId, CancellationToken ct = default);
+
+    /// <summary>Nombre de films proposés par <c>eventId</c> (clés absentes = 0).</summary>
+    Task<IReadOnlyDictionary<string, int>> CountByEventIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default);
 }

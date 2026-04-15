@@ -76,4 +76,24 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
             .ToList();
         return Task.FromResult<IReadOnlyList<string>>(ids);
     }
+
+    public Task<int> CountByEventIdAsync(string eventId, CancellationToken ct = default)
+    {
+        var n = _byId.Values.Count(p => p.EventId == eventId);
+        return Task.FromResult(n);
+    }
+
+    public Task<IReadOnlyDictionary<string, int>> CountByEventIdsAsync(
+        IReadOnlyCollection<string> eventIds,
+        CancellationToken ct = default)
+    {
+        var map = eventIds.Distinct().ToDictionary(id => id, _ => 0);
+        foreach (var p in _byId.Values)
+        {
+            if (map.ContainsKey(p.EventId))
+                map[p.EventId]++;
+        }
+
+        return Task.FromResult<IReadOnlyDictionary<string, int>>(map);
+    }
 }

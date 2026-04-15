@@ -38,6 +38,8 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
         isHost: !!host,
         isFinished: opts.isFinished ?? false,
         winnerMovie: opts.winnerMovie ?? null,
+        participantCount: 3,
+        movieCount: 2,
         config: {
           theme: opts.theme ?? null,
           endDate: null,

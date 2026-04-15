@@ -56,6 +56,26 @@ function lifecycleTranslationKey(l: MyEventLifecycle): TranslationKey {
   }
 }
 
+function cardJoinedLabel(
+  participantCount: number,
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string
+) {
+  const n = participantCount;
+  return n === 1
+    ? t('events.myEvents.joinedCountOne')
+    : t('events.myEvents.joinedCountMany', { count: n });
+}
+
+function cardMoviesLabel(
+  movieCount: number,
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string
+) {
+  const n = movieCount;
+  return n === 1
+    ? t('events.myEvents.movieProposedOne')
+    : t('events.myEvents.movieProposedMany', { count: n });
+}
+
 function EventListBlock({
   sectionId,
   heading,
@@ -96,10 +116,7 @@ function EventListBlock({
           const dateLabel = formatMyEventsListDate(ev.date, locale);
           return (
             <li key={ev.id} className={styles.item}>
-              <Link
-                to={ROUTES.eventDetail(ev.slug)}
-                className={clsx(styles.link, !showLifecycleBadge && styles.linkHistory)}
-              >
+              <Link to={ROUTES.eventDetail(ev.slug)} className={styles.link}>
                 <span className={styles.rowTop}>
                   <span className={styles.title}>{ev.title}</span>
                   {ev.isCreator ? (
@@ -108,14 +125,22 @@ function EventListBlock({
                     </span>
                   ) : null}
                 </span>
-                {showLifecycleBadge ? (
-                  <span className={styles.rowBadges}>
-                    <span className={badgeClass}>{t(lifecycleTranslationKey(lifecycle))}</span>
-                  </span>
-                ) : null}
-                <span className={styles.meta}>
-                  {dateLabel} · {ev.time}
+                <span className={styles.cardStats}>
+                  {cardJoinedLabel(ev.participantCount ?? 0, t)} ·{' '}
+                  {cardMoviesLabel(ev.movieCount ?? 0, t)}
                 </span>
+                <div className={styles.linkFooter}>
+                  <span className={styles.meta}>
+                    {dateLabel} · {ev.time}
+                  </span>
+                  {showLifecycleBadge ? (
+                    <span className={styles.lifecycleCorner}>
+                      <span className={clsx(styles.lifecyclePill, badgeClass)}>
+                        {t(lifecycleTranslationKey(lifecycle))}
+                      </span>
+                    </span>
+                  ) : null}
+                </div>
               </Link>
             </li>
           );

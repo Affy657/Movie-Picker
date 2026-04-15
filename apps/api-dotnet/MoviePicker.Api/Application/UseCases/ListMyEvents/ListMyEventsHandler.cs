@@ -9,11 +9,16 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
 {
     private readonly IEventRepository _eventRepository;
     private readonly IParticipantRepository _participantRepository;
+    private readonly IMovieRepository _movieRepository;
 
-    public ListMyEventsHandler(IEventRepository eventRepository, IParticipantRepository participantRepository)
+    public ListMyEventsHandler(
+        IEventRepository eventRepository,
+        IParticipantRepository participantRepository,
+        IMovieRepository movieRepository)
     {
         _eventRepository = eventRepository;
         _participantRepository = participantRepository;
+        _movieRepository = movieRepository;
     }
 
     public async Task<MyEventsListResponse> HandleAsync(string userId, int? limit, CancellationToken ct = default)
@@ -43,12 +48,42 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
             }
         }
 
-        var ordered = merged.Values
+        var orderedSlice = merged.Values
             .OrderByDescending(x => x.UpdatedAt)
             .Take(lim)
             .ToList();
 
-        return new MyEventsListResponse { Events = ordered };
+        if (orderedSlice.Count == 0)
+            return new MyEventsListResponse { Events = orderedSlice };
+
+        var sliceIds = orderedSlice.ConvertAll(x => x.Id);
+        var participantCountsTask = _participantRepository.CountByEventIdsAsync(sliceIds, ct);
+        var movieCountsTask = _movieRepository.CountByEventIdsAsync(sliceIds, ct);
+        await Task.WhenAll(participantCountsTask, movieCountsTask);
+        var participantCounts = await participantCountsTask;
+        var movieCounts = await movieCountsTask;
+
+        var enriched = orderedSlice.ConvertAll(d =>
+        {
+            var id = d.Id;
+            return new MyEventSummaryDto
+            {
+                Id = d.Id,
+                Slug = d.Slug,
+                Title = d.Title,
+                Date = d.Date,
+                Time = d.Time,
+                CreatedAt = d.CreatedAt,
+                UpdatedAt = d.UpdatedAt,
+                IsCreator = d.IsCreator,
+                IsParticipant = d.IsParticipant,
+                Lifecycle = d.Lifecycle,
+                ParticipantCount = participantCounts.TryGetValue(id, out var pc) ? pc : 0,
+                MovieCount = movieCounts.TryGetValue(id, out var mc) ? mc : 0,
+            };
+        });
+
+        return new MyEventsListResponse { Events = enriched };
     }
 
     private static MyEventSummaryDto ToDto(Event e, bool isCreator, bool isParticipant) => new()
@@ -62,6 +97,8 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
         UpdatedAt = e.UpdatedAt,
         IsCreator = isCreator,
         IsParticipant = isParticipant,
-        Lifecycle = MyEventListLifecycle.Compute(e, DateTimeOffset.UtcNow)
+        Lifecycle = MyEventListLifecycle.Compute(e, DateTimeOffset.UtcNow),
+        ParticipantCount = 0,
+        MovieCount = 0,
     };
 }

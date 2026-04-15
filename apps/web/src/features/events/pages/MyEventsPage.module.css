@@ -73,7 +73,10 @@
 }
 
 .link {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  min-height: 8.5rem;
+  box-sizing: border-box;
   padding: 0.8rem 1rem;
   text-decoration: none;
   color: inherit;
@@ -93,22 +96,13 @@
   outline-offset: 2px;
 }
 
-.linkHistory .rowTop {
-  margin-bottom: 0.5rem;
-}
-
 .rowTop {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.4rem 0.75rem;
-  margin-bottom: 0.4rem;
-}
-
-.rowBadges {
-  display: block;
-  margin-bottom: 0.35rem;
+  flex-shrink: 0;
 }
 
 .title {
@@ -118,13 +112,55 @@
   font-weight: 700;
   line-height: 1.35;
   margin: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.cardStats {
+  display: block;
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.linkFooter {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
+  margin-top: auto;
+  padding-top: 0.35rem;
+  flex-shrink: 0;
 }
 
 .meta {
   display: block;
+  flex: 1;
+  min-width: 0;
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--color-text-muted);
+}
+
+.lifecycleCorner {
+  flex-shrink: 0;
+  align-self: flex-end;
+}
+
+.lifecyclePill {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.22rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  box-sizing: border-box;
 }
 
 .badgeHost {
@@ -141,19 +177,6 @@
   border: 1px solid color-mix(in srgb, var(--color-badge-host-text) 22%, transparent);
 }
 
-.badgeUpcoming,
-.badgeLive,
-.badgeFinished {
-  display: inline-block;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.22rem 0.55rem;
-  border-radius: 6px;
-  border: 1px solid transparent;
-  box-sizing: border-box;
-}
-
-/* Même logique « puce pleine + liséré » pour tous les états */
 .badgeUpcoming {
   background: var(--color-badge-upcoming-bg);
   color: var(--color-badge-upcoming-text);
@@ -167,7 +190,11 @@
 }
 
 .badgeFinished {
-  background: color-mix(in srgb, var(--color-badge-finished-bg) 92%, var(--color-badge-finished-text) 8%);
+  background: color-mix(
+    in srgb,
+    var(--color-badge-finished-bg) 92%,
+    var(--color-badge-finished-text) 8%
+  );
   color: var(--color-badge-finished-text);
   border-color: color-mix(in srgb, var(--color-badge-finished-text) 40%, transparent);
 }

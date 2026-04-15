@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Moq;
 using MoviePicker.Api.Application.Ports;
@@ -11,13 +12,23 @@ public sealed class ListMyEventsHandlerTests
 {
     private readonly Mock<IEventRepository> _eventRepo;
     private readonly Mock<IParticipantRepository> _participantRepo;
+    private readonly Mock<IMovieRepository> _movieRepo;
     private readonly ListMyEventsHandler _sut;
 
     public ListMyEventsHandlerTests()
     {
         _eventRepo = new Mock<IEventRepository>();
         _participantRepo = new Mock<IParticipantRepository>();
-        _sut = new ListMyEventsHandler(_eventRepo.Object, _participantRepo.Object);
+        _movieRepo = new Mock<IMovieRepository>();
+        _participantRepo
+            .Setup(r => r.CountByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<string> ids, CancellationToken _) =>
+                ids.Distinct().ToDictionary(id => id, _ => 0));
+        _movieRepo
+            .Setup(r => r.CountByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<string> ids, CancellationToken _) =>
+                ids.Distinct().ToDictionary(id => id, _ => 0));
+        _sut = new ListMyEventsHandler(_eventRepo.Object, _participantRepo.Object, _movieRepo.Object);
     }
 
     [Fact]
@@ -103,5 +114,49 @@ public sealed class ListMyEventsHandlerTests
 
         Assert.Single(result.Events);
         Assert.Equal("b", result.Events[0].Id);
+        _participantRepo.Verify(
+            r => r.CountByEventIdsAsync(
+                It.Is<IReadOnlyCollection<string>>(ids => ids.Count == 1 && ids.Contains("b")),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+        _movieRepo.Verify(
+            r => r.CountByEventIdsAsync(
+                It.Is<IReadOnlyCollection<string>>(ids => ids.Count == 1 && ids.Contains("b")),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AppliesParticipantAndMovieCountsFromRepositories()
+    {
+        var e1 = new Event
+        {
+            Id = "e1",
+            Title = "Une",
+            Date = "2030-01-01",
+            Time = "20:00",
+            Slug = "u",
+            HostToken = "h",
+            CreatorUserId = "u1",
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.Parse("2026-06-02T00:00:00Z")
+        };
+        _eventRepo.Setup(r => r.ListByCreatorUserIdAsync("u1", 200, It.IsAny<CancellationToken>())).ReturnsAsync(new[] { e1 });
+        _participantRepo.Setup(r => r.ListDistinctEventIdsByUserIdAsync("u1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<string>());
+        _eventRepo.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Event>());
+        _participantRepo
+            .Setup(r => r.CountByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, int> { ["e1"] = 5 });
+        _movieRepo
+            .Setup(r => r.CountByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, int> { ["e1"] = 3 });
+
+        var result = await _sut.HandleAsync("u1", limit: 10);
+
+        var row = Assert.Single(result.Events);
+        Assert.Equal(5, row.ParticipantCount);
+        Assert.Equal(3, row.MovieCount);
     }
 }

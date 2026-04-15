@@ -63,6 +63,12 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
                 myParticipant = ParticipantResponse.FromDomain(p);
         }
 
+        var participantCountTask = _participantRepository.CountByEventIdAsync(evt.Id, ct);
+        var movieCountTask = _movieRepository.CountByEventIdAsync(evt.Id, ct);
+        await Task.WhenAll(participantCountTask, movieCountTask);
+        var participantCount = await participantCountTask;
+        var movieCount = await movieCountTask;
+
         return new EventDetailResponse
         {
             Id = evt.Id,
@@ -78,7 +84,9 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             IsHost = isHost,
             IsFinished = isFinished,
             WinnerMovie = winner,
-            MyParticipant = myParticipant
+            MyParticipant = myParticipant,
+            ParticipantCount = participantCount,
+            MovieCount = movieCount,
         };
     }
 

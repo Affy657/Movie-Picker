@@ -136,6 +136,10 @@ export const en: Locale = {
         'None of the events saved on this device could be loaded. Retry or open an invite link again.',
       guestPartialSkipped: 'Some events saved on this device could not be shown ({{count}}).',
       guestErrorActionsLabel: 'Actions after a load error',
+      joinedCountOne: '1 participant',
+      joinedCountMany: '{{count}} participants',
+      movieProposedOne: '1 movie proposed',
+      movieProposedMany: '{{count}} movies proposed',
     },
     share: {
       shareButton: 'Share',
