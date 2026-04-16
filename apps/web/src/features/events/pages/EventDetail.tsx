@@ -8,6 +8,7 @@ import WheelSection from '@/features/events/components/WheelSection';
 import HostEventSettingsPanel from '@/features/events/components/HostEventSettingsPanel';
 import EventParticipantsList from '@/features/events/components/EventParticipantsList';
 import EventDetailHeader from '@/features/events/pages/event-detail/EventDetailHeader';
+import EventDetailSkeleton from '@/features/events/pages/event-detail/EventDetailSkeleton';
 import EventMoviesLoadError from '@/features/events/pages/event-detail/EventMoviesLoadError';
 import EventMoviesSection from '@/features/events/pages/event-detail/EventMoviesSection';
 import { friendlyEventError } from '@/features/events/pages/event-detail/friendlyEventError';
@@ -53,10 +54,8 @@ export default function EventDetail() {
 
   if (eventQuery.isPending) {
     return (
-      <PageLayout>
-        <p className="placeholder" aria-busy="true">
-          Chargement…
-        </p>
+      <PageLayout className="page-event">
+        <EventDetailSkeleton />
       </PageLayout>
     );
   }
@@ -64,7 +63,7 @@ export default function EventDetail() {
   if (eventQuery.isError) {
     const errorMessage = friendlyEventError(eventQuery.error);
     return (
-      <PageLayout>
+      <PageLayout className="page-event page--centered">
         <p className="error" role="alert">
           {errorMessage}
         </p>

@@ -1,0 +1,55 @@
+.skeleton {
+  display: block;
+  background: var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  position: relative;
+  overflow: hidden;
+  /* Empêche la grille/flex de rétrécir les blocs prévus pour réserver une hauteur. */
+  flex-shrink: 0;
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--color-surface) 70%, transparent) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+  }
+}
+
+/* Variantes — largeur/hauteur laissées au consommateur via style inline ou classes. */
+.text {
+  height: 1em;
+  border-radius: calc(var(--radius-sm) / 2);
+}
+
+.circle {
+  border-radius: 50%;
+}
+
+.poster {
+  aspect-ratio: 2 / 3;
+  width: 100%;
+  border-radius: var(--radius-sm);
+}
+
+.block {
+  border-radius: var(--radius-md);
+}

@@ -52,6 +52,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@fontsource/overpass':
+        specifier: ^5.2.8
+        version: 5.2.8
       '@tanstack/react-query':
         specifier: ^5.96.2
         version: 5.96.2(react@19.2.4)
@@ -420,6 +423,9 @@ packages:
     peerDependenciesMeta:
       '@noble/hashes':
         optional: true
+
+  '@fontsource/overpass@5.2.8':
+    resolution: {integrity: sha512-Svtn/TJCtVZ99JoCi3P+jvHiCo8WoUHZjm5RwHMgSqX2k4qiL4sK1Lh4enotfyDkEIyj/oP99ezOdy5YlEqkDA==}
 
   '@formatjs/ecma402-abstract@2.3.6':
     resolution: {integrity: sha512-HJnTFeRM2kVFVr5gr5kH1XP6K0JcJtE7Lzvtr3FS/so5f1kpsqqqxy5JF+FRaO6H2qmcMfAUIox7AJteieRtVw==}
@@ -2952,6 +2958,8 @@ snapshots:
       levn: 0.4.1
 
   '@exodus/bytes@1.15.0': {}
+
+  '@fontsource/overpass@5.2.8': {}
 
   '@formatjs/ecma402-abstract@2.3.6':
     dependencies:

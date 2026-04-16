@@ -1,0 +1,79 @@
+/* Skeleton calibré sur la structure réelle de la page soirée.
+   Réserve une hauteur proche du contenu final pour minimiser CLS. */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-height: 60vh;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.title {
+  height: 2.1rem;
+  width: 70%;
+  max-width: 22rem;
+}
+
+.meta {
+  height: 1rem;
+  width: 55%;
+  max-width: 18rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.actionPill {
+  height: 2.25rem;
+  width: 8rem;
+  border-radius: 999px;
+}
+
+.sectionTitle {
+  height: 1.25rem;
+  width: 10rem;
+  margin-top: 0.5rem;
+}
+
+.participants {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.chip {
+  height: 1.75rem;
+  width: 5rem;
+  border-radius: 999px;
+}
+
+.movies {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 0.75rem;
+}
+
+.movieCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.movieMeta {
+  height: 0.9rem;
+  width: 90%;
+}
+
+.movieMetaShort {
+  height: 0.9rem;
+  width: 55%;
+}

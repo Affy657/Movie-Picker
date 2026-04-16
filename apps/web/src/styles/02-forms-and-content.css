@@ -26,7 +26,10 @@
   color: var(--color-text);
   cursor: pointer;
   min-height: 40px;
-  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
   letter-spacing: 0.01em;
 }
 
@@ -125,6 +128,16 @@ button.back-link-button {
   margin: 0.75rem 0 1rem;
 }
 
+/* Lien par défaut : éviter le bleu navigateur `#0000ee` qui échoue le contraste
+   (WCAG AA) sur fond sombre — `--color-primary` est validé clair comme sombre. */
+a {
+  color: var(--color-primary);
+}
+
+a:hover {
+  color: var(--color-primary-hover);
+}
+
 .error-boundary-actions {
   display: flex;
   flex-wrap: wrap;
@@ -169,7 +182,9 @@ button.back-link-button {
   min-height: 44px;
   background: var(--color-input-readonly);
   color: var(--color-text);
-  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
   outline: none;
 }
 

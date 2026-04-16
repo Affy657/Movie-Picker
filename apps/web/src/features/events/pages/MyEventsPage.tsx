@@ -8,6 +8,7 @@ import {
   GUEST_JOINED_EVENTS_ALL_FAILED,
 } from '@/features/events/api/eventsApi';
 import PageLayout from '@/shared/components/PageLayout';
+import MyEventsSkeleton from '@/features/events/pages/MyEventsSkeleton';
 import { ApiError, getErrorMessage } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
@@ -218,9 +219,7 @@ export default function MyEventsPage() {
     return (
       <PageLayout className={styles.layout}>
         <h1 className="visually-hidden">{t('events.myEvents.title')}</h1>
-        <p className="placeholder" aria-busy="true">
-          {t('events.myEvents.loadingDetail')}
-        </p>
+        <MyEventsSkeleton label={t('events.myEvents.loadingDetail')} />
       </PageLayout>
     );
   }

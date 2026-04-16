@@ -63,7 +63,8 @@
   --color-error-hover: #feb2b2;
   --color-primary: #02a9ff;
   --color-primary-hover: #33baff;
-  --color-primary-contrast: #ffffff;
+  /* Texte sombre sur accent clair (WCAG AA ≥ 4.5:1) — #ffffff / #02a9ff = 2.57:1 échoue. */
+  --color-primary-contrast: #0b1622;
   --color-badge-finished-bg: #1e2d40;
   --color-badge-finished-text: #c8d6e8;
   --color-badge-upcoming-bg: #2d1f00;
@@ -95,7 +96,11 @@
 
 body {
   margin: 0;
-  font-family: 'Overpass', system-ui, -apple-system, sans-serif;
+  font-family:
+    'Overpass',
+    system-ui,
+    -apple-system,
+    sans-serif;
   font-size: 16px;
   line-height: 1.6;
   color: var(--color-text);
@@ -112,6 +117,17 @@ body {
 /* Détail soirée — colonne un peu plus large, toujours centrée */
 .page.page-event {
   max-width: min(42rem, 100%);
+}
+
+/* Utilitaire : occuper l'espace vertical pour que le swap skeleton → contenu
+   ne produise pas de layout shift (Lighthouse CLS). */
+.page.page--centered {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 1rem;
+  min-height: 60vh;
 }
 
 /*

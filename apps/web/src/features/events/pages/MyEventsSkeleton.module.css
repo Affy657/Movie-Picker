@@ -1,0 +1,37 @@
+/* Skeleton calibré sur MyEventsPage : titre + 3 cartes par section.
+   Réserve l'espace vertical pour éviter le CLS au chargement. */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-height: 60vh;
+}
+
+.pageTitle {
+  height: 1.6rem;
+  width: 55%;
+  max-width: 18rem;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.sectionTitle {
+  height: 0.85rem;
+  width: 8rem;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.card {
+  height: 5rem;
+  border-radius: var(--radius-md);
+}
