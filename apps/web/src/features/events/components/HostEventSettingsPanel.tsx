@@ -5,11 +5,6 @@ import { getErrorMessage } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import styles from './HostEventSettingsPanel.module.css';
 import {
-  REACTION_CATALOG_IDS,
-  REACTION_LABELS,
-  type ReactionCatalogId,
-} from '@/shared/constants/reactionCatalog';
-import {
   datetimeLocalToEndDatePayload,
   isoToDatetimeLocalValue,
 } from '@/shared/utils/eventDateTimeLocal';
@@ -35,22 +30,8 @@ function normalizeConfig(c: EventConfigData | undefined): EventConfigData {
     maxProposalsPerParticipant:
       c?.maxProposalsPerParticipant ?? DEFAULT_EVENT_CONFIG.maxProposalsPerParticipant,
     wheelMode: c?.wheelMode ?? DEFAULT_EVENT_CONFIG.wheelMode,
-    allowedReactionIds: c?.allowedReactionIds ?? DEFAULT_EVENT_CONFIG.allowedReactionIds,
     richSharePreview: c?.richSharePreview ?? DEFAULT_EVENT_CONFIG.richSharePreview,
   };
-}
-
-function allowedToSelectedSet(allowed: string[] | null | undefined): Set<ReactionCatalogId> {
-  if (allowed == null) {
-    return new Set(REACTION_CATALOG_IDS);
-  }
-  const next = new Set<ReactionCatalogId>();
-  for (const id of allowed) {
-    if (REACTION_CATALOG_IDS.includes(id as ReactionCatalogId)) {
-      next.add(id as ReactionCatalogId);
-    }
-  }
-  return next;
 }
 
 export default function HostEventSettingsPanel({
@@ -68,9 +49,6 @@ export default function HostEventSettingsPanel({
     cfg.maxProposalsPerParticipant != null ? String(cfg.maxProposalsPerParticipant) : ''
   );
   const [wheelMode, setWheelMode] = useState<WheelMode>(cfg.wheelMode);
-  const [reactionSel, setReactionSel] = useState<Set<ReactionCatalogId>>(() =>
-    allowedToSelectedSet(cfg.allowedReactionIds)
-  );
   const [richSharePreview, setRichSharePreview] = useState(() => !!cfg.richSharePreview);
   const [flashOk, setFlashOk] = useState(false);
   const flashTimerRef = useRef<number | undefined>(undefined);
@@ -85,7 +63,6 @@ export default function HostEventSettingsPanel({
       next.maxProposalsPerParticipant != null ? String(next.maxProposalsPerParticipant) : ''
     );
     setWheelMode(next.wheelMode);
-    setReactionSel(allowedToSelectedSet(next.allowedReactionIds));
     setRichSharePreview(!!next.richSharePreview);
     setFormError(null);
   }, [event.config]);
@@ -102,15 +79,6 @@ export default function HostEventSettingsPanel({
       setFormError(getErrorMessage(e, 'Enregistrement impossible'));
     },
   });
-
-  const toggleReaction = (id: ReactionCatalogId) => {
-    setReactionSel((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -134,19 +102,11 @@ export default function HostEventSettingsPanel({
       maxProposalsPerParticipant = n;
     }
 
-    const allowedReactionIds =
-      reactionSel.size === 0
-        ? []
-        : reactionSel.size === REACTION_CATALOG_IDS.length
-          ? [...REACTION_CATALOG_IDS]
-          : REACTION_CATALOG_IDS.filter((id) => reactionSel.has(id));
-
     mutation.mutate({
       theme: theme.trim(),
       endDate: endPayload,
       maxProposalsPerParticipant,
       wheelMode,
-      allowedReactionIds,
       richSharePreview,
     });
   };
@@ -161,8 +121,7 @@ export default function HostEventSettingsPanel({
     >
       <summary className={styles.summary}>Paramètres de la soirée</summary>
       <p className={styles.lead}>
-        Réservé à l&apos;hôte — thème, fin de validité, limite de propositions, mode de roue et
-        réactions proposées.
+        Réservé à l&apos;hôte — thème, fin de validité, limite de propositions et mode de roue.
       </p>
       {locked && (
         <p className={styles.locked}>
@@ -269,30 +228,6 @@ export default function HostEventSettingsPanel({
             doc déploiement (MP-17), sinon le partage reste générique côté URL <code>/e/…</code>.
           </p>
         </div>
-
-        <fieldset
-          className={`${styles.field} ${styles.fieldset}`}
-          disabled={locked || mutation.isPending}
-        >
-          <legend className="label">Réactions autorisées</legend>
-          <p className={`hint ${styles.fieldsetHint}`}>
-            Toutes cochées équivaut au catalogue complet.
-          </p>
-          <ul className={styles.reactionList}>
-            {REACTION_CATALOG_IDS.map((id) => (
-              <li key={id}>
-                <label className={styles.checkLabel}>
-                  <input
-                    type="checkbox"
-                    checked={reactionSel.has(id)}
-                    onChange={() => toggleReaction(id)}
-                  />
-                  {REACTION_LABELS[id]}
-                </label>
-              </li>
-            ))}
-          </ul>
-        </fieldset>
 
         <button type="submit" className="btn btn-primary" disabled={locked || mutation.isPending}>
           {mutation.isPending ? 'Enregistrement…' : 'Enregistrer'}

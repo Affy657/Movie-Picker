@@ -46,11 +46,6 @@ public sealed record EventConfig
     public WheelMode WheelMode { get; init; } = WheelMode.StrictRandom;
 
     /// <summary>
-    /// Identifiants de réactions autorisées (hors up/down). <see langword="null"/> = pas de restriction explicite (toutes les réactions connues pourront s’appliquer en V1 §6).
-    /// </summary>
-    public IReadOnlyList<string>? AllowedReactionIds { get; init; }
-
-    /// <summary>
     /// Si <see langword="true"/>, la page <c>share-preview</c> expose titre, texte et éventuelle affiche du film gagnant aux crawlers (aperçu « riche »). Défaut : <see langword="false"/> (aperçu générique, lien privé).
     /// </summary>
     public bool RichSharePreview { get; init; }

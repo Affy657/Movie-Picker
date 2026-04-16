@@ -49,14 +49,13 @@ describe('MovieList', () => {
       <MovieList
         movies={[]}
         slug="s"
-        allowedReactionIds={[]}
         participantId={null}
         participantPseudo={null}
         isFinished={false}
         onVote={vi.fn()}
         onRemove={vi.fn()}
         refresh={vi.fn()}
-        onReactionError={vi.fn()}
+        onActionError={vi.fn()}
       />
     );
     expect(screen.getByText(/aucun film proposé/i)).toBeInTheDocument();
@@ -67,14 +66,13 @@ describe('MovieList', () => {
       <MovieList
         movies={movies}
         slug="s"
-        allowedReactionIds={[]}
         participantId={null}
         participantPseudo={null}
         isFinished={false}
         onVote={vi.fn()}
         onRemove={vi.fn()}
         refresh={vi.fn()}
-        onReactionError={vi.fn()}
+        onActionError={vi.fn()}
       />
     );
     expect(screen.getByText('Inception')).toBeInTheDocument();
@@ -83,33 +81,32 @@ describe('MovieList', () => {
     expect(screen.getByText(/Proposé par Bob/)).toBeInTheDocument();
   });
 
-  it('affiche l’indication déjà vu par d’autres lorsque les agrégats le permettent', () => {
+  it('affiche l’indication « déjà vu par d’autres » quand seenByPseudos contient d’autres participants', () => {
     const withSeen: MovieData[] = [
       {
         ...movies[0]!,
         proposerPseudo: 'Charlie',
-        reactions: [{ reactionId: 'already_seen', count: 2, pseudos: ['Alice', 'Bob'] }],
+        seenCount: 2,
+        seenByPseudos: ['Alice', 'Bob'],
       },
     ];
     renderWithLocale(
       <MovieList
         movies={withSeen}
         slug="s"
-        allowedReactionIds={[]}
         participantId="p0"
         participantPseudo="Bob"
         isFinished={false}
         onVote={vi.fn()}
         onRemove={vi.fn()}
         refresh={vi.fn()}
-        onReactionError={vi.fn()}
+        onActionError={vi.fn()}
       />
     );
-    expect(screen.getByText(/Déjà vu par d'autres/i)).toBeInTheDocument();
-    expect(screen.getByText(/Déjà vu par d'autres : Alice/)).toBeInTheDocument();
+    expect(screen.getByText(/Déjà vu par Alice/)).toBeInTheDocument();
   });
 
-  it('affiche la durée formatée (1h10) dans la meta à côté de l’année et de la note', () => {
+  it('affiche la durée formatée (2h28) dans la meta à côté de l’année et de la note', () => {
     const withRuntime: MovieData[] = [
       {
         ...movies[0]!,
@@ -121,38 +118,37 @@ describe('MovieList', () => {
       <MovieList
         movies={withRuntime}
         slug="s"
-        allowedReactionIds={[]}
         participantId={null}
         participantPseudo={null}
         isFinished={false}
         onVote={vi.fn()}
         onRemove={vi.fn()}
         refresh={vi.fn()}
-        onReactionError={vi.fn()}
+        onActionError={vi.fn()}
       />
     );
     expect(screen.getByText(/2h28/)).toBeInTheDocument();
     expect(screen.getByText(/TMDB\s*8\.4\/10/)).toBeInTheDocument();
   });
 
-  it('affiche les boutons vote up/down quand pas terminé et participantId', async () => {
+  it('affiche les boutons vote up/down + déjà vu quand pas terminé et participantId', async () => {
     const onVote = vi.fn().mockResolvedValue(undefined);
     renderWithLocale(
       <MovieList
         movies={movies}
         slug="s"
-        allowedReactionIds={[]}
         participantId="p0"
         participantPseudo={null}
         isFinished={false}
         onVote={onVote}
         onRemove={vi.fn()}
         refresh={vi.fn()}
-        onReactionError={vi.fn()}
+        onActionError={vi.fn()}
       />
     );
     const upButtons = screen.getAllByRole('button', { name: /^Voter pour / });
     await userEvent.click(upButtons[0]!);
     expect(onVote).toHaveBeenCalledWith('m1', 1);
+    expect(screen.getAllByRole('button', { name: /Marquer « déjà vu »/ })).toHaveLength(2);
   });
 });

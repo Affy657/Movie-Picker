@@ -23,7 +23,6 @@ const server = setupServer(
         endDate: null,
         maxProposalsPerParticipant: null,
         wheelMode: 'strictRandom',
-        allowedReactionIds: null,
       },
     })
   )

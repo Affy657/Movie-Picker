@@ -4,19 +4,20 @@ using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.Posters;
-using MoviePicker.Api.Application.UseCases.Reactions;
 using MoviePicker.Api.Configuration;
-using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.ListMovies;
 
 public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
 {
+    /// <summary>Limite volontairement basse : on affiche quelques pseudos, pas toute la liste.</summary>
+    private const int MaxSeenByPseudosPerMovie = 30;
+
     private readonly IEventRepository _eventRepository;
     private readonly IMovieRepository _movieRepository;
     private readonly IVoteRepository _voteRepository;
     private readonly IParticipantRepository _participantRepository;
-    private readonly IReactionRepository _reactionRepository;
+    private readonly ISeenMarkRepository _seenMarkRepository;
     private readonly ITmdbMovieSearch _tmdbMovieSearch;
     private readonly IPosterImageStore _posterImageStore;
     private readonly MoviePickerOptions _options;
@@ -26,7 +27,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         IMovieRepository movieRepository,
         IVoteRepository voteRepository,
         IParticipantRepository participantRepository,
-        IReactionRepository reactionRepository,
+        ISeenMarkRepository seenMarkRepository,
         ITmdbMovieSearch tmdbMovieSearch,
         IPosterImageStore posterImageStore,
         IOptions<MoviePickerOptions> options)
@@ -35,7 +36,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         _movieRepository = movieRepository;
         _voteRepository = voteRepository;
         _participantRepository = participantRepository;
-        _reactionRepository = reactionRepository;
+        _seenMarkRepository = seenMarkRepository;
         _tmdbMovieSearch = tmdbMovieSearch;
         _posterImageStore = posterImageStore;
         _options = options.Value;
@@ -48,12 +49,9 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         var movies = await _movieRepository.ListByEventIdAsync(evt.Id, ct);
         var movieIds = movies.Select(m => m.Id).ToList();
         var scores = await _voteRepository.AggregateScoresByMovieIdsAsync(movieIds, ct);
-        var reactionAgg = await _reactionRepository.AggregateByMovieIdsAsync(evt.Id, movieIds, ct);
-        var reactionParticipantIds = reactionAgg.Values
-            .SelectMany(v => v.SelectMany(x => x.ParticipantIds))
-            .Distinct()
-            .ToList();
-        var participantIds = movies.Select(m => m.ParticipantId).Concat(reactionParticipantIds).Distinct().ToList();
+        var seenAgg = await _seenMarkRepository.AggregateByMovieIdsAsync(evt.Id, movieIds, ct);
+        var seenParticipantIds = seenAgg.Values.SelectMany(v => v.ParticipantIds).Distinct().ToList();
+        var participantIds = movies.Select(m => m.ParticipantId).Concat(seenParticipantIds).Distinct().ToList();
         var pseudos = await _participantRepository.GetPseudosByIdsAsync(participantIds, ct);
 
         var enrichmentByTmdb = new ConcurrentDictionary<int, TmdbMovieEnrichment?>();
@@ -89,9 +87,22 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         {
             scores.TryGetValue(m.Id, out var s);
             pseudos.TryGetValue(m.ParticipantId, out var pseudo);
-            IReadOnlyList<MovieReactionAggregateResponse> reactionResponses = Array.Empty<MovieReactionAggregateResponse>();
-            if (reactionAgg.TryGetValue(m.Id, out var rows))
-                reactionResponses = ReactionAggregateMapper.ToMovieReactionResponses(rows, pseudos);
+
+            var seenCount = 0;
+            IReadOnlyList<string> seenByPseudos = Array.Empty<string>();
+            if (seenAgg.TryGetValue(m.Id, out var seen))
+            {
+                seenCount = seen.Count;
+                var list2 = new List<string>();
+                foreach (var pid in seen.ParticipantIds)
+                {
+                    if (list2.Count >= MaxSeenByPseudosPerMovie)
+                        break;
+                    if (pseudos.TryGetValue(pid, out var p) && !string.IsNullOrWhiteSpace(p))
+                        list2.Add(p);
+                }
+                seenByPseudos = list2;
+            }
 
             enrichmentByTmdb.TryGetValue(m.TmdbId, out var enr);
             var posterOut = _posterImageStore.ToPublicPosterPath(m.PosterPath);
@@ -112,7 +123,8 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
                     Score = s.Score,
                     Up = s.Up,
                     Down = s.Down,
-                    Reactions = reactionResponses,
+                    SeenCount = seenCount,
+                    SeenByPseudos = seenByPseudos,
                     VoteAverage = enr?.VoteAverage,
                     WatchProviders = enr is null ? Array.Empty<WatchProviderOfferResponse>() : WatchProviderMapping.ToDto(enr.WatchProviders),
                     TmdbWatchPageUrl = enr?.TmdbWatchPageUrl,

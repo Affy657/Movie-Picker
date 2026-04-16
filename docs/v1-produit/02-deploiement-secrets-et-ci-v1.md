@@ -75,7 +75,8 @@ Implémentation : `RateLimitingExtensions` — fenêtre **fixe 1 minute**, clé 
 | `auth-register` | `POST /api/v1/auth/register` | 10 |
 | `auth-login` | `POST /api/v1/auth/login` | 30 |
 | `patch-event-config` | `PATCH /api/v1/events/{id}/config` | 40 |
-| `reactions-mutation` | `POST` / `DELETE` réactions | 120 |
+| `vote-mutation` | `POST /api/v1/events/{id}/movies/{movieId}/vote` | 120 |
+| `seen-marks-mutation` | `POST` / `DELETE` marque « déjà vu » | 120 |
 | `posters-get` | `GET /api/v1/posters/{key}` | 300 |
 
 Réponse **429** + JSON d’erreur ; en-tête **`Retry-After`** lorsque disponible. Ajuster après mesure trafic réel (roadmap « après coup »).

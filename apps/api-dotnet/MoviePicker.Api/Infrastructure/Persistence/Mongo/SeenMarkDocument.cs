@@ -3,7 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
-public sealed class ReactionDocument
+public sealed class SeenMarkDocument
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
@@ -20,9 +20,6 @@ public sealed class ReactionDocument
     [BsonElement("participantId")]
     [BsonRepresentation(BsonType.ObjectId)]
     public string ParticipantId { get; set; } = string.Empty;
-
-    [BsonElement("reactionId")]
-    public string ReactionId { get; set; } = string.Empty;
 
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }

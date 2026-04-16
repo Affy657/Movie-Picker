@@ -60,12 +60,14 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
             IReadOnlyList<WatchProviderOfferResponse> providers = Array.Empty<WatchProviderOfferResponse>();
             string? watchPage = null;
             double? vote = row.VoteAverage;
+            int? runtime = null;
 
             if (enrichments.TryGetValue(row.Id, out var enr) && enr is not null)
             {
                 providers = WatchProviderMapping.ToDto(enr.WatchProviders);
                 watchPage = enr.TmdbWatchPageUrl;
                 vote ??= enr.VoteAverage;
+                runtime = enr.RuntimeMinutes;
             }
 
             items.Add(
@@ -76,6 +78,7 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
                     Year = row.Year,
                     PosterPath = row.PosterPath,
                     VoteAverage = vote,
+                    RuntimeMinutes = runtime,
                     WatchProviders = providers,
                     TmdbWatchPageUrl = watchPage
                 });

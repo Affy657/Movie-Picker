@@ -22,7 +22,6 @@ const baseEvent: EventData = {
     endDate: null,
     maxProposalsPerParticipant: null,
     wheelMode: 'strictRandom',
-    allowedReactionIds: null,
     richSharePreview: false,
   },
 };
@@ -44,13 +43,12 @@ describe('HostEventSettingsPanel', () => {
         expect(body.theme).toBe('SF');
         expect(body.wheelMode).toBe('strictRandom');
         expect(body.richSharePreview).toBe(false);
-        expect(Array.isArray(body.allowedReactionIds)).toBe(true);
+        expect(body.allowedReactionIds).toBeUndefined();
         return HttpResponse.json({
           theme: 'SF',
           endDate: null,
           maxProposalsPerParticipant: null,
           wheelMode: 'strictRandom',
-          allowedReactionIds: body.allowedReactionIds,
           richSharePreview: false,
         });
       })
@@ -82,7 +80,6 @@ describe('HostEventSettingsPanel', () => {
           endDate: null,
           maxProposalsPerParticipant: null,
           wheelMode: 'strictRandom',
-          allowedReactionIds: body.allowedReactionIds,
           richSharePreview: true,
         });
       })

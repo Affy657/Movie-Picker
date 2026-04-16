@@ -39,19 +39,18 @@ Liste de tout ce qu'il y a dans le site (vision cible), puis UX/UI, cas limites 
   - **Limite de propositions** : nombre max de films par participant (ex. 1, 3, 5 ou illimité).
   - **Plage de votes** : votes ouverts jusqu'à une heure avant la soirée, ou jusqu'au lancement de la roue (configurable).
   - **Roue** : mode « aléatoire strict » ou « pondéré » (plus de chance pour les mieux notés).
-  - **Réactions autorisées** : l'hôte choisit quelles réactions sont disponibles (voir ci‑dessous), en plus du up/down vote.
   - **Séries OK / pas OK** : toggle « Accepter les séries » ; si désactivé, seuls les films sont acceptés (type film/série fourni par l'API TMDB/OMDB) ; affichage du type (film ou série) sur chaque proposition.
   - **Limite de participants** : nombre max de participants (optionnel, ex. 10 ou illimité) ; au-delà, message « Soirée complète » ou refus d'inscription.
 - **Page « Paramètres » ou « Config »** : accessible uniquement à l'hôte depuis la page de la soirée.
 
 ### Participation
 - **Rejoindre un événement** : en cliquant sur le lien, sans compte obligatoire. Si l'utilisateur a un compte et est connecté, son pseudo par défaut peut être proposé (modifiable).
-- **Pseudo par soirée** : en rejoignant (ou en ouvrant la soirée), chaque participant choisit un **pseudo** affiché à côté de ses propositions, votes et réactions pour cette soirée uniquement.
-- **Voir les détails de la soirée** : titre, date, **lieu** (si renseigné), thème, liste des films proposés, votes, réactions, bouton « Lancer la roue » (visible uniquement pour l'hôte).
+- **Pseudo par soirée** : en rejoignant (ou en ouvrant la soirée), chaque participant choisit un **pseudo** affiché à côté de ses propositions et votes pour cette soirée uniquement.
+- **Voir les détails de la soirée** : titre, date, **lieu** (si renseigné), thème, liste des films proposés, votes, marqueurs « déjà vu », bouton « Lancer la roue » (visible uniquement pour l'hôte).
 - **Compte à rebours** : affichage « Dans X jours » ou « Dans X heures » jusqu'à la date/heure de la soirée (et éventuellement « C'est ce soir » / « En cours »).
 - **Rappels / notifications** : alerter avant la soirée (ex. « dans 1 h »). Les canaux possibles vont du **léger** (bannière **in-app** tant que l’utilisateur a la soirée ouverte) au **calendrier** (fichier .ics avec rappel géré par l’OS) jusqu’au **push navigateur** ou **e-mail**, qui supposent **consentement**, infra et en général **compte / e-mail** — voir découpage MVP / V1 / V2 / backlog ci-dessous. Fiabilité : date, heure et **fuseau** (ou convention explicite) de l’événement.
 - **Lien « Ajouter au calendrier »** : bouton qui génère un fichier .ics (ou lien Google Calendar / Outlook) pour ajouter la soirée à son agenda (titre, date, heure, lieu).
-- **Mise à jour en direct** : les nouvelles propositions, votes et réactions s'affichent sans recharger la page (WebSocket ou polling) ; idem pour le résultat de la roue quand l'hôte la lance.
+- **Mise à jour en direct** : les nouvelles propositions, votes et marqueurs « déjà vu » s'affichent sans recharger la page (WebSocket ou polling) ; idem pour le résultat de la roue quand l'hôte la lance.
 
 ### Films
 - **Proposer un film** : titre (recherche ou saisie) → **infos film automatiques** (poster, année, résumé, **note moyenne**, **bande-annonce**) via API (TMDB / OMDB).
@@ -61,11 +60,10 @@ Liste de tout ce qu'il y a dans le site (vision cible), puis UX/UI, cas limites 
 - **Cache des posters** : après un appel à l'API films, les URLs ou images des posters sont stockées (bucket ou BDD) pour limiter les appels et accélérer l'affichage des films déjà vus.
 - **Doublons** : détection des films déjà proposés (même titre ou même ID TMDB) ; message « Déjà proposé » et blocage ou avertissement si quelqu'un tente d'ajouter un doublon.
 - **Disponibilité streaming / VOD légale** : pastilles ou liens via TMDB *watch providers* (région ex. FR) sur la recherche ou la fiche film ; mention que l’info est indicative.
-- **Déjà vu par d’autres participants** : lors de l’ajout d’un film, indication si des participants de la soirée l’ont déjà marqué comme vu (réactions ou agrégat serveur).
-- **Liste des films proposés** : affichage avec poster, titre, année, type (film ou série si « Séries OK » activé), note moyenne, bande-annonce, qui a proposé (pseudo), score (up/down), réactions (voir ci‑dessous).
-- **Upvote / Downvote** : chaque participant peut voter une fois par film (selon la config de l'hôte).
-- **Réactions** (en plus du up/down vote) : chaque participant peut poser **une ou plusieurs réactions** par film, selon la config de l'hôte. Exemples : « J'ai déjà vu ce film », « J'aimerais bien le voir », « Pas envie », « Masterpiece », « Je m'en fous » (liste configurable ou prédéfinie selon le thème).
-- Les réactions sont affichées sous ou à côté du film (icônes + compteurs ou liste de pseudos).
+- **Déjà vu par d’autres participants** : lors de l’ajout d’un film, indication si des participants de la soirée l’ont déjà marqué comme vu (marqueur « déjà vu » serveur, neutre pour la roue).
+- **Liste des films proposés** : affichage avec poster, titre, année, type (film ou série si « Séries OK » activé), note moyenne, bande-annonce, qui a proposé (pseudo), score (up/down), marqueur « déjà vu » (compteur + pseudos).
+- **Upvote / Downvote** : chaque participant peut voter une fois par film (selon la config de l'hôte). Ce score alimente la pondération de la roue.
+- **Déjà vu** (neutre pour la roue) : chaque participant peut **marquer / démarquer** un film comme « déjà vu », indépendamment de son vote up/down. Un compteur et la liste des pseudos sont affichés ; ce marqueur **n'influence pas** la pondération de la roue.
 - **Retirer sa proposition** (par celui qui a proposé, tant que la roue n'a pas été lancée).
 
 ### Roue
@@ -86,9 +84,9 @@ Liste de tout ce qu'il y a dans le site (vision cible), puis UX/UI, cas limites 
 - **Usage principal sur mobile** : le site est pensé d'abord pour le **téléphone** ; voir section « UX/UI – Mobile first » ci-dessous.
 
 ### Technique (côté projet cloud)
-- **Front** : pages (accueil, créer soirée, détail soirée avec films/votes/réactions/roue, paramètres hôte, historique, inscription, connexion, profil), **mobile-first** puis responsive (tablette, desktop), mode sombre/clair, vue grille/liste, mode hors-ligne léger (cache).
-- **API** : événements, participants, films, votes, réactions, tirage roue, config soirée ; **auth** (inscription, connexion, déconnexion, session).
-- **Base de données** : **utilisateurs** (email, mot de passe hashé, pseudo par défaut, préférences) ; soirées (dont config, lieu, date/heure, créateur_id si compte) ; participants (pseudo par soirée, lien à la soirée, user_id optionnel) ; films (dont id API, poster, note, bande-annonce, proposé par) ; votes ; réactions.
+- **Front** : pages (accueil, créer soirée, détail soirée avec films/votes/marqueurs « déjà vu »/roue, paramètres hôte, historique, inscription, connexion, profil), **mobile-first** puis responsive (tablette, desktop), mode sombre/clair, vue grille/liste, mode hors-ligne léger (cache).
+- **API** : événements, participants, films, votes, marqueurs « déjà vu », tirage roue, config soirée ; **auth** (inscription, connexion, déconnexion, session).
+- **Base de données** : **utilisateurs** (email, mot de passe hashé, pseudo par défaut, préférences) ; soirées (dont config, lieu, date/heure, créateur_id si compte) ; participants (pseudo par soirée, lien à la soirée, user_id optionnel) ; films (dont id API, poster, note, bande-annonce, proposé par) ; votes ; marqueurs « déjà vu ».
 - **Services externes** : API films (TMDB ou OMDB) pour infos, posters, note moyenne, bande-annonce (si disponible).
 - **Cache des posters** : stockage des posters en bucket (ou BDD) après appel API pour limiter les requêtes et améliorer les perfs.
 - **Rate limiting** : limitation du nombre de créations de soirées, propositions et votes par IP (ou par session) pour éviter les abus et le spam.
@@ -214,19 +212,19 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 - [x] API .NET déployée sur Cloud Run, même comportement que le MVP (parcours complet testé).
 - [x] Ancienne API Node retirée ou désactivée après validation.
 
-**Le back .NET est la base pour la V1** (comptes, config, réactions). Référence : [architecture.md](architecture.md), [mvp/01-roadmap-mvp.md](mvp/01-roadmap-mvp.md) § 17 (contrat : Swagger en dev, `OpenApiContractTests.cs`).
+**Le back .NET est la base pour la V1** (comptes, config, marqueur « déjà vu »). Référence : [architecture.md](architecture.md), [mvp/01-roadmap-mvp.md](mvp/01-roadmap-mvp.md) § 17 (contrat : Swagger en dev, `OpenApiContractTests.cs`).
 
 ---
 
 ## V1 – Features
 
-**Objectif** : compte utilisateur (sans reset email), config hôte, réactions, confort de partage et de lecture, enrichissement film léger côté découverte.
+**Objectif** : compte utilisateur (sans reset email), config hôte, marqueur « déjà vu », confort de partage et de lecture, enrichissement film léger côté découverte.
 
 - **Création de soirée** : **compte obligatoire** (pas de création anonyme) ; après création, le créateur est participant avec son pseudo compte ; lien partagé **sans** `?host=` — aligné roadmap V1 § 16 bis.
 - **Compte utilisateur** : inscription (email, mot de passe, pseudo par défaut), connexion, déconnexion. *Mot de passe oublié (email) reporté en V2* pour alléger la charge (transport email, sécurité, templates). **Rejoindre** une soirée reste possible **sans compte** (pseudo invité).
 - **Mes soirées** : liste persistante pour les utilisateurs connectés ; reconnaissance de l'hôte par compte en plus du token.
-- **Config par l'hôte** : page Paramètres (thème, expiration, limite de propositions, type de roue aléatoire/pondérée). Réactions autorisées : choix des réactions disponibles en plus du up/down.
-- **Réactions** : en plus du vote, réactions type « J'ai déjà vu », « J'aimerais bien », etc. (liste configurable par l'hôte).
+- **Config par l'hôte** : page Paramètres (thème, expiration, limite de propositions, type de roue aléatoire/pondérée).
+- **Déjà vu** (neutre pour la roue) : chaque participant peut **marquer / démarquer** un film comme « déjà vu », en plus du up/down vote. Ce marqueur n'influence **pas** la pondération de la roue ; il est **toujours disponible** (pas de config hôte).
 - **Partage** : QR code ; « Copier le lien » (déjà en MVP).
 - **Aperçu de lien partagé (Open Graph / Twitter Cards)** : métadonnées **dynamiques** pour l’URL d’une soirée (titre de l’événement, description courte, image marque ou visuel fixe) lorsque l’**infra** permet de servir du HTML ou des meta **par URL** aux crawlers (sinon rester sur OG **statiques** et consigner la limite — [mvp/07-redirection-racine-et-referencement.md](mvp/07-redirection-racine-et-referencement.md)). **Option hôte** : afficher ou non des indicateurs sensibles dans l’aperçu (ex. **nombre de participants**) ; défaut prudent si l’événement est « privé par lien ».
 - **Rappels légers** : **bannière in-app** ou message sur la page soirée lorsque l’heure de début est proche (utilisateur déjà sur l’app / la soirée ouverte) — sans push ni e-mail.
@@ -234,8 +232,8 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 - **Mise à jour en direct** : polling (ou WebSocket) pour voir les nouveaux films et votes sans recharger.
 - **Interface** : mode sombre/clair (préférence locale ou compte).
 - **Disponibilité streaming / VOD légale** : intégration TMDB *watch providers* (région ex. FR), pastilles ou liens sur recherche / fiche film, cache API, texte indicatif pour l’utilisateur.
-- **Indicateur « déjà vu » (autres participants)** : à l’ajout d’un film (ou sur la carte), afficher si des participants de la soirée l’ont déjà marqué comme vu (réactions ou agrégat côté API).
-- **Technique** : cache des posters (bucket ou BDD) ; table `users`, `reactions` ; routes auth et config ; endpoints / agrégats nécessaires pour watch providers et l’indicateur « déjà vu » ; si OG **dynamiques** : mécanisme serveur ou edge (HTML ou meta injectées) + éventuel **endpoint résumé événement** lisible par les crawlers. **Rate limiting** (prod, par IP / minute, fenêtre 1 min) : création soirée 20 ; join 60 ; recherche films 40 ; inscription 10 ; login 30 ; PATCH config 40 ; mutations réactions 120 ; GET affiches cache 300 — détail et ajustements : [`docs/v1-produit/02-deploiement-secrets-et-ci-v1.md`](v1-produit/02-deploiement-secrets-et-ci-v1.md) § 5.
+- **Indicateur « déjà vu » (autres participants)** : à l’ajout d’un film (ou sur la carte), afficher si des participants de la soirée l’ont déjà marqué comme vu (agrégat `seenMarks` côté API).
+- **Technique** : cache des posters (bucket ou BDD) ; tables `users`, `seenMarks` ; routes auth et config ; endpoints / agrégats nécessaires pour watch providers et l’indicateur « déjà vu » ; si OG **dynamiques** : mécanisme serveur ou edge (HTML ou meta injectées) + éventuel **endpoint résumé événement** lisible par les crawlers. **Rate limiting** (prod, par IP / minute, fenêtre 1 min) : création soirée 20 ; join 60 ; recherche films 40 ; inscription 10 ; login 30 ; PATCH config 40 ; mutations marqueur « déjà vu » 120 ; GET affiches cache 300 — détail et ajustements : [`docs/v1-produit/02-deploiement-secrets-et-ci-v1.md`](v1-produit/02-deploiement-secrets-et-ci-v1.md) § 5.
 
 ---
 
@@ -284,9 +282,9 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 | Proposer film (API, poster, titre, année) | ✅ | – | Note, bande-annonce, durée, séries OK | – |
 | Doublons, qui a proposé | ✅ | – | – | – |
 | Up/down vote | ✅ | – | – | – |
-| Réactions (« j'ai déjà vu », etc.) | ❌ | ✅ | – | – |
+| Marqueur « déjà vu » (neutre pour la roue) | ❌ | ✅ | – | – |
 | Roue (lancer, animation, résultat, clôturer) | ✅ | – | – | – |
-| Config hôte (thème, expiration, limites, roue, réactions) | ❌ (expiration basique) | ✅ | Limite participants, plage votes | – |
+| Config hôte (thème, expiration, limites, roue) | ❌ (expiration basique) | ✅ | Limite participants, plage votes | – |
 | Expiration / soirée terminée | ✅ (basique) | – | – | – |
 | Compte utilisateur | ❌ | Inscription, connexion, déconnexion | Mot de passe oublié (email) | Suppression, export |
 | QR code | ❌ | ✅ | – | – |

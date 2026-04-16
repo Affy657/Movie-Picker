@@ -19,8 +19,11 @@ public sealed class MovieWithScoreResponse
     public int Up { get; init; }
     public int Down { get; init; }
 
-    /// <summary>Agrégats de réactions (V1 §6) ; liste vide si aucune.</summary>
-    public IReadOnlyList<MovieReactionAggregateResponse> Reactions { get; init; } = Array.Empty<MovieReactionAggregateResponse>();
+    /// <summary>Nombre de participants ayant marqué le film comme « déjà vu » (neutre dans la pondération de la roue).</summary>
+    public int SeenCount { get; init; }
+
+    /// <summary>Pseudos des participants ayant marqué « déjà vu » (taille plafonnée côté API).</summary>
+    public IReadOnlyList<string> SeenByPseudos { get; init; } = Array.Empty<string>();
 
     /// <summary>Note moyenne TMDB (indicatif, V1 §7).</summary>
     public double? VoteAverage { get; init; }

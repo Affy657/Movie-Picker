@@ -1,42 +1,47 @@
-import { memo } from 'react';
-import { ThumbsDown, ThumbsUp } from 'lucide-react';
+import { memo, useState } from 'react';
+import { Eye, ThumbsDown, ThumbsUp } from 'lucide-react';
 import type { MovieData } from '@/shared/types/movie';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
-import { othersAlreadySeenHint } from '@/shared/utils/movieReactions';
 import { isSafeTmdbWatchPageUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
+import { markMovieAsSeen, unmarkMovieAsSeen } from '@/features/movies/api/moviesApi';
+import { othersAlreadySeenHint } from '@/features/movies/utils/seenHint';
+import { getErrorMessage } from '@/shared/api/apiError';
+import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import TmdbIndicativeFooter from '@/features/movies/components/TmdbIndicativeFooter';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
-import MovieReactionBar from '@/features/movies/components/MovieReactionBar';
 import MovieDetailsPanel from '@/features/movies/components/MovieDetailsPanel';
 import styles from './MovieList.module.css';
+
+type Translate = (key: TranslationKey, vars?: Record<string, string | number>) => string;
 
 interface MovieListProps {
   movies: MovieData[];
   slug: string;
-  allowedReactionIds: readonly string[];
   participantId: string | null;
   participantPseudo: string | null;
   isFinished: boolean;
+  isHost?: boolean;
   onVote: (movieId: string, value: 1 | -1) => Promise<void>;
   onRemove: (movieId: string) => Promise<void>;
   refresh: () => void;
-  onReactionError: (message: string) => void;
+  onActionError: (message: string) => void;
 }
 
 interface MovieCardProps {
   movie: MovieData;
   slug: string;
-  allowedReactionIds: readonly string[];
   participantId: string | null;
   participantPseudo: string | null;
   isFinished: boolean;
+  isHost: boolean;
   onVote: (movieId: string, value: 1 | -1) => Promise<void>;
   onRemove: (movieId: string) => Promise<void>;
   refresh: () => void;
-  onReactionError: (message: string) => void;
+  onActionError: (message: string) => void;
+  t: Translate;
 }
 
 function hasTmdbEnrichment(m: MovieData): boolean {
@@ -52,22 +57,48 @@ function hasTmdbEnrichment(m: MovieData): boolean {
 const MovieCard = memo(function MovieCard({
   movie: m,
   slug,
-  allowedReactionIds,
   participantId,
   participantPseudo,
   isFinished,
+  isHost,
   onVote,
   onRemove,
   refresh,
-  onReactionError,
+  onActionError,
+  t,
 }: MovieCardProps) {
   const isMine = participantId && getParticipantId(m) === participantId;
-  const seenHint = othersAlreadySeenHint(m.reactions, participantPseudo);
+  const canRemove = isMine || isHost;
+  const iMarkedSeen = !!(
+    participantPseudo &&
+    m.seenByPseudos &&
+    m.seenByPseudos.includes(participantPseudo)
+  );
+  const seenHint = othersAlreadySeenHint(m.seenByPseudos, participantPseudo, t);
   const voteLabel = formatTmdbVote(m.voteAverage);
   const runtimeLabel = formatRuntimeMinutes(m.runtimeMinutes);
   const providers = m.watchProviders ?? [];
   const posterSrc = posterImageSrc(m.posterPath);
   const safeTmdbWatchUrl = isSafeTmdbWatchPageUrl(m.tmdbWatchPageUrl) ? m.tmdbWatchPageUrl : null;
+
+  const [seenPending, setSeenPending] = useState(false);
+
+  const handleToggleSeen = async () => {
+    if (!participantId || seenPending) return;
+    setSeenPending(true);
+    try {
+      if (iMarkedSeen) {
+        await unmarkMovieAsSeen(slug, m.id, participantId);
+      } else {
+        await markMovieAsSeen(slug, m.id, participantId);
+      }
+      refresh();
+    } catch (e) {
+      onActionError(getErrorMessage(e, t('movies.seen.actionError')));
+    } finally {
+      setSeenPending(false);
+    }
+  };
 
   return (
     <li className={styles.card}>
@@ -94,14 +125,23 @@ const MovieCard = memo(function MovieCard({
               </span>
             ) : null}
             {runtimeLabel ? (
-              <span title="Durée du film">
+              <span title={t('movies.list.runtimeTitle')}>
                 {m.year || voteLabel ? ' · ' : null}
                 {runtimeLabel}
               </span>
             ) : null}
           </p>
         ) : null}
-        <p className={`${styles.meta} ${styles.metaProposer}`}>Proposé par {m.proposerPseudo}</p>
+        <p className={`${styles.meta} ${styles.metaProposer}`}>
+          {isMine ? (
+            <>
+              {t('movies.list.proposedByMeLead')}
+              <span className={styles.selfProposer}>{t('movies.list.proposedByMeSelf')}</span>
+            </>
+          ) : (
+            t('movies.list.proposedBy', { pseudo: m.proposerPseudo })
+          )}
+        </p>
         <WatchProviderChips
           providers={providers}
           variant="compact"
@@ -110,25 +150,13 @@ const MovieCard = memo(function MovieCard({
         />
         {seenHint ? <p className={styles.seenHint}>{seenHint}</p> : null}
         {m.tmdbId > 0 ? <MovieDetailsPanel tmdbId={m.tmdbId} /> : null}
-        <MovieReactionBar
-          slug={slug}
-          movieId={m.id}
-          participantId={participantId}
-          participantPseudo={participantPseudo}
-          reactions={m.reactions}
-          allowedReactionIds={allowedReactionIds}
-          readOnly={isFinished || allowedReactionIds.length === 0}
-          onRefresh={refresh}
-          onError={onReactionError}
-        />
-        {isMine && <span className={styles.badgeMe}>C&apos;est moi</span>}
         {!isFinished && participantId && (
           <div className={styles.actions}>
             <button
               type="button"
               className="btn btn-sm"
               onClick={() => void onVote(m.id, 1)}
-              aria-label={`Voter pour ${m.title}`}
+              aria-label={`${t('movies.list.voteUp')} ${m.title}`}
             >
               <ThumbsUp aria-hidden size={16} /> {m.up}
             </button>
@@ -136,18 +164,41 @@ const MovieCard = memo(function MovieCard({
               type="button"
               className="btn btn-sm"
               onClick={() => void onVote(m.id, -1)}
-              aria-label={`Voter contre ${m.title}`}
+              aria-label={`${t('movies.list.voteDown')} ${m.title}`}
             >
               <ThumbsDown aria-hidden size={16} /> {m.down}
             </button>
-            {isMine && (
+            <button
+              type="button"
+              className={`btn btn-sm ${iMarkedSeen ? styles.seenActive : ''}`}
+              onClick={() => void handleToggleSeen()}
+              disabled={seenPending}
+              aria-pressed={iMarkedSeen}
+              aria-label={
+                iMarkedSeen
+                  ? t('movies.seen.unmarkAria', { title: m.title })
+                  : t('movies.seen.markAria', { title: m.title })
+              }
+              title={t('movies.seen.neutralTooltip')}
+            >
+              <Eye aria-hidden size={16} />{' '}
+              {m.seenCount
+                ? t('movies.seen.labelWithCount', { count: m.seenCount })
+                : t('movies.seen.label')}
+            </button>
+            {canRemove && (
               <button
                 type="button"
                 className="btn btn-sm btn-danger"
                 onClick={() => void onRemove(m.id)}
-                aria-label={`Retirer ${m.title}`}
+                aria-label={
+                  isMine
+                    ? `${t('movies.list.removeButton')} ${m.title}`
+                    : t('movies.list.removeAsHostAria', { title: m.title })
+                }
+                title={!isMine && isHost ? t('movies.list.removeAsHostTitle') : undefined}
               >
-                Retirer
+                {t('movies.list.removeButton')}
               </button>
             )}
           </div>
@@ -160,17 +211,19 @@ const MovieCard = memo(function MovieCard({
 export default function MovieList({
   movies,
   slug,
-  allowedReactionIds,
   participantId,
   participantPseudo,
   isFinished,
+  isHost = false,
   onVote,
   onRemove,
   refresh,
-  onReactionError,
+  onActionError,
 }: MovieListProps) {
+  const { t } = useTranslation();
+
   if (movies.length === 0) {
-    return <p className="placeholder">Aucun film proposé pour l&apos;instant.</p>;
+    return <p className="placeholder">{t('movies.list.emptyPlaceholder')}</p>;
   }
 
   const showTmdbFooter = movies.some(hasTmdbEnrichment);
@@ -183,14 +236,15 @@ export default function MovieList({
             key={m.id}
             movie={m}
             slug={slug}
-            allowedReactionIds={allowedReactionIds}
             participantId={participantId}
             participantPseudo={participantPseudo}
             isFinished={isFinished}
+            isHost={isHost}
             onVote={onVote}
             onRemove={onRemove}
             refresh={refresh}
-            onReactionError={onReactionError}
+            onActionError={onActionError}
+            t={t}
           />
         ))}
       </ul>

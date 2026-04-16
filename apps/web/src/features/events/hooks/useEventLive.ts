@@ -8,7 +8,7 @@ import { eventScheduledStartUtcMs } from '@/shared/utils/eventScheduled';
  */
 export const EVENT_LIVE_POLL_INTERVAL_UPCOMING_MS = 12_000;
 
-/** Pendant la soirée en cours : votes, réactions, films et roue se mettent à jour plus vite. */
+/** Pendant la soirée en cours : votes, marqueurs « déjà vu », films et roue se mettent à jour plus vite. */
 export const EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS = 3_500;
 
 export type EventLiveStrategy = 'polling';
@@ -57,7 +57,7 @@ export function getLivePollingRefetchIntervalForEventQuery(
   return livePollIntervalMs(data, nowMs);
 }
 
-/** Polling de la liste films (même rythme que le détail : réactions / votes dans la même payload). */
+/** Polling de la liste films (même rythme que le détail : votes et « déjà vu » dans la même payload). */
 export function getLivePollingRefetchIntervalForMoviesQuery(
   event: { isFinished?: boolean; date?: string; time?: string } | undefined,
   moviesQueryEnabled: boolean,

@@ -6,13 +6,6 @@ export interface WatchProviderOffer {
   type: string;
 }
 
-/** Agrégat aligné sur `MovieReactionAggregateResponse` (API). */
-export interface MovieReactionAggregate {
-  reactionId: string;
-  count: number;
-  pseudos: string[];
-}
-
 export interface MovieData {
   id: string;
   eventId: string;
@@ -36,8 +29,10 @@ export interface MovieData {
   tmdbWatchPageUrl?: string | null;
   /** Durée du film en minutes (TMDB) — formatée côté UI en « 1h10 ». */
   runtimeMinutes?: number | null;
-  /** Agrégats de réactions (liste vide si aucune). */
-  reactions?: MovieReactionAggregate[];
+  /** Nombre de participants ayant marqué « déjà vu ». */
+  seenCount?: number;
+  /** Pseudos (ordre stable, tronqué côté API) des participants ayant marqué « déjà vu ». */
+  seenByPseudos?: string[];
 }
 
 export interface ParticipantData {

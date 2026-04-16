@@ -55,8 +55,7 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
             {
                 theme = "Horreur",
                 maxProposalsPerParticipant = 2,
-                wheelMode = "weightedByVotes",
-                allowedReactionIds = new[] { "already_seen" }
+                wheelMode = "weightedByVotes"
             });
         Assert.Equal(HttpStatusCode.OK, patch.StatusCode);
         var updated = await patch.Content.ReadFromJsonAsync<EventConfigResponse>(JsonOptions);
@@ -64,7 +63,6 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
         Assert.Equal("Horreur", updated!.Theme);
         Assert.Equal(2, updated.MaxProposalsPerParticipant);
         Assert.Equal(WheelMode.WeightedByVotes, updated.WheelMode);
-        Assert.Single(updated.AllowedReactionIds!);
 
         var get = await client.GetAsync($"/api/v1/events/{created.Slug}/config");
         var again = await get.Content.ReadFromJsonAsync<EventConfigResponse>(JsonOptions);

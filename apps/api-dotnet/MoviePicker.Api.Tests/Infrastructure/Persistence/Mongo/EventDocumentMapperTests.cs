@@ -125,7 +125,7 @@ public sealed class EventDocumentMapperTests
     }
 
     [Fact]
-    public void ToDomain_WithWheelModeAndReactions_RoundTrips()
+    public void ToDomain_WithWheelMode_RoundTrips()
     {
         var evt = new Event
         {
@@ -137,8 +137,7 @@ public sealed class EventDocumentMapperTests
             Slug = "s",
             Config = new EventConfig
             {
-                WheelMode = WheelMode.WeightedByVotes,
-                AllowedReactionIds = new[] { "already_seen", "meh" }
+                WheelMode = WheelMode.WeightedByVotes
             },
             ClosedAt = null,
             WinnerMovieId = null,
@@ -148,7 +147,6 @@ public sealed class EventDocumentMapperTests
         var doc = EventDocumentMapper.ToDocument(evt);
         var back = EventDocumentMapper.ToDomain(doc);
         Assert.Equal(WheelMode.WeightedByVotes, back.Config?.WheelMode);
-        Assert.Equal(new[] { "already_seen", "meh" }, back.Config?.AllowedReactionIds);
     }
 
     [Fact]

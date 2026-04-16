@@ -80,16 +80,6 @@
   margin-bottom: 0.5rem !important;
 }
 
-.reactionList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.reactionList li {
-  margin-bottom: 0.35rem;
-}
-
 .checkLabel {
   display: flex;
   align-items: center;

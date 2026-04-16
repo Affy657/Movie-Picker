@@ -76,7 +76,7 @@ En **Development**, l’API peut créer automatiquement des utilisateurs et des 
 
 Les comptes sont créés une fois (e-mail absent en base). **Trois soirées** pour le compte principal (titres `Soirée de test — …`) si `SeedSampleEvents` est vrai et qu’aucune n’existe encore.
 
-**Scénarios démo** (`SeedScenarioDemos`, défaut `true`) : Alice héberge une soirée « multi-participants » (config riche : thème, limite de propositions, mode de roue pondéré, réactions autorisées, partage riche) ; le compte **dev** et **Bob** la rejoignent ; films TMDB, votes up/down, réaction puis retrait, suppression d’un film par son proposeur. **Bob** héberge une soirée **roue + clôture** (deux films, votes, tirage pondéré, soirée clôturée avec gagnant).
+**Scénarios démo** (`SeedScenarioDemos`, défaut `true`) : Alice héberge une soirée « multi-participants » (config riche : thème, limite de propositions, mode de roue pondéré, partage riche) ; le compte **dev** et **Bob** la rejoignent ; films TMDB, votes up/down, marquage « déjà vu » puis retrait, suppression d’un film par son proposeur. **Bob** héberge une soirée **roue + clôture** (deux films, votes, tirage pondéré, soirée clôturée avec gagnant).
 
 Désactivation : variables `DevelopmentSeed__*` (voir `.env.example`) — notamment `DevelopmentSeed__SeedSampleEvents=false`, `DevelopmentSeed__SeedScenarioDemos=false`. Les deux utilisateurs extra sont configurables via le tableau `ExtraUsers` dans `appsettings.Development.json` (sinon Alice/Bob par défaut).
 

@@ -53,9 +53,10 @@ export default function Home() {
               <ThumbsUp size={28} />
             </span>
             <div className={styles.featureBody}>
-              <h3 className={styles.featureTitle}>Votes et réactions</h3>
+              <h3 className={styles.featureTitle}>Votes et « déjà vu »</h3>
               <p className={styles.featureText}>
-                Chacun donne son avis sur les propositions pour faire émerger les favoris du groupe.
+                Chacun donne son avis sur les propositions et signale les films déjà vus pour faire
+                émerger les favoris du groupe.
               </p>
             </div>
           </li>

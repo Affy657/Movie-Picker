@@ -6,7 +6,7 @@ Suite de tâches pour livrer la **V1 produit** après le MVP et la migration API
 
 Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant l’ordre des sections.
 
-**Ordre logique** : cadrage (§ 1) → modèle de données (§ 2) → API auth puis « mes soirées » / hôte compte (§ 3–4) → config hôte avant réactions (§ 5–6) → enrichissement films & posters côté API (§ 7–8) → shell, auth et pages front (§ 9–14) → live, rappels (§ 15–16) → **§ 16 bis — parcours créateur & watch providers** → OG (§ 17) → **utilisateurs de test / seed local (§ 18)** → i18n (§ 19) → qualité, déploiement, recette (§ 20–22) → sécurité CI : Sonar (§ 23), NuGet (§ 24), image Docker (§ 25), secrets (§ 26).
+**Ordre logique** : cadrage (§ 1) → modèle de données (§ 2) → API auth puis « mes soirées » / hôte compte (§ 3–4) → config hôte avant marqueur « déjà vu » (§ 5–6) → enrichissement films & posters côté API (§ 7–8) → shell, auth et pages front (§ 9–14) → live, rappels (§ 15–16) → **§ 16 bis — parcours créateur & watch providers** → OG (§ 17) → **utilisateurs de test / seed local (§ 18)** → i18n (§ 19) → qualité, déploiement, recette (§ 20–22) → sécurité CI : Sonar (§ 23), NuGet (§ 24), image Docker (§ 25), secrets (§ 26).
 
 > **Hors périmètre V1** (cf. features list du dépôt) : mot de passe oublié par e-mail (**V2**), lieu / description soirée avancée, .ics / compte à rebours dédié (**V2**), vue grille-liste / hors-ligne (**V2**), **limite de participants** et **plage de votes** configurables (**V2**).
 
@@ -57,7 +57,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ## 5. API – Configuration de la soirée (hôte)
 
-- [x] Définir / figer le schéma **`events.config`** (JSON) : **thème / tag** d’ambiance (affichage côté front : bandeau ou couleur — § 12), expiration du lien (si distincte de la logique MVP actuelle), **limite de propositions** par participant, **mode roue** (aléatoire strict vs pondéré), **ensemble des réactions autorisées** (liste ids ou clés)
+- [x] Définir / figer le schéma **`events.config`** (JSON) : **thème / tag** d’ambiance (affichage côté front : bandeau ou couleur — § 12), expiration du lien (si distincte de la logique MVP actuelle), **limite de propositions** par participant, **mode roue** (aléatoire strict vs pondéré). Le marqueur « déjà vu » est **toujours disponible** (pas de config hôte).
 - [x] **GET** config (lecture) : accessible selon règles produit (hôte + participants pour transparence, ou hôte seul pour certains champs — à trancher)
 - [x] **PATCH** ou **PUT** config : **réservé hôte** ; validation des valeurs ; refus si soirée terminée / roue déjà lancée selon règles choisies
 - [x] Adapter la **logique métier** existante : ajout de film, votes, lancement roue pour respecter **limites** et **mode roue**
@@ -65,12 +65,12 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ---
 
-## 6. API – Réactions
+## 6. API – Marqueur « déjà vu »
 
-- [x] Modèle **`reactions`** (ou embed selon choix d’archi) : event, film, participant, type de réaction, contrainte **une ou plusieurs par film** selon spec / config hôte
-- [x] **POST** / **DELETE** (ou toggle) réaction — respect de la liste **autorisée** par l’hôte
-- [x] **GET** agrégats par film (compteurs, éventuellement pseudos) pour alimenter le front
-- [x] **Indicateur « déjà vu » (autres participants)** : exploiter les réactions (ou agrégat dédié) pour exposer un booléen / compteur lors de l’**ajout** ou sur la fiche film — comme décrit en features list *(compteur `already_seen` + pseudos dans `reactions[]` sur liste films / GET agrégats ; le front peut déduire « autres » par rapport au participant courant)*
+- [x] Modèle **`seenMarks`** : event, film, participant, horodatage ; contrainte **un marqueur unique** par (event, movie, participant) — indépendant du vote up/down
+- [x] **POST** `/events/{slug}/movies/{movieId}/seen` (marquer) / **DELETE** (démarquer) — toujours disponible, pas de gating par config hôte
+- [x] Agrégats par film (compteur `seenCount`, `seenByPseudos`) exposés dans la liste des films pour alimenter le front
+- [x] **Indicateur « déjà vu » (autres participants)** : le front déduit « autres » à partir de `seenByPseudos` (vs participant courant). **Neutre pour la roue** : `WheelWinnerPicker` n’utilise que `Score` (up/down).
 
 ---
 
@@ -119,17 +119,18 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 ## 12. Front – Paramètres hôte (config soirée)
 
 - [x] Page ou panneau **Paramètres** accessible **uniquement** à l’hôte depuis le détail soirée
-- [x] Formulaires : thème, expiration, limite propositions, mode roue, **sélection des réactions** disponibles
+- [x] Formulaires : thème, expiration, limite propositions, mode roue
 - [x] **Reflet visuel pour tous** : bandeau, couleur d’accent ou libellé du **thème de soirée** sur la page détail (lecture **GET** config ou champs déjà dans le détail event)
 - [x] Sauvegarde via API § 5 ; feedback succès / erreur ; désactivation si soirée non modifiable
 
 ---
 
-## 13. Front – Réactions et affichage « déjà vu »
+## 13. Front – Bouton « Déjà vu » et affichage agrégé
 
-- [x] UI réactions sur chaque film (icônes / compteurs) selon config
-- [x] Affichage **« déjà vu par d’autres »** à l’ajout ou sur la carte (données § 6)
+- [x] Bouton **Déjà vu** sur chaque carte film (toggle), à côté des boutons up/down ; compteur `seenCount`
+- [x] Affichage **« déjà vu par d’autres »** à l’ajout ou sur la carte (à partir de `seenByPseudos`, § 6)
 - [x] États loading / erreur alignés sur TanStack Query + couche live existante
+- [x] **Neutre pour la pondération de la roue** — indiqué visuellement (libellé / tooltip), aucun impact sur le score
 
 ---
 
@@ -143,7 +144,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 ## 15. Front – Mise à jour « live »
 
 - [x] Remplacer ou compléter le **polling** actuel par **SSE** ou **WebSocket** si la charge / UX le justifie ; sinon **affiner** l’intervalle et l’invalidation React Query — *mémo V1 : polling affiné par phase (à venir / en cours), pas de SSE sans endpoint API*
-- [x] Synchroniser **réactions**, **votes**, **films**, **résultat roue** sans rechargement manuel — *polling + invalidations après mutations ; roue : sync `winnerMovie` depuis le détail événement*
+- [x] Synchroniser **marqueurs « déjà vu »**, **votes**, **films**, **résultat roue** sans rechargement manuel — *polling + invalidations après mutations ; roue : sync `winnerMovie` depuis le détail événement*
 - [x] Isoler dans la couche **`useEventLive`** (ou équivalent) pour limiter les régressions
 
 ---
@@ -183,7 +184,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 > **But** : accélérer les tests manuels et les parcours V1 sans enchaîner inscription / création de soirées à la main. **Uniquement** en environnement **Development** ; jamais exécuté en Production.
 
 - [x] **Seed au démarrage API** : compte principal configurable + **deux utilisateurs additionnels** (ex. Alice / Bob) via `appsettings.Development.json` / variables `DevelopmentSeed__*`
-- [x] **Soirées d’exemple** pour le compte principal (titres préfixés) et **scénarios démo** idempotents : hôte + invités connectés, config d’événement (thème, limite propositions, mode roue, réactions, partage riche), films TMDB, votes, réactions, retrait de film, tirage roue + soirée clôturée avec gagnant
+- [x] **Soirées d’exemple** pour le compte principal (titres préfixés) et **scénarios démo** idempotents : hôte + invités connectés, config d’événement (thème, limite propositions, mode roue, partage riche), films TMDB, votes, marqueurs « déjà vu », retrait de film, tirage roue + soirée clôturée avec gagnant
 - [x] **Documentation** : README (identifiants et description des scénarios), `.env.example` ; tests d’intégration sans pollution (désactivation partielle du seed lourd dans `MoviePickerApplicationFactory`)
 
 ---
@@ -201,10 +202,10 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ## 20. Tests, contrat et qualité
 
-- [x] **Tests .NET** : nouveaux handlers (auth, config, réactions, agrégats watch providers / cache posters si testables)
-- [x] **Tests intégration** : parcours connexion → création soirée liée au compte → config → réaction
+- [x] **Tests .NET** : nouveaux handlers (auth, config, marqueur « déjà vu », agrégats watch providers / cache posters si testables)
+- [x] **Tests intégration** : parcours connexion → création soirée liée au compte → config → marquer « déjà vu »
 - [x] **OpenAPI** : schémas à jour ; **export CI** et `OpenApiContractTests`
-- [x] **Front** : Vitest / RTL sur pages auth, mes soirées, paramètres hôte, composants réactions / QR / **watch providers** / **thème soirée** / **préférence thème UI**
+- [x] **Front** : Vitest / RTL sur pages auth, mes soirées, paramètres hôte, composants bouton « Déjà vu » / QR / **watch providers** / **thème soirée** / **préférence thème UI**
 - [x] **`pnpm run verify:local`** avant merge majeur V1
 
 ---
@@ -214,7 +215,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 - [x] Variables d’environnement et secrets (auth, bucket posters si applicable) documentés pour l’équipe (README, `.env.example`, procédure secrets)
 - [x] **CORS** / `ALLOWED_ORIGINS` si nouvelles origines (ex. sous-domaine OG)
 - [x] **Cookies / sessions** (si cookie auth) : attributs **Secure**, **HttpOnly**, **SameSite** ; politique **CSRF** si cookie en cross-site — à documenter avec le choix auth
-- [x] **Rate limiting** : revoir les plafonds pour les **nouveaux endpoints** (auth, config, réactions, TMDB enrichie) — prolongement note « technique » features list § V1
+- [x] **Rate limiting** : revoir les plafonds pour les **nouveaux endpoints** (auth, config, marqueur « déjà vu », TMDB enrichie) — prolongement note « technique » features list § V1
 - [x] Logs structurés : corrélation sur les routes auth et config (prolongement MVP § 29)
 
 ---
@@ -222,7 +223,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 ## 22. V1 terminée
 
 - [x] Parcours **compte** : inscription → connexion → créer / rejoindre → **Mes soirées**
-- [x] Parcours **hôte** : config (thème, limites, roue, réactions) → invités avec réactions / **bandeau ou style thème soirée** / watch providers / affichage posters (cache si activé)
+- [x] Parcours **hôte** : config (thème, limites, roue) → invités avec marqueur « déjà vu » / **bandeau ou style thème soirée** / watch providers / affichage posters (cache si activé)
 - [x] **QR code** + **rappel in-app** validés sur mobile
 - [x] **OG dynamiques** : livrés **ou** explicitement reportés avec doc de la limite
 - [x] Mettre à jour la features list du dépôt et tout index roadmaps par version si le dépôt en contient un

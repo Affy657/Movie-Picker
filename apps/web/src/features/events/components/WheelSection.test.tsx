@@ -18,7 +18,6 @@ const baseEvent: EventData = {
     endDate: null,
     maxProposalsPerParticipant: null,
     wheelMode: 'strictRandom',
-    allowedReactionIds: null,
   },
 };
 

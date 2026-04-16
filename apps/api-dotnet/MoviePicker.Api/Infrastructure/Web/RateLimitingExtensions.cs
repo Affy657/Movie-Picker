@@ -16,7 +16,8 @@ public static class RateLimitingExtensions
     public const string AuthRegisterPolicy = "auth-register";
     public const string AuthLoginPolicy = "auth-login";
     public const string PatchEventConfigPolicy = "patch-event-config";
-    public const string ReactionsMutationPolicy = "reactions-mutation";
+    public const string VoteMutationPolicy = "vote-mutation";
+    public const string SeenMarksMutationPolicy = "seen-marks-mutation";
     public const string PostersPolicy = "posters-get";
 
     public static IServiceCollection AddMoviePickerRateLimiter(this IServiceCollection services, IHostEnvironment environment)
@@ -50,7 +51,8 @@ public static class RateLimitingExtensions
                 options.AddPolicy(AuthRegisterPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(AuthLoginPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(PatchEventConfigPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                options.AddPolicy(ReactionsMutationPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
+                options.AddPolicy(VoteMutationPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
+                options.AddPolicy(SeenMarksMutationPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(PostersPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 return;
             }
@@ -63,7 +65,9 @@ public static class RateLimitingExtensions
             options.AddPolicy(AuthRegisterPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 10, windowMinutes: 1));
             options.AddPolicy(AuthLoginPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 30, windowMinutes: 1));
             options.AddPolicy(PatchEventConfigPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 40, windowMinutes: 1));
-            options.AddPolicy(ReactionsMutationPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 120, windowMinutes: 1));
+            // Votes et marqueurs « déjà vu » : mêmes ordres de grandeur (toggle par film et par participant).
+            options.AddPolicy(VoteMutationPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 120, windowMinutes: 1));
+            options.AddPolicy(SeenMarksMutationPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 120, windowMinutes: 1));
             options.AddPolicy(PostersPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 300, windowMinutes: 1));
         });
 

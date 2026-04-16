@@ -8,7 +8,7 @@ using MoviePicker.Api.Application.UseCases.AddMovie;
 using MoviePicker.Api.Application.UseCases.CreateEvent;
 using MoviePicker.Api.Application.UseCases.DeleteMovie;
 using MoviePicker.Api.Application.UseCases.JoinEvent;
-using MoviePicker.Api.Application.UseCases.Reactions;
+using MoviePicker.Api.Application.UseCases.SeenMarks;
 using MoviePicker.Api.Application.UseCases.VoteMovie;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
@@ -16,7 +16,7 @@ using MoviePicker.Api.Domain.Entities;
 namespace MoviePicker.Api.Infrastructure.Development;
 
 /// <summary>
-/// Données de démo couvrant plusieurs cas d’usage (hôte, invité, films, votes, réactions, suppression, roue, clôture).
+/// Données de démo couvrant plusieurs cas d’usage (hôte, invité, films, votes, déjà vu, suppression, roue, clôture).
 /// N’utilise pas les handlers qui exigent un <c>HttpContext</c> (patch config, lancement roue via cookie) : config / roue / clôture via <see cref="IEventRepository"/>.
 /// </summary>
 internal static class DevelopmentScenarioSeed
@@ -67,8 +67,8 @@ internal static class DevelopmentScenarioSeed
         var join = sp.GetRequiredService<IJoinEventHandler>();
         var addMovie = sp.GetRequiredService<IAddMovieHandler>();
         var vote = sp.GetRequiredService<IVoteMovieHandler>();
-        var addReaction = sp.GetRequiredService<IAddReactionHandler>();
-        var removeReaction = sp.GetRequiredService<IRemoveReactionHandler>();
+        var markAsSeen = sp.GetRequiredService<IMarkAsSeenHandler>();
+        var unmarkAsSeen = sp.GetRequiredService<IUnmarkAsSeenHandler>();
         var deleteMovie = sp.GetRequiredService<IDeleteMovieHandler>();
 
         var utc = DateTimeOffset.UtcNow;
@@ -165,15 +165,15 @@ internal static class DevelopmentScenarioSeed
             .HandleAsync(slug, mBob.Id, new VoteRequest { ParticipantId = devPart, Value = -1 }, ct)
             .ConfigureAwait(false);
 
-        await addReaction
+        await markAsSeen
             .HandleAsync(
                 slug,
                 mAlice.Id,
-                new AddReactionRequest { ParticipantId = devPart, ReactionId = "want_to_watch" },
+                new MarkAsSeenRequest { ParticipantId = devPart },
                 ct)
             .ConfigureAwait(false);
-        await removeReaction
-            .HandleAsync(slug, mAlice.Id, "want_to_watch", devPart, ct)
+        await unmarkAsSeen
+            .HandleAsync(slug, mAlice.Id, devPart, ct)
             .ConfigureAwait(false);
 
         await deleteMovie.HandleAsync(slug, mJunk.Id, bobPart, ct).ConfigureAwait(false);
@@ -194,7 +194,6 @@ internal static class DevelopmentScenarioSeed
             EndDate = null,
             MaxProposalsPerParticipant = 5,
             WheelMode = WheelMode.WeightedByVotes,
-            AllowedReactionIds = new[] { "want_to_watch", "masterpiece", "already_seen" },
             RichSharePreview = true
         };
 

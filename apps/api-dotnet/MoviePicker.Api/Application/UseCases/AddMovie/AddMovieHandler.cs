@@ -89,7 +89,8 @@ public sealed class AddMovieHandler : IAddMovieHandler
             Score = 0,
             Up = 0,
             Down = 0,
-            Reactions = Array.Empty<MovieReactionAggregateResponse>()
+            SeenCount = 0,
+            SeenByPseudos = Array.Empty<string>()
         };
     }
 

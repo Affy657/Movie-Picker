@@ -112,10 +112,10 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
     }
 
     /// <summary>
-    /// Parcours V1 roadmap §20 : session (login après inscription) → création liée au compte → PATCH config → GET config (persistance) → réaction.
+    /// Parcours V1 roadmap §20 : session (login après inscription) → création liée au compte → PATCH config → GET config (persistance) → marquage « déjà vu ».
     /// </summary>
     [Fact]
-    public async Task V1Flow_Login_CreateEvent_PatchConfig_PostReaction()
+    public async Task V1Flow_Login_CreateEvent_PatchConfig_MarkAsSeen()
     {
         var email = $"v1flow{Guid.NewGuid():N}@test.local";
         const string password = "abcd1234";
@@ -150,11 +150,7 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
 
         var patch = await client.PatchAsJsonAsync(
             $"/api/v1/events/{slug}/config",
-            new
-            {
-                theme = "Science-fiction",
-                allowedReactionIds = new[] { "already_seen", "meh" }
-            });
+            new { theme = "Science-fiction" });
         patch.EnsureSuccessStatusCode();
 
         var getCfg = await client.GetAsync($"/api/v1/events/{slug}/config");
@@ -162,10 +158,6 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
         var cfg = await getCfg.Content.ReadFromJsonAsync<EventConfigResponse>(JsonConfigOptions);
         Assert.NotNull(cfg);
         Assert.Equal("Science-fiction", cfg!.Theme);
-        Assert.NotNull(cfg.AllowedReactionIds);
-        Assert.Equal(2, cfg.AllowedReactionIds!.Count);
-        Assert.Contains("already_seen", cfg.AllowedReactionIds);
-        Assert.Contains("meh", cfg.AllowedReactionIds);
 
         var addMovie = await client.PostAsJsonAsync(
             $"/api/v1/events/{slug}/movies",
@@ -181,10 +173,31 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
         var movie = await addMovie.Content.ReadFromJsonAsync<MovieWithScoreResponse>(JsonOptions);
         Assert.NotNull(movie);
 
-        var rx = await client.PostAsJsonAsync(
-            $"/api/v1/events/{slug}/movies/{movie!.Id}/reactions",
+        var seen = await client.PostAsJsonAsync(
+            $"/api/v1/events/{slug}/movies/{movie!.Id}/seen",
+            new { participantId = creatorPid });
+        // Contrat : le endpoint renvoie 200 OK (ressource idempotente, pas de "location").
+        Assert.Equal(HttpStatusCode.OK, seen.StatusCode);
+
+        // Idempotence : un second POST doit rester 200 OK et ne pas conflicter.
+        var seenAgain = await client.PostAsJsonAsync(
+            $"/api/v1/events/{slug}/movies/{movie.Id}/seen",
+            new { participantId = creatorPid });
+        Assert.Equal(HttpStatusCode.OK, seenAgain.StatusCode);
+
+        // DELETE (unmark) renvoie 204 No Content.
+        var unmarkRequest = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/events/{slug}/movies/{movie.Id}/seen")
+        {
+            Content = JsonContent.Create(new { participantId = creatorPid })
+        };
+        var unmark = await client.SendAsync(unmarkRequest);
+        Assert.Equal(HttpStatusCode.NoContent, unmark.StatusCode);
+
+        // Régression : l'ancienne route « reactions » doit retourner 404 Not Found (surface API).
+        var legacyReaction = await client.PostAsJsonAsync(
+            $"/api/v1/events/{slug}/movies/{movie.Id}/reactions",
             new { participantId = creatorPid, reactionId = "already_seen" });
-        Assert.Equal(HttpStatusCode.OK, rx.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, legacyReaction.StatusCode);
     }
 
     [Fact]

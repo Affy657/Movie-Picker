@@ -8,7 +8,6 @@ public sealed class EventConfigResponse
     public DateTimeOffset? EndDate { get; init; }
     public int? MaxProposalsPerParticipant { get; init; }
     public WheelMode WheelMode { get; init; }
-    public IReadOnlyList<string>? AllowedReactionIds { get; init; }
 
     /// <summary>Aperçu Open Graph « riche » (titre soirée, détails) — désactivé par défaut.</summary>
     public bool RichSharePreview { get; init; }
@@ -22,7 +21,6 @@ public sealed class EventConfigResponse
             EndDate = c?.EndDate,
             MaxProposalsPerParticipant = c?.MaxProposalsPerParticipant,
             WheelMode = c?.WheelMode ?? WheelMode.StrictRandom,
-            AllowedReactionIds = c?.AllowedReactionIds,
             RichSharePreview = c?.RichSharePreview ?? false
         };
     }
@@ -32,9 +30,6 @@ public sealed class EventConfigResponse
 /// PATCH partiel : propriétés absentes ou nulles sans effet, sauf <see cref="Theme"/> non null (chaîne vide efface),
 /// <see cref="EndDate"/> non null (chaîne vide efface, sinon date ISO 8601),
 /// <see cref="MaxProposalsPerParticipant"/> présent : 0 = pas de limite, 1–100 = plafond.
-/// <see cref="AllowedReactionIds"/> : propriété absente ou JSON <c>null</c> = pas de changement ;
-/// tableau vide <c>[]</c> = aucune réaction du catalogue n’est autorisée (persisté tel quel, pour la § réactions) ;
-/// sinon sous-ensemble des clés du catalogue de réactions (domaine).
 /// </summary>
 public sealed class PatchEventConfigRequest
 {
@@ -45,7 +40,6 @@ public sealed class PatchEventConfigRequest
 
     public int? MaxProposalsPerParticipant { get; init; }
     public WheelMode? WheelMode { get; init; }
-    public IReadOnlyList<string>? AllowedReactionIds { get; init; }
 
     /// <summary>Si présent, active ou désactive l’aperçu de partage détaillé (Open Graph).</summary>
     public bool? RichSharePreview { get; init; }

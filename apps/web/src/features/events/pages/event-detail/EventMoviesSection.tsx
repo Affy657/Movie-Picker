@@ -7,12 +7,12 @@ import type { MovieData } from '@/shared/types/movie';
 import AddMovieForm from '@/features/movies/components/AddMovieForm';
 import MovieList from '@/features/movies/components/MovieList';
 import EventActionErrorBanner from '@/features/events/pages/event-detail/EventActionErrorBanner';
-import { effectiveAllowedReactionIds } from '@/shared/utils/movieReactions';
 
 export type EventMoviesSectionProps = {
   slug: string;
   event: EventData;
   participant: { participantId: string; pseudo: string } | null;
+  hostToken: string | null;
   movies: MovieData[];
   moviesQuery: Pick<
     UseQueryResult<MovieData[]>,
@@ -28,6 +28,7 @@ export default function EventMoviesSection({
   slug,
   event,
   participant,
+  hostToken,
   movies,
   moviesQuery,
   actionError,
@@ -36,7 +37,6 @@ export default function EventMoviesSection({
   refreshAll,
 }: EventMoviesSectionProps) {
   const isFinished = !!event.isFinished;
-  const allowedReactionIds = effectiveAllowedReactionIds(event.config?.allowedReactionIds);
 
   const handleVote = useCallback(
     async (movieId: string, value: 1 | -1) => {
@@ -57,16 +57,16 @@ export default function EventMoviesSection({
       if (!participant) return;
       setActionError(null);
       try {
-        await removeMovieFromEvent(slug, movieId, participant.participantId);
+        await removeMovieFromEvent(slug, movieId, participant.participantId, hostToken);
         refreshAll();
       } catch (e) {
         setActionError(getErrorMessage(e, 'Erreur lors de la suppression'));
       }
     },
-    [slug, participant, setActionError, refreshAll]
+    [slug, participant, hostToken, setActionError, refreshAll]
   );
 
-  const handleReactionError = useCallback((msg: string) => setActionError(msg), [setActionError]);
+  const handleActionError = useCallback((msg: string) => setActionError(msg), [setActionError]);
 
   return (
     <section className="section section-movies" aria-label="Films proposés">
@@ -95,11 +95,11 @@ export default function EventMoviesSection({
         <MovieList
           movies={movies}
           slug={slug}
-          allowedReactionIds={allowedReactionIds}
           participantId={participant?.participantId ?? null}
           participantPseudo={participant?.pseudo ?? null}
           isFinished={isFinished}
-          onReactionError={handleReactionError}
+          isHost={!!event.isHost}
+          onActionError={handleActionError}
           onVote={handleVote}
           onRemove={handleRemove}
           refresh={refreshAll}

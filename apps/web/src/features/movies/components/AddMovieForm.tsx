@@ -5,12 +5,13 @@ import {
   type MovieSearchItem,
   type MovieSearchListResponse,
 } from '@/features/movies/api/moviesApi';
+import { othersAlreadySeenHint } from '@/features/movies/utils/seenHint';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
 import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
+import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import type { MovieData } from '@/shared/types/movie';
-import { othersAlreadySeenHint } from '@/shared/utils/movieReactions';
 import { isSafeTmdbWatchPageUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
 import TmdbIndicativeFooter from '@/features/movies/components/TmdbIndicativeFooter';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
@@ -262,6 +263,7 @@ export default function AddMovieForm({
           <ul className={styles.results} aria-label={t('movies.search.resultsListAria')}>
             {results.map((r) => {
               const voteLabel = formatTmdbVote(r.voteAverage);
+              const runtimeLabel = formatRuntimeMinutes(r.runtimeMinutes);
               const providers = r.watchProviders ?? [];
               const posterSrcRaw = posterImageSrc(r.posterPath);
               const posterSrc = posterSrcRaw
@@ -269,7 +271,7 @@ export default function AddMovieForm({
                 : undefined;
               const alreadyListed = existingMovies.find((m) => m.tmdbId === r.id);
               const seenHint = alreadyListed
-                ? othersAlreadySeenHint(alreadyListed.reactions, participantPseudo)
+                ? othersAlreadySeenHint(alreadyListed.seenByPseudos, participantPseudo, t)
                 : null;
               const safeTmdbWatchUrl = isSafeTmdbWatchPageUrl(r.tmdbWatchPageUrl)
                 ? r.tmdbWatchPageUrl
@@ -293,6 +295,12 @@ export default function AddMovieForm({
                         {voteLabel ? (
                           <span className="tmdb-vote" title={t('movies.search.tmdbVoteHint')}>
                             {r.year ? ' · ' : null}TMDB {voteLabel}
+                          </span>
+                        ) : null}
+                        {runtimeLabel ? (
+                          <span title={t('movies.list.runtimeTitle')}>
+                            {r.year || voteLabel ? ' · ' : null}
+                            {runtimeLabel}
                           </span>
                         ) : null}
                       </div>

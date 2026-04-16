@@ -38,17 +38,19 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
         Assert.True(paths.TryGetProperty("/api/v1/events/{idOrSlug}/config", out var evCfg)
                     && evCfg.TryGetProperty("get", out _)
                     && evCfg.TryGetProperty("patch", out _));
-        Assert.True(paths.TryGetProperty("/api/v1/events/{idOrSlug}/movies/{movieId}/reactions", out var rx)
-                    && rx.TryGetProperty("get", out _)
-                    && rx.TryGetProperty("post", out _));
-        Assert.True(paths.TryGetProperty("/api/v1/events/{idOrSlug}/movies/{movieId}/reactions/{reactionId}", out var rxDel)
-                    && rxDel.TryGetProperty("delete", out _));
+        Assert.True(paths.TryGetProperty("/api/v1/events/{idOrSlug}/movies/{movieId}/seen", out var seen)
+                    && seen.TryGetProperty("post", out _)
+                    && seen.TryGetProperty("delete", out _));
         Assert.True(paths.TryGetProperty("/api/v1/movies/search", out var mSearch) && mSearch.TryGetProperty("get", out _));
         Assert.True(paths.TryGetProperty("/api/v1/movies/tmdb/{tmdbId}/details", out var mDetails) && mDetails.TryGetProperty("get", out _));
         Assert.True(paths.TryGetProperty("/api/v1/posters/{posterKey}", out var posters) && posters.TryGetProperty("get", out _));
         var schemas = doc.RootElement.GetProperty("components").GetProperty("schemas");
         Assert.True(schemas.TryGetProperty("MovieSearchListResponse", out _));
-        Assert.True(schemas.TryGetProperty("MovieSearchItemResponse", out _));
+        Assert.True(schemas.TryGetProperty("MovieSearchItemResponse", out var searchItem));
+        // Recherche TMDB : la durée est exposée pour afficher « 2024 · TMDB 7.5/10 · 1h52 ».
+        var searchItemProps = searchItem.GetProperty("properties");
+        Assert.True(searchItemProps.TryGetProperty("runtimeMinutes", out var searchRuntimeProp));
+        Assert.Equal("integer", searchRuntimeProp.GetProperty("type").GetString());
         Assert.True(schemas.TryGetProperty("WatchProviderOfferResponse", out _));
         Assert.True(schemas.TryGetProperty("MovieDetailsResponse", out _));
         Assert.True(schemas.TryGetProperty("EventConfigResponse", out _));
@@ -59,5 +61,20 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
         Assert.True(movieProps.TryGetProperty("runtimeMinutes", out var runtimeProp));
         // integer nullable (camelCase via JsonNamingPolicy.CamelCase).
         Assert.Equal("integer", runtimeProp.GetProperty("type").GetString());
+
+        // Marqueur « déjà vu » : compteur + liste des pseudos exposés pour le front.
+        Assert.True(movieProps.TryGetProperty("seenCount", out var seenCountProp));
+        Assert.Equal("integer", seenCountProp.GetProperty("type").GetString());
+        Assert.True(movieProps.TryGetProperty("seenByPseudos", out var seenByPseudosProp));
+        Assert.Equal("array", seenByPseudosProp.GetProperty("type").GetString());
+
+        // Schéma DTOs SeenMark (corps de requête + réponse).
+        Assert.True(schemas.TryGetProperty("MarkAsSeenRequest", out _));
+        Assert.True(schemas.TryGetProperty("UnmarkAsSeenRequest", out _));
+        Assert.True(schemas.TryGetProperty("SeenMarkResponse", out _));
+
+        // Régression : les anciens schémas « Reaction » ne doivent plus être exposés.
+        Assert.False(schemas.TryGetProperty("ReactionRequest", out _));
+        Assert.False(schemas.TryGetProperty("MovieReactionAggregateResponse", out _));
     }
 }

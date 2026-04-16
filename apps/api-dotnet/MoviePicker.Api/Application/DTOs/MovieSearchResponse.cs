@@ -31,6 +31,10 @@ public sealed class MovieSearchItemResponse
 
     /// <summary>Note moyenne TMDB (0–10), si fournie par la recherche ou le détail.</summary>
     public double? VoteAverage { get; init; }
+
+    /// <summary>Durée du film en minutes (TMDB indicatif), si disponible via l'enrichissement.</summary>
+    public int? RuntimeMinutes { get; init; }
+
     public IReadOnlyList<WatchProviderOfferResponse> WatchProviders { get; init; } =
         Array.Empty<WatchProviderOfferResponse>();
 

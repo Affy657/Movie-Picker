@@ -71,7 +71,7 @@ public sealed class PatchEventConfigHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_ValidReactionIds_Saves()
+    public async Task HandleAsync_Theme_Updates()
     {
         var evt = Evt();
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
@@ -79,24 +79,9 @@ public sealed class PatchEventConfigHandlerTests
         _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
 
-        var res = await _sut.HandleAsync(
-            "s",
-            new PatchEventConfigRequest { AllowedReactionIds = new[] { "already_seen", "meh" } });
+        var res = await _sut.HandleAsync("s", new PatchEventConfigRequest { Theme = "Polars" });
 
-        Assert.NotNull(res.AllowedReactionIds);
-        Assert.Equal(2, res.AllowedReactionIds.Count);
-    }
-
-    [Fact]
-    public async Task HandleAsync_UnknownReaction_ThrowsBadRequest()
-    {
-        var evt = Evt();
-        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
-
-        var ex = await Assert.ThrowsAsync<BadRequestException>(() =>
-            _sut.HandleAsync("s", new PatchEventConfigRequest { AllowedReactionIds = new[] { "nope" } }));
-        Assert.Contains("inconnue", ex.Message);
+        Assert.Equal("Polars", res.Theme);
     }
 
     [Fact]

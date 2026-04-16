@@ -13,6 +13,7 @@ export interface MovieSearchItem {
   year: string;
   posterPath: string | null;
   voteAverage?: number | null;
+  runtimeMinutes?: number | null;
   watchProviders?: WatchProviderOffer[];
   tmdbWatchPageUrl?: string | null;
 }
@@ -131,33 +132,33 @@ export async function voteMovie(
 export async function removeMovieFromEvent(
   slug: string,
   movieId: string,
-  participantId: string
+  participantId: string,
+  hostToken?: string | null
 ): Promise<void> {
-  await fetchApi(`/events/${slug}/movies/${movieId}`, {
+  const suffix = hostToken ? `?host=${encodeURIComponent(hostToken)}` : '';
+  await fetchApi(`/events/${slug}/movies/${movieId}${suffix}`, {
     method: 'DELETE',
     body: JSON.stringify({ participantId }),
   });
 }
 
-export async function addMovieReaction(
+export async function markMovieAsSeen(
   slug: string,
   movieId: string,
-  participantId: string,
-  reactionId: string
+  participantId: string
 ): Promise<void> {
-  await fetchApi(`/events/${slug}/movies/${movieId}/reactions`, {
+  await fetchApi(`/events/${slug}/movies/${movieId}/seen`, {
     method: 'POST',
-    body: JSON.stringify({ participantId, reactionId }),
+    body: JSON.stringify({ participantId }),
   });
 }
 
-export async function removeMovieReaction(
+export async function unmarkMovieAsSeen(
   slug: string,
   movieId: string,
-  participantId: string,
-  reactionId: string
+  participantId: string
 ): Promise<void> {
-  await fetchApi(`/events/${slug}/movies/${movieId}/reactions/${encodeURIComponent(reactionId)}`, {
+  await fetchApi(`/events/${slug}/movies/${movieId}/seen`, {
     method: 'DELETE',
     body: JSON.stringify({ participantId }),
   });

@@ -57,14 +57,16 @@
   margin-bottom: 0.35rem;
 }
 
-.badgeMe {
+.selfProposer {
   display: inline-block;
-  margin-top: 0.25rem;
-  padding: 0.2rem 0.5rem;
+  padding: 0.05rem 0.45rem;
   font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.35;
   background: var(--color-badge-me-bg);
   color: var(--color-badge-me-text);
-  border-radius: 4px;
+  border-radius: 999px;
+  vertical-align: baseline;
 }
 
 .actions {
@@ -78,6 +80,11 @@
   margin: 0.35rem 0 0 0;
   font-size: 0.8125rem;
   color: var(--color-meta);
+}
+
+.seenActive {
+  background: var(--color-badge-me-bg);
+  color: var(--color-badge-me-text);
 }
 
 .cardProviders {

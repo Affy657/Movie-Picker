@@ -126,6 +126,7 @@ export default function EventDetail() {
             slug={slug}
             event={event}
             participant={participant}
+            hostToken={hostToken}
             movies={movies}
             moviesQuery={moviesQuery}
             actionError={actionError}

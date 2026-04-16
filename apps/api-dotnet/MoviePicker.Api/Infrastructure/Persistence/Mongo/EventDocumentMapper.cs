@@ -17,7 +17,6 @@ public static class EventDocumentMapper
                     : null,
                 MaxProposalsPerParticipant = doc.Config.MaxProposalsPerParticipant,
                 WheelMode = ParseWheelMode(doc.Config.WheelMode),
-                AllowedReactionIds = doc.Config.AllowedReactionIds?.Where(s => s.Length > 0).ToList(),
                 RichSharePreview = doc.Config.RichSharePreview
             };
         }
@@ -50,7 +49,6 @@ public static class EventDocumentMapper
                 EndDate = evt.Config.EndDate?.UtcDateTime,
                 MaxProposalsPerParticipant = evt.Config.MaxProposalsPerParticipant,
                 WheelMode = ToWheelModeString(evt.Config.WheelMode),
-                AllowedReactionIds = evt.Config.AllowedReactionIds?.ToList(),
                 RichSharePreview = evt.Config.RichSharePreview
             };
         }

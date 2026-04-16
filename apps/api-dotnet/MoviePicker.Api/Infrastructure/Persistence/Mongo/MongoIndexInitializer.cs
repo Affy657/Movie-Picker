@@ -26,7 +26,7 @@ public sealed class MongoIndexInitializer : IHostedService
             await EnsureMovieIndexesAsync(cancellationToken);
             await EnsureVoteIndexesAsync(cancellationToken);
             await EnsureAuthSessionIndexesAsync(cancellationToken);
-            await EnsureReactionIndexesAsync(cancellationToken);
+            await EnsureSeenMarkIndexesAsync(cancellationToken);
         }
         catch (Exception ex)
         {
@@ -130,23 +130,22 @@ public sealed class MongoIndexInitializer : IHostedService
         await col.Indexes.CreateOneAsync(byUser, cancellationToken: ct);
     }
 
-    private async Task EnsureReactionIndexesAsync(CancellationToken ct)
+    private async Task EnsureSeenMarkIndexesAsync(CancellationToken ct)
     {
-        var col = _database.GetCollection<ReactionDocument>("reactions");
-        var unique = new CreateIndexModel<ReactionDocument>(
-            Builders<ReactionDocument>.IndexKeys
+        var col = _database.GetCollection<SeenMarkDocument>("seen_marks");
+        var unique = new CreateIndexModel<SeenMarkDocument>(
+            Builders<SeenMarkDocument>.IndexKeys
                 .Ascending(x => x.EventId)
                 .Ascending(x => x.MovieId)
-                .Ascending(x => x.ParticipantId)
-                .Ascending(x => x.ReactionId),
-            new CreateIndexOptions<ReactionDocument>
+                .Ascending(x => x.ParticipantId),
+            new CreateIndexOptions<SeenMarkDocument>
             {
-                Name = "reactions_event_movie_participant_reaction_unique",
+                Name = "seen_marks_event_movie_participant_unique",
                 Unique = true
             });
-        var byMovie = new CreateIndexModel<ReactionDocument>(
-            Builders<ReactionDocument>.IndexKeys.Ascending(x => x.MovieId),
-            new CreateIndexOptions { Name = "reactions_movieId" });
+        var byMovie = new CreateIndexModel<SeenMarkDocument>(
+            Builders<SeenMarkDocument>.IndexKeys.Ascending(x => x.MovieId),
+            new CreateIndexOptions { Name = "seen_marks_movieId" });
         await col.Indexes.CreateManyAsync(new[] { unique, byMovie }, ct);
     }
 

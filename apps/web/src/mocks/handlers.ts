@@ -50,7 +50,6 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
           endDate: null,
           maxProposalsPerParticipant: null,
           wheelMode: 'strictRandom',
-          allowedReactionIds: null,
         },
       });
     }),
@@ -82,6 +81,7 @@ export function createSearchAndAddHandlers(slug: string) {
             year: '2024',
             posterPath: null,
             voteAverage: 7.5,
+            runtimeMinutes: 112,
             watchProviders: [
               { providerId: 8, name: 'Netflix MSW', logoPath: null, type: 'flatrate' },
             ],

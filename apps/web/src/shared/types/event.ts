@@ -12,7 +12,6 @@ export interface EventConfigData {
   endDate: string | null;
   maxProposalsPerParticipant: number | null;
   wheelMode: WheelMode;
-  allowedReactionIds: string[] | null;
   /** Aperçu de lien détaillé (Open Graph) — défaut API : false. */
   richSharePreview?: boolean;
 }

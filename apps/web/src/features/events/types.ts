@@ -8,7 +8,6 @@ export const DEFAULT_EVENT_CONFIG: EventConfigData = {
   endDate: null,
   maxProposalsPerParticipant: null,
   wheelMode: 'strictRandom',
-  allowedReactionIds: null,
   richSharePreview: false,
 };
 
@@ -18,7 +17,6 @@ export type EventConfigPatchPayload = {
   endDate?: string | null;
   maxProposalsPerParticipant: number;
   wheelMode: WheelMode;
-  allowedReactionIds: string[];
   richSharePreview: boolean;
 };
 

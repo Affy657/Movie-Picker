@@ -45,7 +45,6 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
             || request.EndDate is not null
             || request.MaxProposalsPerParticipant.HasValue
             || request.WheelMode.HasValue
-            || request.AllowedReactionIds is not null
             || request.RichSharePreview.HasValue;
 
         if (!hasChange)
@@ -79,29 +78,6 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
 
         var wheelMode = request.WheelMode ?? current.WheelMode;
 
-        IReadOnlyList<string>? allowed = current.AllowedReactionIds;
-        if (request.AllowedReactionIds is not null)
-        {
-            if (request.AllowedReactionIds.Count > 20)
-                throw new BadRequestException("allowedReactionIds : au plus 20 entrées.");
-
-            var seen = new HashSet<string>(StringComparer.Ordinal);
-            var list = new List<string>();
-            foreach (var raw in request.AllowedReactionIds)
-            {
-                var id = raw.Trim();
-                if (id.Length == 0)
-                    throw new BadRequestException("allowedReactionIds : identifiants non vides uniquement.");
-                if (!ReactionCatalog.IsKnown(id))
-                    throw new BadRequestException($"Réaction inconnue : {id}");
-                if (!seen.Add(id))
-                    continue;
-                list.Add(id);
-            }
-
-            allowed = list;
-        }
-
         var richShare = current.RichSharePreview;
         if (request.RichSharePreview.HasValue)
             richShare = request.RichSharePreview.Value;
@@ -112,7 +88,6 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
             EndDate = endDate,
             MaxProposalsPerParticipant = maxProp,
             WheelMode = wheelMode,
-            AllowedReactionIds = allowed,
             RichSharePreview = richShare
         };
 

@@ -65,10 +65,6 @@ public sealed class EventConfigDocument
     [BsonElement("wheelMode")]
     public string WheelMode { get; set; } = "strictRandom";
 
-    [BsonElement("allowedReactionIds")]
-    [BsonIgnoreIfNull]
-    public List<string>? AllowedReactionIds { get; set; }
-
     [BsonElement("richSharePreview")]
     [BsonIgnoreIfDefault]
     public bool RichSharePreview { get; set; }

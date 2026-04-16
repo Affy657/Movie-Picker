@@ -1,34 +1,33 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
-namespace MoviePicker.Api.Application.UseCases.Reactions;
+namespace MoviePicker.Api.Application.UseCases.SeenMarks;
 
-public sealed class AddReactionHandler : IAddReactionHandler
+public sealed class MarkAsSeenHandler : IMarkAsSeenHandler
 {
     private readonly IEventRepository _eventRepository;
     private readonly IMovieRepository _movieRepository;
     private readonly IParticipantRepository _participantRepository;
-    private readonly IReactionRepository _reactionRepository;
+    private readonly ISeenMarkRepository _seenMarkRepository;
 
-    public AddReactionHandler(
+    public MarkAsSeenHandler(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
         IParticipantRepository participantRepository,
-        IReactionRepository reactionRepository)
+        ISeenMarkRepository seenMarkRepository)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _participantRepository = participantRepository;
-        _reactionRepository = reactionRepository;
+        _seenMarkRepository = seenMarkRepository;
     }
 
-    public async Task<ReactionResponse> HandleAsync(
+    public async Task<SeenMarkResponse> HandleAsync(
         string idOrSlug,
         string movieId,
-        AddReactionRequest request,
+        MarkAsSeenRequest request,
         CancellationToken ct = default)
     {
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
@@ -40,38 +39,29 @@ public sealed class AddReactionHandler : IAddReactionHandler
         if (movie is null)
             throw new NotFoundException("Film introuvable");
 
-        var rid = request.ReactionId.Trim();
-        if (!ReactionCatalog.IsKnown(rid))
-            throw new BadRequestException("Identifiant de réaction inconnu.");
-
-        if (!ReactionPolicy.IsAllowed(evt.Config, rid))
-            throw new BadRequestException("Réaction non autorisée pour cette soirée.");
-
         var participant = await _participantRepository.FindByIdAndEventIdAsync(request.ParticipantId, evt.Id, ct);
         if (participant is null)
             throw new BadRequestException("Participant invalide pour cette soirée");
 
         var now = DateTimeOffset.UtcNow;
-        var saved = await _reactionRepository.AddAsync(
-            new Reaction
+        var saved = await _seenMarkRepository.AddAsync(
+            new SeenMark
             {
                 Id = string.Empty,
                 EventId = evt.Id,
                 MovieId = movie.Id,
                 ParticipantId = participant.Id,
-                ReactionId = rid,
                 CreatedAt = now,
                 UpdatedAt = now
             },
             ct);
 
-        return new ReactionResponse
+        return new SeenMarkResponse
         {
             Id = saved.Id,
             EventId = saved.EventId,
             MovieId = saved.MovieId,
             ParticipantId = saved.ParticipantId,
-            ReactionId = saved.ReactionId,
             CreatedAt = saved.CreatedAt,
             UpdatedAt = saved.UpdatedAt
         };

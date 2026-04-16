@@ -4,7 +4,7 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.AddMovie;
 using MoviePicker.Api.Application.UseCases.DeleteMovie;
 using MoviePicker.Api.Application.UseCases.ListMovies;
-using MoviePicker.Api.Application.UseCases.Reactions;
+using MoviePicker.Api.Application.UseCases.SeenMarks;
 using MoviePicker.Api.Application.UseCases.VoteMovie;
 using MoviePicker.Api.Infrastructure.Web;
 
@@ -60,10 +60,12 @@ public sealed class EventMoviesController : ControllerBase
     }
 
     [HttpPost("{movieId}/vote")]
+    [EnableRateLimiting(RateLimitingExtensions.VoteMutationPolicy)]
     [ProducesResponseType(typeof(VoteResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Vote(
         string idOrSlug,
         string movieId,
@@ -75,53 +77,39 @@ public sealed class EventMoviesController : ControllerBase
         return Ok(vote);
     }
 
-    [HttpGet("{movieId}/reactions")]
-    [ProducesResponseType(typeof(MovieReactionsResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetReactions(
-        string idOrSlug,
-        string movieId,
-        [FromServices] IGetMovieReactionsHandler handler,
-        CancellationToken ct)
-    {
-        var res = await handler.HandleAsync(idOrSlug, movieId, ct);
-        return Ok(res);
-    }
-
-    [HttpPost("{movieId}/reactions")]
-    [EnableRateLimiting(RateLimitingExtensions.ReactionsMutationPolicy)]
-    [ProducesResponseType(typeof(ReactionResponse), StatusCodes.Status200OK)]
+    [HttpPost("{movieId}/seen")]
+    [EnableRateLimiting(RateLimitingExtensions.SeenMarksMutationPolicy)]
+    [ProducesResponseType(typeof(SeenMarkResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    public async Task<IActionResult> AddReaction(
+    public async Task<IActionResult> MarkAsSeen(
         string idOrSlug,
         string movieId,
-        [FromBody] AddReactionRequest request,
-        [FromServices] IAddReactionHandler handler,
+        [FromBody] MarkAsSeenRequest request,
+        [FromServices] IMarkAsSeenHandler handler,
         CancellationToken ct)
     {
         var res = await handler.HandleAsync(idOrSlug, movieId, request, ct);
         return Ok(res);
     }
 
-    [HttpDelete("{movieId}/reactions/{reactionId}")]
-    [EnableRateLimiting(RateLimitingExtensions.ReactionsMutationPolicy)]
+    [HttpDelete("{movieId}/seen")]
+    [EnableRateLimiting(RateLimitingExtensions.SeenMarksMutationPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    public async Task<IActionResult> RemoveReaction(
+    public async Task<IActionResult> UnmarkAsSeen(
         string idOrSlug,
         string movieId,
-        string reactionId,
-        [FromBody] RemoveReactionRequest request,
-        [FromServices] IRemoveReactionHandler handler,
+        [FromBody] UnmarkAsSeenRequest request,
+        [FromServices] IUnmarkAsSeenHandler handler,
         CancellationToken ct)
     {
-        await handler.HandleAsync(idOrSlug, movieId, reactionId, request.ParticipantId, ct);
+        await handler.HandleAsync(idOrSlug, movieId, request.ParticipantId, ct);
         return NoContent();
     }
 }
