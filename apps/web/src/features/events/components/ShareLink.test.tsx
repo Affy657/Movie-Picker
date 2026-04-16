@@ -26,7 +26,7 @@ describe('ShareLink', () => {
   });
 
   it('affiche le bouton Partager sans exposer l’URL dans la page', () => {
-    const url = 'https://example.com/s/abc';
+    const url = 'https://example.com/e/abc';
     renderShareLink(<ShareLink url={url} />);
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^partager$/i })).toBeInTheDocument();
@@ -38,7 +38,7 @@ describe('ShareLink', () => {
     try {
       vi.mocked(copyTextToClipboard).mockResolvedValue(true);
       const user = userEvent.setup();
-      const url = 'https://example.com/s/xyz';
+      const url = 'https://example.com/e/xyz';
       renderShareLink(<ShareLink url={url} />);
       await user.click(screen.getByRole('button', { name: /^partager$/i }));
       await waitFor(() => {
@@ -52,7 +52,7 @@ describe('ShareLink', () => {
 
   it('avec showQr, bascule le panneau QR au clic', async () => {
     const user = userEvent.setup();
-    const url = 'https://example.com/s/abc';
+    const url = 'https://example.com/e/abc';
     const { container } = renderShareLink(<ShareLink url={url} showQr />);
     const qrBtn = screen.getByRole('button', { name: /afficher le qr code/i });
     expect(qrBtn).toHaveAttribute('aria-expanded', 'false');

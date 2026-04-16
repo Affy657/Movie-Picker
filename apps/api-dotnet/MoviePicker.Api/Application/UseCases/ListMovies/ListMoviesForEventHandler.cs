@@ -115,7 +115,8 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
                     Reactions = reactionResponses,
                     VoteAverage = enr?.VoteAverage,
                     WatchProviders = enr is null ? Array.Empty<WatchProviderOfferResponse>() : WatchProviderMapping.ToDto(enr.WatchProviders),
-                    TmdbWatchPageUrl = enr?.TmdbWatchPageUrl
+                    TmdbWatchPageUrl = enr?.TmdbWatchPageUrl,
+                    RuntimeMinutes = enr?.RuntimeMinutes
                 });
         }
 

@@ -5,7 +5,7 @@ import { getErrorMessage } from '@/shared/api/apiError';
 import styles from './MovieReactionBar.module.css';
 import {
   REACTION_CATALOG_IDS,
-  REACTION_EMOJI,
+  REACTION_ICONS,
   REACTION_LABELS,
   type ReactionCatalogId,
 } from '@/shared/constants/reactionCatalog';
@@ -70,10 +70,10 @@ function MovieReactionBarInner({
           const agg = aggregateFor(reactions, reactionId);
           const count = agg?.count ?? 0;
           const label = REACTION_LABELS[reactionId];
-          const emoji = REACTION_EMOJI[reactionId];
+          const Icon = REACTION_ICONS[reactionId];
           return (
             <span key={reactionId} className={clsx(styles.chip, styles.chipReadonly)} title={label}>
-              <span aria-hidden>{emoji}</span>
+              <Icon aria-hidden size={16} />
               <span className={styles.chipText}>{label}</span>
               <span className={styles.chipCount}>{count}</span>
             </span>
@@ -91,7 +91,7 @@ function MovieReactionBarInner({
         const pseudos = agg?.pseudos ?? [];
         const isMine = !!participantPseudo && pseudos.includes(participantPseudo);
         const label = REACTION_LABELS[reactionId];
-        const emoji = REACTION_EMOJI[reactionId];
+        const Icon = REACTION_ICONS[reactionId];
 
         return (
           <button
@@ -108,7 +108,7 @@ function MovieReactionBarInner({
               })
             }
           >
-            <span aria-hidden>{emoji}</span>
+            <Icon aria-hidden size={16} />
             <span className={styles.chipText}>{label}</span>
             {count > 0 ? (
               <span

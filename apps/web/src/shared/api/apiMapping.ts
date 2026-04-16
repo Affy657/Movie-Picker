@@ -5,7 +5,7 @@
  * This isolates the front from the persistence format.
  */
 
-import type { EventData } from '@/shared/types/event';
+import type { EventData, EventParticipantSummary } from '@/shared/types/event';
 import type { MovieData, ParticipantData } from '@/shared/types/movie';
 
 type RawMovieData = Omit<MovieData, 'id' | 'participantId'> & {
@@ -15,13 +15,19 @@ type RawMovieData = Omit<MovieData, 'id' | 'participantId'> & {
 
 type RawParticipantData = Omit<ParticipantData, 'id'> & { _id: string };
 
-type RawEventData = Omit<EventData, 'id' | 'isFinished' | 'myParticipant' | 'winnerMovie'> & {
+type RawEventParticipantSummary = { _id: string; pseudo: string };
+
+type RawEventData = Omit<
+  EventData,
+  'id' | 'isFinished' | 'myParticipant' | 'winnerMovie' | 'participants'
+> & {
   _id: string;
   isFinished?: boolean;
   myParticipant?: { _id: string; pseudo: string } | null;
   winnerMovie?: RawMovieData | null;
   participantCount?: number;
   movieCount?: number;
+  participants?: RawEventParticipantSummary[];
 };
 
 export function mapMovieData(raw: RawMovieData): MovieData {
@@ -39,7 +45,10 @@ export function mapParticipantData(raw: RawParticipantData): ParticipantData {
 }
 
 export function mapEventData(raw: RawEventData): EventData {
-  const { _id, isFinished, myParticipant, winnerMovie, ...rest } = raw;
+  const { _id, isFinished, myParticipant, winnerMovie, participants, ...rest } = raw;
+  const mappedParticipants: EventParticipantSummary[] | undefined = participants
+    ? participants.map((p) => ({ id: p._id, pseudo: p.pseudo }))
+    : undefined;
   return {
     ...rest,
     id: _id,
@@ -48,6 +57,7 @@ export function mapEventData(raw: RawEventData): EventData {
       ? { id: myParticipant._id, pseudo: myParticipant.pseudo }
       : myParticipant,
     winnerMovie: winnerMovie ? mapMovieData(winnerMovie) : winnerMovie,
+    participants: mappedParticipants,
   };
 }
 

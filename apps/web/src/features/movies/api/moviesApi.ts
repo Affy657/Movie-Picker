@@ -55,6 +55,51 @@ export async function searchMovies(
   };
 }
 
+export interface MovieDetails {
+  tmdbId: number;
+  title: string;
+  overview: string | null;
+  tagline: string | null;
+  director: string | null;
+  cast: string[];
+  runtimeMinutes: number | null;
+  genres: string[];
+  releaseDate: string | null;
+}
+
+interface RawMovieDetailsResponse {
+  tmdbId?: number;
+  title?: string;
+  overview?: string | null;
+  tagline?: string | null;
+  director?: string | null;
+  cast?: string[] | null;
+  runtimeMinutes?: number | null;
+  genres?: string[] | null;
+  releaseDate?: string | null;
+}
+
+export async function fetchMovieDetails(
+  tmdbId: number,
+  opts?: { signal?: AbortSignal }
+): Promise<MovieDetails> {
+  const raw = await fetchApi<RawMovieDetailsResponse>(
+    `/movies/tmdb/${tmdbId}/details`,
+    opts?.signal ? { signal: opts.signal } : undefined
+  );
+  return {
+    tmdbId: raw.tmdbId ?? tmdbId,
+    title: raw.title ?? '',
+    overview: raw.overview ?? null,
+    tagline: raw.tagline ?? null,
+    director: raw.director ?? null,
+    cast: Array.isArray(raw.cast) ? raw.cast : [],
+    runtimeMinutes: raw.runtimeMinutes ?? null,
+    genres: Array.isArray(raw.genres) ? raw.genres : [],
+    releaseDate: raw.releaseDate ?? null,
+  };
+}
+
 export async function addMovieToEvent(
   slug: string,
   body: {

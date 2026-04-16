@@ -50,7 +50,7 @@ public sealed class EventSharePreviewTests : IClassFixture<MoviePickerApplicatio
         Assert.Contains("og:title", html);
         Assert.Contains("Movie Picker", html);
         Assert.DoesNotContain("Soirée confidentielle", html);
-        Assert.Contains("https://web.integration.test/s/", html);
+        Assert.Contains("https://web.integration.test/e/", html);
     }
 
     [Fact]

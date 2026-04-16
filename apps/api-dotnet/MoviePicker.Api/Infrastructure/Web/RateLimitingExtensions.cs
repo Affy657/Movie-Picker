@@ -5,13 +5,14 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace MoviePicker.Api.Infrastructure.Web;
 
 /// <summary>
-/// Limites par IP (clé = partition) sur création d'event, join et recherche TMDB.
+/// Limites par IP (clé = partition) sur création d'event, join, recherche TMDB et détails film.
 /// </summary>
 public static class RateLimitingExtensions
 {
     public const string CreateEventPolicy = "create-event";
     public const string JoinEventPolicy = "join-event";
     public const string SearchMoviesPolicy = "search-movies";
+    public const string MovieDetailsPolicy = "movie-details";
     public const string AuthRegisterPolicy = "auth-register";
     public const string AuthLoginPolicy = "auth-login";
     public const string PatchEventConfigPolicy = "patch-event-config";
@@ -45,6 +46,7 @@ public static class RateLimitingExtensions
                 options.AddPolicy(CreateEventPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(JoinEventPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(SearchMoviesPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
+                options.AddPolicy(MovieDetailsPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(AuthRegisterPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(AuthLoginPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(PatchEventConfigPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
@@ -56,6 +58,8 @@ public static class RateLimitingExtensions
             options.AddPolicy(CreateEventPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 20, windowMinutes: 1));
             options.AddPolicy(JoinEventPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 60, windowMinutes: 1));
             options.AddPolicy(SearchMoviesPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 40, windowMinutes: 1));
+            // Details : endpoint consultatif (ouverture panneau « plus d'infos »), budget plus large car cache TMDB absorbe la charge.
+            options.AddPolicy(MovieDetailsPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 120, windowMinutes: 1));
             options.AddPolicy(AuthRegisterPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 10, windowMinutes: 1));
             options.AddPolicy(AuthLoginPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 30, windowMinutes: 1));
             options.AddPolicy(PatchEventConfigPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 40, windowMinutes: 1));

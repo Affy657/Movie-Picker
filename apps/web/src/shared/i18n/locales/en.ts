@@ -21,7 +21,7 @@ export const en: Locale = {
   nav: {
     home: 'Home',
     myEvents: 'My events',
-    account: 'Account',
+    account: 'Settings',
     navLabel: 'Main navigation',
     brandLabel: 'Movie Picker \u2014 Home',
   },
@@ -58,7 +58,7 @@ export const en: Locale = {
       loginLink: 'Log in',
     },
     account: {
-      title: 'Account',
+      title: 'Settings',
       loadingPlaceholder: 'Loading profile\u2026',
       pseudoLabel: 'Nickname',
       profileTitle: 'Profile',
@@ -100,6 +100,11 @@ export const en: Locale = {
       submitting: 'Sending\u2026',
       fallbackError: 'Unable to join',
       pseudoRequired: 'Enter a nickname to join.',
+    },
+    participants: {
+      title: 'Participants',
+      empty: 'Nobody has joined the event yet.',
+      meBadge: 'you',
     },
     detail: {
       loading: 'Loading\u2026',
@@ -221,6 +226,21 @@ export const en: Locale = {
       tmdbVoteTitle: 'TMDB average rating (indicative)',
       sectionLabel: 'Suggested movies',
       loadingPlaceholder: 'Loading movies\u2026',
+    },
+    details: {
+      toggleShow: 'More info',
+      toggleHide: 'Hide details',
+      regionLabel: 'Movie details',
+      loading: 'Loading details\u2026',
+      error: 'Unable to load movie details.',
+      empty: 'No details available for this movie.',
+      overviewLabel: 'Synopsis',
+      directorLabel: 'Directed by',
+      castLabel: 'Starring',
+      runtimeLabel: 'Runtime',
+      genresLabel: 'Genres',
+      releasedLabel: 'Released',
+      regionAttribution: 'Source: The Movie Database (TMDB)',
     },
     reactions: {
       already_seen: 'Already seen',

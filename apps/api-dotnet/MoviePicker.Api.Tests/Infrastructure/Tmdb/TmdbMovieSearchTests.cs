@@ -173,7 +173,7 @@ public sealed class TmdbMovieSearchTests
     [Fact]
     public async Task GetEnrichmentAsync_CachesSecondCall_SingleHttpPair()
     {
-        var movieJson = """{"vote_average": 8.4}""";
+        var movieJson = """{"vote_average": 8.4, "runtime": 139}""";
         var watchJson = """
             {
               "id": 550,
@@ -213,6 +213,7 @@ public sealed class TmdbMovieSearchTests
         Assert.NotNull(a);
         Assert.NotNull(b);
         Assert.Equal(8.4, a!.VoteAverage);
+        Assert.Equal(139, a.RuntimeMinutes);
         Assert.Single(a.WatchProviders);
         Assert.Equal("Netflix", a.WatchProviders[0].ProviderName);
         Assert.Equal("flatrate", a.WatchProviders[0].MonetizationType);
@@ -274,5 +275,52 @@ public sealed class TmdbMovieSearchTests
         Assert.NotNull(a);
         var p = Assert.Single(a!.WatchProviders);
         Assert.Equal("flatrate", p.MonetizationType);
+    }
+
+    [Theory]
+    [InlineData("""{"vote_average": 7.0}""")]
+    [InlineData("""{"vote_average": 7.0, "runtime": 0}""")]
+    [InlineData("""{"vote_average": 7.0, "runtime": null}""")]
+    public async Task GetEnrichmentAsync_RuntimeAbsentOrZeroOrNull_ReturnsNullRuntime(string movieJson)
+    {
+        var watchJson = """{"id": 1, "results": {}}""";
+        var options = Options.Create(new MoviePickerOptions { TmdbApiKey = "key", TmdbEnrichmentCacheHours = 1 });
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Returns<HttpRequestMessage, CancellationToken>(
+                (req, _) =>
+                {
+                    var u = req.RequestUri?.AbsolutePath ?? "";
+                    var body = u.Contains("/watch/providers", StringComparison.Ordinal) ? watchJson : movieJson;
+                    return Task.FromResult(
+                        new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(body) });
+                });
+        var client = CreateHttpClient(mockHandler.Object);
+        var sut = CreateSut(client, options);
+
+        var a = await sut.GetEnrichmentAsync(1, "FR");
+
+        Assert.NotNull(a);
+        Assert.Null(a!.RuntimeMinutes);
+        Assert.Equal(7.0, a.VoteAverage);
+    }
+
+    [Fact]
+    public async Task GetEnrichmentAsync_MalformedJson_ReturnsNullInsteadOfThrowing()
+    {
+        // Défense contre des parsings TMDB inattendus (InvalidOperationException / JsonException) :
+        // on doit dégrader silencieusement pour ne pas casser la liste des films d'une soirée.
+        var options = Options.Create(new MoviePickerOptions { TmdbApiKey = "key", TmdbEnrichmentCacheHours = 1 });
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("not a json") });
+        var client = CreateHttpClient(mockHandler.Object);
+        var sut = CreateSut(client, options);
+
+        var a = await sut.GetEnrichmentAsync(1, "FR");
+
+        Assert.Null(a);
     }
 }

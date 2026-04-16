@@ -108,7 +108,12 @@ public sealed class MongoIndexInitializer : IHostedService
             Builders<ParticipantDocument>.IndexKeys.Ascending(x => x.EventId).Ascending(x => x.Pseudo),
             new CreateIndexOptions { Name = "participants_eventId_pseudo_unique", Unique = true });
 
-        await col.Indexes.CreateManyAsync(new[] { eventUserUnique, byUser, eventPseudo }, ct);
+        // Support du tri « liste participants » par ordre d'arrivée (cf. ListByEventIdAsync).
+        var eventCreated = new CreateIndexModel<ParticipantDocument>(
+            Builders<ParticipantDocument>.IndexKeys.Ascending(x => x.EventId).Ascending(x => x.CreatedAt),
+            new CreateIndexOptions { Name = "participants_eventId_createdAt" });
+
+        await col.Indexes.CreateManyAsync(new[] { eventUserUnique, byUser, eventPseudo, eventCreated }, ct);
     }
 
     private async Task EnsureAuthSessionIndexesAsync(CancellationToken ct)

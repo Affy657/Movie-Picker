@@ -44,11 +44,20 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
         Assert.True(paths.TryGetProperty("/api/v1/events/{idOrSlug}/movies/{movieId}/reactions/{reactionId}", out var rxDel)
                     && rxDel.TryGetProperty("delete", out _));
         Assert.True(paths.TryGetProperty("/api/v1/movies/search", out var mSearch) && mSearch.TryGetProperty("get", out _));
+        Assert.True(paths.TryGetProperty("/api/v1/movies/tmdb/{tmdbId}/details", out var mDetails) && mDetails.TryGetProperty("get", out _));
         Assert.True(paths.TryGetProperty("/api/v1/posters/{posterKey}", out var posters) && posters.TryGetProperty("get", out _));
         var schemas = doc.RootElement.GetProperty("components").GetProperty("schemas");
         Assert.True(schemas.TryGetProperty("MovieSearchListResponse", out _));
         Assert.True(schemas.TryGetProperty("MovieSearchItemResponse", out _));
         Assert.True(schemas.TryGetProperty("WatchProviderOfferResponse", out _));
+        Assert.True(schemas.TryGetProperty("MovieDetailsResponse", out _));
         Assert.True(schemas.TryGetProperty("EventConfigResponse", out _));
+
+        // Liste des films d'une soirée : expose la durée pour l'affichage « année · note · 1h10 ».
+        Assert.True(schemas.TryGetProperty("MovieWithScoreResponse", out var movieWithScore));
+        var movieProps = movieWithScore.GetProperty("properties");
+        Assert.True(movieProps.TryGetProperty("runtimeMinutes", out var runtimeProp));
+        // integer nullable (camelCase via JsonNamingPolicy.CamelCase).
+        Assert.Equal("integer", runtimeProp.GetProperty("type").GetString());
     }
 }

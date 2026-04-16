@@ -34,7 +34,7 @@ public sealed class GetEventSharePreviewHtmlHandler : IGetEventSharePreviewHtmlH
         var webBase = string.IsNullOrWhiteSpace(_options.PublicWebBaseUrl)
             ? "https://web.movie-picker.fr"
             : _options.PublicWebBaseUrl.Trim().TrimEnd('/');
-        var canonical = $"{webBase}/s/{evt.Slug}";
+        var canonical = $"{webBase}/e/{evt.Slug}";
 
         var apiBase = apiPublicBaseUrl.Trim().TrimEnd('/');
 

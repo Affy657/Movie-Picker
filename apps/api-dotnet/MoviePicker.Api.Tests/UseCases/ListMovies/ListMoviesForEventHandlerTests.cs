@@ -146,7 +146,7 @@ public sealed class ListMoviesForEventHandlerTests
         {
             new TmdbWatchProviderOffer(8, "Netflix", "https://image.tmdb.org/t/p/w45/x.png", "flatrate"),
         };
-        var enrichment = new TmdbMovieEnrichment(7.2, offers, "https://www.themoviedb.org/movie/42/watch");
+        var enrichment = new TmdbMovieEnrichment(7.2, offers, "https://www.themoviedb.org/movie/42/watch", 148);
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movies);
         _voteRepo.Setup(r => r.AggregateScoresByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, VoteScoreAggregate> { ["mov1"] = new(0, 0, 0) });
@@ -177,6 +177,7 @@ public sealed class ListMoviesForEventHandlerTests
 
         var m = Assert.Single(result);
         Assert.Equal(7.2, m.VoteAverage);
+        Assert.Equal(148, m.RuntimeMinutes);
         Assert.Equal("https://www.themoviedb.org/movie/42/watch", m.TmdbWatchPageUrl);
         var p = Assert.Single(m.WatchProviders);
         Assert.Equal(8, p.ProviderId);

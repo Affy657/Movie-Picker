@@ -11,9 +11,9 @@ import { TEST_API_V1 } from '@/mocks/handlers';
 function renderAccount() {
   return render(
     <AppTestProviders>
-      <MemoryRouter initialEntries={['/compte']}>
+      <MemoryRouter initialEntries={['/settings']}>
         <Routes>
-          <Route path="/compte" element={<AccountPage />} />
+          <Route path="/settings" element={<AccountPage />} />
         </Routes>
       </MemoryRouter>
     </AppTestProviders>
@@ -59,7 +59,7 @@ describe('AccountPage (MSW)', () => {
     renderAccount();
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Compte' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Paramètres' })).toBeInTheDocument();
     });
 
     expect(screen.getByRole('heading', { name: 'Préférences' })).toBeInTheDocument();

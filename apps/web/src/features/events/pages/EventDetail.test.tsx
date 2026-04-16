@@ -20,7 +20,7 @@ function renderEventDetail(initialPath: string) {
     <AppTestProviders>
       <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
-          <Route path="/s/:slug" element={<EventDetail />} />
+          <Route path="/e/:slug" element={<EventDetail />} />
         </Routes>
       </MemoryRouter>
     </AppTestProviders>
@@ -51,7 +51,7 @@ describe('EventDetail (MSW)', () => {
       ),
       http.get(`${TEST_API_V1}/events/:s/movies`, () => HttpResponse.json([]))
     );
-    renderEventDetail(`/s/inconnu`);
+    renderEventDetail(`/e/inconnu`);
     await waitFor(() => {
       expect(screen.getByText(/n'existe pas|introuvable/i)).toBeInTheDocument();
     });
@@ -59,7 +59,7 @@ describe('EventDetail (MSW)', () => {
   });
 
   it('affiche le lien invité et le QR pour un simple participant (sans token hôte)', async () => {
-    renderEventDetail(`/s/${slug}`);
+    renderEventDetail(`/e/${slug}`);
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     });
@@ -70,7 +70,7 @@ describe('EventDetail (MSW)', () => {
 
   it('en tant qu’hôte n’affiche plus de lien « hôte » séparé (seul le lien public)', async () => {
     const token = 'host-secret-token';
-    renderEventDetail(`/s/${slug}?host=${encodeURIComponent(token)}`);
+    renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     });
@@ -86,7 +86,7 @@ describe('EventDetail (MSW)', () => {
       createJoinHandler(slug),
       ...createSearchAndAddHandlers(slug)
     );
-    renderEventDetail(`/s/${slug}?host=${encodeURIComponent(token)}`);
+    renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     });
@@ -101,7 +101,7 @@ describe('EventDetail (MSW)', () => {
         HttpResponse.json({ error: 'Service indisponible' }, { status: 503 })
       )
     );
-    renderEventDetail(`/s/${slug}`);
+    renderEventDetail(`/e/${slug}`);
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     });
@@ -113,7 +113,7 @@ describe('EventDetail (MSW)', () => {
 
   it('après rejoindre, affiche la section Films et permet de proposer un film', async () => {
     const user = userEvent.setup();
-    renderEventDetail(`/s/${slug}`);
+    renderEventDetail(`/e/${slug}`);
     await waitFor(() =>
       expect(screen.getByRole('heading', { name: /rejoindre/i })).toBeInTheDocument()
     );

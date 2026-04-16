@@ -98,8 +98,15 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
             _cache.Set(cacheKey, fresh, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl });
             return fresh;
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
+        catch (Exception ex) when (
+            ex is HttpRequestException
+                or TaskCanceledException
+                or JsonException
+                or InvalidOperationException
+                or FormatException)
         {
+            // InvalidOperationException / FormatException : parsing TMDB inattendu
+            // (ex. champ numérique hors plage int, type JSON incohérent) — on dégrade sans casser la liste.
             _logger.LogWarning(ex, "TMDB enrichissement échoué pour movie {TmdbId} région {Region}", tmdbId, r);
             return null;
         }
@@ -116,6 +123,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         await Task.WhenAll(movieTask, watchTask).ConfigureAwait(false);
 
         double? voteAverage = null;
+        int? runtimeMinutes = null;
         using var movieRes = await movieTask.ConfigureAwait(false);
         if (movieRes.IsSuccessStatusCode)
         {
@@ -123,6 +131,12 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
             using var movieDoc = await JsonDocument.ParseAsync(movieStream, cancellationToken: ct).ConfigureAwait(false);
             if (movieDoc.RootElement.TryGetProperty("vote_average", out var va) && va.ValueKind == JsonValueKind.Number)
                 voteAverage = va.GetDouble();
+            if (movieDoc.RootElement.TryGetProperty("runtime", out var rt) && rt.ValueKind == JsonValueKind.Number)
+            {
+                var minutes = rt.GetInt32();
+                if (minutes > 0)
+                    runtimeMinutes = minutes;
+            }
         }
 
         string? watchPageUrl = null;
@@ -133,10 +147,10 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
             await using var watchStream = await watchRes.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
             using var watchDoc = await JsonDocument.ParseAsync(watchStream, cancellationToken: ct).ConfigureAwait(false);
             if (!watchDoc.RootElement.TryGetProperty("results", out var results))
-                return new TmdbMovieEnrichment(voteAverage, offers, null);
+                return new TmdbMovieEnrichment(voteAverage, offers, null, runtimeMinutes);
 
             if (!results.TryGetProperty(region, out var regionObj) || regionObj.ValueKind != JsonValueKind.Object)
-                return new TmdbMovieEnrichment(voteAverage, offers, null);
+                return new TmdbMovieEnrichment(voteAverage, offers, null, runtimeMinutes);
 
             if (regionObj.TryGetProperty("link", out var linkEl) && linkEl.ValueKind == JsonValueKind.String)
                 watchPageUrl = linkEl.GetString();
@@ -146,7 +160,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         }
 
         var deduped = DedupeProviders(offers);
-        return new TmdbMovieEnrichment(voteAverage, deduped, watchPageUrl);
+        return new TmdbMovieEnrichment(voteAverage, deduped, watchPageUrl, runtimeMinutes);
     }
 
     private static void AppendProviders(JsonElement regionObj, string jsonKey, string type, List<TmdbWatchProviderOffer> list)
@@ -202,4 +216,113 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
             "buy" => 2,
             _ => 99
         };
+
+    /// <summary>
+    /// Retourne les détails TMDB d'un film.
+    /// <list type="bullet">
+    ///   <item><description><c>null</c> si TMDB répond 404 (film inconnu).</description></item>
+    ///   <item><description>Lève <see cref="HttpRequestException"/> si TMDB est indisponible (clé manquante, 5xx, timeout, JSON invalide) — à remonter en 503 côté handler.</description></item>
+    /// </list>
+    /// </summary>
+    public async Task<TmdbMovieDetails?> GetDetailsAsync(int tmdbId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(_options.TmdbApiKey))
+            throw new HttpRequestException("TMDB_API_KEY manquante");
+
+        var cacheKey = $"tmdb-details:{tmdbId}";
+        var ttl = TimeSpan.FromHours(Math.Clamp(_options.TmdbEnrichmentCacheHours, 1, 168));
+
+        if (_cache.TryGetValue(cacheKey, out object? boxed) && boxed is TmdbMovieDetails cached)
+            return cached;
+
+        try
+        {
+            var fresh = await FetchDetailsUncachedAsync(tmdbId, ct).ConfigureAwait(false);
+            if (fresh is not null)
+                _cache.Set(cacheKey, fresh, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl });
+            return fresh;
+        }
+        catch (Exception ex) when (
+            ex is TaskCanceledException
+                or JsonException
+                or InvalidOperationException
+                or FormatException)
+        {
+            // Idem : parsing TMDB inattendu → remonte en ServiceUnavailable côté handler.
+            _logger.LogWarning(ex, "TMDB détails échoué pour movie {TmdbId}", tmdbId);
+            throw new HttpRequestException("TMDB indisponible", ex);
+        }
+    }
+
+    private async Task<TmdbMovieDetails?> FetchDetailsUncachedAsync(int tmdbId, CancellationToken ct)
+    {
+        var key = Uri.EscapeDataString(_options.TmdbApiKey!);
+        var url = $"https://api.themoviedb.org/3/movie/{tmdbId}?api_key={key}&language=fr-FR&append_to_response=credits";
+
+        using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
+        if (res.StatusCode == System.Net.HttpStatusCode.NotFound)
+            return null;
+        res.EnsureSuccessStatusCode();
+
+        await using var stream = await res.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+        using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
+        var root = doc.RootElement;
+
+        var title = root.TryGetProperty("title", out var t) ? t.GetString() ?? string.Empty : string.Empty;
+        var overview = root.TryGetProperty("overview", out var ov) ? ov.GetString() : null;
+        var tagline = root.TryGetProperty("tagline", out var tl) ? tl.GetString() : null;
+        int? runtime = root.TryGetProperty("runtime", out var rt) && rt.ValueKind == JsonValueKind.Number ? rt.GetInt32() : null;
+        var releaseDate = root.TryGetProperty("release_date", out var rd) ? rd.GetString() : null;
+
+        var genres = new List<string>();
+        if (root.TryGetProperty("genres", out var genresEl) && genresEl.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var g in genresEl.EnumerateArray())
+            {
+                if (g.TryGetProperty("name", out var n) && n.ValueKind == JsonValueKind.String)
+                {
+                    var name = n.GetString();
+                    if (!string.IsNullOrEmpty(name))
+                        genres.Add(name);
+                }
+            }
+        }
+
+        string? director = null;
+        var cast = new List<string>();
+        if (root.TryGetProperty("credits", out var creditsEl) && creditsEl.ValueKind == JsonValueKind.Object)
+        {
+            if (creditsEl.TryGetProperty("crew", out var crewEl) && crewEl.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var member in crewEl.EnumerateArray())
+                {
+                    var job = member.TryGetProperty("job", out var jobEl) ? jobEl.GetString() : null;
+                    if (string.Equals(job, "Director", StringComparison.OrdinalIgnoreCase))
+                    {
+                        director = member.TryGetProperty("name", out var nameEl) ? nameEl.GetString() : null;
+                        if (!string.IsNullOrEmpty(director))
+                            break;
+                    }
+                }
+            }
+
+            if (creditsEl.TryGetProperty("cast", out var castEl) && castEl.ValueKind == JsonValueKind.Array)
+            {
+                var i = 0;
+                foreach (var actor in castEl.EnumerateArray())
+                {
+                    if (i++ >= 8)
+                        break;
+                    if (actor.TryGetProperty("name", out var nameEl) && nameEl.ValueKind == JsonValueKind.String)
+                    {
+                        var name = nameEl.GetString();
+                        if (!string.IsNullOrEmpty(name))
+                            cast.Add(name);
+                    }
+                }
+            }
+        }
+
+        return new TmdbMovieDetails(tmdbId, title, overview, tagline, director, cast, runtime, genres, releaseDate);
+    }
 }

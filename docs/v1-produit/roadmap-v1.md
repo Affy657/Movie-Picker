@@ -112,7 +112,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 ## 11. Front – Mes soirées
 
 - [x] Page liste : soirées **créées** et **rejointes**, états visuels (à venir, en cours, terminée)
-- [x] Liens vers `/s/:slug` ; rappel du rôle hôte si applicable
+- [x] Liens vers `/e/:slug` ; rappel du rôle hôte si applicable
 
 ---
 
@@ -162,7 +162,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 - [x] **Création de soirée** : **compte obligatoire** ; après **POST** création réussie, l’utilisateur est **automatiquement participant** (pseudo = pseudo compte ou règle documentée) — pas d’écran « rejoindre » pour le créateur.
 - [x] **API** : **POST** `/api/v1/events` réservé aux utilisateurs authentifiés (**401** sinon) ; réponse incluant **`creatorParticipant`** pour le front (session / stockage local).
 - [x] **Lien « hôte » à partager** : ne plus afficher de lien « réservé hôte » dans l’UI ; `hostToken` **conservé en base** pour l’instant (roue / détail inchangés côté API si lien ancien) ; actions hôte via **session** quand `creatorUserId` correspond.
-- [x] **Front** : route **Créer une soirée** protégée ; après création, redirection `/s/:slug` **sans** `?host=` ; stockage participant créateur ; QR / copie **uniquement** sur l’URL invité.
+- [x] **Front** : route **Créer une soirée** protégée ; après création, redirection `/e/:slug` **sans** `?host=` ; stockage participant créateur ; QR / copie **uniquement** sur l’URL invité.
 - [x] **Watch providers TMDB** : uniquement **`flatrate`** (abonnement), exclusion **`rent`** / **`buy`** côté API ; tests .NET ajustés.
 
 ---

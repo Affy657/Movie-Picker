@@ -19,4 +19,7 @@ public interface IParticipantRepository
 
     /// <summary>Nombre de participants par <c>eventId</c> (clés absentes = 0).</summary>
     Task<IReadOnlyDictionary<string, int>> CountByEventIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default);
+
+    /// <summary>Participants d'une soirée, triés par ordre d'arrivée (ancien → récent).</summary>
+    Task<IReadOnlyList<Participant>> ListByEventIdAsync(string eventId, CancellationToken ct = default);
 }

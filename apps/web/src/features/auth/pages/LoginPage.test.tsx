@@ -8,12 +8,12 @@ import LoginPage from '@/features/auth/pages/LoginPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
 
-function renderLogin(initialPath = '/connexion') {
+function renderLogin(initialPath = '/login') {
   return render(
     <AppTestProviders>
       <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
-          <Route path="/connexion" element={<LoginPage />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/" element={<h1>Accueil test</h1>} />
         </Routes>
       </MemoryRouter>
@@ -55,7 +55,7 @@ describe('LoginPage (MSW)', () => {
       })
     );
 
-    renderLogin('/connexion?returnTo=%2F');
+    renderLogin('/login?returnTo=%2F');
 
     await user.type(screen.getByLabelText(/^e-mail$/i), 'lee@test.local');
     await user.type(screen.getByLabelText(/^mot de passe$/i), 'abcd1234');
@@ -89,7 +89,7 @@ describe('LoginPage (MSW)', () => {
       })
     );
 
-    renderLogin('/connexion?returnTo=%2F');
+    renderLogin('/login?returnTo=%2F');
     const devBtn = screen.getByRole('button', {
       name: /connexion rapide compte développeur/i,
     });

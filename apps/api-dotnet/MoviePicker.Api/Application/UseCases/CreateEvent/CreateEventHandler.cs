@@ -81,7 +81,7 @@ public sealed class CreateEventHandler : ICreateEventHandler
             Date = created.Date,
             Time = created.Time,
             Slug = created.Slug,
-            ShareUrl = $"/s/{created.Slug}",
+            ShareUrl = $"/e/{created.Slug}",
             CreatedAt = created.CreatedAt,
             UpdatedAt = created.UpdatedAt,
             CreatorParticipant = ParticipantResponse.FromDomain(createdParticipant)

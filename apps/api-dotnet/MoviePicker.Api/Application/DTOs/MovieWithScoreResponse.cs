@@ -27,4 +27,7 @@ public sealed class MovieWithScoreResponse
     public IReadOnlyList<WatchProviderOfferResponse> WatchProviders { get; init; } =
         Array.Empty<WatchProviderOfferResponse>();
     public string? TmdbWatchPageUrl { get; init; }
+
+    /// <summary>Durée du film en minutes (TMDB) — affichée comme « 1h10 » côté front.</summary>
+    public int? RuntimeMinutes { get; init; }
 }

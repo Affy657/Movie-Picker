@@ -17,6 +17,11 @@ export interface EventConfigData {
   richSharePreview?: boolean;
 }
 
+export interface EventParticipantSummary {
+  id: string;
+  pseudo: string;
+}
+
 export interface EventData {
   id: string;
   title: string;
@@ -35,4 +40,6 @@ export interface EventData {
   participantCount?: number;
   /** Nombre de films proposés (détail / liste à jour). */
   movieCount?: number;
+  /** Liste des participants (pseudo), triés par ordre d'arrivée. */
+  participants?: EventParticipantSummary[];
 }

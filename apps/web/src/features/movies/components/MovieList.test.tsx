@@ -4,9 +4,14 @@ import userEvent from '@testing-library/user-event';
 import MovieList from '@/features/movies/components/MovieList';
 import type { MovieData } from '@/shared/types/movie';
 import { LocaleProvider } from '@/shared/i18n';
+import { QueryClientWrapper } from '@/test-utils/queryWrapper';
 
 function renderWithLocale(ui: React.ReactElement) {
-  return render(<LocaleProvider>{ui}</LocaleProvider>);
+  return render(
+    <QueryClientWrapper>
+      <LocaleProvider>{ui}</LocaleProvider>
+    </QueryClientWrapper>
+  );
 }
 
 const movies: MovieData[] = [
@@ -102,6 +107,32 @@ describe('MovieList', () => {
     );
     expect(screen.getByText(/Déjà vu par d'autres/i)).toBeInTheDocument();
     expect(screen.getByText(/Déjà vu par d'autres : Alice/)).toBeInTheDocument();
+  });
+
+  it('affiche la durée formatée (1h10) dans la meta à côté de l’année et de la note', () => {
+    const withRuntime: MovieData[] = [
+      {
+        ...movies[0]!,
+        voteAverage: 8.4,
+        runtimeMinutes: 148,
+      },
+    ];
+    renderWithLocale(
+      <MovieList
+        movies={withRuntime}
+        slug="s"
+        allowedReactionIds={[]}
+        participantId={null}
+        participantPseudo={null}
+        isFinished={false}
+        onVote={vi.fn()}
+        onRemove={vi.fn()}
+        refresh={vi.fn()}
+        onReactionError={vi.fn()}
+      />
+    );
+    expect(screen.getByText(/2h28/)).toBeInTheDocument();
+    expect(screen.getByText(/TMDB\s*8\.4\/10/)).toBeInTheDocument();
   });
 
   it('affiche les boutons vote up/down quand pas terminé et participantId', async () => {

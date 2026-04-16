@@ -117,4 +117,13 @@ public sealed class MongoParticipantRepository : IParticipantRepository
             map[row.EventId] = row.Count;
         return map;
     }
+
+    public async Task<IReadOnlyList<Participant>> ListByEventIdAsync(string eventId, CancellationToken ct = default)
+    {
+        var docs = await _collection
+            .Find(x => x.EventId == eventId)
+            .SortBy(x => x.CreatedAt)
+            .ToListAsync(ct);
+        return docs.Select(ParticipantDocumentMapper.ToDomain).ToList();
+    }
 }

@@ -16,5 +16,6 @@ export const queryKeys = {
   movies: {
     all: ['movies'] as const,
     list: (slug: string | undefined) => ['movies', 'list', slug ?? '$pending'] as const,
+    details: (tmdbId: number | undefined) => ['movies', 'details', tmdbId ?? '$pending'] as const,
   },
 } as const;

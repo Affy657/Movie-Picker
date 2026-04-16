@@ -96,4 +96,13 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
 
         return Task.FromResult<IReadOnlyDictionary<string, int>>(map);
     }
+
+    public Task<IReadOnlyList<Participant>> ListByEventIdAsync(string eventId, CancellationToken ct = default)
+    {
+        var list = _byId.Values
+            .Where(p => p.EventId == eventId)
+            .OrderBy(p => p.CreatedAt)
+            .ToList();
+        return Task.FromResult<IReadOnlyList<Participant>>(list);
+    }
 }

@@ -9,7 +9,20 @@ public sealed record TmdbWatchProviderOffer(int ProviderId, string ProviderName,
 public sealed record TmdbMovieEnrichment(
     double? VoteAverage,
     IReadOnlyList<TmdbWatchProviderOffer> WatchProviders,
-    string? TmdbWatchPageUrl);
+    string? TmdbWatchPageUrl,
+    int? RuntimeMinutes);
+
+/// <summary>Détails d'un film TMDB (synopsis, équipe, casting) — pour la vue « plus d'infos ».</summary>
+public sealed record TmdbMovieDetails(
+    int Id,
+    string Title,
+    string? Overview,
+    string? Tagline,
+    string? Director,
+    IReadOnlyList<string> Cast,
+    int? Runtime,
+    IReadOnlyList<string> Genres,
+    string? ReleaseDate);
 
 public interface ITmdbMovieSearch
 {
@@ -20,4 +33,10 @@ public interface ITmdbMovieSearch
     /// Retourne <c>null</c> si indisponible (clé absente, erreur HTTP, JSON inattendu).
     /// </summary>
     Task<TmdbMovieEnrichment?> GetEnrichmentAsync(int tmdbId, string region, CancellationToken ct = default);
+
+    /// <summary>
+    /// Détails enrichis (synopsis, réalisateur, casting) — mis en cache.
+    /// Retourne <c>null</c> si indisponible (clé manquante, 404, erreur HTTP).
+    /// </summary>
+    Task<TmdbMovieDetails?> GetDetailsAsync(int tmdbId, CancellationToken ct = default);
 }

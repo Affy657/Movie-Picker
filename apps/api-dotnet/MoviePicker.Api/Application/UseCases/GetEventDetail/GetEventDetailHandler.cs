@@ -55,19 +55,25 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             }
         }
 
+        // Une seule lecture « liste participants » sert à la fois au résumé, au count et
+        // à la détection du participant courant (filtre en mémoire).
+        var participantsTask = _participantRepository.ListByEventIdAsync(evt.Id, ct);
+        var movieCountTask = _movieRepository.CountByEventIdAsync(evt.Id, ct);
+        await Task.WhenAll(participantsTask, movieCountTask);
+        var participants = await participantsTask;
+        var movieCount = await movieCountTask;
+
         ParticipantResponse? myParticipant = null;
         if (!string.IsNullOrEmpty(currentUserId))
         {
-            var p = await _participantRepository.FindByEventAndUserIdAsync(evt.Id, currentUserId, ct);
-            if (p is not null)
-                myParticipant = ParticipantResponse.FromDomain(p);
+            var mine = participants.FirstOrDefault(p => p.UserId == currentUserId);
+            if (mine is not null)
+                myParticipant = ParticipantResponse.FromDomain(mine);
         }
 
-        var participantCountTask = _participantRepository.CountByEventIdAsync(evt.Id, ct);
-        var movieCountTask = _movieRepository.CountByEventIdAsync(evt.Id, ct);
-        await Task.WhenAll(participantCountTask, movieCountTask);
-        var participantCount = await participantCountTask;
-        var movieCount = await movieCountTask;
+        var participantsSummary = participants
+            .Select(p => new EventParticipantSummaryResponse { Id = p.Id, Pseudo = p.Pseudo })
+            .ToList();
 
         return new EventDetailResponse
         {
@@ -85,8 +91,9 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             IsFinished = isFinished,
             WinnerMovie = winner,
             MyParticipant = myParticipant,
-            ParticipantCount = participantCount,
+            ParticipantCount = participants.Count,
             MovieCount = movieCount,
+            Participants = participantsSummary,
         };
     }
 

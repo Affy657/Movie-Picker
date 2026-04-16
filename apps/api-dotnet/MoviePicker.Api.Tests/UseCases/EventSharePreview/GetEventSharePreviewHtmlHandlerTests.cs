@@ -49,7 +49,7 @@ public sealed class GetEventSharePreviewHtmlHandlerTests
 
         Assert.Contains("property=\"og:title\" content=\"Movie Picker\"", html);
         Assert.DoesNotContain("Titre secret", html);
-        Assert.Contains("https://web.example/s/slug1", html);
+        Assert.Contains("https://web.example/e/slug1", html);
     }
 
     [Fact]

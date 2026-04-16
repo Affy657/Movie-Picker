@@ -34,6 +34,8 @@ export interface MovieData {
   voteAverage?: number | null;
   watchProviders?: WatchProviderOffer[];
   tmdbWatchPageUrl?: string | null;
+  /** Durée du film en minutes (TMDB) — formatée côté UI en « 1h10 ». */
+  runtimeMinutes?: number | null;
   /** Agrégats de réactions (liste vide si aucune). */
   reactions?: MovieReactionAggregate[];
 }

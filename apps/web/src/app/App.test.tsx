@@ -31,12 +31,12 @@ describe('App (routes)', () => {
     expect(await screen.findByRole('heading', { name: /^connexion$/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /cr\u00e9er un compte/i })).toHaveAttribute(
       'href',
-      '/inscription?returnTo=%2Fnew'
+      '/register?returnTo=%2Fnew'
     );
   });
 
-  it('route /mes-soirees accessible sans compte (liste invité)', async () => {
-    renderRoutes(['/mes-soirees']);
+  it('route /my-events accessible sans compte (liste invité)', async () => {
+    renderRoutes(['/my-events']);
     expect(
       await screen.findByText(/Aucune soirée enregistrée sur cet appareil/i)
     ).toBeInTheDocument();

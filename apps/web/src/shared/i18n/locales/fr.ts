@@ -25,7 +25,7 @@ export const fr = {
   nav: {
     home: 'Accueil',
     myEvents: 'Mes soirées',
-    account: 'Compte',
+    account: 'Paramètres',
     navLabel: 'Navigation principale',
     brandLabel: 'Movie Picker \u2014 Accueil',
   },
@@ -62,7 +62,7 @@ export const fr = {
       loginLink: 'Se connecter',
     },
     account: {
-      title: 'Compte',
+      title: 'Paramètres',
       loadingPlaceholder: 'Chargement du profil\u2026',
       pseudoLabel: 'Pseudo',
       profileTitle: 'Profil',
@@ -104,6 +104,11 @@ export const fr = {
       submitting: 'Envoi\u2026',
       fallbackError: 'Impossible de rejoindre',
       pseudoRequired: 'Indique un pseudo pour rejoindre.',
+    },
+    participants: {
+      title: 'Participants',
+      empty: "Personne n'a encore rejoint la soirée.",
+      meBadge: 'moi',
     },
     detail: {
       loading: 'Chargement\u2026',
@@ -229,6 +234,21 @@ export const fr = {
       tmdbVoteTitle: 'Note moyenne TMDB (indicatif)',
       sectionLabel: 'Films proposés',
       loadingPlaceholder: 'Chargement des films\u2026',
+    },
+    details: {
+      toggleShow: "Plus d'infos",
+      toggleHide: 'Masquer les infos',
+      regionLabel: 'Détails du film',
+      loading: 'Chargement des détails\u2026',
+      error: 'Impossible de charger les détails du film.',
+      empty: 'Aucun détail disponible pour ce film.',
+      overviewLabel: 'Synopsis',
+      directorLabel: 'Réalisation',
+      castLabel: 'Avec',
+      runtimeLabel: 'Durée',
+      genresLabel: 'Genres',
+      releasedLabel: 'Sortie',
+      regionAttribution: 'Source : The Movie Database (TMDB)',
     },
     reactions: {
       already_seen: 'Déjà vu',

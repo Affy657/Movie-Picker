@@ -70,7 +70,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 ## 7. Front – Base et navigation
 
 - [x] Configurer l'app React (Vite ou équivalent), mobile-first
-- [x] Mettre en place le routage : page d'accueil (home), création d'event, détail event (ex. `/s/:slug`)
+- [x] Mettre en place le routage : page d'accueil (home), création d'event, détail event (ex. `/e/:slug`)
 - [x] Configurer l'appel à l'API (URL de base en variable d'environnement build)
 - [x] Afficher une structure de page pour « détail event » (titre, date, zone films, zone roue)
 
@@ -346,7 +346,7 @@ Travaux réalisés après la clôture fonctionnelle du MVP et la migration .NET,
 
 > Complète les tests **axe** existants (`apps/web/src/pages/a11y.test.tsx`) par une mesure **navigateur** (Core Web Vitals, bonnes pratiques, SEO) sur le build réel du front.
 
-- [x] **Dépendances & script** : `pnpm run lighthouse` à la racine — build `web`, sert `apps/web/dist` avec `serve -s`, Lighthouse sur `/`, `/new`, `/s/lighthouse-smoke` (`scripts/lighthouse-run.mjs`) — routes alignées sur `App.tsx` (`/new`, pas `/create`).
+- [x] **Dépendances & script** : `pnpm run lighthouse` à la racine — build `web`, sert `apps/web/dist` avec `serve -s`, Lighthouse sur `/`, `/new`, `/e/lighthouse-smoke` (`scripts/lighthouse-run.mjs`) — routes alignées sur `App.tsx` (`/new`, `/e/:slug`).
 - [x] **Seuils** : `configs/lighthouse-budgets.json` (performance, accessibilité, bonnes pratiques, SEO) ; meta description + Open Graph dans `apps/web/index.html` pour le score SEO.
 - [x] **CI** : job **lighthouse** dans `.github/workflows/ci-cd.yml` (après `test-web`), **`continue-on-error: true`**, artefact `lighthouse-reports` ; Chrome via `browser-actions/setup-chrome`.
 

@@ -1,3 +1,6 @@
+import type { LucideIcon } from 'lucide-react';
+import { Ban, Eye, Meh, Sparkles, Trophy } from 'lucide-react';
+
 /** Clés stables alignées sur `ReactionCatalog` (API .NET). */
 export const REACTION_CATALOG_IDS = [
   'already_seen',
@@ -17,11 +20,11 @@ export const REACTION_LABELS: Record<ReactionCatalogId, string> = {
   meh: 'Bof',
 };
 
-/** Pastilles courtes côté liste (accessibilité : libellé complet en title). */
-export const REACTION_EMOJI: Record<ReactionCatalogId, string> = {
-  already_seen: '👁',
-  want_to_watch: '✨',
-  not_interested: '🚫',
-  masterpiece: '🏆',
-  meh: '😐',
+/** Icônes associées à chaque réaction (libellé complet en title). */
+export const REACTION_ICONS: Record<ReactionCatalogId, LucideIcon> = {
+  already_seen: Eye,
+  want_to_watch: Sparkles,
+  not_interested: Ban,
+  masterpiece: Trophy,
+  meh: Meh,
 };

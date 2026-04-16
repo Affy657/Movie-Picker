@@ -107,7 +107,7 @@ public sealed class CreateEventHandlerTests
         Assert.NotNull(result);
         Assert.Equal("evt123", result.Id);
         Assert.Equal(capturedEvent.Slug, result.Slug);
-        Assert.Equal("/s/" + result.Slug, result.ShareUrl);
+        Assert.Equal("/e/" + result.Slug, result.ShareUrl);
         Assert.NotNull(result.CreatorParticipant);
         Assert.Equal("part-1", result.CreatorParticipant!.Id);
         Assert.Equal("Alice", result.CreatorParticipant.Pseudo);

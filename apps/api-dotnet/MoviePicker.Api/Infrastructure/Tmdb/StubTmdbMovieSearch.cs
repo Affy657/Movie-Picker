@@ -26,6 +26,21 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
         {
             new TmdbWatchProviderOffer(8, "Netflix Stub", null, "flatrate"),
         };
-        return Task.FromResult<TmdbMovieEnrichment?>(new TmdbMovieEnrichment(8.0, offers, null));
+        return Task.FromResult<TmdbMovieEnrichment?>(new TmdbMovieEnrichment(8.0, offers, null, 120));
+    }
+
+    public Task<TmdbMovieDetails?> GetDetailsAsync(int tmdbId, CancellationToken ct = default)
+    {
+        var details = new TmdbMovieDetails(
+            tmdbId,
+            "Film E2E Stub",
+            "Synopsis généré par le stub TMDB pour les tests E2E.",
+            "Tagline test",
+            "Réalisateur Stub",
+            new[] { "Actrice Stub", "Acteur Stub" },
+            120,
+            new[] { "Science-fiction", "Drame" },
+            "2024-01-01");
+        return Task.FromResult<TmdbMovieDetails?>(details);
     }
 }

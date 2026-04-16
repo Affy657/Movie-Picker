@@ -11,8 +11,8 @@ test.describe('Parcours critique', () => {
     await hostPage.getByLabel(/^heure$/i).fill('20:30');
     await hostPage.getByRole('button', { name: /créer la soirée/i }).click();
 
-    await expect(hostPage).toHaveURL(/\/s\/[^/?]+\?host=/);
-    const slugMatch = hostPage.url().match(/\/s\/([^/?]+)/);
+    await expect(hostPage).toHaveURL(/\/e\/[^/?]+\?host=/);
+    const slugMatch = hostPage.url().match(/\/e\/([^/?]+)/);
     expect(slugMatch).toBeTruthy();
     const slug = slugMatch![1];
 
@@ -20,7 +20,7 @@ test.describe('Parcours critique', () => {
     await hostPage.getByRole('button', { name: /rejoindre/i }).click();
     await expect(hostPage.getByRole('heading', { name: /^films$/i })).toBeVisible();
 
-    await guestPage.goto(`/s/${slug}`);
+    await guestPage.goto(`/e/${slug}`);
     await guestPage.getByPlaceholder(/alice/i).fill('InvitéE2E');
     await guestPage.getByRole('button', { name: /rejoindre/i }).click();
     await expect(guestPage.getByRole('heading', { name: /^films$/i })).toBeVisible();

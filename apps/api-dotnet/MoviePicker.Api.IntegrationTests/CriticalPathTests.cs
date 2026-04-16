@@ -57,7 +57,7 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
         var created = await res.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(created);
         Assert.False(string.IsNullOrEmpty(created!.Slug));
-        Assert.Equal("/s/" + created.Slug, created.ShareUrl);
+        Assert.Equal("/e/" + created.Slug, created.ShareUrl);
         Assert.NotNull(created.CreatorParticipant);
         Assert.False(string.IsNullOrEmpty(created.CreatorParticipant!.Id));
         Assert.Equal("Créateur", created.CreatorParticipant.Pseudo);

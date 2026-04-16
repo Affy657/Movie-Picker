@@ -6,6 +6,7 @@ import { themeHueFromLabel } from '@/shared/utils/eventThemeHue';
 import JoinForm from '@/features/events/components/JoinForm';
 import WheelSection from '@/features/events/components/WheelSection';
 import HostEventSettingsPanel from '@/features/events/components/HostEventSettingsPanel';
+import EventParticipantsList from '@/features/events/components/EventParticipantsList';
 import EventDetailHeader from '@/features/events/pages/event-detail/EventDetailHeader';
 import EventMoviesLoadError from '@/features/events/pages/event-detail/EventMoviesLoadError';
 import EventMoviesSection from '@/features/events/pages/event-detail/EventMoviesSection';
@@ -116,6 +117,11 @@ export default function EventDetail() {
 
       {showContent && (
         <>
+          <EventParticipantsList
+            participants={event.participants}
+            currentParticipantId={participant?.participantId ?? null}
+          />
+
           <EventMoviesSection
             slug={slug}
             event={event}

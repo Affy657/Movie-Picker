@@ -1,6 +1,6 @@
 /**
  * Roadmap MVP §34 — Lighthouse sur le build Vite réel (spa via `serve -s`).
- * Usage : `pnpm run lighthouse` à la racine (build web puis mesure /, /new, /s/…).
+ * Usage : `pnpm run lighthouse` à la racine (build web puis mesure /, /new, /e/…).
  */
 import { spawn, execSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -23,7 +23,7 @@ const OUT = path.join(ROOT, 'artifacts', 'lighthouse');
 const URLS = [
   { path: '/', slug: 'home' },
   { path: '/new', slug: 'new' },
-  { path: '/s/lighthouse-smoke', slug: 'event-slug' },
+  { path: '/e/lighthouse-smoke', slug: 'event-slug' },
 ];
 
 function waitForServer(hostname, port, maxMs = 60000) {

@@ -3,7 +3,7 @@ import { safeReturnTo } from '@/shared/utils/returnTo';
 
 describe('safeReturnTo', () => {
   it('garde un chemin relatif interne', () => {
-    expect(safeReturnTo('/mes-soirees')).toBe('/mes-soirees');
+    expect(safeReturnTo('/my-events')).toBe('/my-events');
     expect(safeReturnTo('/a?x=1')).toBe('/a?x=1');
   });
 

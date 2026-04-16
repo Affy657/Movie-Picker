@@ -50,6 +50,9 @@ public sealed class GetEventDetailHandlerTests
         _participantRepo
             .Setup(r => r.CountByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
+        _participantRepo
+            .Setup(r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<ParticipantEntity>)Array.Empty<ParticipantEntity>());
         _movieRepo
             .Setup(r => r.CountByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
@@ -216,25 +219,39 @@ public sealed class GetEventDetailHandlerTests
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
         _currentUserAccessor.Setup(c => c.GetUserId()).Returns("user-1");
         _participantRepo
-            .Setup(r => r.FindByEventAndUserIdAsync(evt.Id, "user-1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(part);
+            .Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<ParticipantEntity>)new[] { part });
 
         var result = await _sut.HandleAsync("evt1");
 
         Assert.NotNull(result.MyParticipant);
         Assert.Equal("part-1", result.MyParticipant.Id);
         Assert.Equal("Alice", result.MyParticipant.Pseudo);
+        _participantRepo.Verify(
+            r => r.FindByEventAndUserIdAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
     public async Task HandleAsync_IncludesParticipantAndMovieCounts()
     {
         var evt = Event();
+        var now = DateTimeOffset.UtcNow;
+        var participants = Enumerable.Range(1, 12)
+            .Select(i => new ParticipantEntity
+            {
+                Id = $"p-{i}",
+                EventId = evt.Id,
+                Pseudo = $"User{i}",
+                CreatedAt = now.AddSeconds(i),
+                UpdatedAt = now.AddSeconds(i),
+            })
+            .ToList();
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
         _participantRepo
-            .Setup(r => r.CountByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(12);
+            .Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<ParticipantEntity>)participants);
         _movieRepo
             .Setup(r => r.CountByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(4);
@@ -243,5 +260,7 @@ public sealed class GetEventDetailHandlerTests
 
         Assert.Equal(12, result.ParticipantCount);
         Assert.Equal(4, result.MovieCount);
+        Assert.Equal(12, result.Participants.Count);
+        Assert.Equal("User1", result.Participants[0].Pseudo);
     }
 }

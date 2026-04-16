@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Clapperboard, Disc3, Link2, ThumbsUp } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import { APP_DOCUMENT_TITLE, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { ROUTES } from '@/app/routes';
@@ -26,7 +27,7 @@ export default function Home() {
         <ul className={styles.featureGrid}>
           <li className={styles.feature}>
             <span className={styles.featureIcon} aria-hidden>
-              🔗
+              <Link2 size={28} />
             </span>
             <div className={styles.featureBody}>
               <h3 className={styles.featureTitle}>Soirée partagée</h3>
@@ -38,7 +39,7 @@ export default function Home() {
           </li>
           <li className={styles.feature}>
             <span className={styles.featureIcon} aria-hidden>
-              🎬
+              <Clapperboard size={28} />
             </span>
             <div className={styles.featureBody}>
               <h3 className={styles.featureTitle}>Films TMDB</h3>
@@ -49,7 +50,7 @@ export default function Home() {
           </li>
           <li className={styles.feature}>
             <span className={styles.featureIcon} aria-hidden>
-              👍
+              <ThumbsUp size={28} />
             </span>
             <div className={styles.featureBody}>
               <h3 className={styles.featureTitle}>Votes et réactions</h3>
@@ -60,7 +61,7 @@ export default function Home() {
           </li>
           <li className={styles.feature}>
             <span className={styles.featureIcon} aria-hidden>
-              🎡
+              <Disc3 size={28} />
             </span>
             <div className={styles.featureBody}>
               <h3 className={styles.featureTitle}>La roue tranche</h3>

@@ -38,7 +38,7 @@ describe('CreateEvent', () => {
     const user = userEvent.setup();
     mockFetchApi.mockResolvedValueOnce({
       slug: 'abc123',
-      shareUrl: '/s/abc123',
+      shareUrl: '/e/abc123',
       creatorParticipant: { _id: 'p-new', pseudo: 'Vitest' },
     });
     RenderCreateEvent();

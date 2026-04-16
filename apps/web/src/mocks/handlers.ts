@@ -40,6 +40,11 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
         winnerMovie: opts.winnerMovie ?? null,
         participantCount: 3,
         movieCount: 2,
+        participants: [
+          { _id: 'p-msw-alice', pseudo: 'Alice' },
+          { _id: 'p-msw-bob', pseudo: 'Bob' },
+          { _id: 'p-msw-chloe', pseudo: 'Chloé' },
+        ],
         config: {
           theme: opts.theme ?? null,
           endDate: null,

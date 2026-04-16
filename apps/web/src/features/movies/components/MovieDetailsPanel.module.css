@@ -1,0 +1,78 @@
+.toggleRow {
+  margin-top: 0.4rem;
+}
+
+.toggleBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.55rem;
+  font-size: 0.8125rem;
+  background: transparent;
+  color: var(--color-meta);
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.1));
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.toggleBtn:hover,
+.toggleBtn:focus-visible {
+  background: var(--color-surface-muted, rgba(0, 0, 0, 0.04));
+  color: var(--color-text, inherit);
+}
+
+.panel {
+  margin-top: 0.55rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted, rgba(0, 0, 0, 0.04));
+  font-size: 0.85rem;
+  color: var(--color-text, inherit);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tagline {
+  margin: 0;
+  font-style: italic;
+  color: var(--color-meta);
+  font-size: 0.85rem;
+}
+
+.overview {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.factList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.2rem 0.65rem;
+  font-size: 0.8125rem;
+}
+
+.factLabel {
+  font-weight: 600;
+  color: var(--color-meta);
+}
+
+.factValue {
+  color: var(--color-text, inherit);
+  word-break: break-word;
+}
+
+.status {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-meta);
+}
+
+.error {
+  composes: status;
+  color: var(--color-danger, #b3261e);
+}

@@ -26,4 +26,15 @@ public sealed class EventDetailResponse
     public int ParticipantCount { get; init; }
 
     public int MovieCount { get; init; }
+
+    /// <summary>Liste des participants (pseudo, id), triés par ordre d'arrivée.</summary>
+    public IReadOnlyList<EventParticipantSummaryResponse> Participants { get; init; } =
+        Array.Empty<EventParticipantSummaryResponse>();
+}
+
+public sealed class EventParticipantSummaryResponse
+{
+    [JsonPropertyName("_id")]
+    public string Id { get; init; } = string.Empty;
+    public string Pseudo { get; init; } = string.Empty;
 }

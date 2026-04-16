@@ -20,9 +20,9 @@ function clearGuestParticipantKeys() {
 function renderMyEvents() {
   return render(
     <AppTestProviders>
-      <MemoryRouter initialEntries={['/mes-soirees']}>
+      <MemoryRouter initialEntries={['/my-events']}>
         <Routes>
-          <Route path="/mes-soirees" element={<MyEventsPage />} />
+          <Route path="/my-events" element={<MyEventsPage />} />
         </Routes>
       </MemoryRouter>
     </AppTestProviders>
@@ -110,20 +110,20 @@ describe('MyEventsPage (MSW)', () => {
     expect(screen.getByRole('heading', { name: /historique/i })).toBeInTheDocument();
 
     const hostedLink = screen.getByRole('link', { name: /Chez moi/i });
-    expect(hostedLink).toHaveAttribute('href', '/s/ma-soiree');
+    expect(hostedLink).toHaveAttribute('href', '/e/ma-soiree');
     expect(within(hostedLink.closest('li')!).getByText(/4 participants/)).toBeInTheDocument();
     expect(within(hostedLink.closest('li')!).getByText(/2 films propos/)).toBeInTheDocument();
     expect(screen.getAllByText('Hôte').length).toBeGreaterThanOrEqual(2);
     expect(within(hostedLink.closest('li')!).getByText('À venir')).toBeInTheDocument();
 
     const joinedLink = screen.getByRole('link', { name: /Chez Bob/i });
-    expect(joinedLink).toHaveAttribute('href', '/s/autre');
+    expect(joinedLink).toHaveAttribute('href', '/e/autre');
     expect(screen.getByText('En cours')).toBeInTheDocument();
 
     const historyHeading = screen.getByRole('heading', { name: /historique/i });
     const historySection = historyHeading.closest('section')!;
     const historyLink = within(historySection).getByRole('link', { name: /Soirée passée/i });
-    expect(historyLink).toHaveAttribute('href', '/s/terminee');
+    expect(historyLink).toHaveAttribute('href', '/e/terminee');
     expect(within(historySection).queryByText('Terminée')).not.toBeInTheDocument();
 
     const hostedHeading = screen.getByRole('heading', { name: /créées/i });
@@ -158,7 +158,7 @@ describe('MyEventsPage (MSW)', () => {
     expect(screen.queryByRole('link', { name: /Créer une soirée/i })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Se connecter/i })).toHaveAttribute(
       'href',
-      expect.stringContaining('connexion')
+      expect.stringContaining('login')
     );
 
     sessionStorage.removeItem(`moviepicker_participant_${slug}`);

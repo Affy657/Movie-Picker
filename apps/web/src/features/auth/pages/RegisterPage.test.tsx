@@ -8,12 +8,12 @@ import RegisterPage from '@/features/auth/pages/RegisterPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
 
-function renderRegister(initialPath = '/inscription') {
+function renderRegister(initialPath = '/register') {
   return render(
     <AppTestProviders>
       <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
-          <Route path="/inscription" element={<RegisterPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="/" element={<h1>Accueil après inscription</h1>} />
         </Routes>
       </MemoryRouter>
@@ -55,7 +55,7 @@ describe('RegisterPage (MSW)', () => {
       })
     );
 
-    renderRegister('/inscription?returnTo=%2F');
+    renderRegister('/register?returnTo=%2F');
 
     await user.type(screen.getByLabelText(/^pseudo$/i), 'Sam');
     await user.type(screen.getByLabelText(/^e-mail$/i), 'sam@test.local');
@@ -82,7 +82,7 @@ describe('RegisterPage (MSW)', () => {
       })
     );
 
-    renderRegister('/inscription?returnTo=%2F');
+    renderRegister('/register?returnTo=%2F');
 
     await user.type(screen.getByLabelText(/^pseudo$/i), 'Sam');
     await user.type(screen.getByLabelText(/^e-mail$/i), 'sam@test.local');

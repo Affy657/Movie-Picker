@@ -15,7 +15,7 @@ Liste de tout ce qu'il y a dans le site (vision cible), puis UX/UI, cas limites 
 
 ### Création et gestion des soirées
 - **Créer une soirée** : titre, date, heure, **lieu** (optionnel : adresse ou lien Google Maps), description (optionnelle).
-- **Lien de partage** : URL unique par événement (ex. `https://app.com/s/abc123`) à envoyer par message.
+- **Lien de partage** : URL unique par événement (ex. `https://app.com/e/abc123`) à envoyer par message.
 - **Aperçu du lien partagé** (messageries, réseaux) : balises **Open Graph / Twitter Cards** (titre, description, image) pour un extrait lisible lors du collage de l’URL. Une SPA qui sert le même `index.html` pour toutes les routes donne souvent un aperçu **générique** ; un aperçu **dynamique** (titre de la soirée, éventuellement compteur de participants) suppose HTML généré par URL (SSR, prerender, fonction edge, etc.) — voir [mvp/07-redirection-racine-et-referencement.md](mvp/07-redirection-racine-et-referencement.md). **Confidentialité** : tout indicateur dans l’aperçu (ex. nombre de participants) doit être **explicitement acceptable** pour l’hôte / la visibilité de l’événement.
 - **Lien « Copier le lien »** : bouton qui copie l'URL de la soirée dans le presse-papier pour partager en un clic.
 - **QR code** : génération d'un QR code pointant vers l'URL de la soirée ; affichage sur la page (hôte et participants) pour rejoindre facilement depuis le téléphone.
@@ -166,7 +166,7 @@ Le design et l'ergonomie sont pensés **en priorité pour le téléphone** : la 
 
 **Objectif** : application démoable avec le parcours Movie Picker minimal (équivalent roadmap [mvp/01-roadmap-mvp.md](mvp/01-roadmap-mvp.md) § 7–11 et parcours § 16).
 
-- **Navigation & shell** : pages accueil, création de soirée, détail soirée (`/s/:slug`) ; interface **mobile-first** puis responsive ; client API avec base URL au build (`VITE_API_URL`).
+- **Navigation & shell** : pages accueil, création de soirée, détail soirée (`/e/:slug`) ; interface **mobile-first** puis responsive ; client API avec base URL au build (`VITE_API_URL`).
 - **Création & accès** : créer une soirée (titre, date, heure obligatoires) ; lien de partage unique + « Copier le lien » ; rejoindre avec **pseudo** obligatoire ; **hôte** identifié par `?host=…` ou cookie, seul habilité à lancer la roue et clôturer.
 - **Films** : proposition via recherche titre → API TMDB côté serveur (minimum **titre, année, poster**) ; liste avec **qui a proposé** ; **doublons** refusés (id API ou titre) ; **upvote / downvote** (un vote par participant et par film) ; retirer sa proposition tant que la roue n’a pas été lancée.
 - **UX chargement & erreurs** : indicateurs de chargement pour le détail soirée et la liste des films ; en cas d’échec réseau ou API, **message explicite** et action **« Réessayer »** (pas de liste vide silencieuse).
