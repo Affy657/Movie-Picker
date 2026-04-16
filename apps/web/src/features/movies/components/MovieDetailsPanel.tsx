@@ -38,7 +38,12 @@ export default function MovieDetailsPanel({ tmdbId }: MovieDetailsPanelProps) {
         </button>
       </div>
       {open && (
-        <div id={panelId} className={styles.panel} role="region" aria-label={t('movies.details.regionLabel')}>
+        <div
+          id={panelId}
+          className={styles.panel}
+          role="region"
+          aria-label={t('movies.details.regionLabel')}
+        >
           {isLoading && <p className={styles.status}>{t('movies.details.loading')}</p>}
           {isError && <p className={styles.error}>{t('movies.details.error')}</p>}
           {data && <MovieDetailsBody data={data} />}
@@ -68,7 +73,8 @@ function MovieDetailsBody({ data }: MovieDetailsBodyProps) {
   const facts: Array<[string, string]> = [];
 
   if (data.director) facts.push([t('movies.details.directorLabel'), data.director]);
-  if (data.cast.length > 0) facts.push([t('movies.details.castLabel'), data.cast.slice(0, 6).join(', ')]);
+  if (data.cast.length > 0)
+    facts.push([t('movies.details.castLabel'), data.cast.slice(0, 6).join(', ')]);
   const runtimeLabel = formatRuntimeMinutes(data.runtimeMinutes);
   if (runtimeLabel) facts.push([t('movies.details.runtimeLabel'), runtimeLabel]);
   if (data.genres.length > 0) facts.push([t('movies.details.genresLabel'), data.genres.join(', ')]);
