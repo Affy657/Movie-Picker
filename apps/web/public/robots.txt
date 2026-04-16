@@ -1,5 +1,14 @@
-# Domaine prod — voir docs/mvp/07-redirection-racine-et-referencement.md (adapter si fork / autre hôte).
+# Domaine canonique : https://web.movie-picker.fr (voir MoviePickerOptions.PublicWebBaseUrl).
+# Adapter si fork / autre hôte.
 User-agent: *
 Allow: /
+# Routes privées ou non indexables : pages soirée (lien partagé, non publique),
+# espaces utilisateur et formulaires derrière auth.
+Disallow: /e/
+Disallow: /my-events
+Disallow: /settings
+Disallow: /new
+Disallow: /login
+Disallow: /register
 
 Sitemap: https://web.movie-picker.fr/sitemap.xml

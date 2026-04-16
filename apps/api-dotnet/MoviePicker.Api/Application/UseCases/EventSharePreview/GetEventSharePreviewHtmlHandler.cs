@@ -106,6 +106,7 @@ public sealed class GetEventSharePreviewHtmlHandler : IGetEventSharePreviewHtmlH
             + "<html lang=\"fr\">\n<head>\n"
             + "<meta charset=\"utf-8\" />\n"
             + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n"
+            + "<meta name=\"robots\" content=\"noindex, follow\" />\n"
             + "<title>" + H(pageTitle) + "</title>\n"
             + "<link rel=\"canonical\" href=\"" + H(canonicalUrl) + "\" />\n"
             + "<meta property=\"og:type\" content=\"website\" />\n"

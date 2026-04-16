@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- URLs canoniques alignées sur docs/mvp/07-redirection-racine-et-referencement.md ; adapter si autre domaine. -->
+<!--
+  Sitemap statique — URLs publiques indexables uniquement.
+  Domaine canonique aligné sur `MoviePickerOptions.PublicWebBaseUrl`
+  (`https://web.movie-picker.fr`) et `apps/web/index.html`.
+  `/new` est derrière `ProtectedRoute` (redirige vers `/login`) et donc exclu.
+  Les routes privées (`/e/*`, `/my-events`, `/settings`) sont bloquées via `robots.txt`.
+-->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://web.movie-picker.fr/</loc>
+    <lastmod>2026-04-16</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>1</priority>
-  </url>
-  <url>
-    <loc>https://web.movie-picker.fr/new</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>1.0</priority>
   </url>
 </urlset>

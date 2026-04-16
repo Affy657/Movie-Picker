@@ -19,11 +19,17 @@ const BASE = `http://127.0.0.1:${PORT}`;
 const BUDGETS_PATH = path.join(ROOT, 'configs', 'lighthouse-budgets.json');
 const OUT = path.join(ROOT, 'artifacts', 'lighthouse');
 
-/** Routes alignées sur App.tsx : /new (création), pas /create */
+/**
+ * Routes alignées sur App.tsx : /new (création), pas /create.
+ * `indexable: false` => la catégorie SEO n'est pas évaluée contre le seuil
+ * (la page est volontairement `Disallow:` dans robots.txt — /new derrière auth,
+ * /e/:slug = soirée privée par lien ; Lighthouse pénalise sinon ce qui est
+ * justement voulu par la politique d'indexation).
+ */
 const URLS = [
-  { path: '/', slug: 'home' },
-  { path: '/new', slug: 'new' },
-  { path: '/e/lighthouse-smoke', slug: 'event-slug' },
+  { path: '/', slug: 'home', indexable: true },
+  { path: '/new', slug: 'new', indexable: false },
+  { path: '/e/lighthouse-smoke', slug: 'event-slug', indexable: false },
 ];
 
 function waitForServer(hostname, port, maxMs = 60000) {
@@ -88,7 +94,7 @@ try {
   });
 
   try {
-    for (const { path: pth, slug } of URLS) {
+    for (const { path: pth, slug, indexable } of URLS) {
       const url = BASE + pth;
       const result = await lighthouse(url, {
         port: chrome.port,
@@ -104,8 +110,10 @@ try {
         const c = lhr.categories[cat];
         if (!c || typeof c.score !== 'number') continue;
         const score = Math.round(c.score * 100);
-        console.log(`${slug} — ${cat}: ${score} (min ${min})`);
-        if (score < min) {
+        const skipSeo = cat === 'seo' && indexable === false;
+        const suffix = skipSeo ? ' (non indexable — seuil ignoré)' : ` (min ${min})`;
+        console.log(`${slug} — ${cat}: ${score}${suffix}`);
+        if (!skipSeo && score < min) {
           console.error(`✗ ${slug} — ${cat}: ${score} < ${min}`);
           failed = true;
         }
