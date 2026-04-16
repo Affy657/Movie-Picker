@@ -3,10 +3,17 @@ import type { MyEventLifecycle } from '@/shared/types/event';
 export type { WheelMode, EventConfigData, EventData } from '@/shared/types/event';
 import type { EventConfigData, WheelMode } from '@/shared/types/event';
 
+/** Plafond max pour `maxParticipants` (aligné sur `EventConfig.MaxParticipantsCap` côté API). */
+export const MAX_EVENT_PARTICIPANTS = 500;
+
+/** Plafond max pour `maxProposalsPerParticipant` (aligné sur `EventConfig.MaxProposalsPerParticipantCap` côté API). */
+export const MAX_PROPOSALS_PER_PARTICIPANT = 100;
+
 export const DEFAULT_EVENT_CONFIG: EventConfigData = {
   theme: null,
   endDate: null,
   maxProposalsPerParticipant: null,
+  maxParticipants: null,
   wheelMode: 'strictRandom',
   richSharePreview: false,
 };
@@ -16,6 +23,8 @@ export type EventConfigPatchPayload = {
   theme: string;
   endDate?: string | null;
   maxProposalsPerParticipant: number;
+  /** 0 = pas de limite, 1–500 sinon. */
+  maxParticipants: number;
   wheelMode: WheelMode;
   richSharePreview: boolean;
 };

@@ -51,6 +51,16 @@ public sealed class JoinEventHandler : IJoinEventHandler
             };
         }
 
+        // La capacité s'évalue au moment où un nouveau participant serait créé : les requêtes
+        // « réinscription » (compte déjà lié, ou pseudo réutilisé) ont déjà été renvoyées plus haut.
+        if (evt.Config?.MaxParticipants is { } cap && cap > 0)
+        {
+            var currentCount = await _participantRepository.CountByEventIdAsync(evt.Id, ct);
+            if (currentCount >= cap)
+                throw new ConflictException(
+                    $"La soirée est complète ({cap} participants maximum).");
+        }
+
         var now = DateTimeOffset.UtcNow;
         var participant = new Participant
         {

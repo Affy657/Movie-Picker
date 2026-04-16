@@ -16,6 +16,7 @@ public static class EventDocumentMapper
                     ? new DateTimeOffset(doc.Config.EndDate.Value, TimeSpan.Zero)
                     : null,
                 MaxProposalsPerParticipant = doc.Config.MaxProposalsPerParticipant,
+                MaxParticipants = doc.Config.MaxParticipants,
                 WheelMode = ParseWheelMode(doc.Config.WheelMode),
                 RichSharePreview = doc.Config.RichSharePreview
             };
@@ -48,6 +49,7 @@ public static class EventDocumentMapper
                 Theme = evt.Config.Theme,
                 EndDate = evt.Config.EndDate?.UtcDateTime,
                 MaxProposalsPerParticipant = evt.Config.MaxProposalsPerParticipant,
+                MaxParticipants = evt.Config.MaxParticipants,
                 WheelMode = ToWheelModeString(evt.Config.WheelMode),
                 RichSharePreview = evt.Config.RichSharePreview
             };

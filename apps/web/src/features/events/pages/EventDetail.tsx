@@ -81,6 +81,14 @@ export default function EventDetail() {
   const shareUrl = shareUrlFromState ?? `${window.location.origin}${ROUTES.eventDetail(slug)}`;
   const needsJoin = !event.isFinished && !participant;
   const showContent = event.isFinished || participant;
+  const maxParticipants = event.config?.maxParticipants ?? null;
+  // Source autoritaire : `participantCount` retourné par l'API détail.
+  // Fallback sur `participants?.length` pour les anciens mocks/tests sans cette clé.
+  const participantCount = event.participantCount ?? event.participants?.length ?? 0;
+  const isFull =
+    typeof maxParticipants === 'number' &&
+    maxParticipants > 0 &&
+    participantCount >= maxParticipants;
 
   return (
     <PageLayout className="page-event" style={themeStyle}>
@@ -111,6 +119,8 @@ export default function EventDetail() {
         <JoinForm
           slug={slug}
           onJoined={(participantId, pseudo) => setParticipant({ participantId, pseudo })}
+          isFull={isFull}
+          maxParticipants={maxParticipants}
         />
       )}
 
@@ -119,6 +129,7 @@ export default function EventDetail() {
           <EventParticipantsList
             participants={event.participants}
             currentParticipantId={participant?.participantId ?? null}
+            maxParticipants={maxParticipants}
           />
 
           <EventMoviesSection

@@ -23,6 +23,7 @@ internal static class DevelopmentScenarioSeed
 {
     internal const string ScenarioMultiTitle = "Scénario seed — Soirée multi-participants";
     internal const string ScenarioWheelTitle = "Scénario seed — Roue et clôture";
+    internal const string ScenarioFullCapacityTitle = "Scénario seed — Capacité atteinte";
 
     internal static async Task TrySeedAsync(
         IServiceProvider sp,
@@ -45,6 +46,8 @@ internal static class DevelopmentScenarioSeed
             ct).ConfigureAwait(false);
 
         await TrySeedWheelAndCloseScenarioAsync(sp, events, votes, bob, logger, ct).ConfigureAwait(false);
+
+        await TrySeedFullCapacityScenarioAsync(sp, events, primaryUserId, alice, bob, logger, ct).ConfigureAwait(false);
     }
 
     private static async Task TrySeedMultiParticipantScenarioAsync(
@@ -193,6 +196,7 @@ internal static class DevelopmentScenarioSeed
             Theme = "Science-fiction & thrillers",
             EndDate = null,
             MaxProposalsPerParticipant = 5,
+            MaxParticipants = 8,
             WheelMode = WheelMode.WeightedByVotes,
             RichSharePreview = true
         };
@@ -293,6 +297,99 @@ internal static class DevelopmentScenarioSeed
             "DevelopmentSeed : scénario roue & clôture créé (slug={Slug}, gagnant={WinnerId}).",
             slug,
             winner.Id);
+    }
+
+    private static async Task TrySeedFullCapacityScenarioAsync(
+        IServiceProvider sp,
+        IEventRepository events,
+        string primaryUserId,
+        User alice,
+        User bob,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var existingBob = await events.ListByCreatorUserIdAsync(bob.Id, 50, ct).ConfigureAwait(false);
+        if (existingBob.Any(e => e.Title == ScenarioFullCapacityTitle))
+        {
+            logger.LogInformation("DevelopmentSeed : scénario capacité atteinte déjà présent — ignoré.");
+            return;
+        }
+
+        var create = sp.GetRequiredService<ICreateEventHandler>();
+        var join = sp.GetRequiredService<IJoinEventHandler>();
+        var addMovie = sp.GetRequiredService<IAddMovieHandler>();
+
+        var utc = DateTimeOffset.UtcNow;
+        var created = await create
+            .HandleAsync(
+                new CreateEventRequest
+                {
+                    Title = ScenarioFullCapacityTitle,
+                    Date = FormatDate(utc.AddDays(2)),
+                    Time = "21:00"
+                },
+                bob.Id,
+                ct)
+            .ConfigureAwait(false);
+
+        var slug = created.Slug;
+        var bobPart = created.CreatorParticipant?.Id
+            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+
+        // Applique la config : capacité = 3 (hôte inclus) — la soirée sera pleine après 2 joins.
+        var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("Soirée seed (capacité) introuvable après création.");
+
+        var cfg = new EventConfig
+        {
+            Theme = "Comédie & feel-good",
+            EndDate = null,
+            MaxProposalsPerParticipant = 3,
+            MaxParticipants = 3,
+            WheelMode = WheelMode.StrictRandom,
+            RichSharePreview = false
+        };
+
+        await events.UpdateAsync(CloneEvent(evt, config: cfg), ct).ConfigureAwait(false);
+
+        var joinDev = await join
+            .HandleAsync(slug, new JoinEventRequest { Pseudo = "Dev invité" }, primaryUserId, ct)
+            .ConfigureAwait(false);
+        await join
+            .HandleAsync(slug, new JoinEventRequest { Pseudo = "Alice invitée" }, alice.Id, ct)
+            .ConfigureAwait(false);
+
+        await addMovie
+            .HandleAsync(
+                slug,
+                new AddMovieRequest
+                {
+                    TmdbId = 105,
+                    Title = "Back to the Future",
+                    Year = "1985",
+                    PosterPath = null,
+                    ParticipantId = bobPart
+                },
+                ct)
+            .ConfigureAwait(false);
+
+        await addMovie
+            .HandleAsync(
+                slug,
+                new AddMovieRequest
+                {
+                    TmdbId = 13,
+                    Title = "Forrest Gump",
+                    Year = "1994",
+                    PosterPath = null,
+                    ParticipantId = joinDev.Participant.Id
+                },
+                ct)
+            .ConfigureAwait(false);
+
+        logger.LogInformation(
+            "DevelopmentSeed : scénario capacité atteinte créé (slug={Slug}, 3/3 participants, hôte Bob).",
+            slug);
     }
 
     private static Event CloneEvent(

@@ -15,7 +15,9 @@ import type {
   WheelMode,
 } from '@/features/events/types';
 import { DEFAULT_EVENT_CONFIG } from '@/features/events/types';
+import { MAX_EVENT_PARTICIPANTS } from '@/features/events/types';
 import { isWheelMode } from '@/shared/utils/wheelMode';
+import { useTranslation } from '@/shared/i18n';
 
 type HostEventSettingsPanelProps = {
   slug: string;
@@ -29,6 +31,7 @@ function normalizeConfig(c: EventConfigData | undefined): EventConfigData {
     endDate: c?.endDate ?? DEFAULT_EVENT_CONFIG.endDate,
     maxProposalsPerParticipant:
       c?.maxProposalsPerParticipant ?? DEFAULT_EVENT_CONFIG.maxProposalsPerParticipant,
+    maxParticipants: c?.maxParticipants ?? DEFAULT_EVENT_CONFIG.maxParticipants,
     wheelMode: c?.wheelMode ?? DEFAULT_EVENT_CONFIG.wheelMode,
     richSharePreview: c?.richSharePreview ?? DEFAULT_EVENT_CONFIG.richSharePreview,
   };
@@ -39,6 +42,7 @@ export default function HostEventSettingsPanel({
   hostToken,
   event,
 }: HostEventSettingsPanelProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const cfg = normalizeConfig(event.config);
   const locked = !!event.isFinished || !!event.winnerMovie;
@@ -47,6 +51,9 @@ export default function HostEventSettingsPanel({
   const [endLocal, setEndLocal] = useState(isoToDatetimeLocalValue(cfg.endDate));
   const [maxProp, setMaxProp] = useState<string>(
     cfg.maxProposalsPerParticipant != null ? String(cfg.maxProposalsPerParticipant) : ''
+  );
+  const [maxParticipants, setMaxParticipants] = useState<string>(
+    cfg.maxParticipants != null ? String(cfg.maxParticipants) : ''
   );
   const [wheelMode, setWheelMode] = useState<WheelMode>(cfg.wheelMode);
   const [richSharePreview, setRichSharePreview] = useState(() => !!cfg.richSharePreview);
@@ -62,6 +69,7 @@ export default function HostEventSettingsPanel({
     setMaxProp(
       next.maxProposalsPerParticipant != null ? String(next.maxProposalsPerParticipant) : ''
     );
+    setMaxParticipants(next.maxParticipants != null ? String(next.maxParticipants) : '');
     setWheelMode(next.wheelMode);
     setRichSharePreview(!!next.richSharePreview);
     setFormError(null);
@@ -102,10 +110,28 @@ export default function HostEventSettingsPanel({
       maxProposalsPerParticipant = n;
     }
 
+    let maxParticipantsValue = 0;
+    if (maxParticipants.trim() !== '') {
+      const n = Number(maxParticipants);
+      if (!Number.isInteger(n) || n < 1 || n > MAX_EVENT_PARTICIPANTS) {
+        setFormError(t('events.settings.maxParticipantsInvalid', { max: MAX_EVENT_PARTICIPANTS }));
+        return;
+      }
+      const currentCount = event.participantCount ?? 0;
+      if (n < currentCount) {
+        setFormError(
+          t('events.settings.maxParticipantsBelowCurrent', { value: n, count: currentCount })
+        );
+        return;
+      }
+      maxParticipantsValue = n;
+    }
+
     mutation.mutate({
       theme: theme.trim(),
       endDate: endPayload,
       maxProposalsPerParticipant,
+      maxParticipants: maxParticipantsValue,
       wheelMode,
       richSharePreview,
     });
@@ -190,6 +216,32 @@ export default function HostEventSettingsPanel({
             disabled={locked || mutation.isPending}
           />
           <p className="hint">Laisser vide pour aucune limite.</p>
+        </div>
+
+        <div className={styles.field}>
+          <label className="label" htmlFor="host-cfg-max-participants">
+            {t('events.settings.maxParticipantsLabel')}
+          </label>
+          <input
+            id="host-cfg-max-participants"
+            className="input"
+            type="number"
+            min={1}
+            max={MAX_EVENT_PARTICIPANTS}
+            step={1}
+            placeholder={t('events.settings.maxParticipantsPlaceholder')}
+            value={maxParticipants}
+            onChange={(e) => setMaxParticipants(e.target.value)}
+            disabled={locked || mutation.isPending}
+          />
+          <p className="hint">
+            {t(
+              (event.participantCount ?? 0) <= 1
+                ? 'events.settings.maxParticipantsHintOne'
+                : 'events.settings.maxParticipantsHintMany',
+              { count: event.participantCount ?? 0 }
+            )}
+          </p>
         </div>
 
         <div className={styles.field}>

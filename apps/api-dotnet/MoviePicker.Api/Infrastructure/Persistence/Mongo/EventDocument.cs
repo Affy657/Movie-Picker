@@ -62,6 +62,10 @@ public sealed class EventConfigDocument
     [BsonIgnoreIfNull]
     public int? MaxProposalsPerParticipant { get; set; }
 
+    [BsonElement("maxParticipants")]
+    [BsonIgnoreIfNull]
+    public int? MaxParticipants { get; set; }
+
     [BsonElement("wheelMode")]
     public string WheelMode { get; set; } = "strictRandom";
 

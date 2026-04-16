@@ -100,11 +100,16 @@ export const en: Locale = {
       submitting: 'Sending\u2026',
       fallbackError: 'Unable to join',
       pseudoRequired: 'Enter a nickname to join.',
+      fullWithCap:
+        'The event is full ({{max}} participants max). Ask the host to raise the capacity to join.',
+      full: 'The event is full. Ask the host to raise the capacity to join.',
     },
     participants: {
       title: 'Participants',
       empty: 'Nobody has joined the event yet.',
       meBadge: 'you',
+      fullBadge: 'Full',
+      fullBadgeAria: 'Event is full',
     },
     detail: {
       loading: 'Loading\u2026',
@@ -167,6 +172,16 @@ export const en: Locale = {
       saving: 'Saving\u2026',
       saveSuccess: 'Settings saved.',
       fallbackError: 'Save failed.',
+      maxParticipantsLabel: 'Maximum number of participants',
+      maxParticipantsPlaceholder: 'Unlimited',
+      maxParticipantsHintOne:
+        'Leave empty for no limit. {{count}} person currently joined; the cap cannot go below.',
+      maxParticipantsHintMany:
+        'Leave empty for no limit. {{count}} people currently joined; the cap cannot go below.',
+      maxParticipantsInvalid:
+        'Maximum number of participants: integer between 1 and {{max}}, or empty for unlimited.',
+      maxParticipantsBelowCurrent:
+        'Cannot lower the capacity to {{value}}: {{count}} participants are already joined.',
     },
     wheel: {
       title: 'Wheel',

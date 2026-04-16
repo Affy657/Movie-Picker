@@ -49,6 +49,7 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
           theme: opts.theme ?? null,
           endDate: null,
           maxProposalsPerParticipant: null,
+          maxParticipants: null,
           wheelMode: 'strictRandom',
         },
       });

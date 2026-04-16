@@ -129,6 +129,77 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
     }
 
     [Fact]
+    public async Task PatchConfig_MaxParticipants_AsHost_UpdatesAndGetReflects()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
+        var create = await client.PostAsJsonAsync(
+            "/api/v1/events",
+            new { title = "Cap", date = "2035-06-01", time = "20:00" });
+        var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
+        Assert.NotNull(created);
+
+        var patch = await client.PatchAsJsonAsync(
+            $"/api/v1/events/{created!.Slug}/config",
+            new { maxParticipants = 6 });
+        Assert.Equal(HttpStatusCode.OK, patch.StatusCode);
+        var updated = await patch.Content.ReadFromJsonAsync<EventConfigResponse>(JsonOptions);
+        Assert.Equal(6, updated!.MaxParticipants);
+
+        var clear = await client.PatchAsJsonAsync(
+            $"/api/v1/events/{created.Slug}/config",
+            new { maxParticipants = 0 });
+        var cleared = await clear.Content.ReadFromJsonAsync<EventConfigResponse>(JsonOptions);
+        Assert.Null(cleared!.MaxParticipants);
+    }
+
+    [Fact]
+    public async Task Join_WhenAtCapacity_Returns409()
+    {
+        var host = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
+        var create = await host.PostAsJsonAsync(
+            "/api/v1/events",
+            new { title = "Full", date = "2035-06-01", time = "20:00" });
+        var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
+        Assert.NotNull(created);
+        var slug = created!.Slug;
+
+        // La création inscrit déjà l'hôte (1 participant) ; capacité 2 laisse une place à Alice, pas à Bob.
+        var patch = await host.PatchAsJsonAsync(
+            $"/api/v1/events/{slug}/config",
+            new { maxParticipants = 2 });
+        Assert.Equal(HttpStatusCode.OK, patch.StatusCode);
+
+        var first = _factory.CreateClient();
+        var join1 = await first.PostAsJsonAsync($"/api/v1/events/{slug}/join", new { pseudo = "Alice" });
+        join1.EnsureSuccessStatusCode();
+
+        var second = _factory.CreateClient();
+        var join2 = await second.PostAsJsonAsync($"/api/v1/events/{slug}/join", new { pseudo = "Bob" });
+        Assert.Equal(HttpStatusCode.Conflict, join2.StatusCode);
+    }
+
+    [Fact]
+    public async Task PatchConfig_MaxParticipants_BelowCurrent_Returns409()
+    {
+        var host = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
+        var create = await host.PostAsJsonAsync(
+            "/api/v1/events",
+            new { title = "Shrink", date = "2035-06-01", time = "20:00" });
+        var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
+        var slug = created!.Slug;
+
+        var joiner1 = _factory.CreateClient();
+        (await joiner1.PostAsJsonAsync($"/api/v1/events/{slug}/join", new { pseudo = "Alice" })).EnsureSuccessStatusCode();
+        var joiner2 = _factory.CreateClient();
+        (await joiner2.PostAsJsonAsync($"/api/v1/events/{slug}/join", new { pseudo = "Bob" })).EnsureSuccessStatusCode();
+
+        var patch = await host.PatchAsJsonAsync(
+            $"/api/v1/events/{slug}/config",
+            new { maxParticipants = 1 });
+        Assert.Equal(HttpStatusCode.Conflict, patch.StatusCode);
+    }
+
+    [Fact]
     public async Task PatchConfig_InvalidEndDate_Returns400()
     {
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);

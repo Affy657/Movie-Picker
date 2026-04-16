@@ -22,6 +22,7 @@ const server = setupServer(
         theme: null,
         endDate: null,
         maxProposalsPerParticipant: null,
+        maxParticipants: null,
         wheelMode: 'strictRandom',
       },
     })

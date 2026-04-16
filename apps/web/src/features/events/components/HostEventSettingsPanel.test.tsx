@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
-import { QueryClientWrapper, createTestQueryClient } from '@/test-utils/queryWrapper';
+import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import HostEventSettingsPanel from '@/features/events/components/HostEventSettingsPanel';
 import type { EventData } from '@/features/events/types';
@@ -21,6 +21,7 @@ const baseEvent: EventData = {
     theme: 'SF',
     endDate: null,
     maxProposalsPerParticipant: null,
+    maxParticipants: null,
     wheelMode: 'strictRandom',
     richSharePreview: false,
   },
@@ -48,6 +49,7 @@ describe('HostEventSettingsPanel', () => {
           theme: 'SF',
           endDate: null,
           maxProposalsPerParticipant: null,
+          maxParticipants: null,
           wheelMode: 'strictRandom',
           richSharePreview: false,
         });
@@ -56,9 +58,9 @@ describe('HostEventSettingsPanel', () => {
 
     const qc = createTestQueryClient();
     render(
-      <QueryClientWrapper client={qc}>
+      <AppTestProviders client={qc}>
         <HostEventSettingsPanel slug={slug} hostToken={null} event={baseEvent} />
-      </QueryClientWrapper>
+      </AppTestProviders>
     );
 
     await user.click(screen.getByText('Paramètres de la soirée'));
@@ -79,6 +81,7 @@ describe('HostEventSettingsPanel', () => {
           theme: 'SF',
           endDate: null,
           maxProposalsPerParticipant: null,
+          maxParticipants: null,
           wheelMode: 'strictRandom',
           richSharePreview: true,
         });
@@ -86,9 +89,9 @@ describe('HostEventSettingsPanel', () => {
     );
 
     render(
-      <QueryClientWrapper client={createTestQueryClient()}>
+      <AppTestProviders client={createTestQueryClient()}>
         <HostEventSettingsPanel slug={slug} hostToken={null} event={baseEvent} />
-      </QueryClientWrapper>
+      </AppTestProviders>
     );
 
     await user.click(screen.getByText('Paramètres de la soirée'));
@@ -98,10 +101,75 @@ describe('HostEventSettingsPanel', () => {
     await waitFor(() => expect(seenRich).toBe(true));
   });
 
+  it('envoie maxParticipants saisi dans le PATCH', async () => {
+    const user = userEvent.setup();
+    let seenMax: unknown;
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        seenMax = body.maxParticipants;
+        return HttpResponse.json({
+          theme: 'SF',
+          endDate: null,
+          maxProposalsPerParticipant: null,
+          maxParticipants: 8,
+          wheelMode: 'strictRandom',
+          richSharePreview: false,
+        });
+      })
+    );
+
+    render(
+      <AppTestProviders client={createTestQueryClient()}>
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken={null}
+          event={{ ...baseEvent, participantCount: 2 }}
+        />
+      </AppTestProviders>
+    );
+
+    await user.click(screen.getByText('Paramètres de la soirée'));
+    await user.clear(screen.getByLabelText(/nombre maximum de participants/i));
+    await user.type(screen.getByLabelText(/nombre maximum de participants/i), '8');
+    await user.click(screen.getByRole('button', { name: /^enregistrer$/i }));
+
+    await waitFor(() => expect(seenMax).toBe(8));
+  });
+
+  it('refuse une capacité inférieure au nombre de participants déjà inscrits', async () => {
+    const user = userEvent.setup();
+    let patchCalled = false;
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, () => {
+        patchCalled = true;
+        return HttpResponse.json({});
+      })
+    );
+
+    render(
+      <AppTestProviders client={createTestQueryClient()}>
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken={null}
+          event={{ ...baseEvent, participantCount: 5 }}
+        />
+      </AppTestProviders>
+    );
+
+    await user.click(screen.getByText('Paramètres de la soirée'));
+    await user.clear(screen.getByLabelText(/nombre maximum de participants/i));
+    await user.type(screen.getByLabelText(/nombre maximum de participants/i), '3');
+    await user.click(screen.getByRole('button', { name: /^enregistrer$/i }));
+
+    expect(await screen.findByText(/Impossible de réduire la capacité/i)).toBeInTheDocument();
+    expect(patchCalled).toBe(false);
+  });
+
   it('désactive le formulaire si la roue a été lancée', async () => {
     const user = userEvent.setup();
     render(
-      <QueryClientWrapper client={createTestQueryClient()}>
+      <AppTestProviders client={createTestQueryClient()}>
         <HostEventSettingsPanel
           slug={slug}
           hostToken={null}
@@ -122,7 +190,7 @@ describe('HostEventSettingsPanel', () => {
             },
           }}
         />
-      </QueryClientWrapper>
+      </AppTestProviders>
     );
 
     await user.click(screen.getByText('Paramètres de la soirée'));

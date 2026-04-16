@@ -9,15 +9,18 @@ namespace MoviePicker.Api.Application.UseCases.EventConfiguration;
 public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
 {
     private readonly IEventRepository _events;
+    private readonly IParticipantRepository _participants;
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
 
     public PatchEventConfigHandler(
         IEventRepository events,
+        IParticipantRepository participants,
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor)
     {
         _events = events;
+        _participants = participants;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
     }
@@ -44,6 +47,7 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
             request.Theme is not null
             || request.EndDate is not null
             || request.MaxProposalsPerParticipant.HasValue
+            || request.MaxParticipants.HasValue
             || request.WheelMode.HasValue
             || request.RichSharePreview.HasValue;
 
@@ -71,9 +75,29 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
         if (request.MaxProposalsPerParticipant.HasValue)
         {
             var v = request.MaxProposalsPerParticipant.Value;
-            if (v < 0 || v > 100)
-                throw new BadRequestException("maxProposalsPerParticipant doit être entre 0 (pas de limite) et 100.");
+            if (v < 0 || v > EventConfig.MaxProposalsPerParticipantCap)
+                throw new BadRequestException(
+                    $"maxProposalsPerParticipant doit être entre 0 (pas de limite) et {EventConfig.MaxProposalsPerParticipantCap}.");
             maxProp = v == 0 ? null : v;
+        }
+
+        int? maxParticipants = current.MaxParticipants;
+        if (request.MaxParticipants.HasValue)
+        {
+            var v = request.MaxParticipants.Value;
+            if (v < 0 || v > EventConfig.MaxParticipantsCap)
+                throw new BadRequestException(
+                    $"maxParticipants doit être entre 0 (pas de limite) et {EventConfig.MaxParticipantsCap}.");
+
+            if (v > 0)
+            {
+                var currentCount = await _participants.CountByEventIdAsync(evt.Id, ct);
+                if (v < currentCount)
+                    throw new ConflictException(
+                        $"La limite ({v}) est inférieure au nombre de participants déjà inscrits ({currentCount}).");
+            }
+
+            maxParticipants = v == 0 ? null : v;
         }
 
         var wheelMode = request.WheelMode ?? current.WheelMode;
@@ -87,6 +111,7 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
             Theme = theme,
             EndDate = endDate,
             MaxProposalsPerParticipant = maxProp,
+            MaxParticipants = maxParticipants,
             WheelMode = wheelMode,
             RichSharePreview = richShare
         };

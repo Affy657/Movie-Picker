@@ -104,11 +104,16 @@ export const fr = {
       submitting: 'Envoi\u2026',
       fallbackError: 'Impossible de rejoindre',
       pseudoRequired: 'Indique un pseudo pour rejoindre.',
+      fullWithCap:
+        "La soirée est complète ({{max}} participants maximum). Demande à l'hôte d'augmenter la capacité pour rejoindre.",
+      full: "La soirée est complète. Demande à l'hôte d'augmenter la capacité pour rejoindre.",
     },
     participants: {
       title: 'Participants',
       empty: "Personne n'a encore rejoint la soirée.",
       meBadge: 'moi',
+      fullBadge: 'Complète',
+      fullBadgeAria: 'Soirée complète',
     },
     detail: {
       loading: 'Chargement\u2026',
@@ -174,6 +179,16 @@ export const fr = {
       saving: 'Enregistrement\u2026',
       saveSuccess: 'Paramètres enregistrés.',
       fallbackError: 'Enregistrement impossible.',
+      maxParticipantsLabel: 'Nombre maximum de participants',
+      maxParticipantsPlaceholder: 'Illimité',
+      maxParticipantsHintOne:
+        'Laisser vide pour aucune limite. {{count}} personne inscrite actuellement ; la limite ne peut pas descendre en dessous.',
+      maxParticipantsHintMany:
+        'Laisser vide pour aucune limite. {{count}} personnes inscrites actuellement ; la limite ne peut pas descendre en dessous.',
+      maxParticipantsInvalid:
+        'Nombre maximum de participants : entier entre 1 et {{max}}, ou vide pour illimité.',
+      maxParticipantsBelowCurrent:
+        'Impossible de réduire la capacité à {{value}} : {{count}} participants sont déjà inscrits.',
     },
     wheel: {
       title: 'Roue',

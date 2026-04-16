@@ -38,9 +38,18 @@ public sealed record Event
 
 public sealed record EventConfig
 {
+    /// <summary>Plafond supérieur absolu pour <see cref="MaxParticipants"/> (validation côté API).</summary>
+    public const int MaxParticipantsCap = 500;
+
+    /// <summary>Plafond supérieur absolu pour <see cref="MaxProposalsPerParticipant"/>.</summary>
+    public const int MaxProposalsPerParticipantCap = 100;
+
     public string? Theme { get; init; }
     public DateTimeOffset? EndDate { get; init; }
     public int? MaxProposalsPerParticipant { get; init; }
+
+    /// <summary>Capacité maximale de participants (hôte inclus). <see langword="null"/> = pas de limite.</summary>
+    public int? MaxParticipants { get; init; }
 
     /// <summary>Mode de tirage roue. Défaut : <see cref="WheelMode.StrictRandom"/>.</summary>
     public WheelMode WheelMode { get; init; } = WheelMode.StrictRandom;

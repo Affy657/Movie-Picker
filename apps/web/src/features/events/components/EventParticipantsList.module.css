@@ -22,6 +22,25 @@
   font-size: 0.85rem;
 }
 
+.fullBadge {
+  margin-left: 0.35rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: hsl(15 70% 92%);
+  color: hsl(15 70% 35%);
+  border: 1px solid hsl(15 65% 78%);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+:global([data-theme='dark']) .fullBadge {
+  background: hsl(15 55% 24%);
+  color: hsl(15 80% 82%);
+  border-color: hsl(15 50% 36%);
+}
+
 .list {
   list-style: none;
   display: flex;

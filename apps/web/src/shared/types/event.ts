@@ -11,6 +11,8 @@ export interface EventConfigData {
   theme: string | null;
   endDate: string | null;
   maxProposalsPerParticipant: number | null;
+  /** Capacité maximale de participants ; `null` = pas de limite. */
+  maxParticipants: number | null;
   wheelMode: WheelMode;
   /** Aperçu de lien détaillé (Open Graph) — défaut API : false. */
   richSharePreview?: boolean;

@@ -117,6 +117,48 @@ public sealed class JoinEventHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_WhenCapacityReached_ThrowsConflict()
+    {
+        var evt = ActiveEvent() with
+        {
+            Config = new EventConfig { MaxParticipants = 3 }
+        };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _participantRepo.Setup(r => r.FindByEventAndPseudoAsync(evt.Id, "Alice", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Participant?)null);
+        _participantRepo.Setup(r => r.CountByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(3);
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(() =>
+            _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Alice" }, null));
+        Assert.Contains("complète", ex.Message);
+        _participantRepo.Verify(
+            r => r.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenBelowCapacity_AcceptsNewParticipant()
+    {
+        var evt = ActiveEvent() with
+        {
+            Config = new EventConfig { MaxParticipants = 5 }
+        };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _participantRepo.Setup(r => r.FindByEventAndPseudoAsync(evt.Id, "Alice", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Participant?)null);
+        _participantRepo.Setup(r => r.CountByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(2);
+        var newParticipant = new Participant { Id = "p1", EventId = evt.Id, Pseudo = "Alice", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        _participantRepo.Setup(r => r.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>())).ReturnsAsync(newParticipant);
+
+        var result = await _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Alice" }, null);
+
+        Assert.True(result.IsNew);
+        Assert.Equal("p1", result.Participant.Id);
+    }
+
+    [Fact]
     public async Task HandleAsync_WithAccount_PersistsUserIdOnNewParticipant()
     {
         var evt = ActiveEvent();

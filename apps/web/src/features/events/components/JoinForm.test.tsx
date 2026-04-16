@@ -121,6 +121,16 @@ describe('JoinForm', () => {
     });
   });
 
+  it('affiche un message dédié et cache le formulaire quand la soirée est complète', () => {
+    render(
+      <AppTestProviders>
+        <JoinForm slug="soiree" onJoined={onJoined} isFull maxParticipants={4} />
+      </AppTestProviders>
+    );
+    expect(screen.getByText(/complète \(4 participants maximum\)/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /rejoindre/i })).not.toBeInTheDocument();
+  });
+
   it("affiche un message d'erreur si l'API join échoue", async () => {
     const user = userEvent.setup();
     mockFetchApi.mockImplementation(async (path: string) => {
