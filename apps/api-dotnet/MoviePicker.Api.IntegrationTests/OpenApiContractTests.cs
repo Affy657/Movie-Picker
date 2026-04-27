@@ -38,6 +38,9 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
         Assert.True(paths.TryGetProperty("/api/v1/events/{idOrSlug}/config", out var evCfg)
                     && evCfg.TryGetProperty("get", out _)
                     && evCfg.TryGetProperty("patch", out _));
+        // Suppression d'une soirée par son créateur connecté (cascade côté handler).
+        Assert.True(paths.TryGetProperty("/api/v1/events/{idOrSlug}", out var evRoot)
+                    && evRoot.TryGetProperty("delete", out _));
         Assert.True(paths.TryGetProperty("/api/v1/events/{idOrSlug}/movies/{movieId}/seen", out var seen)
                     && seen.TryGetProperty("post", out _)
                     && seen.TryGetProperty("delete", out _));
@@ -72,6 +75,9 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
         Assert.True(schemas.TryGetProperty("MarkAsSeenRequest", out _));
         Assert.True(schemas.TryGetProperty("UnmarkAsSeenRequest", out _));
         Assert.True(schemas.TryGetProperty("SeenMarkResponse", out _));
+
+        // Réponse de suppression d'événement : compteurs cascade exposés au client.
+        Assert.True(schemas.TryGetProperty("DeleteEventResponse", out _));
 
         // Régression : les anciens schémas « Reaction » ne doivent plus être exposés.
         Assert.False(schemas.TryGetProperty("ReactionRequest", out _));

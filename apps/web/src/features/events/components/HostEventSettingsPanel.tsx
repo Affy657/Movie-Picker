@@ -1,8 +1,12 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { patchEventConfig } from '@/features/events/api/eventsApi';
+import { deleteEvent, patchEventConfig } from '@/features/events/api/eventsApi';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
+import { ROUTES } from '@/app/routes';
+import { clearStoredHostToken, removeStoredParticipant } from '@/features/events/storage';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import styles from './HostEventSettingsPanel.module.css';
 import {
   datetimeLocalToEndDatePayload,
@@ -62,6 +66,18 @@ export default function HostEventSettingsPanel({
   useEffect(() => () => clearTimeout(flashTimerRef.current), []);
   const [formError, setFormError] = useState<string | null>(null);
 
+  // Suppression d'événement : modale de confirmation + erreur dédiée. La règle
+  // métier API est stricte (créateur connecté), on n'affiche le bouton que si
+  // l'utilisateur courant correspond au participant marqué `isCreator`.
+  const navigate = useNavigate();
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const isConnectedCreator = useMemo(() => {
+    if (!event.myParticipant) return false;
+    const myId = event.myParticipant.id;
+    return !!event.participants?.find((p) => p.id === myId)?.isCreator;
+  }, [event.myParticipant, event.participants]);
+
   const hydrateFromEvent = useCallback(() => {
     const next = normalizeConfig(event.config);
     setTheme(next.theme ?? '');
@@ -85,6 +101,26 @@ export default function HostEventSettingsPanel({
     },
     onError: (e) => {
       setFormError(getErrorMessage(e, 'Enregistrement impossible'));
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteEvent(slug),
+    onSuccess: async () => {
+      // Nettoyage local : participant invité + hostToken stockés en session.
+      removeStoredParticipant(slug);
+      clearStoredHostToken(slug);
+      // Purge ferme du cache pour cette soirée (la query la plus récente
+      // pourrait sinon retomber un instant sur des données stale avant 404).
+      queryClient.removeQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
+      navigate(ROUTES.myEvents);
+    },
+    onError: (e) => {
+      setDeleteError(getErrorMessage(e, t('events.danger.deleteError')));
+    },
+    onSettled: () => {
+      setConfirmDeleteOpen(false);
     },
   });
 
@@ -285,6 +321,50 @@ export default function HostEventSettingsPanel({
           {mutation.isPending ? 'Enregistrement…' : 'Enregistrer'}
         </button>
       </form>
+
+      {isConnectedCreator && (
+        <section
+          className={styles.dangerZone}
+          aria-labelledby={`host-danger-title-${slug}`}
+          data-testid="host-danger-zone"
+        >
+          <h3 id={`host-danger-title-${slug}`} className={styles.dangerTitle}>
+            {t('events.danger.sectionTitle')}
+          </h3>
+          <p className={styles.dangerLead}>{t('events.danger.sectionDescription')}</p>
+          {deleteError && (
+            <p className="error" role="alert">
+              {deleteError}
+            </p>
+          )}
+          <button
+            type="button"
+            className="btn btn-sm btn-danger"
+            onClick={() => {
+              setDeleteError(null);
+              setConfirmDeleteOpen(true);
+            }}
+            disabled={deleteMutation.isPending}
+            data-testid="delete-event-button"
+          >
+            {deleteMutation.isPending
+              ? t('events.danger.deleting')
+              : t('events.danger.deleteButton')}
+          </button>
+        </section>
+      )}
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        title={t('events.danger.deleteConfirmTitle')}
+        message={t('events.danger.deleteConfirmMessage', { title: event.title })}
+        confirmLabel={t('events.danger.deleteConfirmAction')}
+        confirmVariant="danger"
+        busy={deleteMutation.isPending}
+        onConfirm={() => deleteMutation.mutate()}
+        onCancel={() => setConfirmDeleteOpen(false)}
+        testId="delete-event-confirm-dialog"
+      />
     </details>
   );
 }
