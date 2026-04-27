@@ -54,12 +54,61 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.25rem 0.65rem;
+  padding: 0.25rem 0.4rem 0.25rem 0.65rem;
   border-radius: 999px;
   background: var(--color-surface, #fff);
   border: 1px solid var(--color-border, rgba(127, 127, 127, 0.2));
   font-size: 0.85rem;
   color: var(--color-text);
+}
+
+.chipLabel {
+  line-height: 1;
+}
+
+.hostBadge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-meta, #666);
+  background: rgba(127, 127, 127, 0.12);
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+}
+
+.removeBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  margin-left: 0.15rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-meta, #777);
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.removeBtn:hover:not(:disabled),
+.removeBtn:focus-visible:not(:disabled) {
+  background: hsl(0 70% 92%);
+  color: hsl(0 70% 35%);
+  outline: none;
+}
+
+.removeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+:global([data-theme='dark']) .removeBtn:hover:not(:disabled),
+:global([data-theme='dark']) .removeBtn:focus-visible:not(:disabled) {
+  background: hsl(0 50% 26%);
+  color: hsl(0 80% 80%);
 }
 
 .chipMe {

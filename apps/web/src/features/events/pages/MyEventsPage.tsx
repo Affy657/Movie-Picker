@@ -59,9 +59,16 @@ function lifecycleTranslationKey(l: MyEventLifecycle): TranslationKey {
 
 function cardJoinedLabel(
   participantCount: number,
+  maxParticipants: number | null | undefined,
   t: (key: TranslationKey, vars?: Record<string, string | number>) => string
 ) {
   const n = participantCount;
+  const hasCap = typeof maxParticipants === 'number' && maxParticipants > 0;
+  if (hasCap) {
+    return n === 1
+      ? t('events.myEvents.joinedCountWithCapOne', { max: maxParticipants })
+      : t('events.myEvents.joinedCountWithCapMany', { count: n, max: maxParticipants });
+  }
   return n === 1
     ? t('events.myEvents.joinedCountOne')
     : t('events.myEvents.joinedCountMany', { count: n });
@@ -127,7 +134,7 @@ function EventListBlock({
                   ) : null}
                 </span>
                 <span className={styles.cardStats}>
-                  {cardJoinedLabel(ev.participantCount ?? 0, t)} ·{' '}
+                  {cardJoinedLabel(ev.participantCount ?? 0, ev.maxParticipants, t)} ·{' '}
                   {cardMoviesLabel(ev.movieCount ?? 0, t)}
                 </span>
                 <div className={styles.linkFooter}>

@@ -19,6 +19,22 @@ public sealed class MongoVoteRepository : IVoteRepository
         await _collection.DeleteManyAsync(x => x.MovieId == movieId, cancellationToken: ct);
     }
 
+    public async Task DeleteByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default)
+    {
+        await _collection.DeleteManyAsync(
+            x => x.EventId == eventId && x.ParticipantId == participantId,
+            cancellationToken: ct);
+    }
+
+    public async Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(eventId))
+            return 0;
+
+        var res = await _collection.DeleteManyAsync(x => x.EventId == eventId, ct);
+        return res.IsAcknowledged ? res.DeletedCount : 0;
+    }
+
     public async Task<Vote> UpsertAsync(Vote vote, CancellationToken ct = default)
     {
         var now = DateTime.UtcNow;

@@ -23,4 +23,10 @@ public sealed class MyEventSummaryDto
     public int ParticipantCount { get; init; }
 
     public int MovieCount { get; init; }
+
+    /// <summary>
+    /// Capacité maximale configurée par l’hôte (1..500) ; <c>null</c> = capacité illimitée.
+    /// Permet à la liste « Mes soirées » d’afficher « N / max » sans charger la config détaillée.
+    /// </summary>
+    public int? MaxParticipants { get; init; }
 }

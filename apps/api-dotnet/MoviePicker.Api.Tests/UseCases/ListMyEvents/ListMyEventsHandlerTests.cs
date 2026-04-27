@@ -159,4 +159,52 @@ public sealed class ListMyEventsHandlerTests
         Assert.Equal(5, row.ParticipantCount);
         Assert.Equal(3, row.MovieCount);
     }
+
+    [Fact]
+    public async Task HandleAsync_ExposesMaxParticipantsFromConfig()
+    {
+        var capped = new Event
+        {
+            Id = "e1",
+            Title = "Avec capacité",
+            Date = "2030-01-01",
+            Time = "20:00",
+            Slug = "cap",
+            HostToken = "h",
+            CreatorUserId = "u1",
+            Config = new EventConfig { MaxParticipants = 8 },
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.Parse("2026-06-02T00:00:00Z")
+        };
+        var unlimited = new Event
+        {
+            Id = "e2",
+            Title = "Sans limite",
+            Date = "2030-02-01",
+            Time = "21:00",
+            Slug = "free",
+            HostToken = "h",
+            CreatorUserId = "u1",
+            Config = new EventConfig { MaxParticipants = null },
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.Parse("2026-06-01T00:00:00Z")
+        };
+
+        _eventRepo
+            .Setup(r => r.ListByCreatorUserIdAsync("u1", 200, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { capped, unlimited });
+        _participantRepo
+            .Setup(r => r.ListDistinctEventIdsByUserIdAsync("u1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<string>());
+        _eventRepo
+            .Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Event>());
+
+        var result = await _sut.HandleAsync("u1", limit: 10);
+
+        var rowCapped = result.Events.Single(x => x.Id == "e1");
+        var rowFree = result.Events.Single(x => x.Id == "e2");
+        Assert.Equal(8, rowCapped.MaxParticipants);
+        Assert.Null(rowFree.MaxParticipants);
+    }
 }

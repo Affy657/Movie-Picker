@@ -13,6 +13,12 @@ public interface ISeenMarkRepository
 
     Task DeleteByMovieIdAsync(string eventId, string movieId, CancellationToken ct = default);
 
+    /// <summary>Supprime toutes les marques « déjà vu » d'un participant dans une soirée donnée.</summary>
+    Task DeleteByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default);
+
+    /// <summary>Supprime toutes les marques « déjà vu » d'une soirée. Retourne le nombre supprimé.</summary>
+    Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default);
+
     Task<IReadOnlyDictionary<string, SeenMarkAggregate>> AggregateByMovieIdsAsync(
         string eventId,
         IReadOnlyCollection<string> movieIds,

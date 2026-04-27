@@ -65,6 +65,7 @@ describe('MyEventsPage (MSW)', () => {
               lifecycle: 'upcoming',
               participantCount: 4,
               movieCount: 2,
+              maxParticipants: 8,
             },
             {
               id: 'e2',
@@ -111,7 +112,9 @@ describe('MyEventsPage (MSW)', () => {
 
     const hostedLink = screen.getByRole('link', { name: /Chez moi/i });
     expect(hostedLink).toHaveAttribute('href', '/e/ma-soiree');
-    expect(within(hostedLink.closest('li')!).getByText(/4 participants/)).toBeInTheDocument();
+    expect(
+      within(hostedLink.closest('li')!).getByText(/4\s*\/\s*8 participants/)
+    ).toBeInTheDocument();
     expect(within(hostedLink.closest('li')!).getByText(/2 films propos/)).toBeInTheDocument();
     expect(screen.getAllByText('Hôte').length).toBeGreaterThanOrEqual(2);
     expect(within(hostedLink.closest('li')!).getByText('À venir')).toBeInTheDocument();

@@ -15,7 +15,7 @@ type RawMovieData = Omit<MovieData, 'id' | 'participantId'> & {
 
 type RawParticipantData = Omit<ParticipantData, 'id'> & { _id: string };
 
-type RawEventParticipantSummary = { _id: string; pseudo: string };
+type RawEventParticipantSummary = { _id: string; pseudo: string; isCreator?: boolean };
 
 type RawEventData = Omit<
   EventData,
@@ -47,7 +47,7 @@ export function mapParticipantData(raw: RawParticipantData): ParticipantData {
 export function mapEventData(raw: RawEventData): EventData {
   const { _id, isFinished, myParticipant, winnerMovie, participants, ...rest } = raw;
   const mappedParticipants: EventParticipantSummary[] | undefined = participants
-    ? participants.map((p) => ({ id: p._id, pseudo: p.pseudo }))
+    ? participants.map((p) => ({ id: p._id, pseudo: p.pseudo, isCreator: p.isCreator ?? false }))
     : undefined;
   return {
     ...rest,

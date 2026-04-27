@@ -21,6 +21,8 @@ export interface EventConfigData {
 export interface EventParticipantSummary {
   id: string;
   pseudo: string;
+  /** Vrai si ce participant est le créateur de la soirée (compte). Non retirable. */
+  isCreator?: boolean;
 }
 
 export interface EventData {

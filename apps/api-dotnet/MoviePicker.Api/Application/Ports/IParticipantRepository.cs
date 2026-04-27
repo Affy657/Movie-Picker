@@ -22,4 +22,10 @@ public interface IParticipantRepository
 
     /// <summary>Participants d'une soirée, triés par ordre d'arrivée (ancien → récent).</summary>
     Task<IReadOnlyList<Participant>> ListByEventIdAsync(string eventId, CancellationToken ct = default);
+
+    /// <summary>Supprime un participant d'une soirée. Idempotent : renvoie <c>false</c> si introuvable.</summary>
+    Task<bool> DeleteAsync(string participantId, string eventId, CancellationToken ct = default);
+
+    /// <summary>Supprime tous les participants d'une soirée. Retourne le nombre supprimé.</summary>
+    Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default);
 }

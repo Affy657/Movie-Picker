@@ -5,12 +5,14 @@ using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.CloseEvent;
 using MoviePicker.Api.Application.UseCases.CreateEvent;
+using MoviePicker.Api.Application.UseCases.DeleteEvent;
 using MoviePicker.Api.Application.UseCases.EventConfiguration;
 using MoviePicker.Api.Application.UseCases.EventSharePreview;
 using MoviePicker.Api.Application.UseCases.GetEventDetail;
 using MoviePicker.Api.Application.UseCases.JoinEvent;
 using MoviePicker.Api.Application.UseCases.LaunchWheel;
 using MoviePicker.Api.Application.UseCases.ListMyEvents;
+using MoviePicker.Api.Application.UseCases.RemoveParticipant;
 using MoviePicker.Api.Infrastructure.Web;
 
 namespace MoviePicker.Api.Controllers;
@@ -164,6 +166,51 @@ public sealed class EventsController : ControllerBase
     public async Task<IActionResult> Close(
         string idOrSlug,
         [FromServices] ICloseEventHandler handler,
+        CancellationToken ct)
+    {
+        var result = await handler.HandleAsync(idOrSlug, ct);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Retire un participant d'une soirée. Autorisé pour l'hôte (n'importe quel participant
+    /// hors créateur) ou pour le participant lui-même (compte connecté lié au participant).
+    /// Cascade : votes, marques « déjà vu » et films proposés par le participant sont supprimés.
+    /// </summary>
+    [HttpDelete("{idOrSlug}/participants/{participantId}")]
+    [EnableRateLimiting(RateLimitingExtensions.RemoveParticipantPolicy)]
+    [ProducesResponseType(typeof(RemoveParticipantResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> RemoveParticipant(
+        string idOrSlug,
+        string participantId,
+        [FromServices] IRemoveParticipantHandler handler,
+        CancellationToken ct)
+    {
+        var result = await handler.HandleAsync(idOrSlug, participantId, ct);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Supprime définitivement une soirée et toute sa cascade (participants, films,
+    /// votes, marques « déjà vu »). Réservé au créateur connecté de la soirée.
+    /// Action irréversible — la confirmation utilisateur est faite côté client.
+    /// </summary>
+    [HttpDelete("{idOrSlug}")]
+    [Authorize]
+    [EnableRateLimiting(RateLimitingExtensions.DeleteEventPolicy)]
+    [ProducesResponseType(typeof(DeleteEventResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> Delete(
+        string idOrSlug,
+        [FromServices] IDeleteEventHandler handler,
         CancellationToken ct)
     {
         var result = await handler.HandleAsync(idOrSlug, ct);

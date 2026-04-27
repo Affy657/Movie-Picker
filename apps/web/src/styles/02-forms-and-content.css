@@ -111,6 +111,14 @@ button.back-link-button {
   margin-bottom: 1rem;
 }
 
+/* Utility globale pour un message de succès inline (pendant du `.error`).
+   Couleur verte cohérente avec `var(--color-success)` quand défini, sinon
+   fallback sur un vert sobre. Marge identique à `.error` pour homogénéité. */
+.success {
+  color: var(--color-success, #1f7a3a);
+  margin-bottom: 1rem;
+}
+
 .movies-load-error p {
   margin-top: 0;
 }

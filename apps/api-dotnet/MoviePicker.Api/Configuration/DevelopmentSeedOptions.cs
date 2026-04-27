@@ -22,7 +22,10 @@ public sealed class DevelopmentSeedOptions
     /// <summary>Utilisateurs de test additionnels (join / hôte alternatif). Si vide, valeurs par défaut Alice et Bob.</summary>
     public List<DevelopmentSeedExtraUserEntry> ExtraUsers { get; set; } = new();
 
-    /// <summary>Scénarios démo (multi-participants, roue + clôture). Nécessite <see cref="ExtraUsers"/> (ou défauts).</summary>
+    /// <summary>
+    /// Scénarios démo (multi-participants, roue + clôture, capacité atteinte).
+    /// Nécessite <see cref="ExtraUsers"/> (ou défauts).
+    /// </summary>
     public bool SeedScenarioDemos { get; set; } = true;
 }
 

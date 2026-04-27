@@ -43,6 +43,8 @@ export interface MyEventSummary {
   lifecycle?: MyEventLifecycle | string;
   participantCount?: number;
   movieCount?: number;
+  /** Capacité maximale (1..500) configurée par l’hôte ; absent/null = illimité. */
+  maxParticipants?: number | null;
 }
 
 export interface MyEventsListResponse {

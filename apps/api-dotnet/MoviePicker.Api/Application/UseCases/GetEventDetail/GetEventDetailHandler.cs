@@ -71,8 +71,14 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
                 myParticipant = ParticipantResponse.FromDomain(mine);
         }
 
+        var creatorUserId = evt.CreatorUserId;
         var participantsSummary = participants
-            .Select(p => new EventParticipantSummaryResponse { Id = p.Id, Pseudo = p.Pseudo })
+            .Select(p => new EventParticipantSummaryResponse
+            {
+                Id = p.Id,
+                Pseudo = p.Pseudo,
+                IsCreator = !string.IsNullOrEmpty(creatorUserId) && p.UserId == creatorUserId,
+            })
             .ToList();
 
         return new EventDetailResponse

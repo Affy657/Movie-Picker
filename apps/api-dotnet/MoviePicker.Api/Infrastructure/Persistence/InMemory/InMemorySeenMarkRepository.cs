@@ -51,6 +51,35 @@ public sealed class InMemorySeenMarkRepository : ISeenMarkRepository
         return Task.CompletedTask;
     }
 
+    public Task DeleteByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default)
+    {
+        foreach (var key in _byKey.Keys.ToArray())
+        {
+            if (_byKey.TryGetValue(key, out var r) && r.EventId == eventId && r.ParticipantId == participantId)
+                _byKey.TryRemove(key, out _);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(eventId))
+            return Task.FromResult(0L);
+
+        long count = 0;
+        foreach (var key in _byKey.Keys.ToArray())
+        {
+            if (_byKey.TryGetValue(key, out var r) && r.EventId == eventId)
+            {
+                if (_byKey.TryRemove(key, out _))
+                    count++;
+            }
+        }
+
+        return Task.FromResult(count);
+    }
+
     public Task<IReadOnlyDictionary<string, SeenMarkAggregate>> AggregateByMovieIdsAsync(
         string eventId,
         IReadOnlyCollection<string> movieIds,

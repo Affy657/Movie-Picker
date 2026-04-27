@@ -126,4 +126,21 @@ public sealed class MongoParticipantRepository : IParticipantRepository
             .ToListAsync(ct);
         return docs.Select(ParticipantDocumentMapper.ToDomain).ToList();
     }
+
+    public async Task<bool> DeleteAsync(string participantId, string eventId, CancellationToken ct = default)
+    {
+        var res = await _collection.DeleteOneAsync(
+            x => x.Id == participantId && x.EventId == eventId,
+            ct);
+        return res.DeletedCount > 0;
+    }
+
+    public async Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(eventId))
+            return 0;
+
+        var res = await _collection.DeleteManyAsync(x => x.EventId == eventId, ct);
+        return res.IsAcknowledged ? res.DeletedCount : 0;
+    }
 }

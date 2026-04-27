@@ -91,6 +91,7 @@ export async function fetchGuestJoinedEventsSummaries(): Promise<MyEventsListRes
           lifecycle: guestJoinedEventLifecycle(ev),
           participantCount: ev.participantCount,
           movieCount: ev.movieCount,
+          maxParticipants: ev.config?.maxParticipants ?? null,
         };
         return summary;
       } catch {
@@ -160,4 +161,44 @@ export async function postEventWheel(
 
 export async function postEventClose(slug: string, hostToken: string | null): Promise<void> {
   await fetchApi(`/events/${slug}/close${hostQuery(hostToken)}`, { method: 'POST' });
+}
+
+export type RemoveParticipantResponse = {
+  participantId: string;
+  eventId: string;
+  removedMovies: number;
+  message: string;
+};
+
+/**
+ * Retire un participant d'une soirée (hôte → tout participant hors créateur ; utilisateur connecté → soi-même).
+ * Cascade côté API : votes, marques « déjà vu » et films proposés par le participant sont supprimés.
+ */
+export async function removeEventParticipant(
+  idOrSlug: string,
+  participantId: string,
+  hostToken: string | null
+): Promise<RemoveParticipantResponse> {
+  return fetchApi<RemoveParticipantResponse>(
+    `/events/${idOrSlug}/participants/${participantId}${hostQuery(hostToken)}`,
+    { method: 'DELETE' }
+  );
+}
+
+export type DeleteEventResponse = {
+  eventId: string;
+  slug: string;
+  message: string;
+  removedParticipants: number;
+  removedMovies: number;
+  removedVotes: number;
+  removedSeenMarks: number;
+};
+
+/**
+ * Supprime définitivement une soirée (cascade complète côté API : participants,
+ * films, votes, marques « déjà vu »). Réservé au créateur connecté.
+ */
+export async function deleteEvent(idOrSlug: string): Promise<DeleteEventResponse> {
+  return fetchApi<DeleteEventResponse>(`/events/${idOrSlug}`, { method: 'DELETE' });
 }

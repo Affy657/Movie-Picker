@@ -105,4 +105,33 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
             .ToList();
         return Task.FromResult<IReadOnlyList<Participant>>(list);
     }
+
+    public Task<bool> DeleteAsync(string participantId, string eventId, CancellationToken ct = default)
+    {
+        if (!_byId.TryGetValue(participantId, out var p) || p.EventId != eventId)
+            return Task.FromResult(false);
+
+        _byId.TryRemove(participantId, out _);
+        _eventPseudoToId.TryRemove((p.EventId, p.Pseudo), out _);
+        if (!string.IsNullOrWhiteSpace(p.UserId))
+            _eventUserToId.TryRemove((p.EventId, p.UserId!), out _);
+        return Task.FromResult(true);
+    }
+
+    public Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(eventId))
+            return Task.FromResult(0L);
+
+        var toRemove = _byId.Values.Where(p => p.EventId == eventId).ToList();
+        foreach (var p in toRemove)
+        {
+            _byId.TryRemove(p.Id, out _);
+            _eventPseudoToId.TryRemove((p.EventId, p.Pseudo), out _);
+            if (!string.IsNullOrWhiteSpace(p.UserId))
+                _eventUserToId.TryRemove((p.EventId, p.UserId!), out _);
+        }
+
+        return Task.FromResult((long)toRemove.Count);
+    }
 }

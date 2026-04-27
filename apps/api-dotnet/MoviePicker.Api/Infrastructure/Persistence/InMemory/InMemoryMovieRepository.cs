@@ -71,6 +71,19 @@ public sealed class InMemoryMovieRepository : IMovieRepository
         return Task.CompletedTask;
     }
 
+    public Task<IReadOnlyList<string>> ListIdsByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default)
+    {
+        var list = _byEventId.GetOrAdd(eventId, _ => new List<Movie>());
+        lock (list)
+        {
+            var ids = list
+                .Where(m => m.ParticipantId == participantId)
+                .Select(m => m.Id)
+                .ToList();
+            return Task.FromResult<IReadOnlyList<string>>(ids);
+        }
+    }
+
     public Task<int> CountByEventIdAsync(string eventId, CancellationToken ct = default)
     {
         if (!_byEventId.TryGetValue(eventId, out var list))
@@ -92,5 +105,24 @@ public sealed class InMemoryMovieRepository : IMovieRepository
         }
 
         return Task.FromResult<IReadOnlyDictionary<string, int>>(map);
+    }
+
+    public Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(eventId))
+            return Task.FromResult(0L);
+
+        long count = 0;
+        if (_byEventId.TryRemove(eventId, out var list))
+        {
+            lock (list)
+            {
+                count = list.Count;
+                foreach (var m in list)
+                    _byId.TryRemove(m.Id, out _);
+            }
+        }
+
+        return Task.FromResult(count);
     }
 }

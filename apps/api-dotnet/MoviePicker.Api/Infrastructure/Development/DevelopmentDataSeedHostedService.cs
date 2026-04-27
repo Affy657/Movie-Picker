@@ -187,8 +187,8 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
         if (existing is not null)
         {
             _logger.LogInformation(
-                "DevelopmentSeed : utilisateur {Email} existe déjà (id={UserId}).",
-                email,
+                "DevelopmentSeed : utilisateur {EmailMasked} existe déjà (id={UserId}).",
+                EmailMasking.Mask(email),
                 existing.Id);
             return existing;
         }
@@ -218,9 +218,9 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
 
         var created = await users.AddAsync(user, ct).ConfigureAwait(false);
         _logger.LogInformation(
-            "DevelopmentSeed : utilisateur de test créé (id={UserId}, email={Email}, displayName={DisplayName}).",
+            "DevelopmentSeed : utilisateur de test créé (id={UserId}, email={EmailMasked}, displayName={DisplayName}).",
             created.Id,
-            email,
+            EmailMasking.Mask(email),
             created.DisplayName);
         return created;
     }

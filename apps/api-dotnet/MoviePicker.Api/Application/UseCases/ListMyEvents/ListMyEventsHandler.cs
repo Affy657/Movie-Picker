@@ -80,6 +80,7 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
                 Lifecycle = d.Lifecycle,
                 ParticipantCount = participantCounts.TryGetValue(id, out var pc) ? pc : 0,
                 MovieCount = movieCounts.TryGetValue(id, out var mc) ? mc : 0,
+                MaxParticipants = d.MaxParticipants,
             };
         });
 
@@ -100,5 +101,6 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
         Lifecycle = MyEventListLifecycle.Compute(e, DateTimeOffset.UtcNow),
         ParticipantCount = 0,
         MovieCount = 0,
+        MaxParticipants = e.Config?.MaxParticipants,
     };
 }

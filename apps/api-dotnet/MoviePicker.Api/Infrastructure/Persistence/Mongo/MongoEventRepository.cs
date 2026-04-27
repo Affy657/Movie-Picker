@@ -63,6 +63,19 @@ public sealed class MongoEventRepository : IEventRepository
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
     }
 
+    public async Task<Event?> FindByCreatorAndTitleAsync(string creatorUserId, string title, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(creatorUserId) || string.IsNullOrEmpty(title))
+            return null;
+
+        var filter = Builders<EventDocument>.Filter.And(
+            Builders<EventDocument>.Filter.Eq(x => x.CreatorUserId, creatorUserId),
+            Builders<EventDocument>.Filter.Eq(x => x.Title, title));
+
+        var doc = await _collection.Find(filter).FirstOrDefaultAsync(ct);
+        return doc is null ? null : EventDocumentMapper.ToDomain(doc);
+    }
+
     public async Task<IReadOnlyList<Event>> ListByIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default)
     {
         if (eventIds.Count == 0)
@@ -74,5 +87,14 @@ public sealed class MongoEventRepository : IEventRepository
 
         var docs = await _collection.Find(x => ids.Contains(x.Id)).ToListAsync(ct);
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
+    }
+
+    public async Task<bool> DeleteAsync(string eventId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(eventId))
+            return false;
+
+        var result = await _collection.DeleteOneAsync(x => x.Id == eventId, ct);
+        return result.IsAcknowledged && result.DeletedCount > 0;
     }
 }

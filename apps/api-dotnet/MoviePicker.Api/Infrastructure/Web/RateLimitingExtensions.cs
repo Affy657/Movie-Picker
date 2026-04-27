@@ -6,6 +6,17 @@ namespace MoviePicker.Api.Infrastructure.Web;
 
 /// <summary>
 /// Limites par IP (clé = partition) sur création d'event, join, recherche TMDB et détails film.
+///
+/// <para>
+/// <strong>Dev / CI</strong> : toutes les policies sont enregistrées en
+/// <c>NoLimiter</c> pour ne pas freiner le développement local et les tests
+/// d'intégration (qui peuvent enchaîner 100+ requêtes par fixture). C'est un
+/// choix intentionnel et homogène — y compris pour les actions sensibles
+/// comme <c>DeleteEventPolicy</c>. La limite « réelle » (10/min) ne s'active
+/// qu'en environnement non-Development. Si on souhaitait un jour valider la
+/// limite côté CI, il faudrait basculer un environnement dédié (ex.
+/// <c>ASPNETCORE_ENVIRONMENT=Test</c>) et adapter la branche ci-dessous.
+/// </para>
 /// </summary>
 public static class RateLimitingExtensions
 {
@@ -18,6 +29,8 @@ public static class RateLimitingExtensions
     public const string PatchEventConfigPolicy = "patch-event-config";
     public const string VoteMutationPolicy = "vote-mutation";
     public const string SeenMarksMutationPolicy = "seen-marks-mutation";
+    public const string RemoveParticipantPolicy = "remove-participant";
+    public const string DeleteEventPolicy = "delete-event";
     public const string PostersPolicy = "posters-get";
 
     public static IServiceCollection AddMoviePickerRateLimiter(this IServiceCollection services, IHostEnvironment environment)
@@ -53,6 +66,8 @@ public static class RateLimitingExtensions
                 options.AddPolicy(PatchEventConfigPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(VoteMutationPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(SeenMarksMutationPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
+                options.AddPolicy(RemoveParticipantPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
+                options.AddPolicy(DeleteEventPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(PostersPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 return;
             }
@@ -68,6 +83,11 @@ public static class RateLimitingExtensions
             // Votes et marqueurs « déjà vu » : mêmes ordres de grandeur (toggle par film et par participant).
             options.AddPolicy(VoteMutationPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 120, windowMinutes: 1));
             options.AddPolicy(SeenMarksMutationPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 120, windowMinutes: 1));
+            // Retrait participant : mutation rare (cascade lourde), budget aligné sur PatchEventConfig.
+            options.AddPolicy(RemoveParticipantPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 40, windowMinutes: 1));
+            // Suppression d'une soirée : action irréversible, budget volontairement faible
+            // (10/min) pour limiter l'impact d'un script malveillant sur un compte compromis.
+            options.AddPolicy(DeleteEventPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 10, windowMinutes: 1));
             options.AddPolicy(PostersPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 300, windowMinutes: 1));
         });
 

@@ -23,6 +23,44 @@ public sealed class InMemoryVoteRepository : IVoteRepository
         return Task.CompletedTask;
     }
 
+    public Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(eventId))
+            return Task.FromResult(0L);
+
+        var toRemove = _byId.Values.Where(v => v.EventId == eventId).ToList();
+        foreach (var v in toRemove)
+        {
+            _byId.TryRemove(v.Id, out _);
+            if (_byMovieId.TryGetValue(v.MovieId, out var list))
+            {
+                lock (list) { list.RemoveAll(x => x.Id == v.Id); }
+            }
+        }
+
+        return Task.FromResult((long)toRemove.Count);
+    }
+
+    public Task DeleteByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default)
+    {
+        var toRemove = _byId.Values
+            .Where(v => v.EventId == eventId && v.ParticipantId == participantId)
+            .ToList();
+
+        foreach (var v in toRemove)
+        {
+            _byId.TryRemove(v.Id, out _);
+            if (_byMovieId.TryGetValue(v.MovieId, out var list))
+            {
+                lock (list)
+                {
+                    list.RemoveAll(x => x.Id == v.Id);
+                }
+            }
+        }
+        return Task.CompletedTask;
+    }
+
     public Task<Vote> UpsertAsync(Vote vote, CancellationToken ct = default)
     {
         var id = string.IsNullOrEmpty(vote.Id) ? Guid.NewGuid().ToString("N")[..24] : vote.Id;

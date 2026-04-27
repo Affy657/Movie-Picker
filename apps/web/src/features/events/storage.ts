@@ -21,6 +21,14 @@ export function setStoredParticipant(slug: string, participantId: string, pseudo
   }
 }
 
+export function removeStoredParticipant(slug: string): void {
+  try {
+    sessionStorage.removeItem(PARTICIPANT_KEY + slug);
+  } catch {
+    // Navigation privée — non bloquant.
+  }
+}
+
 /** Slugs pour lesquels une session invité a été enregistrée (page « Mes soirées » sans compte). */
 export function listStoredParticipantSlugs(): string[] {
   if (typeof sessionStorage === 'undefined') return [];
@@ -53,5 +61,13 @@ export function setStoredHostToken(slug: string, token: string): void {
     sessionStorage.setItem(HOST_KEY + slug, token);
   } catch {
     // Navigation privée ou quota dépassé — non bloquant.
+  }
+}
+
+export function clearStoredHostToken(slug: string): void {
+  try {
+    sessionStorage.removeItem(HOST_KEY + slug);
+  } catch {
+    // Navigation privée — non bloquant.
   }
 }

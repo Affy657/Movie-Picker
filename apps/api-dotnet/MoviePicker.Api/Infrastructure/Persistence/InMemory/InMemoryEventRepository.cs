@@ -66,6 +66,16 @@ public sealed class InMemoryEventRepository : IEventRepository
         return Task.FromResult<IReadOnlyList<Event>>(list);
     }
 
+    public Task<Event?> FindByCreatorAndTitleAsync(string creatorUserId, string title, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(creatorUserId) || string.IsNullOrEmpty(title))
+            return Task.FromResult<Event?>(null);
+
+        var match = _byId.Values.FirstOrDefault(e =>
+            e.CreatorUserId == creatorUserId && string.Equals(e.Title, title, StringComparison.Ordinal));
+        return Task.FromResult<Event?>(match);
+    }
+
     public Task<IReadOnlyList<Event>> ListByIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default)
     {
         if (eventIds.Count == 0)
@@ -81,5 +91,19 @@ public sealed class InMemoryEventRepository : IEventRepository
         }
 
         return Task.FromResult<IReadOnlyList<Event>>(list);
+    }
+
+    public Task<bool> DeleteAsync(string eventId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(eventId))
+            return Task.FromResult(false);
+
+        if (!_byId.TryRemove(eventId, out var removed))
+            return Task.FromResult(false);
+
+        if (!string.IsNullOrEmpty(removed.Slug))
+            _bySlug.TryRemove(removed.Slug, out _);
+
+        return Task.FromResult(true);
     }
 }

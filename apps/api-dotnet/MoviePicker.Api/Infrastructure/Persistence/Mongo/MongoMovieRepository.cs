@@ -72,6 +72,15 @@ public sealed class MongoMovieRepository : IMovieRepository
         await _collection.DeleteOneAsync(x => x.Id == movieId, cancellationToken: ct);
     }
 
+    public async Task<IReadOnlyList<string>> ListIdsByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default)
+    {
+        var ids = await _collection
+            .Find(x => x.EventId == eventId && x.ParticipantId == participantId)
+            .Project(x => x.Id)
+            .ToListAsync(ct);
+        return ids;
+    }
+
     public async Task<int> CountByEventIdAsync(string eventId, CancellationToken ct = default)
     {
         var c = await _collection.CountDocumentsAsync(x => x.EventId == eventId, cancellationToken: ct);
@@ -95,5 +104,14 @@ public sealed class MongoMovieRepository : IMovieRepository
         foreach (var row in groups)
             map[row.EventId] = row.Count;
         return map;
+    }
+
+    public async Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(eventId))
+            return 0;
+
+        var res = await _collection.DeleteManyAsync(x => x.EventId == eventId, ct);
+        return res.IsAcknowledged ? res.DeletedCount : 0;
     }
 }

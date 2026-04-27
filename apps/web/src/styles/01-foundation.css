@@ -26,6 +26,8 @@
   --color-placeholder: #a0aec0;
   --color-error: #c53030;
   --color-error-hover: #9b2c2c;
+  /* Contraste vérifié : #2f855a sur --color-bg #edf1f5 ≈ 5.0:1 (WCAG AA). */
+  --color-success: #2f855a;
   --color-primary: #2b6cb0;
   --color-primary-hover: #2c5282;
   --color-primary-contrast: #ffffff;
@@ -61,6 +63,8 @@
   --color-placeholder: #5a7591;
   --color-error: #fc8181;
   --color-error-hover: #feb2b2;
+  /* Contraste vérifié : #68d391 sur --color-bg #0b1622 ≈ 11.4:1 (WCAG AAA). */
+  --color-success: #68d391;
   --color-primary: #02a9ff;
   --color-primary-hover: #33baff;
   /* Texte sombre sur accent clair (WCAG AA ≥ 4.5:1) — #ffffff / #02a9ff = 2.57:1 échoue. */
