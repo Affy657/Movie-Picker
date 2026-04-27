@@ -93,10 +93,7 @@ describe('HostEventSettingsPanel', () => {
     );
 
     const qc = createTestQueryClient();
-    renderWithRouter(
-      <HostEventSettingsPanel slug={slug} hostToken={null} event={baseEvent} />,
-      qc
-    );
+    renderWithRouter(<HostEventSettingsPanel slug={slug} hostToken={null} event={baseEvent} />, qc);
 
     await user.click(screen.getByText('Paramètres de la soirée'));
     await user.click(screen.getByRole('button', { name: /^enregistrer$/i }));
@@ -123,9 +120,7 @@ describe('HostEventSettingsPanel', () => {
       })
     );
 
-    renderWithRouter(
-      <HostEventSettingsPanel slug={slug} hostToken={null} event={baseEvent} />
-    );
+    renderWithRouter(<HostEventSettingsPanel slug={slug} hostToken={null} event={baseEvent} />);
 
     await user.click(screen.getByText('Paramètres de la soirée'));
     await user.click(screen.getByRole('checkbox', { name: /aperçu de lien détaillé/i }));
@@ -250,7 +245,7 @@ describe('HostEventSettingsPanel', () => {
       expect(screen.queryByTestId('delete-event-button')).not.toBeInTheDocument();
     });
 
-    it("montre la zone de danger pour le créateur connecté", async () => {
+    it('montre la zone de danger pour le créateur connecté', async () => {
       const user = userEvent.setup();
       renderWithRouter(
         <HostEventSettingsPanel slug={slug} hostToken={null} event={eventAsConnectedCreator()} />
@@ -300,9 +295,7 @@ describe('HostEventSettingsPanel', () => {
       await waitFor(() => expect(getStoredParticipant(slug)).toBeNull());
       expect(getStoredHostToken(slug)).toBeNull();
 
-      await waitFor(() =>
-        expect(screen.getByTestId('route-my-events')).toBeInTheDocument()
-      );
+      await waitFor(() => expect(screen.getByTestId('route-my-events')).toBeInTheDocument());
     });
 
     it('annule la modale → aucun DELETE émis', async () => {
@@ -349,9 +342,7 @@ describe('HostEventSettingsPanel', () => {
 
       // Le composant doit afficher le message métier renvoyé par l'API
       // (propagé via `getErrorMessage(e)` depuis `ApiError.message`) sans naviguer.
-      await waitFor(() =>
-        expect(screen.getByRole('alert')).toHaveTextContent(/seul le créateur/i)
-      );
+      await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/seul le créateur/i));
       expect(screen.queryByTestId('route-my-events')).not.toBeInTheDocument();
     });
   });

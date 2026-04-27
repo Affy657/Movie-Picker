@@ -45,7 +45,7 @@ describe('EventParticipantsList', () => {
     expect(screen.queryByTestId('remove-participant-p-creator')).not.toBeInTheDocument();
   });
 
-  it("hôte : peut retirer les autres participants, mais pas le créateur ni soi-même", async () => {
+  it('hôte : peut retirer les autres participants, mais pas le créateur ni soi-même', async () => {
     const user = userEvent.setup();
     const onRemove = vi.fn();
 

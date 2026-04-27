@@ -232,7 +232,11 @@ describe('EventDetail (MSW)', () => {
       server.use(
         http.delete(`${TEST_API_V1}/events/${slug}/participants/:pid`, () =>
           HttpResponse.json(
-            { error: 'La roue a déjà été lancée : la liste des participants ne peut plus être modifiée.', code: 409 },
+            {
+              error:
+                'La roue a déjà été lancée : la liste des participants ne peut plus être modifiée.',
+              code: 409,
+            },
             { status: 409 }
           )
         )
@@ -243,9 +247,7 @@ describe('EventDetail (MSW)', () => {
       await user.click(removeButton);
       await user.click(screen.getByTestId('confirm-dialog-confirm'));
 
-      await waitFor(() =>
-        expect(screen.getByText(/déjà été lancée/i)).toBeInTheDocument()
-      );
+      await waitFor(() => expect(screen.getByText(/déjà été lancée/i)).toBeInTheDocument());
     });
   });
 
@@ -323,9 +325,7 @@ describe('EventDetail (MSW)', () => {
       await waitFor(() => expect(getStoredParticipant(slug)).toBeNull());
       expect(deleteCalled).toBe(false);
       // Navigation : le participant invité retourne à l'accueil.
-      await waitFor(() =>
-        expect(screen.getByTestId('route-home')).toBeInTheDocument()
-      );
+      await waitFor(() => expect(screen.getByTestId('route-home')).toBeInTheDocument());
     });
 
     it('utilisateur connecté : confirmation → DELETE appelé + navigation vers /my-events', async () => {
@@ -396,9 +396,7 @@ describe('EventDetail (MSW)', () => {
       // Nettoyage local effectué.
       await waitFor(() => expect(getStoredParticipant(slug)).toBeNull());
       // Navigation : redirige vers la liste « Mes soirées ».
-      await waitFor(() =>
-        expect(screen.getByTestId('route-my-events')).toBeInTheDocument()
-      );
+      await waitFor(() => expect(screen.getByTestId('route-my-events')).toBeInTheDocument());
     });
   });
 
@@ -427,20 +425,14 @@ describe('EventDetail (MSW)', () => {
 
       // 2. Annuler.
       await user.click(screen.getByTestId('confirm-dialog-cancel'));
-      await waitFor(() =>
-        expect(screen.getByTestId('confirm-dialog')).not.toHaveAttribute('open')
-      );
+      await waitFor(() => expect(screen.getByTestId('confirm-dialog')).not.toHaveAttribute('open'));
 
       // 3. Ouvrir la modale « quitter » : les libellés doivent avoir basculé.
       await user.click(screen.getByTestId('leave-event-button'));
-      await waitFor(() =>
-        expect(screen.getByTestId('confirm-dialog')).toHaveAttribute('open')
-      );
+      await waitFor(() => expect(screen.getByTestId('confirm-dialog')).toHaveAttribute('open'));
       expect(screen.getByTestId('confirm-dialog-confirm')).toHaveTextContent(/quitter/i);
       // Et plus de référence visible au mot « retirer ».
-      expect(
-        screen.queryByText(/retirer.*alice/i)
-      ).not.toBeInTheDocument();
+      expect(screen.queryByText(/retirer.*alice/i)).not.toBeInTheDocument();
     });
   });
 });

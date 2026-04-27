@@ -86,14 +86,7 @@ describe('ConfirmDialog', () => {
   it('désactive uniquement Confirmer quand `busy=true` (Annuler reste actif)', () => {
     render(
       <AppTestProviders>
-        <ConfirmDialog
-          open
-          title="x"
-          message="y"
-          busy
-          onConfirm={vi.fn()}
-          onCancel={vi.fn()}
-        />
+        <ConfirmDialog open title="x" message="y" busy onConfirm={vi.fn()} onCancel={vi.fn()} />
       </AppTestProviders>
     );
 
@@ -104,17 +97,11 @@ describe('ConfirmDialog', () => {
     expect(screen.getByTestId('confirm-dialog-cancel')).not.toBeDisabled();
   });
 
-  it("propage la fermeture native (Escape) vers onCancel quand la modale est ouverte", () => {
+  it('propage la fermeture native (Escape) vers onCancel quand la modale est ouverte', () => {
     const onCancel = vi.fn();
     render(
       <AppTestProviders>
-        <ConfirmDialog
-          open
-          title="x"
-          message="y"
-          onConfirm={vi.fn()}
-          onCancel={onCancel}
-        />
+        <ConfirmDialog open title="x" message="y" onConfirm={vi.fn()} onCancel={onCancel} />
       </AppTestProviders>
     );
 

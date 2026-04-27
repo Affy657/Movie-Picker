@@ -119,14 +119,14 @@ export const fr = {
       removeAction: 'Retirer',
       removeAriaLabel: 'Retirer {{pseudo}} de la soirée',
       removeConfirmTitle: 'Retirer un participant',
-      removeConfirm: 'Retirer {{pseudo}} de la soirée\u00a0? Ses films, votes et marques seront supprimés.',
+      removeConfirm:
+        'Retirer {{pseudo}} de la soirée\u00a0? Ses films, votes et marques seront supprimés.',
       removeConfirmAction: 'Retirer',
       removeError: 'Impossible de retirer ce participant.',
       removeSuccess: '{{pseudo}} a été retiré(e) de la soirée.',
       leaveAction: 'Quitter la soirée',
       leaveConfirmTitle: 'Quitter la soirée',
-      leaveConfirm:
-        'Quitter cette soirée\u00a0? Tes films, votes et marques seront supprimés.',
+      leaveConfirm: 'Quitter cette soirée\u00a0? Tes films, votes et marques seront supprimés.',
       leaveConfirmGuest: 'Quitter cette soirée\u00a0? Tu peux la rejoindre à nouveau plus tard.',
       leaveConfirmAction: 'Quitter',
       leaveError: 'Impossible de quitter la soirée.',
