@@ -111,10 +111,11 @@ body {
   background: var(--color-bg);
 }
 
-/* PageLayout — hauteur viewport gérée par AppShell (flex) pour éviter le scroll fantôme */
+/* PageLayout — hauteur viewport gérée par AppShell (flex) pour éviter le scroll fantôme.
+   `--page-max-width` permet à un écran particulier d'élargir la colonne via son CSS module. */
 .page {
   padding: 1.5rem 1rem 1rem;
-  max-width: var(--layout-max);
+  max-width: var(--page-max-width, var(--layout-max));
   margin: 0 auto;
 }
 

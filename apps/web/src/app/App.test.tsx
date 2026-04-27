@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
@@ -41,5 +41,17 @@ describe('App (routes)', () => {
       await screen.findByText(/Aucune soirée enregistrée sur cet appareil/i)
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /^Mes soirées$/i })).toBeInTheDocument();
+  });
+
+  it('navbar mobile expose les liens via leur nom accessible (icônes + libellé sr-only)', async () => {
+    renderRoutes(['/']);
+    await screen.findByRole('heading', { name: /movie picker/i });
+    const navs = screen.getAllByRole('navigation', { name: /navigation principale/i });
+    expect(navs).toHaveLength(2);
+    const mobileNav = navs.at(-1);
+    if (!mobileNav) throw new Error('Mobile nav introuvable');
+    for (const name of [/^Accueil$/i, /^Mes soirées$/i, /^Paramètres$/i]) {
+      expect(within(mobileNav).getByRole('link', { name })).toBeInTheDocument();
+    }
   });
 });
