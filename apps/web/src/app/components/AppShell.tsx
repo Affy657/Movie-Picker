@@ -19,7 +19,9 @@ type NavItemDef = {
   Icon: IconComponent;
 };
 
-const NAV_ITEM_DEFS: ReadonlyArray<Omit<NavItemDef, 'label'> & { labelKey: 'nav.home' | 'nav.myEvents' | 'nav.account' }> = [
+const NAV_ITEM_DEFS: ReadonlyArray<
+  Omit<NavItemDef, 'label'> & { labelKey: 'nav.home' | 'nav.myEvents' | 'nav.account' }
+> = [
   { to: ROUTES.home, end: true, labelKey: 'nav.home', Icon: Home },
   { to: ROUTES.myEvents, labelKey: 'nav.myEvents', Icon: CalendarDays },
   { to: ROUTES.account, labelKey: 'nav.account', Icon: Settings },
