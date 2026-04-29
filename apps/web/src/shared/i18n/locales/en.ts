@@ -61,8 +61,7 @@ export const en: Locale = {
     },
     forgotPassword: {
       title: 'Forgot password',
-      description:
-        'Enter your email to receive a reset link. The link is valid for 30 minutes.',
+      description: 'Enter your email to receive a reset link. The link is valid for 30 minutes.',
       emailLabel: 'Email',
       submit: 'Send the link',
       submitting: 'Sending\u2026',
@@ -86,8 +85,7 @@ export const en: Locale = {
       goToLogin: 'Go to login',
       requestNewLink: 'Request a new link',
       invalidTokenTitle: 'Invalid or expired link',
-      invalidTokenMessage:
-        'This reset link is no longer valid. Request a new one below.',
+      invalidTokenMessage: 'This reset link is no longer valid. Request a new one below.',
       fallbackError: 'Could not update the password. Please try again in a moment.',
       missingTokenError: 'Invalid link: no token provided.',
     },

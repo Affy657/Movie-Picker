@@ -92,7 +92,7 @@ export const fr = {
       requestNewLink: 'Demander un nouveau lien',
       invalidTokenTitle: 'Lien invalide ou expiré',
       invalidTokenMessage:
-        'Ce lien de réinitialisation n\'est plus valable. Demande-en un nouveau ci-dessous.',
+        "Ce lien de réinitialisation n'est plus valable. Demande-en un nouveau ci-dessous.",
       fallbackError:
         'Impossible de mettre à jour le mot de passe. Réessaie dans quelques instants.',
       missingTokenError: 'Lien invalide : aucun token fourni.',

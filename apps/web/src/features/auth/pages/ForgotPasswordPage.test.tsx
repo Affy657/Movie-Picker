@@ -59,7 +59,9 @@ describe('ForgotPasswordPage', () => {
   it('après soumission OK, affiche l écran de succès avec lien retour', async () => {
     const user = userEvent.setup();
     server.use(
-      http.post(`${TEST_API_V1}/auth/password-reset/request`, () => HttpResponse.json({}, { status: 202 }))
+      http.post(`${TEST_API_V1}/auth/password-reset/request`, () =>
+        HttpResponse.json({}, { status: 202 })
+      )
     );
     renderForgot();
     await user.type(screen.getByLabelText(/^e-mail$/i), 'someone@test.local');
@@ -84,7 +86,9 @@ describe('ForgotPasswordPage', () => {
       expect(screen.getByRole('alert')).toBeInTheDocument();
     });
     // Rester sur la page formulaire (pas le successMessage)
-    expect(screen.queryByRole('heading', { name: /vérifie ta boîte mail/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: /vérifie ta boîte mail/i })
+    ).not.toBeInTheDocument();
   });
 
   it('email vide : empêche la soumission HTML5 (champ required)', () => {
