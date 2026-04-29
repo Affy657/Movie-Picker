@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MsOptions = Microsoft.Extensions.Options.Options;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
@@ -9,6 +8,7 @@ using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Email;
 using Xunit;
+using MsOptions = Microsoft.Extensions.Options.Options;
 
 namespace MoviePicker.Api.Tests.UseCases.Auth.PasswordReset;
 
