@@ -16,6 +16,8 @@ const CreateEvent = lazy(() => import('@/features/events/pages/CreateEvent'));
 const EventDetail = lazy(() => import('@/features/events/pages/EventDetail'));
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('@/features/auth/pages/ResetPasswordPage'));
 const AccountPage = lazy(() => import('@/features/auth/pages/AccountPage'));
 const MyEventsPage = lazy(() => import('@/features/events/pages/MyEventsPage'));
 const NotFoundPage = lazy(() => import('@/app/pages/NotFoundPage'));
@@ -56,6 +58,8 @@ export function AppRoutes() {
         />
         <Route path={ROUTES.login} element={<LoginPage />} />
         <Route path={ROUTES.register} element={<RegisterPage />} />
+        <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
+        <Route path={ROUTES.resetPassword} element={<ResetPasswordPage />} />
         <Route path={ROUTES.account} element={<AccountPage />} />
         <Route path={ROUTES.myEvents} element={<MyEventsPage />} />
         <Route path={ROUTES.eventDetailPattern} element={<EventDetail />} />
