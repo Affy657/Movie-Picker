@@ -11,7 +11,7 @@ Document opérationnel pour l’équipe (roadmap V1 § **21**). Complète le [RE
 | `MONGODB_URI` | Chaîne de connexion MongoDB Atlas |
 | `TMDB_API_KEY` | Clé API TMDB (serveur uniquement) |
 | `AUTH_DATAPROTECTION_KEYRING` | XML du keyring **ASP.NET Data Protection** : signature des cookies de session, partagé entre révisions Cloud Run |
-| `RESEND_API_KEY` | Clé API Resend (`re_…`) — emails transactionnels (mot de passe oublié). Voir [`email-reset-mot-de-passe.md`](email-reset-mot-de-passe.md) |
+| `RESEND_API_KEY` | Clé API Resend (`re_…`) — emails transactionnels (mot de passe oublié). Cf. § 8 |
 
 **Génération du keyring** : projet utilitaire `apps/api-dotnet/ToolGenDpKey` — sortie stdout à copier dans Secret Manager sous le nom attendu par Cloud Run (voir `DataProtectionConfiguration.KeyRingXmlEnvName`).
 
@@ -110,10 +110,10 @@ Exemple de filtre (conceptuel) : `jsonPayload.ApiRouteKind="auth"` ou `jsonPaylo
 
 ## 8. Emails transactionnels (mot de passe oublié)
 
-Détail dédié dans **[`email-reset-mot-de-passe.md`](email-reset-mot-de-passe.md)** (vérification domaine Resend, génération clé API, tests). Synthèse ici :
-
 - **Provider** : sélectionné via `EMAIL_PROVIDER` — `log` (dev / fallback : email loggué côté serveur, **pas envoyé**) ou `resend` (prod via API HTTP).
 - **DI** : `EmailServiceCollectionExtensions.AddEmailSender` enregistre l’implémentation appropriée. Si `EMAIL_PROVIDER=resend` mais `RESEND_API_KEY` absent en environnement non-Development, un **warning** est émis sur stderr et `LogEmailSender` est utilisé en repli.
-- **Domaine expéditeur** : domaine de `EMAIL_FROM_ADDRESS` doit être vérifié dans Resend (DNS : SPF + DKIM + DMARC). V1 : `noreply@movie-picker.fr`.
+- **Domaine expéditeur** : domaine de `EMAIL_FROM_ADDRESS` doit être vérifié dans Resend (DNS : SPF + DKIM + DMARC). V1 : `noreply@movie-picker.fr` — verifié sur Resend, DNS chez OVH.
 - **Erreurs réseau / HTTP** : `ResendEmailSender` lève `EmailDeliveryException` (wrapping `HttpRequestException` / timeouts / statuts ≠ 2xx). Le handler `RequestPasswordResetHandler` **swallows** cette exception (anti-énumération + pas de retour fonctionnel utilisateur côté API → l’endpoint répond toujours `202 Accepted`).
 - **Logs** : adresses destinataires sont **masquées** (`EmailMasking.Mask`) ; le **lien de reset** n’est **jamais** logué (override `EmailMessage.PrintMembers`).
+- **Test local sans Resend** : poser `EMAIL_PROVIDER=log` dans `.env` ; demander un reset → le lien complet apparaît dans la console API (ligne `[EMAIL][password-reset] … link=…`). Ne **jamais** activer `log` en environnement avec logs centralisés (staging / prod) : le token plain finirait dans les logs.
+- **Rotation clé Resend** : Secret Manager `RESEND_API_KEY` → `gcloud secrets versions add` ; Cloud Run consomme `:latest` à la prochaine révision.
