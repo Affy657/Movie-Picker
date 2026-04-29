@@ -8,6 +8,7 @@ using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Development;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
+using MoviePicker.Api.Infrastructure.Email;
 using MoviePicker.Api.Infrastructure.Posters;
 using MoviePicker.Api.Infrastructure.Tmdb;
 using MoviePicker.Api.Infrastructure.Web;
@@ -129,6 +130,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
 
         services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
+        services.AddEmailSender(configuration, environment);
+
         RegisterHandlers(services);
 
         services.AddSingleton<ValidationErrorFilter>();
