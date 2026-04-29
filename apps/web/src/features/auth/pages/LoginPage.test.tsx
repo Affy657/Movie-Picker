@@ -101,4 +101,11 @@ describe('LoginPage (MSW)', () => {
       expect(screen.getByRole('heading', { name: 'Accueil test' })).toBeInTheDocument();
     });
   });
+
+  it('expose un lien "Mot de passe oublié ?" vers /forgot-password', () => {
+    renderLogin();
+    const forgotLink = screen.getByRole('link', { name: /mot de passe oublié/i });
+    expect(forgotLink).toBeInTheDocument();
+    expect(forgotLink).toHaveAttribute('href', '/forgot-password');
+  });
 });
