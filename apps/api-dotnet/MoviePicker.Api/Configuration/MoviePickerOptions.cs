@@ -36,4 +36,19 @@ public sealed class MoviePickerOptions
     /// URL canonique du front (HTTPS, sans slash final), pour <c>og:url</c> / partage soirée. Variable : <c>PUBLIC_WEB_BASE_URL</c> (ex. <c>https://web.movie-picker.fr</c>).
     /// </summary>
     public string PublicWebBaseUrl { get; set; } = "https://web.movie-picker.fr";
+
+    /// <summary>Provider email transactionnel : "resend" ou "log". Variable : <c>EMAIL_PROVIDER</c>. Défaut "log" (LogEmailSender).</summary>
+    public string EmailProvider { get; set; } = "log";
+
+    /// <summary>Adresse expéditeur des emails transactionnels. Variable : <c>EMAIL_FROM_ADDRESS</c>.</summary>
+    public string EmailFromAddress { get; set; } = "noreply@movie-picker.fr";
+
+    /// <summary>Nom expéditeur affiché. Variable : <c>EMAIL_FROM_NAME</c>.</summary>
+    public string EmailFromName { get; set; } = "Movie Picker";
+
+    /// <summary>Clé API Resend (secret). Variable : <c>RESEND_API_KEY</c>. Si absente, fallback automatique sur LogEmailSender.</summary>
+    public string? ResendApiKey { get; set; }
+
+    /// <summary>Base URL de l'API Resend (override pour tests / mocks). Variable : <c>RESEND_API_BASE_URL</c>.</summary>
+    public string ResendApiBaseUrl { get; set; } = "https://api.resend.com";
 }
