@@ -83,6 +83,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IMovieRepository, InMemoryMovieRepository>();
             services.AddSingleton<IVoteRepository, InMemoryVoteRepository>();
             services.AddSingleton<ISeenMarkRepository, InMemorySeenMarkRepository>();
+            services.AddSingleton<IAuthSessionInvalidator, InMemoryAuthSessionInvalidator>();
         }
         else
         {
@@ -100,6 +101,7 @@ public static class ServiceCollectionExtensions
             services.AddScoped<IMovieRepository, MongoMovieRepository>();
             services.AddScoped<IVoteRepository, MongoVoteRepository>();
             services.AddScoped<ISeenMarkRepository, MongoSeenMarkRepository>();
+            services.AddScoped<IAuthSessionInvalidator, MongoAuthSessionInvalidator>();
             services.AddHostedService<MongoIndexInitializer>();
         }
 
