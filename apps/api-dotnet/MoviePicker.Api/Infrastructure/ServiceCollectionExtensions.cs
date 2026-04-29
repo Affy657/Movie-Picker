@@ -81,6 +81,7 @@ public static class ServiceCollectionExtensions
             services.AddScoped<IEventRepository, MongoEventRepository>();
             services.AddScoped<IParticipantRepository, MongoParticipantRepository>();
             services.AddScoped<IUserRepository, MongoUserRepository>();
+            services.AddScoped<IPasswordResetTokenRepository, MongoPasswordResetTokenRepository>();
             services.AddScoped<IMovieRepository, MongoMovieRepository>();
             services.AddScoped<IVoteRepository, MongoVoteRepository>();
             services.AddScoped<ISeenMarkRepository, MongoSeenMarkRepository>();
