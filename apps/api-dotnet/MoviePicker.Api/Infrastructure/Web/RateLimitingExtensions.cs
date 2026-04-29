@@ -26,6 +26,8 @@ public static class RateLimitingExtensions
     public const string MovieDetailsPolicy = "movie-details";
     public const string AuthRegisterPolicy = "auth-register";
     public const string AuthLoginPolicy = "auth-login";
+    public const string AuthPasswordResetRequestPolicy = "auth-password-reset-request";
+    public const string AuthPasswordResetConfirmPolicy = "auth-password-reset-confirm";
     public const string PatchEventConfigPolicy = "patch-event-config";
     public const string VoteMutationPolicy = "vote-mutation";
     public const string SeenMarksMutationPolicy = "seen-marks-mutation";
@@ -63,6 +65,8 @@ public static class RateLimitingExtensions
                 options.AddPolicy(MovieDetailsPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(AuthRegisterPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(AuthLoginPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
+                options.AddPolicy(AuthPasswordResetRequestPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
+                options.AddPolicy(AuthPasswordResetConfirmPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(PatchEventConfigPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(VoteMutationPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(SeenMarksMutationPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
@@ -79,6 +83,10 @@ public static class RateLimitingExtensions
             options.AddPolicy(MovieDetailsPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 120, windowMinutes: 1));
             options.AddPolicy(AuthRegisterPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 10, windowMinutes: 1));
             options.AddPolicy(AuthLoginPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 30, windowMinutes: 1));
+            // Reset password : budget volontairement bas côté request (anti-spam) et plus large côté confirm
+            // (l'utilisateur peut se tromper en saisissant le nouveau mot de passe ou retenter sur le lien).
+            options.AddPolicy(AuthPasswordResetRequestPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 5, windowMinutes: 1));
+            options.AddPolicy(AuthPasswordResetConfirmPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 30, windowMinutes: 1));
             options.AddPolicy(PatchEventConfigPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 40, windowMinutes: 1));
             // Votes et marqueurs « déjà vu » : mêmes ordres de grandeur (toggle par film et par participant).
             options.AddPolicy(VoteMutationPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 120, windowMinutes: 1));
