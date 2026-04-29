@@ -64,6 +64,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IEventRepository, InMemoryEventRepository>();
             services.AddSingleton<IParticipantRepository, InMemoryParticipantRepository>();
             services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+            services.AddSingleton<IPasswordResetTokenRepository, InMemoryPasswordResetTokenRepository>();
             services.AddSingleton<IMovieRepository, InMemoryMovieRepository>();
             services.AddSingleton<IVoteRepository, InMemoryVoteRepository>();
             services.AddSingleton<ISeenMarkRepository, InMemorySeenMarkRepository>();
