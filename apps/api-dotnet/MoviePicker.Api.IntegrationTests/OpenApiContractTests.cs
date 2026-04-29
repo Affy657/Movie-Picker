@@ -35,6 +35,10 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
         Assert.True(paths.TryGetProperty("/api/v1/auth/login", out var login) && login.TryGetProperty("post", out _));
         Assert.True(paths.TryGetProperty("/api/v1/auth/logout", out var logout) && logout.TryGetProperty("post", out _));
         Assert.True(paths.TryGetProperty("/api/v1/auth/me", out var me) && me.TryGetProperty("get", out _) && me.TryGetProperty("patch", out _));
+        Assert.True(paths.TryGetProperty("/api/v1/auth/password-reset/request", out var pwdReq)
+                    && pwdReq.TryGetProperty("post", out _));
+        Assert.True(paths.TryGetProperty("/api/v1/auth/password-reset/confirm", out var pwdConfirm)
+                    && pwdConfirm.TryGetProperty("post", out _));
         Assert.True(paths.TryGetProperty("/api/v1/events/{idOrSlug}/config", out var evCfg)
                     && evCfg.TryGetProperty("get", out _)
                     && evCfg.TryGetProperty("patch", out _));
