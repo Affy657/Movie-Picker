@@ -1,5 +1,8 @@
 # CI/CD Movie Picker — lint, tests web + API, couverture, déploiements (E2E Playwright : local uniquement)
-# Branche par défaut : **master** (CI/CD sur cette branche uniquement — voir docs/mvp/04-deploy-cicd.md).
+# Branche par défaut : **master**. Flow : 1 feature = 1 branche → PR vers master → CI (lint, tests, sonar) → merge.
+# Le déploiement (docker-api, deploy-api, deploy-front) ne se déclenche que sur push master après merge,
+# via `if: github.event_name == 'push' && github.ref == 'refs/heads/master'`.
+# Voir docs/v1-produit/securite-ci.md pour la branch protection master et les checks requis.
 
 name: CI/CD
 
