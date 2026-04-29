@@ -5,7 +5,6 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
-using MoviePicker.Api.Infrastructure.Email;
 
 namespace MoviePicker.Api.Application.UseCases.Auth.PasswordReset;
 

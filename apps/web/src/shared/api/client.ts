@@ -135,7 +135,9 @@ export async function fetchApi<T>(path: string, options?: RequestInit): Promise<
       { code: res.status }
     );
   }
-  if (isJson && !text.trim()) {
+  // Body vide (ex. 202 Accepted sans corps depuis ASP.NET Accepted()) : retourner undefined plutôt que de
+  // tenter JSON.parse("") qui jetterait "Réponse invalide". Cohérent avec le traitement de 204.
+  if (!text.trim()) {
     return undefined as T;
   }
   try {

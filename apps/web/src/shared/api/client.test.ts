@@ -72,6 +72,20 @@ describe('fetchApi', () => {
     expect(data).toBeUndefined();
   });
 
+  it('réponse 202 Accepted sans body ni Content-Type renvoie undefined (cas ASP.NET Accepted())', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      status: 202,
+      headers: new Headers(),
+      text: () => Promise.resolve(''),
+    });
+    const data = await fetchApi<unknown>('/auth/password-reset/request', {
+      method: 'POST',
+      body: '{}',
+    });
+    expect(data).toBeUndefined();
+  });
+
   it('réponse 200 JSON renvoie les données brutes (sans mapping domaine)', async () => {
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,

@@ -73,14 +73,14 @@ EMAIL_FROM_NAME=Movie Picker
 dotnet run --project apps/api-dotnet/MoviePicker.Api
 ```
 
-Déclencher un POST `/api/v1/auth/password-reset/request` avec un email **existant** dans la base locale. Logs API attendus :
+Déclencher un POST `/api/v1/auth/password-reset/request` avec un email **existant** dans la base locale. Logs API attendus (format `LogEmailSender`) :
 
 ```
 info: MoviePicker.Api.Infrastructure.Email.LogEmailSender[0]
-      Email simulé envoyé à n***@m***.fr (sujet="Réinitialisation de votre mot de passe Movie Picker", lien=https://web.movie-picker.fr/reset?token=…)
+      [EMAIL][password-reset] to=n***@m***.fr subject="Réinitialise ton mot de passe Movie Picker" link=https://web.movie-picker.fr/reset?token=…
 ```
 
-Le **lien complet** apparaît dans les logs serveur — copier-coller pour tester le parcours `/reset?token=…` côté front sans configurer Resend.
+Le **lien complet** apparaît dans les logs serveur — copier-coller pour tester le parcours `/reset?token=…` côté front sans configurer Resend. **Ne jamais activer `EMAIL_PROVIDER=log` en environnement avec logs centralisés (staging / prod) :** le token plain finirait dans les logs.
 
 ### 5.2 Mode `resend` (envoi réel, après § 3 et § 4)
 
@@ -114,7 +114,7 @@ Demander un reset pour une **vraie adresse** dont on contrôle la boîte. Vérif
 |---|---|---|
 | Email reçu mais marqué spam | DKIM / SPF non vérifiés ou DMARC absent | Vérifier les enregistrements DNS § 3 dans Resend ; ajouter DMARC `p=none` |
 | HTTP 422 « domain not verified » | Domaine pas validé chez Resend | Refaire § 3 ; attendre propagation DNS (`dig TXT movie-picker.fr` doit retourner le SPF) |
-| HTTP 429 « rate_limit_exceeded » | Trop d’envois (free tier : 100/jour, plan payant) | `ResendEmailSender` retry **une fois** après 1 s ; sinon log warning + `EmailDeliveryException` (swallowed côté handler) |
+| HTTP 429 « rate_limit_exceeded » | Trop d’envois (free tier : 100/jour, plan payant) | `ResendEmailSender` retry **une fois** après 200 ms ; sinon log warning + `EmailDeliveryException` (swallowed côté handler) |
 | Aucun log `Email envoyé` | `EMAIL_PROVIDER=log` mais user inconnu (anti-énumération) | Vérifier que l’email est bien en base (compte créé) ; sinon comportement attendu |
 | Warning stderr « EMAIL_PROVIDER=resend but RESEND_API_KEY missing » | Secret manquant en prod | Vérifier le mapping `--set-secrets` Cloud Run ; redéployer |
 

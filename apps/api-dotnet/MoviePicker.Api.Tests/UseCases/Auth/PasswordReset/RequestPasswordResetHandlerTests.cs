@@ -6,7 +6,6 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Auth.PasswordReset;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
-using MoviePicker.Api.Infrastructure.Email;
 using Xunit;
 using MsOptions = Microsoft.Extensions.Options.Options;
 
