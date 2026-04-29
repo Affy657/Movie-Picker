@@ -56,15 +56,6 @@ public class LogEmailSenderTests
         Assert.Contains("(none)", logger.Entries[0].Message);
     }
 
-    [Fact]
-    public void MaskEmail_HandlesShortLocalPart()
-    {
-        Assert.Equal("a***@x.fr", LogEmailSender.MaskEmail("a@x.fr"));
-        Assert.Equal("ab***@x.fr", LogEmailSender.MaskEmail("ab@x.fr"));
-        Assert.Equal("a***@x.fr", LogEmailSender.MaskEmail("alice@x.fr"));
-        Assert.Equal("***@malformed", LogEmailSender.MaskEmail("malformed"));
-    }
-
     private sealed class CapturingLogger<T> : ILogger<T>
     {
         public List<(LogLevel Level, string Message, Exception? Ex)> Entries { get; } = new();

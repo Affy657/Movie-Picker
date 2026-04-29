@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -106,6 +107,19 @@ public class ResendEmailSenderTests
 
         var ex = await Assert.ThrowsAsync<EmailDeliveryException>(() => sender.SendAsync(SampleMessage()));
         Assert.Equal(401, ex.StatusCode);
+    }
+
+    [Fact]
+    public async Task SendAsync_HttpRequestException_ThrowsEmailDeliveryException()
+    {
+        var handler = new RecordingHandler((req, _) =>
+            Task.FromException<HttpResponseMessage>(new HttpRequestException("connection refused")));
+        var http = new HttpClient(handler) { BaseAddress = new Uri("https://api.resend.com/") };
+        var sender = new ResendEmailSender(http, Options.Create(OptionsWith()), NullLogger<ResendEmailSender>.Instance);
+
+        var ex = await Assert.ThrowsAsync<EmailDeliveryException>(() => sender.SendAsync(SampleMessage()));
+        Assert.IsType<HttpRequestException>(ex.InnerException);
+        Assert.Null(ex.StatusCode);
     }
 
     [Fact]

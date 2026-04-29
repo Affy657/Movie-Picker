@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Auth;
 
 namespace MoviePicker.Api.Infrastructure.Email;
 
@@ -20,7 +21,7 @@ public sealed class LogEmailSender : IEmailSender
 
     public Task SendAsync(EmailMessage message, CancellationToken ct = default)
     {
-        var masked = MaskEmail(message.ToEmail);
+        var masked = EmailMasking.Mask(message.ToEmail);
         var link = ExtractFirstLink(message.HtmlBody);
         _logger.LogInformation(
             "[EMAIL][{Tag}] to={To} subject={Subject} link={Link}",
@@ -29,20 +30,6 @@ public sealed class LogEmailSender : IEmailSender
             message.Subject,
             link ?? "(none)");
         return Task.CompletedTask;
-    }
-
-    /// <summary>Masque l'email pour les logs : "alice@x.fr" → "a***@x.fr". Conserve le domaine pour le debug.</summary>
-    public static string MaskEmail(string email)
-    {
-        if (string.IsNullOrWhiteSpace(email))
-            return "***";
-        var at = email.IndexOf('@');
-        if (at <= 0)
-            return "***@malformed";
-        var local = email[..at];
-        var domain = email[(at + 1)..];
-        var prefix = local.Length <= 2 ? local : local[..1];
-        return $"{prefix}***@{domain}";
     }
 
     internal static string? ExtractFirstLink(string html)

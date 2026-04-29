@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Configuration;
 
 namespace MoviePicker.Api.Infrastructure.Email;
@@ -43,7 +44,22 @@ public sealed class ResendEmailSender : IEmailSender
                 Content = JsonContent.Create(payload)
             };
             req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _options.ResendApiKey);
-            res = await _http.SendAsync(req, ct);
+
+            HttpResponseMessage response;
+            try
+            {
+                response = await _http.SendAsync(req, ct);
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new EmailDeliveryException($"HTTP error sending email: {ex.Message}", inner: ex);
+            }
+            catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
+            {
+                throw new EmailDeliveryException("Timeout sending email", inner: ex);
+            }
+
+            res = response;
 
             if (res.StatusCode == HttpStatusCode.TooManyRequests && attempt == 1)
             {
@@ -70,7 +86,7 @@ public sealed class ResendEmailSender : IEmailSender
             }
 
             _logger.LogInformation("EmailSent tag={Tag} to_masked={ToMasked} status={Status}",
-                message.Tag ?? "n/a", LogEmailSender.MaskEmail(message.ToEmail), (int)res.StatusCode);
+                message.Tag ?? "n/a", EmailMasking.Mask(message.ToEmail), (int)res.StatusCode);
         }
         finally
         {
