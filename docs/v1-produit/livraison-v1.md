@@ -268,7 +268,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 - [x] Parcours **hôte** : config (thème, limites, roue) → invités avec marqueur « déjà vu » / **bandeau ou style thème soirée** / watch providers / affichage posters (cache si activé)
 - [x] **QR code** + **rappel in-app** validés sur mobile
 - [x] **OG dynamiques** : livrés **ou** explicitement reportés avec doc de la limite
-- [ ] **Mot de passe oublié** : flux email + reset opérationnel en prod (cf. § 3) — *code, API, front, tests, i18n et rate limits livrés (cf. cases § 3 cochées) ; reste à faire côté humain : vérifier le domaine `movie-picker.fr` dans Resend, créer la clé API, la pousser dans GCP Secret Manager + mapper dans Cloud Run, faire un test end-to-end en prod ([`email-reset-mot-de-passe.md`](email-reset-mot-de-passe.md))*
+- [x] **Mot de passe oublié** : flux email + reset opérationnel en prod (cf. § 3) — *domaine `movie-picker.fr` vérifié dans Resend, secret `RESEND_API_KEY` provisionné dans GCP Secret Manager et mappé sur Cloud Run `movie-picker-api` (révision `00041-gdc`), smoke test bout-en-bout validé en prod (request 202 + `ResendEmailSender` HTTP 200 + confirm 200)*
 - [ ] **Sécurité CI** : Sonar gate, scan NuGet, scan image Docker, secret scanning **tous actifs en CI** (cf. § 23–26)
 - [ ] **Clôture RNCP** : suivie séparément dans [`livraison-RNCP.md`](livraison-RNCP.md) (recettes, OWASP, a11y, manuels, supervision, journal versions, cadrage Bloc 1, pilotage Bloc 3, etc.)
 - [x] Mettre à jour la features list du dépôt et tout index roadmaps par version si le dépôt en contient un
