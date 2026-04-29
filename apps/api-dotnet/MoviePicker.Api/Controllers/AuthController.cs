@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.Auth;
+using MoviePicker.Api.Application.UseCases.Auth.PasswordReset;
 using MoviePicker.Api.Infrastructure.Web;
 
 namespace MoviePicker.Api.Controllers;
@@ -118,5 +119,35 @@ public sealed class AuthController : ControllerBase
             return Unauthorized();
         var profile = await handler.HandleAsync(userId, request, ct);
         return Ok(profile);
+    }
+
+    [HttpPost("password-reset/request")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPasswordResetRequestPolicy)]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> RequestPasswordReset(
+        [FromBody] PasswordResetRequest request,
+        [FromServices] IRequestPasswordResetHandler handler,
+        CancellationToken ct)
+    {
+        var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var userAgent = Request.Headers.UserAgent.ToString();
+        if (string.IsNullOrWhiteSpace(userAgent)) userAgent = null;
+        await handler.HandleAsync(request, clientIp, userAgent, ct);
+        return Accepted(); // 202 — toujours, même si l'email est inconnu (anti-énumération)
+    }
+
+    [HttpPost("password-reset/confirm")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPasswordResetConfirmPolicy)]
+    [ProducesResponseType(typeof(PasswordResetConfirmResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> ConfirmPasswordReset(
+        [FromBody] PasswordResetConfirmRequest request,
+        [FromServices] IConfirmPasswordResetHandler handler,
+        CancellationToken ct)
+    {
+        var response = await handler.HandleAsync(request, ct);
+        return Ok(response);
     }
 }
