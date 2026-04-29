@@ -114,6 +114,9 @@ export default function LoginPage() {
           ) : null}
         </form>
         <p className="muted">
+          <Link to={ROUTES.forgotPassword}>{t('auth.login.forgotPasswordLink')}</Link>
+        </p>
+        <p className="muted">
           {t('auth.login.registerPrompt')}{' '}
           <Link to={withReturnTo(ROUTES.register, returnTo)}>{t('auth.login.registerLink')}</Link>
         </p>

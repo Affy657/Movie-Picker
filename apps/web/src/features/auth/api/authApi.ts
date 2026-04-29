@@ -65,3 +65,24 @@ export async function patchAuthProfile(patch: {
     body: JSON.stringify(patch),
   });
 }
+
+export async function postPasswordResetRequest(email: string, locale: string): Promise<void> {
+  await fetchApi('/auth/password-reset/request', {
+    method: 'POST',
+    body: JSON.stringify({ email, locale }),
+  });
+}
+
+export interface PasswordResetConfirmResponse {
+  message: string;
+}
+
+export async function postPasswordResetConfirm(
+  token: string,
+  newPassword: string
+): Promise<PasswordResetConfirmResponse> {
+  return fetchApi<PasswordResetConfirmResponse>('/auth/password-reset/confirm', {
+    method: 'POST',
+    body: JSON.stringify({ token, newPassword }),
+  });
+}

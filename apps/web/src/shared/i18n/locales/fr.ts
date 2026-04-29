@@ -42,6 +42,7 @@ export const fr = {
       fallbackError: 'Connexion impossible.',
       registerPrompt: 'Pas encore de compte ?',
       registerLink: 'Créer un compte',
+      forgotPasswordLink: 'Mot de passe oublié ?',
       devQuickButton: 'Compte dev (local)',
       devQuickHint: 'Visible uniquement en d\u00e9veloppement.',
       devQuickAriaLabel: 'Connexion rapide compte d\u00e9veloppeur (local uniquement)',
@@ -61,6 +62,40 @@ export const fr = {
       fallbackError: 'Inscription impossible.',
       loginPrompt: 'D\u00e9j\u00e0 inscrit ?',
       loginLink: 'Se connecter',
+    },
+    forgotPassword: {
+      title: 'Mot de passe oublié',
+      description:
+        'Indique ton e-mail pour recevoir un lien de réinitialisation. Le lien est valable 30 minutes.',
+      emailLabel: 'E-mail',
+      submit: 'Recevoir le lien',
+      submitting: 'Envoi\u2026',
+      successTitle: 'Vérifie ta boîte mail',
+      successMessage:
+        "Si un compte existe pour cet e-mail, un lien de réinitialisation vient d'être envoyé. Pense à vérifier les spams.",
+      backToLogin: '\u2190 Retour à la connexion',
+      fallbackError:
+        "Impossible d'envoyer le lien pour le moment. Réessaie dans quelques instants.",
+    },
+    resetPassword: {
+      title: 'Définir un nouveau mot de passe',
+      description: 'Choisis un nouveau mot de passe pour ton compte Movie Picker.',
+      newPasswordLabel: 'Nouveau mot de passe',
+      newPasswordHint: '8 caractères minimum, au moins une lettre et un chiffre.',
+      confirmPasswordLabel: 'Confirme le mot de passe',
+      passwordsMustMatch: 'Les deux mots de passe doivent être identiques.',
+      submit: 'Mettre à jour mon mot de passe',
+      submitting: 'Mise à jour\u2026',
+      successTitle: 'Mot de passe mis à jour',
+      successMessage: 'Tu peux maintenant te connecter avec ton nouveau mot de passe.',
+      goToLogin: 'Aller à la connexion',
+      requestNewLink: 'Demander un nouveau lien',
+      invalidTokenTitle: 'Lien invalide ou expiré',
+      invalidTokenMessage:
+        "Ce lien de réinitialisation n'est plus valable. Demande-en un nouveau ci-dessous.",
+      fallbackError:
+        'Impossible de mettre à jour le mot de passe. Réessaie dans quelques instants.',
+      missingTokenError: 'Lien invalide : aucun token fourni.',
     },
     account: {
       title: 'Paramètres',

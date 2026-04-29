@@ -6,6 +6,7 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Development;
+using MoviePicker.Api.Infrastructure.Email;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
 using MoviePicker.Api.Infrastructure.Posters;
@@ -48,6 +49,20 @@ public static class ServiceCollectionExtensions
                 var webBase = cfg["PUBLIC_WEB_BASE_URL"];
                 if (!string.IsNullOrWhiteSpace(webBase))
                     opts.PublicWebBaseUrl = webBase.Trim().TrimEnd('/');
+                var emailProvider = cfg["EMAIL_PROVIDER"];
+                if (!string.IsNullOrWhiteSpace(emailProvider))
+                    opts.EmailProvider = emailProvider.Trim().ToLowerInvariant();
+                var fromAddress = cfg["EMAIL_FROM_ADDRESS"];
+                if (!string.IsNullOrWhiteSpace(fromAddress))
+                    opts.EmailFromAddress = fromAddress.Trim();
+                var fromName = cfg["EMAIL_FROM_NAME"];
+                if (!string.IsNullOrWhiteSpace(fromName))
+                    opts.EmailFromName = fromName.Trim();
+                var resendKey = cfg["RESEND_API_KEY"];
+                opts.ResendApiKey = string.IsNullOrWhiteSpace(resendKey) ? null : resendKey;
+                var resendBase = cfg["RESEND_API_BASE_URL"];
+                if (!string.IsNullOrWhiteSpace(resendBase))
+                    opts.ResendApiBaseUrl = resendBase.Trim().TrimEnd('/');
             });
 
         services.AddMemoryCache();
@@ -64,9 +79,11 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IEventRepository, InMemoryEventRepository>();
             services.AddSingleton<IParticipantRepository, InMemoryParticipantRepository>();
             services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+            services.AddSingleton<IPasswordResetTokenRepository, InMemoryPasswordResetTokenRepository>();
             services.AddSingleton<IMovieRepository, InMemoryMovieRepository>();
             services.AddSingleton<IVoteRepository, InMemoryVoteRepository>();
             services.AddSingleton<ISeenMarkRepository, InMemorySeenMarkRepository>();
+            services.AddSingleton<IAuthSessionInvalidator, InMemoryAuthSessionInvalidator>();
         }
         else
         {
@@ -80,9 +97,11 @@ public static class ServiceCollectionExtensions
             services.AddScoped<IEventRepository, MongoEventRepository>();
             services.AddScoped<IParticipantRepository, MongoParticipantRepository>();
             services.AddScoped<IUserRepository, MongoUserRepository>();
+            services.AddScoped<IPasswordResetTokenRepository, MongoPasswordResetTokenRepository>();
             services.AddScoped<IMovieRepository, MongoMovieRepository>();
             services.AddScoped<IVoteRepository, MongoVoteRepository>();
             services.AddScoped<ISeenMarkRepository, MongoSeenMarkRepository>();
+            services.AddScoped<IAuthSessionInvalidator, MongoAuthSessionInvalidator>();
             services.AddHostedService<MongoIndexInitializer>();
         }
 
@@ -113,6 +132,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
 
         services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
+        services.AddEmailSender(configuration, environment);
+
         RegisterHandlers(services);
 
         services.AddSingleton<ValidationErrorFilter>();

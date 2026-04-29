@@ -1,7 +1,12 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.IntegrationTests.Helpers;
 
 namespace MoviePicker.Api.IntegrationTests;
 
@@ -10,6 +15,8 @@ namespace MoviePicker.Api.IntegrationTests;
 /// </summary>
 public sealed class MoviePickerApplicationFactory : WebApplicationFactory<Program>
 {
+    public FakeEmailSender FakeEmail { get; } = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment(Environments.Development);
@@ -24,6 +31,12 @@ public sealed class MoviePickerApplicationFactory : WebApplicationFactory<Progra
                 ["DevelopmentSeed__SeedSampleEvents"] = "false",
                 ["DevelopmentSeed__SeedScenarioDemos"] = "false"
             });
+        });
+
+        builder.ConfigureTestServices(services =>
+        {
+            services.RemoveAll<IEmailSender>();
+            services.AddSingleton<IEmailSender>(FakeEmail);
         });
     }
 }

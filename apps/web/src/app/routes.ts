@@ -6,6 +6,8 @@ export const ROUTES = {
   createEvent: '/new',
   login: '/login',
   register: '/register',
+  forgotPassword: '/forgot-password',
+  resetPassword: '/reset',
   account: '/settings',
   myEvents: '/my-events',
   /** Pattern React Router pour le matching (`/e/:slug`). */

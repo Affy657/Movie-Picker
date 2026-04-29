@@ -27,6 +27,7 @@ public sealed class MongoIndexInitializer : IHostedService
             await EnsureVoteIndexesAsync(cancellationToken);
             await EnsureAuthSessionIndexesAsync(cancellationToken);
             await EnsureSeenMarkIndexesAsync(cancellationToken);
+            await EnsurePasswordResetTokenIndexesAsync(cancellationToken);
         }
         catch (Exception ex)
         {
@@ -128,6 +129,21 @@ public sealed class MongoIndexInitializer : IHostedService
             Builders<AuthSessionDocument>.IndexKeys.Ascending(x => x.UserId),
             new CreateIndexOptions { Name = "auth_sessions_userId", Sparse = true });
         await col.Indexes.CreateOneAsync(byUser, cancellationToken: ct);
+    }
+
+    private async Task EnsurePasswordResetTokenIndexesAsync(CancellationToken ct)
+    {
+        var col = _database.GetCollection<PasswordResetTokenDocument>("password_reset_tokens");
+        var tokenHash = new CreateIndexModel<PasswordResetTokenDocument>(
+            Builders<PasswordResetTokenDocument>.IndexKeys.Ascending(x => x.TokenHash),
+            new CreateIndexOptions { Name = "password_reset_tokens_tokenHash_unique", Unique = true });
+        var byUser = new CreateIndexModel<PasswordResetTokenDocument>(
+            Builders<PasswordResetTokenDocument>.IndexKeys.Ascending(x => x.UserId),
+            new CreateIndexOptions { Name = "password_reset_tokens_userId", Sparse = true });
+        var ttl = new CreateIndexModel<PasswordResetTokenDocument>(
+            Builders<PasswordResetTokenDocument>.IndexKeys.Ascending(x => x.ExpiresAtUtc),
+            new CreateIndexOptions { Name = "password_reset_tokens_expires_ttl", ExpireAfter = TimeSpan.Zero });
+        await col.Indexes.CreateManyAsync(new[] { tokenHash, byUser, ttl }, ct);
     }
 
     private async Task EnsureSeenMarkIndexesAsync(CancellationToken ct)
