@@ -89,12 +89,13 @@ export const fr = {
       successTitle: 'Mot de passe mis à jour',
       successMessage: 'Tu peux maintenant te connecter avec ton nouveau mot de passe.',
       goToLogin: 'Aller à la connexion',
+      requestNewLink: 'Demander un nouveau lien',
       invalidTokenTitle: 'Lien invalide ou expiré',
       invalidTokenMessage:
-        'Ce lien de réinitialisation n\'est plus valable. Demande-en un nouveau depuis la page de connexion.',
+        'Ce lien de réinitialisation n\'est plus valable. Demande-en un nouveau ci-dessous.',
       fallbackError:
         'Impossible de mettre à jour le mot de passe. Réessaie dans quelques instants.',
-      missingTokenError: 'Lien invalide : token manquant.',
+      missingTokenError: 'Lien invalide : aucun token fourni.',
     },
     account: {
       title: 'Paramètres',

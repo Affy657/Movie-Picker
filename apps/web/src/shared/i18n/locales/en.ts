@@ -84,11 +84,12 @@ export const en: Locale = {
       successTitle: 'Password updated',
       successMessage: 'You can now log in with your new password.',
       goToLogin: 'Go to login',
+      requestNewLink: 'Request a new link',
       invalidTokenTitle: 'Invalid or expired link',
       invalidTokenMessage:
-        'This reset link is no longer valid. Request a new one from the login page.',
+        'This reset link is no longer valid. Request a new one below.',
       fallbackError: 'Could not update the password. Please try again in a moment.',
-      missingTokenError: 'Invalid link: missing token.',
+      missingTokenError: 'Invalid link: no token provided.',
     },
     account: {
       title: 'Settings',

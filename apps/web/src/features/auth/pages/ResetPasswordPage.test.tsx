@@ -32,9 +32,11 @@ describe('ResetPasswordPage', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
-  it('sans token : affiche écran lien invalide', () => {
+  it('sans token : affiche écran lien invalide + CTA demander un nouveau lien', () => {
     renderReset('/reset');
     expect(screen.getByRole('heading', { name: /lien invalide/i })).toBeInTheDocument();
+    const requestLink = screen.getByRole('link', { name: /demander un nouveau lien/i });
+    expect(requestLink).toHaveAttribute('href', '/forgot-password');
     expect(screen.getByRole('link', { name: /aller à la connexion/i })).toBeInTheDocument();
   });
 
@@ -94,6 +96,10 @@ describe('ResetPasswordPage', () => {
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /lien invalide/i })).toBeInTheDocument();
     });
+    expect(screen.getByRole('link', { name: /demander un nouveau lien/i })).toHaveAttribute(
+      'href',
+      '/forgot-password'
+    );
   });
 
   it('API renvoie 500 (erreur serveur) : affiche fallback erreur, formulaire reste', async () => {

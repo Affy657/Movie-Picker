@@ -64,8 +64,13 @@ export default function ResetPasswordPage() {
       <PageLayout>
         <AuthPageShell
           title={t('auth.resetPassword.invalidTokenTitle')}
-          description={t('auth.resetPassword.invalidTokenMessage')}
+          description={t('auth.resetPassword.missingTokenError')}
         >
+          <p>
+            <Link className="btn btn-primary" to={ROUTES.forgotPassword}>
+              {t('auth.resetPassword.requestNewLink')}
+            </Link>
+          </p>
           <p className="muted">
             <Link to={ROUTES.login}>{t('auth.resetPassword.goToLogin')}</Link>
           </p>
@@ -81,6 +86,11 @@ export default function ResetPasswordPage() {
           title={t('auth.resetPassword.invalidTokenTitle')}
           description={t('auth.resetPassword.invalidTokenMessage')}
         >
+          <p>
+            <Link className="btn btn-primary" to={ROUTES.forgotPassword}>
+              {t('auth.resetPassword.requestNewLink')}
+            </Link>
+          </p>
           <p className="muted">
             <Link to={ROUTES.login}>{t('auth.resetPassword.goToLogin')}</Link>
           </p>
