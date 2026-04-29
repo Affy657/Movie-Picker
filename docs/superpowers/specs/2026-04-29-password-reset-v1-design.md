@@ -95,7 +95,7 @@ Application/UseCases/Auth/PasswordReset/
   PasswordResetTokenFactory.cs       (statique : Generate() → (clair, hash, expiresAt))
 
 Application/Ports/
-  IPasswordResetTokenRepository.cs   (CreateAsync, FindByTokenHashAsync,
+  IPasswordResetTokenRepository.cs   (AddAsync, GetByTokenHashAsync,
                                       MarkConsumedAsync, InvalidateActiveForUserAsync,
                                       GetMostRecentForUserAsync)
   IEmailSender.cs                    (SendAsync(EmailMessage, ct))

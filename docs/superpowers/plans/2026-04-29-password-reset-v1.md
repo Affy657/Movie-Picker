@@ -140,8 +140,8 @@ docs/v1-produit/livraison-v1.md                  (cocher § 3 lignes 84-86, § 2
 ```csharp
 public interface IPasswordResetTokenRepository
 {
-    Task<PasswordResetToken> CreateAsync(PasswordResetToken token, CancellationToken ct = default);
-    Task<PasswordResetToken?> FindByTokenHashAsync(string tokenHash, CancellationToken ct = default);
+    Task<PasswordResetToken> AddAsync(PasswordResetToken token, CancellationToken ct = default);
+    Task<PasswordResetToken?> GetByTokenHashAsync(string tokenHash, CancellationToken ct = default);
     Task MarkConsumedAsync(string tokenId, DateTimeOffset consumedAt, CancellationToken ct = default);
     Task InvalidateActiveForUserAsync(string userId, DateTimeOffset consumedAt, CancellationToken ct = default);
     Task<PasswordResetToken?> GetMostRecentForUserAsync(string userId, CancellationToken ct = default);
@@ -241,7 +241,7 @@ git commit -m "feat(api): ajoute PasswordResetTokenFactory (32 bytes random, has
 
 **Steps :**
 
-- [ ] **3.1** Implémenter `IPasswordResetTokenRepository` au-dessus d'un `ConcurrentDictionary<string, PasswordResetToken>` (clé = Id). `FindByTokenHashAsync` filtre par `TokenHash` ET `ExpiresAtUtc > now` ET `ConsumedAt == null`. `InvalidateActiveForUserAsync` marque tous les tokens du user `ConsumedAt = consumedAt` quand `ConsumedAt == null`. `GetMostRecentForUserAsync` retourne le plus récent par `CreatedAt`.
+- [ ] **3.1** Implémenter `IPasswordResetTokenRepository` au-dessus d'un `ConcurrentDictionary<string, PasswordResetToken>` (clé = Id). `GetByTokenHashAsync` filtre par `TokenHash` ET `ExpiresAtUtc > now` ET `ConsumedAt == null`. `InvalidateActiveForUserAsync` marque tous les tokens du user `ConsumedAt = consumedAt` quand `ConsumedAt == null`. `GetMostRecentForUserAsync` retourne le plus récent par `CreatedAt`.
 
 - [ ] **3.2** Enregistrer dans `ServiceCollectionExtensions.AddMoviePicker` (branche in-memory, à côté de `InMemoryUserRepository` existant) :
 
@@ -276,8 +276,8 @@ git commit -am "feat(api): ajoute InMemoryPasswordResetTokenRepository et enregi
 - [ ] **4.2** GREEN — créer `PasswordResetTokenDocument` (champs BSON `userId`, `tokenHash`, `expiresAtUtc`, `consumedAt`, `createdAt`, `requestIp`, `requestUserAgent`) + mapper bidirectionnel (`ToDocument` / `ToDomain`), miroir de `UserDocumentMapper`.
 
 - [ ] **4.3** Implémenter `MongoPasswordResetTokenRepository` au-dessus de `IMongoCollection<PasswordResetTokenDocument>` (collection `password_reset_tokens`). Méthodes :
-  - `CreateAsync` : `InsertOneAsync` + retourne le doc avec son `Id` Mongo.
-  - `FindByTokenHashAsync` : `Find(d => d.TokenHash == hash && d.ExpiresAtUtc > now && d.ConsumedAt == null)` → 1.
+  - `AddAsync` : `InsertOneAsync` + retourne le doc avec son `Id` Mongo.
+  - `GetByTokenHashAsync` : `Find(d => d.TokenHash == hash && d.ExpiresAtUtc > now && d.ConsumedAt == null)` → 1.
   - `MarkConsumedAsync` : `UpdateOneAsync` `Set(d.ConsumedAt, consumedAt)`.
   - `InvalidateActiveForUserAsync` : `UpdateManyAsync` filtre `userId == X && consumedAt == null`.
   - `GetMostRecentForUserAsync` : `Find(d => d.UserId == userId).SortByDescending(d => d.CreatedAt).Limit(1)`.
@@ -752,7 +752,7 @@ public sealed class RequestPasswordResetHandler : IRequestPasswordResetHandler
             RequestIp = ip,
             RequestUserAgent = userAgent
         };
-        await _tokens.CreateAsync(token, ct);
+        await _tokens.AddAsync(token, ct);
 
         if (throttle)
         {
@@ -817,7 +817,7 @@ public sealed class ConfirmPasswordResetHandler : IConfirmPasswordResetHandler
         if (pwdErr is not null) throw new BadRequestException(pwdErr);
 
         var hash = PasswordResetTokenFactory.Hash(request.Token);
-        var token = await _tokens.FindByTokenHashAsync(hash, ct);
+        var token = await _tokens.GetByTokenHashAsync(hash, ct);
         var now = _clock.GetUtcNow();
         if (token is null || token.ExpiresAtUtc <= now || token.ConsumedAt is not null)
             throw new BadRequestException("Lien invalide ou expiré.");
@@ -837,7 +837,7 @@ public sealed class ConfirmPasswordResetHandler : IConfirmPasswordResetHandler
 }
 ```
 
-(Note : `FindByTokenHashAsync` du repo filtre déjà `expires > now && consumed == null`, mais on re-vérifie en handler pour être robuste si l'impl in-memory évolue.)
+(Note : `GetByTokenHashAsync` du repo filtre déjà `expires > now && consumed == null`, mais on re-vérifie en handler pour être robuste si l'impl in-memory évolue.)
 
 - [ ] **13.5** Tests PASS.
 
@@ -1277,7 +1277,7 @@ git commit -am "docs(v1): coche les cases mot de passe oublié dans livraison-v1
 - **Placeholder scan** : pas de "TBD", "implement later", "similar to". Les zones où le code est résumé renvoient explicitement aux sections du spec qui contiennent le détail. Le compromis "plan condensé" est annoncé dans le header.
 
 - **Type / nom consistency** :
-  - `IPasswordResetTokenRepository` (Task 1) — méthodes utilisées dans Task 12 (`GetMostRecentForUserAsync`, `InvalidateActiveForUserAsync`, `CreateAsync`) et Task 13 (`FindByTokenHashAsync`, `MarkConsumedAsync`) — OK
+  - `IPasswordResetTokenRepository` (Task 1) — méthodes utilisées dans Task 12 (`GetMostRecentForUserAsync`, `InvalidateActiveForUserAsync`, `AddAsync`) et Task 13 (`GetByTokenHashAsync`, `MarkConsumedAsync`) — OK
   - `IEmailSender.SendAsync(EmailMessage, ct)` (Task 5) — utilisé Task 6, 8, 9, 12, 16 — OK
   - `IAuthSessionInvalidator.InvalidateAllForUserAsync` (Task 11) — utilisé Task 13 — OK
   - `MoviePickerOptions.{EmailProvider, EmailFromAddress, EmailFromName, ResendApiKey, ResendApiBaseUrl, PublicWebBaseUrl}` (Task 7) — utilisé Tasks 9, 10, 12 — OK
