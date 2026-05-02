@@ -26,14 +26,14 @@
     "@playwright/test": "^1.59.1",
     "chrome-launcher": "^1.2.1",
     "cross-env": "^10.1.0",
-    "eslint": "^10.2.0",
+    "eslint": "^10.3.0",
     "eslint-config-prettier": "^10.1.8",
-    "globals": "^17.4.0",
-    "lighthouse": "^13.1.0",
-    "prettier": "^3.8.1",
+    "globals": "^17.6.0",
+    "lighthouse": "^13.2.0",
+    "prettier": "^3.8.3",
     "serve": "^14.2.6",
-    "turbo": "^2.9.5",
-    "typescript-eslint": "^8.58.1"
+    "turbo": "^2.9.7",
+    "typescript-eslint": "^8.59.1"
   },
   "packageManager": "pnpm@10.0.0",
   "engines": {
