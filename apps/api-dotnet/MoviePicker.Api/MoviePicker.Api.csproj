@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MongoDB.Driver" Version="3.7.1" />
+    <PackageReference Include="MongoDB.Driver" Version="3.8.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
     <!--
       Pin de transitives héritées de MongoDB.Driver 3.7.1 sur leurs dernières versions
@@ -19,7 +19,7 @@
       ../Directory.Build.props. Garder les overrides récents reste une bonne défense
       pour les autres patches non liés à ces advisories.
     -->
-    <PackageReference Include="Snappier" Version="1.3.0" />
+    <PackageReference Include="Snappier" Version="1.3.1" />
     <PackageReference Include="SharpCompress" Version="0.40.0" />
   </ItemGroup>
 
