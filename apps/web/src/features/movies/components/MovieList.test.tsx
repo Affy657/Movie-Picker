@@ -106,7 +106,7 @@ describe('MovieList', () => {
     expect(screen.getByText(/Déjà vu par Alice/)).toBeInTheDocument();
   });
 
-  it('affiche la durée formatée (2h28) dans la meta à côté de l’année et de la note', () => {
+  it('affiche la durée formatée (2h28) et la note convertie sur 5 (sans préfixe « TMDB »)', () => {
     const withRuntime: MovieData[] = [
       {
         ...movies[0]!,
@@ -128,7 +128,8 @@ describe('MovieList', () => {
       />
     );
     expect(screen.getByText(/2h28/)).toBeInTheDocument();
-    expect(screen.getByText(/TMDB\s*8\.4\/10/)).toBeInTheDocument();
+    expect(screen.getByText(/4\.2\/5/)).toBeInTheDocument();
+    expect(screen.queryByText(/TMDB\s*\d/)).not.toBeInTheDocument();
   });
 
   it('affiche les boutons vote up/down + déjà vu quand pas terminé et participantId', async () => {
@@ -150,5 +151,34 @@ describe('MovieList', () => {
     await userEvent.click(upButtons[0]!);
     expect(onVote).toHaveBeenCalledWith('m1', 1);
     expect(screen.getAllByRole('button', { name: /Marquer « déjà vu »/ })).toHaveLength(2);
+  });
+
+  it('reflète myVote sur les boutons (aria-pressed) et expose un libellé « retirer » au reclic', () => {
+    const voted: MovieData[] = [
+      { ...movies[0]!, myVote: 1 },
+      { ...movies[1]!, myVote: -1 },
+    ];
+    renderWithLocale(
+      <MovieList
+        movies={voted}
+        slug="s"
+        participantId="p0"
+        participantPseudo={null}
+        isFinished={false}
+        onVote={vi.fn()}
+        onRemove={vi.fn()}
+        refresh={vi.fn()}
+        onActionError={vi.fn()}
+      />
+    );
+
+    const upPressed = screen.getByRole('button', { name: /Retirer mon vote pour « Inception »/ });
+    expect(upPressed).toHaveAttribute('aria-pressed', 'true');
+
+    const downPressed = screen.getByRole('button', { name: /Retirer mon vote contre « Matrix »/ });
+    expect(downPressed).toHaveAttribute('aria-pressed', 'true');
+
+    const upNeutral = screen.getByRole('button', { name: /^Voter pour Matrix/ });
+    expect(upNeutral).toHaveAttribute('aria-pressed', 'false');
   });
 });

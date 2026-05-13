@@ -98,6 +98,9 @@ public sealed class CreateEventHandlerTests
         Assert.False(string.IsNullOrEmpty(capturedEvent.Slug));
         Assert.False(string.IsNullOrEmpty(capturedEvent.HostToken));
         Assert.Equal("user-1", capturedEvent.CreatorUserId);
+        // Config persistée à la création avec RichSharePreview activé (aligne UI / aperçu OG).
+        Assert.NotNull(capturedEvent.Config);
+        Assert.True(capturedEvent.Config!.RichSharePreview);
 
         Assert.NotNull(capturedP);
         Assert.Equal("evt123", capturedP!.EventId);

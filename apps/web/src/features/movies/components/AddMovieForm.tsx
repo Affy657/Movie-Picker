@@ -13,8 +13,8 @@ import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import type { MovieData } from '@/shared/types/movie';
 import { isSafeTmdbWatchPageUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
-import TmdbIndicativeFooter from '@/features/movies/components/TmdbIndicativeFooter';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
+import TmdbAttribution from '@/features/movies/components/TmdbAttribution';
 import styles from './AddMovieForm.module.css';
 
 /** Délai après la dernière frappe avant d’appeler l’API (évite une requête par touche). */
@@ -294,7 +294,8 @@ export default function AddMovieForm({
                         {r.year ? <span>{r.year}</span> : null}
                         {voteLabel ? (
                           <span className="tmdb-vote" title={t('movies.search.tmdbVoteHint')}>
-                            {r.year ? ' · ' : null}TMDB {voteLabel}
+                            {r.year ? ' · ' : null}
+                            {voteLabel}
                           </span>
                         ) : null}
                         {runtimeLabel ? (
@@ -334,11 +335,7 @@ export default function AddMovieForm({
               );
             })}
           </ul>
-          <TmdbIndicativeFooter
-            disclaimer={searchMeta?.disclaimer}
-            tmdbUrl={searchMeta?.tmdbAttributionUrl}
-            className={`tmdb-indicative-footer ${styles.tmdbFooter}`}
-          />
+          <TmdbAttribution />
         </>
       )}
     </div>

@@ -15,7 +15,7 @@ export const DEFAULT_EVENT_CONFIG: EventConfigData = {
   maxProposalsPerParticipant: null,
   maxParticipants: null,
   wheelMode: 'strictRandom',
-  richSharePreview: false,
+  richSharePreview: true,
 };
 
 /** Corps PATCH config soirée (formulaire hôte — aligné sur l'API). */

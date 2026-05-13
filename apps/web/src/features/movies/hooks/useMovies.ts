@@ -7,6 +7,11 @@ export type UseMoviesOptions = {
   enabled?: boolean;
   /** Aligné sur le polling event (soirée active) */
   refetchInterval?: number | false;
+  /**
+   * ID du participant courant — quand fourni, l'API renvoie `myVote` par film. La clé
+   * de cache inclut le participant pour ne pas mélanger les vues anonyme/connectée.
+   */
+  participantId?: string | null;
 };
 
 /**
@@ -14,10 +19,11 @@ export type UseMoviesOptions = {
  */
 export function useMovies(slug: string | undefined, options?: UseMoviesOptions) {
   const enabled = !!slug && (options?.enabled ?? true);
+  const participantId = options?.participantId ?? null;
 
   return useQuery({
-    queryKey: queryKeys.movies.list(slug),
-    queryFn: () => fetchEventMovies(slug!),
+    queryKey: [...queryKeys.movies.list(slug), participantId ?? '$anon'] as const,
+    queryFn: () => fetchEventMovies(slug!, participantId),
     enabled,
     refetchInterval: options?.refetchInterval ?? false,
   });

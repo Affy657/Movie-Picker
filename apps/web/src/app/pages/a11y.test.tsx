@@ -5,7 +5,7 @@ import { setupServer } from 'msw/node';
 import { axe } from 'vitest-axe';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { authMeGuestHandler } from '@/mocks/handlers';
-import Home from '@/app/pages/Home';
+import LandingPage from '@/app/pages/LandingPage';
 import CreateEvent from '@/features/events/pages/CreateEvent';
 
 describe('accessibilité (axe)', () => {
@@ -15,12 +15,12 @@ describe('accessibilité (axe)', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
-  it('Home n’a pas de violations', async () => {
+  it('LandingPage n’a pas de violations', async () => {
     const queryClient = createTestQueryClient();
     const { container } = render(
       <AppTestProviders client={queryClient}>
         <MemoryRouter>
-          <Home />
+          <LandingPage />
         </MemoryRouter>
       </AppTestProviders>
     );

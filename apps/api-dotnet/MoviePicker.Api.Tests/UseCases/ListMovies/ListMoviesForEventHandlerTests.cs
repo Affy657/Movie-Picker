@@ -142,6 +142,53 @@ public sealed class ListMoviesForEventHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_WithoutParticipantId_DoesNotExposeMyVote()
+    {
+        var evt = ActiveEvent();
+        var movies = new List<Movie>
+        {
+            new() { Id = "mov1", EventId = evt.Id, ParticipantId = "p1", TmdbId = 1, Title = "A", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
+        };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movies);
+        _voteRepo.Setup(r => r.AggregateScoresByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, VoteScoreAggregate>());
+        _participantRepo.Setup(r => r.GetPseudosByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, string> { ["p1"] = "Alice" });
+
+        var result = await _sut.HandleAsync("evt1");
+
+        var m = Assert.Single(result);
+        Assert.Null(m.MyVote);
+        _voteRepo.Verify(
+            r => r.GetParticipantVotesByEventAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithParticipantId_PopulatesMyVotePerMovie()
+    {
+        var evt = ActiveEvent();
+        var movies = new List<Movie>
+        {
+            new() { Id = "mov1", EventId = evt.Id, ParticipantId = "p1", TmdbId = 1, Title = "A", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
+            new() { Id = "mov2", EventId = evt.Id, ParticipantId = "p2", TmdbId = 2, Title = "B", Year = "2021", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
+            new() { Id = "mov3", EventId = evt.Id, ParticipantId = "p3", TmdbId = 3, Title = "C", Year = "2022", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
+        };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movies);
+        _voteRepo.Setup(r => r.AggregateScoresByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, VoteScoreAggregate>());
+        _participantRepo.Setup(r => r.GetPseudosByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, string>());
+        _voteRepo
+            .Setup(r => r.GetParticipantVotesByEventAsync(evt.Id, "me", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, int> { ["mov1"] = 1, ["mov3"] = -1 });
+
+        var result = await _sut.HandleAsync("evt1", "me");
+
+        Assert.Equal(1, result.First(m => m.Id == "mov1").MyVote);
+        Assert.Null(result.First(m => m.Id == "mov2").MyVote);
+        Assert.Equal(-1, result.First(m => m.Id == "mov3").MyVote);
+    }
+
+    [Fact]
     public async Task HandleAsync_NoMovies_ReturnsEmptyList()
     {
         var evt = ActiveEvent();

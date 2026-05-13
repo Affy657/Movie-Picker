@@ -27,14 +27,3 @@
 .tmdb-watch-link:hover {
   text-decoration: underline;
 }
-
-.tmdb-indicative-footer {
-  margin: 0.75rem 0 0 0;
-  font-size: 0.75rem;
-  line-height: 1.4;
-  color: var(--color-placeholder);
-}
-
-.tmdb-indicative-footer a {
-  color: var(--color-primary);
-}

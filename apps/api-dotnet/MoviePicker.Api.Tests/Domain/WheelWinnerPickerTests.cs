@@ -53,4 +53,43 @@ public sealed class WheelWinnerPickerTests
 
         Assert.True(picked.GetValueOrDefault("high") > picked.GetValueOrDefault("low"));
     }
+
+    [Fact]
+    public void Pick_StrictRandom_ExcludesPreviousWinner_WhenOtherCandidatesExist()
+    {
+        var movies = new[] { M("a", "A"), M("b", "B"), M("c", "C") };
+        var random = new Random(7);
+
+        for (var i = 0; i < 50; i++)
+        {
+            var w = WheelWinnerPicker.Pick(movies, _ => 0, WheelMode.StrictRandom, random, excludedMovieId: "a");
+            Assert.NotEqual("a", w.Id);
+        }
+    }
+
+    [Fact]
+    public void Pick_Weighted_ExcludesPreviousWinner_WhenOtherCandidatesExist()
+    {
+        var movies = new[] { M("a", "A"), M("b", "B"), M("c", "C") };
+        var random = new Random(11);
+
+        for (var i = 0; i < 50; i++)
+        {
+            var w = WheelWinnerPicker.Pick(
+                movies,
+                id => id == "a" ? 100 : 0,
+                WheelMode.WeightedByVotes,
+                random,
+                excludedMovieId: "a");
+            Assert.NotEqual("a", w.Id);
+        }
+    }
+
+    [Fact]
+    public void Pick_FallsBackToExcludedMovie_WhenItIsTheOnlyCandidate()
+    {
+        var movies = new[] { M("only", "Only") };
+        var w = WheelWinnerPicker.Pick(movies, _ => 0, WheelMode.StrictRandom, new Random(0), excludedMovieId: "only");
+        Assert.Equal("only", w.Id);
+    }
 }

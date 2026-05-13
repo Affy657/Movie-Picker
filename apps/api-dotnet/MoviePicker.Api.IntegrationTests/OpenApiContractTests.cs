@@ -48,6 +48,10 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
         Assert.True(paths.TryGetProperty("/api/v1/events/{idOrSlug}/movies/{movieId}/seen", out var seen)
                     && seen.TryGetProperty("post", out _)
                     && seen.TryGetProperty("delete", out _));
+        // Vote : POST (up/down) + DELETE (toggle au reclic, retire mon vote pour ce film).
+        Assert.True(paths.TryGetProperty("/api/v1/events/{idOrSlug}/movies/{movieId}/vote", out var voteOps)
+                    && voteOps.TryGetProperty("post", out _)
+                    && voteOps.TryGetProperty("delete", out _));
         Assert.True(paths.TryGetProperty("/api/v1/movies/search", out var mSearch) && mSearch.TryGetProperty("get", out _));
         Assert.True(paths.TryGetProperty("/api/v1/movies/tmdb/{tmdbId}/details", out var mDetails) && mDetails.TryGetProperty("get", out _));
         Assert.True(paths.TryGetProperty("/api/v1/posters/{posterKey}", out var posters) && posters.TryGetProperty("get", out _));
@@ -74,6 +78,10 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
         Assert.Equal("integer", seenCountProp.GetProperty("type").GetString());
         Assert.True(movieProps.TryGetProperty("seenByPseudos", out var seenByPseudosProp));
         Assert.Equal("array", seenByPseudosProp.GetProperty("type").GetString());
+
+        // myVote : entier nullable (1 / -1) renseigné quand l'appel passe ?participantId=...
+        Assert.True(movieProps.TryGetProperty("myVote", out var myVoteProp));
+        Assert.Equal("integer", myVoteProp.GetProperty("type").GetString());
 
         // Schéma DTOs SeenMark (corps de requête + réponse).
         Assert.True(schemas.TryGetProperty("MarkAsSeenRequest", out _));

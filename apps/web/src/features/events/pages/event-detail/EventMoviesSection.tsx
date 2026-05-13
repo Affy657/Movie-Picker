@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
-import { removeMovieFromEvent, voteMovie } from '@/features/movies/api/moviesApi';
+import { clearMovieVote, removeMovieFromEvent, voteMovie } from '@/features/movies/api/moviesApi';
 import { getErrorMessage } from '@/shared/api/apiError';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
@@ -42,14 +42,19 @@ export default function EventMoviesSection({
     async (movieId: string, value: 1 | -1) => {
       if (!participant) return;
       setActionError(null);
+      const current = movies.find((m) => m.id === movieId)?.myVote ?? null;
       try {
-        await voteMovie(slug, movieId, participant.participantId, value);
+        if (current === value) {
+          await clearMovieVote(slug, movieId, participant.participantId);
+        } else {
+          await voteMovie(slug, movieId, participant.participantId, value);
+        }
         refreshAll();
       } catch (e) {
         setActionError(getErrorMessage(e, 'Erreur lors du vote'));
       }
     },
-    [slug, participant, setActionError, refreshAll]
+    [slug, participant, movies, setActionError, refreshAll]
   );
 
   const handleRemove = useCallback(

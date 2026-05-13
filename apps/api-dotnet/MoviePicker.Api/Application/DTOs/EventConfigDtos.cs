@@ -13,7 +13,12 @@ public sealed class EventConfigResponse
 
     public WheelMode WheelMode { get; init; }
 
-    /// <summary>Aperçu Open Graph « riche » (titre soirée, détails) — désactivé par défaut.</summary>
+    /// <summary>
+    /// Aperçu Open Graph « riche » (titre soirée + détails). Les nouvelles soirées sont
+    /// créées avec ce flag à <see langword="true"/> (cf. <c>CreateEventHandler</c>) ; l'hôte
+    /// peut le désactiver depuis les paramètres. Pour les soirées historiques sans <c>Config</c>
+    /// persistée, on retombe également sur <see langword="true"/> pour cohérence d'affichage.
+    /// </summary>
     public bool RichSharePreview { get; init; }
 
     public static EventConfigResponse FromEvent(Event evt)
@@ -26,7 +31,7 @@ public sealed class EventConfigResponse
             MaxProposalsPerParticipant = c?.MaxProposalsPerParticipant,
             MaxParticipants = c?.MaxParticipants,
             WheelMode = c?.WheelMode ?? WheelMode.StrictRandom,
-            RichSharePreview = c?.RichSharePreview ?? false
+            RichSharePreview = c?.RichSharePreview ?? true
         };
     }
 }

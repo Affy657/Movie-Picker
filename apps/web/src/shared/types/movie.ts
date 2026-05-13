@@ -24,6 +24,11 @@ export interface MovieData {
   score: number;
   up: number;
   down: number;
+  /**
+   * Vote du participant courant pour ce film (1 = like, -1 = dislike). `null` si le
+   * participant n'a pas voté ou si l'appel a été fait en lecture anonyme (sans `participantId`).
+   */
+  myVote?: 1 | -1 | null;
   voteAverage?: number | null;
   watchProviders?: WatchProviderOffer[];
   tmdbWatchPageUrl?: string | null;

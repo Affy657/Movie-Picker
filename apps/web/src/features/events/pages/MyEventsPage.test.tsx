@@ -102,9 +102,9 @@ describe('MyEventsPage (MSW)', () => {
 
     renderMyEvents();
 
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /créées/i })).toBeInTheDocument();
-    });
+    // Timeout étendu : sur Windows / jsdom lent l'enchaînement auth/me + events/mine
+    // peut dépasser le timeout par défaut (1 s) de waitFor lors d'un run complet.
+    await screen.findByRole('heading', { name: /créées/i }, { timeout: 5000 });
 
     expect(screen.getByRole('heading', { name: 'Mes soirées', level: 1 })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /rejointes/i })).toBeInTheDocument();
@@ -189,6 +189,107 @@ describe('MyEventsPage (MSW)', () => {
 
     expect(screen.getByRole('alert')).toHaveTextContent(/Aucune soirée enregistrée ici/i);
     expect(screen.getByRole('button', { name: /réessayer/i })).toBeInTheDocument();
+
+    sessionStorage.removeItem(`moviepicker_participant_${slug}`);
+  });
+
+  it('connecté : fusionne les soirées rejointes en tant qu’invité (sessionStorage)', async () => {
+    const guestSlug = 'soiree-invite-connecte';
+    sessionStorage.setItem(
+      `moviepicker_participant_${guestSlug}`,
+      JSON.stringify({ participantId: 'p-guest', pseudo: 'Invité' })
+    );
+
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u1',
+          displayName: 'Alice',
+          emailMasked: 'a***@test.local',
+          uiTheme: 'system',
+        })
+      ),
+      http.get(`${TEST_API_V1}/events/mine`, () =>
+        HttpResponse.json({
+          events: [
+            {
+              id: 'e-host',
+              slug: 'soiree-hote',
+              title: 'Hôte propre',
+              date: '2035-08-01',
+              time: '22:00',
+              createdAt: '2026-01-01T00:00:00Z',
+              updatedAt: '2026-01-02T00:00:00Z',
+              isCreator: true,
+              isParticipant: true,
+              lifecycle: 'upcoming',
+              participantCount: 1,
+              movieCount: 0,
+            },
+          ],
+        })
+      ),
+      ...createEventDetailHandlers({ slug: guestSlug, title: 'Soirée d’Élio' })
+    );
+
+    renderMyEvents();
+
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: /Soirée d’Élio/i })).toBeInTheDocument();
+    });
+
+    const joinedHeading = screen.getByRole('heading', { name: /rejointes/i });
+    const joinedSection = joinedHeading.closest('section')!;
+    expect(within(joinedSection).getByText(/Soirée d’Élio/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Hôte propre/i })).toBeInTheDocument();
+
+    sessionStorage.removeItem(`moviepicker_participant_${guestSlug}`);
+  });
+
+  it('connecté : ne duplique pas la soirée invité si elle est déjà retournée par /events/mine', async () => {
+    const slug = 'soiree-double';
+    sessionStorage.setItem(
+      `moviepicker_participant_${slug}`,
+      JSON.stringify({ participantId: 'p-guest', pseudo: 'Alice' })
+    );
+
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u1',
+          displayName: 'Alice',
+          emailMasked: 'a***@test.local',
+          uiTheme: 'system',
+        })
+      ),
+      http.get(`${TEST_API_V1}/events/mine`, () =>
+        HttpResponse.json({
+          events: [
+            {
+              id: 'e-double',
+              slug,
+              title: 'Soirée déjà liée',
+              date: '2035-08-01',
+              time: '22:00',
+              createdAt: '2026-01-01T00:00:00Z',
+              updatedAt: '2026-01-02T00:00:00Z',
+              isCreator: false,
+              isParticipant: true,
+              lifecycle: 'upcoming',
+              participantCount: 4,
+              movieCount: 1,
+            },
+          ],
+        })
+      ),
+      ...createEventDetailHandlers({ slug, title: 'Soirée déjà liée' })
+    );
+
+    renderMyEvents();
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('link', { name: /Soirée déjà liée/i })).toHaveLength(1);
+    });
 
     sessionStorage.removeItem(`moviepicker_participant_${slug}`);
   });

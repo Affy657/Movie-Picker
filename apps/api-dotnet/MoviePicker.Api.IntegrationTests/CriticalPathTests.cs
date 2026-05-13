@@ -201,6 +201,116 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
     }
 
     [Fact]
+    public async Task VoteToggle_PostThenDelete_RemovesMyVote_AndIsReflectedInMovieList()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "VoteToggle");
+
+        var createBody = new { title = "Soirée vote toggle", date = "2030-07-01", time = "20:00" };
+        var createRes = await client.PostAsJsonAsync("/api/v1/events", createBody);
+        createRes.EnsureSuccessStatusCode();
+        var created = await createRes.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
+        var slug = created!.Slug;
+        var participantId = created.CreatorParticipant!.Id;
+
+        var addMovieRes = await client.PostAsJsonAsync($"/api/v1/events/{slug}/movies", new
+        {
+            tmdbId = 9999,
+            title = "Toggle Movie",
+            year = "2024",
+            posterPath = (string?)null,
+            participantId
+        });
+        addMovieRes.EnsureSuccessStatusCode();
+        var movieJson = await addMovieRes.Content.ReadFromJsonAsync<JsonElement>();
+        var movieId = movieJson.GetProperty("_id").GetString()!;
+
+        var voteRes = await client.PostAsJsonAsync(
+            $"/api/v1/events/{slug}/movies/{movieId}/vote",
+            new { participantId, value = 1 });
+        voteRes.EnsureSuccessStatusCode();
+
+        var listAfterVote = await client.GetAsync(
+            $"/api/v1/events/{slug}/movies?participantId={Uri.EscapeDataString(participantId)}");
+        listAfterVote.EnsureSuccessStatusCode();
+        var listJson = await listAfterVote.Content.ReadFromJsonAsync<JsonElement>();
+        var firstMovie = listJson.EnumerateArray().First();
+        Assert.Equal(1, firstMovie.GetProperty("up").GetInt32());
+        Assert.Equal(1, firstMovie.GetProperty("myVote").GetInt32());
+
+        var listAnonymous = await client.GetAsync($"/api/v1/events/{slug}/movies");
+        listAnonymous.EnsureSuccessStatusCode();
+        var listAnonJson = await listAnonymous.Content.ReadFromJsonAsync<JsonElement>();
+        var firstAnon = listAnonJson.EnumerateArray().First();
+        Assert.Equal(JsonValueKind.Null, firstAnon.GetProperty("myVote").ValueKind);
+
+        // DELETE /vote : participantId passé en query string (standard HTTP, plus
+        // sûr que le body sur certains proxies historiques).
+        var deleteVoteRes = await client.DeleteAsync(
+            $"/api/v1/events/{slug}/movies/{movieId}/vote?participantId={Uri.EscapeDataString(participantId)}");
+        Assert.Equal(HttpStatusCode.NoContent, deleteVoteRes.StatusCode);
+
+        var listAfterDelete = await client.GetAsync(
+            $"/api/v1/events/{slug}/movies?participantId={Uri.EscapeDataString(participantId)}");
+        listAfterDelete.EnsureSuccessStatusCode();
+        var listAfterJson = await listAfterDelete.Content.ReadFromJsonAsync<JsonElement>();
+        var movieAfter = listAfterJson.EnumerateArray().First();
+        Assert.Equal(0, movieAfter.GetProperty("up").GetInt32());
+        Assert.Equal(JsonValueKind.Null, movieAfter.GetProperty("myVote").ValueKind);
+
+        // Idempotent : redélétion sans vote existant doit renvoyer 204 (cf. revue de code).
+        var deleteAgainRes = await client.DeleteAsync(
+            $"/api/v1/events/{slug}/movies/{movieId}/vote?participantId={Uri.EscapeDataString(participantId)}");
+        Assert.Equal(HttpStatusCode.NoContent, deleteAgainRes.StatusCode);
+    }
+
+    [Fact]
+    public async Task Wheel_Relaunch_DoesNotPickPreviousWinner_WhenMultipleMovies()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "WheelRelaunch");
+
+        var createBody = new { title = "Soirée relance roue", date = "2030-07-01", time = "20:00" };
+        var createRes = await client.PostAsJsonAsync("/api/v1/events", createBody);
+        createRes.EnsureSuccessStatusCode();
+        var created = await createRes.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
+        var slug = created!.Slug;
+        var participantId = created.CreatorParticipant!.Id;
+
+        async Task<string> AddMovieAsync(int tmdbId, string title)
+        {
+            var res = await client.PostAsJsonAsync($"/api/v1/events/{slug}/movies", new
+            {
+                tmdbId,
+                title,
+                year = "2024",
+                posterPath = (string?)null,
+                participantId
+            });
+            res.EnsureSuccessStatusCode();
+            var json = await res.Content.ReadFromJsonAsync<JsonElement>();
+            return json.GetProperty("_id").GetString()!;
+        }
+
+        await AddMovieAsync(1001, "Film A");
+        await AddMovieAsync(1002, "Film B");
+        await AddMovieAsync(1003, "Film C");
+
+        var first = await client.PostAsync($"/api/v1/events/{slug}/wheel", null);
+        first.EnsureSuccessStatusCode();
+        var firstJson = await first.Content.ReadFromJsonAsync<JsonElement>();
+        var previousWinnerId = firstJson.GetProperty("winner").GetProperty("_id").GetString()!;
+
+        for (var i = 0; i < 10; i++)
+        {
+            var relaunch = await client.PostAsync($"/api/v1/events/{slug}/wheel", null);
+            relaunch.EnsureSuccessStatusCode();
+            var relaunchJson = await relaunch.Content.ReadFromJsonAsync<JsonElement>();
+            var newWinnerId = relaunchJson.GetProperty("winner").GetProperty("_id").GetString()!;
+            Assert.NotEqual(previousWinnerId, newWinnerId);
+            previousWinnerId = newWinnerId;
+        }
+    }
+
+    [Fact]
     public async Task GetEventDetail_UnknownSlug_Returns404()
     {
         var client = _factory.CreateClient();

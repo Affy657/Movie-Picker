@@ -1,8 +1,9 @@
 import clsx from 'clsx';
 import type { ComponentType, SVGProps } from 'react';
-import { CalendarDays, Home, Settings } from 'lucide-react';
+import { CalendarDays, Settings } from 'lucide-react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type TranslationKey } from '@/shared/i18n';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { ROUTES } from '@/app/routes';
 import styles from './AppShell.module.css';
 
@@ -19,10 +20,13 @@ type NavItemDef = {
   Icon: IconComponent;
 };
 
-const NAV_ITEM_DEFS: ReadonlyArray<
-  Omit<NavItemDef, 'label'> & { labelKey: 'nav.home' | 'nav.myEvents' | 'nav.account' }
-> = [
-  { to: ROUTES.home, end: true, labelKey: 'nav.home', Icon: Home },
+type NavItemSpec = Omit<NavItemDef, 'label'> & { labelKey: TranslationKey };
+
+/**
+ * Nav réservée aux utilisateurs connectés. La home redirigeant vers `/my-events`
+ * dès qu'on est authentifié, on n'expose pas d'onglet « Accueil » dans la nav.
+ */
+const AUTHENTICATED_NAV_ITEMS: ReadonlyArray<NavItemSpec> = [
   { to: ROUTES.myEvents, labelKey: 'nav.myEvents', Icon: CalendarDays },
   { to: ROUTES.account, labelKey: 'nav.account', Icon: Settings },
 ];
@@ -46,11 +50,14 @@ function MobileNavItem({ to, end, label, Icon }: NavItemDef) {
 
 export default function AppShell() {
   const { t } = useTranslation();
+  const { user } = useAuth();
 
-  const items: NavItemDef[] = NAV_ITEM_DEFS.map(({ labelKey, ...rest }) => ({
-    ...rest,
-    label: t(labelKey),
-  }));
+  const items: NavItemDef[] = user
+    ? AUTHENTICATED_NAV_ITEMS.map(({ labelKey, ...rest }) => ({
+        ...rest,
+        label: t(labelKey),
+      }))
+    : [];
 
   return (
     <div className={styles.root}>
@@ -65,18 +72,22 @@ export default function AppShell() {
             decoding="async"
           />
         </Link>
-        <nav className={styles.navDesktop} aria-label={t('nav.navLabel')}>
-          {items.map((item) => (
-            <DesktopNavItem key={item.to} {...item} />
-          ))}
-        </nav>
+        {items.length > 0 ? (
+          <nav className={styles.navDesktop} aria-label={t('nav.navLabel')}>
+            {items.map((item) => (
+              <DesktopNavItem key={item.to} {...item} />
+            ))}
+          </nav>
+        ) : null}
       </header>
       <Outlet />
-      <nav className={styles.navMobile} aria-label={t('nav.navLabel')}>
-        {items.map((item) => (
-          <MobileNavItem key={item.to} {...item} />
-        ))}
-      </nav>
+      {items.length > 0 ? (
+        <nav className={styles.navMobile} aria-label={t('nav.navLabel')}>
+          {items.map((item) => (
+            <MobileNavItem key={item.to} {...item} />
+          ))}
+        </nav>
+      ) : null}
     </div>
   );
 }

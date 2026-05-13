@@ -1,4 +1,5 @@
 import { memo, useState } from 'react';
+import clsx from 'clsx';
 import { Eye, ThumbsDown, ThumbsUp } from 'lucide-react';
 import type { MovieData } from '@/shared/types/movie';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
@@ -10,9 +11,9 @@ import { markMovieAsSeen, unmarkMovieAsSeen } from '@/features/movies/api/movies
 import { othersAlreadySeenHint } from '@/features/movies/utils/seenHint';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
-import TmdbIndicativeFooter from '@/features/movies/components/TmdbIndicativeFooter';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import MovieDetailsPanel from '@/features/movies/components/MovieDetailsPanel';
+import TmdbAttribution from '@/features/movies/components/TmdbAttribution';
 import styles from './MovieList.module.css';
 
 type Translate = (key: TranslationKey, vars?: Record<string, string | number>) => string;
@@ -42,16 +43,6 @@ interface MovieCardProps {
   refresh: () => void;
   onActionError: (message: string) => void;
   t: Translate;
-}
-
-function hasTmdbEnrichment(m: MovieData): boolean {
-  const providers = m.watchProviders;
-  return (
-    (m.voteAverage != null && !Number.isNaN(m.voteAverage)) ||
-    (!!providers && providers.length > 0) ||
-    isSafeTmdbWatchPageUrl(m.tmdbWatchPageUrl) ||
-    (m.runtimeMinutes != null && m.runtimeMinutes > 0)
-  );
 }
 
 const MovieCard = memo(function MovieCard({
@@ -121,7 +112,8 @@ const MovieCard = memo(function MovieCard({
             {m.year ? <span>{m.year}</span> : null}
             {voteLabel ? (
               <span className="tmdb-vote" title="Note moyenne TMDB (indicatif)">
-                {m.year ? ' · ' : null}TMDB {voteLabel}
+                {m.year ? ' · ' : null}
+                {voteLabel}
               </span>
             ) : null}
             {runtimeLabel ? (
@@ -154,17 +146,27 @@ const MovieCard = memo(function MovieCard({
           <div className={styles.actions}>
             <button
               type="button"
-              className="btn btn-sm"
+              className={clsx('btn btn-sm', m.myVote === 1 && styles.voteUpActive)}
               onClick={() => void onVote(m.id, 1)}
-              aria-label={`${t('movies.list.voteUp')} ${m.title}`}
+              aria-pressed={m.myVote === 1}
+              aria-label={
+                m.myVote === 1
+                  ? t('movies.list.voteUpRemoveAria', { title: m.title })
+                  : `${t('movies.list.voteUp')} ${m.title}`
+              }
             >
               <ThumbsUp aria-hidden size={16} /> {m.up}
             </button>
             <button
               type="button"
-              className="btn btn-sm"
+              className={clsx('btn btn-sm', m.myVote === -1 && styles.voteDownActive)}
               onClick={() => void onVote(m.id, -1)}
-              aria-label={`${t('movies.list.voteDown')} ${m.title}`}
+              aria-pressed={m.myVote === -1}
+              aria-label={
+                m.myVote === -1
+                  ? t('movies.list.voteDownRemoveAria', { title: m.title })
+                  : `${t('movies.list.voteDown')} ${m.title}`
+              }
             >
               <ThumbsDown aria-hidden size={16} /> {m.down}
             </button>
@@ -226,8 +228,6 @@ export default function MovieList({
     return <p className="placeholder">{t('movies.list.emptyPlaceholder')}</p>;
   }
 
-  const showTmdbFooter = movies.some(hasTmdbEnrichment);
-
   return (
     <div>
       <ul className={styles.list}>
@@ -248,9 +248,7 @@ export default function MovieList({
           />
         ))}
       </ul>
-      {showTmdbFooter ? (
-        <TmdbIndicativeFooter className={`tmdb-indicative-footer ${styles.tmdbFooter}`} />
-      ) : null}
+      <TmdbAttribution />
     </div>
   );
 }
