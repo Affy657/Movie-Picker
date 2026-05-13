@@ -26,6 +26,14 @@ public sealed class MongoVoteRepository : IVoteRepository
             cancellationToken: ct);
     }
 
+    public async Task<bool> DeleteByMovieAndParticipantAsync(string movieId, string participantId, CancellationToken ct = default)
+    {
+        var res = await _collection.DeleteOneAsync(
+            x => x.MovieId == movieId && x.ParticipantId == participantId,
+            cancellationToken: ct);
+        return res.IsAcknowledged && res.DeletedCount > 0;
+    }
+
     public async Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(eventId))
@@ -116,6 +124,24 @@ public sealed class MongoVoteRepository : IVoteRepository
                 r["down"].ToInt32());
         }
 
+        return dict;
+    }
+
+    public async Task<IReadOnlyDictionary<string, int>> GetParticipantVotesByEventAsync(
+        string eventId,
+        string participantId,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrEmpty(eventId) || string.IsNullOrEmpty(participantId))
+            return new Dictionary<string, int>();
+
+        var docs = await _collection
+            .Find(x => x.EventId == eventId && x.ParticipantId == participantId)
+            .ToListAsync(ct);
+
+        var dict = new Dictionary<string, int>(docs.Count);
+        foreach (var d in docs)
+            dict[d.MovieId] = d.Value;
         return dict;
     }
 }

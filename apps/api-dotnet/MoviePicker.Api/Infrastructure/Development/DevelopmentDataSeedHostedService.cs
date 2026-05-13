@@ -186,6 +186,25 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
         var existing = await users.GetByEmailAsync(email, ct).ConfigureAwait(false);
         if (existing is not null)
         {
+            // Resync du mot de passe si la config Development a changé depuis la 1re seed :
+            // sans ça, le hash en base reste figé et l'API rejette les credentials documentés
+            // (« compte local dev » dans la SPA). Limité à l'env Development par le caller.
+            var verify = hasher.VerifyHashedPassword(existing, existing.PasswordHash, password);
+            if (verify == PasswordVerificationResult.Failed)
+            {
+                var rehashed = existing with
+                {
+                    PasswordHash = hasher.HashPassword(existing, password),
+                    UpdatedAt = DateTimeOffset.UtcNow
+                };
+                var updated = await users.UpdateAsync(rehashed, ct).ConfigureAwait(false);
+                _logger.LogInformation(
+                    "DevelopmentSeed : mot de passe de {EmailMasked} (id={UserId}) resynchronisé sur la config courante.",
+                    EmailMasking.Mask(email),
+                    updated.Id);
+                return updated;
+            }
+
             _logger.LogInformation(
                 "DevelopmentSeed : utilisateur {EmailMasked} existe déjà (id={UserId}).",
                 EmailMasking.Mask(email),

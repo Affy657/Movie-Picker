@@ -2,20 +2,25 @@ import { Link } from 'react-router-dom';
 import { Clapperboard, Disc3, Link2, ThumbsUp } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import { APP_DOCUMENT_TITLE, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
-import styles from './Home.module.css';
+import styles from './LandingPage.module.css';
 
-export default function Home() {
+export default function LandingPage() {
   useDocumentTitle(APP_DOCUMENT_TITLE);
+  const { t } = useTranslation();
 
   return (
     <PageLayout className={styles.landing}>
       <header className={styles.hero}>
         <h1 className={styles.title}>Movie Picker</h1>
         <p className={styles.tagline}>Choisissez le film de la soirée à plusieurs.</p>
-        <nav className={`nav-actions ${styles.cta}`} aria-label="Actions principales">
-          <Link to={ROUTES.createEvent} className="btn btn-primary">
-            Créer une soirée
+        <nav className={`nav-actions ${styles.cta}`} aria-label={t('home.actionsAriaLabel')}>
+          <Link to={ROUTES.login} className="btn btn-primary">
+            {t('home.ctaLogin')}
+          </Link>
+          <Link to={ROUTES.register} className="btn">
+            {t('home.ctaRegister')}
           </Link>
         </nav>
       </header>

@@ -148,6 +148,29 @@ public sealed class LaunchWheelHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_Relaunch_DoesNotPickPreviousWinner_WhenOtherCandidatesExist()
+    {
+        var evt = ActiveEvent() with { WinnerMovieId = "mov1" };
+        var movies = new List<Movie>
+        {
+            new() { Id = "mov1", EventId = evt.Id, ParticipantId = "p1", TmdbId = 1, Title = "Already Won", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
+            new() { Id = "mov2", EventId = evt.Id, ParticipantId = "p2", TmdbId = 2, Title = "Other A", Year = "2021", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
+            new() { Id = "mov3", EventId = evt.Id, ParticipantId = "p3", TmdbId = 3, Title = "Other B", Year = "2022", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
+        };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
+        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movies);
+        _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+
+        for (var i = 0; i < 30; i++)
+        {
+            var result = await _sut.HandleAsync("evt1");
+            Assert.NotEqual("mov1", result.Winner.Id);
+        }
+    }
+
+    [Fact]
     public async Task HandleAsync_CreatorWithoutHostToken_Succeeds()
     {
         var evt = new Event

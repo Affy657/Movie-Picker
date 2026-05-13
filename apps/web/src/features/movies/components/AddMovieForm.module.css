@@ -155,10 +155,6 @@
   color: var(--color-meta);
 }
 
-.tmdbFooter {
-  margin-top: 0.5rem;
-}
-
 @media (max-width: 520px) {
   .resultItem {
     grid-template-columns: auto 1fr;

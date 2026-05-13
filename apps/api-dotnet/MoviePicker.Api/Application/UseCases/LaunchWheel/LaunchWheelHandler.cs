@@ -61,7 +61,8 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
             movies,
             id => scores.TryGetValue(id, out var a) ? a.Score : 0,
             mode,
-            Random.Shared);
+            Random.Shared,
+            excludedMovieId: evt.WinnerMovieId);
 
         var now = DateTimeOffset.UtcNow;
         var updated = evt with { WinnerMovieId = winner.Id, UpdatedAt = now };

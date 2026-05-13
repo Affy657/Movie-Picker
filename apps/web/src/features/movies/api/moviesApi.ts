@@ -2,8 +2,12 @@ import { fetchApi } from '@/shared/api/client';
 import { mapMovieData, type RawMovieData } from '@/shared/api/apiMapping';
 import type { MovieData, WatchProviderOffer } from '@/shared/types/movie';
 
-export async function fetchEventMovies(slug: string): Promise<MovieData[]> {
-  const list = await fetchApi<RawMovieData[]>(`/events/${slug}/movies`);
+export async function fetchEventMovies(
+  slug: string,
+  participantId?: string | null
+): Promise<MovieData[]> {
+  const suffix = participantId ? `?participantId=${encodeURIComponent(participantId)}` : '';
+  const list = await fetchApi<RawMovieData[]>(`/events/${slug}/movies${suffix}`);
   return Array.isArray(list) ? list.map(mapMovieData) : [];
 }
 
@@ -126,6 +130,19 @@ export async function voteMovie(
   await fetchApi(`/events/${slug}/movies/${movieId}/vote`, {
     method: 'POST',
     body: JSON.stringify({ participantId, value }),
+  });
+}
+
+export async function clearMovieVote(
+  slug: string,
+  movieId: string,
+  participantId: string
+): Promise<void> {
+  // `participantId` est passé en query string : standard HTTP plus sûr que le
+  // body sur un DELETE (certains proxies ignorent le corps des requêtes DELETE).
+  const search = new URLSearchParams({ participantId });
+  await fetchApi(`/events/${slug}/movies/${movieId}/vote?${search.toString()}`, {
+    method: 'DELETE',
   });
 }
 

@@ -1,9 +1,9 @@
 import { lazy, Suspense, useState } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Navigate, Routes, Route, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/shared/contexts/ThemeContext';
 import { LocaleProvider, useTranslation } from '@/shared/i18n';
-import { AuthProvider } from '@/features/auth/contexts/AuthContext';
+import { AuthProvider, useAuth } from '@/features/auth/contexts/AuthContext';
 import UserThemeSync from '@/app/components/UserThemeSync';
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
 import AppShell from '@/app/components/AppShell';
@@ -11,7 +11,7 @@ import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
 
-const Home = lazy(() => import('@/app/pages/Home'));
+const LandingPage = lazy(() => import('@/app/pages/LandingPage'));
 const CreateEvent = lazy(() => import('@/features/events/pages/CreateEvent'));
 const EventDetail = lazy(() => import('@/features/events/pages/EventDetail'));
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
@@ -31,6 +31,29 @@ function PageFallback() {
   );
 }
 
+/**
+ * Page d'accueil routée : un user connecté est redirigé vers « Mes soirées » ;
+ * un visiteur anonyme voit la landing publique (seule page accessible hors auth).
+ */
+function HomeRoute() {
+  const { user, isLoading } = useAuth();
+  const { t } = useTranslation();
+
+  if (isLoading) {
+    return (
+      <PageLayout>
+        <p className="placeholder">{t('common.loading')}</p>
+      </PageLayout>
+    );
+  }
+
+  if (user) {
+    return <Navigate to={ROUTES.myEvents} replace />;
+  }
+
+  return <LandingPage />;
+}
+
 function createAppQueryClient() {
   return new QueryClient({
     defaultOptions: {
@@ -47,7 +70,7 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route element={<AppShell />}>
-        <Route path={ROUTES.home} element={<Home />} />
+        <Route path={ROUTES.home} element={<HomeRoute />} />
         <Route
           path={ROUTES.createEvent}
           element={
@@ -60,9 +83,30 @@ export function AppRoutes() {
         <Route path={ROUTES.register} element={<RegisterPage />} />
         <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
         <Route path={ROUTES.resetPassword} element={<ResetPasswordPage />} />
-        <Route path={ROUTES.account} element={<AccountPage />} />
-        <Route path={ROUTES.myEvents} element={<MyEventsPage />} />
-        <Route path={ROUTES.eventDetailPattern} element={<EventDetail />} />
+        <Route
+          path={ROUTES.account}
+          element={
+            <ProtectedRoute>
+              <AccountPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.myEvents}
+          element={
+            <ProtectedRoute>
+              <MyEventsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.eventDetailPattern}
+          element={
+            <ProtectedRoute>
+              <EventDetail />
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

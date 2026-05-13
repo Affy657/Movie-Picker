@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -7,6 +7,7 @@ import {
   fetchMyEventsList,
   GUEST_JOINED_EVENTS_ALL_FAILED,
 } from '@/features/events/api/eventsApi';
+import { listStoredParticipantSlugs } from '@/features/events/storage';
 import PageLayout from '@/shared/components/PageLayout';
 import MyEventsSkeleton from '@/features/events/pages/MyEventsSkeleton';
 import { ApiError, getErrorMessage } from '@/shared/api/apiError';
@@ -179,6 +180,12 @@ export default function MyEventsPage() {
   const queryClient = useQueryClient();
   const { user, isLoading: authLoading } = useAuth();
 
+  // Évite une requête superflue quand l'utilisateur connecté n'a aucun « join invité »
+  // mémorisé en session. Capturé une fois au montage : on ne suit pas dynamiquement
+  // sessionStorage (un join invité fait dans un autre onglet sera surfacé au prochain
+  // refresh). Pour les anonymes, on garde toujours la query (c'est leur unique source).
+  const [hasGuestSession] = useState<boolean>(() => listStoredParticipantSlugs().length > 0);
+
   const loggedInQuery = useQuery({
     queryKey: queryKeys.myEvents.list,
     queryFn: () => fetchMyEventsList(),
@@ -189,7 +196,7 @@ export default function MyEventsPage() {
   const guestQuery = useQuery({
     queryKey: queryKeys.myEvents.guestJoined,
     queryFn: () => fetchGuestJoinedEventsSummaries(),
-    enabled: !authLoading && !user,
+    enabled: !authLoading && (!user || hasGuestSession),
     retry: false,
   });
 
@@ -203,9 +210,21 @@ export default function MyEventsPage() {
     void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
   }, [user, loggedInQuery.isError, loggedInQuery.error, queryClient]);
 
+  const mergedEvents = useMemo<MyEventSummary[]>(() => {
+    const fromApi = activeQuery.data?.events ?? [];
+    if (!user) return fromApi;
+    // Utilisateur connecté : on ajoute les soirées rejointes en tant qu'invité (sessionStorage),
+    // dédupliquées par slug en privilégiant la version API authentifiée.
+    const guestExtras = guestQuery.data?.events ?? [];
+    if (guestExtras.length === 0) return fromApi;
+    const knownSlugs = new Set(fromApi.map((e) => e.slug));
+    const extras = guestExtras.filter((e) => !knownSlugs.has(e.slug));
+    return extras.length === 0 ? fromApi : [...fromApi, ...extras];
+  }, [user, activeQuery.data?.events, guestQuery.data?.events]);
+
   const { hostedActive, joinedActive, historyEvents } = useMemo(
-    () => partitionMyEvents(activeQuery.data?.events ?? []),
-    [activeQuery.data?.events]
+    () => partitionMyEvents(mergedEvents),
+    [mergedEvents]
   );
 
   const isLoading = authLoading || activeQuery.isLoading;
@@ -263,7 +282,7 @@ export default function MyEventsPage() {
     );
   }
 
-  const total = (activeQuery.data?.events ?? []).length;
+  const total = mergedEvents.length;
   const guestSkipped = !user ? (activeQuery.data?.guestSkippedCount ?? 0) : 0;
   const emptyLead = user
     ? t('events.myEvents.emptyDescription')

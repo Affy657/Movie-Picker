@@ -31,6 +31,12 @@ export const fr = {
     brandLabel: 'Movie Picker \u2014 Accueil',
   },
 
+  home: {
+    actionsAriaLabel: 'Actions principales',
+    ctaLogin: 'Se connecter',
+    ctaRegister: 'Créer un compte',
+  },
+
   auth: {
     login: {
       title: 'Connexion',
@@ -308,6 +314,8 @@ export const fr = {
       proposedByMeSelf: 'moi',
       voteUp: 'Voter pour',
       voteDown: 'Voter contre',
+      voteUpRemoveAria: 'Retirer mon vote pour « {{title}} »',
+      voteDownRemoveAria: 'Retirer mon vote contre « {{title}} »',
       voteError: 'Vote impossible',
       removeButton: 'Retirer',
       removeAsHostAria: 'Retirer « {title} » en tant qu\u2019hôte',
@@ -349,6 +357,9 @@ export const fr = {
     tmdb: {
       disclaimer:
         'Les notes et les offres de visionnage (streaming / VOD) sont indicatives, issues de The Movie Database (TMDB). Les services disponibles peuvent varier.',
+      attributionPrefix: 'Données fournies par',
+      attributionLinkLabel: 'TMDB',
+      attributionLinkAria: 'TMDB — ouvrir le site The Movie Database (nouvel onglet)',
     },
     watchProviders: {
       listAria: 'Offres de visionnage indicatives',

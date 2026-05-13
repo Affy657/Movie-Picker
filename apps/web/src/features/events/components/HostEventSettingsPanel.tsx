@@ -182,9 +182,6 @@ export default function HostEventSettingsPanel({
       }}
     >
       <summary className={styles.summary}>Paramètres de la soirée</summary>
-      <p className={styles.lead}>
-        Réservé à l&apos;hôte — thème, fin de validité, limite de propositions et mode de roue.
-      </p>
       {locked && (
         <p className={styles.locked}>
           Cette soirée n&apos;est plus modifiable (terminée ou roue déjà lancée).
@@ -310,11 +307,6 @@ export default function HostEventSettingsPanel({
             />{' '}
             Aperçu de lien détaillé (messageries / réseaux)
           </label>
-          <p className="hint">
-            Désactivé par défaut : le titre et les détails de la soirée ne sont pas exposés dans
-            l’aperçu du lien. Si vous cochez, activez aussi le branchement CloudFront décrit dans la
-            doc déploiement (MP-17), sinon le partage reste générique côté URL <code>/e/…</code>.
-          </p>
         </div>
 
         <button type="submit" className="btn btn-primary" disabled={locked || mutation.isPending}>

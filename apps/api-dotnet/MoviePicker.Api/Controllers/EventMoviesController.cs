@@ -21,9 +21,10 @@ public sealed class EventMoviesController : ControllerBase
     public async Task<IActionResult> List(
         string idOrSlug,
         [FromServices] IListMoviesForEventHandler handler,
-        CancellationToken ct)
+        CancellationToken ct,
+        [FromQuery] string? participantId = null)
     {
-        var list = await handler.HandleAsync(idOrSlug, ct);
+        var list = await handler.HandleAsync(idOrSlug, participantId, ct);
         return Ok(list);
     }
 
@@ -75,6 +76,26 @@ public sealed class EventMoviesController : ControllerBase
     {
         var vote = await handler.HandleAsync(idOrSlug, movieId, request, ct);
         return Ok(vote);
+    }
+
+    [HttpDelete("{movieId}/vote")]
+    [EnableRateLimiting(RateLimitingExtensions.VoteMutationPolicy)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> ClearVote(
+        string idOrSlug,
+        string movieId,
+        [FromQuery] string participantId,
+        [FromServices] IClearMovieVoteHandler handler,
+        CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(participantId))
+            return BadRequest(new { error = "Le paramètre participantId est requis." });
+        await handler.HandleAsync(idOrSlug, movieId, participantId, ct);
+        return NoContent();
     }
 
     [HttpPost("{movieId}/seen")]

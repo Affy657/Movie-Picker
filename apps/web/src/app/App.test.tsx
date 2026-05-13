@@ -1,10 +1,12 @@
 import { Suspense } from 'react';
-import { describe, it, expect } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { setupServer } from 'msw/node';
+import { http, HttpResponse } from 'msw';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { AppRoutes } from '@/app/App';
+import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
 
 function renderRoutes(initialEntries: string[]) {
   return render(
@@ -18,40 +20,132 @@ function renderRoutes(initialEntries: string[]) {
   );
 }
 
+const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
+  HttpResponse.json({
+    userId: 'u1',
+    displayName: 'Alice',
+    emailMasked: 'a***@test.local',
+    uiTheme: 'system',
+  })
+);
+
 describe('App (routes)', () => {
-  it('route / affiche l\u2019accueil', async () => {
-    renderRoutes(['/']);
-    expect(await screen.findByRole('heading', { name: /movie picker/i })).toBeInTheDocument();
+  const server = setupServer();
+
+  beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
+  afterEach(() => server.resetHandlers());
+  afterAll(() => server.close());
+
+  describe('visiteur anonyme', () => {
+    it('route / affiche la landing publique avec les CTA d’authentification', async () => {
+      server.use(authMeGuestHandler);
+      renderRoutes(['/']);
+      // Timeout étendu : sous coverage V8 sur Windows le mount initial (Auth + lazy LandingPage)
+      // peut dépasser le default 1s de findBy.
+      expect(
+        await screen.findByRole('heading', { name: /movie picker/i }, { timeout: 8000 })
+      ).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /^se connecter$/i })).toHaveAttribute(
+        'href',
+        '/login'
+      );
+      expect(screen.getByRole('link', { name: /^créer un compte$/i })).toHaveAttribute(
+        'href',
+        '/register'
+      );
+    });
+
+    it('route /new redirige vers /login avec un returnTo', async () => {
+      server.use(authMeGuestHandler);
+      renderRoutes(['/new']);
+      expect(await screen.findByRole('heading', { name: /^connexion$/i })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /créer un compte/i })).toHaveAttribute(
+        'href',
+        '/register?returnTo=%2Fnew'
+      );
+    });
+
+    it('route /my-events redirige vers /login avec un returnTo', async () => {
+      server.use(authMeGuestHandler);
+      renderRoutes(['/my-events']);
+      expect(await screen.findByRole('heading', { name: /^connexion$/i })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /créer un compte/i })).toHaveAttribute(
+        'href',
+        '/register?returnTo=%2Fmy-events'
+      );
+    });
+
+    it('route /e/:slug redirige vers /login avec un returnTo (lien de partage)', async () => {
+      server.use(authMeGuestHandler);
+      renderRoutes(['/e/soiree-secrete']);
+      expect(await screen.findByRole('heading', { name: /^connexion$/i })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /créer un compte/i })).toHaveAttribute(
+        'href',
+        '/register?returnTo=%2Fe%2Fsoiree-secrete'
+      );
+    });
+
+    it('route /settings redirige vers /login avec un returnTo', async () => {
+      server.use(authMeGuestHandler);
+      renderRoutes(['/settings']);
+      expect(await screen.findByRole('heading', { name: /^connexion$/i })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /créer un compte/i })).toHaveAttribute(
+        'href',
+        '/register?returnTo=%2Fsettings'
+      );
+    });
+
+    it('AppShell : aucune barre de navigation n’est exposée aux non-connectés', async () => {
+      server.use(authMeGuestHandler);
+      renderRoutes(['/']);
+      await screen.findByRole('heading', { name: /movie picker/i }, { timeout: 8000 });
+      expect(
+        screen.queryByRole('navigation', { name: /navigation principale/i })
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /^Mes soirées$/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /^Paramètres$/i })).not.toBeInTheDocument();
+    });
   });
 
-  it('route /new depuis l\u2019accueil exige une connexion', async () => {
-    const user = userEvent.setup();
-    renderRoutes(['/']);
-    await user.click(await screen.findByRole('link', { name: /cr\u00e9er une soir\u00e9e/i }));
-    expect(await screen.findByRole('heading', { name: /^connexion$/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /cr\u00e9er un compte/i })).toHaveAttribute(
-      'href',
-      '/register?returnTo=%2Fnew'
-    );
+  describe('utilisateur connecté', () => {
+    it('route / redirige vers /my-events', async () => {
+      server.use(
+        authedUserHandler,
+        http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
+      );
+      renderRoutes(['/']);
+      expect(
+        await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 })
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: /movie picker/i })).not.toBeInTheDocument();
+    });
+
+    it('AppShell expose Mes soirées + Paramètres dans la nav (sans Accueil)', async () => {
+      server.use(
+        authedUserHandler,
+        http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
+      );
+      renderRoutes(['/my-events']);
+      await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 });
+      const navs = screen.getAllByRole('navigation', { name: /navigation principale/i });
+      expect(navs).toHaveLength(2);
+      const mobileNav = navs.at(-1);
+      if (!mobileNav) throw new Error('Mobile nav introuvable');
+      expect(within(mobileNav).queryByRole('link', { name: /^Accueil$/i })).not.toBeInTheDocument();
+      expect(within(mobileNav).getByRole('link', { name: /^Mes soirées$/i })).toBeInTheDocument();
+      expect(within(mobileNav).getByRole('link', { name: /^Paramètres$/i })).toBeInTheDocument();
+    });
   });
 
-  it('route /my-events accessible sans compte (liste invité)', async () => {
-    renderRoutes(['/my-events']);
-    expect(
-      await screen.findByText(/Aucune soirée enregistrée sur cet appareil/i)
-    ).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /^Mes soirées$/i })).toBeInTheDocument();
-  });
-
-  it('navbar mobile expose les liens via leur nom accessible (icônes + libellé sr-only)', async () => {
+  it('le brand mène toujours à la racine du site', async () => {
+    server.use(authMeGuestHandler);
     renderRoutes(['/']);
-    await screen.findByRole('heading', { name: /movie picker/i });
-    const navs = screen.getAllByRole('navigation', { name: /navigation principale/i });
-    expect(navs).toHaveLength(2);
-    const mobileNav = navs.at(-1);
-    if (!mobileNav) throw new Error('Mobile nav introuvable');
-    for (const name of [/^Accueil$/i, /^Mes soirées$/i, /^Paramètres$/i]) {
-      expect(within(mobileNav).getByRole('link', { name })).toBeInTheDocument();
-    }
+    await screen.findByRole('heading', { name: /movie picker/i }, { timeout: 8000 });
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: /movie picker .*accueil/i })).toHaveAttribute(
+        'href',
+        '/'
+      );
+    });
   });
 });

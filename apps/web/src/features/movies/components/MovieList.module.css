@@ -87,10 +87,18 @@
   color: var(--color-badge-me-text);
 }
 
-.cardProviders {
-  margin-top: 0.25rem;
+.voteUpActive {
+  background: var(--color-vote-up-bg, #1f7a4a);
+  color: var(--color-vote-up-text, #ffffff);
+  border-color: var(--color-vote-up-bg, #1f7a4a);
 }
 
-.tmdbFooter {
-  margin-top: 0.5rem;
+.voteDownActive {
+  background: var(--color-vote-down-bg, #b3331a);
+  color: var(--color-vote-down-text, #ffffff);
+  border-color: var(--color-vote-down-bg, #b3331a);
+}
+
+.cardProviders {
+  margin-top: 0.25rem;
 }

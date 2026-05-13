@@ -42,7 +42,10 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         _options = options.Value;
     }
 
-    public async Task<IReadOnlyList<MovieWithScoreResponse>> HandleAsync(string idOrSlug, CancellationToken ct = default)
+    public async Task<IReadOnlyList<MovieWithScoreResponse>> HandleAsync(
+        string idOrSlug,
+        string? participantId = null,
+        CancellationToken ct = default)
     {
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
@@ -50,6 +53,10 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         var movieIds = movies.Select(m => m.Id).ToList();
         var scores = await _voteRepository.AggregateScoresByMovieIdsAsync(movieIds, ct);
         var seenAgg = await _seenMarkRepository.AggregateByMovieIdsAsync(evt.Id, movieIds, ct);
+
+        IReadOnlyDictionary<string, int> myVotes = string.IsNullOrEmpty(participantId)
+            ? new Dictionary<string, int>()
+            : await _voteRepository.GetParticipantVotesByEventAsync(evt.Id, participantId, ct);
         var seenParticipantIds = seenAgg.Values.SelectMany(v => v.ParticipantIds).Distinct().ToList();
         var participantIds = movies.Select(m => m.ParticipantId).Concat(seenParticipantIds).Distinct().ToList();
         var pseudos = await _participantRepository.GetPseudosByIdsAsync(participantIds, ct);
@@ -107,6 +114,8 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
             enrichmentByTmdb.TryGetValue(m.TmdbId, out var enr);
             var posterOut = _posterImageStore.ToPublicPosterPath(m.PosterPath);
 
+            int? myVote = myVotes.TryGetValue(m.Id, out var mv) ? mv : null;
+
             list.Add(
                 new MovieWithScoreResponse
                 {
@@ -123,6 +132,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
                     Score = s.Score,
                     Up = s.Up,
                     Down = s.Down,
+                    MyVote = myVote,
                     SeenCount = seenCount,
                     SeenByPseudos = seenByPseudos,
                     VoteAverage = enr?.VoteAverage,

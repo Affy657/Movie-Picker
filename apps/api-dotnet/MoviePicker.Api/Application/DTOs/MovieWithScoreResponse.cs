@@ -19,6 +19,12 @@ public sealed class MovieWithScoreResponse
     public int Up { get; init; }
     public int Down { get; init; }
 
+    /// <summary>
+    /// Vote du participant courant pour ce film (1 = like, -1 = dislike). <see langword="null"/>
+    /// si le participant n'a pas voté ou si le client n'a pas fourni le query <c>participantId</c>.
+    /// </summary>
+    public int? MyVote { get; init; }
+
     /// <summary>Nombre de participants ayant marqué le film comme « déjà vu » (neutre dans la pondération de la roue).</summary>
     public int SeenCount { get; init; }
 

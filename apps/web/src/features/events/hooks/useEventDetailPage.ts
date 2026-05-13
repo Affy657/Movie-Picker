@@ -42,15 +42,16 @@ export function useEventDetailPage(slug: string | undefined) {
   const moviesQueryEnabled = !!slug && eventQuery.isSuccess;
   const { moviesRefetchInterval } = useEventLive(event ?? undefined, { moviesQueryEnabled });
 
-  const moviesQuery = useMovies(slug, {
-    enabled: moviesQueryEnabled,
-    refetchInterval: moviesRefetchInterval,
-  });
-  const movies = moviesQuery.data ?? [];
-
   const [participant, setParticipant] = useState<{ participantId: string; pseudo: string } | null>(
     null
   );
+
+  const moviesQuery = useMovies(slug, {
+    enabled: moviesQueryEnabled,
+    refetchInterval: moviesRefetchInterval,
+    participantId: participant?.participantId ?? null,
+  });
+  const movies = moviesQuery.data ?? [];
   const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {

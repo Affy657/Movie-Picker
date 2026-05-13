@@ -27,6 +27,12 @@ export const en: Locale = {
     brandLabel: 'Movie Picker \u2014 Home',
   },
 
+  home: {
+    actionsAriaLabel: 'Main actions',
+    ctaLogin: 'Log in',
+    ctaRegister: 'Create an account',
+  },
+
   auth: {
     login: {
       title: 'Log in',
@@ -295,6 +301,8 @@ export const en: Locale = {
       proposedByMeSelf: 'you',
       voteUp: 'Vote up',
       voteDown: 'Vote down',
+      voteUpRemoveAria: 'Remove my upvote for "{{title}}"',
+      voteDownRemoveAria: 'Remove my downvote for "{{title}}"',
       voteError: 'Vote failed',
       removeButton: 'Remove',
       removeAsHostAria: 'Remove "{title}" as host',
@@ -335,6 +343,9 @@ export const en: Locale = {
     tmdb: {
       disclaimer:
         'Ratings and streaming availability are indicative, sourced from The Movie Database (TMDB). Available services may vary.',
+      attributionPrefix: 'Data provided by',
+      attributionLinkLabel: 'TMDB',
+      attributionLinkAria: 'TMDB — open The Movie Database website (new tab)',
     },
     watchProviders: {
       listAria: 'Indicative streaming availability',

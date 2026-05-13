@@ -8,15 +8,19 @@ describe('formatTmdbVote', () => {
     expect(formatTmdbVote(NaN)).toBeNull();
   });
 
-  it('formate un entier avec une décimale', () => {
-    expect(formatTmdbVote(7)).toBe('7.0/10');
+  it('convertit la note TMDB (sur 10) sur 5 avec une décimale (entier)', () => {
+    expect(formatTmdbVote(7)).toBe('3.5/5');
   });
 
-  it('formate un décimal à une décimale', () => {
-    expect(formatTmdbVote(8.46)).toBe('8.5/10');
+  it('convertit un décimal sur 5 avec une décimale', () => {
+    expect(formatTmdbVote(8.46)).toBe('4.2/5');
   });
 
   it('formate zéro', () => {
-    expect(formatTmdbVote(0)).toBe('0.0/10');
+    expect(formatTmdbVote(0)).toBe('0.0/5');
+  });
+
+  it('plafond TMDB (10) → 5/5', () => {
+    expect(formatTmdbVote(10)).toBe('5.0/5');
   });
 });
