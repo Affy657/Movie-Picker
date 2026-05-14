@@ -102,10 +102,7 @@ export default function EventDetail() {
           : APP_DOCUMENT_TITLE;
   useDocumentTitle(documentTitle);
 
-  // ──────────────────────────────────────────────────────────────────────
-  // Handlers retrait / quitter — mémoïsés pour des références stables.
-  // (Définis avant les early-returns pour respecter les règles des hooks.)
-  // ──────────────────────────────────────────────────────────────────────
+  // Handlers définis avant les early-returns pour respecter les règles des hooks.
   const isConnectedSelf =
     !!event?.myParticipant?.id && participant?.participantId === event.myParticipant.id;
 

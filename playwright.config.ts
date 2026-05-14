@@ -1,9 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-/**
- * E2E : API .NET (stub TMDB) + front buildé avec VITE_API_URL vers l’API.
- * Prérequis local : `VITE_API_URL=http://127.0.0.1:5010 pnpm --filter web build`
- */
+/** Prérequis local : `VITE_API_URL=http://127.0.0.1:5010 pnpm --filter web build` */
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
@@ -16,7 +13,6 @@ export default defineConfig({
     baseURL: 'http://127.0.0.1:5174',
     trace: 'on-first-retry',
   },
-  // Même chaîne en local et avec CI=1 (test:e2e:ci) : API stub TMDB + preview Vite.
   // --no-launch-profile évite le port 4000 des launchSettings ; sans profil, ASPNETCORE_* doit forcer Development
   // sinon ProductionStartupValidation exige ALLOWED_ORIGINS + MONGODB_URI.
   webServer: [
