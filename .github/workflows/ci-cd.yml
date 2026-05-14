@@ -21,9 +21,24 @@ env:
   CLOUD_RUN_SERVICE_NAME: movie-picker-api
 
 jobs:
+  gitleaks:
+    name: Secret scan (Gitleaks)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - name: Scan working tree
+        run: |
+          docker run --rm -v "${PWD}:/repo:ro" \
+            ghcr.io/gitleaks/gitleaks:v8.24.3 \
+            dir --no-banner --redact --verbose --exit-code 1 /repo
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v6
@@ -55,11 +70,24 @@ jobs:
           if-no-files-found: error
       - name: Audit dépendances (échoue si high/critical)
         run: pnpm audit --audit-level=high
+      - name: Audit NuGet — liste vulnérabilités (informatif)
+        run: dotnet list apps/api-dotnet/MoviePicker.slnx package --vulnerable --include-transitive
+      - name: Audit NuGet — échoue si High / Critical
+        run: |
+          set -o pipefail
+          OUTPUT=$(dotnet list apps/api-dotnet/MoviePicker.slnx package --vulnerable --include-transitive 2>&1)
+          echo "$OUTPUT"
+          if echo "$OUTPUT" | grep -Eq '\b(High|Critical)\b'; then
+            echo "::error::Vulnérabilités NuGet High/Critical détectées. Mettre à jour ou suppress via <NuGetAuditSuppress> dans Directory.Build.props (documenter la raison)."
+            exit 1
+          fi
 
   test-web:
     name: Tests front + couverture
     needs: lint
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v6
@@ -80,6 +108,8 @@ jobs:
     name: Tests API .NET + couverture
     needs: lint
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-dotnet@v5
@@ -106,6 +136,8 @@ jobs:
     needs: test-web
     runs-on: ubuntu-latest
     continue-on-error: true
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v6
@@ -141,6 +173,22 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
       - run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
       - run: docker build -f apps/api-dotnet/MoviePicker.Api/Dockerfile -t movie-picker-api apps/api-dotnet/MoviePicker.Api
+      # § 25 — Scan CVE de l'image avant push. Politique :
+      #   - bloque sur CRITICAL inconditionnellement
+      #   - bloque sur HIGH **uniquement si un fix amont est disponible** (`ignore-unfixed: true`),
+      #     pour éviter de geler le déploiement sur des CVE base-image sans patch publié.
+      # Si un CVE bloque ici, soit on rebuild avec une base image plus récente, soit on
+      # documente le risque (workaround / mitigation) et on suppress côté Trivy
+      # (`.trivyignore` à la racine du contexte de build) avec une note de revue.
+      - name: Scan image Docker (Trivy)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: movie-picker-api
+          format: table
+          exit-code: '1'
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          vuln-type: os,library
       - run: |
           IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPO }}/api:${{ github.sha }}"
           IMAGE_LATEST="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPO }}/api:latest"
@@ -193,6 +241,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test-web, test-api]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v6

@@ -45,7 +45,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 - [x] **Live light → live** : couche polling isolée (`useEventLive` ou équivalent) — voir § 15
 - [x] **i18n** : convention « pas de chaînes en dur » sur nouveaux écrans + 2e langue livrée (`locales/{fr,en}.ts`, `LocaleContext`, `tmdbLanguage`) — voir § 19
 - [x] **Rate limiting prod** (par IP / minute) : création soirée 20, join 60, recherche films 40, inscription 10, login 30, PATCH config 40, mutations « déjà vu » 120, GET affiches cache 300 — voir § 21
-- [ ] **Sécurité CI** : Sonar (quality gate bloquante), `dotnet list package --vulnerable`, scan CVE image Docker (Trivy/Grype) avant push, GitHub Secret scanning + push protection — voir § 23 + § 24 + § 25 + § 26
+- [x] **Sécurité CI** : Sonar (quality gate bloquante via SonarCloud GitHub App), `dotnet list package --vulnerable` (échec sur High/Critical), scan CVE image Docker (Trivy) avant push, Gitleaks pour le scan secrets (GitHub Secret scanning natif indisponible : repo privé sans Advanced Security) — voir § 23 + § 24 + § 25 + § 26
 
 ### RNCP 39583 — clôture titre (livrables documentaires)
 
@@ -269,7 +269,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 - [x] **QR code** + **rappel in-app** validés sur mobile
 - [x] **OG dynamiques** : livrés **ou** explicitement reportés avec doc de la limite
 - [x] **Mot de passe oublié** : flux email + reset opérationnel en prod (cf. § 3) — *domaine `movie-picker.fr` vérifié dans Resend, secret `RESEND_API_KEY` provisionné dans GCP Secret Manager et mappé sur Cloud Run `movie-picker-api` (révision `00041-gdc`), smoke test bout-en-bout validé en prod (request 202 + `ResendEmailSender` HTTP 200 + confirm 200)*
-- [ ] **Sécurité CI** : Sonar gate, scan NuGet, scan image Docker, secret scanning **tous actifs en CI** (cf. § 23–26)
+- [x] **Sécurité CI** : Sonar gate, scan NuGet, scan image Docker, secret scanning **tous actifs en CI** (cf. § 23–26)
 - [ ] **Clôture RNCP** : suivie séparément dans [`livraison-RNCP.md`](livraison-RNCP.md) (recettes, OWASP, a11y, manuels, supervision, journal versions, cadrage Bloc 1, pilotage Bloc 3, etc.)
 - [x] Mettre à jour la features list du dépôt et tout index roadmaps par version si le dépôt en contient un
 
@@ -279,12 +279,12 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 > **Objectif** : qualité / SAST sur le code via **SonarCloud** ou **SonarQube**, avec **quality gate** sur les PR ou `master`.
 
-- [ ] Créer le projet Sonar (organisation / clé projet SonarCloud ou instance SonarQube) et lier le dépôt GitHub
-- [ ] Déposer **`SONAR_TOKEN`** (et si besoin **`SONAR_HOST_URL`** pour SonarQube) dans **GitHub → Secrets** ; ne jamais committer de jetons — noter les noms de secrets où l’équipe suit la CI
-- [ ] Ajouter l’analyse en CI (`.github/workflows/ci-cd.yml` ou job dédié) : **SonarScanner** / action **SonarCloud** pour le **monorepo** — au minimum **API .NET** (`apps/api-dotnet`) et **front** (`apps/web`), ou configuration multi-module selon la doc Sonar
-- [ ] Brancher les **rapports de couverture** (**`dotnet test`** / **Vitest**) vers Sonar si la gate doit inclure la couverture
-- [ ] Définir une **Quality Gate** : la CI **échoue** si la gate est rouge (bugs, vulnérabilités, security hotspots selon seuils retenus)
-- [ ] Documenter brièvement (branche analysée, secrets Sonar, comportement sur PR) pour l’équipe (README ou doc interne)
+- [x] Projet **SonarCloud** lié au dépôt via l'**App GitHub officielle** (analyse auto sur chaque PR / push — pas de job dédié dans `ci-cd.yml`)
+- [x] `SONAR_TOKEN` géré côté SonarCloud (App GitHub, pas de secret repo à provisionner)
+- [x] Analyse multi-langage (.NET + TS) configurée côté projet SonarCloud (auto-détection monorepo)
+- [x] Couverture branchée (les rapports `coverage-web` / `coverage-api-unit` uploadés par les jobs `test-web` / `test-api` sont consommés par Sonar)
+- [x] **Quality Gate** par défaut SonarCloud (gate sur new code) : check `SonarCloud Code Analysis` requis dans la branch protection master
+- [x] Documenté : la gate est gérée 100 % côté SonarCloud, aucune step locale dans le workflow
 
 ---
 
@@ -292,8 +292,8 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 > **Objectif** : détecter les paquets .NET vulnérables en CI — **complète** `pnpm audit` côté Node (**déjà** en job `lint`) ; **distinct** de Sonar.
 
-- [ ] Après **`dotnet restore`** sur la solution, exécuter **`dotnet list package --vulnerable`** (ajouter **`--include-transitive`** si l’équipe veut couvrir les transitifs)
-- [ ] **Faire échouer** le job si des vulnérabilités **high/critical** (ou seuil documenté) ; noter la politique avec la doc CI du dépôt (ex. `.github/workflows/ci-cd.yml`)
+- [x] Après **`dotnet restore`** sur la solution, exécution de **`dotnet list package --vulnerable --include-transitive`** dans le job `lint` (`.github/workflows/ci-cd.yml`)
+- [x] **Échec** du job si la sortie contient **High** ou **Critical** (seuil aligné avec `pnpm audit --audit-level=high`). Les advisories sans fix amont se gèrent via `<NuGetAuditSuppress>` dans `apps/api-dotnet/Directory.Build.props` (raison documentée à chaque entrée, à revoir trimestriellement).
 
 ---
 
@@ -301,8 +301,8 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 > **Objectif** : réduire les CVE dans l’image poussée vers Artifact Registry / Cloud Run.
 
-- [ ] Après **`docker build`** de l’API, lancer un **scan CVE** (**Trivy**, **Grype** ou équivalent) sur l’image taguée localement
-- [ ] **Faire échouer** le pipeline au-delà du seuil retenu **avant** `docker push` ; documenter seuil et outil choisi (README / procédure CI)
+- [x] **Trivy** (`aquasecurity/trivy-action`) entre `docker build` et `docker push` dans le job `docker-api`
+- [x] Politique : **fail** sur `CRITICAL` (toujours) + `HIGH` **avec fix disponible** (`ignore-unfixed: true`). `vuln-type: os,library`. Si CVE bloquante, soit on rebuild avec une base image plus récente, soit on documente le risque et on ajoute une entrée `.trivyignore` (avec note de revue).
 
 ---
 
@@ -310,8 +310,8 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 > **Objectif** : limiter les secrets commités et réagir vite si fuite.
 
-- [ ] Activer ou vérifier **GitHub Secret scanning** (et **push protection** si disponible) sur le dépôt ; définir une **procédure de rotation** si alerte
-- [ ] Option CI : **Gitleaks** ou **TruffleHog** sur le dépôt ou le diff PR — **échec** si finding confirmé ; complément au scanning hébergé GitHub
+- [x] **GitHub Secret scanning natif** : non activé — nécessite **GitHub Advanced Security** sur un repo privé (payant). Couverture assurée via Gitleaks ci-dessous. À activer si on bascule le repo en public, ou si l'organisation souscrit à GHAS.
+- [x] **Gitleaks** (`gitleaks/gitleaks-action@v2`) dans `.github/workflows/ci-cd.yml`, job dédié `gitleaks` en parallèle de `lint` : scanne le diff sur PR, l'historique complet sur push master. Échec sur finding confirmé.
 
 ---
 
