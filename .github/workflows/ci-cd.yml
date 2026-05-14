@@ -13,6 +13,9 @@ on:
   pull_request:
     branches: [master]
 
+permissions:
+  contents: read
+
 env:
   NODE_VERSION: "22"
   DOTNET_VERSION: "10.0.x"
@@ -24,22 +27,13 @@ jobs:
   gitleaks:
     name: Secret scan (Gitleaks)
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v6
-      - name: Install Gitleaks
-        run: |
-          set -euo pipefail
-          version=8.24.3
-          sha256=9991e0b2903da4c8f6122b5c3186448b927a5da4deef1fe45271c3793f4ee29c
-          curl -fsSL -o gitleaks.tgz \
-            "https://github.com/gitleaks/gitleaks/releases/download/v${version}/gitleaks_${version}_linux_x64.tar.gz"
-          echo "${sha256}  gitleaks.tgz" | sha256sum -c -
-          tar -xzf gitleaks.tgz gitleaks
-          ./gitleaks version
       - name: Scan working tree
-        run: ./gitleaks dir --no-banner --redact --verbose --exit-code 1 .
+        run: |
+          docker run --rm -v "${PWD}:/repo:ro" \
+            ghcr.io/gitleaks/gitleaks:v8.24.3 \
+            dir --no-banner --redact --verbose --exit-code 1 /repo
 
   lint:
     name: Lint
