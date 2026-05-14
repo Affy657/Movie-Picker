@@ -21,10 +21,12 @@ env:
   CLOUD_RUN_SERVICE_NAME: movie-picker-api
 
 jobs:
-  # § 26 — Scan secrets sur le diff (PR) ou l'historique (push master). Indépendant des
-  # autres jobs : tourne en parallèle de `lint`. GitHub Secret Scanning natif requiert
-  # Advanced Security côté repos privés (non activé ici) → Gitleaks couvre le besoin
-  # sans dépendance payante. Échoue dès qu'un secret réel est détecté.
+  # § 26 — Scan secrets sur l'historique git (toute la branche / le diff).
+  # Indépendant des autres jobs : tourne en parallèle de `lint`. GitHub Secret Scanning
+  # natif requiert Advanced Security côté repos privés (non activé ici) → on installe
+  # le binaire Gitleaks directement (pas d'action tierce, évite l'épingle SHA d'action
+  # tierce + la permission `pull-requests: write` du wrapper officiel). Échoue dès
+  # qu'un secret réel est détecté (exit code non nul de `gitleaks git`).
   gitleaks:
     name: Secret scan (Gitleaks)
     runs-on: ubuntu-latest
@@ -32,13 +34,22 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v6
-        with:
-          # Historique complet nécessaire pour scanner correctement les diffs sur PR
-          # (Gitleaks compare contre la base de la PR ; un shallow clone trompe le scan).
-          fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
+      - name: Install Gitleaks
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_VERSION: 8.24.3
+        run: |
+          set -e
+          curl -sSL -o gitleaks.tgz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          tar -xzf gitleaks.tgz gitleaks
+          ./gitleaks version
+      # On scanne le **working tree** (`gitleaks dir`) plutôt que l'historique git :
+      # objectif = empêcher qu'un secret arrive dans `master`, sans bloquer sur des
+      # secrets éventuellement présents dans l'historique git (clés rotées, fixtures
+      # de test). Un audit one-shot de l'historique pourra ajouter un baseline plus
+      # tard si on veut durcir.
+      - name: Scan working tree
+        run: ./gitleaks dir --no-banner --redact --verbose --exit-code 1 .
 
   lint:
     name: Lint
@@ -186,7 +197,9 @@ jobs:
       # documente le risque (workaround / mitigation) et on suppress côté Trivy
       # (`.trivyignore` à la racine du contexte de build) avec une note de revue.
       - name: Scan image Docker (Trivy)
-        uses: aquasecurity/trivy-action@0.24.0
+        # Pin sur commit SHA (action tierce) pour éviter le « rug-pull » d'un tag mouvant.
+        # Version : v0.36.0 — bump trimestriel possible si nouvelles options nécessaires.
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: movie-picker-api
           format: table
