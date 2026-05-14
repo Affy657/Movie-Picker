@@ -21,12 +21,6 @@ env:
   CLOUD_RUN_SERVICE_NAME: movie-picker-api
 
 jobs:
-  # § 26 — Scan secrets sur l'historique git (toute la branche / le diff).
-  # Indépendant des autres jobs : tourne en parallèle de `lint`. GitHub Secret Scanning
-  # natif requiert Advanced Security côté repos privés (non activé ici) → on installe
-  # le binaire Gitleaks directement (pas d'action tierce, évite l'épingle SHA d'action
-  # tierce + la permission `pull-requests: write` du wrapper officiel). Échoue dès
-  # qu'un secret réel est détecté (exit code non nul de `gitleaks git`).
   gitleaks:
     name: Secret scan (Gitleaks)
     runs-on: ubuntu-latest
@@ -35,13 +29,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Install Gitleaks
-        # Le binaire est téléchargé depuis GitHub Releases et la signature est vérifiée
-        # par checksum SHA-256 figé ci-dessous (officiel, publié dans
-        # `gitleaks_8.24.3_checksums.txt`). Sans cette vérification, Sonar / SAST flagge
-        # à juste titre l'exécution d'un binaire externe non authentifié. Bumper version
-        # + checksum ensemble.
         env:
           GITLEAKS_VERSION: 8.24.3
+          # Bumper version + checksum ensemble (cf. gitleaks_${GITLEAKS_VERSION}_checksums.txt).
           GITLEAKS_SHA256: 9991e0b2903da4c8f6122b5c3186448b927a5da4deef1fe45271c3793f4ee29c
         run: |
           set -euo pipefail
@@ -50,11 +40,6 @@ jobs:
           echo "${GITLEAKS_SHA256}  gitleaks.tgz" | sha256sum -c -
           tar -xzf gitleaks.tgz gitleaks
           ./gitleaks version
-      # On scanne le **working tree** (`gitleaks dir`) plutôt que l'historique git :
-      # objectif = empêcher qu'un secret arrive dans `master`, sans bloquer sur des
-      # secrets éventuellement présents dans l'historique git (clés rotées, fixtures
-      # de test). Un audit one-shot de l'historique pourra ajouter un baseline plus
-      # tard si on veut durcir.
       - name: Scan working tree
         run: ./gitleaks dir --no-banner --redact --verbose --exit-code 1 .
 
@@ -92,11 +77,6 @@ jobs:
           if-no-files-found: error
       - name: Audit dépendances (échoue si high/critical)
         run: pnpm audit --audit-level=high
-      # § 24 — Sécurité CI : dépendances NuGet (API .NET). Complète `pnpm audit` côté Node.
-      # `dotnet build -warnaserror` ci-dessus échoue déjà sur NU1902/NU1903 (advisories au
-      # restore), mais on garde un step explicite qui (1) liste les vulnérabilités pour
-      # diagnostic rapide en CI, (2) échoue spécifiquement sur High / Critical (politique
-      # alignée avec `pnpm audit --audit-level=high`).
       - name: Audit NuGet — liste vulnérabilités (informatif)
         run: dotnet list apps/api-dotnet/MoviePicker.slnx package --vulnerable --include-transitive
       - name: Audit NuGet — échoue si High / Critical
@@ -104,10 +84,8 @@ jobs:
           set -o pipefail
           OUTPUT=$(dotnet list apps/api-dotnet/MoviePicker.slnx package --vulnerable --include-transitive 2>&1)
           echo "$OUTPUT"
-          # Sortie texte : la dernière colonne donne la sévérité (Low / Moderate / High / Critical).
-          # On échoue uniquement sur High ou Critical (les Moderate restent visibles pour suivi).
           if echo "$OUTPUT" | grep -Eq '\b(High|Critical)\b'; then
-            echo "::error::Vulnérabilités NuGet High/Critical détectées (voir liste ci-dessus). Mettre à jour le(s) paquet(s) ou suppress l'advisory via <NuGetAuditSuppress> dans Directory.Build.props si pas de fix amont (documenter la raison)."
+            echo "::error::Vulnérabilités NuGet High/Critical détectées. Mettre à jour ou suppress via <NuGetAuditSuppress> dans Directory.Build.props (documenter la raison)."
             exit 1
           fi
 
@@ -204,8 +182,6 @@ jobs:
       # documente le risque (workaround / mitigation) et on suppress côté Trivy
       # (`.trivyignore` à la racine du contexte de build) avec une note de revue.
       - name: Scan image Docker (Trivy)
-        # Pin sur commit SHA (action tierce) pour éviter le « rug-pull » d'un tag mouvant.
-        # Version : v0.36.0 — bump trimestriel possible si nouvelles options nécessaires.
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: movie-picker-api

@@ -7,16 +7,8 @@
     <WarningsAsErrors>$(WarningsAsErrors);CS4014</WarningsAsErrors>
   </PropertyGroup>
 
-  <!--
-    Suppression d'advisory NuGet sans version corrigée disponible.
-    Transitive de MongoDB.Driver :
-      - SharpCompress → GHSA-6c8g-7p36-r338 (Moderate, zip-slip dans IArchive.WriteToDirectory).
-        Non utilisé côté API : MongoDB n'expose pas d'archive utilisateur, l'usage est limité
-        au flux ZLib in-memory du wire protocol (cf. release note MongoDB.Driver 3.8.1).
-        À retirer dès qu'une version corrigée sort (suivi : CSHARP-6037 / GHSA précité).
-    Snappier (GHSA-pggp-6c3x-2xmx) était suppressé précédemment ; fix amont via
-    Snappier 1.3.1 → suppression supprimée.
-  -->
+  <!-- GHSA-6c8g-7p36-r338 (SharpCompress, Moderate, zip-slip) : pas de fix amont,
+       API zip-slip non utilisée par MongoDB.Driver (cf. release note 3.8.1, CSHARP-6037). -->
   <ItemGroup>
     <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-6c8g-7p36-r338" />
   </ItemGroup>
