@@ -35,12 +35,19 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Install Gitleaks
+        # Le binaire est téléchargé depuis GitHub Releases et la signature est vérifiée
+        # par checksum SHA-256 figé ci-dessous (officiel, publié dans
+        # `gitleaks_8.24.3_checksums.txt`). Sans cette vérification, Sonar / SAST flagge
+        # à juste titre l'exécution d'un binaire externe non authentifié. Bumper version
+        # + checksum ensemble.
         env:
           GITLEAKS_VERSION: 8.24.3
+          GITLEAKS_SHA256: 9991e0b2903da4c8f6122b5c3186448b927a5da4deef1fe45271c3793f4ee29c
         run: |
-          set -e
+          set -euo pipefail
           curl -sSL -o gitleaks.tgz \
             "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tgz" | sha256sum -c -
           tar -xzf gitleaks.tgz gitleaks
           ./gitleaks version
       # On scanne le **working tree** (`gitleaks dir`) plutôt que l'historique git :
