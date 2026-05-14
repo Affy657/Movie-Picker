@@ -1,7 +1,4 @@
-/**
- * Roadmap MVP §34 — Lighthouse sur le build Vite réel (spa via `serve -s`).
- * Usage : `pnpm run lighthouse` à la racine (build web puis mesure /, /new, /e/…).
- */
+/** Usage : `pnpm run lighthouse` à la racine (build web puis mesure /, /new, /e/…). */
 import { spawn, execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';

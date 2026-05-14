@@ -1,8 +1,5 @@
-# CI/CD Movie Picker — lint, tests web + API, couverture, déploiements (E2E Playwright : local uniquement)
-# Branche par défaut : **master**. Flow : 1 feature = 1 branche → PR vers master → CI (lint, tests, sonar) → merge.
-# Le déploiement (docker-api, deploy-api, deploy-front) ne se déclenche que sur push master après merge,
-# via `if: github.event_name == 'push' && github.ref == 'refs/heads/master'`.
-# Voir docs/v1-produit/securite-ci.md pour la branch protection master et les checks requis.
+# E2E Playwright : local uniquement (pas de job CI).
+# Branch protection master + checks requis : voir docs/v1-produit/securite-ci.md.
 
 name: CI/CD
 
@@ -251,7 +248,6 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # Build Vite : un seul bundle JS + CSS hashés dans apps/web/dist (imports @import CSS inclus).
       - run: |
           if [ -z "$VITE_API_URL" ]; then
             echo "::error::VITE_API_URL (secret) est vide."

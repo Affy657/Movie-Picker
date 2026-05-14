@@ -1,8 +1,4 @@
-/**
- * Export OpenAPI 3 (swagger) depuis l’assembly API sans lancer Kestrel (Swashbuckle CLI).
- * Nécessite ASPNETCORE_ENVIRONMENT=Development pour éviter ProductionStartupValidation (ALLOWED_ORIGINS).
- * Sortie : artifacts/openapi-v1.json (roadmap § 32).
- */
+/** ASPNETCORE_ENVIRONMENT=Development requis pour éviter ProductionStartupValidation (ALLOWED_ORIGINS). */
 const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
