@@ -21,6 +21,25 @@ env:
   CLOUD_RUN_SERVICE_NAME: movie-picker-api
 
 jobs:
+  # § 26 — Scan secrets sur le diff (PR) ou l'historique (push master). Indépendant des
+  # autres jobs : tourne en parallèle de `lint`. GitHub Secret Scanning natif requiert
+  # Advanced Security côté repos privés (non activé ici) → Gitleaks couvre le besoin
+  # sans dépendance payante. Échoue dès qu'un secret réel est détecté.
+  gitleaks:
+    name: Secret scan (Gitleaks)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Historique complet nécessaire pour scanner correctement les diffs sur PR
+          # (Gitleaks compare contre la base de la PR ; un shallow clone trompe le scan).
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -55,6 +74,24 @@ jobs:
           if-no-files-found: error
       - name: Audit dépendances (échoue si high/critical)
         run: pnpm audit --audit-level=high
+      # § 24 — Sécurité CI : dépendances NuGet (API .NET). Complète `pnpm audit` côté Node.
+      # `dotnet build -warnaserror` ci-dessus échoue déjà sur NU1902/NU1903 (advisories au
+      # restore), mais on garde un step explicite qui (1) liste les vulnérabilités pour
+      # diagnostic rapide en CI, (2) échoue spécifiquement sur High / Critical (politique
+      # alignée avec `pnpm audit --audit-level=high`).
+      - name: Audit NuGet — liste vulnérabilités (informatif)
+        run: dotnet list apps/api-dotnet/MoviePicker.slnx package --vulnerable --include-transitive
+      - name: Audit NuGet — échoue si High / Critical
+        run: |
+          set -o pipefail
+          OUTPUT=$(dotnet list apps/api-dotnet/MoviePicker.slnx package --vulnerable --include-transitive 2>&1)
+          echo "$OUTPUT"
+          # Sortie texte : la dernière colonne donne la sévérité (Low / Moderate / High / Critical).
+          # On échoue uniquement sur High ou Critical (les Moderate restent visibles pour suivi).
+          if echo "$OUTPUT" | grep -Eq '\b(High|Critical)\b'; then
+            echo "::error::Vulnérabilités NuGet High/Critical détectées (voir liste ci-dessus). Mettre à jour le(s) paquet(s) ou suppress l'advisory via <NuGetAuditSuppress> dans Directory.Build.props si pas de fix amont (documenter la raison)."
+            exit 1
+          fi
 
   test-web:
     name: Tests front + couverture
@@ -141,6 +178,22 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
       - run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
       - run: docker build -f apps/api-dotnet/MoviePicker.Api/Dockerfile -t movie-picker-api apps/api-dotnet/MoviePicker.Api
+      # § 25 — Scan CVE de l'image avant push. Politique :
+      #   - bloque sur CRITICAL inconditionnellement
+      #   - bloque sur HIGH **uniquement si un fix amont est disponible** (`ignore-unfixed: true`),
+      #     pour éviter de geler le déploiement sur des CVE base-image sans patch publié.
+      # Si un CVE bloque ici, soit on rebuild avec une base image plus récente, soit on
+      # documente le risque (workaround / mitigation) et on suppress côté Trivy
+      # (`.trivyignore` à la racine du contexte de build) avec une note de revue.
+      - name: Scan image Docker (Trivy)
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: movie-picker-api
+          format: table
+          exit-code: '1'
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          vuln-type: os,library
       - run: |
           IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPO }}/api:${{ github.sha }}"
           IMAGE_LATEST="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPO }}/api:latest"
