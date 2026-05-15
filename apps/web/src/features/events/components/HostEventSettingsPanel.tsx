@@ -256,7 +256,7 @@ export default function HostEventSettingsPanel({
 
           <div className={styles.field}>
             <label className="label" htmlFor="host-cfg-max-participants">
-              Participants max
+              {t('events.settings.maxParticipantsLabel')}
             </label>
             <NumberInput
               id="host-cfg-max-participants"

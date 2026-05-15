@@ -144,7 +144,7 @@ function EventListBlock({
                   <span className={styles.meta}>
                     {dateLabel} · {ev.time}
                   </span>
-                  {showLifecycleBadge && lifecycle !== 'upcoming' ? (
+                  {showLifecycleBadge ? (
                     <span className={styles.lifecycleCorner}>
                       <span className={clsx(styles.lifecyclePill, badgeClass)}>
                         {t(lifecycleTranslationKey(lifecycle))}
