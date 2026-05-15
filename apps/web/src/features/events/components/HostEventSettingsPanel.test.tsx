@@ -79,7 +79,7 @@ describe('HostEventSettingsPanel', () => {
         const body = (await request.json()) as Record<string, unknown>;
         expect(body.theme).toBe('SF');
         expect(body.wheelMode).toBe('strictRandom');
-        expect(body.richSharePreview).toBe(false);
+        expect(body.richSharePreview).toBe(true);
         expect(body.allowedReactionIds).toBeUndefined();
         return HttpResponse.json({
           theme: 'SF',
@@ -100,33 +100,6 @@ describe('HostEventSettingsPanel', () => {
 
     await waitFor(() => expect(patched).toBe(true));
     await waitFor(() => expect(screen.getByText(/enregistrés/i)).toBeInTheDocument());
-  });
-
-  it('envoie richSharePreview true quand la case est cochée', async () => {
-    const user = userEvent.setup();
-    let seenRich: boolean | undefined;
-    server.use(
-      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
-        const body = (await request.json()) as Record<string, unknown>;
-        seenRich = body.richSharePreview === true;
-        return HttpResponse.json({
-          theme: 'SF',
-          endDate: null,
-          maxProposalsPerParticipant: null,
-          maxParticipants: null,
-          wheelMode: 'strictRandom',
-          richSharePreview: true,
-        });
-      })
-    );
-
-    renderWithRouter(<HostEventSettingsPanel slug={slug} hostToken={null} event={baseEvent} />);
-
-    await user.click(screen.getByText('Paramètres de la soirée'));
-    await user.click(screen.getByRole('checkbox', { name: /aperçu de lien détaillé/i }));
-    await user.click(screen.getByRole('button', { name: /^enregistrer$/i }));
-
-    await waitFor(() => expect(seenRich).toBe(true));
   });
 
   it('envoie maxParticipants saisi dans le PATCH', async () => {
@@ -156,8 +129,8 @@ describe('HostEventSettingsPanel', () => {
     );
 
     await user.click(screen.getByText('Paramètres de la soirée'));
-    await user.clear(screen.getByLabelText(/nombre maximum de participants/i));
-    await user.type(screen.getByLabelText(/nombre maximum de participants/i), '8');
+    await user.clear(screen.getByLabelText(/maximum de participants/i));
+    await user.type(screen.getByLabelText(/maximum de participants/i), '8');
     await user.click(screen.getByRole('button', { name: /^enregistrer$/i }));
 
     await waitFor(() => expect(seenMax).toBe(8));
@@ -182,8 +155,8 @@ describe('HostEventSettingsPanel', () => {
     );
 
     await user.click(screen.getByText('Paramètres de la soirée'));
-    await user.clear(screen.getByLabelText(/nombre maximum de participants/i));
-    await user.type(screen.getByLabelText(/nombre maximum de participants/i), '3');
+    await user.clear(screen.getByLabelText(/maximum de participants/i));
+    await user.type(screen.getByLabelText(/maximum de participants/i), '3');
     await user.click(screen.getByRole('button', { name: /^enregistrer$/i }));
 
     expect(await screen.findByText(/Impossible de réduire la capacité/i)).toBeInTheDocument();

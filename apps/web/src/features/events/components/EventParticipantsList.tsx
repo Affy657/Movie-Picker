@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { Users, X } from 'lucide-react';
+import { Crown, Users, X } from 'lucide-react';
 import type { EventParticipantSummary } from '@/shared/types/event';
 import { useTranslation } from '@/shared/i18n';
 import styles from './EventParticipantsList.module.css';
@@ -70,7 +70,13 @@ export default function EventParticipantsList({
               >
                 <span className={styles.chipLabel}>{p.pseudo}</span>
                 {isCreator && (
-                  <span className={styles.hostBadge}>{t('events.participants.hostBadge')}</span>
+                  <span
+                    className={styles.hostBadge}
+                    aria-label={t('events.participants.hostBadge')}
+                    title={t('events.participants.hostBadge')}
+                  >
+                    <Crown aria-hidden size={12} />
+                  </span>
                 )}
                 {canHostRemove && (
                   <button

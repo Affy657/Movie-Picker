@@ -263,7 +263,7 @@ export const en: Locale = {
       saving: 'Saving\u2026',
       saveSuccess: 'Settings saved.',
       fallbackError: 'Save failed.',
-      maxParticipantsLabel: 'Maximum number of participants',
+      maxParticipantsLabel: 'Maximum participants',
       maxParticipantsPlaceholder: 'Unlimited',
       maxParticipantsHintOne:
         'Leave empty for no limit. {{count}} person currently joined; the cap cannot go below.',
@@ -332,6 +332,7 @@ export const en: Locale = {
       removeButton: 'Remove',
       removeAsHostAria: 'Remove "{title}" as host',
       removeAsHostTitle: 'As host, you can remove any movie',
+      moreActionsAria: 'More actions for "{{title}}"',
       removeError: 'Remove failed',
       tmdbVoteTitle: 'TMDB average rating (indicative)',
       runtimeTitle: 'Movie runtime',
@@ -351,8 +352,8 @@ export const en: Locale = {
       othersHintManyMany: 'Already seen by {{a}}, {{b}} and {{count}} others.',
     },
     details: {
-      toggleShow: 'More info',
-      toggleHide: 'Hide details',
+      toggleShow: 'Details',
+      toggleHide: 'Hide',
       regionLabel: 'Movie details',
       loading: 'Loading details\u2026',
       error: 'Unable to load movie details.',
@@ -380,6 +381,9 @@ export const en: Locale = {
       chipAria: '{{provider}} ({{type}})',
       chipLinkAria:
         '{{provider}} — {{type}}. Open TMDB’s “where to watch” page for this movie (new tab).',
+      showMoreAria: 'Show {{count}} more platform(s)',
+      showLessAria: 'Collapse the platforms list',
+      emptyLabel: 'Not streaming',
     },
   },
 

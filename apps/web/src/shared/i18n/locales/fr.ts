@@ -275,7 +275,7 @@ export const fr = {
       saving: 'Enregistrement\u2026',
       saveSuccess: 'Paramètres enregistrés.',
       fallbackError: 'Enregistrement impossible.',
-      maxParticipantsLabel: 'Nombre maximum de participants',
+      maxParticipantsLabel: 'Maximum de participants',
       maxParticipantsPlaceholder: 'Illimité',
       maxParticipantsHintOne:
         'Laisser vide pour aucune limite. {{count}} personne inscrite actuellement ; la limite ne peut pas descendre en dessous.',
@@ -346,6 +346,7 @@ export const fr = {
       removeAsHostAria: 'Retirer « {title} » en tant qu\u2019hôte',
       removeAsHostTitle: 'En tant qu\u2019hôte, vous pouvez retirer n\u2019importe quel film',
       removeError: 'Suppression impossible',
+      moreActionsAria: 'Plus d’actions pour « {{title}} »',
       tmdbVoteTitle: 'Note moyenne TMDB (indicatif)',
       runtimeTitle: 'Durée du film',
       sectionLabel: 'Films proposés',
@@ -365,8 +366,8 @@ export const fr = {
       othersHintManyMany: 'D\u00e9j\u00e0 vu par {{a}}, {{b}} et {{count}} autres.',
     },
     details: {
-      toggleShow: "Plus d'infos",
-      toggleHide: 'Masquer les infos',
+      toggleShow: 'Détails',
+      toggleHide: 'Masquer',
       regionLabel: 'Détails du film',
       loading: 'Chargement des détails\u2026',
       error: 'Impossible de charger les détails du film.',
@@ -394,6 +395,9 @@ export const fr = {
       chipAria: '{{provider}} ({{type}})',
       chipLinkAria:
         '{{provider}} — {{type}}. Ouvrir sur TMDB la page « où regarder ce film » (nouvel onglet).',
+      showMoreAria: 'Afficher {{count}} plateforme(s) supplémentaire(s)',
+      showLessAria: 'Réduire la liste des plateformes',
+      emptyLabel: 'Pas en streaming',
     },
   },
 

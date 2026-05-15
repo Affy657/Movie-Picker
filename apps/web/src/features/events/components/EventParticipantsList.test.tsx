@@ -25,7 +25,7 @@ describe('EventParticipantsList', () => {
 
     expect(screen.getByText('Hôte')).toBeInTheDocument();
     expect(screen.getByText('Bob')).toBeInTheDocument();
-    expect(screen.getByText('hôte')).toBeInTheDocument();
+    expect(screen.getByLabelText('hôte')).toBeInTheDocument();
     expect(screen.getByText(/3 \/ 5/)).toBeInTheDocument();
   });
 

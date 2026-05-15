@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import clsx from 'clsx';
 import { ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { useMovieDetails } from '@/features/movies/hooks/useMovieDetails';
 import { useTranslation } from '@/shared/i18n';
@@ -12,45 +13,75 @@ interface MovieDetailsPanelProps {
 /**
  * Panneau repliable « plus d'infos » : synopsis TMDB, réalisateur, casting, durée.
  * Les données sont chargées à la demande (première ouverture) puis mises en cache.
+ * Wrapper auto-géré ; pour un placement non-adjacent du bouton et du panneau, utiliser
+ * `MovieDetailsToggle` + `MovieDetailsContent` avec un state partagé côté parent.
  */
 export default function MovieDetailsPanel({ tmdbId }: MovieDetailsPanelProps) {
-  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const panelId = useId();
-  const { data, isLoading, isError } = useMovieDetails(tmdbId, open);
-
-  const toggle = () => setOpen((v) => !v);
-  const Icon = open ? ChevronUp : ChevronDown;
 
   return (
     <div>
       <div className={styles.toggleRow}>
-        <button
-          type="button"
-          className={styles.toggleBtn}
-          onClick={toggle}
-          aria-expanded={open}
-          aria-controls={panelId}
-        >
-          <Info aria-hidden size={14} />
-          <span>{open ? t('movies.details.toggleHide') : t('movies.details.toggleShow')}</span>
-          <Icon aria-hidden size={14} />
-        </button>
+        <MovieDetailsToggle
+          open={open}
+          onToggle={() => setOpen((v) => !v)}
+          panelId={panelId}
+        />
       </div>
-      {open && (
-        <div
-          id={panelId}
-          className={styles.panel}
-          role="region"
-          aria-label={t('movies.details.regionLabel')}
-        >
-          {isLoading && <p className={styles.status}>{t('movies.details.loading')}</p>}
-          {isError && <p className={styles.error}>{t('movies.details.error')}</p>}
-          {data && <MovieDetailsBody data={data} />}
-          {!isLoading && !isError && !data && (
-            <p className={styles.status}>{t('movies.details.empty')}</p>
-          )}
-        </div>
+      <MovieDetailsContent tmdbId={tmdbId} open={open} panelId={panelId} />
+    </div>
+  );
+}
+
+interface MovieDetailsToggleProps {
+  open: boolean;
+  onToggle: () => void;
+  panelId: string;
+  className?: string;
+}
+
+export function MovieDetailsToggle({ open, onToggle, panelId, className }: MovieDetailsToggleProps) {
+  const { t } = useTranslation();
+  const Icon = open ? ChevronUp : ChevronDown;
+  return (
+    <button
+      type="button"
+      className={clsx(styles.toggleBtn, className)}
+      onClick={onToggle}
+      aria-expanded={open}
+      aria-controls={panelId}
+    >
+      <Info aria-hidden size={14} />
+      <span>{open ? t('movies.details.toggleHide') : t('movies.details.toggleShow')}</span>
+      <Icon aria-hidden size={14} />
+    </button>
+  );
+}
+
+interface MovieDetailsContentProps {
+  tmdbId: number;
+  open: boolean;
+  panelId: string;
+  className?: string;
+}
+
+export function MovieDetailsContent({ tmdbId, open, panelId, className }: MovieDetailsContentProps) {
+  const { t } = useTranslation();
+  const { data, isLoading, isError } = useMovieDetails(tmdbId, open);
+  if (!open) return null;
+  return (
+    <div
+      id={panelId}
+      className={clsx(styles.panel, className)}
+      role="region"
+      aria-label={t('movies.details.regionLabel')}
+    >
+      {isLoading && <p className={styles.status}>{t('movies.details.loading')}</p>}
+      {isError && <p className={styles.error}>{t('movies.details.error')}</p>}
+      {data && <MovieDetailsBody data={data} />}
+      {!isLoading && !isError && !data && (
+        <p className={styles.status}>{t('movies.details.empty')}</p>
       )}
     </div>
   );

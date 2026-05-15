@@ -1,4 +1,6 @@
+import { useId, useState } from 'react';
 import clsx from 'clsx';
+import { ChevronLeft } from 'lucide-react';
 import type { WatchProviderOffer } from '@/shared/types/movie';
 import { useTranslation } from '@/shared/i18n';
 import type { TranslationKey } from '@/shared/i18n/t';
@@ -66,6 +68,11 @@ interface WatchProviderChipsProps {
    * Les parents peuvent pré-filtrer avec `isSafeTmdbWatchPageUrl` ; le composant re-valide en défense en profondeur.
    */
   watchPageUrl?: string | null;
+  /**
+   * Limite le nombre de puces visibles avant d'afficher un chip « +N » dépliable.
+   * Sans valeur, toutes les puces sont affichées.
+   */
+  maxVisible?: number;
 }
 
 export default function WatchProviderChips({
@@ -73,17 +80,25 @@ export default function WatchProviderChips({
   className,
   variant = 'default',
   watchPageUrl,
+  maxVisible,
 }: WatchProviderChipsProps) {
   const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
+  const listId = useId();
   if (!providers.length) return null;
   const compact = variant === 'compact';
   const rootClass = clsx(styles.list, compact && styles.compact, className);
   const safeWatchHref =
     watchPageUrl != null && isSafeTmdbWatchPageUrl(watchPageUrl) ? watchPageUrl : null;
 
+  const overflow = !!maxVisible && providers.length > maxVisible;
+  const collapsed = overflow && !expanded;
+  const visibleProviders = collapsed ? providers.slice(0, maxVisible) : providers;
+  const hiddenCount = providers.length - (maxVisible ?? providers.length);
+
   return (
-    <ul className={rootClass} aria-label={t('movies.watchProviders.listAria')}>
-      {providers.map((p) => {
+    <ul className={rootClass} id={listId} aria-label={t('movies.watchProviders.listAria')}>
+      {visibleProviders.map((p) => {
         const hasLogo = isSafeTmdbLogoUrl(p.logoPath);
         const typeStr = monetizationLabel(t, p.type);
         const ariaStatic = t('movies.watchProviders.chipAria', { provider: p.name, type: typeStr });
@@ -139,6 +154,24 @@ export default function WatchProviderChips({
           </li>
         );
       })}
+      {overflow ? (
+        <li className={styles.listItem}>
+          <button
+            type="button"
+            className={clsx(styles.chip, styles.chipMore)}
+            onClick={() => setExpanded((v) => !v)}
+            aria-expanded={expanded}
+            aria-controls={listId}
+            aria-label={
+              expanded
+                ? t('movies.watchProviders.showLessAria')
+                : t('movies.watchProviders.showMoreAria', { count: hiddenCount })
+            }
+          >
+            {expanded ? <ChevronLeft aria-hidden size={14} /> : `+${hiddenCount}`}
+          </button>
+        </li>
+      ) : null}
     </ul>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
-import { Plus } from 'lucide-react';
+import { Crown, Plus } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
@@ -130,8 +130,12 @@ function EventListBlock({
                 <span className={styles.rowTop}>
                   <span className={styles.title}>{ev.title}</span>
                   {ev.isCreator ? (
-                    <span className={styles.badgeHost} title={t('events.myEvents.hostBadgeTitle')}>
-                      {t('events.myEvents.hostBadge')}
+                    <span
+                      className={styles.badgeHost}
+                      title={t('events.myEvents.hostBadgeTitle')}
+                      aria-label={t('events.myEvents.hostBadge')}
+                    >
+                      <Crown aria-hidden size={14} />
                     </span>
                   ) : null}
                 </span>
@@ -144,7 +148,7 @@ function EventListBlock({
                   <span className={styles.meta}>
                     {dateLabel} · {ev.time}
                   </span>
-                  {showLifecycleBadge ? (
+                  {showLifecycleBadge && lifecycle !== 'upcoming' ? (
                     <span className={styles.lifecycleCorner}>
                       <span className={clsx(styles.lifecyclePill, badgeClass)}>
                         {t(lifecycleTranslationKey(lifecycle))}

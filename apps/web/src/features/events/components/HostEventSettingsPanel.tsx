@@ -65,7 +65,6 @@ export default function HostEventSettingsPanel({
     cfg.maxParticipants != null ? String(cfg.maxParticipants) : ''
   );
   const [wheelMode, setWheelMode] = useState<WheelMode>(cfg.wheelMode);
-  const [richSharePreview, setRichSharePreview] = useState(cfg.richSharePreview ?? false);
   const [flashOk, setFlashOk] = useState(false);
   const flashTimerRef = useRef<number | undefined>(undefined);
   useEffect(() => () => clearTimeout(flashTimerRef.current), []);
@@ -95,7 +94,6 @@ export default function HostEventSettingsPanel({
     );
     setMaxParticipants(next.maxParticipants != null ? String(next.maxParticipants) : '');
     setWheelMode(next.wheelMode);
-    setRichSharePreview(next.richSharePreview ?? false);
     setFormError(null);
   }, [event.config]);
 
@@ -177,7 +175,7 @@ export default function HostEventSettingsPanel({
       maxProposalsPerParticipant,
       maxParticipants: maxParticipantsValue,
       wheelMode,
-      richSharePreview,
+      richSharePreview: true,
     });
   };
 
@@ -288,16 +286,6 @@ export default function HostEventSettingsPanel({
             <option value="weightedByVotes">Pondéré par les votes</option>
           </select>
         </div>
-
-        <label className={styles.checkLabel}>
-          <input
-            type="checkbox"
-            checked={richSharePreview}
-            onChange={(e) => setRichSharePreview(e.target.checked)}
-            disabled={locked || mutation.isPending}
-          />
-          Aperçu de lien détaillé
-        </label>
 
         <button type="submit" className="btn btn-primary" disabled={locked || mutation.isPending}>
           {mutation.isPending ? 'Enregistrement…' : 'Enregistrer'}

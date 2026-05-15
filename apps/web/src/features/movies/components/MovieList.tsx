@@ -1,9 +1,9 @@
-import { memo, useState } from 'react';
+import { memo, useEffect, useId, useRef, useState } from 'react';
 import clsx from 'clsx';
-import { Eye, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { Eye, MoreVertical, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react';
 import type { MovieData } from '@/shared/types/movie';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
-import { posterImageSrc } from '@/shared/utils/posterUrl';
+import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
 import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { isSafeTmdbWatchPageUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
@@ -12,7 +12,10 @@ import { othersAlreadySeenHint } from '@/features/movies/utils/seenHint';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
-import MovieDetailsPanel from '@/features/movies/components/MovieDetailsPanel';
+import {
+  MovieDetailsToggle,
+  MovieDetailsContent,
+} from '@/features/movies/components/MovieDetailsPanel';
 import TmdbAttribution from '@/features/movies/components/TmdbAttribution';
 import styles from './MovieList.module.css';
 
@@ -43,6 +46,8 @@ interface MovieCardProps {
   refresh: () => void;
   onActionError: (message: string) => void;
   t: Translate;
+  /** Charge l'affiche en priorité (premières cards above the fold). */
+  eager?: boolean;
 }
 
 const MovieCard = memo(function MovieCard({
@@ -57,6 +62,7 @@ const MovieCard = memo(function MovieCard({
   refresh,
   onActionError,
   t,
+  eager = false,
 }: MovieCardProps) {
   const isMine = participantId && getParticipantId(m) === participantId;
   const canRemove = isMine || isHost;
@@ -70,9 +76,13 @@ const MovieCard = memo(function MovieCard({
   const runtimeLabel = formatRuntimeMinutes(m.runtimeMinutes);
   const providers = m.watchProviders ?? [];
   const posterSrc = posterImageSrc(m.posterPath);
+  const posterSrcSet = tmdbPosterSrcSetForList(posterSrc);
   const safeTmdbWatchUrl = isSafeTmdbWatchPageUrl(m.tmdbWatchPageUrl) ? m.tmdbWatchPageUrl : null;
 
   const [seenPending, setSeenPending] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const detailsPanelId = useId();
+  const hasDetails = m.tmdbId > 0;
 
   const handleToggleSeen = async () => {
     if (!participantId || seenPending) return;
@@ -93,60 +103,78 @@ const MovieCard = memo(function MovieCard({
 
   return (
     <li className={styles.card}>
-      {posterSrc ? (
-        <img
-          src={posterSrc}
-          alt=""
-          className={styles.poster}
-          width={92}
-          height={138}
-          loading="lazy"
-        />
-      ) : (
-        <div className={`${styles.poster} ${styles.posterPlaceholder}`}>Affiche</div>
-      )}
-      <div className={styles.info}>
-        <h3 className={styles.title}>{m.title}</h3>
-        {m.year || voteLabel || runtimeLabel ? (
-          <p className={`${styles.meta} ${styles.metaTmdb}`}>
-            {m.year ? <span>{m.year}</span> : null}
-            {voteLabel ? (
-              <span className="tmdb-vote" title="Note moyenne TMDB (indicatif)">
-                {m.year ? ' · ' : null}
-                {voteLabel}
-              </span>
-            ) : null}
-            {runtimeLabel ? (
-              <span title={t('movies.list.runtimeTitle')}>
-                {m.year || voteLabel ? ' · ' : null}
-                {runtimeLabel}
-              </span>
-            ) : null}
-          </p>
+      <div className={styles.posterCol}>
+        {posterSrc ? (
+          <img
+            src={posterSrc}
+            srcSet={posterSrcSet}
+            sizes="92px"
+            alt=""
+            className={styles.poster}
+            width={92}
+            height={138}
+            loading={eager ? 'eager' : 'lazy'}
+            fetchPriority={eager ? 'high' : 'auto'}
+            decoding="async"
+          />
+        ) : (
+          <div className={`${styles.poster} ${styles.posterPlaceholder}`}>Affiche</div>
+        )}
+        {hasDetails ? (
+          <MovieDetailsToggle
+            open={detailsOpen}
+            onToggle={() => setDetailsOpen((v) => !v)}
+            panelId={detailsPanelId}
+            className={styles.detailsToggle}
+          />
         ) : null}
-        <p className={`${styles.meta} ${styles.metaProposer}`}>
-          {isMine ? (
-            <>
-              {t('movies.list.proposedByMeLead')}
-              <span className={styles.selfProposer}>{t('movies.list.proposedByMeSelf')}</span>
-            </>
-          ) : (
-            t('movies.list.proposedBy', { pseudo: m.proposerPseudo })
+      </div>
+      <div className={styles.info}>
+        <div className={styles.titleRow}>
+          <h3 className={styles.title}>{m.title}</h3>
+          {canRemove && (
+            <CardKebab
+              title={m.title}
+              isMine={!!isMine}
+              isHost={isHost}
+              onRemove={() => void onRemove(m.id)}
+              t={t}
+            />
           )}
+        </div>
+        <p className={styles.metaLine}>
+          {m.year ? <span className={styles.metaItem}>{m.year}</span> : null}
+          {runtimeLabel ? (
+            <span className={styles.metaItem} title={t('movies.list.runtimeTitle')}>
+              {runtimeLabel}
+            </span>
+          ) : null}
+          {voteLabel ? (
+            <span
+              className={clsx(styles.metaItem, 'tmdb-vote')}
+              title={t('movies.list.tmdbVoteTitle')}
+            >
+              {voteLabel}
+            </span>
+          ) : null}
         </p>
-        <WatchProviderChips
-          providers={providers}
-          variant="compact"
-          className={styles.cardProviders}
-          watchPageUrl={safeTmdbWatchUrl}
-        />
+        {providers.length > 0 ? (
+          <WatchProviderChips
+            providers={providers}
+            variant="compact"
+            className={styles.cardProviders}
+            watchPageUrl={safeTmdbWatchUrl}
+            maxVisible={3}
+          />
+        ) : (
+          <p className={styles.providersEmpty}>{t('movies.watchProviders.emptyLabel')}</p>
+        )}
         {seenHint ? <p className={styles.seenHint}>{seenHint}</p> : null}
-        {m.tmdbId > 0 ? <MovieDetailsPanel tmdbId={m.tmdbId} /> : null}
         {!isFinished && participantId && (
-          <div className={styles.actions}>
+          <div className={styles.actions} role="group" aria-label={m.title}>
             <button
               type="button"
-              className={clsx('btn btn-sm', m.myVote === 1 && styles.voteUpActive)}
+              className={clsx(styles.actionBtn, m.myVote === 1 && styles.voteUpActive)}
               onClick={() => void onVote(m.id, 1)}
               aria-pressed={m.myVote === 1}
               aria-label={
@@ -155,11 +183,12 @@ const MovieCard = memo(function MovieCard({
                   : `${t('movies.list.voteUp')} ${m.title}`
               }
             >
-              <ThumbsUp aria-hidden size={16} /> {m.up}
+              <ThumbsUp aria-hidden size={16} />
+              <span className={styles.actionCount}>{m.up}</span>
             </button>
             <button
               type="button"
-              className={clsx('btn btn-sm', m.myVote === -1 && styles.voteDownActive)}
+              className={clsx(styles.actionBtn, m.myVote === -1 && styles.voteDownActive)}
               onClick={() => void onVote(m.id, -1)}
               aria-pressed={m.myVote === -1}
               aria-label={
@@ -168,11 +197,12 @@ const MovieCard = memo(function MovieCard({
                   : `${t('movies.list.voteDown')} ${m.title}`
               }
             >
-              <ThumbsDown aria-hidden size={16} /> {m.down}
+              <ThumbsDown aria-hidden size={16} />
+              <span className={styles.actionCount}>{m.down}</span>
             </button>
             <button
               type="button"
-              className={`btn btn-sm ${iMarkedSeen ? styles.seenActive : ''}`}
+              className={clsx(styles.actionBtn, iMarkedSeen && styles.seenActive)}
               onClick={() => void handleToggleSeen()}
               disabled={seenPending}
               aria-pressed={iMarkedSeen}
@@ -183,32 +213,107 @@ const MovieCard = memo(function MovieCard({
               }
               title={t('movies.seen.neutralTooltip')}
             >
-              <Eye aria-hidden size={16} />{' '}
-              {m.seenCount
-                ? t('movies.seen.labelWithCount', { count: m.seenCount })
-                : t('movies.seen.label')}
+              <Eye aria-hidden size={16} />
+              <span className={styles.actionLabel}>
+                {m.seenCount
+                  ? t('movies.seen.labelWithCount', { count: m.seenCount })
+                  : t('movies.seen.label')}
+              </span>
             </button>
-            {canRemove && (
-              <button
-                type="button"
-                className="btn btn-sm btn-danger"
-                onClick={() => void onRemove(m.id)}
-                aria-label={
-                  isMine
-                    ? `${t('movies.list.removeButton')} ${m.title}`
-                    : t('movies.list.removeAsHostAria', { title: m.title })
-                }
-                title={!isMine && isHost ? t('movies.list.removeAsHostTitle') : undefined}
-              >
-                {t('movies.list.removeButton')}
-              </button>
-            )}
           </div>
         )}
+        <p className={styles.proposerLine}>
+          {m.proposerPseudo ? (
+            isMine ? (
+              <>
+                {t('movies.list.proposedByMeLead')}
+                <span className={styles.selfProposer}>{t('movies.list.proposedByMeSelf')}</span>
+              </>
+            ) : (
+              t('movies.list.proposedBy', { pseudo: m.proposerPseudo })
+            )
+          ) : null}
+        </p>
       </div>
+      {hasDetails ? (
+        <MovieDetailsContent
+          tmdbId={m.tmdbId}
+          open={detailsOpen}
+          panelId={detailsPanelId}
+          className={styles.detailsPanel}
+        />
+      ) : null}
     </li>
   );
 });
+
+interface CardKebabProps {
+  title: string;
+  isMine: boolean;
+  isHost: boolean;
+  onRemove: () => void;
+  t: Translate;
+}
+
+function CardKebab({ title, isMine, isHost, onRemove, t }: CardKebabProps) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handlePointer = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', handlePointer);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handlePointer);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [open]);
+
+  const removeAria = isMine
+    ? `${t('movies.list.removeButton')} ${title}`
+    : t('movies.list.removeAsHostAria', { title });
+
+  return (
+    <div className={styles.kebab} ref={rootRef}>
+      <button
+        type="button"
+        className={styles.kebabBtn}
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={t('movies.list.moreActionsAria', { title })}
+      >
+        <MoreVertical aria-hidden size={18} />
+      </button>
+      {open ? (
+        <div className={styles.kebabMenu} role="menu">
+          <button
+            type="button"
+            role="menuitem"
+            className={styles.kebabItem}
+            onClick={() => {
+              setOpen(false);
+              onRemove();
+            }}
+            aria-label={removeAria}
+            title={!isMine && isHost ? t('movies.list.removeAsHostTitle') : undefined}
+          >
+            <Trash2 aria-hidden size={14} />
+            <span>{t('movies.list.removeButton')}</span>
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 export default function MovieList({
   movies,
@@ -231,7 +336,7 @@ export default function MovieList({
   return (
     <div>
       <ul className={styles.list}>
-        {movies.map((m) => (
+        {movies.map((m, i) => (
           <MovieCard
             key={m.id}
             movie={m}
@@ -240,6 +345,7 @@ export default function MovieList({
             participantPseudo={participantPseudo}
             isFinished={isFinished}
             isHost={isHost}
+            eager={i < 2}
             onVote={onVote}
             onRemove={onRemove}
             refresh={refresh}

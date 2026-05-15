@@ -116,8 +116,7 @@ describe('MyEventsPage (MSW)', () => {
       within(hostedLink.closest('li')!).getByText(/4\s*\/\s*8 participants/)
     ).toBeInTheDocument();
     expect(within(hostedLink.closest('li')!).getByText(/2 films propos/)).toBeInTheDocument();
-    expect(screen.getAllByText('Hôte').length).toBeGreaterThanOrEqual(1);
-    expect(within(hostedLink.closest('li')!).getByText('À venir')).toBeInTheDocument();
+    expect(screen.getAllByLabelText('Hôte').length).toBeGreaterThanOrEqual(1);
 
     const joinedLink = screen.getByRole('link', { name: /Chez Bob/i });
     expect(joinedLink).toHaveAttribute('href', '/e/autre');

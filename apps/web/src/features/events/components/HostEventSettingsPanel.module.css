@@ -83,7 +83,7 @@
 }
 
 .field:last-of-type {
-  margin-bottom: 0;
+  margin-bottom: 1.25rem;
 }
 
 .field :global(.input) {
