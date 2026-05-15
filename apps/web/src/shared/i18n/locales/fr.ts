@@ -26,7 +26,7 @@ export const fr = {
   nav: {
     home: 'Accueil',
     myEvents: 'Mes soirées',
-    account: 'Paramètres',
+    account: 'Mon compte',
     navLabel: 'Navigation principale',
     brandLabel: 'Movie Picker \u2014 Accueil',
   },
@@ -104,7 +104,7 @@ export const fr = {
       missingTokenError: 'Lien invalide : aucun token fourni.',
     },
     account: {
-      title: 'Paramètres',
+      title: 'Mon compte',
       loadingPlaceholder: 'Chargement du profil\u2026',
       pseudoLabel: 'Pseudo',
       profileTitle: 'Profil',
@@ -176,7 +176,7 @@ export const fr = {
       loading: 'Chargement\u2026',
       errorFallback: 'Soirée introuvable',
       backHome: "Retour à l'accueil",
-      backNav: '\u2190 Retour',
+      backNav: 'Retour',
       finishedBadge: 'Terminée',
       finishedBanner: 'Soirée terminée',
       moviesSection: 'Films',
@@ -198,6 +198,8 @@ export const fr = {
       hostBadge: 'H\u00f4te',
       hostBadgeTitle: 'Vous organisez cette soir\u00e9e',
       historySection: 'Historique',
+      activeEmpty: 'Aucune soirée à venir. Lancez-en une avec le bouton ci-dessous.',
+      historyEmpty: 'Aucune soirée terminée pour le moment.',
       emptyDescriptionGuest:
         'Aucune soir\u00e9e enregistr\u00e9e sur cet appareil. Ouvrez un lien d\u2019invitation pour rejoindre une soir\u00e9e : elle appara\u00eetra ici.',
       guestActionsNavLabel: 'Compte et cr\u00e9ation de soir\u00e9e',
@@ -223,6 +225,7 @@ export const fr = {
       shareText: 'Rejoins la soirée sur Movie Picker.',
       showQr: 'Afficher le QR code',
       hideQr: 'Masquer le QR code',
+      closeQr: 'Fermer le QR code',
       qrTitle: 'QR code \u2014 lien vers la soirée',
       qrHint: "Ouvrez l'appareil photo pour rejoindre la soirée sur mobile.",
       groupLabel: 'Inviter des participants',

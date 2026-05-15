@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
+import { X } from 'lucide-react';
 import QRCodeImport from 'react-qr-code';
 import { copyTextToClipboard } from '@/shared/utils/copyTextToClipboard';
 import { useTranslation } from '@/shared/i18n';
 import styles from './ShareLink.module.css';
 
-const QR_SIZE = 160;
+const QR_SIZE_MODAL = 240;
 const QR_BG_COLOR = '#ffffff';
 const QR_FG_COLOR = '#111827';
 const COPIED_RESET_MS = 2000;
@@ -23,7 +24,7 @@ const QRCode =
 
 interface ShareLinkProps {
   url: string;
-  /** Affiche le bouton et le panneau QR (URL invité uniquement — ne pas utiliser pour un lien hôte secret). */
+  /** Affiche le bouton et la modale QR (URL invité uniquement — ne pas utiliser pour un lien hôte secret). */
   showQr?: boolean;
   /** Aligne les actions au centre (ex. en-tête page soirée). */
   centeredActions?: boolean;
@@ -39,6 +40,27 @@ export default function ShareLink({
   const copyTimerRef = useRef<number | undefined>(undefined);
   useEffect(() => () => clearTimeout(copyTimerRef.current), []);
   const [qrOpen, setQrOpen] = useState(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  // Synchronise l'état React avec l'API native <dialog>. En environnement test
+  // (jsdom n'implémente pas `showModal`), on bascule simplement l'attribut `open`.
+  useEffect(() => {
+    const el = dialogRef.current;
+    if (!el) return;
+    if (qrOpen && !el.open) {
+      if (typeof el.showModal === 'function') {
+        el.showModal();
+      } else {
+        el.setAttribute('open', '');
+      }
+    } else if (!qrOpen && el.open) {
+      if (typeof el.close === 'function') {
+        el.close();
+      } else {
+        el.removeAttribute('open');
+      }
+    }
+  }, [qrOpen]);
 
   const shareLabel = copied ? t('events.share.copiedButton') : t('events.share.shareButton');
 
@@ -80,27 +102,54 @@ export default function ShareLink({
           <button
             type="button"
             className={clsx('btn', styles.btnQr)}
-            onClick={() => setQrOpen((o) => !o)}
-            aria-expanded={qrOpen}
+            onClick={() => setQrOpen(true)}
+            aria-haspopup="dialog"
           >
-            {qrOpen ? t('events.share.hideQr') : t('events.share.showQr')}
+            {t('events.share.showQr')}
           </button>
         ) : null}
       </div>
-      {showQr && qrOpen ? (
-        <div className={clsx(styles.qrPanel, centeredActions && styles.qrPanelCentered)}>
-          <div className={styles.qrCanvas}>
-            <QRCode
-              value={url}
-              size={QR_SIZE}
-              level="M"
-              title={t('events.share.qrTitle')}
-              bgColor={QR_BG_COLOR}
-              fgColor={QR_FG_COLOR}
-            />
+      {showQr ? (
+        <dialog
+          ref={dialogRef}
+          className={styles.qrDialog}
+          aria-labelledby="share-qr-title"
+          onClose={() => setQrOpen(false)}
+          onClick={(e) => {
+            // Ferme si on clique sur le backdrop (en dehors du contenu du dialog).
+            if (e.target === e.currentTarget) {
+              setQrOpen(false);
+            }
+          }}
+        >
+          <div className={styles.qrDialogInner}>
+            <header className={styles.qrDialogHeader}>
+              <h2 id="share-qr-title" className={styles.qrDialogTitle}>
+                {t('events.share.qrTitle')}
+              </h2>
+              <button
+                type="button"
+                className={styles.qrDialogClose}
+                onClick={() => setQrOpen(false)}
+                aria-label={t('events.share.closeQr')}
+              >
+                <X size={18} aria-hidden />
+              </button>
+            </header>
+            <div className={styles.qrCanvas}>
+              <QRCode
+                value={url}
+                size={QR_SIZE_MODAL}
+                level="M"
+                title={t('events.share.qrTitle')}
+                bgColor={QR_BG_COLOR}
+                fgColor={QR_FG_COLOR}
+              />
+            </div>
+            <p className={styles.qrHint}>{t('events.share.qrHint')}</p>
+            <p className={styles.qrUrl}>{url}</p>
           </div>
-          <p className={styles.qrHint}>{t('events.share.qrHint')}</p>
-        </div>
+        </dialog>
       ) : null}
     </div>
   );

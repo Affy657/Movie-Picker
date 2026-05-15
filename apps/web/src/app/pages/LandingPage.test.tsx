@@ -14,8 +14,9 @@ describe('LandingPage', () => {
         </MemoryRouter>
       </AppTestProviders>
     );
-    expect(screen.getByRole('heading', { name: /movie picker/i })).toBeInTheDocument();
-    expect(screen.getByText(/choisissez le film de la soirée/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /choisissez le film de la soirée/i, level: 1 })
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /^se connecter$/i })).toHaveAttribute('href', '/login');
     expect(screen.getByRole('link', { name: /^créer un compte$/i })).toHaveAttribute(
       'href',

@@ -1,0 +1,34 @@
+.layout {
+  --page-max-width: 36rem;
+}
+
+.header {
+  margin: 0 0 1.5rem;
+}
+
+.title {
+  margin: 0 0 0.25rem;
+  font-size: clamp(1.5rem, 3vw, 1.875rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  color: var(--color-text);
+}
+
+.email {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0 0 0.9rem;
+}
+
+.sectionTitle :global(svg) {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}

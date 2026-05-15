@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
-import AuthPageShell from '@/features/auth/components/AuthPageShell';
+import AuthPageShell, { authPageShellStyles } from '@/features/auth/components/AuthPageShell';
 import PageLayout from '@/shared/components/PageLayout';
 import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
@@ -32,7 +32,7 @@ export default function ForgotPasswordPage() {
 
   if (submitted) {
     return (
-      <PageLayout>
+      <PageLayout className={authPageShellStyles.layout}>
         <AuthPageShell
           title={t('auth.forgotPassword.successTitle')}
           description={t('auth.forgotPassword.successMessage')}
@@ -46,7 +46,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <PageLayout>
+    <PageLayout className={authPageShellStyles.layout}>
       <AuthPageShell
         title={t('auth.forgotPassword.title')}
         description={t('auth.forgotPassword.description')}

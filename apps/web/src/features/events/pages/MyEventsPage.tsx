@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
+import { Plus } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
@@ -174,11 +175,14 @@ function partitionMyEvents(events: MyEventSummary[]) {
   return { hostedActive, joinedActive, historyEvents: history };
 }
 
+type MyEventsTab = 'active' | 'history';
+
 export default function MyEventsPage() {
   const { t } = useTranslation();
   useDocumentTitle(pageTitle(t('events.myEvents.title')));
   const queryClient = useQueryClient();
   const { user, isLoading: authLoading } = useAuth();
+  const [tab, setTab] = useState<MyEventsTab>('active');
 
   // Évite une requête superflue quand l'utilisateur connecté n'a aucun « join invité »
   // mémorisé en session. Capturé une fois au montage : on ne suit pas dynamiquement
@@ -300,36 +304,87 @@ export default function MyEventsPage() {
         <p className="lead">{emptyLead}</p>
       ) : (
         <>
-          <EventListBlock
-            sectionId="my-events-hosted"
-            heading={t('events.myEvents.hostedSection')}
-            events={hostedActive}
-            emptyHint={null}
-          />
-          <EventListBlock
-            sectionId="my-events-joined"
-            heading={t('events.myEvents.joinedSection')}
-            events={joinedActive}
-            emptyHint={null}
-          />
-          <EventListBlock
-            sectionId="my-events-history"
-            heading={t('events.myEvents.historySection')}
-            events={historyEvents}
-            emptyHint={null}
-            showLifecycleBadge={false}
-          />
+          <div className={styles.tabs} role="tablist" aria-label={t('events.myEvents.title')}>
+            <button
+              type="button"
+              role="tab"
+              id="myevents-tab-active"
+              aria-selected={tab === 'active'}
+              aria-controls="myevents-panel-active"
+              className={clsx(styles.tab, tab === 'active' && styles.tabActive)}
+              onClick={() => setTab('active')}
+            >
+              À venir
+              <span className={styles.tabCount}>{hostedActive.length + joinedActive.length}</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              id="myevents-tab-history"
+              aria-selected={tab === 'history'}
+              aria-controls="myevents-panel-history"
+              className={clsx(styles.tab, tab === 'history' && styles.tabActive)}
+              onClick={() => setTab('history')}
+            >
+              Historique
+              <span className={styles.tabCount}>{historyEvents.length}</span>
+            </button>
+          </div>
+          {tab === 'active' ? (
+            <div
+              role="tabpanel"
+              id="myevents-panel-active"
+              aria-labelledby="myevents-tab-active"
+            >
+              {hostedActive.length === 0 && joinedActive.length === 0 ? (
+                <p className={styles.sectionEmpty}>{t('events.myEvents.activeEmpty')}</p>
+              ) : (
+                <>
+                  <EventListBlock
+                    sectionId="my-events-hosted"
+                    heading={t('events.myEvents.hostedSection')}
+                    events={hostedActive}
+                    emptyHint={null}
+                  />
+                  <EventListBlock
+                    sectionId="my-events-joined"
+                    heading={t('events.myEvents.joinedSection')}
+                    events={joinedActive}
+                    emptyHint={null}
+                  />
+                </>
+              )}
+            </div>
+          ) : (
+            <div
+              role="tabpanel"
+              id="myevents-panel-history"
+              aria-labelledby="myevents-tab-history"
+            >
+              {historyEvents.length === 0 ? (
+                <p className={styles.sectionEmpty}>{t('events.myEvents.historyEmpty')}</p>
+              ) : (
+                <EventListBlock
+                  sectionId="my-events-history"
+                  heading={t('events.myEvents.historySection')}
+                  events={historyEvents}
+                  emptyHint={null}
+                  showLifecycleBadge={false}
+                />
+              )}
+            </div>
+          )}
         </>
       )}
       {user ? (
-        <nav
-          className={`nav-actions ${styles.ctaNav}`}
-          aria-label={t('events.myEvents.actionsNavLabel')}
+        <Link
+          to={ROUTES.createEvent}
+          className={styles.fab}
+          aria-label={t('events.myEvents.createCta')}
         >
-          <Link to={ROUTES.createEvent} className={`btn btn-primary ${styles.ctaButton}`}>
-            {t('events.myEvents.createCta')}
-          </Link>
-        </nav>
+          <Plus size={20} aria-hidden className={styles.fabIcon} />
+          <span className={styles.fabLabel}>{t('events.myEvents.createCta')}</span>
+        </Link>
       ) : (
         <nav
           className={`nav-actions ${styles.ctaNav}`}

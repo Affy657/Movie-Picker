@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import AuthPageShell from '@/features/auth/components/AuthPageShell';
+import AuthPageShell, { authPageShellStyles } from '@/features/auth/components/AuthPageShell';
 import PageLayout from '@/shared/components/PageLayout';
 import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
@@ -61,7 +61,7 @@ export default function ResetPasswordPage() {
 
   if (!token) {
     return (
-      <PageLayout>
+      <PageLayout className={authPageShellStyles.layout}>
         <AuthPageShell
           title={t('auth.resetPassword.invalidTokenTitle')}
           description={t('auth.resetPassword.missingTokenError')}
@@ -81,7 +81,7 @@ export default function ResetPasswordPage() {
 
   if (tokenInvalid) {
     return (
-      <PageLayout>
+      <PageLayout className={authPageShellStyles.layout}>
         <AuthPageShell
           title={t('auth.resetPassword.invalidTokenTitle')}
           description={t('auth.resetPassword.invalidTokenMessage')}
@@ -101,7 +101,7 @@ export default function ResetPasswordPage() {
 
   if (success) {
     return (
-      <PageLayout>
+      <PageLayout className={authPageShellStyles.layout}>
         <AuthPageShell
           title={t('auth.resetPassword.successTitle')}
           description={t('auth.resetPassword.successMessage')}
@@ -117,7 +117,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <PageLayout>
+    <PageLayout className={authPageShellStyles.layout}>
       <AuthPageShell
         title={t('auth.resetPassword.title')}
         description={t('auth.resetPassword.description')}
@@ -147,7 +147,7 @@ export default function ResetPasswordPage() {
             aria-invalid={error ? true : undefined}
             aria-describedby="reset-pwd-hint"
           />
-          <p className="muted" id="reset-pwd-hint">
+          <p className="hint" id="reset-pwd-hint">
             {t('auth.resetPassword.newPasswordHint')}
           </p>
           <label className="label" htmlFor="reset-confirm-password">

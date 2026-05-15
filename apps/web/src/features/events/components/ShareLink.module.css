@@ -19,50 +19,111 @@
   justify-content: center;
 }
 
-/* Même hiérarchie que le primaire : contour accent, poids visuel proche du bouton Partager */
+/* Contour primary, même hiérarchie que le bouton Partager */
 .btnQr {
-  border: 2px solid var(--color-primary);
+  border: 1.5px solid var(--color-primary);
   color: var(--color-primary);
   background: transparent;
   font-weight: 600;
 }
 
 .btnQr:hover {
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
   border-color: var(--color-primary-hover);
   color: var(--color-primary-hover);
 }
 
-.qrPanel {
-  margin-top: 0.75rem;
-  padding: 0.75rem;
-  border-radius: var(--radius-md);
+/* Modale QR — affichage plein écran (centré, backdrop, blur). */
+.qrDialog {
+  width: min(420px, calc(100vw - 2rem));
+  padding: 0;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--color-border-subtle);
-  background: var(--color-surface-elevated, var(--color-surface));
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-lg);
+}
+
+.qrDialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.qrDialogInner {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1.25rem 1.4rem 1.5rem;
+}
+
+.qrDialogHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
   gap: 0.5rem;
 }
 
-.qrPanelCentered {
+.qrDialogTitle {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--color-text);
+  flex: 1;
+  min-width: 0;
+}
+
+.qrDialogClose {
+  flex-shrink: 0;
+  display: inline-flex;
   align-items: center;
-  align-self: stretch;
-  max-width: 20rem;
-  margin-left: auto;
-  margin-right: auto;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.qrDialogClose:hover {
+  background: color-mix(in srgb, var(--color-text-muted) 14%, transparent);
+  color: var(--color-text);
 }
 
 .qrCanvas {
-  padding: 0.5rem;
-  background: #fff;
-  border-radius: 8px;
+  padding: 0.9rem;
+  background: #ffffff;
+  border-radius: var(--radius-md);
   line-height: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
 .qrHint {
   margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.qrUrl {
+  margin: 0;
   font-size: 0.8125rem;
-  color: var(--color-meta);
-  max-width: 18rem;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+  text-align: center;
+  word-break: break-all;
+  padding: 0.45rem 0.7rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  max-width: 100%;
+  align-self: stretch;
 }

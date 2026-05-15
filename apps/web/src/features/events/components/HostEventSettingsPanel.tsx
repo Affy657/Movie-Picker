@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Settings2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteEvent, patchEventConfig } from '@/features/events/api/eventsApi';
 import { getErrorMessage } from '@/shared/api/apiError';
@@ -181,7 +182,11 @@ export default function HostEventSettingsPanel({
         if (el.open) hydrateFromEvent();
       }}
     >
-      <summary className={styles.summary}>Paramètres de la soirée</summary>
+      <summary className={styles.summary}>
+        <Settings2 size={18} aria-hidden className={styles.summaryIcon} />
+        <span className={styles.summaryLabel}>Paramètres de la soirée</span>
+        <span className={styles.summaryChevron} aria-hidden />
+      </summary>
       {locked && (
         <p className={styles.locked}>
           Cette soirée n&apos;est plus modifiable (terminée ou roue déjà lancée).

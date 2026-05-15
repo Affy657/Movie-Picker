@@ -1,9 +1,11 @@
 import { useCallback, useState } from 'react';
+import { UserPlus } from 'lucide-react';
 import { joinEvent } from '@/features/events/api/eventsApi';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { setStoredParticipant } from '@/features/events/storage';
 import { useTranslation } from '@/shared/i18n';
+import styles from './JoinForm.module.css';
 
 interface JoinFormProps {
   slug: string;
@@ -52,46 +54,62 @@ export default function JoinForm({ slug, onJoined, isFull, maxParticipants }: Jo
       : t('events.join.full');
 
   return (
-    <section className="section section-join">
-      <h2>Rejoindre la soirée</h2>
+    <section className={styles.root}>
+      <h2 className={styles.title}>
+        <UserPlus size={18} aria-hidden className={styles.titleIcon} />
+        Rejoindre la soirée
+      </h2>
       {isFull ? (
-        <p className="error" role="status" aria-live="polite">
+        <p className={styles.fullMessage} role="status" aria-live="polite">
           {fullMessage}
         </p>
       ) : (
-        <form
-          onSubmit={handleSubmit}
-          className="form"
-          aria-describedby={error ? 'join-error' : undefined}
-        >
-          {error && (
-            <p id="join-error" className="error" role="alert">
-              {error}
+        <>
+          {isGuest ? (
+            <p className={styles.intro}>Indique ton pseudo pour rejoindre la soirée.</p>
+          ) : (
+            <p className={styles.intro}>
+              Rejoins la soirée pour proposer des films et voter.
             </p>
           )}
-          {isGuest ? (
-            <>
-              <label className="label" htmlFor="join-pseudo">
-                Ton pseudo
-              </label>
-              <input
-                id="join-pseudo"
-                type="text"
-                className="input"
-                value={pseudo}
-                onChange={(e) => setPseudo(e.target.value)}
-                required
-                maxLength={100}
-                placeholder="Ex: Alice"
-                autoComplete="nickname"
-                aria-invalid={error ? true : undefined}
-              />
-            </>
-          ) : null}
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'Envoi…' : 'Rejoindre'}
-          </button>
-        </form>
+          <form
+            onSubmit={handleSubmit}
+            className="form"
+            aria-describedby={error ? 'join-error' : undefined}
+          >
+            {error && (
+              <p id="join-error" className="error" role="alert">
+                {error}
+              </p>
+            )}
+            {isGuest ? (
+              <>
+                <label className="label" htmlFor="join-pseudo">
+                  Ton pseudo
+                </label>
+                <input
+                  id="join-pseudo"
+                  type="text"
+                  className="input"
+                  value={pseudo}
+                  onChange={(e) => setPseudo(e.target.value)}
+                  required
+                  maxLength={100}
+                  placeholder="Ex : Alice"
+                  autoComplete="nickname"
+                  aria-invalid={error ? true : undefined}
+                />
+              </>
+            ) : null}
+            <button
+              type="submit"
+              className={`btn btn-primary ${styles.submit}`}
+              disabled={loading}
+            >
+              {loading ? 'Envoi…' : 'Rejoindre'}
+            </button>
+          </form>
+        </>
       )}
     </section>
   );

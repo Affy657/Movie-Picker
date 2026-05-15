@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { AlertCircle } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ROUTES } from '@/app/routes';
 import { formatEventStartInUserTimezone } from '@/shared/utils/eventScheduled';
@@ -223,8 +224,11 @@ export default function EventDetail() {
   if (eventQuery.isError) {
     const errorMessage = friendlyEventError(eventQuery.error);
     return (
-      <PageLayout className="page-event page--centered">
-        <p className="error" role="alert">
+      <PageLayout className="page-event page--centered page--errorState">
+        <span className="errorStateIcon" aria-hidden>
+          <AlertCircle size={32} />
+        </span>
+        <p className="errorStateMessage" role="alert">
           {errorMessage}
         </p>
         <Link to={ROUTES.home} className="btn">

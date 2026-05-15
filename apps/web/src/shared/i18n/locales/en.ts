@@ -22,7 +22,7 @@ export const en: Locale = {
   nav: {
     home: 'Home',
     myEvents: 'My events',
-    account: 'Settings',
+    account: 'My account',
     navLabel: 'Main navigation',
     brandLabel: 'Movie Picker \u2014 Home',
   },
@@ -96,7 +96,7 @@ export const en: Locale = {
       missingTokenError: 'Invalid link: no token provided.',
     },
     account: {
-      title: 'Settings',
+      title: 'My account',
       loadingPlaceholder: 'Loading profile\u2026',
       pseudoLabel: 'Nickname',
       profileTitle: 'Profile',
@@ -168,7 +168,7 @@ export const en: Locale = {
       loading: 'Loading\u2026',
       errorFallback: 'Event not found',
       backHome: 'Back to home',
-      backNav: '\u2190 Back',
+      backNav: 'Back',
       finishedBadge: 'Finished',
       finishedBanner: 'Event finished',
       moviesSection: 'Movies',
@@ -189,6 +189,8 @@ export const en: Locale = {
       hostBadge: 'Host',
       hostBadgeTitle: 'You are hosting this event',
       historySection: 'History',
+      activeEmpty: 'No upcoming event. Start one with the button below.',
+      historyEmpty: 'No finished event yet.',
       emptyDescriptionGuest:
         'No events saved on this device yet. Open an invite link to join one — it will show up here.',
       guestActionsNavLabel: 'Account and hosting',
@@ -212,6 +214,7 @@ export const en: Locale = {
       shareText: 'Join the event on Movie Picker.',
       showQr: 'Show QR code',
       hideQr: 'Hide QR code',
+      closeQr: 'Close QR code',
       qrTitle: 'QR code \u2014 link to the event',
       qrHint: 'Open your camera to join the event on mobile.',
       groupLabel: 'Invite participants',

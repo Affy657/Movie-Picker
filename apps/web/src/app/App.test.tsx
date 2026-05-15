@@ -43,7 +43,11 @@ describe('App (routes)', () => {
       // Timeout étendu : sous coverage V8 sur Windows le mount initial (Auth + lazy LandingPage)
       // peut dépasser le default 1s de findBy.
       expect(
-        await screen.findByRole('heading', { name: /movie picker/i }, { timeout: 8000 })
+        await screen.findByRole(
+          'heading',
+          { name: /choisissez le film de la soirée/i, level: 1 },
+          { timeout: 8000 }
+        )
       ).toBeInTheDocument();
       expect(screen.getByRole('link', { name: /^se connecter$/i })).toHaveAttribute(
         'href',
@@ -98,12 +102,16 @@ describe('App (routes)', () => {
     it('AppShell : aucune barre de navigation n’est exposée aux non-connectés', async () => {
       server.use(authMeGuestHandler);
       renderRoutes(['/']);
-      await screen.findByRole('heading', { name: /movie picker/i }, { timeout: 8000 });
+      await screen.findByRole(
+        'heading',
+        { name: /choisissez le film de la soirée/i, level: 1 },
+        { timeout: 8000 }
+      );
       expect(
         screen.queryByRole('navigation', { name: /navigation principale/i })
       ).not.toBeInTheDocument();
       expect(screen.queryByRole('link', { name: /^Mes soirées$/i })).not.toBeInTheDocument();
-      expect(screen.queryByRole('link', { name: /^Paramètres$/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /^Mon compte$/i })).not.toBeInTheDocument();
     });
   });
 
@@ -117,10 +125,12 @@ describe('App (routes)', () => {
       expect(
         await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 })
       ).toBeInTheDocument();
-      expect(screen.queryByRole('heading', { name: /movie picker/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('heading', { name: /choisissez le film de la soirée/i })
+      ).not.toBeInTheDocument();
     });
 
-    it('AppShell expose Mes soirées + Paramètres dans la nav (sans Accueil)', async () => {
+    it('AppShell expose Mes soirées + Mon compte dans la nav (sans Accueil)', async () => {
       server.use(
         authedUserHandler,
         http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
@@ -133,14 +143,18 @@ describe('App (routes)', () => {
       if (!mobileNav) throw new Error('Mobile nav introuvable');
       expect(within(mobileNav).queryByRole('link', { name: /^Accueil$/i })).not.toBeInTheDocument();
       expect(within(mobileNav).getByRole('link', { name: /^Mes soirées$/i })).toBeInTheDocument();
-      expect(within(mobileNav).getByRole('link', { name: /^Paramètres$/i })).toBeInTheDocument();
+      expect(within(mobileNav).getByRole('link', { name: /^Mon compte$/i })).toBeInTheDocument();
     });
   });
 
   it('le brand mène toujours à la racine du site', async () => {
     server.use(authMeGuestHandler);
     renderRoutes(['/']);
-    await screen.findByRole('heading', { name: /movie picker/i }, { timeout: 8000 });
+    await screen.findByRole(
+      'heading',
+      { name: /choisissez le film de la soirée/i, level: 1 },
+      { timeout: 8000 }
+    );
     await waitFor(() => {
       expect(screen.getByRole('link', { name: /movie picker .*accueil/i })).toHaveAttribute(
         'href',

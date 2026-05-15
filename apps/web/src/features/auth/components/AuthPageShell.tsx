@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
 import type { ReactNode } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { ROUTES } from '@/app/routes';
+import styles from './AuthPageShell.module.css';
 
 type AuthPageShellProps = {
   title: string;
-  /** Paragraphe d’intro sous le titre (style `muted`). */
   description?: string;
   children: ReactNode;
 };
@@ -12,12 +13,18 @@ type AuthPageShellProps = {
 export default function AuthPageShell({ title, description, children }: AuthPageShellProps) {
   return (
     <>
-      <Link to={ROUTES.home} className="back-link">
-        ← Accueil
+      <Link to={ROUTES.home} className={styles.backLink}>
+        <ArrowLeft size={16} aria-hidden />
+        Accueil
       </Link>
-      <h1>{title}</h1>
-      {description ? <p className="muted">{description}</p> : null}
-      {children}
+      <div className={styles.card}>
+        <span className={styles.cardAccent} aria-hidden />
+        <h1 className={styles.title}>{title}</h1>
+        {description ? <p className={styles.description}>{description}</p> : null}
+        {children}
+      </div>
     </>
   );
 }
+
+export { styles as authPageShellStyles };

@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import ShareLink from '@/features/events/components/ShareLink';
 import EventThemeBanner from '@/features/events/components/EventThemeBanner';
 import { useTranslation } from '@/shared/i18n';
@@ -39,15 +40,27 @@ export default function EventDetailHeader({
             }
           }}
         >
+          <ArrowLeft size={16} aria-hidden />
           {t('events.detail.backNav')}
         </button>
       </div>
       <EventThemeBanner theme={eventTheme} />
       <div className={styles.intro}>
         <h1>{title}</h1>
-        <p className={styles.meta}>{dateFormatted}</p>
-        {isFinished && <p className={styles.badgeFinished}>{t('events.detail.finishedBanner')}</p>}
-        {shareUrl ? <ShareLink url={shareUrl} showQr centeredActions /> : null}
+        <div className={styles.metaRow}>
+          <p className={styles.meta}>{dateFormatted}</p>
+          {isFinished && (
+            <span className={styles.badgeFinished}>
+              <CheckCircle2 size={12} aria-hidden />
+              {t('events.detail.finishedBanner')}
+            </span>
+          )}
+        </div>
+        {shareUrl ? (
+          <div className={styles.share}>
+            <ShareLink url={shareUrl} showQr />
+          </div>
+        ) : null}
       </div>
     </header>
   );

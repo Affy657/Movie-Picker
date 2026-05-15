@@ -1,10 +1,38 @@
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0 0 0.9rem;
+}
+
+.sectionTitleIcon {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
 .result {
-  padding: 1rem 1.15rem;
-  background: var(--color-wheel-bg);
+  position: relative;
+  padding: 1.5rem 1.4rem;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-wheel-bg) 85%, var(--color-primary)),
+      var(--color-wheel-bg)
+    );
+  border: 1px solid color-mix(in srgb, var(--color-wheel-label) 25%, transparent);
   border-radius: var(--radius-md);
   margin-bottom: 1rem;
-  border: none;
-  box-shadow: none;
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.winnerIcon {
+  color: var(--color-wheel-label);
+  margin-bottom: 0.25rem;
 }
 
 .spinning {
@@ -18,21 +46,26 @@
 }
 
 .winnerLabel {
-  margin: 0 0 0.25rem 0;
-  font-size: 0.875rem;
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--color-wheel-label);
 }
 
 .winnerTitle {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
 }
 
 .winnerMeta {
-  margin: 0.25rem 0 0 0;
-  font-size: 0.875rem;
-  color: var(--color-placeholder);
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
 }
 
 .btnWheel {

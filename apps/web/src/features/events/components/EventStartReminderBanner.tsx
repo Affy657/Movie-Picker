@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Clock } from 'lucide-react';
 import {
   computeEventStartReminder,
   eventScheduledStartUtcMs,
@@ -66,9 +67,14 @@ export default function EventStartReminderBanner({ date, time, isFinished }: Pro
 
   return (
     <aside className={styles.root} role="status" aria-live="polite">
-      <strong className={styles.kicker}>Bientôt</strong>
-      <p className={styles.text}>{state.line1}</p>
-      <p className={`${styles.meta} hint`}>{state.line2}</p>
+      <span className={styles.iconWrap} aria-hidden>
+        <Clock size={16} />
+      </span>
+      <div className={styles.body}>
+        <strong className={styles.kicker}>Bientôt</strong>
+        <p className={styles.text}>{state.line1}</p>
+        <p className={styles.meta}>{state.line2}</p>
+      </div>
     </aside>
   );
 }

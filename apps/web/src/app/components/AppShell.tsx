@@ -71,6 +71,7 @@ export default function AppShell() {
             className={styles.brandLogo}
             decoding="async"
           />
+          <span className={styles.brandName}>Movie Picker</span>
         </Link>
         {items.length > 0 ? (
           <nav className={styles.navDesktop} aria-label={t('nav.navLabel')}>

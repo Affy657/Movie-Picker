@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { LogOut, Sliders, User } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
@@ -8,13 +9,17 @@ import { useTranslation } from '@/shared/i18n';
 import ThemeToggle from '@/app/components/ThemeToggle';
 import LanguageSelector from '@/app/components/LanguageSelector';
 import { withReturnTo, ROUTES } from '@/app/routes';
+import styles from './AccountPage.module.css';
 
 function PreferencesSection() {
   const { t } = useTranslation();
 
   return (
     <section className="section section--panel" aria-labelledby="preferences-heading">
-      <h2 id="preferences-heading">{t('auth.account.preferencesTitle')}</h2>
+      <h2 id="preferences-heading" className={styles.sectionTitle}>
+        <Sliders size={18} aria-hidden />
+        {t('auth.account.preferencesTitle')}
+      </h2>
       <div className="form">
         <label className="label" htmlFor="account-language">
           {t('auth.account.languageLabel')}
@@ -71,8 +76,10 @@ export default function AccountPage() {
 
   if (!user) {
     return (
-      <PageLayout>
-        <h1>{t('auth.account.title')}</h1>
+      <PageLayout className={styles.layout}>
+        <header className={styles.header}>
+          <h1 className={styles.title}>{t('auth.account.title')}</h1>
+        </header>
         <p className="lead">{t('auth.account.guestLead')}</p>
 
         <PreferencesSection />
@@ -95,14 +102,17 @@ export default function AccountPage() {
   };
 
   return (
-    <PageLayout>
-      <h1>{t('auth.account.title')}</h1>
-      <p className="muted">
-        <span>{user.emailMasked}</span>
-      </p>
+    <PageLayout className={styles.layout}>
+      <header className={styles.header}>
+        <h1 className={styles.title}>{t('auth.account.title')}</h1>
+        <p className={styles.email}>{user.emailMasked}</p>
+      </header>
 
       <section className="section section--panel" aria-labelledby="profile-heading">
-        <h2 id="profile-heading">{t('auth.account.profileTitle')}</h2>
+        <h2 id="profile-heading" className={styles.sectionTitle}>
+          <User size={18} aria-hidden />
+          {t('auth.account.profileTitle')}
+        </h2>
         <form onSubmit={handleProfileSubmit} className="form">
           {error && (
             <p id="account-form-error" className="error" role="alert">
@@ -141,7 +151,10 @@ export default function AccountPage() {
       <PreferencesSection />
 
       <section className="section section--panel" aria-labelledby="session-heading">
-        <h2 id="session-heading">{t('auth.account.sessionTitle')}</h2>
+        <h2 id="session-heading" className={styles.sectionTitle}>
+          <LogOut size={18} aria-hidden />
+          {t('auth.account.sessionTitle')}
+        </h2>
         {logoutError && (
           <p className="error" role="alert">
             {logoutError}
