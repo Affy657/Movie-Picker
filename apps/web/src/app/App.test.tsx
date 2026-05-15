@@ -26,6 +26,7 @@ const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
     displayName: 'Alice',
     emailMasked: 'a***@test.local',
     uiTheme: 'system',
+    accentColor: 'default',
   })
 );
 

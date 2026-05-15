@@ -47,6 +47,7 @@ describe('MyEventsPage (MSW)', () => {
           displayName: 'Alice',
           emailMasked: 'a***@test.local',
           uiTheme: 'system',
+          accentColor: 'default',
         })
       ),
       http.get(`${TEST_API_V1}/events/mine`, () =>
@@ -212,6 +213,7 @@ describe('MyEventsPage (MSW)', () => {
           displayName: 'Alice',
           emailMasked: 'a***@test.local',
           uiTheme: 'system',
+          accentColor: 'default',
         })
       ),
       http.get(`${TEST_API_V1}/events/mine`, () =>
@@ -265,6 +267,7 @@ describe('MyEventsPage (MSW)', () => {
           displayName: 'Alice',
           emailMasked: 'a***@test.local',
           uiTheme: 'system',
+          accentColor: 'default',
         })
       ),
       http.get(`${TEST_API_V1}/events/mine`, () =>

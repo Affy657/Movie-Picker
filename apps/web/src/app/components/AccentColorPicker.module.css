@@ -1,0 +1,55 @@
+.root {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.swatch {
+  --swatch-size: 2.2rem;
+  position: relative;
+  width: var(--swatch-size);
+  height: var(--swatch-size);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+  background: var(--swatch-color, var(--color-primary));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  transition:
+    transform 0.12s ease,
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.swatch:hover {
+  transform: scale(1.06);
+}
+
+.swatch:focus-visible {
+  outline: none;
+  border-color: var(--color-text);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+
+.swatchSelected {
+  border-color: var(--color-text);
+  box-shadow: 0 0 0 2px var(--color-surface);
+}
+
+.check {
+  pointer-events: none;
+}
+
+/* Variante "Default" : on illustre la couleur historique (bleu de :root) via gradient subtil
+   pour la distinguer visuellement du choix explicite "blue". */
+.swatchDefault {
+  background: linear-gradient(135deg, transparent 0% 50%, #ffffff22 50% 100%), #2563eb;
+}
+
+[data-theme='dark'] .swatchDefault {
+  background: linear-gradient(135deg, transparent 0% 50%, #00000033 50% 100%), #3b82f6;
+}

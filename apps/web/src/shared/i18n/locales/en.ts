@@ -124,6 +124,17 @@ export const en: Locale = {
       changePasswordMustMatch: 'Both passwords must match.',
       changePasswordRulesError:
         'New password must be at least 8 characters and include a letter and a digit.',
+      accentColorLabel: 'Accent color',
+      accentColorHint:
+        'Choose the dominant colour of buttons and highlights. Applies to both light and dark modes.',
+      accentColorOptions: {
+        default: 'Default',
+        blue: 'Blue',
+        green: 'Green',
+        purple: 'Purple',
+        pink: 'Pink',
+        orange: 'Orange',
+      },
     },
     logout: {
       fallbackError: 'Logout failed.',

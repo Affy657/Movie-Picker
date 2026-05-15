@@ -46,6 +46,7 @@ describe('LoginPage (MSW)', () => {
               displayName: 'Lee',
               emailMasked: 'l***@test.local',
               uiTheme: 'system',
+              accentColor: 'default',
             })
           : HttpResponse.json({ error: '401' }, { status: 401 })
       ),
@@ -77,6 +78,7 @@ describe('LoginPage (MSW)', () => {
               displayName: 'Utilisateur dev',
               emailMasked: 'd***@test.local',
               uiTheme: 'system',
+              accentColor: 'default',
             })
           : HttpResponse.json({ error: '401' }, { status: 401 })
       ),

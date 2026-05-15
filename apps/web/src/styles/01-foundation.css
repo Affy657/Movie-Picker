@@ -55,6 +55,63 @@
   --color-accent: var(--color-primary);
 }
 
+/*
+ * Palettes d'accent — surchargent --color-primary{,--hover,--contrast} et --color-accent
+ * en complément de [data-theme]. Variantes light (par défaut) et dark.
+ * `default` n'a pas de bloc dédié : il utilise les valeurs définies dans :root / [data-theme='dark'].
+ */
+[data-accent='blue'] {
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-contrast: #ffffff;
+}
+[data-accent='green'] {
+  --color-primary: #16a34a;
+  --color-primary-hover: #15803d;
+  --color-primary-contrast: #ffffff;
+}
+[data-accent='purple'] {
+  --color-primary: #7c3aed;
+  --color-primary-hover: #6d28d9;
+  --color-primary-contrast: #ffffff;
+}
+[data-accent='pink'] {
+  --color-primary: #db2777;
+  --color-primary-hover: #be185d;
+  --color-primary-contrast: #ffffff;
+}
+[data-accent='orange'] {
+  --color-primary: #ea580c;
+  --color-primary-hover: #c2410c;
+  --color-primary-contrast: #ffffff;
+}
+
+[data-theme='dark'][data-accent='blue'] {
+  --color-primary: #3b82f6;
+  --color-primary-hover: #60a5fa;
+  --color-primary-contrast: #0a0f1c;
+}
+[data-theme='dark'][data-accent='green'] {
+  --color-primary: #22c55e;
+  --color-primary-hover: #4ade80;
+  --color-primary-contrast: #052e16;
+}
+[data-theme='dark'][data-accent='purple'] {
+  --color-primary: #a78bfa;
+  --color-primary-hover: #c4b5fd;
+  --color-primary-contrast: #1e1b4b;
+}
+[data-theme='dark'][data-accent='pink'] {
+  --color-primary: #f472b6;
+  --color-primary-hover: #f9a8d4;
+  --color-primary-contrast: #500724;
+}
+[data-theme='dark'][data-accent='orange'] {
+  --color-primary: #fb923c;
+  --color-primary-hover: #fdba74;
+  --color-primary-contrast: #431407;
+}
+
 [data-theme='dark'] {
   --color-bg: #0a0f1c;
   --color-surface: #131a2b;

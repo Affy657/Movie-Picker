@@ -18,14 +18,15 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
     {
         var user = await _users.GetByIdAsync(userId, ct) ?? throw new NotFoundException("Utilisateur introuvable");
 
-        if (request.DisplayName is null && request.UiTheme is null)
+        if (request.DisplayName is null && request.UiTheme is null && request.AccentColor is null)
         {
             return new UserProfileResponse
             {
                 UserId = user.Id,
                 DisplayName = user.DisplayName,
                 EmailMasked = EmailMasking.Mask(user.Email),
-                UiTheme = user.UiTheme
+                UiTheme = user.UiTheme,
+                AccentColor = user.AccentColor
             };
         }
 
@@ -42,10 +43,15 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
         if (request.UiTheme is not null)
             theme = ParseTheme(request.UiTheme);
 
+        var accent = user.AccentColor;
+        if (request.AccentColor is not null)
+            accent = ParseAccent(request.AccentColor);
+
         var updated = user with
         {
             DisplayName = displayName,
             UiTheme = theme,
+            AccentColor = accent,
             UpdatedAt = DateTimeOffset.UtcNow
         };
 
@@ -55,7 +61,8 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             UserId = saved.Id,
             DisplayName = saved.DisplayName,
             EmailMasked = EmailMasking.Mask(saved.Email),
-            UiTheme = saved.UiTheme
+            UiTheme = saved.UiTheme,
+            AccentColor = saved.AccentColor
         };
     }
 
@@ -65,5 +72,16 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             "light" => UiThemePreference.Light,
             "dark" => UiThemePreference.Dark,
             _ => UiThemePreference.System
+        };
+
+    private static AccentColor ParseAccent(string raw) =>
+        raw.ToLowerInvariant() switch
+        {
+            "blue" => AccentColor.Blue,
+            "green" => AccentColor.Green,
+            "purple" => AccentColor.Purple,
+            "pink" => AccentColor.Pink,
+            "orange" => AccentColor.Orange,
+            _ => AccentColor.Default
         };
 }

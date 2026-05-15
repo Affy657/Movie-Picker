@@ -132,6 +132,17 @@ export const fr = {
       changePasswordMustMatch: 'Les deux mots de passe doivent \u00eatre identiques.',
       changePasswordRulesError:
         'Le nouveau mot de passe doit contenir au moins 8 caract\u00e8res, une lettre et un chiffre.',
+      accentColorLabel: 'Couleur d\u2019accent',
+      accentColorHint:
+        'Choisissez la couleur dominante des boutons et accents. S\u2019applique en mode clair et sombre.',
+      accentColorOptions: {
+        default: 'Par d\u00e9faut',
+        blue: 'Bleu',
+        green: 'Vert',
+        purple: 'Violet',
+        pink: 'Rose',
+        orange: 'Orange',
+      },
     },
     logout: {
       fallbackError: 'Déconnexion impossible.',

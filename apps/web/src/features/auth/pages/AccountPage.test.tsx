@@ -42,6 +42,7 @@ describe('AccountPage (MSW)', () => {
           displayName: 'Pat',
           emailMasked: 'p***@test.local',
           uiTheme: 'light',
+          accentColor: 'default',
         })
       ),
       http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {

@@ -8,6 +8,7 @@ import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
 import ThemeToggle from '@/app/components/ThemeToggle';
 import LanguageSelector from '@/app/components/LanguageSelector';
+import AccentColorPicker from '@/app/components/AccentColorPicker';
 import { withReturnTo, ROUTES } from '@/app/routes';
 import { patchChangePassword } from '@/features/auth/api/authApi';
 import { isRegisterPasswordCompliant } from '@/shared/utils/authPasswordRules';
@@ -160,6 +161,12 @@ function PreferencesSection() {
           {t('auth.account.themeLabel')}
         </label>
         <ThemeToggle id="account-theme" />
+
+        <label className="label" htmlFor="account-accent">
+          {t('auth.account.accentColorLabel')}
+        </label>
+        <AccentColorPicker id="account-accent" />
+        <p className="hint">{t('auth.account.accentColorHint')}</p>
       </div>
     </section>
   );

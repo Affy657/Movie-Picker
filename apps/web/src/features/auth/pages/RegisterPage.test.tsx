@@ -46,6 +46,7 @@ describe('RegisterPage (MSW)', () => {
               displayName: 'Sam',
               emailMasked: 's***@test.local',
               uiTheme: 'system',
+              accentColor: 'default',
             })
           : HttpResponse.json({ error: '401' }, { status: 401 })
       ),
