@@ -8,8 +8,13 @@ namespace MoviePicker.Api.Application.UseCases.Auth;
 public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
 {
     private readonly IUserRepository _users;
+    private readonly TimeProvider _clock;
 
-    public PatchUserProfileHandler(IUserRepository users) => _users = users;
+    public PatchUserProfileHandler(IUserRepository users, TimeProvider clock)
+    {
+        _users = users;
+        _clock = clock;
+    }
 
     public async Task<UserProfileResponse> HandleAsync(
         string userId,
@@ -41,18 +46,18 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
 
         var theme = user.UiTheme;
         if (request.UiTheme is not null)
-            theme = ParseTheme(request.UiTheme);
+            theme = ParseEnum(request.UiTheme, UiThemePreference.System);
 
         var accent = user.AccentColor;
         if (request.AccentColor is not null)
-            accent = ParseAccent(request.AccentColor);
+            accent = ParseEnum(request.AccentColor, AccentColor.Default);
 
         var updated = user with
         {
             DisplayName = displayName,
             UiTheme = theme,
             AccentColor = accent,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = _clock.GetUtcNow()
         };
 
         var saved = await _users.UpdateAsync(updated, ct);
@@ -66,22 +71,6 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
         };
     }
 
-    private static UiThemePreference ParseTheme(string raw) =>
-        raw.ToLowerInvariant() switch
-        {
-            "light" => UiThemePreference.Light,
-            "dark" => UiThemePreference.Dark,
-            _ => UiThemePreference.System
-        };
-
-    private static AccentColor ParseAccent(string raw) =>
-        raw.ToLowerInvariant() switch
-        {
-            "blue" => AccentColor.Blue,
-            "green" => AccentColor.Green,
-            "purple" => AccentColor.Purple,
-            "pink" => AccentColor.Pink,
-            "orange" => AccentColor.Orange,
-            _ => AccentColor.Default
-        };
+    private static T ParseEnum<T>(string raw, T defaultValue) where T : struct, Enum =>
+        Enum.TryParse<T>(raw, ignoreCase: true, out var result) ? result : defaultValue;
 }

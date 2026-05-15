@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Settings2 } from 'lucide-react';
+import ThemeField from '@/features/events/components/ThemeField';
+import NumberInput from '@/shared/components/NumberInput';
 import { useQueryClient } from '@tanstack/react-query';
 import PageLayout from '@/shared/components/PageLayout';
 import { createEvent as createEventApi, patchEventConfig } from '@/features/events/api/eventsApi';
@@ -31,7 +33,8 @@ export default function CreateEvent() {
   const [title, setTitle] = useState(isDev ? 'Soirée test' : '');
   const [date, setDate] = useState(isDev ? getDefaultDate() : '');
   const [time, setTime] = useState(isDev ? '20:00' : '');
-  const [theme, setTheme] = useState('');
+  const [themeEmoji, setThemeEmoji] = useState('');
+  const [themeText, setThemeText] = useState('');
   const [maxParticipants, setMaxParticipants] = useState('');
   const [maxProposals, setMaxProposals] = useState('');
 
@@ -42,7 +45,7 @@ export default function CreateEvent() {
       setStoredParticipant(res.slug, res.creatorParticipant.id, res.creatorParticipant.pseudo);
     }
 
-    const themeTrimmed = theme.trim();
+    const themeTrimmed = [themeEmoji, themeText.trim()].filter(Boolean).join(' ');
     const maxPartParsed = maxParticipants.trim() === '' ? 0 : Number(maxParticipants);
     const maxPropParsed = maxProposals.trim() === '' ? 0 : Number(maxProposals);
 
@@ -50,6 +53,7 @@ export default function CreateEvent() {
       themeTrimmed !== '' ||
       (Number.isFinite(maxPartParsed) && maxPartParsed > 0) ||
       (Number.isFinite(maxPropParsed) && maxPropParsed > 0);
+
 
     if (needsConfigPatch) {
       try {
@@ -59,7 +63,7 @@ export default function CreateEvent() {
           maxProposalsPerParticipant: Number.isFinite(maxPropParsed) ? maxPropParsed : 0,
           maxParticipants: Number.isFinite(maxPartParsed) ? maxPartParsed : 0,
           wheelMode: DEFAULT_EVENT_CONFIG.wheelMode,
-          richSharePreview: !!DEFAULT_EVENT_CONFIG.richSharePreview,
+          richSharePreview: true,
         });
       } catch {
         // Soirée créée mais config refusée : on continue, l'hôte pourra réessayer dans la page détail.
@@ -70,7 +74,7 @@ export default function CreateEvent() {
     navigate(ROUTES.eventDetail(res.slug), {
       state: { shareUrl: publicUrl, justCreated: true },
     });
-  }, [title, date, time, theme, maxParticipants, maxProposals, queryClient, navigate]);
+  }, [title, date, time, themeEmoji, themeText, maxParticipants, maxProposals, queryClient, navigate]);
 
   const { run: submit, loading, error } = useAsyncAction(createAction, 'Création impossible');
 
@@ -148,33 +152,25 @@ export default function CreateEvent() {
             </summary>
             <div className={styles.advancedBody}>
               <label className="label" htmlFor="create-theme">
-                Thème de la soirée
+                Thème / ambiance
               </label>
-              <input
-                id="create-theme"
-                type="text"
-                className="input"
-                value={theme}
-                onChange={(e) => setTheme(e.target.value)}
-                maxLength={120}
-                placeholder="Ex : Science-fiction, Comédie, …"
+              <ThemeField
+                textInputId="create-theme"
+                emoji={themeEmoji}
+                text={themeText}
+                onEmojiChange={setThemeEmoji}
+                onTextChange={setThemeText}
               />
-              <p className={`${styles.hintTight} hint`}>
-                Affiché en bandeau sur la page de la soirée.
-              </p>
 
               <div className={styles.fieldGrid}>
                 <div>
                   <label className="label" htmlFor="create-max-participants">
                     Participants max
                   </label>
-                  <input
+                  <NumberInput
                     id="create-max-participants"
-                    type="number"
-                    inputMode="numeric"
-                    className="input"
                     value={maxParticipants}
-                    onChange={(e) => setMaxParticipants(e.target.value)}
+                    onChange={setMaxParticipants}
                     min={1}
                     max={MAX_EVENT_PARTICIPANTS}
                     placeholder="Illimité"
@@ -184,22 +180,16 @@ export default function CreateEvent() {
                   <label className="label" htmlFor="create-max-proposals">
                     Films par personne
                   </label>
-                  <input
+                  <NumberInput
                     id="create-max-proposals"
-                    type="number"
-                    inputMode="numeric"
-                    className="input"
                     value={maxProposals}
-                    onChange={(e) => setMaxProposals(e.target.value)}
+                    onChange={setMaxProposals}
                     min={1}
                     max={MAX_PROPOSALS_PER_PARTICIPANT}
                     placeholder="Illimité"
                   />
                 </div>
               </div>
-              <p className={`${styles.hintTight} hint`}>
-                Vide = pas de limite. Vous pourrez les ajuster ensuite.
-              </p>
             </div>
           </details>
 

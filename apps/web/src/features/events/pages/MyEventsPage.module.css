@@ -192,6 +192,17 @@
   line-clamp: 2;
 }
 
+.cardTheme {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: -0.1rem;
+}
+
 .cardStats {
   display: block;
   flex-shrink: 0;

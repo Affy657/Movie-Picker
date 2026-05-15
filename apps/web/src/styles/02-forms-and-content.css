@@ -222,6 +222,12 @@ a:hover {
   letter-spacing: 0.005em;
 }
 
+/* Espacement entre les groupes label/champ dans un formulaire.
+   Cible uniquement les composants custom (div) — pas les <input> ni <p>. */
+.form > div + .label {
+  margin-top: 1.25rem;
+}
+
 .input {
   width: 100%;
   padding: 0.7rem 0.95rem;

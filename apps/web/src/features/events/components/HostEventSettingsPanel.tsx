@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } fro
 import { useNavigate } from 'react-router-dom';
 import { Settings2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import ThemeField, { parseTheme } from './ThemeField';
+import NumberInput from '@/shared/components/NumberInput';
 import { deleteEvent, patchEventConfig } from '@/features/events/api/eventsApi';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
@@ -23,6 +25,7 @@ import { DEFAULT_EVENT_CONFIG } from '@/features/events/types';
 import { MAX_EVENT_PARTICIPANTS } from '@/features/events/types';
 import { isWheelMode } from '@/shared/utils/wheelMode';
 import { useTranslation } from '@/shared/i18n';
+
 
 type HostEventSettingsPanelProps = {
   slug: string;
@@ -52,7 +55,9 @@ export default function HostEventSettingsPanel({
   const cfg = normalizeConfig(event.config);
   const locked = !!event.isFinished || !!event.winnerMovie;
 
-  const [theme, setTheme] = useState(cfg.theme ?? '');
+  const initialTheme = parseTheme(cfg.theme);
+  const [themeEmoji, setThemeEmoji] = useState(initialTheme.emoji);
+  const [themeText, setThemeText] = useState(initialTheme.text);
   const [endLocal, setEndLocal] = useState(isoToDatetimeLocalValue(cfg.endDate));
   const [maxProp, setMaxProp] = useState<string>(
     cfg.maxProposalsPerParticipant != null ? String(cfg.maxProposalsPerParticipant) : ''
@@ -61,10 +66,10 @@ export default function HostEventSettingsPanel({
     cfg.maxParticipants != null ? String(cfg.maxParticipants) : ''
   );
   const [wheelMode, setWheelMode] = useState<WheelMode>(cfg.wheelMode);
-  const [richSharePreview, setRichSharePreview] = useState(() => !!cfg.richSharePreview);
   const [flashOk, setFlashOk] = useState(false);
   const flashTimerRef = useRef<number | undefined>(undefined);
   useEffect(() => () => clearTimeout(flashTimerRef.current), []);
+
   const [formError, setFormError] = useState<string | null>(null);
 
   // Suppression d'événement : modale de confirmation + erreur dédiée. La règle
@@ -81,14 +86,15 @@ export default function HostEventSettingsPanel({
 
   const hydrateFromEvent = useCallback(() => {
     const next = normalizeConfig(event.config);
-    setTheme(next.theme ?? '');
+    const parsed = parseTheme(next.theme);
+    setThemeEmoji(parsed.emoji);
+    setThemeText(parsed.text);
     setEndLocal(isoToDatetimeLocalValue(next.endDate));
     setMaxProp(
       next.maxProposalsPerParticipant != null ? String(next.maxProposalsPerParticipant) : ''
     );
     setMaxParticipants(next.maxParticipants != null ? String(next.maxParticipants) : '');
     setWheelMode(next.wheelMode);
-    setRichSharePreview(!!next.richSharePreview);
     setFormError(null);
   }, [event.config]);
 
@@ -165,12 +171,12 @@ export default function HostEventSettingsPanel({
     }
 
     mutation.mutate({
-      theme: theme.trim(),
+      theme: [themeEmoji, themeText.trim()].filter(Boolean).join(' '),
       endDate: endPayload,
       maxProposalsPerParticipant,
       maxParticipants: maxParticipantsValue,
       wheelMode,
-      richSharePreview,
+      richSharePreview: true,
     });
   };
 
@@ -207,17 +213,14 @@ export default function HostEventSettingsPanel({
           <label className="label" htmlFor="host-cfg-theme">
             Thème / ambiance
           </label>
-          <input
-            id="host-cfg-theme"
-            className="input"
-            type="text"
-            autoComplete="off"
-            placeholder="ex. Horreur, Comédie…"
-            value={theme}
-            onChange={(e) => setTheme(e.target.value)}
+          <ThemeField
+            textInputId="host-cfg-theme"
+            emoji={themeEmoji}
+            text={themeText}
+            onEmojiChange={setThemeEmoji}
+            onTextChange={setThemeText}
             disabled={locked || mutation.isPending}
           />
-          <p className="hint">Visible par tous sous forme de bandeau sur cette page.</p>
         </div>
 
         <div className={styles.field}>
@@ -232,54 +235,38 @@ export default function HostEventSettingsPanel({
             onChange={(e) => setEndLocal(e.target.value)}
             disabled={locked || mutation.isPending}
           />
-          <p className="hint">
-            Vide = date de fin personnalisée effacée (logique par défaut côté API).
-          </p>
         </div>
 
-        <div className={styles.field}>
-          <label className="label" htmlFor="host-cfg-max">
-            Limite de films proposés par participant
-          </label>
-          <input
-            id="host-cfg-max"
-            className="input"
-            type="number"
-            min={1}
-            max={100}
-            step={1}
-            placeholder="Illimité"
-            value={maxProp}
-            onChange={(e) => setMaxProp(e.target.value)}
-            disabled={locked || mutation.isPending}
-          />
-          <p className="hint">Laisser vide pour aucune limite.</p>
-        </div>
+        <div className={styles.fieldRow}>
+          <div className={styles.field}>
+            <label className="label" htmlFor="host-cfg-max">
+              Films par personne
+            </label>
+            <NumberInput
+              id="host-cfg-max"
+              value={maxProp}
+              onChange={setMaxProp}
+              min={1}
+              max={100}
+              placeholder="Illimité"
+              disabled={locked || mutation.isPending}
+            />
+          </div>
 
-        <div className={styles.field}>
-          <label className="label" htmlFor="host-cfg-max-participants">
-            {t('events.settings.maxParticipantsLabel')}
-          </label>
-          <input
-            id="host-cfg-max-participants"
-            className="input"
-            type="number"
-            min={1}
-            max={MAX_EVENT_PARTICIPANTS}
-            step={1}
-            placeholder={t('events.settings.maxParticipantsPlaceholder')}
-            value={maxParticipants}
-            onChange={(e) => setMaxParticipants(e.target.value)}
-            disabled={locked || mutation.isPending}
-          />
-          <p className="hint">
-            {t(
-              (event.participantCount ?? 0) <= 1
-                ? 'events.settings.maxParticipantsHintOne'
-                : 'events.settings.maxParticipantsHintMany',
-              { count: event.participantCount ?? 0 }
-            )}
-          </p>
+          <div className={styles.field}>
+            <label className="label" htmlFor="host-cfg-max-participants">
+              Participants max
+            </label>
+            <NumberInput
+              id="host-cfg-max-participants"
+              value={maxParticipants}
+              onChange={setMaxParticipants}
+              min={1}
+              max={MAX_EVENT_PARTICIPANTS}
+              placeholder={t('events.settings.maxParticipantsPlaceholder')}
+              disabled={locked || mutation.isPending}
+            />
+          </div>
         </div>
 
         <div className={styles.field}>
@@ -299,19 +286,6 @@ export default function HostEventSettingsPanel({
             <option value="strictRandom">Aléatoire strict (égalité)</option>
             <option value="weightedByVotes">Pondéré par les votes</option>
           </select>
-        </div>
-
-        <div className={styles.field}>
-          <label className={`label ${styles.checkLabel}`}>
-            <input
-              id="host-cfg-rich-share"
-              type="checkbox"
-              checked={richSharePreview}
-              onChange={(e) => setRichSharePreview(e.target.checked)}
-              disabled={locked || mutation.isPending}
-            />{' '}
-            Aperçu de lien détaillé (messageries / réseaux)
-          </label>
         </div>
 
         <button type="submit" className="btn btn-primary" disabled={locked || mutation.isPending}>

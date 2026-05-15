@@ -63,6 +63,10 @@
   gap: 0 1rem;
 }
 
+.advancedBody .fieldGrid {
+  margin-top: 1rem;
+}
+
 .fieldGrid > .field {
   margin-bottom: 0;
 }
@@ -141,7 +145,3 @@
   background: var(--color-surface);
 }
 
-.hintTight {
-  margin-top: -0.5rem;
-  margin-bottom: 1rem;
-}

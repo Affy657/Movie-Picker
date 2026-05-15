@@ -19,7 +19,7 @@ import EventStartReminderBanner from '@/features/events/components/EventStartRem
 import PageLayout from '@/shared/components/PageLayout';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useEventDetailPage } from '@/features/events/hooks/useEventDetailPage';
-import { removeEventParticipant } from '@/features/events/api/eventsApi';
+import { removeEventParticipant, eventSharePreviewUrl } from '@/features/events/api/eventsApi';
 import { removeStoredParticipant } from '@/features/events/storage';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { getErrorMessage } from '@/shared/api/apiError';
@@ -54,7 +54,6 @@ export default function EventDetail() {
     actionError,
     setActionError,
     refreshAll,
-    shareUrlFromState,
   } = useEventDetailPage(slug);
 
   const [pendingRemovalId, setPendingRemovalId] = useState<string | null>(null);
@@ -242,7 +241,7 @@ export default function EventDetail() {
 
   const dateFormatted =
     formatEventStartInUserTimezone(event.date, event.time) ?? `${event.date} à ${event.time}`;
-  const shareUrl = shareUrlFromState ?? `${window.location.origin}${ROUTES.eventDetail(slug)}`;
+  const shareUrl = eventSharePreviewUrl(slug);
   const needsJoin = !event.isFinished && !participant;
   const showContent = event.isFinished || participant;
   const maxParticipants = event.config?.maxParticipants ?? null;

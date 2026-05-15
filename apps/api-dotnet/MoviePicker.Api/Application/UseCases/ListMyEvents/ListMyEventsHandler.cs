@@ -81,6 +81,7 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
                 ParticipantCount = participantCounts.TryGetValue(id, out var pc) ? pc : 0,
                 MovieCount = movieCounts.TryGetValue(id, out var mc) ? mc : 0,
                 MaxParticipants = d.MaxParticipants,
+                Theme = d.Theme,
             };
         });
 
@@ -102,5 +103,6 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
         ParticipantCount = 0,
         MovieCount = 0,
         MaxParticipants = e.Config?.MaxParticipants,
+        Theme = string.IsNullOrWhiteSpace(e.Config?.Theme) ? null : e.Config.Theme,
     };
 }

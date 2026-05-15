@@ -29,6 +29,7 @@ public static class RateLimitingExtensions
     public const string AuthPasswordResetRequestPolicy = "auth-password-reset-request";
     public const string AuthPasswordResetConfirmPolicy = "auth-password-reset-confirm";
     public const string AuthChangePasswordPolicy = "auth-change-password";
+    public const string AuthPatchProfilePolicy = "auth-patch-profile";
     public const string PatchEventConfigPolicy = "patch-event-config";
     public const string VoteMutationPolicy = "vote-mutation";
     public const string SeenMarksMutationPolicy = "seen-marks-mutation";
@@ -69,6 +70,7 @@ public static class RateLimitingExtensions
                 options.AddPolicy(AuthPasswordResetRequestPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(AuthPasswordResetConfirmPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(AuthChangePasswordPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
+                options.AddPolicy(AuthPatchProfilePolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(PatchEventConfigPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(VoteMutationPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(SeenMarksMutationPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
@@ -91,6 +93,8 @@ public static class RateLimitingExtensions
             options.AddPolicy(AuthPasswordResetConfirmPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 30, windowMinutes: 1));
             // Change password : sensible (vérifie le mot de passe actuel) → anti-brute-force serré.
             options.AddPolicy(AuthChangePasswordPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 10, windowMinutes: 1));
+            // Patch profil : mise à jour pseudo/thème/accent — budget généreux mais présent.
+            options.AddPolicy(AuthPatchProfilePolicy, ctx => CreateFixedWindow(ctx, permitLimit: 60, windowMinutes: 1));
             options.AddPolicy(PatchEventConfigPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 40, windowMinutes: 1));
             // Votes et marqueurs « déjà vu » : mêmes ordres de grandeur (toggle par film et par participant).
             options.AddPolicy(VoteMutationPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 120, windowMinutes: 1));

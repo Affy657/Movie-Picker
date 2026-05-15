@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import clsx from 'clsx';
 import { Check } from 'lucide-react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -86,7 +86,7 @@ export default function AccentColorPicker({
   // Pour la sélection : on traite la valeur stockée 'default' comme 'blue' (visuellement identique).
   const effectiveSelection: PickerColor = accent === 'default' ? 'blue' : (accent as PickerColor);
 
-  const commit = (next: PickerColor) => {
+  const commit = useCallback((next: PickerColor) => {
     if (next === effectiveSelection && accent !== 'default') return;
     setAccent(next);
     if (!user) {
@@ -105,7 +105,7 @@ export default function AccentColorPicker({
           setAccent(rollback);
         });
     }, PATCH_DEBOUNCE_MS);
-  };
+  }, [effectiveSelection, accent, setAccent, user, patchProfile]);
 
   const handleKey = (e: React.KeyboardEvent, idx: number) => {
     const last = PICKER_COLORS.length - 1;

@@ -179,7 +179,6 @@ function PreferencesSection() {
           {t('auth.account.accentColorLabel')}
         </label>
         <AccentColorPicker id="account-accent" />
-        <p className="hint">{t('auth.account.accentColorHint')}</p>
       </div>
     </section>
   );

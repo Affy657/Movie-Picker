@@ -135,6 +135,9 @@ function EventListBlock({
                     </span>
                   ) : null}
                 </span>
+                {ev.theme ? (
+                  <span className={styles.cardTheme}>{ev.theme}</span>
+                ) : null}
                 <span className={styles.cardStats}>
                   {cardJoinedLabel(ev.participantCount ?? 0, ev.maxParticipants, t)} ·{' '}
                   {cardMoviesLabel(ev.movieCount ?? 0, t)}
@@ -143,7 +146,7 @@ function EventListBlock({
                   <span className={styles.meta}>
                     {dateLabel} · {ev.time}
                   </span>
-                  {showLifecycleBadge ? (
+                  {showLifecycleBadge && lifecycle !== 'upcoming' ? (
                     <span className={styles.lifecycleCorner}>
                       <span className={clsx(styles.lifecyclePill, badgeClass)}>
                         {t(lifecycleTranslationKey(lifecycle))}

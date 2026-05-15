@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useSearchParams, useLocation } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   getStoredHostToken,
@@ -12,26 +12,16 @@ import { useEvent } from '@/features/events/hooks/useEvent';
 import { useMovies } from '@/features/movies/hooks/useMovies';
 import { useEventLive } from '@/features/events/hooks/useEventLive';
 
-function parseShareUrlFromState(state: unknown): string | undefined {
-  if (state != null && typeof state === 'object' && 'shareUrl' in state) {
-    const val = (state as Record<string, unknown>).shareUrl;
-    return typeof val === 'string' ? val : undefined;
-  }
-  return undefined;
-}
 
 /**
  * État partagé de la page détail soirée : host token URL/storage, event, films, participant stocké, refresh.
  */
 export function useEventDetailPage(slug: string | undefined) {
   const [searchParams] = useSearchParams();
-  const location = useLocation();
   const queryClient = useQueryClient();
   const hostFromUrl = searchParams.get('host');
   const hostFromStorage = slug ? getStoredHostToken(slug) : null;
   const hostToken = hostFromUrl ?? hostFromStorage;
-  const shareUrlFromState = parseShareUrlFromState(location.state);
-
   useEffect(() => {
     if (slug && hostFromUrl) setStoredHostToken(slug, hostFromUrl);
   }, [slug, hostFromUrl]);
@@ -96,6 +86,5 @@ export function useEventDetailPage(slug: string | undefined) {
     actionError,
     setActionError,
     refreshAll,
-    shareUrlFromState,
   };
 }

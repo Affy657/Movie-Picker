@@ -99,10 +99,12 @@ public sealed class AuthController : ControllerBase
 
     [HttpPatch("me")]
     [Authorize]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPatchProfilePolicy)]
     [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> PatchMe(
         [FromBody] PatchUserProfileRequest? request,
         [FromServices] IPatchUserProfileHandler handler,
