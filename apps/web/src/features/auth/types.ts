@@ -1,4 +1,4 @@
-import type { UiThemePreference } from '@/shared/types/theme';
+import type { AccentColor, UiThemePreference } from '@/shared/types/theme';
 
 /** Aligné sur `UserProfileResponse` (API .NET). */
 export interface UserProfile {
@@ -6,4 +6,5 @@ export interface UserProfile {
   displayName: string;
   emailMasked: string;
   uiTheme: UiThemePreference;
+  accentColor: AccentColor;
 }

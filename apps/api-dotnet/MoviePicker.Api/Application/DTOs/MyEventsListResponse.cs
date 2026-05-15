@@ -29,4 +29,7 @@ public sealed class MyEventSummaryDto
     /// Permet à la liste « Mes soirées » d’afficher « N / max » sans charger la config détaillée.
     /// </summary>
     public int? MaxParticipants { get; init; }
+
+    /// <summary>Thème/ambiance configuré par l’hôte (ex. "🎃 Horreur") ; <c>null</c> = aucun.</summary>
+    public string? Theme { get; init; }
 }

@@ -1,4 +1,5 @@
-import clsx from 'clsx';
+import { useMemo } from 'react';
+import Dropdown from '@/shared/components/Dropdown';
 import {
   useLocale,
   useTranslation,
@@ -6,7 +7,6 @@ import {
   LOCALE_LABELS,
   isLocaleCode,
 } from '@/shared/i18n';
-import styles from './LanguageSelector.module.css';
 
 export default function LanguageSelector({
   className = '',
@@ -19,24 +19,25 @@ export default function LanguageSelector({
   const { locale, setLocale } = useLocale();
   const { t } = useTranslation();
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    if (isLocaleCode(value)) setLocale(value);
-  };
+  const options = useMemo(
+    () =>
+      SUPPORTED_LOCALES.map((code) => ({
+        value: code,
+        label: LOCALE_LABELS[code],
+      })),
+    []
+  );
 
   return (
-    <select
+    <Dropdown
       id={id}
-      className={clsx('btn', styles.root, className)}
       value={locale}
-      onChange={handleChange}
-      aria-label={id ? undefined : t('common.languageLabel')}
-    >
-      {SUPPORTED_LOCALES.map((code) => (
-        <option key={code} value={code}>
-          {LOCALE_LABELS[code]}
-        </option>
-      ))}
-    </select>
+      options={options}
+      onChange={(v) => {
+        if (isLocaleCode(v)) setLocale(v);
+      }}
+      ariaLabel={id ? undefined : t('common.languageLabel')}
+      className={className || undefined}
+    />
   );
 }

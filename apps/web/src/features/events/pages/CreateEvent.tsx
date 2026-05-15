@@ -1,13 +1,22 @@
 import { useCallback, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, Settings2 } from 'lucide-react';
+import ThemeField from '@/features/events/components/ThemeField';
+import NumberInput from '@/shared/components/NumberInput';
 import { useQueryClient } from '@tanstack/react-query';
 import PageLayout from '@/shared/components/PageLayout';
-import { createEvent as createEventApi } from '@/features/events/api/eventsApi';
+import { createEvent as createEventApi, patchEventConfig } from '@/features/events/api/eventsApi';
 import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { setStoredParticipant } from '@/features/events/storage';
 import { ROUTES } from '@/app/routes';
+import {
+  DEFAULT_EVENT_CONFIG,
+  MAX_EVENT_PARTICIPANTS,
+  MAX_PROPOSALS_PER_PARTICIPANT,
+} from '@/features/events/types';
+import styles from './CreateEvent.module.css';
 
 const isDev = import.meta.env.DEV;
 
@@ -24,6 +33,10 @@ export default function CreateEvent() {
   const [title, setTitle] = useState(isDev ? 'Soirée test' : '');
   const [date, setDate] = useState(isDev ? getDefaultDate() : '');
   const [time, setTime] = useState(isDev ? '20:00' : '');
+  const [themeEmoji, setThemeEmoji] = useState('');
+  const [themeText, setThemeText] = useState('');
+  const [maxParticipants, setMaxParticipants] = useState('');
+  const [maxProposals, setMaxProposals] = useState('');
 
   const createAction = useCallback(async () => {
     const res = await createEventApi({ title, date, time });
@@ -31,11 +44,46 @@ export default function CreateEvent() {
     if (res.creatorParticipant) {
       setStoredParticipant(res.slug, res.creatorParticipant.id, res.creatorParticipant.pseudo);
     }
+
+    const themeTrimmed = [themeEmoji, themeText.trim()].filter(Boolean).join(' ');
+    const maxPartParsed = maxParticipants.trim() === '' ? 0 : Number(maxParticipants);
+    const maxPropParsed = maxProposals.trim() === '' ? 0 : Number(maxProposals);
+
+    const needsConfigPatch =
+      themeTrimmed !== '' ||
+      (Number.isFinite(maxPartParsed) && maxPartParsed > 0) ||
+      (Number.isFinite(maxPropParsed) && maxPropParsed > 0);
+
+    if (needsConfigPatch) {
+      try {
+        await patchEventConfig(res.slug, null, {
+          theme: themeTrimmed,
+          endDate: null,
+          maxProposalsPerParticipant: Number.isFinite(maxPropParsed) ? maxPropParsed : 0,
+          maxParticipants: Number.isFinite(maxPartParsed) ? maxPartParsed : 0,
+          wheelMode: DEFAULT_EVENT_CONFIG.wheelMode,
+          richSharePreview: true,
+        });
+      } catch {
+        // Soirée créée mais config refusée : on continue, l'hôte pourra réessayer dans la page détail.
+      }
+    }
+
     void queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
     navigate(ROUTES.eventDetail(res.slug), {
       state: { shareUrl: publicUrl, justCreated: true },
     });
-  }, [title, date, time, queryClient, navigate]);
+  }, [
+    title,
+    date,
+    time,
+    themeEmoji,
+    themeText,
+    maxParticipants,
+    maxProposals,
+    queryClient,
+    navigate,
+  ]);
 
   const { run: submit, loading, error } = useAsyncAction(createAction, 'Création impossible');
 
@@ -45,53 +93,120 @@ export default function CreateEvent() {
   };
 
   return (
-    <PageLayout>
-      <Link to={ROUTES.home} className="back-link">
-        ← Accueil
+    <PageLayout className={styles.layout}>
+      <Link to={ROUTES.myEvents} className={styles.backLink}>
+        <ArrowLeft size={16} aria-hidden />
+        Mes soirées
       </Link>
-      <h1>Créer une soirée</h1>
-      <form onSubmit={handleSubmit} className="form">
-        {error && (
-          <p className="error" role="alert">
-            {error}
-          </p>
-        )}
-        <label className="label">
-          Titre
+      <div className={styles.card}>
+        <span className={styles.cardAccent} aria-hidden />
+        <h1 className={styles.title}>Créer une soirée</h1>
+        <p className={styles.description}>
+          Donnez-lui un titre, une date et une heure. Vous pourrez ajuster les paramètres plus tard
+          si besoin.
+        </p>
+        <form onSubmit={handleSubmit} className="form">
+          {error && (
+            <p className="error" role="alert">
+              {error}
+            </p>
+          )}
+          <label className="label" htmlFor="create-title">
+            Titre
+          </label>
           <input
+            id="create-title"
             type="text"
             className="input"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
             maxLength={200}
-            placeholder="Ex: Soirée film du vendredi"
+            placeholder="Ex : Soirée film du vendredi"
           />
-        </label>
-        <label className="label">
-          Date
-          <input
-            type="date"
-            className="input"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            required
-          />
-        </label>
-        <label className="label">
-          Heure
-          <input
-            type="time"
-            className="input"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            required
-          />
-        </label>
-        <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? 'Création…' : 'Créer la soirée'}
-        </button>
-      </form>
+          <div className={styles.fieldGrid}>
+            <div>
+              <label className="label" htmlFor="create-date">
+                Date
+              </label>
+              <input
+                id="create-date"
+                type="date"
+                className="input"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className="label" htmlFor="create-time">
+                Heure
+              </label>
+              <input
+                id="create-time"
+                type="time"
+                className="input"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <details className={styles.advanced}>
+            <summary className={styles.advancedSummary}>
+              <Settings2 size={16} aria-hidden className={styles.advancedIcon} />
+              <span className={styles.advancedLabel}>Options avancées (optionnel)</span>
+              <span className={styles.advancedChevron} aria-hidden />
+            </summary>
+            <div className={styles.advancedBody}>
+              <label className="label" htmlFor="create-theme">
+                Thème / ambiance
+              </label>
+              <ThemeField
+                textInputId="create-theme"
+                emoji={themeEmoji}
+                text={themeText}
+                onEmojiChange={setThemeEmoji}
+                onTextChange={setThemeText}
+              />
+
+              <div className={styles.fieldGrid}>
+                <div>
+                  <label className="label" htmlFor="create-max-participants">
+                    Participants max
+                  </label>
+                  <NumberInput
+                    id="create-max-participants"
+                    value={maxParticipants}
+                    onChange={setMaxParticipants}
+                    min={1}
+                    max={MAX_EVENT_PARTICIPANTS}
+                    placeholder="Illimité"
+                  />
+                </div>
+                <div>
+                  <label className="label" htmlFor="create-max-proposals">
+                    Films par personne
+                  </label>
+                  <NumberInput
+                    id="create-max-proposals"
+                    value={maxProposals}
+                    onChange={setMaxProposals}
+                    min={1}
+                    max={MAX_PROPOSALS_PER_PARTICIPANT}
+                    placeholder="Illimité"
+                  />
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <button type="submit" className={`btn btn-primary ${styles.submit}`} disabled={loading}>
+            {loading ? 'Création…' : 'Créer la soirée'}
+          </button>
+        </form>
+      </div>
     </PageLayout>
   );
 }

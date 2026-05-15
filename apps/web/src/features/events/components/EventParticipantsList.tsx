@@ -41,7 +41,7 @@ export default function EventParticipantsList({
       data-testid="event-participants"
     >
       <h2 id="participants-heading" className={styles.header}>
-        <Users aria-hidden size={18} />
+        <Users aria-hidden size={18} className={styles.headerIcon} />
         {t('events.participants.title')}
         <span className={styles.count}>({countLabel})</span>
         {isFull && (

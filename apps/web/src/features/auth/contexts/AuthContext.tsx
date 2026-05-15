@@ -8,7 +8,7 @@ import {
   postAuthRegister,
 } from '@/features/auth/api/authApi';
 import { queryKeys } from '@/shared/hooks/queryKeys';
-import type { UiThemePreference } from '@/shared/types/theme';
+import type { AccentColor, UiThemePreference } from '@/shared/types/theme';
 import type { UserProfile } from '@/features/auth/types';
 
 type AuthContextValue = {
@@ -20,6 +20,7 @@ type AuthContextValue = {
   patchProfile: (patch: {
     displayName?: string;
     uiTheme?: UiThemePreference;
+    accentColor?: AccentColor;
   }) => Promise<UserProfile>;
 };
 
@@ -73,8 +74,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const patchProfileMutation = useMutation({
-    mutationFn: (patch: { displayName?: string; uiTheme?: UiThemePreference }) =>
-      patchAuthProfile(patch),
+    mutationFn: (patch: {
+      displayName?: string;
+      uiTheme?: UiThemePreference;
+      accentColor?: AccentColor;
+    }) => patchAuthProfile(patch),
     onSuccess: (updated) => {
       queryClient.setQueryData(queryKeys.auth.me, updated);
     },
@@ -94,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => logoutMutation.mutateAsync(), [logoutMutation]);
 
   const patchProfile = useCallback(
-    (patch: { displayName?: string; uiTheme?: UiThemePreference }) =>
+    (patch: { displayName?: string; uiTheme?: UiThemePreference; accentColor?: AccentColor }) =>
       patchProfileMutation.mutateAsync(patch),
     [patchProfileMutation]
   );

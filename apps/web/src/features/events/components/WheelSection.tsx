@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
+import { Disc3, Trophy } from 'lucide-react';
 import { postEventClose, postEventWheel } from '@/features/events/api/eventsApi';
 import { getErrorMessage } from '@/shared/api/apiError';
 import type { EventData } from '@/features/events/types';
@@ -84,7 +85,10 @@ export default function WheelSection({
 
   return (
     <section className="section" aria-label={sectionTitle}>
-      <h2>{sectionTitle}</h2>
+      <h2 className={styles.sectionTitle}>
+        <Disc3 size={18} aria-hidden className={styles.sectionTitleIcon} />
+        {sectionTitle}
+      </h2>
       {error && (
         <p className="error" role="alert">
           {error}
@@ -97,9 +101,10 @@ export default function WheelSection({
           role="status"
           aria-live="polite"
         >
+          <Trophy size={28} aria-hidden className={styles.winnerIcon} />
           <p className={styles.winnerLabel}>{t('events.wheel.winnerLabel')}</p>
           <p className={styles.winnerTitle}>{winner.title}</p>
-          <p className={styles.winnerMeta}>{winner.year}</p>
+          {winner.year ? <p className={styles.winnerMeta}>{winner.year}</p> : null}
         </div>
       )}
 

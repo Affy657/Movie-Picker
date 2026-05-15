@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import AuthPageShell from '@/features/auth/components/AuthPageShell';
+import AuthPageShell, { authPageShellStyles } from '@/features/auth/components/AuthPageShell';
 import PageLayout from '@/shared/components/PageLayout';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import {
@@ -57,7 +57,7 @@ export default function LoginPage() {
   };
 
   return (
-    <PageLayout>
+    <PageLayout className={authPageShellStyles.layout}>
       <AuthPageShell title={t('auth.login.title')} description={t('auth.login.description')}>
         <form
           onSubmit={handleSubmit}

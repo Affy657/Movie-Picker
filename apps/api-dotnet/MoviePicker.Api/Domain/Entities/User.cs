@@ -8,6 +8,20 @@ public enum UiThemePreference
     Dark = 2
 }
 
+/// <summary>
+/// Palette d'accent choisie par l'utilisateur (en complément du mode light/dark).
+/// Default = palette historique (bleu).
+/// </summary>
+public enum AccentColor
+{
+    Default = 0,
+    Blue = 1,
+    Green = 2,
+    Purple = 3,
+    Pink = 4,
+    Orange = 5
+}
+
 public sealed record User
 {
     public string Id { get; init; } = string.Empty;
@@ -15,6 +29,7 @@ public sealed record User
     public string PasswordHash { get; init; } = string.Empty;
     public string DisplayName { get; init; } = string.Empty;
     public UiThemePreference UiTheme { get; init; } = UiThemePreference.System;
+    public AccentColor AccentColor { get; init; } = AccentColor.Default;
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
 }

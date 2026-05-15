@@ -1,4 +1,4 @@
-import { fetchApi } from '@/shared/api/client';
+import { fetchApi, apiUrl } from '@/shared/api/client';
 import { ApiError } from '@/shared/api/apiError';
 import {
   mapEventData,
@@ -92,6 +92,7 @@ export async function fetchGuestJoinedEventsSummaries(): Promise<MyEventsListRes
           participantCount: ev.participantCount,
           movieCount: ev.movieCount,
           maxParticipants: ev.config?.maxParticipants ?? null,
+          theme: ev.config?.theme ?? null,
         };
         return summary;
       } catch {
@@ -201,4 +202,12 @@ export type DeleteEventResponse = {
  */
 export async function deleteEvent(idOrSlug: string): Promise<DeleteEventResponse> {
   return fetchApi<DeleteEventResponse>(`/events/${idOrSlug}`, { method: 'DELETE' });
+}
+
+/**
+ * URL publique de la page share-preview (balises OG).
+ * Les bots lisent les métas OG ; les humains sont redirigés vers le web par le script de la page.
+ */
+export function eventSharePreviewUrl(slug: string): string {
+  return apiUrl(`/events/slug/${slug}/share-preview`);
 }

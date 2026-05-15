@@ -50,18 +50,35 @@ describe('ShareLink', () => {
     }
   });
 
-  it('avec showQr, bascule le panneau QR au clic', async () => {
+  it('avec showQr, ouvre la modale QR au clic et permet de la fermer', async () => {
     const user = userEvent.setup();
     const url = 'https://example.com/e/abc';
     const { container } = renderShareLink(<ShareLink url={url} showQr />);
     const qrBtn = screen.getByRole('button', { name: /afficher le qr code/i });
-    expect(qrBtn).toHaveAttribute('aria-expanded', 'false');
-    expect(container.querySelector('svg')).not.toBeInTheDocument();
+    expect(qrBtn).toHaveAttribute('aria-haspopup', 'dialog');
+
+    const dialog = container.querySelector('dialog');
+    expect(dialog).toBeTruthy();
+    // Avant ouverture, la <dialog> ne doit pas être en mode `open`.
+    expect(dialog?.hasAttribute('open')).toBe(false);
 
     await user.click(qrBtn);
-    expect(qrBtn).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByRole('button', { name: /masquer le qr code/i })).toBeInTheDocument();
-    expect(container.querySelector('svg')).toBeTruthy();
+
+    // Après ouverture, la modale doit être marquée open et exposer un titre/QR.
+    await waitFor(() => {
+      expect(dialog?.hasAttribute('open')).toBe(true);
+    });
+    expect(
+      screen.getByRole('heading', { name: /qr code — lien vers la soirée/i })
+    ).toBeInTheDocument();
     expect(screen.getByTitle(/qr code — lien vers la soirée/i)).toBeInTheDocument();
+
+    // Le bouton fermer (icône X) referme la modale.
+    const closeBtn = screen.getByRole('button', { name: /fermer le qr code/i });
+    await user.click(closeBtn);
+
+    await waitFor(() => {
+      expect(dialog?.hasAttribute('open')).toBe(false);
+    });
   });
 });

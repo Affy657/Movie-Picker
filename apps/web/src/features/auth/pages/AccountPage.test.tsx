@@ -42,6 +42,7 @@ describe('AccountPage (MSW)', () => {
           displayName: 'Pat',
           emailMasked: 'p***@test.local',
           uiTheme: 'light',
+          accentColor: 'default',
         })
       ),
       http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
@@ -59,13 +60,15 @@ describe('AccountPage (MSW)', () => {
     renderAccount();
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Paramètres' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Mon compte' })).toBeInTheDocument();
     });
 
     expect(screen.getByRole('heading', { name: 'Préférences' })).toBeInTheDocument();
     const themeSelect = screen.getByLabelText('Thème de l\u2019interface');
 
-    await user.selectOptions(themeSelect, 'dark');
+    await user.click(themeSelect);
+    const darkOption = await screen.findByRole('option', { name: /sombre/i });
+    await user.click(darkOption);
     await waitFor(() => expect(patchedTheme).toBe('dark'));
   });
 });

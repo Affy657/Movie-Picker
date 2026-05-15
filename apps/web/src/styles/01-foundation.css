@@ -4,86 +4,155 @@
 }
 
 :root {
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --layout-max: 600px;
-  --layout-max-landing: 960px;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-pill: 999px;
+  --layout-max: 640px;
+  --layout-max-landing: 1080px;
+
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 1px rgba(15, 23, 42, 0.03);
+  --shadow-md: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 18px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 4px 10px rgba(15, 23, 42, 0.06), 0 18px 40px rgba(15, 23, 42, 0.08);
 }
 
 :root,
 [data-theme='light'] {
-  --color-bg: #edf1f5;
+  --color-bg: #f4f6fa;
   --color-surface: #ffffff;
-  --color-nav-bg: #ffffff;
-  --color-nav-shadow: rgba(0, 0, 0, 0.08);
-  --color-text: #1a1f2e;
-  --color-text-muted: #4a5568;
-  --color-text-secondary: #4a5568; /* alias de --color-text-muted, utilisé par LanguageSelector */
-  --color-meta: #718096;
-  --color-border: #d0d7e3;
+  --color-nav-bg: #ffffffee;
+  --color-nav-shadow: rgba(15, 23, 42, 0.06);
+  --color-text: #0f172a;
+  --color-text-muted: #475569;
+  --color-text-secondary: #475569;
+  --color-meta: #64748b;
+  --color-border: #cbd5e1;
   --color-border-subtle: #e2e8f0;
-  --color-section-heading: #2d3748;
-  --color-placeholder: #a0aec0;
-  --color-error: #c53030;
-  --color-error-hover: #9b2c2c;
-  /* Contraste vérifié : #2f855a sur --color-bg #edf1f5 ≈ 5.0:1 (WCAG AA). */
-  --color-success: #2f855a;
-  --color-primary: #2b6cb0;
-  --color-primary-hover: #2c5282;
+  --color-section-heading: #1e293b;
+  --color-placeholder: #94a3b8;
+  --color-error: #b91c1c;
+  --color-error-hover: #7f1d1d;
+  --color-success: #15803d;
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
   --color-primary-contrast: #ffffff;
-  --color-badge-finished-bg: #edf2f7;
-  --color-badge-finished-text: #4a5568;
-  --color-badge-upcoming-bg: #fffbeb;
+  --color-accent-warm: #06b6d4;
+  --color-badge-finished-bg: #e2e8f0;
+  --color-badge-finished-text: #475569;
+  --color-badge-upcoming-bg: #fef3c7;
   --color-badge-upcoming-text: #92400e;
-  --color-badge-live-bg: #f0fff4;
-  --color-badge-live-text: #276749;
-  --color-badge-host-bg: #faf5ff;
-  --color-badge-host-text: #553c9a;
-  --color-badge-me-bg: #ebf8ff;
-  --color-badge-me-text: #2b6cb0;
-  --color-wheel-bg: #f0fff4;
-  --color-wheel-label: #276749;
+  --color-badge-live-bg: #d1fae5;
+  --color-badge-live-text: #065f46;
+  --color-badge-host-bg: #e0e7ff;
+  --color-badge-host-text: #3730a3;
+  --color-badge-me-bg: #dbeafe;
+  --color-badge-me-text: #1e40af;
+  --color-wheel-bg: #e0e7ff;
+  --color-wheel-label: #3730a3;
   --color-poster-placeholder: #e2e8f0;
-  --color-input-readonly: #f7fafc;
+  --color-input-bg: #ffffff;
+  --color-input-readonly: #f1f5f9;
   --color-accent: var(--color-primary);
 }
 
+/*
+ * Palettes d'accent — surchargent --color-primary{,--hover,--contrast} et --color-accent
+ * en complément de [data-theme]. Variantes light (par défaut) et dark.
+ * `default` n'a pas de bloc dédié : il utilise les valeurs définies dans :root / [data-theme='dark'].
+ * IMPORTANT : si tu modifies ces couleurs, mets également à jour `SWATCH_COLORS` dans
+ * `apps/web/src/app/components/AccentColorPicker.tsx` (aperçu des pastilles).
+ */
+[data-accent='blue'] {
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-contrast: #ffffff;
+}
+[data-accent='green'] {
+  --color-primary: #16a34a;
+  --color-primary-hover: #15803d;
+  --color-primary-contrast: #ffffff;
+}
+[data-accent='purple'] {
+  --color-primary: #7c3aed;
+  --color-primary-hover: #6d28d9;
+  --color-primary-contrast: #ffffff;
+}
+[data-accent='pink'] {
+  --color-primary: #db2777;
+  --color-primary-hover: #be185d;
+  --color-primary-contrast: #ffffff;
+}
+[data-accent='orange'] {
+  --color-primary: #ea580c;
+  --color-primary-hover: #c2410c;
+  --color-primary-contrast: #ffffff;
+}
+
+[data-theme='dark'][data-accent='blue'] {
+  --color-primary: #3b82f6;
+  --color-primary-hover: #60a5fa;
+  --color-primary-contrast: #0a0f1c;
+}
+[data-theme='dark'][data-accent='green'] {
+  --color-primary: #22c55e;
+  --color-primary-hover: #4ade80;
+  --color-primary-contrast: #052e16;
+}
+[data-theme='dark'][data-accent='purple'] {
+  --color-primary: #a78bfa;
+  --color-primary-hover: #c4b5fd;
+  --color-primary-contrast: #1e1b4b;
+}
+[data-theme='dark'][data-accent='pink'] {
+  --color-primary: #f472b6;
+  --color-primary-hover: #f9a8d4;
+  --color-primary-contrast: #500724;
+}
+[data-theme='dark'][data-accent='orange'] {
+  --color-primary: #fb923c;
+  --color-primary-hover: #fdba74;
+  --color-primary-contrast: #431407;
+}
+
 [data-theme='dark'] {
-  --color-bg: #0b1622;
-  --color-surface: #151f2e;
-  --color-nav-bg: #0b1622;
-  --color-nav-shadow: rgba(0, 0, 0, 0.4);
-  --color-text: #e8edf5;
-  --color-text-muted: #a9b8cc;
-  --color-text-secondary: #a9b8cc; /* alias de --color-text-muted */
-  --color-meta: #7a90a8;
-  --color-border: #2a3a50;
-  --color-border-subtle: #1e2d40;
-  --color-section-heading: #d4e0ef;
-  --color-placeholder: #5a7591;
-  --color-error: #fc8181;
-  --color-error-hover: #feb2b2;
-  /* Contraste vérifié : #68d391 sur --color-bg #0b1622 ≈ 11.4:1 (WCAG AAA). */
-  --color-success: #68d391;
-  --color-primary: #02a9ff;
-  --color-primary-hover: #33baff;
-  /* Texte sombre sur accent clair (WCAG AA ≥ 4.5:1) — #ffffff / #02a9ff = 2.57:1 échoue. */
-  --color-primary-contrast: #0b1622;
-  --color-badge-finished-bg: #1e2d40;
-  --color-badge-finished-text: #c8d6e8;
-  --color-badge-upcoming-bg: #2d1f00;
+  --color-bg: #0a0f1c;
+  --color-surface: #131a2b;
+  --color-nav-bg: #0a0f1cee;
+  --color-nav-shadow: rgba(0, 0, 0, 0.5);
+  --color-text: #e2e8f0;
+  --color-text-muted: #94a3b8;
+  --color-text-secondary: #94a3b8;
+  --color-meta: #64748b;
+  --color-border: #334155;
+  --color-border-subtle: #1a2236;
+  --color-section-heading: #cbd5e1;
+  --color-placeholder: #475569;
+  --color-error: #f87171;
+  --color-error-hover: #fca5a5;
+  --color-success: #4ade80;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #60a5fa;
+  --color-primary-contrast: #0a0f1c;
+  --color-accent-warm: #22d3ee;
+  --color-badge-finished-bg: #1e293b;
+  --color-badge-finished-text: #cbd5e1;
+  --color-badge-upcoming-bg: #2a1e08;
   --color-badge-upcoming-text: #fbbf24;
-  --color-badge-live-bg: #00271a;
+  --color-badge-live-bg: #0e2818;
   --color-badge-live-text: #4ade80;
-  --color-badge-host-bg: #1e0a3c;
-  --color-badge-host-text: #c4b5fd;
-  --color-badge-me-bg: #021e38;
-  --color-badge-me-text: #7dd3fc;
-  --color-wheel-bg: #00271a;
-  --color-wheel-label: #4ade80;
-  --color-poster-placeholder: #1e2d40;
-  --color-input-readonly: #0e1825;
+  --color-badge-host-bg: #1e1b4b;
+  --color-badge-host-text: #c7d2fe;
+  --color-badge-me-bg: #172554;
+  --color-badge-me-text: #93c5fd;
+  --color-wheel-bg: #1e1b4b;
+  --color-wheel-label: #c7d2fe;
+  --color-poster-placeholder: #1e293b;
+  --color-input-bg: #0f1524;
+  --color-input-readonly: #0a0f1c;
   --color-accent: var(--color-primary);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.55);
 }
 
 .visually-hidden {
@@ -121,7 +190,7 @@ body {
 
 /* Détail soirée — colonne un peu plus large, toujours centrée */
 .page.page-event {
-  max-width: min(42rem, 100%);
+  max-width: min(48rem, 100%);
 }
 
 /* Utilitaire : occuper l'espace vertical pour que le swap skeleton → contenu
@@ -133,6 +202,30 @@ body {
   align-items: flex-start;
   gap: 1rem;
   min-height: 60vh;
+}
+
+.page.page--errorState {
+  align-items: center;
+  text-align: center;
+}
+
+.page.page--errorState .errorStateIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  margin-bottom: 0.5rem;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-error) 14%, transparent);
+  color: var(--color-error);
+}
+
+.page.page--errorState .errorStateMessage {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--color-text);
 }
 
 /*

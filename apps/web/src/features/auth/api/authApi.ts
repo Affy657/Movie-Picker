@@ -1,6 +1,6 @@
 import { fetchApi } from '@/shared/api/client';
 import { ApiError } from '@/shared/api/apiError';
-import type { UiThemePreference } from '@/shared/types/theme';
+import type { AccentColor, UiThemePreference } from '@/shared/types/theme';
 import type { UserProfile } from '@/features/auth/types';
 import { clearSessionHint, hasSessionHint, setSessionHint } from '@/features/auth/session-hint';
 
@@ -59,10 +59,21 @@ export async function postAuthLogout(): Promise<void> {
 export async function patchAuthProfile(patch: {
   displayName?: string;
   uiTheme?: UiThemePreference;
+  accentColor?: AccentColor;
 }): Promise<UserProfile> {
   return fetchApi<UserProfile>('/auth/me', {
     method: 'PATCH',
     body: JSON.stringify(patch),
+  });
+}
+
+export async function patchChangePassword(
+  currentPassword: string,
+  newPassword: string
+): Promise<void> {
+  await fetchApi('/auth/me/password', {
+    method: 'PATCH',
+    body: JSON.stringify({ currentPassword, newPassword }),
   });
 }
 

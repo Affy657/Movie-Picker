@@ -50,6 +50,7 @@ describe('JoinForm', () => {
       displayName: 'ProfilCompte',
       emailMasked: 'e***@***',
       uiTheme: 'system',
+      accentColor: 'default',
     };
     mockFetchApi.mockImplementation(async (path: string) => {
       if (path === '/auth/me') return profile;

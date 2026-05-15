@@ -22,6 +22,11 @@ public sealed class UserDocument
     [BsonElement("uiTheme")]
     public string UiTheme { get; set; } = "system";
 
+    /// <summary>Valeurs : default | blue | green | purple | pink | orange</summary>
+    [BsonElement("accentColor")]
+    [BsonIgnoreIfNull]
+    public string? AccentColor { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 

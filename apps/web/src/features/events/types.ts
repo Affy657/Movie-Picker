@@ -4,10 +4,10 @@ export type { WheelMode, EventConfigData, EventData } from '@/shared/types/event
 import type { EventConfigData, WheelMode } from '@/shared/types/event';
 
 /** Plafond max pour `maxParticipants` (aligné sur `EventConfig.MaxParticipantsCap` côté API). */
-export const MAX_EVENT_PARTICIPANTS = 500;
+export const MAX_EVENT_PARTICIPANTS = 30;
 
 /** Plafond max pour `maxProposalsPerParticipant` (aligné sur `EventConfig.MaxProposalsPerParticipantCap` côté API). */
-export const MAX_PROPOSALS_PER_PARTICIPANT = 100;
+export const MAX_PROPOSALS_PER_PARTICIPANT = 10;
 
 export const DEFAULT_EVENT_CONFIG: EventConfigData = {
   theme: null,
@@ -43,8 +43,10 @@ export interface MyEventSummary {
   lifecycle?: MyEventLifecycle | string;
   participantCount?: number;
   movieCount?: number;
-  /** Capacité maximale (1..500) configurée par l’hôte ; absent/null = illimité. */
+  /** Capacité maximale configurée par l’hôte ; absent/null = illimité. */
   maxParticipants?: number | null;
+  /** Thème/ambiance configuré par l’hôte (ex. "🎃 Horreur") ; absent/null = aucun. */
+  theme?: string | null;
 }
 
 export interface MyEventsListResponse {

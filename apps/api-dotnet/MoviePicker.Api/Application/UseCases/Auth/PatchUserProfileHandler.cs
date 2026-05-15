@@ -8,8 +8,13 @@ namespace MoviePicker.Api.Application.UseCases.Auth;
 public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
 {
     private readonly IUserRepository _users;
+    private readonly TimeProvider _clock;
 
-    public PatchUserProfileHandler(IUserRepository users) => _users = users;
+    public PatchUserProfileHandler(IUserRepository users, TimeProvider clock)
+    {
+        _users = users;
+        _clock = clock;
+    }
 
     public async Task<UserProfileResponse> HandleAsync(
         string userId,
@@ -18,14 +23,15 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
     {
         var user = await _users.GetByIdAsync(userId, ct) ?? throw new NotFoundException("Utilisateur introuvable");
 
-        if (request.DisplayName is null && request.UiTheme is null)
+        if (request.DisplayName is null && request.UiTheme is null && request.AccentColor is null)
         {
             return new UserProfileResponse
             {
                 UserId = user.Id,
                 DisplayName = user.DisplayName,
                 EmailMasked = EmailMasking.Mask(user.Email),
-                UiTheme = user.UiTheme
+                UiTheme = user.UiTheme,
+                AccentColor = user.AccentColor
             };
         }
 
@@ -40,13 +46,18 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
 
         var theme = user.UiTheme;
         if (request.UiTheme is not null)
-            theme = ParseTheme(request.UiTheme);
+            theme = ParseEnum(request.UiTheme, UiThemePreference.System);
+
+        var accent = user.AccentColor;
+        if (request.AccentColor is not null)
+            accent = ParseEnum(request.AccentColor, AccentColor.Default);
 
         var updated = user with
         {
             DisplayName = displayName,
             UiTheme = theme,
-            UpdatedAt = DateTimeOffset.UtcNow
+            AccentColor = accent,
+            UpdatedAt = _clock.GetUtcNow()
         };
 
         var saved = await _users.UpdateAsync(updated, ct);
@@ -55,15 +66,11 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             UserId = saved.Id,
             DisplayName = saved.DisplayName,
             EmailMasked = EmailMasking.Mask(saved.Email),
-            UiTheme = saved.UiTheme
+            UiTheme = saved.UiTheme,
+            AccentColor = saved.AccentColor
         };
     }
 
-    private static UiThemePreference ParseTheme(string raw) =>
-        raw.ToLowerInvariant() switch
-        {
-            "light" => UiThemePreference.Light,
-            "dark" => UiThemePreference.Dark,
-            _ => UiThemePreference.System
-        };
+    private static T ParseEnum<T>(string raw, T defaultValue) where T : struct, Enum =>
+        Enum.TryParse<T>(raw, ignoreCase: true, out var result) ? result : defaultValue;
 }

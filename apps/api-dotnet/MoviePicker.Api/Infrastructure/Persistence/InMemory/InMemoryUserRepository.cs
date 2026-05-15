@@ -31,6 +31,7 @@ public sealed class InMemoryUserRepository : IUserRepository
             PasswordHash = user.PasswordHash,
             DisplayName = user.DisplayName,
             UiTheme = user.UiTheme,
+            AccentColor = user.AccentColor,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         };
@@ -55,6 +56,7 @@ public sealed class InMemoryUserRepository : IUserRepository
             PasswordHash = user.PasswordHash,
             DisplayName = user.DisplayName,
             UiTheme = user.UiTheme,
+            AccentColor = user.AccentColor,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         };

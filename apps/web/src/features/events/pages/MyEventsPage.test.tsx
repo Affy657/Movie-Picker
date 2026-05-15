@@ -47,6 +47,7 @@ describe('MyEventsPage (MSW)', () => {
           displayName: 'Alice',
           emailMasked: 'a***@test.local',
           uiTheme: 'system',
+          accentColor: 'default',
         })
       ),
       http.get(`${TEST_API_V1}/events/mine`, () =>
@@ -108,7 +109,6 @@ describe('MyEventsPage (MSW)', () => {
 
     expect(screen.getByRole('heading', { name: 'Mes soirées', level: 1 })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /rejointes/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /historique/i })).toBeInTheDocument();
 
     const hostedLink = screen.getByRole('link', { name: /Chez moi/i });
     expect(hostedLink).toHaveAttribute('href', '/e/ma-soiree');
@@ -116,20 +116,26 @@ describe('MyEventsPage (MSW)', () => {
       within(hostedLink.closest('li')!).getByText(/4\s*\/\s*8 participants/)
     ).toBeInTheDocument();
     expect(within(hostedLink.closest('li')!).getByText(/2 films propos/)).toBeInTheDocument();
-    expect(screen.getAllByText('Hôte').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText('Hôte').length).toBeGreaterThanOrEqual(1);
     expect(within(hostedLink.closest('li')!).getByText('À venir')).toBeInTheDocument();
 
     const joinedLink = screen.getByRole('link', { name: /Chez Bob/i });
     expect(joinedLink).toHaveAttribute('href', '/e/autre');
     expect(screen.getByText('En cours')).toBeInTheDocument();
 
-    const historyHeading = screen.getByRole('heading', { name: /historique/i });
+    // L'historique vit dans son propre onglet : on doit y basculer pour le tester.
+    const userEvt = (await import('@testing-library/user-event')).default.setup();
+    await userEvt.click(screen.getByRole('tab', { name: /historique/i }));
+
+    const historyHeading = await screen.findByRole('heading', { name: /historique/i });
     const historySection = historyHeading.closest('section')!;
     const historyLink = within(historySection).getByRole('link', { name: /Soirée passée/i });
     expect(historyLink).toHaveAttribute('href', '/e/terminee');
     expect(within(historySection).queryByText('Terminée')).not.toBeInTheDocument();
 
-    const hostedHeading = screen.getByRole('heading', { name: /créées/i });
+    // Retour sur l'onglet actif pour vérifier l'isolement des sections.
+    await userEvt.click(screen.getByRole('tab', { name: /à venir/i }));
+    const hostedHeading = await screen.findByRole('heading', { name: /créées/i });
     const hostedSection = hostedHeading.closest('section')!;
     expect(within(hostedSection).queryByText(/Soirée passée/i)).not.toBeInTheDocument();
 
@@ -207,6 +213,7 @@ describe('MyEventsPage (MSW)', () => {
           displayName: 'Alice',
           emailMasked: 'a***@test.local',
           uiTheme: 'system',
+          accentColor: 'default',
         })
       ),
       http.get(`${TEST_API_V1}/events/mine`, () =>
@@ -260,6 +267,7 @@ describe('MyEventsPage (MSW)', () => {
           displayName: 'Alice',
           emailMasked: 'a***@test.local',
           uiTheme: 'system',
+          accentColor: 'default',
         })
       ),
       http.get(`${TEST_API_V1}/events/mine`, () =>
