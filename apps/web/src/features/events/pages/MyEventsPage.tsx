@@ -135,9 +135,7 @@ function EventListBlock({
                     </span>
                   ) : null}
                 </span>
-                {ev.theme ? (
-                  <span className={styles.cardTheme}>{ev.theme}</span>
-                ) : null}
+                {ev.theme ? <span className={styles.cardTheme}>{ev.theme}</span> : null}
                 <span className={styles.cardStats}>
                   {cardJoinedLabel(ev.participantCount ?? 0, ev.maxParticipants, t)} ·{' '}
                   {cardMoviesLabel(ev.movieCount ?? 0, t)}

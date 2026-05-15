@@ -54,7 +54,6 @@ export default function CreateEvent() {
       (Number.isFinite(maxPartParsed) && maxPartParsed > 0) ||
       (Number.isFinite(maxPropParsed) && maxPropParsed > 0);
 
-
     if (needsConfigPatch) {
       try {
         await patchEventConfig(res.slug, null, {
@@ -74,7 +73,17 @@ export default function CreateEvent() {
     navigate(ROUTES.eventDetail(res.slug), {
       state: { shareUrl: publicUrl, justCreated: true },
     });
-  }, [title, date, time, themeEmoji, themeText, maxParticipants, maxProposals, queryClient, navigate]);
+  }, [
+    title,
+    date,
+    time,
+    themeEmoji,
+    themeText,
+    maxParticipants,
+    maxProposals,
+    queryClient,
+    navigate,
+  ]);
 
   const { run: submit, loading, error } = useAsyncAction(createAction, 'Création impossible');
 

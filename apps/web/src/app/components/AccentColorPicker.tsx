@@ -85,26 +85,29 @@ export default function AccentColorPicker({
   // Pour la sélection : on traite la valeur stockée 'default' comme 'blue' (visuellement identique).
   const effectiveSelection: PickerColor = accent === 'default' ? 'blue' : (accent as PickerColor);
 
-  const commit = useCallback((next: PickerColor) => {
-    if (next === effectiveSelection && accent !== 'default') return;
-    setAccent(next);
-    if (!user) {
-      lastCommittedRef.current = next;
-      return;
-    }
-    if (patchTimerRef.current !== null) clearTimeout(patchTimerRef.current);
-    patchTimerRef.current = window.setTimeout(() => {
-      patchTimerRef.current = null;
-      const rollback = lastCommittedRef.current;
-      void patchProfile({ accentColor: next })
-        .then(() => {
-          lastCommittedRef.current = next;
-        })
-        .catch(() => {
-          setAccent(rollback);
-        });
-    }, PATCH_DEBOUNCE_MS);
-  }, [effectiveSelection, accent, setAccent, user, patchProfile]);
+  const commit = useCallback(
+    (next: PickerColor) => {
+      if (next === effectiveSelection && accent !== 'default') return;
+      setAccent(next);
+      if (!user) {
+        lastCommittedRef.current = next;
+        return;
+      }
+      if (patchTimerRef.current !== null) clearTimeout(patchTimerRef.current);
+      patchTimerRef.current = window.setTimeout(() => {
+        patchTimerRef.current = null;
+        const rollback = lastCommittedRef.current;
+        void patchProfile({ accentColor: next })
+          .then(() => {
+            lastCommittedRef.current = next;
+          })
+          .catch(() => {
+            setAccent(rollback);
+          });
+      }, PATCH_DEBOUNCE_MS);
+    },
+    [effectiveSelection, accent, setAccent, user, patchProfile]
+  );
 
   const handleKey = (e: React.KeyboardEvent, idx: number) => {
     const last = PICKER_COLORS.length - 1;

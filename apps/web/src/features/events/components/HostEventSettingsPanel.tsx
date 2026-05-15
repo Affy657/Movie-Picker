@@ -26,7 +26,6 @@ import { MAX_EVENT_PARTICIPANTS } from '@/features/events/types';
 import { isWheelMode } from '@/shared/utils/wheelMode';
 import { useTranslation } from '@/shared/i18n';
 
-
 type HostEventSettingsPanelProps = {
   slug: string;
   hostToken: string | null;
