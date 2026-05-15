@@ -74,7 +74,6 @@ export default function AccentColorPicker({
   useEffect(() => {
     if (user) lastCommittedRef.current = accent;
     // On ne dépend que de `user` : on resync quand le profil arrive, pas à chaque local change.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.userId]);
   useEffect(
     () => () => {
