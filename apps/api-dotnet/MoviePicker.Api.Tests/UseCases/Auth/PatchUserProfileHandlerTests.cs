@@ -27,7 +27,7 @@ public sealed class PatchUserProfileHandlerTests
     {
         var users = new Mock<IUserRepository>();
         users.Setup(x => x.GetByIdAsync("x", It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
-        var handler = new PatchUserProfileHandler(users.Object);
+        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
 
         await Assert.ThrowsAsync<NotFoundException>(() =>
             handler.HandleAsync("x", new PatchUserProfileRequest { DisplayName = "N" }));
@@ -39,7 +39,7 @@ public sealed class PatchUserProfileHandlerTests
         var u = User();
         var users = new Mock<IUserRepository>();
         users.Setup(x => x.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(u);
-        var handler = new PatchUserProfileHandler(users.Object);
+        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
 
         var res = await handler.HandleAsync("u1", new PatchUserProfileRequest());
 
@@ -57,7 +57,7 @@ public sealed class PatchUserProfileHandlerTests
         users
             .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User x, CancellationToken _) => x);
-        var handler = new PatchUserProfileHandler(users.Object);
+        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
 
         var res = await handler.HandleAsync(
             "u1",
@@ -77,7 +77,7 @@ public sealed class PatchUserProfileHandlerTests
         var u = User();
         var users = new Mock<IUserRepository>();
         users.Setup(x => x.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(u);
-        var handler = new PatchUserProfileHandler(users.Object);
+        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
 
         await Assert.ThrowsAsync<BadRequestException>(() =>
             handler.HandleAsync("u1", new PatchUserProfileRequest { DisplayName = "   " }));
@@ -92,7 +92,7 @@ public sealed class PatchUserProfileHandlerTests
         users
             .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User x, CancellationToken _) => x);
-        var handler = new PatchUserProfileHandler(users.Object);
+        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
 
         var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { UiTheme = "light" });
 
