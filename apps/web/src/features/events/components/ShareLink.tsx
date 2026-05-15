@@ -42,23 +42,19 @@ export default function ShareLink({
   const [qrOpen, setQrOpen] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
-  // Synchronise l'état React avec l'API native <dialog>. En environnement test
-  // (jsdom n'implémente pas `showModal`), on bascule simplement l'attribut `open`.
+  // Synchronise l'état React avec l'API native <dialog>.
+  // `showModal` et `close` ne sont pas disponibles dans tous les environnements (ex. jsdom) :
+  // le cast les marque optionnels pour que la vérification soit valide côté analyse statique.
   useEffect(() => {
-    const el = dialogRef.current;
+    type PartialDialog = HTMLDialogElement & { showModal?: () => void; close?: () => void };
+    const el = dialogRef.current as PartialDialog | null;
     if (!el) return;
     if (qrOpen && !el.open) {
-      if (typeof el.showModal === 'function') {
-        el.showModal();
-      } else {
-        el.setAttribute('open', '');
-      }
+      if (el.showModal) el.showModal();
+      else el.setAttribute('open', '');
     } else if (!qrOpen && el.open) {
-      if (typeof el.close === 'function') {
-        el.close();
-      } else {
-        el.removeAttribute('open');
-      }
+      if (el.close) el.close();
+      else el.removeAttribute('open');
     }
   }, [qrOpen]);
 
