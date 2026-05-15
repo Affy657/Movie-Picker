@@ -54,7 +54,7 @@ public sealed class GetEventSharePreviewHtmlHandler : IGetEventSharePreviewHtmlH
         else
         {
             pageTitle = $"{evt.Title} — Movie Picker";
-            ogTitle = evt.Title;
+            ogTitle = $"{evt.Title} · Movie Picker";
             ogDescription = BuildRichDescription(evt);
             ogImage = await ResolveOgImageAsync(evt, apiBase, webBase, ct);
         }
@@ -62,14 +62,27 @@ public sealed class GetEventSharePreviewHtmlHandler : IGetEventSharePreviewHtmlH
         return BuildDocument(canonical, pageTitle, ogTitle, ogDescription, ogImage);
     }
 
+    private static readonly System.Globalization.CultureInfo FrCulture =
+        new("fr-FR");
+
     private static string BuildRichDescription(Event evt)
     {
-        var parts = new List<string> { $"Soirée le {evt.Date} à {evt.Time}." };
-        var theme = evt.Config?.Theme;
+        var dateLabel = DateOnly.TryParse(evt.Date, out var d)
+            ? d.ToString("dddd d MMMM yyyy", FrCulture)
+            : evt.Date;
+
+        var timeLabel = evt.Time.Contains(':')
+            ? evt.Time.Replace(":", "h")
+            : evt.Time;
+
+        var parts = new List<string> { $"📅 {dateLabel} à {timeLabel}" };
+
+        var theme = evt.Config?.Theme?.Trim();
         if (!string.IsNullOrWhiteSpace(theme))
-            parts.Add($"Ambiance : {theme.Trim()}.");
-        parts.Add("Rejoignez la soirée sur Movie Picker.");
-        return string.Join(" ", parts);
+            parts.Add($"🎭 {theme}");
+
+        parts.Add("Rejoins-nous sur Movie Picker !");
+        return string.Join(" · ", parts);
     }
 
     private async Task<string> ResolveOgImageAsync(Event evt, string apiBase, string webBase, CancellationToken ct)
