@@ -127,7 +127,7 @@ export const fr = {
       changePasswordConfirmLabel: 'Confirmer le nouveau mot de passe',
       changePasswordSubmit: 'Changer le mot de passe',
       changePasswordSubmitting: 'Mise \u00e0 jour\u2026',
-      changePasswordSuccess: 'Mot de passe mis \u00e0 jour.',
+      changePasswordSuccess: 'Mot de passe mis \u00e0 jour. Reconnectez-vous dans un instant\u2026',
       changePasswordFallbackError: 'Mise \u00e0 jour impossible.',
       changePasswordMustMatch: 'Les deux mots de passe doivent \u00eatre identiques.',
       changePasswordRulesError:
@@ -136,7 +136,6 @@ export const fr = {
       accentColorHint:
         'Choisissez la couleur dominante des boutons et accents. S\u2019applique en mode clair et sombre.',
       accentColorOptions: {
-        default: 'Par d\u00e9faut',
         blue: 'Bleu',
         green: 'Vert',
         purple: 'Violet',

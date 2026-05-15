@@ -123,10 +123,12 @@ public sealed class AuthController : ControllerBase
 
     [HttpPatch("me/password")]
     [Authorize]
+    [EnableRateLimiting(RateLimitingExtensions.AuthChangePasswordPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> ChangePassword(
         [FromBody] ChangePasswordRequest? request,
         [FromServices] IChangePasswordHandler handler,
@@ -141,6 +143,12 @@ public sealed class AuthController : ControllerBase
             return Unauthorized();
 
         await handler.HandleAsync(userId, request, ct);
+
+        // Le handler vient d'invalider toutes les sessions de l'utilisateur ; on clear
+        // le cookie de session courante pour que le client soit cohérent (prochaine
+        // requête → 401, l'UI redirige vers /login).
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
         return NoContent();
     }
 

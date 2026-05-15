@@ -119,7 +119,7 @@ export const en: Locale = {
       changePasswordConfirmLabel: 'Confirm new password',
       changePasswordSubmit: 'Change password',
       changePasswordSubmitting: 'Updating\u2026',
-      changePasswordSuccess: 'Password updated.',
+      changePasswordSuccess: 'Password updated. Redirecting to sign-in…',
       changePasswordFallbackError: 'Update failed.',
       changePasswordMustMatch: 'Both passwords must match.',
       changePasswordRulesError:
@@ -128,7 +128,6 @@ export const en: Locale = {
       accentColorHint:
         'Choose the dominant colour of buttons and highlights. Applies to both light and dark modes.',
       accentColorOptions: {
-        default: 'Default',
         blue: 'Blue',
         green: 'Green',
         purple: 'Purple',

@@ -59,6 +59,8 @@
  * Palettes d'accent — surchargent --color-primary{,--hover,--contrast} et --color-accent
  * en complément de [data-theme]. Variantes light (par défaut) et dark.
  * `default` n'a pas de bloc dédié : il utilise les valeurs définies dans :root / [data-theme='dark'].
+ * IMPORTANT : si tu modifies ces couleurs, mets également à jour `SWATCH_COLORS` dans
+ * `apps/web/src/app/components/AccentColorPicker.tsx` (aperçu des pastilles).
  */
 [data-accent='blue'] {
   --color-primary: #2563eb;

@@ -43,13 +43,3 @@
 .check {
   pointer-events: none;
 }
-
-/* Variante "Default" : on illustre la couleur historique (bleu de :root) via gradient subtil
-   pour la distinguer visuellement du choix explicite "blue". */
-.swatchDefault {
-  background: linear-gradient(135deg, transparent 0% 50%, #ffffff22 50% 100%), #2563eb;
-}
-
-[data-theme='dark'] .swatchDefault {
-  background: linear-gradient(135deg, transparent 0% 50%, #00000033 50% 100%), #3b82f6;
-}

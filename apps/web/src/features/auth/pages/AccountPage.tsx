@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { KeyRound, LogOut, Sliders, User } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -12,27 +13,39 @@ import AccentColorPicker from '@/app/components/AccentColorPicker';
 import { withReturnTo, ROUTES } from '@/app/routes';
 import { patchChangePassword } from '@/features/auth/api/authApi';
 import { isRegisterPasswordCompliant } from '@/shared/utils/authPasswordRules';
+import { queryKeys } from '@/shared/hooks/queryKeys';
 import styles from './AccountPage.module.css';
+
+/** Délai d'affichage du message "Mot de passe mis à jour" avant redirection vers /login. */
+const POST_PASSWORD_CHANGE_REDIRECT_MS = 1800;
 
 function ChangePasswordSection() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<number | null>(null);
-  const resetTimerRef = useRef<number | undefined>(undefined);
-  useEffect(() => () => clearTimeout(resetTimerRef.current), []);
+  const redirectTimerRef = useRef<number | undefined>(undefined);
+  useEffect(() => () => clearTimeout(redirectTimerRef.current), []);
 
   const changeAction = useCallback(async () => {
     await patchChangePassword(currentPassword, newPassword);
+    // Le serveur a invalidé toutes les sessions et clear le cookie courant.
+    // On vide le cache local (auth.me redeviendra 401) puis on redirige vers /login
+    // avec un délai court pour laisser apparaître le message de succès.
     setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');
     setSavedAt(Date.now());
-    clearTimeout(resetTimerRef.current);
-    resetTimerRef.current = window.setTimeout(() => setSavedAt(null), 4000);
-  }, [currentPassword, newPassword]);
+    queryClient.setQueryData(queryKeys.auth.me, null);
+    clearTimeout(redirectTimerRef.current);
+    redirectTimerRef.current = window.setTimeout(() => {
+      navigate(ROUTES.login, { replace: true });
+    }, POST_PASSWORD_CHANGE_REDIRECT_MS);
+  }, [currentPassword, newPassword, queryClient, navigate]);
 
   const {
     run: runChange,

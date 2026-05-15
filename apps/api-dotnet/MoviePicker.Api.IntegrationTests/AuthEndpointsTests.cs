@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Web;
 using Xunit;
 
@@ -182,6 +183,119 @@ public sealed class AuthEndpointsTests : IClassFixture<MoviePickerApplicationFac
             "/api/v1/auth/login",
             new LoginRequest { Email = $"ghost{Guid.NewGuid():N}@test.local", Password = "abcd1234" });
         Assert.Equal(HttpStatusCode.Unauthorized, login.StatusCode);
+    }
+
+    [Fact]
+    public async Task ChangePassword_Success_Returns204_AndSessionIsInvalidated()
+    {
+        var client = _factory.CreateClient();
+        var email = $"cp{Guid.NewGuid():N}@test.local";
+        var reg = await client.PostAsJsonAsync(
+            "/api/v1/auth/register",
+            new RegisterRequest { Email = email, Password = "abcd1234", DisplayName = "CP" });
+        Assert.Equal(HttpStatusCode.Created, reg.StatusCode);
+        ApplySessionCookie(client, reg);
+
+        var change = await client.PatchAsJsonAsync(
+            "/api/v1/auth/me/password",
+            new ChangePasswordRequest { CurrentPassword = "abcd1234", NewPassword = "wxyz5678" });
+        Assert.Equal(HttpStatusCode.NoContent, change.StatusCode);
+
+        // La session courante doit être invalidée côté serveur (sign-out explicite).
+        ApplySessionCookie(client, change);
+        var me = await client.GetAsync("/api/v1/auth/me");
+        Assert.Equal(HttpStatusCode.Unauthorized, me.StatusCode);
+
+        // Le nouveau mot de passe permet bien de se reconnecter.
+        client.DefaultRequestHeaders.Remove("Cookie");
+        var login = await client.PostAsJsonAsync(
+            "/api/v1/auth/login",
+            new LoginRequest { Email = email, Password = "wxyz5678" });
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+    }
+
+    [Fact]
+    public async Task ChangePassword_WrongCurrent_Returns401()
+    {
+        var client = _factory.CreateClient();
+        var email = $"cpw{Guid.NewGuid():N}@test.local";
+        var reg = await client.PostAsJsonAsync(
+            "/api/v1/auth/register",
+            new RegisterRequest { Email = email, Password = "abcd1234", DisplayName = "CPW" });
+        ApplySessionCookie(client, reg);
+
+        var change = await client.PatchAsJsonAsync(
+            "/api/v1/auth/me/password",
+            new ChangePasswordRequest { CurrentPassword = "wrongpass1", NewPassword = "wxyz5678" });
+        Assert.Equal(HttpStatusCode.Unauthorized, change.StatusCode);
+
+        // L'ancien mot de passe reste valide après un échec.
+        client.DefaultRequestHeaders.Remove("Cookie");
+        var loginOld = await client.PostAsJsonAsync(
+            "/api/v1/auth/login",
+            new LoginRequest { Email = email, Password = "abcd1234" });
+        Assert.Equal(HttpStatusCode.OK, loginOld.StatusCode);
+    }
+
+    [Fact]
+    public async Task ChangePassword_WeakNewPassword_Returns400()
+    {
+        var client = _factory.CreateClient();
+        var email = $"cpweak{Guid.NewGuid():N}@test.local";
+        var reg = await client.PostAsJsonAsync(
+            "/api/v1/auth/register",
+            new RegisterRequest { Email = email, Password = "abcd1234", DisplayName = "CPK" });
+        ApplySessionCookie(client, reg);
+
+        var change = await client.PatchAsJsonAsync(
+            "/api/v1/auth/me/password",
+            new ChangePasswordRequest { CurrentPassword = "abcd1234", NewPassword = "short" });
+        Assert.Equal(HttpStatusCode.BadRequest, change.StatusCode);
+    }
+
+    [Fact]
+    public async Task ChangePassword_Unauthenticated_Returns401()
+    {
+        var client = _factory.CreateClient();
+        var change = await client.PatchAsJsonAsync(
+            "/api/v1/auth/me/password",
+            new ChangePasswordRequest { CurrentPassword = "abcd1234", NewPassword = "wxyz5678" });
+        Assert.Equal(HttpStatusCode.Unauthorized, change.StatusCode);
+    }
+
+    [Fact]
+    public async Task PatchMe_AccentColor_UpdatesAndReturns()
+    {
+        var client = _factory.CreateClient();
+        var email = $"acc{Guid.NewGuid():N}@test.local";
+        var reg = await client.PostAsJsonAsync(
+            "/api/v1/auth/register",
+            new RegisterRequest { Email = email, Password = "abcd1234", DisplayName = "AC" });
+        ApplySessionCookie(client, reg);
+
+        var patch = await client.PatchAsJsonAsync(
+            "/api/v1/auth/me",
+            new PatchUserProfileRequest { AccentColor = "purple" });
+        Assert.Equal(HttpStatusCode.OK, patch.StatusCode);
+        var updated = await patch.Content.ReadFromJsonAsync<UserProfileResponse>(JsonReadOptions);
+        Assert.NotNull(updated);
+        Assert.Equal(AccentColor.Purple, updated!.AccentColor);
+    }
+
+    [Fact]
+    public async Task PatchMe_InvalidAccentColor_Returns400()
+    {
+        var client = _factory.CreateClient();
+        var email = $"accbad{Guid.NewGuid():N}@test.local";
+        var reg = await client.PostAsJsonAsync(
+            "/api/v1/auth/register",
+            new RegisterRequest { Email = email, Password = "abcd1234", DisplayName = "AB" });
+        ApplySessionCookie(client, reg);
+
+        var patch = await client.PatchAsJsonAsync(
+            "/api/v1/auth/me",
+            new { accentColor = "fuchsia" });
+        Assert.Equal(HttpStatusCode.BadRequest, patch.StatusCode);
     }
 
     [Fact]
