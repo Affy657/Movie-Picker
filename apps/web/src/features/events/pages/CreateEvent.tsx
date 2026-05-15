@@ -3,10 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Settings2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import PageLayout from '@/shared/components/PageLayout';
-import {
-  createEvent as createEventApi,
-  patchEventConfig,
-} from '@/features/events/api/eventsApi';
+import { createEvent as createEventApi, patchEventConfig } from '@/features/events/api/eventsApi';
 import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { queryKeys } from '@/shared/hooks/queryKeys';

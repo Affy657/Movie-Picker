@@ -69,11 +69,11 @@ export default function Dropdown<V extends string>({
     if (!open) return;
     const idx = options.findIndex((o) => o.value === value);
     if (idx >= 0) setActiveIndex(idx);
-    const id = window.requestAnimationFrame(() => {
+    const rafId = window.requestAnimationFrame(() => {
       const items = listRef.current?.querySelectorAll<HTMLLIElement>('[role="option"]');
       items?.[Math.max(0, idx)]?.focus();
     });
-    return () => window.cancelAnimationFrame(id);
+    return () => window.cancelAnimationFrame(rafId);
   }, [open, options, value]);
 
   const handleKey = (e: React.KeyboardEvent) => {

@@ -16,8 +16,7 @@ export default function NotFoundPage() {
       <p className={styles.code}>Erreur 404</p>
       <h1 className={styles.title}>Page introuvable</h1>
       <p className={styles.message}>
-        Cette page n&apos;existe pas ou a été déplacée. Pas de panique, on vous remet sur les
-        rails.
+        Cette page n&apos;existe pas ou a été déplacée. Pas de panique, on vous remet sur les rails.
       </p>
       <div className={styles.actions}>
         <Link to={ROUTES.home} className="btn btn-primary">

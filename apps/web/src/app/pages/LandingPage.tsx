@@ -19,8 +19,7 @@ export default function LandingPage() {
             Movie night, simplifiée
           </span>
           <h1 className={styles.title}>
-            Choisissez le film de la soirée{' '}
-            <span className={styles.titleAccent}>ensemble.</span>
+            Choisissez le film de la soirée <span className={styles.titleAccent}>ensemble.</span>
           </h1>
           <p className={styles.tagline}>
             Plus de débats interminables. Créez un événement, invitez vos amis, votez sur les

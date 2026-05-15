@@ -331,11 +331,7 @@ export default function MyEventsPage() {
             </button>
           </div>
           {tab === 'active' ? (
-            <div
-              role="tabpanel"
-              id="myevents-panel-active"
-              aria-labelledby="myevents-tab-active"
-            >
+            <div role="tabpanel" id="myevents-panel-active" aria-labelledby="myevents-tab-active">
               {hostedActive.length === 0 && joinedActive.length === 0 ? (
                 <p className={styles.sectionEmpty}>{t('events.myEvents.activeEmpty')}</p>
               ) : (
@@ -356,11 +352,7 @@ export default function MyEventsPage() {
               )}
             </div>
           ) : (
-            <div
-              role="tabpanel"
-              id="myevents-panel-history"
-              aria-labelledby="myevents-tab-history"
-            >
+            <div role="tabpanel" id="myevents-panel-history" aria-labelledby="myevents-tab-history">
               {historyEvents.length === 0 ? (
                 <p className={styles.sectionEmpty}>{t('events.myEvents.historyEmpty')}</p>
               ) : (

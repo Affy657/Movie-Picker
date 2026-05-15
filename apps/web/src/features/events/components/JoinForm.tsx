@@ -68,9 +68,7 @@ export default function JoinForm({ slug, onJoined, isFull, maxParticipants }: Jo
           {isGuest ? (
             <p className={styles.intro}>Indique ton pseudo pour rejoindre la soirée.</p>
           ) : (
-            <p className={styles.intro}>
-              Rejoins la soirée pour proposer des films et voter.
-            </p>
+            <p className={styles.intro}>Rejoins la soirée pour proposer des films et voter.</p>
           )}
           <form
             onSubmit={handleSubmit}
@@ -101,11 +99,7 @@ export default function JoinForm({ slug, onJoined, isFull, maxParticipants }: Jo
                 />
               </>
             ) : null}
-            <button
-              type="submit"
-              className={`btn btn-primary ${styles.submit}`}
-              disabled={loading}
-            >
+            <button type="submit" className={`btn btn-primary ${styles.submit}`} disabled={loading}>
               {loading ? 'Envoi…' : 'Rejoindre'}
             </button>
           </form>
