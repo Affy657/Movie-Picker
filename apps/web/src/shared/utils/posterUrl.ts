@@ -29,3 +29,24 @@ export function posterImageSrc(posterPath: string | null | undefined): string | 
   const p = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
   return apiUrl(p);
 }
+
+/**
+ * Génère un `srcset` TMDB multi-résolutions pour une affiche en miniature liste (~92px de large).
+ * Renvoie `undefined` si l'URL n'est pas une URL TMDB reconnaissable (le navigateur retombera sur `src`).
+ *
+ * Sizes recommandé côté `<img>`: "92px" (largeur fixe poster card).
+ */
+export function tmdbPosterSrcSetForList(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    const u = new URL(url);
+    if (u.protocol !== 'https:' || u.hostname !== 'image.tmdb.org') return undefined;
+    if (!TMDB_POSTER_SIZE_SEGMENT.test(u.pathname)) return undefined;
+    const base = u.pathname;
+    const make = (size: string) =>
+      `https://${u.hostname}${base.replace(TMDB_POSTER_SIZE_SEGMENT, `/t/p/${size}/`)}`;
+    return `${make('w92')} 92w, ${make('w185')} 185w, ${make('w342')} 342w`;
+  } catch {
+    return undefined;
+  }
+}
