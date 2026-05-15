@@ -60,3 +60,13 @@ public sealed class PatchUserProfileRequest
     [RegularExpression("^(system|light|dark)$", ErrorMessage = "uiTheme doit être system, light ou dark.")]
     public string? UiTheme { get; init; }
 }
+
+public sealed class ChangePasswordRequest
+{
+    [Required(ErrorMessage = "Le mot de passe actuel est requis.")]
+    public string CurrentPassword { get; init; } = string.Empty;
+
+    [Required(ErrorMessage = "Le nouveau mot de passe est requis.")]
+    [MinLength(1)]
+    public string NewPassword { get; init; } = string.Empty;
+}

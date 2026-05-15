@@ -120,6 +120,18 @@ export const fr = {
       sessionTitle: 'Session',
       saving: 'Enregistrement\u2026',
       guestNavAriaLabel: 'Connexion et inscription',
+      changePasswordTitle: 'Changer le mot de passe',
+      changePasswordCurrentLabel: 'Mot de passe actuel',
+      changePasswordNewLabel: 'Nouveau mot de passe',
+      changePasswordNewHint: '8 caract\u00e8res minimum, au moins une lettre et un chiffre.',
+      changePasswordConfirmLabel: 'Confirmer le nouveau mot de passe',
+      changePasswordSubmit: 'Changer le mot de passe',
+      changePasswordSubmitting: 'Mise \u00e0 jour\u2026',
+      changePasswordSuccess: 'Mot de passe mis \u00e0 jour.',
+      changePasswordFallbackError: 'Mise \u00e0 jour impossible.',
+      changePasswordMustMatch: 'Les deux mots de passe doivent \u00eatre identiques.',
+      changePasswordRulesError:
+        'Le nouveau mot de passe doit contenir au moins 8 caract\u00e8res, une lettre et un chiffre.',
     },
     logout: {
       fallbackError: 'Déconnexion impossible.',

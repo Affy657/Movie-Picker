@@ -121,6 +121,29 @@ public sealed class AuthController : ControllerBase
         return Ok(profile);
     }
 
+    [HttpPatch("me/password")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ChangePassword(
+        [FromBody] ChangePasswordRequest? request,
+        [FromServices] IChangePasswordHandler handler,
+        CancellationToken ct)
+    {
+        if (request is null)
+            return BadRequest(
+                ApiErrorResponse.FromHttpContext(HttpContext, StatusCodes.Status400BadRequest, "Corps JSON requis."));
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        await handler.HandleAsync(userId, request, ct);
+        return NoContent();
+    }
+
     [HttpPost("password-reset/request")]
     [EnableRateLimiting(RateLimitingExtensions.AuthPasswordResetRequestPolicy)]
     [ProducesResponseType(StatusCodes.Status202Accepted)]

@@ -112,6 +112,18 @@ export const en: Locale = {
       sessionTitle: 'Session',
       saving: 'Saving\u2026',
       guestNavAriaLabel: 'Sign in and sign up',
+      changePasswordTitle: 'Change password',
+      changePasswordCurrentLabel: 'Current password',
+      changePasswordNewLabel: 'New password',
+      changePasswordNewHint: 'At least 8 characters, including a letter and a number.',
+      changePasswordConfirmLabel: 'Confirm new password',
+      changePasswordSubmit: 'Change password',
+      changePasswordSubmitting: 'Updating\u2026',
+      changePasswordSuccess: 'Password updated.',
+      changePasswordFallbackError: 'Update failed.',
+      changePasswordMustMatch: 'Both passwords must match.',
+      changePasswordRulesError:
+        'New password must be at least 8 characters and include a letter and a digit.',
     },
     logout: {
       fallbackError: 'Logout failed.',

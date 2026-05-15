@@ -66,6 +66,16 @@ export async function patchAuthProfile(patch: {
   });
 }
 
+export async function patchChangePassword(
+  currentPassword: string,
+  newPassword: string
+): Promise<void> {
+  await fetchApi('/auth/me/password', {
+    method: 'PATCH',
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+}
+
 export async function postPasswordResetRequest(email: string, locale: string): Promise<void> {
   await fetchApi('/auth/password-reset/request', {
     method: 'POST',

@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { LogOut, Sliders, User } from 'lucide-react';
+import { KeyRound, LogOut, Sliders, User } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
@@ -9,7 +9,137 @@ import { useTranslation } from '@/shared/i18n';
 import ThemeToggle from '@/app/components/ThemeToggle';
 import LanguageSelector from '@/app/components/LanguageSelector';
 import { withReturnTo, ROUTES } from '@/app/routes';
+import { patchChangePassword } from '@/features/auth/api/authApi';
+import { isRegisterPasswordCompliant } from '@/shared/utils/authPasswordRules';
 import styles from './AccountPage.module.css';
+
+function ChangePasswordSection() {
+  const { t } = useTranslation();
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [savedAt, setSavedAt] = useState<number | null>(null);
+  const resetTimerRef = useRef<number | undefined>(undefined);
+  useEffect(() => () => clearTimeout(resetTimerRef.current), []);
+
+  const changeAction = useCallback(async () => {
+    await patchChangePassword(currentPassword, newPassword);
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setSavedAt(Date.now());
+    clearTimeout(resetTimerRef.current);
+    resetTimerRef.current = window.setTimeout(() => setSavedAt(null), 4000);
+  }, [currentPassword, newPassword]);
+
+  const {
+    run: runChange,
+    loading: changing,
+    error: apiError,
+    clearError,
+  } = useAsyncAction(changeAction, t('auth.account.changePasswordFallbackError'));
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setValidationError(null);
+    clearError();
+    setSavedAt(null);
+
+    if (newPassword !== confirmPassword) {
+      setValidationError(t('auth.account.changePasswordMustMatch'));
+      return;
+    }
+    if (!isRegisterPasswordCompliant(newPassword)) {
+      setValidationError(t('auth.account.changePasswordRulesError'));
+      return;
+    }
+    void runChange();
+  };
+
+  const errorMsg = validationError ?? apiError;
+
+  return (
+    <section className="section section--panel" aria-labelledby="change-password-heading">
+      <h2 id="change-password-heading" className={styles.sectionTitle}>
+        <KeyRound size={18} aria-hidden />
+        {t('auth.account.changePasswordTitle')}
+      </h2>
+      <form onSubmit={handleSubmit} className="form" autoComplete="off">
+        {errorMsg && (
+          <p id="change-pw-error" className="error" role="alert">
+            {errorMsg}
+          </p>
+        )}
+        {savedAt != null && !errorMsg && (
+          <p className="hint" role="status" aria-live="polite">
+            {t('auth.account.changePasswordSuccess')}
+          </p>
+        )}
+
+        <label className="label" htmlFor="change-pw-current">
+          {t('auth.account.changePasswordCurrentLabel')}
+        </label>
+        <input
+          id="change-pw-current"
+          type="password"
+          className="input"
+          autoComplete="current-password"
+          value={currentPassword}
+          onChange={(e) => {
+            setCurrentPassword(e.target.value);
+            setValidationError(null);
+            clearError();
+          }}
+          required
+          aria-describedby={errorMsg ? 'change-pw-error' : undefined}
+        />
+
+        <label className="label" htmlFor="change-pw-new">
+          {t('auth.account.changePasswordNewLabel')}
+        </label>
+        <input
+          id="change-pw-new"
+          type="password"
+          className="input"
+          autoComplete="new-password"
+          value={newPassword}
+          onChange={(e) => {
+            setNewPassword(e.target.value);
+            setValidationError(null);
+          }}
+          required
+          aria-describedby="change-pw-new-hint"
+        />
+        <p id="change-pw-new-hint" className="hint">
+          {t('auth.account.changePasswordNewHint')}
+        </p>
+
+        <label className="label" htmlFor="change-pw-confirm">
+          {t('auth.account.changePasswordConfirmLabel')}
+        </label>
+        <input
+          id="change-pw-confirm"
+          type="password"
+          className="input"
+          autoComplete="new-password"
+          value={confirmPassword}
+          onChange={(e) => {
+            setConfirmPassword(e.target.value);
+            setValidationError(null);
+          }}
+          required
+        />
+
+        <button type="submit" className="btn btn-primary" disabled={changing}>
+          {changing
+            ? t('auth.account.changePasswordSubmitting')
+            : t('auth.account.changePasswordSubmit')}
+        </button>
+      </form>
+    </section>
+  );
+}
 
 function PreferencesSection() {
   const { t } = useTranslation();
@@ -147,6 +277,8 @@ export default function AccountPage() {
           </button>
         </form>
       </section>
+
+      <ChangePasswordSection />
 
       <PreferencesSection />
 
