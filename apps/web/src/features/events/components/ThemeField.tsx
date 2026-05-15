@@ -154,7 +154,8 @@ export default function ThemeField({
         />
       </div>
       {!disabled && (
-        <div className={styles.presets} role="group" aria-label="Thèmes suggérés">
+        <fieldset className={styles.presets}>
+          <legend className={styles.presetsLegend}>Thèmes suggérés</legend>
           {(presetsExpanded ? THEME_PRESETS : THEME_PRESETS.slice(0, PRESETS_VISIBLE)).map((p) => (
             <button
               key={p.text}
@@ -179,7 +180,7 @@ export default function ThemeField({
           >
             {presetsExpanded ? '↑' : '···'}
           </button>
-        </div>
+        </fieldset>
       )}
     </>
   );

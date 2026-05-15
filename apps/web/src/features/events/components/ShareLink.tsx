@@ -119,10 +119,10 @@ export default function ShareLink({
           aria-labelledby="share-qr-title"
           onClose={() => setQrOpen(false)}
           onClick={(e) => {
-            // Ferme si on clique sur le backdrop (en dehors du contenu du dialog).
-            if (e.target === e.currentTarget) {
-              setQrOpen(false);
-            }
+            if (e.target === e.currentTarget) setQrOpen(false);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setQrOpen(false);
           }}
         >
           <div className={styles.qrDialogInner}>

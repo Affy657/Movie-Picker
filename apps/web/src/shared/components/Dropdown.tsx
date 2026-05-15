@@ -119,7 +119,7 @@ export default function Dropdown<V extends string>({
   }, [activeIndex, open]);
 
   return (
-    <div ref={rootRef} className={clsx(styles.root, className)} onKeyDown={handleKey}>
+    <div ref={rootRef} className={clsx(styles.root, className)}>
       <button
         ref={buttonRef}
         type="button"
@@ -130,12 +130,20 @@ export default function Dropdown<V extends string>({
         aria-controls={open ? listId : undefined}
         aria-label={ariaLabel}
         onClick={() => setOpen((o) => !o)}
+        onKeyDown={handleKey}
       >
         <span className={styles.triggerLabel}>{selectedLabel}</span>
         <span className={styles.triggerChevron} aria-hidden />
       </button>
       {open ? (
-        <ul ref={listRef} id={listId} role="listbox" className={styles.menu} tabIndex={-1}>
+        <ul
+          ref={listRef}
+          id={listId}
+          role="listbox"
+          className={styles.menu}
+          tabIndex={-1}
+          onKeyDown={handleKey}
+        >
           {options.map((opt, idx) => {
             const selected = opt.value === value;
             return (
@@ -154,6 +162,14 @@ export default function Dropdown<V extends string>({
                   close();
                 }}
                 onMouseEnter={() => setActiveIndex(idx)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onChange(opt.value);
+                    close();
+                  }
+                }}
               >
                 <span className={styles.optionLabel}>{opt.label}</span>
                 {selected ? <Check size={16} aria-hidden className={styles.optionCheck} /> : null}

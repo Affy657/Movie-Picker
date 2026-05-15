@@ -315,7 +315,7 @@ export default function MyEventsPage() {
               className={clsx(styles.tab, tab === 'active' && styles.tabActive)}
               onClick={() => setTab('active')}
             >
-              À venir
+              {'À venir'}
               <span className={styles.tabCount}>{hostedActive.length + joinedActive.length}</span>
             </button>
             <button
@@ -327,7 +327,7 @@ export default function MyEventsPage() {
               className={clsx(styles.tab, tab === 'history' && styles.tabActive)}
               onClick={() => setTab('history')}
             >
-              Historique
+              {'Historique'}
               <span className={styles.tabCount}>{historyEvents.length}</span>
             </button>
           </div>

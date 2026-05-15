@@ -36,8 +36,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background-image:
-    radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
   background-size: 4px 4px;
   opacity: 0.45;
   pointer-events: none;
@@ -141,7 +140,6 @@
 
 .ctaSecondary:hover {
   background: color-mix(in srgb, #f8fafc 8%, transparent);
-  color: #f8fafc;
   transform: none;
   box-shadow: none;
 }
