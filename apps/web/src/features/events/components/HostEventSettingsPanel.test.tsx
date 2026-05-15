@@ -6,7 +6,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
-import { TEST_API_V1 } from '@/mocks/handlers';
+import { TEST_API_V1, authMeGuestHandler } from '@/mocks/handlers';
 import HostEventSettingsPanel from '@/features/events/components/HostEventSettingsPanel';
 import type { EventData } from '@/features/events/types';
 import {
@@ -64,7 +64,7 @@ const baseEvent: EventData = {
 };
 
 describe('HostEventSettingsPanel', () => {
-  const server = setupServer();
+  const server = setupServer(authMeGuestHandler);
 
   beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
   afterEach(() => server.resetHandlers());
