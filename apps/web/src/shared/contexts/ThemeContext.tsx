@@ -87,7 +87,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [preference, setPreferenceState] = useState<UiThemePreference>(() =>
     readStoredPreference()
   );
-  const [accent, setAccentState] = useState<AccentColor>(() => readStoredAccent());
+  const [accentState, setAccentState] = useState<AccentColor>(() => readStoredAccent());
   const [systemDark, setSystemDark] = useState<boolean>(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return false;
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -117,12 +117,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   // `default` = pas d'attribut → utilise les valeurs natives :root/[data-theme=dark].
   useEffect(() => {
-    if (accent === 'default') {
+    if (accentState === 'default') {
       delete document.documentElement.dataset.accent;
     } else {
-      document.documentElement.dataset.accent = accent;
+      document.documentElement.dataset.accent = accentState;
     }
-  }, [accent]);
+  }, [accentState]);
 
   const setUiPreference = useCallback((p: UiThemePreference) => {
     setPreferenceState(p);
@@ -165,7 +165,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setUiPreference,
       toggleTheme,
       applyRemotePreference,
-      accent,
+      accent: accentState,
       setAccent,
       applyRemoteAccent,
     }),
@@ -175,7 +175,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setUiPreference,
       toggleTheme,
       applyRemotePreference,
-      accent,
+      accentState,
       setAccent,
       applyRemoteAccent,
     ]

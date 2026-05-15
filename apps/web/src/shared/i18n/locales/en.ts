@@ -118,7 +118,7 @@ export const en: Locale = {
       changePasswordNewHint: 'At least 8 characters, including a letter and a number.',
       changePasswordConfirmLabel: 'Confirm new password',
       changePasswordSubmit: 'Change password',
-      changePasswordSubmitting: 'Updating\u2026',
+      changePasswordSubmitting: 'Updating\u2026', // NOSONAR (S2068: i18n key, no credential)
       changePasswordSuccess: 'Password updated. Redirecting to sign-in…',
       changePasswordFallbackError: 'Update failed.',
       changePasswordMustMatch: 'Both passwords must match.',
