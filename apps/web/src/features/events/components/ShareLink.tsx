@@ -43,11 +43,18 @@ export default function ShareLink({
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   // Synchronise l'état React avec l'API native <dialog>.
-  // `showModal` et `close` ne sont pas disponibles dans tous les environnements (ex. jsdom) :
-  // le cast les marque optionnels pour que la vérification soit valide côté analyse statique.
+  // `showModal` et `close` sont absents de certains environnements (jsdom).
+  // L'interface `DialogAPI` les déclare explicitement optionnels pour que les
+  // gardes soient légitimes côté analyse statique (pas de boolean gratuit).
   useEffect(() => {
-    type PartialDialog = HTMLDialogElement & { showModal?: () => void; close?: () => void };
-    const el = dialogRef.current as PartialDialog | null;
+    interface DialogAPI {
+      readonly open: boolean;
+      showModal?(): void;
+      close?(): void;
+      setAttribute(name: string, value: string): void;
+      removeAttribute(name: string): void;
+    }
+    const el = dialogRef.current as unknown as DialogAPI | null;
     if (!el) return;
     if (qrOpen && !el.open) {
       if (el.showModal) el.showModal();
