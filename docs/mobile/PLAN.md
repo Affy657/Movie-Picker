@@ -286,11 +286,13 @@
 
 ## Phase 14 — Settings / profil
 
-- [ ] Écran `app/(authed)/settings.tsx` : displayName (édition), email (lecture), thème (system/light/dark), accent (palette), locale (fr/en)
-- [ ] Sous-section "Sécurité" : changer mot de passe
-- [ ] Sous-section "Compte" : déconnexion, suppression compte (si endpoint dispo, sinon "À venir")
-- [ ] PATCH `/auth/me` sur chaque changement (debounced)
-- [ ] Sync thème/accent avec ThemeContext en temps réel
+- [x] Écran `app/(authed)/settings.tsx` : displayName (édition), email (lecture), thème (system/light/dark), accent (palette), locale (fr/en)
+- [x] Sous-section "Sécurité" : changer mot de passe
+- [x] Sous-section "Compte" : déconnexion, suppression compte (si endpoint dispo, sinon "À venir")
+- [x] PATCH `/auth/me` sur chaque changement (debounced)
+  > Debounce pas nécessaire pour le moment : displayName se save via bouton explicite. Thème et accent : PATCH déclenché à chaque tap (un seul tap, donc pas de spam). Locale : purement locale (pas dans le profil API).
+- [x] Sync thème/accent avec ThemeContext en temps réel
+  > `setUiPreference`/`setAccent` (local) appelés d'abord, puis `patchProfile` qui retourne la valeur serveur — `applyRemote*` resynchronise si divergence.
 - [ ] Commit : `feat(mobile): écran settings complet`
 
 ---
@@ -363,14 +365,14 @@
 | 3 — Terrain technique | ✅ | Auth V1 = cookies (Bearer scaffold prêt). i18n locales copiées du web (pas de packages/shared-i18n pour V1). |
 | 4 — Auth | ✅ | Tests AuthContext OK (3/3). Flux register/login/logout end-to-end à confirmer sur device. |
 | 5 — Mes événements + création | ✅ | Datepicker natif reporté en phase 15. Test E2E à valider sur device. |
-| 6 — Détail event (lecture) | ⬜ | |
-| 7 — Rejoindre invité | ⬜ | |
-| 8 — Proposer film | ⬜ | |
-| 9 — Votes + déjà vu | ⬜ | |
-| 10 — Détail film | ⬜ | |
-| 11 — Partage + QR | ⬜ | |
-| 12 — Config hôte | ⬜ | |
-| 13 — Roue + clôture | ⬜ | |
+| 6 — Détail event (lecture) | ✅ | Lifecycle inféré côté client tant que l'API n'expose pas un champ explicite. |
+| 7 — Rejoindre invité | ✅ | "Quitter invité" reporté en phase 15. |
+| 8 — Proposer film | ✅ | Tap = ajout direct (pas de confirmation supplémentaire). |
+| 9 — Votes + déjà vu | ✅ | Optimistic update reporté à la phase 15. |
+| 10 — Détail film | ✅ | watchProviders/tmdbWatchPageUrl récupérés depuis MovieWithScore (l'API détail ne les expose pas). |
+| 11 — Partage + QR | ✅ | Share natif RN + Clipboard + QR. |
+| 12 — Config hôte | ✅ | Kick participant : mutation prête, UI long-press à câbler en phase 15. |
+| 13 — Roue + clôture | ✅ | Roue V1 = disque animé simple. Slices détaillés en phase 15. |
 | 14 — Settings | ⬜ | |
 | 15 — Polish UX | ⬜ | |
 | 16 — Tests | ⬜ | |
