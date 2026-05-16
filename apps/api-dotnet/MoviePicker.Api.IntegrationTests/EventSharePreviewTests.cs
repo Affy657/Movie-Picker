@@ -52,7 +52,7 @@ public sealed class EventSharePreviewTests : IClassFixture<MoviePickerApplicatio
         var html = await res.Content.ReadAsStringAsync();
         Assert.Contains("og:title", html);
         Assert.Contains("publique OG", html);
-        Assert.Contains("août", html); // date formatée en français dans la description OG
+        Assert.Contains("19h30", html); // heure formatée (: → h) dans la description OG riche
         Assert.Contains("https://web.integration.test/e/", html);
     }
 
