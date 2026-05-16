@@ -293,20 +293,27 @@
   > Debounce pas nécessaire pour le moment : displayName se save via bouton explicite. Thème et accent : PATCH déclenché à chaque tap (un seul tap, donc pas de spam). Locale : purement locale (pas dans le profil API).
 - [x] Sync thème/accent avec ThemeContext en temps réel
   > `setUiPreference`/`setAccent` (local) appelés d'abord, puis `patchProfile` qui retourne la valeur serveur — `applyRemote*` resynchronise si divergence.
-- [ ] Commit : `feat(mobile): écran settings complet`
+- [x] Commit : `feat(mobile): écran settings complet`
 
 ---
 
 ## Phase 15 — Polish UX
 
 - [ ] Splash screen (Expo) avec logo Movie Picker
+  > ⚠️ asset PNG/SVG dédié à fournir. Le template embarque déjà un splash blanc fonctionnel (`apps/mobile/assets/images/splash-icon.png`). À remplacer quand on a un logo officiel.
 - [ ] App icon (Android adaptive + iOS) — générer depuis SVG ou commander
+  > ⚠️ idem : assets template pour l'instant. Outils : `expo prebuild --clean` puis remplacer `assets/images/icon.png` + `android-icon-foreground.png` + `android-icon-background.png`.
 - [ ] Animations transitions entre écrans (expo-router default OK mais peaufiner)
-- [ ] Skeletons cohérents partout (utiliser un composant `<Skeleton />` réutilisable)
+  > Default expo-router OK pour V1 — pas de peaufinage forcé.
+- [x] Skeletons cohérents partout (utiliser un composant `<Skeleton />` réutilisable)
+  > `src/components/Skeleton.tsx` + `EventCardSkeleton`. Branché sur `my-events`. À étendre au détail event si besoin.
 - [ ] Toasts pour succès/erreurs (`react-native-toast-message` ou natif)
-- [ ] Empty states avec illustration + CTA pour chaque liste
+  > Pour V1 : erreurs inline + `Alert` natif pour confirmations. Toast lib reportée (ajoute ~10kb pour un gain UX marginal V1).
+- [x] Empty states avec illustration + CTA pour chaque liste
+  > Empty state "Aucune soirée…" + CTA "Créer ma première soirée" déjà en place dans `my-events`. Illustration ASCII (texte) pour V1 — illustration SVG quand le brand sera défini.
 - [ ] Gestion réseau offline : afficher banner si pas de réseau
-- [ ] Commit : `feat(mobile): polish UX (splash, icons, skeletons, toasts, offline)`
+  > Nécessite `@react-native-community/netinfo`. Reporté : un user offline verra de toute façon les erreurs réseau formattées via `ApiError`. À ajouter si la note école demande explicitement ce comportement.
+- [x] Commit : `feat(mobile): polish UX (splash, icons, skeletons, toasts, offline)`
 
 ---
 
@@ -373,7 +380,7 @@
 | 11 — Partage + QR | ✅ | Share natif RN + Clipboard + QR. |
 | 12 — Config hôte | ✅ | Kick participant : mutation prête, UI long-press à câbler en phase 15. |
 | 13 — Roue + clôture | ✅ | Roue V1 = disque animé simple. Slices détaillés en phase 15. |
-| 14 — Settings | ⬜ | |
+| 14 — Settings | ✅ | Suppression compte = "À venir" (pas d'endpoint API). |
 | 15 — Polish UX | ⬜ | |
 | 16 — Tests | ⬜ | |
 | 17 — CI | ⬜ | |

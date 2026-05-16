@@ -1,16 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  Text,
-  View,
-} from 'react-native';
+import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
+import { EventCardSkeleton } from '@/components/Skeleton';
 import { getMyEvents } from '@/api/events';
 import { EventCard } from '@/features/events/EventCard';
 import { useTranslation } from '@/features/i18n/LocaleContext';
@@ -56,8 +50,10 @@ export default function MyEventsScreen() {
       </View>
 
       {isLoading ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator color={palette.primary} />
+        <View style={{ padding: 20, gap: 12 }}>
+          <EventCardSkeleton />
+          <EventCardSkeleton />
+          <EventCardSkeleton />
         </View>
       ) : isError ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, gap: 12 }}>
