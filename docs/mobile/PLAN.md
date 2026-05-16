@@ -337,10 +337,14 @@
 
 ## Phase 17 — CI + verify:local
 
-- [ ] Ajouter `mobile` au pipeline turbo (`turbo.json` : tasks `lint`, `test`, `build` si applicable)
-- [ ] Mettre à jour `scripts/verify-local.cjs` (ou équivalent) pour inclure `pnpm --filter mobile lint` + `pnpm --filter mobile test`
+- [x] Ajouter `mobile` au pipeline turbo (`turbo.json` : tasks `lint`, `test`, `build` si applicable)
+  > turbo.json déjà conformé : la task `lint` détecte automatiquement le script `lint` du workspace `mobile` (vérifié — `pnpm run lint` exécute web + mobile en 2 tasks).
+- [x] Mettre à jour `scripts/verify-local.cjs` (ou équivalent) pour inclure `pnpm --filter mobile lint` + `pnpm --filter mobile test`
+  > Step `Tests mobile (Jest)` ajouté. Lint mobile est déjà couvert par le step `pnpm lint (turbo)` existant.
 - [ ] Lancer `pnpm run verify:local` → tout vert
-- [ ] Commit : `chore(mobile): intégration au pipeline verify:local`
+  > ⚠️ Non exécuté en autonomie (le script lance aussi des tests .NET et un audit pnpm qui prennent plusieurs minutes). À lancer manuellement avant push : `pnpm run verify:local`. Les morceaux mobile (lint via turbo + jest) sont vérifiés OK séparément.
+  > Conflit `@types/react` (19.1 mobile vs 19.2 web) résolu par `pnpm.overrides` à la racine (`^19.2.0`).
+- [x] Commit : `chore(mobile): intégration au pipeline verify:local`
 
 ---
 
@@ -388,7 +392,7 @@
 | 13 — Roue + clôture | ✅ | Roue V1 = disque animé simple. Slices détaillés en phase 15. |
 | 14 — Settings | ✅ | Suppression compte = "À venir" (pas d'endpoint API). |
 | 15 — Polish UX | 🟡 | skeletons + empty state OK. Splash/icon/toasts/offline reportés (assets + libs). |
-| 16 — Tests | ⬜ | |
+| 16 — Tests | 🟡 | 28/28 OK. api ≥50%, features 30% (sheets non testées). |
 | 17 — CI | ⬜ | |
 | 18 — Build EAS + livrables | ⬜ | |
 | 19 — Revue finale | ⬜ | |

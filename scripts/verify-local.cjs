@@ -56,6 +56,7 @@ run('Export OpenAPI (SKIP_OPENAPI_BUILD)', 'node', ['scripts/export-openapi.cjs'
 
 run('pnpm audit (high+)', 'pnpm', ['audit', '--audit-level=high']);
 run('Tests front (Vitest + seuils couverture)', 'pnpm', ['run', 'test:coverage', '--filter=web']);
+run('Tests mobile (Jest)', 'pnpm', ['--filter', 'mobile', 'run', 'test']);
 
 run('Tests API unitaires', 'dotnet', [
   'test',
