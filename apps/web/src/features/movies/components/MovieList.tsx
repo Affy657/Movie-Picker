@@ -11,6 +11,7 @@ import { markMovieAsSeen, unmarkMovieAsSeen } from '@/features/movies/api/movies
 import { othersAlreadySeenHint } from '@/features/movies/utils/seenHint';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
+import { useMovieDetails } from '@/features/movies/hooks/useMovieDetails';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import {
   MovieDetailsToggle,
@@ -18,6 +19,30 @@ import {
 } from '@/features/movies/components/MovieDetailsPanel';
 import TmdbAttribution from '@/features/movies/components/TmdbAttribution';
 import styles from './MovieList.module.css';
+
+function getGenreEmoji(genre: string): string {
+  const g = genre.toLowerCase();
+  if (g.includes('action')) return '⚔️';
+  if (g.includes('animation')) return '🎨';
+  if (g.includes('aventure') || g.includes('adventure')) return '🗺️';
+  if (g.includes('com')) return '😂';
+  if (g.includes('crime')) return '🔫';
+  if (g.includes('documentaire') || g.includes('documentary')) return '🎥';
+  if (g.includes('drame') || g.includes('drama')) return '🎭';
+  if (g.includes('famille') || g.includes('family')) return '👨‍👩‍👧';
+  if (g.includes('fantas')) return '✨';
+  if (g.includes('horreur') || g.includes('horror')) return '😱';
+  if (g.includes('musique') || g.includes('music')) return '🎵';
+  if (g.includes('myst')) return '🔍';
+  if (g.includes('romance') || g.includes('romantique') || g.includes('romantic')) return '❤️';
+  if (g.includes('sci') || g.includes('science')) return '🚀';
+  if (g.includes('thriller')) return '🕵️';
+  if (g.includes('western')) return '🤠';
+  if (g.includes('histoire') || g.includes('history') || g.includes('histor')) return '🏛️';
+  if (g.includes('guerre') || g.includes('war')) return '🎖️';
+  if (g.includes('sport')) return '🏆';
+  return '🎬';
+}
 
 type Translate = (key: TranslationKey, vars?: Record<string, string | number>) => string;
 
@@ -83,6 +108,8 @@ const MovieCard = memo(function MovieCard({
   const [detailsOpen, setDetailsOpen] = useState(false);
   const detailsPanelId = useId();
   const hasDetails = m.tmdbId > 0;
+  const { data: detailsData } = useMovieDetails(hasDetails ? m.tmdbId : undefined, false);
+  const genres = detailsData?.genres ?? [];
 
   const handleToggleSeen = async () => {
     if (!participantId || seenPending) return;
@@ -169,7 +196,28 @@ const MovieCard = memo(function MovieCard({
         ) : (
           <p className={styles.providersEmpty}>{t('movies.watchProviders.emptyLabel')}</p>
         )}
+        {genres.length > 0 && (
+          <div className={styles.genreTags}>
+            {genres.slice(0, 3).map((g) => (
+              <span key={g} className={styles.genreTag}>
+                {getGenreEmoji(g)} {g}
+              </span>
+            ))}
+          </div>
+        )}
         {seenHint ? <p className={styles.seenHint}>{seenHint}</p> : null}
+        <p className={styles.proposerLine}>
+          {m.proposerPseudo ? (
+            isMine ? (
+              <>
+                {t('movies.list.proposedByMeLead')}
+                <span className={styles.selfProposer}>{t('movies.list.proposedByMeSelf')}</span>
+              </>
+            ) : (
+              t('movies.list.proposedBy', { pseudo: m.proposerPseudo })
+            )
+          ) : null}
+        </p>
         {!isFinished && participantId && (
           <div className={styles.actions} role="group" aria-label={m.title}>
             <button
@@ -222,18 +270,6 @@ const MovieCard = memo(function MovieCard({
             </button>
           </div>
         )}
-        <p className={styles.proposerLine}>
-          {m.proposerPseudo ? (
-            isMine ? (
-              <>
-                {t('movies.list.proposedByMeLead')}
-                <span className={styles.selfProposer}>{t('movies.list.proposedByMeSelf')}</span>
-              </>
-            ) : (
-              t('movies.list.proposedBy', { pseudo: m.proposerPseudo })
-            )
-          ) : null}
-        </p>
       </div>
       {hasDetails ? (
         <MovieDetailsContent

@@ -158,8 +158,28 @@
   color: var(--color-text-muted);
 }
 
+.genreTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0.15rem 0 0;
+}
+
+.genreTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
 .proposerLine {
-  margin: 0.3rem 0 0;
+  margin: 0.15rem 0 0;
   font-size: 0.8125rem;
   color: var(--color-meta);
   min-height: 1.2rem;
