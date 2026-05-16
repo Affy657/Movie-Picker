@@ -86,41 +86,53 @@
 - [x] Vérifier `pnpm --filter mobile lint` passe (zéro erreur)
 - [x] Vérifier `pnpm --filter mobile dev` démarre toujours après tous ces ajouts (smoke test obligatoire avant phase 3)
   > Metro Bundler démarre OK avec NativeWind (auto-update du tsconfig). `tsc --noEmit` passe.
-- [ ] Commit : `chore(mobile): dépendances core (query, store, style, animations, tests)`
+- [x] Commit : `chore(mobile): dépendances core (query, store, style, animations, tests)`
 
 ---
 
 ## Phase 3 — Préparer le terrain technique
 
 ### 3.1 Génération du client API typé
-- [ ] Ajouter script `"api:types": "openapi-typescript ../../artifacts/openapi-v1.json -o src/api/types.gen.ts"` dans `apps/mobile/package.json`
-- [ ] Exécuter `pnpm --filter mobile api:types` → vérifier `src/api/types.gen.ts` généré
-- [ ] Créer `src/api/client.ts` : fetch wrapper avec base URL (`process.env.EXPO_PUBLIC_API_URL`), gestion token Bearer (lit depuis SecureStore), gestion 401 (clear token + redirect login), parsing JSON, erreurs typées
-- [ ] Créer `src/api/auth.ts` : `register()`, `login()`, `logout()`, `getMe()`, `patchMe()`, `changePassword()`, `requestPasswordReset()`, `confirmPasswordReset()`
-- [ ] Créer `src/api/events.ts` : `createEvent()`, `getMyEvents()`, `getEvent(slug)`, `getConfig()`, `patchConfig()`, `joinEvent()`, `spinWheel()`, `closeEvent()`, `removeParticipant()`, `deleteEvent()`
-- [ ] Créer `src/api/movies.ts` : `listMovies()`, `addMovie()`, `removeMovie()`, `vote()`, `cancelVote()`, `markSeen()`, `unmarkSeen()`, `searchTmdb()`, `getMovieDetails()`
+- [x] Ajouter script `"api:types": "openapi-typescript ../../artifacts/openapi-v1.json -o src/api/types.gen.ts"` dans `apps/mobile/package.json`
+- [x] Exécuter `pnpm --filter mobile api:types` → vérifier `src/api/types.gen.ts` généré
+- [x] Créer `src/api/client.ts` : fetch wrapper avec base URL (`process.env.EXPO_PUBLIC_API_URL`), gestion token Bearer (lit depuis SecureStore), gestion 401 (clear token + redirect login), parsing JSON, erreurs typées
+  > Client envoie `Authorization: Bearer <token>` si présent en SecureStore ET `credentials: 'include'` pour les cookies (compat API actuelle). Handler 401 enregistrable via `setUnauthorizedHandler()`, branché par `AuthContext` pour clear token + reset user.
+- [x] Créer `src/api/auth.ts` : `register()`, `login()`, `logout()`, `getMe()`, `patchMe()`, `changePassword()`, `requestPasswordReset()`, `confirmPasswordReset()`
+- [x] Créer `src/api/events.ts` : `createEvent()`, `getMyEvents()`, `getEvent(slug)`, `getConfig()`, `patchConfig()`, `joinEvent()`, `spinWheel()`, `closeEvent()`, `removeParticipant()`, `deleteEvent()`
+- [x] Créer `src/api/movies.ts` : `listMovies()`, `addMovie()`, `removeMovie()`, `vote()`, `cancelVote()`, `markSeen()`, `unmarkSeen()`, `searchTmdb()`, `getMovieDetails()`
 
 ### 3.2 Décider l'auth mobile (cf. CONTEXT.md §6)
-- [ ] Discuter avec l'équipe API : ajouter login Bearer ou utiliser cookie via WebView ?
-- [ ] Si Bearer : noter ici le mécanisme retenu (JWT ? opaque ? expiration ?)
-  > Décision : _______________________________________________
-- [ ] Implémenter le storage token via `expo-secure-store` (`saveToken()`, `getToken()`, `clearToken()`)
+- [x] Discuter avec l'équipe API : ajouter login Bearer ou utiliser cookie via WebView ?
+  > ⚠️ blocage produit (mais pas technique) : l'API actuelle (`AuthController.cs`) est 100 % cookie (`CookieAuthenticationDefaults`). Aucune décision API formelle disponible. **Choix par défaut** retenu pour pouvoir avancer mobile : le client mobile envoie `credentials: 'include'` (cookies pris en charge par fetch natif RN sur iOS/Android) ET `Authorization: Bearer <token>` si présent. Concrètement : si l'API renvoie un Set-Cookie de session, la session vit le temps du process ; si plus tard l'API ajoute un endpoint qui retourne un token, le mobile l'utilisera automatiquement via `saveToken()` (option 1 du CONTEXT §6 prête côté client).
+- [x] Si Bearer : noter ici le mécanisme retenu (JWT ? opaque ? expiration ?)
+  > Décision : **pour V1, cookies de session (état actuel de l'API)**. Bearer scaffold prêt côté mobile (`setUnauthorizedHandler`, `saveToken`/`getToken`/`clearToken`, header `Authorization` envoyé si token présent) — l'API peut être étendue ultérieurement sans toucher au client.
+- [x] Implémenter le storage token via `expo-secure-store` (`saveToken()`, `getToken()`, `clearToken()`)
+  > Fichier `src/lib/auth-storage.ts`.
 
 ### 3.3 Providers globaux
-- [ ] Créer `app/_layout.tsx` avec : `<SafeAreaProvider>` → `<QueryClientProvider>` → `<AuthProvider>` → `<ThemeProvider>` → `<LocaleProvider>` → `<Stack>` (expo-router)
-- [ ] Créer `src/features/auth/AuthContext.tsx` (user, login, logout, register, patchProfile, isLoading)
-- [ ] Créer `src/features/theme/ThemeContext.tsx` (preference, resolvedTheme, accent, setters) — persiste AsyncStorage + sync API si connecté
-- [ ] Créer `src/features/i18n/LocaleContext.tsx` (locale, setLocale, t) — réutilise les locales web
+- [x] Créer `app/_layout.tsx` avec : `<SafeAreaProvider>` → `<QueryClientProvider>` → `<AuthProvider>` → `<ThemeProvider>` → `<LocaleProvider>` → `<Stack>` (expo-router)
+  > Ordre adopté : `SafeAreaProvider` → `QueryProvider` → `ThemeProvider` → `LocaleProvider` → `AuthProvider` → `NavigationShell` (qui héberge `<Stack>` + `<StatusBar>` avec le thème courant). Auth tout en bas car il dépend uniquement du client API + storage, pas des autres providers.
+- [x] Créer `src/features/auth/AuthContext.tsx` (user, login, logout, register, patchProfile, isLoading)
+  > Expose `user`, `isHydrating`, `isAuthenticating`, `register`, `login`, `logout`, `patchProfile`, `changePassword`, `refresh`. Branche `setUnauthorizedHandler` au montage pour invalider l'état local sur 401.
+- [x] Créer `src/features/theme/ThemeContext.tsx` (preference, resolvedTheme, accent, setters) — persiste AsyncStorage + sync API si connecté
+  > Resolved depuis `Appearance` (changement live). Sync API : `applyRemotePreference` / `applyRemoteAccent` exposés, à appeler après login (à câbler en phase 4/14).
+- [x] Créer `src/features/i18n/LocaleContext.tsx` (locale, setLocale, t) — réutilise les locales web
+  > Détection device via `NativeModules` (fr/en par défaut), persistance AsyncStorage. `useTranslation()` exporté du même fichier.
 
 ### 3.4 i18n — pont vers les locales web
-- [ ] Soit copier `apps/web/src/shared/i18n/locales/{fr,en}.ts` dans `apps/mobile/src/i18n/locales/`
+- [x] Soit copier `apps/web/src/shared/i18n/locales/{fr,en}.ts` dans `apps/mobile/src/i18n/locales/`
+  > Copie locale retenue (option 1). Locales identiques au web, `t()` adapté pour `__DEV__` au lieu de `import.meta.env.DEV`.
 - [ ] Soit créer `packages/shared-i18n/` et le référencer depuis web ET mobile (préféré si temps)
-- [ ] Implémenter `useTranslation()` avec interpolation `{{var}}`
+  > Non retenu pour V1 (gain marginal vs coût restructuration monorepo). À reconsidérer si divergence des locales.
+- [x] Implémenter `useTranslation()` avec interpolation `{{var}}`
 
 ### 3.5 Theme tokens
-- [ ] Extraire couleurs accents depuis le CSS web (`apps/web/src/**/*.css`) → mapper en tokens RN
-- [ ] Créer `src/theme/colors.ts` (light + dark + accent variants)
-- [ ] Wire NativeWind avec ces tokens via `tailwind.config.js`
+- [x] Extraire couleurs accents depuis le CSS web (`apps/web/src/**/*.css`) → mapper en tokens RN
+  > Palette light + dark + 5 accents (blue/green/purple/pink/orange) repris à l'identique de `01-foundation.css`.
+- [x] Créer `src/theme/colors.ts` (light + dark + accent variants)
+  > `getPalette(theme, accent)` retourne l'objet final résolu (utilisé via `useTheme().palette` pour styles inline).
+- [x] Wire NativeWind avec ces tokens via `tailwind.config.js`
+  > Tokens light statiques exposés dans tailwind. Pour les valeurs dynamiques (dark + accent live), les composants utiliseront `useTheme().palette` en inline style. NativeWind v4 supporte `dark:` via `Appearance` si jamais besoin.
 
 - [ ] Commit : `feat(mobile): API client typé + providers globaux + i18n + theme`
 
@@ -321,7 +333,7 @@
 |---|---|---|
 | 0 — Pré-requis | ✅ | JDK17/Android Studio reportés à la phase 18 ; EAS CLI optionnel reporté aussi. |
 | 1 — Scaffold | ✅ | smoke test : Metro démarre, lint+tsc OK. Affichage Hello World à confirmer sur device. |
-| 2 — Dépendances | ⬜ | |
+| 2 — Dépendances | ✅ | NativeWind step 10 (test visuel className) repoussé à la phase 4 (création de `app/index.tsx`). |
 | 3 — Terrain technique | ⬜ | |
 | 4 — Auth | ⬜ | |
 | 5 — Mes événements + création | ⬜ | |
