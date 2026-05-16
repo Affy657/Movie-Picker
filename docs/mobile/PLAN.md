@@ -47,7 +47,7 @@
   > Template fournit `.expo/`, ajout de `.env` + `.env.*` (avec exception `.env.example`).
 - [x] Premier lancement réussi : `pnpm --filter mobile dev` → QR code affiché, app par défaut sur émulateur ou Expo Go
   > Smoke test : `expo start --offline` démarre Metro Bundler sur `localhost:8081` sans erreur. `pnpm lint` et `tsc --noEmit` passent. Pas de device/émulateur disponible pour valider l'affichage Hello World ; à confirmer manuellement par l'utilisateur côté Expo Go quand un device est dispo.
-- [ ] Commit : `feat(mobile): scaffold initial Expo + expo-router + TypeScript`
+- [x] Commit : `feat(mobile): scaffold initial Expo + expo-router + TypeScript`
 
 ---
 
@@ -55,12 +55,14 @@
 
 > ℹ️ expo-router est déjà installé par le template par défaut de la phase 1. Si tu as malgré tout pris `expo-template-blank-typescript`, ajoute manuellement `expo-router react-native-safe-area-context react-native-screens expo-linking expo-constants expo-status-bar` puis change `"main"` en `"expo-router/entry"` dans `package.json` et configure le plugin `expo-router` + `scheme` dans `app.json`.
 
-- [ ] Installer data : `pnpm --filter mobile add @tanstack/react-query`
-- [ ] Installer state : `pnpm --filter mobile add zustand`
-- [ ] Installer storage : `pnpm --filter mobile add expo-secure-store @react-native-async-storage/async-storage`
-- [ ] Installer forms : `pnpm --filter mobile add react-hook-form zod @hookform/resolvers`
-- [ ] Installer animations : `pnpm --filter mobile add react-native-reanimated react-native-gesture-handler` puis **ajouter `'react-native-reanimated/plugin'` en dernier dans `babel.config.js`** (obligatoire, sinon crash au runtime)
-- [ ] **Installer NativeWind v4** — séquence complète obligatoire :
+- [x] Installer data : `pnpm --filter mobile add @tanstack/react-query`
+- [x] Installer state : `pnpm --filter mobile add zustand`
+- [x] Installer storage : `pnpm --filter mobile add expo-secure-store @react-native-async-storage/async-storage`
+  > Utilisé `pnpm exec expo install` pour aligner sur les versions SDK 54.
+- [x] Installer forms : `pnpm --filter mobile add react-hook-form zod @hookform/resolvers`
+- [x] Installer animations : `pnpm --filter mobile add react-native-reanimated react-native-gesture-handler` puis **ajouter `'react-native-reanimated/plugin'` en dernier dans `babel.config.js`** (obligatoire, sinon crash au runtime)
+  > Déjà installés par le template default (reanimated ~4.1.1 + gesture-handler ~2.28). Reanimated v4 utilise `react-native-worklets/plugin` (renommé). Plugin ajouté dans `babel.config.js`.
+- [x] **Installer NativeWind v4** — séquence complète obligatoire :
   1. `pnpm --filter mobile add nativewind react-native-reanimated` (reanimated déjà fait ci-dessus)
   2. `pnpm --filter mobile add -D tailwindcss@^3.4 prettier-plugin-tailwindcss`
   3. `pnpm --filter mobile exec tailwindcss init` → `tailwind.config.js`
@@ -71,15 +73,19 @@
   8. Dans `babel.config.js` : ajouter `presets: [['babel-preset-expo', { jsxImportSource: 'nativewind' }], 'nativewind/babel']`
   9. Créer `apps/mobile/nativewind-env.d.ts` avec `/// <reference types="nativewind/types" />`
   10. Tester : ajouter `className="text-red-500"` dans `app/index.tsx`, vérifier la couleur appliquée
-- [ ] Installer QR : `pnpm --filter mobile add react-native-qrcode-svg react-native-svg`
-- [ ] Installer clipboard : `pnpm --filter mobile add expo-clipboard`
+  > Steps 1-9 done. Step 10 reporté en phase 4 (l'écran `app/index.tsx` sera créé à ce moment-là ; pour l'instant le template default a l'écran d'accueil en `app/(tabs)/index.tsx` qu'on remplacera). `nativewind-env.d.ts` ajouté automatiquement à `tsconfig.json` par NativeWind au premier démarrage Metro.
+- [x] Installer QR : `pnpm --filter mobile add react-native-qrcode-svg react-native-svg`
+- [x] Installer clipboard : `pnpm --filter mobile add expo-clipboard`
   > Note : pour partager une URL/texte on utilise l'API native `Share.share()` de `react-native` (built-in, pas de package). `expo-sharing` ne sert qu'à partager des **fichiers locaux** — pas applicable ici.
-- [ ] Installer génération OpenAPI : `pnpm --filter mobile add -D openapi-typescript`
-- [ ] Installer tests : `pnpm --filter mobile add -D jest jest-expo @testing-library/react-native @types/jest`
+- [x] Installer génération OpenAPI : `pnpm --filter mobile add -D openapi-typescript`
+- [x] Installer tests : `pnpm --filter mobile add -D jest jest-expo @testing-library/react-native @types/jest`
   > Ne pas installer `@testing-library/jest-native` : déprécié depuis RTL-RN v12.4 (matchers built-in).
-- [ ] Configurer Jest dans `apps/mobile/package.json` (preset `jest-expo`)
-- [ ] Vérifier `pnpm --filter mobile lint` passe (zéro erreur)
-- [ ] Vérifier `pnpm --filter mobile dev` démarre toujours après tous ces ajouts (smoke test obligatoire avant phase 3)
+  > Ajouté aussi `react-test-renderer` (peer dep). Warnings peer-dep mineurs (`react-test-renderer 19.2 vs react 19.1`, `jest-watch-typeahead` vs jest 30) — à surveiller en phase 16.
+- [x] Configurer Jest dans `apps/mobile/package.json` (preset `jest-expo`)
+  > Ajouté aussi le `transformIgnorePatterns` standard pour RN/Expo + script `"test": "jest"` et `"api:types"`.
+- [x] Vérifier `pnpm --filter mobile lint` passe (zéro erreur)
+- [x] Vérifier `pnpm --filter mobile dev` démarre toujours après tous ces ajouts (smoke test obligatoire avant phase 3)
+  > Metro Bundler démarre OK avec NativeWind (auto-update du tsconfig). `tsc --noEmit` passe.
 - [ ] Commit : `chore(mobile): dépendances core (query, store, style, animations, tests)`
 
 ---
@@ -314,7 +320,7 @@
 | Phase | Statut | Notes |
 |---|---|---|
 | 0 — Pré-requis | ✅ | JDK17/Android Studio reportés à la phase 18 ; EAS CLI optionnel reporté aussi. |
-| 1 — Scaffold | 🟡 | code prêt, commit à faire |
+| 1 — Scaffold | ✅ | smoke test : Metro démarre, lint+tsc OK. Affichage Hello World à confirmer sur device. |
 | 2 — Dépendances | ⬜ | |
 | 3 — Terrain technique | ⬜ | |
 | 4 — Auth | ⬜ | |
