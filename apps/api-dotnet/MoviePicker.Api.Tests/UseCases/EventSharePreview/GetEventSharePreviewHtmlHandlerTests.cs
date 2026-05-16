@@ -74,6 +74,6 @@ public sealed class GetEventSharePreviewHtmlHandlerTests
         var sut = CreateSut();
         var html = await sut.BuildHtmlAsync("s2", "https://api.example", default);
 
-        Assert.Contains("property=\"og:title\" content=\"&lt;script&gt;alert(1)&lt;/script&gt;\"", html);
+        Assert.Contains("property=\"og:title\" content=\"&lt;script&gt;alert(1)&lt;/script&gt; · Movie Picker\"", html);
     }
 }
