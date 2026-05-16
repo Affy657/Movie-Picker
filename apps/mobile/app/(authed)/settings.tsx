@@ -44,7 +44,6 @@ export default function SettingsScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [pwError, setPwError] = useState<string | null>(null);
   const [pwSubmitting, setPwSubmitting] = useState(false);
-  const [pwSuccess, setPwSuccess] = useState(false);
 
   const saveName = async () => {
     if (displayName.trim() === user?.displayName) return;
@@ -85,22 +84,19 @@ export default function SettingsScreen() {
 
   const submitPassword = async () => {
     setPwError(null);
-    setPwSuccess(false);
     if (newPassword.length < 8 || !/[A-Za-z]/.test(newPassword) || !/\d/.test(newPassword)) {
       setPwError(t('auth.register.passwordRulesError'));
       return;
     }
     setPwSubmitting(true);
     try {
-      // Le contexte chaîne PATCH /auth/me/password + clearToken + setUser(null)
-      // (la session est invalidée côté API). Pas d'appel direct à apiChangePassword.
+      // Le contexte chaîne PATCH /auth/me/password + clearToken + setUser(null).
+      // Au retour, `user === null` et `(authed)/_layout` va Redirect vers /login
+      // → SettingsScreen unmount. On ne touche plus au state local pour éviter
+      // les warnings React "state update on unmounted component" en dev.
       await changePasswordCtx({ currentPassword, newPassword });
-      setPwSuccess(true);
-      setCurrentPassword('');
-      setNewPassword('');
     } catch (err) {
       setPwError(err instanceof ApiError ? err.message : 'Mise à jour impossible.');
-    } finally {
       setPwSubmitting(false);
     }
   };
@@ -226,9 +222,6 @@ export default function SettingsScreen() {
             {t('auth.register.passwordRulesHint')}
           </Text>
           {pwError ? <Text style={{ color: palette.error }}>{pwError}</Text> : null}
-          {pwSuccess ? (
-            <Text style={{ color: palette.success }}>Mot de passe mis à jour. Reconnecte-toi.</Text>
-          ) : null}
           <Button
             label={pwSubmitting ? 'Mise à jour…' : 'Changer le mot de passe'}
             variant="secondary"
