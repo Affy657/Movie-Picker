@@ -11,6 +11,7 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "test": "jest",
+    "test:coverage": "jest --coverage --coverageReporters=text-summary --collectCoverageFrom='src/api/**/*.ts' --collectCoverageFrom='src/i18n/**/*.ts' --collectCoverageFrom='src/theme/**/*.ts' --collectCoverageFrom='src/features/**/*.ts' --collectCoverageFrom='src/features/**/*.tsx' --collectCoverageFrom='src/lib/**/*.ts'",
     "api:types": "openapi-typescript ../../artifacts/openapi-v1.json -o src/api/types.gen.ts"
   },
   "jest": {
