@@ -154,7 +154,7 @@
   > ⚠️ blocage : impossible à valider end-to-end sans émulateur/device + API joignable. Les écrans compilent, lint passent, tests unitaires AuthContext passent (3/3). À valider manuellement par l'utilisateur sur Expo Go.
 - [x] Test unitaire : `AuthContext` avec mocks fetch
   > `src/features/auth/AuthContext.test.tsx` : hydration guest (401), hydration user (200), logout. Dû downgrader jest 30 → 29 pour compat jest-expo 55, et passer `transformIgnorePatterns: []` (pnpm + RN ESM) — slow mais bulletproof. À raffiner en phase 16 si la durée des tests devient un problème.
-- [ ] Commit : `feat(mobile): auth complète (login, register, reset, profil)`
+- [x] Commit : `feat(mobile): auth complète (login, register, reset, profil)`
 
 ---
 
@@ -162,13 +162,16 @@
 
 > 📐 **Navigation `(authed)`** : utiliser un `<Tabs>` à 2 onglets — `my-events` (liste + accueil) et `settings`. L'écran `new` reste hors-tabs (Stack), poussé par un FAB depuis my-events. Détail event `app/e/[slug].tsx` est aussi un Stack push (hors tabs) car accessible aux invités non connectés.
 
-- [ ] Écran `app/(authed)/my-events.tsx` : liste `useQuery(['events', 'mine'])` avec FlatList
-- [ ] Composant `EventCard` : titre, date, statut (upcoming/live/finished), participants count, films count, theme emoji
-- [ ] États : loading skeleton, empty (CTA "Créer ma première soirée"), error
-- [ ] Pull-to-refresh (RefreshControl)
-- [ ] Bouton flottant "Créer" → navigue `/(authed)/new`
-- [ ] Écran `app/(authed)/new.tsx` : formulaire (titre, date, time) → POST `/events` → redirect `/e/{slug}`
+- [x] Écran `app/(authed)/my-events.tsx` : liste `useQuery(['events', 'mine'])` avec FlatList
+- [x] Composant `EventCard` : titre, date, statut (upcoming/live/finished), participants count, films count, theme emoji
+- [x] États : loading skeleton, empty (CTA "Créer ma première soirée"), error
+  > Loading via `<ActivityIndicator>` (skeleton plus poussé à raffiner en phase 15 polish). Empty + error gérés.
+- [x] Pull-to-refresh (RefreshControl)
+- [x] Bouton flottant "Créer" → navigue `/(authed)/new`
+- [x] Écran `app/(authed)/new.tsx` : formulaire (titre, date, time) → POST `/events` → redirect `/e/{slug}`
+  > Date/heure en TextField avec regex (AAAA-MM-JJ / HH:MM). Datepicker natif reporté à la phase 15 (UX polish).
 - [ ] Test : créer un event, le voir apparaître dans la liste
+  > ⚠️ blocage : nécessite device/émulateur + API. Code compile, lint OK, types OK, Metro bundle OK. À valider manuellement par l'utilisateur.
 - [ ] Commit : `feat(mobile): liste mes événements + création`
 
 ---
@@ -340,7 +343,7 @@
 | 1 — Scaffold | ✅ | smoke test : Metro démarre, lint+tsc OK. Affichage Hello World à confirmer sur device. |
 | 2 — Dépendances | ✅ | NativeWind step 10 (test visuel className) repoussé à la phase 4 (création de `app/index.tsx`). |
 | 3 — Terrain technique | ✅ | Auth V1 = cookies (Bearer scaffold prêt). i18n locales copiées du web (pas de packages/shared-i18n pour V1). |
-| 4 — Auth | ⬜ | |
+| 4 — Auth | ✅ | Tests AuthContext OK (3/3). Flux register/login/logout end-to-end à confirmer sur device. |
 | 5 — Mes événements + création | ⬜ | |
 | 6 — Détail event (lecture) | ⬜ | |
 | 7 — Rejoindre invité | ⬜ | |
