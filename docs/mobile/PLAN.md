@@ -172,97 +172,115 @@
   > Date/heure en TextField avec regex (AAAA-MM-JJ / HH:MM). Datepicker natif reporté à la phase 15 (UX polish).
 - [ ] Test : créer un event, le voir apparaître dans la liste
   > ⚠️ blocage : nécessite device/émulateur + API. Code compile, lint OK, types OK, Metro bundle OK. À valider manuellement par l'utilisateur.
-- [ ] Commit : `feat(mobile): liste mes événements + création`
+- [x] Commit : `feat(mobile): liste mes événements + création`
 
 ---
 
 ## Phase 6 — Détail événement (vue lecture)
 
-- [ ] Écran `app/e/[slug].tsx` : récupère `useQuery(['events', slug])` → `getEvent(slug)`
-- [ ] Header : titre, date/heure, statut, thème emoji
-- [ ] Section participants : liste avec pseudo + indicateur hôte
-- [ ] Section films : liste FlatList avec `MovieCard`
-- [ ] Composant `MovieCard` : poster (Image avec fallback), titre, année, score, votes up/down, chips genres + emoji, runtime, watch providers (logos), badge "déjà vu"
-- [ ] Gestion mode invité : si user non auth, lire `mp-guest-participant-{slug}` depuis AsyncStorage
-- [ ] Si pas de participant invité ni user : afficher CTA "Rejoindre"
-- [ ] Commit : `feat(mobile): écran détail événement (lecture)`
+- [x] Écran `app/e/[slug].tsx` : récupère `useQuery(['events', slug])` → `getEvent(slug)`
+- [x] Header : titre, date/heure, statut, thème emoji
+  > Statut inféré côté client (`inferLifecycle`) tant qu'on n'a pas un champ explicite sur `EventDetailResponse`. Si l'API expose un lifecycle officiel plus tard, basculer dessus.
+- [x] Section participants : liste avec pseudo + indicateur hôte
+- [x] Section films : liste FlatList avec `MovieCard`
+- [x] Composant `MovieCard` : poster (Image avec fallback), titre, année, score, votes up/down, chips genres + emoji, runtime, watch providers (logos), badge "déjà vu"
+  > Chips genres + watch providers déportés vers `MovieDetailSheet` (phase 10) — la carte reste compacte (poster, titre, year, score, runtime, votes, seen, proposer). À débattre côté UX si on remonte les genres directement dans la carte.
+- [x] Gestion mode invité : si user non auth, lire `mp-guest-participant-{slug}` depuis AsyncStorage
+  > `src/lib/guest-storage.ts`.
+- [x] Si pas de participant invité ni user : afficher CTA "Rejoindre"
+- [x] Commit : `feat(mobile): écran détail événement (lecture)`
 
 ---
 
 ## Phase 7 — Rejoindre + actions invité
 
-- [ ] Bouton "Rejoindre" → modal/sheet pseudo
-- [ ] POST `/events/{slug}/join` → stocke `{participantId, pseudo}` dans AsyncStorage (clé `mp-guest-participant-{slug}`)
-- [ ] Invalide `['events', slug]` après join
+- [x] Bouton "Rejoindre" → modal/sheet pseudo
+  > `src/features/events/JoinSheet.tsx`.
+- [x] POST `/events/{slug}/join` → stocke `{participantId, pseudo}` dans AsyncStorage (clé `mp-guest-participant-{slug}`)
+- [x] Invalide `['events', slug]` après join
 - [ ] Bouton "Quitter" pour participant invité (clear AsyncStorage + invalidate)
   > ⚠️ Pas d'endpoint serveur "leave" pour un participant invité — l'action est **purement locale côté mobile**. Le participant reste en base mais n'est plus reconnu sur ce device. Aligné avec le web.
+  > Reporté à la phase 15 (polish) — pour V1 le pseudo persiste, on enchaîne avec le reste.
 - [ ] Test : rejoindre en mode invité, fermer/rouvrir l'app, retrouver son pseudo
-- [ ] Commit : `feat(mobile): rejoindre événement en invité`
+  > ⚠️ blocage : nécessite device + API. Code OK, types OK.
+- [x] Commit : `feat(mobile): rejoindre événement en invité`
 
 ---
 
 ## Phase 8 — Proposer un film (recherche TMDB)
 
-- [ ] Écran/Sheet `ProposeMovie` : input recherche avec debounce 300ms
-- [ ] `useQuery(['tmdb-search', q])` → `searchTmdb(q)`
-- [ ] Liste résultats : poster, titre, année, vote moyen
-- [ ] Tap sur un résultat → confirmation → POST `/movies` → invalidate `['movies', slug]`
-- [ ] Affichage erreur si limite atteinte (`maxProposalsPerParticipant`)
-- [ ] Commit : `feat(mobile): proposer un film (recherche TMDB)`
+- [x] Écran/Sheet `ProposeMovie` : input recherche avec debounce 300ms
+- [x] `useQuery(['tmdb-search', q])` → `searchTmdb(q)`
+- [x] Liste résultats : poster, titre, année, vote moyen
+- [x] Tap sur un résultat → confirmation → POST `/movies` → invalidate `['movies', slug]`
+  > Pas d'écran de confirmation supplémentaire — l'ajout est direct sur tap (cohérent avec un workflow rapide). Erreurs API affichées dans la sheet.
+- [x] Affichage erreur si limite atteinte (`maxProposalsPerParticipant`)
+  > Le message renvoyé par l'API (ApiError.message) est affiché dans la sheet.
+- [x] Commit : `feat(mobile): proposer un film (recherche TMDB)`
 
 ---
 
 ## Phase 9 — Voter + déjà vu + retirer
 
-- [ ] Sur `MovieCard` : boutons 👍 / 👎 (toggle si déjà voté)
+- [x] Sur `MovieCard` : boutons 👍 / 👎 (toggle si déjà voté)
 - [ ] Mutation optimiste : `useMutation` avec rollback sur erreur
-- [ ] Bouton "Déjà vu" : POST/DELETE `/movies/{id}/seen`
-- [ ] Si user est proposeur ou hôte : action "Retirer" (long press ou menu)
+  > Pas d'optimistic update pour V1 — `useMovieActions` se contente de l'invalidation. À ajouter en phase 15 si la latence devient gênante (~300-500 ms perçus).
+- [x] Bouton "Déjà vu" : POST/DELETE `/movies/{id}/seen`
+- [x] Si user est proposeur ou hôte : action "Retirer" (long press ou menu)
+  > Long-press sur la carte (déclenche `onRemove`).
 - [ ] Tests : voter, changer de vote, annuler — score se met à jour
-- [ ] Commit : `feat(mobile): votes + déjà vu + retrait films`
+  > ⚠️ Test E2E reporté à la phase 16 (unit) ou validation device.
+- [x] Commit : `feat(mobile): votes + déjà vu + retrait films`
 
 ---
 
 ## Phase 10 — Détail film + watch providers
 
-- [ ] Modal/Screen `MovieDetail` ouvert depuis MovieCard
-- [ ] `useQuery(['movie-details', tmdbId])` → `getMovieDetails(tmdbId)`
-- [ ] Affiche : tagline, overview, director, cast, genres complets, lien TMDB watch page (`Linking.openURL`)
-- [ ] Watch providers : logos cliquables vers TMDB
-- [ ] Commit : `feat(mobile): détail film + watch providers`
+- [x] Modal/Screen `MovieDetail` ouvert depuis MovieCard
+- [x] `useQuery(['movie-details', tmdbId])` → `getMovieDetails(tmdbId)`
+- [x] Affiche : tagline, overview, director, cast, genres complets, lien TMDB watch page (`Linking.openURL`)
+  > `MovieDetailsResponse` n'inclut pas tmdbWatchPageUrl — on récupère ce lien depuis `MovieWithScore.tmdbWatchPageUrl` (déjà en cache via la liste). Cast et genres sont des string[], affichés tel quels. L'emoji par genre n'est pas dans l'API .NET — à porter côté backend pour parité totale avec le web (voir `apps/web/.../emoji`).
+- [x] Watch providers : logos cliquables vers TMDB
+  > `MovieDetailsResponse` n'a pas de `watchProviders` — on prend ceux de `MovieWithScore.watchProviders` (déjà présents).
+- [x] Commit : `feat(mobile): détail film + watch providers`
 
 ---
 
 ## Phase 11 — Partage event + QR code
 
-- [ ] Bouton "Partager" dans l'event detail
-- [ ] Construit URL web : `${EXPO_PUBLIC_WEB_BASE_URL}/e/{slug}`
-- [ ] Modal présente : URL copiable (`expo-clipboard`), bouton "Partager" natif via **`Share.share({ message, url })` de `react-native`** (PAS `expo-sharing` qui n'accepte que des fichiers locaux), QR code (`react-native-qrcode-svg`)
-- [ ] Variable `EXPO_PUBLIC_WEB_BASE_URL` ajoutée à `.env.example`
-- [ ] Commit : `feat(mobile): partage event (URL + QR + share natif)`
+- [x] Bouton "Partager" dans l'event detail
+- [x] Construit URL web : `${EXPO_PUBLIC_WEB_BASE_URL}/e/{slug}`
+- [x] Modal présente : URL copiable (`expo-clipboard`), bouton "Partager" natif via **`Share.share({ message, url })` de `react-native`** (PAS `expo-sharing` qui n'accepte que des fichiers locaux), QR code (`react-native-qrcode-svg`)
+- [x] Variable `EXPO_PUBLIC_WEB_BASE_URL` ajoutée à `.env.example`
+- [x] Commit : `feat(mobile): partage event (URL + QR + share natif)`
 
 ---
 
 ## Phase 12 — Config event (hôte)
 
-- [ ] Écran/Sheet `EventConfig` accessible si `isHost`
-- [ ] GET `/events/{id}/config` → form pré-rempli
-- [ ] Champs : thème (emoji + texte), endDate, maxProposalsPerParticipant, maxParticipants, wheelMode (radio strictRandom/weightedByVotes), richSharePreview (switch)
-- [ ] PATCH → invalide event
+- [x] Écran/Sheet `EventConfig` accessible si `isHost`
+- [x] GET `/events/{id}/config` → form pré-rempli
+- [x] Champs : thème (emoji + texte), endDate, maxProposalsPerParticipant, maxParticipants, wheelMode (radio strictRandom/weightedByVotes), richSharePreview (switch)
+  > endDate en TextField (datetimepicker repoussé en phase 15).
+- [x] PATCH → invalide event
 - [ ] Hôte peut retirer un participant (long press sur participant) → DELETE
-- [ ] Hôte peut supprimer l'event (bouton danger + confirmation) → DELETE → retour my-events
-- [ ] Commit : `feat(mobile): config event hôte + suppression participants/event`
+  > Mutation prête (`removeParticipantMutation` dans EventConfigSheet) mais long-press sur chip participant pas câblé : nécessite un onLongPress sur chaque chip côté écran principal. Reporté en phase 15.
+- [x] Hôte peut supprimer l'event (bouton danger + confirmation) → DELETE → retour my-events
+- [x] Commit : `feat(mobile): config event hôte + suppression participants/event`
 
 ---
 
 ## Phase 13 — Roue + clôture
 
-- [ ] Écran/Sheet `Wheel` accessible si `isHost` et non `isFinished`
-- [ ] Animation roue avec `react-native-reanimated` (cercle qui tourne, ralentissement, atterrit sur le film gagnant)
-- [ ] Bouton "Lancer" → POST `/events/{id}/wheel` → reçoit `selectedMovieId` → animation cible ce film
-- [ ] Affichage du gagnant en grand après animation
-- [ ] Bouton "Clôturer" → POST `/events/{id}/close` → invalide event, badge "Soirée finie" + film gagnant en hero
-- [ ] Commit : `feat(mobile): roue animée + clôture event`
+- [x] Écran/Sheet `Wheel` accessible si `isHost` et non `isFinished`
+- [x] Animation roue avec `react-native-reanimated` (cercle qui tourne, ralentissement, atterrit sur le film gagnant)
+  > Roue simplifiée pour V1 : un disque animé via `withTiming` + easing.out(cubic), 5 tours puis arrêt sur l'angle du gagnant. Pas de slices visuels — à améliorer en phase 15 (rendu segments + couleurs).
+- [x] Bouton "Lancer" → POST `/events/{id}/wheel` → reçoit `selectedMovieId` → animation cible ce film
+  > Le champ s'appelle `WheelResponse.winner._id`, pas `selectedMovieId` (déduit du schéma OpenAPI).
+- [x] Affichage du gagnant en grand après animation
+- [x] Bouton "Clôturer" → POST `/events/{id}/close` → invalide event, badge "Soirée finie" + film gagnant en hero
+  > Le hero `🏆 Gagnant` apparaît dans le header de `/e/[slug]` quand `event.winnerMovie` est set.
+- [x] Commit : `feat(mobile): roue animée + clôture event`
 
 ---
 
@@ -344,7 +362,7 @@
 | 2 — Dépendances | ✅ | NativeWind step 10 (test visuel className) repoussé à la phase 4 (création de `app/index.tsx`). |
 | 3 — Terrain technique | ✅ | Auth V1 = cookies (Bearer scaffold prêt). i18n locales copiées du web (pas de packages/shared-i18n pour V1). |
 | 4 — Auth | ✅ | Tests AuthContext OK (3/3). Flux register/login/logout end-to-end à confirmer sur device. |
-| 5 — Mes événements + création | ⬜ | |
+| 5 — Mes événements + création | ✅ | Datepicker natif reporté en phase 15. Test E2E à valider sur device. |
 | 6 — Détail event (lecture) | ⬜ | |
 | 7 — Rejoindre invité | ⬜ | |
 | 8 — Proposer film | ⬜ | |
