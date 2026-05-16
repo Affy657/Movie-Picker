@@ -6,7 +6,6 @@ import {
   deleteEvent,
   getConfig,
   patchConfig,
-  removeParticipant,
   type EventConfigResponse,
   type PatchEventConfigRequest,
 } from '@/api/events';
@@ -74,11 +73,6 @@ export function EventConfigSheet({ eventIdOrSlug, onClose }: Props) {
     onError: (err) => {
       setError(err instanceof ApiError ? err.message : 'Suppression impossible.');
     },
-  });
-
-  const removeParticipantMutation = useMutation({
-    mutationFn: (participantId: string) => removeParticipant(eventIdOrSlug, participantId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['event', eventIdOrSlug] }),
   });
 
   const onSave = () => {
@@ -199,11 +193,9 @@ export function EventConfigSheet({ eventIdOrSlug, onClose }: Props) {
           loading={deleteMutation.isPending}
         />
         <Text style={{ color: palette.meta, fontSize: 12, marginTop: 8 }}>
-          Pour retirer un participant, fais un appui long sur son nom dans la liste — flow à câbler
-          dans la phase polish.
+          Pour retirer un participant, fais un appui long sur son pseudo dans la liste des
+          participants de la soirée.
         </Text>
-        {/* hint pour TypeScript : `removeParticipantMutation` réservé pour câblage UI futur */}
-        {removeParticipantMutation.isPending ? <Text>retrait…</Text> : null}
       </ScrollView>
     </BottomSheet>
   );

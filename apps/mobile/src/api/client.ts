@@ -89,7 +89,12 @@ export async function request<T = unknown>(path: string, options: RequestOptions
   });
 
   if (response.status === 401 && !noAuth) {
-    unauthorizedHandler?.();
+    try {
+      unauthorizedHandler?.();
+    } catch (err) {
+      // Un handler buggué ne doit pas masquer l'ApiError originale qu'on est sur le point de jeter.
+      if (__DEV__) console.warn('[client] unauthorizedHandler threw', err);
+    }
   }
 
   if (!response.ok) {

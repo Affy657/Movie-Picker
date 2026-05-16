@@ -73,6 +73,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    // Note : `setUnauthorizedHandler` stocke un handler **global** (singleton).
+    // Si deux <AuthProvider> sont montés simultanément (HMR ou test mal isolé),
+    // le 2ème écrase le 1er et le cleanup du 1er met `null`. En prod, un seul
+    // provider existe (en haut de l'arbre dans `app/_layout.tsx`).
     setUnauthorizedHandler(() => {
       setUser(null);
       clearToken().catch(() => {

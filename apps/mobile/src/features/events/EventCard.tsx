@@ -2,6 +2,7 @@ import { Pressable, Text, View } from 'react-native';
 import { useTheme } from '@/features/theme/ThemeContext';
 import type { MyEventSummary } from '@/api/events';
 import { useTranslation } from '@/features/i18n/LocaleContext';
+import { parseLocalDate } from '@/lib/dates';
 
 type Props = {
   event: MyEventSummary;
@@ -10,8 +11,8 @@ type Props = {
 
 function formatDate(iso: string | null | undefined, locale: string): string {
   if (!iso) return '';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
+  const d = parseLocalDate(iso);
+  if (!d) return iso ?? '';
   return d.toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US', {
     weekday: 'short',
     day: 'numeric',

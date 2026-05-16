@@ -16,7 +16,7 @@ export function MovieDetailSheet({ movie, onClose }: Props) {
   const { palette } = useTheme();
   const { data, isLoading, isError } = useQuery({
     queryKey: ['movie-details', movie.tmdbId],
-    queryFn: () => getMovieDetails(movie.tmdbId ?? 0),
+    queryFn: ({ signal }) => getMovieDetails(movie.tmdbId ?? 0, { signal }),
     enabled: !!movie.tmdbId,
   });
 

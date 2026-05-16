@@ -8,6 +8,11 @@ import { useTheme } from '@/features/theme/ThemeContext';
 
 const WEB_BASE = process.env.EXPO_PUBLIC_WEB_BASE_URL ?? 'http://localhost:5173';
 
+/** URL inutilisable depuis le téléphone d'un destinataire (resolverait sur sa propre loopback). */
+function isUnreachableFromOtherDevices(url: string): boolean {
+  return /\/\/(localhost|127\.0\.0\.1|10\.0\.2\.2)(:|\/|$)/.test(url);
+}
+
 type Props = {
   slug: string;
   title: string;
@@ -17,6 +22,7 @@ type Props = {
 export function ShareSheet({ slug, title, onClose }: Props) {
   const { palette } = useTheme();
   const url = `${WEB_BASE.replace(/\/$/, '')}/e/${slug}`;
+  const unreachable = isUnreachableFromOtherDevices(url);
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
@@ -38,6 +44,22 @@ export function ShareSheet({ slug, title, onClose }: Props) {
       <Text style={{ color: palette.textMuted }}>
         Envoie ce lien à tes amis pour qu&apos;ils rejoignent la soirée.
       </Text>
+
+      {unreachable ? (
+        <View
+          style={{
+            backgroundColor: palette.badgeUpcomingBg,
+            padding: 10,
+            borderRadius: 8,
+          }}
+        >
+          <Text style={{ color: palette.badgeUpcomingText, fontSize: 13 }}>
+            ⚠️ L&apos;URL pointe sur ta machine de dev — elle ne fonctionnera pas chez tes amis. Configure
+            <Text style={{ fontWeight: '700' }}> EXPO_PUBLIC_WEB_BASE_URL </Text>
+            avec l&apos;URL publique du site avant de partager.
+          </Text>
+        </View>
+      ) : null}
 
       <View style={{ alignItems: 'center', gap: 8, padding: 16 }}>
         <View style={{ backgroundColor: '#ffffff', padding: 12, borderRadius: 12 }}>

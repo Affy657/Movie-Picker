@@ -28,8 +28,6 @@ export function MovieCard({
   const { palette } = useTheme();
   const poster = posterUrl(movie.posterPath);
   const isSeen = (movie.seenCount ?? 0) > 0 && movie.seenByPseudos && movie.seenByPseudos.length > 0;
-  const isWinner = false; // surfaced separately in event header
-
   const myVote = movie.myVote ?? 0;
 
   return (
@@ -134,11 +132,6 @@ export function MovieCard({
             >
               <Text style={{ color: palette.text, fontSize: 12, fontWeight: '500' }}>👁 Vu</Text>
             </Pressable>
-          ) : null}
-          {isWinner ? (
-            <View style={{ marginLeft: 'auto' }}>
-              <Text style={{ color: palette.success, fontWeight: '700' }}>🏆</Text>
-            </View>
           ) : null}
         </View>
       </View>

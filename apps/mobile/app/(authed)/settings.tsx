@@ -8,7 +8,6 @@ import { useAuth } from '@/features/auth/AuthContext';
 import { useLocale, useTranslation } from '@/features/i18n/LocaleContext';
 import { useTheme } from '@/features/theme/ThemeContext';
 import { ACCENT_COLORS, type AccentColor, type UiThemePreference } from '@/theme/colors';
-import { changePassword } from '@/api/auth';
 import type { LocaleCode } from '@/i18n/locales';
 
 const ACCENT_SWATCHES: Record<AccentColor, string> = {
@@ -93,8 +92,8 @@ export default function SettingsScreen() {
     }
     setPwSubmitting(true);
     try {
-      await changePassword({ currentPassword, newPassword });
-      // changePassword côté API invalide la session : le contexte va déco
+      // Le contexte chaîne PATCH /auth/me/password + clearToken + setUser(null)
+      // (la session est invalidée côté API). Pas d'appel direct à apiChangePassword.
       await changePasswordCtx({ currentPassword, newPassword });
       setPwSuccess(true);
       setCurrentPassword('');

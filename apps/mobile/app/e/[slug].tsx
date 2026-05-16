@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { getEvent } from '@/api/events';
@@ -10,6 +10,7 @@ import { useAuth } from '@/features/auth/AuthContext';
 import { MovieCard } from '@/features/movies/MovieCard';
 import { useTheme } from '@/features/theme/ThemeContext';
 import { useTranslation } from '@/features/i18n/LocaleContext';
+import { compareDayLocal, parseLocalDate } from '@/lib/dates';
 import { getGuestParticipant, type GuestParticipant } from '@/lib/guest-storage';
 import { JoinSheet } from '@/features/events/JoinSheet';
 import { ProposeMovieSheet } from '@/features/movies/ProposeMovieSheet';
@@ -18,6 +19,7 @@ import { MovieDetailSheet } from '@/features/movies/MovieDetailSheet';
 import type { MovieWithScore } from '@/api/movies';
 import { useMovieActions } from '@/features/movies/useMovieActions';
 import { EventConfigSheet } from '@/features/events/EventConfigSheet';
+import { useEventActions } from '@/features/events/useEventActions';
 import { WheelSheet } from '@/features/wheel/WheelSheet';
 
 const LIFECYCLE: Record<string, { tone: 'upcoming' | 'live' | 'finished'; label: string }> = {
@@ -28,14 +30,11 @@ const LIFECYCLE: Record<string, { tone: 'upcoming' | 'live' | 'finished'; label:
 
 function inferLifecycle(date?: string | null, isFinished?: boolean): string {
   if (isFinished) return 'finished';
-  if (!date) return 'upcoming';
-  const d = new Date(date);
-  if (Number.isNaN(d.getTime())) return 'upcoming';
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  d.setHours(0, 0, 0, 0);
-  if (d.getTime() === today.getTime()) return 'live';
-  return d.getTime() < today.getTime() ? 'finished' : 'upcoming';
+  const d = parseLocalDate(date);
+  if (!d) return 'upcoming';
+  const cmp = compareDayLocal(d, new Date());
+  if (cmp === 0) return 'live';
+  return cmp < 0 ? 'finished' : 'upcoming';
 }
 
 export default function EventDetailScreen() {
@@ -78,6 +77,7 @@ export default function EventDetailScreen() {
   });
 
   const actions = useMovieActions(slug ?? '', myParticipantId ?? null);
+  const eventActions = useEventActions(slug ?? '');
 
   if (!slug) {
     return (
@@ -125,8 +125,9 @@ export default function EventDetailScreen() {
   const canPropose = canAct;
   const canVote = canAct && !!myParticipantId;
   const isMember = !!event.myParticipant?._id || !!guest;
-  const dateLabel = event.date
-    ? new Date(event.date).toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US', {
+  const eventLocalDate = parseLocalDate(event.date);
+  const dateLabel = eventLocalDate
+    ? eventLocalDate.toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US', {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
@@ -135,6 +136,31 @@ export default function EventDetailScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }} edges={['top']}>
+      {actions.error || eventActions.error ? (
+        <View
+          style={{
+            backgroundColor: palette.error,
+            paddingHorizontal: 16,
+            paddingVertical: 10,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+          }}
+          accessibilityRole="alert"
+        >
+          <Text style={{ color: '#ffffff', flex: 1 }}>{actions.error ?? eventActions.error}</Text>
+          <Text
+            onPress={() => {
+              actions.clearError();
+              eventActions.clearError();
+            }}
+            style={{ color: '#ffffff', fontWeight: '700' }}
+            accessibilityLabel="Fermer"
+          >
+            ✕
+          </Text>
+        </View>
+      ) : null}
       <FlatList
         data={moviesQuery.data ?? []}
         keyExtractor={(m) => m._id ?? String(m.tmdbId ?? Math.random())}
@@ -190,29 +216,56 @@ export default function EventDetailScreen() {
                 Participants ({event.participantCount ?? event.participants?.length ?? 0})
               </Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-                {(event.participants ?? []).map((p) => (
-                  <View
-                    key={p._id ?? p.pseudo ?? Math.random()}
-                    style={{
-                      backgroundColor: p.isCreator ? palette.badgeHostBg : palette.borderSubtle,
-                      paddingHorizontal: 10,
-                      paddingVertical: 4,
-                      borderRadius: 999,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: p.isCreator ? palette.badgeHostText : palette.text,
-                        fontSize: 12,
-                        fontWeight: p.isCreator ? '600' : '500',
-                      }}
+                {(event.participants ?? []).map((p) => {
+                  const canKick = isHost && !p.isCreator && !!p._id;
+                  return (
+                    <Pressable
+                      key={p._id ?? p.pseudo ?? Math.random()}
+                      disabled={!canKick || eventActions.isKicking}
+                      onLongPress={
+                        canKick
+                          ? () =>
+                              Alert.alert(
+                                'Retirer ce participant ?',
+                                `${p.pseudo ?? '?'} ne pourra plus voter ni proposer (action irréversible).`,
+                                [
+                                  { text: 'Annuler', style: 'cancel' },
+                                  {
+                                    text: 'Retirer',
+                                    style: 'destructive',
+                                    onPress: () => eventActions.kickParticipant(p._id!),
+                                  },
+                                ]
+                              )
+                          : undefined
+                      }
+                      style={({ pressed }) => ({
+                        backgroundColor: p.isCreator ? palette.badgeHostBg : palette.borderSubtle,
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        borderRadius: 999,
+                        opacity: pressed && canKick ? 0.7 : 1,
+                      })}
                     >
-                      {p.isCreator ? '👑 ' : ''}
-                      {p.pseudo ?? '?'}
-                    </Text>
-                  </View>
-                ))}
+                      <Text
+                        style={{
+                          color: p.isCreator ? palette.badgeHostText : palette.text,
+                          fontSize: 12,
+                          fontWeight: p.isCreator ? '600' : '500',
+                        }}
+                      >
+                        {p.isCreator ? '👑 ' : ''}
+                        {p.pseudo ?? '?'}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
               </View>
+              {isHost ? (
+                <Text style={{ color: palette.meta, fontSize: 11 }}>
+                  Astuce hôte : appui long sur un pseudo pour le retirer.
+                </Text>
+              ) : null}
             </View>
 
             <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>

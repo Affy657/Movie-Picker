@@ -59,13 +59,17 @@ export function unmarkSeen(idOrSlug: string, movieId: string, participantId: str
   );
 }
 
-export function searchTmdb(q: string) {
+export function searchTmdb(q: string, options?: { signal?: AbortSignal }) {
   return request<MovieSearchListResponse>('/movies/search', {
     query: { q },
     noAuth: true,
+    signal: options?.signal,
   });
 }
 
-export function getMovieDetails(tmdbId: number) {
-  return request<MovieDetailsResponse>(`/movies/tmdb/${tmdbId}/details`, { noAuth: true });
+export function getMovieDetails(tmdbId: number, options?: { signal?: AbortSignal }) {
+  return request<MovieDetailsResponse>(`/movies/tmdb/${tmdbId}/details`, {
+    noAuth: true,
+    signal: options?.signal,
+  });
 }

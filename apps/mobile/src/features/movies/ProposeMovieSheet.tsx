@@ -33,7 +33,7 @@ export function ProposeMovieSheet({ slug, participantId, onClose }: Props) {
 
   const searchQuery = useQuery({
     queryKey: ['tmdb-search', debounced],
-    queryFn: () => searchTmdb(debounced),
+    queryFn: ({ signal }) => searchTmdb(debounced, { signal }),
     enabled: debounced.length >= 2,
   });
 

@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Localization from 'expo-localization';
 import {
   createContext,
   useCallback,
@@ -8,7 +9,6 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { NativeModules, Platform } from 'react-native';
 import { isLocaleCode, type LocaleCode } from '@/i18n/locales';
 import { t as rawT, type TranslationKey } from '@/i18n/t';
 
@@ -31,14 +31,8 @@ const TMDB_LANGUAGE_MAP: Record<LocaleCode, string> = {
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
 function detectDeviceLocale(): LocaleCode {
-  const tag =
-    Platform.OS === 'ios'
-      ? (NativeModules.SettingsManager?.settings?.AppleLocale ??
-          NativeModules.SettingsManager?.settings?.AppleLanguages?.[0] ??
-          '')
-      : (NativeModules.I18nManager?.localeIdentifier ?? '');
-  const normalized = String(tag).toLowerCase();
-  return normalized.startsWith('en') ? 'en' : 'fr';
+  const tag = (Localization.getLocales()[0]?.languageCode ?? 'fr').toLowerCase();
+  return tag.startsWith('en') ? 'en' : 'fr';
 }
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
