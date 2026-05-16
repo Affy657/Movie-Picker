@@ -11,18 +11,11 @@ import { LocaleProvider } from '@/features/i18n/LocaleContext';
 import { QueryProvider } from '@/features/providers/QueryProvider';
 import { ThemeProvider, useTheme } from '@/features/theme/ThemeContext';
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
-
 function NavigationShell() {
   const { resolvedTheme } = useTheme();
   return (
     <NavThemeProvider value={resolvedTheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
+      <Stack screenOptions={{ headerShown: false }} />
       <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
     </NavThemeProvider>
   );

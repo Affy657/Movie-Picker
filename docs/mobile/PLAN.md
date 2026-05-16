@@ -134,21 +134,26 @@
 - [x] Wire NativeWind avec ces tokens via `tailwind.config.js`
   > Tokens light statiques exposés dans tailwind. Pour les valeurs dynamiques (dark + accent live), les composants utiliseront `useTheme().palette` en inline style. NativeWind v4 supporte `dark:` via `Appearance` si jamais besoin.
 
-- [ ] Commit : `feat(mobile): API client typé + providers globaux + i18n + theme`
+- [x] Commit : `feat(mobile): API client typé + providers globaux + i18n + theme`
 
 ---
 
 ## Phase 4 — Auth (écrans + flux complet)
 
-- [ ] Écran `app/index.tsx` (landing) : CTA login/register, redirige `/(authed)/my-events` si déjà connecté
-- [ ] Écran `app/login.tsx` : formulaire email/mdp + lien vers register et forgot-password
-- [ ] Écran `app/register.tsx` : email/mdp/displayName + validation Zod
-- [ ] Écran `app/forgot-password.tsx` : demande email → toast confirmation
-- [ ] Écran `app/reset.tsx` : récupère `token` via `useLocalSearchParams()` (deep link)
-- [ ] Configurer deep linking dans `app.json` (`scheme: "moviepicker"`) — **prérequis backend** : l'API doit générer des liens compatibles (universal link ou custom scheme) dans les emails de reset. Si pas faisable côté API à court terme, fallback : afficher dans l'app un champ "coller le token reçu par email" et continuer sans deep link.
-- [ ] Garde d'auth dans `app/(authed)/_layout.tsx` : utiliser le pattern officiel expo-router `<Redirect href="/login" />` dans le layout si `!user && !isLoading` (cf. https://docs.expo.dev/router/reference/authentication/) — **pas** de `useEffect + router.replace` (flash de l'écran protégé)
+- [x] Écran `app/index.tsx` (landing) : CTA login/register, redirige `/(authed)/my-events` si déjà connecté
+- [x] Écran `app/login.tsx` : formulaire email/mdp + lien vers register et forgot-password
+- [x] Écran `app/register.tsx` : email/mdp/displayName + validation Zod
+- [x] Écran `app/forgot-password.tsx` : demande email → toast confirmation
+  > "Toast" remplacé par un écran de succès complet (titre + message + bouton retour), cohérent avec le pattern du web et plus visible que les toasts éphémères.
+- [x] Écran `app/reset.tsx` : récupère `token` via `useLocalSearchParams()` (deep link)
+  > Inclut le fallback "coller le token manuellement" si aucun token n'est passé en query (pour le cas où deep link backend pas dispo).
+- [x] Configurer deep linking dans `app.json` (`scheme: "moviepicker"`) — **prérequis backend** : l'API doit générer des liens compatibles (universal link ou custom scheme) dans les emails de reset. Si pas faisable côté API à court terme, fallback : afficher dans l'app un champ "coller le token reçu par email" et continuer sans deep link.
+  > Scheme passé de `mobile` à `moviepicker`. App renommée en `Movie Picker`, slug = `movie-picker-mobile`. Fallback "coller le token" implémenté dans `app/reset.tsx`.
+- [x] Garde d'auth dans `app/(authed)/_layout.tsx` : utiliser le pattern officiel expo-router `<Redirect href="/login" />` dans le layout si `!user && !isLoading` (cf. https://docs.expo.dev/router/reference/authentication/) — **pas** de `useEffect + router.replace` (flash de l'écran protégé)
 - [ ] Tester : register → login → me affiche bien → logout vide bien le token
-- [ ] Test unitaire : `AuthContext` avec mocks fetch
+  > ⚠️ blocage : impossible à valider end-to-end sans émulateur/device + API joignable. Les écrans compilent, lint passent, tests unitaires AuthContext passent (3/3). À valider manuellement par l'utilisateur sur Expo Go.
+- [x] Test unitaire : `AuthContext` avec mocks fetch
+  > `src/features/auth/AuthContext.test.tsx` : hydration guest (401), hydration user (200), logout. Dû downgrader jest 30 → 29 pour compat jest-expo 55, et passer `transformIgnorePatterns: []` (pnpm + RN ESM) — slow mais bulletproof. À raffiner en phase 16 si la durée des tests devient un problème.
 - [ ] Commit : `feat(mobile): auth complète (login, register, reset, profil)`
 
 ---
@@ -334,7 +339,7 @@
 | 0 — Pré-requis | ✅ | JDK17/Android Studio reportés à la phase 18 ; EAS CLI optionnel reporté aussi. |
 | 1 — Scaffold | ✅ | smoke test : Metro démarre, lint+tsc OK. Affichage Hello World à confirmer sur device. |
 | 2 — Dépendances | ✅ | NativeWind step 10 (test visuel className) repoussé à la phase 4 (création de `app/index.tsx`). |
-| 3 — Terrain technique | ⬜ | |
+| 3 — Terrain technique | ✅ | Auth V1 = cookies (Bearer scaffold prêt). i18n locales copiées du web (pas de packages/shared-i18n pour V1). |
 | 4 — Auth | ⬜ | |
 | 5 — Mes événements + création | ⬜ | |
 | 6 — Détail event (lecture) | ⬜ | |
