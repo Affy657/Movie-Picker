@@ -27,6 +27,14 @@ export const THEME_EMOJIS = [
   '⚡',
   '🎪',
   '🌈',
+  '🎨',
+  '👨‍👩‍👧',
+  '🔍',
+  '📜',
+  '🤠',
+  '🏆',
+  '🧪',
+  '🌌',
 ];
 
 const PRESETS_VISIBLE = 5;
@@ -34,6 +42,7 @@ const PRESETS_VISIBLE = 5;
 export const THEME_PRESETS = [
   { emoji: '🎃', text: 'Horreur' },
   { emoji: '😂', text: 'Comédie' },
+  { emoji: '🎨', text: 'Animation' },
   { emoji: '🚀', text: 'Sci-fi' },
   { emoji: '❤️', text: 'Romance' },
   { emoji: '🎬', text: 'Action' },
@@ -44,6 +53,13 @@ export const THEME_PRESETS = [
   { emoji: '🏃', text: 'Aventure' },
   { emoji: '👻', text: 'Fantastique' },
   { emoji: '🎵', text: 'Musical' },
+  { emoji: '👨‍👩‍👧', text: 'Famille' },
+  { emoji: '🔍', text: 'Policier' },
+  { emoji: '📜', text: 'Historique' },
+  { emoji: '🤠', text: 'Western' },
+  { emoji: '🐉', text: 'Fantasy' },
+  { emoji: '🏆', text: 'Sport' },
+  { emoji: '🌌', text: 'Space opera' },
 ];
 
 export function parseTheme(s: string | null | undefined): { emoji: string; text: string } {
