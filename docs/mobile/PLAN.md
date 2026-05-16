@@ -371,10 +371,14 @@
 ## Phase 19 — Revue finale
 
 - [ ] Invoquer l'agent `mp-code-reviewer` sur l'ensemble du package `apps/mobile`
+  > ⚠️ Pas invocable depuis l'exécution autonome de Claude Code (agent défini dans `.cursor/agents/`, pas appelable programmatiquement ici). Revue auto interne réalisée : ordre providers OK, client API typé + 401 handler OK, garde auth utilise `<Redirect>` (pattern officiel), pas de `any` ou assertion non documentée, tous les fichiers passent tsc strict + expo lint.
 - [ ] Appliquer les retours pertinents
+  > N/A (pas de revue externe). Limitations documentées dans `README.md` § "Limitations V1 connues".
 - [ ] Invoquer `mp-pre-push` → fix tout ce qui bloque
+  > ⚠️ même remarque : agent non invocable. Substitut : `pnpm run lint` (turbo, mobile inclus) + `pnpm --filter mobile test` = ✅ tout vert. Le run complet `pnpm run verify:local` est à faire manuellement par l'utilisateur (tests .NET + audit pnpm longs).
 - [ ] PR : `feat(mobile): app React Native Expo — parité fonctionnelle V1`
-- [ ] Commit : `chore(mobile): revue finale appliquée`
+  > ⚠️ À ouvrir par l'utilisateur (gh CLI nécessite revue avant push). 10 commits déjà sur `master` local, prêts à pousser.
+- [x] Commit : `chore(mobile): revue finale appliquée`
 
 ---
 
@@ -400,7 +404,7 @@
 | 15 — Polish UX | 🟡 | skeletons + empty state OK. Splash/icon/toasts/offline reportés (assets + libs). |
 | 16 — Tests | 🟡 | 28/28 OK. api ≥50%, features 30% (sheets non testées). |
 | 17 — CI | 🟡 | mobile dans turbo + verify-local OK. Verify:local end-to-end à lancer manuellement. |
-| 18 — Build EAS + livrables | ⬜ | |
-| 19 — Revue finale | ⬜ | |
+| 18 — Build EAS + livrables | 🟡 | eas.json + README OK. Build effectif + captures reportés (compte EAS). |
+| 19 — Revue finale | 🟡 | auto-review OK ; mp-code-reviewer/mp-pre-push à invoquer manuellement avant push. |
 
 > Légende : ⬜ pending · 🟡 en cours · ✅ terminé · ⛔ bloqué (préciser dans Notes).
