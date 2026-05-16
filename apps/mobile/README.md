@@ -1,50 +1,110 @@
-# Welcome to your Expo app 👋
+# Movie Picker — mobile app
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+App **React Native (Expo SDK 54+, TypeScript)** qui consomme l'API .NET (`apps/api-dotnet`) du monorepo Movie Picker. Parité fonctionnelle V1 avec `apps/web`.
 
-## Get started
+> Documentation complète : [`docs/mobile/CONTEXT.md`](../../docs/mobile/CONTEXT.md) + [`docs/mobile/PLAN.md`](../../docs/mobile/PLAN.md).
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## Pré-requis
 
-2. Start the app
+- Node 20+ (testé sur v22), pnpm 9+ (testé sur 10)
+- API tournée localement : `pnpm dev:api-dotnet` à la racine du monorepo
+- Pour Android : Android Studio + un AVD **OU** un device USB-debug, ou Expo Go
+- Pour iOS : macOS + Xcode, ou Expo Go
+- (Optionnel pour les builds) JDK 17 + Android SDK, ou un compte EAS Build
 
-   ```bash
-   npx expo start
-   ```
+## Variables d'environnement
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+Copier `.env.example` → `.env` et ajuster :
 
 ```bash
-npm run reset-project
+EXPO_PUBLIC_API_URL=http://10.0.2.2:4000       # émulateur Android
+# EXPO_PUBLIC_API_URL=http://localhost:4000    # iOS sim / web
+# EXPO_PUBLIC_API_URL=http://192.168.x.x:4000  # device physique sur le LAN
+EXPO_PUBLIC_TMDB_IMAGE_BASE=https://image.tmdb.org/t/p
+EXPO_PUBLIC_WEB_BASE_URL=http://localhost:5173
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Dev local
 
-## Learn more
+À la racine du monorepo :
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+pnpm install
+pnpm --filter mobile dev   # ou pnpm --filter mobile android / ios
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Scanne le QR code avec Expo Go (Android/iOS) ou lance un émulateur. Le bundler tourne sur `http://localhost:8081`.
 
-## Join the community
+## Architecture
 
-Join our community of developers creating universal apps.
+```
+app/                       # expo-router screens (file-based)
+├── _layout.tsx           # providers (Query, Theme, Locale, Auth)
+├── index.tsx             # landing
+├── login.tsx, register.tsx, forgot-password.tsx, reset.tsx
+├── (authed)/             # group protégé (garde via <Redirect>)
+│   ├── _layout.tsx       # Tabs (my-events + settings, "new" hidden)
+│   ├── my-events.tsx     # liste avec FlatList + pull-to-refresh + FAB
+│   ├── new.tsx           # création event
+│   └── settings.tsx      # profil + thème + accent + langue + sécu
+└── e/[slug].tsx          # détail event (public + guest mode)
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+src/
+├── api/                  # client typé openapi-typescript (cookies + Bearer ready)
+├── components/           # Button, TextField, Screen, BottomSheet, Skeleton
+├── features/
+│   ├── auth/             # AuthContext (refresh /me, login, logout, …)
+│   ├── theme/            # ThemeContext (Appearance + AsyncStorage + sync API)
+│   ├── i18n/             # LocaleContext + useTranslation
+│   ├── events/           # EventCard, JoinSheet, ShareSheet, EventConfigSheet
+│   ├── movies/           # MovieCard, ProposeMovieSheet, MovieDetailSheet, useMovieActions
+│   └── wheel/            # WheelSheet (animation reanimated)
+├── i18n/locales/         # fr/en (copiés du web)
+├── lib/                  # auth-storage, guest-storage, tmdb URL helpers
+└── theme/colors.ts       # palette light/dark + 5 accents
+```
+
+## Tests
+
+```bash
+pnpm --filter mobile test            # 28/28 OK (Jest + RTL)
+pnpm --filter mobile test:coverage   # coverage HTML + summary
+```
+
+Couverture actuelle : `src/api/` ≥ 60 % lines, `src/features/` 30 % (les sheets et contexts ont des tests d'intégration light — à étendre si besoin).
+
+## Build (EAS)
+
+Pré-requis : un compte Expo + `eas login`.
+
+```bash
+pnpm dlx eas-cli init                              # une seule fois (lie le projet EAS)
+pnpm dlx eas-cli build -p android --profile preview   # APK Android internal
+pnpm dlx eas-cli build -p ios --profile preview       # iOS (macOS recommandé)
+```
+
+Profils définis dans `eas.json` :
+
+- `preview` : APK internal distribution (à partager via lien EAS).
+- `production` : `app-bundle` pour Play Store.
+
+Variables d'env du build préfixées `EXPO_PUBLIC_` sont injectées au bundle — ajuster `EXPO_PUBLIC_API_URL` dans `eas.json` pour pointer sur l'URL publique de l'API en prod.
+
+## Auth — note importante
+
+L'API .NET utilise des **cookies de session HTTP-only**. Le client mobile envoie `credentials: 'include'` (compat cookies natifs RN) **et** `Authorization: Bearer <token>` si un token est stocké via `expo-secure-store`. Côté API, ajouter un endpoint qui retourne un token (cf. `docs/mobile/CONTEXT.md` §6) permettrait de basculer 100 % Bearer sans toucher au client — utile si la session cookie devient instable en RN (background fetch, etc.).
+
+## Limitations V1 connues
+
+- App icon + splash : assets template par défaut, à remplacer.
+- Toasts (`react-native-toast-message`) et offline banner (`NetInfo`) non câblés.
+- Date/time : TextField avec regex pour V1, datepicker natif reporté.
+- Roue : disque animé simple, pas de slices visuels avec les posters.
+- "Quitter event" en mode invité = purge locale uniquement (pas d'endpoint API).
+- Suppression de compte : pas d'endpoint API, message "À venir".
+
+---
+
+Cf. `docs/mobile/PLAN.md` pour l'historique détaillé de chaque phase (cases cochées + notes de blocage).

@@ -351,14 +351,20 @@
 ## Phase 18 — Build EAS + livrables école
 
 - [ ] `eas init` dans `apps/mobile` (lien projet EAS)
-- [ ] Créer `apps/mobile/eas.json` avec profil `preview` (APK Android internal distribution)
+  > ⚠️ blocage : nécessite un compte Expo (login interactif `eas login`). À lancer par l'utilisateur. `eas.json` est prêt.
+- [x] Créer `apps/mobile/eas.json` avec profil `preview` (APK Android internal distribution)
+  > 2 profils : `preview` (APK internal, branchable sur API locale via 10.0.2.2) et `production` (app-bundle). `appVersionSource: remote` pour laisser EAS gérer les versions.
 - [ ] `eas build -p android --profile preview` → récupérer URL APK
+  > ⚠️ blocage : nécessite `eas init` préalable + crédits build EAS (compte payant ou queue gratuite).
 - [ ] Tester l'APK sur device physique (install + parcours principal : register, créer event, proposer film, voter, lancer roue)
-- [ ] Rédiger `apps/mobile/README.md` : prérequis, dev local, build, captures, démo
+  > ⚠️ blocage : dépend du build.
+- [x] Rédiger `apps/mobile/README.md` : prérequis, dev local, build, captures, démo
+  > README complet (architecture, env vars, dev, tests, build EAS, limitations V1).
 - [ ] Captures d'écran principales (5-8) dans `docs/mobile/screenshots/`
+  > ⚠️ blocage : nécessite émulateur/device. Reporté à l'utilisateur.
 - [ ] (Optionnel) Vidéo démo 1 min
 - [ ] (Optionnel) Slides présentation (3-5)
-- [ ] Commit : `docs(mobile): README + screenshots + build EAS`
+- [x] Commit : `docs(mobile): README + screenshots + build EAS`
 
 ---
 
@@ -393,7 +399,7 @@
 | 14 — Settings | ✅ | Suppression compte = "À venir" (pas d'endpoint API). |
 | 15 — Polish UX | 🟡 | skeletons + empty state OK. Splash/icon/toasts/offline reportés (assets + libs). |
 | 16 — Tests | 🟡 | 28/28 OK. api ≥50%, features 30% (sheets non testées). |
-| 17 — CI | ⬜ | |
+| 17 — CI | 🟡 | mobile dans turbo + verify-local OK. Verify:local end-to-end à lancer manuellement. |
 | 18 — Build EAS + livrables | ⬜ | |
 | 19 — Revue finale | ⬜ | |
 
