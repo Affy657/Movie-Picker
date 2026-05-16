@@ -23,11 +23,7 @@ export default function MovieDetailsPanel({ tmdbId }: MovieDetailsPanelProps) {
   return (
     <div>
       <div className={styles.toggleRow}>
-        <MovieDetailsToggle
-          open={open}
-          onToggle={() => setOpen((v) => !v)}
-          panelId={panelId}
-        />
+        <MovieDetailsToggle open={open} onToggle={() => setOpen((v) => !v)} panelId={panelId} />
       </div>
       <MovieDetailsContent tmdbId={tmdbId} open={open} panelId={panelId} />
     </div>
@@ -41,7 +37,12 @@ interface MovieDetailsToggleProps {
   className?: string;
 }
 
-export function MovieDetailsToggle({ open, onToggle, panelId, className }: MovieDetailsToggleProps) {
+export function MovieDetailsToggle({
+  open,
+  onToggle,
+  panelId,
+  className,
+}: MovieDetailsToggleProps) {
   const { t } = useTranslation();
   const Icon = open ? ChevronUp : ChevronDown;
   return (
@@ -66,7 +67,12 @@ interface MovieDetailsContentProps {
   className?: string;
 }
 
-export function MovieDetailsContent({ tmdbId, open, panelId, className }: MovieDetailsContentProps) {
+export function MovieDetailsContent({
+  tmdbId,
+  open,
+  panelId,
+  className,
+}: MovieDetailsContentProps) {
   const { t } = useTranslation();
   const { data, isLoading, isError } = useMovieDetails(tmdbId, open);
   if (!open) return null;
