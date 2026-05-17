@@ -1,5 +1,6 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,6 +13,7 @@ import { useTheme } from '@/features/theme/ThemeContext';
 import { useTranslation } from '@/features/i18n/LocaleContext';
 import { compareDayLocal, parseLocalDate } from '@/lib/dates';
 import { getGuestParticipant, type GuestParticipant } from '@/lib/guest-storage';
+import { EventThemeBanner } from '@/features/events/EventThemeBanner';
 import { JoinSheet } from '@/features/events/JoinSheet';
 import { ProposeMovieSheet } from '@/features/movies/ProposeMovieSheet';
 import { ShareSheet } from '@/features/events/ShareSheet';
@@ -21,12 +23,6 @@ import { useMovieActions } from '@/features/movies/useMovieActions';
 import { EventConfigSheet } from '@/features/events/EventConfigSheet';
 import { useEventActions } from '@/features/events/useEventActions';
 import { WheelSheet } from '@/features/wheel/WheelSheet';
-
-const LIFECYCLE: Record<string, { tone: 'upcoming' | 'live' | 'finished'; label: string }> = {
-  upcoming: { tone: 'upcoming', label: 'À venir' },
-  live: { tone: 'live', label: '● En cours' },
-  finished: { tone: 'finished', label: 'Terminée' },
-};
 
 function inferLifecycle(date?: string | null, isFinished?: boolean): string {
   if (isFinished) return 'finished';
@@ -39,6 +35,7 @@ function inferLifecycle(date?: string | null, isFinished?: boolean): string {
 
 export default function EventDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
+  const router = useRouter();
   const { user } = useAuth();
   const { palette } = useTheme();
   const { t, locale } = useTranslation();
@@ -106,20 +103,6 @@ export default function EventDetailScreen() {
 
   const event = eventQuery.data;
   const lifecycleKey = inferLifecycle(event.date, event.isFinished ?? false);
-  const lifecycle = LIFECYCLE[lifecycleKey] ?? LIFECYCLE.upcoming;
-  const badgeBg =
-    lifecycle.tone === 'live'
-      ? palette.badgeLiveBg
-      : lifecycle.tone === 'finished'
-        ? palette.badgeFinishedBg
-        : palette.badgeUpcomingBg;
-  const badgeText =
-    lifecycle.tone === 'live'
-      ? palette.badgeLiveText
-      : lifecycle.tone === 'finished'
-        ? palette.badgeFinishedText
-        : palette.badgeUpcomingText;
-
   const isHost = event.isHost ?? false;
   const canAct = !!myParticipantId && !event.isFinished;
   const canPropose = canAct;
@@ -131,6 +114,7 @@ export default function EventDetailScreen() {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
+        year: 'numeric',
       })
     : '';
 
@@ -164,56 +148,208 @@ export default function EventDetailScreen() {
       <FlatList
         data={moviesQuery.data ?? []}
         keyExtractor={(m) => m._id ?? String(m.tmdbId ?? Math.random())}
-        contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 80 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}
         ListHeaderComponent={
-          <View style={{ gap: 16, marginBottom: 8 }}>
-            <View style={{ gap: 6 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                {event.config?.theme ? <Text style={{ fontSize: 28 }}>{event.config.theme}</Text> : null}
-                <Text style={{ color: palette.text, fontSize: 22, fontWeight: '700', flexShrink: 1 }}>
-                  {event.title ?? 'Sans titre'}
-                </Text>
-                <View
-                  style={{
-                    backgroundColor: badgeBg,
-                    paddingHorizontal: 8,
-                    paddingVertical: 4,
-                    borderRadius: 999,
-                  }}
-                >
-                  <Text style={{ color: badgeText, fontSize: 12, fontWeight: '600' }}>{lifecycle.label}</Text>
-                </View>
-              </View>
-              <Text style={{ color: palette.textMuted }}>
-                {dateLabel}
-                {event.time ? ` · ${event.time}` : ''}
+          <View style={{ gap: 20, paddingTop: 12, paddingBottom: 12 }}>
+            {/* Back link "← Mes soirées" */}
+            <Pressable
+              onPress={() => (router.canGoBack() ? router.back() : router.replace('/(authed)/my-events'))}
+              accessibilityRole="link"
+              hitSlop={6}
+              style={({ pressed }) => ({
+                alignSelf: 'flex-start',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                paddingHorizontal: 10,
+                paddingVertical: 6,
+                borderRadius: 999,
+                backgroundColor: pressed ? palette.borderSubtle : 'transparent',
+              })}
+            >
+              <Ionicons name="arrow-back" size={16} color={palette.textMuted} />
+              <Text style={{ color: palette.textMuted, fontSize: 13, fontWeight: '500' }}>
+                Mes soirées
               </Text>
+            </Pressable>
+
+            {/* Theme banner */}
+            <EventThemeBanner theme={event.config?.theme} />
+
+            {/* Intro : title + metaRow + share line */}
+            <View style={{ gap: 8 }}>
+              <Text
+                style={{
+                  color: palette.text,
+                  fontSize: 28,
+                  fontWeight: '800',
+                  letterSpacing: -0.6,
+                  lineHeight: 34,
+                }}
+              >
+                {event.title ?? 'Sans titre'}
+              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <Text style={{ color: palette.textMuted, fontSize: 15 }}>
+                  {dateLabel}
+                  {event.time ? ` · ${event.time}` : ''}
+                </Text>
+                {lifecycleKey === 'finished' ? (
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 4,
+                      backgroundColor: palette.badgeFinishedBg,
+                      borderColor: palette.badgeFinishedText,
+                      borderWidth: 1,
+                      paddingHorizontal: 9,
+                      paddingVertical: 3,
+                      borderRadius: 999,
+                    }}
+                  >
+                    <Ionicons name="checkmark-circle" size={11} color={palette.badgeFinishedText} />
+                    <Text
+                      style={{
+                        color: palette.badgeFinishedText,
+                        fontSize: 10,
+                        fontWeight: '700',
+                        letterSpacing: 1,
+                      }}
+                    >
+                      TERMINÉE
+                    </Text>
+                  </View>
+                ) : lifecycleKey === 'live' ? (
+                  <View
+                    style={{
+                      backgroundColor: palette.badgeLiveBg,
+                      borderColor: palette.badgeLiveText,
+                      borderWidth: 1,
+                      paddingHorizontal: 9,
+                      paddingVertical: 3,
+                      borderRadius: 999,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: palette.badgeLiveText,
+                        fontSize: 10,
+                        fontWeight: '700',
+                        letterSpacing: 1,
+                      }}
+                    >
+                      ● EN COURS
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
               {myPseudo ? (
                 <Text style={{ color: palette.meta, fontSize: 13 }}>
-                  Tu participes en tant que {myPseudo}.
+                  Tu participes en tant que{' '}
+                  <Text style={{ color: palette.text, fontWeight: '500' }}>{myPseudo}</Text>.
                 </Text>
               ) : null}
             </View>
 
+            {/* Winner card */}
             {event.winnerMovie ? (
               <View
                 style={{
-                  backgroundColor: palette.badgeLiveBg,
-                  padding: 12,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: 14,
                   borderRadius: 12,
-                  gap: 4,
+                  backgroundColor: palette.badgeLiveBg,
+                  borderWidth: 1,
+                  borderColor: palette.badgeLiveText,
                 }}
               >
-                <Text style={{ color: palette.badgeLiveText, fontSize: 12, fontWeight: '600' }}>🏆 Gagnant</Text>
-                <Text style={{ color: palette.text, fontSize: 16, fontWeight: '600' }}>
-                  {event.winnerMovie.title ?? ''}
-                </Text>
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 10,
+                    backgroundColor: palette.badgeLiveText,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Ionicons name="trophy" size={18} color={palette.badgeLiveBg} />
+                </View>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text
+                    style={{
+                      color: palette.badgeLiveText,
+                      fontSize: 11,
+                      fontWeight: '700',
+                      letterSpacing: 1.2,
+                    }}
+                  >
+                    GAGNANT
+                  </Text>
+                  <Text
+                    style={{ color: palette.text, fontSize: 15, fontWeight: '700' }}
+                    numberOfLines={1}
+                  >
+                    {event.winnerMovie.title ?? ''}
+                  </Text>
+                </View>
               </View>
             ) : null}
 
-            <View style={{ gap: 8 }}>
-              <Text style={{ color: palette.sectionHeading, fontSize: 14, fontWeight: '600' }}>
-                Participants ({event.participantCount ?? event.participants?.length ?? 0})
+            {/* Actions row */}
+            <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+              {!isMember ? (
+                <Button label="Rejoindre" onPress={() => setShowJoin(true)} fullWidth={false} />
+              ) : null}
+              {canPropose ? (
+                <Button
+                  label="Proposer un film"
+                  onPress={() => setShowPropose(true)}
+                  variant={!isMember ? 'secondary' : 'primary'}
+                  fullWidth={false}
+                />
+              ) : null}
+              <Button
+                label="Partager"
+                variant="secondary"
+                onPress={() => setShowShare(true)}
+                fullWidth={false}
+              />
+              {isHost ? (
+                <Button label="Config" variant="ghost" onPress={() => setShowConfig(true)} fullWidth={false} />
+              ) : null}
+              {isHost && !event.isFinished ? (
+                <Button
+                  label="Lancer la roue"
+                  onPress={() => setShowWheel(true)}
+                  fullWidth={false}
+                />
+              ) : null}
+            </View>
+
+            {/* Section : Participants */}
+            <View
+              style={{
+                backgroundColor: palette.surface,
+                borderColor: palette.borderSubtle,
+                borderWidth: 1,
+                borderRadius: 12,
+                padding: 16,
+                gap: 10,
+              }}
+            >
+              <Text
+                style={{
+                  color: palette.meta,
+                  fontSize: 11,
+                  fontWeight: '700',
+                  letterSpacing: 1.2,
+                }}
+              >
+                PARTICIPANTS ({event.participantCount ?? event.participants?.length ?? 0})
               </Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                 {(event.participants ?? []).map((p) => {
@@ -240,13 +376,19 @@ export default function EventDetailScreen() {
                           : undefined
                       }
                       style={({ pressed }) => ({
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 4,
                         backgroundColor: p.isCreator ? palette.badgeHostBg : palette.borderSubtle,
                         paddingHorizontal: 10,
-                        paddingVertical: 4,
+                        paddingVertical: 5,
                         borderRadius: 999,
                         opacity: pressed && canKick ? 0.7 : 1,
                       })}
                     >
+                      {p.isCreator ? (
+                        <Ionicons name="ribbon" size={11} color={palette.badgeHostText} />
+                      ) : null}
                       <Text
                         style={{
                           color: p.isCreator ? palette.badgeHostText : palette.text,
@@ -254,7 +396,6 @@ export default function EventDetailScreen() {
                           fontWeight: p.isCreator ? '600' : '500',
                         }}
                       >
-                        {p.isCreator ? '👑 ' : ''}
                         {p.pseudo ?? '?'}
                       </Text>
                     </Pressable>
@@ -268,41 +409,20 @@ export default function EventDetailScreen() {
               ) : null}
             </View>
 
-            <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-              {!isMember ? (
-                <Button
-                  label="Rejoindre"
-                  onPress={() => setShowJoin(true)}
-                  fullWidth={false}
-                />
-              ) : null}
-              {canPropose ? (
-                <Button
-                  label="Proposer un film"
-                  onPress={() => setShowPropose(true)}
-                  variant="secondary"
-                  fullWidth={false}
-                />
-              ) : null}
-              <Button
-                label="Partager"
-                variant="secondary"
-                onPress={() => setShowShare(true)}
-                fullWidth={false}
-              />
-              {isHost ? (
-                <Button label="⚙ Config" variant="ghost" onPress={() => setShowConfig(true)} fullWidth={false} />
-              ) : null}
-              {isHost && !event.isFinished ? (
-                <Button label="🎯 Lancer la roue" onPress={() => setShowWheel(true)} fullWidth={false} />
-              ) : null}
-            </View>
-
-            <Text style={{ color: palette.sectionHeading, fontSize: 14, fontWeight: '600', marginTop: 4 }}>
-              Films ({event.movieCount ?? moviesQuery.data?.length ?? 0})
+            {/* Films heading */}
+            <Text
+              style={{
+                color: palette.meta,
+                fontSize: 11,
+                fontWeight: '700',
+                letterSpacing: 1.2,
+              }}
+            >
+              FILMS ({event.movieCount ?? moviesQuery.data?.length ?? 0})
             </Text>
           </View>
         }
+        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
         renderItem={({ item }) => (
           <MovieCard
             movie={item}
@@ -333,11 +453,28 @@ export default function EventDetailScreen() {
         )}
         ListEmptyComponent={
           moviesQuery.isLoading ? (
-            <ActivityIndicator color={palette.primary} />
+            <ActivityIndicator color={palette.primary} style={{ marginTop: 20 }} />
           ) : (
-            <Text style={{ color: palette.textMuted, textAlign: 'center', marginTop: 20 }}>
-              Aucun film proposé pour le moment.
-            </Text>
+            <View
+              style={{
+                padding: 20,
+                backgroundColor: palette.surface,
+                borderColor: palette.borderSubtle,
+                borderWidth: 1,
+                borderRadius: 12,
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              <Text style={{ color: palette.textMuted, textAlign: 'center' }}>
+                Aucun film proposé pour le moment.
+              </Text>
+              {canPropose ? (
+                <Text style={{ color: palette.meta, fontSize: 13 }}>
+                  Tape « Proposer un film » pour ouvrir TMDB.
+                </Text>
+              ) : null}
+            </View>
           )
         }
       />
