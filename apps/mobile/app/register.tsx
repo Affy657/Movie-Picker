@@ -2,12 +2,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
-import { Button } from '@/components/Button';
-import { Screen } from '@/components/Screen';
-import { TextField } from '@/components/TextField';
 import { ApiError } from '@/api/client';
+import { AuthCard } from '@/components/AuthCard';
+import { Button } from '@/components/Button';
+import { TextField } from '@/components/TextField';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useTranslation } from '@/features/i18n/LocaleContext';
 import { useTheme } from '@/features/theme/ThemeContext';
@@ -55,84 +56,98 @@ export default function RegisterScreen() {
   };
 
   return (
-    <Screen>
-      <View style={{ gap: 8 }}>
-        <Text style={{ color: palette.text, fontSize: 24, fontWeight: '700' }}>
-          {t('auth.register.title')}
-        </Text>
-        <Text style={{ color: palette.textMuted }}>{t('auth.register.description')}</Text>
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }} edges={['top']}>
+      <ScrollView
+        contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <AuthCard title={t('auth.register.title')} description={t('auth.register.description')}>
+          {submitError ? (
+            <View
+              style={{
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: palette.error,
+                backgroundColor: palette.bg,
+              }}
+              accessibilityRole="alert"
+            >
+              <Text style={{ color: palette.error, fontSize: 14, fontWeight: '500' }}>
+                {submitError}
+              </Text>
+            </View>
+          ) : null}
 
-      <Controller
-        control={control}
-        name="email"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextField
-            label={t('auth.register.emailLabel')}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-            onChangeText={onChange}
-            onBlur={onBlur}
-            value={value}
-            error={errors.email ? t('auth.register.emailLabel') + ' invalide' : undefined}
+          <Controller
+            control={control}
+            name="email"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextField
+                label={t('auth.register.emailLabel')}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                onChangeText={onChange}
+                onBlur={onBlur}
+                value={value}
+                error={errors.email ? `${t('auth.register.emailLabel')} invalide` : undefined}
+              />
+            )}
           />
-        )}
-      />
 
-      <Controller
-        control={control}
-        name="displayName"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextField
-            label={t('auth.register.pseudoLabel')}
-            autoCapitalize="words"
-            onChangeText={onChange}
-            onBlur={onBlur}
-            value={value}
-            error={errors.displayName ? t('auth.register.pseudoLabel') + ' requis' : undefined}
+          <Controller
+            control={control}
+            name="displayName"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextField
+                label={t('auth.register.pseudoLabel')}
+                autoCapitalize="words"
+                onChangeText={onChange}
+                onBlur={onBlur}
+                value={value}
+                error={errors.displayName ? `${t('auth.register.pseudoLabel')} requis` : undefined}
+              />
+            )}
           />
-        )}
-      />
 
-      <Controller
-        control={control}
-        name="password"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextField
-            label={t('auth.register.passwordLabel')}
-            secureTextEntry
-            autoComplete="new-password"
-            onChangeText={onChange}
-            onBlur={onBlur}
-            value={value}
-            error={errors.password ? t('auth.register.passwordRulesError') : undefined}
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextField
+                label={t('auth.register.passwordLabel')}
+                secureTextEntry
+                autoComplete="new-password"
+                onChangeText={onChange}
+                onBlur={onBlur}
+                value={value}
+                hint={t('auth.register.passwordRulesHint')}
+                error={errors.password ? t('auth.register.passwordRulesError') : undefined}
+              />
+            )}
           />
-        )}
-      />
-      <Text style={{ color: palette.meta, fontSize: 13, marginTop: -8 }}>
-        {t('auth.register.passwordRulesHint')}
-      </Text>
 
-      {submitError ? (
-        <Text style={{ color: palette.error, fontSize: 14 }}>{submitError}</Text>
-      ) : null}
+          <Button
+            label={isAuthenticating ? t('auth.register.submitting') : t('auth.register.submit')}
+            loading={isAuthenticating}
+            onPress={handleSubmit(onSubmit)}
+          />
 
-      <Button
-        label={isAuthenticating ? t('auth.register.submitting') : t('auth.register.submit')}
-        loading={isAuthenticating}
-        onPress={handleSubmit(onSubmit)}
-      />
-
-      <View style={{ flexDirection: 'row', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
-        <Text style={{ color: palette.textMuted }}>{t('auth.register.loginPrompt')}</Text>
-        <Text
-          onPress={() => router.push('/login')}
-          style={{ color: palette.primary, fontWeight: '600' }}
-        >
-          {t('auth.register.loginLink')}
-        </Text>
-      </View>
-    </Screen>
+          <View style={{ flexDirection: 'row', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+            <Text style={{ color: palette.textMuted, fontSize: 14 }}>
+              {t('auth.register.loginPrompt')}
+            </Text>
+            <Text
+              onPress={() => router.push('/login')}
+              style={{ color: palette.primary, fontWeight: '600', fontSize: 14 }}
+            >
+              {t('auth.register.loginLink')}
+            </Text>
+          </View>
+        </AuthCard>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

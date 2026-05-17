@@ -2,13 +2,18 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
-import { Button } from '@/components/Button';
-import { Screen } from '@/components/Screen';
-import { TextField } from '@/components/TextField';
 import { ApiError } from '@/api/client';
+import { AuthCard } from '@/components/AuthCard';
+import { Button } from '@/components/Button';
+import { TextField } from '@/components/TextField';
 import { useAuth } from '@/features/auth/AuthContext';
+import {
+  DEV_QUICK_LOGIN_EMAIL,
+  DEV_QUICK_LOGIN_PASSWORD,
+} from '@/features/auth/devQuickLoginCredentials';
 import { useTranslation } from '@/features/i18n/LocaleContext';
 import { useTheme } from '@/features/theme/ThemeContext';
 
@@ -29,93 +34,141 @@ export default function LoginScreen() {
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { email: '', password: '' },
   });
 
-  const onSubmit = async (values: FormValues) => {
+  const performLogin = async (values: FormValues) => {
     setSubmitError(null);
     try {
       await login(values);
       router.replace('/my-events');
     } catch (err) {
       const message =
-        err instanceof ApiError ? (err.message ?? t('auth.login.fallbackError')) : t('auth.login.fallbackError');
+        err instanceof ApiError
+          ? (err.message ?? t('auth.login.fallbackError'))
+          : t('auth.login.fallbackError');
       setSubmitError(message);
     }
   };
 
+  const onDevQuick = () => {
+    setValue('email', DEV_QUICK_LOGIN_EMAIL);
+    setValue('password', DEV_QUICK_LOGIN_PASSWORD);
+    void performLogin({ email: DEV_QUICK_LOGIN_EMAIL, password: DEV_QUICK_LOGIN_PASSWORD });
+  };
+
   return (
-    <Screen>
-      <View style={{ gap: 8 }}>
-        <Text style={{ color: palette.text, fontSize: 24, fontWeight: '700' }}>
-          {t('auth.login.title')}
-        </Text>
-        <Text style={{ color: palette.textMuted }}>{t('auth.login.description')}</Text>
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }} edges={['top']}>
+      <ScrollView
+        contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <AuthCard title={t('auth.login.title')} description={t('auth.login.description')}>
+          {submitError ? (
+            <View
+              style={{
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: palette.error,
+                backgroundColor: palette.bg,
+              }}
+              accessibilityRole="alert"
+            >
+              <Text style={{ color: palette.error, fontSize: 14, fontWeight: '500' }}>
+                {submitError}
+              </Text>
+            </View>
+          ) : null}
 
-      <Controller
-        control={control}
-        name="email"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextField
-            label={t('auth.login.emailLabel')}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-            onChangeText={onChange}
-            onBlur={onBlur}
-            value={value}
-            error={errors.email ? t('auth.login.emailLabel') + ' invalide' : undefined}
+          <Controller
+            control={control}
+            name="email"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextField
+                label={t('auth.login.emailLabel')}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                onChangeText={onChange}
+                onBlur={onBlur}
+                value={value}
+                error={errors.email ? `${t('auth.login.emailLabel')} invalide` : undefined}
+              />
+            )}
           />
-        )}
-      />
 
-      <Controller
-        control={control}
-        name="password"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextField
-            label={t('auth.login.passwordLabel')}
-            secureTextEntry
-            autoComplete="password"
-            onChangeText={onChange}
-            onBlur={onBlur}
-            value={value}
-            error={errors.password ? t('auth.login.passwordLabel') + ' requis' : undefined}
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextField
+                label={t('auth.login.passwordLabel')}
+                secureTextEntry
+                autoComplete="password"
+                onChangeText={onChange}
+                onBlur={onBlur}
+                value={value}
+                error={errors.password ? `${t('auth.login.passwordLabel')} requis` : undefined}
+              />
+            )}
           />
-        )}
-      />
 
-      {submitError ? (
-        <Text style={{ color: palette.error, fontSize: 14 }}>{submitError}</Text>
-      ) : null}
+          <Button
+            label={isAuthenticating ? t('auth.login.submitting') : t('auth.login.submit')}
+            loading={isAuthenticating}
+            onPress={handleSubmit(performLogin)}
+          />
 
-      <Button
-        label={isAuthenticating ? t('auth.login.submitting') : t('auth.login.submit')}
-        loading={isAuthenticating}
-        onPress={handleSubmit(onSubmit)}
-      />
+          {__DEV__ ? (
+            <View
+              style={{
+                marginTop: 4,
+                paddingTop: 14,
+                borderTopWidth: 1,
+                borderTopColor: palette.borderSubtle,
+                gap: 8,
+              }}
+            >
+              <Button
+                label={t('auth.login.devQuickButton')}
+                variant="ghost"
+                onPress={onDevQuick}
+                disabled={isAuthenticating}
+                accessibilityLabel={t('auth.login.devQuickAriaLabel')}
+              />
+              <Text style={{ color: palette.meta, fontSize: 12, textAlign: 'center' }}>
+                {t('auth.login.devQuickHint')}
+              </Text>
+            </View>
+          ) : null}
 
-      <View style={{ gap: 8, marginTop: 8 }}>
-        <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
-          <Text style={{ color: palette.textMuted }}>{t('auth.login.registerPrompt')}</Text>
-          <Text
-            onPress={() => router.push('/register')}
-            style={{ color: palette.primary, fontWeight: '600' }}
-          >
-            {t('auth.login.registerLink')}
-          </Text>
-        </View>
-        <Text
-          onPress={() => router.push('/forgot-password')}
-          style={{ color: palette.primary, fontWeight: '500' }}
-        >
-          {t('auth.login.forgotPasswordLink')}
-        </Text>
-      </View>
-    </Screen>
+          <View style={{ gap: 6, marginTop: 8 }}>
+            <Text
+              onPress={() => router.push('/forgot-password')}
+              style={{ color: palette.primary, fontWeight: '500', fontSize: 14 }}
+            >
+              {t('auth.login.forgotPasswordLink')}
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
+              <Text style={{ color: palette.textMuted, fontSize: 14 }}>
+                {t('auth.login.registerPrompt')}
+              </Text>
+              <Text
+                onPress={() => router.push('/register')}
+                style={{ color: palette.primary, fontWeight: '600', fontSize: 14 }}
+              >
+                {t('auth.login.registerLink')}
+              </Text>
+            </View>
+          </View>
+        </AuthCard>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

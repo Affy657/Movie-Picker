@@ -2,12 +2,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Text, View } from 'react-native';
+import { ScrollView, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
-import { Button } from '@/components/Button';
-import { Screen } from '@/components/Screen';
-import { TextField } from '@/components/TextField';
 import { requestPasswordReset } from '@/api/auth';
+import { AuthCard } from '@/components/AuthCard';
+import { Button } from '@/components/Button';
+import { TextField } from '@/components/TextField';
 import { useTranslation } from '@/features/i18n/LocaleContext';
 import { useTheme } from '@/features/theme/ThemeContext';
 
@@ -44,64 +45,66 @@ export default function ForgotPasswordScreen() {
     }
   };
 
-  if (submitted) {
-    return (
-      <Screen>
-        <View style={{ gap: 12 }}>
-          <Text style={{ color: palette.text, fontSize: 24, fontWeight: '700' }}>
-            {t('auth.forgotPassword.successTitle')}
-          </Text>
-          <Text style={{ color: palette.textMuted }}>{t('auth.forgotPassword.successMessage')}</Text>
-        </View>
-        <Button
-          label={t('auth.forgotPassword.backToLogin')}
-          variant="secondary"
-          onPress={() => router.replace('/login')}
-        />
-      </Screen>
-    );
-  }
-
   return (
-    <Screen>
-      <View style={{ gap: 8 }}>
-        <Text style={{ color: palette.text, fontSize: 24, fontWeight: '700' }}>
-          {t('auth.forgotPassword.title')}
-        </Text>
-        <Text style={{ color: palette.textMuted }}>{t('auth.forgotPassword.description')}</Text>
-      </View>
-
-      <Controller
-        control={control}
-        name="email"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextField
-            label={t('auth.forgotPassword.emailLabel')}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-            onChangeText={onChange}
-            onBlur={onBlur}
-            value={value}
-            error={errors.email ? t('auth.forgotPassword.emailLabel') + ' invalide' : undefined}
-          />
-        )}
-      />
-
-      {error ? <Text style={{ color: palette.error }}>{error}</Text> : null}
-
-      <Button
-        label={submitting ? t('auth.forgotPassword.submitting') : t('auth.forgotPassword.submit')}
-        loading={submitting}
-        onPress={handleSubmit(onSubmit)}
-      />
-
-      <Text
-        onPress={() => router.replace('/login')}
-        style={{ color: palette.primary, fontWeight: '500', marginTop: 8 }}
+    <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }} edges={['top']}>
+      <ScrollView
+        contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+        keyboardShouldPersistTaps="handled"
       >
-        {t('auth.forgotPassword.backToLogin')}
-      </Text>
-    </Screen>
+        {submitted ? (
+          <AuthCard
+            title={t('auth.forgotPassword.successTitle')}
+            description={t('auth.forgotPassword.successMessage')}
+          >
+            <Button
+              label={t('auth.forgotPassword.backToLogin')}
+              variant="secondary"
+              onPress={() => router.replace('/login')}
+            />
+          </AuthCard>
+        ) : (
+          <AuthCard
+            title={t('auth.forgotPassword.title')}
+            description={t('auth.forgotPassword.description')}
+          >
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextField
+                  label={t('auth.forgotPassword.emailLabel')}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  value={value}
+                  error={errors.email ? `${t('auth.forgotPassword.emailLabel')} invalide` : undefined}
+                />
+              )}
+            />
+
+            {error ? (
+              <Text style={{ color: palette.error, fontSize: 14 }}>{error}</Text>
+            ) : null}
+
+            <Button
+              label={
+                submitting ? t('auth.forgotPassword.submitting') : t('auth.forgotPassword.submit')
+              }
+              loading={submitting}
+              onPress={handleSubmit(onSubmit)}
+            />
+
+            <Text
+              onPress={() => router.replace('/login')}
+              style={{ color: palette.primary, fontWeight: '500', marginTop: 4, fontSize: 14 }}
+            >
+              {t('auth.forgotPassword.backToLogin')}
+            </Text>
+          </AuthCard>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }

@@ -18,6 +18,13 @@ type Props = Omit<PressableProps, 'style' | 'children'> & {
   style?: StyleProp<ViewStyle>;
 };
 
+/**
+ * Visuel aligné sur le `.btn` / `.btn-primary` du web :
+ * - radius 12px (radius-md), min-height 42, padding ~10/18
+ * - surface blanche pour secondary/ghost, primary plein
+ * - shadow légère (sm) au repos, shadow-md au press (équivalent hover web)
+ * - font 600, letter-spacing 0.5
+ */
 export function Button({
   label,
   variant = 'primary',
@@ -34,17 +41,20 @@ export function Button({
     variant === 'primary'
       ? palette.primary
       : variant === 'danger'
-        ? palette.error
+        ? palette.surface
         : variant === 'secondary'
           ? palette.surface
           : 'transparent';
-  const color =
+
+  const fg =
     variant === 'primary'
       ? palette.primaryContrast
       : variant === 'danger'
-        ? '#ffffff'
-        : palette.primary;
-  const border = variant === 'secondary' ? palette.border : 'transparent';
+        ? palette.error
+        : palette.text;
+
+  const border =
+    variant === 'ghost' ? 'transparent' : variant === 'primary' ? palette.primary : palette.border;
 
   return (
     <Pressable
@@ -54,22 +64,38 @@ export function Button({
         {
           backgroundColor: bg,
           borderColor: border,
-          borderWidth: variant === 'secondary' ? 1 : 0,
+          borderWidth: 1,
           borderRadius: 12,
-          paddingHorizontal: 16,
-          paddingVertical: 12,
+          paddingHorizontal: 18,
+          paddingVertical: 10,
+          minHeight: 42,
           alignItems: 'center',
           justifyContent: 'center',
-          opacity: isDisabled ? 0.5 : pressed ? 0.85 : 1,
+          opacity: isDisabled ? 0.55 : 1,
+          transform: [{ translateY: pressed && !isDisabled ? -1 : 0 }],
           alignSelf: fullWidth ? 'stretch' : 'flex-start',
+          shadowColor: '#0f172a',
+          shadowOpacity: variant === 'ghost' ? 0 : pressed ? 0.12 : 0.06,
+          shadowRadius: pressed ? 6 : 2,
+          shadowOffset: { width: 0, height: pressed ? 4 : 1 },
+          elevation: variant === 'ghost' ? 0 : pressed ? 4 : 1,
         },
         style,
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={color} />
+        <ActivityIndicator color={fg} />
       ) : (
-        <Text style={{ color, fontSize: 16, fontWeight: '600' }}>{label}</Text>
+        <Text
+          style={{
+            color: fg,
+            fontSize: 15,
+            fontWeight: '600',
+            letterSpacing: 0.2,
+          }}
+        >
+          {label}
+        </Text>
       )}
     </Pressable>
   );

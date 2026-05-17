@@ -2,13 +2,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
-import { Button } from '@/components/Button';
-import { Screen } from '@/components/Screen';
-import { TextField } from '@/components/TextField';
 import { confirmPasswordReset } from '@/api/auth';
 import { ApiError } from '@/api/client';
+import { AuthCard } from '@/components/AuthCard';
+import { Button } from '@/components/Button';
+import { TextField } from '@/components/TextField';
 import { useTranslation } from '@/features/i18n/LocaleContext';
 import { useTheme } from '@/features/theme/ThemeContext';
 
@@ -54,7 +55,6 @@ export default function ResetPasswordScreen() {
       setError(t('auth.resetPassword.missingTokenError'));
       return;
     }
-
     setSubmitting(true);
     setError(null);
     try {
@@ -62,7 +62,9 @@ export default function ResetPasswordScreen() {
       setDone(true);
     } catch (err) {
       const message =
-        err instanceof ApiError ? (err.message ?? t('auth.resetPassword.fallbackError')) : t('auth.resetPassword.fallbackError');
+        err instanceof ApiError
+          ? (err.message ?? t('auth.resetPassword.fallbackError'))
+          : t('auth.resetPassword.fallbackError');
       setError(message);
     } finally {
       setSubmitting(false);
@@ -71,87 +73,113 @@ export default function ResetPasswordScreen() {
 
   if (done) {
     return (
-      <Screen>
-        <View style={{ gap: 12 }}>
-          <Text style={{ color: palette.text, fontSize: 24, fontWeight: '700' }}>
-            {t('auth.resetPassword.successTitle')}
-          </Text>
-          <Text style={{ color: palette.textMuted }}>{t('auth.resetPassword.successMessage')}</Text>
-        </View>
-        <Button label={t('auth.resetPassword.goToLogin')} onPress={() => router.replace('/login')} />
-      </Screen>
+      <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }} edges={['top']}>
+        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+          <AuthCard
+            title={t('auth.resetPassword.successTitle')}
+            description={t('auth.resetPassword.successMessage')}
+          >
+            <Button
+              label={t('auth.resetPassword.goToLogin')}
+              onPress={() => router.replace('/login')}
+            />
+          </AuthCard>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
   const showManualTokenField = !params.token;
   const passwordsDiffer =
-    errors.confirm?.message === 'mismatch' || (watch('confirm') !== '' && watch('confirm') !== watch('password'));
+    errors.confirm?.message === 'mismatch' ||
+    (watch('confirm') !== '' && watch('confirm') !== watch('password'));
 
   return (
-    <Screen>
-      <View style={{ gap: 8 }}>
-        <Text style={{ color: palette.text, fontSize: 24, fontWeight: '700' }}>
-          {t('auth.resetPassword.title')}
-        </Text>
-        <Text style={{ color: palette.textMuted }}>{t('auth.resetPassword.description')}</Text>
-      </View>
-
-      {showManualTokenField ? (
-        <Controller
-          control={control}
-          name="manualToken"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <TextField
-              label="Token de réinitialisation"
-              autoCapitalize="none"
-              autoCorrect={false}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              value={value ?? ''}
+    <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }} edges={['top']}>
+      <ScrollView
+        contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <AuthCard
+          title={t('auth.resetPassword.title')}
+          description={t('auth.resetPassword.description')}
+        >
+          {showManualTokenField ? (
+            <Controller
+              control={control}
+              name="manualToken"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextField
+                  label="Token de réinitialisation"
+                  hint="Colle ici le token reçu par e-mail."
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  value={value ?? ''}
+                />
+              )}
             />
-          )}
-        />
-      ) : null}
+          ) : null}
 
-      <Controller
-        control={control}
-        name="password"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextField
-            label={t('auth.resetPassword.newPasswordLabel')}
-            secureTextEntry
-            autoComplete="new-password"
-            onChangeText={onChange}
-            onBlur={onBlur}
-            value={value}
-            error={errors.password ? t('auth.resetPassword.newPasswordHint') : undefined}
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextField
+                label={t('auth.resetPassword.newPasswordLabel')}
+                secureTextEntry
+                autoComplete="new-password"
+                onChangeText={onChange}
+                onBlur={onBlur}
+                value={value}
+                hint={t('auth.resetPassword.newPasswordHint')}
+                error={errors.password ? t('auth.resetPassword.newPasswordHint') : undefined}
+              />
+            )}
           />
-        )}
-      />
 
-      <Controller
-        control={control}
-        name="confirm"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextField
-            label={t('auth.resetPassword.confirmPasswordLabel')}
-            secureTextEntry
-            autoComplete="new-password"
-            onChangeText={onChange}
-            onBlur={onBlur}
-            value={value}
-            error={passwordsDiffer ? t('auth.resetPassword.passwordsMustMatch') : undefined}
+          <Controller
+            control={control}
+            name="confirm"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextField
+                label={t('auth.resetPassword.confirmPasswordLabel')}
+                secureTextEntry
+                autoComplete="new-password"
+                onChangeText={onChange}
+                onBlur={onBlur}
+                value={value}
+                error={passwordsDiffer ? t('auth.resetPassword.passwordsMustMatch') : undefined}
+              />
+            )}
           />
-        )}
-      />
 
-      {error ? <Text style={{ color: palette.error }}>{error}</Text> : null}
+          {error ? (
+            <View
+              style={{
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: palette.error,
+                backgroundColor: palette.bg,
+              }}
+              accessibilityRole="alert"
+            >
+              <Text style={{ color: palette.error, fontSize: 14 }}>{error}</Text>
+            </View>
+          ) : null}
 
-      <Button
-        label={submitting ? t('auth.resetPassword.submitting') : t('auth.resetPassword.submit')}
-        loading={submitting}
-        onPress={handleSubmit(onSubmit)}
-      />
-    </Screen>
+          <Button
+            label={
+              submitting ? t('auth.resetPassword.submitting') : t('auth.resetPassword.submit')
+            }
+            loading={submitting}
+            onPress={handleSubmit(onSubmit)}
+          />
+        </AuthCard>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
