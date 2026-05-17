@@ -52,21 +52,39 @@ describe('EventCard', () => {
     expect(getByText('HÔTE')).toBeTruthy();
   });
 
-  it('renders the upcoming lifecycle badge', () => {
-    const { getByText } = render(
+  it('hides the lifecycle pill for upcoming events (aligned web)', () => {
+    const { queryByText } = render(
       <Wrap>
         <EventCard event={baseEvent} />
       </Wrap>
     );
-    expect(getByText('À venir')).toBeTruthy();
+    expect(queryByText('À venir')).toBeNull();
   });
 
-  it('switches badge to Terminée for finished', () => {
+  it('shows the lifecycle pill for live events', () => {
     const { getByText } = render(
       <Wrap>
-        <EventCard event={{ ...baseEvent, lifecycle: 'finished' }} />
+        <EventCard event={{ ...baseEvent, lifecycle: 'live' }} />
+      </Wrap>
+    );
+    expect(getByText('● En cours')).toBeTruthy();
+  });
+
+  it('shows Terminée for finished when showLifecycleBadge is true', () => {
+    const { getByText } = render(
+      <Wrap>
+        <EventCard event={{ ...baseEvent, lifecycle: 'finished' }} showLifecycleBadge />
       </Wrap>
     );
     expect(getByText('Terminée')).toBeTruthy();
+  });
+
+  it('hides the lifecycle pill when showLifecycleBadge=false (history tab)', () => {
+    const { queryByText } = render(
+      <Wrap>
+        <EventCard event={{ ...baseEvent, lifecycle: 'finished' }} showLifecycleBadge={false} />
+      </Wrap>
+    );
+    expect(queryByText('Terminée')).toBeNull();
   });
 });
