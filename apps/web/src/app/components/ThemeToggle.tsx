@@ -1,19 +1,30 @@
+import clsx from 'clsx';
 import { useMemo } from 'react';
-import Dropdown from '@/shared/components/Dropdown';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useTheme } from '@/shared/contexts/ThemeContext';
 import type { UiThemePreference } from '@/shared/types/theme';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { isUiThemePreference } from '@/shared/utils/uiThemePreference';
+import styles from './ThemeToggle.module.css';
 
-const THEME_OPTIONS: readonly UiThemePreference[] = ['light', 'dark', 'system'];
+const THEME_OPTIONS: readonly UiThemePreference[] = ['system', 'light', 'dark'];
 
+const LABEL_KEY: Record<UiThemePreference, TranslationKey> = {
+  system: 'theme.system',
+  light: 'theme.light',
+  dark: 'theme.dark',
+};
+
+/**
+ * Segmented radio « Système / Clair / Sombre ».
+ * Pattern WAI-ARIA `radiogroup` — clavier : ←/→ / Home / End déplacent la sélection.
+ * Aligné sur le rendu mobile (carte « Apparence »).
+ */
 export default function ThemeToggle({
   className = '',
   id,
 }: {
   className?: string;
-  /** Si défini, le libellé visible doit utiliser `htmlFor={id}` ; sinon `aria-label` seul. */
   id?: string;
 }) {
   const { preference, setUiPreference } = useTheme();
@@ -24,17 +35,12 @@ export default function ThemeToggle({
     () =>
       THEME_OPTIONS.map((code) => ({
         value: code,
-        label:
-          code === 'light'
-            ? t('theme.light')
-            : code === 'dark'
-              ? t('theme.dark')
-              : t('theme.system'),
+        label: t(LABEL_KEY[code]),
       })),
     [t]
   );
 
-  const handleChange = (value: string) => {
+  const commit = (value: UiThemePreference) => {
     if (!isUiThemePreference(value)) return;
     const prev = preference;
     setUiPreference(value);
@@ -45,14 +51,47 @@ export default function ThemeToggle({
     }
   };
 
+  const handleKey = (e: React.KeyboardEvent, idx: number) => {
+    const last = options.length - 1;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      commit(options[idx === last ? 0 : idx + 1]!.value);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      commit(options[idx === 0 ? last : idx - 1]!.value);
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      commit(options[0]!.value);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      commit(options[last]!.value);
+    }
+  };
+
   return (
-    <Dropdown
+    <div
       id={id}
-      value={preference}
-      options={options}
-      onChange={handleChange}
-      ariaLabel={id ? undefined : t('auth.account.themeLabel')}
-      className={className || undefined}
-    />
+      role="radiogroup"
+      aria-label={id ? undefined : t('auth.account.themeLabel')}
+      className={clsx(styles.root, className || undefined)}
+    >
+      {options.map((opt, idx) => {
+        const selected = opt.value === preference;
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            tabIndex={selected ? 0 : -1}
+            className={clsx(styles.option, selected && styles.optionSelected)}
+            onClick={() => commit(opt.value)}
+            onKeyDown={(e) => handleKey(e, idx)}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }

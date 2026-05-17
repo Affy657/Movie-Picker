@@ -64,11 +64,11 @@ describe('AccountPage (MSW)', () => {
     });
 
     expect(screen.getByRole('heading', { name: 'Préférences' })).toBeInTheDocument();
-    const themeSelect = screen.getByLabelText('Thème de l\u2019interface');
 
-    await user.click(themeSelect);
-    const darkOption = await screen.findByRole('option', { name: /sombre/i });
-    await user.click(darkOption);
+    // Le ThemeToggle est maintenant un radiogroup segmenté (Système / Clair / Sombre)
+    // aligné sur le rendu mobile — voir apps/mobile/app/(authed)/settings.tsx.
+    const darkRadio = await screen.findByRole('radio', { name: /sombre/i });
+    await user.click(darkRadio);
     await waitFor(() => expect(patchedTheme).toBe('dark'));
   });
 });

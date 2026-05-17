@@ -136,6 +136,7 @@ export const fr = {
       accentColorHint:
         'Choisissez la couleur dominante des boutons et accents. S\u2019applique en mode clair et sombre.',
       accentColorOptions: {
+        default: 'Par défaut',
         blue: 'Bleu',
         green: 'Vert',
         purple: 'Violet',

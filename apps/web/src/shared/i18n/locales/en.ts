@@ -128,6 +128,7 @@ export const en: Locale = {
       accentColorHint:
         'Choose the dominant colour of buttons and highlights. Applies to both light and dark modes.',
       accentColorOptions: {
+        default: 'Default',
         blue: 'Blue',
         green: 'Green',
         purple: 'Purple',

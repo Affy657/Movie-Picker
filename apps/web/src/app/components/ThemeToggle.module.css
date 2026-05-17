@@ -1,5 +1,47 @@
-/* Le composant ThemeToggle délègue maintenant son rendu à <Dropdown>.
-   Module conservé en cas de besoin futur d'override local. */
-.placeholder {
-  display: none;
+.root {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.1rem;
+}
+
+.option {
+  flex: 1 1 auto;
+  min-width: 5.5rem;
+  padding: 0.55rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.option:hover:not(.optionSelected) {
+  border-color: color-mix(in srgb, var(--color-primary) 50%, var(--color-border));
+  color: var(--color-primary);
+}
+
+.option:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 25%, transparent);
+}
+
+.optionSelected {
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.optionSelected:hover {
+  /* Pas de hover spécifique : l'état sélectionné prime visuellement. */
+  color: var(--color-primary);
 }

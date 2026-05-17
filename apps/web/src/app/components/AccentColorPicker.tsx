@@ -9,18 +9,18 @@ import type { AccentColor } from '@/shared/types/theme';
 import styles from './AccentColorPicker.module.css';
 
 /**
- * Palettes proposées dans l'UI — exclut 'default' volontairement :
- * la valeur stockée 'default' est visuellement identique à 'blue', donc on
- * affiche 'blue' comme sélection initiale pour les utilisateurs sans choix
- * explicite. Cliquer persiste alors une valeur explicite.
+ * Palettes proposées dans l'UI — inclut 'default' en premier (alignement mobile).
+ * Visuellement identique à 'blue', mais permet à l'utilisateur de retrouver
+ * explicitement l'état initial sans avoir à clear son profil.
  */
 const PICKER_COLORS = [
+  'default',
   'blue',
   'green',
   'purple',
   'pink',
   'orange',
-] as const satisfies readonly Exclude<AccentColor, 'default'>[];
+] as const satisfies readonly AccentColor[];
 type PickerColor = (typeof PICKER_COLORS)[number];
 
 /**
@@ -29,6 +29,7 @@ type PickerColor = (typeof PICKER_COLORS)[number];
  * change aussi le bloc équivalent dans 01-foundation.css.
  */
 const SWATCH_COLORS: Record<PickerColor, string> = {
+  default: '#2563eb',
   blue: '#2563eb',
   green: '#16a34a',
   purple: '#7c3aed',
@@ -38,6 +39,7 @@ const SWATCH_COLORS: Record<PickerColor, string> = {
 
 /** Mapping type-safe couleur → clé i18n (refusé à la compile si une couleur n'a pas de libellé). */
 const ACCENT_LABEL_KEY: Record<PickerColor, TranslationKey> = {
+  default: 'auth.account.accentColorOptions.default',
   blue: 'auth.account.accentColorOptions.blue',
   green: 'auth.account.accentColorOptions.green',
   purple: 'auth.account.accentColorOptions.purple',
@@ -82,12 +84,12 @@ export default function AccentColorPicker({
     []
   );
 
-  // Pour la sélection : on traite la valeur stockée 'default' comme 'blue' (visuellement identique).
-  const effectiveSelection: PickerColor = accent === 'default' ? 'blue' : (accent as PickerColor);
+  // 'default' est maintenant une valeur exposée dans le picker (1ʳᵉ swatch).
+  const effectiveSelection: PickerColor = accent as PickerColor;
 
   const commit = useCallback(
     (next: PickerColor) => {
-      if (next === effectiveSelection && accent !== 'default') return;
+      if (next === effectiveSelection) return;
       setAccent(next);
       if (!user) {
         lastCommittedRef.current = next;
@@ -144,6 +146,7 @@ export default function AccentColorPicker({
             aria-label={t(ACCENT_LABEL_KEY[color])}
             tabIndex={selected ? 0 : -1}
             className={clsx(styles.swatch, selected && styles.swatchSelected)}
+            data-accent={color}
             style={{ ['--swatch-color' as string]: SWATCH_COLORS[color] }}
             onClick={() => commit(color)}
             onKeyDown={(e) => handleKey(e, idx)}

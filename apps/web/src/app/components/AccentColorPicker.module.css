@@ -43,3 +43,18 @@
 .check {
   pointer-events: none;
 }
+
+/* Petit point intérieur pour distinguer 'default' (visuellement = bleu) des autres */
+.swatch[data-accent='default']::after {
+  content: '';
+  position: absolute;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  bottom: 0.18rem;
+  right: 0.18rem;
+}
+.swatch[data-accent='default'].swatchSelected::after {
+  display: none;
+}
