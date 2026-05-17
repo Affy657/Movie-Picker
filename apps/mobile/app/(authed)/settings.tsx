@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -111,11 +112,25 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }} edges={['top']}>
       <ScrollView contentContainerStyle={{ padding: 20, gap: 20 }}>
-        <Text style={{ color: palette.text, fontSize: 24, fontWeight: '700' }}>Mon compte</Text>
+        {/* Header : titre 800 + email masque (parite header web) */}
+        <View style={{ gap: 4 }}>
+          <Text
+            style={{
+              color: palette.text,
+              fontSize: 28,
+              fontWeight: '800',
+              letterSpacing: -0.6,
+            }}
+          >
+            Mon compte
+          </Text>
+          {user?.emailMasked ? (
+            <Text style={{ color: palette.textMuted, fontSize: 14 }}>{user.emailMasked}</Text>
+          ) : null}
+        </View>
 
-        <Section title="Profil" palette={palette}>
+        <Section title="Profil" icon="person-outline" palette={palette}>
           <TextField label="Pseudo affiché" value={displayName} onChangeText={setDisplayName} />
-          <Text style={{ color: palette.meta, fontSize: 12 }}>{user?.emailMasked ?? ''}</Text>
           {error ? <Text style={{ color: palette.error }}>{error}</Text> : null}
           <Button
             label={savingName ? 'Sauvegarde…' : 'Enregistrer le pseudo'}
@@ -125,7 +140,7 @@ export default function SettingsScreen() {
           />
         </Section>
 
-        <Section title="Apparence" palette={palette}>
+        <Section title="Apparence" icon="color-palette-outline" palette={palette}>
           <Text style={{ color: palette.textMuted, fontSize: 13 }}>Thème</Text>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             {THEMES.map((m) => (
@@ -174,7 +189,7 @@ export default function SettingsScreen() {
           </View>
         </Section>
 
-        <Section title="Langue" palette={palette}>
+        <Section title="Langue" icon="language-outline" palette={palette}>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             {LOCALES.map((l) => (
               <Pressable
@@ -203,7 +218,7 @@ export default function SettingsScreen() {
           </View>
         </Section>
 
-        <Section title="Sécurité" palette={palette}>
+        <Section title="Sécurité" icon="key-outline" palette={palette}>
           <TextField
             label="Mot de passe actuel"
             value={currentPassword}
@@ -231,7 +246,7 @@ export default function SettingsScreen() {
           />
         </Section>
 
-        <Section title="Compte" palette={palette}>
+        <Section title="Compte" icon="log-out-outline" palette={palette}>
           <Button label="Se déconnecter" variant="secondary" onPress={confirmLogout} />
           <Text style={{ color: palette.meta, fontSize: 12 }}>
             Suppression de compte : à venir (pas d&apos;endpoint dédié côté API actuelle).
@@ -250,25 +265,44 @@ export default function SettingsScreen() {
 
 function Section({
   title,
+  icon,
   palette,
   children,
 }: {
   title: string;
+  icon?: React.ComponentProps<typeof Ionicons>['name'];
   palette: ReturnType<typeof useTheme>['palette'];
   children: React.ReactNode;
 }) {
   return (
     <View
       style={{
-        gap: 10,
+        gap: 12,
         backgroundColor: palette.surface,
         borderColor: palette.borderSubtle,
         borderWidth: 1,
         borderRadius: 16,
-        padding: 16,
+        padding: 18,
+        shadowColor: '#0f172a',
+        shadowOpacity: 0.04,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 1,
       }}
     >
-      <Text style={{ color: palette.sectionHeading, fontSize: 14, fontWeight: '700' }}>{title}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        {icon ? <Ionicons name={icon} size={18} color={palette.sectionHeading} /> : null}
+        <Text
+          style={{
+            color: palette.sectionHeading,
+            fontSize: 16,
+            fontWeight: '700',
+            letterSpacing: -0.2,
+          }}
+        >
+          {title}
+        </Text>
+      </View>
       {children}
     </View>
   );

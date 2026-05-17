@@ -27,7 +27,7 @@ const FEATURES: Feature[] = [
   {
     icon: '🎯',
     title: 'La roue tranche',
-    text: 'Aléatoire pur ou pondéré par les votes : à toi de choisir.',
+    text: "Toujours pas d'accord ? Un coup de roue et le verdict tombe.",
   },
 ];
 
