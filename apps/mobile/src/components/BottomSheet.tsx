@@ -8,11 +8,6 @@ type Props = ViewProps & {
   title?: string;
 };
 
-/**
- * Modal plein écran utilisée comme bottom-sheet "lite" : pas de drag-handle,
- * fermeture via le bouton "✕" ou via le backdrop. À remplacer par une lib
- * dédiée (@gorhom/bottom-sheet) si l'UX devient prioritaire.
- */
 export function BottomSheet({ visible, onClose, title, children, style }: Props) {
   const { palette } = useTheme();
   return (

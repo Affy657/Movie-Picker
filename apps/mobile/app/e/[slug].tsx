@@ -86,7 +86,14 @@ export default function EventDetailScreen() {
 
   if (eventQuery.isLoading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg, alignItems: 'center', justifyContent: 'center' }}>
+      <SafeAreaView
+        style={{
+          flex: 1,
+          backgroundColor: palette.bg,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
         <ActivityIndicator color={palette.primary} />
       </SafeAreaView>
     );
@@ -96,7 +103,12 @@ export default function EventDetailScreen() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg, padding: 20, gap: 12 }}>
         <Text style={{ color: palette.error }}>Impossible de charger cette soirée.</Text>
-        <Button label={t('common.retry')} variant="secondary" onPress={() => eventQuery.refetch()} fullWidth={false} />
+        <Button
+          label={t('common.retry')}
+          variant="secondary"
+          onPress={() => eventQuery.refetch()}
+          fullWidth={false}
+        />
       </SafeAreaView>
     );
   }
@@ -151,9 +163,10 @@ export default function EventDetailScreen() {
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}
         ListHeaderComponent={
           <View style={{ gap: 20, paddingTop: 12, paddingBottom: 12 }}>
-            {/* Back link "← Mes soirées" */}
             <Pressable
-              onPress={() => (router.canGoBack() ? router.back() : router.replace('/(authed)/my-events'))}
+              onPress={() =>
+                router.canGoBack() ? router.back() : router.replace('/(authed)/my-events')
+              }
               accessibilityRole="link"
               hitSlop={6}
               style={({ pressed }) => ({
@@ -173,10 +186,8 @@ export default function EventDetailScreen() {
               </Text>
             </Pressable>
 
-            {/* Theme banner */}
             <EventThemeBanner theme={event.config?.theme} />
 
-            {/* Intro : title + metaRow + share line */}
             <View style={{ gap: 8 }}>
               <Text
                 style={{
@@ -189,7 +200,9 @@ export default function EventDetailScreen() {
               >
                 {event.title ?? 'Sans titre'}
               </Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <View
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}
+              >
                 <Text style={{ color: palette.textMuted, fontSize: 15 }}>
                   {dateLabel}
                   {event.time ? ` à ${event.time}` : ''}
@@ -252,7 +265,6 @@ export default function EventDetailScreen() {
               ) : null}
             </View>
 
-            {/* Winner card */}
             {event.winnerMovie ? (
               <View
                 style={{
@@ -299,7 +311,6 @@ export default function EventDetailScreen() {
               </View>
             ) : null}
 
-            {/* Actions row */}
             <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
               {!isMember ? (
                 <Button label="Rejoindre" onPress={() => setShowJoin(true)} fullWidth={false} />
@@ -319,7 +330,12 @@ export default function EventDetailScreen() {
                 fullWidth={false}
               />
               {isHost ? (
-                <Button label="Config" variant="ghost" onPress={() => setShowConfig(true)} fullWidth={false} />
+                <Button
+                  label="Config"
+                  variant="ghost"
+                  onPress={() => setShowConfig(true)}
+                  fullWidth={false}
+                />
               ) : null}
               {isHost && !event.isFinished ? (
                 <Button
@@ -330,7 +346,6 @@ export default function EventDetailScreen() {
               ) : null}
             </View>
 
-            {/* Section : Participants */}
             <View
               style={{
                 backgroundColor: palette.surface,
@@ -409,7 +424,6 @@ export default function EventDetailScreen() {
               ) : null}
             </View>
 
-            {/* Films heading */}
             <Text
               style={{
                 color: palette.meta,
@@ -496,7 +510,9 @@ export default function EventDetailScreen() {
           onClose={() => setShowPropose(false)}
         />
       ) : null}
-      {showShare ? <ShareSheet slug={slug} title={event.title ?? ''} onClose={() => setShowShare(false)} /> : null}
+      {showShare ? (
+        <ShareSheet slug={slug} title={event.title ?? ''} onClose={() => setShowShare(false)} />
+      ) : null}
       {showConfig && isHost ? (
         <EventConfigSheet eventIdOrSlug={slug} onClose={() => setShowConfig(false)} />
       ) : null}

@@ -8,7 +8,6 @@ import { parseLocalDate } from '@/lib/dates';
 type Props = {
   event: MyEventSummary;
   onPress?: () => void;
-  /** Affiche le pill de lifecycle (caché sur l'onglet "Historique" pour aligner le web). */
   showLifecycleBadge?: boolean;
 };
 
@@ -29,14 +28,6 @@ const LIFECYCLE_LABEL: Record<string, string> = {
   finished: 'Terminée',
 };
 
-/**
- * Aligné `MyEventsPage.module.css` web :
- * - card surface + border-subtle + shadow-sm + padding 1.1/1.25rem (~18/20px)
- * - row top : titre flex:1 + crown badge top-right (host)
- * - theme line (muted, 13px, single line ellipsis)
- * - stats line "1 participant · 3 films proposés"
- * - footer : date · heure (gauche, flex:1) + pill lifecycle (droite)
- */
 export function EventCard({ event, onPress, showLifecycleBadge = true }: Props) {
   const { palette } = useTheme();
   const { locale } = useTranslation();
@@ -88,7 +79,6 @@ export function EventCard({ event, onPress, showLifecycleBadge = true }: Props) 
         elevation: pressed ? 3 : 1,
       })}
     >
-      {/* row top : title + crown badge host */}
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
         <Text
           style={{
@@ -122,7 +112,6 @@ export function EventCard({ event, onPress, showLifecycleBadge = true }: Props) 
         ) : null}
       </View>
 
-      {/* theme */}
       {event.theme ? (
         <Text
           style={{
@@ -136,7 +125,6 @@ export function EventCard({ event, onPress, showLifecycleBadge = true }: Props) 
         </Text>
       ) : null}
 
-      {/* stats */}
       <Text
         style={{
           color: palette.textMuted,
@@ -148,7 +136,6 @@ export function EventCard({ event, onPress, showLifecycleBadge = true }: Props) 
         {joinedLabel} · {moviesLabel}
       </Text>
 
-      {/* footer date + lifecycle pill */}
       <View
         style={{
           flexDirection: 'row',

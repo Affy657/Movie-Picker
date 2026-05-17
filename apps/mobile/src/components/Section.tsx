@@ -7,7 +7,6 @@ type Props = {
   style?: ViewStyle;
 };
 
-/** Aligné `.section h2` web : carte surface + heading 1.2rem 700. */
 export function Section({ title, children, style }: Props) {
   const { palette } = useTheme();
   return (

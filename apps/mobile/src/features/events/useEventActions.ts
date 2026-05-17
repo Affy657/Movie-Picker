@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { ApiError } from '@/api/client';
 import { removeParticipant } from '@/api/events';
 
-/** Mutations d'hôte qui s'appliquent depuis l'écran détail event (kick, …). */
 export function useEventActions(idOrSlug: string) {
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);

@@ -17,9 +17,7 @@ const STORAGE_KEY = 'moviepicker-locale';
 type LocaleContextValue = {
   locale: LocaleCode;
   setLocale: (code: LocaleCode) => void;
-  /** TMDB language tag derived from the current locale (e.g. "fr-FR", "en-US"). */
   tmdbLanguage: string;
-  /** True until the persisted locale has been loaded from AsyncStorage. */
   isHydrating: boolean;
 };
 

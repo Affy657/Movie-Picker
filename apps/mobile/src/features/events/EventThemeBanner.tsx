@@ -4,12 +4,6 @@ import { useTheme } from '@/features/theme/ThemeContext';
 
 type Props = { theme: string | null | undefined };
 
-/**
- * Équivalent mobile de `EventThemeBanner` web.
- * Bandeau coloré avec icône à gauche + kicker "THÈME" + libellé du thème.
- * Visuellement simplifié : couleur primary 8/15% au lieu d'une teinte calculée
- * depuis le hash du libellé.
- */
 export function EventThemeBanner({ theme }: Props) {
   const { palette } = useTheme();
   const label = theme?.trim();

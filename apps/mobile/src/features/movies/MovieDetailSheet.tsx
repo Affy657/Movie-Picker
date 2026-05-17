@@ -28,7 +28,11 @@ export function MovieDetailSheet({ movie, onClose }: Props) {
       <ScrollView style={{ maxHeight: 500 }} contentContainerStyle={{ gap: 12 }}>
         <View style={{ flexDirection: 'row', gap: 12 }}>
           {poster ? (
-            <Image source={{ uri: poster }} style={{ width: 80, height: 120, borderRadius: 8 }} contentFit="cover" />
+            <Image
+              source={{ uri: poster }}
+              style={{ width: 80, height: 120, borderRadius: 8 }}
+              contentFit="cover"
+            />
           ) : (
             <View
               style={{
@@ -51,7 +55,9 @@ export function MovieDetailSheet({ movie, onClose }: Props) {
               <Text style={{ color: palette.meta }}>★ {movie.voteAverage.toFixed(1)}</Text>
             ) : null}
             {(data?.runtimeMinutes ?? movie.runtimeMinutes) ? (
-              <Text style={{ color: palette.meta }}>{data?.runtimeMinutes ?? movie.runtimeMinutes} min</Text>
+              <Text style={{ color: palette.meta }}>
+                {data?.runtimeMinutes ?? movie.runtimeMinutes} min
+              </Text>
             ) : null}
             {data?.director ? (
               <Text style={{ color: palette.meta, fontSize: 12 }}>Réal. {data.director}</Text>
@@ -62,7 +68,9 @@ export function MovieDetailSheet({ movie, onClose }: Props) {
         {isLoading ? (
           <ActivityIndicator color={palette.primary} />
         ) : isError ? (
-          <Text style={{ color: palette.error }}>Impossible de charger les détails complémentaires.</Text>
+          <Text style={{ color: palette.error }}>
+            Impossible de charger les détails complémentaires.
+          </Text>
         ) : data?.overview ? (
           <Text style={{ color: palette.text, lineHeight: 20 }}>{data.overview}</Text>
         ) : null}
@@ -106,7 +114,11 @@ export function MovieDetailSheet({ movie, onClose }: Props) {
                     style={{ alignItems: 'center', gap: 2 }}
                   >
                     {url ? (
-                      <Image source={{ uri: url }} style={{ width: 36, height: 36, borderRadius: 8 }} contentFit="cover" />
+                      <Image
+                        source={{ uri: url }}
+                        style={{ width: 36, height: 36, borderRadius: 8 }}
+                        contentFit="cover"
+                      />
                     ) : null}
                     <Text style={{ color: palette.meta, fontSize: 10 }} numberOfLines={1}>
                       {wp.name ?? ''}

@@ -16,9 +16,7 @@ import { useTheme } from '@/features/theme/ThemeContext';
 
 const schema = z.object({
   title: z.string().min(2).max(200),
-  date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'date' }),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'date' }),
   time: z.string().regex(/^\d{2}:\d{2}$/, { message: 'time' }),
   themeEmoji: z.string().optional(),
   themeText: z.string().optional(),
@@ -69,7 +67,6 @@ export default function NewEventScreen() {
         time: values.time,
       });
 
-      // Patch config si des options avancées ont été remplies (parité web).
       const themeTrimmed = [values.themeEmoji ?? '', (values.themeText ?? '').trim()]
         .filter(Boolean)
         .join(' ');
@@ -78,12 +75,9 @@ export default function NewEventScreen() {
           ? Number(values.maxParticipants)
           : 0;
       const maxProp =
-        values.maxProposals && values.maxProposals.trim() !== ''
-          ? Number(values.maxProposals)
-          : 0;
+        values.maxProposals && values.maxProposals.trim() !== '' ? Number(values.maxProposals) : 0;
 
-      const needsConfigPatch =
-        themeTrimmed !== '' || (maxPart > 0) || (maxProp > 0);
+      const needsConfigPatch = themeTrimmed !== '' || maxPart > 0 || maxProp > 0;
 
       if (needsConfigPatch && created.slug) {
         try {
@@ -155,7 +149,6 @@ export default function NewEventScreen() {
             )}
           />
 
-          {/* Date / Heure côte à côte (parité web fieldGrid) */}
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <View style={{ flex: 1 }}>
               <Controller
@@ -195,7 +188,6 @@ export default function NewEventScreen() {
             </View>
           </View>
 
-          {/* Options avancées (collapse, parité web <details>) */}
           <Pressable
             onPress={() => setAdvancedOpen((v) => !v)}
             accessibilityRole="button"
@@ -300,11 +292,7 @@ export default function NewEventScreen() {
             onPress={handleSubmit(onSubmit)}
             style={{ marginTop: 8 }}
           />
-          <Button
-            label="Annuler"
-            variant="secondary"
-            onPress={() => router.back()}
-          />
+          <Button label="Annuler" variant="secondary" onPress={() => router.back()} />
         </AuthCard>
       </ScrollView>
     </SafeAreaView>

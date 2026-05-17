@@ -8,7 +8,6 @@ import { useTheme } from '@/features/theme/ThemeContext';
 
 const WEB_BASE = process.env.EXPO_PUBLIC_WEB_BASE_URL ?? 'http://localhost:5173';
 
-/** URL inutilisable depuis le téléphone d'un destinataire (resolverait sur sa propre loopback). */
 function isUnreachableFromOtherDevices(url: string): boolean {
   return /\/\/(localhost|127\.0\.0\.1|10\.0\.2\.2)(:|\/|$)/.test(url);
 }
@@ -54,7 +53,8 @@ export function ShareSheet({ slug, title, onClose }: Props) {
           }}
         >
           <Text style={{ color: palette.badgeUpcomingText, fontSize: 13 }}>
-            ⚠️ L&apos;URL pointe sur ta machine de dev — elle ne fonctionnera pas chez tes amis. Configure
+            ⚠️ L&apos;URL pointe sur ta machine de dev — elle ne fonctionnera pas chez tes amis.
+            Configure
             <Text style={{ fontWeight: '700' }}> EXPO_PUBLIC_WEB_BASE_URL </Text>
             avec l&apos;URL publique du site avant de partager.
           </Text>
@@ -71,7 +71,11 @@ export function ShareSheet({ slug, title, onClose }: Props) {
       </View>
 
       <View style={{ gap: 8 }}>
-        <Button label={copied ? 'Lien copié ✓' : 'Copier le lien'} variant="secondary" onPress={copy} />
+        <Button
+          label={copied ? 'Lien copié ✓' : 'Copier le lien'}
+          variant="secondary"
+          onPress={copy}
+        />
         <Button label="Partager…" onPress={share} />
       </View>
     </BottomSheet>

@@ -57,26 +57,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
     (async () => {
       try {
-        const me = await getMe();
+        const me = await getMe({ signal: controller.signal });
         if (!cancelled) setUser(me);
-      } catch {
-        if (!cancelled) setUser(null);
+      } catch (err) {
+        if (cancelled) return;
+        if (err instanceof ApiError && err.status === 401) {
+          setUser(null);
+        } else {
+          setUser(null);
+          if (__DEV__) console.warn('[auth] initial hydration failed', err);
+        }
       } finally {
+        clearTimeout(timeoutId);
         if (!cancelled) setIsHydrating(false);
       }
     })();
     return () => {
       cancelled = true;
+      clearTimeout(timeoutId);
+      controller.abort();
     };
   }, []);
 
   useEffect(() => {
-    // Note : `setUnauthorizedHandler` stocke un handler **global** (singleton).
-    // Si deux <AuthProvider> sont montés simultanément (HMR ou test mal isolé),
-    // le 2ème écrase le 1er et le cleanup du 1er met `null`. En prod, un seul
-    // provider existe (en haut de l'arbre dans `app/_layout.tsx`).
     setUnauthorizedHandler(() => {
       setUser(null);
       clearToken().catch(() => {
@@ -150,7 +157,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       changePassword,
       refresh,
     }),
-    [user, isHydrating, isAuthenticating, register, login, logout, patchProfile, changePassword, refresh]
+    [
+      user,
+      isHydrating,
+      isAuthenticating,
+      register,
+      login,
+      logout,
+      patchProfile,
+      changePassword,
+      refresh,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

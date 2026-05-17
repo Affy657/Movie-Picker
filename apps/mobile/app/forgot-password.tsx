@@ -79,14 +79,14 @@ export default function ForgotPasswordScreen() {
                   onChangeText={onChange}
                   onBlur={onBlur}
                   value={value}
-                  error={errors.email ? `${t('auth.forgotPassword.emailLabel')} invalide` : undefined}
+                  error={
+                    errors.email ? `${t('auth.forgotPassword.emailLabel')} invalide` : undefined
+                  }
                 />
               )}
             />
 
-            {error ? (
-              <Text style={{ color: palette.error, fontSize: 14 }}>{error}</Text>
-            ) : null}
+            {error ? <Text style={{ color: palette.error, fontSize: 14 }}>{error}</Text> : null}
 
             <Button
               label={

@@ -33,8 +33,15 @@ const LOCALES: { value: LocaleCode; label: string }[] = [
 
 export default function SettingsScreen() {
   const { user, logout, patchProfile, changePassword: changePasswordCtx, refresh } = useAuth();
-  const { palette, preference, setUiPreference, accent, setAccent, applyRemotePreference, applyRemoteAccent } =
-    useTheme();
+  const {
+    palette,
+    preference,
+    setUiPreference,
+    accent,
+    setAccent,
+    applyRemotePreference,
+    applyRemoteAccent,
+  } = useTheme();
   const { locale, setLocale } = useLocale();
   const { t } = useTranslation();
   const [displayName, setDisplayName] = useState(user?.displayName ?? '');
@@ -91,10 +98,6 @@ export default function SettingsScreen() {
     }
     setPwSubmitting(true);
     try {
-      // Le contexte chaîne PATCH /auth/me/password + clearToken + setUser(null).
-      // Au retour, `user === null` et `(authed)/_layout` va Redirect vers /login
-      // → SettingsScreen unmount. On ne touche plus au state local pour éviter
-      // les warnings React "state update on unmounted component" en dev.
       await changePasswordCtx({ currentPassword, newPassword });
     } catch (err) {
       setPwError(err instanceof ApiError ? err.message : 'Mise à jour impossible.');
@@ -112,7 +115,6 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }} edges={['top']}>
       <ScrollView contentContainerStyle={{ padding: 20, gap: 20 }}>
-        {/* Header : titre 800 + email masque (parite header web) */}
         <View style={{ gap: 4 }}>
           <Text
             style={{
@@ -170,7 +172,9 @@ export default function SettingsScreen() {
             ))}
           </View>
 
-          <Text style={{ color: palette.textMuted, fontSize: 13, marginTop: 8 }}>Couleur d&apos;accent</Text>
+          <Text style={{ color: palette.textMuted, fontSize: 13, marginTop: 8 }}>
+            Couleur d&apos;accent
+          </Text>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             {ACCENT_COLORS.map((c) => (
               <Pressable

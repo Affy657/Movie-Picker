@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import Animated, {
   Easing,
@@ -20,17 +20,30 @@ type Props = {
   hasUser: boolean;
 };
 
+const SPIN_DURATION_MS = 3200;
+const FULL_SPINS = 5;
+
 export function WheelSheet({ slug, onClose }: Props) {
   const queryClient = useQueryClient();
   const { palette } = useTheme();
   const [error, setError] = useState<string | null>(null);
   const [winner, setWinner] = useState<MovieWithScore | null>(null);
   const rotation = useSharedValue(0);
+  const winnerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const moviesQuery = useQuery({
-    queryKey: ['movies', slug, 'wheel'],
+    queryKey: ['movies', slug, null],
     queryFn: () => listMovies(slug),
   });
+
+  useEffect(() => {
+    return () => {
+      if (winnerTimeoutRef.current != null) {
+        clearTimeout(winnerTimeoutRef.current);
+        winnerTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   const spinMutation = useMutation({
     mutationFn: () => spinWheel(slug),
@@ -38,12 +51,26 @@ export function WheelSheet({ slug, onClose }: Props) {
       const movies = moviesQuery.data ?? [];
       const winnerId = res.winner?._id ?? null;
       const target = winnerId ? (movies.find((m) => m._id === winnerId) ?? null) : null;
-      const index = target ? movies.indexOf(target) : 0;
+      if (!target) {
+        setError('Réponse inattendue de la roue (film gagnant introuvable).');
+        return;
+      }
+      const index = movies.indexOf(target);
+      if (index < 0) {
+        setError('Réponse inattendue de la roue (film gagnant introuvable).');
+        return;
+      }
       const sliceAngle = movies.length > 0 ? 360 / movies.length : 0;
-      const fullSpins = 5;
-      const finalAngle = 360 * fullSpins + (360 - index * sliceAngle - sliceAngle / 2);
-      rotation.value = withTiming(finalAngle, { duration: 3200, easing: Easing.out(Easing.cubic) });
-      setTimeout(() => setWinner(target), 3200);
+      const finalAngle = 360 * FULL_SPINS + (360 - index * sliceAngle - sliceAngle / 2);
+      rotation.value = withTiming(finalAngle, {
+        duration: SPIN_DURATION_MS,
+        easing: Easing.out(Easing.cubic),
+      });
+      if (winnerTimeoutRef.current != null) clearTimeout(winnerTimeoutRef.current);
+      winnerTimeoutRef.current = setTimeout(() => {
+        winnerTimeoutRef.current = null;
+        setWinner(target);
+      }, SPIN_DURATION_MS);
       queryClient.invalidateQueries({ queryKey: ['event', slug] });
     },
     onError: (err) => setError(err instanceof ApiError ? err.message : 'Tirage impossible.'),

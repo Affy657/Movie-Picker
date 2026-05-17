@@ -16,29 +16,11 @@ type Props = Omit<TextInputProps, 'style'> & {
   containerStyle?: StyleProp<ViewStyle>;
 };
 
-/**
- * Aligné `.input` / `.label` du web :
- * - label : 13px, 600, color section-heading, letter-spacing 0.05
- * - input : border 1.5px, radius 12, min-height 46, padding 10/15
- * - focus : ring color-mix primary 18% (approximé via shadow soft)
- */
-export function TextField({
-  label,
-  error,
-  hint,
-  containerStyle,
-  onFocus,
-  onBlur,
-  ...rest
-}: Props) {
+export function TextField({ label, error, hint, containerStyle, onFocus, onBlur, ...rest }: Props) {
   const { palette } = useTheme();
   const [focused, setFocused] = useState(false);
 
-  const borderColor = error
-    ? palette.error
-    : focused
-      ? palette.primary
-      : palette.border;
+  const borderColor = error ? palette.error : focused ? palette.primary : palette.border;
 
   return (
     <View style={[{ gap: 8, marginBottom: 4 }, containerStyle]}>
@@ -75,7 +57,6 @@ export function TextField({
           minHeight: 46,
           color: palette.text,
           fontSize: 16,
-          // Equivalent du focus-ring du web (color-mix primary 18%).
           shadowColor: focused && !error ? palette.primary : 'transparent',
           shadowOpacity: focused && !error ? 0.18 : 0,
           shadowRadius: focused && !error ? 4 : 0,

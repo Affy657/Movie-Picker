@@ -34,7 +34,10 @@ export function JoinSheet({ slug, onClose, onJoined }: Props) {
       const result = await joinEvent(slug, { pseudo: trimmed });
       const participantId = result.participant?._id ?? '';
       const finalPseudo = result.participant?.pseudo ?? trimmed;
-      if (!participantId) throw new Error('Réponse invalide');
+      if (!participantId) {
+        setError('Impossible de rejoindre. Vérifie le pseudo ou réessaie.');
+        return;
+      }
       const guest: GuestParticipant = { participantId, pseudo: finalPseudo };
       await setGuestParticipant(slug, guest);
       await queryClient.invalidateQueries({ queryKey: ['event', slug] });

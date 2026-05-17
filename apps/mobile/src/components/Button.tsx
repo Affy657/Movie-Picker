@@ -18,13 +18,6 @@ type Props = Omit<PressableProps, 'style' | 'children'> & {
   style?: StyleProp<ViewStyle>;
 };
 
-/**
- * Visuel aligné sur le `.btn` / `.btn-primary` du web :
- * - radius 12px (radius-md), min-height 42, padding ~10/18
- * - surface blanche pour secondary/ghost, primary plein
- * - shadow légère (sm) au repos, shadow-md au press (équivalent hover web)
- * - font 600, letter-spacing 0.5
- */
 export function Button({
   label,
   variant = 'primary',

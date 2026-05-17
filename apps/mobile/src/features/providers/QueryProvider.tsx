@@ -11,6 +11,7 @@ function makeClient() {
           return failureCount < 2;
         },
         staleTime: 30_000,
+        refetchOnReconnect: 'always',
       },
     },
   });

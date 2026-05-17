@@ -172,9 +172,7 @@ export default function ResetPasswordScreen() {
           ) : null}
 
           <Button
-            label={
-              submitting ? t('auth.resetPassword.submitting') : t('auth.resetPassword.submit')
-            }
+            label={submitting ? t('auth.resetPassword.submitting') : t('auth.resetPassword.submit')}
             loading={submitting}
             onPress={handleSubmit(onSubmit)}
           />

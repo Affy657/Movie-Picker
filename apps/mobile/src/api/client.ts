@@ -26,7 +26,6 @@ export class ApiError extends Error {
 type UnauthorizedHandler = () => void;
 let unauthorizedHandler: UnauthorizedHandler | null = null;
 
-/** Registered once at app boot so the client can react to 401 without circular imports. */
 export function setUnauthorizedHandler(handler: UnauthorizedHandler | null): void {
   unauthorizedHandler = handler;
 }
@@ -35,16 +34,16 @@ export type RequestOptions = {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE' | 'PUT';
   body?: unknown;
   query?: Record<string, string | number | boolean | undefined | null>;
-  /** Skip Authorization header even if a token exists (e.g. login/register). */
   noAuth?: boolean;
-  /** Override base URL — rare. */
   baseUrl?: string;
   signal?: AbortSignal;
 };
 
 function buildUrl(path: string, query?: RequestOptions['query'], baseUrl?: string): string {
   const base = (baseUrl ?? API_BASE_URL).replace(/\/$/, '');
-  const prefixed = path.startsWith('/api/') ? path : `${API_PREFIX}${path.startsWith('/') ? path : `/${path}`}`;
+  const prefixed = path.startsWith('/api/')
+    ? path
+    : `${API_PREFIX}${path.startsWith('/') ? path : `/${path}`}`;
   if (!query) return `${base}${prefixed}`;
   const params = new URLSearchParams();
   for (const [k, v] of Object.entries(query)) {
@@ -92,7 +91,6 @@ export async function request<T = unknown>(path: string, options: RequestOptions
     try {
       unauthorizedHandler?.();
     } catch (err) {
-      // Un handler buggué ne doit pas masquer l'ApiError originale qu'on est sur le point de jeter.
       if (__DEV__) console.warn('[client] unauthorizedHandler threw', err);
     }
   }

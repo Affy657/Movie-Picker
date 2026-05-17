@@ -2,11 +2,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { cancelVote, markSeen, removeMovie, unmarkSeen, vote as apiVote } from '@/api/movies';
 
-/**
- * Centralise les mutations sur les films d'un event : vote, déjà vu, retrait.
- * Invalide la liste après chaque action ; ne fait pas d'optimistic update — phase 9 peut
- * être enrichie si la latence devient gênante côté UX.
- */
 export function useMovieActions(slug: string, participantId: string | null) {
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);

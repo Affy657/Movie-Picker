@@ -25,8 +25,8 @@ export function logout() {
   return request<void>('/auth/logout', { method: 'POST' });
 }
 
-export function getMe() {
-  return request<UserProfile>('/auth/me');
+export function getMe(options?: { signal?: AbortSignal }) {
+  return request<UserProfile>('/auth/me', { signal: options?.signal });
 }
 
 export function patchMe(body: PatchUserProfileRequest) {

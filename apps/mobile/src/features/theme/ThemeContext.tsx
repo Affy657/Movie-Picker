@@ -46,7 +46,9 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [preference, setPreferenceState] = useState<UiThemePreference>('system');
   const [accentState, setAccentState] = useState<AccentColor>('default');
-  const [systemDark, setSystemDark] = useState<boolean>(() => Appearance.getColorScheme() === 'dark');
+  const [systemDark, setSystemDark] = useState<boolean>(
+    () => Appearance.getColorScheme() === 'dark'
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -72,7 +74,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resolvedTheme: ResolvedTheme =
-    preference === 'dark' ? 'dark' : preference === 'light' ? 'light' : systemDark ? 'dark' : 'light';
+    preference === 'dark'
+      ? 'dark'
+      : preference === 'light'
+        ? 'light'
+        : systemDark
+          ? 'dark'
+          : 'light';
 
   const setUiPreference = useCallback((p: UiThemePreference) => {
     setPreferenceState(p);
@@ -118,7 +126,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const palette = useMemo(() => getPalette(resolvedTheme, accentState), [resolvedTheme, accentState]);
+  const palette = useMemo(
+    () => getPalette(resolvedTheme, accentState),
+    [resolvedTheme, accentState]
+  );
 
   const value = useMemo<ThemeContextValue>(
     () => ({

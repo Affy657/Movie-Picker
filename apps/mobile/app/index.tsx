@@ -39,7 +39,14 @@ export default function Landing() {
 
   if (isHydrating) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg, alignItems: 'center', justifyContent: 'center' }}>
+      <SafeAreaView
+        style={{
+          flex: 1,
+          backgroundColor: palette.bg,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
         <ActivityIndicator color={palette.primary} />
       </SafeAreaView>
     );
@@ -52,7 +59,6 @@ export default function Landing() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }} edges={['top']}>
       <ScrollView contentContainerStyle={{ padding: 20, gap: 32, paddingBottom: 40 }}>
-        {/* Hero */}
         <View style={{ gap: 16, paddingTop: 8 }}>
           <View
             style={{
@@ -107,9 +113,10 @@ export default function Landing() {
           </View>
         </View>
 
-        {/* Features */}
         <View style={{ gap: 8 }}>
-          <Text style={{ color: palette.primary, fontSize: 12, fontWeight: '700', letterSpacing: 0.6 }}>
+          <Text
+            style={{ color: palette.primary, fontSize: 12, fontWeight: '700', letterSpacing: 0.6 }}
+          >
             EN 4 ÉTAPES
           </Text>
           <Text

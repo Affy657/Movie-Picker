@@ -11,13 +11,6 @@ type Props = {
   style?: ViewStyle;
 };
 
-/**
- * Equivalent mobile de `AuthPageShell` web :
- * - bouton "← Accueil" en haut
- * - carte surface + border subtle + radius-lg (18) + shadow-md
- * - barre d'accent 3px en haut (gradient primary → accent-warm)
- * - titre 800, -0.025em letter-spacing
- */
 export function AuthCard({ title, description, children, showBack = true, style }: Props) {
   const { palette } = useTheme();
   const router = useRouter();
@@ -26,7 +19,7 @@ export function AuthCard({ title, description, children, showBack = true, style 
     <View style={{ width: '100%', maxWidth: 480, alignSelf: 'center', gap: 12 }}>
       {showBack ? (
         <Pressable
-          onPress={() => router.canGoBack() ? router.back() : router.replace('/')}
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
           accessibilityRole="link"
           hitSlop={6}
           style={({ pressed }) => ({
@@ -86,7 +79,6 @@ export function AuthCard({ title, description, children, showBack = true, style 
   );
 }
 
-/** Barre d'accent 3px en haut de la carte (gradient primary → accent warm). */
 function AccentBar({ primary, warm }: { primary: string; warm: string }) {
   return (
     <View
@@ -114,4 +106,3 @@ function AccentBar({ primary, warm }: { primary: string; warm: string }) {
     </View>
   );
 }
-

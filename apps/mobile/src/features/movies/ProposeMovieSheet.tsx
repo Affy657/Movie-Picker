@@ -83,7 +83,7 @@ export function ProposeMovieSheet({ slug, participantId, onClose }: Props) {
       ) : (
         <FlatList
           data={items}
-          keyExtractor={(it) => String(it.id ?? Math.random())}
+          keyExtractor={(it, idx) => (it.id != null ? String(it.id) : `tmdb-${idx}`)}
           style={{ maxHeight: 360 }}
           ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
           renderItem={({ item }) => {
@@ -111,7 +111,11 @@ export function ProposeMovieSheet({ slug, participantId, onClose }: Props) {
                   }}
                 >
                   {url ? (
-                    <Image source={{ uri: url }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+                    <Image
+                      source={{ uri: url }}
+                      style={{ width: '100%', height: '100%' }}
+                      contentFit="cover"
+                    />
                   ) : null}
                 </View>
                 <View style={{ flex: 1, gap: 2 }}>
@@ -120,7 +124,9 @@ export function ProposeMovieSheet({ slug, participantId, onClose }: Props) {
                   </Text>
                   <Text style={{ color: palette.meta, fontSize: 12 }}>
                     {item.year ?? ''}
-                    {typeof item.voteAverage === 'number' ? ` · ★ ${item.voteAverage.toFixed(1)}` : ''}
+                    {typeof item.voteAverage === 'number'
+                      ? ` · ★ ${item.voteAverage.toFixed(1)}`
+                      : ''}
                   </Text>
                 </View>
               </Pressable>

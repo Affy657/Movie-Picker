@@ -18,7 +18,10 @@ export async function getGuestParticipant(slug: string): Promise<GuestParticipan
   }
 }
 
-export async function setGuestParticipant(slug: string, participant: GuestParticipant): Promise<void> {
+export async function setGuestParticipant(
+  slug: string,
+  participant: GuestParticipant
+): Promise<void> {
   await AsyncStorage.setItem(`${KEY_PREFIX}${slug}`, JSON.stringify(participant));
 }
 

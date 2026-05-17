@@ -69,7 +69,7 @@ describe('AuthProvider', () => {
     function Capture() {
       const auth = useAuth();
       logoutFn = auth.logout;
-      return <Text>{auth.user ? auth.user.displayName ?? '' : 'guest'}</Text>;
+      return <Text>{auth.user ? (auth.user.displayName ?? '') : 'guest'}</Text>;
     }
 
     const { getByText } = render(

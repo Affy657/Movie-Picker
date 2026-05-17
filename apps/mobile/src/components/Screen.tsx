@@ -10,9 +10,7 @@ type Props = ScrollViewProps & {
 export function Screen({ scrollable = true, padded = true, children, ...rest }: Props) {
   const { palette } = useTheme();
 
-  const inner = (
-    <View style={{ flex: 1, gap: 16, padding: padded ? 20 : 0 }}>{children}</View>
-  );
+  const inner = <View style={{ flex: 1, gap: 16, padding: padded ? 20 : 0 }}>{children}</View>;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }} edges={['top', 'bottom']}>

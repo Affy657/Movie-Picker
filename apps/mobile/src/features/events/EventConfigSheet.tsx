@@ -25,6 +25,17 @@ const WHEEL_MODES: { value: 'strictRandom' | 'weightedByVotes'; label: string }[
   { value: 'weightedByVotes', label: 'Pondéré par les votes' },
 ];
 
+const MAX_PARTICIPANTS = 50;
+const MAX_PROPOSALS = 20;
+
+function parsePositiveInt(raw: string, max: number): number | null {
+  const trimmed = raw.trim();
+  if (trimmed === '') return null;
+  const n = Number(trimmed);
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 1) return null;
+  return Math.min(n, max);
+}
+
 export function EventConfigSheet({ eventIdOrSlug, onClose }: Props) {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -77,7 +88,25 @@ export function EventConfigSheet({ eventIdOrSlug, onClose }: Props) {
 
   const onSave = () => {
     setError(null);
-    patchMutation.mutate(form);
+    if (!data) {
+      patchMutation.mutate(form);
+      return;
+    }
+    const diff: PatchEventConfigRequest = {};
+    if ((form.theme ?? '') !== (data.theme ?? '')) diff.theme = form.theme;
+    if ((form.endDate ?? '') !== (data.endDate ?? '')) diff.endDate = form.endDate;
+    if ((form.maxProposalsPerParticipant ?? null) !== (data.maxProposalsPerParticipant ?? null))
+      diff.maxProposalsPerParticipant = form.maxProposalsPerParticipant;
+    if ((form.maxParticipants ?? null) !== (data.maxParticipants ?? null))
+      diff.maxParticipants = form.maxParticipants;
+    if (form.wheelMode !== data.wheelMode) diff.wheelMode = form.wheelMode;
+    if (!!form.richSharePreview !== !!data.richSharePreview)
+      diff.richSharePreview = form.richSharePreview;
+    if (Object.keys(diff).length === 0) {
+      onClose();
+      return;
+    }
+    patchMutation.mutate(diff);
   };
 
   const onDelete = () => {
@@ -118,12 +147,14 @@ export function EventConfigSheet({ eventIdOrSlug, onClose }: Props) {
 
         <TextField
           label="Max propositions par participant"
-          value={form.maxProposalsPerParticipant != null ? String(form.maxProposalsPerParticipant) : ''}
+          value={
+            form.maxProposalsPerParticipant != null ? String(form.maxProposalsPerParticipant) : ''
+          }
           keyboardType="numeric"
           onChangeText={(v) =>
             setForm((f) => ({
               ...f,
-              maxProposalsPerParticipant: v.trim() === '' ? null : Number(v),
+              maxProposalsPerParticipant: parsePositiveInt(v, MAX_PROPOSALS),
             }))
           }
         />
@@ -135,7 +166,7 @@ export function EventConfigSheet({ eventIdOrSlug, onClose }: Props) {
           onChangeText={(v) =>
             setForm((f) => ({
               ...f,
-              maxParticipants: v.trim() === '' ? null : Number(v),
+              maxParticipants: parsePositiveInt(v, MAX_PARTICIPANTS),
             }))
           }
         />

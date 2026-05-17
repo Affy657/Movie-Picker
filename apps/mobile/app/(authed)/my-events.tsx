@@ -33,7 +33,6 @@ export default function MyEventsScreen() {
   const { palette } = useTheme();
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
-  /** Aligné `.fab @media (max-width: 380px)` web : à ≤380px on cache le label. */
   const showFabLabel = width > 380;
   const [refreshing, setRefreshing] = useState(false);
   const [tab, setTab] = useState<Tab>('active');
@@ -98,9 +97,7 @@ export default function MyEventsScreen() {
     const r: Row[] = [];
     if (history.length > 0) {
       r.push({ type: 'section', key: 'history', label: 'HISTORIQUE' });
-      history.forEach((ev) =>
-        r.push({ type: 'event', key: `hi-${ev.id}`, ev, showBadge: false })
-      );
+      history.forEach((ev) => r.push({ type: 'event', key: `hi-${ev.id}`, ev, showBadge: false }));
     } else {
       r.push({ type: 'empty', key: 'empty-history', text: 'Aucune soirée terminée.' });
     }
@@ -109,7 +106,6 @@ export default function MyEventsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }} edges={['top']}>
-      {/* Top brand */}
       <View
         style={{
           flexDirection: 'row',
@@ -134,7 +130,6 @@ export default function MyEventsScreen() {
         </View>
       </View>
 
-      {/* Page title */}
       <View style={{ paddingHorizontal: 20, paddingBottom: 14 }}>
         <Text
           style={{
@@ -148,7 +143,6 @@ export default function MyEventsScreen() {
         </Text>
       </View>
 
-      {/* Tabs upcoming / historique (only if there is data) */}
       {!isLoading && total > 0 ? (
         <View style={{ paddingHorizontal: 20, paddingBottom: 16 }}>
           <View
@@ -186,15 +180,26 @@ export default function MyEventsScreen() {
           <EventCardSkeleton />
         </View>
       ) : isError ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, gap: 12 }}>
+        <View
+          style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, gap: 12 }}
+        >
           <Text style={{ color: palette.error, textAlign: 'center' }}>
             Impossible de charger tes soirées.
           </Text>
-          <Button label={t('common.retry')} variant="secondary" onPress={() => refetch()} fullWidth={false} />
+          <Button
+            label={t('common.retry')}
+            variant="secondary"
+            onPress={() => refetch()}
+            fullWidth={false}
+          />
         </View>
       ) : total === 0 ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, gap: 16 }}>
-          <Text style={{ color: palette.text, fontSize: 18, fontWeight: '700', textAlign: 'center' }}>
+        <View
+          style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, gap: 16 }}
+        >
+          <Text
+            style={{ color: palette.text, fontSize: 18, fontWeight: '700', textAlign: 'center' }}
+          >
             Aucune soirée pour le moment.
           </Text>
           <Text style={{ color: palette.textMuted, textAlign: 'center', maxWidth: 280 }}>
@@ -267,7 +272,6 @@ export default function MyEventsScreen() {
         />
       )}
 
-      {/* FAB : pill "+ Créer une soirée" sur ≥ 380px, icone seule en dessous (parite web). */}
       <Pressable
         onPress={() => router.push('/(authed)/new')}
         accessibilityLabel="Créer une nouvelle soirée"

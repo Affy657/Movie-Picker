@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { Pressable, Text, View } from 'react-native';
+import { Alert, Pressable, Text, View } from 'react-native';
 import type { MovieWithScore } from '@/api/movies';
 import { useTranslation } from '@/features/i18n/LocaleContext';
 import { formatRuntimeMinutes, formatTmdbVote } from '@/lib/format';
@@ -18,15 +18,6 @@ type Props = {
   disabled?: boolean;
 };
 
-/**
- * Aligné `MovieList.module.css` web :
- * - card grid auto 1fr, gap 16, padding 18 (~0.95rem 1.1rem), shadow-sm
- * - poster 92×138 à gauche, border-radius sm (6)
- * - info : titre 1.05rem 600, metaLine "année · runtime · vote" (12px muted)
- *   séparée par · entre items
- * - watch providers chips compact (3 max)
- * - actions segmented pill (👍 👎 👁) avec border-right, fond primary 10% sur active
- */
 export function MovieCard({
   movie,
   onPress,
@@ -49,10 +40,25 @@ export function MovieCard({
     ? t('movies.seen.labelWithCount', { count: movie.seenCount ?? 0 })
     : t('movies.seen.label');
 
+  const requestRemove =
+    canRemove && onRemove
+      ? () =>
+          Alert.alert(
+            'Retirer ce film ?',
+            movie.title
+              ? `« ${movie.title} » sera retiré de la liste (irréversible).`
+              : 'Le film sera retiré de la liste (irréversible).',
+            [
+              { text: 'Annuler', style: 'cancel' },
+              { text: 'Retirer', style: 'destructive', onPress: onRemove },
+            ]
+          )
+      : undefined;
+
   return (
     <Pressable
       onPress={onPress}
-      onLongPress={canRemove ? onRemove : undefined}
+      onLongPress={requestRemove}
       disabled={disabled}
       style={({ pressed }) => ({
         backgroundColor: palette.surface,
@@ -71,7 +77,6 @@ export function MovieCard({
         elevation: pressed ? 3 : 1,
       })}
     >
-      {/* Poster col */}
       <View
         style={{
           width: 92,
@@ -82,7 +87,11 @@ export function MovieCard({
         }}
       >
         {poster ? (
-          <Image source={{ uri: poster }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+          <Image
+            source={{ uri: poster }}
+            style={{ width: '100%', height: '100%' }}
+            contentFit="cover"
+          />
         ) : (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ color: palette.placeholder, fontSize: 11 }}>Affiche</Text>
@@ -90,9 +99,7 @@ export function MovieCard({
         )}
       </View>
 
-      {/* Info col */}
       <View style={{ flex: 1, gap: 4, minWidth: 0 }}>
-        {/* Title */}
         <Text
           style={{
             color: palette.text,
@@ -106,22 +113,18 @@ export function MovieCard({
           {movie.title ?? '—'}
         </Text>
 
-        {/* metaLine : year · runtime · vote (format aligne web : "2h15", "4.1/5") */}
-        <Text
-          style={{ color: palette.meta, fontSize: 13, lineHeight: 17 }}
-          numberOfLines={1}
-        >
+        <Text style={{ color: palette.meta, fontSize: 13, lineHeight: 17 }} numberOfLines={1}>
           {[movie.year ? movie.year : null, runtimeLabel, voteLabel].filter(Boolean).join(' · ')}
         </Text>
 
-        {/* Watch providers chips compact */}
         {providers.length > 0 ? (
           <View style={{ flexDirection: 'row', gap: 6, marginTop: 4 }}>
-            {providers.map((wp) => {
+            {providers.map((wp, idx) => {
               const url = logoUrl(wp.logoPath, 'w45');
+              const key = wp.providerId ?? wp.name ?? `provider-${idx}`;
               return url ? (
                 <Image
-                  key={wp.name ?? Math.random()}
+                  key={key}
                   source={{ uri: url }}
                   style={{ width: 24, height: 24, borderRadius: 5 }}
                   contentFit="cover"
@@ -132,15 +135,14 @@ export function MovieCard({
           </View>
         ) : null}
 
-        {/* Proposer */}
         {movie.proposerPseudo ? (
           <Text style={{ color: palette.meta, fontSize: 12, marginTop: 4 }}>
-            Proposé par <Text style={{ color: palette.text, fontWeight: '500' }}>{movie.proposerPseudo}</Text>
+            Proposé par{' '}
+            <Text style={{ color: palette.text, fontWeight: '500' }}>{movie.proposerPseudo}</Text>
           </Text>
         ) : null}
 
-        {/* Actions segmented pill : 👍 👎 👁 */}
-        {(onVoteUp || onVoteDown || onToggleSeen) ? (
+        {onVoteUp || onVoteDown || onToggleSeen ? (
           <View
             style={{
               flexDirection: 'row',
@@ -155,7 +157,13 @@ export function MovieCard({
           >
             {onVoteUp ? (
               <ActionBtn
-                icon={<Ionicons name="thumbs-up" size={14} color={myVote === 1 ? palette.primary : palette.text} />}
+                icon={
+                  <Ionicons
+                    name="thumbs-up"
+                    size={14}
+                    color={myVote === 1 ? palette.primary : palette.text}
+                  />
+                }
                 count={movie.up ?? 0}
                 active={myVote === 1}
                 onPress={onVoteUp}
@@ -165,7 +173,13 @@ export function MovieCard({
             ) : null}
             {onVoteDown ? (
               <ActionBtn
-                icon={<Ionicons name="thumbs-down" size={14} color={myVote === -1 ? palette.error : palette.text} />}
+                icon={
+                  <Ionicons
+                    name="thumbs-down"
+                    size={14}
+                    color={myVote === -1 ? palette.error : palette.text}
+                  />
+                }
                 count={movie.down ?? 0}
                 active={myVote === -1}
                 onPress={onVoteDown}
@@ -175,7 +189,9 @@ export function MovieCard({
             ) : null}
             {onToggleSeen ? (
               <ActionBtn
-                icon={<Ionicons name="eye" size={14} color={iSeen ? palette.success : palette.text} />}
+                icon={
+                  <Ionicons name="eye" size={14} color={iSeen ? palette.success : palette.text} />
+                }
                 label={seenLabel}
                 active={iSeen}
                 onPress={onToggleSeen}
@@ -220,7 +236,7 @@ function ActionBtn({
         borderRightWidth: hasDivider ? 1 : 0,
         borderRightColor: palette.borderSubtle,
         backgroundColor: active
-          ? 'rgba(37,99,235,0.12)' // ~ color-mix(primary 12%)
+          ? 'rgba(37,99,235,0.12)'
           : pressed
             ? 'rgba(37,99,235,0.06)'
             : 'transparent',
