@@ -2,6 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Pressable, Text, View } from 'react-native';
 import type { MovieWithScore } from '@/api/movies';
+import { useTranslation } from '@/features/i18n/LocaleContext';
+import { formatRuntimeMinutes, formatTmdbVote } from '@/lib/format';
 import { posterUrl, logoUrl } from '@/lib/tmdb';
 import { useTheme } from '@/features/theme/ThemeContext';
 
@@ -36,10 +38,16 @@ export function MovieCard({
   disabled = false,
 }: Props) {
   const { palette } = useTheme();
+  const { t } = useTranslation();
   const poster = posterUrl(movie.posterPath);
   const myVote = movie.myVote ?? 0;
   const iSeen = (movie.seenCount ?? 0) > 0;
   const providers = (movie.watchProviders ?? []).slice(0, 3);
+  const runtimeLabel = formatRuntimeMinutes(movie.runtimeMinutes ?? null);
+  const voteLabel = formatTmdbVote(movie.voteAverage ?? null);
+  const seenLabel = iSeen
+    ? t('movies.seen.labelWithCount', { count: movie.seenCount ?? 0 })
+    : t('movies.seen.label');
 
   return (
     <Pressable
@@ -98,20 +106,12 @@ export function MovieCard({
           {movie.title ?? '—'}
         </Text>
 
-        {/* metaLine : year · runtime · vote */}
+        {/* metaLine : year · runtime · vote (format aligne web : "2h15", "4.1/5") */}
         <Text
-          style={{ color: palette.meta, fontSize: 12, lineHeight: 16 }}
+          style={{ color: palette.meta, fontSize: 13, lineHeight: 17 }}
           numberOfLines={1}
         >
-          {[
-            movie.year ? movie.year : null,
-            movie.runtimeMinutes ? `${movie.runtimeMinutes} min` : null,
-            typeof movie.voteAverage === 'number'
-              ? `★ ${movie.voteAverage.toFixed(1)}`
-              : null,
-          ]
-            .filter(Boolean)
-            .join(' · ')}
+          {[movie.year ? movie.year : null, runtimeLabel, voteLabel].filter(Boolean).join(' · ')}
         </Text>
 
         {/* Watch providers chips compact */}
@@ -176,7 +176,7 @@ export function MovieCard({
             {onToggleSeen ? (
               <ActionBtn
                 icon={<Ionicons name="eye" size={14} color={iSeen ? palette.success : palette.text} />}
-                label={iSeen ? `Vu (${movie.seenCount ?? 0})` : 'Vu'}
+                label={seenLabel}
                 active={iSeen}
                 onPress={onToggleSeen}
                 disabled={disabled}

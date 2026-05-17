@@ -67,27 +67,34 @@ export default function Landing() {
             }}
           >
             <Text style={{ fontSize: 12 }}>✨</Text>
-            <Text style={{ color: palette.badgeMeText, fontSize: 12, fontWeight: '600' }}>
-              Movie night, simplifiée
+            <Text
+              style={{
+                color: palette.badgeMeText,
+                fontSize: 12,
+                fontWeight: '700',
+                letterSpacing: 1.44,
+              }}
+            >
+              MOVIE NIGHT, SIMPLIFIÉE
             </Text>
           </View>
 
           <Text
             style={{
               color: palette.text,
-              fontSize: 34,
+              fontSize: 36,
               fontWeight: '800',
-              letterSpacing: -1,
-              lineHeight: 40,
+              letterSpacing: -1.26,
+              lineHeight: 38,
             }}
           >
             Choisissez le film de la soirée{' '}
             <Text style={{ color: palette.primary }}>ensemble.</Text>
           </Text>
 
-          <Text style={{ color: palette.textMuted, fontSize: 16, lineHeight: 23 }}>
-            Plus de débats interminables. Crée un événement, invite tes amis, votez sur les
-            propositions — et laisse la roue trancher si besoin.
+          <Text style={{ color: palette.textMuted, fontSize: 16, lineHeight: 25 }}>
+            Plus de débats interminables. Créez un événement, invitez vos amis, votez sur les
+            propositions — et laissez la roue trancher si besoin.
           </Text>
 
           <View style={{ gap: 10, marginTop: 4 }}>

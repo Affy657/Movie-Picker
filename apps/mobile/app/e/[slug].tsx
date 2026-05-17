@@ -169,7 +169,7 @@ export default function EventDetailScreen() {
             >
               <Ionicons name="arrow-back" size={16} color={palette.textMuted} />
               <Text style={{ color: palette.textMuted, fontSize: 13, fontWeight: '500' }}>
-                Mes soirées
+                Retour
               </Text>
             </Pressable>
 
@@ -181,10 +181,10 @@ export default function EventDetailScreen() {
               <Text
                 style={{
                   color: palette.text,
-                  fontSize: 28,
+                  fontSize: 24,
                   fontWeight: '800',
                   letterSpacing: -0.6,
-                  lineHeight: 34,
+                  lineHeight: 28,
                 }}
               >
                 {event.title ?? 'Sans titre'}
@@ -192,7 +192,7 @@ export default function EventDetailScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 <Text style={{ color: palette.textMuted, fontSize: 15 }}>
                   {dateLabel}
-                  {event.time ? ` · ${event.time}` : ''}
+                  {event.time ? ` à ${event.time}` : ''}
                 </Text>
                 {lifecycleKey === 'finished' ? (
                   <View

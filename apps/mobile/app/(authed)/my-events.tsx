@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getMyEvents, type MyEventSummary } from '@/api/events';
 import { Button } from '@/components/Button';
@@ -32,6 +32,9 @@ export default function MyEventsScreen() {
   const router = useRouter();
   const { palette } = useTheme();
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
+  /** Aligné `.fab @media (max-width: 380px)` web : à ≤380px on cache le label. */
+  const showFabLabel = width > 380;
   const [refreshing, setRefreshing] = useState(false);
   const [tab, setTab] = useState<Tab>('active');
 
@@ -264,7 +267,7 @@ export default function MyEventsScreen() {
         />
       )}
 
-      {/* FAB pill "+ Créer une soirée" */}
+      {/* FAB : pill "+ Créer une soirée" sur ≥ 380px, icone seule en dessous (parite web). */}
       <Pressable
         onPress={() => router.push('/(authed)/new')}
         accessibilityLabel="Créer une nouvelle soirée"
@@ -274,9 +277,12 @@ export default function MyEventsScreen() {
           bottom: 84,
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 6,
-          paddingHorizontal: 16,
-          paddingVertical: 12,
+          gap: showFabLabel ? 6 : 0,
+          paddingHorizontal: showFabLabel ? 16 : 16,
+          paddingVertical: showFabLabel ? 12 : 14,
+          minWidth: showFabLabel ? undefined : 52,
+          minHeight: showFabLabel ? undefined : 52,
+          justifyContent: 'center',
           borderRadius: 999,
           backgroundColor: palette.primary,
           shadowColor: '#000',
@@ -287,10 +293,12 @@ export default function MyEventsScreen() {
           transform: [{ translateY: pressed ? -2 : 0 }],
         })}
       >
-        <Ionicons name="add" size={20} color={palette.primaryContrast} />
-        <Text style={{ color: palette.primaryContrast, fontWeight: '700', fontSize: 15 }}>
-          Créer une soirée
-        </Text>
+        <Ionicons name="add" size={showFabLabel ? 20 : 24} color={palette.primaryContrast} />
+        {showFabLabel ? (
+          <Text style={{ color: palette.primaryContrast, fontWeight: '700', fontSize: 15 }}>
+            Créer une soirée
+          </Text>
+        ) : null}
       </Pressable>
     </SafeAreaView>
   );

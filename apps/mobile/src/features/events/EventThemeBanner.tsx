@@ -20,8 +20,9 @@ export function EventThemeBanner({ theme }: Props) {
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 12,
-        padding: 14,
+        gap: 11,
+        paddingHorizontal: 16,
+        paddingVertical: 11,
         borderRadius: 12,
         borderWidth: 1,
         borderColor: palette.primary,
@@ -37,23 +38,23 @@ export function EventThemeBanner({ theme }: Props) {
     >
       <View
         style={{
-          width: 36,
-          height: 36,
-          borderRadius: 10,
+          width: 32,
+          height: 32,
+          borderRadius: 8,
           backgroundColor: palette.primary,
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-        <Ionicons name="pricetag" size={18} color={palette.primaryContrast} />
+        <Ionicons name="pricetag" size={16} color={palette.primaryContrast} />
       </View>
-      <View style={{ flex: 1, gap: 2 }}>
+      <View style={{ flex: 1, gap: 1 }}>
         <Text
           style={{
             color: palette.primary,
             fontSize: 11,
             fontWeight: '700',
-            letterSpacing: 1.2,
+            letterSpacing: 0.9,
           }}
         >
           THÈME
@@ -61,7 +62,7 @@ export function EventThemeBanner({ theme }: Props) {
         <Text
           style={{
             color: palette.text,
-            fontSize: 15,
+            fontSize: 14,
             fontWeight: '600',
           }}
           numberOfLines={1}

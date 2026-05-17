@@ -106,28 +106,18 @@ export function EventCard({ event, onPress, showLifecycleBadge = true }: Props) 
         {isHost ? (
           <View
             style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 4,
+              width: 28,
+              height: 28,
+              borderRadius: 999,
               backgroundColor: palette.badgeHostBg,
               borderColor: palette.badgeHostText,
               borderWidth: 1,
-              paddingHorizontal: 8,
-              paddingVertical: 3,
-              borderRadius: 999,
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
+            accessibilityLabel="Hôte"
           >
-            <Ionicons name="ribbon" size={12} color={palette.badgeHostText} />
-            <Text
-              style={{
-                color: palette.badgeHostText,
-                fontSize: 10,
-                fontWeight: '700',
-                letterSpacing: 1,
-              }}
-            >
-              HÔTE
-            </Text>
+            <Ionicons name="ribbon" size={14} color={palette.badgeHostText} />
           </View>
         ) : null}
       </View>

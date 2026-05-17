@@ -117,9 +117,10 @@ export default function SettingsScreen() {
           <Text
             style={{
               color: palette.text,
-              fontSize: 28,
+              fontSize: 24,
               fontWeight: '800',
               letterSpacing: -0.6,
+              lineHeight: 28.8,
             }}
           >
             Mon compte
@@ -290,8 +291,8 @@ function Section({
         elevation: 1,
       }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        {icon ? <Ionicons name={icon} size={18} color={palette.sectionHeading} /> : null}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
+        {icon ? <Ionicons name={icon} size={18} color={palette.primary} /> : null}
         <Text
           style={{
             color: palette.sectionHeading,

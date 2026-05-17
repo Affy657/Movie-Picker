@@ -43,13 +43,20 @@ describe('EventCard', () => {
     expect(getByText('🍕')).toBeTruthy();
   });
 
-  it('shows HÔTE badge when creator', () => {
-    const { getByText } = render(
+  it('shows host badge (icon-only circle) when creator', () => {
+    const { getByLabelText, queryByLabelText, rerender } = render(
       <Wrap>
         <EventCard event={baseEvent} />
       </Wrap>
     );
-    expect(getByText('HÔTE')).toBeTruthy();
+    expect(getByLabelText('Hôte')).toBeTruthy();
+
+    rerender(
+      <Wrap>
+        <EventCard event={{ ...baseEvent, isCreator: false }} />
+      </Wrap>
+    );
+    expect(queryByLabelText('Hôte')).toBeNull();
   });
 
   it('hides the lifecycle pill for upcoming events (aligned web)', () => {

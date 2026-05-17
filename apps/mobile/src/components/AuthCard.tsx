@@ -67,10 +67,10 @@ export function AuthCard({ title, description, children, showBack = true, style 
         <Text
           style={{
             color: palette.text,
-            fontSize: 26,
+            fontSize: 24,
             fontWeight: '800',
-            letterSpacing: -0.5,
-            lineHeight: 32,
+            letterSpacing: -0.6,
+            lineHeight: 28.8,
           }}
         >
           {title}
