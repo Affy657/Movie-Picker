@@ -483,6 +483,12 @@ export const fr = {
         config: 'Config',
         wheel: 'Lancer la roue',
       },
+      leaveGuestTitle: 'Quitter cette soirée ?',
+      leaveGuestMessage:
+        'Tu seras déconnecté en tant qu’invité. Tu peux rejoindre à nouveau plus tard.',
+      leaveGuestCta: 'Quitter',
+      leaveGuestToast: 'Tu as quitté la soirée.',
+      leaveGuestLink: 'Quitter cette soirée (mode invité)',
     },
     create: {
       title: 'Créer une soirée',
@@ -517,6 +523,7 @@ export const fr = {
       pseudoSave: 'Enregistrer le pseudo',
       themeLabel: 'Thème',
       accentLabel: "Couleur d'accent",
+      languageA11y: 'Choisir la langue',
       currentPasswordLabel: 'Mot de passe actuel',
       newPasswordLabel: 'Nouveau mot de passe',
       changePasswordSubmit: 'Changer le mot de passe',
@@ -545,6 +552,8 @@ export const fr = {
       typeMore: 'Tape au moins 2 caractères.',
       noResults: 'Aucun résultat.',
       addError: 'Ajout impossible.',
+      successToast: 'Film proposé.',
+      untitled: 'Sans titre',
     },
     share: {
       title: 'Partager la soirée',
@@ -553,7 +562,11 @@ export const fr = {
         "⚠️ L'URL pointe sur ta machine de dev — elle ne fonctionnera pas chez tes amis. Configure EXPO_PUBLIC_WEB_BASE_URL avec l'URL publique du site avant de partager.",
       copy: 'Copier le lien',
       copied: 'Lien copié ✓',
+      copyToast: 'Lien copié dans le presse-papier',
       shareNative: 'Partager…',
+    },
+    offline: {
+      banner: 'Hors ligne — certaines actions peuvent échouer.',
     },
     config: {
       title: 'Configuration de la soirée',
@@ -572,6 +585,7 @@ export const fr = {
         'Cette action est irréversible. Tous les films et votes seront perdus.',
       saveError: 'Sauvegarde impossible.',
       deleteError: 'Suppression impossible.',
+      deleting: 'Suppression…',
       kickHelp:
         'Pour retirer un participant, fais un appui long sur son pseudo dans la liste des participants de la soirée.',
       loading: 'Chargement…',

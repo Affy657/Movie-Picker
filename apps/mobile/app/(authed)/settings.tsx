@@ -21,11 +21,7 @@ const ACCENT_SWATCHES: Record<AccentColor, string> = {
   orange: '#ea580c',
 };
 
-const THEMES: { value: UiThemePreference; label: string }[] = [
-  { value: 'system', label: 'Système' },
-  { value: 'light', label: 'Clair' },
-  { value: 'dark', label: 'Sombre' },
-];
+const THEME_VALUES: UiThemePreference[] = ['system', 'light', 'dark'];
 
 const LOCALES: { value: LocaleCode; label: string }[] = [
   { value: 'fr', label: 'Français' },
@@ -157,27 +153,27 @@ export default function SettingsScreen() {
             {t('mobile.settings.themeLabel')}
           </Text>
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            {THEMES.map((m) => (
+            {THEME_VALUES.map((value) => (
               <Pressable
-                key={m.value}
-                onPress={() => applyTheme(m.value)}
+                key={value}
+                onPress={() => applyTheme(value)}
                 style={{
                   flex: 1,
                   paddingVertical: 10,
                   borderRadius: 10,
                   borderWidth: 1,
-                  borderColor: preference === m.value ? palette.primary : palette.border,
-                  backgroundColor: preference === m.value ? palette.badgeMeBg : 'transparent',
+                  borderColor: preference === value ? palette.primary : palette.border,
+                  backgroundColor: preference === value ? palette.badgeMeBg : 'transparent',
                   alignItems: 'center',
                 }}
               >
                 <Text
                   style={{
-                    color: preference === m.value ? palette.badgeMeText : palette.text,
+                    color: preference === value ? palette.badgeMeText : palette.text,
                     fontWeight: '500',
                   }}
                 >
-                  {m.label}
+                  {t(`theme.${value}`)}
                 </Text>
               </Pressable>
             ))}
@@ -214,7 +210,7 @@ export default function SettingsScreen() {
             value={locale}
             options={LOCALES}
             onChange={setLocale}
-            accessibilityLabel="Choisir la langue"
+            accessibilityLabel={t('mobile.settings.languageA11y')}
           />
         </Section>
 

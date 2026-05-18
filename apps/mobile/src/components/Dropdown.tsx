@@ -10,6 +10,7 @@ type Props<T extends string> = {
   options: Option<T>[];
   onChange: (next: T) => void;
   accessibilityLabel?: string;
+  accessibilityHint?: string;
 };
 
 export function Dropdown<T extends string>({
@@ -17,16 +18,22 @@ export function Dropdown<T extends string>({
   options,
   onChange,
   accessibilityLabel,
+  accessibilityHint,
 }: Props<T>) {
   const { palette } = useTheme();
   const [open, setOpen] = useState(false);
   const current = options.find((o) => o.value === value);
+
+  if (__DEV__ && !current) {
+    console.warn(`[Dropdown] value "${value}" not in options`);
+  }
 
   return (
     <>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
+        accessibilityHint={accessibilityHint ?? 'Ouvre la liste des options'}
         accessibilityState={{ expanded: open }}
         onPress={() => setOpen(true)}
         style={({ pressed }) => ({
@@ -66,6 +73,7 @@ export function Dropdown<T extends string>({
         >
           <Pressable
             onPress={() => {}}
+            android_ripple={null}
             style={{
               backgroundColor: palette.surface,
               borderRadius: 14,

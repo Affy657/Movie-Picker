@@ -468,6 +468,12 @@ export const en: Locale = {
         config: 'Config',
         wheel: 'Spin the wheel',
       },
+      leaveGuestTitle: 'Leave this event?',
+      leaveGuestMessage:
+        'You will be signed out as a guest. You can rejoin later.',
+      leaveGuestCta: 'Leave',
+      leaveGuestToast: 'You left the event.',
+      leaveGuestLink: 'Leave this event (guest mode)',
     },
     create: {
       title: 'Create an event',
@@ -501,6 +507,7 @@ export const en: Locale = {
       pseudoSave: 'Save display name',
       themeLabel: 'Theme',
       accentLabel: 'Accent color',
+      languageA11y: 'Pick a language',
       currentPasswordLabel: 'Current password',
       newPasswordLabel: 'New password',
       changePasswordSubmit: 'Change password',
@@ -528,6 +535,8 @@ export const en: Locale = {
       typeMore: 'Type at least 2 characters.',
       noResults: 'No results.',
       addError: 'Could not add.',
+      successToast: 'Movie proposed.',
+      untitled: 'Untitled',
     },
     share: {
       title: 'Share the event',
@@ -536,7 +545,11 @@ export const en: Locale = {
         '⚠️ The URL points to your dev machine — it will not work for your friends. Set EXPO_PUBLIC_WEB_BASE_URL to the public site URL before sharing.',
       copy: 'Copy link',
       copied: 'Link copied ✓',
+      copyToast: 'Link copied to clipboard',
       shareNative: 'Share…',
+    },
+    offline: {
+      banner: 'Offline — some actions may fail.',
     },
     config: {
       title: 'Event settings',
@@ -554,6 +567,7 @@ export const en: Locale = {
       deleteEventConfirmMessage: 'This action is irreversible. All movies and votes will be lost.',
       saveError: 'Could not save.',
       deleteError: 'Could not delete.',
+      deleting: 'Deleting…',
       kickHelp: 'To remove a participant, long-press their name in the participants list.',
       loading: 'Loading…',
     },

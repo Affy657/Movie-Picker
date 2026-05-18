@@ -367,17 +367,17 @@ export default function EventDetailScreen() {
                 <Pressable
                   onPress={() =>
                     Alert.alert(
-                      'Quitter cette soirée ?',
-                      'Tu seras déconnecté en tant qu’invité. Tu peux rejoindre à nouveau plus tard.',
+                      t('mobile.eventDetail.leaveGuestTitle'),
+                      t('mobile.eventDetail.leaveGuestMessage'),
                       [
-                        { text: 'Annuler', style: 'cancel' },
+                        { text: t('mobile.cancel'), style: 'cancel' },
                         {
-                          text: 'Quitter',
+                          text: t('mobile.eventDetail.leaveGuestCta'),
                           style: 'destructive',
-                          onPress: async () => {
-                            await clearGuestParticipant(slug);
+                          onPress: () => {
                             setGuest(null);
-                            toastSuccess('Tu as quitté la soirée.');
+                            toastSuccess(t('mobile.eventDetail.leaveGuestToast'));
+                            void clearGuestParticipant(slug);
                           },
                         },
                       ]
@@ -387,7 +387,7 @@ export default function EventDetailScreen() {
                   style={{ alignSelf: 'center', paddingVertical: 6 }}
                 >
                   <Text style={{ color: palette.meta, fontSize: 12, textDecorationLine: 'underline' }}>
-                    Quitter cette soirée (mode invité)
+                    {t('mobile.eventDetail.leaveGuestLink')}
                   </Text>
                 </Pressable>
               ) : null}

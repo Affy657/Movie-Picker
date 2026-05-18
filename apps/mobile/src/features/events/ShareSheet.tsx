@@ -30,7 +30,7 @@ export function ShareSheet({ slug, title, onClose }: Props) {
   const copy = async () => {
     await Clipboard.setStringAsync(url);
     setCopied(true);
-    toastSuccess('Lien copié dans le presse-papier');
+    toastSuccess(t('mobile.share.copyToast'));
     setTimeout(() => setCopied(false), 1500);
   };
 

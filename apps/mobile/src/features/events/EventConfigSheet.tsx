@@ -231,7 +231,11 @@ export function EventConfigSheet({ eventIdOrSlug, onClose }: Props) {
           onPress={onSave}
         />
         <Button
-          label={deleteMutation.isPending ? 'Suppression…' : t('mobile.config.deleteEvent')}
+          label={
+            deleteMutation.isPending
+              ? t('mobile.config.deleting')
+              : t('mobile.config.deleteEvent')
+          }
           variant="danger"
           onPress={onDelete}
           loading={deleteMutation.isPending}

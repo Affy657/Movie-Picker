@@ -29,6 +29,7 @@ function NavigationShell() {
         </View>
       </View>
       <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
+      <Toast />
     </NavThemeProvider>
   );
 }
@@ -45,7 +46,6 @@ export default function RootLayout() {
           </LocaleProvider>
         </ThemeProvider>
       </QueryProvider>
-      <Toast />
     </SafeAreaProvider>
   );
 }

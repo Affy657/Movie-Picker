@@ -45,7 +45,7 @@ export function ProposeMovieSheet({ slug, participantId, onClose }: Props) {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['movies', slug] });
       await queryClient.invalidateQueries({ queryKey: ['event', slug] });
-      toastSuccess('Film proposé.');
+      toastSuccess(t('mobile.propose.successToast'));
       onClose();
     },
     onError: (err) => {
@@ -60,7 +60,7 @@ export function ProposeMovieSheet({ slug, participantId, onClose }: Props) {
     if (!item.id) return;
     addMutation.mutate({
       tmdbId: item.id,
-      title: item.title ?? 'Sans titre',
+      title: item.title ?? t('mobile.propose.untitled'),
       year: String(item.year ?? ''),
       posterPath: item.posterPath ?? null,
       participantId,
