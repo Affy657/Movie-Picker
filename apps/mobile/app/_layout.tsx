@@ -7,9 +7,12 @@ import {
 } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 import 'react-native-reanimated';
 
+import { OfflineBanner } from '@/components/OfflineBanner';
 import { AuthProvider } from '@/features/auth/AuthContext';
 import { LocaleProvider } from '@/features/i18n/LocaleContext';
 import { QueryProvider } from '@/features/providers/QueryProvider';
@@ -19,7 +22,12 @@ function NavigationShell() {
   const { resolvedTheme } = useTheme();
   return (
     <NavThemeProvider value={resolvedTheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }} />
+      <View style={{ flex: 1 }}>
+        <OfflineBanner />
+        <View style={{ flex: 1 }}>
+          <Stack screenOptions={{ headerShown: false }} />
+        </View>
+      </View>
       <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
     </NavThemeProvider>
   );
@@ -37,6 +45,7 @@ export default function RootLayout() {
           </LocaleProvider>
         </ThemeProvider>
       </QueryProvider>
+      <Toast />
     </SafeAreaProvider>
   );
 }

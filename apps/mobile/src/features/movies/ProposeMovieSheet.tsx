@@ -8,6 +8,7 @@ import { BottomSheet } from '@/components/BottomSheet';
 import { TextField } from '@/components/TextField';
 import { useTheme } from '@/features/theme/ThemeContext';
 import { posterUrl } from '@/lib/tmdb';
+import { toastSuccess } from '@/lib/toast';
 
 type Props = {
   slug: string;
@@ -42,6 +43,7 @@ export function ProposeMovieSheet({ slug, participantId, onClose }: Props) {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['movies', slug] });
       await queryClient.invalidateQueries({ queryKey: ['event', slug] });
+      toastSuccess('Film proposé.');
       onClose();
     },
     onError: (err) => {

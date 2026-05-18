@@ -12,7 +12,12 @@ import { MovieCard } from '@/features/movies/MovieCard';
 import { useTheme } from '@/features/theme/ThemeContext';
 import { useTranslation } from '@/features/i18n/LocaleContext';
 import { compareDayLocal, parseLocalDate } from '@/lib/dates';
-import { getGuestParticipant, type GuestParticipant } from '@/lib/guest-storage';
+import {
+  clearGuestParticipant,
+  getGuestParticipant,
+  type GuestParticipant,
+} from '@/lib/guest-storage';
+import { toastSuccess } from '@/lib/toast';
 import { EventThemeBanner } from '@/features/events/EventThemeBanner';
 import { JoinSheet } from '@/features/events/JoinSheet';
 import { ProposeMovieSheet } from '@/features/movies/ProposeMovieSheet';
@@ -355,6 +360,35 @@ export default function EventDetailScreen() {
                   </View>
                 ) : null}
               </View>
+
+              {guest && !user && !event.isFinished ? (
+                <Pressable
+                  onPress={() =>
+                    Alert.alert(
+                      'Quitter cette soirée ?',
+                      'Tu seras déconnecté en tant qu’invité. Tu peux rejoindre à nouveau plus tard.',
+                      [
+                        { text: 'Annuler', style: 'cancel' },
+                        {
+                          text: 'Quitter',
+                          style: 'destructive',
+                          onPress: async () => {
+                            await clearGuestParticipant(slug);
+                            setGuest(null);
+                            toastSuccess('Tu as quitté la soirée.');
+                          },
+                        },
+                      ]
+                    )
+                  }
+                  accessibilityRole="button"
+                  style={{ alignSelf: 'center', paddingVertical: 6 }}
+                >
+                  <Text style={{ color: palette.meta, fontSize: 12, textDecorationLine: 'underline' }}>
+                    Quitter cette soirée (mode invité)
+                  </Text>
+                </Pressable>
+              ) : null}
             </View>
 
             <View

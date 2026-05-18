@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react-native';
+import { render, waitFor } from '@testing-library/react-native';
 import { ThemeProvider } from '@/features/theme/ThemeContext';
 import { LocaleProvider } from '@/features/i18n/LocaleContext';
 import { EventCard } from './EventCard';
@@ -33,65 +33,67 @@ const baseEvent: MyEventSummary = {
 };
 
 describe('EventCard', () => {
-  it('renders title and emoji theme', () => {
-    const { getByText } = render(
+  it('renders title and emoji theme', async () => {
+    const { findByText, getByText } = render(
       <Wrap>
         <EventCard event={baseEvent} />
       </Wrap>
     );
-    expect(getByText('Soirée test')).toBeTruthy();
+    await findByText('Soirée test');
     expect(getByText('🍕')).toBeTruthy();
   });
 
-  it('shows host badge (icon-only circle) when creator', () => {
-    const { getByLabelText, queryByLabelText, rerender } = render(
+  it('shows host badge (icon-only circle) when creator', async () => {
+    const { findByLabelText, queryByLabelText, rerender } = render(
       <Wrap>
         <EventCard event={baseEvent} />
       </Wrap>
     );
-    expect(getByLabelText('Hôte')).toBeTruthy();
+    await findByLabelText('Hôte');
 
     rerender(
       <Wrap>
         <EventCard event={{ ...baseEvent, isCreator: false }} />
       </Wrap>
     );
-    expect(queryByLabelText('Hôte')).toBeNull();
+    await waitFor(() => expect(queryByLabelText('Hôte')).toBeNull());
   });
 
-  it('hides the lifecycle pill for upcoming events (aligned web)', () => {
-    const { queryByText } = render(
+  it('hides the lifecycle pill for upcoming events (aligned web)', async () => {
+    const { findByText, queryByText } = render(
       <Wrap>
         <EventCard event={baseEvent} />
       </Wrap>
     );
+    await findByText('Soirée test');
     expect(queryByText('À venir')).toBeNull();
   });
 
-  it('shows the lifecycle pill for live events', () => {
-    const { getByText } = render(
+  it('shows the lifecycle pill for live events', async () => {
+    const { findByText } = render(
       <Wrap>
         <EventCard event={{ ...baseEvent, lifecycle: 'live' }} />
       </Wrap>
     );
-    expect(getByText('● En cours')).toBeTruthy();
+    await findByText('● En cours');
   });
 
-  it('shows Terminée for finished when showLifecycleBadge is true', () => {
-    const { getByText } = render(
+  it('shows Terminée for finished when showLifecycleBadge is true', async () => {
+    const { findByText } = render(
       <Wrap>
         <EventCard event={{ ...baseEvent, lifecycle: 'finished' }} showLifecycleBadge />
       </Wrap>
     );
-    expect(getByText('Terminée')).toBeTruthy();
+    await findByText('Terminée');
   });
 
-  it('hides the lifecycle pill when showLifecycleBadge=false (history tab)', () => {
-    const { queryByText } = render(
+  it('hides the lifecycle pill when showLifecycleBadge=false (history tab)', async () => {
+    const { findByText, queryByText } = render(
       <Wrap>
         <EventCard event={{ ...baseEvent, lifecycle: 'finished' }} showLifecycleBadge={false} />
       </Wrap>
     );
+    await findByText('Soirée test');
     expect(queryByText('Terminée')).toBeNull();
   });
 });

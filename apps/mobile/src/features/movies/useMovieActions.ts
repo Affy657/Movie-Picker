@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { cancelVote, markSeen, removeMovie, unmarkSeen, vote as apiVote } from '@/api/movies';
+import { toastSuccess } from '@/lib/toast';
 
 export function useMovieActions(slug: string, participantId: string | null) {
   const queryClient = useQueryClient();
@@ -41,7 +42,10 @@ export function useMovieActions(slug: string, participantId: string | null) {
     mutationFn: async (movieId: string) => {
       await removeMovie(slug, movieId);
     },
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate();
+      toastSuccess('Film retiré.');
+    },
     onError: (err) => setError(err instanceof Error ? err.message : 'Retrait impossible.'),
   });
 

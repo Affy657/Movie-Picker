@@ -5,6 +5,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { BottomSheet } from '@/components/BottomSheet';
 import { Button } from '@/components/Button';
 import { useTheme } from '@/features/theme/ThemeContext';
+import { toastSuccess } from '@/lib/toast';
 
 const WEB_BASE = process.env.EXPO_PUBLIC_WEB_BASE_URL ?? 'http://localhost:5173';
 
@@ -27,6 +28,7 @@ export function ShareSheet({ slug, title, onClose }: Props) {
   const copy = async () => {
     await Clipboard.setStringAsync(url);
     setCopied(true);
+    toastSuccess('Lien copié dans le presse-papier');
     setTimeout(() => setCopied(false), 1500);
   };
 
