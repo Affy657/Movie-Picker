@@ -101,6 +101,28 @@ jobs:
           path: apps/web/coverage
           if-no-files-found: warn
 
+  test-mobile:
+    name: Tests mobile (Jest) + couverture
+    needs: lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: TypeScript strict
+        run: pnpm --filter mobile exec tsc --noEmit
+      - name: Tests Jest
+        run: pnpm --filter mobile test
+      - name: Couverture (informatif)
+        run: pnpm --filter mobile test:coverage
+        continue-on-error: true
+
   test-api:
     name: Tests API .NET + couverture
     needs: lint

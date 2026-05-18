@@ -129,7 +129,11 @@ export default function SettingsScreen() {
           ) : null}
         </View>
 
-        <Section title={t('mobile.settings.sectionProfile')} icon="person-outline" palette={palette}>
+        <Section
+          title={t('mobile.settings.sectionProfile')}
+          icon="person-outline"
+          palette={palette}
+        >
           <TextField
             label={t('mobile.settings.pseudoLabel')}
             value={displayName}
@@ -214,11 +218,7 @@ export default function SettingsScreen() {
           />
         </Section>
 
-        <Section
-          title={t('mobile.settings.sectionSecurity')}
-          icon="key-outline"
-          palette={palette}
-        >
+        <Section title={t('mobile.settings.sectionSecurity')} icon="key-outline" palette={palette}>
           <TextField
             label={t('mobile.settings.currentPasswordLabel')}
             value={currentPassword}
@@ -255,11 +255,7 @@ export default function SettingsScreen() {
           icon="log-out-outline"
           palette={palette}
         >
-          <Button
-            label={t('mobile.settings.logout')}
-            variant="secondary"
-            onPress={confirmLogout}
-          />
+          <Button label={t('mobile.settings.logout')} variant="secondary" onPress={confirmLogout} />
           <Text style={{ color: palette.meta, fontSize: 12 }}>
             {t('mobile.settings.deleteAccountHint')}
           </Text>

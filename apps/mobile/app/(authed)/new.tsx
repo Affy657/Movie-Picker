@@ -118,10 +118,7 @@ export default function NewEventScreen() {
         contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         keyboardShouldPersistTaps="handled"
       >
-        <AuthCard
-          title={t('mobile.create.title')}
-          description={t('mobile.create.description')}
-        >
+        <AuthCard title={t('mobile.create.title')} description={t('mobile.create.description')}>
           {error ? (
             <View
               style={{

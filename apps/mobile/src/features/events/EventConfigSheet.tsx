@@ -218,9 +218,7 @@ export function EventConfigSheet({ eventIdOrSlug, onClose }: Props) {
             value={!!form.richSharePreview}
             onValueChange={(v) => setForm((f) => ({ ...f, richSharePreview: v }))}
           />
-          <Text style={{ color: palette.text, flex: 1 }}>
-            {t('mobile.config.richShareLabel')}
-          </Text>
+          <Text style={{ color: palette.text, flex: 1 }}>{t('mobile.config.richShareLabel')}</Text>
         </View>
 
         {error ? <Text style={{ color: palette.error }}>{error}</Text> : null}
@@ -232,9 +230,7 @@ export function EventConfigSheet({ eventIdOrSlug, onClose }: Props) {
         />
         <Button
           label={
-            deleteMutation.isPending
-              ? t('mobile.config.deleting')
-              : t('mobile.config.deleteEvent')
+            deleteMutation.isPending ? t('mobile.config.deleting') : t('mobile.config.deleteEvent')
           }
           variant="danger"
           onPress={onDelete}

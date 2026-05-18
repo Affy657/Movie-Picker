@@ -9,7 +9,9 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   removeItem: jest.fn(async () => undefined),
 }));
 
-let netListener: ((s: { isConnected: boolean | null; isInternetReachable: boolean | null }) => void) | null = null;
+let netListener:
+  | ((s: { isConnected: boolean | null; isInternetReachable: boolean | null }) => void)
+  | null = null;
 
 jest.mock('@react-native-community/netinfo', () => ({
   __esModule: true,

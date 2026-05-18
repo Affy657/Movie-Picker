@@ -76,8 +76,7 @@ export function WheelSheet({ slug, onClose }: Props) {
       }, SPIN_DURATION_MS);
       queryClient.invalidateQueries({ queryKey: ['event', slug] });
     },
-    onError: (err) =>
-      setError(err instanceof ApiError ? err.message : t('mobile.wheel.spinError')),
+    onError: (err) => setError(err instanceof ApiError ? err.message : t('mobile.wheel.spinError')),
   });
 
   const closeMutation = useMutation({
@@ -148,9 +147,7 @@ export function WheelSheet({ slug, onClose }: Props) {
           <View style={{ flexDirection: 'row', gap: 8, alignSelf: 'stretch' }}>
             <View style={{ flex: 1 }}>
               <Button
-                label={
-                  spinMutation.isPending ? t('mobile.wheel.spinning') : t('mobile.wheel.spin')
-                }
+                label={spinMutation.isPending ? t('mobile.wheel.spinning') : t('mobile.wheel.spin')}
                 onPress={() => {
                   setError(null);
                   setWinner(null);

@@ -386,7 +386,9 @@ export default function EventDetailScreen() {
                   accessibilityRole="button"
                   style={{ alignSelf: 'center', paddingVertical: 6 }}
                 >
-                  <Text style={{ color: palette.meta, fontSize: 12, textDecorationLine: 'underline' }}>
+                  <Text
+                    style={{ color: palette.meta, fontSize: 12, textDecorationLine: 'underline' }}
+                  >
                     {t('mobile.eventDetail.leaveGuestLink')}
                   </Text>
                 </Pressable>

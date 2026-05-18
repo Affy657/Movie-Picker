@@ -56,12 +56,7 @@ export function Dropdown<T extends string>({
         <Ionicons name="chevron-down" size={18} color={palette.textMuted} />
       </Pressable>
 
-      <Modal
-        visible={open}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setOpen(false)}
-      >
+      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable
           onPress={() => setOpen(false)}
           style={{

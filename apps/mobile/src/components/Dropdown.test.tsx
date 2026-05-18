@@ -30,12 +30,7 @@ describe('Dropdown', () => {
   it('opens a menu on press and lists all options', () => {
     const { getByText, queryByText } = render(
       <Wrap>
-        <Dropdown
-          value="fr"
-          options={options}
-          onChange={() => {}}
-          accessibilityLabel="lang"
-        />
+        <Dropdown value="fr" options={options} onChange={() => {}} accessibilityLabel="lang" />
       </Wrap>
     );
     expect(queryByText('English')).toBeNull();

@@ -469,8 +469,7 @@ export const en: Locale = {
         wheel: 'Spin the wheel',
       },
       leaveGuestTitle: 'Leave this event?',
-      leaveGuestMessage:
-        'You will be signed out as a guest. You can rejoin later.',
+      leaveGuestMessage: 'You will be signed out as a guest. You can rejoin later.',
       leaveGuestCta: 'Leave',
       leaveGuestToast: 'You left the event.',
       leaveGuestLink: 'Leave this event (guest mode)',
