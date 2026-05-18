@@ -52,7 +52,9 @@ function lastInit(): RequestInit {
 describe('api/auth endpoints', () => {
   it('register POST /auth/register without auth', async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(200, { userId: 'u1' }));
-    await auth.register({ email: 'a@b.com', password: 'pwd' } as Parameters<typeof auth.register>[0]);
+    await auth.register({ email: 'a@b.com', password: 'pwd' } as Parameters<
+      typeof auth.register
+    >[0]);
     expect(lastUrl()).toMatch(/\/auth\/register$/);
     expect(lastInit().method).toBe('POST');
   });
@@ -135,7 +137,7 @@ describe('api/events endpoints', () => {
 
   it('joinEvent uses noAuth POST /events/:slug/join', async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(200, { participant: { _id: 'p1' } }));
-    await events.joinEvent('slug', { pseudo: 'Lea' } as Parameters<typeof events.joinEvent>[0]);
+    await events.joinEvent('slug', { pseudo: 'Lea' } as Parameters<typeof events.joinEvent>[1]);
     expect(lastUrl()).toMatch(/\/events\/slug\/join$/);
     expect(lastInit().method).toBe('POST');
   });
@@ -181,7 +183,9 @@ describe('api/movies endpoints', () => {
 
   it('addMovie POST /events/:slug/movies', async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(201, {}));
-    await movies.addMovie('slug', { tmdbId: 1, title: 'X' } as Parameters<typeof movies.addMovie>[0]);
+    await movies.addMovie('slug', { tmdbId: 1, title: 'X' } as Parameters<
+      typeof movies.addMovie
+    >[1]);
     expect(lastInit().method).toBe('POST');
   });
 
