@@ -1,7 +1,9 @@
+import { Ionicons } from '@expo/vector-icons';
 import {
   ActivityIndicator,
   Pressable,
   Text,
+  View,
   type PressableProps,
   type StyleProp,
   type ViewStyle,
@@ -15,6 +17,7 @@ type Props = Omit<PressableProps, 'style' | 'children'> & {
   variant?: Variant;
   loading?: boolean;
   fullWidth?: boolean;
+  icon?: React.ComponentProps<typeof Ionicons>['name'];
   style?: StyleProp<ViewStyle>;
 };
 
@@ -23,6 +26,7 @@ export function Button({
   variant = 'primary',
   loading = false,
   fullWidth = true,
+  icon,
   disabled,
   style,
   ...rest
@@ -79,16 +83,19 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={fg} />
       ) : (
-        <Text
-          style={{
-            color: fg,
-            fontSize: 15,
-            fontWeight: '600',
-            letterSpacing: 0.2,
-          }}
-        >
-          {label}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {icon ? <Ionicons name={icon} size={16} color={fg} /> : null}
+          <Text
+            style={{
+              color: fg,
+              fontSize: 15,
+              fontWeight: '600',
+              letterSpacing: 0.2,
+            }}
+          >
+            {label}
+          </Text>
+        </View>
       )}
     </Pressable>
   );

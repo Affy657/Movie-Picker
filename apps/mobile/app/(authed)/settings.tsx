@@ -4,6 +4,7 @@ import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ApiError } from '@/api/client';
 import { Button } from '@/components/Button';
+import { Dropdown } from '@/components/Dropdown';
 import { TextField } from '@/components/TextField';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useLocale, useTranslation } from '@/features/i18n/LocaleContext';
@@ -195,32 +196,12 @@ export default function SettingsScreen() {
         </Section>
 
         <Section title="Langue" icon="language-outline" palette={palette}>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            {LOCALES.map((l) => (
-              <Pressable
-                key={l.value}
-                onPress={() => setLocale(l.value)}
-                style={{
-                  flex: 1,
-                  paddingVertical: 10,
-                  borderRadius: 10,
-                  borderWidth: 1,
-                  borderColor: locale === l.value ? palette.primary : palette.border,
-                  backgroundColor: locale === l.value ? palette.badgeMeBg : 'transparent',
-                  alignItems: 'center',
-                }}
-              >
-                <Text
-                  style={{
-                    color: locale === l.value ? palette.badgeMeText : palette.text,
-                    fontWeight: '500',
-                  }}
-                >
-                  {l.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
+          <Dropdown
+            value={locale}
+            options={LOCALES}
+            onChange={setLocale}
+            accessibilityLabel="Choisir la langue"
+          />
         </Section>
 
         <Section title="Sécurité" icon="key-outline" palette={palette}>

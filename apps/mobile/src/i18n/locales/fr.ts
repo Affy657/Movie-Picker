@@ -579,15 +579,15 @@ export const fr = {
     wheel: {
       title: 'La roue',
       emptyMovies: 'Aucun film à tirer pour le moment.',
-      spin: 'Lancer 🎯',
+      spin: 'Lancer la roue',
       spinning: 'Tirage…',
       close: 'Clôturer',
       closing: 'Clôture…',
-      winnerKicker: '🏆 Gagnant',
+      winnerKicker: 'Gagnant',
       winnerNotFound: 'Réponse inattendue de la roue (film gagnant introuvable).',
       spinError: 'Tirage impossible.',
       closeError: 'Clôture impossible.',
-      moviesCount: '🎯 {{count}} films',
+      moviesCount: '{{count}} films',
     },
     movieDetail: {
       loadError: 'Impossible de charger les détails complémentaires.',

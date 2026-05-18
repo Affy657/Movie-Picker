@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { ActivityIndicator, Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { Image } from 'expo-image';
@@ -44,7 +45,7 @@ export function MovieDetailSheet({ movie, onClose }: Props) {
                 justifyContent: 'center',
               }}
             >
-              <Text style={{ color: palette.placeholder, fontSize: 24 }}>🎬</Text>
+              <Ionicons name="film" size={28} color={palette.placeholder} />
             </View>
           )}
           <View style={{ flex: 1, gap: 4 }}>

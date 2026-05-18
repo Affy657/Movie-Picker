@@ -560,15 +560,15 @@ export const en: Locale = {
     wheel: {
       title: 'The wheel',
       emptyMovies: 'No movie to spin yet.',
-      spin: 'Spin 🎯',
+      spin: 'Spin the wheel',
       spinning: 'Spinning…',
       close: 'Close',
       closing: 'Closing…',
-      winnerKicker: '🏆 Winner',
+      winnerKicker: 'Winner',
       winnerNotFound: 'Unexpected wheel response (winning movie not found).',
       spinError: 'Could not spin.',
       closeError: 'Could not close.',
-      moviesCount: '🎯 {{count}} movies',
+      moviesCount: '{{count}} movies',
     },
     movieDetail: {
       loadError: 'Could not load extra details.',

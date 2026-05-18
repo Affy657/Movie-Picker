@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Redirect, useRouter } from 'expo-router';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,26 +7,30 @@ import { useAuth } from '@/features/auth/AuthContext';
 import { useTranslation } from '@/features/i18n/LocaleContext';
 import { useTheme } from '@/features/theme/ThemeContext';
 
-type Feature = { icon: string; title: string; text: string };
+type Feature = {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  title: string;
+  text: string;
+};
 
 const FEATURES: Feature[] = [
   {
-    icon: '🔗',
+    icon: 'link',
     title: 'Lancez la soirée',
     text: 'Un lien, un QR code — tout le monde rejoint en deux clics.',
   },
   {
-    icon: '🎬',
+    icon: 'film',
     title: 'Proposez vos films',
     text: 'Affiches, infos, plateformes : la liste se construit depuis TMDB.',
   },
   {
-    icon: '👍',
+    icon: 'thumbs-up',
     title: 'Votez ensemble',
     text: "Pouce en l'air, déjà vu, on garde — les favoris ressortent vite.",
   },
   {
-    icon: '🎯',
+    icon: 'disc',
     title: 'La roue tranche',
     text: "Toujours pas d'accord ? Un coup de roue et le verdict tombe.",
   },
@@ -72,7 +77,7 @@ export default function Landing() {
               backgroundColor: palette.badgeMeBg,
             }}
           >
-            <Text style={{ fontSize: 12 }}>✨</Text>
+            <Ionicons name="sparkles" size={12} color={palette.badgeMeText} />
             <Text
               style={{
                 color: palette.badgeMeText,
@@ -159,7 +164,7 @@ export default function Landing() {
                     justifyContent: 'center',
                   }}
                 >
-                  <Text style={{ fontSize: 20 }}>{f.icon}</Text>
+                  <Ionicons name={f.icon} size={20} color={palette.badgeMeText} />
                 </View>
                 <View style={{ flex: 1, gap: 2 }}>
                   <Text style={{ color: palette.text, fontWeight: '700', fontSize: 15 }}>

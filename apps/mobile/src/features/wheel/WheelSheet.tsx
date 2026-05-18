@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
@@ -114,18 +115,24 @@ export function WheelSheet({ slug, onClose }: Props) {
                 wheelStyle,
               ]}
             >
-              <Text style={{ color: palette.wheelLabel, fontWeight: '700' }}>
-                🎯 {movies.length} films
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="disc" size={16} color={palette.wheelLabel} />
+                <Text style={{ color: palette.wheelLabel, fontWeight: '700' }}>
+                  {movies.length} films
+                </Text>
+              </View>
             </Animated.View>
             <Text style={{ position: 'absolute', top: -4, fontSize: 22 }}>▼</Text>
           </View>
 
           {winner ? (
             <View style={{ alignItems: 'center', gap: 4 }}>
-              <Text style={{ color: palette.success, fontSize: 14, fontWeight: '700' }}>
-                🏆 Gagnant
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="trophy" size={14} color={palette.success} />
+                <Text style={{ color: palette.success, fontSize: 14, fontWeight: '700' }}>
+                  Gagnant
+                </Text>
+              </View>
               <Text style={{ color: palette.text, fontSize: 18, fontWeight: '700' }}>
                 {winner.title}
               </Text>
@@ -137,7 +144,7 @@ export function WheelSheet({ slug, onClose }: Props) {
           <View style={{ flexDirection: 'row', gap: 8, alignSelf: 'stretch' }}>
             <View style={{ flex: 1 }}>
               <Button
-                label={spinMutation.isPending ? 'Tirage…' : 'Lancer 🎯'}
+                label={spinMutation.isPending ? 'Tirage…' : 'Lancer la roue'}
                 onPress={() => {
                   setError(null);
                   setWinner(null);

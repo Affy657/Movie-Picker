@@ -311,39 +311,50 @@ export default function EventDetailScreen() {
               </View>
             ) : null}
 
-            <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+            <View style={{ gap: 10 }}>
               {!isMember ? (
-                <Button label="Rejoindre" onPress={() => setShowJoin(true)} fullWidth={false} />
-              ) : null}
-              {canPropose ? (
+                <Button
+                  label="Rejoindre la soirée"
+                  icon="person-add"
+                  onPress={() => setShowJoin(true)}
+                />
+              ) : canPropose ? (
                 <Button
                   label="Proposer un film"
+                  icon="add-circle"
                   onPress={() => setShowPropose(true)}
-                  variant={!isMember ? 'secondary' : 'primary'}
-                  fullWidth={false}
                 />
               ) : null}
-              <Button
-                label="Partager"
-                variant="secondary"
-                onPress={() => setShowShare(true)}
-                fullWidth={false}
-              />
-              {isHost ? (
-                <Button
-                  label="Config"
-                  variant="ghost"
-                  onPress={() => setShowConfig(true)}
-                  fullWidth={false}
-                />
-              ) : null}
+
               {isHost && !event.isFinished ? (
                 <Button
                   label="Lancer la roue"
+                  icon="disc"
+                  variant={isMember ? 'secondary' : 'primary'}
                   onPress={() => setShowWheel(true)}
-                  fullWidth={false}
                 />
               ) : null}
+
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    label="Partager"
+                    icon="share-social"
+                    variant="secondary"
+                    onPress={() => setShowShare(true)}
+                  />
+                </View>
+                {isHost ? (
+                  <View style={{ flex: 1 }}>
+                    <Button
+                      label="Config"
+                      icon="settings"
+                      variant="secondary"
+                      onPress={() => setShowConfig(true)}
+                    />
+                  </View>
+                ) : null}
+              </View>
             </View>
 
             <View
