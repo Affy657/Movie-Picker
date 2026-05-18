@@ -72,4 +72,8 @@ public sealed class EventConfigDocument
     [BsonElement("richSharePreview")]
     [BsonIgnoreIfDefault]
     public bool RichSharePreview { get; set; }
+
+    [BsonElement("allowSeries")]
+    [BsonIgnoreIfDefault]
+    public bool AllowSeries { get; set; }
 }

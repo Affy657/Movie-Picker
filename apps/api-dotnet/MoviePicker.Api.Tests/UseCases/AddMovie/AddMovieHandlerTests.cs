@@ -16,7 +16,7 @@ public sealed class AddMovieHandlerTests
     private readonly Mock<IPosterImageStore> _posterStore;
     private readonly AddMovieHandler _sut;
 
-    private static Event ActiveEvent() => new()
+    private static Event ActiveEvent(bool allowSeries = false) => new()
     {
         Id = "evt1",
         Title = "Soirée",
@@ -24,13 +24,17 @@ public sealed class AddMovieHandlerTests
         Time = "20:00",
         Slug = "soiree",
         HostToken = "ht",
+        Config = new EventConfig { AllowSeries = allowSeries },
         CreatedAt = DateTimeOffset.UtcNow,
         UpdatedAt = DateTimeOffset.UtcNow
     };
 
-    private static AddMovieRequest Request(string participantId = "p123456789012345678901234") => new()
+    private static AddMovieRequest Request(
+        string participantId = "p123456789012345678901234",
+        MovieMediaType mediaType = MovieMediaType.Movie) => new()
     {
         TmdbId = 27205,
+        MediaType = mediaType,
         Title = " Inception ",
         Year = "2010",
         PosterPath = "https://image.tmdb.org/t/p/w154/abc.jpg",
@@ -71,6 +75,17 @@ public sealed class AddMovieHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_TvSeriesNotAllowed_ThrowsConflictException()
+    {
+        var evt = ActiveEvent(allowSeries: false);
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(
+            () => _sut.HandleAsync("evt1", Request(mediaType: MovieMediaType.Tv)));
+        Assert.Contains("séries", ex.Message);
+    }
+
+    [Fact]
     public async Task HandleAsync_ParticipantInvalid_ThrowsBadRequestException()
     {
         var evt = ActiveEvent();
@@ -88,10 +103,59 @@ public sealed class AddMovieHandlerTests
         var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
-        _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 27205, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 27205, MovieMediaType.Movie, It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request(participant.Id)));
         Assert.Contains("TMDB", ex.Message);
+    }
+
+    [Fact]
+    public async Task HandleAsync_SameTmdbIdDifferentMediaType_IsAllowed()
+    {
+        var evt = ActiveEvent(allowSeries: true);
+        var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        var created = new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = participant.Id, TmdbId = 42, MediaType = MovieMediaType.Tv, Title = "Breaking Bad", Year = "2008", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
+        _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 42, MovieMediaType.Movie, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 42, MovieMediaType.Tv, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Breaking Bad", It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo.Setup(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>())).ReturnsAsync(created);
+
+        var request = new AddMovieRequest
+        {
+            TmdbId = 42,
+            MediaType = MovieMediaType.Tv,
+            Title = "Breaking Bad",
+            Year = "2008",
+            PosterPath = null,
+            ParticipantId = participant.Id
+        };
+
+        var result = await _sut.HandleAsync("evt1", request);
+        Assert.Equal(MovieMediaType.Tv, result.MediaType);
+    }
+
+    [Fact]
+    public async Task HandleAsync_SameTmdbIdSameMediaType_StillRejected()
+    {
+        var evt = ActiveEvent(allowSeries: true);
+        var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
+        _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 42, MovieMediaType.Tv, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var request = new AddMovieRequest
+        {
+            TmdbId = 42,
+            MediaType = MovieMediaType.Tv,
+            Title = "Breaking Bad",
+            Year = "2008",
+            ParticipantId = participant.Id
+        };
+
+        await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", request));
     }
 
     [Fact]
@@ -101,7 +165,7 @@ public sealed class AddMovieHandlerTests
         var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
-        _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 27205, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 27205, MovieMediaType.Movie, It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request(participant.Id)));
@@ -115,7 +179,7 @@ public sealed class AddMovieHandlerTests
         var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
-        _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 27205, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 27205, MovieMediaType.Movie, It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<CancellationToken>())).ReturnsAsync(false);
         var req = new AddMovieRequest { TmdbId = 27205, Title = "Inception", Year = "2010", PosterPath = "not-a-valid-absolute-uri", ParticipantId = participant.Id };
 
@@ -141,7 +205,7 @@ public sealed class AddMovieHandlerTests
         var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
-        _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 27205, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 27205, MovieMediaType.Movie, It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _movieRepo.Setup(r => r.CountByEventAndParticipantAsync(evt.Id, participant.Id, It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
@@ -157,7 +221,7 @@ public sealed class AddMovieHandlerTests
         var createdMovie = new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = participant.Id, TmdbId = 27205, Title = "Inception", Year = "2010", PosterPath = "https://image.tmdb.org/t/p/w154/abc.jpg", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
-        _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 27205, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 27205, MovieMediaType.Movie, It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _movieRepo.Setup(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>())).ReturnsAsync(createdMovie);
 

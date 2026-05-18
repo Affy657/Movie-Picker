@@ -59,7 +59,7 @@ Découpage par version côté **métier / utilisateur**.
 
 **Objectif** : contenu film riche, options de soirée, historique, UX avancée.
 
-- **Films** : note moyenne (API), bande-annonce (lien), durée si disponible ; option « Séries OK / pas OK » (config hôte).
+- **Films** : note moyenne (API) ✅, durée si disponible ✅, bande-annonce (lien) ✅, option « Séries TV OK / pas OK » (config hôte) ✅ — livré avec fix doublon TMDB id par type de média.
 - **Soirée** : lieu, description ; compte à rebours ; lien « Ajouter au calendrier » (.ics) — constitue aussi un **rappel** côté agenda (OS / Google / Outlook), complémentaire aux notifications in-app V1.
 - **Config** : limite de participants, plage de votes (configurable).
 - **Historique** : filtre « Soirées passées », affichage du film gagnant et liste en lecture seule.

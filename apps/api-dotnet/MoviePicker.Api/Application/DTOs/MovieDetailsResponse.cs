@@ -1,9 +1,11 @@
+using MoviePicker.Api.Domain.Entities;
+
 namespace MoviePicker.Api.Application.DTOs;
 
-/// <summary>Réponse <c>GET /api/v1/movies/tmdb/{tmdbId}/details</c> — synopsis, équipe, casting.</summary>
 public sealed class MovieDetailsResponse
 {
     public int TmdbId { get; init; }
+    public MovieMediaType MediaType { get; init; } = MovieMediaType.Movie;
     public string Title { get; init; } = string.Empty;
     public string? Overview { get; init; }
     public string? Tagline { get; init; }
@@ -12,4 +14,5 @@ public sealed class MovieDetailsResponse
     public int? RuntimeMinutes { get; init; }
     public IReadOnlyList<string> Genres { get; init; } = Array.Empty<string>();
     public string? ReleaseDate { get; init; }
+    public string? TrailerUrl { get; init; }
 }

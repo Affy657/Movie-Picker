@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.GetMovieDetails;
@@ -13,11 +14,7 @@ public sealed class GetMovieDetailsHandler : IGetMovieDetailsHandler
         _tmdb = tmdb;
     }
 
-    /// <summary>
-    /// Retourne les détails TMDB (ou <c>null</c> si film inconnu → 404 côté controller).
-    /// Remonte <see cref="ServiceUnavailableException"/> si TMDB est indisponible (→ 503).
-    /// </summary>
-    public async Task<MovieDetailsResponse?> HandleAsync(int tmdbId, CancellationToken ct = default)
+    public async Task<MovieDetailsResponse?> HandleAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct = default)
     {
         if (tmdbId <= 0)
             return null;
@@ -25,7 +22,7 @@ public sealed class GetMovieDetailsHandler : IGetMovieDetailsHandler
         TmdbMovieDetails? details;
         try
         {
-            details = await _tmdb.GetDetailsAsync(tmdbId, ct).ConfigureAwait(false);
+            details = await _tmdb.GetDetailsAsync(tmdbId, mediaType, ct).ConfigureAwait(false);
         }
         catch (HttpRequestException)
         {
@@ -38,6 +35,7 @@ public sealed class GetMovieDetailsHandler : IGetMovieDetailsHandler
         return new MovieDetailsResponse
         {
             TmdbId = details.Id,
+            MediaType = mediaType,
             Title = details.Title,
             Overview = details.Overview,
             Tagline = details.Tagline,
@@ -46,6 +44,7 @@ public sealed class GetMovieDetailsHandler : IGetMovieDetailsHandler
             RuntimeMinutes = details.Runtime,
             Genres = details.Genres,
             ReleaseDate = details.ReleaseDate,
+            TrailerUrl = details.TrailerUrl
         };
     }
 }

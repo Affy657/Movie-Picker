@@ -10,6 +10,7 @@ public static class MovieMapper
         EventId = d.EventId,
         ParticipantId = d.ParticipantId,
         TmdbId = d.TmdbId,
+        MediaType = ParseMediaType(d.MediaType),
         Title = d.Title,
         Year = d.Year,
         PosterPath = d.PosterPath,
@@ -23,10 +24,19 @@ public static class MovieMapper
         EventId = m.EventId,
         ParticipantId = m.ParticipantId,
         TmdbId = m.TmdbId,
+        MediaType = MediaTypeToString(m.MediaType),
         Title = m.Title,
         Year = m.Year,
         PosterPath = m.PosterPath,
         CreatedAt = m.CreatedAt.UtcDateTime,
         UpdatedAt = m.UpdatedAt.UtcDateTime
     };
+
+    public static string MediaTypeToString(MovieMediaType m) =>
+        m == MovieMediaType.Tv ? "tv" : "movie";
+
+    private static MovieMediaType ParseMediaType(string? raw) =>
+        string.Equals(raw?.Trim(), "tv", StringComparison.OrdinalIgnoreCase)
+            ? MovieMediaType.Tv
+            : MovieMediaType.Movie;
 }

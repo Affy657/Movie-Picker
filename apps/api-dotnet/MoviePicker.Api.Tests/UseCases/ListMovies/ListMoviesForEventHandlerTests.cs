@@ -230,7 +230,7 @@ public sealed class ListMoviesForEventHandlerTests
         _voteRepo.Setup(r => r.AggregateScoresByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, VoteScoreAggregate> { ["mov1"] = new(0, 0, 0) });
         _participantRepo.Setup(r => r.GetPseudosByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, string> { ["p1"] = "Alice" });
         _tmdb
-            .Setup(t => t.GetEnrichmentAsync(42, "FR", It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetEnrichmentAsync(42, It.IsAny<MovieMediaType>(), "FR", It.IsAny<CancellationToken>()))
             .ReturnsAsync(enrichment);
 
         var sutWithKey = new ListMoviesForEventHandler(

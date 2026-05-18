@@ -1,6 +1,6 @@
 import { fetchApi } from '@/shared/api/client';
 import { mapMovieData, type RawMovieData } from '@/shared/api/apiMapping';
-import type { MovieData, WatchProviderOffer } from '@/shared/types/movie';
+import type { MovieData, MovieMediaType, WatchProviderOffer } from '@/shared/types/movie';
 
 export async function fetchEventMovies(
   slug: string,
@@ -13,6 +13,7 @@ export async function fetchEventMovies(
 
 export interface MovieSearchItem {
   id: number;
+  mediaType?: MovieMediaType;
   title: string;
   year: string;
   posterPath: string | null;
@@ -35,10 +36,11 @@ export interface MovieSearchListResponse {
  */
 export async function searchMovies(
   query: string,
-  opts?: { signal?: AbortSignal; lang?: string }
+  opts?: { signal?: AbortSignal; lang?: string; eventSlug?: string }
 ): Promise<MovieSearchListResponse> {
   const params = new URLSearchParams({ q: query.trim() });
   if (opts?.lang) params.set('lang', opts.lang);
+  if (opts?.eventSlug) params.set('eventSlug', opts.eventSlug);
 
   const raw = await fetchApi<MovieSearchListResponse | MovieSearchItem[]>(
     `/movies/search?${params.toString()}`,
@@ -62,6 +64,7 @@ export async function searchMovies(
 
 export interface MovieDetails {
   tmdbId: number;
+  mediaType?: MovieMediaType;
   title: string;
   overview: string | null;
   tagline: string | null;
@@ -70,10 +73,12 @@ export interface MovieDetails {
   runtimeMinutes: number | null;
   genres: string[];
   releaseDate: string | null;
+  trailerUrl?: string | null;
 }
 
 interface RawMovieDetailsResponse {
   tmdbId?: number;
+  mediaType?: MovieMediaType;
   title?: string;
   overview?: string | null;
   tagline?: string | null;
@@ -82,18 +87,23 @@ interface RawMovieDetailsResponse {
   runtimeMinutes?: number | null;
   genres?: string[] | null;
   releaseDate?: string | null;
+  trailerUrl?: string | null;
 }
 
 export async function fetchMovieDetails(
   tmdbId: number,
-  opts?: { signal?: AbortSignal }
+  opts?: { signal?: AbortSignal; mediaType?: MovieMediaType }
 ): Promise<MovieDetails> {
+  const params = new URLSearchParams();
+  if (opts?.mediaType) params.set('mediaType', opts.mediaType);
+  const qs = params.toString() ? `?${params.toString()}` : '';
   const raw = await fetchApi<RawMovieDetailsResponse>(
-    `/movies/tmdb/${tmdbId}/details`,
+    `/movies/tmdb/${tmdbId}/details${qs}`,
     opts?.signal ? { signal: opts.signal } : undefined
   );
   return {
     tmdbId: raw.tmdbId ?? tmdbId,
+    mediaType: raw.mediaType,
     title: raw.title ?? '',
     overview: raw.overview ?? null,
     tagline: raw.tagline ?? null,
@@ -102,6 +112,7 @@ export async function fetchMovieDetails(
     runtimeMinutes: raw.runtimeMinutes ?? null,
     genres: Array.isArray(raw.genres) ? raw.genres : [],
     releaseDate: raw.releaseDate ?? null,
+    trailerUrl: raw.trailerUrl ?? null,
   };
 }
 
@@ -109,6 +120,7 @@ export async function addMovieToEvent(
   slug: string,
   body: {
     tmdbId: number;
+    mediaType?: MovieMediaType;
     title: string;
     year: string;
     posterPath: string | null;

@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.DTOs;
 
@@ -9,6 +10,7 @@ public sealed class MovieWithScoreResponse
     public string EventId { get; init; } = string.Empty;
     public string ParticipantId { get; init; } = string.Empty;
     public int TmdbId { get; init; }
+    public MovieMediaType MediaType { get; init; } = MovieMediaType.Movie;
     public string Title { get; init; } = string.Empty;
     public string Year { get; init; } = string.Empty;
     public string? PosterPath { get; init; }

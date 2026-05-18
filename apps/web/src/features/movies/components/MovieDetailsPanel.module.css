@@ -81,3 +81,23 @@
   composes: status;
   color: var(--color-error);
 }
+
+.trailerRow {
+  margin-top: 0.25rem;
+}
+
+.trailerLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.trailerLink:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}

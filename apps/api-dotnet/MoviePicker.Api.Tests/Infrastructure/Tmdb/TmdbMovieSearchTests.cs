@@ -6,6 +6,7 @@ using Moq;
 using Moq.Protected;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Configuration;
+using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Tmdb;
 using Xunit;
 
@@ -25,7 +26,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(new Mock<HttpMessageHandler>().Object);
         var sut = CreateSut(client, options);
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => sut.SearchAsync("inception"));
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => sut.SearchAsync("inception", false));
         Assert.Contains("TMDB_API_KEY", ex.Message);
     }
 
@@ -36,7 +37,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(new Mock<HttpMessageHandler>().Object);
         var sut = CreateSut(client, options);
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => sut.SearchAsync("x"));
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => sut.SearchAsync("x", false));
         Assert.Contains("TMDB_API_KEY", ex.Message);
     }
 
@@ -51,7 +52,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(mockHandler.Object);
         var sut = CreateSut(client, options);
 
-        var result = await sut.SearchAsync("   ");
+        var result = await sut.SearchAsync("   ", false);
 
         Assert.Empty(result);
         mockHandler.Protected().Verify("SendAsync", Times.Never(), ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>());
@@ -87,11 +88,12 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(mockHandler.Object);
         var sut = CreateSut(client, options);
 
-        var result = await sut.SearchAsync("inception");
+        var result = await sut.SearchAsync("inception", false);
 
         Assert.Equal(2, result.Count);
         var first = result[0];
         Assert.Equal(27205, first.Id);
+        Assert.Equal(MovieMediaType.Movie, first.MediaType);
         Assert.Equal("Inception", first.Title);
         Assert.Equal("2010", first.Year);
         Assert.Equal(8.8, first.VoteAverage);
@@ -115,7 +117,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(mockHandler.Object);
         var sut = CreateSut(client, options);
 
-        var result = await sut.SearchAsync("xyz");
+        var result = await sut.SearchAsync("xyz", false);
 
         Assert.Empty(result);
     }
@@ -131,7 +133,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(mockHandler.Object);
         var sut = CreateSut(client, options);
 
-        await Assert.ThrowsAsync<HttpRequestException>(() => sut.SearchAsync("inception"));
+        await Assert.ThrowsAsync<HttpRequestException>(() => sut.SearchAsync("inception", false));
     }
 
     [Fact]
@@ -147,7 +149,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(mockHandler.Object);
         var sut = CreateSut(client, options);
 
-        await sut.SearchAsync("matrix");
+        await sut.SearchAsync("matrix", false);
 
         Assert.NotNull(capturedRequest);
         Assert.Equal(HttpMethod.Get, capturedRequest.Method);
@@ -165,7 +167,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(new Mock<HttpMessageHandler>().Object);
         var sut = CreateSut(client, options);
 
-        var r = await sut.GetEnrichmentAsync(550, "FR");
+        var r = await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR");
 
         Assert.Null(r);
     }
@@ -207,8 +209,8 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(mockHandler.Object);
         var sut = CreateSut(client, options);
 
-        var a = await sut.GetEnrichmentAsync(550, "FR");
-        var b = await sut.GetEnrichmentAsync(550, "FR");
+        var a = await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR");
+        var b = await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR");
 
         Assert.NotNull(a);
         Assert.NotNull(b);
@@ -270,7 +272,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(mockHandler.Object);
         var sut = CreateSut(client, options);
 
-        var a = await sut.GetEnrichmentAsync(1, "FR");
+        var a = await sut.GetEnrichmentAsync(1, MovieMediaType.Movie, "FR");
 
         Assert.NotNull(a);
         var p = Assert.Single(a!.WatchProviders);
@@ -299,7 +301,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(mockHandler.Object);
         var sut = CreateSut(client, options);
 
-        var a = await sut.GetEnrichmentAsync(1, "FR");
+        var a = await sut.GetEnrichmentAsync(1, MovieMediaType.Movie, "FR");
 
         Assert.NotNull(a);
         Assert.Null(a!.RuntimeMinutes);
@@ -319,7 +321,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(mockHandler.Object);
         var sut = CreateSut(client, options);
 
-        var a = await sut.GetEnrichmentAsync(1, "FR");
+        var a = await sut.GetEnrichmentAsync(1, MovieMediaType.Movie, "FR");
 
         Assert.Null(a);
     }

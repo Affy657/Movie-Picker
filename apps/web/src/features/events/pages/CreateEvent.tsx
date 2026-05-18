@@ -63,6 +63,7 @@ export default function CreateEvent() {
           maxParticipants: Number.isFinite(maxPartParsed) ? maxPartParsed : 0,
           wheelMode: DEFAULT_EVENT_CONFIG.wheelMode,
           richSharePreview: true,
+          allowSeries: DEFAULT_EVENT_CONFIG.allowSeries ?? false,
         });
       } catch {
         // Soirée créée mais config refusée : on continue, l'hôte pourra réessayer dans la page détail.

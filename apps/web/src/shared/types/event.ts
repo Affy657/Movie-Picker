@@ -16,6 +16,8 @@ export interface EventConfigData {
   wheelMode: WheelMode;
   /** Aperçu de lien détaillé (Open Graph) — défaut API : false. */
   richSharePreview?: boolean;
+  /** Si true, les séries TV (TMDB `tv`) sont autorisées comme propositions. */
+  allowSeries?: boolean;
 }
 
 export interface EventParticipantSummary {

@@ -163,3 +163,19 @@
   color: var(--color-text-muted);
   font-size: 0.85rem;
 }
+
+.checkboxRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text);
+}

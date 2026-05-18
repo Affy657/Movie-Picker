@@ -16,7 +16,8 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        PropertyNameCaseInsensitive = true
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
     };
 
     private static readonly JsonSerializerOptions JsonConfigOptions = new()

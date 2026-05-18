@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Entities;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -96,13 +97,13 @@ public sealed class MovieDetailsEndpointTests : IClassFixture<MoviePickerApplica
         public TmdbMovieDetails? Details { get; set; }
         public bool ThrowOnDetails { get; set; }
 
-        public Task<IReadOnlyList<TmdbSearchItem>> SearchAsync(string query, CancellationToken ct = default)
+        public Task<IReadOnlyList<TmdbSearchItem>> SearchAsync(string query, bool allowSeries, CancellationToken ct = default)
             => Task.FromResult<IReadOnlyList<TmdbSearchItem>>(Array.Empty<TmdbSearchItem>());
 
-        public Task<TmdbMovieEnrichment?> GetEnrichmentAsync(int tmdbId, string region, CancellationToken ct = default)
+        public Task<TmdbMovieEnrichment?> GetEnrichmentAsync(int tmdbId, MovieMediaType mediaType, string region, CancellationToken ct = default)
             => Task.FromResult<TmdbMovieEnrichment?>(null);
 
-        public Task<TmdbMovieDetails?> GetDetailsAsync(int tmdbId, CancellationToken ct = default)
+        public Task<TmdbMovieDetails?> GetDetailsAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct = default)
         {
             if (ThrowOnDetails)
                 throw new HttpRequestException("tmdb down");

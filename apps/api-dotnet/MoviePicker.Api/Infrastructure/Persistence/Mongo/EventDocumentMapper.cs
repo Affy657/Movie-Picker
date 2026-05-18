@@ -18,7 +18,8 @@ public static class EventDocumentMapper
                 MaxProposalsPerParticipant = doc.Config.MaxProposalsPerParticipant,
                 MaxParticipants = doc.Config.MaxParticipants,
                 WheelMode = ParseWheelMode(doc.Config.WheelMode),
-                RichSharePreview = doc.Config.RichSharePreview
+                RichSharePreview = doc.Config.RichSharePreview,
+                AllowSeries = doc.Config.AllowSeries
             };
         }
 
@@ -51,7 +52,8 @@ public static class EventDocumentMapper
                 MaxProposalsPerParticipant = evt.Config.MaxProposalsPerParticipant,
                 MaxParticipants = evt.Config.MaxParticipants,
                 WheelMode = ToWheelModeString(evt.Config.WheelMode),
-                RichSharePreview = evt.Config.RichSharePreview
+                RichSharePreview = evt.Config.RichSharePreview,
+                AllowSeries = evt.Config.AllowSeries
             };
         }
 

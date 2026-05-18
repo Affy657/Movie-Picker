@@ -49,7 +49,8 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
             || request.MaxProposalsPerParticipant.HasValue
             || request.MaxParticipants.HasValue
             || request.WheelMode.HasValue
-            || request.RichSharePreview.HasValue;
+            || request.RichSharePreview.HasValue
+            || request.AllowSeries.HasValue;
 
         if (!hasChange)
             return EventConfigResponse.FromEvent(evt);
@@ -106,6 +107,10 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
         if (request.RichSharePreview.HasValue)
             richShare = request.RichSharePreview.Value;
 
+        var allowSeries = current.AllowSeries;
+        if (request.AllowSeries.HasValue)
+            allowSeries = request.AllowSeries.Value;
+
         var nextConfig = new EventConfig
         {
             Theme = theme,
@@ -113,7 +118,8 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
             MaxProposalsPerParticipant = maxProp,
             MaxParticipants = maxParticipants,
             WheelMode = wheelMode,
-            RichSharePreview = richShare
+            RichSharePreview = richShare,
+            AllowSeries = allowSeries
         };
 
         var now = DateTimeOffset.UtcNow;

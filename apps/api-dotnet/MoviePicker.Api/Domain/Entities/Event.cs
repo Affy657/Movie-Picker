@@ -58,4 +58,9 @@ public sealed record EventConfig
     /// Si <see langword="true"/>, la page <c>share-preview</c> expose titre, texte et éventuelle affiche du film gagnant aux crawlers (aperçu « riche »). Défaut : <see langword="false"/> (aperçu générique, lien privé).
     /// </summary>
     public bool RichSharePreview { get; init; }
+
+    /// <summary>
+    /// Si <see langword="true"/>, l'hôte autorise les séries TV (TMDB <c>tv</c>) en plus des films lors de la recherche et de l'ajout de propositions. Défaut : <see langword="false"/> (films uniquement).
+    /// </summary>
+    public bool AllowSeries { get; init; }
 }

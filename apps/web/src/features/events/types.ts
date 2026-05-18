@@ -16,6 +16,7 @@ export const DEFAULT_EVENT_CONFIG: EventConfigData = {
   maxParticipants: null,
   wheelMode: 'strictRandom',
   richSharePreview: true,
+  allowSeries: false,
 };
 
 /** Corps PATCH config soirée (formulaire hôte — aligné sur l'API). */
@@ -27,6 +28,7 @@ export type EventConfigPatchPayload = {
   maxParticipants: number;
   wheelMode: WheelMode;
   richSharePreview: boolean;
+  allowSeries: boolean;
 };
 
 export interface MyEventSummary {

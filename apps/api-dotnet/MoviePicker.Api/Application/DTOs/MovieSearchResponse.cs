@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.DTOs;
 
@@ -25,6 +26,7 @@ public sealed class MovieSearchListResponse
 public sealed class MovieSearchItemResponse
 {
     public int Id { get; init; }
+    public MovieMediaType MediaType { get; init; } = MovieMediaType.Movie;
     public string Title { get; init; } = string.Empty;
     public string Year { get; init; } = string.Empty;
     public string? PosterPath { get; init; }

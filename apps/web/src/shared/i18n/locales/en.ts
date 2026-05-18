@@ -274,6 +274,7 @@ export const en: Locale = {
         'Maximum number of participants: integer between 1 and {{max}}, or empty for unlimited.',
       maxParticipantsBelowCurrent:
         'Cannot lower the capacity to {{value}}: {{count}} participants are already joined.',
+      allowSeriesLabel: 'Allow TV series',
     },
     wheel: {
       title: 'Wheel',
@@ -337,6 +338,7 @@ export const en: Locale = {
       removeError: 'Remove failed',
       tmdbVoteTitle: 'TMDB average rating (indicative)',
       runtimeTitle: 'Movie runtime',
+      tvBadge: 'Series',
       sectionLabel: 'Suggested movies',
       loadingPlaceholder: 'Loading movies\u2026',
     },
@@ -366,6 +368,7 @@ export const en: Locale = {
       genresLabel: 'Genres',
       releasedLabel: 'Released',
       regionAttribution: 'Source: The Movie Database (TMDB)',
+      trailerLink: 'Watch trailer',
     },
     tmdb: {
       disclaimer:

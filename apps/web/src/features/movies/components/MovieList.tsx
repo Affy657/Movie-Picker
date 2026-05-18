@@ -131,7 +131,12 @@ const MovieCard = memo(function MovieCard({
       </div>
       <div className={styles.info}>
         <div className={styles.titleRow}>
-          <h3 className={styles.title}>{m.title}</h3>
+          <h3 className={styles.title}>
+            {m.title}
+            {m.mediaType === 'tv' && (
+              <span className={styles.mediaTypeBadge}>{t('movies.list.tvBadge')}</span>
+            )}
+          </h3>
           {canRemove && (
             <CardKebab
               title={m.title}
@@ -238,6 +243,7 @@ const MovieCard = memo(function MovieCard({
       {hasDetails ? (
         <MovieDetailsContent
           tmdbId={m.tmdbId}
+          mediaType={m.mediaType}
           open={detailsOpen}
           panelId={detailsPanelId}
           className={styles.detailsPanel}

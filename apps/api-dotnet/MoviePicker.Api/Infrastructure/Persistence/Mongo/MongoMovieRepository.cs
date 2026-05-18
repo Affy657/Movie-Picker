@@ -34,9 +34,23 @@ public sealed class MongoMovieRepository : IMovieRepository
         return list.ConvertAll(MovieMapper.ToDomain);
     }
 
-    public async Task<bool> ExistsByEventAndTmdbIdAsync(string eventId, int tmdbId, CancellationToken ct = default)
+    public async Task<bool> ExistsByEventAndTmdbIdAsync(
+        string eventId,
+        int tmdbId,
+        MovieMediaType mediaType,
+        CancellationToken ct = default)
     {
-        var count = await _collection.CountDocumentsAsync(x => x.EventId == eventId && x.TmdbId == tmdbId, cancellationToken: ct);
+        var mediaTypeValue = MovieMapper.MediaTypeToString(mediaType);
+        var filter = Builders<MovieDocument>.Filter.And(
+            Builders<MovieDocument>.Filter.Eq(x => x.EventId, eventId),
+            Builders<MovieDocument>.Filter.Eq(x => x.TmdbId, tmdbId),
+            mediaType == MovieMediaType.Movie
+                ? Builders<MovieDocument>.Filter.Or(
+                    Builders<MovieDocument>.Filter.Eq(x => x.MediaType, mediaTypeValue),
+                    Builders<MovieDocument>.Filter.Exists(x => x.MediaType, false),
+                    Builders<MovieDocument>.Filter.Eq(x => x.MediaType, string.Empty))
+                : Builders<MovieDocument>.Filter.Eq(x => x.MediaType, mediaTypeValue));
+        var count = await _collection.CountDocumentsAsync(filter, cancellationToken: ct);
         return count > 0;
     }
 

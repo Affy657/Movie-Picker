@@ -286,6 +286,7 @@ export const fr = {
         'Nombre maximum de participants : entier entre 1 et {{max}}, ou vide pour illimité.',
       maxParticipantsBelowCurrent:
         'Impossible de réduire la capacité à {{value}} : {{count}} participants sont déjà inscrits.',
+      allowSeriesLabel: 'Autoriser les séries TV',
     },
     wheel: {
       title: 'Roue',
@@ -350,6 +351,7 @@ export const fr = {
       moreActionsAria: 'Plus d’actions pour « {{title}} »',
       tmdbVoteTitle: 'Note moyenne TMDB (indicatif)',
       runtimeTitle: 'Durée du film',
+      tvBadge: 'Série',
       sectionLabel: 'Films proposés',
       loadingPlaceholder: 'Chargement des films\u2026',
     },
@@ -380,6 +382,7 @@ export const fr = {
       genresLabel: 'Genres',
       releasedLabel: 'Sortie',
       regionAttribution: 'Source : The Movie Database (TMDB)',
+      trailerLink: 'Voir la bande-annonce',
     },
     tmdb: {
       disclaimer:

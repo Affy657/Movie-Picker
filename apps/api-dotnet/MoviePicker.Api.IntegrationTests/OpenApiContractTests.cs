@@ -63,8 +63,12 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
         Assert.True(searchItemProps.TryGetProperty("runtimeMinutes", out var searchRuntimeProp));
         Assert.Equal("integer", searchRuntimeProp.GetProperty("type").GetString());
         Assert.True(schemas.TryGetProperty("WatchProviderOfferResponse", out _));
-        Assert.True(schemas.TryGetProperty("MovieDetailsResponse", out _));
-        Assert.True(schemas.TryGetProperty("EventConfigResponse", out _));
+        Assert.True(schemas.TryGetProperty("MovieDetailsResponse", out var movieDetails));
+        var movieDetailsProps = movieDetails.GetProperty("properties");
+        Assert.True(movieDetailsProps.TryGetProperty("trailerUrl", out _));
+        Assert.True(schemas.TryGetProperty("EventConfigResponse", out var evConfig));
+        Assert.True(evConfig.GetProperty("properties").TryGetProperty("allowSeries", out _));
+        Assert.True(schemas.TryGetProperty("MovieMediaType", out _));
 
         // Liste des films d'une soirée : expose la durée pour l'affichage « année · note · 1h10 ».
         Assert.True(schemas.TryGetProperty("MovieWithScoreResponse", out var movieWithScore));

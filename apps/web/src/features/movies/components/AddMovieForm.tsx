@@ -92,7 +92,11 @@ export default function AddMovieForm({
       setSearching(true);
       setA11ySearchStatus(t('movies.search.a11ySearching'));
       try {
-        const body = await searchMovies(term, { signal: controller.signal, lang: tmdbLanguage });
+        const body = await searchMovies(term, {
+          signal: controller.signal,
+          lang: tmdbLanguage,
+          eventSlug: slug,
+        });
         if (controller.signal.aborted) return;
         setResults(body.items);
         const hasMeta =
@@ -127,7 +131,7 @@ export default function AddMovieForm({
         if (!controller.signal.aborted) setSearching(false);
       }
     },
-    [tmdbLanguage, t]
+    [tmdbLanguage, t, slug]
   );
 
   /** Recherche immédiate (bouton, Entrée) : mêmes règles que la recherche automatique. */
@@ -179,6 +183,7 @@ export default function AddMovieForm({
     try {
       await addMovieToEvent(slug, {
         tmdbId: r.id,
+        mediaType: r.mediaType,
         title: r.title,
         year: r.year,
         posterPath: r.posterPath,
@@ -269,7 +274,9 @@ export default function AddMovieForm({
               const posterSrc = posterSrcRaw
                 ? tmdbPosterSrcForListDisplay(posterSrcRaw)
                 : undefined;
-              const alreadyListed = existingMovies.find((m) => m.tmdbId === r.id);
+              const alreadyListed = existingMovies.find(
+                (m) => m.tmdbId === r.id && (m.mediaType ?? 'movie') === (r.mediaType ?? 'movie')
+              );
               const seenHint = alreadyListed
                 ? othersAlreadySeenHint(alreadyListed.seenByPseudos, participantPseudo, t)
                 : null;
@@ -289,7 +296,14 @@ export default function AddMovieForm({
                   </div>
                   <div className={styles.resultBody}>
                     <div className={styles.resultTextCol}>
-                      <span className={styles.resultTitle}>{r.title}</span>
+                      <span className={styles.resultTitle}>
+                        {r.title}
+                        {r.mediaType === 'tv' && (
+                          <span className={styles.mediaTypeBadge}>
+                            {t('movies.list.tvBadge')}
+                          </span>
+                        )}
+                      </span>
                       <div className={styles.resultMeta}>
                         {r.year ? <span>{r.year}</span> : null}
                         {voteLabel ? (

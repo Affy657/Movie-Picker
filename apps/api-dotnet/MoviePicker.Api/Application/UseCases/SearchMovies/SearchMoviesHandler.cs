@@ -19,7 +19,7 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
         _options = options.Value;
     }
 
-    public async Task<MovieSearchListResponse> HandleAsync(string query, CancellationToken ct = default)
+    public async Task<MovieSearchListResponse> HandleAsync(string query, bool allowSeries, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(_options.TmdbApiKey))
             throw new ServiceUnavailableException("Recherche films temporairement indisponible");
@@ -27,7 +27,7 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
         IReadOnlyList<TmdbSearchItem> rows;
         try
         {
-            rows = await _tmdb.SearchAsync(query, ct);
+            rows = await _tmdb.SearchAsync(query, allowSeries, ct);
         }
         catch (HttpRequestException)
         {
@@ -40,16 +40,18 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
         var maxLookups = Math.Clamp(_options.TmdbSearchMaxWatchProviderLookups, 0, 20);
         var maxParallelism = Math.Clamp(_options.TmdbListEnrichmentMaxParallelism, 1, 16);
 
-        var enrichments = new ConcurrentDictionary<int, TmdbMovieEnrichment?>();
-        var toEnrich = rows.Take(maxLookups).Select(r => r.Id).Distinct().ToList();
+        var enrichmentsByKey = new ConcurrentDictionary<(int, string), TmdbMovieEnrichment?>();
+        var toEnrich = rows.Take(maxLookups).Select(r => (r.Id, r.MediaType)).Distinct().ToList();
         if (toEnrich.Count > 0)
         {
             await Parallel.ForEachAsync(
                     toEnrich,
                     new ParallelOptions { MaxDegreeOfParallelism = maxParallelism, CancellationToken = ct },
-                    async (tmdbId, c) =>
+                    async (pair, c) =>
                     {
-                        enrichments[tmdbId] = await _tmdb.GetEnrichmentAsync(tmdbId, region, c);
+                        var (tmdbId, mediaType) = pair;
+                        var key = (tmdbId, mediaType.ToString());
+                        enrichmentsByKey[key] = await _tmdb.GetEnrichmentAsync(tmdbId, mediaType, region, c);
                     })
                 .ConfigureAwait(false);
         }
@@ -62,7 +64,8 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
             double? vote = row.VoteAverage;
             int? runtime = null;
 
-            if (enrichments.TryGetValue(row.Id, out var enr) && enr is not null)
+            var enrichKey = (row.Id, row.MediaType.ToString());
+            if (enrichmentsByKey.TryGetValue(enrichKey, out var enr) && enr is not null)
             {
                 providers = WatchProviderMapping.ToDto(enr.WatchProviders);
                 watchPage = enr.TmdbWatchPageUrl;
@@ -74,6 +77,7 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
                 new MovieSearchItemResponse
                 {
                     Id = row.Id,
+                    MediaType = row.MediaType,
                     Title = row.Title,
                     Year = row.Year,
                     PosterPath = row.PosterPath,

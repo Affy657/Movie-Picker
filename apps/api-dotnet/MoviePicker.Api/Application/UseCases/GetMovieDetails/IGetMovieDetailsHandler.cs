@@ -1,9 +1,9 @@
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.UseCases.GetMovieDetails;
 
 public interface IGetMovieDetailsHandler
 {
-    /// <summary>Retourne les détails TMDB d'un film ou <c>null</c> si indisponible (404, clé manquante).</summary>
-    Task<MovieDetailsResponse?> HandleAsync(int tmdbId, CancellationToken ct = default);
+    Task<MovieDetailsResponse?> HandleAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct = default);
 }

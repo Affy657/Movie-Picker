@@ -32,6 +32,9 @@ public sealed class AddMovieHandler : IAddMovieHandler
         if (evt.IsFinished(DateTimeOffset.UtcNow))
             throw new ConflictException("Soirée terminée. Lecture seule.");
 
+        if (request.MediaType == MovieMediaType.Tv && evt.Config?.AllowSeries != true)
+            throw new ConflictException("Cette soirée n'autorise pas les séries TV.");
+
         var poster = string.IsNullOrWhiteSpace(request.PosterPath) ? null : request.PosterPath.Trim();
         if (poster is not null && !IsAcceptablePosterPath(poster))
             throw new BadRequestException("posterPath doit être une URL https absolue, un chemin /api/v1/posters/… ou null");
@@ -44,7 +47,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         if (participant is null)
             throw new BadRequestException("Participant invalide pour cette soirée");
 
-        if (await _movieRepository.ExistsByEventAndTmdbIdAsync(evt.Id, request.TmdbId, ct))
+        if (await _movieRepository.ExistsByEventAndTmdbIdAsync(evt.Id, request.TmdbId, request.MediaType, ct))
             throw new ConflictException("Ce film a déjà été proposé (même id TMDB)");
 
         if (await _movieRepository.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, request.Title.Trim(), ct))
@@ -65,6 +68,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
             EventId = evt.Id,
             ParticipantId = participant.Id,
             TmdbId = request.TmdbId,
+            MediaType = request.MediaType,
             Title = request.Title.Trim(),
             Year = request.Year,
             PosterPath = poster,
@@ -80,6 +84,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
             EventId = created.EventId,
             ParticipantId = created.ParticipantId,
             TmdbId = created.TmdbId,
+            MediaType = created.MediaType,
             Title = created.Title,
             Year = created.Year,
             PosterPath = created.PosterPath,

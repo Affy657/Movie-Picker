@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Configuration;
+using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Infrastructure.Tmdb;
 
@@ -11,6 +12,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
 {
     private const string PosterBase = "https://image.tmdb.org/t/p/w154";
     private const string LogoBase = "https://image.tmdb.org/t/p/w45";
+    private const string YoutubeWatchBase = "https://www.youtube.com/watch?v=";
 
     private readonly HttpClient _http;
     private readonly MoviePickerOptions _options;
@@ -29,7 +31,10 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         _logger = logger;
     }
 
-    public async Task<IReadOnlyList<TmdbSearchItem>> SearchAsync(string query, CancellationToken ct = default)
+    public async Task<IReadOnlyList<TmdbSearchItem>> SearchAsync(
+        string query,
+        bool allowSeries,
+        CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(_options.TmdbApiKey))
             throw new InvalidOperationException("TMDB_API_KEY manquante");
@@ -38,8 +43,10 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         if (q.Length == 0)
             return Array.Empty<TmdbSearchItem>();
 
-        var url =
-            $"https://api.themoviedb.org/3/search/movie?api_key={Uri.EscapeDataString(_options.TmdbApiKey)}&query={q}&language=fr-FR";
+        var key = Uri.EscapeDataString(_options.TmdbApiKey);
+        var endpoint = allowSeries ? "search/multi" : "search/movie";
+        var url = $"https://api.themoviedb.org/3/{endpoint}?api_key={key}&query={q}&language=fr-FR";
+
         using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
         res.EnsureSuccessStatusCode();
 
@@ -52,41 +59,44 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         var n = 0;
         foreach (var item in results.EnumerateArray())
         {
-            if (n++ >= 20)
+            if (n >= 20)
                 break;
+
+            var mediaType = ResolveMediaType(item, allowSeries);
+            if (mediaType is null)
+                continue;
+
             var id = item.GetProperty("id").GetInt32();
-            var title = item.TryGetProperty("title", out var t) ? t.GetString() ?? string.Empty : string.Empty;
-            if (string.IsNullOrEmpty(title) && item.TryGetProperty("name", out var name))
-                title = name.GetString() ?? string.Empty;
-            var date = item.TryGetProperty("release_date", out var rd)
-                ? rd.GetString()
-                : item.TryGetProperty("first_air_date", out var fad) ? fad.GetString() : null;
-            var year = date is { Length: >= 4 } ? date[..4] : string.Empty;
-            string? posterPath = null;
-            if (item.TryGetProperty("poster_path", out var pp) && pp.ValueKind == JsonValueKind.String)
-            {
-                var p = pp.GetString();
-                if (!string.IsNullOrEmpty(p))
-                    posterPath = PosterBase + p;
-            }
+            var title = ReadTitle(item, mediaType.Value);
+            if (string.IsNullOrEmpty(title))
+                continue;
+
+            var year = ReadYear(item, mediaType.Value);
+            var posterPath = ReadPosterUrl(item);
 
             double? voteAverage = null;
             if (item.TryGetProperty("vote_average", out var va) && va.ValueKind == JsonValueKind.Number)
                 voteAverage = va.GetDouble();
 
-            list.Add(new TmdbSearchItem(id, title, year, posterPath, voteAverage));
+            list.Add(new TmdbSearchItem(id, mediaType.Value, title, year, posterPath, voteAverage));
+            n++;
         }
 
         return list;
     }
 
-    public async Task<TmdbMovieEnrichment?> GetEnrichmentAsync(int tmdbId, string region, CancellationToken ct = default)
+    public async Task<TmdbMovieEnrichment?> GetEnrichmentAsync(
+        int tmdbId,
+        MovieMediaType mediaType,
+        string region,
+        CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(_options.TmdbApiKey))
             return null;
 
         var r = string.IsNullOrWhiteSpace(region) ? "FR" : region.Trim().ToUpperInvariant();
-        var cacheKey = $"tmdb-enrich:{r}:{tmdbId}";
+        var typeSegment = MediaTypeSegment(mediaType);
+        var cacheKey = $"tmdb-enrich:{typeSegment}:{r}:{tmdbId}";
         var ttl = TimeSpan.FromHours(Math.Clamp(_options.TmdbEnrichmentCacheHours, 1, 168));
 
         if (_cache.TryGetValue(cacheKey, out object? boxed) && boxed is TmdbMovieEnrichment cached)
@@ -94,7 +104,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
 
         try
         {
-            var fresh = await FetchEnrichmentUncachedAsync(tmdbId, r, ct).ConfigureAwait(false);
+            var fresh = await FetchEnrichmentUncachedAsync(tmdbId, mediaType, r, ct).ConfigureAwait(false);
             _cache.Set(cacheKey, fresh, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl });
             return fresh;
         }
@@ -105,38 +115,41 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
                 or InvalidOperationException
                 or FormatException)
         {
-            // InvalidOperationException / FormatException : parsing TMDB inattendu
-            // (ex. champ numérique hors plage int, type JSON incohérent) — on dégrade sans casser la liste.
-            _logger.LogWarning(ex, "TMDB enrichissement échoué pour movie {TmdbId} région {Region}", tmdbId, r);
+            _logger.LogWarning(
+                ex,
+                "TMDB enrichissement échoué pour {MediaType} {TmdbId} région {Region}",
+                typeSegment,
+                tmdbId,
+                r);
             return null;
         }
     }
 
-    private async Task<TmdbMovieEnrichment> FetchEnrichmentUncachedAsync(int tmdbId, string region, CancellationToken ct)
+    private async Task<TmdbMovieEnrichment> FetchEnrichmentUncachedAsync(
+        int tmdbId,
+        MovieMediaType mediaType,
+        string region,
+        CancellationToken ct)
     {
         var key = Uri.EscapeDataString(_options.TmdbApiKey!);
-        var movieUrl = $"https://api.themoviedb.org/3/movie/{tmdbId}?api_key={key}&language=fr-FR";
-        var watchUrl = $"https://api.themoviedb.org/3/movie/{tmdbId}/watch/providers?api_key={key}";
+        var typeSegment = MediaTypeSegment(mediaType);
+        var detailUrl = $"https://api.themoviedb.org/3/{typeSegment}/{tmdbId}?api_key={key}&language=fr-FR";
+        var watchUrl = $"https://api.themoviedb.org/3/{typeSegment}/{tmdbId}/watch/providers?api_key={key}";
 
-        var movieTask = _http.GetAsync(movieUrl, HttpCompletionOption.ResponseHeadersRead, ct);
+        var detailTask = _http.GetAsync(detailUrl, HttpCompletionOption.ResponseHeadersRead, ct);
         var watchTask = _http.GetAsync(watchUrl, HttpCompletionOption.ResponseHeadersRead, ct);
-        await Task.WhenAll(movieTask, watchTask).ConfigureAwait(false);
+        await Task.WhenAll(detailTask, watchTask).ConfigureAwait(false);
 
         double? voteAverage = null;
         int? runtimeMinutes = null;
-        using var movieRes = await movieTask.ConfigureAwait(false);
-        if (movieRes.IsSuccessStatusCode)
+        using var detailRes = await detailTask.ConfigureAwait(false);
+        if (detailRes.IsSuccessStatusCode)
         {
-            await using var movieStream = await movieRes.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
-            using var movieDoc = await JsonDocument.ParseAsync(movieStream, cancellationToken: ct).ConfigureAwait(false);
-            if (movieDoc.RootElement.TryGetProperty("vote_average", out var va) && va.ValueKind == JsonValueKind.Number)
+            await using var detailStream = await detailRes.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+            using var detailDoc = await JsonDocument.ParseAsync(detailStream, cancellationToken: ct).ConfigureAwait(false);
+            if (detailDoc.RootElement.TryGetProperty("vote_average", out var va) && va.ValueKind == JsonValueKind.Number)
                 voteAverage = va.GetDouble();
-            if (movieDoc.RootElement.TryGetProperty("runtime", out var rt) && rt.ValueKind == JsonValueKind.Number)
-            {
-                var minutes = rt.GetInt32();
-                if (minutes > 0)
-                    runtimeMinutes = minutes;
-            }
+            runtimeMinutes = ReadRuntimeMinutes(detailDoc.RootElement, mediaType);
         }
 
         string? watchPageUrl = null;
@@ -155,7 +168,6 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
             if (regionObj.TryGetProperty("link", out var linkEl) && linkEl.ValueKind == JsonValueKind.String)
                 watchPageUrl = linkEl.GetString();
 
-            // Uniquement l’abonnement (SVOD) — pas location / achat à l’unité
             AppendProviders(regionObj, "flatrate", "flatrate", offers);
         }
 
@@ -188,7 +200,6 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         }
     }
 
-    /// <summary>Garde un type par fournisseur (uniquement offres <c>flatrate</c> collectées aujourd’hui).</summary>
     private static IReadOnlyList<TmdbWatchProviderOffer> DedupeProviders(List<TmdbWatchProviderOffer> offers)
     {
         var best = new Dictionary<int, TmdbWatchProviderOffer>();
@@ -217,19 +228,16 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
             _ => 99
         };
 
-    /// <summary>
-    /// Retourne les détails TMDB d'un film.
-    /// <list type="bullet">
-    ///   <item><description><c>null</c> si TMDB répond 404 (film inconnu).</description></item>
-    ///   <item><description>Lève <see cref="HttpRequestException"/> si TMDB est indisponible (clé manquante, 5xx, timeout, JSON invalide) — à remonter en 503 côté handler.</description></item>
-    /// </list>
-    /// </summary>
-    public async Task<TmdbMovieDetails?> GetDetailsAsync(int tmdbId, CancellationToken ct = default)
+    public async Task<TmdbMovieDetails?> GetDetailsAsync(
+        int tmdbId,
+        MovieMediaType mediaType,
+        CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(_options.TmdbApiKey))
             throw new HttpRequestException("TMDB_API_KEY manquante");
 
-        var cacheKey = $"tmdb-details:{tmdbId}";
+        var typeSegment = MediaTypeSegment(mediaType);
+        var cacheKey = $"tmdb-details:{typeSegment}:{tmdbId}";
         var ttl = TimeSpan.FromHours(Math.Clamp(_options.TmdbEnrichmentCacheHours, 1, 168));
 
         if (_cache.TryGetValue(cacheKey, out object? boxed) && boxed is TmdbMovieDetails cached)
@@ -237,7 +245,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
 
         try
         {
-            var fresh = await FetchDetailsUncachedAsync(tmdbId, ct).ConfigureAwait(false);
+            var fresh = await FetchDetailsUncachedAsync(tmdbId, mediaType, ct).ConfigureAwait(false);
             if (fresh is not null)
                 _cache.Set(cacheKey, fresh, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl });
             return fresh;
@@ -248,16 +256,19 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
                 or InvalidOperationException
                 or FormatException)
         {
-            // Idem : parsing TMDB inattendu → remonte en ServiceUnavailable côté handler.
-            _logger.LogWarning(ex, "TMDB détails échoué pour movie {TmdbId}", tmdbId);
+            _logger.LogWarning(ex, "TMDB détails échoué pour {MediaType} {TmdbId}", typeSegment, tmdbId);
             throw new HttpRequestException("TMDB indisponible", ex);
         }
     }
 
-    private async Task<TmdbMovieDetails?> FetchDetailsUncachedAsync(int tmdbId, CancellationToken ct)
+    private async Task<TmdbMovieDetails?> FetchDetailsUncachedAsync(
+        int tmdbId,
+        MovieMediaType mediaType,
+        CancellationToken ct)
     {
         var key = Uri.EscapeDataString(_options.TmdbApiKey!);
-        var url = $"https://api.themoviedb.org/3/movie/{tmdbId}?api_key={key}&language=fr-FR&append_to_response=credits";
+        var typeSegment = MediaTypeSegment(mediaType);
+        var url = $"https://api.themoviedb.org/3/{typeSegment}/{tmdbId}?api_key={key}&language=fr-FR&append_to_response=credits,videos";
 
         using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
         if (res.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -268,11 +279,13 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
         var root = doc.RootElement;
 
-        var title = root.TryGetProperty("title", out var t) ? t.GetString() ?? string.Empty : string.Empty;
+        var title = ReadTitle(root, mediaType);
         var overview = root.TryGetProperty("overview", out var ov) ? ov.GetString() : null;
         var tagline = root.TryGetProperty("tagline", out var tl) ? tl.GetString() : null;
-        int? runtime = root.TryGetProperty("runtime", out var rt) && rt.ValueKind == JsonValueKind.Number ? rt.GetInt32() : null;
-        var releaseDate = root.TryGetProperty("release_date", out var rd) ? rd.GetString() : null;
+        var runtime = ReadRuntimeMinutes(root, mediaType);
+        var releaseDate = mediaType == MovieMediaType.Tv
+            ? (root.TryGetProperty("first_air_date", out var fad) ? fad.GetString() : null)
+            : (root.TryGetProperty("release_date", out var rd) ? rd.GetString() : null);
 
         var genres = new List<string>();
         if (root.TryGetProperty("genres", out var genresEl) && genresEl.ValueKind == JsonValueKind.Array)
@@ -281,9 +294,9 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
             {
                 if (g.TryGetProperty("name", out var n) && n.ValueKind == JsonValueKind.String)
                 {
-                    var name = n.GetString();
-                    if (!string.IsNullOrEmpty(name))
-                        genres.Add(name);
+                    var gName = n.GetString();
+                    if (!string.IsNullOrEmpty(gName))
+                        genres.Add(gName);
                 }
             }
         }
@@ -323,6 +336,136 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
             }
         }
 
-        return new TmdbMovieDetails(tmdbId, title, overview, tagline, director, cast, runtime, genres, releaseDate);
+        var trailerUrl = ExtractTrailerUrl(root);
+
+        return new TmdbMovieDetails(tmdbId, title, overview, tagline, director, cast, runtime, genres, releaseDate, trailerUrl);
+    }
+
+    private static string MediaTypeSegment(MovieMediaType m) => m == MovieMediaType.Tv ? "tv" : "movie";
+
+    private static MovieMediaType? ResolveMediaType(JsonElement item, bool allowSeries)
+    {
+        if (!allowSeries)
+            return MovieMediaType.Movie;
+
+        if (!item.TryGetProperty("media_type", out var mt) || mt.ValueKind != JsonValueKind.String)
+            return null;
+
+        return mt.GetString() switch
+        {
+            "movie" => MovieMediaType.Movie,
+            "tv" => MovieMediaType.Tv,
+            _ => null
+        };
+    }
+
+    private static string ReadTitle(JsonElement el, MovieMediaType mediaType)
+    {
+        if (mediaType == MovieMediaType.Tv)
+        {
+            if (el.TryGetProperty("name", out var name) && name.ValueKind == JsonValueKind.String)
+                return name.GetString() ?? string.Empty;
+            return el.TryGetProperty("title", out var t) ? t.GetString() ?? string.Empty : string.Empty;
+        }
+
+        if (el.TryGetProperty("title", out var titleEl) && titleEl.ValueKind == JsonValueKind.String)
+            return titleEl.GetString() ?? string.Empty;
+        return el.TryGetProperty("name", out var nameEl) ? nameEl.GetString() ?? string.Empty : string.Empty;
+    }
+
+    private static string ReadYear(JsonElement el, MovieMediaType mediaType)
+    {
+        string? date = mediaType == MovieMediaType.Tv
+            ? (el.TryGetProperty("first_air_date", out var fad) ? fad.GetString() : null)
+            : (el.TryGetProperty("release_date", out var rd) ? rd.GetString() : null);
+        return date is { Length: >= 4 } ? date[..4] : string.Empty;
+    }
+
+    private static string? ReadPosterUrl(JsonElement el)
+    {
+        if (!el.TryGetProperty("poster_path", out var pp) || pp.ValueKind != JsonValueKind.String)
+            return null;
+        var p = pp.GetString();
+        return string.IsNullOrEmpty(p) ? null : PosterBase + p;
+    }
+
+    private static int? ReadRuntimeMinutes(JsonElement root, MovieMediaType mediaType)
+    {
+        if (mediaType == MovieMediaType.Movie)
+        {
+            if (root.TryGetProperty("runtime", out var rt) && rt.ValueKind == JsonValueKind.Number)
+            {
+                var minutes = rt.GetInt32();
+                return minutes > 0 ? minutes : null;
+            }
+            return null;
+        }
+
+        if (root.TryGetProperty("episode_run_time", out var arr) && arr.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var el in arr.EnumerateArray())
+            {
+                if (el.ValueKind != JsonValueKind.Number)
+                    continue;
+                var minutes = el.GetInt32();
+                if (minutes > 0)
+                    return minutes;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? ExtractTrailerUrl(JsonElement root)
+    {
+        if (!root.TryGetProperty("videos", out var videos) || videos.ValueKind != JsonValueKind.Object)
+            return null;
+        if (!videos.TryGetProperty("results", out var results) || results.ValueKind != JsonValueKind.Array)
+            return null;
+
+        string? bestKey = null;
+        var bestRank = int.MaxValue;
+        foreach (var v in results.EnumerateArray())
+        {
+            var site = v.TryGetProperty("site", out var s) ? s.GetString() : null;
+            if (!string.Equals(site, "YouTube", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var key = v.TryGetProperty("key", out var k) ? k.GetString() : null;
+            if (string.IsNullOrWhiteSpace(key))
+                continue;
+
+            var type = v.TryGetProperty("type", out var tp) ? tp.GetString() : null;
+            var lang = v.TryGetProperty("iso_639_1", out var lg) ? lg.GetString() : null;
+            var official = v.TryGetProperty("official", out var of) && of.ValueKind == JsonValueKind.True;
+
+            var rank = TrailerRank(type, lang, official);
+            if (rank < bestRank)
+            {
+                bestRank = rank;
+                bestKey = key;
+            }
+        }
+
+        return bestKey is null ? null : YoutubeWatchBase + Uri.EscapeDataString(bestKey);
+    }
+
+    private static int TrailerRank(string? type, string? lang, bool official)
+    {
+        var typeRank = type switch
+        {
+            "Trailer" => 0,
+            "Teaser" => 10,
+            "Clip" => 20,
+            "Featurette" => 30,
+            _ => 40
+        };
+        var langRank = lang switch
+        {
+            "fr" => 0,
+            "en" => 1,
+            _ => 2
+        };
+        return typeRank + langRank + (official ? 0 : 5);
     }
 }

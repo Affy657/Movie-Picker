@@ -26,10 +26,17 @@ public sealed class InMemoryMovieRepository : IMovieRepository
         lock (list) { return Task.FromResult<IReadOnlyList<Movie>>(list.ToList()); }
     }
 
-    public Task<bool> ExistsByEventAndTmdbIdAsync(string eventId, int tmdbId, CancellationToken ct = default)
+    public Task<bool> ExistsByEventAndTmdbIdAsync(
+        string eventId,
+        int tmdbId,
+        MovieMediaType mediaType,
+        CancellationToken ct = default)
     {
         var list = _byEventId.GetOrAdd(eventId, _ => new List<Movie>());
-        lock (list) { return Task.FromResult(list.Any(m => m.TmdbId == tmdbId)); }
+        lock (list)
+        {
+            return Task.FromResult(list.Any(m => m.TmdbId == tmdbId && m.MediaType == mediaType));
+        }
     }
 
     public Task<bool> ExistsByEventAndTitleCaseInsensitiveAsync(string eventId, string title, CancellationToken ct = default)
@@ -52,7 +59,7 @@ public sealed class InMemoryMovieRepository : IMovieRepository
     public Task<Movie> InsertAsync(Movie movie, CancellationToken ct = default)
     {
         var id = string.IsNullOrEmpty(movie.Id) ? Guid.NewGuid().ToString("N")[..24] : movie.Id;
-        var created = new Movie { Id = id, EventId = movie.EventId, ParticipantId = movie.ParticipantId, TmdbId = movie.TmdbId, Title = movie.Title, Year = movie.Year, PosterPath = movie.PosterPath, CreatedAt = movie.CreatedAt, UpdatedAt = movie.UpdatedAt };
+        var created = movie with { Id = id };
         _byId[id] = created;
         var list = _byEventId.GetOrAdd(created.EventId, _ => new List<Movie>());
         lock (list) { list.Add(created); }

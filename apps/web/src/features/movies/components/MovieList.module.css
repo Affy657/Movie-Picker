@@ -316,3 +316,17 @@
   background: color-mix(in srgb, var(--color-error) 12%, transparent);
   outline: none;
 }
+
+.mediaTypeBadge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border-radius: var(--radius-pill);
+  vertical-align: middle;
+}

@@ -61,21 +61,22 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         var participantIds = movies.Select(m => m.ParticipantId).Concat(seenParticipantIds).Distinct().ToList();
         var pseudos = await _participantRepository.GetPseudosByIdsAsync(participantIds, ct);
 
-        var enrichmentByTmdb = new ConcurrentDictionary<int, TmdbMovieEnrichment?>();
+        var enrichmentByKey = new ConcurrentDictionary<(int, string), TmdbMovieEnrichment?>();
         if (!string.IsNullOrWhiteSpace(_options.TmdbApiKey))
         {
             var region = string.IsNullOrWhiteSpace(_options.TmdbWatchProvidersRegion)
                 ? "FR"
                 : _options.TmdbWatchProvidersRegion.Trim().ToUpperInvariant();
-            var distinctTmdb = movies.Select(x => x.TmdbId).Distinct().ToList();
+            var distinctPairs = movies.Select(x => (x.TmdbId, x.MediaType)).Distinct().ToList();
             var parallel = Math.Clamp(_options.TmdbListEnrichmentMaxParallelism, 1, 16);
             await Parallel.ForEachAsync(
-                    distinctTmdb,
+                    distinctPairs,
                     new ParallelOptions { MaxDegreeOfParallelism = parallel, CancellationToken = ct },
-                    async (tmdbId, c) =>
+                    async (pair, c) =>
                     {
-                        var enr = await _tmdbMovieSearch.GetEnrichmentAsync(tmdbId, region, c);
-                        enrichmentByTmdb[tmdbId] = enr;
+                        var (tmdbId, mediaType) = pair;
+                        var enr = await _tmdbMovieSearch.GetEnrichmentAsync(tmdbId, mediaType, region, c);
+                        enrichmentByKey[(tmdbId, mediaType.ToString())] = enr;
                     })
                 .ConfigureAwait(false);
         }
@@ -111,7 +112,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
                 seenByPseudos = list2;
             }
 
-            enrichmentByTmdb.TryGetValue(m.TmdbId, out var enr);
+            enrichmentByKey.TryGetValue((m.TmdbId, m.MediaType.ToString()), out var enr);
             var posterOut = _posterImageStore.ToPublicPosterPath(m.PosterPath);
 
             int? myVote = myVotes.TryGetValue(m.Id, out var mv) ? mv : null;
@@ -123,6 +124,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
                     EventId = m.EventId,
                     ParticipantId = m.ParticipantId,
                     TmdbId = m.TmdbId,
+                    MediaType = m.MediaType,
                     Title = m.Title,
                     Year = m.Year,
                     PosterPath = posterOut,

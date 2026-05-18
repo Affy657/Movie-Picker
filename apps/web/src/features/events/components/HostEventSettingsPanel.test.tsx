@@ -79,7 +79,8 @@ describe('HostEventSettingsPanel', () => {
         const body = (await request.json()) as Record<string, unknown>;
         expect(body.theme).toBe('SF');
         expect(body.wheelMode).toBe('strictRandom');
-        expect(body.richSharePreview).toBe(true);
+        expect(body.richSharePreview).toBe(false);
+        expect(body.allowSeries).toBe(false);
         expect(body.allowedReactionIds).toBeUndefined();
         return HttpResponse.json({
           theme: 'SF',
@@ -88,6 +89,7 @@ describe('HostEventSettingsPanel', () => {
           maxParticipants: null,
           wheelMode: 'strictRandom',
           richSharePreview: false,
+          allowSeries: false,
         });
       })
     );

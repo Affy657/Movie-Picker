@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.DTOs;
 
@@ -7,6 +8,8 @@ public sealed class AddMovieRequest
     [Required]
     [Range(1, int.MaxValue)]
     public int TmdbId { get; init; }
+
+    public MovieMediaType MediaType { get; init; } = MovieMediaType.Movie;
 
     [Required]
     [MinLength(1)]

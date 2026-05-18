@@ -1,22 +1,31 @@
 import { useId, useState } from 'react';
 import clsx from 'clsx';
-import { ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { ChevronDown, ChevronUp, Info, PlayCircle } from 'lucide-react';
 import { useMovieDetails } from '@/features/movies/hooks/useMovieDetails';
 import { useTranslation } from '@/shared/i18n';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
+import type { MovieMediaType } from '@/shared/types/movie';
 import styles from './MovieDetailsPanel.module.css';
+
+function isSafeTrailerUrl(url: string | null | undefined): url is string {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    return (
+      (parsed.hostname === 'www.youtube.com' || parsed.hostname === 'youtu.be') &&
+      parsed.protocol === 'https:'
+    );
+  } catch {
+    return false;
+  }
+}
 
 interface MovieDetailsPanelProps {
   tmdbId: number;
+  mediaType?: MovieMediaType;
 }
 
-/**
- * Panneau repliable « plus d'infos » : synopsis TMDB, réalisateur, casting, durée.
- * Les données sont chargées à la demande (première ouverture) puis mises en cache.
- * Wrapper auto-géré ; pour un placement non-adjacent du bouton et du panneau, utiliser
- * `MovieDetailsToggle` + `MovieDetailsContent` avec un state partagé côté parent.
- */
-export default function MovieDetailsPanel({ tmdbId }: MovieDetailsPanelProps) {
+export default function MovieDetailsPanel({ tmdbId, mediaType }: MovieDetailsPanelProps) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
 
@@ -25,7 +34,7 @@ export default function MovieDetailsPanel({ tmdbId }: MovieDetailsPanelProps) {
       <div className={styles.toggleRow}>
         <MovieDetailsToggle open={open} onToggle={() => setOpen((v) => !v)} panelId={panelId} />
       </div>
-      <MovieDetailsContent tmdbId={tmdbId} open={open} panelId={panelId} />
+      <MovieDetailsContent tmdbId={tmdbId} mediaType={mediaType} open={open} panelId={panelId} />
     </div>
   );
 }
@@ -62,6 +71,7 @@ export function MovieDetailsToggle({
 
 interface MovieDetailsContentProps {
   tmdbId: number;
+  mediaType?: MovieMediaType;
   open: boolean;
   panelId: string;
   className?: string;
@@ -69,12 +79,13 @@ interface MovieDetailsContentProps {
 
 export function MovieDetailsContent({
   tmdbId,
+  mediaType,
   open,
   panelId,
   className,
 }: MovieDetailsContentProps) {
   const { t } = useTranslation();
-  const { data, isLoading, isError } = useMovieDetails(tmdbId, open);
+  const { data, isLoading, isError } = useMovieDetails(tmdbId, open, mediaType);
   if (!open) return null;
   return (
     <div
@@ -102,6 +113,7 @@ interface MovieDetailsBodyProps {
     runtimeMinutes: number | null;
     genres: string[];
     releaseDate: string | null;
+    trailerUrl?: string | null;
   };
 }
 
@@ -132,6 +144,19 @@ function MovieDetailsBody({ data }: MovieDetailsBodyProps) {
             <FactRow key={label} label={label} value={value} />
           ))}
         </dl>
+      )}
+      {isSafeTrailerUrl(data.trailerUrl) && (
+        <div className={styles.trailerRow}>
+          <a
+            href={data.trailerUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.trailerLink}
+          >
+            <PlayCircle aria-hidden size={14} />
+            <span>{t('movies.details.trailerLink')}</span>
+          </a>
+        </div>
       )}
     </>
   );

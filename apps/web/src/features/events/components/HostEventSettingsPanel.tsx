@@ -41,6 +41,7 @@ function normalizeConfig(c: EventConfigData | undefined): EventConfigData {
     maxParticipants: c?.maxParticipants ?? DEFAULT_EVENT_CONFIG.maxParticipants,
     wheelMode: c?.wheelMode ?? DEFAULT_EVENT_CONFIG.wheelMode,
     richSharePreview: c?.richSharePreview ?? DEFAULT_EVENT_CONFIG.richSharePreview,
+    allowSeries: c?.allowSeries ?? DEFAULT_EVENT_CONFIG.allowSeries,
   };
 }
 
@@ -65,6 +66,7 @@ export default function HostEventSettingsPanel({
     cfg.maxParticipants != null ? String(cfg.maxParticipants) : ''
   );
   const [wheelMode, setWheelMode] = useState<WheelMode>(cfg.wheelMode);
+  const [allowSeries, setAllowSeries] = useState<boolean>(cfg.allowSeries ?? false);
   const [flashOk, setFlashOk] = useState(false);
   const flashTimerRef = useRef<number | undefined>(undefined);
   useEffect(() => () => clearTimeout(flashTimerRef.current), []);
@@ -94,6 +96,7 @@ export default function HostEventSettingsPanel({
     );
     setMaxParticipants(next.maxParticipants != null ? String(next.maxParticipants) : '');
     setWheelMode(next.wheelMode);
+    setAllowSeries(next.allowSeries ?? false);
     setFormError(null);
   }, [event.config]);
 
@@ -175,7 +178,8 @@ export default function HostEventSettingsPanel({
       maxProposalsPerParticipant,
       maxParticipants: maxParticipantsValue,
       wheelMode,
-      richSharePreview: true,
+      richSharePreview: cfg.richSharePreview ?? true,
+      allowSeries,
     });
   };
 
@@ -285,6 +289,18 @@ export default function HostEventSettingsPanel({
             <option value="strictRandom">Aléatoire strict (égalité)</option>
             <option value="weightedByVotes">Pondéré par les votes</option>
           </select>
+        </div>
+
+        <div className={styles.checkboxRow}>
+          <label className={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              checked={allowSeries}
+              onChange={(e) => setAllowSeries(e.target.checked)}
+              disabled={locked || mutation.isPending}
+            />
+            <span>{t('events.settings.allowSeriesLabel')}</span>
+          </label>
         </div>
 
         <button type="submit" className="btn btn-primary" disabled={locked || mutation.isPending}>

@@ -20,6 +20,10 @@ public sealed class MovieDocument
     [BsonElement("tmdbId")]
     public int TmdbId { get; set; }
 
+    [BsonElement("mediaType")]
+    [BsonIgnoreIfDefault]
+    public string MediaType { get; set; } = "movie";
+
     [BsonElement("title")]
     public string Title { get; set; } = string.Empty;
 

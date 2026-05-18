@@ -6,6 +6,8 @@ export interface WatchProviderOffer {
   type: string;
 }
 
+export type MovieMediaType = 'movie' | 'tv';
+
 export interface MovieData {
   id: string;
   eventId: string;
@@ -17,6 +19,7 @@ export interface MovieData {
    */
   participantId: string | { id: string; pseudo: string };
   tmdbId: number;
+  mediaType?: MovieMediaType;
   title: string;
   year: string;
   posterPath: string | null;

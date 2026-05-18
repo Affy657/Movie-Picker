@@ -1,6 +1,7 @@
 using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.GetMovieDetails;
+using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
 
@@ -17,7 +18,7 @@ public sealed class GetMovieDetailsHandlerTests
     {
         var tmdb = new Mock<ITmdbMovieSearch>(MockBehavior.Strict);
 
-        var result = await Build(tmdb).HandleAsync(tmdbId);
+        var result = await Build(tmdb).HandleAsync(tmdbId, MovieMediaType.Movie);
 
         Assert.Null(result);
         tmdb.VerifyNoOtherCalls();
@@ -27,10 +28,10 @@ public sealed class GetMovieDetailsHandlerTests
     public async Task HandleAsync_TmdbReturnsNull_ReturnsNull()
     {
         var tmdb = new Mock<ITmdbMovieSearch>();
-        tmdb.Setup(t => t.GetDetailsAsync(42, It.IsAny<CancellationToken>()))
+        tmdb.Setup(t => t.GetDetailsAsync(42, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
             .ReturnsAsync((TmdbMovieDetails?)null);
 
-        var result = await Build(tmdb).HandleAsync(42);
+        var result = await Build(tmdb).HandleAsync(42, MovieMediaType.Movie);
 
         Assert.Null(result);
     }
@@ -48,11 +49,12 @@ public sealed class GetMovieDetailsHandlerTests
             Cast: new[] { "Leonardo DiCaprio", "Joseph Gordon-Levitt" },
             Runtime: 148,
             Genres: new[] { "Action", "Science-fiction" },
-            ReleaseDate: "2010-07-16");
-        tmdb.Setup(t => t.GetDetailsAsync(27205, It.IsAny<CancellationToken>()))
+            ReleaseDate: "2010-07-16",
+            TrailerUrl: "https://www.youtube.com/watch?v=abc");
+        tmdb.Setup(t => t.GetDetailsAsync(27205, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
             .ReturnsAsync(details);
 
-        var result = await Build(tmdb).HandleAsync(27205);
+        var result = await Build(tmdb).HandleAsync(27205, MovieMediaType.Movie);
 
         Assert.NotNull(result);
         Assert.Equal(27205, result!.TmdbId);
@@ -64,15 +66,16 @@ public sealed class GetMovieDetailsHandlerTests
         Assert.Equal(148, result.RuntimeMinutes);
         Assert.Equal(new[] { "Action", "Science-fiction" }, result.Genres);
         Assert.Equal("2010-07-16", result.ReleaseDate);
+        Assert.Equal("https://www.youtube.com/watch?v=abc", result.TrailerUrl);
     }
 
     [Fact]
     public async Task HandleAsync_TmdbHttpError_ThrowsServiceUnavailable()
     {
         var tmdb = new Mock<ITmdbMovieSearch>();
-        tmdb.Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        tmdb.Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("boom"));
 
-        await Assert.ThrowsAsync<ServiceUnavailableException>(() => Build(tmdb).HandleAsync(42));
+        await Assert.ThrowsAsync<ServiceUnavailableException>(() => Build(tmdb).HandleAsync(42, MovieMediaType.Movie));
     }
 }

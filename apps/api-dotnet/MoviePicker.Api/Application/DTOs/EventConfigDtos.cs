@@ -20,6 +20,7 @@ public sealed class EventConfigResponse
     /// persistée, on retombe également sur <see langword="true"/> pour cohérence d'affichage.
     /// </summary>
     public bool RichSharePreview { get; init; }
+    public bool AllowSeries { get; init; }
 
     public static EventConfigResponse FromEvent(Event evt)
     {
@@ -31,7 +32,8 @@ public sealed class EventConfigResponse
             MaxProposalsPerParticipant = c?.MaxProposalsPerParticipant,
             MaxParticipants = c?.MaxParticipants,
             WheelMode = c?.WheelMode ?? WheelMode.StrictRandom,
-            RichSharePreview = c?.RichSharePreview ?? true
+            RichSharePreview = c?.RichSharePreview ?? true,
+            AllowSeries = c?.AllowSeries ?? false
         };
     }
 }
@@ -58,4 +60,5 @@ public sealed class PatchEventConfigRequest
 
     /// <summary>Si présent, active ou désactive l’aperçu de partage détaillé (Open Graph).</summary>
     public bool? RichSharePreview { get; init; }
+    public bool? AllowSeries { get; init; }
 }
