@@ -20,13 +20,7 @@ const LABEL_KEY: Record<UiThemePreference, TranslationKey> = {
  * Pattern WAI-ARIA `radiogroup` — clavier : ←/→ / Home / End déplacent la sélection.
  * Aligné sur le rendu mobile (carte « Apparence »).
  */
-export default function ThemeToggle({
-  className = '',
-  id,
-}: {
-  className?: string;
-  id?: string;
-}) {
+export default function ThemeToggle({ className = '', id }: { className?: string; id?: string }) {
   const { preference, setUiPreference } = useTheme();
   const { user, patchProfile } = useAuth();
   const { t } = useTranslation();
