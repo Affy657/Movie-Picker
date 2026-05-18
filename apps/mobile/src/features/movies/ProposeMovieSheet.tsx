@@ -6,6 +6,7 @@ import { ApiError } from '@/api/client';
 import { addMovie, searchTmdb, type AddMovieRequest, type MovieSearchItem } from '@/api/movies';
 import { BottomSheet } from '@/components/BottomSheet';
 import { TextField } from '@/components/TextField';
+import { useTranslation } from '@/features/i18n/LocaleContext';
 import { useTheme } from '@/features/theme/ThemeContext';
 import { posterUrl } from '@/lib/tmdb';
 import { toastSuccess } from '@/lib/toast';
@@ -28,6 +29,7 @@ function useDebounced<T>(value: T, delay = 300): T {
 export function ProposeMovieSheet({ slug, participantId, onClose }: Props) {
   const queryClient = useQueryClient();
   const { palette } = useTheme();
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const debounced = useDebounced(query.trim(), 300);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +49,7 @@ export function ProposeMovieSheet({ slug, participantId, onClose }: Props) {
       onClose();
     },
     onError: (err) => {
-      setError(err instanceof ApiError ? err.message : 'Ajout impossible.');
+      setError(err instanceof ApiError ? err.message : t('mobile.propose.addError'));
     },
   });
 
@@ -66,22 +68,22 @@ export function ProposeMovieSheet({ slug, participantId, onClose }: Props) {
   };
 
   return (
-    <BottomSheet visible onClose={onClose} title="Proposer un film">
+    <BottomSheet visible onClose={onClose} title={t('mobile.propose.title')}>
       <TextField
-        label="Recherche TMDB"
+        label={t('mobile.propose.searchLabel')}
         value={query}
         onChangeText={setQuery}
-        placeholder="Titre du film…"
+        placeholder={t('mobile.propose.searchPlaceholder')}
         autoCapitalize="none"
         autoCorrect={false}
       />
       {error ? <Text style={{ color: palette.error }}>{error}</Text> : null}
       {debounced.length < 2 ? (
-        <Text style={{ color: palette.meta }}>Tape au moins 2 caractères.</Text>
+        <Text style={{ color: palette.meta }}>{t('mobile.propose.typeMore')}</Text>
       ) : searchQuery.isLoading ? (
         <ActivityIndicator color={palette.primary} />
       ) : items.length === 0 ? (
-        <Text style={{ color: palette.textMuted }}>Aucun résultat.</Text>
+        <Text style={{ color: palette.textMuted }}>{t('mobile.propose.noResults')}</Text>
       ) : (
         <FlatList
           data={items}

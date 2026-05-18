@@ -107,9 +107,9 @@ export default function SettingsScreen() {
   };
 
   const confirmLogout = () => {
-    Alert.alert('Se déconnecter ?', undefined, [
-      { text: 'Annuler', style: 'cancel' },
-      { text: 'Déconnexion', style: 'destructive', onPress: () => logout() },
+    Alert.alert(t('mobile.settings.logoutConfirm'), undefined, [
+      { text: t('mobile.cancel'), style: 'cancel' },
+      { text: t('mobile.settings.logout'), style: 'destructive', onPress: () => logout() },
     ]);
   };
 
@@ -126,26 +126,36 @@ export default function SettingsScreen() {
               lineHeight: 28.8,
             }}
           >
-            Mon compte
+            {t('mobile.settings.title')}
           </Text>
           {user?.emailMasked ? (
             <Text style={{ color: palette.textMuted, fontSize: 14 }}>{user.emailMasked}</Text>
           ) : null}
         </View>
 
-        <Section title="Profil" icon="person-outline" palette={palette}>
-          <TextField label="Pseudo affiché" value={displayName} onChangeText={setDisplayName} />
+        <Section title={t('mobile.settings.sectionProfile')} icon="person-outline" palette={palette}>
+          <TextField
+            label={t('mobile.settings.pseudoLabel')}
+            value={displayName}
+            onChangeText={setDisplayName}
+          />
           {error ? <Text style={{ color: palette.error }}>{error}</Text> : null}
           <Button
-            label={savingName ? 'Sauvegarde…' : 'Enregistrer le pseudo'}
+            label={savingName ? t('mobile.saving') : t('mobile.settings.pseudoSave')}
             onPress={saveName}
             loading={savingName}
             disabled={displayName.trim().length < 1 || displayName.trim() === user?.displayName}
           />
         </Section>
 
-        <Section title="Apparence" icon="color-palette-outline" palette={palette}>
-          <Text style={{ color: palette.textMuted, fontSize: 13 }}>Thème</Text>
+        <Section
+          title={t('mobile.settings.sectionAppearance')}
+          icon="color-palette-outline"
+          palette={palette}
+        >
+          <Text style={{ color: palette.textMuted, fontSize: 13 }}>
+            {t('mobile.settings.themeLabel')}
+          </Text>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             {THEMES.map((m) => (
               <Pressable
@@ -174,7 +184,7 @@ export default function SettingsScreen() {
           </View>
 
           <Text style={{ color: palette.textMuted, fontSize: 13, marginTop: 8 }}>
-            Couleur d&apos;accent
+            {t('mobile.settings.accentLabel')}
           </Text>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             {ACCENT_COLORS.map((c) => (
@@ -195,7 +205,11 @@ export default function SettingsScreen() {
           </View>
         </Section>
 
-        <Section title="Langue" icon="language-outline" palette={palette}>
+        <Section
+          title={t('mobile.settings.sectionLanguage')}
+          icon="language-outline"
+          palette={palette}
+        >
           <Dropdown
             value={locale}
             options={LOCALES}
@@ -204,16 +218,20 @@ export default function SettingsScreen() {
           />
         </Section>
 
-        <Section title="Sécurité" icon="key-outline" palette={palette}>
+        <Section
+          title={t('mobile.settings.sectionSecurity')}
+          icon="key-outline"
+          palette={palette}
+        >
           <TextField
-            label="Mot de passe actuel"
+            label={t('mobile.settings.currentPasswordLabel')}
             value={currentPassword}
             onChangeText={setCurrentPassword}
             secureTextEntry
             autoComplete="current-password"
           />
           <TextField
-            label="Nouveau mot de passe"
+            label={t('mobile.settings.newPasswordLabel')}
             value={newPassword}
             onChangeText={setNewPassword}
             secureTextEntry
@@ -224,7 +242,11 @@ export default function SettingsScreen() {
           </Text>
           {pwError ? <Text style={{ color: palette.error }}>{pwError}</Text> : null}
           <Button
-            label={pwSubmitting ? 'Mise à jour…' : 'Changer le mot de passe'}
+            label={
+              pwSubmitting
+                ? t('mobile.settings.changePasswordSubmitting')
+                : t('mobile.settings.changePasswordSubmit')
+            }
             variant="secondary"
             onPress={submitPassword}
             loading={pwSubmitting}
@@ -232,16 +254,24 @@ export default function SettingsScreen() {
           />
         </Section>
 
-        <Section title="Compte" icon="log-out-outline" palette={palette}>
-          <Button label="Se déconnecter" variant="secondary" onPress={confirmLogout} />
+        <Section
+          title={t('mobile.settings.sectionAccount')}
+          icon="log-out-outline"
+          palette={palette}
+        >
+          <Button
+            label={t('mobile.settings.logout')}
+            variant="secondary"
+            onPress={confirmLogout}
+          />
           <Text style={{ color: palette.meta, fontSize: 12 }}>
-            Suppression de compte : à venir (pas d&apos;endpoint dédié côté API actuelle).
+            {t('mobile.settings.deleteAccountHint')}
           </Text>
         </Section>
 
         <Pressable onPress={() => refresh()}>
           <Text style={{ color: palette.meta, fontSize: 12, textAlign: 'center' }}>
-            Rafraîchir le profil
+            {t('mobile.settings.refresh')}
           </Text>
         </Pressable>
       </ScrollView>

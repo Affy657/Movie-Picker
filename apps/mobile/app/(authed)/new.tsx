@@ -12,6 +12,7 @@ import { createEvent, patchConfig } from '@/api/events';
 import { AuthCard } from '@/components/AuthCard';
 import { Button } from '@/components/Button';
 import { TextField } from '@/components/TextField';
+import { useTranslation } from '@/features/i18n/LocaleContext';
 import { useTheme } from '@/features/theme/ThemeContext';
 
 const schema = z.object({
@@ -36,6 +37,7 @@ export default function NewEventScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { palette } = useTheme();
+  const { t } = useTranslation();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -101,7 +103,9 @@ export default function NewEventScreen() {
       }
     } catch (err) {
       setError(
-        err instanceof ApiError ? (err.message ?? 'Création impossible.') : 'Création impossible.'
+        err instanceof ApiError
+          ? (err.message ?? t('mobile.create.fallbackError'))
+          : t('mobile.create.fallbackError')
       );
     } finally {
       setSubmitting(false);
@@ -115,8 +119,8 @@ export default function NewEventScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <AuthCard
-          title="Créer une soirée"
-          description="Donne-lui un titre, une date et une heure. Tu pourras ajuster les paramètres plus tard si besoin."
+          title={t('mobile.create.title')}
+          description={t('mobile.create.description')}
         >
           {error ? (
             <View
@@ -139,12 +143,12 @@ export default function NewEventScreen() {
             name="title"
             render={({ field: { onChange, onBlur, value } }) => (
               <TextField
-                label="Titre"
-                placeholder="Ex : Soirée film du vendredi"
+                label={t('mobile.create.titleLabel')}
+                placeholder={t('mobile.create.titlePlaceholder')}
                 onChangeText={onChange}
                 onBlur={onBlur}
                 value={value}
-                error={errors.title ? 'Titre requis (2 à 200 caractères).' : undefined}
+                error={errors.title ? t('mobile.create.titleError') : undefined}
               />
             )}
           />
@@ -156,14 +160,14 @@ export default function NewEventScreen() {
                 name="date"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextField
-                    label="Date"
+                    label={t('mobile.create.dateLabel')}
                     placeholder="2026-06-15"
                     autoCapitalize="none"
                     autoCorrect={false}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     value={value}
-                    error={errors.date ? 'AAAA-MM-JJ' : undefined}
+                    error={errors.date ? t('mobile.create.dateError') : undefined}
                   />
                 )}
               />
@@ -174,14 +178,14 @@ export default function NewEventScreen() {
                 name="time"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextField
-                    label="Heure"
+                    label={t('mobile.create.timeLabel')}
                     placeholder="20:00"
                     autoCapitalize="none"
                     autoCorrect={false}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     value={value}
-                    error={errors.time ? 'HH:MM' : undefined}
+                    error={errors.time ? t('mobile.create.timeError') : undefined}
                   />
                 )}
               />
@@ -204,7 +208,7 @@ export default function NewEventScreen() {
           >
             <Ionicons name="options-outline" size={18} color={palette.textMuted} />
             <Text style={{ color: palette.textMuted, fontSize: 14, fontWeight: '600', flex: 1 }}>
-              Options avancées (optionnel)
+              {t('mobile.create.advancedToggle')}
             </Text>
             <Ionicons
               name={advancedOpen ? 'chevron-up' : 'chevron-down'}
@@ -222,7 +226,7 @@ export default function NewEventScreen() {
                     name="themeEmoji"
                     render={({ field: { onChange, onBlur, value } }) => (
                       <TextField
-                        label="Emoji"
+                        label={t('mobile.create.emojiLabel')}
                         placeholder="🎬"
                         autoCapitalize="none"
                         onChangeText={onChange}
@@ -238,8 +242,8 @@ export default function NewEventScreen() {
                     name="themeText"
                     render={({ field: { onChange, onBlur, value } }) => (
                       <TextField
-                        label="Thème / ambiance"
-                        placeholder="Comédies cultes"
+                        label={t('mobile.create.themeLabel')}
+                        placeholder={t('mobile.create.themePlaceholder')}
                         onChangeText={onChange}
                         onBlur={onBlur}
                         value={value ?? ''}
@@ -256,8 +260,8 @@ export default function NewEventScreen() {
                     name="maxParticipants"
                     render={({ field: { onChange, onBlur, value } }) => (
                       <TextField
-                        label="Participants max"
-                        placeholder="Illimité"
+                        label={t('mobile.create.maxParticipantsLabel')}
+                        placeholder={t('mobile.create.maxPlaceholder')}
                         keyboardType="numeric"
                         onChangeText={onChange}
                         onBlur={onBlur}
@@ -272,8 +276,8 @@ export default function NewEventScreen() {
                     name="maxProposals"
                     render={({ field: { onChange, onBlur, value } }) => (
                       <TextField
-                        label="Films par personne"
-                        placeholder="Illimité"
+                        label={t('mobile.create.maxProposalsLabel')}
+                        placeholder={t('mobile.create.maxPlaceholder')}
                         keyboardType="numeric"
                         onChangeText={onChange}
                         onBlur={onBlur}
@@ -287,12 +291,16 @@ export default function NewEventScreen() {
           ) : null}
 
           <Button
-            label={submitting ? 'Création…' : 'Créer la soirée'}
+            label={submitting ? t('mobile.creating') : t('mobile.create.submit')}
             loading={submitting}
             onPress={handleSubmit(onSubmit)}
             style={{ marginTop: 8 }}
           />
-          <Button label="Annuler" variant="secondary" onPress={() => router.back()} />
+          <Button
+            label={t('mobile.create.cancel')}
+            variant="secondary"
+            onPress={() => router.back()}
+          />
         </AuthCard>
       </ScrollView>
     </SafeAreaView>

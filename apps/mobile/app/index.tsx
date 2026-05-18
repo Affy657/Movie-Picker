@@ -9,31 +9,15 @@ import { useTheme } from '@/features/theme/ThemeContext';
 
 type Feature = {
   icon: React.ComponentProps<typeof Ionicons>['name'];
-  title: string;
-  text: string;
+  titleKey: 'f1Title' | 'f2Title' | 'f3Title' | 'f4Title';
+  textKey: 'f1Text' | 'f2Text' | 'f3Text' | 'f4Text';
 };
 
 const FEATURES: Feature[] = [
-  {
-    icon: 'link',
-    title: 'Lancez la soirée',
-    text: 'Un lien, un QR code — tout le monde rejoint en deux clics.',
-  },
-  {
-    icon: 'film',
-    title: 'Proposez vos films',
-    text: 'Affiches, infos, plateformes : la liste se construit depuis TMDB.',
-  },
-  {
-    icon: 'thumbs-up',
-    title: 'Votez ensemble',
-    text: "Pouce en l'air, déjà vu, on garde — les favoris ressortent vite.",
-  },
-  {
-    icon: 'disc',
-    title: 'La roue tranche',
-    text: "Toujours pas d'accord ? Un coup de roue et le verdict tombe.",
-  },
+  { icon: 'link', titleKey: 'f1Title', textKey: 'f1Text' },
+  { icon: 'film', titleKey: 'f2Title', textKey: 'f2Text' },
+  { icon: 'thumbs-up', titleKey: 'f3Title', textKey: 'f3Text' },
+  { icon: 'disc', titleKey: 'f4Title', textKey: 'f4Text' },
 ];
 
 export default function Landing() {
@@ -86,7 +70,7 @@ export default function Landing() {
                 letterSpacing: 1.44,
               }}
             >
-              MOVIE NIGHT, SIMPLIFIÉE
+              {t('mobile.landing.kicker')}
             </Text>
           </View>
 
@@ -99,13 +83,12 @@ export default function Landing() {
               lineHeight: 38,
             }}
           >
-            Choisissez le film de la soirée{' '}
-            <Text style={{ color: palette.primary }}>ensemble.</Text>
+            {t('mobile.landing.titleLead')}{' '}
+            <Text style={{ color: palette.primary }}>{t('mobile.landing.titleAccent')}</Text>
           </Text>
 
           <Text style={{ color: palette.textMuted, fontSize: 16, lineHeight: 25 }}>
-            Plus de débats interminables. Créez un événement, invitez vos amis, votez sur les
-            propositions — et laissez la roue trancher si besoin.
+            {t('mobile.landing.tagline')}
           </Text>
 
           <View style={{ gap: 10, marginTop: 4 }}>
@@ -122,7 +105,7 @@ export default function Landing() {
           <Text
             style={{ color: palette.primary, fontSize: 12, fontWeight: '700', letterSpacing: 0.6 }}
           >
-            EN 4 ÉTAPES
+            {t('mobile.landing.featuresKicker')}
           </Text>
           <Text
             style={{
@@ -133,16 +116,16 @@ export default function Landing() {
               lineHeight: 28,
             }}
           >
-            De l&apos;invitation au générique
+            {t('mobile.landing.featuresTitle')}
           </Text>
           <Text style={{ color: palette.textMuted, fontSize: 14, marginBottom: 4 }}>
-            Une soirée ciné qui démarre vraiment à l&apos;heure. Promis.
+            {t('mobile.landing.featuresSubtitle')}
           </Text>
 
           <View style={{ gap: 12, marginTop: 8 }}>
             {FEATURES.map((f) => (
               <View
-                key={f.title}
+                key={f.titleKey}
                 style={{
                   flexDirection: 'row',
                   gap: 12,
@@ -168,10 +151,10 @@ export default function Landing() {
                 </View>
                 <View style={{ flex: 1, gap: 2 }}>
                   <Text style={{ color: palette.text, fontWeight: '700', fontSize: 15 }}>
-                    {f.title}
+                    {t(`mobile.landing.${f.titleKey}`)}
                   </Text>
                   <Text style={{ color: palette.textMuted, fontSize: 13, lineHeight: 19 }}>
-                    {f.text}
+                    {t(`mobile.landing.${f.textKey}`)}
                   </Text>
                 </View>
               </View>

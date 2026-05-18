@@ -4,6 +4,7 @@ import { Share, Text, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { BottomSheet } from '@/components/BottomSheet';
 import { Button } from '@/components/Button';
+import { useTranslation } from '@/features/i18n/LocaleContext';
 import { useTheme } from '@/features/theme/ThemeContext';
 import { toastSuccess } from '@/lib/toast';
 
@@ -21,6 +22,7 @@ type Props = {
 
 export function ShareSheet({ slug, title, onClose }: Props) {
   const { palette } = useTheme();
+  const { t } = useTranslation();
   const url = `${WEB_BASE.replace(/\/$/, '')}/e/${slug}`;
   const unreachable = isUnreachableFromOtherDevices(url);
   const [copied, setCopied] = useState(false);
@@ -41,10 +43,8 @@ export function ShareSheet({ slug, title, onClose }: Props) {
   };
 
   return (
-    <BottomSheet visible onClose={onClose} title="Partager la soirée">
-      <Text style={{ color: palette.textMuted }}>
-        Envoie ce lien à tes amis pour qu&apos;ils rejoignent la soirée.
-      </Text>
+    <BottomSheet visible onClose={onClose} title={t('mobile.share.title')}>
+      <Text style={{ color: palette.textMuted }}>{t('mobile.share.description')}</Text>
 
       {unreachable ? (
         <View
@@ -55,10 +55,7 @@ export function ShareSheet({ slug, title, onClose }: Props) {
           }}
         >
           <Text style={{ color: palette.badgeUpcomingText, fontSize: 13 }}>
-            ⚠️ L&apos;URL pointe sur ta machine de dev — elle ne fonctionnera pas chez tes amis.
-            Configure
-            <Text style={{ fontWeight: '700' }}> EXPO_PUBLIC_WEB_BASE_URL </Text>
-            avec l&apos;URL publique du site avant de partager.
+            {t('mobile.share.unreachableWarn')}
           </Text>
         </View>
       ) : null}
@@ -74,11 +71,11 @@ export function ShareSheet({ slug, title, onClose }: Props) {
 
       <View style={{ gap: 8 }}>
         <Button
-          label={copied ? 'Lien copié ✓' : 'Copier le lien'}
+          label={copied ? t('mobile.share.copied') : t('mobile.share.copy')}
           variant="secondary"
           onPress={copy}
         />
-        <Button label="Partager…" onPress={share} />
+        <Button label={t('mobile.share.shareNative')} onPress={share} />
       </View>
     </BottomSheet>
   );

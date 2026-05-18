@@ -44,13 +44,13 @@ export function MovieCard({
     canRemove && onRemove
       ? () =>
           Alert.alert(
-            'Retirer ce film ?',
+            t('mobile.confirmRemoveMovieTitle'),
             movie.title
-              ? `« ${movie.title} » sera retiré de la liste (irréversible).`
-              : 'Le film sera retiré de la liste (irréversible).',
+              ? t('mobile.confirmRemoveMovieMessage', { title: movie.title })
+              : t('mobile.confirmRemoveMovieMessageFallback'),
             [
-              { text: 'Annuler', style: 'cancel' },
-              { text: 'Retirer', style: 'destructive', onPress: onRemove },
+              { text: t('mobile.cancel'), style: 'cancel' },
+              { text: t('mobile.confirmRemove'), style: 'destructive', onPress: onRemove },
             ]
           )
       : undefined;

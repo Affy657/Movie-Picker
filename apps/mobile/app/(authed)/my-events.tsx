@@ -78,31 +78,31 @@ export default function MyEventsScreen() {
     if (tab === 'active') {
       const r: Row[] = [];
       if (hostedActive.length > 0) {
-        r.push({ type: 'section', key: 'hosted', label: "SOIRÉES QUE J'AI CRÉÉES" });
+        r.push({ type: 'section', key: 'hosted', label: t('mobile.myEvents.sectionHosted') });
         hostedActive.forEach((ev) =>
           r.push({ type: 'event', key: `h-${ev.id}`, ev, showBadge: true })
         );
       }
       if (joinedActive.length > 0) {
-        r.push({ type: 'section', key: 'joined', label: 'SOIRÉES OÙ JE PARTICIPE' });
+        r.push({ type: 'section', key: 'joined', label: t('mobile.myEvents.sectionJoined') });
         joinedActive.forEach((ev) =>
           r.push({ type: 'event', key: `j-${ev.id}`, ev, showBadge: true })
         );
       }
       if (r.length === 0) {
-        r.push({ type: 'empty', key: 'empty-active', text: 'Aucune soirée à venir.' });
+        r.push({ type: 'empty', key: 'empty-active', text: t('mobile.myEvents.emptyActive') });
       }
       return r;
     }
     const r: Row[] = [];
     if (history.length > 0) {
-      r.push({ type: 'section', key: 'history', label: 'HISTORIQUE' });
+      r.push({ type: 'section', key: 'history', label: t('mobile.myEvents.sectionHistory') });
       history.forEach((ev) => r.push({ type: 'event', key: `hi-${ev.id}`, ev, showBadge: false }));
     } else {
-      r.push({ type: 'empty', key: 'empty-history', text: 'Aucune soirée terminée.' });
+      r.push({ type: 'empty', key: 'empty-history', text: t('mobile.myEvents.emptyHistory') });
     }
     return r;
-  }, [tab, hostedActive, joinedActive, history]);
+  }, [tab, hostedActive, joinedActive, history, t]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }} edges={['top']}>
@@ -158,13 +158,13 @@ export default function MyEventsScreen() {
             }}
           >
             <TabButton
-              label="À venir"
+              label={t('mobile.myEvents.tabActive')}
               count={activeCount}
               active={tab === 'active'}
               onPress={() => setTab('active')}
             />
             <TabButton
-              label="Historique"
+              label={t('mobile.myEvents.tabHistory')}
               count={historyCount}
               active={tab === 'history'}
               onPress={() => setTab('history')}
@@ -184,7 +184,7 @@ export default function MyEventsScreen() {
           style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, gap: 12 }}
         >
           <Text style={{ color: palette.error, textAlign: 'center' }}>
-            Impossible de charger tes soirées.
+            {t('mobile.myEvents.loadError')}
           </Text>
           <Button
             label={t('common.retry')}
@@ -200,13 +200,13 @@ export default function MyEventsScreen() {
           <Text
             style={{ color: palette.text, fontSize: 18, fontWeight: '700', textAlign: 'center' }}
           >
-            Aucune soirée pour le moment.
+            {t('mobile.myEvents.emptyTitle')}
           </Text>
           <Text style={{ color: palette.textMuted, textAlign: 'center', maxWidth: 280 }}>
-            Lance-toi : crée ta première soirée et invite tes amis.
+            {t('mobile.myEvents.emptyHint')}
           </Text>
           <Button
-            label="Créer ma première soirée"
+            label={t('mobile.myEvents.emptyCta')}
             onPress={() => router.push('/(authed)/new')}
             fullWidth={false}
           />
@@ -274,7 +274,7 @@ export default function MyEventsScreen() {
 
       <Pressable
         onPress={() => router.push('/(authed)/new')}
-        accessibilityLabel="Créer une nouvelle soirée"
+        accessibilityLabel={t('mobile.myEvents.fabAria')}
         style={({ pressed }) => ({
           position: 'absolute',
           right: 20,
@@ -300,7 +300,7 @@ export default function MyEventsScreen() {
         <Ionicons name="add" size={showFabLabel ? 20 : 24} color={palette.primaryContrast} />
         {showFabLabel ? (
           <Text style={{ color: palette.primaryContrast, fontWeight: '700', fontSize: 15 }}>
-            Créer une soirée
+            {t('mobile.myEvents.fab')}
           </Text>
         ) : null}
       </Pressable>

@@ -12,6 +12,7 @@ import {
 import { BottomSheet } from '@/components/BottomSheet';
 import { Button } from '@/components/Button';
 import { TextField } from '@/components/TextField';
+import { useTranslation } from '@/features/i18n/LocaleContext';
 import { useTheme } from '@/features/theme/ThemeContext';
 import { useRouter } from 'expo-router';
 
@@ -20,10 +21,8 @@ type Props = {
   onClose: () => void;
 };
 
-const WHEEL_MODES: { value: 'strictRandom' | 'weightedByVotes'; label: string }[] = [
-  { value: 'strictRandom', label: 'Aléatoire strict' },
-  { value: 'weightedByVotes', label: 'Pondéré par les votes' },
-];
+type WheelMode = 'strictRandom' | 'weightedByVotes';
+const WHEEL_MODE_VALUES: WheelMode[] = ['strictRandom', 'weightedByVotes'];
 
 const MAX_PARTICIPANTS = 50;
 const MAX_PROPOSALS = 20;
@@ -40,7 +39,13 @@ export function EventConfigSheet({ eventIdOrSlug, onClose }: Props) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const { palette } = useTheme();
+  const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
+
+  const wheelModeLabel = (value: WheelMode): string =>
+    value === 'strictRandom'
+      ? t('mobile.config.wheelModeStrict')
+      : t('mobile.config.wheelModeWeighted');
 
   const { data, isLoading } = useQuery({
     queryKey: ['event-config', eventIdOrSlug],
@@ -70,7 +75,7 @@ export function EventConfigSheet({ eventIdOrSlug, onClose }: Props) {
       onClose();
     },
     onError: (err) => {
-      setError(err instanceof ApiError ? err.message : 'Sauvegarde impossible.');
+      setError(err instanceof ApiError ? err.message : t('mobile.config.saveError'));
     },
   });
 
@@ -82,7 +87,7 @@ export function EventConfigSheet({ eventIdOrSlug, onClose }: Props) {
       router.replace('/(authed)/my-events');
     },
     onError: (err) => {
-      setError(err instanceof ApiError ? err.message : 'Suppression impossible.');
+      setError(err instanceof ApiError ? err.message : t('mobile.config.deleteError'));
     },
   });
 
@@ -111,42 +116,46 @@ export function EventConfigSheet({ eventIdOrSlug, onClose }: Props) {
 
   const onDelete = () => {
     Alert.alert(
-      'Supprimer la soirée ?',
-      'Cette action est irréversible. Tous les films et votes seront perdus.',
+      t('mobile.config.deleteEventConfirmTitle'),
+      t('mobile.config.deleteEventConfirmMessage'),
       [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Supprimer', style: 'destructive', onPress: () => deleteMutation.mutate() },
+        { text: t('mobile.cancel'), style: 'cancel' },
+        {
+          text: t('mobile.delete'),
+          style: 'destructive',
+          onPress: () => deleteMutation.mutate(),
+        },
       ]
     );
   };
 
   if (isLoading) {
     return (
-      <BottomSheet visible onClose={onClose} title="Configuration">
-        <Text style={{ color: palette.textMuted }}>Chargement…</Text>
+      <BottomSheet visible onClose={onClose} title={t('mobile.config.title')}>
+        <Text style={{ color: palette.textMuted }}>{t('mobile.config.loading')}</Text>
       </BottomSheet>
     );
   }
 
   return (
-    <BottomSheet visible onClose={onClose} title="Configuration de la soirée">
+    <BottomSheet visible onClose={onClose} title={t('mobile.config.title')}>
       <ScrollView style={{ maxHeight: 500 }} contentContainerStyle={{ gap: 14 }}>
         <TextField
-          label="Thème (emoji + texte court)"
+          label={t('mobile.config.themeLabel')}
           value={form.theme ?? ''}
           onChangeText={(v) => setForm((f) => ({ ...f, theme: v }))}
-          placeholder="🍕 Pizza & comédie"
+          placeholder={t('mobile.config.themePlaceholder')}
         />
 
         <TextField
-          label="Date de fin (AAAA-MM-JJ HH:MM)"
+          label={t('mobile.config.endDateLabel')}
           value={form.endDate ?? ''}
           onChangeText={(v) => setForm((f) => ({ ...f, endDate: v }))}
           autoCapitalize="none"
         />
 
         <TextField
-          label="Max propositions par participant"
+          label={t('mobile.config.maxProposalsLabel')}
           value={
             form.maxProposalsPerParticipant != null ? String(form.maxProposalsPerParticipant) : ''
           }
@@ -160,7 +169,7 @@ export function EventConfigSheet({ eventIdOrSlug, onClose }: Props) {
         />
 
         <TextField
-          label="Max participants"
+          label={t('mobile.config.maxParticipantsLabel')}
           value={form.maxParticipants != null ? String(form.maxParticipants) : ''}
           keyboardType="numeric"
           onChangeText={(v) =>
@@ -172,30 +181,32 @@ export function EventConfigSheet({ eventIdOrSlug, onClose }: Props) {
         />
 
         <View style={{ gap: 6 }}>
-          <Text style={{ color: palette.text, fontWeight: '500' }}>Mode de roue</Text>
+          <Text style={{ color: palette.text, fontWeight: '500' }}>
+            {t('mobile.config.wheelModeLabel')}
+          </Text>
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            {WHEEL_MODES.map((m) => (
+            {WHEEL_MODE_VALUES.map((value) => (
               <Pressable
-                key={m.value}
-                onPress={() => setForm((f) => ({ ...f, wheelMode: m.value }))}
+                key={value}
+                onPress={() => setForm((f) => ({ ...f, wheelMode: value }))}
                 style={{
                   flex: 1,
                   paddingVertical: 10,
                   borderRadius: 10,
                   borderWidth: 1,
-                  borderColor: form.wheelMode === m.value ? palette.primary : palette.border,
-                  backgroundColor: form.wheelMode === m.value ? palette.badgeMeBg : 'transparent',
+                  borderColor: form.wheelMode === value ? palette.primary : palette.border,
+                  backgroundColor: form.wheelMode === value ? palette.badgeMeBg : 'transparent',
                   alignItems: 'center',
                 }}
               >
                 <Text
                   style={{
-                    color: form.wheelMode === m.value ? palette.badgeMeText : palette.text,
+                    color: form.wheelMode === value ? palette.badgeMeText : palette.text,
                     fontWeight: '500',
                     fontSize: 13,
                   }}
                 >
-                  {m.label}
+                  {wheelModeLabel(value)}
                 </Text>
               </Pressable>
             ))}
@@ -207,25 +218,26 @@ export function EventConfigSheet({ eventIdOrSlug, onClose }: Props) {
             value={!!form.richSharePreview}
             onValueChange={(v) => setForm((f) => ({ ...f, richSharePreview: v }))}
           />
-          <Text style={{ color: palette.text, flex: 1 }}>Aperçu enrichi pour le partage web</Text>
+          <Text style={{ color: palette.text, flex: 1 }}>
+            {t('mobile.config.richShareLabel')}
+          </Text>
         </View>
 
         {error ? <Text style={{ color: palette.error }}>{error}</Text> : null}
 
         <Button
-          label={patchMutation.isPending ? 'Sauvegarde…' : 'Enregistrer'}
+          label={patchMutation.isPending ? t('mobile.saving') : t('mobile.save')}
           loading={patchMutation.isPending}
           onPress={onSave}
         />
         <Button
-          label={deleteMutation.isPending ? 'Suppression…' : 'Supprimer la soirée'}
+          label={deleteMutation.isPending ? 'Suppression…' : t('mobile.config.deleteEvent')}
           variant="danger"
           onPress={onDelete}
           loading={deleteMutation.isPending}
         />
         <Text style={{ color: palette.meta, fontSize: 12, marginTop: 8 }}>
-          Pour retirer un participant, fais un appui long sur son pseudo dans la liste des
-          participants de la soirée.
+          {t('mobile.config.kickHelp')}
         </Text>
       </ScrollView>
     </BottomSheet>

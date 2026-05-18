@@ -84,7 +84,9 @@ export default function EventDetailScreen() {
   if (!slug) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }}>
-        <Text style={{ color: palette.error, padding: 20 }}>Slug manquant.</Text>
+        <Text style={{ color: palette.error, padding: 20 }}>
+          {t('mobile.eventDetail.slugMissing')}
+        </Text>
       </SafeAreaView>
     );
   }
@@ -107,7 +109,7 @@ export default function EventDetailScreen() {
   if (eventQuery.isError || !eventQuery.data) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg, padding: 20, gap: 12 }}>
-        <Text style={{ color: palette.error }}>Impossible de charger cette soirée.</Text>
+        <Text style={{ color: palette.error }}>{t('mobile.eventDetail.loadError')}</Text>
         <Button
           label={t('common.retry')}
           variant="secondary"
@@ -156,7 +158,7 @@ export default function EventDetailScreen() {
               eventActions.clearError();
             }}
             style={{ color: '#ffffff', fontWeight: '700' }}
-            accessibilityLabel="Fermer"
+            accessibilityLabel={t('common.close')}
           >
             ✕
           </Text>
@@ -187,7 +189,7 @@ export default function EventDetailScreen() {
             >
               <Ionicons name="arrow-back" size={16} color={palette.textMuted} />
               <Text style={{ color: palette.textMuted, fontSize: 13, fontWeight: '500' }}>
-                Retour
+                {t('mobile.back')}
               </Text>
             </Pressable>
 
@@ -235,7 +237,7 @@ export default function EventDetailScreen() {
                         letterSpacing: 1,
                       }}
                     >
-                      TERMINÉE
+                      {t('mobile.eventDetail.finishedBadge')}
                     </Text>
                   </View>
                 ) : lifecycleKey === 'live' ? (
@@ -257,14 +259,14 @@ export default function EventDetailScreen() {
                         letterSpacing: 1,
                       }}
                     >
-                      ● EN COURS
+                      {t('mobile.eventDetail.liveBadge')}
                     </Text>
                   </View>
                 ) : null}
               </View>
               {myPseudo ? (
                 <Text style={{ color: palette.meta, fontSize: 13 }}>
-                  Tu participes en tant que{' '}
+                  {t('mobile.eventDetail.participatingAs')}{' '}
                   <Text style={{ color: palette.text, fontWeight: '500' }}>{myPseudo}</Text>.
                 </Text>
               ) : null}
@@ -304,7 +306,7 @@ export default function EventDetailScreen() {
                       letterSpacing: 1.2,
                     }}
                   >
-                    GAGNANT
+                    {t('mobile.eventDetail.winnerKicker')}
                   </Text>
                   <Text
                     style={{ color: palette.text, fontSize: 15, fontWeight: '700' }}
@@ -319,13 +321,13 @@ export default function EventDetailScreen() {
             <View style={{ gap: 10 }}>
               {!isMember ? (
                 <Button
-                  label="Rejoindre la soirée"
+                  label={t('mobile.eventDetail.actions.join')}
                   icon="person-add"
                   onPress={() => setShowJoin(true)}
                 />
               ) : canPropose ? (
                 <Button
-                  label="Proposer un film"
+                  label={t('mobile.eventDetail.actions.propose')}
                   icon="add-circle"
                   onPress={() => setShowPropose(true)}
                 />
@@ -333,7 +335,7 @@ export default function EventDetailScreen() {
 
               {isHost && !event.isFinished ? (
                 <Button
-                  label="Lancer la roue"
+                  label={t('mobile.eventDetail.actions.wheel')}
                   icon="disc"
                   variant={isMember ? 'secondary' : 'primary'}
                   onPress={() => setShowWheel(true)}
@@ -343,7 +345,7 @@ export default function EventDetailScreen() {
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <View style={{ flex: 1 }}>
                   <Button
-                    label="Partager"
+                    label={t('mobile.eventDetail.actions.share')}
                     icon="share-social"
                     variant="secondary"
                     onPress={() => setShowShare(true)}
@@ -352,7 +354,7 @@ export default function EventDetailScreen() {
                 {isHost ? (
                   <View style={{ flex: 1 }}>
                     <Button
-                      label="Config"
+                      label={t('mobile.eventDetail.actions.config')}
                       icon="settings"
                       variant="secondary"
                       onPress={() => setShowConfig(true)}
@@ -409,7 +411,8 @@ export default function EventDetailScreen() {
                   letterSpacing: 1.2,
                 }}
               >
-                PARTICIPANTS ({event.participantCount ?? event.participants?.length ?? 0})
+                {t('mobile.eventDetail.participantsHeading')} (
+                {event.participantCount ?? event.participants?.length ?? 0})
               </Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                 {(event.participants ?? []).map((p) => {
@@ -422,12 +425,14 @@ export default function EventDetailScreen() {
                         canKick
                           ? () =>
                               Alert.alert(
-                                'Retirer ce participant ?',
-                                `${p.pseudo ?? '?'} ne pourra plus voter ni proposer (action irréversible).`,
+                                t('mobile.eventDetail.kickTitle'),
+                                t('mobile.eventDetail.kickMessage', {
+                                  pseudo: p.pseudo ?? '?',
+                                }),
                                 [
-                                  { text: 'Annuler', style: 'cancel' },
+                                  { text: t('mobile.cancel'), style: 'cancel' },
                                   {
-                                    text: 'Retirer',
+                                    text: t('mobile.confirmRemove'),
                                     style: 'destructive',
                                     onPress: () => eventActions.kickParticipant(p._id!),
                                   },
@@ -464,7 +469,7 @@ export default function EventDetailScreen() {
               </View>
               {isHost ? (
                 <Text style={{ color: palette.meta, fontSize: 11 }}>
-                  Astuce hôte : appui long sur un pseudo pour le retirer.
+                  {t('mobile.eventDetail.hostHint')}
                 </Text>
               ) : null}
             </View>
@@ -477,7 +482,8 @@ export default function EventDetailScreen() {
                 letterSpacing: 1.2,
               }}
             >
-              FILMS ({event.movieCount ?? moviesQuery.data?.length ?? 0})
+              {t('mobile.eventDetail.moviesHeading')} (
+              {event.movieCount ?? moviesQuery.data?.length ?? 0})
             </Text>
           </View>
         }
@@ -526,11 +532,11 @@ export default function EventDetailScreen() {
               }}
             >
               <Text style={{ color: palette.textMuted, textAlign: 'center' }}>
-                Aucun film proposé pour le moment.
+                {t('mobile.eventDetail.noMovies')}
               </Text>
               {canPropose ? (
                 <Text style={{ color: palette.meta, fontSize: 13 }}>
-                  Tape « Proposer un film » pour ouvrir TMDB.
+                  {t('mobile.eventDetail.proposeHint')}
                 </Text>
               ) : null}
             </View>

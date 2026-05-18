@@ -4,6 +4,7 @@ import { ActivityIndicator, Linking, Pressable, ScrollView, Text, View } from 'r
 import { Image } from 'expo-image';
 import { getMovieDetails } from '@/api/movies';
 import { BottomSheet } from '@/components/BottomSheet';
+import { useTranslation } from '@/features/i18n/LocaleContext';
 import { useTheme } from '@/features/theme/ThemeContext';
 import { logoUrl, posterUrl } from '@/lib/tmdb';
 import type { MovieWithScore } from '@/api/movies';
@@ -15,6 +16,7 @@ type Props = {
 
 export function MovieDetailSheet({ movie, onClose }: Props) {
   const { palette } = useTheme();
+  const { t } = useTranslation();
   const { data, isLoading, isError } = useQuery({
     queryKey: ['movie-details', movie.tmdbId],
     queryFn: ({ signal }) => getMovieDetails(movie.tmdbId ?? 0, { signal }),
@@ -69,9 +71,7 @@ export function MovieDetailSheet({ movie, onClose }: Props) {
         {isLoading ? (
           <ActivityIndicator color={palette.primary} />
         ) : isError ? (
-          <Text style={{ color: palette.error }}>
-            Impossible de charger les détails complémentaires.
-          </Text>
+          <Text style={{ color: palette.error }}>{t('mobile.movieDetail.loadError')}</Text>
         ) : data?.overview ? (
           <Text style={{ color: palette.text, lineHeight: 20 }}>{data.overview}</Text>
         ) : null}
@@ -102,7 +102,9 @@ export function MovieDetailSheet({ movie, onClose }: Props) {
 
         {movie.watchProviders && movie.watchProviders.length > 0 ? (
           <View style={{ gap: 6 }}>
-            <Text style={{ color: palette.sectionHeading, fontWeight: '600' }}>Disponible sur</Text>
+            <Text style={{ color: palette.sectionHeading, fontWeight: '600' }}>
+              {t('mobile.movieDetail.providersHeading')}
+            </Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
               {movie.watchProviders.map((wp) => {
                 const url = logoUrl(wp.logoPath, 'w45');
@@ -133,7 +135,9 @@ export function MovieDetailSheet({ movie, onClose }: Props) {
 
         {tmdbWatchUrl ? (
           <Pressable onPress={() => Linking.openURL(tmdbWatchUrl)}>
-            <Text style={{ color: palette.primary, fontWeight: '500' }}>Voir sur TMDB →</Text>
+            <Text style={{ color: palette.primary, fontWeight: '500' }}>
+              {t('mobile.movieDetail.tmdbLink')}
+            </Text>
           </Pressable>
         ) : null}
       </ScrollView>
