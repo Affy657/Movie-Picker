@@ -11,7 +11,7 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "test": "jest",
-    "test:coverage": "jest --coverage --coverageReporters=text-summary --collectCoverageFrom='src/api/**/*.ts' --collectCoverageFrom='src/i18n/**/*.ts' --collectCoverageFrom='src/theme/**/*.ts' --collectCoverageFrom='src/features/**/*.ts' --collectCoverageFrom='src/features/**/*.tsx' --collectCoverageFrom='src/lib/**/*.ts'",
+    "test:coverage": "jest --coverage --coverageReporters=text-summary --collectCoverageFrom='src/api/**/*.ts' --collectCoverageFrom='src/i18n/**/*.ts' --collectCoverageFrom='src/theme/**/*.ts' --collectCoverageFrom='src/features/**/*.ts' --collectCoverageFrom='src/features/**/*.tsx' --collectCoverageFrom='src/lib/**/*.ts' --collectCoverageFrom='src/components/**/*.ts' --collectCoverageFrom='src/components/**/*.tsx'",
     "api:types": "openapi-typescript ../../artifacts/openapi-v1.json -o src/api/types.gen.ts"
   },
   "jest": {
@@ -22,7 +22,7 @@
     "@expo/vector-icons": "^15.0.3",
     "@hookform/resolvers": "^5.2.2",
     "@react-native-async-storage/async-storage": "2.2.0",
-    "@react-native-community/netinfo": "^12.0.1",
+    "@react-native-community/netinfo": "^11.4.1",
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",

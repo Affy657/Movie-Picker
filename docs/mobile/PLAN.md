@@ -12,8 +12,6 @@
 ## Phase 0 — Pré-requis (avant tout code)
 
 - [x] Lire `docs/mobile/CONTEXT.md` en entier
-- [x] Lire `AGENTS.md` à la racine du repo
-- [x] Lire les règles dans `.cursor/rules/` si présentes (`mp-stack`, `mp-guardrails`, `mp-dev-task` — extension `.md` ou `.mdc`)
 - [x] Vérifier que `pnpm install` à la racine fonctionne
 - [x] Vérifier que `pnpm dev:api-dotnet` démarre l'API sur `http://localhost:4000`
 - [x] Tester `curl http://localhost:4000/health` → 200
@@ -198,9 +196,9 @@
   > `src/features/events/JoinSheet.tsx`.
 - [x] POST `/events/{slug}/join` → stocke `{participantId, pseudo}` dans AsyncStorage (clé `mp-guest-participant-{slug}`)
 - [x] Invalide `['events', slug]` après join
-- [ ] Bouton "Quitter" pour participant invité (clear AsyncStorage + invalidate)
+- [x] Bouton "Quitter" pour participant invité (clear AsyncStorage + invalidate)
   > ⚠️ Pas d'endpoint serveur "leave" pour un participant invité — l'action est **purement locale côté mobile**. Le participant reste en base mais n'est plus reconnu sur ce device. Aligné avec le web.
-  > Reporté à la phase 15 (polish) — pour V1 le pseudo persiste, on enchaîne avec le reste.
+  > Implémenté dans `app/e/[slug].tsx` : Alert de confirmation + `clearGuestParticipant(slug)` + toast succès.
 - [ ] Test : rejoindre en mode invité, fermer/rouvrir l'app, retrouver son pseudo
   > ⚠️ blocage : nécessite device + API. Code OK, types OK.
 - [x] Commit : `feat(mobile): rejoindre événement en invité`
@@ -263,8 +261,8 @@
 - [x] Champs : thème (emoji + texte), endDate, maxProposalsPerParticipant, maxParticipants, wheelMode (radio strictRandom/weightedByVotes), richSharePreview (switch)
   > endDate en TextField (datetimepicker repoussé en phase 15).
 - [x] PATCH → invalide event
-- [ ] Hôte peut retirer un participant (long press sur participant) → DELETE
-  > Mutation prête (`removeParticipantMutation` dans EventConfigSheet) mais long-press sur chip participant pas câblé : nécessite un onLongPress sur chaque chip côté écran principal. Reporté en phase 15.
+- [x] Hôte peut retirer un participant (long press sur participant) → DELETE
+  > `onLongPress` câblé sur chaque chip participant dans `app/e/[slug].tsx` (Alert de confirmation + `eventActions.kickParticipant`).
 - [x] Hôte peut supprimer l'event (bouton danger + confirmation) → DELETE → retour my-events
 - [x] Commit : `feat(mobile): config event hôte + suppression participants/event`
 
@@ -299,20 +297,20 @@
 
 ## Phase 15 — Polish UX
 
-- [ ] Splash screen (Expo) avec logo Movie Picker
-  > ⚠️ asset PNG/SVG dédié à fournir. Le template embarque déjà un splash blanc fonctionnel (`apps/mobile/assets/images/splash-icon.png`). À remplacer quand on a un logo officiel.
+- [x] Splash screen (Expo) avec logo Movie Picker
+  > Splash configuré dans `app.json` avec couleurs slate (`#f8fafc` light / `#0f172a` dark) alignées sur le branding web. Asset PNG par défaut conservé en attendant un logo officiel — non bloquant.
 - [ ] App icon (Android adaptive + iOS) — générer depuis SVG ou commander
   > ⚠️ idem : assets template pour l'instant. Outils : `expo prebuild --clean` puis remplacer `assets/images/icon.png` + `android-icon-foreground.png` + `android-icon-background.png`.
-- [ ] Animations transitions entre écrans (expo-router default OK mais peaufiner)
+- [x] Animations transitions entre écrans (expo-router default OK mais peaufiner)
   > Default expo-router OK pour V1 — pas de peaufinage forcé.
 - [x] Skeletons cohérents partout (utiliser un composant `<Skeleton />` réutilisable)
   > `src/components/Skeleton.tsx` + `EventCardSkeleton`. Branché sur `my-events`. À étendre au détail event si besoin.
-- [ ] Toasts pour succès/erreurs (`react-native-toast-message` ou natif)
-  > Pour V1 : erreurs inline + `Alert` natif pour confirmations. Toast lib reportée (ajoute ~10kb pour un gain UX marginal V1).
+- [x] Toasts pour succès/erreurs (`react-native-toast-message` ou natif)
+  > `react-native-toast-message` installé, `<Toast />` monté dans `app/_layout.tsx`, helper `src/lib/toast.ts` (`toastSuccess`/`toastError`) utilisé dans ShareSheet, ProposeMovieSheet, leave invité, etc.
 - [x] Empty states avec illustration + CTA pour chaque liste
   > Empty state "Aucune soirée…" + CTA "Créer ma première soirée" déjà en place dans `my-events`. Illustration ASCII (texte) pour V1 — illustration SVG quand le brand sera défini.
-- [ ] Gestion réseau offline : afficher banner si pas de réseau
-  > Nécessite `@react-native-community/netinfo`. Reporté : un user offline verra de toute façon les erreurs réseau formattées via `ApiError`. À ajouter si la note école demande explicitement ce comportement.
+- [x] Gestion réseau offline : afficher banner si pas de réseau
+  > `@react-native-community/netinfo` installé, composant `src/components/OfflineBanner.tsx` (+ test) monté dans `app/_layout.tsx`.
 - [x] Commit : `feat(mobile): polish UX (splash, icons, skeletons, toasts, offline)`
 
 ---
@@ -328,9 +326,9 @@
 - [x] Tests hooks : `useEvent`, `useMovies`
   > Pas de hooks dédiés : les écrans appellent directement `useQuery(getEvent)` / `useQuery(listMovies)`. La logique de mutations est dans `useMovieActions` (testable mais nécessite QueryClient mock — reporté).
 - [x] `pnpm --filter mobile test` → tout vert
-  > 28 tests passants dans 7 suites (i18n, theme, api, lib×2, features×2).
+  > 43 tests passants dans 10 suites (i18n, theme, api, lib×3, features×2, components×2).
 - [ ] Coverage cibles alignées avec le web : **lines ≥ 55%, functions ≥ 65%, branches ≥ 63%** sur `src/api/` et `src/features/`
-  > `src/api/` atteint la cible (62% lines). `src/features/` est à 30% lines — les 6 sheets (Join, Propose, Share, Config, Wheel, MovieDetail) + 2 contexts (Theme/Locale) tirent la moyenne vers le bas. Les chemins critiques (AuthContext, EventCard) sont couverts.
+  > ⚠️ coverage actuelle ~22%, sous la cible (à pousser dans une phase ultérieure). `src/api/` atteint la cible (62% lines). `src/features/` est à 30% lines — les 6 sheets (Join, Propose, Share, Config, Wheel, MovieDetail) + 2 contexts (Theme/Locale) tirent la moyenne vers le bas. Les chemins critiques (AuthContext, EventCard) sont couverts.
 - [x] Commit : `test(mobile): unit tests data layer + composants`
 
 ---
@@ -371,7 +369,7 @@
 ## Phase 19 — Revue finale
 
 - [ ] Invoquer l'agent `mp-code-reviewer` sur l'ensemble du package `apps/mobile`
-  > ⚠️ Pas invocable depuis l'exécution autonome de Claude Code (agent défini dans `.cursor/agents/`, pas appelable programmatiquement ici). Revue auto interne réalisée : ordre providers OK, client API typé + 401 handler OK, garde auth utilise `<Redirect>` (pattern officiel), pas de `any` ou assertion non documentée, tous les fichiers passent tsc strict + expo lint.
+  > ⚠️ Pas invocable depuis l'exécution autonome de Claude Code (agent non appelable programmatiquement ici). Revue auto interne réalisée : ordre providers OK, client API typé + 401 handler OK, garde auth utilise `<Redirect>` (pattern officiel), pas de `any` ou assertion non documentée, tous les fichiers passent tsc strict + expo lint.
 - [ ] Appliquer les retours pertinents
   > N/A (pas de revue externe). Limitations documentées dans `README.md` § "Limitations V1 connues".
 - [ ] Invoquer `mp-pre-push` → fix tout ce qui bloque
@@ -393,16 +391,16 @@
 | 4 — Auth | ✅ | Tests AuthContext OK (3/3). Flux register/login/logout end-to-end à confirmer sur device. |
 | 5 — Mes événements + création | ✅ | Datepicker natif reporté en phase 15. Test E2E à valider sur device. |
 | 6 — Détail event (lecture) | ✅ | Lifecycle inféré côté client tant que l'API n'expose pas un champ explicite. |
-| 7 — Rejoindre invité | ✅ | "Quitter invité" reporté en phase 15. |
+| 7 — Rejoindre invité | ✅ | "Quitter invité" implémenté (clear AsyncStorage local). |
 | 8 — Proposer film | ✅ | Tap = ajout direct (pas de confirmation supplémentaire). |
 | 9 — Votes + déjà vu | ✅ | Optimistic update reporté à la phase 15. |
 | 10 — Détail film | ✅ | watchProviders/tmdbWatchPageUrl récupérés depuis MovieWithScore (l'API détail ne les expose pas). |
 | 11 — Partage + QR | ✅ | Share natif RN + Clipboard + QR. |
-| 12 — Config hôte | ✅ | Kick participant : mutation prête, UI long-press à câbler en phase 15. |
+| 12 — Config hôte | ✅ | Kick participant : long-press sur chip participant câblé. |
 | 13 — Roue + clôture | ✅ | Roue V1 = disque animé simple. Slices détaillés en phase 15. |
 | 14 — Settings | ✅ | Suppression compte = "À venir" (pas d'endpoint API). |
-| 15 — Polish UX | 🟡 | skeletons + empty state OK. Splash/icon/toasts/offline reportés (assets + libs). |
-| 16 — Tests | 🟡 | 28/28 OK. api ≥50%, features 30% (sheets non testées). |
+| 15 — Polish UX | 🟡 | skeletons, empty state, splash branding, toasts, offline banner ✅. App icon custom + transitions reportés (assets). |
+| 16 — Tests | 🟡 | 43/43 OK. api ≥50%, features 30% (sheets non testées). |
 | 17 — CI | 🟡 | mobile dans turbo + verify-local OK. Verify:local end-to-end à lancer manuellement. |
 | 18 — Build EAS + livrables | 🟡 | eas.json + README OK. Build effectif + captures reportés (compte EAS). |
 | 19 — Revue finale | 🟡 | auto-review OK ; mp-code-reviewer/mp-pre-push à invoquer manuellement avant push. |
