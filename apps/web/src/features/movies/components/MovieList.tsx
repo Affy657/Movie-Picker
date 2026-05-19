@@ -116,6 +116,7 @@ const MovieCard = memo(function MovieCard({
             loading={eager ? 'eager' : 'lazy'}
             fetchPriority={eager ? 'high' : 'auto'}
             decoding="async"
+            crossOrigin="anonymous"
           />
         ) : (
           <div className={`${styles.poster} ${styles.posterPlaceholder}`}>Affiche</div>
