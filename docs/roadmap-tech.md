@@ -57,13 +57,16 @@ Pas de travail tech transverse sur cette version — les briques techniques ont 
 
 ## 📋 V1.3
 
+**Objectif** : stabilité long terme, sécurité de la chaîne de dépendances et ouverture OAuth.
+
+- ⬜ ⚙️ **Dependabot / Renovate** : automatisation des mises à jour de dépendances (npm, NuGet) — PRs automatiques sur nouvelles versions et CVE ; complète le `pnpm audit` et l'audit NuGet déjà en CI.
 - ⬜ 📊 **Sentry** : capture d'erreurs front (React) et API (.NET), regroupement incidents, contexte release/env ; définir sampling, politique PII et rétention.
+- ⬜ 🔒 **OAuth — volet infra** : librairie OAuth côté API .NET, secrets dédiés par provider, écran de consentement, mentions légales à jour — à poser après que le profil utilisateur (V1.2 produit) soit stabilisé.
 
 ---
 
 ## Backlog tech (non priorisé sur une release)
 
-- ⬜ ⚙️ **Dependabot / Renovate** : automatisation des mises à jour de dépendances (npm, NuGet) — ouvre des PRs automatiques sur nouvelles versions et CVE ; complète le `pnpm audit` et l'audit NuGet déjà en CI.
 - ⬜ 🏗️ **PWA** : manifest, icônes multi-tailles, splash, Service Worker complet.
 - ⬜ 🏗️ **Terraform (IaC)** : environnement staging calqué sur la prod (S3 + CloudFront, Cloud Run + Artifact Registry, IAM) ; state distant, secrets hors repo.
 - ⬜ 🔒 **OAuth — volet infra** : librairie OAuth côté API .NET, secrets dédiés par provider, écran de consentement, mentions légales à jour.
