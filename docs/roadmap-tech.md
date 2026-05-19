@@ -50,6 +50,7 @@ Pas de travail tech transverse sur cette version — les briques techniques ont 
 **Objectif** : qualité UX mesurable et conformité RGPD avant la montée en charge des features sociales.
 
 - ⬜ ♿ **Accessibilité étendue** : audit global (axe + manuel), navigation clavier complète, focus visible cohérent sur toutes les pages — à faire en premier, avant d'ajouter de nouveaux SDKs tiers.
+- ⬜ 🏗️ **PWA** : manifest, icônes multi-tailles, splash screen, Service Worker — "Ajouter à l'écran d'accueil" et chargement hors-ligne partiel ; cohérent avec l'usage mobile-first de l'app.
 - ⬜ 🔒 **Bandeau consentement (CMP)** : choix granulaire au premier accès, persistance, lien « Modifier mes préférences » dans le footer ; conditionne le chargement effectif de l'analytics et de tout SDK tiers — prérequis RGPD à poser avant l'analytics.
 - ⬜ 📊 **Analytics produit** (PostHog, Plausible ou équivalent) : mesure d'usage (créations, joins, votes, roue), funnels, rétention — chargé uniquement après consentement CMP.
 
@@ -67,7 +68,6 @@ Pas de travail tech transverse sur cette version — les briques techniques ont 
 
 ## Backlog tech (non priorisé sur une release)
 
-- ⬜ 🏗️ **PWA** : manifest, icônes multi-tailles, splash, Service Worker complet.
 - ⬜ 🏗️ **Terraform (IaC)** : environnement staging calqué sur la prod (S3 + CloudFront, Cloud Run + Artifact Registry, IAM) ; state distant, secrets hors repo.
 - ⬜ 🔒 **OAuth — volet infra** : librairie OAuth côté API .NET, secrets dédiés par provider, écran de consentement, mentions légales à jour.
 - ⬜ 🏗️ **Notifications hors session — volet infra** : file d'envoi, jobs planifiés, transport push web (VAPID) et email transactionnel ; consentement stocké par utilisateur.
