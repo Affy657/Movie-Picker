@@ -39,9 +39,9 @@ Découpage par version côté **plateforme, qualité, infra, observabilité, det
 
 ---
 
-## 🚧 V1.1
+## ✅ V1.1
 
-- ⬜ 🏗️ **PWA** : manifest, icônes multi-tailles, splash screen, Service Worker — "Ajouter à l'écran d'accueil" et chargement hors-ligne partiel ; cohérent avec l'usage mobile-first de l'app.
+- ✅ 🏗️ **PWA** : manifest, icônes multi-tailles, splash screen, Service Worker — "Ajouter à l'écran d'accueil" et chargement hors-ligne partiel ; cohérent avec l'usage mobile-first de l'app.
 
 ---
 
