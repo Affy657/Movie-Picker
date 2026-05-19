@@ -5,7 +5,6 @@ using MoviePicker.Api.Application.Ports;
 
 namespace MoviePicker.Api.Infrastructure.Email;
 
-/// <summary>Sélection du provider email selon <c>EMAIL_PROVIDER</c> et <c>RESEND_API_KEY</c>.</summary>
 public static class EmailServiceCollectionExtensions
 {
     public static IServiceCollection AddEmailSender(
@@ -32,8 +31,6 @@ public static class EmailServiceCollectionExtensions
 
         if (!environment.IsDevelopment() && provider == "resend")
         {
-            // EMAIL_PROVIDER=resend voulu mais RESEND_API_KEY absente : fallback silencieux + warning au démarrage.
-            // Le logger n'est pas encore disponible ici, donc on écrit sur stderr (visible dans Cloud Run logs).
             Console.Error.WriteLine(
                 "[WARN] EMAIL_PROVIDER=resend mais RESEND_API_KEY absente → fallback LogEmailSender. " +
                 "Les emails (mot de passe oublié) ne seront PAS envoyés.");

@@ -4,11 +4,6 @@ import type { AccentColor, UiThemePreference } from '@/shared/types/theme';
 import type { UserProfile } from '@/features/auth/types';
 import { clearSessionHint, hasSessionHint, setSessionHint } from '@/features/auth/session-hint';
 
-/**
- * Pour la query « session » : 401 → invité, sans lever. Si aucun indice de
- * session local (cf. `session-hint`), on ne tape pas `/auth/me` pour éviter
- * le 401 visible en console (Lighthouse `errors-in-console`).
- */
 export async function fetchAuthMeForSession(): Promise<UserProfile | null> {
   if (!hasSessionHint()) return null;
   try {

@@ -1,10 +1,4 @@
-/**
- * Garde-fou de régression (CI) : détecte les chaînes connues du compte dev rapide dans le bundle.
- * Ce n’est pas un scanner de secrets générique — si les identifiants dev changent, mettre à jour
- * la liste `forbidden` (et/ou le module stub). Un `vite build` seul n’exécute pas ce script :
- * utiliser `pnpm --filter web build` (ou le build racine / CI).
- * @see vite.config.ts (alias vers devQuickLoginCredentials.stub.ts)
- */
+
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';

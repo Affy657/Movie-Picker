@@ -1,11 +1,6 @@
 import { Skeleton, SkeletonScreen } from '@/shared/components/Skeleton';
 import styles from './EventDetailSkeleton.module.css';
 
-/**
- * Skeleton de la page soirée — reproduit l'ossature : titre, métadonnées,
- * actions (partage), participants, grille de films. Réduit le shift entre le
- * chargement et le rendu final (cf. Lighthouse CLS).
- */
 export default function EventDetailSkeleton() {
   return (
     <SkeletonScreen label="Chargement de la soirée…" className={styles.root}>

@@ -103,8 +103,6 @@ describe('MyEventsPage (MSW)', () => {
 
     renderMyEvents();
 
-    // Timeout étendu : sur Windows / jsdom lent l'enchaînement auth/me + events/mine
-    // peut dépasser le timeout par défaut (1 s) de waitFor lors d'un run complet.
     await screen.findByRole('heading', { name: /créées/i }, { timeout: 5000 });
 
     expect(screen.getByRole('heading', { name: 'Mes soirées', level: 1 })).toBeInTheDocument();
@@ -122,7 +120,6 @@ describe('MyEventsPage (MSW)', () => {
     expect(joinedLink).toHaveAttribute('href', '/e/autre');
     expect(screen.getByText('En cours')).toBeInTheDocument();
 
-    // L'historique vit dans son propre onglet : on doit y basculer pour le tester.
     const userEvt = (await import('@testing-library/user-event')).default.setup();
     await userEvt.click(screen.getByRole('tab', { name: /historique/i }));
 
@@ -132,7 +129,6 @@ describe('MyEventsPage (MSW)', () => {
     expect(historyLink).toHaveAttribute('href', '/e/terminee');
     expect(within(historySection).queryByText('Terminée')).not.toBeInTheDocument();
 
-    // Retour sur l'onglet actif pour vérifier l'isolement des sections.
     await userEvt.click(screen.getByRole('tab', { name: /à venir/i }));
     const hostedHeading = await screen.findByRole('heading', { name: /créées/i });
     const hostedSection = hostedHeading.closest('section')!;

@@ -37,9 +37,7 @@ export function ShareSheet({ slug, title, onClose }: Props) {
   const share = async () => {
     try {
       await Share.share({ message: `${title}\n${url}`, url });
-    } catch {
-      /* user cancelled */
-    }
+    } catch {}
   };
 
   return (

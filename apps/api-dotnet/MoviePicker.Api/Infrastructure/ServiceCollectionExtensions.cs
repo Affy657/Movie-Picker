@@ -75,7 +75,6 @@ public static class ServiceCollectionExtensions
         var mongoUri = configuration["MONGODB_URI"] ?? string.Empty;
         if (string.IsNullOrWhiteSpace(mongoUri))
         {
-            // Mode test / in-memory : pas de MongoDB
             services.AddSingleton<IEventRepository, InMemoryEventRepository>();
             services.AddSingleton<IParticipantRepository, InMemoryParticipantRepository>();
             services.AddSingleton<IUserRepository, InMemoryUserRepository>();
@@ -157,10 +156,6 @@ public static class ServiceCollectionExtensions
         return raw != "0" && !raw.Equals("false", StringComparison.OrdinalIgnoreCase);
     }
 
-    /// <summary>
-    /// Convention-based handler registration: scans the assembly for classes whose name
-    /// ends with "Handler" and implements a matching I{ClassName} interface.
-    /// </summary>
     private static void RegisterHandlers(IServiceCollection services)
     {
         var handlerNamespace = "MoviePicker.Api.Application.UseCases";

@@ -2,13 +2,6 @@ import { useTranslation } from '@/shared/i18n';
 
 const TMDB_URL = 'https://www.themoviedb.org/';
 
-/**
- * Mini attribution TMDB (texte + lien). Affichée sous toute liste de films
- * issus de TMDB pour respecter les conditions d'utilisation de l'API
- * (« You shall provide attribution to TMDB […] in any application that uses
- * the TMDB API »). Volontairement minimaliste : pas de disclaimer long ici,
- * la note d'aide « TMDB » sur la valeur reste consultable au survol.
- */
 export default function TmdbAttribution({ className }: { className?: string }) {
   const { t } = useTranslation();
   return (

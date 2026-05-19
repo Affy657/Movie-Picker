@@ -5,7 +5,7 @@ describe('parseLocalDate', () => {
     const d = parseLocalDate('2026-06-15');
     expect(d).not.toBeNull();
     expect(d!.getFullYear()).toBe(2026);
-    expect(d!.getMonth()).toBe(5); // 0-indexé : juin
+    expect(d!.getMonth()).toBe(5);
     expect(d!.getDate()).toBe(15);
     expect(d!.getHours()).toBe(0);
   });

@@ -31,10 +31,6 @@ function PageFallback() {
   );
 }
 
-/**
- * Page d'accueil routée : un user connecté est redirigé vers « Mes soirées » ;
- * un visiteur anonyme voit la landing publique (seule page accessible hors auth).
- */
 function HomeRoute() {
   const { user, isLoading } = useAuth();
   const { t } = useTranslation();
@@ -68,7 +64,6 @@ function createAppQueryClient() {
   });
 }
 
-/** Routes de l’app (pour tests avec MemoryRouter). */
 export function AppRoutes() {
   return (
     <Routes>
@@ -116,7 +111,6 @@ export function AppRoutes() {
   );
 }
 
-/** Error boundary par « page » : `key={pathname}` remonte le boundary au changement de route (roadmap § 30). */
 function AppRoutesWithErrorBoundary() {
   const location = useLocation();
   return (

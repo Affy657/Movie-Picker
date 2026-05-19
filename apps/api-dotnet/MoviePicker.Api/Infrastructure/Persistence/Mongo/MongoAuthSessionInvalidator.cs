@@ -12,7 +12,6 @@ public sealed class MongoAuthSessionInvalidator : IAuthSessionInvalidator
         _collection = database.GetCollection<AuthSessionDocument>("auth_sessions");
     }
 
-    /// <inheritdoc />
     public async Task<long> InvalidateAllForUserAsync(string userId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(userId))

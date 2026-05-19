@@ -14,10 +14,6 @@ using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Infrastructure.Development;
 
-/// <summary>
-/// En Development, crée un utilisateur de test si activé dans la config et si l’e-mail n’existe pas encore,
-/// puis optionnellement des soirées de test et des scénarios démo (idempotent).
-/// </summary>
 public sealed class DevelopmentDataSeedHostedService : IHostedService
 {
     private const string SeedEventTitlePrefix = "Soirée de test — ";
@@ -186,9 +182,6 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
         var existing = await users.GetByEmailAsync(email, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            // Resync du mot de passe si la config Development a changé depuis la 1re seed :
-            // sans ça, le hash en base reste figé et l'API rejette les credentials documentés
-            // (« compte local dev » dans la SPA). Limité à l'env Development par le caller.
             var verify = hasher.VerifyHashedPassword(existing, existing.PasswordHash, password);
             if (verify == PasswordVerificationResult.Failed)
             {

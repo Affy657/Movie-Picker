@@ -173,15 +173,13 @@ public sealed class ChangePasswordHandlerTests
         Assert.NotNull(captured);
         Assert.Equal("new-hash", captured!.PasswordHash);
         Assert.Equal(TestEpoch, captured.UpdatedAt);
-        Assert.Equal(user.Email, captured.Email); // immuable
+        Assert.Equal(user.Email, captured.Email);
         sessions.Verify(x => x.InvalidateAllForUserAsync(user.Id, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task HandleAsync_VerifyReturnsSuccessRehashNeeded_StillAccepted()
     {
-        // Le hasher peut retourner SuccessRehashNeeded si l'algo a évolué.
-        // On accepte cette valeur comme un succès (≠ Failed).
         var user = SampleUser();
         var users = new Mock<IUserRepository>();
         users.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);

@@ -55,8 +55,6 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             }
         }
 
-        // Une seule lecture « liste participants » sert à la fois au résumé, au count et
-        // à la détection du participant courant (filtre en mémoire).
         var participantsTask = _participantRepository.ListByEventIdAsync(evt.Id, ct);
         var movieCountTask = _movieRepository.CountByEventIdAsync(evt.Id, ct);
         await Task.WhenAll(participantsTask, movieCountTask);

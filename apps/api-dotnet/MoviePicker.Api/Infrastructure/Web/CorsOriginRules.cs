@@ -1,9 +1,7 @@
 namespace MoviePicker.Api.Infrastructure.Web;
 
-/// <summary>Règles d'origine pour CORS en développement (localhost, etc.).</summary>
 public static class CorsOriginRules
 {
-    /// <summary>localhost / 127.0.0.1 / ::1 sur http ou https (tout port).</summary>
     public static bool IsLocalDevelopmentOrigin(string origin)
     {
         if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))

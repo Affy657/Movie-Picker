@@ -43,7 +43,6 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
         if (movie is null)
             throw new NotFoundException("Film introuvable");
 
-        // Le proposeur peut retirer son film ; l'hôte de la soirée peut retirer n'importe quel film.
         var isProposer = movie.ParticipantId == participantId;
         var isHost = EventHost.IsHost(
             evt,

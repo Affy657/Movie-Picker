@@ -84,7 +84,6 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Toujours renvoyer du JSON pour 404 (éviter une page HTML en prod)
 app.UseStatusCodePages(async context =>
 {
     if (context.HttpContext.Response.StatusCode == 404 &&
@@ -112,5 +111,4 @@ app.MapGet("/", () => Results.Json(new
 
 app.Run();
 
-/// <summary>Point d'entrée exposé pour les tests d'intégration (WebApplicationFactory).</summary>
 public partial class Program { }

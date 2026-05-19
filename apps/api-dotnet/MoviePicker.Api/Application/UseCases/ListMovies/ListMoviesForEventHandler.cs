@@ -10,7 +10,6 @@ namespace MoviePicker.Api.Application.UseCases.ListMovies;
 
 public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
 {
-    /// <summary>Limite volontairement basse : on affiche quelques pseudos, pas toute la liste.</summary>
     private const int MaxSeenByPseudosPerMovie = 30;
 
     private readonly IEventRepository _eventRepository;

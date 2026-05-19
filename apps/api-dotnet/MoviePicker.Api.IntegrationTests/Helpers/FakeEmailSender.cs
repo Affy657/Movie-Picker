@@ -3,7 +3,6 @@ using MoviePicker.Api.Application.Ports;
 
 namespace MoviePicker.Api.IntegrationTests.Helpers;
 
-/// <summary>Test double singleton qui capte les emails au lieu de les envoyer.</summary>
 public sealed class FakeEmailSender : IEmailSender
 {
     private readonly ConcurrentBag<EmailMessage> _sent = new();

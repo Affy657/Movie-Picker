@@ -26,7 +26,7 @@ public class LogEmailSenderTests
         var entry = logger.Entries[0];
         Assert.Equal(LogLevel.Information, entry.Level);
         Assert.Contains("password-reset", entry.Message);
-        Assert.Contains("a***@example.com", entry.Message); // email masqué
+        Assert.Contains("a***@example.com", entry.Message);
         Assert.Contains("Test subject", entry.Message);
         Assert.Contains("https://web.movie-picker.fr/reset?token=abc123", entry.Message);
     }

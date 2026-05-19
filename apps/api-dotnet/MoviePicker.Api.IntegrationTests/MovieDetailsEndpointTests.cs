@@ -11,9 +11,6 @@ using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
 
-/// <summary>
-/// Couvre le nouvel endpoint <c>GET /api/v1/movies/tmdb/{tmdbId}/details</c> — 200, 404 (film inconnu), 503 (TMDB KO).
-/// </summary>
 public sealed class MovieDetailsEndpointTests : IClassFixture<MoviePickerApplicationFactory>
 {
     private readonly MoviePickerApplicationFactory _factory;

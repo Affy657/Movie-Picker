@@ -58,7 +58,6 @@ public class ResendEmailSenderTests
         Assert.Equal("Test subject", root.GetProperty("subject").GetString());
         Assert.Equal("<p>html</p>", root.GetProperty("html").GetString());
         Assert.Equal("text", root.GetProperty("text").GetString());
-        // tags : [{ name: "category", value: "password-reset" }]
         var tag = root.GetProperty("tags")[0];
         Assert.Equal("category", tag.GetProperty("name").GetString());
         Assert.Equal("password-reset", tag.GetProperty("value").GetString());
@@ -79,7 +78,6 @@ public class ResendEmailSenderTests
         await sender.SendAsync(SampleMessage(tag: null));
 
         using var doc = JsonDocument.Parse(capturedBody!);
-        // tags absent OU array vide selon ton choix d'impl ; test sur les 2
         var hasTags = doc.RootElement.TryGetProperty("tags", out var tags);
         if (hasTags) Assert.Equal(0, tags.GetArrayLength());
     }
@@ -125,7 +123,6 @@ public class ResendEmailSenderTests
     [Fact]
     public async Task SendAsync_429_ThrowsEmailDeliveryExceptionAfterRetry()
     {
-        // Le sender peut faire 1 retry court sur 429 puis lever ; ici on renvoie 429 deux fois.
         var calls = 0;
         var handler = new RecordingHandler((req, _) =>
         {

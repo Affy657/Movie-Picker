@@ -2,18 +2,12 @@ using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.UseCases.ListMyEvents;
 
-/// <summary>État d’affichage pour la liste « mes soirées » : à venir, en cours, terminée.</summary>
 public static class MyEventListLifecycle
 {
     public const string Upcoming = "upcoming";
     public const string Live = "live";
     public const string Finished = "finished";
 
-    /// <summary>
-    /// <paramref name="utcNow"/> : horloge serveur (alignée sur <see cref="Event.IsFinished"/>).
-    /// Terminée : clôture, roue tirée, ou règles <see cref="Event.IsFinished"/>.
-    /// Sinon : avant l’instant date+heure affiché → à venir ; après → en cours.
-    /// </summary>
     public static string Compute(Event e, DateTimeOffset utcNow)
     {
         var effectivelyFinished = e.IsFinished(utcNow)

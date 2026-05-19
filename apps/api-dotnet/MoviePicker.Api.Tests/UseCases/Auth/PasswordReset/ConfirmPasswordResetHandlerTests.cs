@@ -28,7 +28,6 @@ public sealed class ConfirmPasswordResetHandlerTests
 
     private static readonly string PlainToken = Base64UrlTestToken();
 
-    /// <summary>Deterministic pseudo–base64url string for hashing tests.</summary>
     private static string Base64UrlTestToken()
     {
         Span<byte> b = stackalloc byte[24];

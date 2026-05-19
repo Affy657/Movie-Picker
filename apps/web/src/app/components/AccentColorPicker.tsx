@@ -8,11 +8,6 @@ import type { TranslationKey } from '@/shared/i18n';
 import type { AccentColor } from '@/shared/types/theme';
 import styles from './AccentColorPicker.module.css';
 
-/**
- * Palettes proposées dans l'UI — inclut 'default' en premier (alignement mobile).
- * Visuellement identique à 'blue', mais permet à l'utilisateur de retrouver
- * explicitement l'état initial sans avoir à clear son profil.
- */
 const PICKER_COLORS = [
   'default',
   'blue',
@@ -23,11 +18,6 @@ const PICKER_COLORS = [
 ] as const satisfies readonly AccentColor[];
 type PickerColor = (typeof PICKER_COLORS)[number];
 
-/**
- * Couleurs CSS d'aperçu — alignées sur les variables `[data-accent='...']` de
- * `01-foundation.css`. MUST stay in sync : si tu changes la palette ici,
- * change aussi le bloc équivalent dans 01-foundation.css.
- */
 const SWATCH_COLORS: Record<PickerColor, string> = {
   default: '#2563eb',
   blue: '#2563eb',
@@ -37,7 +27,6 @@ const SWATCH_COLORS: Record<PickerColor, string> = {
   orange: '#ea580c',
 };
 
-/** Mapping type-safe couleur → clé i18n (refusé à la compile si une couleur n'a pas de libellé). */
 const ACCENT_LABEL_KEY: Record<PickerColor, TranslationKey> = {
   default: 'auth.account.accentColorOptions.default',
   blue: 'auth.account.accentColorOptions.blue',
@@ -47,22 +36,12 @@ const ACCENT_LABEL_KEY: Record<PickerColor, TranslationKey> = {
   orange: 'auth.account.accentColorOptions.orange',
 };
 
-/** Délai avant de pousser le changement sur le serveur — absorbe le balayage clavier. */
 const PATCH_DEBOUNCE_MS = 400;
 
-/**
- * Sélecteur de palette d'accent — pattern WAI-ARIA `radiogroup`.
- * Clavier : ←/→ (et ↑/↓) déplacent la sélection, Home/End sautent aux extrêmes,
- * Tab entre dans le groupe sur l'option sélectionnée.
- *
- * Réseau : l'état local change immédiatement ; le PATCH serveur est debouncé
- * pour éviter une rafale d'appels lors du balayage clavier.
- */
 export default function AccentColorPicker({
   id,
   className = '',
 }: {
-  /** Si défini, doit cibler le `<label htmlFor>` externe pour l'accessibilité. */
   id?: string;
   className?: string;
 }) {
@@ -70,12 +49,10 @@ export default function AccentColorPicker({
   const { user, patchProfile } = useAuth();
   const { t } = useTranslation();
 
-  // Valeur dernière confirmée serveur — point de rollback en cas d'erreur réseau.
   const lastCommittedRef = useRef<AccentColor>(accent);
   const patchTimerRef = useRef<number | null>(null);
   useEffect(() => {
     if (user) lastCommittedRef.current = accent;
-    // On ne dépend que de `user` : on resync quand le profil arrive, pas à chaque local change.
   }, [user?.userId]);
   useEffect(
     () => () => {
@@ -84,7 +61,6 @@ export default function AccentColorPicker({
     []
   );
 
-  // 'default' est maintenant une valeur exposée dans le picker (1ʳᵉ swatch).
   const effectiveSelection: PickerColor = accent as PickerColor;
 
   const commit = useCallback(

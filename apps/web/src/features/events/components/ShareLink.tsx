@@ -11,9 +11,6 @@ const QR_BG_COLOR = '#ffffff';
 const QR_FG_COLOR = '#111827';
 const COPIED_RESET_MS = 2000;
 
-/**
- * Interop CJS / bundler : `default` peut être `{ QRCode, default }` au lieu du forwardRef → React #130.
- */
 const QRCode =
   typeof QRCodeImport === 'object' &&
   QRCodeImport !== null &&
@@ -24,9 +21,9 @@ const QRCode =
 
 interface ShareLinkProps {
   url: string;
-  /** Affiche le bouton et la modale QR (URL invité uniquement — ne pas utiliser pour un lien hôte secret). */
+
   showQr?: boolean;
-  /** Aligne les actions au centre (ex. en-tête page soirée). */
+
   centeredActions?: boolean;
 }
 
@@ -42,10 +39,6 @@ export default function ShareLink({
   const [qrOpen, setQrOpen] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
-  // Synchronise l'état React avec l'API native <dialog>.
-  // `showModal` et `close` sont absents de certains environnements (jsdom).
-  // L'interface `DialogAPI` les déclare explicitement optionnels pour que les
-  // gardes soient légitimes côté analyse statique (pas de boolean gratuit).
   useEffect(() => {
     interface DialogAPI {
       readonly open: boolean;

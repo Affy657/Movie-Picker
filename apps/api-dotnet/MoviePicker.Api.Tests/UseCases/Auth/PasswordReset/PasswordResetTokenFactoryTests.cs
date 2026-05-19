@@ -9,9 +9,9 @@ public sealed class PasswordResetTokenFactoryTests
     public void Generate_ProducesPlainTokenOf43BytesBase64Url()
     {
         var (plain, hash) = PasswordResetTokenFactory.Generate();
-        Assert.Equal(43, plain.Length); // 32 bytes en base64url sans padding
+        Assert.Equal(43, plain.Length);
         Assert.Matches("^[A-Za-z0-9_-]+$", plain);
-        Assert.Equal(64, hash.Length); // SHA-256 hex
+        Assert.Equal(64, hash.Length);
         Assert.Matches("^[a-f0-9]+$", hash);
     }
 

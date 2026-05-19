@@ -1,22 +1,15 @@
 import { ApiError } from '@/shared/api/apiError';
 
-/** Hôte « local » : schéma implicite → http (évite https://localhost:4000 invalide en dev). */
 function hostLooksLocal(host: string): boolean {
   const h = (host.split(':')[0] ?? host).toLowerCase();
   return h === 'localhost' || h === '127.0.0.1' || h === '[::1]' || h.endsWith('.local');
 }
 
-/**
- * URL de base de l'API (variable d'environnement au build).
- * En dev : VITE_API_URL ou fallback http://localhost:4000
- * Doit être une URL absolue avec protocole (ex. https://xxx.run.app), pas un chemin relatif.
- */
 function getApiBase(): string {
   const raw =
     (typeof import.meta.env !== 'undefined' && import.meta.env?.VITE_API_URL) ||
     'http://localhost:4000';
   const base = (typeof raw === 'string' ? raw : '').trim();
-  // Si pas de protocole, le navigateur traite comme chemin relatif → requête vers le site au lieu de l'API
   if (base && !/^https?:\/\//i.test(base)) {
     const withoutSlash = base.replace(/^\//, '');
     const hostPart = ((withoutSlash.split('/')[0] ?? '').split('@').pop() ?? withoutSlash).trim();
@@ -28,20 +21,17 @@ function getApiBase(): string {
 
 const API_BASE = getApiBase();
 
-/** Préfixe versionné aligné sur l’API .NET (`ApiRoutePrefix.V1`). */
 export const API_VERSION_PREFIX = '/api/v1';
 
 export function apiUrl(path: string): string {
   const p = path.startsWith('/') ? path : `/${path}`;
   const base = API_BASE.replace(/\/$/, '');
-  // Chemins déjà versionnés ou hors API métier (tests / intégrations manuelles)
   if (p.startsWith('/api/') || p === '/health') {
     return `${base}${p}`;
   }
   return `${base}${API_VERSION_PREFIX}${p}`;
 }
 
-/** Vérifie que l'API ne pointe pas vers le même site (CloudFront) — erreur de config au build. */
 function ensureApiIsNotFrontOrigin(url: string): void {
   if (typeof window === 'undefined') return;
   try {
@@ -79,7 +69,6 @@ function mergeRequestHeaders(init?: HeadersInit): Record<string, string> {
   return out;
 }
 
-/** Requêtes JSON vers l’API ; `credentials: 'include'` pour la session cookie httpOnly (auth V1). */
 export async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
   const url = apiUrl(path);
   ensureApiIsNotFrontOrigin(url);
@@ -122,9 +111,7 @@ export async function fetchApi<T>(path: string, options?: RequestInit): Promise<
     if (isJson && text.trim()) {
       try {
         parsed = JSON.parse(text) as { error?: string };
-      } catch {
-        // Body malformé malgré Content-Type JSON (proxy, CDN, etc.)
-      }
+      } catch {}
     }
     throw new ApiError(parsed.error ?? `HTTP ${res.status}`, { code: res.status });
   }
@@ -135,8 +122,6 @@ export async function fetchApi<T>(path: string, options?: RequestInit): Promise<
       { code: res.status }
     );
   }
-  // Body vide (ex. 202 Accepted sans corps depuis ASP.NET Accepted()) : retourner undefined plutôt que de
-  // tenter JSON.parse("") qui jetterait "Réponse invalide". Cohérent avec le traitement de 204.
   if (!text.trim()) {
     return undefined as T;
   }

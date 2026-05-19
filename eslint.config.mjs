@@ -33,6 +33,7 @@ export default defineConfig(
       ],
       '@typescript-eslint/no-require-imports': 'off',
       '@typescript-eslint/no-namespace': 'off',
+      'no-empty': ['error', { allowEmptyCatch: true }],
     },
   }
 );

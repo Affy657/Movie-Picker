@@ -3,7 +3,7 @@ import type { CSSProperties, ReactNode } from 'react';
 
 type PageLayoutProps = {
   children: ReactNode;
-  /** Classes en plus de `page` (ex. `page--landing`, `page-event`). */
+
   className?: string;
   style?: CSSProperties;
 };

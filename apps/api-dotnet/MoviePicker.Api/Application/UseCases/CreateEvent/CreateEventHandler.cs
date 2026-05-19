@@ -36,9 +36,6 @@ public sealed class CreateEventHandler : ICreateEventHandler
         var now = DateTimeOffset.UtcNow;
         var ownerId = creatorUserId.Trim();
 
-        // Config persistée à la création pour aligner UI / API / aperçu Open Graph :
-        // les nouvelles soirées exposent un aperçu riche par défaut (titre + détails),
-        // l'hôte peut le désactiver depuis le panneau « Paramètres de la soirée ».
         var evt = new Event
         {
             Id = string.Empty,

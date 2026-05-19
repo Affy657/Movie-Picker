@@ -2,9 +2,6 @@ import { apiUrl } from '@/shared/api/client';
 
 const TMDB_POSTER_SIZE_SEGMENT = /\/t\/p\/w\d+\//i;
 
-/**
- * Passe une affiche TMDB en w185 pour des miniatures liste plus nettes (l’API recherche renvoie souvent w154).
- */
 export function tmdbPosterSrcForListDisplay(url: string | undefined): string | undefined {
   if (!url) return undefined;
   try {
@@ -18,9 +15,6 @@ export function tmdbPosterSrcForListDisplay(url: string | undefined): string | u
   }
 }
 
-/**
- * URL absolue pour une balise <img> : URLs TMDB inchangées, chemins API (/api/v1/…) préfixés avec VITE_API_URL.
- */
 export function posterImageSrc(posterPath: string | null | undefined): string | undefined {
   if (posterPath == null) return undefined;
   const trimmed = posterPath.trim();
@@ -30,12 +24,6 @@ export function posterImageSrc(posterPath: string | null | undefined): string | 
   return apiUrl(p);
 }
 
-/**
- * Génère un `srcset` TMDB multi-résolutions pour une affiche en miniature liste (~92px de large).
- * Renvoie `undefined` si l'URL n'est pas une URL TMDB reconnaissable (le navigateur retombera sur `src`).
- *
- * Sizes recommandé côté `<img>`: "92px" (largeur fixe poster card).
- */
 export function tmdbPosterSrcSetForList(url: string | undefined): string | undefined {
   if (!url) return undefined;
   try {

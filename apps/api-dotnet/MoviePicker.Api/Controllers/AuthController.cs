@@ -146,9 +146,6 @@ public sealed class AuthController : ControllerBase
 
         await handler.HandleAsync(userId, request, ct);
 
-        // Le handler vient d'invalider toutes les sessions de l'utilisateur ; on clear
-        // le cookie de session courante pour que le client soit cohérent (prochaine
-        // requête → 401, l'UI redirige vers /login).
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
         return NoContent();
@@ -167,7 +164,7 @@ public sealed class AuthController : ControllerBase
         var userAgent = Request.Headers.UserAgent.ToString();
         if (string.IsNullOrWhiteSpace(userAgent)) userAgent = null;
         await handler.HandleAsync(request, clientIp, userAgent, ct);
-        return Accepted(); // 202 — toujours, même si l'email est inconnu (anti-énumération)
+        return Accepted();
     }
 
     [HttpPost("password-reset/confirm")]

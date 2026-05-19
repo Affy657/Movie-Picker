@@ -12,9 +12,6 @@ import { useEvent } from '@/features/events/hooks/useEvent';
 import { useMovies } from '@/features/movies/hooks/useMovies';
 import { useEventLive } from '@/features/events/hooks/useEventLive';
 
-/**
- * État partagé de la page détail soirée : host token URL/storage, event, films, participant stocké, refresh.
- */
 export function useEventDetailPage(slug: string | undefined) {
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();

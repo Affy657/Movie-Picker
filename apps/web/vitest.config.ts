@@ -17,13 +17,8 @@ export default defineConfig({
     globals: true,
     include: ['src/**/*.test.{ts,tsx}'],
     setupFiles: ['src/test-setup.ts'],
-    // Marge confortable pour éviter les timeouts MSW + userEvent (debounce, attente
-    // de re-render) lorsqu'un run complet sature CPU/IO (typiquement Windows + coverage V8).
     testTimeout: 15000,
     hookTimeout: 15000,
-    // Limite le nombre de forks parallèles : sur Windows les workers vitest peuvent
-    // ne pas démarrer à temps quand le pool dépasse la capacité réelle (errors
-    // « Failed to start forks worker / Timeout waiting for worker to respond »).
     pool: 'forks',
     poolOptions: {
       forks: {

@@ -5,3 +5,4 @@ pnpm-lock.yaml
 *.md
 docs
 .github
+**/.expo

@@ -13,7 +13,7 @@ export default function LanguageSelector({
   id,
 }: {
   className?: string;
-  /** Si défini, le libellé visible doit utiliser `htmlFor={id}` ; sinon `aria-label` seule. */
+
   id?: string;
 }) {
   const { locale, setLocale } = useLocale();

@@ -46,9 +46,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
           setLocaleState(stored);
         }
       })
-      .catch(() => {
-        /* ignore */
-      })
+      .catch(() => {})
       .finally(() => {
         if (!cancelled) setIsHydrating(false);
       });
@@ -59,9 +57,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 
   const setLocale = useCallback((code: LocaleCode) => {
     setLocaleState(code);
-    AsyncStorage.setItem(STORAGE_KEY, code).catch(() => {
-      /* ignore */
-    });
+    AsyncStorage.setItem(STORAGE_KEY, code).catch(() => {});
   }, []);
 
   const value = useMemo<LocaleContextValue>(

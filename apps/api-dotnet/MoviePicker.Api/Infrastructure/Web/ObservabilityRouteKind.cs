@@ -1,8 +1,5 @@
 namespace MoviePicker.Api.Infrastructure.Web;
 
-/// <summary>
-/// Catégorie de route pour les logs structurés (roadmap V1 § 21 — filtres auth / config dans Cloud Logging).
-/// </summary>
 internal static class ObservabilityRouteKind
 {
     internal const string Auth = "auth";

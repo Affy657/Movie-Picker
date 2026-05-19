@@ -1,6 +1,3 @@
-/**
- * Interprète `date` + `time` comme dans le fuseau local du navigateur (aligné sur le tri « mes soirées »).
- */
 export function parseEventLocalStartMs(date: string, time: string): number | null {
   const parts = date.split('-').map((p) => parseInt(p, 10));
   const timeParts = (time ?? '00:00').split(':').map((p) => parseInt(p, 10));

@@ -5,10 +5,6 @@ type Props = {
   label: string;
 };
 
-/**
- * Skeleton de « Mes soirées » — titre de page et deux sections de cartes.
- * Libellé fourni par le parent pour rester localisable.
- */
 export default function MyEventsSkeleton({ label }: Props) {
   return (
     <SkeletonScreen label={label} className={styles.root}>

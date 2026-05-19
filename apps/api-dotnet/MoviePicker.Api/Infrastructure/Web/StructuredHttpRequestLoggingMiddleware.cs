@@ -2,9 +2,6 @@ using System.Diagnostics;
 
 namespace MoviePicker.Api.Infrastructure.Web;
 
-/// <summary>
-/// Journalise chaque requête avec durée et statut (propriétés structurées → JSON en prod via JsonConsole).
-/// </summary>
 public sealed class StructuredHttpRequestLoggingMiddleware(
     RequestDelegate next,
     ILogger<StructuredHttpRequestLoggingMiddleware> logger)

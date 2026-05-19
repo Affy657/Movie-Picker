@@ -163,7 +163,6 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
         Assert.NotNull(created);
         var slug = created!.Slug;
 
-        // La création inscrit déjà l'hôte (1 participant) ; capacité 2 laisse une place à Alice, pas à Bob.
         var patch = await host.PatchAsJsonAsync(
             $"/api/v1/events/{slug}/config",
             new { maxParticipants = 2 });

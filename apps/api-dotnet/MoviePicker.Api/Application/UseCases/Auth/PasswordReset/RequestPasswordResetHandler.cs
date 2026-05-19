@@ -55,7 +55,6 @@ public sealed class RequestPasswordResetHandler : IRequestPasswordResetHandler
 
         var now = _clock.GetUtcNow();
 
-        // Throttle 60s : ne créer un nouveau token que si pas de token actif récent
         var recent = await _tokens.GetMostRecentForUserAsync(user.Id, ct);
         if (recent is not null
             && recent.ConsumedAt is null

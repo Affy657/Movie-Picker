@@ -15,26 +15,12 @@ using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Infrastructure.Development;
 
-/// <summary>
-/// Données de démo couvrant plusieurs cas d’usage (hôte, invité, films, votes, déjà vu, suppression, roue, clôture).
-/// N’utilise pas les handlers qui exigent un <c>HttpContext</c> (patch config, lancement roue via cookie) : config / roue / clôture via <see cref="IEventRepository"/>.
-/// </summary>
 internal static class DevelopmentScenarioSeed
 {
     internal const string ScenarioMultiTitle = "Scénario seed — Soirée multi-participants";
     internal const string ScenarioWheelTitle = "Scénario seed — Roue et clôture";
     internal const string ScenarioFullCapacityTitle = "Scénario seed — Capacité atteinte";
-    /// <summary>
-    /// Scénario dédié au flux retrait/quitter : l'utilisateur dev est hôte et la
-    /// soirée mélange participants connectés (Alice, Bob) et invité (Charlie sans
-    /// compte). Permet de tester côté hôte la suppression des deux variantes.
-    /// </summary>
     internal const string ScenarioRemoveParticipantsTitle = "Scénario seed — Retirer / quitter (hôte = dev)";
-    /// <summary>
-    /// Scénario figeant l'état "roue tirée mais soirée pas encore close" :
-    /// matérialise la garde <c>WinnerMovieId</c> dans <c>RemoveParticipantHandler</c>
-    /// (HTTP 409 « déjà été lancée »), distincte du 409 « soirée close ».
-    /// </summary>
     internal const string ScenarioWheelLaunchedTitle = "Scénario seed — Roue tirée (modifications gelées)";
 
     internal static async Task TrySeedAsync(
@@ -352,7 +338,6 @@ internal static class DevelopmentScenarioSeed
         var bobPart = created.CreatorParticipant?.Id
             ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
 
-        // Applique la config : capacité = 3 (hôte inclus) — la soirée sera pleine après 2 joins.
         var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException("Soirée seed (capacité) introuvable après création.");
 
@@ -408,12 +393,6 @@ internal static class DevelopmentScenarioSeed
             slug);
     }
 
-    /// <summary>
-    /// Seed dédié au flux « retirer / quitter ». L'utilisateur dev est créateur,
-    /// donc dès la connexion il a directement le rôle hôte sur cette soirée et
-    /// peut tester la suppression d'un participant connecté (Alice, Bob) ou
-    /// invité (Charlie, sans userId). Lui-même apparaît en hôte non-retirable.
-    /// </summary>
     private static async Task TrySeedRemoveParticipantsScenarioAsync(
         IServiceProvider sp,
         IEventRepository events,
@@ -462,7 +441,6 @@ internal static class DevelopmentScenarioSeed
         var joinBob = await join
             .HandleAsync(slug, new JoinEventRequest { Pseudo = "Bob (compte)" }, bob.Id, ct)
             .ConfigureAwait(false);
-        // Charlie : participant invité, sans userId — testera le retrait d'un guest côté hôte.
         var joinCharlie = await join
             .HandleAsync(slug, new JoinEventRequest { Pseudo = "Charlie (invité)" }, authenticatedUserId: null, ct)
             .ConfigureAwait(false);
@@ -522,13 +500,6 @@ internal static class DevelopmentScenarioSeed
             slug);
     }
 
-    /// <summary>
-    /// Seed reproduisant l'état « roue tirée, soirée encore ouverte ». La soirée
-    /// reste consultable et la liste des films est intacte, mais toute tentative
-    /// de retrait/sortie de participant doit retourner HTTP 409 (la modification
-    /// du panel briserait le film gagnant déjà choisi). Distinct de
-    /// <see cref="ScenarioWheelTitle"/> qui ferme la soirée.
-    /// </summary>
     private static async Task TrySeedWheelLaunchedNotClosedScenarioAsync(
         IServiceProvider sp,
         IEventRepository events,
@@ -662,11 +633,6 @@ internal static class DevelopmentScenarioSeed
         };
     }
 
-    /// <summary>
-    /// Garde-fou : le seed contourne <c>PatchEventConfigHandler</c>, donc on revérifie ici les bornes
-    /// du domaine pour ne pas persister des valeurs hors plage en base de dev (et faire échouer vite
-    /// le démarrage si un futur scénario les enfreint).
-    /// </summary>
     private static void EnsureConfigBounds(EventConfig cfg)
     {
         if (cfg.MaxParticipants is int maxP && (maxP < 1 || maxP > EventConfig.MaxParticipantsCap))

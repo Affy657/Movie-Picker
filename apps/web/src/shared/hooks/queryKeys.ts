@@ -1,4 +1,3 @@
-/** Clés React Query centralisées (invalidation, tests). */
 export const queryKeys = {
   auth: {
     me: ['auth', 'me'] as const,
@@ -9,7 +8,7 @@ export const queryKeys = {
   },
   event: {
     all: ['event'] as const,
-    /** `$pending` quand `slug` absent (query désactivée) — évite une clé vide ambiguë. */
+
     detail: (slug: string | undefined, hostToken: string | null) =>
       ['event', 'detail', slug ?? '$pending', hostToken ?? ''] as const,
   },

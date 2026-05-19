@@ -16,7 +16,6 @@ import { isRegisterPasswordCompliant } from '@/shared/utils/authPasswordRules';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import styles from './AccountPage.module.css';
 
-/** Délai d'affichage du message "Mot de passe mis à jour" avant redirection vers /login. */
 const POST_PASSWORD_CHANGE_REDIRECT_MS = 1800;
 
 function ChangePasswordSection() {
@@ -33,9 +32,6 @@ function ChangePasswordSection() {
 
   const changeAction = useCallback(async () => {
     await patchChangePassword(currentPassword, newPassword);
-    // Le serveur a invalidé toutes les sessions et clear le cookie courant.
-    // On vide le cache local (auth.me redeviendra 401) puis on redirige vers /login
-    // avec un délai court pour laisser apparaître le message de succès.
     setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');

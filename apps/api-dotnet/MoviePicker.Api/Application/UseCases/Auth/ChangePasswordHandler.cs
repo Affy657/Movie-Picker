@@ -49,8 +49,6 @@ public sealed class ChangePasswordHandler : IChangePasswordHandler
         var updated = user with { PasswordHash = newHash, UpdatedAt = now };
         await _users.UpdateAsync(updated, ct);
 
-        // Sécurité : on invalide toutes les sessions actives (y compris celle qui vient
-        // de faire l'appel). Le contrôleur clear le cookie courant pour aligner le client.
         var invalidatedSessions = await _sessionInvalidator.InvalidateAllForUserAsync(userId, ct);
 
         _logger.LogInformation(

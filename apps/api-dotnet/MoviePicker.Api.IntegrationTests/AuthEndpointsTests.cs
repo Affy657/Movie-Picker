@@ -201,12 +201,10 @@ public sealed class AuthEndpointsTests : IClassFixture<MoviePickerApplicationFac
             new ChangePasswordRequest { CurrentPassword = "abcd1234", NewPassword = "wxyz5678" });
         Assert.Equal(HttpStatusCode.NoContent, change.StatusCode);
 
-        // La session courante doit être invalidée côté serveur (sign-out explicite).
         ApplySessionCookie(client, change);
         var me = await client.GetAsync("/api/v1/auth/me");
         Assert.Equal(HttpStatusCode.Unauthorized, me.StatusCode);
 
-        // Le nouveau mot de passe permet bien de se reconnecter.
         client.DefaultRequestHeaders.Remove("Cookie");
         var login = await client.PostAsJsonAsync(
             "/api/v1/auth/login",
@@ -229,7 +227,6 @@ public sealed class AuthEndpointsTests : IClassFixture<MoviePickerApplicationFac
             new ChangePasswordRequest { CurrentPassword = "wrongpass1", NewPassword = "wxyz5678" });
         Assert.Equal(HttpStatusCode.Unauthorized, change.StatusCode);
 
-        // L'ancien mot de passe reste valide après un échec.
         client.DefaultRequestHeaders.Remove("Cookie");
         var loginOld = await client.PostAsJsonAsync(
             "/api/v1/auth/login",

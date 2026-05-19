@@ -6,7 +6,6 @@ using MongoDB.Driver;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
-/// <summary>Sessions auth côté serveur (cookie = clé uniquement). Aligné roadmap V1 § 1 / § 3.</summary>
 public sealed class MongoAuthTicketStore : ITicketStore
 {
     private readonly IMongoCollection<AuthSessionDocument> _collection;

@@ -2,10 +2,6 @@ import { fr, en, type Locale, type LocaleCode } from './locales';
 
 const LOCALES: Record<LocaleCode, Locale> = { fr, en };
 
-/**
- * Union de toutes les clés dot-notation valides dans le fichier de locale.
- * Permet l'autocomplétion et la vérification à la compilation.
- */
 type DotPrefix<P extends string, K extends string> = `${P}${K}`;
 
 type NestedKeys<T, Prefix extends string = ''> =
@@ -19,16 +15,6 @@ type NestedKeys<T, Prefix extends string = ''> =
 
 export type TranslationKey = NestedKeys<Locale>;
 
-/**
- * Résout une clé dot-notation (`'common.loading'`, `'auth.login.title'`, …)
- * dans la locale demandée (par défaut FR).
- *
- * Interpolation : `t('movies.search.regionHint', { region: 'FR' })`
- * remplace `{{region}}` dans la chaîne.
- *
- * Retourne la clé brute si elle ne correspond à aucune entrée.
- * En mode dev, un warning console aide à détecter les clés invalides.
- */
 export function t(
   key: TranslationKey,
   vars?: Record<string, string | number>,

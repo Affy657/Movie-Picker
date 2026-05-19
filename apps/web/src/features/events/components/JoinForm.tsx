@@ -10,9 +10,9 @@ import styles from './JoinForm.module.css';
 interface JoinFormProps {
   slug: string;
   onJoined: (participantId: string, pseudo: string) => void;
-  /** Soirée complète : le formulaire est désactivé et un message s'affiche. */
+
   isFull?: boolean;
-  /** Capacité max (affichée dans le message si `isFull`). */
+
   maxParticipants?: number | null;
 }
 

@@ -13,11 +13,6 @@ public sealed record Movie
     public string ParticipantId { get; init; } = string.Empty;
     public int TmdbId { get; init; }
 
-    /// <summary>
-    /// Type TMDB de la proposition. Défaut <see cref="MovieMediaType.Movie"/> ; <see cref="MovieMediaType.Tv"/>
-    /// uniquement quand <c>EventConfig.AllowSeries</c> est activé. Les IDs TMDB <c>movie</c> et <c>tv</c>
-    /// étant disjoints, ce champ fait partie de l'identité fonctionnelle d'une proposition.
-    /// </summary>
     public MovieMediaType MediaType { get; init; } = MovieMediaType.Movie;
 
     public string Title { get; init; } = string.Empty;

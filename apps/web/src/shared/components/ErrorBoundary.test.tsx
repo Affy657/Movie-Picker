@@ -29,7 +29,6 @@ describe('ErrorBoundary', () => {
     expect(screen.getByRole('heading', { name: /problème est survenu/i })).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent(/erreur de test volontaire/i);
 
-    /* L’enfant ne doit plus planter une fois le boundary réinitialisé */
     rerender(
       <MemoryRouter>
         <ErrorBoundary>

@@ -78,9 +78,6 @@ describe('AddMovieForm (MSW)', () => {
         });
       })
     );
-    // `delay: null` rend les frappes synchrones côté userEvent : on garantit que la
-    // chaîne « ab » + 100ms + « c » tient dans la fenêtre de debounce (350 ms),
-    // même sous coverage V8 ralenti (sinon flaky sur Windows).
     const user = userEvent.setup({ delay: null });
     renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
     const input = screen.getByPlaceholderText(/rechercher un film/i);

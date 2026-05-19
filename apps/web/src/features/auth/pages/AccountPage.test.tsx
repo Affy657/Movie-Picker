@@ -65,8 +65,6 @@ describe('AccountPage (MSW)', () => {
 
     expect(screen.getByRole('heading', { name: 'Préférences' })).toBeInTheDocument();
 
-    // Le ThemeToggle est maintenant un radiogroup segmenté (Système / Clair / Sombre)
-    // aligné sur le rendu mobile — voir apps/mobile/app/(authed)/settings.tsx.
     const darkRadio = await screen.findByRole('radio', { name: /sombre/i });
     await user.click(darkRadio);
     await waitFor(() => expect(patchedTheme).toBe('dark'));

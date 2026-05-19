@@ -86,9 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setUnauthorizedHandler(() => {
       setUser(null);
-      clearToken().catch(() => {
-        /* ignore */
-      });
+      clearToken().catch(() => {});
     });
     return () => setUnauthorizedHandler(null);
   }, []);
@@ -122,12 +120,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     try {
       await apiLogout();
-    } catch {
-      /* ignore — clear local state regardless */
-    }
-    await clearToken().catch(() => {
-      /* ignore */
-    });
+    } catch {}
+    await clearToken().catch(() => {});
     setUser(null);
   }, []);
 
@@ -139,9 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const changePassword = useCallback(async (body: ChangePasswordRequest) => {
     await apiChangePassword(body);
-    await clearToken().catch(() => {
-      /* ignore */
-    });
+    await clearToken().catch(() => {});
     setUser(null);
   }, []);
 

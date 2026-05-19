@@ -84,8 +84,6 @@ public sealed class ClearMovieVoteHandlerTests
     [Fact]
     public async Task HandleAsync_NoExistingVote_IsIdempotent_DoesNotThrow()
     {
-        // L'API doit rester silencieuse si aucun vote n'existait : l'intention « plus de vote »
-        // est déjà satisfaite. Évite un 404 sur double-clic ou re-essai client (cf. revue de code).
         var evt = ActiveEvent();
         var movie = new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = "p0", TmdbId = 1, Title = "X", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         var participant = new Participant { Id = "p123", EventId = evt.Id, Pseudo = "Alice", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };

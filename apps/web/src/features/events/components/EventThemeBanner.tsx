@@ -7,12 +7,10 @@ type EventThemeBannerProps = {
   theme: string | null | undefined;
 };
 
-/** `CSSProperties` seul refuse les clés `--*` — type étendu pour les variables CSS custom. */
 type EventThemeBannerStyle = CSSProperties & {
   '--event-theme-hue'?: string;
 };
 
-/** Bandeau + libellé du thème de soirée (visible par tous les visiteurs). */
 export default function EventThemeBanner({ theme }: EventThemeBannerProps) {
   const label = theme?.trim();
   if (!label) return null;

@@ -8,7 +8,7 @@ import {
 import styles from './EventStartReminderBanner.module.css';
 
 const TICK_MS = 30_000;
-/** Limite `setTimeout` (même ordre de grandeur que partout ailleurs dans le front). */
+
 const MAX_TIMEOUT_MS = 2_147_483_647;
 
 type Props = {
@@ -17,10 +17,6 @@ type Props = {
   isFinished: boolean;
 };
 
-/**
- * Rappel in-app sur la page soirée (V1 §16) : pas de push / e-mail.
- * Minuteur minimal : attente jusqu’à l’entrée dans la fenêtre, puis tick jusqu’au début.
- */
 export default function EventStartReminderBanner({ date, time, isFinished }: Props) {
   const [, setTick] = useState(0);
 

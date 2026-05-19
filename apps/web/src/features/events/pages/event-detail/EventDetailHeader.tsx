@@ -10,9 +10,9 @@ export type EventDetailHeaderProps = {
   title: string;
   dateFormatted: string;
   isFinished: boolean;
-  /** Thème affiché sous le bouton retour (bandeau). */
+
   eventTheme: string | null | undefined;
-  /** URL publique à partager avec les invités (QR + copier). */
+
   shareUrl: string;
 };
 

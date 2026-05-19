@@ -31,8 +31,6 @@ public sealed class EventSharePreviewTests : IClassFixture<MoviePickerApplicatio
     [Fact]
     public async Task SharePreview_NewEvent_IsRichByDefault_IncludesEventTitle()
     {
-        // Depuis la branche fix/wheel-likes-guest-events les nouvelles soirées
-        // sont créées avec RichSharePreview activé (cohérence UI ↔ aperçu OG).
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var create = await client.PostAsJsonAsync(
             "/api/v1/events",
@@ -52,15 +50,13 @@ public sealed class EventSharePreviewTests : IClassFixture<MoviePickerApplicatio
         var html = await res.Content.ReadAsStringAsync();
         Assert.Contains("og:title", html);
         Assert.Contains("publique OG", html);
-        Assert.Contains("19h30", html); // heure formatée (: → h) dans la description OG riche
+        Assert.Contains("19h30", html);
         Assert.Contains("https://web.integration.test/e/", html);
     }
 
     [Fact]
     public async Task SharePreview_AfterPatchFalse_BecomesGeneric_DoesNotLeakEventTitle()
     {
-        // L'hôte peut explicitement désactiver l'aperçu riche depuis les paramètres :
-        // l'aperçu Open Graph retombe alors sur le contenu générique « Movie Picker ».
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var create = await client.PostAsJsonAsync(
             "/api/v1/events",

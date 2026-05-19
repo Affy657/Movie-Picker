@@ -1,6 +1,3 @@
-/**
- * Erreur API typée (roadmap § 25) — message affichable + code HTTP optionnel pour « Réessayer » / analytics.
- */
 export class ApiError extends Error {
   readonly code?: number;
 
@@ -15,7 +12,6 @@ export class ApiError extends Error {
   }
 }
 
-/** Message utilisateur à partir d’une erreur inconnue (fetch, React Query, etc.). */
 export function getErrorMessage(e: unknown, fallback = 'Une erreur est survenue.'): string {
   if (ApiError.is(e)) return e.message;
   if (e instanceof Error) return e.message;

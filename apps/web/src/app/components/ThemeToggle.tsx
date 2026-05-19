@@ -15,11 +15,6 @@ const LABEL_KEY: Record<UiThemePreference, TranslationKey> = {
   dark: 'theme.dark',
 };
 
-/**
- * Segmented radio « Système / Clair / Sombre ».
- * Pattern WAI-ARIA `radiogroup` — clavier : ←/→ / Home / End déplacent la sélection.
- * Aligné sur le rendu mobile (carte « Apparence »).
- */
 export default function ThemeToggle({ className = '', id }: { className?: string; id?: string }) {
   const { preference, setUiPreference } = useTheme();
   const { user, patchProfile } = useAuth();

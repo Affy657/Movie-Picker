@@ -37,9 +37,6 @@ public sealed class ClearMovieVoteHandler : IClearMovieVoteHandler
         if (participant is null)
             throw new BadRequestException("Participant invalide pour cette soirée");
 
-        // Idempotent : « pas de vote à supprimer » est un succès du point de vue de l'API
-        // (l'intention « plus de vote » est déjà satisfaite). Évite un 404 sur double-clic
-        // ou re-essai client après un état stale local (cf. revue de code).
         await _voteRepository.DeleteByMovieAndParticipantAsync(movie.Id, participant.Id, ct);
     }
 }

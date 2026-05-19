@@ -6,7 +6,6 @@ using MoviePicker.Api.Configuration;
 
 namespace MoviePicker.Api.Infrastructure.Posters;
 
-/// <summary>Cache affiches en mémoire (processus) — sans MongoDB, ex. tests d’intégration ou dev local.</summary>
 public sealed class MemoryPosterImageStore : IPosterImageStore
 {
     private sealed class Entry

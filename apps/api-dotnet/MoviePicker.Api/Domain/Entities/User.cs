@@ -1,6 +1,5 @@
 namespace MoviePicker.Api.Domain.Entities;
 
-/// <summary>Préférence de thème UI (persistée compte ou recopiée côté client depuis le local).</summary>
 public enum UiThemePreference
 {
     System = 0,
@@ -8,10 +7,6 @@ public enum UiThemePreference
     Dark = 2
 }
 
-/// <summary>
-/// Palette d'accent choisie par l'utilisateur (en complément du mode light/dark).
-/// Default = palette historique (bleu).
-/// </summary>
 public enum AccentColor
 {
     Default = 0,

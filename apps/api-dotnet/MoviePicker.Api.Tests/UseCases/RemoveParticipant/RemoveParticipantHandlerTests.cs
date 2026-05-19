@@ -217,8 +217,6 @@ public sealed class RemoveParticipantHandlerTests
     [Fact]
     public async Task HandleAsync_WheelLaunched_ButNotClosed_ThrowsConflict()
     {
-        // La roue a été lancée (WinnerMovieId posé) mais la soirée n'est pas
-        // encore clôturée : on doit geler la liste pour ne pas casser le gagnant.
         var withWinner = ActiveEvent() with { WinnerMovieId = "movie-winner" };
         SetupEvent(withWinner);
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
@@ -226,7 +224,6 @@ public sealed class RemoveParticipantHandlerTests
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", "p1"));
         Assert.Contains("roue", ex.Message);
 
-        // Aucune cascade ne doit avoir été déclenchée.
         _participantRepo.Verify(
             r => r.DeleteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
@@ -235,10 +232,6 @@ public sealed class RemoveParticipantHandlerTests
     [Fact]
     public async Task HandleAsync_GuestHostByToken_RemovesItsOwnParticipant_DocumentedV1Behavior()
     {
-        // Hôte sans compte (CreatorUserId vide) : il n'existe pas de « participant créateur »
-        // identifiable côté serveur. Le hostToken donne le rôle hôte ; retirer son propre
-        // participant retire seulement de la liste de participation, mais conserve le rôle hôte
-        // via le HostToken. Comportement V1 documenté dans le handler.
         SetupEvent(ActiveEvent(hostToken: "ht1", creatorUserId: null));
         SetupParticipant(Participant(userId: null));
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");

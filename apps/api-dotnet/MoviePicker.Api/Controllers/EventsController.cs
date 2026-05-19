@@ -89,7 +89,6 @@ public sealed class EventsController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>HTML avec Open Graph pour crawlers (messageries, réseaux). Branchement CloudFront recommandé — voir doc déploiement V1 § MP-17.</summary>
     [HttpGet("slug/{idOrSlug}/share-preview")]
     [Produces("text/html")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -172,11 +171,6 @@ public sealed class EventsController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Retire un participant d'une soirée. Autorisé pour l'hôte (n'importe quel participant
-    /// hors créateur) ou pour le participant lui-même (compte connecté lié au participant).
-    /// Cascade : votes, marques « déjà vu » et films proposés par le participant sont supprimés.
-    /// </summary>
     [HttpDelete("{idOrSlug}/participants/{participantId}")]
     [EnableRateLimiting(RateLimitingExtensions.RemoveParticipantPolicy)]
     [ProducesResponseType(typeof(RemoveParticipantResponse), StatusCodes.Status200OK)]
@@ -195,11 +189,6 @@ public sealed class EventsController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Supprime définitivement une soirée et toute sa cascade (participants, films,
-    /// votes, marques « déjà vu »). Réservé au créateur connecté de la soirée.
-    /// Action irréversible — la confirmation utilisateur est faite côté client.
-    /// </summary>
     [HttpDelete("{idOrSlug}")]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.DeleteEventPolicy)]

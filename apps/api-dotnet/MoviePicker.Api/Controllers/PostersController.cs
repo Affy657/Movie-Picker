@@ -11,7 +11,6 @@ namespace MoviePicker.Api.Controllers;
 [Route(ApiRoutePrefix.V1 + "/posters")]
 public sealed class PostersController : ControllerBase
 {
-    /// <summary>Affiche TMDB mise en cache (lazy fetch). Clé = SHA-256 hex (64) de l’URL TMDB normalisée.</summary>
     [HttpGet("{posterKey}")]
     [AllowAnonymous]
     [EnableRateLimiting(RateLimitingExtensions.PostersPolicy)]

@@ -112,9 +112,6 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
         closeRes.EnsureSuccessStatusCode();
     }
 
-    /// <summary>
-    /// Parcours V1 roadmap §20 : session (login après inscription) → création liée au compte → PATCH config → GET config (persistance) → marquage « déjà vu ».
-    /// </summary>
     [Fact]
     public async Task V1Flow_Login_CreateEvent_PatchConfig_MarkAsSeen()
     {
@@ -177,16 +174,13 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
         var seen = await client.PostAsJsonAsync(
             $"/api/v1/events/{slug}/movies/{movie!.Id}/seen",
             new { participantId = creatorPid });
-        // Contrat : le endpoint renvoie 200 OK (ressource idempotente, pas de "location").
         Assert.Equal(HttpStatusCode.OK, seen.StatusCode);
 
-        // Idempotence : un second POST doit rester 200 OK et ne pas conflicter.
         var seenAgain = await client.PostAsJsonAsync(
             $"/api/v1/events/{slug}/movies/{movie.Id}/seen",
             new { participantId = creatorPid });
         Assert.Equal(HttpStatusCode.OK, seenAgain.StatusCode);
 
-        // DELETE (unmark) renvoie 204 No Content.
         var unmarkRequest = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/events/{slug}/movies/{movie.Id}/seen")
         {
             Content = JsonContent.Create(new { participantId = creatorPid })
@@ -194,7 +188,6 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
         var unmark = await client.SendAsync(unmarkRequest);
         Assert.Equal(HttpStatusCode.NoContent, unmark.StatusCode);
 
-        // Régression : l'ancienne route « reactions » doit retourner 404 Not Found (surface API).
         var legacyReaction = await client.PostAsJsonAsync(
             $"/api/v1/events/{slug}/movies/{movie.Id}/reactions",
             new { participantId = creatorPid, reactionId = "already_seen" });
@@ -244,8 +237,6 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
         var firstAnon = listAnonJson.EnumerateArray().First();
         Assert.Equal(JsonValueKind.Null, firstAnon.GetProperty("myVote").ValueKind);
 
-        // DELETE /vote : participantId passé en query string (standard HTTP, plus
-        // sûr que le body sur certains proxies historiques).
         var deleteVoteRes = await client.DeleteAsync(
             $"/api/v1/events/{slug}/movies/{movieId}/vote?participantId={Uri.EscapeDataString(participantId)}");
         Assert.Equal(HttpStatusCode.NoContent, deleteVoteRes.StatusCode);
@@ -258,7 +249,6 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
         Assert.Equal(0, movieAfter.GetProperty("up").GetInt32());
         Assert.Equal(JsonValueKind.Null, movieAfter.GetProperty("myVote").ValueKind);
 
-        // Idempotent : redélétion sans vote existant doit renvoyer 204 (cf. revue de code).
         var deleteAgainRes = await client.DeleteAsync(
             $"/api/v1/events/{slug}/movies/{movieId}/vote?participantId={Uri.EscapeDataString(participantId)}");
         Assert.Equal(HttpStatusCode.NoContent, deleteAgainRes.StatusCode);

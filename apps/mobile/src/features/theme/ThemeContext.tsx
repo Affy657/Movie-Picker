@@ -84,17 +84,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setUiPreference = useCallback((p: UiThemePreference) => {
     setPreferenceState(p);
-    AsyncStorage.setItem(PREFERENCE_STORAGE_KEY, p).catch(() => {
-      /* ignore */
-    });
+    AsyncStorage.setItem(PREFERENCE_STORAGE_KEY, p).catch(() => {});
   }, []);
 
   const applyRemotePreference = useCallback((p: UiThemePreference) => {
     setPreferenceState((prev) => {
       if (prev === p) return prev;
-      AsyncStorage.setItem(PREFERENCE_STORAGE_KEY, p).catch(() => {
-        /* ignore */
-      });
+      AsyncStorage.setItem(PREFERENCE_STORAGE_KEY, p).catch(() => {});
       return p;
     });
   }, []);
@@ -102,26 +98,20 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const toggleTheme = useCallback(() => {
     setPreferenceState((prev) => {
       const next = NEXT_PREFERENCE[prev];
-      AsyncStorage.setItem(PREFERENCE_STORAGE_KEY, next).catch(() => {
-        /* ignore */
-      });
+      AsyncStorage.setItem(PREFERENCE_STORAGE_KEY, next).catch(() => {});
       return next;
     });
   }, []);
 
   const setAccent = useCallback((c: AccentColor) => {
     setAccentState(c);
-    AsyncStorage.setItem(ACCENT_STORAGE_KEY, c).catch(() => {
-      /* ignore */
-    });
+    AsyncStorage.setItem(ACCENT_STORAGE_KEY, c).catch(() => {});
   }, []);
 
   const applyRemoteAccent = useCallback((c: AccentColor) => {
     setAccentState((prev) => {
       if (prev === c) return prev;
-      AsyncStorage.setItem(ACCENT_STORAGE_KEY, c).catch(() => {
-        /* ignore */
-      });
+      AsyncStorage.setItem(ACCENT_STORAGE_KEY, c).catch(() => {});
       return c;
     });
   }, []);

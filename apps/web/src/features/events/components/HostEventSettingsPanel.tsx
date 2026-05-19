@@ -73,9 +73,6 @@ export default function HostEventSettingsPanel({
 
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Suppression d'événement : modale de confirmation + erreur dédiée. La règle
-  // métier API est stricte (créateur connecté), on n'affiche le bouton que si
-  // l'utilisateur courant correspond au participant marqué `isCreator`.
   const navigate = useNavigate();
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -116,11 +113,8 @@ export default function HostEventSettingsPanel({
   const deleteMutation = useMutation({
     mutationFn: () => deleteEvent(slug),
     onSuccess: async () => {
-      // Nettoyage local : participant invité + hostToken stockés en session.
       removeStoredParticipant(slug);
       clearStoredHostToken(slug);
-      // Purge ferme du cache pour cette soirée (la query la plus récente
-      // pourrait sinon retomber un instant sur des données stale avant 404).
       queryClient.removeQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
       await queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
       navigate(ROUTES.myEvents);

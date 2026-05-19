@@ -4,12 +4,6 @@ namespace MoviePicker.Api.Domain;
 
 public static class WheelWinnerPicker
 {
-    /// <summary>
-    /// Tirage parmi les films (≥2). Un seul film : retour immédiat.
-    /// Si <paramref name="excludedMovieId"/> correspond à un film de la liste et qu'au moins
-    /// un autre film reste éligible, ce film est exclu du tirage (ex. relance de la roue
-    /// après un premier gagnant pour éviter de retomber dessus).
-    /// </summary>
     public static Movie Pick(
         IReadOnlyList<Movie> movies,
         Func<string, int> getNetVoteScore,

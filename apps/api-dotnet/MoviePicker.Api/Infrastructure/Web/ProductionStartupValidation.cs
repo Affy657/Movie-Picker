@@ -1,8 +1,5 @@
 namespace MoviePicker.Api.Infrastructure.Web;
 
-/// <summary>
-/// Garantit qu’on ne démarre pas en prod/staging avec une config incohérente (Mongo in-memory implicite).
-/// </summary>
 public static class ProductionStartupValidation
 {
     public static void Validate(WebApplication app)

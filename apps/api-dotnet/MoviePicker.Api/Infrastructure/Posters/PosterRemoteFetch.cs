@@ -2,7 +2,6 @@ using MoviePicker.Api.Application.Ports;
 
 namespace MoviePicker.Api.Infrastructure.Posters;
 
-/// <summary>Télécharge une affiche depuis une URL TMDB déjà validée (https image.tmdb.org/t/p/…).</summary>
 internal static class PosterRemoteFetch
 {
     private static readonly string[] AllowedContentTypes = ["image/jpeg", "image/png", "image/webp"];

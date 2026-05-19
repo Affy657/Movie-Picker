@@ -90,9 +90,7 @@ export default function NewEventScreen() {
             wheelMode: 'strictRandom',
             richSharePreview: true,
           });
-        } catch {
-          // Soirée créée mais config refusée : on continue, l'hôte peut réessayer dans la page détail.
-        }
+        } catch {}
       }
 
       await queryClient.invalidateQueries({ queryKey: ['events', 'mine'] });

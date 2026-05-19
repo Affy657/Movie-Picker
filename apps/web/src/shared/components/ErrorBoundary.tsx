@@ -12,9 +12,6 @@ type State = {
   error: Error | null;
 };
 
-/**
- * Limite les erreurs React non gérées (roadmap § 30). Réinitialisé au changement de route via `key` sur le parent.
- */
 export class ErrorBoundary extends Component<Props, State> {
   state: State = { hasError: false, error: null };
 

@@ -1,16 +1,8 @@
-/**
- * Début de soirée tel que stocké par l’API : `date` + `time` interprétés en UTC (`…Z`),
- * aligné sur la logique .NET (`MyEventListLifecycle`, polling `useEventLive`).
- */
 export function eventScheduledStartUtcMs(event: { date: string; time: string }): number | null {
   const ms = Date.parse(`${event.date}T${event.time}:00Z`);
   return Number.isNaN(ms) ? null : ms;
 }
 
-/**
- * Affiche le même instant en fuseau local du navigateur.
- * Locale par défaut : `fr-FR` (libellés de date en français).
- */
 export function formatEventStartInUserTimezone(
   date: string,
   time: string,
@@ -33,7 +25,6 @@ export function formatEventStartInUserTimezone(
   }
 }
 
-/** Fenêtre avant le début où la bannière « bientôt » est affichée (page soirée uniquement). */
 export const EVENT_START_REMINDER_WINDOW_MINUTES = 30;
 
 export type EventStartReminderState =

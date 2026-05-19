@@ -9,11 +9,6 @@ using MoviePicker.Api.Configuration;
 
 namespace MoviePicker.Api.Infrastructure.Email;
 
-/// <summary>
-/// Émetteur d'emails via l'API HTTP de Resend (https://resend.com).
-/// Pas de SDK NuGet : appel direct via <see cref="HttpClient"/> typé (configuré en DI : voir <see cref="EmailServiceCollectionExtensions"/>).
-/// Utilisé en prod / staging quand <c>EMAIL_PROVIDER=resend</c> et <c>RESEND_API_KEY</c> est positionné.
-/// </summary>
 public sealed class ResendEmailSender : IEmailSender
 {
     private static readonly TimeSpan RetryDelay = TimeSpan.FromMilliseconds(200);
@@ -33,7 +28,6 @@ public sealed class ResendEmailSender : IEmailSender
     {
         var payload = BuildPayload(message);
 
-        // 1 retry court sur 429
         var attempt = 0;
         HttpResponseMessage? res = null;
         while (true)

@@ -1,8 +1,5 @@
 namespace MoviePicker.Api.Infrastructure.Web;
 
-/// <summary>
-/// En-têtes de sécurité alignés sur les usages « API JSON » (OWASP / équivalent Helmet côté navigateur).
-/// </summary>
 public sealed class SecurityHeadersMiddleware(RequestDelegate next)
 {
     public Task InvokeAsync(HttpContext context)

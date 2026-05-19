@@ -2,9 +2,6 @@ using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Tests.Builders;
 
-/// <summary>
-/// Builder pour les tests unitaires (données d’événement cohérentes).
-/// </summary>
 public sealed class EventEntityBuilder
 {
     private string _id = "evt-1";

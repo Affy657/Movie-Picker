@@ -4,7 +4,6 @@ using Microsoft.Extensions.Options;
 
 namespace MoviePicker.Api.Infrastructure.Web;
 
-/// <summary>Configure le cookie d’auth (session serveur via <see cref="ITicketStore"/>).</summary>
 public sealed class MoviePickerCookieAuthenticationConfigurer : IConfigureNamedOptions<CookieAuthenticationOptions>
 {
     private readonly ITicketStore _ticketStore;

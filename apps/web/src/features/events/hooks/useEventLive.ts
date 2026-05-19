@@ -2,20 +2,14 @@ import { useEffect, useState } from 'react';
 import type { EventData } from '@/features/events/types';
 import { eventScheduledStartUtcMs } from '@/shared/utils/eventScheduled';
 
-/**
- * Avant le créneau date+heure affiché : moins de requêtes (invités peuvent encore arriver, films rares).
- * @see utils/eventScheduled — même interprétation UTC que l’API .NET pour l’état « à venir / en cours ».
- */
 export const EVENT_LIVE_POLL_INTERVAL_UPCOMING_MS = 12_000;
 
-/** Pendant la soirée en cours : votes, marqueurs « déjà vu », films et roue se mettent à jour plus vite. */
 export const EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS = 3_500;
 
 export type EventLiveStrategy = 'polling';
 
 export type EventLivePhase = 'finished' | 'upcoming' | 'active';
 
-/** Partiel : l’API peut omettre date/heure dans certains mocks ; la logique gère l’absence. */
 type EventLikeForSchedule = {
   isFinished?: boolean;
   date?: string;
@@ -46,10 +40,6 @@ function livePollIntervalMs(
   return EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS;
 }
 
-/**
- * Polling du détail event (React Query `refetchInterval`).
- * `nowMs` permet de figer l’horloge dans les tests.
- */
 export function getLivePollingRefetchIntervalForEventQuery(
   data: EventData | undefined,
   nowMs: number = Date.now()
@@ -57,7 +47,6 @@ export function getLivePollingRefetchIntervalForEventQuery(
   return livePollIntervalMs(data, nowMs);
 }
 
-/** Polling de la liste films (même rythme que le détail : votes et « déjà vu » dans la même payload). */
 export function getLivePollingRefetchIntervalForMoviesQuery(
   event: { isFinished?: boolean; date?: string; time?: string } | undefined,
   moviesQueryEnabled: boolean,
@@ -68,23 +57,17 @@ export function getLivePollingRefetchIntervalForMoviesQuery(
 }
 
 export type UseEventLiveOptions = {
-  /** `true` quand `useEvent` a réussi (évite des GET films trop tôt). */
   moviesQueryEnabled: boolean;
 };
 
-/**
- * Couche « live » : polling aujourd’hui ; pour SSE/WebSocket, brancher ici (`strategy` + transport)
- * sans disperser la logique dans les pages.
- */
 export function useEventLive(
   event: EventData | undefined,
   options: UseEventLiveOptions
 ): {
-  /** @internal Réservé pour SSE/WebSocket — non consommé par les pages pour le moment. */
   strategy: EventLiveStrategy;
-  /** @internal Phase dérivée (finished/upcoming/active) — consommé par les tests du hook. */
+
   livePhase: EventLivePhase;
-  /** @internal Intervalle brut en ms — consommé par les tests du hook. */
+
   pollIntervalMs: number;
   moviesRefetchInterval: number | false;
 } {

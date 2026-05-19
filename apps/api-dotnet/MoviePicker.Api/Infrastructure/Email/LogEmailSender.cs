@@ -5,11 +5,6 @@ using MoviePicker.Api.Application.UseCases.Auth;
 
 namespace MoviePicker.Api.Infrastructure.Email;
 
-/// <summary>
-/// Émetteur d'emails « pour les logs » — utilisé en Development ou si <c>RESEND_API_KEY</c> est absente.
-/// Pratique pour récupérer le lien de reset password directement dans la console <c>dotnet run</c>
-/// sans configurer de provider transactionnel. Voir aussi <see cref="ResendEmailSender"/> pour la prod.
-/// </summary>
 public sealed class LogEmailSender : IEmailSender
 {
     private static readonly Regex HrefRegex = new("href=\"(?<url>[^\"]+)\"",

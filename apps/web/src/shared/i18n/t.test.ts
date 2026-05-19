@@ -22,8 +22,6 @@ describe('t (i18n)', () => {
     );
   });
 
-  // `as TranslationKey` est réservé aux tests pour valider le comportement runtime
-  // sur des clés invalides — ne jamais utiliser ce cast dans le code applicatif.
   it('retourne la clé brute si elle est invalide (résilience)', () => {
     const badKey = 'nonexistent.key' as Parameters<typeof t>[0];
     expect(t(badKey)).toBe('nonexistent.key');

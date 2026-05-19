@@ -41,8 +41,6 @@ describe('App (routes)', () => {
     it('route / affiche la landing publique avec les CTA d’authentification', async () => {
       server.use(authMeGuestHandler);
       renderRoutes(['/']);
-      // Timeout étendu : sous coverage V8 sur Windows le mount initial (Auth + lazy LandingPage)
-      // peut dépasser le default 1s de findBy.
       expect(
         await screen.findByRole(
           'heading',

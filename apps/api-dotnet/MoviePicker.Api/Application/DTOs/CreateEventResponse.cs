@@ -11,7 +11,6 @@ public sealed class CreateEventResponse
     public string Time { get; init; } = string.Empty;
     public string Slug { get; init; } = string.Empty;
     public string ShareUrl { get; init; } = string.Empty;
-    /// <summary>Participant créé automatiquement pour le créateur connecté.</summary>
     public ParticipantResponse? CreatorParticipant { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }

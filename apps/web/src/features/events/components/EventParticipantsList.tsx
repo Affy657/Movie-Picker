@@ -7,13 +7,13 @@ import styles from './EventParticipantsList.module.css';
 type Props = {
   participants: EventParticipantSummary[] | undefined;
   currentParticipantId: string | null | undefined;
-  /** Capacité maximale (hôte inclus). `null`/`undefined` = pas de limite. */
+
   maxParticipants?: number | null;
-  /** Vrai si l'utilisateur courant est l'hôte de la soirée (peut retirer un participant). */
+
   isHost?: boolean;
-  /** Identifiant en cours de retrait (désactive le bouton concerné). */
+
   pendingRemovalId?: string | null;
-  /** Callback déclenché au clic sur « Retirer » par l'hôte. */
+
   onRemoveParticipant?: (participantId: string, pseudo: string) => void;
 };
 
@@ -57,8 +57,6 @@ export default function EventParticipantsList({
           {participants.map((p) => {
             const isMe = p.id === currentParticipantId;
             const isCreator = !!p.isCreator;
-            // L'hôte peut retirer tout le monde sauf le créateur ET sauf lui-même
-            // (l'auto-retrait passe par le bouton « Quitter » dédié).
             const canHostRemove = !!isHost && !!onRemoveParticipant && !isCreator && !isMe;
             const isPending = pendingRemovalId === p.id;
 

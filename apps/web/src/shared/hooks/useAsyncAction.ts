@@ -8,10 +8,6 @@ type UseAsyncActionResult<TArgs extends unknown[], TResult> = {
   clearError: () => void;
 };
 
-/**
- * Encapsule le pattern répété : loading + error + try/catch/finally.
- * `getErrorMessage` est appelé automatiquement pour extraire un message user-friendly.
- */
 export function useAsyncAction<TArgs extends unknown[], TResult = void>(
   action: (...args: TArgs) => Promise<TResult>,
   fallbackMessage = 'Une erreur est survenue.'

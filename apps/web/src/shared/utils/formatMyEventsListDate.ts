@@ -5,9 +5,6 @@ const LOCALE_TAG: Record<LocaleCode, string> = {
   en: 'en-GB',
 };
 
-/**
- * Formate une date API `YYYY-MM-DD` pour les listes (Mes soirées, etc.).
- */
 export function formatMyEventsListDate(isoDate: string, locale: LocaleCode): string {
   const raw = isoDate.trim();
   const parts = raw.split('-').map((p) => parseInt(p, 10));

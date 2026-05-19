@@ -6,29 +6,6 @@ using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.RemoveParticipant;
 
-/// <summary>
-/// Retire un participant d'une soirée :
-/// <list type="bullet">
-/// <item>l'hôte peut retirer n'importe quel participant (sauf le créateur connecté),</item>
-/// <item>un utilisateur connecté peut s'auto-retirer si le participant lui appartient,</item>
-/// <item>un invité (sans compte lié) ne peut être retiré que par l'hôte (V1).</item>
-/// </list>
-/// Cascade : votes, marques « déjà vu » et films proposés par le participant sont supprimés.
-///
-/// <para>
-/// <b>Hôte sans compte (invité)</b> : la protection « créateur non retirable » s'appuie sur
-/// <see cref="Domain.Entities.Event.CreatorUserId"/>. Quand celui-ci est absent (hôte sans compte
-/// connecté), il n'existe pas de participant identifié comme « créateur ». L'hôte invité peut donc
-/// se retirer de la liste des participants ; il conserve son rôle d'hôte via le <c>HostToken</c>,
-/// mais ne participera plus aux votes / propositions. Comportement assumé V1 — pour une protection
-/// stricte, prévoir un champ <c>CreatorParticipantId</c> posé au premier <c>Join</c> de l'hôte.
-/// </para>
-///
-/// <para>
-/// <b>Tirage effectué</b> : la modification de la liste est gelée dès que <c>WinnerMovieId</c>
-/// est non vide, comme dans <c>DeleteMovieHandler</c> et <c>PatchEventConfigHandler</c>.
-/// </para>
-/// </summary>
 public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
 {
     private readonly IEventRepository _eventRepository;
@@ -70,9 +47,6 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         if (evt.ClosedAt.HasValue)
             throw new ConflictException("Soirée clôturée. Impossible de modifier la liste des participants.");
 
-        // Aligné avec DeleteMovieHandler / PatchEventConfigHandler : dès que la
-        // roue a été lancée, on gèle la liste des participants pour éviter de
-        // casser le film gagnant (qui pourrait être proposé par le partant).
         if (!string.IsNullOrEmpty(evt.WinnerMovieId))
             throw new ConflictException("La roue a déjà été lancée : la liste des participants ne peut plus être modifiée.");
 
@@ -93,7 +67,6 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         if (!isHost && !isSelfConnected)
             throw new ForbiddenException("Action réservée à l'hôte ou au participant lui-même.");
 
-        // Cascade ordre : films du participant (et leurs votes/seen marks) → votes restants → seen marks restants → participant.
         var movieIds = await _movieRepository.ListIdsByEventAndParticipantAsync(evt.Id, participant.Id, ct);
         foreach (var movieId in movieIds)
         {

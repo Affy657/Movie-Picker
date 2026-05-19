@@ -311,8 +311,6 @@ public sealed class TmdbMovieSearchTests
     [Fact]
     public async Task GetEnrichmentAsync_MalformedJson_ReturnsNullInsteadOfThrowing()
     {
-        // Défense contre des parsings TMDB inattendus (InvalidOperationException / JsonException) :
-        // on doit dégrader silencieusement pour ne pas casser la liste des films d'une soirée.
         var options = Options.Create(new MoviePickerOptions { TmdbApiKey = "key", TmdbEnrichmentCacheHours = 1 });
         var mockHandler = new Mock<HttpMessageHandler>();
         mockHandler.Protected()

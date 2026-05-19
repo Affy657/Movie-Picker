@@ -17,15 +17,14 @@ import WatchProviderChips from '@/features/movies/components/WatchProviderChips'
 import TmdbAttribution from '@/features/movies/components/TmdbAttribution';
 import styles from './AddMovieForm.module.css';
 
-/** Délai après la dernière frappe avant d’appeler l’API (évite une requête par touche). */
 const SEARCH_DEBOUNCE_MS = 350;
-/** Longueur minimale du terme (hors espaces) avant recherche — TMDB est peu utile en dessous. */
+
 const SEARCH_MIN_CHARS = 2;
 
 interface AddMovieFormProps {
   slug: string;
   participantId: string;
-  /** Pour l’indication « déjà vu par d’autres » sur une fiche déjà proposée. */
+
   participantPseudo?: string;
   existingMovies?: MovieData[];
   onAdded: () => void;
@@ -52,11 +51,11 @@ export default function AddMovieForm({
   const [searching, setSearching] = useState(false);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  /** N’exécute l’effet de recherche que si le trim change (évite re-fetch sur espaces en fin seuls). */
+
   const trimmedForSearch = useMemo(() => query.trim(), [query]);
-  /** Dernier terme pour lequel une réponse valide a été appliquée (évite résultats obsolètes). */
+
   const lastFulfilledTermRef = useRef<string | null>(null);
-  /** Terme dont la dernière réponse était une liste vide (message « aucun résultat »). */
+
   const [emptyResultForTerm, setEmptyResultForTerm] = useState<string | null>(null);
   const [a11ySearchStatus, setA11ySearchStatus] = useState('');
   const abortRef = useRef<AbortController | null>(null);
@@ -134,14 +133,12 @@ export default function AddMovieForm({
     [tmdbLanguage, t, slug]
   );
 
-  /** Recherche immédiate (bouton, Entrée) : mêmes règles que la recherche automatique. */
   const search = useCallback(() => {
     if (trimmedForSearch.length < SEARCH_MIN_CHARS) return;
     clearDebounceTimer();
     void executeSearch(trimmedForSearch);
   }, [trimmedForSearch, executeSearch, clearDebounceTimer]);
 
-  /** Pendant la saisie : debounce puis recherche si assez de caractères. */
   useEffect(() => {
     const trimmed = trimmedForSearch;
 
@@ -299,9 +296,7 @@ export default function AddMovieForm({
                       <span className={styles.resultTitle}>
                         {r.title}
                         {r.mediaType === 'tv' && (
-                          <span className={styles.mediaTypeBadge}>
-                            {t('movies.list.tvBadge')}
-                          </span>
+                          <span className={styles.mediaTypeBadge}>{t('movies.list.tvBadge')}</span>
                         )}
                       </span>
                       <div className={styles.resultMeta}>

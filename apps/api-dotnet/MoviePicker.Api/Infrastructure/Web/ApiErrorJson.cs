@@ -2,7 +2,6 @@ using System.Text.Json;
 
 namespace MoviePicker.Api.Infrastructure.Web;
 
-/// <summary>Sérialisation JSON des erreurs hors pipeline MVC (rate limit, status code pages).</summary>
 public static class ApiErrorJson
 {
     private static readonly JsonSerializerOptions Options = new()

@@ -1,4 +1,3 @@
-/** Offre VOD/streaming TMDB (région configurée côté API, ex. FR). */
 export interface WatchProviderOffer {
   providerId: number;
   name: string;
@@ -11,12 +10,7 @@ export type MovieMediaType = 'movie' | 'tv';
 export interface MovieData {
   id: string;
   eventId: string;
-  /**
-   * L'API renvoie un `string` (ID brut) lorsque le film est peuplé via le endpoint movies,
-   * mais un objet `{ id, pseudo }` lorsque le participant est « populated » dans certaines
-   * réponses legacy. Utiliser `getParticipantId()` (`@/shared/utils/movieParticipant`) pour
-   * extraire l'ID de manière sûre.
-   */
+
   participantId: string | { id: string; pseudo: string };
   tmdbId: number;
   mediaType?: MovieMediaType;
@@ -27,19 +21,16 @@ export interface MovieData {
   score: number;
   up: number;
   down: number;
-  /**
-   * Vote du participant courant pour ce film (1 = like, -1 = dislike). `null` si le
-   * participant n'a pas voté ou si l'appel a été fait en lecture anonyme (sans `participantId`).
-   */
+
   myVote?: 1 | -1 | null;
   voteAverage?: number | null;
   watchProviders?: WatchProviderOffer[];
   tmdbWatchPageUrl?: string | null;
-  /** Durée du film en minutes (TMDB) — formatée côté UI en « 1h10 ». */
+
   runtimeMinutes?: number | null;
-  /** Nombre de participants ayant marqué « déjà vu ». */
+
   seenCount?: number;
-  /** Pseudos (ordre stable, tronqué côté API) des participants ayant marqué « déjà vu ». */
+
   seenByPseudos?: string[];
 }
 

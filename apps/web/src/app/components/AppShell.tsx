@@ -22,10 +22,6 @@ type NavItemDef = {
 
 type NavItemSpec = Omit<NavItemDef, 'label'> & { labelKey: TranslationKey };
 
-/**
- * Nav réservée aux utilisateurs connectés. La home redirigeant vers `/my-events`
- * dès qu'on est authentifié, on n'expose pas d'onglet « Accueil » dans la nav.
- */
 const AUTHENTICATED_NAV_ITEMS: ReadonlyArray<NavItemSpec> = [
   { to: ROUTES.myEvents, labelKey: 'nav.myEvents', Icon: CalendarDays },
   { to: ROUTES.account, labelKey: 'nav.account', Icon: Settings },

@@ -69,14 +69,12 @@ public sealed class DeleteEventEndpointTests : IClassFixture<MoviePickerApplicat
     {
         var (creator, evt) = await CreateEventAsync("Créateur");
 
-        // Un autre compte rejoint la soirée pour valider la cascade participants.
         var guest = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Invité");
         var join = await guest.PostAsJsonAsync(
             $"/api/v1/events/{evt.Slug}/join",
             new { pseudo = "Bob" });
         Assert.Equal(HttpStatusCode.Created, join.StatusCode);
 
-        // Sanity check : avant suppression, l'event est trouvable.
         var before = await creator.GetAsync($"/api/v1/events/slug/{evt.Slug}");
         Assert.Equal(HttpStatusCode.OK, before.StatusCode);
 
@@ -85,14 +83,11 @@ public sealed class DeleteEventEndpointTests : IClassFixture<MoviePickerApplicat
         var body = await del.Content.ReadFromJsonAsync<DeleteEventResponse>(JsonOptions);
         Assert.NotNull(body);
         Assert.Equal(evt.Slug, body!.Slug);
-        // Au moins l'hôte + l'invité ont été supprimés en cascade.
         Assert.True(body.RemovedParticipants >= 2);
 
-        // Après suppression : l'event n'existe plus.
         var after = await creator.GetAsync($"/api/v1/events/slug/{evt.Slug}");
         Assert.Equal(HttpStatusCode.NotFound, after.StatusCode);
 
-        // Et la liste « mes soirées » du créateur ne le contient plus.
         var mine = await creator.GetAsync("/api/v1/events/mine");
         Assert.Equal(HttpStatusCode.OK, mine.StatusCode);
         var list = await mine.Content.ReadFromJsonAsync<MyEventsListResponse>(JsonOptions);
@@ -100,21 +95,12 @@ public sealed class DeleteEventEndpointTests : IClassFixture<MoviePickerApplicat
         Assert.DoesNotContain(list!.Events, e => e.Slug == evt.Slug);
     }
 
-    /// <summary>
-    /// Contrat produit : la suppression reste autorisée même quand la roue a
-    /// déjà été tirée (`WinnerMovieId` peuplé). Plus permissif que `PatchConfig`
-    /// ou que le retrait de participants — l'hôte conserve toujours le droit
-    /// de purger sa soirée. Verrouille cette règle face à de futures
-    /// régressions accidentelles (ex. ajout d'un guard « locked »).
-    /// </summary>
     [Fact]
     public async Task Delete_AsCreator_AfterWheel_StillReturns200()
     {
         var (creator, evt) = await CreateEventAsync("Créateur");
         var slug = evt.Slug;
 
-        // L'hôte rejoint comme participant pour pouvoir proposer un film
-        // (la roue exige >= 1 film).
         var join = await creator.PostAsJsonAsync(
             $"/api/v1/events/{slug}/join",
             new { pseudo = "Hôte" });
@@ -137,8 +123,6 @@ public sealed class DeleteEventEndpointTests : IClassFixture<MoviePickerApplicat
             });
         add.EnsureSuccessStatusCode();
 
-        // Tirage : le film devient gagnant, l'event n'est plus modifiable
-        // (`PatchConfig` renverrait 409) — on vérifie quand même la suppression.
         var wheel = await creator.PostAsync($"/api/v1/events/{slug}/wheel", null);
         wheel.EnsureSuccessStatusCode();
 
@@ -147,7 +131,6 @@ public sealed class DeleteEventEndpointTests : IClassFixture<MoviePickerApplicat
         var body = await del.Content.ReadFromJsonAsync<DeleteEventResponse>(JsonOptions);
         Assert.NotNull(body);
         Assert.Equal(slug, body!.Slug);
-        // Le film proposé doit avoir été supprimé en cascade.
         Assert.True(body.RemovedMovies >= 1);
 
         var after = await creator.GetAsync($"/api/v1/events/slug/{slug}");

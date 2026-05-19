@@ -14,7 +14,7 @@ const STORAGE_KEY = 'moviepicker-locale';
 type LocaleContextValue = {
   locale: LocaleCode;
   setLocale: (code: LocaleCode) => void;
-  /** TMDB language tag derived from the current locale (e.g. "fr-FR", "en-US"). */
+
   tmdbLanguage: string;
 };
 
@@ -37,18 +37,14 @@ function readStoredLocale(): LocaleCode {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored != null && isLocaleCode(stored)) return stored;
-  } catch {
-    /* ignore */
-  }
+  } catch {}
   return detectBrowserLocale();
 }
 
 function persistLocale(code: LocaleCode): void {
   try {
     localStorage.setItem(STORAGE_KEY, code);
-  } catch {
-    /* ignore */
-  }
+  } catch {}
 }
 
 export function LocaleProvider({ children }: { children: ReactNode }) {

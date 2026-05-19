@@ -11,7 +11,6 @@ import { ApiError } from '@/shared/api/apiError';
 
 const PASSWORD_MIN_LENGTH = 8;
 
-/** Détecte token reset invalide/expiré à partir du message API (réponse 400 JSON `error`). */
 function isExpiredOrInvalidResetTokenMessage(message: string): boolean {
   const m = message.toLowerCase();
   return m.includes('token invalide') || m.includes('expir');

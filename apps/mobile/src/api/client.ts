@@ -58,9 +58,7 @@ async function parseError(response: Response): Promise<ApiError> {
   let payload: ApiErrorPayload | null = null;
   try {
     payload = (await response.json()) as ApiErrorPayload;
-  } catch {
-    /* no JSON body — fall through */
-  }
+  } catch {}
   const message = payload?.detail ?? payload?.title ?? `HTTP ${response.status}`;
   return new ApiError(response.status, message, payload);
 }

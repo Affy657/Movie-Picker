@@ -21,24 +21,16 @@ public sealed class MovieWithScoreResponse
     public int Up { get; init; }
     public int Down { get; init; }
 
-    /// <summary>
-    /// Vote du participant courant pour ce film (1 = like, -1 = dislike). <see langword="null"/>
-    /// si le participant n'a pas voté ou si le client n'a pas fourni le query <c>participantId</c>.
-    /// </summary>
     public int? MyVote { get; init; }
 
-    /// <summary>Nombre de participants ayant marqué le film comme « déjà vu » (neutre dans la pondération de la roue).</summary>
     public int SeenCount { get; init; }
 
-    /// <summary>Pseudos des participants ayant marqué « déjà vu » (taille plafonnée côté API).</summary>
     public IReadOnlyList<string> SeenByPseudos { get; init; } = Array.Empty<string>();
 
-    /// <summary>Note moyenne TMDB (indicatif, V1 §7).</summary>
     public double? VoteAverage { get; init; }
     public IReadOnlyList<WatchProviderOfferResponse> WatchProviders { get; init; } =
         Array.Empty<WatchProviderOfferResponse>();
     public string? TmdbWatchPageUrl { get; init; }
 
-    /// <summary>Durée du film en minutes (TMDB) — affichée comme « 1h10 » côté front.</summary>
     public int? RuntimeMinutes { get; init; }
 }

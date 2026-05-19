@@ -16,8 +16,6 @@ import {
   getStoredHostToken,
 } from '@/features/events/storage';
 
-// jsdom n'implémente pas <dialog>.showModal/close — stub minimal pour
-// ConfirmDialog (rendu inconditionnellement par le panel).
 beforeAll(() => {
   if (!HTMLDialogElement.prototype.showModal) {
     HTMLDialogElement.prototype.showModal = function () {
@@ -199,7 +197,6 @@ describe('HostEventSettingsPanel', () => {
     const myPid = 'p-self';
 
     function eventAsConnectedCreator(): EventData {
-      // L'utilisateur courant est lié à un participant marqué `isCreator: true`.
       return {
         ...baseEvent,
         myParticipant: { id: myPid, pseudo: 'Hôte' },
@@ -250,7 +247,6 @@ describe('HostEventSettingsPanel', () => {
         })
       );
 
-      // Données locales pour vérifier le nettoyage post-suppression.
       setStoredParticipant(slug, myPid, 'Hôte');
       setStoredHostToken(slug, 'ht-1');
 
@@ -260,7 +256,6 @@ describe('HostEventSettingsPanel', () => {
 
       await user.click(screen.getByText('Paramètres de la soirée'));
       await user.click(screen.getByTestId('delete-event-button'));
-      // La modale s'ouvre puis on confirme.
       await user.click(await screen.findByTestId('delete-event-confirm-dialog-confirm'));
 
       await waitFor(() => expect(deleteCalled).toBe(true));
@@ -290,7 +285,6 @@ describe('HostEventSettingsPanel', () => {
       await user.click(screen.getByTestId('delete-event-button'));
       await user.click(await screen.findByTestId('delete-event-confirm-dialog-cancel'));
 
-      // Petite pause asynchrone pour s'assurer qu'aucune mutation n'a démarré.
       await new Promise((r) => setTimeout(r, 30));
       expect(deleteCalled).toBe(false);
     });
@@ -299,8 +293,6 @@ describe('HostEventSettingsPanel', () => {
       const user = userEvent.setup();
       server.use(
         http.delete(`${TEST_API_V1}/events/${slug}`, () =>
-          // Forme alignée avec `ApiErrorResponse` côté API (champ `error` lu par
-          // `fetchApi` pour produire le message utilisateur).
           HttpResponse.json(
             { error: 'Seul le créateur peut supprimer la soirée.', code: 403 },
             { status: 403 }
@@ -315,8 +307,6 @@ describe('HostEventSettingsPanel', () => {
       await user.click(screen.getByTestId('delete-event-button'));
       await user.click(await screen.findByTestId('delete-event-confirm-dialog-confirm'));
 
-      // Le composant doit afficher le message métier renvoyé par l'API
-      // (propagé via `getErrorMessage(e)` depuis `ApiError.message`) sans naviguer.
       await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/seul le créateur/i));
       expect(screen.queryByTestId('route-my-events')).not.toBeInTheDocument();
     });

@@ -46,7 +46,7 @@ interface MovieCardProps {
   refresh: () => void;
   onActionError: (message: string) => void;
   t: Translate;
-  /** Charge l'affiche en priorité (premières cards above the fold). */
+
   eager?: boolean;
 }
 

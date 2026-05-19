@@ -1,9 +1,5 @@
 namespace MoviePicker.Api.Infrastructure;
 
-/// <summary>
-/// Charge un fichier .env (lignes KEY=VALUE) dans l'environnement, pour le run local sans exporter les variables à la main.
-/// Cherche .env en remontant depuis le répertoire courant (monorepo : .env à la racine).
-/// </summary>
 public static class EnvLoader
 {
     private const int MaxParentLevels = 8;

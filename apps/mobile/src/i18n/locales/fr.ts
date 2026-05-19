@@ -1,13 +1,3 @@
-/**
- * Locale française — source unique pour les chaînes UI.
- *
- * Convention V1 : tout nouvel écran utilise `t('section.clé')` au lieu de chaînes en dur.
- * Les écrans existants seront migrés progressivement ; les clés ci-dessous couvrent
- * les chaînes les plus partagées pour faciliter l'adoption.
- *
- * Organisation : une section par domaine fonctionnel, `common` pour le transversal.
- * Les clés dynamiques utilisent la syntaxe `{{variable}}` (compatible i18next pour V2).
- */
 export const fr = {
   common: {
     appName: 'Movie Picker',
@@ -288,7 +278,7 @@ export const fr = {
     },
     wheel: {
       title: 'Roue',
-      /** Titre quand l’utilisateur ne peut pas lancer la roue (invité) mais voit le résultat. */
+
       viewerTitle: 'R\u00e9sultat du tirage',
       emptyPlaceholder: 'Aucun film. Proposez au moins un film pour lancer la roue.',
       winnerLabel: 'Film gagnant',
@@ -618,5 +608,4 @@ type DeepStringify<T> = {
   [K in keyof T]: T[K] extends string ? string : DeepStringify<T[K]>;
 };
 
-/** Structure de locale avec valeurs `string` — permet aux locales secondaires de compiler. */
 export type Locale = DeepStringify<typeof fr>;

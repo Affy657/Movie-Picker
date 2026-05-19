@@ -1,9 +1,5 @@
 import type { Locale } from './fr';
 
-/**
- * English locale — mirrors the structure of `fr.ts` exactly.
- * Every key present in `fr` must exist here with the same nesting.
- */
 export const en: Locale = {
   common: {
     appName: 'Movie Picker',
@@ -118,7 +114,7 @@ export const en: Locale = {
       changePasswordNewHint: 'At least 8 characters, including a letter and a number.',
       changePasswordConfirmLabel: 'Confirm new password',
       changePasswordSubmit: 'Change password',
-      changePasswordSubmitting: 'Updating\u2026', // NOSONAR (S2068: i18n key, no credential)
+      changePasswordSubmitting: 'Updating\u2026',
       changePasswordSuccess: 'Password updated. Redirecting to sign-in…',
       changePasswordFallbackError: 'Update failed.',
       changePasswordMustMatch: 'Both passwords must match.',

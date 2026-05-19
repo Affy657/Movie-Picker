@@ -2,7 +2,6 @@ using MoviePicker.Api.Application.Ports;
 
 namespace MoviePicker.Api.Infrastructure.Posters;
 
-/// <summary>Cache désactivé : URLs TMDB inchangées ; GET affiche → 404.</summary>
 public sealed class DisabledPosterImageStore : IPosterImageStore
 {
     public string? ToPublicPosterPath(string? posterUrl) => posterUrl;

@@ -65,9 +65,7 @@ export default function CreateEvent() {
           richSharePreview: true,
           allowSeries: DEFAULT_EVENT_CONFIG.allowSeries ?? false,
         });
-      } catch {
-        // Soirée créée mais config refusée : on continue, l'hôte pourra réessayer dans la page détail.
-      }
+      } catch {}
     }
 
     void queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });

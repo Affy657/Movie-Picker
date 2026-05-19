@@ -57,7 +57,6 @@ public class EmailServiceCollectionExtensionsTests
             new Dictionary<string, string?>
             {
                 ["EMAIL_PROVIDER"] = "resend"
-                // RESEND_API_KEY absente
             }).Build();
         var env = new TestHostEnv { EnvironmentName = Environments.Development };
         services.AddEmailSender(cfg, env);

@@ -4,9 +4,6 @@ using Microsoft.Extensions.Hosting;
 
 namespace MoviePicker.Api.Infrastructure.Web;
 
-/// <summary>
-/// CORS : en développement, origines locales autorisées ; en production/staging, liste <c>ALLOWED_ORIGINS</c> (virgules).
-/// </summary>
 internal static class CorsPolicyBuilderExtensions
 {
     internal static void ConfigureMoviePickerCors(

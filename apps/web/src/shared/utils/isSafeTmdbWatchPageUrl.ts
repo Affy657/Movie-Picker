@@ -1,4 +1,3 @@
-/** Autorise uniquement les pages TMDB (HTTPS), ex. `/movie/{id}/watch`. */
 export function isSafeTmdbWatchPageUrl(url: string | null | undefined): url is string {
   if (url == null || typeof url !== 'string') return false;
   const t = url.trim();

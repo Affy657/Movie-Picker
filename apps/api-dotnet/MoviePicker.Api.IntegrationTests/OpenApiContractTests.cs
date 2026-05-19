@@ -4,10 +4,6 @@ using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
 
-/// <summary>
-/// Contrat minimal : le document OpenAPI expose les chemins attendus (évite les régressions de surface API).
-/// Inventaire des routes V1 à couvrir : docs/02-architecture-api-dotnet.md § « Surface API prévue en V1 ».
-/// </summary>
 public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationFactory>
 {
     private readonly HttpClient _client;
@@ -42,13 +38,11 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
         Assert.True(paths.TryGetProperty("/api/v1/events/{idOrSlug}/config", out var evCfg)
                     && evCfg.TryGetProperty("get", out _)
                     && evCfg.TryGetProperty("patch", out _));
-        // Suppression d'une soirée par son créateur connecté (cascade côté handler).
         Assert.True(paths.TryGetProperty("/api/v1/events/{idOrSlug}", out var evRoot)
                     && evRoot.TryGetProperty("delete", out _));
         Assert.True(paths.TryGetProperty("/api/v1/events/{idOrSlug}/movies/{movieId}/seen", out var seen)
                     && seen.TryGetProperty("post", out _)
                     && seen.TryGetProperty("delete", out _));
-        // Vote : POST (up/down) + DELETE (toggle au reclic, retire mon vote pour ce film).
         Assert.True(paths.TryGetProperty("/api/v1/events/{idOrSlug}/movies/{movieId}/vote", out var voteOps)
                     && voteOps.TryGetProperty("post", out _)
                     && voteOps.TryGetProperty("delete", out _));
@@ -58,7 +52,6 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
         var schemas = doc.RootElement.GetProperty("components").GetProperty("schemas");
         Assert.True(schemas.TryGetProperty("MovieSearchListResponse", out _));
         Assert.True(schemas.TryGetProperty("MovieSearchItemResponse", out var searchItem));
-        // Recherche TMDB : la durée est exposée pour afficher « 2024 · TMDB 7.5/10 · 1h52 ».
         var searchItemProps = searchItem.GetProperty("properties");
         Assert.True(searchItemProps.TryGetProperty("runtimeMinutes", out var searchRuntimeProp));
         Assert.Equal("integer", searchRuntimeProp.GetProperty("type").GetString());
@@ -70,32 +63,25 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
         Assert.True(evConfig.GetProperty("properties").TryGetProperty("allowSeries", out _));
         Assert.True(schemas.TryGetProperty("MovieMediaType", out _));
 
-        // Liste des films d'une soirée : expose la durée pour l'affichage « année · note · 1h10 ».
         Assert.True(schemas.TryGetProperty("MovieWithScoreResponse", out var movieWithScore));
         var movieProps = movieWithScore.GetProperty("properties");
         Assert.True(movieProps.TryGetProperty("runtimeMinutes", out var runtimeProp));
-        // integer nullable (camelCase via JsonNamingPolicy.CamelCase).
         Assert.Equal("integer", runtimeProp.GetProperty("type").GetString());
 
-        // Marqueur « déjà vu » : compteur + liste des pseudos exposés pour le front.
         Assert.True(movieProps.TryGetProperty("seenCount", out var seenCountProp));
         Assert.Equal("integer", seenCountProp.GetProperty("type").GetString());
         Assert.True(movieProps.TryGetProperty("seenByPseudos", out var seenByPseudosProp));
         Assert.Equal("array", seenByPseudosProp.GetProperty("type").GetString());
 
-        // myVote : entier nullable (1 / -1) renseigné quand l'appel passe ?participantId=...
         Assert.True(movieProps.TryGetProperty("myVote", out var myVoteProp));
         Assert.Equal("integer", myVoteProp.GetProperty("type").GetString());
 
-        // Schéma DTOs SeenMark (corps de requête + réponse).
         Assert.True(schemas.TryGetProperty("MarkAsSeenRequest", out _));
         Assert.True(schemas.TryGetProperty("UnmarkAsSeenRequest", out _));
         Assert.True(schemas.TryGetProperty("SeenMarkResponse", out _));
 
-        // Réponse de suppression d'événement : compteurs cascade exposés au client.
         Assert.True(schemas.TryGetProperty("DeleteEventResponse", out _));
 
-        // Régression : les anciens schémas « Reaction » ne doivent plus être exposés.
         Assert.False(schemas.TryGetProperty("ReactionRequest", out _));
         Assert.False(schemas.TryGetProperty("MovieReactionAggregateResponse", out _));
     }

@@ -1,10 +1,3 @@
-/**
- * Mapping layer between raw MongoDB-style API responses (_id)
- * and clean domain types (id).
- *
- * This isolates the front from the persistence format.
- */
-
 import type { EventData, EventParticipantSummary } from '@/shared/types/event';
 import type { MovieData, ParticipantData } from '@/shared/types/movie';
 

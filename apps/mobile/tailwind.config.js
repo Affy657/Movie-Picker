@@ -1,12 +1,10 @@
-/** @type {import('tailwindcss').Config} */
+
 module.exports = {
   content: ['./app/**/*.{ts,tsx}', './src/**/*.{ts,tsx}'],
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
       colors: {
-        // Light values — dark variants applied via dark: variant in components,
-        // or via the JS palette returned by `useTheme().palette` for dynamic styles.
         bg: '#f4f6fa',
         surface: '#ffffff',
         text: { DEFAULT: '#0f172a', muted: '#475569', meta: '#64748b' },

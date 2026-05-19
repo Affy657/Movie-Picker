@@ -7,7 +7,6 @@ import type { TranslationKey } from '@/shared/i18n/t';
 import { isSafeTmdbWatchPageUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
 import styles from './WatchProviderChips.module.css';
 
-/** TMDB peut renvoyer une URL complète ou un chemin `/t/p/...`. */
 function toAbsoluteTmdbLogoUrl(raw: string): string {
   const t = raw.trim();
   if (!t) return t;
@@ -28,7 +27,6 @@ function isSafeTmdbLogoUrl(url: string | null): url is string {
   }
 }
 
-/** Taille TMDB adaptée au cadre d’affichage (logos agrandis en liste / cartes). */
 function tmdbLogoSrcForUi(url: string): string {
   const abs = toAbsoluteTmdbLogoUrl(url);
   try {
@@ -60,18 +58,11 @@ function monetizationLabel(
 interface WatchProviderChipsProps {
   providers: WatchProviderOffer[];
   className?: string;
-  /** Affichage plus compact (ex. résultats de recherche). */
+
   variant?: 'default' | 'compact';
-  /**
-   * Page TMDB « où regarder » pour ce film (`/movie/{id}/watch`).
-   * Si définie et valide (HTTPS + themoviedb.org), chaque puce ouvre cette page dans un nouvel onglet.
-   * Les parents peuvent pré-filtrer avec `isSafeTmdbWatchPageUrl` ; le composant re-valide en défense en profondeur.
-   */
+
   watchPageUrl?: string | null;
-  /**
-   * Limite le nombre de puces visibles avant d'afficher un chip « +N » dépliable.
-   * Sans valeur, toutes les puces sont affichées.
-   */
+
   maxVisible?: number;
 }
 

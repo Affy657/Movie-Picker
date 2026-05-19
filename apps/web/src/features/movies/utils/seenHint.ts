@@ -2,12 +2,6 @@ import type { TranslationKey } from '@/shared/i18n';
 
 type Translate = (key: TranslationKey, vars?: Record<string, string | number>) => string;
 
-/**
- * Construit un indice « déjà vu par X » à partir de la liste de pseudos ayant marqué le film,
- * en excluant le participant courant. Retourne `null` si personne d'autre n'a marqué.
- *
- * Neutre dans la pondération de la roue — c'est un simple indicateur social.
- */
 export function othersAlreadySeenHint(
   seenByPseudos: readonly string[] | undefined,
   currentPseudo: string | null | undefined,

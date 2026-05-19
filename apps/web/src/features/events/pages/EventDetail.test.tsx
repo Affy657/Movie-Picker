@@ -16,8 +16,6 @@ import { http, HttpResponse } from 'msw';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { setStoredParticipant, getStoredParticipant } from '@/features/events/storage';
 
-// jsdom n'implémente pas l'API native de <dialog> (utilisée par ConfirmDialog).
-// On stubbe a minima pour que showModal()/close() respectent open + dispatchent l'event close.
 beforeAll(() => {
   if (!HTMLDialogElement.prototype.showModal) {
     HTMLDialogElement.prototype.showModal = function showModal() {
@@ -38,7 +36,6 @@ function renderEventDetail(initialPath: string) {
       <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
           <Route path="/e/:slug" element={<EventDetail />} />
-          {/* Routes "spy" pour vérifier la navigation après un quitter. */}
           <Route path="/my-events" element={<div data-testid="route-my-events" />} />
           <Route path="/" element={<div data-testid="route-home" />} />
         </Routes>
@@ -151,12 +148,6 @@ describe('EventDetail (MSW)', () => {
   });
 
   describe('flux retrait participant (hôte)', () => {
-    /**
-     * Pré-condition réaliste : l'hôte a aussi rejoint la soirée comme participant
-     * (`p-msw-host`, distinct des autres). Sinon `showContent` reste `false` et la
-     * liste des participants n'est pas rendue (l'hôte ne « voit » la soirée que s'il
-     * est lui-même participant ou que la soirée est terminée).
-     */
     function setupHostJoined() {
       setStoredParticipant(slug, 'p-msw-host', 'Hôte');
     }
@@ -184,11 +175,9 @@ describe('EventDetail (MSW)', () => {
         expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument()
       );
 
-      // Le bouton « retirer » doit apparaître à côté d'Alice (hôte, non créateur, non self).
       const removeButton = await screen.findByTestId('remove-participant-p-msw-alice');
       await user.click(removeButton);
 
-      // Modale ouverte → confirmer.
       const dialog = await screen.findByTestId('confirm-dialog');
       expect(dialog).toHaveAttribute('open');
       await user.click(screen.getByTestId('confirm-dialog-confirm'));
@@ -197,7 +186,6 @@ describe('EventDetail (MSW)', () => {
       expect(deleteUrl).toContain('/participants/p-msw-alice');
       expect(deleteUrl).toContain('host=host-token');
 
-      // Message de succès auto-dismiss visible.
       await waitFor(() =>
         expect(screen.getByTestId('participants-action-success')).toBeInTheDocument()
       );
@@ -222,7 +210,6 @@ describe('EventDetail (MSW)', () => {
       await screen.findByTestId('confirm-dialog');
       await user.click(screen.getByTestId('confirm-dialog-cancel'));
 
-      // Pas d'attente nécessaire : le clic Annuler est synchrone.
       expect(deleteCalled).toBe(false);
     });
 
@@ -254,8 +241,6 @@ describe('EventDetail (MSW)', () => {
   describe('flux quitter (participant)', () => {
     it('le créateur ne voit pas le bouton « Quitter » (masqué côté UI)', async () => {
       const myPid = 'p-msw-host';
-      // L'hôte est aussi participant : on simule à la fois la session locale
-      // et le drapeau `isCreator=true` sur sa fiche participant côté API.
       setStoredParticipant(slug, myPid, 'Hôte');
       server.use(
         http.get(`${TEST_API_V1}/events/slug/${slug}`, () =>
@@ -291,15 +276,12 @@ describe('EventDetail (MSW)', () => {
         expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument()
       );
 
-      // La liste des participants est affichée…
       expect(screen.getByText('Alice')).toBeInTheDocument();
-      // …mais le bouton « Quitter la soirée » est absent pour le créateur.
       expect(screen.queryByTestId('leave-event-button')).not.toBeInTheDocument();
     });
 
     it('invité (sans compte) : confirmation → nettoyage local + navigation vers /', async () => {
       const user = userEvent.setup();
-      // Simule un invité ayant rejoint la soirée précédemment (sessionStorage).
       setStoredParticipant(slug, 'p-msw-alice', 'Alice');
 
       let deleteCalled = false;
@@ -324,25 +306,20 @@ describe('EventDetail (MSW)', () => {
 
       await waitFor(() => expect(getStoredParticipant(slug)).toBeNull());
       expect(deleteCalled).toBe(false);
-      // Navigation : le participant invité retourne à l'accueil.
       await waitFor(() => expect(screen.getByTestId('route-home')).toBeInTheDocument());
     });
 
     it('utilisateur connecté : confirmation → DELETE appelé + navigation vers /my-events', async () => {
       const user = userEvent.setup();
       const myPid = 'p-msw-self';
-      // L'utilisateur connecté a sa propre entrée participant déjà stockée localement.
       setStoredParticipant(slug, myPid, 'Moi');
 
       let deleteCalled = false;
       let deleteUrl = '';
       server.use(
-        // Override : auth/me renvoie un user connecté.
         http.get(`${TEST_API_V1}/auth/me`, () =>
           HttpResponse.json({ id: 'user-1', email: 'me@example.com', displayName: 'Moi' })
         ),
-        // Override event detail pour inclure `myParticipant` (= self) afin de
-        // satisfaire la condition `isConnectedSelf` dans EventDetail.
         http.get(`${TEST_API_V1}/events/slug/${slug}`, () =>
           HttpResponse.json({
             _id: 'evt-msw',
@@ -393,22 +370,14 @@ describe('EventDetail (MSW)', () => {
 
       await waitFor(() => expect(deleteCalled).toBe(true));
       expect(deleteUrl).toContain(`/participants/${myPid}`);
-      // Nettoyage local effectué.
       await waitFor(() => expect(getStoredParticipant(slug)).toBeNull());
-      // Navigation : redirige vers la liste « Mes soirées ».
       await waitFor(() => expect(screen.getByTestId('route-my-events')).toBeInTheDocument());
     });
   });
 
   describe('enchaînement de modales (instance unique)', () => {
-    /**
-     * Garantit qu'une seule instance de ConfirmDialog est utilisée (props
-     * dérivés du `confirmState`). Les libellés doivent suivre l'action en
-     * cours sans fuite entre « retirer » et « quitter ».
-     */
     it('ouvrir retirer → annuler → ouvrir quitter : libellés cohérents', async () => {
       const user = userEvent.setup();
-      // L'hôte a aussi rejoint comme participant pour voir la liste.
       setStoredParticipant(slug, 'p-msw-host', 'Hôte');
 
       renderEventDetail(`/e/${slug}?host=host-token`);
@@ -416,22 +385,17 @@ describe('EventDetail (MSW)', () => {
         expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument()
       );
 
-      // 1. Ouvrir la modale « retirer Alice ».
       await user.click(await screen.findByTestId('remove-participant-p-msw-alice'));
       const dialog1 = await screen.findByTestId('confirm-dialog');
       expect(dialog1).toHaveAttribute('open');
-      // Libellé attendu : action « Retirer ».
       expect(screen.getByTestId('confirm-dialog-confirm')).toHaveTextContent(/retirer/i);
 
-      // 2. Annuler.
       await user.click(screen.getByTestId('confirm-dialog-cancel'));
       await waitFor(() => expect(screen.getByTestId('confirm-dialog')).not.toHaveAttribute('open'));
 
-      // 3. Ouvrir la modale « quitter » : les libellés doivent avoir basculé.
       await user.click(screen.getByTestId('leave-event-button'));
       await waitFor(() => expect(screen.getByTestId('confirm-dialog')).toHaveAttribute('open'));
       expect(screen.getByTestId('confirm-dialog-confirm')).toHaveTextContent(/quitter/i);
-      // Et plus de référence visible au mot « retirer ».
       expect(screen.queryByText(/retirer.*alice/i)).not.toBeInTheDocument();
     });
   });

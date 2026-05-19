@@ -30,10 +30,6 @@ export interface MovieSearchListResponse {
   tmdbAttributionUrl: string;
 }
 
-/**
- * Réponse unifiée : l’API peut renvoyer soit `{ items, ... }` soit un tableau legacy ;
- * le client normalise toujours vers `MovieSearchListResponse`.
- */
 export async function searchMovies(
   query: string,
   opts?: { signal?: AbortSignal; lang?: string; eventSlug?: string }
@@ -150,8 +146,6 @@ export async function clearMovieVote(
   movieId: string,
   participantId: string
 ): Promise<void> {
-  // `participantId` est passé en query string : standard HTTP plus sûr que le
-  // body sur un DELETE (certains proxies ignorent le corps des requêtes DELETE).
   const search = new URLSearchParams({ participantId });
   await fetchApi(`/events/${slug}/movies/${movieId}/vote?${search.toString()}`, {
     method: 'DELETE',

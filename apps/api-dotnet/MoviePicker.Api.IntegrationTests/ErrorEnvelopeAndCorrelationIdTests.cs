@@ -4,7 +4,6 @@ using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
 
-/// <summary>§ 29 roadmap : enveloppe JSON + en-tête X-Request-Id.</summary>
 public sealed class ErrorEnvelopeAndCorrelationIdTests : IClassFixture<MoviePickerApplicationFactory>
 {
     private readonly HttpClient _client;

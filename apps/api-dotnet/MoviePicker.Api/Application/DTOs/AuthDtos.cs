@@ -46,7 +46,6 @@ public sealed class UserProfileResponse
     public string UserId { get; init; } = string.Empty;
     public string DisplayName { get; init; } = string.Empty;
 
-    /// <summary>E-mail partiellement masqué (aperçu compte).</summary>
     public string EmailMasked { get; init; } = string.Empty;
     public UiThemePreference UiTheme { get; init; }
     public AccentColor AccentColor { get; init; }
@@ -57,11 +56,9 @@ public sealed class PatchUserProfileRequest
     [MaxLength(80)]
     public string? DisplayName { get; init; }
 
-    /// <summary>system | light | dark</summary>
     [RegularExpression("^(system|light|dark)$", ErrorMessage = "uiTheme doit être system, light ou dark.")]
     public string? UiTheme { get; init; }
 
-    /// <summary>default | blue | green | purple | pink | orange</summary>
     [RegularExpression(
         "^(default|blue|green|purple|pink|orange)$",
         ErrorMessage = "accentColor doit être default, blue, green, purple, pink ou orange.")]

@@ -70,9 +70,7 @@ export default function SettingsScreen() {
       if (profile.uiTheme && profile.uiTheme !== next) {
         applyRemotePreference(profile.uiTheme as UiThemePreference);
       }
-    } catch {
-      /* le set local reste appliqué, on retentera plus tard */
-    }
+    } catch {}
   };
 
   const applyAccent = async (next: AccentColor) => {
@@ -82,9 +80,7 @@ export default function SettingsScreen() {
       if (profile.accentColor && profile.accentColor !== next) {
         applyRemoteAccent(profile.accentColor as AccentColor);
       }
-    } catch {
-      /* idem */
-    }
+    } catch {}
   };
 
   const submitPassword = async () => {

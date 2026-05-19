@@ -3,7 +3,6 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
-/// <summary>Cache d’affiches TMDB (binaire + métadonnées). Collection <c>poster_cache</c>.</summary>
 public sealed class PosterCacheDocument
 {
     [BsonId]
@@ -19,7 +18,6 @@ public sealed class PosterCacheDocument
     [BsonElement("contentType")]
     public string? ContentType { get; set; }
 
-    /// <summary>Expiration logique (UTC) : au-delà, refetch TMDB autorisé.</summary>
     [BsonElement("expiresAtUtc")]
     public DateTime ExpiresAtUtc { get; set; }
 }

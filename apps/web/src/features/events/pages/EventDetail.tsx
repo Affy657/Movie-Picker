@@ -25,17 +25,11 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useTranslation } from '@/shared/i18n';
 
-/**
- * Etat de la modale de confirmation pour les actions destructives.
- * - `remove` : l'hôte retire un participant donné.
- * - `leave`  : le participant courant quitte la soirée.
- */
 type ConfirmState =
   | { kind: 'remove'; participantId: string; pseudo: string }
   | { kind: 'leave' }
   | null;
 
-/** Durée d'affichage du message de succès inline (ms) avant auto-dismiss. */
 const SUCCESS_AUTO_DISMISS_MS = 3500;
 
 export default function EventDetail() {
@@ -60,8 +54,6 @@ export default function EventDetail() {
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
-  // Auto-dismiss du message de succès. Le timer est nettoyé si le message change
-  // ou si le composant se démonte (ex. navigation après un « quitter »).
   useEffect(() => {
     if (!actionSuccess) return;
     const id = window.setTimeout(() => setActionSuccess(null), SUCCESS_AUTO_DISMISS_MS);
@@ -102,7 +94,6 @@ export default function EventDetail() {
           : APP_DOCUMENT_TITLE;
   useDocumentTitle(documentTitle);
 
-  // Handlers définis avant les early-returns pour respecter les règles des hooks.
   const isConnectedSelf =
     !!event?.myParticipant?.id && participant?.participantId === event.myParticipant.id;
 
@@ -169,7 +160,6 @@ export default function EventDetail() {
       return;
     }
 
-    // Invité (sans compte connecté) : nettoyage local uniquement (V1).
     removeStoredParticipant(slug);
     setParticipant(null);
     setConfirmState(null);
@@ -185,9 +175,6 @@ export default function EventDetail() {
     t,
   ]);
 
-  // Libellés de la modale dérivés de l'état courant. Mémoïsés pour éviter
-  // toute incohérence visuelle (ex. afficher des libellés « remove » alors
-  // que la modale vient d'être fermée pour un « leave »).
   const confirmDialogContent = useMemo(() => {
     if (!confirmState) return null;
     if (confirmState.kind === 'remove') {
@@ -245,9 +232,6 @@ export default function EventDetail() {
   const needsJoin = !event.isFinished && !participant;
   const showContent = event.isFinished || participant;
   const maxParticipants = event.config?.maxParticipants ?? null;
-  // Le créateur ne peut pas quitter sa propre soirée (la garde API renvoie 409
-  // si on tente quand même). On masque donc le bouton côté UI pour rester
-  // cohérent avec le badge « hôte » à côté de son pseudo.
   const myParticipantSummary =
     participant && event.participants
       ? event.participants.find((p) => p.id === participant.participantId)
@@ -255,8 +239,6 @@ export default function EventDetail() {
   const isCreatorSelf = !!myParticipantSummary?.isCreator;
   const canShowLeave = !event.isFinished && !!participant && !isCreatorSelf;
 
-  // Source autoritaire : `participantCount` retourné par l'API détail.
-  // Fallback sur `participants?.length` pour les anciens mocks/tests sans cette clé.
   const participantCount = event.participantCount ?? event.participants?.length ?? 0;
   const isFull =
     typeof maxParticipants === 'number' &&
@@ -361,11 +343,6 @@ export default function EventDetail() {
         </>
       )}
 
-      {/*
-        Une seule modale de confirmation pilotée par `confirmState` (les actions
-        retrait / quitter sont mutuellement exclusives). On évite ainsi des
-        nœuds DOM dupliqués (et le bruit côté tests / lecteurs d'écran).
-      */}
       <ConfirmDialog
         open={confirmDialogContent !== null}
         title={confirmDialogContent?.title ?? ''}

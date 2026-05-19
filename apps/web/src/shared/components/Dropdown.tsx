@@ -9,21 +9,15 @@ export type DropdownOption<V extends string> = {
 };
 
 interface DropdownProps<V extends string> {
-  /** ID exposé à `<label htmlFor>` pour la liaison accessible. */
   id?: string;
   value: V;
   options: readonly DropdownOption<V>[];
   onChange: (value: V) => void;
-  /** Pour les cas sans `<label>` externe. */
+
   ariaLabel?: string;
   className?: string;
 }
 
-/**
- * Dropdown custom : remplace `<select>` pour avoir des options entièrement
- * stylisables (impossible sur l'option native, dépendant de l'OS).
- * Pattern WAI-ARIA listbox simplifié — clavier (↑/↓/Enter/Esc) + click outside.
- */
 export default function Dropdown<V extends string>({
   id,
   value,
@@ -52,7 +46,6 @@ export default function Dropdown<V extends string>({
     if (focusButton) buttonRef.current?.focus();
   }, []);
 
-  // Click extérieur ferme le menu (compagnon du Esc clavier).
   useEffect(() => {
     if (!open) return;
     const onDocClick = (e: MouseEvent) => {
@@ -64,7 +57,6 @@ export default function Dropdown<V extends string>({
     return () => document.removeEventListener('mousedown', onDocClick);
   }, [open]);
 
-  // À l'ouverture, focus l'option active et resync l'index sur la valeur courante.
   useEffect(() => {
     if (!open) return;
     const idx = options.findIndex((o) => o.value === value);
@@ -111,7 +103,6 @@ export default function Dropdown<V extends string>({
     }
   };
 
-  // Focus l'option courante lors du déplacement clavier.
   useEffect(() => {
     if (!open) return;
     const items = listRef.current?.querySelectorAll<HTMLLIElement>('[role="option"]');

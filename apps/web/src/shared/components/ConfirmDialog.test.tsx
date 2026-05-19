@@ -4,8 +4,6 @@ import userEvent from '@testing-library/user-event';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 
-// jsdom n'implémente pas l'API native de <dialog> : on la stub a minima
-// pour pouvoir tester l'ouverture/fermeture pilotée par la prop `open`.
 beforeAll(() => {
   if (!HTMLDialogElement.prototype.showModal) {
     HTMLDialogElement.prototype.showModal = function showModal() {
@@ -90,10 +88,7 @@ describe('ConfirmDialog', () => {
       </AppTestProviders>
     );
 
-    // Confirmer désactivé pour empêcher un double envoi…
     expect(screen.getByTestId('confirm-dialog-confirm')).toBeDisabled();
-    // …mais Annuler reste utilisable pour ne pas bloquer l'utilisateur si la
-    // mutation est lente (la mutation déjà partie continue en arrière-plan).
     expect(screen.getByTestId('confirm-dialog-cancel')).not.toBeDisabled();
   });
 

@@ -189,10 +189,6 @@ export default function MyEventsPage() {
   const { user, isLoading: authLoading } = useAuth();
   const [tab, setTab] = useState<MyEventsTab>('active');
 
-  // Évite une requête superflue quand l'utilisateur connecté n'a aucun « join invité »
-  // mémorisé en session. Capturé une fois au montage : on ne suit pas dynamiquement
-  // sessionStorage (un join invité fait dans un autre onglet sera surfacé au prochain
-  // refresh). Pour les anonymes, on garde toujours la query (c'est leur unique source).
   const [hasGuestSession] = useState<boolean>(() => listStoredParticipantSlugs().length > 0);
 
   const loggedInQuery = useQuery({
@@ -222,8 +218,6 @@ export default function MyEventsPage() {
   const mergedEvents = useMemo<MyEventSummary[]>(() => {
     const fromApi = activeQuery.data?.events ?? [];
     if (!user) return fromApi;
-    // Utilisateur connecté : on ajoute les soirées rejointes en tant qu'invité (sessionStorage),
-    // dédupliquées par slug en privilégiant la version API authentifiée.
     const guestExtras = guestQuery.data?.events ?? [];
     if (guestExtras.length === 0) return fromApi;
     const knownSlugs = new Set(fromApi.map((e) => e.slug));

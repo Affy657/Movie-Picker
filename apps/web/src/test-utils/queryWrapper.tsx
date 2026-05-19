@@ -4,7 +4,6 @@ import { AuthProvider } from '@/features/auth/contexts/AuthContext';
 import { ThemeProvider } from '@/shared/contexts/ThemeContext';
 import { LocaleProvider } from '@/shared/i18n';
 
-/** QueryClient adapté aux tests (pas de retry → MSW déterministe). */
 export function createTestQueryClient() {
   return new QueryClient({
     defaultOptions: {
@@ -31,7 +30,6 @@ export function withQueryClient(element: ReactElement, client?: QueryClient) {
   return <QueryClientWrapper client={client}>{element}</QueryClientWrapper>;
 }
 
-/** React Query + thème + locale (pages qui utilisent ThemeToggle, LanguageSelector ou données serveur). */
 export function AppTestProviders({
   children,
   client,

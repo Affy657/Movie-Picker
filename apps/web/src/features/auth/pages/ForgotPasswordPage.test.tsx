@@ -85,7 +85,6 @@ describe('ForgotPasswordPage', () => {
     await waitFor(() => {
       expect(screen.getByRole('alert')).toBeInTheDocument();
     });
-    // Rester sur la page formulaire (pas le successMessage)
     expect(
       screen.queryByRole('heading', { name: /vérifie ta boîte mail/i })
     ).not.toBeInTheDocument();

@@ -94,7 +94,6 @@ public sealed class DeleteEventHandlerTests
 
         await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1"));
 
-        // Aucune cascade ne doit avoir été déclenchée si l'autorisation échoue.
         _voteRepo.Verify(r => r.DeleteByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         _seenMarkRepo.Verify(r => r.DeleteByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         _movieRepo.Verify(r => r.DeleteByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -105,8 +104,6 @@ public sealed class DeleteEventHandlerTests
     [Fact]
     public async Task HandleAsync_EventWithoutCreator_ThrowsForbidden()
     {
-        // Cas dégradé : event sans CreatorUserId (ex. seed avant migration). On
-        // refuse par défaut plutôt que d'autoriser un utilisateur arbitraire.
         _currentUser.Setup(c => c.GetUserId()).Returns("user-1");
         SetupEvent(MakeEvent(creatorUserId: null));
 
@@ -141,10 +138,7 @@ public sealed class DeleteEventHandlerTests
         Assert.Equal(5L, result.RemovedMovies);
         Assert.Equal(3L, result.RemovedParticipants);
 
-        // Ordre attendu (feuilles → racine) : votes/seen → movies → participants → event.
         var seq = new MockSequence();
-        // Note : MockSequence ne s'utilise pas en post-vérification. On valide
-        // simplement ici que toutes les étapes ont bien été appelées une fois.
         _voteRepo.Verify(r => r.DeleteByEventIdAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
         _seenMarkRepo.Verify(r => r.DeleteByEventIdAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
         _movieRepo.Verify(r => r.DeleteByEventIdAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
@@ -156,8 +150,6 @@ public sealed class DeleteEventHandlerTests
     [Fact]
     public async Task HandleAsync_CreatorUser_AllowsDeletionEvenIfClosed()
     {
-        // Contrairement à RemoveParticipant, la suppression d'event est
-        // volontairement autorisée même après clôture (souveraineté de l'hôte).
         _currentUser.Setup(c => c.GetUserId()).Returns("user-1");
         SetupEvent(MakeEvent(creatorUserId: "user-1", closedAt: DateTimeOffset.UtcNow));
 
@@ -169,7 +161,6 @@ public sealed class DeleteEventHandlerTests
     [Fact]
     public async Task HandleAsync_CreatorUser_AllowsDeletionEvenIfWheelLaunched()
     {
-        // Idem : roue tirée mais event non clos → suppression autorisée.
         _currentUser.Setup(c => c.GetUserId()).Returns("user-1");
         SetupEvent(MakeEvent(creatorUserId: "user-1", winnerMovieId: "movie-X"));
 
@@ -181,8 +172,6 @@ public sealed class DeleteEventHandlerTests
     [Fact]
     public async Task HandleAsync_FinalDeleteReturnsFalse_ThrowsNotFound()
     {
-        // Race : un autre process a supprimé l'event entre la cascade et la
-        // suppression finale. On remonte 404 au client (état déjà cohérent).
         _currentUser.Setup(c => c.GetUserId()).Returns("user-1");
         SetupEvent(MakeEvent(creatorUserId: "user-1"));
         _eventRepo

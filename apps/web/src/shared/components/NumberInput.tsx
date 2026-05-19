@@ -43,7 +43,6 @@ export default function NumberInput({
     onChange(String(next));
   };
 
-  // On autorise le décrément même quand numVal === min : le résultat sera '' (illimité).
   const canDecrement = !disabled && numVal !== null;
   const canIncrement = !disabled && (max === undefined || (numVal ?? 0) < max);
 

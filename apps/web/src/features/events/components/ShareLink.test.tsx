@@ -59,12 +59,10 @@ describe('ShareLink', () => {
 
     const dialog = container.querySelector('dialog');
     expect(dialog).toBeTruthy();
-    // Avant ouverture, la <dialog> ne doit pas être en mode `open`.
     expect(dialog?.hasAttribute('open')).toBe(false);
 
     await user.click(qrBtn);
 
-    // Après ouverture, la modale doit être marquée open et exposer un titre/QR.
     await waitFor(() => {
       expect(dialog?.hasAttribute('open')).toBe(true);
     });
@@ -73,7 +71,6 @@ describe('ShareLink', () => {
     ).toBeInTheDocument();
     expect(screen.getByTitle(/qr code — lien vers la soirée/i)).toBeInTheDocument();
 
-    // Le bouton fermer (icône X) referme la modale.
     const closeBtn = screen.getByRole('button', { name: /fermer le qr code/i });
     await user.click(closeBtn);
 

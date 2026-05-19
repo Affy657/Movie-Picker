@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.InMemory;
 
-/// <summary>Stockage ticket en mémoire (tests / mode sans Mongo).</summary>
 public sealed class MemoryAuthTicketStore : ITicketStore
 {
     private readonly ConcurrentDictionary<string, AuthenticationTicket> _tickets = new();

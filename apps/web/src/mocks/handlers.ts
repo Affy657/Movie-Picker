@@ -1,14 +1,11 @@
 import { http, HttpResponse } from 'msw';
 
-/** Aligné sur vitest.config env VITE_API_URL */
 export const TEST_API_BASE = 'http://127.0.0.1:3999';
 
-/** Base MSW pour les routes versionnées (`/api/v1`). */
 export const TEST_API_V1 = `${TEST_API_BASE}/api/v1`;
 
 const V1 = TEST_API_V1;
 
-/** Invité : pas de cookie session (évite requêtes MSW non gérées quand `AuthProvider` est monté). */
 export const authMeGuestHandler = http.get(`${V1}/auth/me`, () =>
   HttpResponse.json({ error: 'Non authentifié.', code: 401 }, { status: 401 })
 );
@@ -18,7 +15,7 @@ export interface MockEventOptions {
   title?: string;
   isFinished?: boolean;
   winnerMovie?: unknown;
-  /** Thème affiché (bandeau + bordure page). */
+
   theme?: string | null;
 }
 

@@ -11,7 +11,6 @@ import type { AccentColor, UiThemePreference } from '@/shared/types/theme';
 import { getNextUiPreference, isUiThemePreference } from '@/shared/utils/uiThemePreference';
 import { isAccentColor } from '@/shared/utils/accentColor';
 
-/** Ancienne clé MVP ; lecture + suppression au premier chargement si la clé V1 est absente. */
 const MIGRATE_FROM_STORAGE_KEY = 'moviepicker-theme';
 const PREFERENCE_STORAGE_KEY = 'moviepicker-ui-preference';
 const ACCENT_STORAGE_KEY = 'moviepicker-ui-accent';
@@ -19,20 +18,18 @@ const ACCENT_STORAGE_KEY = 'moviepicker-ui-accent';
 type ResolvedTheme = 'light' | 'dark';
 
 type ThemeContextValue = {
-  /** Préférence persistée (local ou recopiée depuis le compte). */
   preference: UiThemePreference;
-  /** Thème réellement appliqué au document (système résolu). */
+
   resolvedTheme: ResolvedTheme;
   setUiPreference: (p: UiThemePreference) => void;
-  /** Clair → sombre → auto (système) → clair. */
+
   toggleTheme: () => void;
-  /** Après chargement du profil : applique la préférence serveur + localStorage. */
+
   applyRemotePreference: (p: UiThemePreference) => void;
 
-  /** Palette d'accent active (locale ou recopiée du profil). */
   accent: AccentColor;
   setAccent: (c: AccentColor) => void;
-  /** Après chargement du profil : applique l'accent serveur + localStorage. */
+
   applyRemoteAccent: (c: AccentColor) => void;
 };
 
@@ -50,18 +47,14 @@ function readStoredPreference(): UiThemePreference {
       localStorage.removeItem(MIGRATE_FROM_STORAGE_KEY);
       return migrated;
     }
-  } catch {
-    /* ignore */
-  }
+  } catch {}
   return 'system';
 }
 
 function persistPreference(p: UiThemePreference): void {
   try {
     localStorage.setItem(PREFERENCE_STORAGE_KEY, p);
-  } catch {
-    /* ignore */
-  }
+  } catch {}
 }
 
 function readStoredAccent(): AccentColor {
@@ -69,18 +62,14 @@ function readStoredAccent(): AccentColor {
   try {
     const stored = localStorage.getItem(ACCENT_STORAGE_KEY);
     if (isAccentColor(stored)) return stored;
-  } catch {
-    /* ignore */
-  }
+  } catch {}
   return 'default';
 }
 
 function persistAccent(c: AccentColor): void {
   try {
     localStorage.setItem(ACCENT_STORAGE_KEY, c);
-  } catch {
-    /* ignore */
-  }
+  } catch {}
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -115,7 +104,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     document.documentElement.dataset.theme = resolvedTheme;
   }, [resolvedTheme]);
 
-  // `default` = pas d'attribut → utilise les valeurs natives :root/[data-theme=dark].
   useEffect(() => {
     if (accentState === 'default') {
       delete document.documentElement.dataset.accent;

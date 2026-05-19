@@ -61,13 +61,8 @@ export function fetchMyEventsList(): Promise<MyEventsListResponse> {
   return fetchApi<MyEventsListResponse>('/events/mine');
 }
 
-/**
- * Marqueur réservé — MyEvents (invité) affiche un message i18n dédié.
- * @see MyEventsPage
- */
 export const GUEST_JOINED_EVENTS_ALL_FAILED = 'MP_GUEST_JOINED_ALL_FAILED';
 
-/** Soirées rejointes sans compte : slugs en session + GET public `/events/slug/{slug}`. */
 export async function fetchGuestJoinedEventsSummaries(): Promise<MyEventsListResponse> {
   const slugs = listStoredParticipantSlugs();
   if (slugs.length === 0) return { events: [] };
@@ -171,10 +166,6 @@ export type RemoveParticipantResponse = {
   message: string;
 };
 
-/**
- * Retire un participant d'une soirée (hôte → tout participant hors créateur ; utilisateur connecté → soi-même).
- * Cascade côté API : votes, marques « déjà vu » et films proposés par le participant sont supprimés.
- */
 export async function removeEventParticipant(
   idOrSlug: string,
   participantId: string,
@@ -196,18 +187,10 @@ export type DeleteEventResponse = {
   removedSeenMarks: number;
 };
 
-/**
- * Supprime définitivement une soirée (cascade complète côté API : participants,
- * films, votes, marques « déjà vu »). Réservé au créateur connecté.
- */
 export async function deleteEvent(idOrSlug: string): Promise<DeleteEventResponse> {
   return fetchApi<DeleteEventResponse>(`/events/${idOrSlug}`, { method: 'DELETE' });
 }
 
-/**
- * URL publique de la page share-preview (balises OG).
- * Les bots lisent les métas OG ; les humains sont redirigés vers le web par le script de la page.
- */
 export function eventSharePreviewUrl(slug: string): string {
   return apiUrl(`/events/slug/${slug}/share-preview`);
 }

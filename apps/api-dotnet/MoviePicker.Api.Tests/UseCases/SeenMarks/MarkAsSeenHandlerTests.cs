@@ -131,8 +131,6 @@ public sealed class MarkAsSeenHandlerTests
     [Fact]
     public async Task HandleAsync_DoubleMark_IsIdempotent()
     {
-        // Idempotence déléguée au repo `AddAsync` (contrat : si déjà présente, renvoie l'existante).
-        // Le handler ne doit rien lever et renvoyer la même marque.
         var evt = ActiveEvent();
         var movie = MovieFor(evt);
         var participant = ParticipantFor(evt);
