@@ -235,6 +235,14 @@
   overflow: hidden;
 }
 
+.winnerCard .winnerRow {
+  margin-top: auto;
+}
+
+.winnerCard .linkFooter {
+  margin-top: 0;
+}
+
 .winnerIcon {
   flex-shrink: 0;
   color: var(--color-primary);

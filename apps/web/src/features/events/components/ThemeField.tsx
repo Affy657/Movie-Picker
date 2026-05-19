@@ -35,6 +35,9 @@ export const THEME_EMOJIS = [
   '🏆',
   '🧪',
   '🌌',
+  '⭐',
+  '🎞️',
+  '🌙',
 ];
 
 const PRESETS_VISIBLE = 5;
@@ -57,9 +60,7 @@ export const THEME_PRESETS = [
   { emoji: '🔍', text: 'Policier' },
   { emoji: '📜', text: 'Historique' },
   { emoji: '🤠', text: 'Western' },
-  { emoji: '🐉', text: 'Fantasy' },
-  { emoji: '🏆', text: 'Sport' },
-  { emoji: '🌌', text: 'Space opera' },
+  { emoji: '⭐', text: 'Classiques' },
 ];
 
 export function parseTheme(s: string | null | undefined): { emoji: string; text: string } {

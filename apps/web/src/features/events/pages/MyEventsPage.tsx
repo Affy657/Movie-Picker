@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { Crown, Film, Plus, Trophy, Users } from 'lucide-react';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   fetchGuestJoinedEventsSummaries,
   fetchMyEventsList,
@@ -121,7 +121,10 @@ function EventListBlock({
           const dateLabel = formatMyEventsListDate(ev.date, locale);
           return (
             <li key={ev.id} className={styles.item}>
-              <Link to={ROUTES.eventDetail(ev.slug)} className={styles.link}>
+              <Link
+                to={ROUTES.eventDetail(ev.slug)}
+                className={clsx(styles.link, ev.winnerMovieTitle && styles.winnerCard)}
+              >
                 <span className={styles.rowTop}>
                   <span className={styles.title}>{ev.title}</span>
                   {ev.isCreator ? (
@@ -201,7 +204,8 @@ export default function MyEventsPage() {
   useDocumentTitle(pageTitle(t('events.myEvents.title')));
   const queryClient = useQueryClient();
   const { user, isLoading: authLoading } = useAuth();
-  const [tab, setTab] = useState<MyEventsTab>('active');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab: MyEventsTab = searchParams.get('tab') === 'history' ? 'history' : 'active';
   const [visibleHistoryCount, setVisibleHistoryCount] = useState(HISTORY_PAGE_SIZE);
   const [infiniteScrollActive, setInfiniteScrollActive] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -357,7 +361,7 @@ export default function MyEventsPage() {
               aria-selected={tab === 'active'}
               aria-controls="myevents-panel-active"
               className={clsx(styles.tab, tab === 'active' && styles.tabActive)}
-              onClick={() => setTab('active')}
+              onClick={() => setSearchParams({}, { replace: true })}
             >
               {'À venir'}
               <span className={styles.tabCount}>{hostedActive.length + joinedActive.length}</span>
@@ -369,7 +373,7 @@ export default function MyEventsPage() {
               aria-selected={tab === 'history'}
               aria-controls="myevents-panel-history"
               className={clsx(styles.tab, tab === 'history' && styles.tabActive)}
-              onClick={() => setTab('history')}
+              onClick={() => setSearchParams({ tab: 'history' }, { replace: true })}
             >
               {'Historique'}
               <span className={styles.tabCount}>{historyEvents.length}</span>
