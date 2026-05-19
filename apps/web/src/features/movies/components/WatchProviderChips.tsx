@@ -108,7 +108,6 @@ export default function WatchProviderChips({
                     alt=""
                     className={styles.logoImg}
                     loading="lazy"
-                    crossOrigin="anonymous"
                   />
                 </span>
               ) : (

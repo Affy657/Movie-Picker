@@ -1,7 +1,12 @@
+import clsx from 'clsx';
 import { Link } from 'react-router-dom';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import styles from './Footer.module.css';
+
+type FooterProps = {
+  clearMobileNav?: boolean;
+};
 
 function GitHubIcon() {
   return (
@@ -41,11 +46,14 @@ function LinkedInIcon() {
 
 const CURRENT_YEAR = new Date().getFullYear();
 
-export default function Footer() {
+export default function Footer({ clearMobileNav = false }: FooterProps) {
   const { t } = useTranslation();
 
   return (
-    <footer className={styles.footer} aria-label={t('footer.ariaLabel')}>
+    <footer
+      className={clsx(styles.footer, clearMobileNav && styles.aboveMobileNav)}
+      aria-label={t('footer.ariaLabel')}
+    >
       <div className={styles.inner}>
         <div className={styles.brand}>
           <Link to={ROUTES.home} className={styles.brandLink}>

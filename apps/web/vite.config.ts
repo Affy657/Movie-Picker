@@ -55,7 +55,7 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         runtimeCaching: [
           {
-            urlPattern: /\/api\/v1\//i,
+            urlPattern: /\/api\/v1\/(?!posters\/)/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
@@ -71,7 +71,7 @@ export default defineConfig(({ mode }) => ({
             urlPattern: /^https:\/\/image\.tmdb\.org\/.*/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'tmdb-images',
+              cacheName: 'tmdb-images-v2',
               expiration: {
                 maxEntries: 300,
                 maxAgeSeconds: 60 * 60 * 24 * 30,

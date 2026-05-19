@@ -284,13 +284,7 @@ export default function AddMovieForm({
                 <li key={r.id} className={styles.resultItem}>
                   <div className={styles.posterWrap}>
                     {posterSrc ? (
-                      <img
-                        src={posterSrc}
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                        crossOrigin="anonymous"
-                      />
+                      <img src={posterSrc} alt="" loading="lazy" decoding="async" />
                     ) : (
                       <div className={styles.posterPlaceholder}>
                         {t('movies.search.posterPlaceholder')}

@@ -79,7 +79,7 @@ export default function AppShell() {
         ) : null}
       </header>
       <Outlet />
-      <Footer />
+      <Footer clearMobileNav={items.length > 0} />
       {items.length > 0 ? (
         <nav className={styles.navMobile} aria-label={t('nav.navLabel')}>
           {items.map((item) => (

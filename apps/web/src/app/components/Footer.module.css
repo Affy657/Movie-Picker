@@ -141,6 +141,16 @@
   margin: 0;
 }
 
+@media (max-width: 767px) {
+  .aboveMobileNav {
+    padding-bottom: calc(3.25rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .aboveMobileNav .bottom {
+    padding-bottom: 1rem;
+  }
+}
+
 @media (min-width: 480px) {
   .inner {
     grid-template-columns: 1fr 1fr;

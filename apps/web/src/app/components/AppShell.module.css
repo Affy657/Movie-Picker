@@ -1,9 +1,9 @@
 .root {
   --header-height: 3.5rem;
+  --mobile-nav-height: calc(3.25rem + env(safe-area-inset-bottom, 0px));
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding-bottom: 4.75rem;
 }
 
 /* Un seul « plein écran » : le main remplit l’espace sous le header (pas min-height 100vh en plus). */
@@ -163,15 +163,11 @@
 
 @media (max-width: 767px) {
   .root :global(.page) {
-    padding-bottom: 5.5rem;
+    padding-bottom: calc(var(--mobile-nav-height) + 1.25rem);
   }
 }
 
 @media (min-width: 768px) {
-  .root {
-    padding-bottom: 0;
-  }
-
   .navMobile {
     display: none;
   }
