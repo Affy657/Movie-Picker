@@ -32,14 +32,14 @@ public sealed class AddMovieHandlerTests
     private static AddMovieRequest Request(
         string participantId = "p123456789012345678901234",
         MovieMediaType mediaType = MovieMediaType.Movie) => new()
-    {
-        TmdbId = 27205,
-        MediaType = mediaType,
-        Title = " Inception ",
-        Year = "2010",
-        PosterPath = "https://image.tmdb.org/t/p/w154/abc.jpg",
-        ParticipantId = participantId
-    };
+        {
+            TmdbId = 27205,
+            MediaType = mediaType,
+            Title = " Inception ",
+            Year = "2010",
+            PosterPath = "https://image.tmdb.org/t/p/w154/abc.jpg",
+            ParticipantId = participantId
+        };
 
     public AddMovieHandlerTests()
     {
