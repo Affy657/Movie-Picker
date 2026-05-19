@@ -53,7 +53,7 @@ Découpage par version côté **métier / utilisateur**.
 
 ---
 
-## 🚧 V1.1 – Partiellement livré
+## ✅ V1.1 – Livré
 
 **Objectif** : contenu film riche, options de soirée, historique, UX avancée.
 

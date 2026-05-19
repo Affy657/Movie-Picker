@@ -39,9 +39,9 @@ Découpage par version côté **plateforme, qualité, infra, observabilité, det
 
 ---
 
-## ✅ V1.1
+## 🚧 V1.1
 
-Pas de travail tech transverse sur cette version — les briques techniques ont été livrées dans le cadre des features produit.
+- ⬜ 🏗️ **PWA** : manifest, icônes multi-tailles, splash screen, Service Worker — "Ajouter à l'écran d'accueil" et chargement hors-ligne partiel ; cohérent avec l'usage mobile-first de l'app.
 
 ---
 
@@ -50,7 +50,6 @@ Pas de travail tech transverse sur cette version — les briques techniques ont 
 **Objectif** : qualité UX mesurable et conformité RGPD avant la montée en charge des features sociales.
 
 - ⬜ ♿ **Accessibilité étendue** : audit global (axe + manuel), navigation clavier complète, focus visible cohérent sur toutes les pages — à faire en premier, avant d'ajouter de nouveaux SDKs tiers.
-- ⬜ 🏗️ **PWA** : manifest, icônes multi-tailles, splash screen, Service Worker — "Ajouter à l'écran d'accueil" et chargement hors-ligne partiel ; cohérent avec l'usage mobile-first de l'app.
 - ⬜ 🔒 **Bandeau consentement (CMP)** : choix granulaire au premier accès, persistance, lien « Modifier mes préférences » dans le footer ; conditionne le chargement effectif de l'analytics et de tout SDK tiers — prérequis RGPD à poser avant l'analytics.
 - ⬜ 📊 **Analytics produit** (PostHog, Plausible ou équivalent) : mesure d'usage (créations, joins, votes, roue), funnels, rétention — chargé uniquement après consentement CMP.
 

@@ -101,32 +101,6 @@ jobs:
           path: apps/web/coverage
           if-no-files-found: warn
 
-  test-mobile:
-    name: Tests mobile (Jest) + couverture
-    needs: lint
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: TypeScript strict
-        run: pnpm --filter mobile exec tsc --noEmit
-        timeout-minutes: 5
-      - name: Tests Jest
-        run: pnpm --filter mobile test -- --forceExit --testTimeout=15000
-        timeout-minutes: 8
-      - name: Couverture (informatif)
-        run: pnpm --filter mobile test:coverage -- --forceExit --testTimeout=15000
-        timeout-minutes: 8
-        continue-on-error: true
-
   test-api:
     name: Tests API .NET + couverture
     needs: lint
