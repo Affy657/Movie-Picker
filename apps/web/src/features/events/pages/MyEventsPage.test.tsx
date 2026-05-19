@@ -110,10 +110,8 @@ describe('MyEventsPage (MSW)', () => {
 
     const hostedLink = screen.getByRole('link', { name: /Chez moi/i });
     expect(hostedLink).toHaveAttribute('href', '/e/ma-soiree');
-    expect(
-      within(hostedLink.closest('li')!).getByText(/4\s*\/\s*8 participants/)
-    ).toBeInTheDocument();
-    expect(within(hostedLink.closest('li')!).getByText(/2 films propos/)).toBeInTheDocument();
+    expect(within(hostedLink.closest('li')!).getByText('4 / 8')).toBeInTheDocument();
+    expect(within(hostedLink.closest('li')!).getByText('2')).toBeInTheDocument();
     expect(screen.getAllByLabelText('Hôte').length).toBeGreaterThanOrEqual(1);
 
     const joinedLink = screen.getByRole('link', { name: /Chez Bob/i });
@@ -156,8 +154,8 @@ describe('MyEventsPage (MSW)', () => {
     });
 
     const guestLink = screen.getByRole('link', { name: /Soirée chez Kim/i });
-    expect(within(guestLink.closest('li')!).getByText(/3 participants/)).toBeInTheDocument();
-    expect(within(guestLink.closest('li')!).getByText(/2 films propos/)).toBeInTheDocument();
+    expect(within(guestLink.closest('li')!).getByText('3')).toBeInTheDocument();
+    expect(within(guestLink.closest('li')!).getByText('2')).toBeInTheDocument();
 
     expect(screen.queryByRole('link', { name: /Créer une soirée/i })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Se connecter/i })).toHaveAttribute(

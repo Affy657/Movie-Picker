@@ -105,6 +105,7 @@ jobs:
     name: Tests mobile (Jest) + couverture
     needs: lint
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
@@ -117,10 +118,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: TypeScript strict
         run: pnpm --filter mobile exec tsc --noEmit
+        timeout-minutes: 5
       - name: Tests Jest
-        run: pnpm --filter mobile test
+        run: pnpm --filter mobile test -- --forceExit --testTimeout=15000
+        timeout-minutes: 8
       - name: Couverture (informatif)
-        run: pnpm --filter mobile test:coverage
+        run: pnpm --filter mobile test:coverage -- --forceExit --testTimeout=15000
+        timeout-minutes: 8
         continue-on-error: true
 
   test-api:

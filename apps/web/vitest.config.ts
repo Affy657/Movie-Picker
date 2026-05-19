@@ -20,11 +20,9 @@ export default defineConfig({
     testTimeout: 15000,
     hookTimeout: 15000,
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        maxForks: 4,
-        minForks: 1,
-      },
+    forks: {
+      maxForks: 4,
+      minForks: 1,
     },
     coverage: {
       provider: 'v8',
