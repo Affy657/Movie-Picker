@@ -60,10 +60,7 @@ function lifecycleTranslationKey(l: MyEventLifecycle): TranslationKey {
   }
 }
 
-function cardJoinedLabel(
-  participantCount: number,
-  maxParticipants: number | null | undefined,
-) {
+function cardJoinedLabel(participantCount: number, maxParticipants: number | null | undefined) {
   const n = participantCount;
   const hasCap = typeof maxParticipants === 'number' && maxParticipants > 0;
   const countStr = hasCap ? `${n} / ${maxParticipants}` : String(n);
@@ -152,9 +149,7 @@ function EventListBlock({
                     ) : (
                       <Trophy aria-hidden size={13} className={styles.winnerIcon} />
                     )}
-                    <span className={styles.winnerTitle}>
-                      {ev.winnerMovieTitle}
-                    </span>
+                    <span className={styles.winnerTitle}>{ev.winnerMovieTitle}</span>
                   </span>
                 ) : null}
                 <div className={styles.linkFooter}>
@@ -168,7 +163,9 @@ function EventListBlock({
                         {t(lifecycleTranslationKey(lifecycle))}
                       </span>
                     ) : null}
-                    <span className={styles.meta}>{ev.time} – {dateLabel}</span>
+                    <span className={styles.meta}>
+                      {ev.time} – {dateLabel}
+                    </span>
                   </span>
                 </div>
               </Link>
@@ -412,22 +409,21 @@ export default function MyEventsPage() {
                     emptyHint={null}
                     showLifecycleBadge={false}
                   />
-                  {(visibleHistoryCount < historyEvents.length || loggedInQuery.hasNextPage) && (
-                    infiniteScrollActive
-                      ? <div ref={sentinelRef} className={styles.sentinel} aria-hidden />
-                      : (
-                        <button
-                          type="button"
-                          className={styles.loadMoreBtn}
-                          onClick={() => {
-                            setInfiniteScrollActive(true);
-                            loadNextChunk();
-                          }}
-                        >
-                          Voir plus
-                        </button>
-                      )
-                  )}
+                  {(visibleHistoryCount < historyEvents.length || loggedInQuery.hasNextPage) &&
+                    (infiniteScrollActive ? (
+                      <div ref={sentinelRef} className={styles.sentinel} aria-hidden />
+                    ) : (
+                      <button
+                        type="button"
+                        className={styles.loadMoreBtn}
+                        onClick={() => {
+                          setInfiniteScrollActive(true);
+                          loadNextChunk();
+                        }}
+                      >
+                        Voir plus
+                      </button>
+                    ))}
                 </>
               )}
             </div>
