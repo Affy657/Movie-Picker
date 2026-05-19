@@ -29,4 +29,4 @@ Suivi des bugs, problèmes UX et dette à corriger. Une entrée par problème.
 
 ## 🧹 Dette / Legacy
 
-- ⬜ 🧹 **Nettoyage du repo pour livraison cours** : ranger et nettoyer le dépôt pour qu'il soit présentable — supprimer fichiers temporaires, vérifier que la doc est à jour, s'assurer que le parcours d'installation est clair pour un correcteur.
+- ✅ 🧹 **Nettoyage du repo pour livraison cours** : ranger et nettoyer le dépôt pour qu'il soit présentable — supprimer fichiers temporaires, vérifier que la doc est à jour, s'assurer que le parcours d'installation est clair pour un correcteur.
