@@ -231,6 +231,7 @@ export const fr = {
       joinedCountWithCapMany: '{{count}} / {{max}} participants',
       movieProposedOne: '1 film propos\u00e9',
       movieProposedMany: '{{count}} films propos\u00e9s',
+      winnerMovieLabel: 'Gagnant\u00a0: {{title}}',
     },
     share: {
       shareButton: 'Partager',

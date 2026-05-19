@@ -167,6 +167,11 @@
   border: 0;
 }
 
+html {
+  overflow-x: clip;
+  scrollbar-gutter: stable;
+}
+
 body {
   margin: 0;
   font-family:
@@ -178,6 +183,7 @@ body {
   line-height: 1.6;
   color: var(--color-text);
   background: var(--color-bg);
+  overflow-x: clip;
 }
 
 /* PageLayout — hauteur viewport gérée par AppShell (flex) pour éviter le scroll fantôme.
@@ -186,6 +192,7 @@ body {
   padding: 1.5rem 1rem 1rem;
   max-width: var(--page-max-width, var(--layout-max));
   margin: 0 auto;
+  overflow-x: clip;
 }
 
 /* Détail soirée — colonne un peu plus large, toujours centrée */
@@ -202,6 +209,11 @@ body {
   align-items: flex-start;
   gap: 1rem;
   min-height: 60vh;
+}
+
+.page.page--centered > * {
+  max-width: 100%;
+  min-width: 0;
 }
 
 .page.page--errorState {

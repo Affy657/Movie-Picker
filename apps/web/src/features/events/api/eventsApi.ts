@@ -57,8 +57,9 @@ export async function createEvent(body: CreateEventBody): Promise<CreateEventRes
   };
 }
 
-export function fetchMyEventsList(): Promise<MyEventsListResponse> {
-  return fetchApi<MyEventsListResponse>('/events/mine');
+export function fetchMyEventsList(offset = 0): Promise<MyEventsListResponse> {
+  const params = offset > 0 ? `?offset=${offset}` : '';
+  return fetchApi<MyEventsListResponse>(`/events/mine${params}`);
 }
 
 export const GUEST_JOINED_EVENTS_ALL_FAILED = 'MP_GUEST_JOINED_ALL_FAILED';

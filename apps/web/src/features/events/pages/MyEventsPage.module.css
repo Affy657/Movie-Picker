@@ -203,12 +203,57 @@
   margin-top: -0.1rem;
 }
 
-.cardStats {
+.participantStat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.participantStat svg {
   display: block;
   flex-shrink: 0;
-  font-size: 0.875rem;
+}
+
+.cardStats {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.winnerRow {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
+  overflow: hidden;
+}
+
+.winnerIcon {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+.winnerPoster {
+  flex-shrink: 0;
+  width: 28px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 3px;
+}
+
+.winnerTitle {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -220,22 +265,23 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem 0.75rem;
-  margin-top: 0.15rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  flex-shrink: 0;
+}
+
+.metaRight {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   flex-shrink: 0;
 }
 
 .meta {
-  display: block;
-  flex: 1;
-  min-width: 0;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: var(--color-text-muted);
-}
-
-.lifecycleCorner {
-  flex-shrink: 0;
-  align-self: flex-end;
+  white-space: nowrap;
 }
 
 .lifecyclePill {
@@ -294,6 +340,34 @@
 
 .ctaButton {
   border-radius: var(--radius-md);
+}
+
+.loadMoreBtn {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 0.5rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0.55rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.loadMoreBtn:hover {
+  color: var(--color-text);
+  border-color: color-mix(in srgb, var(--color-text) 35%, transparent);
+}
+
+.sentinel {
+  height: 1px;
+  margin-top: 0.5rem;
 }
 
 /* FAB Créer une soirée — accessible quel que soit le scroll */

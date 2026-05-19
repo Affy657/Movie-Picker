@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
-import { Crown, Plus } from 'lucide-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Crown, Film, Plus, Trophy, Users } from 'lucide-react';
+import { posterImageSrc } from '@/shared/utils/posterUrl';
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
   fetchGuestJoinedEventsSummaries,
@@ -62,28 +63,25 @@ function lifecycleTranslationKey(l: MyEventLifecycle): TranslationKey {
 function cardJoinedLabel(
   participantCount: number,
   maxParticipants: number | null | undefined,
-  t: (key: TranslationKey, vars?: Record<string, string | number>) => string
 ) {
   const n = participantCount;
   const hasCap = typeof maxParticipants === 'number' && maxParticipants > 0;
-  if (hasCap) {
-    return n === 1
-      ? t('events.myEvents.joinedCountWithCapOne', { max: maxParticipants })
-      : t('events.myEvents.joinedCountWithCapMany', { count: n, max: maxParticipants });
-  }
-  return n === 1
-    ? t('events.myEvents.joinedCountOne')
-    : t('events.myEvents.joinedCountMany', { count: n });
+  const countStr = hasCap ? `${n} / ${maxParticipants}` : String(n);
+  return (
+    <span className={styles.participantStat}>
+      <Users aria-hidden size={13} />
+      {countStr}
+    </span>
+  );
 }
 
-function cardMoviesLabel(
-  movieCount: number,
-  t: (key: TranslationKey, vars?: Record<string, string | number>) => string
-) {
-  const n = movieCount;
-  return n === 1
-    ? t('events.myEvents.movieProposedOne')
-    : t('events.myEvents.movieProposedMany', { count: n });
+function cardMoviesLabel(movieCount: number) {
+  return (
+    <span className={styles.participantStat}>
+      <Film aria-hidden size={13} />
+      {movieCount}
+    </span>
+  );
 }
 
 function EventListBlock({
@@ -140,21 +138,38 @@ function EventListBlock({
                   ) : null}
                 </span>
                 {ev.theme ? <span className={styles.cardTheme}>{ev.theme}</span> : null}
-                <span className={styles.cardStats}>
-                  {cardJoinedLabel(ev.participantCount ?? 0, ev.maxParticipants, t)} ·{' '}
-                  {cardMoviesLabel(ev.movieCount ?? 0, t)}
-                </span>
-                <div className={styles.linkFooter}>
-                  <span className={styles.meta}>
-                    {dateLabel} · {ev.time}
+                {ev.winnerMovieTitle ? (
+                  <span className={styles.winnerRow}>
+                    {ev.winnerMoviePosterPath ? (
+                      <img
+                        src={posterImageSrc(ev.winnerMoviePosterPath)}
+                        alt=""
+                        aria-hidden
+                        className={styles.winnerPoster}
+                        width={28}
+                        height={42}
+                      />
+                    ) : (
+                      <Trophy aria-hidden size={13} className={styles.winnerIcon} />
+                    )}
+                    <span className={styles.winnerTitle}>
+                      {ev.winnerMovieTitle}
+                    </span>
                   </span>
-                  {showLifecycleBadge && lifecycle !== 'upcoming' ? (
-                    <span className={styles.lifecycleCorner}>
+                ) : null}
+                <div className={styles.linkFooter}>
+                  <span className={styles.cardStats}>
+                    {cardJoinedLabel(ev.participantCount ?? 0, ev.maxParticipants)}
+                    {cardMoviesLabel(ev.movieCount ?? 0)}
+                  </span>
+                  <span className={styles.metaRight}>
+                    {showLifecycleBadge && lifecycle !== 'upcoming' ? (
                       <span className={clsx(styles.lifecyclePill, badgeClass)}>
                         {t(lifecycleTranslationKey(lifecycle))}
                       </span>
-                    </span>
-                  ) : null}
+                    ) : null}
+                    <span className={styles.meta}>{ev.time} – {dateLabel}</span>
+                  </span>
                 </div>
               </Link>
             </li>
@@ -180,6 +195,8 @@ function partitionMyEvents(events: MyEventSummary[]) {
   return { hostedActive, joinedActive, historyEvents: history };
 }
 
+const HISTORY_PAGE_SIZE = 10;
+
 type MyEventsTab = 'active' | 'history';
 
 export default function MyEventsPage() {
@@ -188,12 +205,20 @@ export default function MyEventsPage() {
   const queryClient = useQueryClient();
   const { user, isLoading: authLoading } = useAuth();
   const [tab, setTab] = useState<MyEventsTab>('active');
+  const [visibleHistoryCount, setVisibleHistoryCount] = useState(HISTORY_PAGE_SIZE);
+  const [infiniteScrollActive, setInfiniteScrollActive] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const [hasGuestSession] = useState<boolean>(() => listStoredParticipantSlugs().length > 0);
 
-  const loggedInQuery = useQuery({
-    queryKey: queryKeys.myEvents.list,
-    queryFn: () => fetchMyEventsList(),
+  const loggedInQuery = useInfiniteQuery({
+    queryKey: queryKeys.myEvents.listPaged,
+    queryFn: ({ pageParam }: { pageParam: number }) => fetchMyEventsList(pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      if (!lastPage?.hasMore) return undefined;
+      return allPages?.reduce((sum, p) => sum + (p?.events?.length ?? 0), 0) ?? 0;
+    },
     enabled: !authLoading && !!user,
     retry: false,
   });
@@ -205,8 +230,6 @@ export default function MyEventsPage() {
     retry: false,
   });
 
-  const activeQuery = user ? loggedInQuery : guestQuery;
-
   useEffect(() => {
     if (!user) return;
     if (!loggedInQuery.isError || !ApiError.is(loggedInQuery.error)) return;
@@ -215,24 +238,50 @@ export default function MyEventsPage() {
     void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
   }, [user, loggedInQuery.isError, loggedInQuery.error, queryClient]);
 
+  const loadNextChunk = useCallback(() => {
+    setVisibleHistoryCount((c) => c + HISTORY_PAGE_SIZE);
+  }, []);
+
+  useEffect(() => {
+    if (!infiniteScrollActive) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0]?.isIntersecting) return;
+        if (loggedInQuery.isFetchingNextPage) return;
+        if (loggedInQuery.hasNextPage) {
+          void loggedInQuery.fetchNextPage().then(loadNextChunk);
+        } else {
+          loadNextChunk();
+        }
+      },
+      { rootMargin: '120px' }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [infiniteScrollActive, loggedInQuery, loadNextChunk]);
+
   const mergedEvents = useMemo<MyEventSummary[]>(() => {
-    const fromApi = activeQuery.data?.events ?? [];
+    const fromApi = user
+      ? (loggedInQuery.data?.pages.flatMap((p) => p.events) ?? [])
+      : (guestQuery.data?.events ?? []);
     if (!user) return fromApi;
     const guestExtras = guestQuery.data?.events ?? [];
     if (guestExtras.length === 0) return fromApi;
     const knownSlugs = new Set(fromApi.map((e) => e.slug));
     const extras = guestExtras.filter((e) => !knownSlugs.has(e.slug));
     return extras.length === 0 ? fromApi : [...fromApi, ...extras];
-  }, [user, activeQuery.data?.events, guestQuery.data?.events]);
+  }, [user, loggedInQuery.data?.pages, guestQuery.data?.events]);
 
   const { hostedActive, joinedActive, historyEvents } = useMemo(
     () => partitionMyEvents(mergedEvents),
     [mergedEvents]
   );
 
-  const isLoading = authLoading || activeQuery.isLoading;
-  const isError = activeQuery.isError;
-  const error = activeQuery.error;
+  const isLoading = authLoading || (user ? loggedInQuery.isLoading : guestQuery.isLoading);
+  const isError = user ? loggedInQuery.isError : guestQuery.isError;
+  const error = user ? loggedInQuery.error : guestQuery.error;
 
   const loadErrorMessage =
     error == null
@@ -269,7 +318,7 @@ export default function MyEventsPage() {
             <button
               type="button"
               className="btn btn-primary"
-              onClick={() => void activeQuery.refetch()}
+              onClick={() => void guestQuery.refetch()}
             >
               {t('common.retry')}
             </button>
@@ -286,7 +335,7 @@ export default function MyEventsPage() {
   }
 
   const total = mergedEvents.length;
-  const guestSkipped = !user ? (activeQuery.data?.guestSkippedCount ?? 0) : 0;
+  const guestSkipped = !user ? (guestQuery.data?.guestSkippedCount ?? 0) : 0;
   const emptyLead = user
     ? t('events.myEvents.emptyDescription')
     : t('events.myEvents.emptyDescriptionGuest');
@@ -355,13 +404,31 @@ export default function MyEventsPage() {
               {historyEvents.length === 0 ? (
                 <p className={styles.sectionEmpty}>{t('events.myEvents.historyEmpty')}</p>
               ) : (
-                <EventListBlock
-                  sectionId="my-events-history"
-                  heading={t('events.myEvents.historySection')}
-                  events={historyEvents}
-                  emptyHint={null}
-                  showLifecycleBadge={false}
-                />
+                <>
+                  <EventListBlock
+                    sectionId="my-events-history"
+                    heading={t('events.myEvents.historySection')}
+                    events={historyEvents.slice(0, visibleHistoryCount)}
+                    emptyHint={null}
+                    showLifecycleBadge={false}
+                  />
+                  {(visibleHistoryCount < historyEvents.length || loggedInQuery.hasNextPage) && (
+                    infiniteScrollActive
+                      ? <div ref={sentinelRef} className={styles.sentinel} aria-hidden />
+                      : (
+                        <button
+                          type="button"
+                          className={styles.loadMoreBtn}
+                          onClick={() => {
+                            setInfiniteScrollActive(true);
+                            loadNextChunk();
+                          }}
+                        >
+                          Voir plus
+                        </button>
+                      )
+                  )}
+                </>
               )}
             </div>
           )}

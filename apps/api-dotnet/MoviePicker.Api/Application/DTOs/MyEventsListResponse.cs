@@ -3,6 +3,7 @@ namespace MoviePicker.Api.Application.DTOs;
 public sealed class MyEventsListResponse
 {
     public IReadOnlyList<MyEventSummaryDto> Events { get; init; } = Array.Empty<MyEventSummaryDto>();
+    public bool HasMore { get; init; }
 }
 
 public sealed class MyEventSummaryDto
@@ -26,4 +27,8 @@ public sealed class MyEventSummaryDto
     public int? MaxParticipants { get; init; }
 
     public string? Theme { get; init; }
+
+    public string? WinnerMovieTitle { get; init; }
+
+    public string? WinnerMoviePosterPath { get; init; }
 }

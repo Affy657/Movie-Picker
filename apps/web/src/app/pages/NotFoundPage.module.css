@@ -5,6 +5,12 @@
   align-items: center;
   text-align: center;
   padding-top: clamp(2rem, 8vh, 5rem);
+  min-width: 0;
+}
+
+.layout > * {
+  max-width: 100%;
+  min-width: 0;
 }
 
 .iconWrap {

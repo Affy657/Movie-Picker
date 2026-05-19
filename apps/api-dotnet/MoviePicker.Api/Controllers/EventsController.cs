@@ -49,13 +49,14 @@ public sealed class EventsController : ControllerBase
     public async Task<IActionResult> ListMine(
         [FromServices] IListMyEventsHandler handler,
         [FromQuery] int? limit,
+        [FromQuery] int? offset,
         CancellationToken ct)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
             return Unauthorized();
 
-        var result = await handler.HandleAsync(userId, limit, ct);
+        var result = await handler.HandleAsync(userId, limit, offset, ct);
         return Ok(result);
     }
 

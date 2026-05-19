@@ -21,9 +21,10 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
         _movieRepository = movieRepository;
     }
 
-    public async Task<MyEventsListResponse> HandleAsync(string userId, int? limit, CancellationToken ct = default)
+    public async Task<MyEventsListResponse> HandleAsync(string userId, int? limit, int? offset, CancellationToken ct = default)
     {
-        var lim = limit is null ? 50 : Math.Clamp(limit.Value, 1, 100);
+        var lim = limit is null ? 20 : Math.Clamp(limit.Value, 1, 100);
+        var skip = offset is null ? 0 : Math.Max(0, offset.Value);
 
         var created = await _eventRepository.ListByCreatorUserIdAsync(userId, 200, ct);
         var joinedIds = await _participantRepository.ListDistinctEventIdsByUserIdAsync(userId, ct);
@@ -31,10 +32,13 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
         var createdIds = new HashSet<string>(created.Select(e => e.Id));
 
         var merged = new Dictionary<string, MyEventSummaryDto>();
+        var winnerMovieIdByEventId = new Dictionary<string, string>();
 
         foreach (var e in created)
         {
             merged[e.Id] = ToDto(e, isCreator: true, isParticipant: joinedSet.Contains(e.Id));
+            if (!string.IsNullOrEmpty(e.WinnerMovieId))
+                winnerMovieIdByEventId[e.Id] = e.WinnerMovieId;
         }
 
         var onlyJoined = joinedIds.Where(id => !createdIds.Contains(id)).ToList();
@@ -45,27 +49,49 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
             {
                 if (!merged.ContainsKey(e.Id))
                     merged[e.Id] = ToDto(e, isCreator: false, isParticipant: true);
+                if (!string.IsNullOrEmpty(e.WinnerMovieId))
+                    winnerMovieIdByEventId[e.Id] = e.WinnerMovieId;
             }
         }
 
-        var orderedSlice = merged.Values
+        var ordered = merged.Values
             .OrderByDescending(x => x.UpdatedAt)
-            .Take(lim)
             .ToList();
 
+        var hasMore = ordered.Count > skip + lim;
+        var orderedSlice = ordered.Skip(skip).Take(lim).ToList();
+
         if (orderedSlice.Count == 0)
-            return new MyEventsListResponse { Events = orderedSlice };
+            return new MyEventsListResponse { Events = orderedSlice, HasMore = hasMore };
 
         var sliceIds = orderedSlice.ConvertAll(x => x.Id);
         var participantCountsTask = _participantRepository.CountByEventIdsAsync(sliceIds, ct);
         var movieCountsTask = _movieRepository.CountByEventIdsAsync(sliceIds, ct);
-        await Task.WhenAll(participantCountsTask, movieCountsTask);
+
+        var sliceWinnerIds = sliceIds
+            .Where(winnerMovieIdByEventId.ContainsKey)
+            .Select(id => winnerMovieIdByEventId[id])
+            .Distinct()
+            .ToList();
+
+        var winnerMoviesTask = sliceWinnerIds.Count > 0
+            ? Task.WhenAll(sliceWinnerIds.Select(id => _movieRepository.GetByIdAsync(id, ct)))
+            : Task.FromResult(Array.Empty<Movie?>());
+
+        await Task.WhenAll(participantCountsTask, movieCountsTask, winnerMoviesTask);
+
         var participantCounts = await participantCountsTask;
         var movieCounts = await movieCountsTask;
+        var winnerMovies = (await winnerMoviesTask)
+            .Where(m => m is not null)
+            .ToDictionary(m => m!.Id, m => m!);
 
         var enriched = orderedSlice.ConvertAll(d =>
         {
             var id = d.Id;
+            Movie? winner = winnerMovieIdByEventId.TryGetValue(id, out var wId) && winnerMovies.TryGetValue(wId, out var wm)
+                ? wm
+                : null;
             return new MyEventSummaryDto
             {
                 Id = d.Id,
@@ -82,10 +108,12 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
                 MovieCount = movieCounts.TryGetValue(id, out var mc) ? mc : 0,
                 MaxParticipants = d.MaxParticipants,
                 Theme = d.Theme,
+                WinnerMovieTitle = winner?.Title,
+                WinnerMoviePosterPath = winner?.PosterPath,
             };
         });
 
-        return new MyEventsListResponse { Events = enriched };
+        return new MyEventsListResponse { Events = enriched, HasMore = hasMore };
     }
 
     private static MyEventSummaryDto ToDto(Event e, bool isCreator, bool isParticipant) => new()

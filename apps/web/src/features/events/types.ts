@@ -46,10 +46,14 @@ export interface MyEventSummary {
   maxParticipants?: number | null;
 
   theme?: string | null;
+
+  winnerMovieTitle?: string | null;
+
+  winnerMoviePosterPath?: string | null;
 }
 
 export interface MyEventsListResponse {
   events: MyEventSummary[];
-
+  hasMore?: boolean;
   guestSkippedCount?: number;
 }

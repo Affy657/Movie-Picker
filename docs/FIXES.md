@@ -17,7 +17,7 @@ Suivi des bugs, problèmes UX et dette à corriger. Une entrée par problème.
 
 ## 🎨 UI/UX
 
-- ⬜ 🎨 **Éléments centrés qui font grossir la page** : certains éléments centrés horizontalement provoquent un agrandissement de la page selon leur contenu (overflow ou min-width non contrôlé).
+- ✅ 🎨 **Éléments centrés qui font grossir la page** : `overflow-x: clip` ajouté sur `html` et `body` + sur `.page` ; `max-width: 100%; min-width: 0` ajouté sur les conteneurs flex-column avec `align-items: center` (`.rootCentered` ShareLink, `.layout` NotFoundPage) et sur les éléments `width: fit-content` sans contrainte (`.actions` MovieList, `.loadMoreBtn` MyEventsPage).
 
 ---
 

@@ -226,6 +226,7 @@ export const en: Locale = {
       joinedCountWithCapMany: '{{count}} / {{max}} participants',
       movieProposedOne: '1 movie proposed',
       movieProposedMany: '{{count}} movies proposed',
+      winnerMovieLabel: 'Winner: {{title}}',
     },
     share: {
       shareButton: 'Share',
