@@ -47,17 +47,23 @@ Pas de travail tech transverse sur cette version — les briques techniques ont 
 
 ## 📋 V1.2
 
-Pas de travail tech transverse identifié à ce stade.
+**Objectif** : qualité UX mesurable et conformité RGPD avant la montée en charge des features sociales.
+
+- ⬜ ♿ **Accessibilité étendue** : audit global (axe + manuel), navigation clavier complète, focus visible cohérent sur toutes les pages — à faire en premier, avant d'ajouter de nouveaux SDKs tiers.
+- ⬜ 🔒 **Bandeau consentement (CMP)** : choix granulaire au premier accès, persistance, lien « Modifier mes préférences » dans le footer ; conditionne le chargement effectif de l'analytics et de tout SDK tiers — prérequis RGPD à poser avant l'analytics.
+- ⬜ 📊 **Analytics produit** (PostHog, Plausible ou équivalent) : mesure d'usage (créations, joins, votes, roue), funnels, rétention — chargé uniquement après consentement CMP.
+
+---
+
+## 📋 V1.3
+
+- ⬜ 📊 **Sentry** : capture d'erreurs front (React) et API (.NET), regroupement incidents, contexte release/env ; définir sampling, politique PII et rétention.
 
 ---
 
 ## Backlog tech (non priorisé sur une release)
 
 - ⬜ ⚙️ **Dependabot / Renovate** : automatisation des mises à jour de dépendances (npm, NuGet) — ouvre des PRs automatiques sur nouvelles versions et CVE ; complète le `pnpm audit` et l'audit NuGet déjà en CI.
-- ⬜ ♿ **Accessibilité étendue** : audit global (axe + manuel), navigation clavier, focus visible cohérent sur toutes les pages.
-- ⬜ 📊 **Sentry** : capture d'erreurs front (React) et API (.NET), regroupement incidents, contexte release/env ; définir sampling, politique PII et rétention.
-- ⬜ 📊 **Analytics produit** (PostHog, Plausible ou équivalent) : mesure d'usage (créations, joins, votes, roue), funnels, rétention. Base légale RGPD + bandeau consentement si nécessaire.
-- ⬜ 🔒 **Bandeau consentement (CMP)** : choix granulaire au premier accès, persistance, lien « Modifier mes préférences » dans le footer ; conditionne le chargement effectif de l'analytics et SDKs tiers.
 - ⬜ 🏗️ **PWA** : manifest, icônes multi-tailles, splash, Service Worker complet.
 - ⬜ 🏗️ **Terraform (IaC)** : environnement staging calqué sur la prod (S3 + CloudFront, Cloud Run + Artifact Registry, IAM) ; state distant, secrets hors repo.
 - ⬜ 🔒 **OAuth — volet infra** : librairie OAuth côté API .NET, secrets dédiés par provider, écran de consentement, mentions légales à jour.
