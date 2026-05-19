@@ -14,7 +14,8 @@ Si on ne peut pas exprimer l'intention via le nommage ou la structure, refactori
 
 ## Workflow
 
-- Vérification par défaut avant push : `pnpm run verify:local`.
+**Avant tout push sur master, toujours exécuter `pnpm run verify:local` et corriger toute erreur avant de push.** Cette vérification couvre lint, format, tests front et tests API — elle est obligatoire quelle que soit la conversation ou la feature.
+
 - Ne jamais skip les hooks pre-push.
 - Préférer éditer les fichiers existants à en créer de nouveaux.
 
