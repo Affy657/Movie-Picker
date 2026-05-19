@@ -64,7 +64,7 @@ public sealed class ListMyEventsHandlerTests
         _eventRepo.Setup(r => r.ListByIdsAsync(It.Is<IReadOnlyCollection<string>>(ids => ids.Count == 1 && ids.Contains("e2")), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { joinedOnly });
 
-        var result = await _sut.HandleAsync("u1", limit: 10);
+        var result = await _sut.HandleAsync("u1", limit: 10, offset: 0);
 
         Assert.Equal(2, result.Events.Count);
         var c = result.Events.Single(x => x.Id == "e1");
@@ -110,7 +110,7 @@ public sealed class ListMyEventsHandlerTests
         _eventRepo.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Event>());
 
-        var result = await _sut.HandleAsync("u1", limit: 1);
+        var result = await _sut.HandleAsync("u1", limit: 1, offset: 0);
 
         Assert.Single(result.Events);
         Assert.Equal("b", result.Events[0].Id);
@@ -153,7 +153,7 @@ public sealed class ListMyEventsHandlerTests
             .Setup(r => r.CountByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<string, int> { ["e1"] = 3 });
 
-        var result = await _sut.HandleAsync("u1", limit: 10);
+        var result = await _sut.HandleAsync("u1", limit: 10, offset: 0);
 
         var row = Assert.Single(result.Events);
         Assert.Equal(5, row.ParticipantCount);
@@ -200,7 +200,7 @@ public sealed class ListMyEventsHandlerTests
             .Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Event>());
 
-        var result = await _sut.HandleAsync("u1", limit: 10);
+        var result = await _sut.HandleAsync("u1", limit: 10, offset: 0);
 
         var rowCapped = result.Events.Single(x => x.Id == "e1");
         var rowFree = result.Events.Single(x => x.Id == "e2");
