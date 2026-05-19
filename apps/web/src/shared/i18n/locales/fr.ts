@@ -415,6 +415,19 @@ export const fr = {
     dark: 'Sombre',
     system: 'Système',
   },
+
+  footer: {
+    ariaLabel: 'Pied de page',
+    tagline: 'Choisissez votre prochain film ensemble.',
+    navTitle: 'Navigation',
+    socialTitle: 'Réseaux',
+    githubLabel: 'Profil GitHub (nouvel onglet)',
+    linkedinLabel: 'Profil LinkedIn (nouvel onglet)',
+    tmdbPrefix: 'Données fournies par',
+    tmdbSuffix: '. Les notes et disponibilités sont indicatives.',
+    tmdbLinkAria: 'TMDB — ouvrir The Movie Database (nouvel onglet)',
+    copyright: '© {{year}} Movie Picker',
+  },
 } as const;
 
 type DeepStringify<T> = {

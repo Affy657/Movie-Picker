@@ -61,7 +61,7 @@ Découpage par version côté **métier / utilisateur**.
 - ✅ **Config** : limite de participants par soirée.
 - ✅ **Historique** : onglet « Soirées passées » dans Mes soirées, film gagnant affiché, lecture seule.
 - ✅ **Interface** : personnalisation de la couleur d'UI (palette de 6 couleurs, persistance locale et compte).
-- ⬜ **Footer global** : pied de page avec liens LinkedIn, GitHub, portfolio ; crédits TMDB obligatoires (condition d'usage de l'API) et liens légaux.
+- ✅ **Footer global** : pied de page avec liens LinkedIn, GitHub, portfolio ; crédits TMDB obligatoires (condition d'usage de l'API) et liens légaux.
 - ✅ **Deep links streaming** : lien direct vers l'app ou le site du provider (Netflix, Prime Video, Disney+…) depuis la fiche film. Fallback web si l'app n'est pas installée.
 
 ---

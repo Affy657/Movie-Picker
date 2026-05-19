@@ -5,6 +5,7 @@ import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { ROUTES } from '@/app/routes';
+import Footer from './Footer';
 import styles from './AppShell.module.css';
 
 function navLinkClass({ isActive }: { isActive: boolean }): string {
@@ -78,6 +79,7 @@ export default function AppShell() {
         ) : null}
       </header>
       <Outlet />
+      <Footer />
       {items.length > 0 ? (
         <nav className={styles.navMobile} aria-label={t('nav.navLabel')}>
           {items.map((item) => (

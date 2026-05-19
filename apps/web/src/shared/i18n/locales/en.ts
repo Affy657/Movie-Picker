@@ -406,4 +406,17 @@ export const en: Locale = {
     dark: 'Dark',
     system: 'System',
   },
+
+  footer: {
+    ariaLabel: 'Footer',
+    tagline: 'Pick your next movie together.',
+    navTitle: 'Navigation',
+    socialTitle: 'Social',
+    githubLabel: 'GitHub profile (new tab)',
+    linkedinLabel: 'LinkedIn profile (new tab)',
+    tmdbPrefix: 'Data provided by',
+    tmdbSuffix: '. Ratings and availability are indicative.',
+    tmdbLinkAria: 'TMDB — open The Movie Database (new tab)',
+    copyright: '© {{year}} Movie Picker',
+  },
 };
