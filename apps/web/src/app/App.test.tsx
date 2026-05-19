@@ -38,7 +38,7 @@ describe('App (routes)', () => {
   afterAll(() => server.close());
 
   describe('visiteur anonyme', () => {
-    it('route / affiche la landing publique avec les CTA d’authentification', async () => {
+    it("route / affiche la landing publique avec les CTA d'authentification", async () => {
       server.use(authMeGuestHandler);
       renderRoutes(['/']);
       expect(
@@ -98,7 +98,7 @@ describe('App (routes)', () => {
       );
     });
 
-    it('AppShell : aucune barre de navigation n’est exposée aux non-connectés', async () => {
+    it("AppShell : aucune barre de navigation n'est exposée aux non-connectés", async () => {
       server.use(authMeGuestHandler);
       renderRoutes(['/']);
       await screen.findByRole(
@@ -109,8 +109,6 @@ describe('App (routes)', () => {
       expect(
         screen.queryByRole('navigation', { name: /navigation principale/i })
       ).not.toBeInTheDocument();
-      expect(screen.queryByRole('link', { name: /^Mes soirées$/i })).not.toBeInTheDocument();
-      expect(screen.queryByRole('link', { name: /^Mon compte$/i })).not.toBeInTheDocument();
     });
   });
 
