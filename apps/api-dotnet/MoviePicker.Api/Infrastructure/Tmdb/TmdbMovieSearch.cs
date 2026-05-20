@@ -96,7 +96,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
 
         var r = string.IsNullOrWhiteSpace(region) ? "FR" : region.Trim().ToUpperInvariant();
         var typeSegment = MediaTypeSegment(mediaType);
-        var cacheKey = $"tmdb-enrich:{typeSegment}:{r}:{tmdbId}";
+        var cacheKey = $"tmdb-enrich-v2:{typeSegment}:{r}:{tmdbId}";
         var ttl = TimeSpan.FromHours(Math.Clamp(_options.TmdbEnrichmentCacheHours, 1, 168));
 
         if (_cache.TryGetValue(cacheKey, out object? boxed) && boxed is TmdbMovieEnrichment cached)

@@ -107,7 +107,13 @@ public static class ServiceCollectionExtensions
         if (string.Equals(configuration["E2E_STUB_TMDB"], "1", StringComparison.Ordinal))
             services.AddSingleton<ITmdbMovieSearch, StubTmdbMovieSearch>();
         else
-            services.AddHttpClient<ITmdbMovieSearch, TmdbMovieSearch>();
+            services.AddHttpClient<ITmdbMovieSearch, TmdbMovieSearch>()
+                .ConfigurePrimaryHttpMessageHandler(static () => new HttpClientHandler
+                {
+                    AutomaticDecompression = System.Net.DecompressionMethods.GZip
+                        | System.Net.DecompressionMethods.Deflate
+                        | System.Net.DecompressionMethods.Brotli,
+                });
 
         services.AddHttpClient(
                 PosterFetchHttp.ClientName,
