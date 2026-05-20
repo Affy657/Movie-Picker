@@ -92,7 +92,8 @@ Découpage par version côté **métier / utilisateur**.
 - **Notifications hors session** : push navigateur et/ou e-mail pour rappels avant soirée ; préférences par utilisateur.
 - **i18n étendue** : langues supplémentaires au-delà de FR / EN ; variantes régionales, RTL si besoin.
 - **Connexion sociale (OAuth)** : Google, Apple, GitHub, Microsoft en complément de l'email / mot de passe.
-- **Intégration Letterboxd** : import de la liste « déjà vu » et watchlist depuis Letterboxd.
+- **Watchlist personnelle** : liste de films « à voir » par utilisateur ; ajout depuis la recherche TMDB ; proposition rapide d'un film depuis sa watchlist directement dans une soirée.
+- **Intégration Letterboxd** : import de la watchlist (films à voir) et de la liste « déjà vu » depuis un export CSV Letterboxd ou via leur flux RSS public.
 - **Système de dons** : page de soutien au projet (Stripe, Buy Me a Coffee, Ko-fi) ; strictement facultatif, sans impact fonctionnel.
 - **Avertissements de contenu** : badges violence / horreur / 18+ sur les fiches films ; option hôte « masquer les films 18+ » pour soirées familiales.
 - **Cercles d'amis** : groupes persistants d'utilisateurs réutilisables d'une soirée à l'autre ; invitation en un clic de tout le cercle.
