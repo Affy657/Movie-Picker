@@ -16,23 +16,29 @@ export const BOTTTS_IDS = [
   'sigma',
   'droid',
   'theta',
-  'glyph',
+  'chip',
   'vibe',
 ] as const;
 
 export const EMOJI_IDS = [
   'cute',
-  'nova',
+  'wink',
   'hero',
   'halo',
-  'riot',
-  'glee',
+  'grin',
+  'cool',
   'keen',
   'jazz',
   'fizz',
   'zest',
   'bold',
   'epic',
+  'bask',
+  'nod',
+  'glow',
+  'zoom',
+  'snap',
+  'luxe',
 ] as const;
 
 export const AVATAR_IDS = [...BOTTTS_IDS, ...EMOJI_IDS] as const;
