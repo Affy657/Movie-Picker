@@ -83,13 +83,7 @@ function cardMoviesLabel(movieCount: number) {
   );
 }
 
-function EventCardKebab({
-  title,
-  onDelete,
-}: {
-  title: string;
-  onDelete: () => void;
-}) {
+function EventCardKebab({ title, onDelete }: { title: string; onDelete: () => void }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
@@ -244,10 +238,7 @@ function EventListBlock({
                 </div>
               </Link>
               {onDeleteEvent && ev.isCreator ? (
-                <EventCardKebab
-                  title={ev.title}
-                  onDelete={() => onDeleteEvent(ev.slug)}
-                />
+                <EventCardKebab title={ev.title} onDelete={() => onDeleteEvent(ev.slug)} />
               ) : null}
             </li>
           );
