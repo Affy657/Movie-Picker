@@ -91,11 +91,7 @@ export default function AvatarPickerModal({ open, currentAvatarId, onSelect, onC
         </button>
       </div>
 
-      <div
-        role="radiogroup"
-        aria-label={t('auth.account.avatarLabel')}
-        className={styles.grid}
-      >
+      <div role="radiogroup" aria-label={t('auth.account.avatarLabel')} className={styles.grid}>
         {ids.map((id) => {
           const selected = id === currentAvatarId;
           return (

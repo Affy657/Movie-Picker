@@ -1,14 +1,38 @@
 // Must match regex in AuthDtos.cs → PatchUserProfileRequest.AvatarId
 export const BOTTTS_IDS = [
-  'alpha', 'beta',  'bolt',  'byte',  'crux',  'delta',
-  'flux',  'forge', 'gamma', 'jolt',  'kilo',  'laser',
-  'dex',   'sigma', 'droid', 'theta', 'glyph', 'vibe',
+  'alpha',
+  'beta',
+  'bolt',
+  'byte',
+  'crux',
+  'delta',
+  'flux',
+  'forge',
+  'gamma',
+  'jolt',
+  'kilo',
+  'laser',
+  'dex',
+  'sigma',
+  'droid',
+  'theta',
+  'glyph',
+  'vibe',
 ] as const;
 
 export const EMOJI_IDS = [
-  'cute', 'nova', 'hero', 'halo',
-  'riot', 'glee', 'keen', 'jazz',
-  'fizz', 'zest', 'bold', 'epic',
+  'cute',
+  'nova',
+  'hero',
+  'halo',
+  'riot',
+  'glee',
+  'keen',
+  'jazz',
+  'fizz',
+  'zest',
+  'bold',
+  'epic',
 ] as const;
 
 export const AVATAR_IDS = [...BOTTTS_IDS, ...EMOJI_IDS] as const;
