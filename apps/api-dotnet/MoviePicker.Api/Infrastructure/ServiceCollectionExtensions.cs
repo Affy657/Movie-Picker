@@ -67,10 +67,10 @@ public static class ServiceCollectionExtensions
                     opts.ResendApiBaseUrl = resendBase.Trim().TrimEnd('/');
                 var vapidPub = cfg["VAPID_PUBLIC_KEY"];
                 if (!string.IsNullOrWhiteSpace(vapidPub))
-                    opts.VapidPublicKey = vapidPub.Trim();
+                    opts.VapidPublicKey = StripNonBase64Url(vapidPub);
                 var vapidPriv = cfg["VAPID_PRIVATE_KEY"];
                 if (!string.IsNullOrWhiteSpace(vapidPriv))
-                    opts.VapidPrivateKey = vapidPriv.Trim();
+                    opts.VapidPrivateKey = StripNonBase64Url(vapidPriv);
                 var vapidSubject = cfg["VAPID_SUBJECT"];
                 if (!string.IsNullOrWhiteSpace(vapidSubject))
                     opts.VapidSubject = vapidSubject.Trim();
@@ -195,4 +195,7 @@ public static class ServiceCollectionExtensions
                 services.AddScoped(iface, type);
         }
     }
+
+    private static string StripNonBase64Url(string s) =>
+        new(s.Where(c => c is (>= 'A' and <= 'Z') or (>= 'a' and <= 'z') or (>= '0' and <= '9') or '-' or '_').ToArray());
 }

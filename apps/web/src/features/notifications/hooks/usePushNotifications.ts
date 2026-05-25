@@ -18,7 +18,8 @@ interface PushNotificationsState {
 }
 
 function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
-  const padded = base64.replace(/-/g, '+').replace(/_/g, '/');
+  const cleaned = base64.replace(/[^A-Za-z0-9\-_]/g, '');
+  const padded = cleaned.replace(/-/g, '+').replace(/_/g, '/');
   const padLen = (4 - (padded.length % 4)) % 4;
   const raw = atob(padded + '='.repeat(padLen));
   const bytes = new Uint8Array(raw.length);
