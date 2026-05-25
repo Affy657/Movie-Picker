@@ -2,7 +2,6 @@
   display: inline-flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 1.1rem;
 }
 
 .option {

@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
-import { Crown, Film, Plus, Trophy, Users } from 'lucide-react';
+import { Crown, Film, MoreVertical, Plus, Trash2, Trophy, Users } from 'lucide-react';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
-import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
+  deleteEvent,
   fetchGuestJoinedEventsSummaries,
   fetchMyEventsList,
   GUEST_JOINED_EVENTS_ALL_FAILED,
 } from '@/features/events/api/eventsApi';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { listStoredParticipantSlugs } from '@/features/events/storage';
 import PageLayout from '@/shared/components/PageLayout';
 import MyEventsSkeleton from '@/features/events/pages/MyEventsSkeleton';
@@ -81,18 +83,83 @@ function cardMoviesLabel(movieCount: number) {
   );
 }
 
+function EventCardKebab({
+  title,
+  onDelete,
+}: {
+  title: string;
+  onDelete: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    if (!open) return;
+    const handlePointer = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', handlePointer);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handlePointer);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [open]);
+
+  return (
+    <div className={styles.itemKebab} ref={rootRef}>
+      <button
+        type="button"
+        className={styles.itemKebabBtn}
+        onClick={(e) => {
+          e.preventDefault();
+          setOpen((v) => !v);
+        }}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={t('events.myEvents.eventOptionsLabel', { title })}
+      >
+        <MoreVertical aria-hidden size={16} />
+      </button>
+      {open ? (
+        <div className={styles.itemKebabMenu} role="menu">
+          <button
+            type="button"
+            role="menuitem"
+            className={styles.itemKebabItemDanger}
+            onClick={(e) => {
+              e.preventDefault();
+              setOpen(false);
+              onDelete();
+            }}
+          >
+            <Trash2 aria-hidden size={14} />
+            <span>{t('events.danger.deleteButton')}</span>
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function EventListBlock({
   sectionId,
   heading,
   events,
   emptyHint,
   showLifecycleBadge = true,
+  onDeleteEvent,
 }: {
   sectionId: string;
   heading: string;
   events: MyEventSummary[];
   emptyHint: string | null;
   showLifecycleBadge?: boolean;
+  onDeleteEvent?: (slug: string) => void;
 }) {
   const { t } = useTranslation();
   const { locale } = useLocale();
@@ -123,7 +190,11 @@ function EventListBlock({
             <li key={ev.id} className={styles.item}>
               <Link
                 to={ROUTES.eventDetail(ev.slug)}
-                className={clsx(styles.link, ev.winnerMovieTitle && styles.winnerCard)}
+                className={clsx(
+                  styles.link,
+                  ev.winnerMovieTitle && styles.winnerCard,
+                  onDeleteEvent && ev.isCreator && styles.linkWithKebab
+                )}
               >
                 <span className={styles.rowTop}>
                   <span className={styles.title}>{ev.title}</span>
@@ -172,6 +243,12 @@ function EventListBlock({
                   </span>
                 </div>
               </Link>
+              {onDeleteEvent && ev.isCreator ? (
+                <EventCardKebab
+                  title={ev.title}
+                  onDelete={() => onDeleteEvent(ev.slug)}
+                />
+              ) : null}
             </li>
           );
         })}
@@ -211,6 +288,24 @@ export default function MyEventsPage() {
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const [hasGuestSession] = useState<boolean>(() => listStoredParticipantSlugs().length > 0);
+  const [confirmDeleteSlug, setConfirmDeleteSlug] = useState<string | null>(null);
+
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const deleteMutation = useMutation({
+    mutationFn: (slug: string) => deleteEvent(slug),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.listPaged });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.guestJoined });
+      setDeleteError(null);
+    },
+    onError: (e) => {
+      setDeleteError(getErrorMessage(e, t('events.danger.deleteError')));
+    },
+    onSettled: () => {
+      setConfirmDeleteSlug(null);
+    },
+  });
 
   const loggedInQuery = useInfiniteQuery({
     queryKey: queryKeys.myEvents.listPaged,
@@ -412,6 +507,7 @@ export default function MyEventsPage() {
                     events={historyEvents.slice(0, visibleHistoryCount)}
                     emptyHint={null}
                     showLifecycleBadge={false}
+                    onDeleteEvent={setConfirmDeleteSlug}
                   />
                   {(visibleHistoryCount < historyEvents.length || loggedInQuery.hasNextPage) &&
                     (infiniteScrollActive ? (
@@ -459,6 +555,27 @@ export default function MyEventsPage() {
           </Link>
         </nav>
       )}
+      {deleteError ? (
+        <p className="error" role="alert">
+          {deleteError}
+        </p>
+      ) : null}
+      <ConfirmDialog
+        open={confirmDeleteSlug !== null}
+        title={t('events.danger.deleteConfirmTitle')}
+        message={t('events.danger.deleteConfirmMessage', {
+          title: historyEvents.find((e) => e.slug === confirmDeleteSlug)?.title ?? '',
+        })}
+        confirmLabel={t('events.danger.deleteConfirmAction')}
+        busy={deleteMutation.isPending}
+        onConfirm={() => {
+          if (confirmDeleteSlug) deleteMutation.mutate(confirmDeleteSlug);
+        }}
+        onCancel={() => {
+          setConfirmDeleteSlug(null);
+          setDeleteError(null);
+        }}
+      />
     </PageLayout>
   );
 }

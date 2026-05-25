@@ -287,13 +287,18 @@ export default function HostEventSettingsPanel({
 
         <div className={styles.checkboxRow}>
           <label className={styles.checkboxLabel}>
+            <span>{t('events.settings.allowSeriesLabel')}</span>
             <input
               type="checkbox"
+              role="switch"
+              aria-checked={allowSeries}
               checked={allowSeries}
               onChange={(e) => setAllowSeries(e.target.checked)}
               disabled={locked || mutation.isPending}
             />
-            <span>{t('events.settings.allowSeriesLabel')}</span>
+            <span className={styles.toggleTrack}>
+              <span className={styles.toggleThumb} />
+            </span>
           </label>
         </div>
 

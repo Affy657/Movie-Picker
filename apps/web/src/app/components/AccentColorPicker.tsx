@@ -9,31 +9,37 @@ import type { AccentColor } from '@/shared/types/theme';
 import styles from './AccentColorPicker.module.css';
 
 const PICKER_COLORS = [
-  'default',
   'blue',
   'green',
   'purple',
   'pink',
   'orange',
+  'red',
+  'cyan',
+  'indigo',
 ] as const satisfies readonly AccentColor[];
 type PickerColor = (typeof PICKER_COLORS)[number];
 
 const SWATCH_COLORS: Record<PickerColor, string> = {
-  default: '#2563eb',
   blue: '#2563eb',
   green: '#16a34a',
   purple: '#7c3aed',
   pink: '#db2777',
   orange: '#ea580c',
+  red: '#dc2626',
+  cyan: '#0891b2',
+  indigo: '#4f46e5',
 };
 
 const ACCENT_LABEL_KEY: Record<PickerColor, TranslationKey> = {
-  default: 'auth.account.accentColorOptions.default',
   blue: 'auth.account.accentColorOptions.blue',
   green: 'auth.account.accentColorOptions.green',
   purple: 'auth.account.accentColorOptions.purple',
   pink: 'auth.account.accentColorOptions.pink',
   orange: 'auth.account.accentColorOptions.orange',
+  red: 'auth.account.accentColorOptions.red',
+  cyan: 'auth.account.accentColorOptions.cyan',
+  indigo: 'auth.account.accentColorOptions.indigo',
 };
 
 const PATCH_DEBOUNCE_MS = 400;
@@ -61,7 +67,9 @@ export default function AccentColorPicker({
     []
   );
 
-  const effectiveSelection: PickerColor = accent as PickerColor;
+  const effectiveSelection: PickerColor = (PICKER_COLORS as readonly string[]).includes(accent)
+    ? (accent as PickerColor)
+    : 'blue';
 
   const commit = useCallback(
     (next: PickerColor) => {
