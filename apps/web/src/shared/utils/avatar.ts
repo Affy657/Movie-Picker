@@ -1,21 +1,21 @@
 // Must match regex in AuthDtos.cs → PatchUserProfileRequest.AvatarId
 export const AVATAR_IDS = [
-  'clap',
-  'reel',
-  'popcorn',
-  'camera',
-  'projector',
-  'trophy',
-  'masks',
-  'star',
-  'ticket',
-  'seat',
-  'lens',
-  'director',
+  'ember',
+  'frost',
+  'jade',
+  'kale',
+  'luna',
+  'mist',
+  'nova',
+  'opal',
+  'pine',
+  'reef',
+  'sage',
+  'zara',
 ] as const;
 
 export type AvatarId = (typeof AVATAR_IDS)[number];
 
 export function avatarUrl(avatarId: string): string {
-  return `/avatars/${avatarId}.svg`;
+  return `https://api.dicebear.com/9.x/bottts-neutral/svg?seed=${encodeURIComponent(avatarId)}&radius=50`;
 }
