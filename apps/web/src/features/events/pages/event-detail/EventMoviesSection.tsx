@@ -74,9 +74,7 @@ export default function EventMoviesSection({
   const handleActionError = useCallback((msg: string) => setActionError(msg), [setActionError]);
 
   const participantAvatars = Object.fromEntries(
-    (event.participants ?? [])
-      .filter((p) => p.avatarId)
-      .map((p) => [p.id, p.avatarId!])
+    (event.participants ?? []).filter((p) => p.avatarId).map((p) => [p.id, p.avatarId!])
   );
 
   return (

@@ -100,8 +100,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => logoutMutation.mutateAsync(), [logoutMutation]);
 
   const patchProfile = useCallback(
-    (patch: { displayName?: string; uiTheme?: UiThemePreference; accentColor?: AccentColor; avatarId?: string }) =>
-      patchProfileMutation.mutateAsync(patch),
+    (patch: {
+      displayName?: string;
+      uiTheme?: UiThemePreference;
+      accentColor?: AccentColor;
+      avatarId?: string;
+    }) => patchProfileMutation.mutateAsync(patch),
     [patchProfileMutation]
   );
 

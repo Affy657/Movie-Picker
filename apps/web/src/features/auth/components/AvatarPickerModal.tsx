@@ -19,7 +19,9 @@ export default function AvatarPickerModal({ open, currentAvatarId, onSelect, onC
   const titleId = `avatar-modal-title-${reactId}`;
 
   const onCloseRef = useRef(onClose);
-  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     const dlg = dialogRef.current;
@@ -31,8 +33,12 @@ export default function AvatarPickerModal({ open, currentAvatarId, onSelect, onC
   useEffect(() => {
     const dlg = dialogRef.current;
     if (!dlg) return;
-    const handleClose = () => { if (open) onCloseRef.current(); };
-    const handleBackdrop = (e: MouseEvent) => { if (e.target === dlg) onCloseRef.current(); };
+    const handleClose = () => {
+      if (open) onCloseRef.current();
+    };
+    const handleBackdrop = (e: MouseEvent) => {
+      if (e.target === dlg) onCloseRef.current();
+    };
     dlg.addEventListener('close', handleClose);
     dlg.addEventListener('click', handleBackdrop);
     return () => {
@@ -44,8 +50,15 @@ export default function AvatarPickerModal({ open, currentAvatarId, onSelect, onC
   return (
     <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>
       <div className={styles.header}>
-        <h2 id={titleId} className={styles.title}>{t('auth.account.avatarLabel')}</h2>
-        <button type="button" className={styles.closeBtn} onClick={onClose} aria-label={t('common.close')}>
+        <h2 id={titleId} className={styles.title}>
+          {t('auth.account.avatarLabel')}
+        </h2>
+        <button
+          type="button"
+          className={styles.closeBtn}
+          onClick={onClose}
+          aria-label={t('common.close')}
+        >
           <X size={18} aria-hidden />
         </button>
       </div>
