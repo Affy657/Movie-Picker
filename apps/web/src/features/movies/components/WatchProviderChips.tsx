@@ -5,6 +5,7 @@ import type { WatchProviderOffer } from '@/shared/types/movie';
 import { useTranslation } from '@/shared/i18n';
 import type { TranslationKey } from '@/shared/i18n/t';
 import { isSafeTmdbWatchPageUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
+import { providerDirectUrl } from '@/shared/utils/providerUrl';
 import styles from './WatchProviderChips.module.css';
 
 function toAbsoluteTmdbLogoUrl(raw: string): string {
@@ -57,17 +58,16 @@ function monetizationLabel(
 
 interface WatchProviderChipsProps {
   providers: WatchProviderOffer[];
+  title: string;
   className?: string;
-
   variant?: 'default' | 'compact';
-
   watchPageUrl?: string | null;
-
   maxVisible?: number;
 }
 
 export default function WatchProviderChips({
   providers,
+  title,
   className,
   variant = 'default',
   watchPageUrl,
@@ -125,11 +125,13 @@ export default function WatchProviderChips({
 
         const chipClass = clsx(styles.chip, hasLogo && styles.chipLogoOnly);
 
+        const href = providerDirectUrl(p.providerId, title, safeWatchHref);
+
         return (
           <li key={`${p.providerId}-${p.type}`} className={styles.listItem}>
-            {safeWatchHref ? (
+            {href ? (
               <a
-                href={safeWatchHref}
+                href={href}
                 className={clsx(chipClass, styles.chipLink)}
                 aria-label={ariaLink}
                 target="_blank"

@@ -305,17 +305,29 @@
   background: transparent;
   border: none;
   border-radius: var(--radius-sm);
-  color: var(--color-error);
+  color: var(--color-text);
   font-size: 0.875rem;
   text-align: left;
   cursor: pointer;
   transition: background 0.15s ease;
+  text-decoration: none;
+  width: 100%;
+  white-space: nowrap;
 }
 
 .kebabItem:hover,
 .kebabItem:focus-visible {
-  background: color-mix(in srgb, var(--color-error) 12%, transparent);
+  background: color-mix(in srgb, var(--color-text) 10%, transparent);
   outline: none;
+}
+
+.kebabItemDanger {
+  color: var(--color-error);
+}
+
+.kebabItemDanger:hover,
+.kebabItemDanger:focus-visible {
+  background: color-mix(in srgb, var(--color-error) 12%, transparent);
 }
 
 .mediaTypeBadge {

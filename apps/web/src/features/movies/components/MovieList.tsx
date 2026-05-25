@@ -1,6 +1,6 @@
 import { memo, useEffect, useId, useRef, useState } from 'react';
 import clsx from 'clsx';
-import { Eye, MoreVertical, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react';
+import { ExternalLink, Eye, MoreVertical, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react';
 import type { MovieData } from '@/shared/types/movie';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
 import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
@@ -137,15 +137,19 @@ const MovieCard = memo(function MovieCard({
               <span className={styles.mediaTypeBadge}>{t('movies.list.tvBadge')}</span>
             )}
           </h3>
-          {canRemove && (
+          {m.tmdbId > 0 || canRemove ? (
             <CardKebab
               title={m.title}
+              year={m.year}
+              tmdbId={m.tmdbId}
+              mediaType={m.mediaType}
               isMine={!!isMine}
               isHost={isHost}
+              canRemove={!!canRemove}
               onRemove={() => void onRemove(m.id)}
               t={t}
             />
-          )}
+          ) : null}
         </div>
         <p className={styles.metaLine}>
           {m.year ? <span className={styles.metaItem}>{m.year}</span> : null}
@@ -166,6 +170,7 @@ const MovieCard = memo(function MovieCard({
         {providers.length > 0 ? (
           <WatchProviderChips
             providers={providers}
+            title={m.title}
             variant="compact"
             className={styles.cardProviders}
             watchPageUrl={safeTmdbWatchUrl}
@@ -255,13 +260,63 @@ const MovieCard = memo(function MovieCard({
 
 interface CardKebabProps {
   title: string;
+  year?: string;
+  tmdbId: number;
+  mediaType?: 'movie' | 'tv';
   isMine: boolean;
   isHost: boolean;
+  canRemove: boolean;
   onRemove: () => void;
   t: Translate;
 }
 
-function CardKebab({ title, isMine, isHost, onRemove, t }: CardKebabProps) {
+function letterboxdUrl(tmdbId: number, mediaType?: 'movie' | 'tv', title?: string): string {
+  if (mediaType === 'tv') {
+    return `https://letterboxd.com/search/films/${encodeURIComponent(title ?? '')}/`;
+  }
+  return `https://letterboxd.com/tmdb/${tmdbId}/`;
+}
+
+function imdbUrl(title: string, year?: string): string {
+  const q = year ? `${title} ${year}` : title;
+  return `https://www.imdb.com/find/?q=${encodeURIComponent(q)}&s=tt`;
+}
+
+function allocineUrl(title: string): string {
+  return `https://www.allocine.fr/recherche/?q=${encodeURIComponent(title)}`;
+}
+
+function tmdbPageUrl(tmdbId: number, mediaType?: 'movie' | 'tv'): string {
+  const type = mediaType === 'tv' ? 'tv' : 'movie';
+  return `https://www.themoviedb.org/${type}/${tmdbId}`;
+}
+
+function ExternalMenuLink({
+  href,
+  label,
+  onClose,
+}: {
+  href: string;
+  label: string;
+  onClose: () => void;
+}) {
+  return (
+    <a
+      role="menuitem"
+      className={styles.kebabItem}
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={onClose}
+      aria-label={label}
+    >
+      <ExternalLink aria-hidden size={14} />
+      <span>{label}</span>
+    </a>
+  );
+}
+
+function CardKebab({ title, year, tmdbId, mediaType, isMine, isHost, canRemove, onRemove, t }: CardKebabProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -287,6 +342,11 @@ function CardKebab({ title, isMine, isHost, onRemove, t }: CardKebabProps) {
     ? `${t('movies.list.removeButton')} ${title}`
     : t('movies.list.removeAsHostAria', { title });
 
+  const lbUrl = letterboxdUrl(tmdbId, mediaType, title);
+  const imdbHref = imdbUrl(title, year);
+  const allocineHref = allocineUrl(title);
+  const tmdbHref = tmdbPageUrl(tmdbId, mediaType);
+
   return (
     <div className={styles.kebab} ref={rootRef}>
       <button
@@ -301,20 +361,30 @@ function CardKebab({ title, isMine, isHost, onRemove, t }: CardKebabProps) {
       </button>
       {open ? (
         <div className={styles.kebabMenu} role="menu">
-          <button
-            type="button"
-            role="menuitem"
-            className={styles.kebabItem}
-            onClick={() => {
-              setOpen(false);
-              onRemove();
-            }}
-            aria-label={removeAria}
-            title={!isMine && isHost ? t('movies.list.removeAsHostTitle') : undefined}
-          >
-            <Trash2 aria-hidden size={14} />
-            <span>{t('movies.list.removeButton')}</span>
-          </button>
+          {tmdbId > 0 && (
+            <>
+              <ExternalMenuLink href={lbUrl} label={t('movies.list.letterboxdButton')} onClose={() => setOpen(false)} />
+              <ExternalMenuLink href={imdbHref} label={t('movies.list.imdbButton')} onClose={() => setOpen(false)} />
+              <ExternalMenuLink href={allocineHref} label={t('movies.list.allocineButton')} onClose={() => setOpen(false)} />
+              <ExternalMenuLink href={tmdbHref} label={t('movies.list.tmdbButton')} onClose={() => setOpen(false)} />
+            </>
+          )}
+          {canRemove && (
+            <button
+              type="button"
+              role="menuitem"
+              className={clsx(styles.kebabItem, styles.kebabItemDanger)}
+              onClick={() => {
+                setOpen(false);
+                onRemove();
+              }}
+              aria-label={removeAria}
+              title={!isMine && isHost ? t('movies.list.removeAsHostTitle') : undefined}
+            >
+              <Trash2 aria-hidden size={14} />
+              <span>{t('movies.list.removeButton')}</span>
+            </button>
+          )}
         </div>
       ) : null}
     </div>
