@@ -43,6 +43,9 @@ public sealed class InMemoryUserRepository : IUserRepository
             AccentColor = user.AccentColor,
             NotifyOnParticipantJoined = user.NotifyOnParticipantJoined,
             NotifyEventReminder = user.NotifyEventReminder,
+            NotifyOnMovieAdded = user.NotifyOnMovieAdded,
+            NotifyOnMoviePicked = user.NotifyOnMoviePicked,
+            NotifyOnEventDeleted = user.NotifyOnEventDeleted,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         };
@@ -70,6 +73,9 @@ public sealed class InMemoryUserRepository : IUserRepository
             AccentColor = user.AccentColor,
             NotifyOnParticipantJoined = user.NotifyOnParticipantJoined,
             NotifyEventReminder = user.NotifyEventReminder,
+            NotifyOnMovieAdded = user.NotifyOnMovieAdded,
+            NotifyOnMoviePicked = user.NotifyOnMoviePicked,
+            NotifyOnEventDeleted = user.NotifyOnEventDeleted,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         };

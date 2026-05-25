@@ -27,6 +27,9 @@ public sealed record User
     public AccentColor AccentColor { get; init; } = AccentColor.Default;
     public bool NotifyOnParticipantJoined { get; init; } = true;
     public bool NotifyEventReminder { get; init; } = true;
+    public bool NotifyOnMovieAdded { get; init; } = true;
+    public bool NotifyOnMoviePicked { get; init; } = true;
+    public bool NotifyOnEventDeleted { get; init; } = true;
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
 }

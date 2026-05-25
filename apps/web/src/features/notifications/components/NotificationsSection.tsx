@@ -136,6 +136,48 @@ export default function NotificationsSection() {
                 <span className={styles.toggleThumb} />
               </button>
             </div>
+
+            <div className={styles.prefRow}>
+              <span className={styles.prefLabel}>{t('notifications.prefMovieAdded')}</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={prefs.notifyOnMovieAdded}
+                className={styles.toggle}
+                disabled={savingPref === 'notifyOnMovieAdded'}
+                onClick={() => void handleTogglePref('notifyOnMovieAdded')}
+              >
+                <span className={styles.toggleThumb} />
+              </button>
+            </div>
+
+            <div className={styles.prefRow}>
+              <span className={styles.prefLabel}>{t('notifications.prefMoviePicked')}</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={prefs.notifyOnMoviePicked}
+                className={styles.toggle}
+                disabled={savingPref === 'notifyOnMoviePicked'}
+                onClick={() => void handleTogglePref('notifyOnMoviePicked')}
+              >
+                <span className={styles.toggleThumb} />
+              </button>
+            </div>
+
+            <div className={styles.prefRow}>
+              <span className={styles.prefLabel}>{t('notifications.prefEventDeleted')}</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={prefs.notifyOnEventDeleted}
+                className={styles.toggle}
+                disabled={savingPref === 'notifyOnEventDeleted'}
+                onClick={() => void handleTogglePref('notifyOnEventDeleted')}
+              >
+                <span className={styles.toggleThumb} />
+              </button>
+            </div>
           </>
         )}
       </div>

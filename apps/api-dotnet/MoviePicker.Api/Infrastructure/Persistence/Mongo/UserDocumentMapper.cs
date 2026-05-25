@@ -15,6 +15,9 @@ public static class UserDocumentMapper
             AccentColor = ParseAccent(doc.AccentColor),
             NotifyOnParticipantJoined = doc.NotifyOnParticipantJoined ?? true,
             NotifyEventReminder = doc.NotifyEventReminder ?? true,
+            NotifyOnMovieAdded = doc.NotifyOnMovieAdded ?? true,
+            NotifyOnMoviePicked = doc.NotifyOnMoviePicked ?? true,
+            NotifyOnEventDeleted = doc.NotifyOnEventDeleted ?? true,
             CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero),
             UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)
         };
@@ -30,6 +33,9 @@ public static class UserDocumentMapper
             AccentColor = AccentToString(user.AccentColor),
             NotifyOnParticipantJoined = user.NotifyOnParticipantJoined,
             NotifyEventReminder = user.NotifyEventReminder,
+            NotifyOnMovieAdded = user.NotifyOnMovieAdded,
+            NotifyOnMoviePicked = user.NotifyOnMoviePicked,
+            NotifyOnEventDeleted = user.NotifyOnEventDeleted,
             CreatedAt = user.CreatedAt.UtcDateTime,
             UpdatedAt = user.UpdatedAt.UtcDateTime
         };

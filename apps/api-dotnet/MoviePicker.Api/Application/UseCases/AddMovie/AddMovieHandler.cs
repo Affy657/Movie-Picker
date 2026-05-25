@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.Posters;
@@ -12,17 +13,29 @@ public sealed class AddMovieHandler : IAddMovieHandler
     private readonly IMovieRepository _movieRepository;
     private readonly IParticipantRepository _participantRepository;
     private readonly IPosterImageStore _posterImageStore;
+    private readonly IUserRepository _userRepository;
+    private readonly IPushSubscriptionRepository _pushSubscriptions;
+    private readonly IPushNotificationSender _pushSender;
+    private readonly ILogger<AddMovieHandler> _logger;
 
     public AddMovieHandler(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
         IParticipantRepository participantRepository,
-        IPosterImageStore posterImageStore)
+        IPosterImageStore posterImageStore,
+        IUserRepository userRepository,
+        IPushSubscriptionRepository pushSubscriptions,
+        IPushNotificationSender pushSender,
+        ILogger<AddMovieHandler> logger)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _participantRepository = participantRepository;
         _posterImageStore = posterImageStore;
+        _userRepository = userRepository;
+        _pushSubscriptions = pushSubscriptions;
+        _pushSender = pushSender;
+        _logger = logger;
     }
 
     public async Task<MovieWithScoreResponse> HandleAsync(string idOrSlug, AddMovieRequest request, CancellationToken ct = default)
@@ -78,6 +91,8 @@ public sealed class AddMovieHandler : IAddMovieHandler
 
         var created = await _movieRepository.InsertAsync(movie, ct);
 
+        _ = NotifyParticipantsOnMovieAddedAsync(evt, created.Title, participant.UserId, CancellationToken.None);
+
         return new MovieWithScoreResponse
         {
             Id = created.Id,
@@ -97,6 +112,44 @@ public sealed class AddMovieHandler : IAddMovieHandler
             SeenCount = 0,
             SeenByPseudos = Array.Empty<string>()
         };
+    }
+
+    private async Task NotifyParticipantsOnMovieAddedAsync(Event evt, string movieTitle, string? proposerUserId, CancellationToken ct)
+    {
+        try
+        {
+            var participants = await _participantRepository.ListByEventIdAsync(evt.Id, ct);
+            var userIds = participants
+                .Where(p => !string.IsNullOrEmpty(p.UserId) && p.UserId != proposerUserId)
+                .Select(p => p.UserId!)
+                .Distinct()
+                .ToList();
+            if (userIds.Count == 0)
+                return;
+
+            var users = await _userRepository.ListByIdsAsync(userIds, ct);
+            var notifiableIds = users.Where(u => u.NotifyOnMovieAdded).Select(u => u.Id).ToHashSet();
+            if (notifiableIds.Count == 0)
+                return;
+
+            var subs = await _pushSubscriptions.ListByUserIdsAsync(notifiableIds, ct);
+            if (subs.Count == 0)
+                return;
+
+            var message = new PushMessage(
+                Title: "🎬 Nouveau film proposé",
+                Body: $"« {movieTitle} » a été ajouté à « {evt.Title} »",
+                Tag: $"movie-add-{evt.Id}",
+                Url: $"/events/{evt.Slug}"
+            );
+
+            foreach (var sub in subs.Where(s => notifiableIds.Contains(s.UserId)))
+                await _pushSender.SendAsync(sub, message, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Échec de la notification film proposé pour la soirée {EventId}", evt.Id);
+        }
     }
 
     private static bool IsAcceptablePosterPath(string p)

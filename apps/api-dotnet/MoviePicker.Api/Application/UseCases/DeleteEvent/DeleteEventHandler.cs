@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.DeleteEvent;
@@ -13,6 +14,9 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
     private readonly IVoteRepository _voteRepository;
     private readonly ISeenMarkRepository _seenMarkRepository;
     private readonly ICurrentUserAccessor _currentUserAccessor;
+    private readonly IUserRepository _userRepository;
+    private readonly IPushSubscriptionRepository _pushSubscriptions;
+    private readonly IPushNotificationSender _pushSender;
     private readonly ILogger<DeleteEventHandler> _logger;
 
     public DeleteEventHandler(
@@ -22,6 +26,9 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         IVoteRepository voteRepository,
         ISeenMarkRepository seenMarkRepository,
         ICurrentUserAccessor currentUserAccessor,
+        IUserRepository userRepository,
+        IPushSubscriptionRepository pushSubscriptions,
+        IPushNotificationSender pushSender,
         ILogger<DeleteEventHandler> logger)
     {
         _eventRepository = eventRepository;
@@ -30,6 +37,9 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         _voteRepository = voteRepository;
         _seenMarkRepository = seenMarkRepository;
         _currentUserAccessor = currentUserAccessor;
+        _userRepository = userRepository;
+        _pushSubscriptions = pushSubscriptions;
+        _pushSender = pushSender;
         _logger = logger;
     }
 
@@ -43,6 +53,15 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
 
         if (string.IsNullOrEmpty(evt.CreatorUserId) || evt.CreatorUserId != currentUserId)
             throw new ForbiddenException("Seul le créateur de la soirée peut la supprimer.");
+
+        var participants = await _participantRepository.ListByEventIdAsync(evt.Id, ct);
+        var participantUserIds = participants
+            .Where(p => !string.IsNullOrEmpty(p.UserId) && p.UserId != currentUserId)
+            .Select(p => p.UserId!)
+            .Distinct()
+            .ToList();
+
+        _ = NotifyParticipantsOnEventDeletedAsync(evt, participantUserIds, CancellationToken.None);
 
         var removedVotes = await _voteRepository.DeleteByEventIdAsync(evt.Id, ct);
         var removedSeenMarks = await _seenMarkRepository.DeleteByEventIdAsync(evt.Id, ct);
@@ -78,5 +97,37 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
             RemovedVotes = removedVotes,
             RemovedSeenMarks = removedSeenMarks
         };
+    }
+
+    private async Task NotifyParticipantsOnEventDeletedAsync(Event evt, IReadOnlyList<string> userIds, CancellationToken ct)
+    {
+        try
+        {
+            if (userIds.Count == 0)
+                return;
+
+            var users = await _userRepository.ListByIdsAsync(userIds, ct);
+            var notifiableIds = users.Where(u => u.NotifyOnEventDeleted).Select(u => u.Id).ToHashSet();
+            if (notifiableIds.Count == 0)
+                return;
+
+            var subs = await _pushSubscriptions.ListByUserIdsAsync(notifiableIds, ct);
+            if (subs.Count == 0)
+                return;
+
+            var message = new PushMessage(
+                Title: "❌ Soirée annulée",
+                Body: $"« {evt.Title} » a été annulée.",
+                Tag: $"event-deleted-{evt.Id}",
+                Url: "/"
+            );
+
+            foreach (var sub in subs.Where(s => notifiableIds.Contains(s.UserId)))
+                await _pushSender.SendAsync(sub, message, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Échec de la notification suppression pour la soirée {EventId}", evt.Id);
+        }
     }
 }

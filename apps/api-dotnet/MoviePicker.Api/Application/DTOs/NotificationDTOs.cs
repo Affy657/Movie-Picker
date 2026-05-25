@@ -24,10 +24,16 @@ public sealed record NotificationPreferencesResponse
 {
     public bool NotifyOnParticipantJoined { get; init; }
     public bool NotifyEventReminder { get; init; }
+    public bool NotifyOnMovieAdded { get; init; }
+    public bool NotifyOnMoviePicked { get; init; }
+    public bool NotifyOnEventDeleted { get; init; }
 }
 
 public sealed record PatchNotificationPreferencesRequest
 {
     public bool? NotifyOnParticipantJoined { get; init; }
     public bool? NotifyEventReminder { get; init; }
+    public bool? NotifyOnMovieAdded { get; init; }
+    public bool? NotifyOnMoviePicked { get; init; }
+    public bool? NotifyOnEventDeleted { get; init; }
 }

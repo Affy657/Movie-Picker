@@ -434,6 +434,9 @@ export const fr = {
     prefsTitle: 'Choisissez les notifications à recevoir',
     prefParticipantJoined: "Quelqu'un rejoint votre soirée",
     prefEventReminder: 'Rappel 1 heure avant la soirée',
+    prefMovieAdded: 'Un film est proposé à votre soirée',
+    prefMoviePicked: 'Résultat du tirage au sort',
+    prefEventDeleted: 'Une soirée est annulée',
   },
 
   footer: {

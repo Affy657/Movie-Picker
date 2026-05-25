@@ -26,6 +26,9 @@ public sealed class PatchNotificationPreferencesHandler : IPatchNotificationPref
         {
             NotifyOnParticipantJoined = request.NotifyOnParticipantJoined ?? user.NotifyOnParticipantJoined,
             NotifyEventReminder = request.NotifyEventReminder ?? user.NotifyEventReminder,
+            NotifyOnMovieAdded = request.NotifyOnMovieAdded ?? user.NotifyOnMovieAdded,
+            NotifyOnMoviePicked = request.NotifyOnMoviePicked ?? user.NotifyOnMoviePicked,
+            NotifyOnEventDeleted = request.NotifyOnEventDeleted ?? user.NotifyOnEventDeleted,
             UpdatedAt = _clock.GetUtcNow()
         };
 
@@ -34,7 +37,10 @@ public sealed class PatchNotificationPreferencesHandler : IPatchNotificationPref
         return new NotificationPreferencesResponse
         {
             NotifyOnParticipantJoined = updated.NotifyOnParticipantJoined,
-            NotifyEventReminder = updated.NotifyEventReminder
+            NotifyEventReminder = updated.NotifyEventReminder,
+            NotifyOnMovieAdded = updated.NotifyOnMovieAdded,
+            NotifyOnMoviePicked = updated.NotifyOnMoviePicked,
+            NotifyOnEventDeleted = updated.NotifyOnEventDeleted
         };
     }
 }

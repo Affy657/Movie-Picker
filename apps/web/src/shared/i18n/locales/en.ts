@@ -425,6 +425,9 @@ export const en: Locale = {
     prefsTitle: 'Choose which notifications to receive',
     prefParticipantJoined: 'Someone joins your event',
     prefEventReminder: 'Reminder 1 hour before the event',
+    prefMovieAdded: 'A movie is proposed for your event',
+    prefMoviePicked: 'Movie draw result',
+    prefEventDeleted: 'An event is cancelled',
   },
 
   footer: {

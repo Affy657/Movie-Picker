@@ -20,7 +20,10 @@ public sealed class GetNotificationPreferencesHandler : IGetNotificationPreferen
         return new NotificationPreferencesResponse
         {
             NotifyOnParticipantJoined = user.NotifyOnParticipantJoined,
-            NotifyEventReminder = user.NotifyEventReminder
+            NotifyEventReminder = user.NotifyEventReminder,
+            NotifyOnMovieAdded = user.NotifyOnMovieAdded,
+            NotifyOnMoviePicked = user.NotifyOnMoviePicked,
+            NotifyOnEventDeleted = user.NotifyOnEventDeleted
         };
     }
 }

@@ -33,6 +33,18 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public bool? NotifyEventReminder { get; set; }
 
+    [BsonElement("notifyOnMovieAdded")]
+    [BsonIgnoreIfNull]
+    public bool? NotifyOnMovieAdded { get; set; }
+
+    [BsonElement("notifyOnMoviePicked")]
+    [BsonIgnoreIfNull]
+    public bool? NotifyOnMoviePicked { get; set; }
+
+    [BsonElement("notifyOnEventDeleted")]
+    [BsonIgnoreIfNull]
+    public bool? NotifyOnEventDeleted { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 

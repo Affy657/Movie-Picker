@@ -3,6 +3,9 @@ import { fetchApi } from '@/shared/api/client';
 export interface NotificationPreferences {
   notifyOnParticipantJoined: boolean;
   notifyEventReminder: boolean;
+  notifyOnMovieAdded: boolean;
+  notifyOnMoviePicked: boolean;
+  notifyOnEventDeleted: boolean;
 }
 
 export async function fetchVapidPublicKey(): Promise<string> {
