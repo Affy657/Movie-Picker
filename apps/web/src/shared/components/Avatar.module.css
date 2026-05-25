@@ -1,0 +1,15 @@
+.avatar {
+  display: inline-block;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.placeholder {
+  background: var(--color-border-subtle);
+}
+
+.xs { width: 20px; height: 20px; }
+.sm { width: 26px; height: 26px; }
+.md { width: 36px; height: 36px; }
+.lg { width: 56px; height: 56px; }

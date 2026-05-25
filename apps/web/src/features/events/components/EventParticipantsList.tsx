@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import { Crown, Users, X } from 'lucide-react';
 import type { EventParticipantSummary } from '@/shared/types/event';
 import { useTranslation } from '@/shared/i18n';
+import Avatar from '@/shared/components/Avatar';
 import styles from './EventParticipantsList.module.css';
 
 type Props = {
@@ -66,6 +67,7 @@ export default function EventParticipantsList({
                 className={clsx(styles.chip, isMe && styles.chipMe)}
                 data-testid={`participant-${p.id}`}
               >
+                <Avatar avatarId={p.avatarId ?? ''} size="xs" />
                 <span className={styles.chipLabel}>{p.pseudo}</span>
                 {isCreator && (
                   <span

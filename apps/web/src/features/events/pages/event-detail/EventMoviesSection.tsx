@@ -73,6 +73,12 @@ export default function EventMoviesSection({
 
   const handleActionError = useCallback((msg: string) => setActionError(msg), [setActionError]);
 
+  const participantAvatars = Object.fromEntries(
+    (event.participants ?? [])
+      .filter((p) => p.avatarId)
+      .map((p) => [p.id, p.avatarId!])
+  );
+
   return (
     <section className="section section-movies" aria-label="Films proposés">
       <h2>Films</h2>
@@ -108,6 +114,7 @@ export default function EventMoviesSection({
           onVote={handleVote}
           onRemove={handleRemove}
           refresh={refreshAll}
+          participantAvatars={participantAvatars}
         />
       )}
     </section>

@@ -131,6 +131,9 @@ export const en: Locale = {
         pink: 'Pink',
         orange: 'Orange',
       },
+      avatarLabel: 'Avatar',
+      avatarHint: 'Shown next to your nickname in events.',
+      avatarOptionAriaLabel: 'Choose avatar {{name}}',
     },
     logout: {
       fallbackError: 'Logout failed.',

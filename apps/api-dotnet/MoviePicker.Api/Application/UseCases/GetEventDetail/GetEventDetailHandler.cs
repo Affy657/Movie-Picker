@@ -12,6 +12,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
     private readonly IEventRepository _eventRepository;
     private readonly IMovieRepository _movieRepository;
     private readonly IParticipantRepository _participantRepository;
+    private readonly IUserRepository _userRepository;
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IPosterImageStore _posterImageStore;
@@ -20,6 +21,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
         IParticipantRepository participantRepository,
+        IUserRepository userRepository,
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
         IPosterImageStore posterImageStore)
@@ -27,6 +29,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _participantRepository = participantRepository;
+        _userRepository = userRepository;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _posterImageStore = posterImageStore;
@@ -69,6 +72,16 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
                 myParticipant = ParticipantResponse.FromDomain(mine);
         }
 
+        var participantUserIds = participants
+            .Where(p => !string.IsNullOrEmpty(p.UserId))
+            .Select(p => p.UserId!)
+            .Distinct()
+            .ToList();
+        var users = participantUserIds.Count > 0
+            ? await _userRepository.ListByIdsAsync(participantUserIds, ct)
+            : Array.Empty<User>();
+        var userAvatarById = users.ToDictionary(u => u.Id, u => u.AvatarId);
+
         var creatorUserId = evt.CreatorUserId;
         var participantsSummary = participants
             .Select(p => new EventParticipantSummaryResponse
@@ -76,6 +89,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
                 Id = p.Id,
                 Pseudo = p.Pseudo,
                 IsCreator = !string.IsNullOrEmpty(creatorUserId) && p.UserId == creatorUserId,
+                AvatarId = p.UserId is not null && userAvatarById.TryGetValue(p.UserId, out var av) ? av : string.Empty,
             })
             .ToList();
 

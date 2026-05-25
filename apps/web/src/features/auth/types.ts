@@ -6,4 +6,5 @@ export interface UserProfile {
   emailMasked: string;
   uiTheme: UiThemePreference;
   accentColor: AccentColor;
+  avatarId: string;
 }

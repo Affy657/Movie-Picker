@@ -23,7 +23,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
     {
         var user = await _users.GetByIdAsync(userId, ct) ?? throw new NotFoundException("Utilisateur introuvable");
 
-        if (request.DisplayName is null && request.UiTheme is null && request.AccentColor is null)
+        if (request.DisplayName is null && request.UiTheme is null && request.AccentColor is null && request.AvatarId is null)
         {
             return new UserProfileResponse
             {
@@ -31,7 +31,8 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
                 DisplayName = user.DisplayName,
                 EmailMasked = EmailMasking.Mask(user.Email),
                 UiTheme = user.UiTheme,
-                AccentColor = user.AccentColor
+                AccentColor = user.AccentColor,
+                AvatarId = user.AvatarId
             };
         }
 
@@ -52,11 +53,14 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
         if (request.AccentColor is not null)
             accent = ParseEnum(request.AccentColor, AccentColor.Default);
 
+        var avatarId = request.AvatarId ?? user.AvatarId;
+
         var updated = user with
         {
             DisplayName = displayName,
             UiTheme = theme,
             AccentColor = accent,
+            AvatarId = avatarId,
             UpdatedAt = _clock.GetUtcNow()
         };
 
@@ -67,7 +71,8 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             DisplayName = saved.DisplayName,
             EmailMasked = EmailMasking.Mask(saved.Email),
             UiTheme = saved.UiTheme,
-            AccentColor = saved.AccentColor
+            AccentColor = saved.AccentColor,
+            AvatarId = saved.AvatarId
         };
     }
 

@@ -19,7 +19,8 @@ public sealed class GetUserProfileHandler : IGetUserProfileHandler
             DisplayName = user.DisplayName,
             EmailMasked = EmailMasking.Mask(user.Email),
             UiTheme = user.UiTheme,
-            AccentColor = user.AccentColor
+            AccentColor = user.AccentColor,
+            AvatarId = user.AvatarId
         };
     }
 }

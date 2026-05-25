@@ -1,6 +1,7 @@
 import { memo, useEffect, useId, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { ExternalLink, Eye, MoreVertical, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react';
+import Avatar from '@/shared/components/Avatar';
 import type { MovieData } from '@/shared/types/movie';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
 import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
@@ -32,6 +33,7 @@ interface MovieListProps {
   onRemove: (movieId: string) => Promise<void>;
   refresh: () => void;
   onActionError: (message: string) => void;
+  participantAvatars?: Record<string, string>;
 }
 
 interface MovieCardProps {
@@ -46,7 +48,7 @@ interface MovieCardProps {
   refresh: () => void;
   onActionError: (message: string) => void;
   t: Translate;
-
+  participantAvatars?: Record<string, string>;
   eager?: boolean;
 }
 
@@ -62,9 +64,11 @@ const MovieCard = memo(function MovieCard({
   refresh,
   onActionError,
   t,
+  participantAvatars,
   eager = false,
 }: MovieCardProps) {
   const isMine = participantId && getParticipantId(m) === participantId;
+  const proposerAvatarId = participantAvatars?.[getParticipantId(m)] ?? '';
   const canRemove = isMine || isHost;
   const iMarkedSeen = !!(
     participantPseudo &&
@@ -182,14 +186,17 @@ const MovieCard = memo(function MovieCard({
         {seenHint ? <p className={styles.seenHint}>{seenHint}</p> : null}
         <p className={styles.proposerLine}>
           {m.proposerPseudo ? (
-            isMine ? (
-              <>
-                {t('movies.list.proposedByMeLead')}
-                <span className={styles.selfProposer}>{t('movies.list.proposedByMeSelf')}</span>
-              </>
-            ) : (
-              t('movies.list.proposedBy', { pseudo: m.proposerPseudo })
-            )
+            <>
+              <Avatar avatarId={proposerAvatarId} size="xs" className={styles.proposerAvatar} />
+              {isMine ? (
+                <>
+                  {t('movies.list.proposedByMeLead')}
+                  <span className={styles.selfProposer}>{t('movies.list.proposedByMeSelf')}</span>
+                </>
+              ) : (
+                t('movies.list.proposedBy', { pseudo: m.proposerPseudo })
+              )}
+            </>
           ) : null}
         </p>
         {!isFinished && participantId && (
@@ -428,6 +435,7 @@ export default function MovieList({
   onRemove,
   refresh,
   onActionError,
+  participantAvatars,
 }: MovieListProps) {
   const { t } = useTranslation();
 
@@ -452,6 +460,7 @@ export default function MovieList({
             onRemove={onRemove}
             refresh={refresh}
             onActionError={onActionError}
+            participantAvatars={participantAvatars}
             t={t}
           />
         ))}

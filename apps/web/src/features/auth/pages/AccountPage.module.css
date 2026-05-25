@@ -32,3 +32,42 @@
   flex-shrink: 0;
   color: var(--color-primary);
 }
+
+.avatarRow {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.avatarButton {
+  position: relative;
+  display: inline-flex;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.avatarButton:hover .avatarEditOverlay,
+.avatarButton:focus-visible .avatarEditOverlay {
+  opacity: 1;
+}
+
+.avatarButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.avatarEditOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}

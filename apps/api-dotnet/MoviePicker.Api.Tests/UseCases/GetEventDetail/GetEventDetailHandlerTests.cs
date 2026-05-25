@@ -13,6 +13,7 @@ public sealed class GetEventDetailHandlerTests
     private readonly Mock<IEventRepository> _eventRepo;
     private readonly Mock<IMovieRepository> _movieRepo;
     private readonly Mock<IParticipantRepository> _participantRepo;
+    private readonly Mock<IUserRepository> _userRepo;
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor;
     private readonly Mock<ICurrentUserAccessor> _currentUserAccessor;
     private readonly Mock<IPosterImageStore> _posterStore;
@@ -56,10 +57,15 @@ public sealed class GetEventDetailHandlerTests
         _movieRepo
             .Setup(r => r.CountByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
+        _userRepo = new Mock<IUserRepository>();
+        _userRepo
+            .Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<User>)Array.Empty<User>());
         _sut = new GetEventDetailHandler(
             _eventRepo.Object,
             _movieRepo.Object,
             _participantRepo.Object,
+            _userRepo.Object,
             _hostTokenAccessor.Object,
             _currentUserAccessor.Object,
             _posterStore.Object);

@@ -183,3 +183,8 @@
     margin-bottom: 0;
   }
 }
+
+.headerAvatar {
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+}

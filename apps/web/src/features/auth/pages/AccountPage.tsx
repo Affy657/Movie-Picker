@@ -5,6 +5,9 @@ import { KeyRound, LogOut, Sliders, User } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import NotificationsSection from '@/features/notifications/components/NotificationsSection';
+import { Pencil } from 'lucide-react';
+import Avatar from '@/shared/components/Avatar';
+import AvatarPickerModal from '@/features/auth/components/AvatarPickerModal';
 import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
@@ -187,6 +190,7 @@ export default function AccountPage() {
   const { user, isLoading, logout, patchProfile } = useAuth();
   const [displayName, setDisplayName] = useState('');
   const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [avatarModalOpen, setAvatarModalOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -259,6 +263,28 @@ export default function AccountPage() {
           <User size={18} aria-hidden />
           {t('auth.account.profileTitle')}
         </h2>
+        <div className={styles.avatarRow}>
+          <button
+            type="button"
+            className={styles.avatarButton}
+            onClick={() => setAvatarModalOpen(true)}
+            aria-label={t('auth.account.avatarLabel')}
+          >
+            <Avatar avatarId={user.avatarId} size="lg" />
+            <span className={styles.avatarEditOverlay} aria-hidden>
+              <Pencil size={14} />
+            </span>
+          </button>
+        </div>
+        <AvatarPickerModal
+          open={avatarModalOpen}
+          currentAvatarId={user.avatarId}
+          onSelect={async (id) => {
+            setAvatarModalOpen(false);
+            await patchProfile({ avatarId: id });
+          }}
+          onClose={() => setAvatarModalOpen(false)}
+        />
         <form onSubmit={handleProfileSubmit} className="form">
           {error && (
             <p id="account-form-error" className="error" role="alert">

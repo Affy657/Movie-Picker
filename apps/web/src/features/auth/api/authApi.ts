@@ -55,6 +55,7 @@ export async function patchAuthProfile(patch: {
   displayName?: string;
   uiTheme?: UiThemePreference;
   accentColor?: AccentColor;
+  avatarId?: string;
 }): Promise<UserProfile> {
   return fetchApi<UserProfile>('/auth/me', {
     method: 'PATCH',

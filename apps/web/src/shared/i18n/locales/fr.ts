@@ -133,6 +133,9 @@ export const fr = {
         pink: 'Rose',
         orange: 'Orange',
       },
+      avatarLabel: 'Avatar',
+      avatarHint: 'Affiché à côté de votre pseudo dans les soirées.',
+      avatarOptionAriaLabel: 'Choisir l’avatar {{name}}',
     },
     logout: {
       fallbackError: 'Déconnexion impossible.',

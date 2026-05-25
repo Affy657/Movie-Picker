@@ -20,8 +20,8 @@ export interface EventConfigData {
 export interface EventParticipantSummary {
   id: string;
   pseudo: string;
-
   isCreator?: boolean;
+  avatarId?: string;
 }
 
 export interface EventData {

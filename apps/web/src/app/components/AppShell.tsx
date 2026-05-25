@@ -5,6 +5,7 @@ import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { ROUTES } from '@/app/routes';
+import Avatar from '@/shared/components/Avatar';
 import Footer from './Footer';
 import styles from './AppShell.module.css';
 
@@ -75,6 +76,7 @@ export default function AppShell() {
             {items.map((item) => (
               <DesktopNavItem key={item.to} {...item} />
             ))}
+            {user && <Avatar avatarId={user.avatarId} size="sm" className={styles.headerAvatar} />}
           </nav>
         ) : null}
       </header>

@@ -34,6 +34,6 @@ public sealed class EventParticipantSummaryResponse
     [JsonPropertyName("_id")]
     public string Id { get; init; } = string.Empty;
     public string Pseudo { get; init; } = string.Empty;
-
     public bool IsCreator { get; init; }
+    public string AvatarId { get; init; } = string.Empty;
 }

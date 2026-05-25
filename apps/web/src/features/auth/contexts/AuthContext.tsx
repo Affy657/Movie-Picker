@@ -21,6 +21,7 @@ type AuthContextValue = {
     displayName?: string;
     uiTheme?: UiThemePreference;
     accentColor?: AccentColor;
+    avatarId?: string;
   }) => Promise<UserProfile>;
 };
 
@@ -78,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       displayName?: string;
       uiTheme?: UiThemePreference;
       accentColor?: AccentColor;
+      avatarId?: string;
     }) => patchAuthProfile(patch),
     onSuccess: (updated) => {
       queryClient.setQueryData(queryKeys.auth.me, updated);
@@ -98,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => logoutMutation.mutateAsync(), [logoutMutation]);
 
   const patchProfile = useCallback(
-    (patch: { displayName?: string; uiTheme?: UiThemePreference; accentColor?: AccentColor }) =>
+    (patch: { displayName?: string; uiTheme?: UiThemePreference; accentColor?: AccentColor; avatarId?: string }) =>
       patchProfileMutation.mutateAsync(patch),
     [patchProfileMutation]
   );

@@ -25,6 +25,10 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public string? AccentColor { get; set; }
 
+    [BsonElement("avatarId")]
+    [BsonIgnoreIfNull]
+    public string? AvatarId { get; set; }
+
     [BsonElement("notifyOnParticipantJoined")]
     [BsonIgnoreIfNull]
     public bool? NotifyOnParticipantJoined { get; set; }

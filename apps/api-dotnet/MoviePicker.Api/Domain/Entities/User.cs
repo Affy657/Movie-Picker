@@ -25,6 +25,7 @@ public sealed record User
     public string DisplayName { get; init; } = string.Empty;
     public UiThemePreference UiTheme { get; init; } = UiThemePreference.System;
     public AccentColor AccentColor { get; init; } = AccentColor.Default;
+    public string AvatarId { get; init; } = string.Empty;
     public bool NotifyOnParticipantJoined { get; init; } = true;
     public bool NotifyEventReminder { get; init; } = true;
     public bool NotifyOnMovieAdded { get; init; } = true;
