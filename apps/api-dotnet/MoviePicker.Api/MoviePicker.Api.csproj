@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MongoDB.Driver" Version="3.8.0" />
+    <PackageReference Include="MongoDB.Driver" Version="3.8.1" />
     <PackageReference Include="WebPush" Version="1.0.11" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
     <!-- Pin de transitives MongoDB.Driver : Snappier corrige GHSA-pggp-6c3x-2xmx ;
