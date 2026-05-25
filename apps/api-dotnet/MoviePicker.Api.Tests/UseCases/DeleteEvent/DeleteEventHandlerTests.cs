@@ -16,6 +16,9 @@ public sealed class DeleteEventHandlerTests
     private readonly Mock<IVoteRepository> _voteRepo = new();
     private readonly Mock<ISeenMarkRepository> _seenMarkRepo = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
+    private readonly Mock<IUserRepository> _userRepo = new();
+    private readonly Mock<IPushSubscriptionRepository> _pushSubRepo = new();
+    private readonly Mock<IPushNotificationSender> _pushSender = new();
     private readonly DeleteEventHandler _sut;
 
     public DeleteEventHandlerTests()
@@ -32,6 +35,9 @@ public sealed class DeleteEventHandlerTests
         _participantRepo
             .Setup(r => r.DeleteByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0L);
+        _participantRepo
+            .Setup(r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Participant>());
         _eventRepo
             .Setup(r => r.DeleteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
@@ -43,6 +49,9 @@ public sealed class DeleteEventHandlerTests
             _voteRepo.Object,
             _seenMarkRepo.Object,
             _currentUser.Object,
+            _userRepo.Object,
+            _pushSubRepo.Object,
+            _pushSender.Object,
             NullLogger<DeleteEventHandler>.Instance);
     }
 

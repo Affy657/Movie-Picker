@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
@@ -14,6 +15,9 @@ public sealed class AddMovieHandlerTests
     private readonly Mock<IMovieRepository> _movieRepo;
     private readonly Mock<IParticipantRepository> _participantRepo;
     private readonly Mock<IPosterImageStore> _posterStore;
+    private readonly Mock<IUserRepository> _userRepo;
+    private readonly Mock<IPushSubscriptionRepository> _pushSubRepo;
+    private readonly Mock<IPushNotificationSender> _pushSender;
     private readonly AddMovieHandler _sut;
 
     private static Event ActiveEvent(bool allowSeries = false) => new()
@@ -47,12 +51,26 @@ public sealed class AddMovieHandlerTests
         _movieRepo = new Mock<IMovieRepository>();
         _participantRepo = new Mock<IParticipantRepository>();
         _posterStore = new Mock<IPosterImageStore>();
+        _userRepo = new Mock<IUserRepository>();
+        _pushSubRepo = new Mock<IPushSubscriptionRepository>();
+        _pushSender = new Mock<IPushNotificationSender>();
         _posterStore.Setup(s => s.ToPublicPosterPath(It.IsAny<string?>())).Returns((string? u) => u);
         _posterStore.Setup(s => s.RegisterTmdbSourceAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _posterStore
             .Setup(s => s.RegisterTmdbSourcesAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
-        _sut = new AddMovieHandler(_eventRepo.Object, _movieRepo.Object, _participantRepo.Object, _posterStore.Object);
+        _participantRepo
+            .Setup(r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Participant>());
+        _sut = new AddMovieHandler(
+            _eventRepo.Object,
+            _movieRepo.Object,
+            _participantRepo.Object,
+            _posterStore.Object,
+            _userRepo.Object,
+            _pushSubRepo.Object,
+            _pushSender.Object,
+            NullLogger<AddMovieHandler>.Instance);
     }
 
     [Fact]
