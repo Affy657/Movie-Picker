@@ -1,17 +1,17 @@
 // Must match regex in AuthDtos.cs → PatchUserProfileRequest.AvatarId
 export const AVATAR_IDS = [
-  'ember',
-  'frost',
-  'jade',
-  'kale',
-  'luna',
-  'mist',
-  'nova',
-  'opal',
-  'pine',
-  'reef',
-  'sage',
-  'zara',
+  'alpha',
+  'beta',
+  'bolt',
+  'byte',
+  'crux',
+  'delta',
+  'flux',
+  'forge',
+  'gamma',
+  'jolt',
+  'kilo',
+  'laser',
 ] as const;
 
 export type AvatarId = (typeof AVATAR_IDS)[number];

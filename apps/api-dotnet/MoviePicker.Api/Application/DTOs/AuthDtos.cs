@@ -67,7 +67,7 @@ public sealed class PatchUserProfileRequest
 
     // Seeds must match AVATAR_IDS in apps/web/src/shared/utils/avatar.ts
     [RegularExpression(
-        "^(ember|frost|jade|kale|luna|mist|nova|opal|pine|reef|sage|zara)$",
+        "^(alpha|beta|bolt|byte|crux|delta|flux|forge|gamma|jolt|kilo|laser)$",
         ErrorMessage = "avatarId invalide.")]
     public string? AvatarId { get; init; }
 }
