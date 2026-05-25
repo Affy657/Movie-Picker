@@ -13,6 +13,8 @@ public static class UserDocumentMapper
             DisplayName = doc.DisplayName,
             UiTheme = ParseTheme(doc.UiTheme),
             AccentColor = ParseAccent(doc.AccentColor),
+            NotifyOnParticipantJoined = doc.NotifyOnParticipantJoined ?? true,
+            NotifyEventReminder = doc.NotifyEventReminder ?? true,
             CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero),
             UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)
         };
@@ -26,6 +28,8 @@ public static class UserDocumentMapper
             DisplayName = user.DisplayName,
             UiTheme = ThemeToString(user.UiTheme),
             AccentColor = AccentToString(user.AccentColor),
+            NotifyOnParticipantJoined = user.NotifyOnParticipantJoined,
+            NotifyEventReminder = user.NotifyEventReminder,
             CreatedAt = user.CreatedAt.UtcDateTime,
             UpdatedAt = user.UpdatedAt.UtcDateTime
         };

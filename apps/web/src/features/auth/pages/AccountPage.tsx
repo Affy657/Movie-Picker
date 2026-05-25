@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { KeyRound, LogOut, Sliders, User } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import NotificationsSection from '@/features/notifications/components/NotificationsSection';
 import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
@@ -296,6 +297,8 @@ export default function AccountPage() {
       <ChangePasswordSection />
 
       <PreferencesSection />
+
+      <NotificationsSection />
 
       <section className="section section--panel" aria-labelledby="session-heading">
         <h2 id="session-heading" className={styles.sectionTitle}>

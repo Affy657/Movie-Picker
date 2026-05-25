@@ -25,6 +25,14 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public string? AccentColor { get; set; }
 
+    [BsonElement("notifyOnParticipantJoined")]
+    [BsonIgnoreIfNull]
+    public bool? NotifyOnParticipantJoined { get; set; }
+
+    [BsonElement("notifyEventReminder")]
+    [BsonIgnoreIfNull]
+    public bool? NotifyEventReminder { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 

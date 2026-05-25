@@ -1,0 +1,54 @@
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0 0 0.9rem;
+}
+
+.sectionTitle :global(svg) {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.toggleInfo {
+  flex: 1;
+}
+
+.toggleLabel {
+  margin: 0;
+  font-weight: 500;
+}
+
+.toggleHint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.prefsDivider {
+  margin: 1rem 0;
+  border: none;
+  border-top: 1px solid var(--color-border);
+  opacity: 0.4;
+}
+
+.prefsTitle {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.prefRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9375rem;
+}

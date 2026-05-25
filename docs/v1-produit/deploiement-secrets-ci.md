@@ -12,6 +12,8 @@ Document opérationnel pour l’équipe (roadmap V1 § **21**). Complète le [RE
 | `TMDB_API_KEY` | Clé API TMDB (serveur uniquement) |
 | `AUTH_DATAPROTECTION_KEYRING` | XML du keyring **ASP.NET Data Protection** : signature des cookies de session, partagé entre révisions Cloud Run |
 | `RESEND_API_KEY` | Clé API Resend (`re_…`) — emails transactionnels (mot de passe oublié). Cf. § 8 |
+| `VAPID_PUBLIC_KEY` | Clé publique ECDH P-256 (base64url) pour les push notifications PWA. Cf. § 9 |
+| `VAPID_PRIVATE_KEY` | Clé privée ECDH P-256 (base64url) pour les push notifications PWA. Cf. § 9 |
 
 **Génération du keyring** : projet utilitaire `apps/api-dotnet/ToolGenDpKey` — sortie stdout à copier dans Secret Manager sous le nom attendu par Cloud Run (voir `DataProtectionConfiguration.KeyRingXmlEnvName`).
 
@@ -117,3 +119,20 @@ Exemple de filtre (conceptuel) : `jsonPayload.ApiRouteKind="auth"` ou `jsonPaylo
 - **Logs** : adresses destinataires sont **masquées** (`EmailMasking.Mask`) ; le **lien de reset** n’est **jamais** logué (override `EmailMessage.PrintMembers`).
 - **Test local sans Resend** : poser `EMAIL_PROVIDER=log` dans `.env` ; demander un reset → le lien complet apparaît dans la console API (ligne `[EMAIL][password-reset] … link=…`). Ne **jamais** activer `log` en environnement avec logs centralisés (staging / prod) : le token plain finirait dans les logs.
 - **Rotation clé Resend** : Secret Manager `RESEND_API_KEY` → `gcloud secrets versions add` ; Cloud Run consomme `:latest` à la prochaine révision.
+
+## 9. Notifications push PWA (VAPID)
+
+- **Protocole** : Web Push avec paire de clés ECDH **P-256** (VAPID). Le serveur signe les envois avec la clé privée ; le navigateur vérifie avec la clé publique.
+- **Génération** (une seule fois par env) :
+  ```bash
+  node -e "const {webcrypto}=require('crypto');(async()=>{const k=await webcrypto.subtle.generateKey({name:'ECDH',namedCurve:'P-256'},true,['deriveKey']);const pub=await webcrypto.subtle.exportKey('raw',k.publicKey);const priv=await webcrypto.subtle.exportKey('jwk',k.privateKey);console.log('PUBLIC='+Buffer.from(pub).toString('base64url'));console.log('PRIVATE='+priv.d);})()"
+  ```
+- **Stockage prod** : `VAPID_PUBLIC_KEY` et `VAPID_PRIVATE_KEY` dans Secret Manager, mappés via `--set-secrets` dans le workflow CI/CD.
+- **Clé publique exposée** : endpoint non authentifié `GET /api/v1/notifications/vapid-public-key` → consommé par le front au moment de l'abonnement (aucune variable d'env Vite nécessaire).
+- **Notifications déclenchées** :
+  - `JoinEventHandler` → notifie l'hôte quand un participant rejoint (si `NotifyOnParticipantJoined=true`).
+  - `EventReminderService` (BackgroundService, polling 30 min) → rappel 1 h avant les soirées ouvertes (si `NotifyEventReminder=true`).
+- **Abonnements MongoDB** : collection `push_subscriptions` ; index unique `(userId, endpoint)`.
+- **Expiration** : une réponse `410 Gone` ou `404` de l'endpoint push supprime automatiquement l'abonnement côté serveur.
+- **Rotation des clés** : les abonnements navigateur existants **sont invalidés** si la clé publique change. Toujours générer une nouvelle paire si rotation nécessaire, puis `gcloud secrets versions add VAPID_PUBLIC_KEY --data-file=-` et idem pour `VAPID_PRIVATE_KEY` ; déployer une nouvelle révision Cloud Run.
+- **Préférences utilisateur** : `NotifyOnParticipantJoined` et `NotifyEventReminder` sur l'entité `User` (défaut `true`) ; configurables depuis la page Compte du front.

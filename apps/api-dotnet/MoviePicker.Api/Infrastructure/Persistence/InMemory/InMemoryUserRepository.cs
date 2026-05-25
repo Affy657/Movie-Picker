@@ -12,6 +12,15 @@ public sealed class InMemoryUserRepository : IUserRepository
     public Task<User?> GetByIdAsync(string id, CancellationToken ct = default) =>
         Task.FromResult(_byId.TryGetValue(id, out var u) ? u : null);
 
+    public Task<IReadOnlyList<User>> ListByIdsAsync(IReadOnlyCollection<string> ids, CancellationToken ct = default)
+    {
+        IReadOnlyList<User> result = ids
+            .Select(id => _byId.TryGetValue(id, out var u) ? u : null)
+            .OfType<User>()
+            .ToList();
+        return Task.FromResult(result);
+    }
+
     public Task<User?> GetByEmailAsync(string email, CancellationToken ct = default)
     {
         var n = Normalize(email);
@@ -32,6 +41,8 @@ public sealed class InMemoryUserRepository : IUserRepository
             DisplayName = user.DisplayName,
             UiTheme = user.UiTheme,
             AccentColor = user.AccentColor,
+            NotifyOnParticipantJoined = user.NotifyOnParticipantJoined,
+            NotifyEventReminder = user.NotifyEventReminder,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         };
@@ -57,6 +68,8 @@ public sealed class InMemoryUserRepository : IUserRepository
             DisplayName = user.DisplayName,
             UiTheme = user.UiTheme,
             AccentColor = user.AccentColor,
+            NotifyOnParticipantJoined = user.NotifyOnParticipantJoined,
+            NotifyEventReminder = user.NotifyEventReminder,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         };

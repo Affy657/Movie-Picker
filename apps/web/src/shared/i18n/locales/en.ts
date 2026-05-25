@@ -411,6 +411,21 @@ export const en: Locale = {
     system: 'System',
   },
 
+  notifications: {
+    title: 'Notifications',
+    unsupported: 'Push notifications are not available on this browser.',
+    permissionDenied: 'Notifications are blocked. Change your browser permissions to re-enable them.',
+    enabledLabel: 'Notifications enabled',
+    disabledLabel: 'Notifications disabled',
+    enabledHint: 'You receive alerts even when the app is closed.',
+    disabledHint: 'Enable to receive background alerts.',
+    enableButton: 'Enable',
+    disableButton: 'Disable',
+    prefsTitle: 'Choose which notifications to receive',
+    prefParticipantJoined: 'Someone joins your event',
+    prefEventReminder: 'Reminder 1 hour before the event',
+  },
+
   footer: {
     ariaLabel: 'Footer',
     tagline: 'Pick your next movie together.',

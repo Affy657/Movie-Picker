@@ -64,6 +64,7 @@ Découpage par version côté **métier / utilisateur**.
 - ✅ **Footer global** : pied de page avec liens LinkedIn, GitHub, portfolio ; crédits TMDB obligatoires (condition d'usage de l'API) et liens légaux.
 - ✅ **Deep links streaming** : lien direct vers l'app ou le site du provider (Netflix, Prime Video, Disney+…) depuis la fiche film. Fallback web si l'app n'est pas installée.
 - ✅ **Liens critiques & bases de données** : boutons « Ouvrir sur Letterboxd », « Ouvrir sur IMDb » et « Ouvrir sur AlloCiné » dans le menu d'actions d'une card film ; redirection directe via l'ID TMDB pour Letterboxd, recherche titre + année pour IMDb et AlloCiné.
+- ✅ **Notifications push PWA** : abonnement VAPID depuis la page compte ; notification quand un participant rejoint la soirée (hôte) ; rappel automatique 1 h avant l'heure prévue (participants) ; préférences par notification configurables.
 
 ---
 
@@ -90,7 +91,6 @@ Découpage par version côté **métier / utilisateur**.
 - **Plage de votes configurable** : l'hôte peut définir le nombre max de votes up/down par participant.
 - **Suppression du compte / export des données** (RGPD) — depuis la page profil.
 - **Pages d'erreur dédiées** : 404 soirée/route, 500 — message clair et lien vers l'accueil.
-- **Notifications hors session** : push navigateur et/ou e-mail pour rappels avant soirée ; préférences par utilisateur.
 - **i18n étendue** : langues supplémentaires au-delà de FR / EN ; variantes régionales, RTL si besoin.
 - **Connexion sociale (OAuth)** : Google, Apple, GitHub, Microsoft en complément de l'email / mot de passe.
 - **Watchlist personnelle** : liste de films « à voir » par utilisateur ; ajout depuis la recherche TMDB ; proposition rapide d'un film depuis sa watchlist directement dans une soirée.

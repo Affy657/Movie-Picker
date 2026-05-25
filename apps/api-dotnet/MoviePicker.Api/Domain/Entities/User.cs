@@ -25,6 +25,8 @@ public sealed record User
     public string DisplayName { get; init; } = string.Empty;
     public UiThemePreference UiTheme { get; init; } = UiThemePreference.System;
     public AccentColor AccentColor { get; init; } = AccentColor.Default;
+    public bool NotifyOnParticipantJoined { get; init; } = true;
+    public bool NotifyEventReminder { get; init; } = true;
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
 }

@@ -31,4 +31,10 @@ public sealed class MoviePickerOptions
     public string? ResendApiKey { get; set; }
 
     public string ResendApiBaseUrl { get; set; } = "https://api.resend.com";
+
+    public string? VapidPublicKey { get; set; }
+
+    public string? VapidPrivateKey { get; set; }
+
+    public string VapidSubject { get; set; } = "mailto:noreply@movie-picker.fr";
 }

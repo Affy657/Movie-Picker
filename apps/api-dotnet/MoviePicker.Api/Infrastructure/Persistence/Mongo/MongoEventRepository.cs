@@ -97,4 +97,11 @@ public sealed class MongoEventRepository : IEventRepository
         var result = await _collection.DeleteOneAsync(x => x.Id == eventId, ct);
         return result.IsAcknowledged && result.DeletedCount > 0;
     }
+
+    public async Task<IReadOnlyList<Event>> ListOpenEventsAsync(CancellationToken ct = default)
+    {
+        var filter = Builders<EventDocument>.Filter.Eq(x => x.ClosedAt, (DateTime?)null);
+        var docs = await _collection.Find(filter).ToListAsync(ct);
+        return docs.ConvertAll(EventDocumentMapper.ToDomain);
+    }
 }

@@ -106,4 +106,12 @@ public sealed class InMemoryEventRepository : IEventRepository
 
         return Task.FromResult(true);
     }
+
+    public Task<IReadOnlyList<Event>> ListOpenEventsAsync(CancellationToken ct = default)
+    {
+        IReadOnlyList<Event> result = _byId.Values
+            .Where(e => !e.ClosedAt.HasValue)
+            .ToList();
+        return Task.FromResult(result);
+    }
 }

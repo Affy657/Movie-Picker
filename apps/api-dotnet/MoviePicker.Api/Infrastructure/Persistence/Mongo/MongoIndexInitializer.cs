@@ -27,6 +27,7 @@ public sealed class MongoIndexInitializer : IHostedService
             await EnsureAuthSessionIndexesAsync(cancellationToken);
             await EnsureSeenMarkIndexesAsync(cancellationToken);
             await EnsurePasswordResetTokenIndexesAsync(cancellationToken);
+            await EnsurePushSubscriptionIndexesAsync(cancellationToken);
         }
         catch (Exception ex)
         {
@@ -161,6 +162,20 @@ public sealed class MongoIndexInitializer : IHostedService
             Builders<SeenMarkDocument>.IndexKeys.Ascending(x => x.MovieId),
             new CreateIndexOptions { Name = "seen_marks_movieId" });
         await col.Indexes.CreateManyAsync(new[] { unique, byMovie }, ct);
+    }
+
+    private async Task EnsurePushSubscriptionIndexesAsync(CancellationToken ct)
+    {
+        var col = _database.GetCollection<PushSubscriptionDocument>("push_subscriptions");
+        var unique = new CreateIndexModel<PushSubscriptionDocument>(
+            Builders<PushSubscriptionDocument>.IndexKeys
+                .Ascending(x => x.UserId)
+                .Ascending(x => x.Endpoint),
+            new CreateIndexOptions { Name = "push_subscriptions_userId_endpoint_unique", Unique = true });
+        var byUser = new CreateIndexModel<PushSubscriptionDocument>(
+            Builders<PushSubscriptionDocument>.IndexKeys.Ascending(x => x.UserId),
+            new CreateIndexOptions { Name = "push_subscriptions_userId" });
+        await col.Indexes.CreateManyAsync(new[] { unique, byUser }, ct);
     }
 
     private static async Task DropIndexIfExistsAsync<T>(IMongoCollection<T> col, string name, CancellationToken ct)

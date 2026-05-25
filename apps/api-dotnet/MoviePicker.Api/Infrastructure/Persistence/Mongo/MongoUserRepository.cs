@@ -22,6 +22,15 @@ public sealed class MongoUserRepository : IUserRepository
         return doc is null ? null : UserDocumentMapper.ToDomain(doc);
     }
 
+    public async Task<IReadOnlyList<User>> ListByIdsAsync(IReadOnlyCollection<string> ids, CancellationToken ct = default)
+    {
+        if (ids.Count == 0)
+            return Array.Empty<User>();
+        var filter = Builders<UserDocument>.Filter.In(x => x.Id, ids);
+        var docs = await _collection.Find(filter).ToListAsync(ct);
+        return docs.ConvertAll(UserDocumentMapper.ToDomain);
+    }
+
     public async Task<User?> GetByEmailAsync(string email, CancellationToken ct = default)
     {
         var normalized = NormalizeEmail(email);

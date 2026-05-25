@@ -420,6 +420,21 @@ export const fr = {
     system: 'Système',
   },
 
+  notifications: {
+    title: 'Notifications',
+    unsupported: 'Les notifications push ne sont pas disponibles sur ce navigateur.',
+    permissionDenied: 'Les notifications ont été bloquées. Modifiez les permissions du navigateur pour les réactiver.',
+    enabledLabel: 'Notifications activées',
+    disabledLabel: 'Notifications désactivées',
+    enabledHint: 'Vous recevez des alertes même lorsque l\'application est fermée.',
+    disabledHint: 'Activez pour recevoir des alertes en arrière-plan.',
+    enableButton: 'Activer',
+    disableButton: 'Désactiver',
+    prefsTitle: 'Choisissez les notifications à recevoir',
+    prefParticipantJoined: 'Quelqu\'un rejoint votre soirée',
+    prefEventReminder: 'Rappel 1 heure avant la soirée',
+  },
+
   footer: {
     ariaLabel: 'Pied de page',
     tagline: 'Choisissez votre prochain film ensemble.',

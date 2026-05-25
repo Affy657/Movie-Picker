@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
@@ -9,11 +10,25 @@ public sealed class JoinEventHandler : IJoinEventHandler
 {
     private readonly IEventRepository _eventRepository;
     private readonly IParticipantRepository _participantRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly IPushSubscriptionRepository _pushSubscriptions;
+    private readonly IPushNotificationSender _pushSender;
+    private readonly ILogger<JoinEventHandler> _logger;
 
-    public JoinEventHandler(IEventRepository eventRepository, IParticipantRepository participantRepository)
+    public JoinEventHandler(
+        IEventRepository eventRepository,
+        IParticipantRepository participantRepository,
+        IUserRepository userRepository,
+        IPushSubscriptionRepository pushSubscriptions,
+        IPushNotificationSender pushSender,
+        ILogger<JoinEventHandler> logger)
     {
         _eventRepository = eventRepository;
         _participantRepository = participantRepository;
+        _userRepository = userRepository;
+        _pushSubscriptions = pushSubscriptions;
+        _pushSender = pushSender;
+        _logger = logger;
     }
 
     public async Task<JoinEventResult> HandleAsync(string idOrSlug, JoinEventRequest request, string? authenticatedUserId, CancellationToken ct = default)
@@ -72,6 +87,8 @@ public sealed class JoinEventHandler : IJoinEventHandler
 
         var created = await _participantRepository.AddAsync(participant, ct);
 
+        _ = NotifyHostAsync(evt, pseudo, CancellationToken.None);
+
         return new JoinEventResult
         {
             Participant = ParticipantResponse.FromDomain(created),
@@ -80,4 +97,34 @@ public sealed class JoinEventHandler : IJoinEventHandler
         };
     }
 
+    private async Task NotifyHostAsync(Event evt, string joinerPseudo, CancellationToken ct)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(evt.CreatorUserId))
+                return;
+
+            var host = await _userRepository.GetByIdAsync(evt.CreatorUserId, ct);
+            if (host is null || !host.NotifyOnParticipantJoined)
+                return;
+
+            var subscriptions = await _pushSubscriptions.ListByUserIdAsync(evt.CreatorUserId, ct);
+            if (subscriptions.Count == 0)
+                return;
+
+            var message = new PushMessage(
+                Title: $"🎉 Nouvelle inscription",
+                Body: $"{joinerPseudo} a rejoint « {evt.Title} »",
+                Tag: $"join-{evt.Id}",
+                Url: $"/events/{evt.Slug}"
+            );
+
+            foreach (var sub in subscriptions)
+                await _pushSender.SendAsync(sub, message, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Échec de la notification d'inscription pour la soirée {EventId}", evt.Id);
+        }
+    }
 }
