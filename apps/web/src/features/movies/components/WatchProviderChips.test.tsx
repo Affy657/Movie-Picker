@@ -81,7 +81,9 @@ describe('WatchProviderChips', () => {
     renderWithLocale(
       <WatchProviderChips
         title="Mon Film"
-        providers={[{ providerId: 9999, name: 'Service Inconnu', logoPath: null, type: 'flatrate' }]}
+        providers={[
+          { providerId: 9999, name: 'Service Inconnu', logoPath: null, type: 'flatrate' },
+        ]}
         watchPageUrl="https://www.themoviedb.org/movie/550/watch"
       />
     );
@@ -95,7 +97,9 @@ describe('WatchProviderChips', () => {
     renderWithLocale(
       <WatchProviderChips
         title="Mon Film"
-        providers={[{ providerId: 9999, name: 'Service Inconnu', logoPath: null, type: 'flatrate' }]}
+        providers={[
+          { providerId: 9999, name: 'Service Inconnu', logoPath: null, type: 'flatrate' },
+        ]}
         watchPageUrl="https://evil.example/phishing"
       />
     );

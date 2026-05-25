@@ -316,7 +316,17 @@ function ExternalMenuLink({
   );
 }
 
-function CardKebab({ title, year, tmdbId, mediaType, isMine, isHost, canRemove, onRemove, t }: CardKebabProps) {
+function CardKebab({
+  title,
+  year,
+  tmdbId,
+  mediaType,
+  isMine,
+  isHost,
+  canRemove,
+  onRemove,
+  t,
+}: CardKebabProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -363,10 +373,26 @@ function CardKebab({ title, year, tmdbId, mediaType, isMine, isHost, canRemove, 
         <div className={styles.kebabMenu} role="menu">
           {tmdbId > 0 && (
             <>
-              <ExternalMenuLink href={lbUrl} label={t('movies.list.letterboxdButton')} onClose={() => setOpen(false)} />
-              <ExternalMenuLink href={imdbHref} label={t('movies.list.imdbButton')} onClose={() => setOpen(false)} />
-              <ExternalMenuLink href={allocineHref} label={t('movies.list.allocineButton')} onClose={() => setOpen(false)} />
-              <ExternalMenuLink href={tmdbHref} label={t('movies.list.tmdbButton')} onClose={() => setOpen(false)} />
+              <ExternalMenuLink
+                href={lbUrl}
+                label={t('movies.list.letterboxdButton')}
+                onClose={() => setOpen(false)}
+              />
+              <ExternalMenuLink
+                href={imdbHref}
+                label={t('movies.list.imdbButton')}
+                onClose={() => setOpen(false)}
+              />
+              <ExternalMenuLink
+                href={allocineHref}
+                label={t('movies.list.allocineButton')}
+                onClose={() => setOpen(false)}
+              />
+              <ExternalMenuLink
+                href={tmdbHref}
+                label={t('movies.list.tmdbButton')}
+                onClose={() => setOpen(false)}
+              />
             </>
           )}
           {canRemove && (
