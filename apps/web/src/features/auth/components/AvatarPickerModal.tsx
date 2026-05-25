@@ -1,9 +1,11 @@
-import { useEffect, useId, useRef } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { Check, X } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
-import { AVATAR_IDS, avatarUrl } from '@/shared/utils/avatar';
+import { BOTTTS_IDS, EMOJI_IDS, avatarUrl } from '@/shared/utils/avatar';
 import styles from './AvatarPickerModal.module.css';
+
+type Category = 'bottts' | 'emoji';
 
 type Props = {
   open: boolean;
@@ -17,6 +19,11 @@ export default function AvatarPickerModal({ open, currentAvatarId, onSelect, onC
   const dialogRef = useRef<HTMLDialogElement>(null);
   const reactId = useId();
   const titleId = `avatar-modal-title-${reactId}`;
+
+  const [category, setCategory] = useState<Category>(() =>
+    EMOJI_IDS.includes(currentAvatarId as never) ? 'emoji' : 'bottts'
+  );
+  const ids = category === 'bottts' ? BOTTTS_IDS : EMOJI_IDS;
 
   const onCloseRef = useRef(onClose);
   useEffect(() => {
@@ -62,9 +69,34 @@ export default function AvatarPickerModal({ open, currentAvatarId, onSelect, onC
           <X size={18} aria-hidden />
         </button>
       </div>
-      <p className={styles.hint}>{t('auth.account.avatarHint')}</p>
-      <div role="radiogroup" aria-label={t('auth.account.avatarLabel')} className={styles.grid}>
-        {AVATAR_IDS.map((id) => {
+
+      <div className={styles.tabs} role="tablist">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={category === 'bottts'}
+          className={clsx(styles.tab, category === 'bottts' && styles.tabActive)}
+          onClick={() => setCategory('bottts')}
+        >
+          🤖 Robots
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={category === 'emoji'}
+          className={clsx(styles.tab, category === 'emoji' && styles.tabActive)}
+          onClick={() => setCategory('emoji')}
+        >
+          😄 Emoji
+        </button>
+      </div>
+
+      <div
+        role="radiogroup"
+        aria-label={t('auth.account.avatarLabel')}
+        className={styles.grid}
+      >
+        {ids.map((id) => {
           const selected = id === currentAvatarId;
           return (
             <button
