@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
@@ -30,7 +31,13 @@ public sealed class JoinEventHandlerTests
     {
         _eventRepo = new Mock<IEventRepository>();
         _participantRepo = new Mock<IParticipantRepository>();
-        _sut = new JoinEventHandler(_eventRepo.Object, _participantRepo.Object);
+        _sut = new JoinEventHandler(
+            _eventRepo.Object,
+            _participantRepo.Object,
+            new Mock<IUserRepository>().Object,
+            new Mock<IPushSubscriptionRepository>().Object,
+            new Mock<IPushNotificationSender>().Object,
+            Mock.Of<ILogger<JoinEventHandler>>());
     }
 
     [Fact]
