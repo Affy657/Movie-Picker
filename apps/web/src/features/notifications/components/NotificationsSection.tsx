@@ -73,27 +73,34 @@ export default function NotificationsSection() {
       {permission === 'denied' && <p className="hint">{t('notifications.permissionDenied')}</p>}
 
       <div className="form">
-        <div className={styles.toggleRow}>
-          {subscribed ? <BellOff size={16} aria-hidden /> : <Bell size={16} aria-hidden />}
-          <div className={styles.toggleInfo}>
-            <p className={styles.toggleLabel}>
-              {subscribed ? t('notifications.enabledLabel') : t('notifications.disabledLabel')}
-            </p>
-            <p className={styles.toggleHint}>
-              {subscribed ? t('notifications.enabledHint') : t('notifications.disabledHint')}
-            </p>
+        <div className={styles.row}>
+          <div className={styles.rowInfo}>
+            {subscribed ? (
+              <BellOff size={18} aria-hidden className={styles.rowIcon} />
+            ) : (
+              <Bell size={18} aria-hidden className={styles.rowIcon} />
+            )}
+            <div className={styles.rowText}>
+              <p className={styles.rowLabel}>
+                {subscribed ? t('notifications.enabledLabel') : t('notifications.disabledLabel')}
+              </p>
+              <p className={styles.rowHint}>
+                {subscribed ? t('notifications.enabledHint') : t('notifications.disabledHint')}
+              </p>
+            </div>
           </div>
           <button
             type="button"
-            className={subscribed ? 'btn btn-danger' : 'btn btn-primary'}
+            role="switch"
+            aria-checked={subscribed}
+            className={styles.toggle}
             disabled={pushLoading || permission === 'denied'}
             onClick={() => void (subscribed ? unsubscribe() : subscribe())}
+            aria-label={
+              subscribed ? t('notifications.disableButton') : t('notifications.enableButton')
+            }
           >
-            {pushLoading
-              ? t('common.loading')
-              : subscribed
-                ? t('notifications.disableButton')
-                : t('notifications.enableButton')}
+            <span className={styles.toggleThumb} />
           </button>
         </div>
 
@@ -102,25 +109,33 @@ export default function NotificationsSection() {
             <hr className={styles.prefsDivider} />
             <p className={styles.prefsTitle}>{t('notifications.prefsTitle')}</p>
 
-            <label className={styles.prefRow}>
-              <input
-                type="checkbox"
-                checked={prefs.notifyOnParticipantJoined}
+            <div className={styles.prefRow}>
+              <span className={styles.prefLabel}>{t('notifications.prefParticipantJoined')}</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={prefs.notifyOnParticipantJoined}
+                className={styles.toggle}
                 disabled={savingPref === 'notifyOnParticipantJoined'}
-                onChange={() => void handleTogglePref('notifyOnParticipantJoined')}
-              />
-              {t('notifications.prefParticipantJoined')}
-            </label>
+                onClick={() => void handleTogglePref('notifyOnParticipantJoined')}
+              >
+                <span className={styles.toggleThumb} />
+              </button>
+            </div>
 
-            <label className={styles.prefRow}>
-              <input
-                type="checkbox"
-                checked={prefs.notifyEventReminder}
+            <div className={styles.prefRow}>
+              <span className={styles.prefLabel}>{t('notifications.prefEventReminder')}</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={prefs.notifyEventReminder}
+                className={styles.toggle}
                 disabled={savingPref === 'notifyEventReminder'}
-                onChange={() => void handleTogglePref('notifyEventReminder')}
-              />
-              {t('notifications.prefEventReminder')}
-            </label>
+                onClick={() => void handleTogglePref('notifyEventReminder')}
+              >
+                <span className={styles.toggleThumb} />
+              </button>
+            </div>
           </>
         )}
       </div>
