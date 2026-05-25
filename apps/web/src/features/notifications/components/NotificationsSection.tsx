@@ -70,9 +70,7 @@ export default function NotificationsSection() {
         </p>
       )}
 
-      {permission === 'denied' && (
-        <p className="hint">{t('notifications.permissionDenied')}</p>
-      )}
+      {permission === 'denied' && <p className="hint">{t('notifications.permissionDenied')}</p>}
 
       <div className="form">
         <div className={styles.toggleRow}>

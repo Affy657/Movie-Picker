@@ -83,7 +83,7 @@ export function usePushNotifications(): PushNotificationsState {
       await postPushSubscription(sub.toJSON());
       setSubscribed(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erreur lors de l\'activation des notifications');
+      setError(e instanceof Error ? e.message : "Erreur lors de l'activation des notifications");
     } finally {
       setLoading(false);
     }

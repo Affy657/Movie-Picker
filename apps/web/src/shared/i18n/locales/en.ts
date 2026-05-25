@@ -414,7 +414,8 @@ export const en: Locale = {
   notifications: {
     title: 'Notifications',
     unsupported: 'Push notifications are not available on this browser.',
-    permissionDenied: 'Notifications are blocked. Change your browser permissions to re-enable them.',
+    permissionDenied:
+      'Notifications are blocked. Change your browser permissions to re-enable them.',
     enabledLabel: 'Notifications enabled',
     disabledLabel: 'Notifications disabled',
     enabledHint: 'You receive alerts even when the app is closed.',
