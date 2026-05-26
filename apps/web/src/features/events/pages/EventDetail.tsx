@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ROUTES } from '@/app/routes';
-import { formatMyEventsListDate } from '@/shared/utils/formatMyEventsListDate';
+import { formatMyEventsListDate, formatEventTime } from '@/shared/utils/formatMyEventsListDate';
 import { themeHueFromLabel } from '@/shared/utils/eventThemeHue';
 import JoinForm from '@/features/events/components/JoinForm';
 import WheelSection from '@/features/events/components/WheelSection';
@@ -227,7 +227,7 @@ export default function EventDetail() {
 
   if (!event) return null;
 
-  const dateFormatted = `${event.time} – ${formatMyEventsListDate(event.date, locale)}`;
+  const dateFormatted = `${formatEventTime(event.time)} – ${formatMyEventsListDate(event.date, locale)}`;
   const shareUrl = eventSharePreviewUrl(slug);
   const needsJoin = !event.isFinished && !participant;
   const showContent = event.isFinished || participant;

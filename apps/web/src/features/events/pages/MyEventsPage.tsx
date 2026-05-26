@@ -1,17 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
-import { Crown, Film, MoreVertical, Plus, Trash2, Trophy, Users } from 'lucide-react';
+import { Crown, Film, LogOut, MoreVertical, Plus, Trash2, Trophy, Users } from 'lucide-react';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   deleteEvent,
   fetchGuestJoinedEventsSummaries,
   fetchMyEventsList,
   GUEST_JOINED_EVENTS_ALL_FAILED,
+  removeEventParticipant,
 } from '@/features/events/api/eventsApi';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import { listStoredParticipantSlugs } from '@/features/events/storage';
+import {
+  listStoredParticipantSlugs,
+  getStoredParticipant,
+  removeStoredParticipant,
+} from '@/features/events/storage';
 import PageLayout from '@/shared/components/PageLayout';
 import MyEventsSkeleton from '@/features/events/pages/MyEventsSkeleton';
 import { ApiError, getErrorMessage } from '@/shared/api/apiError';
@@ -21,7 +26,7 @@ import type { MyEventSummary } from '@/features/events/types';
 import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
 import type { MyEventLifecycle } from '@/shared/types/event';
 import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
-import { formatMyEventsListDate } from '@/shared/utils/formatMyEventsListDate';
+import { formatMyEventsListDate, formatEventTime } from '@/shared/utils/formatMyEventsListDate';
 import { parseEventLocalStartMs } from '@/shared/utils/eventScheduleLocal';
 import { withReturnTo, ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -83,7 +88,15 @@ function cardMoviesLabel(movieCount: number) {
   );
 }
 
-function EventCardKebab({ title, onDelete }: { title: string; onDelete: () => void }) {
+function EventCardKebab({
+  title,
+  onDelete,
+  onLeave,
+}: {
+  title: string;
+  onDelete?: () => void;
+  onLeave?: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
@@ -104,6 +117,8 @@ function EventCardKebab({ title, onDelete }: { title: string; onDelete: () => vo
     };
   }, [open]);
 
+  if (!onDelete && !onLeave) return null;
+
   return (
     <div className={styles.itemKebab} ref={rootRef}>
       <button
@@ -121,19 +136,36 @@ function EventCardKebab({ title, onDelete }: { title: string; onDelete: () => vo
       </button>
       {open ? (
         <div className={styles.itemKebabMenu} role="menu">
-          <button
-            type="button"
-            role="menuitem"
-            className={styles.itemKebabItemDanger}
-            onClick={(e) => {
-              e.preventDefault();
-              setOpen(false);
-              onDelete();
-            }}
-          >
-            <Trash2 aria-hidden size={14} />
-            <span>{t('events.danger.deleteButton')}</span>
-          </button>
+          {onDelete && (
+            <button
+              type="button"
+              role="menuitem"
+              className={styles.itemKebabItemDanger}
+              onClick={(e) => {
+                e.preventDefault();
+                setOpen(false);
+                onDelete();
+              }}
+            >
+              <Trash2 aria-hidden size={14} />
+              <span>{t('events.danger.deleteButton')}</span>
+            </button>
+          )}
+          {onLeave && (
+            <button
+              type="button"
+              role="menuitem"
+              className={styles.itemKebabItemDanger}
+              onClick={(e) => {
+                e.preventDefault();
+                setOpen(false);
+                onLeave();
+              }}
+            >
+              <LogOut aria-hidden size={14} />
+              <span>{t('events.participants.leaveAction')}</span>
+            </button>
+          )}
         </div>
       ) : null}
     </div>
@@ -147,6 +179,7 @@ function EventListBlock({
   emptyHint,
   showLifecycleBadge = true,
   onDeleteEvent,
+  onLeaveEvent,
 }: {
   sectionId: string;
   heading: string;
@@ -154,6 +187,7 @@ function EventListBlock({
   emptyHint: string | null;
   showLifecycleBadge?: boolean;
   onDeleteEvent?: (slug: string) => void;
+  onLeaveEvent?: (slug: string) => void;
 }) {
   const { t } = useTranslation();
   const { locale } = useLocale();
@@ -187,7 +221,8 @@ function EventListBlock({
                 className={clsx(
                   styles.link,
                   ev.winnerMovieTitle && styles.winnerCard,
-                  onDeleteEvent && ev.isCreator && styles.linkWithKebab
+                  ((onDeleteEvent && ev.isCreator) || (onLeaveEvent && !ev.isCreator)) &&
+                    styles.linkWithKebab
                 )}
               >
                 <span className={styles.rowTop}>
@@ -232,13 +267,15 @@ function EventListBlock({
                       </span>
                     ) : null}
                     <span className={styles.meta}>
-                      {ev.time} – {dateLabel}
+                      {formatEventTime(ev.time)} – {dateLabel}
                     </span>
                   </span>
                 </div>
               </Link>
               {onDeleteEvent && ev.isCreator ? (
                 <EventCardKebab title={ev.title} onDelete={() => onDeleteEvent(ev.slug)} />
+              ) : onLeaveEvent && !ev.isCreator ? (
+                <EventCardKebab title={ev.title} onLeave={() => onLeaveEvent(ev.slug)} />
               ) : null}
             </li>
           );
@@ -271,6 +308,7 @@ export default function MyEventsPage() {
   const { t } = useTranslation();
   useDocumentTitle(pageTitle(t('events.myEvents.title')));
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab: MyEventsTab = searchParams.get('tab') === 'history' ? 'history' : 'active';
@@ -280,8 +318,10 @@ export default function MyEventsPage() {
 
   const [hasGuestSession] = useState<boolean>(() => listStoredParticipantSlugs().length > 0);
   const [confirmDeleteSlug, setConfirmDeleteSlug] = useState<string | null>(null);
+  const [confirmLeave, setConfirmLeave] = useState<{ slug: string; participantId: string } | null>(null);
 
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [leaveError, setLeaveError] = useState<string | null>(null);
 
   const deleteMutation = useMutation({
     mutationFn: (slug: string) => deleteEvent(slug),
@@ -297,6 +337,36 @@ export default function MyEventsPage() {
       setConfirmDeleteSlug(null);
     },
   });
+
+  const leaveMutation = useMutation({
+    mutationFn: ({ slug, participantId }: { slug: string; participantId: string }) =>
+      removeEventParticipant(slug, participantId, null),
+    onSuccess: (_, { slug }) => {
+      removeStoredParticipant(slug);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.listPaged });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.guestJoined });
+      setLeaveError(null);
+    },
+    onError: (e) => {
+      setLeaveError(getErrorMessage(e, t('events.participants.leaveError')));
+    },
+    onSettled: () => {
+      setConfirmLeave(null);
+    },
+  });
+
+  const handleLeaveEvent = useCallback(
+    (slug: string) => {
+      const stored = getStoredParticipant(slug);
+      if (!stored) {
+        navigate(ROUTES.eventDetail(slug));
+        return;
+      }
+      setLeaveError(null);
+      setConfirmLeave({ slug, participantId: stored.participantId });
+    },
+    [navigate]
+  );
 
   const loggedInQuery = useInfiniteQuery({
     queryKey: queryKeys.myEvents.listPaged,
@@ -482,6 +552,7 @@ export default function MyEventsPage() {
                     heading={t('events.myEvents.joinedSection')}
                     events={joinedActive}
                     emptyHint={null}
+                    onLeaveEvent={handleLeaveEvent}
                   />
                 </>
               )}
@@ -551,6 +622,11 @@ export default function MyEventsPage() {
           {deleteError}
         </p>
       ) : null}
+      {leaveError ? (
+        <p className="error" role="alert">
+          {leaveError}
+        </p>
+      ) : null}
       <ConfirmDialog
         open={confirmDeleteSlug !== null}
         title={t('events.danger.deleteConfirmTitle')}
@@ -565,6 +641,20 @@ export default function MyEventsPage() {
         onCancel={() => {
           setConfirmDeleteSlug(null);
           setDeleteError(null);
+        }}
+      />
+      <ConfirmDialog
+        open={confirmLeave !== null}
+        title={t('events.participants.leaveConfirmTitle')}
+        message={t(user ? 'events.participants.leaveConfirm' : 'events.participants.leaveConfirmGuest')}
+        confirmLabel={t('events.participants.leaveConfirmAction')}
+        busy={leaveMutation.isPending}
+        onConfirm={() => {
+          if (confirmLeave) leaveMutation.mutate(confirmLeave);
+        }}
+        onCancel={() => {
+          setConfirmLeave(null);
+          setLeaveError(null);
         }}
       />
     </PageLayout>

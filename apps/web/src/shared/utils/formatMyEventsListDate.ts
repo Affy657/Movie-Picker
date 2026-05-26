@@ -14,9 +14,19 @@ export function formatMyEventsListDate(isoDate: string, locale: LocaleCode): str
   const d = parts[2]!;
   const dt = new Date(y, m - 1, d);
   if (Number.isNaN(dt.getTime())) return raw;
-  return new Intl.DateTimeFormat(LOCALE_TAG[locale], {
+  const currentYear = new Date().getFullYear();
+  const options: Intl.DateTimeFormatOptions = {
     day: 'numeric',
     month: 'short',
-    year: 'numeric',
-  }).format(dt);
+    ...(y !== currentYear && { year: 'numeric' }),
+  };
+  return new Intl.DateTimeFormat(LOCALE_TAG[locale], options).format(dt);
+}
+
+export function formatEventTime(time: string): string {
+  const [hStr, mStr] = time.split(':');
+  const h = parseInt(hStr ?? '', 10);
+  const min = parseInt(mStr ?? '0', 10);
+  if (Number.isNaN(h) || Number.isNaN(min)) return time;
+  return min === 0 ? `${h}h` : `${h}h${String(min).padStart(2, '0')}`;
 }
