@@ -8,7 +8,6 @@ Vue d’ensemble **sans ouvrir le code** : flux runtime, dépôt, contrat HTTP e
 flowchart LR
   subgraph clients [Clients]
     Browser[Navigateur / PWA]
-    Mobile[App mobile Expo]
   end
   subgraph aws [AWS]
     CF[CloudFront]
@@ -22,14 +21,12 @@ flowchart LR
   end
   Browser --> CF
   Browser --> CR
-  Mobile --> CR
   CR --> Mongo[(MongoDB Atlas)]
   CR --> TMDB[API TMDB]
   CR --> Resend[Resend (Email)]
 ```
 
 - **Web** : assets servis par CloudFront/S3 ; la SPA appelle l’API (CORS, cookies auth).
-- **Mobile** : Expo (React Native), mêmes endpoints `/api/v1` ; pas de déploiement store décrit ici (build/dev local ou binaire Expo).
 - **Resend** : envoi des mails de reset mot de passe (prod) via `ResendEmailSender` ; en dev sans clé API, repli sur `LogEmailSender` (logs uniquement).
 
 ## Services
@@ -49,19 +46,18 @@ flowchart LR
 
 | Élément | Rôle |
 |---------|------|
-| **pnpm** + `pnpm-workspace.yaml` | Workspaces `apps/*` (web, mobile) |
+| **pnpm** + `pnpm-workspace.yaml` | Workspaces `apps/*` (web) |
 | **Turbo** (`turbo.json`) | Orchestration `build`, `dev`, `lint`, `test` entre paquets |
 | Racine `package.json` | Scripts transverses : `dev:web`, `dev:api-dotnet`, `verify:local`, `openapi:export`, E2E Playwright |
 | **`dotnet`** (hors workspace pnpm) | API dans `apps/api-dotnet/` (solution `MoviePicker.slnx`) |
 
-**`pnpm run verify:local`** : reprend surtout les jobs **lint** + **test-web** + **test-api** (lint, format, build API, export OpenAPI, `pnpm audit`, tests web + API). **En plus en local** : tests Jest **mobile**. **Uniquement en CI** (job lint) : audit NuGet vulnérable (échec High/Critical). Déploiement, Trivy image et Lighthouse : CI seulement.
+**`pnpm run verify:local`** : reprend surtout les jobs **lint** + **test-web** + **test-api** (lint, format, build API, export OpenAPI, `pnpm audit`, tests web + API). **Uniquement en CI** (job lint) : audit NuGet vulnérable (échec High/Critical). Déploiement, Trivy image et Lighthouse : CI seulement.
 
 ## Dépôt (repères dev)
 
 | Chemin | Rôle |
 |--------|------|
 | `apps/web/` | SPA React (Vite), **TanStack Query**, PWA (Service Worker via `vite-plugin-pwa` / Workbox), appels HTTP vers l’API |
-| `apps/mobile/` | App **Expo** + React Native (Expo Router), client API typé (OpenAPI), parité fonctionnelle V1 avec le web ; **pas de job CI** dédié (tests via `verify:local` ou manuel) |
 | `apps/api-dotnet/MoviePicker.Api/` | API ASP.NET Core (.NET 10) |
 | `artifacts/openapi-v1.json` | Export OpenAPI (`pnpm run openapi:export`) |
 | `e2e/` + `playwright.config.ts` | Tests E2E Playwright (local / `test:e2e:ci`, pas de job CI par défaut) |
@@ -69,7 +65,7 @@ flowchart LR
 | `configs/` | TypeScript / Prettier partagés (`tsconfig*.json`, `prettier.config.cjs`) |
 | `.github/workflows/ci-cd.yml` | Pipeline CI/CD (voir ci-dessous) |
 
-En développement local typique : API **port 4000** (`http://localhost:4000/`, `/health`, `/swagger`), front Vite **port 5173**, mobile via Expo (API joignable selon IP / tunnel, voir `apps/mobile/.env`). Préfixe API public **`/api/v1`**.
+En développement local typique : API **port 4000** (`http://localhost:4000/`, `/health`, `/swagger`), front Vite **port 5173**. Préfixe API public **`/api/v1`**.
 
 **Auth** : sessions utilisateur par **cookie** (inscription, connexion, `/auth/me`) ; actions **hôte** sur une soirée via jeton `?host=<token>` en query ou stockage local équivalent (partage invité sans ce jeton). En prod, front (CloudFront) et API (Cloud Run) sur origines distinctes : **CORS** avec `ALLOWED_ORIGINS`, cookies **`SameSite=None` + `Secure`** pour les mutations authentifiées cross-site.
 
@@ -104,7 +100,7 @@ Fichier **`.github/workflows/ci-cd.yml`** — déclenché sur `master` (push) et
 |-------|---------|
 | **Sécurité repo** | Gitleaks (scan secrets dans l’arbre Git ; complète l’absence de Secret Scanning natif sur repo privé sans Advanced Security) |
 | **Lint / qualité** | ESLint + Prettier (front), `dotnet format`, build API Release, export OpenAPI, `pnpm audit`, audit NuGet (échec si High/Critical) |
-| **Tests** | Vitest + couverture (web) ; xUnit + intégration + `OpenApiContractTests` (API) — **mobile non couvert** |
+| **Tests** | Vitest + couverture (web) ; xUnit + intégration + `OpenApiContractTests` (API) |
 | **Lighthouse** | Rapport front (non bloquant) |
 | **Image API** (push `master`) | Build Docker → **scan Trivy** (HIGH/CRITICAL, bloquant) → push Artifact Registry |
 | **Déploiement** (push `master`) | **Cloud Run** (secrets Secret Manager + `ALLOWED_ORIGINS`) ; front Vite → **S3** (3 étapes) + invalidation **CloudFront** |

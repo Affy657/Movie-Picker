@@ -25,7 +25,7 @@ for (const { name, size } of sizes) {
 
 const BLUE = { r: 29, g: 78, b: 216, alpha: 1 };
 const FULL = 512;
-const INNER = Math.round(FULL * 0.6);
+const INNER = Math.round(FULL * 0.8);
 const PAD = Math.round((FULL - INNER) / 2);
 
 const innerBuffer = await sharp(svgContent).resize(INNER, INNER).png().toBuffer();

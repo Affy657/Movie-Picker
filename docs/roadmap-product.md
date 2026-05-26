@@ -84,7 +84,7 @@ Découpage par version côté **métier / utilisateur**.
 
 ## Backlog produit (non priorisé sur une release)
 
-> **Note V2 — Application mobile** : l'app mobile actuelle est un projet de cours temporaire. Pour la V2, l'objectif est une app mobile propre, pleinement intégrée à la plateforme. Pas d'engagement de date.
+> **Note V2 — Application mobile** : l'app mobile (Expo / React Native) était un projet de cours, archivée dans `archive/mobile` (mai 2026). Pour la V2, l'objectif est une app mobile propre, pleinement intégrée à la plateforme. Pas d'engagement de date.
 
 - **Mode hors-ligne léger** : cache de la dernière vue de la soirée, bannière « Données en cache ».
 - **Export calendrier (.ics)** : lien « Ajouter au calendrier » sur la soirée, compatible Google Calendar, Outlook, Apple Calendar.
