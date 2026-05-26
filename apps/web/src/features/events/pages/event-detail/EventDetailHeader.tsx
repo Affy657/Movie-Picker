@@ -62,7 +62,13 @@ export default function EventDetailHeader({
         </div>
         {shareUrl ? (
           <div className={styles.share}>
-            <ShareLink url={shareUrl} displayUrl={shareFrontendUrl} title={title} eventTime={eventTime} showQr />
+            <ShareLink
+              url={shareUrl}
+              displayUrl={shareFrontendUrl}
+              title={title}
+              eventTime={eventTime}
+              showQr
+            />
           </div>
         ) : null}
       </div>
