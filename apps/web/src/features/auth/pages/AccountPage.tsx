@@ -320,11 +320,11 @@ export default function AccountPage() {
         </form>
       </section>
 
-      <ChangePasswordSection />
-
       <PreferencesSection />
 
       <NotificationsSection />
+
+      <ChangePasswordSection />
 
       <section className="section section--panel" aria-labelledby="session-heading">
         <h2 id="session-heading" className={styles.sectionTitle}>

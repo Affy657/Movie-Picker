@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Settings2 } from 'lucide-react';
 import ThemeField from '@/features/events/components/ThemeField';
@@ -16,6 +16,7 @@ import {
   MAX_EVENT_PARTICIPANTS,
   MAX_PROPOSALS_PER_PARTICIPANT,
 } from '@/features/events/types';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
 import styles from './CreateEvent.module.css';
 
 const isDev = import.meta.env.DEV;
@@ -30,7 +31,14 @@ export default function CreateEvent() {
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [title, setTitle] = useState(isDev ? 'Soirée test' : '');
+  const { user } = useAuth();
+  const [title, setTitle] = useState('');
+
+  useEffect(() => {
+    if (user && title === '') {
+      setTitle(`Soirée film chez ${user.displayName}`);
+    }
+  }, [user]);
   const [date, setDate] = useState(isDev ? getDefaultDate() : '');
   const [time, setTime] = useState(isDev ? '20:00' : '');
   const [themeEmoji, setThemeEmoji] = useState('');
