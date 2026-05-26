@@ -259,6 +259,7 @@ export default function EventDetail() {
         dateFormatted={dateFormatted}
         isFinished={!!event.isFinished}
         eventTheme={event.config?.theme}
+        eventThemeColor={event.config?.themeColor}
         shareUrl={shareUrl}
       />
       {event.isHost && <HostEventSettingsPanel slug={slug} hostToken={hostToken} event={event} />}

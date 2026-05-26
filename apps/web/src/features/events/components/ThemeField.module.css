@@ -166,3 +166,63 @@
   border-color: var(--color-primary);
   color: var(--color-primary);
 }
+
+.colorRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 1.4rem;
+  margin-bottom: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.colorRowLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  margin-right: 0.1rem;
+  flex-shrink: 0;
+}
+
+.colorSwatch {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  background: hsl(var(--swatch-hue, 0) 65% 55%);
+  outline-offset: 2px;
+}
+
+.colorSwatch:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 0 2px color-mix(in srgb, hsl(var(--swatch-hue, 0) 65% 55%) 50%, transparent);
+}
+
+.colorSwatchSelected {
+  border-color: var(--color-text);
+  transform: scale(1.18);
+  box-shadow: 0 0 0 2px color-mix(in srgb, hsl(var(--swatch-hue, 0) 65% 55%) 60%, transparent);
+}
+
+.colorSwatchAuto {
+  background: conic-gradient(
+    hsl(0 65% 55%),
+    hsl(40 65% 55%),
+    hsl(90 65% 55%),
+    hsl(185 65% 55%),
+    hsl(220 65% 55%),
+    hsl(270 65% 55%),
+    hsl(320 65% 55%),
+    hsl(360 65% 55%)
+  );
+}
+
+.colorSwatchAuto.colorSwatchSelected {
+  box-shadow: 0 0 0 2px var(--color-border);
+}

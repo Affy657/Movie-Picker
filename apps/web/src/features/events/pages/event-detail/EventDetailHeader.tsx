@@ -10,9 +10,8 @@ export type EventDetailHeaderProps = {
   title: string;
   dateFormatted: string;
   isFinished: boolean;
-
   eventTheme: string | null | undefined;
-
+  eventThemeColor?: number | null;
   shareUrl: string;
 };
 
@@ -21,6 +20,7 @@ export default function EventDetailHeader({
   dateFormatted,
   isFinished,
   eventTheme,
+  eventThemeColor,
   shareUrl,
 }: EventDetailHeaderProps) {
   const navigate = useNavigate();
@@ -44,7 +44,7 @@ export default function EventDetailHeader({
           {t('events.detail.backNav')}
         </button>
       </div>
-      <EventThemeBanner theme={eventTheme} />
+      <EventThemeBanner theme={eventTheme} themeColor={eventThemeColor} />
       <div className={styles.intro}>
         <h1>{title}</h1>
         <div className={styles.metaRow}>

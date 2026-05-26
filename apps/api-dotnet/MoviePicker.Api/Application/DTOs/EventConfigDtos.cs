@@ -5,6 +5,7 @@ namespace MoviePicker.Api.Application.DTOs;
 public sealed class EventConfigResponse
 {
     public string? Theme { get; init; }
+    public int? ThemeColor { get; init; }
     public DateTimeOffset? EndDate { get; init; }
     public int? MaxProposalsPerParticipant { get; init; }
 
@@ -21,6 +22,7 @@ public sealed class EventConfigResponse
         return new EventConfigResponse
         {
             Theme = c?.Theme,
+            ThemeColor = c?.ThemeColor,
             EndDate = c?.EndDate,
             MaxProposalsPerParticipant = c?.MaxProposalsPerParticipant,
             MaxParticipants = c?.MaxParticipants,
@@ -34,6 +36,8 @@ public sealed class EventConfigResponse
 public sealed class PatchEventConfigRequest
 {
     public string? Theme { get; init; }
+    public int? ThemeColor { get; init; }
+    public bool ClearThemeColor { get; init; }
 
     public string? EndDate { get; init; }
 

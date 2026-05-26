@@ -45,6 +45,8 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
 
         var hasChange =
             request.Theme is not null
+            || request.ThemeColor.HasValue
+            || request.ClearThemeColor
             || request.EndDate is not null
             || request.MaxProposalsPerParticipant.HasValue
             || request.MaxParticipants.HasValue
@@ -60,6 +62,17 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
         var theme = current.Theme;
         if (request.Theme is not null)
             theme = string.IsNullOrWhiteSpace(request.Theme) ? null : request.Theme.Trim();
+
+        int? themeColor = current.ThemeColor;
+        if (request.ClearThemeColor)
+            themeColor = null;
+        else if (request.ThemeColor.HasValue)
+        {
+            var hue = request.ThemeColor.Value;
+            if (hue < 0 || hue > 359)
+                throw new BadRequestException("themeColor doit être une teinte entre 0 et 359.");
+            themeColor = hue;
+        }
 
         DateTimeOffset? endDate = current.EndDate;
         if (request.EndDate is not null)
@@ -114,6 +127,7 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
         var nextConfig = new EventConfig
         {
             Theme = theme,
+            ThemeColor = themeColor,
             EndDate = endDate,
             MaxProposalsPerParticipant = maxProp,
             MaxParticipants = maxParticipants,

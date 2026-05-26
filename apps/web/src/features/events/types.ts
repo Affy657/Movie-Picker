@@ -19,6 +19,8 @@ export const DEFAULT_EVENT_CONFIG: EventConfigData = {
 
 export type EventConfigPatchPayload = {
   theme: string;
+  themeColor?: number | null;
+  clearThemeColor?: boolean;
   endDate?: string | null;
   maxProposalsPerParticipant: number;
 

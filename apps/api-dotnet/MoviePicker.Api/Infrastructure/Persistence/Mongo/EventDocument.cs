@@ -54,6 +54,10 @@ public sealed class EventConfigDocument
     [BsonIgnoreIfNull]
     public string? Theme { get; set; }
 
+    [BsonElement("themeColor")]
+    [BsonIgnoreIfNull]
+    public int? ThemeColor { get; set; }
+
     [BsonElement("endDate")]
     [BsonIgnoreIfNull]
     public DateTime? EndDate { get; set; }

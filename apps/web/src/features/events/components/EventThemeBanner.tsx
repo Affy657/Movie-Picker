@@ -5,17 +5,18 @@ import styles from './EventThemeBanner.module.css';
 
 type EventThemeBannerProps = {
   theme: string | null | undefined;
+  themeColor?: number | null;
 };
 
 type EventThemeBannerStyle = CSSProperties & {
   '--event-theme-hue'?: string;
 };
 
-export default function EventThemeBanner({ theme }: EventThemeBannerProps) {
+export default function EventThemeBanner({ theme, themeColor }: EventThemeBannerProps) {
   const label = theme?.trim();
   if (!label) return null;
 
-  const hue = themeHueFromLabel(label);
+  const hue = themeColor ?? themeHueFromLabel(label);
   const style: EventThemeBannerStyle | undefined =
     hue == null ? undefined : { '--event-theme-hue': String(hue) };
 

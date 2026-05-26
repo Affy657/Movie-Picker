@@ -35,6 +35,7 @@ export default function CreateEvent() {
   const [time, setTime] = useState(isDev ? '20:00' : '');
   const [themeEmoji, setThemeEmoji] = useState('');
   const [themeText, setThemeText] = useState('');
+  const [themeColor, setThemeColor] = useState<number | null>(null);
   const [maxParticipants, setMaxParticipants] = useState('');
   const [maxProposals, setMaxProposals] = useState('');
 
@@ -51,6 +52,7 @@ export default function CreateEvent() {
 
     const needsConfigPatch =
       themeTrimmed !== '' ||
+      themeColor !== null ||
       (Number.isFinite(maxPartParsed) && maxPartParsed > 0) ||
       (Number.isFinite(maxPropParsed) && maxPropParsed > 0);
 
@@ -58,6 +60,7 @@ export default function CreateEvent() {
       try {
         await patchEventConfig(res.slug, null, {
           theme: themeTrimmed,
+          themeColor: themeColor ?? undefined,
           endDate: null,
           maxProposalsPerParticipant: Number.isFinite(maxPropParsed) ? maxPropParsed : 0,
           maxParticipants: Number.isFinite(maxPartParsed) ? maxPartParsed : 0,
@@ -78,6 +81,7 @@ export default function CreateEvent() {
     time,
     themeEmoji,
     themeText,
+    themeColor,
     maxParticipants,
     maxProposals,
     queryClient,
@@ -166,8 +170,10 @@ export default function CreateEvent() {
                 textInputId="create-theme"
                 emoji={themeEmoji}
                 text={themeText}
+                themeColor={themeColor}
                 onEmojiChange={setThemeEmoji}
                 onTextChange={setThemeText}
+                onThemeColorChange={setThemeColor}
               />
 
               <div className={styles.fieldGrid}>

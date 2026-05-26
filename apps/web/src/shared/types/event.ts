@@ -6,6 +6,7 @@ export type WheelMode = 'strictRandom' | 'weightedByVotes';
 
 export interface EventConfigData {
   theme: string | null;
+  themeColor?: number | null;
   endDate: string | null;
   maxProposalsPerParticipant: number | null;
 

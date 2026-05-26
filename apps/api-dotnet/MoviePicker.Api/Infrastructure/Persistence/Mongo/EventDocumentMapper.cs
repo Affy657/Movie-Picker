@@ -12,6 +12,7 @@ public static class EventDocumentMapper
             config = new EventConfig
             {
                 Theme = doc.Config.Theme,
+                ThemeColor = doc.Config.ThemeColor,
                 EndDate = doc.Config.EndDate.HasValue
                     ? new DateTimeOffset(doc.Config.EndDate.Value, TimeSpan.Zero)
                     : null,
@@ -48,6 +49,7 @@ public static class EventDocumentMapper
             config = new EventConfigDocument
             {
                 Theme = evt.Config.Theme,
+                ThemeColor = evt.Config.ThemeColor,
                 EndDate = evt.Config.EndDate?.UtcDateTime,
                 MaxProposalsPerParticipant = evt.Config.MaxProposalsPerParticipant,
                 MaxParticipants = evt.Config.MaxParticipants,

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings2 } from 'lucide-react';
+import { Settings2, X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import ThemeField, { parseTheme } from './ThemeField';
 import NumberInput from '@/shared/components/NumberInput';
@@ -58,6 +58,7 @@ export default function HostEventSettingsPanel({
   const initialTheme = parseTheme(cfg.theme);
   const [themeEmoji, setThemeEmoji] = useState(initialTheme.emoji);
   const [themeText, setThemeText] = useState(initialTheme.text);
+  const [themeColor, setThemeColor] = useState<number | null>(cfg.themeColor ?? null);
   const [endLocal, setEndLocal] = useState(isoToDatetimeLocalValue(cfg.endDate));
   const [maxProp, setMaxProp] = useState<string>(
     cfg.maxProposalsPerParticipant != null ? String(cfg.maxProposalsPerParticipant) : ''
@@ -87,6 +88,7 @@ export default function HostEventSettingsPanel({
     const parsed = parseTheme(next.theme);
     setThemeEmoji(parsed.emoji);
     setThemeText(parsed.text);
+    setThemeColor(next.themeColor ?? null);
     setEndLocal(isoToDatetimeLocalValue(next.endDate));
     setMaxProp(
       next.maxProposalsPerParticipant != null ? String(next.maxProposalsPerParticipant) : ''
@@ -168,6 +170,8 @@ export default function HostEventSettingsPanel({
 
     mutation.mutate({
       theme: [themeEmoji, themeText.trim()].filter(Boolean).join(' '),
+      themeColor: themeColor ?? undefined,
+      clearThemeColor: themeColor === null && (event.config?.themeColor ?? null) !== null,
       endDate: endPayload,
       maxProposalsPerParticipant,
       maxParticipants: maxParticipantsValue,
@@ -207,15 +211,34 @@ export default function HostEventSettingsPanel({
       )}
       <form className={`form ${styles.form}`} onSubmit={onSubmit}>
         <div className={styles.field}>
-          <label className="label" htmlFor="host-cfg-theme">
-            Thème / ambiance
-          </label>
+          <div className={styles.fieldLabelRow}>
+            <label className="label" htmlFor="host-cfg-theme">
+              Thème / ambiance
+            </label>
+            {!locked && (themeEmoji || themeText.trim()) && (
+              <button
+                type="button"
+                className={styles.clearThemeBtn}
+                onClick={() => {
+                  setThemeEmoji('');
+                  setThemeText('');
+                }}
+                disabled={mutation.isPending}
+                aria-label="Supprimer le thème"
+              >
+                <X size={11} strokeWidth={2.5} />
+                Effacer
+              </button>
+            )}
+          </div>
           <ThemeField
             textInputId="host-cfg-theme"
             emoji={themeEmoji}
             text={themeText}
+            themeColor={themeColor}
             onEmojiChange={setThemeEmoji}
             onTextChange={setThemeText}
+            onThemeColorChange={setThemeColor}
             disabled={locked || mutation.isPending}
           />
         </div>

@@ -39,6 +39,7 @@ public sealed record EventConfig
     public const int MaxProposalsPerParticipantCap = 100;
 
     public string? Theme { get; init; }
+    public int? ThemeColor { get; init; }
     public DateTimeOffset? EndDate { get; init; }
     public int? MaxProposalsPerParticipant { get; init; }
 
