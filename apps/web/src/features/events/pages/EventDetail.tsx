@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ROUTES } from '@/app/routes';
-import { formatEventStartInUserTimezone } from '@/shared/utils/eventScheduled';
+import { formatMyEventsListDate } from '@/shared/utils/formatMyEventsListDate';
 import { themeHueFromLabel } from '@/shared/utils/eventThemeHue';
 import JoinForm from '@/features/events/components/JoinForm';
 import WheelSection from '@/features/events/components/WheelSection';
@@ -23,7 +23,7 @@ import { removeEventParticipant, eventSharePreviewUrl } from '@/features/events/
 import { removeStoredParticipant } from '@/features/events/storage';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { getErrorMessage } from '@/shared/api/apiError';
-import { useTranslation } from '@/shared/i18n';
+import { useLocale, useTranslation } from '@/shared/i18n';
 
 type ConfirmState =
   | { kind: 'remove'; participantId: string; pseudo: string }
@@ -37,6 +37,7 @@ export default function EventDetail() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  const locale = useLocale();
   const {
     hostToken,
     eventQuery,
@@ -226,8 +227,7 @@ export default function EventDetail() {
 
   if (!event) return null;
 
-  const dateFormatted =
-    formatEventStartInUserTimezone(event.date, event.time) ?? `${event.date} à ${event.time}`;
+  const dateFormatted = `${event.time} – ${formatMyEventsListDate(event.date, locale)}`;
   const shareUrl = eventSharePreviewUrl(slug);
   const needsJoin = !event.isFinished && !participant;
   const showContent = event.isFinished || participant;
