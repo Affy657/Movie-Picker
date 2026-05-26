@@ -47,14 +47,14 @@ public sealed class GetEventSharePreviewHtmlHandler : IGetEventSharePreviewHtmlH
         if (!rich)
         {
             pageTitle = "Movie Picker";
-            ogTitle = "Movie Picker";
-            ogDescription = "Lien privé vers une soirée cinéma — ouvrez l’URL pour rejoindre l’événement.";
+            ogTitle = "Movie Picker — Soirée ciné";
+            ogDescription = "Tu as reçu une invitation pour une soirée ciné sur Movie Picker. Ouvre le lien pour rejoindre !";
             ogImage = $"{webBase}/favicon.svg";
         }
         else
         {
             pageTitle = $"{evt.Title} — Movie Picker";
-            ogTitle = $"{evt.Title} · Movie Picker";
+            ogTitle = $"{evt.Title} — Movie Picker";
             ogDescription = BuildRichDescription(evt);
             ogImage = await ResolveOgImageAsync(evt, apiBase, webBase, ct);
         }
@@ -72,7 +72,9 @@ public sealed class GetEventSharePreviewHtmlHandler : IGetEventSharePreviewHtmlH
             : evt.Date;
 
         var timeLabel = evt.Time.Contains(':')
-            ? evt.Time.Replace(":", "h")
+            ? (evt.Time.EndsWith(":00")
+                ? evt.Time[..evt.Time.IndexOf(':')] + "h"
+                : evt.Time.Replace(":", "h"))
             : evt.Time;
 
         var parts = new List<string> { $"📅 {dateLabel} à {timeLabel}" };
@@ -81,7 +83,7 @@ public sealed class GetEventSharePreviewHtmlHandler : IGetEventSharePreviewHtmlH
         if (!string.IsNullOrWhiteSpace(theme))
             parts.Add($"🎭 {theme}");
 
-        parts.Add("Rejoins-nous sur Movie Picker !");
+        parts.Add("Rejoins la soirée et vote pour ton film !");
         return string.Join(" · ", parts);
     }
 

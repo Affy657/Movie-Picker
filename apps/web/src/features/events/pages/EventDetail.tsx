@@ -19,7 +19,7 @@ import EventStartReminderBanner from '@/features/events/components/EventStartRem
 import PageLayout from '@/shared/components/PageLayout';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useEventDetailPage } from '@/features/events/hooks/useEventDetailPage';
-import { removeEventParticipant, eventSharePreviewUrl } from '@/features/events/api/eventsApi';
+import { removeEventParticipant, eventSharePreviewUrl, eventFrontendUrl } from '@/features/events/api/eventsApi';
 import { removeStoredParticipant } from '@/features/events/storage';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { getErrorMessage } from '@/shared/api/apiError';
@@ -227,8 +227,10 @@ export default function EventDetail() {
 
   if (!event) return null;
 
-  const dateFormatted = `${formatEventTime(event.time)} – ${formatMyEventsListDate(event.date, locale)}`;
+  const timeFormatted = formatEventTime(event.time);
+  const dateFormatted = `${timeFormatted} – ${formatMyEventsListDate(event.date, locale)}`;
   const shareUrl = eventSharePreviewUrl(slug);
+  const shareFrontendUrl = eventFrontendUrl(slug);
   const needsJoin = !event.isFinished && !participant;
   const showContent = event.isFinished || participant;
   const maxParticipants = event.config?.maxParticipants ?? null;
@@ -257,10 +259,12 @@ export default function EventDetail() {
       <EventDetailHeader
         title={event.title}
         dateFormatted={dateFormatted}
+        eventTime={timeFormatted}
         isFinished={!!event.isFinished}
         eventTheme={event.config?.theme}
         eventThemeColor={event.config?.themeColor}
         shareUrl={shareUrl}
+        shareFrontendUrl={shareFrontendUrl}
       />
       {event.isHost && <HostEventSettingsPanel slug={slug} hostToken={hostToken} event={event} />}
 

@@ -8,6 +8,9 @@ import { QueryClientWrapper } from '@/test-utils/queryWrapper';
 
 const mockFetchApi = vi.fn();
 vi.mock('@/shared/api/client', () => ({ fetchApi: (...args: unknown[]) => mockFetchApi(...args) }));
+vi.mock('@/features/auth/contexts/AuthContext', () => ({
+  useAuth: () => ({ user: null, isLoading: false }),
+}));
 
 function RenderCreateEvent() {
   return render(

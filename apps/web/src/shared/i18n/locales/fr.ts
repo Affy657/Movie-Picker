@@ -244,7 +244,8 @@ export const fr = {
     share: {
       shareButton: 'Partager',
       copiedButton: 'Lien copié !',
-      shareText: 'Rejoins la soirée sur Movie Picker.',
+      shareText: 'Je t\'invite à {{title}} à {{time}} sur Movie Picker !',
+      shareTextFallback: 'Tu es invité·e à une soirée ciné sur Movie Picker !',
       showQr: 'Afficher le QR code',
       hideQr: 'Masquer le QR code',
       closeQr: 'Fermer le QR code',

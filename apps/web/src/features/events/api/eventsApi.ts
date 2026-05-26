@@ -195,3 +195,7 @@ export async function deleteEvent(idOrSlug: string): Promise<DeleteEventResponse
 export function eventSharePreviewUrl(slug: string): string {
   return apiUrl(`/events/slug/${slug}/share-preview`);
 }
+
+export function eventFrontendUrl(slug: string): string {
+  return `${window.location.origin}/e/${slug}`;
+}

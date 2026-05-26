@@ -21,6 +21,9 @@ const QRCode =
 
 interface ShareLinkProps {
   url: string;
+  displayUrl?: string;
+  title?: string;
+  eventTime?: string;
 
   showQr?: boolean;
 
@@ -29,6 +32,9 @@ interface ShareLinkProps {
 
 export default function ShareLink({
   url,
+  displayUrl,
+  title,
+  eventTime,
   showQr = false,
   centeredActions = false,
 }: ShareLinkProps) {
@@ -63,9 +69,14 @@ export default function ShareLink({
   const handleShare = async () => {
     if (typeof navigator.share === 'function') {
       try {
+        const shareText =
+          title && eventTime
+            ? t('events.share.shareText', { title, time: eventTime })
+            : t('events.share.shareTextFallback');
         await navigator.share({
+          title: title ?? 'Movie Picker',
           url,
-          text: t('events.share.shareText'),
+          text: shareText,
         });
         return;
       } catch (e) {
@@ -143,7 +154,7 @@ export default function ShareLink({
               />
             </div>
             <p className={styles.qrHint}>{t('events.share.qrHint')}</p>
-            <p className={styles.qrUrl}>{url}</p>
+            <p className={styles.qrUrl}>{displayUrl ?? url}</p>
           </div>
         </dialog>
       ) : null}

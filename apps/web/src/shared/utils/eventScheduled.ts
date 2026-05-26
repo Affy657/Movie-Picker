@@ -1,5 +1,5 @@
 export function eventScheduledStartUtcMs(event: { date: string; time: string }): number | null {
-  const ms = Date.parse(`${event.date}T${event.time}:00`);
+  const ms = Date.parse(`${event.date}T${event.time}:00Z`);
   return Number.isNaN(ms) ? null : ms;
 }
 
