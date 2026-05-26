@@ -61,8 +61,8 @@ public sealed class PatchUserProfileRequest
     public string? UiTheme { get; init; }
 
     [RegularExpression(
-        "^(default|blue|green|purple|pink|orange)$",
-        ErrorMessage = "accentColor doit être default, blue, green, purple, pink ou orange.")]
+        "^(default|blue|green|purple|pink|orange|red|cyan|indigo)$",
+        ErrorMessage = "accentColor doit être default, blue, green, purple, pink, orange, red, cyan ou indigo.")]
     public string? AccentColor { get; init; }
 
     // Seeds must match AVATAR_IDS in apps/web/src/shared/utils/avatar.ts

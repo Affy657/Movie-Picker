@@ -66,6 +66,9 @@ public static class UserDocumentMapper
             "purple" => AccentColor.Purple,
             "pink" => AccentColor.Pink,
             "orange" => AccentColor.Orange,
+            "red" => AccentColor.Red,
+            "cyan" => AccentColor.Cyan,
+            "indigo" => AccentColor.Indigo,
             _ => AccentColor.Default
         };
 
@@ -77,6 +80,9 @@ public static class UserDocumentMapper
             AccentColor.Purple => "purple",
             AccentColor.Pink => "pink",
             AccentColor.Orange => "orange",
+            AccentColor.Red => "red",
+            AccentColor.Cyan => "cyan",
+            AccentColor.Indigo => "indigo",
             _ => null
         };
 }

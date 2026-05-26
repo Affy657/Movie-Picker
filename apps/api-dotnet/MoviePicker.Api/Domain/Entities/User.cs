@@ -14,7 +14,10 @@ public enum AccentColor
     Green = 2,
     Purple = 3,
     Pink = 4,
-    Orange = 5
+    Orange = 5,
+    Red = 6,
+    Cyan = 7,
+    Indigo = 8
 }
 
 public sealed record User
