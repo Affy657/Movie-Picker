@@ -318,7 +318,9 @@ export default function MyEventsPage() {
 
   const [hasGuestSession] = useState<boolean>(() => listStoredParticipantSlugs().length > 0);
   const [confirmDeleteSlug, setConfirmDeleteSlug] = useState<string | null>(null);
-  const [confirmLeave, setConfirmLeave] = useState<{ slug: string; participantId: string } | null>(null);
+  const [confirmLeave, setConfirmLeave] = useState<{ slug: string; participantId: string } | null>(
+    null
+  );
 
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [leaveError, setLeaveError] = useState<string | null>(null);
@@ -646,7 +648,9 @@ export default function MyEventsPage() {
       <ConfirmDialog
         open={confirmLeave !== null}
         title={t('events.participants.leaveConfirmTitle')}
-        message={t(user ? 'events.participants.leaveConfirm' : 'events.participants.leaveConfirmGuest')}
+        message={t(
+          user ? 'events.participants.leaveConfirm' : 'events.participants.leaveConfirmGuest'
+        )}
         confirmLabel={t('events.participants.leaveConfirmAction')}
         busy={leaveMutation.isPending}
         onConfirm={() => {
