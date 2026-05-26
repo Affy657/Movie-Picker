@@ -220,7 +220,11 @@ export default function ThemeField({
           <span className={styles.colorRowLabel}>Couleur</span>
           <button
             type="button"
-            className={clsx(styles.colorSwatch, styles.colorSwatchAuto, themeColor === null && styles.colorSwatchSelected)}
+            className={clsx(
+              styles.colorSwatch,
+              styles.colorSwatchAuto,
+              themeColor === null && styles.colorSwatchSelected
+            )}
             onClick={() => onThemeColorChange(null)}
             aria-label="Automatique"
             aria-pressed={themeColor === null}
@@ -230,7 +234,10 @@ export default function ThemeField({
             <button
               key={s.hue}
               type="button"
-              className={clsx(styles.colorSwatch, themeColor === s.hue && styles.colorSwatchSelected)}
+              className={clsx(
+                styles.colorSwatch,
+                themeColor === s.hue && styles.colorSwatchSelected
+              )}
               style={{ '--swatch-hue': s.hue } as CSSProperties}
               onClick={() => onThemeColorChange(s.hue)}
               aria-label={s.label}
