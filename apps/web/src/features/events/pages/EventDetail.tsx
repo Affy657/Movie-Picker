@@ -37,7 +37,7 @@ export default function EventDetail() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
-  const locale = useLocale();
+  const { locale } = useLocale();
   const {
     hostToken,
     eventQuery,
