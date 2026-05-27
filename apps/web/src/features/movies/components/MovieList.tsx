@@ -110,7 +110,7 @@ function ProposerNoteSection({
       }
       setEditing(false);
       refresh();
-    } catch (e) {
+    } catch {
       onActionError(t('movies.pitchNote.saveError'));
     } finally {
       setPending(false);
