@@ -6,6 +6,15 @@ import type { MovieData } from '@/shared/types/movie';
 import { LocaleProvider } from '@/shared/i18n';
 import { QueryClientWrapper } from '@/test-utils/queryWrapper';
 
+vi.mock('@/features/movies/api/moviesApi', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/features/movies/api/moviesApi')>();
+  return {
+    ...actual,
+    setMoviePitchNote: vi.fn().mockResolvedValue(undefined),
+    deleteMoviePitchNote: vi.fn().mockResolvedValue(undefined),
+  };
+});
+
 function renderWithLocale(ui: React.ReactElement) {
   return render(
     <QueryClientWrapper>
@@ -206,6 +215,29 @@ describe('MovieList', () => {
     );
     await userEvent.click(screen.getByText(/Ajouter une note/i));
     expect(screen.getByRole('textbox')).toBeInTheDocument();
+  });
+
+  it('enregistre une nouvelle note et ferme l\'éditeur', async () => {
+    const { setMoviePitchNote } = await import('@/features/movies/api/moviesApi');
+    const refresh = vi.fn();
+    renderWithLocale(
+      <MovieList
+        movies={[movies[0]!]}
+        slug="test-slug"
+        participantId="p1"
+        participantPseudo="Alice"
+        isFinished={false}
+        onVote={vi.fn()}
+        onRemove={vi.fn()}
+        refresh={refresh}
+        onActionError={vi.fn()}
+      />
+    );
+    await userEvent.click(screen.getByText(/Ajouter une note/i));
+    await userEvent.type(screen.getByRole('textbox'), 'Super film');
+    await userEvent.click(screen.getByText(/Enregistrer/i));
+    expect(setMoviePitchNote).toHaveBeenCalledWith('test-slug', 'm1', 'p1', 'Super film');
+    expect(refresh).toHaveBeenCalled();
   });
 
   it('reflète myVote sur les boutons (aria-pressed) et expose un libellé « retirer » au reclic', () => {
