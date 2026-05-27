@@ -1,6 +1,15 @@
 import { memo, useEffect, useId, useRef, useState } from 'react';
 import clsx from 'clsx';
-import { Check, ExternalLink, Eye, MoreVertical, ThumbsDown, ThumbsUp, Trash2, X } from 'lucide-react';
+import {
+  Check,
+  ExternalLink,
+  Eye,
+  MoreVertical,
+  ThumbsDown,
+  ThumbsUp,
+  Trash2,
+  X,
+} from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
 import type { MovieData } from '@/shared/types/movie';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
@@ -88,7 +97,10 @@ function ProposerNoteSection({
     if (!participantId || pending) return;
     const trimmed = draft.trim();
     if (trimmed.length > PITCH_MAX) return;
-    if (!trimmed && pitchNote == null) { setEditing(false); return; }
+    if (!trimmed && pitchNote == null) {
+      setEditing(false);
+      return;
+    }
     setPending(true);
     try {
       if (trimmed) {
@@ -118,11 +130,7 @@ function ProposerNoteSection({
 
   const showBubble = editing || pitchNote || (!isFinished && isMine);
   if (!showBubble) {
-    return (
-      <div className={styles.proposerRow}>
-        {avatarNode}
-      </div>
-    );
+    return <div className={styles.proposerRow}>{avatarNode}</div>;
   }
 
   return (
