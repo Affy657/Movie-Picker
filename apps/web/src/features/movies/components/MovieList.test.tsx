@@ -153,6 +153,61 @@ describe('MovieList', () => {
     expect(screen.getAllByRole('button', { name: /Marquer « déjà vu »/ })).toHaveLength(2);
   });
 
+  it('affiche la note de pitch quand pitchNote est définie', () => {
+    const withPitch: MovieData[] = [{ ...movies[0]!, pitchNote: 'Film incontournable !' }];
+    renderWithLocale(
+      <MovieList
+        movies={withPitch}
+        slug="s"
+        participantId={null}
+        participantPseudo={null}
+        isFinished={false}
+        onVote={vi.fn()}
+        onRemove={vi.fn()}
+        refresh={vi.fn()}
+        onActionError={vi.fn()}
+      />
+    );
+    expect(screen.getByText('Film incontournable !')).toBeInTheDocument();
+  });
+
+  it("ouvre l'éditeur en cliquant sur sa propre note de pitch", async () => {
+    const withPitch: MovieData[] = [{ ...movies[0]!, pitchNote: 'Mon pitch' }];
+    renderWithLocale(
+      <MovieList
+        movies={withPitch}
+        slug="s"
+        participantId="p1"
+        participantPseudo="Alice"
+        isFinished={false}
+        onVote={vi.fn()}
+        onRemove={vi.fn()}
+        refresh={vi.fn()}
+        onActionError={vi.fn()}
+      />
+    );
+    await userEvent.click(screen.getByText('Mon pitch'));
+    expect(screen.getByRole('textbox')).toBeInTheDocument();
+  });
+
+  it("affiche le bouton Ajouter une note et ouvre l'éditeur au clic", async () => {
+    renderWithLocale(
+      <MovieList
+        movies={[movies[0]!]}
+        slug="s"
+        participantId="p1"
+        participantPseudo="Alice"
+        isFinished={false}
+        onVote={vi.fn()}
+        onRemove={vi.fn()}
+        refresh={vi.fn()}
+        onActionError={vi.fn()}
+      />
+    );
+    await userEvent.click(screen.getByText(/Ajouter une note/i));
+    expect(screen.getByRole('textbox')).toBeInTheDocument();
+  });
+
   it('reflète myVote sur les boutons (aria-pressed) et expose un libellé « retirer » au reclic', () => {
     const voted: MovieData[] = [
       { ...movies[0]!, myVote: 1 },
