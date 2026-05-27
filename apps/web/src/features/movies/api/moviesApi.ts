@@ -165,6 +165,29 @@ export async function removeMovieFromEvent(
   });
 }
 
+export async function setMoviePitchNote(
+  slug: string,
+  movieId: string,
+  participantId: string,
+  pitchNote: string
+): Promise<void> {
+  await fetchApi(`/events/${slug}/movies/${movieId}/note`, {
+    method: 'PUT',
+    body: JSON.stringify({ participantId, pitchNote }),
+  });
+}
+
+export async function deleteMoviePitchNote(
+  slug: string,
+  movieId: string,
+  participantId: string
+): Promise<void> {
+  await fetchApi(`/events/${slug}/movies/${movieId}/note`, {
+    method: 'DELETE',
+    body: JSON.stringify({ participantId }),
+  });
+}
+
 export async function markMovieAsSeen(
   slug: string,
   movieId: string,

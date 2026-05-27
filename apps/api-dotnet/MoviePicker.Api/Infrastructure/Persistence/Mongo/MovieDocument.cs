@@ -33,6 +33,9 @@ public sealed class MovieDocument
     [BsonElement("posterPath")]
     public string? PosterPath { get; set; }
 
+    [BsonElement("pitchNote")]
+    public string? PitchNote { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 

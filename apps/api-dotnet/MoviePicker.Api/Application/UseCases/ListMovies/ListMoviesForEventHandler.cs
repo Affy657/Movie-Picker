@@ -127,6 +127,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
                     Title = m.Title,
                     Year = m.Year,
                     PosterPath = posterOut,
+                    PitchNote = m.PitchNote,
                     CreatedAt = m.CreatedAt,
                     UpdatedAt = m.UpdatedAt,
                     ProposerPseudo = pseudo ?? string.Empty,

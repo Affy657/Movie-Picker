@@ -19,6 +19,7 @@ public static class RateLimitingExtensions
     public const string PatchEventConfigPolicy = "patch-event-config";
     public const string VoteMutationPolicy = "vote-mutation";
     public const string SeenMarksMutationPolicy = "seen-marks-mutation";
+    public const string NoteMutationPolicy = "note-mutation";
     public const string RemoveParticipantPolicy = "remove-participant";
     public const string DeleteEventPolicy = "delete-event";
     public const string PostersPolicy = "posters-get";
@@ -60,6 +61,7 @@ public static class RateLimitingExtensions
                 options.AddPolicy(PatchEventConfigPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(VoteMutationPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(SeenMarksMutationPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
+                options.AddPolicy(NoteMutationPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(RemoveParticipantPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(DeleteEventPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(PostersPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
@@ -79,6 +81,7 @@ public static class RateLimitingExtensions
             options.AddPolicy(PatchEventConfigPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 40, windowMinutes: 1));
             options.AddPolicy(VoteMutationPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 120, windowMinutes: 1));
             options.AddPolicy(SeenMarksMutationPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 120, windowMinutes: 1));
+            options.AddPolicy(NoteMutationPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 60, windowMinutes: 1));
             options.AddPolicy(RemoveParticipantPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 40, windowMinutes: 1));
             options.AddPolicy(DeleteEventPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 10, windowMinutes: 1));
             options.AddPolicy(PostersPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 300, windowMinutes: 1));

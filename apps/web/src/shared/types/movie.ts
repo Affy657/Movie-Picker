@@ -17,6 +17,7 @@ export interface MovieData {
   title: string;
   year: string;
   posterPath: string | null;
+  pitchNote?: string | null;
   proposerPseudo: string;
   score: number;
   up: number;

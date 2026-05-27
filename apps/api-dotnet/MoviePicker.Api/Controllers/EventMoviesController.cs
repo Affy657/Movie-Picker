@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.AddMovie;
 using MoviePicker.Api.Application.UseCases.DeleteMovie;
+using MoviePicker.Api.Application.UseCases.DeleteMoviePitchNote;
 using MoviePicker.Api.Application.UseCases.ListMovies;
 using MoviePicker.Api.Application.UseCases.SeenMarks;
+using MoviePicker.Api.Application.UseCases.SetMoviePitchNote;
 using MoviePicker.Api.Application.UseCases.VoteMovie;
 using MoviePicker.Api.Infrastructure.Web;
 
@@ -114,6 +116,44 @@ public sealed class EventMoviesController : ControllerBase
     {
         var res = await handler.HandleAsync(idOrSlug, movieId, request, ct);
         return Ok(res);
+    }
+
+    [HttpPut("{movieId}/note")]
+    [EnableRateLimiting(RateLimitingExtensions.NoteMutationPolicy)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> SetPitchNote(
+        string idOrSlug,
+        string movieId,
+        [FromBody] SetMoviePitchNoteRequest request,
+        [FromServices] ISetMoviePitchNoteHandler handler,
+        CancellationToken ct)
+    {
+        await handler.HandleAsync(idOrSlug, movieId, request, ct);
+        return NoContent();
+    }
+
+    [HttpDelete("{movieId}/note")]
+    [EnableRateLimiting(RateLimitingExtensions.NoteMutationPolicy)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> DeletePitchNote(
+        string idOrSlug,
+        string movieId,
+        [FromBody] DeleteMoviePitchNoteRequest request,
+        [FromServices] IDeleteMoviePitchNoteHandler handler,
+        CancellationToken ct)
+    {
+        await handler.HandleAsync(idOrSlug, movieId, request, ct);
+        return NoContent();
     }
 
     [HttpDelete("{movieId}/seen")]

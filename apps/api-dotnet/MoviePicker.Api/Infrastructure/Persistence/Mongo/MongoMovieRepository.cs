@@ -4,6 +4,7 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
@@ -84,6 +85,16 @@ public sealed class MongoMovieRepository : IMovieRepository
     public async Task DeleteAsync(string movieId, CancellationToken ct = default)
     {
         await _collection.DeleteOneAsync(x => x.Id == movieId, cancellationToken: ct);
+    }
+
+    public async Task UpdatePitchNoteAsync(string movieId, string? pitchNote, CancellationToken ct = default)
+    {
+        var update = Builders<MovieDocument>.Update
+            .Set(x => x.PitchNote, pitchNote)
+            .Set(x => x.UpdatedAt, DateTime.UtcNow);
+        var result = await _collection.UpdateOneAsync(x => x.Id == movieId, update, cancellationToken: ct);
+        if (result.ModifiedCount == 0)
+            throw new NotFoundException("Film introuvable");
     }
 
     public async Task<IReadOnlyList<string>> ListIdsByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default)

@@ -359,6 +359,14 @@ export const fr = {
       sectionLabel: 'Films proposés',
       loadingPlaceholder: 'Chargement des films\u2026',
     },
+    pitchNote: {
+      addButton: 'Ajouter une note',
+      placeholder: 'Vendez votre film en quelques mots\u2026',
+      charCount: '{{count}}/140',
+      saveButton: 'Enregistrer',
+      cancelButton: 'Annuler',
+      saveError: 'Impossible d\u2019enregistrer la note',
+    },
     seen: {
       label: 'D\u00e9j\u00e0 vu',
       labelWithCount: 'D\u00e9j\u00e0 vu ({{count}})',

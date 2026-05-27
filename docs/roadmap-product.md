@@ -72,10 +72,10 @@ Découpage par version côté **métier / utilisateur**.
 
 **Objectif** : vie sociale de l'app, identité utilisateur et engagement.
 
-- ⬜ **Avatar utilisateur** : choix parmi un set préselectionné ; affiché à côté du pseudo dans la soirée et le profil.
+- ✅ **Avatar utilisateur** : choix parmi un set préselectionné ; affiché à côté du pseudo dans la soirée et le profil.
 - ⬜ **Statistiques utilisateur** : tableau de bord personnel — soirées créées / rejointes, films proposés, votes, films gagnants.
 - ⬜ **Badges / achievements** : récompenses visuelles automatiques selon l'usage (ex. « 10 soirées créées ») ; affichés sur le profil.
-- ⬜ **Mini-commentaires sur une proposition** : courte note (≤ 140 caractères) attachable à un film proposé ; visible par tous les participants ; suppression par l'auteur ou l'hôte.
+- ✅ **Mini-commentaires sur une proposition** : note de pitch (≤ 140 caractères) posée par le proposant sur son film ; visible par tous ; bulle de texte avec avatar du proposant ; éditable au clic par le proposant, supprimable par le proposant (body vide) ou l'hôte (sans participantId requis) ; lecture seule après le lancement de la roue ; rate limiting 60 req/min.
 - ⬜ **Profil public léger** : page `/u/:pseudo` — pseudo, avatar, badges, stats publiques ; paramètres de visibilité (privé par défaut).
 - ⬜ **Notifications in-app** : badge + liste « Invitations reçues » dans Mes soirées.
 - ⬜ **Invitations in-app** : invitation directe à un autre utilisateur en complément du lien de partage.
@@ -86,6 +86,7 @@ Découpage par version côté **métier / utilisateur**.
 
 > **Note V2 — Application mobile** : l'app mobile (Expo / React Native) était un projet de cours, archivée dans `archive/mobile` (mai 2026). Pour la V2, l'objectif est une app mobile propre, pleinement intégrée à la plateforme. Pas d'engagement de date.
 
+- **Tooltips globaux** : ajouter des info-bulles cohérentes sur les éléments interactifs de toute la plateforme — boutons d'action, avatars, icônes, badges, scores TMDB, plateformes de streaming, etc. — pour améliorer la découvrabilité et réduire l'ambiguïté.
 - **Mode hors-ligne léger** : cache de la dernière vue de la soirée, bannière « Données en cache ».
 - **Export calendrier (.ics)** : lien « Ajouter au calendrier » sur la soirée, compatible Google Calendar, Outlook, Apple Calendar.
 - **Plage de votes configurable** : l'hôte peut définir le nombre max de votes up/down par participant.

@@ -14,6 +14,7 @@ public static class MovieMapper
         Title = d.Title,
         Year = d.Year,
         PosterPath = d.PosterPath,
+        PitchNote = string.IsNullOrWhiteSpace(d.PitchNote) ? null : d.PitchNote,
         CreatedAt = new DateTimeOffset(d.CreatedAt, TimeSpan.Zero),
         UpdatedAt = new DateTimeOffset(d.UpdatedAt, TimeSpan.Zero)
     };
@@ -28,6 +29,7 @@ public static class MovieMapper
         Title = m.Title,
         Year = m.Year,
         PosterPath = m.PosterPath,
+        PitchNote = m.PitchNote,
         CreatedAt = m.CreatedAt.UtcDateTime,
         UpdatedAt = m.UpdatedAt.UtcDateTime
     };

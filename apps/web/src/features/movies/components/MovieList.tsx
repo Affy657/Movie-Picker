@@ -1,6 +1,6 @@
 import { memo, useEffect, useId, useRef, useState } from 'react';
 import clsx from 'clsx';
-import { ExternalLink, Eye, MoreVertical, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react';
+import { Check, ExternalLink, Eye, MoreVertical, ThumbsDown, ThumbsUp, Trash2, X } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
 import type { MovieData } from '@/shared/types/movie';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
@@ -8,7 +8,12 @@ import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUr
 import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { isSafeTmdbWatchPageUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
-import { markMovieAsSeen, unmarkMovieAsSeen } from '@/features/movies/api/moviesApi';
+import {
+  deleteMoviePitchNote,
+  markMovieAsSeen,
+  setMoviePitchNote,
+  unmarkMovieAsSeen,
+} from '@/features/movies/api/moviesApi';
 import { othersAlreadySeenHint } from '@/features/movies/utils/seenHint';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
@@ -34,6 +39,165 @@ interface MovieListProps {
   refresh: () => void;
   onActionError: (message: string) => void;
   participantAvatars?: Record<string, string>;
+}
+
+const PITCH_MAX = 140;
+
+interface ProposerNoteSectionProps {
+  movieId: string;
+  slug: string;
+  pitchNote?: string | null;
+  proposerAvatarId: string;
+  proposerPseudo: string;
+  isMine: boolean;
+  isFinished: boolean;
+  participantId: string | null;
+  refresh: () => void;
+  onActionError: (message: string) => void;
+  t: Translate;
+}
+
+function ProposerNoteSection({
+  movieId,
+  slug,
+  pitchNote,
+  proposerAvatarId,
+  proposerPseudo,
+  isMine,
+  isFinished,
+  participantId,
+  refresh,
+  onActionError,
+  t,
+}: ProposerNoteSectionProps) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const [pending, setPending] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const startEdit = () => {
+    setDraft(pitchNote ?? '');
+    setEditing(true);
+  };
+
+  useEffect(() => {
+    if (editing) textareaRef.current?.focus();
+  }, [editing]);
+
+  const handleSave = async () => {
+    if (!participantId || pending) return;
+    const trimmed = draft.trim();
+    if (trimmed.length > PITCH_MAX) return;
+    if (!trimmed && pitchNote == null) { setEditing(false); return; }
+    setPending(true);
+    try {
+      if (trimmed) {
+        await setMoviePitchNote(slug, movieId, participantId, trimmed);
+      } else {
+        await deleteMoviePitchNote(slug, movieId, participantId);
+      }
+      setEditing(false);
+      refresh();
+    } catch (e) {
+      onActionError(t('movies.pitchNote.saveError'));
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void handleSave();
+    if (e.key === 'Escape') setEditing(false);
+  };
+
+  const avatarNode = (
+    <span title={proposerPseudo} className={styles.proposerAvatarWrap}>
+      <Avatar avatarId={proposerAvatarId} size="xs" />
+    </span>
+  );
+
+  const showBubble = editing || pitchNote || (!isFinished && isMine);
+  if (!showBubble) {
+    return (
+      <div className={styles.proposerRow}>
+        {avatarNode}
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.proposerRow}>
+      {avatarNode}
+      <div className={styles.proposerBubbleCol}>
+        {editing ? (
+          <>
+            <textarea
+              ref={textareaRef}
+              className={styles.pitchTextarea}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={handleKeyDown}
+              maxLength={PITCH_MAX}
+              rows={2}
+              placeholder={t('movies.pitchNote.placeholder')}
+              disabled={pending}
+            />
+            <div className={styles.pitchEditorFooter}>
+              <span
+                className={clsx(
+                  styles.pitchCharCount,
+                  draft.trim().length > PITCH_MAX && styles.pitchCharCountOver
+                )}
+              >
+                {t('movies.pitchNote.charCount', { count: draft.trim().length })}
+              </span>
+              <div className={styles.pitchEditorActions}>
+                <button
+                  type="button"
+                  className={clsx(styles.pitchBtn, styles.pitchBtnGhost)}
+                  onClick={() => setEditing(false)}
+                  disabled={pending}
+                >
+                  <X aria-hidden size={13} />
+                  {t('movies.pitchNote.cancelButton')}
+                </button>
+                <button
+                  type="button"
+                  className={clsx(styles.pitchBtn, styles.pitchBtnPrimary)}
+                  onClick={() => void handleSave()}
+                  disabled={pending || draft.trim().length > PITCH_MAX}
+                >
+                  <Check aria-hidden size={13} />
+                  {t('movies.pitchNote.saveButton')}
+                </button>
+              </div>
+            </div>
+          </>
+        ) : pitchNote ? (
+          !isFinished && isMine ? (
+            <button
+              type="button"
+              className={clsx(styles.bubble, styles.bubbleClickable)}
+              onClick={startEdit}
+              disabled={pending}
+            >
+              {pitchNote}
+            </button>
+          ) : (
+            <div className={styles.bubble}>{pitchNote}</div>
+          )
+        ) : (
+          <button
+            type="button"
+            className={clsx(styles.bubble, styles.bubbleAdd)}
+            onClick={startEdit}
+          >
+            {t('movies.pitchNote.addButton')}
+          </button>
+        )}
+      </div>
+    </div>
+  );
 }
 
 interface MovieCardProps {
@@ -184,21 +348,6 @@ const MovieCard = memo(function MovieCard({
           <p className={styles.providersEmpty}>{t('movies.watchProviders.emptyLabel')}</p>
         )}
         {seenHint ? <p className={styles.seenHint}>{seenHint}</p> : null}
-        <p className={styles.proposerLine}>
-          {m.proposerPseudo ? (
-            <>
-              <Avatar avatarId={proposerAvatarId} size="xs" className={styles.proposerAvatar} />
-              {isMine ? (
-                <>
-                  {t('movies.list.proposedByMeLead')}
-                  <span className={styles.selfProposer}>{t('movies.list.proposedByMeSelf')}</span>
-                </>
-              ) : (
-                t('movies.list.proposedBy', { pseudo: m.proposerPseudo })
-              )}
-            </>
-          ) : null}
-        </p>
         {!isFinished && participantId && (
           <div className={styles.actions} role="group" aria-label={m.title}>
             <button
@@ -251,6 +400,19 @@ const MovieCard = memo(function MovieCard({
             </button>
           </div>
         )}
+        <ProposerNoteSection
+          movieId={m.id}
+          slug={slug}
+          pitchNote={m.pitchNote}
+          proposerAvatarId={proposerAvatarId}
+          proposerPseudo={m.proposerPseudo}
+          isMine={!!isMine}
+          isFinished={isFinished}
+          participantId={participantId}
+          refresh={refresh}
+          onActionError={onActionError}
+          t={t}
+        />
       </div>
       {hasDetails ? (
         <MovieDetailsContent

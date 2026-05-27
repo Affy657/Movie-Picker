@@ -75,6 +75,8 @@ public sealed class AddMovieHandler : IAddMovieHandler
         }
 
         var now = DateTimeOffset.UtcNow;
+        var pitchNote = string.IsNullOrWhiteSpace(request.PitchNote) ? null : request.PitchNote.Trim();
+
         var movie = new Movie
         {
             Id = string.Empty,
@@ -85,6 +87,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
             Title = request.Title.Trim(),
             Year = request.Year,
             PosterPath = poster,
+            PitchNote = pitchNote,
             CreatedAt = now,
             UpdatedAt = now
         };
@@ -103,6 +106,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
             Title = created.Title,
             Year = created.Year,
             PosterPath = created.PosterPath,
+            PitchNote = created.PitchNote,
             CreatedAt = created.CreatedAt,
             UpdatedAt = created.UpdatedAt,
             ProposerPseudo = participant.Pseudo,

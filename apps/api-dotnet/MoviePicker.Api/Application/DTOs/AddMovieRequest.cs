@@ -22,6 +22,9 @@ public sealed class AddMovieRequest
 
     public string? PosterPath { get; init; }
 
+    [MaxLength(140)]
+    public string? PitchNote { get; init; }
+
     [Required]
     [StringLength(24, MinimumLength = 24)]
     public string ParticipantId { get; init; } = string.Empty;

@@ -352,6 +352,14 @@ export const en: Locale = {
       sectionLabel: 'Suggested movies',
       loadingPlaceholder: 'Loading movies\u2026',
     },
+    pitchNote: {
+      addButton: 'Add a note',
+      placeholder: 'Sell your movie in a few words…',
+      charCount: '{{count}}/140',
+      saveButton: 'Save',
+      cancelButton: 'Cancel',
+      saveError: 'Could not save the note',
+    },
     seen: {
       label: 'Already seen',
       labelWithCount: 'Already seen ({{count}})',

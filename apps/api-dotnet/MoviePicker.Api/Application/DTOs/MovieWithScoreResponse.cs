@@ -14,6 +14,7 @@ public sealed class MovieWithScoreResponse
     public string Title { get; init; } = string.Empty;
     public string Year { get; init; } = string.Empty;
     public string? PosterPath { get; init; }
+    public string? PitchNote { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
     public string ProposerPseudo { get; init; } = string.Empty;
