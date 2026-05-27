@@ -217,7 +217,7 @@ describe('MovieList', () => {
     expect(screen.getByRole('textbox')).toBeInTheDocument();
   });
 
-  it('enregistre une nouvelle note et ferme l\'éditeur', async () => {
+  it("enregistre une nouvelle note et ferme l'éditeur", async () => {
     const { setMoviePitchNote } = await import('@/features/movies/api/moviesApi');
     const refresh = vi.fn();
     renderWithLocale(
