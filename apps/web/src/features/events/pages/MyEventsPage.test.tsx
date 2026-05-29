@@ -30,6 +30,20 @@ function renderMyEvents() {
   );
 }
 
+beforeAll(() => {
+  if (!HTMLDialogElement.prototype.showModal) {
+    HTMLDialogElement.prototype.showModal = function showModal() {
+      this.setAttribute('open', '');
+    };
+  }
+  if (!HTMLDialogElement.prototype.close) {
+    HTMLDialogElement.prototype.close = function close() {
+      this.removeAttribute('open');
+      this.dispatchEvent(new Event('close'));
+    };
+  }
+});
+
 describe('MyEventsPage (MSW)', () => {
   const server = setupServer();
 
@@ -134,6 +148,68 @@ describe('MyEventsPage (MSW)', () => {
     expect(within(hostedSection).queryByText(/Soirée passée/i)).not.toBeInTheDocument();
 
     expect(document.title).toBe(pageTitle('Mes soirées'));
+  });
+
+  it('historique : ouvrir le menu et supprimer une soirée hôte terminée', async () => {
+    const user = (await import('@testing-library/user-event')).default.setup();
+    let deleteCalled = false;
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u1',
+          displayName: 'Alice',
+          emailMasked: 'a***@test.local',
+          uiTheme: 'system',
+          accentColor: 'default',
+        })
+      ),
+      http.get(`${TEST_API_V1}/events/mine`, () =>
+        HttpResponse.json({
+          events: [
+            {
+              id: 'e3',
+              slug: 'terminee',
+              title: 'Soirée passée',
+              date: '2020-01-01',
+              time: '20:00',
+              createdAt: '2019-01-01T00:00:00Z',
+              updatedAt: '2020-01-02T00:00:00Z',
+              isCreator: true,
+              isParticipant: true,
+              lifecycle: 'finished',
+              participantCount: 2,
+              movieCount: 5,
+            },
+          ],
+        })
+      ),
+      http.delete(`${TEST_API_V1}/events/terminee`, () => {
+        deleteCalled = true;
+        return HttpResponse.json({
+          eventId: 'e3',
+          slug: 'terminee',
+          message: 'ok',
+          removedParticipants: 2,
+          removedMovies: 5,
+          removedVotes: 0,
+          removedSeenMarks: 0,
+        });
+      })
+    );
+
+    renderMyEvents();
+
+    const historyTab = await screen.findByRole('tab', { name: /historique/i }, { timeout: 5000 });
+    await user.click(historyTab);
+    await screen.findByRole('link', { name: /Soirée passée/i });
+
+    await user.click(screen.getByRole('button', { name: /Options pour Soirée passée/i }));
+    await user.click(screen.getByRole('menuitem', { name: /supprimer/i }));
+
+    const openDialog = screen.getAllByTestId('confirm-dialog').find((d) => d.hasAttribute('open'))!;
+    await user.click(within(openDialog).getByTestId('confirm-dialog-confirm'));
+
+    await waitFor(() => expect(deleteCalled).toBe(true));
   });
 
   it('non connecté : ne rend pas la liste (redirection vers login)', async () => {

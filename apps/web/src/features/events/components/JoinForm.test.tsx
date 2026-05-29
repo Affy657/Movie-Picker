@@ -96,6 +96,29 @@ describe('JoinForm', () => {
     });
   });
 
+  it('connecté sans displayName : envoie « Participant » par défaut', async () => {
+    const user = userEvent.setup();
+    mockFetchApi.mockImplementation(async (path: string) => {
+      if (path === '/auth/me') return { ...profile, displayName: '   ' };
+      if (path === '/events/soiree/join')
+        return {
+          participant: { _id: 'p1', eventId: 'e1', pseudo: 'Participant' },
+          isNew: true,
+          message: '',
+        };
+      throw new Error(`fetchApi inattendu: ${path}`);
+    });
+    renderForm(<JoinForm slug="soiree" onJoined={onJoined} />);
+    await user.click(await screen.findByRole('button', { name: /rejoindre/i }));
+
+    await waitFor(() => {
+      expect(mockFetchApi).toHaveBeenCalledWith(
+        '/events/soiree/join',
+        expect.objectContaining({ body: JSON.stringify({ pseudo: 'Participant' }) })
+      );
+    });
+  });
+
   it('affiche un message dédié et cache le formulaire quand la soirée est complète', () => {
     renderForm(<JoinForm slug="soiree" onJoined={onJoined} isFull maxParticipants={4} />);
     expect(screen.getByText(/complète \(4 participants maximum\)/i)).toBeInTheDocument();
