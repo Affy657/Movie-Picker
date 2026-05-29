@@ -46,7 +46,7 @@ public sealed class JoinEventHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
         var request = new JoinEventRequest { Pseudo = "Alice" };
 
-        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad", request, null));
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad", request, "u1"));
         Assert.Equal("Soirée introuvable", ex.Message);
     }
 
@@ -57,7 +57,7 @@ public sealed class JoinEventHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         var request = new JoinEventRequest { Pseudo = "Alice" };
 
-        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", request, null));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", request, "u1"));
         Assert.Contains("terminée", ex.Message);
     }
 
@@ -71,7 +71,7 @@ public sealed class JoinEventHandlerTests
         _participantRepo.Setup(r => r.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>())).ReturnsAsync(newParticipant);
         var request = new JoinEventRequest { Pseudo = " Alice " };
 
-        var result = await _sut.HandleAsync("evt1", request, null);
+        var result = await _sut.HandleAsync("evt1", request, "u1");
 
         Assert.True(result.IsNew);
         Assert.Equal("p1", result.Participant.Id);
@@ -88,7 +88,7 @@ public sealed class JoinEventHandlerTests
         _participantRepo.Setup(r => r.FindByEventAndPseudoAsync(evt.Id, "Bob", It.IsAny<CancellationToken>())).ReturnsAsync(existing);
         var request = new JoinEventRequest { Pseudo = "Bob" };
 
-        var result = await _sut.HandleAsync("evt1", request, null);
+        var result = await _sut.HandleAsync("evt1", request, "u1");
 
         Assert.False(result.IsNew);
         Assert.Equal("p0", result.Participant.Id);
@@ -137,7 +137,7 @@ public sealed class JoinEventHandlerTests
             .ReturnsAsync(3);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() =>
-            _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Alice" }, null));
+            _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Alice" }, "u1"));
         Assert.Contains("complète", ex.Message);
         _participantRepo.Verify(
             r => r.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>()),
@@ -159,10 +159,18 @@ public sealed class JoinEventHandlerTests
         var newParticipant = new Participant { Id = "p1", EventId = evt.Id, Pseudo = "Alice", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _participantRepo.Setup(r => r.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>())).ReturnsAsync(newParticipant);
 
-        var result = await _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Alice" }, null);
+        var result = await _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Alice" }, "u1");
 
         Assert.True(result.IsNew);
         Assert.Equal("p1", result.Participant.Id);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithoutAccount_ThrowsArgumentException()
+    {
+        var request = new JoinEventRequest { Pseudo = "Alice" };
+
+        await Assert.ThrowsAsync<ArgumentException>(() => _sut.HandleAsync("evt1", request, ""));
     }
 
     [Fact]

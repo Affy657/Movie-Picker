@@ -34,7 +34,7 @@ Découpage par version côté **métier / utilisateur**.
 
 **Objectif** : compte utilisateur, config hôte, marqueur « déjà vu », confort de partage, enrichissement film léger.
 
-- ✅ **Compte utilisateur** : inscription (email, mot de passe, pseudo), connexion, déconnexion, mot de passe oublié. Rejoindre une soirée reste possible sans compte (pseudo invité).
+- ✅ **Compte utilisateur** : inscription (email, mot de passe, pseudo), connexion, déconnexion, mot de passe oublié. **Compte obligatoire pour rejoindre une soirée** (le mode invité initial — rejoindre sans compte — a été retiré ensuite : trop de problèmes en usage réel).
 - ✅ **Création de soirée** : compte obligatoire pour créer ; lien de partage sans token hôte.
 - ✅ **Mes soirées** : liste persistante des soirées pour les utilisateurs connectés.
 - ✅ **Config par l'hôte** : paramètres de la soirée — thème, expiration, limite de propositions, type de roue (aléatoire / pondérée).
@@ -76,7 +76,7 @@ Découpage par version côté **métier / utilisateur**.
 - ⬜ **Statistiques utilisateur** : tableau de bord personnel — soirées créées / rejointes, films proposés, votes, films gagnants.
 - ⬜ **Badges / achievements** : récompenses visuelles automatiques selon l'usage (ex. « 10 soirées créées ») ; affichés sur le profil.
 - ✅ **Mini-commentaires sur une proposition** : note de pitch (≤ 140 caractères) posée par le proposant sur son film ; visible par tous ; bulle de texte avec avatar du proposant ; éditable au clic par le proposant, supprimable par le proposant (body vide) ou l'hôte (sans participantId requis) ; lecture seule après le lancement de la roue ; rate limiting 60 req/min.
-- ⬜ **Profil public léger** : page `/u/:pseudo` — pseudo, avatar, badges, stats publiques ; paramètres de visibilité (privé par défaut).
+- ⬜ **Profil public léger** : page `/u/:handle` (handle unique) — avatar, pseudo, bio courte, « membre depuis » ; **public par défaut** avec opt-out. Stats publiques et badges ajoutés ensuite. Plan détaillé → [feature-profil-public.md](feature-profil-public.md).
 - ⬜ **Notifications in-app** : badge + liste « Invitations reçues » dans Mes soirées.
 - ⬜ **Invitations in-app** : invitation directe à un autre utilisateur en complément du lien de partage.
 

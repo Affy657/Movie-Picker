@@ -25,22 +25,6 @@ export function removeStoredParticipant(slug: string): void {
   } catch {}
 }
 
-export function listStoredParticipantSlugs(): string[] {
-  if (typeof sessionStorage === 'undefined') return [];
-  const out: string[] = [];
-  try {
-    for (let i = 0; i < sessionStorage.length; i++) {
-      const k = sessionStorage.key(i);
-      if (!k?.startsWith(PARTICIPANT_KEY)) continue;
-      const slug = k.slice(PARTICIPANT_KEY.length);
-      if (slug && getStoredParticipant(slug)) out.push(slug);
-    }
-  } catch {
-    return out;
-  }
-  return [...new Set(out)];
-}
-
 const HOST_KEY = 'moviepicker_host_';
 
 export function getStoredHostToken(slug: string): string | null {

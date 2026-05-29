@@ -312,8 +312,16 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
     [Fact]
     public async Task PostJoin_UnknownSlug_Returns404()
     {
-        var client = _factory.CreateClient();
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var res = await client.PostAsJsonAsync("/api/v1/events/slug-inexistant/join", new { pseudo = "Bob" });
         Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostJoin_Anonymous_Returns401()
+    {
+        var client = _factory.CreateClient();
+        var res = await client.PostAsJsonAsync("/api/v1/events/whatever/join", new { pseudo = "Bob" });
+        Assert.Equal(HttpStatusCode.Unauthorized, res.StatusCode);
     }
 }

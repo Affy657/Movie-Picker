@@ -441,13 +441,8 @@ internal static class DevelopmentScenarioSeed
         var joinBob = await join
             .HandleAsync(slug, new JoinEventRequest { Pseudo = "Bob (compte)" }, bob.Id, ct)
             .ConfigureAwait(false);
-        var joinCharlie = await join
-            .HandleAsync(slug, new JoinEventRequest { Pseudo = "Charlie (invité)" }, authenticatedUserId: null, ct)
-            .ConfigureAwait(false);
-
         var alicePart = joinAlice.Participant.Id;
         var bobPart = joinBob.Participant.Id;
-        var charliePart = joinCharlie.Participant.Id;
 
         var mAlice = await addMovie
             .HandleAsync(
@@ -486,7 +481,7 @@ internal static class DevelopmentScenarioSeed
                     Title = "Pulp Fiction",
                     Year = "1994",
                     PosterPath = null,
-                    ParticipantId = charliePart
+                    ParticipantId = devPart
                 },
                 ct)
             .ConfigureAwait(false);
@@ -496,7 +491,7 @@ internal static class DevelopmentScenarioSeed
         await vote.HandleAsync(slug, mCharlie.Id, new VoteRequest { ParticipantId = bobPart, Value = -1 }, ct).ConfigureAwait(false);
 
         logger.LogInformation(
-            "DevelopmentSeed : scénario retrait/quitter créé (slug={Slug}, hôte=dev, participants=4 dont 1 invité).",
+            "DevelopmentSeed : scénario retrait/quitter créé (slug={Slug}, hôte=dev, participants=3).",
             slug);
     }
 

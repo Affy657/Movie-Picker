@@ -2,21 +2,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { Crown, Film, LogOut, MoreVertical, Plus, Trash2, Trophy, Users } from 'lucide-react';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   deleteEvent,
-  fetchGuestJoinedEventsSummaries,
   fetchMyEventsList,
-  GUEST_JOINED_EVENTS_ALL_FAILED,
   removeEventParticipant,
 } from '@/features/events/api/eventsApi';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import {
-  listStoredParticipantSlugs,
-  getStoredParticipant,
-  removeStoredParticipant,
-} from '@/features/events/storage';
+import { getStoredParticipant, removeStoredParticipant } from '@/features/events/storage';
 import PageLayout from '@/shared/components/PageLayout';
 import MyEventsSkeleton from '@/features/events/pages/MyEventsSkeleton';
 import { ApiError, getErrorMessage } from '@/shared/api/apiError';
@@ -316,7 +310,6 @@ export default function MyEventsPage() {
   const [infiniteScrollActive, setInfiniteScrollActive] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const [hasGuestSession] = useState<boolean>(() => listStoredParticipantSlugs().length > 0);
   const [confirmDeleteSlug, setConfirmDeleteSlug] = useState<string | null>(null);
   const [confirmLeave, setConfirmLeave] = useState<{ slug: string; participantId: string } | null>(
     null
@@ -329,7 +322,6 @@ export default function MyEventsPage() {
     mutationFn: (slug: string) => deleteEvent(slug),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.listPaged });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.guestJoined });
       setDeleteError(null);
     },
     onError: (e) => {
@@ -346,7 +338,6 @@ export default function MyEventsPage() {
     onSuccess: (_, { slug }) => {
       removeStoredParticipant(slug);
       void queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.listPaged });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.guestJoined });
       setLeaveError(null);
     },
     onError: (e) => {
@@ -382,12 +373,10 @@ export default function MyEventsPage() {
     retry: false,
   });
 
-  const guestQuery = useQuery({
-    queryKey: queryKeys.myEvents.guestJoined,
-    queryFn: () => fetchGuestJoinedEventsSummaries(),
-    enabled: !authLoading && (!user || hasGuestSession),
-    retry: false,
-  });
+  useEffect(() => {
+    if (authLoading || user) return;
+    navigate(withReturnTo(ROUTES.login, ROUTES.myEvents), { replace: true });
+  }, [authLoading, user, navigate]);
 
   useEffect(() => {
     if (!user) return;
@@ -421,36 +410,22 @@ export default function MyEventsPage() {
     return () => observer.disconnect();
   }, [infiniteScrollActive, loggedInQuery, loadNextChunk]);
 
-  const mergedEvents = useMemo<MyEventSummary[]>(() => {
-    const fromApi = user
-      ? (loggedInQuery.data?.pages.flatMap((p) => p.events) ?? [])
-      : (guestQuery.data?.events ?? []);
-    if (!user) return fromApi;
-    const guestExtras = guestQuery.data?.events ?? [];
-    if (guestExtras.length === 0) return fromApi;
-    const knownSlugs = new Set(fromApi.map((e) => e.slug));
-    const extras = guestExtras.filter((e) => !knownSlugs.has(e.slug));
-    return extras.length === 0 ? fromApi : [...fromApi, ...extras];
-  }, [user, loggedInQuery.data?.pages, guestQuery.data?.events]);
+  const mergedEvents = useMemo<MyEventSummary[]>(
+    () => loggedInQuery.data?.pages.flatMap((p) => p.events) ?? [],
+    [loggedInQuery.data?.pages]
+  );
 
   const { hostedActive, joinedActive, historyEvents } = useMemo(
     () => partitionMyEvents(mergedEvents),
     [mergedEvents]
   );
 
-  const isLoading = authLoading || (user ? loggedInQuery.isLoading : guestQuery.isLoading);
-  const isError = user ? loggedInQuery.isError : guestQuery.isError;
-  const error = user ? loggedInQuery.error : guestQuery.error;
+  const isLoading = authLoading || !user || loggedInQuery.isLoading;
+  const isError = loggedInQuery.isError;
+  const error = loggedInQuery.error;
 
   const loadErrorMessage =
-    error == null
-      ? ''
-      : ApiError.is(error) && error.message === GUEST_JOINED_EVENTS_ALL_FAILED
-        ? t('events.myEvents.guestAllFailedError')
-        : getErrorMessage(
-            error,
-            user ? t('events.myEvents.fallbackError') : t('events.myEvents.guestFallbackError')
-          );
+    error == null ? '' : getErrorMessage(error, t('events.myEvents.fallbackError'));
 
   if (isLoading) {
     return (
@@ -468,45 +443,19 @@ export default function MyEventsPage() {
         <p className="error" role="alert">
           {loadErrorMessage}
         </p>
-        {user ? (
-          <Link to={withReturnTo(ROUTES.login, ROUTES.myEvents)}>
-            {t('events.myEvents.reconnectLink')}
-          </Link>
-        ) : (
-          <nav className="nav-actions" aria-label={t('events.myEvents.guestErrorActionsLabel')}>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => void guestQuery.refetch()}
-            >
-              {t('common.retry')}
-            </button>
-            <Link to={withReturnTo(ROUTES.login, ROUTES.myEvents)} className="btn">
-              {t('events.myEvents.guestLoginCta')}
-            </Link>
-            <Link to={withReturnTo(ROUTES.register, ROUTES.myEvents)} className="btn">
-              {t('events.myEvents.guestRegisterCta')}
-            </Link>
-          </nav>
-        )}
+        <Link to={withReturnTo(ROUTES.login, ROUTES.myEvents)}>
+          {t('events.myEvents.reconnectLink')}
+        </Link>
       </PageLayout>
     );
   }
 
   const total = mergedEvents.length;
-  const guestSkipped = !user ? (guestQuery.data?.guestSkippedCount ?? 0) : 0;
-  const emptyLead = user
-    ? t('events.myEvents.emptyDescription')
-    : t('events.myEvents.emptyDescriptionGuest');
+  const emptyLead = t('events.myEvents.emptyDescription');
 
   return (
     <PageLayout className={styles.layout}>
       <h1 className={styles.pageTitle}>{t('events.myEvents.title')}</h1>
-      {guestSkipped > 0 ? (
-        <p className="muted" role="status">
-          {t('events.myEvents.guestPartialSkipped', { count: guestSkipped })}
-        </p>
-      ) : null}
       {total === 0 ? (
         <p className="lead">{emptyLead}</p>
       ) : (
@@ -594,31 +543,14 @@ export default function MyEventsPage() {
           )}
         </>
       )}
-      {user ? (
-        <Link
-          to={ROUTES.createEvent}
-          className={styles.fab}
-          aria-label={t('events.myEvents.createCta')}
-        >
-          <Plus size={20} aria-hidden className={styles.fabIcon} />
-          <span className={styles.fabLabel}>{t('events.myEvents.createCta')}</span>
-        </Link>
-      ) : (
-        <nav
-          className={`nav-actions ${styles.ctaNav}`}
-          aria-label={t('events.myEvents.guestActionsNavLabel')}
-        >
-          <Link
-            to={withReturnTo(ROUTES.login, ROUTES.myEvents)}
-            className={`btn btn-primary ${styles.ctaButton}`}
-          >
-            {t('events.myEvents.guestLoginCta')}
-          </Link>
-          <Link to={withReturnTo(ROUTES.register, ROUTES.myEvents)} className="btn">
-            {t('events.myEvents.guestRegisterCta')}
-          </Link>
-        </nav>
-      )}
+      <Link
+        to={ROUTES.createEvent}
+        className={styles.fab}
+        aria-label={t('events.myEvents.createCta')}
+      >
+        <Plus size={20} aria-hidden className={styles.fabIcon} />
+        <span className={styles.fabLabel}>{t('events.myEvents.createCta')}</span>
+      </Link>
       {deleteError ? (
         <p className="error" role="alert">
           {deleteError}
@@ -648,9 +580,7 @@ export default function MyEventsPage() {
       <ConfirmDialog
         open={confirmLeave !== null}
         title={t('events.participants.leaveConfirmTitle')}
-        message={t(
-          user ? 'events.participants.leaveConfirm' : 'events.participants.leaveConfirmGuest'
-        )}
+        message={t('events.participants.leaveConfirm')}
         confirmLabel={t('events.participants.leaveConfirmAction')}
         busy={leaveMutation.isPending}
         onConfirm={() => {

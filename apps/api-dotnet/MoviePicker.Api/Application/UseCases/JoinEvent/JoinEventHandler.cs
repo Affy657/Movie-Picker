@@ -31,26 +31,26 @@ public sealed class JoinEventHandler : IJoinEventHandler
         _logger = logger;
     }
 
-    public async Task<JoinEventResult> HandleAsync(string idOrSlug, JoinEventRequest request, string? authenticatedUserId, CancellationToken ct = default)
+    public async Task<JoinEventResult> HandleAsync(string idOrSlug, JoinEventRequest request, string authenticatedUserId, CancellationToken ct = default)
     {
+        if (string.IsNullOrWhiteSpace(authenticatedUserId))
+            throw new ArgumentException("Un compte est requis pour rejoindre une soirée.", nameof(authenticatedUserId));
+
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
         if (evt.IsFinished(DateTimeOffset.UtcNow))
             throw new ConflictException("Soirée terminée. Lecture seule.");
 
-        var userId = string.IsNullOrWhiteSpace(authenticatedUserId) ? null : authenticatedUserId;
-        if (userId is not null)
+        var userId = authenticatedUserId;
+        var alreadyLinked = await _participantRepository.FindByEventAndUserIdAsync(evt.Id, userId, ct);
+        if (alreadyLinked is not null)
         {
-            var alreadyLinked = await _participantRepository.FindByEventAndUserIdAsync(evt.Id, userId, ct);
-            if (alreadyLinked is not null)
+            return new JoinEventResult
             {
-                return new JoinEventResult
-                {
-                    Participant = ParticipantResponse.FromDomain(alreadyLinked),
-                    IsNew = false,
-                    Message = "Déjà inscrit avec ce compte"
-                };
-            }
+                Participant = ParticipantResponse.FromDomain(alreadyLinked),
+                IsNew = false,
+                Message = "Déjà inscrit avec ce compte"
+            };
         }
 
         var pseudo = request.Pseudo.Trim();

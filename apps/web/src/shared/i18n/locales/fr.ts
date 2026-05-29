@@ -188,7 +188,6 @@ export const fr = {
       leaveAction: 'Quitter la soirée',
       leaveConfirmTitle: 'Quitter la soirée',
       leaveConfirm: 'Quitter cette soirée\u00a0? Tes films, votes et marques seront supprimés.',
-      leaveConfirmGuest: 'Quitter cette soirée\u00a0? Tu peux la rejoindre à nouveau plus tard.',
       leaveConfirmAction: 'Quitter',
       leaveError: 'Impossible de quitter la soirée.',
     },
@@ -221,18 +220,6 @@ export const fr = {
       historySection: 'Historique',
       activeEmpty: 'Aucune soirée à venir. Lancez-en une avec le bouton ci-dessous.',
       historyEmpty: 'Aucune soirée terminée pour le moment.',
-      emptyDescriptionGuest:
-        'Aucune soir\u00e9e enregistr\u00e9e sur cet appareil. Ouvrez un lien d\u2019invitation pour rejoindre une soir\u00e9e : elle appara\u00eetra ici.',
-      guestActionsNavLabel: 'Compte et cr\u00e9ation de soir\u00e9e',
-      guestLoginCta: 'Se connecter',
-      guestRegisterCta: 'Cr\u00e9er un compte',
-      guestFallbackError:
-        'Impossible de charger vos soir\u00e9es. V\u00e9rifiez la connexion puis r\u00e9essayez.',
-      guestAllFailedError:
-        'Aucune soir\u00e9e enregistr\u00e9e ici n\u2019a pu \u00eatre charg\u00e9e. R\u00e9essayez ou ouvrez \u00e0 nouveau un lien d\u2019invitation.',
-      guestPartialSkipped:
-        'Certaines soir\u00e9es m\u00e9moris\u00e9es sur cet appareil n\u2019ont pas pu \u00eatre affich\u00e9es ({{count}}).',
-      guestErrorActionsLabel: 'Actions apr\u00e8s erreur de chargement',
       joinedCountOne: '1 participant',
       joinedCountMany: '{{count}} participants',
       joinedCountWithCapOne: '1 / {{max}} participant',

@@ -130,12 +130,22 @@ describe('EventDetail (MSW)', () => {
 
   it('après rejoindre, affiche la section Films et permet de proposer un film', async () => {
     const user = userEvent.setup();
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u1',
+          displayName: 'Bob',
+          emailMasked: 'b***@test.local',
+          uiTheme: 'system',
+          accentColor: 'default',
+        })
+      )
+    );
     renderEventDetail(`/e/${slug}`);
     await waitFor(() =>
       expect(screen.getByRole('heading', { name: /rejoindre/i })).toBeInTheDocument()
     );
-    await user.type(screen.getByLabelText(/pseudo/i), 'Bob');
-    await user.click(screen.getByRole('button', { name: /rejoindre/i }));
+    await user.click(await screen.findByRole('button', { name: /rejoindre/i }));
 
     await waitFor(() =>
       expect(screen.getByRole('heading', { name: /^films$/i })).toBeInTheDocument()
@@ -278,35 +288,6 @@ describe('EventDetail (MSW)', () => {
 
       expect(screen.getByText('Alice')).toBeInTheDocument();
       expect(screen.queryByTestId('leave-event-button')).not.toBeInTheDocument();
-    });
-
-    it('invité (sans compte) : confirmation → nettoyage local + navigation vers /', async () => {
-      const user = userEvent.setup();
-      setStoredParticipant(slug, 'p-msw-alice', 'Alice');
-
-      let deleteCalled = false;
-      server.use(
-        http.delete(`${TEST_API_V1}/events/${slug}/participants/:pid`, () => {
-          deleteCalled = true;
-          return HttpResponse.json({});
-        })
-      );
-
-      renderEventDetail(`/e/${slug}`);
-      await waitFor(() =>
-        expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument()
-      );
-
-      const leaveButton = await screen.findByTestId('leave-event-button');
-      await user.click(leaveButton);
-
-      const dialog = await screen.findByTestId('confirm-dialog');
-      expect(dialog).toHaveAttribute('open');
-      await user.click(screen.getByTestId('confirm-dialog-confirm'));
-
-      await waitFor(() => expect(getStoredParticipant(slug)).toBeNull());
-      expect(deleteCalled).toBe(false);
-      await waitFor(() => expect(screen.getByTestId('route-home')).toBeInTheDocument());
     });
 
     it('utilisateur connecté : confirmation → DELETE appelé + navigation vers /my-events', async () => {

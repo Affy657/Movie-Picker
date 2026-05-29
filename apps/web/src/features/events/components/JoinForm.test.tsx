@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
+import type { ReactElement } from 'react';
 import JoinForm from '@/features/events/components/JoinForm';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { ApiError } from '@/shared/api/apiError';
@@ -22,6 +24,23 @@ const guestAuthImpl = (path: string) => {
   throw new Error(`fetchApi inattendu: ${path}`);
 };
 
+const profile: UserProfile = {
+  userId: 'u1',
+  displayName: 'ProfilCompte',
+  emailMasked: 'e***@***',
+  uiTheme: 'system',
+  accentColor: 'default',
+  avatarId: '',
+};
+
+function renderForm(node: ReactElement) {
+  return render(
+    <AppTestProviders>
+      <MemoryRouter>{node}</MemoryRouter>
+    </AppTestProviders>
+  );
+}
+
 describe('JoinForm', () => {
   const onJoined = vi.fn();
 
@@ -32,27 +51,19 @@ describe('JoinForm', () => {
     mockFetchApi.mockImplementation(guestAuthImpl);
   });
 
-  it('affiche le champ pseudo et le bouton Rejoindre (invité)', () => {
-    render(
-      <AppTestProviders>
-        <JoinForm slug="soiree" onJoined={onJoined} />
-      </AppTestProviders>
-    );
+  it('non connecté : affiche les CTA connexion/inscription, pas de champ pseudo ni bouton Rejoindre', async () => {
+    renderForm(<JoinForm slug="soiree" onJoined={onJoined} />);
     expect(screen.getByRole('heading', { name: /rejoindre la soirée/i })).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/alice/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /rejoindre/i })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: /se connecter/i })).toBeInTheDocument();
+    });
+    expect(screen.getByRole('link', { name: /créer un compte/i })).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(/alice/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /rejoindre/i })).not.toBeInTheDocument();
   });
 
   it('connecté : pas de champ pseudo, Rejoindre envoie le displayName du compte', async () => {
     const user = userEvent.setup();
-    const profile: UserProfile = {
-      userId: 'u1',
-      displayName: 'ProfilCompte',
-      emailMasked: 'e***@***',
-      uiTheme: 'system',
-      accentColor: 'default',
-      avatarId: '',
-    };
     mockFetchApi.mockImplementation(async (path: string) => {
       if (path === '/auth/me') return profile;
       if (path === '/events/soiree/join')
@@ -63,14 +74,11 @@ describe('JoinForm', () => {
         };
       throw new Error(`fetchApi inattendu: ${path}`);
     });
-    render(
-      <AppTestProviders>
-        <JoinForm slug="soiree" onJoined={onJoined} />
-      </AppTestProviders>
-    );
+    renderForm(<JoinForm slug="soiree" onJoined={onJoined} />);
     await waitFor(() => {
-      expect(screen.queryByLabelText(/pseudo/i)).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /rejoindre/i })).toBeInTheDocument();
     });
+    expect(screen.queryByPlaceholderText(/alice/i)).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /rejoindre/i }));
 
     await waitFor(() => {
@@ -88,64 +96,23 @@ describe('JoinForm', () => {
     });
   });
 
-  it('soumission appelle l’API join et onJoined (invité)', async () => {
-    const user = userEvent.setup();
-    mockFetchApi.mockImplementation(async (path: string) => {
-      if (path === '/auth/me') throw new ApiError('Non authentifié', { code: 401 });
-      if (path === '/events/soiree/join')
-        return {
-          participant: { _id: 'p1', eventId: 'e1', pseudo: 'Alice' },
-          isNew: true,
-          message: '',
-        };
-      throw new Error(`fetchApi inattendu: ${path}`);
-    });
-    render(
-      <AppTestProviders>
-        <JoinForm slug="soiree" onJoined={onJoined} />
-      </AppTestProviders>
-    );
-    await user.type(screen.getByPlaceholderText(/alice/i), 'Alice');
-    await user.click(screen.getByRole('button', { name: /rejoindre/i }));
-
-    await waitFor(() => {
-      expect(mockFetchApi).toHaveBeenCalledWith(
-        '/events/soiree/join',
-        expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify({ pseudo: 'Alice' }),
-        })
-      );
-    });
-    await waitFor(() => {
-      expect(mockSetStoredParticipant).toHaveBeenCalledWith('soiree', 'p1', 'Alice');
-      expect(onJoined).toHaveBeenCalledWith('p1', 'Alice');
-    });
-  });
-
   it('affiche un message dédié et cache le formulaire quand la soirée est complète', () => {
-    render(
-      <AppTestProviders>
-        <JoinForm slug="soiree" onJoined={onJoined} isFull maxParticipants={4} />
-      </AppTestProviders>
-    );
+    renderForm(<JoinForm slug="soiree" onJoined={onJoined} isFull maxParticipants={4} />);
     expect(screen.getByText(/complète \(4 participants maximum\)/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /rejoindre/i })).not.toBeInTheDocument();
   });
 
-  it("affiche un message d'erreur si l'API join échoue", async () => {
+  it("connecté : affiche un message d'erreur si l'API join échoue", async () => {
     const user = userEvent.setup();
     mockFetchApi.mockImplementation(async (path: string) => {
-      if (path === '/auth/me') throw new ApiError('Non authentifié', { code: 401 });
+      if (path === '/auth/me') return profile;
       if (path === '/events/soiree/join') throw new ApiError('Soirée complète', { code: 403 });
       throw new Error(`fetchApi inattendu: ${path}`);
     });
-    render(
-      <AppTestProviders>
-        <JoinForm slug="soiree" onJoined={onJoined} />
-      </AppTestProviders>
-    );
-    await user.type(screen.getByPlaceholderText(/alice/i), 'Alice');
+    renderForm(<JoinForm slug="soiree" onJoined={onJoined} />);
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /rejoindre/i })).toBeInTheDocument();
+    });
     await user.click(screen.getByRole('button', { name: /rejoindre/i }));
 
     await waitFor(() => {

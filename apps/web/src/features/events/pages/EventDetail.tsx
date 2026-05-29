@@ -78,7 +78,6 @@ export default function EventDetail() {
         void queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
       }
       void queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.guestJoined });
     },
   });
 
@@ -145,40 +144,23 @@ export default function EventDetail() {
     if (!slug || !participant) return;
     setActionError(null);
 
-    if (isConnectedSelf) {
-      removeParticipantMutation.mutate(
-        { participantId: participant.participantId },
-        {
-          onSuccess: () => {
-            removeStoredParticipant(slug);
-            setParticipant(null);
-            navigate(ROUTES.myEvents);
-          },
-          onError: (err) => {
-            setActionError(getErrorMessage(err, t('events.participants.leaveError')));
-          },
-          onSettled: () => {
-            setConfirmState(null);
-          },
-        }
-      );
-      return;
-    }
-
-    removeStoredParticipant(slug);
-    setParticipant(null);
-    setConfirmState(null);
-    navigate(ROUTES.home);
-  }, [
-    slug,
-    participant,
-    isConnectedSelf,
-    removeParticipantMutation,
-    setActionError,
-    setParticipant,
-    navigate,
-    t,
-  ]);
+    removeParticipantMutation.mutate(
+      { participantId: participant.participantId },
+      {
+        onSuccess: () => {
+          removeStoredParticipant(slug);
+          setParticipant(null);
+          navigate(ROUTES.myEvents);
+        },
+        onError: (err) => {
+          setActionError(getErrorMessage(err, t('events.participants.leaveError')));
+        },
+        onSettled: () => {
+          setConfirmState(null);
+        },
+      }
+    );
+  }, [slug, participant, removeParticipantMutation, setActionError, setParticipant, navigate, t]);
 
   const confirmDialogContent = useMemo(() => {
     if (!confirmState) return null;
@@ -192,11 +174,7 @@ export default function EventDetail() {
     }
     return {
       title: t('events.participants.leaveConfirmTitle'),
-      message: t(
-        isConnectedSelf
-          ? 'events.participants.leaveConfirm'
-          : 'events.participants.leaveConfirmGuest'
-      ),
+      message: t('events.participants.leaveConfirm'),
       confirmLabel: t('events.participants.leaveConfirmAction'),
       onConfirm: confirmLeave,
     };

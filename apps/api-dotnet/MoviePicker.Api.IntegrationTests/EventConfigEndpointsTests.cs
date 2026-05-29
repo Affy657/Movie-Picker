@@ -168,11 +168,11 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
             new { maxParticipants = 2 });
         Assert.Equal(HttpStatusCode.OK, patch.StatusCode);
 
-        var first = _factory.CreateClient();
+        var first = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var join1 = await first.PostAsJsonAsync($"/api/v1/events/{slug}/join", new { pseudo = "Alice" });
         join1.EnsureSuccessStatusCode();
 
-        var second = _factory.CreateClient();
+        var second = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var join2 = await second.PostAsJsonAsync($"/api/v1/events/{slug}/join", new { pseudo = "Bob" });
         Assert.Equal(HttpStatusCode.Conflict, join2.StatusCode);
     }
@@ -187,9 +187,9 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
         var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         var slug = created!.Slug;
 
-        var joiner1 = _factory.CreateClient();
+        var joiner1 = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         (await joiner1.PostAsJsonAsync($"/api/v1/events/{slug}/join", new { pseudo = "Alice" })).EnsureSuccessStatusCode();
-        var joiner2 = _factory.CreateClient();
+        var joiner2 = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         (await joiner2.PostAsJsonAsync($"/api/v1/events/{slug}/join", new { pseudo = "Bob" })).EnsureSuccessStatusCode();
 
         var patch = await host.PatchAsJsonAsync(

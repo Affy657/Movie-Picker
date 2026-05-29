@@ -57,5 +57,4 @@ export interface MyEventSummary {
 export interface MyEventsListResponse {
   events: MyEventSummary[];
   hasMore?: boolean;
-  guestSkippedCount?: number;
 }

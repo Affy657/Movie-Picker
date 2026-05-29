@@ -4,5 +4,5 @@ namespace MoviePicker.Api.Application.UseCases.JoinEvent;
 
 public interface IJoinEventHandler
 {
-    Task<JoinEventResult> HandleAsync(string idOrSlug, JoinEventRequest request, string? authenticatedUserId, CancellationToken ct = default);
+    Task<JoinEventResult> HandleAsync(string idOrSlug, JoinEventRequest request, string authenticatedUserId, CancellationToken ct = default);
 }

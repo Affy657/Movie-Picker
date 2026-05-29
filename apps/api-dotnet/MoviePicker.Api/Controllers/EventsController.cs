@@ -118,10 +118,12 @@ public sealed class EventsController : ControllerBase
     }
 
     [HttpPost("{idOrSlug}/join")]
+    [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.JoinEventPolicy)]
     [ProducesResponseType(typeof(JoinEventResult), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(JoinEventResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
@@ -132,11 +134,10 @@ public sealed class EventsController : ControllerBase
         CancellationToken ct)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var result = await handler.HandleAsync(
-            idOrSlug,
-            request,
-            string.IsNullOrEmpty(userId) ? null : userId,
-            ct);
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var result = await handler.HandleAsync(idOrSlug, request, userId, ct);
 
         if (result.IsNew)
             return Created(string.Empty, result);
