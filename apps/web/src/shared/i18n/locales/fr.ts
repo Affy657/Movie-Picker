@@ -179,6 +179,7 @@ export const fr = {
       fullBadgeAria: 'Soirée complète',
       removeAction: 'Retirer',
       removeAriaLabel: 'Retirer {{pseudo}} de la soirée',
+      viewProfileAriaLabel: 'Voir le profil de {{pseudo}}',
       removeConfirmTitle: 'Retirer un participant',
       removeConfirm:
         'Retirer {{pseudo}} de la soirée\u00a0? Ses films, votes et marques seront supprimés.',
@@ -454,6 +455,34 @@ export const fr = {
     tmdbSuffix: '. Les notes et disponibilités sont indicatives.',
     tmdbLinkAria: 'TMDB — ouvrir The Movie Database (nouvel onglet)',
     copyright: '© {{year}} Movie Picker',
+  },
+
+  profile: {
+    notFound: "Ce profil n'existe pas ou n'est pas public.",
+    loadError: 'Impossible de charger ce profil.',
+    backHome: "Retour à l'accueil",
+    memberSince: 'Membre depuis {{date}}',
+    copyLink: 'Copier le lien du profil',
+    linkCopied: 'Lien copié !',
+    settings: {
+      title: 'Profil public',
+      description:
+        'Ton profil est accessible via un lien unique. Tu peux le rendre privé à tout moment.',
+      handleLabel: 'Identifiant public (handle)',
+      handleHint: '3 à 20 caractères : lettres minuscules, chiffres et underscores.',
+      handleChecking: 'Vérification de la disponibilité…',
+      handleAvailable: 'Ce handle est disponible.',
+      handleTaken: 'Ce handle est déjà pris.',
+      handleInvalid: 'Handle invalide (3 à 20 caractères : a-z, 0-9, _).',
+      bioLabel: 'Bio',
+      bioHint: '{{count}} caractères restants.',
+      visibilityLabel: 'Rendre mon profil public',
+      visibilityPublicHint: 'Ton profil est visible par toute personne disposant du lien.',
+      visibilityPrivateHint: 'Ton profil est privé : le lien renvoie une page introuvable.',
+      viewMyProfile: 'Voir mon profil public',
+      saveSuccess: 'Profil public mis à jour.',
+      fallbackError: 'Impossible de mettre à jour le profil public.',
+    },
   },
 } as const;
 

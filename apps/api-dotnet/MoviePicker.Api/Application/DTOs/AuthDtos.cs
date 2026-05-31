@@ -50,6 +50,9 @@ public sealed class UserProfileResponse
     public UiThemePreference UiTheme { get; init; }
     public AccentColor AccentColor { get; init; }
     public string AvatarId { get; init; } = string.Empty;
+    public string Handle { get; init; } = string.Empty;
+    public string? Bio { get; init; }
+    public bool IsProfilePublic { get; init; } = true;
 }
 
 public sealed class PatchUserProfileRequest
@@ -70,6 +73,15 @@ public sealed class PatchUserProfileRequest
         "^(alpha|beta|bolt|byte|crux|delta|flux|forge|gamma|jolt|kilo|laser|dex|sigma|droid|theta|chip|vibe|cute|wink|hero|halo|grin|cool|keen|jazz|fizz|zest|bold|epic|bask|nod|glow|zoom|snap|luxe)$",
         ErrorMessage = "avatarId invalide.")]
     public string? AvatarId { get; init; }
+
+    // Format/réservés validés (après normalisation) par HandlePolicy dans le handler — source unique de vérité.
+    [MaxLength(40, ErrorMessage = "Handle trop long.")]
+    public string? Handle { get; init; }
+
+    [MaxLength(140, ErrorMessage = "La bio ne peut pas dépasser 140 caractères.")]
+    public string? Bio { get; init; }
+
+    public bool? IsProfilePublic { get; init; }
 }
 
 public sealed class ChangePasswordRequest

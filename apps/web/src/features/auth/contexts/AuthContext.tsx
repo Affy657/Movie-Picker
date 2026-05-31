@@ -6,9 +6,9 @@ import {
   postAuthLogin,
   postAuthLogout,
   postAuthRegister,
+  type ProfilePatch,
 } from '@/features/auth/api/authApi';
 import { queryKeys } from '@/shared/hooks/queryKeys';
-import type { AccentColor, UiThemePreference } from '@/shared/types/theme';
 import type { UserProfile } from '@/features/auth/types';
 
 type AuthContextValue = {
@@ -17,12 +17,7 @@ type AuthContextValue = {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<void>;
   logout: () => Promise<void>;
-  patchProfile: (patch: {
-    displayName?: string;
-    uiTheme?: UiThemePreference;
-    accentColor?: AccentColor;
-    avatarId?: string;
-  }) => Promise<UserProfile>;
+  patchProfile: (patch: ProfilePatch) => Promise<UserProfile>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -73,12 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const patchProfileMutation = useMutation({
-    mutationFn: (patch: {
-      displayName?: string;
-      uiTheme?: UiThemePreference;
-      accentColor?: AccentColor;
-      avatarId?: string;
-    }) => patchAuthProfile(patch),
+    mutationFn: (patch: ProfilePatch) => patchAuthProfile(patch),
     onSuccess: (updated) => {
       queryClient.setQueryData(queryKeys.auth.me, updated);
     },
@@ -98,12 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => logoutMutation.mutateAsync(), [logoutMutation]);
 
   const patchProfile = useCallback(
-    (patch: {
-      displayName?: string;
-      uiTheme?: UiThemePreference;
-      accentColor?: AccentColor;
-      avatarId?: string;
-    }) => patchProfileMutation.mutateAsync(patch),
+    (patch: ProfilePatch) => patchProfileMutation.mutateAsync(patch),
     [patchProfileMutation]
   );
 

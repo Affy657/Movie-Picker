@@ -51,12 +51,17 @@ export async function postAuthLogout(): Promise<void> {
   }
 }
 
-export async function patchAuthProfile(patch: {
+export interface ProfilePatch {
   displayName?: string;
   uiTheme?: UiThemePreference;
   accentColor?: AccentColor;
   avatarId?: string;
-}): Promise<UserProfile> {
+  handle?: string;
+  bio?: string | null;
+  isProfilePublic?: boolean;
+}
+
+export async function patchAuthProfile(patch: ProfilePatch): Promise<UserProfile> {
   return fetchApi<UserProfile>('/auth/me', {
     method: 'PATCH',
     body: JSON.stringify(patch),

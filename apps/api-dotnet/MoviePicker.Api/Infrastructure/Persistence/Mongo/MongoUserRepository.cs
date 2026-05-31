@@ -2,6 +2,7 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
@@ -40,16 +41,43 @@ public sealed class MongoUserRepository : IUserRepository
         return doc is null ? null : UserDocumentMapper.ToDomain(doc);
     }
 
+    public async Task<User?> GetByHandleAsync(string handle, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(handle))
+            return null;
+        var normalized = handle.Trim().ToLowerInvariant();
+        var doc = await _collection.Find(x => x.Handle == normalized).FirstOrDefaultAsync(ct);
+        return doc is null ? null : UserDocumentMapper.ToDomain(doc);
+    }
+
+    public async Task<IReadOnlyList<User>> ListMissingHandleAsync(CancellationToken ct = default)
+    {
+        var filter = Builders<UserDocument>.Filter.Or(
+            Builders<UserDocument>.Filter.Exists(x => x.Handle, false),
+            Builders<UserDocument>.Filter.Eq(x => x.Handle, null),
+            Builders<UserDocument>.Filter.Eq(x => x.Handle, string.Empty));
+        var docs = await _collection.Find(filter).ToListAsync(ct);
+        return docs.ConvertAll(UserDocumentMapper.ToDomain);
+    }
+
     public async Task<User> AddAsync(User user, CancellationToken ct = default)
     {
         var doc = UserDocumentMapper.ToDocument(user);
         if (string.IsNullOrEmpty(doc.Id))
             doc.Id = ObjectId.GenerateNewId().ToString();
         doc.Email = NormalizeEmail(doc.Email) ?? doc.Email;
+        doc.Handle = NormalizeHandle(doc.Handle);
         var now = DateTime.UtcNow;
         doc.CreatedAt = now;
         doc.UpdatedAt = now;
-        await _collection.InsertOneAsync(doc, cancellationToken: ct);
+        try
+        {
+            await _collection.InsertOneAsync(doc, cancellationToken: ct);
+        }
+        catch (MongoWriteException ex) when (ex.WriteError?.Category == ServerErrorCategory.DuplicateKey)
+        {
+            ThrowTypedDuplicateKey(ex);
+        }
         return UserDocumentMapper.ToDomain(doc);
     }
 
@@ -57,9 +85,37 @@ public sealed class MongoUserRepository : IUserRepository
     {
         var doc = UserDocumentMapper.ToDocument(user);
         doc.Email = NormalizeEmail(doc.Email) ?? doc.Email;
+        doc.Handle = NormalizeHandle(doc.Handle);
         doc.UpdatedAt = DateTime.UtcNow;
-        await _collection.ReplaceOneAsync(x => x.Id == user.Id, doc, cancellationToken: ct);
+        try
+        {
+            await _collection.ReplaceOneAsync(x => x.Id == user.Id, doc, cancellationToken: ct);
+        }
+        catch (MongoWriteException ex) when (ex.WriteError?.Category == ServerErrorCategory.DuplicateKey)
+        {
+            ThrowTypedDuplicateKey(ex);
+        }
         return UserDocumentMapper.ToDomain(doc);
+    }
+
+    /// <summary>
+    /// Rethrows a duplicate-key error as a <see cref="ConflictException"/> with a message
+    /// that indicates whether the collision is on the handle index or the email index.
+    /// This lets callers distinguish the two cases without depending on MongoDB internals.
+    /// </summary>
+    private static void ThrowTypedDuplicateKey(MongoWriteException ex)
+    {
+        var msg = ex.WriteError?.Message ?? string.Empty;
+        if (msg.Contains("users_handle_unique", StringComparison.OrdinalIgnoreCase))
+            throw new ConflictException("handle_conflict");
+        throw new ConflictException("Un compte existe déjà pour cette adresse e-mail.");
+    }
+
+    private static string? NormalizeHandle(string? handle)
+    {
+        if (string.IsNullOrWhiteSpace(handle))
+            return null;
+        return handle.Trim().ToLowerInvariant();
     }
 
     private static string? NormalizeEmail(string? email)

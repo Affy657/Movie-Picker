@@ -1,0 +1,42 @@
+.layout {
+  align-items: center;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  max-width: 28rem;
+  margin: 2rem auto;
+  padding: 2rem 1.5rem;
+}
+
+.avatar {
+  margin-bottom: 0.5rem;
+}
+
+.displayName {
+  margin: 0;
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+
+.handle {
+  margin: 0;
+  color: var(--color-text-muted, #6b7280);
+  font-size: 0.95rem;
+}
+
+.bio {
+  margin: 0.75rem 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.memberSince {
+  margin: 0.25rem 0 1rem;
+  color: var(--color-text-muted, #6b7280);
+  font-size: 0.85rem;
+}

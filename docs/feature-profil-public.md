@@ -101,7 +101,7 @@ Le **compte est obligatoire pour rejoindre une soirée** (le mode invité est re
 participant est rattaché à un compte et possède un `handle`. L'avatar est donc cliquable par défaut.
 
 - **DTO participant** (détail soirée) : exposer le `handle` du participant.
-- **Web** : l'`Avatar` (`features/auth/components/Avatar.tsx`) devient un lien vers `/u/:handle`.
+- **Web** : l'`Avatar` (`shared/components/Avatar.tsx`) devient un lien vers `/u/:handle`.
 
 > **Robustesse données héritées** : conserver une dégradation gracieuse (participant sans `handle` →
 > avatar non cliquable) au cas où d'anciens participants invités subsistent en base. Le code ne doit
@@ -151,16 +151,7 @@ de problèmes en usage réel). ✅ **Retrait effectué** (2026-05-29) :
 
 ---
 
-## 11. Découpage (3 PRs)
-
-1. **API – modèle + endpoints + migration** : `User` (`handle` / `bio` / `isProfilePublic`),
-   `GET /v1/users/{handle}`, `handle-available`, `PATCH /me` étendu, backfill, index Mongo, tests.
-2. **Web – page profil + réglages** : route `/u/:handle`, `ProfilePage`, section réglages, partage, i18n, tests.
-3. **Web/API – avatar cliquable** : `handle` dans le DTO participant, lien depuis la soirée, tests.
-
----
-
-## 12. Reste à arbitrer
+## 11. Reste à arbitrer
 
 - Valider la mise à jour de la roadmap (visibilité par défaut + URL `/u/:handle`).
 - Confirmer la liste exacte des mots réservés.

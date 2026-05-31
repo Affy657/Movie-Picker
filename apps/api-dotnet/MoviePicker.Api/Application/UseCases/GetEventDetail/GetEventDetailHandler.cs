@@ -80,16 +80,21 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         var users = participantUserIds.Count > 0
             ? await _userRepository.ListByIdsAsync(participantUserIds, ct)
             : Array.Empty<User>();
-        var userAvatarById = users.ToDictionary(u => u.Id, u => u.AvatarId);
+        var userById = users.ToDictionary(u => u.Id);
 
         var creatorUserId = evt.CreatorUserId;
         var participantsSummary = participants
-            .Select(p => new EventParticipantSummaryResponse
+            .Select(p =>
             {
-                Id = p.Id,
-                Pseudo = p.Pseudo,
-                IsCreator = !string.IsNullOrEmpty(creatorUserId) && p.UserId == creatorUserId,
-                AvatarId = p.UserId is not null && userAvatarById.TryGetValue(p.UserId, out var av) ? av : string.Empty,
+                User? linkedUser = p.UserId is not null && userById.TryGetValue(p.UserId, out var u) ? u : null;
+                return new EventParticipantSummaryResponse
+                {
+                    Id = p.Id,
+                    Pseudo = p.Pseudo,
+                    IsCreator = !string.IsNullOrEmpty(creatorUserId) && p.UserId == creatorUserId,
+                    AvatarId = linkedUser?.AvatarId ?? string.Empty,
+                    Handle = string.IsNullOrEmpty(linkedUser?.Handle) ? null : linkedUser.Handle,
+                };
             })
             .ToList();
 

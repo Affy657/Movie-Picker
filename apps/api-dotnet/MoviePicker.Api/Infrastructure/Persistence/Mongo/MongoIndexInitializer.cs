@@ -44,7 +44,15 @@ public sealed class MongoIndexInitializer : IHostedService
         var email = new CreateIndexModel<UserDocument>(
             Builders<UserDocument>.IndexKeys.Ascending(x => x.Email),
             new CreateIndexOptions { Name = "users_email_unique", Unique = true });
-        await col.Indexes.CreateOneAsync(email, cancellationToken: ct);
+        var handle = new CreateIndexModel<UserDocument>(
+            Builders<UserDocument>.IndexKeys.Ascending(x => x.Handle),
+            new CreateIndexOptions<UserDocument>
+            {
+                Name = "users_handle_unique",
+                Unique = true,
+                PartialFilterExpression = Builders<UserDocument>.Filter.Exists(x => x.Handle, true)
+            });
+        await col.Indexes.CreateManyAsync(new[] { email, handle }, ct);
     }
 
     private async Task EnsureEventIndexesAsync(CancellationToken ct)

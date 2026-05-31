@@ -5,6 +5,7 @@ import { KeyRound, LogOut, Sliders, User } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import NotificationsSection from '@/features/notifications/components/NotificationsSection';
+import PublicProfileSection from '@/features/profile/components/PublicProfileSection';
 import { Pencil } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
 import AvatarPickerModal from '@/features/auth/components/AvatarPickerModal';
@@ -319,6 +320,8 @@ export default function AccountPage() {
           </button>
         </form>
       </section>
+
+      <PublicProfileSection />
 
       <PreferencesSection />
 

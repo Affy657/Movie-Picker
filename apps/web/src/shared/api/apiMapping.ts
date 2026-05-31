@@ -13,6 +13,7 @@ type RawEventParticipantSummary = {
   pseudo: string;
   isCreator?: boolean;
   avatarId?: string;
+  handle?: string | null;
 };
 
 type RawEventData = Omit<
@@ -50,6 +51,7 @@ export function mapEventData(raw: RawEventData): EventData {
         pseudo: p.pseudo,
         isCreator: p.isCreator ?? false,
         avatarId: p.avatarId,
+        handle: p.handle ?? null,
       }))
     : undefined;
   return {

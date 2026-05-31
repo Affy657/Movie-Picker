@@ -7,4 +7,7 @@ export interface UserProfile {
   uiTheme: UiThemePreference;
   accentColor: AccentColor;
   avatarId: string;
+  handle: string;
+  bio: string | null;
+  isProfilePublic: boolean;
 }

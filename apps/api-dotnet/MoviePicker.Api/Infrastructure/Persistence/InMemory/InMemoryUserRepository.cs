@@ -8,6 +8,7 @@ public sealed class InMemoryUserRepository : IUserRepository
 {
     private readonly ConcurrentDictionary<string, User> _byId = new();
     private readonly ConcurrentDictionary<string, string> _emailToId = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, string> _handleToId = new(StringComparer.OrdinalIgnoreCase);
 
     public Task<User?> GetByIdAsync(string id, CancellationToken ct = default) =>
         Task.FromResult(_byId.TryGetValue(id, out var u) ? u : null);
@@ -29,16 +30,36 @@ public sealed class InMemoryUserRepository : IUserRepository
         return Task.FromResult(_emailToId.TryGetValue(n, out var id) && _byId.TryGetValue(id, out var u) ? u : null);
     }
 
+    public Task<User?> GetByHandleAsync(string handle, CancellationToken ct = default)
+    {
+        var n = NormalizeHandle(handle);
+        if (n is null)
+            return Task.FromResult<User?>(null);
+        return Task.FromResult(_handleToId.TryGetValue(n, out var id) && _byId.TryGetValue(id, out var u) ? u : null);
+    }
+
+    public Task<IReadOnlyList<User>> ListMissingHandleAsync(CancellationToken ct = default)
+    {
+        IReadOnlyList<User> result = _byId.Values
+            .Where(u => string.IsNullOrEmpty(u.Handle))
+            .ToList();
+        return Task.FromResult(result);
+    }
+
     public Task<User> AddAsync(User user, CancellationToken ct = default)
     {
         var id = string.IsNullOrEmpty(user.Id) ? Guid.NewGuid().ToString("N")[..24] : user.Id;
         var email = Normalize(user.Email) ?? user.Email.Trim();
+        var handle = NormalizeHandle(user.Handle);
         var created = new User
         {
             Id = id,
             Email = email,
             PasswordHash = user.PasswordHash,
             DisplayName = user.DisplayName,
+            Handle = handle ?? string.Empty,
+            Bio = user.Bio,
+            IsProfilePublic = user.IsProfilePublic,
             UiTheme = user.UiTheme,
             AccentColor = user.AccentColor,
             NotifyOnParticipantJoined = user.NotifyOnParticipantJoined,
@@ -51,6 +72,8 @@ public sealed class InMemoryUserRepository : IUserRepository
         };
         _byId[id] = created;
         _emailToId[email] = id;
+        if (handle is not null)
+            _handleToId[handle] = id;
         return Task.FromResult(created);
     }
 
@@ -60,15 +83,22 @@ public sealed class InMemoryUserRepository : IUserRepository
         {
             var prevEmail = Normalize(previous.Email) ?? previous.Email.Trim();
             _emailToId.TryRemove(prevEmail, out _);
+            var prevHandle = NormalizeHandle(previous.Handle);
+            if (prevHandle is not null)
+                _handleToId.TryRemove(prevHandle, out _);
         }
 
         var email = Normalize(user.Email) ?? user.Email.Trim();
+        var handle = NormalizeHandle(user.Handle);
         var updated = new User
         {
             Id = user.Id,
             Email = email,
             PasswordHash = user.PasswordHash,
             DisplayName = user.DisplayName,
+            Handle = handle ?? string.Empty,
+            Bio = user.Bio,
+            IsProfilePublic = user.IsProfilePublic,
             UiTheme = user.UiTheme,
             AccentColor = user.AccentColor,
             NotifyOnParticipantJoined = user.NotifyOnParticipantJoined,
@@ -81,6 +111,8 @@ public sealed class InMemoryUserRepository : IUserRepository
         };
         _byId[user.Id] = updated;
         _emailToId[email] = user.Id;
+        if (handle is not null)
+            _handleToId[handle] = user.Id;
         return Task.FromResult(updated);
     }
 
@@ -89,5 +121,12 @@ public sealed class InMemoryUserRepository : IUserRepository
         if (string.IsNullOrWhiteSpace(email))
             return null;
         return email.Trim().ToLowerInvariant();
+    }
+
+    private static string? NormalizeHandle(string? handle)
+    {
+        if (string.IsNullOrWhiteSpace(handle))
+            return null;
+        return handle.Trim().ToLowerInvariant();
     }
 }

@@ -31,6 +31,9 @@ const profile: UserProfile = {
   uiTheme: 'system',
   accentColor: 'default',
   avatarId: '',
+  handle: 'profilcompte',
+  bio: null,
+  isProfilePublic: true,
 };
 
 function renderForm(node: ReactElement) {

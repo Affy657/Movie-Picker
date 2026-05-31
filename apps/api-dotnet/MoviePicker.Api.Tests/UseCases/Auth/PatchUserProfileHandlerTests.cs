@@ -101,4 +101,98 @@ public sealed class PatchUserProfileHandlerTests
             x => x.UpdateAsync(It.Is<User>(y => y.UiTheme == UiThemePreference.Light), It.IsAny<CancellationToken>()),
             Times.Once);
     }
+
+    [Fact]
+    public async Task HandleAsync_UpdatesHandle_WhenAvailable()
+    {
+        var u = User() with { Handle = "old_handle" };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(u);
+        users.Setup(x => x.GetByHandleAsync("new_handle", It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
+        users
+            .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User x, CancellationToken _) => x);
+        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+
+        var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { Handle = "NEW_HANDLE" });
+
+        Assert.Equal("new_handle", res.Handle);
+        users.Verify(
+            x => x.UpdateAsync(It.Is<User>(y => y.Handle == "new_handle"), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_HandleTakenByOther_ThrowsConflict()
+    {
+        var u = User() with { Handle = "mine" };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(u);
+        users
+            .Setup(x => x.GetByHandleAsync("taken", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(User("u2") with { Handle = "taken" });
+        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+
+        await Assert.ThrowsAsync<ConflictException>(() =>
+            handler.HandleAsync("u1", new PatchUserProfileRequest { Handle = "taken" }));
+    }
+
+    [Fact]
+    public async Task HandleAsync_InvalidHandle_ThrowsBadRequest()
+    {
+        var u = User();
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(u);
+        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+
+        await Assert.ThrowsAsync<BadRequestException>(() =>
+            handler.HandleAsync("u1", new PatchUserProfileRequest { Handle = "ab" }));
+    }
+
+    [Fact]
+    public async Task HandleAsync_BioTooLong_ThrowsBadRequest()
+    {
+        var u = User();
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(u);
+        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+
+        await Assert.ThrowsAsync<BadRequestException>(() =>
+            handler.HandleAsync("u1", new PatchUserProfileRequest { Bio = new string('x', 141) }));
+    }
+
+    [Fact]
+    public async Task HandleAsync_EmptyBio_ClearsBio()
+    {
+        var u = User() with { Bio = "previous" };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(u);
+        users
+            .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User x, CancellationToken _) => x);
+        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+
+        var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { Bio = "   " });
+
+        Assert.Null(res.Bio);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TogglesProfileVisibility()
+    {
+        var u = User() with { IsProfilePublic = true };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(u);
+        users
+            .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User x, CancellationToken _) => x);
+        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+
+        var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { IsProfilePublic = false });
+
+        Assert.False(res.IsProfilePublic);
+        users.Verify(
+            x => x.UpdateAsync(It.Is<User>(y => !y.IsProfilePublic), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
 }

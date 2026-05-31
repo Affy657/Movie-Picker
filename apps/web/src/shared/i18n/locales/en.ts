@@ -177,6 +177,7 @@ export const en: Locale = {
       fullBadgeAria: 'Event is full',
       removeAction: 'Remove',
       removeAriaLabel: 'Remove {{pseudo}} from the event',
+      viewProfileAriaLabel: "View {{pseudo}}'s profile",
       removeConfirmTitle: 'Remove a participant',
       removeConfirm:
         'Remove {{pseudo}} from the event? Their movies, votes and marks will be deleted.',
@@ -447,5 +448,33 @@ export const en: Locale = {
     tmdbSuffix: '. Ratings and availability are indicative.',
     tmdbLinkAria: 'TMDB — open The Movie Database (new tab)',
     copyright: '© {{year}} Movie Picker',
+  },
+
+  profile: {
+    notFound: 'This profile does not exist or is not public.',
+    loadError: 'Unable to load this profile.',
+    backHome: 'Back to home',
+    memberSince: 'Member since {{date}}',
+    copyLink: 'Copy profile link',
+    linkCopied: 'Link copied!',
+    settings: {
+      title: 'Public profile',
+      description:
+        'Your profile is reachable through a unique link. You can make it private at any time.',
+      handleLabel: 'Public handle',
+      handleHint: '3 to 20 characters: lowercase letters, digits and underscores.',
+      handleChecking: 'Checking availability…',
+      handleAvailable: 'This handle is available.',
+      handleTaken: 'This handle is already taken.',
+      handleInvalid: 'Invalid handle (3 to 20 characters: a-z, 0-9, _).',
+      bioLabel: 'Bio',
+      bioHint: '{{count}} characters left.',
+      visibilityLabel: 'Make my profile public',
+      visibilityPublicHint: 'Your profile is visible to anyone who has the link.',
+      visibilityPrivateHint: 'Your profile is private: the link returns a not-found page.',
+      viewMyProfile: 'View my public profile',
+      saveSuccess: 'Public profile updated.',
+      fallbackError: 'Unable to update the public profile.',
+    },
   },
 };

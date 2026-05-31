@@ -13,6 +13,10 @@ export const ROUTES = {
   eventDetailPattern: `${EVENT_PREFIX}/:slug`,
 
   eventDetail: (slug: string) => `${EVENT_PREFIX}/${slug}`,
+
+  profilePattern: '/u/:handle',
+
+  profile: (handle: string) => `/u/${handle}`,
 } as const;
 
 export function withReturnTo(path: string, returnTo: string): string {

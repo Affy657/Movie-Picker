@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import EventParticipantsList from '@/features/events/components/EventParticipantsList';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import type { EventParticipantSummary } from '@/shared/types/event';
@@ -84,5 +85,37 @@ describe('EventParticipantsList', () => {
     );
 
     expect(screen.getByTestId('remove-participant-p-other')).toBeDisabled();
+  });
+
+  it("rend l'avatar du participant cliquable vers son profil quand un handle existe", () => {
+    render(
+      <AppTestProviders>
+        <MemoryRouter>
+          <EventParticipantsList
+            participants={[{ id: 'p1', pseudo: 'Alice', handle: 'alice' }]}
+            currentParticipantId={null}
+          />
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+
+    const link = screen.getByRole('link', { name: /voir le profil de alice/i });
+    expect(link).toHaveAttribute('href', '/u/alice');
+  });
+
+  it('ne rend pas de lien profil pour un participant sans handle', () => {
+    render(
+      <AppTestProviders>
+        <MemoryRouter>
+          <EventParticipantsList
+            participants={[{ id: 'p1', pseudo: 'Legacy', handle: null }]}
+            currentParticipantId={null}
+          />
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    expect(screen.getByText('Legacy')).toBeInTheDocument();
   });
 });

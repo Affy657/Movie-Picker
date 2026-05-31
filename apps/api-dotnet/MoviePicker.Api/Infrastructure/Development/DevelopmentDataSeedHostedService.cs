@@ -9,6 +9,7 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Application.UseCases.CreateEvent;
+using MoviePicker.Api.Application.UseCases.Profile;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 
@@ -217,12 +218,16 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
             UpdatedAt = now
         };
         var hash = hasher.HashPassword(draft, password);
+        var handle = await HandleAllocator
+            .AllocateFromDisplayNameAsync(users, draft.DisplayName, ct)
+            .ConfigureAwait(false);
         var user = new User
         {
             Id = string.Empty,
             Email = email,
             PasswordHash = hash,
             DisplayName = draft.DisplayName,
+            Handle = handle,
             UiTheme = draft.UiTheme,
             CreatedAt = now,
             UpdatedAt = now

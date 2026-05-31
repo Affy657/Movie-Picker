@@ -23,6 +23,7 @@ export interface EventParticipantSummary {
   pseudo: string;
   isCreator?: boolean;
   avatarId?: string;
+  handle?: string | null;
 }
 
 export interface EventData {

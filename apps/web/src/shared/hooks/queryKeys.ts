@@ -2,6 +2,10 @@ export const queryKeys = {
   auth: {
     me: ['auth', 'me'] as const,
   },
+  profile: {
+    public: (handle: string | undefined) => ['profile', 'public', handle ?? '$pending'] as const,
+    handleAvailability: (handle: string) => ['profile', 'handle-available', handle] as const,
+  },
   myEvents: {
     list: ['events', 'mine'] as const,
     listPaged: ['events', 'mine', 'paged'] as const,

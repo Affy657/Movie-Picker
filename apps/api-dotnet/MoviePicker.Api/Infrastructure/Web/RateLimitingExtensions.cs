@@ -23,6 +23,7 @@ public static class RateLimitingExtensions
     public const string RemoveParticipantPolicy = "remove-participant";
     public const string DeleteEventPolicy = "delete-event";
     public const string PostersPolicy = "posters-get";
+    public const string PublicProfilePolicy = "public-profile";
 
     public static IServiceCollection AddMoviePickerRateLimiter(this IServiceCollection services, IHostEnvironment environment)
     {
@@ -65,6 +66,7 @@ public static class RateLimitingExtensions
                 options.AddPolicy(RemoveParticipantPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(DeleteEventPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(PostersPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
+                options.AddPolicy(PublicProfilePolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 return;
             }
 
@@ -85,6 +87,7 @@ public static class RateLimitingExtensions
             options.AddPolicy(RemoveParticipantPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 40, windowMinutes: 1));
             options.AddPolicy(DeleteEventPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 10, windowMinutes: 1));
             options.AddPolicy(PostersPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 300, windowMinutes: 1));
+            options.AddPolicy(PublicProfilePolicy, ctx => CreateFixedWindow(ctx, permitLimit: 120, windowMinutes: 1));
         });
 
         return services;

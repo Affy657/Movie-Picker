@@ -116,4 +116,56 @@ public sealed class RegisterUserHandlerTests
         Assert.NotEqual("abcd1234", captured.PasswordHash);
         users.Verify(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact]
+    public async Task HandleAsync_GeneratesHandleFromDisplayName()
+    {
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
+        users.Setup(x => x.GetByHandleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
+        User? captured = null;
+        users
+            .Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User u, CancellationToken _) =>
+            {
+                captured = u;
+                return u with { Id = "generated-id" };
+            });
+        var hasher = new Mock<IPasswordHasher<User>>();
+        hasher.Setup(x => x.HashPassword(It.IsAny<User>(), It.IsAny<string>())).Returns("HASH");
+
+        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance);
+        await handler.HandleAsync(
+            new RegisterRequest { Email = "jean@b.co", Password = "abcd1234", DisplayName = "Jean Dupont" });
+
+        Assert.NotNull(captured);
+        Assert.Equal("jean_dupont", captured!.Handle);
+    }
+
+    [Fact]
+    public async Task HandleAsync_DeduplicatesHandleOnCollision()
+    {
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
+        users.Setup(x => x.GetByHandleAsync("alice", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = "x", Email = "x@y.z", PasswordHash = "h", DisplayName = "Alice", Handle = "alice" });
+        users.Setup(x => x.GetByHandleAsync("alice2", It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
+        User? captured = null;
+        users
+            .Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User u, CancellationToken _) =>
+            {
+                captured = u;
+                return u with { Id = "id2" };
+            });
+        var hasher = new Mock<IPasswordHasher<User>>();
+        hasher.Setup(x => x.HashPassword(It.IsAny<User>(), It.IsAny<string>())).Returns("HASH");
+
+        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance);
+        await handler.HandleAsync(
+            new RegisterRequest { Email = "alice@b.co", Password = "abcd1234", DisplayName = "Alice" });
+
+        Assert.NotNull(captured);
+        Assert.Equal("alice2", captured!.Handle);
+    }
 }

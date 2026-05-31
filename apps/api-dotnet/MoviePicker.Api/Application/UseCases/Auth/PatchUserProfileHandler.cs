@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Profile;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -23,18 +24,16 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
     {
         var user = await _users.GetByIdAsync(userId, ct) ?? throw new NotFoundException("Utilisateur introuvable");
 
-        if (request.DisplayName is null && request.UiTheme is null && request.AccentColor is null && request.AvatarId is null)
-        {
-            return new UserProfileResponse
-            {
-                UserId = user.Id,
-                DisplayName = user.DisplayName,
-                EmailMasked = EmailMasking.Mask(user.Email),
-                UiTheme = user.UiTheme,
-                AccentColor = user.AccentColor,
-                AvatarId = user.AvatarId
-            };
-        }
+        var nothingToUpdate = request.DisplayName is null
+            && request.UiTheme is null
+            && request.AccentColor is null
+            && request.AvatarId is null
+            && request.Handle is null
+            && request.Bio is null
+            && request.IsProfilePublic is null;
+
+        if (nothingToUpdate)
+            return ToResponse(user);
 
         var displayName = user.DisplayName;
         if (request.DisplayName is not null)
@@ -55,26 +54,75 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
 
         var avatarId = request.AvatarId ?? user.AvatarId;
 
+        var handle = user.Handle;
+        if (request.Handle is not null)
+            handle = await ResolveHandleAsync(request.Handle, user, ct);
+
+        var bio = user.Bio;
+        if (request.Bio is not null)
+        {
+            var bioErr = HandlePolicy.ValidateBio(request.Bio);
+            if (bioErr is not null)
+                throw new BadRequestException(bioErr);
+            var trimmed = request.Bio.Trim();
+            bio = trimmed.Length == 0 ? null : trimmed;
+        }
+
+        var isProfilePublic = request.IsProfilePublic ?? user.IsProfilePublic;
+
         var updated = user with
         {
             DisplayName = displayName,
             UiTheme = theme,
             AccentColor = accent,
             AvatarId = avatarId,
+            Handle = handle,
+            Bio = bio,
+            IsProfilePublic = isProfilePublic,
             UpdatedAt = _clock.GetUtcNow()
         };
 
-        var saved = await _users.UpdateAsync(updated, ct);
-        return new UserProfileResponse
+        User saved;
+        try
         {
-            UserId = saved.Id,
-            DisplayName = saved.DisplayName,
-            EmailMasked = EmailMasking.Mask(saved.Email),
-            UiTheme = saved.UiTheme,
-            AccentColor = saved.AccentColor,
-            AvatarId = saved.AvatarId
-        };
+            saved = await _users.UpdateAsync(updated, ct);
+        }
+        catch (ConflictException ex) when (ex.Message == "handle_conflict")
+        {
+            throw new ConflictException("Ce handle est déjà pris.");
+        }
+        return ToResponse(saved);
     }
+
+    private async Task<string> ResolveHandleAsync(string requested, User user, CancellationToken ct)
+    {
+        var normalized = HandlePolicy.Normalize(requested);
+        if (string.Equals(normalized, user.Handle, StringComparison.Ordinal))
+            return user.Handle;
+
+        var err = HandlePolicy.Validate(normalized);
+        if (err is not null)
+            throw new BadRequestException(err);
+
+        var existing = await _users.GetByHandleAsync(normalized, ct);
+        if (existing is not null && existing.Id != user.Id)
+            throw new ConflictException("Ce handle est déjà pris.");
+
+        return normalized;
+    }
+
+    private static UserProfileResponse ToResponse(User user) => new()
+    {
+        UserId = user.Id,
+        DisplayName = user.DisplayName,
+        EmailMasked = EmailMasking.Mask(user.Email),
+        UiTheme = user.UiTheme,
+        AccentColor = user.AccentColor,
+        AvatarId = user.AvatarId,
+        Handle = user.Handle,
+        Bio = user.Bio,
+        IsProfilePublic = user.IsProfilePublic
+    };
 
     private static T ParseEnum<T>(string raw, T defaultValue) where T : struct, Enum =>
         Enum.TryParse<T>(raw, ignoreCase: true, out var result) ? result : defaultValue;

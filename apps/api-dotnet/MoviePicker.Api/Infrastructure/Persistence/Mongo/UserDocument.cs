@@ -18,6 +18,18 @@ public sealed class UserDocument
     [BsonElement("displayName")]
     public string DisplayName { get; set; } = string.Empty;
 
+    [BsonElement("handle")]
+    [BsonIgnoreIfNull]
+    public string? Handle { get; set; }
+
+    [BsonElement("bio")]
+    [BsonIgnoreIfNull]
+    public string? Bio { get; set; }
+
+    [BsonElement("isProfilePublic")]
+    [BsonIgnoreIfNull]
+    public bool? IsProfilePublic { get; set; }
+
     [BsonElement("uiTheme")]
     public string UiTheme { get; set; } = "system";
 

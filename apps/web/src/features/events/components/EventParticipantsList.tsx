@@ -1,7 +1,9 @@
 import clsx from 'clsx';
+import { Link } from 'react-router-dom';
 import { Crown, Users, X } from 'lucide-react';
 import type { EventParticipantSummary } from '@/shared/types/event';
 import { useTranslation } from '@/shared/i18n';
+import { ROUTES } from '@/app/routes';
 import Avatar from '@/shared/components/Avatar';
 import styles from './EventParticipantsList.module.css';
 
@@ -60,6 +62,12 @@ export default function EventParticipantsList({
             const isCreator = !!p.isCreator;
             const canHostRemove = !!isHost && !!onRemoveParticipant && !isCreator && !isMe;
             const isPending = pendingRemovalId === p.id;
+            const identity = (
+              <>
+                <Avatar avatarId={p.avatarId ?? ''} size="xs" />
+                <span className={styles.chipLabel}>{p.pseudo}</span>
+              </>
+            );
 
             return (
               <li
@@ -67,8 +75,17 @@ export default function EventParticipantsList({
                 className={clsx(styles.chip, isMe && styles.chipMe)}
                 data-testid={`participant-${p.id}`}
               >
-                <Avatar avatarId={p.avatarId ?? ''} size="xs" />
-                <span className={styles.chipLabel}>{p.pseudo}</span>
+                {p.handle ? (
+                  <Link
+                    to={ROUTES.profile(p.handle)}
+                    className={styles.profileLink}
+                    aria-label={t('events.participants.viewProfileAriaLabel', { pseudo: p.pseudo })}
+                  >
+                    {identity}
+                  </Link>
+                ) : (
+                  identity
+                )}
                 {isCreator && (
                   <span
                     className={styles.hostBadge}

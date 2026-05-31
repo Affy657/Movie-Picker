@@ -26,6 +26,9 @@ public sealed record User
     public string Email { get; init; } = string.Empty;
     public string PasswordHash { get; init; } = string.Empty;
     public string DisplayName { get; init; } = string.Empty;
+    public string Handle { get; init; } = string.Empty;
+    public string? Bio { get; init; }
+    public bool IsProfilePublic { get; init; } = true;
     public UiThemePreference UiTheme { get; init; } = UiThemePreference.System;
     public AccentColor AccentColor { get; init; } = AccentColor.Default;
     public string AvatarId { get; init; } = string.Empty;

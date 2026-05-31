@@ -36,4 +36,7 @@ public sealed class EventParticipantSummaryResponse
     public string Pseudo { get; init; } = string.Empty;
     public bool IsCreator { get; init; }
     public string AvatarId { get; init; } = string.Empty;
+
+    /// <summary>Public handle of the linked account, or null for legacy guest participants.</summary>
+    public string? Handle { get; init; }
 }

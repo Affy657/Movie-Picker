@@ -20,6 +20,7 @@ const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswo
 const ResetPasswordPage = lazy(() => import('@/features/auth/pages/ResetPasswordPage'));
 const AccountPage = lazy(() => import('@/features/auth/pages/AccountPage'));
 const MyEventsPage = lazy(() => import('@/features/events/pages/MyEventsPage'));
+const ProfilePage = lazy(() => import('@/features/profile/pages/ProfilePage'));
 const NotFoundPage = lazy(() => import('@/app/pages/NotFoundPage'));
 
 function PageFallback() {
@@ -105,6 +106,7 @@ export function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route path={ROUTES.profilePattern} element={<ProfilePage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

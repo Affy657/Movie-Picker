@@ -115,6 +115,7 @@ public static class ServiceCollectionExtensions
             services.AddScoped<IAuthSessionInvalidator, MongoAuthSessionInvalidator>();
             services.AddScoped<IPushSubscriptionRepository, MongoPushSubscriptionRepository>();
             services.AddHostedService<MongoIndexInitializer>();
+            services.AddHostedService<UserHandleBackfillService>();
         }
 
         if (string.Equals(configuration["E2E_STUB_TMDB"], "1", StringComparison.Ordinal))
