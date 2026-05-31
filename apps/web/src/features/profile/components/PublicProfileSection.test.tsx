@@ -48,7 +48,7 @@ describe('PublicProfileSection (MSW)', () => {
 
     await waitFor(() => expect(screen.getByLabelText(/pseudo/i)).toHaveValue('Alice'));
     expect(screen.getByLabelText(/bio/i)).toHaveValue('Ma bio');
-    expect(screen.getByRole('switch', { name: /rendre mon profil public/i })).toHaveAttribute(
+    expect(screen.getByRole('switch', { name: /profil public/i })).toHaveAttribute(
       'aria-checked',
       'true'
     );
@@ -67,7 +67,7 @@ describe('PublicProfileSection (MSW)', () => {
     renderSection();
     await screen.findByDisplayValue('Alice');
 
-    await user.click(screen.getByRole('switch', { name: /rendre mon profil public/i }));
+    await user.click(screen.getByRole('switch', { name: /profil public/i }));
     await user.click(screen.getByRole('button', { name: /enregistrer/i }));
 
     await waitFor(() => expect(patchBody).not.toBeNull());

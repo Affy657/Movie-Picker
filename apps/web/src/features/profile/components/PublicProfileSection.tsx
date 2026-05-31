@@ -161,6 +161,11 @@ export default function PublicProfileSection() {
             <span className={styles.toggleThumb} />
           </button>
         </div>
+        <p className="hint">
+          {isPublic
+            ? t('profile.settings.visibilityPublicHint')
+            : t('profile.settings.visibilityPrivateHint')}
+        </p>
 
         <button type="submit" className="btn btn-primary" disabled={saving}>
           {saving ? t('auth.account.saving') : t('common.save')}
