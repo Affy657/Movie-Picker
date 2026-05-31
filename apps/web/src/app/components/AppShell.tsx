@@ -89,7 +89,17 @@ export default function AppShell() {
               <DesktopNavItem key={item.to} {...item} />
             ))}
             <div className={styles.navActions}>
-              <Avatar avatarId={user!.avatarId} size="sm" />
+              {user.handle ? (
+                <Link
+                  to={ROUTES.profile(user.handle)}
+                  className={styles.avatarNavLink}
+                  aria-label={t('profile.settings.viewMyProfile')}
+                >
+                  <Avatar avatarId={user.avatarId} size="sm" />
+                </Link>
+              ) : (
+                <Avatar avatarId={user!.avatarId} size="sm" />
+              )}
             </div>
           </nav>
         ) : null}

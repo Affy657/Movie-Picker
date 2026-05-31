@@ -46,50 +46,98 @@
   margin-bottom: 1rem;
 }
 
-.avatarContainer {
+.avatarButton {
   position: relative;
   display: inline-flex;
-}
-
-.avatarLink {
-  display: inline-flex;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
   border-radius: 50%;
-  transition: opacity 0.15s ease;
 }
 
-.avatarLink:hover {
-  opacity: 0.82;
+.avatarButton:hover .avatarEditOverlay,
+.avatarButton:focus-visible .avatarEditOverlay {
+  opacity: 1;
 }
 
-.avatarLink:focus-visible {
+.avatarButton:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 3px;
-  border-radius: 50%;
 }
 
-.avatarEditBtn {
+.avatarEditOverlay {
   position: absolute;
-  bottom: 1px;
-  right: -2px;
-  width: 1.5rem;
-  height: 1.5rem;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  background: var(--color-primary);
-  color: #fff;
-  border: 2px solid var(--color-surface);
   border-radius: 50%;
-  cursor: pointer;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  opacity: 0;
   transition: opacity 0.15s ease;
 }
 
-.avatarEditBtn:hover {
-  opacity: 0.85;
+.visibilityRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
-.avatarEditBtn:focus-visible {
-  outline: 2px solid var(--color-primary);
+.visibilityIcon {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.visibilityLabel {
+  flex: 1;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 2.75rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  background-color: var(--color-border, #374151);
+  transition: background-color 0.2s ease;
   outline-offset: 3px;
+}
+
+.toggle[aria-checked='true'] {
+  background-color: var(--color-primary, #1d4ed8);
+}
+
+.toggle:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.toggle:focus-visible {
+  outline: 2px solid var(--color-primary);
+}
+
+.toggleThumb {
+  position: absolute;
+  top: 0.125rem;
+  left: 0.125rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease;
+  pointer-events: none;
+}
+
+.toggle[aria-checked='true'] .toggleThumb {
+  transform: translateX(1.25rem);
 }

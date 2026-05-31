@@ -43,13 +43,15 @@ describe('PublicProfileSection (MSW)', () => {
     server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(baseUser)));
   });
 
-  it('pré-remplit le pseudo, le handle, la bio et la visibilité depuis le compte', async () => {
+  it('pré-remplit le pseudo, la bio et la visibilité depuis le compte', async () => {
     renderSection();
 
     await waitFor(() => expect(screen.getByLabelText(/pseudo/i)).toHaveValue('Alice'));
-    expect(screen.getByLabelText(/identifiant public/i)).toHaveValue('alice');
     expect(screen.getByLabelText(/bio/i)).toHaveValue('Ma bio');
-    expect(screen.getByRole('checkbox', { name: /rendre mon profil public/i })).toBeChecked();
+    expect(screen.getByRole('switch', { name: /rendre mon profil public/i })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
   });
 
   it('enregistre le pseudo, la bio et la visibilité via PATCH', async () => {
@@ -63,9 +65,9 @@ describe('PublicProfileSection (MSW)', () => {
     );
 
     renderSection();
-    await screen.findByDisplayValue('alice');
+    await screen.findByDisplayValue('Alice');
 
-    await user.click(screen.getByRole('checkbox', { name: /rendre mon profil public/i }));
+    await user.click(screen.getByRole('switch', { name: /rendre mon profil public/i }));
     await user.click(screen.getByRole('button', { name: /enregistrer/i }));
 
     await waitFor(() => expect(patchBody).not.toBeNull());
@@ -73,24 +75,17 @@ describe('PublicProfileSection (MSW)', () => {
     expect(patchBody!.displayName).toBe('Alice');
   });
 
-  it('signale un handle déjà pris', async () => {
-    const user = userEvent.setup();
-    server.use(
-      http.get(`${TEST_API_V1}/users/handle-available`, () =>
-        HttpResponse.json({ handle: 'taken', available: false, reason: 'Ce handle est déjà pris.' })
-      )
-    );
-
+  it('affiche le hint bio uniquement dans les 20 derniers caractères', async () => {
     renderSection();
-    const handleInput = await screen.findByLabelText(/identifiant public/i);
-    await waitFor(() => expect(handleInput).toHaveValue('alice'));
+    const bioInput = await screen.findByLabelText(/bio/i);
 
-    await user.clear(handleInput);
-    await user.type(handleInput, 'taken');
+    expect(screen.queryByText(/caractères restants/i)).toBeNull();
+
+    await userEvent.clear(bioInput);
+    await userEvent.type(bioInput, 'x'.repeat(125));
 
     await waitFor(() => {
-      expect(screen.getByText(/déjà pris/i)).toBeInTheDocument();
+      expect(screen.getByText(/caractères restants/i)).toBeInTheDocument();
     });
-    expect(screen.getByRole('button', { name: /enregistrer/i })).toBeDisabled();
   });
 });
