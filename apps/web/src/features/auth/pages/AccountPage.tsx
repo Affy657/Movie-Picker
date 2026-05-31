@@ -1,14 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { KeyRound, LogOut, Sliders, User } from 'lucide-react';
+import { KeyRound, LogOut, Sliders } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import NotificationsSection from '@/features/notifications/components/NotificationsSection';
 import PublicProfileSection from '@/features/profile/components/PublicProfileSection';
-import { Pencil } from 'lucide-react';
-import Avatar from '@/shared/components/Avatar';
-import AvatarPickerModal from '@/features/auth/components/AvatarPickerModal';
 import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
@@ -188,15 +185,7 @@ function PreferencesSection() {
 export default function AccountPage() {
   const { t } = useTranslation();
   useDocumentTitle(pageTitle(t('auth.account.title')));
-  const { user, isLoading, logout, patchProfile } = useAuth();
-  const [displayName, setDisplayName] = useState('');
-  const [savedAt, setSavedAt] = useState<number | null>(null);
-  const [avatarModalOpen, setAvatarModalOpen] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-    setDisplayName(user.displayName);
-  }, [user]);
+  const { user, isLoading, logout } = useAuth();
 
   const logoutAction = useCallback(() => logout(), [logout]);
   const {
@@ -204,16 +193,6 @@ export default function AccountPage() {
     loading: loggingOut,
     error: logoutError,
   } = useAsyncAction(logoutAction, t('auth.logout.fallbackError'));
-
-  const saveAction = useCallback(async () => {
-    await patchProfile({ displayName: displayName.trim() });
-    setSavedAt(Date.now());
-  }, [patchProfile, displayName]);
-  const {
-    run: runSave,
-    loading: saving,
-    error,
-  } = useAsyncAction(saveAction, t('auth.account.fallbackError'));
 
   if (isLoading) {
     return (
@@ -247,79 +226,12 @@ export default function AccountPage() {
     );
   }
 
-  const handleProfileSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    void runSave();
-  };
-
   return (
     <PageLayout className={styles.layout}>
       <header className={styles.header}>
         <h1 className={styles.title}>{t('auth.account.title')}</h1>
         <p className={styles.email}>{user.emailMasked}</p>
       </header>
-
-      <section className="section section--panel" aria-labelledby="profile-heading">
-        <h2 id="profile-heading" className={styles.sectionTitle}>
-          <User size={18} aria-hidden />
-          {t('auth.account.profileTitle')}
-        </h2>
-        <div className={styles.avatarRow}>
-          <button
-            type="button"
-            className={styles.avatarButton}
-            onClick={() => setAvatarModalOpen(true)}
-            aria-label={t('auth.account.avatarLabel')}
-          >
-            <Avatar avatarId={user.avatarId} size="lg" />
-            <span className={styles.avatarEditOverlay} aria-hidden>
-              <Pencil size={14} />
-            </span>
-          </button>
-        </div>
-        <AvatarPickerModal
-          open={avatarModalOpen}
-          currentAvatarId={user.avatarId}
-          onSelect={async (id) => {
-            setAvatarModalOpen(false);
-            await patchProfile({ avatarId: id });
-          }}
-          onClose={() => setAvatarModalOpen(false)}
-        />
-        <form onSubmit={handleProfileSubmit} className="form">
-          {error && (
-            <p id="account-form-error" className="error" role="alert">
-              {error}
-            </p>
-          )}
-          {savedAt != null && !error && (
-            <p className="hint" role="status" aria-live="polite">
-              {t('auth.account.saveSuccess')}
-            </p>
-          )}
-          <label className="label" htmlFor="account-displayName">
-            {t('auth.account.pseudoLabel')}
-          </label>
-          <input
-            id="account-displayName"
-            type="text"
-            className="input"
-            autoComplete="nickname"
-            value={displayName}
-            onChange={(e) => {
-              setDisplayName(e.target.value);
-              setSavedAt(null);
-            }}
-            required
-            maxLength={80}
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? 'account-form-error' : undefined}
-          />
-          <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving ? t('auth.account.saving') : t('common.save')}
-          </button>
-        </form>
-      </section>
 
       <PublicProfileSection />
 

@@ -43,16 +43,16 @@ describe('PublicProfileSection (MSW)', () => {
     server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(baseUser)));
   });
 
-  it('pré-remplit le handle, la bio et la visibilité depuis le compte', async () => {
+  it('pré-remplit le pseudo, le handle, la bio et la visibilité depuis le compte', async () => {
     renderSection();
 
-    const handleInput = await screen.findByLabelText(/identifiant public/i);
-    await waitFor(() => expect(handleInput).toHaveValue('alice'));
+    await waitFor(() => expect(screen.getByLabelText(/pseudo/i)).toHaveValue('Alice'));
+    expect(screen.getByLabelText(/identifiant public/i)).toHaveValue('alice');
     expect(screen.getByLabelText(/bio/i)).toHaveValue('Ma bio');
     expect(screen.getByRole('checkbox', { name: /rendre mon profil public/i })).toBeChecked();
   });
 
-  it('enregistre la bio et la visibilité via PATCH', async () => {
+  it('enregistre le pseudo, la bio et la visibilité via PATCH', async () => {
     const user = userEvent.setup();
     let patchBody: Record<string, unknown> | null = null;
     server.use(
@@ -70,6 +70,7 @@ describe('PublicProfileSection (MSW)', () => {
 
     await waitFor(() => expect(patchBody).not.toBeNull());
     expect(patchBody!.isProfilePublic).toBe(false);
+    expect(patchBody!.displayName).toBe('Alice');
   });
 
   it('signale un handle déjà pris', async () => {

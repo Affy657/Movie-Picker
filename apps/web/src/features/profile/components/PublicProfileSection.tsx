@@ -1,16 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Globe } from 'lucide-react';
+import { Globe, Pencil, User } from 'lucide-react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import { checkHandleAvailability } from '@/features/profile/api/profileApi';
+import Avatar from '@/shared/components/Avatar';
+import AvatarPickerModal from '@/features/auth/components/AvatarPickerModal';
 import styles from '@/features/auth/pages/AccountPage.module.css';
 
 const HANDLE_PATTERN = /^[a-z0-9_]{3,20}$/;
 const BIO_MAX_LENGTH = 140;
 const AVAILABILITY_DEBOUNCE_MS = 400;
+const SAVE_FEEDBACK_MS = 2500;
 
 type AvailabilityState =
   | { status: 'idle' }
@@ -23,19 +26,30 @@ export default function PublicProfileSection() {
   const { t } = useTranslation();
   const { user, patchProfile } = useAuth();
 
+  const [displayName, setDisplayName] = useState('');
   const [handle, setHandle] = useState('');
   const [bio, setBio] = useState('');
   const [isPublic, setIsPublic] = useState(true);
+  const [avatarModalOpen, setAvatarModalOpen] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [availability, setAvailability] = useState<AvailabilityState>({ status: 'idle' });
   const debounceRef = useRef<number | undefined>(undefined);
+  const savedTimerRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     if (!user) return;
+    setDisplayName(user.displayName);
     setHandle(user.handle ?? '');
     setBio(user.bio ?? '');
     setIsPublic(user.isProfilePublic ?? true);
   }, [user]);
+
+  useEffect(() => {
+    if (savedAt === null) return;
+    window.clearTimeout(savedTimerRef.current);
+    savedTimerRef.current = window.setTimeout(() => setSavedAt(null), SAVE_FEEDBACK_MS);
+    return () => window.clearTimeout(savedTimerRef.current);
+  }, [savedAt]);
 
   const handleChanged = !!user && handle !== (user.handle ?? '');
 
@@ -65,13 +79,14 @@ export default function PublicProfileSection() {
   const saveAction = useCallback(async () => {
     if (!user) return;
     await patchProfile({
+      displayName: displayName.trim(),
       ...(handleChanged ? { handle } : {}),
       bio: bio.trim() === '' ? null : bio.trim(),
       isProfilePublic: isPublic,
     });
     setSavedAt(Date.now());
     setAvailability({ status: 'idle' });
-  }, [user, patchProfile, handleChanged, handle, bio, isPublic]);
+  }, [user, patchProfile, displayName, handleChanged, handle, bio, isPublic]);
 
   const {
     run: runSave,
@@ -95,12 +110,45 @@ export default function PublicProfileSection() {
   };
 
   return (
-    <section className="section section--panel" aria-labelledby="public-profile-heading">
-      <h2 id="public-profile-heading" className={styles.sectionTitle}>
-        <Globe size={18} aria-hidden />
-        {t('profile.settings.title')}
+    <section className="section section--panel" aria-labelledby="profile-section-heading">
+      <h2 id="profile-section-heading" className={styles.sectionTitle}>
+        <User size={18} aria-hidden />
+        {t('auth.account.profileTitle')}
       </h2>
-      <p className="hint">{t('profile.settings.description')}</p>
+
+      <div className={styles.avatarRow}>
+        <div className={styles.avatarContainer}>
+          {user.handle ? (
+            <Link
+              to={ROUTES.profile(user.handle)}
+              className={styles.avatarLink}
+              aria-label={t('profile.settings.viewMyProfile')}
+            >
+              <Avatar avatarId={user.avatarId} size="lg" />
+            </Link>
+          ) : (
+            <Avatar avatarId={user.avatarId} size="lg" />
+          )}
+          <button
+            type="button"
+            className={styles.avatarEditBtn}
+            onClick={() => setAvatarModalOpen(true)}
+            aria-label={t('auth.account.avatarLabel')}
+          >
+            <Pencil size={11} aria-hidden />
+          </button>
+        </div>
+      </div>
+
+      <AvatarPickerModal
+        open={avatarModalOpen}
+        currentAvatarId={user.avatarId}
+        onSelect={async (id) => {
+          setAvatarModalOpen(false);
+          await patchProfile({ avatarId: id });
+        }}
+        onClose={() => setAvatarModalOpen(false)}
+      />
 
       <form onSubmit={handleSubmit} className="form">
         {error && (
@@ -108,11 +156,47 @@ export default function PublicProfileSection() {
             {error}
           </p>
         )}
-        {savedAt != null && !error && (
+        {savedAt !== null && !error && (
           <p className="hint" role="status" aria-live="polite">
-            {t('profile.settings.saveSuccess')}
+            {t('auth.account.saveSuccess')}
           </p>
         )}
+
+        <label className="label" htmlFor="profile-displayName">
+          {t('auth.account.pseudoLabel')}
+        </label>
+        <input
+          id="profile-displayName"
+          type="text"
+          className="input"
+          autoComplete="nickname"
+          value={displayName}
+          onChange={(e) => {
+            setDisplayName(e.target.value);
+            setSavedAt(null);
+          }}
+          required
+          maxLength={80}
+        />
+
+        <label className="label" htmlFor="profile-bio">
+          {t('profile.settings.bioLabel')}
+        </label>
+        <textarea
+          id="profile-bio"
+          className="input"
+          value={bio}
+          onChange={(e) => {
+            setBio(e.target.value);
+            setSavedAt(null);
+          }}
+          maxLength={BIO_MAX_LENGTH}
+          rows={3}
+          aria-describedby="profile-bio-hint"
+        />
+        <p id="profile-bio-hint" className="hint">
+          {t('profile.settings.bioHint', { count: String(BIO_MAX_LENGTH - bio.length) })}
+        </p>
 
         <label className="label" htmlFor="profile-handle">
           {t('profile.settings.handleLabel')}
@@ -144,25 +228,6 @@ export default function PublicProfileSection() {
           {availability.status === 'idle' && !handleInvalid && t('profile.settings.handleHint')}
         </p>
 
-        <label className="label" htmlFor="profile-bio">
-          {t('profile.settings.bioLabel')}
-        </label>
-        <textarea
-          id="profile-bio"
-          className="input"
-          value={bio}
-          onChange={(e) => {
-            setBio(e.target.value);
-            setSavedAt(null);
-          }}
-          maxLength={BIO_MAX_LENGTH}
-          rows={3}
-          aria-describedby="profile-bio-hint"
-        />
-        <p id="profile-bio-hint" className="hint">
-          {t('profile.settings.bioHint', { count: String(BIO_MAX_LENGTH - bio.length) })}
-        </p>
-
         <label className={styles.toggleRow}>
           <input
             type="checkbox"
@@ -172,19 +237,9 @@ export default function PublicProfileSection() {
               setSavedAt(null);
             }}
           />
+          <Globe size={14} aria-hidden />
           <span>{t('profile.settings.visibilityLabel')}</span>
         </label>
-        <p className="hint">
-          {isPublic
-            ? t('profile.settings.visibilityPublicHint')
-            : t('profile.settings.visibilityPrivateHint')}
-        </p>
-
-        {isPublic && user.handle && (
-          <p className="hint">
-            <Link to={ROUTES.profile(user.handle)}>{t('profile.settings.viewMyProfile')}</Link>
-          </p>
-        )}
 
         <button type="submit" className="btn btn-primary" disabled={blockSave}>
           {saving ? t('auth.account.saving') : t('common.save')}

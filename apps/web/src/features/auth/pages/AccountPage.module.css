@@ -46,35 +46,50 @@
   margin-bottom: 1rem;
 }
 
-.avatarButton {
+.avatarContainer {
   position: relative;
   display: inline-flex;
-  padding: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
+}
+
+.avatarLink {
+  display: inline-flex;
+  border-radius: 50%;
+  transition: opacity 0.15s ease;
+}
+
+.avatarLink:hover {
+  opacity: 0.82;
+}
+
+.avatarLink:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
   border-radius: 50%;
 }
 
-.avatarButton:hover .avatarEditOverlay,
-.avatarButton:focus-visible .avatarEditOverlay {
-  opacity: 1;
-}
-
-.avatarButton:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 3px;
-}
-
-.avatarEditOverlay {
+.avatarEditBtn {
   position: absolute;
-  inset: 0;
+  bottom: 1px;
+  right: -2px;
+  width: 1.5rem;
+  height: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.45);
+  padding: 0;
+  background: var(--color-primary);
   color: #fff;
-  opacity: 0;
+  border: 2px solid var(--color-surface);
+  border-radius: 50%;
+  cursor: pointer;
   transition: opacity 0.15s ease;
+}
+
+.avatarEditBtn:hover {
+  opacity: 0.85;
+}
+
+.avatarEditBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
 }
