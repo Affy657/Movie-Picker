@@ -84,9 +84,6 @@ export default function NotificationsSection() {
               <p className={styles.rowLabel}>
                 {subscribed ? t('notifications.enabledLabel') : t('notifications.disabledLabel')}
               </p>
-              <p className={styles.rowHint}>
-                {subscribed ? t('notifications.enabledHint') : t('notifications.disabledHint')}
-              </p>
             </div>
           </div>
           <button

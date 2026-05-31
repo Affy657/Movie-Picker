@@ -38,9 +38,11 @@ export default function PublicProfileSection() {
 
   const saveAction = useCallback(async () => {
     if (!user) return;
+    const bioTrimmed = bio.trim();
+    const bioChanged = bioTrimmed !== (user.bio?.trim() ?? '');
     await patchProfile({
       displayName: displayName.trim(),
-      bio: bio.trim() === '' ? null : bio.trim(),
+      ...(bioChanged ? { bio: bioTrimmed === '' ? null : bioTrimmed } : {}),
       isProfilePublic: isPublic,
     });
     setSavedAt(Date.now());
@@ -161,11 +163,6 @@ export default function PublicProfileSection() {
             <span className={styles.toggleThumb} />
           </button>
         </div>
-        <p className="hint">
-          {isPublic
-            ? t('profile.settings.visibilityPublicHint')
-            : t('profile.settings.visibilityPrivateHint')}
-        </p>
 
         <button type="submit" className="btn btn-primary" disabled={saving}>
           {saving ? t('auth.account.saving') : t('common.save')}

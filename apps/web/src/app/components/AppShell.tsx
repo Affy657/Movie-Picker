@@ -98,7 +98,7 @@ export default function AppShell() {
                   <Avatar avatarId={user.avatarId} size="sm" />
                 </Link>
               ) : (
-                <Avatar avatarId={user!.avatarId} size="sm" />
+                <Avatar avatarId={user.avatarId} size="sm" />
               )}
             </div>
           </nav>

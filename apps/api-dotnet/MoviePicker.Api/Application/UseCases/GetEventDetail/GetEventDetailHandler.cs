@@ -93,7 +93,9 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
                     Pseudo = p.Pseudo,
                     IsCreator = !string.IsNullOrEmpty(creatorUserId) && p.UserId == creatorUserId,
                     AvatarId = linkedUser?.AvatarId ?? string.Empty,
-                    Handle = string.IsNullOrEmpty(linkedUser?.Handle) ? null : linkedUser.Handle,
+                    Handle = (linkedUser?.IsProfilePublic == true && !string.IsNullOrEmpty(linkedUser.Handle))
+                        ? linkedUser.Handle
+                        : null,
                 };
             })
             .ToList();

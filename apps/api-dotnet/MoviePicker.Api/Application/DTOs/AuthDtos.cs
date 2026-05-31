@@ -75,7 +75,7 @@ public sealed class PatchUserProfileRequest
     public string? AvatarId { get; init; }
 
     // Format/réservés validés (après normalisation) par HandlePolicy dans le handler — source unique de vérité.
-    [MaxLength(40, ErrorMessage = "Handle trop long.")]
+    [MaxLength(20, ErrorMessage = "Handle trop long.")]
     public string? Handle { get; init; }
 
     [MaxLength(140, ErrorMessage = "La bio ne peut pas dépasser 140 caractères.")]
