@@ -19,10 +19,7 @@ import EventStartReminderBanner from '@/features/events/components/EventStartRem
 import PageLayout from '@/shared/components/PageLayout';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useEventDetailPage } from '@/features/events/hooks/useEventDetailPage';
-import {
-  removeEventParticipant,
-  eventFrontendUrl,
-} from '@/features/events/api/eventsApi';
+import { removeEventParticipant, eventFrontendUrl } from '@/features/events/api/eventsApi';
 import { removeStoredParticipant } from '@/features/events/storage';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { getErrorMessage } from '@/shared/api/apiError';
