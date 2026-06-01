@@ -229,7 +229,8 @@ export const en: Locale = {
     share: {
       shareButton: 'Share',
       copiedButton: 'Link copied!',
-      shareText: "You're invited to {{title}} at {{time}} on Movie Picker!",
+      shareText: "You're invited to {{title}} on {{date}} at {{time}} on Movie Picker!",
+      shareTextNoDate: "You're invited to {{title}} at {{time}} on Movie Picker!",
       shareTextFallback: "You're invited to a movie night on Movie Picker!",
       showQr: 'Show QR code',
       hideQr: 'Hide QR code',

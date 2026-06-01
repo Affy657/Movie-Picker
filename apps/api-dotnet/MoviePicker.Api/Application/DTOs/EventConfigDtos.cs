@@ -49,4 +49,7 @@ public sealed class PatchEventConfigRequest
 
     public bool? RichSharePreview { get; init; }
     public bool? AllowSeries { get; init; }
+
+    public string? Date { get; init; }
+    public string? Time { get; init; }
 }

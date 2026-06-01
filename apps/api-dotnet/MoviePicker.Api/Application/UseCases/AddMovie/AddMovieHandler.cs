@@ -144,7 +144,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
                 Title: "🎬 Nouveau film proposé",
                 Body: $"« {movieTitle} » a été ajouté à « {evt.Title} »",
                 Tag: $"movie-add-{evt.Id}",
-                Url: $"/events/{evt.Slug}"
+                Url: $"/e/{evt.Slug}"
             );
 
             foreach (var sub in subs.Where(s => notifiableIds.Contains(s.UserId)))

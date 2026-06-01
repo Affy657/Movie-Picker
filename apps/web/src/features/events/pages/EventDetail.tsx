@@ -21,7 +21,6 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useEventDetailPage } from '@/features/events/hooks/useEventDetailPage';
 import {
   removeEventParticipant,
-  eventSharePreviewUrl,
   eventFrontendUrl,
 } from '@/features/events/api/eventsApi';
 import { removeStoredParticipant } from '@/features/events/storage';
@@ -210,9 +209,9 @@ export default function EventDetail() {
   if (!event) return null;
 
   const timeFormatted = formatEventTime(event.time);
-  const dateFormatted = `${timeFormatted} – ${formatMyEventsListDate(event.date, locale)}`;
-  const shareUrl = eventSharePreviewUrl(slug);
-  const shareFrontendUrl = eventFrontendUrl(slug);
+  const dateLabel = formatMyEventsListDate(event.date, locale);
+  const dateFormatted = `${timeFormatted} – ${dateLabel}`;
+  const shareUrl = eventFrontendUrl(slug);
   const needsJoin = !event.isFinished && !participant;
   const showContent = event.isFinished || participant;
   const maxParticipants = event.config?.maxParticipants ?? null;
@@ -242,13 +241,15 @@ export default function EventDetail() {
         title={event.title}
         dateFormatted={dateFormatted}
         eventTime={timeFormatted}
+        eventDate={dateLabel}
         isFinished={!!event.isFinished}
         eventTheme={event.config?.theme}
         eventThemeColor={event.config?.themeColor}
         shareUrl={shareUrl}
-        shareFrontendUrl={shareFrontendUrl}
       />
-      {event.isHost && <HostEventSettingsPanel slug={slug} hostToken={hostToken} event={event} />}
+      {event.isHost && !event.isFinished && !event.winnerMovie && (
+        <HostEventSettingsPanel slug={slug} hostToken={hostToken} event={event} />
+      )}
 
       {moviesQuery.isError && (
         <EventMoviesLoadError
@@ -274,7 +275,7 @@ export default function EventDetail() {
             maxParticipants={maxParticipants}
             isHost={!!event.isHost}
             pendingRemovalId={pendingRemovalId}
-            onRemoveParticipant={handleRemoveParticipant}
+            onRemoveParticipant={event.isFinished ? undefined : handleRemoveParticipant}
           />
 
           {actionSuccess && (

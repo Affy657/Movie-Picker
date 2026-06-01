@@ -14,6 +14,8 @@ import styles from './HostEventSettingsPanel.module.css';
 import {
   datetimeLocalToEndDatePayload,
   isoToDatetimeLocalValue,
+  eventDateTimeToLocal,
+  splitDateTimeLocal,
 } from '@/shared/utils/eventDateTimeLocal';
 import type {
   EventConfigData,
@@ -53,12 +55,14 @@ export default function HostEventSettingsPanel({
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const cfg = normalizeConfig(event.config);
-  const locked = !!event.isFinished || !!event.winnerMovie;
 
   const initialTheme = parseTheme(cfg.theme);
   const [themeEmoji, setThemeEmoji] = useState(initialTheme.emoji);
   const [themeText, setThemeText] = useState(initialTheme.text);
   const [themeColor, setThemeColor] = useState<number | null>(cfg.themeColor ?? null);
+  const [eventDateLocal, setEventDateLocal] = useState(
+    eventDateTimeToLocal(event.date, event.time)
+  );
   const [endLocal, setEndLocal] = useState(isoToDatetimeLocalValue(cfg.endDate));
   const [maxProp, setMaxProp] = useState<string>(
     cfg.maxProposalsPerParticipant != null ? String(cfg.maxProposalsPerParticipant) : ''
@@ -89,6 +93,7 @@ export default function HostEventSettingsPanel({
     setThemeEmoji(parsed.emoji);
     setThemeText(parsed.text);
     setThemeColor(next.themeColor ?? null);
+    setEventDateLocal(eventDateTimeToLocal(event.date, event.time));
     setEndLocal(isoToDatetimeLocalValue(next.endDate));
     setMaxProp(
       next.maxProposalsPerParticipant != null ? String(next.maxProposalsPerParticipant) : ''
@@ -132,6 +137,16 @@ export default function HostEventSettingsPanel({
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     setFormError(null);
+
+    if (!eventDateLocal.trim()) {
+      setFormError('La date de la soirée est requise.');
+      return;
+    }
+    const eventDateTime = splitDateTimeLocal(eventDateLocal);
+    if (!eventDateTime) {
+      setFormError('Date et heure de la soirée invalides.');
+      return;
+    }
 
     const endPayload = datetimeLocalToEndDatePayload(endLocal);
     if (endLocal.trim() && !endPayload) {
@@ -178,6 +193,7 @@ export default function HostEventSettingsPanel({
       wheelMode,
       richSharePreview: cfg.richSharePreview ?? true,
       allowSeries,
+      ...(eventDateTime ? { date: eventDateTime.date, time: eventDateTime.time } : {}),
     });
   };
 
@@ -194,11 +210,6 @@ export default function HostEventSettingsPanel({
         <span className={styles.summaryLabel}>Paramètres de la soirée</span>
         <span className={styles.summaryChevron} aria-hidden />
       </summary>
-      {locked && (
-        <p className={styles.locked}>
-          Cette soirée n&apos;est plus modifiable (terminée ou roue déjà lancée).
-        </p>
-      )}
       {flashOk && (
         <p className={styles.successBanner} role="status" aria-live="polite">
           Paramètres enregistrés.
@@ -211,11 +222,25 @@ export default function HostEventSettingsPanel({
       )}
       <form className={`form ${styles.form}`} onSubmit={onSubmit}>
         <div className={styles.field}>
+          <label className="label" htmlFor="host-cfg-datetime">
+            Date et heure de la soirée
+          </label>
+          <input
+            id="host-cfg-datetime"
+            className="input"
+            type="datetime-local"
+            value={eventDateLocal}
+            onChange={(e) => setEventDateLocal(e.target.value)}
+            disabled={mutation.isPending}
+          />
+        </div>
+
+        <div className={styles.field}>
           <div className={styles.fieldLabelRow}>
             <label className="label" htmlFor="host-cfg-theme">
               Thème / ambiance
             </label>
-            {!locked && (themeEmoji || themeText.trim()) && (
+            {(themeEmoji || themeText.trim()) && (
               <button
                 type="button"
                 className={styles.clearThemeBtn}
@@ -239,7 +264,7 @@ export default function HostEventSettingsPanel({
             onEmojiChange={setThemeEmoji}
             onTextChange={setThemeText}
             onThemeColorChange={setThemeColor}
-            disabled={locked || mutation.isPending}
+            disabled={mutation.isPending}
           />
         </div>
 
@@ -253,7 +278,7 @@ export default function HostEventSettingsPanel({
             type="datetime-local"
             value={endLocal}
             onChange={(e) => setEndLocal(e.target.value)}
-            disabled={locked || mutation.isPending}
+            disabled={mutation.isPending}
           />
         </div>
 
@@ -269,7 +294,7 @@ export default function HostEventSettingsPanel({
               min={1}
               max={100}
               placeholder="Illimité"
-              disabled={locked || mutation.isPending}
+              disabled={mutation.isPending}
             />
           </div>
 
@@ -284,7 +309,7 @@ export default function HostEventSettingsPanel({
               min={1}
               max={MAX_EVENT_PARTICIPANTS}
               placeholder={t('events.settings.maxParticipantsPlaceholder')}
-              disabled={locked || mutation.isPending}
+              disabled={mutation.isPending}
             />
           </div>
         </div>
@@ -301,7 +326,7 @@ export default function HostEventSettingsPanel({
               const v = e.target.value;
               if (isWheelMode(v)) setWheelMode(v);
             }}
-            disabled={locked || mutation.isPending}
+            disabled={mutation.isPending}
           >
             <option value="strictRandom">Aléatoire strict (égalité)</option>
             <option value="weightedByVotes">Pondéré par les votes</option>
@@ -317,7 +342,7 @@ export default function HostEventSettingsPanel({
               aria-checked={allowSeries}
               checked={allowSeries}
               onChange={(e) => setAllowSeries(e.target.checked)}
-              disabled={locked || mutation.isPending}
+              disabled={mutation.isPending}
             />
             <span className={styles.toggleTrack}>
               <span className={styles.toggleThumb} />
@@ -325,7 +350,7 @@ export default function HostEventSettingsPanel({
           </label>
         </div>
 
-        <button type="submit" className="btn btn-primary" disabled={locked || mutation.isPending}>
+        <button type="submit" className="btn btn-primary" disabled={mutation.isPending}>
           {mutation.isPending ? 'Enregistrement…' : 'Enregistrer'}
         </button>
       </form>

@@ -172,6 +172,12 @@
   flex-shrink: 0;
 }
 
+.voteLine {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-meta);
+}
+
 .seenHint {
   margin: 0;
   font-size: 0.8125rem;
@@ -348,7 +354,14 @@
 .proposerAvatarWrap {
   display: flex;
   flex-shrink: 0;
-  cursor: default;
+}
+
+.proposerName {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+  align-self: center;
 }
 
 .proposerBubbleCol {

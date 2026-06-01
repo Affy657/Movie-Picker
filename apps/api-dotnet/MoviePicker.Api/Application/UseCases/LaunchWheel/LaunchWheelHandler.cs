@@ -125,7 +125,7 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
                 Title: "🎡 Film tiré au sort !",
                 Body: $"Ce soir : « {winnerTitle} » pour « {evt.Title} »",
                 Tag: $"wheel-{evt.Id}",
-                Url: $"/events/{evt.Slug}"
+                Url: $"/e/{evt.Slug}"
             );
 
             foreach (var sub in subs.Where(s => notifiableIds.Contains(s.UserId)))

@@ -23,11 +23,12 @@ export type EventConfigPatchPayload = {
   clearThemeColor?: boolean;
   endDate?: string | null;
   maxProposalsPerParticipant: number;
-
   maxParticipants: number;
   wheelMode: WheelMode;
   richSharePreview: boolean;
   allowSeries: boolean;
+  date?: string;
+  time?: string;
 };
 
 export interface MyEventSummary {

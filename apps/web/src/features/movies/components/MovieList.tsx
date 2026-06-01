@@ -123,20 +123,26 @@ function ProposerNoteSection({
   };
 
   const avatarNode = (
-    <span title={proposerPseudo} className={styles.proposerAvatarWrap}>
+    <span className={styles.proposerAvatarWrap}>
       <Avatar avatarId={proposerAvatarId} size="xs" />
     </span>
   );
 
   const showBubble = editing || pitchNote || (!isFinished && isMine);
   if (!showBubble) {
-    return <div className={styles.proposerRow}>{avatarNode}</div>;
+    return (
+      <div className={styles.proposerRow}>
+        {avatarNode}
+        <span className={styles.proposerName}>{proposerPseudo}</span>
+      </div>
+    );
   }
 
   return (
     <div className={styles.proposerRow}>
       {avatarNode}
       <div className={styles.proposerBubbleCol}>
+        <span className={styles.proposerName}>{proposerPseudo}</span>
         {editing ? (
           <>
             <textarea
@@ -241,7 +247,7 @@ const MovieCard = memo(function MovieCard({
 }: MovieCardProps) {
   const isMine = participantId && getParticipantId(m) === participantId;
   const proposerAvatarId = participantAvatars?.[getParticipantId(m)] ?? '';
-  const canRemove = isMine || isHost;
+  const canRemove = !isFinished && (isMine || isHost);
   const iMarkedSeen = !!(
     participantPseudo &&
     m.seenByPseudos &&
@@ -334,15 +340,12 @@ const MovieCard = memo(function MovieCard({
               {runtimeLabel}
             </span>
           ) : null}
-          {voteLabel ? (
-            <span
-              className={clsx(styles.metaItem, 'tmdb-vote')}
-              title={t('movies.list.tmdbVoteTitle')}
-            >
-              {voteLabel}
-            </span>
-          ) : null}
         </p>
+        {voteLabel ? (
+          <p className={clsx(styles.voteLine, 'tmdb-vote')} title={t('movies.list.tmdbVoteTitle')}>
+            {voteLabel}
+          </p>
+        ) : null}
         {providers.length > 0 ? (
           <WatchProviderChips
             providers={providers}

@@ -116,7 +116,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
                 Title: $"🎉 Nouvelle inscription",
                 Body: $"{joinerPseudo} a rejoint « {evt.Title} »",
                 Tag: $"join-{evt.Id}",
-                Url: $"/events/{evt.Slug}"
+                Url: $"/e/{evt.Slug}"
             );
 
             foreach (var sub in subscriptions)

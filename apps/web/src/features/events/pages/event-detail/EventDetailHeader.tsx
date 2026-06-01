@@ -10,22 +10,22 @@ export type EventDetailHeaderProps = {
   title: string;
   dateFormatted: string;
   eventTime: string;
+  eventDate: string;
   isFinished: boolean;
   eventTheme: string | null | undefined;
   eventThemeColor?: number | null;
   shareUrl: string;
-  shareFrontendUrl: string;
 };
 
 export default function EventDetailHeader({
   title,
   dateFormatted,
   eventTime,
+  eventDate,
   isFinished,
   eventTheme,
   eventThemeColor,
   shareUrl,
-  shareFrontendUrl,
 }: EventDetailHeaderProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -64,9 +64,9 @@ export default function EventDetailHeader({
           <div className={styles.share}>
             <ShareLink
               url={shareUrl}
-              displayUrl={shareFrontendUrl}
               title={title}
               eventTime={eventTime}
+              eventDate={eventDate}
               showQr
             />
           </div>

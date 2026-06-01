@@ -24,6 +24,7 @@ interface ShareLinkProps {
   displayUrl?: string;
   title?: string;
   eventTime?: string;
+  eventDate?: string;
 
   showQr?: boolean;
 
@@ -35,6 +36,7 @@ export default function ShareLink({
   displayUrl,
   title,
   eventTime,
+  eventDate,
   showQr = false,
   centeredActions = false,
 }: ShareLinkProps) {
@@ -70,9 +72,11 @@ export default function ShareLink({
     if (typeof navigator.share === 'function') {
       try {
         const shareText =
-          title && eventTime
-            ? t('events.share.shareText', { title, time: eventTime })
-            : t('events.share.shareTextFallback');
+          title && eventTime && eventDate
+            ? t('events.share.shareText', { title, time: eventTime, date: eventDate })
+            : title && eventTime
+              ? t('events.share.shareTextNoDate', { title, time: eventTime })
+              : t('events.share.shareTextFallback');
         await navigator.share({
           title: title ?? 'Movie Picker',
           url,

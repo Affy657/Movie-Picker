@@ -37,13 +37,7 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
         if (!EventHost.IsHost(evt, token, userId))
             throw new ForbiddenException("Réservé à l'hôte de la soirée");
 
-        if (evt.IsFinished(DateTimeOffset.UtcNow))
-            throw new ConflictException("La soirée est terminée : la configuration ne peut plus être modifiée.");
-
-        if (!string.IsNullOrEmpty(evt.WinnerMovieId))
-            throw new ConflictException("La roue a déjà été lancée : la configuration ne peut plus être modifiée.");
-
-        var hasChange =
+        var hasConfigChange =
             request.Theme is not null
             || request.ThemeColor.HasValue
             || request.ClearThemeColor
@@ -53,6 +47,21 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
             || request.WheelMode.HasValue
             || request.RichSharePreview.HasValue
             || request.AllowSeries.HasValue;
+
+        var hasDateTimeChange = request.Date is not null || request.Time is not null;
+
+        if (hasConfigChange)
+        {
+            if (evt.IsFinished(DateTimeOffset.UtcNow))
+                throw new ConflictException("La soirée est terminée : la configuration ne peut plus être modifiée.");
+            if (!string.IsNullOrEmpty(evt.WinnerMovieId))
+                throw new ConflictException("La roue a déjà été lancée : la configuration ne peut plus être modifiée.");
+        }
+
+        if (hasDateTimeChange && (evt.ClosedAt.HasValue || !string.IsNullOrEmpty(evt.WinnerMovieId)))
+            throw new ConflictException("La soirée est définitivement clôturée : la date ne peut plus être modifiée.");
+
+        var hasChange = hasConfigChange || hasDateTimeChange;
 
         if (!hasChange)
             return EventConfigResponse.FromEvent(evt);
@@ -136,8 +145,26 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
             AllowSeries = allowSeries
         };
 
+        var date = evt.Date;
+        if (request.Date is not null)
+        {
+            if (!System.Text.RegularExpressions.Regex.IsMatch(request.Date, @"^\d{4}-\d{2}-\d{2}$")
+                || !DateOnly.TryParse(request.Date, out _))
+                throw new BadRequestException("date doit être au format YYYY-MM-DD.");
+            date = request.Date;
+        }
+
+        var time = evt.Time;
+        if (request.Time is not null)
+        {
+            if (!System.Text.RegularExpressions.Regex.IsMatch(request.Time, @"^\d{2}:\d{2}$")
+                || !TimeOnly.TryParse(request.Time, out _))
+                throw new BadRequestException("time doit être au format HH:mm.");
+            time = request.Time;
+        }
+
         var now = DateTimeOffset.UtcNow;
-        var updated = evt with { Config = nextConfig, UpdatedAt = now };
+        var updated = evt with { Date = date, Time = time, Config = nextConfig, UpdatedAt = now };
 
         var saved = await _events.UpdateAsync(updated, ct);
         return EventConfigResponse.FromEvent(saved);

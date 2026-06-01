@@ -95,7 +95,7 @@ public sealed class EventReminderService : BackgroundService
                 Title: "🎬 Soirée dans 1 heure",
                 Body: $"La soirée \"{evt.Title}\" commence bientôt !",
                 Tag: $"reminder-{evt.Id}",
-                Url: $"/events/{evt.Slug}"
+                Url: $"/e/{evt.Slug}"
             );
 
             foreach (var sub in pushSubs.Where(s => notifiableUserIds.Contains(s.UserId)))
