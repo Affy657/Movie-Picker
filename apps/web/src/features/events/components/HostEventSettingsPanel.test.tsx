@@ -163,7 +163,7 @@ describe('HostEventSettingsPanel', () => {
     expect(patchCalled).toBe(false);
   });
 
-  it('désactive le formulaire si la roue a été lancée', async () => {
+  it('reste fonctionnel quand winnerMovie est défini (masquage géré par EventDetail)', async () => {
     const user = userEvent.setup();
     renderWithRouter(
       <HostEventSettingsPanel
@@ -189,8 +189,8 @@ describe('HostEventSettingsPanel', () => {
     );
 
     await user.click(screen.getByText('Paramètres de la soirée'));
-    expect(screen.getByText(/n'est plus modifiable/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^enregistrer$/i })).toBeDisabled();
+    expect(screen.queryByText(/n'est plus modifiable/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^enregistrer$/i })).not.toBeDisabled();
   });
 
   describe('zone de danger (suppression)', () => {

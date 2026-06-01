@@ -86,8 +86,8 @@ describe('MovieList', () => {
     );
     expect(screen.getByText('Inception')).toBeInTheDocument();
     expect(screen.getByText('Matrix')).toBeInTheDocument();
-    expect(screen.getByTitle('Alice')).toBeInTheDocument();
-    expect(screen.getByTitle('Bob')).toBeInTheDocument();
+    expect(screen.getByText('Alice')).toBeInTheDocument();
+    expect(screen.getByText('Bob')).toBeInTheDocument();
   });
 
   it('affiche l’indication « déjà vu par d’autres » quand seenByPseudos contient d’autres participants', () => {
