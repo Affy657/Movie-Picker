@@ -434,6 +434,11 @@ export const en: Locale = {
     prefMovieAdded: 'A movie is proposed for your event',
     prefMoviePicked: 'Movie draw result',
     prefEventDeleted: 'An event is cancelled',
+    prefNewFollower: 'Someone follows you',
+    inboxAriaLabel: 'Notifications',
+    inboxTitle: 'Notifications',
+    inboxEmpty: 'No notifications yet.',
+    newFollowerText: 'started following you.',
   },
 
   footer: {
@@ -456,6 +461,18 @@ export const en: Locale = {
     memberSince: 'Member since {{date}}',
     copyLink: 'Copy profile link',
     linkCopied: 'Link copied!',
+    follow: {
+      follow: 'Follow',
+      unfollow: 'Unfollow',
+      following: 'following',
+      followers: 'followers',
+      followingCount: '{{count}} following',
+      followersCount: '{{count}} followers',
+      listTitle: 'Follow list',
+      empty: 'Nobody here yet.',
+      followAriaLabel: 'Follow @{{handle}}',
+      unfollowAriaLabel: 'Unfollow @{{handle}}',
+    },
     settings: {
       title: 'Public profile',
       description:

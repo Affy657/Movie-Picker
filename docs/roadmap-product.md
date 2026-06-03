@@ -79,6 +79,7 @@ Découpage par version côté **métier / utilisateur**.
 - ⬜ **Profil public léger** : page `/u/:handle` (handle unique) — avatar, pseudo, bio courte, « membre depuis » ; **public par défaut** avec opt-out. Stats publiques et badges ajoutés ensuite. Plan détaillé → [feature-profil-public.md](feature-profil-public.md).
 - ⬜ **Notifications in-app** : badge + liste « Invitations reçues » dans Mes soirées.
 - ⬜ **Invitations in-app** : invitation directe à un autre utilisateur en complément du lien de partage.
+- ✅ **Follow léger entre utilisateurs** : retrouver facilement ses potes sur l'app pour les réinviter ; brique de base des invitations in-app.
 
 ---
 
@@ -100,3 +101,5 @@ Découpage par version côté **métier / utilisateur**.
 - **Avertissements de contenu** : badges violence / horreur / 18+ sur les fiches films ; option hôte « masquer les films 18+ » pour soirées familiales.
 - **Cercles d'amis** : groupes persistants d'utilisateurs réutilisables d'une soirée à l'autre ; invitation en un clic de tout le cercle.
 - **Historique de recherche dans la barre de film** : dans la page soirée, la barre de recherche de films affiche les dernières recherches effectuées par l'utilisateur ; sélection rapide d'une recherche passée en un clic ; effacement individuel ou global de l'historique ; persistance locale (localStorage) par utilisateur.
+- **Note d'un film vu** : noter sur 5 un film qu'on vient de voir directement dans Movie Picker ; bouton pour aller aussi le noter sur Letterboxd / IMDb (redirection vers la fiche film).
+- **Partage de soirée (story)** : carte recap partageable (film gagnant, participants, note de chacun) à poster sur les réseaux.

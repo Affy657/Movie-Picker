@@ -95,6 +95,8 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<ISeenMarkRepository, InMemorySeenMarkRepository>();
             services.AddSingleton<IAuthSessionInvalidator, InMemoryAuthSessionInvalidator>();
             services.AddSingleton<IPushSubscriptionRepository, InMemoryPushSubscriptionRepository>();
+            services.AddSingleton<IFollowRepository, InMemoryFollowRepository>();
+            services.AddSingleton<IUserNotificationRepository, InMemoryUserNotificationRepository>();
         }
         else
         {
@@ -114,6 +116,8 @@ public static class ServiceCollectionExtensions
             services.AddScoped<ISeenMarkRepository, MongoSeenMarkRepository>();
             services.AddScoped<IAuthSessionInvalidator, MongoAuthSessionInvalidator>();
             services.AddScoped<IPushSubscriptionRepository, MongoPushSubscriptionRepository>();
+            services.AddScoped<IFollowRepository, MongoFollowRepository>();
+            services.AddScoped<IUserNotificationRepository, MongoUserNotificationRepository>();
             services.AddHostedService<MongoIndexInitializer>();
             services.AddHostedService<UserHandleBackfillService>();
         }

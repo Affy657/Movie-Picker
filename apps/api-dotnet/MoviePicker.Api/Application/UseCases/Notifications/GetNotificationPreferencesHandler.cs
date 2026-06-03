@@ -23,7 +23,8 @@ public sealed class GetNotificationPreferencesHandler : IGetNotificationPreferen
             NotifyEventReminder = user.NotifyEventReminder,
             NotifyOnMovieAdded = user.NotifyOnMovieAdded,
             NotifyOnMoviePicked = user.NotifyOnMoviePicked,
-            NotifyOnEventDeleted = user.NotifyOnEventDeleted
+            NotifyOnEventDeleted = user.NotifyOnEventDeleted,
+            NotifyOnNewFollower = user.NotifyOnNewFollower
         };
     }
 }

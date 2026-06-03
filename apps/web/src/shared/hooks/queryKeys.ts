@@ -5,6 +5,11 @@ export const queryKeys = {
   profile: {
     public: (handle: string | undefined) => ['profile', 'public', handle ?? '$pending'] as const,
     handleAvailability: (handle: string) => ['profile', 'handle-available', handle] as const,
+    following: (handle: string | undefined) => ['profile', 'following', handle ?? '$pending'] as const,
+    followers: (handle: string | undefined) => ['profile', 'followers', handle ?? '$pending'] as const,
+  },
+  notifications: {
+    inbox: ['notifications', 'inbox'] as const,
   },
   myEvents: {
     list: ['events', 'mine'] as const,

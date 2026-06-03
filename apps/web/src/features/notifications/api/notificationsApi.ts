@@ -6,6 +6,30 @@ export interface NotificationPreferences {
   notifyOnMovieAdded: boolean;
   notifyOnMoviePicked: boolean;
   notifyOnEventDeleted: boolean;
+  notifyOnNewFollower: boolean;
+}
+
+export interface UserNotificationItem {
+  id: string;
+  type: string;
+  actorHandle: string | null;
+  actorDisplayName: string | null;
+  actorAvatarId: string | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface NotificationInbox {
+  items: UserNotificationItem[];
+  unreadCount: number;
+}
+
+export async function fetchNotificationInbox(): Promise<NotificationInbox> {
+  return fetchApi<NotificationInbox>('/notifications/inbox');
+}
+
+export async function markAllNotificationsRead(): Promise<void> {
+  await fetchApi('/notifications/inbox/read-all', { method: 'POST' });
 }
 
 export async function fetchVapidPublicKey(): Promise<string> {

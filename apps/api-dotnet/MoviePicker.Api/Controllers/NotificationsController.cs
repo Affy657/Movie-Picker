@@ -87,4 +87,36 @@ public sealed class NotificationsController : ControllerBase
         var result = await handler.HandleAsync(userId, request, ct);
         return Ok(result);
     }
+
+    [HttpGet("inbox")]
+    [Authorize]
+    [ProducesResponseType(typeof(NotificationInboxResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetInbox(
+        [FromServices] IGetInboxHandler handler,
+        CancellationToken ct)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var result = await handler.HandleAsync(userId, ct);
+        return Ok(result);
+    }
+
+    [HttpPost("inbox/read-all")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> MarkAllRead(
+        [FromServices] IMarkAllReadHandler handler,
+        CancellationToken ct)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        await handler.HandleAsync(userId, ct);
+        return NoContent();
+    }
 }

@@ -28,6 +28,8 @@ public sealed class MongoIndexInitializer : IHostedService
             await EnsureSeenMarkIndexesAsync(cancellationToken);
             await EnsurePasswordResetTokenIndexesAsync(cancellationToken);
             await EnsurePushSubscriptionIndexesAsync(cancellationToken);
+            await EnsureFollowIndexesAsync(cancellationToken);
+            await EnsureUserNotificationIndexesAsync(cancellationToken);
         }
         catch (Exception ex)
         {
@@ -184,6 +186,45 @@ public sealed class MongoIndexInitializer : IHostedService
             Builders<PushSubscriptionDocument>.IndexKeys.Ascending(x => x.UserId),
             new CreateIndexOptions { Name = "push_subscriptions_userId" });
         await col.Indexes.CreateManyAsync(new[] { unique, byUser }, ct);
+    }
+
+    private async Task EnsureFollowIndexesAsync(CancellationToken ct)
+    {
+        var col = _database.GetCollection<FollowDocument>("follows");
+        var unique = new CreateIndexModel<FollowDocument>(
+            Builders<FollowDocument>.IndexKeys
+                .Ascending(x => x.FollowerId)
+                .Ascending(x => x.FolloweeId),
+            new CreateIndexOptions { Name = "follows_followerId_followeeId_unique", Unique = true });
+        // Index pour GetFollowingIdsAsync : query par FollowerId + tri par CreatedAt
+        var byFollowerDate = new CreateIndexModel<FollowDocument>(
+            Builders<FollowDocument>.IndexKeys
+                .Ascending(x => x.FollowerId)
+                .Descending(x => x.CreatedAt),
+            new CreateIndexOptions { Name = "follows_followerId_createdAt" });
+        // Index pour GetFollowerIdsAsync : query par FolloweeId + tri par CreatedAt
+        var byFolloweeDate = new CreateIndexModel<FollowDocument>(
+            Builders<FollowDocument>.IndexKeys
+                .Ascending(x => x.FolloweeId)
+                .Descending(x => x.CreatedAt),
+            new CreateIndexOptions { Name = "follows_followeeId_createdAt" });
+        await col.Indexes.CreateManyAsync(new[] { unique, byFollowerDate, byFolloweeDate }, ct);
+    }
+
+    private async Task EnsureUserNotificationIndexesAsync(CancellationToken ct)
+    {
+        var col = _database.GetCollection<UserNotificationDocument>("user_notifications");
+        var byUser = new CreateIndexModel<UserNotificationDocument>(
+            Builders<UserNotificationDocument>.IndexKeys
+                .Ascending(x => x.UserId)
+                .Descending(x => x.CreatedAt),
+            new CreateIndexOptions { Name = "user_notifications_userId_createdAt" });
+        var unread = new CreateIndexModel<UserNotificationDocument>(
+            Builders<UserNotificationDocument>.IndexKeys
+                .Ascending(x => x.UserId)
+                .Ascending(x => x.IsRead),
+            new CreateIndexOptions { Name = "user_notifications_userId_isRead" });
+        await col.Indexes.CreateManyAsync(new[] { byUser, unread }, ct);
     }
 
     private static async Task DropIndexIfExistsAsync<T>(IMongoCollection<T> col, string name, CancellationToken ct)

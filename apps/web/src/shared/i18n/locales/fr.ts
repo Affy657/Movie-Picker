@@ -1,4 +1,4 @@
-export const fr = {
+﻿export const fr = {
   common: {
     appName: 'Movie Picker',
     loading: 'Chargement\u2026',
@@ -441,6 +441,11 @@ export const fr = {
     prefMovieAdded: 'Un film est proposé à votre soirée',
     prefMoviePicked: 'Résultat du tirage au sort',
     prefEventDeleted: 'Une soirée est annulée',
+    prefNewFollower: "Quelqu'un vous suit",
+    inboxAriaLabel: 'Notifications',
+    inboxTitle: 'Notifications',
+    inboxEmpty: 'Aucune notification pour le moment.',
+    newFollowerText: 'a commencé à vous suivre.',
   },
 
   footer: {
@@ -463,6 +468,18 @@ export const fr = {
     memberSince: 'Membre depuis {{date}}',
     copyLink: 'Copier le lien du profil',
     linkCopied: 'Lien copié !',
+    follow: {
+      follow: 'Suivre',
+      unfollow: 'Ne plus suivre',
+      following: 'abonnements',
+      followers: 'abonnés',
+      followingCount: '{{count}} abonnements',
+      followersCount: '{{count}} abonnés',
+      listTitle: 'Liste des abonnements',
+      empty: 'Aucun utilisateur ici.',
+      followAriaLabel: 'Suivre @{{handle}}',
+      unfollowAriaLabel: 'Ne plus suivre @{{handle}}',
+    },
     settings: {
       title: 'Profil public',
       description:

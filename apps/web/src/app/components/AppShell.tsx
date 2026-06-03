@@ -6,6 +6,7 @@ import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { ROUTES } from '@/app/routes';
 import Avatar from '@/shared/components/Avatar';
+import InboxBell from '@/features/notifications/components/InboxBell';
 import Footer from './Footer';
 import styles from './AppShell.module.css';
 
@@ -89,6 +90,7 @@ export default function AppShell() {
               <DesktopNavItem key={item.to} {...item} />
             ))}
             <div className={styles.navActions}>
+              <InboxBell />
               {user.handle ? (
                 <Link
                   to={ROUTES.profile(user.handle)}

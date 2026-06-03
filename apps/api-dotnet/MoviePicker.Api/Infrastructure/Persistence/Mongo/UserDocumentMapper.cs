@@ -22,6 +22,7 @@ public static class UserDocumentMapper
             NotifyOnMovieAdded = doc.NotifyOnMovieAdded ?? true,
             NotifyOnMoviePicked = doc.NotifyOnMoviePicked ?? true,
             NotifyOnEventDeleted = doc.NotifyOnEventDeleted ?? true,
+            NotifyOnNewFollower = doc.NotifyOnNewFollower ?? true,
             CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero),
             UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)
         };
@@ -44,6 +45,7 @@ public static class UserDocumentMapper
             NotifyOnMovieAdded = user.NotifyOnMovieAdded,
             NotifyOnMoviePicked = user.NotifyOnMoviePicked,
             NotifyOnEventDeleted = user.NotifyOnEventDeleted,
+            NotifyOnNewFollower = user.NotifyOnNewFollower,
             CreatedAt = user.CreatedAt.UtcDateTime,
             UpdatedAt = user.UpdatedAt.UtcDateTime
         };

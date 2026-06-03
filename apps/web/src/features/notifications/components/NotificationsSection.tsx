@@ -175,6 +175,20 @@ export default function NotificationsSection() {
                 <span className={styles.toggleThumb} />
               </button>
             </div>
+
+            <div className={styles.prefRow}>
+              <span className={styles.prefLabel}>{t('notifications.prefNewFollower')}</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={prefs.notifyOnNewFollower}
+                className={styles.toggle}
+                disabled={savingPref === 'notifyOnNewFollower'}
+                onClick={() => void handleTogglePref('notifyOnNewFollower')}
+              >
+                <span className={styles.toggleThumb} />
+              </button>
+            </div>
           </>
         )}
       </div>

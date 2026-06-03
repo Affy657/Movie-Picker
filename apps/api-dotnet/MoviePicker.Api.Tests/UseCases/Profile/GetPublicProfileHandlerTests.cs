@@ -23,12 +23,23 @@ public sealed class GetPublicProfileHandlerTests
         UpdatedAt = DateTimeOffset.UtcNow
     };
 
+    private static (Mock<IUserRepository>, Mock<IFollowRepository>, GetPublicProfileHandler) Build()
+    {
+        var users = new Mock<IUserRepository>();
+        var follows = new Mock<IFollowRepository>();
+        follows.Setup(x => x.GetCountsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((0, 0));
+        follows.Setup(x => x.IsFollowingAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        var handler = new GetPublicProfileHandler(users.Object, follows.Object);
+        return (users, follows, handler);
+    }
+
     [Fact]
     public async Task HandleAsync_PublicProfile_ReturnsDataWithoutEmail()
     {
-        var users = new Mock<IUserRepository>();
+        var (users, _, handler) = Build();
         users.Setup(x => x.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(User(true));
-        var handler = new GetPublicProfileHandler(users.Object);
 
         var res = await handler.HandleAsync("Alice");
 
@@ -42,9 +53,8 @@ public sealed class GetPublicProfileHandlerTests
     [Fact]
     public async Task HandleAsync_PrivateProfile_ThrowsNotFound()
     {
-        var users = new Mock<IUserRepository>();
+        var (users, _, handler) = Build();
         users.Setup(x => x.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(User(false));
-        var handler = new GetPublicProfileHandler(users.Object);
 
         await Assert.ThrowsAsync<NotFoundException>(() => handler.HandleAsync("alice"));
     }
@@ -52,9 +62,8 @@ public sealed class GetPublicProfileHandlerTests
     [Fact]
     public async Task HandleAsync_UnknownHandle_ThrowsNotFound()
     {
-        var users = new Mock<IUserRepository>();
+        var (users, _, handler) = Build();
         users.Setup(x => x.GetByHandleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
-        var handler = new GetPublicProfileHandler(users.Object);
 
         await Assert.ThrowsAsync<NotFoundException>(() => handler.HandleAsync("ghost"));
     }

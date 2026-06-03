@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { AlertCircle, Link2 } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { AlertCircle, Link2, UserPlus, UserCheck } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import Avatar from '@/shared/components/Avatar';
 import { ROUTES } from '@/app/routes';
@@ -9,8 +9,13 @@ import { ApiError } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { APP_DOCUMENT_TITLE, pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { useLocale, useTranslation } from '@/shared/i18n';
-import { fetchPublicProfile } from '@/features/profile/api/profileApi';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { fetchPublicProfile, followUser, unfollowUser } from '@/features/profile/api/profileApi';
 import styles from './ProfilePage.module.css';
+
+const FollowListModal = lazy(
+  () => import('@/features/profile/components/FollowListModal')
+);
 
 const COPY_FEEDBACK_MS = 2000;
 
@@ -20,11 +25,16 @@ function formatMemberSince(iso: string, locale: string): string {
   return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(date);
 }
 
+type FollowTab = 'following' | 'followers';
+
 export default function ProfilePage() {
   const { handle } = useParams<{ handle: string }>();
   const { t } = useTranslation();
   const { locale } = useLocale();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
+  const [followModal, setFollowModal] = useState<FollowTab | null>(null);
 
   const profileQuery = useQuery({
     queryKey: queryKeys.profile.public(handle),
@@ -34,6 +44,7 @@ export default function ProfilePage() {
   });
 
   const profile = profileQuery.data;
+  const isOwnProfile = !!user && !!profile && user.handle === profile.handle;
 
   useDocumentTitle(profile ? pageTitle(`@${profile.handle}`) : APP_DOCUMENT_TITLE);
 
@@ -47,6 +58,20 @@ export default function ProfilePage() {
     if (typeof navigator === 'undefined' || !navigator.clipboard) return;
     void navigator.clipboard.writeText(window.location.href).then(() => setCopied(true));
   }, []);
+
+  const followMutation = useMutation({
+    mutationFn: () => followUser(profile!.handle),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.profile.public(handle) });
+    },
+  });
+
+  const unfollowMutation = useMutation({
+    mutationFn: () => unfollowUser(profile!.handle),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.profile.public(handle) });
+    },
+  });
 
   if (profileQuery.isPending && handle) {
     return (
@@ -92,6 +117,7 @@ export default function ProfilePage() {
   }
 
   const memberSince = formatMemberSince(profile.memberSince, locale);
+  const followPending = followMutation.isPending || unfollowMutation.isPending;
 
   return (
     <PageLayout className={styles.layout}>
@@ -108,11 +134,64 @@ export default function ProfilePage() {
           <p className={styles.memberSince}>{t('profile.memberSince', { date: memberSince })}</p>
         )}
 
-        <button type="button" className="btn btn-sm" onClick={handleCopyLink}>
-          <Link2 size={14} aria-hidden />
-          {copied ? t('profile.linkCopied') : t('profile.copyLink')}
-        </button>
+        <div className={styles.followStats}>
+          <button
+            type="button"
+            className={styles.statBtn}
+            onClick={() => setFollowModal('following')}
+          >
+            <span className={styles.statCount}>{profile.followingCount}</span>
+            <span className={styles.statLabel}>{t('profile.follow.following')}</span>
+          </button>
+          <button
+            type="button"
+            className={styles.statBtn}
+            onClick={() => setFollowModal('followers')}
+          >
+            <span className={styles.statCount}>{profile.followersCount}</span>
+            <span className={styles.statLabel}>{t('profile.follow.followers')}</span>
+          </button>
+        </div>
+
+        <div className={styles.actions}>
+          {user && !isOwnProfile && (
+            <button
+              type="button"
+              className={profile.isFollowedByMe ? 'btn btn-sm' : 'btn btn-sm btn-primary'}
+              disabled={followPending}
+              onClick={() =>
+                profile.isFollowedByMe ? unfollowMutation.mutate() : followMutation.mutate()
+              }
+            >
+              {profile.isFollowedByMe ? (
+                <UserCheck size={14} aria-hidden />
+              ) : (
+                <UserPlus size={14} aria-hidden />
+              )}
+              {profile.isFollowedByMe
+                ? t('profile.follow.unfollow')
+                : t('profile.follow.follow')}
+            </button>
+          )}
+
+          <button type="button" className="btn btn-sm" onClick={handleCopyLink}>
+            <Link2 size={14} aria-hidden />
+            {copied ? t('profile.linkCopied') : t('profile.copyLink')}
+          </button>
+        </div>
       </section>
+
+      {followModal !== null && (
+        <Suspense fallback={null}>
+          <FollowListModal
+            handle={profile.handle}
+            initialTab={followModal}
+            followingCount={profile.followingCount}
+            followersCount={profile.followersCount}
+            onClose={() => setFollowModal(null)}
+          />
+        </Suspense>
+      )}
     </PageLayout>
   );
 }

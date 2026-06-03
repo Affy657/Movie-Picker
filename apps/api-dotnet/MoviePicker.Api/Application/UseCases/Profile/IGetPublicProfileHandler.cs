@@ -4,5 +4,5 @@ namespace MoviePicker.Api.Application.UseCases.Profile;
 
 public interface IGetPublicProfileHandler
 {
-    Task<PublicProfileResponse> HandleAsync(string handle, CancellationToken ct = default);
+    Task<PublicProfileResponse> HandleAsync(string handle, string? currentUserId = null, CancellationToken ct = default);
 }

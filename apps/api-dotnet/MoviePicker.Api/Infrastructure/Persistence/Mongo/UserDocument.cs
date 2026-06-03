@@ -61,6 +61,10 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public bool? NotifyOnEventDeleted { get; set; }
 
+    [BsonElement("notifyOnNewFollower")]
+    [BsonIgnoreIfNull]
+    public bool? NotifyOnNewFollower { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 
