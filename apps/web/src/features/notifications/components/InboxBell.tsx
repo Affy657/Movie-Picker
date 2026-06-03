@@ -75,10 +75,7 @@ function renderNotifContent(
     );
   }
 
-  if (
-    (item.type === 'eventreminder1h' || item.type === 'eventreminder24h') &&
-    item.eventSlug
-  ) {
+  if ((item.type === 'eventreminder1h' || item.type === 'eventreminder24h') && item.eventSlug) {
     const text =
       item.type === 'eventreminder1h'
         ? t('notifications.eventReminder1hText')
