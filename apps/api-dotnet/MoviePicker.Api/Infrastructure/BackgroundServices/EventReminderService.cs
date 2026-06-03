@@ -2,14 +2,19 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Infrastructure.BackgroundServices;
 
 public sealed class EventReminderService : BackgroundService
 {
     private static readonly TimeSpan Interval = TimeSpan.FromMinutes(30);
-    private static readonly TimeSpan ReminderWindowMin = TimeSpan.FromMinutes(50);
-    private static readonly TimeSpan ReminderWindowMax = TimeSpan.FromMinutes(80);
+
+    private static readonly TimeSpan Window1hMin = TimeSpan.FromMinutes(50);
+    private static readonly TimeSpan Window1hMax = TimeSpan.FromMinutes(80);
+
+    private static readonly TimeSpan Window24hMin = TimeSpan.FromHours(23) + TimeSpan.FromMinutes(50);
+    private static readonly TimeSpan Window24hMax = TimeSpan.FromHours(24) + TimeSpan.FromMinutes(20);
 
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly TimeProvider _clock;
@@ -47,13 +52,42 @@ public sealed class EventReminderService : BackgroundService
         var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
         var subscriptions = scope.ServiceProvider.GetRequiredService<IPushSubscriptionRepository>();
         var sender = scope.ServiceProvider.GetRequiredService<IPushNotificationSender>();
+        var notifications = scope.ServiceProvider.GetRequiredService<IUserNotificationRepository>();
 
         var now = _clock.GetUtcNow();
-        var windowFrom = now + ReminderWindowMin;
-        var windowTo = now + ReminderWindowMax;
-
         var upcomingEvents = await events.ListOpenEventsAsync(ct);
-        var eventsInWindow = upcomingEvents.Where(e =>
+
+        await ProcessWindowAsync(
+            upcomingEvents, now, Window1hMin, Window1hMax,
+            UserNotificationType.EventReminder1h,
+            "🎬 Soirée dans 1 heure",
+            participants, users, subscriptions, sender, notifications, ct);
+
+        await ProcessWindowAsync(
+            upcomingEvents, now, Window24hMin, Window24hMax,
+            UserNotificationType.EventReminder24h,
+            "🎬 Soirée demain",
+            participants, users, subscriptions, sender, notifications, ct);
+    }
+
+    private async Task ProcessWindowAsync(
+        IReadOnlyList<Event> allOpenEvents,
+        DateTimeOffset now,
+        TimeSpan windowMin,
+        TimeSpan windowMax,
+        UserNotificationType notifType,
+        string pushTitle,
+        IParticipantRepository participantRepo,
+        IUserRepository userRepo,
+        IPushSubscriptionRepository subscriptionRepo,
+        IPushNotificationSender sender,
+        IUserNotificationRepository notificationRepo,
+        CancellationToken ct)
+    {
+        var windowFrom = now + windowMin;
+        var windowTo = now + windowMax;
+
+        var eventsInWindow = allOpenEvents.Where(e =>
         {
             if (!DateTimeOffset.TryParse(
                     $"{e.Date}T{e.Time}:00Z",
@@ -67,11 +101,13 @@ public sealed class EventReminderService : BackgroundService
         if (eventsInWindow.Count == 0)
             return;
 
-        _logger.LogInformation("Envoi de rappels pour {Count} soirée(s)", eventsInWindow.Count);
+        _logger.LogInformation(
+            "Rappels {Type} : {Count} soirée(s) dans la fenêtre [{Min}–{Max}]",
+            notifType, eventsInWindow.Count, windowMin, windowMax);
 
         foreach (var evt in eventsInWindow)
         {
-            var eventParticipants = await participants.ListByEventIdAsync(evt.Id, ct);
+            var eventParticipants = await participantRepo.ListByEventIdAsync(evt.Id, ct);
             var userIds = eventParticipants
                 .Where(p => !string.IsNullOrEmpty(p.UserId))
                 .Select(p => p.UserId!)
@@ -81,25 +117,46 @@ public sealed class EventReminderService : BackgroundService
             if (userIds.Count == 0)
                 continue;
 
-            var pushSubs = await subscriptions.ListByUserIdsAsync(userIds, ct);
-            if (pushSubs.Count == 0)
+            var usersWithPref = await userRepo.ListByIdsAsync(userIds, ct);
+            var notifiableUsers = usersWithPref.Where(u => u.NotifyEventReminder).ToList();
+            if (notifiableUsers.Count == 0)
                 continue;
 
-            var usersWithPref = await users.ListByIdsAsync(userIds, ct);
-            var notifiableUserIds = usersWithPref
-                .Where(u => u.NotifyEventReminder)
-                .Select(u => u.Id)
-                .ToHashSet();
+            var pushBody = $"La soirée \"{evt.Title}\" commence bientôt !";
+            var pushSubs = await subscriptionRepo.ListByUserIdsAsync(
+                notifiableUsers.Select(u => u.Id).ToHashSet(), ct);
 
-            var message = new PushMessage(
-                Title: "🎬 Soirée dans 1 heure",
-                Body: $"La soirée \"{evt.Title}\" commence bientôt !",
-                Tag: $"reminder-{evt.Id}",
-                Url: $"/e/{evt.Slug}"
-            );
+            if (pushSubs.Count > 0)
+            {
+                var message = new PushMessage(
+                    Title: pushTitle,
+                    Body: pushBody,
+                    Tag: $"reminder-{notifType}-{evt.Id}",
+                    Url: $"/e/{evt.Slug}"
+                );
 
-            foreach (var sub in pushSubs.Where(s => notifiableUserIds.Contains(s.UserId)))
-                await sender.SendAsync(sub, message, ct);
+                foreach (var sub in pushSubs)
+                    await sender.SendAsync(sub, message, ct);
+            }
+
+            var notifNow = now;
+            foreach (var user in notifiableUsers)
+            {
+                var alreadySent = await notificationRepo.ExistsAsync(user.Id, notifType, evt.Id, ct);
+                if (alreadySent)
+                    continue;
+
+                await notificationRepo.AddAsync(new UserNotification
+                {
+                    UserId = user.Id,
+                    Type = notifType,
+                    EventId = evt.Id,
+                    EventSlug = evt.Slug,
+                    EventTitle = evt.Title,
+                    IsRead = false,
+                    CreatedAt = notifNow
+                }, ct);
+            }
         }
     }
 }

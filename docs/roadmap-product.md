@@ -77,7 +77,7 @@ Découpage par version côté **métier / utilisateur**.
 - ⬜ **Badges / achievements** : récompenses visuelles automatiques selon l'usage (ex. « 10 soirées créées ») ; affichés sur le profil.
 - ✅ **Mini-commentaires sur une proposition** : note de pitch (≤ 140 caractères) posée par le proposant sur son film ; visible par tous ; bulle de texte avec avatar du proposant ; éditable au clic par le proposant, supprimable par le proposant (body vide) ou l'hôte (sans participantId requis) ; lecture seule après le lancement de la roue ; rate limiting 60 req/min.
 - ⬜ **Profil public léger** : page `/u/:handle` (handle unique) — avatar, pseudo, bio courte, « membre depuis » ; **public par défaut** avec opt-out. Stats publiques et badges ajoutés ensuite. Plan détaillé → [feature-profil-public.md](feature-profil-public.md).
-- ⬜ **Notifications in-app** : badge + liste « Invitations reçues » dans Mes soirées.
+- ✅ **Notifications in-app** : badge + liste « Invitations reçues » dans Mes soirées.
 - ⬜ **Invitations in-app** : invitation directe à un autre utilisateur en complément du lien de partage.
 - ✅ **Follow léger entre utilisateurs** : retrouver facilement ses potes sur l'app pour les réinviter ; brique de base des invitations in-app.
 

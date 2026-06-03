@@ -16,6 +16,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
     private readonly IUserRepository _userRepository;
     private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly IPushNotificationSender _pushSender;
+    private readonly IUserNotificationRepository _notifications;
     private readonly ILogger<AddMovieHandler> _logger;
 
     public AddMovieHandler(
@@ -26,6 +27,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         IUserRepository userRepository,
         IPushSubscriptionRepository pushSubscriptions,
         IPushNotificationSender pushSender,
+        IUserNotificationRepository notifications,
         ILogger<AddMovieHandler> logger)
     {
         _eventRepository = eventRepository;
@@ -35,6 +37,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         _userRepository = userRepository;
         _pushSubscriptions = pushSubscriptions;
         _pushSender = pushSender;
+        _notifications = notifications;
         _logger = logger;
     }
 
@@ -136,19 +139,42 @@ public sealed class AddMovieHandler : IAddMovieHandler
             if (notifiableIds.Count == 0)
                 return;
 
+            User? proposer = null;
+            if (!string.IsNullOrEmpty(proposerUserId))
+                proposer = await _userRepository.GetByIdAsync(proposerUserId, ct);
+
             var subs = await _pushSubscriptions.ListByUserIdsAsync(notifiableIds, ct);
-            if (subs.Count == 0)
-                return;
+            if (subs.Count > 0)
+            {
+                var message = new PushMessage(
+                    Title: "🎬 Nouveau film proposé",
+                    Body: $"« {movieTitle} » a été ajouté à « {evt.Title} »",
+                    Tag: $"movie-add-{evt.Id}",
+                    Url: $"/e/{evt.Slug}"
+                );
 
-            var message = new PushMessage(
-                Title: "🎬 Nouveau film proposé",
-                Body: $"« {movieTitle} » a été ajouté à « {evt.Title} »",
-                Tag: $"movie-add-{evt.Id}",
-                Url: $"/e/{evt.Slug}"
-            );
+                foreach (var sub in subs.Where(s => notifiableIds.Contains(s.UserId)))
+                    await _pushSender.SendAsync(sub, message, ct);
+            }
 
-            foreach (var sub in subs.Where(s => notifiableIds.Contains(s.UserId)))
-                await _pushSender.SendAsync(sub, message, ct);
+            var now = DateTimeOffset.UtcNow;
+            foreach (var userId in notifiableIds)
+            {
+                await _notifications.AddAsync(new UserNotification
+                {
+                    UserId = userId,
+                    Type = UserNotificationType.MovieAdded,
+                    ActorHandle = proposer?.Handle,
+                    ActorDisplayName = proposer?.DisplayName,
+                    ActorAvatarId = proposer?.AvatarId,
+                    EventId = evt.Id,
+                    EventSlug = evt.Slug,
+                    EventTitle = evt.Title,
+                    MovieTitle = movieTitle,
+                    IsRead = false,
+                    CreatedAt = now
+                }, ct);
+            }
         }
         catch (Exception ex)
         {

@@ -2,7 +2,13 @@ namespace MoviePicker.Api.Domain.Entities;
 
 public enum UserNotificationType
 {
-    NewFollower = 1
+    NewFollower = 1,
+    MovieAdded = 2,
+    MoviePicked = 3,
+    ParticipantJoined = 4,
+    EventDeleted = 5,
+    EventReminder1h = 6,
+    EventReminder24h = 7,
 }
 
 public sealed record UserNotification
@@ -13,6 +19,10 @@ public sealed record UserNotification
     public string? ActorHandle { get; init; }
     public string? ActorDisplayName { get; init; }
     public string? ActorAvatarId { get; init; }
+    public string? EventId { get; init; }
+    public string? EventSlug { get; init; }
+    public string? EventTitle { get; init; }
+    public string? MovieTitle { get; init; }
     public bool IsRead { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
 }

@@ -27,6 +27,9 @@ public sealed class GetInboxHandler : IGetInboxHandler
                 ActorHandle = n.ActorHandle,
                 ActorDisplayName = n.ActorDisplayName,
                 ActorAvatarId = n.ActorAvatarId,
+                EventSlug = n.EventSlug,
+                EventTitle = n.EventTitle,
+                MovieTitle = n.MovieTitle,
                 IsRead = n.IsRead,
                 CreatedAt = n.CreatedAt
             }).ToList(),

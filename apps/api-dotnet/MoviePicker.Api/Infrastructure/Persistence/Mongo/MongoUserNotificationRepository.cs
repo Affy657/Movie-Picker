@@ -24,6 +24,10 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
             ActorHandle = notification.ActorHandle,
             ActorDisplayName = notification.ActorDisplayName,
             ActorAvatarId = notification.ActorAvatarId,
+            EventId = notification.EventId,
+            EventSlug = notification.EventSlug,
+            EventTitle = notification.EventTitle,
+            MovieTitle = notification.MovieTitle,
             IsRead = false,
             CreatedAt = notification.CreatedAt.UtcDateTime
         };
@@ -46,6 +50,10 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
             ActorHandle = d.ActorHandle,
             ActorDisplayName = d.ActorDisplayName,
             ActorAvatarId = d.ActorAvatarId,
+            EventId = d.EventId,
+            EventSlug = d.EventSlug,
+            EventTitle = d.EventTitle,
+            MovieTitle = d.MovieTitle,
             IsRead = d.IsRead,
             CreatedAt = new DateTimeOffset(d.CreatedAt, TimeSpan.Zero)
         });
@@ -63,5 +71,13 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
         var update = Builders<UserNotificationDocument>.Update.Set(x => x.IsRead, true);
         await _collection.UpdateManyAsync(
             x => x.UserId == userId && !x.IsRead, update, cancellationToken: ct);
+    }
+
+    public async Task<bool> ExistsAsync(string userId, UserNotificationType type, string eventId, CancellationToken ct = default)
+    {
+        var count = await _collection.CountDocumentsAsync(
+            x => x.UserId == userId && x.Type == (int)type && x.EventId == eventId,
+            cancellationToken: ct);
+        return count > 0;
     }
 }

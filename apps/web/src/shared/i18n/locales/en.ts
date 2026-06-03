@@ -439,6 +439,12 @@ export const en: Locale = {
     inboxTitle: 'Notifications',
     inboxEmpty: 'No notifications yet.',
     newFollowerText: 'started following you.',
+    participantJoinedText: '— {{name}} joined the event.',
+    movieAddedText: '— "{{movie}}" was proposed.',
+    moviePickedText: '— movie picked: "{{movie}}"',
+    eventDeletedText: '— the event was cancelled.',
+    eventReminder1hText: '— starts in 1 hour.',
+    eventReminder24hText: '— starts tomorrow.',
   },
 
   footer: {

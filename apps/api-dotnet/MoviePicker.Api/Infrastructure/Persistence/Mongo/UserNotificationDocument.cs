@@ -27,6 +27,22 @@ public sealed class UserNotificationDocument
     [BsonIgnoreIfNull]
     public string? ActorAvatarId { get; set; }
 
+    [BsonElement("eventId")]
+    [BsonIgnoreIfNull]
+    public string? EventId { get; set; }
+
+    [BsonElement("eventSlug")]
+    [BsonIgnoreIfNull]
+    public string? EventSlug { get; set; }
+
+    [BsonElement("eventTitle")]
+    [BsonIgnoreIfNull]
+    public string? EventTitle { get; set; }
+
+    [BsonElement("movieTitle")]
+    [BsonIgnoreIfNull]
+    public string? MovieTitle { get; set; }
+
     [BsonElement("isRead")]
     public bool IsRead { get; set; }
 

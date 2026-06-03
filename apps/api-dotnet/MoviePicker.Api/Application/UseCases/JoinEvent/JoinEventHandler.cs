@@ -13,6 +13,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
     private readonly IUserRepository _userRepository;
     private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly IPushNotificationSender _pushSender;
+    private readonly IUserNotificationRepository _notifications;
     private readonly ILogger<JoinEventHandler> _logger;
 
     public JoinEventHandler(
@@ -21,6 +22,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
         IUserRepository userRepository,
         IPushSubscriptionRepository pushSubscriptions,
         IPushNotificationSender pushSender,
+        IUserNotificationRepository notifications,
         ILogger<JoinEventHandler> logger)
     {
         _eventRepository = eventRepository;
@@ -28,6 +30,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
         _userRepository = userRepository;
         _pushSubscriptions = pushSubscriptions;
         _pushSender = pushSender;
+        _notifications = notifications;
         _logger = logger;
     }
 
@@ -87,7 +90,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
 
         var created = await _participantRepository.AddAsync(participant, ct);
 
-        _ = NotifyHostAsync(evt, pseudo, CancellationToken.None);
+        _ = NotifyHostAsync(evt, pseudo, userId, CancellationToken.None);
 
         return new JoinEventResult
         {
@@ -97,7 +100,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
         };
     }
 
-    private async Task NotifyHostAsync(Event evt, string joinerPseudo, CancellationToken ct)
+    private async Task NotifyHostAsync(Event evt, string joinerPseudo, string joinerUserId, CancellationToken ct)
     {
         try
         {
@@ -108,19 +111,35 @@ public sealed class JoinEventHandler : IJoinEventHandler
             if (host is null || !host.NotifyOnParticipantJoined)
                 return;
 
+            var joiner = await _userRepository.GetByIdAsync(joinerUserId, ct);
+
             var subscriptions = await _pushSubscriptions.ListByUserIdAsync(evt.CreatorUserId, ct);
-            if (subscriptions.Count == 0)
-                return;
+            if (subscriptions.Count > 0)
+            {
+                var message = new PushMessage(
+                    Title: $"🎉 Nouvelle inscription",
+                    Body: $"{joinerPseudo} a rejoint « {evt.Title} »",
+                    Tag: $"join-{evt.Id}",
+                    Url: $"/e/{evt.Slug}"
+                );
 
-            var message = new PushMessage(
-                Title: $"🎉 Nouvelle inscription",
-                Body: $"{joinerPseudo} a rejoint « {evt.Title} »",
-                Tag: $"join-{evt.Id}",
-                Url: $"/e/{evt.Slug}"
-            );
+                foreach (var sub in subscriptions)
+                    await _pushSender.SendAsync(sub, message, ct);
+            }
 
-            foreach (var sub in subscriptions)
-                await _pushSender.SendAsync(sub, message, ct);
+            await _notifications.AddAsync(new UserNotification
+            {
+                UserId = evt.CreatorUserId,
+                Type = UserNotificationType.ParticipantJoined,
+                ActorHandle = joiner?.Handle,
+                ActorDisplayName = joiner?.DisplayName,
+                ActorAvatarId = joiner?.AvatarId,
+                EventId = evt.Id,
+                EventSlug = evt.Slug,
+                EventTitle = evt.Title,
+                IsRead = false,
+                CreatedAt = DateTimeOffset.UtcNow
+            }, ct);
         }
         catch (Exception ex)
         {

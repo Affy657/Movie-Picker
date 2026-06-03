@@ -446,6 +446,12 @@
     inboxTitle: 'Notifications',
     inboxEmpty: 'Aucune notification pour le moment.',
     newFollowerText: 'a commencé à vous suivre.',
+    participantJoinedText: '— {{name}} a rejoint la soirée.',
+    movieAddedText: '— « {{movie}} » a été proposé.',
+    moviePickedText: '— film tiré au sort : « {{movie}} »',
+    eventDeletedText: '— la soirée a été annulée.',
+    eventReminder1hText: '— commence dans 1 heure.',
+    eventReminder24hText: '— commence demain.',
   },
 
   footer: {

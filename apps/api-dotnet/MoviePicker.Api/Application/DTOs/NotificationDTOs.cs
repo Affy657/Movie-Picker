@@ -47,6 +47,9 @@ public sealed record UserNotificationItem
     public string? ActorHandle { get; init; }
     public string? ActorDisplayName { get; init; }
     public string? ActorAvatarId { get; init; }
+    public string? EventSlug { get; init; }
+    public string? EventTitle { get; init; }
+    public string? MovieTitle { get; init; }
     public bool IsRead { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
 }

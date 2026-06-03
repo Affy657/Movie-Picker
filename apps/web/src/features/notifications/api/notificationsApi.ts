@@ -15,6 +15,9 @@ export interface UserNotificationItem {
   actorHandle: string | null;
   actorDisplayName: string | null;
   actorAvatarId: string | null;
+  eventSlug: string | null;
+  eventTitle: string | null;
+  movieTitle: string | null;
   isRead: boolean;
   createdAt: string;
 }

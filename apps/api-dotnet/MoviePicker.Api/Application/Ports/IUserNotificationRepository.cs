@@ -8,4 +8,5 @@ public interface IUserNotificationRepository
     Task<IReadOnlyList<UserNotification>> ListByUserIdAsync(string userId, int limit = 50, CancellationToken ct = default);
     Task<int> GetUnreadCountAsync(string userId, CancellationToken ct = default);
     Task MarkAllReadAsync(string userId, CancellationToken ct = default);
+    Task<bool> ExistsAsync(string userId, UserNotificationType type, string eventId, CancellationToken ct = default);
 }

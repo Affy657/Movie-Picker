@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import type { ComponentType, SVGProps } from 'react';
-import { CalendarDays, Plus, Settings } from 'lucide-react';
+import { CalendarDays, Settings } from 'lucide-react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -47,14 +47,6 @@ function MobileNavItem({ to, end, label, Icon }: NavItemDef) {
   );
 }
 
-function MobileCreateButton({ label }: { label: string }) {
-  return (
-    <Link to={ROUTES.createEvent} className={styles.createButton} aria-label={label}>
-      <Plus className={styles.createIcon} aria-hidden="true" focusable="false" />
-    </Link>
-  );
-}
-
 export default function AppShell() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -67,8 +59,6 @@ export default function AppShell() {
         label: t(labelKey),
       }))
     : [];
-
-  const mid = Math.floor(items.length / 2);
 
   return (
     <div className={styles.root}>
@@ -85,10 +75,12 @@ export default function AppShell() {
           <span className={styles.brandName}>Movie Picker</span>
         </Link>
         {isAuthenticated ? (
-          <nav className={styles.navDesktop} aria-label={t('nav.navLabel')}>
-            {items.map((item) => (
-              <DesktopNavItem key={item.to} {...item} />
-            ))}
+          <>
+            <nav className={styles.navDesktop} aria-label={t('nav.navLabel')}>
+              {items.map((item) => (
+                <DesktopNavItem key={item.to} {...item} />
+              ))}
+            </nav>
             <div className={styles.navActions}>
               <InboxBell />
               {user.handle ? (
@@ -103,18 +95,14 @@ export default function AppShell() {
                 <Avatar avatarId={user.avatarId} size="sm" />
               )}
             </div>
-          </nav>
+          </>
         ) : null}
       </header>
       <Outlet />
       <Footer clearMobileNav={isAuthenticated} />
       {isAuthenticated ? (
         <nav className={styles.navMobile} aria-label={t('nav.navLabel')}>
-          {items.slice(0, mid).map((item) => (
-            <MobileNavItem key={item.to} {...item} />
-          ))}
-          <MobileCreateButton label={t('nav.createEvent')} />
-          {items.slice(mid).map((item) => (
+          {items.map((item) => (
             <MobileNavItem key={item.to} {...item} />
           ))}
         </nav>

@@ -41,4 +41,10 @@ public sealed class InMemoryUserNotificationRepository : IUserNotificationReposi
         }
         return Task.CompletedTask;
     }
+
+    public Task<bool> ExistsAsync(string userId, UserNotificationType type, string eventId, CancellationToken ct = default)
+    {
+        var exists = _store.Values.Any(n => n.UserId == userId && n.Type == type && n.EventId == eventId);
+        return Task.FromResult(exists);
+    }
 }

@@ -17,6 +17,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
     private readonly IUserRepository _userRepository;
     private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly IPushNotificationSender _pushSender;
+    private readonly IUserNotificationRepository _notifications;
     private readonly ILogger<DeleteEventHandler> _logger;
 
     public DeleteEventHandler(
@@ -29,6 +30,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         IUserRepository userRepository,
         IPushSubscriptionRepository pushSubscriptions,
         IPushNotificationSender pushSender,
+        IUserNotificationRepository notifications,
         ILogger<DeleteEventHandler> logger)
     {
         _eventRepository = eventRepository;
@@ -40,6 +42,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         _userRepository = userRepository;
         _pushSubscriptions = pushSubscriptions;
         _pushSender = pushSender;
+        _notifications = notifications;
         _logger = logger;
     }
 
@@ -112,18 +115,31 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
                 return;
 
             var subs = await _pushSubscriptions.ListByUserIdsAsync(notifiableIds, ct);
-            if (subs.Count == 0)
-                return;
+            if (subs.Count > 0)
+            {
+                var message = new PushMessage(
+                    Title: "❌ Soirée annulée",
+                    Body: $"« {evt.Title} » a été annulée.",
+                    Tag: $"event-deleted-{evt.Id}",
+                    Url: "/"
+                );
 
-            var message = new PushMessage(
-                Title: "❌ Soirée annulée",
-                Body: $"« {evt.Title} » a été annulée.",
-                Tag: $"event-deleted-{evt.Id}",
-                Url: "/"
-            );
+                foreach (var sub in subs.Where(s => notifiableIds.Contains(s.UserId)))
+                    await _pushSender.SendAsync(sub, message, ct);
+            }
 
-            foreach (var sub in subs.Where(s => notifiableIds.Contains(s.UserId)))
-                await _pushSender.SendAsync(sub, message, ct);
+            var now = DateTimeOffset.UtcNow;
+            foreach (var userId in notifiableIds)
+            {
+                await _notifications.AddAsync(new UserNotification
+                {
+                    UserId = userId,
+                    Type = UserNotificationType.EventDeleted,
+                    EventTitle = evt.Title,
+                    IsRead = false,
+                    CreatedAt = now
+                }, ct);
+            }
         }
         catch (Exception ex)
         {
