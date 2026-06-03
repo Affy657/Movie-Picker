@@ -39,9 +39,7 @@ describe('FollowListModal (MSW)', () => {
   it('affiche les deux onglets avec compteurs', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice/following`, () =>
-        HttpResponse.json({ items: [] })
-      )
+      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
     );
 
     renderModal();
@@ -53,9 +51,7 @@ describe('FollowListModal (MSW)', () => {
   it("affiche 'Aucun utilisateur' quand la liste est vide", async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice/following`, () =>
-        HttpResponse.json({ items: [] })
-      )
+      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
     );
 
     renderModal();
@@ -70,9 +66,7 @@ describe('FollowListModal (MSW)', () => {
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
       http.get(`${TEST_API_V1}/users/alice/following`, () =>
         HttpResponse.json({
-          items: [
-            { handle: 'bob', displayName: 'Bob', avatarId: '', isFollowedByMe: null },
-          ],
+          items: [{ handle: 'bob', displayName: 'Bob', avatarId: '', isFollowedByMe: null }],
         })
       )
     );
@@ -87,14 +81,10 @@ describe('FollowListModal (MSW)', () => {
     const user = userEvent.setup();
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice/following`, () =>
-        HttpResponse.json({ items: [] })
-      ),
+      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
       http.get(`${TEST_API_V1}/users/alice/followers`, () =>
         HttpResponse.json({
-          items: [
-            { handle: 'carol', displayName: 'Carol', avatarId: '', isFollowedByMe: null },
-          ],
+          items: [{ handle: 'carol', displayName: 'Carol', avatarId: '', isFollowedByMe: null }],
         })
       )
     );
@@ -112,9 +102,7 @@ describe('FollowListModal (MSW)', () => {
     const onClose = vi.fn();
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice/following`, () =>
-        HttpResponse.json({ items: [] })
-      )
+      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
     );
 
     renderModal({}, onClose);
@@ -128,9 +116,7 @@ describe('FollowListModal (MSW)', () => {
   it("démarre sur l'onglet Followers si initialTab='followers'", async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice/followers`, () =>
-        HttpResponse.json({ items: [] })
-      )
+      http.get(`${TEST_API_V1}/users/alice/followers`, () => HttpResponse.json({ items: [] }))
     );
 
     renderModal({ initialTab: 'followers' });

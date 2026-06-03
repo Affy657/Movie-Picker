@@ -109,8 +109,9 @@ describe('InboxBell (MSW)', () => {
           unreadCount: 1,
         })
       ),
-      http.post(`${TEST_API_V1}/notifications/inbox/read-all`, () =>
-        new HttpResponse(null, { status: 204 })
+      http.post(
+        `${TEST_API_V1}/notifications/inbox/read-all`,
+        () => new HttpResponse(null, { status: 204 })
       )
     );
 

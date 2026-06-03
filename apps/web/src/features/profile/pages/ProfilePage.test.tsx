@@ -83,9 +83,7 @@ describe('ProfilePage (MSW)', () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
       http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
-      http.get(`${TEST_API_V1}/users/alice/following`, () =>
-        HttpResponse.json({ items: [] })
-      )
+      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
     );
 
     renderProfile('alice');
@@ -103,9 +101,7 @@ describe('ProfilePage (MSW)', () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
       http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
-      http.get(`${TEST_API_V1}/users/alice/followers`, () =>
-        HttpResponse.json({ items: [] })
-      )
+      http.get(`${TEST_API_V1}/users/alice/followers`, () => HttpResponse.json({ items: [] }))
     );
 
     renderProfile('alice');
@@ -148,7 +144,12 @@ describe('ProfilePage (MSW)', () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
       http.get(`${TEST_API_V1}/users/moi`, () =>
-        HttpResponse.json({ ...ALICE_PROFILE, handle: 'moi', displayName: 'Moi', isFollowedByMe: null })
+        HttpResponse.json({
+          ...ALICE_PROFILE,
+          handle: 'moi',
+          displayName: 'Moi',
+          isFollowedByMe: null,
+        })
       )
     );
 
