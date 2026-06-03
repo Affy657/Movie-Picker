@@ -2,7 +2,7 @@
 
 Suite de tâches pour livrer la **V1 produit** après le MVP et la migration API .NET.
 
-**But final V1** : à la clôture de cette carte, le projet est **prêt côté code produit V1** (compte utilisateur, parcours hôte, watch providers, OG, i18n, mot de passe oublié, sécurité CI). La **clôture du titre RNCP 39583** (« Expert en développement logiciel ») côté **livrables documentaires et process** (cadrage, pilotage, OWASP, accessibilité, recettes, manuels, supervision, etc.) est suivie séparément dans [`livraison-RNCP.md`](livraison-RNCP.md) pour ne pas mélanger dev produit et docs RNCP.
+**But final V1** : à la clôture de cette carte, le projet est **prêt côté code produit V1** (compte utilisateur, parcours hôte, watch providers, OG, i18n, mot de passe oublié, sécurité CI). La **clôture du titre RNCP 39583** (« Expert en développement logiciel ») côté **livrables documentaires et process** (cadrage, pilotage, OWASP, accessibilité, recettes, manuels, supervision, etc.) est suivie séparément dans [`suivi-rncp.md`](../RNCP/suivi-rncp.md) pour ne pas mélanger dev produit et docs RNCP.
 
 **Règle** : ne cocher une case que quand la tâche est **terminée** (y compris ce que l’humain doit faire sur les cloud). Un doc tutoriel seul ne suffit pas.
 
@@ -49,7 +49,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ### RNCP 39583 — clôture titre (livrables documentaires)
 
-> Suivi déplacé dans [`livraison-RNCP.md`](livraison-RNCP.md) : cahier de recettes, OWASP, accessibilité, plan de correction, manuels d’exploitation, journal des versions, supervision, consignation des anomalies, **et** les livrables de cadrage (Bloc 1) et pilotage (Bloc 3) initialement absents de cette carte.
+> Suivi déplacé dans [`suivi-rncp.md`](../RNCP/suivi-rncp.md) : cahier de recettes, OWASP, accessibilité, plan de correction, manuels d’exploitation, journal des versions, supervision, consignation des anomalies, **et** les livrables de cadrage (Bloc 1) et pilotage (Bloc 3) initialement absents de cette carte.
 
 ---
 
@@ -270,7 +270,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 - [x] **OG dynamiques** : livrés **ou** explicitement reportés avec doc de la limite
 - [x] **Mot de passe oublié** : flux email + reset opérationnel en prod (cf. § 3) — *domaine `movie-picker.fr` vérifié dans Resend, secret `RESEND_API_KEY` provisionné dans GCP Secret Manager et mappé sur Cloud Run `movie-picker-api` (révision `00041-gdc`), smoke test bout-en-bout validé en prod (request 202 + `ResendEmailSender` HTTP 200 + confirm 200)*
 - [x] **Sécurité CI** : Sonar gate, scan NuGet, scan image Docker, secret scanning **tous actifs en CI** (cf. § 23–26)
-- [ ] **Clôture RNCP** : suivie séparément dans [`livraison-RNCP.md`](livraison-RNCP.md) (recettes, OWASP, a11y, manuels, supervision, journal versions, cadrage Bloc 1, pilotage Bloc 3, etc.)
+- [ ] **Clôture RNCP** : suivie séparément dans [`suivi-rncp.md`](../RNCP/suivi-rncp.md) (recettes, OWASP, a11y, manuels, supervision, journal versions, cadrage Bloc 1, pilotage Bloc 3, etc.)
 - [x] Mettre à jour la features list du dépôt et tout index roadmaps par version si le dépôt en contient un
 
 ---
@@ -315,7 +315,7 @@ Cocher au fur et à mesure. Une autre IA ou un humain peut reprendre en suivant 
 
 ---
 
-> **Anciennes § 27 à § 34** (livrables documentaires RNCP) → [`livraison-RNCP.md`](livraison-RNCP.md).
+> **Anciennes § 27 à § 34** (livrables documentaires RNCP) → [`suivi-rncp.md`](../RNCP/suivi-rncp.md).
 
 ---
 
