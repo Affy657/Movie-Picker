@@ -118,16 +118,13 @@ export default function FollowListModal({
         </div>
 
         <ul className={styles.list}>
-          {activeQuery.isPending && (
-            <li className={styles.placeholder}>{t('common.loading')}</li>
-          )}
+          {activeQuery.isPending && <li className={styles.placeholder}>{t('common.loading')}</li>}
           {!activeQuery.isPending && items.length === 0 && (
             <li className={styles.placeholder}>{t('profile.follow.empty')}</li>
           )}
           {items.map((item) => {
             const isMe = user?.handle === item.handle;
-            const pending =
-              followMutation.isPending || unfollowMutation.isPending;
+            const pending = followMutation.isPending || unfollowMutation.isPending;
             return (
               <li key={item.handle} className={styles.item}>
                 <Link

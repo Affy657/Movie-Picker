@@ -13,9 +13,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { fetchPublicProfile, followUser, unfollowUser } from '@/features/profile/api/profileApi';
 import styles from './ProfilePage.module.css';
 
-const FollowListModal = lazy(
-  () => import('@/features/profile/components/FollowListModal')
-);
+const FollowListModal = lazy(() => import('@/features/profile/components/FollowListModal'));
 
 const COPY_FEEDBACK_MS = 2000;
 
@@ -168,9 +166,7 @@ export default function ProfilePage() {
               ) : (
                 <UserPlus size={14} aria-hidden />
               )}
-              {profile.isFollowedByMe
-                ? t('profile.follow.unfollow')
-                : t('profile.follow.follow')}
+              {profile.isFollowedByMe ? t('profile.follow.unfollow') : t('profile.follow.follow')}
             </button>
           )}
 
