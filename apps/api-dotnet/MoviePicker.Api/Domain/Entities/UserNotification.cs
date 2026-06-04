@@ -9,6 +9,7 @@ public enum UserNotificationType
     EventDeleted = 5,
     EventReminder1h = 6,
     EventReminder24h = 7,
+    EventInvitation = 8,
 }
 
 public sealed record UserNotification

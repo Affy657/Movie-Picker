@@ -24,6 +24,7 @@ import { removeStoredParticipant } from '@/features/events/storage';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useLocale, useTranslation } from '@/shared/i18n';
+import InviteModal from '@/features/events/components/InviteModal';
 
 type ConfirmState =
   | { kind: 'remove'; participantId: string; pseudo: string }
@@ -54,6 +55,7 @@ export default function EventDetail() {
   const [pendingRemovalId, setPendingRemovalId] = useState<string | null>(null);
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
 
   useEffect(() => {
     if (!actionSuccess) return;
@@ -246,6 +248,25 @@ export default function EventDetail() {
       />
       {event.isHost && !event.isFinished && !event.winnerMovie && (
         <HostEventSettingsPanel slug={slug} hostToken={hostToken} event={event} />
+      )}
+
+      {event.isHost && !event.isFinished && (
+        <>
+          <div style={{ margin: '0 0 0.75rem 0' }}>
+            <button
+              type="button"
+              className="btn btn-sm"
+              onClick={() => setInviteModalOpen(true)}
+            >
+              {t('events.invite.buttonLabel')}
+            </button>
+          </div>
+          <InviteModal
+            open={inviteModalOpen}
+            slug={slug}
+            onClose={() => setInviteModalOpen(false)}
+          />
+        </>
       )}
 
       {moviesQuery.isError && (

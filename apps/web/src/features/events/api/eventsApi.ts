@@ -147,3 +147,27 @@ export function eventSharePreviewUrl(slug: string): string {
 export function eventFrontendUrl(slug: string): string {
   return `${window.location.origin}/e/${slug}`;
 }
+
+export interface EligibleFollowItem {
+  userId: string;
+  handle: string;
+  displayName: string;
+  avatarId: string;
+  isAlreadyParticipant: boolean;
+  isAlreadyInvited: boolean;
+}
+
+export interface EligibleFollowsResponse {
+  follows: EligibleFollowItem[];
+}
+
+export async function getEligibleFollows(idOrSlug: string): Promise<EligibleFollowsResponse> {
+  return fetchApi<EligibleFollowsResponse>(`/events/${idOrSlug}/invitations/eligible-follows`);
+}
+
+export async function sendEventInvitation(idOrSlug: string, targetUserId: string): Promise<void> {
+  await fetchApi(`/events/${idOrSlug}/invitations`, {
+    method: 'POST',
+    body: JSON.stringify({ targetUserId }),
+  });
+}

@@ -80,4 +80,13 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
             cancellationToken: ct);
         return count > 0;
     }
+
+    public async Task<IReadOnlySet<string>> ListUserIdsByTypeAndEventAsync(UserNotificationType type, string eventId, CancellationToken ct = default)
+    {
+        var docs = await _collection
+            .Find(x => x.Type == (int)type && x.EventId == eventId)
+            .Project(x => x.UserId)
+            .ToListAsync(ct);
+        return docs.ToHashSet();
+    }
 }

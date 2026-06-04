@@ -12,6 +12,8 @@ using MoviePicker.Api.Application.UseCases.GetEventDetail;
 using MoviePicker.Api.Application.UseCases.JoinEvent;
 using MoviePicker.Api.Application.UseCases.LaunchWheel;
 using MoviePicker.Api.Application.UseCases.ListMyEvents;
+using MoviePicker.Api.Application.UseCases.GetEligibleFollowsForEvent;
+using MoviePicker.Api.Application.UseCases.InviteUser;
 using MoviePicker.Api.Application.UseCases.RemoveParticipant;
 using MoviePicker.Api.Infrastructure.Web;
 
@@ -189,6 +191,49 @@ public sealed class EventsController : ControllerBase
     {
         var result = await handler.HandleAsync(idOrSlug, participantId, ct);
         return Ok(result);
+    }
+
+    [HttpGet("{idOrSlug}/invitations/eligible-follows")]
+    [Authorize]
+    [ProducesResponseType(typeof(EligibleFollowsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetEligibleFollows(
+        string idOrSlug,
+        [FromServices] IGetEligibleFollowsForEventHandler handler,
+        CancellationToken ct)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var result = await handler.HandleAsync(idOrSlug, ct);
+        return Ok(result);
+    }
+
+    [HttpPost("{idOrSlug}/invitations")]
+    [Authorize]
+    [EnableRateLimiting(RateLimitingExtensions.InviteUserPolicy)]
+    [ProducesResponseType(typeof(InviteUserResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> SendInvitation(
+        string idOrSlug,
+        [FromBody] InviteUserRequest request,
+        [FromServices] IInviteUserHandler handler,
+        CancellationToken ct)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var result = await handler.HandleAsync(idOrSlug, request, ct);
+        return Created(string.Empty, result);
     }
 
     [HttpDelete("{idOrSlug}")]

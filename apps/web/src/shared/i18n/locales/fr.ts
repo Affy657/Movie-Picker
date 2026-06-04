@@ -242,6 +242,20 @@
       qrHint: "Ouvrez l'appareil photo pour rejoindre la soirée sur mobile.",
       groupLabel: 'Inviter des participants',
     },
+    invite: {
+      buttonLabel: 'Inviter des amis',
+      modalTitle: 'Inviter des amis',
+      inviteAction: 'Inviter',
+      inviteAriaLabel: 'Inviter {{name}}',
+      invitedBadge: 'Invité ✓',
+      alreadyParticipant: 'Déjà participant',
+      empty: 'Vous ne suivez encore personne. Suivez des utilisateurs pour pouvoir les inviter directement.',
+      emptyLine1: 'Vous ne suivez encore personne.',
+      emptyLink: 'Allez sur votre profil pour suivre des utilisateurs →',
+      loadError: 'Impossible de charger la liste.',
+      inviteError: 'Invitation impossible.',
+    },
+
     danger: {
       sectionTitle: 'Zone de danger',
       sectionDescription:
@@ -452,6 +466,7 @@
     eventDeletedText: '— la soirée a été annulée.',
     eventReminder1hText: '— commence dans 1 heure.',
     eventReminder24hText: '— commence demain.',
+    eventInvitationText: 'vous invite à rejoindre',
   },
 
   footer: {

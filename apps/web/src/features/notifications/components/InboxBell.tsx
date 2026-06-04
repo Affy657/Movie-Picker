@@ -89,6 +89,18 @@ function renderNotifContent(
     );
   }
 
+  if (item.type === 'eventinvitation' && item.eventSlug) {
+    return (
+      <Link to={ROUTES.eventDetail(item.eventSlug)} className={styles.notifLink} onClick={onClose}>
+        {item.actorAvatarId && <Avatar avatarId={item.actorAvatarId} size="xs" />}
+        <span className={styles.notifText}>
+          <strong>{item.actorDisplayName}</strong> {t('notifications.eventInvitationText')}{' '}
+          <strong>{item.eventTitle}</strong>
+        </span>
+      </Link>
+    );
+  }
+
   return null;
 }
 

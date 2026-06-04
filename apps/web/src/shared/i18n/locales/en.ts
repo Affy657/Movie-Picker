@@ -239,6 +239,20 @@ export const en: Locale = {
       qrHint: 'Open your camera to join the event on mobile.',
       groupLabel: 'Invite participants',
     },
+    invite: {
+      buttonLabel: 'Invite friends',
+      modalTitle: 'Invite friends',
+      inviteAction: 'Invite',
+      inviteAriaLabel: 'Invite {{name}}',
+      invitedBadge: 'Invited ✓',
+      alreadyParticipant: 'Already joined',
+      empty: "You're not following anyone yet. Follow users to invite them directly.",
+      emptyLine1: "You're not following anyone yet.",
+      emptyLink: 'Go to your profile to follow users →',
+      loadError: 'Unable to load the list.',
+      inviteError: 'Invitation failed.',
+    },
+
     danger: {
       sectionTitle: 'Danger zone',
       sectionDescription: 'These actions are irreversible. They only affect this event.',
@@ -445,6 +459,7 @@ export const en: Locale = {
     eventDeletedText: '— the event was cancelled.',
     eventReminder1hText: '— starts in 1 hour.',
     eventReminder24hText: '— starts tomorrow.',
+    eventInvitationText: 'invites you to join',
   },
 
   footer: {
