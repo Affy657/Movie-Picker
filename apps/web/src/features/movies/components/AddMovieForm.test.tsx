@@ -7,6 +7,10 @@ import AddMovieForm from '@/features/movies/components/AddMovieForm';
 import { TEST_API_V1, createSearchAndAddHandlers } from '@/mocks/handlers';
 import { http, HttpResponse } from 'msw';
 
+vi.mock('@/features/auth/contexts/AuthContext', () => ({
+  useAuth: () => ({ user: { userId: 'test-user' }, isLoading: false }),
+}));
+
 function renderWithLocale(ui: React.ReactElement) {
   return render(<LocaleProvider>{ui}</LocaleProvider>);
 }
