@@ -44,7 +44,7 @@ Grille **Probabilité × Impact**, chacun noté de 1 (faible) à 3 (élevé). Le
 
 | ID | Risque | Catégorie | P | I | Score | Criticité | Mitigation | Indicateur de contrôle |
 |----|--------|-----------|---|---|-------|-----------|------------|------------------------|
-| RF1 | **Abandon utilisateur** (friction) | Adoption | 2 | 3 | 6 | 🔴 | Rejoindre sans compte, mobile-first, partage 1 clic | Taux de complétion parcours (recette / retours) |
+| RF1 | **Abandon utilisateur** (friction) | Adoption | 2 | 3 | 6 | 🔴 | Inscription rapide + redirection auto (`returnTo`), mobile-first, partage 1 clic | Taux de complétion parcours (recette / retours) |
 | RF2 | **Mauvaise UX mobile** | Dégradation | 2 | 2 | 4 | 🟡 | Mobile-first, tests a11y, Lighthouse | Score Lighthouse, audit a11y |
 | RF3 | **Lien partagé indexé** par moteur de recherche | Sécurité/confidentialité | 2 | 2 | 4 | 🟡 | Slug opaque, `noindex` selon visibilité, pas d'info sensible URL | Vérification meta robots |
 | RF4 | **Usurpation du rôle hôte** | Sécurité | 1 | 3 | 3 | 🟡 | Lien partagé sans `?host=`, actions hôte via session compte | Tests d'intégration autorisation |
@@ -58,7 +58,7 @@ Grille **Probabilité × Impact**, chacun noté de 1 (faible) à 3 (élevé). Le
 | ID | Risque | Pourquoi prioritaire | Action immédiate |
 |----|--------|----------------------|------------------|
 | **RT6** | CSRF cookie cross-site | Faille de sécurité exploitable | Mesures anti-CSRF + revue OWASP A01 |
-| **RF1** | Abandon utilisateur | Menace directe sur la valeur produit | Garantir le parcours sans friction (sans compte, mobile) |
+| **RF1** | Abandon utilisateur | Menace directe sur la valeur produit | Garantir un parcours fluide (inscription rapide + `returnTo`, mobile) |
 
 ---
 

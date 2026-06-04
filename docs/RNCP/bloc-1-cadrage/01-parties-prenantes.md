@@ -15,7 +15,7 @@
 | **Candidat (moi)** | Architecte | Choix de la stack, modélisation de l'architecture (C4), arbitrages techniques (ADR) | **Permanent** — cumulé avec le rôle développeur |
 | **Candidat (moi)** | Administrateur / DevOps | Mise en place CI/CD, déploiement Cloud Run + S3/CloudFront, secrets, supervision | **Permanent** — cumulé avec les rôles ci-dessus |
 | **Utilisateurs finaux — hôtes** | Client / utilisateur | Créent et configurent une soirée, lancent la roue, clôturent | **Direct** — cœur de cible produit |
-| **Utilisateurs finaux — invités** | Client / utilisateur | Rejoignent via lien, proposent des films, votent | **Direct** — usage sans compte ; majoritaires par soirée (plusieurs invités par hôte) |
+| **Utilisateurs finaux — participants invités** | Client / utilisateur | Rejoignent via lien (compte connecté requis), proposent des films, votent | **Direct** — majoritaires par soirée (plusieurs participants par hôte) |
 | **Testeurs / pairs** | Utilisateur consulté | Recette manuelle, retours UX, signalement d'anomalies | **Ponctuel** — phases de recette |
 | **TMDB** | Acteur externe (API) | Fournit métadonnées films (poster, note, bande-annonce, watch providers) | **Critique** — dépendance fonctionnelle forte |
 | **GCP** (Cloud Run, Artifact Registry, Secret Manager, Cloud Monitoring) | Acteur externe (infra) | Héberge l'API, stocke l'image Docker et les secrets, supervise | **Critique** — disponibilité du back |
@@ -72,17 +72,17 @@ mindmap
 
 **Scénario clé** : Léa crée une soirée « Horreur » pour vendredi, configure la roue en mode pondéré, copie le lien et l'envoie sur WhatsApp. Le soir venu, elle lance la roue depuis son canapé et obtient le film gagnant.
 
-### Persona 2 — Tom, l'invité ponctuel
+### Persona 2 — Tom, le participant invité
 
 | | |
 |--|--|
-| **Profil** | 22 ans, invité occasionnel, ne veut pas créer de compte |
+| **Profil** | 22 ans, invité à une soirée par un ami, utilisateur occasionnel |
 | **Équipement** | Smartphone exclusivement, rejoint depuis un lien reçu par message |
-| **Contexte d'usage** | Clique sur le lien, choisit un pseudo, propose 1-2 films et vote |
-| **Attentes** | Zéro friction : pas d'inscription, accès immédiat, interface au doigt |
-| **Frustrations évitées** | Obligation de créer un compte juste pour participer une fois |
+| **Contexte d'usage** | Clique sur le lien, se connecte ou crée un compte (parcours rapide), propose 1-2 films et vote |
+| **Attentes** | Inscription express puis accès immédiat à la soirée, interface au doigt |
+| **Frustrations évitées** | Parcours d'inscription long, ou perdre le contexte de la soirée après s'être connecté |
 
-**Scénario clé** : Tom reçoit le lien, l'ouvre, saisit « Tom » comme pseudo, recherche « Dune » dans la barre, le propose, vote sur deux autres films, puis ferme. Aucun compte créé.
+**Scénario clé** : Tom reçoit le lien, l'ouvre, est invité à se connecter ou créer un compte ; après une inscription express il est **redirigé automatiquement sur la soirée** (`returnTo`), recherche « Dune », le propose et vote. Son **pseudo affiché = le nom de son compte**.
 
 ### Persona 3 — Le groupe d'amis récurrent
 
@@ -99,8 +99,8 @@ mindmap
 ### Synthèse des caractéristiques transverses
 
 - **Mobile-first** : la majorité des utilisateurs rejoignent via un lien partagé et utilisent l'appareil en main (cf. [`../../spec.md`](../../spec.md) § 9).
-- **Asymétrie compte / sans compte** : créer une soirée exige un compte ; rejoindre reste possible sans compte (pseudo par soirée) — abaisse la friction d'adoption.
-- **Usage ponctuel ET récurrent** : le produit doit servir l'invité one-shot comme le groupe fidèle.
+- **Compte obligatoire pour tous les participants** : créer comme rejoindre une soirée exige un compte connecté ; le pseudo affiché correspond au **nom du compte** (plus de pseudo anonyme par soirée — le mode invité anonyme a été retiré). La friction d'inscription est atténuée par un parcours rapide + **redirection automatique vers la soirée** après connexion (`returnTo`).
+- **Usage ponctuel ET récurrent** : le produit sert le participant occasionnel comme le groupe fidèle ; le compte, désormais requis pour tous, débloque notifications, suivi social et historique.
 - **Accessibilité** : prise en compte dès la conception (clavier, contraste, lecteurs d'écran) — voir [`../accessibilite.md`](../bloc-2-conception-developpement/accessibilite.md).
 
 ---
