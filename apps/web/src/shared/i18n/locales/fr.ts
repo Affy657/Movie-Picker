@@ -249,7 +249,8 @@
       inviteAriaLabel: 'Inviter {{name}}',
       invitedBadge: 'Invité ✓',
       alreadyParticipant: 'Déjà participant',
-      empty: 'Vous ne suivez encore personne. Suivez des utilisateurs pour pouvoir les inviter directement.',
+      empty:
+        'Vous ne suivez encore personne. Suivez des utilisateurs pour pouvoir les inviter directement.',
       emptyLine1: 'Vous ne suivez encore personne.',
       emptyLink: 'Allez sur votre profil pour suivre des utilisateurs →',
       loadError: 'Impossible de charger la liste.',

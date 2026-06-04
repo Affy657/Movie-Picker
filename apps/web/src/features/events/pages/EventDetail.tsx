@@ -253,11 +253,7 @@ export default function EventDetail() {
       {event.isHost && !event.isFinished && (
         <>
           <div style={{ margin: '0 0 0.75rem 0' }}>
-            <button
-              type="button"
-              className="btn btn-sm"
-              onClick={() => setInviteModalOpen(true)}
-            >
+            <button type="button" className="btn btn-sm" onClick={() => setInviteModalOpen(true)}>
               {t('events.invite.buttonLabel')}
             </button>
           </div>

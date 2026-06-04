@@ -102,9 +102,7 @@ export default function InviteModal({ open, slug, onClose }: Props) {
       </div>
 
       <div className={styles.body}>
-        {followsQuery.isPending && (
-          <p className={styles.loadingState}>{t('common.loading')}</p>
-        )}
+        {followsQuery.isPending && <p className={styles.loadingState}>{t('common.loading')}</p>}
 
         {followsQuery.isError && (
           <p className={styles.errorState}>{t('events.invite.loadError')}</p>
