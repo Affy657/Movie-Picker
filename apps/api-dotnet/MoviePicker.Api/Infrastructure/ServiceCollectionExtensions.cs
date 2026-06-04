@@ -101,11 +101,20 @@ public static class ServiceCollectionExtensions
         else
         {
             var mongoUrl = new MongoUrl(mongoUri);
+            var databaseName = mongoUrl.DatabaseName ?? "moviepicker";
+            if (environment.IsDevelopment()
+                && string.Equals(databaseName, "moviepicker", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException(
+                    "Garde-fou : en Development, MONGODB_URI cible la base de production 'moviepicker'. "
+                    + "Utilise une base dédiée et jetable (ex. 'moviepicker_dev'). "
+                    + "La base 'moviepicker' n'est autorisée qu'en Production.");
+            }
             services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoUrl));
             services.AddSingleton<IMongoDatabase>(sp =>
             {
                 var client = sp.GetRequiredService<IMongoClient>();
-                return client.GetDatabase(mongoUrl.DatabaseName ?? "moviepicker");
+                return client.GetDatabase(databaseName);
             });
             services.AddScoped<IEventRepository, MongoEventRepository>();
             services.AddScoped<IParticipantRepository, MongoParticipantRepository>();
