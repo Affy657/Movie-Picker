@@ -1,4 +1,4 @@
-.root {
+﻿.root {
   display: inline-flex;
   flex-wrap: wrap;
   gap: 0.5rem;
@@ -8,19 +8,19 @@
   flex: 1 1 auto;
   min-width: 5.5rem;
   padding: 0.55rem 1rem;
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--color-text);
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md);
   cursor: pointer;
-  letter-spacing: 0.01em;
+  letter-spacing: var(--tracking-slight);
   transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease,
-    transform 0.15s ease;
+    background var(--duration-base) var(--ease-default),
+    border-color var(--duration-base) var(--ease-default),
+    color var(--duration-base) var(--ease-default),
+    transform var(--duration-base) var(--ease-default);
 }
 
 .option:hover:not(.optionSelected) {

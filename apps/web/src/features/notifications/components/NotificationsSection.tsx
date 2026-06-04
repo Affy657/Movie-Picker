@@ -7,6 +7,7 @@ import {
   type NotificationPreferences,
 } from '@/features/notifications/api/notificationsApi';
 import { useTranslation } from '@/shared/i18n';
+import Toggle from '@/shared/components/Toggle';
 import styles from './NotificationsSection.module.css';
 
 export default function NotificationsSection() {
@@ -86,19 +87,12 @@ export default function NotificationsSection() {
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={subscribed}
-            className={styles.toggle}
+          <Toggle
+            checked={subscribed}
             disabled={pushLoading || permission === 'denied'}
-            onClick={() => void (subscribed ? unsubscribe() : subscribe())}
-            aria-label={
-              subscribed ? t('notifications.disableButton') : t('notifications.enableButton')
-            }
-          >
-            <span className={styles.toggleThumb} />
-          </button>
+            onChange={() => void (subscribed ? unsubscribe() : subscribe())}
+            label={subscribed ? t('notifications.disableButton') : t('notifications.enableButton')}
+          />
         </div>
 
         {subscribed && prefs && (
@@ -108,86 +102,56 @@ export default function NotificationsSection() {
 
             <div className={styles.prefRow}>
               <span className={styles.prefLabel}>{t('notifications.prefParticipantJoined')}</span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={prefs.notifyOnParticipantJoined}
-                className={styles.toggle}
+              <Toggle
+                checked={prefs.notifyOnParticipantJoined}
                 disabled={savingPref === 'notifyOnParticipantJoined'}
-                onClick={() => void handleTogglePref('notifyOnParticipantJoined')}
-              >
-                <span className={styles.toggleThumb} />
-              </button>
+                onChange={() => void handleTogglePref('notifyOnParticipantJoined')}
+              />
             </div>
 
             <div className={styles.prefRow}>
               <span className={styles.prefLabel}>{t('notifications.prefEventReminder')}</span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={prefs.notifyEventReminder}
-                className={styles.toggle}
+              <Toggle
+                checked={prefs.notifyEventReminder}
                 disabled={savingPref === 'notifyEventReminder'}
-                onClick={() => void handleTogglePref('notifyEventReminder')}
-              >
-                <span className={styles.toggleThumb} />
-              </button>
+                onChange={() => void handleTogglePref('notifyEventReminder')}
+              />
             </div>
 
             <div className={styles.prefRow}>
               <span className={styles.prefLabel}>{t('notifications.prefMovieAdded')}</span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={prefs.notifyOnMovieAdded}
-                className={styles.toggle}
+              <Toggle
+                checked={prefs.notifyOnMovieAdded}
                 disabled={savingPref === 'notifyOnMovieAdded'}
-                onClick={() => void handleTogglePref('notifyOnMovieAdded')}
-              >
-                <span className={styles.toggleThumb} />
-              </button>
+                onChange={() => void handleTogglePref('notifyOnMovieAdded')}
+              />
             </div>
 
             <div className={styles.prefRow}>
               <span className={styles.prefLabel}>{t('notifications.prefMoviePicked')}</span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={prefs.notifyOnMoviePicked}
-                className={styles.toggle}
+              <Toggle
+                checked={prefs.notifyOnMoviePicked}
                 disabled={savingPref === 'notifyOnMoviePicked'}
-                onClick={() => void handleTogglePref('notifyOnMoviePicked')}
-              >
-                <span className={styles.toggleThumb} />
-              </button>
+                onChange={() => void handleTogglePref('notifyOnMoviePicked')}
+              />
             </div>
 
             <div className={styles.prefRow}>
               <span className={styles.prefLabel}>{t('notifications.prefEventDeleted')}</span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={prefs.notifyOnEventDeleted}
-                className={styles.toggle}
+              <Toggle
+                checked={prefs.notifyOnEventDeleted}
                 disabled={savingPref === 'notifyOnEventDeleted'}
-                onClick={() => void handleTogglePref('notifyOnEventDeleted')}
-              >
-                <span className={styles.toggleThumb} />
-              </button>
+                onChange={() => void handleTogglePref('notifyOnEventDeleted')}
+              />
             </div>
 
             <div className={styles.prefRow}>
               <span className={styles.prefLabel}>{t('notifications.prefNewFollower')}</span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={prefs.notifyOnNewFollower}
-                className={styles.toggle}
+              <Toggle
+                checked={prefs.notifyOnNewFollower}
                 disabled={savingPref === 'notifyOnNewFollower'}
-                onClick={() => void handleTogglePref('notifyOnNewFollower')}
-              >
-                <span className={styles.toggleThumb} />
-              </button>
+                onChange={() => void handleTogglePref('notifyOnNewFollower')}
+              />
             </div>
           </>
         )}

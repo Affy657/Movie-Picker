@@ -5,6 +5,7 @@ import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
 import Avatar from '@/shared/components/Avatar';
 import AvatarPickerModal from '@/features/auth/components/AvatarPickerModal';
+import Toggle from '@/shared/components/Toggle';
 import styles from '@/features/auth/pages/AccountPage.module.css';
 
 const BIO_MAX_LENGTH = 140;
@@ -149,19 +150,14 @@ export default function PublicProfileSection() {
         <div className={styles.visibilityRow}>
           <Globe size={16} aria-hidden className={styles.visibilityIcon} />
           <span className={styles.visibilityLabel}>{t('profile.settings.visibilityLabel')}</span>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={isPublic}
-            aria-label={t('profile.settings.visibilityLabel')}
-            className={styles.toggle}
-            onClick={() => {
+          <Toggle
+            checked={isPublic}
+            label={t('profile.settings.visibilityLabel')}
+            onChange={() => {
               setIsPublic((v) => !v);
               setSavedAt(null);
             }}
-          >
-            <span className={styles.toggleThumb} />
-          </button>
+          />
         </div>
 
         <button type="submit" className="btn btn-primary" disabled={saving}>

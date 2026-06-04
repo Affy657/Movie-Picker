@@ -1,4 +1,4 @@
-.footer {
+﻿.footer {
   width: 100%;
   border-top: 1px solid var(--color-border-subtle);
   background: var(--color-surface);
@@ -34,18 +34,18 @@
 }
 
 .brandName {
-  font-size: 1rem;
+  font-size: var(--font-size-md);
   font-weight: 800;
-  letter-spacing: -0.02em;
-  transition: color 0.15s ease;
+  letter-spacing: var(--tracking-narrow);
+  transition: color var(--duration-base) var(--ease-default);
 }
 
 .brandTagline {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--color-text-muted);
   margin: 0;
   max-width: 18rem;
-  line-height: 1.5;
+  line-height: var(--leading-base);
 }
 
 /* Columns */
@@ -56,9 +56,9 @@
 }
 
 .colTitle {
-  font-size: 0.75rem;
+  font-size: var(--font-size-2xs);
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-extra);
   text-transform: uppercase;
   color: var(--color-text-muted);
   margin: 0;
@@ -74,10 +74,10 @@
 }
 
 .colLink {
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   color: var(--color-text-muted);
   text-decoration: none;
-  transition: color 0.15s ease;
+  transition: color var(--duration-base) var(--ease-default);
 }
 
 .colLink:hover {
@@ -89,10 +89,10 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   color: var(--color-text-muted);
   text-decoration: none;
-  transition: color 0.15s ease;
+  transition: color var(--duration-base) var(--ease-default);
 }
 
 .socialLink:hover {
@@ -118,7 +118,7 @@
 }
 
 .tmdb {
-  font-size: 0.75rem;
+  font-size: var(--font-size-2xs);
   color: var(--color-text-muted);
   opacity: 0.8;
   margin: 0;
@@ -135,7 +135,7 @@
 }
 
 .copyright {
-  font-size: 0.75rem;
+  font-size: var(--font-size-2xs);
   color: var(--color-text-muted);
   opacity: 0.6;
   margin: 0;

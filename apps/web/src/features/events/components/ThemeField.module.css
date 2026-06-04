@@ -1,4 +1,4 @@
-.inputRow {
+﻿.inputRow {
   display: flex;
   gap: 0.5rem;
   align-items: center;
@@ -19,8 +19,8 @@
   width: 2.75rem;
   min-height: 46px;
   padding: 0.7rem 0.5rem;
-  font-size: 1.25rem;
-  line-height: 1;
+  font-size: var(--font-size-lg);
+  line-height: var(--leading-none);
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -29,8 +29,8 @@
   align-items: center;
   justify-content: center;
   transition:
-    background 0.15s,
-    border-color 0.15s;
+    background var(--duration-base),
+    border-color var(--duration-base);
   flex-shrink: 0;
 }
 
@@ -61,8 +61,8 @@
 }
 
 .emojiOpt {
-  font-size: 1.3rem;
-  line-height: 1;
+  font-size: var(--font-size-lg);
+  line-height: var(--leading-none);
   padding: 0.3rem;
   background: transparent;
   border: 1.5px solid transparent;
@@ -71,7 +71,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.1s;
+  transition: background var(--duration-instant);
 }
 
 .emojiOpt:hover {
@@ -79,7 +79,7 @@
 }
 
 .emojiOptNone {
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   color: var(--color-text-muted);
   font-weight: 600;
 }
@@ -117,16 +117,16 @@
   align-items: center;
   gap: 0.2rem;
   padding: 0.2rem 0.6rem;
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
   border-radius: 999px;
   cursor: pointer;
   color: var(--color-text-muted);
   transition:
-    background 0.12s,
-    border-color 0.12s,
-    color 0.12s;
+    background var(--duration-fast),
+    border-color var(--duration-fast),
+    color var(--duration-fast);
   white-space: nowrap;
 }
 
@@ -148,17 +148,17 @@
   align-items: center;
   justify-content: center;
   padding: 0.2rem 0.6rem;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-extra);
   background: transparent;
   border: 1px dashed var(--color-border);
   border-radius: 999px;
   cursor: pointer;
   color: var(--color-text-muted);
   transition:
-    border-color 0.12s,
-    color 0.12s;
+    border-color var(--duration-fast),
+    color var(--duration-fast);
   white-space: nowrap;
 }
 
@@ -177,10 +177,10 @@
 }
 
 .colorRowLabel {
-  font-size: 0.72rem;
+  font-size: var(--font-size-2xs);
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-extra);
   color: var(--color-text-muted);
   margin-right: 0.1rem;
   flex-shrink: 0;
@@ -194,9 +194,9 @@
   cursor: pointer;
   padding: 0;
   flex-shrink: 0;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  transition: transform var(--duration-fast) var(--ease-default), box-shadow var(--duration-fast) var(--ease-default);
   background: hsl(var(--swatch-hue, 0) 65% 55%);
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
 
 .colorSwatch:hover {

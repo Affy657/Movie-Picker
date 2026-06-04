@@ -1,4 +1,4 @@
-.root {
+﻿.root {
   margin: 0 0 1rem 0;
   padding: 0.95rem 1.1rem;
   border-radius: var(--radius-md);
@@ -12,9 +12,9 @@
   align-items: center;
   gap: 0.55rem;
   margin: 0 0 0.65rem 0;
-  font-size: 1rem;
+  font-size: var(--font-size-md);
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: var(--tracking-snug);
   color: var(--color-text);
 }
 
@@ -26,7 +26,7 @@
 .count {
   color: var(--color-text-muted);
   font-weight: 500;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
 }
 
 .fullBadge {
@@ -36,9 +36,9 @@
   background: var(--color-badge-upcoming-bg);
   color: var(--color-badge-upcoming-text);
   border: 1px solid color-mix(in srgb, var(--color-badge-upcoming-text) 30%, transparent);
-  font-size: 0.7rem;
+  font-size: var(--font-size-3xs);
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-wide-lg);
   text-transform: uppercase;
 }
 
@@ -59,13 +59,13 @@
   border-radius: var(--radius-pill);
   background: var(--color-bg);
   border: 1px solid var(--color-border-subtle);
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   color: var(--color-text);
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background var(--duration-base) var(--ease-default), border-color var(--duration-base) var(--ease-default);
 }
 
 .chipLabel {
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 
 .profileLink {
@@ -84,16 +84,16 @@
 
 .profileLink:focus-visible {
   outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
 
 .hostBadge {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.65rem;
+  font-size: var(--font-size-4xs);
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-extra);
   text-transform: uppercase;
   color: var(--color-badge-host-text);
   background: var(--color-badge-host-bg);
@@ -115,7 +115,7 @@
   background: transparent;
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color var(--duration-base) var(--ease-default), color var(--duration-base) var(--ease-default);
 }
 
 .removeBtn:hover:not(:disabled),
@@ -141,5 +141,5 @@
   color: var(--color-text-muted);
   font-style: italic;
   margin: 0;
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
 }

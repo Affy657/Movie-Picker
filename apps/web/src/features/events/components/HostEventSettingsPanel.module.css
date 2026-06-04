@@ -1,4 +1,4 @@
-.root {
+﻿.root {
   margin: 0 0 1.25rem 0;
   padding: 0;
   border: 1px solid var(--color-border-subtle);
@@ -16,7 +16,7 @@
   font-weight: 600;
   padding: 0.85rem 1.1rem;
   list-style: none;
-  transition: background 0.15s ease;
+  transition: background var(--duration-base) var(--ease-default);
 }
 
 .summary:hover {
@@ -44,7 +44,7 @@
   border-right: 2px solid var(--color-text-muted);
   border-bottom: 2px solid var(--color-text-muted);
   transform: rotate(-45deg);
-  transition: transform 0.18s ease, border-color 0.15s ease;
+  transition: transform var(--duration-medium) var(--ease-default), border-color var(--duration-base) var(--ease-default);
 }
 
 .summary:hover .summaryChevron {
@@ -63,13 +63,13 @@
 }
 
 .lead {
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   color: var(--color-text-muted);
   margin-top: -0.25rem;
 }
 
 .locked {
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   color: var(--color-error);
   margin-bottom: 0.5rem;
 }
@@ -98,7 +98,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.72rem;
+  font-size: var(--font-size-2xs);
   font-weight: 500;
   color: var(--color-text-muted);
   background: color-mix(in srgb, var(--color-border) 60%, transparent);
@@ -106,15 +106,15 @@
   border-radius: 999px;
   padding: 0.15rem 0.5rem 0.15rem 0.35rem;
   cursor: pointer;
-  line-height: 1;
+  line-height: var(--leading-none);
   flex-shrink: 0;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: background var(--duration-base) var(--ease-default), color var(--duration-base) var(--ease-default), border-color var(--duration-base) var(--ease-default);
 }
 
 .clearThemeBtn:hover {
-  background: color-mix(in srgb, var(--color-error, #b00020) 12%, transparent);
-  color: var(--color-error, #b00020);
-  border-color: color-mix(in srgb, var(--color-error, #b00020) 40%, transparent);
+  background: color-mix(in srgb, var(--color-error) 12%, transparent);
+  color: var(--color-error);
+  border-color: color-mix(in srgb, var(--color-error) 40%, transparent);
 }
 
 .clearThemeBtn:disabled {
@@ -170,7 +170,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.9375rem;
+  font-size: var(--font-size-base);
   cursor: pointer;
 }
 
@@ -179,29 +179,29 @@
   background: var(--color-wheel-bg);
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   margin: 0 1rem 0.75rem;
 }
 
 .dangerZone {
   margin: 1rem;
   padding: 0.85rem 1rem 1rem;
-  border: 1px solid var(--color-error, #b00020);
+  border: 1px solid var(--color-error);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-error, #b00020) 6%, transparent);
+  background: color-mix(in srgb, var(--color-error) 6%, transparent);
 }
 
 .dangerTitle {
   margin: 0 0 0.25rem;
-  color: var(--color-error, #b00020);
-  font-size: 0.95rem;
+  color: var(--color-error);
+  font-size: var(--font-size-base);
   font-weight: 600;
 }
 
 .dangerLead {
   margin: 0 0 0.75rem;
   color: var(--color-text-muted);
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
 }
 
 .checkboxRow {
@@ -218,7 +218,7 @@
   justify-content: space-between;
   gap: 0.75rem;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--color-text);
   width: 100%;
@@ -234,7 +234,7 @@
   height: 1.5rem;
   border-radius: 999px;
   background: var(--color-border);
-  transition: background 0.2s ease;
+  transition: background var(--duration-slow) var(--ease-default);
   flex-shrink: 0;
 }
 
@@ -249,8 +249,8 @@
   width: 1.1rem;
   height: 1.1rem;
   border-radius: 999px;
-  background: #fff;
-  transition: transform 0.2s ease;
+  background: var(--color-toggle-thumb);
+  transition: transform var(--duration-slow) var(--ease-default);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
 

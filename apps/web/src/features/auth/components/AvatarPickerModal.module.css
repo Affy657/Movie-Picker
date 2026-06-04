@@ -1,4 +1,4 @@
-.dialog {
+﻿.dialog {
   width: min(480px, calc(100vw - 2rem));
   padding: 1.4rem 1.5rem 1.6rem;
   border-radius: var(--radius-lg);
@@ -9,7 +9,7 @@
 }
 
 .dialog::backdrop {
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--overlay-backdrop);
   backdrop-filter: blur(4px);
 }
 
@@ -22,9 +22,9 @@
 
 .title {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: var(--font-size-md-plus);
   font-weight: 700;
-  letter-spacing: -0.015em;
+  letter-spacing: var(--tracking-close);
   color: var(--color-text);
 }
 
@@ -40,7 +40,7 @@
   background: transparent;
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background var(--duration-base) var(--ease-default), color var(--duration-base) var(--ease-default);
 }
 
 .closeBtn:hover {
@@ -50,7 +50,7 @@
 
 .hint {
   margin: 0 0 1.1rem;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   color: var(--color-text-muted);
 }
 
@@ -68,9 +68,9 @@
   background: transparent;
   color: var(--color-text-muted);
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 500;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: background var(--duration-base) var(--ease-default), border-color var(--duration-base) var(--ease-default), color var(--duration-base) var(--ease-default);
 }
 
 .tab:hover {
@@ -107,7 +107,7 @@
   border: 2px solid transparent;
   background: transparent;
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: border-color var(--duration-base) var(--ease-default), background var(--duration-base) var(--ease-default);
 }
 
 .option:hover {
@@ -132,7 +132,7 @@
   bottom: 3px;
   right: 3px;
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-primary-contrast);
   border-radius: 50%;
   padding: 2px;
   width: 16px;

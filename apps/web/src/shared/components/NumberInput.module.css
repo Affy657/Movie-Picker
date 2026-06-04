@@ -1,11 +1,11 @@
-.wrap {
+﻿.wrap {
   display: flex;
   align-items: center;
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md);
   overflow: hidden;
   background: var(--color-input-bg, var(--color-surface));
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color var(--duration-base) var(--ease-default), box-shadow var(--duration-base) var(--ease-default);
 }
 
 .wrap:focus-within {
@@ -38,9 +38,9 @@
   flex-shrink: 0;
   width: 2.25rem;
   min-height: 44px;
-  font-size: 1.1rem;
+  font-size: var(--font-size-md-plus);
   font-weight: 500;
-  line-height: 1;
+  line-height: var(--leading-none);
   border: none;
   background: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
   color: var(--color-primary);
@@ -48,7 +48,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.12s, color 0.12s;
+  transition: background var(--duration-fast), color var(--duration-fast);
   user-select: none;
 }
 

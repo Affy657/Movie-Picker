@@ -1,4 +1,4 @@
-.root {
+﻿.root {
   position: relative;
   margin-bottom: 1.5rem;
   padding: 1.25rem 1.35rem;
@@ -13,9 +13,9 @@
   align-items: center;
   gap: 0.55rem;
   margin: 0 0 0.4rem;
-  font-size: 1.1rem;
+  font-size: var(--font-size-md-plus);
   font-weight: 700;
-  letter-spacing: -0.015em;
+  letter-spacing: var(--tracking-close);
   color: var(--color-text);
 }
 
@@ -26,14 +26,14 @@
 
 .intro {
   margin: 0 0 1rem;
-  font-size: 0.9375rem;
-  line-height: 1.5;
+  font-size: var(--font-size-base);
+  line-height: var(--leading-base);
   color: var(--color-text-muted);
 }
 
 .fullMessage {
   margin: 0;
-  font-size: 0.9375rem;
+  font-size: var(--font-size-base);
   font-weight: 500;
   color: var(--color-error);
 }

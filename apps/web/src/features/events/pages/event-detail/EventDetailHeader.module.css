@@ -1,4 +1,4 @@
-.root {
+﻿.root {
   margin-bottom: 1.75rem;
 }
 
@@ -13,8 +13,8 @@
   margin: 0;
   font-size: clamp(1.5rem, 3vw, 1.875rem);
   font-weight: 800;
-  line-height: 1.15;
-  letter-spacing: -0.025em;
+  line-height: var(--leading-compact);
+  letter-spacing: var(--tracking-tight);
   color: var(--color-text);
 }
 
@@ -34,11 +34,11 @@
   gap: 0.35rem;
   padding: 0.35rem 0.65rem 0.35rem 0.5rem;
   border-radius: var(--radius-pill);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--color-text-muted);
   background: transparent;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition: color var(--duration-base) var(--ease-default), background var(--duration-base) var(--ease-default);
 }
 
 .top :global(.back-link):hover {
@@ -57,8 +57,8 @@
 .meta {
   margin: 0;
   color: var(--color-text-muted);
-  font-size: 0.9375rem;
-  line-height: 1.45;
+  font-size: var(--font-size-base);
+  line-height: var(--leading-comfortable);
 }
 
 .badgeFinished {
@@ -67,9 +67,9 @@
   gap: 0.35rem;
   margin: 0;
   padding: 0.25rem 0.7rem;
-  font-size: 0.75rem;
+  font-size: var(--font-size-2xs);
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-wide-lg);
   text-transform: uppercase;
   border-radius: var(--radius-pill);
   background: var(--color-badge-finished-bg);

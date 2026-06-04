@@ -1,4 +1,4 @@
-.sectionTitle {
+﻿.sectionTitle {
   display: flex;
   align-items: center;
   gap: 0.55rem;
@@ -47,24 +47,24 @@
 
 .winnerLabel {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: var(--font-size-2xs);
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--tracking-widest);
   text-transform: uppercase;
   color: var(--color-wheel-label);
 }
 
 .winnerTitle {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: var(--font-size-xl);
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: var(--tracking-narrow);
   color: var(--color-text);
 }
 
 .winnerMeta {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   color: var(--color-text-muted);
 }
 

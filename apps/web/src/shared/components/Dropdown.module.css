@@ -1,4 +1,4 @@
-.root {
+﻿.root {
   position: relative;
   width: 100%;
 }
@@ -10,7 +10,7 @@
   width: 100%;
   min-height: 46px;
   padding: 0.7rem 0.95rem;
-  font-size: 0.9375rem;
+  font-size: var(--font-size-base);
   font-weight: 500;
   text-align: left;
   background: var(--color-input-bg, var(--color-surface));
@@ -18,7 +18,7 @@
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color var(--duration-base) var(--ease-default), box-shadow var(--duration-base) var(--ease-default);
 }
 
 .trigger:hover:not([aria-expanded='true']) {
@@ -48,7 +48,7 @@
   border-bottom: 2px solid var(--color-text-muted);
   transform: rotate(45deg);
   margin-bottom: 0.25rem;
-  transition: transform 0.18s ease, border-color 0.15s ease;
+  transition: transform var(--duration-medium) var(--ease-default), border-color var(--duration-base) var(--ease-default);
 }
 
 .trigger[aria-expanded='true'] .triggerChevron {
@@ -81,12 +81,12 @@
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.55rem 0.75rem;
-  font-size: 0.9375rem;
+  font-size: var(--font-size-base);
   border-radius: var(--radius-sm);
   color: var(--color-text);
   cursor: pointer;
   outline: none;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition: background var(--duration-fast) var(--ease-default), color var(--duration-fast) var(--ease-default);
 }
 
 .option:focus,

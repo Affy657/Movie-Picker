@@ -1,4 +1,4 @@
-.root {
+﻿.root {
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem;
@@ -18,11 +18,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: var(--color-primary-contrast);
   transition:
-    transform 0.12s ease,
-    border-color 0.12s ease,
-    box-shadow 0.12s ease;
+    transform var(--duration-fast) var(--ease-default),
+    border-color var(--duration-fast) var(--ease-default),
+    box-shadow var(--duration-fast) var(--ease-default);
 }
 
 .swatch:hover {

@@ -1,4 +1,4 @@
-.devQuickLogin {
+﻿.devQuickLogin {
   margin-top: 1.5rem;
   padding: 1rem 1.05rem;
   background: color-mix(in srgb, var(--color-primary) 5%, transparent);
@@ -8,6 +8,6 @@
 
 .devQuickLoginHint {
   margin: 0.6rem 0 0;
-  font-size: 0.75rem;
-  line-height: 1.45;
+  font-size: var(--font-size-2xs);
+  line-height: var(--leading-comfortable);
 }

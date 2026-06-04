@@ -1,4 +1,4 @@
-.root {
+﻿.root {
   display: flex;
   align-items: flex-start;
   gap: 0.85rem;
@@ -33,22 +33,22 @@
 }
 
 .kicker {
-  font-size: 0.7rem;
+  font-size: var(--font-size-3xs);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--tracking-widest);
   color: var(--color-badge-upcoming-text);
 }
 
 .text {
   margin: 0;
-  font-size: 0.9375rem;
+  font-size: var(--font-size-base);
   font-weight: 600;
-  line-height: 1.4;
+  line-height: var(--leading-normal);
 }
 
 .meta {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--color-text-muted);
 }

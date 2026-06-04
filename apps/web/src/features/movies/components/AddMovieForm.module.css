@@ -1,4 +1,4 @@
-.root {
+﻿.root {
   margin-bottom: 1rem;
   max-width: 100%;
   margin-inline: auto;
@@ -44,22 +44,22 @@
 
 .minCharsHint {
   margin: -0.35rem 0 0.55rem 0;
-  font-size: 0.8125rem;
-  line-height: 1.35;
+  font-size: var(--font-size-xs);
+  line-height: var(--leading-snug);
   color: var(--color-text-muted);
 }
 
 .noResultsHint {
   margin: 0 0 0.65rem 0;
-  font-size: 0.875rem;
-  line-height: 1.4;
+  font-size: var(--font-size-sm);
+  line-height: var(--leading-normal);
   color: var(--color-meta);
 }
 
 .regionHint {
   margin: 0 0 0.5rem 0;
-  font-size: 0.75rem;
-  line-height: 1.4;
+  font-size: var(--font-size-2xs);
+  line-height: var(--leading-normal);
   color: var(--color-text-muted);
 }
 
@@ -107,7 +107,7 @@
   height: 100%;
   min-height: 0;
   background: var(--color-poster-placeholder);
-  font-size: 0.75rem;
+  font-size: var(--font-size-2xs);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -141,20 +141,20 @@
 
 .resultTitle {
   display: block;
-  font-size: 0.9375rem;
+  font-size: var(--font-size-base);
   font-weight: 600;
-  line-height: 1.25;
+  line-height: var(--leading-tight);
 }
 
 .resultMeta {
-  font-size: 0.8125rem;
-  line-height: 1.25;
+  font-size: var(--font-size-xs);
+  line-height: var(--leading-tight);
   color: var(--color-meta);
 }
 
 .resultDuplicate {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--color-meta);
 }
 
@@ -239,15 +239,15 @@
 }
 
 .historyTitle {
-  font-size: 0.7rem;
+  font-size: var(--font-size-3xs);
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--tracking-wider);
   text-transform: uppercase;
   color: var(--color-text-muted);
 }
 
 .historyClearBtn {
-  font-size: 0.75rem;
+  font-size: var(--font-size-2xs);
   font-weight: 500;
   color: var(--color-text-muted);
   background: none;
@@ -256,8 +256,8 @@
   cursor: pointer;
   border-radius: var(--radius-sm);
   transition:
-    color 0.12s ease,
-    background 0.12s ease;
+    color var(--duration-fast) var(--ease-default),
+    background var(--duration-fast) var(--ease-default);
 }
 
 .historyClearBtn:hover {
@@ -293,7 +293,7 @@
   background: none;
   border: none;
   text-align: left;
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   color: var(--color-text);
   cursor: pointer;
   border-radius: var(--radius-sm);
@@ -338,15 +338,15 @@
   border-radius: var(--radius-sm);
   opacity: 0.55;
   transition:
-    opacity 0.12s ease,
-    color 0.12s ease,
-    background 0.12s ease;
+    opacity var(--duration-fast) var(--ease-default),
+    color var(--duration-fast) var(--ease-default),
+    background var(--duration-fast) var(--ease-default);
 }
 
 .historyRemoveBtn:hover {
   opacity: 1;
-  color: var(--color-danger, #e5484d);
-  background: color-mix(in srgb, var(--color-danger, #e5484d) 12%, transparent);
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 12%, transparent);
 }
 
 .historyRemoveBtn:focus-visible {
@@ -359,9 +359,9 @@
   display: inline-block;
   margin-left: 0.4rem;
   padding: 0.1rem 0.45rem;
-  font-size: 0.7rem;
+  font-size: var(--font-size-3xs);
   font-weight: 600;
-  letter-spacing: 0.03em;
+  letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   color: var(--color-primary);
   background: color-mix(in srgb, var(--color-primary) 12%, transparent);

@@ -1,4 +1,4 @@
-.layout {
+﻿.layout {
   align-items: center;
 }
 
@@ -19,14 +19,14 @@
 
 .displayName {
   margin: 0;
-  font-size: 1.5rem;
-  line-height: 1.2;
+  font-size: var(--font-size-xl);
+  line-height: var(--leading-tight);
 }
 
 .handle {
   margin: 0;
-  color: var(--color-text-muted, #6b7280);
-  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-base);
 }
 
 .bio {
@@ -37,8 +37,8 @@
 
 .memberSince {
   margin: 0.25rem 0 0.75rem;
-  color: var(--color-text-muted, #6b7280);
-  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
 }
 
 .followStats {
@@ -57,7 +57,7 @@
   cursor: pointer;
   padding: 0.25rem 0.5rem;
   border-radius: 0.375rem;
-  transition: background 0.12s;
+  transition: background var(--duration-fast);
 }
 
 .statBtn:hover {
@@ -65,15 +65,15 @@
 }
 
 .statCount {
-  font-size: 1rem;
+  font-size: var(--font-size-md);
   font-weight: 700;
   color: var(--color-text, inherit);
-  line-height: 1.2;
+  line-height: var(--leading-tight);
 }
 
 .statLabel {
-  font-size: 0.75rem;
-  color: var(--color-text-muted, #6b7280);
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-muted);
 }
 
 .actions {

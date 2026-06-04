@@ -1,4 +1,4 @@
-.layout {
+﻿.layout {
   --page-max-width: 28rem;
   padding-top: clamp(1.5rem, 5vh, 3rem);
 }
@@ -9,12 +9,12 @@
   gap: 0.35rem;
   margin: 0 0 0.85rem clamp(0.5rem, 2vw, 1rem);
   padding: 0.35rem 0.6rem 0.35rem 0.4rem;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--color-text-muted);
   text-decoration: none;
   border-radius: var(--radius-pill);
-  transition: color 0.15s ease, background 0.15s ease;
+  transition: color var(--duration-base) var(--ease-default), background var(--duration-base) var(--ease-default);
 }
 
 .backLink:hover {
@@ -49,14 +49,14 @@
   margin: 0 0 0.4rem;
   font-size: clamp(1.5rem, 3vw, 1.875rem);
   font-weight: 800;
-  letter-spacing: -0.025em;
-  line-height: 1.2;
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
   color: var(--color-text);
 }
 
 .description {
   margin: 0 0 1.5rem;
-  font-size: 0.9375rem;
-  line-height: 1.55;
+  font-size: var(--font-size-base);
+  line-height: var(--leading-loose);
   color: var(--color-text-muted);
 }
