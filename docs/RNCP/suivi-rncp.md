@@ -76,7 +76,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 - [ ] Créer **`docs/RNCP/bloc-2-conception-developpement/cahier-recettes.md`** : tableau **Scénario → Préconditions → Étapes → Résultat attendu → Référence test E2E** ; couvrir au minimum :
   - Création de soirée (compte requis, redirection `/e/:slug` sans `?host=`)
-  - Rejoindre via lien (invité avec pseudo, doublon de pseudo, soirée pleine ou expirée)
+  - Rejoindre via lien (connexion/inscription requise + redirection `returnTo`, participant déjà inscrit, soirée pleine ou expirée)
   - Inscription / connexion / déconnexion / mot de passe oublié (cf. `livraison-v1.md` § 3)
   - Proposer un film (recherche TMDB, doublon refusé, retrait par l'auteur)
   - Voter up/down + marquer « déjà vu » (un seul vote / participant ; agrégat exposé)
@@ -208,11 +208,11 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 - [ ] Créer **`docs/RNCP/bloc-1-cadrage/01-parties-prenantes.md`** :
   - Tableau **acteur → rôle → niveau d'implication** : commanditaire (Ynov / formateur), développeur (candidat), architecte (candidat), administrateur (candidat — Cloud Run / S3), utilisateurs finaux (créateurs de soirée, invités), acteurs externes (TMDB, GCP, AWS, MongoDB Atlas, Sentry, Dependabot)
-  - **Personas utilisateurs** : « hôte qui organise une soirée ciné », « invité ponctuel rejoignant via lien », « groupe d'amis récurrent ». Caractéristiques : âge, équipement (mobile-first, cf. [`../spec.md`](../spec.md) § 9), contexte d'usage, attentes
+  - **Personas utilisateurs** : « hôte qui organise une soirée ciné », « participant invité rejoignant via lien (compte requis) », « groupe d'amis récurrent ». Caractéristiques : âge, équipement (mobile-first, cf. [`../spec.md`](../spec.md) § 9), contexte d'usage, attentes
   - Pour chaque persona : **scénario d'usage** clé en 3-4 lignes
 - [ ] Créer **`docs/RNCP/bloc-1-cadrage/02-analyse-demande.md`** (couvre C1.1.2) :
   - **Problématique** : « comment choisir un film à plusieurs sans 30 min de débat improductif ? »
-  - **Objectifs** : choix collectif rapide, équitable, ludique ; bas friction (lien partagé sans inscription pour les invités)
+  - **Objectifs** : choix collectif rapide, équitable, ludique ; friction maîtrisée (lien partagé + inscription rapide avec redirection `returnTo`)
   - **Enjeux** : adoption (mobile-first, partage par messagerie), engagement (animation roue), conformité (RGPD basique, accessibilité)
   - **État de l'existant** : alternatives (MUBI, Letterboxd watchlist, sondages WhatsApp, Watcha) + leurs limites
   - **Pistes de solutions** retenues (vote pondéré + roue, marqueur « déjà vu » neutre, watch providers TMDB) et écartées (deep links streaming → backlog)

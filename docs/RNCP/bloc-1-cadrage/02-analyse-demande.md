@@ -17,8 +17,8 @@ Le choix collectif d'un film est un problème social récurrent : chacun a ses p
 | Partie prenante | Besoin exprimé / déduit | Traduction produit |
 |-----------------|-------------------------|--------------------|
 | **Hôte** | Organiser sans effort, garder le contrôle de la décision finale | Création rapide, configuration de soirée, rôle hôte exclusif (roue, clôture) |
-| **Invité** | Participer sans contrainte d'inscription | Rejoindre via lien + pseudo, sans compte |
-| **Groupe récurrent** | Retrouver ses soirées, éviter de reproposer un film déjà vu | Compte optionnel, historique, marqueur « déjà vu » neutre |
+| **Participant invité** | Rejoindre et participer simplement | Lien de partage → connexion/inscription rapide → redirection automatique sur la soirée (`returnTo`) |
+| **Groupe récurrent** | Retrouver ses soirées, éviter de reproposer un film déjà vu | Compte (requis), historique, marqueur « déjà vu » neutre |
 | **Tous** | Décider vite et de façon équitable | Vote up/down + roue (aléatoire ou pondérée) |
 | **Tous (mobile)** | Utiliser au doigt, depuis un lien de messagerie | Mobile-first, « Copier le lien », QR code |
 | **Commanditaire (Ynov)** | Démontrer la maîtrise du cycle complet (cadrage → dev → pilotage → MCO) | Couverture des 4 blocs RNCP, livrables documentaires versionnés |
@@ -30,7 +30,7 @@ Le choix collectif d'un film est un problème social récurrent : chacun a ses p
 ### Objectifs produit
 - **Choix collectif rapide** : passer de « quel film ? » à un film décidé en quelques minutes.
 - **Équité** : chaque participant propose et vote ; la roue tranche (option pondérée pour respecter les votes).
-- **Friction minimale** : rejoindre sans compte, partage par simple lien.
+- **Friction maîtrisée** : partage par simple lien menant à une inscription rapide, puis retour automatique sur la soirée (`returnTo`).
 - **Dimension ludique** : l'animation de la roue rend la décision engageante plutôt que conflictuelle.
 
 ### Objectifs académiques (RNCP 39583)
@@ -43,7 +43,7 @@ Le choix collectif d'un film est un problème social récurrent : chacun a ses p
 
 | Enjeu | Description | Levier produit / technique |
 |-------|-------------|----------------------------|
-| **Adoption** | Faire entrer un maximum de participants avec un minimum de friction | Mobile-first, lien partagé sans inscription pour les invités |
+| **Adoption** | Faire entrer un maximum de participants avec un minimum de friction | Mobile-first, lien partagé + inscription rapide avec redirection automatique sur la soirée |
 | **Engagement** | Rendre la décision plaisante et non conflictuelle | Animation de la roue, vote visible, marqueur « déjà vu » |
 | **Confiance / sécurité** | Protéger les données et le rôle hôte | Auth par cookie, OWASP Top 10, rôle hôte non devinable (cf. [`../owasp-top-10.md`](../bloc-2-conception-developpement/owasp-top-10.md)) |
 | **Conformité** | Respecter le cadre légal et l'accessibilité | RGPD basique (export/suppression), accessibilité (OPQUAST/RGAA) |
@@ -69,17 +69,17 @@ Le choix collectif d'un film est un problème social récurrent : chacun a ses p
 
 ### Pistes retenues
 - **Vote up/down + roue** (aléatoire stricte ou pondérée par les votes) : départage rapide et équitable, paramétrable par l'hôte.
-- **Lien partagé + pseudo par soirée** : adoption sans friction pour les invités.
+- **Lien partagé + inscription rapide (`returnTo`)** : adoption fluide tout en garantissant des participants identifiés (pseudo = nom du compte).
 - **Métadonnées TMDB** (poster, note, bande-annonce, watch providers) : aide à la décision, ancrage visuel mobile.
 - **Marqueur « déjà vu » neutre** (n'influence pas la roue) : évite de reproposer sans fausser le tirage.
-- **Compte optionnel** : persistance et historique pour les utilisateurs récurrents, sans pénaliser les ponctuels.
+- **Compte obligatoire pour tous les participants** : persistance, historique, notifications et fonctions sociales pour chacun ; le pseudo affiché = le nom du compte.
 
 ### Pistes écartées (reportées au backlog)
 - **Deep links streaming natifs** (ouverture directe dans l'app de streaming) : complexité de mapping par plateforme → backlog (cf. [`../../roadmap-product.md`](../../roadmap-product.md)).
 - **Recommandation algorithmique** : hors périmètre — la valeur est dans la décision collective, pas la suggestion.
 - **Notifications push / email de rappel** : nécessitent consentement RGPD + infra de file d'envoi → V1.1 / backlog.
 
-> **Cohérence problématique → solutions** : chaque piste retenue répond directement à un enjeu identifié (vote+roue → équité/rapidité ; lien sans compte → adoption ; TMDB → engagement ; compte optionnel → soutenabilité de l'usage récurrent). Les justifications techniques détaillées figurent dans [`04-etude-comparative.md`](04-etude-comparative.md).
+> **Cohérence problématique → solutions** : chaque piste retenue répond directement à un enjeu identifié (vote+roue → équité/rapidité ; lien + inscription rapide → adoption ; TMDB → engagement ; compte pour tous → identité, social et soutenabilité). Les justifications techniques détaillées figurent dans [`04-etude-comparative.md`](04-etude-comparative.md).
 
 ---
 

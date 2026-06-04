@@ -27,18 +27,18 @@ Aucune solution existante ne combine décision collective + métadonnées films 
 | **Contexte** | Les invités rejoignent via un lien de messagerie, sur téléphone, souvent une seule fois |
 | **Options** | App web responsive · app native iOS/Android · app hybride |
 | **Décision** | **Application web (SPA) mobile-first** |
-| **Argumentaire** | « On clique sur un lien et on participe : aucune installation, aucun store. C'est ce qui supprime la barrière d'entrée pour des invités occasionnels. » |
-| **Risque résiduel** | Fonctions natives limitées (notifications push) → reportées en V1.1 avec consentement |
+| **Argumentaire** | « On clique sur un lien et, après une inscription express, on participe : aucune installation, aucun store. La barrière d'entrée se réduit à un compte créé en quelques secondes. » |
+| **Risque résiduel** | Fonctions natives limitées → compensées par une PWA (push web via VAPID livré, installation « écran d'accueil ») |
 
-### Décision 2 — Rejoindre sans compte, créer avec compte
+### Décision 2 — Compte obligatoire pour tous les participants
 
 | | |
 |--|--|
-| **Contexte** | Tension entre friction minimale (invités) et persistance (organisateurs réguliers) |
-| **Options** | Tout sans compte · tout avec compte · **modèle asymétrique** |
-| **Décision** | **Créer une soirée = compte requis ; rejoindre = sans compte (pseudo)** |
-| **Argumentaire** | « L'invité participe en 5 secondes ; l'organisateur, lui, retrouve ses soirées sur tous ses appareils. Chacun a le bon niveau d'engagement. » |
-| **Risque résiduel** | Gestion du rôle hôte cross-canal → tracée en ADR, sécurisée (cf. § décision 4) |
+| **Contexte** | Besoin d'identifier chaque participant (notifications, suivi social, profil public, sécurité) tout en gardant un accès rapide depuis un lien de partage |
+| **Options** | Invités anonymes (pseudo par soirée) · **compte obligatoire pour tous** · OAuth tiers |
+| **Décision** | **Créer comme rejoindre une soirée exige un compte connecté** ; le pseudo affiché = le nom du compte. *(Le mode invité anonyme a été retiré.)* |
+| **Argumentaire** | « Chaque participant a un compte : il reçoit les notifications, retrouve ses soirées et son historique, et la soirée n'accueille que des personnes identifiées. Le lien de partage mène à une inscription express puis ramène directement sur la soirée. » |
+| **Risque résiduel** | Friction d'inscription pour un participant occasionnel → atténuée par un parcours rapide + redirection automatique (`returnTo`) |
 
 ### Décision 3 — Stack moderne maîtrisée et sans coût de licence
 

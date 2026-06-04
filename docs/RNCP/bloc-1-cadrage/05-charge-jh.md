@@ -171,7 +171,7 @@ Chaque fonction principale est tracée jusqu'à son implémentation (endpoint + 
 L'UX est intégrée dès le cahier des charges, conformément à [`../../spec.md`](../../spec.md) § 8 et § 9 :
 
 - **Mobile-first** : conception d'abord pour écran étroit (≈ 375 px), zones tactiles ≥ 44×44 px, colonne unique.
-- **Friction minimale** : rejoindre sans compte, « Copier le lien » + QR code pour le partage.
+- **Friction maîtrisée** : partage par lien / QR code menant à une inscription rapide + redirection automatique sur la soirée (`returnTo`).
 - **Feedback clair** : toasts succès/erreur, indicateurs de chargement, action « Réessayer » (pas de liste vide silencieuse).
 - **Lisibilité** : police ≥ 16 px, contraste validé en modes sombre et clair.
 - **Accessibilité** : navigation clavier, labels lecteurs d'écran (référentiel détaillé dans [`../accessibilite.md`](../bloc-2-conception-developpement/accessibilite.md)).
