@@ -37,6 +37,7 @@ public sealed class JoinEventHandlerTests
             new Mock<IUserRepository>().Object,
             new Mock<IPushSubscriptionRepository>().Object,
             new Mock<IPushNotificationSender>().Object,
+            Mock.Of<IUserNotificationRepository>(),
             Mock.Of<ILogger<JoinEventHandler>>());
     }
 

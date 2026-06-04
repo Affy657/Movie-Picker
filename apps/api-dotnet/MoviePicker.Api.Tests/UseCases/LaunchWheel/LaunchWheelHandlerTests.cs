@@ -68,6 +68,7 @@ public sealed class LaunchWheelHandlerTests
             _userRepo.Object,
             _pushSubRepo.Object,
             _pushSender.Object,
+            Mock.Of<IUserNotificationRepository>(),
             NullLogger<LaunchWheelHandler>.Instance);
     }
 

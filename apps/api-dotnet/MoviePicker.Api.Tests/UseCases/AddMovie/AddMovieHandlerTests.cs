@@ -70,6 +70,7 @@ public sealed class AddMovieHandlerTests
             _userRepo.Object,
             _pushSubRepo.Object,
             _pushSender.Object,
+            Mock.Of<IUserNotificationRepository>(),
             NullLogger<AddMovieHandler>.Instance);
     }
 

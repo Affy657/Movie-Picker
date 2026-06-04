@@ -52,6 +52,7 @@ public sealed class DeleteEventHandlerTests
             _userRepo.Object,
             _pushSubRepo.Object,
             _pushSender.Object,
+            Mock.Of<IUserNotificationRepository>(),
             NullLogger<DeleteEventHandler>.Instance);
     }
 
