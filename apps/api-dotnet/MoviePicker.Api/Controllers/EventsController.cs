@@ -8,12 +8,12 @@ using MoviePicker.Api.Application.UseCases.CreateEvent;
 using MoviePicker.Api.Application.UseCases.DeleteEvent;
 using MoviePicker.Api.Application.UseCases.EventConfiguration;
 using MoviePicker.Api.Application.UseCases.EventSharePreview;
+using MoviePicker.Api.Application.UseCases.GetEligibleFollowsForEvent;
 using MoviePicker.Api.Application.UseCases.GetEventDetail;
+using MoviePicker.Api.Application.UseCases.InviteUser;
 using MoviePicker.Api.Application.UseCases.JoinEvent;
 using MoviePicker.Api.Application.UseCases.LaunchWheel;
 using MoviePicker.Api.Application.UseCases.ListMyEvents;
-using MoviePicker.Api.Application.UseCases.GetEligibleFollowsForEvent;
-using MoviePicker.Api.Application.UseCases.InviteUser;
 using MoviePicker.Api.Application.UseCases.RemoveParticipant;
 using MoviePicker.Api.Infrastructure.Web;
 
