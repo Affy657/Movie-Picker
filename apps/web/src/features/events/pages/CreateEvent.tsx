@@ -29,11 +29,12 @@ function getDefaultDate(): string {
 
 function getDefaultTime(): string {
   const now = new Date();
-  const h = now.getHours();
-  const min = now.getMinutes();
-  if (h < 20) return '20:00';
-  const floored = min < 30 ? 0 : 30;
-  return `${String(h).padStart(2, '0')}:${String(floored).padStart(2, '0')}`;
+  const totalMin = now.getHours() * 60 + now.getMinutes();
+  if (totalMin < 20 * 60) return '20:00';
+  const ceil = Math.ceil(totalMin / 30) * 30;
+  const h = Math.floor(ceil / 60) % 24;
+  const m = ceil % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
 export default function CreateEvent() {
