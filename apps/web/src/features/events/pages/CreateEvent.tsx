@@ -19,11 +19,21 @@ import {
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import styles from './CreateEvent.module.css';
 
-const isDev = import.meta.env.DEV;
-
 function getDefaultDate(): string {
   const d = new Date();
-  return d.toISOString().slice(0, 10);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function getDefaultTime(): string {
+  const now = new Date();
+  const h = now.getHours();
+  const min = now.getMinutes();
+  if (h < 20) return '20:00';
+  const floored = min < 30 ? 0 : 30;
+  return `${String(h).padStart(2, '0')}:${String(floored).padStart(2, '0')}`;
 }
 
 export default function CreateEvent() {
@@ -39,8 +49,8 @@ export default function CreateEvent() {
       setTitle(`Soirée film chez ${user.displayName}`);
     }
   }, [user]);
-  const [date, setDate] = useState(isDev ? getDefaultDate() : '');
-  const [time, setTime] = useState(isDev ? '20:00' : '');
+  const [date, setDate] = useState(getDefaultDate);
+  const [time, setTime] = useState(getDefaultTime);
   const [themeEmoji, setThemeEmoji] = useState('');
   const [themeText, setThemeText] = useState('');
   const [themeColor, setThemeColor] = useState<number | null>(null);
