@@ -68,5 +68,3 @@ Découpage par version côté **plateforme, qualité, infra, observabilité, det
 ## Backlog tech (non priorisé sur une release)
 
 - ⬜ 🏗️ **Terraform (IaC)** : environnement staging calqué sur la prod (S3 + CloudFront, Cloud Run + Artifact Registry, IAM) ; state distant, secrets hors repo.
-- ⬜ 🔒 **OAuth — volet infra** : librairie OAuth côté API .NET, secrets dédiés par provider, écran de consentement, mentions légales à jour.
-- ⬜ 🏗️ **Notifications hors session — volet infra** : file d'envoi, jobs planifiés, transport push web (VAPID) et email transactionnel ; consentement stocké par utilisateur.
