@@ -184,6 +184,168 @@
   }
 }
 
+.searchWrap {
+  position: relative;
+}
+
+.historyDropdown {
+  position: absolute;
+  top: calc(100% - 0.35rem);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg, 0 12px 28px -8px rgb(0 0 0 / 0.25));
+  overflow: hidden;
+  transform-origin: top center;
+  animation: historyDropdownIn 0.14s ease-out;
+}
+
+@keyframes historyDropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-0.35rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .historyDropdown {
+    animation: none;
+  }
+}
+
+.historyHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.historyTitle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.historyClearBtn {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  padding: 0.2rem 0.4rem;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition:
+    color 0.12s ease,
+    background 0.12s ease;
+}
+
+.historyClearBtn:hover {
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.historyList {
+  list-style: none;
+  padding: 0.3rem;
+  margin: 0;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.historyItem {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: var(--radius-sm);
+}
+
+.historyItem:hover {
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+.historyItemBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.5rem;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  min-width: 0;
+}
+
+.historyItemBtn:hover {
+  color: var(--color-primary);
+}
+
+.historyItemBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.historyLabel {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.historyIcon {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.historyRemoveBtn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-right: 0.2rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  opacity: 0.55;
+  transition:
+    opacity 0.12s ease,
+    color 0.12s ease,
+    background 0.12s ease;
+}
+
+.historyRemoveBtn:hover {
+  opacity: 1;
+  color: var(--color-danger, #e5484d);
+  background: color-mix(in srgb, var(--color-danger, #e5484d) 12%, transparent);
+}
+
+.historyRemoveBtn:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
 .mediaTypeBadge {
   display: inline-block;
   margin-left: 0.4rem;

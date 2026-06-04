@@ -12,6 +12,7 @@ Découpage par version côté **métier / utilisateur**.
 
 - **MVP** : parcours minimal utilisable côté utilisateur.
 - **V1, V1.1, V1.2** : releases produit progressives sur la spec complète, sans casser le cœur métier.
+- **V1.3, V1.4, V1.5** : polish, enrichissement, outils hôte et nouvelles surfaces produit.
 - **Backlog** : idées et sujets non planifiés sur une date de release (tri régulier).
 
 ---
@@ -78,8 +79,63 @@ Découpage par version côté **métier / utilisateur**.
 - ✅ **Mini-commentaires sur une proposition** : note de pitch (≤ 140 caractères) posée par le proposant sur son film ; visible par tous ; bulle de texte avec avatar du proposant ; éditable au clic par le proposant, supprimable par le proposant (body vide) ou l'hôte (sans participantId requis) ; lecture seule après le lancement de la roue ; rate limiting 60 req/min.
 - ⬜ **Profil public léger** : page `/u/:handle` (handle unique) — avatar, pseudo, bio courte, « membre depuis » ; **public par défaut** avec opt-out. Stats publiques et badges ajoutés ensuite. Plan détaillé → [feature-profil-public.md](feature-profil-public.md).
 - ✅ **Notifications in-app** : badge + liste « Invitations reçues » dans Mes soirées.
-- ⬜ **Invitations in-app** : invitation directe à un autre utilisateur en complément du lien de partage.
+- ✅ **Invitations in-app** : invitation directe à un autre utilisateur en complément du lien de partage.
 - ✅ **Follow léger entre utilisateurs** : retrouver facilement ses potes sur l'app pour les réinviter ; brique de base des invitations in-app.
+- ✅ **Historique de recherche dans la barre de film** : dans la page soirée, la barre de recherche de films affiche les dernières recherches effectuées par l'utilisateur ; sélection rapide d'une recherche passée en un clic ; effacement individuel ou global de l'historique ; persistance locale (localStorage) par utilisateur.
+
+---
+
+## 📋 V1.3 – Planifiée
+
+**Objectif** : polish & qualité perçue — roue visuelle, finitions UX, conformité légale et enrichissement des données film.
+
+- ⬜ **Vraie roue de tirage** : remplacer l'animation actuelle par une roue visuelle avec les titres des films sur chaque segment ; rotation physique puis ralentissement progressif jusqu'au film gagnant.
+- ⬜ **Suppression de compte + export RGPD** : depuis la page profil — suppression définitive et téléchargement de ses données (soirées, votes, films proposés).
+- ⬜ **Pages d'erreur dédiées** : 404 route / soirée introuvable, 500 erreur serveur — message clair et lien vers l'accueil.
+- ⬜ **Empty states** : états vides travaillés — « Mes soirées » vide, liste de films vide, aucun participant — avec illustration légère et CTA.
+- ⬜ **Location & achat (VOD)** : afficher sur la fiche film les plateformes où le film est disponible à la location ou à l'achat (Amazon, Apple TV, Google Play…) en complément des abonnements streaming déjà affichés ; distinction visuelle claire entre les trois modes (abonnement / location / achat).
+- ⬜ **Tri de la liste de films** : trier les films proposés par score de votes, note TMDB, durée ou ordre d'ajout.
+- ⬜ **Recherche avancée de films** : filtrer par acteur, réalisateur, genre ou année dans la barre de recherche TMDB lors de la proposition.
+- ⬜ **Tooltips globaux** : info-bulles cohérentes sur les icônes et actions moins évidentes (boutons d'action, scores TMDB, badges, pastilles streaming).
+- ⬜ **Accessibilité (a11y baseline)** : navigation clavier cohérente, focus trap dans les modals, aria-labels sur les éléments interactifs.
+- ⬜ **Export calendrier (.ics)** : bouton « Ajouter au calendrier » sur la soirée, compatible Google Calendar, Outlook, Apple Calendar.
+
+---
+
+## 📋 V1.4 – Planifiée
+
+**Objectif** : outils hôte avancés et bibliothèque personnelle — timer, templates, watchlist et intégration Letterboxd pour une expérience plus organisée.
+
+- ⬜ **Timer avant le début de la soirée** : compte à rebours visible par tous les participants depuis la page soirée jusqu'à l'heure de début prévue.
+- ⬜ **Templates de soirée** : sauvegarder une configuration de soirée (genres, limite de propositions, type de roue) et la réutiliser en un clic à la création.
+- ⬜ **Watchlist personnelle** : liste de films « à voir » par utilisateur ; ajout depuis la recherche TMDB ; proposition rapide d'un film depuis sa watchlist directement dans une soirée.
+- ⬜ **Intégration Letterboxd** : import de la watchlist (films à voir) et de la liste « déjà vu » depuis un export CSV Letterboxd ou via leur flux RSS public.
+
+---
+
+## 📋 V1.5 – Planifiée
+
+**Objectif** : home page inspirationnelle — transformer l'accueil en vrai point d'entrée du produit, accessible sans compte et enrichi une fois connecté.
+
+### 🏠 Home page
+
+> Page accessible sans compte, avec des blocs supplémentaires qui apparaissent une fois connecté. Remplace et enrichit la landing page actuelle. À découper en plusieurs sprints. Les blocs connecté dépendent de V1.4 (watchlist, templates).
+
+**Blocs visibles sans compte**
+- ⬜ **Films tendance de la semaine** : carrousel des films populaires TMDB du moment — nourrit l'inspiration avant même de créer un compte.
+- ⬜ **Suggestions thématiques** : carrousels contextuels selon la saison ou l'occasion (« Films d'horreur », « Comédies de Noël », « Soirée années 80 ») — données 100 % TMDB, sans infra custom.
+- ⬜ **Les plus proposés sur Movie Picker** : films les plus souvent mis en soirée par la communauté — dimension sociale sans nécessiter de compte.
+- ⬜ **Collections TMDB** : carrousels de franchises et collections (Marvel, Pixar, trilogies…) ; clic sur un film ouvre sa fiche avec option « Proposer dans une soirée » — données nativement disponibles via l'API TMDB.
+- ⬜ **Recherche de films depuis la home** : barre de recherche TMDB accessible sans compte pour explorer et s'inspirer ; résultats avec fiche rapide (synopsis, note, streaming dispo).
+- ⬜ **Films populaires par genre** : onglets ou filtres (Action, Comédie, Thriller…) sur le bloc tendances pour affiner l'exploration.
+
+**Blocs visibles connecté uniquement**
+- ⬜ **Prochaine soirée mise en avant** : carte principale avec titre, heure et accès direct à la soirée imminente — évite de passer par « Mes soirées ».
+- ⬜ **Invitations en attente** : rappel des invitations non répondues directement sur la home — plus visible que les notifications seules.
+- ⬜ **Soirée rapide** : bouton « Créer une soirée » avec la dernière config utilisée en un clic (dépend des templates de soirée V1.3).
+- ⬜ **Derniers films gagnants** : les 3-4 films tirés dans ses soirées récentes — évite de reproposer un film qu'on vient de voir.
+- ⬜ **Activité des follows** : fil léger — soirée créée par un ami, film gagnant d'une soirée — donne vie à la dimension sociale sans quitter la home.
+- ⬜ **Films de la watchlist** : accès rapide pour proposer un film en un clic depuis la home (dépend de la watchlist personnelle).
 
 ---
 
@@ -87,19 +143,15 @@ Découpage par version côté **métier / utilisateur**.
 
 > **Note V2 — Application mobile** : l'app mobile (Expo / React Native) était un projet de cours, archivée dans `archive/mobile` (mai 2026). Pour la V2, l'objectif est une app mobile propre, pleinement intégrée à la plateforme. Pas d'engagement de date.
 
-- **Tooltips globaux** : ajouter des info-bulles cohérentes sur les éléments interactifs de toute la plateforme — boutons d'action, avatars, icônes, badges, scores TMDB, plateformes de streaming, etc. — pour améliorer la découvrabilité et réduire l'ambiguïté.
-- **Mode hors-ligne léger** : cache de la dernière vue de la soirée, bannière « Données en cache ».
-- **Export calendrier (.ics)** : lien « Ajouter au calendrier » sur la soirée, compatible Google Calendar, Outlook, Apple Calendar.
+- **Système de dons** : page de soutien au projet (Stripe, Buy Me a Coffee, Ko-fi) ; strictement facultatif, sans impact fonctionnel.
+- **Mode hors-ligne léger** : cache de la dernière vue soirée, bannière « Données en cache, reconnexion en cours » — complexité élevée dans un contexte collaboratif temps réel, à traiter comme un sprint dédié.
 - **Plage de votes configurable** : l'hôte peut définir le nombre max de votes up/down par participant.
-- **Suppression du compte / export des données** (RGPD) — depuis la page profil.
-- **Pages d'erreur dédiées** : 404 soirée/route, 500 — message clair et lien vers l'accueil.
 - **i18n étendue** : langues supplémentaires au-delà de FR / EN ; variantes régionales, RTL si besoin.
 - **Connexion sociale (OAuth)** : Google, Apple, GitHub, Microsoft en complément de l'email / mot de passe.
-- **Watchlist personnelle** : liste de films « à voir » par utilisateur ; ajout depuis la recherche TMDB ; proposition rapide d'un film depuis sa watchlist directement dans une soirée.
-- **Intégration Letterboxd** : import de la watchlist (films à voir) et de la liste « déjà vu » depuis un export CSV Letterboxd ou via leur flux RSS public.
-- **Système de dons** : page de soutien au projet (Stripe, Buy Me a Coffee, Ko-fi) ; strictement facultatif, sans impact fonctionnel.
 - **Avertissements de contenu** : badges violence / horreur / 18+ sur les fiches films ; option hôte « masquer les films 18+ » pour soirées familiales.
 - **Cercles d'amis** : groupes persistants d'utilisateurs réutilisables d'une soirée à l'autre ; invitation en un clic de tout le cercle.
-- **Historique de recherche dans la barre de film** : dans la page soirée, la barre de recherche de films affiche les dernières recherches effectuées par l'utilisateur ; sélection rapide d'une recherche passée en un clic ; effacement individuel ou global de l'historique ; persistance locale (localStorage) par utilisateur.
 - **Note d'un film vu** : noter sur 5 un film qu'on vient de voir directement dans Movie Picker ; bouton pour aller aussi le noter sur Letterboxd / IMDb (redirection vers la fiche film).
 - **Partage de soirée (story)** : carte recap partageable (film gagnant, participants, note de chacun) à poster sur les réseaux.
+- **Réactions rapides sur les films** : emojis (❤️ 🔥 😴…) posés sur une card film en complément des votes up/down — plus expressif, moins binaire.
+- **Compatibilité ciné** : score de compatibilité cinématographique avec un ami basé sur les films « déjà vu » en commun ; nécessite les statistiques utilisateur et potentiellement l'intégration Letterboxd pour être complet.
+- **Recherche d'utilisateurs** : trouver un utilisateur par pseudo ou handle pour le suivre ou l'inviter — manque structurel dès lors que le follow existe.

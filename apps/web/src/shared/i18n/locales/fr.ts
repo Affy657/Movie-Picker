@@ -337,6 +337,10 @@
       a11yNoResults: 'Aucun résultat pour cette recherche.',
       noResultsForQuery: 'Aucun film ne correspond à « {{query}} ».',
       resultsListAria: 'Résultats de la recherche',
+      historyTitle: 'Recherches récentes',
+      historyClear: 'Effacer tout',
+      historyRemoveAria: 'Supprimer « {{query}} » de l’historique',
+      historySelectAria: 'Rechercher « {{query}} »',
     },
     list: {
       emptyPlaceholder: "Aucun film proposé pour l'instant.",

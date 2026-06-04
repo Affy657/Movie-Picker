@@ -331,6 +331,10 @@ export const en: Locale = {
       a11yNoResults: 'No results for this search.',
       noResultsForQuery: 'No movies match “{{query}}”.',
       resultsListAria: 'Search results',
+      historyTitle: 'Recent searches',
+      historyClear: 'Clear all',
+      historyRemoveAria: 'Remove "{{query}}" from history',
+      historySelectAria: 'Search "{{query}}"',
     },
     list: {
       emptyPlaceholder: 'No movies suggested yet.',

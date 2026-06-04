@@ -15,6 +15,8 @@ import type { MovieData } from '@/shared/types/movie';
 import { isSafeTmdbWatchPageUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import TmdbAttribution from '@/features/movies/components/TmdbAttribution';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { useSearchHistory } from '@/features/movies/hooks/useSearchHistory';
 import styles from './AddMovieForm.module.css';
 
 const SEARCH_DEBOUNCE_MS = 350;
@@ -41,8 +43,11 @@ export default function AddMovieForm({
 }: AddMovieFormProps) {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
+  const { user } = useAuth();
+  const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory(user?.userId);
   const minCharsHintId = useId();
   const [query, setQuery] = useState('');
+  const [inputFocused, setInputFocused] = useState(false);
   const [results, setResults] = useState<MovieSearchItem[]>([]);
   const [searchMeta, setSearchMeta] = useState<Pick<
     MovieSearchListResponse,
@@ -60,6 +65,8 @@ export default function AddMovieForm({
   const [a11ySearchStatus, setA11ySearchStatus] = useState('');
   const abortRef = useRef<AbortController | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const immediateSearchRef = useRef(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
@@ -112,6 +119,7 @@ export default function AddMovieForm({
             : null
         );
         lastFulfilledTermRef.current = term;
+        addToHistory(term);
         if (body.items.length === 0) {
           setEmptyResultForTerm(term);
           setA11ySearchStatus(t('movies.search.a11yNoResults'));
@@ -130,7 +138,7 @@ export default function AddMovieForm({
         if (!controller.signal.aborted) setSearching(false);
       }
     },
-    [tmdbLanguage, t, slug]
+    [tmdbLanguage, t, slug, addToHistory]
   );
 
   const search = useCallback(() => {
@@ -142,13 +150,8 @@ export default function AddMovieForm({
   useEffect(() => {
     const trimmed = trimmedForSearch;
 
-    if (!trimmed) {
-      clearDebounceTimer();
-      clearSearchResults();
-      return;
-    }
-
-    if (trimmed.length < SEARCH_MIN_CHARS) {
+    if (!trimmed || trimmed.length < SEARCH_MIN_CHARS) {
+      immediateSearchRef.current = false;
       clearDebounceTimer();
       clearSearchResults();
       return;
@@ -164,6 +167,13 @@ export default function AddMovieForm({
     }
 
     clearDebounceTimer();
+
+    if (immediateSearchRef.current) {
+      immediateSearchRef.current = false;
+      void executeSearch(trimmed);
+      return;
+    }
+
     debounceTimerRef.current = setTimeout(() => {
       debounceTimerRef.current = null;
       void executeSearch(trimmed);
@@ -173,6 +183,12 @@ export default function AddMovieForm({
       clearDebounceTimer();
     };
   }, [trimmedForSearch, executeSearch, clearDebounceTimer, clearSearchResults]);
+
+  const selectHistoryItem = useCallback((q: string) => {
+    immediateSearchRef.current = true;
+    setInputFocused(false);
+    setQuery(q);
+  }, []);
 
   const addMovie = async (r: MovieSearchItem) => {
     setError(null);
@@ -199,6 +215,7 @@ export default function AddMovieForm({
   if (disabled) return null;
 
   const trimmed = trimmedForSearch;
+  const showHistory = inputFocused && !trimmed && history.length > 0;
   const showMinCharsHint = trimmed.length > 0 && trimmed.length < SEARCH_MIN_CHARS;
   const searchAllowed = trimmed.length >= SEARCH_MIN_CHARS;
   const showNoResultsBlock =
@@ -216,26 +233,103 @@ export default function AddMovieForm({
       <label className="label" htmlFor="add-movie-search">
         {t('movies.search.label')}
       </label>
-      <div className={styles.searchRow}>
-        <input
-          id="add-movie-search"
-          type="search"
-          className="input"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), search())}
-          placeholder={t('movies.search.placeholder')}
-          aria-busy={searching}
-          aria-describedby={showMinCharsHint ? minCharsHintId : undefined}
-        />
-        <button
-          type="button"
-          className="btn"
-          onClick={search}
-          disabled={searching || !searchAllowed}
-        >
-          {searching ? t('movies.search.searching') : t('movies.search.searchButton')}
-        </button>
+      <div
+        className={styles.searchWrap}
+        ref={containerRef}
+        onBlur={(e) => {
+          if (!containerRef.current?.contains(e.relatedTarget as Node | null)) {
+            setInputFocused(false);
+          }
+        }}
+      >
+        <div className={styles.searchRow}>
+          <input
+            id="add-movie-search"
+            type="search"
+            className="input"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                search();
+              } else if (e.key === 'Escape') {
+                setInputFocused(false);
+              }
+            }}
+            onFocus={() => setInputFocused(true)}
+            placeholder={t('movies.search.placeholder')}
+            autoComplete="off"
+            role="combobox"
+            aria-expanded={showHistory}
+            aria-controls="add-movie-history"
+            aria-busy={searching}
+            aria-describedby={showMinCharsHint ? minCharsHintId : undefined}
+          />
+          <button
+            type="button"
+            className="btn"
+            onClick={search}
+            disabled={searching || !searchAllowed}
+          >
+            {searching ? t('movies.search.searching') : t('movies.search.searchButton')}
+          </button>
+        </div>
+        {showHistory && (
+          <div
+            className={styles.historyDropdown}
+            id="add-movie-history"
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            <div className={styles.historyHeader}>
+              <span className={styles.historyTitle}>{t('movies.search.historyTitle')}</span>
+              <button type="button" className={styles.historyClearBtn} onClick={clearHistory}>
+                {t('movies.search.historyClear')}
+              </button>
+            </div>
+            <ul className={styles.historyList}>
+              {history.map((q) => (
+                <li key={q} className={styles.historyItem}>
+                  <button
+                    type="button"
+                    className={styles.historyItemBtn}
+                    aria-label={t('movies.search.historySelectAria', { query: q })}
+                    onClick={() => selectHistoryItem(q)}
+                  >
+                    <svg
+                      className={styles.historyIcon}
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      aria-hidden="true"
+                    >
+                      <circle cx="6.5" cy="6.5" r="4.5" />
+                      <path d="M10.5 10.5 14 14" strokeLinecap="round" />
+                    </svg>
+                    <span className={styles.historyLabel}>{q}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.historyRemoveBtn}
+                    aria-label={t('movies.search.historyRemoveAria', { query: q })}
+                    onClick={() => removeFromHistory(q)}
+                  >
+                    <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">
+                      <path
+                        d="M1 1l10 10M11 1 1 11"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        fill="none"
+                      />
+                    </svg>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
       {showMinCharsHint ? (
         <p id={minCharsHintId} className={styles.minCharsHint}>
