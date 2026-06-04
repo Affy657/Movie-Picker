@@ -188,9 +188,19 @@
   position: relative;
 }
 
+.inputWrap {
+  position: relative;
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.inputWrap :global(.input) {
+  width: 100%;
+}
+
 .historyDropdown {
   position: absolute;
-  top: calc(100% - 0.35rem);
+  top: calc(100% + 0.3rem);
   left: 0;
   right: 0;
   z-index: 30;
@@ -199,18 +209,17 @@
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg, 0 12px 28px -8px rgb(0 0 0 / 0.25));
   overflow: hidden;
-  transform-origin: top center;
   animation: historyDropdownIn 0.14s ease-out;
 }
 
 @keyframes historyDropdownIn {
   from {
     opacity: 0;
-    transform: translateY(-0.35rem) scale(0.98);
+    transform: translateY(-0.3rem);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 

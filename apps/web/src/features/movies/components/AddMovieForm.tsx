@@ -243,29 +243,86 @@ export default function AddMovieForm({
         }}
       >
         <div className={styles.searchRow}>
-          <input
-            id="add-movie-search"
-            type="search"
-            className="input"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                search();
-              } else if (e.key === 'Escape') {
-                setInputFocused(false);
-              }
-            }}
-            onFocus={() => setInputFocused(true)}
-            placeholder={t('movies.search.placeholder')}
-            autoComplete="off"
-            role="combobox"
-            aria-expanded={showHistory}
-            aria-controls="add-movie-history"
-            aria-busy={searching}
-            aria-describedby={showMinCharsHint ? minCharsHintId : undefined}
-          />
+          <div className={styles.inputWrap}>
+            <input
+              id="add-movie-search"
+              type="search"
+              className="input"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  search();
+                } else if (e.key === 'Escape') {
+                  setInputFocused(false);
+                }
+              }}
+              onFocus={() => setInputFocused(true)}
+              placeholder={t('movies.search.placeholder')}
+              autoComplete="off"
+              role="combobox"
+              aria-expanded={showHistory}
+              aria-controls="add-movie-history"
+              aria-busy={searching}
+              aria-describedby={showMinCharsHint ? minCharsHintId : undefined}
+            />
+            {showHistory && (
+              <div
+                className={styles.historyDropdown}
+                id="add-movie-history"
+                onMouseDown={(e) => e.preventDefault()}
+              >
+                <div className={styles.historyHeader}>
+                  <span className={styles.historyTitle}>{t('movies.search.historyTitle')}</span>
+                  <button type="button" className={styles.historyClearBtn} onClick={clearHistory}>
+                    {t('movies.search.historyClear')}
+                  </button>
+                </div>
+                <ul className={styles.historyList}>
+                  {history.map((q) => (
+                    <li key={q} className={styles.historyItem}>
+                      <button
+                        type="button"
+                        className={styles.historyItemBtn}
+                        aria-label={t('movies.search.historySelectAria', { query: q })}
+                        onClick={() => selectHistoryItem(q)}
+                      >
+                        <svg
+                          className={styles.historyIcon}
+                          viewBox="0 0 16 16"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          aria-hidden="true"
+                        >
+                          <circle cx="6.5" cy="6.5" r="4.5" />
+                          <path d="M10.5 10.5 14 14" strokeLinecap="round" />
+                        </svg>
+                        <span className={styles.historyLabel}>{q}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.historyRemoveBtn}
+                        aria-label={t('movies.search.historyRemoveAria', { query: q })}
+                        onClick={() => removeFromHistory(q)}
+                      >
+                        <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">
+                          <path
+                            d="M1 1l10 10M11 1 1 11"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            fill="none"
+                          />
+                        </svg>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
           <button
             type="button"
             className="btn"
@@ -275,61 +332,6 @@ export default function AddMovieForm({
             {searching ? t('movies.search.searching') : t('movies.search.searchButton')}
           </button>
         </div>
-        {showHistory && (
-          <div
-            className={styles.historyDropdown}
-            id="add-movie-history"
-            onMouseDown={(e) => e.preventDefault()}
-          >
-            <div className={styles.historyHeader}>
-              <span className={styles.historyTitle}>{t('movies.search.historyTitle')}</span>
-              <button type="button" className={styles.historyClearBtn} onClick={clearHistory}>
-                {t('movies.search.historyClear')}
-              </button>
-            </div>
-            <ul className={styles.historyList}>
-              {history.map((q) => (
-                <li key={q} className={styles.historyItem}>
-                  <button
-                    type="button"
-                    className={styles.historyItemBtn}
-                    aria-label={t('movies.search.historySelectAria', { query: q })}
-                    onClick={() => selectHistoryItem(q)}
-                  >
-                    <svg
-                      className={styles.historyIcon}
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      aria-hidden="true"
-                    >
-                      <circle cx="6.5" cy="6.5" r="4.5" />
-                      <path d="M10.5 10.5 14 14" strokeLinecap="round" />
-                    </svg>
-                    <span className={styles.historyLabel}>{q}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.historyRemoveBtn}
-                    aria-label={t('movies.search.historyRemoveAria', { query: q })}
-                    onClick={() => removeFromHistory(q)}
-                  >
-                    <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">
-                      <path
-                        d="M1 1l10 10M11 1 1 11"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        fill="none"
-                      />
-                    </svg>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
       {showMinCharsHint ? (
         <p id={minCharsHintId} className={styles.minCharsHint}>
