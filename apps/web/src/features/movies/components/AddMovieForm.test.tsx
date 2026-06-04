@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll, afterEach, afterAll } from 'vitest';
+import { describe, it, expect, vi, beforeAll, afterEach, afterAll, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
@@ -15,6 +15,8 @@ function renderWithLocale(ui: React.ReactElement) {
   return render(<LocaleProvider>{ui}</LocaleProvider>);
 }
 
+const HISTORY_KEY = 'moviepicker_search_history_test-user';
+
 describe('AddMovieForm (MSW)', () => {
   const slug = 'evt-add';
   const onAdded = vi.fn();
@@ -22,6 +24,7 @@ describe('AddMovieForm (MSW)', () => {
   const server = setupServer(...createSearchAndAddHandlers(slug));
 
   beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+  beforeEach(() => localStorage.removeItem(HISTORY_KEY));
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
@@ -146,5 +149,35 @@ describe('AddMovieForm (MSW)', () => {
     await user.type(input, '   ');
     await new Promise((r) => setTimeout(r, 500));
     expect(searchCalls).toBe(1);
+  });
+
+  it("affiche le dropdown historique au focus si l'input est vide et qu'il y a des entrees", async () => {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(['inception', 'matrix']));
+    const user = userEvent.setup();
+    renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
+    await user.click(screen.getByPlaceholderText(/rechercher un film/i));
+    expect(screen.getByText(/recherches recentes|recherches r/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Rechercher.*inception/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Rechercher.*matrix/i })).toBeInTheDocument();
+  });
+
+  it('supprime une entree individuelle de l\'historique via le bouton x', async () => {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(['inception', 'matrix']));
+    const user = userEvent.setup();
+    renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
+    await user.click(screen.getByPlaceholderText(/rechercher un film/i));
+    const removeBtn = screen.getByRole('button', { name: /supprimer.*inception/i });
+    await user.click(removeBtn);
+    expect(screen.queryByRole('button', { name: /Rechercher.*inception/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Rechercher.*matrix/i })).toBeInTheDocument();
+  });
+
+  it("efface tout l'historique via Effacer tout", async () => {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(['inception', 'matrix']));
+    const user = userEvent.setup();
+    renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
+    await user.click(screen.getByPlaceholderText(/rechercher un film/i));
+    await user.click(screen.getByRole('button', { name: /effacer tout/i }));
+    expect(screen.queryByText(/recherches recentes|recherches r/i)).not.toBeInTheDocument();
   });
 });
