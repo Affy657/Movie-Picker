@@ -161,14 +161,16 @@ describe('AddMovieForm (MSW)', () => {
     expect(screen.getByRole('button', { name: /Rechercher.*matrix/i })).toBeInTheDocument();
   });
 
-  it('supprime une entree individuelle de l\'historique via le bouton x', async () => {
+  it("supprime une entree individuelle de l'historique via le bouton x", async () => {
     localStorage.setItem(HISTORY_KEY, JSON.stringify(['inception', 'matrix']));
     const user = userEvent.setup();
     renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
     await user.click(screen.getByPlaceholderText(/rechercher un film/i));
     const removeBtn = screen.getByRole('button', { name: /supprimer.*inception/i });
     await user.click(removeBtn);
-    expect(screen.queryByRole('button', { name: /Rechercher.*inception/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Rechercher.*inception/i })
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Rechercher.*matrix/i })).toBeInTheDocument();
   });
 
