@@ -32,8 +32,22 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
             Email = "bob@test.local",
             Password = "BobTest12345!",
             DisplayName = "Bob test"
+        },
+        new()
+        {
+            Email = "carla@test.local",
+            Password = "CarlaTest123!",
+            DisplayName = "Carla test"
+        },
+        new()
+        {
+            Email = "david@test.local",
+            Password = "DavidTest123!",
+            DisplayName = "David test"
         }
     };
+
+    private const int ScenarioActorCount = 4;
 
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IHostEnvironment _env;
@@ -97,54 +111,67 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
             return;
 
         var extraEntries = ResolveExtraUserEntries(opts);
-        var aliceEntry = extraEntries[0];
-        var bobEntry = extraEntries[1];
 
-        if (string.Equals(aliceEntry.Email.Trim(), email, StringComparison.OrdinalIgnoreCase)
-            || string.Equals(bobEntry.Email.Trim(), email, StringComparison.OrdinalIgnoreCase)
-            || string.Equals(aliceEntry.Email.Trim(), bobEntry.Email.Trim(), StringComparison.OrdinalIgnoreCase))
+        var allEmails = new List<string> { email };
+        allEmails.AddRange(extraEntries.Select(e => (e.Email ?? string.Empty).Trim()));
+        if (allEmails.Select(x => x.ToLowerInvariant()).Distinct().Count() != allEmails.Count)
         {
-            _logger.LogWarning("DevelopmentSeed : e-mails des utilisateurs extra en conflit — scénarios ignorés.");
+            _logger.LogWarning("DevelopmentSeed : e-mails en conflit entre comptes seed — scénarios ignorés.");
             return;
         }
 
-        if (!TryValidateExtraEntry(aliceEntry, out var aliceErr))
+        foreach (var entry in extraEntries)
         {
-            _logger.LogWarning("DevelopmentSeed : utilisateur extra Alice invalide ({Reason}) — scénarios ignorés.", aliceErr);
-            return;
+            if (!TryValidateExtraEntry(entry, out var entryErr))
+            {
+                _logger.LogWarning(
+                    "DevelopmentSeed : utilisateur extra {EmailMasked} invalide ({Reason}) — scénarios ignorés.",
+                    EmailMasking.Mask((entry.Email ?? string.Empty).Trim()),
+                    entryErr);
+                return;
+            }
         }
 
-        if (!TryValidateExtraEntry(bobEntry, out var bobErr))
+        var extraUsers = new List<User>(extraEntries.Count);
+        foreach (var entry in extraEntries)
         {
-            _logger.LogWarning("DevelopmentSeed : utilisateur extra Bob invalide ({Reason}) — scénarios ignorés.", bobErr);
-            return;
+            var ensured = await EnsureUserAsync(
+                users,
+                hasher,
+                entry.Email.Trim(),
+                entry.Password,
+                entry.DisplayName.Trim(),
+                cancellationToken).ConfigureAwait(false);
+            extraUsers.Add(ensured);
         }
 
-        var alice = await EnsureUserAsync(
-            users,
-            hasher,
-            aliceEntry.Email.Trim(),
-            aliceEntry.Password,
-            aliceEntry.DisplayName.Trim(),
-            cancellationToken).ConfigureAwait(false);
+        var actors = new DevelopmentSeedActors(
+            user,
+            extraUsers[0],
+            extraUsers[1],
+            extraUsers[2],
+            extraUsers[3]);
 
-        var bob = await EnsureUserAsync(
-            users,
-            hasher,
-            bobEntry.Email.Trim(),
-            bobEntry.Password,
-            bobEntry.DisplayName.Trim(),
-            cancellationToken).ConfigureAwait(false);
-
-        await DevelopmentScenarioSeed.TrySeedAsync(sp, user.Id, alice, bob, _logger, cancellationToken).ConfigureAwait(false);
+        await DevelopmentScenarioSeed.TrySeedAsync(sp, actors, _logger, cancellationToken).ConfigureAwait(false);
     }
 
-    private static DevelopmentSeedExtraUserEntry[] ResolveExtraUserEntries(DevelopmentSeedOptions opts)
+    private static List<DevelopmentSeedExtraUserEntry> ResolveExtraUserEntries(DevelopmentSeedOptions opts)
     {
-        if (opts.ExtraUsers is { Count: >= 2 })
-            return new[] { opts.ExtraUsers[0], opts.ExtraUsers[1] };
+        var resolved = new List<DevelopmentSeedExtraUserEntry>(ScenarioActorCount);
+        if (opts.ExtraUsers is { Count: > 0 })
+            resolved.AddRange(opts.ExtraUsers.Take(ScenarioActorCount));
 
-        return DefaultExtraUsers;
+        foreach (var fallback in DefaultExtraUsers)
+        {
+            if (resolved.Count >= ScenarioActorCount)
+                break;
+            var alreadyPresent = resolved.Any(e =>
+                string.Equals((e.Email ?? string.Empty).Trim(), fallback.Email, StringComparison.OrdinalIgnoreCase));
+            if (!alreadyPresent)
+                resolved.Add(fallback);
+        }
+
+        return resolved;
     }
 
     private static bool TryValidateExtraEntry(DevelopmentSeedExtraUserEntry e, out string? error)
