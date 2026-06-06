@@ -1,7 +1,18 @@
 # 09 — Modélisation de l'architecture logicielle
 
-> **RNCP 39583 — C1.5** : « Modéliser une architecture logicielle à partir du scénario élaboré, respectant les spécifications fonctionnelles, exigences de sécurité et techniques visant à réduire l'impact écologique ; faciliter le développement, l'évolution, le déploiement et la maintenance. »
-> **C1.4.2 (partiel)** : « L'architecture est schématisée et légendée. Le choix de la méthode de modélisation et du formalisme est justifié (UML, Merise…). Les interactions avec les systèmes informatiques sont explicitées. L'architecture proposée est maintenable, sécurisée, extensible et prend en compte son impact environnemental. »
+> **RNCP 39583 — C1.5**
+>
+> **Compétence** — Modéliser une architecture logicielle à partir du scénario élaboré en respectant les spécifications fonctionnelles attendues, les exigences de sécurité, et en intégrant les techniques visant à réduire l'impact écologique afin de faciliter les phases de développement, d'évolution, de déploiement et de maintenance du logiciel.
+>
+> **Livrable attendu** — Les schémas de l'architecture logicielle proposée.
+>
+> **Critères d'évaluation**
+> - L'architecture est schématisée et légendée (signification des formes, flèches, couleurs, positions, etc.).
+> - Elle répond aux exigences des parties prenantes et aux contraintes de production ; elle est adaptée au système et à l'infrastructure.
+> - Le choix de la méthode de modélisation et du formalisme est justifié (ex : UML, Merise…).
+> - Les interactions avec les systèmes informatiques sont explicitées.
+> - L'architecture proposée est maintenable, sécurisée et extensible.
+> - Elle prend en compte son impact environnemental (ex : bilan carbone de la solution).
 
 ---
 
@@ -152,7 +163,3 @@ sequenceDiagram
 - **CloudFront edge cache** : contenu servi au plus près, moins de trajets réseau.
 - **Front statique** : aucun calcul serveur pour le rendu.
 - **Piste d'optimisation** : image `mcr.microsoft.com/dotnet/aspnet:10.0` → variante `alpine`/`noble-chiseled` pour réduire surface d'attaque et empreinte image (arbitrage compatibilité ICU/globalisation).
-
----
-
-*Voir aussi : [`../../architecture.md`](../../architecture.md) (architecture système de référence), [`10-budget.md`](10-budget.md) (budget — C1.4.2), [`04-etude-comparative.md`](04-etude-comparative.md) (justification des briques).*

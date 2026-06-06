@@ -1,6 +1,16 @@
 # 03 — Faisabilité technique & diagnostic des infrastructures
 
-> **RNCP 39583 — C1.2.2 (ÉLIMINATOIRE)** : « La démarche d'audit est documentée et argumentée. L'étude technique comprend les langages, les caractéristiques des bases de données, l'architecture existante et les technologies utilisées, un état des applications et logiciels existants. La démarche permet d'identifier les contraintes techniques et financières (hébergement, OS, volume de données, nombre d'utilisateurs, délais, ressources financières/techniques/humaines). Elle permet de formuler un avis critique sur la faisabilité technique. »
+> **RNCP 39583 — C1.2.2 (ÉLIMINATOIRE)**
+>
+> **Compétence** — Évaluer la faisabilité technique en analysant l'environnement technique et fonctionnel, les contraintes et le budget du client pour décider de son lancement et déterminer les moyens nécessaires à sa réalisation.
+>
+> **Livrable attendu** — La démarche d'audit mise en œuvre et le diagnostic des infrastructures existantes.
+>
+> **Critères d'évaluation**
+> - La démarche d'audit est documentée et argumentée.
+> - L'étude technique comprend : les langages informatiques utilisés, les caractéristiques des bases de données, l'architecture existante et les technologies utilisées, un état des applications et logiciels existants.
+> - L'audit identifie les contraintes techniques et financières : hébergement, système d'exploitation, volume de données, nombre d'utilisateurs, délais, ressources financières, techniques et humaines, etc.
+> - La démarche permet de formuler un avis critique sur la faisabilité technique du projet.
 
 ---
 
@@ -10,7 +20,7 @@ L'évaluation de la faisabilité suit une **grille d'analyse descendante** en 5 
 
 ```mermaid
 flowchart TD
-  A[1. Besoins fonctionnels<br/>spec.md] --> B[2. Exigences non fonctionnelles<br/>perf, sécurité, a11y, mobile]
+  A[1. Besoins fonctionnels<br/>spécifications produit] --> B[2. Exigences non fonctionnelles<br/>perf, sécurité, a11y, mobile]
   B --> C[3. Contraintes<br/>techniques, financières, délais, humaines]
   C --> D[4. Ressources nécessaires<br/>langages, BDD, hébergement, outils]
   D --> E[5. Avis critique de faisabilité<br/>Go / No-Go + risques]
@@ -18,10 +28,10 @@ flowchart TD
 
 | Étape | Question posée | Source / méthode |
 |-------|----------------|------------------|
-| 1. Besoins fonctionnels | Que doit faire le produit ? | [`../../spec.md`](../../spec.md) (12 domaines métier) |
+| 1. Besoins fonctionnels | Que doit faire le produit ? | Spécifications fonctionnelles (12 domaines métier) |
 | 2. Exigences non fonctionnelles | Avec quelle qualité de service ? | Mobile-first, HTTPS, CORS strict, OWASP, accessibilité |
 | 3. Contraintes | Quelles limites s'imposent ? | Budget étudiant, projet solo, délais cursus |
-| 4. Ressources | Quels moyens mobiliser ? | Étude technique (§ 3) + étude comparative ([`04-etude-comparative.md`](04-etude-comparative.md)) |
+| 4. Ressources | Quels moyens mobiliser ? | Étude technique (§ 3) et étude comparative des solutions |
 | 5. Avis critique | Le projet est-il réalisable ? | Synthèse argumentée (§ 5) |
 
 > La démarche est **itérative** : un projet étudiant solo sans existant logiciel impose de dimensionner les choix sur la soutenabilité (automatisation, free tiers) plutôt que sur la performance à grande échelle.
@@ -52,7 +62,7 @@ flowchart TD
 ### 2.3 Technologies & architecture cible
 
 - **Architecture** : SPA (front) + API REST (back) + BDD document — découplage net front/back.
-- **API .NET** : architecture **hexagonale** (Domaine / Application / Infrastructure / Entrée) — cf. [`../../architecture.md`](../../architecture.md).
+- **API .NET** : architecture **hexagonale** (Domaine / Application / Infrastructure / Entrée).
 - **Contrat** : `/api/v1`, OpenAPI exporté + `OpenApiContractTests` pour éviter les dérives.
 - **Couche live** : polling en MVP, prête à passer SSE/WebSocket sans recâbler les composants.
 
@@ -84,12 +94,12 @@ flowchart TD
 ### 3.2 Contraintes financières
 
 - **Budget cible** : ≤ ~15 €/mois en production réelle (projet étudiant) → **free tiers prioritaires**.
-- Détail chiffré dans [`10-budget.md`](10-budget.md).
+- Détail chiffré présenté dans le budget prévisionnel du projet.
 
 ### 3.3 Contraintes de délais
 
 - Alignées sur le **calendrier du cursus Ynov** (jalons semestre/année).
-- Découpage par versions : MVP → migration .NET → V1 → V1.1 (cf. [`../../roadmap-product.md`](../../roadmap-product.md), planning [`../pilotage/01-planification.md`](../bloc-3-coordination-pilotage/01-planification.md)).
+- Découpage par versions : MVP → migration .NET → V1 → V1.1.
 
 ### 3.4 Contraintes humaines
 
@@ -121,7 +131,7 @@ flowchart TD
 | **Observabilité** | Logs structurés + Cloud Monitoring (+ Sentry, cf. supervision) |
 | **Email** | Resend (transactionnel) |
 
-> La **justification comparée** de chacun de ces choix figure dans [`04-etude-comparative.md`](04-etude-comparative.md) (C1.3.2).
+> La **justification comparée** de chacun de ces choix est développée dans l'étude comparative des solutions techniques.
 
 ---
 
@@ -142,11 +152,7 @@ flowchart TD
 | **TMDB indisponible / rate limiting / changement CGU** | Recherche film dégradée | Cache posters (TTL), saisie manuelle en repli, clé serveur uniquement |
 | **Coût Cloud Run en cas de pic** | Dépassement budget | Scale-to-zero, free tier 2 M req/mois, limites de concurrence |
 | **Complexité des aperçus OG dynamiques** | Effort disproportionné | Repli OG statiques documenté (cf. spec § 1) |
-| **Cookies cross-site (CSRF)** | Faille sécurité | CORS strict + `SameSite=None; Secure` + mesures OWASP (cf. [`../owasp-top-10.md`](../bloc-2-conception-developpement/owasp-top-10.md)) |
+| **Cookies cross-site (CSRF)** | Faille sécurité | CORS strict + `SameSite=None; Secure` + mesures OWASP |
 | **Charge solo / soutenabilité** | Retard projet | Automatisation, périmètre versionné (MVP → V1), backlog priorisé |
 
-> **Conclusion** : la faisabilité technique est **avérée**. Les risques sont identifiés, de criticité maîtrisée, et couverts par des mesures concrètes détaillées dans [`07-risques.md`](07-risques.md). Le lancement est recommandé.
-
----
-
-*Voir aussi : [`04-etude-comparative.md`](04-etude-comparative.md) (étude comparative — C1.3.2), [`07-risques.md`](07-risques.md) (cartographie des risques — C1.2.3), [`10-budget.md`](10-budget.md) (budget — C1.4.2).*
+> **Conclusion** : la faisabilité technique est **avérée**. Les risques sont identifiés, de criticité maîtrisée, et couverts par des mesures concrètes. Le lancement est recommandé.

@@ -1,6 +1,15 @@
 # 07 — Cartographie des risques & référentiel
 
-> **RNCP 39583 — C1.2.3** : « Les risques techniques et fonctionnels sont cartographiés et priorisés dans un référentiel. Ce référentiel permet de préciser les risques pour la perte de données, l'interruption du système, les facteurs de dégradation, la sécurité. Les indicateurs de contrôle sont explicités et permettent de contrôler l'impact des risques sur la performance du développement. »
+> **RNCP 39583 — C1.2.3**
+>
+> **Compétence** — Cartographier les risques techniques et fonctionnels associés au projet en mettant en place un référentiel et des indicateurs de contrôle, en analysant leur criticité afin de limiter leurs impacts sur la performance du développement.
+>
+> **Livrable attendu** — La cartographie des risques techniques et fonctionnels, un référentiel d'évaluation des risques et de suivi des incidents, et des indicateurs de contrôle.
+>
+> **Critères d'évaluation**
+> - Les risques techniques et fonctionnels sont cartographiés et priorisés dans un référentiel.
+> - Le référentiel précise les risques relatifs à : la perte de données, l'interruption du système, les facteurs de dégradation, la sécurité.
+> - Les indicateurs de contrôle sont explicités et permettent de contrôler l'impact des risques sur la performance du développement.
 
 ---
 
@@ -33,8 +42,8 @@ Grille **Probabilité × Impact**, chacun noté de 1 (faible) à 3 (élevé). Le
 | RT3 | **Perte de données** | Perte de données | 1 | 3 | 3 | 🟡 | Persistance managée Atlas (réplication), pas d'état en mémoire | Sauvegardes Atlas, intégrité au démarrage |
 | RT4 | **Fuite de secret** (clé TMDB, URI Mongo) | Sécurité | 1 | 3 | 3 | 🟡 | Secret Manager + Gitleaks en CI + jamais en repo | Scan Gitleaks (bloquant si fuite) |
 | RT5 | **CVE critique dans une dépendance** | Sécurité | 2 | 2 | 4 | 🟡 | Dependabot mensuel, `pnpm audit`, `dotnet list --vulnerable`, Trivy | CVE High/Critical en CI (bloquant) |
-| RT6 | **CSRF (cookie cross-site)** | Sécurité | 2 | 3 | 6 | 🔴 | CORS strict + `SameSite=None; Secure` + mesures anti-CSRF | Revue OWASP A01 (cf. owasp-top-10.md) |
-| RT7 | **Pic de charge → coût Cloud Run** | Dégradation | 1 | 2 | 2 | 🟢 | Scale-to-zero, free tier 2 M req, limite de concurrence | Coût mensuel GCP vs budget (§ budget) |
+| RT6 | **CSRF (cookie cross-site)** | Sécurité | 2 | 3 | 6 | 🔴 | CORS strict + `SameSite=None; Secure` + mesures anti-CSRF | Revue OWASP A01 |
+| RT7 | **Pic de charge → coût Cloud Run** | Dégradation | 1 | 2 | 2 | 🟢 | Scale-to-zero, free tier 2 M req, limite de concurrence | Coût mensuel GCP vs budget prévu |
 | RT8 | **Désynchronisation SW / bundles** (déploiement front) | Dégradation | 2 | 2 | 4 | 🟡 | Déploiement 3 étapes ordonné + invalidation CloudFront | Smoke test post-déploiement |
 | RT9 | **CI instable / rouge** | Dégradation (dev) | 2 | 2 | 4 | 🟡 | Tests déterministes, `verify:local` avant push | Taux de stabilité CI (vert/rouge) |
 
@@ -64,7 +73,7 @@ Grille **Probabilité × Impact**, chacun noté de 1 (faible) à 3 (élevé). Le
 
 ## 5. Indicateurs de contrôle (suivi de l'impact sur la performance du dev)
 
-Les indicateurs ci-dessous sont **mesurables** et suivis dans le pilotage ([`../pilotage/02-suivi-indicateurs.md`](../bloc-3-coordination-pilotage/02-suivi-indicateurs.md)) :
+Les indicateurs ci-dessous sont **mesurables** et suivis dans le pilotage du projet :
 
 | Indicateur | Source | Seuil d'alerte |
 |------------|--------|----------------|
@@ -72,9 +81,5 @@ Les indicateurs ci-dessous sont **mesurables** et suivis dans le pilotage ([`../
 | Uptime `/health` | Uptime check GCP | 2 échecs consécutifs |
 | CVE High/Critical ouvertes | `pnpm audit` / NuGet / Trivy | > 0 |
 | CI verte / rouge | GitHub Actions | Échec sur `master` |
-| Coût cloud mensuel | Factures GCP + AWS | > budget prévu (§ budget) |
+| Coût cloud mensuel | Factures GCP + AWS | > budget prévu |
 | Fuite de secret | Gitleaks | > 0 (bloquant) |
-
----
-
-*Voir aussi : [`06-swot.md`](06-swot.md) (SWOT — C1.2.1), [`03-faisabilite-technique.md`](03-faisabilite-technique.md) (risques de faisabilité — C1.2.2), [`../supervision.md`](../bloc-4-mco/supervision.md) (supervision — C4.1.2).*

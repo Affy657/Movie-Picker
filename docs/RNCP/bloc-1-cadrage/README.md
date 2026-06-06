@@ -2,7 +2,9 @@
 
 > Grille officielle : [`../referentiel/bloc-01-cadrer-projet-applications.md`](../referentiel/bloc-01-cadrer-projet-applications.md) · Suivi : [`../suivi-rncp.md`](../suivi-rncp.md)
 
-**État : ✅ écrit complet** (la restitution orale de C1.6 reste à préparer).
+**État : ✅ écrit complet** · plan de présentation orale prêt → [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md).
+
+> **Épreuve = oral 30 min** (20 min présentation + 10 min échanges) devant **2 pros externes**. Le livrable évalué est le **support de diapositives**. Bloc validé si ≥ 50 % des compétences acquises **et aucune éliminatoire non-acquise**.
 
 ## Livrables
 

@@ -1,6 +1,17 @@
 # 05 — Cahier des charges fonctionnel & estimation de charge (J/H)
 
-> **RNCP 39583 — C1.4.1 (ÉLIMINATOIRE)** : « Les fonctions sont recensées, caractérisées, ordonnées et hiérarchisées (principales, secondaires, complémentaires). La charge de travail est exprimée en jours-homme. L'outil d'analyse fonctionnelle est explicité. La couverture technique des besoins fonctionnels est argumentée et justifiée. L'expérience utilisateur est prise en compte. »
+> **RNCP 39583 — C1.4.1 (ÉLIMINATOIRE)**
+>
+> **Compétence** — Évaluer la charge de travail nécessaire en analysant les fonctionnalités attendues, en tenant compte des exigences et des contraintes du projet, afin de permettre une évaluation budgétaire.
+>
+> **Livrable attendu** — Un diagramme de fonctionnalités ou un cahier des charges fonctionnel, et une estimation de la charge de travail du projet.
+>
+> **Critères d'évaluation**
+> - Les fonctions sont recensées, caractérisées, ordonnées et hiérarchisées (principales, secondaires, complémentaires).
+> - La charge de travail est exprimée en « jour-homme ».
+> - L'outil d'analyse fonctionnelle est explicité.
+> - La couverture technique des besoins fonctionnels est argumentée et justifiée.
+> - L'expérience utilisateur est prise en compte dans les fonctionnalités développées.
 
 ---
 
@@ -11,7 +22,7 @@ L'analyse combine deux outils complémentaires :
 - **MoSCoW** pour la **priorisation** (Must / Should / Could / Won't) — adapté à un découpage par versions (MVP → V1 → V1.1).
 - **Diagramme de fonctionnalités** (type *bête à cornes* / arborescence) pour la **hiérarchisation** (fonctions principales / secondaires / complémentaires).
 
-> Justification du choix : MoSCoW est léger, lisible par un commanditaire non-technique, et cohérent avec la roadmap par versions ([`../../roadmap-product.md`](../../roadmap-product.md)). La hiérarchisation principale/secondaire/complémentaire répond directement au critère de la grille.
+> Justification du choix : MoSCoW est léger, lisible par un commanditaire non-technique, et cohérent avec la roadmap par versions (MVP → V1 → V1.1). La hiérarchisation principale/secondaire/complémentaire répond directement au critère de la grille.
 
 ### Bête à cornes (besoin fondamental)
 
@@ -79,7 +90,7 @@ mindmap
 
 ## 3. Estimation de la charge (jours-homme)
 
-> Granularité alignée sur les lots de livraison ([`../livraison-v1.md`](../../v1-produit/livraison-v1.md)). Hypothèse : 1 J/H ≈ 1 journée de travail effectif d'un développeur. Méthode d'estimation : **analogique** (par comparaison entre lots de complexité voisine) ; la valeur retenue correspond au scénario **probable**, marge d'incertitude estimée à ± 20 % sur les lots de développement.
+> Granularité alignée sur les lots de livraison du projet. Hypothèse : 1 J/H ≈ 1 journée de travail effectif d'un développeur. Méthode d'estimation : **analogique** (par comparaison entre lots de complexité voisine) ; la valeur retenue correspond au scénario **probable**, marge d'incertitude estimée à ± 20 % sur les lots de développement.
 
 ### MVP (rétrospectif)
 
@@ -144,7 +155,7 @@ mindmap
 | Clôture RNCP | 23 |
 | **TOTAL** | **≈ 98 J/H** |
 
-> Cette charge totale alimente le **budget prévisionnel** ([`10-budget.md`](10-budget.md), C1.4.2) : ≈ 98 J/H × TJM junior simulé = base de chiffrage si le projet était réalisé en agence.
+> Cette charge totale alimente le **budget prévisionnel** du projet : ≈ 98 J/H × TJM junior simulé = base de chiffrage si le projet était réalisé en agence.
 
 ---
 
@@ -162,22 +173,18 @@ Chaque fonction principale est tracée jusqu'à son implémentation (endpoint + 
 | Auth | `/api/v1/auth/*` | `LoginPage` / `RegisterPage` | Intégration + rate limit |
 | Config hôte | `PATCH .../config` | `EventDetail` (section config) | Intégration (garde-fous) |
 
-> Couverture complète et tableau scénarios → tests dans le cahier de recettes ([`../cahier-recettes.md`](../bloc-2-conception-developpement/cahier-recettes.md), C2.3.1).
+> Couverture complète et tableau scénarios → tests détaillés dans le cahier de recettes du projet.
 
 ---
 
 ## 5. Prise en compte de l'expérience utilisateur
 
-L'UX est intégrée dès le cahier des charges, conformément à [`../../spec.md`](../../spec.md) § 8 et § 9 :
+L'UX est intégrée dès le cahier des charges, conformément aux spécifications fonctionnelles du produit :
 
 - **Mobile-first** : conception d'abord pour écran étroit (≈ 375 px), zones tactiles ≥ 44×44 px, colonne unique.
 - **Friction maîtrisée** : partage par lien / QR code menant à une inscription rapide + redirection automatique sur la soirée (`returnTo`).
 - **Feedback clair** : toasts succès/erreur, indicateurs de chargement, action « Réessayer » (pas de liste vide silencieuse).
 - **Lisibilité** : police ≥ 16 px, contraste validé en modes sombre et clair.
-- **Accessibilité** : navigation clavier, labels lecteurs d'écran (référentiel détaillé dans [`../accessibilite.md`](../bloc-2-conception-developpement/accessibilite.md)).
+- **Accessibilité** : navigation clavier, labels lecteurs d'écran (référentiel d'accessibilité dédié).
 
 > L'expérience utilisateur n'est pas une couche cosmétique ajoutée après coup : elle conditionne la hiérarchisation (les fonctions principales sont celles du parcours mobile critique) et l'estimation (le poids du lot « Front SPA mobile-first » le reflète).
-
----
-
-*Voir aussi : [`02-analyse-demande.md`](02-analyse-demande.md) (besoins — C1.1.2), [`10-budget.md`](10-budget.md) (budget à partir de la charge — C1.4.2), [`../livraison-v1.md`](../../v1-produit/livraison-v1.md) (lots de livraison détaillés).*

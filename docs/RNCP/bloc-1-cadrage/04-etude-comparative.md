@@ -1,6 +1,15 @@
 # 04 — Étude comparative des solutions techniques
 
-> **RNCP 39583 — C1.3.2 (ÉLIMINATOIRE)** : « Une analyse comparative des solutions techniques envisagées est réalisée. Les choix retenus sont justifiés et adaptés à la réalisation du projet. Les inconvénients et avantages des différentes solutions sont analysés en termes de : sécurité, environnements systèmes, réseaux, accessibilité, impact environnemental. »
+> **RNCP 39583 — C1.3.2 (ÉLIMINATOIRE)**
+>
+> **Compétence** — Sélectionner l'architecture technique adaptée en réalisant une étude comparative des solutions techniques, en évaluant les solutions en termes de sécurité afin de répondre aux attendus du projet de développement.
+>
+> **Livrable attendu** — L'étude comparative des solutions techniques envisagées et l'identification des ressources matérielles / techniques nécessaires.
+>
+> **Critères d'évaluation**
+> - Une analyse comparative des solutions techniques envisagées est réalisée.
+> - Les choix retenus sont justifiés et adaptés à la réalisation du projet.
+> - Les inconvénients et les avantages des différentes solutions sont analysés en termes de : sécurité, environnements systèmes, réseaux, accessibilité, impact environnemental.
 
 ---
 
@@ -23,7 +32,7 @@ Pour chaque **brique technique majeure**, 2 à 3 options sont comparées selon *
 | **Impact env.** | Faible (statique, pas de calcul serveur) | Plus élevé (rendu serveur par requête) | Faible |
 | **Coût** | Free (S3 + CloudFront free tier) | Surcoût hébergement Node/edge | Free |
 
-**Décision : React + Vite + TypeScript strict.** Maîtrise cursus, écosystème a11y mature (axe, vitest-axe), build statique distribuable par CDN sans serveur à sécuriser ni à alimenter en énergie. Le SSR de Next.js n'apporte pas de valeur décisive ici (aperçus OG traités séparément, cf. spec § 1) pour un surcoût de sécurité, d'exploitation et d'empreinte.
+**Décision : React + Vite + TypeScript strict.** Maîtrise cursus, écosystème a11y mature (axe, vitest-axe), build statique distribuable par CDN sans serveur à sécuriser ni à alimenter en énergie. Le SSR de Next.js n'apporte pas de valeur décisive ici (aperçus OG traités séparément) pour un surcoût de sécurité, d'exploitation et d'empreinte.
 
 ---
 
@@ -98,7 +107,7 @@ Pour chaque **brique technique majeure**, 2 à 3 options sont comparées selon *
 | **Impact env.** | Négligeable | Négligeable | Appels externes supplémentaires |
 | **Coût** | Free | Free | Payant au-delà du free tier, dépendance |
 
-**Décision : sessions par cookie `HttpOnly`.** Meilleure posture sécurité par défaut (token non accessible au JS, donc résistant au vol par XSS ; révocation immédiate côté serveur). Le coût = gérer le cross-site (CORS strict + `SameSite=None; Secure` + mesures anti-CSRF, cf. [`../owasp-top-10.md`](../bloc-2-conception-developpement/owasp-top-10.md)). Décision tracée en ADR (`docs/adr/0002-cookie-sessions-vs-jwt.md`). OAuth externe écarté (dépendance + coût + complexité disproportionnés).
+**Décision : sessions par cookie `HttpOnly`.** Meilleure posture sécurité par défaut (token non accessible au JS, donc résistant au vol par XSS ; révocation immédiate côté serveur). Le coût = gérer le cross-site (CORS strict + `SameSite=None; Secure` + mesures anti-CSRF). Décision tracée dans un ADR dédié. OAuth externe écarté (dépendance + coût + complexité disproportionnés).
 
 ---
 
@@ -156,7 +165,3 @@ flowchart LR
 - **Poste de développement** : éditeur (Cursor / VS Code), Node 22 LTS, .NET 10 SDK, pnpm, Docker Desktop, MongoDB local.
 - **Comptes de service** : GCP, AWS, MongoDB Atlas, TMDB, Resend, GitHub — tous en free tier.
 - Aucun matériel serveur propre (full managé / serverless).
-
----
-
-*Voir aussi : [`03-faisabilite-technique.md`](03-faisabilite-technique.md) (faisabilité — C1.2.2), [`09-architecture.md`](09-architecture.md) (architecture — C1.5), [`../bloc-3-coordination-pilotage/adr/`](../bloc-3-coordination-pilotage/adr/) (ADR — arbitrages tracés).*

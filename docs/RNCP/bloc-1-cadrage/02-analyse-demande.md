@@ -1,6 +1,16 @@
 # 02 — Analyse de la demande
 
-> **RNCP 39583 — C1.1.2** : « La présentation de l'analyse de la demande permet de recenser et d'identifier les besoins et les attentes des parties prenantes. L'analyse est structurée et permet de définir les objectifs et les principaux enjeux. La problématique du client est identifiée. Les pistes de solutions techniques sont cohérentes avec la problématique. »
+> **RNCP 39583 — C1.1.2**
+>
+> **Compétence** — Analyser la demande et les données recueillies auprès du commanditaire en menant un entretien d'explicitation du besoin, des attentes, des exigences et un état des lieux de l'existant, afin de s'approprier le contexte, les enjeux, les objectifs du projet pour cerner la problématique du client et faire émerger des pistes de solutions.
+>
+> **Livrable attendu** — Une présentation de l'analyse de la demande, des objectifs et enjeux du projet pour chacune des parties prenantes.
+>
+> **Critères d'évaluation**
+> - L'analyse recense et identifie les besoins et les attentes des parties prenantes.
+> - Elle est structurée et permet de définir les objectifs et les principaux enjeux du projet.
+> - La problématique du client est identifiée.
+> - Les pistes de solutions techniques sont cohérentes avec la problématique.
 
 ---
 
@@ -45,7 +55,7 @@ Le choix collectif d'un film est un problème social récurrent : chacun a ses p
 |-------|-------------|----------------------------|
 | **Adoption** | Faire entrer un maximum de participants avec un minimum de friction | Mobile-first, lien partagé + inscription rapide avec redirection automatique sur la soirée |
 | **Engagement** | Rendre la décision plaisante et non conflictuelle | Animation de la roue, vote visible, marqueur « déjà vu » |
-| **Confiance / sécurité** | Protéger les données et le rôle hôte | Auth par cookie, OWASP Top 10, rôle hôte non devinable (cf. [`../owasp-top-10.md`](../bloc-2-conception-developpement/owasp-top-10.md)) |
+| **Confiance / sécurité** | Protéger les données et le rôle hôte | Auth par cookie, OWASP Top 10, rôle hôte non devinable |
 | **Conformité** | Respecter le cadre légal et l'accessibilité | RGPD basique (export/suppression), accessibilité (OPQUAST/RGAA) |
 | **Soutenabilité** | Tenir le projet en solo avec un budget étudiant | Automatisation CI/CD, free tiers cloud, scale-to-zero |
 
@@ -75,12 +85,8 @@ Le choix collectif d'un film est un problème social récurrent : chacun a ses p
 - **Compte obligatoire pour tous les participants** : persistance, historique, notifications et fonctions sociales pour chacun ; le pseudo affiché = le nom du compte.
 
 ### Pistes écartées (reportées au backlog)
-- **Deep links streaming natifs** (ouverture directe dans l'app de streaming) : complexité de mapping par plateforme → backlog (cf. [`../../roadmap-product.md`](../../roadmap-product.md)).
+- **Deep links streaming natifs** (ouverture directe dans l'app de streaming) : complexité de mapping par plateforme → backlog.
 - **Recommandation algorithmique** : hors périmètre — la valeur est dans la décision collective, pas la suggestion.
 - **Notifications push / email de rappel** : nécessitent consentement RGPD + infra de file d'envoi → V1.1 / backlog.
 
-> **Cohérence problématique → solutions** : chaque piste retenue répond directement à un enjeu identifié (vote+roue → équité/rapidité ; lien + inscription rapide → adoption ; TMDB → engagement ; compte pour tous → identité, social et soutenabilité). Les justifications techniques détaillées figurent dans [`04-etude-comparative.md`](04-etude-comparative.md).
-
----
-
-*Voir aussi : [`01-parties-prenantes.md`](01-parties-prenantes.md) (cartographie — C1.1.1) et [`11-argumentaire-client.md`](11-argumentaire-client.md) (synthèse argumentée — C1.6).*
+> **Cohérence problématique → solutions** : chaque piste retenue répond directement à un enjeu identifié (vote+roue → équité/rapidité ; lien + inscription rapide → adoption ; TMDB → engagement ; compte pour tous → identité, social et soutenabilité). Les justifications techniques détaillées sont développées dans l'étude comparative des solutions techniques.

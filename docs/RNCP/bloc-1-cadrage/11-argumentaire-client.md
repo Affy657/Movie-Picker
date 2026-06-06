@@ -1,6 +1,20 @@
 # 11 — Argumentaire client (synthèse des décisions et axes de solutions)
 
-> **RNCP 39583 — C1.6 (ÉLIMINATOIRE)** : « Proposer les décisions et axes de solutions préconisées auprès du client en structurant son discours, en développant un argumentaire adapté afin d'obtenir son adhésion et sa validation. »
+> **RNCP 39583 — C1.6 (ÉLIMINATOIRE)**
+>
+> **Compétence** — Proposer les décisions et les axes de solutions préconisées auprès du client en structurant son discours, en développant un argumentaire adapté afin d'obtenir son adhésion et sa validation.
+>
+> **Livrable attendu** — La préconisation des axes de solutions et le développement des arguments répondant à la problématique du client.
+>
+> **Critères d'évaluation**
+> - Le cadre du projet et les solutions techniques préconisées sont exposés.
+> - Les choix sont argumentés et prennent en compte la problématique du client.
+> - Le vocabulaire est professionnel et les termes techniques sont appropriés.
+> - Le discours employé est vulgarisé pour s'adapter à l'auditoire visé.
+> - Les objections sont prises en compte et traitées.
+> - Les supports de communication sont adaptés et en cohérence avec le discours.
+>
+> ---
 >
 > **Nature mixte du livrable** : ce critère est **majoritairement oral** (vocabulaire adapté à l'auditoire, traitement des objections, supports de présentation). Ce document est le **support écrit versionné** qui consolide les choix de cadrage et sert de base à la restitution orale devant le jury.
 
@@ -9,8 +23,6 @@
 ## 1. Rappel de la problématique client
 
 > **Comment permettre à un groupe d'amis de choisir un film à regarder ensemble, rapidement et équitablement, sans débat interminable ni outil contraignant ?**
-
-(Détail : [`02-analyse-demande.md`](02-analyse-demande.md).)
 
 Aucune solution existante ne combine décision collective + métadonnées films riches + départage ludique + zéro friction mobile. C'est le créneau adressé par **Movie Picker**.
 
@@ -45,7 +57,7 @@ Aucune solution existante ne combine décision collective + métadonnées films 
 | | |
 |--|--|
 | **Contexte** | Projet solo, budget étudiant, besoin de maintenabilité |
-| **Options** | Voir l'étude comparative complète ([`04-etude-comparative.md`](04-etude-comparative.md)) |
+| **Options** | Voir l'étude comparative complète des solutions techniques |
 | **Décision** | **React + Vite (front) · ASP.NET Core .NET 10 (API) · MongoDB Atlas** |
 | **Argumentaire** | « Des technologies éprouvées, gratuites, et avec un support long terme : le produit reste maintenable et économe dans la durée. » |
 | **Risque résiduel** | Dépendance TMDB → cache + repli saisie manuelle |
@@ -74,13 +86,13 @@ Aucune solution existante ne combine décision collective + métadonnées films 
 
 ## 3. Axes de solutions techniques retenus
 
-| Axe | Solution | Renvoi |
-|-----|----------|--------|
-| **Architecture** | C4 + hexagonale (maintenable, testable, extensible) | [`09-architecture.md`](09-architecture.md) |
-| **Stack** | React/Vite · .NET 10 · MongoDB | [`04-etude-comparative.md`](04-etude-comparative.md) |
-| **Hébergement** | Cloud Run + S3/CloudFront (scale-to-zero) | [`04-etude-comparative.md`](04-etude-comparative.md) |
-| **Sécurité** | OWASP Top 10 + cookie HttpOnly + rate limit | [`../owasp-top-10.md`](../bloc-2-conception-developpement/owasp-top-10.md) |
-| **Qualité** | CI/CD, tests, scans automatisés | [`../protocole-ci-cd.md`](../bloc-2-conception-developpement/protocole-ci-cd.md) |
+| Axe | Solution |
+|-----|----------|
+| **Architecture** | C4 + hexagonale (maintenable, testable, extensible) |
+| **Stack** | React/Vite · .NET 10 · MongoDB |
+| **Hébergement** | Cloud Run + S3/CloudFront (scale-to-zero) |
+| **Sécurité** | OWASP Top 10 + cookie HttpOnly + rate limit |
+| **Qualité** | CI/CD, tests, scans automatisés |
 
 ---
 
@@ -93,8 +105,6 @@ Aucune solution existante ne combine décision collective + métadonnées films 
 | Licences | 0 € (stack open source) |
 | Coût réel de trésorerie | < 200 €/an |
 
-(Détail : [`10-budget.md`](10-budget.md).)
-
 > **Message clé** : « Une valeur de développement conséquente pour un coût d'exploitation quasi nul — le projet est viable économiquement. »
 
 ---
@@ -106,8 +116,6 @@ flowchart LR
   MVP[MVP<br/>créer/rejoindre/voter/roue] --> V1[V1<br/>compte, config hôte,<br/>watch providers, OG, i18n, sécurité]
   V1 --> V11[V1.1<br/>limite participants, .ics,<br/>hors-ligne, push notifs]
 ```
-
-(Détail : [`../../roadmap-product.md`](../../roadmap-product.md) + [`../../roadmap-tech.md`](../../roadmap-tech.md).)
 
 ---
 
@@ -128,7 +136,3 @@ flowchart LR
 - Présentation projetée (slides ou page Markdown formatée) reprenant les 5 décisions structurantes.
 - **Démonstration produit** du parcours hôte + invité (portée par C3.4.2, hors scope dépôt).
 - Vocabulaire adapté à un auditoire **non-technique** : vulgarisation systématique des termes (serverless → « ne tourne que quand c'est utilisé », hexagonale → « code organisé en couches indépendantes »).
-
----
-
-*Synthèse de l'ensemble du cadrage Bloc 1 : [`01-parties-prenantes.md`](01-parties-prenantes.md) · [`02-analyse-demande.md`](02-analyse-demande.md) · [`03-faisabilite-technique.md`](03-faisabilite-technique.md) · [`04-etude-comparative.md`](04-etude-comparative.md) · [`05-charge-jh.md`](05-charge-jh.md) · [`06-swot.md`](06-swot.md) · [`07-risques.md`](07-risques.md) · [`08-veille.md`](08-veille.md) · [`09-architecture.md`](09-architecture.md) · [`10-budget.md`](10-budget.md).*

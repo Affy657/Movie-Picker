@@ -1,6 +1,14 @@
 # 08 — Veille technique, technologique & réglementaire
 
-> **RNCP 39583 — C1.3.1** : « Une synthèse des sources d'information est présentée et permet d'identifier la stratégie de veille mise en œuvre et les objectifs visés, une explication des outils de veille sélectionnés, les bénéfices attendus. Les évolutions techniques, technologiques ou réglementaires issues de la veille sont classifiées et justifiées au regard de leur impact métier et environnemental. »
+> **RNCP 39583 — C1.3.1**
+>
+> **Compétence** — Réaliser une veille technique, technologique et réglementaire en sélectionnant les outils de veille adaptés et en analysant les données recueillies, en ciblant par exemple les évolutions technologiques qui limiteraient l'impact environnemental du projet, afin de faire bénéficier au projet des dernières avancées technologiques et réglementaires.
+>
+> **Livrable attendu** — La méthodologie de recherche des informations, les principales sources consultées et les outils utilisés pour la veille.
+>
+> **Critères d'évaluation**
+> - Une synthèse des sources d'information est présentée et permet d'identifier : la stratégie de veille mise en œuvre et les objectifs visés, une explication des outils de veille sélectionnés, les bénéfices attendus.
+> - Les évolutions techniques, technologiques ou réglementaires issues de la veille sont classifiées et justifiées au regard de leur impact métier et environnemental.
 
 ---
 
@@ -23,29 +31,29 @@
 
 | Domaine | Source | Format |
 |---------|--------|--------|
-| .NET | [.NET Blog](https://devblogs.microsoft.com/dotnet/) | Blog / RSS |
-| React | [React Blog](https://react.dev/blog) | Blog / RSS |
-| Vite | [Vite Changelog](https://vite.dev/) | Releases GitHub |
-| TanStack | [TanStack Blog](https://tanstack.com/) | Blog / Discord |
-| MongoDB | [MongoDB Blog](https://www.mongodb.com/blog) | Blog |
+| .NET | .NET Blog (devblogs.microsoft.com/dotnet) | Blog / RSS |
+| React | React Blog (react.dev/blog) | Blog / RSS |
+| Vite | Vite Changelog (vite.dev) | Releases GitHub |
+| TanStack | TanStack Blog (tanstack.com) | Blog / Discord |
+| MongoDB | MongoDB Blog (mongodb.com/blog) | Blog |
 | Cloud | Release notes GCP Cloud Run / AWS | Changelog |
 
 ### Veille sécurité
 
 | Source | Usage |
 |--------|-------|
-| [OWASP Top 10](https://owasp.org/Top10/) | Référentiel failles applicatives |
-| [GitHub Security Advisories](https://github.com/advisories) | Alertes dépendances |
-| [CVE / NVD](https://nvd.nist.gov/) | Base CVE officielle |
-| [Have I Been Pwned](https://haveibeenpwned.com/) | Fuites de données |
+| OWASP Top 10 (owasp.org/Top10) | Référentiel failles applicatives |
+| GitHub Security Advisories (github.com/advisories) | Alertes dépendances |
+| CVE / NVD (nvd.nist.gov) | Base CVE officielle |
+| Have I Been Pwned (haveibeenpwned.com) | Fuites de données |
 
 ### Veille réglementaire
 
 | Source | Usage |
 |--------|-------|
-| [CNIL — actualités](https://www.cnil.fr/fr/actualites) | RGPD, cookies, données personnelles |
-| [RGAA / DINUM](https://accessibilite.numerique.gouv.fr/) | Accessibilité numérique |
-| [GreenIT](https://www.greenit.fr/) | Éco-conception web |
+| CNIL — actualités (cnil.fr) | RGPD, cookies, données personnelles |
+| RGAA / DINUM (accessibilite.numerique.gouv.fr) | Accessibilité numérique |
+| GreenIT (greenit.fr) | Éco-conception web |
 
 ---
 
@@ -71,15 +79,11 @@
 | Évolution veillée | Impact métier | Impact environnemental | Action / décision |
 |-------------------|---------------|------------------------|-------------------|
 | **.NET 10 LTS** | Support long, stabilité du socle API | Neutre (runtime optimisé, AOT/trim possible) | **Adopté** — base de la stack (cf. comparatif) |
-| **OWASP Top 10 (édition courante)** | Cadre les mesures de sécurité | Neutre | **Intégré** — mapping dans owasp-top-10.md |
+| **OWASP Top 10 (édition courante)** | Cadre les mesures de sécurité | Neutre | **Intégré** — mapping documenté dans le référentiel de sécurité applicative |
 | **Images Docker `chiseled`/`alpine`** | Surface d'attaque réduite | **Positif** — image plus légère, moins de stockage/transfert | **Piste** — à arbitrer (compatibilité ICU) |
-| **Évolutions RGAA / OPQUAST** | Conformité accessibilité | Neutre | **Suivi** — référentiel a11y choisi (cf. accessibilite.md) |
+| **Évolutions RGAA / OPQUAST** | Conformité accessibilité | Neutre | **Suivi** — référentiel a11y choisi |
 | **CNIL — cookies & consentement** | Conformité RGPD | Neutre | **Suivi** — CMP conditionnée à l'ajout d'analytics (backlog) |
 | **Scale-to-zero serverless** | Élasticité, coût | **Positif** — zéro conso à l'idle | **Adopté** — Cloud Run |
 | **CVE dépendances (flux continu)** | Sécurité | Neutre | **Traité en continu** — Dependabot + scans CI bloquants |
 
 > Chaque évolution est **justifiée** au regard de son double impact (métier + environnemental), conformément au critère. Les évolutions à impact environnemental positif (images chiseled, scale-to-zero) sont **priorisées** lorsqu'elles n'introduisent pas de régression fonctionnelle.
-
----
-
-*Voir aussi : [`06-swot.md`](06-swot.md) (opportunités/menaces — C1.2.1), [`07-risques.md`](07-risques.md) (risques — C1.2.3), [`../owasp-top-10.md`](../bloc-2-conception-developpement/owasp-top-10.md) (sécurité applicative — C2.2.3).*

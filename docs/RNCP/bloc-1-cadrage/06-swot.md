@@ -1,6 +1,14 @@
 # 06 — Analyse SWOT (opportunités & menaces)
 
-> **RNCP 39583 — C1.2.1** : « Une cartographie des menaces et des opportunités est réalisée à l'aide d'un outil adapté (ex : SWOT). Cette analyse permet de définir : l'impact des interactions avec d'autres projets, l'impact environnemental, les préconisations sur la sécurité, les points de vigilance à mettre sous contrôle, les opportunités à exploiter. »
+> **RNCP 39583 — C1.2.1**
+>
+> **Compétence** — Cartographier les opportunités et les menaces du projet, en analysant l'impact environnemental et les adhérences du projet afin de déterminer les actions à mener.
+>
+> **Livrable attendu** — La cartographie des opportunités et menaces du projet.
+>
+> **Critères d'évaluation**
+> - Une cartographie des menaces et des opportunités est réalisée à l'aide d'un outil adapté (ex : SWOT).
+> - L'analyse permet de définir : l'impact des interactions avec d'autres projets le cas échéant, l'impact environnemental du projet, les préconisations sur la sécurité du projet logiciel, les points de vigilance à mettre sous contrôle, les opportunités à exploiter.
 
 ---
 
@@ -43,13 +51,13 @@ Le projet n'interagit pas avec un SI interne (greenfield), mais il **adhère** �
 | **Front statique** | Aucun calcul serveur pour le rendu des pages |
 | **Image Docker** | Piste : passage `alpine`/`chiseled` pour réduire l'empreinte |
 
-> L'éco-conception est un **critère de choix d'architecture assumé** (cf. [`04-etude-comparative.md`](04-etude-comparative.md)), pas un ajout cosmétique.
+> L'éco-conception est un **critère de choix d'architecture assumé**, pas un ajout cosmétique.
 
 ---
 
 ## 4. Préconisations de sécurité
 
-- Couverture **OWASP Top 10** mappée au code (cf. [`../owasp-top-10.md`](../bloc-2-conception-developpement/owasp-top-10.md)).
+- Couverture **OWASP Top 10** mappée au code.
 - **Sessions cookie HttpOnly** + CORS strict (`ALLOWED_ORIGINS`) + `SameSite=None; Secure` cross-site.
 - **Rate limiting** par IP sur les endpoints sensibles (login, création, join, mutations).
 - **Secrets** via GCP Secret Manager (jamais en repo) + scan Gitleaks en CI.
@@ -77,7 +85,3 @@ Le projet n'interagit pas avec un SI interne (greenfield), mais il **adhère** �
 - **Watch providers TMDB** : différenciation produit (aide à la décision) sans coût supplémentaire.
 - **Scale-to-zero** : absorber des pics ponctuels (soirées) sans surdimensionner.
 - **Automatisation** : transformer la contrainte solo en démonstration de maîtrise CI/CD pour le jury.
-
----
-
-*Voir aussi : [`07-risques.md`](07-risques.md) (cartographie des risques — C1.2.3), [`08-veille.md`](08-veille.md) (veille — C1.3.1), [`../owasp-top-10.md`](../bloc-2-conception-developpement/owasp-top-10.md) (sécurité applicative).*

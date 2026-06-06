@@ -1,12 +1,21 @@
 # 10 — Estimation des coûts & budget prévisionnel
 
-> **RNCP 39583 — C1.4.2** : « L'estimation des coûts est cohérente avec la charge de travail. Le budget prévisionnel est élaboré et permet d'identifier les principaux postes de coûts : licence utilisateur, développement, infrastructures, etc. »
+> **RNCP 39583 — C1.4.2**
+>
+> **Compétence** — Estimer le coût associé au projet en se basant sur la charge de travail estimée préalablement et en identifiant les principaux postes de coûts afin de présenter au client un budget prévisionnel.
+>
+> **Livrable attendu** — L'estimation des coûts et le budget prévisionnel du projet.
+>
+> **Critères d'évaluation**
+> - L'estimation des coûts est cohérente avec la charge de travail.
+> - Le budget prévisionnel est élaboré.
+> - Il permet d'identifier les principaux postes de coûts : licence utilisateur, développement, infrastructures, etc.
 
 ---
 
 ## 1. Coût de développement (basé sur la charge)
 
-> Cohérence avec la charge estimée en [`05-charge-jh.md`](05-charge-jh.md) : **≈ 98 J/H** au total. Chiffrage **simulé** comme si le projet était réalisé en agence (le projet réel est réalisé en formation, coût de main-d'œuvre = temps candidat).
+> Cohérence avec la charge estimée (cahier des charges fonctionnel) : **≈ 98 J/H** au total. Chiffrage **simulé** comme si le projet était réalisé en agence (le projet réel est réalisé en formation, coût de main-d'œuvre = temps candidat).
 
 | Phase | Charge (J/H) | TJM junior simulé | Coût simulé (HT) |
 |-------|--------------|-------------------|------------------|
@@ -22,7 +31,7 @@
 
 ## 2. Postes de coûts d'infrastructure (production réelle)
 
-> Tous les services sont dimensionnés sur leurs **free tiers**, suffisants pour le volume attendu (cf. [`03-faisabilite-technique.md`](03-faisabilite-technique.md) § 3.5).
+> Tous les services sont dimensionnés sur leurs **free tiers**, suffisants pour le volume attendu (usage projet étudiant : dizaines à centaines d'utilisateurs).
 
 | Poste | Service | Free tier | Coût au-delà | Estimation mensuelle |
 |-------|---------|-----------|--------------|----------------------|
@@ -35,7 +44,9 @@
 | **Email** | Resend | 100 emails/jour (3 000/mois) | au-delà payant | **~0 €** |
 | **Monitoring erreurs** | Sentry Developer | 5 000 events/mois | au-delà payant | **~0 €** |
 | **CI/CD** | GitHub Actions | inclus repo | — | **~0 €** |
-| **Total récurrent** | | | | **≈ 5–15 €/mois** |
+| **Total récurrent** | | | | **≈ 1–5 €/mois** |
+
+> En régime nominal, le **seul poste non nul** est **S3 + CloudFront** (au-delà des 12 mois gratuits). La borne haute **~15 €/mois** n'est atteinte qu'en cas de **dépassement du free tier MongoDB** (passage M0 → M2 ≈ 9 $/mois) ou de pic de trafic CloudFront.
 
 ---
 
@@ -69,13 +80,9 @@
 | Catégorie | Montant | Hypothèses |
 |-----------|---------|------------|
 | **Développement (valeur simulée)** | 34 300 € HT | 98 J/H × TJM 350 € — coût réel = temps candidat (formation) |
-| **Infrastructure récurrente** | ~5–15 €/mois | Free tiers ; trafic projet étudiant |
+| **Infrastructure récurrente** | ~1–5 €/mois | Free tiers (S3/CloudFront au-delà de 12 mois) ; ≤ ~15 € si passage MongoDB M2 |
 | **One-shot** | ~10 €/an | Nom de domaine |
 | **Licences** | 0 € | Stack 100 % open source / free tier |
-| **Coût réel de trésorerie (hors temps)** | **≈ 70–190 €/an** | Domaine + infra au-delà free tier S3/CloudFront |
+| **Coût réel de trésorerie (hors temps)** | **≈ 20–190 €/an** | Domaine (~10 €/an) + infra ; borne haute = MongoDB M2 |
 
-> **Conclusion** : le budget prévisionnel de **trésorerie** est volontairement minimal (< 200 €/an), aligné sur la contrainte budget étudiant identifiée au cadrage. La **valeur de développement** (≈ 34 k€ simulés) matérialise l'effort pour le commanditaire et sert de base à l'argumentaire ([`11-argumentaire-client.md`](11-argumentaire-client.md)).
-
----
-
-*Voir aussi : [`05-charge-jh.md`](05-charge-jh.md) (charge — C1.4.1), [`09-architecture.md`](09-architecture.md) (architecture — C1.5), [`11-argumentaire-client.md`](11-argumentaire-client.md) (argumentaire — C1.6).*
+> **Conclusion** : le budget prévisionnel de **trésorerie** est volontairement minimal (< 200 €/an), aligné sur la contrainte budget étudiant identifiée au cadrage. La **valeur de développement** (≈ 34 k€ simulés) matérialise l'effort pour le commanditaire et sert de base à l'argumentaire client.

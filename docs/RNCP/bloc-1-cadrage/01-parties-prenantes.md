@@ -1,8 +1,19 @@
 # 01 — Cartographie des parties prenantes
 
-> **RNCP 39583 — C1.1.1 (ÉLIMINATOIRE)** : « La cartographie des parties prenantes permet d'identifier les différents acteurs du projet de développement (développeurs, architectes, administrateurs, clients, acteurs externes), de comprendre leurs rôles et leurs niveaux d'implication. Les caractéristiques des futurs utilisateurs sont identifiées et détaillées. »
+> **RNCP 39583 — C1.1.1 (ÉLIMINATOIRE)**
 >
-> Projet : **Movie Picker** — application web (SPA React + API ASP.NET Core / MongoDB) pour choisir un film à plusieurs lors d'une soirée. Voir [`../../spec.md`](../../spec.md) et [`../../architecture.md`](../../architecture.md).
+> **Compétence** — Cartographier les différents acteurs du projet de développement d'application logicielle (commanditaire, parties prenantes) et leurs rôles, en prenant en compte leur niveau d'implication et en identifiant les futurs utilisateurs, afin de cadrer l'environnement et le périmètre du projet.
+>
+> **Livrable attendu** — La cartographie des parties prenantes.
+>
+> **Critères d'évaluation**
+> - La cartographie identifie les différents acteurs du projet : développeurs, architectes, administrateurs, clients, acteurs externes.
+> - Elle permet de comprendre leurs rôles et leurs niveaux d'implication.
+> - Les caractéristiques des futurs utilisateurs sont identifiées et détaillées.
+>
+> ---
+>
+> Projet : **Movie Picker** — application web (SPA React + API ASP.NET Core / MongoDB) pour choisir un film à plusieurs lors d'une soirée.
 
 ---
 
@@ -54,7 +65,7 @@ mindmap
         Trivy / Gitleaks / SonarCloud
 ```
 
-> **Spécificité projet solo** : les rôles développeur, architecte et administrateur convergent sur une seule personne. Ce cumul est assumé et traité par une **automatisation maximale** (CI/CD, Dependabot, agents de revue) et une **analyse réflexive** sur le pilotage de soi (voir [`../pilotage/03-analyse-reflexive.md`](../bloc-3-coordination-pilotage/03-analyse-reflexive.md)).
+> **Spécificité projet solo** : les rôles développeur, architecte et administrateur convergent sur une seule personne. Ce cumul est assumé et traité par une **automatisation maximale** (CI/CD, Dependabot, agents de revue) et une **analyse réflexive** sur le pilotage de soi.
 
 ---
 
@@ -98,11 +109,7 @@ mindmap
 
 ### Synthèse des caractéristiques transverses
 
-- **Mobile-first** : la majorité des utilisateurs rejoignent via un lien partagé et utilisent l'appareil en main (cf. [`../../spec.md`](../../spec.md) § 9).
+- **Mobile-first** : la majorité des utilisateurs rejoignent via un lien partagé et utilisent l'appareil en main.
 - **Compte obligatoire pour tous les participants** : créer comme rejoindre une soirée exige un compte connecté ; le pseudo affiché correspond au **nom du compte** (plus de pseudo anonyme par soirée — le mode invité anonyme a été retiré). La friction d'inscription est atténuée par un parcours rapide + **redirection automatique vers la soirée** après connexion (`returnTo`).
 - **Usage ponctuel ET récurrent** : le produit sert le participant occasionnel comme le groupe fidèle ; le compte, désormais requis pour tous, débloque notifications, suivi social et historique.
-- **Accessibilité** : prise en compte dès la conception (clavier, contraste, lecteurs d'écran) — voir [`../accessibilite.md`](../bloc-2-conception-developpement/accessibilite.md).
-
----
-
-*Voir aussi : [`02-analyse-demande.md`](02-analyse-demande.md) (analyse de la demande — C1.1.2).*
+- **Accessibilité** : prise en compte dès la conception (clavier, contraste, lecteurs d'écran).
