@@ -41,10 +41,11 @@ public sealed class DeleteMoviePitchNoteHandler : IDeleteMoviePitchNoteHandler
         if (movie is null)
             throw new NotFoundException("Film introuvable");
 
+        var currentUserId = _currentUserAccessor.GetUserId();
         var isHost = EventHost.IsHost(
             evt,
             _hostTokenAccessor.GetHostToken(),
-            _currentUserAccessor.GetUserId());
+            currentUserId);
 
         if (!isHost)
         {
@@ -55,7 +56,7 @@ public sealed class DeleteMoviePitchNoteHandler : IDeleteMoviePitchNoteHandler
             if (participant is null)
                 throw new BadRequestException("Participant invalide pour cette soirée");
 
-            if (movie.ParticipantId != participant.Id)
+            if (string.IsNullOrEmpty(currentUserId) || participant.UserId != currentUserId || movie.ParticipantId != participant.Id)
                 throw new ForbiddenException("Seul le participant qui a proposé ce film ou l'hôte peut supprimer la note");
         }
 

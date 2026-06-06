@@ -11,10 +11,13 @@ namespace MoviePicker.Api.Tests.UseCases.VoteMovie;
 
 public sealed class VoteMovieHandlerTests
 {
+    private const string OwnerUserId = "user-owner";
+
     private readonly Mock<IEventRepository> _eventRepo;
     private readonly Mock<IMovieRepository> _movieRepo;
     private readonly Mock<IParticipantRepository> _participantRepo;
     private readonly Mock<IVoteRepository> _voteRepo;
+    private readonly Mock<ICurrentUserAccessor> _currentUser;
     private readonly VoteMovieHandler _sut;
 
     private static Event ActiveEvent() =>
@@ -26,7 +29,9 @@ public sealed class VoteMovieHandlerTests
         _movieRepo = new Mock<IMovieRepository>();
         _participantRepo = new Mock<IParticipantRepository>();
         _voteRepo = new Mock<IVoteRepository>();
-        _sut = new VoteMovieHandler(_eventRepo.Object, _movieRepo.Object, _participantRepo.Object, _voteRepo.Object);
+        _currentUser = new Mock<ICurrentUserAccessor>();
+        _currentUser.Setup(u => u.GetUserId()).Returns(OwnerUserId);
+        _sut = new VoteMovieHandler(_eventRepo.Object, _movieRepo.Object, _participantRepo.Object, _voteRepo.Object, _currentUser.Object);
     }
 
     [Fact]
@@ -81,7 +86,7 @@ public sealed class VoteMovieHandlerTests
     {
         var evt = ActiveEvent();
         var movie = new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = "p0", TmdbId = 1, Title = "X", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
-        var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         var savedVote = new Vote { Id = "v1", EventId = evt.Id, MovieId = movie.Id, ParticipantId = participant.Id, Value = 1, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
@@ -102,7 +107,7 @@ public sealed class VoteMovieHandlerTests
     {
         var evt = ActiveEvent();
         var movie = new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = "p0", TmdbId = 1, Title = "X", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
-        var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Bob", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Bob", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         var savedVote = new Vote { Id = "v2", EventId = evt.Id, MovieId = movie.Id, ParticipantId = participant.Id, Value = -1, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
@@ -113,5 +118,20 @@ public sealed class VoteMovieHandlerTests
         var result = await _sut.HandleAsync("evt1", "mov1", request);
 
         Assert.Equal(-1, result.Value);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ParticipantOwnedByAnotherUser_ThrowsForbiddenException()
+    {
+        var evt = ActiveEvent();
+        var movie = new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = "p0", TmdbId = 1, Title = "X", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        var victim = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Victim", UserId = "another-user", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
+        _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(victim.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(victim);
+        var request = new VoteRequest { ParticipantId = victim.Id, Value = 1 };
+
+        await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1", "mov1", request));
+        _voteRepo.Verify(r => r.UpsertAsync(It.IsAny<Vote>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

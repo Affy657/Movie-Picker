@@ -17,6 +17,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
     private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly IPushNotificationSender _pushSender;
     private readonly IUserNotificationRepository _notifications;
+    private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly ILogger<AddMovieHandler> _logger;
 
     public AddMovieHandler(
@@ -28,6 +29,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         IPushSubscriptionRepository pushSubscriptions,
         IPushNotificationSender pushSender,
         IUserNotificationRepository notifications,
+        ICurrentUserAccessor currentUserAccessor,
         ILogger<AddMovieHandler> logger)
     {
         _eventRepository = eventRepository;
@@ -38,6 +40,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         _pushSubscriptions = pushSubscriptions;
         _pushSender = pushSender;
         _notifications = notifications;
+        _currentUserAccessor = currentUserAccessor;
         _logger = logger;
     }
 
@@ -62,6 +65,10 @@ public sealed class AddMovieHandler : IAddMovieHandler
         var participant = await _participantRepository.FindByIdAndEventIdAsync(request.ParticipantId, evt.Id, ct);
         if (participant is null)
             throw new BadRequestException("Participant invalide pour cette soirée");
+
+        var currentUserId = _currentUserAccessor.GetUserId();
+        if (string.IsNullOrEmpty(currentUserId) || participant.UserId != currentUserId)
+            throw new ForbiddenException("Vous ne pouvez proposer un film que pour votre propre participation.");
 
         if (await _movieRepository.ExistsByEventAndTmdbIdAsync(evt.Id, request.TmdbId, request.MediaType, ct))
             throw new ConflictException("Ce film a déjà été proposé (même id TMDB)");

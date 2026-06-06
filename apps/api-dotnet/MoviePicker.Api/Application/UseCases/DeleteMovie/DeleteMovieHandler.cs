@@ -10,6 +10,7 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
     private readonly IMovieRepository _movieRepository;
     private readonly IVoteRepository _voteRepository;
     private readonly ISeenMarkRepository _seenMarkRepository;
+    private readonly IParticipantRepository _participantRepository;
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
 
@@ -18,6 +19,7 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
         IMovieRepository movieRepository,
         IVoteRepository voteRepository,
         ISeenMarkRepository seenMarkRepository,
+        IParticipantRepository participantRepository,
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor)
     {
@@ -25,6 +27,7 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
         _movieRepository = movieRepository;
         _voteRepository = voteRepository;
         _seenMarkRepository = seenMarkRepository;
+        _participantRepository = participantRepository;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
     }
@@ -43,11 +46,21 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
         if (movie is null)
             throw new NotFoundException("Film introuvable");
 
-        var isProposer = movie.ParticipantId == participantId;
+        var currentUserId = _currentUserAccessor.GetUserId();
         var isHost = EventHost.IsHost(
             evt,
             _hostTokenAccessor.GetHostToken(),
-            _currentUserAccessor.GetUserId());
+            currentUserId);
+
+        var isProposer = false;
+        if (!isHost)
+        {
+            var participant = await _participantRepository.FindByIdAndEventIdAsync(participantId, evt.Id, ct);
+            isProposer = participant is not null
+                && !string.IsNullOrEmpty(currentUserId)
+                && participant.UserId == currentUserId
+                && movie.ParticipantId == participant.Id;
+        }
 
         if (!isProposer && !isHost)
             throw new ForbiddenException("Seul le participant qui a proposé ou l'hôte peut retirer ce film");

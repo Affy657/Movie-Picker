@@ -9,17 +9,20 @@ public sealed class UnmarkAsSeenHandler : IUnmarkAsSeenHandler
     private readonly IMovieRepository _movieRepository;
     private readonly IParticipantRepository _participantRepository;
     private readonly ISeenMarkRepository _seenMarkRepository;
+    private readonly ICurrentUserAccessor _currentUserAccessor;
 
     public UnmarkAsSeenHandler(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
         IParticipantRepository participantRepository,
-        ISeenMarkRepository seenMarkRepository)
+        ISeenMarkRepository seenMarkRepository,
+        ICurrentUserAccessor currentUserAccessor)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _participantRepository = participantRepository;
         _seenMarkRepository = seenMarkRepository;
+        _currentUserAccessor = currentUserAccessor;
     }
 
     public async Task HandleAsync(
@@ -40,6 +43,10 @@ public sealed class UnmarkAsSeenHandler : IUnmarkAsSeenHandler
         var participant = await _participantRepository.FindByIdAndEventIdAsync(participantId, evt.Id, ct);
         if (participant is null)
             throw new BadRequestException("Participant invalide pour cette soirée");
+
+        var currentUserId = _currentUserAccessor.GetUserId();
+        if (string.IsNullOrEmpty(currentUserId) || participant.UserId != currentUserId)
+            throw new ForbiddenException("Vous ne pouvez modifier que votre propre marque « déjà vu ».");
 
         var deleted = await _seenMarkRepository.DeleteAsync(evt.Id, movie.Id, participant.Id, ct);
         if (!deleted)

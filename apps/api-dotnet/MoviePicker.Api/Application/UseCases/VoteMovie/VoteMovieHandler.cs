@@ -11,17 +11,20 @@ public sealed class VoteMovieHandler : IVoteMovieHandler
     private readonly IMovieRepository _movieRepository;
     private readonly IParticipantRepository _participantRepository;
     private readonly IVoteRepository _voteRepository;
+    private readonly ICurrentUserAccessor _currentUserAccessor;
 
     public VoteMovieHandler(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
         IParticipantRepository participantRepository,
-        IVoteRepository voteRepository)
+        IVoteRepository voteRepository,
+        ICurrentUserAccessor currentUserAccessor)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _participantRepository = participantRepository;
         _voteRepository = voteRepository;
+        _currentUserAccessor = currentUserAccessor;
     }
 
     public async Task<VoteResponse> HandleAsync(string idOrSlug, string movieId, VoteRequest request, CancellationToken ct = default)
@@ -38,6 +41,10 @@ public sealed class VoteMovieHandler : IVoteMovieHandler
         var participant = await _participantRepository.FindByIdAndEventIdAsync(request.ParticipantId, evt.Id, ct);
         if (participant is null)
             throw new BadRequestException("Participant invalide pour cette soirée");
+
+        var currentUserId = _currentUserAccessor.GetUserId();
+        if (string.IsNullOrEmpty(currentUserId) || participant.UserId != currentUserId)
+            throw new ForbiddenException("Vous ne pouvez voter que pour votre propre participation.");
 
         var vote = new Vote
         {
