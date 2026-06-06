@@ -9,15 +9,18 @@ public sealed class SetMoviePitchNoteHandler : ISetMoviePitchNoteHandler
     private readonly IEventRepository _eventRepository;
     private readonly IMovieRepository _movieRepository;
     private readonly IParticipantRepository _participantRepository;
+    private readonly ICurrentUserAccessor _currentUserAccessor;
 
     public SetMoviePitchNoteHandler(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
-        IParticipantRepository participantRepository)
+        IParticipantRepository participantRepository,
+        ICurrentUserAccessor currentUserAccessor)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _participantRepository = participantRepository;
+        _currentUserAccessor = currentUserAccessor;
     }
 
     public async Task HandleAsync(string idOrSlug, string movieId, SetMoviePitchNoteRequest request, CancellationToken ct = default)
@@ -37,6 +40,10 @@ public sealed class SetMoviePitchNoteHandler : ISetMoviePitchNoteHandler
         var participant = await _participantRepository.FindByIdAndEventIdAsync(request.ParticipantId, evt.Id, ct);
         if (participant is null)
             throw new BadRequestException("Participant invalide pour cette soirée");
+
+        var currentUserId = _currentUserAccessor.GetUserId();
+        if (string.IsNullOrEmpty(currentUserId) || participant.UserId != currentUserId)
+            throw new ForbiddenException("Seul le participant qui a proposé ce film peut modifier sa note");
 
         if (movie.ParticipantId != participant.Id)
             throw new ForbiddenException("Seul le participant qui a proposé ce film peut modifier sa note");

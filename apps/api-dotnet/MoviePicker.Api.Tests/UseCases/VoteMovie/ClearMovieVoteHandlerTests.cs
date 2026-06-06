@@ -10,19 +10,24 @@ namespace MoviePicker.Api.Tests.UseCases.VoteMovie;
 
 public sealed class ClearMovieVoteHandlerTests
 {
+    private const string OwnerUserId = "user-owner";
+
     private readonly Mock<IEventRepository> _eventRepo = new();
     private readonly Mock<IMovieRepository> _movieRepo = new();
     private readonly Mock<IParticipantRepository> _participantRepo = new();
     private readonly Mock<IVoteRepository> _voteRepo = new();
+    private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly ClearMovieVoteHandler _sut;
 
     public ClearMovieVoteHandlerTests()
     {
+        _currentUser.Setup(u => u.GetUserId()).Returns(OwnerUserId);
         _sut = new ClearMovieVoteHandler(
             _eventRepo.Object,
             _movieRepo.Object,
             _participantRepo.Object,
-            _voteRepo.Object);
+            _voteRepo.Object,
+            _currentUser.Object);
     }
 
     private static Event ActiveEvent() =>
@@ -86,7 +91,7 @@ public sealed class ClearMovieVoteHandlerTests
     {
         var evt = ActiveEvent();
         var movie = new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = "p0", TmdbId = 1, Title = "X", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
-        var participant = new Participant { Id = "p123", EventId = evt.Id, Pseudo = "Alice", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        var participant = new Participant { Id = "p123", EventId = evt.Id, Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
@@ -104,7 +109,7 @@ public sealed class ClearMovieVoteHandlerTests
     {
         var evt = ActiveEvent();
         var movie = new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = "p0", TmdbId = 1, Title = "X", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
-        var participant = new Participant { Id = "p123", EventId = evt.Id, Pseudo = "Alice", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        var participant = new Participant { Id = "p123", EventId = evt.Id, Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);

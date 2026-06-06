@@ -11,10 +11,13 @@ namespace MoviePicker.Api.Tests.UseCases.SeenMarks;
 
 public sealed class MarkAsSeenHandlerTests
 {
+    private const string OwnerUserId = "user-owner";
+
     private readonly Mock<IEventRepository> _eventRepo;
     private readonly Mock<IMovieRepository> _movieRepo;
     private readonly Mock<IParticipantRepository> _participantRepo;
     private readonly Mock<ISeenMarkRepository> _seenMarkRepo;
+    private readonly Mock<ICurrentUserAccessor> _currentUser;
     private readonly MarkAsSeenHandler _sut;
 
     private static Event ActiveEvent() =>
@@ -32,11 +35,12 @@ public sealed class MarkAsSeenHandlerTests
         UpdatedAt = DateTimeOffset.UtcNow
     };
 
-    private static Participant ParticipantFor(Event evt, string id = "p123456789012345678901234", string pseudo = "Alice") => new()
+    private static Participant ParticipantFor(Event evt, string id = "p123456789012345678901234", string pseudo = "Alice", string? userId = OwnerUserId) => new()
     {
         Id = id,
         EventId = evt.Id,
         Pseudo = pseudo,
+        UserId = userId,
         CreatedAt = DateTimeOffset.UtcNow,
         UpdatedAt = DateTimeOffset.UtcNow
     };
@@ -47,7 +51,9 @@ public sealed class MarkAsSeenHandlerTests
         _movieRepo = new Mock<IMovieRepository>();
         _participantRepo = new Mock<IParticipantRepository>();
         _seenMarkRepo = new Mock<ISeenMarkRepository>();
-        _sut = new MarkAsSeenHandler(_eventRepo.Object, _movieRepo.Object, _participantRepo.Object, _seenMarkRepo.Object);
+        _currentUser = new Mock<ICurrentUserAccessor>();
+        _currentUser.Setup(u => u.GetUserId()).Returns(OwnerUserId);
+        _sut = new MarkAsSeenHandler(_eventRepo.Object, _movieRepo.Object, _participantRepo.Object, _seenMarkRepo.Object, _currentUser.Object);
     }
 
     [Fact]
