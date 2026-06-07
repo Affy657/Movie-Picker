@@ -4,13 +4,12 @@
 >
 > **Compétence** — Analyser la demande et les données recueillies auprès du commanditaire en menant un entretien d'explicitation du besoin, des attentes, des exigences et un état des lieux de l'existant, afin de s'approprier le contexte, les enjeux, les objectifs du projet pour cerner la problématique du client et faire émerger des pistes de solutions.
 >
-> **Livrable attendu** — Une présentation de l'analyse de la demande, des objectifs et enjeux du projet pour chacune des parties prenantes.
+> **Livrable attendu** — Une présentation de l'analyse de la demande, des objectifs et enjeux du projet pour chacune des parties prenantes du projet.
 >
 > **Critères d'évaluation**
-> - L'analyse recense et identifie les besoins et les attentes des parties prenantes.
-> - Elle est structurée et permet de définir les objectifs et les principaux enjeux du projet.
-> - La problématique du client est identifiée.
-> - Les pistes de solutions techniques sont cohérentes avec la problématique.
+> - La présentation de l'analyse de la demande du commanditaire permet de recenser et d'identifier les besoins et les attentes des parties prenantes.
+> - L'analyse de la demande est structurée et permet de définir les objectifs et les principaux enjeux du projet de développement.
+> - La problématique du client est identifiée. Les pistes de solutions techniques sont cohérentes avec la problématique.
 
 ---
 

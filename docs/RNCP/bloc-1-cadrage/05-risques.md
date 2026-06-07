@@ -8,8 +8,8 @@
 >
 > **Critères d'évaluation**
 > - Les risques techniques et fonctionnels sont cartographiés et priorisés dans un référentiel.
-> - Le référentiel précise les risques relatifs à : la perte de données, l'interruption du système, les facteurs de dégradation, la sécurité.
-> - Les indicateurs de contrôle sont explicités et permettent de contrôler l'impact des risques sur la performance du développement.
+> - Ce référentiel permet de préciser les risques pour : la perte de données, l'interruption du système, les facteurs de dégradation, la sécurité.
+> - Les indicateurs de contrôle sont explicités et permettent de contrôler l'impact des risques sur la performance du développement du projet.
 
 ---
 

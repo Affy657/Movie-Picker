@@ -1,4 +1,4 @@
-# 06 — Analyse SWOT (opportunités & menaces)
+# 03 — Analyse SWOT (opportunités & menaces)
 
 > **RNCP 39583 — C1.2.1**
 >
@@ -8,7 +8,12 @@
 >
 > **Critères d'évaluation**
 > - Une cartographie des menaces et des opportunités est réalisée à l'aide d'un outil adapté (ex : SWOT).
-> - L'analyse permet de définir : l'impact des interactions avec d'autres projets le cas échéant, l'impact environnemental du projet, les préconisations sur la sécurité du projet logiciel, les points de vigilance à mettre sous contrôle, les opportunités à exploiter.
+> - Cette analyse permet de définir :
+>   - l'impact des interactions avec d'autres projets le cas échéant ;
+>   - l'impact environnemental du projet ;
+>   - les préconisations sur la sécurité du projet de logiciel ;
+>   - les points de vigilance à mettre sous contrôle ;
+>   - les opportunités à exploiter.
 
 ---
 

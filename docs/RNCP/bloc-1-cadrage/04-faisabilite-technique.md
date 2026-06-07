@@ -1,4 +1,4 @@
-# 03 — Faisabilité technique & diagnostic des infrastructures
+# 04 — Faisabilité technique & diagnostic des infrastructures
 
 > **RNCP 39583 — C1.2.2 (ÉLIMINATOIRE)**
 >
@@ -9,8 +9,8 @@
 > **Critères d'évaluation**
 > - La démarche d'audit est documentée et argumentée.
 > - L'étude technique comprend : les langages informatiques utilisés, les caractéristiques des bases de données, l'architecture existante et les technologies utilisées, un état des applications et logiciels existants.
-> - L'audit identifie les contraintes techniques et financières : hébergement, système d'exploitation, volume de données, nombre d'utilisateurs, délais, ressources financières, techniques et humaines, etc.
-> - La démarche permet de formuler un avis critique sur la faisabilité technique du projet.
+> - La démarche d'audit permet d'identifier les contraintes techniques et financières : hébergement, système d'exploitation, volume de données, nombre d'utilisateurs, délais, ressources financières, techniques et humaines, etc.
+> - La démarche d'audit permet de formuler un avis critique sur la faisabilité technique du projet.
 
 ---
 

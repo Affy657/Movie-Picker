@@ -7,8 +7,8 @@
 > **Livrable attendu** — Un diagramme de fonctionnalités ou un cahier des charges fonctionnel, et une estimation de la charge de travail du projet.
 >
 > **Critères d'évaluation**
-> - Les fonctions sont recensées, caractérisées, ordonnées et hiérarchisées (principales, secondaires, complémentaires).
-> - La charge de travail est exprimée en « jour-homme ».
+> - Les fonctions sont recensées, caractérisées, ordonnées et hiérarchisées (fonctions principales, secondaires, complémentaires).
+> - La charge de travail est exprimée en « jour homme ».
 > - L'outil d'analyse fonctionnelle est explicité.
 > - La couverture technique des besoins fonctionnels est argumentée et justifiée.
 > - L'expérience utilisateur est prise en compte dans les fonctionnalités développées.

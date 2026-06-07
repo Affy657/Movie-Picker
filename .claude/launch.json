@@ -22,6 +22,12 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "mobile", "run", "web", "--port", "8081"],
       "port": 8081
+    },
+    {
+      "name": "slides",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "docs/RNCP/bloc-1-cadrage/slides", "run", "dev"],
+      "port": 3030
     }
   ]
 }

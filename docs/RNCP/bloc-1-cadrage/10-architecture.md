@@ -7,12 +7,12 @@
 > **Livrable attendu** — Les schémas de l'architecture logicielle proposée.
 >
 > **Critères d'évaluation**
-> - L'architecture est schématisée et légendée (signification des formes, flèches, couleurs, positions, etc.).
-> - Elle répond aux exigences des parties prenantes et aux contraintes de production ; elle est adaptée au système et à l'infrastructure.
-> - Le choix de la méthode de modélisation et du formalisme est justifié (ex : UML, Merise…).
+> - L'architecture est schématisée et légendée. On y trouve la signification des formes, flèches, couleurs, positions, etc.
+> - Elle permet de répondre aux exigences des parties prenantes et aux contraintes de production. Elle est adaptée au système et à l'infrastructure.
+> - Le choix de la méthode de modélisation et du formalisme est justifié (ex : UML, Merise...).
 > - Les interactions avec les systèmes informatiques sont explicitées.
 > - L'architecture proposée est maintenable, sécurisée et extensible.
-> - Elle prend en compte son impact environnemental (ex : bilan carbone de la solution).
+> - L'architecture proposée prend en compte son impact environnemental (ex : le bilan carbone de la solution).
 
 ---
 

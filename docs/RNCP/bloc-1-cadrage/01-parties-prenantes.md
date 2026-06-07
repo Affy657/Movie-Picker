@@ -7,8 +7,8 @@
 > **Livrable attendu** — La cartographie des parties prenantes.
 >
 > **Critères d'évaluation**
-> - La cartographie identifie les différents acteurs du projet : développeurs, architectes, administrateurs, clients, acteurs externes.
-> - Elle permet de comprendre leurs rôles et leurs niveaux d'implication.
+> - La cartographie des parties prenantes permet d'identifier les différents acteurs du projet de développement comme les : développeurs, architectes, administrateurs, clients, acteurs externes.
+> - Cette cartographie permet de comprendre leurs rôles et leurs niveaux d'implication.
 > - Les caractéristiques des futurs utilisateurs sont identifiées et détaillées.
 >
 > ---

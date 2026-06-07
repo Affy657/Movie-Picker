@@ -7,7 +7,10 @@
 > **Livrable attendu** — La méthodologie de recherche des informations, les principales sources consultées et les outils utilisés pour la veille.
 >
 > **Critères d'évaluation**
-> - Une synthèse des sources d'information est présentée et permet d'identifier : la stratégie de veille mise en œuvre et les objectifs visés, une explication des outils de veille sélectionnés, les bénéfices attendus.
+> - Une synthèse des sources d'information est présentée et permet d'identifier :
+>   - la stratégie de veille mise en œuvre et les objectifs visés ;
+>   - une explication des outils de veille sélectionnés (ex : utilisation d'un outil d'automatisation de la veille, inscription à des salons, réseaux de professionnels) ;
+>   - les bénéfices attendus.
 > - Les évolutions techniques, technologiques ou réglementaires issues de la veille sont classifiées et justifiées au regard de leur impact métier et environnemental.
 
 ---
