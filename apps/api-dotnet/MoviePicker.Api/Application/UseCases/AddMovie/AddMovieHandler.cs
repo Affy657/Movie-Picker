@@ -47,7 +47,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         _logger = logger;
     }
 
-    public async Task<MovieWithScoreResponse> HandleAsync(string idOrSlug, AddMovieRequest request, CancellationToken ct = default)
+    public async Task<MovieWithScoreResponse> HandleAsync(string idOrSlug, AddMovieRequest request, string? callerUserId, CancellationToken ct = default)
     {
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
@@ -69,7 +69,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         if (participant is null)
             throw new BadRequestException("Participant invalide pour cette soirée");
 
-        var currentUserId = _currentUserAccessor.GetUserId();
+        var currentUserId = callerUserId ?? _currentUserAccessor.GetUserId();
         if (string.IsNullOrEmpty(currentUserId) || participant.UserId != currentUserId)
             throw new ForbiddenException("Vous ne pouvez proposer un film que pour votre propre participation.");
 

@@ -4,5 +4,5 @@ namespace MoviePicker.Api.Application.UseCases.AddMovie;
 
 public interface IAddMovieHandler
 {
-    Task<MovieWithScoreResponse> HandleAsync(string idOrSlug, AddMovieRequest request, CancellationToken ct = default);
+    Task<MovieWithScoreResponse> HandleAsync(string idOrSlug, AddMovieRequest request, string? callerUserId, CancellationToken ct = default);
 }
