@@ -54,6 +54,27 @@ export default function ProfileStatsSection({ stats }: Props) {
 
       {!hasAnyData && <p className={styles.empty}>{t('profile.stats.empty')}</p>}
 
+      {(hasGenres || hasActivity) && (
+        <div className={styles.panels}>
+          {hasActivity && (
+            <div className={styles.panel}>
+              <h3 className={styles.panelTitle}>{t('profile.stats.activityTitle')}</h3>
+              <Suspense fallback={null}>
+                <ActivityHeatmap points={stats.dailyActivity} />
+              </Suspense>
+            </div>
+          )}
+          {hasGenres && (
+            <div className={styles.panel}>
+              <h3 className={styles.panelTitle}>{t('profile.stats.genresTitle')}</h3>
+              <Suspense fallback={null}>
+                <GenresBar genres={stats.favoriteGenres} />
+              </Suspense>
+            </div>
+          )}
+        </div>
+      )}
+
       <ul className={styles.heroGrid}>
         {counters.map(({ key, icon: Icon, label, value }) => (
           <li key={key} className={styles.heroStat}>
@@ -67,27 +88,6 @@ export default function ProfileStatsSection({ stats }: Props) {
           </li>
         ))}
       </ul>
-
-      {(hasGenres || hasActivity) && (
-        <div className={styles.panels}>
-          {hasGenres && (
-            <div className={styles.panel}>
-              <h3 className={styles.panelTitle}>{t('profile.stats.genresTitle')}</h3>
-              <Suspense fallback={null}>
-                <GenresBar genres={stats.favoriteGenres} />
-              </Suspense>
-            </div>
-          )}
-          {hasActivity && (
-            <div className={styles.panel}>
-              <h3 className={styles.panelTitle}>{t('profile.stats.activityTitle')}</h3>
-              <Suspense fallback={null}>
-                <ActivityHeatmap points={stats.dailyActivity} />
-              </Suspense>
-            </div>
-          )}
-        </div>
-      )}
     </section>
   );
 }
