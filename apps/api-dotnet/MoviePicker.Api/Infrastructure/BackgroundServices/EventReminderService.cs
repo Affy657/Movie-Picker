@@ -29,18 +29,24 @@ public sealed class EventReminderService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            try
+            while (!stoppingToken.IsCancellationRequested)
             {
-                await SendRemindersAsync(stoppingToken);
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                _logger.LogError(ex, "Erreur lors de l'envoi des rappels de soirée");
-            }
+                try
+                {
+                    await SendRemindersAsync(stoppingToken);
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    _logger.LogError(ex, "Erreur lors de l'envoi des rappels de soirée");
+                }
 
-            await Task.Delay(Interval, stoppingToken);
+                await Task.Delay(Interval, stoppingToken);
+            }
+        }
+        catch (OperationCanceledException)
+        {
         }
     }
 
