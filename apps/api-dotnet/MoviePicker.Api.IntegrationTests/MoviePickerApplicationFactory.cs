@@ -25,8 +25,9 @@ public sealed class MoviePickerApplicationFactory : WebApplicationFactory<Progra
                 ["MONGODB_URI"] = "",
                 ["TMDB_API_KEY"] = "test-key",
                 ["PUBLIC_WEB_BASE_URL"] = "https://web.integration.test",
-                ["DevelopmentSeed__SeedSampleEvents"] = "false",
-                ["DevelopmentSeed__SeedScenarioDemos"] = "false"
+                ["DevelopmentSeed:Enabled"] = "false",
+                ["DevelopmentSeed:SeedSampleEvents"] = "false",
+                ["DevelopmentSeed:SeedScenarioDemos"] = "false"
             });
         });
 
