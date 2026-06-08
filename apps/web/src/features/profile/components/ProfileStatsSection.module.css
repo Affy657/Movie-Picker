@@ -1,27 +1,26 @@
-.section {
+.stats {
   width: 100%;
-  max-width: 28rem;
-  margin: 0 auto 2rem;
-  padding: 1.5rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  margin: 0 auto 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .heading {
-  margin: 0 0 1rem;
+  margin: 0;
   font-size: var(--font-size-lg);
   line-height: var(--leading-tight);
+  color: var(--color-section-heading);
 }
 
 .empty {
-  margin: 0 0 1rem;
+  margin: -0.5rem 0 0;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
 }
 
-.counters {
+/* ---------- Hero counters: étalés directement dans la page ---------- */
+.heroGrid {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -30,143 +29,178 @@
   gap: 0.75rem;
 }
 
-@media (max-width: 24rem) {
-  .counters {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.counter {
+.heroStat {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  text-align: center;
-  gap: 0.15rem;
-  padding: 0.75rem 0.5rem;
-  background: color-mix(in srgb, var(--color-text) 4%, transparent);
+  gap: 0.85rem;
+  padding: 0.9rem 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
 }
 
-.counterIcon {
+.heroIcon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
   color: var(--color-primary);
-  margin-bottom: 0.15rem;
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
 }
 
-.counterValue {
-  font-size: var(--font-size-lg);
+.heroText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.heroValue {
+  font-size: 1.6rem;
   font-weight: 700;
   line-height: var(--leading-none);
+  color: var(--color-primary);
 }
 
-.counterLabel {
+.heroLabel {
+  margin-top: 0.2rem;
   font-size: var(--font-size-2xs);
   color: var(--color-text-muted);
   line-height: var(--leading-snug);
 }
 
-.charts {
+/* ---------- Panels (un par groupe, jamais une card unique) ---------- */
+.panels {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  margin-top: 1.5rem;
+  gap: 1rem;
 }
 
-.chartBlock {
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
 }
 
-.chartTitle {
+.panelTitle {
   margin: 0;
   font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--color-section-heading);
 }
 
-.donutWrap {
+/* ---------- Genres: chips + barre segmentée façon AniList ---------- */
+.genres {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.85rem;
 }
 
-.donut {
-  flex: 0 0 auto;
-}
-
-.legend {
+.genreChips {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  min-width: 8rem;
-  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.85rem;
 }
 
-.legendItem {
-  display: flex;
+.genreChip {
+  display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   font-size: var(--font-size-2xs);
 }
 
-.legendSwatch {
+.genreDot {
   width: 0.7rem;
   height: 0.7rem;
-  border-radius: 2px;
+  border-radius: 3px;
   flex: 0 0 auto;
 }
 
-.legendLabel {
-  flex: 1 1 auto;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.genreLabel {
+  font-weight: 600;
 }
 
-.legendCount {
+.genreCount {
   color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
 }
 
+.genreBar {
+  display: flex;
+  width: 100%;
+  height: 0.85rem;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+}
+
+.genreSegment {
+  height: 100%;
+}
+
+.genreSegment:not(:last-child) {
+  border-right: 2px solid var(--color-surface);
+}
+
+/* ---------- Activité: area chart pleine largeur ---------- */
 .area {
   width: 100%;
   height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.areaBaseline {
+  stroke: var(--color-border-subtle);
+  stroke-width: 1;
+}
+
+.areaDot {
+  fill: var(--color-surface);
+  stroke: var(--color-primary);
+  stroke-width: 2;
+}
+
+.areaValue {
+  fill: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .areaLabel {
   fill: var(--color-text-muted);
-  font-size: 9px;
+  font-size: 11px;
 }
 
-.badgesBlock {
-  margin-top: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
+/* ---------- Badges ---------- */
 .badgeList {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
+  gap: 0.6rem;
 }
 
 .badge {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.6rem;
+  gap: 0.65rem;
+  padding: 0.7rem 0.8rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border-subtle);
-  background: var(--color-surface);
-  opacity: 0.55;
+  background: color-mix(in srgb, var(--color-text) 3%, transparent);
+  opacity: 0.65;
   filter: grayscale(1);
   transition:
     opacity var(--duration-fast),
@@ -181,19 +215,53 @@
 }
 
 .badgeEmoji {
-  font-size: 1.1rem;
+  font-size: 1.5rem;
   line-height: 1;
+  flex: 0 0 auto;
+}
+
+.badgeText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .badgeName {
-  flex: 1 1 auto;
-  font-size: var(--font-size-2xs);
+  font-size: var(--font-size-xs);
   font-weight: 600;
   line-height: var(--leading-snug);
 }
 
-.badgeProgress {
+.badgeDesc {
   font-size: var(--font-size-3xs);
   color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
+  line-height: var(--leading-snug);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 36rem) {
+  .heroGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .heroStat {
+    padding: 0.75rem;
+    gap: 0.6rem;
+  }
+
+  .heroIcon {
+    width: 2.1rem;
+    height: 2.1rem;
+  }
+
+  .heroValue {
+    font-size: 1.35rem;
+  }
+}
+
+@media (max-width: 24rem) {
+  .badgeList {
+    grid-template-columns: 1fr;
+  }
 }

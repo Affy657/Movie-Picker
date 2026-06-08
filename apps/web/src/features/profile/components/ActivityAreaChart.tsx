@@ -2,11 +2,11 @@ import { useLocale } from '@/shared/i18n';
 import type { MonthlyActivityPoint } from '@/features/profile/api/profileApi';
 import styles from './ProfileStatsSection.module.css';
 
-const W = 320;
-const H = 120;
-const PAD_X = 10;
-const PAD_TOP = 12;
-const PAD_BOTTOM = 22;
+const W = 720;
+const H = 240;
+const PAD_X = 16;
+const PAD_TOP = 28;
+const PAD_BOTTOM = 30;
 const GRADIENT_ID = 'profileActivityFill';
 
 function monthShort(monthKey: string, locale: string): string {
@@ -47,35 +47,43 @@ export default function ActivityAreaChart({ points }: Props) {
   const area = `${line} L ${lastCoord.x.toFixed(1)} ${baseline} L ${firstCoord.x.toFixed(1)} ${baseline} Z`;
 
   return (
-    <svg className={styles.area} viewBox={`0 0 ${W} ${H}`} role="img" aria-hidden="true">
+    <svg
+      className={styles.area}
+      viewBox={`0 0 ${W} ${H}`}
+      role="img"
+      aria-label={coords
+        .map((c) => `${monthShort(c.point.month, locale)}: ${c.point.count}`)
+        .join(', ')}
+    >
       <defs>
         <linearGradient id={GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0.35" />
+          <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0.32" />
           <stop offset="100%" stopColor="var(--color-primary)" stopOpacity="0" />
         </linearGradient>
       </defs>
+      <line x1={PAD_X} y1={baseline} x2={W - PAD_X} y2={baseline} className={styles.areaBaseline} />
       <path d={area} fill={`url(#${GRADIENT_ID})`} />
       <path
         d={line}
         fill="none"
         stroke="var(--color-primary)"
-        strokeWidth="2"
+        strokeWidth="2.5"
         strokeLinejoin="round"
         strokeLinecap="round"
       />
-      {coords.map((c, i) =>
-        i % 3 === 0 ? (
-          <text
-            key={c.point.month}
-            x={c.x}
-            y={H - 6}
-            className={styles.areaLabel}
-            textAnchor="middle"
-          >
+      {coords.map((c) => (
+        <g key={c.point.month}>
+          <circle cx={c.x} cy={c.y} r="3.5" className={styles.areaDot} />
+          {c.point.count > 0 && (
+            <text x={c.x} y={c.y - 9} className={styles.areaValue} textAnchor="middle">
+              {c.point.count}
+            </text>
+          )}
+          <text x={c.x} y={H - 9} className={styles.areaLabel} textAnchor="middle">
             {monthShort(c.point.month, locale)}
           </text>
-        ) : null
-      )}
+        </g>
+      ))}
     </svg>
   );
 }

@@ -1,4 +1,5 @@
 ﻿.layout {
+  --page-max-width: 60rem;
   align-items: center;
 }
 

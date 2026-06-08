@@ -6,7 +6,7 @@ import type { UserStats } from '@/features/profile/api/profileApi';
 import { computeBadges, type BadgeId } from '@/features/profile/lib/badges';
 import styles from './ProfileStatsSection.module.css';
 
-const GenresDonut = lazy(() => import('./GenresDonut'));
+const GenresBar = lazy(() => import('./GenresBar'));
 const ActivityAreaChart = lazy(() => import('./ActivityAreaChart'));
 
 const BADGE_NAME_KEYS: Record<BadgeId, TranslationKey> = {
@@ -70,36 +70,40 @@ export default function ProfileStatsSection({ stats }: Props) {
   const hasAnyData = counters.some((c) => c.value > 0) || hasGenres || hasActivity;
 
   return (
-    <section className={styles.section} aria-labelledby="profile-stats-heading">
+    <section className={styles.stats} aria-labelledby="profile-stats-heading">
       <h2 id="profile-stats-heading" className={styles.heading}>
         {t('profile.stats.title')}
       </h2>
 
       {!hasAnyData && <p className={styles.empty}>{t('profile.stats.empty')}</p>}
 
-      <ul className={styles.counters}>
+      <ul className={styles.heroGrid}>
         {counters.map(({ key, icon: Icon, label, value }) => (
-          <li key={key} className={styles.counter}>
-            <Icon size={18} aria-hidden className={styles.counterIcon} />
-            <span className={styles.counterValue}>{value}</span>
-            <span className={styles.counterLabel}>{label}</span>
+          <li key={key} className={styles.heroStat}>
+            <span className={styles.heroIcon} aria-hidden>
+              <Icon size={20} />
+            </span>
+            <span className={styles.heroText}>
+              <span className={styles.heroValue}>{value}</span>
+              <span className={styles.heroLabel}>{label}</span>
+            </span>
           </li>
         ))}
       </ul>
 
       {(hasGenres || hasActivity) && (
-        <div className={styles.charts}>
+        <div className={styles.panels}>
           {hasGenres && (
-            <div className={styles.chartBlock}>
-              <h3 className={styles.chartTitle}>{t('profile.stats.genresTitle')}</h3>
+            <div className={styles.panel}>
+              <h3 className={styles.panelTitle}>{t('profile.stats.genresTitle')}</h3>
               <Suspense fallback={null}>
-                <GenresDonut genres={stats.favoriteGenres} />
+                <GenresBar genres={stats.favoriteGenres} />
               </Suspense>
             </div>
           )}
           {hasActivity && (
-            <div className={styles.chartBlock}>
-              <h3 className={styles.chartTitle}>{t('profile.stats.activityTitle')}</h3>
+            <div className={styles.panel}>
+              <h3 className={styles.panelTitle}>{t('profile.stats.activityTitle')}</h3>
               <Suspense fallback={null}>
                 <ActivityAreaChart points={stats.monthlyActivity} />
               </Suspense>
@@ -108,27 +112,28 @@ export default function ProfileStatsSection({ stats }: Props) {
         </div>
       )}
 
-      <div className={styles.badgesBlock}>
-        <h3 className={styles.chartTitle}>{t('profile.stats.badgesTitle')}</h3>
+      <div className={styles.panel}>
+        <h3 className={styles.panelTitle}>{t('profile.stats.badgesTitle')}</h3>
         <ul className={styles.badgeList}>
           {badges.map((badge) => (
             <li
               key={badge.id}
               className={badge.earned ? `${styles.badge} ${styles.badgeEarned}` : styles.badge}
-              title={t(BADGE_DESC_KEYS[badge.id], { threshold: badge.threshold })}
             >
               <span className={styles.badgeEmoji} aria-hidden>
                 {badge.emoji}
               </span>
-              <span className={styles.badgeName}>{t(BADGE_NAME_KEYS[badge.id])}</span>
-              {!badge.earned && (
-                <span className={styles.badgeProgress}>
-                  {t('profile.stats.badgeLocked', {
-                    current: badge.current,
-                    threshold: badge.threshold,
-                  })}
+              <span className={styles.badgeText}>
+                <span className={styles.badgeName}>{t(BADGE_NAME_KEYS[badge.id])}</span>
+                <span className={styles.badgeDesc}>
+                  {badge.earned
+                    ? t(BADGE_DESC_KEYS[badge.id], { threshold: badge.threshold })
+                    : t('profile.stats.badgeLocked', {
+                        current: badge.current,
+                        threshold: badge.threshold,
+                      })}
                 </span>
-              )}
+              </span>
             </li>
           ))}
         </ul>
