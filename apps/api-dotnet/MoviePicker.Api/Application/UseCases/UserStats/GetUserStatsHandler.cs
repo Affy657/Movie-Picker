@@ -50,8 +50,15 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
 
         var participants = await _participants.ListByUserIdAsync(user.Id, ParticipantsCap, ct);
         var participantIds = participants.Select(p => p.Id).ToList();
-        var joinDates = participants.Select(p => p.CreatedAt).ToList();
-        var dailyActivity = BuildDailyActivity(joinDates);
+
+        var participantEventIds = participants.Select(p => p.EventId).Distinct().ToList();
+        var participantEvents = await _events.ListByIdsAsync(participantEventIds, ct);
+        var eventDateById = participantEvents.ToDictionary(e => e.Id, e => e.Date);
+        var activityDates = participants
+            .Select(p => eventDateById.GetValueOrDefault(p.EventId))
+            .Where(d => d is not null)
+            .ToList()!;
+        var dailyActivity = BuildDailyActivity(activityDates!);
 
         // The user's own created events double as the "created" count and the set we subtract
         // from participations to avoid counting a hosted soirée as "joined".
@@ -104,9 +111,10 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
     }
 
     // Heatmap-style window: one bucket per day over the last ActivityWeeks weeks (~6 months),
-    // aligned so the grid starts on a Monday and ends today. The source is the user's soirée
-    // participations (host or guest), one timestamp per participation. Days outside the window are ignored.
-    private IReadOnlyList<DailyActivityPoint> BuildDailyActivity(IReadOnlyList<DateTimeOffset> timestamps)
+    // aligned so the grid starts on a Monday and ends today. Each entry in eventDates is an event's
+    // date string ("yyyy-MM-dd") — the date of the soirée, not the join timestamp.
+    // Days outside the window are ignored.
+    private IReadOnlyList<DailyActivityPoint> BuildDailyActivity(IReadOnlyList<string> eventDates)
     {
         var today = _clock.GetUtcNow().UtcDateTime.Date;
         var daysFromMonday = ((int)today.DayOfWeek + 6) % 7;
@@ -114,9 +122,10 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
         var start = mondayThisWeek.AddDays(-7 * (ActivityWeeks - 1));
 
         var counts = new Dictionary<string, int>();
-        foreach (var ts in timestamps)
+        foreach (var dateStr in eventDates)
         {
-            var day = ts.ToUniversalTime().Date;
+            if (!DateTime.TryParseExact(dateStr, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var day))
+                continue;
             if (day < start || day > today)
                 continue;
             var key = day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);

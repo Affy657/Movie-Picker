@@ -59,11 +59,11 @@ public sealed class GetUserStatsHandlerTests
         UpdatedAt = DateTimeOffset.UtcNow
     };
 
-    private static Event Evt(string id) => new()
+    private static Event Evt(string id, string date = "2030-01-01") => new()
     {
         Id = id,
         Title = "E",
-        Date = "2030-01-01",
+        Date = date,
         Time = "20:00",
         Slug = id,
         HostToken = "ht",
@@ -77,6 +77,8 @@ public sealed class GetUserStatsHandlerTests
         _participants.Setup(r => r.ListByUserIdAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Participant>());
         _events.Setup(r => r.ListByCreatorUserIdAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Event>());
+        _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Event>());
         _events.Setup(r => r.CountByWinnerMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
@@ -140,15 +142,17 @@ public sealed class GetUserStatsHandlerTests
         var handler = Build();
         _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
 
-        // p1 → event A (created by the user), p2 → event B (joined only).
+        // p1 → event A (created by the user, soirée 2026-06-01), p2 → event B (joined only, soirée 2026-05-01).
         var parts = new[]
         {
-            Part("p1", "A", new DateTimeOffset(2026, 6, 1, 0, 0, 0, TimeSpan.Zero)),
-            Part("p2", "B", new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero)),
+            Part("p1", "A", new DateTimeOffset(2026, 5, 20, 0, 0, 0, TimeSpan.Zero)),
+            Part("p2", "B", new DateTimeOffset(2026, 4, 20, 0, 0, 0, TimeSpan.Zero)),
         };
         _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(parts);
         _events.Setup(r => r.ListByCreatorUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Evt("A") });
+        _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Evt("A", "2026-06-01"), Evt("B", "2026-05-01") });
         _movies.Setup(r => r.ListByParticipantIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Mov("m1", "p1", 28, 878), Mov("m2", "p1", 28), Mov("m3", "p2") });
         _votes.Setup(r => r.CountByParticipantIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(5);
@@ -182,17 +186,24 @@ public sealed class GetUserStatsHandlerTests
         _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
         var parts = new[]
         {
-            Part("p1", "A", new DateTimeOffset(2026, 6, 10, 0, 0, 0, TimeSpan.Zero)), // in window
-            Part("p2", "B", new DateTimeOffset(2026, 1, 5, 0, 0, 0, TimeSpan.Zero)),  // in window
-            Part("p3", "C", new DateTimeOffset(2025, 12, 1, 0, 0, 0, TimeSpan.Zero)), // before 2025-12-22 → dropped
+            Part("p1", "A", DateTimeOffset.UtcNow),
+            Part("p2", "B", DateTimeOffset.UtcNow),
+            Part("p3", "C", DateTimeOffset.UtcNow),
         };
         _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(parts);
+        _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                Evt("A", "2026-06-10"),  // in window
+                Evt("B", "2026-01-05"),  // in window
+                Evt("C", "2025-12-01"),  // before 2025-12-22 → dropped
+            });
 
         var res = await handler.HandleAsync("alice");
 
         Assert.Equal(176, res.DailyActivity.Count);
         Assert.Equal(1, res.DailyActivity.Single(p => p.Date == "2026-06-10").Count);
         Assert.Equal(1, res.DailyActivity.Single(p => p.Date == "2026-01-05").Count);
-        Assert.Equal(2, res.DailyActivity.Sum(p => p.Count)); // 2025-12-01 participation excluded
+        Assert.Equal(2, res.DailyActivity.Sum(p => p.Count)); // 2025-12-01 soirée date excluded
     }
 }

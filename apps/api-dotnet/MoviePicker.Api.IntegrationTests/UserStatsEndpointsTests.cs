@@ -35,7 +35,8 @@ public sealed class UserStatsEndpointsTests : IClassFixture<MoviePickerApplicati
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Statisticienne");
         var me = await GetMeAsync(client);
 
-        var createRes = await client.PostAsJsonAsync("/api/v1/events", new { title = "Soirée stats", date = "2030-06-15", time = "19:00" });
+        var todayDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var createRes = await client.PostAsJsonAsync("/api/v1/events", new { title = "Soirée stats", date = todayDate, time = "23:59" });
         createRes.EnsureSuccessStatusCode();
         var created = await createRes.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(created);
