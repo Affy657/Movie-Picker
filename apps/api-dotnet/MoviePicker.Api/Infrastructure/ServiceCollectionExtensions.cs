@@ -129,6 +129,7 @@ public static class ServiceCollectionExtensions
             services.AddScoped<IUserNotificationRepository, MongoUserNotificationRepository>();
             services.AddHostedService<MongoIndexInitializer>();
             services.AddHostedService<UserHandleBackfillService>();
+            services.AddHostedService<GenreBackfillService>();
         }
 
         if (string.Equals(configuration["E2E_STUB_TMDB"], "1", StringComparison.Ordinal))

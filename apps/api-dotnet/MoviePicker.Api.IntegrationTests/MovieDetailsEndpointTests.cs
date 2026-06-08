@@ -40,6 +40,7 @@ public sealed class MovieDetailsEndpointTests : IClassFixture<MoviePickerApplica
                 new[] { "Leonardo DiCaprio", "Joseph Gordon-Levitt" },
                 148,
                 new[] { "Action" },
+                new[] { 28 },
                 "2010-07-16")
         };
         using var client = CreateClientWith(fake);

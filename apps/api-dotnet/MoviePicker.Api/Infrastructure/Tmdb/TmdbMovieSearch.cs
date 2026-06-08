@@ -288,10 +288,14 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
             : (root.TryGetProperty("release_date", out var rd) ? rd.GetString() : null);
 
         var genres = new List<string>();
+        var genreIds = new List<int>();
         if (root.TryGetProperty("genres", out var genresEl) && genresEl.ValueKind == JsonValueKind.Array)
         {
             foreach (var g in genresEl.EnumerateArray())
             {
+                if (g.TryGetProperty("id", out var idEl) && idEl.ValueKind == JsonValueKind.Number)
+                    genreIds.Add(idEl.GetInt32());
+
                 if (g.TryGetProperty("name", out var n) && n.ValueKind == JsonValueKind.String)
                 {
                     var gName = n.GetString();
@@ -338,7 +342,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
 
         var trailerUrl = ExtractTrailerUrl(root);
 
-        return new TmdbMovieDetails(tmdbId, title, overview, tagline, director, cast, runtime, genres, releaseDate, trailerUrl);
+        return new TmdbMovieDetails(tmdbId, title, overview, tagline, director, cast, runtime, genres, genreIds, releaseDate, trailerUrl);
     }
 
     private static string MediaTypeSegment(MovieMediaType m) => m == MovieMediaType.Tv ? "tv" : "movie";

@@ -10,10 +10,16 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { APP_DOCUMENT_TITLE, pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import { fetchPublicProfile, followUser, unfollowUser } from '@/features/profile/api/profileApi';
+import {
+  fetchPublicProfile,
+  fetchUserStats,
+  followUser,
+  unfollowUser,
+} from '@/features/profile/api/profileApi';
 import styles from './ProfilePage.module.css';
 
 const FollowListModal = lazy(() => import('@/features/profile/components/FollowListModal'));
+const ProfileStatsSection = lazy(() => import('@/features/profile/components/ProfileStatsSection'));
 
 const COPY_FEEDBACK_MS = 2000;
 
@@ -38,6 +44,13 @@ export default function ProfilePage() {
     queryKey: queryKeys.profile.public(handle),
     queryFn: () => fetchPublicProfile(handle ?? ''),
     enabled: !!handle,
+    retry: false,
+  });
+
+  const statsQuery = useQuery({
+    queryKey: queryKeys.profile.stats(handle),
+    queryFn: () => fetchUserStats(handle ?? ''),
+    enabled: !!handle && profileQuery.isSuccess,
     retry: false,
   });
 
@@ -176,6 +189,12 @@ export default function ProfilePage() {
           </button>
         </div>
       </section>
+
+      {statsQuery.data && (
+        <Suspense fallback={null}>
+          <ProfileStatsSection stats={statsQuery.data} />
+        </Suspense>
+      )}
 
       {followModal !== null && (
         <Suspense fallback={null}>

@@ -23,4 +23,6 @@ public interface IVoteRepository
         string eventId,
         string participantId,
         CancellationToken ct = default);
+
+    Task<int> CountByParticipantIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default);
 }

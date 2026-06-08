@@ -97,6 +97,44 @@ public sealed class MongoMovieRepository : IMovieRepository
             throw new NotFoundException("Film introuvable");
     }
 
+    public async Task UpdateGenresAsync(string movieId, IReadOnlyList<int> genreIds, CancellationToken ct = default)
+    {
+        var value = genreIds.Count > 0 ? genreIds.ToList() : null;
+        var update = Builders<MovieDocument>.Update
+            .Set(x => x.GenreIds, value)
+            .Set(x => x.UpdatedAt, DateTime.UtcNow);
+        await _collection.UpdateOneAsync(x => x.Id == movieId, update, cancellationToken: ct);
+    }
+
+    public async Task<IReadOnlyList<Movie>> ListByParticipantIdsAsync(
+        IReadOnlyCollection<string> participantIds,
+        CancellationToken ct = default)
+    {
+        if (participantIds.Count == 0)
+            return Array.Empty<Movie>();
+
+        var ids = participantIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
+        if (ids.Count == 0)
+            return Array.Empty<Movie>();
+
+        var filter = Builders<MovieDocument>.Filter.In(x => x.ParticipantId, ids);
+        var docs = await _collection.Find(filter).ToListAsync(ct);
+        return docs.ConvertAll(MovieMapper.ToDomain);
+    }
+
+    public async Task<IReadOnlyList<Movie>> ListMissingGenresAsync(int limit, CancellationToken ct = default)
+    {
+        if (limit <= 0)
+            return Array.Empty<Movie>();
+
+        var filter = Builders<MovieDocument>.Filter.Or(
+            Builders<MovieDocument>.Filter.Exists(x => x.GenreIds, false),
+            Builders<MovieDocument>.Filter.Eq(x => x.GenreIds, null),
+            Builders<MovieDocument>.Filter.Size(x => x.GenreIds, 0));
+        var docs = await _collection.Find(filter).Limit(limit).ToListAsync(ct);
+        return docs.ConvertAll(MovieMapper.ToDomain);
+    }
+
     public async Task<IReadOnlyList<string>> ListIdsByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default)
     {
         var ids = await _collection

@@ -111,4 +111,14 @@ public sealed class InMemorySeenMarkRepository : ISeenMarkRepository
 
         return Task.FromResult<IReadOnlyDictionary<string, SeenMarkAggregate>>(result);
     }
+
+    public Task<int> CountByParticipantIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default)
+    {
+        if (participantIds.Count == 0)
+            return Task.FromResult(0);
+
+        var set = participantIds.Where(id => !string.IsNullOrWhiteSpace(id)).ToHashSet();
+        var n = _byKey.Values.Count(s => set.Contains(s.ParticipantId));
+        return Task.FromResult(n);
+    }
 }

@@ -18,6 +18,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
     private readonly IPushNotificationSender _pushSender;
     private readonly IUserNotificationRepository _notifications;
     private readonly ICurrentUserAccessor _currentUserAccessor;
+    private readonly ITmdbMovieSearch _tmdb;
     private readonly ILogger<AddMovieHandler> _logger;
 
     public AddMovieHandler(
@@ -30,6 +31,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         IPushNotificationSender pushSender,
         IUserNotificationRepository notifications,
         ICurrentUserAccessor currentUserAccessor,
+        ITmdbMovieSearch tmdb,
         ILogger<AddMovieHandler> logger)
     {
         _eventRepository = eventRepository;
@@ -41,6 +43,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         _pushSender = pushSender;
         _notifications = notifications;
         _currentUserAccessor = currentUserAccessor;
+        _tmdb = tmdb;
         _logger = logger;
     }
 
@@ -86,6 +89,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
 
         var now = DateTimeOffset.UtcNow;
         var pitchNote = string.IsNullOrWhiteSpace(request.PitchNote) ? null : request.PitchNote.Trim();
+        var genreIds = await FetchGenreIdsBestEffortAsync(request.TmdbId, request.MediaType, ct);
 
         var movie = new Movie
         {
@@ -98,6 +102,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
             Year = request.Year,
             PosterPath = poster,
             PitchNote = pitchNote,
+            GenreIds = genreIds,
             CreatedAt = now,
             UpdatedAt = now
         };
@@ -126,6 +131,20 @@ public sealed class AddMovieHandler : IAddMovieHandler
             SeenCount = 0,
             SeenByPseudos = Array.Empty<string>()
         };
+    }
+
+    private async Task<IReadOnlyList<int>> FetchGenreIdsBestEffortAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct)
+    {
+        try
+        {
+            var details = await _tmdb.GetDetailsAsync(tmdbId, mediaType, ct);
+            return details?.GenreIds ?? [];
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Récupération des genres TMDB échouée pour {TmdbId} ; film ajouté sans genres", tmdbId);
+            return [];
+        }
     }
 
     private async Task NotifyParticipantsOnMovieAddedAsync(Event evt, string movieTitle, string? proposerUserId, CancellationToken ct)

@@ -98,6 +98,50 @@ public sealed class InMemoryMovieRepository : IMovieRepository
         return Task.CompletedTask;
     }
 
+    public Task UpdateGenresAsync(string movieId, IReadOnlyList<int> genreIds, CancellationToken ct = default)
+    {
+        if (!_byId.TryGetValue(movieId, out var existing))
+            return Task.CompletedTask;
+
+        var updated = existing with { GenreIds = genreIds.ToList(), UpdatedAt = DateTimeOffset.UtcNow };
+        _byId[movieId] = updated;
+
+        if (_byEventId.TryGetValue(existing.EventId, out var list))
+        {
+            lock (list)
+            {
+                var idx = list.FindIndex(m => m.Id == movieId);
+                if (idx >= 0) list[idx] = updated;
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<Movie>> ListByParticipantIdsAsync(
+        IReadOnlyCollection<string> participantIds,
+        CancellationToken ct = default)
+    {
+        if (participantIds.Count == 0)
+            return Task.FromResult<IReadOnlyList<Movie>>(Array.Empty<Movie>());
+
+        var set = participantIds.Where(id => !string.IsNullOrWhiteSpace(id)).ToHashSet();
+        if (set.Count == 0)
+            return Task.FromResult<IReadOnlyList<Movie>>(Array.Empty<Movie>());
+
+        var list = _byId.Values.Where(m => set.Contains(m.ParticipantId)).ToList();
+        return Task.FromResult<IReadOnlyList<Movie>>(list);
+    }
+
+    public Task<IReadOnlyList<Movie>> ListMissingGenresAsync(int limit, CancellationToken ct = default)
+    {
+        if (limit <= 0)
+            return Task.FromResult<IReadOnlyList<Movie>>(Array.Empty<Movie>());
+
+        var list = _byId.Values.Where(m => m.GenreIds.Count == 0).Take(limit).ToList();
+        return Task.FromResult<IReadOnlyList<Movie>>(list);
+    }
+
     public Task<IReadOnlyList<string>> ListIdsByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default)
     {
         var list = _byEventId.GetOrAdd(eventId, _ => new List<Movie>());

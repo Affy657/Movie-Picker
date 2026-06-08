@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Infrastructure.Tmdb;
 using MoviePicker.Api.IntegrationTests.Helpers;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -33,6 +34,12 @@ public sealed class MoviePickerApplicationFactory : WebApplicationFactory<Progra
         {
             services.RemoveAll<IEmailSender>();
             services.AddSingleton<IEmailSender>(FakeEmail);
+
+            // Force the deterministic, offline TMDB stub: AddMovie now fetches genres on add,
+            // and the E2E_STUB_TMDB config flag isn't honoured under the minimal-hosting factory
+            // (AddMoviePicker runs before the in-memory config is merged).
+            services.RemoveAll<ITmdbMovieSearch>();
+            services.AddSingleton<ITmdbMovieSearch, StubTmdbMovieSearch>();
         });
     }
 }

@@ -20,4 +20,6 @@ public interface ISeenMarkRepository
         string eventId,
         IReadOnlyCollection<string> movieIds,
         CancellationToken ct = default);
+
+    Task<int> CountByParticipantIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default);
 }

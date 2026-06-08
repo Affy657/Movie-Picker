@@ -27,6 +27,7 @@ public sealed record TmdbMovieDetails(
     IReadOnlyList<string> Cast,
     int? Runtime,
     IReadOnlyList<string> Genres,
+    IReadOnlyList<int> GenreIds,
     string? ReleaseDate,
     string? TrailerUrl = null);
 
