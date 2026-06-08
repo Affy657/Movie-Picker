@@ -534,20 +534,13 @@
       genresTitle: 'Genres favoris',
       activityTitle: 'Activité (6 mois)',
       activityImgAlt: "Heatmap d'activité : {{count}} participation(s) sur 26 semaines",
-      badgesTitle: 'Badges',
       empty: 'Aucune activité pour le moment.',
-      badgeLocked: '{{current}} / {{threshold}}',
-      badges: {
-        organizer: 'Organisateur',
-        cinephile: 'Cinéphile',
-        kingmaker: 'Faiseur de rois',
-        juror: 'Juré assidu',
-        organizerDesc: 'Créer {{threshold}} soirées',
-        cinephileDesc: 'Voir {{threshold}} films',
-        kingmakerDesc: 'Avoir {{threshold}} propositions gagnantes',
-        jurorDesc: 'Donner {{threshold}} votes',
-      },
     },
+  },
+  pwaUpdate: {
+    message: 'Nouvelle version disponible',
+    reload: 'Recharger',
+    dismiss: 'Ignorer la mise à jour',
   },
 } as const;
 

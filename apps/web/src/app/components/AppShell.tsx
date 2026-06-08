@@ -8,6 +8,7 @@ import { ROUTES } from '@/app/routes';
 import Avatar from '@/shared/components/Avatar';
 import InboxBell from '@/features/notifications/components/InboxBell';
 import Footer from './Footer';
+import UpdateBanner from './UpdateBanner';
 import styles from './AppShell.module.css';
 
 function navLinkClass({ isActive }: { isActive: boolean }): string {
@@ -107,6 +108,7 @@ export default function AppShell() {
           ))}
         </nav>
       ) : null}
+      <UpdateBanner />
     </div>
   );
 }

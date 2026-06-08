@@ -75,7 +75,6 @@ Découpage par version côté **métier / utilisateur**.
 
 - ✅ **Avatar utilisateur** : choix parmi un set préselectionné ; affiché à côté du pseudo dans la soirée et le profil.
 - ✅ **Statistiques utilisateur** : section stats sur le profil public `/u/:handle` — 6 compteurs (soirées créées / rejointes, films proposés, votes, propositions gagnantes, films vus), barre des genres favoris (IDs TMDB persistés à l'ajout + backfill one-shot) et heatmap d'activité sur 26 semaines.
-- 🟡 **Badges / achievements** : implémentation **en partie faite** — calcul des 4 badges (Organisateur, Cinéphile, Faiseur de rois, Juré assidu) + libellés i18n + tests unitaires prêts (`features/profile/lib/badges.ts`), mais **affichage retiré du profil** en attendant une UI plus aboutie. _Reste_ : design de la présentation et réactivation sur le profil.
 - ✅ **Mini-commentaires sur une proposition** : note de pitch (≤ 140 caractères) posée par le proposant sur son film ; visible par tous ; bulle de texte avec avatar du proposant ; éditable au clic par le proposant, supprimable par le proposant (body vide) ou l'hôte (sans participantId requis) ; lecture seule après le lancement de la roue ; rate limiting 60 req/min.
 - ✅ **Profil public léger** : page `/u/:handle` (handle unique) — avatar, pseudo, bio courte, « membre depuis » ; **public par défaut** avec opt-out ; statistiques et follow intégrés.
 - ✅ **Notifications in-app** : badge + liste « Invitations reçues » dans Mes soirées.
@@ -153,5 +152,6 @@ Découpage par version côté **métier / utilisateur**.
 - **Note d'un film vu** : noter sur 5 un film qu'on vient de voir directement dans Movie Picker ; bouton pour aller aussi le noter sur Letterboxd / IMDb (redirection vers la fiche film).
 - **Partage de soirée (story)** : carte recap partageable (film gagnant, participants, note de chacun) à poster sur les réseaux.
 - **Réactions rapides sur les films** : emojis (❤️ 🔥 😴…) posés sur une card film en complément des votes up/down — plus expressif, moins binaire.
+- **Badges / achievements** : 4 badges (Organisateur, Cinéphile, Faiseur de rois, Juré assidu) — code de calcul supprimé ; à concevoir avec un design abouti et réimplémenter.
 - **Compatibilité ciné** : score de compatibilité cinématographique avec un ami basé sur les films « déjà vu » en commun ; nécessite les statistiques utilisateur et potentiellement l'intégration Letterboxd pour être complet.
 - **Recherche d'utilisateurs** : trouver un utilisateur par pseudo ou handle pour le suivre ou l'inviter — manque structurel dès lors que le follow existe.
