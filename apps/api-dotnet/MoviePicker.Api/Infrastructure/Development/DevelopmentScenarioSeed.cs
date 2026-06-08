@@ -246,11 +246,11 @@ internal static class DevelopmentScenarioSeed
         var bobPart = joinBob.Participant.Id;
         var carlaPart = joinCarla.Participant.Id;
 
-        var mAlice = await AddMovieAsync(addMovie, slug, 550, "Fight Club", "1999", alicePart, ct).ConfigureAwait(false);
-        var mDev = await AddMovieAsync(addMovie, slug, 27205, "Inception", "2010", devPart, ct).ConfigureAwait(false);
-        var mBob = await AddMovieAsync(addMovie, slug, 120, "The Lord of the Rings: The Fellowship of the Ring", "2001", bobPart, ct).ConfigureAwait(false);
-        var mCarla = await AddMovieAsync(addMovie, slug, 157336, "Interstellar", "2014", carlaPart, ct).ConfigureAwait(false);
-        var mJunk = await AddMovieAsync(addMovie, slug, 603, "The Matrix", "1999", bobPart, ct).ConfigureAwait(false);
+        var mAlice = await AddMovieAsync(addMovie, slug, 550, "Fight Club", "1999", alicePart, actors.Alice.Id, ct).ConfigureAwait(false);
+        var mDev = await AddMovieAsync(addMovie, slug, 27205, "Inception", "2010", devPart, actors.Dev.Id, ct).ConfigureAwait(false);
+        var mBob = await AddMovieAsync(addMovie, slug, 120, "The Lord of the Rings: The Fellowship of the Ring", "2001", bobPart, actors.Bob.Id, ct).ConfigureAwait(false);
+        var mCarla = await AddMovieAsync(addMovie, slug, 157336, "Interstellar", "2014", carlaPart, actors.Carla.Id, ct).ConfigureAwait(false);
+        var mJunk = await AddMovieAsync(addMovie, slug, 603, "The Matrix", "1999", bobPart, actors.Bob.Id, ct).ConfigureAwait(false);
 
         await VoteAsync(vote, slug, mAlice.Id, bobPart, 1, ct).ConfigureAwait(false);
         await VoteAsync(vote, slug, mAlice.Id, carlaPart, 1, ct).ConfigureAwait(false);
@@ -315,9 +315,9 @@ internal static class DevelopmentScenarioSeed
             .HandleAsync(slug, new JoinEventRequest { Pseudo = "Alice invitée" }, actors.Alice.Id, ct)
             .ConfigureAwait(false);
 
-        var m1 = await AddMovieAsync(addMovie, slug, 862, "Toy Story", "1995", bobPart, ct).ConfigureAwait(false);
-        var m2 = await AddMovieAsync(addMovie, slug, 324857, "Spider-Man: Into the Spider-Verse", "2018", joinDev.Participant.Id, ct).ConfigureAwait(false);
-        var m3 = await AddMovieAsync(addMovie, slug, 12, "Finding Nemo", "2003", joinAlice.Participant.Id, ct).ConfigureAwait(false);
+        var m1 = await AddMovieAsync(addMovie, slug, 862, "Toy Story", "1995", bobPart, actors.Bob.Id, ct).ConfigureAwait(false);
+        var m2 = await AddMovieAsync(addMovie, slug, 324857, "Spider-Man: Into the Spider-Verse", "2018", joinDev.Participant.Id, actors.Dev.Id, ct).ConfigureAwait(false);
+        var m3 = await AddMovieAsync(addMovie, slug, 12, "Finding Nemo", "2003", joinAlice.Participant.Id, actors.Alice.Id, ct).ConfigureAwait(false);
 
         await VoteAsync(vote, slug, m1.Id, bobPart, 1, ct).ConfigureAwait(false);
         await VoteAsync(vote, slug, m1.Id, joinDev.Participant.Id, 1, ct).ConfigureAwait(false);
@@ -404,8 +404,8 @@ internal static class DevelopmentScenarioSeed
             .HandleAsync(slug, new JoinEventRequest { Pseudo = "Alice invitée" }, actors.Alice.Id, ct)
             .ConfigureAwait(false);
 
-        await AddMovieAsync(addMovie, slug, 105, "Back to the Future", "1985", bobPart, ct).ConfigureAwait(false);
-        await AddMovieAsync(addMovie, slug, 13, "Forrest Gump", "1994", joinDev.Participant.Id, ct).ConfigureAwait(false);
+        await AddMovieAsync(addMovie, slug, 105, "Back to the Future", "1985", bobPart, actors.Bob.Id, ct).ConfigureAwait(false);
+        await AddMovieAsync(addMovie, slug, 13, "Forrest Gump", "1994", joinDev.Participant.Id, actors.Dev.Id, ct).ConfigureAwait(false);
 
         logger.LogInformation("DevelopmentSeed : scénario capacité atteinte créé (slug={Slug}, 3/3 participants, hôte Bob).", slug);
     }
@@ -468,9 +468,9 @@ internal static class DevelopmentScenarioSeed
         var alicePart = joinAlice.Participant.Id;
         var bobPart = joinBob.Participant.Id;
 
-        var mAlice = await AddMovieAsync(addMovie, slug, 157336, "Interstellar", "2014", alicePart, ct).ConfigureAwait(false);
-        var mBob = await AddMovieAsync(addMovie, slug, 49026, "The Dark Knight Rises", "2012", bobPart, ct).ConfigureAwait(false);
-        var mDev = await AddMovieAsync(addMovie, slug, 680, "Pulp Fiction", "1994", devPart, ct).ConfigureAwait(false);
+        var mAlice = await AddMovieAsync(addMovie, slug, 157336, "Interstellar", "2014", alicePart, actors.Alice.Id, ct).ConfigureAwait(false);
+        var mBob = await AddMovieAsync(addMovie, slug, 49026, "The Dark Knight Rises", "2012", bobPart, actors.Bob.Id, ct).ConfigureAwait(false);
+        var mDev = await AddMovieAsync(addMovie, slug, 680, "Pulp Fiction", "1994", devPart, actors.Dev.Id, ct).ConfigureAwait(false);
 
         await VoteAsync(vote, slug, mAlice.Id, devPart, 1, ct).ConfigureAwait(false);
         await VoteAsync(vote, slug, mBob.Id, alicePart, 1, ct).ConfigureAwait(false);
@@ -523,9 +523,9 @@ internal static class DevelopmentScenarioSeed
             .HandleAsync(slug, new JoinEventRequest { Pseudo = "Bob (compte)" }, actors.Bob.Id, ct)
             .ConfigureAwait(false);
 
-        var m1 = await AddMovieAsync(addMovie, slug, 18, "The Fifth Element", "1997", devPart, ct).ConfigureAwait(false);
-        var m2 = await AddMovieAsync(addMovie, slug, 78, "Blade Runner", "1982", joinAlice.Participant.Id, ct).ConfigureAwait(false);
-        var m3 = await AddMovieAsync(addMovie, slug, 335984, "Blade Runner 2049", "2017", joinBob.Participant.Id, ct).ConfigureAwait(false);
+        var m1 = await AddMovieAsync(addMovie, slug, 18, "The Fifth Element", "1997", devPart, actors.Dev.Id, ct).ConfigureAwait(false);
+        var m2 = await AddMovieAsync(addMovie, slug, 78, "Blade Runner", "1982", joinAlice.Participant.Id, actors.Alice.Id, ct).ConfigureAwait(false);
+        var m3 = await AddMovieAsync(addMovie, slug, 335984, "Blade Runner 2049", "2017", joinBob.Participant.Id, actors.Bob.Id, ct).ConfigureAwait(false);
 
         await VoteAsync(vote, slug, m1.Id, devPart, 1, ct).ConfigureAwait(false);
         await VoteAsync(vote, slug, m2.Id, joinAlice.Participant.Id, 1, ct).ConfigureAwait(false);
@@ -590,8 +590,8 @@ internal static class DevelopmentScenarioSeed
             .HandleAsync(slug, new JoinEventRequest { Pseudo = "Bob (compte)" }, actors.Bob.Id, ct)
             .ConfigureAwait(false);
 
-        var m1 = await AddMovieAsync(addMovie, slug, 11, "Star Wars", "1977", alicePart, ct).ConfigureAwait(false);
-        var m2 = await AddMovieAsync(addMovie, slug, 1891, "The Empire Strikes Back", "1980", joinBob.Participant.Id, ct).ConfigureAwait(false);
+        var m1 = await AddMovieAsync(addMovie, slug, 11, "Star Wars", "1977", alicePart, actors.Alice.Id, ct).ConfigureAwait(false);
+        var m2 = await AddMovieAsync(addMovie, slug, 1891, "The Empire Strikes Back", "1980", joinBob.Participant.Id, actors.Bob.Id, ct).ConfigureAwait(false);
         await VoteAsync(vote, slug, m1.Id, joinBob.Participant.Id, 1, ct).ConfigureAwait(false);
         await VoteAsync(vote, slug, m2.Id, alicePart, 1, ct).ConfigureAwait(false);
 
@@ -674,8 +674,8 @@ internal static class DevelopmentScenarioSeed
             .HandleAsync(slug, new JoinEventRequest { Pseudo = "Dev invité" }, actors.Dev.Id, ct)
             .ConfigureAwait(false);
 
-        await AddMovieAsync(addMovie, slug, 694, "The Shining", "1980", bobPart, ct).ConfigureAwait(false);
-        await AddMovieAsync(addMovie, slug, 539, "Psycho", "1960", joinDev.Participant.Id, ct).ConfigureAwait(false);
+        await AddMovieAsync(addMovie, slug, 694, "The Shining", "1980", bobPart, actors.Bob.Id, ct).ConfigureAwait(false);
+        await AddMovieAsync(addMovie, slug, 539, "Psycho", "1960", joinDev.Participant.Id, actors.Dev.Id, ct).ConfigureAwait(false);
 
         logger.LogInformation("DevelopmentSeed : scénario soirée avec échéance créé (slug={Slug}, EndDate +2j).", slug);
     }
@@ -859,6 +859,7 @@ internal static class DevelopmentScenarioSeed
         string title,
         string year,
         string participantId,
+        string callerUserId,
         CancellationToken ct) =>
         await addMovie
             .HandleAsync(
@@ -871,6 +872,7 @@ internal static class DevelopmentScenarioSeed
                     PosterPath = null,
                     ParticipantId = participantId
                 },
+                callerUserId,
                 ct)
             .ConfigureAwait(false);
 

@@ -9,6 +9,7 @@ using MoviePicker.Api.Application.UseCases.ListMovies;
 using MoviePicker.Api.Application.UseCases.SeenMarks;
 using MoviePicker.Api.Application.UseCases.SetMoviePitchNote;
 using MoviePicker.Api.Application.UseCases.VoteMovie;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Infrastructure.Web;
 
 namespace MoviePicker.Api.Controllers;
@@ -43,9 +44,10 @@ public sealed class EventMoviesController : ControllerBase
         string idOrSlug,
         [FromBody] AddMovieRequest request,
         [FromServices] IAddMovieHandler handler,
+        [FromServices] ICurrentUserAccessor currentUser,
         CancellationToken ct)
     {
-        var movie = await handler.HandleAsync(idOrSlug, request, ct);
+        var movie = await handler.HandleAsync(idOrSlug, request, currentUser.GetUserId(), ct);
         return Created(string.Empty, movie);
     }
 
