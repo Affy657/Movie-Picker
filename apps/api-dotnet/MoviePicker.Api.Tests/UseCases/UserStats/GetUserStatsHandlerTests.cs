@@ -74,7 +74,7 @@ public sealed class GetUserStatsHandlerTests
 
     private GetUserStatsHandler Build()
     {
-        _participants.Setup(r => r.ListByUserIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _participants.Setup(r => r.ListByUserIdAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Participant>());
         _events.Setup(r => r.ListByCreatorUserIdAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Event>());
@@ -146,7 +146,7 @@ public sealed class GetUserStatsHandlerTests
             Part("p1", "A", new DateTimeOffset(2026, 6, 1, 0, 0, 0, TimeSpan.Zero)),
             Part("p2", "B", new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero)),
         };
-        _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(parts);
+        _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(parts);
         _events.Setup(r => r.ListByCreatorUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Evt("A") });
         _movies.Setup(r => r.ListByParticipantIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
@@ -186,7 +186,7 @@ public sealed class GetUserStatsHandlerTests
             Part("p2", "B", new DateTimeOffset(2026, 1, 5, 0, 0, 0, TimeSpan.Zero)),  // in window
             Part("p3", "C", new DateTimeOffset(2025, 12, 1, 0, 0, 0, TimeSpan.Zero)), // before 2025-12-22 → dropped
         };
-        _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(parts);
+        _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(parts);
 
         var res = await handler.HandleAsync("alice");
 

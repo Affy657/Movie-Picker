@@ -75,6 +75,6 @@ export async function fetchFollowers(handle: string): Promise<FollowListResponse
   return fetchApi<FollowListResponse>(`/users/${encodeURIComponent(handle)}/followers`);
 }
 
-export async function fetchUserStats(handle: string): Promise<UserStats> {
-  return fetchApi<UserStats>(`/users/${encodeURIComponent(handle)}/stats`);
+export async function fetchUserStats(handle: string, signal?: AbortSignal): Promise<UserStats> {
+  return fetchApi<UserStats>(`/users/${encodeURIComponent(handle)}/stats`, { signal });
 }

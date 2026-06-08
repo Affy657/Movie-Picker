@@ -525,6 +525,7 @@ export const en: Locale = {
       moviesSeen: 'Movies seen',
       genresTitle: 'Favourite genres',
       activityTitle: 'Activity (6 months)',
+      activityImgAlt: 'Activity heatmap: {{count}} participation(s) over 26 weeks',
       badgesTitle: 'Badges',
       empty: 'No activity yet.',
       badgeLocked: '{{current}} / {{threshold}}',

@@ -45,6 +45,6 @@ describe('ActivityHeatmap', () => {
       { date: '2026-01-01', count: 2 },
       { date: '2026-01-02', count: 3 },
     ]);
-    expect(screen.getByRole('img', { name: '5' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /5 participation/ })).toBeInTheDocument();
   });
 });

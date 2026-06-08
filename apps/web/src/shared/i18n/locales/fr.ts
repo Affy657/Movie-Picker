@@ -533,6 +533,7 @@
       moviesSeen: 'Films vus',
       genresTitle: 'Genres favoris',
       activityTitle: 'Activité (6 mois)',
+      activityImgAlt: "Heatmap d'activité : {{count}} participation(s) sur 26 semaines",
       badgesTitle: 'Badges',
       empty: 'Aucune activité pour le moment.',
       badgeLocked: '{{current}} / {{threshold}}',

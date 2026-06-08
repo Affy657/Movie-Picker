@@ -6,7 +6,7 @@ import styles from './ProfileStatsSection.module.css';
 const PALETTE = ['#3db4f2', '#4cd6b4', '#9b7bff', '#f2698a', '#f5a623', '#5c7cfa'];
 
 function genreColor(index: number): string {
-  return PALETTE[index % PALETTE.length] ?? PALETTE[0]!;
+  return PALETTE[index % PALETTE.length]!;
 }
 
 interface Props {

@@ -49,8 +49,8 @@ export default function ProfilePage() {
 
   const statsQuery = useQuery({
     queryKey: queryKeys.profile.stats(handle),
-    queryFn: () => fetchUserStats(handle ?? ''),
-    enabled: !!handle && profileQuery.isSuccess,
+    queryFn: ({ signal }) => fetchUserStats(handle ?? '', signal),
+    enabled: !!handle,
     retry: false,
   });
 

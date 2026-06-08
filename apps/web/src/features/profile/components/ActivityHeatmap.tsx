@@ -1,4 +1,4 @@
-import { useLocale } from '@/shared/i18n';
+import { useLocale, useTranslation } from '@/shared/i18n';
 import type { DailyActivityPoint } from '@/features/profile/api/profileApi';
 import styles from './ProfileStatsSection.module.css';
 
@@ -25,6 +25,7 @@ interface Props {
 
 export default function ActivityHeatmap({ points }: Props) {
   const { locale } = useLocale();
+  const { t } = useTranslation();
   if (points.length === 0) return null;
 
   const cols = Math.ceil(points.length / ROWS);
@@ -43,7 +44,7 @@ export default function ActivityHeatmap({ points }: Props) {
         className={styles.heatmap}
         style={{ ['--cols' as string]: cols }}
         role="img"
-        aria-label={`${total}`}
+        aria-label={t('profile.stats.activityImgAlt', { count: total })}
       >
         {points.map((p) => {
           const level = intensityLevel(p.count);
