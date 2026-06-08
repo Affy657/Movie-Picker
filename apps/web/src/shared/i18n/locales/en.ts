@@ -22,6 +22,7 @@ export const en: Locale = {
     createEvent: 'New event',
     navLabel: 'Main navigation',
     brandLabel: 'Movie Picker \u2014 Home',
+    skipToMain: 'Skip to main content',
   },
 
   home: {

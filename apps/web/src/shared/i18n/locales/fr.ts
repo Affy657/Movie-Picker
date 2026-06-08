@@ -20,6 +20,7 @@
     createEvent: 'Nouvelle soirée',
     navLabel: 'Navigation principale',
     brandLabel: 'Movie Picker \u2014 Accueil',
+    skipToMain: 'Passer au contenu principal',
   },
 
   home: {

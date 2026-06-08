@@ -63,6 +63,9 @@ export default function AppShell() {
 
   return (
     <div className={styles.root}>
+      <a href="#main-content" className={styles.skipLink}>
+        {t('nav.skipToMain')}
+      </a>
       <header className={styles.header}>
         <Link to={ROUTES.home} className={styles.brand} aria-label={t('nav.brandLabel')}>
           <img
