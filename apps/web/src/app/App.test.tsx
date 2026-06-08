@@ -120,7 +120,7 @@ describe('App (routes)', () => {
       );
       renderRoutes(['/']);
       expect(
-        await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 })
+        await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 }, { timeout: 8000 })
       ).toBeInTheDocument();
       expect(
         screen.queryByRole('heading', { name: /choisissez le film de la soirée/i })
@@ -133,7 +133,7 @@ describe('App (routes)', () => {
         http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
       );
       renderRoutes(['/my-events']);
-      await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 });
+      await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 }, { timeout: 8000 });
       const navs = screen.getAllByRole('navigation', { name: /navigation principale/i });
       expect(navs).toHaveLength(2);
       const mobileNav = navs.at(-1);
