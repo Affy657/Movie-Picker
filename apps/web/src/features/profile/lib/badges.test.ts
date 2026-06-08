@@ -42,9 +42,7 @@ describe('computeBadges', () => {
   });
 
   it('débloque le badge Faiseur de rois quand winningProposals >= 3', () => {
-    const b = computeBadges(makeStats({ winningProposals: 3 })).find(
-      (b) => b.id === 'kingmaker'
-    )!;
+    const b = computeBadges(makeStats({ winningProposals: 3 })).find((b) => b.id === 'kingmaker')!;
     expect(b.earned).toBe(true);
   });
 
@@ -54,9 +52,7 @@ describe('computeBadges', () => {
   });
 
   it('la progression est plafonnée à 1 même si la valeur dépasse le seuil', () => {
-    const b = computeBadges(makeStats({ eventsCreated: 100 })).find(
-      (b) => b.id === 'organizer'
-    )!;
+    const b = computeBadges(makeStats({ eventsCreated: 100 })).find((b) => b.id === 'organizer')!;
     expect(b.progress).toBe(1);
     expect(b.earned).toBe(true);
   });

@@ -31,11 +31,36 @@ export default function ProfileStatsSection({ stats }: Props) {
   const { t } = useTranslation();
 
   const counters: { key: string; icon: LucideIcon; label: string; value: number }[] = [
-    { key: 'eventsCreated', icon: CalendarPlus, label: t('profile.stats.eventsCreated'), value: stats.eventsCreated },
-    { key: 'eventsJoined', icon: Users, label: t('profile.stats.eventsJoined'), value: stats.eventsJoined },
-    { key: 'moviesProposed', icon: Film, label: t('profile.stats.moviesProposed'), value: stats.moviesProposed },
-    { key: 'votesCast', icon: ThumbsUp, label: t('profile.stats.votesCast'), value: stats.votesCast },
-    { key: 'winningProposals', icon: Trophy, label: t('profile.stats.winningProposals'), value: stats.winningProposals },
+    {
+      key: 'eventsCreated',
+      icon: CalendarPlus,
+      label: t('profile.stats.eventsCreated'),
+      value: stats.eventsCreated,
+    },
+    {
+      key: 'eventsJoined',
+      icon: Users,
+      label: t('profile.stats.eventsJoined'),
+      value: stats.eventsJoined,
+    },
+    {
+      key: 'moviesProposed',
+      icon: Film,
+      label: t('profile.stats.moviesProposed'),
+      value: stats.moviesProposed,
+    },
+    {
+      key: 'votesCast',
+      icon: ThumbsUp,
+      label: t('profile.stats.votesCast'),
+      value: stats.votesCast,
+    },
+    {
+      key: 'winningProposals',
+      icon: Trophy,
+      label: t('profile.stats.winningProposals'),
+      value: stats.winningProposals,
+    },
     { key: 'moviesSeen', icon: Eye, label: t('profile.stats.moviesSeen'), value: stats.moviesSeen },
   ];
 
@@ -98,7 +123,10 @@ export default function ProfileStatsSection({ stats }: Props) {
               <span className={styles.badgeName}>{t(BADGE_NAME_KEYS[badge.id])}</span>
               {!badge.earned && (
                 <span className={styles.badgeProgress}>
-                  {t('profile.stats.badgeLocked', { current: badge.current, threshold: badge.threshold })}
+                  {t('profile.stats.badgeLocked', {
+                    current: badge.current,
+                    threshold: badge.threshold,
+                  })}
                 </span>
               )}
             </li>

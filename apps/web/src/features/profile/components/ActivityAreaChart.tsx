@@ -47,12 +47,7 @@ export default function ActivityAreaChart({ points }: Props) {
   const area = `${line} L ${lastCoord.x.toFixed(1)} ${baseline} L ${firstCoord.x.toFixed(1)} ${baseline} Z`;
 
   return (
-    <svg
-      className={styles.area}
-      viewBox={`0 0 ${W} ${H}`}
-      role="img"
-      aria-hidden="true"
-    >
+    <svg className={styles.area} viewBox={`0 0 ${W} ${H}`} role="img" aria-hidden="true">
       <defs>
         <linearGradient id={GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0.35" />
@@ -70,7 +65,13 @@ export default function ActivityAreaChart({ points }: Props) {
       />
       {coords.map((c, i) =>
         i % 3 === 0 ? (
-          <text key={c.point.month} x={c.x} y={H - 6} className={styles.areaLabel} textAnchor="middle">
+          <text
+            key={c.point.month}
+            x={c.x}
+            y={H - 6}
+            className={styles.areaLabel}
+            textAnchor="middle"
+          >
             {monthShort(c.point.month, locale)}
           </text>
         ) : null

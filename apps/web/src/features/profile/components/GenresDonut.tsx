@@ -68,7 +68,11 @@ export default function GenresDonut({ genres }: Props) {
       <ul className={styles.legend}>
         {segments.map((s) => (
           <li key={s.key} className={styles.legendItem}>
-            <span className={styles.legendSwatch} style={{ background: s.color }} aria-hidden="true" />
+            <span
+              className={styles.legendSwatch}
+              style={{ background: s.color }}
+              aria-hidden="true"
+            />
             <span className={styles.legendLabel}>{s.label}</span>
             <span className={styles.legendCount}>{s.count}</span>
           </li>
