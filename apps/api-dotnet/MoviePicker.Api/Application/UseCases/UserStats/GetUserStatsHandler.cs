@@ -9,6 +9,7 @@ namespace MoviePicker.Api.Application.UseCases.UserStats;
 public sealed class GetUserStatsHandler : IGetUserStatsHandler
 {
     private const int CreatedEventsCap = 1000;
+    private const int ParticipantsCap = 500;
     private const int FavoriteGenresTop = 6;
     private const int ActivityWeeks = 26;
 
@@ -47,9 +48,10 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
         if (user is null || !user.IsProfilePublic)
             throw new NotFoundException("Profil introuvable");
 
-        var participants = await _participants.ListByUserIdAsync(user.Id, ct);
-        var participantIds = participants.Select(p => p.Id).Distinct().ToList();
-        var dailyActivity = BuildDailyActivity(participants.Select(p => p.CreatedAt));
+        var participants = await _participants.ListByUserIdAsync(user.Id, ParticipantsCap, ct);
+        var participantIds = participants.Select(p => p.Id).ToList();
+        var joinDates = participants.Select(p => p.CreatedAt).ToList();
+        var dailyActivity = BuildDailyActivity(joinDates);
 
         // The user's own created events double as the "created" count and the set we subtract
         // from participations to avoid counting a hosted soirée as "joined".
@@ -104,7 +106,7 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
     // Heatmap-style window: one bucket per day over the last ActivityWeeks weeks (~6 months),
     // aligned so the grid starts on a Monday and ends today. The source is the user's soirée
     // participations (host or guest), one timestamp per participation. Days outside the window are ignored.
-    private IReadOnlyList<DailyActivityPoint> BuildDailyActivity(IEnumerable<DateTimeOffset> timestamps)
+    private IReadOnlyList<DailyActivityPoint> BuildDailyActivity(IReadOnlyList<DateTimeOffset> timestamps)
     {
         var today = _clock.GetUtcNow().UtcDateTime.Date;
         var daysFromMonday = ((int)today.DayOfWeek + 6) % 7;

@@ -93,14 +93,15 @@ public sealed class MongoParticipantRepository : IParticipantRepository
         return ids.Distinct().ToList();
     }
 
-    public async Task<IReadOnlyList<Participant>> ListByUserIdAsync(string userId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<Participant>> ListByUserIdAsync(string userId, int limit = 0, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(userId))
             return Array.Empty<Participant>();
 
-        var docs = await _collection
-            .Find(x => x.UserId == userId)
-            .ToListAsync(ct);
+        var query = _collection.Find(x => x.UserId == userId);
+        if (limit > 0)
+            query = query.Limit(limit);
+        var docs = await query.ToListAsync(ct);
         return docs.Select(ParticipantDocumentMapper.ToDomain).ToList();
     }
 

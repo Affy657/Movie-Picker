@@ -14,7 +14,7 @@ public interface IParticipantRepository
 
     Task<IReadOnlyList<string>> ListDistinctEventIdsByUserIdAsync(string userId, CancellationToken ct = default);
 
-    Task<IReadOnlyList<Participant>> ListByUserIdAsync(string userId, CancellationToken ct = default);
+    Task<IReadOnlyList<Participant>> ListByUserIdAsync(string userId, int limit = 0, CancellationToken ct = default);
 
     Task<int> CountByEventIdAsync(string eventId, CancellationToken ct = default);
 
