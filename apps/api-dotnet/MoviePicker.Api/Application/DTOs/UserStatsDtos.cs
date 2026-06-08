@@ -9,7 +9,7 @@ public sealed class UserStatsResponse
     public int WinningProposals { get; init; }
     public int MoviesSeen { get; init; }
     public IReadOnlyList<GenreCount> FavoriteGenres { get; init; } = [];
-    public IReadOnlyList<MonthlyActivityPoint> MonthlyActivity { get; init; } = [];
+    public IReadOnlyList<DailyActivityPoint> DailyActivity { get; init; } = [];
 }
 
 public sealed class GenreCount
@@ -18,8 +18,8 @@ public sealed class GenreCount
     public int Count { get; init; }
 }
 
-public sealed class MonthlyActivityPoint
+public sealed class DailyActivityPoint
 {
-    public string Month { get; init; } = string.Empty;
+    public string Date { get; init; } = string.Empty;
     public int Count { get; init; }
 }

@@ -113,7 +113,7 @@ public sealed class GetUserStatsHandlerTests
     }
 
     [Fact]
-    public async Task ZeroActivity_ReturnsZerosAndTwelveZeroFilledMonths()
+    public async Task ZeroActivity_ReturnsZerosAndZeroFilledDailyWindow()
     {
         var handler = Build();
         _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
@@ -127,10 +127,11 @@ public sealed class GetUserStatsHandlerTests
         Assert.Equal(0, res.WinningProposals);
         Assert.Equal(0, res.MoviesSeen);
         Assert.Empty(res.FavoriteGenres);
-        Assert.Equal(12, res.MonthlyActivity.Count);
-        Assert.Equal("2025-07", res.MonthlyActivity[0].Month);
-        Assert.Equal("2026-06", res.MonthlyActivity[^1].Month);
-        Assert.All(res.MonthlyActivity, p => Assert.Equal(0, p.Count));
+        // 2026-06-15 is a Monday → window starts on Monday 2025-06-23 and ends today (358 days).
+        Assert.Equal(358, res.DailyActivity.Count);
+        Assert.Equal("2025-06-23", res.DailyActivity[0].Date);
+        Assert.Equal("2026-06-15", res.DailyActivity[^1].Date);
+        Assert.All(res.DailyActivity, p => Assert.Equal(0, p.Count));
     }
 
     [Fact]
@@ -170,28 +171,28 @@ public sealed class GetUserStatsHandlerTests
         Assert.Equal(878, res.FavoriteGenres[1].GenreId);
         Assert.Equal(1, res.FavoriteGenres[1].Count);
 
-        Assert.Equal(1, res.MonthlyActivity.Single(p => p.Month == "2026-06").Count);
-        Assert.Equal(1, res.MonthlyActivity.Single(p => p.Month == "2026-05").Count);
+        Assert.Equal(1, res.DailyActivity.Single(p => p.Date == "2026-06-01").Count);
+        Assert.Equal(1, res.DailyActivity.Single(p => p.Date == "2026-05-01").Count);
     }
 
     [Fact]
-    public async Task MonthlyActivity_DropsParticipationsOlderThan12Months()
+    public async Task DailyActivity_DropsParticipationsOutsideWindow()
     {
         var handler = Build();
         _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
         var parts = new[]
         {
-            Part("p1", "A", new DateTimeOffset(2026, 6, 10, 0, 0, 0, TimeSpan.Zero)), // current month
-            Part("p2", "B", new DateTimeOffset(2025, 7, 10, 0, 0, 0, TimeSpan.Zero)), // oldest in-window bucket
-            Part("p3", "C", new DateTimeOffset(2025, 5, 10, 0, 0, 0, TimeSpan.Zero)), // 13 months ago → dropped
+            Part("p1", "A", new DateTimeOffset(2026, 6, 10, 0, 0, 0, TimeSpan.Zero)), // in window
+            Part("p2", "B", new DateTimeOffset(2025, 7, 10, 0, 0, 0, TimeSpan.Zero)), // in window
+            Part("p3", "C", new DateTimeOffset(2025, 6, 1, 0, 0, 0, TimeSpan.Zero)),  // before 2025-06-23 → dropped
         };
         _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(parts);
 
         var res = await handler.HandleAsync("alice");
 
-        Assert.Equal(12, res.MonthlyActivity.Count);
-        Assert.Equal(1, res.MonthlyActivity.Single(p => p.Month == "2026-06").Count);
-        Assert.Equal(1, res.MonthlyActivity.Single(p => p.Month == "2025-07").Count);
-        Assert.Equal(2, res.MonthlyActivity.Sum(p => p.Count)); // 2025-05 participation excluded
+        Assert.Equal(358, res.DailyActivity.Count);
+        Assert.Equal(1, res.DailyActivity.Single(p => p.Date == "2026-06-10").Count);
+        Assert.Equal(1, res.DailyActivity.Single(p => p.Date == "2025-07-10").Count);
+        Assert.Equal(2, res.DailyActivity.Sum(p => p.Count)); // 2025-06-01 participation excluded
     }
 }

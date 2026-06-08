@@ -70,10 +70,10 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
         Assert.Equal("integer", eventsCreatedProp.GetProperty("type").GetString());
         Assert.True(statsProps.TryGetProperty("favoriteGenres", out var favGenresProp));
         Assert.Equal("array", favGenresProp.GetProperty("type").GetString());
-        Assert.True(statsProps.TryGetProperty("monthlyActivity", out var monthlyProp));
-        Assert.Equal("array", monthlyProp.GetProperty("type").GetString());
+        Assert.True(statsProps.TryGetProperty("dailyActivity", out var dailyProp));
+        Assert.Equal("array", dailyProp.GetProperty("type").GetString());
         Assert.True(schemas.TryGetProperty("GenreCount", out _));
-        Assert.True(schemas.TryGetProperty("MonthlyActivityPoint", out _));
+        Assert.True(schemas.TryGetProperty("DailyActivityPoint", out _));
 
         Assert.True(schemas.TryGetProperty("MovieWithScoreResponse", out var movieWithScore));
         var movieProps = movieWithScore.GetProperty("properties");

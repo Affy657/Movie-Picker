@@ -16,7 +16,7 @@ const EMPTY_STATS = {
   winningProposals: 0,
   moviesSeen: 0,
   favoriteGenres: [],
-  monthlyActivity: [],
+  dailyActivity: [],
 };
 
 const ALICE_PROFILE = {
@@ -223,7 +223,7 @@ describe('ProfilePage (MSW)', () => {
         winningProposals: 2,
         moviesSeen: 5,
         favoriteGenres: [{ genreId: 878, count: 6 }],
-        monthlyActivity: [],
+        dailyActivity: [],
       })
     );
 
@@ -237,7 +237,7 @@ describe('ProfilePage (MSW)', () => {
 
     expect(screen.getByText('4')).toBeInTheDocument();
     expect(screen.getByText(/soirées créées/i)).toBeInTheDocument();
-    expect(screen.getByText(/badges/i)).toBeInTheDocument();
+    expect(screen.getByText(/genres favoris/i)).toBeInTheDocument();
   });
 
   it("masque la section stats si l'endpoint stats échoue", async () => {

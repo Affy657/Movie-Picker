@@ -33,8 +33,8 @@ export interface GenreCount {
   count: number;
 }
 
-export interface MonthlyActivityPoint {
-  month: string;
+export interface DailyActivityPoint {
+  date: string;
   count: number;
 }
 
@@ -46,7 +46,7 @@ export interface UserStats {
   winningProposals: number;
   moviesSeen: number;
   favoriteGenres: GenreCount[];
-  monthlyActivity: MonthlyActivityPoint[];
+  dailyActivity: DailyActivityPoint[];
 }
 
 export async function fetchPublicProfile(handle: string): Promise<PublicProfile> {

@@ -11,7 +11,7 @@ function makeStats(overrides: Partial<UserStats> = {}): UserStats {
     winningProposals: 0,
     moviesSeen: 0,
     favoriteGenres: [],
-    monthlyActivity: [],
+    dailyActivity: [],
     ...overrides,
   };
 }

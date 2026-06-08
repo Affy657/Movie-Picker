@@ -74,8 +74,8 @@ Découpage par version côté **métier / utilisateur**.
 **Objectif** : vie sociale de l'app, identité utilisateur et engagement.
 
 - ✅ **Avatar utilisateur** : choix parmi un set préselectionné ; affiché à côté du pseudo dans la soirée et le profil.
-- ⬜ **Statistiques utilisateur** : tableau de bord personnel — soirées créées / rejointes, films proposés, votes, films gagnants.
-- ⬜ **Badges / achievements** : récompenses visuelles automatiques selon l'usage (ex. « 10 soirées créées ») ; affichés sur le profil.
+- 🟡 **Statistiques utilisateur** : section stats sur le profil public `/u/:handle` — 6 compteurs (soirées créées / rejointes, films proposés, votes, propositions gagnantes, films vus), barre des genres favoris (IDs TMDB persistés à l'ajout + backfill one-shot) et heatmap d'activité sur 52 semaines. _Reste_ : ajustement des seuils, éventuel dashboard privé dédié.
+- 🟡 **Badges / achievements** : implémentation **en partie faite** — calcul des 4 badges (Organisateur, Cinéphile, Faiseur de rois, Juré assidu) + libellés i18n + tests unitaires prêts (`features/profile/lib/badges.ts`), mais **affichage retiré du profil** en attendant une UI plus aboutie. _Reste_ : design de la présentation et réactivation sur le profil.
 - ✅ **Mini-commentaires sur une proposition** : note de pitch (≤ 140 caractères) posée par le proposant sur son film ; visible par tous ; bulle de texte avec avatar du proposant ; éditable au clic par le proposant, supprimable par le proposant (body vide) ou l'hôte (sans participantId requis) ; lecture seule après le lancement de la roue ; rate limiting 60 req/min.
 - ⬜ **Profil public léger** : page `/u/:handle` (handle unique) — avatar, pseudo, bio courte, « membre depuis » ; **public par défaut** avec opt-out. Stats publiques et badges ajoutés ensuite. Plan détaillé → [feature-profil-public.md](feature-profil-public.md).
 - ✅ **Notifications in-app** : badge + liste « Invitations reçues » dans Mes soirées.

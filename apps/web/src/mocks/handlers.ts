@@ -76,7 +76,7 @@ export interface MockUserStats {
   winningProposals?: number;
   moviesSeen?: number;
   favoriteGenres?: { genreId: number; count: number }[];
-  monthlyActivity?: { month: string; count: number }[];
+  dailyActivity?: { date: string; count: number }[];
 }
 
 export function createUserStatsHandler(handle: string, stats?: MockUserStats) {
@@ -89,7 +89,7 @@ export function createUserStatsHandler(handle: string, stats?: MockUserStats) {
       winningProposals: stats?.winningProposals ?? 0,
       moviesSeen: stats?.moviesSeen ?? 0,
       favoriteGenres: stats?.favoriteGenres ?? [],
-      monthlyActivity: stats?.monthlyActivity ?? [],
+      dailyActivity: stats?.dailyActivity ?? [],
     })
   );
 }

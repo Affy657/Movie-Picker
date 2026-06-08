@@ -10,7 +10,7 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
 {
     private const int CreatedEventsCap = 1000;
     private const int FavoriteGenresTop = 6;
-    private const int ActivityMonths = 12;
+    private const int ActivityWeeks = 52;
 
     private readonly IUserRepository _users;
     private readonly IParticipantRepository _participants;
@@ -49,7 +49,7 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
 
         var participants = await _participants.ListByUserIdAsync(user.Id, ct);
         var participantIds = participants.Select(p => p.Id).Distinct().ToList();
-        var monthlyActivity = BuildMonthlyActivity(participants.Select(p => p.CreatedAt));
+        var dailyActivity = BuildDailyActivity(participants.Select(p => p.CreatedAt));
 
         // The user's own created events double as the "created" count and the set we subtract
         // from participations to avoid counting a hosted soirée as "joined".
@@ -66,7 +66,7 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
             {
                 EventsCreated = createdEvents.Count,
                 EventsJoined = eventsJoined,
-                MonthlyActivity = monthlyActivity
+                DailyActivity = dailyActivity
             };
         }
 
@@ -97,34 +97,41 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
             WinningProposals = winningProposals,
             MoviesSeen = seenTask.Result,
             FavoriteGenres = favoriteGenres,
-            MonthlyActivity = monthlyActivity
+            DailyActivity = dailyActivity
         };
     }
 
-    private IReadOnlyList<MonthlyActivityPoint> BuildMonthlyActivity(IEnumerable<DateTimeOffset> timestamps)
+    // Heatmap-style window: one bucket per day over the last ActivityWeeks weeks, aligned so the
+    // grid starts on a Monday and ends today. Days outside the window are ignored.
+    private IReadOnlyList<DailyActivityPoint> BuildDailyActivity(IEnumerable<DateTimeOffset> timestamps)
     {
-        var now = _clock.GetUtcNow();
-        var anchor = new DateTimeOffset(now.Year, now.Month, 1, 0, 0, 0, TimeSpan.Zero);
+        var today = _clock.GetUtcNow().UtcDateTime.Date;
+        var daysFromMonday = ((int)today.DayOfWeek + 6) % 7;
+        var mondayThisWeek = today.AddDays(-daysFromMonday);
+        var start = mondayThisWeek.AddDays(-7 * (ActivityWeeks - 1));
 
-        var orderedKeys = new string[ActivityMonths];
-        var counts = new Dictionary<string, int>(ActivityMonths);
-        for (var i = 0; i < ActivityMonths; i++)
-        {
-            var month = anchor.AddMonths(-(ActivityMonths - 1 - i));
-            var key = month.ToString("yyyy-MM", CultureInfo.InvariantCulture);
-            orderedKeys[i] = key;
-            counts[key] = 0;
-        }
-
+        var counts = new Dictionary<string, int>();
         foreach (var ts in timestamps)
         {
-            var key = ts.ToUniversalTime().ToString("yyyy-MM", CultureInfo.InvariantCulture);
-            if (counts.ContainsKey(key))
-                counts[key]++;
+            var day = ts.ToUniversalTime().Date;
+            if (day < start || day > today)
+                continue;
+            var key = day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            counts[key] = counts.TryGetValue(key, out var c) ? c + 1 : 1;
         }
 
-        return orderedKeys
-            .Select(k => new MonthlyActivityPoint { Month = k, Count = counts[k] })
-            .ToList();
+        var totalDays = (today - start).Days + 1;
+        var result = new List<DailyActivityPoint>(totalDays);
+        for (var i = 0; i < totalDays; i++)
+        {
+            var key = start.AddDays(i).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            result.Add(new DailyActivityPoint
+            {
+                Date = key,
+                Count = counts.TryGetValue(key, out var c) ? c : 0
+            });
+        }
+
+        return result;
     }
 }

@@ -1,27 +1,12 @@
 import { lazy, Suspense } from 'react';
 import { CalendarPlus, Eye, Film, ThumbsUp, Trophy, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { useTranslation, type TranslationKey } from '@/shared/i18n';
+import { useTranslation } from '@/shared/i18n';
 import type { UserStats } from '@/features/profile/api/profileApi';
-import { computeBadges, type BadgeId } from '@/features/profile/lib/badges';
 import styles from './ProfileStatsSection.module.css';
 
 const GenresBar = lazy(() => import('./GenresBar'));
-const ActivityAreaChart = lazy(() => import('./ActivityAreaChart'));
-
-const BADGE_NAME_KEYS: Record<BadgeId, TranslationKey> = {
-  organizer: 'profile.stats.badges.organizer',
-  cinephile: 'profile.stats.badges.cinephile',
-  kingmaker: 'profile.stats.badges.kingmaker',
-  juror: 'profile.stats.badges.juror',
-};
-
-const BADGE_DESC_KEYS: Record<BadgeId, TranslationKey> = {
-  organizer: 'profile.stats.badges.organizerDesc',
-  cinephile: 'profile.stats.badges.cinephileDesc',
-  kingmaker: 'profile.stats.badges.kingmakerDesc',
-  juror: 'profile.stats.badges.jurorDesc',
-};
+const ActivityHeatmap = lazy(() => import('./ActivityHeatmap'));
 
 interface Props {
   stats: UserStats;
@@ -64,9 +49,8 @@ export default function ProfileStatsSection({ stats }: Props) {
     { key: 'moviesSeen', icon: Eye, label: t('profile.stats.moviesSeen'), value: stats.moviesSeen },
   ];
 
-  const badges = computeBadges(stats);
   const hasGenres = stats.favoriteGenres.length > 0;
-  const hasActivity = stats.monthlyActivity.some((p) => p.count > 0);
+  const hasActivity = stats.dailyActivity.some((p) => p.count > 0);
   const hasAnyData = counters.some((c) => c.value > 0) || hasGenres || hasActivity;
 
   return (
@@ -105,39 +89,12 @@ export default function ProfileStatsSection({ stats }: Props) {
             <div className={styles.panel}>
               <h3 className={styles.panelTitle}>{t('profile.stats.activityTitle')}</h3>
               <Suspense fallback={null}>
-                <ActivityAreaChart points={stats.monthlyActivity} />
+                <ActivityHeatmap points={stats.dailyActivity} />
               </Suspense>
             </div>
           )}
         </div>
       )}
-
-      <div className={styles.panel}>
-        <h3 className={styles.panelTitle}>{t('profile.stats.badgesTitle')}</h3>
-        <ul className={styles.badgeList}>
-          {badges.map((badge) => (
-            <li
-              key={badge.id}
-              className={badge.earned ? `${styles.badge} ${styles.badgeEarned}` : styles.badge}
-            >
-              <span className={styles.badgeEmoji} aria-hidden>
-                {badge.emoji}
-              </span>
-              <span className={styles.badgeText}>
-                <span className={styles.badgeName}>{t(BADGE_NAME_KEYS[badge.id])}</span>
-                <span className={styles.badgeDesc}>
-                  {badge.earned
-                    ? t(BADGE_DESC_KEYS[badge.id], { threshold: badge.threshold })
-                    : t('profile.stats.badgeLocked', {
-                        current: badge.current,
-                        threshold: badge.threshold,
-                      })}
-                </span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
     </section>
   );
 }

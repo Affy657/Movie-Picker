@@ -152,91 +152,25 @@
 }
 
 /* ---------- Activité: area chart pleine largeur ---------- */
-.area {
+/* ---------- Activité: heatmap façon GitHub ---------- */
+.heatmapWrap {
   width: 100%;
-  height: auto;
-  display: block;
-  overflow: visible;
+  overflow-x: auto;
 }
 
-.areaBaseline {
-  stroke: var(--color-border-subtle);
-  stroke-width: 1;
-}
-
-.areaDot {
-  fill: var(--color-surface);
-  stroke: var(--color-primary);
-  stroke-width: 2;
-}
-
-.areaValue {
-  fill: var(--color-text-muted);
-  font-size: 11px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-.areaLabel {
-  fill: var(--color-text-muted);
-  font-size: 11px;
-}
-
-/* ---------- Badges ---------- */
-.badgeList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.heatmap {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.6rem;
+  grid-template-rows: repeat(7, 1fr);
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 3px;
+  width: 100%;
+  aspect-ratio: var(--cols) / 7;
 }
 
-.badge {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  padding: 0.7rem 0.8rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-subtle);
-  background: color-mix(in srgb, var(--color-text) 3%, transparent);
-  opacity: 0.65;
-  filter: grayscale(1);
-  transition:
-    opacity var(--duration-fast),
-    filter var(--duration-fast);
-}
-
-.badgeEarned {
-  opacity: 1;
-  filter: none;
-  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
-  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
-}
-
-.badgeEmoji {
-  font-size: 1.5rem;
-  line-height: 1;
-  flex: 0 0 auto;
-}
-
-.badgeText {
-  display: flex;
-  flex-direction: column;
+.heatCell {
+  border-radius: 2px;
   min-width: 0;
-}
-
-.badgeName {
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  line-height: var(--leading-snug);
-}
-
-.badgeDesc {
-  font-size: var(--font-size-3xs);
-  color: var(--color-text-muted);
-  font-variant-numeric: tabular-nums;
-  line-height: var(--leading-snug);
 }
 
 /* ---------- Responsive ---------- */
@@ -258,10 +192,8 @@
   .heroValue {
     font-size: 1.35rem;
   }
-}
 
-@media (max-width: 24rem) {
-  .badgeList {
-    grid-template-columns: 1fr;
+  .heatmap {
+    min-width: 520px;
   }
 }
