@@ -238,6 +238,9 @@ describe('ProfilePage (MSW)', () => {
     expect(screen.getByText('4')).toBeInTheDocument();
     expect(screen.getByText(/soirées créées/i)).toBeInTheDocument();
     expect(screen.getByText(/genres favoris/i)).toBeInTheDocument();
+    // votes donnés / films vus retirés de l'affichage
+    expect(screen.queryByText(/votes donnés/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/films vus/i)).not.toBeInTheDocument();
   });
 
   it("masque la section stats si l'endpoint stats échoue", async () => {

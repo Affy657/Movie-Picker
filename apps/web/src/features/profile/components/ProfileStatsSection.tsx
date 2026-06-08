@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { CalendarPlus, Eye, Film, ThumbsUp, Trophy, Users } from 'lucide-react';
+import { CalendarPlus, Film, Trophy, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import type { UserStats } from '@/features/profile/api/profileApi';
@@ -35,18 +35,11 @@ export default function ProfileStatsSection({ stats }: Props) {
       value: stats.moviesProposed,
     },
     {
-      key: 'votesCast',
-      icon: ThumbsUp,
-      label: t('profile.stats.votesCast'),
-      value: stats.votesCast,
-    },
-    {
       key: 'winningProposals',
       icon: Trophy,
       label: t('profile.stats.winningProposals'),
       value: stats.winningProposals,
     },
-    { key: 'moviesSeen', icon: Eye, label: t('profile.stats.moviesSeen'), value: stats.moviesSeen },
   ];
 
   const hasGenres = stats.favoriteGenres.length > 0;

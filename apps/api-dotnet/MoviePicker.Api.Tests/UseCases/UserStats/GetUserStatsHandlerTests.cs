@@ -127,9 +127,9 @@ public sealed class GetUserStatsHandlerTests
         Assert.Equal(0, res.WinningProposals);
         Assert.Equal(0, res.MoviesSeen);
         Assert.Empty(res.FavoriteGenres);
-        // 2026-06-15 is a Monday → window starts on Monday 2025-06-23 and ends today (358 days).
-        Assert.Equal(358, res.DailyActivity.Count);
-        Assert.Equal("2025-06-23", res.DailyActivity[0].Date);
+        // 2026-06-15 is a Monday → 26-week window starts on Monday 2025-12-22 and ends today (176 days).
+        Assert.Equal(176, res.DailyActivity.Count);
+        Assert.Equal("2025-12-22", res.DailyActivity[0].Date);
         Assert.Equal("2026-06-15", res.DailyActivity[^1].Date);
         Assert.All(res.DailyActivity, p => Assert.Equal(0, p.Count));
     }
@@ -183,16 +183,16 @@ public sealed class GetUserStatsHandlerTests
         var parts = new[]
         {
             Part("p1", "A", new DateTimeOffset(2026, 6, 10, 0, 0, 0, TimeSpan.Zero)), // in window
-            Part("p2", "B", new DateTimeOffset(2025, 7, 10, 0, 0, 0, TimeSpan.Zero)), // in window
-            Part("p3", "C", new DateTimeOffset(2025, 6, 1, 0, 0, 0, TimeSpan.Zero)),  // before 2025-06-23 → dropped
+            Part("p2", "B", new DateTimeOffset(2026, 1, 5, 0, 0, 0, TimeSpan.Zero)),  // in window
+            Part("p3", "C", new DateTimeOffset(2025, 12, 1, 0, 0, 0, TimeSpan.Zero)), // before 2025-12-22 → dropped
         };
         _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(parts);
 
         var res = await handler.HandleAsync("alice");
 
-        Assert.Equal(358, res.DailyActivity.Count);
+        Assert.Equal(176, res.DailyActivity.Count);
         Assert.Equal(1, res.DailyActivity.Single(p => p.Date == "2026-06-10").Count);
-        Assert.Equal(1, res.DailyActivity.Single(p => p.Date == "2025-07-10").Count);
-        Assert.Equal(2, res.DailyActivity.Sum(p => p.Count)); // 2025-06-01 participation excluded
+        Assert.Equal(1, res.DailyActivity.Single(p => p.Date == "2026-01-05").Count);
+        Assert.Equal(2, res.DailyActivity.Sum(p => p.Count)); // 2025-12-01 participation excluded
     }
 }

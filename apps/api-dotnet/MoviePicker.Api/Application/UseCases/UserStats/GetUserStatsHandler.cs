@@ -10,7 +10,7 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
 {
     private const int CreatedEventsCap = 1000;
     private const int FavoriteGenresTop = 6;
-    private const int ActivityWeeks = 52;
+    private const int ActivityWeeks = 26;
 
     private readonly IUserRepository _users;
     private readonly IParticipantRepository _participants;
@@ -101,8 +101,9 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
         };
     }
 
-    // Heatmap-style window: one bucket per day over the last ActivityWeeks weeks, aligned so the
-    // grid starts on a Monday and ends today. Days outside the window are ignored.
+    // Heatmap-style window: one bucket per day over the last ActivityWeeks weeks (~6 months),
+    // aligned so the grid starts on a Monday and ends today. The source is the user's soirée
+    // participations (host or guest), one timestamp per participation. Days outside the window are ignored.
     private IReadOnlyList<DailyActivityPoint> BuildDailyActivity(IEnumerable<DateTimeOffset> timestamps)
     {
         var today = _clock.GetUtcNow().UtcDateTime.Date;

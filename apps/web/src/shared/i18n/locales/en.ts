@@ -524,7 +524,7 @@ export const en: Locale = {
       winningProposals: 'Winning proposals',
       moviesSeen: 'Movies seen',
       genresTitle: 'Favourite genres',
-      activityTitle: 'Activity (12 months)',
+      activityTitle: 'Activity (6 months)',
       badgesTitle: 'Badges',
       empty: 'No activity yet.',
       badgeLocked: '{{current}} / {{threshold}}',

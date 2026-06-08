@@ -532,7 +532,7 @@
       winningProposals: 'Propositions gagnantes',
       moviesSeen: 'Films vus',
       genresTitle: 'Genres favoris',
-      activityTitle: 'Activité (12 mois)',
+      activityTitle: 'Activité (6 mois)',
       badgesTitle: 'Badges',
       empty: 'Aucune activité pour le moment.',
       badgeLocked: '{{current}} / {{threshold}}',
