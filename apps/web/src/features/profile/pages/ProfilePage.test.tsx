@@ -6,7 +6,18 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import ProfilePage from '@/features/profile/pages/ProfilePage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
-import { TEST_API_V1 } from '@/mocks/handlers';
+import { TEST_API_V1, createUserStatsHandler } from '@/mocks/handlers';
+
+const EMPTY_STATS = {
+  eventsCreated: 0,
+  eventsJoined: 0,
+  moviesProposed: 0,
+  votesCast: 0,
+  winningProposals: 0,
+  moviesSeen: 0,
+  favoriteGenres: [],
+  monthlyActivity: [],
+};
 
 const ALICE_PROFILE = {
   handle: 'alice',
@@ -45,7 +56,9 @@ function renderProfile(handle: string) {
 }
 
 describe('ProfilePage (MSW)', () => {
-  const server = setupServer();
+  const server = setupServer(
+    http.get(`${TEST_API_V1}/users/:handle/stats`, () => HttpResponse.json(EMPTY_STATS))
+  );
 
   beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
   afterEach(() => server.resetHandlers());
@@ -196,5 +209,52 @@ describe('ProfilePage (MSW)', () => {
 
     expect(await screen.findByRole('heading', { name: 'Bob' })).toBeInTheDocument();
     expect(screen.getByText('@bob')).toBeInTheDocument();
+  });
+
+  it('affiche la section statistiques quand les stats sont disponibles', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      createUserStatsHandler('alice', {
+        eventsCreated: 4,
+        eventsJoined: 2,
+        moviesProposed: 10,
+        votesCast: 30,
+        winningProposals: 2,
+        moviesSeen: 5,
+        favoriteGenres: [{ genreId: 878, count: 6 }],
+        monthlyActivity: [],
+      })
+    );
+
+    renderProfile('alice');
+
+    await screen.findByRole('heading', { name: 'Alice' });
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /statistiques/i })).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('4')).toBeInTheDocument();
+    expect(screen.getByText(/soirées créées/i)).toBeInTheDocument();
+    expect(screen.getByText(/badges/i)).toBeInTheDocument();
+  });
+
+  it("masque la section stats si l'endpoint stats échoue", async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      http.get(`${TEST_API_V1}/users/alice/stats`, () =>
+        HttpResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+      )
+    );
+
+    renderProfile('alice');
+
+    await screen.findByRole('heading', { name: 'Alice' });
+
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: /statistiques/i })).not.toBeInTheDocument();
+    });
   });
 });

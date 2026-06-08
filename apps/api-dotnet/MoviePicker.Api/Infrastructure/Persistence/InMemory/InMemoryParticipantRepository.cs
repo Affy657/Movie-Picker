@@ -77,6 +77,15 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
         return Task.FromResult<IReadOnlyList<string>>(ids);
     }
 
+    public Task<IReadOnlyList<Participant>> ListByUserIdAsync(string userId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return Task.FromResult<IReadOnlyList<Participant>>(Array.Empty<Participant>());
+
+        var list = _byId.Values.Where(p => p.UserId == userId).ToList();
+        return Task.FromResult<IReadOnlyList<Participant>>(list);
+    }
+
     public Task<int> CountByEventIdAsync(string eventId, CancellationToken ct = default)
     {
         var n = _byId.Values.Count(p => p.EventId == eventId);

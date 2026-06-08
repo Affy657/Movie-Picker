@@ -28,6 +28,27 @@ export interface FollowListResponse {
   items: FollowUserItem[];
 }
 
+export interface GenreCount {
+  genreId: number;
+  count: number;
+}
+
+export interface MonthlyActivityPoint {
+  month: string;
+  count: number;
+}
+
+export interface UserStats {
+  eventsCreated: number;
+  eventsJoined: number;
+  moviesProposed: number;
+  votesCast: number;
+  winningProposals: number;
+  moviesSeen: number;
+  favoriteGenres: GenreCount[];
+  monthlyActivity: MonthlyActivityPoint[];
+}
+
 export async function fetchPublicProfile(handle: string): Promise<PublicProfile> {
   return fetchApi<PublicProfile>(`/users/${encodeURIComponent(handle)}`);
 }
@@ -52,4 +73,8 @@ export async function fetchFollowing(handle: string): Promise<FollowListResponse
 
 export async function fetchFollowers(handle: string): Promise<FollowListResponse> {
   return fetchApi<FollowListResponse>(`/users/${encodeURIComponent(handle)}/followers`);
+}
+
+export async function fetchUserStats(handle: string): Promise<UserStats> {
+  return fetchApi<UserStats>(`/users/${encodeURIComponent(handle)}/stats`);
 }

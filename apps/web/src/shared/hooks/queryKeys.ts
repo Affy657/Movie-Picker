@@ -9,6 +9,7 @@ export const queryKeys = {
       ['profile', 'following', handle ?? '$pending'] as const,
     followers: (handle: string | undefined) =>
       ['profile', 'followers', handle ?? '$pending'] as const,
+    stats: (handle: string | undefined) => ['profile', 'stats', handle ?? '$pending'] as const,
   },
   notifications: {
     inbox: ['notifications', 'inbox'] as const,

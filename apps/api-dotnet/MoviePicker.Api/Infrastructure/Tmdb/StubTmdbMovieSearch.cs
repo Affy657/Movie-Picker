@@ -38,6 +38,7 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
             new[] { "Actrice Stub", "Acteur Stub" },
             120,
             new[] { "Science-fiction", "Drame" },
+            new[] { 878, 18 },
             "2024-01-01",
             null);
         return Task.FromResult<TmdbMovieDetails?>(details);

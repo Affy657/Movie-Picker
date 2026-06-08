@@ -15,6 +15,7 @@ public static class MovieMapper
         Year = d.Year,
         PosterPath = d.PosterPath,
         PitchNote = string.IsNullOrWhiteSpace(d.PitchNote) ? null : d.PitchNote,
+        GenreIds = d.GenreIds is { Count: > 0 } ? d.GenreIds.ToList() : [],
         CreatedAt = new DateTimeOffset(d.CreatedAt, TimeSpan.Zero),
         UpdatedAt = new DateTimeOffset(d.UpdatedAt, TimeSpan.Zero)
     };
@@ -30,6 +31,7 @@ public static class MovieMapper
         Year = m.Year,
         PosterPath = m.PosterPath,
         PitchNote = m.PitchNote,
+        GenreIds = m.GenreIds is { Count: > 0 } ? m.GenreIds.ToList() : null,
         CreatedAt = m.CreatedAt.UtcDateTime,
         UpdatedAt = m.UpdatedAt.UtcDateTime
     };

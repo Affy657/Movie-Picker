@@ -49,6 +49,7 @@ public sealed class GetMovieDetailsHandlerTests
             Cast: new[] { "Leonardo DiCaprio", "Joseph Gordon-Levitt" },
             Runtime: 148,
             Genres: new[] { "Action", "Science-fiction" },
+            GenreIds: new[] { 28, 878 },
             ReleaseDate: "2010-07-16",
             TrailerUrl: "https://www.youtube.com/watch?v=abc");
         tmdb.Setup(t => t.GetDetailsAsync(27205, MovieMediaType.Movie, It.IsAny<CancellationToken>()))

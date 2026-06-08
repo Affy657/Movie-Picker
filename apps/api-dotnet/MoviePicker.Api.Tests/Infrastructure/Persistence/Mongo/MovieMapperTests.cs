@@ -19,6 +19,7 @@ public sealed class MovieMapperTests
             Title = "Inception",
             Year = "2010",
             PosterPath = "https://image.tmdb.org/t/p/w154/x.jpg",
+            GenreIds = new List<int> { 28, 878 },
             CreatedAt = new DateTime(2020, 1, 1, 12, 0, 0, DateTimeKind.Utc),
             UpdatedAt = new DateTime(2020, 1, 2, 12, 0, 0, DateTimeKind.Utc)
         };
@@ -32,6 +33,7 @@ public sealed class MovieMapperTests
         Assert.Equal("Inception", domain.Title);
         Assert.Equal("2010", domain.Year);
         Assert.Equal("https://image.tmdb.org/t/p/w154/x.jpg", domain.PosterPath);
+        Assert.Equal(new[] { 28, 878 }, domain.GenreIds);
         Assert.Equal(new DateTimeOffset(2020, 1, 1, 12, 0, 0, TimeSpan.Zero), domain.CreatedAt);
         Assert.Equal(new DateTimeOffset(2020, 1, 2, 12, 0, 0, TimeSpan.Zero), domain.UpdatedAt);
     }
@@ -42,6 +44,24 @@ public sealed class MovieMapperTests
         var doc = new MovieDocument { Id = "m1", EventId = "e1", ParticipantId = "p1", TmdbId = 1, Title = "X", Year = "2020", PosterPath = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
         var domain = MovieMapper.ToDomain(doc);
         Assert.Null(domain.PosterPath);
+    }
+
+    [Fact]
+    public void ToDomain_NullGenreIds_MapsToEmptyList()
+    {
+        var doc = new MovieDocument { Id = "m1", EventId = "e1", ParticipantId = "p1", TmdbId = 1, Title = "X", Year = "2020", GenreIds = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+        var domain = MovieMapper.ToDomain(doc);
+        Assert.Empty(domain.GenreIds);
+    }
+
+    [Fact]
+    public void ToDocument_EmptyGenreIds_StoredAsNull()
+    {
+        var domain = new Movie { Id = "m1", EventId = "e1", ParticipantId = "p1", TmdbId = 1, Title = "X", Year = "2020", GenreIds = [], CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        var doc = MovieMapper.ToDocument(domain);
+        Assert.Null(doc.GenreIds);
+        // null round-trips back to an empty (never null) list.
+        Assert.Empty(MovieMapper.ToDomain(doc).GenreIds);
     }
 
     [Fact]
@@ -56,6 +76,7 @@ public sealed class MovieMapperTests
             Title = "Film",
             Year = "2022",
             PosterPath = null,
+            GenreIds = new List<int> { 18, 35 },
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
@@ -64,5 +85,6 @@ public sealed class MovieMapperTests
         Assert.Equal(domain.Id, back.Id);
         Assert.Equal(domain.Title, back.Title);
         Assert.Equal(domain.TmdbId, back.TmdbId);
+        Assert.Equal(new[] { 18, 35 }, back.GenreIds);
     }
 }

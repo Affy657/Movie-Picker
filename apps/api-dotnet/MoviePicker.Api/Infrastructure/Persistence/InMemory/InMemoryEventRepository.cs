@@ -93,6 +93,19 @@ public sealed class InMemoryEventRepository : IEventRepository
         return Task.FromResult<IReadOnlyList<Event>>(list);
     }
 
+    public Task<int> CountByWinnerMovieIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
+    {
+        if (movieIds.Count == 0)
+            return Task.FromResult(0);
+
+        var set = movieIds.Where(id => !string.IsNullOrWhiteSpace(id)).ToHashSet();
+        if (set.Count == 0)
+            return Task.FromResult(0);
+
+        var n = _byId.Values.Count(e => e.WinnerMovieId is not null && set.Contains(e.WinnerMovieId));
+        return Task.FromResult(n);
+    }
+
     public Task<bool> DeleteAsync(string eventId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(eventId))

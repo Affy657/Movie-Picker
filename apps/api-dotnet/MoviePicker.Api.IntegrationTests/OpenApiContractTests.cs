@@ -49,6 +49,7 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
         Assert.True(paths.TryGetProperty("/api/v1/movies/search", out var mSearch) && mSearch.TryGetProperty("get", out _));
         Assert.True(paths.TryGetProperty("/api/v1/movies/tmdb/{tmdbId}/details", out var mDetails) && mDetails.TryGetProperty("get", out _));
         Assert.True(paths.TryGetProperty("/api/v1/posters/{posterKey}", out var posters) && posters.TryGetProperty("get", out _));
+        Assert.True(paths.TryGetProperty("/api/v1/users/{handle}/stats", out var userStats) && userStats.TryGetProperty("get", out _));
         var schemas = doc.RootElement.GetProperty("components").GetProperty("schemas");
         Assert.True(schemas.TryGetProperty("MovieSearchListResponse", out _));
         Assert.True(schemas.TryGetProperty("MovieSearchItemResponse", out var searchItem));
@@ -62,6 +63,17 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
         Assert.True(schemas.TryGetProperty("EventConfigResponse", out var evConfig));
         Assert.True(evConfig.GetProperty("properties").TryGetProperty("allowSeries", out _));
         Assert.True(schemas.TryGetProperty("MovieMediaType", out _));
+
+        Assert.True(schemas.TryGetProperty("UserStatsResponse", out var userStatsSchema));
+        var statsProps = userStatsSchema.GetProperty("properties");
+        Assert.True(statsProps.TryGetProperty("eventsCreated", out var eventsCreatedProp));
+        Assert.Equal("integer", eventsCreatedProp.GetProperty("type").GetString());
+        Assert.True(statsProps.TryGetProperty("favoriteGenres", out var favGenresProp));
+        Assert.Equal("array", favGenresProp.GetProperty("type").GetString());
+        Assert.True(statsProps.TryGetProperty("monthlyActivity", out var monthlyProp));
+        Assert.Equal("array", monthlyProp.GetProperty("type").GetString());
+        Assert.True(schemas.TryGetProperty("GenreCount", out _));
+        Assert.True(schemas.TryGetProperty("MonthlyActivityPoint", out _));
 
         Assert.True(schemas.TryGetProperty("MovieWithScoreResponse", out var movieWithScore));
         var movieProps = movieWithScore.GetProperty("properties");

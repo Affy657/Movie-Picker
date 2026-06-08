@@ -12,6 +12,8 @@ public interface IEventRepository
 
     Task<IReadOnlyList<Event>> ListByIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default);
 
+    Task<int> CountByWinnerMovieIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default);
+
     Task<Event?> FindByCreatorAndTitleAsync(string creatorUserId, string title, CancellationToken ct = default);
 
     Task<bool> DeleteAsync(string eventId, CancellationToken ct = default);

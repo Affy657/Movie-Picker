@@ -144,4 +144,18 @@ public sealed class MongoVoteRepository : IVoteRepository
             dict[d.MovieId] = d.Value;
         return dict;
     }
+
+    public async Task<int> CountByParticipantIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default)
+    {
+        if (participantIds.Count == 0)
+            return 0;
+
+        var ids = participantIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
+        if (ids.Count == 0)
+            return 0;
+
+        var filter = Builders<VoteDocument>.Filter.In(x => x.ParticipantId, ids);
+        var c = await _collection.CountDocumentsAsync(filter, cancellationToken: ct);
+        return (int)c;
+    }
 }

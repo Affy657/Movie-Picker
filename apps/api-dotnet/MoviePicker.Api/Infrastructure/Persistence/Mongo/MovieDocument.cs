@@ -36,6 +36,10 @@ public sealed class MovieDocument
     [BsonElement("pitchNote")]
     public string? PitchNote { get; set; }
 
+    [BsonElement("genreIds")]
+    [BsonIgnoreIfNull]
+    public List<int>? GenreIds { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 

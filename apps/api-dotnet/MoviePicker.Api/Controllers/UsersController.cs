@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.Follow;
 using MoviePicker.Api.Application.UseCases.Profile;
+using MoviePicker.Api.Application.UseCases.UserStats;
 using MoviePicker.Api.Infrastructure.Web;
 
 namespace MoviePicker.Api.Controllers;
@@ -43,6 +44,21 @@ public sealed class UsersController : ControllerBase
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var profile = await handler.HandleAsync(handle, currentUserId, ct);
         return Ok(profile);
+    }
+
+    [HttpGet("{handle}/stats")]
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingExtensions.PublicProfilePolicy)]
+    [ProducesResponseType(typeof(UserStatsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> GetUserStats(
+        string handle,
+        [FromServices] IGetUserStatsHandler handler,
+        CancellationToken ct)
+    {
+        var stats = await handler.HandleAsync(handle, ct);
+        return Ok(stats);
     }
 
     [HttpPost("{handle}/follow")]

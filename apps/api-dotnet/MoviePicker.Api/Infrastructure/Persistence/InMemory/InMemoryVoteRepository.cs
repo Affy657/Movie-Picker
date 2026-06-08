@@ -126,4 +126,14 @@ public sealed class InMemoryVoteRepository : IVoteRepository
         }
         return Task.FromResult<IReadOnlyDictionary<string, int>>(result);
     }
+
+    public Task<int> CountByParticipantIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default)
+    {
+        if (participantIds.Count == 0)
+            return Task.FromResult(0);
+
+        var set = participantIds.Where(id => !string.IsNullOrWhiteSpace(id)).ToHashSet();
+        var n = _byId.Values.Count(v => set.Contains(v.ParticipantId));
+        return Task.FromResult(n);
+    }
 }

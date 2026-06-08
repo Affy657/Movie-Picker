@@ -68,6 +68,32 @@ export function createJoinHandler(slug: string) {
   );
 }
 
+export interface MockUserStats {
+  eventsCreated?: number;
+  eventsJoined?: number;
+  moviesProposed?: number;
+  votesCast?: number;
+  winningProposals?: number;
+  moviesSeen?: number;
+  favoriteGenres?: { genreId: number; count: number }[];
+  monthlyActivity?: { month: string; count: number }[];
+}
+
+export function createUserStatsHandler(handle: string, stats?: MockUserStats) {
+  return http.get(`${V1}/users/${handle}/stats`, () =>
+    HttpResponse.json({
+      eventsCreated: stats?.eventsCreated ?? 0,
+      eventsJoined: stats?.eventsJoined ?? 0,
+      moviesProposed: stats?.moviesProposed ?? 0,
+      votesCast: stats?.votesCast ?? 0,
+      winningProposals: stats?.winningProposals ?? 0,
+      moviesSeen: stats?.moviesSeen ?? 0,
+      favoriteGenres: stats?.favoriteGenres ?? [],
+      monthlyActivity: stats?.monthlyActivity ?? [],
+    })
+  );
+}
+
 export function createSearchAndAddHandlers(slug: string) {
   return [
     http.get(`${V1}/movies/search`, () =>
