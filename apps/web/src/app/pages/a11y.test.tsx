@@ -84,9 +84,7 @@ describe('accessibilité (axe)', () => {
   it("MyEventsPage n'a pas de violations", async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(AUTH_USER)),
-      http.get(`${TEST_API_V1}/events/mine`, () =>
-        HttpResponse.json({ events: [], total: 0 })
-      )
+      http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [], total: 0 }))
     );
     const queryClient = createTestQueryClient();
     const { container } = render(

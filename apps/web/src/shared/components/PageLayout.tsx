@@ -10,7 +10,7 @@ type PageLayoutProps = {
 
 export default function PageLayout({ children, className, style }: PageLayoutProps) {
   return (
-    <main id="main-content" className={clsx('page', className)} style={style}>
+    <main id="main-content" tabIndex={-1} className={clsx('page', className)} style={style}>
       {children}
     </main>
   );
