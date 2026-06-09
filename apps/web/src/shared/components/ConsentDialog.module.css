@@ -92,18 +92,18 @@
 
 .actions {
   display: flex;
-  flex-direction: column;
   gap: 0.5rem;
 }
 
-@media (min-width: 440px) {
-  .actions {
-    flex-direction: row;
-    align-items: center;
-    flex-wrap: wrap;
-  }
+.actionBtn {
+  flex: 1;
+  justify-content: center;
+}
 
-  .rejectBtn {
-    margin-right: auto;
-  }
+.rejectBtn {
+  color: var(--color-text-muted);
+}
+
+.rejectBtn:hover {
+  color: var(--color-text);
 }
