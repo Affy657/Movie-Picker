@@ -56,10 +56,13 @@ export default function AccentColorPicker({
   const { t } = useTranslation();
 
   const lastCommittedRef = useRef<AccentColor>(accent);
+  const accentRef = useRef(accent);
+  accentRef.current = accent;
   const patchTimerRef = useRef<number | null>(null);
+  const userId = user?.userId;
   useEffect(() => {
-    if (user) lastCommittedRef.current = accent;
-  }, [user?.userId]);
+    if (userId) lastCommittedRef.current = accentRef.current;
+  }, [userId]);
   useEffect(
     () => () => {
       if (patchTimerRef.current !== null) clearTimeout(patchTimerRef.current);
@@ -92,7 +95,7 @@ export default function AccentColorPicker({
           });
       }, PATCH_DEBOUNCE_MS);
     },
-    [effectiveSelection, accent, setAccent, user, patchProfile]
+    [effectiveSelection, setAccent, user, patchProfile]
   );
 
   const handleKey = (e: React.KeyboardEvent, idx: number) => {

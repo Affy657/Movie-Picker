@@ -176,7 +176,7 @@ export default function EventDetail() {
       confirmLabel: t('events.participants.leaveConfirmAction'),
       onConfirm: confirmLeave,
     };
-  }, [confirmState, isConnectedSelf, t, confirmRemove, confirmLeave]);
+  }, [confirmState, t, confirmRemove, confirmLeave]);
 
   if (!slug) return null;
 

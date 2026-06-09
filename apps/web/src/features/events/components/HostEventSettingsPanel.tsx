@@ -102,7 +102,7 @@ export default function HostEventSettingsPanel({
     setWheelMode(next.wheelMode);
     setAllowSeries(next.allowSeries ?? false);
     setFormError(null);
-  }, [event.config]);
+  }, [event.config, event.date, event.time]);
 
   const mutation = useMutation({
     mutationFn: (body: EventConfigPatchPayload) => patchEventConfig(slug, hostToken, body),

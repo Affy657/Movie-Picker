@@ -74,16 +74,19 @@ export function useEventLive(
   const strategy: EventLiveStrategy = 'polling';
 
   const [, bumpLivePhaseForSchedule] = useState(0);
+  const eventDate = event?.date;
+  const eventTime = event?.time;
+  const eventIsFinished = event?.isFinished;
   useEffect(() => {
-    if (!event || event.isFinished || !event.date || !event.time) return;
-    const start = eventScheduledStartUtcMs({ date: event.date, time: event.time });
+    if (!eventDate || !eventTime || eventIsFinished) return;
+    const start = eventScheduledStartUtcMs({ date: eventDate, time: eventTime });
     if (start === null) return;
     const now = Date.now();
     if (now >= start) return;
     const delay = Math.min(start - now, 2_147_483_647);
     const id = window.setTimeout(() => bumpLivePhaseForSchedule((n) => n + 1), delay);
     return () => clearTimeout(id);
-  }, [event?.date, event?.time, event?.isFinished]);
+  }, [eventDate, eventTime, eventIsFinished]);
 
   const nowMs = Date.now();
   const livePhase = getEventLivePhase(event, nowMs);

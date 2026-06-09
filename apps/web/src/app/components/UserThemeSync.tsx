@@ -6,20 +6,17 @@ export default function UserThemeSync() {
   const { user, isLoading } = useAuth();
   const { applyRemotePreference, applyRemoteAccent } = useTheme();
 
+  const userId = user?.userId ?? null;
+  const uiTheme = user?.uiTheme ?? null;
+  const accentColor = user?.accentColor ?? null;
+
   useEffect(() => {
     if (isLoading) return;
-    if (user) {
-      applyRemotePreference(user.uiTheme);
-      applyRemoteAccent(user.accentColor);
+    if (userId !== null && uiTheme !== null && accentColor !== null) {
+      applyRemotePreference(uiTheme);
+      applyRemoteAccent(accentColor);
     }
-  }, [
-    isLoading,
-    user?.userId,
-    user?.uiTheme,
-    user?.accentColor,
-    applyRemotePreference,
-    applyRemoteAccent,
-  ]);
+  }, [isLoading, userId, uiTheme, accentColor, applyRemotePreference, applyRemoteAccent]);
 
   return null;
 }
