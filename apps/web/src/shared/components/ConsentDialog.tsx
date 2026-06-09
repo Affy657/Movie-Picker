@@ -73,7 +73,11 @@ export default function ConsentDialog({ open, onClose }: Props) {
           <span className={styles.requiredBadge}>{t('consent.dialog.required')}</span>
         </li>
         <li className={styles.category}>
-          <label className={styles.categoryLabel} htmlFor="consent-analytics" aria-label={t('consent.dialog.analytics')}>
+          <label
+            className={styles.categoryLabel}
+            htmlFor="consent-analytics"
+            aria-label={t('consent.dialog.analytics')}
+          >
             <div className={styles.categoryInfo}>
               <strong className={styles.categoryName}>{t('consent.dialog.analytics')}</strong>
               <p className={styles.categoryDesc}>{t('consent.dialog.analyticsDesc')}</p>
