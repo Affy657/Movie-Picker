@@ -15,14 +15,12 @@ export default function ConsentBanner() {
     <>
       <div
         className={styles.root}
-        role="dialog"
-        aria-labelledby="consent-banner-title"
-        aria-modal="false"
+        role="region"
+        aria-label={t('consent.banner.title')}
+        aria-live="polite"
       >
         <div className={styles.content}>
-          <p className={styles.title} id="consent-banner-title">
-            {t('consent.banner.title')}
-          </p>
+          <p className={styles.title}>{t('consent.banner.title')}</p>
           <p className={styles.description}>{t('consent.banner.description')}</p>
         </div>
         <div className={styles.actions}>

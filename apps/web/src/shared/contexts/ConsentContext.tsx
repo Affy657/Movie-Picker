@@ -13,6 +13,7 @@ type ConsentContextValue = {
   acceptAll: () => void;
   rejectAll: () => void;
   savePreferences: (prefs: Pick<ConsentPrefs, 'analytics'>) => void;
+  reset: () => void;
 };
 
 const ConsentContext = createContext<ConsentContextValue | null>(null);
@@ -23,16 +24,14 @@ function readStored(): ConsentPrefs {
     const raw = localStorage.getItem(CONSENT_STORAGE_KEY);
     if (!raw) return { decided: false, analytics: false };
     const parsed = JSON.parse(raw) as unknown;
+    const p = parsed as Record<string, unknown>;
     if (
       typeof parsed === 'object' &&
       parsed !== null &&
-      'decided' in parsed &&
-      typeof (parsed as Record<string, unknown>).decided === 'boolean'
+      typeof p.decided === 'boolean' &&
+      typeof p.analytics === 'boolean'
     ) {
-      return {
-        decided: Boolean((parsed as ConsentPrefs).decided),
-        analytics: Boolean((parsed as ConsentPrefs).analytics),
-      };
+      return { decided: p.decided, analytics: p.analytics };
     }
   } catch {}
   return { decided: false, analytics: false };
@@ -65,6 +64,14 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
     persist(next);
   }, []);
 
+  const reset = useCallback(() => {
+    const next = { decided: false, analytics: false };
+    setPrefs(next);
+    try {
+      localStorage.removeItem(CONSENT_STORAGE_KEY);
+    } catch {}
+  }, []);
+
   const value = useMemo<ConsentContextValue>(
     () => ({
       decided: prefs.decided,
@@ -72,8 +79,9 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
       acceptAll,
       rejectAll,
       savePreferences,
+      reset,
     }),
-    [prefs.decided, prefs.analytics, acceptAll, rejectAll, savePreferences]
+    [prefs.decided, prefs.analytics, acceptAll, rejectAll, savePreferences, reset]
   );
 
   return <ConsentContext.Provider value={value}>{children}</ConsentContext.Provider>;
