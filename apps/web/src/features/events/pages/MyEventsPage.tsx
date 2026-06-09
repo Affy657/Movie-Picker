@@ -16,6 +16,7 @@ import MyEventsSkeleton from '@/features/events/pages/MyEventsSkeleton';
 import { ApiError, getErrorMessage } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import type { MyEventSummary } from '@/features/events/types';
 import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
 import type { MyEventLifecycle } from '@/shared/types/event';
@@ -95,22 +96,8 @@ function EventCardKebab({
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
-
-  useEffect(() => {
-    if (!open) return;
-    const handlePointer = (e: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
-    };
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-    document.addEventListener('mousedown', handlePointer);
-    document.addEventListener('keydown', handleKey);
-    return () => {
-      document.removeEventListener('mousedown', handlePointer);
-      document.removeEventListener('keydown', handleKey);
-    };
-  }, [open]);
+  const close = useCallback(() => setOpen(false), []);
+  useClickOutside(rootRef, close, open);
 
   if (!onDelete && !onLeave) return null;
 

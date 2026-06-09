@@ -1,4 +1,4 @@
-import { memo, useEffect, useId, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useId, useRef, useState } from 'react';
 import clsx from 'clsx';
 import {
   Check,
@@ -32,6 +32,7 @@ import {
   MovieDetailsContent,
 } from '@/features/movies/components/MovieDetailsPanel';
 import TmdbAttribution from '@/features/movies/components/TmdbAttribution';
+import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import styles from './MovieList.module.css';
 
 type Translate = (key: TranslationKey, vars?: Record<string, string | number>) => string;
@@ -509,24 +510,8 @@ function CardKebab({
 }: CardKebabProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const handlePointer = (e: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-    document.addEventListener('mousedown', handlePointer);
-    document.addEventListener('keydown', handleKey);
-    return () => {
-      document.removeEventListener('mousedown', handlePointer);
-      document.removeEventListener('keydown', handleKey);
-    };
-  }, [open]);
+  const close = useCallback(() => setOpen(false), []);
+  useClickOutside(rootRef, close, open);
 
   const removeAria = isMine
     ? `${t('movies.list.removeButton')} ${title}`
