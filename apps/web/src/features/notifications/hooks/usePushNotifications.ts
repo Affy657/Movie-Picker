@@ -18,12 +18,12 @@ interface PushNotificationsState {
 }
 
 function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
-  const cleaned = base64.replace(/[^A-Za-z0-9\-_]/g, '');
-  const padded = cleaned.replace(/-/g, '+').replace(/_/g, '/');
+  const cleaned = base64.replaceAll(/[^A-Za-z0-9\-_]/g, '');
+  const padded = cleaned.replaceAll('-', '+').replaceAll('_', '/');
   const padLen = (4 - (padded.length % 4)) % 4;
   const raw = atob(padded + '='.repeat(padLen));
   const bytes = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.codePointAt(i) ?? 0;
   return bytes;
 }
 

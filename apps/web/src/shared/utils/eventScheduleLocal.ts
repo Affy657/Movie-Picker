@@ -1,6 +1,6 @@
 export function parseEventLocalStartMs(date: string, time: string): number | null {
-  const parts = date.split('-').map((p) => parseInt(p, 10));
-  const timeParts = (time ?? '00:00').split(':').map((p) => parseInt(p, 10));
+  const parts = date.split('-').map((p) => Number.parseInt(p, 10));
+  const timeParts = (time ?? '00:00').split(':').map((p) => Number.parseInt(p, 10));
   if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return null;
   const y = parts[0]!;
   const mo = parts[1]!;

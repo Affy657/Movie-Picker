@@ -135,7 +135,7 @@ export default function InviteModal({ open, slug, onClose }: Props) {
                 {itemError}
               </p>
             )}
-            <ul className={styles.list} role="list">
+            <ul className={styles.list}>
               {follows.map((item) => {
                 const isInvited = item.isAlreadyInvited || invitedIds.has(item.userId);
                 const isParticipant = item.isAlreadyParticipant;
