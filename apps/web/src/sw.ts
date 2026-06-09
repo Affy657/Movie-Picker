@@ -61,15 +61,25 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url: string | undefined = (event.notification.data as { url?: string } | undefined)?.url;
-  if (!url) return;
+  const rawUrl: string | undefined = (event.notification.data as { url?: string } | undefined)?.url;
+  if (!rawUrl) return;
+
+  let safeUrl: string;
+  try {
+    const parsed = new URL(rawUrl, self.location.origin);
+    if (parsed.origin !== self.location.origin) return;
+    safeUrl = parsed.pathname + parsed.search + parsed.hash;
+  } catch {
+    return;
+  }
+
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       const match = clientList.find(
-        (c) => new URL(c.url).pathname === new URL(url, self.location.origin).pathname
+        (c) => new URL(c.url).pathname === new URL(safeUrl, self.location.origin).pathname
       );
       if (match) return match.focus();
-      return self.clients.openWindow(url);
+      return self.clients.openWindow(safeUrl);
     })
   );
 });
