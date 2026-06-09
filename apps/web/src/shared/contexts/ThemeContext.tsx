@@ -47,14 +47,18 @@ function readStoredPreference(): UiThemePreference {
       localStorage.removeItem(MIGRATE_FROM_STORAGE_KEY);
       return migrated;
     }
-  } catch {}
+  } catch {
+    // Storage unavailable or invalid value — return default theme
+  }
   return 'system';
 }
 
 function persistPreference(p: UiThemePreference): void {
   try {
     localStorage.setItem(PREFERENCE_STORAGE_KEY, p);
-  } catch {}
+  } catch {
+    // Storage unavailable (private browsing or quota exceeded) — write fails silently
+  }
 }
 
 function readStoredAccent(): AccentColor {
@@ -62,14 +66,18 @@ function readStoredAccent(): AccentColor {
   try {
     const stored = localStorage.getItem(ACCENT_STORAGE_KEY);
     if (isAccentColor(stored)) return stored;
-  } catch {}
+  } catch {
+    // Storage unavailable — return default accent
+  }
   return 'default';
 }
 
 function persistAccent(c: AccentColor): void {
   try {
     localStorage.setItem(ACCENT_STORAGE_KEY, c);
-  } catch {}
+  } catch {
+    // Storage unavailable (private browsing or quota exceeded) — write fails silently
+  }
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

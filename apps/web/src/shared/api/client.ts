@@ -111,7 +111,9 @@ export async function fetchApi<T>(path: string, options?: RequestInit): Promise<
     if (isJson && text.trim()) {
       try {
         parsed = JSON.parse(text) as { error?: string };
-      } catch {}
+      } catch {
+        // JSON parse failed — keep the statusText fallback set above
+      }
     }
     throw new ApiError(parsed.error ?? `HTTP ${res.status}`, { code: res.status });
   }
