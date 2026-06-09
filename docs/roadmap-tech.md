@@ -50,7 +50,7 @@ Découpage par version côté **plateforme, qualité, infra, observabilité, det
 **Objectif** : qualité UX mesurable et conformité RGPD avant la montée en charge des features sociales.
 
 - ✅ ♿ **Accessibilité étendue** : skip link, focus-visible global (liens + nav), navigation clavier complète, couverture axe étendue (7 pages).
-- ⬜ 🔒 **Bandeau consentement (CMP)** : choix granulaire au premier accès, persistance, lien « Modifier mes préférences » dans le footer ; conditionne le chargement effectif de l'analytics et de tout SDK tiers — prérequis RGPD à poser avant l'analytics.
+- ✅ 🔒 **Bandeau consentement (CMP)** : choix granulaire au premier accès, persistance, lien « Modifier mes préférences » dans le footer ; conditionne le chargement effectif de l'analytics et de tout SDK tiers — prérequis RGPD à poser avant l'analytics.
 - ⬜ 📊 **Analytics produit** (PostHog, Plausible ou équivalent) : mesure d'usage (créations, joins, votes, roue), funnels, rétention — chargé uniquement après consentement CMP.
 
 ---
