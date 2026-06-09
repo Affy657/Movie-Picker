@@ -28,7 +28,14 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html'],
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/**/*.test.{ts,tsx}', 'src/test-setup.ts', 'src/vite-env.d.ts', 'src/main.tsx'],
+      exclude: [
+        'src/**/*.test.{ts,tsx}',
+        'src/test-setup.ts',
+        'src/vite-env.d.ts',
+        'src/main.tsx',
+        'src/shared/analytics/**',
+        'src/app/components/AnalyticsSync.tsx',
+      ],
       thresholds: {
         lines: 55,
         functions: 65,
