@@ -10,6 +10,9 @@ import { http, HttpResponse } from 'msw';
 vi.mock('@/features/auth/contexts/AuthContext', () => ({
   useAuth: () => ({ user: { userId: 'test-user' }, isLoading: false }),
 }));
+vi.mock('@/shared/hooks/useAnalytics', () => ({
+  useAnalytics: () => ({ track: vi.fn() }),
+}));
 
 function renderWithLocale(ui: React.ReactElement) {
   return render(<LocaleProvider>{ui}</LocaleProvider>);

@@ -6,6 +6,7 @@ import { ConsentProvider } from '@/shared/contexts/ConsentContext';
 import { LocaleProvider, useTranslation } from '@/shared/i18n';
 import { AuthProvider, useAuth } from '@/features/auth/contexts/AuthContext';
 import UserThemeSync from '@/app/components/UserThemeSync';
+import AnalyticsSync from '@/app/components/AnalyticsSync';
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
 import AppShell from '@/app/components/AppShell';
 import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute';
@@ -135,6 +136,7 @@ function App() {
           <ConsentProvider>
             <AuthProvider>
               <UserThemeSync />
+              <AnalyticsSync />
               <BrowserRouter>
                 <AppRoutesWithErrorBoundary />
               </BrowserRouter>

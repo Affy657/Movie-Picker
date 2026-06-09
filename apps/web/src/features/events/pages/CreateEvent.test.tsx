@@ -11,6 +11,9 @@ vi.mock('@/shared/api/client', () => ({ fetchApi: (...args: unknown[]) => mockFe
 vi.mock('@/features/auth/contexts/AuthContext', () => ({
   useAuth: () => ({ user: null, isLoading: false }),
 }));
+vi.mock('@/shared/hooks/useAnalytics', () => ({
+  useAnalytics: () => ({ track: vi.fn() }),
+}));
 
 function RenderCreateEvent() {
   return render(

@@ -5,6 +5,10 @@ import WheelSection from '@/features/events/components/WheelSection';
 import type { EventData } from '@/features/events/types';
 import { LocaleProvider } from '@/shared/i18n';
 
+vi.mock('@/shared/hooks/useAnalytics', () => ({
+  useAnalytics: () => ({ track: vi.fn() }),
+}));
+
 const baseEvent: EventData = {
   id: 'e1',
   title: 'Soirée',
