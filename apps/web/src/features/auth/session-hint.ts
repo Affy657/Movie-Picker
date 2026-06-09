@@ -13,12 +13,16 @@ export function setSessionHint(): void {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem(STORAGE_KEY, '1');
-  } catch {}
+  } catch {
+    // Storage unavailable (private browsing or quota exceeded) — write fails silently
+  }
 }
 
 export function clearSessionHint(): void {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.removeItem(STORAGE_KEY);
-  } catch {}
+  } catch {
+    // Storage unavailable (private browsing or quota exceeded) — remove fails silently
+  }
 }

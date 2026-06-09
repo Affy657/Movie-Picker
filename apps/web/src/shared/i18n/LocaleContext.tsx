@@ -37,14 +37,18 @@ function readStoredLocale(): LocaleCode {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored != null && isLocaleCode(stored)) return stored;
-  } catch {}
+  } catch {
+    // Storage unavailable — fallback to browser locale detection
+  }
   return detectBrowserLocale();
 }
 
 function persistLocale(code: LocaleCode): void {
   try {
     localStorage.setItem(STORAGE_KEY, code);
-  } catch {}
+  } catch {
+    // Storage unavailable (private browsing or quota exceeded) — write fails silently
+  }
 }
 
 export function LocaleProvider({ children }: { children: ReactNode }) {

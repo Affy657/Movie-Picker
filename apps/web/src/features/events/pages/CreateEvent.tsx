@@ -90,7 +90,9 @@ export default function CreateEvent() {
           richSharePreview: true,
           allowSeries: DEFAULT_EVENT_CONFIG.allowSeries ?? false,
         });
-      } catch {}
+      } catch {
+        // Config patch is optional — event was already created, proceed to navigation
+      }
     }
 
     void queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });

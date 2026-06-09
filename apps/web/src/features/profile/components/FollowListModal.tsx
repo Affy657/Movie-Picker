@@ -50,22 +50,20 @@ export default function FollowListModal({
     enabled: tab === 'followers',
   });
 
+  const invalidateProfileQueries = () => {
+    void queryClient.invalidateQueries({ queryKey: queryKeys.profile.following(handle) });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.profile.followers(handle) });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.profile.public(handle) });
+  };
+
   const followMutation = useMutation({
     mutationFn: (h: string) => followUser(h),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.profile.following(handle) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.profile.followers(handle) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.profile.public(handle) });
-    },
+    onSuccess: invalidateProfileQueries,
   });
 
   const unfollowMutation = useMutation({
     mutationFn: (h: string) => unfollowUser(h),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.profile.following(handle) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.profile.followers(handle) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.profile.public(handle) });
-    },
+    onSuccess: invalidateProfileQueries,
   });
 
   const activeQuery = tab === 'following' ? followingQuery : followersQuery;
