@@ -576,12 +576,6 @@ class: text-center
 
 </div>
 
-<div class="mt-8 text-xl">
-
-**Validation demandée** pour lancer le **lot 1 (MVP)**
-
-</div>
-
 <div class="mt-6 opacity-70">Merci — je suis à votre disposition pour vos questions.</div>
 
 <!--
@@ -652,20 +646,4 @@ sequenceDiagram
 
 <!--
 Appui C1.5 : interactions entre systèmes explicitées.
--->
-
----
-
-# Annexe — Back-up
-
-À tenir prêt pour les questions :
-
-- Référentiel de risques complet (échelle proba × impact, indicateurs)
-- Détail de la charge par fonctionnalité et hypothèses de budget
-- Sources & outils de veille (liste détaillée)
-- Maquettes / parcours utilisateur (journey map)
-- Modèle de données (collections MongoDB)
-
-<!--
-Diapos de réserve, non présentées en linéaire.
 -->

@@ -11,5 +11,8 @@
     "@slidev/cli": "latest",
     "@slidev/theme-default": "^0.25.0",
     "movie-picker": "file:../../../.."
+  },
+  "devDependencies": {
+    "playwright-chromium": "^1.60.0"
   }
 }
