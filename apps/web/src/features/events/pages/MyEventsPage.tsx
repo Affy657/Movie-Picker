@@ -24,6 +24,7 @@ import { formatMyEventsListDate, formatEventTime } from '@/shared/utils/formatMy
 import { parseEventLocalStartMs } from '@/shared/utils/eventScheduleLocal';
 import { withReturnTo, ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import styles from './MyEventsPage.module.css';
 
 const badgeClassMap: Record<string, string | undefined> = {
@@ -304,6 +305,7 @@ export default function MyEventsPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
+  const { track } = useAnalytics();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab: MyEventsTab = searchParams.get('tab') === 'history' ? 'history' : 'active';
   const [visibleHistoryCount, setVisibleHistoryCount] = useState(HISTORY_PAGE_SIZE);
@@ -323,6 +325,7 @@ export default function MyEventsPage() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.listPaged });
       setDeleteError(null);
+      track('event_deleted');
     },
     onError: (e) => {
       setDeleteError(getErrorMessage(e, t('events.danger.deleteError')));
@@ -339,6 +342,7 @@ export default function MyEventsPage() {
       removeStoredParticipant(slug);
       void queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.listPaged });
       setLeaveError(null);
+      track('event_left');
     },
     onError: (e) => {
       setLeaveError(getErrorMessage(e, t('events.participants.leaveError')));

@@ -6,6 +6,7 @@ import { getErrorMessage } from '@/shared/api/apiError';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 import { useTranslation } from '@/shared/i18n';
+import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import styles from './WheelSection.module.css';
 
 const SPIN_ANIMATION_MS = 1500;
@@ -28,6 +29,7 @@ export default function WheelSection({
   onCloseDone,
 }: WheelSectionProps) {
   const { t } = useTranslation();
+  const { track } = useAnalytics();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [spinning, setSpinning] = useState(false);
@@ -49,6 +51,7 @@ export default function WheelSection({
     try {
       const res = await postEventWheel(slug, hostToken);
       setWinner(res.winner);
+      track('movie_picked');
       clearTimeout(spinTimerRef.current);
       spinTimerRef.current = window.setTimeout(() => setSpinning(false), SPIN_ANIMATION_MS);
       onWheelDone();
@@ -65,6 +68,7 @@ export default function WheelSection({
     setLoading(true);
     try {
       await postEventClose(slug, hostToken);
+      track('event_closed');
       onCloseDone();
     } catch (err) {
       setError(getErrorMessage(err, t('events.wheel.closeError')));

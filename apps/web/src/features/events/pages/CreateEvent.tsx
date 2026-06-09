@@ -17,6 +17,7 @@ import {
   MAX_PROPOSALS_PER_PARTICIPANT,
 } from '@/features/events/types';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import styles from './CreateEvent.module.css';
 
 function getDefaultDate(): string {
@@ -43,6 +44,7 @@ export default function CreateEvent() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { track } = useAnalytics();
   const [title, setTitle] = useState('');
 
   useEffect(() => {
@@ -60,6 +62,7 @@ export default function CreateEvent() {
 
   const createAction = useCallback(async () => {
     const res = await createEventApi({ title, date, time });
+    track('event_created');
     const publicUrl = `${window.location.origin}${ROUTES.eventDetail(res.slug)}`;
     if (res.creatorParticipant) {
       setStoredParticipant(res.slug, res.creatorParticipant.id, res.creatorParticipant.pseudo);
@@ -105,6 +108,7 @@ export default function CreateEvent() {
     maxProposals,
     queryClient,
     navigate,
+    track,
   ]);
 
   const { run: submit, loading, error } = useAsyncAction(createAction, 'Création impossible');

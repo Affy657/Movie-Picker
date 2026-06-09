@@ -10,6 +10,7 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { APP_DOCUMENT_TITLE, pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import {
   fetchPublicProfile,
   fetchUserStats,
@@ -36,6 +37,7 @@ export default function ProfilePage() {
   const { t } = useTranslation();
   const { locale } = useLocale();
   const { user } = useAuth();
+  const { track } = useAnalytics();
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
   const [followModal, setFollowModal] = useState<FollowTab | null>(null);
@@ -74,6 +76,7 @@ export default function ProfilePage() {
     mutationFn: () => followUser(profile!.handle),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.profile.public(handle) });
+      track('user_followed');
     },
   });
 
@@ -81,6 +84,7 @@ export default function ProfilePage() {
     mutationFn: () => unfollowUser(profile!.handle),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.profile.public(handle) });
+      track('user_unfollowed');
     },
   });
 
