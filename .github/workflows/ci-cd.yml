@@ -43,7 +43,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm run lint
       - run: pnpm run lint:eslint
       - run: pnpm run format:check
@@ -92,7 +92,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm run test --filter=web
       - run: pnpm run test:coverage --filter=web
       - uses: actions/upload-artifact@v7
@@ -143,7 +143,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - uses: browser-actions/setup-chrome@v2
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm run lighthouse
       - uses: actions/upload-artifact@v7
         if: always()
@@ -247,7 +247,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: |
           if [ -z "$VITE_API_URL" ]; then
             echo "::error::VITE_API_URL (secret) est vide."
