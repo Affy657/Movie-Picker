@@ -97,11 +97,7 @@ export default function ConsentDialog({ open, onClose }: Props) {
         >
           {t('consent.dialog.rejectAll')}
         </button>
-        <button
-          type="button"
-          className={`btn btn-sm ${styles.actionBtn}`}
-          onClick={handleSave}
-        >
+        <button type="button" className={`btn btn-sm ${styles.actionBtn}`} onClick={handleSave}>
           {t('consent.dialog.save')}
         </button>
         <button
