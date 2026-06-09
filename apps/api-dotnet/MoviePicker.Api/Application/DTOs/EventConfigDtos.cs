@@ -37,7 +37,7 @@ public sealed class PatchEventConfigRequest
 {
     public string? Theme { get; init; }
     public int? ThemeColor { get; init; }
-    public bool ClearThemeColor { get; init; }
+    public bool? ClearThemeColor { get; init; }
 
     public string? EndDate { get; init; }
 

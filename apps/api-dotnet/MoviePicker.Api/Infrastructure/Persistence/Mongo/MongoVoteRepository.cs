@@ -113,7 +113,8 @@ public sealed class MongoVoteRepository : IVoteRepository
                 })
         };
 
-        var results = await _collection.Aggregate<BsonDocument>(pipeline, cancellationToken: ct).ToListAsync(ct);
+        using var cursor = await _collection.AggregateAsync<BsonDocument>(pipeline, cancellationToken: ct);
+        var results = await cursor.ToListAsync(ct);
         var dict = new Dictionary<string, VoteScoreAggregate>();
         foreach (var r in results)
         {

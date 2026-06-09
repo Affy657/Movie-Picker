@@ -66,6 +66,23 @@ export default function ShareLink({
     }
   }, [qrOpen]);
 
+  useEffect(() => {
+    if (!qrOpen) return;
+    const el = dialogRef.current;
+    const onClick = (e: MouseEvent) => {
+      if (e.target === el) setQrOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setQrOpen(false);
+    };
+    el?.addEventListener('click', onClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      el?.removeEventListener('click', onClick);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [qrOpen]);
+
   const shareLabel = copied ? t('events.share.copiedButton') : t('events.share.shareButton');
 
   const handleShare = async () => {
@@ -126,12 +143,6 @@ export default function ShareLink({
           className={styles.qrDialog}
           aria-labelledby="share-qr-title"
           onClose={() => setQrOpen(false)}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setQrOpen(false);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') setQrOpen(false);
-          }}
         >
           <div className={styles.qrDialogInner}>
             <header className={styles.qrDialogHeader}>

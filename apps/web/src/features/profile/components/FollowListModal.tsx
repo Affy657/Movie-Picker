@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, UserPlus, UserCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -37,6 +37,25 @@ export default function FollowListModal({
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<Tab>(initialTab);
+  const backdropRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  useEffect(() => {
+    const el = backdropRef.current;
+    if (!el) return;
+    const onClick = (e: MouseEvent) => {
+      if (e.target === el) onClose();
+    };
+    el.addEventListener('click', onClick);
+    return () => el.removeEventListener('click', onClick);
+  }, [onClose]);
 
   const followingQuery = useQuery({
     queryKey: queryKeys.profile.following(handle),
@@ -79,16 +98,11 @@ export default function FollowListModal({
 
   return (
     <div
+      ref={backdropRef}
       className={styles.backdrop}
       role="dialog"
       aria-modal="true"
       aria-label={t('profile.follow.listTitle')}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-      onKeyDown={(e) => {
-        if (e.key === 'Escape') onClose();
-      }}
     >
       <div className={styles.modal}>
         <div className={styles.header}>

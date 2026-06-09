@@ -69,6 +69,7 @@ export default function AddMovieForm({
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const immediateSearchRef = useRef(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const historyDropdownRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
@@ -192,6 +193,29 @@ export default function AddMovieForm({
     setQuery(q);
   }, []);
 
+  useEffect(() => {
+    if (disabled) return;
+    const el = containerRef.current;
+    if (!el) return;
+    const onFocusOut = (e: FocusEvent) => {
+      if (!el.contains(e.relatedTarget as Node | null)) {
+        setInputFocused(false);
+      }
+    };
+    el.addEventListener('focusout', onFocusOut);
+    return () => el.removeEventListener('focusout', onFocusOut);
+  }, [disabled]);
+
+  useEffect(() => {
+    const dropdownVisible = inputFocused && !trimmedForSearch && history.length > 0;
+    if (!dropdownVisible) return;
+    const el = historyDropdownRef.current;
+    if (!el) return;
+    const onMouseDown = (e: MouseEvent) => e.preventDefault();
+    el.addEventListener('mousedown', onMouseDown);
+    return () => el.removeEventListener('mousedown', onMouseDown);
+  }, [inputFocused, trimmedForSearch, history]);
+
   const addMovie = async (r: MovieSearchItem) => {
     setError(null);
     setAdding(true);
@@ -236,15 +260,7 @@ export default function AddMovieForm({
       <label className="label" htmlFor="add-movie-search">
         {t('movies.search.label')}
       </label>
-      <div
-        className={styles.searchWrap}
-        ref={containerRef}
-        onBlur={(e) => {
-          if (!containerRef.current?.contains(e.relatedTarget as Node | null)) {
-            setInputFocused(false);
-          }
-        }}
-      >
+      <div className={styles.searchWrap} ref={containerRef}>
         <div className={styles.searchRow}>
           <div className={styles.inputWrap}>
             <input
@@ -274,7 +290,7 @@ export default function AddMovieForm({
               <div
                 className={styles.historyDropdown}
                 id="add-movie-history"
-                onMouseDown={(e) => e.preventDefault()}
+                ref={historyDropdownRef}
               >
                 <div className={styles.historyHeader}>
                   <span className={styles.historyTitle}>{t('movies.search.historyTitle')}</span>

@@ -40,7 +40,7 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
         var hasConfigChange =
             request.Theme is not null
             || request.ThemeColor.HasValue
-            || request.ClearThemeColor
+            || request.ClearThemeColor == true
             || request.EndDate is not null
             || request.MaxProposalsPerParticipant.HasValue
             || request.MaxParticipants.HasValue
@@ -73,7 +73,7 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
             theme = string.IsNullOrWhiteSpace(request.Theme) ? null : request.Theme.Trim();
 
         int? themeColor = current.ThemeColor;
-        if (request.ClearThemeColor)
+        if (request.ClearThemeColor == true)
             themeColor = null;
         else if (request.ThemeColor.HasValue)
         {

@@ -109,6 +109,6 @@ app.MapGet("/", () => Results.Json(new
     docs = app.Environment.IsDevelopment() ? "/swagger" : (object?)null
 }));
 
-app.Run();
+await app.RunAsync();
 
 public partial class Program { }

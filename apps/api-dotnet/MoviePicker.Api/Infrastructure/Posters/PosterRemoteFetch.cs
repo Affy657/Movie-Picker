@@ -36,7 +36,7 @@ internal static class PosterRemoteFetch
             total += read;
             if (total > maxBytes)
                 return null;
-            ms.Write(buffer, 0, read);
+            await ms.WriteAsync(buffer.AsMemory(0, read), ct);
         }
 
         if (ms.Length == 0)
