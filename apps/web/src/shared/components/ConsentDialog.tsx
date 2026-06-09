@@ -58,11 +58,7 @@ export default function ConsentDialog({ open, onClose }: Props) {
   }
 
   return (
-    <dialog
-      ref={dialogRef}
-      className={styles.dialog}
-      aria-labelledby={titleId}
-    >
+    <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>
       <h2 id={titleId} className={styles.title}>
         {t('consent.dialog.title')}
       </h2>

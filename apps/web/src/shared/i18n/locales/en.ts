@@ -539,8 +539,7 @@ export const en: Locale = {
   consent: {
     banner: {
       title: 'Your privacy preferences',
-      description:
-        'We use cookies to keep the site running. Choose the categories you allow.',
+      description: 'We use cookies to keep the site running. Choose the categories you allow.',
       acceptAll: 'Accept all',
       rejectAll: 'Reject all',
       customize: 'Customize',
