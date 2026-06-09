@@ -7,6 +7,7 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { ROUTES } from '@/app/routes';
 import {
   getEligibleFollows,
@@ -24,6 +25,7 @@ type Props = {
 export default function InviteModal({ open, slug, onClose }: Props) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { track } = useAnalytics();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const queryClient = useQueryClient();
@@ -43,6 +45,7 @@ export default function InviteModal({ open, slug, onClose }: Props) {
     onSuccess: (_data, targetUserId) => {
       setInvitedIds((prev) => new Set(prev).add(targetUserId));
       setItemError(null);
+      track('invitation_sent');
       void queryClient.invalidateQueries({ queryKey: queryKeys.event.eligibleFollows(slug) });
     },
     onError: (err) => {

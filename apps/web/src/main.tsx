@@ -1,7 +1,10 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from '@/app/App';
+import { initPostHog } from '@/shared/analytics/posthog';
 import './index.css';
+
+initPostHog();
 
 if ('serviceWorker' in navigator) {
   const hadController = !!navigator.serviceWorker.controller;

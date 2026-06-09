@@ -17,6 +17,7 @@ import WatchProviderChips from '@/features/movies/components/WatchProviderChips'
 import TmdbAttribution from '@/features/movies/components/TmdbAttribution';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useSearchHistory } from '@/features/movies/hooks/useSearchHistory';
+import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import styles from './AddMovieForm.module.css';
 
 const SEARCH_DEBOUNCE_MS = 350;
@@ -44,6 +45,7 @@ export default function AddMovieForm({
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
   const { user } = useAuth();
+  const { track } = useAnalytics();
   const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory(user?.userId);
   const minCharsHintId = useId();
   const [query, setQuery] = useState('');
@@ -202,6 +204,7 @@ export default function AddMovieForm({
         posterPath: r.posterPath,
         participantId,
       });
+      track('movie_added', { mediaType: r.mediaType });
       clearSearchResults();
       setQuery('');
       onAdded();

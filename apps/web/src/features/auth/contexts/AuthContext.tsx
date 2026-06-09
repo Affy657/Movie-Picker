@@ -9,6 +9,7 @@ import {
   type ProfilePatch,
 } from '@/features/auth/api/authApi';
 import { queryKeys } from '@/shared/hooks/queryKeys';
+import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import type { UserProfile } from '@/features/auth/types';
 
 type AuthContextValue = {
@@ -24,6 +25,8 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
+
+  const { track } = useAnalytics();
 
   const invalidateSession = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
@@ -42,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await postAuthLogin(email, password);
       await invalidateSession();
     },
+    onSuccess: () => track('user_logged_in'),
   });
 
   const registerMutation = useMutation({
@@ -57,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await postAuthRegister(email, password, displayName);
       await invalidateSession();
     },
+    onSuccess: () => track('user_signed_up'),
   });
 
   const logoutMutation = useMutation({
@@ -65,12 +70,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(queryKeys.auth.me, null);
       await queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
     },
+    onSuccess: () => track('user_logged_out'),
   });
 
   const patchProfileMutation = useMutation({
     mutationFn: (patch: ProfilePatch) => patchAuthProfile(patch),
     onSuccess: (updated) => {
       queryClient.setQueryData(queryKeys.auth.me, updated);
+      track('profile_updated');
     },
   });
 

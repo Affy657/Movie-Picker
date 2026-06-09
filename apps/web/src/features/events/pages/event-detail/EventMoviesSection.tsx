@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
+import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { clearMovieVote, removeMovieFromEvent, voteMovie } from '@/features/movies/api/moviesApi';
 import { getErrorMessage } from '@/shared/api/apiError';
 import type { EventData } from '@/features/events/types';
@@ -37,6 +38,7 @@ export default function EventMoviesSection({
   refreshAll,
 }: EventMoviesSectionProps) {
   const isFinished = !!event.isFinished;
+  const { track } = useAnalytics();
 
   const handleVote = useCallback(
     async (movieId: string, value: 1 | -1) => {
@@ -63,12 +65,13 @@ export default function EventMoviesSection({
       setActionError(null);
       try {
         await removeMovieFromEvent(slug, movieId, participant.participantId, hostToken);
+        track('movie_removed');
         refreshAll();
       } catch (e) {
         setActionError(getErrorMessage(e, 'Erreur lors de la suppression'));
       }
     },
-    [slug, participant, hostToken, setActionError, refreshAll]
+    [slug, participant, hostToken, setActionError, refreshAll, track]
   );
 
   const handleActionError = useCallback((msg: string) => setActionError(msg), [setActionError]);

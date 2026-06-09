@@ -4,6 +4,7 @@ import { UserPlus } from 'lucide-react';
 import { joinEvent } from '@/features/events/api/eventsApi';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
+import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { setStoredParticipant } from '@/features/events/storage';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES, withReturnTo } from '@/app/routes';
@@ -21,14 +22,16 @@ interface JoinFormProps {
 export default function JoinForm({ slug, onJoined, isFull, maxParticipants }: JoinFormProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { track } = useAnalytics();
 
   const joinAction = useCallback(async () => {
     const pseudoToSend = user?.displayName.trim() || 'Participant';
     const res = await joinEvent(slug, pseudoToSend);
     const { id } = res.participant;
     setStoredParticipant(slug, id, res.participant.pseudo);
+    track('event_joined');
     onJoined(id, res.participant.pseudo);
-  }, [user, slug, onJoined]);
+  }, [user, slug, onJoined, track]);
 
   const { run: submit, loading, error } = useAsyncAction(joinAction, 'Impossible de rejoindre');
 
