@@ -1,5 +1,12 @@
 # E2E Playwright : local uniquement (pas de job CI).
 # Branch protection master + checks requis : voir docs/v1-produit/securite-ci.md.
+#
+# Durcissement sécurité :
+#   - Actions épinglées par SHA de commit (anti supply-chain) ; le commentaire # vX
+#     permet à Dependabot de proposer les mises à jour.
+#   - permissions least-privilege (deny par défaut au niveau workflow).
+#   - Secrets passés via env: (jamais interpolés directement dans un bloc run:).
+#   - Déploiement bloqué tant que le Quality Gate SonarCloud n'est pas vert.
 
 name: CI/CD
 
@@ -9,6 +16,9 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
+
+permissions:
+  contents: read
 
 env:
   NODE_VERSION: "22"
@@ -24,7 +34,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
       - name: Scan working tree
         run: |
           docker run --rm -v "${PWD}:/repo:ro" \
@@ -37,9 +47,9 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -47,7 +57,7 @@ jobs:
       - run: pnpm run lint
       - run: pnpm run lint:eslint
       - run: pnpm run format:check
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       - name: Restore API .NET
@@ -60,7 +70,7 @@ jobs:
         env:
           SKIP_OPENAPI_BUILD: '1'
         run: node scripts/export-openapi.cjs
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: openapi-v1
           path: artifacts/openapi-v1.json
@@ -86,16 +96,16 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm run test --filter=web
       - run: pnpm run test:coverage --filter=web
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: coverage-web
           path: apps/web/coverage
@@ -108,8 +118,8 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       - name: Tests unitaires + couverture
@@ -122,7 +132,7 @@ jobs:
         run: dotnet test apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj -c Debug --verbosity normal
         env:
           MONGODB_URI: ""
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: coverage-api-unit
           path: coverage-unit
@@ -136,36 +146,80 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
-      - uses: browser-actions/setup-chrome@v2
+      - uses: browser-actions/setup-chrome@2e1d749697dd1612b833dba4a722266286fbefcd # v2
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm run lighthouse
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always()
         with:
           name: lighthouse-reports
           path: artifacts/lighthouse
           if-no-files-found: warn
 
+  sonar-quality-gate:
+    name: SonarCloud Quality Gate (bloquant)
+    needs: [test-web, test-api]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    permissions:
+      contents: read
+    steps:
+      - name: Attendre l'analyse du commit et vérifier le Quality Gate
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_PROJECT: Affy657_Movie-Picker
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          set -uo pipefail
+          if [ -z "${SONAR_TOKEN:-}" ]; then
+            echo "::error::SONAR_TOKEN manquant (Settings → Secrets and variables → Actions). Impossible de vérifier le Quality Gate."
+            exit 1
+          fi
+          API="https://sonarcloud.io/api"
+          AUTH="Authorization: Bearer $SONAR_TOKEN"
+          echo "Attente de l'analyse SonarCloud du commit $COMMIT_SHA…"
+          REV=""
+          for i in $(seq 1 40); do
+            REV=$(curl -s -H "$AUTH" "$API/project_analyses/search?project=$SONAR_PROJECT&branch=master&ps=1" | jq -r '.analyses[0].revision // empty' 2>/dev/null || true)
+            if [ "$REV" = "$COMMIT_SHA" ]; then
+              echo "Analyse trouvée pour $COMMIT_SHA."
+              break
+            fi
+            echo "  ($i/40) dernière analyse=${REV:-aucune} ≠ commit courant — nouvelle tentative dans 15s…"
+            sleep 15
+          done
+          if [ "$REV" != "$COMMIT_SHA" ]; then
+            echo "::error::Analyse SonarCloud du commit $COMMIT_SHA introuvable après ~10 min. Déploiement bloqué par sécurité."
+            exit 1
+          fi
+          STATUS=$(curl -s -H "$AUTH" "$API/qualitygates/project_status?projectKey=$SONAR_PROJECT&branch=master" | jq -r '.projectStatus.status // "UNKNOWN"')
+          echo "Quality Gate = $STATUS"
+          if [ "$STATUS" != "OK" ]; then
+            echo "::error::SonarCloud Quality Gate = $STATUS → déploiement bloqué. Détails : https://sonarcloud.io/dashboard?id=$SONAR_PROJECT"
+            exit 1
+          fi
+          echo "✅ Quality Gate vert — déploiement autorisé."
+
   docker-api:
     name: Docker API → Artifact Registry
     runs-on: ubuntu-latest
-    needs: [test-web, test-api]
+    needs: [test-web, test-api, sonar-quality-gate]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     permissions:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v6
-      - uses: google-github-actions/auth@v3
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
-      - uses: google-github-actions/setup-gcloud@v3
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
       - run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
@@ -186,9 +240,12 @@ jobs:
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           vuln-type: os,library
-      - run: |
-          IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPO }}/api:${{ github.sha }}"
-          IMAGE_LATEST="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPO }}/api:latest"
+      - name: Tag & push image
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        run: |
+          IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/$GCP_PROJECT_ID/${{ env.GCP_ARTIFACT_REPO }}/api:${{ github.sha }}"
+          IMAGE_LATEST="${{ env.GCP_REGION }}-docker.pkg.dev/$GCP_PROJECT_ID/${{ env.GCP_ARTIFACT_REPO }}/api:latest"
           docker tag movie-picker-api "$IMAGE"
           docker tag movie-picker-api "$IMAGE_LATEST"
           docker push "$IMAGE"
@@ -203,19 +260,22 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: google-github-actions/auth@v3
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
-      - uses: google-github-actions/setup-gcloud@v3
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
       - name: Activer l’API Secret Manager (obligatoire pour --set-secrets ; idempotent)
-        run: gcloud services enable secretmanager.googleapis.com --project="${{ secrets.GCP_PROJECT_ID }}"
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        run: gcloud services enable secretmanager.googleapis.com --project="$GCP_PROJECT_ID"
       - name: Deploy Cloud Run (secrets GCP + CORS)
         env:
           # Variables (recommandé) ou Secret de secours si tu as tout mis dans Secrets
           ALLOWED_ORIGINS_VARS: ${{ vars.ALLOWED_ORIGINS }}
           ALLOWED_ORIGINS_SECRET: ${{ secrets.ALLOWED_ORIGINS }}
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
           CORS="${ALLOWED_ORIGINS_VARS:-$ALLOWED_ORIGINS_SECRET}"
           if [ -z "$CORS" ]; then
@@ -226,7 +286,7 @@ jobs:
           fi
           # --set-env-vars dict parsing treats ':' and ',' specially; ^##^ sets an alternate delimiter (gcloud topic escaping).
           gcloud run deploy ${{ env.CLOUD_RUN_SERVICE_NAME }} \
-            --image ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPO }}/api:${{ github.sha }} \
+            --image ${{ env.GCP_REGION }}-docker.pkg.dev/$GCP_PROJECT_ID/${{ env.GCP_ARTIFACT_REPO }}/api:${{ github.sha }} \
             --region ${{ env.GCP_REGION }} \
             --platform managed \
             --allow-unauthenticated \
@@ -236,14 +296,14 @@ jobs:
   deploy-front:
     name: Deploy Front → S3 & CloudFront
     runs-on: ubuntu-latest
-    needs: [test-web, test-api]
+    needs: [test-web, test-api, sonar-quality-gate]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -261,30 +321,36 @@ jobs:
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
           VITE_POSTHOG_KEY: ${{ secrets.VITE_POSTHOG_KEY }}
-      - uses: aws-actions/configure-aws-credentials@v6
+      - uses: aws-actions/configure-aws-credentials@e7f100cf4c008499ea8adda475de1042d6975c7b # v6
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION || 'eu-west-1' }}
       - name: "S3 — étape 1 : assets hachés (hors entry-points)"
+        env:
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
         run: |
-          aws s3 sync apps/web/dist/ s3://${{ secrets.AWS_S3_BUCKET }}/ \
+          aws s3 sync apps/web/dist/ "s3://$AWS_S3_BUCKET/" \
             --exclude "index.html" \
             --exclude "sw.js" \
             --exclude "registerSW.js" \
             --exclude "manifest.webmanifest" \
             --cache-control "public, max-age=31536000, immutable"
       - name: "S3 — étape 2 : SW, manifest (no-cache)"
+        env:
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
         run: |
-          aws s3 cp apps/web/dist/sw.js s3://${{ secrets.AWS_S3_BUCKET }}/sw.js \
+          aws s3 cp apps/web/dist/sw.js "s3://$AWS_S3_BUCKET/sw.js" \
             --cache-control "no-cache, no-store, must-revalidate" --content-type "application/javascript"
-          aws s3 cp apps/web/dist/registerSW.js s3://${{ secrets.AWS_S3_BUCKET }}/registerSW.js \
+          aws s3 cp apps/web/dist/registerSW.js "s3://$AWS_S3_BUCKET/registerSW.js" \
             --cache-control "no-cache, no-store, must-revalidate" --content-type "application/javascript"
-          aws s3 cp apps/web/dist/manifest.webmanifest s3://${{ secrets.AWS_S3_BUCKET }}/manifest.webmanifest \
+          aws s3 cp apps/web/dist/manifest.webmanifest "s3://$AWS_S3_BUCKET/manifest.webmanifest" \
             --cache-control "no-cache, must-revalidate" --content-type "application/manifest+json"
       - name: "S3 — étape 3 : index.html en dernier (point d'entrée)"
+        env:
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
         run: |
-          aws s3 cp apps/web/dist/index.html s3://${{ secrets.AWS_S3_BUCKET }}/index.html \
+          aws s3 cp apps/web/dist/index.html "s3://$AWS_S3_BUCKET/index.html" \
             --cache-control "no-cache, no-store, must-revalidate" --content-type "text/html"
       - if: vars.AWS_CLOUDFRONT_DISTRIBUTION_ID != ''
         run: |
