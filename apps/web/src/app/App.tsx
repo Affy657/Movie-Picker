@@ -2,6 +2,7 @@ import { lazy, Suspense, useState } from 'react';
 import { BrowserRouter, Navigate, Routes, Route, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/shared/contexts/ThemeContext';
+import { ConsentProvider } from '@/shared/contexts/ConsentContext';
 import { LocaleProvider, useTranslation } from '@/shared/i18n';
 import { AuthProvider, useAuth } from '@/features/auth/contexts/AuthContext';
 import UserThemeSync from '@/app/components/UserThemeSync';
@@ -131,12 +132,14 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <LocaleProvider>
         <ThemeProvider>
-          <AuthProvider>
-            <UserThemeSync />
-            <BrowserRouter>
-              <AppRoutesWithErrorBoundary />
-            </BrowserRouter>
-          </AuthProvider>
+          <ConsentProvider>
+            <AuthProvider>
+              <UserThemeSync />
+              <BrowserRouter>
+                <AppRoutesWithErrorBoundary />
+              </BrowserRouter>
+            </AuthProvider>
+          </ConsentProvider>
         </ThemeProvider>
       </LocaleProvider>
     </QueryClientProvider>

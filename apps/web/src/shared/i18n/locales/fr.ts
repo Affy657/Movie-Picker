@@ -543,6 +543,32 @@
     reload: 'Recharger',
     dismiss: 'Ignorer la mise à jour',
   },
+
+  consent: {
+    banner: {
+      title: 'Vos préférences de confidentialité',
+      description:
+        'Nous utilisons des cookies pour le bon fonctionnement du site. Vous pouvez choisir les catégories que vous autorisez.',
+      acceptAll: 'Tout accepter',
+      rejectAll: 'Tout refuser',
+      customize: 'Personnaliser',
+    },
+    dialog: {
+      title: 'Gestion des cookies',
+      description:
+        'Gérez vos préférences par catégorie. Les cookies fonctionnels sont nécessaires au bon fonctionnement du site et ne peuvent pas être désactivés.',
+      functional: 'Fonctionnels',
+      functionalDesc:
+        'Nécessaires au fonctionnement du site : préférences de thème, langue, authentification.',
+      analytics: 'Analyse',
+      analyticsDesc:
+        "Nous aident à comprendre comment vous utilisez l'application pour l'améliorer.",
+      required: 'Requis',
+      save: 'Enregistrer mes préférences',
+      acceptAll: 'Tout accepter',
+      rejectAll: 'Tout refuser',
+    },
+  },
 } as const;
 
 type DeepStringify<T> = {

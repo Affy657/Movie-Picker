@@ -535,4 +535,29 @@ export const en: Locale = {
     reload: 'Reload',
     dismiss: 'Dismiss update',
   },
+
+  consent: {
+    banner: {
+      title: 'Your privacy preferences',
+      description:
+        'We use cookies to keep the site running. Choose the categories you allow.',
+      acceptAll: 'Accept all',
+      rejectAll: 'Reject all',
+      customize: 'Customize',
+    },
+    dialog: {
+      title: 'Cookie settings',
+      description:
+        'Manage your preferences by category. Functional cookies are required for the site to work and cannot be disabled.',
+      functional: 'Functional',
+      functionalDesc:
+        'Required for the site to work: theme, language, and authentication preferences.',
+      analytics: 'Analytics',
+      analyticsDesc: 'Help us understand how you use the app so we can improve it.',
+      required: 'Required',
+      save: 'Save preferences',
+      acceptAll: 'Accept all',
+      rejectAll: 'Reject all',
+    },
+  },
 };
