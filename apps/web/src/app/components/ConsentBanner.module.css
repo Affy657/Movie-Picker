@@ -1,6 +1,8 @@
 .root {
   position: fixed;
-  bottom: calc(var(--mobile-nav-height, calc(3.25rem + env(safe-area-inset-bottom, 0px))) + 0.75rem);
+  bottom: calc(
+    var(--mobile-nav-height, calc(3.25rem + env(safe-area-inset-bottom, 0px))) + 0.75rem
+  );
   left: 1rem;
   right: 1rem;
   z-index: 50;
@@ -47,6 +49,8 @@
 .content {
   flex: 1;
   min-width: 0;
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--color-primary);
 }
 
 .title {

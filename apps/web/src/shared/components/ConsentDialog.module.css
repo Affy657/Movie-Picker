@@ -92,14 +92,18 @@
 
 .actions {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   gap: 0.5rem;
-  flex-wrap: wrap;
 }
 
-.actionsRight {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+@media (min-width: 440px) {
+  .actions {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .rejectBtn {
+    margin-right: auto;
+  }
 }
