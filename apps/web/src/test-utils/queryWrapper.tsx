@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactElement, ReactNode } from 'react';
 import { AuthProvider } from '@/features/auth/contexts/AuthContext';
 import { ThemeProvider } from '@/shared/contexts/ThemeContext';
+import { ConsentProvider } from '@/shared/contexts/ConsentContext';
 import { LocaleProvider } from '@/shared/i18n';
 
 export function createTestQueryClient() {
@@ -41,7 +42,9 @@ export function AppTestProviders({
     <QueryClientWrapper client={client}>
       <LocaleProvider>
         <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <ConsentProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </ConsentProvider>
         </ThemeProvider>
       </LocaleProvider>
     </QueryClientWrapper>
