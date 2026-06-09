@@ -51,7 +51,7 @@ export default function CreateEvent() {
     if (user && title === '') {
       setTitle(`Soirée film chez ${user.displayName}`);
     }
-  }, [user]);
+  }, [user, title]);
   const [date, setDate] = useState(getDefaultDate);
   const [time, setTime] = useState(getDefaultTime);
   const [themeEmoji, setThemeEmoji] = useState('');
