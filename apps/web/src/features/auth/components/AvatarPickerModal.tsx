@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { Check, X } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import { BOTTTS_IDS, EMOJI_IDS, avatarUrl } from '@/shared/utils/avatar';
+import { useDialogOpen } from '@/shared/hooks/useDialogOpen';
 import styles from './AvatarPickerModal.module.css';
 
 type Category = 'bottts' | 'emoji';
@@ -30,12 +31,7 @@ export default function AvatarPickerModal({ open, currentAvatarId, onSelect, onC
     onCloseRef.current = onClose;
   }, [onClose]);
 
-  useEffect(() => {
-    const dlg = dialogRef.current;
-    if (!dlg) return;
-    if (open && !dlg.open) dlg.showModal();
-    else if (!open && dlg.open) dlg.close();
-  }, [open]);
+  useDialogOpen(dialogRef, open);
 
   useEffect(() => {
     const dlg = dialogRef.current;

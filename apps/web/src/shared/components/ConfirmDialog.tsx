@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef } from 'react';
 import { useTranslation } from '@/shared/i18n';
+import { useDialogOpen } from '@/shared/hooks/useDialogOpen';
 import styles from './ConfirmDialog.module.css';
 
 type ConfirmDialogProps = {
@@ -45,16 +46,7 @@ export default function ConfirmDialog({
     onCancelRef.current = onCancel;
   }, [onCancel]);
 
-  useEffect(() => {
-    const dlg = dialogRef.current;
-    if (!dlg) return;
-
-    if (open && !dlg.open) {
-      dlg.showModal();
-    } else if (!open && dlg.open) {
-      dlg.close();
-    }
-  }, [open]);
+  useDialogOpen(dialogRef, open);
 
   useEffect(() => {
     const dlg = dialogRef.current;
