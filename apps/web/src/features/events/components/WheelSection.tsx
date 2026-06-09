@@ -39,10 +39,9 @@ export default function WheelSection({
 
   useEffect(() => () => clearTimeout(spinTimerRef.current), []);
 
-  const winnerId = event.winnerMovie?.id;
   useEffect(() => {
     setWinner(event.winnerMovie ?? null);
-  }, [winnerId]);
+  }, [event.winnerMovie]);
 
   const launchWheel = async () => {
     setError(null);
