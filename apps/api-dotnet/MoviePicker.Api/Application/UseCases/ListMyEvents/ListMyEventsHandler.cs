@@ -31,28 +31,8 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
         var joinedSet = new HashSet<string>(joinedIds);
         var createdIds = new HashSet<string>(created.Select(e => e.Id));
 
-        var merged = new Dictionary<string, MyEventSummaryDto>();
-        var winnerMovieIdByEventId = new Dictionary<string, string>();
-
-        foreach (var e in created)
-        {
-            merged[e.Id] = ToDto(e, isCreator: true, isParticipant: joinedSet.Contains(e.Id));
-            if (!string.IsNullOrEmpty(e.WinnerMovieId))
-                winnerMovieIdByEventId[e.Id] = e.WinnerMovieId;
-        }
-
-        var onlyJoined = joinedIds.Where(id => !createdIds.Contains(id)).ToList();
-        if (onlyJoined.Count > 0)
-        {
-            var extra = await _eventRepository.ListByIdsAsync(onlyJoined, ct);
-            foreach (var e in extra)
-            {
-                if (!merged.ContainsKey(e.Id))
-                    merged[e.Id] = ToDto(e, isCreator: false, isParticipant: true);
-                if (!string.IsNullOrEmpty(e.WinnerMovieId))
-                    winnerMovieIdByEventId[e.Id] = e.WinnerMovieId;
-            }
-        }
+        var (merged, winnerMovieIdByEventId) =
+            await BuildMergedEventsAsync(created, joinedIds, joinedSet, createdIds, ct);
 
         var ordered = merged.Values
             .OrderByDescending(x => x.UpdatedAt)
@@ -87,33 +67,75 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
             .ToDictionary(m => m!.Id, m => m!);
 
         var enriched = orderedSlice.ConvertAll(d =>
-        {
-            var id = d.Id;
-            Movie? winner = winnerMovieIdByEventId.TryGetValue(id, out var wId) && winnerMovies.TryGetValue(wId, out var wm)
-                ? wm
-                : null;
-            return new MyEventSummaryDto
-            {
-                Id = d.Id,
-                Slug = d.Slug,
-                Title = d.Title,
-                Date = d.Date,
-                Time = d.Time,
-                CreatedAt = d.CreatedAt,
-                UpdatedAt = d.UpdatedAt,
-                IsCreator = d.IsCreator,
-                IsParticipant = d.IsParticipant,
-                Lifecycle = d.Lifecycle,
-                ParticipantCount = participantCounts.TryGetValue(id, out var pc) ? pc : 0,
-                MovieCount = movieCounts.TryGetValue(id, out var mc) ? mc : 0,
-                MaxParticipants = d.MaxParticipants,
-                Theme = d.Theme,
-                WinnerMovieTitle = winner?.Title,
-                WinnerMoviePosterPath = winner?.PosterPath,
-            };
-        });
+            EnrichSummary(d, winnerMovieIdByEventId, winnerMovies, participantCounts, movieCounts));
 
         return new MyEventsListResponse { Events = enriched, HasMore = hasMore };
+    }
+
+    private async Task<(Dictionary<string, MyEventSummaryDto> Merged, Dictionary<string, string> WinnerIds)>
+        BuildMergedEventsAsync(
+            IReadOnlyList<Event> created,
+            IReadOnlyList<string> joinedIds,
+            HashSet<string> joinedSet,
+            HashSet<string> createdIds,
+            CancellationToken ct)
+    {
+        var merged = new Dictionary<string, MyEventSummaryDto>();
+        var winnerMovieIdByEventId = new Dictionary<string, string>();
+
+        foreach (var e in created)
+        {
+            merged[e.Id] = ToDto(e, isCreator: true, isParticipant: joinedSet.Contains(e.Id));
+            if (!string.IsNullOrEmpty(e.WinnerMovieId))
+                winnerMovieIdByEventId[e.Id] = e.WinnerMovieId;
+        }
+
+        var onlyJoined = joinedIds.Where(id => !createdIds.Contains(id)).ToList();
+        if (onlyJoined.Count > 0)
+        {
+            var extra = await _eventRepository.ListByIdsAsync(onlyJoined, ct);
+            foreach (var e in extra)
+            {
+                if (!merged.ContainsKey(e.Id))
+                    merged[e.Id] = ToDto(e, isCreator: false, isParticipant: true);
+                if (!string.IsNullOrEmpty(e.WinnerMovieId))
+                    winnerMovieIdByEventId[e.Id] = e.WinnerMovieId;
+            }
+        }
+
+        return (merged, winnerMovieIdByEventId);
+    }
+
+    private static MyEventSummaryDto EnrichSummary(
+        MyEventSummaryDto d,
+        IReadOnlyDictionary<string, string> winnerMovieIdByEventId,
+        IReadOnlyDictionary<string, Movie> winnerMovies,
+        IReadOnlyDictionary<string, int> participantCounts,
+        IReadOnlyDictionary<string, int> movieCounts)
+    {
+        var id = d.Id;
+        Movie? winner = winnerMovieIdByEventId.TryGetValue(id, out var wId) && winnerMovies.TryGetValue(wId, out var wm)
+            ? wm
+            : null;
+        return new MyEventSummaryDto
+        {
+            Id = d.Id,
+            Slug = d.Slug,
+            Title = d.Title,
+            Date = d.Date,
+            Time = d.Time,
+            CreatedAt = d.CreatedAt,
+            UpdatedAt = d.UpdatedAt,
+            IsCreator = d.IsCreator,
+            IsParticipant = d.IsParticipant,
+            Lifecycle = d.Lifecycle,
+            ParticipantCount = participantCounts.TryGetValue(id, out var pc) ? pc : 0,
+            MovieCount = movieCounts.TryGetValue(id, out var mc) ? mc : 0,
+            MaxParticipants = d.MaxParticipants,
+            Theme = d.Theme,
+            WinnerMovieTitle = winner?.Title,
+            WinnerMoviePosterPath = winner?.PosterPath,
+        };
     }
 
     private static MyEventSummaryDto ToDto(Event e, bool isCreator, bool isParticipant) => new()

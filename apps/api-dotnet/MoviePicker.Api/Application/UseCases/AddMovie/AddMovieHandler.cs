@@ -57,13 +57,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         if (request.MediaType == MovieMediaType.Tv && evt.Config?.AllowSeries != true)
             throw new ConflictException("Cette soirée n'autorise pas les séries TV.");
 
-        var poster = string.IsNullOrWhiteSpace(request.PosterPath) ? null : request.PosterPath.Trim();
-        if (poster is not null && !IsAcceptablePosterPath(poster))
-            throw new BadRequestException("posterPath doit être une URL https absolue, un chemin /api/v1/posters/… ou null");
-
-        if (poster is not null && TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(poster, out var norm))
-            await _posterImageStore.RegisterTmdbSourceAsync(norm, ct);
-        poster = _posterImageStore.ToPublicPosterPath(poster);
+        var poster = await ResolvePosterAsync(request, ct);
 
         var participant = await _participantRepository.FindByIdAndEventIdAsync(request.ParticipantId, evt.Id, ct);
         if (participant is null)
@@ -79,13 +73,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         if (await _movieRepository.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, request.Title.Trim(), ct))
             throw new ConflictException("Un film avec ce titre a déjà été proposé");
 
-        var maxProp = evt.Config?.MaxProposalsPerParticipant;
-        if (maxProp is > 0)
-        {
-            var count = await _movieRepository.CountByEventAndParticipantAsync(evt.Id, participant.Id, ct);
-            if (count >= maxProp)
-                throw new ConflictException($"Limite de {maxProp} proposition(s) par participant atteinte.");
-        }
+        await EnsureWithinProposalLimitAsync(evt, participant, ct);
 
         var now = DateTimeOffset.UtcNow;
         var pitchNote = string.IsNullOrWhiteSpace(request.PitchNote) ? null : request.PitchNote.Trim();
@@ -131,6 +119,27 @@ public sealed class AddMovieHandler : IAddMovieHandler
             SeenCount = 0,
             SeenByPseudos = Array.Empty<string>()
         };
+    }
+
+    private async Task<string?> ResolvePosterAsync(AddMovieRequest request, CancellationToken ct)
+    {
+        var poster = string.IsNullOrWhiteSpace(request.PosterPath) ? null : request.PosterPath.Trim();
+        if (poster is not null && !IsAcceptablePosterPath(poster))
+            throw new BadRequestException("posterPath doit être une URL https absolue, un chemin /api/v1/posters/… ou null");
+
+        if (poster is not null && TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(poster, out var norm))
+            await _posterImageStore.RegisterTmdbSourceAsync(norm, ct);
+        return _posterImageStore.ToPublicPosterPath(poster);
+    }
+
+    private async Task EnsureWithinProposalLimitAsync(Event evt, Participant participant, CancellationToken ct)
+    {
+        var maxProp = evt.Config?.MaxProposalsPerParticipant;
+        if (maxProp is not > 0)
+            return;
+        var count = await _movieRepository.CountByEventAndParticipantAsync(evt.Id, participant.Id, ct);
+        if (count >= maxProp)
+            throw new ConflictException($"Limite de {maxProp} proposition(s) par participant atteinte.");
     }
 
     private async Task<IReadOnlyList<int>> FetchGenreIdsBestEffortAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct)

@@ -59,6 +59,16 @@ public static partial class HandlePolicy
     public static string SlugifyBase(string? displayName)
     {
         var normalized = (displayName ?? string.Empty).Normalize(NormalizationForm.FormD);
+        var slug = NormalizeSlugLength(CollapseToSlug(normalized));
+
+        if (IsReserved(slug))
+            slug = slug.Length < MaxLength ? slug + "0" : slug[..(MaxLength - 1)] + "0";
+
+        return slug;
+    }
+
+    private static string CollapseToSlug(string normalized)
+    {
         var sb = new StringBuilder(normalized.Length);
         foreach (var ch in normalized)
         {
@@ -75,16 +85,17 @@ public static partial class HandlePolicy
         while (slug.Contains("__", StringComparison.Ordinal))
             slug = slug.Replace("__", "_", StringComparison.Ordinal);
 
+        return slug;
+    }
+
+    private static string NormalizeSlugLength(string slug)
+    {
         if (slug.Length > MaxLength)
             slug = slug[..MaxLength];
         if (slug.Length == 0)
-            slug = "member";
-        else if (slug.Length < MinLength)
-            slug = slug.PadRight(MinLength, '0');
-
-        if (IsReserved(slug))
-            slug = slug.Length < MaxLength ? slug + "0" : slug[..(MaxLength - 1)] + "0";
-
+            return "member";
+        if (slug.Length < MinLength)
+            return slug.PadRight(MinLength, '0');
         return slug;
     }
 }
