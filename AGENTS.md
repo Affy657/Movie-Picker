@@ -31,3 +31,17 @@ Monorepo pnpm + Turbo :
 - **Roadmap produit** (features par version, statuts) → [`docs/roadmap-product.md`](docs/roadmap-product.md)
 - **Roadmap tech** (infra, CI/CD, qualité, sécurité) → [`docs/roadmap-tech.md`](docs/roadmap-tech.md)
 - **Bugs & dette** (fixes en cours et backlog) → [`docs/FIXES.md`](docs/FIXES.md)
+
+## Accès outils externes (autonomie agent)
+
+Outils configurés pour qu'un agent IA travaille sur le projet sans intervention manuelle. Les tokens et secrets sont en scope **local** (`~/.claude.json`), jamais versionnés.
+
+| Outil | Accès | Usage |
+|-------|-------|-------|
+| GitHub | CLI `gh` | PR, issues, runs CI, releases |
+| GCP | CLI `gcloud` | Cloud Run, Artifact Registry, Secret Manager, logs |
+| AWS | CLI `aws` | S3, CloudFront (déploiement front) |
+| SonarQube | MCP `sonarqube` (Docker) | qualité, issues, hotspots |
+| PostHog | MCP `posthog` (HTTP) | analytics, events produit |
+| MongoDB | MCP `mongodb` | base dev `moviepicker_dev` |
+| Resend | non configuré | envoi mail = à la demande |
