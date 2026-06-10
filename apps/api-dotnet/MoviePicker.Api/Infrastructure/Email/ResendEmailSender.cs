@@ -84,7 +84,7 @@ public sealed class ResendEmailSender : IEmailSender
         }
         finally
         {
-            res?.Dispose();
+            res!.Dispose();
         }
     }
 

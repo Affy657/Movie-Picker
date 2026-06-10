@@ -47,6 +47,7 @@ public sealed class EventReminderService : BackgroundService
         }
         catch (OperationCanceledException)
         {
+            // Arrêt normal du service (annulation demandée) — rien à faire.
         }
     }
 
@@ -97,7 +98,7 @@ public sealed class EventReminderService : BackgroundService
         {
             if (!DateTimeOffset.TryParse(
                     $"{e.Date}T{e.Time}:00Z",
-                    null,
+                    System.Globalization.CultureInfo.InvariantCulture,
                     System.Globalization.DateTimeStyles.AssumeUniversal,
                     out var startAt))
                 return false;

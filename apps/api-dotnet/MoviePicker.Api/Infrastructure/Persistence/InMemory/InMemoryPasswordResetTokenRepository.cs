@@ -19,9 +19,8 @@ public sealed class InMemoryPasswordResetTokenRepository : IPasswordResetTokenRe
     public Task<PasswordResetToken?> GetByTokenHashAsync(string tokenHash, CancellationToken ct = default)
     {
         var now = DateTimeOffset.UtcNow;
-        foreach (var kv in _byId)
+        foreach (var t in _byId.Values)
         {
-            var t = kv.Value;
             if (t.TokenHash == tokenHash && t.ExpiresAtUtc > now && t.ConsumedAt is null)
                 return Task.FromResult<PasswordResetToken?>(t);
         }
@@ -51,9 +50,8 @@ public sealed class InMemoryPasswordResetTokenRepository : IPasswordResetTokenRe
     public Task<PasswordResetToken?> GetMostRecentForUserAsync(string userId, CancellationToken ct = default)
     {
         PasswordResetToken? best = null;
-        foreach (var kv in _byId)
+        foreach (var t in _byId.Values)
         {
-            var t = kv.Value;
             if (t.UserId != userId)
                 continue;
             if (best is null || t.CreatedAt > best.CreatedAt)

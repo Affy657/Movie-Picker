@@ -102,10 +102,10 @@ public sealed class InMemoryVoteRepository : IVoteRepository
             int up = 0, down = 0;
             lock (list)
             {
-                foreach (var v in list)
+                foreach (var value in list.Select(v => v.Value))
                 {
-                    if (v.Value == 1) up++;
-                    else if (v.Value == -1) down++;
+                    if (value == 1) up++;
+                    else if (value == -1) down++;
                 }
             }
             result[movieId] = new VoteScoreAggregate(up - down, up, down);

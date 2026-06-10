@@ -54,7 +54,7 @@ public sealed class WebPushSender : IPushNotificationSender
         }
         catch (WebPushException ex) when (ex.StatusCode is System.Net.HttpStatusCode.Gone or System.Net.HttpStatusCode.NotFound)
         {
-            _logger.LogInformation("Push subscription expired for user {UserId}, endpoint removed", subscription.UserId);
+            _logger.LogInformation(ex, "Push subscription expired for user {UserId}, endpoint removed", subscription.UserId);
         }
         catch (Exception ex)
         {
