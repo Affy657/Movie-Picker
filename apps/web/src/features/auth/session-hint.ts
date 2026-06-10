@@ -1,7 +1,7 @@
 const STORAGE_KEY = 'mp.session-hint';
 
 export function hasSessionHint(): boolean {
-  if (typeof globalThis.window === 'undefined') return false;
+  if (globalThis.window === undefined) return false;
   try {
     return globalThis.localStorage.getItem(STORAGE_KEY) === '1';
   } catch {
@@ -10,7 +10,7 @@ export function hasSessionHint(): boolean {
 }
 
 export function setSessionHint(): void {
-  if (typeof globalThis.window === 'undefined') return;
+  if (globalThis.window === undefined) return;
   try {
     globalThis.localStorage.setItem(STORAGE_KEY, '1');
   } catch {
@@ -19,7 +19,7 @@ export function setSessionHint(): void {
 }
 
 export function clearSessionHint(): void {
-  if (typeof globalThis.window === 'undefined') return;
+  if (globalThis.window === undefined) return;
   try {
     globalThis.localStorage.removeItem(STORAGE_KEY);
   } catch {

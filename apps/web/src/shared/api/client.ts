@@ -31,7 +31,7 @@ export function apiUrl(path: string): string {
 }
 
 function ensureApiIsNotFrontOrigin(url: string): void {
-  if (typeof globalThis.window === 'undefined') return;
+  if (globalThis.window === undefined) return;
   try {
     const apiOrigin = new URL(url).origin;
     if (apiOrigin === globalThis.location.origin) {

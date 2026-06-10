@@ -33,7 +33,7 @@ function detectBrowserLocale(): LocaleCode {
 }
 
 function readStoredLocale(): LocaleCode {
-  if (typeof globalThis.window === 'undefined') return 'fr';
+  if (globalThis.window === undefined) return 'fr';
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored != null && isLocaleCode(stored)) return stored;

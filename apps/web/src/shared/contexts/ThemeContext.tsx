@@ -36,7 +36,7 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function readStoredPreference(): UiThemePreference {
-  if (typeof globalThis.window === 'undefined') return 'system';
+  if (globalThis.window === undefined) return 'system';
   try {
     const stored = localStorage.getItem(PREFERENCE_STORAGE_KEY);
     if (isUiThemePreference(stored)) return stored;
@@ -62,7 +62,7 @@ function persistPreference(p: UiThemePreference): void {
 }
 
 function readStoredAccent(): AccentColor {
-  if (typeof globalThis.window === 'undefined') return 'default';
+  if (globalThis.window === undefined) return 'default';
   try {
     const stored = localStorage.getItem(ACCENT_STORAGE_KEY);
     if (isAccentColor(stored)) return stored;
@@ -90,7 +90,7 @@ export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [preference, setPreference] = useState<UiThemePreference>(() => readStoredPreference());
   const [accentState, setAccentState] = useState<AccentColor>(() => readStoredAccent());
   const [systemDark, setSystemDark] = useState<boolean>(() => {
-    if (typeof globalThis.window === 'undefined' || !globalThis.matchMedia) return false;
+    if (globalThis.window === undefined || !globalThis.matchMedia) return false;
     return globalThis.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
