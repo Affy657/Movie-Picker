@@ -9,19 +9,19 @@ export default function UpdateBanner() {
 
   useEffect(() => {
     const handler = () => setShow(true);
-    window.addEventListener('pwa-update', handler);
-    return () => window.removeEventListener('pwa-update', handler);
+    globalThis.addEventListener('pwa-update', handler);
+    return () => globalThis.removeEventListener('pwa-update', handler);
   }, []);
 
   if (!show) return null;
 
   return (
-    <div className={styles.root} role="status">
+    <output className={styles.root}>
       <span className={styles.iconWrap} aria-hidden="true">
         <RefreshCw className={styles.icon} />
       </span>
       <p className={styles.text}>{t('pwaUpdate.message')}</p>
-      <button type="button" className={styles.reloadBtn} onClick={() => window.location.reload()}>
+      <button type="button" className={styles.reloadBtn} onClick={() => globalThis.location.reload()}>
         {t('pwaUpdate.reload')}
       </button>
       <button
@@ -32,6 +32,6 @@ export default function UpdateBanner() {
       >
         <X className={styles.dismissIcon} aria-hidden="true" />
       </button>
-    </div>
+    </output>
   );
 }

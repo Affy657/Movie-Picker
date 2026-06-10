@@ -39,7 +39,7 @@ export default function ShareLink({
   eventDate,
   showQr = false,
   centeredActions = false,
-}: ShareLinkProps) {
+}: Readonly<ShareLinkProps>) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const copyTimerRef = useRef<number | undefined>(undefined);
@@ -88,12 +88,14 @@ export default function ShareLink({
   const handleShare = async () => {
     if (typeof navigator.share === 'function') {
       try {
-        const shareText =
-          title && eventTime && eventDate
-            ? t('events.share.shareText', { title, time: eventTime, date: eventDate })
-            : title && eventTime
-              ? t('events.share.shareTextNoDate', { title, time: eventTime })
-              : t('events.share.shareTextFallback');
+        let shareText: string;
+        if (title && eventTime && eventDate) {
+          shareText = t('events.share.shareText', { title, time: eventTime, date: eventDate });
+        } else if (title && eventTime) {
+          shareText = t('events.share.shareTextNoDate', { title, time: eventTime });
+        } else {
+          shareText = t('events.share.shareTextFallback');
+        }
         await navigator.share({
           title: title ?? 'Movie Picker',
           url,
@@ -109,7 +111,7 @@ export default function ShareLink({
     if (ok) {
       setCopied(true);
       clearTimeout(copyTimerRef.current);
-      copyTimerRef.current = window.setTimeout(() => setCopied(false), COPIED_RESET_MS);
+      copyTimerRef.current = globalThis.setTimeout(() => setCopied(false), COPIED_RESET_MS);
     }
   };
 

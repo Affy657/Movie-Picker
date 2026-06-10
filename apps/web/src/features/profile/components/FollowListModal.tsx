@@ -32,7 +32,7 @@ export default function FollowListModal({
   followingCount,
   followersCount,
   onClose,
-}: Props) {
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -70,9 +70,9 @@ export default function FollowListModal({
   });
 
   const invalidateProfileQueries = () => {
-    void queryClient.invalidateQueries({ queryKey: queryKeys.profile.following(handle) });
-    void queryClient.invalidateQueries({ queryKey: queryKeys.profile.followers(handle) });
-    void queryClient.invalidateQueries({ queryKey: queryKeys.profile.public(handle) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.profile.following(handle) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.profile.followers(handle) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.profile.public(handle) });
   };
 
   const followMutation = useMutation({

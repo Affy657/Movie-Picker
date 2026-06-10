@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { UserPlus } from 'lucide-react';
 import { joinEvent } from '@/features/events/api/eventsApi';
@@ -19,7 +19,7 @@ interface JoinFormProps {
   maxParticipants?: number | null;
 }
 
-export default function JoinForm({ slug, onJoined, isFull, maxParticipants }: JoinFormProps) {
+export default function JoinForm({ slug, onJoined, isFull, maxParticipants }: Readonly<JoinFormProps>) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { track } = useAnalytics();
@@ -47,47 +47,56 @@ export default function JoinForm({ slug, onJoined, isFull, maxParticipants }: Jo
 
   const returnTo = ROUTES.eventDetail(slug);
 
+  let body: ReactNode;
+  if (isFull) {
+    body = (
+      <p className={styles.fullMessage} role="status" aria-live="polite">
+        {fullMessage}
+      </p>
+    );
+  } else if (user) {
+    body = (
+      <>
+        <p className={styles.intro}>Rejoins la soirée pour proposer des films et voter.</p>
+        <form
+          onSubmit={handleSubmit}
+          className="form"
+          aria-describedby={error ? 'join-error' : undefined}
+        >
+          {error && (
+            <p id="join-error" className="error" role="alert">
+              {error}
+            </p>
+          )}
+          <button type="submit" className={`btn btn-primary ${styles.submit}`} disabled={loading}>
+            {loading ? 'Envoi…' : 'Rejoindre'}
+          </button>
+        </form>
+      </>
+    );
+  } else {
+    body = (
+      <>
+        <p className={styles.intro}>Connecte-toi ou crée un compte pour rejoindre la soirée.</p>
+        <nav className="nav-actions">
+          <Link to={withReturnTo(ROUTES.login, returnTo)} className="btn btn-primary">
+            Se connecter
+          </Link>
+          <Link to={withReturnTo(ROUTES.register, returnTo)} className="btn">
+            Créer un compte
+          </Link>
+        </nav>
+      </>
+    );
+  }
+
   return (
     <section className={styles.root}>
       <h2 className={styles.title}>
         <UserPlus size={18} aria-hidden className={styles.titleIcon} />
         Rejoindre la soirée
       </h2>
-      {isFull ? (
-        <p className={styles.fullMessage} role="status" aria-live="polite">
-          {fullMessage}
-        </p>
-      ) : !user ? (
-        <>
-          <p className={styles.intro}>Connecte-toi ou crée un compte pour rejoindre la soirée.</p>
-          <nav className="nav-actions">
-            <Link to={withReturnTo(ROUTES.login, returnTo)} className="btn btn-primary">
-              Se connecter
-            </Link>
-            <Link to={withReturnTo(ROUTES.register, returnTo)} className="btn">
-              Créer un compte
-            </Link>
-          </nav>
-        </>
-      ) : (
-        <>
-          <p className={styles.intro}>Rejoins la soirée pour proposer des films et voter.</p>
-          <form
-            onSubmit={handleSubmit}
-            className="form"
-            aria-describedby={error ? 'join-error' : undefined}
-          >
-            {error && (
-              <p id="join-error" className="error" role="alert">
-                {error}
-              </p>
-            )}
-            <button type="submit" className={`btn btn-primary ${styles.submit}`} disabled={loading}>
-              {loading ? 'Envoi…' : 'Rejoindre'}
-            </button>
-          </form>
-        </>
-      )}
+      {body}
     </section>
   );
 }

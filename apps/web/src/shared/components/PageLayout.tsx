@@ -8,7 +8,7 @@ type PageLayoutProps = {
   style?: CSSProperties;
 };
 
-export default function PageLayout({ children, className, style }: PageLayoutProps) {
+export default function PageLayout({ children, className, style }: Readonly<PageLayoutProps>) {
   return (
     <main id="main-content" tabIndex={-1} className={clsx('page', className)} style={style}>
       {children}

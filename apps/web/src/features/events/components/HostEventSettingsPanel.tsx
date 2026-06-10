@@ -23,8 +23,7 @@ import type {
   EventData,
   WheelMode,
 } from '@/features/events/types';
-import { DEFAULT_EVENT_CONFIG } from '@/features/events/types';
-import { MAX_EVENT_PARTICIPANTS } from '@/features/events/types';
+import { DEFAULT_EVENT_CONFIG, MAX_EVENT_PARTICIPANTS } from '@/features/events/types';
 import { isWheelMode } from '@/shared/utils/wheelMode';
 import { useTranslation } from '@/shared/i18n';
 
@@ -51,7 +50,7 @@ export default function HostEventSettingsPanel({
   slug,
   hostToken,
   event,
-}: HostEventSettingsPanelProps) {
+}: Readonly<HostEventSettingsPanelProps>) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const cfg = normalizeConfig(event.config);
@@ -65,10 +64,10 @@ export default function HostEventSettingsPanel({
   );
   const [endLocal, setEndLocal] = useState(isoToDatetimeLocalValue(cfg.endDate));
   const [maxProp, setMaxProp] = useState<string>(
-    cfg.maxProposalsPerParticipant != null ? String(cfg.maxProposalsPerParticipant) : ''
+    cfg.maxProposalsPerParticipant == null ? '' : String(cfg.maxProposalsPerParticipant)
   );
   const [maxParticipants, setMaxParticipants] = useState<string>(
-    cfg.maxParticipants != null ? String(cfg.maxParticipants) : ''
+    cfg.maxParticipants == null ? '' : String(cfg.maxParticipants)
   );
   const [wheelMode, setWheelMode] = useState<WheelMode>(cfg.wheelMode);
   const [allowSeries, setAllowSeries] = useState<boolean>(cfg.allowSeries ?? false);
@@ -96,9 +95,9 @@ export default function HostEventSettingsPanel({
     setEventDateLocal(eventDateTimeToLocal(event.date, event.time));
     setEndLocal(isoToDatetimeLocalValue(next.endDate));
     setMaxProp(
-      next.maxProposalsPerParticipant != null ? String(next.maxProposalsPerParticipant) : ''
+      next.maxProposalsPerParticipant == null ? '' : String(next.maxProposalsPerParticipant)
     );
-    setMaxParticipants(next.maxParticipants != null ? String(next.maxParticipants) : '');
+    setMaxParticipants(next.maxParticipants == null ? '' : String(next.maxParticipants));
     setWheelMode(next.wheelMode);
     setAllowSeries(next.allowSeries ?? false);
     setFormError(null);
@@ -110,7 +109,7 @@ export default function HostEventSettingsPanel({
       await queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
       setFlashOk(true);
       clearTimeout(flashTimerRef.current);
-      flashTimerRef.current = window.setTimeout(() => setFlashOk(false), 4000);
+      flashTimerRef.current = globalThis.setTimeout(() => setFlashOk(false), 4000);
     },
     onError: (e) => {
       setFormError(getErrorMessage(e, 'Enregistrement impossible'));

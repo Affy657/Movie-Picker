@@ -36,7 +36,7 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function readStoredPreference(): UiThemePreference {
-  if (typeof window === 'undefined') return 'system';
+  if (typeof globalThis.window === 'undefined') return 'system';
   try {
     const stored = localStorage.getItem(PREFERENCE_STORAGE_KEY);
     if (isUiThemePreference(stored)) return stored;
@@ -62,7 +62,7 @@ function persistPreference(p: UiThemePreference): void {
 }
 
 function readStoredAccent(): AccentColor {
-  if (typeof window === 'undefined') return 'default';
+  if (typeof globalThis.window === 'undefined') return 'default';
   try {
     const stored = localStorage.getItem(ACCENT_STORAGE_KEY);
     if (isAccentColor(stored)) return stored;
@@ -80,33 +80,30 @@ function persistAccent(c: AccentColor): void {
   }
 }
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [preference, setPreferenceState] = useState<UiThemePreference>(() =>
-    readStoredPreference()
-  );
+function resolveTheme(preference: UiThemePreference, systemDark: boolean): ResolvedTheme {
+  if (preference === 'dark') return 'dark';
+  if (preference === 'light') return 'light';
+  return systemDark ? 'dark' : 'light';
+}
+
+export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
+  const [preference, setPreference] = useState<UiThemePreference>(() => readStoredPreference());
   const [accentState, setAccentState] = useState<AccentColor>(() => readStoredAccent());
   const [systemDark, setSystemDark] = useState<boolean>(() => {
-    if (typeof window === 'undefined' || !window.matchMedia) return false;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (typeof globalThis.window === 'undefined' || !globalThis.matchMedia) return false;
+    return globalThis.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
   useEffect(() => {
     if (preference !== 'system') return;
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const mq = globalThis.matchMedia('(prefers-color-scheme: dark)');
     const onChange = () => setSystemDark(mq.matches);
     onChange();
     mq.addEventListener('change', onChange);
     return () => mq.removeEventListener('change', onChange);
   }, [preference]);
 
-  const resolvedTheme: ResolvedTheme =
-    preference === 'dark'
-      ? 'dark'
-      : preference === 'light'
-        ? 'light'
-        : systemDark
-          ? 'dark'
-          : 'light';
+  const resolvedTheme: ResolvedTheme = resolveTheme(preference, systemDark);
 
   useEffect(() => {
     document.documentElement.dataset.theme = resolvedTheme;
@@ -121,12 +118,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [accentState]);
 
   const setUiPreference = useCallback((p: UiThemePreference) => {
-    setPreferenceState(p);
+    setPreference(p);
     persistPreference(p);
   }, []);
 
   const applyRemotePreference = useCallback((p: UiThemePreference) => {
-    setPreferenceState((prev) => {
+    setPreference((prev) => {
       if (prev === p) return prev;
       persistPreference(p);
       return p;
@@ -134,7 +131,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setPreferenceState((prev) => {
+    setPreference((prev) => {
       const next = getNextUiPreference(prev);
       persistPreference(next);
       return next;

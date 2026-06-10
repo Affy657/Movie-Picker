@@ -5,7 +5,7 @@ type Props = {
   label: string;
 };
 
-export default function MyEventsSkeleton({ label }: Props) {
+export default function MyEventsSkeleton({ label }: Readonly<Props>) {
   return (
     <SkeletonScreen label={label} className={styles.root}>
       <Skeleton variant="text" className={styles.pageTitle} />

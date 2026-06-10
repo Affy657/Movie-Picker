@@ -2,7 +2,7 @@ import { useTranslation } from '@/shared/i18n';
 
 const TMDB_URL = 'https://www.themoviedb.org/';
 
-export default function TmdbAttribution({ className }: { className?: string }) {
+export default function TmdbAttribution({ className }: Readonly<{ className?: string }>) {
   const { t } = useTranslation();
   return (
     <p className={className ?? 'hint'} style={{ marginTop: '0.75rem', textAlign: 'right' }}>

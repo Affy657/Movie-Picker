@@ -73,7 +73,7 @@ export function useEventLive(
 } {
   const strategy: EventLiveStrategy = 'polling';
 
-  const [, bumpLivePhaseForSchedule] = useState(0);
+  const [nowMs, setNowMs] = useState(() => Date.now());
   const eventDate = event?.date;
   const eventTime = event?.time;
   const eventIsFinished = event?.isFinished;
@@ -84,11 +84,10 @@ export function useEventLive(
     const now = Date.now();
     if (now >= start) return;
     const delay = Math.min(start - now, 2_147_483_647);
-    const id = window.setTimeout(() => bumpLivePhaseForSchedule((n) => n + 1), delay);
+    const id = globalThis.setTimeout(() => setNowMs(Date.now()), delay);
     return () => clearTimeout(id);
   }, [eventDate, eventTime, eventIsFinished]);
 
-  const nowMs = Date.now();
   const livePhase = getEventLivePhase(event, nowMs);
   const moviesRefetchInterval = getLivePollingRefetchIntervalForMoviesQuery(
     event,
@@ -97,12 +96,14 @@ export function useEventLive(
   );
 
   const eventOnlyInterval = getLivePollingRefetchIntervalForEventQuery(event, nowMs);
-  const pollIntervalMs =
-    typeof moviesRefetchInterval === 'number'
-      ? moviesRefetchInterval
-      : typeof eventOnlyInterval === 'number'
-        ? eventOnlyInterval
-        : EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS;
+  let pollIntervalMs: number;
+  if (typeof moviesRefetchInterval === 'number') {
+    pollIntervalMs = moviesRefetchInterval;
+  } else if (typeof eventOnlyInterval === 'number') {
+    pollIntervalMs = eventOnlyInterval;
+  } else {
+    pollIntervalMs = EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS;
+  }
 
   return {
     strategy,

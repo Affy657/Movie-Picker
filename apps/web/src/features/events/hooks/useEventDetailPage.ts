@@ -50,7 +50,7 @@ export function useEventDetailPage(slug: string | undefined) {
       setParticipant(stored);
       return;
     }
-    if (!event || event.slug !== slug) {
+    if (event?.slug !== slug) {
       setParticipant(null);
       return;
     }
@@ -66,8 +66,8 @@ export function useEventDetailPage(slug: string | undefined) {
 
   const refreshAll = useCallback(() => {
     if (!slug) return;
-    void queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
-    void queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
   }, [slug, hostToken, queryClient]);
 
   return {

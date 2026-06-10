@@ -13,7 +13,7 @@ interface Props {
   genres: GenreCount[];
 }
 
-export default function GenresBar({ genres }: Props) {
+export default function GenresBar({ genres }: Readonly<Props>) {
   const { locale } = useLocale();
   const total = genres.reduce((sum, g) => sum + g.count, 0);
   if (total === 0) return null;

@@ -11,11 +11,11 @@ import {
 export default function LanguageSelector({
   className = '',
   id,
-}: {
+}: Readonly<{
   className?: string;
 
   id?: string;
-}) {
+}>) {
   const { locale, setLocale } = useLocale();
   const { t } = useTranslation();
 

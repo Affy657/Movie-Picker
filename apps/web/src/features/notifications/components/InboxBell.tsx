@@ -119,7 +119,7 @@ export default function InboxBell() {
   const markReadMutation = useMutation({
     mutationFn: markAllNotificationsRead,
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.notifications.inbox });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.inbox });
     },
   });
 

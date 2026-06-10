@@ -27,7 +27,7 @@ export default function EventParticipantsList({
   isHost,
   pendingRemovalId,
   onRemoveParticipant,
-}: Props) {
+}: Readonly<Props>) {
   const { t } = useTranslation();
   if (!participants) return null;
 
@@ -102,7 +102,7 @@ export default function EventParticipantsList({
                     aria-label={t('events.participants.removeAriaLabel', { pseudo: p.pseudo })}
                     title={t('events.participants.removeAction')}
                     disabled={isPending}
-                    onClick={() => onRemoveParticipant!(p.id, p.pseudo)}
+                    onClick={() => onRemoveParticipant(p.id, p.pseudo)}
                     data-testid={`remove-participant-${p.id}`}
                   >
                     <X aria-hidden size={14} />

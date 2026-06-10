@@ -7,7 +7,7 @@ interface Props {
   label?: string;
 }
 
-export default function Toggle({ checked, onChange, disabled, label }: Props) {
+export default function Toggle({ checked, onChange, disabled, label }: Readonly<Props>) {
   return (
     <button
       type="button"

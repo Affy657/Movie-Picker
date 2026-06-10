@@ -34,7 +34,7 @@ export default function ConfirmDialog({
   onConfirm,
   onCancel,
   testId = 'confirm-dialog',
-}: ConfirmDialogProps) {
+}: Readonly<ConfirmDialogProps>) {
   const { t } = useTranslation();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const reactId = useId();

@@ -5,7 +5,7 @@ import { withReturnTo, ROUTES } from '@/app/routes';
 
 type Props = { children: React.ReactNode };
 
-export function ProtectedRoute({ children }: Props) {
+export function ProtectedRoute({ children }: Readonly<Props>) {
   const { user, isLoading } = useAuth();
   const location = useLocation();
 

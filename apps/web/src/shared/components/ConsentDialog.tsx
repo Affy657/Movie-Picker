@@ -8,7 +8,7 @@ type Props = {
   onClose: () => void;
 };
 
-export default function ConsentDialog({ open, onClose }: Props) {
+export default function ConsentDialog({ open, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const { analytics, acceptAll, rejectAll, savePreferences } = useConsent();
   const [analyticsChecked, setAnalyticsChecked] = useState(analytics);

@@ -63,19 +63,19 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!copied) return;
-    const id = window.setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
-    return () => window.clearTimeout(id);
+    const id = globalThis.setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
+    return () => globalThis.clearTimeout(id);
   }, [copied]);
 
   const handleCopyLink = useCallback(() => {
     if (typeof navigator === 'undefined' || !navigator.clipboard) return;
-    void navigator.clipboard.writeText(window.location.href).then(() => setCopied(true));
+    void navigator.clipboard.writeText(globalThis.location.href).then(() => setCopied(true));
   }, []);
 
   const followMutation = useMutation({
     mutationFn: () => followUser(profile!.handle),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.profile.public(handle) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile.public(handle) });
       track('user_followed');
     },
   });
@@ -83,7 +83,7 @@ export default function ProfilePage() {
   const unfollowMutation = useMutation({
     mutationFn: () => unfollowUser(profile!.handle),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.profile.public(handle) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile.public(handle) });
       track('user_unfollowed');
     },
   });

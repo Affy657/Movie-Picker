@@ -19,7 +19,7 @@ type ConsentContextValue = {
 const ConsentContext = createContext<ConsentContextValue | null>(null);
 
 function readStored(): ConsentPrefs {
-  if (typeof window === 'undefined') return { decided: false, analytics: false };
+  if (typeof globalThis.window === 'undefined') return { decided: false, analytics: false };
   try {
     const raw = localStorage.getItem(CONSENT_STORAGE_KEY);
     if (!raw) return { decided: false, analytics: false };
@@ -47,7 +47,7 @@ function persist(prefs: ConsentPrefs): void {
   }
 }
 
-export function ConsentProvider({ children }: { children: ReactNode }) {
+export function ConsentProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [prefs, setPrefs] = useState<ConsentPrefs>(() => readStored());
 
   const acceptAll = useCallback(() => {

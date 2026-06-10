@@ -42,9 +42,11 @@
             localStorage.getItem('moviepicker-theme');
           var dark =
             p === 'dark' ||
-            (p !== 'light' && window.matchMedia('(prefers-color-scheme:dark)').matches);
+            (p !== 'light' && globalThis.matchMedia('(prefers-color-scheme:dark)').matches);
           document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-        } catch (e) {}
+        } catch {
+          /* préférence de thème indisponible : on garde le thème par défaut */
+        }
       })();
     </script>
     <style>

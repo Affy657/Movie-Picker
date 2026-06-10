@@ -31,8 +31,10 @@ export function tmdbPosterSrcSetForList(url: string | undefined): string | undef
     if (u.protocol !== 'https:' || u.hostname !== 'image.tmdb.org') return undefined;
     if (!TMDB_POSTER_SIZE_SEGMENT.test(u.pathname)) return undefined;
     const base = u.pathname;
-    const make = (size: string) =>
-      `https://${u.hostname}${base.replace(TMDB_POSTER_SIZE_SEGMENT, `/t/p/${size}/`)}`;
+    const make = (size: string) => {
+      const replacement = `/t/p/${size}/`;
+      return `https://${u.hostname}${base.replace(TMDB_POSTER_SIZE_SEGMENT, replacement)}`;
+    };
     return `${make('w92')} 92w, ${make('w185')} 185w, ${make('w342')} 342w`;
   } catch {
     return undefined;

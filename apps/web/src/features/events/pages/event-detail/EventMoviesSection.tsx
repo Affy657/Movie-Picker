@@ -36,7 +36,7 @@ export default function EventMoviesSection({
   onDismissActionError,
   setActionError,
   refreshAll,
-}: EventMoviesSectionProps) {
+}: Readonly<EventMoviesSectionProps>) {
   const isFinished = !!event.isFinished;
   const { track } = useAnalytics();
 

@@ -105,7 +105,7 @@ export default function NotificationsSection() {
               <Toggle
                 checked={prefs.notifyOnParticipantJoined}
                 disabled={savingPref === 'notifyOnParticipantJoined'}
-                onChange={() => void handleTogglePref('notifyOnParticipantJoined')}
+                onChange={() => handleTogglePref('notifyOnParticipantJoined')}
               />
             </div>
 
@@ -114,7 +114,7 @@ export default function NotificationsSection() {
               <Toggle
                 checked={prefs.notifyEventReminder}
                 disabled={savingPref === 'notifyEventReminder'}
-                onChange={() => void handleTogglePref('notifyEventReminder')}
+                onChange={() => handleTogglePref('notifyEventReminder')}
               />
             </div>
 
@@ -123,7 +123,7 @@ export default function NotificationsSection() {
               <Toggle
                 checked={prefs.notifyOnMovieAdded}
                 disabled={savingPref === 'notifyOnMovieAdded'}
-                onChange={() => void handleTogglePref('notifyOnMovieAdded')}
+                onChange={() => handleTogglePref('notifyOnMovieAdded')}
               />
             </div>
 
@@ -132,7 +132,7 @@ export default function NotificationsSection() {
               <Toggle
                 checked={prefs.notifyOnMoviePicked}
                 disabled={savingPref === 'notifyOnMoviePicked'}
-                onChange={() => void handleTogglePref('notifyOnMoviePicked')}
+                onChange={() => handleTogglePref('notifyOnMoviePicked')}
               />
             </div>
 
@@ -141,7 +141,7 @@ export default function NotificationsSection() {
               <Toggle
                 checked={prefs.notifyOnEventDeleted}
                 disabled={savingPref === 'notifyOnEventDeleted'}
-                onChange={() => void handleTogglePref('notifyOnEventDeleted')}
+                onChange={() => handleTogglePref('notifyOnEventDeleted')}
               />
             </div>
 
@@ -150,7 +150,7 @@ export default function NotificationsSection() {
               <Toggle
                 checked={prefs.notifyOnNewFollower}
                 disabled={savingPref === 'notifyOnNewFollower'}
-                onChange={() => void handleTogglePref('notifyOnNewFollower')}
+                onChange={() => handleTogglePref('notifyOnNewFollower')}
               />
             </div>
           </>

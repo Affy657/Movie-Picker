@@ -29,10 +29,10 @@ function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
 
 export function usePushNotifications(): PushNotificationsState {
   const supported =
-    typeof window !== 'undefined' &&
+    typeof globalThis.window !== 'undefined' &&
     'serviceWorker' in navigator &&
-    'PushManager' in window &&
-    'Notification' in window;
+    'PushManager' in globalThis &&
+    'Notification' in globalThis;
 
   const [permission, setPermission] = useState<PermissionState>(
     supported ? (Notification.permission as PermissionState) : 'unsupported'
@@ -68,7 +68,7 @@ export function usePushNotifications(): PushNotificationsState {
     setLoading(true);
     try {
       const perm = await Notification.requestPermission();
-      setPermission(perm as PermissionState);
+      setPermission(perm);
       if (perm !== 'granted') {
         setLoading(false);
         return;

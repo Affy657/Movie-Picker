@@ -145,7 +145,7 @@ export function eventSharePreviewUrl(slug: string): string {
 }
 
 export function eventFrontendUrl(slug: string): string {
-  return `${window.location.origin}/e/${slug}`;
+  return `${globalThis.location.origin}/e/${slug}`;
 }
 
 export interface EligibleFollowItem {

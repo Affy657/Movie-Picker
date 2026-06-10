@@ -63,7 +63,7 @@ export default function CreateEvent() {
   const createAction = useCallback(async () => {
     const res = await createEventApi({ title, date, time });
     track('event_created');
-    const publicUrl = `${window.location.origin}${ROUTES.eventDetail(res.slug)}`;
+    const publicUrl = `${globalThis.location.origin}${ROUTES.eventDetail(res.slug)}`;
     if (res.creatorParticipant) {
       setStoredParticipant(res.slug, res.creatorParticipant.id, res.creatorParticipant.pseudo);
     }
@@ -95,7 +95,7 @@ export default function CreateEvent() {
       }
     }
 
-    void queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
+    queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
     navigate(ROUTES.eventDetail(res.slug), {
       state: { shareUrl: publicUrl, justCreated: true },
     });

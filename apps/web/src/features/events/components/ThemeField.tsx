@@ -108,7 +108,7 @@ export default function ThemeField({
   onThemeColorChange,
   disabled,
   textInputId,
-}: ThemeFieldProps) {
+}: Readonly<ThemeFieldProps>) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [presetsExpanded, setPresetsExpanded] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);

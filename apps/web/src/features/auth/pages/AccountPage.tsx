@@ -40,7 +40,7 @@ function ChangePasswordSection() {
     setSavedAt(Date.now());
     queryClient.setQueryData(queryKeys.auth.me, null);
     clearTimeout(redirectTimerRef.current);
-    redirectTimerRef.current = window.setTimeout(() => {
+    redirectTimerRef.current = globalThis.setTimeout(() => {
       navigate(ROUTES.login, { replace: true });
     }, POST_PASSWORD_CHANGE_REDIRECT_MS);
   }, [currentPassword, newPassword, queryClient, navigate]);
