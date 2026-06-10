@@ -38,11 +38,8 @@ public sealed class CorrelationIdMiddleware(RequestDelegate next, ILogger<Correl
         var v = value.Trim();
         if (v.Length == 0 || v.Length > CorrelationIdConstants.MaxIncomingLength)
             return null;
-        foreach (var c in v)
-        {
-            if (c < 0x20 || c > 0x7e)
-                return null;
-        }
+        if (v.Any(c => c < 0x20 || c > 0x7e))
+            return null;
 
         return v;
     }

@@ -68,12 +68,9 @@ public sealed class InMemoryMovieRepository : IMovieRepository
 
     public Task DeleteAsync(string movieId, CancellationToken ct = default)
     {
-        if (_byId.TryRemove(movieId, out var m))
+        if (_byId.TryRemove(movieId, out var m) && _byEventId.TryGetValue(m.EventId, out var list))
         {
-            if (_byEventId.TryGetValue(m.EventId, out var list))
-            {
-                lock (list) { list.RemoveAll(x => x.Id == movieId); }
-            }
+            lock (list) { list.RemoveAll(x => x.Id == movieId); }
         }
         return Task.CompletedTask;
     }

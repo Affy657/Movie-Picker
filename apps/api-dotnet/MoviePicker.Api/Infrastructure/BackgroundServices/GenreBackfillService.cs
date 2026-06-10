@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Infrastructure.BackgroundServices;
 
@@ -58,19 +59,8 @@ public sealed class GenreBackfillService : BackgroundService
                 {
                     if (stoppingToken.IsCancellationRequested)
                         break;
-                    try
-                    {
-                        var details = await tmdb.GetDetailsAsync(movie.TmdbId, movie.MediaType, stoppingToken);
-                        if (details is { GenreIds.Count: > 0 })
-                        {
-                            await movies.UpdateGenresAsync(movie.Id, details.GenreIds, stoppingToken);
-                            updated++;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Échec backfill genres pour le film {MovieId} (TMDB {TmdbId})", movie.Id, movie.TmdbId);
-                    }
+                    if (await TryBackfillMovieGenresAsync(movie, tmdb, movies, stoppingToken))
+                        updated++;
                 }
             }
 
@@ -85,5 +75,27 @@ public sealed class GenreBackfillService : BackgroundService
         {
             _logger.LogError(ex, "Échec du backfill des genres de films");
         }
+    }
+
+    private async Task<bool> TryBackfillMovieGenresAsync(
+        Movie movie,
+        ITmdbMovieSearch tmdb,
+        IMovieRepository movies,
+        CancellationToken ct)
+    {
+        try
+        {
+            var details = await tmdb.GetDetailsAsync(movie.TmdbId, movie.MediaType, ct);
+            if (details is { GenreIds.Count: > 0 })
+            {
+                await movies.UpdateGenresAsync(movie.Id, details.GenreIds, ct);
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Échec backfill genres pour le film {MovieId} (TMDB {TmdbId})", movie.Id, movie.TmdbId);
+        }
+        return false;
     }
 }

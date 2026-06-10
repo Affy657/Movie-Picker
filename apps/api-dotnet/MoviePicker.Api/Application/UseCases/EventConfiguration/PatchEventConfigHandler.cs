@@ -88,7 +88,7 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
         {
             if (request.EndDate.Length == 0)
                 endDate = null;
-            else if (!DateTimeOffset.TryParse(request.EndDate, null, System.Globalization.DateTimeStyles.RoundtripKind, out var parsed))
+            else if (!DateTimeOffset.TryParse(request.EndDate, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind, out var parsed))
                 throw new BadRequestException("endDate doit être une date ISO 8601 valide ou une chaîne vide pour effacer.");
             else
                 endDate = parsed.ToUniversalTime();
@@ -149,7 +149,7 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
         if (request.Date is not null)
         {
             if (!System.Text.RegularExpressions.Regex.IsMatch(request.Date, @"^\d{4}-\d{2}-\d{2}$")
-                || !DateOnly.TryParse(request.Date, out _))
+                || !DateOnly.TryParse(request.Date, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _))
                 throw new BadRequestException("date doit être au format YYYY-MM-DD.");
             date = request.Date;
         }
@@ -158,7 +158,7 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
         if (request.Time is not null)
         {
             if (!System.Text.RegularExpressions.Regex.IsMatch(request.Time, @"^\d{2}:\d{2}$")
-                || !TimeOnly.TryParse(request.Time, out _))
+                || !TimeOnly.TryParse(request.Time, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _))
                 throw new BadRequestException("time doit être au format HH:mm.");
             time = request.Time;
         }

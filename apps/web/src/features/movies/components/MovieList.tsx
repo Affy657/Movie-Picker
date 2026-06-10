@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useId, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import clsx from 'clsx';
 import {
   Check,
@@ -79,7 +79,7 @@ function ProposerNoteSection({
   refresh,
   onActionError,
   t,
-}: ProposerNoteSectionProps) {
+}: Readonly<ProposerNoteSectionProps>) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const [pending, setPending] = useState(false);
@@ -139,6 +139,28 @@ function ProposerNoteSection({
     );
   }
 
+  let displayNote: ReactNode;
+  if (pitchNote && !isFinished && isMine) {
+    displayNote = (
+      <button
+        type="button"
+        className={clsx(styles.bubble, styles.bubbleClickable)}
+        onClick={startEdit}
+        disabled={pending}
+      >
+        {pitchNote}
+      </button>
+    );
+  } else if (pitchNote) {
+    displayNote = <div className={styles.bubble}>{pitchNote}</div>;
+  } else {
+    displayNote = (
+      <button type="button" className={clsx(styles.bubble, styles.bubbleAdd)} onClick={startEdit}>
+        {t('movies.pitchNote.addButton')}
+      </button>
+    );
+  }
+
   return (
     <div className={styles.proposerRow}>
       {avatarNode}
@@ -188,27 +210,8 @@ function ProposerNoteSection({
               </div>
             </div>
           </>
-        ) : pitchNote ? (
-          !isFinished && isMine ? (
-            <button
-              type="button"
-              className={clsx(styles.bubble, styles.bubbleClickable)}
-              onClick={startEdit}
-              disabled={pending}
-            >
-              {pitchNote}
-            </button>
-          ) : (
-            <div className={styles.bubble}>{pitchNote}</div>
-          )
         ) : (
-          <button
-            type="button"
-            className={clsx(styles.bubble, styles.bubbleAdd)}
-            onClick={startEdit}
-          >
-            {t('movies.pitchNote.addButton')}
-          </button>
+          displayNote
         )}
       </div>
     </div>
@@ -231,6 +234,123 @@ interface MovieCardProps {
   eager?: boolean;
 }
 
+function MovieCardMeta({
+  m,
+  runtimeLabel,
+  voteLabel,
+  safeTmdbWatchUrl,
+  seenHint,
+  t,
+}: Readonly<{
+  m: MovieData;
+  runtimeLabel: string | null;
+  voteLabel: string | null;
+  safeTmdbWatchUrl: string | null;
+  seenHint: string | null;
+  t: Translate;
+}>) {
+  const providers = m.watchProviders ?? [];
+  return (
+    <>
+      <p className={styles.metaLine}>
+        {m.year ? <span className={styles.metaItem}>{m.year}</span> : null}
+        {runtimeLabel ? (
+          <span className={styles.metaItem} title={t('movies.list.runtimeTitle')}>
+            {runtimeLabel}
+          </span>
+        ) : null}
+      </p>
+      {voteLabel ? (
+        <p className={clsx(styles.voteLine, 'tmdb-vote')} title={t('movies.list.tmdbVoteTitle')}>
+          {voteLabel}
+        </p>
+      ) : null}
+      {providers.length > 0 ? (
+        <WatchProviderChips
+          providers={providers}
+          title={m.title}
+          variant="compact"
+          className={styles.cardProviders}
+          watchPageUrl={safeTmdbWatchUrl}
+          maxVisible={3}
+        />
+      ) : (
+        <p className={styles.providersEmpty}>{t('movies.watchProviders.emptyLabel')}</p>
+      )}
+      {seenHint ? <p className={styles.seenHint}>{seenHint}</p> : null}
+    </>
+  );
+}
+
+function MovieCardActions({
+  m,
+  onVote,
+  iMarkedSeen,
+  seenPending,
+  onToggleSeen,
+  t,
+}: Readonly<{
+  m: MovieData;
+  onVote: (movieId: string, value: 1 | -1) => Promise<void>;
+  iMarkedSeen: boolean;
+  seenPending: boolean;
+  onToggleSeen: () => void;
+  t: Translate;
+}>) {
+  return (
+    <div className={styles.actions} role="group" aria-label={m.title}>
+      <button
+        type="button"
+        className={clsx(styles.actionBtn, m.myVote === 1 && styles.voteUpActive)}
+        onClick={() => void onVote(m.id, 1)}
+        aria-pressed={m.myVote === 1}
+        aria-label={
+          m.myVote === 1
+            ? t('movies.list.voteUpRemoveAria', { title: m.title })
+            : `${t('movies.list.voteUp')} ${m.title}`
+        }
+      >
+        <ThumbsUp aria-hidden size={16} />
+        <span className={styles.actionCount}>{m.up}</span>
+      </button>
+      <button
+        type="button"
+        className={clsx(styles.actionBtn, m.myVote === -1 && styles.voteDownActive)}
+        onClick={() => void onVote(m.id, -1)}
+        aria-pressed={m.myVote === -1}
+        aria-label={
+          m.myVote === -1
+            ? t('movies.list.voteDownRemoveAria', { title: m.title })
+            : `${t('movies.list.voteDown')} ${m.title}`
+        }
+      >
+        <ThumbsDown aria-hidden size={16} />
+        <span className={styles.actionCount}>{m.down}</span>
+      </button>
+      <button
+        type="button"
+        className={clsx(styles.actionBtn, iMarkedSeen && styles.seenActive)}
+        onClick={onToggleSeen}
+        disabled={seenPending}
+        aria-pressed={iMarkedSeen}
+        aria-label={
+          iMarkedSeen
+            ? t('movies.seen.unmarkAria', { title: m.title })
+            : t('movies.seen.markAria', { title: m.title })
+        }
+        title={t('movies.seen.neutralTooltip')}
+      >
+        <Eye aria-hidden size={16} />
+        <span className={styles.actionLabel}>
+          {m.seenCount
+            ? t('movies.seen.labelWithCount', { count: m.seenCount })
+            : t('movies.seen.label')}
+        </span>
+      </button>
+    </div>
+  );
+}
+
 const MovieCard = memo(function MovieCard({
   movie: m,
   slug,
@@ -249,15 +369,10 @@ const MovieCard = memo(function MovieCard({
   const isMine = participantId && getParticipantId(m) === participantId;
   const proposerAvatarId = participantAvatars?.[getParticipantId(m)] ?? '';
   const canRemove = !isFinished && (isMine || isHost);
-  const iMarkedSeen = !!(
-    participantPseudo &&
-    m.seenByPseudos &&
-    m.seenByPseudos.includes(participantPseudo)
-  );
+  const iMarkedSeen = !!(participantPseudo && m.seenByPseudos?.includes(participantPseudo));
   const seenHint = othersAlreadySeenHint(m.seenByPseudos, participantPseudo, t);
   const voteLabel = formatTmdbVote(m.voteAverage);
   const runtimeLabel = formatRuntimeMinutes(m.runtimeMinutes);
-  const providers = m.watchProviders ?? [];
   const posterSrc = posterImageSrc(m.posterPath);
   const posterSrcSet = tmdbPosterSrcSetForList(posterSrc);
   const safeTmdbWatchUrl = isSafeTmdbWatchPageUrl(m.tmdbWatchPageUrl) ? m.tmdbWatchPageUrl : null;
@@ -334,83 +449,23 @@ const MovieCard = memo(function MovieCard({
             />
           ) : null}
         </div>
-        <p className={styles.metaLine}>
-          {m.year ? <span className={styles.metaItem}>{m.year}</span> : null}
-          {runtimeLabel ? (
-            <span className={styles.metaItem} title={t('movies.list.runtimeTitle')}>
-              {runtimeLabel}
-            </span>
-          ) : null}
-        </p>
-        {voteLabel ? (
-          <p className={clsx(styles.voteLine, 'tmdb-vote')} title={t('movies.list.tmdbVoteTitle')}>
-            {voteLabel}
-          </p>
-        ) : null}
-        {providers.length > 0 ? (
-          <WatchProviderChips
-            providers={providers}
-            title={m.title}
-            variant="compact"
-            className={styles.cardProviders}
-            watchPageUrl={safeTmdbWatchUrl}
-            maxVisible={3}
-          />
-        ) : (
-          <p className={styles.providersEmpty}>{t('movies.watchProviders.emptyLabel')}</p>
-        )}
-        {seenHint ? <p className={styles.seenHint}>{seenHint}</p> : null}
+        <MovieCardMeta
+          m={m}
+          runtimeLabel={runtimeLabel}
+          voteLabel={voteLabel}
+          safeTmdbWatchUrl={safeTmdbWatchUrl}
+          seenHint={seenHint}
+          t={t}
+        />
         {!isFinished && participantId && (
-          <div className={styles.actions} role="group" aria-label={m.title}>
-            <button
-              type="button"
-              className={clsx(styles.actionBtn, m.myVote === 1 && styles.voteUpActive)}
-              onClick={() => void onVote(m.id, 1)}
-              aria-pressed={m.myVote === 1}
-              aria-label={
-                m.myVote === 1
-                  ? t('movies.list.voteUpRemoveAria', { title: m.title })
-                  : `${t('movies.list.voteUp')} ${m.title}`
-              }
-            >
-              <ThumbsUp aria-hidden size={16} />
-              <span className={styles.actionCount}>{m.up}</span>
-            </button>
-            <button
-              type="button"
-              className={clsx(styles.actionBtn, m.myVote === -1 && styles.voteDownActive)}
-              onClick={() => void onVote(m.id, -1)}
-              aria-pressed={m.myVote === -1}
-              aria-label={
-                m.myVote === -1
-                  ? t('movies.list.voteDownRemoveAria', { title: m.title })
-                  : `${t('movies.list.voteDown')} ${m.title}`
-              }
-            >
-              <ThumbsDown aria-hidden size={16} />
-              <span className={styles.actionCount}>{m.down}</span>
-            </button>
-            <button
-              type="button"
-              className={clsx(styles.actionBtn, iMarkedSeen && styles.seenActive)}
-              onClick={() => void handleToggleSeen()}
-              disabled={seenPending}
-              aria-pressed={iMarkedSeen}
-              aria-label={
-                iMarkedSeen
-                  ? t('movies.seen.unmarkAria', { title: m.title })
-                  : t('movies.seen.markAria', { title: m.title })
-              }
-              title={t('movies.seen.neutralTooltip')}
-            >
-              <Eye aria-hidden size={16} />
-              <span className={styles.actionLabel}>
-                {m.seenCount
-                  ? t('movies.seen.labelWithCount', { count: m.seenCount })
-                  : t('movies.seen.label')}
-              </span>
-            </button>
-          </div>
+          <MovieCardActions
+            m={m}
+            onVote={onVote}
+            iMarkedSeen={iMarkedSeen}
+            seenPending={seenPending}
+            onToggleSeen={() => void handleToggleSeen()}
+            t={t}
+          />
         )}
         <ProposerNoteSection
           movieId={m.id}
@@ -476,11 +531,11 @@ function ExternalMenuLink({
   href,
   label,
   onClose,
-}: {
+}: Readonly<{
   href: string;
   label: string;
   onClose: () => void;
-}) {
+}>) {
   return (
     <a
       role="menuitem"
@@ -507,7 +562,7 @@ function CardKebab({
   canRemove,
   onRemove,
   t,
-}: CardKebabProps) {
+}: Readonly<CardKebabProps>) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const close = useCallback(() => setOpen(false), []);
@@ -594,7 +649,7 @@ export default function MovieList({
   refresh,
   onActionError,
   participantAvatars,
-}: MovieListProps) {
+}: Readonly<MovieListProps>) {
   const { t } = useTranslation();
 
   if (movies.length === 0) {

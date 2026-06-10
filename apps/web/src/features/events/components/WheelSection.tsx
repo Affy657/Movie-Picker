@@ -27,7 +27,7 @@ export default function WheelSection({
   hostToken,
   onWheelDone,
   onCloseDone,
-}: WheelSectionProps) {
+}: Readonly<WheelSectionProps>) {
   const { t } = useTranslation();
   const { track } = useAnalytics();
   const [loading, setLoading] = useState(false);
@@ -52,7 +52,7 @@ export default function WheelSection({
       setWinner(res.winner);
       track('movie_picked');
       clearTimeout(spinTimerRef.current);
-      spinTimerRef.current = window.setTimeout(() => setSpinning(false), SPIN_ANIMATION_MS);
+      spinTimerRef.current = globalThis.setTimeout(() => setSpinning(false), SPIN_ANIMATION_MS);
       onWheelDone();
     } catch (err) {
       setError(getErrorMessage(err, t('events.wheel.launchError')));

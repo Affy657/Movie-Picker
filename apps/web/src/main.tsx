@@ -9,7 +9,7 @@ initPostHog();
 if ('serviceWorker' in navigator) {
   const hadController = !!navigator.serviceWorker.controller;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (hadController) window.dispatchEvent(new CustomEvent('pwa-update'));
+    if (hadController) globalThis.dispatchEvent(new CustomEvent('pwa-update'));
   });
 }
 

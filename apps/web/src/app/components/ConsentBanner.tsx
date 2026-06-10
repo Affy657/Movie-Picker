@@ -13,9 +13,8 @@ export default function ConsentBanner() {
 
   return (
     <>
-      <div
+      <section
         className={styles.root}
-        role="region"
         aria-label={t('consent.banner.title')}
         aria-live="polite"
       >
@@ -42,7 +41,7 @@ export default function ConsentBanner() {
             {t('consent.banner.acceptAll')}
           </button>
         </div>
-      </div>
+      </section>
       <ConsentDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
     </>
   );

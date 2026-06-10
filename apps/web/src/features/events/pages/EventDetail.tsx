@@ -33,6 +33,19 @@ type ConfirmState =
 
 const SUCCESS_AUTO_DISMISS_MS = 3500;
 
+function getDocumentTitle(
+  slug: string | undefined,
+  isPending: boolean,
+  isError: boolean,
+  eventTitle: string | undefined
+): string {
+  if (!slug) return APP_DOCUMENT_TITLE;
+  if (isPending) return pageTitle('Chargement');
+  if (isError) return pageTitle('Soirée introuvable');
+  if (eventTitle) return pageTitle(eventTitle);
+  return APP_DOCUMENT_TITLE;
+}
+
 export default function EventDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -59,8 +72,8 @@ export default function EventDetail() {
 
   useEffect(() => {
     if (!actionSuccess) return;
-    const id = window.setTimeout(() => setActionSuccess(null), SUCCESS_AUTO_DISMISS_MS);
-    return () => window.clearTimeout(id);
+    const id = globalThis.setTimeout(() => setActionSuccess(null), SUCCESS_AUTO_DISMISS_MS);
+    return () => globalThis.clearTimeout(id);
   }, [actionSuccess]);
 
   const removeParticipantMutation = useMutation({
@@ -72,10 +85,10 @@ export default function EventDetail() {
     onSettled: () => {
       setPendingRemovalId(null);
       if (slug) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
-        void queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
       }
-      void queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
+      queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
     },
   });
 
@@ -85,15 +98,12 @@ export default function EventDetail() {
     [themeHue]
   );
 
-  const documentTitle = !slug
-    ? APP_DOCUMENT_TITLE
-    : eventQuery.isPending
-      ? pageTitle('Chargement')
-      : eventQuery.isError
-        ? pageTitle('Soirée introuvable')
-        : event
-          ? pageTitle(event.title)
-          : APP_DOCUMENT_TITLE;
+  const documentTitle = getDocumentTitle(
+    slug,
+    eventQuery.isPending,
+    eventQuery.isError,
+    event?.title
+  );
   useDocumentTitle(documentTitle);
 
   const isConnectedSelf =
@@ -268,7 +278,7 @@ export default function EventDetail() {
       {moviesQuery.isError && (
         <EventMoviesLoadError
           error={moviesQuery.error}
-          onRetry={() => void moviesQuery.refetch()}
+          onRetry={() => moviesQuery.refetch()}
         />
       )}
 

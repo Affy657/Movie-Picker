@@ -284,8 +284,8 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         var tagline = root.TryGetProperty("tagline", out var tl) ? tl.GetString() : null;
         var runtime = ReadRuntimeMinutes(root, mediaType);
         var releaseDate = mediaType == MovieMediaType.Tv
-            ? (root.TryGetProperty("first_air_date", out var fad) ? fad.GetString() : null)
-            : (root.TryGetProperty("release_date", out var rd) ? rd.GetString() : null);
+            ? ReadStringProp(root, "first_air_date")
+            : ReadStringProp(root, "release_date");
 
         var genres = new List<string>();
         var genreIds = new List<int>();
@@ -377,11 +377,14 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         return el.TryGetProperty("name", out var nameEl) ? nameEl.GetString() ?? string.Empty : string.Empty;
     }
 
+    private static string? ReadStringProp(JsonElement el, string name) =>
+        el.TryGetProperty(name, out var v) ? v.GetString() : null;
+
     private static string ReadYear(JsonElement el, MovieMediaType mediaType)
     {
         string? date = mediaType == MovieMediaType.Tv
-            ? (el.TryGetProperty("first_air_date", out var fad) ? fad.GetString() : null)
-            : (el.TryGetProperty("release_date", out var rd) ? rd.GetString() : null);
+            ? ReadStringProp(el, "first_air_date")
+            : ReadStringProp(el, "release_date");
         return date is { Length: >= 4 } ? date[..4] : string.Empty;
     }
 

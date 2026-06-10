@@ -47,10 +47,10 @@ const PATCH_DEBOUNCE_MS = 400;
 export default function AccentColorPicker({
   id,
   className = '',
-}: {
+}: Readonly<{
   id?: string;
   className?: string;
-}) {
+}>) {
   const { accent, setAccent } = useTheme();
   const { user, patchProfile } = useAuth();
   const { t } = useTranslation();
@@ -83,7 +83,7 @@ export default function AccentColorPicker({
         return;
       }
       if (patchTimerRef.current !== null) clearTimeout(patchTimerRef.current);
-      patchTimerRef.current = window.setTimeout(() => {
+      patchTimerRef.current = globalThis.setTimeout(() => {
         patchTimerRef.current = null;
         const rollback = lastCommittedRef.current;
         void patchProfile({ accentColor: next })
@@ -108,7 +108,7 @@ export default function AccentColorPicker({
       commit(PICKER_COLORS[idx === 0 ? last : idx - 1]!);
     } else if (e.key === 'Home') {
       e.preventDefault();
-      commit(PICKER_COLORS[0]!);
+      commit(PICKER_COLORS[0]);
     } else if (e.key === 'End') {
       e.preventDefault();
       commit(PICKER_COLORS[last]!);

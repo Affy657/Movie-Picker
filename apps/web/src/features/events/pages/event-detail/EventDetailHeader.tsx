@@ -26,7 +26,7 @@ export default function EventDetailHeader({
   eventTheme,
   eventThemeColor,
   shareUrl,
-}: EventDetailHeaderProps) {
+}: Readonly<EventDetailHeaderProps>) {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -37,7 +37,7 @@ export default function EventDetailHeader({
           type="button"
           className="back-link back-link-button"
           onClick={() => {
-            if (window.history.length > 1) {
+            if (globalThis.history.length > 1) {
               navigate(-1);
             } else {
               navigate(ROUTES.home);

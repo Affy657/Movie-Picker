@@ -1,7 +1,6 @@
-import type { MyEventLifecycle } from '@/shared/types/event';
+import type { EventConfigData, MyEventLifecycle, WheelMode } from '@/shared/types/event';
 
 export type { WheelMode, EventConfigData, EventData } from '@/shared/types/event';
-import type { EventConfigData, WheelMode } from '@/shared/types/event';
 
 export const MAX_EVENT_PARTICIPANTS = 30;
 
@@ -42,7 +41,7 @@ export interface MyEventSummary {
   isCreator: boolean;
   isParticipant: boolean;
 
-  lifecycle?: MyEventLifecycle | string;
+  lifecycle?: MyEventLifecycle | (string & {});
   participantCount?: number;
   movieCount?: number;
 

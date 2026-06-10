@@ -99,11 +99,8 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
         CancellationToken ct = default)
     {
         var map = eventIds.Distinct().ToDictionary(id => id, _ => 0);
-        foreach (var p in _byId.Values)
-        {
-            if (map.ContainsKey(p.EventId))
-                map[p.EventId]++;
-        }
+        foreach (var p in _byId.Values.Where(p => map.ContainsKey(p.EventId)))
+            map[p.EventId]++;
 
         return Task.FromResult<IReadOnlyDictionary<string, int>>(map);
     }

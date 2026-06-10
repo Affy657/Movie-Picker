@@ -33,7 +33,7 @@ function detectBrowserLocale(): LocaleCode {
 }
 
 function readStoredLocale(): LocaleCode {
-  if (typeof window === 'undefined') return 'fr';
+  if (typeof globalThis.window === 'undefined') return 'fr';
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored != null && isLocaleCode(stored)) return stored;
@@ -51,8 +51,8 @@ function persistLocale(code: LocaleCode): void {
   }
 }
 
-export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<LocaleCode>(readStoredLocale);
+export function LocaleProvider({ children }: Readonly<{ children: ReactNode }>) {
+  const [localeState, setLocaleState] = useState<LocaleCode>(readStoredLocale);
 
   const setLocale = useCallback((code: LocaleCode) => {
     setLocaleState(code);
@@ -60,14 +60,14 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    document.documentElement.lang = locale;
-  }, [locale]);
+    document.documentElement.lang = localeState;
+  }, [localeState]);
 
-  const tmdbLanguage = TMDB_LANGUAGE_MAP[locale];
+  const tmdbLanguage = TMDB_LANGUAGE_MAP[localeState];
 
   const value = useMemo<LocaleContextValue>(
-    () => ({ locale, setLocale, tmdbLanguage }),
-    [locale, setLocale, tmdbLanguage]
+    () => ({ locale: localeState, setLocale, tmdbLanguage }),
+    [localeState, setLocale, tmdbLanguage]
   );
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;

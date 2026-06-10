@@ -22,8 +22,8 @@ export default function EventDetailSkeleton() {
 
       <Skeleton variant="text" className={styles.sectionTitle} />
       <div className={styles.movies}>
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className={styles.movieCard}>
+        {['a', 'b', 'c', 'd'].map((key) => (
+          <div key={key} className={styles.movieCard}>
             <Skeleton variant="poster" />
             <Skeleton variant="text" className={styles.movieMeta} />
             <Skeleton variant="text" className={styles.movieMetaShort} />

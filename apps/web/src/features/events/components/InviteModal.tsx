@@ -22,7 +22,7 @@ type Props = {
   onClose: () => void;
 };
 
-export default function InviteModal({ open, slug, onClose }: Props) {
+export default function InviteModal({ open, slug, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { track } = useAnalytics();
@@ -46,7 +46,7 @@ export default function InviteModal({ open, slug, onClose }: Props) {
       setInvitedIds((prev) => new Set(prev).add(targetUserId));
       setItemError(null);
       track('invitation_sent');
-      void queryClient.invalidateQueries({ queryKey: queryKeys.event.eligibleFollows(slug) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.event.eligibleFollows(slug) });
     },
     onError: (err) => {
       setItemError(getErrorMessage(err, t('events.invite.inviteError')));
@@ -141,6 +141,22 @@ export default function InviteModal({ open, slug, onClose }: Props) {
                 const isParticipant = item.isAlreadyParticipant;
                 const isBusy = inviteMutation.isPending && inviteMutation.variables === item.userId;
 
+                const inviteAction = isInvited ? (
+                  <span className={`${styles.badge} ${styles.badgeInvited}`}>
+                    {t('events.invite.invitedBadge')}
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-primary"
+                    onClick={() => handleInvite(item)}
+                    disabled={isBusy}
+                    aria-label={t('events.invite.inviteAriaLabel', { name: item.displayName })}
+                  >
+                    {isBusy ? '…' : t('events.invite.inviteAction')}
+                  </button>
+                );
+
                 return (
                   <li
                     key={item.userId}
@@ -156,20 +172,8 @@ export default function InviteModal({ open, slug, onClose }: Props) {
                       <span className={`${styles.badge} ${styles.badgeParticipant}`}>
                         {t('events.invite.alreadyParticipant')}
                       </span>
-                    ) : isInvited ? (
-                      <span className={`${styles.badge} ${styles.badgeInvited}`}>
-                        {t('events.invite.invitedBadge')}
-                      </span>
                     ) : (
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-primary"
-                        onClick={() => handleInvite(item)}
-                        disabled={isBusy}
-                        aria-label={t('events.invite.inviteAriaLabel', { name: item.displayName })}
-                      >
-                        {isBusy ? '…' : t('events.invite.inviteAction')}
-                      </button>
+                      inviteAction
                     )}
                   </li>
                 );

@@ -23,7 +23,7 @@ export default function NumberInput({
   placeholder,
   disabled,
   className,
-}: NumberInputProps) {
+}: Readonly<NumberInputProps>) {
   const numVal = value === '' ? null : Number(value);
 
   const decrement = () => {

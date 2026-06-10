@@ -12,7 +12,7 @@ interface Props {
   stats: UserStats;
 }
 
-export default function ProfileStatsSection({ stats }: Props) {
+export default function ProfileStatsSection({ stats }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const counters: { key: string; icon: LucideIcon; label: string; value: number }[] = [

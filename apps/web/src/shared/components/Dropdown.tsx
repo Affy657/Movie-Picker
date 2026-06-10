@@ -25,7 +25,7 @@ export default function Dropdown<V extends string>({
   onChange,
   ariaLabel,
   className,
-}: DropdownProps<V>) {
+}: Readonly<DropdownProps<V>>) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(() =>
     Math.max(
@@ -61,11 +61,11 @@ export default function Dropdown<V extends string>({
     if (!open) return;
     const idx = options.findIndex((o) => o.value === value);
     if (idx >= 0) setActiveIndex(idx);
-    const rafId = window.requestAnimationFrame(() => {
+    const rafId = globalThis.requestAnimationFrame(() => {
       const items = listRef.current?.querySelectorAll<HTMLLIElement>('[role="option"]');
       items?.[Math.max(0, idx)]?.focus();
     });
-    return () => window.cancelAnimationFrame(rafId);
+    return () => globalThis.cancelAnimationFrame(rafId);
   }, [open, options, value]);
 
   const handleKey = (e: React.KeyboardEvent) => {

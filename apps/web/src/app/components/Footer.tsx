@@ -46,7 +46,7 @@ function LinkedInIcon() {
 
 const CURRENT_YEAR = new Date().getFullYear();
 
-export default function Footer({ clearMobileNav = false }: FooterProps) {
+export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>) {
   const { t } = useTranslation();
 
   return (

@@ -15,7 +15,7 @@ const SIZE_PX: Record<NonNullable<AvatarProps['size']>, number> = {
   lg: 56,
 };
 
-export default function Avatar({ avatarId, size = 'md', className }: AvatarProps) {
+export default function Avatar({ avatarId, size = 'md', className }: Readonly<AvatarProps>) {
   const px = SIZE_PX[size];
 
   if (!avatarId) {

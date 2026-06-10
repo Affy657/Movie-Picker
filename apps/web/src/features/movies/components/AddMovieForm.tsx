@@ -24,6 +24,42 @@ const SEARCH_DEBOUNCE_MS = 350;
 
 const SEARCH_MIN_CHARS = 2;
 
+function isSameTmdbItem(m: MovieData, r: MovieSearchItem): boolean {
+  return m.tmdbId === r.id && (m.mediaType ?? 'movie') === (r.mediaType ?? 'movie');
+}
+
+function ResultMeta({
+  year,
+  voteLabel,
+  runtimeLabel,
+  voteTitle,
+  runtimeTitle,
+}: Readonly<{
+  year?: string;
+  voteLabel: string | null;
+  runtimeLabel: string | null;
+  voteTitle: string;
+  runtimeTitle: string;
+}>) {
+  return (
+    <div className={styles.resultMeta}>
+      {year ? <span>{year}</span> : null}
+      {voteLabel ? (
+        <span className="tmdb-vote" title={voteTitle}>
+          {year ? ' · ' : null}
+          {voteLabel}
+        </span>
+      ) : null}
+      {runtimeLabel ? (
+        <span title={runtimeTitle}>
+          {year || voteLabel ? ' · ' : null}
+          {runtimeLabel}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
 interface AddMovieFormProps {
   slug: string;
   participantId: string;
@@ -41,7 +77,7 @@ export default function AddMovieForm({
   existingMovies = [],
   onAdded,
   disabled,
-}: AddMovieFormProps) {
+}: Readonly<AddMovieFormProps>) {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
   const { user } = useAuth();
@@ -147,7 +183,7 @@ export default function AddMovieForm({
   const search = useCallback(() => {
     if (trimmedForSearch.length < SEARCH_MIN_CHARS) return;
     clearDebounceTimer();
-    void executeSearch(trimmedForSearch);
+    executeSearch(trimmedForSearch);
   }, [trimmedForSearch, executeSearch, clearDebounceTimer]);
 
   useEffect(() => {
@@ -173,13 +209,13 @@ export default function AddMovieForm({
 
     if (immediateSearchRef.current) {
       immediateSearchRef.current = false;
-      void executeSearch(trimmed);
+      executeSearch(trimmed);
       return;
     }
 
     debounceTimerRef.current = setTimeout(() => {
       debounceTimerRef.current = null;
-      void executeSearch(trimmed);
+      executeSearch(trimmed);
     }, SEARCH_DEBOUNCE_MS);
 
     return () => {
@@ -386,9 +422,7 @@ export default function AddMovieForm({
               const posterSrc = posterSrcRaw
                 ? tmdbPosterSrcForListDisplay(posterSrcRaw)
                 : undefined;
-              const alreadyListed = existingMovies.find(
-                (m) => m.tmdbId === r.id && (m.mediaType ?? 'movie') === (r.mediaType ?? 'movie')
-              );
+              const alreadyListed = existingMovies.find((m) => isSameTmdbItem(m, r));
               const seenHint = alreadyListed
                 ? othersAlreadySeenHint(alreadyListed.seenByPseudos, participantPseudo, t)
                 : null;
@@ -414,21 +448,13 @@ export default function AddMovieForm({
                           <span className={styles.mediaTypeBadge}>{t('movies.list.tvBadge')}</span>
                         )}
                       </span>
-                      <div className={styles.resultMeta}>
-                        {r.year ? <span>{r.year}</span> : null}
-                        {voteLabel ? (
-                          <span className="tmdb-vote" title={t('movies.search.tmdbVoteHint')}>
-                            {r.year ? ' · ' : null}
-                            {voteLabel}
-                          </span>
-                        ) : null}
-                        {runtimeLabel ? (
-                          <span title={t('movies.list.runtimeTitle')}>
-                            {r.year || voteLabel ? ' · ' : null}
-                            {runtimeLabel}
-                          </span>
-                        ) : null}
-                      </div>
+                      <ResultMeta
+                        year={r.year}
+                        voteLabel={voteLabel}
+                        runtimeLabel={runtimeLabel}
+                        voteTitle={t('movies.search.tmdbVoteHint')}
+                        runtimeTitle={t('movies.list.runtimeTitle')}
+                      />
                     </div>
                     {alreadyListed ? (
                       <p className={`${styles.resultDuplicate} hint`}>

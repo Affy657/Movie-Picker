@@ -19,10 +19,10 @@ export function createTestQueryClient() {
 export function QueryClientWrapper({
   children,
   client,
-}: {
+}: Readonly<{
   children: ReactNode;
   client?: QueryClient;
-}) {
+}>) {
   const qc = client ?? createTestQueryClient();
   return <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
 }
@@ -34,10 +34,10 @@ export function withQueryClient(element: ReactElement, client?: QueryClient) {
 export function AppTestProviders({
   children,
   client,
-}: {
+}: Readonly<{
   children: ReactNode;
   client?: QueryClient;
-}) {
+}>) {
   return (
     <QueryClientWrapper client={client}>
       <LocaleProvider>

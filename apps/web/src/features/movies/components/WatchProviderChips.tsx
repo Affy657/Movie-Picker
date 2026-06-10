@@ -72,7 +72,7 @@ export default function WatchProviderChips({
   variant = 'default',
   watchPageUrl,
   maxVisible,
-}: WatchProviderChipsProps) {
+}: Readonly<WatchProviderChipsProps>) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const listId = useId();

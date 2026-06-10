@@ -67,15 +67,17 @@ public sealed class GetEventSharePreviewHtmlHandler : IGetEventSharePreviewHtmlH
 
     private static string BuildRichDescription(Event evt)
     {
-        var dateLabel = DateOnly.TryParse(evt.Date, out var d)
+        var dateLabel = DateOnly.TryParse(evt.Date, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var d)
             ? d.ToString("dddd d MMMM yyyy", FrCulture)
             : evt.Date;
 
-        var timeLabel = evt.Time.Contains(':')
-            ? (evt.Time.EndsWith(":00")
-                ? evt.Time[..evt.Time.IndexOf(':')] + "h"
-                : evt.Time.Replace(":", "h"))
-            : evt.Time;
+        static string FormatTimeLabel(string time)
+        {
+            if (!time.Contains(':')) return time;
+            if (time.EndsWith(":00")) return time[..time.IndexOf(':')] + "h";
+            return time.Replace(":", "h");
+        }
+        var timeLabel = FormatTimeLabel(evt.Time);
 
         var parts = new List<string> { $"📅 {dateLabel} à {timeLabel}" };
 
@@ -115,6 +117,7 @@ public sealed class GetEventSharePreviewHtmlHandler : IGetEventSharePreviewHtmlH
         string ogImageAbsolute)
     {
         static string H(string? s) => WebUtility.HtmlEncode(s ?? string.Empty);
+        const string CloseMetaTag = "\" />\n";
         var canonicalJson = JsonSerializer.Serialize(canonicalUrl);
         return
             "<!DOCTYPE html>\n"
@@ -122,19 +125,19 @@ public sealed class GetEventSharePreviewHtmlHandler : IGetEventSharePreviewHtmlH
             + "<meta charset=\"utf-8\" />\n"
             + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n"
             + "<meta name=\"robots\" content=\"noindex, follow\" />\n"
-            + "<meta http-equiv=\"refresh\" content=\"0; url=" + H(canonicalUrl) + "\" />\n"
+            + "<meta http-equiv=\"refresh\" content=\"0; url=" + H(canonicalUrl) + CloseMetaTag
             + "<title>" + H(pageTitle) + "</title>\n"
-            + "<link rel=\"canonical\" href=\"" + H(canonicalUrl) + "\" />\n"
+            + "<link rel=\"canonical\" href=\"" + H(canonicalUrl) + CloseMetaTag
             + "<meta property=\"og:type\" content=\"website\" />\n"
-            + "<meta property=\"og:url\" content=\"" + H(canonicalUrl) + "\" />\n"
-            + "<meta property=\"og:title\" content=\"" + H(ogTitle) + "\" />\n"
-            + "<meta property=\"og:description\" content=\"" + H(ogDescription) + "\" />\n"
-            + "<meta property=\"og:image\" content=\"" + H(ogImageAbsolute) + "\" />\n"
+            + "<meta property=\"og:url\" content=\"" + H(canonicalUrl) + CloseMetaTag
+            + "<meta property=\"og:title\" content=\"" + H(ogTitle) + CloseMetaTag
+            + "<meta property=\"og:description\" content=\"" + H(ogDescription) + CloseMetaTag
+            + "<meta property=\"og:image\" content=\"" + H(ogImageAbsolute) + CloseMetaTag
             + "<meta property=\"og:locale\" content=\"fr_FR\" />\n"
             + "<meta name=\"twitter:card\" content=\"summary_large_image\" />\n"
-            + "<meta name=\"twitter:title\" content=\"" + H(ogTitle) + "\" />\n"
-            + "<meta name=\"twitter:description\" content=\"" + H(ogDescription) + "\" />\n"
-            + "<meta name=\"twitter:image\" content=\"" + H(ogImageAbsolute) + "\" />\n"
+            + "<meta name=\"twitter:title\" content=\"" + H(ogTitle) + CloseMetaTag
+            + "<meta name=\"twitter:description\" content=\"" + H(ogDescription) + CloseMetaTag
+            + "<meta name=\"twitter:image\" content=\"" + H(ogImageAbsolute) + CloseMetaTag
             + "</head>\n<body>\n"
             + "<p><a href=\"" + H(canonicalUrl) + "\">Ouvrir la soirée sur Movie Picker</a></p>\n"
             + "<script>location.replace(" + canonicalJson + ");</script>\n"

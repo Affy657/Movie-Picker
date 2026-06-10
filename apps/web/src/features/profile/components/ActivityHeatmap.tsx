@@ -23,7 +23,7 @@ interface Props {
   points: DailyActivityPoint[];
 }
 
-export default function ActivityHeatmap({ points }: Props) {
+export default function ActivityHeatmap({ points }: Readonly<Props>) {
   const { locale } = useLocale();
   const { t } = useTranslation();
   if (points.length === 0) return null;

@@ -25,7 +25,7 @@ interface MovieDetailsPanelProps {
   mediaType?: MovieMediaType;
 }
 
-export default function MovieDetailsPanel({ tmdbId, mediaType }: MovieDetailsPanelProps) {
+export default function MovieDetailsPanel({ tmdbId, mediaType }: Readonly<MovieDetailsPanelProps>) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
 
@@ -51,7 +51,7 @@ export function MovieDetailsToggle({
   onToggle,
   panelId,
   className,
-}: MovieDetailsToggleProps) {
+}: Readonly<MovieDetailsToggleProps>) {
   const { t } = useTranslation();
   const Icon = open ? ChevronUp : ChevronDown;
   return (
@@ -83,15 +83,14 @@ export function MovieDetailsContent({
   open,
   panelId,
   className,
-}: MovieDetailsContentProps) {
+}: Readonly<MovieDetailsContentProps>) {
   const { t } = useTranslation();
   const { data, isLoading, isError } = useMovieDetails(tmdbId, open, mediaType);
   if (!open) return null;
   return (
-    <div
+    <section
       id={panelId}
       className={clsx(styles.panel, className)}
-      role="region"
       aria-label={t('movies.details.regionLabel')}
     >
       {isLoading && <p className={styles.status}>{t('movies.details.loading')}</p>}
@@ -100,7 +99,7 @@ export function MovieDetailsContent({
       {!isLoading && !isError && !data && (
         <p className={styles.status}>{t('movies.details.empty')}</p>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -117,7 +116,7 @@ interface MovieDetailsBodyProps {
   };
 }
 
-function MovieDetailsBody({ data }: MovieDetailsBodyProps) {
+function MovieDetailsBody({ data }: Readonly<MovieDetailsBodyProps>) {
   const { t } = useTranslation();
   const facts: Array<[string, string]> = [];
 
@@ -162,7 +161,7 @@ function MovieDetailsBody({ data }: MovieDetailsBodyProps) {
   );
 }
 
-function FactRow({ label, value }: { label: string; value: string }) {
+function FactRow({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <>
       <dt className={styles.factLabel}>{label}</dt>

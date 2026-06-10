@@ -44,19 +44,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         var isHost = EventHost.IsHost(evt, token, currentUserId);
         var isFinished = evt.IsFinished(DateTimeOffset.UtcNow);
 
-        WinnerMovieResponse? winner = null;
-        if (!string.IsNullOrEmpty(evt.WinnerMovieId))
-        {
-            var wm = await _movieRepository.GetByIdAsync(evt.WinnerMovieId, ct);
-            if (wm is not null)
-            {
-                if (wm.PosterPath is not null &&
-                    TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(wm.PosterPath, out var pNorm))
-                    await _posterImageStore.RegisterTmdbSourceAsync(pNorm, ct);
-                var posterOut = _posterImageStore.ToPublicPosterPath(wm.PosterPath);
-                winner = WinnerMovieResponse.FromDomain(wm, posterOut);
-            }
-        }
+        var winner = await ResolveWinnerAsync(evt, ct);
 
         var participantsTask = _participantRepository.ListByEventIdAsync(evt.Id, ct);
         var movieCountTask = _movieRepository.CountByEventIdAsync(evt.Id, ct);
@@ -84,20 +72,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
 
         var creatorUserId = evt.CreatorUserId;
         var participantsSummary = participants
-            .Select(p =>
-            {
-                User? linkedUser = p.UserId is not null && userById.TryGetValue(p.UserId, out var u) ? u : null;
-                return new EventParticipantSummaryResponse
-                {
-                    Id = p.Id,
-                    Pseudo = p.Pseudo,
-                    IsCreator = !string.IsNullOrEmpty(creatorUserId) && p.UserId == creatorUserId,
-                    AvatarId = linkedUser?.AvatarId ?? string.Empty,
-                    Handle = (linkedUser?.IsProfilePublic == true && !string.IsNullOrEmpty(linkedUser.Handle))
-                        ? linkedUser.Handle
-                        : null,
-                };
-            })
+            .Select(p => ToParticipantSummary(p, userById, creatorUserId))
             .ToList();
 
         return new EventDetailResponse
@@ -122,4 +97,35 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         };
     }
 
+    private async Task<WinnerMovieResponse?> ResolveWinnerAsync(Event evt, CancellationToken ct)
+    {
+        if (string.IsNullOrEmpty(evt.WinnerMovieId))
+            return null;
+        var wm = await _movieRepository.GetByIdAsync(evt.WinnerMovieId, ct);
+        if (wm is null)
+            return null;
+        if (wm.PosterPath is not null &&
+            TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(wm.PosterPath, out var pNorm))
+            await _posterImageStore.RegisterTmdbSourceAsync(pNorm, ct);
+        var posterOut = _posterImageStore.ToPublicPosterPath(wm.PosterPath);
+        return WinnerMovieResponse.FromDomain(wm, posterOut);
+    }
+
+    private static EventParticipantSummaryResponse ToParticipantSummary(
+        Participant p,
+        IReadOnlyDictionary<string, User> userById,
+        string? creatorUserId)
+    {
+        User? linkedUser = p.UserId is not null && userById.TryGetValue(p.UserId, out var u) ? u : null;
+        return new EventParticipantSummaryResponse
+        {
+            Id = p.Id,
+            Pseudo = p.Pseudo,
+            IsCreator = !string.IsNullOrEmpty(creatorUserId) && p.UserId == creatorUserId,
+            AvatarId = linkedUser?.AvatarId ?? string.Empty,
+            Handle = (linkedUser?.IsProfilePublic == true && !string.IsNullOrEmpty(linkedUser.Handle))
+                ? linkedUser.Handle
+                : null,
+        };
+    }
 }

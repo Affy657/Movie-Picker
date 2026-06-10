@@ -17,8 +17,8 @@ type Props = {
   isFinished: boolean;
 };
 
-export default function EventStartReminderBanner({ date, time, isFinished }: Props) {
-  const [, setTick] = useState(0);
+export default function EventStartReminderBanner({ date, time, isFinished }: Readonly<Props>) {
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     if (isFinished) return;
@@ -28,11 +28,11 @@ export default function EventStartReminderBanner({ date, time, isFinished }: Pro
     let intervalId: number | undefined;
     let timeoutId: number | undefined;
 
-    const refresh = () => setTick((n) => n + 1);
+    const refresh = () => setNow(Date.now());
 
     const startPolling = () => {
       refresh();
-      intervalId = window.setInterval(() => {
+      intervalId = globalThis.setInterval(() => {
         refresh();
         if (Date.now() >= startMs && intervalId != null) {
           clearInterval(intervalId);
@@ -47,7 +47,7 @@ export default function EventStartReminderBanner({ date, time, isFinished }: Pro
     const windowMs = EVENT_START_REMINDER_WINDOW_MINUTES * 60_000;
     const windowStart = startMs - windowMs;
     if (now < windowStart) {
-      timeoutId = window.setTimeout(startPolling, Math.min(windowStart - now, MAX_TIMEOUT_MS));
+      timeoutId = globalThis.setTimeout(startPolling, Math.min(windowStart - now, MAX_TIMEOUT_MS));
     } else {
       startPolling();
     }
@@ -58,7 +58,7 @@ export default function EventStartReminderBanner({ date, time, isFinished }: Pro
     };
   }, [isFinished, date, time]);
 
-  const state = computeEventStartReminder(date, time, isFinished, Date.now());
+  const state = computeEventStartReminder(date, time, isFinished, now);
   if (!state.visible) return null;
 
   return (

@@ -111,4 +111,7 @@ app.MapGet("/", () => Results.Json(new
 
 await app.RunAsync();
 
-public partial class Program { }
+public partial class Program
+{
+    protected Program() { }
+}

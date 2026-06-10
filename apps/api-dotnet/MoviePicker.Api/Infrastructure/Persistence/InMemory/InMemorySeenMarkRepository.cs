@@ -70,11 +70,8 @@ public sealed class InMemorySeenMarkRepository : ISeenMarkRepository
         long count = 0;
         foreach (var key in _byKey.Keys.ToArray())
         {
-            if (_byKey.TryGetValue(key, out var r) && r.EventId == eventId)
-            {
-                if (_byKey.TryRemove(key, out _))
-                    count++;
-            }
+            if (_byKey.TryGetValue(key, out var r) && r.EventId == eventId && _byKey.TryRemove(key, out _))
+                count++;
         }
 
         return Task.FromResult(count);

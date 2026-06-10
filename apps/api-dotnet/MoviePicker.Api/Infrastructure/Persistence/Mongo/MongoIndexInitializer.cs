@@ -33,8 +33,7 @@ public sealed class MongoIndexInitializer : IHostedService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Échec création index MongoDB");
-            throw;
+            throw new InvalidOperationException("Échec de la création des index MongoDB au démarrage.", ex);
         }
     }
 
@@ -230,6 +229,9 @@ public sealed class MongoIndexInitializer : IHostedService
     private static async Task DropIndexIfExistsAsync<T>(IMongoCollection<T> col, string name, CancellationToken ct)
     {
         try { await col.Indexes.DropOneAsync(name, ct); }
-        catch (MongoCommandException ex) when (ex.Code == MongoErrorCodes.IndexNotFound) { }
+        catch (MongoCommandException ex) when (ex.Code == MongoErrorCodes.IndexNotFound)
+        {
+            // L'index n'existe pas — rien à supprimer.
+        }
     }
 }

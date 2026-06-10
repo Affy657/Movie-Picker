@@ -32,7 +32,7 @@ const AUTHENTICATED_NAV_ITEMS: ReadonlyArray<NavItemSpec> = [
   { to: ROUTES.account, labelKey: 'nav.account', Icon: Settings },
 ];
 
-function DesktopNavItem({ to, end, label }: NavItemDef) {
+function DesktopNavItem({ to, end, label }: Readonly<Omit<NavItemDef, 'Icon'>>) {
   return (
     <NavLink to={to} end={end} className={navLinkClass}>
       {label}
@@ -40,7 +40,7 @@ function DesktopNavItem({ to, end, label }: NavItemDef) {
   );
 }
 
-function MobileNavItem({ to, end, label, Icon }: NavItemDef) {
+function MobileNavItem({ to, end, label, Icon }: Readonly<NavItemDef>) {
   return (
     <NavLink to={to} end={end} className={navLinkClass}>
       <Icon className={styles.navIcon} aria-hidden="true" focusable="false" />

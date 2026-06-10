@@ -28,7 +28,7 @@ public static class MyEventListLifecycle
     private static bool TryParseScheduledInstant(Event e, out DateTimeOffset instant) =>
         DateTimeOffset.TryParse(
             $"{e.Date}T{e.Time}:00Z",
-            null,
+            System.Globalization.CultureInfo.InvariantCulture,
             System.Globalization.DateTimeStyles.AssumeUniversal,
             out instant);
 }

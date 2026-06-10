@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import clsx from 'clsx';
 import { Crown, Film, LogOut, MoreVertical, Plus, Trash2, Trophy, Users } from 'lucide-react';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
@@ -88,11 +88,11 @@ function EventCardKebab({
   title,
   onDelete,
   onLeave,
-}: {
+}: Readonly<{
   title: string;
   onDelete?: () => void;
   onLeave?: () => void;
-}) {
+}>) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
@@ -162,7 +162,7 @@ function EventListBlock({
   showLifecycleBadge = true,
   onDeleteEvent,
   onLeaveEvent,
-}: {
+}: Readonly<{
   sectionId: string;
   heading: string;
   events: MyEventSummary[];
@@ -170,7 +170,7 @@ function EventListBlock({
   showLifecycleBadge?: boolean;
   onDeleteEvent?: (slug: string) => void;
   onLeaveEvent?: (slug: string) => void;
-}) {
+}>) {
   const { t } = useTranslation();
   const { locale } = useLocale();
 
@@ -254,11 +254,12 @@ function EventListBlock({
                   </span>
                 </div>
               </Link>
-              {onDeleteEvent && ev.isCreator ? (
+              {onDeleteEvent && ev.isCreator && (
                 <EventCardKebab title={ev.title} onDelete={() => onDeleteEvent(ev.slug)} />
-              ) : onLeaveEvent && !ev.isCreator ? (
+              )}
+              {onLeaveEvent && !ev.isCreator && (
                 <EventCardKebab title={ev.title} onLeave={() => onLeaveEvent(ev.slug)} />
-              ) : null}
+              )}
             </li>
           );
         })}
@@ -286,6 +287,98 @@ const HISTORY_PAGE_SIZE = 10;
 
 type MyEventsTab = 'active' | 'history';
 
+function onSentinelIntersect(
+  entries: IntersectionObserverEntry[],
+  query: { isFetchingNextPage: boolean; hasNextPage: boolean; fetchNextPage: () => Promise<unknown> },
+  loadNextChunk: () => void
+): void {
+  if (!entries[0]?.isIntersecting) return;
+  if (query.isFetchingNextPage) return;
+  if (query.hasNextPage) {
+    query.fetchNextPage().then(loadNextChunk);
+  } else {
+    loadNextChunk();
+  }
+}
+
+function ActiveEventsPanel({
+  hostedActive,
+  joinedActive,
+  onLeaveEvent,
+  t,
+}: Readonly<{
+  hostedActive: MyEventSummary[];
+  joinedActive: MyEventSummary[];
+  onLeaveEvent: (slug: string) => void;
+  t: ReturnType<typeof useTranslation>['t'];
+}>) {
+  if (hostedActive.length === 0 && joinedActive.length === 0) {
+    return <p className={styles.sectionEmpty}>{t('events.myEvents.activeEmpty')}</p>;
+  }
+  return (
+    <>
+      <EventListBlock
+        sectionId="my-events-hosted"
+        heading={t('events.myEvents.hostedSection')}
+        events={hostedActive}
+        emptyHint={null}
+      />
+      <EventListBlock
+        sectionId="my-events-joined"
+        heading={t('events.myEvents.joinedSection')}
+        events={joinedActive}
+        emptyHint={null}
+        onLeaveEvent={onLeaveEvent}
+      />
+    </>
+  );
+}
+
+function HistoryEventsPanel({
+  historyEvents,
+  visibleHistoryCount,
+  hasNextPage,
+  infiniteScrollActive,
+  sentinelRef,
+  onActivateInfiniteScroll,
+  onDeleteEvent,
+  t,
+}: Readonly<{
+  historyEvents: MyEventSummary[];
+  visibleHistoryCount: number;
+  hasNextPage: boolean;
+  infiniteScrollActive: boolean;
+  sentinelRef: RefObject<HTMLDivElement | null>;
+  onActivateInfiniteScroll: () => void;
+  onDeleteEvent: (slug: string) => void;
+  t: ReturnType<typeof useTranslation>['t'];
+}>) {
+  if (historyEvents.length === 0) {
+    return <p className={styles.sectionEmpty}>{t('events.myEvents.historyEmpty')}</p>;
+  }
+  const showLoadMore = visibleHistoryCount < historyEvents.length || hasNextPage;
+  return (
+    <>
+      <EventListBlock
+        sectionId="my-events-history"
+        heading={t('events.myEvents.historySection')}
+        events={historyEvents.slice(0, visibleHistoryCount)}
+        emptyHint={null}
+        showLifecycleBadge={false}
+        onDeleteEvent={onDeleteEvent}
+      />
+      {showLoadMore &&
+        (infiniteScrollActive ? (
+          <div ref={sentinelRef} className={styles.sentinel} aria-hidden />
+        ) : (
+          <button type="button" className={styles.loadMoreBtn} onClick={onActivateInfiniteScroll}>
+            Voir plus
+          </button>
+        ))}
+    </>
+  );
+}
+
 export default function MyEventsPage() {
   const { t } = useTranslation();
   useDocumentTitle(pageTitle(t('events.myEvents.title')));
@@ -310,7 +403,7 @@ export default function MyEventsPage() {
   const deleteMutation = useMutation({
     mutationFn: (slug: string) => deleteEvent(slug),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.listPaged });
+      queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.listPaged });
       setDeleteError(null);
       track('event_deleted');
     },
@@ -327,7 +420,7 @@ export default function MyEventsPage() {
       removeEventParticipant(slug, participantId, null),
     onSuccess: (_, { slug }) => {
       removeStoredParticipant(slug);
-      void queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.listPaged });
+      queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.listPaged });
       setLeaveError(null);
       track('event_left');
     },
@@ -374,7 +467,7 @@ export default function MyEventsPage() {
     if (!loggedInQuery.isError || !ApiError.is(loggedInQuery.error)) return;
     if (loggedInQuery.error.code !== 401) return;
     queryClient.setQueryData(queryKeys.auth.me, null);
-    void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
+    queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
   }, [user, loggedInQuery.isError, loggedInQuery.error, queryClient]);
 
   const loadNextChunk = useCallback(() => {
@@ -386,15 +479,7 @@ export default function MyEventsPage() {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
     const observer = new IntersectionObserver(
-      (entries) => {
-        if (!entries[0]?.isIntersecting) return;
-        if (loggedInQuery.isFetchingNextPage) return;
-        if (loggedInQuery.hasNextPage) {
-          void loggedInQuery.fetchNextPage().then(loadNextChunk);
-        } else {
-          loadNextChunk();
-        }
-      },
+      (entries) => onSentinelIntersect(entries, loggedInQuery, loadNextChunk),
       { rootMargin: '120px' }
     );
     observer.observe(sentinel);
@@ -479,57 +564,28 @@ export default function MyEventsPage() {
           </div>
           {tab === 'active' ? (
             <div role="tabpanel" id="myevents-panel-active" aria-labelledby="myevents-tab-active">
-              {hostedActive.length === 0 && joinedActive.length === 0 ? (
-                <p className={styles.sectionEmpty}>{t('events.myEvents.activeEmpty')}</p>
-              ) : (
-                <>
-                  <EventListBlock
-                    sectionId="my-events-hosted"
-                    heading={t('events.myEvents.hostedSection')}
-                    events={hostedActive}
-                    emptyHint={null}
-                  />
-                  <EventListBlock
-                    sectionId="my-events-joined"
-                    heading={t('events.myEvents.joinedSection')}
-                    events={joinedActive}
-                    emptyHint={null}
-                    onLeaveEvent={handleLeaveEvent}
-                  />
-                </>
-              )}
+              <ActiveEventsPanel
+                hostedActive={hostedActive}
+                joinedActive={joinedActive}
+                onLeaveEvent={handleLeaveEvent}
+                t={t}
+              />
             </div>
           ) : (
             <div role="tabpanel" id="myevents-panel-history" aria-labelledby="myevents-tab-history">
-              {historyEvents.length === 0 ? (
-                <p className={styles.sectionEmpty}>{t('events.myEvents.historyEmpty')}</p>
-              ) : (
-                <>
-                  <EventListBlock
-                    sectionId="my-events-history"
-                    heading={t('events.myEvents.historySection')}
-                    events={historyEvents.slice(0, visibleHistoryCount)}
-                    emptyHint={null}
-                    showLifecycleBadge={false}
-                    onDeleteEvent={setConfirmDeleteSlug}
-                  />
-                  {(visibleHistoryCount < historyEvents.length || loggedInQuery.hasNextPage) &&
-                    (infiniteScrollActive ? (
-                      <div ref={sentinelRef} className={styles.sentinel} aria-hidden />
-                    ) : (
-                      <button
-                        type="button"
-                        className={styles.loadMoreBtn}
-                        onClick={() => {
-                          setInfiniteScrollActive(true);
-                          loadNextChunk();
-                        }}
-                      >
-                        Voir plus
-                      </button>
-                    ))}
-                </>
-              )}
+              <HistoryEventsPanel
+                historyEvents={historyEvents}
+                visibleHistoryCount={visibleHistoryCount}
+                hasNextPage={loggedInQuery.hasNextPage}
+                infiniteScrollActive={infiniteScrollActive}
+                sentinelRef={sentinelRef}
+                onActivateInfiniteScroll={() => {
+                  setInfiniteScrollActive(true);
+                  loadNextChunk();
+                }}
+                onDeleteEvent={setConfirmDeleteSlug}
+                t={t}
+              />
             </div>
           )}
         </>

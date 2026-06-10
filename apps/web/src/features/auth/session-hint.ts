@@ -1,27 +1,27 @@
 const STORAGE_KEY = 'mp.session-hint';
 
 export function hasSessionHint(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof globalThis.window === 'undefined') return false;
   try {
-    return window.localStorage.getItem(STORAGE_KEY) === '1';
+    return globalThis.localStorage.getItem(STORAGE_KEY) === '1';
   } catch {
     return false;
   }
 }
 
 export function setSessionHint(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis.window === 'undefined') return;
   try {
-    window.localStorage.setItem(STORAGE_KEY, '1');
+    globalThis.localStorage.setItem(STORAGE_KEY, '1');
   } catch {
     // Storage unavailable (private browsing or quota exceeded) — write fails silently
   }
 }
 
 export function clearSessionHint(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis.window === 'undefined') return;
   try {
-    window.localStorage.removeItem(STORAGE_KEY);
+    globalThis.localStorage.removeItem(STORAGE_KEY);
   } catch {
     // Storage unavailable (private browsing or quota exceeded) — remove fails silently
   }

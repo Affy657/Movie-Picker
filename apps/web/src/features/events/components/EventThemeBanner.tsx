@@ -12,7 +12,7 @@ type EventThemeBannerStyle = CSSProperties & {
   '--event-theme-hue'?: string;
 };
 
-export default function EventThemeBanner({ theme, themeColor }: EventThemeBannerProps) {
+export default function EventThemeBanner({ theme, themeColor }: Readonly<EventThemeBannerProps>) {
   const label = theme?.trim();
   if (!label) return null;
 
@@ -21,10 +21,9 @@ export default function EventThemeBanner({ theme, themeColor }: EventThemeBanner
     hue == null ? undefined : { '--event-theme-hue': String(hue) };
 
   return (
-    <div
+    <output
       className={styles.root}
       style={style}
-      role="status"
       aria-label={`Thème de soirée : ${label}`}
     >
       <span className={styles.iconWrap} aria-hidden>
@@ -34,6 +33,6 @@ export default function EventThemeBanner({ theme, themeColor }: EventThemeBanner
         <span className={styles.kicker}>Thème</span>
         <span className={styles.title}>{label}</span>
       </div>
-    </div>
+    </output>
   );
 }

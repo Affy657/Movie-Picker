@@ -10,6 +10,8 @@ namespace MoviePicker.Api.Application.UseCases.SearchMovies;
 
 public sealed class SearchMoviesHandler : ISearchMoviesHandler
 {
+    private const string TmdbHomeUrl = "https://www.themoviedb.org/";
+
     private readonly ITmdbMovieSearch _tmdb;
     private readonly MoviePickerOptions _options;
 
@@ -93,7 +95,7 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
             Items = items,
             WatchProvidersRegion = region,
             Disclaimer = TmdbIndicativeCopy.Disclaimer,
-            TmdbAttributionUrl = "https://www.themoviedb.org/"
+            TmdbAttributionUrl = TmdbHomeUrl
         };
     }
 }

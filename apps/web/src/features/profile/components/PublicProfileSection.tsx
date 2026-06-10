@@ -32,9 +32,9 @@ export default function PublicProfileSection() {
 
   useEffect(() => {
     if (savedAt === null) return;
-    window.clearTimeout(savedTimerRef.current);
-    savedTimerRef.current = window.setTimeout(() => setSavedAt(null), SAVE_FEEDBACK_MS);
-    return () => window.clearTimeout(savedTimerRef.current);
+    globalThis.clearTimeout(savedTimerRef.current);
+    savedTimerRef.current = globalThis.setTimeout(() => setSavedAt(null), SAVE_FEEDBACK_MS);
+    return () => globalThis.clearTimeout(savedTimerRef.current);
   }, [savedAt]);
 
   const saveAction = useCallback(async () => {

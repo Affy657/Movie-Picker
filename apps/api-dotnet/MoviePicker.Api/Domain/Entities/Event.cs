@@ -25,7 +25,7 @@ public sealed record Event
         if (Config?.EndDate is { } endDate)
             return utcNow >= endDate;
 
-        if (DateTimeOffset.TryParse($"{Date}T{Time}:00Z", null, System.Globalization.DateTimeStyles.AssumeUniversal, out var end))
+        if (DateTimeOffset.TryParse($"{Date}T{Time}:00Z", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal, out var end))
             return utcNow >= end;
 
         return false;

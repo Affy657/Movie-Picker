@@ -5,5 +5,5 @@ export function getParticipantId(movie: MovieData): string {
   if (typeof p === 'object' && p !== null && 'id' in p && typeof p.id === 'string') {
     return p.id;
   }
-  return String(p);
+  return typeof p === 'string' ? p : JSON.stringify(p);
 }
