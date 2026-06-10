@@ -29,7 +29,7 @@ function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
 
 export function usePushNotifications(): PushNotificationsState {
   const supported =
-    typeof globalThis.window !== 'undefined' &&
+    globalThis.window !== undefined &&
     'serviceWorker' in navigator &&
     'PushManager' in globalThis &&
     'Notification' in globalThis;

@@ -30,6 +30,7 @@ public sealed class MongoIndexInitializer : IHostedService
             await EnsurePushSubscriptionIndexesAsync(cancellationToken);
             await EnsureFollowIndexesAsync(cancellationToken);
             await EnsureUserNotificationIndexesAsync(cancellationToken);
+            _logger.LogInformation("Index MongoDB initialisés.");
         }
         catch (Exception ex)
         {
