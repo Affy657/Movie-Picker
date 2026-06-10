@@ -276,10 +276,7 @@ export default function EventDetail() {
       )}
 
       {moviesQuery.isError && (
-        <EventMoviesLoadError
-          error={moviesQuery.error}
-          onRetry={() => moviesQuery.refetch()}
-        />
+        <EventMoviesLoadError error={moviesQuery.error} onRetry={() => moviesQuery.refetch()} />
       )}
 
       {needsJoin && (

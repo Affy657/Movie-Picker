@@ -19,7 +19,12 @@ interface JoinFormProps {
   maxParticipants?: number | null;
 }
 
-export default function JoinForm({ slug, onJoined, isFull, maxParticipants }: Readonly<JoinFormProps>) {
+export default function JoinForm({
+  slug,
+  onJoined,
+  isFull,
+  maxParticipants,
+}: Readonly<JoinFormProps>) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { track } = useAnalytics();

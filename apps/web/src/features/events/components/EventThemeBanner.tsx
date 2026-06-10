@@ -21,11 +21,7 @@ export default function EventThemeBanner({ theme, themeColor }: Readonly<EventTh
     hue == null ? undefined : { '--event-theme-hue': String(hue) };
 
   return (
-    <output
-      className={styles.root}
-      style={style}
-      aria-label={`Thème de soirée : ${label}`}
-    >
+    <output className={styles.root} style={style} aria-label={`Thème de soirée : ${label}`}>
       <span className={styles.iconWrap} aria-hidden>
         <Tag size={16} />
       </span>

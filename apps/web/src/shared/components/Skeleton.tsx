@@ -35,7 +35,12 @@ type SkeletonScreenProps = {
   children: ReactNode;
 };
 
-export function SkeletonScreen({ label, className, style, children }: Readonly<SkeletonScreenProps>) {
+export function SkeletonScreen({
+  label,
+  className,
+  style,
+  children,
+}: Readonly<SkeletonScreenProps>) {
   return (
     <div role="status" aria-busy="true" aria-live="polite" className={className} style={style}>
       <span className="visually-hidden">{label}</span>

@@ -10,7 +10,11 @@ type AuthPageShellProps = {
   children: ReactNode;
 };
 
-export default function AuthPageShell({ title, description, children }: Readonly<AuthPageShellProps>) {
+export default function AuthPageShell({
+  title,
+  description,
+  children,
+}: Readonly<AuthPageShellProps>) {
   return (
     <>
       <Link to={ROUTES.home} className={styles.backLink}>

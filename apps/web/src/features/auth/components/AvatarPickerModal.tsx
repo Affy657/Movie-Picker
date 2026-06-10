@@ -15,7 +15,12 @@ type Props = {
   onClose: () => void;
 };
 
-export default function AvatarPickerModal({ open, currentAvatarId, onSelect, onClose }: Readonly<Props>) {
+export default function AvatarPickerModal({
+  open,
+  currentAvatarId,
+  onSelect,
+  onClose,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const reactId = useId();

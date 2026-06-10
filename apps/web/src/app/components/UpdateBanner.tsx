@@ -21,7 +21,11 @@ export default function UpdateBanner() {
         <RefreshCw className={styles.icon} />
       </span>
       <p className={styles.text}>{t('pwaUpdate.message')}</p>
-      <button type="button" className={styles.reloadBtn} onClick={() => globalThis.location.reload()}>
+      <button
+        type="button"
+        className={styles.reloadBtn}
+        onClick={() => globalThis.location.reload()}
+      >
         {t('pwaUpdate.reload')}
       </button>
       <button

@@ -15,7 +15,10 @@ const LABEL_KEY: Record<UiThemePreference, TranslationKey> = {
   dark: 'theme.dark',
 };
 
-export default function ThemeToggle({ className = '', id }: Readonly<{ className?: string; id?: string }>) {
+export default function ThemeToggle({
+  className = '',
+  id,
+}: Readonly<{ className?: string; id?: string }>) {
   const { preference, setUiPreference } = useTheme();
   const { user, patchProfile } = useAuth();
   const { t } = useTranslation();

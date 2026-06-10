@@ -13,11 +13,7 @@ export default function ConsentBanner() {
 
   return (
     <>
-      <section
-        className={styles.root}
-        aria-label={t('consent.banner.title')}
-        aria-live="polite"
-      >
+      <section className={styles.root} aria-label={t('consent.banner.title')} aria-live="polite">
         <div className={styles.content}>
           <p className={styles.title}>{t('consent.banner.title')}</p>
           <p className={styles.description}>{t('consent.banner.description')}</p>

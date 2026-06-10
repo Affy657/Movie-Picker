@@ -289,7 +289,11 @@ type MyEventsTab = 'active' | 'history';
 
 function onSentinelIntersect(
   entries: IntersectionObserverEntry[],
-  query: { isFetchingNextPage: boolean; hasNextPage: boolean; fetchNextPage: () => Promise<unknown> },
+  query: {
+    isFetchingNextPage: boolean;
+    hasNextPage: boolean;
+    fetchNextPage: () => Promise<unknown>;
+  },
   loadNextChunk: () => void
 ): void {
   if (!entries[0]?.isIntersecting) return;
