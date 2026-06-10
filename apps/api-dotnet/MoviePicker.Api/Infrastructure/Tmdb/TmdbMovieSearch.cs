@@ -287,62 +287,79 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
             ? ReadStringProp(root, "first_air_date")
             : ReadStringProp(root, "release_date");
 
-        var genres = new List<string>();
-        var genreIds = new List<int>();
-        if (root.TryGetProperty("genres", out var genresEl) && genresEl.ValueKind == JsonValueKind.Array)
-        {
-            foreach (var g in genresEl.EnumerateArray())
-            {
-                if (g.TryGetProperty("id", out var idEl) && idEl.ValueKind == JsonValueKind.Number)
-                    genreIds.Add(idEl.GetInt32());
-
-                if (g.TryGetProperty("name", out var n) && n.ValueKind == JsonValueKind.String)
-                {
-                    var gName = n.GetString();
-                    if (!string.IsNullOrEmpty(gName))
-                        genres.Add(gName);
-                }
-            }
-        }
+        var (genres, genreIds) = ReadGenres(root);
 
         string? director = null;
         var cast = new List<string>();
         if (root.TryGetProperty("credits", out var creditsEl) && creditsEl.ValueKind == JsonValueKind.Object)
         {
-            if (creditsEl.TryGetProperty("crew", out var crewEl) && crewEl.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var member in crewEl.EnumerateArray())
-                {
-                    var job = member.TryGetProperty("job", out var jobEl) ? jobEl.GetString() : null;
-                    if (string.Equals(job, "Director", StringComparison.OrdinalIgnoreCase))
-                    {
-                        director = member.TryGetProperty("name", out var nameEl) ? nameEl.GetString() : null;
-                        if (!string.IsNullOrEmpty(director))
-                            break;
-                    }
-                }
-            }
-
-            if (creditsEl.TryGetProperty("cast", out var castEl) && castEl.ValueKind == JsonValueKind.Array)
-            {
-                var i = 0;
-                foreach (var actor in castEl.EnumerateArray())
-                {
-                    if (i++ >= 8)
-                        break;
-                    if (actor.TryGetProperty("name", out var nameEl) && nameEl.ValueKind == JsonValueKind.String)
-                    {
-                        var name = nameEl.GetString();
-                        if (!string.IsNullOrEmpty(name))
-                            cast.Add(name);
-                    }
-                }
-            }
+            director = ReadDirector(creditsEl);
+            cast = ReadTopCast(creditsEl);
         }
 
         var trailerUrl = ExtractTrailerUrl(root);
 
         return new TmdbMovieDetails(tmdbId, title, overview, tagline, director, cast, runtime, genres, genreIds, releaseDate, trailerUrl);
+    }
+
+    private static (List<string> Names, List<int> Ids) ReadGenres(JsonElement root)
+    {
+        var genres = new List<string>();
+        var genreIds = new List<int>();
+        if (!root.TryGetProperty("genres", out var genresEl) || genresEl.ValueKind != JsonValueKind.Array)
+            return (genres, genreIds);
+
+        foreach (var g in genresEl.EnumerateArray())
+        {
+            if (g.TryGetProperty("id", out var idEl) && idEl.ValueKind == JsonValueKind.Number)
+                genreIds.Add(idEl.GetInt32());
+
+            if (g.TryGetProperty("name", out var n) && n.ValueKind == JsonValueKind.String)
+            {
+                var gName = n.GetString();
+                if (!string.IsNullOrEmpty(gName))
+                    genres.Add(gName);
+            }
+        }
+        return (genres, genreIds);
+    }
+
+    private static string? ReadDirector(JsonElement creditsEl)
+    {
+        if (!creditsEl.TryGetProperty("crew", out var crewEl) || crewEl.ValueKind != JsonValueKind.Array)
+            return null;
+
+        foreach (var member in crewEl.EnumerateArray())
+        {
+            var job = member.TryGetProperty("job", out var jobEl) ? jobEl.GetString() : null;
+            if (!string.Equals(job, "Director", StringComparison.OrdinalIgnoreCase))
+                continue;
+            var director = member.TryGetProperty("name", out var nameEl) ? nameEl.GetString() : null;
+            if (!string.IsNullOrEmpty(director))
+                return director;
+        }
+        return null;
+    }
+
+    private static List<string> ReadTopCast(JsonElement creditsEl)
+    {
+        var cast = new List<string>();
+        if (!creditsEl.TryGetProperty("cast", out var castEl) || castEl.ValueKind != JsonValueKind.Array)
+            return cast;
+
+        var i = 0;
+        foreach (var actor in castEl.EnumerateArray())
+        {
+            if (i++ >= 8)
+                break;
+            if (actor.TryGetProperty("name", out var nameEl) && nameEl.ValueKind == JsonValueKind.String)
+            {
+                var name = nameEl.GetString();
+                if (!string.IsNullOrEmpty(name))
+                    cast.Add(name);
+            }
+        }
+        return cast;
     }
 
     private static string MediaTypeSegment(MovieMediaType m) => m == MovieMediaType.Tv ? "tv" : "movie";
@@ -396,30 +413,31 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         return string.IsNullOrEmpty(p) ? null : PosterBase + p;
     }
 
-    private static int? ReadRuntimeMinutes(JsonElement root, MovieMediaType mediaType)
+    private static int? ReadRuntimeMinutes(JsonElement root, MovieMediaType mediaType) =>
+        mediaType == MovieMediaType.Movie ? ReadMovieRuntime(root) : ReadSeriesRuntime(root);
+
+    private static int? ReadMovieRuntime(JsonElement root)
     {
-        if (mediaType == MovieMediaType.Movie)
+        if (root.TryGetProperty("runtime", out var rt) && rt.ValueKind == JsonValueKind.Number)
         {
-            if (root.TryGetProperty("runtime", out var rt) && rt.ValueKind == JsonValueKind.Number)
-            {
-                var minutes = rt.GetInt32();
-                return minutes > 0 ? minutes : null;
-            }
+            var minutes = rt.GetInt32();
+            return minutes > 0 ? minutes : null;
+        }
+        return null;
+    }
+
+    private static int? ReadSeriesRuntime(JsonElement root)
+    {
+        if (!root.TryGetProperty("episode_run_time", out var arr) || arr.ValueKind != JsonValueKind.Array)
             return null;
-        }
-
-        if (root.TryGetProperty("episode_run_time", out var arr) && arr.ValueKind == JsonValueKind.Array)
+        foreach (var el in arr.EnumerateArray())
         {
-            foreach (var el in arr.EnumerateArray())
-            {
-                if (el.ValueKind != JsonValueKind.Number)
-                    continue;
-                var minutes = el.GetInt32();
-                if (minutes > 0)
-                    return minutes;
-            }
+            if (el.ValueKind != JsonValueKind.Number)
+                continue;
+            var minutes = el.GetInt32();
+            if (minutes > 0)
+                return minutes;
         }
-
         return null;
     }
 
@@ -434,27 +452,31 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         var bestRank = int.MaxValue;
         foreach (var v in results.EnumerateArray())
         {
-            var site = v.TryGetProperty("site", out var s) ? s.GetString() : null;
-            if (!string.Equals(site, "YouTube", StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            var key = v.TryGetProperty("key", out var k) ? k.GetString() : null;
-            if (string.IsNullOrWhiteSpace(key))
-                continue;
-
-            var type = v.TryGetProperty("type", out var tp) ? tp.GetString() : null;
-            var lang = v.TryGetProperty("iso_639_1", out var lg) ? lg.GetString() : null;
-            var official = v.TryGetProperty("official", out var of) && of.ValueKind == JsonValueKind.True;
-
-            var rank = TrailerRank(type, lang, official);
-            if (rank < bestRank)
+            if (ReadYouTubeTrailerCandidate(v) is { } candidate && candidate.Rank < bestRank)
             {
-                bestRank = rank;
-                bestKey = key;
+                bestRank = candidate.Rank;
+                bestKey = candidate.Key;
             }
         }
 
         return bestKey is null ? null : YoutubeWatchBase + Uri.EscapeDataString(bestKey);
+    }
+
+    private static (string Key, int Rank)? ReadYouTubeTrailerCandidate(JsonElement v)
+    {
+        var site = v.TryGetProperty("site", out var s) ? s.GetString() : null;
+        if (!string.Equals(site, "YouTube", StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        var key = v.TryGetProperty("key", out var k) ? k.GetString() : null;
+        if (string.IsNullOrWhiteSpace(key))
+            return null;
+
+        var type = v.TryGetProperty("type", out var tp) ? tp.GetString() : null;
+        var lang = v.TryGetProperty("iso_639_1", out var lg) ? lg.GetString() : null;
+        var official = v.TryGetProperty("official", out var of) && of.ValueKind == JsonValueKind.True;
+
+        return (key, TrailerRank(type, lang, official));
     }
 
     private static int TrailerRank(string? type, string? lang, bool official)
