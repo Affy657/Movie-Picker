@@ -5,6 +5,7 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.Posters;
 using MoviePicker.Api.Configuration;
+using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.UseCases.ListMovies;
 
@@ -60,34 +61,9 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         var participantIds = movies.Select(m => m.ParticipantId).Concat(seenParticipantIds).Distinct().ToList();
         var pseudos = await _participantRepository.GetPseudosByIdsAsync(participantIds, ct);
 
-        var enrichmentByKey = new ConcurrentDictionary<(int, string), TmdbMovieEnrichment?>();
-        if (!string.IsNullOrWhiteSpace(_options.TmdbApiKey))
-        {
-            var region = string.IsNullOrWhiteSpace(_options.TmdbWatchProvidersRegion)
-                ? "FR"
-                : _options.TmdbWatchProvidersRegion.Trim().ToUpperInvariant();
-            var distinctPairs = movies.Select(x => (x.TmdbId, x.MediaType)).Distinct().ToList();
-            var parallel = Math.Clamp(_options.TmdbListEnrichmentMaxParallelism, 1, 16);
-            await Parallel.ForEachAsync(
-                    distinctPairs,
-                    new ParallelOptions { MaxDegreeOfParallelism = parallel, CancellationToken = ct },
-                    async (pair, c) =>
-                    {
-                        var (tmdbId, mediaType) = pair;
-                        var enr = await _tmdbMovieSearch.GetEnrichmentAsync(tmdbId, mediaType, region, c);
-                        enrichmentByKey[(tmdbId, mediaType.ToString())] = enr;
-                    })
-                .ConfigureAwait(false);
-        }
+        var enrichmentByKey = await BuildEnrichmentMapAsync(movies, ct);
 
-        var tmdbSources = new List<string>();
-        foreach (var m in movies)
-        {
-            if (TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(m.PosterPath, out var src))
-                tmdbSources.Add(src);
-        }
-
-        await _posterImageStore.RegisterTmdbSourcesAsync(tmdbSources, ct);
+        await _posterImageStore.RegisterTmdbSourcesAsync(CollectTmdbPosterSources(movies), ct);
 
         var list = new List<MovieWithScoreResponse>(movies.Count);
         foreach (var m in movies)
@@ -100,15 +76,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
             if (seenAgg.TryGetValue(m.Id, out var seen))
             {
                 seenCount = seen.Count;
-                var list2 = new List<string>();
-                foreach (var pid in seen.ParticipantIds)
-                {
-                    if (list2.Count >= MaxSeenByPseudosPerMovie)
-                        break;
-                    if (pseudos.TryGetValue(pid, out var p) && !string.IsNullOrWhiteSpace(p))
-                        list2.Add(p);
-                }
-                seenByPseudos = list2;
+                seenByPseudos = ResolveSeenPseudos(seen.ParticipantIds, pseudos);
             }
 
             enrichmentByKey.TryGetValue((m.TmdbId, m.MediaType.ToString()), out var enr);
@@ -145,5 +113,57 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         }
 
         return list;
+    }
+
+    private async Task<ConcurrentDictionary<(int, string), TmdbMovieEnrichment?>> BuildEnrichmentMapAsync(
+        IReadOnlyList<Movie> movies,
+        CancellationToken ct)
+    {
+        var enrichmentByKey = new ConcurrentDictionary<(int, string), TmdbMovieEnrichment?>();
+        if (string.IsNullOrWhiteSpace(_options.TmdbApiKey))
+            return enrichmentByKey;
+
+        var region = string.IsNullOrWhiteSpace(_options.TmdbWatchProvidersRegion)
+            ? "FR"
+            : _options.TmdbWatchProvidersRegion.Trim().ToUpperInvariant();
+        var distinctPairs = movies.Select(x => (x.TmdbId, x.MediaType)).Distinct().ToList();
+        var parallel = Math.Clamp(_options.TmdbListEnrichmentMaxParallelism, 1, 16);
+        await Parallel.ForEachAsync(
+                distinctPairs,
+                new ParallelOptions { MaxDegreeOfParallelism = parallel, CancellationToken = ct },
+                async (pair, c) =>
+                {
+                    var (tmdbId, mediaType) = pair;
+                    var enr = await _tmdbMovieSearch.GetEnrichmentAsync(tmdbId, mediaType, region, c);
+                    enrichmentByKey[(tmdbId, mediaType.ToString())] = enr;
+                })
+            .ConfigureAwait(false);
+        return enrichmentByKey;
+    }
+
+    private static List<string> CollectTmdbPosterSources(IReadOnlyList<Movie> movies)
+    {
+        var sources = new List<string>();
+        foreach (var m in movies)
+        {
+            if (TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(m.PosterPath, out var src))
+                sources.Add(src);
+        }
+        return sources;
+    }
+
+    private static IReadOnlyList<string> ResolveSeenPseudos(
+        IEnumerable<string> participantIds,
+        IReadOnlyDictionary<string, string> pseudos)
+    {
+        var result = new List<string>();
+        foreach (var pid in participantIds)
+        {
+            if (result.Count >= MaxSeenByPseudosPerMovie)
+                break;
+            if (pseudos.TryGetValue(pid, out var p) && !string.IsNullOrWhiteSpace(p))
+                result.Add(p);
+        }
+        return result;
     }
 }

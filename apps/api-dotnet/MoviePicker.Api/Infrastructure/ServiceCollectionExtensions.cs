@@ -28,53 +28,7 @@ public static class ServiceCollectionExtensions
     {
         services
             .AddOptions<MoviePickerOptions>()
-            .Configure<IConfiguration>((opts, cfg) =>
-            {
-                opts.MongoDbUri = cfg["MONGODB_URI"] ?? string.Empty;
-                var key = cfg["TMDB_API_KEY"];
-                opts.TmdbApiKey = string.IsNullOrWhiteSpace(key) ? null : key;
-                var region = cfg["TMDB_WATCH_REGION"];
-                opts.TmdbWatchProvidersRegion = string.IsNullOrWhiteSpace(region) ? "FR" : region.Trim();
-                if (int.TryParse(cfg["TMDB_ENRICHMENT_CACHE_HOURS"], out var hours) && hours > 0)
-                    opts.TmdbEnrichmentCacheHours = hours;
-                if (int.TryParse(cfg["TMDB_SEARCH_MAX_PROVIDER_LOOKUPS"], out var maxLp) && maxLp >= 0)
-                    opts.TmdbSearchMaxWatchProviderLookups = maxLp;
-                if (int.TryParse(cfg["TMDB_LIST_ENRICHMENT_MAX_PARALLEL"], out var par) && par > 0)
-                    opts.TmdbListEnrichmentMaxParallelism = Math.Min(par, 16);
-                var posterEn = cfg["POSTER_CACHE_ENABLED"];
-                opts.PosterCacheEnabled = string.IsNullOrWhiteSpace(posterEn)
-                    || (posterEn != "0" && !posterEn.Equals("false", StringComparison.OrdinalIgnoreCase));
-                if (int.TryParse(cfg["POSTER_CACHE_TTL_DAYS"], out var pttl) && pttl > 0)
-                    opts.PosterCacheTtlDays = pttl;
-                if (int.TryParse(cfg["POSTER_CACHE_MAX_BYTES"], out var pmax) && pmax >= 4096)
-                    opts.PosterCacheMaxBytes = pmax;
-                var webBase = cfg["PUBLIC_WEB_BASE_URL"];
-                if (!string.IsNullOrWhiteSpace(webBase))
-                    opts.PublicWebBaseUrl = webBase.Trim().TrimEnd('/');
-                var emailProvider = cfg["EMAIL_PROVIDER"];
-                if (!string.IsNullOrWhiteSpace(emailProvider))
-                    opts.EmailProvider = emailProvider.Trim().ToLowerInvariant();
-                var fromAddress = cfg["EMAIL_FROM_ADDRESS"];
-                if (!string.IsNullOrWhiteSpace(fromAddress))
-                    opts.EmailFromAddress = fromAddress.Trim();
-                var fromName = cfg["EMAIL_FROM_NAME"];
-                if (!string.IsNullOrWhiteSpace(fromName))
-                    opts.EmailFromName = fromName.Trim();
-                var resendKey = cfg["RESEND_API_KEY"];
-                opts.ResendApiKey = string.IsNullOrWhiteSpace(resendKey) ? null : resendKey;
-                var resendBase = cfg["RESEND_API_BASE_URL"];
-                if (!string.IsNullOrWhiteSpace(resendBase))
-                    opts.ResendApiBaseUrl = resendBase.Trim().TrimEnd('/');
-                var vapidPub = cfg["VAPID_PUBLIC_KEY"];
-                if (!string.IsNullOrWhiteSpace(vapidPub))
-                    opts.VapidPublicKey = StripNonBase64Url(vapidPub);
-                var vapidPriv = cfg["VAPID_PRIVATE_KEY"];
-                if (!string.IsNullOrWhiteSpace(vapidPriv))
-                    opts.VapidPrivateKey = StripNonBase64Url(vapidPriv);
-                var vapidSubject = cfg["VAPID_SUBJECT"];
-                if (!string.IsNullOrWhiteSpace(vapidSubject))
-                    opts.VapidSubject = vapidSubject.Trim();
-            });
+            .Configure<IConfiguration>(ConfigureMoviePickerOptions);
 
         services.AddMemoryCache();
 
@@ -84,64 +38,8 @@ public static class ServiceCollectionExtensions
                 p => p.ConfigureMoviePickerCors(configuration, environment)));
 
         var mongoUri = configuration["MONGODB_URI"] ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(mongoUri))
-        {
-            services.AddSingleton<IEventRepository, InMemoryEventRepository>();
-            services.AddSingleton<IParticipantRepository, InMemoryParticipantRepository>();
-            services.AddSingleton<IUserRepository, InMemoryUserRepository>();
-            services.AddSingleton<IPasswordResetTokenRepository, InMemoryPasswordResetTokenRepository>();
-            services.AddSingleton<IMovieRepository, InMemoryMovieRepository>();
-            services.AddSingleton<IVoteRepository, InMemoryVoteRepository>();
-            services.AddSingleton<ISeenMarkRepository, InMemorySeenMarkRepository>();
-            services.AddSingleton<IAuthSessionInvalidator, InMemoryAuthSessionInvalidator>();
-            services.AddSingleton<IPushSubscriptionRepository, InMemoryPushSubscriptionRepository>();
-            services.AddSingleton<IFollowRepository, InMemoryFollowRepository>();
-            services.AddSingleton<IUserNotificationRepository, InMemoryUserNotificationRepository>();
-        }
-        else
-        {
-            var mongoUrl = new MongoUrl(mongoUri);
-            var databaseName = mongoUrl.DatabaseName ?? "moviepicker";
-            if (environment.IsDevelopment()
-                && string.Equals(databaseName, "moviepicker", StringComparison.OrdinalIgnoreCase))
-            {
-                throw new InvalidOperationException(
-                    "Garde-fou : en Development, MONGODB_URI cible la base de production 'moviepicker'. "
-                    + "Utilise une base dédiée et jetable (ex. 'moviepicker_dev'). "
-                    + "La base 'moviepicker' n'est autorisée qu'en Production.");
-            }
-            services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoUrl));
-            services.AddSingleton<IMongoDatabase>(sp =>
-            {
-                var client = sp.GetRequiredService<IMongoClient>();
-                return client.GetDatabase(databaseName);
-            });
-            services.AddScoped<IEventRepository, MongoEventRepository>();
-            services.AddScoped<IParticipantRepository, MongoParticipantRepository>();
-            services.AddScoped<IUserRepository, MongoUserRepository>();
-            services.AddScoped<IPasswordResetTokenRepository, MongoPasswordResetTokenRepository>();
-            services.AddScoped<IMovieRepository, MongoMovieRepository>();
-            services.AddScoped<IVoteRepository, MongoVoteRepository>();
-            services.AddScoped<ISeenMarkRepository, MongoSeenMarkRepository>();
-            services.AddScoped<IAuthSessionInvalidator, MongoAuthSessionInvalidator>();
-            services.AddScoped<IPushSubscriptionRepository, MongoPushSubscriptionRepository>();
-            services.AddScoped<IFollowRepository, MongoFollowRepository>();
-            services.AddScoped<IUserNotificationRepository, MongoUserNotificationRepository>();
-            services.AddHostedService<MongoIndexInitializer>();
-            services.AddHostedService<UserHandleBackfillService>();
-            services.AddHostedService<GenreBackfillService>();
-        }
-
-        if (string.Equals(configuration["E2E_STUB_TMDB"], "1", StringComparison.Ordinal))
-            services.AddSingleton<ITmdbMovieSearch, StubTmdbMovieSearch>();
-        else
-            services.AddHttpClient<ITmdbMovieSearch, TmdbMovieSearch>()
-                .ConfigurePrimaryHttpMessageHandler(static () => new HttpClientHandler
-                {
-                    AutomaticDecompression = System.Net.DecompressionMethods.GZip
-                        | System.Net.DecompressionMethods.Deflate
-                        | System.Net.DecompressionMethods.Brotli,
-                });
+        RegisterRepositories(services, mongoUri, environment);
+        RegisterTmdbSearch(services, configuration);
 
         services.AddHttpClient(
                 PosterFetchHttp.ClientName,
@@ -153,12 +51,7 @@ public static class ServiceCollectionExtensions
             .ConfigurePrimaryHttpMessageHandler(
                 static () => new SocketsHttpHandler { AllowAutoRedirect = false });
 
-        if (!GetPosterCacheEnabledFlag(configuration))
-            services.AddSingleton<IPosterImageStore, DisabledPosterImageStore>();
-        else if (string.IsNullOrWhiteSpace(mongoUri))
-            services.AddSingleton<IPosterImageStore, MemoryPosterImageStore>();
-        else
-            services.AddSingleton<IPosterImageStore, MongoPosterImageStore>();
+        RegisterPosterStore(services, configuration, mongoUri);
 
         services.AddHttpContextAccessor();
         services.AddScoped<IHostTokenAccessor, HostTokenAccessor>();
@@ -183,6 +76,159 @@ public static class ServiceCollectionExtensions
         }
 
         return services;
+    }
+
+    private static void ConfigureMoviePickerOptions(MoviePickerOptions opts, IConfiguration cfg)
+    {
+        opts.MongoDbUri = cfg["MONGODB_URI"] ?? string.Empty;
+        ConfigureTmdbOptions(opts, cfg);
+        ConfigurePosterOptions(opts, cfg);
+
+        var webBase = cfg["PUBLIC_WEB_BASE_URL"];
+        if (!string.IsNullOrWhiteSpace(webBase))
+            opts.PublicWebBaseUrl = webBase.Trim().TrimEnd('/');
+
+        ConfigureEmailOptions(opts, cfg);
+        ConfigureVapidOptions(opts, cfg);
+    }
+
+    private static void ConfigureTmdbOptions(MoviePickerOptions opts, IConfiguration cfg)
+    {
+        var key = cfg["TMDB_API_KEY"];
+        opts.TmdbApiKey = string.IsNullOrWhiteSpace(key) ? null : key;
+        var region = cfg["TMDB_WATCH_REGION"];
+        opts.TmdbWatchProvidersRegion = string.IsNullOrWhiteSpace(region) ? "FR" : region.Trim();
+        if (int.TryParse(cfg["TMDB_ENRICHMENT_CACHE_HOURS"], out var hours) && hours > 0)
+            opts.TmdbEnrichmentCacheHours = hours;
+        if (int.TryParse(cfg["TMDB_SEARCH_MAX_PROVIDER_LOOKUPS"], out var maxLp) && maxLp >= 0)
+            opts.TmdbSearchMaxWatchProviderLookups = maxLp;
+        if (int.TryParse(cfg["TMDB_LIST_ENRICHMENT_MAX_PARALLEL"], out var par) && par > 0)
+            opts.TmdbListEnrichmentMaxParallelism = Math.Min(par, 16);
+    }
+
+    private static void ConfigurePosterOptions(MoviePickerOptions opts, IConfiguration cfg)
+    {
+        var posterEn = cfg["POSTER_CACHE_ENABLED"];
+        opts.PosterCacheEnabled = string.IsNullOrWhiteSpace(posterEn)
+            || (posterEn != "0" && !posterEn.Equals("false", StringComparison.OrdinalIgnoreCase));
+        if (int.TryParse(cfg["POSTER_CACHE_TTL_DAYS"], out var pttl) && pttl > 0)
+            opts.PosterCacheTtlDays = pttl;
+        if (int.TryParse(cfg["POSTER_CACHE_MAX_BYTES"], out var pmax) && pmax >= 4096)
+            opts.PosterCacheMaxBytes = pmax;
+    }
+
+    private static void ConfigureEmailOptions(MoviePickerOptions opts, IConfiguration cfg)
+    {
+        var emailProvider = cfg["EMAIL_PROVIDER"];
+        if (!string.IsNullOrWhiteSpace(emailProvider))
+            opts.EmailProvider = emailProvider.Trim().ToLowerInvariant();
+        var fromAddress = cfg["EMAIL_FROM_ADDRESS"];
+        if (!string.IsNullOrWhiteSpace(fromAddress))
+            opts.EmailFromAddress = fromAddress.Trim();
+        var fromName = cfg["EMAIL_FROM_NAME"];
+        if (!string.IsNullOrWhiteSpace(fromName))
+            opts.EmailFromName = fromName.Trim();
+        var resendKey = cfg["RESEND_API_KEY"];
+        opts.ResendApiKey = string.IsNullOrWhiteSpace(resendKey) ? null : resendKey;
+        var resendBase = cfg["RESEND_API_BASE_URL"];
+        if (!string.IsNullOrWhiteSpace(resendBase))
+            opts.ResendApiBaseUrl = resendBase.Trim().TrimEnd('/');
+    }
+
+    private static void ConfigureVapidOptions(MoviePickerOptions opts, IConfiguration cfg)
+    {
+        var vapidPub = cfg["VAPID_PUBLIC_KEY"];
+        if (!string.IsNullOrWhiteSpace(vapidPub))
+            opts.VapidPublicKey = StripNonBase64Url(vapidPub);
+        var vapidPriv = cfg["VAPID_PRIVATE_KEY"];
+        if (!string.IsNullOrWhiteSpace(vapidPriv))
+            opts.VapidPrivateKey = StripNonBase64Url(vapidPriv);
+        var vapidSubject = cfg["VAPID_SUBJECT"];
+        if (!string.IsNullOrWhiteSpace(vapidSubject))
+            opts.VapidSubject = vapidSubject.Trim();
+    }
+
+    private static void RegisterRepositories(
+        IServiceCollection services,
+        string mongoUri,
+        IHostEnvironment environment)
+    {
+        if (string.IsNullOrWhiteSpace(mongoUri))
+        {
+            services.AddSingleton<IEventRepository, InMemoryEventRepository>();
+            services.AddSingleton<IParticipantRepository, InMemoryParticipantRepository>();
+            services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+            services.AddSingleton<IPasswordResetTokenRepository, InMemoryPasswordResetTokenRepository>();
+            services.AddSingleton<IMovieRepository, InMemoryMovieRepository>();
+            services.AddSingleton<IVoteRepository, InMemoryVoteRepository>();
+            services.AddSingleton<ISeenMarkRepository, InMemorySeenMarkRepository>();
+            services.AddSingleton<IAuthSessionInvalidator, InMemoryAuthSessionInvalidator>();
+            services.AddSingleton<IPushSubscriptionRepository, InMemoryPushSubscriptionRepository>();
+            services.AddSingleton<IFollowRepository, InMemoryFollowRepository>();
+            services.AddSingleton<IUserNotificationRepository, InMemoryUserNotificationRepository>();
+            return;
+        }
+
+        var mongoUrl = new MongoUrl(mongoUri);
+        var databaseName = mongoUrl.DatabaseName ?? "moviepicker";
+        if (environment.IsDevelopment()
+            && string.Equals(databaseName, "moviepicker", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                "Garde-fou : en Development, MONGODB_URI cible la base de production 'moviepicker'. "
+                + "Utilise une base dédiée et jetable (ex. 'moviepicker_dev'). "
+                + "La base 'moviepicker' n'est autorisée qu'en Production.");
+        }
+        services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoUrl));
+        services.AddSingleton<IMongoDatabase>(sp =>
+        {
+            var client = sp.GetRequiredService<IMongoClient>();
+            return client.GetDatabase(databaseName);
+        });
+        services.AddScoped<IEventRepository, MongoEventRepository>();
+        services.AddScoped<IParticipantRepository, MongoParticipantRepository>();
+        services.AddScoped<IUserRepository, MongoUserRepository>();
+        services.AddScoped<IPasswordResetTokenRepository, MongoPasswordResetTokenRepository>();
+        services.AddScoped<IMovieRepository, MongoMovieRepository>();
+        services.AddScoped<IVoteRepository, MongoVoteRepository>();
+        services.AddScoped<ISeenMarkRepository, MongoSeenMarkRepository>();
+        services.AddScoped<IAuthSessionInvalidator, MongoAuthSessionInvalidator>();
+        services.AddScoped<IPushSubscriptionRepository, MongoPushSubscriptionRepository>();
+        services.AddScoped<IFollowRepository, MongoFollowRepository>();
+        services.AddScoped<IUserNotificationRepository, MongoUserNotificationRepository>();
+        services.AddHostedService<MongoIndexInitializer>();
+        services.AddHostedService<UserHandleBackfillService>();
+        services.AddHostedService<GenreBackfillService>();
+    }
+
+    private static void RegisterTmdbSearch(IServiceCollection services, IConfiguration configuration)
+    {
+        if (string.Equals(configuration["E2E_STUB_TMDB"], "1", StringComparison.Ordinal))
+        {
+            services.AddSingleton<ITmdbMovieSearch, StubTmdbMovieSearch>();
+            return;
+        }
+
+        services.AddHttpClient<ITmdbMovieSearch, TmdbMovieSearch>()
+            .ConfigurePrimaryHttpMessageHandler(static () => new HttpClientHandler
+            {
+                AutomaticDecompression = System.Net.DecompressionMethods.GZip
+                    | System.Net.DecompressionMethods.Deflate
+                    | System.Net.DecompressionMethods.Brotli,
+            });
+    }
+
+    private static void RegisterPosterStore(
+        IServiceCollection services,
+        IConfiguration configuration,
+        string mongoUri)
+    {
+        if (!GetPosterCacheEnabledFlag(configuration))
+            services.AddSingleton<IPosterImageStore, DisabledPosterImageStore>();
+        else if (string.IsNullOrWhiteSpace(mongoUri))
+            services.AddSingleton<IPosterImageStore, MemoryPosterImageStore>();
+        else
+            services.AddSingleton<IPosterImageStore, MongoPosterImageStore>();
     }
 
     private static bool GetPosterCacheEnabledFlag(IConfiguration configuration)
