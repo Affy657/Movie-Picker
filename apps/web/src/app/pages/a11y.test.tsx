@@ -13,6 +13,8 @@ import RegisterPage from '@/features/auth/pages/RegisterPage';
 import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage';
 import AccountPage from '@/features/auth/pages/AccountPage';
 import MyEventsPage from '@/features/events/pages/MyEventsPage';
+import NotFoundPage from '@/app/pages/NotFoundPage';
+import ServerErrorPage from '@/app/pages/ServerErrorPage';
 
 const AUTH_USER = {
   userId: 'u-a11y',
@@ -78,6 +80,18 @@ describe('accessibilité (axe)', () => {
 
   it("AccountPage (visiteur) n'a pas de violations", async () => {
     const { container, queryClient } = renderPage(<AccountPage />);
+    await assertNoViolations(container, queryClient);
+  });
+
+  it("NotFoundPage n'a pas de violations", async () => {
+    const { container, queryClient } = renderPage(<NotFoundPage />);
+    await assertNoViolations(container, queryClient);
+  });
+
+  it("ServerErrorPage n'a pas de violations", async () => {
+    const { container, queryClient } = renderPage(
+      <ServerErrorPage error={new Error('boom')} onRetry={() => {}} />
+    );
     await assertNoViolations(container, queryClient);
   });
 
