@@ -113,6 +113,22 @@ describe('FollowListModal (MSW)', () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
+  it('place le focus dans la modale à l’ouverture et le piège (focus trap)', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
+    );
+
+    renderModal();
+    const dialog = await screen.findByRole('dialog');
+
+    await waitFor(() => expect(dialog.contains(document.activeElement)).toBe(true));
+
+    await user.tab({ shift: true });
+    expect(dialog.contains(document.activeElement)).toBe(true);
+  });
+
   it("démarre sur l'onglet Followers si initialTab='followers'", async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),

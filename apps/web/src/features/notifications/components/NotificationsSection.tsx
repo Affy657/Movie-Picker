@@ -104,6 +104,7 @@ export default function NotificationsSection() {
               <span className={styles.prefLabel}>{t('notifications.prefParticipantJoined')}</span>
               <Toggle
                 checked={prefs.notifyOnParticipantJoined}
+                label={t('notifications.prefParticipantJoined')}
                 disabled={savingPref === 'notifyOnParticipantJoined'}
                 onChange={() => handleTogglePref('notifyOnParticipantJoined')}
               />
@@ -113,6 +114,7 @@ export default function NotificationsSection() {
               <span className={styles.prefLabel}>{t('notifications.prefEventReminder')}</span>
               <Toggle
                 checked={prefs.notifyEventReminder}
+                label={t('notifications.prefEventReminder')}
                 disabled={savingPref === 'notifyEventReminder'}
                 onChange={() => handleTogglePref('notifyEventReminder')}
               />
@@ -122,6 +124,7 @@ export default function NotificationsSection() {
               <span className={styles.prefLabel}>{t('notifications.prefMovieAdded')}</span>
               <Toggle
                 checked={prefs.notifyOnMovieAdded}
+                label={t('notifications.prefMovieAdded')}
                 disabled={savingPref === 'notifyOnMovieAdded'}
                 onChange={() => handleTogglePref('notifyOnMovieAdded')}
               />
@@ -131,6 +134,7 @@ export default function NotificationsSection() {
               <span className={styles.prefLabel}>{t('notifications.prefMoviePicked')}</span>
               <Toggle
                 checked={prefs.notifyOnMoviePicked}
+                label={t('notifications.prefMoviePicked')}
                 disabled={savingPref === 'notifyOnMoviePicked'}
                 onChange={() => handleTogglePref('notifyOnMoviePicked')}
               />
@@ -140,6 +144,7 @@ export default function NotificationsSection() {
               <span className={styles.prefLabel}>{t('notifications.prefEventDeleted')}</span>
               <Toggle
                 checked={prefs.notifyOnEventDeleted}
+                label={t('notifications.prefEventDeleted')}
                 disabled={savingPref === 'notifyOnEventDeleted'}
                 onChange={() => handleTogglePref('notifyOnEventDeleted')}
               />
@@ -149,6 +154,7 @@ export default function NotificationsSection() {
               <span className={styles.prefLabel}>{t('notifications.prefNewFollower')}</span>
               <Toggle
                 checked={prefs.notifyOnNewFollower}
+                label={t('notifications.prefNewFollower')}
                 disabled={savingPref === 'notifyOnNewFollower'}
                 onChange={() => handleTogglePref('notifyOnNewFollower')}
               />

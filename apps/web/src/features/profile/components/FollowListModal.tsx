@@ -6,6 +6,7 @@ import Avatar from '@/shared/components/Avatar';
 import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
+import { useFocusTrap } from '@/shared/hooks/useFocusTrap';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import {
   fetchFollowing,
@@ -38,6 +39,8 @@ export default function FollowListModal({
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<Tab>(initialTab);
   const backdropRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap(backdropRef);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
