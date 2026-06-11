@@ -159,4 +159,18 @@ public sealed class MongoVoteRepository : IVoteRepository
         var c = await _collection.CountDocumentsAsync(filter, cancellationToken: ct);
         return (int)c;
     }
+
+    public async Task<IReadOnlyList<Vote>> ListByParticipantIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default)
+    {
+        if (participantIds.Count == 0)
+            return Array.Empty<Vote>();
+
+        var ids = participantIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
+        if (ids.Count == 0)
+            return Array.Empty<Vote>();
+
+        var filter = Builders<VoteDocument>.Filter.In(x => x.ParticipantId, ids);
+        var docs = await _collection.Find(filter).ToListAsync(ct);
+        return docs.ConvertAll(VoteMapper.ToDomain);
+    }
 }

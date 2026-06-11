@@ -52,6 +52,14 @@ public sealed class MongoPushSubscriptionRepository : IPushSubscriptionRepositor
         return docs.ConvertAll(ToDomain);
     }
 
+    public async Task<long> DeleteByUserIdAsync(string userId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return 0;
+        var res = await _collection.DeleteManyAsync(x => x.UserId == userId, ct);
+        return res.IsAcknowledged ? res.DeletedCount : 0;
+    }
+
     private static PushSubscription ToDomain(PushSubscriptionDocument doc) =>
         new()
         {

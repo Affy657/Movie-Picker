@@ -9,4 +9,5 @@ public interface IPasswordResetTokenRepository
     Task MarkConsumedAsync(string tokenId, DateTimeOffset consumedAt, CancellationToken ct = default);
     Task InvalidateActiveForUserAsync(string userId, DateTimeOffset consumedAt, CancellationToken ct = default);
     Task<PasswordResetToken?> GetMostRecentForUserAsync(string userId, CancellationToken ct = default);
+    Task<long> DeleteByUserIdAsync(string userId, CancellationToken ct = default);
 }

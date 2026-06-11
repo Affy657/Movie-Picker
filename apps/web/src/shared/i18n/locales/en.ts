@@ -139,6 +139,23 @@ export const en: Locale = {
       avatarLabel: 'Avatar',
       avatarHint: 'Shown next to your nickname in events.',
       avatarOptionAriaLabel: 'Choose avatar {{name}}',
+      exportDataTitle: 'Export my data',
+      exportDataDescription:
+        'Download all of your personal data as JSON: profile, notifications, follows, events you created, participations and votes.',
+      exportDataButton: 'Download my data',
+      exportDataSubmitting: 'Preparing…',
+      exportDataError: 'Export failed. Please try again in a moment.',
+      dangerZoneTitle: 'Danger zone',
+      deleteAccountDescription:
+        'Your profile, notifications, follows and notification devices will be permanently deleted. The events you created and your votes are kept but anonymised (attributed to “Deleted account”) so other participants are not disrupted. This action cannot be undone.',
+      deleteAccountButton: 'Delete my account',
+      deleteAccountConfirmTitle: 'Confirm deletion',
+      deleteAccountPasswordLabel: 'Enter your password to confirm',
+      deleteAccountConfirmButton: 'Delete permanently',
+      deleteAccountSubmitting: 'Deleting…',
+      deleteAccountCancel: 'Cancel',
+      deleteAccountPasswordRequired: 'Password is required.',
+      deleteAccountFallbackError: 'Deletion failed. Check your password.',
     },
     logout: {
       fallbackError: 'Logout failed.',

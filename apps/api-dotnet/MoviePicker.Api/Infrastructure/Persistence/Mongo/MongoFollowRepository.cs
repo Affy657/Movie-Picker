@@ -73,4 +73,15 @@ public sealed class MongoFollowRepository : IFollowRepository
         await Task.WhenAll(followingTask, followersTask);
         return ((int)followingTask.Result, (int)followersTask.Result);
     }
+
+    public async Task<long> DeleteAllForUserAsync(string userId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return 0;
+        var filter = Builders<FollowDocument>.Filter.Or(
+            Builders<FollowDocument>.Filter.Eq(x => x.FollowerId, userId),
+            Builders<FollowDocument>.Filter.Eq(x => x.FolloweeId, userId));
+        var res = await _collection.DeleteManyAsync(filter, ct);
+        return res.IsAcknowledged ? res.DeletedCount : 0;
+    }
 }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { KeyRound, LogOut, Sliders } from 'lucide-react';
+import { AlertCircle, Download, KeyRound, LogOut, Sliders } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import NotificationsSection from '@/features/notifications/components/NotificationsSection';
@@ -13,7 +13,11 @@ import ThemeToggle from '@/app/components/ThemeToggle';
 import LanguageSelector from '@/app/components/LanguageSelector';
 import AccentColorPicker from '@/app/components/AccentColorPicker';
 import { withReturnTo, ROUTES } from '@/app/routes';
-import { patchChangePassword } from '@/features/auth/api/authApi';
+import {
+  deleteAccount,
+  downloadMyDataExport,
+  patchChangePassword,
+} from '@/features/auth/api/authApi';
 import { isRegisterPasswordCompliant } from '@/shared/utils/authPasswordRules';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import styles from './AccountPage.module.css';
@@ -182,6 +186,131 @@ function PreferencesSection() {
   );
 }
 
+function DataExportSection() {
+  const { t } = useTranslation();
+  const exportAction = useCallback(() => downloadMyDataExport(), []);
+  const {
+    run: runExport,
+    loading: exporting,
+    error: exportError,
+  } = useAsyncAction(exportAction, t('auth.account.exportDataError'));
+
+  return (
+    <section className="section section--panel" aria-labelledby="export-data-heading">
+      <h2 id="export-data-heading" className={styles.sectionTitle}>
+        <Download size={18} aria-hidden />
+        {t('auth.account.exportDataTitle')}
+      </h2>
+      <p className="hint">{t('auth.account.exportDataDescription')}</p>
+      {exportError && (
+        <p className="error" role="alert">
+          {exportError}
+        </p>
+      )}
+      <div className="nav-actions">
+        <button type="button" className="btn" disabled={exporting} onClick={() => void runExport()}>
+          {exporting ? t('auth.account.exportDataSubmitting') : t('auth.account.exportDataButton')}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function DeleteAccountSection() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [confirming, setConfirming] = useState(false);
+  const [password, setPassword] = useState('');
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const deleteAction = useCallback(async () => {
+    await deleteAccount(password);
+    queryClient.setQueryData(queryKeys.auth.me, null);
+    await queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
+    navigate(ROUTES.home, { replace: true });
+  }, [password, queryClient, navigate]);
+
+  const {
+    run: runDelete,
+    loading: deleting,
+    error: apiError,
+    clearError,
+  } = useAsyncAction(deleteAction, t('auth.account.deleteAccountFallbackError'));
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setValidationError(null);
+    clearError();
+    if (!password) {
+      setValidationError(t('auth.account.deleteAccountPasswordRequired'));
+      return;
+    }
+    void runDelete();
+  };
+
+  const cancel = () => {
+    setConfirming(false);
+    setPassword('');
+    setValidationError(null);
+    clearError();
+  };
+
+  const errorMsg = validationError ?? apiError;
+
+  return (
+    <section className="section section--panel" aria-labelledby="danger-zone-heading">
+      <h2 id="danger-zone-heading" className={styles.sectionTitle}>
+        <AlertCircle size={18} aria-hidden />
+        {t('auth.account.dangerZoneTitle')}
+      </h2>
+      <p className="hint">{t('auth.account.deleteAccountDescription')}</p>
+
+      {!confirming ? (
+        <div className="nav-actions">
+          <button type="button" className="btn btn-danger" onClick={() => setConfirming(true)}>
+            {t('auth.account.deleteAccountButton')}
+          </button>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="form" autoComplete="off">
+          {errorMsg && (
+            <p id="delete-account-error" className="error" role="alert">
+              {errorMsg}
+            </p>
+          )}
+          <label className="label" htmlFor="delete-account-password">
+            {t('auth.account.deleteAccountPasswordLabel')}
+          </label>
+          <input
+            id="delete-account-password"
+            type="password"
+            className="input"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setValidationError(null);
+              clearError();
+            }}
+            aria-describedby={errorMsg ? 'delete-account-error' : undefined}
+          />
+          <div className="nav-actions">
+            <button type="submit" className="btn btn-danger" disabled={deleting}>
+              {deleting
+                ? t('auth.account.deleteAccountSubmitting')
+                : t('auth.account.deleteAccountConfirmButton')}
+            </button>
+            <button type="button" className="btn" onClick={cancel} disabled={deleting}>
+              {t('auth.account.deleteAccountCancel')}
+            </button>
+          </div>
+        </form>
+      )}
+    </section>
+  );
+}
+
 export default function AccountPage() {
   const { t } = useTranslation();
   useDocumentTitle(pageTitle(t('auth.account.title')));
@@ -241,6 +370,8 @@ export default function AccountPage() {
 
       <ChangePasswordSection />
 
+      <DataExportSection />
+
       <section className="section section--panel" aria-labelledby="session-heading">
         <h2 id="session-heading" className={styles.sectionTitle}>
           <LogOut size={18} aria-hidden />
@@ -262,6 +393,8 @@ export default function AccountPage() {
           </button>
         </div>
       </section>
+
+      <DeleteAccountSection />
     </PageLayout>
   );
 }

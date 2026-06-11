@@ -8,4 +8,5 @@ public interface IPushSubscriptionRepository
     Task DeleteByEndpointAsync(string userId, string endpoint, CancellationToken ct = default);
     Task<IReadOnlyList<PushSubscription>> ListByUserIdAsync(string userId, CancellationToken ct = default);
     Task<IReadOnlyList<PushSubscription>> ListByUserIdsAsync(IReadOnlyCollection<string> userIds, CancellationToken ct = default);
+    Task<long> DeleteByUserIdAsync(string userId, CancellationToken ct = default);
 }

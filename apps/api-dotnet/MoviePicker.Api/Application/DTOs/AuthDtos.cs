@@ -93,3 +93,9 @@ public sealed class ChangePasswordRequest
     [MinLength(8, ErrorMessage = "Le mot de passe doit contenir au moins 8 caractères.")]
     public string NewPassword { get; init; } = string.Empty;
 }
+
+public sealed class DeleteAccountRequest
+{
+    [Required(ErrorMessage = "Le mot de passe est requis.")]
+    public string Password { get; init; } = string.Empty;
+}

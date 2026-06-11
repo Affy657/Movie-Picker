@@ -10,4 +10,5 @@ public interface IUserNotificationRepository
     Task MarkAllReadAsync(string userId, CancellationToken ct = default);
     Task<bool> ExistsAsync(string userId, UserNotificationType type, string eventId, CancellationToken ct = default);
     Task<IReadOnlySet<string>> ListUserIdsByTypeAndEventAsync(UserNotificationType type, string eventId, CancellationToken ct = default);
+    Task<long> DeleteByUserIdAsync(string userId, CancellationToken ct = default);
 }

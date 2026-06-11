@@ -56,4 +56,12 @@ public sealed class MongoPasswordResetTokenRepository : IPasswordResetTokenRepos
             .FirstOrDefaultAsync(ct);
         return doc is null ? null : PasswordResetTokenDocumentMapper.ToDomain(doc);
     }
+
+    public async Task<long> DeleteByUserIdAsync(string userId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return 0;
+        var res = await _collection.DeleteManyAsync(d => d.UserId == userId, ct);
+        return res.IsAcknowledged ? res.DeletedCount : 0;
+    }
 }

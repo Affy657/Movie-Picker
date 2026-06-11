@@ -16,6 +16,8 @@ public static class RateLimitingExtensions
     public const string AuthPasswordResetConfirmPolicy = "auth-password-reset-confirm";
     public const string AuthChangePasswordPolicy = "auth-change-password";
     public const string AuthPatchProfilePolicy = "auth-patch-profile";
+    public const string AuthExportDataPolicy = "auth-export-data";
+    public const string AuthDeleteAccountPolicy = "auth-delete-account";
     public const string PatchEventConfigPolicy = "patch-event-config";
     public const string VoteMutationPolicy = "vote-mutation";
     public const string SeenMarksMutationPolicy = "seen-marks-mutation";
@@ -61,6 +63,8 @@ public static class RateLimitingExtensions
                 options.AddPolicy(AuthPasswordResetConfirmPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(AuthChangePasswordPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(AuthPatchProfilePolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
+                options.AddPolicy(AuthExportDataPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
+                options.AddPolicy(AuthDeleteAccountPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(PatchEventConfigPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(VoteMutationPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(SeenMarksMutationPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
@@ -84,6 +88,8 @@ public static class RateLimitingExtensions
             options.AddPolicy(AuthPasswordResetConfirmPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 30, windowMinutes: 1));
             options.AddPolicy(AuthChangePasswordPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 10, windowMinutes: 1));
             options.AddPolicy(AuthPatchProfilePolicy, ctx => CreateFixedWindow(ctx, permitLimit: 60, windowMinutes: 1));
+            options.AddPolicy(AuthExportDataPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 5, windowMinutes: 1));
+            options.AddPolicy(AuthDeleteAccountPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 5, windowMinutes: 1));
             options.AddPolicy(PatchEventConfigPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 40, windowMinutes: 1));
             options.AddPolicy(VoteMutationPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 120, windowMinutes: 1));
             options.AddPolicy(SeenMarksMutationPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 120, windowMinutes: 1));

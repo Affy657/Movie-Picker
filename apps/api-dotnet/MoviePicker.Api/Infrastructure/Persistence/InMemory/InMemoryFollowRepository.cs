@@ -53,4 +53,16 @@ public sealed class InMemoryFollowRepository : IFollowRepository
         var followers = _store.Values.Count(x => x.FolloweeId == userId);
         return Task.FromResult((following, followers));
     }
+
+    public Task<long> DeleteAllForUserAsync(string userId, CancellationToken ct = default)
+    {
+        long count = 0;
+        foreach (var kv in _store)
+        {
+            if ((kv.Value.FollowerId == userId || kv.Value.FolloweeId == userId) && _store.TryRemove(kv.Key, out _))
+                count++;
+        }
+
+        return Task.FromResult(count);
+    }
 }

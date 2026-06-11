@@ -98,6 +98,14 @@ public sealed class MongoUserRepository : IUserRepository
         return UserDocumentMapper.ToDomain(doc);
     }
 
+    public async Task<bool> DeleteAsync(string id, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+            return false;
+        var result = await _collection.DeleteOneAsync(x => x.Id == id, ct);
+        return result.IsAcknowledged && result.DeletedCount > 0;
+    }
+
     /// <summary>
     /// Rethrows a duplicate-key error as a <see cref="ConflictException"/> with a message
     /// that indicates whether the collision is on the handle index or the email index.

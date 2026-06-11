@@ -19,4 +19,6 @@ public interface IEventRepository
     Task<bool> DeleteAsync(string eventId, CancellationToken ct = default);
 
     Task<IReadOnlyList<Event>> ListOpenEventsAsync(CancellationToken ct = default);
+
+    Task<long> AnonymizeCreatorAsync(string creatorUserId, CancellationToken ct = default);
 }

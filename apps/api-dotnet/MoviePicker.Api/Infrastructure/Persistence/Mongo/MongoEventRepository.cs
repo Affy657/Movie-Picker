@@ -118,4 +118,13 @@ public sealed class MongoEventRepository : IEventRepository
         var docs = await _collection.Find(filter).ToListAsync(ct);
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
     }
+
+    public async Task<long> AnonymizeCreatorAsync(string creatorUserId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(creatorUserId))
+            return 0;
+        var update = Builders<EventDocument>.Update.Unset(x => x.CreatorUserId);
+        var res = await _collection.UpdateManyAsync(x => x.CreatorUserId == creatorUserId, update, cancellationToken: ct);
+        return res.IsAcknowledged ? res.ModifiedCount : 0;
+    }
 }

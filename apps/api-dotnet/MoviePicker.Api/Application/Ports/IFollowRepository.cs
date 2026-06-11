@@ -9,4 +9,5 @@ public interface IFollowRepository
     Task<IReadOnlyList<string>> GetFollowingIdsAsync(string userId, int limit = 500, CancellationToken ct = default);
     Task<IReadOnlyList<string>> GetFollowerIdsAsync(string userId, int limit = 500, CancellationToken ct = default);
     Task<(int Following, int Followers)> GetCountsAsync(string userId, CancellationToken ct = default);
+    Task<long> DeleteAllForUserAsync(string userId, CancellationToken ct = default);
 }

@@ -25,4 +25,6 @@ public interface IParticipantRepository
     Task<bool> DeleteAsync(string participantId, string eventId, CancellationToken ct = default);
 
     Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default);
+
+    Task<long> AnonymizeByUserIdAsync(string userId, string anonymizedPseudo, CancellationToken ct = default);
 }

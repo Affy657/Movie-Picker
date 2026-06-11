@@ -127,4 +127,22 @@ public sealed class InMemoryEventRepository : IEventRepository
             .ToList();
         return Task.FromResult(result);
     }
+
+    public Task<long> AnonymizeCreatorAsync(string creatorUserId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(creatorUserId))
+            return Task.FromResult(0L);
+
+        long count = 0;
+        foreach (var e in _byId.Values.Where(e => e.CreatorUserId == creatorUserId).ToList())
+        {
+            var anonymized = e with { CreatorUserId = null };
+            _byId[e.Id] = anonymized;
+            if (!string.IsNullOrEmpty(anonymized.Slug))
+                _bySlug[anonymized.Slug] = anonymized;
+            count++;
+        }
+
+        return Task.FromResult(count);
+    }
 }

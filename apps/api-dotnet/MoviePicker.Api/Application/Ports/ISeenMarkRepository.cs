@@ -22,4 +22,6 @@ public interface ISeenMarkRepository
         CancellationToken ct = default);
 
     Task<int> CountByParticipantIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default);
+
+    Task<IReadOnlyList<SeenMark>> ListByParticipantIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default);
 }

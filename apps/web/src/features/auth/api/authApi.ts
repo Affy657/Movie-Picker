@@ -98,3 +98,35 @@ export async function postPasswordResetConfirm(
     body: JSON.stringify({ token, newPassword }),
   });
 }
+
+function buildExportFilename(): string {
+  const date = new Date().toISOString().slice(0, 10);
+  return `movie-picker-mes-donnees-${date}.json`;
+}
+
+function triggerBlobDownload(blob: Blob, filename: string): void {
+  if (typeof URL.createObjectURL !== 'function') return;
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadMyDataExport(): Promise<void> {
+  const data = await fetchApi<unknown>('/auth/me/export');
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  triggerBlobDownload(blob, buildExportFilename());
+}
+
+export async function deleteAccount(password: string): Promise<void> {
+  await fetchApi('/auth/me', {
+    method: 'DELETE',
+    body: JSON.stringify({ password }),
+  });
+  clearSessionHint();
+}

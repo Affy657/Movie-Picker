@@ -56,4 +56,16 @@ public sealed class InMemoryUserNotificationRepository : IUserNotificationReposi
             .ToHashSet();
         return Task.FromResult(result);
     }
+
+    public Task<long> DeleteByUserIdAsync(string userId, CancellationToken ct = default)
+    {
+        long count = 0;
+        foreach (var key in _store.Keys.ToList())
+        {
+            if (_store.TryGetValue(key, out var n) && n.UserId == userId && _store.TryRemove(key, out _))
+                count++;
+        }
+
+        return Task.FromResult(count);
+    }
 }

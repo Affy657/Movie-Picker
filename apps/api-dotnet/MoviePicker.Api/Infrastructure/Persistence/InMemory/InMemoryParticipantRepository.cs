@@ -142,4 +142,36 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
 
         return Task.FromResult((long)toRemove.Count);
     }
+
+    public Task<long> AnonymizeByUserIdAsync(string userId, string anonymizedPseudo, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return Task.FromResult(0L);
+
+        var targets = _byId.Values.Where(p => p.UserId == userId).ToList();
+        long count = 0;
+        foreach (var p in targets)
+        {
+            var pseudo = anonymizedPseudo;
+            if (_eventPseudoToId.ContainsKey((p.EventId, pseudo)))
+                pseudo = $"{anonymizedPseudo} {p.Id[^6..]}";
+
+            var anonymized = new Participant
+            {
+                Id = p.Id,
+                EventId = p.EventId,
+                Pseudo = pseudo,
+                UserId = null,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = DateTimeOffset.UtcNow
+            };
+            _byId[p.Id] = anonymized;
+            _eventPseudoToId.TryRemove((p.EventId, p.Pseudo), out _);
+            _eventPseudoToId[(p.EventId, pseudo)] = p.Id;
+            _eventUserToId.TryRemove((p.EventId, userId), out _);
+            count++;
+        }
+
+        return Task.FromResult(count);
+    }
 }

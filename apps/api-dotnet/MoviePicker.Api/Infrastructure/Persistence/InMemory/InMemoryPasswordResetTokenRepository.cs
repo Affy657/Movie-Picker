@@ -60,4 +60,16 @@ public sealed class InMemoryPasswordResetTokenRepository : IPasswordResetTokenRe
 
         return Task.FromResult(best);
     }
+
+    public Task<long> DeleteByUserIdAsync(string userId, CancellationToken ct = default)
+    {
+        long count = 0;
+        foreach (var kv in _byId)
+        {
+            if (kv.Value.UserId == userId && _byId.TryRemove(kv.Key, out _))
+                count++;
+        }
+
+        return Task.FromResult(count);
+    }
 }

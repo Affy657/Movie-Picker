@@ -116,6 +116,19 @@ public sealed class InMemoryUserRepository : IUserRepository
         return Task.FromResult(updated);
     }
 
+    public Task<bool> DeleteAsync(string id, CancellationToken ct = default)
+    {
+        if (!_byId.TryRemove(id, out var removed))
+            return Task.FromResult(false);
+
+        var email = Normalize(removed.Email) ?? removed.Email.Trim();
+        _emailToId.TryRemove(email, out _);
+        var handle = NormalizeHandle(removed.Handle);
+        if (handle is not null)
+            _handleToId.TryRemove(handle, out _);
+        return Task.FromResult(true);
+    }
+
     private static string? Normalize(string? email)
     {
         if (string.IsNullOrWhiteSpace(email))

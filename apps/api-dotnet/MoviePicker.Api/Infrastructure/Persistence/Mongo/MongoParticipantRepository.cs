@@ -155,4 +155,41 @@ public sealed class MongoParticipantRepository : IParticipantRepository
         var res = await _collection.DeleteManyAsync(x => x.EventId == eventId, ct);
         return res.IsAcknowledged ? res.DeletedCount : 0;
     }
+
+    public async Task<long> AnonymizeByUserIdAsync(string userId, string anonymizedPseudo, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return 0;
+
+        var docs = await _collection.Find(x => x.UserId == userId).ToListAsync(ct);
+        long count = 0;
+        foreach (var doc in docs)
+        {
+            var now = DateTime.UtcNow;
+            try
+            {
+                await _collection.UpdateOneAsync(
+                    x => x.Id == doc.Id,
+                    Builders<ParticipantDocument>.Update
+                        .Unset(x => x.UserId)
+                        .Set(x => x.Pseudo, anonymizedPseudo)
+                        .Set(x => x.UpdatedAt, now),
+                    cancellationToken: ct);
+            }
+            catch (MongoWriteException ex) when (ex.WriteError?.Category == ServerErrorCategory.DuplicateKey)
+            {
+                await _collection.UpdateOneAsync(
+                    x => x.Id == doc.Id,
+                    Builders<ParticipantDocument>.Update
+                        .Unset(x => x.UserId)
+                        .Set(x => x.Pseudo, $"{anonymizedPseudo} {doc.Id[^6..]}")
+                        .Set(x => x.UpdatedAt, now),
+                    cancellationToken: ct);
+            }
+
+            count++;
+        }
+
+        return count;
+    }
 }

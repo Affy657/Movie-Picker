@@ -141,6 +141,23 @@
       avatarLabel: 'Avatar',
       avatarHint: 'Affiché à côté de votre pseudo dans les soirées.',
       avatarOptionAriaLabel: 'Choisir l’avatar {{name}}',
+      exportDataTitle: 'Exporter mes données',
+      exportDataDescription:
+        'Téléchargez l’ensemble de vos données personnelles au format JSON : profil, notifications, abonnements, soirées créées, participations et votes.',
+      exportDataButton: 'Télécharger mes données',
+      exportDataSubmitting: 'Préparation…',
+      exportDataError: 'Export impossible. Réessayez dans un instant.',
+      dangerZoneTitle: 'Zone de danger',
+      deleteAccountDescription:
+        'Votre profil, vos notifications, vos abonnements et vos appareils de notification seront définitivement supprimés. Les soirées que vous avez créées et vos votes sont conservés mais anonymisés (rattachés à « Compte supprimé ») pour ne pas perturber les autres participants. Cette action est irréversible.',
+      deleteAccountButton: 'Supprimer mon compte',
+      deleteAccountConfirmTitle: 'Confirmer la suppression',
+      deleteAccountPasswordLabel: 'Saisissez votre mot de passe pour confirmer',
+      deleteAccountConfirmButton: 'Supprimer définitivement',
+      deleteAccountSubmitting: 'Suppression…',
+      deleteAccountCancel: 'Annuler',
+      deleteAccountPasswordRequired: 'Le mot de passe est requis.',
+      deleteAccountFallbackError: 'Suppression impossible. Vérifiez votre mot de passe.',
     },
     logout: {
       fallbackError: 'Déconnexion impossible.',
