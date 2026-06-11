@@ -6,7 +6,6 @@ import Avatar from '@/shared/components/Avatar';
 import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
-import { useFocusTrap } from '@/shared/hooks/useFocusTrap';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import {
   fetchFollowing,
@@ -38,27 +37,28 @@ export default function FollowListModal({
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<Tab>(initialTab);
-  const backdropRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
-  useFocusTrap(backdropRef);
-
+  const onCloseRef = useRef(onClose);
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    onCloseRef.current = onClose;
   }, [onClose]);
 
   useEffect(() => {
-    const el = backdropRef.current;
-    if (!el) return;
-    const onClick = (e: MouseEvent) => {
-      if (e.target === el) onClose();
+    const dlg = dialogRef.current;
+    if (!dlg) return;
+    if (!dlg.open) dlg.showModal();
+    const handleClose = () => onCloseRef.current();
+    const handleBackdrop = (e: MouseEvent) => {
+      if (e.target === dlg) onCloseRef.current();
     };
-    el.addEventListener('click', onClick);
-    return () => el.removeEventListener('click', onClick);
-  }, [onClose]);
+    dlg.addEventListener('close', handleClose);
+    dlg.addEventListener('click', handleBackdrop);
+    return () => {
+      dlg.removeEventListener('close', handleClose);
+      dlg.removeEventListener('click', handleBackdrop);
+    };
+  }, []);
 
   const followingQuery = useQuery({
     queryKey: queryKeys.profile.following(handle),
@@ -100,89 +100,75 @@ export default function FollowListModal({
   };
 
   return (
-    <div
-      ref={backdropRef}
-      className={styles.backdrop}
-      role="dialog"
-      aria-modal="true"
-      aria-label={t('profile.follow.listTitle')}
-    >
-      <div className={styles.modal}>
-        <div className={styles.header}>
-          <div className={styles.tabs}>
-            <button
-              type="button"
-              className={tab === 'following' ? styles.tabActive : styles.tab}
-              onClick={() => setTab('following')}
-            >
-              {t('profile.follow.followingCount', { count: String(followingCount) })}
-            </button>
-            <button
-              type="button"
-              className={tab === 'followers' ? styles.tabActive : styles.tab}
-              onClick={() => setTab('followers')}
-            >
-              {t('profile.follow.followersCount', { count: String(followersCount) })}
-            </button>
-          </div>
+    <dialog ref={dialogRef} className={styles.dialog} aria-label={t('profile.follow.listTitle')}>
+      <div className={styles.header}>
+        <div className={styles.tabs}>
           <button
             type="button"
-            className={styles.closeButton}
-            onClick={onClose}
-            aria-label={t('common.close')}
+            className={tab === 'following' ? styles.tabActive : styles.tab}
+            onClick={() => setTab('following')}
           >
-            <X size={20} aria-hidden />
+            {t('profile.follow.followingCount', { count: String(followingCount) })}
+          </button>
+          <button
+            type="button"
+            className={tab === 'followers' ? styles.tabActive : styles.tab}
+            onClick={() => setTab('followers')}
+          >
+            {t('profile.follow.followersCount', { count: String(followersCount) })}
           </button>
         </div>
-
-        <ul className={styles.list}>
-          {activeQuery.isPending && <li className={styles.placeholder}>{t('common.loading')}</li>}
-          {!activeQuery.isPending && items.length === 0 && (
-            <li className={styles.placeholder}>{t('profile.follow.empty')}</li>
-          )}
-          {items.map((item) => {
-            const isMe = user?.handle === item.handle;
-            const pending = followMutation.isPending || unfollowMutation.isPending;
-            return (
-              <li key={item.handle} className={styles.item}>
-                <Link
-                  to={ROUTES.profile(item.handle)}
-                  className={styles.itemLink}
-                  onClick={onClose}
-                >
-                  <Avatar avatarId={item.avatarId} size="sm" />
-                  <div className={styles.itemInfo}>
-                    <span className={styles.itemName}>{item.displayName}</span>
-                    <span className={styles.itemHandle}>@{item.handle}</span>
-                  </div>
-                </Link>
-                {user && !isMe && item.isFollowedByMe !== null && (
-                  <button
-                    type="button"
-                    className={item.isFollowedByMe ? styles.unfollowBtn : styles.followBtn}
-                    disabled={pending}
-                    onClick={() => handleToggleFollow(item)}
-                    aria-label={
-                      item.isFollowedByMe
-                        ? t('profile.follow.unfollowAriaLabel', { handle: item.handle })
-                        : t('profile.follow.followAriaLabel', { handle: item.handle })
-                    }
-                  >
-                    {item.isFollowedByMe ? (
-                      <UserCheck size={16} aria-hidden />
-                    ) : (
-                      <UserPlus size={16} aria-hidden />
-                    )}
-                    {item.isFollowedByMe
-                      ? t('profile.follow.unfollow')
-                      : t('profile.follow.follow')}
-                  </button>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+        <button
+          type="button"
+          className={styles.closeButton}
+          onClick={onClose}
+          aria-label={t('common.close')}
+        >
+          <X size={20} aria-hidden />
+        </button>
       </div>
-    </div>
+
+      <ul className={styles.list}>
+        {activeQuery.isPending && <li className={styles.placeholder}>{t('common.loading')}</li>}
+        {!activeQuery.isPending && items.length === 0 && (
+          <li className={styles.placeholder}>{t('profile.follow.empty')}</li>
+        )}
+        {items.map((item) => {
+          const isMe = user?.handle === item.handle;
+          const pending = followMutation.isPending || unfollowMutation.isPending;
+          return (
+            <li key={item.handle} className={styles.item}>
+              <Link to={ROUTES.profile(item.handle)} className={styles.itemLink} onClick={onClose}>
+                <Avatar avatarId={item.avatarId} size="sm" />
+                <div className={styles.itemInfo}>
+                  <span className={styles.itemName}>{item.displayName}</span>
+                  <span className={styles.itemHandle}>@{item.handle}</span>
+                </div>
+              </Link>
+              {user && !isMe && item.isFollowedByMe !== null && (
+                <button
+                  type="button"
+                  className={item.isFollowedByMe ? styles.unfollowBtn : styles.followBtn}
+                  disabled={pending}
+                  onClick={() => handleToggleFollow(item)}
+                  aria-label={
+                    item.isFollowedByMe
+                      ? t('profile.follow.unfollowAriaLabel', { handle: item.handle })
+                      : t('profile.follow.followAriaLabel', { handle: item.handle })
+                  }
+                >
+                  {item.isFollowedByMe ? (
+                    <UserCheck size={16} aria-hidden />
+                  ) : (
+                    <UserPlus size={16} aria-hidden />
+                  )}
+                  {item.isFollowedByMe ? t('profile.follow.unfollow') : t('profile.follow.follow')}
+                </button>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </dialog>
   );
 }

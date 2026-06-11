@@ -101,60 +101,72 @@ export default function NotificationsSection() {
             <p className={styles.prefsTitle}>{t('notifications.prefsTitle')}</p>
 
             <div className={styles.prefRow}>
-              <span className={styles.prefLabel}>{t('notifications.prefParticipantJoined')}</span>
+              <span id="notif-pref-participant-joined" className={styles.prefLabel}>
+                {t('notifications.prefParticipantJoined')}
+              </span>
               <Toggle
                 checked={prefs.notifyOnParticipantJoined}
-                label={t('notifications.prefParticipantJoined')}
+                labelledBy="notif-pref-participant-joined"
                 disabled={savingPref === 'notifyOnParticipantJoined'}
                 onChange={() => handleTogglePref('notifyOnParticipantJoined')}
               />
             </div>
 
             <div className={styles.prefRow}>
-              <span className={styles.prefLabel}>{t('notifications.prefEventReminder')}</span>
+              <span id="notif-pref-event-reminder" className={styles.prefLabel}>
+                {t('notifications.prefEventReminder')}
+              </span>
               <Toggle
                 checked={prefs.notifyEventReminder}
-                label={t('notifications.prefEventReminder')}
+                labelledBy="notif-pref-event-reminder"
                 disabled={savingPref === 'notifyEventReminder'}
                 onChange={() => handleTogglePref('notifyEventReminder')}
               />
             </div>
 
             <div className={styles.prefRow}>
-              <span className={styles.prefLabel}>{t('notifications.prefMovieAdded')}</span>
+              <span id="notif-pref-movie-added" className={styles.prefLabel}>
+                {t('notifications.prefMovieAdded')}
+              </span>
               <Toggle
                 checked={prefs.notifyOnMovieAdded}
-                label={t('notifications.prefMovieAdded')}
+                labelledBy="notif-pref-movie-added"
                 disabled={savingPref === 'notifyOnMovieAdded'}
                 onChange={() => handleTogglePref('notifyOnMovieAdded')}
               />
             </div>
 
             <div className={styles.prefRow}>
-              <span className={styles.prefLabel}>{t('notifications.prefMoviePicked')}</span>
+              <span id="notif-pref-movie-picked" className={styles.prefLabel}>
+                {t('notifications.prefMoviePicked')}
+              </span>
               <Toggle
                 checked={prefs.notifyOnMoviePicked}
-                label={t('notifications.prefMoviePicked')}
+                labelledBy="notif-pref-movie-picked"
                 disabled={savingPref === 'notifyOnMoviePicked'}
                 onChange={() => handleTogglePref('notifyOnMoviePicked')}
               />
             </div>
 
             <div className={styles.prefRow}>
-              <span className={styles.prefLabel}>{t('notifications.prefEventDeleted')}</span>
+              <span id="notif-pref-event-deleted" className={styles.prefLabel}>
+                {t('notifications.prefEventDeleted')}
+              </span>
               <Toggle
                 checked={prefs.notifyOnEventDeleted}
-                label={t('notifications.prefEventDeleted')}
+                labelledBy="notif-pref-event-deleted"
                 disabled={savingPref === 'notifyOnEventDeleted'}
                 onChange={() => handleTogglePref('notifyOnEventDeleted')}
               />
             </div>
 
             <div className={styles.prefRow}>
-              <span className={styles.prefLabel}>{t('notifications.prefNewFollower')}</span>
+              <span id="notif-pref-new-follower" className={styles.prefLabel}>
+                {t('notifications.prefNewFollower')}
+              </span>
               <Toggle
                 checked={prefs.notifyOnNewFollower}
-                label={t('notifications.prefNewFollower')}
+                labelledBy="notif-pref-new-follower"
                 disabled={savingPref === 'notifyOnNewFollower'}
                 onChange={() => handleTogglePref('notifyOnNewFollower')}
               />

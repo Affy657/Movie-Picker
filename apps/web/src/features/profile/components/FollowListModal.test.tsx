@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { setupServer } from 'msw/node';
@@ -113,20 +113,19 @@ describe('FollowListModal (MSW)', () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
-  it('place le focus dans la modale à l’ouverture et le piège (focus trap)', async () => {
-    const user = userEvent.setup();
+  it('s’ouvre en modale native et se ferme sur l’événement close (Échap)', async () => {
+    const onClose = vi.fn();
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
       http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
     );
 
-    renderModal();
+    renderModal({}, onClose);
     const dialog = await screen.findByRole('dialog');
+    expect(dialog).toHaveAttribute('open');
 
-    await waitFor(() => expect(dialog.contains(document.activeElement)).toBe(true));
-
-    await user.tab({ shift: true });
-    expect(dialog.contains(document.activeElement)).toBe(true);
+    fireEvent(dialog, new Event('close'));
+    expect(onClose).toHaveBeenCalledOnce();
   });
 
   it("démarre sur l'onglet Followers si initialTab='followers'", async () => {
