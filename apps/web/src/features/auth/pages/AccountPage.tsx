@@ -207,7 +207,7 @@ function DataExportSection() {
           {exportError}
         </p>
       )}
-      <div className="nav-actions">
+      <div className={`nav-actions ${styles.actionRow}`}>
         <button type="button" className="btn" disabled={exporting} onClick={() => void runExport()}>
           {exporting ? t('auth.account.exportDataSubmitting') : t('auth.account.exportDataButton')}
         </button>
@@ -267,13 +267,13 @@ function DeleteAccountSection() {
       <p className="hint">{t('auth.account.deleteAccountDescription')}</p>
 
       {!confirming ? (
-        <div className="nav-actions">
+        <div className={`nav-actions ${styles.actionRow}`}>
           <button type="button" className="btn btn-danger" onClick={() => setConfirming(true)}>
             {t('auth.account.deleteAccountButton')}
           </button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="form" autoComplete="off">
+        <form onSubmit={handleSubmit} className={`form ${styles.actionRow}`} autoComplete="off">
           {errorMsg && (
             <p id="delete-account-error" className="error" role="alert">
               {errorMsg}
