@@ -1,5 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
-import ServerErrorPage from '@/app/pages/ServerErrorPage';
+import ServerErrorPage from '@/shared/components/ServerErrorPage';
 
 type Props = {
   children: ReactNode;

@@ -14,7 +14,7 @@ import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage';
 import AccountPage from '@/features/auth/pages/AccountPage';
 import MyEventsPage from '@/features/events/pages/MyEventsPage';
 import NotFoundPage from '@/app/pages/NotFoundPage';
-import ServerErrorPage from '@/app/pages/ServerErrorPage';
+import ServerErrorPage from '@/shared/components/ServerErrorPage';
 
 const AUTH_USER = {
   userId: 'u-a11y',
