@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { Link } from 'react-router-dom';
-import { Crown, Users, X } from 'lucide-react';
+import { Crown, UserPlus, Users, X } from 'lucide-react';
 import type { EventParticipantSummary } from '@/shared/types/event';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
@@ -57,7 +57,7 @@ export default function EventParticipantsList({
       {participants.length === 0 ? (
         <EmptyState
           compact
-          icon={<Users size={22} aria-hidden />}
+          icon={<UserPlus size={22} aria-hidden />}
           message={t('events.participants.empty')}
         />
       ) : (

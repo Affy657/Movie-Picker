@@ -324,11 +324,6 @@ function ActiveEventsPanel({
         icon={<CalendarPlus size={26} aria-hidden />}
         title={t('events.myEvents.activeEmptyTitle')}
         message={t('events.myEvents.activeEmpty')}
-        actions={
-          <Link to={ROUTES.createEvent} className="btn btn-primary">
-            {t('events.myEvents.createCta')}
-          </Link>
-        }
       />
     );
   }
