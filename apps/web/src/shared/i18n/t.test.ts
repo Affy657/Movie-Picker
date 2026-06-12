@@ -44,7 +44,7 @@ describe('t (i18n)', () => {
   it('couvre les clés de chaque domaine principal (FR)', () => {
     expect(t('nav.home')).toBe('Accueil');
     expect(t('events.create.title')).toBe('Cr\u00e9er une soir\u00e9e');
-    expect(t('movies.list.emptyPlaceholder')).toContain('Aucun film');
+    expect(t('movies.list.emptyTitle')).toContain('Aucun film');
     expect(t('errors.generic')).toBe('Une erreur est survenue.');
     expect(t('theme.light')).toBe('Clair');
   });
@@ -67,7 +67,7 @@ describe('t (i18n)', () => {
     it('couvre les clés de chaque domaine principal (EN)', () => {
       expect(t('nav.home', undefined, 'en')).toBe('Home');
       expect(t('events.create.title', undefined, 'en')).toBe('Create an event');
-      expect(t('movies.list.emptyPlaceholder', undefined, 'en')).toContain('No movies');
+      expect(t('movies.list.emptyTitle', undefined, 'en')).toContain('No movies');
       expect(t('errors.generic', undefined, 'en')).toBe('An error occurred.');
       expect(t('theme.light', undefined, 'en')).toBe('Light');
     });

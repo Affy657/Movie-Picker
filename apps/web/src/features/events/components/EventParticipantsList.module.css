@@ -136,10 +136,3 @@
   color: var(--color-primary);
   font-weight: 600;
 }
-
-.empty {
-  color: var(--color-text-muted);
-  font-style: italic;
-  margin: 0;
-  font-size: var(--font-size-sm);
-}

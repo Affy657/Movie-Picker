@@ -1,6 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import clsx from 'clsx';
-import { Crown, Film, LogOut, MoreVertical, Plus, Trash2, Trophy, Users } from 'lucide-react';
+import {
+  CalendarPlus,
+  Crown,
+  Film,
+  History,
+  LogOut,
+  MoreVertical,
+  Plus,
+  Trash2,
+  Trophy,
+  Users,
+} from 'lucide-react';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
@@ -10,6 +21,7 @@ import {
   removeEventParticipant,
 } from '@/features/events/api/eventsApi';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import EmptyState from '@/shared/components/EmptyState';
 import { getStoredParticipant, removeStoredParticipant } from '@/features/events/storage';
 import PageLayout from '@/shared/components/PageLayout';
 import MyEventsSkeleton from '@/features/events/pages/MyEventsSkeleton';
@@ -158,7 +170,6 @@ function EventListBlock({
   sectionId,
   heading,
   events,
-  emptyHint,
   showLifecycleBadge = true,
   onDeleteEvent,
   onLeaveEvent,
@@ -166,7 +177,6 @@ function EventListBlock({
   sectionId: string;
   heading: string;
   events: MyEventSummary[];
-  emptyHint: string | null;
   showLifecycleBadge?: boolean;
   onDeleteEvent?: (slug: string) => void;
   onLeaveEvent?: (slug: string) => void;
@@ -175,15 +185,7 @@ function EventListBlock({
   const { locale } = useLocale();
 
   if (events.length === 0) {
-    if (!emptyHint) return null;
-    return (
-      <section className={styles.section} aria-labelledby={sectionId}>
-        <h2 id={sectionId} className={styles.sectionTitle}>
-          {heading}
-        </h2>
-        <p className={styles.sectionEmpty}>{emptyHint}</p>
-      </section>
-    );
+    return null;
   }
 
   return (
@@ -317,7 +319,18 @@ function ActiveEventsPanel({
   t: ReturnType<typeof useTranslation>['t'];
 }>) {
   if (hostedActive.length === 0 && joinedActive.length === 0) {
-    return <p className={styles.sectionEmpty}>{t('events.myEvents.activeEmpty')}</p>;
+    return (
+      <EmptyState
+        icon={<CalendarPlus size={26} aria-hidden />}
+        title={t('events.myEvents.activeEmptyTitle')}
+        message={t('events.myEvents.activeEmpty')}
+        actions={
+          <Link to={ROUTES.createEvent} className="btn btn-primary">
+            {t('events.myEvents.createCta')}
+          </Link>
+        }
+      />
+    );
   }
   return (
     <>
@@ -325,13 +338,11 @@ function ActiveEventsPanel({
         sectionId="my-events-hosted"
         heading={t('events.myEvents.hostedSection')}
         events={hostedActive}
-        emptyHint={null}
       />
       <EventListBlock
         sectionId="my-events-joined"
         heading={t('events.myEvents.joinedSection')}
         events={joinedActive}
-        emptyHint={null}
         onLeaveEvent={onLeaveEvent}
       />
     </>
@@ -358,7 +369,13 @@ function HistoryEventsPanel({
   t: ReturnType<typeof useTranslation>['t'];
 }>) {
   if (historyEvents.length === 0) {
-    return <p className={styles.sectionEmpty}>{t('events.myEvents.historyEmpty')}</p>;
+    return (
+      <EmptyState
+        icon={<History size={26} aria-hidden />}
+        title={t('events.myEvents.historyEmptyTitle')}
+        message={t('events.myEvents.historyEmpty')}
+      />
+    );
   }
   const showLoadMore = visibleHistoryCount < historyEvents.length || hasNextPage;
   return (
@@ -367,7 +384,6 @@ function HistoryEventsPanel({
         sectionId="my-events-history"
         heading={t('events.myEvents.historySection')}
         events={historyEvents.slice(0, visibleHistoryCount)}
-        emptyHint={null}
         showLifecycleBadge={false}
         onDeleteEvent={onDeleteEvent}
       />
@@ -537,7 +553,16 @@ export default function MyEventsPage() {
     <PageLayout className={styles.layout}>
       <h1 className={styles.pageTitle}>{t('events.myEvents.title')}</h1>
       {total === 0 ? (
-        <p className="lead">{emptyLead}</p>
+        <EmptyState
+          icon={<CalendarPlus size={26} aria-hidden />}
+          title={t('events.myEvents.emptyTitle')}
+          message={emptyLead}
+          actions={
+            <Link to={ROUTES.createEvent} className="btn btn-primary">
+              {t('events.myEvents.createCta')}
+            </Link>
+          }
+        />
       ) : (
         <>
           <div className={styles.tabs} role="tablist" aria-label={t('events.myEvents.title')}>
@@ -594,14 +619,16 @@ export default function MyEventsPage() {
           )}
         </>
       )}
-      <Link
-        to={ROUTES.createEvent}
-        className={styles.fab}
-        aria-label={t('events.myEvents.createCta')}
-      >
-        <Plus size={20} aria-hidden className={styles.fabIcon} />
-        <span className={styles.fabLabel}>{t('events.myEvents.createCta')}</span>
-      </Link>
+      {total > 0 ? (
+        <Link
+          to={ROUTES.createEvent}
+          className={styles.fab}
+          aria-label={t('events.myEvents.createCta')}
+        >
+          <Plus size={20} aria-hidden className={styles.fabIcon} />
+          <span className={styles.fabLabel}>{t('events.myEvents.createCta')}</span>
+        </Link>
+      ) : null}
       {deleteError ? (
         <p className="error" role="alert">
           {deleteError}
