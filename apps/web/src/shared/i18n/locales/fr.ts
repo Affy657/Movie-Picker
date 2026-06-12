@@ -263,6 +263,15 @@
       qrHint: "Ouvrez l'appareil photo pour rejoindre la soirée sur mobile.",
       groupLabel: 'Inviter des participants',
     },
+    calendar: {
+      addButton: 'Ajouter au calendrier',
+      menuLabel: 'Choisir un calendrier',
+      google: 'Google Calendar',
+      outlook: 'Outlook',
+      apple: 'Apple Calendar (.ics)',
+      icsDescription: 'Soirée ciné sur Movie Picker. Rejoins-la ici : {{url}}',
+      icsDescriptionNoUrl: 'Soirée ciné sur Movie Picker.',
+    },
     invite: {
       buttonLabel: 'Inviter des amis',
       modalTitle: 'Inviter des amis',

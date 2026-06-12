@@ -97,7 +97,7 @@ Découpage par version côté **métier / utilisateur**.
 - ⬜ **Recherche avancée de films** : filtrer par acteur, réalisateur, genre ou année dans la barre de recherche TMDB lors de la proposition.
 - ⬜ **Tooltips globaux** : info-bulles cohérentes sur les icônes et actions moins évidentes (boutons d'action, scores TMDB, badges, pastilles streaming).
 - ✅ **Accessibilité (a11y baseline)** : navigation clavier cohérente, focus trap dans les modals, aria-labels sur les éléments interactifs.
-- ⬜ **Export calendrier (.ics)** : bouton « Ajouter au calendrier » sur la soirée, compatible Google Calendar, Outlook, Apple Calendar.
+- ✅ **Export calendrier (.ics)** : bouton « Ajouter au calendrier » sur la soirée, compatible Google Calendar, Outlook, Apple Calendar.
 
 ---
 

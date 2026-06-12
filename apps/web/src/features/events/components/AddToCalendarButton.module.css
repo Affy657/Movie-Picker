@@ -1,0 +1,59 @@
+.root {
+  position: relative;
+  margin-top: 0.6rem;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1.5px solid var(--color-primary);
+  color: var(--color-primary);
+  background: transparent;
+  font-weight: 600;
+}
+
+.trigger:hover {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  border-color: var(--color-primary-hover);
+  color: var(--color-primary-hover);
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  z-index: 10;
+  min-width: 13rem;
+  padding: 0.3rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  text-align: left;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background var(--duration-base) var(--ease-default);
+}
+
+.item:hover,
+.item:focus-visible {
+  background: color-mix(in srgb, var(--color-text) 10%, transparent);
+  outline: none;
+}
