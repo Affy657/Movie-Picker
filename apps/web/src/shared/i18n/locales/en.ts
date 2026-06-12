@@ -259,6 +259,15 @@ export const en: Locale = {
       qrHint: 'Open your camera to join the event on mobile.',
       groupLabel: 'Invite participants',
     },
+    calendar: {
+      addButton: 'Add to calendar',
+      menuLabel: 'Choose a calendar',
+      google: 'Google Calendar',
+      outlook: 'Outlook',
+      apple: 'Apple Calendar (.ics)',
+      icsDescription: 'Movie night on Movie Picker. Join here: {{url}}',
+      icsDescriptionNoUrl: 'Movie night on Movie Picker.',
+    },
     invite: {
       buttonLabel: 'Invite friends',
       modalTitle: 'Invite friends',

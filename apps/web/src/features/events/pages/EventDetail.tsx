@@ -251,6 +251,8 @@ export default function EventDetail() {
         dateFormatted={dateFormatted}
         eventTime={timeFormatted}
         eventDate={dateLabel}
+        rawDate={event.date}
+        rawTime={event.time}
         isFinished={!!event.isFinished}
         eventTheme={event.config?.theme}
         eventThemeColor={event.config?.themeColor}

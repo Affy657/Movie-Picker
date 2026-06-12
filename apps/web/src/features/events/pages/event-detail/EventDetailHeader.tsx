@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import ShareLink from '@/features/events/components/ShareLink';
+import AddToCalendarButton from '@/features/events/components/AddToCalendarButton';
 import EventThemeBanner from '@/features/events/components/EventThemeBanner';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
@@ -11,6 +12,8 @@ export type EventDetailHeaderProps = {
   dateFormatted: string;
   eventTime: string;
   eventDate: string;
+  rawDate: string;
+  rawTime: string;
   isFinished: boolean;
   eventTheme: string | null | undefined;
   eventThemeColor?: number | null;
@@ -22,6 +25,8 @@ export default function EventDetailHeader({
   dateFormatted,
   eventTime,
   eventDate,
+  rawDate,
+  rawTime,
   isFinished,
   eventTheme,
   eventThemeColor,
@@ -69,6 +74,9 @@ export default function EventDetailHeader({
               eventDate={eventDate}
               showQr
             />
+            {!isFinished && (
+              <AddToCalendarButton title={title} date={rawDate} time={rawTime} url={shareUrl} />
+            )}
           </div>
         ) : null}
       </div>
