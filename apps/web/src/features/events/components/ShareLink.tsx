@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { X } from 'lucide-react';
 import QRCodeImport from 'react-qr-code';
 import { copyTextToClipboard } from '@/shared/utils/copyTextToClipboard';
+import Tooltip from '@/shared/components/Tooltip';
 import { useTranslation } from '@/shared/i18n';
 import styles from './ShareLink.module.css';
 
@@ -151,14 +152,16 @@ export default function ShareLink({
               <h2 id="share-qr-title" className={styles.qrDialogTitle}>
                 {t('events.share.qrTitle')}
               </h2>
-              <button
-                type="button"
-                className={styles.qrDialogClose}
-                onClick={() => setQrOpen(false)}
-                aria-label={t('events.share.closeQr')}
-              >
-                <X size={18} aria-hidden />
-              </button>
+              <Tooltip label={t('events.share.closeQr')} placement="bottom">
+                <button
+                  type="button"
+                  className={styles.qrDialogClose}
+                  onClick={() => setQrOpen(false)}
+                  aria-label={t('events.share.closeQr')}
+                >
+                  <X size={18} aria-hidden />
+                </button>
+              </Tooltip>
             </header>
             <div className={styles.qrCanvas}>
               <QRCode
