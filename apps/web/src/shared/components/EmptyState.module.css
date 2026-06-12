@@ -1,0 +1,70 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.45rem;
+  padding: 2.25rem 1.5rem;
+  border: 1px dashed var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+}
+
+.iconWrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin-bottom: 0.35rem;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-md-plus);
+  font-weight: 700;
+  letter-spacing: var(--tracking-snug);
+  line-height: var(--leading-snug);
+  color: var(--color-text);
+}
+
+.message {
+  max-width: 34ch;
+  margin: 0;
+  font-size: var(--font-size-base);
+  line-height: var(--leading-loose);
+  color: var(--color-text-muted);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+}
+
+/* Variante compacte — pour les surfaces déjà délimitées (carte, menu déroulant, modale) */
+.compact {
+  gap: 0.35rem;
+  padding: 1.75rem 1rem;
+  border: none;
+  background: transparent;
+}
+
+.compact .iconWrap {
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.compact .title {
+  font-size: var(--font-size-base);
+}
+
+.compact .message {
+  font-size: var(--font-size-sm);
+}

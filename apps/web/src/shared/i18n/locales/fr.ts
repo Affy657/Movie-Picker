@@ -237,8 +237,11 @@
       hostBadgeTitle: 'Vous organisez cette soir\u00e9e',
       eventOptionsLabel: 'Options pour {{title}}',
       historySection: 'Historique',
-      activeEmpty: 'Aucune soirée à venir. Lancez-en une avec le bouton ci-dessous.',
-      historyEmpty: 'Aucune soirée terminée pour le moment.',
+      activeEmptyTitle: 'Aucune soirée à venir',
+      activeEmpty:
+        'Créez une nouvelle soirée pour rassembler vos amis et choisir un film ensemble.',
+      historyEmptyTitle: 'Pas encore d’historique',
+      historyEmpty: 'Vos soirées terminées apparaîtront ici.',
       joinedCountOne: '1 participant',
       joinedCountMany: '{{count}} participants',
       joinedCountWithCapOne: '1 / {{max}} participant',
@@ -361,7 +364,9 @@
       historySelectAria: 'Rechercher « {{query}} »',
     },
     list: {
-      emptyPlaceholder: "Aucun film proposé pour l'instant.",
+      emptyTitle: 'Aucun film proposé',
+      emptyPlaceholder:
+        'Utilisez la recherche ci-dessus pour proposer le premier film et lancer la roue.',
       proposedBy: 'Proposé par {{pseudo}}',
       proposedByMeLead: 'Proposé par ',
       proposedByMeSelf: 'moi',

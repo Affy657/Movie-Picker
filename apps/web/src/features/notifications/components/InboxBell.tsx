@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bell } from 'lucide-react';
+import { Bell, Inbox } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Avatar from '@/shared/components/Avatar';
+import EmptyState from '@/shared/components/EmptyState';
 import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
@@ -170,7 +171,11 @@ export default function InboxBell() {
         <div className={styles.dropdown} role="menu">
           <p className={styles.dropdownTitle}>{t('notifications.inboxTitle')}</p>
           {items.length === 0 ? (
-            <p className={styles.empty}>{t('notifications.inboxEmpty')}</p>
+            <EmptyState
+              compact
+              icon={<Inbox size={22} aria-hidden />}
+              message={t('notifications.inboxEmpty')}
+            />
           ) : (
             <ul className={styles.list}>
               {items.slice(0, 10).map((item) => {

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, UserPlus, UserCheck } from 'lucide-react';
+import { X, UserPlus, UserCheck, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Avatar from '@/shared/components/Avatar';
+import EmptyState from '@/shared/components/EmptyState';
 import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
@@ -131,7 +132,13 @@ export default function FollowListModal({
       <ul className={styles.list}>
         {activeQuery.isPending && <li className={styles.placeholder}>{t('common.loading')}</li>}
         {!activeQuery.isPending && items.length === 0 && (
-          <li className={styles.placeholder}>{t('profile.follow.empty')}</li>
+          <li>
+            <EmptyState
+              compact
+              icon={<Users size={22} aria-hidden />}
+              message={t('profile.follow.empty')}
+            />
+          </li>
         )}
         {items.map((item) => {
           const isMe = user?.handle === item.handle;

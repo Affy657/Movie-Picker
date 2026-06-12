@@ -5,6 +5,7 @@ import type { EventParticipantSummary } from '@/shared/types/event';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import Avatar from '@/shared/components/Avatar';
+import EmptyState from '@/shared/components/EmptyState';
 import styles from './EventParticipantsList.module.css';
 
 type Props = {
@@ -54,7 +55,11 @@ export default function EventParticipantsList({
         )}
       </h2>
       {participants.length === 0 ? (
-        <p className={styles.empty}>{t('events.participants.empty')}</p>
+        <EmptyState
+          compact
+          icon={<Users size={22} aria-hidden />}
+          message={t('events.participants.empty')}
+        />
       ) : (
         <ul className={styles.list}>
           {participants.map((p) => {

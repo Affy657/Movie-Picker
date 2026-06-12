@@ -4,6 +4,7 @@ import {
   Check,
   ExternalLink,
   Eye,
+  Film,
   MoreVertical,
   ThumbsDown,
   ThumbsUp,
@@ -11,6 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
+import EmptyState from '@/shared/components/EmptyState';
 import type { MovieData } from '@/shared/types/movie';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
 import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
@@ -653,7 +655,13 @@ export default function MovieList({
   const { t } = useTranslation();
 
   if (movies.length === 0) {
-    return <p className="placeholder">{t('movies.list.emptyPlaceholder')}</p>;
+    return (
+      <EmptyState
+        icon={<Film size={26} aria-hidden />}
+        title={t('movies.list.emptyTitle')}
+        message={t('movies.list.emptyPlaceholder')}
+      />
+    );
   }
 
   return (
