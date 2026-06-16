@@ -279,6 +279,68 @@ public sealed class TmdbMovieSearchTests
         Assert.Equal("flatrate", p.MonetizationType);
     }
 
+    [Fact]
+    public async Task GetEnrichmentAsync_IncludesRentAndBuy_OrderedByMonetization()
+    {
+        var movieJson = """{"vote_average": 7.5}""";
+        var watchJson = """
+            {
+              "id": 1,
+              "results": {
+                "FR": {
+                  "link": "https://www.themoviedb.org/movie/1/watch",
+                  "buy": [
+                    {
+                      "logo_path": "/buy.png",
+                      "provider_id": 68,
+                      "provider_name": "Microsoft Store",
+                      "display_priority": 0
+                    }
+                  ],
+                  "rent": [
+                    {
+                      "logo_path": "/rent.png",
+                      "provider_id": 3,
+                      "provider_name": "Google Play",
+                      "display_priority": 0
+                    }
+                  ],
+                  "flatrate": [
+                    {
+                      "logo_path": "/sub.png",
+                      "provider_id": 8,
+                      "provider_name": "Netflix",
+                      "display_priority": 0
+                    }
+                  ]
+                }
+              }
+            }
+            """;
+        var options = Options.Create(new MoviePickerOptions { TmdbApiKey = "key", TmdbEnrichmentCacheHours = 1 });
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Returns<HttpRequestMessage, CancellationToken>(
+                (req, _) =>
+                {
+                    var u = req.RequestUri?.AbsolutePath ?? "";
+                    var body = u.Contains("/watch/providers", StringComparison.Ordinal) ? watchJson : movieJson;
+                    return Task.FromResult(
+                        new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(body) });
+                });
+        var client = CreateHttpClient(mockHandler.Object);
+        var sut = CreateSut(client, options);
+
+        var a = await sut.GetEnrichmentAsync(1, MovieMediaType.Movie, "FR");
+
+        Assert.NotNull(a);
+        Assert.Equal(3, a!.WatchProviders.Count);
+        Assert.Equal("flatrate", a.WatchProviders[0].MonetizationType);
+        Assert.Equal("rent", a.WatchProviders[1].MonetizationType);
+        Assert.Equal("buy", a.WatchProviders[2].MonetizationType);
+    }
+
     [Theory]
     [InlineData("""{"vote_average": 7.0}""")]
     [InlineData("""{"vote_average": 7.0, "runtime": 0}""")]

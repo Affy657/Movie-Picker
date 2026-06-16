@@ -169,6 +169,8 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
                 watchPageUrl = linkEl.GetString();
 
             AppendProviders(regionObj, "flatrate", "flatrate", offers);
+            AppendProviders(regionObj, "rent", "rent", offers);
+            AppendProviders(regionObj, "buy", "buy", offers);
         }
 
         var deduped = DedupeProviders(offers);

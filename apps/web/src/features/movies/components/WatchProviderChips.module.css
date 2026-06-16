@@ -1,126 +1,72 @@
-﻿.list {
-  list-style: none;
-  padding: 0;
+.root {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.3rem 0.6rem;
+  margin: 0;
+}
+
+.label {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+}
+
+.logos {
   margin: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  align-items: center;
+  gap: 0.3rem;
 }
 
-.listItem {
-  list-style: none;
-  display: inline-flex;
-  margin: 0;
-  padding: 0;
-}
-
-.chipLink {
-  text-decoration: none;
-  color: inherit;
-  cursor: pointer;
-}
-
-.chipLink:hover {
-  filter: brightness(1.06);
-}
-
-.chipLink:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 3px;
-}
-
-.compact {
-  gap: 0.35rem;
-  margin-top: 0.1rem;
+.compact .root,
+.compact.root {
+  gap: 0.25rem 0.5rem;
 }
 
 .chip {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+/*
+ * Cadre du logo posé directement sur le chip (pas de wrapper) ; hauteur fixe,
+ * largeur auto pour s'adapter aux wordmarks larges comme aux icônes carrées.
+ */
+.chipLogo {
+  height: 2rem;
+  min-width: 2rem;
+  max-width: 4.5rem;
+  padding: 0.2rem 0.3rem;
+  border-radius: 5px;
+  background: var(--color-input-readonly);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.chipText {
   gap: 0.25rem;
   padding: 0.15rem 0.4rem;
-  border-radius: 6px;
+  border-radius: 5px;
   background: var(--color-input-readonly);
   border: 1px solid var(--color-border-subtle);
   font-size: var(--font-size-2xs);
   color: var(--color-text-muted);
 }
 
-.compact .chip {
-  gap: 0.15rem;
-  padding: 0.05rem 0.28rem;
-  border-radius: 4px;
+.compact .chipText {
   font-size: var(--font-size-4xs);
-}
-
-.compact .chipName {
-  max-width: 5.5rem;
-}
-
-.chipLogoOnly {
-  padding: 0.1rem;
-  background: transparent;
-  border: none;
-}
-
-.compact .chipLogoOnly {
-  padding: 0;
-}
-
-/**
- * Cadre rectangulaire : les logos TMDB « watch provider » sont souvent des wordmarks larges ;
- * object-fit: contain garde le logo entier lisible.
- */
-.logoFrame {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  width: 5rem;
-  height: 2rem;
-  flex-shrink: 0;
-  padding: 0.2rem 0.35rem;
-  border-radius: 4px;
-  background: var(--color-border-subtle);
-}
-
-/*
- * Compact : cadre carré (les logos TMDB « app » sont souvent carrés ; un rectangle large
- * laissait du vide sur les côtés). Même inset sur les 4 côtés.
- */
-.logoFrameCompact {
-  position: relative;
-  display: block;
-  width: 2.75rem;
-  height: 2.75rem;
-  box-sizing: border-box;
-  padding: 0;
-  border-radius: 4px;
-  background: var(--color-input-readonly);
-  border: 1px solid var(--color-border-subtle);
-}
-
-.logoInset {
-  position: absolute;
-  inset: 0.2rem;
-  pointer-events: none;
 }
 
 .logoImg {
   display: block;
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  object-position: center;
-}
-
-.logoFrameCompact .logoInset .logoImg {
-  width: 100%;
   height: 100%;
-  max-width: none;
-  max-height: none;
+  width: auto;
+  max-width: 100%;
   object-fit: contain;
   object-position: center;
 }
@@ -132,22 +78,43 @@
   white-space: nowrap;
 }
 
-.chipMore {
+.chipLink {
+  text-decoration: none;
+  color: inherit;
   cursor: pointer;
-  font-weight: 600;
-  color: var(--color-text);
-  background: var(--color-input-readonly);
-  border: 1px solid var(--color-border-subtle);
-  min-width: 2.4rem;
-  justify-content: center;
-  padding: 0.25rem 0.55rem;
-  transition: background var(--duration-base) var(--ease-default), border-color var(--duration-base) var(--ease-default), color var(--duration-base) var(--ease-default);
 }
 
-.chipMore:hover,
-.chipMore:focus-visible {
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-  border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-border-subtle));
+.chipLink:hover {
+  filter: brightness(1.06);
+  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border-subtle));
+}
+
+.chipLink:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2rem;
+  min-width: 2rem;
+  padding: 0 0.4rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: var(--font-size-3xs);
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px dashed var(--color-border-subtle);
+  transition: color var(--duration-base) var(--ease-default),
+    border-color var(--duration-base) var(--ease-default);
+}
+
+.more:hover,
+.more:focus-visible {
   color: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border-subtle));
   outline: none;
 }
