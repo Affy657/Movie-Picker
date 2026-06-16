@@ -92,7 +92,7 @@ Découpage par version côté **métier / utilisateur**.
 - ✅ **Suppression de compte + export RGPD** : depuis la page profil — suppression définitive et téléchargement de ses données (soirées, votes, films proposés).
 - ✅ **Pages d'erreur dédiées** : 404 route / soirée introuvable, 500 erreur serveur — message clair et lien vers l'accueil.
 - ✅ **Empty states** : composant partagé `EmptyState` (icône + titre + message + CTA) appliqué à « Mes soirées » vide, liste de films vide, aucun participant, inbox notifications et abonnements/abonnés.
-- ⬜ **Location & achat (VOD)** : afficher sur la fiche film les plateformes où le film est disponible à la location ou à l'achat (Amazon, Apple TV, Google Play…) en complément des abonnements streaming déjà affichés ; distinction visuelle claire entre les trois modes (abonnement / location / achat).
+- ✅ **Location & achat (VOD)** : afficher sur la fiche film les plateformes où le film est disponible à la location ou à l'achat (Amazon, Apple TV, Google Play…) en complément des abonnements streaming déjà affichés ; distinction visuelle claire entre les trois modes (abonnement / location / achat).
 - ⬜ **Tri de la liste de films** : trier les films proposés par score de votes, note TMDB, durée ou ordre d'ajout.
 - ⬜ **Recherche avancée de films** : filtrer par acteur, réalisateur, genre ou année dans la barre de recherche TMDB lors de la proposition.
 - ⬜ **Tooltips globaux** : info-bulles cohérentes sur les icônes et actions moins évidentes (boutons d'action, scores TMDB, badges, pastilles streaming).
