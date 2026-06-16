@@ -56,7 +56,7 @@ function slugForUid(value: string): string {
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .replace(/^-|-$/g, '');
   return slug || 'soiree';
 }
 
