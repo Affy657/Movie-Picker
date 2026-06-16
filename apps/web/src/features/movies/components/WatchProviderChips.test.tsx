@@ -38,7 +38,23 @@ describe('WatchProviderChips', () => {
     );
     expect(document.querySelector('img[src*="image.tmdb.org"]')).toBeTruthy();
     expect(screen.queryByText('Service Inconnu')).not.toBeInTheDocument();
-    expect(screen.getByRole('group', { name: /service inconnu.*abonnement/i })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /service inconnu.*abonnement/i })).toBeInTheDocument();
+  });
+
+  it('groupe les offres par mode avec une icône libellée Abonnement / Location / Achat', () => {
+    renderWithLocale(
+      <WatchProviderChips
+        title="Mon Film"
+        providers={[
+          { providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' },
+          { providerId: 3, name: 'Google Play', logoPath: null, type: 'rent' },
+          { providerId: 68, name: 'Microsoft Store', logoPath: null, type: 'buy' },
+        ]}
+      />
+    );
+    expect(screen.getByLabelText('Abonnement')).toBeInTheDocument();
+    expect(screen.getByLabelText('Location')).toBeInTheDocument();
+    expect(screen.getByLabelText('Achat')).toBeInTheDocument();
   });
 
   it('ne rend rien si liste vide', () => {

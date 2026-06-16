@@ -1,6 +1,6 @@
-import { useId, useState } from 'react';
+import { Fragment, useId, useState } from 'react';
 import clsx from 'clsx';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Euro, Film, PlayCircle, Tag } from 'lucide-react';
 import type { WatchProviderOffer } from '@/shared/types/movie';
 import { useTranslation } from '@/shared/i18n';
 import type { TranslationKey } from '@/shared/i18n/t';
@@ -56,6 +56,22 @@ function monetizationLabel(
   }
 }
 
+const TYPE_ORDER = ['flatrate', 'rent', 'buy'] as const;
+const KNOWN_TYPES = new Set<string>(TYPE_ORDER);
+
+function ModeIcon({ type, size }: Readonly<{ type: string; size: number }>) {
+  switch (type) {
+    case 'flatrate':
+      return <PlayCircle aria-hidden size={size} />;
+    case 'rent':
+      return <Tag aria-hidden size={size} />;
+    case 'buy':
+      return <Euro aria-hidden size={size} />;
+    default:
+      return <Film aria-hidden size={size} />;
+  }
+}
+
 interface WatchProviderChipsProps {
   providers: WatchProviderOffer[];
   title: string;
@@ -75,96 +91,92 @@ export default function WatchProviderChips({
 }: Readonly<WatchProviderChipsProps>) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
-  const listId = useId();
+  const rootId = useId();
   if (!providers.length) return null;
   const compact = variant === 'compact';
-  const rootClass = clsx(styles.list, compact && styles.compact, className);
+  const rootClass = clsx(styles.root, compact && styles.compact, className);
   const safeWatchHref =
     watchPageUrl != null && isSafeTmdbWatchPageUrl(watchPageUrl) ? watchPageUrl : null;
 
-  const overflow = !!maxVisible && providers.length > maxVisible;
-  const collapsed = overflow && !expanded;
-  const visibleProviders = collapsed ? providers.slice(0, maxVisible) : providers;
-  const hiddenCount = providers.length - (maxVisible ?? providers.length);
+  const groups = [
+    ...TYPE_ORDER.map((type) => ({
+      type: type as string,
+      items: providers.filter((p) => p.type === type),
+    })),
+    { type: 'other', items: providers.filter((p) => !KNOWN_TYPES.has(p.type)) },
+  ].filter((g) => g.items.length > 0);
+
+  const collapsed = !!maxVisible && !expanded;
+
+  const renderChip = (p: WatchProviderOffer) => {
+    const hasLogo = isSafeTmdbLogoUrl(p.logoPath);
+    const typeStr = monetizationLabel(t, p.type);
+    const ariaStatic = t('movies.watchProviders.chipAria', { provider: p.name, type: typeStr });
+    const ariaLink = t('movies.watchProviders.chipLinkAria', { provider: p.name, type: typeStr });
+
+    const chipInner =
+      hasLogo && p.logoPath ? (
+        <img src={tmdbLogoSrcForUi(p.logoPath)} alt="" className={styles.logoImg} loading="lazy" />
+      ) : (
+        <span className={styles.chipName}>{p.name}</span>
+      );
+
+    const chipClass = clsx(styles.chip, hasLogo ? styles.chipLogo : styles.chipText);
+    const href = providerDirectUrl(p.providerId, title, safeWatchHref);
+    const key = `${p.providerId}-${p.type}`;
+
+    return href ? (
+      <a
+        key={key}
+        href={href}
+        className={clsx(chipClass, styles.chipLink)}
+        aria-label={ariaLink}
+        target="_blank"
+        rel="noreferrer noopener"
+      >
+        {chipInner}
+      </a>
+    ) : (
+      <span key={key} className={chipClass} role="img" aria-label={ariaStatic}>
+        {chipInner}
+      </span>
+    );
+  };
 
   return (
-    <ul className={rootClass} id={listId} aria-label={t('movies.watchProviders.listAria')}>
-      {visibleProviders.map((p) => {
-        const hasLogo = isSafeTmdbLogoUrl(p.logoPath);
-        const typeStr = monetizationLabel(t, p.type);
-        const ariaStatic = t('movies.watchProviders.chipAria', { provider: p.name, type: typeStr });
-        const ariaLink = t('movies.watchProviders.chipLinkAria', {
-          provider: p.name,
-          type: typeStr,
-        });
-
-        const chipInner =
-          hasLogo && p.logoPath ? (
-            <span className={clsx(styles.logoFrame, compact && styles.logoFrameCompact)}>
-              {compact ? (
-                <span className={styles.logoInset} aria-hidden="true">
-                  <img
-                    src={tmdbLogoSrcForUi(p.logoPath)}
-                    alt=""
-                    className={styles.logoImg}
-                    loading="lazy"
-                  />
-                </span>
-              ) : (
-                <img
-                  src={tmdbLogoSrcForUi(p.logoPath)}
-                  alt=""
-                  className={styles.logoImg}
-                  loading="lazy"
-                />
-              )}
-            </span>
-          ) : (
-            <span className={styles.chipName}>{p.name}</span>
-          );
-
-        const chipClass = clsx(styles.chip, hasLogo && styles.chipLogoOnly);
-
-        const href = providerDirectUrl(p.providerId, title, safeWatchHref);
-
+    <dl className={rootClass} id={rootId} aria-label={t('movies.watchProviders.listAria')}>
+      {groups.map((g) => {
+        const label = monetizationLabel(t, g.type);
+        const hadOverflow = !!maxVisible && g.items.length > maxVisible;
+        const limited = collapsed && maxVisible ? g.items.slice(0, maxVisible) : g.items;
+        const hidden = g.items.length - limited.length;
         return (
-          <li key={`${p.providerId}-${p.type}`} className={styles.listItem}>
-            {href ? (
-              <a
-                href={href}
-                className={clsx(chipClass, styles.chipLink)}
-                aria-label={ariaLink}
-                target="_blank"
-                rel="noreferrer noopener"
-              >
-                {chipInner}
-              </a>
-            ) : (
-              <div className={chipClass} role="group" aria-label={ariaStatic}>
-                {chipInner}
-              </div>
-            )}
-          </li>
+          <Fragment key={g.type}>
+            <dt className={styles.label} aria-label={label} title={label}>
+              <ModeIcon type={g.type} size={compact ? 15 : 17} />
+            </dt>
+            <dd className={styles.logos}>
+              {limited.map(renderChip)}
+              {hadOverflow ? (
+                <button
+                  type="button"
+                  className={styles.more}
+                  onClick={() => setExpanded((v) => !v)}
+                  aria-expanded={expanded}
+                  aria-controls={rootId}
+                  aria-label={
+                    expanded
+                      ? t('movies.watchProviders.showLessAria')
+                      : t('movies.watchProviders.showMoreAria', { count: hidden })
+                  }
+                >
+                  {expanded ? <ChevronLeft aria-hidden size={14} /> : `+${hidden}`}
+                </button>
+              ) : null}
+            </dd>
+          </Fragment>
         );
       })}
-      {overflow ? (
-        <li className={styles.listItem}>
-          <button
-            type="button"
-            className={clsx(styles.chip, styles.chipMore)}
-            onClick={() => setExpanded((v) => !v)}
-            aria-expanded={expanded}
-            aria-controls={listId}
-            aria-label={
-              expanded
-                ? t('movies.watchProviders.showLessAria')
-                : t('movies.watchProviders.showMoreAria', { count: hiddenCount })
-            }
-          >
-            {expanded ? <ChevronLeft aria-hidden size={14} /> : `+${hiddenCount}`}
-          </button>
-        </li>
-      ) : null}
-    </ul>
+    </dl>
   );
 }
