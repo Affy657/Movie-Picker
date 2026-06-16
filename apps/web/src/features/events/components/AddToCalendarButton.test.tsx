@@ -71,6 +71,8 @@ describe('AddToCalendarButton', () => {
   it('ne rend rien quand la date est invalide', () => {
     const { container } = renderButton(<AddToCalendarButton {...props} date="" />);
     expect(container).toBeEmptyDOMElement();
-    expect(screen.queryByRole('button', { name: /ajouter au calendrier/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /ajouter au calendrier/i })
+    ).not.toBeInTheDocument();
   });
 });

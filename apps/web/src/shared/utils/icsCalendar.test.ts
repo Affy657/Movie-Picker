@@ -70,9 +70,7 @@ describe('icsCalendar', () => {
     const url = googleCalendarUrl(baseEvent);
     expect(url).not.toBeNull();
     const parsed = new URL(url!);
-    expect(parsed.origin + parsed.pathname).toBe(
-      'https://calendar.google.com/calendar/render'
-    );
+    expect(parsed.origin + parsed.pathname).toBe('https://calendar.google.com/calendar/render');
     expect(parsed.searchParams.get('action')).toBe('TEMPLATE');
     expect(parsed.searchParams.get('text')).toBe('Soirée ciné');
     expect(parsed.searchParams.get('dates')).toBe('20260615T190000/20260615T210000');
