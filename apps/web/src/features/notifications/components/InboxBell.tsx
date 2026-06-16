@@ -4,6 +4,7 @@ import { Bell, Inbox } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Avatar from '@/shared/components/Avatar';
 import EmptyState from '@/shared/components/EmptyState';
+import Tooltip from '@/shared/components/Tooltip';
 import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
@@ -152,20 +153,22 @@ export default function InboxBell() {
 
   return (
     <div ref={containerRef} className={styles.container}>
-      <button
-        type="button"
-        className={styles.bellButton}
-        onClick={handleOpen}
-        aria-label={t('notifications.inboxAriaLabel')}
-        aria-expanded={open}
-      >
-        <Bell size={20} aria-hidden />
-        {unreadCount > 0 && (
-          <span className={styles.badge} aria-hidden>
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
-        )}
-      </button>
+      <Tooltip label={t('notifications.inboxAriaLabel')} placement="bottom" disabled={open}>
+        <button
+          type="button"
+          className={styles.bellButton}
+          onClick={handleOpen}
+          aria-label={t('notifications.inboxAriaLabel')}
+          aria-expanded={open}
+        >
+          <Bell size={20} aria-hidden />
+          {unreadCount > 0 && (
+            <span className={styles.badge} aria-hidden>
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </button>
+      </Tooltip>
 
       {open && (
         <div className={styles.dropdown} role="menu">
