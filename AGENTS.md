@@ -19,6 +19,10 @@ Si on ne peut pas exprimer l'intention via le nommage ou la structure, refactori
 - Ne jamais skip les hooks pre-push.
 - Préférer éditer les fichiers existants à en créer de nouveaux.
 
+## Mémoire inter-sessions
+
+Quand un problème systématique est rencontré et résolu — erreur de config récurrente, comportement inattendu d'un outil, contrainte non documentée du projet — le sauvegarder en mémoire (`C:\Users\adrie\.claude\projects\C--ynov-movie-picker\memory\`) sous forme d'entrée `feedback` ou `project` selon le cas, pour que la prochaine session ne repart pas de zéro.
+
 ## Stack
 
 Monorepo pnpm + Turbo :

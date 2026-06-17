@@ -1,0 +1,12 @@
+pnpm-lock.yaml
+node_modules/
+.turbo/
+dist/
+build/
+coverage/
+test-results/
+*.log
+logs/
+archive/
+artifacts/
+.git/
