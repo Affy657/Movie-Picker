@@ -33,7 +33,15 @@ public sealed record TmdbMovieDetails(
 
 public interface ITmdbMovieSearch
 {
-    Task<IReadOnlyList<TmdbSearchItem>> SearchAsync(string query, bool allowSeries, CancellationToken ct = default);
+    Task<IReadOnlyList<TmdbSearchItem>> SearchAsync(
+        string query,
+        bool allowSeries,
+        IReadOnlyList<int>? genreIds = null,
+        int? yearFrom = null,
+        int? yearTo = null,
+        double? voteMin = null,
+        string? originalLanguage = null,
+        CancellationToken ct = default);
 
     Task<TmdbMovieEnrichment?> GetEnrichmentAsync(int tmdbId, MovieMediaType mediaType, string region, CancellationToken ct = default);
 

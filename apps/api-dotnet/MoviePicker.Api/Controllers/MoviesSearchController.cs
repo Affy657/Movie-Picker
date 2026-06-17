@@ -22,6 +22,11 @@ public sealed class MoviesSearchController : ControllerBase
     public async Task<IActionResult> Search(
         [FromQuery] string? q,
         [FromQuery] string? eventSlug,
+        [FromQuery] string? genreIds,
+        [FromQuery] int? yearFrom,
+        [FromQuery] int? yearTo,
+        [FromQuery] double? voteMin,
+        [FromQuery] string? language,
         [FromServices] ISearchMoviesHandler handler,
         [FromServices] IEventRepository eventRepository,
         CancellationToken ct)
@@ -40,8 +45,25 @@ public sealed class MoviesSearchController : ControllerBase
             }
         }
 
-        var results = await handler.HandleAsync(q ?? string.Empty, allowSeries, ct);
+        var parsedGenreIds = ParseGenreIds(genreIds);
+        MovieSearchFilters? filters = null;
+        if (parsedGenreIds.Count > 0 || yearFrom.HasValue || yearTo.HasValue || voteMin.HasValue || !string.IsNullOrWhiteSpace(language))
+            filters = new MovieSearchFilters(parsedGenreIds, yearFrom, yearTo, voteMin, language?.Trim().ToLowerInvariant());
+
+        var results = await handler.HandleAsync(q ?? string.Empty, allowSeries, filters, ct);
         return Ok(results);
+    }
+
+    private static IReadOnlyList<int> ParseGenreIds(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return Array.Empty<int>();
+        var ids = new List<int>();
+        foreach (var part in raw.Split(','))
+        {
+            if (int.TryParse(part.Trim(), out var id) && id > 0)
+                ids.Add(id);
+        }
+        return ids;
     }
 
     [HttpGet("tmdb/{tmdbId:int}/details")]

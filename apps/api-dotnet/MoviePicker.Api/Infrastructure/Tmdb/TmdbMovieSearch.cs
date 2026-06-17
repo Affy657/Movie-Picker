@@ -34,16 +34,30 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
     public async Task<IReadOnlyList<TmdbSearchItem>> SearchAsync(
         string query,
         bool allowSeries,
+        IReadOnlyList<int>? genreIds = null,
+        int? yearFrom = null,
+        int? yearTo = null,
+        double? voteMin = null,
+        string? originalLanguage = null,
         CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(_options.TmdbApiKey))
             throw new InvalidOperationException("TMDB_API_KEY manquante");
 
-        var q = Uri.EscapeDataString(query.Trim());
-        if (q.Length == 0)
+        var trimmedQuery = query.Trim();
+        var hasText = trimmedQuery.Length > 0;
+        var hasFilters = (genreIds?.Count > 0) || yearFrom.HasValue || yearTo.HasValue
+            || voteMin.HasValue || !string.IsNullOrWhiteSpace(originalLanguage);
+
+        if (!hasText && !hasFilters)
             return Array.Empty<TmdbSearchItem>();
 
         var key = Uri.EscapeDataString(_options.TmdbApiKey);
+
+        if (!hasText)
+            return await DiscoverMoviesAsync(key, genreIds, yearFrom, yearTo, voteMin, originalLanguage, ct);
+
+        var q = Uri.EscapeDataString(trimmedQuery);
         var endpoint = allowSeries ? "search/multi" : "search/movie";
         var url = $"https://api.themoviedb.org/3/{endpoint}?api_key={key}&query={q}&language=fr-FR";
 
@@ -66,6 +80,38 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
             if (mediaType is null)
                 continue;
 
+            if (genreIds?.Count > 0)
+            {
+                var itemGenreIds = ReadGenreIdArray(item);
+                if (!genreIds.Any(g => itemGenreIds.Contains(g)))
+                    continue;
+            }
+
+            if (yearFrom.HasValue || yearTo.HasValue)
+            {
+                var yearStr = ReadYear(item, mediaType.Value);
+                if (!int.TryParse(yearStr, out var yr))
+                    continue;
+                if (yearFrom.HasValue && yr < yearFrom.Value)
+                    continue;
+                if (yearTo.HasValue && yr > yearTo.Value)
+                    continue;
+            }
+
+            double? voteAverage = null;
+            if (item.TryGetProperty("vote_average", out var vaEl) && vaEl.ValueKind == JsonValueKind.Number)
+                voteAverage = vaEl.GetDouble();
+
+            if (voteMin.HasValue && (voteAverage is null || voteAverage < voteMin.Value))
+                continue;
+
+            if (!string.IsNullOrWhiteSpace(originalLanguage))
+            {
+                var lang = ReadOriginalLanguage(item);
+                if (!string.Equals(lang, originalLanguage, StringComparison.OrdinalIgnoreCase))
+                    continue;
+            }
+
             var id = item.GetProperty("id").GetInt32();
             var title = ReadTitle(item, mediaType.Value);
             if (string.IsNullOrEmpty(title))
@@ -74,16 +120,85 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
             var year = ReadYear(item, mediaType.Value);
             var posterPath = ReadPosterUrl(item);
 
-            double? voteAverage = null;
-            if (item.TryGetProperty("vote_average", out var va) && va.ValueKind == JsonValueKind.Number)
-                voteAverage = va.GetDouble();
-
             list.Add(new TmdbSearchItem(id, mediaType.Value, title, year, posterPath, voteAverage));
             n++;
         }
 
         return list;
     }
+
+    private async Task<IReadOnlyList<TmdbSearchItem>> DiscoverMoviesAsync(
+        string apiKey,
+        IReadOnlyList<int>? genreIds,
+        int? yearFrom,
+        int? yearTo,
+        double? voteMin,
+        string? originalLanguage,
+        CancellationToken ct)
+    {
+        var url = $"https://api.themoviedb.org/3/discover/movie?api_key={apiKey}&language=fr-FR&sort_by=popularity.desc";
+        if (genreIds?.Count > 0)
+            url += $"&with_genres={string.Join(",", genreIds)}";
+        if (yearFrom.HasValue)
+            url += $"&primary_release_date.gte={yearFrom.Value}-01-01";
+        if (yearTo.HasValue)
+            url += $"&primary_release_date.lte={yearTo.Value}-12-31";
+        if (voteMin.HasValue)
+            url += $"&vote_average.gte={voteMin.Value.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)}";
+        if (!string.IsNullOrWhiteSpace(originalLanguage))
+            url += $"&with_original_language={Uri.EscapeDataString(originalLanguage.Trim())}";
+
+        using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
+        res.EnsureSuccessStatusCode();
+
+        await using var stream = await res.Content.ReadAsStreamAsync(ct);
+        using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+
+        if (!doc.RootElement.TryGetProperty("results", out var results))
+            return Array.Empty<TmdbSearchItem>();
+
+        var list = new List<TmdbSearchItem>();
+        var n = 0;
+        foreach (var item in results.EnumerateArray())
+        {
+            if (n >= 20) break;
+
+            var id = item.GetProperty("id").GetInt32();
+            var title = ReadTitle(item, MovieMediaType.Movie);
+            if (string.IsNullOrEmpty(title)) continue;
+
+            var year = ReadYear(item, MovieMediaType.Movie);
+            var posterPath = ReadPosterUrl(item);
+
+            double? voteAverage = null;
+            if (item.TryGetProperty("vote_average", out var va) && va.ValueKind == JsonValueKind.Number)
+                voteAverage = va.GetDouble();
+
+            list.Add(new TmdbSearchItem(id, MovieMediaType.Movie, title, year, posterPath, voteAverage));
+            n++;
+        }
+
+        return list;
+    }
+
+    private static IReadOnlyList<int> ReadGenreIdArray(JsonElement item)
+    {
+        if (!item.TryGetProperty("genre_ids", out var arr) || arr.ValueKind != JsonValueKind.Array)
+            return Array.Empty<int>();
+
+        var ids = new List<int>();
+        foreach (var el in arr.EnumerateArray())
+        {
+            if (el.ValueKind == JsonValueKind.Number)
+                ids.Add(el.GetInt32());
+        }
+        return ids;
+    }
+
+    private static string? ReadOriginalLanguage(JsonElement item) =>
+        item.TryGetProperty("original_language", out var lang) && lang.ValueKind == JsonValueKind.String
+            ? lang.GetString()
+            : null;
 
     public async Task<TmdbMovieEnrichment?> GetEnrichmentAsync(
         int tmdbId,

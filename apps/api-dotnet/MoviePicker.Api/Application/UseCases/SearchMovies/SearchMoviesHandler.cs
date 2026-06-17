@@ -21,7 +21,11 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
         _options = options.Value;
     }
 
-    public async Task<MovieSearchListResponse> HandleAsync(string query, bool allowSeries, CancellationToken ct = default)
+    public async Task<MovieSearchListResponse> HandleAsync(
+        string query,
+        bool allowSeries,
+        MovieSearchFilters? filters = null,
+        CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(_options.TmdbApiKey))
             throw new ServiceUnavailableException("Recherche films temporairement indisponible");
@@ -29,7 +33,15 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
         IReadOnlyList<TmdbSearchItem> rows;
         try
         {
-            rows = await _tmdb.SearchAsync(query, allowSeries, ct);
+            rows = await _tmdb.SearchAsync(
+                query,
+                allowSeries,
+                filters?.GenreIds,
+                filters?.YearFrom,
+                filters?.YearTo,
+                filters?.VoteMin,
+                filters?.OriginalLanguage,
+                ct);
         }
         catch (HttpRequestException)
         {
