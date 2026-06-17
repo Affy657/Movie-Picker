@@ -375,6 +375,8 @@ export const en: Locale = {
       noResultsForFilters: 'No movies match the selected filters.',
       filterVoteMin: 'Min. rating',
       filterLanguage: 'Orig. language',
+      filterGenreAll: 'All genres',
+      filterLanguageAll: 'All languages',
       removeFilterAria: 'Remove filter',
     },
     list: {

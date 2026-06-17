@@ -29,7 +29,11 @@ const MOVIE_GENRE_IDS = [
   28, 35, 53, 27, 878, 18, 12, 14, 10749, 80, 16, 10751, 99, 9648, 36, 10402, 10752, 37,
 ] as const;
 
-const VOTE_MIN_OPTIONS = [6, 7, 8] as const;
+const VOTE_MIN_OPTIONS = [
+  { tmdb: 6, label: '6/10' },
+  { tmdb: 7, label: '7/10' },
+  { tmdb: 8, label: '8/10' },
+] as const;
 
 const LANGUAGE_OPTIONS = [
   { code: 'fr', fr: 'Français', en: 'French', flag: '🇫🇷' },
@@ -120,7 +124,7 @@ export default function AddMovieForm({
   const [emptySearchKey, setEmptySearchKey] = useState<string | null>(null);
 
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
+  const [selectedGenre, setSelectedGenre] = useState<number | undefined>(undefined);
   const [yearFromInput, setYearFromInput] = useState('');
   const [yearToInput, setYearToInput] = useState('');
   const [voteMin, setVoteMin] = useState<number | undefined>(undefined);
@@ -140,17 +144,17 @@ export default function AddMovieForm({
 
   const activeFilters: MovieSearchFilters = useMemo(
     () => ({
-      genreIds: selectedGenres.length > 0 ? selectedGenres : undefined,
+      genreIds: selectedGenre != null ? [selectedGenre] : undefined,
       yearFrom: yearFromValid,
       yearTo: yearToValid,
       voteMin,
       originalLanguage: selectedLanguage,
     }),
-    [selectedGenres, yearFromValid, yearToValid, voteMin, selectedLanguage]
+    [selectedGenre, yearFromValid, yearToValid, voteMin, selectedLanguage]
   );
 
   const hasActiveFilters =
-    selectedGenres.length > 0 ||
+    selectedGenre != null ||
     yearFromValid !== undefined ||
     yearToValid !== undefined ||
     voteMin !== undefined ||
@@ -308,9 +312,9 @@ export default function AddMovieForm({
     setQuery(q);
   }, []);
 
-  const toggleGenre = useCallback((id: number) => {
+  const handleGenreChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     filterChangedRef.current = true;
-    setSelectedGenres((prev) => (prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]));
+    setSelectedGenre(e.target.value ? Number(e.target.value) : undefined);
   }, []);
 
   const handleYearFromChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -330,14 +334,14 @@ export default function AddMovieForm({
     setVoteMin((prev) => (prev === min ? undefined : min));
   }, []);
 
-  const toggleLanguage = useCallback((code: string) => {
+  const handleLanguageChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     filterChangedRef.current = true;
-    setSelectedLanguage((prev) => (prev === code ? undefined : code));
+    setSelectedLanguage(e.target.value || undefined);
   }, []);
 
   const clearAllFilters = useCallback(() => {
     filterChangedRef.current = true;
-    setSelectedGenres([]);
+    setSelectedGenre(undefined);
     setYearFromInput('');
     setYearToInput('');
     setVoteMin(undefined);
@@ -346,13 +350,13 @@ export default function AddMovieForm({
 
   const activeFilterChips = useMemo(() => {
     const chips: { key: string; label: string; onRemove: () => void }[] = [];
-    for (const id of selectedGenres) {
+    if (selectedGenre != null) {
       chips.push({
-        key: `g-${id}`,
-        label: genreLabel(id, tmdbLanguage),
+        key: `g-${selectedGenre}`,
+        label: genreLabel(selectedGenre, tmdbLanguage),
         onRemove: () => {
           filterChangedRef.current = true;
-          setSelectedGenres((prev) => prev.filter((g) => g !== id));
+          setSelectedGenre(undefined);
         },
       });
     }
@@ -386,9 +390,10 @@ export default function AddMovieForm({
       });
     }
     if (voteMin != null) {
+      const voteOpt = VOTE_MIN_OPTIONS.find((o) => o.tmdb === voteMin);
       chips.push({
         key: 'vote',
-        label: `★ ${voteMin}+`,
+        label: voteOpt ? `${voteOpt.label}+` : `${voteMin}/10+`,
         onRemove: () => {
           filterChangedRef.current = true;
           setVoteMin(undefined);
@@ -410,7 +415,7 @@ export default function AddMovieForm({
       });
     }
     return chips;
-  }, [selectedGenres, yearFromValid, yearToValid, voteMin, selectedLanguage, tmdbLanguage]);
+  }, [selectedGenre, yearFromValid, yearToValid, voteMin, selectedLanguage, tmdbLanguage]);
 
   useEffect(() => {
     if (disabled) return;
@@ -631,20 +636,22 @@ export default function AddMovieForm({
       {filtersOpen && (
         <div id={filtersPanelId} className={styles.filtersPanel}>
           <div className={styles.filterGroup}>
-            <span className={styles.filterLabel}>{t('movies.search.filterGenre')}</span>
-            <div className={styles.genreChips}>
+            <label className={styles.filterLabel} htmlFor="filter-genre">
+              {t('movies.search.filterGenre')}
+            </label>
+            <select
+              id="filter-genre"
+              className={`input ${styles.filterSelect}`}
+              value={selectedGenre ?? ''}
+              onChange={handleGenreChange}
+            >
+              <option value="">{t('movies.search.filterGenreAll')}</option>
               {MOVIE_GENRE_IDS.map((id) => (
-                <button
-                  key={id}
-                  type="button"
-                  className={`${styles.genreChip} ${selectedGenres.includes(id) ? styles.genreChipActive : ''}`}
-                  onClick={() => toggleGenre(id)}
-                  aria-pressed={selectedGenres.includes(id)}
-                >
+                <option key={id} value={id}>
                   {genreLabel(id, tmdbLanguage)}
-                </button>
+                </option>
               ))}
-            </div>
+            </select>
           </div>
           <div className={styles.filterGroup}>
             <span className={styles.filterLabel}>{t('movies.search.filterYear')}</span>
@@ -677,35 +684,36 @@ export default function AddMovieForm({
           <div className={styles.filterGroup}>
             <span className={styles.filterLabel}>{t('movies.search.filterVoteMin')}</span>
             <div className={styles.voteChips}>
-              {VOTE_MIN_OPTIONS.map((min) => (
+              {VOTE_MIN_OPTIONS.map((opt) => (
                 <button
-                  key={min}
+                  key={opt.tmdb}
                   type="button"
-                  className={`${styles.voteChip} ${voteMin === min ? styles.voteChipActive : ''}`}
-                  onClick={() => toggleVoteMin(min)}
-                  aria-pressed={voteMin === min}
+                  className={`${styles.voteChip} ${voteMin === opt.tmdb ? styles.voteChipActive : ''}`}
+                  onClick={() => toggleVoteMin(opt.tmdb)}
+                  aria-pressed={voteMin === opt.tmdb}
                 >
-                  ★ {min}+
+                  {opt.label}+
                 </button>
               ))}
             </div>
           </div>
           <div className={styles.filterGroup}>
-            <span className={styles.filterLabel}>{t('movies.search.filterLanguage')}</span>
-            <div className={styles.langChips}>
+            <label className={styles.filterLabel} htmlFor="filter-language">
+              {t('movies.search.filterLanguage')}
+            </label>
+            <select
+              id="filter-language"
+              className={`input ${styles.filterSelect}`}
+              value={selectedLanguage ?? ''}
+              onChange={handleLanguageChange}
+            >
+              <option value="">{t('movies.search.filterLanguageAll')}</option>
               {LANGUAGE_OPTIONS.map((lang) => (
-                <button
-                  key={lang.code}
-                  type="button"
-                  className={`${styles.langChip} ${selectedLanguage === lang.code ? styles.langChipActive : ''}`}
-                  onClick={() => toggleLanguage(lang.code)}
-                  aria-pressed={selectedLanguage === lang.code}
-                >
-                  <span aria-hidden="true">{lang.flag}</span>
-                  {tmdbLanguage.startsWith('fr') ? lang.fr : lang.en}
-                </button>
+                <option key={lang.code} value={lang.code}>
+                  {lang.flag} {tmdbLanguage.startsWith('fr') ? lang.fr : lang.en}
+                </option>
               ))}
-            </div>
+            </select>
           </div>
         </div>
       )}

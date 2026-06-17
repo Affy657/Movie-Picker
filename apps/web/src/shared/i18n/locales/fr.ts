@@ -382,6 +382,8 @@
       noResultsForFilters: 'Aucun film ne correspond aux filtres sélectionnés.',
       filterVoteMin: 'Note min.',
       filterLanguage: 'Langue VO',
+      filterGenreAll: 'Tous les genres',
+      filterLanguageAll: 'Toutes les langues',
       removeFilterAria: 'Retirer ce filtre',
     },
     list: {
