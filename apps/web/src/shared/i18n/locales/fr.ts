@@ -382,8 +382,9 @@
       noResultsForFilters: 'Aucun film ne correspond aux filtres sélectionnés.',
       filterVoteMin: 'Note min.',
       filterLanguage: 'Langue VO',
-      filterGenreAll: 'Tous les genres',
-      filterLanguageAll: 'Toutes les langues',
+      filterAvailability: 'Disponibilité',
+      noResultsAvailability:
+        'Aucun film disponible avec ce mode de visionnage parmi les résultats.',
       removeFilterAria: 'Retirer ce filtre',
     },
     list: {
