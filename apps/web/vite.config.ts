@@ -77,7 +77,7 @@ export default defineConfig(({ mode }) => ({
     ],
   },
   server: {
-    port: 5173,
+    port: Number(process.env.PORT) || 5173,
   },
   build: {
     rollupOptions: {

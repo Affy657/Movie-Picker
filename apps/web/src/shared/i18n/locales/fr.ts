@@ -398,6 +398,11 @@
       tvBadge: 'Série',
       sectionLabel: 'Films proposés',
       loadingPlaceholder: 'Chargement des films\u2026',
+      sortLabel: 'Trier par',
+      sortScore: 'Votes',
+      sortTmdbVote: 'Note TMDB',
+      sortDuration: 'Dur\u00e9e',
+      sortAddedAt: 'Ordre d\u2019ajout',
     },
     pitchNote: {
       addButton: 'Ajouter une note',

@@ -390,6 +390,11 @@ export const en: Locale = {
       tvBadge: 'Series',
       sectionLabel: 'Suggested movies',
       loadingPlaceholder: 'Loading movies\u2026',
+      sortLabel: 'Sort by',
+      sortScore: 'Votes',
+      sortTmdbVote: 'TMDB rating',
+      sortDuration: 'Duration',
+      sortAddedAt: 'Added order',
     },
     pitchNote: {
       addButton: 'Add a note',

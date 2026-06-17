@@ -1,4 +1,5 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
+import clsx from 'clsx';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { clearMovieVote, removeMovieFromEvent, voteMovie } from '@/features/movies/api/moviesApi';
@@ -8,6 +9,31 @@ import type { MovieData } from '@/shared/types/movie';
 import AddMovieForm from '@/features/movies/components/AddMovieForm';
 import MovieList from '@/features/movies/components/MovieList';
 import EventActionErrorBanner from '@/features/events/pages/event-detail/EventActionErrorBanner';
+import { useTranslation } from '@/shared/i18n';
+import styles from './EventMoviesSection.module.css';
+
+type SortKey = 'score' | 'voteAverage' | 'duration' | 'createdAt';
+
+function sortMovies(movies: MovieData[], sortBy: SortKey): MovieData[] {
+  return [...movies].sort((a, b) => {
+    switch (sortBy) {
+      case 'score':
+        return b.score - a.score;
+      case 'voteAverage': {
+        const va = a.voteAverage ?? -Infinity;
+        const vb = b.voteAverage ?? -Infinity;
+        return vb - va;
+      }
+      case 'duration': {
+        const ra = a.runtimeMinutes ?? Infinity;
+        const rb = b.runtimeMinutes ?? Infinity;
+        return ra - rb;
+      }
+      case 'createdAt':
+        return (a.createdAt ?? '').localeCompare(b.createdAt ?? '');
+    }
+  });
+}
 
 export type EventMoviesSectionProps = {
   slug: string;
@@ -39,6 +65,8 @@ export default function EventMoviesSection({
 }: Readonly<EventMoviesSectionProps>) {
   const isFinished = !!event.isFinished;
   const { track } = useAnalytics();
+  const { t } = useTranslation();
+  const [sortBy, setSortBy] = useState<SortKey>('score');
 
   const handleVote = useCallback(
     async (movieId: string, value: 1 | -1) => {
@@ -103,9 +131,35 @@ export default function EventMoviesSection({
         </p>
       )}
 
+      {moviesQuery.isSuccess && movies.length > 1 && (
+        <div className={styles.sortBar}>
+          <span className={styles.sortLabel}>{t('movies.list.sortLabel')}</span>
+          <div className={styles.sortPills} role="group" aria-label={t('movies.list.sortLabel')}>
+            {(
+              [
+                { key: 'score', label: t('movies.list.sortScore') },
+                { key: 'voteAverage', label: t('movies.list.sortTmdbVote') },
+                { key: 'duration', label: t('movies.list.sortDuration') },
+                { key: 'createdAt', label: t('movies.list.sortAddedAt') },
+              ] as { key: SortKey; label: string }[]
+            ).map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                className={clsx(styles.sortPill, sortBy === key && styles.sortPillActive)}
+                aria-pressed={sortBy === key}
+                onClick={() => setSortBy(key)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {moviesQuery.isSuccess && (
         <MovieList
-          movies={movies}
+          movies={sortMovies(movies, sortBy)}
           slug={slug}
           participantId={participant?.participantId ?? null}
           participantPseudo={participant?.pseudo ?? null}

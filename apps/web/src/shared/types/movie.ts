@@ -30,6 +30,8 @@ export interface MovieData {
 
   runtimeMinutes?: number | null;
 
+  createdAt?: string;
+
   seenCount?: number;
 
   seenByPseudos?: string[];
