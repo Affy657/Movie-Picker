@@ -10,10 +10,8 @@
   color: var(--color-primary);
 }
 
-.btnGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+.btnClose {
+  margin-top: 0.75rem;
 }
 
 /* --- Winner card --- */
