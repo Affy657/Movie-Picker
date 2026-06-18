@@ -58,7 +58,7 @@ describe('AddMovieForm (MSW)', () => {
     });
   });
 
-it('une seule requête si la frappe continue avant la fin du debounce', async () => {
+  it('une seule requête si la frappe continue avant la fin du debounce', async () => {
     let searchCalls = 0;
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () => {

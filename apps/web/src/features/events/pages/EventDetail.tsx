@@ -263,11 +263,7 @@ export default function EventDetail() {
       )}
 
       {event.isHost && !event.isFinished && (
-        <InviteModal
-          open={inviteModalOpen}
-          slug={slug}
-          onClose={() => setInviteModalOpen(false)}
-        />
+        <InviteModal open={inviteModalOpen} slug={slug} onClose={() => setInviteModalOpen(false)} />
       )}
 
       {moviesQuery.isError && (
@@ -292,7 +288,9 @@ export default function EventDetail() {
             isHost={!!event.isHost}
             pendingRemovalId={pendingRemovalId}
             onRemoveParticipant={event.isFinished ? undefined : handleRemoveParticipant}
-            onInvite={event.isHost && !event.isFinished ? () => setInviteModalOpen(true) : undefined}
+            onInvite={
+              event.isHost && !event.isFinished ? () => setInviteModalOpen(true) : undefined
+            }
           />
 
           {actionSuccess && (
