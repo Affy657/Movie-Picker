@@ -143,7 +143,7 @@ export default function WheelSection({
       {canLaunch && !winner && (
         <button
           type="button"
-          className={`btn btn-primary ${styles.btnWheel}`}
+          className="btn btn-primary"
           onClick={() => void launchWheel()}
           disabled={loading}
         >
@@ -151,26 +151,29 @@ export default function WheelSection({
         </button>
       )}
 
-      {showRelancer && (
-        <button
-          type="button"
-          className={`btn btn-primary ${styles.btnWheel}`}
-          onClick={() => void launchWheel()}
-          disabled={loading}
-        >
-          {loading ? t('events.wheel.spinning') : t('events.wheel.relaunchButton')}
-        </button>
-      )}
-
-      {showClose && (
-        <button
-          type="button"
-          className={`btn ${styles.btnClose}`}
-          onClick={() => void closeEvent()}
-          disabled={loading}
-        >
-          {t('events.wheel.closeButton')}
-        </button>
+      {(showRelancer || showClose) && (
+        <div className={styles.btnGroup}>
+          {showRelancer && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => void launchWheel()}
+              disabled={loading}
+            >
+              {loading ? t('events.wheel.spinning') : t('events.wheel.relaunchButton')}
+            </button>
+          )}
+          {showClose && (
+            <button
+              type="button"
+              className="btn"
+              onClick={() => void closeEvent()}
+              disabled={loading}
+            >
+              {t('events.wheel.closeButton')}
+            </button>
+          )}
+        </div>
       )}
 
       {isModalOpen && winner && winnerIndex >= 0 && (

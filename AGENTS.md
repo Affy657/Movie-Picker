@@ -45,7 +45,7 @@ Outils configurés pour qu'un agent IA travaille sur le projet sans intervention
 | GitHub | CLI `gh` | PR, issues, runs CI, releases |
 | GCP | CLI `gcloud` | Cloud Run, Artifact Registry, Secret Manager, logs |
 | AWS | CLI `aws` | S3, CloudFront (déploiement front) |
-| SonarQube | MCP `sonarqube` (Docker) | qualité, issues, hotspots |
+| SonarQube | MCP `sonarqube` (Docker) + CLI `sonar-scanner` (devDep) | qualité, issues, hotspots ; `pnpm check:sonar` (requiert `SONAR_TOKEN` dans l'env) |
 | PostHog | MCP `posthog` (HTTP) | analytics, events produit |
 | MongoDB | MCP `mongodb` | base dev `moviepicker_dev` |
 | Resend | non configuré | envoi mail = à la demande |

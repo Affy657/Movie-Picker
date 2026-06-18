@@ -19,6 +19,8 @@ type Props = {
   pendingRemovalId?: string | null;
 
   onRemoveParticipant?: (participantId: string, pseudo: string) => void;
+
+  onInvite?: () => void;
 };
 
 export default function EventParticipantsList({
@@ -28,6 +30,7 @@ export default function EventParticipantsList({
   isHost,
   pendingRemovalId,
   onRemoveParticipant,
+  onInvite,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   if (!participants) return null;
@@ -52,6 +55,17 @@ export default function EventParticipantsList({
           <span className={styles.fullBadge} aria-label={t('events.participants.fullBadgeAria')}>
             {t('events.participants.fullBadge')}
           </span>
+        )}
+        {onInvite && (
+          <button
+            type="button"
+            className={styles.inviteBtn}
+            onClick={onInvite}
+            aria-label={t('events.participants.inviteAriaLabel')}
+            title={t('events.participants.inviteAriaLabel')}
+          >
+            <UserPlus aria-hidden size={14} />
+          </button>
         )}
       </h2>
       {participants.length === 0 ? (

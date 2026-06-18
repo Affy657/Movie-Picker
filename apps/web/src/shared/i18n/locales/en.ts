@@ -196,6 +196,7 @@ export const en: Locale = {
       removeAction: 'Remove',
       removeAriaLabel: 'Remove {{pseudo}} from the event',
       viewProfileAriaLabel: "View {{pseudo}}'s profile",
+      inviteAriaLabel: 'Invite friends',
       removeConfirmTitle: 'Remove a participant',
       removeConfirm:
         'Remove {{pseudo}} from the event? Their movies, votes and marks will be deleted.',
@@ -411,7 +412,7 @@ export const en: Locale = {
       loadingPlaceholder: 'Loading movies\u2026',
       sortLabel: 'Sort by',
       sortScore: 'Votes',
-      sortTmdbVote: 'TMDB rating',
+      sortTmdbVote: 'Rating',
       sortDuration: 'Duration',
       sortAddedAt: 'Added order',
     },

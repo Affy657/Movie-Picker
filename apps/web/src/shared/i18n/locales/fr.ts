@@ -198,6 +198,7 @@
       removeAction: 'Retirer',
       removeAriaLabel: 'Retirer {{pseudo}} de la soirée',
       viewProfileAriaLabel: 'Voir le profil de {{pseudo}}',
+      inviteAriaLabel: 'Inviter des amis',
       removeConfirmTitle: 'Retirer un participant',
       removeConfirm:
         'Retirer {{pseudo}} de la soirée\u00a0? Ses films, votes et marques seront supprimés.',
@@ -420,7 +421,7 @@
       loadingPlaceholder: 'Chargement des films\u2026',
       sortLabel: 'Trier par',
       sortScore: 'Votes',
-      sortTmdbVote: 'Note TMDB',
+      sortTmdbVote: 'Note',
       sortDuration: 'Dur\u00e9e',
       sortAddedAt: 'Ordre d\u2019ajout',
     },
