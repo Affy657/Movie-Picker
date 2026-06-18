@@ -73,7 +73,6 @@ function ModeIcon({ type, size }: Readonly<{ type: string; size: number }>) {
 
 interface WatchProviderChipsProps {
   providers: WatchProviderOffer[];
-  title: string;
   className?: string;
   variant?: 'default' | 'compact';
   watchPageUrl?: string | null;
@@ -82,7 +81,6 @@ interface WatchProviderChipsProps {
 
 export default function WatchProviderChips({
   providers,
-  title,
   className,
   variant = 'default',
   watchPageUrl,

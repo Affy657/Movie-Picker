@@ -801,7 +801,6 @@ export default function AddMovieForm({
                     ) : null}
                     <WatchProviderChips
                       providers={providers}
-                      title={r.title}
                       variant="compact"
                       watchPageUrl={safeTmdbWatchUrl}
                     />

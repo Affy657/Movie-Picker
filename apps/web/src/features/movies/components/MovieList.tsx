@@ -273,7 +273,6 @@ function MovieCardMeta({
       {providers.length > 0 ? (
         <WatchProviderChips
           providers={providers}
-          title={m.title}
           variant="compact"
           className={styles.cardProviders}
           watchPageUrl={safeTmdbWatchUrl}

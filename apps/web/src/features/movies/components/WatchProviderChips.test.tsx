@@ -11,7 +11,6 @@ describe('WatchProviderChips', () => {
   it('sans logo TMDB, affiche le nom du fournisseur', () => {
     renderWithLocale(
       <WatchProviderChips
-        title="Mon Film"
         providers={[
           { providerId: 9999, name: 'Service A', logoPath: null, type: 'flatrate' },
           { providerId: 9998, name: 'Service B', logoPath: null, type: 'rent' },
@@ -25,7 +24,6 @@ describe('WatchProviderChips', () => {
   it("avec logo TMDB, affiche seulement l'icone (nom en aria-label)", () => {
     renderWithLocale(
       <WatchProviderChips
-        title="Mon Film"
         providers={[
           {
             providerId: 9999,
@@ -44,7 +42,6 @@ describe('WatchProviderChips', () => {
   it('groupe les offres par mode avec une icône libellée Abonnement / Location / Achat', () => {
     renderWithLocale(
       <WatchProviderChips
-        title="Mon Film"
         providers={[
           { providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' },
           { providerId: 3, name: 'Google Play', logoPath: null, type: 'rent' },
@@ -58,14 +55,13 @@ describe('WatchProviderChips', () => {
   });
 
   it('ne rend rien si liste vide', () => {
-    const { container } = renderWithLocale(<WatchProviderChips title="Mon Film" providers={[]} />);
+    const { container } = renderWithLocale(<WatchProviderChips providers={[]} />);
     expect(container.firstChild).toBeNull();
   });
 
   it('accepte un chemin TMDB relatif pour le logo', () => {
     renderWithLocale(
       <WatchProviderChips
-        title="Mon Film"
         providers={[
           {
             providerId: 9999,
@@ -83,7 +79,6 @@ describe('WatchProviderChips', () => {
   it('provider avec watchPageUrl TMDB : lien vers la page TMDB du film', () => {
     renderWithLocale(
       <WatchProviderChips
-        title="Inception"
         providers={[{ providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' }]}
         watchPageUrl="https://www.themoviedb.org/movie/27205/watch"
       />
@@ -96,7 +91,6 @@ describe('WatchProviderChips', () => {
   it('provider sans watchPageUrl : pas de lien cliquable', () => {
     renderWithLocale(
       <WatchProviderChips
-        title="Inception"
         providers={[{ providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' }]}
       />
     );
@@ -106,7 +100,6 @@ describe('WatchProviderChips', () => {
   it('provider inconnu + watchPageUrl TMDB valide : lien vers TMDB en fallback', () => {
     renderWithLocale(
       <WatchProviderChips
-        title="Mon Film"
         providers={[
           { providerId: 9999, name: 'Service Inconnu', logoPath: null, type: 'flatrate' },
         ]}
@@ -122,7 +115,6 @@ describe('WatchProviderChips', () => {
   it('provider inconnu + watchPageUrl non TMDB : pas de lien', () => {
     renderWithLocale(
       <WatchProviderChips
-        title="Mon Film"
         providers={[
           { providerId: 9999, name: 'Service Inconnu', logoPath: null, type: 'flatrate' },
         ]}

@@ -177,7 +177,6 @@ export default function WheelModal({
                 <div className={styles.providers}>
                   <WatchProviderChips
                     providers={providers}
-                    title={winner.title}
                     watchPageUrl={winner.tmdbWatchPageUrl}
                     maxVisible={6}
                   />
