@@ -21,7 +21,8 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-qr-code": "^2.2.0",
-    "react-router-dom": "^7.17.0"
+    "react-router-dom": "^7.17.0",
+    "workbox-window": "^7.4.1"
   },
   "devDependencies": {
     "@axe-core/react": "^4.11.3",
