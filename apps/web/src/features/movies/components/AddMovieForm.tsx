@@ -492,8 +492,8 @@ export default function AddMovieForm({
               type="button"
               className={styles.searchIconBtn}
               onClick={search}
+              disabled={searching || !searchAllowed}
               aria-label={t('movies.search.searchButton')}
-              tabIndex={-1}
             >
               <Search size={15} aria-hidden />
             </button>

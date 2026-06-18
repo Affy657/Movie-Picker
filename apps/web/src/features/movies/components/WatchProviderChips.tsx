@@ -5,7 +5,6 @@ import type { WatchProviderOffer } from '@/shared/types/movie';
 import { useTranslation } from '@/shared/i18n';
 import type { TranslationKey } from '@/shared/i18n/t';
 import { isSafeTmdbWatchPageUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
-import { providerDirectUrl } from '@/shared/utils/providerUrl';
 import styles from './WatchProviderChips.module.css';
 
 function toAbsoluteTmdbLogoUrl(raw: string): string {
@@ -122,7 +121,7 @@ export default function WatchProviderChips({
       );
 
     const chipClass = clsx(styles.chip, hasLogo ? styles.chipLogo : styles.chipText);
-    const href = providerDirectUrl(p.providerId, title, safeWatchHref);
+    const href = safeWatchHref;
     const key = `${p.providerId}-${p.type}`;
 
     return href ? (
