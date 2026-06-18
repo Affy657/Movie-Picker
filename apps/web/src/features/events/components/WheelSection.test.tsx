@@ -173,6 +173,21 @@ describe('WheelSection', () => {
     expect(screen.getByText('Inception')).toBeInTheDocument();
   });
 
+  it('affiche Relancer + Fermer pour hote avec gagnant', () => {
+    renderWheel(
+      <WheelSection
+        slug="soiree"
+        event={{ ...baseEvent, isHost: true, winnerMovie: sampleWinner }}
+        movies={makeMovies(1)}
+        hostToken="ht"
+        onWheelDone={vi.fn()}
+        onCloseDone={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('button', { name: /relancer la roue/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /clôturer/i })).toBeInTheDocument();
+  });
+
   it('met a jour le gagnant quand winnerMovie arrive (polling live)', () => {
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const { rerender } = renderWheel(
