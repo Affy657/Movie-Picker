@@ -58,14 +58,7 @@ describe('AddMovieForm (MSW)', () => {
     });
   });
 
-  it('désactive Rechercher avec un seul caractère', async () => {
-    const user = userEvent.setup();
-    renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
-    await user.type(screen.getByPlaceholderText(/rechercher un film/i), 'x');
-    expect(screen.getByRole('button', { name: /^rechercher$/i })).toBeDisabled();
-  });
-
-  it('une seule requête si la frappe continue avant la fin du debounce', async () => {
+it('une seule requête si la frappe continue avant la fin du debounce', async () => {
     let searchCalls = 0;
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () => {

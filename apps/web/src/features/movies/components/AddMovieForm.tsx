@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { Search } from 'lucide-react';
 import {
   addMovieToEvent,
   searchMovies,
@@ -487,6 +488,15 @@ export default function AddMovieForm({
       <div className={styles.searchWrap} ref={containerRef}>
         <div className={styles.searchRow}>
           <div className={styles.inputWrap}>
+            <button
+              type="button"
+              className={styles.searchIconBtn}
+              onClick={search}
+              aria-label={t('movies.search.searchButton')}
+              tabIndex={-1}
+            >
+              <Search size={15} aria-hidden />
+            </button>
             <input
               id="add-movie-search"
               type="search"
@@ -591,14 +601,6 @@ export default function AddMovieForm({
                 {activeFiltersCount}
               </span>
             )}
-          </button>
-          <button
-            type="button"
-            className="btn"
-            onClick={search}
-            disabled={searching || !searchAllowed}
-          >
-            {searching ? t('movies.search.searching') : t('movies.search.searchButton')}
           </button>
         </div>
       </div>

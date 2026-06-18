@@ -26,12 +26,19 @@
   justify-content: center;
 }
 
+.btnShareIcon {
+  padding: 0;
+  min-width: 42px;
+}
+
 /* Contour primary, même hiérarchie que le bouton Partager */
 .btnQr {
   border: 1.5px solid var(--color-primary);
   color: var(--color-primary);
   background: transparent;
   font-weight: 600;
+  padding: 0;
+  min-width: 42px;
 }
 
 .btnQr:hover {

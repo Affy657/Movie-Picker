@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
-import { X } from 'lucide-react';
+import { QrCode, Share2, X } from 'lucide-react';
 import QRCodeImport from 'react-qr-code';
 import { copyTextToClipboard } from '@/shared/utils/copyTextToClipboard';
 import Tooltip from '@/shared/components/Tooltip';
@@ -126,8 +126,14 @@ export default function ShareLink({
         {copied ? t('events.share.copiedButton') : ''}
       </p>
       <div className={clsx(styles.actions, centeredActions && styles.actionsCentered)}>
-        <button type="button" className="btn btn-primary" onClick={() => void handleShare()}>
-          {shareLabel}
+        <button
+          type="button"
+          className={clsx('btn btn-primary', styles.btnShareIcon)}
+          onClick={() => void handleShare()}
+          aria-label={shareLabel}
+          title={shareLabel}
+        >
+          <Share2 size={16} aria-hidden />
         </button>
         {showQr ? (
           <button
@@ -135,8 +141,10 @@ export default function ShareLink({
             className={clsx('btn', styles.btnQr)}
             onClick={() => setQrOpen(true)}
             aria-haspopup="dialog"
+            aria-label={t('events.share.showQr')}
+            title={t('events.share.showQr')}
           >
-            {t('events.share.showQr')}
+            <QrCode size={16} aria-hidden />
           </button>
         ) : null}
       </div>

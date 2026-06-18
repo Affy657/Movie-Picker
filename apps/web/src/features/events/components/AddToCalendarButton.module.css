@@ -1,16 +1,16 @@
 .root {
   position: relative;
-  margin-top: 0.6rem;
 }
 
 .trigger {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
   border: 1.5px solid var(--color-primary);
   color: var(--color-primary);
   background: transparent;
   font-weight: 600;
+  padding: 0;
+  min-width: 42px;
 }
 
 .trigger:hover {

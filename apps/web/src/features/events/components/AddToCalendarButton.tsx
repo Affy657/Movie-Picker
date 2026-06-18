@@ -67,9 +67,10 @@ export default function AddToCalendarButton({
         onClick={() => setOpen((value) => !value)}
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-label={t('events.calendar.addButton')}
+        title={t('events.calendar.addButton')}
       >
         <CalendarPlus size={16} aria-hidden />
-        {t('events.calendar.addButton')}
       </button>
       {open ? (
         <div className={styles.menu} role="menu" aria-label={t('events.calendar.menuLabel')}>

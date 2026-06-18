@@ -194,8 +194,31 @@
   min-width: 0;
 }
 
+.searchIconBtn {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  z-index: 1;
+  transition: color var(--duration-fast) var(--ease-default);
+}
+
+.searchIconBtn:hover {
+  color: var(--color-primary);
+}
+
 .inputWrap :global(.input) {
   width: 100%;
+  padding-left: 2.5rem;
 }
 
 .historyDropdown {
