@@ -97,29 +97,29 @@ export default function WheelModal({
 
       const fire = confetti.create(canvas, { resize: true, useWorker: false });
 
-      void fire({
+      fire?.({
         particleCount: 160,
         spread: 80,
         origin: { x: 0.5, y: 0.55 },
         colors: ['#3B82F6', '#7C3AED', '#06B6D4', '#EC4899', '#F97316', '#10B981'],
-      });
+      })?.catch(() => {});
 
       clearTimeout(confettiTimerRef.current);
       confettiTimerRef.current = setTimeout(() => {
-        void fire({
+        fire?.({
           particleCount: 80,
           angle: 60,
           spread: 55,
           origin: { x: 0.1, y: 0.5 },
           colors: ['#4F46E5', '#D97706', '#0D9488', '#DB2777'],
-        });
-        void fire({
+        })?.catch(() => {});
+        fire?.({
           particleCount: 80,
           angle: 120,
           spread: 55,
           origin: { x: 0.9, y: 0.5 },
           colors: ['#8B5CF6', '#0891B2', '#F97316', '#EC4899'],
-        });
+        })?.catch(() => {});
         confettiTimerRef.current = setTimeout(cleanupConfettiOverlay, 4500);
       }, 180);
     }); // end requestAnimationFrame

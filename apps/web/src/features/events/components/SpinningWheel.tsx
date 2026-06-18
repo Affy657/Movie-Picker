@@ -144,7 +144,8 @@ export default function SpinningWheel({
 
     const N = movies.length;
     const segAngle = (2 * Math.PI) / N;
-    const jitter = (Math.random() - 0.5) * segAngle * 0.4;
+    const jitter =
+      (crypto.getRandomValues(new Uint32Array(1))[0]! / 0xffffffff - 0.5) * segAngle * 0.4;
     const targetRotation = SPIN_ROTATIONS * 2 * Math.PI - (winnerIndex + 0.5) * segAngle + jitter;
 
     let startTime: number | null = null;
