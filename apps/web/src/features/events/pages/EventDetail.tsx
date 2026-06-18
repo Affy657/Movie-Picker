@@ -346,7 +346,7 @@ export default function EventDetail() {
           <WheelSection
             slug={slug}
             event={event}
-            moviesCount={movies.length}
+            movies={movies}
             hostToken={hostToken}
             onWheelDone={refreshAll}
             onCloseDone={refreshAll}

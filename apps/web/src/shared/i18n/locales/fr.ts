@@ -334,6 +334,11 @@
       closeButton: 'Clôturer la soirée',
       launchError: 'Tirage impossible',
       closeError: 'Clôture impossible',
+      modal: {
+        spinningTitle: 'Tirage en cours…',
+        winnerTitle: 'Film sélectionné !',
+        closeButton: "C'est parti !",
+      },
     },
     reminder: {
       startsIn: 'La soirée commence dans {{time}}',

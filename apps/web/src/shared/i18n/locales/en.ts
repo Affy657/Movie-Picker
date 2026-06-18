@@ -327,6 +327,11 @@ export const en: Locale = {
       closeButton: 'Close the event',
       launchError: 'Spin failed',
       closeError: 'Close failed',
+      modal: {
+        spinningTitle: 'Draw in progress…',
+        winnerTitle: 'Movie selected!',
+        closeButton: "Let's watch!",
+      },
     },
     reminder: {
       startsIn: 'The event starts in {{time}}',

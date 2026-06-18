@@ -33,7 +33,7 @@
   align-items: stretch;
   gap: 0.5rem;
   flex-shrink: 0;
-  width: 92px;
+  width: 120px;
 }
 
 .poster {
@@ -57,8 +57,8 @@
 }
 
 .posterPlaceholder {
-  width: 92px;
-  height: 138px;
+  width: 120px;
+  height: 180px;
   background: var(--color-poster-placeholder);
   font-size: var(--font-size-2xs);
   color: var(--color-placeholder);

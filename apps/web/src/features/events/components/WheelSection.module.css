@@ -1,4 +1,4 @@
-﻿.sectionTitle {
+.sectionTitle {
   display: flex;
   align-items: center;
   gap: 0.55rem;
@@ -10,68 +10,48 @@
   color: var(--color-primary);
 }
 
-.result {
-  position: relative;
-  padding: 1.5rem 1.4rem;
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--color-wheel-bg) 85%, var(--color-primary)),
-      var(--color-wheel-bg)
-    );
-  border: 1px solid color-mix(in srgb, var(--color-wheel-label) 25%, transparent);
-  border-radius: var(--radius-md);
-  margin-bottom: 1rem;
-  box-shadow: var(--shadow-sm);
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.winnerIcon {
-  color: var(--color-wheel-label);
-  margin-bottom: 0.25rem;
-}
-
-.spinning {
-  animation: wheel-reveal 1.2s ease-out;
-}
-
-@keyframes wheel-reveal {
-  0% { opacity: 0.3; transform: scale(0.95); }
-  60% { opacity: 1; transform: scale(1.02); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-.winnerLabel {
-  margin: 0;
-  font-size: var(--font-size-2xs);
-  font-weight: 700;
-  letter-spacing: var(--tracking-widest);
-  text-transform: uppercase;
-  color: var(--color-wheel-label);
-}
-
-.winnerTitle {
-  margin: 0;
-  font-size: var(--font-size-xl);
-  font-weight: 800;
-  letter-spacing: var(--tracking-narrow);
-  color: var(--color-text);
-}
-
-.winnerMeta {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-}
-
 .btnWheel {
   margin-bottom: 0.5rem;
 }
 
 .btnClose {
   margin-top: 0.5rem;
+}
+
+/* --- Winner card --- */
+.winnerSection {
+  margin-bottom: 1.25rem;
+}
+
+.winnerLabel {
+  margin: 0.75rem 0 0.4rem;
+  font-size: var(--font-size-2xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.winnerWrapper {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border-radius: var(--radius-md);
+  animation: winnerAppear 0.5s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+.winnerWrapper > li {
+  margin-bottom: 0;
+  box-shadow: var(--shadow-md);
+}
+
+@keyframes winnerAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }

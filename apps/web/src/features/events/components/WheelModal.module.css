@@ -1,0 +1,177 @@
+.dialog {
+  padding: 0;
+  overflow: visible;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  max-width: min(540px, calc(100vw - 2rem));
+}
+
+.dialog::backdrop {
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(6px);
+}
+
+/* --- Spinning phase : just the wheel, no card --- */
+.dialogSpin {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.spinPhase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+}
+
+.spinLabel {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: var(--tracking-wide);
+}
+
+/* --- Winner phase : card --- */
+.dialogDone {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  animation: popIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.4rem 0.9rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.closeIconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+
+.closeIconBtn:hover {
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.winnerArea {
+  display: flex;
+  gap: 1.25rem;
+  padding: 1.4rem;
+  align-items: flex-start;
+}
+
+.poster {
+  width: 110px;
+  min-width: 110px;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.posterPlaceholder {
+  width: 110px;
+  min-width: 110px;
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+}
+
+.info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+  padding-top: 0.2rem;
+}
+
+.winnerTitle {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--color-text);
+}
+
+.winnerYear {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.providers {
+  margin-top: 0.75rem;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 0.75rem 1.4rem 1.1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 480px) {
+  .winnerArea {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1.2rem;
+  }
+
+  .poster,
+  .posterPlaceholder {
+    width: 130px;
+  }
+
+  .providers {
+    display: flex;
+    justify-content: center;
+  }
+
+  .footer {
+    justify-content: stretch;
+  }
+
+  .footer .btn {
+    width: 100%;
+  }
+}

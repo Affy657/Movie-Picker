@@ -1,20 +1,19 @@
-import clsx from 'clsx';
-import { useEffect, useRef, useState } from 'react';
-import { Disc3, Trophy } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Disc3 } from 'lucide-react';
 import { postEventClose, postEventWheel } from '@/features/events/api/eventsApi';
 import { getErrorMessage } from '@/shared/api/apiError';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 import { useTranslation } from '@/shared/i18n';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
+import { MovieCard } from '@/features/movies/components/MovieList';
+import WheelModal from './WheelModal';
 import styles from './WheelSection.module.css';
-
-const SPIN_ANIMATION_MS = 1500;
 
 interface WheelSectionProps {
   slug: string;
   event: EventData;
-  moviesCount: number;
+  movies: MovieData[];
   hostToken: string | null;
   onWheelDone: () => void;
   onCloseDone: () => void;
@@ -23,7 +22,7 @@ interface WheelSectionProps {
 export default function WheelSection({
   slug,
   event,
-  moviesCount,
+  movies,
   hostToken,
   onWheelDone,
   onCloseDone,
@@ -32,12 +31,13 @@ export default function WheelSection({
   const { track } = useAnalytics();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [spinning, setSpinning] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [winnerIndex, setWinnerIndex] = useState(-1);
+  const [wheelKey, setWheelKey] = useState(0);
   const [winner, setWinner] = useState<MovieData | null>(event.winnerMovie ?? null);
   const isHost = event.isHost === true || (event.isHost == null && !!hostToken);
-  const spinTimerRef = useRef<number | undefined>(undefined);
-
-  useEffect(() => () => clearTimeout(spinTimerRef.current), []);
+  const safeMovies = movies ?? [];
+  const moviesCount = safeMovies.length;
 
   useEffect(() => {
     setWinner(event.winnerMovie ?? null);
@@ -46,20 +46,24 @@ export default function WheelSection({
   const launchWheel = async () => {
     setError(null);
     setLoading(true);
-    setSpinning(true);
     try {
       const res = await postEventWheel(slug, hostToken);
+      const idx = safeMovies.findIndex((m) => m.id === res.winner.id);
       setWinner(res.winner);
+      setWinnerIndex(idx >= 0 ? idx : 0);
+      setWheelKey((k) => k + 1);
+      setIsModalOpen(true);
       track('movie_picked');
-      clearTimeout(spinTimerRef.current);
-      spinTimerRef.current = globalThis.setTimeout(() => setSpinning(false), SPIN_ANIMATION_MS);
-      onWheelDone();
     } catch (err) {
       setError(getErrorMessage(err, t('events.wheel.launchError')));
-      setSpinning(false);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    onWheelDone();
   };
 
   const closeEvent = async () => {
@@ -77,8 +81,12 @@ export default function WheelSection({
   };
 
   const canLaunch = isHost && !event.isFinished && moviesCount > 0;
-  const showRelancer = isHost && !event.isFinished && winner && moviesCount > 0;
-  const showClose = isHost && !event.isFinished && (winner || event.closedAt);
+  const showRelancer = isHost && !event.isFinished && !!winner && moviesCount > 0;
+  const showClose = isHost && !event.isFinished && (!!winner || !!event.closedAt);
+
+  const handleModalRelaunch = () => {
+    void launchWheel();
+  };
 
   if (!isHost && !winner) {
     return null;
@@ -86,33 +94,50 @@ export default function WheelSection({
 
   const sectionTitle = isHost ? t('events.wheel.title') : t('events.wheel.viewerTitle');
 
+  const winnerFull = winner ? (safeMovies.find((m) => m.id === winner.id) ?? winner) : null;
+
+  const participantAvatars = Object.fromEntries(
+    (event.participants ?? []).filter((p) => p.avatarId).map((p) => [p.id, p.avatarId as string])
+  );
+
   return (
     <section className="section" aria-label={sectionTitle}>
       <h2 className={styles.sectionTitle}>
         <Disc3 size={18} aria-hidden className={styles.sectionTitleIcon} />
         {sectionTitle}
       </h2>
+
       {error && (
         <p className="error" role="alert">
           {error}
         </p>
       )}
 
-      {winner && (
-        <div
-          className={clsx(styles.result, spinning && styles.spinning)}
-          role="status"
-          aria-live="polite"
-        >
-          <Trophy size={28} aria-hidden className={styles.winnerIcon} />
-          <p className={styles.winnerLabel}>{t('events.wheel.winnerLabel')}</p>
-          <p className={styles.winnerTitle}>{winner.title}</p>
-          {winner.year ? <p className={styles.winnerMeta}>{winner.year}</p> : null}
-        </div>
-      )}
-
       {moviesCount === 0 && !winner && isHost && (
         <p className="placeholder">{t('events.wheel.emptyPlaceholder')}</p>
+      )}
+
+      {winnerFull && !isModalOpen && (
+        <div className={styles.winnerSection} aria-live="polite">
+          <p className={styles.winnerLabel}>{t('events.wheel.winnerLabel')}</p>
+          <ul className={styles.winnerWrapper}>
+            <MovieCard
+              movie={winnerFull}
+              slug={slug}
+              participantId={null}
+              participantPseudo={null}
+              isFinished={true}
+              isHost={false}
+              onVote={async () => {}}
+              onRemove={async () => {}}
+              refresh={() => {}}
+              onActionError={() => {}}
+              participantAvatars={participantAvatars}
+              t={t}
+              eager
+            />
+          </ul>
+        </div>
       )}
 
       {canLaunch && !winner && (
@@ -146,6 +171,18 @@ export default function WheelSection({
         >
           {t('events.wheel.closeButton')}
         </button>
+      )}
+
+      {isModalOpen && winner && winnerIndex >= 0 && (
+        <WheelModal
+          open={isModalOpen}
+          movies={safeMovies}
+          winnerIndex={winnerIndex}
+          winner={winner}
+          wheelKey={wheelKey}
+          onClose={handleModalClose}
+          onRelaunch={showRelancer ? handleModalRelaunch : undefined}
+        />
       )}
     </section>
   );

@@ -261,12 +261,15 @@ function MovieCardMeta({
             {runtimeLabel}
           </span>
         ) : null}
+        {voteLabel ? (
+          <span
+            className={clsx(styles.metaItem, 'tmdb-vote')}
+            title={t('movies.list.tmdbVoteTitle')}
+          >
+            {voteLabel}
+          </span>
+        ) : null}
       </p>
-      {voteLabel ? (
-        <p className={clsx(styles.voteLine, 'tmdb-vote')} title={t('movies.list.tmdbVoteTitle')}>
-          {voteLabel}
-        </p>
-      ) : null}
       {providers.length > 0 ? (
         <WatchProviderChips
           providers={providers}
@@ -353,7 +356,7 @@ function MovieCardActions({
   );
 }
 
-const MovieCard = memo(function MovieCard({
+export const MovieCard = memo(function MovieCard({
   movie: m,
   slug,
   participantId,
@@ -408,11 +411,11 @@ const MovieCard = memo(function MovieCard({
           <img
             src={posterSrc}
             srcSet={posterSrcSet}
-            sizes="92px"
+            sizes="120px"
             alt=""
             className={styles.poster}
-            width={92}
-            height={138}
+            width={120}
+            height={180}
             loading={eager ? 'eager' : 'lazy'}
             fetchPriority={eager ? 'high' : 'auto'}
             decoding="async"
