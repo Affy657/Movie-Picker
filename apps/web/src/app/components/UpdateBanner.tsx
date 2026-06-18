@@ -1,19 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 import { RefreshCw, X } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import styles from './UpdateBanner.module.css';
 
 export default function UpdateBanner() {
   const { t } = useTranslation();
-  const [show, setShow] = useState(false);
+  const {
+    needRefresh: [needRefresh, setNeedRefresh],
+    updateServiceWorker,
+  } = useRegisterSW();
 
-  useEffect(() => {
-    const handler = () => setShow(true);
-    globalThis.addEventListener('pwa-update', handler);
-    return () => globalThis.removeEventListener('pwa-update', handler);
-  }, []);
-
-  if (!show) return null;
+  if (!needRefresh) return null;
 
   return (
     <output className={styles.root}>
@@ -24,14 +21,14 @@ export default function UpdateBanner() {
       <button
         type="button"
         className={styles.reloadBtn}
-        onClick={() => globalThis.location.reload()}
+        onClick={() => void updateServiceWorker(true)}
       >
         {t('pwaUpdate.reload')}
       </button>
       <button
         type="button"
         className={styles.dismissBtn}
-        onClick={() => setShow(false)}
+        onClick={() => setNeedRefresh(false)}
         aria-label={t('pwaUpdate.dismiss')}
       >
         <X className={styles.dismissIcon} aria-hidden="true" />

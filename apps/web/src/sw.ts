@@ -7,9 +7,12 @@ import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 
 declare const self: ServiceWorkerGlobalScope;
 
-self.addEventListener('install', () => void self.skipWaiting());
 self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim());
+});
+
+self.addEventListener('message', (event: ExtendableMessageEvent) => {
+  if ((event.data as { type?: string } | null)?.type === 'SKIP_WAITING') void self.skipWaiting();
 });
 
 precacheAndRoute(self.__WB_MANIFEST);

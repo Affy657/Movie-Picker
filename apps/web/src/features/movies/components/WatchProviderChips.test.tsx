@@ -80,17 +80,27 @@ describe('WatchProviderChips', () => {
     expect(img?.getAttribute('src')).toMatch(/^https:\/\/image\.tmdb\.org\/t\/p\/w154\//);
   });
 
-  it('provider connu (Netflix id=8) : lien direct vers Netflix', () => {
+  it('provider avec watchPageUrl TMDB : lien vers la page TMDB du film', () => {
+    renderWithLocale(
+      <WatchProviderChips
+        title="Inception"
+        providers={[{ providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' }]}
+        watchPageUrl="https://www.themoviedb.org/movie/27205/watch"
+      />
+    );
+    const link = screen.getByRole('link', { name: /netflix/i });
+    expect(link).toHaveAttribute('href', 'https://www.themoviedb.org/movie/27205/watch');
+    expect(link).toHaveAttribute('target', '_blank');
+  });
+
+  it('provider sans watchPageUrl : pas de lien cliquable', () => {
     renderWithLocale(
       <WatchProviderChips
         title="Inception"
         providers={[{ providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' }]}
       />
     );
-    const link = screen.getByRole('link', { name: /netflix/i });
-    expect(link).toHaveAttribute('href', expect.stringContaining('netflix.com'));
-    expect(link).toHaveAttribute('href', expect.stringContaining('Inception'));
-    expect(link).toHaveAttribute('target', '_blank');
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 
   it('provider inconnu + watchPageUrl TMDB valide : lien vers TMDB en fallback', () => {
