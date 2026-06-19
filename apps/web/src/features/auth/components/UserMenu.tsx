@@ -6,6 +6,7 @@ import { ROUTES } from '@/app/routes';
 import { useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
+import { useMenuFocus } from '@/shared/hooks/useMenuFocus';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import type { UserProfile } from '@/features/auth/types';
 import styles from './UserMenu.module.css';
@@ -19,10 +20,13 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
   const { logout } = useAuth();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
 
   const close = useCallback(() => setOpen(false), []);
   useClickOutside(containerRef, close, open);
+  useMenuFocus(open, panelRef, triggerRef);
 
   const logoutAction = useCallback(() => logout(), [logout]);
   const {
@@ -34,11 +38,11 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
   return (
     <div ref={containerRef} className={styles.container}>
       <button
+        ref={triggerRef}
         type="button"
         className={styles.trigger}
         onClick={() => setOpen((prev) => !prev)}
         aria-label={t('nav.accountMenu')}
-        aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
       >
@@ -46,27 +50,27 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
       </button>
 
       {open ? (
-        <div id={menuId} className={styles.dropdown} role="menu">
+        <div
+          ref={panelRef}
+          id={menuId}
+          className={styles.dropdown}
+          tabIndex={-1}
+          aria-label={t('nav.accountMenu')}
+        >
           <p className={styles.heading}>{user.displayName}</p>
           {user.handle ? (
-            <Link
-              to={ROUTES.profile(user.handle)}
-              className={styles.item}
-              role="menuitem"
-              onClick={close}
-            >
+            <Link to={ROUTES.profile(user.handle)} className={styles.item} onClick={close}>
               <UserRound className={styles.icon} aria-hidden="true" focusable="false" />
               {t('profile.settings.viewMyProfile')}
             </Link>
           ) : null}
-          <Link to={ROUTES.account} className={styles.item} role="menuitem" onClick={close}>
+          <Link to={ROUTES.account} className={styles.item} onClick={close}>
             <Settings className={styles.icon} aria-hidden="true" focusable="false" />
             {t('nav.account')}
           </Link>
           <button
             type="button"
             className={styles.item}
-            role="menuitem"
             onClick={() => void runLogout()}
             disabled={loggingOut}
           >

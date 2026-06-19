@@ -44,7 +44,7 @@ describe('UserMenu', () => {
       'aria-expanded',
       'false'
     );
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /se déconnecter/i })).not.toBeInTheDocument();
   });
 
   it('ouvre le menu et affiche profil, compte et déconnexion', async () => {
@@ -53,17 +53,24 @@ describe('UserMenu', () => {
 
     await user.click(screen.getByRole('button', { name: /menu du compte/i }));
 
-    expect(screen.getByRole('menu')).toBeInTheDocument();
     expect(screen.getByText('Alice')).toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: /voir mon profil public/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /voir mon profil public/i })).toHaveAttribute(
       'href',
       '/u/alice'
     );
-    expect(screen.getByRole('menuitem', { name: /mon compte/i })).toHaveAttribute(
-      'href',
-      '/settings'
+    expect(screen.getByRole('link', { name: /mon compte/i })).toHaveAttribute('href', '/settings');
+    expect(screen.getByRole('button', { name: /se déconnecter/i })).toBeInTheDocument();
+  });
+
+  it("place le focus sur le premier élément à l'ouverture", async () => {
+    const user = userEvent.setup();
+    renderMenu();
+
+    await user.click(screen.getByRole('button', { name: /menu du compte/i }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('link', { name: /voir mon profil public/i })).toHaveFocus()
     );
-    expect(screen.getByRole('menuitem', { name: /se déconnecter/i })).toBeInTheDocument();
   });
 
   it("masque le lien profil quand l'utilisateur n'a pas de handle", async () => {
@@ -72,22 +79,24 @@ describe('UserMenu', () => {
 
     await user.click(screen.getByRole('button', { name: /menu du compte/i }));
 
-    expect(
-      screen.queryByRole('menuitem', { name: /voir mon profil public/i })
-    ).not.toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: /mon compte/i })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /voir mon profil public/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /mon compte/i })).toBeInTheDocument();
   });
 
-  it('ferme le menu avec la touche Échap', async () => {
+  it('ferme le menu avec Échap et rend le focus au déclencheur', async () => {
     const user = userEvent.setup();
     renderMenu();
+    const trigger = screen.getByRole('button', { name: /menu du compte/i });
 
-    await user.click(screen.getByRole('button', { name: /menu du compte/i }));
-    expect(screen.getByRole('menu')).toBeInTheDocument();
+    await user.click(trigger);
+    expect(screen.getByRole('button', { name: /se déconnecter/i })).toBeInTheDocument();
 
     await user.keyboard('{Escape}');
 
-    await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: /se déconnecter/i })).not.toBeInTheDocument()
+    );
+    expect(trigger).toHaveFocus();
   });
 
   it('déclenche la déconnexion au clic sur Se déconnecter', async () => {
@@ -102,7 +111,7 @@ describe('UserMenu', () => {
     renderMenu();
 
     await user.click(screen.getByRole('button', { name: /menu du compte/i }));
-    await user.click(screen.getByRole('menuitem', { name: /se déconnecter/i }));
+    await user.click(screen.getByRole('button', { name: /se déconnecter/i }));
 
     await waitFor(() => expect(loggedOut).toBe(true));
   });

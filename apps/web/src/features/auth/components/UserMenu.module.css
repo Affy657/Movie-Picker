@@ -39,6 +39,10 @@
   padding: 0.25rem 0;
 }
 
+.dropdown:focus {
+  outline: none;
+}
+
 .heading {
   padding: 0.5rem 1rem;
   margin: 0;

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, Inbox } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -8,6 +8,8 @@ import Tooltip from '@/shared/components/Tooltip';
 import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
+import { useClickOutside } from '@/shared/hooks/useClickOutside';
+import { useMenuFocus } from '@/shared/hooks/useMenuFocus';
 import {
   fetchNotificationInbox,
   markAllNotificationsRead,
@@ -111,6 +113,9 @@ export default function InboxBell() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const menuId = useId();
 
   const inboxQuery = useQuery({
     queryKey: queryKeys.notifications.inbox,
@@ -128,16 +133,9 @@ export default function InboxBell() {
   const unreadCount = inboxQuery.data?.unreadCount ?? 0;
   const items = inboxQuery.data?.items ?? [];
 
-  useEffect(() => {
-    if (!open) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [open]);
+  const handleClose = useCallback(() => setOpen(false), []);
+  useClickOutside(containerRef, handleClose, open);
+  useMenuFocus(open, panelRef, triggerRef);
 
   const handleOpen = () => {
     setOpen((prev) => {
@@ -149,17 +147,17 @@ export default function InboxBell() {
     });
   };
 
-  const handleClose = () => setOpen(false);
-
   return (
     <div ref={containerRef} className={styles.container}>
       <Tooltip label={t('notifications.inboxAriaLabel')} placement="bottom" disabled={open}>
         <button
+          ref={triggerRef}
           type="button"
           className={styles.bellButton}
           onClick={handleOpen}
           aria-label={t('notifications.inboxAriaLabel')}
           aria-expanded={open}
+          aria-controls={open ? menuId : undefined}
         >
           <Bell size={20} aria-hidden />
           {unreadCount > 0 && (
@@ -171,7 +169,13 @@ export default function InboxBell() {
       </Tooltip>
 
       {open && (
-        <div className={styles.dropdown} role="menu">
+        <div
+          ref={panelRef}
+          id={menuId}
+          className={styles.dropdown}
+          tabIndex={-1}
+          aria-label={t('notifications.inboxTitle')}
+        >
           <p className={styles.dropdownTitle}>{t('notifications.inboxTitle')}</p>
           {items.length === 0 ? (
             <EmptyState
