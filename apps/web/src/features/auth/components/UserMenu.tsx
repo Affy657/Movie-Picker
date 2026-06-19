@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LogOut, Settings, UserRound } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
@@ -19,6 +19,7 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
   const { logout } = useAuth();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const menuId = useId();
 
   const close = useCallback(() => setOpen(false), []);
   useClickOutside(containerRef, close, open);
@@ -39,12 +40,13 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
         aria-label={t('nav.accountMenu')}
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-controls={open ? menuId : undefined}
       >
         <Avatar avatarId={user.avatarId} size="sm" />
       </button>
 
       {open ? (
-        <div className={styles.dropdown} role="menu">
+        <div id={menuId} className={styles.dropdown} role="menu">
           <p className={styles.heading}>{user.displayName}</p>
           {user.handle ? (
             <Link
