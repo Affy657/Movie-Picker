@@ -33,11 +33,18 @@
   align-items: stretch;
   gap: 0.5rem;
   flex-shrink: 0;
-  width: 120px;
+  width: 80px;
+}
+
+@media (min-width: 480px) {
+  .posterCol {
+    width: 120px;
+  }
 }
 
 .poster {
-  flex-shrink: 0;
+  width: 100%;
+  aspect-ratio: 2 / 3;
   border-radius: var(--radius-sm);
   object-fit: cover;
 }
@@ -57,8 +64,8 @@
 }
 
 .posterPlaceholder {
-  width: 120px;
-  height: 180px;
+  width: 100%;
+  aspect-ratio: 2 / 3;
   background: var(--color-poster-placeholder);
   font-size: var(--font-size-2xs);
   color: var(--color-placeholder);

@@ -410,7 +410,7 @@ export const MovieCard = memo(function MovieCard({
           <img
             src={posterSrc}
             srcSet={posterSrcSet}
-            sizes="120px"
+            sizes="(max-width: 479px) 80px, 120px"
             alt=""
             className={styles.poster}
             width={120}
