@@ -19,6 +19,7 @@
     account: 'Mon compte',
     createEvent: 'Nouvelle soirée',
     navLabel: 'Navigation principale',
+    accountMenu: 'Menu du compte',
     brandLabel: 'Movie Picker \u2014 Accueil',
     skipToMain: 'Passer au contenu principal',
   },

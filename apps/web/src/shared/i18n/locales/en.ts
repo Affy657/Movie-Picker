@@ -21,6 +21,7 @@ export const en: Locale = {
     account: 'My account',
     createEvent: 'New event',
     navLabel: 'Main navigation',
+    accountMenu: 'Account menu',
     brandLabel: 'Movie Picker \u2014 Home',
     skipToMain: 'Skip to main content',
   },
