@@ -7,7 +7,6 @@ import {
   History,
   LogOut,
   MoreVertical,
-  Plus,
   Trash2,
   Trophy,
   Users,
@@ -614,16 +613,6 @@ export default function MyEventsPage() {
           )}
         </>
       )}
-      {total > 0 ? (
-        <Link
-          to={ROUTES.createEvent}
-          className={styles.fab}
-          aria-label={t('events.myEvents.createCta')}
-        >
-          <Plus size={20} aria-hidden className={styles.fabIcon} />
-          <span className={styles.fabLabel}>{t('events.myEvents.createCta')}</span>
-        </Link>
-      ) : null}
       {deleteError ? (
         <p className="error" role="alert">
           {deleteError}

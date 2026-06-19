@@ -127,7 +127,7 @@ describe('App (routes)', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('AppShell expose Mes soirées + Mon compte dans la nav (sans Accueil)', async () => {
+    it('AppShell expose Mes soirées + Nouvelle soirée dans la nav (Mon compte est dans le menu avatar)', async () => {
       server.use(
         authedUserHandler,
         http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
@@ -140,7 +140,13 @@ describe('App (routes)', () => {
       if (!mobileNav) throw new Error('Mobile nav introuvable');
       expect(within(mobileNav).queryByRole('link', { name: /^Accueil$/i })).not.toBeInTheDocument();
       expect(within(mobileNav).getByRole('link', { name: /^Mes soirées$/i })).toBeInTheDocument();
-      expect(within(mobileNav).getByRole('link', { name: /^Mon compte$/i })).toBeInTheDocument();
+      expect(
+        within(mobileNav).getByRole('link', { name: /^Nouvelle soirée$/i })
+      ).toBeInTheDocument();
+      expect(
+        within(mobileNav).queryByRole('link', { name: /^Mon compte$/i })
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /menu du compte/i })).toBeInTheDocument();
     });
   });
 

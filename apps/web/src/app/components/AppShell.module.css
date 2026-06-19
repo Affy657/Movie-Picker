@@ -205,20 +205,3 @@
     display: flex;
   }
 }
-
-
-.avatarNavLink {
-  display: inline-flex;
-  border-radius: 50%;
-  transition: opacity var(--duration-base) var(--ease-default);
-}
-
-.avatarNavLink:hover {
-  opacity: 0.8;
-}
-
-.avatarNavLink:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 3px;
-  border-radius: 50%;
-}

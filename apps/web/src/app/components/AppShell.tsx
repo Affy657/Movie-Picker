@@ -1,11 +1,11 @@
 import clsx from 'clsx';
 import type { ComponentType, SVGProps } from 'react';
-import { CalendarDays, Settings } from 'lucide-react';
+import { CalendarDays, Plus } from 'lucide-react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { ROUTES } from '@/app/routes';
-import Avatar from '@/shared/components/Avatar';
+import UserMenu from '@/features/auth/components/UserMenu';
 import InboxBell from '@/features/notifications/components/InboxBell';
 import Footer from './Footer';
 import UpdateBanner from './UpdateBanner';
@@ -29,7 +29,7 @@ type NavItemSpec = Omit<NavItemDef, 'label'> & { labelKey: TranslationKey };
 
 const AUTHENTICATED_NAV_ITEMS: ReadonlyArray<NavItemSpec> = [
   { to: ROUTES.myEvents, labelKey: 'nav.myEvents', Icon: CalendarDays },
-  { to: ROUTES.account, labelKey: 'nav.account', Icon: Settings },
+  { to: ROUTES.createEvent, labelKey: 'nav.createEvent', Icon: Plus },
 ];
 
 function DesktopNavItem({ to, end, label }: Readonly<Omit<NavItemDef, 'Icon'>>) {
@@ -88,17 +88,7 @@ export default function AppShell() {
             </nav>
             <div className={styles.navActions}>
               <InboxBell />
-              {user.handle ? (
-                <Link
-                  to={ROUTES.profile(user.handle)}
-                  className={styles.avatarNavLink}
-                  aria-label={t('profile.settings.viewMyProfile')}
-                >
-                  <Avatar avatarId={user.avatarId} size="sm" />
-                </Link>
-              ) : (
-                <Avatar avatarId={user.avatarId} size="sm" />
-              )}
+              <UserMenu user={user} />
             </div>
           </>
         ) : null}
