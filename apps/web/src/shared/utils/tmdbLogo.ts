@@ -2,9 +2,17 @@ export function toAbsoluteTmdbLogoUrl(raw: string): string {
   const t = raw.trim();
   if (!t) return t;
   if (t.startsWith('https://image.tmdb.org')) return t;
-  if (t.startsWith('http://image.tmdb.org')) return `https://${t.slice(7)}`;
   if (t.startsWith('//')) return `https:${t}`;
   if (t.startsWith('/')) return `https://image.tmdb.org${t}`;
+  try {
+    const u = new URL(t);
+    if (u.hostname === 'image.tmdb.org') {
+      u.protocol = 'https:';
+      return u.toString();
+    }
+  } catch {
+    // not a parseable absolute URL
+  }
   return t;
 }
 
