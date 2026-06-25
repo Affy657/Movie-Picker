@@ -16,7 +16,11 @@ internal static class PosterRemoteFetch
         var fetchUrl = TmdbPosterUrlNormalizer.UpgradeTmdbSize(
             sourceUrl,
             TmdbPosterUrlNormalizer.PreferredPosterSize);
-        using var res = await http.GetAsync(fetchUrl, HttpCompletionOption.ResponseHeadersRead, ct);
+        if (!Uri.TryCreate(fetchUrl, UriKind.Absolute, out var fetchUri)
+            || fetchUri.Scheme != Uri.UriSchemeHttps
+            || !string.Equals(fetchUri.Host, "image.tmdb.org", StringComparison.OrdinalIgnoreCase))
+            return null;
+        using var res = await http.GetAsync(fetchUri, HttpCompletionOption.ResponseHeadersRead, ct);
         if (!res.IsSuccessStatusCode)
             return null;
 
