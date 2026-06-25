@@ -240,6 +240,66 @@ describe('MovieList', () => {
     expect(refresh).toHaveBeenCalled();
   });
 
+  it('affiche les films en vue liste (MovieCardList)', () => {
+    renderWithLocale(
+      <MovieList
+        movies={movies}
+        slug="s"
+        participantId={null}
+        participantPseudo={null}
+        isFinished={false}
+        onVote={vi.fn()}
+        onRemove={vi.fn()}
+        refresh={vi.fn()}
+        onActionError={vi.fn()}
+        viewMode="list"
+      />
+    );
+    expect(screen.getByText('Inception')).toBeInTheDocument();
+    expect(screen.getByText('Matrix')).toBeInTheDocument();
+  });
+
+  it('affiche vote et déjà-vu en vue liste avec participantId', async () => {
+    const onVote = vi.fn().mockResolvedValue(undefined);
+    renderWithLocale(
+      <MovieList
+        movies={movies}
+        slug="s"
+        participantId="p0"
+        participantPseudo="Alice"
+        isFinished={false}
+        onVote={onVote}
+        onRemove={vi.fn()}
+        refresh={vi.fn()}
+        onActionError={vi.fn()}
+        viewMode="list"
+      />
+    );
+    const upButtons = screen.getAllByRole('button', { name: /^Voter pour / });
+    await userEvent.click(upButtons[0]!);
+    expect(onVote).toHaveBeenCalledWith('m1', 1);
+    expect(screen.getAllByRole('button', { name: /Marquer « déjà vu »/ })).toHaveLength(2);
+  });
+
+  it('masque vote et déjà-vu en vue liste quand soirée terminée', () => {
+    renderWithLocale(
+      <MovieList
+        movies={movies}
+        slug="s"
+        participantId="p0"
+        participantPseudo="Alice"
+        isFinished
+        onVote={vi.fn()}
+        onRemove={vi.fn()}
+        refresh={vi.fn()}
+        onActionError={vi.fn()}
+        viewMode="list"
+      />
+    );
+    expect(screen.queryByRole('button', { name: /Voter pour/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Marquer/ })).not.toBeInTheDocument();
+  });
+
   it('reflète myVote sur les boutons (aria-pressed) et expose un libellé « retirer » au reclic', () => {
     const voted: MovieData[] = [
       { ...movies[0]!, myVote: 1 },
