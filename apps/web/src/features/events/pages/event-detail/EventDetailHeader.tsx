@@ -65,7 +65,7 @@ export default function EventDetailHeader({
             </span>
           )}
         </div>
-        {shareUrl ? (
+        {shareUrl && !isFinished ? (
           <div className={styles.share}>
             <ShareLink
               url={shareUrl}
@@ -74,9 +74,7 @@ export default function EventDetailHeader({
               eventDate={eventDate}
               showQr
             />
-            {!isFinished && (
-              <AddToCalendarButton title={title} date={rawDate} time={rawTime} url={shareUrl} />
-            )}
+            <AddToCalendarButton title={title} date={rawDate} time={rawTime} url={shareUrl} />
           </div>
         ) : null}
       </div>

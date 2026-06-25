@@ -1,14 +1,62 @@
+import { useEffect, useRef, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { RefreshCw, X } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import styles from './UpdateBanner.module.css';
 
-export default function UpdateBanner() {
-  const { t } = useTranslation();
+const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
+
+function useServiceWorkerUpdate() {
+  const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
-  } = useRegisterSW();
+  } = useRegisterSW({
+    onRegisteredSW(_swUrl, r) {
+      if (r) setRegistration(r);
+    },
+  });
+
+  const needRefreshRef = useRef(needRefresh);
+  needRefreshRef.current = needRefresh;
+
+  useEffect(() => {
+    if (!registration) return;
+
+    const checkForUpdate = () => {
+      if (registration.installing || !navigator.onLine) return;
+      registration.update().catch(() => {});
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkForUpdate();
+      } else if (needRefreshRef.current) {
+        void updateServiceWorker(true);
+      }
+    };
+
+    const intervalId = window.setInterval(checkForUpdate, UPDATE_CHECK_INTERVAL_MS);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('online', checkForUpdate);
+
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('online', checkForUpdate);
+    };
+  }, [registration, updateServiceWorker]);
+
+  return {
+    needRefresh,
+    reload: () => void updateServiceWorker(true),
+    dismiss: () => setNeedRefresh(false),
+  };
+}
+
+export default function UpdateBanner() {
+  const { t } = useTranslation();
+  const { needRefresh, reload, dismiss } = useServiceWorkerUpdate();
 
   if (!needRefresh) return null;
 
@@ -18,17 +66,13 @@ export default function UpdateBanner() {
         <RefreshCw className={styles.icon} />
       </span>
       <p className={styles.text}>{t('pwaUpdate.message')}</p>
-      <button
-        type="button"
-        className={styles.reloadBtn}
-        onClick={() => void updateServiceWorker(true)}
-      >
+      <button type="button" className={styles.reloadBtn} onClick={reload}>
         {t('pwaUpdate.reload')}
       </button>
       <button
         type="button"
         className={styles.dismissBtn}
-        onClick={() => setNeedRefresh(false)}
+        onClick={dismiss}
         aria-label={t('pwaUpdate.dismiss')}
       >
         <X className={styles.dismissIcon} aria-hidden="true" />
