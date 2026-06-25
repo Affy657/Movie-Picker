@@ -175,12 +175,12 @@ export default function EventMoviesSection({
               </div>
             </>
           )}
-          <div className={styles.viewToggle} role="group" aria-label="Mode d'affichage">
+          <div className={styles.viewToggle} role="group" aria-label={t('movies.list.viewToggleAria')}>
             <button
               type="button"
               className={clsx(styles.viewToggleBtn, viewMode === 'grid' && styles.viewToggleBtnActive)}
               aria-pressed={viewMode === 'grid'}
-              aria-label="Affichage grille"
+              aria-label={t('movies.list.viewGridAria')}
               onClick={() => handleViewMode('grid')}
             >
               <LayoutGrid aria-hidden size={15} />
@@ -189,7 +189,7 @@ export default function EventMoviesSection({
               type="button"
               className={clsx(styles.viewToggleBtn, viewMode === 'list' && styles.viewToggleBtnActive)}
               aria-pressed={viewMode === 'list'}
-              aria-label="Affichage liste"
+              aria-label={t('movies.list.viewListAria')}
               onClick={() => handleViewMode('list')}
             >
               <List aria-hidden size={15} />
@@ -199,6 +199,7 @@ export default function EventMoviesSection({
       )}
 
       {moviesQuery.isSuccess && (
+        <div className={viewMode === 'list' ? styles.movieListBleed : undefined}>
         <MovieList
           movies={sortMovies(movies, sortBy)}
           slug={slug}
@@ -214,6 +215,7 @@ export default function EventMoviesSection({
           participantAvatarsByPseudo={participantAvatarsByPseudo}
           viewMode={viewMode}
         />
+        </div>
       )}
     </section>
   );

@@ -256,6 +256,18 @@
   border: 0;
 }
 
+svg.lucide {
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.icon-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  line-height: 1;
+}
+
 html {
   overflow-x: clip;
   scrollbar-gutter: stable;

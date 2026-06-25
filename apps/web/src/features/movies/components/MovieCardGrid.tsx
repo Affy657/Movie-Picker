@@ -1,7 +1,7 @@
 import { memo } from 'react';
-import { ChevronDown, ChevronUp, MessageSquarePlus } from 'lucide-react';
+import { ChevronDown, MessageSquarePlus } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
-import { MovieDetailsContent } from '@/features/movies/components/MovieDetailsPanel';
+import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
 import { ModeIcon, TYPE_ORDER } from '@/features/movies/components/WatchProviderChips';
 import WatchProvidersModal from '@/features/movies/components/WatchProvidersModal';
 import {
@@ -177,41 +177,26 @@ export const MovieCardGrid = memo(function MovieCardGrid({
               <button
                 type="button"
                 className={styles.detailsToggle}
+                aria-haspopup="dialog"
                 aria-expanded={s.detailsOpen}
-                aria-controls={s.detailsPanelId}
-                onClick={() => s.setDetailsOpen((v) => !v)}
+                onClick={() => s.setDetailsOpen(true)}
               >
-                <span>
-                  {s.detailsOpen ? t('movies.details.toggleHide') : t('movies.details.toggleShow')}
-                </span>
-                {s.detailsOpen ? (
-                  <ChevronUp aria-hidden size={14} />
-                ) : (
-                  <ChevronDown aria-hidden size={14} />
-                )}
+                <span>{t('movies.details.toggleShow')}</span>
+                <ChevronDown aria-hidden size={14} />
               </button>
             )}
           </div>
         </div>
       </div>
 
-      {s.hasDetails && s.detailsOpen && (
-        <div className={styles.detailsOverlay}>
-          <button
-            type="button"
-            className={styles.detailsClose}
-            onClick={() => s.setDetailsOpen(false)}
-          >
-            <ChevronUp aria-hidden size={14} />
-            {t('movies.details.toggleHide')}
-          </button>
-          <MovieDetailsContent
-            tmdbId={m.tmdbId}
-            mediaType={m.mediaType}
-            open={s.detailsOpen}
-            panelId={s.detailsPanelId}
-          />
-        </div>
+      {s.hasDetails && (
+        <MovieDetailsModal
+          open={s.detailsOpen}
+          movieTitle={m.title}
+          tmdbId={m.tmdbId}
+          mediaType={m.mediaType}
+          onClose={() => s.setDetailsOpen(false)}
+        />
       )}
 
       {s.providers.length > 0 && (

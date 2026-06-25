@@ -1,3 +1,8 @@
+.movieListBleed {
+  margin-left: -1rem;
+  margin-right: -1rem;
+}
+
 .sortBar {
   display: flex;
   align-items: center;

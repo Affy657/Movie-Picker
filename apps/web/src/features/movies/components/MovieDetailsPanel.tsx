@@ -75,6 +75,7 @@ interface MovieDetailsContentProps {
   open: boolean;
   panelId: string;
   className?: string;
+  onPlayTrailer?: (url: string) => void;
 }
 
 export function MovieDetailsContent({
@@ -83,6 +84,7 @@ export function MovieDetailsContent({
   open,
   panelId,
   className,
+  onPlayTrailer,
 }: Readonly<MovieDetailsContentProps>) {
   const { t } = useTranslation();
   const { data, isLoading, isError } = useMovieDetails(tmdbId, open, mediaType);
@@ -95,7 +97,7 @@ export function MovieDetailsContent({
     >
       {isLoading && <p className={styles.status}>{t('movies.details.loading')}</p>}
       {isError && <p className={styles.error}>{t('movies.details.error')}</p>}
-      {data && <MovieDetailsBody data={data} />}
+      {data && <MovieDetailsBody data={data} onPlayTrailer={onPlayTrailer} />}
       {!isLoading && !isError && !data && (
         <p className={styles.status}>{t('movies.details.empty')}</p>
       )}
@@ -114,11 +116,13 @@ interface MovieDetailsBodyProps {
     releaseDate: string | null;
     trailerUrl?: string | null;
   };
+  onPlayTrailer?: (url: string) => void;
 }
 
-function MovieDetailsBody({ data }: Readonly<MovieDetailsBodyProps>) {
+function MovieDetailsBody({ data, onPlayTrailer }: Readonly<MovieDetailsBodyProps>) {
   const { t } = useTranslation();
   const facts: Array<[string, string]> = [];
+  const safeTrailerUrl = isSafeTrailerUrl(data.trailerUrl) ? data.trailerUrl : null;
 
   if (data.director) facts.push([t('movies.details.directorLabel'), data.director]);
   if (data.cast.length > 0)
@@ -144,19 +148,31 @@ function MovieDetailsBody({ data }: Readonly<MovieDetailsBodyProps>) {
           ))}
         </dl>
       )}
-      {isSafeTrailerUrl(data.trailerUrl) && (
-        <div className={styles.trailerRow}>
-          <a
-            href={data.trailerUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.trailerLink}
-          >
-            <PlayCircle aria-hidden size={14} />
-            <span>{t('movies.details.trailerLink')}</span>
-          </a>
-        </div>
-      )}
+      {safeTrailerUrl &&
+        (onPlayTrailer ? (
+          <div className={styles.trailerRow}>
+            <button
+              type="button"
+              className={styles.trailerLink}
+              onClick={() => onPlayTrailer(safeTrailerUrl)}
+            >
+              <PlayCircle aria-hidden size={14} />
+              <span>{t('movies.details.trailerLink')}</span>
+            </button>
+          </div>
+        ) : (
+          <div className={styles.trailerRow}>
+            <a
+              href={safeTrailerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.trailerLink}
+            >
+              <PlayCircle aria-hidden size={14} />
+              <span>{t('movies.details.trailerLink')}</span>
+            </a>
+          </div>
+        ))}
     </>
   );
 }

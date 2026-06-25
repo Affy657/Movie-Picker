@@ -1,7 +1,7 @@
 .card {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: stretch;
   border-radius: var(--radius-md);
   overflow: hidden;
   background: #0c1322;
@@ -16,16 +16,26 @@
 
 .posterCol {
   position: relative;
-  flex: 0 0 clamp(7rem, 32%, 13rem);
+  flex: 0 0 clamp(7rem, 32%, 12rem);
   align-self: stretch;
-  background: #1e293b;
+  overflow: hidden;
+  background: #0c1322;
+}
+
+.posterBackdrop {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(22px) brightness(0.55) saturate(1.1);
+  transform: scale(1.25);
 }
 
 .poster {
+  position: relative;
   display: block;
   width: 100%;
-  height: 100%;
-  min-height: 100%;
+  height: auto;
   aspect-ratio: 2 / 3;
   object-fit: cover;
 }
@@ -37,7 +47,6 @@
   width: 100%;
   height: 100%;
   min-height: 10rem;
-  aspect-ratio: 2 / 3;
   color: #475569;
   font-size: var(--font-size-2xs);
 }
@@ -59,28 +68,35 @@
 }
 
 .info {
+  position: relative;
   flex: 1;
   min-width: 0;
+  align-self: stretch;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.25rem;
   padding: 0.7rem 0.85rem;
 }
 
-.titleRow {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.5rem;
+.kebabSlot {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.7rem;
+  z-index: 2;
 }
 
 .title {
   margin: 0;
+  padding-right: 2rem;
   font-size: var(--font-size-base);
   font-weight: 600;
   line-height: var(--leading-tight);
   letter-spacing: var(--tracking-snug);
   color: #f8fafc;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   word-break: break-word;
 }
 
@@ -123,12 +139,18 @@
   color: #94a3b8;
 }
 
+.bottomSection {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
 .proposerRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  margin-top: auto;
 }
 
 .proposer {
@@ -186,24 +208,3 @@
   outline: none;
 }
 
-.detailsPanel {
-  flex: 0 0 100%;
-  padding: 0.75rem 0.85rem;
-  border-top: 1px solid #1a2236;
-  background: #0a0f1c;
-  --color-text: #e2e8f0;
-  --color-text-muted: #94a3b8;
-  --color-border-subtle: #243044;
-  --color-bg: #0a0f1c;
-  --details-gap: 0.5rem;
-  --details-font-size: var(--font-size-sm);
-  --overview-clamp: 99;
-}
-
-.detailsPanel section {
-  margin: 0;
-  padding: 0;
-  border: none;
-  border-radius: 0;
-  background: transparent;
-}

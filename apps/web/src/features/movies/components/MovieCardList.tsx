@@ -1,7 +1,7 @@
 import { memo } from 'react';
-import { ChevronDown, ChevronUp, MessageSquarePlus } from 'lucide-react';
+import { ChevronDown, MessageSquarePlus } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
-import { MovieDetailsContent } from '@/features/movies/components/MovieDetailsPanel';
+import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import {
   CardKebab,
@@ -46,18 +46,25 @@ export const MovieCardList = memo(function MovieCardList({
     <li className={styles.card}>
       <div className={styles.posterCol}>
         {s.posterSrc ? (
-          <img
-            src={s.posterSrc}
-            srcSet={s.posterSrcSet}
-            sizes="(max-width: 479px) 33vw, 200px"
-            alt=""
-            className={styles.poster}
-            width={120}
-            height={180}
-            loading={eager ? 'eager' : 'lazy'}
-            fetchPriority={eager ? 'high' : 'auto'}
-            decoding="async"
-          />
+          <>
+            <div
+              className={styles.posterBackdrop}
+              style={{ backgroundImage: `url("${s.posterSrc}")` }}
+              aria-hidden
+            />
+            <img
+              src={s.posterSrc}
+              srcSet={s.posterSrcSet}
+              sizes="(max-width: 479px) 33vw, 200px"
+              alt=""
+              className={styles.poster}
+              width={120}
+              height={180}
+              loading={eager ? 'eager' : 'lazy'}
+              fetchPriority={eager ? 'high' : 'auto'}
+              decoding="async"
+            />
+          </>
         ) : (
           <div className={styles.posterPlaceholder} aria-hidden>
             {t('movies.search.posterPlaceholder')}
@@ -67,9 +74,8 @@ export const MovieCardList = memo(function MovieCardList({
       </div>
 
       <div className={styles.info}>
-        <div className={styles.titleRow}>
-          <h3 className={styles.title}>{m.title}</h3>
-          {(s.hasDetails || s.canRemove) && (
+        {(s.hasDetails || s.canRemove) && (
+          <div className={styles.kebabSlot}>
             <CardKebab
               title={m.title}
               year={m.year}
@@ -81,8 +87,11 @@ export const MovieCardList = memo(function MovieCardList({
               onRemove={() => void onRemove(m.id)}
               t={t}
             />
-          )}
-        </div>
+          </div>
+        )}
+        <h3 className={styles.title} title={m.title}>
+          {m.title}
+        </h3>
 
         <p className={styles.metaLine}>
           {m.year ? <span>{m.year}</span> : null}
@@ -106,6 +115,7 @@ export const MovieCardList = memo(function MovieCardList({
           <p className={styles.providersEmpty}>{t('movies.watchProviders.emptyLabel')}</p>
         )}
 
+        <div className={styles.bottomSection}>
         {s.canAct && (
           <div className={styles.actions}>
             <VoteBar m={m} onVote={onVote} t={t} />
@@ -159,32 +169,26 @@ export const MovieCardList = memo(function MovieCardList({
             <button
               type="button"
               className={styles.detailsToggle}
+              aria-haspopup="dialog"
               aria-expanded={s.detailsOpen}
-              aria-controls={s.detailsPanelId}
-              onClick={() => s.setDetailsOpen((v) => !v)}
+              onClick={() => s.setDetailsOpen(true)}
             >
-              <span>
-                {s.detailsOpen ? t('movies.details.toggleHide') : t('movies.details.toggleShow')}
-              </span>
-              {s.detailsOpen ? (
-                <ChevronUp aria-hidden size={14} />
-              ) : (
-                <ChevronDown aria-hidden size={14} />
-              )}
+              <span>{t('movies.details.toggleShow')}</span>
+              <ChevronDown aria-hidden size={14} />
             </button>
           )}
         </div>
+        </div>
       </div>
 
-      {s.hasDetails && s.detailsOpen && (
-        <div className={styles.detailsPanel}>
-          <MovieDetailsContent
-            tmdbId={m.tmdbId}
-            mediaType={m.mediaType}
-            open={s.detailsOpen}
-            panelId={s.detailsPanelId}
-          />
-        </div>
+      {s.hasDetails && (
+        <MovieDetailsModal
+          open={s.detailsOpen}
+          movieTitle={m.title}
+          tmdbId={m.tmdbId}
+          mediaType={m.mediaType}
+          onClose={() => s.setDetailsOpen(false)}
+        />
       )}
     </li>
   );

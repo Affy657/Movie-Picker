@@ -321,7 +321,6 @@ export function MovieNote({
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={handleKeyDown}
-          maxLength={PITCH_MAX}
           rows={2}
           placeholder={t('movies.pitchNote.placeholder')}
           disabled={pending}

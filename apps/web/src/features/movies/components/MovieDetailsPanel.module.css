@@ -94,10 +94,15 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  padding: 0;
+  background: none;
+  border: none;
+  font-family: inherit;
   font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--color-primary);
   text-decoration: none;
+  cursor: pointer;
   transition: opacity var(--duration-base) var(--ease-default);
 }
 

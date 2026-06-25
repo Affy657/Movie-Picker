@@ -416,6 +416,9 @@ export const en: Locale = {
       sortTmdbVote: 'Rating',
       sortDuration: 'Duration',
       sortAddedAt: 'Added order',
+      viewToggleAria: 'Display mode',
+      viewGridAria: 'Grid view',
+      viewListAria: 'List view',
     },
     pitchNote: {
       addButton: 'Add a note',

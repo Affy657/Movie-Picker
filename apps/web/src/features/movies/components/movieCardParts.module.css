@@ -17,6 +17,7 @@
   border-radius: var(--radius-sm);
   color: #e2e8f0;
   font-size: var(--font-size-sm);
+  line-height: 1;
   cursor: pointer;
   transition: background var(--duration-base) var(--ease-default);
 }
@@ -55,6 +56,7 @@
   border-radius: var(--radius-pill);
   color: #cbd5e1;
   font-size: var(--font-size-2xs);
+  line-height: 1;
   cursor: pointer;
   white-space: nowrap;
   transition: background var(--duration-base) var(--ease-default);
