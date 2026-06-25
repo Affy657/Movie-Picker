@@ -1,0 +1,321 @@
+/* Pièces partagées entre les vues grille et liste : votes, déjà-vu, note, kebab. */
+
+.votes {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+  flex-shrink: 0;
+}
+
+.voteBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.4rem;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #e2e8f0;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: background var(--duration-base) var(--ease-default);
+}
+
+.voteBtn:hover:not(:disabled),
+.voteBtn:focus-visible {
+  background: rgba(255, 255, 255, 0.1);
+  outline: none;
+}
+
+.voteActive {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.voteCount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  min-width: 0.9rem;
+  text-align: center;
+}
+
+.seenWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.seenBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  background: transparent;
+  border: 1px solid #3a4861;
+  border-radius: var(--radius-pill);
+  color: #cbd5e1;
+  font-size: var(--font-size-2xs);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--duration-base) var(--ease-default);
+}
+
+.seenBtn:hover:not(:disabled),
+.seenBtn:focus-visible {
+  background: rgba(255, 255, 255, 0.07);
+  outline: none;
+}
+
+.seenBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.seenActive {
+  background: #243044;
+  border-color: #7c8aa3;
+  color: #e2e8f0;
+}
+
+.seenLabel {
+  font-size: var(--font-size-2xs);
+}
+
+.seenAvatars {
+  display: inline-flex;
+  align-items: center;
+}
+
+.seenAvatar {
+  border: 1.5px solid #0c1322;
+  border-radius: var(--radius-pill);
+}
+
+.seenAvatar:not(:first-child) {
+  margin-left: -5px;
+}
+
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.noteQuote {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  color: #64748b;
+}
+
+.noteText {
+  font-size: var(--font-size-2xs);
+  font-style: italic;
+  color: #cbd5e1;
+  line-height: var(--leading-snug);
+  word-break: break-word;
+}
+
+.noteTextClamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.noteEditTrigger {
+  min-width: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.noteEditTrigger:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.noteExpand {
+  flex-shrink: 0;
+  display: inline-flex;
+  padding: 0;
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.noteExpand:hover,
+.noteExpand:focus-visible {
+  color: #cbd5e1;
+  outline: none;
+}
+
+.noteEditor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.noteTextarea {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  font-size: var(--font-size-2xs);
+  font-family: inherit;
+  line-height: var(--leading-comfortable);
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid #7c8aa3;
+  border-radius: var(--radius-sm);
+  resize: vertical;
+  min-height: 3.25rem;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.noteTextarea::placeholder {
+  color: #7c8aa3;
+}
+
+.noteEditorFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.noteCharCount {
+  font-size: var(--font-size-4xs);
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+}
+
+.noteCharCountOver {
+  color: #f87171;
+}
+
+.noteEditorActions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.noteBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.55rem;
+  font-size: var(--font-size-4xs);
+  font-weight: 500;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--duration-base) var(--ease-default);
+}
+
+.noteBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.noteBtnGhost {
+  background: transparent;
+  color: #cbd5e1;
+  border-color: #3a4861;
+}
+
+.noteBtnGhost:hover:not(:disabled),
+.noteBtnGhost:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+  outline: none;
+}
+
+.noteBtnPrimary {
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+  border-color: var(--color-primary);
+}
+
+.noteBtnPrimary:hover:not(:disabled),
+.noteBtnPrimary:focus-visible {
+  filter: brightness(1.08);
+  outline: none;
+}
+
+.kebab {
+  position: relative;
+}
+
+.kebabBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: rgba(7, 11, 22, 0.6);
+  color: #f1f5f9;
+  cursor: pointer;
+  transition: background var(--duration-base) var(--ease-default);
+}
+
+.kebabBtn:hover,
+.kebabBtn:focus-visible {
+  background: rgba(7, 11, 22, 0.85);
+  outline: none;
+}
+
+.kebabMenu {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  right: 0;
+  z-index: 10;
+  min-width: 10rem;
+  padding: 0.3rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.kebabItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--duration-base) var(--ease-default);
+  text-decoration: none;
+  width: 100%;
+  white-space: nowrap;
+}
+
+.kebabItem:hover,
+.kebabItem:focus-visible {
+  background: color-mix(in srgb, var(--color-text) 10%, transparent);
+  outline: none;
+}
+
+.kebabItemDanger {
+  color: var(--color-error);
+}
+
+.kebabItemDanger:hover,
+.kebabItemDanger:focus-visible {
+  background: color-mix(in srgb, var(--color-error) 12%, transparent);
+}
