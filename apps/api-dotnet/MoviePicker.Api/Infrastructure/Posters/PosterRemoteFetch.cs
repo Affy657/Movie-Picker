@@ -1,5 +1,5 @@
-using MoviePicker.Api.Application.Posters;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.Posters;
 
 namespace MoviePicker.Api.Infrastructure.Posters;
 
