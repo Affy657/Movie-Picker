@@ -2,7 +2,7 @@ import { useEffect, useId, useRef } from 'react';
 import { X } from 'lucide-react';
 import { useDialogOpen } from '@/shared/hooks/useDialogOpen';
 import { useTranslation } from '@/shared/i18n';
-import { youTubeEmbedUrl } from '@/shared/utils/youtube';
+import { extractYouTubeId } from '@/shared/utils/youtube';
 import styles from './TrailerModal.module.css';
 
 interface TrailerModalProps {
@@ -21,7 +21,10 @@ export default function TrailerModal({
   const { t } = useTranslation();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
-  const embedUrl = youTubeEmbedUrl(trailerUrl);
+  const trailerYtId = extractYouTubeId(trailerUrl);
+  const embedUrl = trailerYtId
+    ? `https://www.youtube.com/embed/${encodeURIComponent(trailerYtId)}`
+    : null;
   const visible = open && !!embedUrl;
 
   const onCloseRef = useRef(onClose);
