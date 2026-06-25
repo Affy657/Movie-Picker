@@ -4,21 +4,9 @@ import { ChevronDown, ChevronUp, Info, PlayCircle } from 'lucide-react';
 import { useMovieDetails } from '@/features/movies/hooks/useMovieDetails';
 import { useTranslation } from '@/shared/i18n';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
+import { extractYouTubeId } from '@/shared/utils/youtube';
 import type { MovieMediaType } from '@/shared/types/movie';
 import styles from './MovieDetailsPanel.module.css';
-
-function isSafeTrailerUrl(url: string | null | undefined): url is string {
-  if (!url) return false;
-  try {
-    const parsed = new URL(url);
-    return (
-      (parsed.hostname === 'www.youtube.com' || parsed.hostname === 'youtu.be') &&
-      parsed.protocol === 'https:'
-    );
-  } catch {
-    return false;
-  }
-}
 
 interface MovieDetailsPanelProps {
   tmdbId: number;
@@ -122,7 +110,8 @@ interface MovieDetailsBodyProps {
 function MovieDetailsBody({ data, onPlayTrailer }: Readonly<MovieDetailsBodyProps>) {
   const { t } = useTranslation();
   const facts: Array<[string, string]> = [];
-  const safeTrailerUrl = isSafeTrailerUrl(data.trailerUrl) ? data.trailerUrl : null;
+  const trailerYtId = extractYouTubeId(data.trailerUrl);
+  const safeTrailerUrl = trailerYtId ? `https://www.youtube.com/watch?v=${trailerYtId}` : null;
 
   if (data.director) facts.push([t('movies.details.directorLabel'), data.director]);
   if (data.cast.length > 0)
