@@ -38,4 +38,22 @@ public sealed class TmdbPosterUrlNormalizerTests
         Assert.True(TmdbPosterUrlNormalizer.TryParsePosterKey(TmdbPosterUrlNormalizer.ApiPosterPathPrefix + key, out var parsed));
         Assert.Equal(key, parsed);
     }
+
+    [Theory]
+    [InlineData("https://image.tmdb.org/t/p/w154/x.jpg")]
+    [InlineData("https://image.tmdb.org/t/p/w92/x.jpg")]
+    [InlineData("https://image.tmdb.org/t/p/original/x.jpg")]
+    public void UpgradeTmdbSize_RewritesSizeSegmentToTarget(string url)
+    {
+        Assert.Equal(
+            "https://image.tmdb.org/t/p/w500/x.jpg",
+            TmdbPosterUrlNormalizer.UpgradeTmdbSize(url, "w500"));
+    }
+
+    [Fact]
+    public void UpgradeTmdbSize_LeavesUrlWithoutSizeSegmentUnchanged()
+    {
+        const string url = "https://image.tmdb.org/other/x.jpg";
+        Assert.Equal(url, TmdbPosterUrlNormalizer.UpgradeTmdbSize(url, "w500"));
+    }
 }

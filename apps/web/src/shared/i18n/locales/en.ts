@@ -416,6 +416,9 @@ export const en: Locale = {
       sortTmdbVote: 'Rating',
       sortDuration: 'Duration',
       sortAddedAt: 'Added order',
+      viewToggleAria: 'Display mode',
+      viewGridAria: 'Grid view',
+      viewListAria: 'List view',
     },
     pitchNote: {
       addButton: 'Add a note',
@@ -471,6 +474,8 @@ export const en: Locale = {
       showMoreAria: 'Show {{count}} more platform(s)',
       showLessAria: 'Collapse the platforms list',
       emptyLabel: 'Not streaming',
+      modalTitle: 'Where to watch',
+      openModalAria: 'See where to watch "{{title}}"',
     },
   },
 

@@ -1,15 +1,28 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace MoviePicker.Api.Application.Posters;
 
-public static class TmdbPosterUrlNormalizer
+public static partial class TmdbPosterUrlNormalizer
 {
     private const string TmdbImageHost = "image.tmdb.org";
 
     public const string ApiPosterPathPrefix = "/api/v1/posters/";
 
     public const int PosterKeyHexLength = 64;
+
+    public const string PreferredPosterSize = "w500";
+
+    [GeneratedRegex(@"/t/p/(w\d+|original)/", RegexOptions.IgnoreCase)]
+    private static partial Regex TmdbSizeSegmentRegex();
+
+    public static string UpgradeTmdbSize(string url, string targetSize)
+    {
+        if (string.IsNullOrEmpty(url))
+            return url;
+        return TmdbSizeSegmentRegex().Replace(url, $"/t/p/{targetSize}/", 1);
+    }
 
     public static bool IsApiPosterPath(string url) => TryParsePosterKey(url, out _);
 

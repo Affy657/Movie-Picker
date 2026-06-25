@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import clsx from 'clsx';
+import { LayoutGrid, List } from 'lucide-react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { clearMovieVote, removeMovieFromEvent, voteMovie } from '@/features/movies/api/moviesApi';
@@ -67,6 +68,23 @@ export default function EventMoviesSection({
   const { track } = useAnalytics();
   const { t } = useTranslation();
   const [sortBy, setSortBy] = useState<SortKey>('score');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
+    try {
+      const stored = localStorage.getItem('movies-view');
+      return stored === 'list' ? 'list' : 'grid';
+    } catch {
+      return 'grid';
+    }
+  });
+
+  const handleViewMode = (mode: 'grid' | 'list') => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('movies-view', mode);
+    } catch {
+      /* ignore */
+    }
+  };
 
   const handleVote = useCallback(
     async (movieId: string, value: 1 | -1) => {
@@ -107,6 +125,9 @@ export default function EventMoviesSection({
   const participantAvatars = Object.fromEntries(
     (event.participants ?? []).filter((p) => p.avatarId).map((p) => [p.id, p.avatarId!])
   );
+  const participantAvatarsByPseudo = Object.fromEntries(
+    (event.participants ?? []).filter((p) => p.avatarId).map((p) => [p.pseudo, p.avatarId!])
+  );
 
   return (
     <section className="section section-movies" aria-label="Films proposés">
@@ -131,46 +152,88 @@ export default function EventMoviesSection({
         </p>
       )}
 
-      {moviesQuery.isSuccess && movies.length > 1 && (
+      {moviesQuery.isSuccess && (
         <div className={styles.sortBar}>
-          <span className={styles.sortLabel}>{t('movies.list.sortLabel')}</span>
-          <div className={styles.sortPills} role="group" aria-label={t('movies.list.sortLabel')}>
-            {(
-              [
-                { key: 'score', label: t('movies.list.sortScore') },
-                { key: 'voteAverage', label: t('movies.list.sortTmdbVote') },
-                { key: 'duration', label: t('movies.list.sortDuration') },
-                { key: 'createdAt', label: t('movies.list.sortAddedAt') },
-              ] as { key: SortKey; label: string }[]
-            ).map(({ key, label }) => (
-              <button
-                key={key}
-                type="button"
-                className={clsx(styles.sortPill, sortBy === key && styles.sortPillActive)}
-                aria-pressed={sortBy === key}
-                onClick={() => setSortBy(key)}
+          {movies.length > 1 && (
+            <>
+              <span className={styles.sortLabel}>{t('movies.list.sortLabel')}</span>
+              <div
+                className={styles.sortPills}
+                role="group"
+                aria-label={t('movies.list.sortLabel')}
               >
-                {label}
-              </button>
-            ))}
+                {(
+                  [
+                    { key: 'score', label: t('movies.list.sortScore') },
+                    { key: 'voteAverage', label: t('movies.list.sortTmdbVote') },
+                    { key: 'duration', label: t('movies.list.sortDuration') },
+                    { key: 'createdAt', label: t('movies.list.sortAddedAt') },
+                  ] as { key: SortKey; label: string }[]
+                ).map(({ key, label }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className={clsx(styles.sortPill, sortBy === key && styles.sortPillActive)}
+                    aria-pressed={sortBy === key}
+                    onClick={() => setSortBy(key)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+          <div
+            className={styles.viewToggle}
+            role="group"
+            aria-label={t('movies.list.viewToggleAria')}
+          >
+            <button
+              type="button"
+              className={clsx(
+                styles.viewToggleBtn,
+                viewMode === 'grid' && styles.viewToggleBtnActive
+              )}
+              aria-pressed={viewMode === 'grid'}
+              aria-label={t('movies.list.viewGridAria')}
+              onClick={() => handleViewMode('grid')}
+            >
+              <LayoutGrid aria-hidden size={15} />
+            </button>
+            <button
+              type="button"
+              className={clsx(
+                styles.viewToggleBtn,
+                viewMode === 'list' && styles.viewToggleBtnActive
+              )}
+              aria-pressed={viewMode === 'list'}
+              aria-label={t('movies.list.viewListAria')}
+              onClick={() => handleViewMode('list')}
+            >
+              <List aria-hidden size={15} />
+            </button>
           </div>
         </div>
       )}
 
       {moviesQuery.isSuccess && (
-        <MovieList
-          movies={sortMovies(movies, sortBy)}
-          slug={slug}
-          participantId={participant?.participantId ?? null}
-          participantPseudo={participant?.pseudo ?? null}
-          isFinished={isFinished}
-          isHost={!!event.isHost}
-          onActionError={handleActionError}
-          onVote={handleVote}
-          onRemove={handleRemove}
-          refresh={refreshAll}
-          participantAvatars={participantAvatars}
-        />
+        <div className={viewMode === 'list' ? styles.movieListBleed : undefined}>
+          <MovieList
+            movies={sortMovies(movies, sortBy)}
+            slug={slug}
+            participantId={participant?.participantId ?? null}
+            participantPseudo={participant?.pseudo ?? null}
+            isFinished={isFinished}
+            isHost={!!event.isHost}
+            onActionError={handleActionError}
+            onVote={handleVote}
+            onRemove={handleRemove}
+            refresh={refreshAll}
+            participantAvatars={participantAvatars}
+            participantAvatarsByPseudo={participantAvatarsByPseudo}
+            viewMode={viewMode}
+          />
+        </div>
       )}
     </section>
   );

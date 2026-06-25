@@ -425,6 +425,9 @@
       sortTmdbVote: 'Note',
       sortDuration: 'Dur\u00e9e',
       sortAddedAt: 'Ordre d\u2019ajout',
+      viewToggleAria: 'Mode d\u2019affichage',
+      viewGridAria: 'Affichage grille',
+      viewListAria: 'Affichage liste',
     },
     pitchNote: {
       addButton: 'Ajouter une note',
@@ -481,6 +484,8 @@
       showMoreAria: 'Afficher {{count}} plateforme(s) supplémentaire(s)',
       showLessAria: 'Réduire la liste des plateformes',
       emptyLabel: 'Pas en streaming',
+      modalTitle: 'Où regarder',
+      openModalAria: 'Voir où regarder « {{title}} »',
     },
   },
 

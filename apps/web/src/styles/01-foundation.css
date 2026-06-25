@@ -256,6 +256,18 @@
   border: 0;
 }
 
+svg.lucide {
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.icon-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  line-height: 1;
+}
+
 html {
   overflow-x: clip;
   scrollbar-gutter: stable;
@@ -286,7 +298,7 @@ body {
 
 /* Détail soirée — colonne un peu plus large, toujours centrée */
 .page.page-event {
-  max-width: min(48rem, 100%);
+  max-width: min(52rem, 100%);
 }
 
 /* Utilitaire : occuper l'espace vertical pour que le swap skeleton → contenu

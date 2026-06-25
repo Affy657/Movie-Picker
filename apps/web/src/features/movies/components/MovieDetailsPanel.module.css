@@ -31,24 +31,28 @@
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--color-bg) 60%, transparent);
   border: 1px solid var(--color-border-subtle);
-  font-size: var(--font-size-sm);
+  font-size: var(--details-font-size, var(--font-size-sm));
   color: var(--color-text);
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: var(--details-gap, 0.45rem);
 }
 
 .tagline {
   margin: 0;
   font-style: italic;
   color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
+  font-size: var(--tagline-font-size, var(--font-size-sm));
 }
 
 .overview {
   margin: 0;
   line-height: var(--leading-base);
   color: var(--color-text);
+  display: -webkit-box;
+  -webkit-line-clamp: var(--overview-clamp, 99);
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .factList {
@@ -57,8 +61,8 @@
   list-style: none;
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 0.3rem 0.75rem;
-  font-size: var(--font-size-xs);
+  gap: var(--fact-row-gap, 0.25rem) var(--fact-col-gap, 0.65rem);
+  font-size: var(--fact-font-size, var(--font-size-xs));
 }
 
 .factLabel {
@@ -90,10 +94,15 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  padding: 0;
+  background: none;
+  border: none;
+  font-family: inherit;
   font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--color-primary);
   text-decoration: none;
+  cursor: pointer;
   transition: opacity var(--duration-base) var(--ease-default);
 }
 
