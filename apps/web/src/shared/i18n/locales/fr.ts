@@ -481,6 +481,8 @@
       showMoreAria: 'Afficher {{count}} plateforme(s) supplémentaire(s)',
       showLessAria: 'Réduire la liste des plateformes',
       emptyLabel: 'Pas en streaming',
+      modalTitle: 'Où regarder',
+      openModalAria: 'Voir où regarder « {{title}} »',
     },
   },
 

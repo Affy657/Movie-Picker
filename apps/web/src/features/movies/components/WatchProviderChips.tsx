@@ -5,39 +5,8 @@ import type { WatchProviderOffer } from '@/shared/types/movie';
 import { useTranslation } from '@/shared/i18n';
 import type { TranslationKey } from '@/shared/i18n/t';
 import { isSafeTmdbWatchPageUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
+import { isSafeTmdbLogoUrl, tmdbLogoSrcForUi } from '@/shared/utils/tmdbLogo';
 import styles from './WatchProviderChips.module.css';
-
-function toAbsoluteTmdbLogoUrl(raw: string): string {
-  const t = raw.trim();
-  if (!t) return t;
-  if (t.startsWith('https://image.tmdb.org')) return t;
-  if (t.startsWith('http://image.tmdb.org')) return `https://${t.slice(7)}`;
-  if (t.startsWith('//')) return `https:${t}`;
-  if (t.startsWith('/')) return `https://image.tmdb.org${t}`;
-  return t;
-}
-
-function isSafeTmdbLogoUrl(url: string | null): url is string {
-  if (!url) return false;
-  try {
-    const u = new URL(toAbsoluteTmdbLogoUrl(url));
-    return u.protocol === 'https:' && u.hostname === 'image.tmdb.org';
-  } catch {
-    return false;
-  }
-}
-
-function tmdbLogoSrcForUi(url: string): string {
-  const abs = toAbsoluteTmdbLogoUrl(url);
-  try {
-    const u = new URL(abs);
-    if (u.hostname !== 'image.tmdb.org') return abs;
-    u.pathname = u.pathname.replace(/\/t\/p\/w\d+\//i, '/t/p/w154/');
-    return u.toString();
-  } catch {
-    return abs;
-  }
-}
 
 function monetizationLabel(
   t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
@@ -55,10 +24,10 @@ function monetizationLabel(
   }
 }
 
-const TYPE_ORDER = ['flatrate', 'rent', 'buy'] as const;
+export const TYPE_ORDER = ['flatrate', 'rent', 'buy'] as const;
 const KNOWN_TYPES = new Set<string>(TYPE_ORDER);
 
-function ModeIcon({ type, size }: Readonly<{ type: string; size: number }>) {
+export function ModeIcon({ type, size }: Readonly<{ type: string; size: number }>) {
   switch (type) {
     case 'flatrate':
       return <PlayCircle aria-hidden size={size} />;

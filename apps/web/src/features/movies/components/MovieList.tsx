@@ -1,11 +1,15 @@
-import { memo, useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { memo, useCallback, useEffect, useId, useRef, useState } from 'react';
 import clsx from 'clsx';
 import {
   Check,
+  ChevronDown,
+  ChevronUp,
   ExternalLink,
   Eye,
   Film,
+  MessageSquarePlus,
   MoreVertical,
+  Quote,
   ThumbsDown,
   ThumbsUp,
   Trash2,
@@ -13,12 +17,12 @@ import {
 } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
 import EmptyState from '@/shared/components/EmptyState';
+import Tooltip from '@/shared/components/Tooltip';
 import type { MovieData } from '@/shared/types/movie';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
 import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
 import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
-import { isSafeTmdbWatchPageUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
 import {
   deleteMoviePitchNote,
   markMovieAsSeen,
@@ -28,16 +32,18 @@ import {
 import { othersAlreadySeenHint } from '@/features/movies/utils/seenHint';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
-import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
-import {
-  MovieDetailsToggle,
-  MovieDetailsContent,
-} from '@/features/movies/components/MovieDetailsPanel';
+import { MovieDetailsContent } from '@/features/movies/components/MovieDetailsPanel';
+import { ModeIcon, TYPE_ORDER } from '@/features/movies/components/WatchProviderChips';
+import WatchProvidersModal from '@/features/movies/components/WatchProvidersModal';
 import TmdbAttribution from '@/features/movies/components/TmdbAttribution';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import styles from './MovieList.module.css';
 
 type Translate = (key: TranslationKey, vars?: Record<string, string | number>) => string;
+
+const PITCH_MAX = 140;
+const NOTE_PREVIEW_THRESHOLD = 38;
+const KNOWN_PROVIDER_TYPES = new Set<string>(TYPE_ORDER);
 
 interface MovieListProps {
   movies: MovieData[];
@@ -51,49 +57,46 @@ interface MovieListProps {
   refresh: () => void;
   onActionError: (message: string) => void;
   participantAvatars?: Record<string, string>;
+  participantAvatarsByPseudo?: Record<string, string>;
+  viewMode?: 'grid' | 'list';
 }
 
-const PITCH_MAX = 140;
-
-interface ProposerNoteSectionProps {
+interface MovieNoteProps {
   movieId: string;
   slug: string;
   pitchNote?: string | null;
-  proposerAvatarId: string;
-  proposerPseudo: string;
   isMine: boolean;
-  isFinished: boolean;
   participantId: string | null;
+  editing: boolean;
+  onEditingChange: (editing: boolean) => void;
   refresh: () => void;
   onActionError: (message: string) => void;
   t: Translate;
 }
 
-function ProposerNoteSection({
+function MovieNote({
   movieId,
   slug,
   pitchNote,
-  proposerAvatarId,
-  proposerPseudo,
   isMine,
-  isFinished,
   participantId,
+  editing,
+  onEditingChange,
   refresh,
   onActionError,
   t,
-}: Readonly<ProposerNoteSectionProps>) {
-  const [editing, setEditing] = useState(false);
+}: Readonly<MovieNoteProps>) {
   const [draft, setDraft] = useState('');
   const [pending, setPending] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const startEdit = () => {
-    setDraft(pitchNote ?? '');
-    setEditing(true);
-  };
-
   useEffect(() => {
-    if (editing) textareaRef.current?.focus();
+    if (editing) {
+      setDraft(pitchNote ?? '');
+      textareaRef.current?.focus();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editing]);
 
   const handleSave = async () => {
@@ -101,7 +104,7 @@ function ProposerNoteSection({
     const trimmed = draft.trim();
     if (trimmed.length > PITCH_MAX) return;
     if (!trimmed && pitchNote == null) {
-      setEditing(false);
+      onEditingChange(false);
       return;
     }
     setPending(true);
@@ -111,7 +114,7 @@ function ProposerNoteSection({
       } else {
         await deleteMoviePitchNote(slug, movieId, participantId);
       }
-      setEditing(false);
+      onEditingChange(false);
       refresh();
     } catch {
       onActionError(t('movies.pitchNote.saveError'));
@@ -122,103 +125,196 @@ function ProposerNoteSection({
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void handleSave();
-    if (e.key === 'Escape') setEditing(false);
+    if (e.key === 'Escape') onEditingChange(false);
   };
 
-  const avatarNode = (
-    <span className={styles.proposerAvatarWrap}>
-      <Avatar avatarId={proposerAvatarId} size="xs" />
-    </span>
+  if (editing) {
+    const over = draft.trim().length > PITCH_MAX;
+    return (
+      <div className={styles.noteEditor}>
+        <textarea
+          ref={textareaRef}
+          className={styles.noteTextarea}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={handleKeyDown}
+          maxLength={PITCH_MAX}
+          rows={2}
+          placeholder={t('movies.pitchNote.placeholder')}
+          disabled={pending}
+        />
+        <div className={styles.noteEditorFooter}>
+          <span className={clsx(styles.noteCharCount, over && styles.noteCharCountOver)}>
+            {t('movies.pitchNote.charCount', { count: draft.trim().length })}
+          </span>
+          <div className={styles.noteEditorActions}>
+            <button
+              type="button"
+              className={clsx(styles.noteBtn, styles.noteBtnGhost)}
+              onClick={() => onEditingChange(false)}
+              disabled={pending}
+            >
+              <X aria-hidden size={13} />
+              {t('movies.pitchNote.cancelButton')}
+            </button>
+            <button
+              type="button"
+              className={clsx(styles.noteBtn, styles.noteBtnPrimary)}
+              onClick={() => void handleSave()}
+              disabled={pending || over}
+            >
+              <Check aria-hidden size={13} />
+              {t('movies.pitchNote.saveButton')}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!pitchNote) return null;
+
+  const textNode = (
+    <span className={clsx(styles.noteText, !expanded && styles.noteTextClamp)}>{pitchNote}</span>
   );
 
-  const showBubble = editing || pitchNote || (!isFinished && isMine);
-  if (!showBubble) {
+  if (isMine) {
     return (
-      <div className={styles.proposerRow}>
-        {avatarNode}
-        <span className={styles.proposerName}>{proposerPseudo}</span>
+      <div className={styles.note}>
+        <Quote aria-hidden size={13} className={styles.noteQuote} />
+        <button
+          type="button"
+          className={styles.noteEditTrigger}
+          onClick={() => onEditingChange(true)}
+        >
+          {textNode}
+        </button>
       </div>
     );
   }
 
-  let displayNote: ReactNode;
-  if (pitchNote && !isFinished && isMine) {
-    displayNote = (
-      <button
-        type="button"
-        className={clsx(styles.bubble, styles.bubbleClickable)}
-        onClick={startEdit}
-        disabled={pending}
-      >
-        {pitchNote}
-      </button>
-    );
-  } else if (pitchNote) {
-    displayNote = <div className={styles.bubble}>{pitchNote}</div>;
-  } else {
-    displayNote = (
-      <button type="button" className={clsx(styles.bubble, styles.bubbleAdd)} onClick={startEdit}>
-        {t('movies.pitchNote.addButton')}
-      </button>
-    );
-  }
-
+  const showExpand = pitchNote.length > NOTE_PREVIEW_THRESHOLD;
   return (
-    <div className={styles.proposerRow}>
-      {avatarNode}
-      <div className={styles.proposerBubbleCol}>
-        <span className={styles.proposerName}>{proposerPseudo}</span>
-        {editing ? (
-          <>
-            <textarea
-              ref={textareaRef}
-              className={styles.pitchTextarea}
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={handleKeyDown}
-              maxLength={PITCH_MAX}
-              rows={2}
-              placeholder={t('movies.pitchNote.placeholder')}
-              disabled={pending}
-            />
-            <div className={styles.pitchEditorFooter}>
-              <span
-                className={clsx(
-                  styles.pitchCharCount,
-                  draft.trim().length > PITCH_MAX && styles.pitchCharCountOver
-                )}
-              >
-                {t('movies.pitchNote.charCount', { count: draft.trim().length })}
-              </span>
-              <div className={styles.pitchEditorActions}>
-                <button
-                  type="button"
-                  className={clsx(styles.pitchBtn, styles.pitchBtnGhost)}
-                  onClick={() => setEditing(false)}
-                  disabled={pending}
-                >
-                  <X aria-hidden size={13} />
-                  {t('movies.pitchNote.cancelButton')}
-                </button>
-                <button
-                  type="button"
-                  className={clsx(styles.pitchBtn, styles.pitchBtnPrimary)}
-                  onClick={() => void handleSave()}
-                  disabled={pending || draft.trim().length > PITCH_MAX}
-                >
-                  <Check aria-hidden size={13} />
-                  {t('movies.pitchNote.saveButton')}
-                </button>
-              </div>
-            </div>
-          </>
-        ) : (
-          displayNote
-        )}
-      </div>
+    <div className={styles.note}>
+      <Quote aria-hidden size={13} className={styles.noteQuote} />
+      {textNode}
+      {showExpand && (
+        <button
+          type="button"
+          className={styles.noteExpand}
+          aria-expanded={expanded}
+          aria-label={expanded ? t('movies.details.toggleHide') : t('movies.details.toggleShow')}
+          onClick={() => setExpanded((v) => !v)}
+        >
+          {expanded ? <ChevronUp aria-hidden size={14} /> : <ChevronDown aria-hidden size={14} />}
+        </button>
+      )}
     </div>
   );
 }
+
+function VoteBar({
+  m,
+  onVote,
+  t,
+}: Readonly<{
+  m: MovieData;
+  onVote: (movieId: string, value: 1 | -1) => Promise<void>;
+  t: Translate;
+}>) {
+  return (
+    <div className={styles.votes} role="group" aria-label={m.title}>
+      <button
+        type="button"
+        className={clsx(styles.voteBtn, m.myVote === 1 && styles.voteActive)}
+        onClick={() => void onVote(m.id, 1)}
+        aria-pressed={m.myVote === 1}
+        aria-label={
+          m.myVote === 1
+            ? t('movies.list.voteUpRemoveAria', { title: m.title })
+            : `${t('movies.list.voteUp')} ${m.title}`
+        }
+      >
+        <ThumbsUp aria-hidden size={16} />
+        <span className={styles.voteCount}>{m.up}</span>
+      </button>
+      <button
+        type="button"
+        className={clsx(styles.voteBtn, m.myVote === -1 && styles.voteActive)}
+        onClick={() => void onVote(m.id, -1)}
+        aria-pressed={m.myVote === -1}
+        aria-label={
+          m.myVote === -1
+            ? t('movies.list.voteDownRemoveAria', { title: m.title })
+            : `${t('movies.list.voteDown')} ${m.title}`
+        }
+      >
+        <ThumbsDown aria-hidden size={16} />
+        <span className={styles.voteCount}>{m.down}</span>
+      </button>
+    </div>
+  );
+}
+
+function SeenButton({
+  m,
+  iMarkedSeen,
+  seenPending,
+  onToggle,
+  others,
+  othersHint,
+  avatarsByPseudo,
+  t,
+}: Readonly<{
+  m: MovieData;
+  iMarkedSeen: boolean;
+  seenPending: boolean;
+  onToggle: () => void;
+  others: string[];
+  othersHint: string | null;
+  avatarsByPseudo?: Record<string, string>;
+  t: Translate;
+}>) {
+  return (
+    <span className={styles.seenWrap}>
+      <button
+        type="button"
+        className={clsx(styles.seenBtn, iMarkedSeen && styles.seenActive)}
+        onClick={onToggle}
+        disabled={seenPending}
+        aria-pressed={iMarkedSeen}
+        aria-label={
+          iMarkedSeen
+            ? t('movies.seen.unmarkAria', { title: m.title })
+            : t('movies.seen.markAria', { title: m.title })
+        }
+        title={t('movies.seen.neutralTooltip')}
+      >
+        <Eye aria-hidden size={15} />
+        <span className={styles.seenLabel}>
+          {m.seenCount
+            ? t('movies.seen.labelWithCount', { count: m.seenCount })
+            : t('movies.seen.label')}
+        </span>
+      </button>
+      {othersHint && others.length > 0 && (
+        <Tooltip label={othersHint}>
+          <span className={styles.seenAvatars} role="img" aria-label={othersHint}>
+            {others.slice(0, 3).map((pseudo) => (
+              <Avatar
+                key={pseudo}
+                avatarId={avatarsByPseudo?.[pseudo] ?? ''}
+                size="xs"
+                className={styles.seenAvatar}
+              />
+            ))}
+          </span>
+        </Tooltip>
+      )}
+    </span>
+  );
+}
+
 
 interface MovieCardProps {
   movie: MovieData;
@@ -233,126 +329,9 @@ interface MovieCardProps {
   onActionError: (message: string) => void;
   t: Translate;
   participantAvatars?: Record<string, string>;
+  participantAvatarsByPseudo?: Record<string, string>;
   eager?: boolean;
-}
-
-function MovieCardMeta({
-  m,
-  runtimeLabel,
-  voteLabel,
-  safeTmdbWatchUrl,
-  seenHint,
-  t,
-}: Readonly<{
-  m: MovieData;
-  runtimeLabel: string | null;
-  voteLabel: string | null;
-  safeTmdbWatchUrl: string | null;
-  seenHint: string | null;
-  t: Translate;
-}>) {
-  const providers = m.watchProviders ?? [];
-  return (
-    <>
-      <p className={styles.metaLine}>
-        {m.year ? <span className={styles.metaItem}>{m.year}</span> : null}
-        {runtimeLabel ? (
-          <span className={styles.metaItem} title={t('movies.list.runtimeTitle')}>
-            {runtimeLabel}
-          </span>
-        ) : null}
-        {voteLabel ? (
-          <span
-            className={clsx(styles.metaItem, 'tmdb-vote')}
-            title={t('movies.list.tmdbVoteTitle')}
-          >
-            {voteLabel}
-          </span>
-        ) : null}
-      </p>
-      {providers.length > 0 ? (
-        <WatchProviderChips
-          providers={providers}
-          variant="compact"
-          className={styles.cardProviders}
-          watchPageUrl={safeTmdbWatchUrl}
-          maxVisible={3}
-        />
-      ) : (
-        <p className={styles.providersEmpty}>{t('movies.watchProviders.emptyLabel')}</p>
-      )}
-      {seenHint ? <p className={styles.seenHint}>{seenHint}</p> : null}
-    </>
-  );
-}
-
-function MovieCardActions({
-  m,
-  onVote,
-  iMarkedSeen,
-  seenPending,
-  onToggleSeen,
-  t,
-}: Readonly<{
-  m: MovieData;
-  onVote: (movieId: string, value: 1 | -1) => Promise<void>;
-  iMarkedSeen: boolean;
-  seenPending: boolean;
-  onToggleSeen: () => void;
-  t: Translate;
-}>) {
-  return (
-    <div className={styles.actions} role="group" aria-label={m.title}>
-      <button
-        type="button"
-        className={clsx(styles.actionBtn, m.myVote === 1 && styles.voteUpActive)}
-        onClick={() => void onVote(m.id, 1)}
-        aria-pressed={m.myVote === 1}
-        aria-label={
-          m.myVote === 1
-            ? t('movies.list.voteUpRemoveAria', { title: m.title })
-            : `${t('movies.list.voteUp')} ${m.title}`
-        }
-      >
-        <ThumbsUp aria-hidden size={16} />
-        <span className={styles.actionCount}>{m.up}</span>
-      </button>
-      <button
-        type="button"
-        className={clsx(styles.actionBtn, m.myVote === -1 && styles.voteDownActive)}
-        onClick={() => void onVote(m.id, -1)}
-        aria-pressed={m.myVote === -1}
-        aria-label={
-          m.myVote === -1
-            ? t('movies.list.voteDownRemoveAria', { title: m.title })
-            : `${t('movies.list.voteDown')} ${m.title}`
-        }
-      >
-        <ThumbsDown aria-hidden size={16} />
-        <span className={styles.actionCount}>{m.down}</span>
-      </button>
-      <button
-        type="button"
-        className={clsx(styles.actionBtn, iMarkedSeen && styles.seenActive)}
-        onClick={onToggleSeen}
-        disabled={seenPending}
-        aria-pressed={iMarkedSeen}
-        aria-label={
-          iMarkedSeen
-            ? t('movies.seen.unmarkAria', { title: m.title })
-            : t('movies.seen.markAria', { title: m.title })
-        }
-        title={t('movies.seen.neutralTooltip')}
-      >
-        <Eye aria-hidden size={16} />
-        <span className={styles.actionLabel}>
-          {m.seenCount
-            ? t('movies.seen.labelWithCount', { count: m.seenCount })
-            : t('movies.seen.label')}
-        </span>
-      </button>
-    </div>
-  );
+  viewMode?: 'grid' | 'list';
 }
 
 export const MovieCard = memo(function MovieCard({
@@ -368,23 +347,37 @@ export const MovieCard = memo(function MovieCard({
   onActionError,
   t,
   participantAvatars,
+  participantAvatarsByPseudo,
   eager = false,
+  viewMode = 'grid',
 }: MovieCardProps) {
-  const isMine = participantId && getParticipantId(m) === participantId;
+  const isMine = !!participantId && getParticipantId(m) === participantId;
   const proposerAvatarId = participantAvatars?.[getParticipantId(m)] ?? '';
   const canRemove = !isFinished && (isMine || isHost);
+  const canAct = !isFinished && !!participantId;
   const iMarkedSeen = !!(participantPseudo && m.seenByPseudos?.includes(participantPseudo));
-  const seenHint = othersAlreadySeenHint(m.seenByPseudos, participantPseudo, t);
+  const others = (m.seenByPseudos ?? []).filter((p) => p !== participantPseudo);
+  const othersHint = othersAlreadySeenHint(m.seenByPseudos, participantPseudo, t);
   const voteLabel = formatTmdbVote(m.voteAverage);
   const runtimeLabel = formatRuntimeMinutes(m.runtimeMinutes);
   const posterSrc = posterImageSrc(m.posterPath);
   const posterSrcSet = tmdbPosterSrcSetForList(posterSrc);
-  const safeTmdbWatchUrl = isSafeTmdbWatchPageUrl(m.tmdbWatchPageUrl) ? m.tmdbWatchPageUrl : null;
+  const providers = m.watchProviders ?? [];
+  const providerGroups = [
+    ...TYPE_ORDER.map((type) => ({
+      type,
+      count: providers.filter((p) => p.type === type).length,
+    })).filter((g) => g.count > 0),
+    { type: 'other', count: providers.filter((p) => !KNOWN_PROVIDER_TYPES.has(p.type)).length },
+  ].filter((g) => g.count > 0);
 
   const [seenPending, setSeenPending] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [providersOpen, setProvidersOpen] = useState(false);
+  const [noteEditing, setNoteEditing] = useState(false);
   const detailsPanelId = useId();
   const hasDetails = m.tmdbId > 0;
+  const showAddNote = canAct && isMine && !m.pitchNote && !noteEditing;
 
   const handleToggleSeen = async () => {
     if (!participantId || seenPending) return;
@@ -403,14 +396,117 @@ export const MovieCard = memo(function MovieCard({
     }
   };
 
+  const panelContent = (
+    <>
+      <div className={styles.titleBlock}>
+        <h3 className={styles.title}>{m.title}</h3>
+        <p className={styles.meta}>
+          {m.year ? <span>{m.year}</span> : null}
+          {runtimeLabel ? (
+            <span title={t('movies.list.runtimeTitle')}>{runtimeLabel}</span>
+          ) : null}
+          {voteLabel ? (
+            <span title={t('movies.list.tmdbVoteTitle')}>{voteLabel}</span>
+          ) : null}
+          {providerGroups.length > 0 && (
+            <span>
+              <button
+                type="button"
+                className={styles.metaProviders}
+                onClick={() => setProvidersOpen(true)}
+                aria-label={t('movies.watchProviders.openModalAria', { title: m.title })}
+              >
+                {providerGroups.map((g) => (
+                  <span key={g.type} className={styles.metaProvGroup}>
+                    <ModeIcon type={g.type} size={11} />
+                    <span>{g.count}</span>
+                  </span>
+                ))}
+              </button>
+            </span>
+          )}
+        </p>
+      </div>
+
+      {canAct && (
+        <div className={styles.actionRow}>
+          <VoteBar m={m} onVote={onVote} t={t} />
+          <SeenButton
+            m={m}
+            iMarkedSeen={iMarkedSeen}
+            seenPending={seenPending}
+            onToggle={() => void handleToggleSeen()}
+            others={others}
+            othersHint={othersHint}
+            avatarsByPseudo={participantAvatarsByPseudo}
+            t={t}
+          />
+        </div>
+      )}
+
+      {!canAct && othersHint && <p className={styles.seenHintText}>{othersHint}</p>}
+
+      {(m.pitchNote || noteEditing) && (
+        <MovieNote
+          movieId={m.id}
+          slug={slug}
+          pitchNote={m.pitchNote}
+          isMine={isMine}
+          participantId={participantId}
+          editing={noteEditing}
+          onEditingChange={setNoteEditing}
+          refresh={refresh}
+          onActionError={onActionError}
+          t={t}
+        />
+      )}
+
+      <div className={styles.footRow}>
+        <span className={styles.proposer}>
+          <Avatar avatarId={proposerAvatarId} size="xs" />
+          <span className={styles.proposerName}>{m.proposerPseudo}</span>
+          {showAddNote && (
+            <button
+              type="button"
+              className={styles.addNote}
+              onClick={() => setNoteEditing(true)}
+              aria-label={t('movies.pitchNote.addButton')}
+              title={t('movies.pitchNote.addButton')}
+            >
+              <MessageSquarePlus aria-hidden size={15} />
+            </button>
+          )}
+        </span>
+        {hasDetails && (
+          <button
+            type="button"
+            className={styles.detailsToggle}
+            aria-expanded={detailsOpen}
+            aria-controls={detailsPanelId}
+            onClick={() => setDetailsOpen((v) => !v)}
+          >
+            <span>
+              {detailsOpen ? t('movies.details.toggleHide') : t('movies.details.toggleShow')}
+            </span>
+            {detailsOpen ? (
+              <ChevronUp aria-hidden size={14} />
+            ) : (
+              <ChevronDown aria-hidden size={14} />
+            )}
+          </button>
+        )}
+      </div>
+    </>
+  );
+
   return (
-    <li className={styles.card}>
-      <div className={styles.posterCol}>
+    <li className={clsx(styles.card, viewMode === 'list' && styles.cardList)}>
+      <div className={styles.posterRegion}>
         {posterSrc ? (
           <img
             src={posterSrc}
             srcSet={posterSrcSet}
-            sizes="(max-width: 479px) 80px, 120px"
+            sizes="(max-width: 479px) 100vw, 220px"
             alt=""
             className={styles.poster}
             width={120}
@@ -420,80 +516,62 @@ export const MovieCard = memo(function MovieCard({
             decoding="async"
           />
         ) : (
-          <div className={`${styles.poster} ${styles.posterPlaceholder}`}>Affiche</div>
+          <div className={styles.posterPlaceholder} aria-hidden>
+            {t('movies.search.posterPlaceholder')}
+          </div>
         )}
-        {hasDetails ? (
-          <MovieDetailsToggle
-            open={detailsOpen}
-            onToggle={() => setDetailsOpen((v) => !v)}
-            panelId={detailsPanelId}
-            className={styles.detailsToggle}
-          />
-        ) : null}
-      </div>
-      <div className={styles.info}>
-        <div className={styles.titleRow}>
-          <h3 className={styles.title}>
-            {m.title}
-            {m.mediaType === 'tv' && (
-              <span className={styles.mediaTypeBadge}>{t('movies.list.tvBadge')}</span>
-            )}
-          </h3>
-          {m.tmdbId > 0 || canRemove ? (
+
+        {m.mediaType === 'tv' && <span className={styles.tvBadge}>{t('movies.list.tvBadge')}</span>}
+
+        {(hasDetails || canRemove) && (
+          <div className={styles.kebabSlot}>
             <CardKebab
               title={m.title}
               year={m.year}
               tmdbId={m.tmdbId}
               mediaType={m.mediaType}
-              isMine={!!isMine}
+              isMine={isMine}
               isHost={isHost}
-              canRemove={!!canRemove}
+              canRemove={canRemove}
               onRemove={() => void onRemove(m.id)}
               t={t}
             />
-          ) : null}
-        </div>
-        <MovieCardMeta
-          m={m}
-          runtimeLabel={runtimeLabel}
-          voteLabel={voteLabel}
-          safeTmdbWatchUrl={safeTmdbWatchUrl}
-          seenHint={seenHint}
-          t={t}
-        />
-        {!isFinished && participantId && (
-          <MovieCardActions
-            m={m}
-            onVote={onVote}
-            iMarkedSeen={iMarkedSeen}
-            seenPending={seenPending}
-            onToggleSeen={() => void handleToggleSeen()}
-            t={t}
-          />
+          </div>
         )}
-        <ProposerNoteSection
-          movieId={m.id}
-          slug={slug}
-          pitchNote={m.pitchNote}
-          proposerAvatarId={proposerAvatarId}
-          proposerPseudo={m.proposerPseudo}
-          isMine={!!isMine}
-          isFinished={isFinished}
-          participantId={participantId}
-          refresh={refresh}
-          onActionError={onActionError}
-          t={t}
-        />
+
+        {viewMode !== 'list' && <div className={styles.panel}>{panelContent}</div>}
       </div>
-      {hasDetails ? (
-        <MovieDetailsContent
-          tmdbId={m.tmdbId}
-          mediaType={m.mediaType}
-          open={detailsOpen}
-          panelId={detailsPanelId}
-          className={styles.detailsPanel}
+
+      {viewMode === 'list' && <div className={styles.listContent}>{panelContent}</div>}
+
+      {hasDetails && detailsOpen && (
+        <div className={styles.detailsOverlay}>
+          <button
+            type="button"
+            className={styles.detailsClose}
+            onClick={() => setDetailsOpen(false)}
+          >
+            <ChevronUp aria-hidden size={14} />
+            {t('movies.details.toggleHide')}
+          </button>
+          <MovieDetailsContent
+            tmdbId={m.tmdbId}
+            mediaType={m.mediaType}
+            open={detailsOpen}
+            panelId={detailsPanelId}
+          />
+        </div>
+      )}
+
+      {providers.length > 0 && (
+        <WatchProvidersModal
+          open={providersOpen}
+          movieTitle={m.title}
+          providers={providers}
+          watchPageUrl={m.tmdbWatchPageUrl}
+          onClose={() => setProvidersOpen(false)}
         />
-      ) : null}
+      )}
     </li>
   );
 });
@@ -653,6 +731,8 @@ export default function MovieList({
   refresh,
   onActionError,
   participantAvatars,
+  participantAvatarsByPseudo,
+  viewMode = 'grid',
 }: Readonly<MovieListProps>) {
   const { t } = useTranslation();
 
@@ -668,7 +748,7 @@ export default function MovieList({
 
   return (
     <div>
-      <ul className={styles.list}>
+      <ul className={clsx(styles.list, viewMode === 'list' && styles.listModeGrid)}>
         {movies.map((m, i) => (
           <MovieCard
             key={m.id}
@@ -678,12 +758,14 @@ export default function MovieList({
             participantPseudo={participantPseudo}
             isFinished={isFinished}
             isHost={isHost}
-            eager={i < 2}
+            eager={i < 3}
             onVote={onVote}
             onRemove={onRemove}
             refresh={refresh}
             onActionError={onActionError}
             participantAvatars={participantAvatars}
+            participantAvatarsByPseudo={participantAvatarsByPseudo}
+            viewMode={viewMode}
             t={t}
           />
         ))}

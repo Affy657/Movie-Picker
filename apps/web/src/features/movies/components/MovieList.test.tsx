@@ -213,7 +213,7 @@ describe('MovieList', () => {
         onActionError={vi.fn()}
       />
     );
-    await userEvent.click(screen.getByText(/Ajouter une note/i));
+    await userEvent.click(screen.getByRole('button', { name: /Ajouter une note/i }));
     expect(screen.getByRole('textbox')).toBeInTheDocument();
   });
 
@@ -233,7 +233,7 @@ describe('MovieList', () => {
         onActionError={vi.fn()}
       />
     );
-    await userEvent.click(screen.getByText(/Ajouter une note/i));
+    await userEvent.click(screen.getByRole('button', { name: /Ajouter une note/i }));
     await userEvent.type(screen.getByRole('textbox'), 'Super film');
     await userEvent.click(screen.getByText(/Enregistrer/i));
     expect(setMoviePitchNote).toHaveBeenCalledWith('test-slug', 'm1', 'p1', 'Super film');

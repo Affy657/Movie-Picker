@@ -1,3 +1,4 @@
+using MoviePicker.Api.Application.Posters;
 using MoviePicker.Api.Application.Ports;
 
 namespace MoviePicker.Api.Infrastructure.Posters;
@@ -12,7 +13,10 @@ internal static class PosterRemoteFetch
         int maxBytes,
         CancellationToken ct)
     {
-        using var res = await http.GetAsync(sourceUrl, HttpCompletionOption.ResponseHeadersRead, ct);
+        var fetchUrl = TmdbPosterUrlNormalizer.UpgradeTmdbSize(
+            sourceUrl,
+            TmdbPosterUrlNormalizer.PreferredPosterSize);
+        using var res = await http.GetAsync(fetchUrl, HttpCompletionOption.ResponseHeadersRead, ct);
         if (!res.IsSuccessStatusCode)
             return null;
 

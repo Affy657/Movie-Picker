@@ -471,6 +471,8 @@ export const en: Locale = {
       showMoreAria: 'Show {{count}} more platform(s)',
       showLessAria: 'Collapse the platforms list',
       emptyLabel: 'Not streaming',
+      modalTitle: 'Where to watch',
+      openModalAria: 'See where to watch "{{title}}"',
     },
   },
 

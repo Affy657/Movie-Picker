@@ -1,0 +1,78 @@
+.dialog {
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-lg);
+  width: min(420px, calc(100vw - 2rem));
+  max-height: min(80dvh, 600px);
+  overflow: hidden;
+}
+
+.dialog:not([open]) {
+  display: none;
+}
+
+.dialog::backdrop {
+  background: var(--overlay-backdrop);
+  backdrop-filter: blur(2px);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem 0.25rem;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.closeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    background var(--duration-base) var(--ease-default),
+    color var(--duration-base) var(--ease-default);
+}
+
+.closeBtn:hover,
+.closeBtn:focus-visible {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+  outline: none;
+}
+
+.subtitle {
+  margin: 0;
+  padding: 0 1.25rem;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.body {
+  padding: 1rem 1.25rem 1.25rem;
+  overflow-y: auto;
+}
+
+.empty {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-style: italic;
+  color: var(--color-text-muted);
+}

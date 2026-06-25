@@ -286,7 +286,7 @@ body {
 
 /* Détail soirée — colonne un peu plus large, toujours centrée */
 .page.page-event {
-  max-width: min(48rem, 100%);
+  max-width: min(52rem, 100%);
 }
 
 /* Utilitaire : occuper l'espace vertical pour que le swap skeleton → contenu
