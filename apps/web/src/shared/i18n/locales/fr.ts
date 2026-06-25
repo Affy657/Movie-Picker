@@ -425,7 +425,7 @@
       sortTmdbVote: 'Note',
       sortDuration: 'Dur\u00e9e',
       sortAddedAt: 'Ordre d\u2019ajout',
-      viewToggleAria: "Mode d\u2019affichage",
+      viewToggleAria: 'Mode d\u2019affichage',
       viewGridAria: 'Affichage grille',
       viewListAria: 'Affichage liste',
     },

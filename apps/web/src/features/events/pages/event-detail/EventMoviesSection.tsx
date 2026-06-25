@@ -79,7 +79,11 @@ export default function EventMoviesSection({
 
   const handleViewMode = (mode: 'grid' | 'list') => {
     setViewMode(mode);
-    try { localStorage.setItem('movies-view', mode); } catch { /* ignore */ }
+    try {
+      localStorage.setItem('movies-view', mode);
+    } catch {
+      /* ignore */
+    }
   };
 
   const handleVote = useCallback(
@@ -153,7 +157,11 @@ export default function EventMoviesSection({
           {movies.length > 1 && (
             <>
               <span className={styles.sortLabel}>{t('movies.list.sortLabel')}</span>
-              <div className={styles.sortPills} role="group" aria-label={t('movies.list.sortLabel')}>
+              <div
+                className={styles.sortPills}
+                role="group"
+                aria-label={t('movies.list.sortLabel')}
+              >
                 {(
                   [
                     { key: 'score', label: t('movies.list.sortScore') },
@@ -175,10 +183,17 @@ export default function EventMoviesSection({
               </div>
             </>
           )}
-          <div className={styles.viewToggle} role="group" aria-label={t('movies.list.viewToggleAria')}>
+          <div
+            className={styles.viewToggle}
+            role="group"
+            aria-label={t('movies.list.viewToggleAria')}
+          >
             <button
               type="button"
-              className={clsx(styles.viewToggleBtn, viewMode === 'grid' && styles.viewToggleBtnActive)}
+              className={clsx(
+                styles.viewToggleBtn,
+                viewMode === 'grid' && styles.viewToggleBtnActive
+              )}
               aria-pressed={viewMode === 'grid'}
               aria-label={t('movies.list.viewGridAria')}
               onClick={() => handleViewMode('grid')}
@@ -187,7 +202,10 @@ export default function EventMoviesSection({
             </button>
             <button
               type="button"
-              className={clsx(styles.viewToggleBtn, viewMode === 'list' && styles.viewToggleBtnActive)}
+              className={clsx(
+                styles.viewToggleBtn,
+                viewMode === 'list' && styles.viewToggleBtnActive
+              )}
               aria-pressed={viewMode === 'list'}
               aria-label={t('movies.list.viewListAria')}
               onClick={() => handleViewMode('list')}
@@ -200,21 +218,21 @@ export default function EventMoviesSection({
 
       {moviesQuery.isSuccess && (
         <div className={viewMode === 'list' ? styles.movieListBleed : undefined}>
-        <MovieList
-          movies={sortMovies(movies, sortBy)}
-          slug={slug}
-          participantId={participant?.participantId ?? null}
-          participantPseudo={participant?.pseudo ?? null}
-          isFinished={isFinished}
-          isHost={!!event.isHost}
-          onActionError={handleActionError}
-          onVote={handleVote}
-          onRemove={handleRemove}
-          refresh={refreshAll}
-          participantAvatars={participantAvatars}
-          participantAvatarsByPseudo={participantAvatarsByPseudo}
-          viewMode={viewMode}
-        />
+          <MovieList
+            movies={sortMovies(movies, sortBy)}
+            slug={slug}
+            participantId={participant?.participantId ?? null}
+            participantPseudo={participant?.pseudo ?? null}
+            isFinished={isFinished}
+            isHost={!!event.isHost}
+            onActionError={handleActionError}
+            onVote={handleVote}
+            onRemove={handleRemove}
+            refresh={refreshAll}
+            participantAvatars={participantAvatars}
+            participantAvatarsByPseudo={participantAvatarsByPseudo}
+            viewMode={viewMode}
+          />
         </div>
       )}
     </section>

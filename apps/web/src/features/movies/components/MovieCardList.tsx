@@ -98,9 +98,7 @@ export const MovieCardList = memo(function MovieCardList({
           {s.runtimeLabel ? (
             <span title={t('movies.list.runtimeTitle')}>{s.runtimeLabel}</span>
           ) : null}
-          {s.voteLabel ? (
-            <span title={t('movies.list.tmdbVoteTitle')}>{s.voteLabel}</span>
-          ) : null}
+          {s.voteLabel ? <span title={t('movies.list.tmdbVoteTitle')}>{s.voteLabel}</span> : null}
         </p>
 
         {s.providers.length > 0 ? (
@@ -116,68 +114,68 @@ export const MovieCardList = memo(function MovieCardList({
         )}
 
         <div className={styles.bottomSection}>
-        {s.canAct && (
-          <div className={styles.actions}>
-            <VoteBar m={m} onVote={onVote} t={t} />
-            <SeenButton
-              m={m}
-              iMarkedSeen={s.iMarkedSeen}
-              seenPending={s.seenPending}
-              onToggle={() => void s.handleToggleSeen()}
-              others={s.others}
-              othersHint={s.othersHint}
-              avatarsByPseudo={participantAvatarsByPseudo}
+          {s.canAct && (
+            <div className={styles.actions}>
+              <VoteBar m={m} onVote={onVote} t={t} />
+              <SeenButton
+                m={m}
+                iMarkedSeen={s.iMarkedSeen}
+                seenPending={s.seenPending}
+                onToggle={() => void s.handleToggleSeen()}
+                others={s.others}
+                othersHint={s.othersHint}
+                avatarsByPseudo={participantAvatarsByPseudo}
+                t={t}
+              />
+            </div>
+          )}
+
+          {!s.canAct && s.othersHint && <p className={styles.seenHint}>{s.othersHint}</p>}
+
+          {(m.pitchNote || s.noteEditing) && (
+            <MovieNote
+              movieId={m.id}
+              slug={slug}
+              pitchNote={m.pitchNote}
+              isMine={s.isMine}
+              participantId={participantId}
+              editing={s.noteEditing}
+              onEditingChange={s.setNoteEditing}
+              refresh={refresh}
+              onActionError={onActionError}
               t={t}
             />
-          </div>
-        )}
+          )}
 
-        {!s.canAct && s.othersHint && <p className={styles.seenHint}>{s.othersHint}</p>}
-
-        {(m.pitchNote || s.noteEditing) && (
-          <MovieNote
-            movieId={m.id}
-            slug={slug}
-            pitchNote={m.pitchNote}
-            isMine={s.isMine}
-            participantId={participantId}
-            editing={s.noteEditing}
-            onEditingChange={s.setNoteEditing}
-            refresh={refresh}
-            onActionError={onActionError}
-            t={t}
-          />
-        )}
-
-        <div className={styles.proposerRow}>
-          <span className={styles.proposer}>
-            <Avatar avatarId={s.proposerAvatarId} size="xs" />
-            <span className={styles.proposerName}>{m.proposerPseudo}</span>
-            {s.showAddNote && (
+          <div className={styles.proposerRow}>
+            <span className={styles.proposer}>
+              <Avatar avatarId={s.proposerAvatarId} size="xs" />
+              <span className={styles.proposerName}>{m.proposerPseudo}</span>
+              {s.showAddNote && (
+                <button
+                  type="button"
+                  className={styles.addNote}
+                  onClick={() => s.setNoteEditing(true)}
+                  aria-label={t('movies.pitchNote.addButton')}
+                  title={t('movies.pitchNote.addButton')}
+                >
+                  <MessageSquarePlus aria-hidden size={15} />
+                </button>
+              )}
+            </span>
+            {s.hasDetails && (
               <button
                 type="button"
-                className={styles.addNote}
-                onClick={() => s.setNoteEditing(true)}
-                aria-label={t('movies.pitchNote.addButton')}
-                title={t('movies.pitchNote.addButton')}
+                className={styles.detailsToggle}
+                aria-haspopup="dialog"
+                aria-expanded={s.detailsOpen}
+                onClick={() => s.setDetailsOpen(true)}
               >
-                <MessageSquarePlus aria-hidden size={15} />
+                <span>{t('movies.details.toggleShow')}</span>
+                <ChevronDown aria-hidden size={14} />
               </button>
             )}
-          </span>
-          {s.hasDetails && (
-            <button
-              type="button"
-              className={styles.detailsToggle}
-              aria-haspopup="dialog"
-              aria-expanded={s.detailsOpen}
-              onClick={() => s.setDetailsOpen(true)}
-            >
-              <span>{t('movies.details.toggleShow')}</span>
-              <ChevronDown aria-hidden size={14} />
-            </button>
-          )}
-        </div>
+          </div>
         </div>
       </div>
 
