@@ -111,7 +111,7 @@ function MovieDetailsBody({ data, onPlayTrailer }: Readonly<MovieDetailsBodyProp
   const { t } = useTranslation();
   const facts: Array<[string, string]> = [];
   const trailerYtId = extractYouTubeId(data.trailerUrl);
-  const safeTrailerUrl = trailerYtId ? `https://www.youtube.com/watch?v=${trailerYtId}` : null;
+  const safeTrailerUrl = trailerYtId ? `https://www.youtube.com/watch?v=${encodeURIComponent(trailerYtId)}` : null;
 
   if (data.director) facts.push([t('movies.details.directorLabel'), data.director]);
   if (data.cast.length > 0)

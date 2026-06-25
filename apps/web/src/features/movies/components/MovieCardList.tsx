@@ -49,7 +49,7 @@ export const MovieCardList = memo(function MovieCardList({
           <>
             <div
               className={styles.posterBackdrop}
-              style={{ backgroundImage: `url("${s.posterSrc}")` }}
+              style={{ backgroundImage: `url("${encodeURI(s.posterSrc)}")` }}
               aria-hidden
             />
             <img

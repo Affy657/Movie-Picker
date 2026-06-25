@@ -14,7 +14,7 @@ import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/post
 import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import type { MovieData } from '@/shared/types/movie';
-import { isSafeTmdbWatchPageUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
+import { safeTmdbWatchUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import TmdbAttribution from '@/features/movies/components/TmdbAttribution';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -763,9 +763,7 @@ export default function AddMovieForm({
               const seenHint = alreadyListed
                 ? othersAlreadySeenHint(alreadyListed.seenByPseudos, participantPseudo, t)
                 : null;
-              const safeTmdbWatchUrl = isSafeTmdbWatchPageUrl(r.tmdbWatchPageUrl)
-                ? r.tmdbWatchPageUrl
-                : null;
+              const safeWatchUrl = safeTmdbWatchUrl(r.tmdbWatchPageUrl);
               return (
                 <li key={r.id} className={styles.resultItem}>
                   <div className={styles.posterWrap}>
@@ -802,7 +800,7 @@ export default function AddMovieForm({
                     <WatchProviderChips
                       providers={providers}
                       variant="compact"
-                      watchPageUrl={safeTmdbWatchUrl}
+                      watchPageUrl={safeWatchUrl}
                     />
                   </div>
                   <div className={styles.resultAction}>

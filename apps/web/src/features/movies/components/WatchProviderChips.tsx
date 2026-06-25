@@ -4,7 +4,7 @@ import { ChevronLeft, Euro, Film, PlayCircle, Tag } from 'lucide-react';
 import type { WatchProviderOffer } from '@/shared/types/movie';
 import { useTranslation } from '@/shared/i18n';
 import type { TranslationKey } from '@/shared/i18n/t';
-import { isSafeTmdbWatchPageUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
+import { safeTmdbWatchUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
 import { isSafeTmdbLogoUrl, tmdbLogoSrcForUi } from '@/shared/utils/tmdbLogo';
 import styles from './WatchProviderChips.module.css';
 
@@ -61,8 +61,7 @@ export default function WatchProviderChips({
   if (!providers.length) return null;
   const compact = variant === 'compact';
   const rootClass = clsx(styles.root, compact && styles.compact, className);
-  const safeWatchHref =
-    watchPageUrl != null && isSafeTmdbWatchPageUrl(watchPageUrl) ? watchPageUrl : null;
+  const safeWatchHref = safeTmdbWatchUrl(watchPageUrl);
 
   const groups = [
     ...TYPE_ORDER.map((type) => ({
