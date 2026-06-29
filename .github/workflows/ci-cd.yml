@@ -1,5 +1,5 @@
 # E2E Playwright : local uniquement (pas de job CI).
-# Branch protection master + checks requis : voir docs/v1-produit/securite-ci.md.
+# Branch protection master + checks requis : SonarCloud quality gate (app GitHub officielle).
 #
 # Durcissement sécurité :
 #   - Actions épinglées par SHA de commit (anti supply-chain) ; le commentaire # vX
