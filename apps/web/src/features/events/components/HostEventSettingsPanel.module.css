@@ -262,3 +262,7 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.deleteArea {
+  margin: 0 1rem 1rem;
+}

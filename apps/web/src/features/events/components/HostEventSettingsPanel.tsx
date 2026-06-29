@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings2, X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -11,12 +11,7 @@ import { ROUTES } from '@/app/routes';
 import { clearStoredHostToken, removeStoredParticipant } from '@/features/events/storage';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import styles from './HostEventSettingsPanel.module.css';
-import {
-  datetimeLocalToEndDatePayload,
-  isoToDatetimeLocalValue,
-  eventDateTimeToLocal,
-  splitDateTimeLocal,
-} from '@/shared/utils/eventDateTimeLocal';
+import { eventDateTimeToLocal, splitDateTimeLocal } from '@/shared/utils/eventDateTimeLocal';
 import type {
   EventConfigData,
   EventConfigPatchPayload,
@@ -63,7 +58,6 @@ export default function HostEventSettingsPanel({
   const [eventDateLocal, setEventDateLocal] = useState(
     eventDateTimeToLocal(event.date, event.time)
   );
-  const [endLocal, setEndLocal] = useState(isoToDatetimeLocalValue(cfg.endDate));
   const [maxProp, setMaxProp] = useState<string>(
     cfg.maxProposalsPerParticipant == null ? '' : String(cfg.maxProposalsPerParticipant)
   );
@@ -74,7 +68,16 @@ export default function HostEventSettingsPanel({
   const [allowSeries, setAllowSeries] = useState<boolean>(cfg.allowSeries ?? false);
   const [flashOk, setFlashOk] = useState(false);
   const flashTimerRef = useRef<number | undefined>(undefined);
-  useEffect(() => () => clearTimeout(flashTimerRef.current), []);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const performSaveRef = useRef<() => void>(() => {});
+
+  useEffect(
+    () => () => {
+      clearTimeout(flashTimerRef.current);
+      clearTimeout(saveTimerRef.current);
+    },
+    []
+  );
 
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -95,7 +98,6 @@ export default function HostEventSettingsPanel({
     setThemeText(parsed.text);
     setThemeColor(next.themeColor ?? null);
     setEventDateLocal(eventDateTimeToLocal(event.date, event.time));
-    setEndLocal(isoToDatetimeLocalValue(next.endDate));
     setMaxProp(
       next.maxProposalsPerParticipant == null ? '' : String(next.maxProposalsPerParticipant)
     );
@@ -135,15 +137,18 @@ export default function HostEventSettingsPanel({
     },
   });
 
-  const onSubmit = (e: FormEvent) => {
-    e.preventDefault();
+  const scheduleAutoSave = useCallback((immediate = false) => {
+    clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => performSaveRef.current(), immediate ? 0 : 600);
+  }, []);
+
+  performSaveRef.current = () => {
     setFormError(null);
 
     if (!eventTitle.trim()) {
       setFormError(t('events.settings.titleRequired'));
       return;
     }
-
     if (!eventDateLocal.trim()) {
       setFormError('La date de la soirée est requise.');
       return;
@@ -151,12 +156,6 @@ export default function HostEventSettingsPanel({
     const eventDateTime = splitDateTimeLocal(eventDateLocal);
     if (!eventDateTime) {
       setFormError('Date et heure de la soirée invalides.');
-      return;
-    }
-
-    const endPayload = datetimeLocalToEndDatePayload(endLocal);
-    if (endLocal.trim() && !endPayload) {
-      setFormError('Date de fin invalide.');
       return;
     }
 
@@ -194,7 +193,6 @@ export default function HostEventSettingsPanel({
       theme: [themeEmoji, themeText.trim()].filter(Boolean).join(' '),
       themeColor: themeColor ?? undefined,
       clearThemeColor: themeColor === null && (event.config?.themeColor ?? null) !== null,
-      endDate: endPayload,
       maxProposalsPerParticipant,
       maxParticipants: maxParticipantsValue,
       wheelMode,
@@ -227,7 +225,7 @@ export default function HostEventSettingsPanel({
           {formError}
         </p>
       )}
-      <form className={`form ${styles.form}`} onSubmit={onSubmit}>
+      <form className={`form ${styles.form}`}>
         <div className={styles.field}>
           <label className="label" htmlFor="host-cfg-title">
             {t('events.settings.titleLabel')}
@@ -237,7 +235,10 @@ export default function HostEventSettingsPanel({
             className="input"
             type="text"
             value={eventTitle}
-            onChange={(e) => setEventTitle(e.target.value)}
+            onChange={(e) => {
+              setEventTitle(e.target.value);
+              scheduleAutoSave();
+            }}
             maxLength={200}
             required
             placeholder={t('events.settings.titlePlaceholder')}
@@ -254,7 +255,10 @@ export default function HostEventSettingsPanel({
             className="input"
             type="datetime-local"
             value={eventDateLocal}
-            onChange={(e) => setEventDateLocal(e.target.value)}
+            onChange={(e) => {
+              setEventDateLocal(e.target.value);
+              scheduleAutoSave();
+            }}
             disabled={mutation.isPending}
           />
         </div>
@@ -271,6 +275,7 @@ export default function HostEventSettingsPanel({
                 onClick={() => {
                   setThemeEmoji('');
                   setThemeText('');
+                  scheduleAutoSave();
                 }}
                 disabled={mutation.isPending}
                 aria-label="Supprimer le thème"
@@ -285,23 +290,18 @@ export default function HostEventSettingsPanel({
             emoji={themeEmoji}
             text={themeText}
             themeColor={themeColor}
-            onEmojiChange={setThemeEmoji}
-            onTextChange={setThemeText}
-            onThemeColorChange={setThemeColor}
-            disabled={mutation.isPending}
-          />
-        </div>
-
-        <div className={styles.field}>
-          <label className="label" htmlFor="host-cfg-end">
-            Fin de validité (optionnel)
-          </label>
-          <input
-            id="host-cfg-end"
-            className="input"
-            type="datetime-local"
-            value={endLocal}
-            onChange={(e) => setEndLocal(e.target.value)}
+            onEmojiChange={(v) => {
+              setThemeEmoji(v);
+              scheduleAutoSave();
+            }}
+            onTextChange={(v) => {
+              setThemeText(v);
+              scheduleAutoSave();
+            }}
+            onThemeColorChange={(v) => {
+              setThemeColor(v);
+              scheduleAutoSave();
+            }}
             disabled={mutation.isPending}
           />
         </div>
@@ -314,7 +314,10 @@ export default function HostEventSettingsPanel({
             <NumberInput
               id="host-cfg-max"
               value={maxProp}
-              onChange={setMaxProp}
+              onChange={(v) => {
+                setMaxProp(v);
+                scheduleAutoSave();
+              }}
               min={1}
               max={100}
               placeholder="Illimité"
@@ -329,7 +332,10 @@ export default function HostEventSettingsPanel({
             <NumberInput
               id="host-cfg-max-participants"
               value={maxParticipants}
-              onChange={setMaxParticipants}
+              onChange={(v) => {
+                setMaxParticipants(v);
+                scheduleAutoSave();
+              }}
               min={1}
               max={MAX_EVENT_PARTICIPANTS}
               placeholder={t('events.settings.maxParticipantsPlaceholder')}
@@ -348,7 +354,10 @@ export default function HostEventSettingsPanel({
             value={wheelMode}
             onChange={(e) => {
               const v = e.target.value;
-              if (isWheelMode(v)) setWheelMode(v);
+              if (isWheelMode(v)) {
+                setWheelMode(v);
+                scheduleAutoSave(true);
+              }
             }}
             disabled={mutation.isPending}
           >
@@ -365,7 +374,10 @@ export default function HostEventSettingsPanel({
               role="switch"
               aria-checked={allowSeries}
               checked={allowSeries}
-              onChange={(e) => setAllowSeries(e.target.checked)}
+              onChange={(e) => {
+                setAllowSeries(e.target.checked);
+                scheduleAutoSave(true);
+              }}
               disabled={mutation.isPending}
             />
             <span className={styles.toggleTrack}>
@@ -373,22 +385,10 @@ export default function HostEventSettingsPanel({
             </span>
           </label>
         </div>
-
-        <button type="submit" className="btn btn-primary" disabled={mutation.isPending}>
-          {mutation.isPending ? 'Enregistrement…' : 'Enregistrer'}
-        </button>
       </form>
 
       {isConnectedCreator && (
-        <section
-          className={styles.dangerZone}
-          aria-labelledby={`host-danger-title-${slug}`}
-          data-testid="host-danger-zone"
-        >
-          <h3 id={`host-danger-title-${slug}`} className={styles.dangerTitle}>
-            {t('events.danger.sectionTitle')}
-          </h3>
-          <p className={styles.dangerLead}>{t('events.danger.sectionDescription')}</p>
+        <div className={styles.deleteArea} data-testid="host-danger-zone">
           {deleteError && (
             <p className="error" role="alert">
               {deleteError}
@@ -408,7 +408,7 @@ export default function HostEventSettingsPanel({
               ? t('events.danger.deleting')
               : t('events.danger.deleteButton')}
           </button>
-        </section>
+        </div>
       )}
 
       <ConfirmDialog

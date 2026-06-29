@@ -148,9 +148,9 @@ describe('EventDetail (MSW)', () => {
     await user.click(await screen.findByRole('button', { name: /rejoindre/i }));
 
     await waitFor(() =>
-      expect(screen.getByRole('heading', { name: /^films$/i })).toBeInTheDocument()
+      expect(screen.getByPlaceholderText(/ajouter un film/i)).toBeInTheDocument()
     );
-    await user.type(screen.getByPlaceholderText(/rechercher un film/i), 'Test');
+    await user.type(screen.getByPlaceholderText(/ajouter un film/i), 'Test');
     await user.click(screen.getByRole('button', { name: /^rechercher$/i }));
     await waitFor(() => expect(screen.getByText(/film test/i)).toBeInTheDocument());
     await user.click(screen.getByRole('button', { name: /^ajouter$/i }));

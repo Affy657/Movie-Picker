@@ -5,7 +5,6 @@ import type { MovieData } from '@/shared/types/movie';
 import { useTranslation } from '@/shared/i18n';
 import { MovieCardGrid } from '@/features/movies/components/MovieCardGrid';
 import { MovieCardList } from '@/features/movies/components/MovieCardList';
-import TmdbAttribution from '@/features/movies/components/TmdbAttribution';
 import styles from './MovieList.module.css';
 
 export { MovieCardGrid as MovieCard } from '@/features/movies/components/MovieCardGrid';
@@ -78,7 +77,6 @@ export default function MovieList({
           />
         ))}
       </ul>
-      <TmdbAttribution />
     </div>
   );
 }

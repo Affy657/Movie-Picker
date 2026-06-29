@@ -32,18 +32,12 @@ export default function WheelModal({
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [animDone, setAnimDone] = useState(false);
   const confettiTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const confettiOverlayRef = useRef<HTMLDialogElement | null>(null);
-  const confettiStyleRef = useRef<HTMLStyleElement | null>(null);
+  const confettiCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const cleanupConfettiOverlay = () => {
     clearTimeout(confettiTimerRef.current);
-    try {
-      confettiOverlayRef.current?.close();
-    } catch {}
-    confettiOverlayRef.current?.remove();
-    confettiStyleRef.current?.remove();
-    confettiOverlayRef.current = null;
-    confettiStyleRef.current = null;
+    confettiCanvasRef.current?.remove();
+    confettiCanvasRef.current = null;
   };
 
   useDialogOpen(dialogRef, open);
@@ -74,26 +68,13 @@ export default function WheelModal({
 
     requestAnimationFrame(() => {
       cleanupConfettiOverlay();
-
-      const styleEl = document.createElement('style');
-      styleEl.textContent =
-        '.confetti-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;max-width:100vw!important;max-height:100vh!important;background:transparent!important;border:none!important;box-shadow:none!important;padding:0!important;pointer-events:none!important;overflow:hidden!important;margin:0!important}.confetti-overlay::backdrop{background:transparent!important;pointer-events:none!important}';
-      document.head.appendChild(styleEl);
-      confettiStyleRef.current = styleEl;
-
-      const overlay = document.createElement('dialog');
-      overlay.className = 'confetti-overlay';
-      document.body.appendChild(overlay);
-      try {
-        overlay.showModal();
-      } catch {
-        overlay.setAttribute('open', '');
-      }
-      confettiOverlayRef.current = overlay;
+      if (!dialogRef.current) return;
 
       const canvas = document.createElement('canvas');
-      canvas.style.cssText = 'width:100%;height:100%;display:block;pointer-events:none;';
-      overlay.appendChild(canvas);
+      canvas.style.cssText =
+        'position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:1;';
+      dialogRef.current.appendChild(canvas);
+      confettiCanvasRef.current = canvas;
 
       const fire = confetti.create(canvas, { resize: true, useWorker: false });
 
@@ -122,7 +103,7 @@ export default function WheelModal({
         })?.catch(() => {});
         confettiTimerRef.current = setTimeout(cleanupConfettiOverlay, 4500);
       }, 180);
-    }); // end requestAnimationFrame
+    });
   };
 
   const posterSrc = posterImageSrc(winner.posterPath);

@@ -35,7 +35,7 @@ describe('AddMovieForm (MSW)', () => {
     const user = userEvent.setup();
     renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
 
-    await user.type(screen.getByPlaceholderText(/rechercher un film/i), 'Inception');
+    await user.type(screen.getByPlaceholderText(/ajouter un film/i), 'Inception');
     await waitFor(() => expect(screen.getByText(/film test/i)).toBeInTheDocument(), {
       timeout: 3000,
     });
@@ -52,7 +52,7 @@ describe('AddMovieForm (MSW)', () => {
     );
     const user = userEvent.setup();
     renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
-    await user.type(screen.getByPlaceholderText(/rechercher un film/i), 'xx');
+    await user.type(screen.getByPlaceholderText(/ajouter un film/i), 'xx');
     await waitFor(() => expect(screen.getByText(/TMDB down|503/i)).toBeInTheDocument(), {
       timeout: 3000,
     });
@@ -83,7 +83,7 @@ describe('AddMovieForm (MSW)', () => {
     );
     const user = userEvent.setup({ delay: null });
     renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
-    const input = screen.getByPlaceholderText(/rechercher un film/i);
+    const input = screen.getByPlaceholderText(/ajouter un film/i);
     await user.type(input, 'ab');
     await new Promise((r) => setTimeout(r, 100));
     await user.type(input, 'c');
@@ -106,7 +106,7 @@ describe('AddMovieForm (MSW)', () => {
     );
     const user = userEvent.setup();
     renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
-    await user.type(screen.getByPlaceholderText(/rechercher un film/i), 'zzz');
+    await user.type(screen.getByPlaceholderText(/ajouter un film/i), 'zzz');
     await waitFor(() => expect(screen.getByText(/aucun film ne correspond/i)).toBeInTheDocument());
   });
 
@@ -135,7 +135,7 @@ describe('AddMovieForm (MSW)', () => {
     );
     const user = userEvent.setup();
     renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
-    const input = screen.getByPlaceholderText(/rechercher un film/i);
+    const input = screen.getByPlaceholderText(/ajouter un film/i);
     await user.type(input, 'ab');
     await waitFor(() => expect(screen.getByText(/film test/i)).toBeInTheDocument(), {
       timeout: 3000,
@@ -151,7 +151,7 @@ describe('AddMovieForm (MSW)', () => {
     localStorage.setItem(HISTORY_KEY, JSON.stringify(['inception', 'matrix']));
     const user = userEvent.setup();
     renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
-    await user.click(screen.getByPlaceholderText(/rechercher un film/i));
+    await user.click(screen.getByPlaceholderText(/ajouter un film/i));
     expect(screen.getByText(/recherches recentes|recherches r/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Rechercher.*inception/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Rechercher.*matrix/i })).toBeInTheDocument();
@@ -161,7 +161,7 @@ describe('AddMovieForm (MSW)', () => {
     localStorage.setItem(HISTORY_KEY, JSON.stringify(['inception', 'matrix']));
     const user = userEvent.setup();
     renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
-    await user.click(screen.getByPlaceholderText(/rechercher un film/i));
+    await user.click(screen.getByPlaceholderText(/ajouter un film/i));
     const removeBtn = screen.getByRole('button', { name: /supprimer.*inception/i });
     await user.click(removeBtn);
     expect(
@@ -174,7 +174,7 @@ describe('AddMovieForm (MSW)', () => {
     localStorage.setItem(HISTORY_KEY, JSON.stringify(['inception', 'matrix']));
     const user = userEvent.setup();
     renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
-    await user.click(screen.getByPlaceholderText(/rechercher un film/i));
+    await user.click(screen.getByPlaceholderText(/ajouter un film/i));
     await user.click(screen.getByRole('button', { name: /effacer tout/i }));
     expect(screen.queryByText(/recherches recentes|recherches r/i)).not.toBeInTheDocument();
   });

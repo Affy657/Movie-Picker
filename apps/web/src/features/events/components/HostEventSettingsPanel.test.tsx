@@ -76,7 +76,7 @@ describe('HostEventSettingsPanel', () => {
         patched = true;
         const body = (await request.json()) as Record<string, unknown>;
         expect(body.theme).toBe('SF');
-        expect(body.wheelMode).toBe('strictRandom');
+        expect(body.wheelMode).toBe('weightedByVotes');
         expect(body.richSharePreview).toBe(false);
         expect(body.allowSeries).toBe(false);
         expect(body.allowedReactionIds).toBeUndefined();
@@ -96,7 +96,7 @@ describe('HostEventSettingsPanel', () => {
     renderWithRouter(<HostEventSettingsPanel slug={slug} hostToken={null} event={baseEvent} />, qc);
 
     await user.click(screen.getByText('Paramètres de la soirée'));
-    await user.click(screen.getByRole('button', { name: /^enregistrer$/i }));
+    await user.selectOptions(screen.getByLabelText(/mode de la roue/i), 'weightedByVotes');
 
     await waitFor(() => expect(patched).toBe(true));
     await waitFor(() => expect(screen.getByText(/enregistrés/i)).toBeInTheDocument());
@@ -131,9 +131,8 @@ describe('HostEventSettingsPanel', () => {
     await user.click(screen.getByText('Paramètres de la soirée'));
     await user.clear(screen.getByLabelText(/maximum de participants/i));
     await user.type(screen.getByLabelText(/maximum de participants/i), '8');
-    await user.click(screen.getByRole('button', { name: /^enregistrer$/i }));
 
-    await waitFor(() => expect(seenMax).toBe(8));
+    await waitFor(() => expect(seenMax).toBe(8), { timeout: 3000 });
   });
 
   it('refuse une capacité inférieure au nombre de participants déjà inscrits', async () => {
@@ -157,9 +156,10 @@ describe('HostEventSettingsPanel', () => {
     await user.click(screen.getByText('Paramètres de la soirée'));
     await user.clear(screen.getByLabelText(/maximum de participants/i));
     await user.type(screen.getByLabelText(/maximum de participants/i), '3');
-    await user.click(screen.getByRole('button', { name: /^enregistrer$/i }));
 
-    expect(await screen.findByText(/Impossible de réduire la capacité/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Impossible de réduire la capacité/i, {}, { timeout: 3000 })
+    ).toBeInTheDocument();
     expect(patchCalled).toBe(false);
   });
 
@@ -190,7 +190,7 @@ describe('HostEventSettingsPanel', () => {
 
     await user.click(screen.getByText('Paramètres de la soirée'));
     expect(screen.queryByText(/n'est plus modifiable/i)).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^enregistrer$/i })).not.toBeDisabled();
+    expect(screen.getByLabelText(/nom de la soirée/i)).not.toBeDisabled();
   });
 
   describe('zone de danger (suppression)', () => {
