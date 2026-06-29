@@ -30,7 +30,7 @@ export default function WheelModal({
 }: Readonly<WheelModalProps>) {
   const { t } = useTranslation();
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const confettiDialogRef = useRef<HTMLDialogElement>(null);
+  const confettiOverlayRef = useRef<HTMLDivElement>(null);
   const [animDone, setAnimDone] = useState(false);
   const confettiTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const confettiCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -39,7 +39,8 @@ export default function WheelModal({
     clearTimeout(confettiTimerRef.current);
     confettiCanvasRef.current?.remove();
     confettiCanvasRef.current = null;
-    if (confettiDialogRef.current?.open) confettiDialogRef.current.close();
+    const overlay = confettiOverlayRef.current;
+    if (overlay?.matches(':popover-open')) overlay.hidePopover();
   };
 
   useDialogOpen(dialogRef, open);
@@ -70,15 +71,15 @@ export default function WheelModal({
 
     requestAnimationFrame(() => {
       cleanupConfettiOverlay();
-      const dlg = confettiDialogRef.current;
-      if (!dlg) return;
+      const overlay = confettiOverlayRef.current;
+      if (!overlay) return;
 
-      dlg.showModal();
+      overlay.showPopover();
 
       const canvas = document.createElement('canvas');
       canvas.style.cssText =
         'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;';
-      dlg.appendChild(canvas);
+      overlay.appendChild(canvas);
       confettiCanvasRef.current = canvas;
 
       const fire = confetti.create(canvas, { resize: true, useWorker: false });
@@ -185,7 +186,12 @@ export default function WheelModal({
           </>
         )}
       </dialog>
-      <dialog ref={confettiDialogRef} className={styles.confettiDialog} aria-hidden="true" />
+      <div
+        ref={confettiOverlayRef}
+        className={styles.confettiOverlay}
+        popover="manual"
+        aria-hidden="true"
+      />
     </>
   );
 }
