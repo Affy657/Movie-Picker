@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import clsx from 'clsx';
 import {
   Check,
@@ -29,7 +30,6 @@ import {
 import { othersAlreadySeenHint } from '@/features/movies/utils/seenHint';
 import { getErrorMessage } from '@/shared/api/apiError';
 import type { TranslationKey } from '@/shared/i18n';
-import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import styles from './movieCardParts.module.css';
 
 export type Translate = (key: TranslationKey, vars?: Record<string, string | number>) => string;
@@ -466,8 +466,35 @@ export function CardKebab({
 }: Readonly<CardKebabProps>) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number }>({ top: 0, right: 0 });
   const close = useCallback(() => setOpen(false), []);
-  useClickOutside(rootRef, close, open);
+
+  useEffect(() => {
+    if (!open) return;
+    const handlePointer = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (!rootRef.current?.contains(target) && !menuRef.current?.contains(target)) close();
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close();
+    };
+    document.addEventListener('mousedown', handlePointer);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handlePointer);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [open, close]);
+
+  const handleToggle = () => {
+    if (!open && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+    }
+    setOpen((v) => !v);
+  };
 
   const removeAria = isMine
     ? `${t('movies.list.removeButton')} ${title}`
@@ -481,59 +508,72 @@ export function CardKebab({
   return (
     <div className={styles.kebab} ref={rootRef}>
       <button
+        ref={btnRef}
         type="button"
         className={styles.kebabBtn}
-        onClick={() => setOpen((v) => !v)}
+        onClick={handleToggle}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={t('movies.list.moreActionsAria', { title })}
       >
         <MoreVertical aria-hidden size={18} />
       </button>
-      {open ? (
-        <div className={styles.kebabMenu} role="menu">
-          {tmdbId > 0 && (
-            <>
-              <ExternalMenuLink
-                href={lbUrl}
-                label={t('movies.list.letterboxdButton')}
-                onClose={() => setOpen(false)}
-              />
-              <ExternalMenuLink
-                href={imdbHref}
-                label={t('movies.list.imdbButton')}
-                onClose={() => setOpen(false)}
-              />
-              <ExternalMenuLink
-                href={allocineHref}
-                label={t('movies.list.allocineButton')}
-                onClose={() => setOpen(false)}
-              />
-              <ExternalMenuLink
-                href={tmdbHref}
-                label={t('movies.list.tmdbButton')}
-                onClose={() => setOpen(false)}
-              />
-            </>
-          )}
-          {canRemove && (
-            <button
-              type="button"
-              role="menuitem"
-              className={clsx(styles.kebabItem, styles.kebabItemDanger)}
-              onClick={() => {
-                setOpen(false);
-                onRemove();
-              }}
-              aria-label={removeAria}
-              title={!isMine && isHost ? t('movies.list.removeAsHostTitle') : undefined}
-            >
-              <Trash2 aria-hidden size={14} />
-              <span>{t('movies.list.removeButton')}</span>
-            </button>
-          )}
-        </div>
-      ) : null}
+      {open &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className={styles.kebabMenu}
+            role="menu"
+            style={{
+              position: 'fixed',
+              top: `${menuPos.top}px`,
+              right: `${menuPos.right}px`,
+              zIndex: 9999,
+            }}
+          >
+            {tmdbId > 0 && (
+              <>
+                <ExternalMenuLink
+                  href={lbUrl}
+                  label={t('movies.list.letterboxdButton')}
+                  onClose={close}
+                />
+                <ExternalMenuLink
+                  href={imdbHref}
+                  label={t('movies.list.imdbButton')}
+                  onClose={close}
+                />
+                <ExternalMenuLink
+                  href={allocineHref}
+                  label={t('movies.list.allocineButton')}
+                  onClose={close}
+                />
+                <ExternalMenuLink
+                  href={tmdbHref}
+                  label={t('movies.list.tmdbButton')}
+                  onClose={close}
+                />
+              </>
+            )}
+            {canRemove && (
+              <button
+                type="button"
+                role="menuitem"
+                className={clsx(styles.kebabItem, styles.kebabItemDanger)}
+                onClick={() => {
+                  setOpen(false);
+                  onRemove();
+                }}
+                aria-label={removeAria}
+                title={!isMine && isHost ? t('movies.list.removeAsHostTitle') : undefined}
+              >
+                <Trash2 aria-hidden size={14} />
+                <span>{t('movies.list.removeButton')}</span>
+              </button>
+            )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

@@ -72,7 +72,7 @@ export default function WheelModal({
 
       const canvas = document.createElement('canvas');
       canvas.style.cssText =
-        'position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:1;';
+        'position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:9999;';
       dialogRef.current.appendChild(canvas);
       confettiCanvasRef.current = canvas;
 

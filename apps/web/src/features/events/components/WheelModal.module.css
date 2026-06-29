@@ -51,7 +51,7 @@
   }
   to {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: none;
   }
 }
 
@@ -82,7 +82,9 @@
   color: var(--color-text-muted);
   cursor: pointer;
   flex-shrink: 0;
-  transition: background var(--duration-fast), color var(--duration-fast);
+  transition:
+    background var(--duration-fast),
+    color var(--duration-fast);
 }
 
 .closeIconBtn:hover {

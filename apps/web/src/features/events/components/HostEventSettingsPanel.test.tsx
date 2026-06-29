@@ -99,7 +99,6 @@ describe('HostEventSettingsPanel', () => {
     await user.selectOptions(screen.getByLabelText(/mode de la roue/i), 'weightedByVotes');
 
     await waitFor(() => expect(patched).toBe(true));
-    await waitFor(() => expect(screen.getByText(/enregistrés/i)).toBeInTheDocument());
   });
 
   it('envoie maxParticipants saisi dans le PATCH', async () => {

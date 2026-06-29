@@ -66,18 +66,10 @@ export default function HostEventSettingsPanel({
   );
   const [wheelMode, setWheelMode] = useState<WheelMode>(cfg.wheelMode);
   const [allowSeries, setAllowSeries] = useState<boolean>(cfg.allowSeries ?? false);
-  const [flashOk, setFlashOk] = useState(false);
-  const flashTimerRef = useRef<number | undefined>(undefined);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const performSaveRef = useRef<() => void>(() => {});
 
-  useEffect(
-    () => () => {
-      clearTimeout(flashTimerRef.current);
-      clearTimeout(saveTimerRef.current);
-    },
-    []
-  );
+  useEffect(() => () => clearTimeout(saveTimerRef.current), []);
 
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -111,9 +103,6 @@ export default function HostEventSettingsPanel({
     mutationFn: (body: EventConfigPatchPayload) => patchEventConfig(slug, hostToken, body),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
-      setFlashOk(true);
-      clearTimeout(flashTimerRef.current);
-      flashTimerRef.current = globalThis.setTimeout(() => setFlashOk(false), 4000);
     },
     onError: (e) => {
       setFormError(getErrorMessage(e, 'Enregistrement impossible'));
@@ -215,11 +204,6 @@ export default function HostEventSettingsPanel({
         <span className={styles.summaryLabel}>Paramètres de la soirée</span>
         <span className={styles.summaryChevron} aria-hidden />
       </summary>
-      {flashOk && (
-        <p className={styles.successBanner} role="status" aria-live="polite">
-          Paramètres enregistrés.
-        </p>
-      )}
       {formError && (
         <p className="error" role="alert">
           {formError}
@@ -396,7 +380,7 @@ export default function HostEventSettingsPanel({
           )}
           <button
             type="button"
-            className="btn btn-sm btn-danger"
+            className="btn btn-danger"
             onClick={() => {
               setDeleteError(null);
               setConfirmDeleteOpen(true);
