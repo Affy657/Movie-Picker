@@ -77,7 +77,7 @@ export default function WheelModal({
 
       const styleEl = document.createElement('style');
       styleEl.textContent =
-        '.confetti-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;max-width:100vw!important;max-height:100vh!important;background:transparent!important;border:none!important;box-shadow:none!important;padding:0!important;pointer-events:none!important;overflow:hidden!important;margin:0!important}.confetti-overlay::backdrop{background:transparent!important}';
+        '.confetti-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;max-width:100vw!important;max-height:100vh!important;background:transparent!important;border:none!important;box-shadow:none!important;padding:0!important;pointer-events:none!important;overflow:hidden!important;margin:0!important}.confetti-overlay::backdrop{background:transparent!important;pointer-events:none!important}';
       document.head.appendChild(styleEl);
       confettiStyleRef.current = styleEl;
 

@@ -150,10 +150,10 @@ export default function EventMoviesSection({
               >
                 {(
                   [
+                    { key: 'createdAt', label: t('movies.list.sortAddedAt') },
                     { key: 'score', label: t('movies.list.sortScore') },
                     { key: 'voteAverage', label: t('movies.list.sortTmdbVote') },
                     { key: 'duration', label: t('movies.list.sortDuration') },
-                    { key: 'createdAt', label: t('movies.list.sortAddedAt') },
                   ] as { key: SortKey; label: string }[]
                 ).map(({ key, label }) => (
                   <button
