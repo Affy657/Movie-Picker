@@ -17,6 +17,7 @@ export const DEFAULT_EVENT_CONFIG: EventConfigData = {
 };
 
 export type EventConfigPatchPayload = {
+  title?: string;
   theme: string;
   themeColor?: number | null;
   clearThemeColor?: boolean;
