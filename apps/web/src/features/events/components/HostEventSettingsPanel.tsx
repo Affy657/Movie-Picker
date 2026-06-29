@@ -68,7 +68,7 @@ export default function HostEventSettingsPanel({
   const [allowSeries, setAllowSeries] = useState<boolean>(cfg.allowSeries ?? false);
   const [flashOk, setFlashOk] = useState(false);
   const flashTimerRef = useRef<number | undefined>(undefined);
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const performSaveRef = useRef<() => void>(() => {});
 
   useEffect(
