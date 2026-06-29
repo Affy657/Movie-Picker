@@ -8,8 +8,9 @@ export function initPostHog(): void {
   posthog.init(key, {
     api_host: 'https://eu.i.posthog.com',
     autocapture: false,
-    capture_pageview: true,
+    capture_pageview: 'history_change',
     capture_pageleave: true,
+    capture_performance: { web_vitals: true },
     disable_session_recording: true,
     opt_out_capturing_by_default: true,
   });
