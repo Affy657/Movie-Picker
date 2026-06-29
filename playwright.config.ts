@@ -11,6 +11,7 @@ export default defineConfig({
   use: {
     ...devices['Desktop Chrome'],
     baseURL: 'http://127.0.0.1:5174',
+    locale: 'fr-FR',
     trace: 'on-first-retry',
   },
   // --no-launch-profile évite le port 4000 des launchSettings ; sans profil, ASPNETCORE_* doit forcer Development
