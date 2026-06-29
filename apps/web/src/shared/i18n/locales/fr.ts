@@ -305,6 +305,7 @@
       title: 'Paramètres de la soirée',
       titleLabel: 'Nom de la soirée',
       titlePlaceholder: 'Ex : Soirée film du vendredi',
+      titleRequired: 'Le nom de la soirée est requis.',
       themeLabel: 'Thème / ambiance',
       themePlaceholder: 'Ex: Horreur, Sci-fi, Comédie\u2026',
       endDateLabel: 'Date de fin des propositions',

@@ -157,4 +157,70 @@ public sealed class PatchEventConfigHandlerTests
             _sut.HandleAsync("s", new PatchEventConfigRequest { MaxParticipants = 5 }));
         Assert.Contains("inférieure", ex.Message);
     }
+
+    [Fact]
+    public async Task HandleAsync_Title_Valid_Updates()
+    {
+        var evt = Evt();
+        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
+        _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+
+        await _sut.HandleAsync("s", new PatchEventConfigRequest { Title = "Nouvelle soirée" });
+
+        _events.Verify(r => r.UpdateAsync(
+            It.Is<Event>(e => e.Title == "Nouvelle soirée"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_Title_Trimmed()
+    {
+        var evt = Evt();
+        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
+        _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+
+        await _sut.HandleAsync("s", new PatchEventConfigRequest { Title = "  Soirée  " });
+
+        _events.Verify(r => r.UpdateAsync(
+            It.Is<Event>(e => e.Title == "Soirée"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_Title_Empty_ThrowsBadRequest()
+    {
+        var evt = Evt();
+        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
+
+        await Assert.ThrowsAsync<BadRequestException>(() =>
+            _sut.HandleAsync("s", new PatchEventConfigRequest { Title = "   " }));
+    }
+
+    [Fact]
+    public async Task HandleAsync_Title_TooLong_ThrowsBadRequest()
+    {
+        var evt = Evt();
+        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
+
+        await Assert.ThrowsAsync<BadRequestException>(() =>
+            _sut.HandleAsync("s", new PatchEventConfigRequest { Title = new string('a', 201) }));
+    }
+
+    [Fact]
+    public async Task HandleAsync_Title_WhenFinished_ThrowsConflict()
+    {
+        var evt = Evt() with { ClosedAt = DateTimeOffset.UtcNow.AddDays(-1) };
+        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(() =>
+            _sut.HandleAsync("s", new PatchEventConfigRequest { Title = "Nouveau nom" }));
+        Assert.Contains("terminée", ex.Message);
+    }
 }
