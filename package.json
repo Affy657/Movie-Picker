@@ -2,7 +2,7 @@
   "name": "movie-picker",
   "private": true,
   "simple-git-hooks": {
-    "pre-push": "pnpm run lint && pnpm run format:check && node scripts/sonar-local.cjs"
+    "pre-push": "pnpm run lint && pnpm run format:check"
   },
   "scripts": {
     "prepare": "simple-git-hooks",
@@ -24,7 +24,6 @@
     "test:e2e": "playwright test",
     "test:e2e:ci": "cross-env VITE_API_URL=http://127.0.0.1:5010 pnpm --filter \"./apps/web\" run build && cross-env CI=1 pnpm run test:e2e",
     "audit": "pnpm audit --audit-level=high",
-    "check:sonar": "sonar-scanner",
     "verify:local": "node scripts/verify-local.cjs",
     "lighthouse": "node scripts/lighthouse-run.mjs"
   },

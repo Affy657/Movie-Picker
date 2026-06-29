@@ -194,11 +194,12 @@ Pipeline GitHub Actions : `.github/workflows/ci-cd.yml`, déclenché sur `master
 | **Sécurité repo** | Gitleaks (scan de secrets dans l'arbre Git) |
 | **Lint / qualité** | ESLint + Prettier, `dotnet format`, build API Release, export OpenAPI, `pnpm audit`, audit NuGet (échec si High/Critical) |
 | **Tests** | Vitest + couverture (web) ; xUnit + intégration + `OpenApiContractTests` (API) |
+| **Qualité (Sonar)** | SonarScanner for .NET → SonarCloud (front + API, couverture lcov + opencover), **Quality Gate bloquant** |
 | **Lighthouse** | Rapport front (non bloquant) |
 | **Image API** *(push `master`)* | Build Docker → scan **Trivy** (HIGH/CRITICAL, bloquant) → push Artifact Registry |
 | **Déploiement** *(push `master`)* | **Cloud Run** (secrets Secret Manager + `ALLOWED_ORIGINS`) ; front → **S3** + invalidation **CloudFront** |
 
-- **Hors workflow** : **SonarCloud** via l'app GitHub officielle (quality gate requis en branch protection).
+- **Quality Gate SonarCloud** : le job `sonar` attend le verdict (`sonar.qualitygate.wait`) et bloque le déploiement s'il n'est pas vert (check requis en branch protection).
 - **Déploiement front** : push S3 en 3 étapes (`index.html` et Service Worker en dernier, assets hachés en cache long) puis invalidation CloudFront, pour éviter toute désynchronisation Service Worker / bundles.
 
 Branche par défaut : **`master`**.

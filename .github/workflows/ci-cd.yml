@@ -1,5 +1,5 @@
 # E2E Playwright : local uniquement (pas de job CI).
-# Branch protection master + checks requis : SonarCloud quality gate (app GitHub officielle).
+# Branch protection master + checks requis : job "sonar" (SonarScanner for .NET, analyse + couverture + Quality Gate).
 #
 # Durcissement sécurité :
 #   - Actions épinglées par SHA de commit (anti supply-chain) ; le commentaire # vX
@@ -9,7 +9,7 @@
 #   - Déploiement bloqué tant que le Quality Gate SonarCloud n'est pas vert.
 #   - concurrency: group cd-<ref> (cancel-in-progress: false) — pas de double deploy sur push rapides.
 #   - timeout-minutes sur chaque job — évite les runners bloqués au-delà de 6 h.
-#   - Quality Gate interrogé via analysisId exact (anti-TOCTOU), avec retry.
+#   - Analyse Sonar CI-based : couverture front (lcov) + API (opencover) ; `end` attend le Quality Gate (sonar.qualitygate.wait).
 
 name: CI/CD
 
@@ -174,65 +174,80 @@ jobs:
           path: artifacts/lighthouse
           if-no-files-found: warn
 
-  sonar-quality-gate:
-    name: SonarCloud Quality Gate (bloquant)
+  sonar:
+    name: SonarCloud (analyse + couverture + Quality Gate)
     needs: [test-web, test-api]
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    timeout-minutes: 20
+    if: github.event_name != 'workflow_dispatch'
     permissions:
       contents: read
+      pull-requests: read
     steps:
-      - name: Attendre l'analyse du commit et vérifier le Quality Gate
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Couverture front (lcov)
+        run: |
+          pnpm install --frozen-lockfile --ignore-scripts
+          pnpm run test:coverage --filter=web
+      - name: Installer SonarScanner for .NET
+        run: |
+          dotnet tool install --global dotnet-sonarscanner
+          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+      - name: Analyse + Quality Gate (SonarScanner for .NET)
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_PROJECT: Affy657_Movie-Picker
-          COMMIT_SHA: ${{ github.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD: ${{ github.head_ref }}
+          PR_BASE: ${{ github.base_ref }}
+          MONGODB_URI: ""
         run: |
-          set -uo pipefail
+          set -eo pipefail
           if [ -z "${SONAR_TOKEN:-}" ]; then
-            echo "::error::SONAR_TOKEN manquant (Settings → Secrets and variables → Actions). Impossible de vérifier le Quality Gate."
+            echo "::error::SONAR_TOKEN manquant (Settings → Secrets and variables → Actions)."
             exit 1
           fi
-          API="https://sonarcloud.io/api"
-          AUTH="Authorization: Bearer $SONAR_TOKEN"
-          echo "Attente de l'analyse SonarCloud du commit $COMMIT_SHA…"
-          REV=""
-          ANALYSIS_KEY=""
-          for i in $(seq 1 40); do
-            RESP=$(curl -s -H "$AUTH" "$API/project_analyses/search?project=$SONAR_PROJECT&branch=master&ps=1" 2>/dev/null || true)
-            REV=$(echo "$RESP" | jq -r '.analyses[0].revision // empty')
-            if [ "$REV" = "$COMMIT_SHA" ]; then
-              ANALYSIS_KEY=$(echo "$RESP" | jq -r '.analyses[0].key // empty')
-              echo "Analyse trouvée pour $COMMIT_SHA (key=$ANALYSIS_KEY)."
-              break
-            fi
-            echo "  ($i/40) dernière analyse=${REV:-aucune} ≠ commit courant — nouvelle tentative dans 15s…"
-            sleep 15
-          done
-          if [ "$REV" != "$COMMIT_SHA" ]; then
-            echo "::error::Analyse SonarCloud du commit $COMMIT_SHA introuvable après ~10 min. Déploiement bloqué par sécurité."
-            exit 1
+          [ -n "${JAVA_HOME_17_X64:-}" ] && export JAVA_HOME="$JAVA_HOME_17_X64"
+          EXCL='**/node_modules/**,**/dist/**,**/coverage/**,**/build/**,**/.next/**,archive/**,docs/**,e2e/**,scripts/**,configs/**,logs/**,test-results/**,artifacts/**,apps/web/src/**/*.test.ts,apps/web/src/**/*.test.tsx,apps/web/src/test-setup.ts,apps/web/src/mocks/**,apps/web/src/features/auth/devQuickLoginCredentials.ts,apps/web/src/shared/i18n/locales/en.ts,apps/web/src/shared/i18n/locales/fr.ts,apps/api-dotnet/*.Tests/**,apps/api-dotnet/*.IntegrationTests/**,apps/api-dotnet/ToolGenDpKey/**,apps/api-dotnet/**/Infrastructure/Development/**'
+          CPD='apps/web/src/**/locales/fr.ts,apps/web/src/**/locales/en.ts,apps/api-dotnet/**/Development/**'
+          PRARGS=()
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            PRARGS=(/d:sonar.pullrequest.key="$PR_NUMBER" /d:sonar.pullrequest.branch="$PR_HEAD" /d:sonar.pullrequest.base="$PR_BASE")
           fi
-          STATUS="UNKNOWN"
-          for attempt in 1 2 3; do
-            STATUS=$(curl -s -H "$AUTH" "$API/qualitygates/project_status?analysisId=$ANALYSIS_KEY" | jq -r '.projectStatus.status // "UNKNOWN"')
-            [ "$STATUS" != "UNKNOWN" ] && break
-            echo "  (QG tentative $attempt/3) — retry dans 5s…"
-            sleep 5
-          done
-          echo "Quality Gate = $STATUS"
-          if [ "$STATUS" != "OK" ]; then
-            echo "::error::SonarCloud Quality Gate = $STATUS → déploiement bloqué. Détails : https://sonarcloud.io/dashboard?id=$SONAR_PROJECT"
-            exit 1
-          fi
-          echo "✅ Quality Gate vert — déploiement autorisé."
+          dotnet sonarscanner begin \
+            /k:"Affy657_Movie-Picker" \
+            /o:"affy657" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.token="$SONAR_TOKEN" \
+            /d:sonar.exclusions="$EXCL" \
+            /d:sonar.cpd.exclusions="$CPD" \
+            /d:sonar.javascript.lcov.reportPaths="apps/web/coverage/lcov.info" \
+            /d:sonar.cs.opencover.reportsPaths="apps/api-dotnet/**/TestResults/**/coverage.opencover.xml" \
+            /d:sonar.qualitygate.wait=true \
+            /d:sonar.qualitygate.timeout=300 \
+            "${PRARGS[@]}"
+          dotnet build apps/api-dotnet/MoviePicker.slnx -c Debug
+          dotnet test apps/api-dotnet/MoviePicker.Api.Tests/MoviePicker.Api.Tests.csproj -c Debug --no-build \
+            --collect:"XPlat Code Coverage" \
+            --settings apps/api-dotnet/coverlet.runsettings \
+            --results-directory apps/api-dotnet/MoviePicker.Api.Tests/TestResults
+          dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
 
   docker-api:
     name: Docker API → Artifact Registry
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [test-web, test-api, sonar-quality-gate]
+    needs: [test-web, test-api, sonar]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     permissions:
       contents: read
@@ -321,7 +336,7 @@ jobs:
     name: Deploy Front → S3 & CloudFront
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [test-web, test-api, sonar-quality-gate]
+    needs: [test-web, test-api, sonar]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     permissions:
       contents: read
