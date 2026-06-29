@@ -695,7 +695,9 @@ export default function AddMovieForm({
                   onClick={() => toggleLanguage(lang.code)}
                   aria-pressed={selectedLanguage === lang.code}
                 >
-                  <span className={styles.langCode} aria-hidden="true">{lang.code.toUpperCase()}</span>
+                  <span className={styles.langCode} aria-hidden="true">
+                    {lang.code.toUpperCase()}
+                  </span>
                   {tmdbLanguage.startsWith('fr') ? lang.fr : lang.en}
                 </button>
               ))}

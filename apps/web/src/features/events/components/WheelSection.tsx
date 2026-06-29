@@ -143,7 +143,12 @@ export default function WheelSection({
       {winnerFull && !isModalOpen && (
         <div className={styles.winnerSection} aria-live="polite">
           <p className={styles.winnerLabel}>{t('events.wheel.winnerLabel')}</p>
-          <ul className={clsx(styles.winnerWrapper, viewMode === 'list' ? styles.winnerWrapperList : styles.winnerWrapperGrid)}>
+          <ul
+            className={clsx(
+              styles.winnerWrapper,
+              viewMode === 'list' ? styles.winnerWrapperList : styles.winnerWrapperGrid
+            )}
+          >
             {viewMode === 'list' ? (
               <MovieCardList
                 movie={winnerFull}
