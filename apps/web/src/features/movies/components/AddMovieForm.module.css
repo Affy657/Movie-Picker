@@ -715,6 +715,20 @@
   font-weight: 600;
 }
 
+.langCode {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.7em;
+  padding: 0 0.2em;
+  font-size: var(--font-size-3xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-radius: 3px;
+  background: color-mix(in srgb, currentColor 15%, transparent);
+  line-height: 1.5;
+}
+
 .availabilityChips {
   display: flex;
   flex-wrap: wrap;

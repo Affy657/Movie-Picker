@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
+import clsx from 'clsx';
 import { Disc3 } from 'lucide-react';
-import { postEventClose, postEventWheel } from '@/features/events/api/eventsApi';
+import { deleteEventWheel, postEventClose, postEventWheel } from '@/features/events/api/eventsApi';
 import { getErrorMessage } from '@/shared/api/apiError';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 import { useTranslation } from '@/shared/i18n';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
-import { MovieCard } from '@/features/movies/components/MovieList';
+import { MovieCardGrid } from '@/features/movies/components/MovieCardGrid';
+import { MovieCardList } from '@/features/movies/components/MovieCardList';
 import WheelModal from './WheelModal';
 import styles from './WheelSection.module.css';
 
@@ -35,6 +37,13 @@ export default function WheelSection({
   const [winnerIndex, setWinnerIndex] = useState(-1);
   const [wheelKey, setWheelKey] = useState(0);
   const [winner, setWinner] = useState<MovieData | null>(event.winnerMovie ?? null);
+  const [viewMode] = useState<'grid' | 'list'>(() => {
+    try {
+      return localStorage.getItem('movies-view') === 'list' ? 'list' : 'grid';
+    } catch {
+      return 'grid';
+    }
+  });
   const isHost = event.isHost === true || (event.isHost == null && !!hostToken);
   const safeMovies = movies ?? [];
   const moviesCount = safeMovies.length;
@@ -88,6 +97,20 @@ export default function WheelSection({
     void launchWheel();
   };
 
+  const resetWheel = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      await deleteEventWheel(slug, hostToken);
+      setWinner(null);
+      onWheelDone();
+    } catch (err) {
+      setError(getErrorMessage(err, t('events.wheel.resetError')));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!isHost && !winner) {
     return null;
   }
@@ -120,22 +143,40 @@ export default function WheelSection({
       {winnerFull && !isModalOpen && (
         <div className={styles.winnerSection} aria-live="polite">
           <p className={styles.winnerLabel}>{t('events.wheel.winnerLabel')}</p>
-          <ul className={styles.winnerWrapper}>
-            <MovieCard
-              movie={winnerFull}
-              slug={slug}
-              participantId={null}
-              participantPseudo={null}
-              isFinished={true}
-              isHost={false}
-              onVote={async () => {}}
-              onRemove={async () => {}}
-              refresh={() => {}}
-              onActionError={() => {}}
-              participantAvatars={participantAvatars}
-              t={t}
-              eager
-            />
+          <ul className={clsx(styles.winnerWrapper, viewMode === 'list' ? styles.winnerWrapperList : styles.winnerWrapperGrid)}>
+            {viewMode === 'list' ? (
+              <MovieCardList
+                movie={winnerFull}
+                slug={slug}
+                participantId={null}
+                participantPseudo={null}
+                isFinished={true}
+                isHost={false}
+                onVote={async () => {}}
+                onRemove={async () => {}}
+                refresh={() => {}}
+                onActionError={() => {}}
+                participantAvatars={participantAvatars}
+                t={t}
+                eager
+              />
+            ) : (
+              <MovieCardGrid
+                movie={winnerFull}
+                slug={slug}
+                participantId={null}
+                participantPseudo={null}
+                isFinished={true}
+                isHost={false}
+                onVote={async () => {}}
+                onRemove={async () => {}}
+                refresh={() => {}}
+                onActionError={() => {}}
+                participantAvatars={participantAvatars}
+                t={t}
+                eager
+              />
+            )}
           </ul>
         </div>
       )}
@@ -159,6 +200,17 @@ export default function WheelSection({
           disabled={loading}
         >
           {loading ? t('events.wheel.spinning') : t('events.wheel.relaunchButton')}
+        </button>
+      )}
+
+      {isHost && !event.isFinished && !!winner && (
+        <button
+          type="button"
+          className={`btn ${styles.btnReset}`}
+          onClick={() => void resetWheel()}
+          disabled={loading}
+        >
+          {t('events.wheel.resetButton')}
         </button>
       )}
 

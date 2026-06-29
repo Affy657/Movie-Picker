@@ -330,8 +330,10 @@ export const en: Locale = {
       relaunchButton: 'Spin again',
       spinning: 'Spinning\u2026',
       closeButton: 'Close the event',
+      resetButton: 'Cancel draw',
       launchError: 'Spin failed',
       closeError: 'Close failed',
+      resetError: 'Cancel failed',
       modal: {
         spinningTitle: 'Draw in progress…',
         winnerTitle: 'Movie selected!',

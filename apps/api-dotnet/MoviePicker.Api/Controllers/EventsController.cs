@@ -14,6 +14,7 @@ using MoviePicker.Api.Application.UseCases.InviteUser;
 using MoviePicker.Api.Application.UseCases.JoinEvent;
 using MoviePicker.Api.Application.UseCases.LaunchWheel;
 using MoviePicker.Api.Application.UseCases.ListMyEvents;
+using MoviePicker.Api.Application.UseCases.ResetWheel;
 using MoviePicker.Api.Application.UseCases.RemoveParticipant;
 using MoviePicker.Api.Infrastructure.Web;
 
@@ -156,6 +157,20 @@ public sealed class EventsController : ControllerBase
     public async Task<IActionResult> Wheel(
         string idOrSlug,
         [FromServices] ILaunchWheelHandler handler,
+        CancellationToken ct)
+    {
+        var result = await handler.HandleAsync(idOrSlug, ct);
+        return Ok(result);
+    }
+
+    [HttpDelete("{idOrSlug}/wheel")]
+    [ProducesResponseType(typeof(ResetWheelResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> ResetWheel(
+        string idOrSlug,
+        [FromServices] IResetWheelHandler handler,
         CancellationToken ct)
     {
         var result = await handler.HandleAsync(idOrSlug, ct);

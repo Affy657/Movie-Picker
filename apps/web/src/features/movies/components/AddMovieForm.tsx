@@ -385,7 +385,7 @@ export default function AddMovieForm({
     if (selectedLanguage != null) {
       const opt = LANGUAGE_OPTIONS.find((l) => l.code === selectedLanguage);
       const label = opt
-        ? `${opt.flag} ${tmdbLanguage.startsWith('fr') ? opt.fr : opt.en}`
+        ? `${opt.code.toUpperCase()} ${tmdbLanguage.startsWith('fr') ? opt.fr : opt.en}`
         : selectedLanguage;
       chips.push({
         key: 'lang',
@@ -695,7 +695,7 @@ export default function AddMovieForm({
                   onClick={() => toggleLanguage(lang.code)}
                   aria-pressed={selectedLanguage === lang.code}
                 >
-                  <span aria-hidden="true">{lang.flag}</span>
+                  <span className={styles.langCode} aria-hidden="true">{lang.code.toUpperCase()}</span>
                   {tmdbLanguage.startsWith('fr') ? lang.fr : lang.en}
                 </button>
               ))}

@@ -337,8 +337,10 @@
       relaunchButton: 'Relancer la roue',
       spinning: 'Tirage\u2026',
       closeButton: 'Clôturer la soirée',
+      resetButton: 'Annuler le tirage',
       launchError: 'Tirage impossible',
       closeError: 'Clôture impossible',
+      resetError: 'Annulation impossible',
       modal: {
         spinningTitle: 'Tirage en cours…',
         winnerTitle: 'Film sélectionné !',
