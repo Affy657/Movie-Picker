@@ -482,9 +482,6 @@ export default function AddMovieForm({
 
   return (
     <div className={styles.root}>
-      <label className="label" htmlFor="add-movie-search">
-        {t('movies.search.label')}
-      </label>
       <div className={styles.searchWrap} ref={containerRef}>
         <div className={styles.searchRow}>
           <div className={styles.inputWrap}>
@@ -501,6 +498,7 @@ export default function AddMovieForm({
               id="add-movie-search"
               type="search"
               className="input"
+              aria-label={t('movies.search.label')}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => {

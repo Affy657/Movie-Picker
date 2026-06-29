@@ -69,6 +69,22 @@ export default function EventDetail() {
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
+    try {
+      return localStorage.getItem('movies-view') === 'list' ? 'list' : 'grid';
+    } catch {
+      return 'grid';
+    }
+  });
+
+  const handleViewModeChange = (mode: 'grid' | 'list') => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('movies-view', mode);
+    } catch {
+      /* ignore */
+    }
+  };
 
   useEffect(() => {
     if (!actionSuccess) return;
@@ -333,6 +349,8 @@ export default function EventDetail() {
             onDismissActionError={() => setActionError(null)}
             setActionError={setActionError}
             refreshAll={refreshAll}
+            viewMode={viewMode}
+            onViewModeChange={handleViewModeChange}
           />
 
           <WheelSection
@@ -342,6 +360,7 @@ export default function EventDetail() {
             hostToken={hostToken}
             onWheelDone={refreshAll}
             onCloseDone={refreshAll}
+            viewMode={viewMode}
           />
         </>
       )}

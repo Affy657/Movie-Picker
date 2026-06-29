@@ -19,6 +19,7 @@ interface WheelSectionProps {
   hostToken: string | null;
   onWheelDone: () => void;
   onCloseDone: () => void;
+  viewMode: 'grid' | 'list';
 }
 
 export default function WheelSection({
@@ -28,6 +29,7 @@ export default function WheelSection({
   hostToken,
   onWheelDone,
   onCloseDone,
+  viewMode,
 }: Readonly<WheelSectionProps>) {
   const { t } = useTranslation();
   const { track } = useAnalytics();
@@ -37,13 +39,6 @@ export default function WheelSection({
   const [winnerIndex, setWinnerIndex] = useState(-1);
   const [wheelKey, setWheelKey] = useState(0);
   const [winner, setWinner] = useState<MovieData | null>(event.winnerMovie ?? null);
-  const [viewMode] = useState<'grid' | 'list'>(() => {
-    try {
-      return localStorage.getItem('movies-view') === 'list' ? 'list' : 'grid';
-    } catch {
-      return 'grid';
-    }
-  });
   const isHost = event.isHost === true || (event.isHost == null && !!hostToken);
   const safeMovies = movies ?? [];
   const moviesCount = safeMovies.length;

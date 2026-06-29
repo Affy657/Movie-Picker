@@ -361,7 +361,7 @@
   movies: {
     search: {
       label: 'Proposer un film',
-      placeholder: 'Rechercher un film\u2026',
+      placeholder: 'Ajouter un film \u00e0 la soir\u00e9e\u2026',
       searchButton: 'Rechercher',
       searching: '\u2026',
       fallbackError: 'Recherche indisponible',
@@ -429,7 +429,7 @@
       sortScore: 'Votes',
       sortTmdbVote: 'Note',
       sortDuration: 'Dur\u00e9e',
-      sortAddedAt: 'Ordre d\u2019ajout',
+      sortAddedAt: 'Ajout',
       viewToggleAria: 'Mode d\u2019affichage',
       viewGridAria: 'Affichage grille',
       viewListAria: 'Affichage liste',

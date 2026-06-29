@@ -64,6 +64,7 @@ describe('WheelSection', () => {
         hostToken="ht"
         onWheelDone={vi.fn()}
         onCloseDone={vi.fn()}
+        viewMode="grid"
       />
     );
     expect(screen.getByRole('heading', { name: /roue/i })).toBeInTheDocument();
@@ -78,6 +79,7 @@ describe('WheelSection', () => {
         hostToken={null}
         onWheelDone={vi.fn()}
         onCloseDone={vi.fn()}
+        viewMode="grid"
       />
     );
     expect(container.querySelector('section')).toBeNull();
@@ -92,6 +94,7 @@ describe('WheelSection', () => {
         hostToken="stale-token"
         onWheelDone={vi.fn()}
         onCloseDone={vi.fn()}
+        viewMode="grid"
       />
     );
     expect(container.querySelector('section')).toBeNull();
@@ -106,6 +109,7 @@ describe('WheelSection', () => {
         hostToken="ht"
         onWheelDone={vi.fn()}
         onCloseDone={vi.fn()}
+        viewMode="grid"
       />
     );
     expect(screen.getByRole('heading', { name: /roue/i })).toBeInTheDocument();
@@ -120,6 +124,7 @@ describe('WheelSection', () => {
         hostToken="ht"
         onWheelDone={vi.fn()}
         onCloseDone={vi.fn()}
+        viewMode="grid"
       />
     );
     expect(screen.getByText(/aucun film.*proposez/i)).toBeInTheDocument();
@@ -134,6 +139,7 @@ describe('WheelSection', () => {
         hostToken="ht"
         onWheelDone={vi.fn()}
         onCloseDone={vi.fn()}
+        viewMode="grid"
       />
     );
     expect(screen.getByRole('button', { name: /lancer la roue/i })).toBeInTheDocument();
@@ -165,6 +171,7 @@ describe('WheelSection', () => {
         hostToken={null}
         onWheelDone={vi.fn()}
         onCloseDone={vi.fn()}
+        viewMode="grid"
       />
     );
     expect(screen.getByRole('heading', { name: /résultat du tirage/i })).toBeInTheDocument();
@@ -182,6 +189,7 @@ describe('WheelSection', () => {
         hostToken="ht"
         onWheelDone={vi.fn()}
         onCloseDone={vi.fn()}
+        viewMode="grid"
       />
     );
     expect(screen.getByRole('button', { name: /relancer la roue/i })).toBeInTheDocument();
@@ -198,6 +206,7 @@ describe('WheelSection', () => {
         hostToken={null}
         onWheelDone={vi.fn()}
         onCloseDone={vi.fn()}
+        viewMode="grid"
       />
     );
     expect(screen.queryByText('Inception')).not.toBeInTheDocument();
@@ -212,6 +221,7 @@ describe('WheelSection', () => {
             hostToken={null}
             onWheelDone={vi.fn()}
             onCloseDone={vi.fn()}
+            viewMode="grid"
           />
         </LocaleProvider>
       </QueryClientProvider>

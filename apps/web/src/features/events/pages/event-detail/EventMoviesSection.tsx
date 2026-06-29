@@ -50,6 +50,8 @@ export type EventMoviesSectionProps = {
   onDismissActionError: () => void;
   setActionError: (message: string | null) => void;
   refreshAll: () => void;
+  viewMode: 'grid' | 'list';
+  onViewModeChange: (mode: 'grid' | 'list') => void;
 };
 
 export default function EventMoviesSection({
@@ -63,28 +65,13 @@ export default function EventMoviesSection({
   onDismissActionError,
   setActionError,
   refreshAll,
+  viewMode,
+  onViewModeChange,
 }: Readonly<EventMoviesSectionProps>) {
   const isFinished = !!event.isFinished;
   const { track } = useAnalytics();
   const { t } = useTranslation();
-  const [sortBy, setSortBy] = useState<SortKey>('score');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
-    try {
-      const stored = localStorage.getItem('movies-view');
-      return stored === 'list' ? 'list' : 'grid';
-    } catch {
-      return 'grid';
-    }
-  });
-
-  const handleViewMode = (mode: 'grid' | 'list') => {
-    setViewMode(mode);
-    try {
-      localStorage.setItem('movies-view', mode);
-    } catch {
-      /* ignore */
-    }
-  };
+  const [sortBy, setSortBy] = useState<SortKey>('createdAt');
 
   const handleVote = useCallback(
     async (movieId: string, value: 1 | -1) => {
@@ -131,7 +118,6 @@ export default function EventMoviesSection({
 
   return (
     <section className="section section-movies" aria-label="Films proposés">
-      <h2>Films</h2>
       {!isFinished && participant && (
         <AddMovieForm
           slug={slug}
@@ -196,7 +182,7 @@ export default function EventMoviesSection({
               )}
               aria-pressed={viewMode === 'grid'}
               aria-label={t('movies.list.viewGridAria')}
-              onClick={() => handleViewMode('grid')}
+              onClick={() => onViewModeChange('grid')}
             >
               <LayoutGrid aria-hidden size={15} />
             </button>
@@ -208,7 +194,7 @@ export default function EventMoviesSection({
               )}
               aria-pressed={viewMode === 'list'}
               aria-label={t('movies.list.viewListAria')}
-              onClick={() => handleViewMode('list')}
+              onClick={() => onViewModeChange('list')}
             >
               <List aria-hidden size={15} />
             </button>

@@ -354,7 +354,7 @@ export const en: Locale = {
   movies: {
     search: {
       label: 'Suggest a movie',
-      placeholder: 'Search for a movie\u2026',
+      placeholder: 'Add a movie to the event\u2026',
       searchButton: 'Search',
       searching: '\u2026',
       fallbackError: 'Search unavailable',
@@ -420,7 +420,7 @@ export const en: Locale = {
       sortScore: 'Votes',
       sortTmdbVote: 'Rating',
       sortDuration: 'Duration',
-      sortAddedAt: 'Added order',
+      sortAddedAt: 'Added',
       viewToggleAria: 'Display mode',
       viewGridAria: 'Grid view',
       viewListAria: 'List view',
