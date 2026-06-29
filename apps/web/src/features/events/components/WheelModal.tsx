@@ -30,6 +30,7 @@ export default function WheelModal({
 }: Readonly<WheelModalProps>) {
   const { t } = useTranslation();
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const confettiDialogRef = useRef<HTMLDialogElement>(null);
   const [animDone, setAnimDone] = useState(false);
   const confettiTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const confettiCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -38,6 +39,7 @@ export default function WheelModal({
     clearTimeout(confettiTimerRef.current);
     confettiCanvasRef.current?.remove();
     confettiCanvasRef.current = null;
+    if (confettiDialogRef.current?.open) confettiDialogRef.current.close();
   };
 
   useDialogOpen(dialogRef, open);
@@ -68,12 +70,15 @@ export default function WheelModal({
 
     requestAnimationFrame(() => {
       cleanupConfettiOverlay();
-      if (!dialogRef.current) return;
+      const dlg = confettiDialogRef.current;
+      if (!dlg) return;
+
+      dlg.showModal();
 
       const canvas = document.createElement('canvas');
       canvas.style.cssText =
-        'position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:9999;';
-      dialogRef.current.appendChild(canvas);
+        'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;';
+      dlg.appendChild(canvas);
       confettiCanvasRef.current = canvas;
 
       const fire = confetti.create(canvas, { resize: true, useWorker: false });
@@ -110,74 +115,77 @@ export default function WheelModal({
   const providers = winner.watchProviders ?? [];
 
   return (
-    <dialog
-      ref={dialogRef}
-      className={`${styles.dialog} ${animDone ? styles.dialogDone : styles.dialogSpin}`}
-      aria-labelledby="wheel-modal-title"
-    >
-      {!animDone && (
-        <div className={styles.spinPhase}>
-          <SpinningWheel
-            key={wheelKey}
-            movies={movies}
-            winnerIndex={winnerIndex}
-            onDone={handleWheelDone}
-          />
-          <p className={styles.spinLabel} id="wheel-modal-title">
-            {t('events.wheel.modal.spinningTitle')}
-          </p>
-        </div>
-      )}
-
-      {animDone && (
-        <>
-          <div className={styles.header}>
-            <h2 id="wheel-modal-title" className={styles.title}>
-              {t('events.wheel.modal.winnerTitle')}
-            </h2>
-            <button
-              type="button"
-              className={styles.closeIconBtn}
-              onClick={onClose}
-              aria-label="Fermer"
-            >
-              <X size={20} />
-            </button>
+    <>
+      <dialog
+        ref={dialogRef}
+        className={`${styles.dialog} ${animDone ? styles.dialogDone : styles.dialogSpin}`}
+        aria-labelledby="wheel-modal-title"
+      >
+        {!animDone && (
+          <div className={styles.spinPhase}>
+            <SpinningWheel
+              key={wheelKey}
+              movies={movies}
+              winnerIndex={winnerIndex}
+              onDone={handleWheelDone}
+            />
+            <p className={styles.spinLabel} id="wheel-modal-title">
+              {t('events.wheel.modal.spinningTitle')}
+            </p>
           </div>
+        )}
 
-          <div className={styles.winnerArea}>
-            {posterSrc ? (
-              <img src={posterSrc} alt={winner.title} className={styles.poster} loading="lazy" />
-            ) : (
-              <div className={styles.posterPlaceholder} aria-hidden />
-            )}
-            <div className={styles.info}>
-              <p className={styles.winnerTitle}>{winner.title}</p>
-              {winner.year && <p className={styles.winnerYear}>{winner.year}</p>}
-              {providers.length > 0 && (
-                <div className={styles.providers}>
-                  <WatchProviderChips
-                    providers={providers}
-                    watchPageUrl={winner.tmdbWatchPageUrl}
-                    maxVisible={6}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className={styles.footer}>
-            {onRelaunch && (
-              <button type="button" className="btn" onClick={onRelaunch}>
-                {t('events.wheel.relaunchButton')}
+        {animDone && (
+          <>
+            <div className={styles.header}>
+              <h2 id="wheel-modal-title" className={styles.title}>
+                {t('events.wheel.modal.winnerTitle')}
+              </h2>
+              <button
+                type="button"
+                className={styles.closeIconBtn}
+                onClick={onClose}
+                aria-label="Fermer"
+              >
+                <X size={20} />
               </button>
-            )}
-            <button type="button" className="btn btn-primary" onClick={onClose}>
-              {t('events.wheel.modal.closeButton')}
-            </button>
-          </div>
-        </>
-      )}
-    </dialog>
+            </div>
+
+            <div className={styles.winnerArea}>
+              {posterSrc ? (
+                <img src={posterSrc} alt={winner.title} className={styles.poster} loading="lazy" />
+              ) : (
+                <div className={styles.posterPlaceholder} aria-hidden />
+              )}
+              <div className={styles.info}>
+                <p className={styles.winnerTitle}>{winner.title}</p>
+                {winner.year && <p className={styles.winnerYear}>{winner.year}</p>}
+                {providers.length > 0 && (
+                  <div className={styles.providers}>
+                    <WatchProviderChips
+                      providers={providers}
+                      watchPageUrl={winner.tmdbWatchPageUrl}
+                      maxVisible={6}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className={styles.footer}>
+              {onRelaunch && (
+                <button type="button" className="btn" onClick={onRelaunch}>
+                  {t('events.wheel.relaunchButton')}
+                </button>
+              )}
+              <button type="button" className="btn btn-primary" onClick={onClose}>
+                {t('events.wheel.modal.closeButton')}
+              </button>
+            </div>
+          </>
+        )}
+      </dialog>
+      <dialog ref={confettiDialogRef} className={styles.confettiDialog} aria-hidden="true" />
+    </>
   );
 }

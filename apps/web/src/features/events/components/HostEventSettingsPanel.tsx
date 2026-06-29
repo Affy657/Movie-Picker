@@ -226,7 +226,6 @@ export default function HostEventSettingsPanel({
             maxLength={200}
             required
             placeholder={t('events.settings.titlePlaceholder')}
-            disabled={mutation.isPending}
           />
         </div>
 
@@ -243,7 +242,6 @@ export default function HostEventSettingsPanel({
               setEventDateLocal(e.target.value);
               scheduleAutoSave();
             }}
-            disabled={mutation.isPending}
           />
         </div>
 
@@ -261,7 +259,6 @@ export default function HostEventSettingsPanel({
                   setThemeText('');
                   scheduleAutoSave();
                 }}
-                disabled={mutation.isPending}
                 aria-label="Supprimer le thème"
               >
                 <X size={11} strokeWidth={2.5} />
@@ -286,7 +283,6 @@ export default function HostEventSettingsPanel({
               setThemeColor(v);
               scheduleAutoSave();
             }}
-            disabled={mutation.isPending}
           />
         </div>
 
@@ -305,7 +301,6 @@ export default function HostEventSettingsPanel({
               min={1}
               max={100}
               placeholder="Illimité"
-              disabled={mutation.isPending}
             />
           </div>
 
@@ -323,7 +318,6 @@ export default function HostEventSettingsPanel({
               min={1}
               max={MAX_EVENT_PARTICIPANTS}
               placeholder={t('events.settings.maxParticipantsPlaceholder')}
-              disabled={mutation.isPending}
             />
           </div>
         </div>
@@ -343,7 +337,6 @@ export default function HostEventSettingsPanel({
                 scheduleAutoSave(true);
               }
             }}
-            disabled={mutation.isPending}
           >
             <option value="strictRandom">Aléatoire strict (égalité)</option>
             <option value="weightedByVotes">Pondéré par les votes</option>
@@ -362,7 +355,6 @@ export default function HostEventSettingsPanel({
                 setAllowSeries(e.target.checked);
                 scheduleAutoSave(true);
               }}
-              disabled={mutation.isPending}
             />
             <span className={styles.toggleTrack}>
               <span className={styles.toggleThumb} />

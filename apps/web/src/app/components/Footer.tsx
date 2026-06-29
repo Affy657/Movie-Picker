@@ -76,8 +76,8 @@ export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>
               </Link>
             </li>
             <li>
-              <Link to={ROUTES.account} className={styles.colLink}>
-                {t('nav.account')}
+              <Link to={ROUTES.createEvent} className={styles.colLink}>
+                {t('nav.createEvent')}
               </Link>
             </li>
           </ul>
