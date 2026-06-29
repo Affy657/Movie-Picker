@@ -140,11 +140,7 @@ export default function HostEventSettingsPanel({
     setFormError(null);
 
     if (!eventTitle.trim()) {
-      setFormError('Le nom de la soirée est requis.');
-      return;
-    }
-    if (eventTitle.trim().length > 200) {
-      setFormError('Le nom de la soirée ne peut pas dépasser 200 caractères.');
+      setFormError(t('events.settings.titleRequired'));
       return;
     }
 

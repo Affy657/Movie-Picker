@@ -41,7 +41,10 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
         var hasDateTimeChange = request.Date is not null || request.Time is not null;
         var hasTitleChange = request.Title is not null;
 
-        EnsurePatchAllowed(evt, hasConfigChange || hasTitleChange, hasDateTimeChange);
+        EnsurePatchAllowed(evt, hasConfigChange, hasDateTimeChange);
+
+        if (hasTitleChange && (evt.IsFinished(DateTimeOffset.UtcNow) || !string.IsNullOrEmpty(evt.WinnerMovieId)))
+            throw new ConflictException("La soirée est terminée : le nom ne peut plus être modifié.");
 
         if (!hasConfigChange && !hasDateTimeChange && !hasTitleChange)
             return EventConfigResponse.FromEvent(evt);

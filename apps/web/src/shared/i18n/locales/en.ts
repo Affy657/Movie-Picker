@@ -299,6 +299,7 @@ export const en: Locale = {
       title: 'Event settings',
       titleLabel: 'Event name',
       titlePlaceholder: 'E.g. Friday movie night',
+      titleRequired: 'Event name is required.',
       themeLabel: 'Theme / mood',
       themePlaceholder: 'E.g. Horror, Sci-fi, Comedy\u2026',
       endDateLabel: 'Proposal deadline',
