@@ -1,5 +1,5 @@
 import confetti from 'canvas-confetti';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import type { MovieData } from '@/shared/types/movie';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
@@ -35,13 +35,13 @@ export default function WheelModal({
   const confettiTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const confettiCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const cleanupConfettiOverlay = () => {
+  const cleanupConfettiOverlay = useCallback(() => {
     clearTimeout(confettiTimerRef.current);
     confettiCanvasRef.current?.remove();
     confettiCanvasRef.current = null;
     const overlay = confettiOverlayRef.current;
     if (overlay?.matches(':popover-open')) overlay.hidePopover();
-  };
+  }, []);
 
   useDialogOpen(dialogRef, open);
 
@@ -50,11 +50,11 @@ export default function WheelModal({
       setAnimDone(false);
       cleanupConfettiOverlay();
     }
-  }, [open, wheelKey]);
+  }, [open, wheelKey, cleanupConfettiOverlay]);
 
   useEffect(() => {
     return () => cleanupConfettiOverlay();
-  }, []);
+  }, [cleanupConfettiOverlay]);
 
   useEffect(() => {
     const dlg = dialogRef.current;
@@ -146,7 +146,7 @@ export default function WheelModal({
                 type="button"
                 className={styles.closeIconBtn}
                 onClick={onClose}
-                aria-label="Fermer"
+                aria-label={t('common.close')}
               >
                 <X size={20} />
               </button>

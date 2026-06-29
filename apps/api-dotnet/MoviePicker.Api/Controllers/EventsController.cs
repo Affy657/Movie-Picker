@@ -14,8 +14,8 @@ using MoviePicker.Api.Application.UseCases.InviteUser;
 using MoviePicker.Api.Application.UseCases.JoinEvent;
 using MoviePicker.Api.Application.UseCases.LaunchWheel;
 using MoviePicker.Api.Application.UseCases.ListMyEvents;
-using MoviePicker.Api.Application.UseCases.ResetWheel;
 using MoviePicker.Api.Application.UseCases.RemoveParticipant;
+using MoviePicker.Api.Application.UseCases.ResetWheel;
 using MoviePicker.Api.Infrastructure.Web;
 
 namespace MoviePicker.Api.Controllers;
