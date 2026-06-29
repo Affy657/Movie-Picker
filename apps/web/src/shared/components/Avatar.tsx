@@ -23,12 +23,15 @@ const INITIALS_COLORS = [
 
 function getInitials(pseudo: string): string {
   const parts = pseudo.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  const a = parts[0]?.[0] ?? '';
+  const b = parts[1]?.[0] ?? '';
+  if (a && b) return (a + b).toUpperCase();
   return pseudo.slice(0, 2).toUpperCase();
 }
 
 function initialsColor(pseudo: string): string {
-  return INITIALS_COLORS[pseudo.charCodeAt(0) % INITIALS_COLORS.length];
+  const idx = pseudo.charCodeAt(0) % INITIALS_COLORS.length;
+  return INITIALS_COLORS[idx] ?? '#3B82F6';
 }
 
 export default function Avatar({ avatarId, pseudo, size = 'md', className }: Readonly<AvatarProps>) {
