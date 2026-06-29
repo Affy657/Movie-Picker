@@ -297,6 +297,8 @@ export const en: Locale = {
     },
     settings: {
       title: 'Event settings',
+      titleLabel: 'Event name',
+      titlePlaceholder: 'E.g. Friday movie night',
       themeLabel: 'Theme / mood',
       themePlaceholder: 'E.g. Horror, Sci-fi, Comedy\u2026',
       endDateLabel: 'Proposal deadline',

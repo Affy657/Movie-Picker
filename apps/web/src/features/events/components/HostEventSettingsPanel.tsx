@@ -55,6 +55,7 @@ export default function HostEventSettingsPanel({
   const queryClient = useQueryClient();
   const cfg = normalizeConfig(event.config);
 
+  const [eventTitle, setEventTitle] = useState(event.title);
   const initialTheme = parseTheme(cfg.theme);
   const [themeEmoji, setThemeEmoji] = useState(initialTheme.emoji);
   const [themeText, setThemeText] = useState(initialTheme.text);
@@ -88,6 +89,7 @@ export default function HostEventSettingsPanel({
 
   const hydrateFromEvent = useCallback(() => {
     const next = normalizeConfig(event.config);
+    setEventTitle(event.title);
     const parsed = parseTheme(next.theme);
     setThemeEmoji(parsed.emoji);
     setThemeText(parsed.text);
@@ -101,7 +103,7 @@ export default function HostEventSettingsPanel({
     setWheelMode(next.wheelMode);
     setAllowSeries(next.allowSeries ?? false);
     setFormError(null);
-  }, [event.config, event.date, event.time]);
+  }, [event.title, event.config, event.date, event.time]);
 
   const mutation = useMutation({
     mutationFn: (body: EventConfigPatchPayload) => patchEventConfig(slug, hostToken, body),
@@ -136,6 +138,15 @@ export default function HostEventSettingsPanel({
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     setFormError(null);
+
+    if (!eventTitle.trim()) {
+      setFormError('Le nom de la soirée est requis.');
+      return;
+    }
+    if (eventTitle.trim().length > 200) {
+      setFormError('Le nom de la soirée ne peut pas dépasser 200 caractères.');
+      return;
+    }
 
     if (!eventDateLocal.trim()) {
       setFormError('La date de la soirée est requise.');
@@ -183,6 +194,7 @@ export default function HostEventSettingsPanel({
     }
 
     mutation.mutate({
+      ...(eventTitle.trim() !== event.title ? { title: eventTitle.trim() } : {}),
       theme: [themeEmoji, themeText.trim()].filter(Boolean).join(' '),
       themeColor: themeColor ?? undefined,
       clearThemeColor: themeColor === null && (event.config?.themeColor ?? null) !== null,
@@ -220,6 +232,23 @@ export default function HostEventSettingsPanel({
         </p>
       )}
       <form className={`form ${styles.form}`} onSubmit={onSubmit}>
+        <div className={styles.field}>
+          <label className="label" htmlFor="host-cfg-title">
+            {t('events.settings.titleLabel')}
+          </label>
+          <input
+            id="host-cfg-title"
+            className="input"
+            type="text"
+            value={eventTitle}
+            onChange={(e) => setEventTitle(e.target.value)}
+            maxLength={200}
+            required
+            placeholder={t('events.settings.titlePlaceholder')}
+            disabled={mutation.isPending}
+          />
+        </div>
+
         <div className={styles.field}>
           <label className="label" htmlFor="host-cfg-datetime">
             Date et heure de la soirée

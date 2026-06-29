@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Settings2 } from 'lucide-react';
 import ThemeField from '@/features/events/components/ThemeField';
@@ -46,12 +46,14 @@ export default function CreateEvent() {
   const { user } = useAuth();
   const { track } = useAnalytics();
   const [title, setTitle] = useState('');
+  const titleInitialized = useRef(false);
 
   useEffect(() => {
-    if (user && title === '') {
+    if (user && !titleInitialized.current) {
+      titleInitialized.current = true;
       setTitle(`Soirée film chez ${user.displayName}`);
     }
-  }, [user, title]);
+  }, [user]);
   const [date, setDate] = useState(getDefaultDate);
   const [time, setTime] = useState(getDefaultTime);
   const [themeEmoji, setThemeEmoji] = useState('');

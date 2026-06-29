@@ -303,6 +303,8 @@
     },
     settings: {
       title: 'Paramètres de la soirée',
+      titleLabel: 'Nom de la soirée',
+      titlePlaceholder: 'Ex : Soirée film du vendredi',
       themeLabel: 'Thème / ambiance',
       themePlaceholder: 'Ex: Horreur, Sci-fi, Comédie\u2026',
       endDateLabel: 'Date de fin des propositions',

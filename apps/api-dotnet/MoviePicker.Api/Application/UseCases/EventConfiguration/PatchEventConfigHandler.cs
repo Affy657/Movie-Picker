@@ -39,10 +39,11 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
 
         var hasConfigChange = HasConfigChange(request);
         var hasDateTimeChange = request.Date is not null || request.Time is not null;
+        var hasTitleChange = request.Title is not null;
 
-        EnsurePatchAllowed(evt, hasConfigChange, hasDateTimeChange);
+        EnsurePatchAllowed(evt, hasConfigChange || hasTitleChange, hasDateTimeChange);
 
-        if (!hasConfigChange && !hasDateTimeChange)
+        if (!hasConfigChange && !hasDateTimeChange && !hasTitleChange)
             return EventConfigResponse.FromEvent(evt);
 
         var current = evt.Config ?? new EventConfig();
@@ -75,9 +76,10 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
 
         var date = ResolveDate(request, evt.Date);
         var time = ResolveTime(request, evt.Time);
+        var title = ResolveTitle(request, evt.Title);
 
         var now = DateTimeOffset.UtcNow;
-        var updated = evt with { Date = date, Time = time, Config = nextConfig, UpdatedAt = now };
+        var updated = evt with { Title = title, Date = date, Time = time, Config = nextConfig, UpdatedAt = now };
 
         var saved = await _events.UpdateAsync(updated, ct);
         return EventConfigResponse.FromEvent(saved);
@@ -167,6 +169,18 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
         }
 
         return v == 0 ? null : v;
+    }
+
+    private static string ResolveTitle(PatchEventConfigRequest request, string current)
+    {
+        if (request.Title is null)
+            return current;
+        var trimmed = request.Title.Trim();
+        if (trimmed.Length == 0)
+            throw new BadRequestException("Le titre de la soirée ne peut pas être vide.");
+        if (trimmed.Length > 200)
+            throw new BadRequestException("Le titre de la soirée ne peut pas dépasser 200 caractères.");
+        return trimmed;
     }
 
     private static string ResolveDate(PatchEventConfigRequest request, string current)

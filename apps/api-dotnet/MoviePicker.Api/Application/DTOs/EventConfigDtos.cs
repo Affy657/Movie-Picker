@@ -35,6 +35,7 @@ public sealed class EventConfigResponse
 
 public sealed class PatchEventConfigRequest
 {
+    public string? Title { get; init; }
     public string? Theme { get; init; }
     public int? ThemeColor { get; init; }
     public bool? ClearThemeColor { get; init; }
