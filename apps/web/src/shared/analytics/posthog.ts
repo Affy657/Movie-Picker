@@ -32,11 +32,11 @@ export function resetIdentity(): void {
 }
 
 export function optIn(): void {
-  if (!initialized) return;
+  if (!initialized || posthog.has_opted_in_capturing()) return;
   posthog.opt_in_capturing();
 }
 
 export function optOut(): void {
-  if (!initialized) return;
+  if (!initialized || posthog.has_opted_out_capturing()) return;
   posthog.opt_out_capturing();
 }
