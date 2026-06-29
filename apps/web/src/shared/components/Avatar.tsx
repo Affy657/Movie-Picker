@@ -17,8 +17,14 @@ const SIZE_PX: Record<NonNullable<AvatarProps['size']>, number> = {
 };
 
 const INITIALS_COLORS = [
-  '#3B82F6', '#7C3AED', '#06B6D4', '#EC4899',
-  '#F97316', '#10B981', '#EF4444', '#8B5CF6',
+  '#3B82F6',
+  '#7C3AED',
+  '#06B6D4',
+  '#EC4899',
+  '#F97316',
+  '#10B981',
+  '#EF4444',
+  '#8B5CF6',
 ];
 
 function getInitials(pseudo: string): string {
@@ -34,7 +40,12 @@ function initialsColor(pseudo: string): string {
   return INITIALS_COLORS[idx] ?? '#3B82F6';
 }
 
-export default function Avatar({ avatarId, pseudo, size = 'md', className }: Readonly<AvatarProps>) {
+export default function Avatar({
+  avatarId,
+  pseudo,
+  size = 'md',
+  className,
+}: Readonly<AvatarProps>) {
   const px = SIZE_PX[size];
 
   if (!avatarId) {
