@@ -305,9 +305,9 @@
   letter-spacing: var(--tracking-extra);
   padding: 0.28rem 0.6rem;
   border-radius: var(--radius-pill);
-  background: var(--color-badge-host-bg);
-  color: var(--color-badge-host-text);
-  border: 1px solid color-mix(in srgb, var(--color-badge-host-text) 28%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+  color: var(--color-primary);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
 .badgeUpcoming {

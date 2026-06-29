@@ -6,8 +6,10 @@
   color: var(--color-text);
   box-shadow: var(--shadow-lg);
   width: min(640px, calc(100vw - 2rem));
-  max-height: min(85dvh, 720px);
+  max-height: min(88dvh, 720px);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .dialog:not([open]) {
@@ -62,6 +64,8 @@
 .body {
   padding: 0 1.25rem 1.25rem;
   overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .details {

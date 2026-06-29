@@ -56,19 +56,8 @@ export default function EventParticipantsList({
             {t('events.participants.fullBadge')}
           </span>
         )}
-        {onInvite && (
-          <button
-            type="button"
-            className={styles.inviteBtn}
-            onClick={onInvite}
-            aria-label={t('events.participants.inviteAriaLabel')}
-            title={t('events.participants.inviteAriaLabel')}
-          >
-            <UserPlus aria-hidden size={14} />
-          </button>
-        )}
       </h2>
-      {participants.length === 0 ? (
+      {participants.length === 0 && !onInvite ? (
         <EmptyState
           compact
           icon={<UserPlus size={22} aria-hidden />}
@@ -130,6 +119,19 @@ export default function EventParticipantsList({
               </li>
             );
           })}
+          {onInvite && (
+            <li>
+              <button
+                type="button"
+                className={styles.inviteChip}
+                onClick={onInvite}
+                aria-label={t('events.participants.inviteAriaLabel')}
+                title={t('events.participants.inviteAriaLabel')}
+              >
+                <UserPlus aria-hidden size={14} />
+              </button>
+            </li>
+          )}
         </ul>
       )}
     </section>

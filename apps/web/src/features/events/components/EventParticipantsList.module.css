@@ -65,7 +65,8 @@
 }
 
 .chipLabel {
-  line-height: var(--leading-none);
+  line-height: 1;
+  margin-top: 1px;
 }
 
 .profileLink {
@@ -122,29 +123,32 @@
   cursor: not-allowed;
 }
 
-.inviteBtn {
+.inviteChip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.6rem;
-  height: 1.6rem;
-  padding: 0;
-  border: 1px solid var(--color-border);
+  padding: 0.3rem 0.6rem;
   border-radius: var(--radius-pill);
   background: transparent;
-  color: var(--color-primary);
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-muted);
   cursor: pointer;
-  transition: background-color var(--duration-base) var(--ease-default),
-    border-color var(--duration-base) var(--ease-default);
+  line-height: 1;
+  transition:
+    background var(--duration-base) var(--ease-default),
+    border-color var(--duration-base) var(--ease-default),
+    color var(--duration-base) var(--ease-default);
 }
 
-.inviteBtn:hover,
-.inviteBtn:focus-visible {
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+.inviteChip:hover,
+.inviteChip:focus-visible {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
   border-color: var(--color-primary);
+  color: var(--color-primary);
+  border-style: solid;
 }
 
-.inviteBtn:focus-visible {
+.inviteChip:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
