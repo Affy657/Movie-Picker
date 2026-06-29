@@ -90,16 +90,8 @@
 .hostBadge {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  font-size: var(--font-size-4xs);
-  font-weight: 700;
-  letter-spacing: var(--tracking-extra);
-  text-transform: uppercase;
   color: var(--color-badge-host-text);
-  background: var(--color-badge-host-bg);
-  padding: 0.15rem 0.45rem;
-  border-radius: var(--radius-pill);
-  border: 1px solid color-mix(in srgb, var(--color-badge-host-text) 25%, transparent);
+  flex-shrink: 0;
 }
 
 .removeBtn {

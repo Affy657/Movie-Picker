@@ -46,7 +46,7 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
       >
-        <Avatar avatarId={user.avatarId} size="sm" />
+        <Avatar avatarId={user.avatarId} pseudo={user.displayName} size="sm" />
       </button>
 
       {open ? (

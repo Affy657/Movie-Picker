@@ -83,7 +83,7 @@ export default function EventParticipantsList({
             const isPending = pendingRemovalId === p.id;
             const identity = (
               <>
-                <Avatar avatarId={p.avatarId ?? ''} size="xs" />
+                <Avatar avatarId={p.avatarId} pseudo={p.pseudo} size="xs" />
                 <span className={styles.chipLabel}>{p.pseudo}</span>
               </>
             );

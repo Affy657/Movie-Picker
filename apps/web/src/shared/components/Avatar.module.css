@@ -9,6 +9,17 @@
   background: var(--color-border-subtle);
 }
 
+.initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #fff;
+  user-select: none;
+  font-size: 0.55em;
+  letter-spacing: 0.02em;
+}
+
 .xs { width: 20px; height: 20px; }
 .sm { width: 26px; height: 26px; }
 .md { width: 36px; height: 36px; }
