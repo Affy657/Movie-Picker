@@ -74,7 +74,7 @@ export default function PublicProfileSection() {
           onClick={() => setAvatarModalOpen(true)}
           aria-label={t('auth.account.avatarLabel')}
         >
-          <Avatar avatarId={user.avatarId} size="lg" />
+          <Avatar avatarId={user.avatarId} pseudo={user.displayName} size="lg" />
           <span className={styles.avatarEditOverlay} aria-hidden>
             <Pencil size={14} />
           </span>

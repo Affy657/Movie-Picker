@@ -233,6 +233,7 @@ export function SeenButton({
               <Avatar
                 key={pseudo}
                 avatarId={avatarsByPseudo?.[pseudo] ?? ''}
+                pseudo={pseudo}
                 size="xs"
                 className={styles.seenAvatar}
               />

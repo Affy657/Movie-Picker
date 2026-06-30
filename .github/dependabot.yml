@@ -33,3 +33,13 @@ updates:
       nuget-all:
         patterns:
           - "*"
+
+  # Slides Slidev archivées (archive/, non maintenues) : neutralise Dependabot
+  # (version + sécurité) sur ce manifeste figé — sinon les security updates
+  # échouent sur des deps transitives vulnérables (ex. dompurify) qu'on ne patche pas.
+  - package-ecosystem: npm
+    directory: /archive/docs/RNCP/bloc-1-cadrage/slides
+    schedule:
+      interval: monthly
+    ignore:
+      - dependency-name: "*"
