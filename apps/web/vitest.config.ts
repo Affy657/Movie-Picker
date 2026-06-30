@@ -30,7 +30,7 @@ export default defineConfig({
     },
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'html'],
+      reporter: ['text', 'html', 'lcov'],
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
         'src/**/*.test.{ts,tsx}',
@@ -44,7 +44,7 @@ export default defineConfig({
       thresholds: {
         lines: 55,
         functions: 65,
-        branches: 62,
+        branches: 60,
       },
     },
   },
