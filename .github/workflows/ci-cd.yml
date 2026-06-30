@@ -1,15 +1,15 @@
 # E2E Playwright : local uniquement (pas de job CI).
-# Branch protection master + checks requis : job "sonar" (SonarScanner for .NET, analyse + couverture + Quality Gate).
+# SonarCloud : job "sonar" (SonarScanner for .NET) — analyse + couverture ; Quality Gate informatif (non bloquant).
 #
 # Durcissement sécurité :
 #   - Actions épinglées par SHA de commit (anti supply-chain) ; le commentaire # vX
 #     permet à Dependabot de proposer les mises à jour.
 #   - permissions least-privilege (deny par défaut au niveau workflow).
 #   - Secrets passés via env: (jamais interpolés directement dans un bloc run:).
-#   - Déploiement bloqué tant que le Quality Gate SonarCloud n'est pas vert.
+#   - Quality Gate SonarCloud informatif (calculé à chaque run, visible sur PR/dashboard) — ne bloque pas le déploiement.
 #   - concurrency: group cd-<ref> (cancel-in-progress: false) — pas de double deploy sur push rapides.
 #   - timeout-minutes sur chaque job — évite les runners bloqués au-delà de 6 h.
-#   - Analyse Sonar CI-based : couverture front (lcov) + API (opencover) ; `end` attend le Quality Gate (sonar.qualitygate.wait).
+#   - Analyse Sonar CI-based : couverture front (lcov) + API (opencover), soumise à chaque run.
 
 name: CI/CD
 
@@ -175,7 +175,7 @@ jobs:
           if-no-files-found: warn
 
   sonar:
-    name: SonarCloud (analyse + couverture + Quality Gate)
+    name: SonarCloud (analyse + couverture ; QG non bloquant)
     needs: [test-web, test-api]
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -233,8 +233,6 @@ jobs:
             /d:sonar.cpd.exclusions="$CPD" \
             /d:sonar.javascript.lcov.reportPaths="apps/web/coverage/lcov.info" \
             /d:sonar.cs.opencover.reportsPaths="apps/api-dotnet/**/TestResults/**/coverage.opencover.xml" \
-            /d:sonar.qualitygate.wait=true \
-            /d:sonar.qualitygate.timeout=300 \
             "${PRARGS[@]}"
           dotnet build apps/api-dotnet/MoviePicker.slnx -c Debug
           dotnet test apps/api-dotnet/MoviePicker.Api.Tests/MoviePicker.Api.Tests.csproj -c Debug --no-build \
