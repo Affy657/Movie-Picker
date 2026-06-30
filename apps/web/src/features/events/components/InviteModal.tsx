@@ -162,7 +162,7 @@ export default function InviteModal({ open, slug, onClose }: Readonly<Props>) {
                     key={item.userId}
                     className={`${styles.item} ${isParticipant ? styles.itemDisabled : ''}`}
                   >
-                    <Avatar avatarId={item.avatarId} size="sm" />
+                    <Avatar avatarId={item.avatarId} pseudo={item.displayName} size="sm" />
                     <div className={styles.itemInfo}>
                       <div className={styles.itemName}>{item.displayName}</div>
                       <div className={styles.itemHandle}>@{item.handle}</div>

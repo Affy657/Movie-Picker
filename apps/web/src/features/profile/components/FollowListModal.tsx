@@ -146,7 +146,7 @@ export default function FollowListModal({
           return (
             <li key={item.handle} className={styles.item}>
               <Link to={ROUTES.profile(item.handle)} className={styles.itemLink} onClick={onClose}>
-                <Avatar avatarId={item.avatarId} size="sm" />
+                <Avatar avatarId={item.avatarId} pseudo={item.displayName} size="sm" />
                 <div className={styles.itemInfo}>
                   <span className={styles.itemName}>{item.displayName}</span>
                   <span className={styles.itemHandle}>@{item.handle}</span>
