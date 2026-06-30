@@ -209,7 +209,7 @@ jobs:
           pnpm run test:coverage --filter=web
       - name: Installer SonarScanner for .NET
         run: |
-          dotnet tool install --global dotnet-sonarscanner
+          dotnet tool install --global dotnet-sonarscanner --version 11.2.1
           echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
       - name: Analyse SonarCloud (begin + build + tests)
         env:
