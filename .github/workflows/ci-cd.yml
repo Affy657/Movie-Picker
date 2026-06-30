@@ -239,7 +239,7 @@ jobs:
             /d:sonar.host.url="https://sonarcloud.io" \
             /d:sonar.token="$SONAR_TOKEN" \
             /d:sonar.scanner.skipJreProvisioning=true \
-            /d:sonar.projectVersion="$VERSION" \
+            /v:"$VERSION" \
             /d:sonar.exclusions="$EXCL" \
             /d:sonar.coverage.exclusions="$COV_EXCL" \
             /d:sonar.cpd.exclusions="$CPD" \
