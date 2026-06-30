@@ -149,7 +149,7 @@ export const MovieCardList = memo(function MovieCardList({
 
           <div className={styles.proposerRow}>
             <span className={styles.proposer}>
-              <Avatar avatarId={s.proposerAvatarId} size="xs" />
+              <Avatar avatarId={s.proposerAvatarId} pseudo={m.proposerPseudo} size="xs" />
               <span className={styles.proposerName}>{m.proposerPseudo}</span>
               {s.showAddNote && (
                 <button

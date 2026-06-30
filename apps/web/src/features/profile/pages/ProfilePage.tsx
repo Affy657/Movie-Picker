@@ -137,7 +137,7 @@ export default function ProfilePage() {
   return (
     <PageLayout className={styles.layout}>
       <section className={styles.card} aria-labelledby="profile-heading">
-        <Avatar avatarId={profile.avatarId} size="lg" className={styles.avatar} />
+        <Avatar avatarId={profile.avatarId} pseudo={profile.displayName} size="lg" className={styles.avatar} />
         <h1 id="profile-heading" className={styles.displayName}>
           {profile.displayName}
         </h1>

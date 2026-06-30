@@ -28,7 +28,7 @@ function renderNotifContent(
   if (item.type === 'newfollower' && item.actorHandle) {
     return (
       <Link to={ROUTES.profile(item.actorHandle)} className={styles.notifLink} onClick={onClose}>
-        <Avatar avatarId={item.actorAvatarId ?? ''} size="xs" />
+        <Avatar avatarId={item.actorAvatarId ?? undefined} pseudo={item.actorDisplayName ?? undefined} size="xs" />
         <span className={styles.notifText}>
           <strong>{item.actorDisplayName}</strong> {t('notifications.newFollowerText')}
         </span>
@@ -39,7 +39,7 @@ function renderNotifContent(
   if (item.type === 'participantjoined' && item.eventSlug) {
     return (
       <Link to={ROUTES.eventDetail(item.eventSlug)} className={styles.notifLink} onClick={onClose}>
-        {item.actorAvatarId && <Avatar avatarId={item.actorAvatarId} size="xs" />}
+        <Avatar avatarId={item.actorAvatarId ?? undefined} pseudo={item.actorDisplayName ?? undefined} size="xs" />
         <span className={styles.notifText}>
           <strong>{item.eventTitle}</strong>{' '}
           {t('notifications.participantJoinedText', { name: item.actorDisplayName ?? '—' })}
@@ -51,7 +51,7 @@ function renderNotifContent(
   if (item.type === 'movieadded' && item.eventSlug) {
     return (
       <Link to={ROUTES.eventDetail(item.eventSlug)} className={styles.notifLink} onClick={onClose}>
-        {item.actorAvatarId && <Avatar avatarId={item.actorAvatarId} size="xs" />}
+        <Avatar avatarId={item.actorAvatarId ?? undefined} pseudo={item.actorDisplayName ?? undefined} size="xs" />
         <span className={styles.notifText}>
           <strong>{item.eventTitle}</strong>{' '}
           {t('notifications.movieAddedText', { movie: item.movieTitle ?? '—' })}
@@ -96,7 +96,7 @@ function renderNotifContent(
   if (item.type === 'eventinvitation' && item.eventSlug) {
     return (
       <Link to={ROUTES.eventDetail(item.eventSlug)} className={styles.notifLink} onClick={onClose}>
-        {item.actorAvatarId && <Avatar avatarId={item.actorAvatarId} size="xs" />}
+        <Avatar avatarId={item.actorAvatarId ?? undefined} pseudo={item.actorDisplayName ?? undefined} size="xs" />
         <span className={styles.notifText}>
           <strong>{item.actorDisplayName}</strong> {t('notifications.eventInvitationText')}{' '}
           <strong>{item.eventTitle}</strong>
