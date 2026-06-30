@@ -103,12 +103,14 @@ Découpage par version côté **métier / utilisateur**.
 
 ## 📋 V1.4 – Planifiée
 
-**Objectif** : outils hôte avancés et bibliothèque personnelle — timer, templates, watchlist et intégration Letterboxd pour une expérience plus organisée.
+**Objectif** : outils hôte avancés, bibliothèque personnelle et engagement utilisateur — timer, templates, watchlist, intégration Letterboxd, sélection manuelle et streak de soirées.
 
 - ⬜ **Timer avant le début de la soirée** : compte à rebours visible par tous les participants depuis la page soirée jusqu'à l'heure de début prévue.
 - ⬜ **Templates de soirée** : sauvegarder une configuration de soirée (genres, limite de propositions, type de roue) et la réutiliser en un clic à la création.
 - ⬜ **Watchlist personnelle** : liste de films « à voir » par utilisateur ; ajout depuis la recherche TMDB ; proposition rapide d'un film depuis sa watchlist directement dans une soirée.
 - ⬜ **Intégration Letterboxd** : import de la watchlist (films à voir) et de la liste « déjà vu » depuis un export CSV Letterboxd ou via leur flux RSS public.
+- ⬜ **Sélection manuelle du film gagnant** : en alternative au tirage par la roue, l'hôte peut activer un mode « choix manuel » — toutes les cards de films entrent en animation de tremblement, l'hôte clique sur le film choisi, puis l'animation de fin habituelle (identique à la roue) se déclenche pour le révéler.
+- ⬜ **Flamme streak de soirées** : compteur de semaines consécutives durant lesquelles l'utilisateur a participé à au moins une soirée ; icône flamme + chiffre affichés sur le profil public ; remise à zéro automatique si une semaine calendar entière passe sans activité.
 
 ---
 
@@ -156,9 +158,7 @@ Découpage par version côté **métier / utilisateur**.
 - **Compatibilité ciné** : score de compatibilité cinématographique avec un ami basé sur les films « déjà vu » en commun ; nécessite les statistiques utilisateur et potentiellement l'intégration Letterboxd pour être complet.
 - **Recherche d'utilisateurs** : trouver un utilisateur par pseudo ou handle pour le suivre ou l'inviter — manque structurel dès lors que le follow existe.
 - **Statistique : note moyenne des films gagnants** : ajouter dans la section stats du profil public la moyenne des notes TMDB des films tirés gagnants dans les soirées auxquelles l'utilisateur a participé — aucune infra supplémentaire, les notes TMDB sont déjà stockées avec les films.
-- **Flamme streak de soirées** : compteur de semaines consécutives durant lesquelles l'utilisateur a participé à au moins une soirée ; icône flamme + chiffre affichés sur le profil public ; remise à zéro automatique si une semaine calendar entière passe sans activité.
 - **Top 3 films préférés sur le profil** : permettre à l'utilisateur de sélectionner et d'afficher 3 films favoris sur son profil public `/u/:handle` via une recherche TMDB ; cartes visibles par tous les visiteurs, modifiables depuis les paramètres du profil.
-- **Sélection manuelle du film gagnant** : en alternative au tirage par la roue, l'hôte peut activer un mode « choix manuel » — toutes les cards de films entrent en animation de tremblement, l'hôte clique sur le film choisi, puis l'animation de fin habituelle (identique à la roue) se déclenche pour le révéler.
 - **Formulaire de retour utilisateur** : formulaire in-app accessible depuis le footer ou le menu compte — catégorie (idée de feature / bug / autre), titre, description libre ; la soumission crée automatiquement une GitHub Issue sur le dépôt via l'API GitHub (token serveur, aucune credential exposée côté client) ; confirmation visuelle après envoi.
 - **Mode Battle / Tournoi** : alternative à la roue — l'hôte lance un tournoi en duels ; deux films s'affrontent, les participants votent, le gagnant passe au tour suivant jusqu'au film champion ; plus interactif et peut animer toute la soirée.
 - **Thème imposé par l'hôte** : contrainte de proposition définie à la création ou dans les paramètres de la soirée (genre TMDB, décennie, acteur, réalisateur) ; les films proposés qui ne respectent pas la contrainte sont refusés côté back avec message explicite ; le thème est affiché en bannière sur la page soirée.
