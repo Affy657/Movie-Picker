@@ -41,8 +41,15 @@ public sealed class AddMovieHandlerNotificationTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Event
             {
-                Id = "evt1", Title = "Soirée", Date = "2030-01-01", Time = "20:00", Slug = "soiree",
-                HostToken = "ht1", Config = new EventConfig(), CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow
+                Id = "evt1",
+                Title = "Soirée",
+                Date = "2030-01-01",
+                Time = "20:00",
+                Slug = "soiree",
+                HostToken = "ht1",
+                Config = new EventConfig(),
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow
             });
         _posterStore.Setup(s => s.ToPublicPosterPath(It.IsAny<string?>())).Returns((string? u) => u);
         _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);

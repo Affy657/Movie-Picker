@@ -12,7 +12,10 @@ public sealed class WebPushSenderTests
 {
     private static readonly PushSubscription Subscription = new()
     {
-        UserId = "u1", Endpoint = "https://push.example.com/abc", P256dh = "key", Auth = "auth"
+        UserId = "u1",
+        Endpoint = "https://push.example.com/abc",
+        P256dh = "key",
+        Auth = "auth"
     };
 
     private static readonly PushMessage Message = new("Titre", "Corps");

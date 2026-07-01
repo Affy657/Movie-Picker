@@ -23,8 +23,15 @@ public sealed class JoinEventHandlerNotificationTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Event
             {
-                Id = "evt1", Title = "Soirée", Date = "2030-01-01", Time = "20:00", Slug = "soiree",
-                HostToken = "ht1", CreatorUserId = "host", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow
+                Id = "evt1",
+                Title = "Soirée",
+                Date = "2030-01-01",
+                Time = "20:00",
+                Slug = "soiree",
+                HostToken = "ht1",
+                CreatorUserId = "host",
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow
             });
         _participantRepo.Setup(r => r.FindByEventAndUserIdAsync("evt1", It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Participant?)null);
@@ -77,8 +84,15 @@ public sealed class JoinEventHandlerNotificationTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt2", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Event
             {
-                Id = "evt2", Title = "Soirée", Date = "2030-01-01", Time = "20:00", Slug = "s2",
-                HostToken = "ht1", CreatorUserId = null, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow
+                Id = "evt2",
+                Title = "Soirée",
+                Date = "2030-01-01",
+                Time = "20:00",
+                Slug = "s2",
+                HostToken = "ht1",
+                CreatorUserId = null,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow
             });
         _participantRepo.Setup(r => r.FindByEventAndUserIdAsync("evt2", It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Participant?)null);

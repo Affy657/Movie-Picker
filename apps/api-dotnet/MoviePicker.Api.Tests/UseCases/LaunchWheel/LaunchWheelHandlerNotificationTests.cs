@@ -26,8 +26,14 @@ public sealed class LaunchWheelHandlerNotificationTests
     {
         var evt = new Event
         {
-            Id = "evt1", Title = "Soirée", Date = "2030-01-01", Time = "20:00", Slug = "soiree",
-            HostToken = "ht1", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow
+            Id = "evt1",
+            Title = "Soirée",
+            Date = "2030-01-01",
+            Time = "20:00",
+            Slug = "soiree",
+            HostToken = "ht1",
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
         };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
@@ -54,8 +60,12 @@ public sealed class LaunchWheelHandlerNotificationTests
         _participantRepo.Setup(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(userIds.Select((u, i) => new Participant
             {
-                Id = $"p{i}", EventId = "evt1", Pseudo = $"P{i}", UserId = u,
-                CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow
+                Id = $"p{i}",
+                EventId = "evt1",
+                Pseudo = $"P{i}",
+                UserId = u,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow
             }).ToList());
 
     private void Users(params User[] users) =>

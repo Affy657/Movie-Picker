@@ -46,8 +46,13 @@ public sealed class UserDocumentMapperMappingTests
     {
         var doc = new UserDocument
         {
-            Id = "1", Email = "a@b.c", PasswordHash = "x", DisplayName = "n",
-            UiTheme = "system", CreatedAt = Utc, UpdatedAt = Utc
+            Id = "1",
+            Email = "a@b.c",
+            PasswordHash = "x",
+            DisplayName = "n",
+            UiTheme = "system",
+            CreatedAt = Utc,
+            UpdatedAt = Utc
         };
 
         var user = UserDocumentMapper.ToDomain(doc);
@@ -70,10 +75,20 @@ public sealed class UserDocumentMapperMappingTests
     {
         var doc = new UserDocument
         {
-            Id = "1", Email = "a@b.c", PasswordHash = "x", DisplayName = "n", UiTheme = "system",
-            NotifyOnParticipantJoined = false, NotifyEventReminder = false, NotifyOnMovieAdded = false,
-            NotifyOnMoviePicked = false, NotifyOnEventDeleted = false, NotifyOnNewFollower = false,
-            IsProfilePublic = false, CreatedAt = Utc, UpdatedAt = Utc
+            Id = "1",
+            Email = "a@b.c",
+            PasswordHash = "x",
+            DisplayName = "n",
+            UiTheme = "system",
+            NotifyOnParticipantJoined = false,
+            NotifyEventReminder = false,
+            NotifyOnMovieAdded = false,
+            NotifyOnMoviePicked = false,
+            NotifyOnEventDeleted = false,
+            NotifyOnNewFollower = false,
+            IsProfilePublic = false,
+            CreatedAt = Utc,
+            UpdatedAt = Utc
         };
 
         var user = UserDocumentMapper.ToDomain(doc);
@@ -88,10 +103,17 @@ public sealed class UserDocumentMapperMappingTests
     {
         var user = new User
         {
-            Id = "1", Email = "a@b.c", PasswordHash = "x", DisplayName = "n",
-            Handle = string.Empty, Bio = null, AvatarId = string.Empty,
-            AccentColor = AccentColor.Default, IsProfilePublic = false,
-            CreatedAt = new DateTimeOffset(Utc), UpdatedAt = new DateTimeOffset(Utc)
+            Id = "1",
+            Email = "a@b.c",
+            PasswordHash = "x",
+            DisplayName = "n",
+            Handle = string.Empty,
+            Bio = null,
+            AvatarId = string.Empty,
+            AccentColor = AccentColor.Default,
+            IsProfilePublic = false,
+            CreatedAt = new DateTimeOffset(Utc),
+            UpdatedAt = new DateTimeOffset(Utc)
         };
 
         var doc = UserDocumentMapper.ToDocument(user);
@@ -108,10 +130,17 @@ public sealed class UserDocumentMapperMappingTests
     {
         var user = new User
         {
-            Id = "1", Email = "a@b.c", PasswordHash = "x", DisplayName = "n",
-            Handle = "alice", Bio = "hi", AvatarId = "bolt",
-            UiTheme = UiThemePreference.Light, AccentColor = AccentColor.Purple,
-            CreatedAt = new DateTimeOffset(Utc), UpdatedAt = new DateTimeOffset(Utc)
+            Id = "1",
+            Email = "a@b.c",
+            PasswordHash = "x",
+            DisplayName = "n",
+            Handle = "alice",
+            Bio = "hi",
+            AvatarId = "bolt",
+            UiTheme = UiThemePreference.Light,
+            AccentColor = AccentColor.Purple,
+            CreatedAt = new DateTimeOffset(Utc),
+            UpdatedAt = new DateTimeOffset(Utc)
         };
 
         var doc = UserDocumentMapper.ToDocument(user);
@@ -128,8 +157,13 @@ public sealed class UserDocumentMapperMappingTests
     {
         var user = new User
         {
-            Id = "1", Email = "a@b.c", PasswordHash = "x", DisplayName = "n",
-            AccentColor = AccentColor.Cyan, CreatedAt = new DateTimeOffset(Utc), UpdatedAt = new DateTimeOffset(Utc)
+            Id = "1",
+            Email = "a@b.c",
+            PasswordHash = "x",
+            DisplayName = "n",
+            AccentColor = AccentColor.Cyan,
+            CreatedAt = new DateTimeOffset(Utc),
+            UpdatedAt = new DateTimeOffset(Utc)
         };
 
         var back = UserDocumentMapper.ToDomain(UserDocumentMapper.ToDocument(user));

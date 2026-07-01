@@ -27,8 +27,15 @@ public sealed class DeleteEventHandlerNotificationTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Event
             {
-                Id = "evt1", Title = "Soirée", Date = "2030-01-01", Time = "20:00", Slug = "soiree",
-                HostToken = "ht1", CreatorUserId = "creator", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow
+                Id = "evt1",
+                Title = "Soirée",
+                Date = "2030-01-01",
+                Time = "20:00",
+                Slug = "soiree",
+                HostToken = "ht1",
+                CreatorUserId = "creator",
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow
             });
         _eventRepo.Setup(r => r.DeleteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _voteRepo.Setup(r => r.DeleteByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(0L);
@@ -46,8 +53,12 @@ public sealed class DeleteEventHandlerNotificationTests
         _participantRepo.Setup(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(userIds.Select((u, i) => new Participant
             {
-                Id = $"p{i}", EventId = "evt1", Pseudo = $"P{i}", UserId = u,
-                CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow
+                Id = $"p{i}",
+                EventId = "evt1",
+                Pseudo = $"P{i}",
+                UserId = u,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow
             }).ToList());
 
     [Fact]
