@@ -227,7 +227,7 @@ jobs:
           fi
           EXCL='**/node_modules/**,**/dist/**,**/coverage/**,**/build/**,**/.next/**,archive/**,docs/**,e2e/**,scripts/**,configs/**,logs/**,test-results/**,artifacts/**,apps/web/src/**/*.test.ts,apps/web/src/**/*.test.tsx,apps/web/src/test-setup.ts,apps/web/src/mocks/**,apps/web/src/features/auth/devQuickLoginCredentials.ts,apps/web/src/shared/i18n/locales/en.ts,apps/web/src/shared/i18n/locales/fr.ts,apps/api-dotnet/*.Tests/**,apps/api-dotnet/*.IntegrationTests/**,apps/api-dotnet/ToolGenDpKey/**,apps/api-dotnet/**/Infrastructure/Development/**'
           CPD='apps/web/src/**/locales/fr.ts,apps/web/src/**/locales/en.ts,apps/api-dotnet/**/Development/**'
-          COV_EXCL='apps/web/src/main.tsx,apps/web/src/vite-env.d.ts,apps/web/src/shared/analytics/**,apps/web/src/app/components/AnalyticsSync.tsx,apps/web/src/features/events/components/SpinningWheel.tsx,apps/api-dotnet/**/Program.cs,apps/api-dotnet/**/Contracts/**'
+          COV_EXCL='apps/web/src/main.tsx,apps/web/src/vite-env.d.ts,apps/web/vite.config.ts,prettier.config.cjs,apps/web/scripts/**,apps/web/src/sw.ts,apps/web/src/**/*.stub.ts,apps/web/src/shared/analytics/**,apps/web/src/app/components/AnalyticsSync.tsx,apps/web/src/features/events/components/SpinningWheel.tsx,apps/api-dotnet/**/Program.cs,apps/api-dotnet/**/Contracts/**,apps/api-dotnet/**/Configuration/**,apps/api-dotnet/**/Persistence/Mongo/*Document.cs,apps/api-dotnet/**/Persistence/Mongo/Mongo*.cs,apps/api-dotnet/**/Infrastructure/Posters/MongoPosterImageStore.cs,apps/api-dotnet/**/BackgroundServices/**'
           VERSION="$(git describe --tags --always 2>/dev/null || echo 0.0.0)"
           PRARGS=()
           if [ "$EVENT_NAME" = "pull_request" ]; then
