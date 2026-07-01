@@ -136,9 +136,27 @@ jobs:
       - name: Tests unitaires + couverture
         run: |
           dotnet test apps/api-dotnet/MoviePicker.Api.Tests/MoviePicker.Api.Tests.csproj -c Debug \
-            --collect:"XPlat Code Coverage" --results-directory ./coverage-unit
+            --collect:"XPlat Code Coverage" \
+            --settings apps/api-dotnet/coverlet.runsettings \
+            --results-directory ./coverage-unit
         env:
           MONGODB_URI: ""
+      - name: Gate couverture back (lignes >= 80%)
+        run: |
+          set -eo pipefail
+          report="$(find ./coverage-unit -name coverage.opencover.xml | head -1)"
+          if [ -z "$report" ]; then
+            echo "::error::Rapport de couverture OpenCover introuvable"
+            exit 1
+          fi
+          cov="$(grep -o 'sequenceCoverage="[0-9.]*"' "$report" | head -1 | grep -o '[0-9.]*')"
+          echo "Couverture lignes back : ${cov}% (seuil 80%)"
+          if awk -v c="$cov" 'BEGIN { exit !(c + 0 >= 80) }'; then
+            echo "OK : couverture back suffisante"
+          else
+            echo "::error::Couverture back ${cov}% < 80% requis"
+            exit 1
+          fi
       - name: Tests intégration
         run: dotnet test apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj -c Debug --verbosity normal
         env:
