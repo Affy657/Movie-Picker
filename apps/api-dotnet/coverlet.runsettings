@@ -5,6 +5,7 @@
       <DataCollector friendlyName="XPlat Code Coverage">
         <Configuration>
           <Format>opencover</Format>
+          <ExcludeByFile>**/Program.cs,**/Contracts/**/*.cs,**/Configuration/**/*.cs,**/Persistence/Mongo/Mongo*.cs,**/Persistence/Mongo/*Document.cs,**/Infrastructure/Posters/MongoPosterImageStore.cs,**/BackgroundServices/**/*.cs,**/Infrastructure/Development/**/*.cs</ExcludeByFile>
         </Configuration>
       </DataCollector>
     </DataCollectors>
