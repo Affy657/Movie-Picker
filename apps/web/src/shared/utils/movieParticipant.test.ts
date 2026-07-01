@@ -4,7 +4,7 @@ import { getParticipantId } from '@/shared/utils/movieParticipant';
 import type { MovieData } from '@/shared/types/movie';
 
 const movieWith = (participantId: unknown): MovieData =>
-  ({ participantId } as unknown as MovieData);
+  ({ participantId }) as unknown as MovieData;
 
 describe('getParticipantId', () => {
   it('returns a plain string participant id as-is', () => {
