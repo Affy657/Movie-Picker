@@ -76,56 +76,86 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
             if (n >= 20)
                 break;
 
-            var mediaType = ResolveMediaType(item, allowSeries);
-            if (mediaType is null)
+            var mapped = TryMapSearchItem(item, allowSeries, genreIds, yearFrom, yearTo, voteMin, originalLanguage);
+            if (mapped is null)
                 continue;
 
-            if (genreIds?.Count > 0)
-            {
-                var itemGenreIds = ReadGenreIdArray(item);
-                if (!genreIds.Any(g => itemGenreIds.Contains(g)))
-                    continue;
-            }
-
-            if (yearFrom.HasValue || yearTo.HasValue)
-            {
-                var yearStr = ReadYear(item, mediaType.Value);
-                if (!int.TryParse(yearStr, out var yr))
-                    continue;
-                if (yearFrom.HasValue && yr < yearFrom.Value)
-                    continue;
-                if (yearTo.HasValue && yr > yearTo.Value)
-                    continue;
-            }
-
-            double? voteAverage = null;
-            if (item.TryGetProperty("vote_average", out var vaEl) && vaEl.ValueKind == JsonValueKind.Number)
-                voteAverage = vaEl.GetDouble();
-
-            if (voteMin.HasValue && (voteAverage is null || voteAverage < voteMin.Value))
-                continue;
-
-            if (!string.IsNullOrWhiteSpace(originalLanguage))
-            {
-                var lang = ReadOriginalLanguage(item);
-                if (!string.Equals(lang, originalLanguage, StringComparison.OrdinalIgnoreCase))
-                    continue;
-            }
-
-            var id = item.GetProperty("id").GetInt32();
-            var title = ReadTitle(item, mediaType.Value);
-            if (string.IsNullOrEmpty(title))
-                continue;
-
-            var year = ReadYear(item, mediaType.Value);
-            var posterPath = ReadPosterUrl(item);
-
-            list.Add(new TmdbSearchItem(id, mediaType.Value, title, year, posterPath, voteAverage));
+            list.Add(mapped);
             n++;
         }
 
         return list;
     }
+
+    private static TmdbSearchItem? TryMapSearchItem(
+        JsonElement item,
+        bool allowSeries,
+        IReadOnlyList<int>? genreIds,
+        int? yearFrom,
+        int? yearTo,
+        double? voteMin,
+        string? originalLanguage)
+    {
+        var mediaType = ResolveMediaType(item, allowSeries);
+        if (mediaType is null)
+            return null;
+
+        if (!MatchesGenres(item, genreIds))
+            return null;
+
+        if (!MatchesYearRange(item, mediaType.Value, yearFrom, yearTo))
+            return null;
+
+        var voteAverage = ReadVoteAverage(item);
+        if (!MatchesVoteMin(voteAverage, voteMin))
+            return null;
+
+        if (!MatchesLanguage(item, originalLanguage))
+            return null;
+
+        var title = ReadTitle(item, mediaType.Value);
+        if (string.IsNullOrEmpty(title))
+            return null;
+
+        var id = item.GetProperty("id").GetInt32();
+        var year = ReadYear(item, mediaType.Value);
+        var posterPath = ReadPosterUrl(item);
+        return new TmdbSearchItem(id, mediaType.Value, title, year, posterPath, voteAverage);
+    }
+
+    private static bool MatchesGenres(JsonElement item, IReadOnlyList<int>? genreIds)
+    {
+        if (!(genreIds?.Count > 0))
+            return true;
+        var itemGenreIds = ReadGenreIdArray(item);
+        return genreIds.Any(itemGenreIds.Contains);
+    }
+
+    private static bool MatchesYearRange(JsonElement item, MovieMediaType mediaType, int? yearFrom, int? yearTo)
+    {
+        if (!yearFrom.HasValue && !yearTo.HasValue)
+            return true;
+        if (!int.TryParse(ReadYear(item, mediaType), out var yr))
+            return false;
+        return (!yearFrom.HasValue || yr >= yearFrom.Value)
+            && (!yearTo.HasValue || yr <= yearTo.Value);
+    }
+
+    private static bool MatchesVoteMin(double? voteAverage, double? voteMin) =>
+        !voteMin.HasValue || (voteAverage is not null && voteAverage >= voteMin.Value);
+
+    private static bool MatchesLanguage(JsonElement item, string? originalLanguage)
+    {
+        if (string.IsNullOrWhiteSpace(originalLanguage))
+            return true;
+        var lang = ReadOriginalLanguage(item);
+        return string.Equals(lang, originalLanguage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static double? ReadVoteAverage(JsonElement item) =>
+        item.TryGetProperty("vote_average", out var vaEl) && vaEl.ValueKind == JsonValueKind.Number
+            ? vaEl.GetDouble()
+            : null;
 
     private async Task<IReadOnlyList<TmdbSearchItem>> DiscoverMoviesAsync(
         string apiKey,
@@ -169,10 +199,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
 
             var year = ReadYear(item, MovieMediaType.Movie);
             var posterPath = ReadPosterUrl(item);
-
-            double? voteAverage = null;
-            if (item.TryGetProperty("vote_average", out var va) && va.ValueKind == JsonValueKind.Number)
-                voteAverage = va.GetDouble();
+            var voteAverage = ReadVoteAverage(item);
 
             list.Add(new TmdbSearchItem(id, MovieMediaType.Movie, title, year, posterPath, voteAverage));
             n++;
