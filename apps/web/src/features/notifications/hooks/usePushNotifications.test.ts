@@ -89,9 +89,7 @@ describe('usePushNotifications (supported)', () => {
     });
 
     expect(mockFetchKey).toHaveBeenCalledOnce();
-    expect(pmSubscribe).toHaveBeenCalledWith(
-      expect.objectContaining({ userVisibleOnly: true })
-    );
+    expect(pmSubscribe).toHaveBeenCalledWith(expect.objectContaining({ userVisibleOnly: true }));
     expect(mockPost).toHaveBeenCalledWith(subJson);
     expect(result.current.permission).toBe('granted');
     expect(result.current.subscribed).toBe(true);

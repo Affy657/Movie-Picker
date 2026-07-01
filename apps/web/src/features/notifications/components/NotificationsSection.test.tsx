@@ -97,7 +97,9 @@ describe('NotificationsSection', () => {
     render(<NotificationsSection />);
 
     await waitFor(() => expect(mockFetchPrefs).toHaveBeenCalledOnce());
-    expect(await screen.findByRole('switch', { name: 'notifications.prefParticipantJoined' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('switch', { name: 'notifications.prefParticipantJoined' })
+    ).toBeInTheDocument();
     expect(screen.getAllByRole('switch')).toHaveLength(7);
   });
 

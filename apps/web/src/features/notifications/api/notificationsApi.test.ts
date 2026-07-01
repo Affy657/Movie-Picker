@@ -91,9 +91,9 @@ describe('notificationsApi', () => {
     const updated = { notifyOnMovieAdded: false };
     mockFetchApi.mockResolvedValue(updated);
 
-    await expect(
-      patchNotificationPreferences({ notifyOnMovieAdded: false })
-    ).resolves.toBe(updated);
+    await expect(patchNotificationPreferences({ notifyOnMovieAdded: false })).resolves.toBe(
+      updated
+    );
     expect(mockFetchApi).toHaveBeenCalledWith('/notifications/preferences', {
       method: 'PATCH',
       body: JSON.stringify({ notifyOnMovieAdded: false }),
