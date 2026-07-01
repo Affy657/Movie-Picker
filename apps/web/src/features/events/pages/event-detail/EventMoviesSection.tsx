@@ -145,7 +145,7 @@ export default function EventMoviesSection({
               <span className={styles.sortLabel}>{t('movies.list.sortLabel')}</span>
               <div
                 className={styles.sortPills}
-                role="group"
+                role="toolbar"
                 aria-label={t('movies.list.sortLabel')}
               >
                 {(
@@ -171,7 +171,7 @@ export default function EventMoviesSection({
           )}
           <div
             className={styles.viewToggle}
-            role="group"
+            role="toolbar"
             aria-label={t('movies.list.viewToggleAria')}
           >
             <button

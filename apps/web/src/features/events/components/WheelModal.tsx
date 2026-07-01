@@ -9,6 +9,8 @@ import { useTranslation } from '@/shared/i18n';
 import SpinningWheel from './SpinningWheel';
 import styles from './WheelModal.module.css';
 
+const noop = () => {};
+
 interface WheelModalProps {
   open: boolean;
   movies: MovieData[];
@@ -89,7 +91,7 @@ export default function WheelModal({
         spread: 80,
         origin: { x: 0.5, y: 0.55 },
         colors: ['#3B82F6', '#7C3AED', '#06B6D4', '#EC4899', '#F97316', '#10B981'],
-      })?.catch(() => {});
+      })?.catch(noop);
 
       clearTimeout(confettiTimerRef.current);
       confettiTimerRef.current = setTimeout(() => {
@@ -99,14 +101,14 @@ export default function WheelModal({
           spread: 55,
           origin: { x: 0.1, y: 0.5 },
           colors: ['#4F46E5', '#D97706', '#0D9488', '#DB2777'],
-        })?.catch(() => {});
+        })?.catch(noop);
         fire?.({
           particleCount: 80,
           angle: 120,
           spread: 55,
           origin: { x: 0.9, y: 0.5 },
           colors: ['#8B5CF6', '#0891B2', '#F97316', '#EC4899'],
-        })?.catch(() => {});
+        })?.catch(noop);
         confettiTimerRef.current = setTimeout(cleanupConfettiOverlay, 4500);
       }, 180);
     });

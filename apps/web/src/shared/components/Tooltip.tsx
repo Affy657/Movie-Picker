@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { KeyboardEvent, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import clsx from 'clsx';
 import styles from './Tooltip.module.css';
 
@@ -35,6 +35,18 @@ export default function Tooltip({
 
   useEffect(() => clearShowTimer, []);
 
+  useEffect(() => {
+    if (!visible) return undefined;
+    const onEscape = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        dismissed.current = true;
+        setVisible(false);
+      }
+    };
+    document.addEventListener('keydown', onEscape);
+    return () => document.removeEventListener('keydown', onEscape);
+  }, [visible]);
+
   const show = (immediate: boolean) => {
     if (disabled || dismissed.current) return;
     clearShowTimer();
@@ -51,13 +63,6 @@ export default function Tooltip({
     setVisible(false);
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLSpanElement>) => {
-    if (e.key === 'Escape' && visible) {
-      dismissed.current = true;
-      hide(false);
-    }
-  };
-
   return (
     <span
       className={clsx(styles.wrapper, className)}
@@ -65,7 +70,6 @@ export default function Tooltip({
       onPointerLeave={() => hide(true)}
       onFocus={() => show(true)}
       onBlur={() => hide(true)}
-      onKeyDown={handleKeyDown}
     >
       {children}
       {!disabled && (

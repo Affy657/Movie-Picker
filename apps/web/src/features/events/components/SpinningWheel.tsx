@@ -173,8 +173,8 @@ export default function SpinningWheel({
   }, [movies, winnerIndex]);
 
   return (
-    <div className={styles.wrapper}>
-      <canvas ref={canvasRef} className={styles.canvas} aria-hidden />
+    <div className={styles.wrapper} aria-hidden>
+      <canvas ref={canvasRef} className={styles.canvas} />
     </div>
   );
 }

@@ -4,9 +4,12 @@ public static class EnvLoader
 {
     private const int MaxParentLevels = 8;
 
-    public static void LoadFromEnvFileIfExists()
+    public static void LoadFromEnvFileIfExists() =>
+        LoadFromEnvFileIfExists(Directory.GetCurrentDirectory());
+
+    internal static void LoadFromEnvFileIfExists(string startDirectory)
     {
-        var dir = Directory.GetCurrentDirectory();
+        var dir = startDirectory;
         for (var i = 0; i < MaxParentLevels && !string.IsNullOrEmpty(dir); i++)
         {
             var path = Path.Combine(dir, ".env");
@@ -30,7 +33,7 @@ public static class EnvLoader
         }
     }
 
-    private static bool TryParseEnvLine(string line, out string key, out string value)
+    internal static bool TryParseEnvLine(string line, out string key, out string value)
     {
         key = string.Empty;
         value = string.Empty;
