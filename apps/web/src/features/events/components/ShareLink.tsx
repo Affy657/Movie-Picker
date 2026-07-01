@@ -117,7 +117,7 @@ export default function ShareLink({
 
   return (
     <div
-      className={clsx(styles.root, centeredActions && styles.rootCentered)}
+      className={clsx(centeredActions && styles.rootCentered)}
       role="group"
       aria-label={t('events.share.groupLabel')}
     >

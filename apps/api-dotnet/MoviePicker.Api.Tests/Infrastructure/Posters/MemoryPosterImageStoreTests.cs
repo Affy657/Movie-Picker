@@ -55,7 +55,9 @@ public sealed class MemoryPosterImageStoreTests
     [Fact]
     public async Task RegisterTmdbSourcesAsync_Empty_DoesNotThrow()
     {
-        await Build().RegisterTmdbSourcesAsync([]);
+        var exception = await Record.ExceptionAsync(() => Build().RegisterTmdbSourcesAsync([]));
+
+        Assert.Null(exception);
     }
 
     [Fact]

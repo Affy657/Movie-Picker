@@ -152,7 +152,7 @@ export function VoteBar({
   t: Translate;
 }>) {
   return (
-    <div className={styles.votes} role="group" aria-label={m.title}>
+    <div className={styles.votes} role="toolbar" aria-label={m.title}>
       <button
         type="button"
         className={clsx(styles.voteBtn, m.myVote === 1 && styles.voteActive)}

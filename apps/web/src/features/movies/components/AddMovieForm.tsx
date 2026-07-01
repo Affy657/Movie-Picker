@@ -59,6 +59,10 @@ function makeSearchKey(term: string, filters: MovieSearchFilters): string {
   return `${term}|${(filters.genreIds ?? []).join(',')}|${filters.yearFrom ?? ''}|${filters.yearTo ?? ''}|${filters.voteMin ?? ''}|${filters.originalLanguage ?? ''}`;
 }
 
+function localizedName(fr: string, en: string, lang: string): string {
+  return lang.startsWith('fr') ? fr : en;
+}
+
 function isSameTmdbItem(m: MovieData, r: MovieSearchItem): boolean {
   return m.tmdbId === r.id && (m.mediaType ?? 'movie') === (r.mediaType ?? 'movie');
 }
@@ -349,16 +353,18 @@ export default function AddMovieForm({
     setAvailabilityFilter(undefined);
   }, []);
 
+  const removeGenre = useCallback((id: number) => {
+    filterChangedRef.current = true;
+    setSelectedGenres((prev) => prev.filter((g) => g !== id));
+  }, []);
+
   const activeFilterChips = useMemo(() => {
     const chips: { key: string; label: string; onRemove: () => void }[] = [];
     for (const id of selectedGenres) {
       chips.push({
         key: `g-${id}`,
         label: genreLabel(id, tmdbLanguage),
-        onRemove: () => {
-          filterChangedRef.current = true;
-          setSelectedGenres((prev) => prev.filter((g) => g !== id));
-        },
+        onRemove: () => removeGenre(id),
       });
     }
     if (selectedDecade != null) {
@@ -385,7 +391,7 @@ export default function AddMovieForm({
     if (selectedLanguage != null) {
       const opt = LANGUAGE_OPTIONS.find((l) => l.code === selectedLanguage);
       const label = opt
-        ? `${opt.code.toUpperCase()} ${tmdbLanguage.startsWith('fr') ? opt.fr : opt.en}`
+        ? `${opt.code.toUpperCase()} ${localizedName(opt.fr, opt.en, tmdbLanguage)}`
         : selectedLanguage;
       chips.push({
         key: 'lang',
@@ -400,12 +406,20 @@ export default function AddMovieForm({
       const opt = AVAILABILITY_OPTIONS.find((o) => o.type === availabilityFilter);
       chips.push({
         key: 'avail',
-        label: opt ? (tmdbLanguage.startsWith('fr') ? opt.fr : opt.en) : availabilityFilter,
+        label: opt ? localizedName(opt.fr, opt.en, tmdbLanguage) : availabilityFilter,
         onRemove: () => setAvailabilityFilter(undefined),
       });
     }
     return chips;
-  }, [selectedGenres, selectedDecade, voteMin, selectedLanguage, availabilityFilter, tmdbLanguage]);
+  }, [
+    selectedGenres,
+    selectedDecade,
+    voteMin,
+    selectedLanguage,
+    availabilityFilter,
+    tmdbLanguage,
+    removeGenre,
+  ]);
 
   const displayedResults = useMemo(
     () =>

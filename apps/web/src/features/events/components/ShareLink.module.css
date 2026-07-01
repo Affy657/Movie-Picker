@@ -1,7 +1,4 @@
-﻿.root {
-}
-
-.rootCentered {
+﻿.rootCentered {
   display: flex;
   flex-direction: column;
   align-items: center;
