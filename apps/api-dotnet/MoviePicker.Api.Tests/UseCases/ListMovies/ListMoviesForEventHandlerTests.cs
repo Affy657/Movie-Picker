@@ -19,6 +19,7 @@ public sealed class ListMoviesForEventHandlerTests
     private readonly Mock<ITmdbMovieSearch> _tmdb;
     private readonly Mock<IPosterImageStore> _posterStore;
     private readonly ListMoviesForEventHandler _sut;
+    private static readonly string[] ParticipantIds = new[] { "p2", "p3" };
 
     private static Event ActiveEvent() => new()
     {
@@ -128,7 +129,7 @@ public sealed class ListMoviesForEventHandlerTests
             .Setup(r => r.AggregateByMovieIdsAsync(evt.Id, It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<string, SeenMarkAggregate>
             {
-                ["mov1"] = new SeenMarkAggregate(2, new[] { "p2", "p3" })
+                ["mov1"] = new SeenMarkAggregate(2, ParticipantIds)
             });
         _participantRepo
             .Setup(r => r.GetPseudosByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))

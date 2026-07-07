@@ -6,6 +6,7 @@ namespace MoviePicker.Api.Tests.Infrastructure.Posters;
 public sealed class DisabledPosterImageStoreTests
 {
     private readonly DisabledPosterImageStore _sut = new();
+    private static readonly string[] normalizedTmdbHttpsUrls = new[] { "https://image.tmdb.org/t/p/original/x.jpg" };
 
     [Theory]
     [InlineData("https://image.tmdb.org/t/p/w500/poster.jpg")]
@@ -34,7 +35,7 @@ public sealed class DisabledPosterImageStoreTests
     public async Task RegisterTmdbSourcesAsync_DoesNotThrow()
     {
         var ex = await Record.ExceptionAsync(() =>
-            _sut.RegisterTmdbSourcesAsync(new[] { "https://image.tmdb.org/t/p/original/x.jpg" }));
+            _sut.RegisterTmdbSourcesAsync(normalizedTmdbHttpsUrls));
 
         Assert.Null(ex);
     }

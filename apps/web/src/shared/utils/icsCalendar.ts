@@ -62,10 +62,10 @@ function slugForUid(value: string): string {
 
 function escapeIcsText(value: string): string {
   return value
-    .replace(/\\/g, '\\\\')
-    .replace(/;/g, '\\;')
-    .replace(/,/g, '\\,')
-    .replace(/\r?\n/g, '\\n');
+    .replaceAll(/\\/g, String.raw`\\`)
+    .replaceAll(/;/g, String.raw`\;`)
+    .replaceAll(/,/g, String.raw`\,`)
+    .replaceAll(/\r?\n/g, String.raw`\n`);
 }
 
 function foldIcsLine(line: string): string {

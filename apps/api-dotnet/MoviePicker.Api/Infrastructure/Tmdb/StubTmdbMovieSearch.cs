@@ -27,6 +27,8 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
         return Task.FromResult<TmdbMovieEnrichment?>(new TmdbMovieEnrichment(8.0, offers, null, 120));
     }
 
+    private static readonly string[] Cast = new[] { "Actrice Stub", "Acteur Stub" };
+
     public Task<TmdbMovieDetails?> GetDetailsAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct = default)
     {
         var details = new TmdbMovieDetails(
@@ -35,7 +37,7 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
             "Synopsis généré par le stub TMDB pour les tests E2E.",
             "Tagline test",
             "Réalisateur Stub",
-            new[] { "Actrice Stub", "Acteur Stub" },
+            Cast,
             120,
             new[] { "Science-fiction", "Drame" },
             new[] { 878, 18 },

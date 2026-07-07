@@ -23,6 +23,7 @@ public sealed class AddMovieHandlerTests
     private readonly Mock<ICurrentUserAccessor> _currentUser;
     private readonly Mock<ITmdbMovieSearch> _tmdb;
     private readonly AddMovieHandler _sut;
+    private static readonly string[] Genres = new[] { "Action" };
 
     private static Event ActiveEvent(bool allowSeries = false) => new()
     {
@@ -184,7 +185,7 @@ public sealed class AddMovieHandlerTests
             .ReturnsAsync((Movie m, CancellationToken _) => m with { Id = "mov1" });
         _tmdb
             .Setup(t => t.GetDetailsAsync(27205, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TmdbMovieDetails(27205, "Inception", null, null, null, Array.Empty<string>(), 148, new[] { "Action" }, new[] { 28, 878 }, "2010-07-16"));
+            .ReturnsAsync(new TmdbMovieDetails(27205, "Inception", null, null, null, Array.Empty<string>(), 148, Genres, new[] { 28, 878 }, "2010-07-16"));
 
         await _sut.HandleAsync("evt1", Request(participant.Id), null);
 

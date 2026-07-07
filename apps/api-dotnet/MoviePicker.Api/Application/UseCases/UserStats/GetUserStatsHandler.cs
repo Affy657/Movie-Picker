@@ -114,7 +114,7 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
     // aligned so the grid starts on a Monday and ends today. Each entry in eventDates is an event's
     // date string ("yyyy-MM-dd") — the date of the soirée, not the join timestamp.
     // Days outside the window are ignored.
-    private IReadOnlyList<DailyActivityPoint> BuildDailyActivity(IReadOnlyList<string> eventDates)
+    private List<DailyActivityPoint> BuildDailyActivity(IReadOnlyList<string> eventDates)
     {
         var today = _clock.GetUtcNow().UtcDateTime.Date;
         var daysFromMonday = ((int)today.DayOfWeek + 6) % 7;

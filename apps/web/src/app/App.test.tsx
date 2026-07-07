@@ -58,43 +58,18 @@ describe('App (routes)', () => {
       );
     });
 
-    it('route /new redirige vers /login avec un returnTo', async () => {
+    it.each([
+      ['/new', '%2Fnew'],
+      ['/my-events', '%2Fmy-events'],
+      ['/e/soiree-secrete', '%2Fe%2Fsoiree-secrete'],
+      ['/settings', '%2Fsettings'],
+    ])('route %s redirige vers /login avec un returnTo', async (path, encodedReturnTo) => {
       server.use(authMeGuestHandler);
-      renderRoutes(['/new']);
+      renderRoutes([path]);
       expect(await screen.findByRole('heading', { name: /^connexion$/i })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: /créer un compte/i })).toHaveAttribute(
         'href',
-        '/register?returnTo=%2Fnew'
-      );
-    });
-
-    it('route /my-events redirige vers /login avec un returnTo', async () => {
-      server.use(authMeGuestHandler);
-      renderRoutes(['/my-events']);
-      expect(await screen.findByRole('heading', { name: /^connexion$/i })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: /créer un compte/i })).toHaveAttribute(
-        'href',
-        '/register?returnTo=%2Fmy-events'
-      );
-    });
-
-    it('route /e/:slug redirige vers /login avec un returnTo (lien de partage)', async () => {
-      server.use(authMeGuestHandler);
-      renderRoutes(['/e/soiree-secrete']);
-      expect(await screen.findByRole('heading', { name: /^connexion$/i })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: /créer un compte/i })).toHaveAttribute(
-        'href',
-        '/register?returnTo=%2Fe%2Fsoiree-secrete'
-      );
-    });
-
-    it('route /settings redirige vers /login avec un returnTo', async () => {
-      server.use(authMeGuestHandler);
-      renderRoutes(['/settings']);
-      expect(await screen.findByRole('heading', { name: /^connexion$/i })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: /créer un compte/i })).toHaveAttribute(
-        'href',
-        '/register?returnTo=%2Fsettings'
+        `/register?returnTo=${encodedReturnTo}`
       );
     });
 

@@ -108,8 +108,8 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
 
     private static MyEventSummaryDto EnrichSummary(
         MyEventSummaryDto d,
-        IReadOnlyDictionary<string, string> winnerMovieIdByEventId,
-        IReadOnlyDictionary<string, Movie> winnerMovies,
+        Dictionary<string, string> winnerMovieIdByEventId,
+        Dictionary<string, Movie> winnerMovies,
         IReadOnlyDictionary<string, int> participantCounts,
         IReadOnlyDictionary<string, int> movieCounts)
     {

@@ -36,7 +36,7 @@ function getInitials(pseudo: string): string {
 }
 
 function initialsColor(pseudo: string): string {
-  const idx = pseudo.charCodeAt(0) % INITIALS_COLORS.length;
+  const idx = (pseudo.codePointAt(0) ?? 0) % INITIALS_COLORS.length;
   return INITIALS_COLORS[idx] ?? '#3B82F6';
 }
 

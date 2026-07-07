@@ -6,7 +6,7 @@ using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.EventConfiguration;
 
-public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
+public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
 {
     private readonly IEventRepository _events;
     private readonly IParticipantRepository _participants;
@@ -190,7 +190,7 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
     {
         if (request.Date is null)
             return current;
-        if (!System.Text.RegularExpressions.Regex.IsMatch(request.Date, @"^\d{4}-\d{2}-\d{2}$")
+        if (!DatePatternRegex().IsMatch(request.Date)
             || !DateOnly.TryParse(request.Date, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _))
             throw new BadRequestException("date doit être au format YYYY-MM-DD.");
         return request.Date;
@@ -200,9 +200,15 @@ public sealed class PatchEventConfigHandler : IPatchEventConfigHandler
     {
         if (request.Time is null)
             return current;
-        if (!System.Text.RegularExpressions.Regex.IsMatch(request.Time, @"^\d{2}:\d{2}$")
+        if (!TimePatternRegex().IsMatch(request.Time)
             || !TimeOnly.TryParse(request.Time, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _))
             throw new BadRequestException("time doit être au format HH:mm.");
         return request.Time;
     }
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"^\d{4}-\d{2}-\d{2}$")]
+    private static partial System.Text.RegularExpressions.Regex DatePatternRegex();
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"^\d{2}:\d{2}$")]
+    private static partial System.Text.RegularExpressions.Regex TimePatternRegex();
 }

@@ -152,7 +152,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         return sources;
     }
 
-    private static IReadOnlyList<string> ResolveSeenPseudos(
+    private static List<string> ResolveSeenPseudos(
         IEnumerable<string> participantIds,
         IReadOnlyDictionary<string, string> pseudos)
     {

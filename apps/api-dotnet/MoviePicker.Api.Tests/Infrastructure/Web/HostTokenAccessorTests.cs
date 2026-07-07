@@ -33,7 +33,7 @@ public sealed class HostTokenAccessorTests
     public void GetHostToken_FromCookie_WhenNoQuery()
     {
         var ctx = new DefaultHttpContext();
-        ctx.Request.Headers["Cookie"] = "moviepicker_host=ck123";
+        ctx.Request.Headers.Cookie = "moviepicker_host=ck123";
 
         Assert.Equal("ck123", Build(ctx).GetHostToken());
     }
@@ -43,7 +43,7 @@ public sealed class HostTokenAccessorTests
     {
         var ctx = new DefaultHttpContext();
         ctx.Request.QueryString = new QueryString("?host=fromquery");
-        ctx.Request.Headers["Cookie"] = "moviepicker_host=fromcookie";
+        ctx.Request.Headers.Cookie = "moviepicker_host=fromcookie";
 
         Assert.Equal("fromquery", Build(ctx).GetHostToken());
     }

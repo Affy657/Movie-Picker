@@ -345,7 +345,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         }
     }
 
-    private static IReadOnlyList<TmdbWatchProviderOffer> DedupeProviders(List<TmdbWatchProviderOffer> offers)
+    private static List<TmdbWatchProviderOffer> DedupeProviders(List<TmdbWatchProviderOffer> offers)
     {
         var best = new Dictionary<int, TmdbWatchProviderOffer>();
         foreach (var o in offers)

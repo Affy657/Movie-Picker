@@ -113,7 +113,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
 
     private static EventParticipantSummaryResponse ToParticipantSummary(
         Participant p,
-        IReadOnlyDictionary<string, User> userById,
+        Dictionary<string, User> userById,
         string? creatorUserId)
     {
         User? linkedUser = p.UserId is not null && userById.TryGetValue(p.UserId, out var u) ? u : null;

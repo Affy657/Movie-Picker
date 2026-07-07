@@ -152,7 +152,7 @@ export default function SpinningWheel({
     const ANIM_CUT = 0.9;
 
     function animate(ts: number): void {
-      if (startTime === null) startTime = ts;
+      startTime ??= ts;
       const t = Math.min((ts - startTime) / SPIN_DURATION_MS, 1);
       drawFrame(ctx!, movies, easeOutQuint(t) * targetRotation);
 

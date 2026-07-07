@@ -108,7 +108,7 @@ public sealed class EventReminderService : BackgroundService
             await ProcessEventRemindersAsync(evt, window, services, now, ct);
     }
 
-    private async Task ProcessEventRemindersAsync(
+    private static async Task ProcessEventRemindersAsync(
         Event evt,
         ReminderWindow window,
         ReminderServices services,

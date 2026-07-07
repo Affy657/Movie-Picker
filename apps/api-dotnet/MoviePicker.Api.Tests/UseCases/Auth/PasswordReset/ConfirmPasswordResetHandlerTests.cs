@@ -27,6 +27,7 @@ public sealed class ConfirmPasswordResetHandlerTests
     private const string SuccessMessage = "Mot de passe réinitialisé. Connecte-toi avec ton nouveau mot de passe.";
 
     private static readonly string PlainToken = Base64UrlTestToken();
+    private static readonly string[] expected = new[] { "update", "mark", "invalidateTokens", "invalidateSessions" };
 
     private static string Base64UrlTestToken()
     {
@@ -48,7 +49,7 @@ public sealed class ConfirmPasswordResetHandlerTests
             UpdatedAt = TestEpoch
         };
 
-    private ConfirmPasswordResetHandler CreateHandler(
+    private static ConfirmPasswordResetHandler CreateHandler(
         IUserRepository users,
         IPasswordResetTokenRepository tokens,
         IPasswordHasher<User> hasher,
@@ -322,7 +323,7 @@ public sealed class ConfirmPasswordResetHandlerTests
 
         await handler.HandleAsync(new PasswordResetConfirmRequest { Token = PlainToken, NewPassword = "abcd1234" });
 
-        Assert.Equal(new[] { "update", "mark", "invalidateTokens", "invalidateSessions" }, callOrder);
+        Assert.Equal(expected, callOrder);
     }
 
     [Fact]

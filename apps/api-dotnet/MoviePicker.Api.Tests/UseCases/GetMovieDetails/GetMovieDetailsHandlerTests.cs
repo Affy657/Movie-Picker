@@ -36,6 +36,8 @@ public sealed class GetMovieDetailsHandlerTests
         Assert.Null(result);
     }
 
+    private static readonly string[] Cast = new[] { "Leonardo DiCaprio", "Joseph Gordon-Levitt" };
+
     [Fact]
     public async Task HandleAsync_TmdbReturnsDetails_MapsAllFields()
     {
@@ -46,7 +48,7 @@ public sealed class GetMovieDetailsHandlerTests
             Overview: "Un voleur qui explore les rêves.",
             Tagline: "Votre esprit est la scène du crime.",
             Director: "Christopher Nolan",
-            Cast: new[] { "Leonardo DiCaprio", "Joseph Gordon-Levitt" },
+            Cast: Cast,
             Runtime: 148,
             Genres: new[] { "Action", "Science-fiction" },
             GenreIds: new[] { 28, 878 },
