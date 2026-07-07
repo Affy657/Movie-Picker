@@ -1,15 +1,22 @@
-# E2E Playwright : local uniquement (pas de job CI).
-# SonarCloud : job "sonar" (SonarScanner for .NET) — analyse + couverture ; Quality Gate informatif (non bloquant).
+# CI/CD Movie Picker — monorepo (front Vite/React → S3+CloudFront ; API .NET → Cloud Run).
+#
+# Path-filtering : le job "changes" (dorny/paths-filter) calcule 2 sorties web/api ; chaque job
+# ne tourne que si sa lane est impactée (skip sinon). workflow_dispatch force les 2 lanes.
+#   - Lane web : lint-web, test-web, lighthouse, deploy-front.
+#   - Lane api : lint-api, test-api, docker-api, deploy-api.
+#   - Transverses : gitleaks (toujours), audit npm/NuGet, sonar (analyse globale, non bloquante).
+#   - E2E Playwright : local uniquement (pas de job CI).
 #
 # Durcissement sécurité :
-#   - Actions épinglées par SHA de commit (anti supply-chain) ; le commentaire # vX
-#     permet à Dependabot de proposer les mises à jour.
-#   - permissions least-privilege (deny par défaut au niveau workflow).
+#   - Actions épinglées par SHA de commit (anti supply-chain) ; le commentaire # vX permet à Dependabot de proposer les MAJ.
+#   - Images Docker (base .NET + gitleaks) épinglées par digest sha256.
+#   - permissions least-privilege (deny par défaut) ; checkout avec persist-credentials: false.
 #   - Secrets passés via env: (jamais interpolés directement dans un bloc run:).
-#   - Quality Gate SonarCloud informatif (calculé à chaque run, visible sur PR/dashboard) — ne bloque pas le déploiement.
-#   - concurrency: group cd-<ref> (cancel-in-progress: false) — pas de double deploy sur push rapides.
-#   - timeout-minutes sur chaque job — évite les runners bloqués au-delà de 6 h.
-#   - Analyse Sonar CI-based : couverture front (lcov) + API (opencover), soumise à chaque run.
+#   - Quality Gate SonarCloud informatif — ne bloque pas le déploiement.
+#   - concurrency: group cd-<ref> — cancel-in-progress sur PR / false sur master.
+#   - timeout-minutes sur chaque job ; caches NuGet / Turbo / Trivy.
+#   - docker-api : scan Trivy (CRITICAL bloquant ; HIGH bloquant si fix dispo) + cache de layers GHA.
+#   - Déploiements : environment "production" (historique GitHub) + smoke test post-deploy (/health, CloudFront).
 
 name: CI/CD
 
@@ -25,7 +32,7 @@ permissions:
 
 concurrency:
   group: cd-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   NODE_VERSION: "22"
@@ -35,40 +42,111 @@ env:
   CLOUD_RUN_SERVICE_NAME: movie-picker-api
 
 jobs:
+  changes:
+    name: Détection des changements (path-filtering)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      web: ${{ steps.filter.outputs.web == 'true' || github.event_name == 'workflow_dispatch' }}
+      api: ${{ steps.filter.outputs.api == 'true' || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590 # v3
+        id: filter
+        if: github.event_name != 'workflow_dispatch'
+        with:
+          filters: |
+            web:
+              - 'apps/web/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+              - 'eslint.config.mjs'
+              - 'prettier.config.cjs'
+              - 'playwright.config.ts'
+              - 'configs/**'
+              - 'e2e/**'
+              - 'scripts/**'
+              - '.github/workflows/ci-cd.yml'
+            api:
+              - 'apps/api-dotnet/**'
+              - 'scripts/**'
+              - '.github/workflows/ci-cd.yml'
+
   gitleaks:
     name: Secret scan (Gitleaks)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
       - name: Scan working tree
         run: |
           docker run --rm -v "${PWD}:/repo:ro" \
-            ghcr.io/gitleaks/gitleaks:v8.24.3 \
+            ghcr.io/gitleaks/gitleaks:v8.24.3@sha256:e1b35e12a8c6fa8901f060459cfb6b2fc4c484d3afbe3b029733a3bbfab07055 \
             dir --no-banner --redact --verbose --exit-code 1 /repo
 
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
+  lint-web:
+    name: Lint front (tsc + eslint + prettier)
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .turbo
+          key: turbo-lintweb-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            turbo-lintweb-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm run lint
       - run: pnpm run lint:eslint
       - run: pnpm run format:check
+
+  lint-api:
+    name: Lint API .NET (format + build + OpenAPI)
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
       - uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('apps/api-dotnet/**/*.csproj', 'apps/api-dotnet/Directory.Build.props') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
       - name: Restore API .NET
         run: dotnet restore apps/api-dotnet/MoviePicker.slnx
       - name: dotnet format (vérification, roadmap § 31)
@@ -84,11 +162,51 @@ jobs:
           name: openapi-v1
           path: artifacts/openapi-v1.json
           if-no-files-found: error
-      - name: Audit dépendances (échoue si high/critical)
-        run: pnpm audit --audit-level=high
+          retention-days: 7
+
+  audit:
+    name: Audit dépendances (npm + NuGet)
+    needs: changes
+    if: needs.changes.outputs.web == 'true' || needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6
+        if: needs.changes.outputs.web == 'true'
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        if: needs.changes.outputs.web == 'true'
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - name: Audit npm (échoue si high/critical)
+        if: needs.changes.outputs.web == 'true'
+        run: |
+          pnpm install --frozen-lockfile --ignore-scripts
+          pnpm audit --audit-level=high
+      - uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5
+        if: needs.changes.outputs.api == 'true'
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        if: needs.changes.outputs.api == 'true'
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('apps/api-dotnet/**/*.csproj', 'apps/api-dotnet/Directory.Build.props') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+      - name: Restore API .NET (pour audit NuGet)
+        if: needs.changes.outputs.api == 'true'
+        run: dotnet restore apps/api-dotnet/MoviePicker.slnx
       - name: Audit NuGet — liste vulnérabilités (informatif)
+        if: needs.changes.outputs.api == 'true'
         run: dotnet list apps/api-dotnet/MoviePicker.slnx package --vulnerable --include-transitive
       - name: Audit NuGet — échoue si High / Critical
+        if: needs.changes.outputs.api == 'true'
         run: |
           set -o pipefail
           OUTPUT=$(dotnet list apps/api-dotnet/MoviePicker.slnx package --vulnerable --include-transitive 2>&1)
@@ -100,39 +218,57 @@ jobs:
 
   test-web:
     name: Tests front + couverture
-    needs: lint
-    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .turbo
+          key: turbo-testweb-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            turbo-testweb-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile --ignore-scripts
-      - run: pnpm run test --filter=web
       - run: pnpm run test:coverage --filter=web
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: coverage-web
           path: apps/web/coverage
           if-no-files-found: warn
+          retention-days: 7
 
   test-api:
     name: Tests API .NET + couverture
-    needs: lint
-    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
       - uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('apps/api-dotnet/**/*.csproj', 'apps/api-dotnet/Directory.Build.props') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
       - name: Tests unitaires + couverture
         run: |
           dotnet test apps/api-dotnet/MoviePicker.Api.Tests/MoviePicker.Api.Tests.csproj -c Debug \
@@ -149,7 +285,7 @@ jobs:
             echo "::error::Rapport de couverture OpenCover introuvable"
             exit 1
           fi
-          cov="$(grep -o 'sequenceCoverage="[0-9.]*"' "$report" | head -1 | grep -o '[0-9.]*')"
+          cov="$(grep -m1 -o 'sequenceCoverage="[0-9.]*"' "$report" | grep -o '[0-9.]*')"
           echo "Couverture lignes back : ${cov}% (seuil 80%)"
           if awk -v c="$cov" 'BEGIN { exit !(c + 0 >= 80) }'; then
             echo "OK : couverture back suffisante"
@@ -166,17 +302,21 @@ jobs:
           name: coverage-api-unit
           path: coverage-unit
           if-no-files-found: warn
+          retention-days: 7
 
   lighthouse:
     name: Lighthouse front (rapport, non bloquant)
-    needs: test-web
-    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     continue-on-error: true
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
@@ -191,13 +331,16 @@ jobs:
           name: lighthouse-reports
           path: artifacts/lighthouse
           if-no-files-found: warn
+          retention-days: 7
 
   sonar:
     name: SonarCloud (analyse + couverture ; QG non bloquant)
-    needs: [test-web, test-api]
-    runs-on: ubuntu-latest
+    needs: [changes, test-web, test-api]
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
-    if: github.event_name != 'workflow_dispatch'
+    if: >-
+      always() && github.event_name != 'workflow_dispatch' &&
+      (needs.test-web.result == 'success' || needs.test-api.result == 'success')
     permissions:
       contents: read
       pull-requests: read
@@ -205,6 +348,7 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
@@ -221,7 +365,20 @@ jobs:
         with:
           path: ~/.sonar/cache
           key: sonar-cache-${{ runner.os }}
-      - name: Couverture front (lcov)
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('apps/api-dotnet/**/*.csproj', 'apps/api-dotnet/Directory.Build.props') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+      - name: Couverture front — download artefact (si test-web a tourné)
+        if: needs.test-web.result == 'success'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: coverage-web
+          path: apps/web/coverage
+      - name: Couverture front — fallback (régénère si test-web non exécuté)
+        if: needs.test-web.result != 'success'
         run: |
           pnpm install --frozen-lockfile --ignore-scripts
           pnpm run test:coverage --filter=web
@@ -281,15 +438,17 @@ jobs:
 
   docker-api:
     name: Docker API → Artifact Registry
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
-    needs: [test-web, test-api, sonar]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: [changes, lint-api, test-api, audit]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master' && needs.changes.outputs.api == 'true'
     permissions:
       contents: read
       id-token: write
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
       - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
@@ -297,7 +456,15 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
       - run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
-      - run: docker build -f apps/api-dotnet/MoviePicker.Api/Dockerfile -t movie-picker-api apps/api-dotnet/MoviePicker.Api
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Build image API (buildx + cache GHA de layers)
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: apps/api-dotnet/MoviePicker.Api
+          tags: movie-picker-api
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
       # § 25 — Scan CVE de l'image avant push. Politique :
       #   - bloque sur CRITICAL inconditionnellement
       #   - bloque sur HIGH **uniquement si un fix amont est disponible** (`ignore-unfixed: true`),
@@ -314,6 +481,7 @@ jobs:
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           vuln-type: os,library
+          cache: true
       - name: Tag & push image
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -327,10 +495,11 @@ jobs:
 
   deploy-api:
     name: Deploy API → Cloud Run
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     needs: docker-api
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    environment: production
     permissions:
       contents: read
       id-token: write
@@ -367,17 +536,29 @@ jobs:
             --allow-unauthenticated \
             --set-secrets "MONGODB_URI=MONGODB_URI:latest,TMDB_API_KEY=TMDB_API_KEY:latest,AUTH_DATAPROTECTION_KEYRING=AUTH_DATAPROTECTION_KEYRING:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest" \
             --set-env-vars "^##^ALLOWED_ORIGINS=$CORS"
+      - name: Smoke test API (GET /health)
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        run: |
+          URL="$(gcloud run services describe ${{ env.CLOUD_RUN_SERVICE_NAME }} --region ${{ env.GCP_REGION }} --format='value(status.url)')"
+          echo "Service URL : $URL"
+          code="$(curl -sS -o /dev/null -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 "$URL/health")"
+          echo "GET /health -> $code"
+          test "$code" = "200"
 
   deploy-front:
     name: Deploy Front → S3 & CloudFront
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
-    needs: [test-web, test-api, sonar]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: [changes, lint-web, test-web, audit]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master' && needs.changes.outputs.web == 'true'
+    environment: production
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
@@ -425,7 +606,8 @@ jobs:
         run: |
           aws s3 cp apps/web/dist/index.html "s3://$AWS_S3_BUCKET/index.html" \
             --cache-control "no-cache, no-store, must-revalidate" --content-type "text/html"
-      - if: vars.AWS_CLOUDFRONT_DISTRIBUTION_ID != ''
+      - name: Invalidation CloudFront
+        if: vars.AWS_CLOUDFRONT_DISTRIBUTION_ID != ''
         run: |
           INV_ID=$(aws cloudfront create-invalidation \
             --distribution-id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
@@ -434,3 +616,11 @@ jobs:
           aws cloudfront wait invalidation-completed \
             --distribution-id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
             --id "$INV_ID"
+      - name: Smoke test front (CloudFront)
+        if: vars.AWS_CLOUDFRONT_DISTRIBUTION_ID != ''
+        run: |
+          DOMAIN="$(aws cloudfront get-distribution --id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }} --query 'Distribution.DomainName' --output text)"
+          echo "CloudFront domain : $DOMAIN"
+          code="$(curl -sS -o /dev/null -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 "https://$DOMAIN/")"
+          echo "GET / -> $code"
+          test "$code" = "200"
