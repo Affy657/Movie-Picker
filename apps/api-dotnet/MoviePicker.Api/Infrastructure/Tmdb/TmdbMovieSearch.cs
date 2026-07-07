@@ -13,6 +13,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
     private const string PosterBase = "https://image.tmdb.org/t/p/w154";
     private const string LogoBase = "https://image.tmdb.org/t/p/w45";
     private const string YoutubeWatchBase = "https://www.youtube.com/watch?v=";
+    private const string ResultsProperty = "results";
 
     private readonly HttpClient _http;
     private readonly MoviePickerOptions _options;
@@ -66,7 +67,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
 
         await using var stream = await res.Content.ReadAsStreamAsync(ct);
         using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
-        if (!doc.RootElement.TryGetProperty("results", out var results))
+        if (!doc.RootElement.TryGetProperty(ResultsProperty, out var results))
             return Array.Empty<TmdbSearchItem>();
 
         var list = new List<TmdbSearchItem>();
@@ -184,7 +185,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         await using var stream = await res.Content.ReadAsStreamAsync(ct);
         using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
 
-        if (!doc.RootElement.TryGetProperty("results", out var results))
+        if (!doc.RootElement.TryGetProperty(ResultsProperty, out var results))
             return Array.Empty<TmdbSearchItem>();
 
         var list = new List<TmdbSearchItem>();
@@ -301,7 +302,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         {
             await using var watchStream = await watchRes.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
             using var watchDoc = await JsonDocument.ParseAsync(watchStream, cancellationToken: ct).ConfigureAwait(false);
-            if (!watchDoc.RootElement.TryGetProperty("results", out var results))
+            if (!watchDoc.RootElement.TryGetProperty(ResultsProperty, out var results))
                 return new TmdbMovieEnrichment(voteAverage, offers, null, runtimeMinutes);
 
             if (!results.TryGetProperty(region, out var regionObj) || regionObj.ValueKind != JsonValueKind.Object)
@@ -589,7 +590,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
     {
         if (!root.TryGetProperty("videos", out var videos) || videos.ValueKind != JsonValueKind.Object)
             return null;
-        if (!videos.TryGetProperty("results", out var results) || results.ValueKind != JsonValueKind.Array)
+        if (!videos.TryGetProperty(ResultsProperty, out var results) || results.ValueKind != JsonValueKind.Array)
             return null;
 
         string? bestKey = null;

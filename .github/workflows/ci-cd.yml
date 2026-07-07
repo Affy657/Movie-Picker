@@ -330,7 +330,8 @@ jobs:
         with:
           name: playwright-traces
           path: test-results
-          if-no-files-found: warn
+          # Playwright n'écrit test-results/ qu'en cas d'échec/retry ; vide sur run vert = normal.
+          if-no-files-found: ignore
           retention-days: 7
 
   sonar:
@@ -340,6 +341,7 @@ jobs:
     timeout-minutes: 20
     if: >-
       always() && github.event_name != 'workflow_dispatch' &&
+      github.actor != 'dependabot[bot]' &&
       (needs.test-web.result == 'success' || needs.test-api.result == 'success')
     permissions:
       contents: read
