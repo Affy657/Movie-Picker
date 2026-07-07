@@ -1,0 +1,17 @@
+name: "Setup web (pnpm + Node)"
+description: "Installe pnpm, Node (cache pnpm store) et les dépendances du monorepo (frozen lockfile)."
+inputs:
+  node-version:
+    description: "Version de Node"
+    required: false
+    default: "22"
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6
+    - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: pnpm
+    - run: pnpm install --frozen-lockfile --ignore-scripts
+      shell: bash
