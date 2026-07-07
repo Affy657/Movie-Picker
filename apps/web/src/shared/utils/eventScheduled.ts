@@ -28,8 +28,7 @@ export function formatEventStartInUserTimezone(
 export const EVENT_START_REMINDER_WINDOW_MINUTES = 30;
 
 export type EventStartReminderState =
-  | { visible: false }
-  | { visible: true; line1: string; line2: string };
+  { visible: false } | { visible: true; line1: string; line2: string };
 
 export function computeEventStartReminder(
   date: string,
