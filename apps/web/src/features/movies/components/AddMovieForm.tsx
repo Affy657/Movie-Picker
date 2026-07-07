@@ -145,8 +145,8 @@ export default function AddMovieForm({
 
   const trimmedForSearch = useMemo(() => query.trim(), [query]);
 
-  const yearFrom = selectedDecade ? parseInt(selectedDecade, 10) : undefined;
-  const yearTo = selectedDecade ? parseInt(selectedDecade, 10) + 9 : undefined;
+  const yearFrom = selectedDecade ? Number.parseInt(selectedDecade, 10) : undefined;
+  const yearTo = selectedDecade ? Number.parseInt(selectedDecade, 10) + 9 : undefined;
 
   const activeFilters: MovieSearchFilters = useMemo(
     () => ({

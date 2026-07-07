@@ -22,7 +22,7 @@ public sealed class ServiceCollectionExtensionsTests
         public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
     }
 
-    private static IServiceCollection Wire(Dictionary<string, string?> config, string environment)
+    private static ServiceCollection Wire(Dictionary<string, string?> config, string environment)
     {
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(config).Build();
         var services = new ServiceCollection();

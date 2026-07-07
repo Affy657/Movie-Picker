@@ -33,7 +33,7 @@ public class ResendEmailSenderTests
         var handler = new RecordingHandler(async (req, _) =>
         {
             captured = req;
-            capturedBody = await (req.Content?.ReadAsStringAsync() ?? Task.FromResult(string.Empty));
+            capturedBody = await (req.Content?.ReadAsStringAsync(_) ?? Task.FromResult(string.Empty));
             return new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = JsonContent.Create(new { id = "re_msg_1" })
@@ -69,7 +69,7 @@ public class ResendEmailSenderTests
         string? capturedBody = null;
         var handler = new RecordingHandler(async (req, _) =>
         {
-            capturedBody = await (req.Content?.ReadAsStringAsync() ?? Task.FromResult(string.Empty));
+            capturedBody = await (req.Content?.ReadAsStringAsync(_) ?? Task.FromResult(string.Empty));
             return new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(new { id = "x" }) };
         });
         var http = new HttpClient(handler) { BaseAddress = new Uri("https://api.resend.com/") };

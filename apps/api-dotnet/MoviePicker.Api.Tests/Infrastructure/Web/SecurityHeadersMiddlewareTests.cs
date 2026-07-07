@@ -21,10 +21,10 @@ public sealed class SecurityHeadersMiddlewareTests
 
         Assert.True(nextCalled);
         var h = ctx.Response.Headers;
-        Assert.Equal("nosniff", h["X-Content-Type-Options"]);
-        Assert.Equal("DENY", h["X-Frame-Options"]);
+        Assert.Equal("nosniff", h.XContentTypeOptions);
+        Assert.Equal("DENY", h.XFrameOptions);
         Assert.Equal("no-referrer", h["Referrer-Policy"]);
         Assert.Contains("microphone=()", h["Permissions-Policy"].ToString());
-        Assert.Contains("default-src 'none'", h["Content-Security-Policy"].ToString());
+        Assert.Contains("default-src 'none'", h.ContentSecurityPolicy.ToString());
     }
 }

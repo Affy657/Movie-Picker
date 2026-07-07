@@ -37,6 +37,8 @@ public sealed class TmdbMovieSearchAdvancedTests
 
     private static Mock<HttpMessageHandler> AlwaysReturns(string body) => Handler(_ => Json(body));
 
+    private static readonly int[] singleGenreIdFilter = new[] { 28 };
+
     [Fact]
     public async Task SearchAsync_GenreFilter_KeepsOnlyMatchingItems()
     {
@@ -48,7 +50,7 @@ public sealed class TmdbMovieSearchAdvancedTests
             """;
         var sut = CreateSut(CreateHttpClient(AlwaysReturns(json).Object));
 
-        var result = await sut.SearchAsync("x", false, genreIds: new[] { 28 });
+        var result = await sut.SearchAsync("x", false, genreIds: singleGenreIdFilter);
 
         var item = Assert.Single(result);
         Assert.Equal(1, item.Id);
@@ -128,6 +130,8 @@ public sealed class TmdbMovieSearchAdvancedTests
         Assert.Equal("2019", series.Year);
     }
 
+    private static readonly int[] multiGenreIdsFilter = new[] { 28, 12 };
+
     [Fact]
     public async Task SearchAsync_NoTextWithFilters_UsesDiscoverEndpointAndMapsResults()
     {
@@ -140,7 +144,7 @@ public sealed class TmdbMovieSearchAdvancedTests
         var sut = CreateSut(CreateHttpClient(handler.Object));
 
         var result = await sut.SearchAsync(
-            "   ", false, genreIds: new[] { 28, 12 }, yearFrom: 2000, yearTo: 2025, voteMin: 5.0, originalLanguage: "en");
+            "   ", false, genreIds: multiGenreIdsFilter, yearFrom: 2000, yearTo: 2025, voteMin: 5.0, originalLanguage: "en");
 
         var item = Assert.Single(result);
         Assert.Equal(10, item.Id);
@@ -172,6 +176,8 @@ public sealed class TmdbMovieSearchAdvancedTests
         Assert.Null(result);
     }
 
+    private static readonly string[] expected = new[] { "Drame", "Thriller" };
+
     [Fact]
     public async Task GetDetailsAsync_OkMovie_MapsAllFields()
     {
@@ -202,7 +208,7 @@ public sealed class TmdbMovieSearchAdvancedTests
         Assert.Equal("Le premier regle.", details.Tagline);
         Assert.Equal(139, details.Runtime);
         Assert.Equal("1999-10-15", details.ReleaseDate);
-        Assert.Equal(new[] { "Drame", "Thriller" }, details.Genres);
+        Assert.Equal(expected, details.Genres);
         Assert.Equal(new[] { 18, 53 }, details.GenreIds);
         Assert.Equal("David Fincher", details.Director);
         Assert.Equal(new[] { "Brad Pitt", "Edward Norton" }, details.Cast);

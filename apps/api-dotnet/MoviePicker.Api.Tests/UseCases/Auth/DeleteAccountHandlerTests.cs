@@ -25,7 +25,7 @@ public sealed class DeleteAccountHandlerTests
         public InMemoryVoteRepository Votes { get; } = new();
         public InMemorySeenMarkRepository SeenMarks { get; } = new();
         public Mock<IAuthSessionInvalidator> Sessions { get; } = new();
-        public IPasswordHasher<User> Hasher { get; } = new PasswordHasher<User>();
+        public PasswordHasher<User> Hasher { get; } = new PasswordHasher<User>();
 
         public DeleteAccountHandler CreateHandler() =>
             new(

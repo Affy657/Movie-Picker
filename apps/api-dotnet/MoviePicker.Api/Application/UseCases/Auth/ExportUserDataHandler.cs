@@ -122,7 +122,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         CreatedAt = n.CreatedAt
     };
 
-    private static IReadOnlyList<ExportedConnection> MapConnections(IReadOnlyList<User> users) =>
+    private static List<ExportedConnection> MapConnections(IReadOnlyList<User> users) =>
         users
             .Select(u => new ExportedConnection { Handle = u.Handle, DisplayName = u.DisplayName })
             .ToList();
@@ -140,9 +140,9 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
 
     private static ExportedParticipation MapParticipation(
         Participant p,
-        IReadOnlyDictionary<string, string> eventTitleById,
-        IReadOnlyDictionary<string, List<Vote>> votesByParticipant,
-        IReadOnlyDictionary<string, List<SeenMark>> seenByParticipant)
+        Dictionary<string, string> eventTitleById,
+        Dictionary<string, List<Vote>> votesByParticipant,
+        Dictionary<string, List<SeenMark>> seenByParticipant)
     {
         var votes = votesByParticipant.TryGetValue(p.Id, out var v) ? v : new List<Vote>();
         var seen = seenByParticipant.TryGetValue(p.Id, out var s) ? s : new List<SeenMark>();

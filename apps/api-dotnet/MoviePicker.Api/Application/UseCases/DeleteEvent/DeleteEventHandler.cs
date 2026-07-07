@@ -102,7 +102,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         };
     }
 
-    private async Task NotifyParticipantsOnEventDeletedAsync(Event evt, IReadOnlyList<string> userIds, CancellationToken ct)
+    private async Task NotifyParticipantsOnEventDeletedAsync(Event evt, List<string> userIds, CancellationToken ct)
     {
         try
         {

@@ -18,6 +18,7 @@ public sealed class MovieDetailsEndpointTests : IClassFixture<MoviePickerApplica
     public MovieDetailsEndpointTests(MoviePickerApplicationFactory factory) => _factory = factory;
 
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+    private static readonly string[] Cast = new[] { "Leonardo DiCaprio", "Joseph Gordon-Levitt" };
 
     private HttpClient CreateClientWith(ITmdbMovieSearch fake) =>
         _factory.WithWebHostBuilder(b => b.ConfigureTestServices(services =>
@@ -37,7 +38,7 @@ public sealed class MovieDetailsEndpointTests : IClassFixture<MoviePickerApplica
                 "Un voleur qui explore les rêves.",
                 "Votre esprit est la scène du crime.",
                 "Christopher Nolan",
-                new[] { "Leonardo DiCaprio", "Joseph Gordon-Levitt" },
+                Cast,
                 148,
                 new[] { "Action" },
                 new[] { 28 },

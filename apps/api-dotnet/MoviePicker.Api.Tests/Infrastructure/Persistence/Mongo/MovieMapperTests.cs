@@ -7,6 +7,8 @@ namespace MoviePicker.Api.Tests.Infrastructure.Persistence.Mongo;
 
 public sealed class MovieMapperTests
 {
+    private static readonly int[] expectedDomainGenreIds = new[] { 28, 878 };
+
     [Fact]
     public void ToDomain_MapsAllFields()
     {
@@ -33,7 +35,7 @@ public sealed class MovieMapperTests
         Assert.Equal("Inception", domain.Title);
         Assert.Equal("2010", domain.Year);
         Assert.Equal("https://image.tmdb.org/t/p/w154/x.jpg", domain.PosterPath);
-        Assert.Equal(new[] { 28, 878 }, domain.GenreIds);
+        Assert.Equal(expectedDomainGenreIds, domain.GenreIds);
         Assert.Equal(new DateTimeOffset(2020, 1, 1, 12, 0, 0, TimeSpan.Zero), domain.CreatedAt);
         Assert.Equal(new DateTimeOffset(2020, 1, 2, 12, 0, 0, TimeSpan.Zero), domain.UpdatedAt);
     }
@@ -64,6 +66,8 @@ public sealed class MovieMapperTests
         Assert.Empty(MovieMapper.ToDomain(doc).GenreIds);
     }
 
+    private static readonly int[] expectedRoundTripGenreIds = new[] { 18, 35 };
+
     [Fact]
     public void ToDocument_RoundTrip_PreservesData()
     {
@@ -85,6 +89,6 @@ public sealed class MovieMapperTests
         Assert.Equal(domain.Id, back.Id);
         Assert.Equal(domain.Title, back.Title);
         Assert.Equal(domain.TmdbId, back.TmdbId);
-        Assert.Equal(new[] { 18, 35 }, back.GenreIds);
+        Assert.Equal(expectedRoundTripGenreIds, back.GenreIds);
     }
 }

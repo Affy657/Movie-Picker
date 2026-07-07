@@ -18,13 +18,15 @@ public sealed class WheelWinnerPickerTests
         UpdatedAt = DateTimeOffset.UtcNow
     };
 
+    private static readonly string[] collection = new[] { "a", "b" };
+
     [Fact]
     public void Pick_StrictRandom_UsesRandom()
     {
         var movies = new[] { M("a", "A"), M("b", "B") };
         var random = new Random(42);
         var w = WheelWinnerPicker.Pick(movies, _ => 0, WheelMode.StrictRandom, random);
-        Assert.Contains(w.Id, new[] { "a", "b" });
+        Assert.Contains(w.Id, collection);
     }
 
     [Fact]
@@ -32,7 +34,7 @@ public sealed class WheelWinnerPickerTests
     {
         var movies = new[] { M("a", "A"), M("b", "B") };
         var w = WheelWinnerPicker.Pick(movies, _ => 0, WheelMode.WeightedByVotes, new Random(123));
-        Assert.Contains(w.Id, new[] { "a", "b" });
+        Assert.Contains(w.Id, collection);
     }
 
     [Fact]

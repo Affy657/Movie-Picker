@@ -115,7 +115,7 @@
   font-style: italic;
   color: #cbd5e1;
   line-height: var(--leading-snug);
-  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .noteTextClamp {

@@ -14,6 +14,7 @@ public sealed class ListMyEventsHandlerTests
     private readonly Mock<IParticipantRepository> _participantRepo;
     private readonly Mock<IMovieRepository> _movieRepo;
     private readonly ListMyEventsHandler _sut;
+    private static readonly string[] value = new[] { "e1", "e2" };
 
     public ListMyEventsHandlerTests()
     {
@@ -60,7 +61,7 @@ public sealed class ListMyEventsHandlerTests
 
         _eventRepo.Setup(r => r.ListByCreatorUserIdAsync("u1", 200, It.IsAny<CancellationToken>())).ReturnsAsync(new[] { created });
         _participantRepo.Setup(r => r.ListDistinctEventIdsByUserIdAsync("u1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { "e1", "e2" });
+            .ReturnsAsync(value);
         _eventRepo.Setup(r => r.ListByIdsAsync(It.Is<IReadOnlyCollection<string>>(ids => ids.Count == 1 && ids.Contains("e2")), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { joinedOnly });
 

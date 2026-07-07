@@ -27,6 +27,8 @@ public sealed class MoviesSearchControllerTests
         handler.Verify(h => h.HandleAsync("", false, null, It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    private static readonly int[] expected = new[] { 28, 12 };
+
     [Fact]
     public async Task Search_WithFiltersAndGenres_BuildsParsedFilters()
     {
@@ -43,7 +45,7 @@ public sealed class MoviesSearchControllerTests
             "bat", null, "28, 12, x, -3, 0", 2000, 2010, 7.5, "EN", handler.Object, repo.Object, CancellationToken.None);
 
         Assert.NotNull(captured);
-        Assert.Equal(new[] { 28, 12 }, captured!.GenreIds);
+        Assert.Equal(expected, captured!.GenreIds);
         Assert.Equal(2000, captured.YearFrom);
         Assert.Equal(2010, captured.YearTo);
         Assert.Equal(7.5, captured.VoteMin);

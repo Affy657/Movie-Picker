@@ -18,6 +18,7 @@ public sealed class RemoveParticipantHandlerTests
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly RemoveParticipantHandler _sut;
+    private static readonly string[] value = new[] { "m1", "m2" };
 
     public RemoveParticipantHandlerTests()
     {
@@ -148,7 +149,7 @@ public sealed class RemoveParticipantHandlerTests
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
         _movieRepo
             .Setup(r => r.ListIdsByEventAndParticipantAsync("evt1", "p1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { "m1", "m2" });
+            .ReturnsAsync(value);
         _participantRepo
             .Setup(r => r.DeleteAsync("p1", "evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);

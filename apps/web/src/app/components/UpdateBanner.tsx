@@ -32,7 +32,7 @@ function useServiceWorkerUpdate() {
       if (document.visibilityState === 'visible') {
         checkForUpdate();
       } else if (needRefreshRef.current) {
-        void updateServiceWorker(true);
+        updateServiceWorker(true).catch(() => {});
       }
     };
 
@@ -49,7 +49,7 @@ function useServiceWorkerUpdate() {
 
   return {
     needRefresh,
-    reload: () => void updateServiceWorker(true),
+    reload: () => updateServiceWorker(true).catch(() => {}),
     dismiss: () => setNeedRefresh(false),
   };
 }

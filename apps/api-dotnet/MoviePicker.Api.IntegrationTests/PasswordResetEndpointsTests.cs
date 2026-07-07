@@ -8,12 +8,12 @@ using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
 
-public sealed class PasswordResetEndpointsTests : IClassFixture<MoviePickerApplicationFactory>
+public sealed partial class PasswordResetEndpointsTests : IClassFixture<MoviePickerApplicationFactory>
 {
     private static readonly JsonSerializerOptions JsonRead = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
     private static readonly Regex ResetUrlRegex =
-        new(@"https?://[^/\s]+/reset\?token=([A-Za-z0-9_-]+)", RegexOptions.Compiled);
+        ResetUrlPatternRegex();
 
     private readonly MoviePickerApplicationFactory _factory;
 
@@ -151,4 +151,7 @@ public sealed class PasswordResetEndpointsTests : IClassFixture<MoviePickerAppli
             new PasswordResetRequest { Email = email });
         Assert.Equal(firstCount, _factory.FakeEmail.SentMessages.Count);
     }
+
+    [GeneratedRegex(@"https?://[^/\s]+/reset\?token=([A-Za-z0-9_-]+)", RegexOptions.Compiled)]
+    private static partial Regex ResetUrlPatternRegex();
 }

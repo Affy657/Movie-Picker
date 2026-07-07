@@ -50,7 +50,7 @@ public sealed class WebPushSender : IPushNotificationSender
                 url = message.Url
             });
 
-            await webPushClient.SendNotificationAsync(pushSubscription, payload);
+            await webPushClient.SendNotificationAsync(pushSubscription, payload, cancellationToken: ct);
         }
         catch (WebPushException ex) when (ex.StatusCode is System.Net.HttpStatusCode.Gone or System.Net.HttpStatusCode.NotFound)
         {
