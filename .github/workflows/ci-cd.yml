@@ -53,8 +53,12 @@ jobs:
       web: ${{ steps.filter.outputs.web == 'true' || github.event_name == 'workflow_dispatch' }}
       api: ${{ steps.filter.outputs.api == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
+      # fetch-depth: 0 requis : sur push, paths-filter diffe contre le commit précédent
+      # via git ; sans historique complet il devrait fetch, ce qui échoue avec
+      # persist-credentials: false (pas de token). L'historique complet évite le fetch.
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
+          fetch-depth: 0
           persist-credentials: false
       - uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590 # v3
         id: filter
