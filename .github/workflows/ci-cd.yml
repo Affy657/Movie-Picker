@@ -5,7 +5,7 @@
 #   - Lane web : lint-web, test-web, lighthouse, deploy-front.
 #   - Lane api : lint-api, test-api, docker-api, deploy-api.
 #   - Transverses : gitleaks (toujours), audit npm/NuGet, sonar (analyse globale, non bloquante).
-#   - E2E Playwright : local uniquement (pas de job CI).
+#   - E2E Playwright : job CI non bloquant (continue-on-error) + exécution locale.
 #
 # Durcissement sécurité :
 #   - Actions épinglées par SHA de commit (anti supply-chain) ; le commentaire # vX permet à Dependabot de proposer les MAJ.

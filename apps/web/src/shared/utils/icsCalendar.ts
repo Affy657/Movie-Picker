@@ -62,9 +62,9 @@ function slugForUid(value: string): string {
 
 function escapeIcsText(value: string): string {
   return value
-    .replaceAll(/\\/g, String.raw`\\`)
-    .replaceAll(/;/g, String.raw`\;`)
-    .replaceAll(/,/g, String.raw`\,`)
+    .replaceAll('\\', String.raw`\\`)
+    .replaceAll(';', String.raw`\;`)
+    .replaceAll(',', String.raw`\,`)
     .replaceAll(/\r?\n/g, String.raw`\n`);
 }
 
@@ -97,8 +97,7 @@ export function buildIcsContent(event: CalendarEvent, now: Date = new Date()): s
   ];
   if (event.description) lines.push(`DESCRIPTION:${escapeIcsText(event.description)}`);
   if (event.url) {
-    lines.push(`URL:${event.url}`);
-    lines.push(`LOCATION:${escapeIcsText(event.url)}`);
+    lines.push(`URL:${event.url}`, `LOCATION:${escapeIcsText(event.url)}`);
   }
   lines.push('END:VEVENT', 'END:VCALENDAR');
 
