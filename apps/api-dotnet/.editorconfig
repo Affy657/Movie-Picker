@@ -23,12 +23,24 @@ dotnet_diagnostic.CA1716.severity = none
 dotnet_diagnostic.CA1848.severity = none
 dotnet_diagnostic.CA1873.severity = none
 
+# Handlers CQRS / Clean Architecture : DI par constructeur avec de nombreuses
+# dépendances est le pattern assumé de cette couche Application ; découper
+# artificiellement n'améliorerait ni lisibilité ni testabilité.
+dotnet_diagnostic.S107.severity = none
+
+# Boucles avec effets de bord (écriture async conditionnelle) que l'analyseur
+# confond avec une simple projection Select — le rewrite suggéré casserait le comportement.
+dotnet_diagnostic.S3267.severity = none
+
 # Code de seed Development (démo locale, déjà exclu de l'analyse SonarCloud) :
 # identifiants de démo (pas des secrets prod) et littéraux répétés volontaires.
 [**/Infrastructure/Development/*.cs]
 dotnet_diagnostic.S1192.severity = none
 dotnet_diagnostic.S2068.severity = none
 
-# URL d'attribution TMDB : lien public fixe imposé par les CGU TMDB, pas une ressource configurable.
+# URL d'attribution TMDB et base URL email : chaînes fixes, pas des chemins filesystem.
 [**/SearchMoviesHandler.cs]
+dotnet_diagnostic.S1075.severity = none
+
+[**/EmailServiceCollectionExtensions.cs]
 dotnet_diagnostic.S1075.severity = none
