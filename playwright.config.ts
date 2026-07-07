@@ -16,10 +16,12 @@ export default defineConfig({
   },
   // --no-launch-profile évite le port 4000 des launchSettings ; sans profil, ASPNETCORE_* doit forcer Development
   // sinon ProductionStartupValidation exige ALLOWED_ORIGINS + MONGODB_URI.
+  // DevelopmentSeed__Enabled=false : les tests créent leurs propres comptes ; le seed de démo
+  // n'est pas requis et son étape de vote crashe l'hôte sur un seed frais (contexte sans user courant).
   webServer: [
     {
       command:
-        'cross-env E2E_STUB_TMDB=1 MONGODB_URI= ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://127.0.0.1:5010 dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj --no-launch-profile',
+        'cross-env E2E_STUB_TMDB=1 MONGODB_URI= DevelopmentSeed__Enabled=false ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://127.0.0.1:5010 dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj --no-launch-profile',
       cwd: '.',
       url: 'http://127.0.0.1:5010/health',
       reuseExistingServer: !process.env.CI,
