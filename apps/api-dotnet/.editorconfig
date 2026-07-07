@@ -22,3 +22,13 @@ dotnet_diagnostic.CA1716.severity = none
 # LoggerMessage source-gen : hors périmètre MVP ; évite bruit CA1848/CA1873 sur middleware
 dotnet_diagnostic.CA1848.severity = none
 dotnet_diagnostic.CA1873.severity = none
+
+# Code de seed Development (démo locale, déjà exclu de l'analyse SonarCloud) :
+# identifiants de démo (pas des secrets prod) et littéraux répétés volontaires.
+[**/Infrastructure/Development/*.cs]
+dotnet_diagnostic.S1192.severity = none
+dotnet_diagnostic.S2068.severity = none
+
+# URL d'attribution TMDB : lien public fixe imposé par les CGU TMDB, pas une ressource configurable.
+[**/SearchMoviesHandler.cs]
+dotnet_diagnostic.S1075.severity = none

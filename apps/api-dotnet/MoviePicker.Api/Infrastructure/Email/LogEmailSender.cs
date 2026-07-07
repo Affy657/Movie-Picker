@@ -8,7 +8,7 @@ namespace MoviePicker.Api.Infrastructure.Email;
 public sealed class LogEmailSender : IEmailSender
 {
     private static readonly Regex HrefRegex = new("href=\"(?<url>[^\"]+)\"",
-        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
 
     private readonly ILogger<LogEmailSender> _logger;
 
