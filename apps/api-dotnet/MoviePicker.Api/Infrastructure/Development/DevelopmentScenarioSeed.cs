@@ -1,5 +1,7 @@
 using System.Globalization;
 using System.Linq;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
@@ -38,19 +40,47 @@ internal static class DevelopmentScenarioSeed
         ILogger logger,
         CancellationToken ct)
     {
-        await TryEnrichProfilesAsync(sp, actors, logger, ct).ConfigureAwait(false);
-        await TrySeedFollowsAsync(sp, actors, logger, ct).ConfigureAwait(false);
+        var httpContext = sp.GetRequiredService<IHttpContextAccessor>();
+        try
+        {
+            await RunStepAsync(logger, "profils enrichis", () => TryEnrichProfilesAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "follows", () => TrySeedFollowsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
 
-        await TrySeedMultiParticipantScenarioAsync(sp, actors, logger, ct).ConfigureAwait(false);
-        await TrySeedWheelAndCloseScenarioAsync(sp, actors, logger, ct).ConfigureAwait(false);
-        await TrySeedFullCapacityScenarioAsync(sp, actors, logger, ct).ConfigureAwait(false);
-        await TrySeedRemoveParticipantsScenarioAsync(sp, actors, logger, ct).ConfigureAwait(false);
-        await TrySeedWheelLaunchedNotClosedScenarioAsync(sp, actors, logger, ct).ConfigureAwait(false);
-        await TrySeedPastEventScenarioAsync(sp, actors, logger, ct).ConfigureAwait(false);
-        await TrySeedDeadlineEventScenarioAsync(sp, actors, logger, ct).ConfigureAwait(false);
-        await TrySeedEmptyEventScenarioAsync(sp, actors, logger, ct).ConfigureAwait(false);
-        await TrySeedDeletedEventScenarioAsync(sp, actors, logger, ct).ConfigureAwait(false);
-        await TrySeedReminderNotificationsAsync(sp, actors, logger, ct).ConfigureAwait(false);
+            await RunStepAsync(logger, "multi-participants", () => TrySeedMultiParticipantScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "roue & clôture", () => TrySeedWheelAndCloseScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "capacité atteinte", () => TrySeedFullCapacityScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "retrait/quitter", () => TrySeedRemoveParticipantsScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "roue tirée (non close)", () => TrySeedWheelLaunchedNotClosedScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "soirée passée", () => TrySeedPastEventScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "soirée avec échéance", () => TrySeedDeadlineEventScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "soirée vide", () => TrySeedEmptyEventScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "soirée annulée", () => TrySeedDeletedEventScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "rappels", () => TrySeedReminderNotificationsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+        }
+        finally
+        {
+            httpContext.HttpContext = null;
+        }
+    }
+
+    private static async Task RunStepAsync(ILogger logger, string step, Func<Task> action)
+    {
+        try
+        {
+            await action().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "DevelopmentSeed : étape « {Step} » échouée — ignorée, démarrage poursuivi.", step);
+        }
+    }
+
+    private static void ActAs(IHttpContextAccessor httpContext, string userId)
+    {
+        var identity = new ClaimsIdentity(
+            new[] { new Claim(ClaimTypes.NameIdentifier, userId) },
+            authenticationType: "DevelopmentSeed");
+        httpContext.HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(identity) };
     }
 
     private static async Task TryEnrichProfilesAsync(
@@ -197,6 +227,7 @@ internal static class DevelopmentScenarioSeed
         var join = sp.GetRequiredService<IJoinEventHandler>();
         var addMovie = sp.GetRequiredService<IAddMovieHandler>();
         var vote = sp.GetRequiredService<IVoteMovieHandler>();
+        var httpContext = sp.GetRequiredService<IHttpContextAccessor>();
         var markAsSeen = sp.GetRequiredService<IMarkAsSeenHandler>();
         var unmarkAsSeen = sp.GetRequiredService<IUnmarkAsSeenHandler>();
         var deleteMovie = sp.GetRequiredService<IDeleteMovieHandler>();
@@ -252,20 +283,23 @@ internal static class DevelopmentScenarioSeed
         var mCarla = await AddMovieAsync(addMovie, slug, 157336, "Interstellar", "2014", carlaPart, actors.Carla.Id, ct).ConfigureAwait(false);
         var mJunk = await AddMovieAsync(addMovie, slug, 603, "The Matrix", "1999", bobPart, actors.Bob.Id, ct).ConfigureAwait(false);
 
-        await VoteAsync(vote, slug, mAlice.Id, bobPart, 1, ct).ConfigureAwait(false);
-        await VoteAsync(vote, slug, mAlice.Id, carlaPart, 1, ct).ConfigureAwait(false);
-        await VoteAsync(vote, slug, mDev.Id, alicePart, 1, ct).ConfigureAwait(false);
-        await VoteAsync(vote, slug, mBob.Id, devPart, -1, ct).ConfigureAwait(false);
-        await VoteAsync(vote, slug, mCarla.Id, devPart, 1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, mAlice.Id, bobPart, actors.Bob.Id, 1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, mAlice.Id, carlaPart, actors.Carla.Id, 1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, mDev.Id, alicePart, actors.Alice.Id, 1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, mBob.Id, devPart, actors.Dev.Id, -1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, mCarla.Id, devPart, actors.Dev.Id, 1, ct).ConfigureAwait(false);
 
+        ActAs(httpContext, actors.Dev.Id);
         await markAsSeen
             .HandleAsync(slug, mAlice.Id, new MarkAsSeenRequest { ParticipantId = devPart }, ct)
             .ConfigureAwait(false);
         await unmarkAsSeen.HandleAsync(slug, mAlice.Id, devPart, ct).ConfigureAwait(false);
+        ActAs(httpContext, actors.Carla.Id);
         await markAsSeen
             .HandleAsync(slug, mBob.Id, new MarkAsSeenRequest { ParticipantId = carlaPart }, ct)
             .ConfigureAwait(false);
 
+        ActAs(httpContext, actors.Bob.Id);
         await deleteMovie.HandleAsync(slug, mJunk.Id, bobPart, ct).ConfigureAwait(false);
 
         logger.LogInformation("DevelopmentSeed : scénario multi-participants créé (slug={Slug}, hôte Alice, 4 participants).", slug);
@@ -319,10 +353,11 @@ internal static class DevelopmentScenarioSeed
         var m2 = await AddMovieAsync(addMovie, slug, 324857, "Spider-Man: Into the Spider-Verse", "2018", joinDev.Participant.Id, actors.Dev.Id, ct).ConfigureAwait(false);
         var m3 = await AddMovieAsync(addMovie, slug, 12, "Finding Nemo", "2003", joinAlice.Participant.Id, actors.Alice.Id, ct).ConfigureAwait(false);
 
-        await VoteAsync(vote, slug, m1.Id, bobPart, 1, ct).ConfigureAwait(false);
-        await VoteAsync(vote, slug, m1.Id, joinDev.Participant.Id, 1, ct).ConfigureAwait(false);
-        await VoteAsync(vote, slug, m2.Id, joinAlice.Participant.Id, 1, ct).ConfigureAwait(false);
-        await VoteAsync(vote, slug, m3.Id, bobPart, -1, ct).ConfigureAwait(false);
+        var httpContext = sp.GetRequiredService<IHttpContextAccessor>();
+        await VoteAsync(vote, httpContext, slug, m1.Id, bobPart, actors.Bob.Id, 1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, m1.Id, joinDev.Participant.Id, actors.Dev.Id, 1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, m2.Id, joinAlice.Participant.Id, actors.Alice.Id, 1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, m3.Id, bobPart, actors.Bob.Id, -1, ct).ConfigureAwait(false);
 
         var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException("Soirée roue seed introuvable.");
@@ -472,9 +507,10 @@ internal static class DevelopmentScenarioSeed
         var mBob = await AddMovieAsync(addMovie, slug, 49026, "The Dark Knight Rises", "2012", bobPart, actors.Bob.Id, ct).ConfigureAwait(false);
         var mDev = await AddMovieAsync(addMovie, slug, 680, "Pulp Fiction", "1994", devPart, actors.Dev.Id, ct).ConfigureAwait(false);
 
-        await VoteAsync(vote, slug, mAlice.Id, devPart, 1, ct).ConfigureAwait(false);
-        await VoteAsync(vote, slug, mBob.Id, alicePart, 1, ct).ConfigureAwait(false);
-        await VoteAsync(vote, slug, mDev.Id, bobPart, -1, ct).ConfigureAwait(false);
+        var httpContext = sp.GetRequiredService<IHttpContextAccessor>();
+        await VoteAsync(vote, httpContext, slug, mAlice.Id, devPart, actors.Dev.Id, 1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, mBob.Id, alicePart, actors.Alice.Id, 1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, mDev.Id, bobPart, actors.Bob.Id, -1, ct).ConfigureAwait(false);
 
         logger.LogInformation("DevelopmentSeed : scénario retrait/quitter créé (slug={Slug}, hôte=dev, participants=3).", slug);
     }
@@ -527,9 +563,10 @@ internal static class DevelopmentScenarioSeed
         var m2 = await AddMovieAsync(addMovie, slug, 78, "Blade Runner", "1982", joinAlice.Participant.Id, actors.Alice.Id, ct).ConfigureAwait(false);
         var m3 = await AddMovieAsync(addMovie, slug, 335984, "Blade Runner 2049", "2017", joinBob.Participant.Id, actors.Bob.Id, ct).ConfigureAwait(false);
 
-        await VoteAsync(vote, slug, m1.Id, devPart, 1, ct).ConfigureAwait(false);
-        await VoteAsync(vote, slug, m2.Id, joinAlice.Participant.Id, 1, ct).ConfigureAwait(false);
-        await VoteAsync(vote, slug, m3.Id, joinBob.Participant.Id, 1, ct).ConfigureAwait(false);
+        var httpContext = sp.GetRequiredService<IHttpContextAccessor>();
+        await VoteAsync(vote, httpContext, slug, m1.Id, devPart, actors.Dev.Id, 1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, m2.Id, joinAlice.Participant.Id, actors.Alice.Id, 1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, m3.Id, joinBob.Participant.Id, actors.Bob.Id, 1, ct).ConfigureAwait(false);
 
         var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException("Soirée roue tirée seed introuvable.");
@@ -592,8 +629,9 @@ internal static class DevelopmentScenarioSeed
 
         var m1 = await AddMovieAsync(addMovie, slug, 11, "Star Wars", "1977", alicePart, actors.Alice.Id, ct).ConfigureAwait(false);
         var m2 = await AddMovieAsync(addMovie, slug, 1891, "The Empire Strikes Back", "1980", joinBob.Participant.Id, actors.Bob.Id, ct).ConfigureAwait(false);
-        await VoteAsync(vote, slug, m1.Id, joinBob.Participant.Id, 1, ct).ConfigureAwait(false);
-        await VoteAsync(vote, slug, m2.Id, alicePart, 1, ct).ConfigureAwait(false);
+        var httpContext = sp.GetRequiredService<IHttpContextAccessor>();
+        await VoteAsync(vote, httpContext, slug, m1.Id, joinBob.Participant.Id, actors.Bob.Id, 1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, m2.Id, alicePart, actors.Alice.Id, 1, ct).ConfigureAwait(false);
 
         var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException("Soirée passée seed introuvable.");
@@ -878,14 +916,19 @@ internal static class DevelopmentScenarioSeed
 
     private static async Task VoteAsync(
         IVoteMovieHandler vote,
+        IHttpContextAccessor httpContext,
         string slug,
         string movieId,
         string participantId,
+        string callerUserId,
         int value,
-        CancellationToken ct) =>
+        CancellationToken ct)
+    {
+        ActAs(httpContext, callerUserId);
         await vote
             .HandleAsync(slug, movieId, new VoteRequest { ParticipantId = participantId, Value = value }, ct)
             .ConfigureAwait(false);
+    }
 
     private static async Task AddMoviePickedNotificationsAsync(
         IServiceProvider sp,

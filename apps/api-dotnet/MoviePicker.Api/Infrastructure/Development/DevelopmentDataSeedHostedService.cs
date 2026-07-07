@@ -97,62 +97,69 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
             return;
         }
 
-        using var scope = _scopeFactory.CreateScope();
-        var sp = scope.ServiceProvider;
-        var users = sp.GetRequiredService<IUserRepository>();
-        var hasher = sp.GetRequiredService<IPasswordHasher<User>>();
-
-        var user = await EnsureUserAsync(users, hasher, email, password, displayName, cancellationToken).ConfigureAwait(false);
-
-        if (opts.SeedSampleEvents)
-            await TrySeedSampleEventsAsync(sp, user.Id, cancellationToken).ConfigureAwait(false);
-
-        if (!opts.SeedScenarioDemos)
-            return;
-
-        var extraEntries = ResolveExtraUserEntries(opts);
-
-        var allEmails = new List<string> { email };
-        allEmails.AddRange(extraEntries.Select(e => (e.Email ?? string.Empty).Trim()));
-        if (allEmails.Select(x => x.ToLowerInvariant()).Distinct().Count() != allEmails.Count)
+        try
         {
-            _logger.LogWarning("DevelopmentSeed : e-mails en conflit entre comptes seed — scénarios ignorés.");
-            return;
-        }
+            using var scope = _scopeFactory.CreateScope();
+            var sp = scope.ServiceProvider;
+            var users = sp.GetRequiredService<IUserRepository>();
+            var hasher = sp.GetRequiredService<IPasswordHasher<User>>();
 
-        foreach (var entry in extraEntries)
-        {
-            if (!TryValidateExtraEntry(entry, out var entryErr))
+            var user = await EnsureUserAsync(users, hasher, email, password, displayName, cancellationToken).ConfigureAwait(false);
+
+            if (opts.SeedSampleEvents)
+                await TrySeedSampleEventsAsync(sp, user.Id, cancellationToken).ConfigureAwait(false);
+
+            if (!opts.SeedScenarioDemos)
+                return;
+
+            var extraEntries = ResolveExtraUserEntries(opts);
+
+            var allEmails = new List<string> { email };
+            allEmails.AddRange(extraEntries.Select(e => (e.Email ?? string.Empty).Trim()));
+            if (allEmails.Select(x => x.ToLowerInvariant()).Distinct().Count() != allEmails.Count)
             {
-                _logger.LogWarning(
-                    "DevelopmentSeed : utilisateur extra {EmailMasked} invalide ({Reason}) — scénarios ignorés.",
-                    EmailMasking.Mask((entry.Email ?? string.Empty).Trim()),
-                    entryErr);
+                _logger.LogWarning("DevelopmentSeed : e-mails en conflit entre comptes seed — scénarios ignorés.");
                 return;
             }
-        }
 
-        var extraUsers = new List<User>(extraEntries.Count);
-        foreach (var entry in extraEntries)
+            foreach (var entry in extraEntries)
+            {
+                if (!TryValidateExtraEntry(entry, out var entryErr))
+                {
+                    _logger.LogWarning(
+                        "DevelopmentSeed : utilisateur extra {EmailMasked} invalide ({Reason}) — scénarios ignorés.",
+                        EmailMasking.Mask((entry.Email ?? string.Empty).Trim()),
+                        entryErr);
+                    return;
+                }
+            }
+
+            var extraUsers = new List<User>(extraEntries.Count);
+            foreach (var entry in extraEntries)
+            {
+                var ensured = await EnsureUserAsync(
+                    users,
+                    hasher,
+                    entry.Email.Trim(),
+                    entry.Password,
+                    entry.DisplayName.Trim(),
+                    cancellationToken).ConfigureAwait(false);
+                extraUsers.Add(ensured);
+            }
+
+            var actors = new DevelopmentSeedActors(
+                user,
+                extraUsers[0],
+                extraUsers[1],
+                extraUsers[2],
+                extraUsers[3]);
+
+            await DevelopmentScenarioSeed.TrySeedAsync(sp, actors, _logger, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex)
         {
-            var ensured = await EnsureUserAsync(
-                users,
-                hasher,
-                entry.Email.Trim(),
-                entry.Password,
-                entry.DisplayName.Trim(),
-                cancellationToken).ConfigureAwait(false);
-            extraUsers.Add(ensured);
+            _logger.LogError(ex, "DevelopmentSeed : échec inattendu du seed — démarrage de l'application poursuivi sans seed complet.");
         }
-
-        var actors = new DevelopmentSeedActors(
-            user,
-            extraUsers[0],
-            extraUsers[1],
-            extraUsers[2],
-            extraUsers[3]);
-
-        await DevelopmentScenarioSeed.TrySeedAsync(sp, actors, _logger, cancellationToken).ConfigureAwait(false);
     }
 
     private static List<DevelopmentSeedExtraUserEntry> ResolveExtraUserEntries(DevelopmentSeedOptions opts)
