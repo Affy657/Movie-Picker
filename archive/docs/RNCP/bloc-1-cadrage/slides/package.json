@@ -16,6 +16,9 @@
     "playwright-chromium": "^1.60.0"
   },
   "overrides": {
-    "dompurify": "^3.4.0"
+    "dompurify": "^3.4.11",
+    "gray-matter": {
+      "js-yaml": "^3.15.0"
+    }
   }
 }

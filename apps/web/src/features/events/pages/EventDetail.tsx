@@ -27,9 +27,7 @@ import { useLocale, useTranslation } from '@/shared/i18n';
 import InviteModal from '@/features/events/components/InviteModal';
 
 type ConfirmState =
-  | { kind: 'remove'; participantId: string; pseudo: string }
-  | { kind: 'leave' }
-  | null;
+  { kind: 'remove'; participantId: string; pseudo: string } | { kind: 'leave' } | null;
 
 const SUCCESS_AUTO_DISMISS_MS = 3500;
 
