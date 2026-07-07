@@ -30,7 +30,7 @@ public sealed class MoviePickerExceptionFilterTests
             new RouteData(),
             new ActionDescriptor(),
             new ModelStateDictionary());
-        return new ExceptionContext(actionContext, new List<IFilterMetadata>()) { Exception = ex };
+        return new ExceptionContext(actionContext, []) { Exception = ex };
     }
 
     [Fact]

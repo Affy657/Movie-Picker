@@ -5,7 +5,7 @@ namespace MoviePicker.Api.IntegrationTests.Helpers;
 
 public sealed class FakeEmailSender : IEmailSender
 {
-    private readonly ConcurrentBag<EmailMessage> _sent = new();
+    private readonly ConcurrentBag<EmailMessage> _sent = [];
 
     public ConcurrentBag<EmailMessage> SentMessages => _sent;
 

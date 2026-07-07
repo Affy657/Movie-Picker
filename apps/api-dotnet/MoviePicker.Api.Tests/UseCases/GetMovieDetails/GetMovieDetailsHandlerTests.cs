@@ -37,6 +37,7 @@ public sealed class GetMovieDetailsHandlerTests
     }
 
     private static readonly string[] Cast = new[] { "Leonardo DiCaprio", "Joseph Gordon-Levitt" };
+    private static readonly string[] Genres = new[] { "Action", "Science-fiction" };
 
     [Fact]
     public async Task HandleAsync_TmdbReturnsDetails_MapsAllFields()
@@ -50,7 +51,7 @@ public sealed class GetMovieDetailsHandlerTests
             Director: "Christopher Nolan",
             Cast: Cast,
             Runtime: 148,
-            Genres: new[] { "Action", "Science-fiction" },
+            Genres: Genres,
             GenreIds: new[] { 28, 878 },
             ReleaseDate: "2010-07-16",
             TrailerUrl: "https://www.youtube.com/watch?v=abc");

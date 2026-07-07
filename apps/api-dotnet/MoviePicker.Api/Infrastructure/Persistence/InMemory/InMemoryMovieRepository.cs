@@ -22,7 +22,7 @@ public sealed class InMemoryMovieRepository : IMovieRepository
 
     public Task<IReadOnlyList<Movie>> ListByEventIdAsync(string eventId, CancellationToken ct = default)
     {
-        var list = _byEventId.GetOrAdd(eventId, _ => new List<Movie>());
+        var list = _byEventId.GetOrAdd(eventId, _ => []);
         lock (list) { return Task.FromResult<IReadOnlyList<Movie>>(list.ToList()); }
     }
 
@@ -32,7 +32,7 @@ public sealed class InMemoryMovieRepository : IMovieRepository
         MovieMediaType mediaType,
         CancellationToken ct = default)
     {
-        var list = _byEventId.GetOrAdd(eventId, _ => new List<Movie>());
+        var list = _byEventId.GetOrAdd(eventId, _ => []);
         lock (list)
         {
             return Task.FromResult(list.Any(m => m.TmdbId == tmdbId && m.MediaType == mediaType));
@@ -41,14 +41,14 @@ public sealed class InMemoryMovieRepository : IMovieRepository
 
     public Task<bool> ExistsByEventAndTitleCaseInsensitiveAsync(string eventId, string title, CancellationToken ct = default)
     {
-        var list = _byEventId.GetOrAdd(eventId, _ => new List<Movie>());
+        var list = _byEventId.GetOrAdd(eventId, _ => []);
         var t = title.Trim();
         lock (list) { return Task.FromResult(list.Any(m => string.Equals(m.Title, t, StringComparison.OrdinalIgnoreCase))); }
     }
 
     public Task<int> CountByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default)
     {
-        var list = _byEventId.GetOrAdd(eventId, _ => new List<Movie>());
+        var list = _byEventId.GetOrAdd(eventId, _ => []);
         lock (list)
         {
             var n = list.Count(m => m.ParticipantId == participantId);
@@ -61,7 +61,7 @@ public sealed class InMemoryMovieRepository : IMovieRepository
         var id = string.IsNullOrEmpty(movie.Id) ? Guid.NewGuid().ToString("N")[..24] : movie.Id;
         var created = movie with { Id = id };
         _byId[id] = created;
-        var list = _byEventId.GetOrAdd(created.EventId, _ => new List<Movie>());
+        var list = _byEventId.GetOrAdd(created.EventId, _ => []);
         lock (list) { list.Add(created); }
         return Task.FromResult(created);
     }
@@ -141,7 +141,7 @@ public sealed class InMemoryMovieRepository : IMovieRepository
 
     public Task<IReadOnlyList<string>> ListIdsByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default)
     {
-        var list = _byEventId.GetOrAdd(eventId, _ => new List<Movie>());
+        var list = _byEventId.GetOrAdd(eventId, _ => []);
         lock (list)
         {
             var ids = list

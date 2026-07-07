@@ -83,7 +83,7 @@ public sealed class InMemoryVoteRepository : IVoteRepository
         var id = string.IsNullOrEmpty(vote.Id) ? Guid.NewGuid().ToString("N")[..24] : vote.Id;
         var created = new Vote { Id = id, EventId = vote.EventId, MovieId = vote.MovieId, ParticipantId = vote.ParticipantId, Value = vote.Value, CreatedAt = vote.CreatedAt, UpdatedAt = vote.UpdatedAt };
         _byId[id] = created;
-        var list = _byMovieId.GetOrAdd(vote.MovieId, _ => new List<Vote>());
+        var list = _byMovieId.GetOrAdd(vote.MovieId, _ => []);
         lock (list)
         {
             list.RemoveAll(v => v.ParticipantId == vote.ParticipantId);

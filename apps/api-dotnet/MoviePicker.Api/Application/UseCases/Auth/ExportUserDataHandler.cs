@@ -144,8 +144,8 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         Dictionary<string, List<Vote>> votesByParticipant,
         Dictionary<string, List<SeenMark>> seenByParticipant)
     {
-        var votes = votesByParticipant.TryGetValue(p.Id, out var v) ? v : new List<Vote>();
-        var seen = seenByParticipant.TryGetValue(p.Id, out var s) ? s : new List<SeenMark>();
+        var votes = votesByParticipant.TryGetValue(p.Id, out var v) ? v : [];
+        var seen = seenByParticipant.TryGetValue(p.Id, out var s) ? s : [];
         return new ExportedParticipation
         {
             EventId = p.EventId,

@@ -34,7 +34,7 @@ public sealed class GetFollowingListHandler : IGetFollowingListHandler
         if (currentUserId is not null)
         {
             var myFollowingIds = await _follows.GetFollowingIdsAsync(currentUserId, ct: ct);
-            followingSet = new HashSet<string>(myFollowingIds);
+            followingSet = [.. myFollowingIds];
         }
 
         var orderedItems = ids

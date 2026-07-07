@@ -54,7 +54,7 @@ export default function WheelSection({
       const res = await postEventWheel(slug, hostToken);
       const idx = safeMovies.findIndex((m) => m.id === res.winner.id);
       setWinner(res.winner);
-      setWinnerIndex(idx >= 0 ? idx : 0);
+      setWinnerIndex(Math.max(idx, 0));
       setWheelKey((k) => k + 1);
       setIsModalOpen(true);
       track('movie_picked');

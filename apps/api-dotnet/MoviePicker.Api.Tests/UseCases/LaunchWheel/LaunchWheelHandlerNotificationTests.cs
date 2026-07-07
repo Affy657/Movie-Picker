@@ -41,10 +41,10 @@ public sealed class LaunchWheelHandlerNotificationTests
         _hostToken.Setup(h => h.GetHostToken()).Returns("ht1");
         _currentUser.Setup(c => c.GetUserId()).Returns((string?)null);
         _movieRepo.Setup(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<Movie>
-            {
+            .ReturnsAsync(
+            [
                 new() { Id = "mov1", EventId = "evt1", ParticipantId = "p1", TmdbId = 1, Title = "Winner", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
-            });
+            ]);
         _voteRepo.Setup(r => r.AggregateScoresByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<string, VoteScoreAggregate>());
         _posterStore.Setup(s => s.ToPublicPosterPath(It.IsAny<string?>())).Returns((string? u) => u);
@@ -109,7 +109,7 @@ public sealed class LaunchWheelHandlerNotificationTests
     public async Task HandleAsync_NoParticipants_CompletesWithoutNotifying()
     {
         _participantRepo.Setup(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<Participant>());
+            .ReturnsAsync([]);
 
         var result = await _sut.HandleAsync("evt1");
 

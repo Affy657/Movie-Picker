@@ -94,7 +94,7 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
             title = "Inception",
             year = "2010",
             posterPath = (string?)null,
-            participantId = participantId
+            participantId
         });
         addMovieRes.EnsureSuccessStatusCode();
         var movieJson = await addMovieRes.Content.ReadFromJsonAsync<JsonElement>();

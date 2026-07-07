@@ -14,7 +14,7 @@ public sealed class DevelopmentSeedOptions
 
     public bool SeedSampleEvents { get; set; } = true;
 
-    public List<DevelopmentSeedExtraUserEntry> ExtraUsers { get; set; } = new();
+    public List<DevelopmentSeedExtraUserEntry> ExtraUsers { get; set; } = [];
 
     public bool SeedScenarioDemos { get; set; } = true;
 }

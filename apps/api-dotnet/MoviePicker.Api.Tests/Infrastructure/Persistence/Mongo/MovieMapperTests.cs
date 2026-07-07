@@ -21,7 +21,7 @@ public sealed class MovieMapperTests
             Title = "Inception",
             Year = "2010",
             PosterPath = "https://image.tmdb.org/t/p/w154/x.jpg",
-            GenreIds = new List<int> { 28, 878 },
+            GenreIds = [28, 878],
             CreatedAt = new DateTime(2020, 1, 1, 12, 0, 0, DateTimeKind.Utc),
             UpdatedAt = new DateTime(2020, 1, 2, 12, 0, 0, DateTimeKind.Utc)
         };
@@ -80,7 +80,7 @@ public sealed class MovieMapperTests
             Title = "Film",
             Year = "2022",
             PosterPath = null,
-            GenreIds = new List<int> { 18, 35 },
+            GenreIds = [18, 35],
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };

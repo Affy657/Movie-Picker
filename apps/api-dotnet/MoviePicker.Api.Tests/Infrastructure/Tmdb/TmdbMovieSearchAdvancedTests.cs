@@ -177,6 +177,7 @@ public sealed class TmdbMovieSearchAdvancedTests
     }
 
     private static readonly string[] expected = new[] { "Drame", "Thriller" };
+    private static readonly int[] expectedArray = new[] { 18, 53 };
 
     [Fact]
     public async Task GetDetailsAsync_OkMovie_MapsAllFields()
@@ -209,7 +210,7 @@ public sealed class TmdbMovieSearchAdvancedTests
         Assert.Equal(139, details.Runtime);
         Assert.Equal("1999-10-15", details.ReleaseDate);
         Assert.Equal(expected, details.Genres);
-        Assert.Equal(new[] { 18, 53 }, details.GenreIds);
+        Assert.Equal(expectedArray, details.GenreIds);
         Assert.Equal("David Fincher", details.Director);
         Assert.Equal(new[] { "Brad Pitt", "Edward Norton" }, details.Cast);
         Assert.Equal("https://www.youtube.com/watch?v=abc123", details.TrailerUrl);
