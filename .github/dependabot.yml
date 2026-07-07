@@ -34,6 +34,17 @@ updates:
         patterns:
           - "*"
 
+  # Images de base du Dockerfile API (FROM ... épinglés par digest) → bump digest auto
+  - package-ecosystem: docker
+    directory: /apps/api-dotnet/MoviePicker.Api
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 2
+    groups:
+      docker-all:
+        patterns:
+          - "*"
+
   # Slides Slidev archivées (archive/, non maintenues) : neutralise Dependabot
   # (version + sécurité) sur ce manifeste figé — sinon les security updates
   # échouent sur des deps transitives vulnérables (ex. dompurify) qu'on ne patche pas.
