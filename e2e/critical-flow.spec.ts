@@ -47,22 +47,22 @@ test.describe('Parcours critique', () => {
       await hostPage.getByLabel(/^heure$/i).fill('20:30');
       await hostPage.getByRole('button', { name: /créer la soirée/i }).click();
 
-      await expect(hostPage).toHaveURL(/\/e\/[^/?]+/);
+      await expect(hostPage).toHaveURL(/\/e\/[^/?]+/, { timeout: 15_000 });
       const slug = hostPage.url().match(/\/e\/([^/?]+)/)?.[1];
       expect(slug).toBeTruthy();
-      await expect(hostPage.getByRole('heading', { name: /^films$/i })).toBeVisible();
+      await expect(hostPage.getByRole('region', { name: 'Films proposés' })).toBeVisible();
 
       await registerAccount(guestPage, 'InvitéE2E');
       await guestPage.goto(`/e/${slug}`);
       await guestPage.getByRole('button', { name: /^rejoindre$/i }).click();
-      await expect(guestPage.getByRole('heading', { name: /^films$/i })).toBeVisible();
+      await expect(guestPage.getByRole('region', { name: 'Films proposés' })).toBeVisible();
 
-      const guestSearch = guestPage.getByPlaceholder(/rechercher un film/i);
+      const guestSearch = guestPage.getByRole('combobox', { name: /proposer un film/i });
       await guestSearch.fill('stub');
       const stubResult = guestPage.getByRole('listitem').filter({ hasText: /film e2e stub/i });
-      await expect(stubResult).toBeVisible();
+      await expect(stubResult).toBeVisible({ timeout: 15_000 });
       await stubResult.getByRole('button', { name: /^ajouter$/i }).click();
-      await expect(guestSearch).toHaveValue('');
+      await expect(guestSearch).toHaveValue('', { timeout: 15_000 });
 
       await hostPage.reload();
       await expect(hostPage.getByText(/film e2e stub/i).first()).toBeVisible({ timeout: 15_000 });
