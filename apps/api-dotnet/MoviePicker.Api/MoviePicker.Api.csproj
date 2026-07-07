@@ -16,7 +16,7 @@
     <PackageReference Include="MongoDB.Driver" Version="3.9.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="WebPush" Version="1.0.13" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
     <!-- Pin de transitives MongoDB.Driver : Snappier corrige GHSA-pggp-6c3x-2xmx ;
          SharpCompress reste à la dernière version (GHSA-6c8g-7p36-r338 sans fix amont,
          suppress dans ../Directory.Build.props). -->
