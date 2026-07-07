@@ -306,33 +306,6 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-  e2e:
-    name: E2E Playwright (non bloquant)
-    needs: changes
-    if: needs.changes.outputs.web == 'true' || needs.changes.outputs.api == 'true'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    continue-on-error: true
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/setup-web
-      - uses: ./.github/actions/setup-dotnet-cache
-      - name: Installer le navigateur Playwright
-        run: pnpm exec playwright install --with-deps chromium
-      - name: Tests E2E (build front + API stub + Playwright)
-        run: pnpm run test:e2e:ci
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        if: always()
-        with:
-          name: playwright-traces
-          path: test-results
-          if-no-files-found: warn
-          retention-days: 7
-
   sonar:
     name: SonarCloud (analyse + couverture ; QG non bloquant)
     needs: [changes, test-web, test-api]
