@@ -60,7 +60,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590 # v3
+      - uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4
         id: filter
         if: github.event_name != 'workflow_dispatch'
         with:
@@ -112,7 +112,7 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup-web
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: .turbo
           key: turbo-lintweb-${{ runner.os }}-${{ github.sha }}
@@ -183,7 +183,7 @@ jobs:
         if: needs.changes.outputs.api == 'true'
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         if: needs.changes.outputs.api == 'true'
         with:
           path: ~/.nuget/packages
@@ -220,7 +220,7 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup-web
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: .turbo
           key: turbo-testweb-${{ runner.os }}-${{ github.sha }}
@@ -361,11 +361,11 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: ~/.sonar/cache
           key: sonar-cache-${{ runner.os }}
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: ~/.nuget/packages
           key: nuget-${{ runner.os }}-${{ hashFiles('apps/api-dotnet/**/*.csproj', 'apps/api-dotnet/Directory.Build.props') }}
