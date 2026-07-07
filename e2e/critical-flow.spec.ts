@@ -50,14 +50,14 @@ test.describe('Parcours critique', () => {
       await expect(hostPage).toHaveURL(/\/e\/[^/?]+/);
       const slug = hostPage.url().match(/\/e\/([^/?]+)/)?.[1];
       expect(slug).toBeTruthy();
-      await expect(hostPage.getByRole('heading', { name: /^films$/i })).toBeVisible();
+      await expect(hostPage.getByRole('region', { name: 'Films proposés' })).toBeVisible();
 
       await registerAccount(guestPage, 'InvitéE2E');
       await guestPage.goto(`/e/${slug}`);
       await guestPage.getByRole('button', { name: /^rejoindre$/i }).click();
-      await expect(guestPage.getByRole('heading', { name: /^films$/i })).toBeVisible();
+      await expect(guestPage.getByRole('region', { name: 'Films proposés' })).toBeVisible();
 
-      const guestSearch = guestPage.getByPlaceholder(/rechercher un film/i);
+      const guestSearch = guestPage.getByRole('combobox', { name: /proposer un film/i });
       await guestSearch.fill('stub');
       const stubResult = guestPage.getByRole('listitem').filter({ hasText: /film e2e stub/i });
       await expect(stubResult).toBeVisible();
