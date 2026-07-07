@@ -37,7 +37,7 @@ public sealed class DeleteEventHandlerTests
             .ReturnsAsync(0L);
         _participantRepo
             .Setup(r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<Participant>());
+            .ReturnsAsync([]);
         _eventRepo
             .Setup(r => r.DeleteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);

@@ -53,7 +53,7 @@ public sealed class JoinEventHandlerNotificationTests
         _userRepo.Setup(r => r.GetByIdAsync("joiner", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = "joiner", DisplayName = "Joiner", Handle = "joiner" });
         _pushSubRepo.Setup(r => r.ListByUserIdAsync("host", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<PushSubscription> { new() { Id = "s1", UserId = "host", Endpoint = "https://push/x", P256dh = "k", Auth = "a" } });
+            .ReturnsAsync([new() { Id = "s1", UserId = "host", Endpoint = "https://push/x", P256dh = "k", Auth = "a" }]);
 
         var result = await _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Joiner" }, "joiner");
 

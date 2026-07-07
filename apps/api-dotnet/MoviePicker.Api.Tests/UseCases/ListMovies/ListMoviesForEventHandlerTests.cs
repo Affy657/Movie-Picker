@@ -20,6 +20,7 @@ public sealed class ListMoviesForEventHandlerTests
     private readonly Mock<IPosterImageStore> _posterStore;
     private readonly ListMoviesForEventHandler _sut;
     private static readonly string[] ParticipantIds = new[] { "p2", "p3" };
+    private static readonly string[] expected = new[] { "Bob", "Chloé" };
 
     private static Event ActiveEvent() => new()
     {
@@ -139,7 +140,7 @@ public sealed class ListMoviesForEventHandlerTests
 
         var m = Assert.Single(result);
         Assert.Equal(2, m.SeenCount);
-        Assert.Equal(new[] { "Bob", "Chloé" }, m.SeenByPseudos);
+        Assert.Equal(expected, m.SeenByPseudos);
     }
 
     [Fact]
@@ -194,7 +195,7 @@ public sealed class ListMoviesForEventHandlerTests
     {
         var evt = ActiveEvent();
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(new List<Movie>());
+        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync([]);
         _voteRepo.Setup(r => r.AggregateScoresByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, VoteScoreAggregate>());
         _participantRepo.Setup(r => r.GetPseudosByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, string>());
 

@@ -53,7 +53,7 @@ public sealed class LaunchWheelHandlerTests
         _participantRepo = new Mock<IParticipantRepository>();
         _participantRepo
             .Setup(r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<Participant>());
+            .ReturnsAsync([]);
         _userRepo = new Mock<IUserRepository>();
         _pushSubRepo = new Mock<IPushSubscriptionRepository>();
         _pushSender = new Mock<IPushNotificationSender>();
@@ -131,7 +131,7 @@ public sealed class LaunchWheelHandlerTests
         var evt = ActiveEvent();
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
-        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(new List<Movie>());
+        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync([]);
 
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1"));
         Assert.Contains("Aucun film", ex.Message);

@@ -20,7 +20,7 @@ public sealed class ValidationErrorFilterTests
             modelState);
         return new ActionExecutingContext(
             actionContext,
-            new List<IFilterMetadata>(),
+            [],
             new Dictionary<string, object?>(),
             controller: new object());
     }

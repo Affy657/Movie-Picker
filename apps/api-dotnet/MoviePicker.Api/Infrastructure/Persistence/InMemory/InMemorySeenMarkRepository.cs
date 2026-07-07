@@ -92,7 +92,7 @@ public sealed class InMemorySeenMarkRepository : ISeenMarkRepository
 
             if (!byMovie.TryGetValue(r.MovieId, out var pids))
             {
-                pids = new List<string>();
+                pids = [];
                 byMovie[r.MovieId] = pids;
             }
 

@@ -36,7 +36,7 @@ public sealed class ServiceCollectionExtensionsTests
     [Fact]
     public void AddMoviePicker_NoMongoUri_RegistersInMemoryRepositories()
     {
-        var services = Wire(new Dictionary<string, string?>(), Environments.Development);
+        var services = Wire([], Environments.Development);
 
         Assert.Equal(typeof(InMemoryEventRepository), ImplOf<IEventRepository>(services));
         Assert.Equal(typeof(InMemoryUserRepository), ImplOf<IUserRepository>(services));
@@ -48,7 +48,7 @@ public sealed class ServiceCollectionExtensionsTests
     [Fact]
     public void AddMoviePicker_NoMongoUri_RegistersMemoryPosterStore()
     {
-        var services = Wire(new Dictionary<string, string?>(), Environments.Development);
+        var services = Wire([], Environments.Development);
 
         Assert.Equal(typeof(MemoryPosterImageStore), ImplOf<IPosterImageStore>(services));
     }

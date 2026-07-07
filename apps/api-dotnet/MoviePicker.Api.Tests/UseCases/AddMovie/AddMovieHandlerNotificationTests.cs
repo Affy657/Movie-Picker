@@ -75,17 +75,17 @@ public sealed class AddMovieHandlerNotificationTests
     {
         OwnerParticipant();
         _participantRepo.Setup(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<Participant>
-            {
+            .ReturnsAsync(
+            [
                 new() { Id = ParticipantId, EventId = "evt1", Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
                 new() { Id = "p2", EventId = "evt1", Pseudo = "Bob", UserId = "other", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
-            });
+            ]);
         _userRepo.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<User> { new() { Id = "other", NotifyOnMovieAdded = true } });
+            .ReturnsAsync([new() { Id = "other", NotifyOnMovieAdded = true }]);
         _userRepo.Setup(r => r.GetByIdAsync(OwnerUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = OwnerUserId, DisplayName = "Alice", Handle = "alice" });
         _pushSubRepo.Setup(r => r.ListByUserIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<PushSubscription> { new() { Id = "s1", UserId = "other", Endpoint = "https://push/x", P256dh = "k", Auth = "a" } });
+            .ReturnsAsync([new() { Id = "s1", UserId = "other", Endpoint = "https://push/x", P256dh = "k", Auth = "a" }]);
 
         var result = await _sut.HandleAsync("evt1", Request(), OwnerUserId);
 
@@ -103,10 +103,10 @@ public sealed class AddMovieHandlerNotificationTests
     {
         OwnerParticipant();
         _participantRepo.Setup(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<Participant>
-            {
+            .ReturnsAsync(
+            [
                 new() { Id = ParticipantId, EventId = "evt1", Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
-            });
+            ]);
 
         await _sut.HandleAsync("evt1", Request(), OwnerUserId);
 

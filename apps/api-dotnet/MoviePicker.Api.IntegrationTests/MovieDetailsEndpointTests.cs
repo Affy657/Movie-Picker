@@ -19,6 +19,7 @@ public sealed class MovieDetailsEndpointTests : IClassFixture<MoviePickerApplica
 
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
     private static readonly string[] Cast = new[] { "Leonardo DiCaprio", "Joseph Gordon-Levitt" };
+    private static readonly string[] Genres = new[] { "Action" };
 
     private HttpClient CreateClientWith(ITmdbMovieSearch fake) =>
         _factory.WithWebHostBuilder(b => b.ConfigureTestServices(services =>
@@ -40,7 +41,7 @@ public sealed class MovieDetailsEndpointTests : IClassFixture<MoviePickerApplica
                 "Christopher Nolan",
                 Cast,
                 148,
-                new[] { "Action" },
+                Genres,
                 new[] { 28 },
                 "2010-07-16")
         };
