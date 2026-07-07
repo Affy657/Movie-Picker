@@ -1,0 +1,72 @@
+# Rollback API (Cloud Run) — bascule le trafic vers une révision antérieure.
+#   - Déclenché à la main (workflow_dispatch).
+#   - Input `revision` vide → révision précédente (2e plus récente).
+#   - Cloud Run conserve les révisions : le rollback ne redéploie rien, il route le trafic.
+# NB : rollback front (S3/CloudFront) non couvert ici (pas d'artefacts versionnés en l'état).
+
+name: Rollback API (Cloud Run)
+
+on:
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: "Révision Cloud Run cible (vide = révision précédente)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  GCP_REGION: europe-west1
+  CLOUD_RUN_SERVICE_NAME: movie-picker-api
+
+jobs:
+  rollback:
+    name: Rollback trafic Cloud Run
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: Déterminer la révision cible
+        id: target
+        env:
+          INPUT_REV: ${{ inputs.revision }}
+        run: |
+          set -eo pipefail
+          if [ -n "$INPUT_REV" ]; then
+            TARGET="$INPUT_REV"
+          else
+            TARGET="$(gcloud run revisions list \
+              --service "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" \
+              --sort-by=~metadata.creationTimestamp \
+              --format='value(metadata.name)' | sed -n '2p')"
+          fi
+          if [ -z "$TARGET" ]; then
+            echo "::error::Aucune révision cible déterminée."
+            exit 1
+          fi
+          echo "Rollback vers la révision : $TARGET"
+          echo "target=$TARGET" >> "$GITHUB_OUTPUT"
+      - name: Basculer 100% du trafic
+        run: |
+          gcloud run services update-traffic "$CLOUD_RUN_SERVICE_NAME" \
+            --region "$GCP_REGION" \
+            --to-revisions "${{ steps.target.outputs.target }}=100"
+      - name: Smoke test (/health)
+        run: |
+          set -eo pipefail
+          URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format='value(status.url)')"
+          echo "Service URL : $URL"
+          code="$(curl -sS -o /dev/null -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 "$URL/health")"
+          echo "GET /health -> $code"
+          test "$code" = "200"

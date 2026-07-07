@@ -1,0 +1,43 @@
+# Applique une politique de rétention sur Artifact Registry (dépôt des images API).
+#   - Garde les 10 versions les plus récentes, supprime les autres de plus de 30 jours.
+#   - GCP applique ensuite la politique automatiquement (pas de suppression directe ici).
+#   - Mensuel + déclenchable à la main. SA requis : rôle artifactregistry.admin (ou update).
+
+name: Nettoyage Artifact Registry
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5 1 * *" # 1er du mois, 05:00 UTC
+
+permissions:
+  contents: read
+
+env:
+  GCP_REGION: europe-west1
+  GCP_ARTIFACT_REPO: movie-picker
+
+jobs:
+  apply-policy:
+    name: Appliquer la politique de rétention
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: set-cleanup-policies (garde 10 récentes, purge > 30j)
+        run: |
+          gcloud artifacts repositories set-cleanup-policies "$GCP_ARTIFACT_REPO" \
+            --location="$GCP_REGION" \
+            --policy=infra/artifact-registry-cleanup-policy.json \
+            --no-dry-run
