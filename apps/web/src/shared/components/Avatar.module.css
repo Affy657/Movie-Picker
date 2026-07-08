@@ -20,12 +20,38 @@
   letter-spacing: 0.02em;
 }
 
-.xs { width: 20px; height: 20px; }
-.sm { width: 26px; height: 26px; }
-.md { width: 36px; height: 36px; }
-.lg { width: 56px; height: 56px; }
+/* Uppercase caps sit high in the line box; nudge the text down so it
+   aligns optically with the vertical center of the circle. */
+.initialsText {
+  transform: translateY(0.13em);
+}
 
-.initials.xs { font-size: 10px; }
-.initials.sm { font-size: 12px; }
-.initials.md { font-size: 15px; }
-.initials.lg { font-size: 22px; }
+.xs {
+  width: 20px;
+  height: 20px;
+}
+.sm {
+  width: 26px;
+  height: 26px;
+}
+.md {
+  width: 36px;
+  height: 36px;
+}
+.lg {
+  width: 56px;
+  height: 56px;
+}
+
+.initials.xs {
+  font-size: 10px;
+}
+.initials.sm {
+  font-size: 12px;
+}
+.initials.md {
+  font-size: 15px;
+}
+.initials.lg {
+  font-size: 22px;
+}

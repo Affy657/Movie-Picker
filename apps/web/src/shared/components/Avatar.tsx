@@ -56,7 +56,7 @@ export default function Avatar({
           className={clsx(styles.avatar, styles.initials, styles[size], className)}
           style={{ width: px, height: px, background: initialsColor(pseudo) }}
         >
-          {getInitials(pseudo)}
+          <span className={styles.initialsText}>{getInitials(pseudo)}</span>
         </span>
       );
     }
