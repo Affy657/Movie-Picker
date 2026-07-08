@@ -64,6 +64,8 @@
 .badgeFinished {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  text-align: center;
   gap: 0.35rem;
   margin: 0;
   padding: 0.25rem 0.7rem;

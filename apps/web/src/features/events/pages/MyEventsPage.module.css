@@ -285,6 +285,7 @@
 
 .lifecyclePill {
   display: inline-block;
+  text-align: center;
   font-size: var(--font-size-2xs);
   font-weight: 600;
   padding: 0.22rem 0.55rem;

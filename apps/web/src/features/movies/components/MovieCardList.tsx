@@ -3,6 +3,7 @@ import { ChevronDown, MessageSquarePlus } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
 import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
+import WatchProvidersModal from '@/features/movies/components/WatchProvidersModal';
 import {
   CardKebab,
   MovieNote,
@@ -108,6 +109,7 @@ export const MovieCardList = memo(function MovieCardList({
             className={styles.cardProviders}
             watchPageUrl={m.tmdbWatchPageUrl}
             maxVisible={3}
+            onMoreClick={() => s.setProvidersOpen(true)}
           />
         ) : (
           <p className={styles.providersEmpty}>{t('movies.watchProviders.emptyLabel')}</p>
@@ -186,6 +188,16 @@ export const MovieCardList = memo(function MovieCardList({
           tmdbId={m.tmdbId}
           mediaType={m.mediaType}
           onClose={() => s.setDetailsOpen(false)}
+        />
+      )}
+
+      {s.providers.length > 0 && (
+        <WatchProvidersModal
+          open={s.providersOpen}
+          movieTitle={m.title}
+          providers={s.providers}
+          watchPageUrl={m.tmdbWatchPageUrl}
+          onClose={() => s.setProvidersOpen(false)}
         />
       )}
     </li>

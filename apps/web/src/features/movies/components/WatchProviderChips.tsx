@@ -45,6 +45,7 @@ interface WatchProviderChipsProps {
   variant?: 'default' | 'compact';
   watchPageUrl?: string | null;
   maxVisible?: number;
+  onMoreClick?: () => void;
 }
 
 export default function WatchProviderChips({
@@ -53,6 +54,7 @@ export default function WatchProviderChips({
   variant = 'default',
   watchPageUrl,
   maxVisible,
+  onMoreClick,
 }: Readonly<WatchProviderChipsProps>) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
@@ -136,9 +138,9 @@ export default function WatchProviderChips({
                 <button
                   type="button"
                   className={styles.more}
-                  onClick={() => setExpanded((v) => !v)}
-                  aria-expanded={expanded}
-                  aria-controls={rootId}
+                  onClick={onMoreClick ?? (() => setExpanded((v) => !v))}
+                  aria-expanded={onMoreClick ? undefined : expanded}
+                  aria-controls={onMoreClick ? undefined : rootId}
                   aria-label={
                     expanded
                       ? t('movies.watchProviders.showLessAria')
