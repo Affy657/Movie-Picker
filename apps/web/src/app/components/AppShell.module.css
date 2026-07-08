@@ -149,6 +149,23 @@
   flex-shrink: 0;
 }
 
+.navMobile .navLink {
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.navMobile .navIcon {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.navMobileLabel {
+  font-size: var(--font-size-4xs);
+  font-weight: 600;
+  line-height: var(--leading-none);
+  letter-spacing: var(--tracking-slight);
+}
+
 .navDesktop .navLink {
   flex: none;
   min-height: auto;

@@ -10,8 +10,10 @@
 .voteBtn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.3rem;
-  padding: 0.25rem 0.4rem;
+  min-height: 2.75rem;
+  padding: 0.25rem 0.55rem;
   background: none;
   border: none;
   border-radius: var(--radius-sm);
@@ -50,7 +52,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.3rem 0.6rem;
+  min-height: 2.75rem;
+  padding: 0.3rem 0.75rem;
   background: transparent;
   border: 1px solid #3a4861;
   border-radius: var(--radius-pill);
@@ -127,7 +130,9 @@
 
 .noteEditTrigger {
   min-width: 0;
-  padding: 0;
+  padding-block: 0.3rem;
+  margin-block: -0.3rem;
+  padding-inline: 0;
   background: none;
   border: none;
   text-align: left;
@@ -143,6 +148,10 @@
 .noteExpand {
   flex-shrink: 0;
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
   padding: 0;
   background: none;
   border: none;

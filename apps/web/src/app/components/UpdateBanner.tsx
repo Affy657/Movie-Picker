@@ -8,14 +8,27 @@ const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
 
 function useServiceWorkerUpdate() {
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
+  const mountedRef = useRef(false);
+  const pendingRegistrationRef = useRef<ServiceWorkerRegistration | null>(null);
+
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW({
     onRegisteredSW(_swUrl, r) {
-      if (r) setRegistration(r);
+      if (!r) return;
+      if (mountedRef.current) setRegistration(r);
+      else pendingRegistrationRef.current = r;
     },
   });
+
+  useEffect(() => {
+    mountedRef.current = true;
+    if (pendingRegistrationRef.current) setRegistration(pendingRegistrationRef.current);
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const needRefreshRef = useRef(needRefresh);
   needRefreshRef.current = needRefresh;
