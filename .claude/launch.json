@@ -9,13 +9,26 @@
       "autoPort": true
     },
     {
+      "name": "web-preview",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "web",
+        "exec",
+        "vite",
+        "preview",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "5174",
+        "--strictPort"
+      ],
+      "port": 5174
+    },
+    {
       "name": "api",
       "runtimeExecutable": "dotnet",
-      "runtimeArgs": [
-        "run",
-        "--project",
-        "apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj"
-      ],
+      "runtimeArgs": ["run", "--project", "apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj"],
       "port": 4000
     },
     {
