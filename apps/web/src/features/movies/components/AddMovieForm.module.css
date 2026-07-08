@@ -368,7 +368,9 @@
 .mediaTypeBadge {
   display: inline-block;
   margin-left: 0.4rem;
-  padding: 0.1rem 0.45rem;
+  /* letter-spacing adds trailing space after the last character; padding-right
+     is reduced by that amount so the text stays visually centered. */
+  padding: 0.1rem calc(0.45rem - var(--tracking-wide)) 0.1rem 0.45rem;
   font-size: var(--font-size-3xs);
   font-weight: 600;
   letter-spacing: var(--tracking-wide);
@@ -720,7 +722,9 @@
   align-items: center;
   justify-content: center;
   min-width: 1.7em;
-  padding: 0 0.2em;
+  /* letter-spacing adds trailing space after the last character; padding-right
+     is reduced by that amount so the text stays visually centered. */
+  padding: 0 calc(0.2em - 0.04em) 0 0.2em;
   font-size: var(--font-size-3xs);
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -770,4 +774,3 @@
   color: var(--color-primary);
   font-weight: 600;
 }
-

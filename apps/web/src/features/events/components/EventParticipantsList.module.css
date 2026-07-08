@@ -31,19 +31,17 @@
 
 .fullBadge {
   margin-left: 0.35rem;
-  padding: 0.15rem 0.55rem;
+  /* letter-spacing adds trailing space after the last character; padding-right
+     is reduced by that amount so the text stays visually centered. */
+  padding: 0.15rem calc(0.55rem - var(--tracking-wide-lg)) 0.15rem 0.55rem;
   border-radius: var(--radius-pill);
   background: var(--color-badge-upcoming-bg);
   color: var(--color-badge-upcoming-text);
   border: 1px solid color-mix(in srgb, var(--color-badge-upcoming-text) 30%, transparent);
   font-size: var(--font-size-3xs);
   font-weight: 700;
-  text-transform: uppercase;
-}
-
-.fullBadgeText {
   letter-spacing: var(--tracking-wide-lg);
-  margin-right: calc(-1 * var(--tracking-wide-lg));
+  text-transform: uppercase;
 }
 
 .list {
@@ -65,7 +63,9 @@
   border: 1px solid var(--color-border-subtle);
   font-size: var(--font-size-sm);
   color: var(--color-text);
-  transition: background var(--duration-base) var(--ease-default), border-color var(--duration-base) var(--ease-default);
+  transition:
+    background var(--duration-base) var(--ease-default),
+    border-color var(--duration-base) var(--ease-default);
 }
 
 .chipLabel {
@@ -112,7 +112,9 @@
   background: transparent;
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: background-color var(--duration-base) var(--ease-default), color var(--duration-base) var(--ease-default);
+  transition:
+    background-color var(--duration-base) var(--ease-default),
+    color var(--duration-base) var(--ease-default);
 }
 
 .removeBtn:hover:not(:disabled),

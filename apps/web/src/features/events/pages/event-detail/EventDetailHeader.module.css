@@ -38,7 +38,9 @@
   font-weight: 500;
   color: var(--color-text-muted);
   background: transparent;
-  transition: color var(--duration-base) var(--ease-default), background var(--duration-base) var(--ease-default);
+  transition:
+    color var(--duration-base) var(--ease-default),
+    background var(--duration-base) var(--ease-default);
 }
 
 .top :global(.back-link):hover {
@@ -66,19 +68,17 @@
   align-items: center;
   gap: 0.35rem;
   margin: 0;
-  padding: 0.25rem 0.7rem;
+  /* letter-spacing adds trailing space after the last character; padding-right
+     is reduced by that amount so the text stays visually centered. */
+  padding: 0.25rem calc(0.7rem - var(--tracking-wide-lg)) 0.25rem 0.7rem;
   font-size: var(--font-size-2xs);
   font-weight: 700;
+  letter-spacing: var(--tracking-wide-lg);
   text-transform: uppercase;
   border-radius: var(--radius-pill);
   background: var(--color-badge-finished-bg);
   color: var(--color-badge-finished-text);
   border: 1px solid color-mix(in srgb, var(--color-badge-finished-text) 30%, transparent);
-}
-
-.badgeFinishedText {
-  letter-spacing: var(--tracking-wide-lg);
-  margin-right: calc(-1 * var(--tracking-wide-lg));
 }
 
 .share {

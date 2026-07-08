@@ -57,7 +57,9 @@
   align-items: center;
   gap: 0.55rem;
   align-self: flex-start;
-  padding: 0.4rem 0.9rem;
+  /* letter-spacing adds trailing space after the last character; padding-right
+     is reduced by that amount so the text stays visually centered. */
+  padding: 0.4rem calc(0.9rem - var(--tracking-caps)) 0.4rem 0.9rem;
   font-size: var(--font-size-2xs);
   font-weight: 700;
   letter-spacing: var(--tracking-caps);
