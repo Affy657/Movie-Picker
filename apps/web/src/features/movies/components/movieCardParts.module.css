@@ -52,8 +52,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  min-height: 2.75rem;
-  padding: 0.3rem 0.75rem;
+  padding: 0.3rem 0.6rem;
   background: transparent;
   border: 1px solid #3a4861;
   border-radius: var(--radius-pill);
