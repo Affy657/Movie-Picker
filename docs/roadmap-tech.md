@@ -59,7 +59,7 @@ Découpage par version côté **plateforme, qualité, infra, observabilité, det
 
 **Objectif** : stabilité long terme, sécurité de la chaîne de dépendances et ouverture OAuth.
 
-- ⬜ ⚙️ **Dependabot / Renovate** : automatisation des mises à jour de dépendances (npm, NuGet) — PRs automatiques sur nouvelles versions et CVE ; complète le `pnpm audit` et l'audit NuGet déjà en CI.
+- ✅ ⚙️ **Dependabot** : mises à jour groupées mensuelles (npm, github-actions, nuget, docker) ; alertes de vulnérabilité + *automated security fixes* activés — PRs auto sur nouvelles versions et CVE ; complète le `pnpm audit` et l'audit NuGet déjà en CI.
 - ⬜ 📊 **Sentry** : capture d'erreurs front (React) et API (.NET), regroupement incidents, contexte release/env ; définir sampling, politique PII et rétention.
 - ⬜ 🔒 **OAuth — volet infra** : librairie OAuth côté API .NET, secrets dédiés par provider, écran de consentement, mentions légales à jour — à poser après que le profil utilisateur (V1.2 produit) soit stabilisé.
 

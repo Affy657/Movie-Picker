@@ -20,47 +20,15 @@ import TmdbAttribution from '@/features/movies/components/TmdbAttribution';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useSearchHistory } from '@/features/movies/hooks/useSearchHistory';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
-import { genreLabel } from '@/features/profile/lib/tmdbGenres';
+import { useMovieSearchFilters } from '@/features/movies/hooks/useMovieSearchFilters';
+import MovieSearchFiltersPanel from '@/features/movies/components/MovieSearchFiltersPanel';
 import styles from './AddMovieForm.module.css';
 
 const SEARCH_DEBOUNCE_MS = 350;
 const SEARCH_MIN_CHARS = 2;
 
-const MOVIE_GENRE_IDS = [
-  28, 35, 53, 27, 878, 18, 12, 14, 10749, 80, 16, 10751, 99, 9648, 36, 10402, 10752, 37,
-] as const;
-
-const VOTE_MIN_OPTIONS = [
-  { tmdb: 6, label: '3' },
-  { tmdb: 7, label: '3.5' },
-  { tmdb: 8, label: '4' },
-] as const;
-
-const DECADE_OPTIONS = ['2020', '2010', '2000', '1990', '1980'] as const;
-
-const AVAILABILITY_OPTIONS = [
-  { type: 'flatrate', fr: 'Streaming', en: 'Streaming' },
-  { type: 'rent', fr: 'Location', en: 'Rental' },
-  { type: 'buy', fr: 'Achat', en: 'Purchase' },
-] as const;
-
-const LANGUAGE_OPTIONS = [
-  { code: 'fr', fr: 'Français', en: 'French', flag: '🇫🇷' },
-  { code: 'en', fr: 'Anglais', en: 'English', flag: '🇬🇧' },
-  { code: 'ja', fr: 'Japonais', en: 'Japanese', flag: '🇯🇵' },
-  { code: 'ko', fr: 'Coréen', en: 'Korean', flag: '🇰🇷' },
-  { code: 'es', fr: 'Espagnol', en: 'Spanish', flag: '🇪🇸' },
-  { code: 'de', fr: 'Allemand', en: 'German', flag: '🇩🇪' },
-  { code: 'it', fr: 'Italien', en: 'Italian', flag: '🇮🇹' },
-  { code: 'zh', fr: 'Chinois', en: 'Chinese', flag: '🇨🇳' },
-] as const;
-
 function makeSearchKey(term: string, filters: MovieSearchFilters): string {
   return `${term}|${(filters.genreIds ?? []).join(',')}|${filters.yearFrom ?? ''}|${filters.yearTo ?? ''}|${filters.voteMin ?? ''}|${filters.originalLanguage ?? ''}`;
-}
-
-function localizedName(fr: string, en: string, lang: string): string {
-  return lang.startsWith('fr') ? fr : en;
 }
 
 function isSameTmdbItem(m: MovieData, r: MovieSearchItem): boolean {
@@ -136,43 +104,14 @@ export default function AddMovieForm({
   const [error, setError] = useState<string | null>(null);
   const [emptySearchKey, setEmptySearchKey] = useState<string | null>(null);
 
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
-  const [selectedDecade, setSelectedDecade] = useState<string | undefined>(undefined);
-  const [voteMin, setVoteMin] = useState<number | undefined>(undefined);
-  const [selectedLanguage, setSelectedLanguage] = useState<string | undefined>(undefined);
-  const [availabilityFilter, setAvailabilityFilter] = useState<string | undefined>(undefined);
+  const filters = useMovieSearchFilters(tmdbLanguage);
 
   const trimmedForSearch = useMemo(() => query.trim(), [query]);
-
-  const yearFrom = selectedDecade ? Number.parseInt(selectedDecade, 10) : undefined;
-  const yearTo = selectedDecade ? Number.parseInt(selectedDecade, 10) + 9 : undefined;
-
-  const activeFilters: MovieSearchFilters = useMemo(
-    () => ({
-      genreIds: selectedGenres.length > 0 ? selectedGenres : undefined,
-      yearFrom,
-      yearTo,
-      voteMin,
-      originalLanguage: selectedLanguage,
-    }),
-    [selectedGenres, yearFrom, yearTo, voteMin, selectedLanguage]
-  );
-
-  const hasApiFilters = useMemo(
-    () =>
-      selectedGenres.length > 0 ||
-      selectedDecade !== undefined ||
-      voteMin !== undefined ||
-      selectedLanguage !== undefined,
-    [selectedGenres, selectedDecade, voteMin, selectedLanguage]
-  );
 
   const lastFulfilledKeyRef = useRef<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const immediateSearchRef = useRef(false);
-  const filterChangedRef = useRef(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const historyDropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -199,7 +138,7 @@ export default function AddMovieForm({
   const [a11ySearchStatus, setA11ySearchStatus] = useState('');
 
   const executeSearch = useCallback(
-    async (term: string, filters: MovieSearchFilters) => {
+    async (term: string, activeFilters: MovieSearchFilters) => {
       abortRef.current?.abort();
       const controller = new AbortController();
       abortRef.current = controller;
@@ -212,7 +151,7 @@ export default function AddMovieForm({
           signal: controller.signal,
           lang: tmdbLanguage,
           eventSlug: slug,
-          filters,
+          filters: activeFilters,
         });
         if (controller.signal.aborted) return;
         setResults(body.items);
@@ -229,10 +168,10 @@ export default function AddMovieForm({
               }
             : null
         );
-        lastFulfilledKeyRef.current = makeSearchKey(term, filters);
+        lastFulfilledKeyRef.current = makeSearchKey(term, activeFilters);
         if (term.length >= SEARCH_MIN_CHARS) addToHistory(term);
         if (body.items.length === 0) {
-          setEmptySearchKey(makeSearchKey(term, filters));
+          setEmptySearchKey(makeSearchKey(term, activeFilters));
           setA11ySearchStatus(t('movies.search.a11yNoResults'));
         } else {
           setEmptySearchKey(null);
@@ -252,25 +191,25 @@ export default function AddMovieForm({
     [tmdbLanguage, t, slug, addToHistory]
   );
 
-  const searchAllowed = trimmedForSearch.length >= SEARCH_MIN_CHARS || hasApiFilters;
+  const searchAllowed = trimmedForSearch.length >= SEARCH_MIN_CHARS || filters.hasApiFilters;
   const currentSearchKey = useMemo(
-    () => makeSearchKey(trimmedForSearch, activeFilters),
-    [trimmedForSearch, activeFilters]
+    () => makeSearchKey(trimmedForSearch, filters.activeFilters),
+    [trimmedForSearch, filters.activeFilters]
   );
 
   const search = useCallback(() => {
     if (!searchAllowed) return;
     clearDebounceTimer();
-    executeSearch(trimmedForSearch, activeFilters);
-  }, [searchAllowed, trimmedForSearch, activeFilters, executeSearch, clearDebounceTimer]);
+    executeSearch(trimmedForSearch, filters.activeFilters);
+  }, [searchAllowed, trimmedForSearch, filters.activeFilters, executeSearch, clearDebounceTimer]);
 
   useEffect(() => {
     const trimmed = trimmedForSearch;
-    const shouldSearch = trimmed.length >= SEARCH_MIN_CHARS || hasApiFilters;
+    const shouldSearch = trimmed.length >= SEARCH_MIN_CHARS || filters.hasApiFilters;
 
     if (!shouldSearch) {
       immediateSearchRef.current = false;
-      filterChangedRef.current = false;
+      filters.filterChangedRef.current = false;
       clearDebounceTimer();
       clearSearchResults();
       return;
@@ -287,18 +226,18 @@ export default function AddMovieForm({
 
     clearDebounceTimer();
 
-    const immediate = immediateSearchRef.current || filterChangedRef.current;
+    const immediate = immediateSearchRef.current || filters.filterChangedRef.current;
     immediateSearchRef.current = false;
-    filterChangedRef.current = false;
+    filters.filterChangedRef.current = false;
 
     if (immediate) {
-      executeSearch(trimmed, activeFilters);
+      executeSearch(trimmed, filters.activeFilters);
       return;
     }
 
     debounceTimerRef.current = setTimeout(() => {
       debounceTimerRef.current = null;
-      executeSearch(trimmed, activeFilters);
+      executeSearch(trimmed, filters.activeFilters);
     }, SEARCH_DEBOUNCE_MS);
 
     return () => {
@@ -306,8 +245,9 @@ export default function AddMovieForm({
     };
   }, [
     trimmedForSearch,
-    hasApiFilters,
-    activeFilters,
+    filters.hasApiFilters,
+    filters.activeFilters,
+    filters.filterChangedRef,
     currentSearchKey,
     executeSearch,
     clearDebounceTimer,
@@ -320,113 +260,14 @@ export default function AddMovieForm({
     setQuery(q);
   }, []);
 
-  const toggleGenre = useCallback((id: number) => {
-    filterChangedRef.current = true;
-    setSelectedGenres((prev) => (prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]));
-  }, []);
-
-  const toggleVoteMin = useCallback((min: number) => {
-    filterChangedRef.current = true;
-    setVoteMin((prev) => (prev === min ? undefined : min));
-  }, []);
-
-  const toggleDecade = useCallback((decade: string) => {
-    filterChangedRef.current = true;
-    setSelectedDecade((prev) => (prev === decade ? undefined : decade));
-  }, []);
-
-  const toggleLanguage = useCallback((code: string) => {
-    filterChangedRef.current = true;
-    setSelectedLanguage((prev) => (prev === code ? undefined : code));
-  }, []);
-
-  const toggleAvailability = useCallback((type: string) => {
-    setAvailabilityFilter((prev) => (prev === type ? undefined : type));
-  }, []);
-
-  const clearAllFilters = useCallback(() => {
-    filterChangedRef.current = true;
-    setSelectedGenres([]);
-    setSelectedDecade(undefined);
-    setVoteMin(undefined);
-    setSelectedLanguage(undefined);
-    setAvailabilityFilter(undefined);
-  }, []);
-
-  const removeGenre = useCallback((id: number) => {
-    filterChangedRef.current = true;
-    setSelectedGenres((prev) => prev.filter((g) => g !== id));
-  }, []);
-
-  const activeFilterChips = useMemo(() => {
-    const chips: { key: string; label: string; onRemove: () => void }[] = [];
-    for (const id of selectedGenres) {
-      chips.push({
-        key: `g-${id}`,
-        label: genreLabel(id, tmdbLanguage),
-        onRemove: () => removeGenre(id),
-      });
-    }
-    if (selectedDecade != null) {
-      chips.push({
-        key: 'decade',
-        label: `${selectedDecade}s`,
-        onRemove: () => {
-          filterChangedRef.current = true;
-          setSelectedDecade(undefined);
-        },
-      });
-    }
-    if (voteMin != null) {
-      const voteOpt = VOTE_MIN_OPTIONS.find((o) => o.tmdb === voteMin);
-      chips.push({
-        key: 'vote',
-        label: voteOpt ? `★ ${voteOpt.label}+` : `★ ${voteMin}+`,
-        onRemove: () => {
-          filterChangedRef.current = true;
-          setVoteMin(undefined);
-        },
-      });
-    }
-    if (selectedLanguage != null) {
-      const opt = LANGUAGE_OPTIONS.find((l) => l.code === selectedLanguage);
-      const label = opt
-        ? `${opt.code.toUpperCase()} ${localizedName(opt.fr, opt.en, tmdbLanguage)}`
-        : selectedLanguage;
-      chips.push({
-        key: 'lang',
-        label,
-        onRemove: () => {
-          filterChangedRef.current = true;
-          setSelectedLanguage(undefined);
-        },
-      });
-    }
-    if (availabilityFilter != null) {
-      const opt = AVAILABILITY_OPTIONS.find((o) => o.type === availabilityFilter);
-      chips.push({
-        key: 'avail',
-        label: opt ? localizedName(opt.fr, opt.en, tmdbLanguage) : availabilityFilter,
-        onRemove: () => setAvailabilityFilter(undefined),
-      });
-    }
-    return chips;
-  }, [
-    selectedGenres,
-    selectedDecade,
-    voteMin,
-    selectedLanguage,
-    availabilityFilter,
-    tmdbLanguage,
-    removeGenre,
-  ]);
-
   const displayedResults = useMemo(
     () =>
-      availabilityFilter
-        ? results.filter((r) => r.watchProviders?.some((p) => p.type === availabilityFilter))
+      filters.availabilityFilter
+        ? results.filter((r) =>
+            r.watchProviders?.some((p) => p.type === filters.availabilityFilter)
+          )
         : results,
-    [results, availabilityFilter]
+    [results, filters.availabilityFilter]
   );
 
   useEffect(() => {
@@ -480,7 +321,7 @@ export default function AddMovieForm({
   const trimmed = trimmedForSearch;
   const showHistory = inputFocused && !trimmed && history.length > 0;
   const showMinCharsHint =
-    trimmed.length > 0 && trimmed.length < SEARCH_MIN_CHARS && !hasApiFilters;
+    trimmed.length > 0 && trimmed.length < SEARCH_MIN_CHARS && !filters.hasApiFilters;
   const showNoResultsBlock =
     !searching &&
     searchAllowed &&
@@ -489,10 +330,13 @@ export default function AddMovieForm({
     emptySearchKey !== null &&
     emptySearchKey === currentSearchKey;
   const showAvailabilityEmpty =
-    !searching && results.length > 0 && displayedResults.length === 0 && availabilityFilter != null;
+    !searching &&
+    results.length > 0 &&
+    displayedResults.length === 0 &&
+    filters.availabilityFilter != null;
 
   const hasResultsBlock = displayedResults.length > 0;
-  const activeFiltersCount = activeFilterChips.length;
+  const activeFiltersCount = filters.activeFilterChips.length;
 
   return (
     <div className={styles.root}>
@@ -590,9 +434,9 @@ export default function AddMovieForm({
           </div>
           <button
             type="button"
-            className={`${styles.filterIconBtn} ${filtersOpen ? styles.filterIconBtnActive : ''}`}
-            onClick={() => setFiltersOpen((v) => !v)}
-            aria-expanded={filtersOpen}
+            className={`${styles.filterIconBtn} ${filters.filtersOpen ? styles.filterIconBtnActive : ''}`}
+            onClick={() => filters.setFiltersOpen((v) => !v)}
+            aria-expanded={filters.filtersOpen}
             aria-controls={filtersPanelId}
             aria-label={t('movies.search.filtersToggle')}
           >
@@ -617,9 +461,9 @@ export default function AddMovieForm({
         </div>
       </div>
 
-      {activeFilterChips.length > 0 && (
+      {filters.activeFilterChips.length > 0 && (
         <div className={styles.activeFiltersRow} aria-label={t('movies.search.filtersToggle')}>
-          {activeFilterChips.map((chip) => (
+          {filters.activeFilterChips.map((chip) => (
             <span key={chip.key} className={styles.activeFilterChip}>
               {chip.label}
               <button
@@ -640,98 +484,31 @@ export default function AddMovieForm({
               </button>
             </span>
           ))}
-          <button type="button" className={styles.filtersClearAll} onClick={clearAllFilters}>
+          <button
+            type="button"
+            className={styles.filtersClearAll}
+            onClick={filters.clearAllFilters}
+          >
             {t('movies.search.filtersClearAll')}
           </button>
         </div>
       )}
 
-      {filtersOpen && (
-        <div id={filtersPanelId} className={styles.filtersPanel}>
-          <div className={styles.filterGroup}>
-            <span className={styles.filterLabel}>{t('movies.search.filterGenre')}</span>
-            <div className={styles.genreChips}>
-              {MOVIE_GENRE_IDS.map((id) => (
-                <button
-                  key={id}
-                  type="button"
-                  className={`${styles.genreChip} ${selectedGenres.includes(id) ? styles.genreChipActive : ''}`}
-                  onClick={() => toggleGenre(id)}
-                  aria-pressed={selectedGenres.includes(id)}
-                >
-                  {genreLabel(id, tmdbLanguage)}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className={styles.filterGroup}>
-            <span className={styles.filterLabel}>{t('movies.search.filterYear')}</span>
-            <div className={styles.decadeChips}>
-              {DECADE_OPTIONS.map((decade) => (
-                <button
-                  key={decade}
-                  type="button"
-                  className={`${styles.decadeChip} ${selectedDecade === decade ? styles.decadeChipActive : ''}`}
-                  onClick={() => toggleDecade(decade)}
-                  aria-pressed={selectedDecade === decade}
-                >
-                  {decade}s
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className={styles.filterGroup}>
-            <span className={styles.filterLabel}>{t('movies.search.filterVoteMin')}</span>
-            <div className={styles.voteChips}>
-              {VOTE_MIN_OPTIONS.map((opt) => (
-                <button
-                  key={opt.tmdb}
-                  type="button"
-                  className={`${styles.voteChip} ${voteMin === opt.tmdb ? styles.voteChipActive : ''}`}
-                  onClick={() => toggleVoteMin(opt.tmdb)}
-                  aria-pressed={voteMin === opt.tmdb}
-                >
-                  ★ {opt.label}+
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className={styles.filterGroup}>
-            <span className={styles.filterLabel}>{t('movies.search.filterLanguage')}</span>
-            <div className={styles.langChips}>
-              {LANGUAGE_OPTIONS.map((lang) => (
-                <button
-                  key={lang.code}
-                  type="button"
-                  className={`${styles.langChip} ${selectedLanguage === lang.code ? styles.langChipActive : ''}`}
-                  onClick={() => toggleLanguage(lang.code)}
-                  aria-pressed={selectedLanguage === lang.code}
-                >
-                  <span className={styles.langCode} aria-hidden="true">
-                    {lang.code.toUpperCase()}
-                  </span>
-                  {tmdbLanguage.startsWith('fr') ? lang.fr : lang.en}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className={styles.filterGroup}>
-            <span className={styles.filterLabel}>{t('movies.search.filterAvailability')}</span>
-            <div className={styles.availabilityChips}>
-              {AVAILABILITY_OPTIONS.map((opt) => (
-                <button
-                  key={opt.type}
-                  type="button"
-                  className={`${styles.availabilityChip} ${availabilityFilter === opt.type ? styles.availabilityChipActive : ''}`}
-                  onClick={() => toggleAvailability(opt.type)}
-                  aria-pressed={availabilityFilter === opt.type}
-                >
-                  {tmdbLanguage.startsWith('fr') ? opt.fr : opt.en}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+      {filters.filtersOpen && (
+        <MovieSearchFiltersPanel
+          panelId={filtersPanelId}
+          tmdbLanguage={tmdbLanguage}
+          selectedGenres={filters.selectedGenres}
+          selectedDecade={filters.selectedDecade}
+          voteMin={filters.voteMin}
+          selectedLanguage={filters.selectedLanguage}
+          availabilityFilter={filters.availabilityFilter}
+          onToggleGenre={filters.toggleGenre}
+          onToggleDecade={filters.toggleDecade}
+          onToggleVoteMin={filters.toggleVoteMin}
+          onToggleLanguage={filters.toggleLanguage}
+          onToggleAvailability={filters.toggleAvailability}
+        />
       )}
 
       {showMinCharsHint ? (

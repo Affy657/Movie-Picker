@@ -1,0 +1,131 @@
+import { useTranslation } from '@/shared/i18n';
+import { genreLabel } from '@/features/profile/lib/tmdbGenres';
+import {
+  AVAILABILITY_OPTIONS,
+  DECADE_OPTIONS,
+  LANGUAGE_OPTIONS,
+  MOVIE_GENRE_IDS,
+  VOTE_MIN_OPTIONS,
+} from './movieSearchFilterOptions';
+import styles from './AddMovieForm.module.css';
+
+interface MovieSearchFiltersPanelProps {
+  panelId: string;
+  tmdbLanguage: string;
+  selectedGenres: number[];
+  selectedDecade: string | undefined;
+  voteMin: number | undefined;
+  selectedLanguage: string | undefined;
+  availabilityFilter: string | undefined;
+  onToggleGenre: (id: number) => void;
+  onToggleDecade: (decade: string) => void;
+  onToggleVoteMin: (min: number) => void;
+  onToggleLanguage: (code: string) => void;
+  onToggleAvailability: (type: string) => void;
+}
+
+export default function MovieSearchFiltersPanel({
+  panelId,
+  tmdbLanguage,
+  selectedGenres,
+  selectedDecade,
+  voteMin,
+  selectedLanguage,
+  availabilityFilter,
+  onToggleGenre,
+  onToggleDecade,
+  onToggleVoteMin,
+  onToggleLanguage,
+  onToggleAvailability,
+}: Readonly<MovieSearchFiltersPanelProps>) {
+  const { t } = useTranslation();
+  const inFrench = tmdbLanguage.startsWith('fr');
+
+  return (
+    <div id={panelId} className={styles.filtersPanel}>
+      <div className={styles.filterGroup}>
+        <span className={styles.filterLabel}>{t('movies.search.filterGenre')}</span>
+        <div className={styles.genreChips}>
+          {MOVIE_GENRE_IDS.map((id) => (
+            <button
+              key={id}
+              type="button"
+              className={`${styles.genreChip} ${selectedGenres.includes(id) ? styles.genreChipActive : ''}`}
+              onClick={() => onToggleGenre(id)}
+              aria-pressed={selectedGenres.includes(id)}
+            >
+              {genreLabel(id, tmdbLanguage)}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className={styles.filterGroup}>
+        <span className={styles.filterLabel}>{t('movies.search.filterYear')}</span>
+        <div className={styles.decadeChips}>
+          {DECADE_OPTIONS.map((decade) => (
+            <button
+              key={decade}
+              type="button"
+              className={`${styles.decadeChip} ${selectedDecade === decade ? styles.decadeChipActive : ''}`}
+              onClick={() => onToggleDecade(decade)}
+              aria-pressed={selectedDecade === decade}
+            >
+              {decade}s
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className={styles.filterGroup}>
+        <span className={styles.filterLabel}>{t('movies.search.filterVoteMin')}</span>
+        <div className={styles.voteChips}>
+          {VOTE_MIN_OPTIONS.map((opt) => (
+            <button
+              key={opt.tmdb}
+              type="button"
+              className={`${styles.voteChip} ${voteMin === opt.tmdb ? styles.voteChipActive : ''}`}
+              onClick={() => onToggleVoteMin(opt.tmdb)}
+              aria-pressed={voteMin === opt.tmdb}
+            >
+              ★ {opt.label}+
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className={styles.filterGroup}>
+        <span className={styles.filterLabel}>{t('movies.search.filterLanguage')}</span>
+        <div className={styles.langChips}>
+          {LANGUAGE_OPTIONS.map((lang) => (
+            <button
+              key={lang.code}
+              type="button"
+              className={`${styles.langChip} ${selectedLanguage === lang.code ? styles.langChipActive : ''}`}
+              onClick={() => onToggleLanguage(lang.code)}
+              aria-pressed={selectedLanguage === lang.code}
+            >
+              <span className={styles.langCode} aria-hidden="true">
+                {lang.code.toUpperCase()}
+              </span>
+              {inFrench ? lang.fr : lang.en}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className={styles.filterGroup}>
+        <span className={styles.filterLabel}>{t('movies.search.filterAvailability')}</span>
+        <div className={styles.availabilityChips}>
+          {AVAILABILITY_OPTIONS.map((opt) => (
+            <button
+              key={opt.type}
+              type="button"
+              className={`${styles.availabilityChip} ${availabilityFilter === opt.type ? styles.availabilityChipActive : ''}`}
+              onClick={() => onToggleAvailability(opt.type)}
+              aria-pressed={availabilityFilter === opt.type}
+            >
+              {inFrench ? opt.fr : opt.en}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
