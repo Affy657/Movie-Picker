@@ -92,13 +92,13 @@
   - A02 Cryptographic Failures : hachage mot de passe (Identity), cookies `Secure`/`HttpOnly`.
   - A03 Injection : `MongoDB.Driver` paramétré, `ValidationErrorFilter`.
   - A04 Insecure Design : rate limiting, garde-fous config soirée, secrets externes.
-  - A05 Security Misconfiguration : `SecurityHeadersMiddleware` (CSP, `frame-ancestors 'none'`…).
+  - A05 Security Misconfiguration : `SecurityHeadersMiddleware` API (CSP, `frame-ancestors 'none'`…) **+ CSP du front SPA** injectée au build (`apps/web/vite.config.ts`, plugin `moviepicker-csp-meta` ; limite : `frame-ancestors` front = en-tête CloudFront, hors `<meta>`).
   - A06 Vulnerable Components : Dependabot + `pnpm audit` + `dotnet list package --vulnerable` + Trivy.
   - A07 Auth Failures : rate limit login, cooldown, reset anti-énumération.
   - A08 Data Integrity : actions épinglées, images taguées par digest, Gitleaks.
   - A09 Logging & Monitoring : `StructuredHttpRequestLoggingMiddleware`, `CorrelationIdMiddleware`.
   - A10 SSRF : allowlist hosts TMDB / posters.
-- **Preuves** : extraits de `SecurityHeadersMiddleware.cs`, `MoviePickerCookieAuthenticationConfigurer.cs`, config CORS/rate limit, `security-scan.yml`. *(chemins exacts + lignes à confirmer à la rédaction)*
+- **Preuves** : extraits de `SecurityHeadersMiddleware.cs`, `MoviePickerCookieAuthenticationConfigurer.cs`, config CORS/rate limit, `apps/web/vite.config.ts` (plugin CSP front), `security-scan.yml`. *(chemins exacts + lignes à confirmer à la rédaction)*
 
 ### §9 — Accessibilité — C2.2.3 ÉLIM (2 p.)
 - **Référentiel retenu & justifié** : **RGAA 4.1 / WCAG 2.1 AA** ; lien avec `axe-core` (moteur WCAG).
@@ -107,7 +107,7 @@
   - Gestion du focus : focus-visible global, restauration.
   - ARIA & sémantique : landmarks, `aria-live`, `aria-label`, hiérarchie des titres.
   - Contraste & thèmes clair/sombre, `prefers-reduced-motion`, attribut `lang`.
-- **Tests automatisés** : `axe` sur **7 pages** (`a11y.test.tsx`) + audit manuel.
+- **Tests automatisés** : `axe` sur **9 vues** (8 pages + écran d'erreur serveur) dans `a11y.test.tsx` + audit manuel.
 - **Critères reportés / limites** (honnêteté jury).
 - **Preuves** : `a11y.test.tsx`, `AppShell.tsx`, extraits focus/ARIA.
 

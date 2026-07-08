@@ -36,7 +36,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 > Le code et les tests sont déjà couverts par [`livraison-v1.md`](../../archive/docs/v1-produit/livraison-v1.md) (archivé). Restent ici les **livrables documentaires / process**.
 
-> **⚠️ Mise à jour 2026-07-08** — Plusieurs éléments décrits comme « à faire » dans les sections § 1-8 / § 18 ci-dessous **sont désormais livrés dans le code** : E2E Playwright (`e2e/` + `playwright.config.ts` à la racine + job CI), accessibilité (skip link, focus-visible, couverture `axe` sur 7 pages), pipeline CI/CD complet (4 workflows + actions composites), `CHANGELOG.md` et templates issue/PR. Il reste surtout à **présenter** ces preuves au jury. Le plan de rédaction fait foi : [`bloc-2-conception-developpement/dossier-bloc-2-plan.md`](bloc-2-conception-developpement/dossier-bloc-2-plan.md).
+> **⚠️ Mise à jour 2026-07-08** — Plusieurs éléments décrits comme « à faire » dans les sections § 1-8 / § 18 ci-dessous **sont désormais livrés dans le code** : E2E Playwright (`e2e/` + `playwright.config.ts` à la racine + job CI), accessibilité (skip link, focus-visible, couverture `axe` sur 9 vues), pipeline CI/CD complet (4 workflows + actions composites), `CHANGELOG.md` et templates issue/PR. Il reste surtout à **présenter** ces preuves au jury. Le plan de rédaction fait foi : [`bloc-2-conception-developpement/dossier-bloc-2-plan.md`](bloc-2-conception-developpement/dossier-bloc-2-plan.md).
 
 - [ ] **C2.1.1** — Protocole de déploiement continu formalisé — voir § 18
 - [ ] **C2.1.2** — Protocole d'intégration continue formalisé — voir § 18
@@ -96,40 +96,30 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 > **Objectif RNCP — C2.2.3 (ÉLIM, sécurité)** : « les mesures prises permettent de couvrir les 10 failles de sécurité principales décrites par l'OWASP ». Le jury attend un **mapping vérifiable** dans le code et la doc, pas une simple affirmation.
 
-- [ ] Créer **`docs/RNCP/bloc-2-conception-developpement/owasp-top-10.md`** : tableau **Faille OWASP 2021 → Mesure dans le repo → Référence fichier:ligne (ou commit)** pour **les 10 catégories** (A01 Broken Access Control … A10 SSRF) — aucune ligne vide pour ne pas laisser de trou apparent au jury
-- [ ] **A01 Broken Access Control — CSRF** : la stratégie cookie auth est **`SameSite=None` + `Secure=Always` en Production** (front et API sur origines distinctes — cf. `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/MoviePickerCookieAuthenticationConfigurer.cs` lignes ~38-41), donc cookie « cross-site » au sens navigateur. Mitigations à consigner / vérifier : **CORS strict avec `AllowCredentials` et allowlist `ALLOWED_ORIGINS`** (déjà en place), **header custom requis sur les mutations** (ex. `X-Requested-With`) ou **token anti-CSRF** via `AddAntiforgery` sur les routes de mutation cookie-based
-- [ ] **A02 Cryptographic Failures** : confirmer hash mot de passe (Argon2 / PBKDF2 .NET Identity ou équivalent) et durée Data Protection ; documenter
-- [ ] **A03 Injection** : tracer l'usage **MongoDB.Driver** (paramétré, pas de string concat) + validation côté API (`ValidationErrorFilter`) ; un test d'intégration ciblé d'injection NoSQL refusée
-- [ ] **A04 Insecure Design** : renvoyer dans `owasp-top-10.md` aux décisions de conception sécurité documentées :
-  - **Rate limiting prod** par endpoint et par IP (`livraison-v1.md` § 21)
-  - **Compte obligatoire pour création** + lien partagé sans `?host=` + actions hôte via session compte (`livraison-v1.md` § 16 *bis*) — design qui supprime la classe d'attaque « usurpation hôte par devinette de token »
-  - **Garde-fous métier sur la config soirée** (refus PATCH si soirée terminée / roue lancée — `livraison-v1.md` § 5)
-  - **Secrets via GCP Secret Manager**, jamais en repo (`livraison-v1.md` § 1 + § 21)
-  - **Validation centralisée API** (`ValidationErrorFilter`) refusant les payloads malformés — pas de ligne vide
-- [ ] **A05 Security Misconfiguration — CSP** : la CSP **existe déjà** côté API dans `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/SecurityHeadersMiddleware.cs` lignes ~17-19 (`default-src 'none'; frame-ancestors 'none'; base-uri 'none'`). À faire : (a) **durcir / documenter** cette CSP API dans `owasp-top-10.md` ; (b) **ajouter** une CSP **dédiée au front SPA** servie via en-tête CloudFront (Function ou Lambda@Edge) **ou** balise `<meta http-equiv="Content-Security-Policy">` dans `apps/web/index.html`, avec `script-src` / `style-src` / `connect-src` (URL API) explicites
-- [ ] **A06 Vulnerable & Outdated Components** : déjà couvert côté process — Dependabot mensuel (npm + GitHub Actions + NuGet) cf. `.github/dependabot.yml`, `pnpm audit --audit-level=high` en CI cf. job `lint`, `dotnet list package --vulnerable` (`livraison-v1.md` § 24), scan image Docker (`livraison-v1.md` § 25). Renvoi à consigner dans `owasp-top-10.md`
-- [ ] **A07 Identification & Authentication** : rate limit login + lockout / cooldown documenté + reset password (cf. `livraison-v1.md` § 3)
-- [ ] **A08 Software & Data Integrity Failures** : intégrité du pipeline — workflows GitHub Actions épinglés (versions explicites), images Docker taguées par SHA (cf. `ci-cd.yml`), Dependabot pour les actions, secret scanning (`livraison-v1.md` § 26). À consigner dans `owasp-top-10.md`
-- [ ] **A09 Security Logging & Monitoring Failures** : logs structurés + correlation ID déjà OK (`StructuredHttpRequestLoggingMiddleware`, `CorrelationIdMiddleware`) ; lier vers § 7 (Sentry + alertes)
-- [ ] **A10 SSRF** : valider que les appels TMDB/Posters n'acceptent pas d'URL utilisateur arbitraire (allowlist des hosts)
+> **État réel (2026-07-08)** — les **mesures** de sécurité sont **livrées dans le code** ; le **mapping A01→A10 vérifiable** (Faille → Mesure → `fichier:ligne` + extrait) sera **présenté dans le dossier jury (plan §8)**, pas dans un `.md` séparé (livrable = PDF autonome, cf. décision candidat). Les cases ci-dessous reflètent l'état des **mesures**, pas de la rédaction.
+
+- [x] **A01 Broken Access Control** : compte obligatoire, lien partagé sans `?host=`, actions hôte via session ; **CORS strict** `AllowCredentials` + allowlist `ALLOWED_ORIGINS` (`Infrastructure/Web/CorsPolicyBuilderExtensions.cs`). Cookie prod `SameSite=None` + `Secure=Always` (`MoviePickerCookieAuthenticationConfigurer.cs:39-40`). **Résiduel honnête** : pas de token anti-CSRF (`AddAntiforgery`) ni en-tête custom sur les mutations — atténué par CORS + `Content-Type: application/json` (preflight) ; ajout à arbitrer, à présenter tel quel au jury
+- [x] **A02 Cryptographic Failures** : cookies `HttpOnly` + `Secure` en prod (`MoviePickerCookieAuthenticationConfigurer.cs:27,39`) ; hachage mot de passe via .NET Identity — *algorithme exact à préciser à la rédaction*
+- [x] **A03 Injection** : `MongoDB.Driver` (requêtes typées/paramétrées, pas de concaténation) + `ValidationErrorFilter` centralisé. *Optionnel* : ajouter un test d'intégration « injection NoSQL refusée »
+- [x] **A04 Insecure Design** : rate limiting (`RateLimitingExtensions.cs`), compte obligatoire, garde-fous config soirée (refus PATCH si terminée/roue lancée), secrets via GCP Secret Manager, validation centralisée
+- [x] **A05 Security Misconfiguration** : CSP + headers stricts côté API (`SecurityHeadersMiddleware.cs:14-16`) **et désormais CSP côté front SPA** injectée au build (`apps/web/vite.config.ts`, plugin `moviepicker-csp-meta` ; `connect-src` dérivé de `VITE_API_URL`, PostHog + TMDB autorisés). **Limite connue** : `frame-ancestors` / `X-Frame-Options` du front = en-tête CloudFront (non applicable via `<meta>`) → à documenter dans le dossier §8
+- [x] **A06 Vulnerable & Outdated Components** : Dependabot mensuel (npm + Actions + NuGet + Docker) `.github/dependabot.yml`, `pnpm audit --audit-level=high` en CI, `dotnet list package --vulnerable`, Trivy image (`security-scan.yml`)
+- [x] **A07 Identification & Authentication** : rate limit login + cooldown + reset anti-énumération (cf. `livraison-v1.md` § 3)
+- [x] **A08 Software & Data Integrity Failures** : Actions GitHub épinglées, images Docker taguées par digest (`ci-cd.yml`), Gitleaks (`security-scan.yml`)
+- [x] **A09 Security Logging & Monitoring Failures** : `StructuredHttpRequestLoggingMiddleware` + `CorrelationIdMiddleware`. **Résiduel** : supervision active + alertes (Sentry + uptime) = § 7 (bloc 4)
+- [x] **A10 SSRF** : pas d'URL utilisateur libre vers un fetch serveur (appels sortants = TMDB via clé serveur, posters proxifiés) — *périmètre à confirmer à la rédaction*
+- [ ] **Présentation jury** : tableau A01→A10 rédigé dans le **dossier §8** (reste = rédaction)
 
 ---
 
 ## 3. Accessibilité — référentiel + tests automatisés
 
-> **Objectif RNCP — C2.2.3 (ÉLIM, a11y)** : « le référentiel d'accessibilité choisi est présenté et justifié (RGAA, OPQUAST, etc.) ; le prototype permet de répondre aux exigences ». **Référentiel retenu : RGAA 4.1 / WCAG 2.1 AA.** Accessibilité **livrée** : skip link, focus-visible global, couverture `axe` sur 7 pages. Reste à **présenter** ces preuves dans le dossier jury (§9 du plan).
+> **Objectif RNCP — C2.2.3 (ÉLIM, a11y)** : « le référentiel d'accessibilité choisi est présenté et justifié (RGAA, OPQUAST, etc.) ; le prototype permet de répondre aux exigences ». **Référentiel retenu : RGAA 4.1 / WCAG 2.1 AA.** Accessibilité **livrée** : skip link, focus-visible global, couverture `axe` sur 9 vues (8 pages + écran d'erreur serveur). Reste à **présenter** ces preuves dans le dossier jury (§9 du plan).
 
-- [ ] Choisir explicitement **OPQUAST niveau 1** (pragmatique pour un MVP / V1) ou **RGAA 4.1 — niveau A minimum** ; consigner dans **`docs/RNCP/bloc-2-conception-developpement/accessibilite.md`** (référentiel retenu + critères couverts + critères reportés)
-- [ ] Test `vitest-axe` **par page clé** dans `apps/web/src/` — convention de nommage **`*.a11y.test.tsx`** (un fichier dédié à côté des tests fonctionnels existants pour pouvoir les filtrer en CI ; les composants pages réels du repo s'appellent `Home.tsx`, `CreateEvent.tsx`, `EventDetail.tsx`, etc., **pas** `HomePage.tsx`) :
-  - `app/pages/Home.a11y.test.tsx`
-  - `features/events/pages/CreateEvent.a11y.test.tsx`
-  - `features/events/pages/EventDetail.a11y.test.tsx`
-  - `features/events/pages/MyEventsPage.a11y.test.tsx`
-  - `features/auth/pages/LoginPage.a11y.test.tsx` / `RegisterPage.a11y.test.tsx`
-  - `features/auth/pages/AccountPage.a11y.test.tsx`
-- [ ] Activer **`@axe-core/react`** uniquement en dev (`if (import.meta.env.DEV)`) pour signaler les violations en console au runtime
-- [ ] Ajouter un script `pnpm --filter web a11y` (filtre Vitest sur le pattern `**/*.a11y.test.tsx`) ; brancher dans `verify:local`
-- [ ] Audit manuel rapide : navigation **clavier seule** sur les parcours critiques + contraste validé en mode sombre & clair (consigner dans `accessibilite.md`)
+- [x] **Référentiel retenu et figé** : **RGAA 4.1 / WCAG 2.1 AA** (moteur `axe-core` = règles WCAG). Le choix OPQUAST est écarté. Justification + critères couverts/reportés → **dossier §9**
+- [x] **Tests `axe` livrés** : fichier unique `apps/web/src/app/pages/a11y.test.tsx` couvrant **9 vues** (LandingPage, CreateEvent, LoginPage, RegisterPage, ForgotPasswordPage, AccountPage, NotFoundPage, ServerErrorPage, MyEventsPage). *La convention initialement envisagée (`*.a11y.test.tsx` par page + `@axe-core/react` en dev + script `pnpm --filter web a11y`) est **abandonnée** au profit de ce fichier unique déjà en place.*
+- [x] **Mesures a11y livrées** : skip link (`AppShell.tsx:67`), focus-visible global, landmarks + `aria-*`, thèmes clair/sombre, `prefers-reduced-motion`, attribut `lang`
+- [ ] **Audit manuel** (clavier seul + contraste clair/sombre) à consigner dans le **dossier §9** (reste = rédaction)
 
 ---
 

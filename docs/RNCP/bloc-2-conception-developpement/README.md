@@ -14,7 +14,7 @@ Le dossier PDF est **autonome** : il embarque les preuves (extraits de code, sch
 | **C2.1.2** — Intégration continue | | Jobs lint / test / build de `ci-cd.yml` | ✅ code · dossier |
 | **C2.2.1** — Prototype | ✅ | Application en production + architecture (archivée) | **ACQUIS** (fiche) |
 | **C2.2.2** — Harnais de tests unitaires | ✅ | ~85 fichiers de test front + suite d'intégration API | **ACQUIS** (fiche) |
-| **C2.2.3** — Sécurité (OWASP Top 10) + accessibilité | ✅ | Middlewares sécurité (CSP, CORS, rate limit) + a11y (skip link, axe 7 pages) | ✅ code · dossier |
+| **C2.2.3** — Sécurité (OWASP Top 10) + accessibilité | ✅ | Middlewares sécurité (CSP, CORS, rate limit) + a11y (skip link, axe 9 vues) | ✅ code · dossier |
 | **C2.2.4** — Déploiement continu + historique versions | | CD auto sur `master` + [`CHANGELOG.md`](../../../CHANGELOG.md) + versionnage SemVer | ✅ code |
 | **C2.3.1** — Cahier de recettes | ✅ | E2E Playwright ([`e2e/`](../../../e2e/)) | ✅ code · dossier |
 | **C2.3.2** — Plan de correction des bogues | | Templates issue/PR ([`.github/`](../../../.github/)) + flux git/PR | ✅ code · dossier |
