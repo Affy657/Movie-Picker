@@ -31,9 +31,12 @@
 
 .fullBadge {
   margin-left: 0.35rem;
-  /* letter-spacing adds trailing space after the last character; padding-right
-     is reduced by that amount so the text stays visually centered. */
-  padding: 0.15rem calc(0.55rem - var(--tracking-wide-lg)) 0.15rem 0.55rem;
+  /* Horizontal: letter-spacing adds trailing space after the last character,
+     so padding-right is reduced by that amount. Vertical: uppercase caps sit
+     high in the line box, so padding-top is increased and padding-bottom
+     reduced by 0.11em to bring the caps to the optical vertical center. */
+  padding: calc(0.15rem + 0.11em) calc(0.55rem - var(--tracking-wide-lg)) calc(0.15rem - 0.11em)
+    0.55rem;
   border-radius: var(--radius-pill);
   background: var(--color-badge-upcoming-bg);
   color: var(--color-badge-upcoming-text);

@@ -71,6 +71,12 @@
   backdrop-filter: blur(8px);
 }
 
+/* Uppercase caps sit high in the line box; nudge the text down so it aligns
+   optically with the vertical center of the pill and the icon. */
+.kickerText {
+  transform: translateY(0.09em);
+}
+
 .title {
   margin: 0;
   font-size: clamp(2.25rem, 6vw, 3.75rem);

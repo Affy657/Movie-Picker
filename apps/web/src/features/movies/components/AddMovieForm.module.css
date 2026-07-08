@@ -368,9 +368,9 @@
 .mediaTypeBadge {
   display: inline-block;
   margin-left: 0.4rem;
-  /* letter-spacing adds trailing space after the last character; padding-right
-     is reduced by that amount so the text stays visually centered. */
-  padding: 0.1rem calc(0.45rem - var(--tracking-wide)) 0.1rem 0.45rem;
+  /* Horizontal: padding-right reduced by the trailing letter-spacing. Vertical:
+     padding-top +0.11em / padding-bottom -0.11em to optically center the caps. */
+  padding: calc(0.1rem + 0.11em) calc(0.45rem - var(--tracking-wide)) calc(0.1rem - 0.11em) 0.45rem;
   font-size: var(--font-size-3xs);
   font-weight: 600;
   letter-spacing: var(--tracking-wide);
@@ -731,6 +731,13 @@
   border-radius: 3px;
   background: color-mix(in srgb, currentColor 15%, transparent);
   line-height: 1.5;
+}
+
+/* Uppercase caps sit slightly high; a small nudge centers them optically.
+   (This chip's line-height already does most of the centering, so the nudge
+   is smaller than on the other pills.) */
+.langCodeText {
+  transform: translateY(0.04em);
 }
 
 .availabilityChips {

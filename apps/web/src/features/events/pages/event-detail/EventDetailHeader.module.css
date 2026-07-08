@@ -81,6 +81,12 @@
   border: 1px solid color-mix(in srgb, var(--color-badge-finished-text) 30%, transparent);
 }
 
+/* Uppercase caps sit high in the line box; nudge the text down 0.13em so it
+   aligns optically with the vertical center of the pill and the icon. */
+.badgeFinishedText {
+  transform: translateY(0.13em);
+}
+
 .share {
   margin-top: 0.85rem;
   display: flex;

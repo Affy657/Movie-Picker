@@ -103,7 +103,7 @@ export default function MovieSearchFiltersPanel({
               aria-pressed={selectedLanguage === lang.code}
             >
               <span className={styles.langCode} aria-hidden="true">
-                {lang.code.toUpperCase()}
+                <span className={styles.langCodeText}>{lang.code.toUpperCase()}</span>
               </span>
               {inFrench ? lang.fr : lang.en}
             </button>

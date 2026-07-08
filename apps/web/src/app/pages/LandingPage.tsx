@@ -16,7 +16,7 @@ export default function LandingPage() {
         <div className={styles.heroInner}>
           <span className={styles.kicker}>
             <Sparkles size={14} aria-hidden />
-            Movie night, simplifiée
+            <span className={styles.kickerText}>Movie night, simplifiée</span>
           </span>
           <h1 className={styles.title}>
             Choisissez le film de la soirée <span className={styles.titleAccent}>ensemble.</span>

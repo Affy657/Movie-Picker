@@ -46,9 +46,9 @@
   top: 0.5rem;
   left: 0.5rem;
   z-index: 3;
-  /* letter-spacing adds trailing space after the last character; padding-right
-     is reduced by that amount so the text stays visually centered. */
-  padding: 0.1rem calc(0.4rem - var(--tracking-wide)) 0.1rem 0.4rem;
+  /* Horizontal: padding-right reduced by the trailing letter-spacing. Vertical:
+     padding-top +0.11em / padding-bottom -0.11em to optically center the caps. */
+  padding: calc(0.1rem + 0.11em) calc(0.4rem - var(--tracking-wide)) calc(0.1rem - 0.11em) 0.4rem;
   font-size: var(--font-size-4xs);
   font-weight: 600;
   letter-spacing: var(--tracking-wide);
