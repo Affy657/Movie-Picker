@@ -226,6 +226,8 @@ movie-picker/
 
 | Document | Contenu |
 |----------|---------|
+| [`CHANGELOG.md`](CHANGELOG.md) | Journal des versions (Keep a Changelog + SemVer) |
 | [`docs/roadmap-product.md`](docs/roadmap-product.md) | Roadmap produit |
 | [`docs/roadmap-tech.md`](docs/roadmap-tech.md) | Roadmap technique |
 | [`docs/FIXES.md`](docs/FIXES.md) | Suivi des correctifs |
+| [`docs/RNCP/`](docs/RNCP/) | Livrables de certification (RNCP 39583) |

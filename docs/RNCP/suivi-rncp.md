@@ -2,11 +2,11 @@
 
 Carte dédiée aux **livrables documentaires et process** exigés par le titre **Expert en développement logiciel — RNCP 39583** (référentiel : [`referentiel/`](referentiel/)).
 
-> **Périmètre** : tout ce qui n'est **pas du dev produit V1** mais qui est **attendu par le jury** côté **dépôt** (docs versionnées, schémas, ADR, process). Le **dev produit V1** (compte utilisateur, parcours hôte, watch providers, OG, i18n, mot de passe oublié, sécurité CI…) reste dans [`livraison-v1.md`](../v1-produit/livraison-v1.md). Le rapport écrit candidat et la soutenance orale **ne sont pas couverts ici**.
+> **Périmètre** : tout ce qui n'est **pas du dev produit V1** mais qui est **attendu par le jury** côté **dépôt** (docs versionnées, schémas, ADR, process). Le **dev produit V1** (compte utilisateur, parcours hôte, watch providers, OG, i18n, mot de passe oublié, sécurité CI…) reste dans [`livraison-v1.md`](../../archive/docs/v1-produit/livraison-v1.md). Le rapport écrit candidat et la soutenance orale **ne sont pas couverts ici**.
 
 **Règle** : ne cocher une case que quand la tâche est **terminée** (fichier mergé sur `master`, lien vérifiable). Un brouillon ou un TODO ne suffit pas.
 
-> **Note de numérotation** : les § 1 à 8 reprennent **à l'identique** les anciennes § 27 à 34 de [`livraison-v1.md`](../v1-produit/livraison-v1.md) (compatibilité historique, renvois préservés). Les § 9 à 20 sont nouveaux et complètent la couverture RNCP (cadrage Bloc 1, pilotage Bloc 3, MCO retours).
+> **Note de numérotation** : les § 1 à 8 reprennent **à l'identique** les anciennes § 27 à 34 de [`livraison-v1.md`](../../archive/docs/v1-produit/livraison-v1.md) (compatibilité historique, renvois préservés). Les § 9 à 20 sont nouveaux et complètent la couverture RNCP (cadrage Bloc 1, pilotage Bloc 3, MCO retours).
 
 **Ordre logique conseillé** (différent de l'ordre du sommaire) : cadrage (§ 9-14, 9 *bis*) → pilotage (§ 15-17) → compléments dev (§ 18) → sécurité & qualité ancrées au code (§ 1-3) → process & exploitation (§ 4-8) → MCO retours (§ 19-20).
 
@@ -34,7 +34,9 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 ### Bloc 2 — Concevoir et développer (compléments documentaires)
 
-> Le code et les tests sont déjà couverts par [`livraison-v1.md`](../v1-produit/livraison-v1.md). Restent ici les **livrables documentaires / process**.
+> Le code et les tests sont déjà couverts par [`livraison-v1.md`](../../archive/docs/v1-produit/livraison-v1.md) (archivé). Restent ici les **livrables documentaires / process**.
+
+> **⚠️ Mise à jour 2026-07-08** — Plusieurs éléments décrits comme « à faire » dans les sections § 1-8 / § 18 ci-dessous **sont désormais livrés dans le code** : E2E Playwright (`e2e/` + `playwright.config.ts` à la racine + job CI), accessibilité (skip link, focus-visible, couverture `axe` sur 7 pages), pipeline CI/CD complet (4 workflows + actions composites), `CHANGELOG.md` et templates issue/PR. Il reste surtout à **présenter** ces preuves au jury. Le plan de rédaction fait foi : [`bloc-2-conception-developpement/dossier-bloc-2-plan.md`](bloc-2-conception-developpement/dossier-bloc-2-plan.md).
 
 - [ ] **C2.1.1** — Protocole de déploiement continu formalisé — voir § 18
 - [ ] **C2.1.2** — Protocole d'intégration continue formalisé — voir § 18
@@ -83,10 +85,9 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
   - Configuration hôte (PATCH config, refus si soirée terminée)
   - Lancer la roue (réservé hôte, 0 film bloqué, 1 film direct, pondération si activée), clôture, lecture seule
   - Cas sécurité explicites : 401 sans session, rate limit login, CORS refusé, 404 JSON
-- [ ] Installer **Playwright** dans `apps/web` (`pnpm add -D @playwright/test` + `npx playwright install`) ; `playwright.config.ts` (baseURL = front local, projet `chromium` + `mobile-safari` mobile-first)
-- [ ] Créer **`apps/web/e2e/`** avec un fichier `.spec.ts` par scénario du cahier ; nommage stable pour réfèrencement croisé depuis `cahier-recettes.md`
-- [ ] Ajouter le script **`e2e`** dans `apps/web/package.json` (absent à date) ; commande `pnpm --filter web e2e` + documenter dans `README.md` (lancement local : `pnpm --filter web dev` puis `pnpm --filter web e2e`)
-- [ ] CI E2E : **aucun job Playwright n'existe à date** dans `.github/workflows/ci-cd.yml` (seul un commentaire d'en-tête mentionne « E2E Playwright : local uniquement »). Au choix : (a) garder strictement local + procédure manuelle documentée pour la soutenance ; (b) ajouter un workflow `workflow_dispatch` non bloquant rejouable à la demande
+- [x] Playwright **installé à la racine** du monorepo (`playwright.config.ts` + dossier `e2e/`, et non dans `apps/web`) ; scripts `test:e2e` et `test:e2e:ci` dans le `package.json` racine ; navigateur `chromium`, stub TMDB sur `:5010` en CI
+- [x] Scénarios `e2e/*.spec.ts` présents ; **job E2E en CI livré** (non bloquant, cf. refonte pipeline 2026-07-07)
+- [ ] `cahier-recettes.md` (dossier jury §10) : mapper chaque scénario E2E existant → tableau de recette lisible (Scénario → Préconditions → Étapes → Résultat attendu → test associé)
 - [ ] Captures d'écran / vidéos archivées (`test-results/`) pour preuves de recette à présenter au jury
 
 ---
@@ -116,7 +117,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 ## 3. Accessibilité — référentiel + tests automatisés
 
-> **Objectif RNCP — C2.2.3 (ÉLIM, a11y)** : « le référentiel d'accessibilité choisi est présenté et justifié (RGAA, OPQUAST, etc.) ; le prototype permet de répondre aux exigences ». Les libs `vitest-axe` et `@axe-core/react` sont déjà installées : il faut **choisir le référentiel** et **systématiser les tests**.
+> **Objectif RNCP — C2.2.3 (ÉLIM, a11y)** : « le référentiel d'accessibilité choisi est présenté et justifié (RGAA, OPQUAST, etc.) ; le prototype permet de répondre aux exigences ». **Référentiel retenu : RGAA 4.1 / WCAG 2.1 AA.** Accessibilité **livrée** : skip link, focus-visible global, couverture `axe` sur 7 pages. Reste à **présenter** ces preuves dans le dossier jury (§9 du plan).
 
 - [ ] Choisir explicitement **OPQUAST niveau 1** (pragmatique pour un MVP / V1) ou **RGAA 4.1 — niveau A minimum** ; consigner dans **`docs/RNCP/bloc-2-conception-developpement/accessibilite.md`** (référentiel retenu + critères couverts + critères reportés)
 - [ ] Test `vitest-axe` **par page clé** dans `apps/web/src/` — convention de nommage **`*.a11y.test.tsx`** (un fichier dédié à côté des tests fonctionnels existants pour pouvoir les filtrer en CI ; les composants pages réels du repo s'appellent `Home.tsx`, `CreateEvent.tsx`, `EventDetail.tsx`, etc., **pas** `HomePage.tsx`) :
@@ -147,7 +148,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 > **Objectif RNCP — C2.4.1** : « rédiger la documentation technique d'exploitation détaillant le fonctionnement (manuel de déploiement, d'utilisation, de mise à jour) ». À ancrer dans le repo, pas dans un PDF externe.
 
-- [ ] **Manuel de déploiement** — pointeur ou contenu dans [`deploiement-secrets-ci.md`](../v1-produit/deploiement-secrets-ci.md) (déjà existant) : prérequis cloud (GCP, AWS, MongoDB Atlas, TMDB), variables/secrets, étapes premier déploiement, rollback ; **mention explicite** du choix « déploiement direct sans canary / bleu-vert » (cf. note C2.2.4 en couverture)
+- [ ] **Manuel de déploiement** — pointeur ou contenu dans [`deploiement-secrets-ci.md`](../../archive/docs/v1-produit/deploiement-secrets-ci.md) (archivé) : prérequis cloud (GCP, AWS, MongoDB Atlas, TMDB), variables/secrets, étapes premier déploiement, rollback ; **mention explicite** du choix « déploiement direct sans canary / bleu-vert » (cf. note C2.2.4 en couverture)
 - [ ] **Manuel d'utilisation** — créer **`docs/RNCP/bloc-2-conception-developpement/manuel-utilisation.md`** : parcours hôte (créer / config / lancer roue / clôturer), parcours invité (rejoindre / proposer / voter / déjà vu), captures d'écran clés
 - [ ] **Manuel de mise à jour** — créer **`docs/RNCP/bloc-2-conception-developpement/manuel-mise-a-jour.md`** : décrire **explicitement le processus de mise à jour des dépendances** (couvre **C4.1.1** — exigence de la grille : « **fréquence**, **périmètre logiciel**, **type — automatique / manuel** »), à savoir : Dependabot **mensuel** sur npm + GitHub Actions + NuGet (cf. `.github/dependabot.yml`), `pnpm audit --audit-level=high` à chaque CI (cf. job `lint` dans `.github/workflows/ci-cd.yml`), validation PR humaine avant merge, vérification CI verte, déploiement automatique sur `master`. Compléter avec : process release (tag + Release GitHub via § 6), process correctif urgent (hotfix → release patch)
 - [ ] Lien explicite vers ces 3 manuels depuis le **`README.md`** racine (section « Documentation »)
@@ -156,7 +157,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 ## 6. Journal des versions — `CHANGELOG.md` + GitHub Releases
 
-> **Objectif RNCP — C4.3.2 (ÉLIM)** : « le journal de version contient les différentes améliorations amenées par cette version ; les correctifs déployés sont documentés ». Aucun `CHANGELOG*` ni tag de release n'existe à date dans le repo.
+> **Objectif RNCP — C4.3.2 (ÉLIM)** : « le journal de version contient les différentes améliorations amenées par cette version ; les correctifs déployés sont documentés ». **`CHANGELOG.md` créé** à la racine (Keep a Changelog + SemVer, `0.1.0` MVP → `1.3.1` actuelle) ; **tags Git + releases GitHub restent à générer**.
 
 - [ ] Créer **`CHANGELOG.md`** racine au format **Keep a Changelog** + versionnage **SemVer** (`Added` / `Changed` / `Fixed` / `Security` / `Removed`) ; entrée initiale `[0.1.0] - MVP` rétrospective puis `[0.2.0] - V1`
 - [ ] **Tags Git** sur `master` à chaque release (`v0.2.0`, etc.) + **GitHub Release** associée (titre = version, body = section CHANGELOG correspondante)
@@ -285,7 +286,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 - [ ] Créer **`docs/RNCP/bloc-1-cadrage/05-charge-jh.md`** :
   - **Outil d'analyse fonctionnelle** : choix justifié (par ex. **MoSCoW** + diagramme de fonctionnalités type **bête à cornes / pieuvre** simplifié) — référencer la convention déjà en place dans le skill `mp-brainstorm-to-features`
   - **Diagramme de fonctionnalités** : visuel (Mermaid `mindmap` ou `flowchart`) listant les features V1 hiérarchisées en **principales** (création soirée, vote, roue, compte), **secondaires** (déjà vu, watch providers, QR code, OG dynamiques), **complémentaires** (i18n EN, mode sombre persisté, rappels in-app)
-  - **Estimation J/H** : tableau feature × estimation (en jours-homme) — granularité section de [`livraison-v1.md`](../v1-produit/livraison-v1.md) § 1-22 (≈ 22 lots) → total V1 ; idem pour MVP en rétrospectif
+  - **Estimation J/H** : tableau feature × estimation (en jours-homme) — granularité section de [`livraison-v1.md`](../../archive/docs/v1-produit/livraison-v1.md) § 1-22 (≈ 22 lots) → total V1 ; idem pour MVP en rétrospectif
   - **Couverture technique des besoins fonctionnels** : argumentée (chaque feature → endpoint + écran + tests prévus)
   - **Expérience utilisateur** : référence à [`../spec.md`](../spec.md) § 9 (Mobile first) et § 8 (Interface et confort)
 
@@ -447,7 +448,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
     - Build API : **.NET SDK 10** (`dotnet build` / `dotnet publish`)
     - Compilation image : **Docker** (image `mcr.microsoft.com/dotnet/aspnet:10.0`)
     - Serveur d'application prod : **GCP Cloud Run** (front : **AWS S3 + CloudFront**)
-  - **Protocole d'intégration continue** (C2.1.2) — séquence sur chaque PR + push `master` (état **cible V1 close** ; les étapes 6 et 7 sont conditionnées au livrable des § 23-25 de [`livraison-v1.md`](../v1-produit/livraison-v1.md), à la date de rédaction encore non livrées) :
+  - **Protocole d'intégration continue** (C2.1.2) — séquence sur chaque PR + push `master` (état **cible V1 close** ; les étapes 6 et 7 sont conditionnées au livrable des § 23-25 de [`livraison-v1.md`](../../archive/docs/v1-produit/livraison-v1.md), à la date de rédaction encore non livrées) :
     1. `pnpm install` (cache pnpm) — **livré**
     2. `pnpm lint` (ESLint + Prettier check) + `pnpm audit --audit-level=high` — **livré**
     3. `dotnet restore` + `dotnet format --verify-no-changes` + `dotnet list package --vulnerable` (cf. `livraison-v1.md` § 24) — **partiel** (vulnerable scan = cible § 24)

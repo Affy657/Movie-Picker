@@ -1,0 +1,59 @@
+name: 🐞 Rapport de bug
+description: Signaler un dysfonctionnement en fournissant les informations nécessaires à sa reproduction et à sa correction.
+title: "[Bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci de renseigner un maximum d'informations : une anomalie reproductible est une anomalie corrigeable rapidement.
+  - type: input
+    id: contexte
+    attributes:
+      label: Contexte
+      description: URL concernée, navigateur, système d'exploitation, version de l'application (visible dans Sentry / le pied de page).
+      placeholder: "ex. https://movie-picker.app/e/soiree-ciné — Chrome 130 / Windows 11 — build a1b2c3d"
+    validations:
+      required: true
+  - type: textarea
+    id: etapes
+    attributes:
+      label: Étapes pour reproduire
+      description: Liste ordonnée des actions menant à l'anomalie.
+      placeholder: |
+        1. Aller sur …
+        2. Cliquer sur …
+        3. Observer …
+    validations:
+      required: true
+  - type: textarea
+    id: attendu
+    attributes:
+      label: Comportement attendu
+    validations:
+      required: true
+  - type: textarea
+    id: observe
+    attributes:
+      label: Comportement observé
+    validations:
+      required: true
+  - type: textarea
+    id: preuves
+    attributes:
+      label: Captures d'écran / logs
+      description: Capture, message d'erreur console, ou lien vers l'événement Sentry si disponible.
+    validations:
+      required: false
+  - type: dropdown
+    id: severite
+    attributes:
+      label: Sévérité
+      description: Estimation de l'impact utilisateur.
+      options:
+        - "critical — service inutilisable ou perte de données"
+        - "high — fonctionnalité principale bloquée"
+        - "medium — contournement possible"
+        - "low — cosmétique / mineur"
+    validations:
+      required: true

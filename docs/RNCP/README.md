@@ -12,7 +12,7 @@ Dossier regroupant **tous les livrables liés au titre RNCP 39583** pour le proj
 |---------|---------|
 | [`suivi-rncp.md`](suivi-rncp.md) | **Carte de suivi maîtresse** — couverture par bloc/compétence + détail des tâches (anciennement `livraison-RNCP.md`) |
 | [`referentiel/`](referentiel/) | **Grilles officielles** d'évaluation (fiche récapitulative + 4 blocs) — *lecture seule, source jury* |
-| [`bloc-1-cadrage/`](bloc-1-cadrage/) | **Bloc 1 — Cadrer le projet** ✅ *(11 livrables, complet)* |
+| [`bloc-1-cadrage/`](../../archive/docs/RNCP/bloc-1-cadrage/) | **Bloc 1 — Cadrer le projet** ✅ *(11 livrables, complet — archivé dans [`archive/docs/`](../../archive/docs/))* |
 | [`bloc-2-conception-developpement/`](bloc-2-conception-developpement/) | **Bloc 2 — Concevoir & développer** *(livrables documentaires)* |
 | [`bloc-3-coordination-pilotage/`](bloc-3-coordination-pilotage/) | **Bloc 3 — Coordonner & piloter** |
 | [`bloc-4-mco/`](bloc-4-mco/) | **Bloc 4 — Maintien en condition opérationnelle** |
