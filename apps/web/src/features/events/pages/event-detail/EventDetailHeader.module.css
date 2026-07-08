@@ -64,19 +64,21 @@
 .badgeFinished {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
   gap: 0.35rem;
   margin: 0;
   padding: 0.25rem 0.7rem;
   font-size: var(--font-size-2xs);
   font-weight: 700;
-  letter-spacing: var(--tracking-wide-lg);
   text-transform: uppercase;
   border-radius: var(--radius-pill);
   background: var(--color-badge-finished-bg);
   color: var(--color-badge-finished-text);
   border: 1px solid color-mix(in srgb, var(--color-badge-finished-text) 30%, transparent);
+}
+
+.badgeFinishedText {
+  letter-spacing: var(--tracking-wide-lg);
+  margin-right: calc(-1 * var(--tracking-wide-lg));
 }
 
 .share {

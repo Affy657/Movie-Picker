@@ -17,7 +17,6 @@
   line-height: 1;
   color: #fff;
   user-select: none;
-  font-size: 0.55em;
   letter-spacing: 0.02em;
 }
 
@@ -25,3 +24,8 @@
 .sm { width: 26px; height: 26px; }
 .md { width: 36px; height: 36px; }
 .lg { width: 56px; height: 56px; }
+
+.initials.xs { font-size: 10px; }
+.initials.sm { font-size: 12px; }
+.initials.md { font-size: 15px; }
+.initials.lg { font-size: 22px; }

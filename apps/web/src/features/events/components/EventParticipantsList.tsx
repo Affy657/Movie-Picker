@@ -53,7 +53,7 @@ export default function EventParticipantsList({
         <span className={styles.count}>({countLabel})</span>
         {isFull && (
           <span className={styles.fullBadge} aria-label={t('events.participants.fullBadgeAria')}>
-            {t('events.participants.fullBadge')}
+            <span className={styles.fullBadgeText}>{t('events.participants.fullBadge')}</span>
           </span>
         )}
       </h2>

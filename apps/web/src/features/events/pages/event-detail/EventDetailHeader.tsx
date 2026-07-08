@@ -61,7 +61,7 @@ export default function EventDetailHeader({
           {isFinished && (
             <span className={styles.badgeFinished}>
               <CheckCircle2 size={12} aria-hidden />
-              {t('events.detail.finishedBanner')}
+              <span className={styles.badgeFinishedText}>{t('events.detail.finishedBanner')}</span>
             </span>
           )}
         </div>

@@ -32,15 +32,18 @@
 .fullBadge {
   margin-left: 0.35rem;
   padding: 0.15rem 0.55rem;
-  text-align: center;
   border-radius: var(--radius-pill);
   background: var(--color-badge-upcoming-bg);
   color: var(--color-badge-upcoming-text);
   border: 1px solid color-mix(in srgb, var(--color-badge-upcoming-text) 30%, transparent);
   font-size: var(--font-size-3xs);
   font-weight: 700;
-  letter-spacing: var(--tracking-wide-lg);
   text-transform: uppercase;
+}
+
+.fullBadgeText {
+  letter-spacing: var(--tracking-wide-lg);
+  margin-right: calc(-1 * var(--tracking-wide-lg));
 }
 
 .list {

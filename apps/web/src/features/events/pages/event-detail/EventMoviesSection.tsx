@@ -178,18 +178,6 @@ export default function EventMoviesSection({
               type="button"
               className={clsx(
                 styles.viewToggleBtn,
-                viewMode === 'grid' && styles.viewToggleBtnActive
-              )}
-              aria-pressed={viewMode === 'grid'}
-              aria-label={t('movies.list.viewGridAria')}
-              onClick={() => onViewModeChange('grid')}
-            >
-              <LayoutGrid aria-hidden size={15} />
-            </button>
-            <button
-              type="button"
-              className={clsx(
-                styles.viewToggleBtn,
                 viewMode === 'list' && styles.viewToggleBtnActive
               )}
               aria-pressed={viewMode === 'list'}
@@ -197,6 +185,18 @@ export default function EventMoviesSection({
               onClick={() => onViewModeChange('list')}
             >
               <List aria-hidden size={15} />
+            </button>
+            <button
+              type="button"
+              className={clsx(
+                styles.viewToggleBtn,
+                viewMode === 'grid' && styles.viewToggleBtnActive
+              )}
+              aria-pressed={viewMode === 'grid'}
+              aria-label={t('movies.list.viewGridAria')}
+              onClick={() => onViewModeChange('grid')}
+            >
+              <LayoutGrid aria-hidden size={15} />
             </button>
           </div>
         </div>

@@ -38,7 +38,7 @@ export default function MovieList({
   onActionError,
   participantAvatars,
   participantAvatarsByPseudo,
-  viewMode = 'grid',
+  viewMode = 'list',
 }: Readonly<MovieListProps>) {
   const { t } = useTranslation();
 

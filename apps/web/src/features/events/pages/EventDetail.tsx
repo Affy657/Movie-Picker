@@ -69,9 +69,9 @@ export default function EventDetail() {
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
     try {
-      return localStorage.getItem('movies-view') === 'list' ? 'list' : 'grid';
+      return localStorage.getItem('movies-view') === 'grid' ? 'grid' : 'list';
     } catch {
-      return 'grid';
+      return 'list';
     }
   });
 
