@@ -6,7 +6,12 @@
   color: var(--color-text);
   box-shadow: var(--shadow-lg);
   width: min(640px, calc(100vw - 2rem));
-  max-height: min(88dvh, 720px);
+  max-height: min(75dvh, 620px);
+  /* Ancre la modale pres du haut au lieu du centrage vertical par defaut
+     du navigateur : dans certains navigateurs in-app iOS (BeReal, etc.),
+     la barre du bas persiste et n'est pas exclue du calcul de dvh, donc
+     un centrage vertical pousse une modale courte derriere cette barre. */
+  margin: max(1.5rem, env(safe-area-inset-top, 0px)) auto auto;
   overflow: hidden;
   display: flex;
   flex-direction: column;
