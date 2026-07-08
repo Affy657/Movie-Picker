@@ -19,6 +19,8 @@ function getApiBase(): string {
 
 const API_BASE = getApiBase();
 
+const IS_DEV = import.meta.env?.DEV === true;
+
 export const API_VERSION_PREFIX = '/api/v1';
 
 export function apiUrl(path: string): string {
@@ -30,25 +32,28 @@ export function apiUrl(path: string): string {
   return `${base}${API_VERSION_PREFIX}${p}`;
 }
 
+const MISCONFIG_ERROR_MSG = IS_DEV
+  ? "Configuration incorrecte : l'URL de l'API pointe vers ce site au lieu de l'API. " +
+    "Vérifiez le secret VITE_API_URL (doit être l'URL Cloud Run, ex. https://xxx.run.app). " +
+    'Puis redéployez le front et faites un rechargement forcé (Ctrl+Shift+R).'
+  : 'Le service est momentanément indisponible. Réessayez dans quelques instants.';
+
 function ensureApiIsNotFrontOrigin(url: string): void {
   if (globalThis.window === undefined) return;
+  let apiOrigin: string;
   try {
-    const apiOrigin = new URL(url).origin;
-    if (apiOrigin === globalThis.location.origin) {
-      throw new ApiError(
-        "Configuration incorrecte : l'URL de l'API pointe vers ce site au lieu de l'API. " +
-          "Vérifiez le secret VITE_API_URL (doit être l'URL Cloud Run, ex. https://xxx.run.app). " +
-          'Puis redéployez le front et faites un rechargement forcé (Ctrl+Shift+R).',
-        { code: 0 }
-      );
-    }
-  } catch (e) {
-    if (ApiError.is(e) && e.message.startsWith('Configuration incorrecte')) throw e;
+    apiOrigin = new URL(url).origin;
+  } catch {
+    return;
+  }
+  if (apiOrigin === globalThis.location.origin) {
+    throw new ApiError(MISCONFIG_ERROR_MSG, { code: 0 });
   }
 }
 
-const NETWORK_ERROR_MSG =
-  'Impossible de joindre l’API. Vérifiez que l’API est démarrée (pnpm dev:api-dotnet) et votre connexion.';
+const NETWORK_ERROR_MSG = IS_DEV
+  ? 'Impossible de joindre l’API. Vérifiez que l’API est démarrée (pnpm dev:api-dotnet) et votre connexion.'
+  : 'Connexion au serveur impossible. Vérifiez votre connexion internet, puis réessayez.';
 
 function mergeRequestHeaders(init?: HeadersInit): Record<string, string> {
   const out: Record<string, string> = {};
@@ -67,8 +72,9 @@ function mergeRequestHeaders(init?: HeadersInit): Record<string, string> {
   return out;
 }
 
-const HTML_RESPONSE_MSG =
-  'L’API a renvoyé du HTML au lieu de JSON. Vérifiez que VITE_API_URL pointe vers l’URL de l’API (ex. Cloud Run), pas vers le site web.';
+const HTML_RESPONSE_MSG = IS_DEV
+  ? 'L’API a renvoyé du HTML au lieu de JSON. Vérifiez que VITE_API_URL pointe vers l’URL de l’API (ex. Cloud Run), pas vers le site web.'
+  : 'Une erreur est survenue côté serveur. Réessayez dans un instant.';
 
 function looksLikeHtml(isJson: boolean, text: string): boolean {
   return !isJson && text.trimStart().startsWith('<');
