@@ -124,4 +124,115 @@ describe('InboxBell (MSW)', () => {
       expect(screen.getByText('Bob')).toBeInTheDocument();
     });
   });
+
+  it('rend chaque type de notification connu', async () => {
+    const user = userEvent.setup();
+    const base = { actorAvatarId: '', isRead: false, createdAt: '2026-06-03T10:00:00Z' };
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/notifications/inbox`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              ...base,
+              id: 'a',
+              type: 'participantjoined',
+              eventSlug: 's1',
+              eventTitle: 'Soiree A',
+              actorDisplayName: 'Alice',
+            },
+            {
+              ...base,
+              id: 'b',
+              type: 'movieadded',
+              eventSlug: 's2',
+              eventTitle: 'Soiree B',
+              actorDisplayName: 'Bob',
+              movieTitle: 'Matrix',
+            },
+            {
+              ...base,
+              id: 'c',
+              type: 'moviepicked',
+              eventSlug: 's3',
+              eventTitle: 'Soiree C',
+              movieTitle: 'Dune',
+            },
+            { ...base, id: 'd', type: 'eventdeleted', eventTitle: 'Soiree D' },
+            { ...base, id: 'e', type: 'eventreminder1h', eventSlug: 's5', eventTitle: 'Soiree E' },
+            { ...base, id: 'f', type: 'eventreminder24h', eventSlug: 's6', eventTitle: 'Soiree F' },
+            {
+              ...base,
+              id: 'g',
+              type: 'eventinvitation',
+              eventSlug: 's7',
+              eventTitle: 'Soiree G',
+              actorDisplayName: 'Gaby',
+            },
+          ],
+          unreadCount: 7,
+        })
+      ),
+      http.post(
+        `${TEST_API_V1}/notifications/inbox/read-all`,
+        () => new HttpResponse(null, { status: 204 })
+      )
+    );
+
+    renderBell();
+    await user.click(await screen.findByRole('button', { name: /notifications/i }));
+
+    for (const title of [
+      'Soiree A',
+      'Soiree B',
+      'Soiree C',
+      'Soiree D',
+      'Soiree E',
+      'Soiree F',
+      'Soiree G',
+    ]) {
+      expect(await screen.findByText(title)).toBeInTheDocument();
+    }
+  });
+
+  it("marque tout comme lu a l'ouverture quand il y a des non-lus", async () => {
+    const user = userEvent.setup();
+    let readAll = 0;
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/notifications/inbox`, () =>
+        HttpResponse.json({ items: [], unreadCount: 3 })
+      ),
+      http.post(`${TEST_API_V1}/notifications/inbox/read-all`, () => {
+        readAll += 1;
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+
+    renderBell();
+    await waitFor(() => expect(screen.getByText('3')).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: /notifications/i }));
+    await waitFor(() => expect(readAll).toBe(1));
+  });
+
+  it("ne marque pas comme lu quand il n'y a aucun non-lu", async () => {
+    const user = userEvent.setup();
+    let readAll = 0;
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/notifications/inbox`, () =>
+        HttpResponse.json({ items: [], unreadCount: 0 })
+      ),
+      http.post(`${TEST_API_V1}/notifications/inbox/read-all`, () => {
+        readAll += 1;
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+
+    renderBell();
+    await screen.findByRole('button', { name: /notifications/i });
+    await user.click(screen.getByRole('button', { name: /notifications/i }));
+    await screen.findByText(/aucune notification/i);
+    expect(readAll).toBe(0);
+  });
 });

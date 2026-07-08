@@ -44,9 +44,9 @@ export default defineConfig({
         'src/features/events/components/SpinningWheel.tsx',
       ],
       thresholds: {
-        lines: 78,
-        functions: 70,
-        branches: 68,
+        lines: 82,
+        functions: 76,
+        branches: 74,
       },
     },
   },
