@@ -39,7 +39,14 @@ function cspMetaPlugin(apiOrigin: string): Plugin {
   ]
     .filter(Boolean)
     .join(' ');
-  const imgSrc = ["'self'", 'data:', 'blob:', 'https://image.tmdb.org', apiOrigin]
+  const imgSrc = [
+    "'self'",
+    'data:',
+    'blob:',
+    'https://image.tmdb.org',
+    'https://api.dicebear.com',
+    apiOrigin,
+  ]
     .filter(Boolean)
     .join(' ');
   const policy = [
