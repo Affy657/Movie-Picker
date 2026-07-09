@@ -39,11 +39,14 @@ function cspMetaPlugin(apiOrigin: string): Plugin {
   ]
     .filter(Boolean)
     .join(' ');
+  const imgSrc = ["'self'", 'data:', 'blob:', 'https://image.tmdb.org', apiOrigin]
+    .filter(Boolean)
+    .join(' ');
   const policy = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline'",
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https://image.tmdb.org",
+    `img-src ${imgSrc}`,
     "font-src 'self' data:",
     `connect-src ${connectSrc}`,
     "worker-src 'self'",
