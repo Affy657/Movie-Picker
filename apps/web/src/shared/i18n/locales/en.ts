@@ -481,6 +481,8 @@ export const en: Locale = {
       emptyLabel: 'Not streaming',
       modalTitle: 'Where to watch',
       openModalAria: 'See where to watch "{{title}}"',
+      alsoRentAria: 'Rent ({{count}}) — see where to watch "{{title}}"',
+      alsoBuyAria: 'Buy ({{count}}) — see where to watch "{{title}}"',
     },
   },
 

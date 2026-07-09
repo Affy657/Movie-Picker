@@ -144,6 +144,10 @@
   font-variant-numeric: tabular-nums;
 }
 
+.metaProvGroup svg {
+  display: block;
+}
+
 .actionRow {
   display: flex;
   align-items: center;

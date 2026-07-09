@@ -65,7 +65,7 @@ export default function WatchProvidersModal({
       <p className={styles.subtitle}>{movieTitle}</p>
       <div className={styles.body}>
         {providers.length > 0 ? (
-          <WatchProviderChips providers={providers} watchPageUrl={watchPageUrl} />
+          <WatchProviderChips providers={providers} watchPageUrl={watchPageUrl} separators />
         ) : (
           <p className={styles.empty}>{t('movies.watchProviders.emptyLabel')}</p>
         )}

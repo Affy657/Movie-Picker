@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import MovieList from '@/features/movies/components/MovieList';
-import type { MovieData } from '@/shared/types/movie';
+import type { MovieData, WatchProviderOffer } from '@/shared/types/movie';
 import { LocaleProvider } from '@/shared/i18n';
 import { QueryClientWrapper } from '@/test-utils/queryWrapper';
 
@@ -14,6 +14,11 @@ vi.mock('@/features/movies/api/moviesApi', async (importOriginal) => {
     deleteMoviePitchNote: vi.fn().mockResolvedValue(undefined),
   };
 });
+
+vi.mock('@/features/movies/components/WatchProvidersModal', () => ({
+  default: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="providers-modal-open" /> : null,
+}));
 
 function renderWithLocale(ui: React.ReactElement) {
   return render(
@@ -51,6 +56,15 @@ const movies: MovieData[] = [
     down: 1,
   },
 ];
+
+const flatrateOnly: WatchProviderOffer[] = [
+  { providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' },
+];
+const rentBuyOnly: WatchProviderOffer[] = [
+  { providerId: 2, name: 'Apple TV', logoPath: null, type: 'rent' },
+  { providerId: 68, name: 'Microsoft', logoPath: null, type: 'buy' },
+];
+const mixedProviders: WatchProviderOffer[] = [...flatrateOnly, ...rentBuyOnly];
 
 describe('MovieList', () => {
   it('affiche un placeholder si liste vide', () => {
@@ -327,5 +341,92 @@ describe('MovieList', () => {
 
     const upNeutral = screen.getByRole('button', { name: /^Voter pour Matrix/ });
     expect(upNeutral).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('vue liste : abonnement seul → chips flatrate, aucune pastille location/achat', () => {
+    renderWithLocale(
+      <MovieList
+        movies={[{ ...movies[0]!, watchProviders: flatrateOnly }]}
+        slug="s"
+        participantId={null}
+        participantPseudo={null}
+        isFinished={false}
+        onVote={vi.fn()}
+        onRemove={vi.fn()}
+        refresh={vi.fn()}
+        onActionError={vi.fn()}
+        viewMode="list"
+      />
+    );
+    expect(screen.getByText('Netflix')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Location/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Achat/ })).not.toBeInTheDocument();
+  });
+
+  it('vue liste : sépare la location et l’achat du flatrate dans deux pastilles distinctes qui ouvrent la modale', async () => {
+    renderWithLocale(
+      <MovieList
+        movies={[{ ...movies[0]!, watchProviders: mixedProviders }]}
+        slug="s"
+        participantId={null}
+        participantPseudo={null}
+        isFinished={false}
+        onVote={vi.fn()}
+        onRemove={vi.fn()}
+        refresh={vi.fn()}
+        onActionError={vi.fn()}
+        viewMode="list"
+      />
+    );
+    expect(screen.getByText('Netflix')).toBeInTheDocument();
+    const rentBtn = screen.getByRole('button', { name: /Location/ });
+    const buyBtn = screen.getByRole('button', { name: /Achat/ });
+    expect(screen.queryByTestId('providers-modal-open')).not.toBeInTheDocument();
+    await userEvent.click(rentBtn);
+    expect(screen.getByTestId('providers-modal-open')).toBeInTheDocument();
+    expect(buyBtn).toBeInTheDocument();
+  });
+
+  it('vue liste : sans abonnement, affiche uniquement les pastilles location/achat', () => {
+    renderWithLocale(
+      <MovieList
+        movies={[{ ...movies[0]!, watchProviders: rentBuyOnly }]}
+        slug="s"
+        participantId={null}
+        participantPseudo={null}
+        isFinished={false}
+        onVote={vi.fn()}
+        onRemove={vi.fn()}
+        refresh={vi.fn()}
+        onActionError={vi.fn()}
+        viewMode="list"
+      />
+    );
+    expect(screen.queryByText('Netflix')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Location/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Achat/ })).toBeInTheDocument();
+  });
+
+  it('vue liste : type de plateforme inconnu uniquement → retombe sur le message vide plutôt qu’une zone blanche', () => {
+    renderWithLocale(
+      <MovieList
+        movies={[
+          {
+            ...movies[0]!,
+            watchProviders: [{ providerId: 999, name: 'Mystère', logoPath: null, type: 'ads' }],
+          },
+        ]}
+        slug="s"
+        participantId={null}
+        participantPseudo={null}
+        isFinished={false}
+        onVote={vi.fn()}
+        onRemove={vi.fn()}
+        refresh={vi.fn()}
+        onActionError={vi.fn()}
+        viewMode="list"
+      />
+    );
+    expect(screen.getByText(/pas en streaming/i)).toBeInTheDocument();
   });
 });
