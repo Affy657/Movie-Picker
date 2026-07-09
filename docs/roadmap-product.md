@@ -111,6 +111,7 @@ Découpage par version côté **métier / utilisateur**.
 - ⬜ **Intégration Letterboxd** : import de la watchlist (films à voir) et de la liste « déjà vu » depuis un export CSV Letterboxd ou via leur flux RSS public.
 - ⬜ **Sélection manuelle du film gagnant** : en alternative au tirage par la roue, l'hôte peut activer un mode « choix manuel » — toutes les cards de films entrent en animation de tremblement, l'hôte clique sur le film choisi, puis l'animation de fin habituelle (identique à la roue) se déclenche pour le révéler.
 - ⬜ **Flamme streak de soirées** : compteur de semaines consécutives durant lesquelles l'utilisateur a participé à au moins une soirée ; icône flamme + chiffre affichés sur le profil public ; remise à zéro automatique si une semaine calendar entière passe sans activité.
+- ⬜ **Exclusion d'un film de la roue** : l'hôte peut, via le menu d'actions (trois petits points) d'une card film, exclure ce film du prochain tirage sans le retirer de la liste de propositions ; le film reste visible, votable et commentable, mais affiché avec une mise en évidence visuelle (grisé, contour rouge) signalant son exclusion ; réversible par l'hôte tant que la roue n'a pas été lancée.
 
 ---
 
