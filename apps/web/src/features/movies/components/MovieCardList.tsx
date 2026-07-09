@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { ChevronDown, MessageSquarePlus } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
 import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
-import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
+import WatchProviderChips, { ModeIcon } from '@/features/movies/components/WatchProviderChips';
 import WatchProvidersModal from '@/features/movies/components/WatchProvidersModal';
 import {
   CardKebab,
@@ -42,6 +42,11 @@ export const MovieCardList = memo(function MovieCardList({
     onActionError,
     t,
   });
+
+  const flatrateProviders = s.providers.filter((p) => p.type === 'flatrate');
+  const rentCount = s.providers.filter((p) => p.type === 'rent').length;
+  const buyCount = s.providers.filter((p) => p.type === 'buy').length;
+  const hasRenderableOffers = flatrateProviders.length > 0 || rentCount > 0 || buyCount > 0;
 
   return (
     <li className={styles.card}>
@@ -102,15 +107,47 @@ export const MovieCardList = memo(function MovieCardList({
           {s.voteLabel ? <span title={t('movies.list.tmdbVoteTitle')}>{s.voteLabel}</span> : null}
         </p>
 
-        {s.providers.length > 0 ? (
-          <WatchProviderChips
-            providers={s.providers}
-            variant="compact"
-            className={styles.cardProviders}
-            watchPageUrl={m.tmdbWatchPageUrl}
-            maxVisible={3}
-            onMoreClick={() => s.setProvidersOpen(true)}
-          />
+        {hasRenderableOffers ? (
+          <div className={styles.offersRow}>
+            {flatrateProviders.length > 0 && (
+              <WatchProviderChips
+                providers={flatrateProviders}
+                variant="compact"
+                className={styles.cardProviders}
+                watchPageUrl={m.tmdbWatchPageUrl}
+                maxVisible={3}
+                onMoreClick={() => s.setProvidersOpen(true)}
+              />
+            )}
+            {rentCount > 0 && (
+              <button
+                type="button"
+                className={styles.paidChip}
+                onClick={() => s.setProvidersOpen(true)}
+                aria-label={t('movies.watchProviders.alsoRentAria', {
+                  count: rentCount,
+                  title: m.title,
+                })}
+              >
+                <ModeIcon type="rent" size={13} />
+                {rentCount}
+              </button>
+            )}
+            {buyCount > 0 && (
+              <button
+                type="button"
+                className={styles.paidChip}
+                onClick={() => s.setProvidersOpen(true)}
+                aria-label={t('movies.watchProviders.alsoBuyAria', {
+                  count: buyCount,
+                  title: m.title,
+                })}
+              >
+                <ModeIcon type="buy" size={13} />
+                {buyCount}
+              </button>
+            )}
+          </div>
         ) : (
           <p className={styles.providersEmpty}>{t('movies.watchProviders.emptyLabel')}</p>
         )}

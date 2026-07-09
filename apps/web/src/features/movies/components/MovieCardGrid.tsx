@@ -114,7 +114,7 @@ export const MovieCardGrid = memo(function MovieCardGrid({
                   >
                     {providerGroups.map((g) => (
                       <span key={g.type} className={styles.metaProvGroup}>
-                        <ModeIcon type={g.type} size={11} />
+                        <ModeIcon type={g.type} size={12} />
                         <span>{g.count}</span>
                       </span>
                     ))}

@@ -112,6 +112,35 @@ describe('WatchProviderChips', () => {
     expect(link).toHaveAttribute('rel', 'noreferrer noopener');
   });
 
+  it('avec separators, ajoute une séparation visuelle entre les groupes (pas sur le premier)', () => {
+    const { container } = renderWithLocale(
+      <WatchProviderChips
+        providers={[
+          { providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' },
+          { providerId: 9, name: 'Prime Video', logoPath: null, type: 'rent' },
+        ]}
+        separators
+      />
+    );
+    const groups = container.querySelectorAll('dl > div');
+    expect(groups).toHaveLength(2);
+    expect(groups[0]?.className).not.toMatch(/groupSep/);
+    expect(groups[1]?.className).toMatch(/groupSep/);
+  });
+
+  it('sans separators (comportement par défaut), aucune séparation ajoutée', () => {
+    const { container } = renderWithLocale(
+      <WatchProviderChips
+        providers={[
+          { providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' },
+          { providerId: 9, name: 'Prime Video', logoPath: null, type: 'rent' },
+        ]}
+      />
+    );
+    const groups = container.querySelectorAll('dl > div');
+    expect(groups[1]?.className).not.toMatch(/groupSep/);
+  });
+
   it('provider inconnu + watchPageUrl non TMDB : pas de lien', () => {
     renderWithLocale(
       <WatchProviderChips

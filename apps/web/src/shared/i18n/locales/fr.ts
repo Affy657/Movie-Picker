@@ -491,6 +491,8 @@
       emptyLabel: 'Pas en streaming',
       modalTitle: 'Où regarder',
       openModalAria: 'Voir où regarder « {{title}} »',
+      alsoRentAria: 'Location ({{count}}) — voir où regarder « {{title}} »',
+      alsoBuyAria: 'Achat ({{count}}) — voir où regarder « {{title}} »',
     },
   },
 

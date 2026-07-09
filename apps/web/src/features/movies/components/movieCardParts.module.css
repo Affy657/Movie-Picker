@@ -12,8 +12,8 @@
   align-items: center;
   justify-content: center;
   gap: 0.3rem;
-  min-height: 2.75rem;
-  padding: 0.25rem 0.55rem;
+  min-height: 2rem;
+  padding: 0.2rem 0.5rem;
   background: none;
   border: none;
   border-radius: var(--radius-sm);

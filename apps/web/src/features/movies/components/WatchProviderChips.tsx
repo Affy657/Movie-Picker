@@ -1,4 +1,4 @@
-import { Fragment, useId, useState } from 'react';
+import { useId, useState } from 'react';
 import clsx from 'clsx';
 import { ChevronLeft, Euro, Film, PlayCircle, Tag } from 'lucide-react';
 import type { WatchProviderOffer } from '@/shared/types/movie';
@@ -46,6 +46,7 @@ interface WatchProviderChipsProps {
   watchPageUrl?: string | null;
   maxVisible?: number;
   onMoreClick?: () => void;
+  separators?: boolean;
 }
 
 export default function WatchProviderChips({
@@ -55,6 +56,7 @@ export default function WatchProviderChips({
   watchPageUrl,
   maxVisible,
   onMoreClick,
+  separators = false,
 }: Readonly<WatchProviderChipsProps>) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
@@ -122,13 +124,13 @@ export default function WatchProviderChips({
 
   return (
     <dl className={rootClass} id={rootId} aria-label={t('movies.watchProviders.listAria')}>
-      {groups.map((g) => {
+      {groups.map((g, i) => {
         const label = monetizationLabel(t, g.type);
         const hadOverflow = !!maxVisible && g.items.length > maxVisible;
         const limited = collapsed && maxVisible ? g.items.slice(0, maxVisible) : g.items;
         const hidden = g.items.length - limited.length;
         return (
-          <Fragment key={g.type}>
+          <div key={g.type} className={clsx(styles.group, separators && i > 0 && styles.groupSep)}>
             <dt className={styles.label} aria-label={label} title={label}>
               <ModeIcon type={g.type} size={compact ? 15 : 17} />
             </dt>
@@ -151,7 +153,7 @@ export default function WatchProviderChips({
                 </button>
               ) : null}
             </dd>
-          </Fragment>
+          </div>
         );
       })}
     </dl>

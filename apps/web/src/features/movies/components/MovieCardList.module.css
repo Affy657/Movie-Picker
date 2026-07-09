@@ -118,8 +118,49 @@
   opacity: 0.6;
 }
 
-.cardProviders {
+.offersRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.5rem;
   margin: 0.05rem 0;
+}
+
+.cardProviders {
+  margin: 0;
+}
+
+.paidChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  height: 1.75rem;
+  min-width: 1.75rem;
+  padding: 0 0.3rem;
+  border-radius: 5px;
+  border: 1px dashed var(--color-border-subtle);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-3xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color var(--duration-base) var(--ease-default),
+    border-color var(--duration-base) var(--ease-default);
+}
+
+.paidChip:hover,
+.paidChip:focus-visible {
+  color: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border-subtle));
+  outline: none;
+}
+
+.paidChip svg {
+  display: block;
 }
 
 .providersEmpty {
