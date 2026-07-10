@@ -93,7 +93,9 @@ export default function AppShell() {
           </>
         ) : null}
       </header>
-      <Outlet />
+      <div className={styles.content}>
+        <Outlet />
+      </div>
       <Footer clearMobileNav={isAuthenticated} />
       {isAuthenticated ? (
         <nav className={styles.navMobile} aria-label={t('nav.navLabel')}>

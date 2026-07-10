@@ -5,7 +5,7 @@
   z-index: 9999;
   padding: 0.5rem 1.1rem;
   background: var(--color-surface);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   border: 2px solid var(--color-primary);
   border-radius: var(--radius-md);
   font-weight: 600;
@@ -27,10 +27,17 @@
   flex-direction: column;
 }
 
-/* Un seul « plein écran » : le main remplit l’espace sous le header (pas min-height 100vh en plus). */
-.root > :global(main.page) {
+.content {
+  display: flex;
+  flex-direction: column;
   flex: 1 1 auto;
   min-height: calc(100dvh - var(--header-height));
+  min-width: 0;
+  width: 100%;
+}
+
+.content > :global(main.page) {
+  flex: 1 1 auto;
   min-width: 0;
   width: 100%;
 }
@@ -176,7 +183,7 @@
 }
 
 .navLink:hover {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   background: color-mix(in srgb, var(--color-primary) 8%, transparent);
 }
 
@@ -187,21 +194,21 @@
 }
 
 .navLinkActive {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   background: color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 
 @media (min-width: 768px) {
   .navDesktop .navLink:hover {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
     background: transparent;
   }
 
   .navDesktop .navLinkActive {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
     background: transparent;
     text-decoration: underline;
-    text-decoration-color: var(--color-primary);
+    text-decoration-color: var(--color-primary-text);
     text-underline-offset: 0.45rem;
     text-decoration-thickness: 2px;
   }

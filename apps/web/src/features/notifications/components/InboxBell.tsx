@@ -147,6 +147,7 @@ export default function InboxBell() {
   });
 
   const unreadCount = inboxQuery.data?.unreadCount ?? 0;
+  const displayCount = unreadCount > 9 ? '9+' : String(unreadCount);
   const items = inboxQuery.data?.items ?? [];
 
   const handleClose = useCallback(() => setOpen(false), []);
@@ -171,14 +172,18 @@ export default function InboxBell() {
           type="button"
           className={styles.bellButton}
           onClick={handleOpen}
-          aria-label={t('notifications.inboxAriaLabel')}
+          aria-label={
+            unreadCount > 0
+              ? t('notifications.inboxAriaLabelWithCount', { count: displayCount })
+              : t('notifications.inboxAriaLabel')
+          }
           aria-expanded={open}
           aria-controls={open ? menuId : undefined}
         >
           <Bell size={20} aria-hidden />
           {unreadCount > 0 && (
             <span className={styles.badge} aria-hidden>
-              {unreadCount > 9 ? '9+' : unreadCount}
+              {displayCount}
             </span>
           )}
         </button>

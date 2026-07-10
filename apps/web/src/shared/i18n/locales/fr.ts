@@ -538,6 +538,7 @@
     prefEventDeleted: 'Une soirée est annulée',
     prefNewFollower: "Quelqu'un vous suit",
     inboxAriaLabel: 'Notifications',
+    inboxAriaLabelWithCount: 'Notifications, {{count}} non lues',
     inboxTitle: 'Notifications',
     inboxEmpty: 'Aucune notification pour le moment.',
     newFollowerText: 'a commencé à vous suivre.',

@@ -77,6 +77,34 @@ function cspMetaPlugin(apiOrigin: string): Plugin {
   };
 }
 
+function preloadFontsPlugin(): Plugin {
+  return {
+    name: 'moviepicker-preload-fonts',
+    apply: 'build',
+    enforce: 'post',
+    transformIndexHtml(html, ctx) {
+      const bundle = ctx.bundle ?? {};
+      const preloads = ['overpass-latin-400-normal', 'overpass-latin-700-normal']
+        .map((base) => Object.keys(bundle).find((f) => f.includes(base) && f.endsWith('.woff2')))
+        .filter((f): f is string => Boolean(f));
+      return {
+        html,
+        tags: preloads.map((href) => ({
+          tag: 'link',
+          attrs: {
+            rel: 'preload',
+            href: '/' + href,
+            as: 'font',
+            type: 'font/woff2',
+            crossorigin: '',
+          },
+          injectTo: 'head-prepend',
+        })),
+      };
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, path.resolve(__dirname));
   const apiOrigin = toApiOrigin(process.env.VITE_API_URL || env.VITE_API_URL || '');
@@ -135,6 +163,7 @@ export default defineConfig(({ mode }) => {
         },
       }),
       cspMetaPlugin(apiOrigin),
+      preloadFontsPlugin(),
     ],
     resolve: {
       alias: [
@@ -153,11 +182,20 @@ export default defineConfig(({ mode }) => {
       port: Number(process.env.PORT) || 5173,
     },
     build: {
+      target: 'es2022',
       rollupOptions: {
         output: {
           entryFileNames: 'assets/[name]-[hash].js',
           chunkFileNames: 'assets/[name]-[hash].js',
           assetFileNames: 'assets/[name]-[hash][extname]',
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return undefined;
+            if (/[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) {
+              return 'react-vendor';
+            }
+            if (id.includes('@tanstack')) return 'query-vendor';
+            return undefined;
+          },
         },
       },
     },
