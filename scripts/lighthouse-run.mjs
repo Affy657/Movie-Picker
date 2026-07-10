@@ -90,25 +90,41 @@ try {
     chromeFlags: ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'],
   });
 
+  const median = (nums) => [...nums].sort((a, b) => a - b)[Math.floor(nums.length / 2)];
+  const RUNS = Number(process.env.LH_RUNS || 3);
+
   try {
     for (const { path: pth, slug, indexable } of URLS) {
       const url = BASE + pth;
-      const result = await lighthouse(url, {
-        port: chrome.port,
-        logLevel: 'error',
-        onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo'],
-      });
-      const lhr = result.lhr;
+      const lhrs = [];
+      for (let i = 0; i < RUNS; i++) {
+        const result = await lighthouse(url, {
+          port: chrome.port,
+          logLevel: 'error',
+          onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo'],
+        });
+        lhrs.push(result.lhr);
+      }
 
-      fs.writeFileSync(path.join(OUT, `report-${slug}.json`), JSON.stringify(lhr, null, 2));
-      fs.writeFileSync(path.join(OUT, `report-${slug}.html`), generateReport(lhr, 'html'));
+      const perfList = lhrs.map((l) => l.categories.performance?.score ?? 0);
+      const medPerf = median(perfList);
+      const repLhr =
+        lhrs.find((l) => (l.categories.performance?.score ?? 0) === medPerf) ?? lhrs[0];
+
+      fs.writeFileSync(path.join(OUT, `report-${slug}.json`), JSON.stringify(repLhr, null, 2));
+      fs.writeFileSync(path.join(OUT, `report-${slug}.html`), generateReport(repLhr, 'html'));
 
       for (const [cat, min] of Object.entries(mins)) {
-        const c = lhr.categories[cat];
-        if (!c || typeof c.score !== 'number') continue;
-        const score = Math.round(c.score * 100);
+        const scores = lhrs
+          .map((l) => l.categories[cat])
+          .filter((c) => c && typeof c.score === 'number')
+          .map((c) => Math.round(c.score * 100));
+        if (scores.length === 0) continue;
+        const score = median(scores);
         const skipSeo = cat === 'seo' && indexable === false;
-        const suffix = skipSeo ? ' (non indexable — seuil ignoré)' : ` (min ${min})`;
+        const suffix = skipSeo
+          ? ' (non indexable — seuil ignoré)'
+          : ` (min ${min}, médiane ${RUNS} runs)`;
         console.log(`${slug} — ${cat}: ${score}${suffix}`);
         if (!skipSeo && score < min) {
           console.error(`✗ ${slug} — ${cat}: ${score} < ${min}`);

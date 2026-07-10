@@ -97,6 +97,7 @@ export default function EventParticipantsList({
                 {isCreator && (
                   <span
                     className={styles.hostBadge}
+                    role="img"
                     aria-label={t('events.participants.hostBadge')}
                     title={t('events.participants.hostBadge')}
                   >

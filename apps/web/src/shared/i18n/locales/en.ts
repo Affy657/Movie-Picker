@@ -527,6 +527,7 @@ export const en: Locale = {
     prefEventDeleted: 'An event is cancelled',
     prefNewFollower: 'Someone follows you',
     inboxAriaLabel: 'Notifications',
+    inboxAriaLabelWithCount: 'Notifications, {{count}} unread',
     inboxTitle: 'Notifications',
     inboxEmpty: 'No notifications yet.',
     newFollowerText: 'started following you.',

@@ -4,13 +4,13 @@ import App from '@/app/App';
 import { initPostHog } from '@/shared/analytics/posthog';
 import './index.css';
 
-initPostHog();
-
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
   </StrictMode>
 );
+
+void initPostHog();
 
 requestAnimationFrame(() => {
   requestAnimationFrame(() => {

@@ -166,6 +166,6 @@
 .chipMe {
   border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
   background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   font-weight: 600;
 }
