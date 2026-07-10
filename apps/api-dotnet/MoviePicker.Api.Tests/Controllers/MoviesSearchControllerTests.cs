@@ -21,7 +21,7 @@ public sealed class MoviesSearchControllerTests
         var controller = new MoviesSearchController().WithContext();
 
         var result = await controller.Search(
-            null, null, null, null, null, null, null, handler.Object, repo.Object, CancellationToken.None);
+            null, null, null, null, null, null, null, null, null, handler.Object, repo.Object, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
         handler.Verify(h => h.HandleAsync("", false, null, It.IsAny<CancellationToken>()), Times.Once);
@@ -42,7 +42,8 @@ public sealed class MoviesSearchControllerTests
         var controller = new MoviesSearchController().WithContext();
 
         await controller.Search(
-            "bat", null, "28, 12, x, -3, 0", 2000, 2010, 7.5, "EN", handler.Object, repo.Object, CancellationToken.None);
+            "bat", null, "28, 12, x, -3, 0", 2000, 2010, 7.5, "EN", 60, 150,
+            handler.Object, repo.Object, CancellationToken.None);
 
         Assert.NotNull(captured);
         Assert.Equal(expected, captured!.GenreIds);
@@ -50,6 +51,28 @@ public sealed class MoviesSearchControllerTests
         Assert.Equal(2010, captured.YearTo);
         Assert.Equal(7.5, captured.VoteMin);
         Assert.Equal("en", captured.OriginalLanguage);
+        Assert.Equal(60, captured.RuntimeMin);
+        Assert.Equal(150, captured.RuntimeMax);
+    }
+
+    [Fact]
+    public async Task Search_WithOnlyRuntimeFilter_BuildsFilters()
+    {
+        MovieSearchFilters? captured = null;
+        var handler = new Mock<ISearchMoviesHandler>();
+        handler
+            .Setup(h => h.HandleAsync(
+                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<MovieSearchFilters?>(), It.IsAny<CancellationToken>()))
+            .Callback<string, bool, MovieSearchFilters?, CancellationToken>((_, _, f, _) => captured = f);
+        var repo = new Mock<IEventRepository>();
+        var controller = new MoviesSearchController().WithContext();
+
+        await controller.Search(
+            "bat", null, null, null, null, null, null, 60, null, handler.Object, repo.Object, CancellationToken.None);
+
+        Assert.NotNull(captured);
+        Assert.Equal(60, captured!.RuntimeMin);
+        Assert.Null(captured.RuntimeMax);
     }
 
     [Fact]
@@ -61,7 +84,7 @@ public sealed class MoviesSearchControllerTests
         repo.Setup(r => r.GetByIdOrSlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         var controller = new MoviesSearchController().WithContext();
 
-        await controller.Search("q", "soiree", null, null, null, null, null, handler.Object, repo.Object, CancellationToken.None);
+        await controller.Search("q", "soiree", null, null, null, null, null, null, null, handler.Object, repo.Object, CancellationToken.None);
 
         handler.Verify(
             h => h.HandleAsync("q", true, It.IsAny<MovieSearchFilters?>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -76,7 +99,7 @@ public sealed class MoviesSearchControllerTests
             .ThrowsAsync(new InvalidOperationException("boom"));
         var controller = new MoviesSearchController().WithContext();
 
-        await controller.Search("q", "missing", null, null, null, null, null, handler.Object, repo.Object, CancellationToken.None);
+        await controller.Search("q", "missing", null, null, null, null, null, null, null, handler.Object, repo.Object, CancellationToken.None);
 
         handler.Verify(
             h => h.HandleAsync("q", false, It.IsAny<MovieSearchFilters?>(), It.IsAny<CancellationToken>()), Times.Once);

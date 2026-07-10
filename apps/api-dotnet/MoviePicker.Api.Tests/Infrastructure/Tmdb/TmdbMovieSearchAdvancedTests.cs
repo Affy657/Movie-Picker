@@ -158,6 +158,25 @@ public sealed class TmdbMovieSearchAdvancedTests
     }
 
     [Fact]
+    public async Task SearchAsync_NoTextWithRuntimeFilter_UsesDiscoverEndpointWithRuntimeParams()
+    {
+        string? capturedUrl = null;
+        var handler = Handler(req =>
+        {
+            capturedUrl = req.RequestUri?.ToString();
+            return Json("""{"results":[]}""");
+        });
+        var sut = CreateSut(CreateHttpClient(handler.Object));
+
+        await sut.SearchAsync("   ", false, runtimeMin: 90, runtimeMax: 150);
+
+        Assert.NotNull(capturedUrl);
+        Assert.Contains("discover/movie", capturedUrl);
+        Assert.Contains("with_runtime.gte=90", capturedUrl);
+        Assert.Contains("with_runtime.lte=150", capturedUrl);
+    }
+
+    [Fact]
     public async Task GetDetailsAsync_NoApiKey_ThrowsHttpRequestException()
     {
         var sut = CreateSut(CreateHttpClient(new Mock<HttpMessageHandler>().Object), apiKey: null);

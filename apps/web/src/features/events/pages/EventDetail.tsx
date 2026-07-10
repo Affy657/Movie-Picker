@@ -4,7 +4,6 @@ import { AlertCircle } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ROUTES } from '@/app/routes';
 import { formatMyEventsListDate, formatEventTime } from '@/shared/utils/formatMyEventsListDate';
-import { themeHueFromLabel } from '@/shared/utils/eventThemeHue';
 import JoinForm from '@/features/events/components/JoinForm';
 import WheelSection from '@/features/events/components/WheelSection';
 import HostEventSettingsPanel from '@/features/events/components/HostEventSettingsPanel';
@@ -105,12 +104,6 @@ export default function EventDetail() {
       queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
     },
   });
-
-  const themeHue = themeHueFromLabel(event?.config?.theme);
-  const themeStyle = useMemo(
-    () => (themeHue == null ? undefined : { borderTop: `3px solid hsl(${themeHue} 48% 42%)` }),
-    [themeHue]
-  );
 
   const documentTitle = getDocumentTitle(
     slug,
@@ -252,7 +245,7 @@ export default function EventDetail() {
     participantCount >= maxParticipants;
 
   return (
-    <PageLayout className="page-event" style={themeStyle}>
+    <PageLayout className="page-event">
       {!event.isFinished && (
         <EventStartReminderBanner
           date={event.date}

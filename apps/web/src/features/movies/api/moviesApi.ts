@@ -36,6 +36,8 @@ export interface MovieSearchFilters {
   yearTo?: number;
   voteMin?: number;
   originalLanguage?: string;
+  runtimeMin?: number;
+  runtimeMax?: number;
 }
 
 export async function searchMovies(
@@ -50,6 +52,8 @@ export async function searchMovies(
   if (opts?.filters?.yearTo != null) params.set('yearTo', String(opts.filters.yearTo));
   if (opts?.filters?.voteMin != null) params.set('voteMin', String(opts.filters.voteMin));
   if (opts?.filters?.originalLanguage) params.set('language', opts.filters.originalLanguage);
+  if (opts?.filters?.runtimeMin != null) params.set('runtimeMin', String(opts.filters.runtimeMin));
+  if (opts?.filters?.runtimeMax != null) params.set('runtimeMax', String(opts.filters.runtimeMax));
 
   const raw = await fetchApi<MovieSearchListResponse | MovieSearchItem[]>(
     `/movies/search?${params.toString()}`,

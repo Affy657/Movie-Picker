@@ -7,7 +7,9 @@ public sealed record MovieSearchFilters(
     int? YearFrom,
     int? YearTo,
     double? VoteMin = null,
-    string? OriginalLanguage = null);
+    string? OriginalLanguage = null,
+    int? RuntimeMin = null,
+    int? RuntimeMax = null);
 
 public interface ISearchMoviesHandler
 {

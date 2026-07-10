@@ -5,7 +5,7 @@ namespace MoviePicker.Api.Infrastructure.Tmdb;
 
 public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
 {
-    public Task<IReadOnlyList<TmdbSearchItem>> SearchAsync(string query, bool allowSeries, IReadOnlyList<int>? genreIds = null, int? yearFrom = null, int? yearTo = null, double? voteMin = null, string? originalLanguage = null, CancellationToken ct = default)
+    public Task<IReadOnlyList<TmdbSearchItem>> SearchAsync(string query, bool allowSeries, IReadOnlyList<int>? genreIds = null, int? yearFrom = null, int? yearTo = null, double? voteMin = null, string? originalLanguage = null, int? runtimeMin = null, int? runtimeMax = null, CancellationToken ct = default)
     {
         IReadOnlyList<TmdbSearchItem> list =
             string.IsNullOrWhiteSpace(query)
