@@ -28,7 +28,7 @@ const SEARCH_DEBOUNCE_MS = 350;
 const SEARCH_MIN_CHARS = 2;
 
 function makeSearchKey(term: string, filters: MovieSearchFilters): string {
-  return `${term}|${(filters.genreIds ?? []).join(',')}|${filters.yearFrom ?? ''}|${filters.yearTo ?? ''}|${filters.voteMin ?? ''}|${filters.originalLanguage ?? ''}`;
+  return `${term}|${(filters.genreIds ?? []).join(',')}|${filters.yearFrom ?? ''}|${filters.yearTo ?? ''}|${filters.voteMin ?? ''}|${filters.originalLanguage ?? ''}|${filters.runtimeMin ?? ''}|${filters.runtimeMax ?? ''}`;
 }
 
 function isSameTmdbItem(m: MovieData, r: MovieSearchItem): boolean {
@@ -503,12 +503,14 @@ export default function AddMovieForm({
           voteMin={filters.voteMin}
           selectedLanguage={filters.selectedLanguage}
           availabilityFilter={filters.availabilityFilter}
+          runtimeRange={filters.runtimeRange}
           ratingScale={user?.ratingScale}
           onToggleGenre={filters.toggleGenre}
           onToggleDecade={filters.toggleDecade}
           onToggleVoteMin={filters.toggleVoteMin}
           onToggleLanguage={filters.toggleLanguage}
           onToggleAvailability={filters.toggleAvailability}
+          onChangeRuntimeRange={filters.changeRuntimeRange}
         />
       )}
 

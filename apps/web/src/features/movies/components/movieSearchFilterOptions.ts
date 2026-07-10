@@ -1,4 +1,5 @@
 import type { RatingScale } from '@/shared/types/theme';
+import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 
 export const MOVIE_GENRE_IDS = [
   28, 35, 53, 27, 878, 18, 12, 14, 10749, 80, 16, 10751, 99, 9648, 36, 10402, 10752, 37,
@@ -33,4 +34,15 @@ export const LANGUAGE_OPTIONS = [
 
 export function localizedName(fr: string, en: string, lang: string): string {
   return lang.startsWith('fr') ? fr : en;
+}
+
+export const RUNTIME_MIN_MINUTES = 10;
+export const RUNTIME_MAX_MINUTES = 180;
+export const RUNTIME_STEP_MINUTES = 5;
+
+export function runtimeRangeLabel(minutes: number, lang: string): string {
+  if (minutes <= RUNTIME_MIN_MINUTES)
+    return lang.startsWith('fr') ? '10 min ou moins' : '10 min or less';
+  if (minutes >= RUNTIME_MAX_MINUTES) return lang.startsWith('fr') ? '3h et plus' : '3h and more';
+  return formatRuntimeMinutes(minutes) ?? String(minutes);
 }

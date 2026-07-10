@@ -40,6 +40,8 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         int? yearTo = null,
         double? voteMin = null,
         string? originalLanguage = null,
+        int? runtimeMin = null,
+        int? runtimeMax = null,
         CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(_options.TmdbApiKey))
@@ -48,7 +50,8 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         var trimmedQuery = query.Trim();
         var hasText = trimmedQuery.Length > 0;
         var hasFilters = (genreIds?.Count > 0) || yearFrom.HasValue || yearTo.HasValue
-            || voteMin.HasValue || !string.IsNullOrWhiteSpace(originalLanguage);
+            || voteMin.HasValue || !string.IsNullOrWhiteSpace(originalLanguage)
+            || runtimeMin.HasValue || runtimeMax.HasValue;
 
         if (!hasText && !hasFilters)
             return Array.Empty<TmdbSearchItem>();
@@ -56,7 +59,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         var key = Uri.EscapeDataString(_options.TmdbApiKey);
 
         if (!hasText)
-            return await DiscoverMoviesAsync(key, genreIds, yearFrom, yearTo, voteMin, originalLanguage, ct);
+            return await DiscoverMoviesAsync(key, genreIds, yearFrom, yearTo, voteMin, originalLanguage, runtimeMin, runtimeMax, ct);
 
         var q = Uri.EscapeDataString(trimmedQuery);
         var endpoint = allowSeries ? "search/multi" : "search/movie";
@@ -165,6 +168,8 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         int? yearTo,
         double? voteMin,
         string? originalLanguage,
+        int? runtimeMin,
+        int? runtimeMax,
         CancellationToken ct)
     {
         var url = $"https://api.themoviedb.org/3/discover/movie?api_key={apiKey}&language=fr-FR&sort_by=popularity.desc";
@@ -178,6 +183,10 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
             url += $"&vote_average.gte={voteMin.Value.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)}";
         if (!string.IsNullOrWhiteSpace(originalLanguage))
             url += $"&with_original_language={Uri.EscapeDataString(originalLanguage.Trim())}";
+        if (runtimeMin.HasValue)
+            url += $"&with_runtime.gte={runtimeMin.Value}";
+        if (runtimeMax.HasValue)
+            url += $"&with_runtime.lte={runtimeMax.Value}";
 
         using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
         res.EnsureSuccessStatusCode();
