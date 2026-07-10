@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import clsx from 'clsx';
 import { LayoutGrid, List } from 'lucide-react';
 import type { UseQueryResult } from '@tanstack/react-query';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { clearMovieVote, removeMovieFromEvent, voteMovie } from '@/features/movies/api/moviesApi';
 import { getErrorMessage } from '@/shared/api/apiError';
@@ -70,6 +71,8 @@ export default function EventMoviesSection({
 }: Readonly<EventMoviesSectionProps>) {
   const isFinished = !!event.isFinished;
   const { track } = useAnalytics();
+  const { user } = useAuth();
+  const ratingScale = user?.ratingScale;
   const { t } = useTranslation();
   const [sortBy, setSortBy] = useState<SortKey>('createdAt');
 
@@ -217,6 +220,7 @@ export default function EventMoviesSection({
             refresh={refreshAll}
             participantAvatars={participantAvatars}
             participantAvatarsByPseudo={participantAvatarsByPseudo}
+            ratingScale={ratingScale}
             viewMode={viewMode}
           />
         </div>

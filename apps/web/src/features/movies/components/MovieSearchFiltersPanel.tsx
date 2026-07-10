@@ -1,11 +1,13 @@
 import { useTranslation } from '@/shared/i18n';
 import { genreLabel } from '@/features/profile/lib/tmdbGenres';
+import type { RatingScale } from '@/shared/types/theme';
 import {
   AVAILABILITY_OPTIONS,
   DECADE_OPTIONS,
   LANGUAGE_OPTIONS,
   MOVIE_GENRE_IDS,
   VOTE_MIN_OPTIONS,
+  voteMinLabel,
 } from './movieSearchFilterOptions';
 import styles from './AddMovieForm.module.css';
 
@@ -17,6 +19,7 @@ interface MovieSearchFiltersPanelProps {
   voteMin: number | undefined;
   selectedLanguage: string | undefined;
   availabilityFilter: string | undefined;
+  ratingScale?: RatingScale;
   onToggleGenre: (id: number) => void;
   onToggleDecade: (decade: string) => void;
   onToggleVoteMin: (min: number) => void;
@@ -32,6 +35,7 @@ export default function MovieSearchFiltersPanel({
   voteMin,
   selectedLanguage,
   availabilityFilter,
+  ratingScale,
   onToggleGenre,
   onToggleDecade,
   onToggleVoteMin,
@@ -86,7 +90,7 @@ export default function MovieSearchFiltersPanel({
               onClick={() => onToggleVoteMin(opt.tmdb)}
               aria-pressed={voteMin === opt.tmdb}
             >
-              ★ {opt.label}+
+              ★ {voteMinLabel(opt.tmdb, ratingScale)}+
             </button>
           ))}
         </div>

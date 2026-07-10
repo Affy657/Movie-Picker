@@ -20,6 +20,12 @@ public enum AccentColor
     Indigo = 8
 }
 
+public enum RatingScale
+{
+    Five = 0,
+    Ten = 1
+}
+
 public sealed record User
 {
     public string Id { get; init; } = string.Empty;
@@ -31,6 +37,7 @@ public sealed record User
     public bool IsProfilePublic { get; init; } = true;
     public UiThemePreference UiTheme { get; init; } = UiThemePreference.System;
     public AccentColor AccentColor { get; init; } = AccentColor.Default;
+    public RatingScale RatingScale { get; init; } = RatingScale.Five;
     public string AvatarId { get; init; } = string.Empty;
     public bool NotifyOnParticipantJoined { get; init; } = true;
     public bool NotifyEventReminder { get; init; } = true;

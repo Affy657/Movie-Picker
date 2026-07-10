@@ -100,4 +100,12 @@ describe('MovieSearchFiltersPanel', () => {
     expect(screen.getByRole('button', { name: 'Rental' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Purchase' })).toBeInTheDocument();
   });
+
+  it('avec ratingScale="ten", affiche le filtre de note minimale sur 10', () => {
+    renderPanel({ ratingScale: 'ten' });
+    expect(screen.getByRole('button', { name: '★ 6+' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '★ 7+' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '★ 8+' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '★ 3+' })).not.toBeInTheDocument();
+  });
 });

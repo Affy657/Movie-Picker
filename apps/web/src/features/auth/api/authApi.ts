@@ -1,6 +1,6 @@
 import { fetchApi } from '@/shared/api/client';
 import { ApiError } from '@/shared/api/apiError';
-import type { AccentColor, UiThemePreference } from '@/shared/types/theme';
+import type { AccentColor, RatingScale, UiThemePreference } from '@/shared/types/theme';
 import type { UserProfile } from '@/features/auth/types';
 import { clearSessionHint, hasSessionHint, setSessionHint } from '@/features/auth/session-hint';
 
@@ -55,6 +55,7 @@ export interface ProfilePatch {
   displayName?: string;
   uiTheme?: UiThemePreference;
   accentColor?: AccentColor;
+  ratingScale?: RatingScale;
   avatarId?: string;
   handle?: string;
   bio?: string | null;

@@ -139,6 +139,11 @@
         cyan: 'Cyan',
         indigo: 'Indigo',
       },
+      ratingScaleLabel: 'Échelle des notes',
+      ratingScaleOptions: {
+        five: 'Sur 5',
+        ten: 'Sur 10',
+      },
       avatarLabel: 'Avatar',
       avatarHint: 'Affiché à côté de votre pseudo dans les soirées.',
       avatarOptionAriaLabel: 'Choisir l’avatar {{name}}',

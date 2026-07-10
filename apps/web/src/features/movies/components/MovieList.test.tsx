@@ -155,6 +155,26 @@ describe('MovieList', () => {
     expect(screen.queryByText(/TMDB\s*\d/)).not.toBeInTheDocument();
   });
 
+  it('avec ratingScale="ten", affiche la note TMDB brute sur 10', () => {
+    const withVote: MovieData[] = [{ ...movies[0]!, voteAverage: 8.4 }];
+    renderWithLocale(
+      <MovieList
+        movies={withVote}
+        slug="s"
+        participantId={null}
+        participantPseudo={null}
+        isFinished={false}
+        onVote={vi.fn()}
+        onRemove={vi.fn()}
+        refresh={vi.fn()}
+        onActionError={vi.fn()}
+        ratingScale="ten"
+      />
+    );
+    expect(screen.getByText(/8\.4\/10/)).toBeInTheDocument();
+    expect(screen.queryByText(/4\.2\/5/)).not.toBeInTheDocument();
+  });
+
   it('affiche les boutons vote up/down + déjà vu quand pas terminé et participantId', async () => {
     const onVote = vi.fn().mockResolvedValue(undefined);
     renderWithLocale(

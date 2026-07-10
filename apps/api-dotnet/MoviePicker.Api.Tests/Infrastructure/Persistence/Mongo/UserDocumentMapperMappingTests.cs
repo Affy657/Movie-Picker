@@ -41,6 +41,44 @@ public sealed class UserDocumentMapperMappingTests
         Assert.Equal(expected, UserDocumentMapper.AccentToString(color));
     }
 
+    [Theory]
+    [InlineData("ten", RatingScale.Ten)]
+    [InlineData("five", RatingScale.Five)]
+    [InlineData("TEN", RatingScale.Ten)]
+    [InlineData("unknown", RatingScale.Five)]
+    [InlineData(null, RatingScale.Five)]
+    public void ParseRatingScale_MapsKnownValues(string? stored, RatingScale expected)
+    {
+        Assert.Equal(expected, UserDocumentMapper.ParseRatingScale(stored));
+    }
+
+    [Theory]
+    [InlineData(RatingScale.Ten, "ten")]
+    [InlineData(RatingScale.Five, "five")]
+    public void RatingScaleToString_MapsKnownValues(RatingScale scale, string expected)
+    {
+        Assert.Equal(expected, UserDocumentMapper.RatingScaleToString(scale));
+    }
+
+    [Fact]
+    public void RatingScale_RoundTripsThroughDocument()
+    {
+        var user = new User
+        {
+            Id = "1",
+            Email = "a@b.c",
+            PasswordHash = "x",
+            DisplayName = "n",
+            RatingScale = RatingScale.Ten,
+            CreatedAt = new DateTimeOffset(Utc),
+            UpdatedAt = new DateTimeOffset(Utc)
+        };
+
+        var back = UserDocumentMapper.ToDomain(UserDocumentMapper.ToDocument(user));
+
+        Assert.Equal(RatingScale.Ten, back.RatingScale);
+    }
+
     [Fact]
     public void ToDomain_NullableFieldsAbsent_AppliesDefaults()
     {
@@ -62,6 +100,7 @@ public sealed class UserDocumentMapperMappingTests
         Assert.True(user.IsProfilePublic);
         Assert.Equal(string.Empty, user.AvatarId);
         Assert.Equal(AccentColor.Default, user.AccentColor);
+        Assert.Equal(RatingScale.Five, user.RatingScale);
         Assert.True(user.NotifyOnParticipantJoined);
         Assert.True(user.NotifyEventReminder);
         Assert.True(user.NotifyOnMovieAdded);

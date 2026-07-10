@@ -23,4 +23,14 @@ describe('formatTmdbVote', () => {
   it('plafond TMDB (10) → 5/5', () => {
     expect(formatTmdbVote(10)).toBe('5.0/5');
   });
+
+  it("scale 'ten' : renvoie la note TMDB brute sur 10", () => {
+    expect(formatTmdbVote(7, 'ten')).toBe('7.0/10');
+    expect(formatTmdbVote(8.46, 'ten')).toBe('8.5/10');
+  });
+
+  it("scale 'ten' avec null/NaN : renvoie null", () => {
+    expect(formatTmdbVote(null, 'ten')).toBeNull();
+    expect(formatTmdbVote(NaN, 'ten')).toBeNull();
+  });
 });

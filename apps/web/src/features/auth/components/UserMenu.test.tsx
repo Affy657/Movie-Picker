@@ -15,6 +15,7 @@ const baseUser: UserProfile = {
   emailMasked: 'a***@test.local',
   uiTheme: 'system',
   accentColor: 'default',
+  ratingScale: 'five',
   avatarId: '',
   handle: 'alice',
   bio: null,

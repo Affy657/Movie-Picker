@@ -6,7 +6,7 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import AccountPage from '@/features/auth/pages/AccountPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
-import { TEST_API_V1 } from '@/mocks/handlers';
+import { TEST_API_V1, authMeGuestHandler } from '@/mocks/handlers';
 
 function renderAccount() {
   return render(
@@ -68,5 +68,57 @@ describe('AccountPage (MSW)', () => {
     const darkRadio = await screen.findByRole('radio', { name: /sombre/i });
     await user.click(darkRadio);
     await waitFor(() => expect(patchedTheme).toBe('dark'));
+  });
+
+  it("affiche l'échelle des notes et envoie ratingScale au PATCH profil", async () => {
+    const user = userEvent.setup();
+    let patchedRatingScale: string | undefined;
+
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u-acc',
+          displayName: 'Pat',
+          emailMasked: 'p***@test.local',
+          uiTheme: 'light',
+          accentColor: 'default',
+          ratingScale: 'five',
+        })
+      ),
+      http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
+        const body = (await request.json()) as { ratingScale?: string };
+        patchedRatingScale = body.ratingScale;
+        return HttpResponse.json({
+          userId: 'u-acc',
+          displayName: 'Pat',
+          emailMasked: 'p***@test.local',
+          uiTheme: 'light',
+          accentColor: 'default',
+          ratingScale: body.ratingScale ?? 'five',
+        });
+      })
+    );
+
+    renderAccount();
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Mon compte' })).toBeInTheDocument();
+    });
+
+    const tenRadio = await screen.findByRole('radio', { name: 'Sur 10' });
+    await user.click(tenRadio);
+    await waitFor(() => expect(patchedRatingScale).toBe('ten'));
+  });
+
+  it("n'affiche pas le contrôle d'échelle des notes pour un invité non connecté", async () => {
+    server.use(authMeGuestHandler);
+
+    renderAccount();
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Mon compte' })).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Échelle des notes')).not.toBeInTheDocument();
   });
 });
