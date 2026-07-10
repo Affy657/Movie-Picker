@@ -30,6 +30,7 @@ export const MovieCardGrid = memo(function MovieCardGrid({
   t,
   participantAvatars,
   participantAvatarsByPseudo,
+  ratingScale,
   eager = false,
 }: MovieCardCommonProps) {
   const s = useMovieCardState({
@@ -40,6 +41,7 @@ export const MovieCardGrid = memo(function MovieCardGrid({
     isFinished,
     isHost,
     participantAvatars,
+    ratingScale,
     refresh,
     onActionError,
     t,

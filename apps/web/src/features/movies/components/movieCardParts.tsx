@@ -30,6 +30,7 @@ import {
 import { othersAlreadySeenHint } from '@/features/movies/utils/seenHint';
 import { getErrorMessage } from '@/shared/api/apiError';
 import type { TranslationKey } from '@/shared/i18n';
+import type { RatingScale } from '@/shared/types/theme';
 import styles from './movieCardParts.module.css';
 
 export type Translate = (key: TranslationKey, vars?: Record<string, string | number>) => string;
@@ -51,6 +52,7 @@ export interface MovieCardCommonProps {
   t: Translate;
   participantAvatars?: Record<string, string>;
   participantAvatarsByPseudo?: Record<string, string>;
+  ratingScale?: RatingScale;
   eager?: boolean;
 }
 
@@ -62,6 +64,7 @@ export function useMovieCardState({
   isFinished,
   isHost,
   participantAvatars,
+  ratingScale,
   refresh,
   onActionError,
   t,
@@ -73,6 +76,7 @@ export function useMovieCardState({
   isFinished: boolean;
   isHost: boolean;
   participantAvatars?: Record<string, string>;
+  ratingScale?: RatingScale;
   refresh: () => void;
   onActionError: (message: string) => void;
   t: Translate;
@@ -84,7 +88,7 @@ export function useMovieCardState({
   const iMarkedSeen = !!(participantPseudo && m.seenByPseudos?.includes(participantPseudo));
   const others = (m.seenByPseudos ?? []).filter((p) => p !== participantPseudo);
   const othersHint = othersAlreadySeenHint(m.seenByPseudos, participantPseudo, t);
-  const voteLabel = formatTmdbVote(m.voteAverage);
+  const voteLabel = formatTmdbVote(m.voteAverage, ratingScale);
   const runtimeLabel = formatRuntimeMinutes(m.runtimeMinutes);
   const posterSrc = posterImageSrc(m.posterPath);
   const posterSrcSet = tmdbPosterSrcSetForList(posterSrc);

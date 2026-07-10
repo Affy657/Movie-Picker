@@ -28,6 +28,7 @@ export const MovieCardList = memo(function MovieCardList({
   t,
   participantAvatars,
   participantAvatarsByPseudo,
+  ratingScale,
   eager = false,
 }: MovieCardCommonProps) {
   const s = useMovieCardState({
@@ -38,6 +39,7 @@ export const MovieCardList = memo(function MovieCardList({
     isFinished,
     isHost,
     participantAvatars,
+    ratingScale,
     refresh,
     onActionError,
     t,

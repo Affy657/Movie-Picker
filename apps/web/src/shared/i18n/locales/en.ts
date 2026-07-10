@@ -137,6 +137,11 @@ export const en: Locale = {
         cyan: 'Cyan',
         indigo: 'Indigo',
       },
+      ratingScaleLabel: 'Rating scale',
+      ratingScaleOptions: {
+        five: 'Out of 5',
+        ten: 'Out of 10',
+      },
       avatarLabel: 'Avatar',
       avatarHint: 'Shown next to your nickname in events.',
       avatarOptionAriaLabel: 'Choose avatar {{name}}',

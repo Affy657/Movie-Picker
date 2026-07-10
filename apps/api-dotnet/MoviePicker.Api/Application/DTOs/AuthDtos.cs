@@ -49,6 +49,7 @@ public sealed class UserProfileResponse
     public string EmailMasked { get; init; } = string.Empty;
     public UiThemePreference UiTheme { get; init; }
     public AccentColor AccentColor { get; init; }
+    public RatingScale RatingScale { get; init; }
     public string AvatarId { get; init; } = string.Empty;
     public string Handle { get; init; } = string.Empty;
     public string? Bio { get; init; }
@@ -67,6 +68,9 @@ public sealed class PatchUserProfileRequest
         "^(default|blue|green|purple|pink|orange|red|cyan|indigo)$",
         ErrorMessage = "accentColor doit être default, blue, green, purple, pink, orange, red, cyan ou indigo.")]
     public string? AccentColor { get; init; }
+
+    [RegularExpression("^(five|ten)$", ErrorMessage = "ratingScale doit être five ou ten.")]
+    public string? RatingScale { get; init; }
 
     // Seeds must match AVATAR_IDS in apps/web/src/shared/utils/avatar.ts
     [RegularExpression(

@@ -1,4 +1,4 @@
-import type { AccentColor, UiThemePreference } from '@/shared/types/theme';
+import type { AccentColor, RatingScale, UiThemePreference } from '@/shared/types/theme';
 
 export interface UserProfile {
   userId: string;
@@ -6,6 +6,7 @@ export interface UserProfile {
   emailMasked: string;
   uiTheme: UiThemePreference;
   accentColor: AccentColor;
+  ratingScale: RatingScale;
   avatarId: string;
   handle: string;
   bio: string | null;

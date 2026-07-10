@@ -1,12 +1,16 @@
+import type { RatingScale } from '@/shared/types/theme';
+
 export const MOVIE_GENRE_IDS = [
   28, 35, 53, 27, 878, 18, 12, 14, 10749, 80, 16, 10751, 99, 9648, 36, 10402, 10752, 37,
 ] as const;
 
-export const VOTE_MIN_OPTIONS = [
-  { tmdb: 6, label: '3' },
-  { tmdb: 7, label: '3.5' },
-  { tmdb: 8, label: '4' },
-] as const;
+export const VOTE_MIN_OPTIONS = [{ tmdb: 6 }, { tmdb: 7 }, { tmdb: 8 }] as const;
+
+export function voteMinLabel(tmdb: number, scale: RatingScale = 'five'): string {
+  if (scale === 'ten') return String(tmdb);
+  const five = tmdb / 2;
+  return Number.isInteger(five) ? String(five) : five.toFixed(1);
+}
 
 export const DECADE_OPTIONS = ['2020', '2010', '2000', '1990', '1980'] as const;
 

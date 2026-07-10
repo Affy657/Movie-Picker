@@ -310,4 +310,43 @@ public sealed class AuthEndpointsTests : IClassFixture<MoviePickerApplicationFac
             new { uiTheme = "invalid" });
         Assert.Equal(HttpStatusCode.BadRequest, patch.StatusCode);
     }
+
+    [Fact]
+    public async Task PatchMe_RatingScale_UpdatesAndReturns()
+    {
+        var client = _factory.CreateClient();
+        var email = $"rating{Guid.NewGuid():N}@test.local";
+        var reg = await client.PostAsJsonAsync(
+            "/api/v1/auth/register",
+            new RegisterRequest { Email = email, Password = "abcd1234", DisplayName = "RS" });
+        ApplySessionCookie(client, reg);
+
+        var patch = await client.PatchAsJsonAsync(
+            "/api/v1/auth/me",
+            new PatchUserProfileRequest { RatingScale = "ten" });
+        Assert.Equal(HttpStatusCode.OK, patch.StatusCode);
+        var updated = await patch.Content.ReadFromJsonAsync<UserProfileResponse>(JsonReadOptions);
+        Assert.NotNull(updated);
+        Assert.Equal(RatingScale.Ten, updated!.RatingScale);
+
+        var me = await client.GetAsync("/api/v1/auth/me");
+        var meBody = await me.Content.ReadFromJsonAsync<UserProfileResponse>(JsonReadOptions);
+        Assert.Equal(RatingScale.Ten, meBody!.RatingScale);
+    }
+
+    [Fact]
+    public async Task PatchMe_InvalidRatingScale_Returns400()
+    {
+        var client = _factory.CreateClient();
+        var email = $"badrating{Guid.NewGuid():N}@test.local";
+        var reg = await client.PostAsJsonAsync(
+            "/api/v1/auth/register",
+            new RegisterRequest { Email = email, Password = "abcd1234", DisplayName = "BR" });
+        ApplySessionCookie(client, reg);
+
+        var patch = await client.PatchAsJsonAsync(
+            "/api/v1/auth/me",
+            new { ratingScale = "seven" });
+        Assert.Equal(HttpStatusCode.BadRequest, patch.StatusCode);
+    }
 }

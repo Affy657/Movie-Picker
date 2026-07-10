@@ -12,6 +12,7 @@ import { useTranslation } from '@/shared/i18n';
 import ThemeToggle from '@/app/components/ThemeToggle';
 import LanguageSelector from '@/app/components/LanguageSelector';
 import AccentColorPicker from '@/app/components/AccentColorPicker';
+import RatingScaleToggle from '@/app/components/RatingScaleToggle';
 import { withReturnTo, ROUTES } from '@/app/routes';
 import {
   deleteAccount,
@@ -159,6 +160,7 @@ function ChangePasswordSection() {
 
 function PreferencesSection() {
   const { t } = useTranslation();
+  const { user } = useAuth();
 
   return (
     <section className="section section--panel" aria-labelledby="preferences-heading">
@@ -181,6 +183,15 @@ function PreferencesSection() {
           {t('auth.account.accentColorLabel')}
         </label>
         <AccentColorPicker id="account-accent" />
+
+        {user && (
+          <>
+            <label className="label" htmlFor="account-rating-scale">
+              {t('auth.account.ratingScaleLabel')}
+            </label>
+            <RatingScaleToggle id="account-rating-scale" />
+          </>
+        )}
       </div>
     </section>
   );

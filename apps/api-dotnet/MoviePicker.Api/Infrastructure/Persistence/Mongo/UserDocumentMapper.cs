@@ -16,6 +16,7 @@ public static class UserDocumentMapper
             IsProfilePublic = doc.IsProfilePublic ?? true,
             UiTheme = ParseTheme(doc.UiTheme),
             AccentColor = ParseAccent(doc.AccentColor),
+            RatingScale = ParseRatingScale(doc.RatingScale),
             AvatarId = doc.AvatarId ?? string.Empty,
             NotifyOnParticipantJoined = doc.NotifyOnParticipantJoined ?? true,
             NotifyEventReminder = doc.NotifyEventReminder ?? true,
@@ -39,6 +40,7 @@ public static class UserDocumentMapper
             IsProfilePublic = user.IsProfilePublic,
             UiTheme = ThemeToString(user.UiTheme),
             AccentColor = AccentToString(user.AccentColor),
+            RatingScale = RatingScaleToString(user.RatingScale),
             AvatarId = string.IsNullOrEmpty(user.AvatarId) ? null : user.AvatarId,
             NotifyOnParticipantJoined = user.NotifyOnParticipantJoined,
             NotifyEventReminder = user.NotifyEventReminder,
@@ -92,5 +94,19 @@ public static class UserDocumentMapper
             AccentColor.Cyan => "cyan",
             AccentColor.Indigo => "indigo",
             _ => null
+        };
+
+    internal static RatingScale ParseRatingScale(string? s) =>
+        s?.ToLowerInvariant() switch
+        {
+            "ten" => RatingScale.Ten,
+            _ => RatingScale.Five
+        };
+
+    internal static string RatingScaleToString(RatingScale r) =>
+        r switch
+        {
+            RatingScale.Ten => "ten",
+            _ => "five"
         };
 }

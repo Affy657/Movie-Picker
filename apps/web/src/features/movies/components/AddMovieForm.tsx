@@ -104,7 +104,7 @@ export default function AddMovieForm({
   const [error, setError] = useState<string | null>(null);
   const [emptySearchKey, setEmptySearchKey] = useState<string | null>(null);
 
-  const filters = useMovieSearchFilters(tmdbLanguage);
+  const filters = useMovieSearchFilters(tmdbLanguage, user?.ratingScale);
 
   const trimmedForSearch = useMemo(() => query.trim(), [query]);
 
@@ -503,6 +503,7 @@ export default function AddMovieForm({
           voteMin={filters.voteMin}
           selectedLanguage={filters.selectedLanguage}
           availabilityFilter={filters.availabilityFilter}
+          ratingScale={user?.ratingScale}
           onToggleGenre={filters.toggleGenre}
           onToggleDecade={filters.toggleDecade}
           onToggleVoteMin={filters.toggleVoteMin}
@@ -543,7 +544,7 @@ export default function AddMovieForm({
           ) : null}
           <ul className={styles.results} aria-label={t('movies.search.resultsListAria')}>
             {displayedResults.map((r) => {
-              const voteLabel = formatTmdbVote(r.voteAverage);
+              const voteLabel = formatTmdbVote(r.voteAverage, user?.ratingScale);
               const runtimeLabel = formatRuntimeMinutes(r.runtimeMinutes);
               const providers = r.watchProviders ?? [];
               const posterSrcRaw = posterImageSrc(r.posterPath);

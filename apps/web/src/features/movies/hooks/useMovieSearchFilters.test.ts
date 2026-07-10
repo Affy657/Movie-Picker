@@ -182,4 +182,11 @@ describe('useMovieSearchFilters', () => {
     act(() => result.current.setFiltersOpen(true));
     expect(result.current.filtersOpen).toBe(true);
   });
+
+  it("avec ratingScale='ten', le chip de note minimale affiche la valeur TMDB brute", () => {
+    const { result } = renderHook(() => useMovieSearchFilters('fr', 'ten'));
+    act(() => result.current.toggleVoteMin(8));
+    const chip = result.current.activeFilterChips.find((c) => c.key === 'vote')!;
+    expect(chip.label).toBe('★ 8+');
+  });
 });

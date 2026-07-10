@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import { Film } from 'lucide-react';
 import EmptyState from '@/shared/components/EmptyState';
 import type { MovieData } from '@/shared/types/movie';
+import type { RatingScale } from '@/shared/types/theme';
 import { useTranslation } from '@/shared/i18n';
 import { MovieCardGrid } from '@/features/movies/components/MovieCardGrid';
 import { MovieCardList } from '@/features/movies/components/MovieCardList';
@@ -22,6 +23,7 @@ interface MovieListProps {
   onActionError: (message: string) => void;
   participantAvatars?: Record<string, string>;
   participantAvatarsByPseudo?: Record<string, string>;
+  ratingScale?: RatingScale;
   viewMode?: 'grid' | 'list';
 }
 
@@ -38,6 +40,7 @@ export default function MovieList({
   onActionError,
   participantAvatars,
   participantAvatarsByPseudo,
+  ratingScale,
   viewMode = 'list',
 }: Readonly<MovieListProps>) {
   const { t } = useTranslation();
@@ -73,6 +76,7 @@ export default function MovieList({
             onActionError={onActionError}
             participantAvatars={participantAvatars}
             participantAvatarsByPseudo={participantAvatarsByPseudo}
+            ratingScale={ratingScale}
             t={t}
           />
         ))}

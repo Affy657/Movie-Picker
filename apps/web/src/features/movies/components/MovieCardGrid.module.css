@@ -182,6 +182,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  /* Le crénage de la police laisse plus de blanc sous la ligne de base que
+     dessus ; sans ce nudge le pseudo paraît décalé sous le centre de l'avatar. */
+  transform: translateY(-0.08em);
 }
 
 .addNote {

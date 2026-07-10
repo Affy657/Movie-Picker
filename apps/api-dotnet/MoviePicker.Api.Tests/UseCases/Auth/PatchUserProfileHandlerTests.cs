@@ -103,6 +103,25 @@ public sealed class PatchUserProfileHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_UpdatesRatingScale()
+    {
+        var u = User();
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(u);
+        users
+            .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User x, CancellationToken _) => x);
+        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+
+        var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { RatingScale = "ten" });
+
+        Assert.Equal(RatingScale.Ten, res.RatingScale);
+        users.Verify(
+            x => x.UpdateAsync(It.Is<User>(y => y.RatingScale == RatingScale.Ten), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task HandleAsync_UpdatesHandle_WhenAvailable()
     {
         var u = User() with { Handle = "old_handle" };

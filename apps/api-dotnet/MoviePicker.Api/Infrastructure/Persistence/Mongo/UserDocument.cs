@@ -37,6 +37,9 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public string? AccentColor { get; set; }
 
+    [BsonElement("ratingScale")]
+    public string RatingScale { get; set; } = "five";
+
     [BsonElement("avatarId")]
     [BsonIgnoreIfNull]
     public string? AvatarId { get; set; }

@@ -1,11 +1,13 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { genreLabel } from '@/features/profile/lib/tmdbGenres';
 import type { MovieSearchFilters } from '@/features/movies/api/moviesApi';
+import type { RatingScale } from '@/shared/types/theme';
 import {
   AVAILABILITY_OPTIONS,
   LANGUAGE_OPTIONS,
   VOTE_MIN_OPTIONS,
   localizedName,
+  voteMinLabel,
 } from '@/features/movies/components/movieSearchFilterOptions';
 
 export interface ActiveFilterChip {
@@ -14,7 +16,7 @@ export interface ActiveFilterChip {
   onRemove: () => void;
 }
 
-export function useMovieSearchFilters(tmdbLanguage: string) {
+export function useMovieSearchFilters(tmdbLanguage: string, ratingScale?: RatingScale) {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
   const [selectedDecade, setSelectedDecade] = useState<string | undefined>(undefined);
@@ -108,7 +110,7 @@ export function useMovieSearchFilters(tmdbLanguage: string) {
       const voteOpt = VOTE_MIN_OPTIONS.find((o) => o.tmdb === voteMin);
       chips.push({
         key: 'vote',
-        label: voteOpt ? `★ ${voteOpt.label}+` : `★ ${voteMin}+`,
+        label: voteOpt ? `★ ${voteMinLabel(voteOpt.tmdb, ratingScale)}+` : `★ ${voteMin}+`,
         onRemove: () => {
           filterChangedRef.current = true;
           setVoteMin(undefined);
@@ -145,6 +147,7 @@ export function useMovieSearchFilters(tmdbLanguage: string) {
     selectedLanguage,
     availabilityFilter,
     tmdbLanguage,
+    ratingScale,
     removeGenre,
   ]);
 

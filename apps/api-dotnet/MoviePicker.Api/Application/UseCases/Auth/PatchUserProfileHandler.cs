@@ -27,6 +27,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
         var nothingToUpdate = request.DisplayName is null
             && request.UiTheme is null
             && request.AccentColor is null
+            && request.RatingScale is null
             && request.AvatarId is null
             && request.Handle is null
             && request.Bio is null
@@ -52,6 +53,10 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
         if (request.AccentColor is not null)
             accent = ParseEnum(request.AccentColor, AccentColor.Default);
 
+        var ratingScale = user.RatingScale;
+        if (request.RatingScale is not null)
+            ratingScale = ParseEnum(request.RatingScale, RatingScale.Five);
+
         var avatarId = request.AvatarId ?? user.AvatarId;
 
         var handle = user.Handle;
@@ -75,6 +80,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             DisplayName = displayName,
             UiTheme = theme,
             AccentColor = accent,
+            RatingScale = ratingScale,
             AvatarId = avatarId,
             Handle = handle,
             Bio = bio,
@@ -118,6 +124,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
         EmailMasked = EmailMasking.Mask(user.Email),
         UiTheme = user.UiTheme,
         AccentColor = user.AccentColor,
+        RatingScale = user.RatingScale,
         AvatarId = user.AvatarId,
         Handle = user.Handle,
         Bio = user.Bio,

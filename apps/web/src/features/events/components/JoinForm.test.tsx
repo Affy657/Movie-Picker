@@ -30,6 +30,7 @@ const profile: UserProfile = {
   emailMasked: 'e***@***',
   uiTheme: 'system',
   accentColor: 'default',
+  ratingScale: 'five',
   avatarId: '',
   handle: 'profilcompte',
   bio: null,
