@@ -563,6 +563,10 @@ export const en: Locale = {
     memberSince: 'Member since {{date}}',
     copyLink: 'Copy profile link',
     linkCopied: 'Link copied!',
+    showQr: 'Show profile QR code',
+    closeQr: 'Close QR code',
+    qrTitle: 'QR code — link to the profile',
+    qrHint: 'Open your camera to access the profile on mobile.',
     follow: {
       follow: 'Follow',
       unfollow: 'Unfollow',

@@ -11,6 +11,7 @@ import { APP_DOCUMENT_TITLE, pageTitle, useDocumentTitle } from '@/shared/hooks/
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
+import QrCodeButton from '@/shared/components/QrCodeButton';
 import {
   fetchPublicProfile,
   fetchUserStats,
@@ -196,6 +197,15 @@ export default function ProfilePage() {
             <Link2 size={14} aria-hidden />
             {copied ? t('profile.linkCopied') : t('profile.copyLink')}
           </button>
+
+          <QrCodeButton
+            url={globalThis.location.href}
+            dialogTitle={t('profile.qrTitle')}
+            hint={t('profile.qrHint')}
+            showLabel={t('profile.showQr')}
+            closeLabel={t('profile.closeQr')}
+            className="btn btn-sm"
+          />
         </div>
       </section>
 

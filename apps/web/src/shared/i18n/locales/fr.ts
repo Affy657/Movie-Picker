@@ -574,6 +574,10 @@
     memberSince: 'Membre depuis {{date}}',
     copyLink: 'Copier le lien du profil',
     linkCopied: 'Lien copié !',
+    showQr: 'Afficher le QR code du profil',
+    closeQr: 'Fermer le QR code',
+    qrTitle: 'QR code — lien vers le profil',
+    qrHint: "Ouvrez l'appareil photo pour accéder au profil sur mobile.",
     follow: {
       follow: 'Suivre',
       unfollow: 'Ne plus suivre',
