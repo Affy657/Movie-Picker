@@ -123,7 +123,7 @@ export default defineConfig(({ mode }) => {
           short_name: 'Movie Picker',
           description:
             'Organisez une soirée cinéma : créez un événement, partagez le lien, proposez des films, votez et tirez au sort.',
-          theme_color: '#1d4ed8',
+          theme_color: '#0a0f1c',
           background_color: '#0f172a',
           display: 'standalone',
           orientation: 'portrait',

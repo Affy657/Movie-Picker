@@ -553,7 +553,7 @@ export const en: Locale = {
     tmdbPrefix: 'Data provided by',
     tmdbSuffix: '. Ratings and availability are indicative.',
     tmdbLinkAria: 'TMDB — open The Movie Database (new tab)',
-    copyright: '© {{year}} Movie Picker',
+    copyright: '© {{year}} Movie Picker v{{version}}',
   },
 
   profile: {

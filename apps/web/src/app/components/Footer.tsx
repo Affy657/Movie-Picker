@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import { Link } from 'react-router-dom';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
+import { APP_VERSION } from '@/shared/appVersion';
 import styles from './Footer.module.css';
 
 type FooterProps = {
@@ -128,7 +129,9 @@ export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>
           </a>
           {t('footer.tmdbSuffix')}
         </p>
-        <p className={styles.copyright}>{t('footer.copyright', { year: String(CURRENT_YEAR) })}</p>
+        <p className={styles.copyright}>
+          {t('footer.copyright', { year: String(CURRENT_YEAR), version: APP_VERSION })}
+        </p>
       </div>
     </footer>
   );

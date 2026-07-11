@@ -564,7 +564,7 @@
     tmdbPrefix: 'Données fournies par',
     tmdbSuffix: '. Les notes et disponibilités sont indicatives.',
     tmdbLinkAria: 'TMDB — ouvrir The Movie Database (nouvel onglet)',
-    copyright: '© {{year}} Movie Picker',
+    copyright: '© {{year}} Movie Picker v{{version}}',
   },
 
   profile: {

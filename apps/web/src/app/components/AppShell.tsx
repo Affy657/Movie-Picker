@@ -68,30 +68,32 @@ export default function AppShell() {
         {t('nav.skipToMain')}
       </a>
       <header className={styles.header}>
-        <Link to={ROUTES.home} className={styles.brand} aria-label={t('nav.brandLabel')}>
-          <img
-            src="/logo.svg"
-            alt=""
-            width={32}
-            height={32}
-            className={styles.brandLogo}
-            decoding="async"
-          />
-          <span className={styles.brandName}>Movie Picker</span>
-        </Link>
-        {isAuthenticated ? (
-          <>
-            <nav className={styles.navDesktop} aria-label={t('nav.navLabel')}>
-              {items.map((item) => (
-                <DesktopNavItem key={item.to} {...item} />
-              ))}
-            </nav>
-            <div className={styles.navActions}>
-              <InboxBell />
-              <UserMenu user={user} />
-            </div>
-          </>
-        ) : null}
+        <div className={styles.headerInner}>
+          <Link to={ROUTES.home} className={styles.brand} aria-label={t('nav.brandLabel')}>
+            <img
+              src="/logo.svg"
+              alt=""
+              width={32}
+              height={32}
+              className={styles.brandLogo}
+              decoding="async"
+            />
+            <span className={styles.brandName}>Movie Picker</span>
+          </Link>
+          {isAuthenticated ? (
+            <>
+              <nav className={styles.navDesktop} aria-label={t('nav.navLabel')}>
+                {items.map((item) => (
+                  <DesktopNavItem key={item.to} {...item} />
+                ))}
+              </nav>
+              <div className={styles.navActions}>
+                <InboxBell />
+                <UserMenu user={user} />
+              </div>
+            </>
+          ) : null}
+        </div>
       </header>
       <div className={styles.content}>
         <Outlet />

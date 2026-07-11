@@ -182,9 +182,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  /* Le crénage de la police laisse plus de blanc sous la ligne de base que
-     dessus ; sans ce nudge le pseudo paraît décalé sous le centre de l'avatar. */
-  transform: translateY(-0.08em);
+  /* Le centrage flex se base sur la boîte de ligne (ascent+descent de la
+     police), pas sur l'encre réelle des lettres ; sans descendante (g/j/p/q/y),
+     le pseudo paraît décalé au-dessus du centre de l'avatar sans ce nudge. */
+  transform: translateY(0.13em);
 }
 
 .addNote {

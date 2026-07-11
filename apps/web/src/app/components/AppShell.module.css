@@ -43,6 +43,22 @@
 }
 
 .header {
+  width: 100%;
+  padding-top: env(safe-area-inset-top, 0);
+  box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--color-nav-bg);
+  border-bottom: 1px solid var(--color-border-subtle);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+}
+
+/* Séparé de .header pour que le padding de la safe-area (au-dessus) ne
+   déséquilibre pas le centrage vertical de cette rangée : .header peut
+   grandir vers le haut sans jamais décaler le logo/les icônes du centre. */
+.headerInner {
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
@@ -52,13 +68,6 @@
   padding: 0 1.25rem 0 1.1rem;
   min-height: var(--header-height);
   box-sizing: border-box;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  background: var(--color-nav-bg);
-  border-bottom: 1px solid var(--color-border-subtle);
-  backdrop-filter: saturate(180%) blur(12px);
-  -webkit-backdrop-filter: saturate(180%) blur(12px);
 }
 
 :global([data-theme='dark']) .header {
