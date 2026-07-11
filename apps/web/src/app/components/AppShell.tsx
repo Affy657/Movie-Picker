@@ -70,7 +70,7 @@ export default function AppShell() {
       <header className={styles.header}>
         <Link to={ROUTES.home} className={styles.brand} aria-label={t('nav.brandLabel')}>
           <img
-            src="/favicon.svg"
+            src="/logo.svg"
             alt=""
             width={32}
             height={32}
