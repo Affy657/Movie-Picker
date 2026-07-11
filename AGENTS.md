@@ -34,7 +34,6 @@ Monorepo pnpm + Turbo :
 
 - **Roadmap produit** (features par version, statuts) → [`docs/roadmap-product.md`](docs/roadmap-product.md)
 - **Roadmap tech** (infra, CI/CD, qualité, sécurité) → [`docs/roadmap-tech.md`](docs/roadmap-tech.md)
-- **Bugs & dette** (fixes en cours et backlog) → [`docs/FIXES.md`](docs/FIXES.md)
 
 ## Accès outils externes (autonomie agent)
 
