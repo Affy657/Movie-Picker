@@ -79,6 +79,7 @@
   width: 2rem;
   height: 2rem;
   flex-shrink: 0;
+  transform: translateY(-1px);
 }
 
 .brandName {
