@@ -41,6 +41,8 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
                 filters?.YearTo,
                 filters?.VoteMin,
                 filters?.OriginalLanguage,
+                filters?.RuntimeMin,
+                filters?.RuntimeMax,
                 ct);
         }
         catch (HttpRequestException)
@@ -54,8 +56,16 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
         var maxLookups = Math.Clamp(_options.TmdbSearchMaxWatchProviderLookups, 0, 20);
         var maxParallelism = Math.Clamp(_options.TmdbListEnrichmentMaxParallelism, 1, 16);
 
+        // TMDB's text search endpoint doesn't return runtime or accept a runtime filter, so when the
+        // user filters by duration on a text query we must enrich every candidate (not just the
+        // configured lookup cap) to know their runtime before filtering the response.
+        var hasTextQuery = !string.IsNullOrWhiteSpace(query);
+        var hasRuntimeFilter = filters?.RuntimeMin.HasValue == true || filters?.RuntimeMax.HasValue == true;
+        var runtimeFilterNeedsEnrichment = hasRuntimeFilter && hasTextQuery;
+        var lookupCount = runtimeFilterNeedsEnrichment ? rows.Count : maxLookups;
+
         var enrichmentsByKey = new ConcurrentDictionary<(int, string), TmdbMovieEnrichment?>();
-        var toEnrich = rows.Take(maxLookups).Select(r => (r.Id, r.MediaType)).Distinct().ToList();
+        var toEnrich = rows.Take(lookupCount).Select(r => (r.Id, r.MediaType)).Distinct().ToList();
         if (toEnrich.Count > 0)
         {
             await Parallel.ForEachAsync(
@@ -87,6 +97,9 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
                 runtime = enr.RuntimeMinutes;
             }
 
+            if (runtimeFilterNeedsEnrichment && !MatchesRuntime(runtime, filters!.RuntimeMin, filters.RuntimeMax))
+                continue;
+
             items.Add(
                 new MovieSearchItemResponse
                 {
@@ -110,4 +123,9 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
             TmdbAttributionUrl = TmdbHomeUrl
         };
     }
+
+    private static bool MatchesRuntime(int? runtime, int? runtimeMin, int? runtimeMax) =>
+        runtime.HasValue
+        && (!runtimeMin.HasValue || runtime.Value >= runtimeMin.Value)
+        && (!runtimeMax.HasValue || runtime.Value <= runtimeMax.Value);
 }

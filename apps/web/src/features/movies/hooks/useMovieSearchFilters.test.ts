@@ -11,6 +11,7 @@ describe('useMovieSearchFilters', () => {
     expect(result.current.voteMin).toBeUndefined();
     expect(result.current.selectedLanguage).toBeUndefined();
     expect(result.current.availabilityFilter).toBeUndefined();
+    expect(result.current.runtimeRange).toEqual([10, 180]);
     expect(result.current.hasApiFilters).toBe(false);
     expect(result.current.activeFilterChips).toEqual([]);
     expect(result.current.activeFilters).toEqual({
@@ -19,6 +20,8 @@ describe('useMovieSearchFilters', () => {
       yearTo: undefined,
       voteMin: undefined,
       originalLanguage: undefined,
+      runtimeMin: undefined,
+      runtimeMax: undefined,
     });
     expect(result.current.filterChangedRef.current).toBe(false);
   });
@@ -92,6 +95,7 @@ describe('useMovieSearchFilters', () => {
       result.current.toggleVoteMin(7);
       result.current.toggleLanguage('en');
       result.current.toggleAvailability('rent');
+      result.current.changeRuntimeRange(30, 90);
     });
     act(() => result.current.clearAllFilters());
     expect(result.current.selectedGenres).toEqual([]);
@@ -99,7 +103,36 @@ describe('useMovieSearchFilters', () => {
     expect(result.current.voteMin).toBeUndefined();
     expect(result.current.selectedLanguage).toBeUndefined();
     expect(result.current.availabilityFilter).toBeUndefined();
+    expect(result.current.runtimeRange).toEqual([10, 180]);
     expect(result.current.hasApiFilters).toBe(false);
+  });
+
+  it('changeRuntimeRange met a jour la plage et expose runtimeMin/runtimeMax', () => {
+    const { result } = renderHook(() => useMovieSearchFilters('fr'));
+    act(() => result.current.changeRuntimeRange(30, 90));
+    expect(result.current.runtimeRange).toEqual([30, 90]);
+    expect(result.current.activeFilters.runtimeMin).toBe(30);
+    expect(result.current.activeFilters.runtimeMax).toBe(90);
+    expect(result.current.hasApiFilters).toBe(true);
+    expect(result.current.filterChangedRef.current).toBe(true);
+  });
+
+  it('changeRuntimeRange aux bornes ne produit aucun filtre actif', () => {
+    const { result } = renderHook(() => useMovieSearchFilters('fr'));
+    act(() => result.current.changeRuntimeRange(10, 180));
+    expect(result.current.activeFilters.runtimeMin).toBeUndefined();
+    expect(result.current.activeFilters.runtimeMax).toBeUndefined();
+    expect(result.current.hasApiFilters).toBe(false);
+  });
+
+  it('chip duree : onRemove reinitialise la plage', () => {
+    const { result } = renderHook(() => useMovieSearchFilters('fr'));
+    act(() => result.current.changeRuntimeRange(60, 120));
+    const chip = result.current.activeFilterChips.find((c) => c.key === 'runtime')!;
+    expect(chip.label).toBe('1h - 2h');
+    act(() => chip.onRemove());
+    expect(result.current.runtimeRange).toEqual([10, 180]);
+    expect(result.current.activeFilters.runtimeMin).toBeUndefined();
   });
 
   it('construit les chips actifs avec les bons libelles (fr)', () => {

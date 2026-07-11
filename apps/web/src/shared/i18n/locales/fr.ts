@@ -400,6 +400,9 @@
       filterVoteMin: 'Note min.',
       filterLanguage: 'Langue VO',
       filterAvailability: 'Disponibilité',
+      filterDuration: 'Durée',
+      durationMinAria: 'Durée minimum',
+      durationMaxAria: 'Durée maximum',
       noResultsAvailability:
         'Aucun film disponible avec ce mode de visionnage parmi les résultats.',
       removeFilterAria: 'Retirer ce filtre',

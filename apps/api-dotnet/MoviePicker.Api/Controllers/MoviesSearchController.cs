@@ -27,6 +27,8 @@ public sealed class MoviesSearchController : ControllerBase
         [FromQuery] int? yearTo,
         [FromQuery] double? voteMin,
         [FromQuery] string? language,
+        [FromQuery] int? runtimeMin,
+        [FromQuery] int? runtimeMax,
         [FromServices] ISearchMoviesHandler handler,
         [FromServices] IEventRepository eventRepository,
         CancellationToken ct)
@@ -47,8 +49,10 @@ public sealed class MoviesSearchController : ControllerBase
 
         var parsedGenreIds = ParseGenreIds(genreIds);
         MovieSearchFilters? filters = null;
-        if (parsedGenreIds.Count > 0 || yearFrom.HasValue || yearTo.HasValue || voteMin.HasValue || !string.IsNullOrWhiteSpace(language))
-            filters = new MovieSearchFilters(parsedGenreIds, yearFrom, yearTo, voteMin, language?.Trim().ToLowerInvariant());
+        if (parsedGenreIds.Count > 0 || yearFrom.HasValue || yearTo.HasValue || voteMin.HasValue
+            || !string.IsNullOrWhiteSpace(language) || runtimeMin.HasValue || runtimeMax.HasValue)
+            filters = new MovieSearchFilters(
+                parsedGenreIds, yearFrom, yearTo, voteMin, language?.Trim().ToLowerInvariant(), runtimeMin, runtimeMax);
 
         var results = await handler.HandleAsync(q ?? string.Empty, allowSeries, filters, ct);
         return Ok(results);

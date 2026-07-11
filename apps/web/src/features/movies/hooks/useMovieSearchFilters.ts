@@ -5,8 +5,11 @@ import type { RatingScale } from '@/shared/types/theme';
 import {
   AVAILABILITY_OPTIONS,
   LANGUAGE_OPTIONS,
+  RUNTIME_MAX_MINUTES,
+  RUNTIME_MIN_MINUTES,
   VOTE_MIN_OPTIONS,
   localizedName,
+  runtimeRangeLabel,
   voteMinLabel,
 } from '@/features/movies/components/movieSearchFilterOptions';
 
@@ -23,11 +26,17 @@ export function useMovieSearchFilters(tmdbLanguage: string, ratingScale?: Rating
   const [voteMin, setVoteMin] = useState<number | undefined>(undefined);
   const [selectedLanguage, setSelectedLanguage] = useState<string | undefined>(undefined);
   const [availabilityFilter, setAvailabilityFilter] = useState<string | undefined>(undefined);
+  const [runtimeRange, setRuntimeRange] = useState<[number, number]>([
+    RUNTIME_MIN_MINUTES,
+    RUNTIME_MAX_MINUTES,
+  ]);
 
   const filterChangedRef = useRef(false);
 
   const yearFrom = selectedDecade ? Number.parseInt(selectedDecade, 10) : undefined;
   const yearTo = selectedDecade ? Number.parseInt(selectedDecade, 10) + 9 : undefined;
+  const runtimeMin = runtimeRange[0] > RUNTIME_MIN_MINUTES ? runtimeRange[0] : undefined;
+  const runtimeMax = runtimeRange[1] < RUNTIME_MAX_MINUTES ? runtimeRange[1] : undefined;
 
   const activeFilters: MovieSearchFilters = useMemo(
     () => ({
@@ -36,8 +45,10 @@ export function useMovieSearchFilters(tmdbLanguage: string, ratingScale?: Rating
       yearTo,
       voteMin,
       originalLanguage: selectedLanguage,
+      runtimeMin,
+      runtimeMax,
     }),
-    [selectedGenres, yearFrom, yearTo, voteMin, selectedLanguage]
+    [selectedGenres, yearFrom, yearTo, voteMin, selectedLanguage, runtimeMin, runtimeMax]
   );
 
   const hasApiFilters = useMemo(
@@ -45,8 +56,10 @@ export function useMovieSearchFilters(tmdbLanguage: string, ratingScale?: Rating
       selectedGenres.length > 0 ||
       selectedDecade !== undefined ||
       voteMin !== undefined ||
-      selectedLanguage !== undefined,
-    [selectedGenres, selectedDecade, voteMin, selectedLanguage]
+      selectedLanguage !== undefined ||
+      runtimeMin !== undefined ||
+      runtimeMax !== undefined,
+    [selectedGenres, selectedDecade, voteMin, selectedLanguage, runtimeMin, runtimeMax]
   );
 
   const toggleGenre = useCallback((id: number) => {
@@ -73,6 +86,11 @@ export function useMovieSearchFilters(tmdbLanguage: string, ratingScale?: Rating
     setAvailabilityFilter((prev) => (prev === type ? undefined : type));
   }, []);
 
+  const changeRuntimeRange = useCallback((min: number, max: number) => {
+    filterChangedRef.current = true;
+    setRuntimeRange([min, max]);
+  }, []);
+
   const clearAllFilters = useCallback(() => {
     filterChangedRef.current = true;
     setSelectedGenres([]);
@@ -80,6 +98,7 @@ export function useMovieSearchFilters(tmdbLanguage: string, ratingScale?: Rating
     setVoteMin(undefined);
     setSelectedLanguage(undefined);
     setAvailabilityFilter(undefined);
+    setRuntimeRange([RUNTIME_MIN_MINUTES, RUNTIME_MAX_MINUTES]);
   }, []);
 
   const removeGenre = useCallback((id: number) => {
@@ -139,6 +158,16 @@ export function useMovieSearchFilters(tmdbLanguage: string, ratingScale?: Rating
         onRemove: () => setAvailabilityFilter(undefined),
       });
     }
+    if (runtimeMin !== undefined || runtimeMax !== undefined) {
+      chips.push({
+        key: 'runtime',
+        label: `${runtimeRangeLabel(runtimeRange[0], tmdbLanguage)} - ${runtimeRangeLabel(runtimeRange[1], tmdbLanguage)}`,
+        onRemove: () => {
+          filterChangedRef.current = true;
+          setRuntimeRange([RUNTIME_MIN_MINUTES, RUNTIME_MAX_MINUTES]);
+        },
+      });
+    }
     return chips;
   }, [
     selectedGenres,
@@ -146,6 +175,9 @@ export function useMovieSearchFilters(tmdbLanguage: string, ratingScale?: Rating
     voteMin,
     selectedLanguage,
     availabilityFilter,
+    runtimeMin,
+    runtimeMax,
+    runtimeRange,
     tmdbLanguage,
     ratingScale,
     removeGenre,
@@ -159,11 +191,13 @@ export function useMovieSearchFilters(tmdbLanguage: string, ratingScale?: Rating
     voteMin,
     selectedLanguage,
     availabilityFilter,
+    runtimeRange,
     toggleGenre,
     toggleVoteMin,
     toggleDecade,
     toggleLanguage,
     toggleAvailability,
+    changeRuntimeRange,
     clearAllFilters,
     activeFilters,
     hasApiFilters,

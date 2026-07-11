@@ -28,7 +28,8 @@ public sealed class SearchMoviesHandlerTests
     public async Task HandleAsync_TmdbHttpFailure_ThrowsServiceUnavailable()
     {
         _tmdb.Setup(t => t.SearchAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<int>?>(),
-                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("boom"));
         var sut = Build();
 
@@ -39,7 +40,8 @@ public sealed class SearchMoviesHandlerTests
     public async Task HandleAsync_WithoutEnrichment_MapsRowsAndDefaults()
     {
         _tmdb.Setup(t => t.SearchAsync("inception", true, It.IsAny<IReadOnlyList<int>?>(),
-                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([new TmdbSearchItem(1, MovieMediaType.Movie, "Inception", "2010", "/p.jpg", 8.4)]);
         var sut = Build(new MoviePickerOptions { TmdbApiKey = "key", TmdbSearchMaxWatchProviderLookups = 0 });
 
@@ -60,7 +62,8 @@ public sealed class SearchMoviesHandlerTests
     public async Task HandleAsync_WithEnrichment_FillsProvidersRuntimeAndVoteFallback()
     {
         _tmdb.Setup(t => t.SearchAsync("inception", true, It.IsAny<IReadOnlyList<int>?>(),
-                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([new TmdbSearchItem(1, MovieMediaType.Movie, "Inception", "2010", "/p.jpg", VoteAverage: null)]);
         _tmdb.Setup(t => t.GetEnrichmentAsync(1, MovieMediaType.Movie, "FR", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TmdbMovieEnrichment(
@@ -82,10 +85,40 @@ public sealed class SearchMoviesHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_TextQueryWithRuntimeFilter_EnrichesAllRowsAndDropsOutOfRange()
+    {
+        _tmdb.Setup(t => t.SearchAsync("inception", true, It.IsAny<IReadOnlyList<int>?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
+                90, 120, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                new TmdbSearchItem(1, MovieMediaType.Movie, "InRange", "2010", "/p.jpg"),
+                new TmdbSearchItem(2, MovieMediaType.Movie, "TooShort", "2011", "/p.jpg"),
+                new TmdbSearchItem(3, MovieMediaType.Movie, "Unknown", "2012", "/p.jpg"),
+            ]);
+        _tmdb.Setup(t => t.GetEnrichmentAsync(1, MovieMediaType.Movie, "FR", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TmdbMovieEnrichment(null, [], null, 100));
+        _tmdb.Setup(t => t.GetEnrichmentAsync(2, MovieMediaType.Movie, "FR", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TmdbMovieEnrichment(null, [], null, 45));
+        _tmdb.Setup(t => t.GetEnrichmentAsync(3, MovieMediaType.Movie, "FR", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TmdbMovieEnrichment?)null);
+        var sut = Build(new MoviePickerOptions { TmdbApiKey = "key", TmdbSearchMaxWatchProviderLookups = 0 });
+        var filters = new MovieSearchFilters(Array.Empty<int>(), null, null, RuntimeMin: 90, RuntimeMax: 120);
+
+        var result = await sut.HandleAsync("inception", true, filters);
+
+        var item = Assert.Single(result.Items);
+        Assert.Equal(1, item.Id);
+        Assert.Equal(100, item.RuntimeMinutes);
+        _tmdb.Verify(t => t.GetEnrichmentAsync(3, MovieMediaType.Movie, "FR", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task HandleAsync_NormalizesRegionFromOptions()
     {
         _tmdb.Setup(t => t.SearchAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<int>?>(),
-                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
         var sut = Build(new MoviePickerOptions { TmdbApiKey = "key", TmdbWatchProvidersRegion = " us " });
 

@@ -41,6 +41,8 @@ public interface ITmdbMovieSearch
         int? yearTo = null,
         double? voteMin = null,
         string? originalLanguage = null,
+        int? runtimeMin = null,
+        int? runtimeMax = null,
         CancellationToken ct = default);
 
     Task<TmdbMovieEnrichment?> GetEnrichmentAsync(int tmdbId, MovieMediaType mediaType, string region, CancellationToken ct = default);

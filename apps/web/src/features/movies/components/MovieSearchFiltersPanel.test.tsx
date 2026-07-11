@@ -22,11 +22,13 @@ function renderPanel(overrides: Partial<PanelProps> = {}) {
     voteMin: undefined,
     selectedLanguage: undefined,
     availabilityFilter: undefined,
+    runtimeRange: [10, 180],
     onToggleGenre: vi.fn(),
     onToggleDecade: vi.fn(),
     onToggleVoteMin: vi.fn(),
     onToggleLanguage: vi.fn(),
     onToggleAvailability: vi.fn(),
+    onChangeRuntimeRange: vi.fn(),
     ...overrides,
   };
   render(
