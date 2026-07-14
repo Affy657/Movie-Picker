@@ -117,7 +117,7 @@ export default function CreateEvent() {
 
   const { run: submit, loading, error } = useAsyncAction(createAction, 'Création impossible');
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     void submit();
   };

@@ -57,7 +57,7 @@ function ChangePasswordSection() {
     clearError,
   } = useAsyncAction(changeAction, t('auth.account.changePasswordFallbackError'));
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setValidationError(null);
     clearError();
@@ -249,7 +249,7 @@ function DeleteAccountSection() {
     clearError,
   } = useAsyncAction(deleteAction, t('auth.account.deleteAccountFallbackError'));
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setValidationError(null);
     clearError();

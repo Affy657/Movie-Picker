@@ -25,7 +25,7 @@ export default function ForgotPasswordPage() {
     error,
   } = useAsyncAction(requestAction, t('auth.forgotPassword.fallbackError'));
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     void submit();
   };

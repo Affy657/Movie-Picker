@@ -40,7 +40,7 @@ export default function JoinForm({
 
   const { run: submit, loading, error } = useAsyncAction(joinAction, 'Impossible de rejoindre');
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     void submit();
   };
