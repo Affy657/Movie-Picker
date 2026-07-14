@@ -1,6 +1,6 @@
-import { useEffect, useId, useRef } from 'react';
+import { useId } from 'react';
 import { X } from 'lucide-react';
-import { useDialogOpen } from '@/shared/hooks/useDialogOpen';
+import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import { useTranslation } from '@/shared/i18n';
 import type { WatchProviderOffer } from '@/shared/types/movie';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
@@ -22,30 +22,8 @@ export default function WatchProvidersModal({
   onClose,
 }: Readonly<WatchProvidersModalProps>) {
   const { t } = useTranslation();
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const dialogRef = useModalDialog(open, onClose);
   const titleId = useId();
-
-  const onCloseRef = useRef(onClose);
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
-
-  useDialogOpen(dialogRef, open);
-
-  useEffect(() => {
-    const dlg = dialogRef.current;
-    if (!dlg) return;
-    const handleClose = () => onCloseRef.current();
-    const handleBackdropClick = (e: MouseEvent) => {
-      if (e.target === dlg) onCloseRef.current();
-    };
-    dlg.addEventListener('close', handleClose);
-    dlg.addEventListener('click', handleBackdropClick);
-    return () => {
-      dlg.removeEventListener('close', handleClose);
-      dlg.removeEventListener('click', handleBackdropClick);
-    };
-  }, []);
 
   return (
     <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>

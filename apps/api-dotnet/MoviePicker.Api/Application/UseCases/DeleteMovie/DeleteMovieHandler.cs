@@ -1,5 +1,5 @@
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Domain;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.DeleteMovie;
@@ -34,23 +34,15 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
 
     public async Task HandleAsync(string idOrSlug, string movieId, string participantId, CancellationToken ct = default)
     {
-        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
-
-        if (evt.IsFinished(DateTimeOffset.UtcNow))
-            throw new ConflictException("Soirée terminée. Lecture seule.");
-
-        if (!string.IsNullOrEmpty(evt.WinnerMovieId))
-            throw new ConflictException("La roue a déjà été lancée, suppression impossible");
-
-        var movie = await _movieRepository.GetByIdAndEventIdAsync(movieId, evt.Id, ct);
-        if (movie is null)
-            throw new NotFoundException("Film introuvable");
-
-        var currentUserId = _currentUserAccessor.GetUserId();
-        var isHost = EventHost.IsHost(
-            evt,
-            _hostTokenAccessor.GetHostToken(),
-            currentUserId);
+        var (evt, movie, currentUserId, isHost) = await MovieActionContext.ResolveMovieForHostActionAsync(
+            _eventRepository,
+            _movieRepository,
+            _hostTokenAccessor,
+            _currentUserAccessor,
+            idOrSlug,
+            movieId,
+            "La roue a déjà été lancée, suppression impossible",
+            ct);
 
         var isProposer = false;
         if (!isHost)

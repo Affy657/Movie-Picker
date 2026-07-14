@@ -1,11 +1,9 @@
 import { memo } from 'react';
-import { ChevronDown, MessageSquarePlus } from 'lucide-react';
-import Avatar from '@/shared/components/Avatar';
-import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
 import { ModeIcon, TYPE_ORDER } from '@/features/movies/components/WatchProviderChips';
-import WatchProvidersModal from '@/features/movies/components/WatchProvidersModal';
 import {
   CardKebab,
+  CardModals,
+  CardProposerFooter,
   MovieNote,
   SeenButton,
   VoteBar,
@@ -160,56 +158,12 @@ export const MovieCardGrid = memo(function MovieCardGrid({
           )}
 
           <div className={styles.footRow}>
-            <span className={styles.proposer}>
-              <Avatar avatarId={s.proposerAvatarId} pseudo={m.proposerPseudo} size="xs" />
-              <span className={styles.proposerName}>{m.proposerPseudo}</span>
-              {s.showAddNote && (
-                <button
-                  type="button"
-                  className={styles.addNote}
-                  onClick={() => s.setNoteEditing(true)}
-                  aria-label={t('movies.pitchNote.addButton')}
-                  title={t('movies.pitchNote.addButton')}
-                >
-                  <MessageSquarePlus aria-hidden size={15} />
-                </button>
-              )}
-            </span>
-            {s.hasDetails && (
-              <button
-                type="button"
-                className={styles.detailsToggle}
-                aria-haspopup="dialog"
-                aria-expanded={s.detailsOpen}
-                onClick={() => s.setDetailsOpen(true)}
-              >
-                <span>{t('movies.details.toggleShow')}</span>
-                <ChevronDown aria-hidden size={14} />
-              </button>
-            )}
+            <CardProposerFooter s={s} m={m} t={t} />
           </div>
         </div>
       </div>
 
-      {s.hasDetails && (
-        <MovieDetailsModal
-          open={s.detailsOpen}
-          movieTitle={m.title}
-          tmdbId={m.tmdbId}
-          mediaType={m.mediaType}
-          onClose={() => s.setDetailsOpen(false)}
-        />
-      )}
-
-      {s.providers.length > 0 && (
-        <WatchProvidersModal
-          open={s.providersOpen}
-          movieTitle={m.title}
-          providers={s.providers}
-          watchPageUrl={m.tmdbWatchPageUrl}
-          onClose={() => s.setProvidersOpen(false)}
-        />
-      )}
+      <CardModals s={s} m={m} />
     </li>
   );
 });

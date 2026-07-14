@@ -4,15 +4,15 @@
 # ne tourne que si sa lane est impactée (skip sinon). workflow_dispatch force les 2 lanes.
 #   - Lane web : lint-web, test-web, lighthouse, deploy-front.
 #   - Lane api : lint-api, test-api, docker-api, deploy-api.
-#   - Transverses : gitleaks (toujours), audit npm/NuGet, sonar (analyse globale, non bloquante).
-#   - E2E Playwright : job CI non bloquant (continue-on-error) + exécution locale.
+#   - Transverses : gitleaks (toujours), audit npm/NuGet, sonar (analyse globale + Quality Gate bloquant).
+#   - E2E Playwright : job CI bloquant (gate du déploiement) + exécution locale.
 #
 # Durcissement sécurité :
 #   - Actions épinglées par SHA de commit (anti supply-chain) ; le commentaire # vX permet à Dependabot de proposer les MAJ.
 #   - Images Docker (base .NET + gitleaks) épinglées par digest sha256.
 #   - permissions least-privilege (deny par défaut) ; checkout avec persist-credentials: false.
 #   - Secrets passés via env: (jamais interpolés directement dans un bloc run:).
-#   - Quality Gate SonarCloud informatif — ne bloque pas le déploiement.
+#   - Quality Gate SonarCloud bloquant — un QG rouge fait échouer le job et bloque le déploiement.
 #   - concurrency: group cd-<ref> — cancel-in-progress sur PR / false sur master.
 #   - timeout-minutes sur chaque job ; caches NuGet / Turbo / Trivy.
 #   - docker-api : scan Trivy (CRITICAL bloquant ; HIGH bloquant si fix dispo) + cache de layers GHA.
@@ -283,12 +283,11 @@ jobs:
           retention-days: 7
 
   lighthouse:
-    name: Lighthouse front (rapport, non bloquant)
+    name: Lighthouse front (seuils bloquants)
     needs: changes
     if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    continue-on-error: true
     permissions:
       contents: read
     steps:
@@ -307,12 +306,11 @@ jobs:
           retention-days: 7
 
   e2e:
-    name: E2E Playwright (non bloquant)
+    name: E2E Playwright (bloquant)
     needs: changes
     if: needs.changes.outputs.web == 'true' || needs.changes.outputs.api == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    continue-on-error: true
     permissions:
       contents: read
     steps:
@@ -335,7 +333,7 @@ jobs:
           retention-days: 7
 
   sonar:
-    name: SonarCloud (analyse + couverture ; QG non bloquant)
+    name: SonarCloud (analyse + couverture ; QG bloquant)
     needs: [changes, test-web, test-api]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -430,8 +428,7 @@ jobs:
             --collect:"XPlat Code Coverage" \
             --settings apps/api-dotnet/coverlet.runsettings \
             --results-directory apps/api-dotnet/MoviePicker.Api.Tests/TestResults
-      - name: Quality Gate (informatif — n'échoue pas le job)
-        continue-on-error: true
+      - name: Quality Gate (bloquant — échoue le job si le QG est rouge)
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
@@ -509,7 +506,7 @@ jobs:
     name: Deploy API → Cloud Run
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    needs: docker-api
+    needs: [docker-api, e2e, sonar]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     environment: production
     permissions:
@@ -566,7 +563,7 @@ jobs:
     name: Deploy Front → S3 & CloudFront
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    needs: [changes, lint-web, test-web, audit]
+    needs: [changes, lint-web, test-web, audit, lighthouse, e2e, sonar]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master' && needs.changes.outputs.web == 'true'
     environment: production
     permissions:

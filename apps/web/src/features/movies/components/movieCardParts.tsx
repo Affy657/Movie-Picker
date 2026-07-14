@@ -7,6 +7,7 @@ import {
   ChevronUp,
   ExternalLink,
   Eye,
+  MessageSquarePlus,
   MoreVertical,
   Quote,
   ThumbsDown,
@@ -16,6 +17,8 @@ import {
 } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
 import Tooltip from '@/shared/components/Tooltip';
+import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
+import WatchProvidersModal from '@/features/movies/components/WatchProvidersModal';
 import type { MovieData } from '@/shared/types/movie';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
 import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
@@ -580,5 +583,78 @@ export function CardKebab({
           document.body
         )}
     </div>
+  );
+}
+
+export function CardProposerFooter({
+  s,
+  m,
+  t,
+}: Readonly<{
+  s: ReturnType<typeof useMovieCardState>;
+  m: MovieData;
+  t: Translate;
+}>) {
+  return (
+    <>
+      <span className={styles.proposer}>
+        <Avatar avatarId={s.proposerAvatarId} pseudo={m.proposerPseudo} size="xs" />
+        <span className={styles.proposerName}>{m.proposerPseudo}</span>
+        {s.showAddNote && (
+          <button
+            type="button"
+            className={styles.addNote}
+            onClick={() => s.setNoteEditing(true)}
+            aria-label={t('movies.pitchNote.addButton')}
+            title={t('movies.pitchNote.addButton')}
+          >
+            <MessageSquarePlus aria-hidden size={15} />
+          </button>
+        )}
+      </span>
+      {s.hasDetails && (
+        <button
+          type="button"
+          className={styles.detailsToggle}
+          aria-haspopup="dialog"
+          aria-expanded={s.detailsOpen}
+          onClick={() => s.setDetailsOpen(true)}
+        >
+          <span>{t('movies.details.toggleShow')}</span>
+          <ChevronDown aria-hidden size={14} />
+        </button>
+      )}
+    </>
+  );
+}
+
+export function CardModals({
+  s,
+  m,
+}: Readonly<{
+  s: ReturnType<typeof useMovieCardState>;
+  m: MovieData;
+}>) {
+  return (
+    <>
+      {s.hasDetails && (
+        <MovieDetailsModal
+          open={s.detailsOpen}
+          movieTitle={m.title}
+          tmdbId={m.tmdbId}
+          mediaType={m.mediaType}
+          onClose={() => s.setDetailsOpen(false)}
+        />
+      )}
+      {s.providers.length > 0 && (
+        <WatchProvidersModal
+          open={s.providersOpen}
+          movieTitle={m.title}
+          providers={s.providers}
+          watchPageUrl={m.tmdbWatchPageUrl}
+          onClose={() => s.setProvidersOpen(false)}
+        />
+      )}
+    </>
   );
 }

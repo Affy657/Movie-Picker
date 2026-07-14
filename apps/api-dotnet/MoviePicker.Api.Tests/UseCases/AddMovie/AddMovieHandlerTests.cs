@@ -191,7 +191,7 @@ public sealed class AddMovieHandlerTests
         await _sut.HandleAsync("evt1", Request(participant.Id), null);
 
         Assert.NotNull(inserted);
-        Assert.Equal(new[] { 28, 878 }, inserted!.GenreIds);
+        Assert.Equal(GenreIds, inserted!.GenreIds);
     }
 
     [Fact]

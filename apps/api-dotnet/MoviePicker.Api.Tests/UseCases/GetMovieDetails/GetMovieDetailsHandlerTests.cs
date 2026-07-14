@@ -38,6 +38,7 @@ public sealed class GetMovieDetailsHandlerTests
 
     private static readonly string[] Cast = new[] { "Leonardo DiCaprio", "Joseph Gordon-Levitt" };
     private static readonly string[] Genres = new[] { "Action", "Science-fiction" };
+    private static readonly int[] GenreIds = new[] { 28, 878 };
 
     [Fact]
     public async Task HandleAsync_TmdbReturnsDetails_MapsAllFields()
@@ -52,7 +53,7 @@ public sealed class GetMovieDetailsHandlerTests
             Cast: Cast,
             Runtime: 148,
             Genres: Genres,
-            GenreIds: new[] { 28, 878 },
+            GenreIds: GenreIds,
             ReleaseDate: "2010-07-16",
             TrailerUrl: "https://www.youtube.com/watch?v=abc");
         tmdb.Setup(t => t.GetDetailsAsync(27205, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
@@ -66,9 +67,9 @@ public sealed class GetMovieDetailsHandlerTests
         Assert.Equal("Un voleur qui explore les rêves.", result.Overview);
         Assert.Equal("Votre esprit est la scène du crime.", result.Tagline);
         Assert.Equal("Christopher Nolan", result.Director);
-        Assert.Equal(new[] { "Leonardo DiCaprio", "Joseph Gordon-Levitt" }, result.Cast);
+        Assert.Equal(Cast, result.Cast);
         Assert.Equal(148, result.RuntimeMinutes);
-        Assert.Equal(new[] { "Action", "Science-fiction" }, result.Genres);
+        Assert.Equal(Genres, result.Genres);
         Assert.Equal("2010-07-16", result.ReleaseDate);
         Assert.Equal("https://www.youtube.com/watch?v=abc", result.TrailerUrl);
     }
