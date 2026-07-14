@@ -8,6 +8,17 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Changed
+
+- Portes de qualité CI désormais **bloquantes** (Quality Gate SonarCloud, Lighthouse, E2E Playwright) : un échec fait échouer le pipeline et bloque le déploiement.
+- Réduction de la duplication de code : factorisation des handlers d'action sur un film (vote, « déjà vu », note de pitch, suppression), fermeture des modales mutualisée (`useModalDialog`), pied de carte film partagé entre les vues grille et liste.
+
+### Fixed
+
+- Résolution des 7 signalements SonarCloud restants (règle CA1861 : tableaux constants hissés en `static readonly`).
+
+### À faire
+
 - Préparation V1.4 : sélection manuelle du film et flamme de régularité (streak).
 
 ## [1.3.1] - 2026-07-08
