@@ -85,4 +85,20 @@ public static partial class TmdbPosterUrlNormalizer
 
         return true;
     }
+
+    public static string? ToPublicPosterPath(string? posterUrl)
+    {
+        if (string.IsNullOrWhiteSpace(posterUrl))
+            return posterUrl;
+
+        var trimmed = posterUrl.Trim();
+        if (TryParsePosterKey(trimmed, out var parsedKey))
+            return ApiPosterPathPrefix + parsedKey;
+
+        if (!TryNormalizeToHttpsTmdb(trimmed, out var normalized))
+            return posterUrl;
+
+        var key = ComputeKey(normalized);
+        return ApiPosterPathPrefix + key;
+    }
 }
