@@ -54,7 +54,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
             || runtimeMin.HasValue || runtimeMax.HasValue;
 
         if (!hasText && !hasFilters)
-            return Array.Empty<TmdbSearchItem>();
+            return [];
 
         var key = Uri.EscapeDataString(_options.TmdbApiKey);
 
@@ -82,7 +82,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         await using var stream = await res.Content.ReadAsStreamAsync(ct);
         using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
         if (!doc.RootElement.TryGetProperty(ResultsProperty, out var results))
-            return new List<TmdbSearchItem>();
+            return [];
 
         var list = new List<TmdbSearchItem>();
         foreach (var item in results.EnumerateArray())
@@ -214,7 +214,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
     private static IReadOnlyList<int> ReadGenreIdArray(JsonElement item)
     {
         if (!item.TryGetProperty("genre_ids", out var arr) || arr.ValueKind != JsonValueKind.Array)
-            return Array.Empty<int>();
+            return [];
 
         var ids = new List<int>();
         foreach (var el in arr.EnumerateArray())

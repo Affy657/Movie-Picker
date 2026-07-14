@@ -84,7 +84,7 @@ public sealed class MongoParticipantRepository : IParticipantRepository
     public async Task<IReadOnlyList<string>> ListDistinctEventIdsByUserIdAsync(string userId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(userId))
-            return Array.Empty<string>();
+            return [];
 
         var ids = await _collection
             .Find(x => x.UserId == userId)
@@ -96,7 +96,7 @@ public sealed class MongoParticipantRepository : IParticipantRepository
     public async Task<IReadOnlyList<Participant>> ListByUserIdAsync(string userId, int limit = 0, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(userId))
-            return Array.Empty<Participant>();
+            return [];
 
         var query = _collection.Find(x => x.UserId == userId);
         if (limit > 0)

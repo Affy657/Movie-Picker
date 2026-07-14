@@ -46,7 +46,7 @@ public sealed class MongoPushSubscriptionRepository : IPushSubscriptionRepositor
     public async Task<IReadOnlyList<PushSubscription>> ListByUserIdsAsync(IReadOnlyCollection<string> userIds, CancellationToken ct = default)
     {
         if (userIds.Count == 0)
-            return Array.Empty<PushSubscription>();
+            return [];
         var filter = Builders<PushSubscriptionDocument>.Filter.In(x => x.UserId, userIds);
         var docs = await _collection.Find(filter).ToListAsync(ct);
         return docs.ConvertAll(ToDomain);

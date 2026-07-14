@@ -163,11 +163,11 @@ public sealed class MongoVoteRepository : IVoteRepository
     public async Task<IReadOnlyList<Vote>> ListByParticipantIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default)
     {
         if (participantIds.Count == 0)
-            return Array.Empty<Vote>();
+            return [];
 
         var ids = participantIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
         if (ids.Count == 0)
-            return Array.Empty<Vote>();
+            return [];
 
         var filter = Builders<VoteDocument>.Filter.In(x => x.ParticipantId, ids);
         var docs = await _collection.Find(filter).ToListAsync(ct);

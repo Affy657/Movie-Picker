@@ -111,11 +111,11 @@ public sealed class MongoMovieRepository : IMovieRepository
         CancellationToken ct = default)
     {
         if (participantIds.Count == 0)
-            return Array.Empty<Movie>();
+            return [];
 
         var ids = participantIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
         if (ids.Count == 0)
-            return Array.Empty<Movie>();
+            return [];
 
         var filter = Builders<MovieDocument>.Filter.In(x => x.ParticipantId, ids);
         var docs = await _collection.Find(filter).ToListAsync(ct);
@@ -125,7 +125,7 @@ public sealed class MongoMovieRepository : IMovieRepository
     public async Task<IReadOnlyList<Movie>> ListMissingGenresAsync(int limit, CancellationToken ct = default)
     {
         if (limit <= 0)
-            return Array.Empty<Movie>();
+            return [];
 
         var filter = Builders<MovieDocument>.Filter.Or(
             Builders<MovieDocument>.Filter.Exists(x => x.GenreIds, false),

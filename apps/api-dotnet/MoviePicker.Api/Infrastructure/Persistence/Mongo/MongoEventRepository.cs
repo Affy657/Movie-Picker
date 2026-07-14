@@ -53,7 +53,7 @@ public sealed class MongoEventRepository : IEventRepository
     public async Task<IReadOnlyList<Event>> ListByCreatorUserIdAsync(string creatorUserId, int limit, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(creatorUserId) || limit <= 0)
-            return Array.Empty<Event>();
+            return [];
 
         var docs = await _collection
             .Find(x => x.CreatorUserId == creatorUserId)
@@ -79,11 +79,11 @@ public sealed class MongoEventRepository : IEventRepository
     public async Task<IReadOnlyList<Event>> ListByIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default)
     {
         if (eventIds.Count == 0)
-            return Array.Empty<Event>();
+            return [];
 
         var ids = eventIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
         if (ids.Count == 0)
-            return Array.Empty<Event>();
+            return [];
 
         var docs = await _collection.Find(x => ids.Contains(x.Id)).ToListAsync(ct);
         return docs.ConvertAll(EventDocumentMapper.ToDomain);

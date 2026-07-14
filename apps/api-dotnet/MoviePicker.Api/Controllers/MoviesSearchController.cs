@@ -60,7 +60,7 @@ public sealed class MoviesSearchController : ControllerBase
 
     private static IReadOnlyList<int> ParseGenreIds(string? raw)
     {
-        if (string.IsNullOrWhiteSpace(raw)) return Array.Empty<int>();
+        if (string.IsNullOrWhiteSpace(raw)) return [];
         var ids = new List<int>();
         foreach (var part in raw.Split(','))
         {
