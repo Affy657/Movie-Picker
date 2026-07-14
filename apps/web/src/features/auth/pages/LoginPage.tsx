@@ -45,7 +45,7 @@ export default function LoginPage() {
     error,
   } = useAsyncAction(loginAction, t('auth.login.fallbackError'));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     void submit('form');
   };

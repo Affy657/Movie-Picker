@@ -53,7 +53,7 @@ export default function ResetPasswordPage() {
     error,
   } = useAsyncAction(confirmAction, t('auth.resetPassword.fallbackError'));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     void submit();
   };

@@ -34,7 +34,7 @@ export default function RegisterPage() {
     error,
   } = useAsyncAction(registerAction, t('auth.register.fallbackError'));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setRulesError(null);
     if (!isRegisterPasswordCompliant(password)) {
