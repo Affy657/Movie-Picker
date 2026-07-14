@@ -119,7 +119,7 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
         var movieJson = await add.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
         var movieId = movieJson.GetProperty("_id").GetString()!;
 
-        var wheel = await client.PostAsync($"/api/v1/events/{slug}/wheel", null);
+        var wheel = await client.PostAsJsonAsync($"/api/v1/events/{slug}/wheel", new { });
         wheel.EnsureSuccessStatusCode();
 
         var patch = await client.PatchAsJsonAsync(

@@ -154,8 +154,10 @@ public sealed class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status415UnsupportedMediaType)]
     public async Task<IActionResult> Wheel(
         string idOrSlug,
+        [FromBody] CsrfGuardRequest _,
         [FromServices] ILaunchWheelHandler handler,
         CancellationToken ct)
     {
@@ -181,8 +183,10 @@ public sealed class EventsController : ControllerBase
     [ProducesResponseType(typeof(CloseEventResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status415UnsupportedMediaType)]
     public async Task<IActionResult> Close(
         string idOrSlug,
+        [FromBody] CsrfGuardRequest _,
         [FromServices] ICloseEventHandler handler,
         CancellationToken ct)
     {

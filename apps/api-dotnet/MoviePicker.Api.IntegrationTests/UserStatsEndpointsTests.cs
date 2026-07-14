@@ -58,7 +58,7 @@ public sealed class UserStatsEndpointsTests : IClassFixture<MoviePickerApplicati
         var voteRes = await client.PostAsJsonAsync($"/api/v1/events/{slug}/movies/{movieId}/vote", new { participantId, value = 1 });
         voteRes.EnsureSuccessStatusCode();
 
-        var wheelRes = await client.PostAsync($"/api/v1/events/{slug}/wheel", null);
+        var wheelRes = await client.PostAsJsonAsync($"/api/v1/events/{slug}/wheel", new { });
         wheelRes.EnsureSuccessStatusCode();
 
         var anon = _factory.CreateClient();

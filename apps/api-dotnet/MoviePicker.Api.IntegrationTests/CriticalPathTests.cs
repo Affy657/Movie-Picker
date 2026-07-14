@@ -103,13 +103,30 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
         var voteRes = await client.PostAsJsonAsync($"/api/v1/events/{slug}/movies/{movieId}/vote", new { participantId, value = 1 });
         voteRes.EnsureSuccessStatusCode();
 
-        var wheelRes = await client.PostAsync($"/api/v1/events/{slug}/wheel", null);
+        var wheelRes = await client.PostAsJsonAsync($"/api/v1/events/{slug}/wheel", new { });
         wheelRes.EnsureSuccessStatusCode();
         var wheelJson = await wheelRes.Content.ReadFromJsonAsync<JsonElement>();
         Assert.NotNull(wheelJson.GetProperty("winner").GetProperty("title").GetString());
 
-        var closeRes = await client.PostAsync($"/api/v1/events/{slug}/close", null);
+        var closeRes = await client.PostAsJsonAsync($"/api/v1/events/{slug}/close", new { });
         closeRes.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task PostWheelAndClose_WithoutJsonBody_Returns415()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "GardeCsrf");
+        var createBody = new { title = "Soirée garde CSRF", date = "2030-08-01", time = "20:00" };
+        var createRes = await client.PostAsJsonAsync("/api/v1/events", createBody);
+        createRes.EnsureSuccessStatusCode();
+        var created = await createRes.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
+        var slug = created!.Slug;
+
+        var wheelRes = await client.PostAsync($"/api/v1/events/{slug}/wheel", null);
+        Assert.Equal(HttpStatusCode.UnsupportedMediaType, wheelRes.StatusCode);
+
+        var closeRes = await client.PostAsync($"/api/v1/events/{slug}/close", null);
+        Assert.Equal(HttpStatusCode.UnsupportedMediaType, closeRes.StatusCode);
     }
 
     [Fact]
@@ -285,14 +302,14 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
         await AddMovieAsync(1002, "Film B");
         await AddMovieAsync(1003, "Film C");
 
-        var first = await client.PostAsync($"/api/v1/events/{slug}/wheel", null);
+        var first = await client.PostAsJsonAsync($"/api/v1/events/{slug}/wheel", new { });
         first.EnsureSuccessStatusCode();
         var firstJson = await first.Content.ReadFromJsonAsync<JsonElement>();
         var previousWinnerId = firstJson.GetProperty("winner").GetProperty("_id").GetString()!;
 
         for (var i = 0; i < 10; i++)
         {
-            var relaunch = await client.PostAsync($"/api/v1/events/{slug}/wheel", null);
+            var relaunch = await client.PostAsJsonAsync($"/api/v1/events/{slug}/wheel", new { });
             relaunch.EnsureSuccessStatusCode();
             var relaunchJson = await relaunch.Content.ReadFromJsonAsync<JsonElement>();
             var newWinnerId = relaunchJson.GetProperty("winner").GetProperty("_id").GetString()!;

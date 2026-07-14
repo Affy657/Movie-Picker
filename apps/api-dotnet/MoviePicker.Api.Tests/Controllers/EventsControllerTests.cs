@@ -151,7 +151,7 @@ public sealed class EventsControllerTests
     {
         var handler = new Mock<ILaunchWheelHandler>();
 
-        var result = await Controller(null).Wheel("e", handler.Object, CancellationToken.None);
+        var result = await Controller(null).Wheel("e", new CsrfGuardRequest(), handler.Object, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
         handler.Verify(h => h.HandleAsync("e", It.IsAny<CancellationToken>()), Times.Once);
@@ -172,7 +172,7 @@ public sealed class EventsControllerTests
     {
         var handler = new Mock<ICloseEventHandler>();
 
-        var result = await Controller(null).Close("e", handler.Object, CancellationToken.None);
+        var result = await Controller(null).Close("e", new CsrfGuardRequest(), handler.Object, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
     }

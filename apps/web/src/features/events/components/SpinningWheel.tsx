@@ -148,6 +148,12 @@ export default function SpinningWheel({
       (crypto.getRandomValues(new Uint32Array(1))[0]! / 0xffffffff - 0.5) * segAngle * 0.4;
     const targetRotation = SPIN_ROTATIONS * 2 * Math.PI - (winnerIndex + 0.5) * segAngle + jitter;
 
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      drawFrame(ctx, movies, targetRotation);
+      const timeoutId = setTimeout(() => onDoneRef.current(), 0);
+      return () => clearTimeout(timeoutId);
+    }
+
     let startTime: number | null = null;
     const ANIM_CUT = 0.9;
 

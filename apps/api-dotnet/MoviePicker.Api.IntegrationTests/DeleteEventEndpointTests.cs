@@ -123,7 +123,7 @@ public sealed class DeleteEventEndpointTests : IClassFixture<MoviePickerApplicat
             });
         add.EnsureSuccessStatusCode();
 
-        var wheel = await creator.PostAsync($"/api/v1/events/{slug}/wheel", null);
+        var wheel = await creator.PostAsJsonAsync($"/api/v1/events/{slug}/wheel", new { });
         wheel.EnsureSuccessStatusCode();
 
         var del = await creator.DeleteAsync($"/api/v1/events/{slug}");

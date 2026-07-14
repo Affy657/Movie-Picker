@@ -99,13 +99,13 @@ export async function postEventWheel(
 ): Promise<{ winner: MovieData; message: string }> {
   const raw = await fetchApi<{ winner: RawMovieData; message: string }>(
     `/events/${slug}/wheel${hostQuery(hostToken)}`,
-    { method: 'POST' }
+    { method: 'POST', body: '{}' }
   );
   return { winner: mapMovieData(raw.winner), message: raw.message };
 }
 
 export async function postEventClose(slug: string, hostToken: string | null): Promise<void> {
-  await fetchApi(`/events/${slug}/close${hostQuery(hostToken)}`, { method: 'POST' });
+  await fetchApi(`/events/${slug}/close${hostQuery(hostToken)}`, { method: 'POST', body: '{}' });
 }
 
 export async function deleteEventWheel(slug: string, hostToken: string | null): Promise<void> {
