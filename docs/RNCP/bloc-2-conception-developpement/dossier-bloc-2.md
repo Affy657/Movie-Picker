@@ -160,7 +160,7 @@ flowchart TD
   MP -.->|"analytics · soumis au consentement"| PH["PostHog"]
 ```
 
-L'utilisateur n'interagit qu'avec Movie Picker (HTTPS). L'application consomme **TMDB** (catalogue et affiches), **Resend** (e-mails transactionnels : réinitialisation de mot de passe), un **service Web Push** (notifications navigateur) et remonte des événements d'usage à **PostHog** — uniquement en production et après consentement. L'**observabilité** repose aujourd'hui sur des journaux JSON structurés corrélés (`CorrelationIdMiddleware`, renvoi §8-A09) et la supervision Cloud Run ; une remontée d'exceptions dédiée (Sentry) est identifiée comme axe d'amélioration (§11) et n'est donc pas représentée comme système en place.
+L'utilisateur n'interagit qu'avec Movie Picker (HTTPS). L'application consomme **TMDB** (catalogue et affiches), **Resend** (e-mails transactionnels : réinitialisation de mot de passe), un **service Web Push** (notifications navigateur) et remonte des événements d'usage à **PostHog** — uniquement en production et après consentement. L'**observabilité** repose aujourd'hui sur des journaux JSON structurés corrélés (`CorrelationIdMiddleware`, renvoi §8-A09) et la supervision Cloud Run ; une remontée d'exceptions dédiée (Sentry) est identifiée comme axe d'amélioration (§11.5) et n'est donc pas représentée comme système en place.
 
 ### 2.3 — C4 niveau 2 : conteneurs
 
@@ -402,9 +402,9 @@ Suivent l'**invalidation CloudFront** (`/*`, avec attente de complétion) et un 
 
 ### 5.5 — Reprise sur incident & exploitation continue
 
-- **Rollback API** (`rollback.yml`, manuel) — bascule 100 % du trafic Cloud Run vers une **révision antérieure** (par défaut la précédente). Cloud Run **conservant ses révisions**, le rollback **ne reconstruit rien** : c'est un simple **reroutage de trafic**, quasi instantané, validé par un smoke `/health`. *Limite assumée* : le rollback **front** (S3/CloudFront) n'est pas outillé faute d'artefacts front versionnés → axe d'amélioration (§11).
+- **Rollback API** (`rollback.yml`, manuel) — bascule 100 % du trafic Cloud Run vers une **révision antérieure** (par défaut la précédente). Cloud Run **conservant ses révisions**, le rollback **ne reconstruit rien** : c'est un simple **reroutage de trafic**, quasi instantané, validé par un smoke `/health`. *Limite assumée* : le rollback **front** (S3/CloudFront) n'est pas outillé faute d'artefacts front versionnés → axe d'amélioration (§11.5).
 - **Rétention du registre** (`registry-cleanup.yml`, mensuel + manuel) — applique une politique Artifact Registry (`infra/artifact-registry-cleanup-policy.json`) conservant les **10 images récentes** et purgeant les images de **plus de 30 jours**.
-- **Déploiement progressif** — choix **assumé** en V1 : déploiement **direct** (100 % du trafic), **sans canary/bleu-vert**, justifié par un projet solo à faible trafic dont le risque est couvert par le **smoke test post-déploiement** et un **rollback rapide**. La plateforme Cloud Run (révisions + routage de trafic) rend le canary **activable sans refonte** — inscrit comme axe d'évolution (§11).
+- **Déploiement progressif** — choix **assumé** en V1 : déploiement **direct** (100 % du trafic), **sans canary/bleu-vert**, justifié par un projet solo à faible trafic dont le risque est couvert par le **smoke test post-déploiement** et un **rollback rapide**. La plateforme Cloud Run (révisions + routage de trafic) rend le canary **activable sans refonte** — inscrit comme axe d'évolution (§11.5).
 
 > **Preuves de la section.** `.github/workflows/ci-cd.yml` (jobs `docker-api`, `deploy-api`, `deploy-front`) · `.github/workflows/rollback.yml` · `.github/workflows/registry-cleanup.yml` · `infra/artifact-registry-cleanup-policy.json`.
 
@@ -614,9 +614,9 @@ Au-delà des en-têtes posés par l'API, le front applique sa propre **CSP injec
 
 ### 8.4 — Résiduels assumés (honnêteté vis-à-vis du jury)
 
-- **Pas de jeton anti-CSRF** (`AddAntiforgery` non activé). L'auth par cookie impose `SameSite=None` en production (front CloudFront et API Cloud Run *cross-origin*), ce qui n'offre pas en soi de protection CSRF. **Atténuation partielle** : les mutations à **corps JSON** (`[FromBody]` — vote, ajout, « déjà vu », note, config…) déclenchent un *preflight* CORS **refusé** hors allowlist. En revanche, deux actions hôte en **POST sans corps** (`POST …/wheel`, `POST …/close`) sont des requêtes « simples » **non soumises au preflight**, donc théoriquement joignables en CSRF (impact faible : actions sur un *slug* opaque, sans exfiltration de données). **Durcissement inscrit (§11)** : jeton anti-CSRF *double-submit*, ou exigence d'un en-tête custom / d'un corps JSON sur ces deux endpoints.
+- **CSRF** : l'auth par cookie impose `SameSite=None` en production (front CloudFront et API Cloud Run *cross-origin*), ce qui n'offre pas en soi de protection CSRF ; la mitigation retenue est **structurelle** — toute mutation à **corps JSON** (`[FromBody]`) déclenche un *preflight* CORS **refusé** hors allowlist. C'était le cas de la quasi-totalité des mutations (vote, ajout, « déjà vu », note, config…), à l'exception de deux actions hôte en **POST sans corps** (`POST …/wheel`, `POST …/close`), des requêtes « simples » non soumises au preflight. **Identifié en auto-revue et corrigé** (commit `36690e6`, détail **§11.4**) : ces deux endpoints exigent désormais un corps JSON (`CsrfGuardRequest`), alignés sur le reste de l'API ; une requête sans corps échoue en **415** (testé).
 - **`frame-ancestors` du front** (anti-*clickjacking*) relève d'un **en-tête de réponse CloudFront**, non exprimable via `<meta>` ; côté API la directive est bien posée (`frame-ancestors 'none'`).
-- **Observabilité** : remontée d'exceptions dédiée (Sentry) non encore branchée — actuellement logs structurés + corrélation (§11).
+- **Observabilité** : remontée d'exceptions dédiée (Sentry) non encore branchée — actuellement logs structurés + corrélation (§11.5).
 
 > **Preuves de la section.** `SecurityHeadersMiddleware.cs` · `MoviePickerCookieAuthenticationConfigurer.cs` · `CorsPolicyBuilderExtensions.cs` · `RateLimitingExtensions.cs` · `ValidationErrorFilter.cs` · `TmdbPosterUrlNormalizer.cs` · `Application/UseCases/Auth/PasswordReset/RequestPasswordResetHandler.cs` · `apps/web/vite.config.ts` · `.github/dependabot.yml` · `.github/workflows/{ci-cd,security-scan}.yml`.
 
@@ -660,7 +660,7 @@ Extrait — lien d'évitement pointant vers le landmark principal focusable :
 
 - Les outils automatiques (`axe`, Lighthouse) ne couvrent **qu'une partie** des critères WCAG/RGAA (ordre de lecture, pertinence réelle des libellés, parcours lecteur d'écran complet relèvent de l'**audit manuel**, non exhaustif ici).
 - Aucune **déclaration de conformité RGAA** formelle (audit tiers) n'a été produite — hors périmètre d'un projet solo.
-- L'animation de la **roue** n'est pas encore désactivée sous `prefers-reduced-motion` (axe d'amélioration, §11).
+- L'animation de la **roue** sous `prefers-reduced-motion` : **identifié en auto-revue et corrigé** (commit `36690e6`, détail **§11.4**) — le tirage affiche désormais son résultat directement, sans jouer l'animation canvas (7,5 s), quand la préférence système est active.
 
 > **Preuves de la section.** `apps/web/src/app/pages/a11y.test.tsx` · `apps/web/src/app/components/AppShell.tsx` · `apps/web/src/shared/components/PageLayout.tsx` · `apps/web/src/shared/hooks/useMenuFocus.ts` · `apps/web/src/styles/{01-foundation,02-forms-and-content}.css` · `apps/web/src/shared/i18n/LocaleContext.tsx`.
 
@@ -777,7 +777,29 @@ La démarche est constante : **reproduire** (les étapes de l'issue, ou le test 
 
 Cet incident illustre le cycle complet **détecter → qualifier → corriger → vérifier → historiser**, et a nourri en retour un **garde-fou** : la CSP est désormais construite et vérifiée au build (plus de dérive silencieuse `img-src`/`connect-src`).
 
-> **Preuves de la section.** `.github/ISSUE_TEMPLATE/{bug_report.yml,feature_request.yml,config.yml}` · `.github/PULL_REQUEST_TEMPLATE.md` · `CHANGELOG.md` (section *Fixed* de [1.3.1]) · commits `0de05e1`, `2485f94`.
+### 11.4 — Résidus identifiés en auto-revue, corrigés avant restitution
+
+Deux limites honnêtement documentées plus haut (§8.4, §9.4) ont été closes pendant la préparation de ce dossier, en suivant le même processus qu'en §11.1–§11.2 :
+
+| | CSRF sur `wheel` / `close` (§8.4) | Animation de la roue & `prefers-reduced-motion` (§9.4) |
+|---|---|---|
+| **Détection** | Auto-revue de sécurité : 2 endpoints `POST` sans corps échappaient au *preflight* CORS (requêtes « simples »), contrairement au reste de l'API | Auto-revue d'accessibilité : le tirage (7,5 s, animation canvas) ignorait la préférence système |
+| **Qualification** | Risque faible (slug opaque, pas d'exfiltration) mais incohérent avec la défense en profondeur du reste de l'API → *medium* | Confort / déclencheurs vestibulaires ; critère RGAA/WCAG 2.1 AA → *low* |
+| **Correctif** | Corps JSON requis (`CsrfGuardRequest`) sur les 2 endpoints → force le *preflight* CORS, aligné sur `vote` / `config` / ajout de film | `window.matchMedia('(prefers-reduced-motion: reduce)')` : affiche le résultat du tirage directement, sans lancer l'animation |
+| **Non-régression** | `PostWheelAndClose_WithoutJsonBody_Returns415` (415 si corps absent) + suite E2E R1/R2 rejouée | `SpinningWheel.test.tsx` (nouveau) : couvre les deux branches (avec/sans préférence système) |
+| **Trace** | Commit `36690e6` | Commit `36690e6` |
+
+### 11.5 — Axes d'amélioration restants
+
+Trois axes identifiés mais non traités dans le périmètre de ce dossier — charge disproportionnée pour un projet solo en V1, sans impact sur les critères d'évaluation :
+
+| Axe | Contexte | Effort |
+|---|---|---|
+| **Observabilité applicative (Sentry)** | Remontée d'exceptions dédiée ; aujourd'hui logs structurés + `correlation id` (§8.1, A09) | Faible (SDK + DSN) |
+| **Rollback front outillé** | `rollback.yml` couvre l'API (Cloud Run) ; le front (S3/CloudFront) n'a pas d'équivalent versionné (§5.5) | Moyen (versionner les builds S3) |
+| **Déploiement progressif (canary)** | Déploiement direct 100 % assumé en V1 (§5.5) ; la plateforme Cloud Run le permettrait sans refonte | Moyen (découpage du trafic Cloud Run) |
+
+> **Preuves de la section.** `.github/ISSUE_TEMPLATE/{bug_report.yml,feature_request.yml,config.yml}` · `.github/PULL_REQUEST_TEMPLATE.md` · `CHANGELOG.md` (section *Fixed* de [1.3.1]) · commits `0de05e1`, `2485f94` · `apps/api-dotnet/MoviePicker.Api/Controllers/EventsController.cs` + `Application/DTOs/CsrfGuardRequest.cs` · `apps/web/src/features/events/components/SpinningWheel.tsx` + `SpinningWheel.test.tsx` · `MoviePicker.Api.IntegrationTests/CriticalPathTests.cs` · commit `36690e6`.
 
 ---
 
