@@ -65,27 +65,34 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         var endpoint = allowSeries ? "search/multi" : "search/movie";
         var url = $"https://api.themoviedb.org/3/{endpoint}?api_key={key}&query={q}&language=fr-FR";
 
+        return await FetchAndMapResultsAsync(
+            url,
+            item => TryMapSearchItem(item, allowSeries, genreIds, yearFrom, yearTo, voteMin, originalLanguage),
+            ct);
+    }
+
+    private async Task<List<TmdbSearchItem>> FetchAndMapResultsAsync(
+        string url,
+        Func<JsonElement, TmdbSearchItem?> mapItem,
+        CancellationToken ct)
+    {
         using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
         res.EnsureSuccessStatusCode();
 
         await using var stream = await res.Content.ReadAsStreamAsync(ct);
         using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
         if (!doc.RootElement.TryGetProperty(ResultsProperty, out var results))
-            return Array.Empty<TmdbSearchItem>();
+            return new List<TmdbSearchItem>();
 
         var list = new List<TmdbSearchItem>();
-        var n = 0;
         foreach (var item in results.EnumerateArray())
         {
-            if (n >= 20)
+            if (list.Count >= 20)
                 break;
 
-            var mapped = TryMapSearchItem(item, allowSeries, genreIds, yearFrom, yearTo, voteMin, originalLanguage);
-            if (mapped is null)
-                continue;
-
-            list.Add(mapped);
-            n++;
+            var mapped = mapItem(item);
+            if (mapped is not null)
+                list.Add(mapped);
         }
 
         return list;
@@ -188,34 +195,20 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         if (runtimeMax.HasValue)
             url += $"&with_runtime.lte={runtimeMax.Value}";
 
-        using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
-        res.EnsureSuccessStatusCode();
+        return await FetchAndMapResultsAsync(url, MapDiscoverItem, ct);
+    }
 
-        await using var stream = await res.Content.ReadAsStreamAsync(ct);
-        using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+    private static TmdbSearchItem? MapDiscoverItem(JsonElement item)
+    {
+        var id = item.GetProperty("id").GetInt32();
+        var title = ReadTitle(item, MovieMediaType.Movie);
+        if (string.IsNullOrEmpty(title))
+            return null;
 
-        if (!doc.RootElement.TryGetProperty(ResultsProperty, out var results))
-            return Array.Empty<TmdbSearchItem>();
-
-        var list = new List<TmdbSearchItem>();
-        var n = 0;
-        foreach (var item in results.EnumerateArray())
-        {
-            if (n >= 20) break;
-
-            var id = item.GetProperty("id").GetInt32();
-            var title = ReadTitle(item, MovieMediaType.Movie);
-            if (string.IsNullOrEmpty(title)) continue;
-
-            var year = ReadYear(item, MovieMediaType.Movie);
-            var posterPath = ReadPosterUrl(item);
-            var voteAverage = ReadVoteAverage(item);
-
-            list.Add(new TmdbSearchItem(id, MovieMediaType.Movie, title, year, posterPath, voteAverage));
-            n++;
-        }
-
-        return list;
+        var year = ReadYear(item, MovieMediaType.Movie);
+        var posterPath = ReadPosterUrl(item);
+        var voteAverage = ReadVoteAverage(item);
+        return new TmdbSearchItem(id, MovieMediaType.Movie, title, year, posterPath, voteAverage);
     }
 
     private static IReadOnlyList<int> ReadGenreIdArray(JsonElement item)

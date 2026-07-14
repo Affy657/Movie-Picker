@@ -20,6 +20,27 @@ import styles from './InboxBell.module.css';
 
 type TFn = (key: TranslationKey, vars?: Record<string, string | number>) => string;
 
+function NotifLinkWithAvatar({
+  eventSlug,
+  onClose,
+  avatarId,
+  pseudo,
+  children,
+}: Readonly<{
+  eventSlug: string;
+  onClose: () => void;
+  avatarId?: string | null;
+  pseudo?: string | null;
+  children: React.ReactNode;
+}>) {
+  return (
+    <Link to={ROUTES.eventDetail(eventSlug)} className={styles.notifLink} onClick={onClose}>
+      <Avatar avatarId={avatarId ?? undefined} pseudo={pseudo ?? undefined} size="xs" />
+      <span className={styles.notifText}>{children}</span>
+    </Link>
+  );
+}
+
 function renderNotifContent(
   item: UserNotificationItem,
   onClose: () => void,
@@ -42,33 +63,29 @@ function renderNotifContent(
 
   if (item.type === 'participantjoined' && item.eventSlug) {
     return (
-      <Link to={ROUTES.eventDetail(item.eventSlug)} className={styles.notifLink} onClick={onClose}>
-        <Avatar
-          avatarId={item.actorAvatarId ?? undefined}
-          pseudo={item.actorDisplayName ?? undefined}
-          size="xs"
-        />
-        <span className={styles.notifText}>
-          <strong>{item.eventTitle}</strong>{' '}
-          {t('notifications.participantJoinedText', { name: item.actorDisplayName ?? '—' })}
-        </span>
-      </Link>
+      <NotifLinkWithAvatar
+        eventSlug={item.eventSlug}
+        onClose={onClose}
+        avatarId={item.actorAvatarId}
+        pseudo={item.actorDisplayName}
+      >
+        <strong>{item.eventTitle}</strong>{' '}
+        {t('notifications.participantJoinedText', { name: item.actorDisplayName ?? '—' })}
+      </NotifLinkWithAvatar>
     );
   }
 
   if (item.type === 'movieadded' && item.eventSlug) {
     return (
-      <Link to={ROUTES.eventDetail(item.eventSlug)} className={styles.notifLink} onClick={onClose}>
-        <Avatar
-          avatarId={item.actorAvatarId ?? undefined}
-          pseudo={item.actorDisplayName ?? undefined}
-          size="xs"
-        />
-        <span className={styles.notifText}>
-          <strong>{item.eventTitle}</strong>{' '}
-          {t('notifications.movieAddedText', { movie: item.movieTitle ?? '—' })}
-        </span>
-      </Link>
+      <NotifLinkWithAvatar
+        eventSlug={item.eventSlug}
+        onClose={onClose}
+        avatarId={item.actorAvatarId}
+        pseudo={item.actorDisplayName}
+      >
+        <strong>{item.eventTitle}</strong>{' '}
+        {t('notifications.movieAddedText', { movie: item.movieTitle ?? '—' })}
+      </NotifLinkWithAvatar>
     );
   }
 
@@ -107,17 +124,15 @@ function renderNotifContent(
 
   if (item.type === 'eventinvitation' && item.eventSlug) {
     return (
-      <Link to={ROUTES.eventDetail(item.eventSlug)} className={styles.notifLink} onClick={onClose}>
-        <Avatar
-          avatarId={item.actorAvatarId ?? undefined}
-          pseudo={item.actorDisplayName ?? undefined}
-          size="xs"
-        />
-        <span className={styles.notifText}>
-          <strong>{item.actorDisplayName}</strong> {t('notifications.eventInvitationText')}{' '}
-          <strong>{item.eventTitle}</strong>
-        </span>
-      </Link>
+      <NotifLinkWithAvatar
+        eventSlug={item.eventSlug}
+        onClose={onClose}
+        avatarId={item.actorAvatarId}
+        pseudo={item.actorDisplayName}
+      >
+        <strong>{item.actorDisplayName}</strong> {t('notifications.eventInvitationText')}{' '}
+        <strong>{item.eventTitle}</strong>
+      </NotifLinkWithAvatar>
     );
   }
 

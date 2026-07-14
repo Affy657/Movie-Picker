@@ -58,32 +58,16 @@ export default function ResetPasswordPage() {
     void submit();
   };
 
-  if (!token) {
+  if (!token || tokenInvalid) {
     return (
       <PageLayout className={authPageShellStyles.layout}>
         <AuthPageShell
           title={t('auth.resetPassword.invalidTokenTitle')}
-          description={t('auth.resetPassword.missingTokenError')}
-        >
-          <p>
-            <Link className="btn btn-primary" to={ROUTES.forgotPassword}>
-              {t('auth.resetPassword.requestNewLink')}
-            </Link>
-          </p>
-          <p className="muted">
-            <Link to={ROUTES.login}>{t('auth.resetPassword.goToLogin')}</Link>
-          </p>
-        </AuthPageShell>
-      </PageLayout>
-    );
-  }
-
-  if (tokenInvalid) {
-    return (
-      <PageLayout className={authPageShellStyles.layout}>
-        <AuthPageShell
-          title={t('auth.resetPassword.invalidTokenTitle')}
-          description={t('auth.resetPassword.invalidTokenMessage')}
+          description={t(
+            !token
+              ? 'auth.resetPassword.missingTokenError'
+              : 'auth.resetPassword.invalidTokenMessage'
+          )}
         >
           <p>
             <Link className="btn btn-primary" to={ROUTES.forgotPassword}>

@@ -28,21 +28,7 @@ public sealed class MongoPosterImageStore : IPosterImageStore
         _logger = logger;
     }
 
-    public string? ToPublicPosterPath(string? posterUrl)
-    {
-        if (string.IsNullOrWhiteSpace(posterUrl))
-            return posterUrl;
-
-        var trimmed = posterUrl.Trim();
-        if (TmdbPosterUrlNormalizer.TryParsePosterKey(trimmed, out var parsedKey))
-            return TmdbPosterUrlNormalizer.ApiPosterPathPrefix + parsedKey;
-
-        if (!TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(trimmed, out var normalized))
-            return posterUrl;
-
-        var key = TmdbPosterUrlNormalizer.ComputeKey(normalized);
-        return TmdbPosterUrlNormalizer.ApiPosterPathPrefix + key;
-    }
+    public string? ToPublicPosterPath(string? posterUrl) => TmdbPosterUrlNormalizer.ToPublicPosterPath(posterUrl);
 
     public Task RegisterTmdbSourceAsync(string normalizedTmdbHttpsUrl, CancellationToken ct = default) =>
         RegisterTmdbSourcesAsync(new[] { normalizedTmdbHttpsUrl }, ct);
