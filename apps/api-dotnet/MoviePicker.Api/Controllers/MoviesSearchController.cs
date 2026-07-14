@@ -58,7 +58,7 @@ public sealed class MoviesSearchController : ControllerBase
         return Ok(results);
     }
 
-    private static IReadOnlyList<int> ParseGenreIds(string? raw)
+    private static List<int> ParseGenreIds(string? raw)
     {
         if (string.IsNullOrWhiteSpace(raw)) return [];
         var ids = new List<int>();

@@ -211,7 +211,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         return new TmdbSearchItem(id, MovieMediaType.Movie, title, year, posterPath, voteAverage);
     }
 
-    private static IReadOnlyList<int> ReadGenreIdArray(JsonElement item)
+    private static List<int> ReadGenreIdArray(JsonElement item)
     {
         if (!item.TryGetProperty("genre_ids", out var arr) || arr.ValueKind != JsonValueKind.Array)
             return [];
