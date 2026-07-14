@@ -507,7 +507,12 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     needs: [docker-api, e2e, sonar]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: >-
+      always() &&
+      github.event_name == 'push' && github.ref == 'refs/heads/master' &&
+      needs.docker-api.result == 'success' &&
+      needs.e2e.result == 'success' &&
+      needs.sonar.result == 'success'
     environment: production
     permissions:
       contents: read
@@ -564,7 +569,17 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     needs: [changes, lint-web, test-web, audit, lighthouse, e2e, sonar]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master' && needs.changes.outputs.web == 'true'
+    if: >-
+      always() &&
+      github.event_name == 'push' && github.ref == 'refs/heads/master' &&
+      needs.changes.outputs.web == 'true' &&
+      needs.changes.result == 'success' &&
+      needs.lint-web.result == 'success' &&
+      needs.test-web.result == 'success' &&
+      needs.audit.result == 'success' &&
+      needs.lighthouse.result == 'success' &&
+      needs.e2e.result == 'success' &&
+      needs.sonar.result == 'success'
     environment: production
     permissions:
       contents: read
