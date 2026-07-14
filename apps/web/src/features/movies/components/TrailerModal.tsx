@@ -1,6 +1,6 @@
-import { useEffect, useId, useRef } from 'react';
+import { useId } from 'react';
 import { X } from 'lucide-react';
-import { useDialogOpen } from '@/shared/hooks/useDialogOpen';
+import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import { useTranslation } from '@/shared/i18n';
 import { extractYouTubeId } from '@/shared/utils/youtube';
 import styles from './TrailerModal.module.css';
@@ -19,7 +19,6 @@ export default function TrailerModal({
   onClose,
 }: Readonly<TrailerModalProps>) {
   const { t } = useTranslation();
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const trailerYtId = extractYouTubeId(trailerUrl);
   const embedUrl = trailerYtId
@@ -27,27 +26,7 @@ export default function TrailerModal({
     : null;
   const visible = open && !!embedUrl;
 
-  const onCloseRef = useRef(onClose);
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
-
-  useDialogOpen(dialogRef, visible);
-
-  useEffect(() => {
-    const dlg = dialogRef.current;
-    if (!dlg) return;
-    const handleClose = () => onCloseRef.current();
-    const handleBackdropClick = (e: MouseEvent) => {
-      if (e.target === dlg) onCloseRef.current();
-    };
-    dlg.addEventListener('close', handleClose);
-    dlg.addEventListener('click', handleBackdropClick);
-    return () => {
-      dlg.removeEventListener('close', handleClose);
-      dlg.removeEventListener('click', handleBackdropClick);
-    };
-  }, []);
+  const dialogRef = useModalDialog(visible, onClose);
 
   return (
     <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>

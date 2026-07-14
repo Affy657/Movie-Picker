@@ -1,6 +1,6 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { X } from 'lucide-react';
-import { useDialogOpen } from '@/shared/hooks/useDialogOpen';
+import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import { useTranslation } from '@/shared/i18n';
 import type { MovieMediaType } from '@/shared/types/movie';
 import { MovieDetailsContent } from '@/features/movies/components/MovieDetailsPanel';
@@ -23,36 +23,14 @@ export default function MovieDetailsModal({
   onClose,
 }: Readonly<MovieDetailsModalProps>) {
   const { t } = useTranslation();
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const dialogRef = useModalDialog(open, onClose);
   const titleId = useId();
   const panelId = useId();
   const [trailerUrl, setTrailerUrl] = useState<string | null>(null);
 
-  const onCloseRef = useRef(onClose);
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
-
   useEffect(() => {
     if (!open) setTrailerUrl(null);
   }, [open]);
-
-  useDialogOpen(dialogRef, open);
-
-  useEffect(() => {
-    const dlg = dialogRef.current;
-    if (!dlg) return;
-    const handleClose = () => onCloseRef.current();
-    const handleBackdropClick = (e: MouseEvent) => {
-      if (e.target === dlg) onCloseRef.current();
-    };
-    dlg.addEventListener('close', handleClose);
-    dlg.addEventListener('click', handleBackdropClick);
-    return () => {
-      dlg.removeEventListener('close', handleClose);
-      dlg.removeEventListener('click', handleBackdropClick);
-    };
-  }, []);
 
   return (
     <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>

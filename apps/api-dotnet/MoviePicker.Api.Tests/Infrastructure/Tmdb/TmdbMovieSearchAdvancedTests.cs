@@ -198,6 +198,8 @@ public sealed class TmdbMovieSearchAdvancedTests
     private static readonly string[] expected = new[] { "Drame", "Thriller" };
     private static readonly int[] expectedArray = new[] { 18, 53 };
 
+    private static readonly string[] FightClubCast = new[] { "Brad Pitt", "Edward Norton" };
+
     [Fact]
     public async Task GetDetailsAsync_OkMovie_MapsAllFields()
     {
@@ -231,7 +233,7 @@ public sealed class TmdbMovieSearchAdvancedTests
         Assert.Equal(expected, details.Genres);
         Assert.Equal(expectedArray, details.GenreIds);
         Assert.Equal("David Fincher", details.Director);
-        Assert.Equal(new[] { "Brad Pitt", "Edward Norton" }, details.Cast);
+        Assert.Equal(FightClubCast, details.Cast);
         Assert.Equal("https://www.youtube.com/watch?v=abc123", details.TrailerUrl);
     }
 

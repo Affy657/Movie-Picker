@@ -29,6 +29,7 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
 
     private static readonly string[] Cast = new[] { "Actrice Stub", "Acteur Stub" };
     private static readonly string[] Genres = new[] { "Science-fiction", "Drame" };
+    private static readonly int[] GenreIds = new[] { 878, 18 };
 
     public Task<TmdbMovieDetails?> GetDetailsAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct = default)
     {
@@ -41,7 +42,7 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
             Cast,
             120,
             Genres,
-            new[] { 878, 18 },
+            GenreIds,
             "2024-01-01",
             null);
         return Task.FromResult<TmdbMovieDetails?>(details);

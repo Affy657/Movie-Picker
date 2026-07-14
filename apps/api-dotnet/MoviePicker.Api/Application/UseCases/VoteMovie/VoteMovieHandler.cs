@@ -1,7 +1,7 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
-using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.VoteMovie;
 
@@ -29,22 +29,16 @@ public sealed class VoteMovieHandler : IVoteMovieHandler
 
     public async Task<VoteResponse> HandleAsync(string idOrSlug, string movieId, VoteRequest request, CancellationToken ct = default)
     {
-        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
-
-        if (evt.IsFinished(DateTimeOffset.UtcNow))
-            throw new ConflictException("Soirée terminée. Lecture seule.");
-
-        var movie = await _movieRepository.GetByIdAndEventIdAsync(movieId, evt.Id, ct);
-        if (movie is null)
-            throw new NotFoundException("Film introuvable");
-
-        var participant = await _participantRepository.FindByIdAndEventIdAsync(request.ParticipantId, evt.Id, ct);
-        if (participant is null)
-            throw new BadRequestException("Participant invalide pour cette soirée");
-
-        var currentUserId = _currentUserAccessor.GetUserId();
-        if (string.IsNullOrEmpty(currentUserId) || participant.UserId != currentUserId)
-            throw new ForbiddenException("Vous ne pouvez voter que pour votre propre participation.");
+        var (evt, movie, participant) = await MovieActionContext.ResolveOwnedMovieAsync(
+            _eventRepository,
+            _movieRepository,
+            _participantRepository,
+            _currentUserAccessor,
+            idOrSlug,
+            movieId,
+            request.ParticipantId,
+            "Vous ne pouvez voter que pour votre propre participation.",
+            ct);
 
         var vote = new Vote
         {
