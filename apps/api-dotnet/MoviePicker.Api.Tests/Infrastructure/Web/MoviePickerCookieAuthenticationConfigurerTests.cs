@@ -52,12 +52,12 @@ public sealed class MoviePickerCookieAuthenticationConfigurerTests
     }
 
     [Fact]
-    public void Configure_Production_UsesAlwaysSecureNoneCookie()
+    public void Configure_Production_UsesAlwaysSecureLaxCookie()
     {
         var options = Configure(Environments.Production);
 
         Assert.Equal(CookieSecurePolicy.Always, options.Cookie.SecurePolicy);
-        Assert.Equal(SameSiteMode.None, options.Cookie.SameSite);
+        Assert.Equal(SameSiteMode.Lax, options.Cookie.SameSite);
     }
 
     [Fact]

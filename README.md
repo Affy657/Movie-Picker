@@ -72,7 +72,7 @@ flowchart LR
 - **Back** — API ASP.NET Core (C#, .NET 10) en **architecture hexagonale**, conteneurisée sur **GCP** Cloud Run.
 - **Données et services externes** — MongoDB Atlas ; TMDB (films, affiches proxifiées via `/api/v1/posters/{clé}`) ; Resend (mails de réinitialisation de mot de passe).
 - **API** — préfixe public `/api/v1`, Swagger en développement, schéma exporté vers `artifacts/openapi-v1.json`.
-- **Auth** — sessions par **cookie** ; actions hôte via jeton `?host=<token>`. En production, front et API sont sur des origines distinctes → CORS (`ALLOWED_ORIGINS`) et cookies `SameSite=None; Secure`.
+- **Auth** — sessions par **cookie** ; actions hôte via jeton `?host=<token>`. En production, front (`web.movie-picker.fr`) et API (`api.movie-picker.fr`) partagent le même domaine racine → CORS (`ALLOWED_ORIGINS`) et cookies `SameSite=Lax; Secure`.
 
 | Fournisseur | Service | Rôle |
 |-------------|---------|------|

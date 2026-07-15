@@ -37,7 +37,11 @@ public sealed class MoviePickerCookieAuthenticationConfigurer : IConfigureNamedO
         else
         {
             options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-            options.Cookie.SameSite = SameSiteMode.None;
+            // Front (web.movie-picker.fr) et API (api.movie-picker.fr) partagent le même
+            // eTLD+1 : la requête est same-site, Lax suffit et évite le traitement
+            // "cookie tiers" (ITP Safari, protections cross-site Chrome/Firefox) que
+            // SameSite=None subissait, qui purgeait la session prématurément.
+            options.Cookie.SameSite = SameSiteMode.Lax;
         }
 
         options.Events.OnRedirectToLogin = async ctx =>
