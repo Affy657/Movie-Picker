@@ -541,6 +541,9 @@ export const en: Locale = {
     eventReminder1hText: '— starts in 1 hour.',
     eventReminder24hText: '— starts tomorrow.',
     eventInvitationText: 'invites you to join',
+    markReadError: 'Could not mark notifications as read.',
+    prefsLoadError: 'Could not load your notification preferences.',
+    prefsSaveError: 'Could not save this preference.',
   },
 
   footer: {
@@ -578,6 +581,7 @@ export const en: Locale = {
       empty: 'Nobody here yet.',
       followAriaLabel: 'Follow @{{handle}}',
       unfollowAriaLabel: 'Unfollow @{{handle}}',
+      error: 'Action failed, please try again.',
     },
     settings: {
       title: 'Public profile',

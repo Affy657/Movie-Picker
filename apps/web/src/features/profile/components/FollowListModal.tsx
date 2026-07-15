@@ -8,6 +8,7 @@ import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { getErrorMessage } from '@/shared/api/apiError';
 import {
   fetchFollowing,
   fetchFollowers,
@@ -38,6 +39,7 @@ export default function FollowListModal({
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<Tab>(initialTab);
+  const [followError, setFollowError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   const onCloseRef = useRef(onClose);
@@ -81,12 +83,20 @@ export default function FollowListModal({
 
   const followMutation = useMutation({
     mutationFn: (h: string) => followUser(h),
-    onSuccess: invalidateProfileQueries,
+    onSuccess: () => {
+      setFollowError(null);
+      invalidateProfileQueries();
+    },
+    onError: (err) => setFollowError(getErrorMessage(err, t('profile.follow.error'))),
   });
 
   const unfollowMutation = useMutation({
     mutationFn: (h: string) => unfollowUser(h),
-    onSuccess: invalidateProfileQueries,
+    onSuccess: () => {
+      setFollowError(null);
+      invalidateProfileQueries();
+    },
+    onError: (err) => setFollowError(getErrorMessage(err, t('profile.follow.error'))),
   });
 
   const activeQuery = tab === 'following' ? followingQuery : followersQuery;
@@ -128,6 +138,12 @@ export default function FollowListModal({
           <X size={20} aria-hidden />
         </button>
       </div>
+
+      {followError && (
+        <p className="error" role="alert">
+          {followError}
+        </p>
+      )}
 
       <ul className={styles.list}>
         {activeQuery.isPending && <li className={styles.placeholder}>{t('common.loading')}</li>}

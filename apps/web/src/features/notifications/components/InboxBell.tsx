@@ -10,6 +10,7 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useMenuFocus } from '@/shared/hooks/useMenuFocus';
+import { getErrorMessage } from '@/shared/api/apiError';
 import {
   fetchNotificationInbox,
   markAllNotificationsRead,
@@ -143,6 +144,7 @@ export default function InboxBell() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [markReadError, setMarkReadError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -157,8 +159,10 @@ export default function InboxBell() {
   const markReadMutation = useMutation({
     mutationFn: markAllNotificationsRead,
     onSuccess: () => {
+      setMarkReadError(null);
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.inbox });
     },
+    onError: (err) => setMarkReadError(getErrorMessage(err, t('notifications.markReadError'))),
   });
 
   const unreadCount = inboxQuery.data?.unreadCount ?? 0;
@@ -213,6 +217,11 @@ export default function InboxBell() {
           aria-label={t('notifications.inboxTitle')}
         >
           <p className={styles.dropdownTitle}>{t('notifications.inboxTitle')}</p>
+          {markReadError && (
+            <p className="error" role="alert">
+              {markReadError}
+            </p>
+          )}
           {items.length === 0 ? (
             <EmptyState
               compact

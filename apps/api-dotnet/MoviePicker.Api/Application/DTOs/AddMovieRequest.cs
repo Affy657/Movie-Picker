@@ -16,7 +16,6 @@ public sealed class AddMovieRequest
     [MaxLength(500)]
     public string Title { get; init; } = string.Empty;
 
-    [Required]
     [MaxLength(10)]
     public string Year { get; init; } = string.Empty;
 

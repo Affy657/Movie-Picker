@@ -84,3 +84,9 @@
   justify-content: center;
   margin-top: 0.5rem;
 }
+
+.shareGroup {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+}

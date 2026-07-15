@@ -5,7 +5,7 @@ import { AlertCircle, Link2, UserPlus, UserCheck } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import Avatar from '@/shared/components/Avatar';
 import { ROUTES } from '@/app/routes';
-import { ApiError } from '@/shared/api/apiError';
+import { ApiError, getErrorMessage } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { APP_DOCUMENT_TITLE, pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { useLocale, useTranslation } from '@/shared/i18n';
@@ -42,6 +42,7 @@ export default function ProfilePage() {
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
   const [followModal, setFollowModal] = useState<FollowTab | null>(null);
+  const [followError, setFollowError] = useState<string | null>(null);
 
   const profileQuery = useQuery({
     queryKey: queryKeys.profile.public(handle),
@@ -76,17 +77,21 @@ export default function ProfilePage() {
   const followMutation = useMutation({
     mutationFn: () => followUser(profile!.handle),
     onSuccess: () => {
+      setFollowError(null);
       queryClient.invalidateQueries({ queryKey: queryKeys.profile.public(handle) });
       track('user_followed');
     },
+    onError: (err) => setFollowError(getErrorMessage(err, t('profile.follow.error'))),
   });
 
   const unfollowMutation = useMutation({
     mutationFn: () => unfollowUser(profile!.handle),
     onSuccess: () => {
+      setFollowError(null);
       queryClient.invalidateQueries({ queryKey: queryKeys.profile.public(handle) });
       track('user_unfollowed');
     },
+    onError: (err) => setFollowError(getErrorMessage(err, t('profile.follow.error'))),
   });
 
   if (profileQuery.isPending && handle) {
@@ -175,6 +180,22 @@ export default function ProfilePage() {
         </div>
 
         <div className={styles.actions}>
+          <div className={styles.shareGroup}>
+            <button type="button" className="btn btn-sm" onClick={handleCopyLink}>
+              <Link2 size={14} aria-hidden />
+              {copied ? t('profile.linkCopied') : t('profile.copyLink')}
+            </button>
+
+            <QrCodeButton
+              url={globalThis.location.href}
+              dialogTitle={t('profile.qrTitle')}
+              hint={t('profile.qrHint')}
+              showLabel={t('profile.showQr')}
+              closeLabel={t('profile.closeQr')}
+              className="btn btn-sm"
+            />
+          </div>
+
           {user && !isOwnProfile && (
             <button
               type="button"
@@ -192,21 +213,13 @@ export default function ProfilePage() {
               {profile.isFollowedByMe ? t('profile.follow.unfollow') : t('profile.follow.follow')}
             </button>
           )}
-
-          <button type="button" className="btn btn-sm" onClick={handleCopyLink}>
-            <Link2 size={14} aria-hidden />
-            {copied ? t('profile.linkCopied') : t('profile.copyLink')}
-          </button>
-
-          <QrCodeButton
-            url={globalThis.location.href}
-            dialogTitle={t('profile.qrTitle')}
-            hint={t('profile.qrHint')}
-            showLabel={t('profile.showQr')}
-            closeLabel={t('profile.closeQr')}
-            className="btn btn-sm"
-          />
         </div>
+
+        {followError && (
+          <p className="error" role="alert">
+            {followError}
+          </p>
+        )}
       </section>
 
       {statsQuery.data && (
