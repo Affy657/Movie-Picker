@@ -57,10 +57,17 @@ Découpage par version côté **plateforme, qualité, infra, observabilité, det
 
 ## 📋 V1.3
 
-**Objectif** : stabilité long terme, sécurité de la chaîne de dépendances et ouverture OAuth.
+**Objectif** : stabilité long terme et sécurité de la chaîne de dépendances.
 
 - ✅ ⚙️ **Dependabot** : mises à jour groupées mensuelles (npm, github-actions, nuget, docker) ; alertes de vulnérabilité + *automated security fixes* activés — PRs auto sur nouvelles versions et CVE ; complète le `pnpm audit` et l'audit NuGet déjà en CI.
 - ⬜ 📊 **Sentry** : capture d'erreurs front (React) et API (.NET), regroupement incidents, contexte release/env ; définir sampling, politique PII et rétention.
+
+---
+
+## 📋 V1.4
+
+**Objectif** : ouverture OAuth.
+
 - ⬜ 🔒 **OAuth — volet infra** : librairie OAuth côté API .NET, secrets dédiés par provider, écran de consentement, mentions légales à jour — à poser après que le profil utilisateur (V1.2 produit) soit stabilisé.
 
 ---
