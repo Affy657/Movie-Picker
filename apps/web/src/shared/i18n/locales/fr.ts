@@ -552,6 +552,9 @@
     eventReminder1hText: '— commence dans 1 heure.',
     eventReminder24hText: '— commence demain.',
     eventInvitationText: 'vous invite à rejoindre',
+    markReadError: 'Impossible de marquer les notifications comme lues.',
+    prefsLoadError: 'Impossible de charger vos préférences de notifications.',
+    prefsSaveError: 'Impossible d\'enregistrer cette préférence.',
   },
 
   footer: {
@@ -589,6 +592,7 @@
       empty: 'Aucun utilisateur ici.',
       followAriaLabel: 'Suivre @{{handle}}',
       unfollowAriaLabel: 'Ne plus suivre @{{handle}}',
+      error: "Action impossible, réessayez.",
     },
     settings: {
       title: 'Profil public',

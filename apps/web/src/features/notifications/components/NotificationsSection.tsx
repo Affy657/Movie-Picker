@@ -8,6 +8,7 @@ import {
 } from '@/features/notifications/api/notificationsApi';
 import { useTranslation } from '@/shared/i18n';
 import Toggle from '@/shared/components/Toggle';
+import { getErrorMessage } from '@/shared/api/apiError';
 import styles from './NotificationsSection.module.css';
 
 export default function NotificationsSection() {
@@ -24,13 +25,14 @@ export default function NotificationsSection() {
 
   const [prefs, setPrefs] = useState<NotificationPreferences | null>(null);
   const [savingPref, setSavingPref] = useState<string | null>(null);
+  const [prefsError, setPrefsError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!subscribed) return;
     fetchNotificationPreferences()
       .then(setPrefs)
-      .catch(() => {});
-  }, [subscribed]);
+      .catch((err) => setPrefsError(getErrorMessage(err, t('notifications.prefsLoadError'))));
+  }, [subscribed, t]);
 
   const handleTogglePref = useCallback(
     async (key: keyof NotificationPreferences) => {
@@ -39,11 +41,14 @@ export default function NotificationsSection() {
       try {
         const updated = await patchNotificationPreferences({ [key]: !prefs[key] });
         setPrefs(updated);
+        setPrefsError(null);
+      } catch (err) {
+        setPrefsError(getErrorMessage(err, t('notifications.prefsSaveError')));
       } finally {
         setSavingPref(null);
       }
     },
-    [prefs]
+    [prefs, t]
   );
 
   if (!supported) {
@@ -68,6 +73,12 @@ export default function NotificationsSection() {
       {pushError && (
         <p className="error" role="alert">
           {pushError}
+        </p>
+      )}
+
+      {prefsError && (
+        <p className="error" role="alert">
+          {prefsError}
         </p>
       )}
 
