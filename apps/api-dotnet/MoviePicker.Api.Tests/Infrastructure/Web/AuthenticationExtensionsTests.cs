@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Infrastructure.Web;
@@ -11,14 +10,6 @@ namespace MoviePicker.Api.Tests.Infrastructure.Web;
 
 public sealed class AuthenticationExtensionsTests
 {
-    private sealed class FakeHostEnvironment : IHostEnvironment
-    {
-        public string EnvironmentName { get; set; } = Environments.Production;
-        public string ApplicationName { get; set; } = "MoviePicker.Api.Tests";
-        public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
-        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
-    }
-
     private static CookieAuthenticationOptions ResolveCookieOptions()
     {
         var services = new ServiceCollection();
