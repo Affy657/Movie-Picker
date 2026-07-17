@@ -78,6 +78,27 @@
   flex-direction: column;
   gap: 0.25rem;
   padding: 0.7rem 0.85rem;
+  /* Re-theme les pieces partagees de movieCardParts.module.css : en vue
+     grille elles reposent sur le bandeau sombre qui recouvre l'affiche
+     (leurs valeurs par defaut conviennent), mais ici .info est un panneau
+     de contenu ordinaire qui suit le theme clair/sombre. */
+  --mc-fg: var(--color-text);
+  --mc-fg-strong: var(--color-text);
+  --mc-fg-muted: var(--color-text-muted);
+  --mc-fg-soft: var(--color-text-muted);
+  --mc-fg-subtle: var(--color-text-muted);
+  --mc-icon-muted: var(--color-text-muted);
+  --mc-border: var(--color-border-subtle);
+  --mc-surface-ring: var(--color-surface);
+  --mc-overlay-hover: color-mix(in srgb, var(--color-text) 8%, transparent);
+  --mc-overlay-active: color-mix(in srgb, var(--color-text) 12%, transparent);
+  --mc-overlay-hover-soft: color-mix(in srgb, var(--color-text) 6%, transparent);
+  --mc-active-bg: var(--color-surface-hover);
+  --mc-input-bg: var(--color-input-bg);
+  --mc-kebab-bg: transparent;
+  --mc-kebab-bg-hover: var(--color-surface-hover);
+  --mc-kebab-fg: var(--color-text-muted);
+  --mc-kebab-fg-hover: var(--color-text);
 }
 
 .kebabSlot {
