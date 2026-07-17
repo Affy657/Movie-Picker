@@ -25,6 +25,8 @@ interface MovieListProps {
   participantAvatarsByPseudo?: Record<string, string>;
   ratingScale?: RatingScale;
   viewMode?: 'grid' | 'list';
+  isInWatchlist?: (movie: MovieData) => boolean;
+  onToggleWatchlist?: (movie: MovieData) => void;
 }
 
 export default function MovieList({
@@ -42,6 +44,8 @@ export default function MovieList({
   participantAvatarsByPseudo,
   ratingScale,
   viewMode = 'list',
+  isInWatchlist,
+  onToggleWatchlist,
 }: Readonly<MovieListProps>) {
   const { t } = useTranslation();
 
@@ -77,6 +81,8 @@ export default function MovieList({
             participantAvatars={participantAvatars}
             participantAvatarsByPseudo={participantAvatarsByPseudo}
             ratingScale={ratingScale}
+            isInWatchlist={isInWatchlist?.(m)}
+            onToggleWatchlist={onToggleWatchlist}
             t={t}
           />
         ))}

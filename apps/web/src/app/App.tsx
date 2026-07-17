@@ -22,6 +22,7 @@ const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswo
 const ResetPasswordPage = lazy(() => import('@/features/auth/pages/ResetPasswordPage'));
 const AccountPage = lazy(() => import('@/features/auth/pages/AccountPage'));
 const MyEventsPage = lazy(() => import('@/features/events/pages/MyEventsPage'));
+const WatchlistPage = lazy(() => import('@/features/watchlist/pages/WatchlistPage'));
 const ProfilePage = lazy(() => import('@/features/profile/pages/ProfilePage'));
 const NotFoundPage = lazy(() => import('@/app/pages/NotFoundPage'));
 
@@ -97,6 +98,14 @@ export function AppRoutes() {
           element={
             <ProtectedRoute>
               <MyEventsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.watchlist}
+          element={
+            <ProtectedRoute>
+              <WatchlistPage />
             </ProtectedRoute>
           }
         />

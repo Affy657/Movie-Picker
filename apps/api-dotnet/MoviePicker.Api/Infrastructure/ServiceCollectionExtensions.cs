@@ -165,6 +165,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IAuthSessionInvalidator, InMemoryAuthSessionInvalidator>();
             services.AddSingleton<IPushSubscriptionRepository, InMemoryPushSubscriptionRepository>();
             services.AddSingleton<IFollowRepository, InMemoryFollowRepository>();
+            services.AddSingleton<IWatchlistRepository, InMemoryWatchlistRepository>();
             services.AddSingleton<IUserNotificationRepository, InMemoryUserNotificationRepository>();
             return;
         }
@@ -195,6 +196,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuthSessionInvalidator, MongoAuthSessionInvalidator>();
         services.AddScoped<IPushSubscriptionRepository, MongoPushSubscriptionRepository>();
         services.AddScoped<IFollowRepository, MongoFollowRepository>();
+        services.AddScoped<IWatchlistRepository, MongoWatchlistRepository>();
         services.AddScoped<IUserNotificationRepository, MongoUserNotificationRepository>();
         services.AddHostedService<MongoIndexInitializer>();
         services.AddHostedService<UserHandleBackfillService>();

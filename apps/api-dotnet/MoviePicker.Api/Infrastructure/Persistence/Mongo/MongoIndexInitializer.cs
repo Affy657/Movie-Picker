@@ -29,6 +29,7 @@ public sealed class MongoIndexInitializer : IHostedService
             await EnsurePasswordResetTokenIndexesAsync(cancellationToken);
             await EnsurePushSubscriptionIndexesAsync(cancellationToken);
             await EnsureFollowIndexesAsync(cancellationToken);
+            await EnsureWatchlistIndexesAsync(cancellationToken);
             await EnsureUserNotificationIndexesAsync(cancellationToken);
             _logger.LogInformation("Index MongoDB initialisés.");
         }
@@ -209,6 +210,23 @@ public sealed class MongoIndexInitializer : IHostedService
                 .Descending(x => x.CreatedAt),
             new CreateIndexOptions { Name = "follows_followeeId_createdAt" });
         await col.Indexes.CreateManyAsync(new[] { unique, byFollowerDate, byFolloweeDate }, ct);
+    }
+
+    private async Task EnsureWatchlistIndexesAsync(CancellationToken ct)
+    {
+        var col = _database.GetCollection<WatchlistItemDocument>("watchlist");
+        var unique = new CreateIndexModel<WatchlistItemDocument>(
+            Builders<WatchlistItemDocument>.IndexKeys
+                .Ascending(x => x.UserId)
+                .Ascending(x => x.TmdbId)
+                .Ascending(x => x.MediaType),
+            new CreateIndexOptions { Name = "watchlist_userId_tmdbId_mediaType_unique", Unique = true });
+        var byUserDate = new CreateIndexModel<WatchlistItemDocument>(
+            Builders<WatchlistItemDocument>.IndexKeys
+                .Ascending(x => x.UserId)
+                .Descending(x => x.CreatedAt),
+            new CreateIndexOptions { Name = "watchlist_userId_createdAt" });
+        await col.Indexes.CreateManyAsync(new[] { unique, byUserDate }, ct);
     }
 
     private async Task EnsureUserNotificationIndexesAsync(CancellationToken ct)

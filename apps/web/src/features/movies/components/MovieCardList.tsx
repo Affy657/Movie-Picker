@@ -28,6 +28,8 @@ export const MovieCardList = memo(function MovieCardList({
   participantAvatarsByPseudo,
   ratingScale,
   eager = false,
+  isInWatchlist,
+  onToggleWatchlist,
 }: MovieCardCommonProps) {
   const s = useMovieCardState({
     movie: m,
@@ -80,7 +82,7 @@ export const MovieCardList = memo(function MovieCardList({
       </div>
 
       <div className={styles.info}>
-        {(s.hasDetails || s.canRemove) && (
+        {(s.hasDetails || s.canRemove || !!onToggleWatchlist) && (
           <div className={styles.kebabSlot}>
             <CardKebab
               title={m.title}
@@ -91,6 +93,8 @@ export const MovieCardList = memo(function MovieCardList({
               isHost={isHost}
               canRemove={s.canRemove}
               onRemove={() => void onRemove(m.id)}
+              inWatchlist={isInWatchlist}
+              onToggleWatchlist={onToggleWatchlist ? () => onToggleWatchlist(m) : undefined}
               t={t}
             />
           </div>

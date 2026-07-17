@@ -2,11 +2,14 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import clsx from 'clsx';
 import {
+  Bookmark,
+  BookmarkCheck,
   Check,
   ChevronDown,
   ChevronUp,
   ExternalLink,
   Eye,
+  ListPlus,
   MessageSquarePlus,
   MoreVertical,
   Quote,
@@ -57,6 +60,8 @@ export interface MovieCardCommonProps {
   participantAvatarsByPseudo?: Record<string, string>;
   ratingScale?: RatingScale;
   eager?: boolean;
+  isInWatchlist?: boolean;
+  onToggleWatchlist?: (movie: MovieData) => void;
 }
 
 export function useMovieCardState({
@@ -412,6 +417,9 @@ interface CardKebabProps {
   isHost: boolean;
   canRemove: boolean;
   onRemove: () => void;
+  inWatchlist?: boolean;
+  onToggleWatchlist?: () => void;
+  onProposeToEvent?: () => void;
   t: Translate;
 }
 
@@ -470,6 +478,9 @@ export function CardKebab({
   isHost,
   canRemove,
   onRemove,
+  inWatchlist,
+  onToggleWatchlist,
+  onProposeToEvent,
   t,
 }: Readonly<CardKebabProps>) {
   const [open, setOpen] = useState(false);
@@ -562,6 +573,40 @@ export function CardKebab({
                   onClose={close}
                 />
               </>
+            )}
+            {onToggleWatchlist && (
+              <button
+                type="button"
+                role="menuitem"
+                className={styles.kebabItem}
+                onClick={() => {
+                  setOpen(false);
+                  onToggleWatchlist();
+                }}
+              >
+                {inWatchlist ? (
+                  <BookmarkCheck aria-hidden size={14} />
+                ) : (
+                  <Bookmark aria-hidden size={14} />
+                )}
+                <span>
+                  {inWatchlist ? t('watchlist.card.removeAction') : t('watchlist.card.addAction')}
+                </span>
+              </button>
+            )}
+            {onProposeToEvent && (
+              <button
+                type="button"
+                role="menuitem"
+                className={styles.kebabItem}
+                onClick={() => {
+                  setOpen(false);
+                  onProposeToEvent();
+                }}
+              >
+                <ListPlus aria-hidden size={14} />
+                <span>{t('watchlist.card.proposeAction')}</span>
+              </button>
             )}
             {canRemove && (
               <button

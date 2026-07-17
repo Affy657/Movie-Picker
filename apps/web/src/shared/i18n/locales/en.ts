@@ -18,6 +18,7 @@ export const en: Locale = {
   nav: {
     home: 'Home',
     myEvents: 'My events',
+    watchlist: 'My watchlist',
     account: 'My account',
     createEvent: 'New event',
     navLabel: 'Main navigation',
@@ -491,6 +492,44 @@ export const en: Locale = {
       openModalAria: 'See where to watch "{{title}}"',
       alsoRentAria: 'Rent ({{count}}) — see where to watch "{{title}}"',
       alsoBuyAria: 'Buy ({{count}}) — see where to watch "{{title}}"',
+    },
+  },
+
+  watchlist: {
+    title: 'My watchlist',
+    listHeading: 'To watch ({{count}})',
+    listAria: 'Movies in my watchlist',
+    loadError: 'Could not load your watchlist.',
+    addError: 'Could not add to watchlist.',
+    removeError: 'Could not remove from watchlist.',
+    removeAria: 'Remove "{{title}}" from my watchlist',
+    empty: {
+      title: 'Your watchlist is empty',
+      message: 'Search for a movie above to add it to your "to watch" list.',
+    },
+    search: {
+      label: 'Search for a movie to add to my watchlist',
+      placeholder: 'Search for a movie to add…',
+      add: 'Add',
+      alreadyAdded: 'Already in watchlist',
+    },
+    card: {
+      addAction: 'Add to my watchlist',
+      removeAction: 'Remove from my watchlist',
+      proposeAction: 'Propose in an event',
+      addError: 'Could not add to watchlist.',
+      removeError: 'Could not remove from watchlist.',
+    },
+    propose: {
+      proposeError: 'Could not propose.',
+      modalTitle: 'Propose "{{title}}" in an event',
+      noEvents: 'You have no active events yet.',
+      proposedDone: 'Proposed',
+      viewMore: 'View all my events',
+    },
+    filter: {
+      toggleAria: 'Filter my to-watch list',
+      empty: 'No results for this filter.',
     },
   },
 

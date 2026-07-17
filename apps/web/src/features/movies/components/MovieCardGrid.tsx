@@ -30,6 +30,8 @@ export const MovieCardGrid = memo(function MovieCardGrid({
   participantAvatarsByPseudo,
   ratingScale,
   eager = false,
+  isInWatchlist,
+  onToggleWatchlist,
 }: MovieCardCommonProps) {
   const s = useMovieCardState({
     movie: m,
@@ -77,7 +79,7 @@ export const MovieCardGrid = memo(function MovieCardGrid({
 
         {m.mediaType === 'tv' && <span className={styles.tvBadge}>{t('movies.list.tvBadge')}</span>}
 
-        {(s.hasDetails || s.canRemove) && (
+        {(s.hasDetails || s.canRemove || !!onToggleWatchlist) && (
           <div className={styles.kebabSlot}>
             <CardKebab
               title={m.title}
@@ -88,6 +90,8 @@ export const MovieCardGrid = memo(function MovieCardGrid({
               isHost={isHost}
               canRemove={s.canRemove}
               onRemove={() => void onRemove(m.id)}
+              inWatchlist={isInWatchlist}
+              onToggleWatchlist={onToggleWatchlist ? () => onToggleWatchlist(m) : undefined}
               t={t}
             />
           </div>

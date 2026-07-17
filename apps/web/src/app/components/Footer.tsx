@@ -81,6 +81,11 @@ export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>
                 {t('nav.createEvent')}
               </Link>
             </li>
+            <li>
+              <Link to={ROUTES.watchlist} className={styles.colLink}>
+                {t('nav.watchlist')}
+              </Link>
+            </li>
           </ul>
         </div>
 

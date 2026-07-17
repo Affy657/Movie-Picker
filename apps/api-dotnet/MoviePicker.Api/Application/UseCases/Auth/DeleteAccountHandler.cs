@@ -18,6 +18,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
     private readonly IUserNotificationRepository _notifications;
     private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly IFollowRepository _follows;
+    private readonly IWatchlistRepository _watchlist;
     private readonly IPasswordResetTokenRepository _resetTokens;
     private readonly IAuthSessionInvalidator _sessionInvalidator;
     private readonly ILogger<DeleteAccountHandler> _logger;
@@ -30,6 +31,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         IUserNotificationRepository notifications,
         IPushSubscriptionRepository pushSubscriptions,
         IFollowRepository follows,
+        IWatchlistRepository watchlist,
         IPasswordResetTokenRepository resetTokens,
         IAuthSessionInvalidator sessionInvalidator,
         ILogger<DeleteAccountHandler> logger)
@@ -41,6 +43,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         _notifications = notifications;
         _pushSubscriptions = pushSubscriptions;
         _follows = follows;
+        _watchlist = watchlist;
         _resetTokens = resetTokens;
         _sessionInvalidator = sessionInvalidator;
         _logger = logger;
@@ -62,6 +65,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         await _notifications.DeleteByUserIdAsync(userId, ct);
         await _pushSubscriptions.DeleteByUserIdAsync(userId, ct);
         await _follows.DeleteAllForUserAsync(userId, ct);
+        await _watchlist.DeleteAllForUserAsync(userId, ct);
         await _resetTokens.DeleteByUserIdAsync(userId, ct);
         await _sessionInvalidator.InvalidateAllForUserAsync(userId, ct);
         await _users.DeleteAsync(userId, ct);

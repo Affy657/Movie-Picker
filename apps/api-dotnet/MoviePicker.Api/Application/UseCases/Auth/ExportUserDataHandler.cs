@@ -17,6 +17,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
     private readonly IVoteRepository _votes;
     private readonly ISeenMarkRepository _seenMarks;
     private readonly IPushSubscriptionRepository _pushSubscriptions;
+    private readonly IWatchlistRepository _watchlist;
     private readonly TimeProvider _clock;
 
     public ExportUserDataHandler(
@@ -28,6 +29,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         IVoteRepository votes,
         ISeenMarkRepository seenMarks,
         IPushSubscriptionRepository pushSubscriptions,
+        IWatchlistRepository watchlist,
         TimeProvider clock)
     {
         _users = users;
@@ -38,6 +40,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         _votes = votes;
         _seenMarks = seenMarks;
         _pushSubscriptions = pushSubscriptions;
+        _watchlist = watchlist;
         _clock = clock;
     }
 
@@ -63,6 +66,8 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         var participationEvents = await _events.ListByIdsAsync(participationEventIds, ct);
         var eventTitleById = participationEvents.ToDictionary(e => e.Id, e => e.Title);
 
+        var watchlist = await _watchlist.ListByUserIdAsync(userId, MaxItems, ct);
+
         var votesByParticipant = votes
             .GroupBy(v => v.ParticipantId)
             .ToDictionary(g => g.Key, g => g.ToList());
@@ -83,9 +88,19 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
                 .ToList(),
             PushSubscriptions = pushSubscriptions
                 .Select(s => new ExportedPushSubscription { Endpoint = s.Endpoint, CreatedAt = s.CreatedAt })
-                .ToList()
+                .ToList(),
+            Watchlist = watchlist.Select(MapWatchlistItem).ToList()
         };
     }
+
+    private static ExportedWatchlistItem MapWatchlistItem(WatchlistItem item) => new()
+    {
+        TmdbId = item.TmdbId,
+        MediaType = item.MediaType == MovieMediaType.Tv ? "tv" : "movie",
+        Title = item.Title,
+        Year = item.Year,
+        CreatedAt = item.CreatedAt
+    };
 
     private static ExportedProfile MapProfile(User user) => new()
     {

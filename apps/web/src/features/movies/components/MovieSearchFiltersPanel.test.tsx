@@ -103,6 +103,20 @@ describe('MovieSearchFiltersPanel', () => {
     expect(screen.getByRole('button', { name: 'Purchase' })).toBeInTheDocument();
   });
 
+  it('masque les groupes genre/langue/disponibilité quand leur callback est omis', () => {
+    renderPanel({
+      onToggleGenre: undefined,
+      onToggleLanguage: undefined,
+      onToggleAvailability: undefined,
+    });
+    expect(screen.queryByText('Genre')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Action' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Français' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Streaming' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '2020s' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '★ 3+' })).toBeInTheDocument();
+  });
+
   it('avec ratingScale="ten", affiche le filtre de note minimale sur 10', () => {
     renderPanel({ ratingScale: 'ten' });
     expect(screen.getByRole('button', { name: '★ 6+' })).toBeInTheDocument();

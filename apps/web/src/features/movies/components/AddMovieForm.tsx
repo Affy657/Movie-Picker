@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import clsx from 'clsx';
 import { Search } from 'lucide-react';
 import {
   addMovieToEvent,
@@ -68,12 +69,20 @@ function ResultMeta({
 }
 
 interface AddMovieFormProps {
-  slug: string;
-  participantId: string;
+  slug?: string;
+  participantId?: string;
   participantPseudo?: string;
   existingMovies?: MovieData[];
   onAdded: () => void;
   disabled?: boolean;
+  onAddItem?: (item: MovieSearchItem) => Promise<void>;
+  isItemAlreadyAdded?: (item: MovieSearchItem) => boolean;
+  alreadyAddedLabel?: string;
+  alreadyAddedHint?: string;
+  addErrorLabel?: string;
+  searchPlaceholder?: string;
+  searchAriaLabel?: string;
+  searchWrapClassName?: string;
 }
 
 export default function AddMovieForm({
@@ -83,6 +92,14 @@ export default function AddMovieForm({
   existingMovies = [],
   onAdded,
   disabled,
+  onAddItem,
+  isItemAlreadyAdded,
+  alreadyAddedLabel,
+  alreadyAddedHint,
+  addErrorLabel,
+  searchPlaceholder,
+  searchAriaLabel,
+  searchWrapClassName,
 }: Readonly<AddMovieFormProps>) {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
@@ -297,20 +314,24 @@ export default function AddMovieForm({
     setError(null);
     setAdding(true);
     try {
-      await addMovieToEvent(slug, {
-        tmdbId: r.id,
-        mediaType: r.mediaType,
-        title: r.title,
-        year: r.year,
-        posterPath: r.posterPath,
-        participantId,
-      });
-      track('movie_added', { mediaType: r.mediaType });
+      if (onAddItem) {
+        await onAddItem(r);
+      } else if (slug && participantId) {
+        await addMovieToEvent(slug, {
+          tmdbId: r.id,
+          mediaType: r.mediaType,
+          title: r.title,
+          year: r.year,
+          posterPath: r.posterPath,
+          participantId,
+        });
+        track('movie_added', { mediaType: r.mediaType });
+      }
       clearSearchResults();
       setQuery('');
       onAdded();
     } catch (err) {
-      setError(getErrorMessage(err, t('movies.search.addError')));
+      setError(getErrorMessage(err, addErrorLabel ?? t('movies.search.addError')));
     } finally {
       setAdding(false);
     }
@@ -340,7 +361,7 @@ export default function AddMovieForm({
 
   return (
     <div className={styles.root}>
-      <div className={styles.searchWrap} ref={containerRef}>
+      <div className={clsx(styles.searchWrap, searchWrapClassName)} ref={containerRef}>
         <div className={styles.searchRow}>
           <div className={styles.inputWrap}>
             <button
@@ -356,7 +377,7 @@ export default function AddMovieForm({
               id="add-movie-search"
               type="search"
               className="input"
-              aria-label={t('movies.search.label')}
+              aria-label={searchAriaLabel ?? t('movies.search.label')}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => {
@@ -368,7 +389,7 @@ export default function AddMovieForm({
                 }
               }}
               onFocus={() => setInputFocused(true)}
-              placeholder={t('movies.search.placeholder')}
+              placeholder={searchPlaceholder ?? t('movies.search.placeholder')}
               autoComplete="off"
               role="combobox"
               aria-expanded={showHistory}
@@ -554,6 +575,7 @@ export default function AddMovieForm({
                 ? tmdbPosterSrcForListDisplay(posterSrcRaw)
                 : undefined;
               const alreadyListed = existingMovies.find((m) => isSameTmdbItem(m, r));
+              const alreadyAdded = isItemAlreadyAdded ? isItemAlreadyAdded(r) : !!alreadyListed;
               const seenHint = alreadyListed
                 ? othersAlreadySeenHint(alreadyListed.seenByPseudos, participantPseudo, t)
                 : null;
@@ -602,11 +624,15 @@ export default function AddMovieForm({
                       type="button"
                       className={`btn btn-sm btn-primary ${styles.addButton}`}
                       onClick={() => addMovie(r)}
-                      disabled={adding || !!alreadyListed}
-                      title={alreadyListed ? t('movies.search.alreadyListedHint') : undefined}
+                      disabled={adding || alreadyAdded}
+                      title={
+                        alreadyAdded
+                          ? (alreadyAddedHint ?? t('movies.search.alreadyListedHint'))
+                          : undefined
+                      }
                     >
-                      {alreadyListed
-                        ? t('movies.search.alreadyListed')
+                      {alreadyAdded
+                        ? (alreadyAddedLabel ?? t('movies.search.alreadyListed'))
                         : t('movies.search.addButton')}
                     </button>
                   </div>

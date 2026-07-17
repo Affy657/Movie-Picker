@@ -1,17 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import clsx from 'clsx';
-import {
-  CalendarPlus,
-  Crown,
-  Film,
-  History,
-  LogOut,
-  MoreVertical,
-  Trash2,
-  Trophy,
-  Users,
-} from 'lucide-react';
-import { posterImageSrc } from '@/shared/utils/posterUrl';
+import { CalendarPlus, History, LogOut, MoreVertical, Trash2 } from 'lucide-react';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -30,20 +19,16 @@ import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import type { MyEventSummary } from '@/features/events/types';
 import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
-import type { MyEventLifecycle } from '@/shared/types/event';
-import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
-import { formatMyEventsListDate, formatEventTime } from '@/shared/utils/formatMyEventsListDate';
+import { useTranslation } from '@/shared/i18n';
 import { parseEventLocalStartMs } from '@/shared/utils/eventScheduleLocal';
 import { withReturnTo, ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
+import {
+  EventSummaryCardBody,
+  eventSummaryCardStyles,
+} from '@/features/events/components/EventSummaryCard';
 import styles from './MyEventsPage.module.css';
-
-const badgeClassMap: Record<string, string | undefined> = {
-  upcoming: styles.badgeUpcoming,
-  live: styles.badgeLive,
-  finished: styles.badgeFinished,
-};
 
 function isFinishedEvent(ev: MyEventSummary): boolean {
   return normalizeMyEventLifecycle(ev.lifecycle) === 'finished';
@@ -59,40 +44,6 @@ function sortActiveChrono(a: MyEventSummary, b: MyEventSummary): number {
 
 function sortHistoryChrono(a: MyEventSummary, b: MyEventSummary): number {
   return eventDateTimeMs(b) - eventDateTimeMs(a);
-}
-
-function lifecycleTranslationKey(l: MyEventLifecycle): TranslationKey {
-  switch (l) {
-    case 'upcoming':
-      return 'events.lifecycle.upcoming';
-    case 'live':
-      return 'events.lifecycle.live';
-    case 'finished':
-      return 'events.lifecycle.finished';
-    default:
-      return 'events.lifecycle.finished';
-  }
-}
-
-function cardJoinedLabel(participantCount: number, maxParticipants: number | null | undefined) {
-  const n = participantCount;
-  const hasCap = typeof maxParticipants === 'number' && maxParticipants > 0;
-  const countStr = hasCap ? `${n} / ${maxParticipants}` : String(n);
-  return (
-    <span className={styles.participantStat}>
-      <Users aria-hidden size={13} />
-      {countStr}
-    </span>
-  );
-}
-
-function cardMoviesLabel(movieCount: number) {
-  return (
-    <span className={styles.participantStat}>
-      <Film aria-hidden size={13} />
-      {movieCount}
-    </span>
-  );
 }
 
 function EventCardKebab({
@@ -180,9 +131,6 @@ function EventListBlock({
   onDeleteEvent?: (slug: string) => void;
   onLeaveEvent?: (slug: string) => void;
 }>) {
-  const { t } = useTranslation();
-  const { locale } = useLocale();
-
   if (events.length === 0) {
     return null;
   }
@@ -193,77 +141,26 @@ function EventListBlock({
         {heading}
       </h2>
       <ul className={styles.list}>
-        {events.map((ev) => {
-          const lifecycle = normalizeMyEventLifecycle(ev.lifecycle);
-          const badgeClass = badgeClassMap[lifecycle] ?? '';
-          const dateLabel = formatMyEventsListDate(ev.date, locale);
-          return (
-            <li key={ev.id} className={styles.item}>
-              <Link
-                to={ROUTES.eventDetail(ev.slug)}
-                className={clsx(
-                  styles.link,
-                  ev.winnerMovieTitle && styles.winnerCard,
-                  ((onDeleteEvent && ev.isCreator) || (onLeaveEvent && !ev.isCreator)) &&
-                    styles.linkWithKebab
-                )}
-              >
-                <span className={styles.rowTop}>
-                  <span className={styles.title}>{ev.title}</span>
-                  {ev.isCreator ? (
-                    <span
-                      className={styles.badgeHost}
-                      title={t('events.myEvents.hostBadgeTitle')}
-                      aria-label={t('events.myEvents.hostBadge')}
-                    >
-                      <Crown aria-hidden size={14} />
-                    </span>
-                  ) : null}
-                </span>
-                {ev.theme ? <span className={styles.cardTheme}>{ev.theme}</span> : null}
-                {ev.winnerMovieTitle ? (
-                  <span className={styles.winnerRow}>
-                    {ev.winnerMoviePosterPath ? (
-                      <img
-                        src={posterImageSrc(ev.winnerMoviePosterPath)}
-                        alt=""
-                        aria-hidden
-                        className={styles.winnerPoster}
-                        width={28}
-                        height={42}
-                      />
-                    ) : (
-                      <Trophy aria-hidden size={13} className={styles.winnerIcon} />
-                    )}
-                    <span className={styles.winnerTitle}>{ev.winnerMovieTitle}</span>
-                  </span>
-                ) : null}
-                <div className={styles.linkFooter}>
-                  <span className={styles.cardStats}>
-                    {cardJoinedLabel(ev.participantCount ?? 0, ev.maxParticipants)}
-                    {cardMoviesLabel(ev.movieCount ?? 0)}
-                  </span>
-                  <span className={styles.metaRight}>
-                    {showLifecycleBadge && lifecycle !== 'upcoming' ? (
-                      <span className={clsx(styles.lifecyclePill, badgeClass)}>
-                        {t(lifecycleTranslationKey(lifecycle))}
-                      </span>
-                    ) : null}
-                    <span className={styles.meta}>
-                      {formatEventTime(ev.time)} – {dateLabel}
-                    </span>
-                  </span>
-                </div>
-              </Link>
-              {onDeleteEvent && ev.isCreator && (
-                <EventCardKebab title={ev.title} onDelete={() => onDeleteEvent(ev.slug)} />
+        {events.map((ev) => (
+          <li key={ev.id} className={styles.item}>
+            <Link
+              to={ROUTES.eventDetail(ev.slug)}
+              className={clsx(
+                eventSummaryCardStyles.card,
+                ((onDeleteEvent && ev.isCreator) || (onLeaveEvent && !ev.isCreator)) &&
+                  styles.linkWithKebab
               )}
-              {onLeaveEvent && !ev.isCreator && (
-                <EventCardKebab title={ev.title} onLeave={() => onLeaveEvent(ev.slug)} />
-              )}
-            </li>
-          );
-        })}
+            >
+              <EventSummaryCardBody event={ev} showLifecycleBadge={showLifecycleBadge} />
+            </Link>
+            {onDeleteEvent && ev.isCreator && (
+              <EventCardKebab title={ev.title} onDelete={() => onDeleteEvent(ev.slug)} />
+            )}
+            {onLeaveEvent && !ev.isCreator && (
+              <EventCardKebab title={ev.title} onLeave={() => onLeaveEvent(ev.slug)} />
+            )}
+          </li>
+        ))}
       </ul>
     </section>
   );

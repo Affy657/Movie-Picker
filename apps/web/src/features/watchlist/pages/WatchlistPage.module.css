@@ -1,0 +1,111 @@
+.layout {
+  --page-max-width: 640px;
+}
+
+@media (min-width: 640px) {
+  .layout {
+    --page-max-width: 75vw;
+  }
+}
+
+.sectionTitle {
+  margin: 0 0 0.85rem 0;
+  font-size: var(--font-size-lg);
+  line-height: var(--leading-snug);
+}
+
+.searchFixedWidth {
+  max-width: 32rem;
+}
+
+.grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 0.9rem;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.poster {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  background: var(--color-poster-placeholder);
+}
+
+.kebabSlot {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+.proposeSlot {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+}
+
+.poster img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.posterPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 0.15rem;
+  padding: 0.6rem 0.7rem;
+}
+
+.cardDetailsBtn {
+  margin-top: auto;
+}
+
+.cardTitle {
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  line-height: var(--leading-snug);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.cardMetaRow {
+  font-size: var(--font-size-xs);
+  color: var(--color-meta);
+}
+
+.mediaBadge {
+  font-size: var(--font-size-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.05rem 0.35rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-hover);
+  color: var(--color-text-muted);
+}

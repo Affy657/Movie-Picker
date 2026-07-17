@@ -33,4 +33,7 @@ export const queryKeys = {
     details: (tmdbId: number | undefined, mediaType?: string) =>
       ['movies', 'details', tmdbId ?? '$pending', mediaType ?? 'movie'] as const,
   },
+  watchlist: {
+    list: ['watchlist', 'list'] as const,
+  },
 } as const;

@@ -100,3 +100,7 @@
   color: var(--color-primary-contrast);
   border-color: var(--color-primary);
 }
+
+.addSection {
+  margin-bottom: 1rem;
+}

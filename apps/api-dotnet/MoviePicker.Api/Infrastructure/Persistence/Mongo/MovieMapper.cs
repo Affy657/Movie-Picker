@@ -39,7 +39,7 @@ public static class MovieMapper
     public static string MediaTypeToString(MovieMediaType m) =>
         m == MovieMediaType.Tv ? "tv" : "movie";
 
-    private static MovieMediaType ParseMediaType(string? raw) =>
+    public static MovieMediaType ParseMediaType(string? raw) =>
         string.Equals(raw?.Trim(), "tv", StringComparison.OrdinalIgnoreCase)
             ? MovieMediaType.Tv
             : MovieMediaType.Movie;

@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import type { ComponentType, SVGProps } from 'react';
-import { CalendarDays, Plus } from 'lucide-react';
+import { Bookmark, CalendarDays, Plus } from 'lucide-react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -30,6 +30,7 @@ type NavItemSpec = Omit<NavItemDef, 'label'> & { labelKey: TranslationKey };
 const AUTHENTICATED_NAV_ITEMS: ReadonlyArray<NavItemSpec> = [
   { to: ROUTES.myEvents, labelKey: 'nav.myEvents', Icon: CalendarDays },
   { to: ROUTES.createEvent, labelKey: 'nav.createEvent', Icon: Plus },
+  { to: ROUTES.watchlist, labelKey: 'nav.watchlist', Icon: Bookmark },
 ];
 
 function DesktopNavItem({ to, end, label }: Readonly<Omit<NavItemDef, 'Icon'>>) {

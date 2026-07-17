@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { LayoutGrid, List } from 'lucide-react';
 import type { UseQueryResult } from '@tanstack/react-query';
@@ -11,8 +11,17 @@ import type { MovieData } from '@/shared/types/movie';
 import AddMovieForm from '@/features/movies/components/AddMovieForm';
 import MovieList from '@/features/movies/components/MovieList';
 import EventActionErrorBanner from '@/features/events/pages/event-detail/EventActionErrorBanner';
+import {
+  useAddToWatchlist,
+  useRemoveFromWatchlist,
+  useWatchlist,
+} from '@/features/watchlist/hooks/useWatchlist';
 import { useTranslation } from '@/shared/i18n';
 import styles from './EventMoviesSection.module.css';
+
+function watchlistKey(tmdbId: number, mediaType: MovieData['mediaType']): string {
+  return `${tmdbId}|${mediaType ?? 'movie'}`;
+}
 
 type SortKey = 'score' | 'voteAverage' | 'duration' | 'createdAt';
 
@@ -76,6 +85,45 @@ export default function EventMoviesSection({
   const { t } = useTranslation();
   const [sortBy, setSortBy] = useState<SortKey>('createdAt');
 
+  const watchlistQuery = useWatchlist({ enabled: !!user });
+  const watchlistItems = useMemo(() => watchlistQuery.data ?? [], [watchlistQuery.data]);
+  const watchlistKeys = useMemo(
+    () => new Set(watchlistItems.map((i) => watchlistKey(i.tmdbId, i.mediaType))),
+    [watchlistItems]
+  );
+
+  const { mutate: addToWatchlist } = useAddToWatchlist({
+    onError: (e) => setActionError(getErrorMessage(e, t('watchlist.card.addError'))),
+  });
+  const { mutate: removeFromWatchlist } = useRemoveFromWatchlist({
+    onError: (e) => setActionError(getErrorMessage(e, t('watchlist.card.removeError'))),
+  });
+
+  const isInWatchlist = useCallback(
+    (m: MovieData) => watchlistKeys.has(watchlistKey(m.tmdbId, m.mediaType)),
+    [watchlistKeys]
+  );
+
+  const handleToggleWatchlist = useCallback(
+    (m: MovieData) => {
+      setActionError(null);
+      if (watchlistKeys.has(watchlistKey(m.tmdbId, m.mediaType))) {
+        removeFromWatchlist({ tmdbId: m.tmdbId, mediaType: m.mediaType });
+      } else {
+        addToWatchlist({
+          tmdbId: m.tmdbId,
+          mediaType: m.mediaType,
+          title: m.title,
+          year: m.year,
+          posterPath: m.posterPath,
+          voteAverage: m.voteAverage,
+          runtimeMinutes: m.runtimeMinutes,
+        });
+      }
+    },
+    [watchlistKeys, addToWatchlist, removeFromWatchlist, setActionError]
+  );
+
   const handleVote = useCallback(
     async (movieId: string, value: 1 | -1) => {
       if (!participant) return;
@@ -122,14 +170,16 @@ export default function EventMoviesSection({
   return (
     <section className="section section-movies" aria-label="Films proposés">
       {!isFinished && participant && (
-        <AddMovieForm
-          slug={slug}
-          participantId={participant.participantId}
-          participantPseudo={participant.pseudo}
-          existingMovies={movies}
-          onAdded={refreshAll}
-          disabled={isFinished}
-        />
+        <div className={styles.addSection}>
+          <AddMovieForm
+            slug={slug}
+            participantId={participant.participantId}
+            participantPseudo={participant.pseudo}
+            existingMovies={movies}
+            onAdded={refreshAll}
+            disabled={isFinished}
+          />
+        </div>
       )}
       {actionError && (
         <EventActionErrorBanner message={actionError} onDismiss={onDismissActionError} />
@@ -222,6 +272,8 @@ export default function EventMoviesSection({
             participantAvatarsByPseudo={participantAvatarsByPseudo}
             ratingScale={ratingScale}
             viewMode={viewMode}
+            isInWatchlist={user ? isInWatchlist : undefined}
+            onToggleWatchlist={user ? handleToggleWatchlist : undefined}
           />
         </div>
       )}

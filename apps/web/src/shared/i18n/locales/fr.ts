@@ -16,6 +16,7 @@
   nav: {
     home: 'Accueil',
     myEvents: 'Mes soirées',
+    watchlist: 'Ma watchlist',
     account: 'Mon compte',
     createEvent: 'Nouvelle soirée',
     navLabel: 'Navigation principale',
@@ -501,6 +502,44 @@
       openModalAria: 'Voir où regarder « {{title}} »',
       alsoRentAria: 'Location ({{count}}) — voir où regarder « {{title}} »',
       alsoBuyAria: 'Achat ({{count}}) — voir où regarder « {{title}} »',
+    },
+  },
+
+  watchlist: {
+    title: 'Ma watchlist',
+    listHeading: 'À voir ({{count}})',
+    listAria: 'Films de ma watchlist',
+    loadError: 'Impossible de charger votre watchlist.',
+    addError: 'Ajout à la watchlist impossible.',
+    removeError: 'Retrait de la watchlist impossible.',
+    removeAria: 'Retirer « {{title}} » de ma watchlist',
+    empty: {
+      title: 'Votre watchlist est vide',
+      message: 'Cherchez un film ci-dessus pour l’ajouter à votre liste « à voir ».',
+    },
+    search: {
+      label: 'Rechercher un film à ajouter à ma watchlist',
+      placeholder: 'Rechercher un film à ajouter…',
+      add: 'Ajouter',
+      alreadyAdded: 'Déjà dans la watchlist',
+    },
+    card: {
+      addAction: 'Ajouter à ma watchlist',
+      removeAction: 'Retirer de ma watchlist',
+      proposeAction: 'Proposer dans une soirée',
+      addError: 'Ajout à la watchlist impossible.',
+      removeError: 'Retrait de la watchlist impossible.',
+    },
+    propose: {
+      proposeError: 'Proposition impossible.',
+      modalTitle: 'Proposer « {{title}} » dans une soirée',
+      noEvents: "Vous n'avez aucune soirée active pour l'instant.",
+      proposedDone: 'Proposé',
+      viewMore: 'Voir toutes mes soirées',
+    },
+    filter: {
+      toggleAria: 'Filtrer ma liste à voir',
+      empty: 'Aucun film pour ce filtre.',
     },
   },
 

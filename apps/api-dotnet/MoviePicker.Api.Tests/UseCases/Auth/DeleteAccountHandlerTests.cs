@@ -21,6 +21,7 @@ public sealed class DeleteAccountHandlerTests
         public InMemoryUserNotificationRepository Notifications { get; } = new();
         public InMemoryPushSubscriptionRepository Push { get; } = new();
         public InMemoryFollowRepository Follows { get; } = new();
+        public InMemoryWatchlistRepository Watchlist { get; } = new();
         public InMemoryPasswordResetTokenRepository ResetTokens { get; } = new();
         public InMemoryVoteRepository Votes { get; } = new();
         public InMemorySeenMarkRepository SeenMarks { get; } = new();
@@ -36,6 +37,7 @@ public sealed class DeleteAccountHandlerTests
                 Notifications,
                 Push,
                 Follows,
+                Watchlist,
                 ResetTokens,
                 Sessions.Object,
                 NullLogger<DeleteAccountHandler>.Instance);
