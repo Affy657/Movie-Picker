@@ -56,6 +56,7 @@ function cspMetaPlugin(apiOrigin: string): Plugin {
     `img-src ${imgSrc}`,
     "font-src 'self' data:",
     `connect-src ${connectSrc}`,
+    'frame-src https://www.youtube.com',
     "worker-src 'self'",
     "manifest-src 'self'",
     "object-src 'none'",
