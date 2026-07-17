@@ -1,13 +1,15 @@
 import { Link } from 'react-router-dom';
 import { Clapperboard, Disc3, Link2, Sparkles, ThumbsUp } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
-import { APP_DOCUMENT_TITLE, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import { APP_DOCUMENT_TITLE } from '@/shared/hooks/useDocumentTitle';
+import { usePageSeo } from '@/shared/hooks/usePageSeo';
+import { SITE_URL } from '@/shared/seo/siteMeta';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import styles from './LandingPage.module.css';
 
 export default function LandingPage() {
-  useDocumentTitle(APP_DOCUMENT_TITLE);
+  usePageSeo({ title: APP_DOCUMENT_TITLE, canonical: `${SITE_URL}/`, ogType: 'website' });
   const { t } = useTranslation();
 
   return (

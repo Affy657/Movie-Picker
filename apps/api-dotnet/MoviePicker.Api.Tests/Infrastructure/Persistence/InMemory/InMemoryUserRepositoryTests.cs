@@ -106,4 +106,41 @@ public sealed class InMemoryUserRepositoryTests
         Assert.Null(await _repo.GetByEmailAsync("alice@test.local"));
         Assert.Null(await _repo.GetByHandleAsync("alice"));
     }
+
+    [Fact]
+    public async Task ListPublicProfilesAsync_ExcludesPrivateAndHandleless()
+    {
+        await _repo.AddAsync(Mk(email: "pub@test.local", handle: "publicuser"));
+        await _repo.AddAsync(Mk(email: "priv@test.local", handle: "privateuser") with { IsProfilePublic = false });
+        await _repo.AddAsync(Mk(email: "none@test.local", handle: ""));
+
+        var result = await _repo.ListPublicProfilesAsync(100);
+
+        Assert.Single(result);
+        Assert.Equal("publicuser", result[0].Handle);
+    }
+
+    [Fact]
+    public async Task ListPublicProfilesAsync_OrdersByUpdatedAtDescending()
+    {
+        var older = Mk(email: "old@test.local", handle: "older") with { UpdatedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero) };
+        var newer = Mk(email: "new@test.local", handle: "newer") with { UpdatedAt = new DateTimeOffset(2026, 6, 1, 0, 0, 0, TimeSpan.Zero) };
+        await _repo.AddAsync(older);
+        await _repo.AddAsync(newer);
+
+        var result = await _repo.ListPublicProfilesAsync(100);
+
+        Assert.Equal(new[] { "newer", "older" }, result.Select(p => p.Handle).ToArray());
+    }
+
+    [Fact]
+    public async Task ListPublicProfilesAsync_RespectsLimit()
+    {
+        for (var i = 0; i < 5; i++)
+            await _repo.AddAsync(Mk(email: $"u{i}@test.local", handle: $"user{i}"));
+
+        var result = await _repo.ListPublicProfilesAsync(3);
+
+        Assert.Equal(3, result.Count);
+    }
 }
