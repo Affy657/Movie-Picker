@@ -37,7 +37,7 @@ public sealed class MoviePickerCookieAuthenticationConfigurerTests
         Assert.Equal(AuthConstants.CookieName, options.Cookie.Name);
         Assert.True(options.Cookie.HttpOnly);
         Assert.Equal("/", options.Cookie.Path);
-        Assert.Equal(TimeSpan.FromDays(14), options.ExpireTimeSpan);
+        Assert.Equal(AuthConstants.SessionLifetime, options.ExpireTimeSpan);
         Assert.True(options.SlidingExpiration);
         Assert.NotNull(options.SessionStore);
     }

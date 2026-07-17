@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MoviePicker.Api.Infrastructure.Web;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
@@ -19,7 +20,7 @@ public sealed class MongoAuthTicketStore : ITicketStore
     {
         var id = ObjectId.GenerateNewId().ToString();
         var now = DateTime.UtcNow;
-        var expires = ticket.Properties.ExpiresUtc?.UtcDateTime ?? now.AddDays(14);
+        var expires = ticket.Properties.ExpiresUtc?.UtcDateTime ?? now.Add(AuthConstants.SessionLifetime);
         var doc = new AuthSessionDocument
         {
             Id = id,
@@ -34,7 +35,7 @@ public sealed class MongoAuthTicketStore : ITicketStore
 
     public async Task RenewAsync(string key, AuthenticationTicket ticket)
     {
-        var expires = ticket.Properties.ExpiresUtc?.UtcDateTime ?? DateTime.UtcNow.AddDays(14);
+        var expires = ticket.Properties.ExpiresUtc?.UtcDateTime ?? DateTime.UtcNow.Add(AuthConstants.SessionLifetime);
         var claims = ticket.Principal.Claims.Select(c => new StoredClaim { Type = c.Type, Value = c.Value }).ToList();
         var userId = ticket.Principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
         await _collection.UpdateOneAsync(
