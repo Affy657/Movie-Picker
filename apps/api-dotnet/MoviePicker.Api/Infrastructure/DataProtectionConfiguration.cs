@@ -29,6 +29,9 @@ public static class DataProtectionConfiguration
             return;
         }
 
+        // Repli utilisé uniquement en dev sans Mongo : en production MONGODB_URI est
+        // toujours renseigné, donc cette branche (et le secret AUTH_DATAPROTECTION_KEYRING)
+        // n'est jamais atteinte.
         var xml =
             builder.Configuration[KeyRingXmlEnvName]
             ?? Environment.GetEnvironmentVariable(KeyRingXmlEnvName);
