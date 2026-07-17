@@ -35,7 +35,7 @@ public sealed class AuthController : ControllerBase
         new()
         {
             IsPersistent = true,
-            ExpiresUtc = DateTimeOffset.UtcNow.AddDays(14),
+            ExpiresUtc = DateTimeOffset.UtcNow.Add(AuthConstants.SessionLifetime),
             AllowRefresh = true
         };
 

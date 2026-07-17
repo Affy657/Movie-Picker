@@ -7,7 +7,8 @@ var services = new ServiceCollection();
 services
     .AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(dir))
-    .SetApplicationName("MoviePicker");
+    .SetApplicationName("MoviePicker")
+    .SetDefaultKeyLifetime(TimeSpan.FromDays(3650));
 
 var sp = services.BuildServiceProvider();
 var provider = sp.GetRequiredService<IDataProtectionProvider>();
