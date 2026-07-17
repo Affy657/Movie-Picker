@@ -17,6 +17,16 @@
   flex-direction: column;
 }
 
+@media (max-width: 480px) {
+  .dialog {
+    /* Sur mobile, laisse la modale utiliser (presque) toute la hauteur
+       disponible : les 620px + 75dvh du desktop ecrasaient les longues
+       descriptions dans une petite zone de scroll interne. */
+    max-height: 92dvh;
+    margin-top: max(0.75rem, env(safe-area-inset-top, 0px));
+  }
+}
+
 .dialog:not([open]) {
   display: none;
 }
