@@ -205,7 +205,11 @@ export default function AddMovieForm({
 
   useEffect(() => {
     const trimmed = trimmedForSearch;
-    const shouldSearch = trimmed.length >= SEARCH_MIN_CHARS || filters.hasApiFilters;
+    // Un changement de filtre ne doit jamais declencher de recherche automatique
+    // tant que la barre est vide (ou trop courte) : les filtres seuls ne
+    // suffisent pas a lancer une recherche implicite, seule une recherche
+    // explicite (bouton / Entree, cf. searchAllowed) peut le faire.
+    const shouldSearch = trimmed.length >= SEARCH_MIN_CHARS;
 
     if (!shouldSearch) {
       immediateSearchRef.current = false;
@@ -245,7 +249,6 @@ export default function AddMovieForm({
     };
   }, [
     trimmedForSearch,
-    filters.hasApiFilters,
     filters.activeFilters,
     filters.filterChangedRef,
     currentSearchKey,
@@ -320,8 +323,7 @@ export default function AddMovieForm({
 
   const trimmed = trimmedForSearch;
   const showHistory = inputFocused && !trimmed && history.length > 0;
-  const showMinCharsHint =
-    trimmed.length > 0 && trimmed.length < SEARCH_MIN_CHARS && !filters.hasApiFilters;
+  const showMinCharsHint = trimmed.length > 0 && trimmed.length < SEARCH_MIN_CHARS;
   const showNoResultsBlock =
     !searching &&
     searchAllowed &&
