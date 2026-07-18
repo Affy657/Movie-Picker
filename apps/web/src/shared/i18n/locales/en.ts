@@ -639,7 +639,7 @@ export const en: Locale = {
       analyticsDesc: 'Help us understand how you use the app so we can improve it.',
       errorMonitoring: 'Error monitoring',
       errorMonitoringDesc:
-        'We record technical errors (without personal data or cookies) to keep the service stable and secure. Legal basis: legitimate interest.',
+        'We record technical errors, without directly identifying data (no IP stored, no email, no account identifier) and without cookies, to keep the service stable and secure. Legal basis: legitimate interest.',
       required: 'Required',
       save: 'Save preferences',
       acceptAll: 'Accept all',
