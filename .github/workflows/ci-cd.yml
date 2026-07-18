@@ -545,8 +545,8 @@ jobs:
             --region ${{ env.GCP_REGION }} \
             --platform managed \
             --allow-unauthenticated \
-            --set-secrets "MONGODB_URI=MONGODB_URI:latest,TMDB_API_KEY=TMDB_API_KEY:latest,AUTH_DATAPROTECTION_KEYRING=AUTH_DATAPROTECTION_KEYRING:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest" \
-            --set-env-vars "^##^ALLOWED_ORIGINS=$CORS"
+            --set-secrets "MONGODB_URI=MONGODB_URI:latest,TMDB_API_KEY=TMDB_API_KEY:latest,AUTH_DATAPROTECTION_KEYRING=AUTH_DATAPROTECTION_KEYRING:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest" \
+            --set-env-vars "^##^ALLOWED_ORIGINS=$CORS##SENTRY_ENVIRONMENT=production##SENTRY_RELEASE=${{ github.sha }}"
       - name: Smoke test API (GET /health)
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -603,6 +603,12 @@ jobs:
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
           VITE_POSTHOG_KEY: ${{ secrets.VITE_POSTHOG_KEY }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+          SENTRY_URL: ${{ vars.SENTRY_URL }}
+          SENTRY_RELEASE: ${{ github.sha }}
       - name: "Sitemap dynamique (profils publics via l'API)"
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
@@ -621,6 +627,7 @@ jobs:
             --exclude "sw.js" \
             --exclude "manifest.webmanifest" \
             --exclude "sitemap.xml" \
+            --exclude "*.map" \
             --cache-control "public, max-age=31536000, immutable"
       - name: "S3 — étape 2 : SW, manifest (no-cache)"
         env:
