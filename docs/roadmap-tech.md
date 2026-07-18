@@ -60,7 +60,7 @@ Découpage par version côté **plateforme, qualité, infra, observabilité, det
 **Objectif** : stabilité long terme et sécurité de la chaîne de dépendances.
 
 - ✅ ⚙️ **Dependabot** : mises à jour groupées mensuelles (npm, github-actions, nuget, docker) ; alertes de vulnérabilité + *automated security fixes* activés — PRs auto sur nouvelles versions et CVE ; complète le `pnpm audit` et l'audit NuGet déjà en CI.
-- ⬜ 📊 **Sentry** : capture d'erreurs front (React) et API (.NET), regroupement incidents, contexte release/env ; définir sampling, politique PII et rétention.
+- ✅ 📊 **Sentry** : capture d'erreurs front (React) et API (.NET) via projets Sentry SaaS UE, regroupement incidents, contexte release/env ; toujours actif en prod sans PII (intérêt légitime, non consent-gated), tracing léger (0.1), source maps + release liés au commit en CI.
 
 ---
 
