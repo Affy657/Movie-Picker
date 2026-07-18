@@ -652,7 +652,7 @@
         "Nous aident à comprendre comment vous utilisez l'application pour l'améliorer.",
       errorMonitoring: 'Surveillance des erreurs',
       errorMonitoringDesc:
-        'Nous enregistrons les erreurs techniques (sans donnée personnelle ni cookie) pour assurer la stabilité et la sécurité du service. Base légale : intérêt légitime.',
+        'Nous enregistrons les erreurs techniques, sans donnée directement identifiante (aucune IP conservée, ni e-mail, ni identifiant de compte) et sans cookie, pour assurer la stabilité et la sécurité du service. Base légale : intérêt légitime.',
       required: 'Requis',
       save: 'Enregistrer mes préférences',
       acceptAll: 'Tout accepter',
