@@ -637,6 +637,9 @@ export const en: Locale = {
         'Required for the site to work: theme, language, and authentication preferences.',
       analytics: 'Analytics',
       analyticsDesc: 'Help us understand how you use the app so we can improve it.',
+      errorMonitoring: 'Error monitoring',
+      errorMonitoringDesc:
+        'We record technical errors (without personal data or cookies) to keep the service stable and secure. Legal basis: legitimate interest.',
       required: 'Required',
       save: 'Save preferences',
       acceptAll: 'Accept all',
