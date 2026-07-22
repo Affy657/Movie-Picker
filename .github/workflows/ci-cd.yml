@@ -357,7 +357,7 @@ jobs:
       - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.sonar/cache
@@ -436,7 +436,7 @@ jobs:
     name: Docker API → Artifact Registry
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    needs: [changes, lint-api, test-api, audit]
+    needs: [changes, gitleaks, lint-api, test-api, audit]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master' && needs.changes.outputs.api == 'true'
     permissions:
       contents: read
@@ -565,12 +565,13 @@ jobs:
     name: Deploy Front → S3 & CloudFront
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    needs: [changes, lint-web, test-web, audit, lighthouse, e2e, sonar]
+    needs: [changes, gitleaks, lint-web, test-web, audit, lighthouse, e2e, sonar]
     if: >-
       always() &&
       github.event_name == 'push' && github.ref == 'refs/heads/master' &&
       needs.changes.outputs.web == 'true' &&
       needs.changes.result == 'success' &&
+      needs.gitleaks.result == 'success' &&
       needs.lint-web.result == 'success' &&
       needs.test-web.result == 'success' &&
       needs.audit.result == 'success' &&
