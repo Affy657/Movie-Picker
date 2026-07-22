@@ -59,17 +59,19 @@ run('Audit npm (Trivy fs — pnpm audit indisponible depuis le 2026-07-15, cf. p
   'run',
   '--rm',
   '-v',
-  './apps/web:/repo:ro',
+  './pnpm-lock.yaml:/repo/pnpm-lock.yaml:ro',
   '-v',
   'trivy-cache:/root/.cache/trivy',
   'aquasec/trivy@sha256:be1190afcb28352bfddc4ddeb71470835d16462af68d310f9f4bca710961a41e',
   'fs',
+  '--scanners',
+  'vuln',
   '--severity',
   'HIGH,CRITICAL',
   '--exit-code',
   '1',
   '--ignore-unfixed',
-  '/repo',
+  '/repo/pnpm-lock.yaml',
 ]);
 run('Tests front (Vitest + seuils couverture)', 'pnpm', ['run', 'test:coverage', '--filter=web']);
 
