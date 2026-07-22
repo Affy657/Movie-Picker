@@ -615,8 +615,6 @@ Au-delà des en-têtes posés par l'API, le front applique sa propre **CSP injec
 
 - **`frame-ancestors` du front** (anti-*clickjacking*) relève d'un **en-tête de réponse CloudFront**, non exprimable via `<meta>` ; côté API la directive est bien posée (`frame-ancestors 'none'`).
 
-*Un résiduel CSRF (2 endpoints hôte en POST sans corps échappant au preflight CORS) a été détecté par revue de sécurité et corrigé — désormais couvert en A01 ci-dessus, traçabilité complète en §11.4.*
-
 > **Preuves de la section.** `SecurityHeadersMiddleware.cs` · `MoviePickerCookieAuthenticationConfigurer.cs` · `CorsPolicyBuilderExtensions.cs` · `RateLimitingExtensions.cs` · `ValidationErrorFilter.cs` · `TmdbPosterUrlNormalizer.cs` · `Application/UseCases/Auth/PasswordReset/RequestPasswordResetHandler.cs` · `EventsController.cs:160,189` + `Application/DTOs/CsrfGuardRequest.cs` · `Program.cs:16-34` · `MoviePickerExceptionFilter.cs:48` · `apps/web/src/shared/observability/sentry.ts` · `apps/web/vite.config.ts` · `.github/dependabot.yml` · `.github/workflows/{ci-cd,security-scan}.yml`.
 
 ---
