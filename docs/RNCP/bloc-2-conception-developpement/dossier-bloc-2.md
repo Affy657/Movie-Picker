@@ -615,7 +615,7 @@ Au-delà des en-têtes posés par l'API, le front applique sa propre **CSP injec
 
 - **`frame-ancestors` du front** (anti-*clickjacking*) relève d'un **en-tête de réponse CloudFront**, non exprimable via `<meta>` ; côté API la directive est bien posée (`frame-ancestors 'none'`).
 
-*Un résiduel CSRF (2 endpoints hôte en POST sans corps échappant au preflight CORS) a été identifié et fermé pendant la préparation de ce dossier — désormais couvert en A01 ci-dessus, traçabilité complète en §11.4.*
+*Un résiduel CSRF (2 endpoints hôte en POST sans corps échappant au preflight CORS) a été détecté par revue de sécurité et corrigé — désormais couvert en A01 ci-dessus, traçabilité complète en §11.4.*
 
 > **Preuves de la section.** `SecurityHeadersMiddleware.cs` · `MoviePickerCookieAuthenticationConfigurer.cs` · `CorsPolicyBuilderExtensions.cs` · `RateLimitingExtensions.cs` · `ValidationErrorFilter.cs` · `TmdbPosterUrlNormalizer.cs` · `Application/UseCases/Auth/PasswordReset/RequestPasswordResetHandler.cs` · `EventsController.cs:160,189` + `Application/DTOs/CsrfGuardRequest.cs` · `Program.cs:16-34` · `MoviePickerExceptionFilter.cs:48` · `apps/web/src/shared/observability/sentry.ts` · `apps/web/vite.config.ts` · `.github/dependabot.yml` · `.github/workflows/{ci-cd,security-scan}.yml`.
 
@@ -636,7 +636,7 @@ Le référentiel retenu est le **RGAA 4.1** (Référentiel général d'améliora
 | **Navigation clavier** | Lien d'évitement (1re cible tabulable) vers le landmark principal ; menus en *disclosure* avec **retour de focus sur Échap** et fermeture au clic extérieur | `AppShell.tsx:67` → `PageLayout.tsx:13` · `useMenuFocus.ts:18-19` · `useClickOutside.ts:17` |
 | **Gestion du focus** | `:focus-visible` sur les éléments interactifs (boutons, liens) ; landmark principal `tabIndex={-1}` (cible du *skip link*) ; utilitaire `.visually-hidden` pour le texte lecteur d'écran | `styles/02-forms-and-content.css:69,181` · `styles/01-foundation.css:249` |
 | **ARIA & sémantique** | Landmarks `header` / `nav` (avec `aria-label`) / `main` / `footer` ; icônes décoratives `aria-hidden="true" focusable="false"` ; messages d'erreur `role="alert"` ; chargements `role="status" aria-live="polite"` | `AppShell.tsx:70-108` · `Skeleton.tsx:45` · `LoginPage.tsx:68` (et pages formulaires) |
-| **Contraste & confort** | Thèmes clair/sombre ; contrastes conformes (Lighthouse a11y ≥ 95, §6) ; `prefers-reduced-motion` respecté sur les animations ; attribut **`lang` dynamique** selon la locale | `Tooltip/Skeleton/AddMovieForm.module.css` · `LocaleContext.tsx:63` |
+| **Contraste & confort** | Thèmes clair/sombre ; contrastes conformes (Lighthouse a11y ≥ 95, §6) ; `prefers-reduced-motion` respecté sur les animations CSS **et** sur l'animation *canvas* de la roue (résultat affiché directement, sans les 7,5 s de tirage, si la préférence système est active) ; attribut **`lang` dynamique** selon la locale | `Tooltip/Skeleton/AddMovieForm.module.css` · `SpinningWheel.tsx` (`matchMedia('(prefers-reduced-motion: reduce)')`) · `LocaleContext.tsx:63` |
 
 Extrait — lien d'évitement pointant vers le landmark principal focusable :
 
@@ -659,9 +659,8 @@ Extrait — lien d'évitement pointant vers le landmark principal focusable :
 
 - Les outils automatiques (`axe`, Lighthouse) ne couvrent **qu'une partie** des critères WCAG/RGAA (ordre de lecture, pertinence réelle des libellés, parcours lecteur d'écran complet relèvent de l'**audit manuel**, non exhaustif ici).
 - Aucune **déclaration de conformité RGAA** formelle (audit tiers) n'a été produite — hors périmètre d'un projet solo.
-- L'animation de la **roue** sous `prefers-reduced-motion` : **identifié en auto-revue et corrigé** (commit `36690e6`, détail **§11.4**) — le tirage affiche désormais son résultat directement, sans jouer l'animation canvas (7,5 s), quand la préférence système est active.
 
-> **Preuves de la section.** `apps/web/src/app/pages/a11y.test.tsx` · `apps/web/src/app/components/AppShell.tsx` · `apps/web/src/shared/components/PageLayout.tsx` · `apps/web/src/shared/hooks/useMenuFocus.ts` · `apps/web/src/styles/{01-foundation,02-forms-and-content}.css` · `apps/web/src/shared/i18n/LocaleContext.tsx`.
+> **Preuves de la section.** `apps/web/src/app/pages/a11y.test.tsx` · `apps/web/src/app/components/AppShell.tsx` · `apps/web/src/shared/components/PageLayout.tsx` · `apps/web/src/shared/hooks/useMenuFocus.ts` · `apps/web/src/styles/{01-foundation,02-forms-and-content}.css` · `apps/web/src/features/events/components/SpinningWheel.tsx` + `SpinningWheel.test.tsx` · `apps/web/src/shared/i18n/LocaleContext.tsx`.
 
 ---
 
@@ -776,9 +775,9 @@ La démarche est constante : **reproduire** (les étapes de l'issue, ou le test 
 
 Cet incident illustre le cycle complet **détecter → qualifier → corriger → vérifier → historiser**, et a nourri en retour un **garde-fou** : la CSP est désormais construite et vérifiée au build (plus de dérive silencieuse `img-src`/`connect-src`).
 
-### 11.4 — Résidus identifiés en auto-revue, corrigés avant restitution
+### 11.4 — Autres corrections tracées : sécurité et accessibilité
 
-Deux limites honnêtement documentées plus haut (§8.4, §9.4) ont été closes pendant la préparation de ce dossier, en suivant le même processus qu'en §11.1–§11.2 :
+Deux anomalies supplémentaires, détectées par revue de sécurité et d'accessibilité du code, ont été corrigées en suivant le même processus qu'en §11.1–§11.2 :
 
 | | CSRF sur `wheel` / `close` (§8.4) | Animation de la roue & `prefers-reduced-motion` (§9.4) |
 |---|---|---|
