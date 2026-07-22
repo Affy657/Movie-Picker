@@ -16,6 +16,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 ### Fixed
 
 - Résolution des 7 signalements SonarCloud restants (règle CA1861 : tableaux constants hissés en `static readonly`).
+- CSRF : les deux endpoints de lancement/clôture de la roue exigent désormais un corps JSON, alignés sur le reste de l'API.
+- Accessibilité : l'animation de la roue respecte `prefers-reduced-motion` (affiche le résultat directement si la préférence système est active).
 
 ### À faire
 
