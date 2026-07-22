@@ -34,8 +34,6 @@
 | 12 | Historique des versions | C2.2.4 |
 | 13 | Manuels d'exploitation | C2.4.1 |
 
-*La pagination définitive (numéros de page) est générée à l'export PDF.*
-
 ### Table de correspondance compétences → sections → critères
 
 | Compétence | Élim. | Section(s) | Critères d'évaluation couverts |
@@ -158,9 +156,10 @@ flowchart TD
   MP -->|"e-mails transactionnels"| RS["Resend"]
   MP -->|"notifications push"| WP["Service Web Push"]
   MP -.->|"analytics · soumis au consentement"| PH["PostHog"]
+  MP -.->|"erreurs front + API · zéro PII"| SE["Sentry"]
 ```
 
-L'utilisateur n'interagit qu'avec Movie Picker (HTTPS). L'application consomme **TMDB** (catalogue et affiches), **Resend** (e-mails transactionnels : réinitialisation de mot de passe), un **service Web Push** (notifications navigateur) et remonte des événements d'usage à **PostHog** — uniquement en production et après consentement. L'**observabilité** repose aujourd'hui sur des journaux JSON structurés corrélés (`CorrelationIdMiddleware`, renvoi §8-A09) et la supervision Cloud Run ; une remontée d'exceptions dédiée (Sentry) est identifiée comme axe d'amélioration (§11.5) et n'est donc pas représentée comme système en place.
+L'utilisateur n'interagit qu'avec Movie Picker (HTTPS). L'application consomme **TMDB** (catalogue et affiches), **Resend** (e-mails transactionnels : réinitialisation de mot de passe), un **service Web Push** (notifications navigateur) et remonte des événements d'usage à **PostHog** — uniquement en production et après consentement. L'**observabilité** repose sur des journaux JSON structurés corrélés (`CorrelationIdMiddleware`, renvoi §8-A09), la supervision Cloud Run, et une remontée d'exceptions dédiée vers **Sentry** (front + API, détail §8.1-A09) : à la différence de PostHog, elle tourne **sans bandeau de consentement**, au titre de l'intérêt légitime RGPD (finalité de sécurité, zéro donnée directement identifiante).
 
 ### 2.3 — C4 niveau 2 : conteneurs
 
@@ -266,7 +265,7 @@ Le **Domaine** et l'**Application** ne connaissent ni MongoDB ni HTTP : l'Applic
 
 | Outil | Version / précision (dépôt) | Rôle |
 |---|---|---|
-| Éditeur | VS Code / Cursor | édition, extensions TypeScript & C# |
+| Éditeur | VS Code / Cursor, assisté de **Claude Code** (CLI) | édition, extensions TypeScript & C# ; génération et revue de code assistées par IA |
 | Node.js | `^20.19 \|\| ^22.13 \|\| >=24` (champ `engines`) | exécution du *toolchain* front |
 | pnpm | **10.0.0** (champ `packageManager`) | gestionnaire de paquets & *workspace* |
 | .NET SDK | **10.0** (cible `net10.0`) | build & exécution de l'API |
@@ -552,13 +551,13 @@ La couverture (détaillée en §6) satisfait le critère « couvre la majorité 
 
 ## §8 — Sécurité : couverture OWASP Top 10 (2021)
 
-> **Compétence C2.2.3 (éliminatoire)** — *Développer le logiciel en veillant à … la sécurisation du code source …* Chaque risque du **Top 10 OWASP 2021** est adressé par une ou plusieurs mesures concrètes, référencées par `fichier:ligne`. Aucune ligne n'est vide ; les **résiduels assumés** sont explicités en §8.4.
+> **Compétence C2.2.3 (éliminatoire)** — *Développer le logiciel en veillant à … la sécurisation du code source …* Chaque risque du **Top 10 OWASP 2021** est adressé par une ou plusieurs mesures concrètes, référencées par `fichier:ligne`. Aucune ligne n'est vide ; le **résiduel assumé** est explicité en §8.4.
 
 ### 8.1 — Tableau de couverture A01 → A10
 
 | Risque OWASP 2021 | Mesures dans le projet | Référence |
 |---|---|---|
-| **A01 — Broken Access Control** | Compte obligatoire (pas d'invité anonyme) ; auth par cookie de session, `401`/`403` renvoyés en JSON ; autorisation hôte par **jeton dédié** (cookie `moviepicker_host`) ; CORS en **allowlist stricte** + `AllowCredentials` | `MoviePickerCookieAuthenticationConfigurer.cs:27,43-62` · `CorsPolicyBuilderExtensions.cs:17,26-33` · `HostTokenAccessor.cs:9` |
+| **A01 — Broken Access Control** | Compte obligatoire (pas d'invité anonyme) ; auth par cookie de session, `401`/`403` renvoyés en JSON ; autorisation hôte par **jeton dédié** (cookie `moviepicker_host`) ; CORS en **allowlist stricte** + `AllowCredentials` ; protection **CSRF structurelle** — toute mutation exige un **corps JSON**, ce qui déclenche un *preflight* CORS refusé hors allowlist (y compris `wheel`/`close`, seuls endpoints hôte initialement sans corps) | `MoviePickerCookieAuthenticationConfigurer.cs:27,43-62` · `CorsPolicyBuilderExtensions.cs:17,26-33` · `HostTokenAccessor.cs:9` · `EventsController.cs:160,189` (`CsrfGuardRequest`) |
 | **A02 — Cryptographic Failures** | Mots de passe hachés via Identity `PasswordHasher<User>` (PBKDF2 salé) ; cookies `HttpOnly` + `Secure` ; ticket chiffré (Data Protection, keyring `AUTH_DATAPROTECTION_KEYRING`) ; jetons de reset **stockés hachés** | `ServiceCollectionExtensions.cs:61` · `MoviePickerCookieAuthenticationConfigurer.cs:27,39` · `RequestPasswordResetHandler.cs:67-71` |
 | **A03 — Injection** | Accès MongoDB par **filtres typés** `Builders<T>` / lambdas (aucune requête concaténée → pas d'injection NoSQL) ; validation d'entrée centralisée → `400` JSON | `MongoMovieRepository.cs:22,45-47` · `ValidationErrorFilter.cs` |
 | **A04 — Insecure Design** | Rate limiting (22 politiques *fenêtre fixe* par IP) ; quotas de soirée ; **slugs opaques** ; secrets externalisés ; isolation base dev/prod | `RateLimitingExtensions.cs:81-102` · `Domain/Services/SlugGenerator.cs` · `ServiceCollectionExtensions.cs:174` |
@@ -566,7 +565,7 @@ La couverture (détaillée en §6) satisfait le critère « couvre la majorité 
 | **A06 — Vulnerable & Outdated Components** | Dependabot mensuel groupé (npm, GitHub Actions, NuGet, **digests Docker**) ; CI `pnpm audit` + `dotnet list --vulnerable` + Trivy ; scan hebdomadaire | `.github/dependabot.yml` · `ci-cd.yml` (`audit`, `docker-api`) · `security-scan.yml` |
 | **A07 — Identification & Auth Failures** | Rate limit login (30/min) & register (10/min) ; reset **anti-énumération** (réponse identique, *throttle* 60 s, jeton 30 min) ; hachage Identity ; session glissante 14 j | `RateLimitingExtensions.cs:85-87` · `RequestPasswordResetHandler.cs:45-65` |
 | **A08 — Software & Data Integrity** | Actions CI épinglées par **SHA** ; images Docker par **digest** ; Gitleaks ; **SBOM** CycloneDX ; `pnpm --frozen-lockfile` | `ci-cd.yml` (`gitleaks`, `docker-api`) · `Dockerfile:11,20` |
-| **A09 — Security Logging & Monitoring** | Logs HTTP **JSON structurés** + `correlation id` par requête ; **masquage e-mail** dans les logs ; console JSON en prod | `StructuredHttpRequestLoggingMiddleware.cs` · `CorrelationIdMiddleware.cs` · `Program.cs:18-26,70,81` |
+| **A09 — Security Logging & Monitoring** | Logs HTTP **JSON structurés** + `correlation id` par requête ; **masquage e-mail** dans les logs ; console JSON en prod ; remontée d'exceptions **Sentry** (front + API), activée uniquement si un DSN est fourni, **zéro PII** (IP/e-mail/username *scrubbés* côté client **et** serveur) | `StructuredHttpRequestLoggingMiddleware.cs` · `CorrelationIdMiddleware.cs` · `Program.cs:18-26,70,81` · `Program.cs:16-34` (init Sentry API) · `MoviePickerExceptionFilter.cs:48` (capture explicite des 500) · `apps/web/src/shared/observability/sentry.ts` |
 | **A10 — SSRF** | Proxy d'affiches : seules les URL **HTTPS** vers l'hôte **`image.tmdb.org`** (chemin `/t/p/`) sont acceptées, sinon rejet ; le client ne manipule qu'une **clé opaque** (SHA-256), jamais d'URL arbitraire | `TmdbPosterUrlNormalizer.cs:50-73` |
 
 ### 8.2 — Extraits représentatifs
@@ -612,13 +611,13 @@ options.AddPolicy(AuthDeleteAccountPolicy,        ctx => CreateFixedWindow(ctx, 
 
 Au-delà des en-têtes posés par l'API, le front applique sa propre **CSP injectée au build** (plugin Vite `moviepicker-csp-meta`, `apps/web/vite.config.ts`) : `default-src 'self'`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, et un `connect-src` **dérivé de `VITE_API_URL`** (+ PostHog, TMDB) — l'application ne peut donc émettre de requêtes que vers son API et les services attendus.
 
-### 8.4 — Résiduels assumés (honnêteté vis-à-vis du jury)
+### 8.4 — Résiduel assumé (honnêteté vis-à-vis du jury)
 
-- **CSRF** : l'auth par cookie impose `SameSite=None` en production (front CloudFront et API Cloud Run *cross-origin*), ce qui n'offre pas en soi de protection CSRF ; la mitigation retenue est **structurelle** — toute mutation à **corps JSON** (`[FromBody]`) déclenche un *preflight* CORS **refusé** hors allowlist. C'était le cas de la quasi-totalité des mutations (vote, ajout, « déjà vu », note, config…), à l'exception de deux actions hôte en **POST sans corps** (`POST …/wheel`, `POST …/close`), des requêtes « simples » non soumises au preflight. **Identifié en auto-revue et corrigé** (commit `36690e6`, détail **§11.4**) : ces deux endpoints exigent désormais un corps JSON (`CsrfGuardRequest`), alignés sur le reste de l'API ; une requête sans corps échoue en **415** (testé).
 - **`frame-ancestors` du front** (anti-*clickjacking*) relève d'un **en-tête de réponse CloudFront**, non exprimable via `<meta>` ; côté API la directive est bien posée (`frame-ancestors 'none'`).
-- **Observabilité** : remontée d'exceptions dédiée (Sentry) non encore branchée — actuellement logs structurés + corrélation (§11.5).
 
-> **Preuves de la section.** `SecurityHeadersMiddleware.cs` · `MoviePickerCookieAuthenticationConfigurer.cs` · `CorsPolicyBuilderExtensions.cs` · `RateLimitingExtensions.cs` · `ValidationErrorFilter.cs` · `TmdbPosterUrlNormalizer.cs` · `Application/UseCases/Auth/PasswordReset/RequestPasswordResetHandler.cs` · `apps/web/vite.config.ts` · `.github/dependabot.yml` · `.github/workflows/{ci-cd,security-scan}.yml`.
+*Un résiduel CSRF (2 endpoints hôte en POST sans corps échappant au preflight CORS) a été identifié et fermé pendant la préparation de ce dossier — désormais couvert en A01 ci-dessus, traçabilité complète en §11.4.*
+
+> **Preuves de la section.** `SecurityHeadersMiddleware.cs` · `MoviePickerCookieAuthenticationConfigurer.cs` · `CorsPolicyBuilderExtensions.cs` · `RateLimitingExtensions.cs` · `ValidationErrorFilter.cs` · `TmdbPosterUrlNormalizer.cs` · `Application/UseCases/Auth/PasswordReset/RequestPasswordResetHandler.cs` · `EventsController.cs:160,189` + `Application/DTOs/CsrfGuardRequest.cs` · `Program.cs:16-34` · `MoviePickerExceptionFilter.cs:48` · `apps/web/src/shared/observability/sentry.ts` · `apps/web/vite.config.ts` · `.github/dependabot.yml` · `.github/workflows/{ci-cd,security-scan}.yml`.
 
 ---
 
@@ -791,11 +790,10 @@ Deux limites honnêtement documentées plus haut (§8.4, §9.4) ont été closes
 
 ### 11.5 — Axes d'amélioration restants
 
-Trois axes identifiés mais non traités dans le périmètre de ce dossier — charge disproportionnée pour un projet solo en V1, sans impact sur les critères d'évaluation :
+Deux axes identifiés mais non traités dans le périmètre de ce dossier — charge disproportionnée pour un projet solo en V1, sans impact sur les critères d'évaluation :
 
 | Axe | Contexte | Effort |
 |---|---|---|
-| **Observabilité applicative (Sentry)** | Remontée d'exceptions dédiée ; aujourd'hui logs structurés + `correlation id` (§8.1, A09) | Faible (SDK + DSN) |
 | **Rollback front outillé** | `rollback.yml` couvre l'API (Cloud Run) ; le front (S3/CloudFront) n'a pas d'équivalent versionné (§5.5) | Moyen (versionner les builds S3) |
 | **Déploiement progressif (canary)** | Déploiement direct 100 % assumé en V1 (§5.5) ; la plateforme Cloud Run le permettrait sans refonte | Moyen (découpage du trafic Cloud Run) |
 
