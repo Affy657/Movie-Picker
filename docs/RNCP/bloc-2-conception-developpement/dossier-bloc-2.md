@@ -14,6 +14,8 @@
 
 > Ce dossier est **autonome** : il embarque les preuves nécessaires à l'évaluation (extraits de code, schémas, captures, tableaux) et n'exige pas la lecture du dépôt. Chaque section indique néanmoins les fichiers de référence de l'archive `.zip` pour permettre au jury de recouper.
 
+> **Note de lecture (document figé, produit vivant).** Ce dossier décrit fidèlement l'état du projet à sa rédaction (juillet 2026, version **v1.3.1**, §12). Le déploiement continu (§5) implique que la production peut, au moment de la lecture, comporter des correctifs ou fonctionnalités supplémentaires non couverts ici. De même, l'adresse du front — **web.movie-picker.fr** à ce jour — est susceptible d'être devenue **www.movie-picker.fr** (migration de domaine planifiée) ; l'API reste alors sur **api.movie-picker.fr**, et le raisonnement *same-site* du cookie de session (§2.3, §8.1 — eTLD+1 `movie-picker.fr`) reste valable dans les deux cas.
+
 ---
 
 ## Sommaire
@@ -253,7 +255,7 @@ Le **Domaine** et l'**Application** ne connaissent ni MongoDB ni HTTP : l'Applic
 | **Extensible** | Ports pour brancher de nouvelles implémentations (nouvelle BDD = 1 implémentation) · schéma Mongo souple · ajouter une fonctionnalité = 1 dossier `UseCases/` + 1 contrôleur. |
 | **Évolutive (livraison)** | Image Docker · CI/CD GitHub Actions · déploiement Cloud Run + S3/CloudFront automatisé (§4–§5). |
 
-> **Preuves de la section.** Arborescence réelle `apps/api-dotnet/MoviePicker.Api/` (Controllers · Application · Domain · Infrastructure) · `Program.cs` (pipeline middleware, `MapControllers`) · `Application/Ports/*.cs` (interfaces) · `apps/web/src/{app,features,shared}/` · `Infrastructure/Web/MoviePickerCookieAuthenticationConfigurer.cs` (cookie `SameSite`/`Secure`) · `Infrastructure/Web/CorsPolicyBuilderExtensions.cs` (CORS `AllowCredentials` + allowlist) · synthèse fidèle de `archive/docs/RNCP/bloc-1-cadrage/10-architecture.md`.
+> **Preuves de la section.** Arborescence réelle `apps/api-dotnet/MoviePicker.Api/` (Controllers · Application · Domain · Infrastructure) · `Program.cs` (pipeline middleware, `MapControllers`) · `Application/Ports/*.cs` (interfaces) · `apps/web/src/{app,features,shared}/` · `Infrastructure/Web/MoviePickerCookieAuthenticationConfigurer.cs` (cookie `SameSite`/`Secure`) · `Infrastructure/Web/CorsPolicyBuilderExtensions.cs` (CORS `AllowCredentials` + allowlist).
 
 ---
 
@@ -340,7 +342,7 @@ flowchart TD
 | `gitleaks` | toujours | scan de secrets sur l'arbre de travail | ✅ |
 | `lint-web` | lane web | `tsc` + ESLint + Prettier `--check` | ✅ |
 | `lint-api` | lane api | `dotnet format` + build `-warnaserror` + export OpenAPI (artefact) | ✅ |
-| `audit` | web ou api | Trivy *filesystem* (`apps/web`, HIGH/CRITICAL) + NuGet vulnérables (High/Critical) | ✅ |
+| `audit` | web ou api | Trivy *filesystem* (`pnpm-lock.yaml`, HIGH/CRITICAL) + NuGet vulnérables (High/Critical) | ✅ |
 | `test-web` | lane web | Vitest + seuils de couverture (cf. §6) | ✅ |
 | `test-api` | lane api | xUnit unitaires + intégration + **gate couverture lignes ≥ 80 %** | ✅ |
 | `sonar` | après `test-web`/`test-api` | analyse SonarCloud + Quality Gate (code nouveau) | ✅ |
@@ -891,6 +893,6 @@ Les captures du parcours principal figurent en §1.5 (accueil, création, détai
 | Hébergement | **Cloud Run** (API) + **S3/CloudFront** (front) | *Scale-to-zero*, CDN statique, coût maîtrisé |
 | Langues | **FR / EN** (i18n) | Internationalisation dès la V1 |
 
-> **Preuves de la section.** `.env.example` · `.github/dependabot.yml` · `.github/workflows/{ci-cd,rollback,security-scan}.yml` · `apps/api-dotnet/MoviePicker.Api/Configuration/MoviePickerOptions.cs` · `apps/api-dotnet/MoviePicker.Api/Infrastructure/DataProtectionConfiguration.cs` (persistance Mongo des clés en prod) · `apps/api-dotnet/ToolGenDpKey/` · synthèse *partiellement* fidèle de `archive/docs/v1-produit/deploiement-secrets-ci.md` (source elle-même datée sur le mécanisme Data Protection).
+> **Preuves de la section.** `.env.example` · `.github/dependabot.yml` · `.github/workflows/{ci-cd,rollback,security-scan}.yml` · `apps/api-dotnet/MoviePicker.Api/Configuration/MoviePickerOptions.cs` · `apps/api-dotnet/MoviePicker.Api/Infrastructure/DataProtectionConfiguration.cs` (persistance Mongo des clés en prod) · `apps/api-dotnet/ToolGenDpKey/`.
 
 ---
