@@ -18,7 +18,7 @@ export function asciiSlug(value: string): string {
 export async function registerAccount(page: Page, displayName: string): Promise<void> {
   await page.goto('/register');
   await page.getByLabel('Pseudo').fill(displayName);
-  await page.getByLabel('E-mail').fill(uniqueEmail(asciiSlug(displayName)));
+  await page.getByLabel('E-mail', { exact: true }).fill(uniqueEmail(asciiSlug(displayName)));
   await page.getByLabel('Mot de passe').fill(TEST_PASSWORD);
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await page.waitForURL((url) => !url.pathname.startsWith('/register'));
