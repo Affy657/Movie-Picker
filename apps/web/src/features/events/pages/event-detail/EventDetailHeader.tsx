@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import ShareLink from '@/features/events/components/ShareLink';
 import AddToCalendarButton from '@/features/events/components/AddToCalendarButton';

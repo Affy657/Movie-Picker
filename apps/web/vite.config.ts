@@ -218,7 +218,7 @@ export default defineConfig(({ mode }) => {
           assetFileNames: 'assets/[name]-[hash][extname]',
           manualChunks(id) {
             if (!id.includes('node_modules')) return undefined;
-            if (/[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) {
+            if (/[\\/](react|react-dom|react-router|react-router|scheduler)[\\/]/.test(id)) {
               return 'react-vendor';
             }
             if (id.includes('@tanstack')) return 'query-vendor';

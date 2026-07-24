@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import {
   deleteEvent,
   fetchMyEventsList,
