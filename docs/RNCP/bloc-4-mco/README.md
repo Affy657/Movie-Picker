@@ -18,7 +18,7 @@ Ordre des éléments imposé par le règlement : processus de mise à jour des d
 
 | Compétence | Livrable attendu | ÉLIM | Matériau existant |
 |------------|------------------|:----:|-------------------|
-| C4.1.1 | Description du processus de mise à jour des dépendances (fréquence, périmètre, automatique/manuel) | | [`.github/dependabot.yml`](../../../.github/dependabot.yml) · [`security-scan.yml`](../../../.github/workflows/security-scan.yml) · dossier Bloc 2 §13.3 |
+| C4.1.1 | Description du processus de mise à jour des dépendances (fréquence, périmètre, automatique/manuel) | | ✅ [`mise-a-jour-dependances.md`](mise-a-jour-dependances.md) — 4 écosystèmes, 3 rythmes, cas react-router 8.3.0 |
 | C4.1.2 | Description du système de supervision (sondes, indicateurs, seuils, signalement, disponibilité) | ✅ | ✅ [`supervision.md`](supervision.md) — 3 sondes actives, 5 politiques d'alerte, Sentry (3 règles/projet), tableau de bord, chaîne d'alerte testée |
 | C4.2.1 | Processus de collecte/consignation des anomalies **+ une fiche de consignation** | ✅ | ✅ [`processus-anomalies.md`](processus-anomalies.md) — 5 canaux, gabarit, sévérités, cycle de vie ; fiche = issue #67 |
 | C4.2.2 | Traitement d'une anomalie détectée au cours du projet (via CI/CD) | | [`ci-cd.yml`](../../../.github/workflows/ci-cd.yml) · [`rollback.yml`](../../../.github/workflows/rollback.yml) · historique Git des correctifs |
@@ -30,5 +30,6 @@ Ordre des éléments imposé par le règlement : processus de mise à jour des d
 
 | Fichier | Contenu |
 |---------|---------|
+| [`mise-a-jour-dependances.md`](mise-a-jour-dependances.md) | Processus de mise à jour des dépendances (C4.1.1) — matière du § 1 du dossier |
 | [`supervision.md`](supervision.md) | Système de supervision et d'alerte (C4.1.2) — matière du § 2 du dossier |
 | [`processus-anomalies.md`](processus-anomalies.md) | Processus de collecte et de consignation (C4.2.1) — matière des § 3 à 5 |
