@@ -551,12 +551,27 @@ export const en: Locale = {
     tagline: 'Pick your next movie together.',
     navTitle: 'Navigation',
     socialTitle: 'Social',
+    helpTitle: 'Help',
+    reportIssue: 'Report an issue',
+    reportIssueAria: 'Report an issue by email (opens your mail app)',
     githubLabel: 'GitHub profile (new tab)',
     linkedinLabel: 'LinkedIn profile (new tab)',
     tmdbPrefix: 'Data provided by',
     tmdbSuffix: '. Ratings and availability are indicative.',
     tmdbLinkAria: 'TMDB — open The Movie Database (new tab)',
     copyright: '© {{year}} Movie Picker v{{version}}',
+  },
+
+  support: {
+    mailSubject: '[Movie Picker] Issue report',
+    mailDescribe: 'Describe the problem you ran into:',
+    mailSteps: 'Steps to reproduce:',
+    mailExpected: 'What you expected:',
+    mailObserved: 'What happened:',
+    mailTechnicalHeader: '--- Technical details (please keep) ---',
+    mailPage: 'Page:',
+    mailVersion: 'Version:',
+    mailBrowser: 'Browser:',
   },
 
   profile: {
