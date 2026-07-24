@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import type { ReactNode } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { ROUTES } from '@/app/routes';

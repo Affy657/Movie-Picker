@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Settings2, X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import ThemeField, { parseTheme } from './ThemeField';

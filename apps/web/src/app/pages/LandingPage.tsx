@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Clapperboard, Disc3, Link2, Sparkles, ThumbsUp } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import { APP_DOCUMENT_TITLE } from '@/shared/hooks/useDocumentTitle';

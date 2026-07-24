@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import type { ComponentType, SVGProps } from 'react';
 import { CalendarDays, Plus } from 'lucide-react';
-import { Link, NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { ROUTES } from '@/app/routes';

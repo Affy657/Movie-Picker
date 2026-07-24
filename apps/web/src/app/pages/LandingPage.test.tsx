@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import LandingPage from '@/app/pages/LandingPage';
 import { APP_DOCUMENT_TITLE } from '@/shared/hooks/useDocumentTitle';
