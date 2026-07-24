@@ -166,6 +166,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IPushSubscriptionRepository, InMemoryPushSubscriptionRepository>();
             services.AddSingleton<IFollowRepository, InMemoryFollowRepository>();
             services.AddSingleton<IUserNotificationRepository, InMemoryUserNotificationRepository>();
+            services.AddSingleton<IDatabaseHealthProbe, InMemoryDatabaseHealthProbe>();
             return;
         }
 
@@ -196,6 +197,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPushSubscriptionRepository, MongoPushSubscriptionRepository>();
         services.AddScoped<IFollowRepository, MongoFollowRepository>();
         services.AddScoped<IUserNotificationRepository, MongoUserNotificationRepository>();
+        services.AddSingleton<IDatabaseHealthProbe, MongoDatabaseHealthProbe>();
         services.AddHostedService<MongoIndexInitializer>();
         services.AddHostedService<UserHandleBackfillService>();
         services.AddHostedService<GenreBackfillService>();
