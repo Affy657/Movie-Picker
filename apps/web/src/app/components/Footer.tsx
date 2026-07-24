@@ -1,8 +1,9 @@
 import clsx from 'clsx';
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import { APP_VERSION } from '@/shared/appVersion';
+import { buildSupportMailto } from '@/shared/support/supportMailto';
 import styles from './Footer.module.css';
 
 type FooterProps = {
@@ -49,6 +50,23 @@ const CURRENT_YEAR = new Date().getFullYear();
 
 export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>) {
   const { t } = useTranslation();
+  const location = useLocation();
+
+  const supportHref = buildSupportMailto({
+    path: location.pathname,
+    userAgent: typeof navigator === 'undefined' ? undefined : navigator.userAgent,
+    labels: {
+      subject: t('support.mailSubject'),
+      describe: t('support.mailDescribe'),
+      steps: t('support.mailSteps'),
+      expected: t('support.mailExpected'),
+      observed: t('support.mailObserved'),
+      technicalHeader: t('support.mailTechnicalHeader'),
+      page: t('support.mailPage'),
+      version: t('support.mailVersion'),
+      browser: t('support.mailBrowser'),
+    },
+  });
 
   return (
     <footer
@@ -80,6 +98,21 @@ export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>
               <Link to={ROUTES.createEvent} className={styles.colLink}>
                 {t('nav.createEvent')}
               </Link>
+            </li>
+          </ul>
+        </div>
+
+        <div className={styles.col}>
+          <p className={styles.colTitle}>{t('footer.helpTitle')}</p>
+          <ul className={styles.colList}>
+            <li>
+              <a
+                href={supportHref}
+                className={styles.colLink}
+                aria-label={t('footer.reportIssueAria')}
+              >
+                {t('footer.reportIssue')}
+              </a>
             </li>
           </ul>
         </div>

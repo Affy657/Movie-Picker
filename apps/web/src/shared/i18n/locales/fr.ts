@@ -562,12 +562,27 @@
     tagline: 'Choisissez votre prochain film ensemble.',
     navTitle: 'Navigation',
     socialTitle: 'Réseaux',
+    helpTitle: 'Aide',
+    reportIssue: 'Signaler un problème',
+    reportIssueAria: 'Signaler un problème par e-mail (ouvre votre messagerie)',
     githubLabel: 'Profil GitHub (nouvel onglet)',
     linkedinLabel: 'Profil LinkedIn (nouvel onglet)',
     tmdbPrefix: 'Données fournies par',
     tmdbSuffix: '. Les notes et disponibilités sont indicatives.',
     tmdbLinkAria: 'TMDB — ouvrir The Movie Database (nouvel onglet)',
     copyright: '© {{year}} Movie Picker v{{version}}',
+  },
+
+  support: {
+    mailSubject: '[Movie Picker] Signalement d’un problème',
+    mailDescribe: 'Décrivez le problème rencontré :',
+    mailSteps: 'Étapes pour le reproduire :',
+    mailExpected: 'Ce que vous attendiez :',
+    mailObserved: 'Ce qui s’est passé :',
+    mailTechnicalHeader: '--- Informations techniques (à conserver) ---',
+    mailPage: 'Page :',
+    mailVersion: 'Version :',
+    mailBrowser: 'Navigateur :',
   },
 
   profile: {
