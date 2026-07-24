@@ -40,6 +40,19 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
     }
 
     [Fact]
+    public async Task GetHealthReady_Returns200_WithDependencyStatus()
+    {
+        var client = _factory.CreateClient();
+        var res = await client.GetAsync("/health/ready");
+        res.EnsureSuccessStatusCode();
+        var json = await res.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("ready", json.GetProperty("status").GetString());
+        Assert.Equal("movie-picker-api", json.GetProperty("service").GetString());
+        var dependency = Assert.Single(json.GetProperty("dependencies").EnumerateArray().ToList());
+        Assert.Equal("mongodb", dependency.GetProperty("name").GetString());
+    }
+
+    [Fact]
     public async Task PostEvents_WithoutSession_Returns401()
     {
         var client = _factory.CreateClient();

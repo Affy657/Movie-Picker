@@ -126,6 +126,7 @@ app.MapGet("/", () => Results.Json(new
 {
     name = "Movie Picker API",
     health = "/health",
+    ready = "/health/ready",
     api = $"/{ApiRoutePrefix.V1}",
     docs = app.Environment.IsDevelopment() ? "/swagger" : (object?)null
 }));

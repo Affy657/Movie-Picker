@@ -548,7 +548,7 @@ jobs:
             --allow-unauthenticated \
             --set-secrets "MONGODB_URI=MONGODB_URI:latest,TMDB_API_KEY=TMDB_API_KEY:latest,AUTH_DATAPROTECTION_KEYRING=AUTH_DATAPROTECTION_KEYRING:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest,RESEND_API_KEY=RESEND_API_KEY:latest" \
             --set-env-vars "^##^ALLOWED_ORIGINS=$CORS##SENTRY_ENVIRONMENT=production##SENTRY_RELEASE=${{ github.sha }}##EMAIL_PROVIDER=resend"
-      - name: Smoke test API (GET /health)
+      - name: Smoke test API (GET /health puis /health/ready)
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
@@ -559,6 +559,16 @@ jobs:
           echo "Réponse /health : $BODY"
           echo "$BODY" | grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' || {
             echo "::error::/health ne renvoie pas status=ok"
+            exit 1
+          }
+          READY="$(curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 "$URL/health/ready")"
+          echo "Réponse /health/ready : $READY"
+          echo "$READY" | grep -qE '"status"[[:space:]]*:[[:space:]]*"ready"' || {
+            echo "::error::/health/ready ne renvoie pas status=ready (dépendance indisponible)"
+            exit 1
+          }
+          echo "$READY" | grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' || {
+            echo "::error::/health/ready signale MongoDB comme non joignable"
             exit 1
           }
 
