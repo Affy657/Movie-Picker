@@ -64,8 +64,6 @@ Le dépôt est un monorepo réunissant deux applications et leur outillage. Quat
 
 L'épinglage par SHA et par digest est une protection contre les attaques de chaîne d'approvisionnement : une action ou une image ne peut pas changer de contenu sous une même étiquette. En contrepartie, ces références n'évoluent que si on les met à jour explicitement — d'où leur intégration au périmètre automatisé.
 
-Une exclusion est assumée : les supports de présentation archivés (`archive/docs/…/slides`) constituent un manifeste figé, hors production, où la mise à jour automatique est neutralisée. Sans cela, les correctifs de sécurité échouent en boucle sur les dépendances transitives d'un projet qui n'est plus maintenu ni déployé.
-
 ### 1.2 — Fréquence
 
 Trois rythmes se complètent, du plus lent au plus réactif :
@@ -163,6 +161,8 @@ Quatre familles de sondes se complètent, de la vérification externe la plus fa
 
 Chaque sonde s'exécute depuis l'Europe, les États-Unis et l'Asie-Pacifique, avec un délai d'expiration de dix secondes. Interroger plusieurs régions évite de confondre une panne réelle avec un incident réseau local.
 
+![Les trois sondes de disponibilité et leur périodicité](captures/06-sondes.png)
+
 La distinction entre les deux sondes de l'API est le point central du dispositif. `GET /health` répond sans solliciter aucune dépendance : il détecte un service mort ou une révision qui ne démarre pas. `GET /health/ready` exécute un ping de la base avec un délai maximal de trois secondes et renvoie **503** si elle est injoignable : il détecte le cas — invisible pour la première sonde — où l'API répond parfaitement mais ne peut servir aucune donnée. La réponse porte également la **version déployée**, ce qui permet de vérifier à tout instant ce qui tourne réellement en production :
 
 ```json
@@ -201,6 +201,8 @@ Chaque politique embarque sa **conduite à tenir**, affichée dans la notificati
 Le signalement se fait par **courriel** vers l'adresse d'exploitation, déclarée comme canal de notification et rattachée aux cinq politiques. Le message porte la politique déclenchée, la condition franchie, la valeur observée, l'horodatage, un lien vers l'incident et le graphique correspondant, ainsi que la conduite à tenir. Trois règles complémentaires par projet Sentry couvrent les erreurs applicatives : anomalie classée prioritaire, **régression** d'une anomalie précédemment corrigée, et **rafale** de plus de vingt occurrences en une heure. La règle de régression protège contre un scénario classique : une correction qui se défait silencieusement plusieurs déploiements plus tard.
 
 La chaîne complète a été **vérifiée de bout en bout** : une sonde temporaire pointant vers une adresse inexistante a été mise en service, l'alerte s'est déclenchée après deux points de contrôle en échec, et le courriel est parvenu à l'exploitant avec sa conduite à tenir. La sonde et la politique de test ont ensuite été supprimées. Le dispositif n'est donc pas seulement configuré : il est prouvé.
+
+![Notification d'alerte reçue lors de la vérification de la chaîne de signalement](captures/07-alerte-email.png)
 
 Le projet étant exploité par une seule personne, il n'y a ni astreinte ni escalade à plusieurs niveaux : le signalement va directement à l'exploitant, qui est aussi le développeur. Une escalade formelle serait ici une complication sans destinataire.
 
