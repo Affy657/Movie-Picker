@@ -35,7 +35,7 @@
 
 **Movie Picker** répond à un irritant du quotidien : choisir un film à plusieurs sans négociation interminable. Un hôte crée une **soirée** et invite des participants par un simple lien ; chacun propose des films issus du catalogue TMDB, l'assemblée vote, puis une roue tire au sort parmi les propositions retenues.
 
-L'application est en production depuis mai 2026, à l'adresse **web.movie-picker.fr**, et repose sur trois composants déployés indépendamment :
+L'application sert des utilisateurs réels depuis **avril 2026** — la première version étiquetée `1.0.0` datant du 19 mai — à l'adresse **web.movie-picker.fr**. Elle repose sur trois composants déployés indépendamment :
 
 | Composant | Technologie | Hébergement |
 |-----------|-------------|-------------|
@@ -104,7 +104,7 @@ Le 25 juillet 2026, l'audit du pipeline échoue sur l'avis **`GHSA-qwww-vcr4-c8h
 
 **Décision.** Bien que la faille ne soit pas exploitable dans ce contexte, la montée est effectuée plutôt que neutralisée par une exception : l'interface utilisée est stable, la couverture de tests est forte, et supprimer la cause vaut mieux qu'entretenir une dérogation à réexaminer indéfiniment.
 
-**Intégration et vérification.** Remplacement du paquet, réécriture des imports sur les 51 fichiers, puis contrôle complet : compilation TypeScript et analyse statique sans erreur, **575 tests unitaires au vert**, build de production et génération du service worker conformes, tests de bout en bout et audit de performance validés en intégration continue. L'avis disparaît de l'audit, le pipeline repasse au vert et le déploiement bloqué reprend son cours. Durée totale : moins d'une heure, sans adaptation du code applicatif.
+**Intégration et vérification.** Remplacement du paquet, réécriture des imports sur les 51 fichiers, puis contrôle complet : compilation TypeScript et analyse statique sans erreur, **intégralité de la suite unitaire au vert** (575 tests à cette date), build de production et génération du service worker conformes, tests de bout en bout et audit de performance validés en intégration continue. L'avis disparaît de l'audit, le pipeline repasse au vert et le déploiement bloqué reprend son cours. Durée totale : moins d'une heure, sans adaptation du code applicatif.
 
 ### 1.6 — Limites connues
 
@@ -206,12 +206,7 @@ Le projet étant exploité par une seule personne, il n'y a ni astreinte ni esca
 
 ### 2.6 — De l'alerte à la correction
 
-1. **Détection** — une sonde franchit un seuil, ou une exception est capturée.
-2. **Signalement** — courriel portant le contexte et la conduite à tenir.
-3. **Qualification** — lecture de l'incident, ou de l'anomalie regroupée : pile d'appel lisible, version, occurrences, fil d'événements.
-4. **Consignation** — l'anomalie confirmée devient une fiche écrite (§3).
-5. **Correction et déploiement** — correctif par le pipeline ; en cas d'incident lié à un déploiement, retour arrière vers la révision précédente, la version portée par chaque événement identifiant le déploiement fautif.
-6. **Vérification** — contrôle automatique des deux sondes de santé en fin de déploiement, retour de la sonde au vert, puis inscription au journal des versions (§7).
+La supervision n'a d'intérêt que si elle débouche sur une action. Une alerte suit toujours le même enchaînement : **détection** par une sonde ou une exception capturée → **signalement** par courriel avec la conduite à tenir → **qualification** à partir de l'incident ou de l'anomalie regroupée (pile d'appel, version, occurrences) → **consignation** en fiche écrite, dont le processus fait l'objet du §3 → **correction** par le pipeline, ou retour arrière immédiat si l'incident suit un déploiement → **vérification** par les sondes de santé et inscription au journal des versions (§7).
 
 ### 2.7 — Tableau de bord
 
@@ -357,7 +352,7 @@ L'étape 4 est celle qui rend la fiche exploitable : sans elle, la reproduction 
 
 Le diagnostic a mis au jour **deux causes cumulées**, l'une expliquant le déclenchement, l'autre aggravant silencieusement la situation depuis l'origine.
 
-**Cause racine 1 — clé de chiffrement expirée.** Le cookie d'authentification est chiffré par le mécanisme de protection des données du framework. La clé provenait d'un secret généré **sans durée explicite**, donc avec la valeur par défaut de **90 jours**. Créée au premier déploiement de la version 1 en avril 2026, elle a expiré à la mi-juillet. Le trousseau ne contenant qu'une seule clé, chaque instance s'est mise à en régénérer une **éphémère**, stockée dans un dossier temporaire effacé au démarrage. Le service étant configuré sans instance minimale, le démarrage à froid suivant rendait le cookie émis par l'instance précédente indéchiffrable : 401, puis déconnexion.
+**Cause racine 1 — clé de chiffrement expirée.** Le cookie d'authentification est chiffré par le mécanisme de protection des données du framework. La clé provenait d'un secret généré **sans durée explicite**, donc avec la valeur par défaut de **90 jours**. Créée lors d'un déploiement d'avril 2026, elle a expiré à la mi-juillet. Le trousseau ne contenant qu'une seule clé, chaque instance s'est mise à en régénérer une **éphémère**, stockée dans un dossier temporaire effacé au démarrage. Le service étant configuré sans instance minimale, le démarrage à froid suivant rendait le cookie émis par l'instance précédente indéchiffrable : 401, puis déconnexion.
 
 Cette cause explique les trois observations : le lien avec la fermeture du navigateur (le temps d'inactivité laisse le service redescendre à zéro), l'atteinte de tous les supports (le défaut est côté serveur), et l'apparition sans déploiement (c'est le temps qui déclenche, pas le code).
 
@@ -381,7 +376,7 @@ Le traitement effectif de ces préconisations, de la branche de correction à la
 
 ### 4.6 — Portée de la fiche
 
-Cette fiche a été consignée **a posteriori** : l'anomalie date du 17 juillet 2026, antérieure à la formalisation du processus décrit au §3. Elle a été reconstituée à partir du diagnostic d'origine et du correctif déployé, avec les dates réelles de chaque étape. Depuis, le processus s'applique en amont : le canal de signalement, les étiquettes de triage et le gabarit obligatoire sont en place, et toute anomalie ultérieure est consignée au moment où elle est constatée.
+Cette fiche a été consignée **a posteriori** : l'anomalie date du 17 juillet 2026, antérieure à la formalisation du processus décrit au §3. Elle a été reconstituée à partir du diagnostic d'origine et du correctif déployé, avec les dates réelles de chaque étape. Depuis, le processus s'applique en amont — le canal de signalement, les étiquettes de triage et le gabarit obligatoire sont en place — et l'anomalie suivante, détectée le 25 juillet par les portes du pipeline, a bien été consignée au moment de sa constatation (fiche #68, §5.4).
 
 ---
 
@@ -393,8 +388,8 @@ Cette fiche a été consignée **a posteriori** : l'anomalie date du 17 juillet 
 
 Un correctif emprunte exactement le même chemin qu'une évolution : **aucune voie rapide, aucun accès direct à la production**. C'est ce qui permet de corriger vite sans corriger mal — l'urgence d'une anomalie est précisément le moment où l'on est tenté de sauter les vérifications.
 
-| Étape | Contrôles | Blocant |
-|-------|-----------|:-------:|
+| Étape | Contrôles | Bloquant |
+|-------|-----------|:--------:|
 | **Poussée sur une branche** | Analyse statique, formatage, compilation ; recherche de secrets | ✅ |
 | **Tests** | Tests unitaires front (578) et API, tests d'intégration, **6 parcours de bout en bout** | ✅ |
 | **Qualité et sécurité** | Porte de qualité du code sur le code nouveau, analyse de vulnérabilités des dépendances et de l'image, audit de performance et d'accessibilité | ✅ |
@@ -441,7 +436,7 @@ Le 25 juillet 2026, l'ajout du lien « Signaler un problème » en pied de page 
 
 Conséquence immédiate : la porte étant bloquante, la construction de l'image et le déploiement sont annulés. **Le défaut n'a jamais atteint la production.**
 
-Deux corrections étaient possibles : dégrader le libellé d'accessibilité du lien pour lever l'ambiguïté, ou rendre le sélecteur de test exact. La seconde a été retenue — l'accessibilité prime, et un futur libellé mentionnant l'e-mail ne recassera pas les tests. Après correction, les six parcours repassent au vert en local, puis en intégration continue ; le déploiement bloqué reprend et met en ligne le canal de signalement.
+Le processus décrit au §3 s'applique de la même manière qu'à une anomalie signalée par un utilisateur : le défaut est consigné en fiche **#68**, avec ses étapes de reproduction, son analyse et les options de correction envisagées. Deux étaient possibles — dégrader le libellé d'accessibilité du lien pour lever l'ambiguïté, ou rendre le sélecteur de test exact. La seconde a été retenue : l'accessibilité prime, et un futur libellé mentionnant l'e-mail ne recassera pas les tests. Le défaut se situait d'ailleurs dans le test, non dans l'application — le sélecteur, écrit en correspondance partielle, était fragile avant même l'ajout du lien, qui n'a fait que le révéler. Après correction, les six parcours repassent au vert en local, puis en intégration continue ; le déploiement bloqué reprend et met en ligne le canal de signalement.
 
 Ces deux cas se complètent : le premier montre le pipeline **corrigeant** une anomalie parvenue jusqu'aux utilisateurs, le second le montre **empêchant** un défaut de les atteindre. C'est la même chaîne, mobilisée à deux moments différents du cycle de vie.
 
