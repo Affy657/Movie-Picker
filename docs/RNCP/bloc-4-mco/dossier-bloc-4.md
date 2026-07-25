@@ -382,3 +382,147 @@ Le traitement effectif de ces préconisations, de la branche de correction à la
 ### 4.6 — Portée de la fiche
 
 Cette fiche a été consignée **a posteriori** : l'anomalie date du 17 juillet 2026, antérieure à la formalisation du processus décrit au §3. Elle a été reconstituée à partir du diagnostic d'origine et du correctif déployé, avec les dates réelles de chaque étape. Depuis, le processus s'applique en amont : le canal de signalement, les étiquettes de triage et le gabarit obligatoire sont en place, et toute anomalie ultérieure est consignée au moment où elle est constatée.
+
+---
+
+## §5 — Traitement d'une anomalie détectée en production
+
+> **Compétence C4.2.2** — *Créer et déployer un correctif en respectant le processus d'intégration et de déploiement continu afin de résoudre l'anomalie. Le traitement tire profit du processus d'intégration et de déploiement continu ; le correctif mis en place est décrit et permet la résolution de l'anomalie.*
+
+### 5.1 — Le pipeline mobilisé
+
+Un correctif emprunte exactement le même chemin qu'une évolution : **aucune voie rapide, aucun accès direct à la production**. C'est ce qui permet de corriger vite sans corriger mal — l'urgence d'une anomalie est précisément le moment où l'on est tenté de sauter les vérifications.
+
+| Étape | Contrôles | Blocant |
+|-------|-----------|:-------:|
+| **Poussée sur une branche** | Analyse statique, formatage, compilation ; recherche de secrets | ✅ |
+| **Tests** | Tests unitaires front (578) et API, tests d'intégration, **6 parcours de bout en bout** | ✅ |
+| **Qualité et sécurité** | Porte de qualité du code sur le code nouveau, analyse de vulnérabilités des dépendances et de l'image, audit de performance et d'accessibilité | ✅ |
+| **Fusion sur la branche principale** | Revue du correctif | — |
+| **Construction et publication** | Image conteneur analysée puis publiée, référencée par empreinte | ✅ |
+| **Déploiement** | Mise en ligne de la révision (API) ; synchronisation et invalidation du cache (front) | — |
+| **Contrôle post-déploiement** | Appel des deux sondes de santé : le service répond-il, et peut-il servir ? | ✅ |
+
+Le déploiement n'est donc pas un acte manuel, mais la conséquence d'une fusion ayant franchi l'ensemble des portes. En cas d'incident malgré tout, un retour arrière bascule la totalité du trafic vers la révision précédente **sans reconstruction**, en quelques minutes.
+
+### 5.2 — Chronologie du traitement de l'anomalie #67
+
+| Étape | Contenu |
+|-------|---------|
+| **Signalement** (17/07) | Plusieurs utilisateurs rapportent des déconnexions ; qualification et reproduction |
+| **Analyse** | Identification des deux causes racines (§4.4) |
+| **Branche dédiée** | `fix/auth-session-persistence`, isolée de la branche principale |
+| **Correctif** | Commit `ec7ce77`, accompagné d'un test de non-régression |
+| **Portes du pipeline** | Analyse statique, tests unitaires et d'intégration, parcours de bout en bout, qualité, sécurité — toutes franchies |
+| **Revue** | Ajustements issus de la relecture du correctif (`f80c95b`) |
+| **Fusion** | `21335d2` sur la branche principale |
+| **Déploiement** | Automatique : construction, publication de l'image, mise en ligne de la révision |
+| **Contrôle post-déploiement** | Sonde de santé appelée par le pipeline, réponse conforme |
+| **Vérification fonctionnelle** | Session testée après déploiement, **puis après un démarrage à froid** — la condition exacte qui déclenchait le défaut |
+| **Clôture** | Fiche refermée en référençant le commit correctif et la date de déploiement |
+
+### 5.3 — Le correctif mis en place
+
+Les cinq préconisations du §4.5 ont été traitées :
+
+| Préconisation | Réalisation |
+|---------------|-------------|
+| 1 — Persister les clés de chiffrement | Nouveau dépôt de clés adossé à la base de données, activé dès qu'une connexion est configurée. Les clés deviennent durables et partagées entre instances et révisions ; la rotation automatique se poursuit sans rupture. Le repli sur fichier est conservé en développement |
+| 2 — Corriger l'enregistrement du configurateur | Enregistrement basculé sur l'interface effectivement consommée par la fabrique d'options : nom du cookie applicatif, magasin de sessions, réglages de sécurité et réponse 401 en JSON redeviennent effectifs |
+| 3 — Durée de session unifiée | Portée à 30 jours glissants, via une constante partagée par le configurateur, le contrôleur d'authentification et le magasin de tickets — une seule source de vérité |
+| 4 — Clé de secours | Durée de vie portée à dix ans pour l'outil de génération de la clé statique de repli |
+| 5 — Test de non-régression | Test vérifiant que le configurateur s'applique réellement : il échoue avec l'ancien enregistrement, ce qui interdit la réapparition silencieuse de la cause racine 2 |
+
+**Pourquoi le correctif résout l'anomalie.** La cause racine 1 disparaît parce que la clé n'est plus stockée dans un espace éphémère : un redémarrage, un passage à zéro instance ou un nouveau déploiement ne lui font plus perdre sa clé, et le cookie reste déchiffrable. La cause racine 2 disparaît parce que la configuration s'applique enfin, ce qu'un test garantit désormais à chaque exécution du pipeline. L'effet de bord annoncé — une reconnexion unique pour tous — s'est produit comme prévu au déploiement, puis les sessions sont restées stables. **Aucune réapparition depuis le 17 juillet 2026.**
+
+### 5.4 — Un second cas : la porte qui bloque avant l'utilisateur
+
+Le 25 juillet 2026, l'ajout du lien « Signaler un problème » en pied de page fait échouer **cinq parcours de bout en bout** sur six. Le motif est instructif : le libellé d'accessibilité du nouveau lien contient le mot « e-mail », si bien que le sélecteur `getByLabel('E-mail')` des tests, jusque-là sans ambiguïté, désigne désormais deux éléments — le champ du formulaire d'inscription et le lien du pied de page.
+
+Conséquence immédiate : la porte étant bloquante, la construction de l'image et le déploiement sont annulés. **Le défaut n'a jamais atteint la production.**
+
+Deux corrections étaient possibles : dégrader le libellé d'accessibilité du lien pour lever l'ambiguïté, ou rendre le sélecteur de test exact. La seconde a été retenue — l'accessibilité prime, et un futur libellé mentionnant l'e-mail ne recassera pas les tests. Après correction, les six parcours repassent au vert en local, puis en intégration continue ; le déploiement bloqué reprend et met en ligne le canal de signalement.
+
+Ces deux cas se complètent : le premier montre le pipeline **corrigeant** une anomalie parvenue jusqu'aux utilisateurs, le second le montre **empêchant** un défaut de les atteindre. C'est la même chaîne, mobilisée à deux moments différents du cycle de vie.
+
+### 5.5 — Ce que le déploiement continu apporte au traitement d'une anomalie
+
+| Apport | Effet concret observé |
+|--------|----------------------|
+| **Délai réduit** | Le correctif atteint la production dès la fusion, sans fenêtre de livraison à attendre |
+| **Non-régression garantie** | Un correctif ne peut pas en introduire un autre : 578 tests unitaires, 6 parcours de bout en bout et les audits de qualité s'exécutent sur chaque correctif, y compris urgent |
+| **Vérification automatique** | Les sondes de santé sont appelées en fin de déploiement : une révision incapable de joindre la base échoue à se mettre en ligne |
+| **Réversibilité** | Un retour arrière rétablit la révision précédente en quelques minutes, sans reconstruction — l'arbitrage « corriger ou revenir en arrière » du §3.4 est réellement praticable |
+| **Traçabilité** | Chaque déploiement porte l'identifiant du commit, repris par le suivi des erreurs : une exception observée en production désigne le déploiement qui l'a introduite |
+
+![Exécution du pipeline sur le correctif : portes franchies et déploiement](captures/03-pipeline-correctif.png)
+
+---
+
+## §6 — Recommandations argumentées d'amélioration
+
+> **Compétence C4.3.1** — *Proposer des axes d'amélioration en prenant en compte les indicateurs de performance et en analysant les retours utilisateurs, afin de maintenir et renforcer l'attractivité du logiciel.*
+
+### 6.1 — Méthode
+
+Les recommandations qui suivent partent de mesures, non d'intuitions. Quatre sources ont été exploitées : la **base de production** (agrégats sans donnée personnelle), les **métriques d'exploitation** sur trente jours, l'**analytique produit** sur quatre-vingt-dix jours, et les **audits automatisés** exécutés à chaque déploiement.
+
+Le volet qualitatif est en cours de constitution : le canal « Signaler un problème » est en service depuis la version 1.3.2, et un questionnaire de six questions est adressé aux utilisateurs inscrits. Les recommandations ci-dessous s'appuient donc sur le quantitatif ; le qualitatif servira à les confirmer ou à les réordonner — ce que la recommandation R1 rend possible en continu plutôt que par campagnes ponctuelles.
+
+### 6.2 — Indicateurs observés
+
+| Indicateur | Mesure | Lecture |
+|------------|--------|---------|
+| Utilisateurs inscrits | 17 (avril → juillet 2026) | Base réduite, usage entre proches |
+| Soirées créées | 18 — rythme mensuel 2 / 6 / 6 / 4 | Activité stable |
+| Soirées menées jusqu'au tirage | **14 sur 18 — 78 %** | Le parcours principal aboutit |
+| Films proposés | 58 — moyenne 3,6 par soirée | Conforme à l'usage attendu |
+| Participations | 76 — moyenne 4,2 par soirée | Le partage par lien fonctionne |
+| Votes exprimés | 78, par 34 participants | **≈ 1 vote par participant** pour 3,6 films disponibles |
+| Abonnements aux notifications | **3 sur 17 — 18 %** | Fonctionnalité peu adoptée |
+| Relations de suivi | 21 | Fonctionnalité sociale utilisée |
+| Latence p95 · taux d'erreur | 207 ms · 0,026 % | Aucun problème de fiabilité |
+| Événements du parcours cœur | **0** | Création, vote et tirage non instrumentés |
+
+Deux conclusions structurent le reste : **la fiabilité n'est pas le facteur limitant**, et **l'engagement dans la soirée l'est** — le vote, mécanisme censé faire émerger le consensus, est à peine sollicité.
+
+### 6.3 — Recommandations
+
+**R1 — Instrumenter le parcours cœur.** Aucun événement n'est capturé sur la création d'une soirée, l'ajout d'un film, le vote ou le tirage : les chiffres ci-dessus ont dû être reconstitués depuis la base et décrivent des résultats, jamais des abandons. Impossible aujourd'hui de répondre à « combien d'invités ouvrent le lien sans jamais voter ? ». La proposition consiste à capturer six événements et à construire l'entonnoir correspondant ; l'infrastructure analytique existe déjà et reste soumise au consentement, seuls les appels manquent.
+*Coût **0,5 à 1 jour**, effet immédiat. Gain : mesure des abandons étape par étape — les décisions suivantes cessent d'être des paris.* **Priorité 1**, prérequis des autres.
+
+**R2 — Relancer le vote.** 78 votes pour 76 participations et 58 films : chaque participant se prononce environ une fois alors qu'il peut voter sur tous les films de sa soirée. Le tirage s'appuie donc sur un signal faible, ce qui affaiblit la promesse du produit. La proposition rend visible ce qui reste à faire : indicateur « il te reste X films à noter », relance dans l'application lorsqu'un autre participant ajoute un film, et avertissement à l'hôte avant le lancement de la roue si moins de la moitié des participants ont voté.
+*Coût **2 à 3 jours**, une itération. Gain visé : passer de ≈ 1 à ≥ 2,5 votes par participant, pour un tirage représentatif et une décision mieux acceptée par le groupe.* **Priorité 2.**
+
+**R3 — Trancher le sort des notifications.** Trois abonnements actifs pour dix-sept inscrits, alors que la version 1.1 a investi dans les clés de signature, cinq déclencheurs et une interface de préférences : le rapport entre coût de maintenance et valeur rendue est défavorable. La proposition tient en une tentative de redressement avant décision — déplacer la demande d'autorisation, aujourd'hui présentée trop tôt, vers un moment où son intérêt est évident (juste après la création d'une soirée), avec une phrase expliquant ce que l'utilisateur recevra. Si l'adoption ne dépasse pas 40 % sous deux mois, geler l'investissement plutôt que continuer à maintenir à perte.
+*Coût **1 jour**, une itération. Gain : adoption visée > 40 % ; à défaut, une décision d'arrêt argumentée par la mesure — un gain lui aussi, en coût de maintenance évité.* **Priorité 3.**
+
+**R4 — Installer une boucle de satisfaction continue.** Aucun dispositif ne mesure la satisfaction dans la durée ; le questionnaire en cours donnera une photographie, pas une tendance. La proposition ajoute une question unique après le tirage — « cette soirée s'est-elle bien passée ? », trois niveaux — stockée sans donnée nominative et agrégée par mois, en complément du canal de signalement déjà livré.
+*Coût **1 à 2 jours**, une itération. Gain : détection des dégradations d'expérience invisibles pour la supervision technique — aucune des anomalies fonctionnelles rencontrées n'avait levé d'exception.* **Priorité 3.**
+
+**R5 — Encourager la récurrence, mais après mesure.** Dix-huit soirées en trois mois et demi pour dix-sept inscrits : l'application est utilisée par événement, pas par habitude. La version 1.4 envisagée (sélection manuelle, flamme de régularité) parie sur la récurrence sans qu'aucune mesure ne l'éclaire. La proposition consiste à attendre les données de R1 et les réponses à la question « qu'est-ce qui te ferait revenir plus souvent ? » ; si le pari se confirme, la piste la moins coûteuse est la reconduction d'une soirée avec le même groupe en un clic, plutôt qu'un mécanisme de gamification complet.
+*Coût **2 jours** pour la reconduction contre **5 à 8 jours** pour la gamification. Gain : évite d'engager une semaine sur une hypothèse non vérifiée, et supprime le principal frein à une nouvelle soirée — reconstituer le groupe.* **Priorité 4**, conditionnée à R1.
+
+**R6 — Décrire la supervision en infrastructure-as-code.** Les trois sondes, les cinq politiques d'alerte, le canal de notification et le tableau de bord ont été créés par appels d'interface de programmation : ils ne sont pas versionnés, une suppression accidentelle ou une dérive de configuration passerait inaperçue. La proposition consiste à les décrire dans le dépôt et à les appliquer depuis le pipeline.
+*Coût **1 à 2 jours**, une itération. Gain : configuration de supervision reproductible et relue comme du code ; suppression d'un point de fragilité de l'exploitation.* **Priorité 4.**
+
+### 6.4 — Priorisation et séquencement
+
+| Rang | Recommandation | Coût | Nature du gain |
+|:----:|----------------|:----:|----------------|
+| 1 | R1 — Instrumenter le parcours cœur | 0,5 à 1 j | Capacité de décision |
+| 2 | R2 — Relancer le vote | 2 à 3 j | Attractivité, tenue de la promesse produit |
+| 3 | R3 — Trancher le sort des notifications | 1 j | Attractivité, ou économie de maintenance |
+| 3 | R4 — Boucle de satisfaction | 1 à 2 j | Détection des irritants invisibles |
+| 4 | R5 — Récurrence | 2 j (option courte) | Fréquence d'usage, sous condition de mesure |
+| 4 | R6 — Supervision en infrastructure-as-code | 1 à 2 j | Robustesse de l'exploitation |
+
+**Total : 7,5 à 11 jours**, séquençables en trois itérations. Aucune recommandation n'exige de refonte : toutes s'appuient sur l'existant, condition de leur faisabilité sur un projet mené par une seule personne.
+
+L'ordre n'est pas une simple file d'attente. R1 conditionne l'évaluation de R2, R3 et R5 : engager R5 avant R1 reviendrait à développer une semaine de fonctionnalités sur une hypothèse invérifiable — exactement ce que ces recommandations cherchent à éviter.
+
+### 6.5 — Ce qui n'est délibérément pas recommandé
+
+La fiabilité et la performance ne figurent pas dans cette liste. Avec 0,026 % d'erreurs serveur, une latence p95 de 207 ms et une disponibilité sous surveillance active, elles ne limitent pas l'attractivité du produit : y investir maintenant reviendrait à optimiser ce qui fonctionne déjà, au détriment de ce qui bloque réellement. Le démarrage à froid de 3,8 secondes relève du même raisonnement — il a d'ailleurs été atténué sans développement, les sondes de disponibilité maintenant les instances tièdes.
+
+Les retours qualitatifs, une fois collectés, pourront faire émerger des irritants absents de cette analyse : un parcours mal compris ou une attente déçue ne laissent aucune trace dans les données d'usage. La liste sera alors révisée — c'est précisément la fonction de la boucle de satisfaction proposée en R4.
