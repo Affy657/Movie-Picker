@@ -526,3 +526,142 @@ L'ordre n'est pas une simple file d'attente. R1 conditionne l'évaluation de R2,
 La fiabilité et la performance ne figurent pas dans cette liste. Avec 0,026 % d'erreurs serveur, une latence p95 de 207 ms et une disponibilité sous surveillance active, elles ne limitent pas l'attractivité du produit : y investir maintenant reviendrait à optimiser ce qui fonctionne déjà, au détriment de ce qui bloque réellement. Le démarrage à froid de 3,8 secondes relève du même raisonnement — il a d'ailleurs été atténué sans développement, les sondes de disponibilité maintenant les instances tièdes.
 
 Les retours qualitatifs, une fois collectés, pourront faire émerger des irritants absents de cette analyse : un parcours mal compris ou une attente déçue ne laissent aucune trace dans les données d'usage. La liste sera alors révisée — c'est précisément la fonction de la boucle de satisfaction proposée en R4.
+
+---
+
+## §7 — Journal des versions déployées
+
+> **Compétence C4.3.2 (éliminatoire)** — *Établir un journal des versions déployées en y intégrant la documentation des correctifs réalisés, pour suivre les différentes évolutions du logiciel. Le journal contient les améliorations apportées par la version ; les correctifs déployés sont documentés.*
+
+### 7.1 — Dispositif
+
+Le journal repose sur trois supports complémentaires, tous versionnés ou publiés :
+
+| Support | Rôle |
+|---------|------|
+| **`CHANGELOG.md`**, à la racine du dépôt | Journal de référence — format *Keep a Changelog 1.1.0*, rédigé en français |
+| **Étiquettes Git** | Une étiquette annotée `vX.Y.Z` par version publiée, posée sur le commit exact déployé |
+| **Publications GitHub** | Notes de version lisibles, adossées à l'étiquette correspondante |
+
+La version est également **lisible depuis l'application elle-même** : affichée en pied de page, et exposée par la sonde d'aptitude à servir sous forme de l'identifiant du commit déployé. Un utilisateur qui signale une anomalie transmet donc sa version sans avoir à la chercher — le message pré-rempli du canal de signalement l'embarque automatiquement — et l'exploitant peut vérifier à tout instant ce qui tourne réellement en production.
+
+### 7.2 — Politique de versionnage
+
+Versionnage sémantique, interprété comme suit pour une application web :
+
+| Incrément | Déclencheur | Exemple |
+|-----------|-------------|---------|
+| **Majeur** | Rupture du parcours utilisateur ou du contrat de l'API | Aucun à ce jour |
+| **Mineur** | Nouvelle fonctionnalité visible par l'utilisateur | `1.2.0` — profil public, notifications, conformité RGPD |
+| **Correctif** | Correction d'anomalie, sécurité, exploitation, qualité interne | `1.3.2` — supervision, canal de signalement, correctif de sécurité |
+
+Les entrées sont classées par catégories — *ajouté*, *modifié*, *corrigé*, *sécurité* — et rédigées pour être comprises sans lire le code : ce sont les évolutions du produit qui sont décrites, jamais les commits.
+
+### 7.3 — Versions publiées
+
+| Version | Date | Contenu principal |
+|---------|------|-------------------|
+| **1.3.2** | 25/07/2026 | Supervision de production, sonde d'aptitude à servir, canal de signalement, correctif de sécurité du routeur |
+| 1.3.1 | 08/07/2026 | Filtre de durée, échelle de notes, politique de sécurité du contenu, refonte du pipeline |
+| 1.3.0 | 19/06/2026 | États vides, export calendrier, infobulles, refonte de la navigation |
+| 1.2.0 | 11/06/2026 | Profil public, notifications dans l'application, accessibilité étendue, RGPD, analytique |
+| 1.1.0 | 25/05/2026 | Application installable, notifications push, séries télévisées |
+| 1.0.0 | 19/05/2026 | Première version de production |
+| 0.1.0 | 27/02/2026 | Prototype initial |
+
+![Publications du dépôt — sept versions étiquetées](captures/04-releases.png)
+
+### 7.4 — Exemplaire : version 1.3.2
+
+**Ajouté**
+- Lien « Signaler un problème » en pied de page, ouvrant un message pré-rempli avec la page concernée, la version et le navigateur.
+- Sonde `GET /health/ready` vérifiant la joignabilité de la base et exposant la version déployée.
+- Supervision de production : trois sondes de disponibilité, cinq politiques d'alerte notifiées par courriel, tableau de bord d'exploitation, règles d'alerte sur les régressions et les rafales d'erreurs.
+- Contrôle de l'aptitude à servir dans le test de fumée de déploiement.
+
+**Modifié**
+- Portes de qualité du pipeline rendues bloquantes (qualité du code, performance, parcours de bout en bout).
+- Réduction de la duplication de code : actions sur un film, fermeture des fenêtres modales, pied de carte partagé.
+
+**Corrigé**
+- Sept signalements de qualité du code résolus.
+- Sécurité : les points d'entrée de lancement et de clôture de la roue exigent désormais un corps de requête JSON, alignés sur le reste de l'API.
+- Accessibilité : l'animation de la roue respecte la préférence système de réduction des animations.
+
+**Sécurité**
+- Montée du routeur de 7.18.1 vers 8.3.0, corrigeant l'avis `GHSA-qwww-vcr4-c8h2`.
+- Résolution des huit alertes de dépendances ouvertes (six hautes, deux basses).
+
+Cette entrée illustre les deux exigences du critère : les **améliorations apportées** par la version — quatre ajouts, deux évolutions — et les **correctifs déployés**, documentés un par un avec leur nature, y compris les correctifs de sécurité assortis de l'identifiant public de l'avis.
+
+### 7.5 — Traçabilité des correctifs
+
+Chaque correctif se relie à sa version dans les deux sens :
+
+- **De l'anomalie vers la version** — la fiche référence le commit correctif, le commit appartient à une étiquette, l'étiquette correspond à une entrée du journal. L'anomalie #67 se retrouve ainsi dans la version qui la corrige.
+- **De la version vers les anomalies** — la rubrique *corrigé* énumère les correctifs embarqués, la rubrique *sécurité* les vulnérabilités traitées avec leur identifiant d'avis.
+- **De la production vers le code** — la version portée par chaque événement d'erreur, égale à l'identifiant du commit déployé, rattache une exception observée en production au déploiement exact qui l'a introduite.
+
+---
+
+## §8 — Problème résolu en collaboration avec le support
+
+> **Compétence C4.3.3** — *Collaborer avec les équipes de support en fournissant une expertise technique, en répondant aux retours clients et en résolvant des problèmes complexes afin d'améliorer le logiciel.*
+
+### 8.1 — Dispositif de support
+
+L'application est développée et exploitée par une seule personne : les rôles de support de premier niveau — réception et qualification du retour — et de second niveau — diagnostic et correction — sont tenus par le même intervenant. Le dispositif est donc conçu pour que **le retour utilisateur ne dépende pas d'un canal informel**.
+
+| Fonction | Qui l'assure | Support |
+|----------|--------------|---------|
+| Réception du signalement | Développeur-mainteneur | Lien **« Signaler un problème »** en pied de page, message pré-rempli avec page, version et navigateur |
+| Qualification et reproduction | Développeur-mainteneur | Gabarit obligatoire, grille de sévérité (§3) |
+| Diagnostic et correction | Développeur-mainteneur | Suivi des erreurs, métriques d'exploitation, journaux du service |
+| Validation du retour à la normale | Développeur-mainteneur **et utilisateurs signalants** | Vérification en production, confirmation d'usage |
+| Fournisseurs de service | Hébergeur de l'API, base managée, suivi des erreurs | Documentation, comportements de plateforme, télémétrie |
+
+![Canal de signalement dans le pied de page de l'application](captures/05-lien-support.png)
+
+La faiblesse structurelle de ce dispositif est connue : signalant et correcteur ne se contrôlent pas mutuellement. Elle est compensée par la formalisation écrite de chaque anomalie, y compris lorsqu'une seule personne la lit.
+
+### 8.2 — Contexte du retour utilisateur
+
+**17 juillet 2026.** Plusieurs utilisateurs signalent le même symptôme, exprimé en langage courant : *« je dois me reconnecter à chaque fois »*. Les échanges de qualification apportent trois précisions décisives, qu'aucun outil technique n'aurait fournies :
+
+1. La déconnexion survient **à la fermeture de l'onglet ou du navigateur**, pas pendant l'utilisation.
+2. Elle touche **tous les supports** : ordinateur, mobile, application installée.
+3. **« Avant, ça marchait »** — le comportement s'est dégradé sans qu'aucune version n'ait été publiée.
+
+Ces retours sont d'autant plus précieux qu'**aucune alerte technique ne s'est déclenchée**. L'application répondait, ne levait aucune exception, et renvoyait des codes 401 parfaitement conformes à son propre code : pour la supervision de l'époque, tout allait bien. Seuls les utilisateurs pouvaient signaler l'anomalie.
+
+**Le problème à résoudre**, une fois traduit du langage utilisateur au langage technique : pourquoi un cookie d'authentification, émis avec une durée de vie longue, cesse-t-il d'être reconnu après la fermeture du navigateur, sans modification du code ?
+
+### 8.3 — Résolution apportée
+
+La troisième précision — « avant, ça marchait » — a orienté le diagnostic vers un élément **dépendant du temps** plutôt que vers une régression de code, écartant d'emblée la piste la plus naturelle. L'investigation a mis au jour deux causes cumulées : une clé de chiffrement arrivée à expiration, combinée à un stockage éphémère et au passage à zéro instance du service ; et un composant de configuration enregistré sur une interface jamais consommée, inopérant depuis l'origine. L'analyse détaillée figure au §4.4, le correctif et son déploiement au §5.3.
+
+Du point de vue de la relation avec les utilisateurs, la résolution comportait un élément à annoncer : le changement de clé de chiffrement imposait une **reconnexion unique pour tous**. Elle a été assumée et signalée plutôt que subie — un utilisateur prévenu d'une reconnexion la vit comme une opération de maintenance, un utilisateur surpris la vit comme une seconde anomalie.
+
+### 8.4 — Contribution des parties prenantes
+
+| Partie prenante | Contribution | Sans elle |
+|-----------------|--------------|-----------|
+| **Utilisateurs signalants** | Détection, description du symptôme, et surtout les trois précisions de contexte : fermeture du navigateur, tous supports, dégradation sans déploiement | L'anomalie restait invisible : aucune alerte, aucune exception, aucun code d'erreur anormal |
+| **Développeur-mainteneur** | Qualification, reproduction, diagnostic des deux causes racines, correctif, test de non-régression, déploiement, vérification | — |
+| **Hébergeur de l'API** | Le comportement documenté du passage à zéro instance et du stockage éphémère a fourni le chaînon entre l'expiration d'une clé et le symptôme perçu | Le lien entre une clé expirée et une déconnexion à la fermeture du navigateur restait incompréhensible |
+| **Base de données managée** | Support de persistance durable des clés, partagé entre instances et révisions | La correction se serait limitée à repousser l'expiration, sans traiter la cause |
+| **Pipeline d'intégration et de déploiement** | Portes de qualité, déploiement, contrôle post-déploiement | Correctif livré sans garantie de non-régression |
+
+La contribution la plus déterminante n'est pas technique : c'est le **« avant, ça marchait »** des utilisateurs. Cette phrase a exclu l'hypothèse d'une régression de code et orienté vers un mécanisme temporel — l'expiration d'une clé. Un signalement limité à « je suis déconnecté » aurait coûté plusieurs heures de recherche supplémentaires, très probablement engagées dans la mauvaise direction.
+
+### 8.5 — Ce que l'épisode a changé
+
+Trois évolutions en ont été tirées, toutes livrées depuis :
+
+1. **Un canal de signalement explicite** — le lien en pied de page évite de dépendre du fait qu'un utilisateur pense à écrire spontanément, et son message pré-rempli embarque page, version et navigateur : trois des précisions qu'il avait fallu réclamer.
+2. **Une supervision capable de voir ce type de dégradation** — la sonde d'aptitude à servir, les alertes sur les erreurs serveur et la règle de détection des régressions réduisent la dépendance au signalement humain pour les défauts de cette nature.
+3. **Une consignation systématique** — le processus formalisé garantit qu'une anomalie signalée oralement laisse désormais une trace écrite et reproductible.
+
+### 8.6 — Limite assumée
+
+Sur un projet à intervenant unique, la collaboration avec le support se joue entre le développeur et ses utilisateurs, non entre deux équipes constituées. Le cas présenté est réel et non simulé : les utilisateurs ont tenu le rôle de détection et de qualification qu'assurerait un support de premier niveau, et leurs précisions ont directement orienté le diagnostic. Dans une organisation plus grande, la différence porterait sur la traçabilité du ticket et la passation entre niveaux — deux points que le processus écrit du §3 couvre déjà, précisément parce qu'il a été conçu pour ne pas reposer sur la mémoire d'une seule personne.
