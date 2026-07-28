@@ -149,7 +149,29 @@ L'API est configurée sans instance minimale : après une période d'inactivité
 
 ### 2.3 Sondes mises en place et finalité de chacune
 
-Quatre familles de sondes se complètent, de la vérification externe la plus factuelle à la prévention en amont du déploiement.
+Quatre familles de sondes se complètent, de la vérification externe la plus factuelle à la prévention en amont du déploiement. Les trois premières convergent vers le même point de signalement.
+
+```mermaid
+flowchart LR
+  subgraph Surveille["Ce qui est surveillé"]
+    FRONT["Front SPA<br/>CloudFront et S3"]
+    API["API .NET<br/>Cloud Run"]
+    DB[("Base MongoDB")]
+    API --> DB
+  end
+  S1["Sonde /health<br/>60 s, 3 régions"] --> API
+  S2["Sonde /health/ready<br/>15 min, ping de la base"] --> API
+  S3["Sonde page d'accueil<br/>5 min"] --> FRONT
+  FRONT -. "erreurs JavaScript" .-> SEN["Suivi des erreurs"]
+  API -. "exceptions 5xx" .-> SEN
+  API -. "latence, codes, instances" .-> MET["Métriques d'exécution"]
+  S1 --> AL["5 politiques d'alerte"]
+  S2 --> AL
+  S3 --> AL
+  MET --> AL
+  SEN --> AL
+  AL --> MAIL["Courriel à l'exploitant<br/>avec conduite à tenir"]
+```
 
 **a. Sondes actives de disponibilité.** Ce sont les seules qui prouvent qu'un utilisateur peut réellement atteindre le service : elles interrogent l'application **de l'extérieur**, depuis trois continents, indépendamment de son propre code.
 
@@ -300,7 +322,18 @@ Une anomalie critique en production ouvre un arbitrage immédiat : **corriger** 
 
 Chaque anomalie laisse une chaîne complète et vérifiable :
 
-**Fiche** (symptôme, reproduction, analyse) → **branche** dédiée → **commit** expliquant la cause racine → **exécution du pipeline** (portes franchies) → **déploiement** (révision et version identifiées) → **entrée au journal des versions** → **étiquette et publication de version** → **clôture de la fiche** référençant le commit.
+```mermaid
+flowchart LR
+  F["Fiche d'anomalie<br/>symptôme, reproduction, analyse"] --> B["Branche dédiée"]
+  B --> C["Commit<br/>cause racine expliquée"]
+  C --> P["Pipeline<br/>portes de qualité franchies"]
+  P --> D["Déploiement<br/>révision et version identifiées"]
+  D --> J["Journal des versions"]
+  J --> R["Étiquette et publication"]
+  R --> K["Clôture de la fiche"]
+  K -. "référence le commit correctif" .-> C
+  D -. "version portée par chaque erreur observée" .-> F
+```
 
 Cette chaîne se parcourt dans les deux sens : depuis une anomalie, on retrouve la version qui la corrige ; depuis une version, on retrouve les anomalies qu'elle traite. La version portée par chaque événement d'erreur, égale à l'identifiant du commit déployé, fait le lien entre une exception observée en production et le déploiement qui l'a introduite.
 
@@ -563,13 +596,13 @@ Les entrées sont classées par catégories (*ajouté*, *modifié*, *corrigé*, 
 
 | Version | Date | Contenu principal |
 |---------|------|-------------------|
-| **1.3.2** | 25/07/2026 | Supervision de production, sonde d'aptitude à servir, canal de signalement, correctif de sécurité du routeur |
-| 1.3.1 | 08/07/2026 | Filtre de durée, échelle de notes, politique de sécurité du contenu, refonte du pipeline |
-| 1.3.0 | 19/06/2026 | États vides, export calendrier, infobulles, refonte de la navigation |
-| 1.2.0 | 11/06/2026 | Profil public, notifications dans l'application, accessibilité étendue, RGPD, analytique |
-| 1.1.0 | 25/05/2026 | Application installable, notifications push, séries télévisées |
-| 1.0.0 | 19/05/2026 | Première version de production |
-| 0.1.0 | 27/02/2026 | Prototype initial |
+| **1.3.2** | 25/07/2026 | Supervision de production (sondes, alertes, tableau de bord), sonde d'aptitude à servir, canal « Signaler un problème », portes de qualité rendues bloquantes, correctif de sécurité du routeur |
+| 1.3.1 | 08/07/2026 | Refonte des cartes film (grille immersive, vue liste, modale streaming), filtre de durée, échelle de notes au choix, politique de sécurité du contenu, refonte du pipeline, optimisations de performance et d'accessibilité, durcissement SSRF et scans de sécurité étendus |
+| 1.3.0 | 19/06/2026 | Roue repensée en canvas avec animation, recherche avancée (note, langue, décennie, disponibilité), tri de la liste, offres de location et d'achat, export calendrier, états vides harmonisés, infobulles, refonte de la navigation |
+| 1.2.0 | 11/06/2026 | Profil public avec statistiques, suivi entre utilisateurs, invitations et notifications dans l'application, note de présentation des films, historique de recherche, accessibilité étendue, analytique soumise au consentement, suppression de compte et export RGPD |
+| 1.1.0 | 25/05/2026 | Application installable (PWA), notifications système à cinq déclencheurs, séries en plus des films, bandes-annonces et liens vers les plateformes, sélecteur d'avatar |
+| 1.0.0 | 19/05/2026 | Première version de production : comptes et réinitialisation de mot de passe, création de soirée avec lien de partage et QR code, configuration par l'hôte, propositions, votes, marque « déjà vu », roue, mise à jour en direct, bilingue, thème clair et sombre, migration du back-end vers ASP.NET Core, limitation de débit et en-têtes de sécurité |
+| 0.1.0 | 27/02/2026 | Prototype : création de soirée, proposition de films depuis le catalogue, vote, roue de tirage |
 
 ![Publications du dépôt : sept versions étiquetées](captures/04-releases.png)
 
@@ -612,58 +645,42 @@ Chaque correctif se relie à sa version dans les deux sens :
 
 ### 8.1 Dispositif de support
 
-L'application est développée et exploitée par une seule personne : les rôles de support de premier niveau (réception et qualification du retour) et de second niveau (diagnostic et correction) sont tenus par le même intervenant. Le dispositif est donc conçu pour que **le retour utilisateur ne dépende pas d'un canal informel**.
-
-| Fonction | Qui l'assure | Support |
-|----------|--------------|---------|
-| Réception du signalement | Développeur-mainteneur | Lien **« Signaler un problème »** en pied de page, message pré-rempli avec page, version et navigateur |
-| Qualification et reproduction | Développeur-mainteneur | Gabarit obligatoire, grille de sévérité (§3) |
-| Diagnostic et correction | Développeur-mainteneur | Suivi des erreurs, métriques d'exploitation, journaux du service |
-| Validation du retour à la normale | Développeur-mainteneur **et utilisateurs signalants** | Vérification en production, confirmation d'usage |
-| Fournisseurs de service | Hébergeur de l'API, base managée, suivi des erreurs | Documentation, comportements de plateforme, télémétrie |
+L'application est développée et exploitée par une seule personne : les rôles de support de premier niveau (réception et qualification) et de second niveau (diagnostic et correction) sont tenus par le même intervenant. Le dispositif est donc conçu pour que le retour utilisateur ne dépende pas d'un canal informel. La réception passe par le lien **« Signaler un problème »** en pied de page, dont le message pré-rempli embarque la page, la version et le navigateur ; la qualification suit le gabarit et la grille de sévérité du §3 ; le diagnostic s'appuie sur les outils du §2 ; et le retour à la normale est confirmé en production, avec les utilisateurs signalants.
 
 ![Canal de signalement dans le pied de page de l'application](captures/05-lien-support.png)
 
 La faiblesse structurelle de ce dispositif est connue : signalant et correcteur ne se contrôlent pas mutuellement. Elle est compensée par la formalisation écrite de chaque anomalie, y compris lorsqu'une seule personne la lit.
 
-### 8.2 Contexte du retour utilisateur
+### 8.2 Le retour utilisateur
 
-**17 juillet 2026.** Plusieurs utilisateurs signalent le même symptôme, exprimé en langage courant : *« je dois me reconnecter à chaque fois »*. Les échanges de qualification apportent trois précisions décisives, qu'aucun outil technique n'aurait fournies :
+L'anomalie traitée aux §4 et §5 illustre ce dispositif, en tant qu'elle a été **détectée par les utilisateurs et par eux seuls**. Le 17 juillet 2026, plusieurs d'entre eux signalent le même symptôme en langage courant : *« je dois me reconnecter à chaque fois »*. Les échanges de qualification apportent trois précisions qu'aucun outil n'aurait fournies :
 
 1. La déconnexion survient **à la fermeture de l'onglet ou du navigateur**, pas pendant l'utilisation.
 2. Elle touche **tous les supports** : ordinateur, mobile, application installée.
-3. **« Avant, ça marchait »** : le comportement s'est dégradé sans qu'aucune version n'ait été publiée.
+3. **« Avant, ça marchait »**, alors qu'aucune version n'a été publiée entretemps.
 
-Ces retours sont d'autant plus précieux qu'**aucune alerte technique ne s'est déclenchée**. L'application répondait, ne levait aucune exception, et renvoyait des codes 401 parfaitement conformes à son propre code : pour la supervision de l'époque, tout allait bien. Seuls les utilisateurs pouvaient signaler l'anomalie.
+Traduit en termes techniques, le problème à résoudre devient : pourquoi un cookie émis avec une durée de vie longue cesse-t-il d'être reconnu après la fermeture du navigateur, sans modification du code ?
 
-**Le problème à résoudre**, une fois traduit du langage utilisateur au langage technique : pourquoi un cookie d'authentification, émis avec une durée de vie longue, cesse-t-il d'être reconnu après la fermeture du navigateur, sans modification du code ?
+### 8.3 Résolution et annonce
 
-### 8.3 Résolution apportée
+La troisième précision a écarté d'emblée l'hypothèse d'une régression de code et orienté vers un mécanisme dépendant du temps, ce qui a conduit aux deux causes racines exposées au §4.4 et au correctif détaillé au §5.3.
 
-La troisième précision (« avant, ça marchait ») a orienté le diagnostic vers un élément **dépendant du temps** plutôt que vers une régression de code, écartant d'emblée la piste la plus naturelle. L'investigation a mis au jour deux causes cumulées : une clé de chiffrement arrivée à expiration, combinée à un stockage éphémère et au passage à zéro instance du service ; et un composant de configuration enregistré sur une interface jamais consommée, inopérant depuis l'origine. L'analyse détaillée figure au §4.4, le correctif et son déploiement au §5.3.
-
-Du point de vue de la relation avec les utilisateurs, la résolution comportait un élément à annoncer : le changement de clé de chiffrement imposait une **reconnexion unique pour tous**. Elle a été assumée et signalée plutôt que subie : un utilisateur prévenu d'une reconnexion la vit comme une opération de maintenance, un utilisateur surpris la vit comme une seconde anomalie.
+Un point relevait de la relation avec les utilisateurs plutôt que de la technique : le changement de clé de chiffrement imposait une **reconnexion unique pour tous**. Elle a été annoncée avant le déploiement. Un utilisateur prévenu d'une reconnexion y voit une opération de maintenance ; le même utilisateur non prévenu y voit une seconde anomalie.
 
 ### 8.4 Contribution des parties prenantes
 
 | Partie prenante | Contribution | Sans elle |
 |-----------------|--------------|-----------|
-| **Utilisateurs signalants** | Détection, description du symptôme, et surtout les trois précisions de contexte : fermeture du navigateur, tous supports, dégradation sans déploiement | L'anomalie restait invisible : aucune alerte, aucune exception, aucun code d'erreur anormal |
-| **Développeur-mainteneur** | Qualification, reproduction, diagnostic des deux causes racines, correctif, test de non-régression, déploiement, vérification | n/a |
-| **Hébergeur de l'API** | Le comportement documenté du passage à zéro instance et du stockage éphémère a fourni le chaînon entre l'expiration d'une clé et le symptôme perçu | Le lien entre une clé expirée et une déconnexion à la fermeture du navigateur restait incompréhensible |
-| **Base de données managée** | Support de persistance durable des clés, partagé entre instances et révisions | La correction se serait limitée à repousser l'expiration, sans traiter la cause |
+| **Utilisateurs signalants** | Détection, description du symptôme, et les trois précisions de contexte | L'anomalie restait invisible : aucune alerte, aucune exception, aucun code d'erreur anormal |
+| **Développeur-mainteneur** | Qualification, reproduction, diagnostic, correctif, test de non-régression, déploiement, vérification | n/a |
+| **Hébergeur de l'API** | Le comportement documenté du passage à zéro instance a fourni le chaînon entre l'expiration d'une clé et le symptôme perçu | Le lien entre les deux restait incompréhensible |
+| **Base de données managée** | Support de persistance durable des clés, partagé entre instances et révisions | La correction se serait limitée à repousser l'expiration |
 | **Pipeline d'intégration et de déploiement** | Portes de qualité, déploiement, contrôle post-déploiement | Correctif livré sans garantie de non-régression |
 
-La contribution la plus déterminante n'est pas technique : c'est le **« avant, ça marchait »** des utilisateurs. Cette phrase a exclu l'hypothèse d'une régression de code et orienté vers un mécanisme temporel : l'expiration d'une clé. Un signalement limité à « je suis déconnecté » aurait coûté plusieurs heures de recherche supplémentaires, très probablement engagées dans la mauvaise direction.
+La contribution la plus déterminante n'est pas technique : c'est le **« avant, ça marchait »**. Cette phrase a exclu la piste la plus naturelle et orienté vers l'expiration d'une clé. Un signalement limité à « je suis déconnecté » aurait coûté plusieurs heures de recherche, très probablement engagées dans la mauvaise direction.
 
 ### 8.5 Ce que l'épisode a changé
 
-Trois évolutions en ont été tirées, toutes livrées depuis :
+Trois évolutions en ont été tirées, toutes livrées depuis : le **canal de signalement** en pied de page, qui embarque d'emblée trois des précisions qu'il avait fallu réclamer ; la **supervision** décrite au §2, qui détecterait aujourd'hui une dégradation de cette nature sans attendre un signalement ; et la **consignation systématique** formalisée au §3.
 
-1. **Un canal de signalement explicite** : le lien en pied de page évite de dépendre du fait qu'un utilisateur pense à écrire spontanément, et son message pré-rempli embarque page, version et navigateur : trois des précisions qu'il avait fallu réclamer.
-2. **Une supervision capable de voir ce type de dégradation** : la sonde d'aptitude à servir, les alertes sur les erreurs serveur et la règle de détection des régressions réduisent la dépendance au signalement humain pour les défauts de cette nature.
-3. **Une consignation systématique** : le processus formalisé garantit qu'une anomalie signalée oralement laisse désormais une trace écrite et reproductible.
-
-### 8.6 Limite assumée
-
-Sur un projet à intervenant unique, la collaboration avec le support se joue entre le développeur et ses utilisateurs, non entre deux équipes constituées. Le cas présenté est réel et non simulé : les utilisateurs ont tenu le rôle de détection et de qualification qu'assurerait un support de premier niveau, et leurs précisions ont directement orienté le diagnostic. Dans une organisation plus grande, la différence porterait sur la traçabilité du ticket et la passation entre niveaux : deux points que le processus écrit du §3 couvre déjà, précisément parce qu'il a été conçu pour ne pas reposer sur la mémoire d'une seule personne.
+Sur un projet à intervenant unique, la collaboration avec le support se joue entre le développeur et ses utilisateurs, non entre deux équipes constituées. Le cas est réel et non simulé : les utilisateurs ont tenu le rôle de détection et de qualification qu'assurerait un support de premier niveau. Dans une organisation plus grande, la différence porterait sur la traçabilité du ticket et la passation entre niveaux, deux points que le processus écrit couvre déjà.
