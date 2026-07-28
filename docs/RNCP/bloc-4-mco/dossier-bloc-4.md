@@ -12,7 +12,7 @@
 | **Livrable** | Ce dossier (20 pages maximum) |
 | **Date** | Juillet 2026 |
 
-> Ce dossier décrit le maintien en condition opérationnelle d'une application **réellement déployée et utilisée** : les mesures, seuils, incidents et indicateurs qui y figurent proviennent de la production, non d'un environnement de démonstration. Les valeurs chiffrées ont été relevées le 25 juillet 2026 ; le déploiement continu implique que la production peut avoir évolué depuis.
+> Ce dossier décrit le maintien en condition opérationnelle d'une application **réellement déployée et utilisée** : les mesures, seuils, incidents et indicateurs qui y figurent proviennent de la production, non d'un environnement de démonstration. Les valeurs chiffrées ont été relevées fin juillet 2026 ; le déploiement continu implique que la production peut avoir évolué depuis.
 
 ---
 
@@ -43,7 +43,7 @@ L'application sert des utilisateurs réels depuis **avril 2026** (la première v
 | API REST | ASP.NET Core (.NET 10) | GCP Cloud Run (europe-west1) |
 | Base de données | MongoDB | MongoDB Atlas |
 
-L'échelle réelle du service conditionne toutes les décisions d'exploitation présentées ici : **17 comptes inscrits**, **18 soirées créées** entre avril et juillet 2026, **15 161 requêtes** servies sur les trente derniers jours. Un projet de cette taille ne justifie ni astreinte ni redondance multi-région ; il justifie en revanche que la moindre indisponibilité soit détectée sans dépendre du signalement d'un utilisateur, et que chaque anomalie laisse une trace écrite. C'est le parti pris de ce dossier : un dispositif **proportionné**, mais complet sur la chaîne détection → consignation → correction → traçabilité.
+L'échelle réelle du service conditionne toutes les décisions d'exploitation présentées ici : **17 comptes inscrits**, **19 soirées créées** entre avril et juillet 2026, **15 161 requêtes** servies sur les trente derniers jours. Un projet de cette taille ne justifie ni astreinte ni redondance multi-région ; il justifie en revanche que la moindre indisponibilité soit détectée sans dépendre du signalement d'un utilisateur, et que chaque anomalie laisse une trace écrite. C'est le parti pris de ce dossier : un dispositif **proportionné**, mais complet sur la chaîne détection → consignation → correction → traçabilité.
 
 ---
 
@@ -178,7 +178,7 @@ Cette même vérification est rejouée **en fin de déploiement** par le pipelin
 
 **b. Sondes passives, métriques d'exécution.** Collectées en continu par la plateforme d'hébergement, sans instrumentation applicative : requêtes par classe de code (2xx/3xx/4xx/5xx), distribution des latences, nombre d'instances actives. Leur finalité est de détecter une **dégradation progressive**) une latence qui monte, des erreurs qui apparaissent : que des sondes binaires « en ligne / hors ligne » ne verraient jamais.
 
-**c. Sonde applicative, suivi des erreurs.** Deux projets Sentry, un par composant, en production uniquement. Sont capturées les exceptions front non gérées (y compris les erreurs de rendu remontées par la barrière d'erreur de l'application) et les erreurs serveur 5xx, à l'exclusion délibérée des erreurs métier attendues) validation, ressource non trouvée, conflit, non autorisé : pour éviter le bruit. Les traces de performance sont échantillonnées à 10 %. Chaque événement porte l'environnement, la **version déployée**, la route et le contexte d'exécution ; les incidents sont regroupés par empreinte, avec compteur d'occurrences et version d'introduction. Les fichiers de correspondance du front sont transmis pendant la construction puis retirés de l'artefact publié : les piles d'appel sont lisibles sans exposer le code source. Sa finalité est de **nommer la cause** là où les sondes précédentes ne constatent qu'un symptôme.
+**c. Sonde applicative, suivi des erreurs.** Deux projets Sentry, un par composant, en production uniquement. Sont capturées les exceptions front non gérées (y compris les erreurs de rendu remontées par la barrière d'erreur de l'application) et les erreurs serveur 5xx, à l'exclusion délibérée des erreurs métier attendues : validation, ressource non trouvée, conflit, non autorisé : pour éviter le bruit. Les traces de performance sont échantillonnées à 10 %. Chaque événement porte l'environnement, la **version déployée**, la route et le contexte d'exécution ; les incidents sont regroupés par empreinte, avec compteur d'occurrences et version d'introduction. Les fichiers de correspondance du front sont transmis pendant la construction puis retirés de l'artefact publié : les piles d'appel sont lisibles sans exposer le code source. Sa finalité est de **nommer la cause** là où les sondes précédentes ne constatent qu'un symptôme.
 
 **d. Sondes préventives : avant la mise en production.** Tests unitaires et d'intégration, tests de bout en bout, audit de performance et d'accessibilité, porte de qualité du code, analyses de vulnérabilités et de secrets, plus une analyse de sécurité hebdomadaire planifiée. Leur finalité est de faire échouer le déploiement plutôt que l'utilisateur.
 
@@ -438,7 +438,7 @@ Le 25 juillet 2026, l'ajout du lien « Signaler un problème » en pied de page 
 
 Conséquence immédiate : la porte étant bloquante, la construction de l'image et le déploiement sont annulés. **Le défaut n'a jamais atteint la production.**
 
-Le processus décrit au §3 s'applique de la même manière qu'à une anomalie signalée par un utilisateur : le défaut est consigné en fiche **#68**, avec ses étapes de reproduction, son analyse et les options de correction envisagées. Deux étaient possibles (dégrader le libellé d'accessibilité du lien pour lever l'ambiguïté, ou rendre le sélecteur de test exact. La seconde a été retenue : l'accessibilité prime, et un futur libellé mentionnant l'e-mail ne recassera pas les tests. Le défaut se situait d'ailleurs dans le test, non dans l'application) le sélecteur, écrit en correspondance partielle, était fragile avant même l'ajout du lien, qui n'a fait que le révéler. Après correction, les six parcours repassent au vert en local, puis en intégration continue ; le déploiement bloqué reprend et met en ligne le canal de signalement.
+Le processus décrit au §3 s'applique de la même manière qu'à une anomalie signalée par un utilisateur : le défaut est consigné en fiche **#68**, avec ses étapes de reproduction, son analyse et les options de correction envisagées. Deux étaient possibles (dégrader le libellé d'accessibilité du lien pour lever l'ambiguïté, ou rendre le sélecteur de test exact. La seconde a été retenue : l'accessibilité prime, et un futur libellé mentionnant l'e-mail ne recassera pas les tests. Le défaut se situait d'ailleurs dans le test, non dans l'application : le sélecteur, écrit en correspondance partielle, était fragile avant même l'ajout du lien, qui n'a fait que le révéler. Après correction, les six parcours repassent au vert en local, puis en intégration continue ; le déploiement bloqué reprend et met en ligne le canal de signalement.
 
 Ces deux cas se complètent : le premier montre le pipeline **corrigeant** une anomalie parvenue jusqu'aux utilisateurs, le second le montre **empêchant** un défaut de les atteindre. C'est la même chaîne, mobilisée à deux moments différents du cycle de vie.
 
@@ -470,34 +470,38 @@ Le volet qualitatif est en cours de constitution : le canal « Signaler un probl
 
 | Indicateur | Mesure | Lecture |
 |------------|--------|---------|
-| Utilisateurs inscrits | 17 (avril → juillet 2026) | Base réduite, usage entre proches |
-| Soirées créées | 18 : rythme mensuel 2 / 6 / 6 / 4 | Activité stable |
-| Soirées menées jusqu'au tirage | **14 sur 18 : 78 %** | Le parcours principal aboutit |
-| Films proposés | 58 : moyenne 3,6 par soirée | Conforme à l'usage attendu |
-| Participations | 76 : moyenne 4,2 par soirée | Le partage par lien fonctionne |
-| Votes exprimés | 78, par 34 participants | **≈ 1 vote par participant** pour 3,6 films disponibles |
-| Abonnements aux notifications | **3 sur 17 : 18 %** | Fonctionnalité peu adoptée |
+| Utilisateurs inscrits | 17 (avril à juillet 2026) | Base réduite, usage entre proches |
+| Soirées créées | 19 : rythme mensuel 2 / 6 / 6 / 5 | Activité stable |
+| Soirées menées jusqu'au tirage | **14 sur 19 : 74 %** | Le parcours principal aboutit |
+| Films proposés | 62 : moyenne 3,3 par soirée | Conforme à l'usage attendu |
+| Participations | 80 : moyenne 4,2 par soirée | Le partage par lien fonctionne |
+| Votes exprimés | 81 (68 pour, 13 contre) par 35 participants | **≈ 1 vote par participant** pour 3,3 films disponibles |
+| Soirées tirées en mode pondéré par les votes | **0 sur 19** | Le vote n'a jamais influencé un tirage |
+| Films dotés d'une note de présentation | **3 sur 62 : 5 %** | Fonctionnalité quasi ignorée |
+| Marques « déjà vu » | 15 | Usage modéré |
+| Abonnements aux notifications système | **3 sur 17 : 18 %** | Fonctionnalité peu adoptée |
 | Relations de suivi | 21 | Fonctionnalité sociale utilisée |
 | Latence p95, taux d'erreur | 207 ms, 0,026 % | Aucun problème de fiabilité |
 | Événements du parcours cœur | **0** | Création, vote et tirage non instrumentés |
 
-Deux conclusions structurent le reste : **la fiabilité n'est pas le facteur limitant**, et **l'engagement dans la soirée l'est**, le vote, mécanisme censé faire émerger le consensus, est à peine sollicité.
+Deux conclusions structurent le reste. **La fiabilité n'est pas le facteur limitant** : aucun indicateur technique n'est dans le rouge. **L'engagement dans la soirée l'est** : le vote, mécanisme censé faire émerger le consensus, est à peine sollicité, et plusieurs fonctionnalités livrées ne rencontrent pas leur usage.
 
 ### 6.3 Recommandations
 
 **R1. Instrumenter le parcours cœur.** Aucun événement n'est capturé sur la création d'une soirée, l'ajout d'un film, le vote ou le tirage : les chiffres ci-dessus ont dû être reconstitués depuis la base et décrivent des résultats, jamais des abandons. Impossible aujourd'hui de répondre à « combien d'invités ouvrent le lien sans jamais voter ? ». La proposition consiste à capturer six événements et à construire l'entonnoir correspondant ; l'infrastructure analytique existe déjà et reste soumise au consentement, seuls les appels manquent.
 *Coût **0,5 à 1 jour**, effet immédiat. Gain : mesure des abandons étape par étape, les décisions suivantes cessent d'être des paris.* **Priorité 1**, prérequis des autres.
 
-**R2. Relancer le vote.** 78 votes pour 76 participations et 58 films : chaque participant se prononce environ une fois alors qu'il peut voter sur tous les films de sa soirée. Le tirage s'appuie donc sur un signal faible, ce qui affaiblit la promesse du produit. La proposition rend visible ce qui reste à faire : indicateur « il te reste X films à noter », relance dans l'application lorsqu'un autre participant ajoute un film, et avertissement à l'hôte avant le lancement de la roue si moins de la moitié des participants ont voté.
-*Coût **2 à 3 jours**, une itération. Gain visé : passer de ≈ 1 à ≥ 2,5 votes par participant, pour un tirage représentatif et une décision mieux acceptée par le groupe.* **Priorité 2.**
+**R2. Réconcilier le vote et son effet sur le tirage.** Chaque film proposé porte deux boutons, « Voter pour » et « Voter contre ». Ils sont peu sollicités : 81 votes pour 80 participations et 62 films, soit environ un vote par participant. La mesure décisive est toutefois ailleurs. La roue accepte deux modes, un tirage strictement aléatoire et un tirage pondéré par les votes ; le premier est la valeur par défaut, et **aucune des 19 soirées n'a activé le second**. Depuis la mise en production, aucun vote n'a donc jamais influencé un tirage. Le produit demande aux participants un effort dont il n'utilise pas le résultat, ce qui suffit à expliquer le désintérêt observé.
+La proposition tient en trois volets : faire du mode pondéré la valeur par défaut à la création d'une soirée, l'hôte restant libre de revenir au tirage strictement aléatoire ; afficher sur la roue la part réelle de chaque film, pour que l'effet du vote se voie avant le tirage ; signaler à l'hôte, avant le lancement, la proportion de participants n'ayant pas voté.
+*Coût **2 à 3 jours**, une itération. Gain : le vote retrouve la fonction qui justifie sa présence, faire émerger un consensus, ce qui est la promesse même du produit. Objectifs mesurables : au moins la moitié des soirées tirées en mode pondéré, et deux votes par participant.* **Priorité 2.**
 
-**R3. Trancher le sort des notifications.** Trois abonnements actifs pour dix-sept inscrits, alors que la version 1.1 a investi dans les clés de signature, cinq déclencheurs et une interface de préférences : le rapport entre coût de maintenance et valeur rendue est défavorable. La proposition tient en une tentative de redressement avant décision) déplacer la demande d'autorisation, aujourd'hui présentée trop tôt, vers un moment où son intérêt est évident (juste après la création d'une soirée), avec une phrase expliquant ce que l'utilisateur recevra. Si l'adoption ne dépasse pas 40 % sous deux mois, geler l'investissement plutôt que continuer à maintenir à perte.
+**R3. Trancher le sort des notifications.** Trois abonnements actifs pour dix-sept inscrits, alors que la version 1.1 a investi dans les clés de signature, cinq déclencheurs et une interface de préférences : le rapport entre coût de maintenance et valeur rendue est défavorable. La proposition tient en une tentative de redressement avant décision : déplacer la demande d'autorisation, aujourd'hui présentée trop tôt, vers un moment où son intérêt est évident (juste après la création d'une soirée), avec une phrase expliquant ce que l'utilisateur recevra. Si l'adoption ne dépasse pas 40 % sous deux mois, geler l'investissement plutôt que continuer à maintenir à perte.
 *Coût **1 jour**, une itération. Gain : adoption visée > 40 % ; à défaut, une décision d'arrêt argumentée par la mesure, un gain lui aussi, en coût de maintenance évité.* **Priorité 3.**
 
 **R4. Installer une boucle de satisfaction continue.** Aucun dispositif ne mesure la satisfaction dans la durée ; le questionnaire en cours donnera une photographie, pas une tendance. La proposition ajoute une question unique après le tirage) « cette soirée s'est-elle bien passée ? », trois niveaux : stockée sans donnée nominative et agrégée par mois, en complément du canal de signalement déjà livré.
 *Coût **1 à 2 jours**, une itération. Gain : détection des dégradations d'expérience invisibles pour la supervision technique, aucune des anomalies fonctionnelles rencontrées n'avait levé d'exception.* **Priorité 3.**
 
-**R5. Encourager la récurrence, mais après mesure.** Dix-huit soirées en trois mois et demi pour dix-sept inscrits : l'application est utilisée par événement, pas par habitude. La version 1.4 envisagée (sélection manuelle, flamme de régularité) parie sur la récurrence sans qu'aucune mesure ne l'éclaire. La proposition consiste à attendre les données de R1 et les réponses à la question « qu'est-ce qui te ferait revenir plus souvent ? » ; si le pari se confirme, la piste la moins coûteuse est la reconduction d'une soirée avec le même groupe en un clic, plutôt qu'un mécanisme de gamification complet.
+**R5. Encourager la récurrence, mais après mesure.** Dix-neuf soirées en trois mois et demi pour dix-sept inscrits : l'application est utilisée par événement, pas par habitude. La version 1.4 envisagée (sélection manuelle, flamme de régularité) parie sur la récurrence sans qu'aucune mesure ne l'éclaire. La proposition consiste à attendre les données de R1 et les réponses à la question « qu'est-ce qui te ferait revenir plus souvent ? » ; si le pari se confirme, la piste la moins coûteuse est la reconduction d'une soirée avec le même groupe en un clic, plutôt qu'un mécanisme de gamification complet.
 *Coût **2 jours** pour la reconduction contre **5 à 8 jours** pour la gamification. Gain : évite d'engager une semaine sur une hypothèse non vérifiée, et supprime le principal frein à une nouvelle soirée, reconstituer le groupe.* **Priorité 4**, conditionnée à R1.
 
 **R6. Décrire la supervision en infrastructure-as-code.** Les trois sondes, les cinq politiques d'alerte, le canal de notification et le tableau de bord ont été créés par appels d'interface de programmation : ils ne sont pas versionnés, une suppression accidentelle ou une dérive de configuration passerait inaperçue. La proposition consiste à les décrire dans le dépôt et à les appliquer depuis le pipeline.

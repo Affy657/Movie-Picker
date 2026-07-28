@@ -6,7 +6,7 @@
 
 ## 1. Méthode et sources
 
-Les recommandations qui suivent partent de mesures, pas d'intuitions. Quatre sources ont été exploitées le 25/07/2026 :
+Les recommandations qui suivent partent de mesures, pas d'intuitions. Quatre sources ont été exploitées, relevés de fin juillet 2026 :
 
 | Source | Ce qu'elle fournit |
 |--------|--------------------|
@@ -22,18 +22,20 @@ Les recommandations qui suivent partent de mesures, pas d'intuitions. Quatre sou
 | Indicateur | Mesure | Lecture |
 |------------|--------|---------|
 | Utilisateurs inscrits | 17 (08/04 → 21/07/2026) | Base réduite, usage entre proches |
-| Soirées créées | 18 | Rythme stable : 2 / 6 / 6 / 4 par mois |
-| Soirées menées jusqu'au tirage | **14 sur 18 — 78 %** | Le parcours principal aboutit |
-| Films proposés | 58 — moyenne 3,6 par soirée | Conforme à l'usage attendu |
-| Participations | 76 — moyenne 4,2 par soirée | Le partage de lien fonctionne |
-| Votes exprimés | 78, par 34 participants | **≈ 1 vote par participant** pour 3,6 films disponibles |
+| Soirées créées | 19 | Rythme stable : 2 / 6 / 6 / 5 par mois |
+| Soirées menées jusqu'au tirage | **14 sur 19, soit 74 %** | Le parcours principal aboutit |
+| Soirées tirées en mode pondéré par les votes | **0 sur 19** | Le vote n'a jamais influencé un tirage |
+| Films proposés | 62, moyenne 3,3 par soirée | Conforme à l'usage attendu |
+| Films dotés d'une note de présentation | **3 sur 62, soit 5 %** | Fonctionnalité quasi ignorée |
+| Participations | 80, moyenne 4,2 par soirée | Le partage de lien fonctionne |
+| Votes exprimés | 81 (68 pour, 13 contre) par 35 participants | **environ 1 vote par participant** pour 3,3 films disponibles |
 | Abonnements push actifs | **3 sur 17 — 18 %** | Fonctionnalité V1.1 peu adoptée |
 | Relations de suivi | 21 | Fonctionnalité sociale V1.2 utilisée |
 | Latence API p95 | 207 ms | Confortable |
 | Taux d'erreur serveur | 0,026 % | Aucun problème de fiabilité |
 | Événements analytics du parcours cœur | **0** | Création, vote et tirage non instrumentés |
 
-Deux conclusions structurent tout le reste : **la fiabilité n'est pas le sujet** (0,026 % d'erreurs, p95 à 207 ms, 78 % d'aboutissement), et **l'engagement dans la soirée l'est** — le vote, mécanisme censé faire émerger le consensus, est à peine sollicité.
+Deux conclusions structurent tout le reste : **la fiabilité n'est pas le sujet** (0,026 % d'erreurs, p95 à 207 ms, 74 % d'aboutissement), et **l'engagement dans la soirée l'est** — le vote, mécanisme censé faire émerger le consensus, est à peine sollicité.
 
 ## 3. Recommandations
 
@@ -49,15 +51,15 @@ Deux conclusions structurent tout le reste : **la fiabilité n'est pas le sujet*
 
 **Priorité 1** — prérequis des autres recommandations : sans elle, aucun gain ne sera mesurable.
 
-### R2 — Relancer le vote
+### R2 — Réconcilier le vote et son effet sur le tirage
 
-**Constat.** 78 votes pour 76 participations et 58 films proposés : chaque participant vote environ une fois, alors qu'il peut se prononcer sur tous les films de sa soirée. Le tirage s'appuie donc sur un signal faible, ce qui affaiblit la promesse produit — « faire émerger un consensus ».
+**Constat.** Chaque film porte deux boutons, « Voter pour » et « Voter contre ». 81 votes pour 80 participations et 62 films : environ un vote par participant. Surtout, la roue accepte deux modes (aléatoire strict, valeur par défaut, et pondéré par les votes) et **aucune des 19 soirées n'a activé le second** : aucun vote n'a jamais influencé un tirage. Le produit demande un effort dont il n'utilise pas le résultat.
 
-**Proposition.** Rendre visible ce qui reste à faire : un indicateur « il te reste X films à noter » sur la page de soirée, une relance in-app à l'ajout d'un film par un autre participant, et un rappel à l'hôte avant le lancement de la roue si moins de la moitié des participants ont voté.
+**Proposition.** Trois volets : faire du mode pondéré la valeur par défaut à la création (l'hôte reste libre de revenir à l'aléatoire strict) ; afficher sur la roue la part réelle de chaque film ; signaler à l'hôte, avant le lancement, la proportion de participants n'ayant pas voté.
 
 | Coût | Délai | Gain attendu |
 |------|-------|--------------|
-| **2 à 3 j** | Une itération | Objectif : passer de ≈ 1 à ≥ 2,5 votes par participant ; tirage plus représentatif, donc décision mieux acceptée par le groupe |
+| **2 à 3 j** | Une itération | Le vote retrouve sa fonction. Objectifs : au moins la moitié des soirées tirées en mode pondéré, et 2 votes par participant |
 
 **Priorité 2.** À mesurer avec l'entonnoir de R1 avant / après.
 
@@ -87,7 +89,7 @@ Deux conclusions structurent tout le reste : **la fiabilité n'est pas le sujet*
 
 ### R5 — Encourager la récurrence
 
-**Constat.** 18 soirées en trois mois et demi pour 17 inscrits : l'application est utilisée par événement, pas par habitude. C'est cohérent avec l'usage, mais la V1.4 prévue (sélection manuelle, flamme de régularité) parie sur la récurrence sans qu'aucune mesure ne l'éclaire.
+**Constat.** 19 soirées en trois mois et demi pour 17 inscrits : l'application est utilisée par événement, pas par habitude. C'est cohérent avec l'usage, mais la V1.4 prévue (sélection manuelle, flamme de régularité) parie sur la récurrence sans qu'aucune mesure ne l'éclaire.
 
 **Proposition.** Attendre les données de R1 et les réponses à la question « qu'est-ce qui te ferait revenir plus souvent ? » avant d'engager le développement. Si le pari est confirmé, la piste la moins coûteuse est la soirée récurrente (« refaire une soirée avec le même groupe » en un clic, à partir d'une soirée passée) plutôt qu'un mécanisme de gamification complet.
 
