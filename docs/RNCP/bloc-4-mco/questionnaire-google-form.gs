@@ -17,10 +17,10 @@ function genererQuestionnaire() {
   const form = FormApp.openById(FORM_ID);
 
   form
-    .setTitle('Movie Picker : ton avis en 3 minutes')
+    .setTitle('Movie Picker : ton avis en 4 minutes')
     .setDescription(
       "Tu as utilisé Movie Picker pour choisir un film à plusieurs. J'aimerais l'améliorer et j'ai besoin de ton avis.\n" +
-        "Neuf questions, trois minutes, réponses anonymes. Les retours négatifs sont les plus utiles : n'hésite pas."
+        "Douze questions courtes, quatre minutes, réponses anonymes. Les retours négatifs sont les plus utiles : n'hésite pas."
     )
     .setCollectEmail(false)
     .setLimitOneResponsePerUser(false)
@@ -74,42 +74,53 @@ function genererQuestionnaire() {
     .setRequired(true);
 
   form
-    .addCheckboxItem()
-    .setTitle("Si tu n'as pas voté, ou peu voté, qu'est-ce qui t'en a empêché ?")
+    .addMultipleChoiceItem()
+    .setTitle('Comment votre groupe choisit-il finalement le film ?')
     .setChoiceValues([
-      "Je n'avais pas remarqué les boutons",
-      'Je ne voyais pas à quoi servait mon vote',
-      'Je pensais que le tirage était de toute façon aléatoire',
-      'Je ne connaissais pas assez les films proposés pour me prononcer',
-      'Je préférais laisser choisir les autres',
-      'Les films ont été ajoutés après mon passage',
+      "La roue tranche, on regarde ce qu'elle donne",
+      "On discute d'abord, la roue ne fait que confirmer un choix déjà fait",
+      "On relance la roue jusqu'à tomber sur un film qui convient à tout le monde",
+      "L'hôte décide, la roue est surtout là pour l'ambiance",
+      'Ça dépend des soirées',
     ])
     .showOtherOption(true)
-    .setRequired(false);
+    .setRequired(true);
 
   form
     .addMultipleChoiceItem()
-    .setTitle('As-tu autorisé les notifications système de Movie Picker ?')
+    .setTitle('Idéalement, que devrait faire ton vote ?')
+    .setChoiceValues([
+      'Augmenter les chances du film dans le tirage',
+      'Écarter du tirage les films rejetés par le groupe',
+      'Donner un avis, sans rien changer au tirage',
+      'Servir de base à la discussion, le tirage restant à part',
+    ])
+    .showOtherOption(true)
+    .setRequired(true);
+
+  form
+    .addMultipleChoiceItem()
+    .setTitle('Savais-tu que tu peux activer ces notifications depuis la page « Mon compte » ?')
     .setHelpText(
       "Il s'agit des notifications qui s'affichent sur ton téléphone ou ton ordinateur même quand Movie Picker est fermé, à ne pas confondre avec la cloche à l'intérieur de l'application."
     )
     .setChoiceValues([
-      'Oui, je les reçois',
-      "Non, j'ai refusé quand on me l'a demandé",
-      "Je ne me souviens pas qu'on me l'ait proposé",
-      'Je ne savais pas que ça existait',
+      'Oui, et je les ai activées',
+      "Oui, mais je ne l'ai pas fait",
+      "Non, je ne savais pas que c'était possible",
+      "J'ai essayé, mais ça n'a pas fonctionné",
     ])
     .setRequired(true);
 
   form
     .addCheckboxItem()
-    .setTitle("Si tu ne les as pas autorisées, pourquoi ?")
+    .setTitle("Qu'est-ce qui te ferait activer les notifications ?")
     .setChoiceValues([
-      'Je refuse les notifications système par principe',
-      "On me l'a demandé trop tôt, avant que je comprenne l'application",
-      "Je ne voyais pas ce que j'allais recevoir",
-      "La cloche dans l'application me suffit",
-      "J'en reçois déjà trop ailleurs",
+      'Savoir précisément ce que je vais recevoir, et à quelle fréquence',
+      "Qu'on me le propose au moment utile, par exemple quand je rejoins une soirée",
+      "Pouvoir n'activer que certaines notifications, comme le rappel de soirée",
+      "La cloche dans l'application me suffit, je n'en veux pas d'autres",
+      'Rien, je refuse les notifications système par principe',
     ])
     .showOtherOption(true)
     .setRequired(false);

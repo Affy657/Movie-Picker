@@ -495,8 +495,9 @@ Deux conclusions structurent le reste. **La fiabilité n'est pas le facteur limi
 La proposition tient en trois volets : faire du mode pondéré la valeur par défaut à la création d'une soirée, l'hôte restant libre de revenir au tirage strictement aléatoire ; afficher sur la roue la part réelle de chaque film, pour que l'effet du vote se voie avant le tirage ; signaler à l'hôte, avant le lancement, la proportion de participants n'ayant pas voté.
 *Coût **2 à 3 jours**, une itération. Gain : le vote retrouve la fonction qui justifie sa présence, faire émerger un consensus, ce qui est la promesse même du produit. Objectifs mesurables : au moins la moitié des soirées tirées en mode pondéré, et deux votes par participant.* **Priorité 2.**
 
-**R3. Trancher le sort des notifications.** Trois abonnements actifs pour dix-sept inscrits, alors que la version 1.1 a investi dans les clés de signature, cinq déclencheurs et une interface de préférences : le rapport entre coût de maintenance et valeur rendue est défavorable. La proposition tient en une tentative de redressement avant décision : déplacer la demande d'autorisation, aujourd'hui présentée trop tôt, vers un moment où son intérêt est évident (juste après la création d'une soirée), avec une phrase expliquant ce que l'utilisateur recevra. Si l'adoption ne dépasse pas 40 % sous deux mois, geler l'investissement plutôt que continuer à maintenir à perte.
-*Coût **1 jour**, une itération. Gain : adoption visée > 40 % ; à défaut, une décision d'arrêt argumentée par la mesure, un gain lui aussi, en coût de maintenance évité.* **Priorité 3.**
+**R3. Rendre les notifications atteignables avant de trancher leur sort.** Trois abonnements actifs pour dix-sept inscrits, alors que la version 1.1 a investi dans les clés de signature, cinq déclencheurs et une interface de préférences. L'examen du code explique le chiffre : l'activation n'est **jamais proposée dans le parcours**. Elle n'existe que sous la forme d'un interrupteur dans la page « Mon compte », que rien ne signale, et le réglage fin par type de notification ne s'affiche même qu'une fois l'utilisateur déjà abonné. Le taux d'adoption ne mesure donc pas un refus, mais l'absence de sollicitation.
+La proposition consiste à proposer l'activation une fois, au moment où son intérêt est évident, par exemple juste après avoir créé ou rejoint une soirée, en énonçant ce que l'utilisateur recevra, et à rendre le choix par type visible avant l'abonnement plutôt qu'après. Si l'adoption ne dépasse pas 40 % dans les deux mois qui suivent, la fonctionnalité aura été jugée sur pièces et son gel deviendra défendable.
+*Coût **1 jour**, une itération. Gain : une décision fondée. Aujourd'hui, geler l'investissement reviendrait à condamner une fonctionnalité que personne n'a jamais eu l'occasion d'accepter.* **Priorité 3.**
 
 **R4. Installer une boucle de satisfaction continue.** Aucun dispositif ne mesure la satisfaction dans la durée ; le questionnaire en cours donnera une photographie, pas une tendance. La proposition ajoute une question unique après le tirage) « cette soirée s'est-elle bien passée ? », trois niveaux : stockée sans donnée nominative et agrégée par mois, en complément du canal de signalement déjà livré.
 *Coût **1 à 2 jours**, une itération. Gain : détection des dégradations d'expérience invisibles pour la supervision technique, aucune des anomalies fonctionnelles rencontrées n'avait levé d'exception.* **Priorité 3.**
@@ -512,8 +513,8 @@ La proposition tient en trois volets : faire du mode pondéré la valeur par dé
 | Rang | Recommandation | Coût | Nature du gain |
 |:----:|----------------|:----:|----------------|
 | 1 | R1 : Instrumenter le parcours cœur | 0,5 à 1 j | Capacité de décision |
-| 2 | R2 : Relancer le vote | 2 à 3 j | Attractivité, tenue de la promesse produit |
-| 3 | R3 : Trancher le sort des notifications | 1 j | Attractivité, ou économie de maintenance |
+| 2 | R2 : Réconcilier le vote et son effet | 2 à 3 j | Attractivité, tenue de la promesse produit |
+| 3 | R3 : Rendre les notifications atteignables | 1 j | Adoption réelle, ou décision d'arrêt fondée |
 | 3 | R4 : Boucle de satisfaction | 1 à 2 j | Détection des irritants invisibles |
 | 4 | R5 : Récurrence | 2 j (option courte) | Fréquence d'usage, sous condition de mesure |
 | 4 | R6 : Supervision en infrastructure-as-code | 1 à 2 j | Robustesse de l'exploitation |

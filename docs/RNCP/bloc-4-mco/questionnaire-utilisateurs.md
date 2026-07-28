@@ -2,7 +2,7 @@
 
 > Support de collecte des retours pour les axes d'amélioration ([`axes-amelioration.md`](axes-amelioration.md), C4.3.1) et pour le suivi de la satisfaction.
 >
-> **Statut : à envoyer.** Cible : les 17 comptes inscrits en production. Durée annoncée : trois minutes.
+> **Statut : à envoyer.** Cible : les 17 comptes inscrits en production. Durée annoncée : quatre minutes.
 > **Formulaire** : [Google Forms](https://docs.google.com/forms/d/1u_FlEJPyoUATSZp18kE-Ak3hb6upPQv4mu8Znksd8_o/edit), généré par [`questionnaire-google-form.gs`](questionnaire-google-form.gs).
 
 ## Ce que le questionnaire cherche à établir
@@ -11,8 +11,8 @@ Les indicateurs de production disent **ce que** les utilisateurs font, jamais **
 
 | Écart mesuré | Hypothèse à tester |
 |--------------|--------------------|
-| 78 votes pour 76 participations et 58 films proposés | Les boutons « Voter pour » et « Voter contre » sont-ils vus ? Leur effet est-il compris, sachant que **toutes les soirées tournent en mode aléatoire strict**, où le vote n'influence pas le tirage ? |
-| 3 abonnements aux notifications système sur 17 inscrits | Refus délibéré, demande d'autorisation arrivée trop tôt, ou cloche in-app jugée suffisante ? |
+| 81 votes pour 80 participations et 62 films proposés | Les boutons « Voter pour » et « Voter contre » sont-ils vus ? Leur effet est-il compris, sachant que **toutes les soirées tournent en mode aléatoire strict**, où le vote n'influence pas le tirage ? Et comment le groupe décide-t-il réellement ? |
+| 3 abonnements aux notifications système sur 17 inscrits | Refus délibéré, ou simple ignorance ? L'activation n'existe que sous forme d'un interrupteur dans « Mon compte », que rien ne signale dans le parcours. |
 | 19 soirées en trois mois et demi, usage par événement | Quelles fonctionnalités existantes sont ignorées, et qu'est-ce qui déclencherait une nouvelle soirée ? |
 
 ## Réglages du formulaire
@@ -27,12 +27,12 @@ Les indicateurs de production disent **ce que** les utilisateurs font, jamais **
 
 ## Titre et introduction
 
-**Titre** : Movie Picker : ton avis en 3 minutes
+**Titre** : Movie Picker : ton avis en 4 minutes
 
 **Description** :
 
 > Tu as utilisé Movie Picker pour choisir un film à plusieurs. J'aimerais l'améliorer et j'ai besoin de ton avis.
-> Neuf questions, trois minutes, réponses anonymes. Les retours négatifs sont les plus utiles : n'hésite pas.
+> Douze questions courtes, quatre minutes, réponses anonymes. Les retours négatifs sont les plus utiles : n'hésite pas.
 
 ## Questions
 
@@ -101,24 +101,42 @@ Les indicateurs de production disent **ce que** les utilisateurs font, jamais **
 
 *Question centrale. Toutes les soirées ont tourné en mode aléatoire strict, où le vote n'a aucun effet sur le tirage. Si les réponses montrent que les participants croient l'inverse, ou l'ignorent, l'écart entre la promesse et le comportement réel du produit est établi, et R2 change de nature : il ne s'agit plus d'inciter à voter, mais de réconcilier le vote et son effet.*
 
-### Q5. Frein au vote
+### Q5. Décision réelle du groupe
 
 | | |
 |---|---|
-| **Type** | Cases à cocher, plusieurs réponses possibles |
-| **Obligatoire** | Non |
+| **Type** | Choix multiple, une seule réponse |
+| **Obligatoire** | Oui |
 | **« Autre »** | **Oui**, avec champ libre |
 
-**Si tu n'as pas voté, ou peu voté, qu'est-ce qui t'en a empêché ?**
+**Comment votre groupe choisit-il finalement le film ?**
 
-1. Je n'avais pas remarqué les boutons
-2. Je ne voyais pas à quoi servait mon vote
-3. Je pensais que le tirage était de toute façon aléatoire
-4. Je ne connaissais pas assez les films proposés pour me prononcer
-5. Je préférais laisser choisir les autres
-6. Les films ont été ajoutés après mon passage
+1. La roue tranche, on regarde ce qu'elle donne
+2. On discute d'abord, la roue ne fait que confirmer un choix déjà fait
+3. On relance la roue jusqu'à tomber sur un film qui convient à tout le monde
+4. L'hôte décide, la roue est surtout là pour l'ambiance
+5. Ça dépend des soirées
 
-### Q6. Notifications système
+*Question la plus révélatrice du formulaire. Elle dit si le tirage sert réellement à décider ou s'il n'est qu'un habillage d'une décision prise autrement. L'option 3 est plausible, l'interface proposant « Relancer la roue » et « Annuler le tirage » : si elle domine, le tirage aléatoire strict est contourné manuellement par les groupes, ce qui confirme que le vote doit peser sur le résultat.*
+
+### Q6. Attente vis-à-vis du vote
+
+| | |
+|---|---|
+| **Type** | Choix multiple, une seule réponse |
+| **Obligatoire** | Oui |
+| **« Autre »** | **Oui**, avec champ libre |
+
+**Idéalement, que devrait faire ton vote ?**
+
+1. Augmenter les chances du film dans le tirage
+2. Écarter du tirage les films rejetés par le groupe
+3. Donner un avis, sans rien changer au tirage
+4. Servir de base à la discussion, le tirage restant à part
+
+*Arbitre la forme que doit prendre R2. L'option 1 valide la pondération, l'option 2 appelle un mécanisme d'élimination qui n'existe pas aujourd'hui, l'option 3 conduirait à assumer le vote comme purement indicatif et à le dire clairement dans l'interface.*
+
+### Q7. Connaissance des notifications système
 
 | | |
 |---|---|
@@ -127,14 +145,16 @@ Les indicateurs de production disent **ce que** les utilisateurs font, jamais **
 | **« Autre »** | Non |
 | **Aide** | Il s'agit des notifications qui s'affichent sur ton téléphone ou ton ordinateur même quand Movie Picker est fermé, à ne pas confondre avec la cloche à l'intérieur de l'application. |
 
-**As-tu autorisé les notifications système de Movie Picker ?**
+**Savais-tu que tu peux activer ces notifications depuis la page « Mon compte » ?**
 
-1. Oui, je les reçois
-2. Non, j'ai refusé quand on me l'a demandé
-3. Je ne me souviens pas qu'on me l'ait proposé
-4. Je ne savais pas que ça existait
+1. Oui, et je les ai activées
+2. Oui, mais je ne l'ai pas fait
+3. Non, je ne savais pas que c'était possible
+4. J'ai essayé, mais ça n'a pas fonctionné
 
-### Q7. Frein aux notifications
+*L'activation n'est proposée nulle part dans le parcours : elle n'existe que sous forme d'un interrupteur dans les réglages du compte, que rien ne signale. Cette question mesure la part des 82 % de non-abonnés qui ignorent simplement l'existence de l'option, par opposition à un refus assumé. C'est elle qui décide du sort de R3.*
+
+### Q8. Condition d'activation
 
 | | |
 |---|---|
@@ -142,17 +162,17 @@ Les indicateurs de production disent **ce que** les utilisateurs font, jamais **
 | **Obligatoire** | Non |
 | **« Autre »** | **Oui**, avec champ libre |
 
-**Si tu ne les as pas autorisées, pourquoi ?**
+**Qu'est-ce qui te ferait activer les notifications ?**
 
-1. Je refuse les notifications système par principe
-2. On me l'a demandé trop tôt, avant que je comprenne l'application
-3. Je ne voyais pas ce que j'allais recevoir
-4. La cloche dans l'application me suffit
-5. J'en reçois déjà trop ailleurs
+1. Savoir précisément ce que je vais recevoir, et à quelle fréquence
+2. Qu'on me le propose au moment utile, par exemple quand je rejoins une soirée
+3. Pouvoir n'activer que certaines notifications, comme le rappel de soirée
+4. La cloche dans l'application me suffit, je n'en veux pas d'autres
+5. Rien, je refuse les notifications système par principe
 
-*Éclaire R3. L'option 2 teste directement l'hypothèse du moment mal choisi, l'option 4 celle d'un canal in-app déjà suffisant, auquel cas l'arrêt de l'investissement se justifie.*
+*L'option 3 mérite attention : le choix par type existe déjà, mais reste invisible tant qu'on n'est pas abonné. Si elle est cochée, la correction est un simple réordonnancement de l'interface, pas un développement.*
 
-### Q8. Fonctionnalités connues
+### Q9. Fonctionnalités connues
 
 | | |
 |---|---|
@@ -175,7 +195,7 @@ Les indicateurs de production disent **ce que** les utilisateurs font, jamais **
 
 *Mesure la découvrabilité. Une fonctionnalité livrée mais inconnue coûte de la maintenance sans rien rapporter : le résultat arbitre entre mieux exposer l'existant et développer du neuf.*
 
-### Q9. Ce qui ferait revenir
+### Q10. Ce qui ferait revenir
 
 | | |
 |---|---|
@@ -194,7 +214,7 @@ Les indicateurs de production disent **ce que** les utilisateurs font, jamais **
 
 *Éclaire R5 et R2. Les options 1, 2, 3 et 5 correspondent à des évolutions réalisables sur l'existant ; l'option 6 est proposée pour éviter de forcer une attente qui n'existe pas.*
 
-### Q10. Recommandation
+### Q11. Recommandation
 
 | | |
 |---|---|
@@ -204,7 +224,7 @@ Les indicateurs de production disent **ce que** les utilisateurs font, jamais **
 
 **Recommanderais-tu Movie Picker à un ami ?**
 
-### Q11. Champ libre
+### Q12. Champ libre
 
 | | |
 |---|---|
@@ -219,9 +239,9 @@ Les réponses sont synthétisées par thème, sans donnée nominative, puis conf
 
 | Question | Ce qu'elle arbitre |
 |----------|--------------------|
-| Q1, Q9 | R5, encourager la récurrence |
-| Q2, Q11 | Irritants invisibles pour la supervision, entrées possibles pour de nouvelles fiches |
-| Q3, Q4, Q5 | R2, réconcilier le vote et son effet sur le tirage |
-| Q6, Q7 | R3, trancher le sort des notifications système |
-| Q8 | Arbitrage entre mieux exposer l'existant et développer du neuf |
-| Q10 | R4, valeur de départ de la boucle de satisfaction |
+| Q1, Q10 | R5, encourager la récurrence |
+| Q2, Q12 | Irritants invisibles pour la supervision, entrées possibles pour de nouvelles fiches |
+| Q3, Q4, Q5, Q6 | R2, réconcilier le vote et son effet sur le tirage |
+| Q7, Q8 | R3, rendre les notifications atteignables avant de trancher leur sort |
+| Q9 | Arbitrage entre mieux exposer l'existant et développer du neuf |
+| Q11 | R4, valeur de départ de la boucle de satisfaction |

@@ -63,15 +63,15 @@ Deux conclusions structurent tout le reste : **la fiabilité n'est pas le sujet*
 
 **Priorité 2.** À mesurer avec l'entonnoir de R1 avant / après.
 
-### R3 — Trancher le sort des notifications push
+### R3 — Rendre les notifications atteignables avant de trancher leur sort
 
-**Constat.** 3 abonnements actifs pour 17 inscrits (18 %), alors que la V1.1 a investi dans les clés VAPID, cinq déclencheurs et une interface de préférences. Le rapport coût de maintenance / valeur rendue est défavorable en l'état.
+**Constat.** 3 abonnements actifs pour 17 inscrits (18 %), alors que la V1.1 a investi dans les clés VAPID, cinq déclencheurs et une interface de préférences. Le code explique le chiffre : `Notification.requestPermission()` n'est appelé que par le toggle de `NotificationsSection`, monté dans la seule page « Mon compte ». **Aucune sollicitation n'existe dans le parcours**, et les six préférences par type ne s'affichent qu'une fois abonné. Le taux ne mesure pas un refus mais une absence d'occasion.
 
-**Proposition.** Une tentative unique de redressement avant décision : déplacer la demande d'autorisation, aujourd'hui présentée trop tôt, vers un moment où son intérêt est évident — juste après la création d'une soirée ou l'ajout d'un premier film, avec une phrase expliquant ce que l'utilisateur recevra. Si l'adoption ne dépasse pas 40 % sous deux mois, geler l'investissement sur cette fonctionnalité plutôt que continuer à la maintenir à perte.
+**Proposition.** Proposer l'activation une fois, au moment utile (après création ou participation à une soirée), en énonçant ce qui sera reçu, et remonter le choix par type avant l'abonnement plutôt qu'après. Si l'adoption ne dépasse pas 40 % sous deux mois, le gel devient défendable — mais il ne l'est pas tant que personne n'a eu l'occasion d'accepter.
 
 | Coût | Délai | Gain attendu |
 |------|-------|--------------|
-| **1 j** | Une itération | Adoption visée > 40 % ; à défaut, décision d'arrêt argumentée par la mesure — un gain lui aussi, en coût de maintenance évité |
+| **1 j** | Une itération | Adoption visée > 40 % ; à défaut, décision d'arrêt fondée sur une fonctionnalité réellement exposée, et non jamais proposée |
 
 **Priorité 3.**
 
@@ -116,8 +116,8 @@ Deux conclusions structurent tout le reste : **la fiabilité n'est pas le sujet*
 | Rang | Recommandation | Coût | Nature du gain |
 |:----:|----------------|:----:|----------------|
 | 1 | R1 — Instrumenter le parcours cœur | 0,5 à 1 j | Capacité de décision |
-| 2 | R2 — Relancer le vote | 2 à 3 j | Attractivité, qualité de la promesse produit |
-| 3 | R3 — Trancher le sort du push | 1 j | Attractivité ou économie de maintenance |
+| 2 | R2 — Réconcilier le vote et son effet | 2 à 3 j | Attractivité, qualité de la promesse produit |
+| 3 | R3 — Rendre les notifications atteignables | 1 j | Adoption réelle, ou décision d'arrêt fondée |
 | 3 | R4 — Boucle de satisfaction | 1 à 2 j | Détection des irritants invisibles |
 | 4 | R5 — Récurrence | 2 j (option courte) | Fréquence d'usage — sous condition de mesure |
 | 4 | R6 — Supervision en IaC | 1 à 2 j | Robustesse de l'exploitation |
