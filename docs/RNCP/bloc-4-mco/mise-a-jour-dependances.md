@@ -1,6 +1,6 @@
 # Processus de mise à jour des dépendances (C4.1.1)
 
-> Grille : [`../referentiel/bloc-04-maintenir-application-mco.md`](../referentiel/bloc-04-maintenir-application-mco.md) · Suivi : [`../suivi-rncp.md`](../suivi-rncp.md) § 5
+> Grille : [`../referentiel/bloc-04-maintenir-application-mco.md`](../referentiel/bloc-04-maintenir-application-mco.md) | Suivi : [`../suivi-rncp.md`](../suivi-rncp.md) § 5
 >
 > **Objectif du critère (C4.1.1)** : décrire le processus de mise à jour des dépendances en précisant la **fréquence**, le **périmètre logiciel** concerné et le **type** de mise à jour (automatique ou manuel), la surveillance des nouvelles versions, l'évaluation des impacts et l'intégration sécurisée.
 
@@ -15,7 +15,7 @@ Movie Picker est un monorepo à deux applications et plusieurs chaînes d'outill
 | **GitHub Actions** | `.github/workflows/*.yml` | Actions du pipeline, **épinglées par SHA de commit** |
 | **Images Docker** | `apps/api-dotnet/MoviePicker.Api/Dockerfile` | Images de base de l'API, **épinglées par digest `sha256`** |
 
-L'épinglage par SHA et par digest est une mesure anti-chaîne d'approvisionnement : une action ou une image ne peut pas changer de contenu sous une même étiquette. En contrepartie, ces références doivent être mises à jour explicitement — d'où leur intégration au périmètre automatisé.
+L'épinglage par SHA et par digest est une mesure anti-chaîne d'approvisionnement : une action ou une image ne peut pas changer de contenu sous une même étiquette. En contrepartie, ces références doivent être mises à jour explicitement, d'où leur intégration au périmètre automatisé.
 
 **Exclusion assumée** : les slides Slidev archivées (`archive/docs/RNCP/bloc-1-cadrage/slides`) sont un manifeste figé, hors production, où Dependabot est neutralisé (`ignore: "*"`). Sans cela, les mises à jour de sécurité échouent en boucle sur des dépendances transitives d'un projet qui n'est plus maintenu et n'est jamais déployé.
 
@@ -25,9 +25,9 @@ Trois rythmes complémentaires, du plus lent au plus rapide :
 
 | Rythme | Mécanisme | Rôle |
 |--------|-----------|------|
-| **Mensuel** | Dependabot — une pull request **groupée** par écosystème (`open-pull-requests-limit` de 2 à 3) | Maintenir le socle à jour sans noyer le projet sous les PR |
-| **Hebdomadaire** | `security-scan.yml`, lundi 04 h 17 UTC — Trivy sur l'ensemble du dépôt, sévérités HIGH et CRITICAL bloquantes | Capter les vulnérabilités divulguées **entre deux cycles Dependabot** |
-| **À chaque commit** | Job `audit` du pipeline — Trivy sur `pnpm-lock.yaml` + `dotnet list package --vulnerable --include-transitive` | Interdire l'introduction d'une dépendance vulnérable, et bloquer le déploiement si une CVE est publiée entretemps |
+| **Mensuel** | Dependabot, une pull request **groupée** par écosystème (`open-pull-requests-limit` de 2 à 3) | Maintenir le socle à jour sans noyer le projet sous les PR |
+| **Hebdomadaire** | `security-scan.yml`, lundi 04 h 17 UTC, Trivy sur l'ensemble du dépôt, sévérités HIGH et CRITICAL bloquantes | Capter les vulnérabilités divulguées **entre deux cycles Dependabot** |
+| **À chaque commit** | Job `audit` du pipeline, Trivy sur `pnpm-lock.yaml` + `dotnet list package --vulnerable --include-transitive` | Interdire l'introduction d'une dépendance vulnérable, et bloquer le déploiement si une CVE est publiée entretemps |
 
 Le choix d'une cadence **mensuelle groupée** plutôt qu'hebdomadaire est délibéré : sur un projet à développeur unique, une pluie de pull requests individuelles produit de la fatigue et des fusions non relues. Le filet de sécurité réel n'est pas la fréquence de Dependabot, mais le scan hebdomadaire et l'audit à chaque commit, tous deux **bloquants**.
 
@@ -43,26 +43,26 @@ Le choix d'une cadence **mensuelle groupée** plutôt qu'hebdomadaire est délib
 | Montée de version majeure | | ✅ **Développeur** |
 | Déploiement après fusion | ✅ CI/CD | |
 
-**Aucune fusion automatique.** La proposition est automatisée, la décision ne l'est pas : une montée de version peut passer les tests tout en changeant un comportement non couvert. Les PR ouvertes par Dependabot s'exécutent d'ailleurs **sans accès aux secrets du dépôt** — l'analyse SonarCloud y est donc désactivée, ce qui exige une relecture humaine avant fusion.
+**Aucune fusion automatique.** La proposition est automatisée, la décision ne l'est pas : une montée de version peut passer les tests tout en changeant un comportement non couvert. Les PR ouvertes par Dependabot s'exécutent d'ailleurs **sans accès aux secrets du dépôt**, l'analyse SonarCloud y est donc désactivée, ce qui exige une relecture humaine avant fusion.
 
 ## 4. Évaluation de l'impact avant intégration
 
 Chaque montée de version est jugée sur quatre points :
 
-1. **Nature du changement** — correctif, mineure ou majeure. Une majeure déclenche systématiquement la lecture des notes de version.
-2. **Exploitabilité réelle de la vulnérabilité** — le code vulnérable est-il atteignable dans cette application ? Une CVE portant sur un mode d'exécution non utilisé n'a pas le même poids qu'une faille sur un chemin actif.
-3. **Surface d'impact** — nombre de fichiers concernés, présence des symboles touchés dans le code, couverture de tests existante sur ces chemins.
-4. **Vérification** — compilation, suite de tests complète, tests E2E, build de production, et audit Lighthouse. Ces contrôles étant bloquants en CI, une régression détectable ne peut pas atteindre la production.
+1. **Nature du changement**, correctif, mineure ou majeure. Une majeure déclenche systématiquement la lecture des notes de version.
+2. **Exploitabilité réelle de la vulnérabilité**, le code vulnérable est-il atteignable dans cette application ? Une CVE portant sur un mode d'exécution non utilisé n'a pas le même poids qu'une faille sur un chemin actif.
+3. **Surface d'impact**, nombre de fichiers concernés, présence des symboles touchés dans le code, couverture de tests existante sur ces chemins.
+4. **Vérification**, compilation, suite de tests complète, tests E2E, build de production, et audit Lighthouse. Ces contrôles étant bloquants en CI, une régression détectable ne peut pas atteindre la production.
 
 En cas de vulnérabilité sans correctif disponible (`ignore-unfixed`), l'exposition est documentée et réévaluée au scan hebdomadaire suivant.
 
-## 5. Cas d'application — montée majeure sous contrainte de sécurité (25/07/2026)
+## 5. Cas d'application : montée majeure sous contrainte de sécurité (25/07/2026)
 
-**Détection.** Le job `audit` du pipeline échoue sur `GHSA-qwww-vcr4-c8h2` (HIGH) : `react-router` 7.18.1, corrigé en 8.3.0. Le déploiement est automatiquement bloqué — la porte joue son rôle.
+**Détection.** Le job `audit` du pipeline échoue sur `GHSA-qwww-vcr4-c8h2` (HIGH) : `react-router` 7.18.1, corrigé en 8.3.0. Le déploiement est automatiquement bloqué, la porte joue son rôle.
 
 **Évaluation de l'impact.**
 
-- *Exploitabilité* : l'avis concerne le mode RSC (composants serveur React). L'application est une SPA pure — `<BrowserRouter>`, aucune occurrence de `@react-router/rsc`, `createStaticHandler` ni de rendu serveur. Le code vulnérable n'est pas atteignable.
+- *Exploitabilité* : l'avis concerne le mode RSC (composants serveur React). L'application est une SPA pure, `<BrowserRouter>`, aucune occurrence de `@react-router/rsc`, `createStaticHandler` ni de rendu serveur. Le code vulnérable n'est pas atteignable.
 - *Nature* : montée **majeure** (7.x → 8.x), donc ruptures possibles.
 - *Surface* : 51 fichiers importent le routeur ; l'API utilisée se limite au cœur stable (`BrowserRouter`, `Routes`, `Route`, `Link`, `NavLink`, `Navigate`, `Outlet`, `MemoryRouter`, `useLocation`, `useNavigate`, `useParams`, `useSearchParams`).
 - *Découverte structurante* : le paquet `react-router-dom` n'est plus publié au-delà de la 7.18.1 ; la ligne 8.x est distribuée sous le paquet unifié `react-router`. La montée impose donc un changement de paquet, pas seulement de version.

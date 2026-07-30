@@ -1,6 +1,6 @@
 # Journal des versions déployées (C4.3.2)
 
-> Grille : [`../referentiel/bloc-04-maintenir-application-mco.md`](../referentiel/bloc-04-maintenir-application-mco.md) · Suivi : [`../suivi-rncp.md`](../suivi-rncp.md) § 6
+> Grille : [`../referentiel/bloc-04-maintenir-application-mco.md`](../referentiel/bloc-04-maintenir-application-mco.md) | Suivi : [`../suivi-rncp.md`](../suivi-rncp.md) § 6
 >
 > **Objectif du critère (C4.3.2)** : présenter un exemplaire du journal de version, contenant les améliorations apportées par la version (anomalies corrigées, nouvelles fonctionnalités) et documentant les correctifs déployés.
 
@@ -10,7 +10,7 @@ Le journal de version repose sur trois supports complémentaires, tous versionn�
 
 | Support | Rôle |
 |---------|------|
-| [`CHANGELOG.md`](../../../CHANGELOG.md) | Journal de référence, à la racine du dépôt — format **Keep a Changelog 1.1.0**, rédigé en français |
+| [`CHANGELOG.md`](../../../CHANGELOG.md) | Journal de référence, à la racine du dépôt, format **Keep a Changelog 1.1.0**, rédigé en français |
 | **Tags Git** | Un tag annoté `vX.Y.Z` par version publiée, posé sur le commit exact déployé |
 | **Releases GitHub** | Publication lisible des notes de version, adossée au tag |
 
@@ -23,10 +23,10 @@ Versionnage sémantique (**SemVer**), interprété comme suit pour une applicati
 | Incrément | Déclencheur | Exemple |
 |-----------|-------------|---------|
 | **MAJEUR** | Rupture du parcours utilisateur ou du contrat d'API `/api/v1` | Aucun à ce jour |
-| **MINEUR** | Nouvelle fonctionnalité visible par l'utilisateur | `1.2.0` — profil public, notifications in-app, RGPD |
-| **CORRECTIF** | Correction d'anomalie, sécurité, exploitation, qualité interne | `1.3.2` — supervision, canal de support, correctif de sécurité |
+| **MINEUR** | Nouvelle fonctionnalité visible par l'utilisateur | `1.2.0`, profil public, notifications in-app, RGPD |
+| **CORRECTIF** | Correction d'anomalie, sécurité, exploitation, qualité interne | `1.3.2`, supervision, canal de support, correctif de sécurité |
 
-Les entrées sont classées selon les catégories Keep a Changelog — *Added*, *Changed*, *Fixed*, *Security* — et rédigées pour être compréhensibles sans lire le code : ce sont les évolutions du produit qui sont décrites, pas les commits.
+Les entrées sont classées selon les catégories Keep a Changelog, *Added*, *Changed*, *Fixed*, *Security*, et rédigées pour être compréhensibles sans lire le code : ce sont les évolutions du produit qui sont décrites, pas les commits.
 
 ## 3. Versions publiées
 
@@ -42,7 +42,7 @@ Les entrées sont classées selon les catégories Keep a Changelog — *Added*, 
 
 Sept versions publiées, chacune associée à un tag et à une release.
 
-## 4. Exemplaire — version 1.3.2
+## 4. Exemplaire : version 1.3.2
 
 La dernière version illustre les deux exigences du critère : les **améliorations apportées** et les **correctifs déployés**.
 
@@ -69,6 +69,6 @@ La dernière version illustre les deux exigences du critère : les **améliorati
 
 Chaque correctif déployé se relie à sa version dans les deux sens :
 
-- **De l'anomalie vers la version** — l'issue référence le commit correctif ; le commit appartient à un tag ; le tag correspond à une entrée du CHANGELOG. L'anomalie [#67](https://github.com/Affy657/Movie-Picker/issues/67) (déconnexion à la fermeture du navigateur) se retrouve ainsi dans la version qui la corrige.
-- **De la version vers les anomalies** — la rubrique *Fixed* d'une version énumère les correctifs qu'elle embarque, et la rubrique *Security* les vulnérabilités traitées, avec leur identifiant d'avis (`GHSA-…`).
-- **De la production vers le code** — la release Sentry, égale au SHA du commit déployé, rattache une exception observée en production au déploiement exact qui l'a introduite.
+- **De l'anomalie vers la version**, l'issue référence le commit correctif ; le commit appartient à un tag ; le tag correspond à une entrée du CHANGELOG. L'anomalie [#67](https://github.com/Affy657/Movie-Picker/issues/67) (déconnexion à la fermeture du navigateur) se retrouve ainsi dans la version qui la corrige.
+- **De la version vers les anomalies**, la rubrique *Fixed* d'une version énumère les correctifs qu'elle embarque, et la rubrique *Security* les vulnérabilités traitées, avec leur identifiant d'avis (`GHSA-…`).
+- **De la production vers le code**, la release Sentry, égale au SHA du commit déployé, rattache une exception observée en production au déploiement exact qui l'a introduite.
