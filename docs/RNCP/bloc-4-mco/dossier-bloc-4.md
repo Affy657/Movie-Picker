@@ -53,7 +53,7 @@ L'échelle réelle du service conditionne toutes les décisions d'exploitation p
 
 ### 1.1 Périmètre logiciel
 
-Le dépôt est un monorepo réunissant deux applications et leur outillage. Quatre écosystèmes de dépendances y coexistent, tous placés sous surveillance automatisée :
+Le dépôt est un monorepo réunissant deux applications et leur outillage. Le code livré en production repose sur quatre écosystèmes de dépendances, tous placés sous surveillance automatisée :
 
 | Écosystème | Manifeste | Contenu surveillé |
 |------------|-----------|-------------------|
@@ -98,15 +98,17 @@ Chaque montée de version est jugée sur quatre points : la **nature du changeme
 
 Le 25 juillet 2026, l'audit du pipeline échoue sur l'avis **`GHSA-qwww-vcr4-c8h2`** (sévérité haute) : la bibliothèque de routage `react-router` 7.18.1 est vulnérable, le correctif se trouve en version **8.3.0**. Le déploiement est automatiquement bloqué : la porte joue son rôle.
 
-**Évaluation.** L'avis concerne le mode « composants serveur » du routeur. L'application est une SPA sans rendu serveur : le code vulnérable n'y est pas atteignable. L'impact est donc nul en exploitation, mais le correctif impose une **montée majeure** (7.x → 8.x), avec un risque de rupture d'interface. L'analyse du code montre que 51 fichiers importent le routeur, tous limités à son cœur stable. Elle révèle surtout un point structurant : le paquet `react-router-dom` n'est plus publié au-delà de la 7.18.1, la ligne 8.x étant distribuée sous le paquet unifié `react-router`, la montée impose donc un changement de paquet, pas seulement de version.
+**Évaluation.** L'avis concerne le mode « composants serveur » du routeur, que cette SPA sans rendu serveur n'utilise pas : le code vulnérable n'y est pas atteignable et l'impact en exploitation est nul. Le correctif impose pourtant une **montée majeure** (7.x → 8.x). L'analyse montre que 51 fichiers importent le routeur, tous limités à son cœur stable, et révèle un point structurant : le paquet `react-router-dom` n'est plus publié au-delà de la 7.18.1, la ligne 8.x étant distribuée sous le paquet unifié `react-router`. La montée impose donc un changement de paquet, pas seulement de version.
 
-**Décision.** Bien que la faille ne soit pas exploitable dans ce contexte, la montée est effectuée plutôt que neutralisée par une exception : l'interface utilisée est stable, la couverture de tests est forte, et supprimer la cause vaut mieux qu'entretenir une dérogation à réexaminer indéfiniment.
-
-**Intégration et vérification.** Remplacement du paquet, réécriture des imports sur les 51 fichiers, puis contrôle complet : compilation TypeScript et analyse statique sans erreur, **intégralité de la suite unitaire au vert** (575 tests à cette date), build de production et génération du service worker conformes, tests de bout en bout et audit de performance validés en intégration continue. L'avis disparaît de l'audit, le pipeline repasse au vert et le déploiement bloqué reprend son cours. Durée totale : moins d'une heure, sans adaptation du code applicatif.
+**Décision et vérification.** La montée est effectuée plutôt que neutralisée par une exception : l'interface utilisée est stable, la couverture de tests est forte, et supprimer la cause vaut mieux qu'entretenir une dérogation à réexaminer indéfiniment. Après remplacement du paquet et réécriture des imports sur les 51 fichiers, le contrôle est complet : compilation et analyse statique sans erreur, suite unitaire au vert, construction de production et service worker conformes, parcours de bout en bout et audit de performance validés. L'avis disparaît, le déploiement bloqué reprend son cours. Durée totale : moins d'une heure, sans adaptation du code applicatif.
 
 ### 1.6 Limites connues
 
-L'audit npm s'appuie sur Trivy et non sur l'outil natif du gestionnaire de paquets, dont le service d'audit a été retiré le 15 juillet 2026 ; Trivy lit directement le fichier de verrouillage et couvre le même besoin. Côté .NET, une exception délibérée passerait par une suppression déclarée et justifiée dans la configuration du projet : aucune n'est active à ce jour. Enfin, les montées majeures restent des décisions humaines : aucune automatisation ne peut juger de l'acceptabilité d'une rupture d'interface.
+L'audit npm s'appuie sur Trivy et non sur l'outil natif du gestionnaire de paquets, dont le service d'audit a été retiré le 15 juillet 2026 ; Trivy lit directement le fichier de verrouillage et couvre le même besoin.
+
+Deux exclusions sont assumées, toutes deux déclarées dans le dépôt plutôt que subies. Côté .NET, une suppression d'audit est active sur l'avis `GHSA-6c8g-7p36-r338` (bibliothèque de compression, sévérité modérée) : aucun correctif amont n'existe, et l'interface vulnérable n'est pas atteignable depuis le pilote de base de données qui l'embarque. La suppression est déclarée dans la configuration du projet, avec sa justification, ce qui la rend relisible et réexaminable, à la différence d'une vulnérabilité simplement ignorée. Côté npm, un cinquième manifeste échappe volontairement à la surveillance, celui des supports de présentation archivés : figé et hors production, il ferait échouer en boucle les correctifs de sécurité sur des dépendances qu'aucun déploiement n'utilise.
+
+Enfin, les montées majeures restent des décisions humaines : aucune automatisation ne peut juger de l'acceptabilité d'une rupture d'interface.
 
 ---
 
@@ -123,7 +125,7 @@ Les trois composants de l'application sont déployés séparément et peuvent to
 | **Front SPA** (S3 + CloudFront) | Disponibilité de la page servie, erreurs JavaScript, Web Vitals |
 | **API .NET** (Cloud Run) | Disponibilité, aptitude à servir, latence, taux d'erreur, exceptions serveur |
 | **Base MongoDB** (Atlas) | Joignabilité depuis l'API |
-| **Services tiers** (TMDB, e-mail, notifications) | Indirectement, via les exceptions applicatives |
+| **Services tiers** (catalogue TMDB, courriel, notifications) | Indisponibilité, remontée en erreur serveur et capturée par le suivi des erreurs |
 
 La supervision de l'infrastructure sous-jacente (machines, réseau, réplication) relève des fournisseurs managés et n'est pas instrumentée par le projet : c'est une limite assumée, cohérente avec le choix d'un hébergement entièrement managé.
 
@@ -142,8 +144,8 @@ Les cibles ne sont pas des valeurs théoriques : elles ont été calées sur tre
 | Ping de la base depuis l'API | **7 ms** | < 100 ms |
 | Taux d'erreur serveur | **0,026 %** (4 réponses 5xx sur 15 161 requêtes) | **< 1 %** |
 | Erreurs applicatives | regroupées par empreinte | 0 anomalie non triée au-delà de 24 h |
-| Performance du front | score ≥ 80 | maintenu à chaque déploiement |
-| Accessibilité du front | score 100 | maintenu à chaque déploiement |
+| Performance du front | médiane de trois exécutions | **≥ 80**, porte bloquante |
+| Accessibilité du front | score 100 | **100**, porte bloquante |
 
 L'API est configurée sans instance minimale : après une période d'inactivité, le premier appel subit un **démarrage à froid de 3,8 secondes**. C'est un arbitrage de coût explicite, et les seuils d'alerte en tiennent compte plutôt que de le traiter comme une anomalie.
 
@@ -198,23 +200,26 @@ La distinction entre les deux sondes de l'API est le point central du dispositif
 
 Cette même vérification est rejouée **en fin de déploiement** par le pipeline : une révision dont la base est injoignable fait échouer sa propre mise en production, avant d'avoir servi le moindre utilisateur.
 
-**b. Sondes passives, métriques d'exécution.** Collectées en continu par la plateforme d'hébergement, sans instrumentation applicative : requêtes par classe de code (2xx/3xx/4xx/5xx), distribution des latences, nombre d'instances actives. Leur finalité est de détecter une **dégradation progressive**) une latence qui monte, des erreurs qui apparaissent : que des sondes binaires « en ligne / hors ligne » ne verraient jamais.
+**b. Sondes passives, métriques d'exécution.** Collectées en continu par la plateforme d'hébergement, sans instrumentation applicative : requêtes par classe de code (2xx/3xx/4xx/5xx), distribution des latences, nombre d'instances actives. Leur finalité est de détecter les **dégradations progressives** que des sondes binaires « en ligne / hors ligne » ne verraient jamais : une latence qui monte, des erreurs qui apparaissent.
 
-**c. Sonde applicative, suivi des erreurs.** Deux projets Sentry, un par composant, en production uniquement. Sont capturées les exceptions front non gérées (y compris les erreurs de rendu remontées par la barrière d'erreur de l'application) et les erreurs serveur 5xx, à l'exclusion délibérée des erreurs métier attendues : validation, ressource non trouvée, conflit, non autorisé : pour éviter le bruit. Les traces de performance sont échantillonnées à 10 %. Chaque événement porte l'environnement, la **version déployée**, la route et le contexte d'exécution ; les incidents sont regroupés par empreinte, avec compteur d'occurrences et version d'introduction. Les fichiers de correspondance du front sont transmis pendant la construction puis retirés de l'artefact publié : les piles d'appel sont lisibles sans exposer le code source. Sa finalité est de **nommer la cause** là où les sondes précédentes ne constatent qu'un symptôme.
+**c. Sonde applicative, suivi des erreurs.** Deux projets Sentry, un par composant, en production uniquement. Sont capturées les exceptions front non gérées (y compris les erreurs de rendu remontées par la barrière d'erreur de l'application) et toute réponse de classe 5xx, y compris l'indisponibilité déclarée d'un service tiers. Les erreurs métier attendues sont délibérément exclues pour éviter le bruit : validation, ressource non trouvée, conflit, non autorisé. Le partage se fait sur le code de réponse plutôt que sur le type d'exception, de sorte qu'une nouvelle erreur serveur est capturée sans qu'on ait à y penser. Les traces de performance sont échantillonnées à 10 %. Chaque événement porte l'environnement, la **version déployée**, la route et le contexte d'exécution ; les incidents sont regroupés par empreinte, avec compteur d'occurrences et version d'introduction. Les fichiers de correspondance du front sont transmis pendant la construction puis retirés de l'artefact publié : les piles d'appel sont lisibles sans exposer le code source. Sa finalité est de **nommer la cause** là où les sondes précédentes ne constatent qu'un symptôme.
 
 **d. Sondes préventives : avant la mise en production.** Tests unitaires et d'intégration, tests de bout en bout, audit de performance et d'accessibilité, porte de qualité du code, analyses de vulnérabilités et de secrets, plus une analyse de sécurité hebdomadaire planifiée. Leur finalité est de faire échouer le déploiement plutôt que l'utilisateur.
 
 ### 2.4 Seuils d'alerte
 
-Cinq politiques sont configurées. Leurs seuils sont volontairement placés **au-dessus du bruit mesuré** : une alerte qui se déclenche sans raison finit par être ignorée, et un système de supervision qu'on ignore ne supervise plus rien.
+Cinq politiques sont configurées, dont celle des erreurs serveur qui porte deux conditions complémentaires. Leurs seuils sont volontairement placés **au-dessus du bruit mesuré** : une alerte qui se déclenche sans raison finit par être ignorée, et un système de supervision qu'on ignore ne supervise plus rien.
 
 | Politique | Condition | Seuil | Sévérité | Justification du seuil |
 |-----------|-----------|-------|:--------:|------------------------|
 | **API indisponible** | Sonde `/health` en échec | ≥ 2 points de contrôle sur 5 min | Critique | Un seul point en échec traduit un incident réseau local, pas une panne |
 | **Base injoignable** | Sonde `/health/ready` en échec | ≥ 2 points de contrôle sur 30 min | Critique | L'API répond mais ne peut servir aucune donnée : impact utilisateur total |
 | **Front indisponible** | Sonde front en échec | ≥ 2 points de contrôle sur 10 min | Critique | Même logique, avec une fréquence de sonde plus lente |
-| **Erreurs serveur anormales** | Réponses 5xx | > 5 sur 5 min | Erreur | Référence mesurée : 4 réponses 5xx en 30 jours |
+| **Erreurs serveur anormales** | Part des réponses en 5xx | > 20 % pendant 10 min | Erreur | Voir ci-dessous : un seuil exprimé en nombre d'erreurs serait inatteignable à ce volume |
+| **Erreurs serveur anormales** | Volume de réponses 5xx | > 2 sur 30 min | Erreur | Référence mesurée : 4 réponses 5xx en 30 jours |
 | **Latence dégradée** | p95 des requêtes | > 800 ms pendant 10 min | Avertissement | Référence mesurée : 207 ms ; marge laissée aux démarrages à froid |
+
+La politique sur les erreurs serveur mérite un mot, parce qu'elle illustre le piège d'un seuil calé sur le seul bruit. Le service reçoit environ 15 000 requêtes utilisateur par mois, soit **moins de deux par fenêtre de cinq minutes** : un seuil exprimé en nombre absolu d'erreurs, si bas soit-il, ne peut pas être franchi par une panne qui renverrait pourtant 500 à la totalité du trafic. Le déclencheur principal est donc une **part du trafic**, indépendante du volume, tenue pendant dix minutes pour qu'une erreur isolée, mécaniquement majoritaire sur un trafic aussi faible, ne déclenche rien. Le déclencheur en volume absolu reste en second rideau, sur une fenêtre de trente minutes, pour capter la dégradation lente que la part du trafic manquerait si le volume remontait.
 
 Chaque politique embarque sa **conduite à tenir**, affichée dans la notification : où regarder, dans quel ordre, et quand déclencher un retour arrière. Les alertes se referment automatiquement après trente minutes sans nouvelle occurrence.
 
@@ -228,25 +233,23 @@ La chaîne complète a été **vérifiée de bout en bout** : une sonde temporai
 
 Le projet étant exploité par une seule personne, il n'y a ni astreinte ni escalade à plusieurs niveaux : le signalement va directement à l'exploitant, qui est aussi le développeur. Une escalade formelle serait ici une complication sans destinataire.
 
-### 2.6 De l'alerte à la correction
+Une alerte n'a d'intérêt que si elle débouche sur une action : elle est qualifiée à partir de l'incident, puis consignée en fiche écrite selon le processus du §3, corrigée par le pipeline ou annulée par un retour arrière, et refermée par la vérification des sondes et l'inscription au journal des versions.
 
-La supervision n'a d'intérêt que si elle débouche sur une action. Une alerte suit toujours le même enchaînement : **détection** par une sonde ou une exception capturée → **signalement** par courriel avec la conduite à tenir → **qualification** à partir de l'incident ou de l'anomalie regroupée (pile d'appel, version, occurrences) → **consignation** en fiche écrite, dont le processus fait l'objet du §3 → **correction** par le pipeline, ou retour arrière immédiat si l'incident suit un déploiement → **vérification** par les sondes de santé et inscription au journal des versions (§7).
-
-### 2.7 Tableau de bord
+### 2.6 Tableau de bord
 
 Un tableau de bord d'exploitation regroupe les six vues utilisées au quotidien : disponibilité de l'API, disponibilité du front, latences p50 et p95 avec le seuil d'alerte matérialisé, répartition des requêtes par classe de code, erreurs serveur, et nombre d'instances actives.
 
 ![Tableau de bord de supervision : disponibilité, latences, erreurs et instances](captures/01-dashboard-supervision.png)
 
-### 2.8 Données personnelles
+### 2.7 Données personnelles
 
-Le suivi des erreurs relève de l'**intérêt légitime** : sécurité et stabilité du service. Il n'utilise aucun cookie et n'est pas conditionné au consentement, contrairement à l'analytique produit, soumise à l'accord préalable de l'utilisateur ; une catégorie informative « Surveillance des erreurs » figure néanmoins dans les préférences, par transparence. La minimisation est appliquée strictement : envoi des données personnelles désactivé sur les deux SDK, effacement supplémentaire de l'adresse IP, du courriel et du nom d'utilisateur avant transmission, nettoyage côté serveur, aucun enregistrement de session ni capture d'écran. Les sondes de disponibilité n'interrogent que des points d'entrée techniques, sans authentification ni donnée utilisateur.
+Le suivi des erreurs relève de l'**intérêt légitime**, sécurité et stabilité du service : il n'utilise aucun cookie et n'est pas conditionné au consentement, contrairement à l'analytique produit, mais figure par transparence dans les préférences. La minimisation est stricte : envoi des données personnelles désactivé sur les deux SDK, effacement de l'adresse IP, du courriel et du nom d'utilisateur avant transmission, aucun enregistrement de session. Les sondes n'interrogent que des points d'entrée techniques, sans authentification ni donnée utilisateur.
 
-### 2.9 Coûts et limites
+### 2.8 Coûts et limites
 
-L'ensemble du dispositif fonctionne dans les offres gratuites : les sondes ajoutent environ 276 000 requêtes mensuelles à une API facturée au temps de traitement (environ 14 % du quota offert) et les exécutions de sondes comme les notifications ne sont pas facturées. Effet de bord favorable : les instances restent tièdes, ce qui réduit les démarrages à froid pour les utilisateurs réels.
+L'ensemble du dispositif fonctionne dans les offres gratuites. Les sondes ajoutent environ **138 000 requêtes mensuelles** à l'API, soit 7 % du quota offert sur une facturation au temps de traitement : la sonde `/health` interrogée toutes les minutes depuis trois régions en représente à elle seule 130 000. Les exécutions de sondes et les notifications ne sont pas facturées. Effet de bord favorable : les instances restent tièdes, ce qui réduit les démarrages à froid pour les utilisateurs réels.
 
-Trois limites sont assumées : la rétention des erreurs est d'environ trente jours sur l'offre gratuite, ce qui impose d'archiver hors outil les incidents à conserver ; la base de données n'est pas supervisée pour elle-même, seule sa joignabilité depuis l'API l'est ; enfin, les sondes et politiques ont été créées par appels d'interface de programmation et ne sont pas encore décrites en infrastructure-as-code, ce qui en fait un point de fragilité, il est repris comme axe d'amélioration au §6.
+Trois limites sont assumées. La rétention des erreurs est d'environ trente jours sur l'offre gratuite, ce qui impose d'archiver hors outil les incidents à conserver. La base de données n'est pas supervisée pour elle-même, seule sa joignabilité depuis l'API l'est. Enfin, les sondes et les politiques ont été créées par appels d'interface de programmation et ne sont pas encore décrites en infrastructure-as-code : c'est un point de fragilité, repris comme axe d'amélioration au §6.
 
 ---
 
@@ -260,7 +263,7 @@ Trois limites sont assumées : la rétention des erreurs est d'environ trente jo
 
 Cette règle vaut particulièrement sur un projet mené par une seule personne. C'est là qu'elle est la plus fragile (la mémoire du développeur remplace volontiers l'écrit) et là qu'elle rend le plus service : trois semaines après, la cause racine d'une anomalie n'est plus reconstituable de tête, et un correctif dont on a oublié le motif se défait au premier remaniement.
 
-Le processus est dimensionné pour la typologie du logiciel : une application web grand public, en déploiement continu, sans astreinte, dont les anomalies proviennent presque toutes de trois origines, une régression introduite par un déploiement, une dépendance externe défaillante, ou un cas d'usage non prévu.
+Le processus est dimensionné pour la typologie du logiciel : une application web grand public, en déploiement continu, sans astreinte, dont les anomalies proviennent presque toutes de trois origines : une régression introduite par un déploiement, une dépendance externe défaillante, ou un cas d'usage non prévu.
 
 ### 3.2 Canaux de collecte
 
@@ -345,9 +348,9 @@ Cette chaîne se parcourt dans les deux sens : depuis une anomalie, on retrouve 
 
 ### 4.1 L'anomalie retenue
 
-L'anomalie présentée ci-dessous est **réelle et survenue en production**. Elle a été retenue parce qu'elle illustre le cas le plus difficile pour un dispositif de maintien en condition opérationnelle : une anomalie **invisible pour la supervision technique**. L'API répondait, ne levait aucune exception, et renvoyait des codes d'erreur parfaitement conformes à son propre code. Seuls les utilisateurs pouvaient la signaler.
+L'anomalie traitée ici relève du cas le plus difficile pour un dispositif de maintien en condition opérationnelle : une anomalie **invisible pour la supervision technique**. L'API répondait, ne levait aucune exception, et renvoyait des codes d'erreur parfaitement conformes à son propre code. Seuls les utilisateurs pouvaient la signaler.
 
-Elle est consignée dans le gestionnaire d'incidents du dépôt sous la référence **#67**.
+Elle est consignée dans le gestionnaire d'incidents du dépôt sous la référence **#67** (`github.com/Affy657/Movie-Picker/issues/67`).
 
 ![Fiche de consignation de l'anomalie #67 dans le gestionnaire d'incidents](captures/02-issue-67.png)
 
@@ -423,12 +426,14 @@ Cette fiche a été consignée **a posteriori** : l'anomalie date du 17 juillet 
 
 Un correctif emprunte exactement le même chemin qu'une évolution : **aucune voie rapide, aucun accès direct à la production**. C'est ce qui permet de corriger vite sans corriger mal : l'urgence d'une anomalie est précisément le moment où l'on est tenté de sauter les vérifications.
 
+Le pipeline se déclenche sur **toute poussée, quelle que soit la branche**, et compare la branche à la branche principale pour déterminer ce qu'il doit vérifier. Les portes s'exécutent donc avant la fusion, sur le périmètre exact que la fusion apportera ; seuls les travaux de publication et de déploiement sont réservés à la branche principale.
+
 | Étape | Contrôles | Bloquant |
 |-------|-----------|:--------:|
 | **Poussée sur une branche** | Analyse statique, formatage, compilation ; recherche de secrets | ✅ |
 | **Tests** | Tests unitaires front (578) et API, tests d'intégration, **6 parcours de bout en bout** | ✅ |
 | **Qualité et sécurité** | Porte de qualité du code sur le code nouveau, analyse de vulnérabilités des dépendances et de l'image, audit de performance et d'accessibilité | ✅ |
-| **Fusion sur la branche principale** | Revue du correctif | n/a |
+| **Fusion sur la branche principale** | Relecture du correctif par son auteur, hors portes automatiques | n/a |
 | **Construction et publication** | Image conteneur analysée puis publiée, référencée par empreinte | ✅ |
 | **Déploiement** | Mise en ligne de la révision (API) ; synchronisation et invalidation du cache (front) | n/a |
 | **Contrôle post-déploiement** | Appel des deux sondes de santé : le service répond-il, et peut-il servir ? | ✅ |
@@ -444,8 +449,8 @@ Le déploiement n'est donc pas un acte manuel, mais la conséquence d'une fusion
 | **Branche dédiée** | `fix/auth-session-persistence`, isolée de la branche principale |
 | **Correctif** | Commit `ec7ce77`, accompagné d'un test de non-régression |
 | **Portes du pipeline** | Analyse statique, tests unitaires et d'intégration, parcours de bout en bout, qualité, sécurité : toutes franchies |
-| **Revue** | Ajustements issus de la relecture du correctif (`f80c95b`) |
 | **Fusion** | `21335d2` sur la branche principale |
+| **Relecture** | Relecture du correctif après fusion, ajustements livrés sur une branche de suivi (`f80c95b`) |
 | **Déploiement** | Automatique : construction, publication de l'image, mise en ligne de la révision |
 | **Contrôle post-déploiement** | Sonde de santé appelée par le pipeline, réponse conforme |
 | **Vérification fonctionnelle** | Session testée après déploiement, **puis après un démarrage à froid** : la condition exacte qui déclenchait le défaut |
@@ -453,37 +458,21 @@ Le déploiement n'est donc pas un acte manuel, mais la conséquence d'une fusion
 
 ### 5.3 Le correctif mis en place
 
-Les cinq préconisations du §4.5 ont été traitées :
+Les cinq préconisations du §4.5 ont toutes été réalisées. Le dépôt de clés est désormais adossé à la base de données, ce qui les rend durables et partagées entre instances et révisions sans interrompre la rotation automatique, le repli sur fichier restant en développement. Le configurateur est enregistré sur l'interface effectivement consommée par la fabrique d'options, si bien que le nom du cookie applicatif, le magasin de sessions, les réglages de sécurité et la réponse 401 en JSON redeviennent effectifs. La durée de session est portée à trente jours glissants par une constante unique, partagée par le configurateur, le contrôleur d'authentification et le magasin de tickets. La clé de secours générée hors base voit sa durée de vie portée à dix ans. Un test de non-régression, enfin, échoue avec l'ancien enregistrement.
 
-| Préconisation | Réalisation |
-|---------------|-------------|
-| 1 : Persister les clés de chiffrement | Nouveau dépôt de clés adossé à la base de données, activé dès qu'une connexion est configurée. Les clés deviennent durables et partagées entre instances et révisions ; la rotation automatique se poursuit sans rupture. Le repli sur fichier est conservé en développement |
-| 2 : Corriger l'enregistrement du configurateur | Enregistrement basculé sur l'interface effectivement consommée par la fabrique d'options : nom du cookie applicatif, magasin de sessions, réglages de sécurité et réponse 401 en JSON redeviennent effectifs |
-| 3 : Durée de session unifiée | Portée à 30 jours glissants, via une constante partagée par le configurateur, le contrôleur d'authentification et le magasin de tickets : une seule source de vérité |
-| 4 : Clé de secours | Durée de vie portée à dix ans pour l'outil de génération de la clé statique de repli |
-| 5 : Test de non-régression | Test vérifiant que le configurateur s'applique réellement : il échoue avec l'ancien enregistrement, ce qui interdit la réapparition silencieuse de la cause racine 2 |
-
-**Pourquoi le correctif résout l'anomalie.** La cause racine 1 disparaît parce que la clé n'est plus stockée dans un espace éphémère : un redémarrage, un passage à zéro instance ou un nouveau déploiement ne lui font plus perdre sa clé, et le cookie reste déchiffrable. La cause racine 2 disparaît parce que la configuration s'applique enfin, ce qu'un test garantit désormais à chaque exécution du pipeline. L'effet de bord annoncé (une reconnexion unique pour tous) s'est produit comme prévu au déploiement, puis les sessions sont restées stables. **Aucune réapparition depuis le 17 juillet 2026.**
+**Pourquoi le correctif résout l'anomalie.** La cause racine 1 disparaît parce que la clé n'est plus dans un espace éphémère : ni un redémarrage, ni un passage à zéro instance, ni un déploiement ne la lui font perdre, et le cookie reste déchiffrable. La cause racine 2 disparaît parce que la configuration s'applique enfin, ce qu'un test garantit à chaque exécution du pipeline. La reconnexion unique annoncée s'est produite comme prévu, puis les sessions sont restées stables. **Aucune réapparition depuis le 17 juillet 2026.**
 
 ### 5.4 Un second cas : la porte qui bloque avant l'utilisateur
 
 Le 25 juillet 2026, l'ajout du lien « Signaler un problème » en pied de page fait échouer **cinq parcours de bout en bout** sur six. Le motif est instructif : le libellé d'accessibilité du nouveau lien contient le mot « e-mail », si bien que le sélecteur `getByLabel('E-mail')` des tests, jusque-là sans ambiguïté, désigne désormais deux éléments, le champ du formulaire d'inscription et le lien du pied de page.
 
-Conséquence immédiate : la porte étant bloquante, la construction de l'image et le déploiement sont annulés. **Le défaut n'a jamais atteint la production.**
+Conséquence immédiate : la porte des parcours de bout en bout étant bloquante et le déploiement du front en dépendant, la mise en ligne est annulée. **Le défaut n'a jamais atteint la production.**
 
-Le processus décrit au §3 s'applique de la même manière qu'à une anomalie signalée par un utilisateur : le défaut est consigné en fiche **#68**, avec ses étapes de reproduction, son analyse et les options de correction envisagées. Deux étaient possibles (dégrader le libellé d'accessibilité du lien pour lever l'ambiguïté, ou rendre le sélecteur de test exact. La seconde a été retenue : l'accessibilité prime, et un futur libellé mentionnant l'e-mail ne recassera pas les tests. Le défaut se situait d'ailleurs dans le test, non dans l'application : le sélecteur, écrit en correspondance partielle, était fragile avant même l'ajout du lien, qui n'a fait que le révéler. Après correction, les six parcours repassent au vert en local, puis en intégration continue ; le déploiement bloqué reprend et met en ligne le canal de signalement.
-
-Ces deux cas se complètent : le premier montre le pipeline **corrigeant** une anomalie parvenue jusqu'aux utilisateurs, le second le montre **empêchant** un défaut de les atteindre. C'est la même chaîne, mobilisée à deux moments différents du cycle de vie.
+Le processus décrit au §3 s'applique de la même manière qu'à une anomalie signalée par un utilisateur : le défaut est consigné en fiche **#68**, avec ses étapes de reproduction, son analyse et les options de correction envisagées. Deux étaient possibles : dégrader le libellé d'accessibilité du lien pour lever l'ambiguïté, ou rendre le sélecteur de test exact. La seconde a été retenue, parce que l'accessibilité prime et qu'un futur libellé mentionnant l'e-mail ne recassera pas les tests. Le défaut se situait d'ailleurs dans le test, non dans l'application : le sélecteur, écrit en correspondance partielle, était fragile avant même l'ajout du lien, qui n'a fait que le révéler. Après correction, les six parcours repassent au vert en local, puis en intégration continue ; le déploiement bloqué reprend et met en ligne le canal de signalement.
 
 ### 5.5 Ce que le déploiement continu apporte au traitement d'une anomalie
 
-| Apport | Effet concret observé |
-|--------|----------------------|
-| **Délai réduit** | Le correctif atteint la production dès la fusion, sans fenêtre de livraison à attendre |
-| **Non-régression garantie** | Un correctif ne peut pas en introduire un autre : 578 tests unitaires, 6 parcours de bout en bout et les audits de qualité s'exécutent sur chaque correctif, y compris urgent |
-| **Vérification automatique** | Les sondes de santé sont appelées en fin de déploiement : une révision incapable de joindre la base échoue à se mettre en ligne |
-| **Réversibilité** | Un retour arrière rétablit la révision précédente en quelques minutes, sans reconstruction : l'arbitrage « corriger ou revenir en arrière » du §3.4 est réellement praticable |
-| **Traçabilité** | Chaque déploiement porte l'identifiant du commit, repris par le suivi des erreurs : une exception observée en production désigne le déploiement qui l'a introduite |
+Ces deux cas se complètent : le premier montre le pipeline **corrigeant** une anomalie parvenue jusqu'aux utilisateurs, le second le montre **empêchant** un défaut de les atteindre, une même chaîne mobilisée à deux moments du cycle de vie. Ils donnent ensemble la mesure de ce que le déploiement continu change. Le **délai** d'abord : le correctif atteint la production dès la fusion, sans fenêtre de livraison à attendre. La **non-régression** ensuite, puisqu'un correctif ne peut pas en introduire un autre sans que les 578 tests unitaires, les six parcours de bout en bout et les audits de qualité ne le signalent, y compris dans l'urgence. La **réversibilité** enfin, qui rend l'arbitrage « corriger ou revenir en arrière » du §3.4 réellement praticable, un retour arrière rétablissant la révision précédente en quelques minutes sans reconstruction.
 
 ![Exécution du pipeline sur le correctif : portes franchies et déploiement](captures/03-pipeline-correctif.png)
 
@@ -497,7 +486,7 @@ Ces deux cas se complètent : le premier montre le pipeline **corrigeant** une a
 
 Les recommandations qui suivent partent de mesures, non d'intuitions. Quatre sources ont été exploitées : la **base de production** (agrégats sans donnée personnelle), les **métriques d'exploitation** sur trente jours, l'**analytique produit** sur quatre-vingt-dix jours, et les **audits automatisés** exécutés à chaque déploiement.
 
-Le volet qualitatif est en cours de constitution : le canal « Signaler un problème » est en service depuis la version 1.3.2, et un questionnaire de six questions est adressé aux utilisateurs inscrits. Les recommandations ci-dessous s'appuient donc sur le quantitatif ; le qualitatif servira à les confirmer ou à les réordonner : ce que la recommandation R1 rend possible en continu plutôt que par campagnes ponctuelles.
+Le volet qualitatif est en cours de constitution : le canal « Signaler un problème » est en service depuis la version 1.3.2, et un questionnaire de retour est adressé aux utilisateurs inscrits. Les recommandations ci-dessous s'appuient donc sur le quantitatif ; le qualitatif servira à les confirmer ou à les réordonner, ce que la recommandation R1 rend possible en continu plutôt que par campagnes ponctuelles.
 
 ### 6.2 Indicateurs observés
 
@@ -508,7 +497,7 @@ Le volet qualitatif est en cours de constitution : le canal « Signaler un probl
 | Soirées menées jusqu'au tirage | **14 sur 19 : 74 %** | Le parcours principal aboutit |
 | Films proposés | 62 : moyenne 3,3 par soirée | Conforme à l'usage attendu |
 | Participations | 80 : moyenne 4,2 par soirée | Le partage par lien fonctionne |
-| Votes exprimés | 81 (68 pour, 13 contre) par 35 participants | **≈ 1 vote par participant** pour 3,3 films disponibles |
+| Votes exprimés | 81 (68 pour, 13 contre) | **56 % des participations n'ont produit aucun vote** ; les 44 % restantes votent 2,3 fois pour 3,3 films disponibles |
 | Soirées tirées en mode pondéré par les votes | **0 sur 19** | Le vote n'a jamais influencé un tirage |
 | Films dotés d'une note de présentation | **3 sur 62 : 5 %** | Fonctionnalité quasi ignorée |
 | Marques « déjà vu » | 15 | Usage modéré |
@@ -524,15 +513,15 @@ Deux conclusions structurent le reste. **La fiabilité n'est pas le facteur limi
 **R1. Instrumenter le parcours cœur.** Aucun événement n'est capturé sur la création d'une soirée, l'ajout d'un film, le vote ou le tirage : les chiffres ci-dessus ont dû être reconstitués depuis la base et décrivent des résultats, jamais des abandons. Impossible aujourd'hui de répondre à « combien d'invités ouvrent le lien sans jamais voter ? ». La proposition consiste à capturer six événements et à construire l'entonnoir correspondant ; l'infrastructure analytique existe déjà et reste soumise au consentement, seuls les appels manquent.
 *Coût **0,5 à 1 jour**, effet immédiat. Gain : mesure des abandons étape par étape, les décisions suivantes cessent d'être des paris.* **Priorité 1**, prérequis des autres.
 
-**R2. Réconcilier le vote et son effet sur le tirage.** Chaque film proposé porte deux boutons, « Voter pour » et « Voter contre ». Ils sont peu sollicités : 81 votes pour 80 participations et 62 films, soit environ un vote par participant. La mesure décisive est toutefois ailleurs. La roue accepte deux modes, un tirage strictement aléatoire et un tirage pondéré par les votes ; le premier est la valeur par défaut, et **aucune des 19 soirées n'a activé le second**. Depuis la mise en production, aucun vote n'a donc jamais influencé un tirage. Le produit demande aux participants un effort dont il n'utilise pas le résultat, ce qui suffit à expliquer le désintérêt observé.
+**R2. Réconcilier le vote et son effet sur le tirage.** Chaque film proposé porte deux boutons, « Voter pour » et « Voter contre ». Le problème n'est pas l'intensité du vote mais son audience : les participants qui votent le font sur 2,3 films en moyenne, mais **56 % des participations n'ont produit aucun vote**. La mesure décisive est toutefois ailleurs. La roue accepte deux modes, un tirage strictement aléatoire et un tirage pondéré par les votes ; le premier est la valeur par défaut, et **aucune des 19 soirées n'a activé le second**. Depuis la mise en production, aucun vote n'a donc jamais influencé un tirage. Le produit demande aux participants un effort dont il n'utilise pas le résultat, ce qui suffit à expliquer le désintérêt observé.
 La proposition tient en trois volets : faire du mode pondéré la valeur par défaut à la création d'une soirée, l'hôte restant libre de revenir au tirage strictement aléatoire ; afficher sur la roue la part réelle de chaque film, pour que l'effet du vote se voie avant le tirage ; signaler à l'hôte, avant le lancement, la proportion de participants n'ayant pas voté.
-*Coût **2 à 3 jours**, une itération. Gain : le vote retrouve la fonction qui justifie sa présence, faire émerger un consensus, ce qui est la promesse même du produit. Objectifs mesurables : au moins la moitié des soirées tirées en mode pondéré, et deux votes par participant.* **Priorité 2.**
+*Coût **2 à 3 jours**, une itération. Gain : le vote retrouve la fonction qui justifie sa présence, faire émerger un consensus, ce qui est la promesse même du produit. Objectifs mesurables : au moins la moitié des soirées tirées en mode pondéré, et la part des participations sans aucun vote ramenée sous 25 %.* **Priorité 2.**
 
 **R3. Rendre les notifications atteignables avant de trancher leur sort.** Trois abonnements actifs pour dix-sept inscrits, alors que la version 1.1 a investi dans les clés de signature, cinq déclencheurs et une interface de préférences. L'examen du code explique le chiffre : l'activation n'est **jamais proposée dans le parcours**. Elle n'existe que sous la forme d'un interrupteur dans la page « Mon compte », que rien ne signale, et le réglage fin par type de notification ne s'affiche même qu'une fois l'utilisateur déjà abonné. Le taux d'adoption ne mesure donc pas un refus, mais l'absence de sollicitation.
 La proposition consiste à proposer l'activation une fois, au moment où son intérêt est évident, par exemple juste après avoir créé ou rejoint une soirée, en énonçant ce que l'utilisateur recevra, et à rendre le choix par type visible avant l'abonnement plutôt qu'après. Si l'adoption ne dépasse pas 40 % dans les deux mois qui suivent, la fonctionnalité aura été jugée sur pièces et son gel deviendra défendable.
 *Coût **1 jour**, une itération. Gain : une décision fondée. Aujourd'hui, geler l'investissement reviendrait à condamner une fonctionnalité que personne n'a jamais eu l'occasion d'accepter.* **Priorité 3.**
 
-**R4. Installer une boucle de satisfaction continue.** Aucun dispositif ne mesure la satisfaction dans la durée ; le questionnaire en cours donnera une photographie, pas une tendance. La proposition ajoute une question unique après le tirage) « cette soirée s'est-elle bien passée ? », trois niveaux : stockée sans donnée nominative et agrégée par mois, en complément du canal de signalement déjà livré.
+**R4. Installer une boucle de satisfaction continue.** Aucun dispositif ne mesure la satisfaction dans la durée ; le questionnaire en cours donnera une photographie, pas une tendance. La proposition ajoute une question unique après le tirage, « cette soirée s'est-elle bien passée ? » à trois niveaux, stockée sans donnée nominative et agrégée par mois, en complément du canal de signalement déjà livré.
 *Coût **1 à 2 jours**, une itération. Gain : détection des dégradations d'expérience invisibles pour la supervision technique, aucune des anomalies fonctionnelles rencontrées n'avait levé d'exception.* **Priorité 3.**
 
 **R5. Encourager la récurrence, mais après mesure.** Dix-neuf soirées en trois mois et demi pour dix-sept inscrits : l'application est utilisée par événement, pas par habitude. La version 1.4 envisagée (sélection manuelle, flamme de régularité) parie sur la récurrence sans qu'aucune mesure ne l'éclaire. La proposition consiste à attendre les données de R1 et les réponses à la question « qu'est-ce qui te ferait revenir plus souvent ? » ; si le pari se confirme, la piste la moins coûteuse est la reconduction d'une soirée avec le même groupe en un clic, plutôt qu'un mécanisme de gamification complet.
@@ -541,26 +530,11 @@ La proposition consiste à proposer l'activation une fois, au moment où son int
 **R6. Décrire la supervision en infrastructure-as-code.** Les trois sondes, les cinq politiques d'alerte, le canal de notification et le tableau de bord ont été créés par appels d'interface de programmation : ils ne sont pas versionnés, une suppression accidentelle ou une dérive de configuration passerait inaperçue. La proposition consiste à les décrire dans le dépôt et à les appliquer depuis le pipeline.
 *Coût **1 à 2 jours**, une itération. Gain : configuration de supervision reproductible et relue comme du code ; suppression d'un point de fragilité de l'exploitation.* **Priorité 4.**
 
-### 6.4 Priorisation et séquencement
+### 6.4 Priorisation et périmètre
 
-| Rang | Recommandation | Coût | Nature du gain |
-|:----:|----------------|:----:|----------------|
-| 1 | R1 : Instrumenter le parcours cœur | 0,5 à 1 j | Capacité de décision |
-| 2 | R2 : Réconcilier le vote et son effet | 2 à 3 j | Attractivité, tenue de la promesse produit |
-| 3 | R3 : Rendre les notifications atteignables | 1 j | Adoption réelle, ou décision d'arrêt fondée |
-| 3 | R4 : Boucle de satisfaction | 1 à 2 j | Détection des irritants invisibles |
-| 4 | R5 : Récurrence | 2 j (option courte) | Fréquence d'usage, sous condition de mesure |
-| 4 | R6 : Supervision en infrastructure-as-code | 1 à 2 j | Robustesse de l'exploitation |
+L'ordre de priorité, indiqué sous chaque recommandation, totalise **7,5 à 11 jours** séquençables en trois itérations. Aucune n'exige de refonte : toutes s'appuient sur l'existant, condition de leur faisabilité sur un projet mené par une seule personne. Et l'ordre n'est pas une simple file d'attente, puisque R1 conditionne l'évaluation de R2, R3 et R5 : engager R5 avant R1 reviendrait à développer une semaine de fonctionnalités sur une hypothèse invérifiable, exactement ce que ces recommandations cherchent à éviter.
 
-**Total : 7,5 à 11 jours**, séquençables en trois itérations. Aucune recommandation n'exige de refonte : toutes s'appuient sur l'existant, condition de leur faisabilité sur un projet mené par une seule personne.
-
-L'ordre n'est pas une simple file d'attente. R1 conditionne l'évaluation de R2, R3 et R5 : engager R5 avant R1 reviendrait à développer une semaine de fonctionnalités sur une hypothèse invérifiable, exactement ce que ces recommandations cherchent à éviter.
-
-### 6.5 Ce qui n'est délibérément pas recommandé
-
-La fiabilité et la performance ne figurent pas dans cette liste. Avec 0,026 % d'erreurs serveur, une latence p95 de 207 ms et une disponibilité sous surveillance active, elles ne limitent pas l'attractivité du produit : y investir maintenant reviendrait à optimiser ce qui fonctionne déjà, au détriment de ce qui bloque réellement. Le démarrage à froid de 3,8 secondes relève du même raisonnement : il a d'ailleurs été atténué sans développement, les sondes de disponibilité maintenant les instances tièdes.
-
-Les retours qualitatifs, une fois collectés, pourront faire émerger des irritants absents de cette analyse : un parcours mal compris ou une attente déçue ne laissent aucune trace dans les données d'usage. La liste sera alors révisée : c'est précisément la fonction de la boucle de satisfaction proposée en R4.
+Deux sujets sont délibérément absents de cette liste. La fiabilité et la performance, d'abord, parce qu'elles ne limitent pas l'attractivité du produit : y investir reviendrait à optimiser ce qui fonctionne déjà, au détriment de ce qui bloque réellement, et le démarrage à froid relève du même raisonnement puisque les sondes de disponibilité l'ont atténué sans développement. Les irritants qualitatifs, ensuite, qu'un parcours mal compris ou une attente déçue ne laissent jamais dans les données d'usage : la liste sera révisée quand les retours seront collectés, ce qui est précisément la fonction de R4.
 
 ---
 
@@ -587,8 +561,10 @@ Versionnage sémantique, interprété comme suit pour une application web :
 | Incrément | Déclencheur | Exemple |
 |-----------|-------------|---------|
 | **Majeur** | Rupture du parcours utilisateur ou du contrat de l'API | Aucun à ce jour |
-| **Mineur** | Nouvelle fonctionnalité visible par l'utilisateur | `1.2.0` : profil public, notifications, conformité RGPD |
-| **Correctif** | Correction d'anomalie, sécurité, exploitation, qualité interne | `1.3.2` : supervision, canal de signalement, correctif de sécurité |
+| **Mineur** | Nouveau parcours ou nouvel écran : l'utilisateur peut faire quelque chose qu'il ne pouvait pas faire | `1.2.0` : profil public, suivi entre utilisateurs, export et suppression de compte |
+| **Correctif** | Correction d'anomalie, sécurité, exploitation, et enrichissement d'un parcours existant sans en ouvrir de nouveau | `1.3.2` : supervision, canal de signalement, filtre de durée, correctif de sécurité |
+
+Le critère du mineur est donc l'ouverture d'un parcours, pas la simple visibilité d'un changement : un filtre supplémentaire dans une recherche existante ou un réglage dans la page de compte enrichissent un écran déjà là et restent des correctifs. Ce choix évite l'inflation du numéro mineur sur un produit livré en continu, où presque chaque semaine apporte un ajustement visible.
 
 Les entrées sont classées par catégories (*ajouté*, *modifié*, *corrigé*, *sécurité*) et rédigées pour être comprises sans lire le code : ce sont les évolutions du produit qui sont décrites, jamais les commits.
 
@@ -596,13 +572,13 @@ Les entrées sont classées par catégories (*ajouté*, *modifié*, *corrigé*, 
 
 | Version | Date | Contenu principal |
 |---------|------|-------------------|
-| **1.3.2** | 25/07/2026 | Supervision de production (sondes, alertes, tableau de bord), sonde d'aptitude à servir, canal « Signaler un problème », portes de qualité rendues bloquantes, correctif de sécurité du routeur |
-| 1.3.1 | 08/07/2026 | Refonte des cartes film (grille immersive, vue liste, modale streaming), filtre de durée, échelle de notes au choix, politique de sécurité du contenu, refonte du pipeline, optimisations de performance et d'accessibilité, durcissement SSRF et scans de sécurité étendus |
-| 1.3.0 | 19/06/2026 | Roue repensée en canvas avec animation, recherche avancée (note, langue, décennie, disponibilité), tri de la liste, offres de location et d'achat, export calendrier, états vides harmonisés, infobulles, refonte de la navigation |
-| 1.2.0 | 11/06/2026 | Profil public avec statistiques, suivi entre utilisateurs, invitations et notifications dans l'application, note de présentation des films, historique de recherche, accessibilité étendue, analytique soumise au consentement, suppression de compte et export RGPD |
-| 1.1.0 | 25/05/2026 | Application installable (PWA), notifications système à cinq déclencheurs, séries en plus des films, bandes-annonces et liens vers les plateformes, sélecteur d'avatar |
-| 1.0.0 | 19/05/2026 | Première version de production : comptes et réinitialisation de mot de passe, création de soirée avec lien de partage et QR code, configuration par l'hôte, propositions, votes, marque « déjà vu », roue, mise à jour en direct, bilingue, thème clair et sombre, migration du back-end vers ASP.NET Core, limitation de débit et en-têtes de sécurité |
-| 0.1.0 | 27/02/2026 | Prototype : création de soirée, proposition de films depuis le catalogue, vote, roue de tirage |
+| **1.3.2** | 25/07/2026 | Supervision de production (sondes, alertes, tableau de bord), sonde d'aptitude à servir, canal « Signaler un problème », suivi des erreurs et SEO, correctif de la persistance des sessions, portes de qualité rendues bloquantes, optimisations de performance et d'accessibilité, filtre de durée et échelle de notes, correctif de sécurité du routeur |
+| 1.3.1 | 08/07/2026 | Refonte des cartes film (grille immersive, vue liste, modale streaming), politique de sécurité du contenu, refonte du pipeline, bascule de l'analyse de qualité en intégration continue, durcissement SSRF et scans de sécurité étendus, comblement des lacunes de tests |
+| 1.3.0 | 19/06/2026 | Roue en canvas animée, recherche avancée, tri de la liste, offres de location et d'achat, export calendrier, états vides, infobulles, refonte de la navigation |
+| 1.2.0 | 11/06/2026 | Profil public et statistiques, suivi entre utilisateurs, notifications dans l'application, note de présentation, historique de recherche, accessibilité étendue, analytique consentie, suppression de compte et export RGPD |
+| 1.1.0 | 25/05/2026 | Application installable, notifications système à cinq déclencheurs, séries, bandes-annonces et plateformes, sélecteur d'avatar |
+| 1.0.0 | 19/05/2026 | Première version de production : comptes, soirée avec lien de partage et code QR, propositions, votes, marque « déjà vu », roue, temps réel, bilingue, thèmes, back-end ASP.NET Core, limitation de débit et en-têtes de sécurité |
+| 0.1.0 | 27/02/2026 | Prototype : création de soirée, proposition de films, vote, roue de tirage |
 
 ![Publications du dépôt : sept versions étiquetées](captures/04-releases.png)
 
@@ -612,22 +588,28 @@ Les entrées sont classées par catégories (*ajouté*, *modifié*, *corrigé*, 
 - Lien « Signaler un problème » en pied de page, ouvrant un message pré-rempli avec la page concernée, la version et le navigateur.
 - Sonde `GET /health/ready` vérifiant la joignabilité de la base et exposant la version déployée.
 - Supervision de production : trois sondes de disponibilité, cinq politiques d'alerte notifiées par courriel, tableau de bord d'exploitation, règles d'alerte sur les régressions et les rafales d'erreurs.
-- Contrôle de l'aptitude à servir dans le test de fumée de déploiement.
+- Suivi des erreurs sur le front et l'API, avec sa catégorie dédiée dans les préférences de confidentialité.
+- Référencement : métadonnées par page, image de partage, données structurées et plan de site des profils publics.
+- Filtre de durée à la recherche, échelle de notes au choix, code QR de partage du profil.
 
 **Modifié**
 - Portes de qualité du pipeline rendues bloquantes (qualité du code, performance, parcours de bout en bout).
+- Optimisations de performance et d'accessibilité : accessibilité 100, décalage de mise en page éliminé, poids du paquet réduit de 83 %.
 - Réduction de la duplication de code : actions sur un film, fermeture des fenêtres modales, pied de carte partagé.
 
 **Corrigé**
+- **Sessions non persistées en production (fiche #67)** : les utilisateurs étaient déconnectés à la fermeture du navigateur, sans changement de code. Clés de chiffrement désormais persistées en base et partagées entre instances, configurateur de cookie enregistré sur l'interface effectivement consommée, durée de session unifiée à trente jours glissants, test de non-régression ajouté. Une reconnexion unique a été nécessaire au déploiement.
+- Images cassées en production : la politique de sécurité du contenu bloquait les affiches et les avatars par défaut.
 - Sept signalements de qualité du code résolus.
-- Sécurité : les points d'entrée de lancement et de clôture de la roue exigent désormais un corps de requête JSON, alignés sur le reste de l'API.
-- Accessibilité : l'animation de la roue respecte la préférence système de réduction des animations.
+- Les points d'entrée de lancement et de clôture de la roue exigent un corps de requête JSON, alignés sur le reste de l'API.
+- L'animation de la roue respecte la préférence système de réduction des animations.
 
 **Sécurité**
 - Montée du routeur de 7.18.1 vers 8.3.0, corrigeant l'avis `GHSA-qwww-vcr4-c8h2`.
 - Résolution des huit alertes de dépendances ouvertes (six hautes, deux basses).
+- Remplacement de l'audit natif par Trivy, le service amont ayant été retiré : l'audit ne scannait plus aucun fichier depuis son introduction.
 
-Cette entrée illustre les deux exigences du critère : les **améliorations apportées** par la version (quatre ajouts, deux évolutions) et les **correctifs déployés**, documentés un par un avec leur nature, y compris les correctifs de sécurité assortis de l'identifiant public de l'avis.
+Chaque correctif est rattachable à sa trace : la fiche #67 pour l'anomalie de session, l'identifiant public de l'avis pour les correctifs de sécurité.
 
 ### 7.5 Traçabilité des correctifs
 
@@ -663,7 +645,7 @@ Traduit en termes techniques, le problème à résoudre devient : pourquoi un co
 
 ### 8.3 Résolution et annonce
 
-La troisième précision a écarté d'emblée l'hypothèse d'une régression de code et orienté vers un mécanisme dépendant du temps, ce qui a conduit aux deux causes racines exposées au §4.4 et au correctif détaillé au §5.3.
+La troisième précision a écarté d'emblée l'hypothèse d'une régression de code et orienté vers un mécanisme dépendant du temps. L'investigation a mis au jour deux causes cumulées : une clé de chiffrement arrivée à expiration, combinée à un stockage éphémère et au passage à zéro instance du service, et un composant de configuration enregistré sur une interface jamais consommée, inopérant depuis l'origine. La première a été supprimée en persistant les clés en base, la seconde en corrigeant l'enregistrement du composant ; le détail de l'analyse figure au §4.4 et celui du correctif au §5.3.
 
 Un point relevait de la relation avec les utilisateurs plutôt que de la technique : le changement de clé de chiffrement imposait une **reconnexion unique pour tous**. Elle a été annoncée avant le déploiement. Un utilisateur prévenu d'une reconnexion y voit une opération de maintenance ; le même utilisateur non prévenu y voit une seconde anomalie.
 
@@ -681,6 +663,8 @@ La contribution la plus déterminante n'est pas technique : c'est le **« avant,
 
 ### 8.5 Ce que l'épisode a changé
 
-Trois évolutions en ont été tirées, toutes livrées depuis : le **canal de signalement** en pied de page, qui embarque d'emblée trois des précisions qu'il avait fallu réclamer ; la **supervision** décrite au §2, qui détecterait aujourd'hui une dégradation de cette nature sans attendre un signalement ; et la **consignation systématique** formalisée au §3.
+Trois évolutions en ont été tirées, toutes livrées depuis : le **canal de signalement** en pied de page, qui embarque d'emblée la page, la version et le navigateur, trois informations qu'il avait fallu réclamer ; la **supervision** décrite au §2 ; et la **consignation systématique** formalisée au §3.
+
+Sur la supervision, la portée exacte du progrès mérite d'être dite. Une déconnexion massive se traduit par des réponses 401, que le suivi des erreurs écarte délibérément puisqu'un mot de passe erroné en produit tout autant, et que les sondes ne verraient pas davantage puisqu'elles interrogent des points d'entrée non authentifiés. Ce n'est donc pas la détection de ce symptôme précis qui a progressé, mais la capacité à voir ses voisins : l'expiration de la clé était un mécanisme dépendant du temps, et c'est le suivi de la version déployée par chaque événement, ajouté depuis, qui aurait montré qu'aucun déploiement ne coïncidait avec l'apparition du défaut. La leçon retenue est plus large que l'outillage : une anomalie qui n'émet aucun signal technique reste tributaire du canal utilisateur, ce qui est précisément la raison d'être de ce canal.
 
 Sur un projet à intervenant unique, la collaboration avec le support se joue entre le développeur et ses utilisateurs, non entre deux équipes constituées. Le cas est réel et non simulé : les utilisateurs ont tenu le rôle de détection et de qualification qu'assurerait un support de premier niveau. Dans une organisation plus grande, la différence porterait sur la traçabilité du ticket et la passation entre niveaux, deux points que le processus écrit couvre déjà.

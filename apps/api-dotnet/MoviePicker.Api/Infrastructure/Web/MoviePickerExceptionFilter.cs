@@ -23,6 +23,11 @@ public sealed class MoviePickerExceptionFilter : IExceptionFilter
         if (context.Exception is MoviePickerException ex)
         {
             var statusCode = ToHttpStatus(ex.Kind);
+            if (statusCode >= StatusCodes.Status500InternalServerError)
+            {
+                SentrySdk.CaptureException(context.Exception);
+            }
+
             context.Result = new JsonResult(ApiErrorResponse.FromHttpContext(http, statusCode, ex.Message))
             {
                 StatusCode = statusCode

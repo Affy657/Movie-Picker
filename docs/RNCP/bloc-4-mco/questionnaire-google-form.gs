@@ -1,20 +1,23 @@
-/**
- * Génère le questionnaire de retour utilisateur Movie Picker.
- *
- * Utilisation :
- *   1. Ouvrir https://script.google.com/ puis « Nouveau projet »
- *   2. Coller ce fichier, remplacer le contenu par défaut
- *   3. Lancer la fonction genererQuestionnaire, autoriser l'accès quand Google le demande
- *   4. Le lien de partage s'affiche dans le journal d'exécution (Ctrl+Entrée)
- *
- * Le script vide le formulaire cible avant de le reconstruire : il est rejouable
- * sans créer de doublons.
- */
-
 const FORM_ID = '1u_FlEJPyoUATSZp18kE-Ak3hb6upPQv4mu8Znksd8_o';
+const ECRASER_LE_FORMULAIRE_EXISTANT = false;
 
 function genererQuestionnaire() {
   const form = FormApp.openById(FORM_ID);
+  const questionsExistantes = form.getItems();
+
+  if (questionsExistantes.length > 0 && !ECRASER_LE_FORMULAIRE_EXISTANT) {
+    throw new Error(
+      'Le formulaire contient déjà ' +
+        questionsExistantes.length +
+        ' questions. Passer ECRASER_LE_FORMULAIRE_EXISTANT à true pour les remplacer : ' +
+        'toute modification faite à la main dans Google Forms, et les réponses déjà ' +
+        'reçues sur les questions supprimées, seront perdues.'
+    );
+  }
+
+  for (let i = questionsExistantes.length - 1; i >= 0; i--) {
+    form.deleteItem(questionsExistantes[i]);
+  }
 
   form
     .setTitle('Movie Picker : ton avis en 4 minutes')
@@ -27,8 +30,6 @@ function genererQuestionnaire() {
     .setProgressBar(true)
     .setShuffleQuestions(false)
     .setConfirmationMessage("Merci, c'est noté. Les retours sont lus un par un.");
-
-  form.getItems().forEach((item) => form.deleteItem(item));
 
   form
     .addMultipleChoiceItem()

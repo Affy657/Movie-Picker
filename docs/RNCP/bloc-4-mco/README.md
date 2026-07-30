@@ -1,8 +1,8 @@
-# Bloc 4 — Maintenir l'application en condition opérationnelle (MCO)
+# Bloc 4 : Maintenir l'application en condition opérationnelle (MCO)
 
-> Grille officielle : [`../referentiel/bloc-04-maintenir-application-mco.md`](../referentiel/bloc-04-maintenir-application-mco.md) · Suivi : [`../suivi-rncp.md`](../suivi-rncp.md)
+> Grille officielle : [`../referentiel/bloc-04-maintenir-application-mco.md`](../referentiel/bloc-04-maintenir-application-mco.md) | Suivi : [`../suivi-rncp.md`](../suivi-rncp.md)
 
-**État : 🟡 matière complète, dossier à rédiger** — les 8 éléments ont leur document source. Restent : les captures d'écran de preuve, l'intégration des retours du questionnaire (envoi à faire), puis la rédaction du dossier de 20 pages.
+**État : 🟡 dossier rédigé, preuves à joindre.** Le livrable est [`dossier-bloc-4.md`](dossier-bloc-4.md), couvrant les 8 éléments. Restent : les sept captures d'écran de `captures/`, l'envoi du questionnaire et l'intégration de ses réponses au § 6, puis l'export PDF sous le plafond de 20 pages.
 
 ## Attendus du jury
 
@@ -18,22 +18,22 @@ Ordre des éléments imposé par le règlement : processus de mise à jour des d
 
 | Compétence | Livrable attendu | ÉLIM | Matériau existant |
 |------------|------------------|:----:|-------------------|
-| C4.1.1 | Description du processus de mise à jour des dépendances (fréquence, périmètre, automatique/manuel) | | ✅ [`mise-a-jour-dependances.md`](mise-a-jour-dependances.md) — 4 écosystèmes, 3 rythmes, cas react-router 8.3.0 |
-| C4.1.2 | Description du système de supervision (sondes, indicateurs, seuils, signalement, disponibilité) | ✅ | ✅ [`supervision.md`](supervision.md) — 3 sondes actives, 5 politiques d'alerte, Sentry (3 règles/projet), tableau de bord, chaîne d'alerte testée |
-| C4.2.1 | Processus de collecte/consignation des anomalies **+ une fiche de consignation** | ✅ | ✅ [`processus-anomalies.md`](processus-anomalies.md) — 5 canaux, gabarit, sévérités, cycle de vie ; fiche = issue #67 |
+| C4.1.1 | Description du processus de mise à jour des dépendances (fréquence, périmètre, automatique/manuel) | | ✅ [`mise-a-jour-dependances.md`](mise-a-jour-dependances.md), 4 écosystèmes, 3 rythmes, cas react-router 8.3.0 |
+| C4.1.2 | Description du système de supervision (sondes, indicateurs, seuils, signalement, disponibilité) | ✅ | ✅ [`supervision.md`](supervision.md), 3 sondes actives, 5 politiques d'alerte, Sentry (3 règles/projet), tableau de bord, chaîne d'alerte testée |
+| C4.2.1 | Processus de collecte/consignation des anomalies **+ une fiche de consignation** | ✅ | ✅ [`processus-anomalies.md`](processus-anomalies.md), 5 canaux, gabarit, sévérités, cycle de vie ; fiche = issue #67 |
 | C4.2.2 | Traitement d'une anomalie détectée au cours du projet (via CI/CD) | | ✅ issue #67 + § 6 de [`processus-anomalies.md`](processus-anomalies.md) ; **reste** : captures du pipeline |
-| C4.3.1 | Recommandations argumentées d'amélioration (gains, coût, délai) | | ✅ [`axes-amelioration.md`](axes-amelioration.md) — 6 recommandations chiffrées sur indicateurs réels ; **reste** : intégrer les retours du [`questionnaire`](questionnaire-utilisateurs.md) |
+| C4.3.1 | Recommandations argumentées d'amélioration (gains, coût, délai) | | ✅ [`axes-amelioration.md`](axes-amelioration.md), 6 recommandations chiffrées sur indicateurs réels ; **reste** : intégrer les retours du [`questionnaire`](questionnaire-utilisateurs.md) |
 | C4.3.2 | Exemplaire du journal de version | ✅ | ✅ [`journal-versions.md`](journal-versions.md) + [`CHANGELOG.md`](../../../CHANGELOG.md) + 7 tags et 7 releases, dont **v1.3.2** du 25/07/2026 |
-| C4.3.3 | Exemple de problème résolu en collaboration avec le support client | | ✅ [`collaboration-support.md`](collaboration-support.md) — dispositif + cas #67 + contribution des parties prenantes |
+| C4.3.3 | Exemple de problème résolu en collaboration avec le support client | | ✅ [`collaboration-support.md`](collaboration-support.md), dispositif + cas #67 + contribution des parties prenantes |
 
 ## Fichiers du dossier
 
 | Fichier | Contenu |
 |---------|---------|
-| [`mise-a-jour-dependances.md`](mise-a-jour-dependances.md) | Processus de mise à jour des dépendances (C4.1.1) — matière du § 1 du dossier |
-| [`supervision.md`](supervision.md) | Système de supervision et d'alerte (C4.1.2) — matière du § 2 du dossier |
-| [`processus-anomalies.md`](processus-anomalies.md) | Processus de collecte et de consignation (C4.2.1) — matière des § 3 à 5 |
-| [`axes-amelioration.md`](axes-amelioration.md) | Recommandations argumentées (C4.3.1) — matière du § 6 |
-| [`journal-versions.md`](journal-versions.md) | Journal des versions déployées (C4.3.2) — matière du § 7 |
-| [`collaboration-support.md`](collaboration-support.md) | Problème résolu avec le support (C4.3.3) — matière du § 8 |
-| [`questionnaire-utilisateurs.md`](questionnaire-utilisateurs.md) | Questionnaire de retour utilisateur — **à envoyer** |
+| [`mise-a-jour-dependances.md`](mise-a-jour-dependances.md) | Processus de mise à jour des dépendances (C4.1.1), matière du § 1 du dossier |
+| [`supervision.md`](supervision.md) | Système de supervision et d'alerte (C4.1.2), matière du § 2 du dossier |
+| [`processus-anomalies.md`](processus-anomalies.md) | Processus de collecte et de consignation (C4.2.1), matière des § 3 à 5 |
+| [`axes-amelioration.md`](axes-amelioration.md) | Recommandations argumentées (C4.3.1), matière du § 6 |
+| [`journal-versions.md`](journal-versions.md) | Journal des versions déployées (C4.3.2), matière du § 7 |
+| [`collaboration-support.md`](collaboration-support.md) | Problème résolu avec le support (C4.3.3), matière du § 8 |
+| [`questionnaire-utilisateurs.md`](questionnaire-utilisateurs.md) | Questionnaire de retour utilisateur, **à envoyer** |

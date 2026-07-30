@@ -70,6 +70,23 @@ public sealed class MoviePickerExceptionFilterTests
     }
 
     [Fact]
+    public void OnException_ServiceUnavailableException_Sets503()
+    {
+        var env = new StubHostEnvironment();
+        var filter = new MoviePickerExceptionFilter(env);
+        var context = CreateContext(new ServiceUnavailableException("Recherche films temporairement indisponible"));
+
+        filter.OnException(context);
+
+        Assert.True(context.ExceptionHandled);
+        var result = context.Result as JsonResult;
+        Assert.NotNull(result);
+        Assert.Equal((int)HttpStatusCode.ServiceUnavailable, result!.StatusCode);
+        var errorProp = result.Value?.GetType().GetProperty(nameof(ApiErrorResponse.Error));
+        Assert.Equal("Recherche films temporairement indisponible", errorProp?.GetValue(result.Value)?.ToString());
+    }
+
+    [Fact]
     public void OnException_ArgumentException_Sets400()
     {
         var env = new StubHostEnvironment();

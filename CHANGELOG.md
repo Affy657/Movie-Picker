@@ -20,32 +20,51 @@ version publiée est associée à un tag Git et à une release GitHub.
 - Sonde de disponibilité applicative **`GET /health/ready`** : vérifie la joignabilité de MongoDB, renvoie 503 si la base est injoignable, et expose la version déployée.
 - **Supervision de production** : trois sondes de disponibilité (API, readiness, front) interrogées depuis trois continents, cinq politiques d'alerte (indisponibilité, base injoignable, erreurs serveur, latence dégradée) notifiées par e-mail, tableau de bord d'exploitation, et alertes Sentry sur les régressions et les rafales d'erreurs.
 - Vérification de la readiness dans le **smoke test de déploiement** : une révision dont la base est injoignable fait échouer sa propre mise en production.
+- **Monitoring d'erreurs Sentry** sur le front (React) et l'API (.NET), en production uniquement, avec une catégorie « surveillance des erreurs » dans les préférences de confidentialité.
+- **SEO global** : métadonnées par page, image Open Graph, données structurées JSON-LD et sitemap dynamique des profils publics.
+- QR code de partage sur le profil public.
+- Filtre de durée de film dans la recherche d'ajout (10 min ou moins à 3h et plus).
+- Réglage de compte pour l'échelle de notes TMDB (affichage sur 5 ou sur 10).
+- Nouveau logo (clap incliné, fond sombre) et icônes PWA régénérées.
+- Version de l'application affichée dans le pied de page.
 
 ### Changed
 
 - Portes de qualité CI désormais **bloquantes** (Quality Gate SonarCloud, Lighthouse, E2E Playwright) : un échec fait échouer le pipeline et bloque le déploiement.
 - Réduction de la duplication de code : factorisation des handlers d'action sur un film (vote, « déjà vu », note de pitch, suppression), fermeture des modales mutualisée (`useModalDialog`), pied de carte film partagé entre les vues grille et liste.
+- Optimisations Lighthouse : accessibilité 100/100, CLS éliminé, bundle réduit de 83 %.
+- Immersion PWA Android (theme-color dynamique, safe-area) et alignements optiques (logo, pseudo/avatar).
+- Cartes film : streaming affiché uniquement par abonnement, location et achat regroupés en pastilles compactes.
+
+### Removed
+
+- Barre de couleur du thème sur la page de détail d'une soirée.
 
 ### Fixed
 
+- **Sessions non persistées en production** : les utilisateurs étaient déconnectés à la fermeture du navigateur, sans qu'aucun code n'ait changé. Deux causes cumulées, l'expiration au bout de 90 jours de la clé de protection des données (générée sans durée explicite, puis régénérée en éphémère à chaque démarrage à froid) et un configurateur de cookie enregistré sur une interface que la fabrique d'options ne consomme pas, donc inopérant depuis l'origine. Les clés sont désormais persistées en base et partagées entre instances et révisions, le configurateur est enregistré sur la bonne interface, la durée de session est unifiée à 30 jours glissants et un test de non-régression vérifie que la configuration s'applique réellement. Une reconnexion unique a été nécessaire au déploiement.
 - Résolution des 7 signalements SonarCloud restants (règle CA1861 : tableaux constants hissés en `static readonly`).
 - CSRF : les deux endpoints de lancement/clôture de la roue exigent désormais un corps JSON, alignés sur le reste de l'API.
 - Accessibilité : l'animation de la roue respecte `prefers-reduced-motion` (affiche le résultat directement si la préférence système est active).
+- Images cassées en production : la CSP bloquait les posters et les avatars par défaut (`img-src` incomplet).
+- Cookie de session passé en `SameSite=Lax` en production.
+- Bandes-annonces cassées, contraste des actions de carte film en thème clair, modale sur mobile.
+- Année de film absente désormais acceptée à l'ajout ; QR code et copie du lien regroupés.
+- Le skip transitif du pipeline empêchait `deploy-api` et `deploy-front` de s'exécuter.
+- Envoi d'e-mails de production rebranché (`RESEND_API_KEY`, `EMAIL_PROVIDER=resend`).
 
 ### Security
 
 - Montée de **react-router 7.18.1 vers 8.3.0** (paquet unifié `react-router`), corrigeant `GHSA-qwww-vcr4-c8h2` (contournement CSRF en mode RSC). L'API de routage utilisée est inchangée.
 - Résolution des 8 alertes Dependabot ouvertes (6 hautes, 2 basses) : `fast-uri`, `shell-quote`, `brace-expansion`, `dompurify`, `linkify-it`, `js-yaml`.
+- Remplacement de `pnpm audit` par Trivy sur `pnpm-lock.yaml`, le service d'audit npm ayant été retiré le 15 juillet 2026 ; l'audit ne scannait plus aucun fichier depuis son introduction.
+- Déblocage du pipeline : CVE de l'image Docker de base et version de Java obsolète pour le scanner Sonar.
 
 ## [1.3.1] - 2026-07-08
 
 ### Added
 
-- Filtre de durée de film dans la recherche d'ajout (10 min ou moins à 3h et plus).
-- Réglage de compte pour l'échelle de notes TMDB (affichage sur 5 ou sur 10).
-- Nouveau logo (clap incliné, fond sombre) et icônes PWA régénérées.
 - Content-Security-Policy (CSP) sur le front SPA.
-- Version de l'application affichée dans le pied de page.
 - Repli sur les initiales pour l'avatar quand aucun avatar n'est choisi.
 
 ### Changed
@@ -53,13 +72,9 @@ version publiée est associée à un tag Git et à une release GitHub.
 - Refonte du pipeline CI/CD : filtrage par chemins, découpage du lint, mise en cache, images taguées par digest (temps de CI réduit de plus de moitié).
 - Analyse SonarCloud basculée en mode CI (couverture ingérée, quality gate informatif).
 - Refonte des cartes film : affiche immersive en grille, vue liste, modale dédiée aux plateformes de streaming.
-- Cartes film : streaming affiché uniquement par abonnement, location et achat regroupés en pastilles compactes.
-- Immersion PWA Android (theme-color dynamique, safe-area) et alignements optiques (logo, pseudo/avatar).
-- Optimisations Lighthouse : accessibilité 100/100, CLS éliminé, bundle réduit de 83 %.
 
 ### Removed
 
-- Barre de couleur du thème sur la page de détail d'une soirée.
 - Configuration de dev « mobile-web » obsolète (le prototype mobile est archivé).
 
 ### Security
@@ -71,7 +86,6 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 - Résorption de la dette technique (élimination des warnings SonarCloud .NET et TS/CSS, déduplication).
 - Comblement des lacunes de tests (front, API, E2E) et relèvement des seuils de couverture front.
-- Images cassées en production : la CSP bloquait les posters et les avatars par défaut (img-src incomplet).
 
 ## [1.3.0] - 2026-06-19
 
@@ -161,7 +175,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage — front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.3.1...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.3.2...HEAD
+[1.3.2]: https://github.com/Affy657/Movie-Picker/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/Affy657/Movie-Picker/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/Affy657/Movie-Picker/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/Affy657/Movie-Picker/compare/v1.1.0...v1.2.0
