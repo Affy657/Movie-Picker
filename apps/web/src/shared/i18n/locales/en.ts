@@ -35,6 +35,7 @@ export const en: Locale = {
   auth: {
     sessionCheck: {
       failed: 'We could not verify your session. Check your connection and try again.',
+      backHome: 'Back to home',
     },
     login: {
       title: 'Log in',

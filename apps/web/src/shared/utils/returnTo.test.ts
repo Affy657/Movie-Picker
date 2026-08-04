@@ -26,4 +26,12 @@ describe('safeReturnTo', () => {
     expect(safeReturnTo('/forgot-password')).toBe('/');
     expect(safeReturnTo('/reset?token=abc')).toBe('/');
   });
+
+  it("refuse les pages d'authentification même avec un slash final ou une casse différente (react-router les résout vers la même route)", () => {
+    expect(safeReturnTo('/login/')).toBe('/');
+    expect(safeReturnTo('/Login')).toBe('/');
+    expect(safeReturnTo('/LOGIN/')).toBe('/');
+    expect(safeReturnTo('/register/')).toBe('/');
+    expect(safeReturnTo('/reset//?token=abc')).toBe('/');
+  });
 });

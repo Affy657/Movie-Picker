@@ -1,5 +1,5 @@
 import { AlertCircle } from 'lucide-react';
-import { Navigate, useLocation } from 'react-router';
+import { Link, Navigate, useLocation } from 'react-router';
 import PageLayout from '@/shared/components/PageLayout';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useTranslation } from '@/shared/i18n';
@@ -32,6 +32,9 @@ export function ProtectedRoute({ children }: Readonly<Props>) {
         <button type="button" className="btn btn-primary" onClick={retryAuthCheck}>
           {t('common.retry')}
         </button>
+        <Link to={ROUTES.home} className="btn">
+          {t('auth.sessionCheck.backHome')}
+        </Link>
       </PageLayout>
     );
   }

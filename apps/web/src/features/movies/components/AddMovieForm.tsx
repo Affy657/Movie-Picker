@@ -10,12 +10,13 @@ import {
 import { othersAlreadySeenHint } from '@/features/movies/utils/seenHint';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useLocale, useTranslation } from '@/shared/i18n';
+import type { TranslationKey } from '@/shared/i18n/t';
 import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
 import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import type { MovieData } from '@/shared/types/movie';
 import { safeTmdbWatchUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
-import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
+import WatchProviderChips, { ModeIcon } from '@/features/movies/components/WatchProviderChips';
 import TmdbAttribution from '@/features/movies/components/TmdbAttribution';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useSearchHistory } from '@/features/movies/hooks/useSearchHistory';
@@ -64,6 +65,43 @@ function ResultMeta({
         </span>
       ) : null}
     </div>
+  );
+}
+
+function PaidAvailabilityChip({
+  type,
+  count,
+  title,
+  watchPageUrl,
+  t,
+}: Readonly<{
+  type: 'rent' | 'buy';
+  count: number;
+  title: string;
+  watchPageUrl: string | null;
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
+}>) {
+  const ariaLabel = t(
+    type === 'rent' ? 'movies.watchProviders.alsoRentAria' : 'movies.watchProviders.alsoBuyAria',
+    { count, title }
+  );
+  const icon = <ModeIcon type={type} size={13} />;
+  return watchPageUrl ? (
+    <a
+      href={watchPageUrl}
+      className={styles.paidChip}
+      aria-label={ariaLabel}
+      target="_blank"
+      rel="noreferrer noopener"
+    >
+      {icon}
+      {count}
+    </a>
+  ) : (
+    <span className={styles.paidChip} role="img" aria-label={ariaLabel}>
+      {icon}
+      {count}
+    </span>
   );
 }
 
@@ -550,7 +588,10 @@ export default function AddMovieForm({
             {displayedResults.map((r) => {
               const voteLabel = formatTmdbVote(r.voteAverage, user?.ratingScale);
               const runtimeLabel = formatRuntimeMinutes(r.runtimeMinutes);
-              const providers = (r.watchProviders ?? []).filter((p) => p.type === 'flatrate');
+              const allProviders = r.watchProviders ?? [];
+              const providers = allProviders.filter((p) => p.type === 'flatrate');
+              const rentCount = allProviders.filter((p) => p.type === 'rent').length;
+              const buyCount = allProviders.filter((p) => p.type === 'buy').length;
               const posterSrcRaw = posterImageSrc(r.posterPath);
               const posterSrc = posterSrcRaw
                 ? tmdbPosterSrcForListDisplay(posterSrcRaw)
@@ -593,11 +634,33 @@ export default function AddMovieForm({
                         {seenHint ? <> {seenHint}</> : null}
                       </p>
                     ) : null}
-                    <WatchProviderChips
-                      providers={providers}
-                      variant="compact"
-                      watchPageUrl={safeWatchUrl}
-                    />
+                    {(providers.length > 0 || rentCount > 0 || buyCount > 0) && (
+                      <div className={styles.providersRow}>
+                        <WatchProviderChips
+                          providers={providers}
+                          variant="compact"
+                          watchPageUrl={safeWatchUrl}
+                        />
+                        {rentCount > 0 && (
+                          <PaidAvailabilityChip
+                            type="rent"
+                            count={rentCount}
+                            title={r.title}
+                            watchPageUrl={safeWatchUrl}
+                            t={t}
+                          />
+                        )}
+                        {buyCount > 0 && (
+                          <PaidAvailabilityChip
+                            type="buy"
+                            count={buyCount}
+                            title={r.title}
+                            watchPageUrl={safeWatchUrl}
+                            t={t}
+                          />
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className={styles.resultAction}>
                     <button

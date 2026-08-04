@@ -33,6 +33,7 @@
   auth: {
     sessionCheck: {
       failed: 'Impossible de vérifier votre session. Vérifiez votre connexion puis réessayez.',
+      backHome: "Retour à l'accueil",
     },
     login: {
       title: 'Connexion',

@@ -40,6 +40,12 @@ function stubVisibility(state: DocumentVisibilityState) {
   return vi.spyOn(document, 'visibilityState', 'get').mockReturnValue(state);
 }
 
+function stubLocationReload() {
+  const reload = vi.fn();
+  vi.stubGlobal('location', { ...globalThis.location, reload });
+  return reload;
+}
+
 function stubServiceWorkerContainer() {
   const container = {
     addEventListener: vi.fn(),
@@ -61,6 +67,7 @@ describe('PwaAutoUpdate', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it("n'affiche aucune interface", async () => {
@@ -155,9 +162,28 @@ describe('PwaAutoUpdate', () => {
       expect(mockUpdateSW).toHaveBeenCalledWith(true);
       expect(container.addEventListener).toHaveBeenCalledWith(
         'controllerchange',
-        expect.any(Function),
-        { once: true }
+        expect.any(Function)
       );
+
+      unmount();
+    });
+
+    it("recharge même si c'est un autre onglet qui a déclenché la mise à jour, sans jamais être passée en arrière-plan elle-même", async () => {
+      stubVisibility('visible');
+      const container = stubServiceWorkerContainer();
+      const reload = stubLocationReload();
+      const { unmount } = await renderWithRegistration(vi.fn().mockResolvedValue(undefined), true);
+
+      expect(mockUpdateSW).not.toHaveBeenCalled();
+
+      const controllerChangeCall = container.addEventListener.mock.calls.find(
+        ([event]) => event === 'controllerchange'
+      );
+      expect(controllerChangeCall).toBeDefined();
+      const controllerChangeHandler = controllerChangeCall?.[1] as () => void;
+      controllerChangeHandler();
+
+      expect(reload).toHaveBeenCalledTimes(1);
 
       unmount();
     });

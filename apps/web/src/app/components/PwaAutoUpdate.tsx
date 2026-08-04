@@ -52,14 +52,13 @@ export default function PwaAutoUpdate() {
     const container = navigator.serviceWorker;
     let applied = false;
     const reloadPage = () => globalThis.location.reload();
+    container?.addEventListener('controllerchange', reloadPage);
 
     const applyWhenHidden = () => {
       if (applied || document.visibilityState !== 'hidden') return;
       applied = true;
-      container?.addEventListener('controllerchange', reloadPage, { once: true });
       updateServiceWorker(true).catch(() => {
         applied = false;
-        container?.removeEventListener('controllerchange', reloadPage);
       });
     };
 
