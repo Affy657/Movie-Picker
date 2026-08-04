@@ -8,7 +8,10 @@ export default function PwaAutoUpdate() {
   const mountedRef = useRef(false);
   const pendingRegistrationRef = useRef<ServiceWorkerRegistration | null>(null);
 
-  useRegisterSW({
+  const {
+    needRefresh: [needRefresh],
+    updateServiceWorker,
+  } = useRegisterSW({
     onRegisteredSW(_swUrl, r) {
       if (!r) return;
       if (mountedRef.current) setRegistration(r);
@@ -42,6 +45,31 @@ export default function PwaAutoUpdate() {
       window.removeEventListener('online', checkForUpdate);
     };
   }, [registration]);
+
+  useEffect(() => {
+    if (!needRefresh) return;
+
+    const container = navigator.serviceWorker;
+    let applied = false;
+    const reloadPage = () => globalThis.location.reload();
+
+    const applyWhenHidden = () => {
+      if (applied || document.visibilityState !== 'hidden') return;
+      applied = true;
+      container?.addEventListener('controllerchange', reloadPage, { once: true });
+      updateServiceWorker(true).catch(() => {
+        applied = false;
+        container?.removeEventListener('controllerchange', reloadPage);
+      });
+    };
+
+    applyWhenHidden();
+    document.addEventListener('visibilitychange', applyWhenHidden);
+    return () => {
+      document.removeEventListener('visibilitychange', applyWhenHidden);
+      container?.removeEventListener('controllerchange', reloadPage);
+    };
+  }, [needRefresh, updateServiceWorker]);
 
   return null;
 }
