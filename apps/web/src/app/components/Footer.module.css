@@ -85,6 +85,22 @@
   color: var(--color-primary);
 }
 
+.colLinkButton {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-align: left;
+  cursor: pointer;
+  transition: color var(--duration-base) var(--ease-default);
+}
+
+.colLinkButton:hover {
+  color: var(--color-primary);
+}
+
 /* Social links */
 .socialLink {
   display: inline-flex;

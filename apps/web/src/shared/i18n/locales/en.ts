@@ -556,7 +556,6 @@ export const en: Locale = {
     socialTitle: 'Social',
     helpTitle: 'Help',
     reportIssue: 'Report an issue',
-    reportIssueAria: 'Report an issue by email (opens your mail app)',
     githubLabel: 'GitHub profile (new tab)',
     linkedinLabel: 'LinkedIn profile (new tab)',
     tmdbPrefix: 'Data provided by',
@@ -575,6 +574,18 @@ export const en: Locale = {
     mailPage: 'Page:',
     mailVersion: 'Version:',
     mailBrowser: 'Browser:',
+    recipientLabel: 'To:',
+    subjectLabel: 'Subject:',
+    dialogTitle: 'Report a problem',
+    dialogIntro:
+      'Send us the message below. It includes the page, the version and your browser so we can reproduce the problem.',
+    reportLabel: 'Message to send',
+    openMailApp: 'Open my mail app',
+    copyReport: 'Copy the message',
+    copied: 'Message copied.',
+    copyFailed: 'Copying failed. Select the message above to copy it manually.',
+    fallbackHint: 'If your mail app does not open, write to us directly at {{email}}.',
+    close: 'Close',
   },
 
   profile: {
