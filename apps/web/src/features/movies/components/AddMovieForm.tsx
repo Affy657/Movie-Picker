@@ -550,7 +550,7 @@ export default function AddMovieForm({
             {displayedResults.map((r) => {
               const voteLabel = formatTmdbVote(r.voteAverage, user?.ratingScale);
               const runtimeLabel = formatRuntimeMinutes(r.runtimeMinutes);
-              const providers = r.watchProviders ?? [];
+              const providers = (r.watchProviders ?? []).filter((p) => p.type === 'flatrate');
               const posterSrcRaw = posterImageSrc(r.posterPath);
               const posterSrc = posterSrcRaw
                 ? tmdbPosterSrcForListDisplay(posterSrcRaw)

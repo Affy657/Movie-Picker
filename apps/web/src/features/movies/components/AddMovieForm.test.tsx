@@ -178,4 +178,38 @@ describe('AddMovieForm (MSW)', () => {
     await user.click(screen.getByRole('button', { name: /effacer tout/i }));
     expect(screen.queryByText(/recherches recentes|recherches r/i)).not.toBeInTheDocument();
   });
+
+  it("les cartes de résultat n'affichent que les plateformes en abonnement, pas la location ni l'achat", async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/movies/search`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: 100,
+              title: 'Film Test',
+              year: '2024',
+              posterPath: null,
+              voteAverage: 7.5,
+              watchProviders: [
+                { providerId: 1, name: 'Netflix Abonnement', logoPath: null, type: 'flatrate' },
+                { providerId: 2, name: 'Louer Ici', logoPath: null, type: 'rent' },
+                { providerId: 3, name: 'Acheter Ici', logoPath: null, type: 'buy' },
+              ],
+              tmdbWatchPageUrl: null,
+            },
+          ],
+          watchProvidersRegion: 'FR',
+          disclaimer: '',
+          tmdbAttributionUrl: 'https://www.themoviedb.org/',
+        })
+      )
+    );
+    const user = userEvent.setup();
+    renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
+    await user.type(screen.getByPlaceholderText(/ajouter un film/i), 'Inception');
+
+    expect(await screen.findByText('Netflix Abonnement')).toBeInTheDocument();
+    expect(screen.queryByText('Louer Ici')).not.toBeInTheDocument();
+    expect(screen.queryByText('Acheter Ici')).not.toBeInTheDocument();
+  });
 });
