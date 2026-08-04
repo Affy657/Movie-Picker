@@ -31,6 +31,9 @@
   },
 
   auth: {
+    sessionCheck: {
+      failed: 'Impossible de vérifier votre session. Vérifiez votre connexion puis réessayez.',
+    },
     login: {
       title: 'Connexion',
       description: 'Acc\u00e9dez \u00e0 vos soir\u00e9es et \u00e0 votre profil.',

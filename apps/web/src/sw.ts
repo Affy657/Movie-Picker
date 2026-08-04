@@ -77,12 +77,29 @@ self.addEventListener('notificationclick', (event) => {
   }
 
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      const match = clientList.find(
-        (c) => new URL(c.url).pathname === new URL(safeUrl, self.location.origin).pathname
-      );
-      if (match) return match.focus();
-      return self.clients.openWindow(safeUrl);
-    })
+    self.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then(async (clientList) => {
+        const targetPathname = new URL(safeUrl, self.location.origin).pathname;
+        const sameOrigin = clientList.filter((c) => {
+          try {
+            return new URL(c.url).origin === self.location.origin;
+          } catch {
+            return false;
+          }
+        });
+
+        const exact = sameOrigin.find((c) => new URL(c.url).pathname === targetPathname);
+        if (exact) return exact.focus();
+
+        const reusable = sameOrigin[0];
+        if (reusable) {
+          const focused = (await reusable.focus().catch(() => null)) ?? reusable;
+          const navigated = await focused.navigate(safeUrl).catch(() => null);
+          if (navigated) return navigated;
+        }
+
+        return self.clients.openWindow(safeUrl);
+      })
   );
 });

@@ -33,6 +33,9 @@ export const en: Locale = {
   },
 
   auth: {
+    sessionCheck: {
+      failed: 'We could not verify your session. Check your connection and try again.',
+    },
     login: {
       title: 'Log in',
       description: 'Access your events and profile.',
