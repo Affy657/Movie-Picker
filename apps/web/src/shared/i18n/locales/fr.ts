@@ -31,6 +31,10 @@
   },
 
   auth: {
+    sessionCheck: {
+      failed: 'Impossible de vérifier votre session. Vérifiez votre connexion puis réessayez.',
+      backHome: "Retour à l'accueil",
+    },
     login: {
       title: 'Connexion',
       description: 'Acc\u00e9dez \u00e0 vos soir\u00e9es et \u00e0 votre profil.',
@@ -564,7 +568,6 @@
     socialTitle: 'Réseaux',
     helpTitle: 'Aide',
     reportIssue: 'Signaler un problème',
-    reportIssueAria: 'Signaler un problème par e-mail (ouvre votre messagerie)',
     githubLabel: 'Profil GitHub (nouvel onglet)',
     linkedinLabel: 'Profil LinkedIn (nouvel onglet)',
     tmdbPrefix: 'Données fournies par',
@@ -583,6 +586,17 @@
     mailPage: 'Page :',
     mailVersion: 'Version :',
     mailBrowser: 'Navigateur :',
+    recipientLabel: 'À :',
+    subjectLabel: 'Objet :',
+    dialogTitle: 'Signaler un problème',
+    dialogIntro:
+      'Envoyez-nous le message ci-dessous. Il contient la page, la version et votre navigateur pour nous aider à reproduire le problème.',
+    reportLabel: 'Message à envoyer',
+    openMailApp: 'Ouvrir ma messagerie',
+    copyReport: 'Copier le message',
+    copied: 'Message copié.',
+    copyFailed: 'Copie impossible. Sélectionnez le message ci-dessus pour le copier à la main.',
+    fallbackHint: 'Si votre messagerie ne s’ouvre pas, écrivez-nous directement à {{email}}.',
   },
 
   profile: {
@@ -640,12 +654,6 @@
       empty: 'Aucune activité pour le moment.',
     },
   },
-  pwaUpdate: {
-    message: 'Nouvelle version disponible',
-    reload: 'Recharger',
-    dismiss: 'Ignorer la mise à jour',
-  },
-
   consent: {
     banner: {
       title: 'Vos préférences de confidentialité',

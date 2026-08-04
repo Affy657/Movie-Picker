@@ -20,5 +20,6 @@ export const ROUTES = {
 } as const;
 
 export function withReturnTo(path: string, returnTo: string): string {
+  if (!returnTo || returnTo === ROUTES.home) return path;
   return `${path}?returnTo=${encodeURIComponent(returnTo)}`;
 }

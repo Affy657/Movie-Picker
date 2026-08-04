@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
 import AuthPageShell, { authPageShellStyles } from '@/features/auth/components/AuthPageShell';
 import PageLayout from '@/shared/components/PageLayout';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -23,7 +23,7 @@ export default function LoginPage() {
   const [params] = useSearchParams();
   const returnTo = safeReturnTo(params.get('returnTo'));
 
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -55,6 +55,8 @@ export default function LoginPage() {
     setPassword(DEV_QUICK_LOGIN_PASSWORD);
     void submit('devQuick');
   };
+
+  if (user) return <Navigate to={returnTo} replace />;
 
   return (
     <PageLayout className={authPageShellStyles.layout}>
@@ -114,7 +116,9 @@ export default function LoginPage() {
           ) : null}
         </form>
         <p className="muted">
-          <Link to={ROUTES.forgotPassword}>{t('auth.login.forgotPasswordLink')}</Link>
+          <Link to={withReturnTo(ROUTES.forgotPassword, returnTo)}>
+            {t('auth.login.forgotPasswordLink')}
+          </Link>
         </p>
         <p className="muted">
           {t('auth.login.registerPrompt')}{' '}

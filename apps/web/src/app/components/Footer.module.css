@@ -85,6 +85,15 @@
   color: var(--color-primary);
 }
 
+.colButtonReset {
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
 /* Social links */
 .socialLink {
   display: inline-flex;
