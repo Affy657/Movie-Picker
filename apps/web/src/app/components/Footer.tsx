@@ -89,7 +89,7 @@ export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>
           <p className={styles.colTitle}>{t('footer.helpTitle')}</p>
           <ul className={styles.colList}>
             <li>
-              <SupportReportButton className={styles.colLinkButton} />
+              <SupportReportButton className={clsx(styles.colLink, styles.colButtonReset)} />
             </li>
           </ul>
         </div>

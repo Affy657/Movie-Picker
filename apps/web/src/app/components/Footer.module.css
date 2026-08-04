@@ -85,20 +85,13 @@
   color: var(--color-primary);
 }
 
-.colLinkButton {
+.colButtonReset {
   padding: 0;
   border: none;
   background: none;
-  font: inherit;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
+  font-family: inherit;
   text-align: left;
   cursor: pointer;
-  transition: color var(--duration-base) var(--ease-default);
-}
-
-.colLinkButton:hover {
-  color: var(--color-primary);
 }
 
 /* Social links */

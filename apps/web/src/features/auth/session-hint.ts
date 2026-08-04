@@ -25,9 +25,7 @@ export function setSessionHint(): void {
   memoryHint = 'present';
   try {
     globalThis.localStorage.setItem(STORAGE_KEY, '1');
-  } catch {
-    /* ignore */
-  }
+  } catch {}
 }
 
 export function clearSessionHint(): void {
@@ -35,9 +33,7 @@ export function clearSessionHint(): void {
   memoryHint = 'absent';
   try {
     globalThis.localStorage.removeItem(STORAGE_KEY);
-  } catch {
-    /* ignore */
-  }
+  } catch {}
 }
 
 export function resetSessionHintMemoryForTests(): void {

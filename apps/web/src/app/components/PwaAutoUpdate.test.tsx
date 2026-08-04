@@ -46,15 +46,22 @@ function stubLocationReload() {
   return reload;
 }
 
+let restoreServiceWorker: (() => void) | null = null;
+
 function stubServiceWorkerContainer() {
   const container = {
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
   };
+  const original = Object.getOwnPropertyDescriptor(navigator, 'serviceWorker');
   Object.defineProperty(navigator, 'serviceWorker', {
     configurable: true,
     value: container,
   });
+  restoreServiceWorker = () => {
+    if (original) Object.defineProperty(navigator, 'serviceWorker', original);
+    else delete (navigator as { serviceWorker?: unknown }).serviceWorker;
+  };
   return container;
 }
 
@@ -68,6 +75,8 @@ describe('PwaAutoUpdate', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
+    restoreServiceWorker?.();
+    restoreServiceWorker = null;
   });
 
   it("n'affiche aucune interface", async () => {
@@ -89,7 +98,8 @@ describe('PwaAutoUpdate', () => {
       unmount();
     });
 
-    it('cherche une mise à jour à chaque changement de visibilité', async () => {
+    it('cherche une mise à jour en revenant sur la page (visibilitychange -> visible)', async () => {
+      stubVisibility('visible');
       const update = vi.fn().mockResolvedValue(undefined);
       const { unmount } = await renderWithRegistration(update);
 
@@ -98,6 +108,18 @@ describe('PwaAutoUpdate', () => {
       await vi.waitFor(() => {
         expect(update).toHaveBeenCalledTimes(1);
       });
+
+      unmount();
+    });
+
+    it('ne cherche pas de mise à jour au passage en arrière-plan (visibilitychange -> hidden)', async () => {
+      stubVisibility('hidden');
+      const update = vi.fn().mockResolvedValue(undefined);
+      const { unmount } = await renderWithRegistration(update);
+
+      document.dispatchEvent(new Event('visibilitychange'));
+
+      expect(update).not.toHaveBeenCalled();
 
       unmount();
     });
@@ -186,6 +208,10 @@ describe('PwaAutoUpdate', () => {
       expect(reload).toHaveBeenCalledTimes(1);
 
       unmount();
+    });
+
+    it('ne laisse pas le stub de navigator.serviceWorker fuiter vers les tests suivants', () => {
+      expect(navigator.serviceWorker).toBeUndefined();
     });
 
     it("n'applique la mise à jour qu'une seule fois", async () => {

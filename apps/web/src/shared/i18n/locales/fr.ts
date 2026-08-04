@@ -597,7 +597,6 @@
     copied: 'Message copié.',
     copyFailed: 'Copie impossible. Sélectionnez le message ci-dessus pour le copier à la main.',
     fallbackHint: 'Si votre messagerie ne s’ouvre pas, écrivez-nous directement à {{email}}.',
-    close: 'Fermer',
   },
 
   profile: {

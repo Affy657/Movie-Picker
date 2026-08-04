@@ -41,11 +41,11 @@ export function buildSupportMailto(context: SupportContext): string {
 
 export function buildSupportReportText(
   context: SupportContext,
-  headerLabels: { recipient: string; subject: string }
+  fieldLabels: { recipientFieldLabel: string; subjectFieldLabel: string }
 ): string {
   return [
-    `${headerLabels.recipient} ${SUPPORT_EMAIL}`,
-    `${headerLabels.subject} ${context.labels.subject}`,
+    `${fieldLabels.recipientFieldLabel} ${SUPPORT_EMAIL}`,
+    `${fieldLabels.subjectFieldLabel} ${context.labels.subject}`,
     '',
     buildSupportReportBody(context),
   ].join('\n');

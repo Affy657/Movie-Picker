@@ -34,14 +34,17 @@ export default function PwaAutoUpdate() {
       if (registration.installing || !navigator.onLine) return;
       registration.update().catch(() => {});
     };
+    const checkForUpdateIfVisible = () => {
+      if (document.visibilityState === 'visible') checkForUpdate();
+    };
 
     const intervalId = window.setInterval(checkForUpdate, UPDATE_CHECK_INTERVAL_MS);
-    document.addEventListener('visibilitychange', checkForUpdate);
+    document.addEventListener('visibilitychange', checkForUpdateIfVisible);
     window.addEventListener('online', checkForUpdate);
 
     return () => {
       window.clearInterval(intervalId);
-      document.removeEventListener('visibilitychange', checkForUpdate);
+      document.removeEventListener('visibilitychange', checkForUpdateIfVisible);
       window.removeEventListener('online', checkForUpdate);
     };
   }, [registration]);

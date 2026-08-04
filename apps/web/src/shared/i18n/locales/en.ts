@@ -586,7 +586,6 @@ export const en: Locale = {
     copied: 'Message copied.',
     copyFailed: 'Copying failed. Select the message above to copy it manually.',
     fallbackHint: 'If your mail app does not open, write to us directly at {{email}}.',
-    close: 'Close',
   },
 
   profile: {

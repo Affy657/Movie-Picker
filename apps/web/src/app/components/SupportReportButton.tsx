@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router';
 import { X } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
@@ -26,26 +26,35 @@ export default function SupportReportButton({ className }: Readonly<Props>) {
   const titleId = useId();
   const reportId = useId();
 
-  const context: SupportContext = {
-    path: location.pathname,
-    userAgent: typeof navigator === 'undefined' ? undefined : navigator.userAgent,
-    labels: {
-      subject: t('support.mailSubject'),
-      describe: t('support.mailDescribe'),
-      steps: t('support.mailSteps'),
-      expected: t('support.mailExpected'),
-      observed: t('support.mailObserved'),
-      technicalHeader: t('support.mailTechnicalHeader'),
-      page: t('support.mailPage'),
-      version: t('support.mailVersion'),
-      browser: t('support.mailBrowser'),
-    },
-  };
+  const context = useMemo<SupportContext>(
+    () => ({
+      path: location.pathname,
+      userAgent: typeof navigator === 'undefined' ? undefined : navigator.userAgent,
+      labels: {
+        subject: t('support.mailSubject'),
+        describe: t('support.mailDescribe'),
+        steps: t('support.mailSteps'),
+        expected: t('support.mailExpected'),
+        observed: t('support.mailObserved'),
+        technicalHeader: t('support.mailTechnicalHeader'),
+        page: t('support.mailPage'),
+        version: t('support.mailVersion'),
+        browser: t('support.mailBrowser'),
+      },
+    }),
+    [location.pathname, t]
+  );
 
-  const reportText = buildSupportReportText(context, {
-    recipient: t('support.recipientLabel'),
-    subject: t('support.subjectLabel'),
-  });
+  const reportText = useMemo(
+    () =>
+      buildSupportReportText(context, {
+        recipientFieldLabel: t('support.recipientLabel'),
+        subjectFieldLabel: t('support.subjectLabel'),
+      }),
+    [context, t]
+  );
+
+  const mailtoHref = useMemo(() => buildSupportMailto(context), [context]);
 
   useEffect(() => {
     const dlg = dialogRef.current;
@@ -104,7 +113,7 @@ export default function SupportReportButton({ className }: Readonly<Props>) {
               type="button"
               className={styles.close}
               onClick={() => setOpen(false)}
-              aria-label={t('support.close')}
+              aria-label={t('common.close')}
             >
               <X size={18} aria-hidden />
             </button>
@@ -118,7 +127,7 @@ export default function SupportReportButton({ className }: Readonly<Props>) {
           <textarea id={reportId} className={styles.report} value={reportText} readOnly rows={9} />
 
           <div className={styles.actions}>
-            <a href={buildSupportMailto(context)} className="btn btn-primary">
+            <a href={mailtoHref} className="btn btn-primary">
               {t('support.openMailApp')}
             </a>
             <button type="button" className="btn" onClick={() => void handleCopy()}>
