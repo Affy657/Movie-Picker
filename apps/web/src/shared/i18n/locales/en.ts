@@ -632,12 +632,6 @@ export const en: Locale = {
       empty: 'No activity yet.',
     },
   },
-  pwaUpdate: {
-    message: 'New version available',
-    reload: 'Reload',
-    dismiss: 'Dismiss update',
-  },
-
   consent: {
     banner: {
       title: 'Your privacy preferences',

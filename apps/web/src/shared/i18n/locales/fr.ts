@@ -643,12 +643,6 @@
       empty: 'Aucune activité pour le moment.',
     },
   },
-  pwaUpdate: {
-    message: 'Nouvelle version disponible',
-    reload: 'Recharger',
-    dismiss: 'Ignorer la mise à jour',
-  },
-
   consent: {
     banner: {
       title: 'Vos préférences de confidentialité',

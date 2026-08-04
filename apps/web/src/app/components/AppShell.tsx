@@ -8,7 +8,7 @@ import { ROUTES } from '@/app/routes';
 import UserMenu from '@/features/auth/components/UserMenu';
 import InboxBell from '@/features/notifications/components/InboxBell';
 import Footer from './Footer';
-import UpdateBanner from './UpdateBanner';
+import PwaAutoUpdate from './PwaAutoUpdate';
 import ConsentBanner from './ConsentBanner';
 import styles from './AppShell.module.css';
 
@@ -106,7 +106,7 @@ export default function AppShell() {
           ))}
         </nav>
       ) : null}
-      <UpdateBanner />
+      <PwaAutoUpdate />
       <ConsentBanner />
     </div>
   );
