@@ -11,4 +11,5 @@ export interface UserProfile {
   handle: string;
   bio: string | null;
   isProfilePublic: boolean;
+  letterboxdUsername: string | null;
 }

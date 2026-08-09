@@ -18,6 +18,26 @@
   max-width: 32rem;
 }
 
+.letterboxdCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 1rem;
+  padding: 0.4rem 0.75rem;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-primary);
+  background: var(--color-surface-hover);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: background var(--duration-base) var(--ease-default);
+}
+
+.letterboxdCta:hover,
+.letterboxdCta:focus-visible {
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface-hover));
+}
+
 .grid {
   list-style: none;
   padding: 0;

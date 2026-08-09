@@ -60,6 +60,7 @@ export interface ProfilePatch {
   handle?: string;
   bio?: string | null;
   isProfilePublic?: boolean;
+  letterboxdUsername?: string | null;
 }
 
 export async function patchAuthProfile(patch: ProfilePatch): Promise<UserProfile> {

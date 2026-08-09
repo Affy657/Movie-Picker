@@ -1,6 +1,6 @@
 import { useCallback, useId, useRef, useState } from 'react';
 import { Link } from 'react-router';
-import { Bookmark, LogOut, Settings, UserRound } from 'lucide-react';
+import { LogOut, Settings, UserRound } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
 import { ROUTES } from '@/app/routes';
 import { useTranslation } from '@/shared/i18n';
@@ -64,10 +64,6 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
               {t('profile.settings.viewMyProfile')}
             </Link>
           ) : null}
-          <Link to={ROUTES.watchlist} className={styles.item} onClick={close}>
-            <Bookmark className={styles.icon} aria-hidden="true" focusable="false" />
-            {t('nav.watchlist')}
-          </Link>
           <Link to={ROUTES.account} className={styles.item} onClick={close}>
             <Settings className={styles.icon} aria-hidden="true" focusable="false" />
             {t('nav.account')}

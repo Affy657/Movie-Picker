@@ -1,6 +1,8 @@
 import { useId, useMemo, useState } from 'react';
 import clsx from 'clsx';
-import { Bookmark, ChevronDown } from 'lucide-react';
+import { Link } from 'react-router';
+import { Bookmark, ChevronDown, Import } from 'lucide-react';
+import { ROUTES } from '@/app/routes';
 import PageLayout from '@/shared/components/PageLayout';
 import EmptyState from '@/shared/components/EmptyState';
 import { getErrorMessage } from '@/shared/api/apiError';
@@ -131,6 +133,13 @@ export default function WatchlistPage() {
           searchWrapClassName={styles.searchFixedWidth}
         />
       </section>
+
+      {!user?.letterboxdUsername && (
+        <Link to={ROUTES.account} className={styles.letterboxdCta}>
+          <Import size={14} aria-hidden />
+          {t('watchlist.letterboxdCta')}
+        </Link>
+      )}
 
       <section className="section" aria-labelledby="watchlist-list-heading">
         <h2 id="watchlist-list-heading" className={styles.sectionTitle}>

@@ -11,6 +11,7 @@ public interface IUserRepository
     Task<User?> GetByEmailAsync(string email, CancellationToken ct = default);
     Task<User?> GetByHandleAsync(string handle, CancellationToken ct = default);
     Task<IReadOnlyList<User>> ListMissingHandleAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<User>> ListWithLetterboxdSyncEnabledAsync(CancellationToken ct = default);
     Task<IReadOnlyList<PublicProfileRef>> ListPublicProfilesAsync(int limit, CancellationToken ct = default);
     Task<User> AddAsync(User user, CancellationToken ct = default);
     Task<User> UpdateAsync(User user, CancellationToken ct = default);

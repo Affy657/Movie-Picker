@@ -60,6 +60,15 @@ public sealed class MongoUserRepository : IUserRepository
         return docs.ConvertAll(UserDocumentMapper.ToDomain);
     }
 
+    public async Task<IReadOnlyList<User>> ListWithLetterboxdSyncEnabledAsync(CancellationToken ct = default)
+    {
+        var filter = Builders<UserDocument>.Filter.And(
+            Builders<UserDocument>.Filter.Ne(x => x.LetterboxdUsername, null),
+            Builders<UserDocument>.Filter.Ne(x => x.LetterboxdUsername, string.Empty));
+        var docs = await _collection.Find(filter).ToListAsync(ct);
+        return docs.ConvertAll(UserDocumentMapper.ToDomain);
+    }
+
     public async Task<IReadOnlyList<PublicProfileRef>> ListPublicProfilesAsync(int limit, CancellationToken ct = default)
     {
         var filter = Builders<UserDocument>.Filter.And(

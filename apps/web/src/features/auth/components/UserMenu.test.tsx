@@ -20,6 +20,7 @@ const baseUser: UserProfile = {
   handle: 'alice',
   bio: null,
   isProfilePublic: true,
+  letterboxdUsername: null,
 };
 
 function renderMenu(user: UserProfile = baseUser) {

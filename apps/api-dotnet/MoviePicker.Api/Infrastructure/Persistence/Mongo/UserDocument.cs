@@ -68,6 +68,10 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public bool? NotifyOnNewFollower { get; set; }
 
+    [BsonElement("letterboxdUsername")]
+    [BsonIgnoreIfNull]
+    public string? LetterboxdUsername { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 

@@ -46,6 +46,14 @@ public sealed class InMemoryUserRepository : IUserRepository
         return Task.FromResult(result);
     }
 
+    public Task<IReadOnlyList<User>> ListWithLetterboxdSyncEnabledAsync(CancellationToken ct = default)
+    {
+        IReadOnlyList<User> result = _byId.Values
+            .Where(u => !string.IsNullOrWhiteSpace(u.LetterboxdUsername))
+            .ToList();
+        return Task.FromResult(result);
+    }
+
     public Task<IReadOnlyList<PublicProfileRef>> ListPublicProfilesAsync(int limit, CancellationToken ct = default)
     {
         IReadOnlyList<PublicProfileRef> result = _byId.Values
@@ -79,6 +87,8 @@ public sealed class InMemoryUserRepository : IUserRepository
             NotifyOnMovieAdded = user.NotifyOnMovieAdded,
             NotifyOnMoviePicked = user.NotifyOnMoviePicked,
             NotifyOnEventDeleted = user.NotifyOnEventDeleted,
+            NotifyOnNewFollower = user.NotifyOnNewFollower,
+            LetterboxdUsername = user.LetterboxdUsername,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         };
@@ -119,6 +129,8 @@ public sealed class InMemoryUserRepository : IUserRepository
             NotifyOnMovieAdded = user.NotifyOnMovieAdded,
             NotifyOnMoviePicked = user.NotifyOnMoviePicked,
             NotifyOnEventDeleted = user.NotifyOnEventDeleted,
+            NotifyOnNewFollower = user.NotifyOnNewFollower,
+            LetterboxdUsername = user.LetterboxdUsername,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         };

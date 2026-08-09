@@ -6,6 +6,7 @@ import PageLayout from '@/shared/components/PageLayout';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import NotificationsSection from '@/features/notifications/components/NotificationsSection';
 import PublicProfileSection from '@/features/profile/components/PublicProfileSection';
+import LetterboxdImportSection from '@/features/letterboxd/components/LetterboxdImportSection';
 import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
@@ -378,6 +379,8 @@ export default function AccountPage() {
       <PreferencesSection />
 
       <NotificationsSection />
+
+      <LetterboxdImportSection />
 
       <ChangePasswordSection />
 

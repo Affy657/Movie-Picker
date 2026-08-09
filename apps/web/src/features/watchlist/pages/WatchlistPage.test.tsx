@@ -394,4 +394,38 @@ describe('WatchlistPage (MSW)', () => {
 
     vi.unstubAllGlobals();
   });
+
+  it("propose l'import Letterboxd quand aucun pseudo n'est configuré", async () => {
+    server.use(authedUserHandler, watchlistHandler([ITEM_A]));
+
+    renderPage();
+
+    expect(
+      await screen.findByRole('link', { name: /importer depuis letterboxd/i })
+    ).toHaveAttribute('href', '/settings');
+  });
+
+  it("masque l'incitation Letterboxd une fois le pseudo configuré", async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u1',
+          displayName: 'Alice',
+          emailMasked: 'a***@test.local',
+          uiTheme: 'system',
+          accentColor: 'default',
+          ratingScale: 'ten',
+          letterboxdUsername: 'alice_lb',
+        })
+      ),
+      watchlistHandler([ITEM_A])
+    );
+
+    renderPage();
+
+    await screen.findByText(ITEM_A.title);
+    expect(
+      screen.queryByRole('link', { name: /importer depuis letterboxd/i })
+    ).not.toBeInTheDocument();
+  });
 });

@@ -167,6 +167,38 @@ export const en: Locale = {
       deleteAccountCancel: 'Cancel',
       deleteAccountPasswordRequired: 'Password is required.',
       deleteAccountFallbackError: 'Deletion failed. Check your password.',
+      letterboxd: {
+        title: 'Letterboxd',
+        syncTitle: 'Automatic sync',
+        syncDescription:
+          'Set your Letterboxd username: films you mark as watched on Letterboxd are then automatically removed from your Movie Picker watchlist. This only works one way: the sync cannot add films to your watchlist, only remove them.',
+        usernameLabel: 'Letterboxd username',
+        usernamePlaceholder: 'e.g. dave_v',
+        usernameHint: 'Visible in your Letterboxd profile URL (letterboxd.com/your-username).',
+        usernameFallbackError: 'Could not save.',
+        importTitle: 'Import your watchlist',
+        importDescription:
+          'Add every film from your Letterboxd watchlist to your Movie Picker watchlist at once, from a file exported from Letterboxd.',
+        csvLabel: 'watchlist.csv file',
+        csvDropHint: 'Drag the file here or click to choose it',
+        csvHint:
+          'From Letterboxd: Settings > Import & Export > Export your data. Use the watchlist.csv file from the downloaded archive.',
+        importFallbackError: 'Import failed. Check the file and try again.',
+        importSuccess:
+          '{{added}} film(s) added to your watchlist ({{alreadyPresent}} already present).',
+        importSuccessNoneAdded: 'No new films added.',
+        reviewTitle: 'Review films to import',
+        reviewSummary:
+          '{{total}} row(s) read from the file. {{alreadyInWatchlist}} already in your watchlist, {{notFound}} not found on TMDB.',
+        reviewTruncated:
+          '{{count}} additional row(s) skipped (file too large for a single import).',
+        reviewNothingToImport: 'Nothing to import right now.',
+        reviewFromLetterboxd: 'From Letterboxd: {{title}} ({{year}})',
+        reviewSkipRow: 'Skip this row',
+        confirmFallbackError: 'Import failed. Try again.',
+        confirmSubmitting: 'Importing…',
+        confirmSubmit: 'Import ({{count}})',
+      },
     },
     logout: {
       fallbackError: 'Logout failed.',
@@ -507,6 +539,7 @@ export const en: Locale = {
     addError: 'Could not add to watchlist.',
     removeError: 'Could not remove from watchlist.',
     removeAria: 'Remove "{{title}}" from my watchlist',
+    letterboxdCta: 'Import from Letterboxd',
     empty: {
       title: 'Your watchlist is empty',
       message: 'Search for a movie above to add it to your "to watch" list.',

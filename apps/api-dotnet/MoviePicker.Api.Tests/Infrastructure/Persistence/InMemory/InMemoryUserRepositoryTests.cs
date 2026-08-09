@@ -143,4 +143,46 @@ public sealed class InMemoryUserRepositoryTests
 
         Assert.Equal(3, result.Count);
     }
+
+    [Fact]
+    public async Task AddAsync_PersistsNotifyOnNewFollower()
+    {
+        var created = await _repo.AddAsync(Mk() with { NotifyOnNewFollower = false });
+
+        Assert.False(created.NotifyOnNewFollower);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_PersistsNotifyOnNewFollower()
+    {
+        var created = await _repo.AddAsync(Mk() with { NotifyOnNewFollower = true });
+        var toUpdate = created with { NotifyOnNewFollower = false };
+        Assert.False(toUpdate.NotifyOnNewFollower);
+
+        var updated = await _repo.UpdateAsync(toUpdate);
+
+        Assert.False(updated.NotifyOnNewFollower);
+        Assert.False((await _repo.GetByIdAsync(created.Id))!.NotifyOnNewFollower);
+    }
+
+    [Fact]
+    public async Task AddAsync_PersistsLetterboxdUsername()
+    {
+        var created = await _repo.AddAsync(Mk() with { LetterboxdUsername = "dave_v" });
+
+        Assert.Equal("dave_v", created.LetterboxdUsername);
+    }
+
+    [Fact]
+    public async Task ListWithLetterboxdSyncEnabledAsync_ReturnsOnlyConfiguredUsers()
+    {
+        await _repo.AddAsync(Mk(email: "a@test.local", handle: "a") with { LetterboxdUsername = "dave_v" });
+        await _repo.AddAsync(Mk(email: "b@test.local", handle: "b"));
+        await _repo.AddAsync(Mk(email: "c@test.local", handle: "c") with { LetterboxdUsername = "" });
+
+        var result = await _repo.ListWithLetterboxdSyncEnabledAsync();
+
+        Assert.Single(result);
+        Assert.Equal("dave_v", result[0].LetterboxdUsername);
+    }
 }

@@ -30,6 +30,7 @@ public static class RateLimitingExtensions
     public const string InviteUserPolicy = "invite-user";
     public const string WatchlistReadPolicy = "watchlist-read";
     public const string WatchlistMutationPolicy = "watchlist-mutation";
+    public const string LetterboxdImportPolicy = "letterboxd-import";
 
     public static IServiceCollection AddMoviePickerRateLimiter(this IServiceCollection services, IHostEnvironment environment)
     {
@@ -79,6 +80,7 @@ public static class RateLimitingExtensions
                 options.AddPolicy(InviteUserPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(WatchlistReadPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(WatchlistMutationPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
+                options.AddPolicy(LetterboxdImportPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 return;
             }
 
@@ -106,6 +108,7 @@ public static class RateLimitingExtensions
             options.AddPolicy(InviteUserPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 60, windowMinutes: 1));
             options.AddPolicy(WatchlistReadPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 120, windowMinutes: 1));
             options.AddPolicy(WatchlistMutationPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 60, windowMinutes: 1));
+            options.AddPolicy(LetterboxdImportPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 10, windowMinutes: 1));
         });
 
         return services;

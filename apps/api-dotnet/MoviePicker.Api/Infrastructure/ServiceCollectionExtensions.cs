@@ -8,6 +8,7 @@ using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.BackgroundServices;
 using MoviePicker.Api.Infrastructure.Development;
 using MoviePicker.Api.Infrastructure.Email;
+using MoviePicker.Api.Infrastructure.Letterboxd;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
 using MoviePicker.Api.Infrastructure.Posters;
@@ -62,6 +63,13 @@ public static class ServiceCollectionExtensions
         services.AddEmailSender(configuration, environment);
         services.AddSingleton<IPushNotificationSender, WebPushSender>();
         services.AddHostedService<EventReminderService>();
+        services.AddHostedService<LetterboxdWatchlistSyncService>();
+
+        services.AddHttpClient<ILetterboxdRssClient, LetterboxdRssClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(15);
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("MoviePicker-Api/1.0");
+        });
 
         RegisterHandlers(services);
 

@@ -45,6 +45,7 @@ public sealed record User
     public bool NotifyOnMoviePicked { get; init; } = true;
     public bool NotifyOnEventDeleted { get; init; } = true;
     public bool NotifyOnNewFollower { get; init; } = true;
+    public string? LetterboxdUsername { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
 }

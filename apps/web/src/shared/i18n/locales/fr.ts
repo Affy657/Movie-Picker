@@ -169,6 +169,39 @@
       deleteAccountCancel: 'Annuler',
       deleteAccountPasswordRequired: 'Le mot de passe est requis.',
       deleteAccountFallbackError: 'Suppression impossible. Vérifiez votre mot de passe.',
+      letterboxd: {
+        title: 'Letterboxd',
+        syncTitle: 'Synchronisation automatique',
+        syncDescription:
+          'Renseignez votre pseudo Letterboxd : les films que vous marquez comme vus sur Letterboxd sont ensuite retirés automatiquement de votre watchlist Movie Picker. Ça ne fonctionne que dans ce sens : la synchronisation ne peut pas ajouter de films à votre watchlist, seulement en retirer.',
+        usernameLabel: 'Pseudo Letterboxd',
+        usernamePlaceholder: 'Ex : dave_v',
+        usernameHint:
+          'Visible dans l’URL de votre profil Letterboxd (letterboxd.com/votre-pseudo).',
+        usernameFallbackError: 'Enregistrement impossible.',
+        importTitle: 'Importer votre watchlist',
+        importDescription:
+          'Ajoutez d’un coup tous les films de votre watchlist Letterboxd à votre watchlist Movie Picker, à partir d’un fichier exporté depuis Letterboxd.',
+        csvLabel: 'Fichier watchlist.csv',
+        csvDropHint: 'Glissez le fichier ici ou cliquez pour le choisir',
+        csvHint:
+          'Depuis Letterboxd : Paramètres > Importer et exporter > Exporter les données. Utilisez le fichier watchlist.csv de l’archive téléchargée.',
+        importFallbackError: 'Import impossible. Vérifiez le fichier et réessayez.',
+        importSuccess:
+          '{{added}} film(s) ajouté(s) à votre watchlist ({{alreadyPresent}} déjà présent(s)).',
+        importSuccessNoneAdded: 'Aucun nouveau film ajouté.',
+        reviewTitle: 'Vérifier les films à importer',
+        reviewSummary:
+          '{{total}} ligne(s) lue(s) dans le fichier. {{alreadyInWatchlist}} déjà dans votre watchlist, {{notFound}} introuvable(s) sur TMDB.',
+        reviewTruncated:
+          '{{count}} ligne(s) supplémentaire(s) non traitée(s) (fichier trop volumineux pour un import en une fois).',
+        reviewNothingToImport: "Aucun film à importer pour l'instant.",
+        reviewFromLetterboxd: 'Depuis Letterboxd : {{title}} ({{year}})',
+        reviewSkipRow: 'Ignorer cette ligne',
+        confirmFallbackError: 'Import impossible. Réessayez.',
+        confirmSubmitting: 'Import en cours…',
+        confirmSubmit: 'Importer ({{count}})',
+      },
     },
     logout: {
       fallbackError: 'Déconnexion impossible.',
@@ -517,6 +550,7 @@
     addError: 'Ajout à la watchlist impossible.',
     removeError: 'Retrait de la watchlist impossible.',
     removeAria: 'Retirer « {{title}} » de ma watchlist',
+    letterboxdCta: 'Importer depuis Letterboxd',
     empty: {
       title: 'Votre watchlist est vide',
       message: 'Cherchez un film ci-dessus pour l’ajouter à votre liste « à voir ».',

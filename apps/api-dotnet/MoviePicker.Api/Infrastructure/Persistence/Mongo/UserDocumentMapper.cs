@@ -24,6 +24,7 @@ public static class UserDocumentMapper
             NotifyOnMoviePicked = doc.NotifyOnMoviePicked ?? true,
             NotifyOnEventDeleted = doc.NotifyOnEventDeleted ?? true,
             NotifyOnNewFollower = doc.NotifyOnNewFollower ?? true,
+            LetterboxdUsername = doc.LetterboxdUsername,
             CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero),
             UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)
         };
@@ -48,6 +49,7 @@ public static class UserDocumentMapper
             NotifyOnMoviePicked = user.NotifyOnMoviePicked,
             NotifyOnEventDeleted = user.NotifyOnEventDeleted,
             NotifyOnNewFollower = user.NotifyOnNewFollower,
+            LetterboxdUsername = string.IsNullOrEmpty(user.LetterboxdUsername) ? null : user.LetterboxdUsername,
             CreatedAt = user.CreatedAt.UtcDateTime,
             UpdatedAt = user.UpdatedAt.UtcDateTime
         };

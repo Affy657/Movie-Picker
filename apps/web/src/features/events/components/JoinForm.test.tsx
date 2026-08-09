@@ -35,6 +35,7 @@ const profile: UserProfile = {
   handle: 'profilcompte',
   bio: null,
   isProfilePublic: true,
+  letterboxdUsername: null,
 };
 
 function renderForm(node: ReactElement) {

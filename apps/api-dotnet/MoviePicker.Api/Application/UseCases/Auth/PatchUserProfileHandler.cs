@@ -31,7 +31,8 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             && request.AvatarId is null
             && request.Handle is null
             && request.Bio is null
-            && request.IsProfilePublic is null;
+            && request.IsProfilePublic is null
+            && request.LetterboxdUsername is null;
 
         if (nothingToUpdate)
             return ToResponse(user);
@@ -75,6 +76,15 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
 
         var isProfilePublic = request.IsProfilePublic ?? user.IsProfilePublic;
 
+        var letterboxdUsername = user.LetterboxdUsername;
+        if (request.LetterboxdUsername is not null)
+        {
+            var trimmed = request.LetterboxdUsername.Trim();
+            if (trimmed.Length > 0 && !IsValidLetterboxdUsername(trimmed))
+                throw new BadRequestException("Le pseudo Letterboxd ne peut contenir que des lettres, chiffres et underscores.");
+            letterboxdUsername = trimmed.Length == 0 ? null : trimmed;
+        }
+
         var updated = user with
         {
             DisplayName = displayName,
@@ -85,6 +95,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             Handle = handle,
             Bio = bio,
             IsProfilePublic = isProfilePublic,
+            LetterboxdUsername = letterboxdUsername,
             UpdatedAt = _clock.GetUtcNow()
         };
 
@@ -128,9 +139,13 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
         AvatarId = user.AvatarId,
         Handle = user.Handle,
         Bio = user.Bio,
-        IsProfilePublic = user.IsProfilePublic
+        IsProfilePublic = user.IsProfilePublic,
+        LetterboxdUsername = user.LetterboxdUsername
     };
 
     private static T ParseEnum<T>(string raw, T defaultValue) where T : struct, Enum =>
         Enum.TryParse<T>(raw, ignoreCase: true, out var result) ? result : defaultValue;
+
+    private static bool IsValidLetterboxdUsername(string username) =>
+        username.Length <= 40 && username.All(c => char.IsAsciiLetterOrDigit(c) || c == '_');
 }
