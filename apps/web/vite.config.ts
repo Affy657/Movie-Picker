@@ -2,6 +2,7 @@ import path from 'node:path';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 const devQuickLoginStub = path.resolve(
   __dirname,
@@ -29,10 +30,21 @@ function toApiOrigin(raw: string): string {
   }
 }
 
-function cspMetaPlugin(apiOrigin: string): Plugin {
+function toSentryIngestOrigin(dsn: string): string {
+  const raw = (dsn ?? '').trim();
+  if (!raw) return '';
+  try {
+    return new URL(raw).origin;
+  } catch {
+    return '';
+  }
+}
+
+function cspMetaPlugin(apiOrigin: string, sentryOrigin: string): Plugin {
   const connectSrc = [
     "'self'",
     apiOrigin,
+    sentryOrigin,
     'https://eu.i.posthog.com',
     'https://eu-assets.i.posthog.com',
     'https://image.tmdb.org',
@@ -56,6 +68,7 @@ function cspMetaPlugin(apiOrigin: string): Plugin {
     `img-src ${imgSrc}`,
     "font-src 'self' data:",
     `connect-src ${connectSrc}`,
+    'frame-src https://www.youtube.com',
     "worker-src 'self'",
     "manifest-src 'self'",
     "object-src 'none'",
@@ -108,6 +121,9 @@ function preloadFontsPlugin(): Plugin {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, path.resolve(__dirname));
   const apiOrigin = toApiOrigin(process.env.VITE_API_URL || env.VITE_API_URL || '');
+  const sentryDsn = process.env.VITE_SENTRY_DSN || env.VITE_SENTRY_DSN || '';
+  const sentryOrigin = toSentryIngestOrigin(sentryDsn);
+  const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN;
   return {
     plugins: [
       react(),
@@ -162,8 +178,19 @@ export default defineConfig(({ mode }) => {
           type: 'module',
         },
       }),
-      cspMetaPlugin(apiOrigin),
+      cspMetaPlugin(apiOrigin, sentryOrigin),
       preloadFontsPlugin(),
+      ...(sentryAuthToken
+        ? sentryVitePlugin({
+            org: process.env.SENTRY_ORG,
+            project: process.env.SENTRY_PROJECT,
+            authToken: sentryAuthToken,
+            url: process.env.SENTRY_URL,
+            release: { name: process.env.SENTRY_RELEASE },
+            sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.map'] },
+            telemetry: false,
+          })
+        : []),
     ],
     resolve: {
       alias: [
@@ -183,6 +210,7 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       target: 'es2022',
+      sourcemap: sentryAuthToken ? 'hidden' : false,
       rollupOptions: {
         output: {
           entryFileNames: 'assets/[name]-[hash].js',
@@ -190,7 +218,7 @@ export default defineConfig(({ mode }) => {
           assetFileNames: 'assets/[name]-[hash][extname]',
           manualChunks(id) {
             if (!id.includes('node_modules')) return undefined;
-            if (/[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) {
+            if (/[\\/](react|react-dom|react-router|react-router|scheduler)[\\/]/.test(id)) {
               return 'react-vendor';
             }
             if (id.includes('@tanstack')) return 'query-vendor';

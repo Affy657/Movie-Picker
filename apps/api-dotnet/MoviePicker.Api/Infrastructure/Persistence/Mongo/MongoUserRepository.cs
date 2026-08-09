@@ -60,6 +60,25 @@ public sealed class MongoUserRepository : IUserRepository
         return docs.ConvertAll(UserDocumentMapper.ToDomain);
     }
 
+    public async Task<IReadOnlyList<PublicProfileRef>> ListPublicProfilesAsync(int limit, CancellationToken ct = default)
+    {
+        var filter = Builders<UserDocument>.Filter.And(
+            Builders<UserDocument>.Filter.Ne(x => x.IsProfilePublic, false),
+            Builders<UserDocument>.Filter.Ne(x => x.Handle, null),
+            Builders<UserDocument>.Filter.Ne(x => x.Handle, string.Empty));
+        IFindFluent<UserDocument, UserDocument> find =
+            _collection.Find(filter).SortByDescending(x => x.UpdatedAt);
+        if (limit > 0)
+            find = find.Limit(limit);
+        var docs = await find.ToListAsync(ct);
+        return docs
+            .Where(d => !string.IsNullOrWhiteSpace(d.Handle))
+            .Select(d => new PublicProfileRef(
+                d.Handle!,
+                new DateTimeOffset(DateTime.SpecifyKind(d.UpdatedAt, DateTimeKind.Utc))))
+            .ToList();
+    }
+
     public async Task<User> AddAsync(User user, CancellationToken ct = default)
     {
         var doc = UserDocumentMapper.ToDocument(user);

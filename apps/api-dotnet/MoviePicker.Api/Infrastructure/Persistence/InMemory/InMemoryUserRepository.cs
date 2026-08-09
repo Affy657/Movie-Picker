@@ -46,6 +46,17 @@ public sealed class InMemoryUserRepository : IUserRepository
         return Task.FromResult(result);
     }
 
+    public Task<IReadOnlyList<PublicProfileRef>> ListPublicProfilesAsync(int limit, CancellationToken ct = default)
+    {
+        IReadOnlyList<PublicProfileRef> result = _byId.Values
+            .Where(u => u.IsProfilePublic && !string.IsNullOrWhiteSpace(u.Handle))
+            .OrderByDescending(u => u.UpdatedAt)
+            .Take(limit > 0 ? limit : int.MaxValue)
+            .Select(u => new PublicProfileRef(u.Handle, u.UpdatedAt))
+            .ToList();
+        return Task.FromResult(result);
+    }
+
     public Task<User> AddAsync(User user, CancellationToken ct = default)
     {
         var id = string.IsNullOrEmpty(user.Id) ? Guid.NewGuid().ToString("N")[..24] : user.Id;

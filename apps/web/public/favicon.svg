@@ -4,7 +4,6 @@
       <path d="M10.472,25.712 L53.528,17.288 Q55,17 55.325,15.536 L56.675,9.464 Q57,8 55.528,8.288 L12.472,16.712 Q11,17 10.675,18.464 L9.325,24.536 Q9,26 10.472,25.712 Z" />
     </clipPath>
   </defs>
-  <rect width="64" height="64" rx="14" fill="#0f172a" />
   <g transform="translate(6.65 8.21) scale(0.78)">
     <g transform="rotate(-12 32.5 30.5)">
       <rect x="8" y="26" width="48" height="27" rx="4" fill="#1d4ed8" />

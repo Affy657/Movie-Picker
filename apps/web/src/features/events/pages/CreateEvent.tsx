@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router';
 import { ArrowLeft, Settings2 } from 'lucide-react';
 import ThemeField from '@/features/events/components/ThemeField';
 import NumberInput from '@/shared/components/NumberInput';

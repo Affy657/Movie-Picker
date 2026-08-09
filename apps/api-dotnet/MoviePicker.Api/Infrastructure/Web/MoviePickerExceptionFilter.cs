@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Exceptions;
+using Sentry;
 
 namespace MoviePicker.Api.Infrastructure.Web;
 
@@ -22,6 +23,11 @@ public sealed class MoviePickerExceptionFilter : IExceptionFilter
         if (context.Exception is MoviePickerException ex)
         {
             var statusCode = ToHttpStatus(ex.Kind);
+            if (statusCode >= StatusCodes.Status500InternalServerError)
+            {
+                SentrySdk.CaptureException(context.Exception);
+            }
+
             context.Result = new JsonResult(ApiErrorResponse.FromHttpContext(http, statusCode, ex.Message))
             {
                 StatusCode = statusCode
@@ -43,6 +49,8 @@ public sealed class MoviePickerExceptionFilter : IExceptionFilter
             context.ExceptionHandled = true;
             return;
         }
+
+        SentrySdk.CaptureException(context.Exception);
 
         var message = _env.IsDevelopment() ? context.Exception.Message : "Une erreur interne s'est produite.";
         context.Result = new JsonResult(

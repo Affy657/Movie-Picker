@@ -167,6 +167,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IFollowRepository, InMemoryFollowRepository>();
             services.AddSingleton<IWatchlistRepository, InMemoryWatchlistRepository>();
             services.AddSingleton<IUserNotificationRepository, InMemoryUserNotificationRepository>();
+            services.AddSingleton<IDatabaseHealthProbe, InMemoryDatabaseHealthProbe>();
             return;
         }
 
@@ -198,6 +199,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFollowRepository, MongoFollowRepository>();
         services.AddScoped<IWatchlistRepository, MongoWatchlistRepository>();
         services.AddScoped<IUserNotificationRepository, MongoUserNotificationRepository>();
+        services.AddSingleton<IDatabaseHealthProbe, MongoDatabaseHealthProbe>();
         services.AddHostedService<MongoIndexInitializer>();
         services.AddHostedService<UserHandleBackfillService>();
         services.AddHostedService<GenreBackfillService>();

@@ -1,14 +1,14 @@
 import clsx from 'clsx';
 import type { ComponentType, SVGProps } from 'react';
 import { Bookmark, CalendarDays, Plus } from 'lucide-react';
-import { Link, NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { ROUTES } from '@/app/routes';
 import UserMenu from '@/features/auth/components/UserMenu';
 import InboxBell from '@/features/notifications/components/InboxBell';
 import Footer from './Footer';
-import UpdateBanner from './UpdateBanner';
+import PwaAutoUpdate from './PwaAutoUpdate';
 import ConsentBanner from './ConsentBanner';
 import styles from './AppShell.module.css';
 
@@ -107,7 +107,7 @@ export default function AppShell() {
           ))}
         </nav>
       ) : null}
-      <UpdateBanner />
+      <PwaAutoUpdate />
       <ConsentBanner />
     </div>
   );

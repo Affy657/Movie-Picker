@@ -4,8 +4,8 @@
   align-items: stretch;
   border-radius: var(--radius-md);
   overflow: hidden;
-  background: #0c1322;
-  border: 1px solid #1a2236;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
   box-shadow: var(--shadow-sm);
   transition: box-shadow var(--duration-medium) var(--ease-default);
 }
@@ -19,7 +19,7 @@
   flex: 0 0 clamp(7rem, 32%, 12rem);
   align-self: stretch;
   overflow: hidden;
-  background: #0c1322;
+  background: var(--color-poster-placeholder);
 }
 
 .posterBackdrop {
@@ -47,7 +47,7 @@
   width: 100%;
   height: 100%;
   min-height: 10rem;
-  color: #94a3b8;
+  color: var(--color-placeholder);
   font-size: var(--font-size-2xs);
 }
 
@@ -78,6 +78,27 @@
   flex-direction: column;
   gap: 0.25rem;
   padding: 0.7rem 0.85rem;
+  /* Re-theme les pieces partagees de movieCardParts.module.css : en vue
+     grille elles reposent sur le bandeau sombre qui recouvre l'affiche
+     (leurs valeurs par defaut conviennent), mais ici .info est un panneau
+     de contenu ordinaire qui suit le theme clair/sombre. */
+  --mc-fg: var(--color-text);
+  --mc-fg-strong: var(--color-text);
+  --mc-fg-muted: var(--color-text-muted);
+  --mc-fg-soft: var(--color-text-muted);
+  --mc-fg-subtle: var(--color-text-muted);
+  --mc-icon-muted: var(--color-text-muted);
+  --mc-border: var(--color-border-subtle);
+  --mc-surface-ring: var(--color-surface);
+  --mc-overlay-hover: color-mix(in srgb, var(--color-text) 8%, transparent);
+  --mc-overlay-active: color-mix(in srgb, var(--color-text) 12%, transparent);
+  --mc-overlay-hover-soft: color-mix(in srgb, var(--color-text) 6%, transparent);
+  --mc-active-bg: var(--color-surface-hover);
+  --mc-input-bg: var(--color-input-bg);
+  --mc-kebab-bg: transparent;
+  --mc-kebab-bg-hover: var(--color-surface-hover);
+  --mc-kebab-fg: var(--color-text-muted);
+  --mc-kebab-fg-hover: var(--color-text);
 }
 
 .kebabSlot {
@@ -94,7 +115,7 @@
   font-weight: 600;
   line-height: var(--leading-tight);
   letter-spacing: var(--tracking-snug);
-  color: #f8fafc;
+  color: var(--color-text);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -109,7 +130,7 @@
   align-items: center;
   gap: 0.2rem 0.4rem;
   font-size: var(--font-size-xs);
-  color: #cbd5e1;
+  color: var(--color-text-muted);
 }
 
 .metaLine span + span::before {
@@ -166,7 +187,7 @@
 .providersEmpty {
   margin: 0;
   font-size: var(--font-size-2xs);
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .actions {
@@ -179,7 +200,7 @@
 .seenHint {
   margin: 0;
   font-size: var(--font-size-2xs);
-  color: #94a3b8;
+  color: var(--color-text-muted);
 }
 
 .bottomSection {

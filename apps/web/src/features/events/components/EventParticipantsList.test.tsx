@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import EventParticipantsList from '@/features/events/components/EventParticipantsList';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import type { EventParticipantSummary } from '@/shared/types/event';

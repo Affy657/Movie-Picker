@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Moq;
 using MoviePicker.Api.Infrastructure.Web;
@@ -11,14 +10,6 @@ namespace MoviePicker.Api.Tests.Infrastructure.Web;
 
 public sealed class MoviePickerCookieAuthenticationConfigurerTests
 {
-    private sealed class FakeHostEnvironment : IHostEnvironment
-    {
-        public string EnvironmentName { get; set; } = Environments.Production;
-        public string ApplicationName { get; set; } = "MoviePicker.Api.Tests";
-        public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
-        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
-    }
-
     private static CookieAuthenticationOptions Configure(string environment)
     {
         var configurer = new MoviePickerCookieAuthenticationConfigurer(
@@ -37,7 +28,7 @@ public sealed class MoviePickerCookieAuthenticationConfigurerTests
         Assert.Equal(AuthConstants.CookieName, options.Cookie.Name);
         Assert.True(options.Cookie.HttpOnly);
         Assert.Equal("/", options.Cookie.Path);
-        Assert.Equal(TimeSpan.FromDays(14), options.ExpireTimeSpan);
+        Assert.Equal(AuthConstants.SessionLifetime, options.ExpireTimeSpan);
         Assert.True(options.SlidingExpiration);
         Assert.NotNull(options.SessionStore);
     }

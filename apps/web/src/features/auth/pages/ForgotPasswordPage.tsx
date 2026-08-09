@@ -1,16 +1,19 @@
 import { useCallback, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router';
 import AuthPageShell, { authPageShellStyles } from '@/features/auth/components/AuthPageShell';
 import PageLayout from '@/shared/components/PageLayout';
 import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
-import { ROUTES } from '@/app/routes';
+import { ROUTES, withReturnTo } from '@/app/routes';
+import { safeReturnTo } from '@/shared/utils/returnTo';
 import { postPasswordResetRequest } from '@/features/auth/api/authApi';
 
 export default function ForgotPasswordPage() {
   const { t, locale } = useTranslation();
   useDocumentTitle(pageTitle(t('auth.forgotPassword.title')));
+  const [params] = useSearchParams();
+  const loginTo = withReturnTo(ROUTES.login, safeReturnTo(params.get('returnTo')));
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
@@ -38,7 +41,7 @@ export default function ForgotPasswordPage() {
           description={t('auth.forgotPassword.successMessage')}
         >
           <p className="muted">
-            <Link to={ROUTES.login}>{t('auth.forgotPassword.backToLogin')}</Link>
+            <Link to={loginTo}>{t('auth.forgotPassword.backToLogin')}</Link>
           </p>
         </AuthPageShell>
       </PageLayout>
@@ -79,7 +82,7 @@ export default function ForgotPasswordPage() {
           </button>
         </form>
         <p className="muted">
-          <Link to={ROUTES.login}>{t('auth.forgotPassword.backToLogin')}</Link>
+          <Link to={loginTo}>{t('auth.forgotPassword.backToLogin')}</Link>
         </p>
       </AuthPageShell>
     </PageLayout>

@@ -14,6 +14,8 @@
 
 > Ce dossier est **autonome** : il embarque les preuves nécessaires à l'évaluation (extraits de code, schémas, captures, tableaux) et n'exige pas la lecture du dépôt. Chaque section indique néanmoins les fichiers de référence de l'archive `.zip` pour permettre au jury de recouper.
 
+> **Note de lecture (document figé, produit vivant).** Ce dossier décrit fidèlement l'état du projet à sa rédaction (juillet 2026, version **v1.3.1**, §12). Le déploiement continu (§5) implique que la production peut, au moment de la lecture, comporter des correctifs ou fonctionnalités supplémentaires non couverts ici. De même, l'adresse du front — **web.movie-picker.fr** à ce jour — est susceptible d'être devenue **www.movie-picker.fr** (migration de domaine planifiée) ; l'API reste alors sur **api.movie-picker.fr**, et le raisonnement *same-site* du cookie de session (§2.3, §8.1 — eTLD+1 `movie-picker.fr`) reste valable dans les deux cas.
+
 ---
 
 ## Sommaire
@@ -33,8 +35,6 @@
 | 11 | Plan de correction des bogues | C2.3.2 |
 | 12 | Historique des versions | C2.2.4 |
 | 13 | Manuels d'exploitation | C2.4.1 |
-
-*La pagination définitive (numéros de page) est générée à l'export PDF.*
 
 ### Table de correspondance compétences → sections → critères
 
@@ -89,7 +89,7 @@ Ces récits pilotent les fonctionnalités reprises intégralement dans le **cahi
 | **Front (SPA)** | React 19 · TypeScript 6 · Vite 8 · React Router 7 · TanStack Query 5 · PWA (VitePWA / Workbox) | Interface, routage, état serveur/cache, hors-ligne installable |
 | **API** | ASP.NET Core .NET 10 (contrôleurs + filtres) · Swashbuckle (OpenAPI / Swagger) · WebPush | Ressources métier REST, contrat OpenAPI, notifications push |
 | **Données** | MongoDB (driver 3.9, MongoDB Atlas) | Persistance documentaire (soirées, utilisateurs, votes) |
-| **Intégrations tierces** | TMDB (catalogue films & affiches) · e-mail (réinitialisation) · Web Push · PostHog (analytics, soumis au consentement) | Enrichissement fonctionnel |
+| **Intégrations tierces** | TMDB (catalogue films & affiches) · e-mail (réinitialisation) · Web Push · PostHog (analytics, soumis au consentement) · Sentry (suivi d'erreurs, sans consentement) | Enrichissement fonctionnel |
 | **Hébergement** | Front : AWS S3 + CloudFront · API : GCP Cloud Run · Secrets : Secret Manager | Diffusion statique CDN + service conteneurisé managé |
 
 *Preuves : `apps/web/package.json` (dépendances front), `apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj` (cible `net10.0` + paquets).*
@@ -158,9 +158,10 @@ flowchart TD
   MP -->|"e-mails transactionnels"| RS["Resend"]
   MP -->|"notifications push"| WP["Service Web Push"]
   MP -.->|"analytics · soumis au consentement"| PH["PostHog"]
+  MP -.->|"erreurs front + API · zéro PII"| SE["Sentry"]
 ```
 
-L'utilisateur n'interagit qu'avec Movie Picker (HTTPS). L'application consomme **TMDB** (catalogue et affiches), **Resend** (e-mails transactionnels : réinitialisation de mot de passe), un **service Web Push** (notifications navigateur) et remonte des événements d'usage à **PostHog** — uniquement en production et après consentement. L'**observabilité** repose aujourd'hui sur des journaux JSON structurés corrélés (`CorrelationIdMiddleware`, renvoi §8-A09) et la supervision Cloud Run ; une remontée d'exceptions dédiée (Sentry) est identifiée comme axe d'amélioration (§11.5) et n'est donc pas représentée comme système en place.
+L'utilisateur n'interagit qu'avec Movie Picker (HTTPS). L'application consomme **TMDB** (catalogue et affiches), **Resend** (e-mails transactionnels : réinitialisation de mot de passe), un **service Web Push** (notifications navigateur) et remonte des événements d'usage à **PostHog** — uniquement en production et après consentement. L'**observabilité** repose sur des journaux JSON structurés corrélés (`CorrelationIdMiddleware`, renvoi §8-A09), la supervision Cloud Run, et une remontée d'exceptions dédiée vers **Sentry** (front + API, détail §8.1-A09) : à la différence de PostHog, elle tourne **sans bandeau de consentement**, au titre de l'intérêt légitime RGPD (finalité de sécurité, zéro donnée directement identifiante).
 
 ### 2.3 — C4 niveau 2 : conteneurs
 
@@ -183,7 +184,7 @@ flowchart LR
   CR --> WP["Service Web Push"]
 ```
 
-Le navigateur charge la SPA via **CloudFront/S3**, puis appelle l'**API** (`/api/v1`) en **cross-origin** avec cookie de session (`SameSite=None; Secure`, CORS `AllowCredentials` + allowlist d'origines). L'API lit/écrit dans **MongoDB Atlas**, interroge TMDB (clé côté serveur), envoie les e-mails via Resend, émet les notifications push, et récupère ses secrets depuis **Secret Manager** au déploiement. Le rendu de la SPA étant statique, aucun calcul serveur n'est requis pour l'affichage.
+Le navigateur charge la SPA via **CloudFront/S3**, puis appelle l'**API** (`/api/v1`) en **cross-origin** avec cookie de session (`SameSite=Lax; Secure` — front (`web.movie-picker.fr`) et API (`api.movie-picker.fr`) partagent le même eTLD+1, donc la requête reste *same-site* —, CORS `AllowCredentials` + allowlist d'origines). L'API lit/écrit dans **MongoDB Atlas**, interroge TMDB (clé côté serveur), envoie les e-mails via Resend, émet les notifications push, et récupère ses secrets depuis **Secret Manager** au déploiement. Le rendu de la SPA étant statique, aucun calcul serveur n'est requis pour l'affichage.
 
 ### 2.4 — C4 niveau 3 : composants de l'API (architecture hexagonale)
 
@@ -241,7 +242,7 @@ Le **Domaine** et l'**Application** ne connaissent ni MongoDB ni HTTP : l'Applic
 ├─ app/                composition applicative : components/, pages/ (routage, shell)
 ├─ features/           domaines fonctionnels : auth/, events/, movies/, notifications/, profile/
 ├─ shared/             transverse : api/ (client.ts), components/, hooks/, contexts/,
-│                                   analytics/, i18n/, types/, utils/
+│                                   analytics/, observability/ (Sentry), i18n/, seo/, types/, utils/
 └─ styles/ · test-utils/
 ```
 
@@ -254,7 +255,7 @@ Le **Domaine** et l'**Application** ne connaissent ni MongoDB ni HTTP : l'Applic
 | **Extensible** | Ports pour brancher de nouvelles implémentations (nouvelle BDD = 1 implémentation) · schéma Mongo souple · ajouter une fonctionnalité = 1 dossier `UseCases/` + 1 contrôleur. |
 | **Évolutive (livraison)** | Image Docker · CI/CD GitHub Actions · déploiement Cloud Run + S3/CloudFront automatisé (§4–§5). |
 
-> **Preuves de la section.** Arborescence réelle `apps/api-dotnet/MoviePicker.Api/` (Controllers · Application · Domain · Infrastructure) · `Program.cs` (pipeline middleware, `MapControllers`) · `Application/Ports/*.cs` (interfaces) · `apps/web/src/{app,features,shared}/` · synthèse fidèle de `archive/docs/RNCP/bloc-1-cadrage/10-architecture.md`.
+> **Preuves de la section.** Arborescence réelle `apps/api-dotnet/MoviePicker.Api/` (Controllers · Application · Domain · Infrastructure) · `Program.cs` (pipeline middleware, `MapControllers`) · `Application/Ports/*.cs` (interfaces) · `apps/web/src/{app,features,shared}/` · `Infrastructure/Web/MoviePickerCookieAuthenticationConfigurer.cs` (cookie `SameSite`/`Secure`) · `Infrastructure/Web/CorsPolicyBuilderExtensions.cs` (CORS `AllowCredentials` + allowlist).
 
 ---
 
@@ -266,7 +267,7 @@ Le **Domaine** et l'**Application** ne connaissent ni MongoDB ni HTTP : l'Applic
 
 | Outil | Version / précision (dépôt) | Rôle |
 |---|---|---|
-| Éditeur | VS Code / Cursor | édition, extensions TypeScript & C# |
+| Éditeur | VS Code / Cursor, assisté de **Claude Code** (CLI) | édition, extensions TypeScript & C# ; génération et revue de code assistées par IA |
 | Node.js | `^20.19 \|\| ^22.13 \|\| >=24` (champ `engines`) | exécution du *toolchain* front |
 | pnpm | **10.0.0** (champ `packageManager`) | gestionnaire de paquets & *workspace* |
 | .NET SDK | **10.0** (cible `net10.0`) | build & exécution de l'API |
@@ -277,7 +278,7 @@ La base de développement (`moviepicker_dev`) est **isolée de la production** p
 
 ### 3.2 — Monorepo & orchestration
 
-Le dépôt est un **monorepo pnpm** (`pnpm-workspace.yaml`) réunissant le front (`apps/web`), l'API (`apps/api-dotnet`) et les tests E2E (`e2e/` à la racine). **Turbo** (`turbo.json`) orchestre les tâches `build / lint / test / test:coverage` avec un **graphe de dépendances** (`^build`) et un **cache** des sorties (`dist/`, `coverage/`) : une seule commande à la racine (`pnpm run build|lint|test`) pilote les deux applications. Le script `dev:full` lance le front et l'API en parallèle (`concurrently`).
+Le dépôt est un **monorepo pnpm** réunissant le front (`apps/web`) et l'API (`apps/api-dotnet`) comme *workspaces* (`pnpm-workspace.yaml` : `apps/*`), plus les tests E2E (`e2e/` à la racine, dossier de specs autonome hors *workspace*). **Turbo** (`turbo.json`) orchestre les tâches `build / lint / test / test:coverage` avec un **graphe de dépendances** (`^build`) et un **cache** des sorties (`dist/`, `coverage/`) : une seule commande à la racine (`pnpm run build|lint|test`) pilote les deux applications. Le script `dev:full` lance le front et l'API en parallèle (`concurrently`).
 
 ### 3.3 — Gestion des sources
 
@@ -303,7 +304,7 @@ Deux filets de sécurité s'exécutent **avant même la CI** :
 | **Gestion de sources** | **Git + GitHub** (branche `master`, PR, GitHub Actions) |
 | **Conteneurisation** | Docker **multi-étages** : `sdk:10.0` (build → `dotnet publish -c Release`) → `aspnet:10.0` (runtime) ; images **épinglées par digest**, exécution **non-root** (`USER $APP_UID`) |
 
-> **Preuves de la section.** `package.json` (racine : `scripts`, `packageManager`, `engines`, `simple-git-hooks`) · `apps/web/package.json` (build `tsc -b && vite build`) · `scripts/verify-local.cjs` · `turbo.json` · `pnpm-workspace.yaml` · `apps/api-dotnet/MoviePicker.Api/Dockerfile` · `.github/workflows/ci-cd.yml`.
+> **Preuves de la section.** `package.json` (racine : `scripts`, `packageManager`, `engines`, `simple-git-hooks`) · `apps/web/package.json` (build `tsc -b && vite build`) · `scripts/verify-local.cjs` · `turbo.json` · `pnpm-workspace.yaml` · `apps/api-dotnet/MoviePicker.Api/Infrastructure/ServiceCollectionExtensions.cs` (garde-fou base dev/prod) · `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/ProductionStartupValidation.cs` · `apps/api-dotnet/MoviePicker.Api/Dockerfile` · `.github/workflows/ci-cd.yml`.
 
 ---
 
@@ -324,12 +325,14 @@ Deux filets de sécurité s'exécutent **avant même la CI** :
 flowchart TD
   T["PR ou push sur master"] --> CH["changes — path-filtering<br/>calcule les lanes web / api"]
   T --> GL["gitleaks — secret scan (toujours)"]
-  CH --> L["lint-web · lint-api · audit<br/>(par lane impactée)"]
-  L --> TESTS["test-web · test-api<br/>couverture ; gate back lignes ≥ 80%"]
+  CH --> LA["lint-web · lint-api · audit<br/>(par lane impactée, en parallèle)"]
+  CH --> TESTS["test-web · test-api<br/>couverture ; gate back lignes ≥ 80%"]
   TESTS --> SO["sonar — analyse + ingestion couverture<br/>(Quality Gate bloquant)"]
   CH --> NB["lighthouse · e2e Playwright<br/>(bloquants)"]
   SO --> GATE{{"pipeline vert ?"}}
   NB --> GATE
+  LA --> GATE
+  GL --> GATE
   GATE -->|push master| CD["→ §5 · docker-api → deploy-api / deploy-front"]
 ```
 
@@ -339,7 +342,7 @@ flowchart TD
 | `gitleaks` | toujours | scan de secrets sur l'arbre de travail | ✅ |
 | `lint-web` | lane web | `tsc` + ESLint + Prettier `--check` | ✅ |
 | `lint-api` | lane api | `dotnet format` + build `-warnaserror` + export OpenAPI (artefact) | ✅ |
-| `audit` | web ou api | `pnpm audit` (high+) + NuGet vulnérables (High/Critical) | ✅ |
+| `audit` | web ou api | Trivy *filesystem* (`pnpm-lock.yaml`, HIGH/CRITICAL) + NuGet vulnérables (High/Critical) | ✅ |
 | `test-web` | lane web | Vitest + seuils de couverture (cf. §6) | ✅ |
 | `test-api` | lane api | xUnit unitaires + intégration + **gate couverture lignes ≥ 80 %** | ✅ |
 | `sonar` | après `test-web`/`test-api` | analyse SonarCloud + Quality Gate (code nouveau) | ✅ |
@@ -351,7 +354,7 @@ flowchart TD
 **Toutes les portes de qualité sont bloquantes** : elles échouent le pipeline et **bloquent le déploiement** (les jobs `deploy-*` en dépendent via `needs:`).
 
 - **Build & style** : lint front (`tsc` + ESLint + Prettier), `dotnet format` + build `-warnaserror`.
-- **Sécurité** : `pnpm audit` (high+), NuGet High/Critical, scan Trivy de l'image (CRITICAL, et HIGH si un correctif existe — cf. §5).
+- **Sécurité** : Gitleaks (secrets, sur chaque run), Trivy *filesystem* sur les dépendances npm (HIGH/CRITICAL — a remplacé `pnpm audit`, indisponible depuis que npm a retiré l'ancien endpoint dont dépendait cette commande), NuGet High/Critical, scan Trivy de l'image (HIGH/CRITICAL, `ignore-unfixed` — cf. §5 ; ce réglage écarte un HIGH **ou** un CRITICAL tant qu'aucun correctif n'est publié, résiduel assumé plutôt qu'un blocage inconditionnel sur tout CRITICAL).
 - **Tests & couverture** : tests front (seuils de couverture), tests API unitaires **et** d'intégration, **gate de couverture back ≥ 80 %**.
 - **Recette & qualité continue** : **E2E Playwright** (cahier de recettes, §10), **Lighthouse** (seuils perf/a11y, §6.3) et le **Quality Gate SonarCloud** (§6.2).
 
@@ -361,7 +364,7 @@ Le risque de *flake* est **maîtrisé plutôt qu'évité** : Lighthouse statue s
 
 Le workflow applique des mesures anti *supply-chain* (reprises en §8-A08) : **actions épinglées par SHA de commit** (commentaire `# vX` pour laisser Dependabot proposer les mises à jour), **images Docker épinglées par digest `sha256`**, `persist-credentials: false` au *checkout*, **secrets passés via `env:`** (jamais interpolés dans un bloc `run:`), et des **caches** Turbo / pnpm / NuGet / Trivy / Sonar pour la rapidité.
 
-> **Preuves de la section.** `.github/workflows/ci-cd.yml` (jobs `changes`, `lint-*`, `audit`, `test-*`, `sonar`, `e2e`, `lighthouse`) · actions composites `.github/actions/setup-web/action.yml` et `.github/actions/setup-dotnet-cache/action.yml`.
+> **Preuves de la section.** `.github/workflows/ci-cd.yml` (jobs `changes`, `gitleaks`, `lint-*`, `audit`, `test-*`, `sonar`, `e2e`, `lighthouse`) · actions composites `.github/actions/setup-web/action.yml` et `.github/actions/setup-dotnet-cache/action.yml`.
 
 ---
 
@@ -387,8 +390,8 @@ flowchart TD
 
 ### 5.3 — API → Cloud Run
 
-1. **`docker-api`** — build **buildx** de l'image (avec cache de *layers* GHA) ; **scan Trivy** (bloque sur `CRITICAL`, et sur `HIGH` si un correctif amont existe — `ignore-unfixed`) **avant** toute publication ; **push** vers **Artifact Registry** avec pour tag le **SHA de commit** (`…/api:${github.sha}`) — image traçable et adressable pour le rollback ; génération d'un **SBOM CycloneDX** archivé en artefact (30 j).
-2. **`deploy-api`** — `gcloud run deploy` (région **`europe-west1`**, `--platform managed`). Les secrets (`MONGODB_URI`, `TMDB_API_KEY`, `AUTH_DATAPROTECTION_KEYRING`, `VAPID_PUBLIC/PRIVATE_KEY`) sont injectés depuis **Secret Manager** (`--set-secrets …:latest`), jamais dans l'image ni le dépôt ; `ALLOWED_ORIGINS` (CORS) passe en variable. Un **smoke test** `GET /health` (avec *retries*) valide la mise en service et **échoue le déploiement** si la réponse n'est pas `status=ok`.
+1. **`docker-api`** — build **buildx** de l'image (avec cache de *layers* GHA) ; **scan Trivy** (HIGH/CRITICAL, `ignore-unfixed` — écarte un HIGH **ou** un CRITICAL tant qu'aucun correctif n'est publié) **avant** toute publication ; **push** vers **Artifact Registry** avec pour tag le **SHA de commit** (`…/api:${github.sha}`) — image traçable et adressable pour le rollback ; génération d'un **SBOM CycloneDX** archivé en artefact (30 j).
+2. **`deploy-api`** — `gcloud run deploy` (région **`europe-west1`**, `--platform managed`). Les secrets (`MONGODB_URI`, `TMDB_API_KEY`, `AUTH_DATAPROTECTION_KEYRING`, `VAPID_PUBLIC/PRIVATE_KEY`, `SENTRY_DSN`, `RESEND_API_KEY`) sont injectés depuis **Secret Manager** (`--set-secrets …:latest`), jamais dans l'image ni le dépôt ; `ALLOWED_ORIGINS` (CORS), `EMAIL_PROVIDER`, `SENTRY_ENVIRONMENT`/`SENTRY_RELEASE` passent en variables. Un **smoke test** `GET /health` (avec *retries*) valide la mise en service et **échoue le déploiement** si la réponse n'est pas `status=ok`.
 
 ### 5.4 — Front → S3 + CloudFront
 
@@ -426,7 +429,7 @@ Les seuils sont des **planchers** qui font échouer la CI en cas de régression 
 
 ### 6.2 — Quality Gate SonarCloud
 
-L'analyse SonarCloud s'exécute à chaque PR / push `master` (§4) et ingère la couverture front **et** back. Le **Quality Gate** (profil *Sonar way*, appliqué au **code nouveau**) est **au vert** (13/07/2026) :
+L'analyse SonarCloud s'exécute à chaque PR / push `master` (§4, hors PR ouvertes par Dependabot — sans accès aux secrets du dépôt) et ingère la couverture front **et** back. Le **Quality Gate** (profil *Sonar way*, appliqué au **code nouveau**) est **au vert** (13/07/2026) :
 
 | Condition (code nouveau) | Seuil | Valeur | Statut |
 |---|---|---|:--:|
@@ -435,7 +438,7 @@ L'analyse SonarCloud s'exécute à chaque PR / push `master` (§4) et ingère la
 | Fiabilité / Sécurité / Maintenabilité | A | A / A / A | ✅ |
 | Hotspots de sécurité revus | 100 % | 100 % | ✅ |
 
-Ce Quality Gate est **bloquant** dans la CI (§4.3) : le job `sonar` lance `sonarscanner end` avec `sonar.qualitygate.wait=true`, et un Quality Gate rouge **fait échouer le pipeline et bloque le déploiement**. Portant sur le **code nouveau** (conditions déterministes), il reste robuste au *flake*.
+Ce Quality Gate est **bloquant** dans la CI (§4.3) : le job `sonar` lance `sonarscanner begin` avec `sonar.qualitygate.wait=true`, et c'est l'étape `sonarscanner end` qui échoue si le Quality Gate est rouge — **le pipeline échoue et le déploiement est bloqué**. Portant sur le **code nouveau** (conditions déterministes), il reste robuste au *flake*.
 
 ![Tableau de bord SonarCloud — Quality Gate « Passed »](captures/07-sonar-quality-gate.png)
 
@@ -456,15 +459,15 @@ Le job CI `lighthouse` est **bloquant** (rapport conservé en artefact) : il sta
 
 ### 6.4 — Sécurité (0 vulnérabilité High/Critical)
 
-Quatre filets complémentaires garantissent l'absence de vulnérabilité **High/Critical** (détail des mesures OWASP en §8) :
+Trois filets complémentaires garantissent l'absence de vulnérabilité **High/Critical** (détail des mesures OWASP en §8) :
 
-- **`pnpm audit --audit-level=high`** (dépendances npm) et **`dotnet list package --vulnerable`** (NuGet, High/Critical) — bloquants en CI.
-- **Trivy** — scan de l'**image** Docker avant push (§5) **et** scan **filesystem** des *lockfiles*.
-- **Gitleaks** — scan de secrets sur l'arbre de travail (§4), à chaque run.
+- **`dotnet list package --vulnerable`** (NuGet, High/Critical) — bloquant en CI.
+- **Trivy** — trois usages : scan **filesystem** des dépendances npm (job `audit`, a remplacé `pnpm audit` devenu indisponible — npm a retiré l'endpoint dont dépendait cette commande), scan de l'**image** Docker avant push (§5), et scan **filesystem** hebdomadaire de l'ensemble du dépôt.
+- **Gitleaks** — scan de secrets sur l'arbre de travail (§4), à chaque run — désormais bloquant pour le déploiement (job `docker-api` / `deploy-front` en dépendent via `needs:`).
 
 Ces contrôles tournent en CI (§4) **et** via un **scan hebdomadaire planifié** (`security-scan.yml`, lundi) qui attrape les CVE divulguées **entre deux mises à jour Dependabot**.
 
-> **Preuves de la section.** `apps/web/vitest.config.ts` (seuils de couverture) · `.github/workflows/ci-cd.yml` (gate back ≥ 80 %, job `sonar`) · `scripts/lighthouse-run.mjs` + `configs/lighthouse-budgets.json` · `.github/workflows/security-scan.yml` · tableau de bord SonarCloud (Quality Gate « Passed », cf. Figure 7).
+> **Preuves de la section.** `apps/web/vitest.config.ts` (seuils de couverture) · `.github/workflows/ci-cd.yml` (gate back ≥ 80 %, jobs `sonar`, `audit`, `docker-api`, `gitleaks`) · `scripts/lighthouse-run.mjs` + `configs/lighthouse-budgets.json` · `.github/workflows/security-scan.yml` · tableau de bord SonarCloud (Quality Gate « Passed », cf. Figure 7).
 
 ---
 
@@ -476,11 +479,11 @@ Ces contrôles tournent en CI (§4) **et** via un **scan hebdomadaire planifié*
 
 | Harnais | Outils | Fichiers | Portée |
 |---|---|:--:|---|
-| **Front** | Vitest + React Testing Library + `user-event` + `jest-dom` · MSW (mock réseau) · `vitest-axe` (a11y) | **87** `*.test.{ts,tsx}` | composants, hooks, utilitaires, i18n, accessibilité |
-| **API — unitaires** | xUnit | **116** `*Tests.cs` | miroir de l'archi : `Domain/`, `UseCases/` (1 par cas d'usage), `Infrastructure/`, `Web/` |
-| **API — intégration** | xUnit + `WebApplicationFactory` (`MoviePickerApplicationFactory`) | **19** `*Tests.cs` | endpoints bout-en-bout : `AuthEndpointsTests`, `CriticalPathTests`, `OpenApiContractTests`, `RateLimitingTests`, `ErrorEnvelopeAndCorrelationIdTests`… |
+| **Front** | Vitest + React Testing Library + `user-event` + `jest-dom` · MSW (mock réseau) · `vitest-axe` (a11y) | **89** `*.test.{ts,tsx}` | composants, hooks, utilitaires, i18n, accessibilité |
+| **API — unitaires** | xUnit | **118** `*Tests.cs` | miroir de l'archi : `Controllers/`, `Application/`, `Domain/`, `UseCases/` (1 par cas d'usage), `Infrastructure/Web/` |
+| **API — intégration** | xUnit + `WebApplicationFactory` (`MoviePickerApplicationFactory`) | **20** `*Tests.cs` | endpoints bout-en-bout : `AuthEndpointsTests`, `CriticalPathTests`, `OpenApiContractTests`, `RateLimitingTests`, `ErrorEnvelopeAndCorrelationIdTests`… |
 
-Répartition front (extrait) : `shared/utils` 18 · `features/events` 17 · `features/movies` 12 · `features/profile` 7 · `features/auth` 7. Les tests s'exécutent **sans base réelle** (`MONGODB_URI` vide → dépôts *InMemory*), donc **déterministes et rapides** (§3–§4).
+Répartition front (extrait) : `shared/utils` 18 · `features/events` 18 · `features/movies` 12 · `features/profile` 7 · `features/auth` 7. Les tests s'exécutent **sans base réelle** (`MONGODB_URI` vide → dépôts *InMemory*), donc **déterministes et rapides** (§3–§4).
 
 ### 7.2 — Exemple front (Vitest + React Testing Library)
 
@@ -552,21 +555,21 @@ La couverture (détaillée en §6) satisfait le critère « couvre la majorité 
 
 ## §8 — Sécurité : couverture OWASP Top 10 (2021)
 
-> **Compétence C2.2.3 (éliminatoire)** — *Développer le logiciel en veillant à … la sécurisation du code source …* Chaque risque du **Top 10 OWASP 2021** est adressé par une ou plusieurs mesures concrètes, référencées par `fichier:ligne`. Aucune ligne n'est vide ; les **résiduels assumés** sont explicités en §8.4.
+> **Compétence C2.2.3 (éliminatoire)** — *Développer le logiciel en veillant à … la sécurisation du code source …* Chaque risque du **Top 10 OWASP 2021** est adressé par une ou plusieurs mesures concrètes, référencées par `fichier:ligne`. Aucune ligne n'est vide ; le **résiduel assumé** est explicité en §8.4.
 
 ### 8.1 — Tableau de couverture A01 → A10
 
 | Risque OWASP 2021 | Mesures dans le projet | Référence |
 |---|---|---|
-| **A01 — Broken Access Control** | Compte obligatoire (pas d'invité anonyme) ; auth par cookie de session, `401`/`403` renvoyés en JSON ; autorisation hôte par **jeton dédié** (cookie `moviepicker_host`) ; CORS en **allowlist stricte** + `AllowCredentials` | `MoviePickerCookieAuthenticationConfigurer.cs:27,43-62` · `CorsPolicyBuilderExtensions.cs:17,26-33` · `HostTokenAccessor.cs:9` |
+| **A01 — Broken Access Control** | Compte obligatoire (pas d'invité anonyme) ; auth par cookie de session, `401`/`403` renvoyés en JSON ; autorisation hôte par **jeton dédié** (cookie `moviepicker_host`) ; CORS en **allowlist stricte** + `AllowCredentials` ; cookie de session en **`SameSite=Lax`** (front/API *same-site* sur `movie-picker.fr`) — protection CSRF native contre les requêtes cross-*site* ; en complément, toute mutation exige un **corps JSON**, ce qui déclenche un *preflight* CORS refusé hors allowlist (y compris `wheel`/`close`, alignés sur le reste de l'API) | `MoviePickerCookieAuthenticationConfigurer.cs:27,43-62` · `CorsPolicyBuilderExtensions.cs:17,26-33` · `HostTokenAccessor.cs:9` · `EventsController.cs:160,189` (`CsrfGuardRequest`) |
 | **A02 — Cryptographic Failures** | Mots de passe hachés via Identity `PasswordHasher<User>` (PBKDF2 salé) ; cookies `HttpOnly` + `Secure` ; ticket chiffré (Data Protection, keyring `AUTH_DATAPROTECTION_KEYRING`) ; jetons de reset **stockés hachés** | `ServiceCollectionExtensions.cs:61` · `MoviePickerCookieAuthenticationConfigurer.cs:27,39` · `RequestPasswordResetHandler.cs:67-71` |
 | **A03 — Injection** | Accès MongoDB par **filtres typés** `Builders<T>` / lambdas (aucune requête concaténée → pas d'injection NoSQL) ; validation d'entrée centralisée → `400` JSON | `MongoMovieRepository.cs:22,45-47` · `ValidationErrorFilter.cs` |
 | **A04 — Insecure Design** | Rate limiting (22 politiques *fenêtre fixe* par IP) ; quotas de soirée ; **slugs opaques** ; secrets externalisés ; isolation base dev/prod | `RateLimitingExtensions.cs:81-102` · `Domain/Services/SlugGenerator.cs` · `ServiceCollectionExtensions.cs:174` |
-| **A05 — Security Misconfiguration** | En-têtes API (`nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`, CSP `default-src 'none'`) ; **CSP du front SPA** injectée au build ; en-tête serveur Kestrel retiré ; validation de démarrage en prod | `SecurityHeadersMiddleware.cs:8-16` · `apps/web/vite.config.ts` (plugin `moviepicker-csp-meta`) · `Program.cs:13,66` |
-| **A06 — Vulnerable & Outdated Components** | Dependabot mensuel groupé (npm, GitHub Actions, NuGet, **digests Docker**) ; CI `pnpm audit` + `dotnet list --vulnerable` + Trivy ; scan hebdomadaire | `.github/dependabot.yml` · `ci-cd.yml` (`audit`, `docker-api`) · `security-scan.yml` |
+| **A05 — Security Misconfiguration** | En-têtes API (`nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`, CSP `default-src 'none'`) ; **CSP du front SPA** injectée au build ; en-tête serveur Kestrel retiré ; validation de démarrage en prod | `SecurityHeadersMiddleware.cs:8-16` · `apps/web/vite.config.ts` (plugin `moviepicker-csp-meta`) · `Program.cs:14,87` |
+| **A06 — Vulnerable & Outdated Components** | Dependabot mensuel groupé (npm, GitHub Actions, NuGet, **digests Docker**) ; CI Trivy *filesystem* (npm) + `dotnet list --vulnerable` (NuGet) + Trivy image ; scan hebdomadaire | `.github/dependabot.yml` · `ci-cd.yml` (`audit`, `docker-api`) · `security-scan.yml` |
 | **A07 — Identification & Auth Failures** | Rate limit login (30/min) & register (10/min) ; reset **anti-énumération** (réponse identique, *throttle* 60 s, jeton 30 min) ; hachage Identity ; session glissante 14 j | `RateLimitingExtensions.cs:85-87` · `RequestPasswordResetHandler.cs:45-65` |
 | **A08 — Software & Data Integrity** | Actions CI épinglées par **SHA** ; images Docker par **digest** ; Gitleaks ; **SBOM** CycloneDX ; `pnpm --frozen-lockfile` | `ci-cd.yml` (`gitleaks`, `docker-api`) · `Dockerfile:11,20` |
-| **A09 — Security Logging & Monitoring** | Logs HTTP **JSON structurés** + `correlation id` par requête ; **masquage e-mail** dans les logs ; console JSON en prod | `StructuredHttpRequestLoggingMiddleware.cs` · `CorrelationIdMiddleware.cs` · `Program.cs:18-26,70,81` |
+| **A09 — Security Logging & Monitoring** | Logs HTTP **JSON structurés** + `correlation id` par requête ; **masquage e-mail** dans les logs ; console JSON en prod ; remontée d'exceptions **Sentry** (front + API), activée uniquement si un DSN est fourni, **zéro PII** (IP/e-mail/username *scrubbés* côté client **et** serveur) | `StructuredHttpRequestLoggingMiddleware.cs` · `CorrelationIdMiddleware.cs` · `Program.cs:36-48,91` · `Application/UseCases/Auth/EmailMasking.cs` (masquage e-mail) · `Program.cs:16-34` (init Sentry API) · `MoviePickerExceptionFilter.cs:48` (capture explicite des 500) · `apps/web/src/shared/observability/sentry.ts` |
 | **A10 — SSRF** | Proxy d'affiches : seules les URL **HTTPS** vers l'hôte **`image.tmdb.org`** (chemin `/t/p/`) sont acceptées, sinon rejet ; le client ne manipule qu'une **clé opaque** (SHA-256), jamais d'URL arbitraire | `TmdbPosterUrlNormalizer.cs:50-73` |
 
 ### 8.2 — Extraits représentatifs
@@ -612,13 +615,11 @@ options.AddPolicy(AuthDeleteAccountPolicy,        ctx => CreateFixedWindow(ctx, 
 
 Au-delà des en-têtes posés par l'API, le front applique sa propre **CSP injectée au build** (plugin Vite `moviepicker-csp-meta`, `apps/web/vite.config.ts`) : `default-src 'self'`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, et un `connect-src` **dérivé de `VITE_API_URL`** (+ PostHog, TMDB) — l'application ne peut donc émettre de requêtes que vers son API et les services attendus.
 
-### 8.4 — Résiduels assumés (honnêteté vis-à-vis du jury)
+### 8.4 — Résiduel assumé (honnêteté vis-à-vis du jury)
 
-- **CSRF** : l'auth par cookie impose `SameSite=None` en production (front CloudFront et API Cloud Run *cross-origin*), ce qui n'offre pas en soi de protection CSRF ; la mitigation retenue est **structurelle** — toute mutation à **corps JSON** (`[FromBody]`) déclenche un *preflight* CORS **refusé** hors allowlist. C'était le cas de la quasi-totalité des mutations (vote, ajout, « déjà vu », note, config…), à l'exception de deux actions hôte en **POST sans corps** (`POST …/wheel`, `POST …/close`), des requêtes « simples » non soumises au preflight. **Identifié en auto-revue et corrigé** (commit `36690e6`, détail **§11.4**) : ces deux endpoints exigent désormais un corps JSON (`CsrfGuardRequest`), alignés sur le reste de l'API ; une requête sans corps échoue en **415** (testé).
 - **`frame-ancestors` du front** (anti-*clickjacking*) relève d'un **en-tête de réponse CloudFront**, non exprimable via `<meta>` ; côté API la directive est bien posée (`frame-ancestors 'none'`).
-- **Observabilité** : remontée d'exceptions dédiée (Sentry) non encore branchée — actuellement logs structurés + corrélation (§11.5).
 
-> **Preuves de la section.** `SecurityHeadersMiddleware.cs` · `MoviePickerCookieAuthenticationConfigurer.cs` · `CorsPolicyBuilderExtensions.cs` · `RateLimitingExtensions.cs` · `ValidationErrorFilter.cs` · `TmdbPosterUrlNormalizer.cs` · `Application/UseCases/Auth/PasswordReset/RequestPasswordResetHandler.cs` · `apps/web/vite.config.ts` · `.github/dependabot.yml` · `.github/workflows/{ci-cd,security-scan}.yml`.
+> **Preuves de la section.** `SecurityHeadersMiddleware.cs` · `MoviePickerCookieAuthenticationConfigurer.cs` · `CorsPolicyBuilderExtensions.cs` · `HostTokenAccessor.cs` · `Infrastructure/ServiceCollectionExtensions.cs` · `Infrastructure/Persistence/Mongo/MongoMovieRepository.cs` · `ValidationErrorFilter.cs` · `RateLimitingExtensions.cs` · `Domain/Services/SlugGenerator.cs` · `Application/UseCases/Auth/PasswordReset/RequestPasswordResetHandler.cs` · `Application/UseCases/Auth/EmailMasking.cs` · `Dockerfile` · `TmdbPosterUrlNormalizer.cs` · `EventsController.cs:160,189` + `Application/DTOs/CsrfGuardRequest.cs` · `Program.cs` · `MoviePickerExceptionFilter.cs:48` · `apps/web/src/shared/observability/sentry.ts` · `apps/web/vite.config.ts` · `.github/dependabot.yml` · `.github/workflows/{ci-cd,security-scan}.yml`.
 
 ---
 
@@ -634,10 +635,10 @@ Le référentiel retenu est le **RGAA 4.1** (Référentiel général d'améliora
 
 | Thème | Mesures | Référence |
 |---|---|---|
-| **Navigation clavier** | Lien d'évitement (1re cible tabulable) vers le landmark principal ; menus en *disclosure* avec **retour de focus sur Échap** et fermeture au clic extérieur | `AppShell.tsx:67` → `PageLayout.tsx:13` · `useMenuFocus.ts:18-19` · `useClickOutside.ts:17` |
+| **Navigation clavier** | Lien d'évitement (1re cible tabulable) vers le landmark principal ; menus en *disclosure* avec **retour de focus sur Échap** et fermeture au clic extérieur | `AppShell.tsx:67` → `PageLayout.tsx:13` · `useMenuFocus.ts:18-19` · `useClickOutside.ts:13-14` |
 | **Gestion du focus** | `:focus-visible` sur les éléments interactifs (boutons, liens) ; landmark principal `tabIndex={-1}` (cible du *skip link*) ; utilitaire `.visually-hidden` pour le texte lecteur d'écran | `styles/02-forms-and-content.css:69,181` · `styles/01-foundation.css:249` |
-| **ARIA & sémantique** | Landmarks `header` / `nav` (avec `aria-label`) / `main` / `footer` ; icônes décoratives `aria-hidden="true" focusable="false"` ; messages d'erreur `role="alert"` ; chargements `role="status" aria-live="polite"` | `AppShell.tsx:70-108` · `Skeleton.tsx:45` · `LoginPage.tsx:68` (et pages formulaires) |
-| **Contraste & confort** | Thèmes clair/sombre ; contrastes conformes (Lighthouse a11y ≥ 95, §6) ; `prefers-reduced-motion` respecté sur les animations ; attribut **`lang` dynamique** selon la locale | `Tooltip/Skeleton/AddMovieForm.module.css` · `LocaleContext.tsx:63` |
+| **ARIA & sémantique** | Landmarks `header` / `nav` (avec `aria-label`) / `main` / `footer` ; icônes décoratives `aria-hidden="true" focusable="false"` ; messages d'erreur `role="alert"` ; chargements `role="status" aria-live="polite"` | `AppShell.tsx:46,70-108` · `PageLayout.tsx:13` · `Footer.tsx:54` · `Skeleton.tsx:45` · `LoginPage.tsx:68` (et pages formulaires) |
+| **Contraste & confort** | Thèmes clair/sombre ; contrastes conformes (Lighthouse a11y ≥ 95, §6) ; `prefers-reduced-motion` respecté sur les animations CSS **et** sur l'animation *canvas* de la roue (résultat affiché directement, sans les 7,5 s de tirage, si la préférence système est active) ; attribut **`lang` dynamique** selon la locale | `Tooltip/Skeleton/AddMovieForm.module.css` · `SpinningWheel.tsx` (`matchMedia('(prefers-reduced-motion: reduce)')`) · `LocaleContext.tsx:63` |
 
 Extrait — lien d'évitement pointant vers le landmark principal focusable :
 
@@ -660,9 +661,8 @@ Extrait — lien d'évitement pointant vers le landmark principal focusable :
 
 - Les outils automatiques (`axe`, Lighthouse) ne couvrent **qu'une partie** des critères WCAG/RGAA (ordre de lecture, pertinence réelle des libellés, parcours lecteur d'écran complet relèvent de l'**audit manuel**, non exhaustif ici).
 - Aucune **déclaration de conformité RGAA** formelle (audit tiers) n'a été produite — hors périmètre d'un projet solo.
-- L'animation de la **roue** sous `prefers-reduced-motion` : **identifié en auto-revue et corrigé** (commit `36690e6`, détail **§11.4**) — le tirage affiche désormais son résultat directement, sans jouer l'animation canvas (7,5 s), quand la préférence système est active.
 
-> **Preuves de la section.** `apps/web/src/app/pages/a11y.test.tsx` · `apps/web/src/app/components/AppShell.tsx` · `apps/web/src/shared/components/PageLayout.tsx` · `apps/web/src/shared/hooks/useMenuFocus.ts` · `apps/web/src/styles/{01-foundation,02-forms-and-content}.css` · `apps/web/src/shared/i18n/LocaleContext.tsx`.
+> **Preuves de la section.** `apps/web/src/app/pages/a11y.test.tsx` · `apps/web/src/app/components/AppShell.tsx` · `apps/web/src/shared/components/PageLayout.tsx` · `apps/web/src/shared/hooks/useMenuFocus.ts` · `apps/web/src/styles/{01-foundation,02-forms-and-content}.css` · `apps/web/src/features/events/components/SpinningWheel.tsx` + `SpinningWheel.test.tsx` · `apps/web/src/shared/i18n/LocaleContext.tsx`.
 
 ---
 
@@ -683,9 +683,9 @@ Les recettes sont pilotées par **Playwright** (`playwright.config.ts`, `testDir
 
 | ID | Scénario | Préconditions | Étapes (résumé) | Résultat attendu | Test |
 |---|---|---|---|---|---|
-| **R1** | Parcours critique complet (US-1→5) | 2 navigateurs (hôte + invité) | l'hôte s'inscrit, crée la soirée (titre/date/heure) → obtient un `slug` ; l'invité s'inscrit, rejoint `/e/:slug`, recherche et **propose** un film ; l'hôte **lance la roue** | soirée sur `/e/:slug`, film visible côté hôte, « film sélectionné » puis « **film gagnant** » | `critical-flow.spec.ts` |
+| **R1** | Parcours critique complet (US-1,2,3,5 — le vote US-4 est couvert par R2) | 2 navigateurs (hôte + invité) | l'hôte s'inscrit, crée la soirée (titre/date/heure) → obtient un `slug` ; l'invité s'inscrit, rejoint `/e/:slug`, recherche et **propose** un film ; l'hôte **lance la roue** (sans vote préalable) | soirée sur `/e/:slug`, film visible côté hôte, « film sélectionné » puis « **film gagnant** » | `critical-flow.spec.ts` |
 | **R2** | Vote + roue + annulation (US-4,5) | hôte connecté | crée une soirée, propose un film, **vote**, lance la roue, ferme, **annule le tirage** | « retirer mon vote » visible, gagnant affiché, annulation → « **Lancer la roue** » de nouveau | `vote-and-wheel.spec.ts` |
-| **R3** | Rejoindre via lien + `returnTo` (US-2) | compte existant | s'inscrit, se déconnecte, tente `/new` (protégée) → redirigé `/login?returnTo=`, se reconnecte | **retour automatique sur `/new`** après connexion | `auth-flows.spec.ts` |
+| **R3** | Mécanisme `returnTo` sur route protégée (générique à US-2, rejoindre via lien) | compte existant | s'inscrit, se déconnecte, tente `/new` (protégée) → redirigé `/login?returnTo=`, se reconnecte | **retour automatique sur `/new`** après connexion | `auth-flows.spec.ts` |
 | **R4** | Suppression de compte (RGPD) | hôte connecté | Réglages → « Supprimer mon compte » → **confirme le mot de passe** → « Supprimer définitivement » | redirigé vers `/login` ; une page protégée redemande la connexion | `auth-flows.spec.ts` |
 | **R5** | Suivre un ami puis l'inviter (social) | 2 navigateurs | l'ami expose son profil public `/u/:handle` ; l'hôte le **suit**, crée une soirée, ouvre « Inviter des amis », **invite** l'ami | « Ne plus suivre » puis « **Invité ✓** » | `social.spec.ts` |
 | **R6** | Protection des routes (sécurité) | non connecté | accède directement à `/new` | redirection `/login?returnTo=` + bouton « Se connecter » | `critical-flow.spec.ts` |
@@ -727,9 +727,10 @@ Le cahier de recettes **couvre l'ensemble des fonctionnalités**, en les testant
 | Suppression de compte (RGPD) | **E2E** | R4 |
 | Profil public · suivre · inviter | **E2E** | R5 |
 | Clôture · expulsion d'un participant · suppression de film | Unitaire (cas d'usage) | `CloseEvent/` · `RemoveParticipant/` · `DeleteMovie/…HandlerTests` |
-| Configuration hôte (thème, quota, échéance, type de roue) | Unitaire | `EventConfiguration/{Patch,Get}EventConfigHandlerTests` |
+| Configuration hôte (thème, quota, type de roue) | Unitaire | `EventConfiguration/{Patch,Get}EventConfigHandlerTests` |
+| Configuration hôte — échéance (`EndDate`) | Intégration | `EventConfigEndpointsTests` (`PatchConfig_InvalidEndDate_Returns400`) |
 | « Déjà vu » · retrait de vote · note de pitch | Unitaire | `SeenMarks/` · `VoteMovie/ClearMovieVote` · `SetMoviePitchNote/` |
-| Mot de passe oublié (réinitialisation par e-mail) | Unitaire + intégration | `Auth/PasswordReset/*HandlerTests` · `AuthEndpointsTests` |
+| Mot de passe oublié (réinitialisation par e-mail) | Unitaire + intégration | `Auth/PasswordReset/*HandlerTests` · `PasswordResetEndpointsTests` |
 | Export de données personnelles (RGPD) | Unitaire | `Auth/ExportUserDataHandlerTests` |
 | Notifications in-app · préférences · abonnement push | Unitaire | `Notifications/*HandlersTests` |
 | Export `.ics` · historique de recherche · filtres & tri | Unitaire (front) | `AddToCalendarButton` · `useSearchHistory` · `MovieSearchFiltersPanel`.test |
@@ -749,7 +750,7 @@ Cette **stratification est assumée** : elle évite de gonfler une suite E2E (le
 
 | Étape | Outil / artefact | Trace produite |
 |---|---|---|
-| 1. **Consignation** | Issue **imposée par template** `bug_report.yml` (`blank_issues_enabled: false`) | issue `[Bug] …`, labels **`bug` + `triage`** |
+| 1. **Consignation** | Issue **imposée par template** `bug_report.yml` ; `config.yml` (`blank_issues_enabled: false`) interdit les issues libres | issue `[Bug] …`, labels **`bug` + `triage`** |
 | 2. **Qualification** | Champs requis : contexte, étapes de repro, attendu, observé, **Sévérité** (`critical`/`high`/`medium`/`low`) | issue triée |
 | 3. **Correction** | Branche `fix/…`, **commit conventionnel** `fix(scope): …` | historique Git |
 | 4. **Revue** | PR (`PULL_REQUEST_TEMPLATE.md`) : `Closes #`, type de changement, **checklist** (`verify:local`, lint/format, tests, doc, CHANGELOG) | Pull Request |
@@ -777,9 +778,9 @@ La démarche est constante : **reproduire** (les étapes de l'issue, ou le test 
 
 Cet incident illustre le cycle complet **détecter → qualifier → corriger → vérifier → historiser**, et a nourri en retour un **garde-fou** : la CSP est désormais construite et vérifiée au build (plus de dérive silencieuse `img-src`/`connect-src`).
 
-### 11.4 — Résidus identifiés en auto-revue, corrigés avant restitution
+### 11.4 — Autres corrections tracées : sécurité et accessibilité
 
-Deux limites honnêtement documentées plus haut (§8.4, §9.4) ont été closes pendant la préparation de ce dossier, en suivant le même processus qu'en §11.1–§11.2 :
+Deux anomalies supplémentaires, détectées par revue de sécurité et d'accessibilité du code, ont été corrigées en suivant le même processus qu'en §11.1–§11.2 :
 
 | | CSRF sur `wheel` / `close` (§8.4) | Animation de la roue & `prefers-reduced-motion` (§9.4) |
 |---|---|---|
@@ -791,11 +792,10 @@ Deux limites honnêtement documentées plus haut (§8.4, §9.4) ont été closes
 
 ### 11.5 — Axes d'amélioration restants
 
-Trois axes identifiés mais non traités dans le périmètre de ce dossier — charge disproportionnée pour un projet solo en V1, sans impact sur les critères d'évaluation :
+Deux axes identifiés mais non traités dans le périmètre de ce dossier — charge disproportionnée pour un projet solo en V1, sans impact sur les critères d'évaluation :
 
 | Axe | Contexte | Effort |
 |---|---|---|
-| **Observabilité applicative (Sentry)** | Remontée d'exceptions dédiée ; aujourd'hui logs structurés + `correlation id` (§8.1, A09) | Faible (SDK + DSN) |
 | **Rollback front outillé** | `rollback.yml` couvre l'API (Cloud Run) ; le front (S3/CloudFront) n'a pas d'équivalent versionné (§5.5) | Moyen (versionner les builds S3) |
 | **Déploiement progressif (canary)** | Déploiement direct 100 % assumé en V1 (§5.5) ; la plateforme Cloud Run le permettrait sans refonte | Moyen (découpage du trafic Cloud Run) |
 
@@ -842,17 +842,20 @@ Six versions **taguées** (`v0.1.0` → `v1.3.1`) jalonnent ~5 mois d'évolution
 |---|---|---|
 | **API — secrets** (Secret Manager → `--set-secrets`) | `MONGODB_URI` | Connexion MongoDB Atlas |
 | | `TMDB_API_KEY` | Clé TMDB (serveur uniquement) |
-| | `AUTH_DATAPROTECTION_KEYRING` | Keyring Data Protection (cookie de session, partagé entre révisions) — généré via `apps/api-dotnet/ToolGenDpKey` |
+| | `AUTH_DATAPROTECTION_KEYRING` | Repli **dev uniquement** (généré via `apps/api-dotnet/ToolGenDpKey`) — en production `MONGODB_URI` est toujours renseigné, donc les clés Data Protection sont automatiquement persistées dans MongoDB (`MongoXmlRepository`), partagées entre révisions sans ce secret |
 | | `RESEND_API_KEY` | E-mails transactionnels (reset) |
+| | `SENTRY_DSN` | Suivi d'erreurs API (§8.1-A09) |
 | | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | Paire ECDH P-256 (Web Push) |
 | **API — variable** | `ALLOWED_ORIGINS` | Origines CORS (virgules, sans slash) — **obligatoire hors `Development`** |
+| | `EMAIL_PROVIDER` | `resend` en production (sinon repli `log`, défaut si absent) |
 | **Front — au build** | `VITE_API_URL` | URL racine de l'API (sans `/api/v1`) |
 | | `VITE_POSTHOG_KEY` | Clé projet PostHog |
-| **CI (GitHub Actions)** | `GCP_SA_KEY`, `GCP_PROJECT_ID` · `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_S3_BUCKET` · vars `AWS_REGION`, `AWS_CLOUDFRONT_DISTRIBUTION_ID` | Identifiants de déploiement |
+| | `VITE_SENTRY_DSN`, `SENTRY_AUTH_TOKEN` | Suivi d'erreurs front + upload des *source maps* (CI) |
+| **CI (GitHub Actions)** | `GCP_SA_KEY`, `GCP_PROJECT_ID` · `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_S3_BUCKET` · vars `AWS_REGION`, `AWS_CLOUDFRONT_DISTRIBUTION_ID`, `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_URL` | Identifiants de déploiement |
 
-*La clé publique VAPID n'est pas une variable front : le navigateur la récupère via `GET /api/v1/notifications/vapid-public-key`. `EMAIL_PROVIDER=log` (défaut) journalise l'e-mail sans l'envoyer ; `resend` l'envoie réellement.*
+*La clé publique VAPID n'est pas une variable front : le navigateur la récupère via `GET /api/v1/notifications/vapid-public-key`. `EMAIL_PROVIDER=log` (défaut si la variable est absente) journalise l'e-mail sans l'envoyer ; `resend` l'envoie réellement — c'est la valeur configurée en production.*
 
-**Premier déploiement.** (1) provisionner les services et créer les secrets (keyring via `ToolGenDpKey`, VAPID via le script Node documenté) ; (2) renseigner secrets/variables dans GitHub Actions ; (3) **`push` sur `master`** → la CI/CD build, scanne et déploie automatiquement (séquence détaillée en §5) ; (4) validation par **smoke tests** `/health` (API) et `GET /` (CloudFront).
+**Premier déploiement.** (1) provisionner les services et créer les secrets (VAPID via le script Node documenté ; le keyring `ToolGenDpKey` n'est utile qu'en dev sans MongoDB — la prod persiste ses clés Data Protection dans MongoDB automatiquement) ; (2) renseigner secrets/variables dans GitHub Actions ; (3) **`push` sur `master`** → la CI/CD build, scanne et déploie automatiquement (séquence détaillée en §5) ; (4) validation par **smoke tests** `/health` (API) et `GET /` (CloudFront).
 
 **Rollback & rotation.** Retour arrière API par le workflow `rollback.yml` (bascule de trafic Cloud Run, §5). Rotation d'un secret : `gcloud secrets versions add <NOM> --data-file=-` puis nouvelle révision Cloud Run (consomme `:latest`).
 
@@ -890,6 +893,6 @@ Les captures du parcours principal figurent en §1.5 (accueil, création, détai
 | Hébergement | **Cloud Run** (API) + **S3/CloudFront** (front) | *Scale-to-zero*, CDN statique, coût maîtrisé |
 | Langues | **FR / EN** (i18n) | Internationalisation dès la V1 |
 
-> **Preuves de la section.** `.env.example` · `.github/dependabot.yml` · `.github/workflows/{ci-cd,rollback,security-scan}.yml` · `apps/api-dotnet/MoviePicker.Api/Configuration/MoviePickerOptions.cs` · `apps/api-dotnet/ToolGenDpKey/` · synthèse fidèle de `archive/docs/v1-produit/deploiement-secrets-ci.md`.
+> **Preuves de la section.** `.env.example` · `.github/dependabot.yml` · `.github/workflows/{ci-cd,rollback,security-scan}.yml` · `apps/api-dotnet/MoviePicker.Api/Configuration/MoviePickerOptions.cs` · `apps/api-dotnet/MoviePicker.Api/Infrastructure/DataProtectionConfiguration.cs` (persistance Mongo des clés en prod) · `apps/api-dotnet/ToolGenDpKey/`.
 
 ---

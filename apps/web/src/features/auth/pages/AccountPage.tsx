@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, Download, KeyRound, LogOut, Sliders } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';

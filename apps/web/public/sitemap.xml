@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Sitemap statique — URLs publiques indexables uniquement.
+  Sitemap de secours (fallback). En déploiement, `deploy-front` régénère ce fichier
+  via `scripts/generate-sitemap.mjs` (GET {API}/sitemap.xml) pour y ajouter les profils
+  publics `/u/:handle`. Ce fichier statique ne sert qu'en cas d'échec de génération.
   Domaine canonique aligné sur `MoviePickerOptions.PublicWebBaseUrl`
   (`https://web.movie-picker.fr`) et `apps/web/index.html`.
-  `/new` est derrière `ProtectedRoute` (redirige vers `/login`) et donc exclu.
   Les routes privées (`/e/*`, `/my-events`, `/settings`) sont bloquées via `robots.txt`.
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

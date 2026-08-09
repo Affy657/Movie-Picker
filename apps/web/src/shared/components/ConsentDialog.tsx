@@ -91,6 +91,13 @@ export default function ConsentDialog({ open, onClose }: Readonly<Props>) {
             />
           </label>
         </li>
+        <li className={styles.category}>
+          <div className={styles.categoryInfo}>
+            <strong className={styles.categoryName}>{t('consent.dialog.errorMonitoring')}</strong>
+            <p className={styles.categoryDesc}>{t('consent.dialog.errorMonitoringDesc')}</p>
+          </div>
+          <span className={styles.requiredBadge}>{t('consent.dialog.required')}</span>
+        </li>
       </ul>
 
       <div className={styles.actions}>

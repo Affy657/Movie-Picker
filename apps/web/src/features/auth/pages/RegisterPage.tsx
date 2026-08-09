@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
 import AuthPageShell, { authPageShellStyles } from '@/features/auth/components/AuthPageShell';
 import PageLayout from '@/shared/components/PageLayout';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -17,7 +17,7 @@ export default function RegisterPage() {
   const [params] = useSearchParams();
   const returnTo = safeReturnTo(params.get('returnTo'));
 
-  const { register } = useAuth();
+  const { register, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -43,6 +43,8 @@ export default function RegisterPage() {
     }
     void submit();
   };
+
+  if (user) return <Navigate to={returnTo} replace />;
 
   return (
     <PageLayout className={authPageShellStyles.layout}>

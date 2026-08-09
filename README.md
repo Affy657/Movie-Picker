@@ -106,7 +106,12 @@ Vérification rapide : `node scripts/check-prereqs.js` et `dotnet --version`.
 
 ## Démarrage
 
-**1. Configurer l'environnement.** Copier `.env.example` → `.env` à la racine et renseigner au minimum `MONGODB_URI` et `TMDB_API_KEY` (l'API .NET charge `.env` en remontant depuis le répertoire courant). Optionnel : `apps/web/.env` pour `VITE_API_URL` (voir `apps/web/.env.example`).
+**1. Configurer l'environnement.**
+
+- **MongoDB** — une base dédiée et jetable (jamais la prod) : soit un cluster **Atlas gratuit (M0)** via [mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas) (récupérer la chaîne de connexion), soit un conteneur local — `docker run -d --name moviepicker-mongo -p 27017:27017 mongo:7` → `MONGODB_URI=mongodb://localhost:27017/moviepicker_dev`.
+- **TMDB** — compte gratuit sur [themoviedb.org](https://www.themoviedb.org/), puis *Réglages → API* pour obtenir une **clé API (v3 auth)** → `TMDB_API_KEY`.
+
+Copier `.env.example` → `.env` à la racine et y renseigner ces deux valeurs (l'API .NET charge `.env` en remontant depuis le répertoire courant). Optionnel : `apps/web/.env` pour `VITE_API_URL` (voir `apps/web/.env.example`).
 
 > En **Development**, `localhost` / `127.0.0.1` sont autorisés sans configuration CORS. En **Production** / Docker, l'API exige aussi `ALLOWED_ORIGINS` (origines du front, séparées par des virgules).
 

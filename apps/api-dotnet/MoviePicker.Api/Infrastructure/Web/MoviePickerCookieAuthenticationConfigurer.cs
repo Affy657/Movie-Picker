@@ -26,7 +26,7 @@ public sealed class MoviePickerCookieAuthenticationConfigurer : IConfigureNamedO
         options.SessionStore = _ticketStore;
         options.Cookie.HttpOnly = true;
         options.Cookie.Path = "/";
-        options.ExpireTimeSpan = TimeSpan.FromDays(14);
+        options.ExpireTimeSpan = AuthConstants.SessionLifetime;
         options.SlidingExpiration = true;
 
         if (_environment.IsDevelopment())

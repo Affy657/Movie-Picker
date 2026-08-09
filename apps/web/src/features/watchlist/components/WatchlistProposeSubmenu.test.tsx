@@ -1,7 +1,7 @@
 import { afterEach, afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import WatchlistProposeSubmenu from '@/features/watchlist/components/WatchlistProposeSubmenu';

@@ -16,6 +16,7 @@ export function formatMyEventsListDate(isoDate: string, locale: LocaleCode): str
   if (Number.isNaN(dt.getTime())) return raw;
   const currentYear = new Date().getFullYear();
   const options: Intl.DateTimeFormatOptions = {
+    weekday: 'short',
     day: 'numeric',
     month: 'short',
     ...(y !== currentYear && { year: 'numeric' }),

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, Link2, UserPlus, UserCheck } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
@@ -7,7 +7,9 @@ import Avatar from '@/shared/components/Avatar';
 import { ROUTES } from '@/app/routes';
 import { ApiError, getErrorMessage } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
-import { APP_DOCUMENT_TITLE, pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import { APP_DOCUMENT_TITLE, pageTitle } from '@/shared/hooks/useDocumentTitle';
+import { usePageSeo } from '@/shared/hooks/usePageSeo';
+import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
@@ -17,6 +19,7 @@ import {
   fetchUserStats,
   followUser,
   unfollowUser,
+  type PublicProfile,
 } from '@/features/profile/api/profileApi';
 import styles from './ProfilePage.module.css';
 
@@ -29,6 +32,27 @@ function formatMemberSince(iso: string, locale: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
   return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(date);
+}
+
+function buildProfileDescription(profile: PublicProfile): string {
+  const bio = profile.bio?.trim();
+  if (bio) return bio;
+  return `Profil de ${profile.displayName} (@${profile.handle}) sur Movie Picker : statistiques de soirées ciné, films proposés et abonnements.`;
+}
+
+function buildProfileJsonLd(profile: PublicProfile): Record<string, unknown> {
+  const bio = profile.bio?.trim();
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    mainEntity: {
+      '@type': 'Person',
+      name: profile.displayName,
+      alternateName: `@${profile.handle}`,
+      url: absoluteUrl(ROUTES.profile(profile.handle)),
+      ...(bio ? { description: bio } : {}),
+    },
+  };
 }
 
 type FollowTab = 'following' | 'followers';
@@ -60,8 +84,21 @@ export default function ProfilePage() {
 
   const profile = profileQuery.data;
   const isOwnProfile = !!user && !!profile && user.handle === profile.handle;
+  const isNotFound =
+    !handle ||
+    (profileQuery.isError && ApiError.is(profileQuery.error) && profileQuery.error.code === 404);
 
-  useDocumentTitle(profile ? pageTitle(`@${profile.handle}`) : APP_DOCUMENT_TITLE);
+  usePageSeo(
+    profile
+      ? {
+          title: pageTitle(`@${profile.handle}`),
+          description: buildProfileDescription(profile),
+          canonical: absoluteUrl(ROUTES.profile(profile.handle)),
+          ogType: 'profile',
+          jsonLd: buildProfileJsonLd(profile),
+        }
+      : { title: APP_DOCUMENT_TITLE, noindex: isNotFound }
+  );
 
   useEffect(() => {
     if (!copied) return;
@@ -103,10 +140,6 @@ export default function ProfilePage() {
       </PageLayout>
     );
   }
-
-  const isNotFound =
-    !handle ||
-    (profileQuery.isError && ApiError.is(profileQuery.error) && profileQuery.error.code === 404);
 
   if (isNotFound) {
     return (

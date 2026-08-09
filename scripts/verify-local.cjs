@@ -1,6 +1,7 @@
 /**
  * Vérification locale alignée sur le job **lint** + **test-web** + **test-api** de la CI
  * (.github/workflows/ci-cd.yml). À lancer à la racine après `pnpm install` et avec .NET SDK installé.
+ * Docker requis (daemon actif) pour l'étape d'audit npm (scan Trivy filesystem, cf. commit 26c9163).
  */
 const { spawnSync } = require('node:child_process');
 const path = require('node:path');
@@ -54,7 +55,24 @@ run('Export OpenAPI (SKIP_OPENAPI_BUILD)', 'node', ['scripts/export-openapi.cjs'
   },
 });
 
-run('pnpm audit (high+)', 'pnpm', ['audit', '--audit-level=high']);
+run('Audit npm (Trivy fs — pnpm audit indisponible depuis le 2026-07-15, cf. pnpm/pnpm#11265)', 'docker', [
+  'run',
+  '--rm',
+  '-v',
+  './pnpm-lock.yaml:/repo/pnpm-lock.yaml:ro',
+  '-v',
+  'trivy-cache:/root/.cache/trivy',
+  'aquasec/trivy@sha256:be1190afcb28352bfddc4ddeb71470835d16462af68d310f9f4bca710961a41e',
+  'fs',
+  '--scanners',
+  'vuln',
+  '--severity',
+  'HIGH,CRITICAL',
+  '--exit-code',
+  '1',
+  '--ignore-unfixed',
+  '/repo/pnpm-lock.yaml',
+]);
 run('Tests front (Vitest + seuils couverture)', 'pnpm', ['run', 'test:coverage', '--filter=web']);
 
 run('Tests API unitaires', 'dotnet', [

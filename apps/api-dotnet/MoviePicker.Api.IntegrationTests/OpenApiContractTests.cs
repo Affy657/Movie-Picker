@@ -22,6 +22,7 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
         using var doc = JsonDocument.Parse(json);
         var paths = doc.RootElement.GetProperty("paths");
         Assert.True(paths.TryGetProperty("/health", out _));
+        Assert.True(paths.TryGetProperty("/health/ready", out var ready) && ready.TryGetProperty("get", out _));
         Assert.True(paths.TryGetProperty("/api/v1/events", out var events) && events.TryGetProperty("post", out _));
         Assert.True(paths.TryGetProperty("/api/v1/events/mine", out var mine) && mine.TryGetProperty("get", out _));
         Assert.True(paths.TryGetProperty("/api/v1/events/slug/{idOrSlug}", out _));

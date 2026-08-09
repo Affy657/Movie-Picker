@@ -55,7 +55,10 @@ public sealed class MongoIndexInitializer : IHostedService
                 Unique = true,
                 PartialFilterExpression = Builders<UserDocument>.Filter.Exists(x => x.Handle, true)
             });
-        await col.Indexes.CreateManyAsync(new[] { email, handle }, ct);
+        var updatedAt = new CreateIndexModel<UserDocument>(
+            Builders<UserDocument>.IndexKeys.Descending(x => x.UpdatedAt),
+            new CreateIndexOptions { Name = "users_updatedAt" });
+        await col.Indexes.CreateManyAsync(new[] { email, handle, updatedAt }, ct);
     }
 
     private async Task EnsureEventIndexesAsync(CancellationToken ct)

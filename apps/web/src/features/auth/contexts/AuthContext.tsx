@@ -15,6 +15,8 @@ import type { UserProfile } from '@/features/auth/types';
 type AuthContextValue = {
   user: UserProfile | null;
   isLoading: boolean;
+  authCheckFailed: boolean;
+  retryAuthCheck: () => void;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -33,12 +35,22 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     await queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
   }, [queryClient]);
 
-  const { data: user = null, isLoading } = useQuery({
+  const {
+    data: user = null,
+    isLoading,
+    isError: authCheckFailed,
+    refetch: refetchSession,
+  } = useQuery({
     queryKey: queryKeys.auth.me,
     queryFn: fetchAuthMeForSession,
     staleTime: 60_000,
-    retry: false,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
   });
+
+  const retryAuthCheck = useCallback(() => {
+    void refetchSession();
+  }, [refetchSession]);
 
   const loginMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
@@ -103,12 +115,14 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     () => ({
       user,
       isLoading,
+      authCheckFailed,
+      retryAuthCheck,
       login,
       register,
       logout,
       patchProfile,
     }),
-    [user, isLoading, login, register, logout, patchProfile]
+    [user, isLoading, authCheckFailed, retryAuthCheck, login, register, logout, patchProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

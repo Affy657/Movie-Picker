@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.HttpOverrides;
 using MoviePicker.Api.Infrastructure;
 using MoviePicker.Api.Infrastructure.Web;
+using Sentry;
 
 EnvLoader.LoadFromEnvFileIfExists();
 
@@ -11,6 +12,26 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddSharedDataProtection();
 
 builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
+
+var sentryDsn = builder.Configuration["SENTRY_DSN"];
+if (!string.IsNullOrWhiteSpace(sentryDsn))
+{
+    builder.WebHost.UseSentry(options =>
+    {
+        options.Dsn = sentryDsn;
+        options.Environment = builder.Configuration["SENTRY_ENVIRONMENT"] ?? builder.Environment.EnvironmentName;
+        options.Release = builder.Configuration["SENTRY_RELEASE"];
+        options.TracesSampleRate = 0.1;
+        options.SendDefaultPii = false;
+        options.SetBeforeSend((SentryEvent sentryEvent) =>
+        {
+            sentryEvent.User.IpAddress = null;
+            sentryEvent.User.Email = null;
+            sentryEvent.User.Username = null;
+            return sentryEvent;
+        });
+    });
+}
 
 if (!builder.Environment.IsDevelopment())
 {
@@ -79,7 +100,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseRouting();
 app.UseMiddleware<StructuredHttpRequestLoggingMiddleware>();
-app.UseCors(ServiceCollectionExtensions.CorsPolicyFront);
+app.UseCors(MoviePicker.Api.Infrastructure.ServiceCollectionExtensions.CorsPolicyFront);
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -105,6 +126,7 @@ app.MapGet("/", () => Results.Json(new
 {
     name = "Movie Picker API",
     health = "/health",
+    ready = "/health/ready",
     api = $"/{ApiRoutePrefix.V1}",
     docs = app.Environment.IsDevelopment() ? "/swagger" : (object?)null
 }));

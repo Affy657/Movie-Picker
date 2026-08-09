@@ -1,8 +1,9 @@
 import clsx from 'clsx';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import { APP_VERSION } from '@/shared/appVersion';
+import SupportReportButton from './SupportReportButton';
 import styles from './Footer.module.css';
 
 type FooterProps = {
@@ -85,6 +86,15 @@ export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>
               <Link to={ROUTES.watchlist} className={styles.colLink}>
                 {t('nav.watchlist')}
               </Link>
+            </li>
+          </ul>
+        </div>
+
+        <div className={styles.col}>
+          <p className={styles.colTitle}>{t('footer.helpTitle')}</p>
+          <ul className={styles.colList}>
+            <li>
+              <SupportReportButton className={clsx(styles.colLink, styles.colButtonReset)} />
             </li>
           </ul>
         </div>

@@ -18,7 +18,7 @@ public static class AuthenticationExtensions
             return new MongoAuthTicketStore(sp.GetRequiredService<IMongoDatabase>());
         });
 
-        services.AddSingleton<IConfigureNamedOptions<CookieAuthenticationOptions>, MoviePickerCookieAuthenticationConfigurer>();
+        services.AddSingleton<IConfigureOptions<CookieAuthenticationOptions>, MoviePickerCookieAuthenticationConfigurer>();
 
         services
             .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
