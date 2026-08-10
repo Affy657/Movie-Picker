@@ -46,6 +46,7 @@ public sealed class MongoWatchlistRepository : IWatchlistRepository
             PosterPath = item.PosterPath,
             VoteAverage = item.VoteAverage,
             RuntimeMinutes = item.RuntimeMinutes,
+            LetterboxdSlug = item.LetterboxdSlug,
             CreatedAt = item.CreatedAt == default ? DateTime.UtcNow : item.CreatedAt.UtcDateTime
         };
         try
@@ -65,6 +66,21 @@ public sealed class MongoWatchlistRepository : IWatchlistRepository
         var res = await _collection.DeleteOneAsync(
             x => x.UserId == userId && x.TmdbId == tmdbId && x.MediaType == mediaTypeValue, ct);
         return res.IsAcknowledged && res.DeletedCount > 0;
+    }
+
+    public async Task<bool> SetLetterboxdSlugAsync(
+        string userId,
+        int tmdbId,
+        MovieMediaType mediaType,
+        string slug,
+        CancellationToken ct = default)
+    {
+        var mediaTypeValue = MovieMapper.MediaTypeToString(mediaType);
+        var res = await _collection.UpdateOneAsync(
+            x => x.UserId == userId && x.TmdbId == tmdbId && x.MediaType == mediaTypeValue,
+            Builders<WatchlistItemDocument>.Update.Set(x => x.LetterboxdSlug, slug),
+            cancellationToken: ct);
+        return res.IsAcknowledged && res.MatchedCount > 0;
     }
 
     public async Task<long> RemoveForUsersAsync(IReadOnlyCollection<string> userIds, int tmdbId, MovieMediaType mediaType, CancellationToken ct = default)
@@ -99,6 +115,7 @@ public sealed class MongoWatchlistRepository : IWatchlistRepository
         PosterPath = d.PosterPath,
         VoteAverage = d.VoteAverage,
         RuntimeMinutes = d.RuntimeMinutes,
+        LetterboxdSlug = d.LetterboxdSlug,
         CreatedAt = new DateTimeOffset(d.CreatedAt, TimeSpan.Zero)
     };
 }

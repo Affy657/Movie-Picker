@@ -11,5 +11,6 @@ public sealed record WatchlistItem
     public string? PosterPath { get; init; }
     public double? VoteAverage { get; init; }
     public int? RuntimeMinutes { get; init; }
+    public string? LetterboxdSlug { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
 }

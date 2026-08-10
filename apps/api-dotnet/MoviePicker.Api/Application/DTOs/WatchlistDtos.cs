@@ -24,6 +24,9 @@ public sealed class AddWatchlistItemRequest
     public double? VoteAverage { get; init; }
 
     public int? RuntimeMinutes { get; init; }
+
+    [MaxLength(200)]
+    public string? LetterboxdSlug { get; init; }
 }
 
 public sealed class WatchlistItemResponse

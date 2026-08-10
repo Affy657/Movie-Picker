@@ -44,4 +44,26 @@ public sealed class GetUserProfileHandlerTests
         Assert.Contains("***", res.EmailMasked, StringComparison.Ordinal);
         Assert.DoesNotContain("bob@", res.EmailMasked, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public async Task HandleAsync_ReturnsLetterboxdUsername()
+    {
+        var user = new User
+        {
+            Id = "id1",
+            Email = "bob@example.com",
+            PasswordHash = "h",
+            DisplayName = "Bob",
+            LetterboxdUsername = "affy657",
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("id1", It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var handler = new GetUserProfileHandler(users.Object);
+
+        var res = await handler.HandleAsync("id1");
+
+        Assert.Equal("affy657", res.LetterboxdUsername);
+    }
 }

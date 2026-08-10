@@ -65,7 +65,7 @@ public static class ServiceCollectionExtensions
         services.AddHostedService<EventReminderService>();
         services.AddHostedService<LetterboxdWatchlistSyncService>();
 
-        services.AddHttpClient<ILetterboxdRssClient, LetterboxdRssClient>(client =>
+        services.AddHttpClient<ILetterboxdWatchlistClient, LetterboxdWatchlistClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(15);
             client.DefaultRequestHeaders.UserAgent.ParseAdd("MoviePicker-Api/1.0");

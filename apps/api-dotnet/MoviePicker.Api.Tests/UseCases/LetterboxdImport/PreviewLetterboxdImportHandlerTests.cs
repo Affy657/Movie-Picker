@@ -3,6 +3,7 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.LetterboxdImport;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.LetterboxdImport;
@@ -11,8 +12,12 @@ public sealed class PreviewLetterboxdImportHandlerTests
 {
     private const string UserId = "u1";
 
+    private const string LetterboxdUsername = "affy657";
+
     private readonly Mock<IWatchlistRepository> _watchlist = new();
     private readonly Mock<ITmdbMovieSearch> _tmdb = new();
+    private readonly Mock<IUserRepository> _users = new();
+    private readonly Mock<ILetterboxdWatchlistClient> _letterboxd = new();
     private readonly PreviewLetterboxdImportHandler _sut;
 
     public PreviewLetterboxdImportHandlerTests()
@@ -20,7 +25,14 @@ public sealed class PreviewLetterboxdImportHandlerTests
         _watchlist
             .Setup(w => w.ListByUserIdAsync(UserId, It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<WatchlistItem>)[]);
-        _sut = new PreviewLetterboxdImportHandler(_watchlist.Object, _tmdb.Object);
+        _users
+            .Setup(u => u.GetByIdAsync(UserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = UserId, Email = "a@b.c", LetterboxdUsername = LetterboxdUsername });
+        _sut = new PreviewLetterboxdImportHandler(
+            _watchlist.Object,
+            _tmdb.Object,
+            _users.Object,
+            _letterboxd.Object);
     }
 
     private static string Csv(params (string Title, string Year)[] rows)
@@ -118,5 +130,93 @@ public sealed class PreviewLetterboxdImportHandlerTests
         Assert.Equal(LetterboxdCsvParser.MaxRows + 3, result.TotalParsed);
         Assert.Equal(3, result.TotalTruncated);
         Assert.Equal(LetterboxdCsvParser.MaxRows, result.Rows.Count);
+    }
+
+    private void GivenLetterboxdWatchlist(bool isComplete, params LetterboxdFilm[] films) =>
+        _letterboxd
+            .Setup(l => l.GetWatchlistAsync(LetterboxdUsername, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new LetterboxdWatchlistSnapshot(films, isComplete));
+
+    [Fact]
+    public async Task HandleFromAccountAsync_ReturnsRowsCarryingTheLetterboxdSlug()
+    {
+        GivenLetterboxdWatchlist(true, new LetterboxdFilm("inception", "Inception", "2010"));
+        _tmdb
+            .Setup(t => t.SearchAsync(
+                "Inception", false, null, 2009, 2011, null, null, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<TmdbSearchItem>)
+            [
+                new TmdbSearchItem(27205, MovieMediaType.Movie, "Inception", "2010", "/poster.jpg", 8.4)
+            ]);
+
+        var result = await _sut.HandleFromAccountAsync(UserId);
+
+        var row = Assert.Single(result.Rows);
+        Assert.Equal("inception", row.LetterboxdSlug);
+        Assert.Equal("Inception", row.Title);
+        Assert.Equal(27205, Assert.Single(row.Candidates).TmdbId);
+        Assert.Equal(1, result.TotalParsed);
+        Assert.Equal(0, result.TotalTruncated);
+    }
+
+    [Fact]
+    public async Task HandleFromAccountAsync_SlugAlreadyTracked_SkipsTmdbSearch()
+    {
+        _watchlist
+            .Setup(w => w.ListByUserIdAsync(UserId, It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<WatchlistItem>)
+            [
+                new WatchlistItem
+                {
+                    Id = "1",
+                    UserId = UserId,
+                    TmdbId = 27205,
+                    MediaType = MovieMediaType.Movie,
+                    Title = "Le Titre Français",
+                    Year = "2010",
+                    LetterboxdSlug = "Inception",
+                    CreatedAt = DateTimeOffset.UtcNow
+                }
+            ]);
+        GivenLetterboxdWatchlist(true, new LetterboxdFilm("inception", "Inception", "2010"));
+
+        var result = await _sut.HandleFromAccountAsync(UserId);
+
+        Assert.True(Assert.Single(result.Rows).AlreadyInWatchlist);
+        _tmdb.Verify(
+            t => t.SearchAsync(
+                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<int>?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleFromAccountAsync_NoUsernameConfigured_ThrowsBadRequest()
+    {
+        _users
+            .Setup(u => u.GetByIdAsync(UserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = UserId, Email = "a@b.c", LetterboxdUsername = null });
+
+        await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleFromAccountAsync(UserId));
+    }
+
+    [Fact]
+    public async Task HandleFromAccountAsync_IncompleteSnapshot_ThrowsBadRequest()
+    {
+        GivenLetterboxdWatchlist(false);
+
+        await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleFromAccountAsync(UserId));
+    }
+
+    [Fact]
+    public async Task HandleFromAccountAsync_EmptyLetterboxdWatchlist_ReturnsNoRow()
+    {
+        GivenLetterboxdWatchlist(true);
+
+        var result = await _sut.HandleFromAccountAsync(UserId);
+
+        Assert.Empty(result.Rows);
+        Assert.Equal(0, result.TotalParsed);
     }
 }

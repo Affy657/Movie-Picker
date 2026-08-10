@@ -12,6 +12,13 @@ public interface IWatchlistRepository
 
     Task<bool> RemoveAsync(string userId, int tmdbId, MovieMediaType mediaType, CancellationToken ct = default);
 
+    Task<bool> SetLetterboxdSlugAsync(
+        string userId,
+        int tmdbId,
+        MovieMediaType mediaType,
+        string slug,
+        CancellationToken ct = default);
+
     Task<long> RemoveForUsersAsync(IReadOnlyCollection<string> userIds, int tmdbId, MovieMediaType mediaType, CancellationToken ct = default);
 
     Task<long> DeleteAllForUserAsync(string userId, CancellationToken ct = default);

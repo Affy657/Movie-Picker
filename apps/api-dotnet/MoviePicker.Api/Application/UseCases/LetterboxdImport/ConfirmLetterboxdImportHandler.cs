@@ -7,7 +7,7 @@ namespace MoviePicker.Api.Application.UseCases.LetterboxdImport;
 
 public sealed class ConfirmLetterboxdImportHandler : IConfirmLetterboxdImportHandler
 {
-    private const int MaxSelections = LetterboxdCsvParser.MaxRows;
+    private const int MaxSelections = LetterboxdImportLimits.MaxRows;
 
     private readonly IWatchlistRepository _watchlist;
     private readonly IAddToWatchlistHandler _addToWatchlist;
@@ -39,6 +39,16 @@ public sealed class ConfirmLetterboxdImportHandler : IConfirmLetterboxdImportHan
             if (existingKeys.Contains((selection.TmdbId, selection.MediaType)))
             {
                 alreadyPresent++;
+                if (!string.IsNullOrWhiteSpace(selection.LetterboxdSlug))
+                {
+                    await _watchlist.SetLetterboxdSlugAsync(
+                        userId,
+                        selection.TmdbId,
+                        selection.MediaType,
+                        selection.LetterboxdSlug.Trim(),
+                        ct);
+                }
+
                 continue;
             }
 

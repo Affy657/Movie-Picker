@@ -25,6 +25,7 @@ public sealed class LetterboxdImportRowResponse
     public int RowIndex { get; init; }
     public string Title { get; init; } = string.Empty;
     public string Year { get; init; } = string.Empty;
+    public string? LetterboxdSlug { get; init; }
     public bool AlreadyInWatchlist { get; init; }
     public IReadOnlyList<LetterboxdImportCandidateResponse> Candidates { get; init; } = [];
 }

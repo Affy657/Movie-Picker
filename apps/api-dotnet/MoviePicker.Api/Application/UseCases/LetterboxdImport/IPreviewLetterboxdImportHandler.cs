@@ -8,4 +8,8 @@ public interface IPreviewLetterboxdImportHandler
         string userId,
         LetterboxdImportPreviewRequest request,
         CancellationToken ct = default);
+
+    Task<LetterboxdImportPreviewResponse> HandleFromAccountAsync(
+        string userId,
+        CancellationToken ct = default);
 }

@@ -37,6 +37,9 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
             PosterPath = poster,
             VoteAverage = request.VoteAverage,
             RuntimeMinutes = request.RuntimeMinutes,
+            LetterboxdSlug = string.IsNullOrWhiteSpace(request.LetterboxdSlug)
+                ? null
+                : request.LetterboxdSlug.Trim(),
             CreatedAt = _clock.GetUtcNow()
         };
 

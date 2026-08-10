@@ -9,7 +9,7 @@ public sealed record LetterboxdCsvParseResult(IReadOnlyList<LetterboxdCsvRow> Ro
 
 public static class LetterboxdCsvParser
 {
-    public const int MaxRows = 300;
+    public const int MaxRows = LetterboxdImportLimits.MaxRows;
 
     public static LetterboxdCsvParseResult Parse(string? csv)
     {

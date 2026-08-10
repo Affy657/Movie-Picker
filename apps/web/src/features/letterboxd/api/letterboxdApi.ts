@@ -14,6 +14,7 @@ export interface LetterboxdImportRow {
   rowIndex: number;
   title: string;
   year: string;
+  letterboxdSlug: string | null;
   alreadyInWatchlist: boolean;
   candidates: LetterboxdImportCandidate[];
 }
@@ -31,6 +32,7 @@ export interface LetterboxdImportSelection {
   year: string;
   posterPath: string | null;
   voteAverage?: number | null;
+  letterboxdSlug: string | null;
 }
 
 export interface LetterboxdImportConfirmResult {
@@ -42,6 +44,12 @@ export async function previewLetterboxdImport(csv: string): Promise<LetterboxdIm
   return fetchApi<LetterboxdImportPreview>('/letterboxd-import/preview', {
     method: 'POST',
     body: JSON.stringify({ csv }),
+  });
+}
+
+export async function previewLetterboxdImportFromAccount(): Promise<LetterboxdImportPreview> {
+  return fetchApi<LetterboxdImportPreview>('/letterboxd-import/preview-from-account', {
+    method: 'POST',
   });
 }
 

@@ -28,6 +28,7 @@ const PREVIEW: LetterboxdImportPreview = {
       rowIndex: 1,
       title: 'Matrix',
       year: '1999',
+      letterboxdSlug: 'the-matrix',
       alreadyInWatchlist: false,
       candidates: [
         {
@@ -44,6 +45,7 @@ const PREVIEW: LetterboxdImportPreview = {
       rowIndex: 2,
       title: 'Inception',
       year: '2010',
+      letterboxdSlug: 'inception',
       alreadyInWatchlist: true,
       candidates: [],
     },
@@ -51,6 +53,7 @@ const PREVIEW: LetterboxdImportPreview = {
       rowIndex: 3,
       title: 'Film Introuvable',
       year: '2005',
+      letterboxdSlug: null,
       alreadyInWatchlist: false,
       candidates: [],
     },
@@ -85,7 +88,7 @@ describe('LetterboxdImportReviewModal (MSW)', () => {
     expect(screen.getByText('The Matrix (1999)')).toBeInTheDocument();
     expect(screen.queryByText(/Inception/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Film Introuvable/)).not.toBeInTheDocument();
-    expect(screen.getByText(/3 ligne\(s\) lue\(s\)/)).toBeInTheDocument();
+    expect(screen.getByText(/3 film\(s\) analysé\(s\)/)).toBeInTheDocument();
     expect(screen.getByText(/1 déjà dans votre watchlist/)).toBeInTheDocument();
     expect(screen.getByText(/1 introuvable\(s\)/)).toBeInTheDocument();
   });
@@ -116,6 +119,7 @@ describe('LetterboxdImportReviewModal (MSW)', () => {
         year: '1999',
         posterPath: null,
         voteAverage: 8.2,
+        letterboxdSlug: 'the-matrix',
       },
     ]);
   });
@@ -125,7 +129,7 @@ describe('LetterboxdImportReviewModal (MSW)', () => {
 
     renderModal();
 
-    await user.click(screen.getByRole('radio', { name: 'Ignorer cette ligne' }));
+    await user.click(screen.getByRole('radio', { name: 'Ignorer ce film' }));
 
     expect(screen.getByRole('button', { name: /Importer \(0\)/ })).toBeDisabled();
   });

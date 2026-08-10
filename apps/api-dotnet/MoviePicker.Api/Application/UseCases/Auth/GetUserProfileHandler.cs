@@ -24,7 +24,8 @@ public sealed class GetUserProfileHandler : IGetUserProfileHandler
             AvatarId = user.AvatarId,
             Handle = user.Handle,
             Bio = user.Bio,
-            IsProfilePublic = user.IsProfilePublic
+            IsProfilePublic = user.IsProfilePublic,
+            LetterboxdUsername = user.LetterboxdUsername
         };
     }
 }

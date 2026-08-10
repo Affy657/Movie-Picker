@@ -45,6 +45,19 @@ public sealed class InMemoryWatchlistRepository : IWatchlistRepository
         return Task.FromResult(removed);
     }
 
+    public Task<bool> SetLetterboxdSlugAsync(
+        string userId,
+        int tmdbId,
+        MovieMediaType mediaType,
+        string slug,
+        CancellationToken ct = default)
+    {
+        var key = Key(userId, tmdbId, mediaType);
+        if (!_store.TryGetValue(key, out var existing))
+            return Task.FromResult(false);
+        return Task.FromResult(_store.TryUpdate(key, existing with { LetterboxdSlug = slug }, existing));
+    }
+
     public Task<long> RemoveForUsersAsync(IReadOnlyCollection<string> userIds, int tmdbId, MovieMediaType mediaType, CancellationToken ct = default)
     {
         long count = 0;

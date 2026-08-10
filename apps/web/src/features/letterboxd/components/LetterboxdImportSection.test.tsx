@@ -107,6 +107,7 @@ describe('LetterboxdImportSection (MSW)', () => {
               rowIndex: 1,
               title: 'Inception',
               year: '2010',
+              letterboxdSlug: null,
               alreadyInWatchlist: false,
               candidates: [
                 {
@@ -140,5 +141,68 @@ describe('LetterboxdImportSection (MSW)', () => {
       await screen.findByRole('heading', { name: 'Vérifier les films à importer' })
     ).toBeInTheDocument();
     expect(screen.getByText('Inception (2010)')).toBeInTheDocument();
+  });
+
+  it('importe depuis le compte Letterboxd et transmet le slug à l’écran de revue', async () => {
+    const user = userEvent.setup();
+    let accountImportCalled = false;
+
+    server.use(
+      meHandler('affy657'),
+      http.post(`${TEST_API_V1}/letterboxd-import/preview-from-account`, () => {
+        accountImportCalled = true;
+        return HttpResponse.json({
+          rows: [
+            {
+              rowIndex: 1,
+              title: 'The Polar Express',
+              year: '2004',
+              letterboxdSlug: 'the-polar-express',
+              alreadyInWatchlist: false,
+              candidates: [
+                {
+                  tmdbId: 5255,
+                  mediaType: 'movie',
+                  title: 'Le Pôle Express',
+                  year: '2004',
+                  posterPath: null,
+                  voteAverage: 6.8,
+                },
+              ],
+            },
+          ],
+          totalParsed: 1,
+          totalTruncated: 0,
+        });
+      })
+    );
+
+    renderAccount();
+
+    const importButton = await screen.findByRole('button', {
+      name: 'Importer ma watchlist Letterboxd',
+    });
+    await waitFor(() => expect(importButton).toBeEnabled());
+    await user.click(importButton);
+
+    await waitFor(() => expect(accountImportCalled).toBe(true));
+    expect(
+      await screen.findByRole('heading', { name: 'Vérifier les films à importer' })
+    ).toBeInTheDocument();
+    expect(screen.getByText('Le Pôle Express (2004)')).toBeInTheDocument();
+  });
+
+  it('désactive l’import depuis le compte tant qu’aucun pseudo n’est enregistré', async () => {
+    server.use(meHandler(null));
+
+    renderAccount();
+
+    const importButton = await screen.findByRole('button', {
+      name: 'Importer ma watchlist Letterboxd',
+    });
+    expect(importButton).toBeDisabled();
+    expect(
+      screen.getByText('Enregistrez d’abord votre pseudo Letterboxd ci-dessus.')
+    ).toBeInTheDocument();
   });
 });

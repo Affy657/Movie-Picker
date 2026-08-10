@@ -36,6 +36,10 @@ public sealed class WatchlistItemDocument
     [BsonIgnoreIfNull]
     public int? RuntimeMinutes { get; set; }
 
+    [BsonElement("letterboxdSlug")]
+    [BsonIgnoreIfNull]
+    public string? LetterboxdSlug { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 }

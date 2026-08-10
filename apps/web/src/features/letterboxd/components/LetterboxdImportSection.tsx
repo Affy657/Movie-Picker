@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Import, RefreshCw } from 'lucide-react';
+import { Download, Import, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import {
   previewLetterboxdImport,
+  previewLetterboxdImportFromAccount,
   type LetterboxdImportConfirmResult,
   type LetterboxdImportPreview,
 } from '@/features/letterboxd/api/letterboxdApi';
@@ -65,14 +66,33 @@ export default function LetterboxdImportSection() {
     clearError: clearImportError,
   } = useAsyncAction(importAction, t('auth.account.letterboxd.importFallbackError'));
 
+  const {
+    run: runAccountImport,
+    loading: accountImporting,
+    error: accountImportError,
+    clearError: clearAccountImportError,
+  } = useAsyncAction(
+    previewLetterboxdImportFromAccount,
+    t('auth.account.letterboxd.accountImportFallbackError')
+  );
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     clearImportError();
+    clearAccountImportError();
     setImportResult(null);
     const result = await runImport(file);
     if (result) setPreview(result);
     e.target.value = '';
+  };
+
+  const handleAccountImport = async () => {
+    clearImportError();
+    clearAccountImportError();
+    setImportResult(null);
+    const result = await runAccountImport();
+    if (result) setPreview(result);
   };
 
   const handleImported = (result: LetterboxdImportConfirmResult) => {
@@ -138,6 +158,49 @@ export default function LetterboxdImportSection() {
         </form>
       </div>
 
+      {importResult && !importError && !accountImportError && (
+        <p className="hint" role="status" aria-live="polite">
+          {importResult.added > 0
+            ? t('auth.account.letterboxd.importSuccess', {
+                added: String(importResult.added),
+                alreadyPresent: String(importResult.alreadyPresent),
+              })
+            : t('auth.account.letterboxd.importSuccessNoneAdded')}
+        </p>
+      )}
+
+      <div className={styles.block}>
+        <h3 className={styles.blockTitle}>
+          <Download size={15} aria-hidden />
+          {t('auth.account.letterboxd.accountImportTitle')}
+        </h3>
+        <p className={styles.blockDescription}>
+          {t('auth.account.letterboxd.accountImportDescription')}
+        </p>
+
+        {accountImportError && (
+          <p className="error" role="alert">
+            {accountImportError}
+          </p>
+        )}
+
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => void handleAccountImport()}
+          disabled={accountImporting || !user.letterboxdUsername}
+        >
+          {accountImporting
+            ? t('auth.account.letterboxd.accountImportSubmitting')
+            : t('auth.account.letterboxd.accountImportSubmit')}
+        </button>
+        <p className="hint">
+          {user.letterboxdUsername
+            ? t('auth.account.letterboxd.accountImportHint')
+            : t('auth.account.letterboxd.accountImportNeedsUsername')}
+        </p>
+      </div>
+
       <div className={styles.block}>
         <h3 className={styles.blockTitle}>
           <Import size={15} aria-hidden />
@@ -148,16 +211,6 @@ export default function LetterboxdImportSection() {
         {importError && (
           <p className="error" role="alert">
             {importError}
-          </p>
-        )}
-        {importResult && !importError && (
-          <p className="hint" role="status" aria-live="polite">
-            {importResult.added > 0
-              ? t('auth.account.letterboxd.importSuccess', {
-                  added: String(importResult.added),
-                  alreadyPresent: String(importResult.alreadyPresent),
-                })
-              : t('auth.account.letterboxd.importSuccessNoneAdded')}
           </p>
         )}
 

@@ -40,6 +40,24 @@ public sealed class LetterboxdImportController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("preview-from-account")]
+    [EnableRateLimiting(RateLimitingExtensions.LetterboxdImportPolicy)]
+    [ProducesResponseType(typeof(LetterboxdImportPreviewResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> PreviewFromAccount(
+        [FromServices] IPreviewLetterboxdImportHandler handler,
+        [FromServices] ICurrentUserAccessor currentUser,
+        CancellationToken ct)
+    {
+        var userId = currentUser.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var result = await handler.HandleFromAccountAsync(userId, ct);
+        return Ok(result);
+    }
+
     [HttpPost("confirm")]
     [EnableRateLimiting(RateLimitingExtensions.LetterboxdImportPolicy)]
     [ProducesResponseType(typeof(LetterboxdImportConfirmResponse), StatusCodes.Status200OK)]

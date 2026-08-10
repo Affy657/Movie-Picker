@@ -32,7 +32,8 @@ function buildInitialSelection(rows: LetterboxdImportRow[]): Record<string, numb
 }
 
 function selectionToImportSelection(
-  candidate: LetterboxdImportCandidate
+  candidate: LetterboxdImportCandidate,
+  letterboxdSlug: string | null
 ): LetterboxdImportSelection {
   return {
     tmdbId: candidate.tmdbId,
@@ -41,6 +42,7 @@ function selectionToImportSelection(
     year: candidate.year,
     posterPath: candidate.posterPath,
     voteAverage: candidate.voteAverage,
+    letterboxdSlug,
   };
 }
 
@@ -75,7 +77,7 @@ export default function LetterboxdImportReviewModal({
         const chosenId = selectedByRow[candidateKey(row)];
         if (chosenId == null) return null;
         const candidate = row.candidates.find((c) => c.tmdbId === chosenId);
-        return candidate ? selectionToImportSelection(candidate) : null;
+        return candidate ? selectionToImportSelection(candidate, row.letterboxdSlug) : null;
       })
       .filter((s): s is LetterboxdImportSelection => s !== null);
 
