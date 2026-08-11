@@ -131,7 +131,8 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         var id = item.GetProperty("id").GetInt32();
         var year = ReadYear(item, mediaType.Value);
         var posterPath = ReadPosterUrl(item);
-        return new TmdbSearchItem(id, mediaType.Value, title, year, posterPath, voteAverage);
+        var originalTitle = ReadOriginalTitle(item, mediaType.Value);
+        return new TmdbSearchItem(id, mediaType.Value, title, year, posterPath, voteAverage, originalTitle);
     }
 
     private static bool MatchesGenres(JsonElement item, IReadOnlyList<int>? genreIds)
@@ -525,6 +526,14 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
             "tv" => MovieMediaType.Tv,
             _ => null
         };
+    }
+
+    private static string? ReadOriginalTitle(JsonElement el, MovieMediaType mediaType)
+    {
+        var property = mediaType == MovieMediaType.Tv ? "original_name" : "original_title";
+        if (el.TryGetProperty(property, out var value) && value.ValueKind == JsonValueKind.String)
+            return value.GetString();
+        return null;
     }
 
     private static string ReadTitle(JsonElement el, MovieMediaType mediaType)

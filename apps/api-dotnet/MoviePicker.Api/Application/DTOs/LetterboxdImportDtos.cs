@@ -3,13 +3,6 @@ using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.DTOs;
 
-public sealed class LetterboxdImportPreviewRequest
-{
-    [Required]
-    [MaxLength(500_000)]
-    public string Csv { get; init; } = string.Empty;
-}
-
 public sealed class LetterboxdImportCandidateResponse
 {
     public int TmdbId { get; init; }
@@ -26,14 +19,17 @@ public sealed class LetterboxdImportRowResponse
     public string Title { get; init; } = string.Empty;
     public string Year { get; init; } = string.Empty;
     public string? LetterboxdSlug { get; init; }
-    public bool AlreadyInWatchlist { get; init; }
     public IReadOnlyList<LetterboxdImportCandidateResponse> Candidates { get; init; } = [];
 }
 
-public sealed class LetterboxdImportPreviewResponse
+public sealed class LetterboxdSyncResponse
 {
-    public IReadOnlyList<LetterboxdImportRowResponse> Rows { get; init; } = [];
-    public int TotalParsed { get; init; }
+    public bool Skipped { get; init; }
+    public int Added { get; init; }
+    public int Removed { get; init; }
+    public IReadOnlyList<string> UnmatchedTitles { get; init; } = [];
+    public IReadOnlyList<LetterboxdImportRowResponse> PendingChoices { get; init; } = [];
+    public int TotalOnLetterboxd { get; init; }
     public int TotalTruncated { get; init; }
 }
 

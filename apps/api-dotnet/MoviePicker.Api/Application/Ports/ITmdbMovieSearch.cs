@@ -8,7 +8,8 @@ public sealed record TmdbSearchItem(
     string Title,
     string Year,
     string? PosterPath,
-    double? VoteAverage = null);
+    double? VoteAverage = null,
+    string? OriginalTitle = null);
 
 public sealed record TmdbWatchProviderOffer(int ProviderId, string ProviderName, string? LogoUrl, string MonetizationType);
 

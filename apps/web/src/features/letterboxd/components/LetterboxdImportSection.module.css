@@ -1,85 +1,149 @@
-.block {
-  margin-top: 1.5rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--color-border);
-}
-
-.block:first-of-type {
-  margin-top: 0;
-  padding-top: 0;
-  border-top: none;
-}
-
-.blockTitle {
+.usernameRow,
+.editRow {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin: 0 0 0.4rem;
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-  color: var(--color-text);
+  gap: var(--space-2);
+  margin: 0;
 }
 
-.blockTitle svg {
+.usernameValue {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.editRow .input {
+  flex: 1;
+  min-width: 0;
+  max-width: 18rem;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
   flex-shrink: 0;
-  color: var(--color-primary);
-}
-
-.blockDescription {
-  margin: 0 0 1rem;
-  font-size: var(--font-size-sm);
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
   color: var(--color-text-muted);
-  line-height: var(--leading-base);
-}
-
-.fileDropZone {
-  position: relative;
-  margin-top: 0.5rem;
-}
-
-.fileDropLabel {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  padding: 1rem 1.15rem;
-  border: 1.5px dashed var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-hover);
   cursor: pointer;
   transition:
-    border-color var(--duration-base) var(--ease-default),
-    background var(--duration-base) var(--ease-default);
+    color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
 }
 
-.fileDropLabel:hover {
-  border-color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface-hover));
+.iconBtn:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
-.fileDropZone input:focus-visible + .fileDropLabel {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-  border-color: var(--color-primary);
+.iconBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
-.fileDropIcon {
+.status,
+.statusOk,
+.statusError {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-xs);
+  line-height: var(--leading-snug);
+}
+
+.status {
+  color: var(--color-text-muted);
+}
+
+.statusOk {
+  color: var(--color-success, var(--color-text-muted));
+}
+
+.statusError {
+  color: var(--color-danger);
+}
+
+.statusOk svg,
+.statusError svg {
   flex-shrink: 0;
-  color: var(--color-primary);
 }
 
-.fileDropText {
+.syncBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.syncBtn:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.syncBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.report {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.reportLine {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.reportAction {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-accent);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reportAction:hover {
+  text-decoration: underline;
+}
+
+.unmatched {
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-muted);
+}
+
+.unmatched summary {
+  cursor: pointer;
+}
+
+.unmatchedList {
+  margin: var(--space-1) 0 0;
+  padding-left: 1.1rem;
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
-}
-
-.fileDropTitle {
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.fileDropHint {
-  font-size: var(--font-size-2xs);
-  color: var(--color-text-muted);
 }

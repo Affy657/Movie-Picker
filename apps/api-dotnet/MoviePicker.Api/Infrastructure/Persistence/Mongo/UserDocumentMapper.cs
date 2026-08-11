@@ -25,6 +25,10 @@ public static class UserDocumentMapper
             NotifyOnEventDeleted = doc.NotifyOnEventDeleted ?? true,
             NotifyOnNewFollower = doc.NotifyOnNewFollower ?? true,
             LetterboxdUsername = doc.LetterboxdUsername,
+            LetterboxdLastSyncAt = doc.LetterboxdLastSyncAt is null
+                ? null
+                : new DateTimeOffset(doc.LetterboxdLastSyncAt.Value, TimeSpan.Zero),
+            LetterboxdLastSyncError = doc.LetterboxdLastSyncError,
             CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero),
             UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)
         };
@@ -50,6 +54,8 @@ public static class UserDocumentMapper
             NotifyOnEventDeleted = user.NotifyOnEventDeleted,
             NotifyOnNewFollower = user.NotifyOnNewFollower,
             LetterboxdUsername = string.IsNullOrEmpty(user.LetterboxdUsername) ? null : user.LetterboxdUsername,
+            LetterboxdLastSyncAt = user.LetterboxdLastSyncAt?.UtcDateTime,
+            LetterboxdLastSyncError = user.LetterboxdLastSyncError,
             CreatedAt = user.CreatedAt.UtcDateTime,
             UpdatedAt = user.UpdatedAt.UtcDateTime
         };

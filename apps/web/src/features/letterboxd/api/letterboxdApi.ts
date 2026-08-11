@@ -1,7 +1,7 @@
 import { fetchApi } from '@/shared/api/client';
 import type { MovieMediaType } from '@/shared/types/movie';
 
-export interface LetterboxdImportCandidate {
+export interface LetterboxdCandidate {
   tmdbId: number;
   mediaType: MovieMediaType;
   title: string;
@@ -10,22 +10,25 @@ export interface LetterboxdImportCandidate {
   voteAverage?: number | null;
 }
 
-export interface LetterboxdImportRow {
+export interface LetterboxdPendingChoice {
   rowIndex: number;
   title: string;
   year: string;
   letterboxdSlug: string | null;
-  alreadyInWatchlist: boolean;
-  candidates: LetterboxdImportCandidate[];
+  candidates: LetterboxdCandidate[];
 }
 
-export interface LetterboxdImportPreview {
-  rows: LetterboxdImportRow[];
-  totalParsed: number;
+export interface LetterboxdSyncReport {
+  skipped: boolean;
+  added: number;
+  removed: number;
+  unmatchedTitles: string[];
+  pendingChoices: LetterboxdPendingChoice[];
+  totalOnLetterboxd: number;
   totalTruncated: number;
 }
 
-export interface LetterboxdImportSelection {
+export interface LetterboxdSelection {
   tmdbId: number;
   mediaType: MovieMediaType;
   title: string;
@@ -35,28 +38,21 @@ export interface LetterboxdImportSelection {
   letterboxdSlug: string | null;
 }
 
-export interface LetterboxdImportConfirmResult {
+export interface LetterboxdConfirmResult {
   added: number;
   alreadyPresent: number;
 }
 
-export async function previewLetterboxdImport(csv: string): Promise<LetterboxdImportPreview> {
-  return fetchApi<LetterboxdImportPreview>('/letterboxd-import/preview', {
-    method: 'POST',
-    body: JSON.stringify({ csv }),
-  });
-}
-
-export async function previewLetterboxdImportFromAccount(): Promise<LetterboxdImportPreview> {
-  return fetchApi<LetterboxdImportPreview>('/letterboxd-import/preview-from-account', {
+export async function syncLetterboxd(force: boolean): Promise<LetterboxdSyncReport> {
+  return fetchApi<LetterboxdSyncReport>(`/letterboxd/sync?force=${force ? 'true' : 'false'}`, {
     method: 'POST',
   });
 }
 
-export async function confirmLetterboxdImport(
-  selections: LetterboxdImportSelection[]
-): Promise<LetterboxdImportConfirmResult> {
-  return fetchApi<LetterboxdImportConfirmResult>('/letterboxd-import/confirm', {
+export async function confirmLetterboxdChoices(
+  selections: LetterboxdSelection[]
+): Promise<LetterboxdConfirmResult> {
+  return fetchApi<LetterboxdConfirmResult>('/letterboxd/confirm', {
     method: 'POST',
     body: JSON.stringify({ selections }),
   });

@@ -69,6 +69,18 @@ public sealed class MongoUserRepository : IUserRepository
         return docs.ConvertAll(UserDocumentMapper.ToDomain);
     }
 
+    public async Task SetLetterboxdSyncStatusAsync(
+        string userId,
+        DateTimeOffset syncedAt,
+        string? error,
+        CancellationToken ct = default)
+    {
+        var update = Builders<UserDocument>.Update
+            .Set(x => x.LetterboxdLastSyncAt, syncedAt.UtcDateTime)
+            .Set(x => x.LetterboxdLastSyncError, error);
+        await _collection.UpdateOneAsync(x => x.Id == userId, update, cancellationToken: ct);
+    }
+
     public async Task<IReadOnlyList<PublicProfileRef>> ListPublicProfilesAsync(int limit, CancellationToken ct = default)
     {
         var filter = Builders<UserDocument>.Filter.And(

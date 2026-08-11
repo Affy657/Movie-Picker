@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, beforeEach } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
@@ -20,7 +20,13 @@ function renderAccount() {
   );
 }
 
-function meHandler(letterboxdUsername: string | null = null) {
+function meHandler(
+  overrides: {
+    letterboxdUsername?: string | null;
+    letterboxdLastSyncAt?: string | null;
+    letterboxdLastSyncError?: string | null;
+  } = {}
+) {
   return http.get(`${TEST_API_V1}/auth/me`, () =>
     HttpResponse.json({
       userId: 'u-acc',
@@ -33,7 +39,9 @@ function meHandler(letterboxdUsername: string | null = null) {
       handle: 'pat',
       bio: null,
       isProfilePublic: true,
-      letterboxdUsername,
+      letterboxdUsername: overrides.letterboxdUsername ?? null,
+      letterboxdLastSyncAt: overrides.letterboxdLastSyncAt ?? null,
+      letterboxdLastSyncError: overrides.letterboxdLastSyncError ?? null,
     })
   );
 }
@@ -62,12 +70,24 @@ describe('LetterboxdImportSection (MSW)', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
-  it('affiche le pseudo Letterboxd existant et envoie le PATCH au clic sur Enregistrer', async () => {
+  it('affiche le pseudo en lecture seule, sans champ de saisie', async () => {
+    server.use(meHandler({ letterboxdUsername: 'dave_v' }));
+
+    renderAccount();
+
+    expect(await screen.findByText('dave_v')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Pseudo Letterboxd')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Modifier le pseudo Letterboxd' })
+    ).toBeInTheDocument();
+  });
+
+  it('permet de modifier le pseudo via le crayon puis de valider', async () => {
     const user = userEvent.setup();
     let patched: string | null | undefined;
 
     server.use(
-      meHandler('dave_v'),
+      meHandler({ letterboxdUsername: 'dave_v' }),
       http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
         const body = (await request.json()) as { letterboxdUsername?: string | null };
         patched = body.letterboxdUsername;
@@ -76,52 +96,75 @@ describe('LetterboxdImportSection (MSW)', () => {
           displayName: 'Pat',
           emailMasked: 'p***@test.local',
           letterboxdUsername: body.letterboxdUsername ?? null,
+          letterboxdLastSyncAt: null,
+          letterboxdLastSyncError: null,
         });
       })
     );
 
     renderAccount();
 
-    const input = await screen.findByLabelText('Pseudo Letterboxd');
-    await waitFor(() => expect(input).toHaveValue('dave_v'));
+    await user.click(await screen.findByRole('button', { name: 'Modifier le pseudo Letterboxd' }));
+
+    const input = screen.getByLabelText('Pseudo Letterboxd');
+    expect(input).toHaveValue('dave_v');
 
     await user.clear(input);
     await user.type(input, 'newname');
-    const section = input.closest('section') as HTMLElement;
-    await user.click(within(section).getByRole('button', { name: 'Enregistrer' }));
+    await user.click(screen.getByRole('button', { name: 'Enregistrer le pseudo Letterboxd' }));
 
     await waitFor(() => expect(patched).toBe('newname'));
   });
 
-  it('importe un CSV et ouvre l’écran de revue avec les candidats TMDB', async () => {
+  it('annule la modification du pseudo sans envoyer de PATCH', async () => {
     const user = userEvent.setup();
+    let patchCalled = false;
 
     server.use(
-      meHandler(),
-      http.post(`${TEST_API_V1}/letterboxd-import/preview`, async ({ request }) => {
-        const body = (await request.json()) as { csv: string };
-        expect(body.csv).toContain('Inception');
+      meHandler({ letterboxdUsername: 'dave_v' }),
+      http.patch(`${TEST_API_V1}/auth/me`, () => {
+        patchCalled = true;
+        return HttpResponse.json({});
+      })
+    );
+
+    renderAccount();
+
+    await user.click(await screen.findByRole('button', { name: 'Modifier le pseudo Letterboxd' }));
+    await user.type(screen.getByLabelText('Pseudo Letterboxd'), 'xyz');
+    await user.click(screen.getByRole('button', { name: 'Annuler' }));
+
+    expect(screen.queryByLabelText('Pseudo Letterboxd')).not.toBeInTheDocument();
+    expect(screen.getByText('dave_v')).toBeInTheDocument();
+    expect(patchCalled).toBe(false);
+  });
+
+  it('affiche directement le champ de saisie quand aucun pseudo n’est enregistré', async () => {
+    server.use(meHandler({ letterboxdUsername: null }));
+
+    renderAccount();
+
+    expect(await screen.findByLabelText('Pseudo Letterboxd')).toHaveValue('');
+    expect(
+      screen.queryByRole('button', { name: 'Modifier le pseudo Letterboxd' })
+    ).not.toBeInTheDocument();
+  });
+
+  it('synchronise et affiche le bilan ajouts/retraits sans ouvrir de modale quand tout est certain', async () => {
+    const user = userEvent.setup();
+    let syncUrl: string | null = null;
+
+    server.use(
+      meHandler({ letterboxdUsername: 'affy657' }),
+      http.post(`${TEST_API_V1}/letterboxd/sync`, ({ request }) => {
+        syncUrl = request.url;
         return HttpResponse.json({
-          rows: [
-            {
-              rowIndex: 1,
-              title: 'Inception',
-              year: '2010',
-              letterboxdSlug: null,
-              alreadyInWatchlist: false,
-              candidates: [
-                {
-                  tmdbId: 27205,
-                  mediaType: 'movie',
-                  title: 'Inception',
-                  year: '2010',
-                  posterPath: null,
-                  voteAverage: 8.4,
-                },
-              ],
-            },
-          ],
-          totalParsed: 1,
+          skipped: false,
+          added: 3,
+          removed: 1,
+          unmatchedTitles: [],
+          pendingChoices: [],
+          totalOnLetterboxd: 10,
           totalTruncated: 0,
         });
       })
@@ -129,80 +172,169 @@ describe('LetterboxdImportSection (MSW)', () => {
 
     renderAccount();
 
-    await screen.findByLabelText('Pseudo Letterboxd');
-    const csvContent =
-      'Date,Name,Year,Letterboxd URI\n2026-01-01,Inception,2010,https://letterboxd.com/x/\n';
-    const file = new File([csvContent], 'watchlist.csv', { type: 'text/csv' });
-    const fileInput = screen.getByLabelText('Fichier watchlist.csv');
+    const syncButton = await screen.findByRole('button', { name: /Synchroniser maintenant/ });
+    await waitFor(() => expect(syncButton).toBeEnabled());
+    await user.click(syncButton);
 
-    await user.upload(fileInput, file);
-
+    expect(await screen.findByText('3 film(s) ajouté(s), 1 retiré(s).')).toBeInTheDocument();
+    expect(syncUrl).toContain('force=true');
     expect(
-      await screen.findByRole('heading', { name: 'Vérifier les films à importer' })
-    ).toBeInTheDocument();
-    expect(screen.getByText('Inception (2010)')).toBeInTheDocument();
+      screen.queryByRole('heading', { name: 'Choisir les bonnes correspondances' })
+    ).not.toBeInTheDocument();
   });
 
-  it('importe depuis le compte Letterboxd et transmet le slug à l’écran de revue', async () => {
+  it('ouvre la modale de choix quand la synchro renvoie des correspondances ambiguës', async () => {
     const user = userEvent.setup();
-    let accountImportCalled = false;
 
     server.use(
-      meHandler('affy657'),
-      http.post(`${TEST_API_V1}/letterboxd-import/preview-from-account`, () => {
-        accountImportCalled = true;
-        return HttpResponse.json({
-          rows: [
+      meHandler({ letterboxdUsername: 'affy657' }),
+      http.post(`${TEST_API_V1}/letterboxd/sync`, () =>
+        HttpResponse.json({
+          skipped: false,
+          added: 0,
+          removed: 0,
+          unmatchedTitles: [],
+          pendingChoices: [
             {
               rowIndex: 1,
-              title: 'The Polar Express',
-              year: '2004',
-              letterboxdSlug: 'the-polar-express',
-              alreadyInWatchlist: false,
+              title: 'Midnight Mass',
+              year: '2021',
+              letterboxdSlug: 'midnight-mass-2021',
               candidates: [
                 {
-                  tmdbId: 5255,
-                  mediaType: 'movie',
-                  title: 'Le Pôle Express',
-                  year: '2004',
+                  tmdbId: 97400,
+                  mediaType: 'tv',
+                  title: 'Sermons de minuit',
+                  year: '2021',
                   posterPath: null,
-                  voteAverage: 6.8,
+                  voteAverage: 7.5,
                 },
               ],
             },
           ],
-          totalParsed: 1,
+          totalOnLetterboxd: 1,
           totalTruncated: 0,
-        });
+        })
+      )
+    );
+
+    renderAccount();
+
+    const syncButton = await screen.findByRole('button', { name: /Synchroniser maintenant/ });
+    await waitFor(() => expect(syncButton).toBeEnabled());
+    await user.click(syncButton);
+
+    expect(
+      await screen.findByRole('heading', { name: 'Choisir les bonnes correspondances' })
+    ).toBeInTheDocument();
+    expect(screen.getByText('Sermons de minuit (2021)')).toBeInTheDocument();
+  });
+
+  it('liste les films introuvables sur TMDB dans un dépliant', async () => {
+    const user = userEvent.setup();
+
+    server.use(
+      meHandler({ letterboxdUsername: 'affy657' }),
+      http.post(`${TEST_API_V1}/letterboxd/sync`, () =>
+        HttpResponse.json({
+          skipped: false,
+          added: 0,
+          removed: 0,
+          unmatchedTitles: ['Film Obscur (1974)'],
+          pendingChoices: [],
+          totalOnLetterboxd: 1,
+          totalTruncated: 0,
+        })
+      )
+    );
+
+    renderAccount();
+
+    const syncButton = await screen.findByRole('button', { name: /Synchroniser maintenant/ });
+    await waitFor(() => expect(syncButton).toBeEnabled());
+    await user.click(syncButton);
+
+    expect(
+      await screen.findByText('Voir les 1 film(s) introuvable(s) sur TMDB')
+    ).toBeInTheDocument();
+    expect(screen.getByText('Film Obscur (1974)')).toBeInTheDocument();
+  });
+
+  it('désactive la synchronisation et signale qu’elle est inactive sans pseudo', async () => {
+    server.use(meHandler({ letterboxdUsername: null }));
+
+    renderAccount();
+
+    const syncButton = await screen.findByRole('button', { name: /Synchroniser maintenant/ });
+    expect(syncButton).toBeDisabled();
+    expect(
+      screen.getByText('Ajoutez votre pseudo pour activer la synchronisation.')
+    ).toBeInTheDocument();
+  });
+
+  it('affiche la date de dernière synchronisation réussie', async () => {
+    server.use(
+      meHandler({
+        letterboxdUsername: 'affy657',
+        letterboxdLastSyncAt: '2026-08-10T12:00:00Z',
       })
     );
 
     renderAccount();
 
-    const importButton = await screen.findByRole('button', {
-      name: 'Importer ma watchlist Letterboxd',
-    });
-    await waitFor(() => expect(importButton).toBeEnabled());
-    await user.click(importButton);
-
-    await waitFor(() => expect(accountImportCalled).toBe(true));
-    expect(
-      await screen.findByRole('heading', { name: 'Vérifier les films à importer' })
-    ).toBeInTheDocument();
-    expect(screen.getByText('Le Pôle Express (2004)')).toBeInTheDocument();
+    expect(await screen.findByText(/Synchronisé le/)).toBeInTheDocument();
   });
 
-  it('désactive l’import depuis le compte tant qu’aucun pseudo n’est enregistré', async () => {
-    server.use(meHandler(null));
+  it('affiche l’erreur de la dernière synchronisation échouée', async () => {
+    server.use(
+      meHandler({
+        letterboxdUsername: 'affy657',
+        letterboxdLastSyncError: 'Watchlist Letterboxd inaccessible.',
+      })
+    );
 
     renderAccount();
 
-    const importButton = await screen.findByRole('button', {
-      name: 'Importer ma watchlist Letterboxd',
-    });
-    expect(importButton).toBeDisabled();
+    const alerts = await screen.findAllByRole('alert');
     expect(
-      screen.getByText('Enregistrez d’abord votre pseudo Letterboxd ci-dessus.')
-    ).toBeInTheDocument();
+      alerts.some((el) => el.textContent?.includes('Watchlist Letterboxd inaccessible.'))
+    ).toBe(true);
+  });
+
+  it('affiche le message d’erreur du serveur quand la synchronisation échoue', async () => {
+    const user = userEvent.setup();
+
+    server.use(
+      meHandler({ letterboxdUsername: 'inconnu' }),
+      http.post(`${TEST_API_V1}/letterboxd/sync`, () =>
+        HttpResponse.json(
+          { error: 'Watchlist Letterboxd de « inconnu » inaccessible.' },
+          { status: 400 }
+        )
+      )
+    );
+
+    renderAccount();
+
+    const syncButton = await screen.findByRole('button', { name: /Synchroniser maintenant/ });
+    await waitFor(() => expect(syncButton).toBeEnabled());
+    await user.click(syncButton);
+
+    expect(await screen.findByText(/inaccessible/)).toBeInTheDocument();
+  });
+
+  it('ouvre la bulle d’information sur le fonctionnement de la synchronisation', async () => {
+    const user = userEvent.setup();
+    server.use(meHandler({ letterboxdUsername: 'affy657' }));
+
+    renderAccount();
+
+    const trigger = await screen.findByRole('button', { name: 'Comment ça marche' });
+    expect(screen.queryByText(/Vos deux watchlists restent alignées/)).not.toBeInTheDocument();
+
+    await user.click(trigger);
+
+    expect(screen.getByText(/Vos deux watchlists restent alignées/)).toBeInTheDocument();
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
   });
 });

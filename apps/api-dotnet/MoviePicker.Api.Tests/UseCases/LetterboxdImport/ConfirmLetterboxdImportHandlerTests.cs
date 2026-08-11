@@ -52,7 +52,7 @@ public sealed class ConfirmLetterboxdImportHandlerTests
     [Fact]
     public async Task HandleAsync_TooManySelections_ThrowsBadRequest()
     {
-        var selections = Enumerable.Range(0, LetterboxdCsvParser.MaxRows + 1)
+        var selections = Enumerable.Range(0, LetterboxdImportLimits.MaxRows + 1)
             .Select(i => Selection(i))
             .ToList();
 

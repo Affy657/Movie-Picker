@@ -54,6 +54,24 @@ public sealed class InMemoryUserRepository : IUserRepository
         return Task.FromResult(result);
     }
 
+    public Task SetLetterboxdSyncStatusAsync(
+        string userId,
+        DateTimeOffset syncedAt,
+        string? error,
+        CancellationToken ct = default)
+    {
+        if (_byId.TryGetValue(userId, out var user))
+        {
+            _byId[userId] = user with
+            {
+                LetterboxdLastSyncAt = syncedAt,
+                LetterboxdLastSyncError = error
+            };
+        }
+
+        return Task.CompletedTask;
+    }
+
     public Task<IReadOnlyList<PublicProfileRef>> ListPublicProfilesAsync(int limit, CancellationToken ct = default)
     {
         IReadOnlyList<PublicProfileRef> result = _byId.Values
@@ -89,6 +107,8 @@ public sealed class InMemoryUserRepository : IUserRepository
             NotifyOnEventDeleted = user.NotifyOnEventDeleted,
             NotifyOnNewFollower = user.NotifyOnNewFollower,
             LetterboxdUsername = user.LetterboxdUsername,
+            LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,
+            LetterboxdLastSyncError = user.LetterboxdLastSyncError,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         };
@@ -131,6 +151,8 @@ public sealed class InMemoryUserRepository : IUserRepository
             NotifyOnEventDeleted = user.NotifyOnEventDeleted,
             NotifyOnNewFollower = user.NotifyOnNewFollower,
             LetterboxdUsername = user.LetterboxdUsername,
+            LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,
+            LetterboxdLastSyncError = user.LetterboxdLastSyncError,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         };

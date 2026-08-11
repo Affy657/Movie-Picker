@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.LetterboxdImport;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.BackgroundServices;
@@ -63,7 +64,6 @@ public static class ServiceCollectionExtensions
         services.AddEmailSender(configuration, environment);
         services.AddSingleton<IPushNotificationSender, WebPushSender>();
         services.AddHostedService<EventReminderService>();
-        services.AddHostedService<LetterboxdWatchlistSyncService>();
 
         services.AddHttpClient<ILetterboxdWatchlistClient, LetterboxdWatchlistClient>(client =>
         {
@@ -253,6 +253,8 @@ public static class ServiceCollectionExtensions
 
     private static void RegisterHandlers(IServiceCollection services)
     {
+        services.AddScoped<LetterboxdWatchlistSynchronizer>();
+
         var handlerNamespace = "MoviePicker.Api.Application.UseCases";
         var types = typeof(ServiceCollectionExtensions).Assembly.GetTypes()
             .Where(t => t is { IsClass: true, IsAbstract: false }

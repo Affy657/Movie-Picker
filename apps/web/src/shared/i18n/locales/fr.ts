@@ -171,46 +171,36 @@
       deleteAccountFallbackError: 'Suppression impossible. Vérifiez votre mot de passe.',
       letterboxd: {
         title: 'Letterboxd',
-        syncTitle: 'Synchronisation automatique',
-        syncDescription:
-          'Renseignez votre pseudo Letterboxd. Movie Picker relit régulièrement votre watchlist Letterboxd et retire de votre watchlist Movie Picker les films qui n’y sont plus, autrement dit ceux que vous avez vus, notés ou commentés sur Letterboxd. Seuls les films importés depuis Letterboxd sont concernés : ceux que vous avez ajoutés directement dans Movie Picker ne sont jamais retirés.',
+        helpTitle: 'Comment ça marche',
+        helpSync:
+          'Vos deux watchlists restent alignées : ce que vous ajoutez sur Letterboxd arrive ici, ce que vous en sortez (vu, noté, commenté) est retiré d’ici.',
+        helpSafety: 'Les films ajoutés directement dans Movie Picker ne sont jamais retirés.',
+        helpUsername:
+          'Votre pseudo est la fin de letterboxd.com/…, et votre profil doit être public. La synchronisation automatique tourne au plus une fois par jour, à l’ouverture de l’application.',
         usernameLabel: 'Pseudo Letterboxd',
-        usernamePlaceholder: 'Ex : dave_v',
-        usernameHint:
-          'Visible dans l’URL de votre profil Letterboxd (letterboxd.com/votre-pseudo). Votre profil doit être public.',
+        usernamePlaceholder: 'Votre pseudo Letterboxd',
+        usernameEdit: 'Modifier le pseudo Letterboxd',
+        usernameSave: 'Enregistrer le pseudo Letterboxd',
         usernameFallbackError: 'Enregistrement impossible.',
-        accountImportTitle: 'Importer depuis votre compte',
-        accountImportDescription:
-          'Récupère votre watchlist Letterboxd et vous laisse valider les correspondances avant l’ajout. Relancez-le quand vous voulez pour récupérer vos nouveaux films.',
-        accountImportSubmit: 'Importer ma watchlist Letterboxd',
-        accountImportSubmitting: 'Récupération en cours…',
-        accountImportHint:
-          'Les films déjà présents dans votre watchlist Movie Picker seront ignorés.',
-        accountImportNeedsUsername: 'Enregistrez d’abord votre pseudo Letterboxd ci-dessus.',
-        accountImportFallbackError:
-          'Récupération impossible. Vérifiez votre pseudo et que votre profil Letterboxd est public.',
-        importTitle: 'Importer un fichier CSV',
-        importDescription:
-          'Solution de repli si votre profil Letterboxd est privé : importez le fichier watchlist.csv exporté depuis Letterboxd.',
-        csvLabel: 'Fichier watchlist.csv',
-        csvDropHint: 'Glissez le fichier ici ou cliquez pour le choisir',
-        csvHint:
-          'Depuis Letterboxd : Paramètres > Importer et exporter > Exporter les données. Utilisez le fichier watchlist.csv de l’archive téléchargée.',
-        importFallbackError: 'Import impossible. Vérifiez le fichier et réessayez.',
-        importSuccess:
-          '{{added}} film(s) ajouté(s) à votre watchlist ({{alreadyPresent}} déjà présent(s)).',
-        importSuccessNoneAdded: 'Aucun nouveau film ajouté.',
-        reviewTitle: 'Vérifier les films à importer',
-        reviewSummary:
-          '{{total}} film(s) analysé(s). {{alreadyInWatchlist}} déjà dans votre watchlist, {{notFound}} introuvable(s) sur TMDB.',
-        reviewTruncated:
-          '{{count}} film(s) supplémentaire(s) non traité(s) (trop de films pour un seul import).',
-        reviewNothingToImport: "Aucun film à importer pour l'instant.",
-        reviewFromLetterboxd: 'Depuis Letterboxd : {{title}} ({{year}})',
-        reviewSkipRow: 'Ignorer ce film',
-        confirmFallbackError: 'Import impossible. Réessayez.',
-        confirmSubmitting: 'Import en cours…',
-        confirmSubmit: 'Importer ({{count}})',
+        statusOff: 'Ajoutez votre pseudo pour activer la synchronisation.',
+        statusPending: 'Synchronisation active, première lecture à venir.',
+        statusSyncedAt: 'Synchronisé le {{date}}.',
+        syncNow: 'Synchroniser maintenant',
+        syncSubmitting: 'Lecture de Letterboxd…',
+        syncFallbackError: 'Synchronisation impossible. Réessayez dans un instant.',
+        reportChanges: '{{added}} film(s) ajouté(s), {{removed}} retiré(s).',
+        reportPending: 'Choisir pour {{count}} film(s) ambigu(s)',
+        reportUnmatched: 'Voir les {{count}} film(s) introuvable(s) sur TMDB',
+        reportTruncated: '{{count}} film(s) non traité(s) : trop de films pour une seule fois.',
+        choicesTitle: 'Choisir les bonnes correspondances',
+        choicesIntro:
+          'TMDB propose plusieurs films pour {{count}} titre(s) Letterboxd, choisissez le bon.',
+        choicesFallbackError: 'Impossible d’enregistrer votre choix. Réessayez.',
+        choicesFromLetterboxd: 'Depuis Letterboxd : {{title}} ({{year}})',
+        choicesSkip: 'Ignorer ce film',
+        choicesSubmitting: 'Enregistrement…',
+        choicesSubmit: 'Valider ({{count}})',
+        choicesApplied: '{{added}} film(s) ajouté(s).',
       },
     },
     logout: {

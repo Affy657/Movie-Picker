@@ -72,6 +72,14 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public string? LetterboxdUsername { get; set; }
 
+    [BsonElement("letterboxdLastSyncAt")]
+    [BsonIgnoreIfNull]
+    public DateTime? LetterboxdLastSyncAt { get; set; }
+
+    [BsonElement("letterboxdLastSyncError")]
+    [BsonIgnoreIfNull]
+    public string? LetterboxdLastSyncError { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 

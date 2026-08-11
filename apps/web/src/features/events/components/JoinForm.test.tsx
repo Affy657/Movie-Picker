@@ -36,6 +36,8 @@ const profile: UserProfile = {
   bio: null,
   isProfilePublic: true,
   letterboxdUsername: null,
+  letterboxdLastSyncAt: null,
+  letterboxdLastSyncError: null,
 };
 
 function renderForm(node: ReactElement) {

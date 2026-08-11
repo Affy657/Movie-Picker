@@ -21,6 +21,8 @@ const baseUser: UserProfile = {
   bio: null,
   isProfilePublic: true,
   letterboxdUsername: null,
+  letterboxdLastSyncAt: null,
+  letterboxdLastSyncError: null,
 };
 
 function renderMenu(user: UserProfile = baseUser) {

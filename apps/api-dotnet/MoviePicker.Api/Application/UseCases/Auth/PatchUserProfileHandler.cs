@@ -85,6 +85,11 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             letterboxdUsername = trimmed.Length == 0 ? null : trimmed;
         }
 
+        var letterboxdChanged = !string.Equals(
+            letterboxdUsername,
+            user.LetterboxdUsername,
+            StringComparison.OrdinalIgnoreCase);
+
         var updated = user with
         {
             DisplayName = displayName,
@@ -96,6 +101,8 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             Bio = bio,
             IsProfilePublic = isProfilePublic,
             LetterboxdUsername = letterboxdUsername,
+            LetterboxdLastSyncAt = letterboxdChanged ? null : user.LetterboxdLastSyncAt,
+            LetterboxdLastSyncError = letterboxdChanged ? null : user.LetterboxdLastSyncError,
             UpdatedAt = _clock.GetUtcNow()
         };
 
@@ -140,7 +147,9 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
         Handle = user.Handle,
         Bio = user.Bio,
         IsProfilePublic = user.IsProfilePublic,
-        LetterboxdUsername = user.LetterboxdUsername
+        LetterboxdUsername = user.LetterboxdUsername,
+        LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,
+        LetterboxdLastSyncError = user.LetterboxdLastSyncError
     };
 
     private static T ParseEnum<T>(string raw, T defaultValue) where T : struct, Enum =>

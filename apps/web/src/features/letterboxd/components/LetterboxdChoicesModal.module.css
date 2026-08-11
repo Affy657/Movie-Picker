@@ -60,31 +60,16 @@
   outline: none;
 }
 
-.summary {
-  margin: 0.5rem 1.25rem 0;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-}
-
-.truncatedNotice {
+.intro {
   margin: 0.35rem 1.25rem 0;
-  font-size: var(--font-size-2xs);
+  font-size: var(--font-size-xs);
   color: var(--color-text-muted);
-  font-style: italic;
 }
 
 .error {
   margin: 0.5rem 1.25rem 0;
   color: var(--color-error);
   font-size: var(--font-size-sm);
-}
-
-.empty {
-  margin: 0;
-  padding: 1rem 1.25rem 1.25rem;
-  font-size: var(--font-size-sm);
-  font-style: italic;
-  color: var(--color-text-muted);
 }
 
 .list {

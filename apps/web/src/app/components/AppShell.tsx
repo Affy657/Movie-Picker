@@ -4,6 +4,7 @@ import { Bookmark, CalendarDays, Plus } from 'lucide-react';
 import { Link, NavLink, Outlet } from 'react-router';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { useLetterboxdAutoSync } from '@/features/letterboxd/hooks/useLetterboxdAutoSync';
 import { ROUTES } from '@/app/routes';
 import UserMenu from '@/features/auth/components/UserMenu';
 import InboxBell from '@/features/notifications/components/InboxBell';
@@ -53,6 +54,7 @@ function MobileNavItem({ to, end, label, Icon }: Readonly<NavItemDef>) {
 export default function AppShell() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  useLetterboxdAutoSync();
 
   const isAuthenticated = !!user;
 

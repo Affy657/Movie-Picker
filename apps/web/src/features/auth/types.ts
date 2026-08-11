@@ -12,4 +12,6 @@ export interface UserProfile {
   bio: string | null;
   isProfilePublic: boolean;
   letterboxdUsername: string | null;
+  letterboxdLastSyncAt: string | null;
+  letterboxdLastSyncError: string | null;
 }

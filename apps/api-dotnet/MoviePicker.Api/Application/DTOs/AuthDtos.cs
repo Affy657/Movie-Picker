@@ -55,6 +55,8 @@ public sealed class UserProfileResponse
     public string? Bio { get; init; }
     public bool IsProfilePublic { get; init; } = true;
     public string? LetterboxdUsername { get; init; }
+    public DateTimeOffset? LetterboxdLastSyncAt { get; init; }
+    public string? LetterboxdLastSyncError { get; init; }
 }
 
 public sealed class PatchUserProfileRequest

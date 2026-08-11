@@ -169,45 +169,36 @@ export const en: Locale = {
       deleteAccountFallbackError: 'Deletion failed. Check your password.',
       letterboxd: {
         title: 'Letterboxd',
-        syncTitle: 'Automatic sync',
-        syncDescription:
-          'Set your Letterboxd username. Movie Picker regularly re-reads your Letterboxd watchlist and removes from your Movie Picker watchlist the films that are no longer on it, meaning the ones you watched, rated or reviewed on Letterboxd. Only films imported from Letterboxd are affected: films you added directly in Movie Picker are never removed.',
+        helpTitle: 'How it works',
+        helpSync:
+          'Both watchlists stay aligned: what you add on Letterboxd shows up here, what you take off there (watched, rated, reviewed) is removed here.',
+        helpSafety: 'Films added directly in Movie Picker are never removed.',
+        helpUsername:
+          'Your username is the end of letterboxd.com/…, and your profile must be public. Automatic sync runs at most once a day, when you open the app.',
         usernameLabel: 'Letterboxd username',
-        usernamePlaceholder: 'e.g. dave_v',
-        usernameHint:
-          'Visible in your Letterboxd profile URL (letterboxd.com/your-username). Your profile must be public.',
+        usernamePlaceholder: 'Your Letterboxd username',
+        usernameEdit: 'Edit Letterboxd username',
+        usernameSave: 'Save Letterboxd username',
         usernameFallbackError: 'Could not save.',
-        accountImportTitle: 'Import from your account',
-        accountImportDescription:
-          'Fetches your Letterboxd watchlist and lets you confirm the matches before adding. Run it again whenever you want to pull in your new films.',
-        accountImportSubmit: 'Import my Letterboxd watchlist',
-        accountImportSubmitting: 'Fetching…',
-        accountImportHint: 'Films already in your Movie Picker watchlist will be skipped.',
-        accountImportNeedsUsername: 'Save your Letterboxd username above first.',
-        accountImportFallbackError:
-          'Could not fetch. Check your username and that your Letterboxd profile is public.',
-        importTitle: 'Import a CSV file',
-        importDescription:
-          'Fallback if your Letterboxd profile is private: import the watchlist.csv file exported from Letterboxd.',
-        csvLabel: 'watchlist.csv file',
-        csvDropHint: 'Drag the file here or click to choose it',
-        csvHint:
-          'From Letterboxd: Settings > Import & Export > Export your data. Use the watchlist.csv file from the downloaded archive.',
-        importFallbackError: 'Import failed. Check the file and try again.',
-        importSuccess:
-          '{{added}} film(s) added to your watchlist ({{alreadyPresent}} already present).',
-        importSuccessNoneAdded: 'No new films added.',
-        reviewTitle: 'Review films to import',
-        reviewSummary:
-          '{{total}} film(s) analysed. {{alreadyInWatchlist}} already in your watchlist, {{notFound}} not found on TMDB.',
-        reviewTruncated:
-          '{{count}} additional film(s) skipped (too many films for a single import).',
-        reviewNothingToImport: 'Nothing to import right now.',
-        reviewFromLetterboxd: 'From Letterboxd: {{title}} ({{year}})',
-        reviewSkipRow: 'Skip this film',
-        confirmFallbackError: 'Import failed. Try again.',
-        confirmSubmitting: 'Importing…',
-        confirmSubmit: 'Import ({{count}})',
+        statusOff: 'Add your username to turn the sync on.',
+        statusPending: 'Sync is on, first read coming up.',
+        statusSyncedAt: 'Synced on {{date}}.',
+        syncNow: 'Sync now',
+        syncSubmitting: 'Reading Letterboxd…',
+        syncFallbackError: 'Sync failed. Try again in a moment.',
+        reportChanges: '{{added}} film(s) added, {{removed}} removed.',
+        reportPending: 'Choose for {{count}} ambiguous film(s)',
+        reportUnmatched: 'Show the {{count}} film(s) not found on TMDB',
+        reportTruncated: '{{count}} film(s) skipped: too many films at once.',
+        choicesTitle: 'Pick the right matches',
+        choicesIntro:
+          'TMDB found several films for {{count}} Letterboxd title(s), pick the right one.',
+        choicesFallbackError: 'Could not save your choice. Try again.',
+        choicesFromLetterboxd: 'From Letterboxd: {{title}} ({{year}})',
+        choicesSkip: 'Skip this film',
+        choicesSubmitting: 'Saving…',
+        choicesSubmit: 'Confirm ({{count}})',
+        choicesApplied: '{{added}} film(s) added.',
       },
     },
     logout: {
