@@ -7,7 +7,7 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
-  CircleSlash,
+  Disc3,
   ExternalLink,
   Eye,
   ListPlus,
@@ -655,7 +655,7 @@ export function CardKebab({
                 {wheelExclusion.excluded ? (
                   <RotateCcw aria-hidden size={14} />
                 ) : (
-                  <CircleSlash aria-hidden size={14} />
+                  <Disc3 aria-hidden size={14} />
                 )}
                 <span>
                   {wheelExclusion.excluded
