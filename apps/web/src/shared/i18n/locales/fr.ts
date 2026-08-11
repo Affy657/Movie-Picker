@@ -736,6 +736,8 @@
       votesCast: 'Votes donnés',
       winningProposals: 'Propositions gagnantes',
       moviesSeen: 'Films vus',
+      currentStreak: 'Semaines de suite',
+      bestStreakTooltip: 'Record : {{best}} semaines',
       genresTitle: 'Genres favoris',
       activityTitle: 'Activité (6 mois)',
       activityImgAlt: "Heatmap d'activité : {{count}} participation(s) sur 26 semaines",

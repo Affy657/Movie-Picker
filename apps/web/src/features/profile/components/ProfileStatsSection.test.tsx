@@ -11,6 +11,8 @@ const EMPTY_STATS: UserStats = {
   votesCast: 0,
   winningProposals: 0,
   moviesSeen: 0,
+  currentStreakWeeks: 0,
+  bestStreakWeeks: 0,
   favoriteGenres: [],
   dailyActivity: [],
 };
@@ -39,14 +41,20 @@ describe('ProfileStatsSection', () => {
     expect(screen.queryByText(/aucune activité/i)).toBeNull();
   });
 
-  it('affiche 4 entrées dans la grille des compteurs', () => {
+  it('affiche 5 entrées dans la grille des compteurs', () => {
     renderSection({ ...EMPTY_STATS, eventsCreated: 1 });
-    expect(screen.getAllByRole('listitem')).toHaveLength(4);
+    expect(screen.getAllByRole('listitem')).toHaveLength(5);
   });
 
   it('affiche la valeur du compteur eventsCreated', () => {
     renderSection({ ...EMPTY_STATS, eventsCreated: 7 });
     expect(screen.getByText('7')).toBeInTheDocument();
+  });
+
+  it('affiche la valeur du compteur currentStreakWeeks', () => {
+    renderSection({ ...EMPTY_STATS, currentStreakWeeks: 3, bestStreakWeeks: 5 });
+    expect(screen.getByText('3')).toBeInTheDocument();
+    expect(screen.getByText(/semaines de suite/i)).toBeInTheDocument();
   });
 
   it('affiche le panneau activité si au moins un jour a count > 0', async () => {

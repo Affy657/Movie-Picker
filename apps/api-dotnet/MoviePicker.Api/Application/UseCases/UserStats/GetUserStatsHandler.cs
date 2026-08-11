@@ -2,6 +2,7 @@ using System.Globalization;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Profile;
+using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.UserStats;
@@ -53,12 +54,20 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
 
         var participantEventIds = participants.Select(p => p.EventId).Distinct().ToList();
         var participantEvents = await _events.ListByIdsAsync(participantEventIds, ct);
-        var eventDateById = participantEvents.ToDictionary(e => e.Id, e => e.Date);
+        var eventById = participantEvents.ToDictionary(e => e.Id);
         var activityDates = participants
-            .Select(p => eventDateById.GetValueOrDefault(p.EventId))
+            .Select(p => eventById.GetValueOrDefault(p.EventId)?.Date)
             .Where(d => d is not null)
             .ToList()!;
         var dailyActivity = BuildDailyActivity(activityDates!);
+
+        var now = _clock.GetUtcNow();
+        var qualifyingEvents = participants
+            .Select(p => eventById.GetValueOrDefault(p.EventId))
+            .Where(e => e is not null && e.WinnerMovieId is not null && e.IsFinished(now))
+            .Select(e => e!)
+            .DistinctBy(e => e.Id);
+        var (currentStreakWeeks, bestStreakWeeks) = ComputeStreaks(qualifyingEvents, now);
 
         // The user's own created events double as the "created" count and the set we subtract
         // from participations to avoid counting a hosted soirée as "joined".
@@ -75,6 +84,8 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
             {
                 EventsCreated = createdEvents.Count,
                 EventsJoined = eventsJoined,
+                CurrentStreakWeeks = currentStreakWeeks,
+                BestStreakWeeks = bestStreakWeeks,
                 DailyActivity = dailyActivity
             };
         }
@@ -105,6 +116,8 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
             VotesCast = votesTask.Result,
             WinningProposals = winningProposals,
             MoviesSeen = seenTask.Result,
+            CurrentStreakWeeks = currentStreakWeeks,
+            BestStreakWeeks = bestStreakWeeks,
             FavoriteGenres = favoriteGenres,
             DailyActivity = dailyActivity
         };
@@ -117,8 +130,7 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
     private List<DailyActivityPoint> BuildDailyActivity(IReadOnlyList<string> eventDates)
     {
         var today = _clock.GetUtcNow().UtcDateTime.Date;
-        var daysFromMonday = ((int)today.DayOfWeek + 6) % 7;
-        var mondayThisWeek = today.AddDays(-daysFromMonday);
+        var mondayThisWeek = MondayOfWeek(today);
         var start = mondayThisWeek.AddDays(-7 * (ActivityWeeks - 1));
 
         var counts = new Dictionary<string, int>();
@@ -145,5 +157,53 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
         }
 
         return result;
+    }
+
+    // ISO week convention shared with BuildDailyActivity: weeks run Monday-to-Sunday, in UTC.
+    internal static DateTime MondayOfWeek(DateTime date)
+    {
+        var daysFromMonday = ((int)date.DayOfWeek + 6) % 7;
+        return date.Date.AddDays(-daysFromMonday);
+    }
+
+    // Current streak = consecutive weeks with a qualifying soirée, walking back from this week
+    // (or last week if this week has none yet, so an in-progress week never breaks the streak).
+    // Best streak = the longest such run anywhere in the user's history.
+    internal static (int Current, int Best) ComputeStreaks(IEnumerable<Event> qualifyingEvents, DateTimeOffset now)
+    {
+        var weeks = qualifyingEvents
+            .Select(e => DateTime.TryParseExact(e.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var day)
+                ? MondayOfWeek(day)
+                : (DateTime?)null)
+            .Where(w => w is not null)
+            .Select(w => w!.Value)
+            .Distinct()
+            .OrderBy(w => w)
+            .ToList();
+
+        if (weeks.Count == 0)
+            return (0, 0);
+
+        var best = 0;
+        var run = 0;
+        DateTime? previous = null;
+        foreach (var week in weeks)
+        {
+            run = previous is not null && week == previous.Value.AddDays(7) ? run + 1 : 1;
+            best = Math.Max(best, run);
+            previous = week;
+        }
+
+        var weekSet = weeks.ToHashSet();
+        var todayWeekMonday = MondayOfWeek(now.UtcDateTime.Date);
+        var cursor = weekSet.Contains(todayWeekMonday) ? todayWeekMonday : todayWeekMonday.AddDays(-7);
+        var current = 0;
+        while (weekSet.Contains(cursor))
+        {
+            current++;
+            cursor = cursor.AddDays(-7);
+        }
+
+        return (current, best);
     }
 }

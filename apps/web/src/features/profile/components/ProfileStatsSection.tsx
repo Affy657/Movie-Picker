@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { CalendarPlus, Film, Trophy, Users } from 'lucide-react';
+import { CalendarPlus, Film, Flame, Trophy, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import type { UserStats } from '@/features/profile/api/profileApi';
@@ -15,7 +15,7 @@ interface Props {
 export default function ProfileStatsSection({ stats }: Readonly<Props>) {
   const { t } = useTranslation();
 
-  const counters: { key: string; icon: LucideIcon; label: string; value: number }[] = [
+  const counters: { key: string; icon: LucideIcon; label: string; value: number; title?: string }[] = [
     {
       key: 'eventsCreated',
       icon: CalendarPlus,
@@ -39,6 +39,13 @@ export default function ProfileStatsSection({ stats }: Readonly<Props>) {
       icon: Trophy,
       label: t('profile.stats.winningProposals'),
       value: stats.winningProposals,
+    },
+    {
+      key: 'currentStreak',
+      icon: Flame,
+      label: t('profile.stats.currentStreak'),
+      value: stats.currentStreakWeeks,
+      title: t('profile.stats.bestStreakTooltip', { best: stats.bestStreakWeeks }),
     },
   ];
 
@@ -76,8 +83,8 @@ export default function ProfileStatsSection({ stats }: Readonly<Props>) {
       )}
 
       <ul className={styles.heroGrid}>
-        {counters.map(({ key, icon: Icon, label, value }) => (
-          <li key={key} className={styles.heroStat}>
+        {counters.map(({ key, icon: Icon, label, value, title }) => (
+          <li key={key} className={styles.heroStat} title={title}>
             <span className={styles.heroIcon} aria-hidden>
               <Icon size={20} />
             </span>

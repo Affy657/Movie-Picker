@@ -45,6 +45,8 @@ export interface UserStats {
   votesCast: number;
   winningProposals: number;
   moviesSeen: number;
+  currentStreakWeeks: number;
+  bestStreakWeeks: number;
   favoriteGenres: GenreCount[];
   dailyActivity: DailyActivityPoint[];
 }

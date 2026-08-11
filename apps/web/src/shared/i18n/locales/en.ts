@@ -725,6 +725,8 @@ export const en: Locale = {
       votesCast: 'Votes cast',
       winningProposals: 'Winning proposals',
       moviesSeen: 'Movies seen',
+      currentStreak: 'Weeks in a row',
+      bestStreakTooltip: 'Record: {{best}} weeks',
       genresTitle: 'Favourite genres',
       activityTitle: 'Activity (6 months)',
       activityImgAlt: 'Activity heatmap: {{count}} participation(s) over 26 weeks',
