@@ -10,12 +10,11 @@
   color: var(--color-primary);
 }
 
-.btnClose {
-  margin-left: 0.75rem;
-}
-
-.btnReset {
-  margin-left: 0.75rem;
+.actionsRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 /* --- Winner card --- */
@@ -24,12 +23,41 @@
 }
 
 .winnerLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin: 0.75rem 0 0.4rem;
   font-size: var(--font-size-2xs);
   font-weight: 700;
   letter-spacing: var(--tracking-widest);
   text-transform: uppercase;
   color: var(--color-primary-text);
+}
+
+.methodBadge {
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-4xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: none;
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
+}
+
+.manualBar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.9rem;
+}
+
+.manualHint {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
 }
 
 .winnerWrapper {

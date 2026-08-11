@@ -10,6 +10,7 @@ import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 import AddMovieForm from '@/features/movies/components/AddMovieForm';
 import MovieList from '@/features/movies/components/MovieList';
+import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
 import EventActionErrorBanner from '@/features/events/pages/event-detail/EventActionErrorBanner';
 import {
   useAddToWatchlist,
@@ -62,6 +63,7 @@ export type EventMoviesSectionProps = {
   refreshAll: () => void;
   viewMode: 'grid' | 'list';
   onViewModeChange: (mode: 'grid' | 'list') => void;
+  selection?: MovieCardSelection;
 };
 
 export default function EventMoviesSection({
@@ -77,6 +79,7 @@ export default function EventMoviesSection({
   refreshAll,
   viewMode,
   onViewModeChange,
+  selection,
 }: Readonly<EventMoviesSectionProps>) {
   const isFinished = !!event.isFinished;
   const { track } = useAnalytics();
@@ -274,6 +277,7 @@ export default function EventMoviesSection({
             viewMode={viewMode}
             isInWatchlist={user ? isInWatchlist : undefined}
             onToggleWatchlist={user ? handleToggleWatchlist : undefined}
+            selection={selection}
           />
         </div>
       )}

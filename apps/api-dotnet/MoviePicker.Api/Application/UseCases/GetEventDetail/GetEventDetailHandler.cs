@@ -85,6 +85,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             Config = EventConfigResponse.FromEvent(evt),
             ClosedAt = evt.ClosedAt,
             WinnerMovieId = evt.WinnerMovieId,
+            WinnerPickMethod = ToWinnerPickMethodString(evt.WinnerPickMethod),
             CreatedAt = evt.CreatedAt,
             UpdatedAt = evt.UpdatedAt,
             IsHost = isHost,
@@ -96,6 +97,14 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             Participants = participantsSummary,
         };
     }
+
+    private static string? ToWinnerPickMethodString(WinnerPickMethod? method) =>
+        method switch
+        {
+            WinnerPickMethod.Manual => "manual",
+            WinnerPickMethod.Wheel => "wheel",
+            _ => null
+        };
 
     private async Task<WinnerMovieResponse?> ResolveWinnerAsync(Event evt, CancellationToken ct)
     {

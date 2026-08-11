@@ -101,6 +101,17 @@ function renderNotifContent(
     );
   }
 
+  if (item.type === 'moviepickedmanually' && item.eventSlug) {
+    return (
+      <Link to={ROUTES.eventDetail(item.eventSlug)} className={styles.notifLink} onClick={onClose}>
+        <span className={styles.notifText}>
+          <strong>{item.eventTitle}</strong>{' '}
+          {t('notifications.moviePickedManuallyText', { movie: item.movieTitle ?? '—' })}
+        </span>
+      </Link>
+    );
+  }
+
   if (item.type === 'eventdeleted') {
     return (
       <span className={styles.notifText}>

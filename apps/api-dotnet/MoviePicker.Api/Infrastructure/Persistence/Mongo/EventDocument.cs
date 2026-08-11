@@ -40,6 +40,10 @@ public sealed class EventDocument
     [BsonRepresentation(BsonType.ObjectId)]
     public string? WinnerMovieId { get; set; }
 
+    [BsonElement("winnerPickMethod")]
+    [BsonIgnoreIfNull]
+    public string? WinnerPickMethod { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 

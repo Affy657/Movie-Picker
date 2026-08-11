@@ -7,32 +7,29 @@ using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
-namespace MoviePicker.Api.Application.UseCases.LaunchWheel;
+namespace MoviePicker.Api.Application.UseCases.SetManualWinner;
 
-public sealed class LaunchWheelHandler : ILaunchWheelHandler
+public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
 {
     private readonly IEventRepository _eventRepository;
     private readonly IMovieRepository _movieRepository;
-    private readonly IVoteRepository _voteRepository;
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IPosterImageStore _posterImageStore;
     private readonly IWinnerAnnouncer _winnerAnnouncer;
-    private readonly ILogger<LaunchWheelHandler> _logger;
+    private readonly ILogger<SetManualWinnerHandler> _logger;
 
-    public LaunchWheelHandler(
+    public SetManualWinnerHandler(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
-        IVoteRepository voteRepository,
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
         IPosterImageStore posterImageStore,
         IWinnerAnnouncer winnerAnnouncer,
-        ILogger<LaunchWheelHandler> logger)
+        ILogger<SetManualWinnerHandler> logger)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
-        _voteRepository = voteRepository;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _posterImageStore = posterImageStore;
@@ -40,7 +37,7 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         _logger = logger;
     }
 
-    public async Task<WheelResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
+    public async Task<WheelResponse> HandleAsync(string idOrSlug, SetManualWinnerRequest request, CancellationToken ct = default)
     {
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
@@ -52,47 +49,32 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         if (evt.IsFinished(DateTimeOffset.UtcNow))
             throw new ConflictException("Soirée terminée. Lecture seule.");
 
-        var movies = await _movieRepository.ListByEventIdAsync(evt.Id, ct);
-        if (movies.Count == 0)
-            throw new BadRequestException("Aucun film proposé. Proposez au moins un film pour lancer la roue.");
-
-        var mode = evt.Config?.WheelMode ?? WheelMode.StrictRandom;
-        var scores = await _voteRepository.AggregateScoresByMovieIdsAsync(
-            movies.Select(m => m.Id).ToList(),
-            ct);
-
-        var winner = WheelWinnerPicker.Pick(
-            movies,
-            id => scores.TryGetValue(id, out var a) ? a.Score : 0,
-            mode,
-            Random.Shared,
-            excludedMovieId: evt.WinnerMovieId);
+        var winner = await _movieRepository.GetByIdAsync(request.MovieId, ct);
+        if (winner is null || winner.EventId != evt.Id)
+            throw new NotFoundException("Film introuvable dans cette soirée");
 
         var now = DateTimeOffset.UtcNow;
         var updated = evt with
         {
             WinnerMovieId = winner.Id,
-            WinnerPickMethod = WinnerPickMethod.Wheel,
+            WinnerPickMethod = WinnerPickMethod.Manual,
             UpdatedAt = now
         };
 
         await _eventRepository.UpdateAsync(updated, ct);
-        _logger.LogInformation("Wheel launched for event {EventId}, winner: {MovieId} (mode: {WheelMode})", evt.Id, winner.Id, mode);
+        _logger.LogInformation("Manual winner set for event {EventId}, winner: {MovieId}", evt.Id, winner.Id);
 
-        _ = _winnerAnnouncer.AnnounceAsync(evt, winner.Title, WinnerPickMethod.Wheel, CancellationToken.None);
-
-        var message = movies.Count == 1
-            ? "Un seul film proposé : gagnant direct."
-            : "Roue lancée.";
+        _ = _winnerAnnouncer.AnnounceAsync(evt, winner.Title, WinnerPickMethod.Manual, CancellationToken.None);
 
         if (winner.PosterPath is not null &&
-            TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(winner.PosterPath, out var wNorm))
-            await _posterImageStore.RegisterTmdbSourceAsync(wNorm, ct);
+            TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(winner.PosterPath, out var normalizedPoster))
+            await _posterImageStore.RegisterTmdbSourceAsync(normalizedPoster, ct);
         var winnerPoster = _posterImageStore.ToPublicPosterPath(winner.PosterPath);
+
         return new WheelResponse
         {
             Winner = WinnerMovieResponse.FromDomain(winner, winnerPoster),
-            Message = message
+            Message = "Film choisi par l'hôte."
         };
     }
 }

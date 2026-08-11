@@ -158,6 +158,14 @@ describe('InboxBell (MSW)', () => {
               eventTitle: 'Soiree C',
               movieTitle: 'Dune',
             },
+            {
+              ...base,
+              id: 'h',
+              type: 'moviepickedmanually',
+              eventSlug: 's8',
+              eventTitle: 'Soiree H',
+              movieTitle: 'Le Parrain',
+            },
             { ...base, id: 'd', type: 'eventdeleted', eventTitle: 'Soiree D' },
             { ...base, id: 'e', type: 'eventreminder1h', eventSlug: 's5', eventTitle: 'Soiree E' },
             { ...base, id: 'f', type: 'eventreminder24h', eventSlug: 's6', eventTitle: 'Soiree F' },
@@ -190,9 +198,11 @@ describe('InboxBell (MSW)', () => {
       'Soiree E',
       'Soiree F',
       'Soiree G',
+      'Soiree H',
     ]) {
       expect(await screen.findByText(title)).toBeInTheDocument();
     }
+    expect(await screen.findByText(/choisi par l.hôte.*Le Parrain/i)).toBeInTheDocument();
   });
 
   it("marque tout comme lu a l'ouverture quand il y a des non-lus", async () => {

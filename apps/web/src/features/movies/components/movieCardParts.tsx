@@ -44,6 +44,12 @@ export type Translate = (key: TranslationKey, vars?: Record<string, string | num
 export const PITCH_MAX = 140;
 const NOTE_PREVIEW_THRESHOLD = 38;
 
+export interface MovieCardSelection {
+  active: boolean;
+  pending?: boolean;
+  onSelect: (movie: MovieData) => void;
+}
+
 export interface MovieCardCommonProps {
   movie: MovieData;
   slug: string;
@@ -62,6 +68,24 @@ export interface MovieCardCommonProps {
   eager?: boolean;
   isInWatchlist?: boolean;
   onToggleWatchlist?: (movie: MovieData) => void;
+  selection?: MovieCardSelection;
+}
+
+export function CardSelectionOverlay({
+  movie,
+  selection,
+  t,
+}: Readonly<{ movie: MovieData; selection: MovieCardSelection; t: Translate }>) {
+  return (
+    <button
+      type="button"
+      className={styles.selectOverlay}
+      onClick={() => selection.onSelect(movie)}
+      disabled={selection.pending}
+      aria-label={t('events.wheel.manualPickCardAria', { title: movie.title })}
+      data-testid={`manual-pick-${movie.id}`}
+    />
+  );
 }
 
 export function useMovieCardState({

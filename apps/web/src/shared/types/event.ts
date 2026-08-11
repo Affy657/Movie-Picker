@@ -4,6 +4,8 @@ export type MyEventLifecycle = 'upcoming' | 'live' | 'finished';
 
 export type WheelMode = 'strictRandom' | 'weightedByVotes';
 
+export type WinnerPickMethod = 'wheel' | 'manual';
+
 export interface EventConfigData {
   theme: string | null;
   themeColor?: number | null;
@@ -36,6 +38,8 @@ export interface EventData {
   isFinished?: boolean;
   closedAt?: string | null;
   winnerMovie?: MovieData | null;
+
+  winnerPickMethod?: WinnerPickMethod | null;
 
   config?: EventConfigData;
 

@@ -6,6 +6,7 @@ import type { RatingScale } from '@/shared/types/theme';
 import { useTranslation } from '@/shared/i18n';
 import { MovieCardGrid } from '@/features/movies/components/MovieCardGrid';
 import { MovieCardList } from '@/features/movies/components/MovieCardList';
+import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
 import styles from './MovieList.module.css';
 
 export { MovieCardGrid as MovieCard } from '@/features/movies/components/MovieCardGrid';
@@ -27,6 +28,7 @@ interface MovieListProps {
   viewMode?: 'grid' | 'list';
   isInWatchlist?: (movie: MovieData) => boolean;
   onToggleWatchlist?: (movie: MovieData) => void;
+  selection?: MovieCardSelection;
 }
 
 export default function MovieList({
@@ -46,6 +48,7 @@ export default function MovieList({
   viewMode = 'list',
   isInWatchlist,
   onToggleWatchlist,
+  selection,
 }: Readonly<MovieListProps>) {
   const { t } = useTranslation();
 
@@ -83,6 +86,7 @@ export default function MovieList({
             ratingScale={ratingScale}
             isInWatchlist={isInWatchlist?.(m)}
             onToggleWatchlist={onToggleWatchlist}
+            selection={selection}
             t={t}
           />
         ))}

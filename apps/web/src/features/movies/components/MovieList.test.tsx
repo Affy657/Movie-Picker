@@ -449,4 +449,88 @@ describe('MovieList', () => {
     );
     expect(screen.getByText(/pas en streaming/i)).toBeInTheDocument();
   });
+
+  it('mode sélection : affiche un bouton de choix par film et neutralise les actions habituelles', () => {
+    const { container } = renderWithLocale(
+      <MovieList
+        movies={movies}
+        slug="s"
+        participantId="p0"
+        participantPseudo="Alice"
+        isFinished={false}
+        onVote={vi.fn()}
+        onRemove={vi.fn()}
+        refresh={vi.fn()}
+        onActionError={vi.fn()}
+        selection={{ active: true, onSelect: vi.fn() }}
+      />
+    );
+    expect(screen.getByTestId('manual-pick-m1')).toBeInTheDocument();
+    expect(screen.getByTestId('manual-pick-m2')).toBeInTheDocument();
+    const voteButtons = screen.getAllByRole('button', { name: /^Voter pour/ });
+    for (const btn of voteButtons) {
+      expect(btn.closest('[inert]')).not.toBeNull();
+    }
+    expect(container.querySelectorAll('[inert]').length).toBeGreaterThan(0);
+  });
+
+  it('mode sélection en vue grille : neutralise aussi les actions habituelles', () => {
+    renderWithLocale(
+      <MovieList
+        movies={[movies[0]!]}
+        slug="s"
+        participantId="p0"
+        participantPseudo="Alice"
+        isFinished={false}
+        onVote={vi.fn()}
+        onRemove={vi.fn()}
+        refresh={vi.fn()}
+        onActionError={vi.fn()}
+        viewMode="grid"
+        selection={{ active: true, onSelect: vi.fn() }}
+      />
+    );
+    const pickButton = screen.getByTestId('manual-pick-m1');
+    expect(pickButton).toBeInTheDocument();
+    const voteButton = screen.getByRole('button', { name: /^Voter pour/ });
+    expect(voteButton.closest('[inert]')).not.toBeNull();
+  });
+
+  it('mode sélection : cliquer sur une carte appelle onSelect avec le bon film', async () => {
+    const onSelect = vi.fn();
+    renderWithLocale(
+      <MovieList
+        movies={movies}
+        slug="s"
+        participantId={null}
+        participantPseudo={null}
+        isFinished={false}
+        onVote={vi.fn()}
+        onRemove={vi.fn()}
+        refresh={vi.fn()}
+        onActionError={vi.fn()}
+        selection={{ active: true, onSelect }}
+      />
+    );
+    await userEvent.click(screen.getByTestId('manual-pick-m2'));
+    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ id: 'm2', title: 'Matrix' }));
+  });
+
+  it('mode sélection : désactive le bouton de choix pendant pending', () => {
+    renderWithLocale(
+      <MovieList
+        movies={[movies[0]!]}
+        slug="s"
+        participantId={null}
+        participantPseudo={null}
+        isFinished={false}
+        onVote={vi.fn()}
+        onRemove={vi.fn()}
+        refresh={vi.fn()}
+        onActionError={vi.fn()}
+        selection={{ active: true, pending: true, onSelect: vi.fn() }}
+      />
+    );
+    expect(screen.getByTestId('manual-pick-m1')).toBeDisabled();
+  });
 });

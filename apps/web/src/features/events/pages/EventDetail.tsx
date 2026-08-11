@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { AlertCircle } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -24,6 +24,7 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import InviteModal from '@/features/events/components/InviteModal';
+import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
 
 type ConfirmState =
   { kind: 'remove'; participantId: string; pseudo: string } | { kind: 'leave' } | null;
@@ -66,6 +67,8 @@ export default function EventDetail() {
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [manualSelection, setManualSelection] = useState<MovieCardSelection | null>(null);
+  const moviesSectionRef = useRef<HTMLDivElement>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
     try {
       return localStorage.getItem('movies-view') === 'grid' ? 'grid' : 'list';
@@ -88,6 +91,12 @@ export default function EventDetail() {
     const id = globalThis.setTimeout(() => setActionSuccess(null), SUCCESS_AUTO_DISMISS_MS);
     return () => globalThis.clearTimeout(id);
   }, [actionSuccess]);
+
+  useEffect(() => {
+    if (manualSelection?.active) {
+      moviesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [manualSelection?.active]);
 
   const removeParticipantMutation = useMutation({
     mutationFn: (variables: { participantId: string }) =>
@@ -329,20 +338,23 @@ export default function EventDetail() {
             </div>
           )}
 
-          <EventMoviesSection
-            slug={slug}
-            event={event}
-            participant={participant}
-            hostToken={hostToken}
-            movies={movies}
-            moviesQuery={moviesQuery}
-            actionError={actionError}
-            onDismissActionError={() => setActionError(null)}
-            setActionError={setActionError}
-            refreshAll={refreshAll}
-            viewMode={viewMode}
-            onViewModeChange={handleViewModeChange}
-          />
+          <div ref={moviesSectionRef}>
+            <EventMoviesSection
+              slug={slug}
+              event={event}
+              participant={participant}
+              hostToken={hostToken}
+              movies={movies}
+              moviesQuery={moviesQuery}
+              actionError={actionError}
+              onDismissActionError={() => setActionError(null)}
+              setActionError={setActionError}
+              refreshAll={refreshAll}
+              viewMode={viewMode}
+              onViewModeChange={handleViewModeChange}
+              selection={manualSelection ?? undefined}
+            />
+          </div>
 
           <WheelSection
             slug={slug}
@@ -352,6 +364,7 @@ export default function EventDetail() {
             onWheelDone={refreshAll}
             onCloseDone={refreshAll}
             viewMode={viewMode}
+            onManualSelectionChange={setManualSelection}
           />
         </>
       )}

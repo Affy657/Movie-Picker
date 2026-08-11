@@ -104,6 +104,18 @@ export async function postEventWheel(
   return { winner: mapMovieData(raw.winner), message: raw.message };
 }
 
+export async function postEventWinner(
+  slug: string,
+  movieId: string,
+  hostToken: string | null
+): Promise<{ winner: MovieData; message: string }> {
+  const raw = await fetchApi<{ winner: RawMovieData; message: string }>(
+    `/events/${slug}/winner${hostQuery(hostToken)}`,
+    { method: 'POST', body: JSON.stringify({ movieId }) }
+  );
+  return { winner: mapMovieData(raw.winner), message: raw.message };
+}
+
 export async function postEventClose(slug: string, hostToken: string | null): Promise<void> {
   await fetchApi(`/events/${slug}/close${hostQuery(hostToken)}`, { method: 'POST', body: '{}' });
 }

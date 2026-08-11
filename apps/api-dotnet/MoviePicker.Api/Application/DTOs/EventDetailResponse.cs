@@ -13,6 +13,7 @@ public sealed class EventDetailResponse
     public required EventConfigResponse Config { get; init; }
     public DateTimeOffset? ClosedAt { get; init; }
     public string? WinnerMovieId { get; init; }
+    public string? WinnerPickMethod { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
     public bool IsHost { get; init; }

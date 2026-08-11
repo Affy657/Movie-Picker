@@ -19,6 +19,7 @@ interface WheelModalProps {
   wheelKey: number;
   onClose: () => void;
   onRelaunch?: () => void;
+  skipSpin?: boolean;
 }
 
 export default function WheelModal({
@@ -29,11 +30,12 @@ export default function WheelModal({
   wheelKey,
   onClose,
   onRelaunch,
+  skipSpin = false,
 }: Readonly<WheelModalProps>) {
   const { t } = useTranslation();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const confettiOverlayRef = useRef<HTMLDivElement>(null);
-  const [animDone, setAnimDone] = useState(false);
+  const [animDone, setAnimDone] = useState(skipSpin);
   const confettiTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const confettiCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -49,10 +51,10 @@ export default function WheelModal({
 
   useEffect(() => {
     if (open) {
-      setAnimDone(false);
+      setAnimDone(skipSpin);
       cleanupConfettiOverlay();
     }
-  }, [open, wheelKey, cleanupConfettiOverlay]);
+  }, [open, wheelKey, skipSpin, cleanupConfettiOverlay]);
 
   useEffect(() => {
     return () => cleanupConfettiOverlay();
@@ -68,7 +70,7 @@ export default function WheelModal({
     return () => dlg.removeEventListener('cancel', prevent);
   }, [animDone]);
 
-  const handleWheelDone = () => {
+  const handleWheelDone = useCallback(() => {
     setAnimDone(true);
 
     requestAnimationFrame(() => {
@@ -112,7 +114,13 @@ export default function WheelModal({
         confettiTimerRef.current = setTimeout(cleanupConfettiOverlay, 4500);
       }, 180);
     });
-  };
+  }, [cleanupConfettiOverlay]);
+
+  useEffect(() => {
+    if (open && skipSpin) {
+      handleWheelDone();
+    }
+  }, [open, wheelKey, skipSpin, handleWheelDone]);
 
   const posterSrc = posterImageSrc(winner.posterPath);
   const providers = winner.watchProviders ?? [];
@@ -142,7 +150,9 @@ export default function WheelModal({
           <>
             <div className={styles.header}>
               <h2 id="wheel-modal-title" className={styles.title}>
-                {t('events.wheel.modal.winnerTitle')}
+                {skipSpin
+                  ? t('events.wheel.modal.manualWinnerTitle')
+                  : t('events.wheel.modal.winnerTitle')}
               </h2>
               <button
                 type="button"

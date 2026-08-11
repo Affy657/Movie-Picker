@@ -1,15 +1,18 @@
 import { memo } from 'react';
+import clsx from 'clsx';
 import WatchProviderChips, { ModeIcon } from '@/features/movies/components/WatchProviderChips';
 import {
   CardKebab,
   CardModals,
   CardProposerFooter,
+  CardSelectionOverlay,
   MovieNote,
   SeenButton,
   VoteBar,
   useMovieCardState,
   type MovieCardCommonProps,
 } from '@/features/movies/components/movieCardParts';
+import cardPartsStyles from './movieCardParts.module.css';
 import styles from './MovieCardList.module.css';
 
 export const MovieCardList = memo(function MovieCardList({
@@ -30,6 +33,7 @@ export const MovieCardList = memo(function MovieCardList({
   eager = false,
   isInWatchlist,
   onToggleWatchlist,
+  selection,
 }: MovieCardCommonProps) {
   const s = useMovieCardState({
     movie: m,
@@ -50,9 +54,12 @@ export const MovieCardList = memo(function MovieCardList({
   const buyCount = s.providers.filter((p) => p.type === 'buy').length;
   const hasRenderableOffers = flatrateProviders.length > 0 || rentCount > 0 || buyCount > 0;
 
+  const selecting = !!selection?.active;
+
   return (
-    <li className={styles.card}>
-      <div className={styles.posterCol}>
+    <li className={clsx(styles.card, selecting && cardPartsStyles.selectable)}>
+      {selecting && <CardSelectionOverlay movie={m} selection={selection} t={t} />}
+      <div className={styles.posterCol} inert={selecting}>
         {s.posterSrc ? (
           <>
             <div
@@ -81,7 +88,7 @@ export const MovieCardList = memo(function MovieCardList({
         {m.mediaType === 'tv' && <span className={styles.tvBadge}>{t('movies.list.tvBadge')}</span>}
       </div>
 
-      <div className={styles.info}>
+      <div className={styles.info} inert={selecting}>
         {(s.hasDetails || s.canRemove || !!onToggleWatchlist) && (
           <div className={styles.kebabSlot}>
             <CardKebab

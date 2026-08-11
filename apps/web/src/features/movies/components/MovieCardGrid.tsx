@@ -1,15 +1,18 @@
 import { memo } from 'react';
+import clsx from 'clsx';
 import { ModeIcon, TYPE_ORDER } from '@/features/movies/components/WatchProviderChips';
 import {
   CardKebab,
   CardModals,
   CardProposerFooter,
+  CardSelectionOverlay,
   MovieNote,
   SeenButton,
   VoteBar,
   useMovieCardState,
   type MovieCardCommonProps,
 } from '@/features/movies/components/movieCardParts';
+import cardPartsStyles from './movieCardParts.module.css';
 import styles from './MovieCardGrid.module.css';
 
 const KNOWN_PROVIDER_TYPES = new Set<string>(TYPE_ORDER);
@@ -32,6 +35,7 @@ export const MovieCardGrid = memo(function MovieCardGrid({
   eager = false,
   isInWatchlist,
   onToggleWatchlist,
+  selection,
 }: MovieCardCommonProps) {
   const s = useMovieCardState({
     movie: m,
@@ -55,9 +59,12 @@ export const MovieCardGrid = memo(function MovieCardGrid({
     { type: 'other', count: s.providers.filter((p) => !KNOWN_PROVIDER_TYPES.has(p.type)).length },
   ].filter((g) => g.count > 0);
 
+  const selecting = !!selection?.active;
+
   return (
-    <li className={styles.card}>
-      <div className={styles.posterRegion}>
+    <li className={clsx(styles.card, selecting && cardPartsStyles.selectable)}>
+      {selecting && <CardSelectionOverlay movie={m} selection={selection} t={t} />}
+      <div className={styles.posterRegion} inert={selecting}>
         {s.posterSrc ? (
           <img
             src={s.posterSrc}

@@ -190,4 +190,22 @@ describe('WheelModal', () => {
     );
     expect(screen.getByText(/tirage en cours/i)).toBeInTheDocument();
   });
+
+  it('skipSpin : révèle directement le gagnant avec le titre "choisi par l\'hôte"', () => {
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+        skipSpin
+      />
+    );
+    expect(screen.queryByText(/tirage en cours/i)).not.toBeInTheDocument();
+    expect(screen.queryByTestId('spin-done-trigger')).not.toBeInTheDocument();
+    expect(screen.getByText(/choisi par l.hôte/i)).toBeInTheDocument();
+    expect(screen.getByText('Interstellar')).toBeInTheDocument();
+  });
 });

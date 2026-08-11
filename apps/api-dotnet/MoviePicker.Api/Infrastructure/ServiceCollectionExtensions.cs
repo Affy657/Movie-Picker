@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.LetterboxdImport;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.BackgroundServices;
@@ -254,6 +255,7 @@ public static class ServiceCollectionExtensions
     private static void RegisterHandlers(IServiceCollection services)
     {
         services.AddScoped<LetterboxdWatchlistSynchronizer>();
+        services.AddScoped<IWinnerAnnouncer, WinnerAnnouncer>();
 
         var handlerNamespace = "MoviePicker.Api.Application.UseCases";
         var types = typeof(ServiceCollectionExtensions).Assembly.GetTypes()
