@@ -14,6 +14,7 @@ import { useLocale, useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import QrCodeButton from '@/shared/components/QrCodeButton';
+import ProfileStreakFlame from '@/features/profile/components/ProfileStreakFlame';
 import {
   fetchPublicProfile,
   fetchUserStats,
@@ -172,6 +173,8 @@ export default function ProfilePage() {
 
   const memberSince = formatMemberSince(profile.memberSince, locale);
   const followPending = followMutation.isPending || unfollowMutation.isPending;
+  const stats = statsQuery.data;
+  const hasStreakHistory = !!stats && (stats.currentStreakWeeks > 0 || stats.bestStreakWeeks > 0);
 
   return (
     <PageLayout className={styles.layout}>
@@ -192,6 +195,8 @@ export default function ProfilePage() {
         {memberSince && (
           <p className={styles.memberSince}>{t('profile.memberSince', { date: memberSince })}</p>
         )}
+
+        {hasStreakHistory && <ProfileStreakFlame weeks={stats.currentStreakWeeks} />}
 
         <div className={styles.followStats}>
           <button

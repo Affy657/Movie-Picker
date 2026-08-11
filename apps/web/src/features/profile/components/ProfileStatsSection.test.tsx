@@ -51,10 +51,11 @@ describe('ProfileStatsSection', () => {
     expect(screen.getByText('7')).toBeInTheDocument();
   });
 
-  it('affiche la valeur du compteur currentStreakWeeks', () => {
+  it('affiche le record dans la grille des compteurs, pas le streak courant', () => {
     renderSection({ ...EMPTY_STATS, currentStreakWeeks: 3, bestStreakWeeks: 5 });
-    expect(screen.getByText('3')).toBeInTheDocument();
-    expect(screen.getByText(/semaines de suite/i)).toBeInTheDocument();
+    expect(screen.getByText(/meilleur streak/i)).toBeInTheDocument();
+    expect(screen.getByText('5')).toBeInTheDocument();
+    expect(screen.queryByText('3')).toBeNull();
   });
 
   it('affiche le panneau activité si au moins un jour a count > 0', async () => {

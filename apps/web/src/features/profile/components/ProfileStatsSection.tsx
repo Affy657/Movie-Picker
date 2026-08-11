@@ -15,7 +15,7 @@ interface Props {
 export default function ProfileStatsSection({ stats }: Readonly<Props>) {
   const { t } = useTranslation();
 
-  const counters: { key: string; icon: LucideIcon; label: string; value: number; title?: string }[] = [
+  const counters: { key: string; icon: LucideIcon; label: string; value: number }[] = [
     {
       key: 'eventsCreated',
       icon: CalendarPlus,
@@ -41,11 +41,10 @@ export default function ProfileStatsSection({ stats }: Readonly<Props>) {
       value: stats.winningProposals,
     },
     {
-      key: 'currentStreak',
+      key: 'bestStreak',
       icon: Flame,
-      label: t('profile.stats.currentStreak'),
-      value: stats.currentStreakWeeks,
-      title: t('profile.stats.bestStreakTooltip', { best: stats.bestStreakWeeks }),
+      label: t('profile.stats.bestStreak'),
+      value: stats.bestStreakWeeks,
     },
   ];
 
@@ -83,8 +82,8 @@ export default function ProfileStatsSection({ stats }: Readonly<Props>) {
       )}
 
       <ul className={styles.heroGrid}>
-        {counters.map(({ key, icon: Icon, label, value, title }) => (
-          <li key={key} className={styles.heroStat} title={title}>
+        {counters.map(({ key, icon: Icon, label, value }) => (
+          <li key={key} className={styles.heroStat}>
             <span className={styles.heroIcon} aria-hidden>
               <Icon size={20} />
             </span>

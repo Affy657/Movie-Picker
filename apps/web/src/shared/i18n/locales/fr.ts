@@ -736,12 +736,15 @@
       votesCast: 'Votes donnés',
       winningProposals: 'Propositions gagnantes',
       moviesSeen: 'Films vus',
-      currentStreak: 'Semaines de suite',
-      bestStreakTooltip: 'Record : {{best}} semaines',
+      bestStreak: 'Meilleur streak',
       genresTitle: 'Genres favoris',
       activityTitle: 'Activité (6 mois)',
       activityImgAlt: "Heatmap d'activité : {{count}} participation(s) sur 26 semaines",
       empty: 'Aucune activité pour le moment.',
+    },
+    streak: {
+      weekLabel: 'semaine de suite',
+      weeksLabel: 'semaines de suite',
     },
   },
   consent: {
