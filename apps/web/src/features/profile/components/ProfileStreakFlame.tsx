@@ -13,9 +13,14 @@ export default function ProfileStreakFlame({ weeks }: Readonly<Props>) {
   const { t } = useTranslation();
   const gradientId = `streak-flame-${useId().replaceAll(':', '')}`;
   const isLit = weeks > 0;
+  const label = t(weeks === 1 ? 'profile.streak.weekLabel' : 'profile.streak.weeksLabel');
 
   return (
-    <div className={isLit ? styles.streak : `${styles.streak} ${styles.out}`}>
+    <div
+      className={isLit ? styles.streak : `${styles.streak} ${styles.out}`}
+      role="group"
+      aria-label={`${weeks} ${label}`}
+    >
       <span className={styles.flameWrap}>
         <svg className={styles.flame} viewBox="0 0 64 80" aria-hidden focusable="false">
           <defs>
@@ -27,12 +32,15 @@ export default function ProfileStreakFlame({ weeks }: Readonly<Props>) {
           </defs>
           <path d={FLAME_PATH} fill={`url(#${gradientId})`} />
         </svg>
-        <span className={weeks >= 100 ? `${styles.count} ${styles.countLong}` : styles.count}>
+        <span
+          className={weeks >= 100 ? `${styles.count} ${styles.countLong}` : styles.count}
+          aria-hidden
+        >
           {weeks}
         </span>
       </span>
-      <span className={styles.label}>
-        {t(weeks === 1 ? 'profile.streak.weekLabel' : 'profile.streak.weeksLabel')}
+      <span className={styles.label} aria-hidden>
+        {label}
       </span>
     </div>
   );

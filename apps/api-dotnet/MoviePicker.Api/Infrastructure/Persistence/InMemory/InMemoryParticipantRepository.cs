@@ -82,10 +82,9 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
         if (string.IsNullOrWhiteSpace(userId))
             return Task.FromResult<IReadOnlyList<Participant>>(Array.Empty<Participant>());
 
-        var query = _byId.Values.Where(p => p.UserId == userId);
-        if (limit > 0)
-            query = query.Take(limit);
-        return Task.FromResult<IReadOnlyList<Participant>>(query.ToList());
+        var query = _byId.Values.Where(p => p.UserId == userId).OrderByDescending(p => p.CreatedAt);
+        var result = limit > 0 ? query.Take(limit) : query;
+        return Task.FromResult<IReadOnlyList<Participant>>(result.ToList());
     }
 
     public Task<int> CountByEventIdAsync(string eventId, CancellationToken ct = default)

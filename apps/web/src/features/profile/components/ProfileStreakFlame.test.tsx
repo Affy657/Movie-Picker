@@ -32,4 +32,9 @@ describe('ProfileStreakFlame', () => {
     expect(screen.getByText('0')).toBeInTheDocument();
     expect(container.querySelector('svg')).toBeInTheDocument();
   });
+
+  it('expose un nom accessible regroupant le chiffre et le label', () => {
+    renderFlame(3);
+    expect(screen.getByRole('group', { name: '3 semaines de suite' })).toBeInTheDocument();
+  });
 });

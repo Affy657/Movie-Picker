@@ -98,7 +98,9 @@ public sealed class MongoParticipantRepository : IParticipantRepository
         if (string.IsNullOrWhiteSpace(userId))
             return [];
 
-        var query = _collection.Find(x => x.UserId == userId);
+        IFindFluent<ParticipantDocument, ParticipantDocument> query = _collection
+            .Find(x => x.UserId == userId)
+            .SortByDescending(x => x.CreatedAt);
         if (limit > 0)
             query = query.Limit(limit);
         var docs = await query.ToListAsync(ct);

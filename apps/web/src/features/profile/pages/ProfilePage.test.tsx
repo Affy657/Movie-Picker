@@ -243,6 +243,39 @@ describe('ProfilePage (MSW)', () => {
     expect(screen.queryByText(/films vus/i)).not.toBeInTheDocument();
   });
 
+  it('affiche la flamme avec le streak courant quand il est > 0', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      createUserStatsHandler('alice', { currentStreakWeeks: 3, bestStreakWeeks: 5 })
+    );
+
+    renderProfile('alice');
+
+    await screen.findByRole('heading', { name: 'Alice' });
+
+    await waitFor(() => {
+      expect(screen.getByRole('group', { name: '3 semaines de suite' })).toBeInTheDocument();
+    });
+  });
+
+  it("ne montre pas la flamme quand l'utilisateur n'a jamais eu de streak", async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      createUserStatsHandler('alice', { currentStreakWeeks: 0, bestStreakWeeks: 0 })
+    );
+
+    renderProfile('alice');
+
+    await screen.findByRole('heading', { name: 'Alice' });
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /statistiques/i })).toBeInTheDocument();
+    });
+    expect(screen.queryByRole('group', { name: /semaine.*de suite/i })).not.toBeInTheDocument();
+  });
+
   it("masque la section stats si l'endpoint stats échoue", async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
