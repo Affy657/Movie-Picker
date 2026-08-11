@@ -403,4 +403,41 @@ describe('WheelSection', () => {
     expect(screen.getByTestId('wheel-modal-mock')).toHaveAttribute('data-skip-spin', 'false');
     expect(screen.getByTestId('wheel-modal-mock')).toHaveAttribute('data-has-relaunch', 'true');
   });
+
+  it('tous les films exclus : désactive le tirage et affiche l’aide', () => {
+    const excluded = makeMovies(2).map((m) => ({ ...m, excludedFromWheel: true }));
+    renderWheel(
+      <WheelSection
+        slug="soiree"
+        event={{ ...baseEvent, isHost: true }}
+        movies={excluded}
+        hostToken="ht"
+        onWheelDone={vi.fn()}
+        onCloseDone={vi.fn()}
+        viewMode="grid"
+      />
+    );
+
+    expect(screen.getByRole('button', { name: /lancer la roue/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /choisir moi-même/i })).toBeDisabled();
+    expect(screen.getByText(/tous les films sont exclus du tirage/i)).toBeInTheDocument();
+  });
+
+  it('un seul film éligible : le tirage reste possible', () => {
+    const [first, second] = makeMovies(2);
+    renderWheel(
+      <WheelSection
+        slug="soiree"
+        event={{ ...baseEvent, isHost: true }}
+        movies={[{ ...first!, excludedFromWheel: true }, second!]}
+        hostToken="ht"
+        onWheelDone={vi.fn()}
+        onCloseDone={vi.fn()}
+        viewMode="grid"
+      />
+    );
+
+    expect(screen.getByRole('button', { name: /lancer la roue/i })).toBeEnabled();
+    expect(screen.queryByText(/tous les films sont exclus du tirage/i)).not.toBeInTheDocument();
+  });
 });

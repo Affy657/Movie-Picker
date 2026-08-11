@@ -56,6 +56,10 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         if (movies.Count == 0)
             throw new BadRequestException("Aucun film proposé. Proposez au moins un film pour lancer la roue.");
 
+        var eligibleCount = movies.Count(m => !m.ExcludedFromWheel);
+        if (eligibleCount == 0)
+            throw new BadRequestException("Tous les films sont exclus du tirage. Réintégrez au moins un film pour lancer la roue.");
+
         var mode = evt.Config?.WheelMode ?? WheelMode.StrictRandom;
         var scores = await _voteRepository.AggregateScoresByMovieIdsAsync(
             movies.Select(m => m.Id).ToList(),
@@ -81,8 +85,8 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
 
         _ = _winnerAnnouncer.AnnounceAsync(evt, winner.Title, WinnerPickMethod.Wheel, CancellationToken.None);
 
-        var message = movies.Count == 1
-            ? "Un seul film proposé : gagnant direct."
+        var message = eligibleCount == 1
+            ? "Un seul film dans le tirage : gagnant direct."
             : "Roue lancée.";
 
         if (winner.PosterPath is not null &&

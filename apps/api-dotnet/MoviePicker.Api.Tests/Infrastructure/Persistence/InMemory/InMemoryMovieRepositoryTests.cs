@@ -142,6 +142,29 @@ public sealed class InMemoryMovieRepositoryTests
     }
 
     [Fact]
+    public async Task UpdateWheelExclusionAsync_TogglesFlag()
+    {
+        var created = await _repo.InsertAsync(Mk());
+
+        await _repo.UpdateWheelExclusionAsync(created.Id, true);
+
+        Assert.True((await _repo.GetByIdAsync(created.Id))!.ExcludedFromWheel);
+        Assert.True((await _repo.ListByEventIdAsync("evt1")).Single().ExcludedFromWheel);
+
+        await _repo.UpdateWheelExclusionAsync(created.Id, false);
+
+        Assert.False((await _repo.GetByIdAsync(created.Id))!.ExcludedFromWheel);
+        Assert.False((await _repo.ListByEventIdAsync("evt1")).Single().ExcludedFromWheel);
+    }
+
+    [Fact]
+    public async Task UpdateWheelExclusionAsync_NoOp_WhenMissing()
+    {
+        await _repo.UpdateWheelExclusionAsync("ghost", true);
+        Assert.Null(await _repo.GetByIdAsync("ghost"));
+    }
+
+    [Fact]
     public async Task UpdateGenresAsync_UpdatesGenres()
     {
         var created = await _repo.InsertAsync(Mk());

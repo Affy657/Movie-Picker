@@ -53,13 +53,20 @@ const MOVIE: MovieData = {
   runtimeMinutes: 136,
 };
 
-function renderSection(props: { movies?: MovieData[]; watchlistItems?: unknown[] } = {}) {
+function renderSection(
+  props: {
+    movies?: MovieData[];
+    watchlistItems?: unknown[];
+    event?: EventData;
+    refreshAll?: () => void;
+  } = {}
+) {
   return render(
     <AppTestProviders>
       <MemoryRouter>
         <EventMoviesSection
           slug="soiree-cine"
-          event={EVENT}
+          event={props.event ?? EVENT}
           participant={{ participantId: 'p1', pseudo: 'Alice' }}
           hostToken={null}
           movies={props.movies ?? [MOVIE]}
@@ -73,7 +80,7 @@ function renderSection(props: { movies?: MovieData[]; watchlistItems?: unknown[]
           actionError={null}
           onDismissActionError={() => undefined}
           setActionError={() => undefined}
-          refreshAll={() => undefined}
+          refreshAll={props.refreshAll ?? (() => undefined)}
           viewMode="grid"
           onViewModeChange={() => undefined}
         />
@@ -144,5 +151,39 @@ describe('EventMoviesSection (MSW)', () => {
     await user.click(await screen.findByRole('menuitem', { name: /retirer de ma watchlist/i }));
 
     await waitFor(() => expect(removeCalled).toBe(true));
+  });
+  it("l'hôte exclut un film du tirage depuis le menu de la card", async () => {
+    let excludedBody: Record<string, unknown> | null = null;
+    const refreshAll = vi.fn();
+    server.use(
+      authedUserHandler,
+      watchlistHandler([]),
+      http.put(
+        `${TEST_API_V1}/events/soiree-cine/movies/m1/wheel-exclusion`,
+        async ({ request }) => {
+          excludedBody = (await request.json()) as Record<string, unknown>;
+          return new HttpResponse(null, { status: 204 });
+        }
+      )
+    );
+
+    renderSection({ event: { ...EVENT, isHost: true }, refreshAll });
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: /plus d.actions.*matrix/i }));
+    await user.click(await screen.findByRole('menuitem', { name: /exclure du tirage/i }));
+
+    await waitFor(() => expect(excludedBody).toEqual({ excluded: true }));
+    await waitFor(() => expect(refreshAll).toHaveBeenCalled());
+  });
+
+  it("un participant non hôte n'a pas l'action d'exclusion", async () => {
+    server.use(authedUserHandler, watchlistHandler([]));
+
+    renderSection();
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: /plus d.actions.*matrix/i }));
+    expect(screen.queryByRole('menuitem', { name: /tirage/i })).not.toBeInTheDocument();
   });
 });

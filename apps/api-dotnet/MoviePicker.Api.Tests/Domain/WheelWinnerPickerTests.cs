@@ -94,4 +94,54 @@ public sealed class WheelWinnerPickerTests
         var w = WheelWinnerPicker.Pick(movies, _ => 0, WheelMode.StrictRandom, new Random(0), excludedMovieId: "only");
         Assert.Equal("only", w.Id);
     }
+
+    [Fact]
+    public void Pick_NeverPicksMovieExcludedFromWheel()
+    {
+        var movies = new[] { M("a", "A") with { ExcludedFromWheel = true }, M("b", "B"), M("c", "C") };
+        var random = new Random(3);
+
+        for (var i = 0; i < 50; i++)
+        {
+            var w = WheelWinnerPicker.Pick(movies, _ => 0, WheelMode.StrictRandom, random);
+            Assert.NotEqual("a", w.Id);
+        }
+    }
+
+    [Fact]
+    public void Pick_Weighted_NeverPicksMovieExcludedFromWheel_EvenWithHighestScore()
+    {
+        var movies = new[] { M("a", "A") with { ExcludedFromWheel = true }, M("b", "B"), M("c", "C") };
+        var random = new Random(5);
+
+        for (var i = 0; i < 50; i++)
+        {
+            var w = WheelWinnerPicker.Pick(movies, id => id == "a" ? 100 : 0, WheelMode.WeightedByVotes, random);
+            Assert.NotEqual("a", w.Id);
+        }
+    }
+
+    [Fact]
+    public void Pick_ExcludedFromWheel_TakesPrecedenceOverPreviousWinnerFallback()
+    {
+        var movies = new[] { M("a", "A") with { ExcludedFromWheel = true }, M("b", "B") };
+        var w = WheelWinnerPicker.Pick(movies, _ => 0, WheelMode.StrictRandom, new Random(0), excludedMovieId: "b");
+        Assert.Equal("b", w.Id);
+    }
+
+    [Fact]
+    public void Pick_ReturnsOnlyEligibleMovie_WhenAllOthersAreExcluded()
+    {
+        var movies = new[] { M("a", "A") with { ExcludedFromWheel = true }, M("b", "B") };
+        var w = WheelWinnerPicker.Pick(movies, _ => 0, WheelMode.StrictRandom, new Random(0));
+        Assert.Equal("b", w.Id);
+    }
+
+    [Fact]
+    public void Pick_AllMoviesExcluded_Throws()
+    {
+        var movies = new[] { M("a", "A") with { ExcludedFromWheel = true }, M("b", "B") with { ExcludedFromWheel = true } };
+        Assert.Throws<InvalidOperationException>(() =>
+            WheelWinnerPicker.Pick(movies, _ => 0, WheelMode.StrictRandom, new Random(0)));
+    }
 }

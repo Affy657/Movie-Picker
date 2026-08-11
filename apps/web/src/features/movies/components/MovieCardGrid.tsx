@@ -35,6 +35,7 @@ export const MovieCardGrid = memo(function MovieCardGrid({
   eager = false,
   isInWatchlist,
   onToggleWatchlist,
+  onToggleWheelExclusion,
   selection,
 }: MovieCardCommonProps) {
   const s = useMovieCardState({
@@ -59,10 +60,18 @@ export const MovieCardGrid = memo(function MovieCardGrid({
     { type: 'other', count: s.providers.filter((p) => !KNOWN_PROVIDER_TYPES.has(p.type)).length },
   ].filter((g) => g.count > 0);
 
-  const selecting = !!selection?.active;
+  const excluded = !!m.excludedFromWheel;
+  const selecting = !!selection?.active && !excluded;
 
   return (
-    <li className={clsx(styles.card, selecting && cardPartsStyles.selectable)}>
+    <li
+      className={clsx(
+        styles.card,
+        excluded && cardPartsStyles.excluded,
+        selecting && cardPartsStyles.selectable
+      )}
+    >
+      {excluded && <span className="visually-hidden">{t('movies.list.excludedFromWheelSr')}</span>}
       {selecting && <CardSelectionOverlay movie={m} selection={selection} t={t} />}
       <div className={styles.posterRegion} inert={selecting}>
         {s.posterSrc ? (
@@ -86,7 +95,7 @@ export const MovieCardGrid = memo(function MovieCardGrid({
 
         {m.mediaType === 'tv' && <span className={styles.tvBadge}>{t('movies.list.tvBadge')}</span>}
 
-        {(s.hasDetails || s.canRemove || !!onToggleWatchlist) && (
+        {(s.hasDetails || s.canRemove || !!onToggleWatchlist || !!onToggleWheelExclusion) && (
           <div className={styles.kebabSlot}>
             <CardKebab
               title={m.title}
@@ -99,6 +108,11 @@ export const MovieCardGrid = memo(function MovieCardGrid({
               onRemove={() => void onRemove(m.id)}
               inWatchlist={isInWatchlist}
               onToggleWatchlist={onToggleWatchlist ? () => onToggleWatchlist(m) : undefined}
+              wheelExclusion={
+                onToggleWheelExclusion
+                  ? { excluded, onToggle: () => onToggleWheelExclusion(m) }
+                  : undefined
+              }
               t={t}
             />
           </div>

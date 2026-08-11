@@ -20,6 +20,7 @@ public sealed record Movie
     public string? PosterPath { get; init; }
     public string? PitchNote { get; init; }
     public IReadOnlyList<int> GenreIds { get; init; } = [];
+    public bool ExcludedFromWheel { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
 }

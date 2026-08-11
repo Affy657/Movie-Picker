@@ -383,6 +383,8 @@ export const en: Locale = {
       manualPickBadge: 'Picked by the host',
       manualPickCardAria: '{{title}}: pick this movie as the winner',
       manualPickError: 'Pick failed',
+      allExcludedHint:
+        'Every movie is excluded from the draw. Put at least one back to spin the wheel.',
       modal: {
         manualWinnerTitle: 'Movie picked by the host!',
         spinningTitle: 'Draw in progress…',
@@ -464,6 +466,11 @@ export const en: Locale = {
       removeAsHostTitle: 'As host, you can remove any movie',
       moreActionsAria: 'More actions for "{{title}}"',
       removeError: 'Remove failed',
+      excludeFromWheelAction: 'Exclude from the draw',
+      includeInWheelAction: 'Put back in the draw',
+      excludeFromWheelError: 'Could not exclude the movie',
+      includeInWheelError: 'Could not put the movie back',
+      excludedFromWheelSr: 'Movie excluded from the draw',
       tmdbVoteTitle: 'TMDB average rating (indicative)',
       runtimeTitle: 'Movie runtime',
       tvBadge: 'Series',

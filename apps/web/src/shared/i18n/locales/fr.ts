@@ -390,6 +390,8 @@
       manualPickBadge: 'Choisi par l’hôte',
       manualPickCardAria: '{{title}} : désigner ce film comme gagnant',
       manualPickError: 'Sélection impossible',
+      allExcludedHint:
+        'Tous les films sont exclus du tirage. Réintégrez-en au moins un pour lancer la roue.',
       modal: {
         manualWinnerTitle: 'Film choisi par l’hôte !',
         spinningTitle: 'Tirage en cours…',
@@ -472,6 +474,11 @@
       removeAsHostAria: 'Retirer « {title} » en tant qu\u2019hôte',
       removeAsHostTitle: 'En tant qu\u2019hôte, vous pouvez retirer n\u2019importe quel film',
       removeError: 'Suppression impossible',
+      excludeFromWheelAction: 'Exclure du tirage',
+      includeInWheelAction: 'Réintégrer au tirage',
+      excludeFromWheelError: 'Exclusion impossible',
+      includeInWheelError: 'Réintégration impossible',
+      excludedFromWheelSr: 'Film exclu du tirage',
       moreActionsAria: 'Plus d’actions pour « {{title}} »',
       tmdbVoteTitle: 'Note moyenne TMDB (indicatif)',
       runtimeTitle: 'Durée du film',

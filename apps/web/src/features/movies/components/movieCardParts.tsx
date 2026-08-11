@@ -7,12 +7,14 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  CircleSlash,
   ExternalLink,
   Eye,
   ListPlus,
   MessageSquarePlus,
   MoreVertical,
   Quote,
+  RotateCcw,
   ThumbsDown,
   ThumbsUp,
   Trash2,
@@ -50,6 +52,11 @@ export interface MovieCardSelection {
   onSelect: (movie: MovieData) => void;
 }
 
+export interface MovieWheelExclusion {
+  excluded: boolean;
+  onToggle: () => void;
+}
+
 export interface MovieCardCommonProps {
   movie: MovieData;
   slug: string;
@@ -68,6 +75,7 @@ export interface MovieCardCommonProps {
   eager?: boolean;
   isInWatchlist?: boolean;
   onToggleWatchlist?: (movie: MovieData) => void;
+  onToggleWheelExclusion?: (movie: MovieData) => void;
   selection?: MovieCardSelection;
 }
 
@@ -444,6 +452,7 @@ interface CardKebabProps {
   inWatchlist?: boolean;
   onToggleWatchlist?: () => void;
   onProposeToEvent?: () => void;
+  wheelExclusion?: MovieWheelExclusion;
   t: Translate;
 }
 
@@ -505,6 +514,7 @@ export function CardKebab({
   inWatchlist,
   onToggleWatchlist,
   onProposeToEvent,
+  wheelExclusion,
   t,
 }: Readonly<CardKebabProps>) {
   const [open, setOpen] = useState(false);
@@ -630,6 +640,28 @@ export function CardKebab({
               >
                 <ListPlus aria-hidden size={14} />
                 <span>{t('watchlist.card.proposeAction')}</span>
+              </button>
+            )}
+            {wheelExclusion && (
+              <button
+                type="button"
+                role="menuitem"
+                className={styles.kebabItem}
+                onClick={() => {
+                  setOpen(false);
+                  wheelExclusion.onToggle();
+                }}
+              >
+                {wheelExclusion.excluded ? (
+                  <RotateCcw aria-hidden size={14} />
+                ) : (
+                  <CircleSlash aria-hidden size={14} />
+                )}
+                <span>
+                  {wheelExclusion.excluded
+                    ? t('movies.list.includeInWheelAction')
+                    : t('movies.list.excludeFromWheelAction')}
+                </span>
               </button>
             )}
             {canRemove && (

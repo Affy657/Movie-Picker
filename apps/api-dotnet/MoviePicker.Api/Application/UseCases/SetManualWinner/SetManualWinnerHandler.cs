@@ -53,6 +53,9 @@ public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
         if (winner is null || winner.EventId != evt.Id)
             throw new NotFoundException("Film introuvable dans cette soirée");
 
+        if (winner.ExcludedFromWheel)
+            throw new ConflictException("Ce film est exclu du tirage. Réintégrez-le pour pouvoir le choisir.");
+
         var now = DateTimeOffset.UtcNow;
         var updated = evt with
         {

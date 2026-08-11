@@ -4,7 +4,12 @@ import { LayoutGrid, List } from 'lucide-react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
-import { clearMovieVote, removeMovieFromEvent, voteMovie } from '@/features/movies/api/moviesApi';
+import {
+  clearMovieVote,
+  removeMovieFromEvent,
+  setMovieWheelExclusion,
+  voteMovie,
+} from '@/features/movies/api/moviesApi';
 import { getErrorMessage } from '@/shared/api/apiError';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
@@ -161,6 +166,26 @@ export default function EventMoviesSection({
     [slug, participant, hostToken, setActionError, refreshAll, track]
   );
 
+  const handleToggleWheelExclusion = useCallback(
+    (m: MovieData) => {
+      setActionError(null);
+      const excluded = !m.excludedFromWheel;
+      void setMovieWheelExclusion(slug, m.id, excluded, hostToken)
+        .then(refreshAll)
+        .catch((e: unknown) => {
+          setActionError(
+            getErrorMessage(
+              e,
+              excluded
+                ? t('movies.list.excludeFromWheelError')
+                : t('movies.list.includeInWheelError')
+            )
+          );
+        });
+    },
+    [slug, hostToken, setActionError, refreshAll, t]
+  );
+
   const handleActionError = useCallback((msg: string) => setActionError(msg), [setActionError]);
 
   const participantAvatars = Object.fromEntries(
@@ -277,6 +302,9 @@ export default function EventMoviesSection({
             viewMode={viewMode}
             isInWatchlist={user ? isInWatchlist : undefined}
             onToggleWatchlist={user ? handleToggleWatchlist : undefined}
+            onToggleWheelExclusion={
+              event.isHost && !isFinished ? handleToggleWheelExclusion : undefined
+            }
             selection={selection}
           />
         </div>

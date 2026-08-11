@@ -95,6 +95,26 @@ public sealed class InMemoryMovieRepository : IMovieRepository
         return Task.CompletedTask;
     }
 
+    public Task UpdateWheelExclusionAsync(string movieId, bool excluded, CancellationToken ct = default)
+    {
+        if (!_byId.TryGetValue(movieId, out var existing))
+            return Task.CompletedTask;
+
+        var updated = existing with { ExcludedFromWheel = excluded, UpdatedAt = DateTimeOffset.UtcNow };
+        _byId[movieId] = updated;
+
+        if (_byEventId.TryGetValue(existing.EventId, out var list))
+        {
+            lock (list)
+            {
+                var idx = list.FindIndex(m => m.Id == movieId);
+                if (idx >= 0) list[idx] = updated;
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
     public Task UpdateGenresAsync(string movieId, IReadOnlyList<int> genreIds, CancellationToken ct = default)
     {
         if (!_byId.TryGetValue(movieId, out var existing))

@@ -13,13 +13,17 @@ public static class WheelWinnerPicker
     {
         if (movies.Count == 0)
             throw new InvalidOperationException("Liste de films vide.");
-        if (movies.Count == 1)
-            return movies[0];
 
-        var pool = movies;
+        var eligible = movies.Where(m => !m.ExcludedFromWheel).ToList();
+        if (eligible.Count == 0)
+            throw new InvalidOperationException("Tous les films sont exclus du tirage.");
+        if (eligible.Count == 1)
+            return eligible[0];
+
+        IReadOnlyList<Movie> pool = eligible;
         if (!string.IsNullOrEmpty(excludedMovieId))
         {
-            var filtered = movies.Where(m => !string.Equals(m.Id, excludedMovieId, StringComparison.Ordinal)).ToList();
+            var filtered = eligible.Where(m => !string.Equals(m.Id, excludedMovieId, StringComparison.Ordinal)).ToList();
             if (filtered.Count > 0)
                 pool = filtered;
         }

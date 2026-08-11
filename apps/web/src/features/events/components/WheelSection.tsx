@@ -56,6 +56,8 @@ export default function WheelSection({
   const isHost = event.isHost === true || (event.isHost == null && !!hostToken);
   const safeMovies = movies ?? [];
   const moviesCount = safeMovies.length;
+  const eligibleMovies = safeMovies.filter((m) => !m.excludedFromWheel);
+  const noEligibleMovie = moviesCount > 0 && eligibleMovies.length === 0;
 
   useEffect(() => {
     setWinner(event.winnerMovie ?? null);
@@ -67,7 +69,7 @@ export default function WheelSection({
     setLoading(true);
     try {
       const res = await postEventWheel(slug, hostToken);
-      const idx = safeMovies.findIndex((m) => m.id === res.winner.id);
+      const idx = eligibleMovies.findIndex((m) => m.id === res.winner.id);
       setWinner(res.winner);
       setPickMethod('wheel');
       setWinnerIndex(Math.max(idx, 0));
@@ -198,6 +200,10 @@ export default function WheelSection({
         <p className="placeholder">{t('events.wheel.emptyPlaceholder')}</p>
       )}
 
+      {noEligibleMovie && isHost && !event.isFinished && (
+        <p className="placeholder">{t('events.wheel.allExcludedHint')}</p>
+      )}
+
       {manualMode && (
         <div className={styles.manualBar} role="status">
           <p className={styles.manualHint}>{t('events.wheel.manualPickHint')}</p>
@@ -265,7 +271,7 @@ export default function WheelSection({
               type="button"
               className="btn btn-primary"
               onClick={() => void launchWheel()}
-              disabled={loading}
+              disabled={loading || noEligibleMovie}
             >
               {loading ? t('events.wheel.spinning') : t('events.wheel.launchButton')}
             </button>
@@ -273,7 +279,7 @@ export default function WheelSection({
               type="button"
               className="btn"
               onClick={() => setManualMode(true)}
-              disabled={loading}
+              disabled={loading || noEligibleMovie}
             >
               {t('events.wheel.manualPickButton')}
             </button>
@@ -286,7 +292,7 @@ export default function WheelSection({
               type="button"
               className="btn btn-primary"
               onClick={() => void launchWheel()}
-              disabled={loading}
+              disabled={loading || noEligibleMovie}
             >
               {loading ? t('events.wheel.spinning') : t('events.wheel.relaunchButton')}
             </button>
@@ -294,7 +300,7 @@ export default function WheelSection({
               type="button"
               className="btn"
               onClick={() => setManualMode(true)}
-              disabled={loading}
+              disabled={loading || noEligibleMovie}
             >
               {t('events.wheel.manualPickButton')}
             </button>
@@ -327,7 +333,7 @@ export default function WheelSection({
       {isModalOpen && winner && winnerIndex >= 0 && (
         <WheelModal
           open={isModalOpen}
-          movies={safeMovies}
+          movies={eligibleMovies}
           winnerIndex={winnerIndex}
           winner={winner}
           wheelKey={wheelKey}

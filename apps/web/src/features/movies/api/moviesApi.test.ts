@@ -11,6 +11,7 @@ import {
   removeMovieFromEvent,
   searchMovies,
   setMoviePitchNote,
+  setMovieWheelExclusion,
   unmarkMovieAsSeen,
   voteMovie,
 } from '@/features/movies/api/moviesApi';
@@ -195,6 +196,24 @@ describe('movie mutations', () => {
     expect(mockFetchApi).toHaveBeenCalledWith('/events/soiree/movies/m1', {
       method: 'DELETE',
       body: JSON.stringify({ participantId: 'p1' }),
+    });
+  });
+
+  it('setMovieWheelExclusion puts the flag with the host token', async () => {
+    await setMovieWheelExclusion('soiree', 'm1', true, 'HT');
+
+    expect(mockFetchApi).toHaveBeenCalledWith('/events/soiree/movies/m1/wheel-exclusion?host=HT', {
+      method: 'PUT',
+      body: JSON.stringify({ excluded: true }),
+    });
+  });
+
+  it('setMovieWheelExclusion omits the host token when absent', async () => {
+    await setMovieWheelExclusion('soiree', 'm1', false);
+
+    expect(mockFetchApi).toHaveBeenCalledWith('/events/soiree/movies/m1/wheel-exclusion', {
+      method: 'PUT',
+      body: JSON.stringify({ excluded: false }),
     });
   });
 

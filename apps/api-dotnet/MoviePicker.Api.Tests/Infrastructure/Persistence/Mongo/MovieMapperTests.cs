@@ -66,6 +66,22 @@ public sealed class MovieMapperTests
         Assert.Empty(MovieMapper.ToDomain(doc).GenreIds);
     }
 
+    [Fact]
+    public void ToDomain_MissingExcludedFromWheel_MapsToFalse()
+    {
+        var doc = new MovieDocument { Id = "m1", EventId = "e1", ParticipantId = "p1", TmdbId = 1, Title = "X", Year = "2020", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+        Assert.False(MovieMapper.ToDomain(doc).ExcludedFromWheel);
+    }
+
+    [Fact]
+    public void ToDocument_ExcludedFromWheel_RoundTrips()
+    {
+        var domain = new Movie { Id = "m1", EventId = "e1", ParticipantId = "p1", TmdbId = 1, Title = "X", Year = "2020", ExcludedFromWheel = true, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        var doc = MovieMapper.ToDocument(domain);
+        Assert.True(doc.ExcludedFromWheel);
+        Assert.True(MovieMapper.ToDomain(doc).ExcludedFromWheel);
+    }
+
     private static readonly int[] expectedRoundTripGenreIds = new[] { 18, 35 };
 
     [Fact]

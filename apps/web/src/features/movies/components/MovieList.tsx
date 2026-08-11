@@ -28,6 +28,7 @@ interface MovieListProps {
   viewMode?: 'grid' | 'list';
   isInWatchlist?: (movie: MovieData) => boolean;
   onToggleWatchlist?: (movie: MovieData) => void;
+  onToggleWheelExclusion?: (movie: MovieData) => void;
   selection?: MovieCardSelection;
 }
 
@@ -48,6 +49,7 @@ export default function MovieList({
   viewMode = 'list',
   isInWatchlist,
   onToggleWatchlist,
+  onToggleWheelExclusion,
   selection,
 }: Readonly<MovieListProps>) {
   const { t } = useTranslation();
@@ -86,6 +88,7 @@ export default function MovieList({
             ratingScale={ratingScale}
             isInWatchlist={isInWatchlist?.(m)}
             onToggleWatchlist={onToggleWatchlist}
+            onToggleWheelExclusion={onToggleWheelExclusion}
             selection={selection}
             t={t}
           />

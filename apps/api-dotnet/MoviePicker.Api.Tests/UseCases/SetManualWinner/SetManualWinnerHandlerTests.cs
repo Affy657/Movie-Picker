@@ -115,6 +115,19 @@ public sealed class SetManualWinnerHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_MovieExcludedFromWheel_ThrowsConflictException()
+    {
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
+        _movieRepo.Setup(r => r.GetByIdAsync("mov1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MovieOf("mov1", "evt1") with { ExcludedFromWheel = true });
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request("mov1")));
+        Assert.Contains("exclu", ex.Message);
+        _eventRepo.Verify(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task HandleAsync_Success_StoresManualWinnerAndAnnounces()
     {
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());

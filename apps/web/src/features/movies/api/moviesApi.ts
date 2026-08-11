@@ -182,6 +182,19 @@ export async function removeMovieFromEvent(
   });
 }
 
+export async function setMovieWheelExclusion(
+  slug: string,
+  movieId: string,
+  excluded: boolean,
+  hostToken?: string | null
+): Promise<void> {
+  const suffix = hostToken ? `?host=${encodeURIComponent(hostToken)}` : '';
+  await fetchApi(`/events/${slug}/movies/${movieId}/wheel-exclusion${suffix}`, {
+    method: 'PUT',
+    body: JSON.stringify({ excluded }),
+  });
+}
+
 export async function setMoviePitchNote(
   slug: string,
   movieId: string,

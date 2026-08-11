@@ -394,6 +394,11 @@
   background: color-mix(in srgb, var(--color-error) 12%, transparent);
 }
 
+.excluded {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
 .selectable {
   position: relative;
   cursor: pointer;
