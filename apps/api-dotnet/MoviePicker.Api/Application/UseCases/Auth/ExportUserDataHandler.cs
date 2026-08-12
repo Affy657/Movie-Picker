@@ -113,6 +113,8 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         UiTheme = user.UiTheme.ToString(),
         AccentColor = user.AccentColor.ToString(),
         AvatarId = user.AvatarId,
+        HasPassword = !string.IsNullOrEmpty(user.PasswordHash),
+        LinkedProviders = user.Identities.Select(i => i.Provider).ToList(),
         NotificationPreferences = new ExportedNotificationPreferences
         {
             ParticipantJoined = user.NotifyOnParticipantJoined,

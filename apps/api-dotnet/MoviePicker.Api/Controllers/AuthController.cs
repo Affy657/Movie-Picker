@@ -8,9 +8,12 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.Auth;
+using MoviePicker.Api.Application.UseCases.Auth.OAuth;
 using MoviePicker.Api.Application.UseCases.Auth.PasswordReset;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Infrastructure.Web;
 
 namespace MoviePicker.Api.Controllers;
@@ -93,6 +96,141 @@ public sealed class AuthController : ControllerBase
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return NoContent();
+    }
+
+    private const string FrontLoginPath = "/login";
+    private const string FrontAccountPath = "/settings";
+    private const string FrontCallbackPath = "/auth/callback";
+    private const string ReturnToItemKey = "returnTo";
+
+    [HttpGet("oauth/providers")]
+    [ProducesResponseType(typeof(OAuthProvidersResponse), StatusCodes.Status200OK)]
+    public IActionResult ListOAuthProviders([FromServices] OAuthProviderCatalog catalog) =>
+        Ok(new OAuthProvidersResponse { Providers = catalog.Enabled });
+
+    [HttpGet("oauth/{provider}/start")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthLoginPolicy)]
+    [ProducesResponseType(StatusCodes.Status302Found)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public IActionResult OAuthStart(
+        string provider,
+        [FromQuery] string? returnTo,
+        [FromServices] OAuthProviderCatalog catalog)
+    {
+        if (!OAuthProviders.IsKnown(provider) || !catalog.IsEnabled(provider))
+            return NotFound();
+
+        var props = new AuthenticationProperties
+        {
+            RedirectUri = $"/{ApiRoutePrefix.V1}/auth/oauth/{provider}/callback"
+        };
+        props.Items[ReturnToItemKey] = ReturnToPolicy.Sanitize(returnTo);
+        return Challenge(props, provider);
+    }
+
+    [HttpGet("oauth/{provider}/callback")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthLoginPolicy)]
+    [ProducesResponseType(StatusCodes.Status302Found)]
+    public async Task<IActionResult> OAuthCallback(
+        string provider,
+        [FromServices] IOAuthLoginHandler loginHandler,
+        [FromServices] IOAuthLinkHandler linkHandler,
+        [FromServices] OAuthProviderCatalog catalog,
+        [FromServices] IOptions<MoviePickerOptions> options,
+        CancellationToken ct)
+    {
+        var webBase = options.Value.ResolvedWebBaseUrl();
+
+        if (!OAuthProviders.IsKnown(provider) || !catalog.IsEnabled(provider))
+            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, ("oauthError", "provider_disabled")));
+
+        var externalResult = await HttpContext.AuthenticateAsync(AuthConstants.ExternalCookieScheme);
+        await HttpContext.SignOutAsync(AuthConstants.ExternalCookieScheme);
+
+        if (!externalResult.Succeeded || externalResult.Principal is null)
+            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, ("oauthError", "external_auth_failed")));
+
+        var returnTo = ReturnToPolicy.Sanitize(
+            externalResult.Properties?.Items.TryGetValue(ReturnToItemKey, out var storedReturnTo) == true
+                ? storedReturnTo
+                : null);
+
+        var info = ExtractExternalLoginInfo(provider, externalResult.Principal);
+        if (info is null)
+            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, ("oauthError", "provider_error"), ("returnTo", returnTo)));
+
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!string.IsNullOrEmpty(currentUserId))
+        {
+            var linkOutcome = await linkHandler.HandleAsync(currentUserId, info, ct);
+            return linkOutcome.Kind == OAuthOutcomeKind.Linked
+                ? Redirect(BuildFrontUrl(webBase, FrontAccountPath, ("oauthLinked", provider)))
+                : Redirect(BuildFrontUrl(webBase, FrontAccountPath, ("oauthError", "identity_taken")));
+        }
+
+        var loginOutcome = await loginHandler.HandleAsync(info, ct);
+        if (loginOutcome.Kind != OAuthOutcomeKind.SignedIn || loginOutcome.User is null)
+            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, ("oauthError", "email_not_verified"), ("returnTo", returnTo)));
+
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            CreatePrincipal(loginOutcome.User.Id, loginOutcome.User.DisplayName),
+            AuthProps());
+
+        return Redirect(BuildFrontUrl(
+            webBase,
+            FrontCallbackPath,
+            ("returnTo", returnTo),
+            ("provider", provider),
+            ("event", loginOutcome.IsNewAccount ? "signup" : "login")));
+    }
+
+    [HttpDelete("me/identities/{provider}")]
+    [Authorize]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPatchProfilePolicy)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UnlinkIdentity(
+        string provider,
+        [FromServices] IOAuthUnlinkHandler handler,
+        CancellationToken ct)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+        await handler.HandleAsync(userId, provider, ct);
+        return NoContent();
+    }
+
+    private static string BuildFrontUrl(string baseUrl, string path, params (string Key, string? Value)[] queryParams)
+    {
+        var query = string.Join(
+            '&',
+            queryParams
+                .Where(p => !string.IsNullOrEmpty(p.Value))
+                .Select(p => $"{Uri.EscapeDataString(p.Key)}={Uri.EscapeDataString(p.Value!)}"));
+        return string.IsNullOrEmpty(query) ? $"{baseUrl}{path}" : $"{baseUrl}{path}?{query}";
+    }
+
+    private static ExternalLoginInfo? ExtractExternalLoginInfo(string provider, ClaimsPrincipal principal)
+    {
+        var subject = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(subject))
+            return null;
+
+        var emailVerified = string.Equals(
+            principal.FindFirstValue("email_verified"), "true", StringComparison.OrdinalIgnoreCase);
+
+        return new ExternalLoginInfo
+        {
+            Provider = provider,
+            Subject = subject,
+            Email = principal.FindFirstValue(ClaimTypes.Email),
+            EmailVerified = emailVerified,
+            DisplayName = principal.FindFirstValue(ClaimTypes.Name) ?? string.Empty
+        };
     }
 
     [HttpGet("me")]

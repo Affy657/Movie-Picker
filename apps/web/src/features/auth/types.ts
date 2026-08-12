@@ -14,4 +14,6 @@ export interface UserProfile {
   letterboxdUsername: string | null;
   letterboxdLastSyncAt: string | null;
   letterboxdLastSyncError: string | null;
+  hasPassword: boolean;
+  linkedProviders: string[];
 }

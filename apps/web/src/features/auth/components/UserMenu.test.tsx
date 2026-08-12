@@ -23,6 +23,8 @@ const baseUser: UserProfile = {
   letterboxdUsername: null,
   letterboxdLastSyncAt: null,
   letterboxdLastSyncError: null,
+  hasPassword: true,
+  linkedProviders: [],
 };
 
 function renderMenu(user: UserProfile = baseUser) {

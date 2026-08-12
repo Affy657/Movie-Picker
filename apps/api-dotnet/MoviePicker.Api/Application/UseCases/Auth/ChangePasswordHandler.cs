@@ -33,11 +33,15 @@ public sealed class ChangePasswordHandler : IChangePasswordHandler
     {
         var user = await _users.GetByIdAsync(userId, ct) ?? throw new NotFoundException("Utilisateur introuvable.");
 
-        var verify = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.CurrentPassword);
-        if (verify == PasswordVerificationResult.Failed)
+        if (!string.IsNullOrEmpty(user.PasswordHash))
         {
-            _logger.LogWarning("ChangePassword: incorrect current password for {UserId}", userId);
-            throw new UnauthorizedException("Mot de passe actuel incorrect.");
+            var verify = _passwordHasher.VerifyHashedPassword(
+                user, user.PasswordHash, request.CurrentPassword ?? string.Empty);
+            if (verify == PasswordVerificationResult.Failed)
+            {
+                _logger.LogWarning("ChangePassword: incorrect current password for {UserId}", userId);
+                throw new UnauthorizedException("Mot de passe actuel incorrect.");
+            }
         }
 
         var validationError = AuthInputValidation.ValidatePassword(request.NewPassword);

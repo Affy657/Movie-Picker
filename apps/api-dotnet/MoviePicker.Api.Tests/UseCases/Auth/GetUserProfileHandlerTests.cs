@@ -66,4 +66,27 @@ public sealed class GetUserProfileHandlerTests
 
         Assert.Equal("affy657", res.LetterboxdUsername);
     }
+
+    [Fact]
+    public async Task HandleAsync_NoPasswordWithLinkedIdentities_ReturnsHasPasswordFalseAndProviders()
+    {
+        var user = new User
+        {
+            Id = "id1",
+            Email = "bob@example.com",
+            PasswordHash = string.Empty,
+            DisplayName = "Bob",
+            Identities = [new LinkedIdentity { Provider = "google", Subject = "g-1", Email = "bob@example.com", LinkedAt = DateTimeOffset.UtcNow }],
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("id1", It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var handler = new GetUserProfileHandler(users.Object);
+
+        var res = await handler.HandleAsync("id1");
+
+        Assert.False(res.HasPassword);
+        Assert.Equal(["google"], res.LinkedProviders);
+    }
 }

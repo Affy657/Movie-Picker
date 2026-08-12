@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
 import AuthPageShell, { authPageShellStyles } from '@/features/auth/components/AuthPageShell';
 import PageLayout from '@/shared/components/PageLayout';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import OAuthProviderButtons from '@/features/auth/components/OAuthProviderButtons';
 import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { safeReturnTo } from '@/shared/utils/returnTo';
@@ -111,6 +112,7 @@ export default function RegisterPage() {
             {loading ? t('auth.register.submitting') : t('auth.register.submit')}
           </button>
         </form>
+        <OAuthProviderButtons returnTo={returnTo} />
         <p className="muted">
           {t('auth.register.loginPrompt')}{' '}
           <Link to={withReturnTo(ROUTES.login, returnTo)}>{t('auth.register.loginLink')}</Link>

@@ -38,6 +38,8 @@ const profile: UserProfile = {
   letterboxdUsername: null,
   letterboxdLastSyncAt: null,
   letterboxdLastSyncError: null,
+  hasPassword: true,
+  linkedProviders: [],
 };
 
 function renderForm(node: ReactElement) {

@@ -66,6 +66,7 @@ describe("lien d'invitation : retour vers la soirée après authentification", (
         return HttpResponse.json({});
       }),
       http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] })),
+      http.get(`${TEST_API_V1}/auth/oauth/providers`, () => HttpResponse.json({ providers: [] })),
       ...createEventDetailHandlers({ slug: EVENT_SLUG, title: 'Soirée invitée' })
     );
   }
