@@ -74,6 +74,55 @@ public sealed class DeleteAccountHandlerTests
             Times.Never);
     }
 
+    private static async Task<User> SeedUserWithoutPasswordAsync(Fixture f, string handle = "neo")
+    {
+        var user = new User
+        {
+            Email = "neo@example.com",
+            DisplayName = "Neo",
+            Handle = handle,
+            Identities = [new LinkedIdentity { Provider = "google", Subject = "g-1", Email = "neo@example.com", LinkedAt = DateTimeOffset.UtcNow }],
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        return await f.Users.AddAsync(user);
+    }
+
+    [Fact]
+    public async Task HandleAsync_NoPassword_WrongConfirmation_ThrowsUnauthorized_AndKeepsData()
+    {
+        var f = new Fixture();
+        var user = await SeedUserWithoutPasswordAsync(f);
+
+        var ex = await Assert.ThrowsAsync<UnauthorizedException>(() =>
+            f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Confirmation = "wrong" }));
+
+        Assert.Equal("Confirmation incorrecte.", ex.Message);
+        Assert.NotNull(await f.Users.GetByIdAsync(user.Id));
+    }
+
+    [Fact]
+    public async Task HandleAsync_NoPassword_ConfirmationMatchesHandle_DeletesAccount()
+    {
+        var f = new Fixture();
+        var user = await SeedUserWithoutPasswordAsync(f);
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Confirmation = "NEO" });
+
+        Assert.Null(await f.Users.GetByIdAsync(user.Id));
+    }
+
+    [Fact]
+    public async Task HandleAsync_NoPassword_ConfirmationMatchesEmail_DeletesAccount()
+    {
+        var f = new Fixture();
+        var user = await SeedUserWithoutPasswordAsync(f);
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Confirmation = "neo@example.com" });
+
+        Assert.Null(await f.Users.GetByIdAsync(user.Id));
+    }
+
     [Fact]
     public async Task HandleAsync_UserNotFound_ThrowsNotFound()
     {

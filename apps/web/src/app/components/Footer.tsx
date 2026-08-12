@@ -100,6 +100,22 @@ export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>
         </div>
 
         <div className={styles.col}>
+          <p className={styles.colTitle}>{t('footer.legalTitle')}</p>
+          <ul className={styles.colList}>
+            <li>
+              <Link to={ROUTES.legalNotice} className={styles.colLink}>
+                {t('footer.legalNotice')}
+              </Link>
+            </li>
+            <li>
+              <Link to={ROUTES.privacyPolicy} className={styles.colLink}>
+                {t('footer.privacyPolicy')}
+              </Link>
+            </li>
+          </ul>
+        </div>
+
+        <div className={styles.col}>
           <p className={styles.colTitle}>{t('footer.socialTitle')}</p>
           <ul className={styles.colList}>
             <li>

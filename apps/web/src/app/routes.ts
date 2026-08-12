@@ -7,9 +7,12 @@ export const ROUTES = {
   register: '/register',
   forgotPassword: '/forgot-password',
   resetPassword: '/reset',
+  oauthCallback: '/auth/callback',
   account: '/settings',
   myEvents: '/my-events',
   watchlist: '/watchlist',
+  legalNotice: '/mentions-legales',
+  privacyPolicy: '/politique-de-confidentialite',
 
   eventDetailPattern: `${EVENT_PREFIX}/:slug`,
 

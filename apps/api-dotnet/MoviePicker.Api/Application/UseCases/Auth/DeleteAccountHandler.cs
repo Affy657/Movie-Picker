@@ -53,11 +53,26 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
     {
         var user = await _users.GetByIdAsync(userId, ct) ?? throw new NotFoundException("Utilisateur introuvable.");
 
-        var verify = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
-        if (verify == PasswordVerificationResult.Failed)
+        if (string.IsNullOrEmpty(user.PasswordHash))
         {
-            _logger.LogWarning("DeleteAccount: incorrect password for {UserId}", userId);
-            throw new UnauthorizedException("Mot de passe incorrect.");
+            var confirmation = (request.Confirmation ?? string.Empty).Trim();
+            var matchesHandle = !string.IsNullOrEmpty(user.Handle)
+                && string.Equals(confirmation, user.Handle, StringComparison.OrdinalIgnoreCase);
+            var matchesEmail = string.Equals(confirmation, user.Email, StringComparison.OrdinalIgnoreCase);
+            if (!matchesHandle && !matchesEmail)
+            {
+                _logger.LogWarning("DeleteAccount: incorrect confirmation for {UserId}", userId);
+                throw new UnauthorizedException("Confirmation incorrecte.");
+            }
+        }
+        else
+        {
+            var verify = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password ?? string.Empty);
+            if (verify == PasswordVerificationResult.Failed)
+            {
+                _logger.LogWarning("DeleteAccount: incorrect password for {UserId}", userId);
+                throw new UnauthorizedException("Mot de passe incorrect.");
+            }
         }
 
         var anonymizedEvents = await _events.AnonymizeCreatorAsync(userId, ct);

@@ -24,6 +24,8 @@ public sealed record ExportedProfile
     public string UiTheme { get; init; } = string.Empty;
     public string AccentColor { get; init; } = string.Empty;
     public string AvatarId { get; init; } = string.Empty;
+    public bool HasPassword { get; init; }
+    public IReadOnlyList<string> LinkedProviders { get; init; } = Array.Empty<string>();
     public ExportedNotificationPreferences NotificationPreferences { get; init; } = new();
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }

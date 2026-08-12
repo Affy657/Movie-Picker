@@ -11,6 +11,7 @@ public static class UserDocumentMapper
             Email = doc.Email,
             PasswordHash = doc.PasswordHash,
             DisplayName = doc.DisplayName,
+            Identities = (doc.Identities ?? []).ConvertAll(ToIdentityDomain),
             Handle = doc.Handle ?? string.Empty,
             Bio = doc.Bio,
             IsProfilePublic = doc.IsProfilePublic ?? true,
@@ -40,6 +41,7 @@ public static class UserDocumentMapper
             Email = user.Email,
             PasswordHash = user.PasswordHash,
             DisplayName = user.DisplayName,
+            Identities = user.Identities.Count == 0 ? null : user.Identities.Select(ToIdentityDocument).ToList(),
             Handle = string.IsNullOrEmpty(user.Handle) ? null : user.Handle,
             Bio = string.IsNullOrEmpty(user.Bio) ? null : user.Bio,
             IsProfilePublic = user.IsProfilePublic,
@@ -59,6 +61,22 @@ public static class UserDocumentMapper
             CreatedAt = user.CreatedAt.UtcDateTime,
             UpdatedAt = user.UpdatedAt.UtcDateTime
         };
+
+    private static LinkedIdentity ToIdentityDomain(UserIdentityDocument doc) => new()
+    {
+        Provider = doc.Provider,
+        Subject = doc.Subject,
+        Email = doc.Email,
+        LinkedAt = new DateTimeOffset(doc.LinkedAt, TimeSpan.Zero)
+    };
+
+    private static UserIdentityDocument ToIdentityDocument(LinkedIdentity identity) => new()
+    {
+        Provider = identity.Provider,
+        Subject = identity.Subject,
+        Email = identity.Email,
+        LinkedAt = identity.LinkedAt.UtcDateTime
+    };
 
     private static UiThemePreference ParseTheme(string? s) =>
         s?.ToLowerInvariant() switch

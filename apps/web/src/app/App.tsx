@@ -20,7 +20,10 @@ const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('@/features/auth/pages/ResetPasswordPage'));
+const OAuthCallbackPage = lazy(() => import('@/features/auth/pages/OAuthCallbackPage'));
 const AccountPage = lazy(() => import('@/features/auth/pages/AccountPage'));
+const LegalNoticePage = lazy(() => import('@/app/pages/LegalNoticePage'));
+const PrivacyPolicyPage = lazy(() => import('@/app/pages/PrivacyPolicyPage'));
 const MyEventsPage = lazy(() => import('@/features/events/pages/MyEventsPage'));
 const WatchlistPage = lazy(() => import('@/features/watchlist/pages/WatchlistPage'));
 const ProfilePage = lazy(() => import('@/features/profile/pages/ProfilePage'));
@@ -85,6 +88,9 @@ export function AppRoutes() {
         <Route path={ROUTES.register} element={<RegisterPage />} />
         <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
         <Route path={ROUTES.resetPassword} element={<ResetPasswordPage />} />
+        <Route path={ROUTES.oauthCallback} element={<OAuthCallbackPage />} />
+        <Route path={ROUTES.legalNotice} element={<LegalNoticePage />} />
+        <Route path={ROUTES.privacyPolicy} element={<PrivacyPolicyPage />} />
         <Route
           path={ROUTES.account}
           element={

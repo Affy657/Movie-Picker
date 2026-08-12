@@ -50,6 +50,19 @@ public sealed class MongoUserRepository : IUserRepository
         return doc is null ? null : UserDocumentMapper.ToDomain(doc);
     }
 
+    public async Task<User?> GetByIdentityAsync(string provider, string subject, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(provider) || string.IsNullOrWhiteSpace(subject))
+            return null;
+        var filter = Builders<UserDocument>.Filter.ElemMatch(
+            x => x.Identities,
+            Builders<UserIdentityDocument>.Filter.And(
+                Builders<UserIdentityDocument>.Filter.Eq(i => i.Provider, provider),
+                Builders<UserIdentityDocument>.Filter.Eq(i => i.Subject, subject)));
+        var doc = await _collection.Find(filter).FirstOrDefaultAsync(ct);
+        return doc is null ? null : UserDocumentMapper.ToDomain(doc);
+    }
+
     public async Task<IReadOnlyList<User>> ListMissingHandleAsync(CancellationToken ct = default)
     {
         var filter = Builders<UserDocument>.Filter.Or(
@@ -156,6 +169,8 @@ public sealed class MongoUserRepository : IUserRepository
         var msg = ex.WriteError?.Message ?? string.Empty;
         if (msg.Contains("users_handle_unique", StringComparison.OrdinalIgnoreCase))
             throw new ConflictException("handle_conflict");
+        if (msg.Contains("users_identities_provider_subject_unique", StringComparison.OrdinalIgnoreCase))
+            throw new ConflictException("identity_conflict");
         throw new ConflictException("Un compte existe déjà pour cette adresse e-mail.");
     }
 

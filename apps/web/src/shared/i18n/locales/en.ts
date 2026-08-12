@@ -69,6 +69,20 @@ export const en: Locale = {
       loginPrompt: 'Already registered?',
       loginLink: 'Log in',
     },
+    oauth: {
+      divider: 'or',
+      continueWith: 'Continue with {{provider}}',
+      callbackLoading: 'Signing you in…',
+      errors: {
+        providerDisabled: 'This sign-in provider is not available right now.',
+        externalAuthFailed: 'Sign-in failed. Please try again.',
+        providerError: 'The provider did not return the expected information. Please try again.',
+        emailNotVerified:
+          'This account’s email is not verified by the provider. Log in with your password, then link this account from the Account page.',
+        identityTaken: 'This account is already linked to another Movie Picker profile.',
+        generic: 'Sign-in failed. Please try again.',
+      },
+    },
     forgotPassword: {
       title: 'Forgot password',
       description: 'Enter your email to receive a reset link. The link is valid for 30 minutes.',
@@ -128,6 +142,21 @@ export const en: Locale = {
       changePasswordMustMatch: 'Both passwords must match.',
       changePasswordRulesError:
         'New password must be at least 8 characters and include a letter and a digit.',
+      setPasswordTitle: 'Set a password',
+      setPasswordHint:
+        'You signed up with Google or GitHub. Set a password to also be able to log in with your email.',
+      setPasswordSubmit: 'Set password',
+      setPasswordSubmitting: 'Saving…',
+      setPasswordSuccess: 'Password set. Redirecting to sign-in…',
+      setPasswordFallbackError: 'Update failed.',
+      connectionsTitle: 'Connections',
+      connectionsDescription: 'Sign in faster next time with a Google or GitHub account.',
+      connectionsLinked: 'Linked',
+      connectionsLinkButton: 'Link {{provider}}',
+      connectionsUnlinkButton: 'Unlink',
+      connectionsUnlinkConfirm: 'Unlink this {{provider}} account?',
+      connectionsUnlinkFallbackError: 'Could not unlink this account right now.',
+      connectionsLinkedBanner: '{{provider}} is now linked to your account.',
       accentColorLabel: 'Accent color',
       accentColorHint:
         'Choose the dominant colour of buttons and highlights. Applies to both light and dark modes.',
@@ -162,11 +191,15 @@ export const en: Locale = {
       deleteAccountButton: 'Delete my account',
       deleteAccountConfirmTitle: 'Confirm deletion',
       deleteAccountPasswordLabel: 'Enter your password to confirm',
+      deleteAccountConfirmationLabel: 'Enter your handle or email to confirm',
       deleteAccountConfirmButton: 'Delete permanently',
       deleteAccountSubmitting: 'Deleting…',
       deleteAccountCancel: 'Cancel',
       deleteAccountPasswordRequired: 'Password is required.',
+      deleteAccountConfirmationRequired: 'Confirmation is required.',
       deleteAccountFallbackError: 'Deletion failed. Check your password.',
+      deleteAccountConfirmationFallbackError:
+        'Deletion failed. Check the confirmation you entered.',
       letterboxd: {
         title: 'Letterboxd',
         helpTitle: 'How it works',
@@ -651,6 +684,42 @@ export const en: Locale = {
     tmdbSuffix: '. Ratings and availability are indicative.',
     tmdbLinkAria: 'TMDB — open The Movie Database (new tab)',
     copyright: '© {{year}} Movie Picker v{{version}}',
+    legalTitle: 'Legal information',
+    legalNotice: 'Legal notice',
+    privacyPolicy: 'Privacy policy',
+  },
+
+  legal: {
+    noticeTitle: 'Legal notice',
+    noticeIntro: 'Movie Picker is a personal project developed and published by Adrien Morand.',
+    noticeEditorTitle: 'Publisher',
+    noticeEditorBody: 'Adrien Morand — contact: {{email}}',
+    noticeHostingTitle: 'Hosting',
+    noticeHostingBody:
+      'The website (front-end) is hosted by Amazon Web Services (AWS S3 / CloudFront). The API is hosted by Google Cloud Platform (Cloud Run). The database is hosted by MongoDB Atlas.',
+    noticeIpTitle: 'Intellectual property',
+    noticeIpBody:
+      'Movie and TV show data, posters and availability information come from The Movie Database (TMDB) and remain the property of their respective rights holders. Movie Picker is neither produced by nor affiliated with TMDB.',
+    noticeContactTitle: 'Contact',
+    noticeContactBody: 'For any question, write to {{email}}.',
+    backToApp: '← Back to Movie Picker',
+    privacyTitle: 'Privacy policy',
+    privacyIntro:
+      'This page describes the personal data processed by Movie Picker and your rights over that data.',
+    privacyDataTitle: 'Data collected',
+    privacyDataBody:
+      'Account: email, nickname, public handle, hashed password, or an identity linked via Google/GitHub. Service usage: events you create, votes, participations, watchlist, notifications, follows. Audience measurement: PostHog, only with your consent.',
+    privacyOAuthTitle: 'Signing in with Google or GitHub',
+    privacyOAuthBody:
+      'If you choose to sign in with Google or GitHub, Movie Picker only receives your identifier, your email address (if verified by the provider) and your display name. No other data from the provider is requested or stored. You can link or unlink these accounts at any time from the Account page.',
+    privacyRetentionTitle: 'Data retention',
+    privacyRetentionBody:
+      'Your data is kept for as long as your account exists. Deleting your account, available from the Account page, permanently erases your profile; events you created and your votes are kept but anonymised.',
+    privacyRightsTitle: 'Your rights',
+    privacyRightsBody:
+      'Under GDPR, you can export your data (Account page) or delete your account at any time. For any other request about your data, contact {{email}}.',
+    privacyContactTitle: 'Contact',
+    privacyContactBody: 'For any question about this policy, write to {{email}}.',
   },
 
   support: {

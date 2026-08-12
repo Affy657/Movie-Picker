@@ -110,4 +110,19 @@ describe('LoginPage (MSW)', () => {
     expect(forgotLink).toBeInTheDocument();
     expect(forgotLink).toHaveAttribute('href', '/forgot-password');
   });
+
+  it('affiche un message quand oauthError=email_not_verified est présent', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({ error: '401' }, { status: 401 })
+      ),
+      http.get(`${TEST_API_V1}/auth/oauth/providers`, () => HttpResponse.json({ providers: [] }))
+    );
+
+    renderLogin('/login?oauthError=email_not_verified');
+
+    expect(
+      await screen.findByText(/adresse e-mail de ce compte n’est pas vérifiée/i)
+    ).toBeInTheDocument();
+  });
 });

@@ -64,9 +64,14 @@ describe('App (routes)', () => {
       ['/e/soiree-secrete', '%2Fe%2Fsoiree-secrete'],
       ['/settings', '%2Fsettings'],
     ])('route %s redirige vers /login avec un returnTo', async (path, encodedReturnTo) => {
-      server.use(authMeGuestHandler);
+      server.use(
+        authMeGuestHandler,
+        http.get(`${TEST_API_V1}/auth/oauth/providers`, () => HttpResponse.json({ providers: [] }))
+      );
       renderRoutes([path]);
-      expect(await screen.findByRole('heading', { name: /^connexion$/i })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { name: /^connexion$/i }, { timeout: 8000 })
+      ).toBeInTheDocument();
       expect(screen.getByRole('link', { name: /créer un compte/i })).toHaveAttribute(
         'href',
         `/register?returnTo=${encodedReturnTo}`

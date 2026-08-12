@@ -25,7 +25,10 @@ const AUTH_USER = {
 };
 
 describe('accessibilité (axe)', () => {
-  const server = setupServer(authMeGuestHandler);
+  const server = setupServer(
+    authMeGuestHandler,
+    http.get(`${TEST_API_V1}/auth/oauth/providers`, () => HttpResponse.json({ providers: [] }))
+  );
 
   beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
   afterEach(() => server.resetHandlers());

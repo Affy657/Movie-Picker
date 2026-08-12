@@ -10,6 +10,7 @@ public interface IUserRepository
     Task<IReadOnlyList<User>> ListByIdsAsync(IReadOnlyCollection<string> ids, CancellationToken ct = default);
     Task<User?> GetByEmailAsync(string email, CancellationToken ct = default);
     Task<User?> GetByHandleAsync(string handle, CancellationToken ct = default);
+    Task<User?> GetByIdentityAsync(string provider, string subject, CancellationToken ct = default);
     Task<IReadOnlyList<User>> ListMissingHandleAsync(CancellationToken ct = default);
     Task<IReadOnlyList<User>> ListWithLetterboxdSyncEnabledAsync(CancellationToken ct = default);
 

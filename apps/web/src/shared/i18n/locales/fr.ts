@@ -67,6 +67,21 @@
       loginPrompt: 'D\u00e9j\u00e0 inscrit ?',
       loginLink: 'Se connecter',
     },
+    oauth: {
+      divider: 'ou',
+      continueWith: 'Continuer avec {{provider}}',
+      callbackLoading: 'Connexion en cours\u2026',
+      errors: {
+        providerDisabled: 'Ce fournisseur de connexion n\u2019est pas disponible pour le moment.',
+        externalAuthFailed: 'La connexion a \u00e9chou\u00e9. R\u00e9essayez.',
+        providerError:
+          'Le fournisseur n\u2019a pas renvoy\u00e9 les informations attendues. R\u00e9essayez.',
+        emailNotVerified:
+          'L\u2019adresse e-mail de ce compte n\u2019est pas v\u00e9rifi\u00e9e par le fournisseur. Connectez-vous avec votre mot de passe, puis liez ce compte depuis la page Mon compte.',
+        identityTaken: 'Ce compte est d\u00e9j\u00e0 li\u00e9 \u00e0 un autre profil Movie Picker.',
+        generic: 'Connexion impossible. R\u00e9essayez.',
+      },
+    },
     forgotPassword: {
       title: 'Mot de passe oublié',
       description:
@@ -130,6 +145,22 @@
       changePasswordMustMatch: 'Les deux mots de passe doivent \u00eatre identiques.',
       changePasswordRulesError:
         'Le nouveau mot de passe doit contenir au moins 8 caract\u00e8res, une lettre et un chiffre.',
+      setPasswordTitle: 'D\u00e9finir un mot de passe',
+      setPasswordHint:
+        'Vous vous \u00eates inscrit avec Google ou GitHub. D\u00e9finissez un mot de passe pour aussi pouvoir vous connecter avec votre e-mail.',
+      setPasswordSubmit: 'D\u00e9finir le mot de passe',
+      setPasswordSubmitting: 'Enregistrement\u2026',
+      setPasswordSuccess: 'Mot de passe d\u00e9fini. Reconnectez-vous dans un instant\u2026',
+      setPasswordFallbackError: 'Enregistrement impossible.',
+      connectionsTitle: 'Connexions',
+      connectionsDescription:
+        'Connectez-vous en un clic la prochaine fois gr\u00e2ce \u00e0 un compte Google ou GitHub.',
+      connectionsLinked: 'Li\u00e9',
+      connectionsLinkButton: 'Lier {{provider}}',
+      connectionsUnlinkButton: 'D\u00e9lier',
+      connectionsUnlinkConfirm: 'D\u00e9lier ce compte {{provider}} ?',
+      connectionsUnlinkFallbackError: 'Impossible de d\u00e9lier ce compte pour le moment.',
+      connectionsLinkedBanner: '{{provider}} est maintenant li\u00e9 \u00e0 votre compte.',
       accentColorLabel: 'Couleur d\u2019accent',
       accentColorHint:
         'Choisissez la couleur dominante des boutons et accents. S\u2019applique en mode clair et sombre.',
@@ -164,11 +195,15 @@
       deleteAccountButton: 'Supprimer mon compte',
       deleteAccountConfirmTitle: 'Confirmer la suppression',
       deleteAccountPasswordLabel: 'Saisissez votre mot de passe pour confirmer',
+      deleteAccountConfirmationLabel: 'Saisissez votre handle ou votre e-mail pour confirmer',
       deleteAccountConfirmButton: 'Supprimer définitivement',
       deleteAccountSubmitting: 'Suppression…',
       deleteAccountCancel: 'Annuler',
       deleteAccountPasswordRequired: 'Le mot de passe est requis.',
+      deleteAccountConfirmationRequired: 'La confirmation est requise.',
       deleteAccountFallbackError: 'Suppression impossible. Vérifiez votre mot de passe.',
+      deleteAccountConfirmationFallbackError:
+        'Suppression impossible. Vérifiez la confirmation saisie.',
       letterboxd: {
         title: 'Letterboxd',
         helpTitle: 'Comment ça marche',
@@ -662,6 +697,43 @@
     tmdbSuffix: '. Les notes et disponibilités sont indicatives.',
     tmdbLinkAria: 'TMDB — ouvrir The Movie Database (nouvel onglet)',
     copyright: '© {{year}} Movie Picker v{{version}}',
+    legalTitle: 'Informations légales',
+    legalNotice: 'Mentions légales',
+    privacyPolicy: 'Politique de confidentialité',
+  },
+
+  legal: {
+    noticeTitle: 'Mentions légales',
+    noticeIntro:
+      'Movie Picker est un projet développé et édité à titre personnel par Adrien Morand.',
+    noticeEditorTitle: 'Éditeur du site',
+    noticeEditorBody: 'Adrien Morand — contact : {{email}}',
+    noticeHostingTitle: 'Hébergement',
+    noticeHostingBody:
+      'Le site (front) est hébergé par Amazon Web Services (AWS S3 / CloudFront). L’API est hébergée par Google Cloud Platform (Cloud Run). La base de données est hébergée par MongoDB Atlas.',
+    noticeIpTitle: 'Propriété intellectuelle',
+    noticeIpBody:
+      'Les données de films, séries, affiches et disponibilités proviennent de The Movie Database (TMDB) et restent la propriété de leurs ayants droit respectifs. Movie Picker n’est ni produit ni affilié à TMDB.',
+    noticeContactTitle: 'Contact',
+    noticeContactBody: 'Pour toute question, écrivez à {{email}}.',
+    backToApp: '← Retour à Movie Picker',
+    privacyTitle: 'Politique de confidentialité',
+    privacyIntro:
+      'Cette page décrit les données personnelles traitées par Movie Picker et vos droits sur ces données.',
+    privacyDataTitle: 'Données collectées',
+    privacyDataBody:
+      'Compte : e-mail, pseudo, handle public, mot de passe (haché) ou identité liée via Google/GitHub. Usage du service : soirées créées, votes, participations, watchlist, notifications, abonnements. Mesure d’audience : PostHog, uniquement avec votre consentement.',
+    privacyOAuthTitle: 'Connexion via Google ou GitHub',
+    privacyOAuthBody:
+      'Si vous choisissez de vous connecter via Google ou GitHub, Movie Picker reçoit uniquement votre identifiant, votre adresse e-mail (si vérifiée par le fournisseur) et votre nom affiché. Aucune autre donnée du fournisseur n’est demandée ni stockée. Vous pouvez lier ou délier ces comptes à tout moment depuis la page Mon compte.',
+    privacyRetentionTitle: 'Durée de conservation',
+    privacyRetentionBody:
+      'Vos données sont conservées tant que votre compte existe. La suppression de compte, disponible depuis la page Mon compte, efface définitivement votre profil ; les soirées créées et vos votes sont conservés mais anonymisés.',
+    privacyRightsTitle: 'Vos droits',
+    privacyRightsBody:
+      'Conformément au RGPD, vous pouvez à tout moment exporter vos données (page Mon compte) ou supprimer votre compte. Pour toute autre demande relative à vos données, contactez {{email}}.',
+    privacyContactTitle: 'Contact',
+    privacyContactBody: 'Pour toute question sur cette politique, écrivez à {{email}}.',
   },
 
   support: {

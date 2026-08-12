@@ -26,12 +26,21 @@ public enum RatingScale
     Ten = 1
 }
 
+public sealed record LinkedIdentity
+{
+    public string Provider { get; init; } = string.Empty;
+    public string Subject { get; init; } = string.Empty;
+    public string Email { get; init; } = string.Empty;
+    public DateTimeOffset LinkedAt { get; init; }
+}
+
 public sealed record User
 {
     public string Id { get; init; } = string.Empty;
     public string Email { get; init; } = string.Empty;
     public string PasswordHash { get; init; } = string.Empty;
     public string DisplayName { get; init; } = string.Empty;
+    public IReadOnlyList<LinkedIdentity> Identities { get; init; } = Array.Empty<LinkedIdentity>();
     public string Handle { get; init; } = string.Empty;
     public string? Bio { get; init; }
     public bool IsProfilePublic { get; init; } = true;

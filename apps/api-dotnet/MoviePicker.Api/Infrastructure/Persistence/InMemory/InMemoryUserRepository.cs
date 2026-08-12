@@ -38,6 +38,17 @@ public sealed class InMemoryUserRepository : IUserRepository
         return Task.FromResult(_handleToId.TryGetValue(n, out var id) && _byId.TryGetValue(id, out var u) ? u : null);
     }
 
+    public Task<User?> GetByIdentityAsync(string provider, string subject, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(provider) || string.IsNullOrWhiteSpace(subject))
+            return Task.FromResult<User?>(null);
+        var match = _byId.Values.FirstOrDefault(u =>
+            u.Identities.Any(i =>
+                string.Equals(i.Provider, provider, StringComparison.Ordinal)
+                && string.Equals(i.Subject, subject, StringComparison.Ordinal)));
+        return Task.FromResult(match);
+    }
+
     public Task<IReadOnlyList<User>> ListMissingHandleAsync(CancellationToken ct = default)
     {
         IReadOnlyList<User> result = _byId.Values
@@ -94,6 +105,7 @@ public sealed class InMemoryUserRepository : IUserRepository
             Email = email,
             PasswordHash = user.PasswordHash,
             DisplayName = user.DisplayName,
+            Identities = user.Identities,
             Handle = handle ?? string.Empty,
             Bio = user.Bio,
             IsProfilePublic = user.IsProfilePublic,
@@ -138,6 +150,7 @@ public sealed class InMemoryUserRepository : IUserRepository
             Email = email,
             PasswordHash = user.PasswordHash,
             DisplayName = user.DisplayName,
+            Identities = user.Identities,
             Handle = handle ?? string.Empty,
             Bio = user.Bio,
             IsProfilePublic = user.IsProfilePublic,

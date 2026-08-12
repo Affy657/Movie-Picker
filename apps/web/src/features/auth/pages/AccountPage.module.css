@@ -93,3 +93,26 @@
 .actionRow {
   margin-top: 1.25rem;
 }
+
+.connectionsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.connectionRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.connectionRow > span:first-child {
+  flex: 1;
+  font-weight: 600;
+}
