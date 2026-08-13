@@ -14,7 +14,6 @@ public sealed class KofiWebhookController : ControllerBase
     [HttpPost]
     [AllowAnonymous]
     [EnableRateLimiting(RateLimitingExtensions.KofiWebhookPolicy)]
-    [Consumes("application/x-www-form-urlencoded")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

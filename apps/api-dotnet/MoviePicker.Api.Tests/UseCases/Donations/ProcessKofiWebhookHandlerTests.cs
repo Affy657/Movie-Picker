@@ -37,8 +37,8 @@ public sealed class ProcessKofiWebhookHandlerTests
     }
 
     private void AcceptNewMessages() =>
-        _log.Setup(r => r.TryRecordAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+        _log.Setup(r => r.HasProcessedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
 
     private static string Payload(
         string token = ConfiguredToken,
@@ -108,13 +108,44 @@ public sealed class ProcessKofiWebhookHandlerTests
     [Fact]
     public async Task HandleAsync_ReplayedMessage_ReturnsAlreadyProcessed()
     {
-        _log.Setup(r => r.TryRecordAsync("msg-1", TestEpoch, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
+        _log.Setup(r => r.HasProcessedAsync("msg-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         var outcome = await CreateSut().HandleAsync(Payload());
 
         Assert.Equal(KofiWebhookOutcome.AlreadyProcessed, outcome);
         _users.VerifyNoOtherCalls();
+        _log.Verify(
+            r => r.RecordAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenBadgeGrantThrows_DoesNotRecordMessageSoKofiCanRetry()
+    {
+        AcceptNewMessages();
+        _users.Setup(r => r.GetByEmailAsync("donor@example.com", It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new TimeoutException("mongo indisponible"));
+
+        await Assert.ThrowsAsync<TimeoutException>(() => CreateSut().HandleAsync(Payload()));
+
+        _log.Verify(
+            r => r.RecordAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ProcessedMessage_IsRecordedAfterwards()
+    {
+        AcceptNewMessages();
+        _users.Setup(r => r.GetByEmailAsync("donor@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SampleUser());
+        _users.Setup(r => r.MarkSupporterAsync("user-1", TestEpoch, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        await CreateSut().HandleAsync(Payload());
+
+        _log.Verify(r => r.RecordAsync("msg-1", TestEpoch, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

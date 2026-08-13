@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
-import { render, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
@@ -15,6 +15,7 @@ import AccountPage from '@/features/auth/pages/AccountPage';
 import MyEventsPage from '@/features/events/pages/MyEventsPage';
 import NotFoundPage from '@/app/pages/NotFoundPage';
 import DonatePage from '@/app/pages/DonatePage';
+import ProfilePage from '@/features/profile/pages/ProfilePage';
 import ServerErrorPage from '@/shared/components/ServerErrorPage';
 
 const AUTH_USER = {
@@ -121,6 +122,52 @@ describe('accessibilité (axe)', () => {
         </MemoryRouter>
       </AppTestProviders>
     );
+    await assertNoViolations(container, queryClient);
+  });
+
+  it("ProfilePage avec badge soutien n'a pas de violations", async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () =>
+        HttpResponse.json({
+          handle: 'alice',
+          displayName: 'Alice',
+          avatarId: 'alpha',
+          bio: 'Cinéphile',
+          memberSince: '2024-03-15T00:00:00Z',
+          followingCount: 2,
+          followersCount: 5,
+          isSupporter: true,
+          isFollowedByMe: null,
+        })
+      ),
+      http.get(`${TEST_API_V1}/users/alice/stats`, () =>
+        HttpResponse.json({
+          eventsCreated: 0,
+          eventsJoined: 0,
+          moviesProposed: 0,
+          votesCast: 0,
+          winningProposals: 0,
+          moviesSeen: 0,
+          currentStreakWeeks: 0,
+          bestStreakWeeks: 0,
+          favoriteGenres: [],
+          dailyActivity: [],
+        })
+      )
+    );
+    const queryClient = createTestQueryClient();
+    const { container } = render(
+      <AppTestProviders client={queryClient}>
+        <MemoryRouter initialEntries={['/u/alice']}>
+          <Routes>
+            <Route path="/u/:handle" element={<ProfilePage />} />
+            <Route path="/" element={<div />} />
+          </Routes>
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+    await screen.findByRole('heading', { name: 'Alice' });
     await assertNoViolations(container, queryClient);
   });
 });

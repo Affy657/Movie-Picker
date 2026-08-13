@@ -12,26 +12,31 @@ public sealed class MongoKofiWebhookLogRepository : IKofiWebhookLogRepository
         _collection = database.GetCollection<KofiWebhookLogDocument>("kofi_webhook_log");
     }
 
-    public async Task<bool> TryRecordAsync(
-        string messageId, DateTimeOffset receivedAt, CancellationToken ct = default)
+    public async Task<bool> HasProcessedAsync(string messageId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(messageId))
             return false;
 
-        var doc = new KofiWebhookLogDocument
-        {
-            MessageId = messageId,
-            ReceivedAt = receivedAt.UtcDateTime
-        };
+        var count = await _collection.CountDocumentsAsync(
+            x => x.MessageId == messageId,
+            new CountOptions { Limit = 1 },
+            ct);
+        return count > 0;
+    }
 
-        try
-        {
-            await _collection.InsertOneAsync(doc, cancellationToken: ct);
-            return true;
-        }
-        catch (MongoWriteException ex) when (ex.WriteError?.Category == ServerErrorCategory.DuplicateKey)
-        {
-            return false;
-        }
+    public async Task RecordAsync(
+        string messageId, DateTimeOffset receivedAt, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(messageId))
+            return;
+
+        var keepEarliestDelivery = Builders<KofiWebhookLogDocument>.Update
+            .SetOnInsert(x => x.ReceivedAt, receivedAt.UtcDateTime);
+
+        await _collection.UpdateOneAsync(
+            x => x.MessageId == messageId,
+            keepEarliestDelivery,
+            new UpdateOptions { IsUpsert = true },
+            ct);
     }
 }

@@ -52,13 +52,21 @@ public sealed class ProcessKofiWebhookHandler : IProcessKofiWebhookHandler
             return KofiWebhookOutcome.InvalidToken;
         }
 
-        var now = _clock.GetUtcNow();
-        if (!await _log.TryRecordAsync(payload.MessageId, now, ct))
+        if (await _log.HasProcessedAsync(payload.MessageId, ct))
         {
             _logger.LogInformation("Webhook Ko-fi ignoré : message {MessageId} déjà traité.", payload.MessageId);
             return KofiWebhookOutcome.AlreadyProcessed;
         }
 
+        var now = _clock.GetUtcNow();
+        var outcome = await GrantSupporterBadgeAsync(payload, now, ct);
+        await _log.RecordAsync(payload.MessageId, now, ct);
+        return outcome;
+    }
+
+    private async Task<KofiWebhookOutcome> GrantSupporterBadgeAsync(
+        KofiWebhookPayload payload, DateTimeOffset now, CancellationToken ct)
+    {
         if (!GrantsSupporterBadge(payload.Type))
         {
             _logger.LogInformation("Webhook Ko-fi sans badge : type {Type} non éligible.", payload.Type);

@@ -6,7 +6,7 @@ import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import { SUPPORT_EMAIL } from '@/shared/support/supportMailto';
-import styles from './LegalPage.module.css';
+import styles from './ContentPage.module.css';
 
 export default function LegalNoticePage() {
   const { t } = useTranslation();
