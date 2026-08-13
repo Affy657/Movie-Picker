@@ -678,6 +678,7 @@ export const en: Locale = {
     socialTitle: 'Social',
     helpTitle: 'Help',
     reportIssue: 'Report an issue',
+    donate: 'Support the project',
     githubLabel: 'GitHub profile (new tab)',
     linkedinLabel: 'LinkedIn profile (new tab)',
     tmdbPrefix: 'Data provided by',
@@ -700,6 +701,9 @@ export const en: Locale = {
     noticeIpTitle: 'Intellectual property',
     noticeIpBody:
       'Movie and TV show data, posters and availability information come from The Movie Database (TMDB) and remain the property of their respective rights holders. Movie Picker is neither produced by nor affiliated with TMDB.',
+    noticeDonationsTitle: 'Donations',
+    noticeDonationsBody:
+      'Donations made through Ko-fi are voluntary and come with nothing in return: they grant no goods, services or functional benefit on Movie Picker. Movie Picker is not a registered non-profit, so donations do not qualify for any tax deduction and no tax receipt is issued. They are received by Adrien Morand personally and go towards the hosting and running costs of the service.',
     noticeContactTitle: 'Contact',
     noticeContactBody: 'For any question, write to {{email}}.',
     backToApp: '← Back to Movie Picker',
@@ -712,6 +716,9 @@ export const en: Locale = {
     privacyOAuthTitle: 'Signing in with Google or GitHub',
     privacyOAuthBody:
       'If you choose to sign in with Google or GitHub, Movie Picker only receives your identifier, your email address (if verified by the provider) and your display name. No other data from the provider is requested or stored. You can link or unlink these accounts at any time from the Account page.',
+    privacyDonationsTitle: 'Donations through Ko-fi',
+    privacyDonationsBody:
+      'Payments are handled entirely by Ko-fi, which acts as the data controller for payment data: Movie Picker never has access to it. For each donation, Ko-fi notifies our server and passes on the donor’s email address. That address is used in memory only, to find the matching Movie Picker account and show the supporter badge on it; it is never stored. No amount, donor name or message is kept: only the date of the first donation is stored on the account concerned, along with a technical notification identifier that prevents the same donation from being processed twice.',
     privacyRetentionTitle: 'Data retention',
     privacyRetentionBody:
       'Your data is kept for as long as your account exists. Deleting your account, available from the Account page, permanently erases your profile; events you created and your votes are kept but anonymised.',
@@ -720,6 +727,35 @@ export const en: Locale = {
       'Under GDPR, you can export your data (Account page) or delete your account at any time. For any other request about your data, contact {{email}}.',
     privacyContactTitle: 'Contact',
     privacyContactBody: 'For any question about this policy, write to {{email}}.',
+  },
+
+  donate: {
+    title: 'Support Movie Picker',
+    seoDescription:
+      'Movie Picker is free and ad-free. You can support the project with an optional donation through Ko-fi.',
+    intro:
+      'Movie Picker is a personal project, free and ad-free. Donating is entirely optional: it unlocks no feature, and nothing changes if you do not donate.',
+    kofiTitle: 'Make a donation',
+    kofiBody:
+      'Donations go through Ko-fi. Movie Picker never sees your payment details: the whole payment happens on Ko-fi.',
+    kofiCta: 'Donate on Ko-fi',
+    kofiCtaAria: 'Donate on Ko-fi (new tab)',
+    kofiNote: 'Any amount, one-off or monthly. No commitment, cancel at any time.',
+    costsTitle: 'What your support pays for',
+    costsIntro: 'Donations cover the running costs of the service:',
+    costsHosting: 'Website and API hosting (Amazon Web Services, Google Cloud Platform)',
+    costsDatabase: 'Database (MongoDB Atlas)',
+    costsDomain: 'The movie-picker.fr domain name',
+    costsMonitoring: 'Error and performance monitoring (Sentry)',
+    noPerksTitle: 'No functional perks',
+    noPerksBody:
+      'Every Movie Picker feature is and will remain available to everyone, with no donation required. There is no paid tier, no limit lifted by a donation, no reserved content.',
+    badgeTitle: 'The supporter badge',
+    badgeBody:
+      'A purely decorative badge appears on your public profile if you have supported the project. It is granted automatically when the email address used for the donation matches the one on your Movie Picker account.',
+    badgeMismatch:
+      'If you donated with a different email address, or if you would rather not have the badge shown, write to {{email}}.',
+    back: '← Back to Movie Picker',
   },
 
   support: {
@@ -803,6 +839,10 @@ export const en: Locale = {
     streak: {
       weekLabel: 'week in a row',
       weeksLabel: 'weeks in a row',
+    },
+    supporter: {
+      label: 'Supporter',
+      tooltip: 'Project supporter: this person donated to Movie Picker.',
     },
   },
   consent: {

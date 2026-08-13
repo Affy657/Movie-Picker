@@ -8,6 +8,7 @@ export interface PublicProfile {
   memberSince: string;
   followingCount: number;
   followersCount: number;
+  isSupporter: boolean;
   isFollowedByMe: boolean | null;
 }
 

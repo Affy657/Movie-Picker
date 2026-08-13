@@ -124,6 +124,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
             EventDeleted = user.NotifyOnEventDeleted,
             NewFollower = user.NotifyOnNewFollower
         },
+        SupporterSince = user.SupporterSince,
         CreatedAt = user.CreatedAt,
         UpdatedAt = user.UpdatedAt
     };

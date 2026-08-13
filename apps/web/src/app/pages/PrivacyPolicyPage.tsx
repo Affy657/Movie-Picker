@@ -32,6 +32,11 @@ export default function PrivacyPolicyPage() {
       </section>
 
       <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>{t('legal.privacyDonationsTitle')}</h2>
+        <p>{t('legal.privacyDonationsBody')}</p>
+      </section>
+
+      <section className={styles.section}>
         <h2 className={styles.sectionTitle}>{t('legal.privacyRetentionTitle')}</h2>
         <p>{t('legal.privacyRetentionBody')}</p>
       </section>

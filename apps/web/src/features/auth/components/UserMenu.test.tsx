@@ -65,6 +65,10 @@ describe('UserMenu', () => {
       '/u/alice'
     );
     expect(screen.getByRole('link', { name: /mon compte/i })).toHaveAttribute('href', '/settings');
+    expect(screen.getByRole('link', { name: /soutenir le projet/i })).toHaveAttribute(
+      'href',
+      '/soutenir'
+    );
     expect(screen.getByRole('button', { name: /se déconnecter/i })).toBeInTheDocument();
   });
 

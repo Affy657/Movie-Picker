@@ -37,6 +37,11 @@ export default function LegalNoticePage() {
       </section>
 
       <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>{t('legal.noticeDonationsTitle')}</h2>
+        <p>{t('legal.noticeDonationsBody')}</p>
+      </section>
+
+      <section className={styles.section}>
         <h2 className={styles.sectionTitle}>{t('legal.noticeContactTitle')}</h2>
         <p>{t('legal.noticeContactBody', { email: SUPPORT_EMAIL })}</p>
       </section>

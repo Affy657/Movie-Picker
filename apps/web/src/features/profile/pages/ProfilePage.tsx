@@ -15,6 +15,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import QrCodeButton from '@/shared/components/QrCodeButton';
 import ProfileStreakFlame from '@/features/profile/components/ProfileStreakFlame';
+import SupporterBadge from '@/features/profile/components/SupporterBadge';
 import {
   fetchPublicProfile,
   fetchUserStats,
@@ -189,6 +190,8 @@ export default function ProfilePage() {
           {profile.displayName}
         </h1>
         <p className={styles.handle}>@{profile.handle}</p>
+
+        {profile.isSupporter && <SupporterBadge />}
 
         {profile.bio && <p className={styles.bio}>{profile.bio}</p>}
 

@@ -83,6 +83,15 @@ public sealed class InMemoryUserRepository : IUserRepository
         return Task.CompletedTask;
     }
 
+    public Task<bool> MarkSupporterAsync(string userId, DateTimeOffset since, CancellationToken ct = default)
+    {
+        if (!_byId.TryGetValue(userId, out var user) || user.SupporterSince is not null)
+            return Task.FromResult(false);
+
+        _byId[userId] = user with { SupporterSince = since, UpdatedAt = since };
+        return Task.FromResult(true);
+    }
+
     public Task<IReadOnlyList<PublicProfileRef>> ListPublicProfilesAsync(int limit, CancellationToken ct = default)
     {
         IReadOnlyList<PublicProfileRef> result = _byId.Values

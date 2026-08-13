@@ -31,6 +31,7 @@ public sealed class MongoIndexInitializer : IHostedService
             await EnsureFollowIndexesAsync(cancellationToken);
             await EnsureWatchlistIndexesAsync(cancellationToken);
             await EnsureUserNotificationIndexesAsync(cancellationToken);
+            await EnsureKofiWebhookLogIndexesAsync(cancellationToken);
             _logger.LogInformation("Index MongoDB initialisés.");
         }
         catch (Exception ex)
@@ -251,6 +252,15 @@ public sealed class MongoIndexInitializer : IHostedService
                 .Ascending(x => x.IsRead),
             new CreateIndexOptions { Name = "user_notifications_userId_isRead" });
         await col.Indexes.CreateManyAsync(new[] { byUser, unread }, ct);
+    }
+
+    private async Task EnsureKofiWebhookLogIndexesAsync(CancellationToken ct)
+    {
+        var col = _database.GetCollection<KofiWebhookLogDocument>("kofi_webhook_log");
+        var ttl = new CreateIndexModel<KofiWebhookLogDocument>(
+            Builders<KofiWebhookLogDocument>.IndexKeys.Ascending(x => x.ReceivedAt),
+            new CreateIndexOptions { Name = "kofi_webhook_log_receivedAt_ttl", ExpireAfter = TimeSpan.FromDays(365) });
+        await col.Indexes.CreateOneAsync(ttl, cancellationToken: ct);
     }
 
     private static async Task DropIndexIfExistsAsync<T>(IMongoCollection<T> col, string name, CancellationToken ct)

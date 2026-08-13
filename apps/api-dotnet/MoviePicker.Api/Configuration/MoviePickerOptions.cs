@@ -42,4 +42,6 @@ public sealed class MoviePickerOptions
     public string? VapidPrivateKey { get; set; }
 
     public string VapidSubject { get; set; } = "mailto:noreply@movie-picker.fr";
+
+    public string? KofiWebhookToken { get; set; }
 }

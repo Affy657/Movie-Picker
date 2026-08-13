@@ -1,6 +1,6 @@
 import { useCallback, useId, useRef, useState } from 'react';
 import { Link } from 'react-router';
-import { LogOut, Settings, UserRound } from 'lucide-react';
+import { HeartHandshake, LogOut, Settings, UserRound } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
 import { ROUTES } from '@/app/routes';
 import { useTranslation } from '@/shared/i18n';
@@ -67,6 +67,10 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
           <Link to={ROUTES.account} className={styles.item} onClick={close}>
             <Settings className={styles.icon} aria-hidden="true" focusable="false" />
             {t('nav.account')}
+          </Link>
+          <Link to={ROUTES.donate} className={styles.item} onClick={close}>
+            <HeartHandshake className={styles.icon} aria-hidden="true" focusable="false" />
+            {t('footer.donate')}
           </Link>
           <button
             type="button"

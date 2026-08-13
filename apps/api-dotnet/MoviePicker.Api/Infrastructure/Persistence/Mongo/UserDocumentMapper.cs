@@ -25,6 +25,9 @@ public static class UserDocumentMapper
             NotifyOnMoviePicked = doc.NotifyOnMoviePicked ?? true,
             NotifyOnEventDeleted = doc.NotifyOnEventDeleted ?? true,
             NotifyOnNewFollower = doc.NotifyOnNewFollower ?? true,
+            SupporterSince = doc.SupporterSince is null
+                ? null
+                : new DateTimeOffset(doc.SupporterSince.Value, TimeSpan.Zero),
             LetterboxdUsername = doc.LetterboxdUsername,
             LetterboxdLastSyncAt = doc.LetterboxdLastSyncAt is null
                 ? null
@@ -55,6 +58,7 @@ public static class UserDocumentMapper
             NotifyOnMoviePicked = user.NotifyOnMoviePicked,
             NotifyOnEventDeleted = user.NotifyOnEventDeleted,
             NotifyOnNewFollower = user.NotifyOnNewFollower,
+            SupporterSince = user.SupporterSince?.UtcDateTime,
             LetterboxdUsername = string.IsNullOrEmpty(user.LetterboxdUsername) ? null : user.LetterboxdUsername,
             LetterboxdLastSyncAt = user.LetterboxdLastSyncAt?.UtcDateTime,
             LetterboxdLastSyncError = user.LetterboxdLastSyncError,

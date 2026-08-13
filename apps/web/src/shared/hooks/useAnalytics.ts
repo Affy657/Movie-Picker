@@ -17,7 +17,8 @@ export type AnalyticsEvent =
   | 'movie_picked'
   | 'event_closed'
   | 'user_followed'
-  | 'user_unfollowed';
+  | 'user_unfollowed'
+  | 'donation_link_clicked';
 
 export function useAnalytics() {
   const { analytics } = useConsent();

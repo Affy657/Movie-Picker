@@ -40,6 +40,7 @@ public sealed class GetPublicProfileHandler : IGetPublicProfileHandler
             MemberSince = user.CreatedAt,
             FollowingCount = followingCount,
             FollowersCount = followersCount,
+            IsSupporter = user.SupporterSince is not null,
             IsFollowedByMe = isFollowedByMe
         };
     }

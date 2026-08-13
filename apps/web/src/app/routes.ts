@@ -13,6 +13,7 @@ export const ROUTES = {
   watchlist: '/watchlist',
   legalNotice: '/mentions-legales',
   privacyPolicy: '/politique-de-confidentialite',
+  donate: '/soutenir',
 
   eventDetailPattern: `${EVENT_PREFIX}/:slug`,
 

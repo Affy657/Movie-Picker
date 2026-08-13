@@ -94,6 +94,22 @@ public sealed class MongoUserRepository : IUserRepository
         await _collection.UpdateOneAsync(x => x.Id == userId, update, cancellationToken: ct);
     }
 
+    public async Task<bool> MarkSupporterAsync(string userId, DateTimeOffset since, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return false;
+
+        var filter = Builders<UserDocument>.Filter.And(
+            Builders<UserDocument>.Filter.Eq(x => x.Id, userId),
+            Builders<UserDocument>.Filter.Eq(x => x.SupporterSince, null));
+        var update = Builders<UserDocument>.Update
+            .Set(x => x.SupporterSince, since.UtcDateTime)
+            .Set(x => x.UpdatedAt, since.UtcDateTime);
+
+        var result = await _collection.UpdateOneAsync(filter, update, cancellationToken: ct);
+        return result.ModifiedCount > 0;
+    }
+
     public async Task<IReadOnlyList<PublicProfileRef>> ListPublicProfilesAsync(int limit, CancellationToken ct = default)
     {
         var filter = Builders<UserDocument>.Filter.And(

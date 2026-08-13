@@ -79,6 +79,34 @@ describe('ProfilePage (MSW)', () => {
     expect(screen.getByRole('button', { name: /copier le lien/i })).toBeInTheDocument();
   });
 
+  it('affiche le badge soutien uniquement pour un profil soutien', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () =>
+        HttpResponse.json({ ...ALICE_PROFILE, isSupporter: true })
+      )
+    );
+
+    renderProfile('alice');
+
+    await screen.findByRole('heading', { name: 'Alice' });
+    expect(screen.getByLabelText(/soutien du projet/i)).toBeInTheDocument();
+  });
+
+  it("n'affiche pas le badge soutien sur un profil sans don", async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () =>
+        HttpResponse.json({ ...ALICE_PROFILE, isSupporter: false })
+      )
+    );
+
+    renderProfile('alice');
+
+    await screen.findByRole('heading', { name: 'Alice' });
+    expect(screen.queryByLabelText(/soutien du projet/i)).not.toBeInTheDocument();
+  });
+
   it('affiche les compteurs following/followers cliquables', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),

@@ -99,6 +99,10 @@ public static class ServiceCollectionExtensions
 
         ConfigureEmailOptions(opts, cfg);
         ConfigureVapidOptions(opts, cfg);
+
+        var kofiToken = cfg["KOFI_WEBHOOK_TOKEN"];
+        if (!string.IsNullOrWhiteSpace(kofiToken))
+            opts.KofiWebhookToken = kofiToken.Trim();
     }
 
     private static void ConfigureTmdbOptions(MoviePickerOptions opts, IConfiguration cfg)
@@ -176,6 +180,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IFollowRepository, InMemoryFollowRepository>();
             services.AddSingleton<IWatchlistRepository, InMemoryWatchlistRepository>();
             services.AddSingleton<IUserNotificationRepository, InMemoryUserNotificationRepository>();
+            services.AddSingleton<IKofiWebhookLogRepository, InMemoryKofiWebhookLogRepository>();
             services.AddSingleton<IDatabaseHealthProbe, InMemoryDatabaseHealthProbe>();
             return;
         }
@@ -208,6 +213,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFollowRepository, MongoFollowRepository>();
         services.AddScoped<IWatchlistRepository, MongoWatchlistRepository>();
         services.AddScoped<IUserNotificationRepository, MongoUserNotificationRepository>();
+        services.AddScoped<IKofiWebhookLogRepository, MongoKofiWebhookLogRepository>();
         services.AddSingleton<IDatabaseHealthProbe, MongoDatabaseHealthProbe>();
         services.AddHostedService<MongoIndexInitializer>();
         services.AddHostedService<UserHandleBackfillService>();

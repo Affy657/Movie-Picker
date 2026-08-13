@@ -96,6 +96,11 @@ export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>
             <li>
               <SupportReportButton className={clsx(styles.colLink, styles.colButtonReset)} />
             </li>
+            <li>
+              <Link to={ROUTES.donate} className={styles.colLink}>
+                {t('footer.donate')}
+              </Link>
+            </li>
           </ul>
         </div>
 

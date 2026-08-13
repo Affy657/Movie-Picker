@@ -27,6 +27,7 @@ public sealed record ExportedProfile
     public bool HasPassword { get; init; }
     public IReadOnlyList<string> LinkedProviders { get; init; } = Array.Empty<string>();
     public ExportedNotificationPreferences NotificationPreferences { get; init; } = new();
+    public DateTimeOffset? SupporterSince { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
 }

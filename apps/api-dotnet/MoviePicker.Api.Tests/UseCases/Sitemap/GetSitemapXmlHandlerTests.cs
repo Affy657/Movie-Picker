@@ -39,6 +39,15 @@ public sealed class GetSitemapXmlHandlerTests
     }
 
     [Fact]
+    public async Task BuildXmlAsync_AlwaysIncludesDonatePage()
+    {
+        SetupProfiles();
+        var xml = await CreateSut().BuildXmlAsync();
+
+        Assert.Contains("https://web.example/soutenir", Locs(xml));
+    }
+
+    [Fact]
     public async Task BuildXmlAsync_IncludesPublicProfileUrls()
     {
         SetupProfiles(
@@ -71,6 +80,6 @@ public sealed class GetSitemapXmlHandlerTests
         var root = XDocument.Parse(xml).Root;
         Assert.NotNull(root);
         Assert.Equal(Ns + "urlset", root!.Name);
-        Assert.Equal(2, root.Elements(Ns + "url").Count());
+        Assert.Equal(3, root.Elements(Ns + "url").Count());
     }
 }

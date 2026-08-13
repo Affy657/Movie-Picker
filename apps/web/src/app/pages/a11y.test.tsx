@@ -14,6 +14,7 @@ import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage';
 import AccountPage from '@/features/auth/pages/AccountPage';
 import MyEventsPage from '@/features/events/pages/MyEventsPage';
 import NotFoundPage from '@/app/pages/NotFoundPage';
+import DonatePage from '@/app/pages/DonatePage';
 import ServerErrorPage from '@/shared/components/ServerErrorPage';
 
 const AUTH_USER = {
@@ -83,6 +84,11 @@ describe('accessibilité (axe)', () => {
 
   it("AccountPage (visiteur) n'a pas de violations", async () => {
     const { container, queryClient } = renderPage(<AccountPage />);
+    await assertNoViolations(container, queryClient);
+  });
+
+  it("DonatePage n'a pas de violations", async () => {
+    const { container, queryClient } = renderPage(<DonatePage />);
     await assertNoViolations(container, queryClient);
   });
 
