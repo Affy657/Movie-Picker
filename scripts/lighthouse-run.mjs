@@ -13,6 +13,8 @@ const ROOT = path.join(__dirname, '..');
 const DIST = path.join(ROOT, 'apps', 'web', 'dist');
 const PORT = Number(process.env.LH_PORT || 4179);
 const BASE = `http://127.0.0.1:${PORT}`;
+const API_PORT = Number(process.env.LH_API_PORT || 4000);
+const API_URL = `http://localhost:${API_PORT}`;
 const BUDGETS_PATH = path.join(ROOT, 'configs', 'lighthouse-budgets.json');
 const OUT = path.join(ROOT, 'artifacts', 'lighthouse');
 
@@ -63,7 +65,41 @@ function killServe(proc) {
   }
 }
 
-execSync('pnpm --filter web run build', { cwd: ROOT, stdio: 'inherit', shell: true });
+/**
+ * Stub minimal de l'API, requis pour que les pages testées non authentifiées
+ * (redirigées vers /login) puissent résoudre leur appel `GET /auth/oauth/providers`
+ * sans lever d'erreur CSP/CORS/réseau qui ferait chuter le score best-practices.
+ */
+function startApiStub(port) {
+  const server = http.createServer((req, res) => {
+    const origin = req.headers.origin ?? BASE;
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204).end();
+      return;
+    }
+    if (req.url === '/api/v1/auth/oauth/providers') {
+      res
+        .writeHead(200, { 'Content-Type': 'application/json' })
+        .end(JSON.stringify({ providers: [] }));
+      return;
+    }
+    res
+      .writeHead(404, { 'Content-Type': 'application/json' })
+      .end(JSON.stringify({ message: 'Not Found' }));
+  });
+  server.listen(port, 'localhost');
+  return server;
+}
+
+execSync('pnpm --filter web run build', {
+  cwd: ROOT,
+  stdio: 'inherit',
+  shell: true,
+  env: { ...process.env, VITE_API_URL: API_URL },
+});
 
 if (!fs.existsSync(DIST)) {
   console.error('apps/web/dist introuvable après build.');
@@ -80,6 +116,7 @@ const serve = spawn(`pnpm exec serve -s "${DIST}" -l ${PORT}`, {
   stdio: 'ignore',
   shell: true,
 });
+const apiStub = startApiStub(API_PORT);
 
 let failed = false;
 
@@ -137,6 +174,7 @@ try {
   }
 } finally {
   killServe(serve);
+  apiStub.close();
 }
 
 if (failed) {
