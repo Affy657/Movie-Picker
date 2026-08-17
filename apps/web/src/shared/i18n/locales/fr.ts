@@ -692,6 +692,7 @@
     helpTitle: 'Aide',
     reportIssue: 'Signaler un problème',
     donate: 'Soutenir le projet',
+    whatsNew: 'Nouveautés',
     githubLabel: 'Profil GitHub (nouvel onglet)',
     linkedinLabel: 'Profil LinkedIn (nouvel onglet)',
     tmdbPrefix: 'Données fournies par',
@@ -885,6 +886,28 @@
       save: 'Enregistrer mes préférences',
       acceptAll: 'Tout accepter',
       rejectAll: 'Tout refuser',
+    },
+  },
+  whatsNew: {
+    title: 'Nouveautés de la version {{version}}',
+    close: 'Fermer',
+    categories: {
+      new: 'Nouveautés',
+      improved: 'Améliorations',
+      fixed: 'Corrections',
+    },
+    entries: {
+      watchlist:
+        'Créez votre liste de films « à voir » et proposez-en un directement dans une soirée.',
+      letterboxd: 'Synchronisez automatiquement votre watchlist Letterboxd avec Movie Picker.',
+      manualPick:
+        "L'hôte peut désormais désigner lui-même le film gagnant, sans passer par la roue.",
+      streak: 'Une flamme sur votre profil récompense votre régularité, semaine après semaine.',
+      oauth: 'Connectez-vous en un clic avec votre compte Google ou GitHub.',
+      donations:
+        'Une page « Soutenir Movie Picker » pour contribuer librement aux frais du service.',
+      wheelExclusion: "L'hôte peut écarter un film du tirage sans le retirer de la liste.",
+      whatsNewModal: 'Retrouvez les nouveautés de chaque mise à jour depuis le pied de page.',
     },
   },
 } as const;

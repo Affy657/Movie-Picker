@@ -679,6 +679,7 @@ export const en: Locale = {
     helpTitle: 'Help',
     reportIssue: 'Report an issue',
     donate: 'Support the project',
+    whatsNew: "What's new",
     githubLabel: 'GitHub profile (new tab)',
     linkedinLabel: 'LinkedIn profile (new tab)',
     tmdbPrefix: 'Data provided by',
@@ -869,6 +870,25 @@ export const en: Locale = {
       save: 'Save preferences',
       acceptAll: 'Accept all',
       rejectAll: 'Reject all',
+    },
+  },
+  whatsNew: {
+    title: "What's new in version {{version}}",
+    close: 'Close',
+    categories: {
+      new: 'New',
+      improved: 'Improved',
+      fixed: 'Fixed',
+    },
+    entries: {
+      watchlist: 'Build a personal watchlist and suggest a title straight from it during an event.',
+      letterboxd: 'Sync your Letterboxd watchlist automatically with Movie Picker.',
+      manualPick: 'Hosts can now pick the winning movie themselves, skipping the wheel.',
+      streak: 'A flame on your profile rewards your consistency, week after week.',
+      oauth: 'Sign in with one click using your Google or GitHub account.',
+      donations: "A new “Support Movie Picker” page to contribute freely to the service's costs.",
+      wheelExclusion: 'Hosts can exclude a movie from the draw without removing it from the list.',
+      whatsNewModal: "Catch up on what's new after every update, right from the footer.",
     },
   },
 };

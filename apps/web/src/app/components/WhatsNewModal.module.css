@@ -1,0 +1,57 @@
+.dialog {
+  width: min(500px, calc(100vw - 2rem));
+  padding: 1.5rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-lg);
+  color: var(--color-text);
+}
+
+.dialog::backdrop {
+  background: var(--overlay-backdrop, rgba(0, 0, 0, 0.55));
+}
+
+.title {
+  margin: 0 0 1rem;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.category {
+  margin: 0 0 1.25rem;
+}
+
+.category:last-of-type {
+  margin-bottom: 1.5rem;
+}
+
+.categoryTitle {
+  margin: 0 0 0.5rem;
+  font-size: var(--font-size-2xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-extra);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.entryList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.entry {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  line-height: var(--leading-relaxed);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}

@@ -149,6 +149,22 @@
   margin: 0;
 }
 
+.whatsNewLink {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: var(--font-size-2xs);
+  color: var(--color-meta);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.whatsNewLink:hover {
+  color: var(--color-primary);
+}
+
 @media (max-width: 767px) {
   .aboveMobileNav {
     padding-bottom: calc(3.25rem + env(safe-area-inset-bottom, 0px));

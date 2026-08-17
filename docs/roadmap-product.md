@@ -112,7 +112,7 @@ Découpage par version côté **métier / utilisateur**.
 - ✅ **Exclusion d'un film de la roue** : l'hôte écarte un film du tirage sans le retirer de la liste — il reste visible, votable et commentable, mais grisé. Réversible à tout moment, y compris après un tirage.
 - ✅ **Connexion sociale (OAuth)** : connexion et inscription via Google ou GitHub en complément de l'e-mail / mot de passe. Section « Connexions » sur la page Compte pour lier ou délier un fournisseur, sans jamais pouvoir retirer sa dernière méthode de connexion.
 - ✅ **Système de dons** : page publique « Soutenir Movie Picker » qui expose les frais réels du service et renvoie vers Ko-fi pour un don libre, ponctuel ou mensuel. Strictement facultatif — aucune fonctionnalité réservée aux donateurs, la seule contrepartie est un badge « Soutien » décoratif sur le profil public.
-- ⬜ **Modale de nouveautés** : à la première visite suivant une mise à jour, une modale résume ce qui a changé dans la version. Affichée une seule fois par version, et consultable ensuite à la demande.
+- ✅ **Modale de nouveautés** : à la première visite suivant une mise à jour, une modale résume ce qui a changé dans la version. Affichée une seule fois par version, et consultable ensuite à la demande.
 
 ---
 
