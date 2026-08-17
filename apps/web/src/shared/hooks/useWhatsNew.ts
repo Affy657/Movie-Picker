@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { safeLocalStorageGet, safeLocalStorageSet } from '@/shared/utils/safeStorage';
 import { LATEST_WHATS_NEW_RELEASE, type WhatsNewRelease } from '@/shared/whatsNew';
 
 function storageKey(userId: string) {
@@ -6,19 +7,11 @@ function storageKey(userId: string) {
 }
 
 function readSeenVersion(userId: string): string | null {
-  try {
-    return localStorage.getItem(storageKey(userId));
-  } catch {
-    return null;
-  }
+  return safeLocalStorageGet(storageKey(userId));
 }
 
-function writeSeenVersion(userId: string, version: string) {
-  try {
-    localStorage.setItem(storageKey(userId), version);
-  } catch {
-    return;
-  }
+function writeSeenVersion(userId: string, version: string): void {
+  safeLocalStorageSet(storageKey(userId), version);
 }
 
 export type UseWhatsNewResult = {
@@ -29,20 +22,27 @@ export type UseWhatsNewResult = {
 };
 
 export function useWhatsNew(userId: string | undefined): UseWhatsNewResult {
-  const [isOpen, setIsOpen] = useState(
-    () => !!userId && readSeenVersion(userId) !== LATEST_WHATS_NEW_RELEASE.version
-  );
+  const dismissedRef = useRef(false);
+
+  const computeIsOpen = useCallback((id: string | undefined) => {
+    if (dismissedRef.current) return false;
+    return !!id && readSeenVersion(id) !== LATEST_WHATS_NEW_RELEASE.version;
+  }, []);
+
+  const [isOpen, setIsOpen] = useState(() => computeIsOpen(userId));
 
   useEffect(() => {
-    setIsOpen(!!userId && readSeenVersion(userId) !== LATEST_WHATS_NEW_RELEASE.version);
-  }, [userId]);
+    setIsOpen(computeIsOpen(userId));
+  }, [userId, computeIsOpen]);
 
   const openOnDemand = useCallback(() => {
+    dismissedRef.current = false;
     setIsOpen(true);
   }, []);
 
   const close = useCallback(() => {
     setIsOpen(false);
+    dismissedRef.current = true;
     if (userId) writeSeenVersion(userId, LATEST_WHATS_NEW_RELEASE.version);
   }, [userId]);
 

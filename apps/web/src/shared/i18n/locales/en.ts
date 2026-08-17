@@ -873,7 +873,7 @@ export const en: Locale = {
     },
   },
   whatsNew: {
-    title: "What's new in version {{version}}",
+    title: "What's new?",
     close: 'Close',
     categories: {
       new: 'New',
@@ -881,14 +881,15 @@ export const en: Locale = {
       fixed: 'Fixed',
     },
     entries: {
-      watchlist: 'Build a personal watchlist and suggest a title straight from it during an event.',
-      letterboxd: 'Sync your Letterboxd watchlist automatically with Movie Picker.',
-      manualPick: 'Hosts can now pick the winning movie themselves, skipping the wheel.',
-      streak: 'A flame on your profile rewards your consistency, week after week.',
+      watchlist:
+        'Build your watchlist and suggest a title straight from it, right when movie night calls for one.',
+      letterboxd: 'Your Letterboxd watchlist now syncs with Movie Picker all by itself.',
+      manualPick: 'Hosts can now pick the winning movie themselves, no wheel required.',
+      streak: 'A flame lights up on your profile for every week you keep the streak alive.',
       oauth: 'Sign in with one click using your Google or GitHub account.',
-      donations: "A new “Support Movie Picker” page to contribute freely to the service's costs.",
-      wheelExclusion: 'Hosts can exclude a movie from the draw without removing it from the list.',
-      whatsNewModal: "Catch up on what's new after every update, right from the footer.",
+      donations: 'A new “Support Movie Picker” page to give the project a boost.',
+      wheelExclusion:
+        'Hosts can set a movie aside from the draw without removing it from the list.',
     },
   },
 };

@@ -22,10 +22,15 @@ export const WHATS_NEW: readonly WhatsNewRelease[] = [
       { category: 'new', textKey: 'whatsNew.entries.streak' },
       { category: 'new', textKey: 'whatsNew.entries.oauth' },
       { category: 'new', textKey: 'whatsNew.entries.donations' },
-      { category: 'improved', textKey: 'whatsNew.entries.wheelExclusion' },
-      { category: 'improved', textKey: 'whatsNew.entries.whatsNewModal' },
+      { category: 'new', textKey: 'whatsNew.entries.wheelExclusion' },
     ],
   },
 ];
 
-export const LATEST_WHATS_NEW_RELEASE: WhatsNewRelease = WHATS_NEW.at(-1)!;
+function getLatestRelease(releases: readonly WhatsNewRelease[]): WhatsNewRelease {
+  const latest = releases.at(-1);
+  if (!latest) throw new Error('WHATS_NEW doit contenir au moins une version.');
+  return latest;
+}
+
+export const LATEST_WHATS_NEW_RELEASE: WhatsNewRelease = getLatestRelease(WHATS_NEW);

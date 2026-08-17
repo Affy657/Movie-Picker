@@ -889,7 +889,7 @@
     },
   },
   whatsNew: {
-    title: 'Nouveautés de la version {{version}}',
+    title: 'Quoi de neuf ?',
     close: 'Fermer',
     categories: {
       new: 'Nouveautés',
@@ -898,16 +898,18 @@
     },
     entries: {
       watchlist:
-        'Créez votre liste de films « à voir » et proposez-en un directement dans une soirée.',
-      letterboxd: 'Synchronisez automatiquement votre watchlist Letterboxd avec Movie Picker.',
+        'Constituez votre liste de films à voir et proposez-en un directement lors d’une soirée, en un clic.',
+      letterboxd:
+        'Votre watchlist Letterboxd se synchronise désormais toute seule avec Movie Picker.',
       manualPick:
-        "L'hôte peut désormais désigner lui-même le film gagnant, sans passer par la roue.",
-      streak: 'Une flamme sur votre profil récompense votre régularité, semaine après semaine.',
+        "L'hôte peut maintenant désigner lui-même le film gagnant, sans passer par la roue.",
+      streak:
+        'Une flamme s’allume sur votre profil à chaque semaine de participation. À vous de la faire durer.',
       oauth: 'Connectez-vous en un clic avec votre compte Google ou GitHub.',
       donations:
-        'Une page « Soutenir Movie Picker » pour contribuer librement aux frais du service.',
-      wheelExclusion: "L'hôte peut écarter un film du tirage sans le retirer de la liste.",
-      whatsNewModal: 'Retrouvez les nouveautés de chaque mise à jour depuis le pied de page.',
+        'Une nouvelle page « Soutenir Movie Picker » pour donner un coup de pouce au projet.',
+      wheelExclusion:
+        "L'hôte peut écarter un film du tirage sans le retirer de la liste, pour garder toutes les options sous la main.",
     },
   },
 } as const;

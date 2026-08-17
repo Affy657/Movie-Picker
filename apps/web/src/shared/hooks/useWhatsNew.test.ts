@@ -75,11 +75,18 @@ describe('useWhatsNew', () => {
     expect(result.current.release).toBe(LATEST_WHATS_NEW_RELEASE);
   });
 
-  it('ne plante pas si localStorage.setItem lève une erreur', () => {
+  it('ne plante pas et reste fermée dans la même session si localStorage.setItem échoue', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('QuotaExceededError');
     });
-    const { result } = renderHook(() => useWhatsNew(USER_ID));
+    const { result, rerender } = renderHook(({ uid }) => useWhatsNew(uid), {
+      initialProps: { uid: USER_ID as string | undefined },
+    });
+    expect(result.current.isOpen).toBe(true);
     expect(() => act(() => result.current.close())).not.toThrow();
+    expect(result.current.isOpen).toBe(false);
+    rerender({ uid: 'user-456' });
+    rerender({ uid: USER_ID });
+    expect(result.current.isOpen).toBe(false);
   });
 });
