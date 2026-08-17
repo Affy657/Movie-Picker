@@ -143,10 +143,35 @@
   color: var(--color-primary);
 }
 
+.copyrightRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  column-gap: 1rem;
+  row-gap: 0.15rem;
+}
+
 .copyright {
   font-size: var(--font-size-2xs);
   color: var(--color-meta);
   margin: 0;
+}
+
+.whatsNewLink {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: var(--font-size-2xs);
+  color: var(--color-meta);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.whatsNewLink:hover {
+  color: var(--color-primary);
 }
 
 @media (max-width: 767px) {
@@ -185,7 +210,8 @@
     text-align: left;
   }
 
-  .bottom .copyright {
+  .copyrightRow {
+    justify-content: flex-end;
     text-align: right;
   }
 }

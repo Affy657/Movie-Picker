@@ -90,6 +90,17 @@ describe('App (routes)', () => {
         screen.queryByRole('navigation', { name: /navigation principale/i })
       ).not.toBeInTheDocument();
     });
+
+    it("AppShell : aucun lien « Nouveautés » n'est exposé aux non-connectés", async () => {
+      server.use(authMeGuestHandler);
+      renderRoutes(['/']);
+      await screen.findByRole(
+        'heading',
+        { name: /choisissez le film de la soirée/i, level: 1 },
+        { timeout: 8000 }
+      );
+      expect(screen.queryByRole('button', { name: /nouveautés/i })).not.toBeInTheDocument();
+    });
   });
 
   describe('utilisateur connecté', () => {
@@ -127,6 +138,16 @@ describe('App (routes)', () => {
         within(mobileNav).queryByRole('link', { name: /^Mon compte$/i })
       ).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: /menu du compte/i })).toBeInTheDocument();
+    });
+
+    it('AppShell expose le lien « Nouveautés » dans le pied de page pour les connectés', async () => {
+      server.use(
+        authedUserHandler,
+        http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
+      );
+      renderRoutes(['/my-events']);
+      await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 }, { timeout: 8000 });
+      expect(screen.getByRole('button', { name: /nouveautés/i })).toBeInTheDocument();
     });
   });
 

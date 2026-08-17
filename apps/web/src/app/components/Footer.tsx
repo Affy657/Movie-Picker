@@ -8,6 +8,7 @@ import styles from './Footer.module.css';
 
 type FooterProps = {
   clearMobileNav?: boolean;
+  onOpenWhatsNew?: () => void;
 };
 
 function GitHubIcon() {
@@ -48,7 +49,7 @@ function LinkedInIcon() {
 
 const CURRENT_YEAR = new Date().getFullYear();
 
-export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>) {
+export default function Footer({ clearMobileNav = false, onOpenWhatsNew }: Readonly<FooterProps>) {
   const { t } = useTranslation();
 
   return (
@@ -165,9 +166,16 @@ export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>
           </a>
           {t('footer.tmdbSuffix')}
         </p>
-        <p className={styles.copyright}>
-          {t('footer.copyright', { year: String(CURRENT_YEAR), version: APP_VERSION })}
-        </p>
+        <div className={styles.copyrightRow}>
+          <p className={styles.copyright}>
+            {t('footer.copyright', { year: String(CURRENT_YEAR), version: APP_VERSION })}
+          </p>
+          {onOpenWhatsNew ? (
+            <button type="button" className={styles.whatsNewLink} onClick={onOpenWhatsNew}>
+              {t('footer.whatsNew')}
+            </button>
+          ) : null}
+        </div>
       </div>
     </footer>
   );

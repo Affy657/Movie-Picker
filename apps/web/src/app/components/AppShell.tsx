@@ -5,12 +5,14 @@ import { Link, NavLink, Outlet } from 'react-router';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useLetterboxdAutoSync } from '@/features/letterboxd/hooks/useLetterboxdAutoSync';
+import { useWhatsNew } from '@/shared/hooks/useWhatsNew';
 import { ROUTES } from '@/app/routes';
 import UserMenu from '@/features/auth/components/UserMenu';
 import InboxBell from '@/features/notifications/components/InboxBell';
 import Footer from './Footer';
 import PwaAutoUpdate from './PwaAutoUpdate';
 import ConsentBanner from './ConsentBanner';
+import WhatsNewModal from './WhatsNewModal';
 import styles from './AppShell.module.css';
 
 function navLinkClass({ isActive }: { isActive: boolean }): string {
@@ -55,6 +57,12 @@ export default function AppShell() {
   const { t } = useTranslation();
   const { user } = useAuth();
   useLetterboxdAutoSync();
+  const {
+    isOpen: whatsNewOpen,
+    release: whatsNewRelease,
+    openOnDemand: openWhatsNew,
+    close: closeWhatsNew,
+  } = useWhatsNew(user?.userId);
 
   const isAuthenticated = !!user;
 
@@ -101,7 +109,10 @@ export default function AppShell() {
       <div className={styles.content}>
         <Outlet />
       </div>
-      <Footer clearMobileNav={isAuthenticated} />
+      <Footer
+        clearMobileNav={isAuthenticated}
+        onOpenWhatsNew={isAuthenticated ? openWhatsNew : undefined}
+      />
       {isAuthenticated ? (
         <nav className={styles.navMobile} aria-label={t('nav.navLabel')}>
           {items.map((item) => (
@@ -111,6 +122,9 @@ export default function AppShell() {
       ) : null}
       <PwaAutoUpdate />
       <ConsentBanner />
+      {isAuthenticated ? (
+        <WhatsNewModal open={whatsNewOpen} release={whatsNewRelease} onClose={closeWhatsNew} />
+      ) : null}
     </div>
   );
 }
