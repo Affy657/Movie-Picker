@@ -47,7 +47,7 @@ test.describe('Parcours critique', () => {
       await hostPage.getByRole('button', { name: /lancer la roue/i }).click();
       await expect(hostPage.getByText(/film sélectionné/i)).toBeVisible({ timeout: 15_000 });
       await hostPage.getByRole('button', { name: 'Fermer', exact: true }).click();
-      await expect(hostPage.getByText(/film gagnant/i)).toBeVisible();
+      await expect(hostPage.getByText('Film gagnant', { exact: true })).toBeVisible();
     } finally {
       await hostContext?.close();
       await guestContext?.close();

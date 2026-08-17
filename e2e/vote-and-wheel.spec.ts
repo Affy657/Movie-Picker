@@ -27,7 +27,7 @@ test.describe('Vote et roue (hote)', () => {
     await page.getByRole('button', { name: 'Lancer la roue' }).click();
     await expect(page.getByText('Film sélectionné !')).toBeVisible({ timeout: 15_000 });
     await page.getByRole('button', { name: 'Fermer', exact: true }).click();
-    await expect(page.getByText('Film gagnant')).toBeVisible();
+    await expect(page.getByText('Film gagnant', { exact: true })).toBeVisible();
 
     await page.getByRole('button', { name: 'Annuler le tirage' }).click();
     await expect(page.getByRole('button', { name: 'Lancer la roue' })).toBeVisible({

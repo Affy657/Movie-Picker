@@ -1,7 +1,5 @@
 .dialog {
   position: relative;
-  display: flex;
-  flex-direction: column;
   width: min(500px, calc(100vw - 2rem));
   max-height: min(85dvh, 640px);
   padding: 0;
@@ -11,6 +9,11 @@
   box-shadow: var(--shadow-lg);
   color: var(--color-text);
   overflow: hidden;
+}
+
+.dialog[open] {
+  display: flex;
+  flex-direction: column;
 }
 
 .dialog::backdrop {

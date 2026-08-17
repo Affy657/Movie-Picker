@@ -22,4 +22,27 @@ export async function registerAccount(page: Page, displayName: string): Promise<
   await page.getByLabel('Mot de passe').fill(TEST_PASSWORD);
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await page.waitForURL((url) => !url.pathname.startsWith('/register'));
+  await dismissWhatsNewModal(page);
+}
+
+/**
+ * La modale "Quoi de neuf ?" s'ouvre automatiquement à la première connexion
+ * d'un compte (voir useWhatsNew) et intercepte les clics tant qu'elle est ouverte.
+ * Chaque nouveau compte e2e étant un utilisateur inédit, elle apparaît à chaque fois.
+ */
+export async function dismissWhatsNewModal(page: Page): Promise<void> {
+  // La modale se déclenche une fois l'utilisateur résolu par AuthContext, pas
+  // au moment du changement d'URL : attendre un repère fiable de session active
+  // avant de conclure trop vite qu'elle ne va pas s'afficher.
+  await page
+    .getByRole('button', { name: 'Menu du compte' })
+    .waitFor({ state: 'visible', timeout: 10_000 })
+    .catch(() => {});
+  const modal = page.getByRole('dialog', { name: /quoi de neuf/i });
+  try {
+    await modal.waitFor({ state: 'visible', timeout: 3000 });
+    await modal.getByRole('button', { name: 'Fermer' }).click();
+  } catch {
+    // Pas de modale affichée : rien à fermer.
+  }
 }
