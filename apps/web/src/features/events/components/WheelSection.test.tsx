@@ -3,6 +3,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import WheelSection from '@/features/events/components/WheelSection';
+import EventWheelActions from '@/features/events/components/EventWheelActions';
+import { useEventWheel } from '@/features/events/hooks/useEventWheel';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 import { LocaleProvider } from '@/shared/i18n';
@@ -45,6 +47,29 @@ function makeMovies(n: number): MovieData[] {
   }));
 }
 
+type HarnessProps = {
+  event: EventData;
+  movies: MovieData[];
+  hostToken: string | null;
+};
+
+function WheelHarness({ event, movies, hostToken }: Readonly<HarnessProps>) {
+  const wheel = useEventWheel({
+    slug: 'soiree',
+    event,
+    movies,
+    hostToken,
+    onWheelDone: () => {},
+    onCloseDone: () => {},
+  });
+  return (
+    <>
+      <EventWheelActions wheel={wheel} />
+      <WheelSection slug="soiree" event={event} movies={movies} wheel={wheel} viewMode="grid" />
+    </>
+  );
+}
+
 function renderWheel(ui: ReactNode) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -55,94 +80,51 @@ function renderWheel(ui: ReactNode) {
 }
 
 describe('WheelSection', () => {
-  it("affiche le titre Roue pour l'hote", () => {
-    renderWheel(
-      <WheelSection
-        slug="soiree"
-        event={{ ...baseEvent, isHost: true }}
-        movies={makeMovies(1)}
-        hostToken="ht"
-        onWheelDone={vi.fn()}
-        onCloseDone={vi.fn()}
-        viewMode="grid"
-      />
+  it("n'affiche pas de section tant qu'aucun film n'est tire, meme pour l'hote", () => {
+    const { container } = renderWheel(
+      <WheelHarness event={{ ...baseEvent, isHost: true }} movies={makeMovies(1)} hostToken="ht" />
     );
-    expect(screen.getByRole('heading', { name: /roue/i })).toBeInTheDocument();
+    expect(container.querySelector('section')).toBeNull();
+    expect(screen.getByRole('button', { name: /lancer la roue/i })).toBeInTheDocument();
   });
 
   it("n'affiche rien pour un invite sans film tire", () => {
     const { container } = renderWheel(
-      <WheelSection
-        slug="soiree"
-        event={baseEvent}
-        movies={makeMovies(3)}
-        hostToken={null}
-        onWheelDone={vi.fn()}
-        onCloseDone={vi.fn()}
-        viewMode="grid"
-      />
+      <WheelHarness event={baseEvent} movies={makeMovies(3)} hostToken={null} />
     );
     expect(container.querySelector('section')).toBeNull();
   });
 
   it('isHost false prime sur un hostToken present', () => {
     const { container } = renderWheel(
-      <WheelSection
-        slug="soiree"
-        event={baseEvent}
-        movies={makeMovies(3)}
-        hostToken="stale-token"
-        onWheelDone={vi.fn()}
-        onCloseDone={vi.fn()}
-        viewMode="grid"
-      />
+      <WheelHarness event={baseEvent} movies={makeMovies(3)} hostToken="stale-token" />
     );
     expect(container.querySelector('section')).toBeNull();
   });
 
-  it('isHost absent (undefined) + hostToken => UI hote', () => {
+  it('isHost absent (undefined) + hostToken => actions hote', () => {
     renderWheel(
-      <WheelSection
-        slug="soiree"
+      <WheelHarness
         event={{ ...baseEvent, isHost: undefined }}
         movies={makeMovies(1)}
         hostToken="ht"
-        onWheelDone={vi.fn()}
-        onCloseDone={vi.fn()}
-        viewMode="grid"
-      />
-    );
-    expect(screen.getByRole('heading', { name: /roue/i })).toBeInTheDocument();
-  });
-
-  it('affiche le placeholder si aucun film et hote', () => {
-    renderWheel(
-      <WheelSection
-        slug="soiree"
-        event={{ ...baseEvent, isHost: true }}
-        movies={makeMovies(0)}
-        hostToken="ht"
-        onWheelDone={vi.fn()}
-        onCloseDone={vi.fn()}
-        viewMode="grid"
-      />
-    );
-    expect(screen.getByText(/aucun film.*proposez/i)).toBeInTheDocument();
-  });
-
-  it("affiche le bouton Lancer la roue pour l'hote avec des films", () => {
-    renderWheel(
-      <WheelSection
-        slug="soiree"
-        event={{ ...baseEvent, isHost: true }}
-        movies={makeMovies(2)}
-        hostToken="ht"
-        onWheelDone={vi.fn()}
-        onCloseDone={vi.fn()}
-        viewMode="grid"
       />
     );
     expect(screen.getByRole('button', { name: /lancer la roue/i })).toBeInTheDocument();
+  });
+
+  it('desactive Lancer la roue si aucun film', () => {
+    renderWheel(
+      <WheelHarness event={{ ...baseEvent, isHost: true }} movies={makeMovies(0)} hostToken="ht" />
+    );
+    expect(screen.getByRole('button', { name: /lancer la roue/i })).toBeDisabled();
+  });
+
+  it("active le bouton Lancer la roue pour l'hote avec des films", () => {
+    renderWheel(
+      <WheelHarness event={{ ...baseEvent, isHost: true }} movies={makeMovies(2)} hostToken="ht" />
+    );
+    expect(screen.getByRole('button', { name: /lancer la roue/i })).toBeEnabled();
   });
 
   const sampleWinner: MovieData = {
@@ -161,67 +143,45 @@ describe('WheelSection', () => {
 
   it('invite : titre resultat du tirage et film gagnant', () => {
     renderWheel(
-      <WheelSection
-        slug="soiree"
-        event={{
-          ...baseEvent,
-          winnerMovie: sampleWinner,
-        }}
+      <WheelHarness
+        event={{ ...baseEvent, winnerMovie: sampleWinner }}
         movies={makeMovies(1)}
         hostToken={null}
-        onWheelDone={vi.fn()}
-        onCloseDone={vi.fn()}
-        viewMode="grid"
       />
     );
     expect(screen.getByRole('heading', { name: /résultat du tirage/i })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: /^roue$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /lancer la roue/i })).not.toBeInTheDocument();
     expect(screen.getByText(/film gagnant/i)).toBeInTheDocument();
     expect(screen.getByText('Inception')).toBeInTheDocument();
   });
 
-  it('affiche Relancer + Fermer pour hote avec gagnant', () => {
+  it('affiche Relancer, Annuler le tirage et Clôturer pour hote avec gagnant', () => {
     renderWheel(
-      <WheelSection
-        slug="soiree"
+      <WheelHarness
         event={{ ...baseEvent, isHost: true, winnerMovie: sampleWinner }}
         movies={makeMovies(1)}
         hostToken="ht"
-        onWheelDone={vi.fn()}
-        onCloseDone={vi.fn()}
-        viewMode="grid"
       />
     );
     expect(screen.getByRole('button', { name: /relancer la roue/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /annuler le tirage/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /clôturer/i })).toBeInTheDocument();
   });
 
   it('met a jour le gagnant quand winnerMovie arrive (polling live)', () => {
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const { rerender } = renderWheel(
-      <WheelSection
-        slug="soiree"
-        event={baseEvent}
-        movies={makeMovies(1)}
-        hostToken={null}
-        onWheelDone={vi.fn()}
-        onCloseDone={vi.fn()}
-        viewMode="grid"
-      />
+      <WheelHarness event={baseEvent} movies={makeMovies(1)} hostToken={null} />
     );
     expect(screen.queryByText('Inception')).not.toBeInTheDocument();
 
     rerender(
       <QueryClientProvider client={qc}>
         <LocaleProvider>
-          <WheelSection
-            slug="soiree"
+          <WheelHarness
             event={{ ...baseEvent, winnerMovie: sampleWinner }}
             movies={makeMovies(1)}
             hostToken={null}
-            onWheelDone={vi.fn()}
-            onCloseDone={vi.fn()}
-            viewMode="grid"
           />
         </LocaleProvider>
       </QueryClientProvider>

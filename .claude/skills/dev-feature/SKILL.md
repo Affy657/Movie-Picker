@@ -9,6 +9,10 @@ Orchestre le cycle complet d'une feature, du scope au déploiement. L'argument `
 
 Les règles de style et de workflow du repo (zéro commentaire, `verify:local` avant push, jamais skip les hooks) sont dans [AGENTS.md](../../../AGENTS.md) — les respecter, ne pas les redéfinir ici.
 
+**Deux règles qui structurent tout le flow :**
+- Les suites de tests lourdes se lancent **juste avant le commit** (étape 7), jamais à la fin du dev.
+- Le commit et le push n'ont lieu **qu'après** que l'utilisateur a testé la feature lui-même et donné son go.
+
 ## Étape 1 — Lire la feature
 
 - Chercher `$ARGUMENTS` dans, par ordre : [docs/roadmap-product.md](../../../docs/roadmap-product.md), [docs/roadmap-tech.md](../../../docs/roadmap-tech.md).
@@ -21,12 +25,28 @@ La roadmap ne donne qu'un nom et une phrase : poser les questions nécessaires p
 
 **STOP. Terminer le message et attendre la réponse de l'utilisateur. Ne pas écrire de code, ne pas continuer le flow. Reprendre uniquement quand l'utilisateur a répondu et donné son go.**
 
-## Étape 3 — Dev en autonomie
+## Étape 3 — Maquettage (conditionnel)
+
+Décider d'abord si l'étape s'applique. **Sauter le maquettage** dans ces cas :
+- la feature ne touche pas au front (API seule, infra, CI, script) ;
+- le changement front est petit et localisé (un libellé, un champ de plus dans un formulaire existant, un bouton dans un composant déjà en place) ;
+- l'utilisateur a déjà décrit précisément le rendu attendu, ou fourni une maquette ou une capture annotée.
+
+Sinon (nouvel écran, refonte de page, nouveau composant structurant, changement de hiérarchie visuelle), produire une maquette **avant** d'écrire du code :
+- Page HTML autonome publiée en Artifact, reprenant les jetons de design du projet (`apps/web/src/styles/01-foundation.css`) pour que la maquette ressemble à l'app et pas à un wireframe générique.
+- Montrer les états qui comptent (vide, chargé, hôte / participant, mobile), pas seulement le cas nominal.
+- Annoter les partis pris et lister explicitement les points à trancher ; proposer des variantes quand un choix est ouvert plutôt que d'imposer une option.
+- Réutiliser les composants existants de l'app plutôt que d'en inventer : vérifier dans le code s'il existe déjà une pastille, un menu ou un bouton pour ce besoin.
+
+**STOP. Terminer le message avec le lien de la maquette et attendre les retours. Itérer sur la maquette jusqu'à ce que l'utilisateur valide. Ne pas écrire de code avant son go.**
+
+## Étape 4 — Dev en autonomie
 
 - Implémenter la feature de bout en bout (front `apps/web`, API `apps/api-dotnet`, tests).
 - Suivre AGENTS.md. Préférer éditer l'existant plutôt que créer.
+- Vérifications **ciblées** uniquement pendant le dev : `tsc --noEmit`, `eslint`, `vitest run <chemin>` sur les fichiers touchés. Pas de suite complète, pas de `test:coverage`, pas de `verify:local` à ce stade.
 
-## Étape 4 — Lancer front + back pour test manuel
+## Étape 5 — Lancer front + back pour test manuel
 
 Démarrer les deux serveurs en tâche de fond (config dans [.claude/launch.json](../launch.json)) :
 - **web** → `pnpm --filter web dev` (http://localhost:5173)
@@ -36,17 +56,16 @@ Vérifier rapidement qu'ils démarrent sans erreur (logs / preview), donner les 
 
 **STOP. Terminer le message et attendre. Ne pas continuer le flow. Si l'utilisateur signale un problème : corriger, relancer les serveurs, lui demander de re-tester — et STOP à nouveau. Répéter jusqu'à ce qu'il donne explicitement son go pour passer à l'étape suivante.**
 
-## Étape 5 — Code review
+## Étape 6 — Code review et roadmap
 
-- Invoquer `/code-review`.
-- Appliquer les retours pertinents. Re-tester si le diff a bougé de façon notable.
-
-## Étape 6 — Cocher dans la roadmap
-
+- Invoquer `/code-review`. Appliquer les retours pertinents ; re-tester manuellement si le diff a bougé de façon notable.
 - Marquer la feature `✅` dans la roadmap où elle était (étape 1), avec la date du jour si le format du fichier le prévoit.
 
-## Étape 7 — Commit, push, CI
+## Étape 7 — Tests, commit, push, CI
 
+Dans cet ordre, et seulement une fois le go de l'utilisateur obtenu à l'étape 5 :
+
+- Arrêter les serveurs de dev avant de lancer les suites : les laisser tourner sature le CPU et provoque de faux échecs par timeout.
 - `pnpm run verify:local` et corriger toute erreur **avant** de push (obligatoire, cf. AGENTS.md). Jamais skip les hooks.
 - Commit + push sur `master` (code + mise à jour roadmap en un seul commit).
 - Surveiller la CI (`gh run list` / `gh pr checks`), corriger jusqu'à ce que tout soit vert **et déployé**. Reboucler autant que nécessaire.

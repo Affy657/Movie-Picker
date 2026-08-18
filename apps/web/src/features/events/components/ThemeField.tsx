@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { ChevronUp, MoreHorizontal } from 'lucide-react';
 import clsx from 'clsx';
 import styles from './ThemeField.module.css';
 
@@ -210,8 +211,14 @@ export default function ThemeField({
             className={styles.presetMore}
             onClick={() => setPresetsExpanded((v) => !v)}
             aria-expanded={presetsExpanded}
+            aria-label={presetsExpanded ? 'Moins de thèmes' : 'Plus de thèmes'}
+            title={presetsExpanded ? 'Moins de thèmes' : 'Plus de thèmes'}
           >
-            {presetsExpanded ? '↑' : '···'}
+            {presetsExpanded ? (
+              <ChevronUp size={14} aria-hidden />
+            ) : (
+              <MoreHorizontal size={14} aria-hidden />
+            )}
           </button>
         </fieldset>
       )}

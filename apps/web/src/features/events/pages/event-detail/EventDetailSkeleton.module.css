@@ -4,68 +4,86 @@
 .root {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0.9rem;
   min-height: 60vh;
 }
 
 .header {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.6rem;
+  margin-bottom: 0.35rem;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .title {
   height: 2.1rem;
-  width: 70%;
+  width: 60%;
   max-width: 22rem;
-}
-
-.meta {
-  height: 1rem;
-  width: 55%;
-  max-width: 18rem;
 }
 
 .actions {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
+  gap: 0.5rem;
+  margin-left: auto;
 }
 
 .actionPill {
   height: 2.25rem;
-  width: 8rem;
-  border-radius: 999px;
+  width: 7rem;
+  border-radius: var(--radius-md);
 }
 
-.sectionTitle {
-  height: 1.25rem;
-  width: 10rem;
-  margin-top: 0.5rem;
+.meta {
+  height: 1.4rem;
+  width: 70%;
+  max-width: 28rem;
 }
 
-.participants {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+.search {
+  height: 2.9rem;
+  width: 100%;
+  max-width: 26rem;
+  border-radius: var(--radius-md);
 }
 
-.chip {
-  height: 1.75rem;
-  width: 5rem;
-  border-radius: 999px;
+.sortBar {
+  height: 1.5rem;
+  width: 60%;
+  max-width: 24rem;
 }
 
 .movies {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(370px, 100%), 1fr));
+  gap: 0.6rem;
 }
 
 .movieCard {
   display: flex;
+  gap: 0.7rem;
+  padding: 0.6rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.moviePoster {
+  flex: 0 0 5rem;
+  height: 7.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.movieInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.45rem;
 }
 
 .movieMeta {

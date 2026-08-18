@@ -30,20 +30,14 @@ import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import type { MyEventSummary } from '@/features/events/types';
 import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
-import type { MyEventLifecycle } from '@/shared/types/event';
-import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
+import { useLocale, useTranslation } from '@/shared/i18n';
 import { formatMyEventsListDate, formatEventTime } from '@/shared/utils/formatMyEventsListDate';
 import { parseEventLocalStartMs } from '@/shared/utils/eventScheduleLocal';
 import { withReturnTo, ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
+import EventLifecyclePill from '@/shared/components/EventLifecyclePill';
 import styles from './MyEventsPage.module.css';
-
-const badgeClassMap: Record<string, string | undefined> = {
-  upcoming: styles.badgeUpcoming,
-  live: styles.badgeLive,
-  finished: styles.badgeFinished,
-};
 
 function isFinishedEvent(ev: MyEventSummary): boolean {
   return normalizeMyEventLifecycle(ev.lifecycle) === 'finished';
@@ -59,19 +53,6 @@ function sortActiveChrono(a: MyEventSummary, b: MyEventSummary): number {
 
 function sortHistoryChrono(a: MyEventSummary, b: MyEventSummary): number {
   return eventDateTimeMs(b) - eventDateTimeMs(a);
-}
-
-function lifecycleTranslationKey(l: MyEventLifecycle): TranslationKey {
-  switch (l) {
-    case 'upcoming':
-      return 'events.lifecycle.upcoming';
-    case 'live':
-      return 'events.lifecycle.live';
-    case 'finished':
-      return 'events.lifecycle.finished';
-    default:
-      return 'events.lifecycle.finished';
-  }
 }
 
 function cardJoinedLabel(participantCount: number, maxParticipants: number | null | undefined) {
@@ -195,7 +176,6 @@ function EventListBlock({
       <ul className={styles.list}>
         {events.map((ev) => {
           const lifecycle = normalizeMyEventLifecycle(ev.lifecycle);
-          const badgeClass = badgeClassMap[lifecycle] ?? '';
           const dateLabel = formatMyEventsListDate(ev.date, locale);
           return (
             <li key={ev.id} className={styles.item}>
@@ -245,9 +225,7 @@ function EventListBlock({
                   </span>
                   <span className={styles.metaRight}>
                     {showLifecycleBadge && lifecycle !== 'upcoming' ? (
-                      <span className={clsx(styles.lifecyclePill, badgeClass)}>
-                        {t(lifecycleTranslationKey(lifecycle))}
-                      </span>
+                      <EventLifecyclePill lifecycle={lifecycle} />
                     ) : null}
                     <span className={styles.meta}>
                       {formatEventTime(ev.time)} – {dateLabel}

@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Settings2, X } from 'lucide-react';
+import { Settings, X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import ThemeField, { parseTheme } from './ThemeField';
 import NumberInput from '@/shared/components/NumberInput';
@@ -10,6 +10,7 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { ROUTES } from '@/app/routes';
 import { clearStoredHostToken, removeStoredParticipant } from '@/features/events/storage';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import styles from './HostEventSettingsPanel.module.css';
 import { eventDateTimeToLocal, splitDateTimeLocal } from '@/shared/utils/eventDateTimeLocal';
 import type {
@@ -26,6 +27,10 @@ type HostEventSettingsPanelProps = {
   slug: string;
   hostToken: string | null;
   event: EventData;
+
+  open: boolean;
+
+  onClose: () => void;
 };
 
 function normalizeConfig(c: EventConfigData | undefined): EventConfigData {
@@ -45,6 +50,8 @@ export default function HostEventSettingsPanel({
   slug,
   hostToken,
   event,
+  open,
+  onClose,
 }: Readonly<HostEventSettingsPanelProps>) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -98,6 +105,16 @@ export default function HostEventSettingsPanel({
     setAllowSeries(next.allowSeries ?? false);
     setFormError(null);
   }, [event.title, event.config, event.date, event.time]);
+
+  const titleId = useId();
+
+  const wasOpenRef = useRef(false);
+  useEffect(() => {
+    if (open && !wasOpenRef.current) hydrateFromEvent();
+    wasOpenRef.current = open;
+  }, [open, hydrateFromEvent]);
+
+  const dialogRef = useModalDialog(open, onClose);
 
   const mutation = useMutation({
     mutationFn: (body: EventConfigPatchPayload) => patchEventConfig(slug, hostToken, body),
@@ -192,212 +209,217 @@ export default function HostEventSettingsPanel({
   };
 
   return (
-    <details
-      className={styles.root}
-      onToggle={(ev) => {
-        const el = ev.currentTarget;
-        if (el.open) hydrateFromEvent();
-      }}
-    >
-      <summary className={styles.summary}>
-        <Settings2 size={18} aria-hidden className={styles.summaryIcon} />
-        <span className={styles.summaryLabel}>Paramètres de la soirée</span>
-        <span className={styles.summaryChevron} aria-hidden />
-      </summary>
-      {formError && (
-        <p className="error" role="alert">
-          {formError}
-        </p>
-      )}
-      <form className={`form ${styles.form}`}>
-        <div className={styles.field}>
-          <label className="label" htmlFor="host-cfg-title">
-            {t('events.settings.titleLabel')}
-          </label>
-          <input
-            id="host-cfg-title"
-            className="input"
-            type="text"
-            value={eventTitle}
-            onChange={(e) => {
-              setEventTitle(e.target.value);
-              scheduleAutoSave();
-            }}
-            maxLength={200}
-            required
-            placeholder={t('events.settings.titlePlaceholder')}
-          />
-        </div>
-
-        <div className={styles.field}>
-          <label className="label" htmlFor="host-cfg-datetime">
-            Date et heure de la soirée
-          </label>
-          <input
-            id="host-cfg-datetime"
-            className="input"
-            type="datetime-local"
-            value={eventDateLocal}
-            onChange={(e) => {
-              setEventDateLocal(e.target.value);
-              scheduleAutoSave();
-            }}
-          />
-        </div>
-
-        <div className={styles.field}>
-          <div className={styles.fieldLabelRow}>
-            <label className="label" htmlFor="host-cfg-theme">
-              Thème / ambiance
+    <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>
+      <div className={styles.panelHead}>
+        <Settings size={18} aria-hidden className={styles.summaryIcon} />
+        <h2 id={titleId} className={styles.panelTitle}>
+          {t('events.settings.title')}
+        </h2>
+        <button
+          type="button"
+          className={styles.panelClose}
+          onClick={onClose}
+          aria-label={t('common.close')}
+        >
+          <X size={16} aria-hidden />
+        </button>
+      </div>
+      <div className={styles.dialogBody}>
+        {formError && (
+          <p className="error" role="alert">
+            {formError}
+          </p>
+        )}
+        <form className={`form ${styles.form}`}>
+          <div className={styles.field}>
+            <label className="label" htmlFor="host-cfg-title">
+              {t('events.settings.titleLabel')}
             </label>
-            {(themeEmoji || themeText.trim()) && (
-              <button
-                type="button"
-                className={styles.clearThemeBtn}
-                onClick={() => {
-                  setThemeEmoji('');
-                  setThemeText('');
+            <input
+              id="host-cfg-title"
+              className="input"
+              type="text"
+              value={eventTitle}
+              onChange={(e) => {
+                setEventTitle(e.target.value);
+                scheduleAutoSave();
+              }}
+              maxLength={200}
+              required
+              placeholder={t('events.settings.titlePlaceholder')}
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label className="label" htmlFor="host-cfg-datetime">
+              Date et heure de la soirée
+            </label>
+            <input
+              id="host-cfg-datetime"
+              className="input"
+              type="datetime-local"
+              value={eventDateLocal}
+              onChange={(e) => {
+                setEventDateLocal(e.target.value);
+                scheduleAutoSave();
+              }}
+            />
+          </div>
+
+          <div className={styles.field}>
+            <div className={styles.fieldLabelRow}>
+              <label className="label" htmlFor="host-cfg-theme">
+                Thème / ambiance
+              </label>
+              {(themeEmoji || themeText.trim()) && (
+                <button
+                  type="button"
+                  className={styles.clearThemeBtn}
+                  onClick={() => {
+                    setThemeEmoji('');
+                    setThemeText('');
+                    scheduleAutoSave();
+                  }}
+                  aria-label="Supprimer le thème"
+                >
+                  <X size={11} strokeWidth={2.5} />
+                  Effacer
+                </button>
+              )}
+            </div>
+            <ThemeField
+              textInputId="host-cfg-theme"
+              emoji={themeEmoji}
+              text={themeText}
+              themeColor={themeColor}
+              onEmojiChange={(v) => {
+                setThemeEmoji(v);
+                scheduleAutoSave();
+              }}
+              onTextChange={(v) => {
+                setThemeText(v);
+                scheduleAutoSave();
+              }}
+              onThemeColorChange={(v) => {
+                setThemeColor(v);
+                scheduleAutoSave();
+              }}
+            />
+          </div>
+
+          <div className={styles.fieldRow}>
+            <div className={styles.field}>
+              <label className="label" htmlFor="host-cfg-max">
+                Films par personne
+              </label>
+              <NumberInput
+                id="host-cfg-max"
+                value={maxProp}
+                onChange={(v) => {
+                  setMaxProp(v);
                   scheduleAutoSave();
                 }}
-                aria-label="Supprimer le thème"
-              >
-                <X size={11} strokeWidth={2.5} />
-                Effacer
-              </button>
-            )}
-          </div>
-          <ThemeField
-            textInputId="host-cfg-theme"
-            emoji={themeEmoji}
-            text={themeText}
-            themeColor={themeColor}
-            onEmojiChange={(v) => {
-              setThemeEmoji(v);
-              scheduleAutoSave();
-            }}
-            onTextChange={(v) => {
-              setThemeText(v);
-              scheduleAutoSave();
-            }}
-            onThemeColorChange={(v) => {
-              setThemeColor(v);
-              scheduleAutoSave();
-            }}
-          />
-        </div>
+                min={1}
+                max={100}
+                placeholder="Illimité"
+              />
+            </div>
 
-        <div className={styles.fieldRow}>
-          <div className={styles.field}>
-            <label className="label" htmlFor="host-cfg-max">
-              Films par personne
-            </label>
-            <NumberInput
-              id="host-cfg-max"
-              value={maxProp}
-              onChange={(v) => {
-                setMaxProp(v);
-                scheduleAutoSave();
-              }}
-              min={1}
-              max={100}
-              placeholder="Illimité"
-            />
+            <div className={styles.field}>
+              <label className="label" htmlFor="host-cfg-max-participants">
+                {t('events.settings.maxParticipantsLabel')}
+              </label>
+              <NumberInput
+                id="host-cfg-max-participants"
+                value={maxParticipants}
+                onChange={(v) => {
+                  setMaxParticipants(v);
+                  scheduleAutoSave();
+                }}
+                min={1}
+                max={MAX_EVENT_PARTICIPANTS}
+                placeholder={t('events.settings.maxParticipantsPlaceholder')}
+              />
+            </div>
           </div>
 
           <div className={styles.field}>
-            <label className="label" htmlFor="host-cfg-max-participants">
-              {t('events.settings.maxParticipantsLabel')}
+            <label className="label" htmlFor="host-cfg-wheel">
+              Mode de la roue
             </label>
-            <NumberInput
-              id="host-cfg-max-participants"
-              value={maxParticipants}
-              onChange={(v) => {
-                setMaxParticipants(v);
-                scheduleAutoSave();
-              }}
-              min={1}
-              max={MAX_EVENT_PARTICIPANTS}
-              placeholder={t('events.settings.maxParticipantsPlaceholder')}
-            />
-          </div>
-        </div>
-
-        <div className={styles.field}>
-          <label className="label" htmlFor="host-cfg-wheel">
-            Mode de la roue
-          </label>
-          <select
-            id="host-cfg-wheel"
-            className={`input ${styles.select}`}
-            value={wheelMode}
-            onChange={(e) => {
-              const v = e.target.value;
-              if (isWheelMode(v)) {
-                setWheelMode(v);
-                scheduleAutoSave(true);
-              }
-            }}
-          >
-            <option value="strictRandom">Aléatoire strict (égalité)</option>
-            <option value="weightedByVotes">Pondéré par les votes</option>
-          </select>
-        </div>
-
-        <div className={styles.checkboxRow}>
-          <label className={styles.checkboxLabel}>
-            <span>{t('events.settings.allowSeriesLabel')}</span>
-            <input
-              type="checkbox"
-              role="switch"
-              aria-checked={allowSeries}
-              checked={allowSeries}
+            <select
+              id="host-cfg-wheel"
+              className={`input ${styles.select}`}
+              value={wheelMode}
               onChange={(e) => {
-                setAllowSeries(e.target.checked);
-                scheduleAutoSave(true);
+                const v = e.target.value;
+                if (isWheelMode(v)) {
+                  setWheelMode(v);
+                  scheduleAutoSave(true);
+                }
               }}
-            />
-            <span className={styles.toggleTrack}>
-              <span className={styles.toggleThumb} />
-            </span>
-          </label>
-        </div>
-      </form>
+            >
+              <option value="strictRandom">Aléatoire strict (égalité)</option>
+              <option value="weightedByVotes">Pondéré par les votes</option>
+            </select>
+          </div>
 
-      {isConnectedCreator && (
-        <div className={styles.deleteArea} data-testid="host-danger-zone">
-          {deleteError && (
-            <p className="error" role="alert">
-              {deleteError}
-            </p>
-          )}
-          <button
-            type="button"
-            className="btn btn-danger"
-            onClick={() => {
-              setDeleteError(null);
-              setConfirmDeleteOpen(true);
-            }}
-            disabled={deleteMutation.isPending}
-            data-testid="delete-event-button"
-          >
-            {deleteMutation.isPending
-              ? t('events.danger.deleting')
-              : t('events.danger.deleteButton')}
-          </button>
-        </div>
-      )}
+          <div className={styles.checkboxRow}>
+            <label className={styles.checkboxLabel}>
+              <span>{t('events.settings.allowSeriesLabel')}</span>
+              <input
+                type="checkbox"
+                role="switch"
+                aria-checked={allowSeries}
+                checked={allowSeries}
+                onChange={(e) => {
+                  setAllowSeries(e.target.checked);
+                  scheduleAutoSave(true);
+                }}
+              />
+              <span className={styles.toggleTrack}>
+                <span className={styles.toggleThumb} />
+              </span>
+            </label>
+          </div>
+        </form>
 
-      <ConfirmDialog
-        open={confirmDeleteOpen}
-        title={t('events.danger.deleteConfirmTitle')}
-        message={t('events.danger.deleteConfirmMessage', { title: event.title })}
-        confirmLabel={t('events.danger.deleteConfirmAction')}
-        confirmVariant="danger"
-        busy={deleteMutation.isPending}
-        onConfirm={() => deleteMutation.mutate()}
-        onCancel={() => setConfirmDeleteOpen(false)}
-        testId="delete-event-confirm-dialog"
-      />
-    </details>
+        {isConnectedCreator && (
+          <div className={styles.deleteArea} data-testid="host-danger-zone">
+            {deleteError && (
+              <p className="error" role="alert">
+                {deleteError}
+              </p>
+            )}
+            <button
+              type="button"
+              className="btn btn-danger"
+              onClick={() => {
+                setDeleteError(null);
+                setConfirmDeleteOpen(true);
+              }}
+              disabled={deleteMutation.isPending}
+              data-testid="delete-event-button"
+            >
+              {deleteMutation.isPending
+                ? t('events.danger.deleting')
+                : t('events.danger.deleteButton')}
+            </button>
+          </div>
+        )}
+
+        <ConfirmDialog
+          open={confirmDeleteOpen}
+          title={t('events.danger.deleteConfirmTitle')}
+          message={t('events.danger.deleteConfirmMessage', { title: event.title })}
+          confirmLabel={t('events.danger.deleteConfirmAction')}
+          confirmVariant="danger"
+          busy={deleteMutation.isPending}
+          onConfirm={() => deleteMutation.mutate()}
+          onCancel={() => setConfirmDeleteOpen(false)}
+          testId="delete-event-confirm-dialog"
+        />
+      </div>
+    </dialog>
   );
 }

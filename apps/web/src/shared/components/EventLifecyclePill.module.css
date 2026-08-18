@@ -1,0 +1,67 @@
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: var(--font-size-2xs);
+  font-weight: 600;
+  line-height: 1;
+  padding: calc(0.34rem + var(--text-optical-nudge)) 0.55rem
+    calc(0.34rem - var(--text-optical-nudge));
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  box-sizing: border-box;
+}
+
+.upcoming {
+  background: var(--color-badge-upcoming-bg);
+  color: var(--color-badge-upcoming-text);
+  border-color: color-mix(in srgb, var(--color-badge-upcoming-text) 32%, transparent);
+}
+
+.live {
+  background: var(--color-badge-live-bg);
+  color: var(--color-badge-live-text);
+  border-color: color-mix(in srgb, var(--color-badge-live-text) 32%, transparent);
+}
+
+.finished {
+  background: color-mix(
+    in srgb,
+    var(--color-badge-finished-bg) 92%,
+    var(--color-badge-finished-text) 8%
+  );
+  color: var(--color-badge-finished-text);
+  border-color: color-mix(in srgb, var(--color-badge-finished-text) 40%, transparent);
+}
+
+.detail {
+  font-weight: 500;
+  opacity: 0.72;
+}
+
+.pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: currentColor;
+  animation: lifecycleBlip 2.4s var(--ease-in-out) infinite;
+}
+
+@keyframes lifecycleBlip {
+  0%,
+  70%,
+  100% {
+    opacity: 1;
+  }
+  35% {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse {
+    animation: none;
+  }
+}

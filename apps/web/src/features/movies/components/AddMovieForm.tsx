@@ -54,16 +54,10 @@ function ResultMeta({
       {year ? <span>{year}</span> : null}
       {voteLabel ? (
         <span className="tmdb-vote" title={voteTitle}>
-          {year ? ' · ' : null}
           {voteLabel}
         </span>
       ) : null}
-      {runtimeLabel ? (
-        <span title={runtimeTitle}>
-          {year || voteLabel ? ' · ' : null}
-          {runtimeLabel}
-        </span>
-      ) : null}
+      {runtimeLabel ? <span title={runtimeTitle}>{runtimeLabel}</span> : null}
     </div>
   );
 }

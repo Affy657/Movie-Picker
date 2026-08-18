@@ -3,7 +3,11 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { AlertCircle } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ROUTES } from '@/app/routes';
-import { formatMyEventsListDate, formatEventTime } from '@/shared/utils/formatMyEventsListDate';
+import {
+  formatMyEventsListDate,
+  formatEventTime,
+  formatEventDateLong,
+} from '@/shared/utils/formatMyEventsListDate';
 import JoinForm from '@/features/events/components/JoinForm';
 import WheelSection from '@/features/events/components/WheelSection';
 import HostEventSettingsPanel from '@/features/events/components/HostEventSettingsPanel';
@@ -22,13 +26,32 @@ import { removeEventParticipant, eventFrontendUrl } from '@/features/events/api/
 import { removeStoredParticipant } from '@/features/events/storage';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { getErrorMessage } from '@/shared/api/apiError';
-import { useLocale, useTranslation } from '@/shared/i18n';
+import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
 import InviteModal from '@/features/events/components/InviteModal';
+import EventWheelActions from '@/features/events/components/EventWheelActions';
+import { useEventWheel } from '@/features/events/hooks/useEventWheel';
+import { getEventLivePhase } from '@/features/events/hooks/useEventLive';
+import { eventCountdown, type EventCountdown } from '@/shared/utils/eventCountdown';
+import type { MyEventLifecycle } from '@/shared/types/event';
 
 type ConfirmState =
   { kind: 'remove'; participantId: string; pseudo: string } | { kind: 'leave' } | null;
 
 const SUCCESS_AUTO_DISMISS_MS = 3500;
+
+const COUNTDOWN_TICK_MS = 60_000;
+
+const LIFECYCLE_BY_PHASE: Record<string, MyEventLifecycle> = {
+  finished: 'finished',
+  upcoming: 'upcoming',
+  active: 'live',
+};
+
+const COUNTDOWN_KEYS = {
+  imminent: 'events.detail.countdownImminent',
+  minutes: 'events.detail.countdownMinutes',
+  hours: 'events.detail.countdownHours',
+} as const satisfies Record<EventCountdown['unit'], TranslationKey>;
 
 function getDocumentTitle(
   slug: string | undefined,
@@ -66,6 +89,9 @@ export default function EventDetail() {
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [participantsOpen, setParticipantsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [nowMs, setNowMs] = useState(() => Date.now());
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
     try {
       return localStorage.getItem('movies-view') === 'grid' ? 'grid' : 'list';
@@ -82,6 +108,18 @@ export default function EventDetail() {
       /* ignore */
     }
   };
+
+  useEffect(() => {
+    if (event?.isFinished) return;
+    const id = globalThis.setInterval(() => setNowMs(Date.now()), COUNTDOWN_TICK_MS);
+    return () => globalThis.clearInterval(id);
+  }, [event?.isFinished]);
+
+  useEffect(() => {
+    if (!event?.isHost || event?.isFinished || event?.winnerMovie) {
+      setSettingsOpen(false);
+    }
+  }, [event?.isHost, event?.isFinished, event?.winnerMovie]);
 
   useEffect(() => {
     if (!actionSuccess) return;
@@ -103,6 +141,15 @@ export default function EventDetail() {
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
     },
+  });
+
+  const wheel = useEventWheel({
+    slug: slug ?? '',
+    event: event ?? undefined,
+    movies,
+    hostToken,
+    onWheelDone: refreshAll,
+    onCloseDone: refreshAll,
   });
 
   const documentTitle = getDocumentTitle(
@@ -226,7 +273,12 @@ export default function EventDetail() {
 
   const timeFormatted = formatEventTime(event.time);
   const dateLabel = formatMyEventsListDate(event.date, locale);
-  const dateFormatted = `${timeFormatted} – ${dateLabel}`;
+  const dateFormatted = formatEventDateLong(
+    event.date,
+    event.time,
+    locale,
+    t('events.detail.dateTimeJoiner')
+  );
   const shareUrl = eventFrontendUrl(slug);
   const needsJoin = !event.isFinished && !participant;
   const showContent = event.isFinished || participant;
@@ -239,6 +291,17 @@ export default function EventDetail() {
   const canShowLeave = !event.isFinished && !!participant && !isCreatorSelf;
 
   const participantCount = event.participantCount ?? event.participants?.length ?? 0;
+  const moviesCount = moviesQuery.isSuccess ? movies.length : (event.movieCount ?? 0);
+  const votesCount = movies.reduce((total, m) => total + m.up + m.down, 0);
+  const lifecycle = LIFECYCLE_BY_PHASE[getEventLivePhase(event, nowMs)] ?? 'upcoming';
+  const countdown = eventCountdown(event.date, event.time, nowMs);
+  const countdownLabel = countdown
+    ? t(
+        COUNTDOWN_KEYS[countdown.unit],
+        countdown.unit === 'imminent' ? undefined : { count: countdown.count }
+      )
+    : null;
+  const canConfigure = !!event.isHost && !event.isFinished && !event.winnerMovie;
   const isFull =
     typeof maxParticipants === 'number' &&
     maxParticipants > 0 &&
@@ -264,9 +327,34 @@ export default function EventDetail() {
         eventTheme={event.config?.theme}
         eventThemeColor={event.config?.themeColor}
         shareUrl={shareUrl}
+        lifecycle={lifecycle}
+        countdownLabel={countdownLabel}
+        participants={event.participants}
+        participantCount={participantCount}
+        moviesCount={moviesCount}
+        votesCount={votesCount}
+        participantsOpen={participantsOpen}
+        onToggleParticipants={() => setParticipantsOpen((value) => !value)}
+        onInviteFriends={
+          event.isHost && !event.isFinished ? () => setInviteModalOpen(true) : undefined
+        }
+        onOpenSettings={canConfigure ? () => setSettingsOpen(true) : undefined}
+        wheelActions={showContent ? <EventWheelActions wheel={wheel} /> : null}
       />
-      {event.isHost && !event.isFinished && !event.winnerMovie && (
-        <HostEventSettingsPanel slug={slug} hostToken={hostToken} event={event} />
+      {canConfigure && (
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken={hostToken}
+          event={event}
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+        />
+      )}
+
+      {wheel.error && (
+        <p className="error" role="alert">
+          {wheel.error}
+        </p>
       )}
 
       {event.isHost && !event.isFinished && (
@@ -288,17 +376,25 @@ export default function EventDetail() {
 
       {showContent && (
         <>
-          <EventParticipantsList
-            participants={event.participants}
-            currentParticipantId={participant?.participantId ?? null}
-            maxParticipants={maxParticipants}
-            isHost={!!event.isHost}
-            pendingRemovalId={pendingRemovalId}
-            onRemoveParticipant={event.isFinished ? undefined : handleRemoveParticipant}
-            onInvite={
-              event.isHost && !event.isFinished ? () => setInviteModalOpen(true) : undefined
-            }
-          />
+          {participantsOpen && (
+            <EventParticipantsList
+              participants={event.participants}
+              currentParticipantId={participant?.participantId ?? null}
+              maxParticipants={maxParticipants}
+              isHost={!!event.isHost}
+              pendingRemovalId={pendingRemovalId}
+              onRemoveParticipant={event.isFinished ? undefined : handleRemoveParticipant}
+              onInvite={
+                event.isHost && !event.isFinished ? () => setInviteModalOpen(true) : undefined
+              }
+              onLeave={canShowLeave ? handleLeaveEvent : undefined}
+              leaveDisabled={
+                isConnectedSelf &&
+                removeParticipantMutation.isPending &&
+                pendingRemovalId === participant?.participantId
+              }
+            />
+          )}
 
           {actionSuccess && (
             <p
@@ -309,24 +405,6 @@ export default function EventDetail() {
             >
               {actionSuccess}
             </p>
-          )}
-
-          {canShowLeave && (
-            <div style={{ margin: '0 0 1rem 0' }}>
-              <button
-                type="button"
-                className="btn btn-sm btn-danger"
-                onClick={handleLeaveEvent}
-                disabled={
-                  isConnectedSelf &&
-                  removeParticipantMutation.isPending &&
-                  pendingRemovalId === participant?.participantId
-                }
-                data-testid="leave-event-button"
-              >
-                {t('events.participants.leaveAction')}
-              </button>
-            </div>
           )}
 
           <EventMoviesSection
@@ -348,9 +426,7 @@ export default function EventDetail() {
             slug={slug}
             event={event}
             movies={movies}
-            hostToken={hostToken}
-            onWheelDone={refreshAll}
-            onCloseDone={refreshAll}
+            wheel={wheel}
             viewMode={viewMode}
           />
         </>

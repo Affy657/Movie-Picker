@@ -44,6 +44,15 @@ function renderEventDetail(initialPath: string) {
   );
 }
 
+async function openParticipantsPanel(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByTestId('participants-toggle'));
+}
+
+async function openParticipantsManageMode(user: ReturnType<typeof userEvent.setup>) {
+  await openParticipantsPanel(user);
+  await user.click(await screen.findByTestId('manage-participants-toggle'));
+}
+
 describe('EventDetail (MSW)', () => {
   const slug = 'soiree-msw';
 
@@ -76,22 +85,26 @@ describe('EventDetail (MSW)', () => {
   });
 
   it('affiche le lien invité et le QR pour un simple participant (sans token hôte)', async () => {
+    const user = userEvent.setup();
     renderEventDetail(`/e/${slug}`);
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     });
+    await user.click(screen.getByRole('button', { name: /inviter/i }));
     expect(screen.getByRole('button', { name: /^partager$/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /afficher le qr code/i })).toBeInTheDocument();
     expect(screen.queryByText('Votre lien hôte (ne pas partager)')).not.toBeInTheDocument();
   });
 
   it('en tant qu’hôte n’affiche plus de lien « hôte » séparé (seul le lien public)', async () => {
+    const user = userEvent.setup();
     const token = 'host-secret-token';
     renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     });
     expect(document.title).toBe(pageTitle('Soirée démo'));
+    await user.click(screen.getByRole('button', { name: /inviter/i }));
     expect(screen.getByRole('button', { name: /^partager$/i })).toBeInTheDocument();
     expect(screen.queryByText('Votre lien hôte (ne pas partager)')).not.toBeInTheDocument();
   });
@@ -109,7 +122,15 @@ describe('EventDetail (MSW)', () => {
     });
     expect(screen.getByText('Comédie noire')).toBeInTheDocument();
     expect(screen.getByRole('status', { name: /Thème de soirée/i })).toBeInTheDocument();
-    expect(screen.getByText('Paramètres de la soirée')).toBeInTheDocument();
+
+    const settingsToggle = screen.getByRole('button', { name: 'Paramètres de la soirée' });
+    expect(settingsToggle).toHaveAttribute('aria-haspopup', 'dialog');
+    const settingsDialog = document.querySelector('dialog[aria-labelledby]');
+    expect(settingsDialog).not.toHaveAttribute('open');
+
+    await userEvent.setup().click(settingsToggle);
+    await waitFor(() => expect(settingsDialog).toHaveAttribute('open'));
+    expect(screen.getByLabelText(/nom de la soirée/i)).toBeInTheDocument();
   });
 
   it('affiche erreur films + Réessayer si le chargement des films échoue', async () => {
@@ -185,6 +206,7 @@ describe('EventDetail (MSW)', () => {
         expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument()
       );
 
+      await openParticipantsManageMode(user);
       const removeButton = await screen.findByTestId('remove-participant-p-msw-alice');
       await user.click(removeButton);
 
@@ -214,6 +236,7 @@ describe('EventDetail (MSW)', () => {
       );
 
       renderEventDetail(`/e/${slug}?host=host-token`);
+      await openParticipantsManageMode(user);
       const removeButton = await screen.findByTestId('remove-participant-p-msw-alice');
       await user.click(removeButton);
 
@@ -240,6 +263,7 @@ describe('EventDetail (MSW)', () => {
       );
 
       renderEventDetail(`/e/${slug}?host=host-token`);
+      await openParticipantsManageMode(user);
       const removeButton = await screen.findByTestId('remove-participant-p-msw-alice');
       await user.click(removeButton);
       await user.click(screen.getByTestId('confirm-dialog-confirm'));
@@ -250,6 +274,7 @@ describe('EventDetail (MSW)', () => {
 
   describe('flux quitter (participant)', () => {
     it('le créateur ne voit pas le bouton « Quitter » (masqué côté UI)', async () => {
+      const user = userEvent.setup();
       const myPid = 'p-msw-host';
       setStoredParticipant(slug, myPid, 'Hôte');
       server.use(
@@ -285,6 +310,7 @@ describe('EventDetail (MSW)', () => {
       await waitFor(() =>
         expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument()
       );
+      await openParticipantsPanel(user);
 
       expect(screen.getByText('Alice')).toBeInTheDocument();
       expect(screen.queryByTestId('leave-event-button')).not.toBeInTheDocument();
@@ -345,6 +371,7 @@ describe('EventDetail (MSW)', () => {
         expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument()
       );
 
+      await openParticipantsPanel(user);
       const leaveButton = await screen.findByTestId('leave-event-button');
       await user.click(leaveButton);
       await user.click(screen.getByTestId('confirm-dialog-confirm'));
@@ -366,6 +393,7 @@ describe('EventDetail (MSW)', () => {
         expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument()
       );
 
+      await openParticipantsManageMode(user);
       await user.click(await screen.findByTestId('remove-participant-p-msw-alice'));
       const dialog1 = await screen.findByTestId('confirm-dialog');
       expect(dialog1).toHaveAttribute('open');

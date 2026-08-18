@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react';
+import { useCallback, useId, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { CalendarPlus, Download, ExternalLink } from 'lucide-react';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
+import { useMenuFocus } from '@/shared/hooks/useMenuFocus';
 import { useTranslation } from '@/shared/i18n';
 import {
   buildIcsContent,
@@ -10,25 +11,31 @@ import {
   outlookCalendarUrl,
   type CalendarEvent,
 } from '@/shared/utils/icsCalendar';
-import styles from './AddToCalendarButton.module.css';
+import styles from './EventShareMenu.module.css';
 
-interface AddToCalendarButtonProps {
+type EventCalendarMenuProps = {
   title: string;
   date: string;
   time: string;
   url?: string;
-}
+};
 
-export default function AddToCalendarButton({
+export default function EventCalendarMenu({
   title,
   date,
   time,
   url,
-}: Readonly<AddToCalendarButtonProps>) {
+}: Readonly<EventCalendarMenuProps>) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
-  useClickOutside(rootRef, () => setOpen(false), open);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const menuId = useId();
+
+  const close = useCallback(() => setOpen(false), []);
+  useClickOutside(containerRef, close, open);
+  useMenuFocus(open, panelRef, triggerRef);
 
   const calendarEvent: CalendarEvent = {
     title,
@@ -56,49 +63,59 @@ export default function AddToCalendarButton({
     anchor.click();
     anchor.remove();
     URL.revokeObjectURL(objectUrl);
-    setOpen(false);
+    close();
   };
 
   return (
-    <div className={styles.root} ref={rootRef}>
+    <div className={styles.container} ref={containerRef}>
       <button
+        ref={triggerRef}
         type="button"
-        className={clsx('btn', styles.trigger)}
-        onClick={() => setOpen((value) => !value)}
+        className={clsx('btn', styles.iconTrigger)}
+        onClick={() => setOpen((prev) => !prev)}
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-controls={open ? menuId : undefined}
         aria-label={t('events.calendar.addButton')}
         title={t('events.calendar.addButton')}
       >
         <CalendarPlus size={16} aria-hidden />
       </button>
+
       {open ? (
-        <div className={styles.menu} role="menu" aria-label={t('events.calendar.menuLabel')}>
+        <div
+          ref={panelRef}
+          id={menuId}
+          className={styles.dropdown}
+          role="menu"
+          tabIndex={-1}
+          aria-label={t('events.calendar.menuLabel')}
+        >
           <a
-            role="menuitem"
             className={styles.item}
+            role="menuitem"
             href={googleHref}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => setOpen(false)}
+            onClick={close}
           >
-            <ExternalLink size={14} aria-hidden />
-            <span>{t('events.calendar.google')}</span>
+            <ExternalLink className={styles.icon} size={15} aria-hidden />
+            {t('events.calendar.google')}
           </a>
           <a
-            role="menuitem"
             className={styles.item}
+            role="menuitem"
             href={outlookHref}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => setOpen(false)}
+            onClick={close}
           >
-            <ExternalLink size={14} aria-hidden />
-            <span>{t('events.calendar.outlook')}</span>
+            <ExternalLink className={styles.icon} size={15} aria-hidden />
+            {t('events.calendar.outlook')}
           </a>
           <button type="button" role="menuitem" className={styles.item} onClick={handleDownloadIcs}>
-            <Download size={14} aria-hidden />
-            <span>{t('events.calendar.apple')}</span>
+            <Download className={styles.icon} size={15} aria-hidden />
+            {t('events.calendar.apple')}
           </button>
         </div>
       ) : null}

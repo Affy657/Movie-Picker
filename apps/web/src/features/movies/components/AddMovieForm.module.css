@@ -169,6 +169,10 @@
 }
 
 .resultMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem 0.6rem;
   font-size: var(--font-size-xs);
   line-height: var(--leading-tight);
   color: var(--color-meta);
@@ -213,6 +217,7 @@
 .inputWrap {
   position: relative;
   flex: 1 1 14rem;
+  max-width: 26rem;
   min-width: 0;
 }
 

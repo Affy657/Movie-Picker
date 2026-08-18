@@ -93,9 +93,17 @@ describe('HostEventSettingsPanel', () => {
     );
 
     const qc = createTestQueryClient();
-    renderWithRouter(<HostEventSettingsPanel slug={slug} hostToken={null} event={baseEvent} />, qc);
+    renderWithRouter(
+      <HostEventSettingsPanel
+        slug={slug}
+        hostToken={null}
+        event={baseEvent}
+        open
+        onClose={() => {}}
+      />,
+      qc
+    );
 
-    await user.click(screen.getByText('Paramètres de la soirée'));
     await user.selectOptions(screen.getByLabelText(/mode de la roue/i), 'weightedByVotes');
 
     await waitFor(() => expect(patched).toBe(true));
@@ -121,13 +129,14 @@ describe('HostEventSettingsPanel', () => {
 
     renderWithRouter(
       <HostEventSettingsPanel
+        open
+        onClose={() => {}}
         slug={slug}
         hostToken={null}
         event={{ ...baseEvent, participantCount: 2 }}
       />
     );
 
-    await user.click(screen.getByText('Paramètres de la soirée'));
     await user.clear(screen.getByLabelText(/maximum de participants/i));
     await user.type(screen.getByLabelText(/maximum de participants/i), '8');
 
@@ -146,13 +155,14 @@ describe('HostEventSettingsPanel', () => {
 
     renderWithRouter(
       <HostEventSettingsPanel
+        open
+        onClose={() => {}}
         slug={slug}
         hostToken={null}
         event={{ ...baseEvent, participantCount: 5 }}
       />
     );
 
-    await user.click(screen.getByText('Paramètres de la soirée'));
     await user.clear(screen.getByLabelText(/maximum de participants/i));
     await user.type(screen.getByLabelText(/maximum de participants/i), '3');
 
@@ -163,9 +173,10 @@ describe('HostEventSettingsPanel', () => {
   });
 
   it('reste fonctionnel quand winnerMovie est défini (masquage géré par EventDetail)', async () => {
-    const user = userEvent.setup();
     renderWithRouter(
       <HostEventSettingsPanel
+        open
+        onClose={() => {}}
         slug={slug}
         hostToken={null}
         event={{
@@ -187,7 +198,6 @@ describe('HostEventSettingsPanel', () => {
       />
     );
 
-    await user.click(screen.getByText('Paramètres de la soirée'));
     expect(screen.queryByText(/n'est plus modifiable/i)).not.toBeInTheDocument();
     expect(screen.getByLabelText(/nom de la soirée/i)).not.toBeDisabled();
   });
@@ -207,21 +217,29 @@ describe('HostEventSettingsPanel', () => {
     }
 
     it("ne montre PAS la zone de danger si l'utilisateur n'est pas le créateur connecté", async () => {
-      const user = userEvent.setup();
       renderWithRouter(
-        <HostEventSettingsPanel slug={slug} hostToken="ht-only" event={baseEvent} />
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken="ht-only"
+          event={baseEvent}
+          open
+          onClose={() => {}}
+        />
       );
-      await user.click(screen.getByText('Paramètres de la soirée'));
       expect(screen.queryByTestId('host-danger-zone')).not.toBeInTheDocument();
       expect(screen.queryByTestId('delete-event-button')).not.toBeInTheDocument();
     });
 
     it('montre la zone de danger pour le créateur connecté', async () => {
-      const user = userEvent.setup();
       renderWithRouter(
-        <HostEventSettingsPanel slug={slug} hostToken={null} event={eventAsConnectedCreator()} />
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken={null}
+          event={eventAsConnectedCreator()}
+          open
+          onClose={() => {}}
+        />
       );
-      await user.click(screen.getByText('Paramètres de la soirée'));
       expect(screen.getByTestId('host-danger-zone')).toBeInTheDocument();
       expect(screen.getByTestId('delete-event-button')).toBeInTheDocument();
     });
@@ -250,10 +268,15 @@ describe('HostEventSettingsPanel', () => {
       setStoredHostToken(slug, 'ht-1');
 
       renderWithRouter(
-        <HostEventSettingsPanel slug={slug} hostToken="ht-1" event={eventAsConnectedCreator()} />
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken="ht-1"
+          event={eventAsConnectedCreator()}
+          open
+          onClose={() => {}}
+        />
       );
 
-      await user.click(screen.getByText('Paramètres de la soirée'));
       await user.click(screen.getByTestId('delete-event-button'));
       await user.click(await screen.findByTestId('delete-event-confirm-dialog-confirm'));
 
@@ -278,9 +301,14 @@ describe('HostEventSettingsPanel', () => {
       );
 
       renderWithRouter(
-        <HostEventSettingsPanel slug={slug} hostToken={null} event={eventAsConnectedCreator()} />
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken={null}
+          event={eventAsConnectedCreator()}
+          open
+          onClose={() => {}}
+        />
       );
-      await user.click(screen.getByText('Paramètres de la soirée'));
       await user.click(screen.getByTestId('delete-event-button'));
       await user.click(await screen.findByTestId('delete-event-confirm-dialog-cancel'));
 
@@ -300,9 +328,14 @@ describe('HostEventSettingsPanel', () => {
       );
 
       renderWithRouter(
-        <HostEventSettingsPanel slug={slug} hostToken={null} event={eventAsConnectedCreator()} />
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken={null}
+          event={eventAsConnectedCreator()}
+          open
+          onClose={() => {}}
+        />
       );
-      await user.click(screen.getByText('Paramètres de la soirée'));
       await user.click(screen.getByTestId('delete-event-button'));
       await user.click(await screen.findByTestId('delete-event-confirm-dialog-confirm'));
 

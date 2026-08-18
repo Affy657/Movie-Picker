@@ -98,6 +98,7 @@ Découpage par version côté **métier / utilisateur**.
 - ✅ **Tooltips globaux** : info-bulles cohérentes sur les icônes et actions moins évidentes (boutons d'action, scores TMDB, badges, pastilles streaming).
 - ✅ **Accessibilité (a11y baseline)** : navigation clavier cohérente, focus trap dans les modals, aria-labels sur les éléments interactifs.
 - ✅ **Export calendrier (.ics)** : bouton « Ajouter au calendrier » sur la soirée, compatible Google Calendar, Outlook, Apple Calendar.
+- ✅ **Refonte de la page soirée** : barre de soirée avec pastille d'état et compte à rebours, actions de décision toujours accessibles (barre collante sur desktop, barre basse sur mobile), participants repliés derrière une pile d'avatars avec mode « Gérer », réglages hôte derrière un engrenage, partage / QR / calendrier regroupés dans un menu « Inviter », colonne élargie pour trois cartes film de front.
 
 ---
 
