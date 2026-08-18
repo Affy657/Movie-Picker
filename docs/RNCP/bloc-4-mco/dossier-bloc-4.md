@@ -145,7 +145,7 @@ Les cibles ne sont pas des valeurs théoriques : elles ont été calées sur tre
 | Taux d'erreur serveur | **0,026 %** (4 réponses 5xx sur 15 161 requêtes) | **< 1 %** |
 | Erreurs applicatives | regroupées par empreinte | 0 anomalie non triée au-delà de 24 h |
 | Performance du front | médiane de trois exécutions | **≥ 80**, porte bloquante |
-| Accessibilité du front | score 100 | **100**, porte bloquante |
+| Accessibilité du front | score 100 mesuré | **≥ 98**, porte bloquante |
 
 L'API est configurée sans instance minimale : après une période d'inactivité, le premier appel subit un **démarrage à froid de 3,8 secondes**. C'est un arbitrage de coût explicite, et les seuils d'alerte en tiennent compte plutôt que de le traiter comme une anomalie.
 

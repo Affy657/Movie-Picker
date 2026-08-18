@@ -33,7 +33,7 @@ Les cibles sont calées sur des mesures réelles relevées sur les **30 jours** 
 | Taux d'erreur serveur | **0,026 %** (4 réponses 5xx sur 15 161 requêtes) | **< 1 %** | Cloud Monitoring |
 | Erreurs applicatives | regroupées par empreinte | 0 issue non triée > 24 h | Sentry |
 | Performance front | score Lighthouse ≥ 80 | maintenu à chaque déploiement | CI (médiane de 3 exécutions) |
-| Accessibilité front | score Lighthouse 100 | maintenu à chaque déploiement | CI |
+| Accessibilité front | score Lighthouse 100 mesuré | **≥ 98**, porte bloquante | CI |
 
 Le **scale-to-zero** (aucune instance minimale) est un choix de coût assumé : il implique un démarrage à froid de ~3,8 s après une période d'inactivité. Les seuils de latence en tiennent compte (§ 4) plutôt que de le traiter comme une anomalie.
 
