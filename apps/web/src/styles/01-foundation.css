@@ -69,6 +69,9 @@
   --space-7: 1.75rem;
   --space-8: 2rem;
   --color-toggle-thumb: #ffffff;
+
+  --text-optical-nudge: 0.06em;
+  --text-optical-nudge-caps: 0.12em;
 }
 
 :root,
@@ -289,6 +292,13 @@ body {
   overflow-x: clip;
 }
 
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
 /* PageLayout — hauteur viewport gérée par AppShell (flex) pour éviter le scroll fantôme.
    `--page-max-width` permet à un écran particulier d'élargir la colonne via son CSS module. */
 .page {
@@ -298,9 +308,15 @@ body {
   overflow-x: clip;
 }
 
-/* Détail soirée — colonne un peu plus large, toujours centrée */
 .page.page-event {
-  max-width: min(52rem, 100%);
+  max-width: min(72rem, 100%);
+  overflow-anchor: none;
+}
+
+@media (max-width: 47.9375rem) {
+  main.page.page-event {
+    padding-bottom: calc(var(--mobile-nav-height, 3.25rem) + 5rem);
+  }
 }
 
 /* Utilitaire : occuper l'espace vertical pour que le swap skeleton → contenu

@@ -23,6 +23,8 @@ interface QrCodeButtonProps {
   showLabel: string;
   closeLabel: string;
   className?: string;
+
+  withLabel?: boolean;
 }
 
 export default function QrCodeButton({
@@ -33,6 +35,7 @@ export default function QrCodeButton({
   showLabel,
   closeLabel,
   className,
+  withLabel = false,
 }: Readonly<QrCodeButtonProps>) {
   const [open, setOpen] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -81,10 +84,11 @@ export default function QrCodeButton({
         className={className ?? 'btn'}
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
-        aria-label={showLabel}
-        title={showLabel}
+        aria-label={withLabel ? undefined : showLabel}
+        title={withLabel ? undefined : showLabel}
       >
-        <QrCode size={16} aria-hidden />
+        <QrCode size={withLabel ? 15 : 16} aria-hidden />
+        {withLabel ? showLabel : null}
       </button>
       <dialog
         ref={dialogRef}

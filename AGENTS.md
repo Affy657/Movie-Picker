@@ -12,6 +12,24 @@ Règles pour les agents IA travaillant sur ce repo.
 
 Si on ne peut pas exprimer l'intention via le nommage ou la structure, refactoriser le code — pas ajouter un commentaire.
 
+## Centrage vertical du texte
+
+Un texte centré dans un petit élément (pastille, badge, puce, chip) n'est **pas** optiquement centré par `align-items: center` seul : le centre des glyphes se situe au-dessus du centre de la boîte de ligne, donc le texte paraît trop haut et le vide s'accumule sous lui.
+
+Pour tout élément compact contenant du texte centré :
+1. poser `line-height: 1` pour que la boîte de ligne colle à la taille de police ;
+2. compenser avec les jetons `--text-optical-nudge` (texte mixte) ou `--text-optical-nudge-caps` (petites capitales), soit en padding vertical asymétrique (`padding-top` + nudge, `padding-bottom` - nudge), soit en `transform: translateY(nudge)` sur le seul span de texte quand l'élément contient aussi des éléments graphiques (avatar, icône) qu'il ne faut pas décaler.
+
+Vérifier le résultat, pas seulement l'écrire : mesurer l'écart entre le centre des glyphes (`measureText` sur canvas, `actualBoundingBoxAscent` / `actualBoundingBoxDescent`) et le centre de l'élément, et viser moins d'un demi-pixel.
+
+## Barre collante et scroll anchoring
+
+Une barre `position: sticky` qui change de hauteur entre son état déplié et son état replié (un bloc masqué en `display: none`, par exemple) déclenche le scroll anchoring de Chrome : le navigateur recale `scrollTop` du delta de hauteur, ce qui fait osciller la barre en boucle au scroll lent.
+
+Pour toute nouvelle barre sticky dont le contenu change de hauteur :
+1. garder la hauteur de la barre constante entre les deux états (sortir le contenu variable de la barre elle-même) ;
+2. poser `overflow-anchor: none` sur le conteneur de page concerné en filet de sécurité.
+
 ## Workflow
 
 **Avant tout push sur master, toujours exécuter `pnpm run verify:local` et corriger toute erreur avant de push.** Cette vérification couvre lint, format, tests front et tests API — elle est obligatoire quelle que soit la conversation ou la feature.

@@ -21,7 +21,7 @@
 
 .root {
   --header-height: 3.5rem;
-  --mobile-nav-height: calc(3.25rem + env(safe-area-inset-bottom, 0px));
+  --mobile-nav-height: calc(4rem + env(safe-area-inset-bottom, 0px));
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -121,6 +121,7 @@
 
 .navMobile {
   position: fixed;
+  min-height: var(--mobile-nav-height);
   bottom: 0;
   left: 0;
   right: 0;

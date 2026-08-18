@@ -61,6 +61,10 @@ describe('EventParticipantsList', () => {
       </AppTestProviders>
     );
 
+    expect(screen.queryByTestId('remove-participant-p-other')).not.toBeInTheDocument();
+
+    await user.click(screen.getByTestId('manage-participants-toggle'));
+
     expect(screen.queryByTestId('remove-participant-p-creator')).not.toBeInTheDocument();
     expect(screen.queryByTestId('remove-participant-p-me')).not.toBeInTheDocument();
 
@@ -71,7 +75,8 @@ describe('EventParticipantsList', () => {
     expect(onRemove).toHaveBeenCalledWith('p-other', 'Bob');
   });
 
-  it('désactive le bouton du participant en cours de retrait', () => {
+  it('désactive le bouton du participant en cours de retrait', async () => {
+    const user = userEvent.setup();
     render(
       <AppTestProviders>
         <EventParticipantsList
@@ -83,6 +88,8 @@ describe('EventParticipantsList', () => {
         />
       </AppTestProviders>
     );
+
+    await user.click(screen.getByTestId('manage-participants-toggle'));
 
     expect(screen.getByTestId('remove-participant-p-other')).toBeDisabled();
   });
