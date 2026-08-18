@@ -32,6 +32,7 @@ test.describe('Parcours social (suivre puis inviter)', () => {
       await pageA.getByRole('button', { name: /créer la soirée/i }).click();
       await expect(pageA).toHaveURL(/\/e\/[^/?]+/, { timeout: 15_000 });
 
+      await pageA.getByRole('button', { name: 'Inviter' }).click();
       await pageA.getByRole('button', { name: 'Inviter des amis' }).click();
       await expect(pageA.getByRole('heading', { name: 'Inviter des amis' })).toBeVisible();
       const inviteBtn = pageA.getByRole('button', { name: /inviter amie2e/i });
