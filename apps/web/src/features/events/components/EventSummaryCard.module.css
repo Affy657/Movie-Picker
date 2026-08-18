@@ -155,17 +155,6 @@
   white-space: nowrap;
 }
 
-.lifecyclePill {
-  display: inline-block;
-  text-align: center;
-  font-size: var(--font-size-2xs);
-  font-weight: 600;
-  padding: 0.22rem 0.55rem;
-  border-radius: 6px;
-  border: 1px solid transparent;
-  box-sizing: border-box;
-}
-
 .badgeHost {
   display: inline-flex;
   align-items: center;
@@ -181,26 +170,4 @@
   background: color-mix(in srgb, var(--color-primary) 15%, transparent);
   color: var(--color-primary);
   border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
-}
-
-.badgeUpcoming {
-  background: var(--color-badge-upcoming-bg);
-  color: var(--color-badge-upcoming-text);
-  border-color: color-mix(in srgb, var(--color-badge-upcoming-text) 32%, transparent);
-}
-
-.badgeLive {
-  background: var(--color-badge-live-bg);
-  color: var(--color-badge-live-text);
-  border-color: color-mix(in srgb, var(--color-badge-live-text) 32%, transparent);
-}
-
-.badgeFinished {
-  background: color-mix(
-    in srgb,
-    var(--color-badge-finished-bg) 92%,
-    var(--color-badge-finished-text) 8%
-  );
-  color: var(--color-badge-finished-text);
-  border-color: color-mix(in srgb, var(--color-badge-finished-text) 40%, transparent);
 }

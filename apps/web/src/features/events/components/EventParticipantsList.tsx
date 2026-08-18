@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import clsx from 'clsx';
 import { Link } from 'react-router';
-import { Crown, UserPlus, Users, X } from 'lucide-react';
+import { Check, Crown, Settings2, UserPlus, Users, X } from 'lucide-react';
 import type { EventParticipantSummary } from '@/shared/types/event';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
@@ -21,6 +22,10 @@ type Props = {
   onRemoveParticipant?: (participantId: string, pseudo: string) => void;
 
   onInvite?: () => void;
+
+  onLeave?: () => void;
+
+  leaveDisabled?: boolean;
 };
 
 export default function EventParticipantsList({
@@ -31,8 +36,11 @@ export default function EventParticipantsList({
   pendingRemovalId,
   onRemoveParticipant,
   onInvite,
+  onLeave,
+  leaveDisabled,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const [managing, setManaging] = useState(false);
   if (!participants) return null;
 
   const hasCap = typeof maxParticipants === 'number' && maxParticipants > 0;
@@ -40,23 +48,49 @@ export default function EventParticipantsList({
     ? `${participants.length} / ${maxParticipants}`
     : String(participants.length);
   const isFull = hasCap && participants.length >= (maxParticipants ?? 0);
+  const canManage = !!isHost && !!onRemoveParticipant && participants.length > 1;
 
   return (
     <section
+      id="event-participants-panel"
       className={styles.root}
       aria-labelledby="participants-heading"
       data-testid="event-participants"
     >
-      <h2 id="participants-heading" className={styles.header}>
-        <Users aria-hidden size={18} className={styles.headerIcon} />
-        {t('events.participants.title')}
-        <span className={styles.count}>({countLabel})</span>
-        {isFull && (
-          <span className={styles.fullBadge} aria-label={t('events.participants.fullBadgeAria')}>
-            {t('events.participants.fullBadge')}
-          </span>
+      <div className={styles.headerRow}>
+        <h2 id="participants-heading" className={styles.header}>
+          <Users aria-hidden size={18} className={styles.headerIcon} />
+          {t('events.participants.title')}
+          <span className={styles.count}>({countLabel})</span>
+          {isFull && (
+            <span className={styles.fullBadge} aria-label={t('events.participants.fullBadgeAria')}>
+              {t('events.participants.fullBadge')}
+            </span>
+          )}
+        </h2>
+        {canManage && (
+          <button
+            type="button"
+            className={clsx('btn btn-sm', styles.manageBtn)}
+            onClick={() => setManaging((value) => !value)}
+            aria-pressed={managing}
+            data-testid="manage-participants-toggle"
+          >
+            {managing ? (
+              <>
+                <Check aria-hidden size={14} />
+                {t('events.participants.manageDone')}
+              </>
+            ) : (
+              <>
+                <Settings2 aria-hidden size={14} />
+                {t('events.participants.manageAction')}
+              </>
+            )}
+          </button>
         )}
-      </h2>
+      </div>
+
       {participants.length === 0 && !onInvite ? (
         <EmptyState
           compact
@@ -104,7 +138,7 @@ export default function EventParticipantsList({
                     <Crown aria-hidden size={12} />
                   </span>
                 )}
-                {canHostRemove && (
+                {managing && canHostRemove && (
                   <button
                     type="button"
                     className={styles.removeBtn}
@@ -127,13 +161,27 @@ export default function EventParticipantsList({
                 className={styles.inviteChip}
                 onClick={onInvite}
                 aria-label={t('events.participants.inviteAriaLabel')}
-                title={t('events.participants.inviteAriaLabel')}
               >
                 <UserPlus aria-hidden size={14} />
+                {t('events.participants.inviteAction')}
               </button>
             </li>
           )}
         </ul>
+      )}
+
+      {onLeave && (
+        <div className={styles.leaveRow}>
+          <button
+            type="button"
+            className="btn btn-sm btn-danger"
+            onClick={onLeave}
+            disabled={leaveDisabled}
+            data-testid="leave-event-button"
+          >
+            {t('events.participants.leaveAction')}
+          </button>
+        </div>
       )}
     </section>
   );

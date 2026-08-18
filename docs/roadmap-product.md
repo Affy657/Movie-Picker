@@ -98,6 +98,7 @@ Découpage par version côté **métier / utilisateur**.
 - ✅ **Tooltips globaux** : info-bulles cohérentes sur les icônes et actions moins évidentes (boutons d'action, scores TMDB, badges, pastilles streaming).
 - ✅ **Accessibilité (a11y baseline)** : navigation clavier cohérente, focus trap dans les modals, aria-labels sur les éléments interactifs.
 - ✅ **Export calendrier (.ics)** : bouton « Ajouter au calendrier » sur la soirée, compatible Google Calendar, Outlook, Apple Calendar.
+- ✅ **Refonte de la page soirée** : barre de soirée avec pastille d'état et compte à rebours, actions de décision toujours accessibles (barre collante sur desktop, barre basse sur mobile), participants repliés derrière une pile d'avatars avec mode « Gérer », réglages hôte derrière un engrenage, partage / QR / calendrier regroupés dans un menu « Inviter », colonne élargie pour trois cartes film de front.
 
 ---
 
@@ -175,3 +176,5 @@ Découpage par version côté **métier / utilisateur**.
 - **Plusieurs films gagnants par soirée** : l'hôte peut relancer la roue un nombre indéfini de fois sur la même soirée ; chaque nouveau lancement tire parmi les films restants (les gagnants précédents sont exclus du tirage) ; couvre les soirées à plusieurs films (thème court métrage, plusieurs épisodes d'une franchise…) ; possibilité de relancer la roue sur la sélection complète reste disponible en parallèle ; dépend de la sélection manuelle du film gagnant (V1.4).
 - **Timer avant le début de la soirée** : compte à rebours visible par tous les participants depuis la page soirée jusqu'à l'heure de début prévue.
 - **Templates de soirée** : sauvegarder une configuration de soirée (genres, limite de propositions, type de roue) et la réutiliser en un clic à la création.
+- **Synchronisation temps réel et présence** : remplacer le polling actuel par une connexion temps réel — propositions, votes et arrivées de participants apparaissent instantanément sans délai perceptible ; indicateur de présence sur la page soirée (avatars des participants actuellement connectés, signal « en train de proposer un film »).
+- **Palette de commandes (Cmd+K)** : accès clavier global aux actions et à la navigation — recherche floue sur les soirées, les films et les utilisateurs, création de soirée, changement de thème ; navigation entièrement au clavier dans la palette.

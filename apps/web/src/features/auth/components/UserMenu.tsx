@@ -1,6 +1,6 @@
 import { useCallback, useId, useRef, useState } from 'react';
 import { Link } from 'react-router';
-import { HeartHandshake, LogOut, Settings, UserRound } from 'lucide-react';
+import { ChevronDown, HeartHandshake, LogOut, Settings, UserRound } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
 import { ROUTES } from '@/app/routes';
 import { useTranslation } from '@/shared/i18n';
@@ -47,6 +47,12 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
         aria-controls={open ? menuId : undefined}
       >
         <Avatar avatarId={user.avatarId} pseudo={user.displayName} size="sm" />
+        <ChevronDown
+          className={styles.chevron}
+          data-open={open || undefined}
+          aria-hidden="true"
+          focusable="false"
+        />
       </button>
 
       {open ? (

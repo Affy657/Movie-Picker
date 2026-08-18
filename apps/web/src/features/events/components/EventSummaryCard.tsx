@@ -1,33 +1,14 @@
 import clsx from 'clsx';
 import { Crown, Film, Trophy, Users } from 'lucide-react';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
-import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
+import { useLocale, useTranslation } from '@/shared/i18n';
 import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
 import { formatEventTime, formatMyEventsListDate } from '@/shared/utils/formatMyEventsListDate';
-import type { MyEventLifecycle } from '@/shared/types/event';
+import EventLifecyclePill from '@/shared/components/EventLifecyclePill';
 import type { MyEventSummary } from '@/features/events/types';
 import styles from './EventSummaryCard.module.css';
 
 export { styles as eventSummaryCardStyles };
-
-const badgeClassMap: Record<string, string | undefined> = {
-  upcoming: styles.badgeUpcoming,
-  live: styles.badgeLive,
-  finished: styles.badgeFinished,
-};
-
-function lifecycleTranslationKey(l: MyEventLifecycle): TranslationKey {
-  switch (l) {
-    case 'upcoming':
-      return 'events.lifecycle.upcoming';
-    case 'live':
-      return 'events.lifecycle.live';
-    case 'finished':
-      return 'events.lifecycle.finished';
-    default:
-      return 'events.lifecycle.finished';
-  }
-}
 
 function ParticipantStat({
   count,
@@ -64,7 +45,6 @@ export function EventSummaryCardBody({
   const { t } = useTranslation();
   const { locale } = useLocale();
   const lifecycle = normalizeMyEventLifecycle(event.lifecycle);
-  const badgeClass = badgeClassMap[lifecycle] ?? '';
   const dateLabel = formatMyEventsListDate(event.date, locale);
 
   return (
@@ -111,9 +91,7 @@ export function EventSummaryCardBody({
         </span>
         <span className={styles.metaRight}>
           {showLifecycleBadge && lifecycle !== 'upcoming' ? (
-            <span className={clsx(styles.lifecyclePill, badgeClass)}>
-              {t(lifecycleTranslationKey(lifecycle))}
-            </span>
+            <EventLifecyclePill lifecycle={lifecycle} />
           ) : null}
           <span className={styles.meta}>
             {formatEventTime(event.time)} – {dateLabel}

@@ -12,7 +12,7 @@ describe('t (i18n)', () => {
 
   it('interpole des variables avec la syntaxe {{var}}', () => {
     expect(t('movies.search.regionHint', { region: 'FR' })).toBe(
-      'Disponibilit\u00e9s indicatives \u00b7 r\u00e9gion FR'
+      'Disponibilit\u00e9s indicatives pour la r\u00e9gion FR'
     );
   });
 
@@ -37,7 +37,7 @@ describe('t (i18n)', () => {
 
   it('laisse le placeholder intact si la variable correspondante est absente', () => {
     expect(t('movies.search.regionHint')).toBe(
-      'Disponibilit\u00e9s indicatives \u00b7 r\u00e9gion {{region}}'
+      'Disponibilit\u00e9s indicatives pour la r\u00e9gion {{region}}'
     );
   });
 
@@ -60,7 +60,7 @@ describe('t (i18n)', () => {
 
     it('interpole des variables en anglais', () => {
       expect(t('movies.search.regionHint', { region: 'US' }, 'en')).toBe(
-        'Indicative availability \u00b7 region US'
+        'Indicative availability for region US'
       );
     });
 

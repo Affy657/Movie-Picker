@@ -10,13 +10,6 @@
   color: var(--color-primary);
 }
 
-.actionsRow {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
 /* --- Winner card --- */
 .winnerSection {
   margin-bottom: 1.25rem;
@@ -44,20 +37,6 @@
   color: var(--color-text);
   background: color-mix(in srgb, var(--color-accent) 18%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
-}
-
-.manualBar {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.9rem;
-}
-
-.manualHint {
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
 }
 
 .winnerWrapper {

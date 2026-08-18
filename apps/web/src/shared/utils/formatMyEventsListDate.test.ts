@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { formatMyEventsListDate, formatEventTime } from './formatMyEventsListDate';
+import {
+  formatMyEventsListDate,
+  formatEventTime,
+  formatEventDateLong,
+} from './formatMyEventsListDate';
 
 describe('formatMyEventsListDate', () => {
   it('formats in French', () => {
@@ -51,5 +55,29 @@ describe('formatEventTime', () => {
   it('affiche heures et minutes si minutes non nulles', () => {
     expect(formatEventTime('20:30')).toBe('20h30');
     expect(formatEventTime('08:05')).toBe('8h05');
+  });
+});
+
+describe('formatEventDateLong', () => {
+  it('écrit le jour en entier et le mois abrégé, sans année pour l’année en cours', () => {
+    const currentYear = new Date().getFullYear();
+    const result = formatEventDateLong(`${currentYear}-08-22`, '20:30', 'fr', 'à');
+    expect(result).toMatch(/^\p{L}+ 22 août à 20h30$/u);
+    expect(result).not.toContain(String(currentYear));
+  });
+
+  it('ajoute l’année quand elle diffère de l’année en cours', () => {
+    const nextYear = new Date().getFullYear() + 1;
+    expect(formatEventDateLong(`${nextYear}-04-15`, '21:00', 'fr', 'à')).toContain(
+      `avr. ${nextYear} à 21h`
+    );
+  });
+
+  it('utilise le joignant fourni', () => {
+    expect(formatEventDateLong('2030-12-20', '19:05', 'en', 'at')).toContain('at 19h05');
+  });
+
+  it('renvoie la chaîne brute si la date est invalide', () => {
+    expect(formatEventDateLong('nope', '20:00', 'fr', 'à')).toBe('nope');
   });
 });
