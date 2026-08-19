@@ -15,7 +15,7 @@ Les recommandations qui suivent partent de mesures, pas d'intuitions. Quatre sou
 | **PostHog** (90 jours) | Analytics produit, et surtout ses trous |
 | **CI/CD** | Performance et accessibilité mesurées à chaque déploiement (Lighthouse) |
 
-**Limite assumée** : les retours utilisateurs qualitatifs ne sont pas encore collectés, le questionnaire ([`questionnaire-utilisateurs.md`](questionnaire-utilisateurs.md)) et le canal « Signaler un problème », livré en v1.3.2, sont les deux dispositifs mis en place pour cela. Les recommandations ci-dessous s'appuient donc sur le quantitatif ; le qualitatif servira à les confirmer ou à les réordonner, ce que la recommandation R1 rend possible en continu.
+**Limite assumée** : le volet qualitatif est en cours de constitution. Le questionnaire ([`questionnaire-utilisateurs.md`](questionnaire-utilisateurs.md)) est en ligne depuis le 18 août 2026 ; sept réponses sont arrivées en quarante-huit heures, sur une dizaine espérée au maximum et une cible de 17 comptes. Le canal « Signaler un problème », livré en v1.3.2, complète ce dispositif en continu. Les recommandations ci-dessous restent construites sur le quantitatif, mais intègrent déjà les sept premiers retours reçus, présentés au § 2 bis ; elles seront réexaminées si d'autres réponses arrivent avant la remise du dossier.
 
 ## 2. Indicateurs observés
 
@@ -37,6 +37,28 @@ Les recommandations qui suivent partent de mesures, pas d'intuitions. Quatre sou
 
 Deux conclusions structurent tout le reste : **la fiabilité n'est pas le sujet** (0,026 % d'erreurs, p95 à 207 ms, 74 % d'aboutissement), et **l'engagement dans la soirée l'est**, le vote, mécanisme censé faire émerger le consensus, est à peine sollicité.
 
+## 2 bis. Premiers retours qualitatifs (questionnaire, n = 7)
+
+Sept réponses en quarante-huit heures, sur une dizaine espérée au maximum : l'échantillon est réduit, et vraisemblablement orienté vers les utilisateurs les plus engagés, cinq des sept répondants utilisant l'application « à chaque soirée film ». Les tendances qui suivent sont indicatives, pas représentatives ; elles seront complétées si d'autres réponses arrivent avant la remise du dossier.
+
+| Question | Réponses (n = 7) | Lecture |
+|---|---|---|
+| Usage des boutons de vote | 6/7 ont voté au moins une fois ; 1/7 jamais | Le vote est pratiqué, malgré un faible taux de participation mesuré en production |
+| Effet du vote sur le tirage | 4/7 pensent que ça dépend d'un réglage de l'hôte ; 1/7 croit les films les plus votés toujours favorisés ; 1/7 identifie la réalité (toujours aléatoire) ; 1/7 ne s'est jamais posé la question | La majorité sait le mécanisme configurable, mais quasi personne ne sait qu'il n'est jamais activé |
+| Décision réelle du groupe | 5/7 « ça dépend des soirées » ; 1/7 relance la roue jusqu'à un résultat qui convient à tous ; 1/7 fait confiance au tirage | Une réponse confirme le contournement manuel du tirage aléatoire, hypothèse posée avant l'envoi du questionnaire |
+| Attente vis-à-vis du vote | 3/7 veulent écarter du tirage les films rejetés ; 2/7 le veulent purement indicatif ; 1/7 veut le pondérer ; 1/7 sans avis | La préférence la plus citée est un mécanisme d'élimination, qui n'existe pas aujourd'hui, davantage qu'une simple pondération |
+| Connaissance des notifications | 4/7 ignoraient que l'activation était possible ; 3/7 les ont activées | Même dans un échantillon orienté utilisateurs assidus, plus de la moitié ignore le réglage |
+| Connaissance du réglage de la roue | 5/7 connaissaient le réglage aléatoire/pondéré | Le réglage est repéré, mais jamais actionné : 0 soirée sur 19 ne l'a utilisé malgré cette connaissance |
+| Ce qui ferait revenir plus souvent | 5/7 « rien de particulier, je l'utilise quand j'en ai besoin » | Confirme un usage par événement plutôt que par habitude |
+| Recommandation (échelle 0 à 10) | 10, 10, 10, 8, 9, 10, 10, moyenne ≈ 9,6 | Aucun détracteur ; à lire avec prudence, un échantillon volontaire favorise les utilisateurs satisfaits |
+
+Deux réponses en texte libre apportent une information absente des mesures de production :
+
+- Un répondant qui n'a jamais activé les notifications demande explicitement à être averti quand un film est ajouté à une soirée qu'il a rejointe. Cette notification **existe déjà** (`AddMovieHandler`, déclencheur `MovieAdded`, envoyée en push aux participants ayant activé le réglage), mais reste invisible tant que l'activation n'a jamais été proposée : confirmation directe, sur un cas concret, du diagnostic de R3.
+- Un autre signale devoir se reconnecter à chaque fois qu'il rouvre le lien de soirée depuis le navigateur intégré de Snapchat. Distinct de l'anomalie #67 (cause serveur, déjà corrigée), le symptôme évoque le stockage cloisonné propre à certains navigateurs intégrés. Consigné en fiche [#71](https://github.com/Affy657/Movie-Picker/issues/71) selon le processus du § 3, sévérité *medium*.
+
+Deux dernières remarques, sans effet sur les priorités ci-dessous : un répondant souhaiterait voir, sur le profil d'un utilisateur, les films qu'il a proposés plutôt que leur seul nombre (`UserStatsResponse.MoviesProposed` est aujourd'hui un entier, sans détail) ; un autre suggère une watchlist personnelle avec recommandations, déjà backloguée pour la V1.4.
+
 ## 3. Recommandations
 
 ### R1 : Instrumenter le parcours cœur
@@ -55,6 +77,8 @@ Deux conclusions structurent tout le reste : **la fiabilité n'est pas le sujet*
 
 **Constat.** Chaque film porte deux boutons, « Voter pour » et « Voter contre ». Le problème n'est pas l'intensité du vote mais son audience : les participants qui votent le font sur 2,3 films en moyenne, mais 56 % des participations n'ont produit aucun vote. Surtout, la roue accepte deux modes (aléatoire strict, valeur par défaut, et pondéré par les votes) et **aucune des 19 soirées n'a activé le second** : aucun vote n'a jamais influencé un tirage. Le produit demande un effort dont il n'utilise pas le résultat.
 
+**Confirmation qualitative (§ 2 bis).** Une réponse décrit explicitement le contournement manuel du tirage aléatoire (« on relance la roue jusqu'à tomber sur un film qui convient à tout le monde »). Le réglage aléatoire/pondéré est pourtant connu de 5 répondants sur 7 : la barrière n'est donc pas sa découvrabilité, mais son statut par défaut, ce qui va dans le sens de la proposition ci-dessous. Point plus inattendu : interrogés sur ce que le vote devrait idéalement faire, 3 répondants sur 7 souhaitent qu'il élimine les films rejetés du tirage, contre 1 seul qui souhaite une simple pondération. Cette préférence pour un mécanisme d'élimination, absent aujourd'hui, dépasse le périmètre de la proposition immédiate ; elle est notée comme piste d'itération suivante plutôt qu'ajoutée au chiffrage ci-dessous, l'échantillon (n = 7) restant trop réduit pour trancher entre pondération et élimination.
+
 **Proposition.** Trois volets : faire du mode pondéré la valeur par défaut à la création (l'hôte reste libre de revenir à l'aléatoire strict) ; afficher sur la roue la part réelle de chaque film ; signaler à l'hôte, avant le lancement, la proportion de participants n'ayant pas voté.
 
 | Coût | Délai | Gain attendu |
@@ -67,6 +91,8 @@ Deux conclusions structurent tout le reste : **la fiabilité n'est pas le sujet*
 
 **Constat.** 3 abonnements actifs pour 17 inscrits (18 %), alors que la V1.1 a investi dans les clés VAPID, cinq déclencheurs et une interface de préférences. Le code explique le chiffre : `Notification.requestPermission()` n'est appelé que par le toggle de `NotificationsSection`, monté dans la seule page « Mon compte ». **Aucune sollicitation n'existe dans le parcours**, et les six préférences par type ne s'affichent qu'une fois abonné. Le taux ne mesure pas un refus mais une absence d'occasion.
 
+**Confirmation qualitative (§ 2 bis).** Sur les 7 réponses reçues, 4 ignoraient que l'activation était possible, y compris parmi des répondants qui utilisent l'application à chaque soirée. L'un d'eux demande spontanément, en texte libre, à être notifié quand un film est ajouté à une soirée qu'il a rejointe : cette notification existe déjà, mais elle ne peut pas être reçue par quelqu'un qui n'a jamais eu l'occasion de s'abonner. Confirmation concrète que le taux d'adoption mesure une absence d'occasion, pas un désintérêt.
+
 **Proposition.** Proposer l'activation une fois, au moment utile (après création ou participation à une soirée), en énonçant ce qui sera reçu, et remonter le choix par type avant l'abonnement plutôt qu'après. Si l'adoption ne dépasse pas 40 % sous deux mois, le gel devient défendable, mais il ne l'est pas tant que personne n'a eu l'occasion d'accepter.
 
 | Coût | Délai | Gain attendu |
@@ -77,7 +103,7 @@ Deux conclusions structurent tout le reste : **la fiabilité n'est pas le sujet*
 
 ### R4 : Boucle de satisfaction continue
 
-**Constat.** Aucun dispositif ne mesure la satisfaction dans la durée. Le questionnaire en préparation donnera une photographie ponctuelle, pas une tendance.
+**Constat.** Aucun dispositif ne mesure la satisfaction dans la durée. Le questionnaire (§ 2 bis) donne une photographie ponctuelle, pas une tendance.
 
 **Proposition.** Une question unique affichée après le tirage (« cette soirée s'est-elle bien passée ? », trois niveaux), stockée sans donnée nominative, agrégée par mois. Complétée par le canal « Signaler un problème » déjà livré, elle transforme le retour utilisateur en flux plutôt qu'en campagne.
 
@@ -90,6 +116,8 @@ Deux conclusions structurent tout le reste : **la fiabilité n'est pas le sujet*
 ### R5 : Encourager la récurrence
 
 **Constat.** 19 soirées en trois mois et demi pour 17 inscrits : l'application est utilisée par événement, pas par habitude. C'est cohérent avec l'usage, mais la V1.4 prévue (sélection manuelle, flamme de régularité) parie sur la récurrence sans qu'aucune mesure ne l'éclaire.
+
+**Confirmation qualitative (§ 2 bis).** 5 des 7 réponses reçues répondent « rien de particulier, je l'utilise quand j'en ai besoin » à cette même question. Cela ne condamne pas la piste, mais confirme la prudence de la proposition : ne pas investir avant d'avoir mesuré autre chose qu'une satisfaction déclarée.
 
 **Proposition.** Attendre les données de R1 et les réponses à la question « qu'est-ce qui te ferait revenir plus souvent ? » avant d'engager le développement. Si le pari est confirmé, la piste la moins coûteuse est la soirée récurrente (« refaire une soirée avec le même groupe » en un clic, à partir d'une soirée passée) plutôt qu'un mécanisme de gamification complet.
 
@@ -111,6 +139,18 @@ Deux conclusions structurent tout le reste : **la fiabilité n'est pas le sujet*
 
 **Priorité 4.**
 
+### R7 : Corriger deux irritants remontés par le questionnaire
+
+**Constat.** Le texte libre du questionnaire a fait remonter deux frictions absentes des mesures quantitatives, détaillées au § 2 bis. D'abord, un répondant doit se reconnecter à chaque ouverture du lien de soirée depuis le navigateur intégré de Snapchat, symptôme distinct de l'anomalie #67 et consigné en fiche #71. Ensuite, un autre signale que le profil public affiche le nombre de films proposés par un utilisateur, jamais lesquels, ce que confirme le code (`UserStatsResponse.MoviesProposed` est un entier, sans détail).
+
+**Proposition.** Détecter les navigateurs intégrés connus par leur user-agent et afficher un bandeau invitant à ouvrir le lien dans le navigateur système. Lister les films proposés sur le profil public, à la place ou en complément du simple total.
+
+| Coût | Délai | Gain attendu |
+|------|-------|--------------|
+| **1 j** (0,5 j par irritant) | Une itération | Deux frictions concrètes levées, remontées indépendamment par deux répondants différents |
+
+**Priorité 4.** Indépendante des autres recommandations, à traiter quand une itération a de la place libre.
+
 ## 4. Priorisation
 
 | Rang | Recommandation | Coût | Nature du gain |
@@ -121,8 +161,9 @@ Deux conclusions structurent tout le reste : **la fiabilité n'est pas le sujet*
 | 3 | R4, Boucle de satisfaction | 1 à 2 j | Détection des irritants invisibles |
 | 4 | R5, Récurrence | 2 j (option courte) | Fréquence d'usage, sous condition de mesure |
 | 4 | R6, Supervision en IaC | 1 à 2 j | Robustesse de l'exploitation |
+| 4 | R7, Deux irritants du questionnaire | 1 j | Frictions concrètes levées |
 
-**Total : 7,5 à 11 jours**, séquençables en trois itérations. Aucune ne demande de refonte, toutes s'appuient sur l'existant, c'est la condition pour qu'elles soient réalisables sur un projet mené par une seule personne.
+**Total : 8,5 à 12 jours**, séquençables en trois itérations, R7 rejoignant le même dernier lot que R5 et R6. Aucune ne demande de refonte, toutes s'appuient sur l'existant, c'est la condition pour qu'elles soient réalisables sur un projet mené par une seule personne.
 
 L'ordre n'est pas seulement une file d'attente : R1 conditionne l'évaluation de R2, R3 et R5. Engager R5 avant R1 reviendrait à développer une semaine de fonctionnalités sur une hypothèse invérifiable, exactement ce que ces recommandations cherchent à éviter.
 
@@ -130,4 +171,4 @@ L'ordre n'est pas seulement une file d'attente : R1 conditionne l'évaluation de
 
 La fiabilité et la performance ne figurent pas dans cette liste, et c'est un choix : avec 0,026 % d'erreurs serveur, un p95 à 207 ms et une disponibilité sous surveillance active, elles ne sont pas le facteur limitant de l'attractivité. Y investir maintenant serait optimiser ce qui fonctionne déjà.
 
-Les retours qualitatifs, une fois collectés, pourront faire émerger des irritants absents de cette analyse, un parcours mal compris ou une attente non satisfaite ne laissent aucune trace dans les données d'usage. La liste sera alors révisée.
+Les retours qualitatifs, encore partiels (§ 2 bis), ont déjà fait émerger deux irritants absents des données d'usage (R7) et une nuance sur R2 qu'aucune mesure de production n'aurait révélée : un parcours mal compris ou une attente non satisfaite ne laisse aucune trace dans les indicateurs quantitatifs. La liste sera réexaminée si d'autres réponses arrivent avant la remise du dossier.
