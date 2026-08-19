@@ -185,7 +185,7 @@ flowchart LR
 
 Chaque sonde s'exécute depuis l'Europe, les États-Unis et l'Asie-Pacifique, avec un délai d'expiration de dix secondes. Interroger plusieurs régions évite de confondre une panne réelle avec un incident réseau local.
 
-![Les trois sondes de disponibilité et leur périodicité](captures/06-sondes.png)
+![Les trois sondes de disponibilité et les régions depuis lesquelles elles interrogent le service](captures/06-sondes.png)
 
 La distinction entre les deux sondes de l'API est le point central du dispositif. `GET /health` répond sans solliciter aucune dépendance : il détecte un service mort ou une révision qui ne démarre pas. `GET /health/ready` exécute un ping de la base avec un délai maximal de trois secondes et renvoie **503** si elle est injoignable : il détecte le cas (invisible pour la première sonde) où l'API répond parfaitement mais ne peut servir aucune donnée. La réponse porte également la **version déployée**, ce qui permet de vérifier à tout instant ce qui tourne réellement en production :
 
@@ -474,7 +474,7 @@ Le processus décrit au §3 s'applique de la même manière qu'à une anomalie s
 
 Ces deux cas se complètent : le premier montre le pipeline **corrigeant** une anomalie parvenue jusqu'aux utilisateurs, le second le montre **empêchant** un défaut de les atteindre, une même chaîne mobilisée à deux moments du cycle de vie. Ils donnent ensemble la mesure de ce que le déploiement continu change. Le **délai** d'abord : le correctif atteint la production dès la fusion, sans fenêtre de livraison à attendre. La **non-régression** ensuite, puisqu'un correctif ne peut pas en introduire un autre sans que les 578 tests unitaires, les six parcours de bout en bout et les audits de qualité ne le signalent, y compris dans l'urgence. La **réversibilité** enfin, qui rend l'arbitrage « corriger ou revenir en arrière » du §3.4 réellement praticable, un retour arrière rétablissant la révision précédente en quelques minutes sans reconstruction.
 
-![Exécution du pipeline sur le correctif : portes franchies et déploiement](captures/03-pipeline-correctif.png)
+![Exécution du pipeline sur la branche de suivi du correctif #67 : les treize travaux franchis, jusqu'au déploiement](captures/03-pipeline-correctif.png)
 
 ---
 
@@ -583,6 +583,8 @@ Les entrées sont classées par catégories (*ajouté*, *modifié*, *corrigé*, 
 | 1.1.0 | 25/05/2026 | Application installable, notifications système à cinq déclencheurs, séries, bandes-annonces et plateformes, sélecteur d'avatar |
 | 1.0.0 | 19/05/2026 | Première version de production : comptes, soirée avec lien de partage et code QR, propositions, votes, marque « déjà vu », roue, temps réel, bilingue, thèmes, back-end ASP.NET Core, limitation de débit et en-têtes de sécurité |
 | 0.1.0 | 27/02/2026 | Prototype : création de soirée, proposition de films, vote, roue de tirage |
+
+Les dates ci-dessus sont celles de la mise en production effective, c'est-à-dire du commit déployé. Elles ne coïncident pas avec la date de création des étiquettes pour les versions antérieures à la 1.3.1 : le versionnage sémantique a été formalisé le 8 juillet 2026, et les six versions déjà livrées à cette date ont été étiquetées rétroactivement ce jour-là, chaque étiquette étant posée sur le commit réellement déployé à l'époque. Depuis la 1.3.1, l'étiquette est posée au moment de la publication. La distinction est visible sur le dépôt et méritait d'être dite plutôt que laissée à l'interprétation.
 
 ![Publications du dépôt : sept versions étiquetées](captures/04-releases.png)
 
