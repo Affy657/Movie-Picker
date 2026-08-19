@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { eventCountdown } from '@/shared/utils/eventCountdown';
+import { eventScheduledStartUtcMs } from '@/shared/utils/eventScheduled';
 
-const START = Date.parse('2026-08-19T19:00:00Z');
+const START = eventScheduledStartUtcMs({ date: '2026-08-19', time: '19:00' })!;
 
 describe('eventCountdown', () => {
   it('renvoie null si la date ou l’heure manque', () => {

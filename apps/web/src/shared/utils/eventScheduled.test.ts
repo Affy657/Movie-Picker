@@ -7,10 +7,19 @@ import {
 } from '@/shared/utils/eventScheduled';
 
 describe('eventScheduled', () => {
-  it('eventScheduledStartUtcMs parse en UTC', () => {
+  it('eventScheduledStartUtcMs convertit depuis Europe/Paris (hiver, UTC+1)', () => {
     expect(eventScheduledStartUtcMs({ date: '2030-01-15', time: '18:30' })).toBe(
-      Date.parse('2030-01-15T18:30:00Z')
+      Date.parse('2030-01-15T17:30:00Z')
     );
+  });
+
+  it('eventScheduledStartUtcMs convertit depuis Europe/Paris (été, UTC+2)', () => {
+    expect(eventScheduledStartUtcMs({ date: '2030-06-01', time: '20:00' })).toBe(
+      Date.parse('2030-06-01T18:00:00Z')
+    );
+  });
+
+  it('eventScheduledStartUtcMs : heure invalide', () => {
     expect(eventScheduledStartUtcMs({ date: '2030-06-01', time: 'not-a-time' })).toBeNull();
   });
 

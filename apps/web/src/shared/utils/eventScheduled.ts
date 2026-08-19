@@ -1,6 +1,32 @@
+const EVENT_TIMEZONE = 'Europe/Paris';
+
+function timeZoneOffsetMs(utcMs: number, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).formatToParts(new Date(utcMs));
+  const get = (type: string) => Number(parts.find((p) => p.type === type)?.value);
+  const asUtc = Date.UTC(
+    get('year'),
+    get('month') - 1,
+    get('day'),
+    get('hour'),
+    get('minute'),
+    get('second')
+  );
+  return asUtc - utcMs;
+}
+
 export function eventScheduledStartUtcMs(event: { date: string; time: string }): number | null {
-  const ms = Date.parse(`${event.date}T${event.time}:00Z`);
-  return Number.isNaN(ms) ? null : ms;
+  const guessMs = Date.parse(`${event.date}T${event.time}:00Z`);
+  if (Number.isNaN(guessMs)) return null;
+  return guessMs - timeZoneOffsetMs(guessMs, EVENT_TIMEZONE);
 }
 
 export function formatEventStartInUserTimezone(

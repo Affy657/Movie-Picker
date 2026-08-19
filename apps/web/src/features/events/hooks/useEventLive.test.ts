@@ -91,14 +91,13 @@ describe('useEventLive — passage à l’heure de début', () => {
   });
 
   it('force un re-render au moment du créneau (polling plus rapide ensuite)', () => {
-    const start = new Date('2035-12-01T21:00:00.000Z').getTime();
-    vi.setSystemTime(start - 5_000);
-
     const event = {
       isFinished: false,
       date: '2035-12-01',
       time: '21:00',
     } as EventData;
+    const start = eventScheduledStartUtcMs(event)!;
+    vi.setSystemTime(start - 5_000);
 
     const { result } = renderHook(() => useEventLive(event, { moviesQueryEnabled: true }));
 
