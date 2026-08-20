@@ -2,7 +2,7 @@
 
 > Grille officielle : [`../referentiel/bloc-04-maintenir-application-mco.md`](../referentiel/bloc-04-maintenir-application-mco.md) | Suivi : [`../suivi-rncp.md`](../suivi-rncp.md)
 
-**État : 🟡 dossier rédigé, preuves à joindre.** Le livrable est [`dossier-bloc-4.md`](dossier-bloc-4.md), couvrant les 8 éléments, y compris les 7 premières réponses au questionnaire intégrées au § 6. Restent : les sept captures d'écran de `captures/`, l'éventuelle mise à jour du § 6 si d'autres réponses arrivent, puis l'export PDF sous le plafond de 20 pages.
+**État : 🟢 dossier rédigé, preuves jointes.** Le livrable est [`dossier-bloc-4.md`](dossier-bloc-4.md), couvrant les 8 éléments, y compris les 7 réponses au questionnaire intégrées au § 6. Les sept captures d'écran sont en place dans `captures/`. Reste : l'export PDF sous le plafond de 20 pages.
 
 ## Attendus du jury
 
