@@ -101,12 +101,15 @@ public sealed class UserDocumentMapperMappingTests
         Assert.Equal(string.Empty, user.AvatarId);
         Assert.Equal(AccentColor.Default, user.AccentColor);
         Assert.Equal(RatingScale.Five, user.RatingScale);
-        Assert.True(user.NotifyOnParticipantJoined);
-        Assert.True(user.NotifyEventReminder);
-        Assert.True(user.NotifyOnMovieAdded);
-        Assert.True(user.NotifyOnMoviePicked);
-        Assert.True(user.NotifyOnEventDeleted);
-        Assert.True(user.NotifyOnNewFollower);
+        Assert.True(user.NotifiesOn(UserNotificationType.ParticipantJoined));
+        Assert.True(user.NotifiesOn(UserNotificationType.EventReminder1h));
+        Assert.True(user.NotifiesOn(UserNotificationType.EventReminder24h));
+        Assert.True(user.NotifiesOn(UserNotificationType.MovieAdded));
+        Assert.True(user.NotifiesOn(UserNotificationType.MoviePicked));
+        Assert.True(user.NotifiesOn(UserNotificationType.EventDeleted));
+        Assert.True(user.NotifiesOn(UserNotificationType.NewFollower));
+        Assert.True(user.NotifiesOn(UserNotificationType.EventInvitation));
+        Assert.True(user.NotifiesOn(UserNotificationType.EventPending));
     }
 
     [Fact]
@@ -133,8 +136,8 @@ public sealed class UserDocumentMapperMappingTests
         var user = UserDocumentMapper.ToDomain(doc);
 
         Assert.False(user.IsProfilePublic);
-        Assert.False(user.NotifyOnParticipantJoined);
-        Assert.False(user.NotifyOnNewFollower);
+        Assert.False(user.NotifiesOn(UserNotificationType.ParticipantJoined));
+        Assert.False(user.NotifiesOn(UserNotificationType.NewFollower));
     }
 
     [Fact]

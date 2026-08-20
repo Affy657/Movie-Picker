@@ -12,6 +12,8 @@ public sealed class InviteUserHandler : IInviteUserHandler
     private readonly IFollowRepository _follows;
     private readonly IUserRepository _users;
     private readonly IUserNotificationRepository _notifications;
+    private readonly IPushSubscriptionRepository _pushSubscriptions;
+    private readonly IPushNotificationSender _pushSender;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly TimeProvider _clock;
 
@@ -21,6 +23,8 @@ public sealed class InviteUserHandler : IInviteUserHandler
         IFollowRepository follows,
         IUserRepository users,
         IUserNotificationRepository notifications,
+        IPushSubscriptionRepository pushSubscriptions,
+        IPushNotificationSender pushSender,
         ICurrentUserAccessor currentUserAccessor,
         TimeProvider clock)
     {
@@ -29,6 +33,8 @@ public sealed class InviteUserHandler : IInviteUserHandler
         _follows = follows;
         _users = users;
         _notifications = notifications;
+        _pushSubscriptions = pushSubscriptions;
+        _pushSender = pushSender;
         _currentUserAccessor = currentUserAccessor;
         _clock = clock;
     }
@@ -63,6 +69,9 @@ public sealed class InviteUserHandler : IInviteUserHandler
 
         var actor = await _users.GetByIdAsync(currentUserId, ct);
 
+        // L'invitation reste toujours créée en in-app (c'est le mécanisme même de l'invitation,
+        // pas une simple notification informative) : la désactiver couperait la fonctionnalité.
+        // Seul l'envoi du push est gaté par la préférence de l'invité.
         await _notifications.AddAsync(new UserNotification
         {
             UserId = targetUserId,
@@ -76,6 +85,20 @@ public sealed class InviteUserHandler : IInviteUserHandler
             IsRead = false,
             CreatedAt = _clock.GetUtcNow()
         }, ct);
+
+        var target = await _users.GetByIdAsync(targetUserId, ct);
+        if (target is not null && target.NotifiesOn(UserNotificationType.EventInvitation))
+        {
+            var subs = await _pushSubscriptions.ListByUserIdAsync(targetUserId, ct);
+            var message = new PushMessage(
+                Title: "Invitation reçue ! 💌",
+                Body: $"{actor?.DisplayName} vous invite à rejoindre {evt.Title}",
+                Tag: $"invite-{evt.Id}",
+                Url: $"/e/{evt.Slug}"
+            );
+            foreach (var sub in subs)
+                await _pushSender.SendAsync(sub, message, ct);
+        }
 
         return new InviteUserResponse { Message = "Invitation envoyée." };
     }

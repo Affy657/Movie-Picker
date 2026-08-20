@@ -80,7 +80,7 @@ describe('notificationsApi', () => {
   });
 
   it('fetchNotificationPreferences reads the preferences endpoint', async () => {
-    const prefs = { notifyOnMovieAdded: true };
+    const prefs = { preferences: [{ type: 'movieadded' as const, enabled: true }] };
     mockFetchApi.mockResolvedValue(prefs);
 
     await expect(fetchNotificationPreferences()).resolves.toBe(prefs);
@@ -88,15 +88,15 @@ describe('notificationsApi', () => {
   });
 
   it('patchNotificationPreferences sends the patch body', async () => {
-    const updated = { notifyOnMovieAdded: false };
+    const updated = { preferences: [{ type: 'movieadded' as const, enabled: false }] };
     mockFetchApi.mockResolvedValue(updated);
 
-    await expect(patchNotificationPreferences({ notifyOnMovieAdded: false })).resolves.toBe(
-      updated
-    );
+    await expect(
+      patchNotificationPreferences([{ type: 'movieadded', enabled: false }])
+    ).resolves.toBe(updated);
     expect(mockFetchApi).toHaveBeenCalledWith('/notifications/preferences', {
       method: 'PATCH',
-      body: JSON.stringify({ notifyOnMovieAdded: false }),
+      body: JSON.stringify({ preferences: [{ type: 'movieadded', enabled: false }] }),
     });
   });
 });

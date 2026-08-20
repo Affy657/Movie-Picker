@@ -18,6 +18,8 @@ public sealed class InviteUserHandlerTests
     private readonly Mock<IFollowRepository> _follows = new();
     private readonly Mock<IUserRepository> _users = new();
     private readonly Mock<IUserNotificationRepository> _notifications = new();
+    private readonly Mock<IPushSubscriptionRepository> _pushSubs = new();
+    private readonly Mock<IPushNotificationSender> _pushSender = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly InviteUserHandler _sut;
 
@@ -26,7 +28,7 @@ public sealed class InviteUserHandlerTests
         _currentUser.Setup(c => c.GetUserId()).Returns(HostId);
         _sut = new InviteUserHandler(
             _events.Object, _participants.Object, _follows.Object, _users.Object,
-            _notifications.Object, _currentUser.Object, TimeProvider.System);
+            _notifications.Object, _pushSubs.Object, _pushSender.Object, _currentUser.Object, TimeProvider.System);
     }
 
     private static Event Evt(DateTimeOffset? closedAt = null) =>
@@ -118,5 +120,54 @@ public sealed class InviteUserHandlerTests
         _notifications.Verify(n => n.AddAsync(
             It.Is<UserNotification>(x => x.UserId == TargetId && x.Type == UserNotificationType.EventInvitation && x.EventId == "evt1"),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TargetNotifiable_SendsPush()
+    {
+        SetupEvent(Evt());
+        _follows.Setup(f => f.IsFollowingAsync(HostId, TargetId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _participants.Setup(p => p.FindByEventAndUserIdAsync("evt1", TargetId, It.IsAny<CancellationToken>())).ReturnsAsync((Participant?)null);
+        _notifications.Setup(n => n.ExistsAsync(TargetId, UserNotificationType.EventInvitation, "evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        _users.Setup(u => u.GetByIdAsync(HostId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = HostId, Handle = "host", DisplayName = "Host" });
+        _users.Setup(u => u.GetByIdAsync(TargetId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = TargetId, Handle = "target" });
+        _pushSubs.Setup(p => p.ListByUserIdAsync(TargetId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new PushSubscription { UserId = TargetId, Endpoint = "https://push/x" }]);
+
+        await _sut.HandleAsync("evt1", Request());
+
+        _pushSender.Verify(
+            s => s.SendAsync(It.Is<PushSubscription>(x => x.UserId == TargetId), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TargetOptedOut_SkipsPush()
+    {
+        SetupEvent(Evt());
+        _follows.Setup(f => f.IsFollowingAsync(HostId, TargetId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _participants.Setup(p => p.FindByEventAndUserIdAsync("evt1", TargetId, It.IsAny<CancellationToken>())).ReturnsAsync((Participant?)null);
+        _notifications.Setup(n => n.ExistsAsync(TargetId, UserNotificationType.EventInvitation, "evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        _users.Setup(u => u.GetByIdAsync(HostId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = HostId, Handle = "host", DisplayName = "Host" });
+        _users.Setup(u => u.GetByIdAsync(TargetId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User
+            {
+                Id = TargetId,
+                Handle = "target",
+                NotificationPreferences = new Dictionary<UserNotificationType, bool>
+                {
+                    [UserNotificationType.EventInvitation] = false
+                }
+            });
+
+        await _sut.HandleAsync("evt1", Request());
+
+        _pushSender.Verify(s => s.SendAsync(It.IsAny<PushSubscription>(), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()), Times.Never);
+        _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

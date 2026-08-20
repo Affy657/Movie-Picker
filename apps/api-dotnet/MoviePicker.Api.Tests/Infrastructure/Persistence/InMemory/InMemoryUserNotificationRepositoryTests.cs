@@ -99,4 +99,30 @@ public sealed class InMemoryUserNotificationRepositoryTests
         Assert.Empty(await _repo.ListByUserIdAsync("u1"));
         Assert.Single(await _repo.ListByUserIdAsync("u2"));
     }
+
+    [Fact]
+    public async Task MarkReadAsync_OnlyMarksMatchingUserAndId()
+    {
+        await _repo.AddAsync(Mk(userId: "u1"));
+        var notificationId = (await _repo.ListByUserIdAsync("u1")).Single().Id;
+
+        await _repo.MarkReadAsync("someone-else", notificationId);
+        Assert.Equal(1, await _repo.GetUnreadCountAsync("u1"));
+
+        await _repo.MarkReadAsync("u1", notificationId);
+        Assert.Equal(0, await _repo.GetUnreadCountAsync("u1"));
+    }
+
+    [Fact]
+    public async Task DeleteByEventIdAsync_RemovesOnlyNotificationsForThatEvent()
+    {
+        await _repo.AddAsync(Mk(userId: "u1", eventId: "evt1"));
+        await _repo.AddAsync(Mk(userId: "u2", eventId: "evt1"));
+        await _repo.AddAsync(Mk(userId: "u1", eventId: "evt2"));
+        await _repo.AddAsync(Mk(userId: "u1", eventId: null));
+
+        Assert.Equal(2L, await _repo.DeleteByEventIdAsync("evt1"));
+        Assert.Equal(2, (await _repo.ListByUserIdAsync("u1")).Count);
+        Assert.Empty(await _repo.ListByUserIdAsync("u2"));
+    }
 }

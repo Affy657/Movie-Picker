@@ -116,7 +116,7 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
                 return;
 
             var users = await _userRepository.ListByIdsAsync(userIds, ct);
-            var notifiableIds = users.Where(u => u.NotifyOnMoviePicked).Select(u => u.Id).ToHashSet();
+            var notifiableIds = users.Where(u => u.NotifiesOn(UserNotificationType.MoviePicked)).Select(u => u.Id).ToHashSet();
             if (notifiableIds.Count == 0)
                 return;
 
@@ -124,8 +124,8 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
             if (subs.Count > 0)
             {
                 var message = new PushMessage(
-                    Title: "🎡 Film tiré au sort !",
-                    Body: $"Ce soir : « {winnerTitle} » pour « {evt.Title} »",
+                    Title: "C'est décidé !",
+                    Body: $"Le verdict est tombé pour {evt.Title} : ce sera {winnerTitle} !",
                     Tag: $"wheel-{evt.Id}",
                     Url: $"/e/{evt.Slug}"
                 );

@@ -70,6 +70,19 @@
   padding: 0.3rem 0;
 }
 
+.prefLabelWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.prefIcon {
+  flex-shrink: 0;
+  display: flex;
+  color: var(--color-text-muted);
+}
+
 .prefLabel {
   font-size: var(--font-size-base);
 }

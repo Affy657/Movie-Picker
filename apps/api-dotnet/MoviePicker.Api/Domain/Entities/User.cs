@@ -39,12 +39,8 @@ public sealed record User
     public AccentColor AccentColor { get; init; } = AccentColor.Default;
     public RatingScale RatingScale { get; init; } = RatingScale.Five;
     public string AvatarId { get; init; } = string.Empty;
-    public bool NotifyOnParticipantJoined { get; init; } = true;
-    public bool NotifyEventReminder { get; init; } = true;
-    public bool NotifyOnMovieAdded { get; init; } = true;
-    public bool NotifyOnMoviePicked { get; init; } = true;
-    public bool NotifyOnEventDeleted { get; init; } = true;
-    public bool NotifyOnNewFollower { get; init; } = true;
+    public IReadOnlyDictionary<UserNotificationType, bool> NotificationPreferences { get; init; }
+        = NotificationPreferenceDefaults.All();
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
 }

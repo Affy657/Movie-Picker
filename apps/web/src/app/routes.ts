@@ -9,6 +9,7 @@ export const ROUTES = {
   resetPassword: '/reset',
   account: '/settings',
   myEvents: '/my-events',
+  notifications: '/notifications',
 
   eventDetailPattern: `${EVENT_PREFIX}/:slug`,
 

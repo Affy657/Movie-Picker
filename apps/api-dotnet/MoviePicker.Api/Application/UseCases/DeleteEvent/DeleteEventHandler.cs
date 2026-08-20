@@ -70,6 +70,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         var removedSeenMarks = await _seenMarkRepository.DeleteByEventIdAsync(evt.Id, ct);
         var removedMovies = await _movieRepository.DeleteByEventIdAsync(evt.Id, ct);
         var removedParticipants = await _participantRepository.DeleteByEventIdAsync(evt.Id, ct);
+        await _notifications.DeleteByEventIdAsync(evt.Id, ct);
 
         var deleted = await _eventRepository.DeleteAsync(evt.Id, ct);
         if (!deleted)
@@ -110,7 +111,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
                 return;
 
             var users = await _userRepository.ListByIdsAsync(userIds, ct);
-            var notifiableIds = users.Where(u => u.NotifyOnEventDeleted).Select(u => u.Id).ToHashSet();
+            var notifiableIds = users.Where(u => u.NotifiesOn(UserNotificationType.EventDeleted)).Select(u => u.Id).ToHashSet();
             if (notifiableIds.Count == 0)
                 return;
 
@@ -118,8 +119,8 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
             if (subs.Count > 0)
             {
                 var message = new PushMessage(
-                    Title: "❌ Soirée annulée",
-                    Body: $"« {evt.Title} » a été annulée.",
+                    Title: "Soirée annulée 😢",
+                    Body: $"{evt.Title} a été annulée.",
                     Tag: $"event-deleted-{evt.Id}",
                     Url: "/"
                 );

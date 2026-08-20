@@ -108,7 +108,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
                 return;
 
             var host = await _userRepository.GetByIdAsync(evt.CreatorUserId, ct);
-            if (host is null || !host.NotifyOnParticipantJoined)
+            if (host is null || !host.NotifiesOn(UserNotificationType.ParticipantJoined))
                 return;
 
             var joiner = await _userRepository.GetByIdAsync(joinerUserId, ct);
@@ -117,8 +117,8 @@ public sealed class JoinEventHandler : IJoinEventHandler
             if (subscriptions.Count > 0)
             {
                 var message = new PushMessage(
-                    Title: $"🎉 Nouvelle inscription",
-                    Body: $"{joinerPseudo} a rejoint « {evt.Title} »",
+                    Title: "Ça s'anime !",
+                    Body: $"{joinerPseudo} vient de rejoindre {evt.Title} ! 🎉",
                     Tag: $"join-{evt.Id}",
                     Url: $"/e/{evt.Slug}"
                 );

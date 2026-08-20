@@ -94,13 +94,15 @@ public sealed class NotificationsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetInbox(
         [FromServices] IGetInboxHandler handler,
+        [FromQuery] int? limit,
+        [FromQuery] int? offset,
         CancellationToken ct)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
             return Unauthorized();
 
-        var result = await handler.HandleAsync(userId, ct);
+        var result = await handler.HandleAsync(userId, limit, offset, ct);
         return Ok(result);
     }
 
@@ -117,6 +119,23 @@ public sealed class NotificationsController : ControllerBase
             return Unauthorized();
 
         await handler.HandleAsync(userId, ct);
+        return NoContent();
+    }
+
+    [HttpPost("inbox/{id}/read")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> MarkOneRead(
+        string id,
+        [FromServices] IMarkOneReadHandler handler,
+        CancellationToken ct)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        await handler.HandleAsync(userId, id, ct);
         return NoContent();
     }
 }

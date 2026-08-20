@@ -16,11 +16,12 @@ public sealed class InMemoryUserNotificationRepository : IUserNotificationReposi
     }
 
     public Task<IReadOnlyList<UserNotification>> ListByUserIdAsync(
-        string userId, int limit = 50, CancellationToken ct = default)
+        string userId, int limit = 50, int offset = 0, CancellationToken ct = default)
     {
         IReadOnlyList<UserNotification> result = _store.Values
             .Where(n => n.UserId == userId)
             .OrderByDescending(n => n.CreatedAt)
+            .Skip(offset)
             .Take(limit)
             .ToList();
         return Task.FromResult(result);
@@ -39,6 +40,13 @@ public sealed class InMemoryUserNotificationRepository : IUserNotificationReposi
             if (_store.TryGetValue(key, out var n) && n.UserId == userId && !n.IsRead)
                 _store[key] = n with { IsRead = true };
         }
+        return Task.CompletedTask;
+    }
+
+    public Task MarkReadAsync(string userId, string notificationId, CancellationToken ct = default)
+    {
+        if (_store.TryGetValue(notificationId, out var n) && n.UserId == userId && !n.IsRead)
+            _store[notificationId] = n with { IsRead = true };
         return Task.CompletedTask;
     }
 
@@ -63,6 +71,18 @@ public sealed class InMemoryUserNotificationRepository : IUserNotificationReposi
         foreach (var key in _store.Keys.ToList())
         {
             if (_store.TryGetValue(key, out var n) && n.UserId == userId && _store.TryRemove(key, out _))
+                count++;
+        }
+
+        return Task.FromResult(count);
+    }
+
+    public Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default)
+    {
+        long count = 0;
+        foreach (var key in _store.Keys.ToList())
+        {
+            if (_store.TryGetValue(key, out var n) && n.EventId == eventId && _store.TryRemove(key, out _))
                 count++;
         }
 

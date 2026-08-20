@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.Notifications;
@@ -19,12 +20,13 @@ public sealed class GetNotificationPreferencesHandler : IGetNotificationPreferen
 
         return new NotificationPreferencesResponse
         {
-            NotifyOnParticipantJoined = user.NotifyOnParticipantJoined,
-            NotifyEventReminder = user.NotifyEventReminder,
-            NotifyOnMovieAdded = user.NotifyOnMovieAdded,
-            NotifyOnMoviePicked = user.NotifyOnMoviePicked,
-            NotifyOnEventDeleted = user.NotifyOnEventDeleted,
-            NotifyOnNewFollower = user.NotifyOnNewFollower
+            Preferences = Enum.GetValues<UserNotificationType>()
+                .Select(type => new NotificationTypePreference
+                {
+                    Type = type.ToString().ToLowerInvariant(),
+                    Enabled = user.NotifiesOn(type)
+                })
+                .ToList()
         };
     }
 }

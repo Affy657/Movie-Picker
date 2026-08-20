@@ -35,11 +35,12 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
     }
 
     public async Task<IReadOnlyList<UserNotification>> ListByUserIdAsync(
-        string userId, int limit = 50, CancellationToken ct = default)
+        string userId, int limit = 50, int offset = 0, CancellationToken ct = default)
     {
         var docs = await _collection
             .Find(x => x.UserId == userId)
             .SortByDescending(x => x.CreatedAt)
+            .Skip(offset)
             .Limit(limit)
             .ToListAsync(ct);
         return docs.ConvertAll(d => new UserNotification
@@ -73,6 +74,13 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
             x => x.UserId == userId && !x.IsRead, update, cancellationToken: ct);
     }
 
+    public async Task MarkReadAsync(string userId, string notificationId, CancellationToken ct = default)
+    {
+        var update = Builders<UserNotificationDocument>.Update.Set(x => x.IsRead, true);
+        await _collection.UpdateOneAsync(
+            x => x.Id == notificationId && x.UserId == userId, update, cancellationToken: ct);
+    }
+
     public async Task<bool> ExistsAsync(string userId, UserNotificationType type, string eventId, CancellationToken ct = default)
     {
         var count = await _collection.CountDocumentsAsync(
@@ -95,6 +103,14 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
         if (string.IsNullOrWhiteSpace(userId))
             return 0;
         var res = await _collection.DeleteManyAsync(x => x.UserId == userId, ct);
+        return res.IsAcknowledged ? res.DeletedCount : 0;
+    }
+
+    public async Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(eventId))
+            return 0;
+        var res = await _collection.DeleteManyAsync(x => x.EventId == eventId, ct);
         return res.IsAcknowledged ? res.DeletedCount : 0;
     }
 }
