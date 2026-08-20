@@ -2,9 +2,11 @@
 
 > Grille officielle : [`../referentiel/bloc-04-maintenir-application-mco.md`](../referentiel/bloc-04-maintenir-application-mco.md) | Suivi : [`../suivi-rncp.md`](../suivi-rncp.md)
 
-**État : 🟢 dossier rédigé, relu, preuves jointes.** Le livrable est [`dossier-bloc-4.md`](dossier-bloc-4.md), couvrant les 8 éléments, y compris les 7 réponses au questionnaire intégrées au § 6. Les sept captures d'écran sont en place dans `captures/`. Volume : 9 900 mots, 4 100 mm de contenu mesuré, calibré pour tenir sous le plafond de 20 pages.
+**État : 🟢 dossier rédigé, relu, recentré sur la grille.** Le livrable est [`dossier-bloc-4.md`](dossier-bloc-4.md), couvrant les 8 éléments imposés. Volume : 8 400 mots, **18 pages** en rendu A4 dense (corps 10,5 pt, marges 18/16 mm, tableaux 9 pt, captures plafonnées à 75 mm de haut), 20 pages en mise en page confortable (11 pt, marges 20 mm).
 
-Reste avant remise : reprendre la capture `01-dashboard-supervision.png` sur une fenêtre de 7 ou 30 jours (elle est actuellement prise sur « la dernière heure », le panneau des erreurs 5xx affichant « aucune donnée »), confirmer que la redirection `contact@movie-picker.fr` délivre bien chez OVH, et exporter en PDF.
+Trois captures sont retenues, chacune adossée à une compétence éliminatoire : `06-sondes.png` et `07-alerte-email.png` pour C4.1.2, `02-issue-67.png` pour C4.2.1. Les quatre autres ont été retirées du dossier, leur contenu étant intégralement décrit en texte : `01-dashboard-supervision.png` (à reprendre sur 7 ou 30 jours si tu veux la réintégrer, elle est actuellement prise sur « la dernière heure » avec un panneau vide), `03-pipeline-correctif.png`, `04-releases.png` et `05-lien-support.png`. Elles restent dans `captures/`.
+
+Reste avant remise : confirmer que la redirection `contact@movie-picker.fr` délivre bien chez OVH, et exporter en PDF en vérifiant le compte de pages.
 
 ## Attendus du jury
 
