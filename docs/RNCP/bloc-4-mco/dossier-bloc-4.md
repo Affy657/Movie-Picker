@@ -229,7 +229,7 @@ Le signalement se fait par **courriel** vers l'adresse d'exploitation, déclaré
 
 La chaîne complète a été **vérifiée de bout en bout** : une sonde temporaire pointant vers une adresse inexistante a été mise en service, l'alerte s'est déclenchée après deux points de contrôle en échec, et le courriel est parvenu à l'exploitant avec sa conduite à tenir. La sonde et la politique de test ont ensuite été supprimées. Le dispositif n'est donc pas seulement configuré : il est prouvé.
 
-![Notification d'alerte reçue lors de la vérification de la chaîne de signalement](captures/07-alerte-email.png)
+![Courriel reçu lors de la vérification de la chaîne de signalement : politique de test, sonde volontairement en échec, conduite à tenir, et clôture automatique après retour à la normale](captures/07-alerte-email.png)
 
 Le projet étant exploité par une seule personne, il n'y a ni astreinte ni escalade à plusieurs niveaux : le signalement va directement à l'exploitant, qui est aussi le développeur. Une escalade formelle serait ici une complication sans destinataire.
 
@@ -556,7 +556,7 @@ Le journal repose sur trois supports complémentaires, tous versionnés ou publi
 | **Étiquettes Git** | Une étiquette annotée `vX.Y.Z` par version publiée, posée sur le commit exact déployé |
 | **Publications GitHub** | Notes de version lisibles, adossées à l'étiquette correspondante |
 
-La version est également **lisible depuis l'application elle-même** : affichée en pied de page, et exposée par la sonde d'aptitude à servir sous forme de l'identifiant du commit déployé. Un utilisateur qui signale une anomalie transmet donc sa version sans avoir à la chercher (le message pré-rempli du canal de signalement l'embarque automatiquement) et l'exploitant peut vérifier à tout instant ce qui tourne réellement en production.
+La version est également **lisible depuis l'application elle-même** : affichée en pied de page, où la capture du §8.1 la montre en `v1.3.2`, et exposée par la sonde d'aptitude à servir sous forme de l'identifiant du commit déployé. Un utilisateur qui signale une anomalie transmet donc sa version sans avoir à la chercher (le message pré-rempli du canal de signalement l'embarque automatiquement) et l'exploitant peut vérifier à tout instant ce qui tourne réellement en production.
 
 ### 7.2 Politique de versionnage
 
