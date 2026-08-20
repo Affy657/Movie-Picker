@@ -2,7 +2,9 @@
 
 > Grille officielle : [`../referentiel/bloc-04-maintenir-application-mco.md`](../referentiel/bloc-04-maintenir-application-mco.md) | Suivi : [`../suivi-rncp.md`](../suivi-rncp.md)
 
-**État : 🟢 dossier rédigé, preuves jointes.** Le livrable est [`dossier-bloc-4.md`](dossier-bloc-4.md), couvrant les 8 éléments, y compris les 7 réponses au questionnaire intégrées au § 6. Les sept captures d'écran sont en place dans `captures/`. Reste : l'export PDF sous le plafond de 20 pages.
+**État : 🟢 dossier rédigé, relu, preuves jointes.** Le livrable est [`dossier-bloc-4.md`](dossier-bloc-4.md), couvrant les 8 éléments, y compris les 7 réponses au questionnaire intégrées au § 6. Les sept captures d'écran sont en place dans `captures/`. Volume : 9 900 mots, 4 100 mm de contenu mesuré, calibré pour tenir sous le plafond de 20 pages.
+
+Reste avant remise : reprendre la capture `01-dashboard-supervision.png` sur une fenêtre de 7 ou 30 jours (elle est actuellement prise sur « la dernière heure », le panneau des erreurs 5xx affichant « aucune donnée »), confirmer que la redirection `contact@movie-picker.fr` délivre bien chez OVH, et exporter en PDF.
 
 ## Attendus du jury
 
