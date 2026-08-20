@@ -81,7 +81,7 @@ La cadence mensuelle groupée répond à une contrainte de projet mené par une 
 
 **Aucune fusion n'est automatique.** La proposition est automatisée, la décision ne l'est pas : une montée de version peut franchir toutes les portes tout en modifiant un comportement non couvert par les tests. Les demandes ouvertes par Dependabot s'exécutent d'ailleurs sans accès aux secrets du dépôt, ce qui désactive l'analyse de qualité externe et impose une relecture humaine. Chaque montée est jugée sur quatre points : la **nature du changement** (une majeure impose la lecture des notes de version), l'**exploitabilité réelle** de la vulnérabilité dans cette application, la **surface d'impact** et sa couverture de tests, et la **vérification** par les portes du pipeline, bloquantes, si bien qu'une régression détectable ne peut pas atteindre la production.
 
-Le processus a été éprouvé le 25 juillet 2026 sur l'avis **`GHSA-qwww-vcr4-c8h2`** : `react-router` 7.18.1 est vulnérable et le déploiement se bloque de lui-même. L'avis ne concerne qu'un mode que cette SPA n'utilise pas, mais le correctif impose une montée majeure et un changement de paquet. Elle a été effectuée plutôt que neutralisée par une exception, l'interface utilisée étant stable et la couverture de tests forte : après réécriture des imports sur 51 fichiers et passage complet des portes, l'avis disparaît et le déploiement reprend, en moins d'une heure.
+Le processus a été éprouvé le 25 juillet 2026 sur l'avis **`GHSA-qwww-vcr4-c8h2`** : `react-router` 7.18.1 est vulnérable et le déploiement se bloque de lui-même. L'avis ne concerne qu'un mode que cette SPA n'utilise pas, mais le correctif impose une montée majeure et un changement de paquet. Elle a été effectuée plutôt que neutralisée par une exception, l'interface utilisée étant stable et la couverture de tests forte : après réécriture des imports sur 50 fichiers et passage complet des portes, l'avis disparaît et le déploiement reprend, en moins d'une heure.
 
 ---
 
@@ -108,7 +108,7 @@ Les cibles ne sont pas des valeurs théoriques : elles ont été calées sur tre
 
 | Indicateur | Mesure de référence | Cible |
 |------------|--------------------|-------|
-| Disponibilité de l'API et du front | 100 % depuis la mise en service des sondes | **≥ 99,5 %** par mois |
+| Disponibilité de l'API et du front | **100 %** sur les quatre semaines écoulées depuis la mise en service des sondes, le 25 juillet | **≥ 99,5 %** par mois |
 | Latence p50 / p95 / p99 | **72 ms** / **207 ms** / 284 ms | < 200 ms / **< 500 ms** / < 1 s |
 | Démarrage à froid | 3,8 s | toléré (arbitrage de coût explicite) |
 | Ping de la base depuis l'API | **7 ms** | < 100 ms |
@@ -135,7 +135,7 @@ Chaque sonde s'exécute depuis l'Europe, l'Amérique du Nord et l'Asie-Pacifique
 
 ![Les trois sondes de disponibilité et les régions depuis lesquelles elles interrogent le service](captures/06-sondes.png)
 
-La distinction entre les deux sondes de l'API est le point central du dispositif. `GET /health` répond sans solliciter aucune dépendance : il détecte un service mort ou une révision qui ne démarre pas. `GET /health/ready` ping la base avec un délai maximal de trois secondes et renvoie **503** si elle est injoignable : il détecte le cas, invisible pour la première sonde, où l'API répond parfaitement mais ne peut servir aucune donnée. Sa réponse porte aussi la **version déployée**. La même vérification est rejouée **en fin de déploiement** : une révision dont la base est injoignable fait échouer sa propre mise en production.
+La distinction entre les deux sondes de l'API est le point central du dispositif. `GET /health` répond sans solliciter aucune dépendance : il détecte un service mort ou une révision qui ne démarre pas. `GET /health/ready` interroge la base avec un délai maximal de trois secondes et renvoie **503** si elle est injoignable : il détecte le cas, invisible pour la première sonde, où l'API répond parfaitement mais ne peut servir aucune donnée. Sa réponse porte aussi la **version déployée**. La même vérification est rejouée **en fin de déploiement** : une révision dont la base est injoignable fait échouer sa propre mise en production.
 
 **b. Sondes passives, métriques d'exécution.** Collectées en continu par la plateforme d'hébergement, sans instrumentation applicative : requêtes par classe de code, distribution des latences, nombre d'instances actives. Leur finalité est de détecter les **dégradations progressives** que des sondes binaires « en ligne / hors ligne » ne verraient jamais.
 
@@ -156,7 +156,9 @@ Cinq politiques sont configurées, dont celle des erreurs serveur qui porte deux
 | **Erreurs serveur anormales** | Part des réponses en 5xx | > 20 % pendant 10 min | Erreur | Capte la panne généralisée, quel que soit le volume |
 | **Latence dégradée** | p95 des requêtes | > 800 ms pendant 10 min | Avertissement | Référence : 207 ms, marge pour les démarrages à froid |
 
-L'ordre des deux conditions sur les erreurs serveur résulte d'un calcul de volume. Celle en **volume absolu** travaille au quotidien : elle détecte le cas le plus courant, une partie des routes applicatives qui tombe alors que le service continue de répondre. Celle en **part du trafic** couvre la panne généralisée, mais les sondes la diluent mécaniquement, ajoutant une trentaine d'appels toujours en 200 par fenêtre de dix minutes contre trois à quatre requêtes utilisateur : une défaillance limitée aux routes applicatives ne franchirait pas les 20 %, ce que la condition en volume rattrape. Chaque politique embarque sa **conduite à tenir**, affichée dans la notification.
+Cible et seuil d'alerte ne se confondent pas, ce que la latence illustre : la cible de 500 ms au p95 est un critère de qualité, suivie au tableau de bord et arbitrée à froid, tandis que l'alerte à 800 ms ne signale qu'une dégradation franche appelant une action immédiate. Une alerte calée sur la cible transformerait chaque démarrage à froid en incident.
+
+Le doublement de la condition sur les erreurs serveur résulte d'un calcul de volume. Celle en **volume absolu** travaille au quotidien : elle détecte le cas le plus courant, une partie des routes applicatives qui tombe alors que le service continue de répondre. Celle en **part du trafic** couvre la panne généralisée, mais les sondes la diluent mécaniquement, ajoutant une trentaine d'appels toujours en 200 par fenêtre de dix minutes contre trois à quatre requêtes utilisateur : une défaillance limitée aux routes applicatives ne franchirait pas les 20 %, ce que la condition en volume rattrape. Chaque politique embarque sa **conduite à tenir**, affichée dans la notification.
 
 ### 2.5 Modalité de signalement
 
@@ -172,7 +174,7 @@ Le projet étant exploité par une seule personne, il n'y a ni astreinte ni esca
 
 Un tableau de bord d'exploitation regroupe les six vues suivies au quotidien : disponibilité de l'API, disponibilité du front, latences p50 et p95 avec le seuil d'alerte matérialisé, requêtes par classe de code, erreurs serveur avec son seuil de volume, et nombre d'instances actives. C'est l'écran consulté en premier lors d'un signalement, avant d'ouvrir l'incident lui-même.
 
-Le dispositif entier tient dans les offres gratuites, les sondes ajoutant environ 138 000 requêtes mensuelles à l'API, soit 7 % du quota offert. Deux limites sont assumées : la rétention des erreurs est d'environ trente jours, ce qui impose d'archiver hors outil les incidents à conserver, et la base de données n'est supervisée que dans sa joignabilité depuis l'API.
+Le dispositif entier tient dans les offres gratuites, les sondes ajoutant environ 138 000 requêtes mensuelles à l'API, soit 7 % du quota offert. Effet de bord favorable : cette interrogation permanente maintient une instance tiède aux heures d'usage, ce qui raréfie pour l'utilisateur les démarrages à froid que le §2.2 tolère. Deux limites sont assumées : la rétention des erreurs est d'environ trente jours, ce qui impose d'archiver hors outil les incidents à conserver, et la base de données n'est supervisée que dans sa joignabilité depuis l'API.
 
 ---
 
@@ -284,7 +286,7 @@ L'anomalie traitée ici relève du cas le plus difficile pour un dispositif de m
 
 Le diagnostic a mis au jour **deux causes cumulées**, l'une expliquant le déclenchement, l'autre aggravant silencieusement la situation depuis l'origine.
 
-**Cause racine 1 : clé de chiffrement expirée.** Le cookie d'authentification est chiffré par le mécanisme de protection des données du framework. La clé provenait d'un secret généré **sans durée explicite**, donc avec la valeur par défaut de **90 jours**. Créée lors du déploiement de l'authentification, le 7 avril 2026, elle a expiré à la mi-juillet. Le trousseau ne contenant qu'une seule clé, chaque instance s'est mise à en régénérer une **éphémère**, stockée dans un dossier temporaire effacé au démarrage. Le service étant configuré sans instance minimale, le démarrage à froid suivant rendait le cookie émis par l'instance précédente indéchiffrable : 401, puis déconnexion. Cette cause explique les trois observations : le lien avec la fermeture du navigateur (le temps d'inactivité laisse le service redescendre à zéro), l'atteinte de tous les supports (le défaut est côté serveur), et l'apparition sans déploiement (c'est le temps qui déclenche, pas le code).
+**Cause racine 1 : clé de chiffrement expirée.** Le cookie d'authentification est chiffré par le mécanisme de protection des données du framework. La clé provenait d'un secret généré **sans durée explicite**, donc avec la valeur par défaut de **90 jours**. Créée lors du déploiement de l'authentification, le 7 avril 2026, elle est arrivée à expiration début juillet. Une clé expirée reste capable de déchiffrer les cookies déjà émis mais ne peut plus en chiffrer de nouveaux : seules les sessions ouvertes après cette date se sont mises à casser, d'où des signalements qui ne remontent qu'à la mi-juillet. Le trousseau ne contenant qu'une seule clé, chaque instance s'est mise à en régénérer une **éphémère**, stockée dans un dossier temporaire effacé au démarrage. Le service étant configuré sans instance minimale, le démarrage à froid suivant rendait le cookie émis par l'instance précédente indéchiffrable : 401, puis déconnexion. Cette cause explique les trois observations : le lien avec la fermeture du navigateur (le temps d'inactivité laisse le service redescendre à zéro), l'atteinte de tous les supports (le défaut est côté serveur), et l'apparition sans déploiement (c'est le temps qui déclenche, pas le code).
 
 **Cause racine 2 : configurateur jamais exécuté.** Le composant chargé de configurer le cookie était enregistré sur une interface que la fabrique d'options **ne consomme pas**. Il ne s'exécutait donc jamais : le cookie portait le nom par défaut du framework, le magasin de sessions était inactif, les réglages de sécurité inopérants, et un 401 renvoyait une redirection vers une route de connexion inexistante dans cette API. Présent depuis l'origine sans jamais se manifester, ce défaut n'a été révélé que par l'investigation de la première cause. Vérification du diagnostic : un test isolé de l'injection de dépendances échoue avec l'ancien enregistrement.
 
@@ -315,9 +317,9 @@ Un correctif emprunte le même chemin qu'une évolution : **aucune voie rapide, 
 | Étape | Contrôles | Bloquant |
 |-------|-----------|:--------:|
 | **Poussée sur une branche** | Analyse statique, formatage, compilation, recherche de secrets | ✅ |
-| **Tests** | Unitaires front (578) et API, intégration, **6 parcours de bout en bout** | ✅ |
+| **Tests** | Unitaires front (643) et API (820), intégration (101), **6 parcours de bout en bout** | ✅ |
 | **Qualité et sécurité** | Porte de qualité sur le code nouveau, vulnérabilités des dépendances et de l'image, audit performance et accessibilité | ✅ |
-| **Fusion** | Relecture du correctif, hors portes automatiques | n/a |
+| **Fusion** | Auto-relecture du diff complet, les portes automatiques compensant l'absence d'un second relecteur | n/a |
 | **Construction et publication** | Image conteneur analysée puis publiée, référencée par empreinte | ✅ |
 | **Déploiement** | Mise en ligne de la révision (API), invalidation du cache (front) | n/a |
 | **Contrôle post-déploiement** | Appel des deux sondes de santé : répond-il, et peut-il servir ? | ✅ |
@@ -356,7 +358,7 @@ Le 25 juillet 2026, l'ajout du lien « Signaler un problème » fait échouer **
 
 ### 6.1 Méthode
 
-Les recommandations qui suivent partent de mesures. Cinq sources ont été croisées : la **base de production** (agrégats sans donnée personnelle), les **métriques d'exploitation** sur trente jours, l'**analytique produit** sur quatre-vingt-dix jours, les **audits automatisés** de chaque déploiement, et les **retours utilisateurs**. Ce dernier volet est le plus récent : le questionnaire, en ligne depuis le 18 août 2026, a recueilli sept réponses sur dix-sept comptes. L'échantillon est réduit et orienté vers les utilisateurs les plus engagés, cinq répondants sur sept utilisant l'application à chaque soirée : ses tendances nuancent les mesures quantitatives sans les fonder.
+Les recommandations qui suivent partent de mesures. Cinq sources ont été croisées : la **base de production** (agrégats sans donnée personnelle), les **métriques d'exploitation** sur trente jours, l'**analytique produit** sur quatre-vingt-dix jours, limitée aux pages vues et aux web vitals faute d'événements métier, les **audits automatisés** de chaque déploiement, et les **retours utilisateurs**. Ce dernier volet est le plus récent : le questionnaire, en ligne depuis le 18 août 2026, a recueilli sept réponses sur dix-sept comptes. L'échantillon est réduit et orienté vers les utilisateurs les plus engagés, cinq répondants sur sept utilisant l'application à chaque soirée : ses tendances nuancent les mesures quantitatives sans les fonder.
 
 ### 6.2 Indicateurs observés
 
@@ -381,7 +383,7 @@ Deux conclusions structurent le reste. **Ni la fiabilité ni l'appréciation gé
 
 **R1. Instrumenter le parcours cœur.** *Priorité 1, prérequis des autres.* Aucun événement n'est capturé sur la création d'une soirée, l'ajout d'un film, le vote ou le tirage. Les chiffres du §6.2, reconstitués depuis la base, décrivent des résultats et jamais des abandons : ils ne permettent pas de répondre à « combien d'invités ouvrent le lien sans jamais voter ? ». *Proposition* : capturer six événements et construire l'entonnoir correspondant, l'infrastructure analytique existant déjà. *Coût **0,5 à 1 jour**, délai immédiat. Gain : mesure des abandons étape par étape, les décisions suivantes cessent d'être des paris.*
 
-**R2. Réconcilier le vote et son effet sur le tirage.** *Priorité 2.* **56 % des participations n'ont produit aucun vote.** La cause tient moins à l'intensité du vote qu'à son absence d'effet : la roue accepte un tirage strictement aléatoire et un tirage pondéré par les votes, le premier est la valeur par défaut, et **aucune des 19 soirées n'a activé le second**. Le produit demande un effort dont il n'utilise pas le résultat. Le questionnaire le confirme : un répondant relance manuellement la roue jusqu'à un résultat qui convienne à tous, alors que le réglage est connu de cinq répondants sur sept. La barrière n'est pas sa découvrabilité mais son statut par défaut. Trois répondants sur sept souhaiteraient même que le vote élimine les films rejetés, piste notée faute d'échantillon suffisant. *Proposition*, en trois volets : faire du mode pondéré la valeur par défaut, l'hôte restant libre de revenir à l'aléatoire ; afficher sur la roue la part réelle de chaque film ; signaler à l'hôte la proportion de participants n'ayant pas voté. *Coût **2 à 3 jours**, délai d'une itération après R1. Gain : le vote retrouve la fonction qui justifie sa présence, faire émerger un consensus, promesse même du produit. Objectifs : la moitié des soirées tirées en mode pondéré, participations sans vote sous 25 %.*
+**R2. Réconcilier le vote et son effet sur le tirage.** *Priorité 2.* **56 % des participations n'ont produit aucun vote.** La cause tient moins à l'intensité du vote qu'à son absence d'effet : la roue accepte un tirage strictement aléatoire et un tirage pondéré par les votes, le premier est la valeur par défaut, et **aucune des 19 soirées n'a activé le second**. Le produit demande un effort dont il n'utilise pas le résultat. Le questionnaire le confirme : un répondant relance manuellement la roue jusqu'à un résultat qui convienne à tous, alors que le réglage est connu de cinq répondants sur sept. La barrière n'est pas sa découvrabilité mais son statut par défaut. Trois répondants sur sept souhaiteraient même que le vote élimine les films rejetés, piste notée mais non retenue, l'échantillon étant trop réduit pour l'engager. *Proposition*, en trois volets : faire du mode pondéré la valeur par défaut, l'hôte restant libre de revenir à l'aléatoire ; afficher sur la roue la part réelle de chaque film ; signaler à l'hôte la proportion de participants n'ayant pas voté. *Coût **2 à 3 jours**, délai d'une itération après R1. Gain : le vote retrouve la fonction qui justifie sa présence, faire émerger un consensus, promesse même du produit. Objectifs : la moitié des soirées tirées en mode pondéré, participations sans vote sous 25 %.*
 
 **R3. Rendre les notifications atteignables avant de trancher leur sort.** *Priorité 3.* Trois abonnements actifs pour dix-sept inscrits, alors que la 1.1 a livré les clés de signature, cinq déclencheurs et une interface de préférences. Le code explique le chiffre : l'activation n'est **jamais proposée dans le parcours**, elle n'existe que sous la forme d'un interrupteur que rien ne signale dans « Mon compte », et le réglage par type ne s'affiche qu'une fois l'utilisateur abonné. Le taux ne mesure donc pas un refus mais une absence de sollicitation, ce que le questionnaire confirme : quatre répondants sur sept ignoraient que l'activation était possible, et l'un d'eux demande spontanément à être averti quand un film est ajouté à une soirée qu'il a rejointe, notification qui existe déjà mais reste invisible. *Proposition* : proposer l'activation une fois, juste après avoir créé ou rejoint une soirée ; rendre le choix par type visible avant l'abonnement. *Coût **1 jour**, délai d'une itération. Gain : une décision fondée. Si l'adoption ne dépasse pas 40 % en deux mois, le gel devient défendable ; aujourd'hui il condamnerait une fonctionnalité que personne n'a eu l'occasion d'accepter.*
 
@@ -438,11 +440,13 @@ Versionnage sémantique, interprété ainsi pour une application web : **majeur*
 | 1.0.0 | 19/05/2026 | Premier périmètre de production consolidé, déployé progressivement depuis avril : comptes, soirée partageable, propositions, votes, roue, temps réel |
 | 0.1.0 | 27/02/2026 | Prototype : création de soirée, proposition de films, vote, roue de tirage |
 
-Les dates sont celles de la mise en production effective. Le versionnage ayant été formalisé le 8 juillet 2026, les six versions déjà livrées ont été étiquetées rétroactivement, chaque étiquette sur le commit réellement déployé à l'époque ; depuis la 1.3.1 elle est posée au moment de la publication.
+Les dates sont celles de la mise en production effective. Le versionnage ayant été formalisé le 8 juillet 2026, les cinq versions antérieures ont été étiquetées ce jour-là, chaque étiquette sur le commit réellement déployé à l'époque ; depuis la 1.3.1, publiée le même jour, l'étiquette est posée au moment de la mise en production.
 
 ### 7.4 Exemplaire : la note de version 1.3.2
 
 Version d'exploitation : elle met l'application sous supervision active et ouvre un canal de signalement aux utilisateurs.
+
+![Note de version 1.3.2 publiée, adossée à son étiquette et au commit déployé, la liste des sept versions apparaissant à gauche](captures/04-releases.png)
 
 **Ajouté**
 - Lien « Signaler un problème » en pied de page, ouvrant un message pré-rempli avec la page, la version et le navigateur.
@@ -455,6 +459,9 @@ Version d'exploitation : elle met l'application sous supervision active et ouvre
 - Portes de qualité du pipeline rendues bloquantes (qualité du code, performance, parcours de bout en bout).
 - Performance et accessibilité : accessibilité 100, décalage de mise en page éliminé, poids du paquet réduit de 83 %.
 - Duplication de code réduite : actions sur un film, fermeture des modales, pied de carte partagé.
+
+**Retiré**
+- Barre de couleur du thème sur la page de détail d'une soirée.
 
 **Corrigé**
 - **Sessions non persistées en production (fiche #67)** : les utilisateurs étaient déconnectés à la fermeture du navigateur, sans changement de code. Clés de chiffrement désormais persistées en base et partagées entre instances, configurateur de cookie enregistré sur l'interface effectivement consommée, durée de session unifiée à trente jours glissants, test de non-régression ajouté. Une reconnexion unique a été nécessaire au déploiement.
