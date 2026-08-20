@@ -31,6 +31,11 @@ public sealed class CreateEventHandler : ICreateEventHandler
         if (string.IsNullOrWhiteSpace(creatorUserId))
             throw new UnauthorizedException("La création d’une soirée nécessite un compte connecté.");
 
+        if (!DateOnly.TryParse(request.Date, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _))
+            throw new BadRequestException("date doit être au format YYYY-MM-DD.");
+        if (!TimeOnly.TryParse(request.Time, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _))
+            throw new BadRequestException("time doit être au format HH:mm.");
+
         var slug = SlugGenerator.NewSlug();
         var hostToken = SlugGenerator.NewHostToken();
         var now = DateTimeOffset.UtcNow;

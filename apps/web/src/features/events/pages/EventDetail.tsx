@@ -19,6 +19,8 @@ import EventMoviesSection from '@/features/events/pages/event-detail/EventMovies
 import { friendlyEventError } from '@/features/events/pages/event-detail/friendlyEventError';
 import { APP_DOCUMENT_TITLE, pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import EventStartReminderBanner from '@/features/events/components/EventStartReminderBanner';
+import EventPendingBanner from '@/features/events/components/EventPendingBanner';
+import EventClosedWithoutMovieState from '@/features/events/pages/event-detail/EventClosedWithoutMovieState';
 import PageLayout from '@/shared/components/PageLayout';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useEventDetailPage } from '@/features/events/hooks/useEventDetailPage';
@@ -30,22 +32,18 @@ import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
 import InviteModal from '@/features/events/components/InviteModal';
 import EventWheelActions from '@/features/events/components/EventWheelActions';
 import { useEventWheel } from '@/features/events/hooks/useEventWheel';
-import { getEventLivePhase } from '@/features/events/hooks/useEventLive';
 import { eventCountdown, type EventCountdown } from '@/shared/utils/eventCountdown';
-import type { MyEventLifecycle } from '@/shared/types/event';
+import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
 
 type ConfirmState =
-  { kind: 'remove'; participantId: string; pseudo: string } | { kind: 'leave' } | null;
+  | { kind: 'remove'; participantId: string; pseudo: string }
+  | { kind: 'leave' }
+  | { kind: 'closeWithoutMovie' }
+  | null;
 
 const SUCCESS_AUTO_DISMISS_MS = 3500;
 
 const COUNTDOWN_TICK_MS = 60_000;
-
-const LIFECYCLE_BY_PHASE: Record<string, MyEventLifecycle> = {
-  finished: 'finished',
-  upcoming: 'upcoming',
-  active: 'live',
-};
 
 const COUNTDOWN_KEYS = {
   imminent: 'events.detail.countdownImminent',
@@ -224,6 +222,20 @@ export default function EventDetail() {
     );
   }, [slug, participant, removeParticipantMutation, setActionError, setParticipant, navigate, t]);
 
+  const [closeWithoutMovieRequested, setCloseWithoutMovieRequested] = useState(false);
+
+  const confirmCloseWithoutMovie = useCallback(() => {
+    setCloseWithoutMovieRequested(true);
+    wheel.closeEvent();
+  }, [wheel]);
+
+  useEffect(() => {
+    if (closeWithoutMovieRequested && !wheel.loading) {
+      setCloseWithoutMovieRequested(false);
+      setConfirmState(null);
+    }
+  }, [closeWithoutMovieRequested, wheel.loading]);
+
   const confirmDialogContent = useMemo(() => {
     if (!confirmState) return null;
     if (confirmState.kind === 'remove') {
@@ -234,13 +246,21 @@ export default function EventDetail() {
         onConfirm: () => confirmRemove(confirmState.participantId, confirmState.pseudo),
       };
     }
+    if (confirmState.kind === 'closeWithoutMovie') {
+      return {
+        title: t('events.wheel.closeWithoutMovieConfirmTitle'),
+        message: t('events.wheel.closeWithoutMovieConfirmMessage', { title: event?.title ?? '' }),
+        confirmLabel: t('events.wheel.closeWithoutMovieConfirmAction'),
+        onConfirm: confirmCloseWithoutMovie,
+      };
+    }
     return {
       title: t('events.participants.leaveConfirmTitle'),
       message: t('events.participants.leaveConfirm'),
       confirmLabel: t('events.participants.leaveConfirmAction'),
       onConfirm: confirmLeave,
     };
-  }, [confirmState, t, confirmRemove, confirmLeave]);
+  }, [confirmState, t, confirmRemove, confirmLeave, confirmCloseWithoutMovie, event?.title]);
 
   if (!slug) return null;
 
@@ -293,7 +313,7 @@ export default function EventDetail() {
   const participantCount = event.participantCount ?? event.participants?.length ?? 0;
   const moviesCount = moviesQuery.isSuccess ? movies.length : (event.movieCount ?? 0);
   const votesCount = movies.reduce((total, m) => total + m.up + m.down, 0);
-  const lifecycle = LIFECYCLE_BY_PHASE[getEventLivePhase(event, nowMs)] ?? 'upcoming';
+  const lifecycle = normalizeMyEventLifecycle(event.lifecycle);
   const countdown = eventCountdown(event.date, event.time, nowMs);
   const countdownLabel = countdown
     ? t(
@@ -339,8 +359,16 @@ export default function EventDetail() {
           event.isHost && !event.isFinished ? () => setInviteModalOpen(true) : undefined
         }
         onOpenSettings={canConfigure ? () => setSettingsOpen(true) : undefined}
-        wheelActions={showContent ? <EventWheelActions wheel={wheel} /> : null}
+        wheelActions={
+          showContent ? (
+            <EventWheelActions
+              wheel={wheel}
+              onRequestCloseWithoutMovie={() => setConfirmState({ kind: 'closeWithoutMovie' })}
+            />
+          ) : null
+        }
       />
+      {lifecycle === 'pending' && <EventPendingBanner isHost={!!event.isHost} />}
       {canConfigure && (
         <HostEventSettingsPanel
           slug={slug}
@@ -429,6 +457,10 @@ export default function EventDetail() {
             wheel={wheel}
             viewMode={viewMode}
           />
+
+          {event.isFinished && !event.winnerMovie && (
+            <EventClosedWithoutMovieState isHost={!!event.isHost} />
+          )}
         </>
       )}
 
@@ -438,7 +470,7 @@ export default function EventDetail() {
         message={confirmDialogContent?.message ?? ''}
         confirmLabel={confirmDialogContent?.confirmLabel ?? ''}
         confirmVariant="danger"
-        busy={removeParticipantMutation.isPending}
+        busy={confirmState?.kind === 'closeWithoutMovie' ? wheel.loading : removeParticipantMutation.isPending}
         onConfirm={confirmDialogContent?.onConfirm ?? closeConfirm}
         onCancel={closeConfirm}
       />

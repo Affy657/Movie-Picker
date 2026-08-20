@@ -6,15 +6,31 @@ import styles from './EventWheelActions.module.css';
 
 type EventWheelActionsProps = {
   wheel: EventWheelState;
+  onRequestCloseWithoutMovie?: () => void;
 };
 
-export default function EventWheelActions({ wheel }: Readonly<EventWheelActionsProps>) {
+export default function EventWheelActions({
+  wheel,
+  onRequestCloseWithoutMovie,
+}: Readonly<EventWheelActionsProps>) {
   const { t } = useTranslation();
   if (!wheel.canSpin && !wheel.showClose) return null;
 
   const spinLabel = wheel.showRelaunch
     ? t('events.wheel.relaunchButton')
     : t('events.wheel.launchButton');
+
+  const closeLabel = wheel.closeWithoutMovie
+    ? t('events.wheel.closeWithoutMovieButton')
+    : t('events.wheel.closeButton');
+
+  const handleCloseClick = () => {
+    if (wheel.closeWithoutMovie && onRequestCloseWithoutMovie) {
+      onRequestCloseWithoutMovie();
+      return;
+    }
+    wheel.closeEvent();
+  };
 
   return (
     <>
@@ -36,11 +52,11 @@ export default function EventWheelActions({ wheel }: Readonly<EventWheelActionsP
         <button
           type="button"
           className={clsx('btn', styles.close)}
-          onClick={wheel.closeEvent}
+          onClick={handleCloseClick}
           disabled={wheel.loading}
         >
           <Lock size={15} aria-hidden />
-          <span className={styles.closeLabel}>{t('events.wheel.closeButton')}</span>
+          <span className={styles.closeLabel}>{closeLabel}</span>
         </button>
       )}
     </>

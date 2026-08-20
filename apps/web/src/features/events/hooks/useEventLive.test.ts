@@ -19,9 +19,28 @@ const activeEvent = {
 
 const finishedEvent = { isFinished: true, date: '2030-06-01', time: '20:00' } as EventData;
 
+const pendingEvent = {
+  isFinished: false,
+  lifecycle: 'pending',
+  date: '2030-06-01',
+  time: '20:00',
+} as EventData;
+
 describe('useEventLive / polling helpers', () => {
   it('getEventLivePhase : finished si isFinished', () => {
     expect(getEventLivePhase(finishedEvent, 0)).toBe('finished');
+  });
+
+  it('getEventLivePhase : pending si lifecycle pending, même après le créneau', () => {
+    const t0 = eventScheduledStartUtcMs({ date: '2030-06-01', time: '20:00' })!;
+    expect(getEventLivePhase(pendingEvent, t0 + 60_000)).toBe('pending');
+  });
+
+  it('event query : poll ralenti (intervalle upcoming) pour une soirée en suspens', () => {
+    const t0 = eventScheduledStartUtcMs({ date: '2030-06-01', time: '20:00' })!;
+    expect(getLivePollingRefetchIntervalForEventQuery(pendingEvent, t0 + 60_000)).toBe(
+      EVENT_LIVE_POLL_INTERVAL_UPCOMING_MS
+    );
   });
 
   it('getEventLivePhase : upcoming avant le créneau', () => {

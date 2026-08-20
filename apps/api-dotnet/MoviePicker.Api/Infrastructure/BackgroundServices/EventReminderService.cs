@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Infrastructure.BackgroundServices;
@@ -64,20 +65,25 @@ public sealed class EventReminderService : BackgroundService
 
         var now = _clock.GetUtcNow();
         var upcomingEvents = await events.ListOpenEventsAsync(ct);
+        var eventsWithStart = upcomingEvents
+            .Select(e => (Event: e, HasStart: EventSchedule.TryGetStartUtc(e.Date, e.Time, out var startAt), StartUtc: startAt))
+            .Where(x => x.HasStart)
+            .Select(x => (x.Event, x.StartUtc))
+            .ToList();
 
         await ProcessWindowAsync(
-            upcomingEvents, now,
+            eventsWithStart, now,
             new ReminderWindow(Window1hMin, Window1hMax, UserNotificationType.EventReminder1h, "🎬 Soirée dans 1 heure"),
             services, ct);
 
         await ProcessWindowAsync(
-            upcomingEvents, now,
+            eventsWithStart, now,
             new ReminderWindow(Window24hMin, Window24hMax, UserNotificationType.EventReminder24h, "🎬 Soirée demain"),
             services, ct);
     }
 
     private async Task ProcessWindowAsync(
-        IReadOnlyList<Event> allOpenEvents,
+        IReadOnlyList<(Event Event, DateTimeOffset StartUtc)> eventsWithStart,
         DateTimeOffset now,
         ReminderWindow window,
         ReminderServices services,
@@ -86,16 +92,10 @@ public sealed class EventReminderService : BackgroundService
         var windowFrom = now + window.Min;
         var windowTo = now + window.Max;
 
-        var eventsInWindow = allOpenEvents.Where(e =>
-        {
-            if (!DateTimeOffset.TryParse(
-                    $"{e.Date}T{e.Time}:00Z",
-                    System.Globalization.CultureInfo.InvariantCulture,
-                    System.Globalization.DateTimeStyles.AssumeUniversal,
-                    out var startAt))
-                return false;
-            return startAt >= windowFrom && startAt <= windowTo;
-        }).ToList();
+        var eventsInWindow = eventsWithStart
+            .Where(x => x.StartUtc >= windowFrom && x.StartUtc <= windowTo)
+            .Select(x => x.Event)
+            .ToList();
 
         if (eventsInWindow.Count == 0)
             return;

@@ -17,19 +17,32 @@ public sealed record Event
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
 
-    public bool IsFinished(DateTimeOffset utcNow)
+    public EventLifecycle Lifecycle(DateTimeOffset utcNow)
     {
         if (ClosedAt.HasValue)
-            return true;
+            return EventLifecycle.Finished;
 
-        if (Config?.EndDate is { } endDate)
-            return utcNow >= endDate;
+        if (!EventSchedule.TryGetStartUtc(Date, Time, out var startUtc))
+            return EventLifecycle.Upcoming;
 
-        if (DateTimeOffset.TryParse($"{Date}T{Time}:00Z", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal, out var end))
-            return utcNow >= end;
+        var pendingAt = startUtc + EventSchedule.PendingDelay;
+        var autoCloseAt = pendingAt + EventSchedule.AutoCloseDelay;
 
-        return false;
+        if (utcNow >= autoCloseAt)
+            return EventLifecycle.Finished;
+
+        var hasWinner = !string.IsNullOrEmpty(WinnerMovieId);
+
+        if (utcNow >= pendingAt)
+            return hasWinner ? EventLifecycle.Finished : EventLifecycle.Pending;
+
+        if (utcNow >= startUtc)
+            return EventLifecycle.Live;
+
+        return EventLifecycle.Upcoming;
     }
+
+    public bool IsFinished(DateTimeOffset utcNow) => Lifecycle(utcNow) == EventLifecycle.Finished;
 }
 
 public sealed record EventConfig
@@ -40,7 +53,6 @@ public sealed record EventConfig
 
     public string? Theme { get; init; }
     public int? ThemeColor { get; init; }
-    public DateTimeOffset? EndDate { get; init; }
     public int? MaxProposalsPerParticipant { get; init; }
 
     public int? MaxParticipants { get; init; }

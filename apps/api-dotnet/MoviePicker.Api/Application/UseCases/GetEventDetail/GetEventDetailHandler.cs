@@ -1,6 +1,7 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.Posters;
+using MoviePicker.Api.Application.UseCases.ListMyEvents;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -42,7 +43,10 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         var token = _hostTokenAccessor.GetHostToken();
         var currentUserId = _currentUserAccessor.GetUserId();
         var isHost = EventHost.IsHost(evt, token, currentUserId);
-        var isFinished = evt.IsFinished(DateTimeOffset.UtcNow);
+        var now = DateTimeOffset.UtcNow;
+        var eventLifecycle = evt.Lifecycle(now);
+        var isFinished = eventLifecycle == EventLifecycle.Finished;
+        var lifecycle = MyEventListLifecycle.FromLifecycle(eventLifecycle);
 
         var winner = await ResolveWinnerAsync(evt, ct);
 
@@ -89,6 +93,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             UpdatedAt = evt.UpdatedAt,
             IsHost = isHost,
             IsFinished = isFinished,
+            Lifecycle = lifecycle,
             WinnerMovie = winner,
             MyParticipant = myParticipant,
             ParticipantCount = participants.Count,

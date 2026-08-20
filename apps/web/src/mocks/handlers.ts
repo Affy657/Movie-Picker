@@ -14,6 +14,7 @@ export interface MockEventOptions {
   slug: string;
   title?: string;
   isFinished?: boolean;
+  lifecycle?: string;
   winnerMovie?: unknown;
 
   theme?: string | null;
@@ -34,6 +35,7 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
         slug,
         isHost: !!host,
         isFinished: opts.isFinished ?? false,
+        lifecycle: opts.lifecycle ?? (opts.isFinished ? 'finished' : 'live'),
         winnerMovie: opts.winnerMovie ?? null,
         participantCount: 3,
         movieCount: 2,
@@ -44,7 +46,6 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
         ],
         config: {
           theme: opts.theme ?? null,
-          endDate: null,
           maxProposalsPerParticipant: null,
           maxParticipants: null,
           wheelMode: 'strictRandom',

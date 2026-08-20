@@ -85,7 +85,6 @@ export default function CreateEvent() {
         await patchEventConfig(res.slug, null, {
           theme: themeTrimmed,
           themeColor: themeColor ?? undefined,
-          endDate: null,
           maxProposalsPerParticipant: Number.isFinite(maxPropParsed) ? maxPropParsed : 0,
           maxParticipants: Number.isFinite(maxPartParsed) ? maxPartParsed : 0,
           wheelMode: DEFAULT_EVENT_CONFIG.wheelMode,

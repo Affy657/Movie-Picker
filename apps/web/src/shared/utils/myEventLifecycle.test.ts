@@ -9,6 +9,7 @@ describe('myEventLifecycle', () => {
   it('labels lifecycle in French', () => {
     expect(myEventLifecycleLabel('upcoming')).toBe('À venir');
     expect(myEventLifecycleLabel('live')).toBe('En cours');
+    expect(myEventLifecycleLabel('pending')).toBe('En suspens');
     expect(myEventLifecycleLabel('finished')).toBe('Terminée');
   });
 
@@ -20,6 +21,7 @@ describe('myEventLifecycle', () => {
 
   it('isMyEventLifecycle narrows type', () => {
     expect(isMyEventLifecycle('upcoming')).toBe(true);
+    expect(isMyEventLifecycle('pending')).toBe(true);
     expect(isMyEventLifecycle('finished')).toBe(true);
     expect(isMyEventLifecycle('nope')).toBe(false);
   });

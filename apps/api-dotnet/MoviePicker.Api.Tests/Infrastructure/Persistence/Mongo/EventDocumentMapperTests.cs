@@ -72,7 +72,6 @@ public sealed class EventDocumentMapperTests
         var config = new EventConfigDocument
         {
             Theme = "SF",
-            EndDate = new DateTime(2030, 6, 1, 22, 0, 0, DateTimeKind.Utc),
             MaxProposalsPerParticipant = 5
         };
         var doc = new EventDocument
@@ -95,8 +94,6 @@ public sealed class EventDocumentMapperTests
         Assert.NotNull(domain.Config);
         Assert.Equal("SF", domain.Config.Theme);
         Assert.Equal(5, domain.Config.MaxProposalsPerParticipant);
-        Assert.NotNull(domain.Config.EndDate);
-        Assert.Equal(2030, domain.Config.EndDate!.Value.Year);
     }
 
     [Fact]

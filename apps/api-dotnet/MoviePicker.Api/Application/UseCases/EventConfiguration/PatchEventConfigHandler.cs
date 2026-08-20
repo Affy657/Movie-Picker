@@ -69,7 +69,6 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         {
             Theme = theme,
             ThemeColor = ResolveThemeColor(request, current.ThemeColor),
-            EndDate = ResolveEndDate(request, current.EndDate),
             MaxProposalsPerParticipant = ResolveMaxProposals(request, current.MaxProposalsPerParticipant),
             MaxParticipants = await ResolveMaxParticipantsAsync(request, current.MaxParticipants, evt, ct),
             WheelMode = wheelMode,
@@ -92,7 +91,6 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         request.Theme is not null
         || request.ThemeColor.HasValue
         || request.ClearThemeColor == true
-        || request.EndDate is not null
         || request.MaxProposalsPerParticipant.HasValue
         || request.MaxParticipants.HasValue
         || request.WheelMode.HasValue
@@ -109,8 +107,8 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
                 throw new ConflictException("La roue a déjà été lancée : la configuration ne peut plus être modifiée.");
         }
 
-        if (hasDateTimeChange && (evt.ClosedAt.HasValue || !string.IsNullOrEmpty(evt.WinnerMovieId)))
-            throw new ConflictException("La soirée est définitivement clôturée : la date ne peut plus être modifiée.");
+        if (hasDateTimeChange && (evt.IsFinished(DateTimeOffset.UtcNow) || !string.IsNullOrEmpty(evt.WinnerMovieId)))
+            throw new ConflictException("La soirée est terminée : la date ne peut plus être modifiée.");
     }
 
     private static int? ResolveThemeColor(PatchEventConfigRequest request, int? current)
@@ -124,17 +122,6 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         if (hue < 0 || hue > 359)
             throw new BadRequestException("themeColor doit être une teinte entre 0 et 359.");
         return hue;
-    }
-
-    private static DateTimeOffset? ResolveEndDate(PatchEventConfigRequest request, DateTimeOffset? current)
-    {
-        if (request.EndDate is null)
-            return current;
-        if (request.EndDate.Length == 0)
-            return null;
-        if (!DateTimeOffset.TryParse(request.EndDate, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind, out var parsed))
-            throw new BadRequestException("endDate doit être une date ISO 8601 valide ou une chaîne vide pour effacer.");
-        return parsed.ToUniversalTime();
     }
 
     private static int? ResolveMaxProposals(PatchEventConfigRequest request, int? current)

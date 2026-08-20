@@ -30,7 +30,7 @@ internal static class DevelopmentScenarioSeed
     internal const string ScenarioRemoveParticipantsTitle = "Scénario seed — Retirer / quitter (hôte = dev)";
     internal const string ScenarioWheelLaunchedTitle = "Scénario seed — Roue tirée (modifications gelées)";
     internal const string ScenarioPastTitle = "Scénario seed — Soirée passée (archivée)";
-    internal const string ScenarioDeadlineTitle = "Scénario seed — Soirée avec échéance";
+    internal const string ScenarioPendingTitle = "Scénario seed — Soirée en suspens";
     internal const string ScenarioEmptyTitle = "Scénario seed — Soirée vide (fraîche)";
     internal const string ScenarioDeletedTitle = "Scénario seed — Soirée annulée";
 
@@ -52,7 +52,7 @@ internal static class DevelopmentScenarioSeed
             await RunStepAsync(logger, "retrait/quitter", () => TrySeedRemoveParticipantsScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "roue tirée (non close)", () => TrySeedWheelLaunchedNotClosedScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "soirée passée", () => TrySeedPastEventScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
-            await RunStepAsync(logger, "soirée avec échéance", () => TrySeedDeadlineEventScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "soirée en suspens", () => TrySeedPendingEventScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "soirée vide", () => TrySeedEmptyEventScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "soirée annulée", () => TrySeedDeletedEventScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "rappels", () => TrySeedReminderNotificationsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
@@ -658,17 +658,17 @@ internal static class DevelopmentScenarioSeed
         logger.LogInformation("DevelopmentSeed : scénario soirée passée créé (slug={Slug}, lecture seule).", slug);
     }
 
-    private static async Task TrySeedDeadlineEventScenarioAsync(
+    private static async Task TrySeedPendingEventScenarioAsync(
         IServiceProvider sp,
         DevelopmentSeedActors actors,
         ILogger logger,
         CancellationToken ct)
     {
         var events = sp.GetRequiredService<IEventRepository>();
-        var existing = await events.FindByCreatorAndTitleAsync(actors.Bob.Id, ScenarioDeadlineTitle, ct).ConfigureAwait(false);
+        var existing = await events.FindByCreatorAndTitleAsync(actors.Bob.Id, ScenarioPendingTitle, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            logger.LogInformation("DevelopmentSeed : scénario soirée avec échéance déjà présent — ignoré.");
+            logger.LogInformation("DevelopmentSeed : scénario soirée en suspens déjà présent — ignoré.");
             return;
         }
 
@@ -681,8 +681,8 @@ internal static class DevelopmentScenarioSeed
             .HandleAsync(
                 new CreateEventRequest
                 {
-                    Title = ScenarioDeadlineTitle,
-                    Date = FormatDate(utc.AddDays(10)),
+                    Title = ScenarioPendingTitle,
+                    Date = FormatDate(utc.AddDays(1)),
                     Time = "20:00"
                 },
                 actors.Bob.Id,
@@ -700,7 +700,6 @@ internal static class DevelopmentScenarioSeed
             {
                 Theme = "Horreur",
                 ThemeColor = 0,
-                EndDate = utc.AddDays(2),
                 MaxProposalsPerParticipant = 3,
                 MaxParticipants = 6,
                 WheelMode = WheelMode.StrictRandom,
@@ -715,7 +714,20 @@ internal static class DevelopmentScenarioSeed
         await AddMovieAsync(addMovie, slug, 694, "The Shining", "1980", bobPart, actors.Bob.Id, ct).ConfigureAwait(false);
         await AddMovieAsync(addMovie, slug, 539, "Psycho", "1960", joinDev.Participant.Id, actors.Dev.Id, ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : scénario soirée avec échéance créé (slug={Slug}, EndDate +2j).", slug);
+        var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("Soirée en suspens seed introuvable.");
+
+        var startedParis = TimeZoneInfo.ConvertTime(utc.AddHours(-3), EventSchedule.ParisTimeZone);
+        var now = DateTimeOffset.UtcNow;
+        var pending = evt with
+        {
+            Date = startedParis.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            Time = startedParis.ToString("HH:mm", CultureInfo.InvariantCulture),
+            UpdatedAt = now
+        };
+        await events.UpdateAsync(pending, ct).ConfigureAwait(false);
+
+        logger.LogInformation("DevelopmentSeed : scénario soirée en suspens créé (slug={Slug}, début -3h, aucun film choisi).", slug);
     }
 
     private static async Task TrySeedEmptyEventScenarioAsync(

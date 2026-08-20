@@ -6,7 +6,7 @@ namespace MoviePicker.Api.Tests.UseCases.ListMyEvents;
 
 public sealed class MyEventListLifecycleTests
 {
-    private static Event Base(string date = "2030-06-01", string time = "20:00") => new()
+    private static Event Base(string date = "2030-06-01", string time = "20:00", string? winnerMovieId = null) => new()
     {
         Id = "e1",
         Title = "S",
@@ -14,6 +14,7 @@ public sealed class MyEventListLifecycleTests
         Time = time,
         Slug = "s",
         HostToken = "h",
+        WinnerMovieId = winnerMovieId,
         CreatedAt = DateTimeOffset.Parse("2026-01-01T00:00:00Z"),
         UpdatedAt = DateTimeOffset.Parse("2026-01-02T00:00:00Z")
     };
@@ -27,58 +28,52 @@ public sealed class MyEventListLifecycleTests
     }
 
     [Fact]
-    public void Compute_AfterScheduled_WithEndDateInFuture_IsLive()
+    public void Compute_AfterStart_BeforePendingDelay_IsLive()
     {
-        var b = Base();
-        var e = new Event
-        {
-            Id = b.Id,
-            Title = b.Title,
-            Date = b.Date,
-            Time = b.Time,
-            Slug = b.Slug,
-            HostToken = b.HostToken,
-            CreatedAt = b.CreatedAt,
-            UpdatedAt = b.UpdatedAt,
-            Config = new EventConfig { EndDate = DateTimeOffset.Parse("2031-01-01T00:00:00Z") }
-        };
-        var now = DateTimeOffset.Parse("2030-06-01T21:00:00Z");
+        var e = Base();
+        var summerStartUtc = DateTimeOffset.Parse("2030-06-01T18:00:00Z");
+        var now = summerStartUtc.AddHours(1);
         Assert.Equal(MyEventListLifecycle.Live, MyEventListLifecycle.Compute(e, now));
     }
 
     [Fact]
-    public void Compute_AfterScheduled_WithoutConfigEndDate_IsFinishedByDomainTime()
-    {
-        var e = Base();
-        var now = DateTimeOffset.Parse("2030-06-01T21:00:00Z");
-        Assert.Equal(MyEventListLifecycle.Finished, MyEventListLifecycle.Compute(e, now));
-    }
-
-    [Fact]
-    public void Compute_IsFinishedByNextDay_IsFinished()
+    public void Compute_AfterPendingDelay_WithoutWinner_IsPending()
     {
         var e = Base();
         var now = DateTimeOffset.Parse("2030-06-02T00:00:00Z");
+        Assert.Equal(MyEventListLifecycle.Pending, MyEventListLifecycle.Compute(e, now));
+    }
+
+    [Fact]
+    public void Compute_PastAutoCloseDelay_WithoutWinner_IsFinished()
+    {
+        var e = Base();
+        var pendingAt = DateTimeOffset.Parse("2030-06-01T20:00:00Z");
+        var now = pendingAt.AddDays(7).AddMinutes(1);
         Assert.Equal(MyEventListLifecycle.Finished, MyEventListLifecycle.Compute(e, now));
     }
 
     [Fact]
-    public void Compute_WinnerSet_IsFinishedEvenIfDateFuture()
+    public void Compute_WinnerSet_BeforeStart_IsUpcoming()
     {
-        var b = Base("2050-01-01", "20:00");
-        var e = new Event
-        {
-            Id = b.Id,
-            Title = b.Title,
-            Date = b.Date,
-            Time = b.Time,
-            Slug = b.Slug,
-            HostToken = b.HostToken,
-            CreatedAt = b.CreatedAt,
-            UpdatedAt = b.UpdatedAt,
-            WinnerMovieId = "m1"
-        };
+        var e = Base("2050-01-01", "20:00", winnerMovieId: "m1");
         var now = DateTimeOffset.Parse("2030-01-01T12:00:00Z");
+        Assert.Equal(MyEventListLifecycle.Upcoming, MyEventListLifecycle.Compute(e, now));
+    }
+
+    [Fact]
+    public void Compute_WinnerSet_BeforePendingDelay_IsLive()
+    {
+        var e = Base(winnerMovieId: "m1");
+        var now = DateTimeOffset.Parse("2030-06-01T19:00:00Z");
+        Assert.Equal(MyEventListLifecycle.Live, MyEventListLifecycle.Compute(e, now));
+    }
+
+    [Fact]
+    public void Compute_WinnerSet_AfterPendingDelay_IsFinished()
+    {
+        var e = Base(winnerMovieId: "m1");
+        var now = DateTimeOffset.Parse("2030-06-01T20:00:00Z");
         Assert.Equal(MyEventListLifecycle.Finished, MyEventListLifecycle.Compute(e, now));
     }
 
@@ -103,7 +98,7 @@ public sealed class MyEventListLifecycleTests
     }
 
     [Fact]
-    public void Compute_InvalidDateTime_IsFinished()
+    public void Compute_InvalidDateTime_IsUpcoming()
     {
         var b = Base();
         var e = new Event
@@ -118,6 +113,6 @@ public sealed class MyEventListLifecycleTests
             UpdatedAt = b.UpdatedAt
         };
         var now = DateTimeOffset.Parse("2026-01-01T12:00:00Z");
-        Assert.Equal(MyEventListLifecycle.Finished, MyEventListLifecycle.Compute(e, now));
+        Assert.Equal(MyEventListLifecycle.Upcoming, MyEventListLifecycle.Compute(e, now));
     }
 }

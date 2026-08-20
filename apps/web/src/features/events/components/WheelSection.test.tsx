@@ -24,7 +24,6 @@ const baseEvent: EventData = {
   isFinished: false,
   config: {
     theme: null,
-    endDate: null,
     maxProposalsPerParticipant: null,
     maxParticipants: null,
     wheelMode: 'strictRandom',

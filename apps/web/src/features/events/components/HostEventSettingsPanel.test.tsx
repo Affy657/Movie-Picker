@@ -53,7 +53,6 @@ const baseEvent: EventData = {
   isFinished: false,
   config: {
     theme: 'SF',
-    endDate: null,
     maxProposalsPerParticipant: null,
     maxParticipants: null,
     wheelMode: 'strictRandom',
@@ -82,7 +81,6 @@ describe('HostEventSettingsPanel', () => {
         expect(body.allowedReactionIds).toBeUndefined();
         return HttpResponse.json({
           theme: 'SF',
-          endDate: null,
           maxProposalsPerParticipant: null,
           maxParticipants: null,
           wheelMode: 'strictRandom',
@@ -118,7 +116,6 @@ describe('HostEventSettingsPanel', () => {
         seenMax = body.maxParticipants;
         return HttpResponse.json({
           theme: 'SF',
-          endDate: null,
           maxProposalsPerParticipant: null,
           maxParticipants: 8,
           wheelMode: 'strictRandom',

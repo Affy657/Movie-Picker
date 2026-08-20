@@ -329,7 +329,6 @@ export const en: Locale = {
       titleRequired: 'Event name is required.',
       themeLabel: 'Theme / mood',
       themePlaceholder: 'E.g. Horror, Sci-fi, Comedy\u2026',
-      endDateLabel: 'Proposal deadline',
       maxProposalsLabel: 'Max proposals per participant',
       wheelModeLabel: 'Wheel mode',
       saveButton: 'Save',
@@ -357,6 +356,11 @@ export const en: Locale = {
       relaunchButton: 'Spin again',
       spinning: 'Spinning\u2026',
       closeButton: 'Close the event',
+      closeWithoutMovieButton: 'Close without a movie',
+      closeWithoutMovieConfirmTitle: 'Close without picking a movie?',
+      closeWithoutMovieConfirmMessage:
+        'The event "{{title}}" will be closed without a movie. This action is final.',
+      closeWithoutMovieConfirmAction: 'Close without a movie',
       resetButton: 'Cancel draw',
       launchError: 'Spin failed',
       closeError: 'Close failed',
@@ -375,7 +379,15 @@ export const en: Locale = {
       startsIn: 'Starts in',
       upcoming: 'Upcoming',
       live: 'Live',
+      pending: 'Pending',
       finished: 'Finished',
+    },
+    pending: {
+      hostText: 'The event time has passed and no movie has been picked yet.',
+      hostMeta:
+        'Spin the wheel, reschedule, or close without a movie. Without action, the event closes automatically in 7 days.',
+      participantText: 'The event time has passed, no movie has been picked yet.',
+      participantMeta: "You can still vote and suggest movies while the host decides.",
     },
   },
 
@@ -514,6 +526,11 @@ export const en: Locale = {
       openModalAria: 'See where to watch "{{title}}"',
       alsoRentAria: 'Rent ({{count}}) — see where to watch "{{title}}"',
       alsoBuyAria: 'Buy ({{count}}) — see where to watch "{{title}}"',
+    },
+    closed: {
+      emptyTitle: 'No movie was picked',
+      emptyHost: 'The event is closed. You can create a new one anytime.',
+      emptyParticipant: 'This event ended without a movie being picked.',
     },
   },
 

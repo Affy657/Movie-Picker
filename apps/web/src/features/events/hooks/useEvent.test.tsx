@@ -20,7 +20,6 @@ const server = setupServer(
       winnerMovie: null,
       config: {
         theme: null,
-        endDate: null,
         maxProposalsPerParticipant: null,
         maxParticipants: null,
         wheelMode: 'strictRandom',

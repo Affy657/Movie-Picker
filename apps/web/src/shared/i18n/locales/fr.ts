@@ -335,7 +335,6 @@
       titleRequired: 'Le nom de la soirée est requis.',
       themeLabel: 'Thème / ambiance',
       themePlaceholder: 'Ex: Horreur, Sci-fi, Comédie\u2026',
-      endDateLabel: 'Date de fin des propositions',
       maxProposalsLabel: 'Limite de propositions par participant',
       wheelModeLabel: 'Mode de la roue',
       saveButton: 'Enregistrer',
@@ -364,6 +363,11 @@
       relaunchButton: 'Relancer la roue',
       spinning: 'Tirage\u2026',
       closeButton: 'Clôturer la soirée',
+      closeWithoutMovieButton: 'Clôturer sans film',
+      closeWithoutMovieConfirmTitle: 'Clôturer sans choisir de film ?',
+      closeWithoutMovieConfirmMessage:
+        'La soirée « {{title}} » sera clôturée sans film. Cette action est définitive.',
+      closeWithoutMovieConfirmAction: 'Clôturer sans film',
       resetButton: 'Annuler le tirage',
       launchError: 'Tirage impossible',
       closeError: 'Clôture impossible',
@@ -382,7 +386,15 @@
       startsIn: 'Commence dans',
       upcoming: 'À venir',
       live: 'En cours',
+      pending: 'En suspens',
       finished: 'Terminée',
+    },
+    pending: {
+      hostText: "L'heure de la soirée est passée et aucun film n'a été choisi.",
+      hostMeta:
+        'Relance la roue, reprogramme, ou clôture sans film. Sans action, la soirée se clôture automatiquement dans 7 jours.',
+      participantText: "L'heure de la soirée est passée, aucun film n'a encore été choisi.",
+      participantMeta: "Tu peux encore voter et proposer des films en attendant que l'hôte décide.",
     },
   },
 
@@ -524,6 +536,11 @@
       openModalAria: 'Voir où regarder « {{title}} »',
       alsoRentAria: 'Location ({{count}}) — voir où regarder « {{title}} »',
       alsoBuyAria: 'Achat ({{count}}) — voir où regarder « {{title}} »',
+    },
+    closed: {
+      emptyTitle: "Aucun film n'a été choisi",
+      emptyHost: 'La soirée est clôturée. Tu peux en créer une nouvelle quand tu veux.',
+      emptyParticipant: "Cette soirée s'est terminée sans qu'un film soit choisi.",
     },
   },
 

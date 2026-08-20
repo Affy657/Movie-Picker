@@ -1,13 +1,12 @@
 import type { MovieData } from '@/shared/types/movie';
 
-export type MyEventLifecycle = 'upcoming' | 'live' | 'finished';
+export type MyEventLifecycle = 'upcoming' | 'live' | 'pending' | 'finished';
 
 export type WheelMode = 'strictRandom' | 'weightedByVotes';
 
 export interface EventConfigData {
   theme: string | null;
   themeColor?: number | null;
-  endDate: string | null;
   maxProposalsPerParticipant: number | null;
 
   maxParticipants: number | null;
@@ -34,6 +33,7 @@ export interface EventData {
   slug: string;
   isHost?: boolean;
   isFinished?: boolean;
+  lifecycle?: MyEventLifecycle;
   closedAt?: string | null;
   winnerMovie?: MovieData | null;
 
