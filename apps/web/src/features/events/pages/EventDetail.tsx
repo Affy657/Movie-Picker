@@ -470,7 +470,11 @@ export default function EventDetail() {
         message={confirmDialogContent?.message ?? ''}
         confirmLabel={confirmDialogContent?.confirmLabel ?? ''}
         confirmVariant="danger"
-        busy={confirmState?.kind === 'closeWithoutMovie' ? wheel.loading : removeParticipantMutation.isPending}
+        busy={
+          confirmState?.kind === 'closeWithoutMovie'
+            ? wheel.loading
+            : removeParticipantMutation.isPending
+        }
         onConfirm={confirmDialogContent?.onConfirm ?? closeConfirm}
         onCancel={closeConfirm}
       />

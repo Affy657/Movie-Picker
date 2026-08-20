@@ -387,7 +387,7 @@ export const en: Locale = {
       hostMeta:
         'Spin the wheel, reschedule, or close without a movie. Without action, the event closes automatically in 7 days.',
       participantText: 'The event time has passed, no movie has been picked yet.',
-      participantMeta: "You can still vote and suggest movies while the host decides.",
+      participantMeta: 'You can still vote and suggest movies while the host decides.',
     },
   },
 

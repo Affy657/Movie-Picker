@@ -10,4 +10,3 @@ export function splitDateTimeLocal(local: string): { date: string; time: string 
   if (tIndex === -1) return null;
   return { date: s.slice(0, tIndex), time: s.slice(tIndex + 1, tIndex + 6) };
 }
-
