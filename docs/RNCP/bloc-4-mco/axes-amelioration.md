@@ -15,7 +15,7 @@ Les recommandations qui suivent partent de mesures, pas d'intuitions. Quatre sou
 | **PostHog** (90 jours) | Analytics produit, et surtout ses trous |
 | **CI/CD** | Performance et accessibilité mesurées à chaque déploiement (Lighthouse) |
 
-**Limite assumée** : le volet qualitatif est en cours de constitution. Le questionnaire ([`questionnaire-utilisateurs.md`](questionnaire-utilisateurs.md)) est en ligne depuis le 18 août 2026 ; sept réponses sont arrivées en quarante-huit heures, sur une dizaine espérée au maximum et une cible de 17 comptes. Le canal « Signaler un problème », livré en v1.3.2, complète ce dispositif en continu. Les recommandations ci-dessous restent construites sur le quantitatif, mais intègrent déjà les sept premiers retours reçus, présentés au § 2 bis ; elles seront réexaminées si d'autres réponses arrivent avant la remise du dossier.
+**Limite assumée** : le volet qualitatif est en cours de constitution. Le questionnaire ([`questionnaire-utilisateurs.md`](questionnaire-utilisateurs.md)) est en ligne depuis le 18 août 2026 ; sept réponses ont été recueillies pour une cible de 17 comptes. Le canal « Signaler un problème », livré en v1.3.2, complète ce dispositif en continu. Les recommandations ci-dessous restent construites sur le quantitatif, mais intègrent les sept retours reçus, présentés au § 2 bis.
 
 ## 2. Indicateurs observés
 
@@ -39,7 +39,7 @@ Deux conclusions structurent tout le reste : **la fiabilité n'est pas le sujet*
 
 ## 2 bis. Premiers retours qualitatifs (questionnaire, n = 7)
 
-Sept réponses en quarante-huit heures, sur une dizaine espérée au maximum : l'échantillon est réduit, et vraisemblablement orienté vers les utilisateurs les plus engagés, cinq des sept répondants utilisant l'application « à chaque soirée film ». Les tendances qui suivent sont indicatives, pas représentatives ; elles seront complétées si d'autres réponses arrivent avant la remise du dossier.
+Sept réponses pour dix-sept comptes inscrits : l'échantillon est réduit, et vraisemblablement orienté vers les utilisateurs les plus engagés, cinq des sept répondants utilisant l'application « à chaque soirée film ». Les tendances qui suivent sont indicatives, pas représentatives.
 
 | Question | Réponses (n = 7) | Lecture |
 |---|---|---|
@@ -163,7 +163,7 @@ Deux dernières remarques, sans effet sur les priorités ci-dessous : un répond
 | 4 | R6, Supervision en IaC | 1 à 2 j | Robustesse de l'exploitation |
 | 4 | R7, Deux irritants du questionnaire | 1 j | Frictions concrètes levées |
 
-**Total : 8,5 à 12 jours**, séquençables en trois itérations, R7 rejoignant le même dernier lot que R5 et R6. Aucune ne demande de refonte, toutes s'appuient sur l'existant, c'est la condition pour qu'elles soient réalisables sur un projet mené par une seule personne.
+**Total : 8,5 à 12 jours**, répartis en quatre lots successifs, R7 rejoignant le dernier lot avec R5 et R6. Aucune ne demande de refonte, toutes s'appuient sur l'existant, c'est la condition pour qu'elles soient réalisables sur un projet mené par une seule personne.
 
 L'ordre n'est pas seulement une file d'attente : R1 conditionne l'évaluation de R2, R3 et R5. Engager R5 avant R1 reviendrait à développer une semaine de fonctionnalités sur une hypothèse invérifiable, exactement ce que ces recommandations cherchent à éviter.
 
@@ -171,4 +171,4 @@ L'ordre n'est pas seulement une file d'attente : R1 conditionne l'évaluation de
 
 La fiabilité et la performance ne figurent pas dans cette liste, et c'est un choix : avec 0,026 % d'erreurs serveur, un p95 à 207 ms et une disponibilité sous surveillance active, elles ne sont pas le facteur limitant de l'attractivité. Y investir maintenant serait optimiser ce qui fonctionne déjà.
 
-Les retours qualitatifs, encore partiels (§ 2 bis), ont déjà fait émerger deux irritants absents des données d'usage (R7) et une nuance sur R2 qu'aucune mesure de production n'aurait révélée : un parcours mal compris ou une attente non satisfaite ne laisse aucune trace dans les indicateurs quantitatifs. La liste sera réexaminée si d'autres réponses arrivent avant la remise du dossier.
+Les retours qualitatifs, encore partiels (§ 2 bis), ont déjà fait émerger deux irritants absents des données d'usage (R7) et une nuance sur R2 qu'aucune mesure de production n'aurait révélée : un parcours mal compris ou une attente non satisfaite ne laisse aucune trace dans les indicateurs quantitatifs. C'est précisément ce que R4 vise à rendre mesurable en continu.

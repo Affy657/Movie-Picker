@@ -484,9 +484,9 @@ Ces deux cas se complètent : le premier montre le pipeline **corrigeant** une a
 
 ### 6.1 Méthode
 
-Les recommandations qui suivent partent de mesures, non d'intuitions. Quatre sources ont été exploitées : la **base de production** (agrégats sans donnée personnelle), les **métriques d'exploitation** sur trente jours, l'**analytique produit** sur quatre-vingt-dix jours, et les **audits automatisés** exécutés à chaque déploiement.
+Les recommandations qui suivent partent de mesures, non d'intuitions. Cinq sources ont été croisées : la **base de production** (agrégats sans donnée personnelle), les **métriques d'exploitation** sur trente jours, l'**analytique produit** sur quatre-vingt-dix jours, les **audits automatisés** exécutés à chaque déploiement, et les **retours utilisateurs**.
 
-Le volet qualitatif s'y ajoute désormais : le canal « Signaler un problème » est en service depuis la version 1.3.2, et le questionnaire de retour, en ligne depuis le 18 août 2026, a reçu sept réponses en quarante-huit heures sur une dizaine espérée au maximum. L'échantillon est réduit et orienté vers les utilisateurs les plus engagés (cinq répondants sur sept utilisent l'application à chaque soirée) ; les tendances qu'il révèle sont indicatives, pas représentatives, et intégrées ci-dessous à titre de confirmation plutôt que de fondement.
+Ce dernier volet est le plus récent. Le canal « Signaler un problème » est en service depuis la version 1.3.2, et le questionnaire de retour, en ligne depuis le 18 août 2026, a recueilli sept réponses. L'échantillon est réduit et orienté vers les utilisateurs les plus engagés, cinq répondants sur sept utilisant l'application à chaque soirée. Ses tendances sont donc indicatives et non représentatives : elles confirment ou nuancent les mesures quantitatives, elles ne les fondent pas.
 
 ### 6.2 Indicateurs observés
 
@@ -510,35 +510,85 @@ Deux conclusions structurent le reste. **La fiabilité n'est pas le facteur limi
 
 ### 6.3 Recommandations
 
-**R1. Instrumenter le parcours cœur.** Aucun événement n'est capturé sur la création d'une soirée, l'ajout d'un film, le vote ou le tirage : les chiffres ci-dessus ont dû être reconstitués depuis la base et décrivent des résultats, jamais des abandons. Impossible aujourd'hui de répondre à « combien d'invités ouvrent le lien sans jamais voter ? ». La proposition consiste à capturer six événements et à construire l'entonnoir correspondant ; l'infrastructure analytique existe déjà et reste soumise au consentement, seuls les appels manquent.
-*Coût **0,5 à 1 jour**, effet immédiat. Gain : mesure des abandons étape par étape, les décisions suivantes cessent d'être des paris.* **Priorité 1**, prérequis des autres.
+**R1. Instrumenter le parcours cœur.** *Priorité 1, prérequis des autres.*
 
-**R2. Réconcilier le vote et son effet sur le tirage.** Chaque film proposé porte deux boutons, « Voter pour » et « Voter contre ». Le problème n'est pas l'intensité du vote mais son audience : les participants qui votent le font sur 2,3 films en moyenne, mais **56 % des participations n'ont produit aucun vote**. La mesure décisive est toutefois ailleurs. La roue accepte deux modes, un tirage strictement aléatoire et un tirage pondéré par les votes ; le premier est la valeur par défaut, et **aucune des 19 soirées n'a activé le second**. Depuis la mise en production, aucun vote n'a donc jamais influencé un tirage. Le produit demande aux participants un effort dont il n'utilise pas le résultat, ce qui suffit à expliquer le désintérêt observé. Le questionnaire le confirme sur un cas concret : un répondant décrit relancer manuellement la roue jusqu'à un résultat qui convienne à tout le monde, alors même que le réglage aléatoire/pondéré est connu de cinq répondants sur sept. La barrière n'est donc pas sa découvrabilité, mais son statut par défaut. Une pluralité de répondants (3 sur 7) va plus loin et souhaiterait que le vote élimine les films rejetés plutôt que de simplement les pondérer, une piste notée pour une itération ultérieure faute d'échantillon suffisant pour trancher.
-La proposition tient en trois volets : faire du mode pondéré la valeur par défaut à la création d'une soirée, l'hôte restant libre de revenir au tirage strictement aléatoire ; afficher sur la roue la part réelle de chaque film, pour que l'effet du vote se voie avant le tirage ; signaler à l'hôte, avant le lancement, la proportion de participants n'ayant pas voté.
-*Coût **2 à 3 jours**, une itération. Gain : le vote retrouve la fonction qui justifie sa présence, faire émerger un consensus, ce qui est la promesse même du produit. Objectifs mesurables : au moins la moitié des soirées tirées en mode pondéré, et la part des participations sans aucun vote ramenée sous 25 %.* **Priorité 2.**
+Aucun événement n'est capturé sur la création d'une soirée, l'ajout d'un film, le vote ou le tirage. Les chiffres du § 6.2 ont dû être reconstitués depuis la base : ils décrivent des résultats, jamais des abandons, et ne permettent pas de répondre à « combien d'invités ouvrent le lien sans jamais voter ? ».
 
-**R3. Rendre les notifications atteignables avant de trancher leur sort.** Trois abonnements actifs pour dix-sept inscrits, alors que la version 1.1 a investi dans les clés de signature, cinq déclencheurs et une interface de préférences. L'examen du code explique le chiffre : l'activation n'est **jamais proposée dans le parcours**. Elle n'existe que sous la forme d'un interrupteur dans la page « Mon compte », que rien ne signale, et le réglage fin par type de notification ne s'affiche même qu'une fois l'utilisateur déjà abonné. Le taux d'adoption ne mesure donc pas un refus, mais l'absence de sollicitation, ce que confirme un cas concret du questionnaire : un répondant qui n'a jamais activé les notifications demande spontanément à être averti quand un film est ajouté à une soirée qu'il a rejointe, une notification qui existe déjà mais reste invisible tant que l'activation n'est jamais proposée.
-La proposition consiste à proposer l'activation une fois, au moment où son intérêt est évident, par exemple juste après avoir créé ou rejoint une soirée, en énonçant ce que l'utilisateur recevra, et à rendre le choix par type visible avant l'abonnement plutôt qu'après. Si l'adoption ne dépasse pas 40 % dans les deux mois qui suivent, la fonctionnalité aura été jugée sur pièces et son gel deviendra défendable.
-*Coût **1 jour**, une itération. Gain : une décision fondée. Aujourd'hui, geler l'investissement reviendrait à condamner une fonctionnalité que personne n'a jamais eu l'occasion d'accepter.* **Priorité 3.**
+*Proposition* : capturer six événements et construire l'entonnoir correspondant. L'infrastructure analytique existe déjà et reste soumise au consentement, seuls les appels manquent.
 
-**R4. Installer une boucle de satisfaction continue.** Aucun dispositif ne mesure la satisfaction dans la durée ; le questionnaire donne une photographie, pas une tendance. La proposition ajoute une question unique après le tirage, « cette soirée s'est-elle bien passée ? » à trois niveaux, stockée sans donnée nominative et agrégée par mois, en complément du canal de signalement déjà livré.
-*Coût **1 à 2 jours**, une itération. Gain : détection des dégradations d'expérience invisibles pour la supervision technique, aucune des anomalies fonctionnelles rencontrées n'avait levé d'exception.* **Priorité 3.**
+*Coût **0,5 à 1 jour**, effet immédiat. Gain : mesure des abandons étape par étape, les décisions suivantes cessent d'être des paris.*
 
-**R5. Encourager la récurrence, mais après mesure.** Dix-neuf soirées en trois mois et demi pour dix-sept inscrits : l'application est utilisée par événement, pas par habitude. La version 1.4 envisagée (sélection manuelle, flamme de régularité) parie sur la récurrence sans qu'aucune mesure ne l'éclaire. Le questionnaire va dans le même sens : cinq répondants sur sept déclarent que rien de particulier ne les ferait utiliser l'application plus souvent, l'usage tenant à l'occasion plutôt qu'à l'habitude. La proposition consiste à attendre les données de R1 avant d'engager le développement ; si le pari se confirme malgré tout, la piste la moins coûteuse est la reconduction d'une soirée avec le même groupe en un clic, plutôt qu'un mécanisme de gamification complet.
-*Coût **2 jours** pour la reconduction contre **5 à 8 jours** pour la gamification. Gain : évite d'engager une semaine sur une hypothèse non vérifiée, et supprime le principal frein à une nouvelle soirée, reconstituer le groupe.* **Priorité 4**, conditionnée à R1.
+**R2. Réconcilier le vote et son effet sur le tirage.** *Priorité 2.*
 
-**R6. Décrire la supervision en infrastructure-as-code.** Les trois sondes, les cinq politiques d'alerte, le canal de notification et le tableau de bord ont été créés par appels d'interface de programmation : ils ne sont pas versionnés, une suppression accidentelle ou une dérive de configuration passerait inaperçue. La proposition consiste à les décrire dans le dépôt et à les appliquer depuis le pipeline.
-*Coût **1 à 2 jours**, une itération. Gain : configuration de supervision reproductible et relue comme du code ; suppression d'un point de fragilité de l'exploitation.* **Priorité 4.**
+**56 % des participations n'ont produit aucun vote.** La cause tient moins à l'intensité du vote qu'à son absence d'effet : la roue accepte un tirage strictement aléatoire et un tirage pondéré par les votes, le premier est la valeur par défaut, et **aucune des 19 soirées n'a activé le second**. Aucun vote n'a donc jamais influencé un tirage : le produit demande un effort dont il n'utilise pas le résultat, ce qui suffit à expliquer le désintérêt observé.
 
-**R7. Corriger deux irritants remontés par le questionnaire.** Le texte libre a fait remonter deux frictions absentes des mesures quantitatives : un répondant doit se reconnecter à chaque ouverture du lien de soirée depuis le navigateur intégré de Snapchat, symptôme distinct de l'anomalie #67 et consigné en fiche #71 ; un autre signale que le profil public n'affiche que le nombre de films proposés par un utilisateur, jamais lesquels.
-La proposition détecte les navigateurs intégrés connus pour suggérer l'ouverture dans le navigateur système, et liste les films proposés sur le profil plutôt que leur seul total.
-*Coût **1 jour**. Gain : deux frictions concrètes levées, remontées indépendamment par deux répondants différents.* **Priorité 4**, indépendante des autres recommandations.
+Le questionnaire le confirme : un répondant relance manuellement la roue jusqu'à un résultat qui convienne à tout le monde, alors même que le réglage est connu de cinq répondants sur sept. La barrière n'est donc pas sa découvrabilité, mais son statut par défaut. Trois répondants sur sept souhaiteraient même que le vote élimine les films rejetés au lieu de les pondérer, piste notée pour plus tard faute d'échantillon suffisant.
+
+*Proposition*, en trois volets :
+
+- faire du mode pondéré la valeur par défaut à la création d'une soirée, l'hôte restant libre de revenir au tirage strictement aléatoire ;
+- afficher sur la roue la part réelle de chaque film, pour que l'effet du vote se voie avant le tirage ;
+- signaler à l'hôte, avant le lancement, la proportion de participants n'ayant pas voté.
+
+*Coût **2 à 3 jours**, une itération. Gain : le vote retrouve la fonction qui justifie sa présence, faire émerger un consensus, promesse même du produit. Objectifs mesurables : la moitié des soirées tirées en mode pondéré, et les participations sans aucun vote ramenées sous 25 %.*
+
+**R3. Rendre les notifications atteignables avant de trancher leur sort.** *Priorité 3.*
+
+Trois abonnements actifs pour dix-sept inscrits, alors que la version 1.1 a livré les clés de signature, cinq déclencheurs et une interface de préférences. L'examen du code explique le chiffre : l'activation n'est **jamais proposée dans le parcours**, elle n'existe que sous la forme d'un interrupteur que rien ne signale dans la page « Mon compte », et le réglage par type ne s'affiche qu'une fois l'utilisateur déjà abonné.
+
+Le taux d'adoption ne mesure donc pas un refus, mais une absence de sollicitation. Un répondant l'illustre : jamais abonné, il demande spontanément à être averti quand un film est ajouté à une soirée qu'il a rejointe, notification qui existe déjà mais reste invisible.
+
+*Proposition* : proposer l'activation une fois, au moment où son intérêt est évident, juste après avoir créé ou rejoint une soirée, en énonçant ce que l'utilisateur recevra ; rendre le choix par type visible avant l'abonnement plutôt qu'après.
+
+*Coût **1 jour**, une itération. Gain : une décision fondée. Si l'adoption ne dépasse pas 40 % dans les deux mois qui suivent, le gel de la fonctionnalité devient défendable ; aujourd'hui, il condamnerait une fonctionnalité que personne n'a jamais eu l'occasion d'accepter.*
+
+**R4. Installer une boucle de satisfaction continue.** *Priorité 3.*
+
+Aucun dispositif ne mesure la satisfaction dans la durée : le questionnaire donne une photographie, pas une tendance.
+
+*Proposition* : ajouter une question unique après le tirage, « cette soirée s'est-elle bien passée ? » à trois niveaux, stockée sans donnée nominative et agrégée par mois, en complément du canal de signalement déjà livré.
+
+*Coût **1 à 2 jours**, une itération. Gain : détection des dégradations d'expérience invisibles pour la supervision technique, aucune des anomalies fonctionnelles rencontrées n'ayant levé d'exception.*
+
+**R5. Encourager la récurrence, mais après mesure.** *Priorité 4, conditionnée à R1.*
+
+Dix-neuf soirées en trois mois et demi pour dix-sept inscrits : l'application est utilisée par événement, pas par habitude. La version 1.4 envisagée, sélection manuelle et flamme de régularité, parie sur la récurrence sans qu'aucune mesure ne l'éclaire. Le questionnaire va dans le même sens, cinq répondants sur sept déclarant que rien de particulier ne les ferait utiliser l'application plus souvent.
+
+*Proposition* : attendre les données de R1 avant d'engager le développement ; si le pari se confirme, retenir d'abord la reconduction d'une soirée avec le même groupe en un clic, plutôt qu'un mécanisme de gamification complet.
+
+*Coût **2 jours** pour la reconduction contre **5 à 8 jours** pour la gamification. Gain : évite d'engager une semaine sur une hypothèse non vérifiée, et supprime le principal frein à une nouvelle soirée, reconstituer le groupe.*
+
+**R6. Décrire la supervision en infrastructure-as-code.** *Priorité 4.*
+
+Les trois sondes, les cinq politiques d'alerte, le canal de notification et le tableau de bord ont été créés par appels d'interface de programmation : ils ne sont pas versionnés, et une suppression accidentelle ou une dérive de configuration passerait inaperçue.
+
+*Proposition* : les décrire dans le dépôt et les appliquer depuis le pipeline.
+
+*Coût **1 à 2 jours**, une itération. Gain : configuration de supervision reproductible et relue comme du code, un point de fragilité de l'exploitation en moins.*
+
+**R7. Corriger deux irritants remontés par le questionnaire.** *Priorité 4, indépendante des autres.*
+
+Le texte libre a fait remonter deux frictions absentes des mesures quantitatives : un répondant doit se reconnecter à chaque ouverture du lien de soirée depuis le navigateur intégré de Snapchat, symptôme distinct de l'anomalie #67 et consigné en fiche #71 ; un autre signale que le profil public n'affiche que le nombre de films proposés par un utilisateur, jamais lesquels.
+
+*Proposition* : détecter les navigateurs intégrés connus pour suggérer l'ouverture dans le navigateur système ; lister les films proposés sur le profil plutôt que leur seul total.
+
+*Coût **1 jour**. Gain : deux frictions concrètes levées, remontées indépendamment par deux répondants différents.*
 
 ### 6.4 Priorisation et périmètre
 
-L'ordre de priorité, indiqué sous chaque recommandation, totalise **8,5 à 12 jours** séquençables en trois itérations, R7 rejoignant le même dernier lot que R5 et R6. Aucune n'exige de refonte : toutes s'appuient sur l'existant, condition de leur faisabilité sur un projet mené par une seule personne. Et l'ordre n'est pas une simple file d'attente, puisque R1 conditionne l'évaluation de R2, R3 et R5 : engager R5 avant R1 reviendrait à développer une semaine de fonctionnalités sur une hypothèse invérifiable, exactement ce que ces recommandations cherchent à éviter.
+| Rang | Recommandation | Coût | Nature du gain |
+|:----:|----------------|:----:|----------------|
+| 1 | R1, Instrumenter le parcours cœur | 0,5 à 1 j | Capacité de décision |
+| 2 | R2, Réconcilier le vote et son effet | 2 à 3 j | Attractivité, qualité de la promesse produit |
+| 3 | R3, Rendre les notifications atteignables | 1 j | Adoption réelle, ou décision d'arrêt fondée |
+| 3 | R4, Boucle de satisfaction | 1 à 2 j | Détection des irritants invisibles |
+| 4 | R5, Récurrence (option courte) | 2 j | Fréquence d'usage, sous condition de mesure |
+| 4 | R6, Supervision en IaC | 1 à 2 j | Robustesse de l'exploitation |
+| 4 | R7, Deux irritants du questionnaire | 1 j | Frictions concrètes levées |
 
-La fiabilité et la performance sont délibérément absentes de cette liste, parce qu'elles ne limitent pas l'attractivité du produit : y investir reviendrait à optimiser ce qui fonctionne déjà, au détriment de ce qui bloque réellement, et le démarrage à froid relève du même raisonnement puisque les sondes de disponibilité l'ont atténué sans développement. Le questionnaire étant encore en cours, la liste ci-dessus sera réexaminée si d'autres réponses arrivent avant la remise du dossier, ce que R4, une fois en place, rendra possible en continu plutôt que par campagnes ponctuelles.
+**Total : 8,5 à 12 jours**, répartis en quatre lots successifs. Aucune recommandation n'exige de refonte : toutes s'appuient sur l'existant, condition de leur faisabilité sur un projet mené par une seule personne. L'ordre n'est pas une simple file d'attente, R1 conditionnant l'évaluation de R2, R3 et R5 : engager R5 avant R1 reviendrait à développer une semaine de fonctionnalités sur une hypothèse invérifiable, exactement ce que ces recommandations cherchent à éviter.
+
+La fiabilité et la performance sont délibérément absentes de cette liste : elles ne limitent pas l'attractivité du produit, et y investir reviendrait à optimiser ce qui fonctionne déjà au détriment de ce qui bloque réellement. Le démarrage à froid relève du même raisonnement, les sondes de disponibilité l'ayant atténué sans développement. La faiblesse de l'échantillon qualitatif est enfin, à elle seule, un argument pour R4 : une boucle de satisfaction continue remplace les campagnes ponctuelles par une tendance mesurable en permanence.
 
 ---
 
