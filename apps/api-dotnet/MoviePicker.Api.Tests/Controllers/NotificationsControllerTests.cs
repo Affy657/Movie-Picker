@@ -108,10 +108,10 @@ public sealed class NotificationsControllerTests
     {
         var handler = new Mock<IGetInboxHandler>();
 
-        var result = await Controller("u1").GetInbox(handler.Object, CancellationToken.None);
+        var result = await Controller("u1").GetInbox(handler.Object, null, null, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
-        handler.Verify(h => h.HandleAsync("u1", It.IsAny<CancellationToken>()), Times.Once);
+        handler.Verify(h => h.HandleAsync("u1", null, null, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

@@ -38,7 +38,10 @@ public sealed class FollowUserHandlerTests
             Handle = "alice",
             DisplayName = "Alice",
             IsProfilePublic = isPublic,
-            NotifyOnNewFollower = notifyOnNewFollower
+            NotificationPreferences = new Dictionary<UserNotificationType, bool>
+            {
+                [UserNotificationType.NewFollower] = notifyOnNewFollower
+            }
         };
 
     [Fact]
@@ -109,7 +112,7 @@ public sealed class FollowUserHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_NotifyDisabled_AddsNotificationButNoPush()
+    public async Task HandleAsync_NotifyDisabled_SkipsNotificationAndPush()
     {
         _users.Setup(u => u.GetByHandleAsync("alice", It.IsAny<CancellationToken>()))
             .ReturnsAsync(Target(notifyOnNewFollower: false));
@@ -119,7 +122,7 @@ public sealed class FollowUserHandlerTests
 
         await _sut.HandleAsync(CurrentUserId, "alice");
 
-        _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Once);
+        _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
         _pushSender.Verify(s => s.SendAsync(It.IsAny<PushSubscription>(), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

@@ -4,5 +4,5 @@ namespace MoviePicker.Api.Application.UseCases.Notifications;
 
 public interface IGetInboxHandler
 {
-    Task<NotificationInboxResponse> HandleAsync(string userId, CancellationToken ct = default);
+    Task<NotificationInboxResponse> HandleAsync(string userId, int? limit, int? offset, CancellationToken ct = default);
 }

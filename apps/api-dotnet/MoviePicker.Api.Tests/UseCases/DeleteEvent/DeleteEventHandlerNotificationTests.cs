@@ -66,7 +66,7 @@ public sealed class DeleteEventHandlerNotificationTests
     {
         Participants("u2");
         _userRepo.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([new() { Id = "u2", NotifyOnEventDeleted = true }]);
+            .ReturnsAsync([new() { Id = "u2", NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.EventDeleted] = true } }]);
         _pushSubRepo.Setup(r => r.ListByUserIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([new() { Id = "s1", UserId = "u2", Endpoint = "https://push/x", P256dh = "k", Auth = "a" }]);
 
@@ -96,7 +96,7 @@ public sealed class DeleteEventHandlerNotificationTests
     {
         Participants("u2");
         _userRepo.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([new() { Id = "u2", NotifyOnEventDeleted = false }]);
+            .ReturnsAsync([new() { Id = "u2", NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.EventDeleted] = false } }]);
 
         await _sut.HandleAsync("evt1");
 

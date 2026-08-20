@@ -27,15 +27,24 @@ public sealed class GetNotificationPreferencesHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_ReturnsAllFlags()
+    public async Task HandleAsync_ReturnsAllTypes()
     {
         _users.Setup(u => u.GetByIdAsync("u1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new User { Id = "u1", NotifyOnMovieAdded = false, NotifyOnNewFollower = true });
+            .ReturnsAsync(new User
+            {
+                Id = "u1",
+                NotificationPreferences = new Dictionary<UserNotificationType, bool>
+                {
+                    [UserNotificationType.MovieAdded] = false,
+                    [UserNotificationType.NewFollower] = true
+                }
+            });
 
         var result = await _sut.HandleAsync("u1");
 
-        Assert.False(result.NotifyOnMovieAdded);
-        Assert.True(result.NotifyOnNewFollower);
+        Assert.Equal(Enum.GetValues<UserNotificationType>().Length, result.Preferences.Count);
+        Assert.False(result.Preferences.Single(p => p.Type == "movieadded").Enabled);
+        Assert.True(result.Preferences.Single(p => p.Type == "newfollower").Enabled);
     }
 }
 
@@ -59,19 +68,45 @@ public sealed class PatchNotificationPreferencesHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_UnknownType_Throws()
+    {
+        _users.Setup(u => u.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(new User { Id = "u1" });
+
+        await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(
+            "u1",
+            new PatchNotificationPreferencesRequest
+            {
+                Preferences = [new NotificationTypePreferencePatch { Type = "not-a-type", Enabled = true }]
+            }));
+    }
+
+    [Fact]
     public async Task HandleAsync_OnlyPatchesProvidedFields()
     {
         _users.Setup(u => u.GetByIdAsync("u1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new User { Id = "u1", NotifyOnMovieAdded = true, NotifyOnNewFollower = true });
+            .ReturnsAsync(new User
+            {
+                Id = "u1",
+                NotificationPreferences = new Dictionary<UserNotificationType, bool>
+                {
+                    [UserNotificationType.MovieAdded] = true,
+                    [UserNotificationType.NewFollower] = true
+                }
+            });
         _users.Setup(u => u.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User u, CancellationToken _) => u);
 
-        var result = await _sut.HandleAsync("u1", new PatchNotificationPreferencesRequest { NotifyOnMovieAdded = false });
+        var result = await _sut.HandleAsync(
+            "u1",
+            new PatchNotificationPreferencesRequest
+            {
+                Preferences = [new NotificationTypePreferencePatch { Type = "movieadded", Enabled = false }]
+            });
 
-        Assert.False(result.NotifyOnMovieAdded);
-        Assert.True(result.NotifyOnNewFollower);
+        Assert.False(result.Preferences.Single(p => p.Type == "movieadded").Enabled);
+        Assert.True(result.Preferences.Single(p => p.Type == "newfollower").Enabled);
         _users.Verify(u => u.UpdateAsync(
-            It.Is<User>(x => !x.NotifyOnMovieAdded && x.NotifyOnNewFollower),
+            It.Is<User>(x => !x.NotifiesOn(UserNotificationType.MovieAdded) && x.NotifiesOn(UserNotificationType.NewFollower)),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 }

@@ -81,7 +81,7 @@ public sealed class AddMovieHandlerNotificationTests
                 new() { Id = "p2", EventId = "evt1", Pseudo = "Bob", UserId = "other", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
             ]);
         _userRepo.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([new() { Id = "other", NotifyOnMovieAdded = true }]);
+            .ReturnsAsync([new() { Id = "other", NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.MovieAdded] = true } }]);
         _userRepo.Setup(r => r.GetByIdAsync(OwnerUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = OwnerUserId, DisplayName = "Alice", Handle = "alice" });
         _pushSubRepo.Setup(r => r.ListByUserIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))

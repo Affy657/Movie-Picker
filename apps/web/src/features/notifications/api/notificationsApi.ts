@@ -1,12 +1,23 @@
 import { fetchApi } from '@/shared/api/client';
 
+export type NotificationTypeKey =
+  | 'newfollower'
+  | 'movieadded'
+  | 'moviepicked'
+  | 'participantjoined'
+  | 'eventdeleted'
+  | 'eventreminder1h'
+  | 'eventreminder24h'
+  | 'eventinvitation'
+  | 'eventpending';
+
+export interface NotificationTypePreference {
+  type: NotificationTypeKey;
+  enabled: boolean;
+}
+
 export interface NotificationPreferences {
-  notifyOnParticipantJoined: boolean;
-  notifyEventReminder: boolean;
-  notifyOnMovieAdded: boolean;
-  notifyOnMoviePicked: boolean;
-  notifyOnEventDeleted: boolean;
-  notifyOnNewFollower: boolean;
+  preferences: NotificationTypePreference[];
 }
 
 export interface UserNotificationItem {
@@ -25,14 +36,20 @@ export interface UserNotificationItem {
 export interface NotificationInbox {
   items: UserNotificationItem[];
   unreadCount: number;
+  hasMore: boolean;
 }
 
-export async function fetchNotificationInbox(): Promise<NotificationInbox> {
-  return fetchApi<NotificationInbox>('/notifications/inbox');
+export async function fetchNotificationInbox(offset = 0): Promise<NotificationInbox> {
+  const params = offset > 0 ? `?offset=${offset}` : '';
+  return fetchApi<NotificationInbox>(`/notifications/inbox${params}`);
 }
 
 export async function markAllNotificationsRead(): Promise<void> {
   await fetchApi('/notifications/inbox/read-all', { method: 'POST' });
+}
+
+export async function markNotificationRead(id: string): Promise<void> {
+  await fetchApi(`/notifications/inbox/${id}/read`, { method: 'POST' });
 }
 
 export async function fetchVapidPublicKey(): Promise<string> {
@@ -64,10 +81,10 @@ export async function fetchNotificationPreferences(): Promise<NotificationPrefer
 }
 
 export async function patchNotificationPreferences(
-  patch: Partial<NotificationPreferences>
+  patch: { type: NotificationTypeKey; enabled: boolean }[]
 ): Promise<NotificationPreferences> {
   return fetchApi<NotificationPreferences>('/notifications/preferences', {
     method: 'PATCH',
-    body: JSON.stringify(patch),
+    body: JSON.stringify({ preferences: patch }),
   });
 }

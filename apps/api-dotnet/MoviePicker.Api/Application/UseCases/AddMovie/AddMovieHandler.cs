@@ -170,7 +170,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
                 return;
 
             var users = await _userRepository.ListByIdsAsync(userIds, ct);
-            var notifiableIds = users.Where(u => u.NotifyOnMovieAdded).Select(u => u.Id).ToHashSet();
+            var notifiableIds = users.Where(u => u.NotifiesOn(UserNotificationType.MovieAdded)).Select(u => u.Id).ToHashSet();
             if (notifiableIds.Count == 0)
                 return;
 
@@ -182,8 +182,8 @@ public sealed class AddMovieHandler : IAddMovieHandler
             if (subs.Count > 0)
             {
                 var message = new PushMessage(
-                    Title: "🎬 Nouveau film proposé",
-                    Body: $"« {movieTitle} » a été ajouté à « {evt.Title} »",
+                    Title: "Un film de plus au menu 🍿",
+                    Body: $"{movieTitle} vient d'être ajouté à {evt.Title}",
                     Tag: $"movie-add-{evt.Id}",
                     Url: $"/e/{evt.Slug}"
                 );

@@ -80,7 +80,7 @@ public sealed class LaunchWheelHandlerNotificationTests
     public async Task HandleAsync_NotifiableParticipant_SendsPushAndInbox()
     {
         HasParticipants("u1");
-        Users(new User { Id = "u1", NotifyOnMoviePicked = true });
+        Users(new User { Id = "u1", NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.MoviePicked] = true } });
         Subscriptions("u1");
 
         await _sut.HandleAsync("evt1");
@@ -97,7 +97,7 @@ public sealed class LaunchWheelHandlerNotificationTests
     public async Task HandleAsync_ParticipantOptedOut_DoesNotNotify()
     {
         HasParticipants("u1");
-        Users(new User { Id = "u1", NotifyOnMoviePicked = false });
+        Users(new User { Id = "u1", NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.MoviePicked] = false } });
 
         await _sut.HandleAsync("evt1");
 

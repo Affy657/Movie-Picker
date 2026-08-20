@@ -154,15 +154,21 @@ internal static class DevelopmentScenarioSeed
         // Variété de préférences de notification (le reste reste ON par défaut).
         await prefs.HandleAsync(
             actors.Bob.Id,
-            new PatchNotificationPreferencesRequest { NotifyOnMovieAdded = false },
+            new PatchNotificationPreferencesRequest
+            {
+                Preferences = [new NotificationTypePreferencePatch { Type = "movieadded", Enabled = false }]
+            },
             ct).ConfigureAwait(false);
 
         await prefs.HandleAsync(
             actors.David.Id,
             new PatchNotificationPreferencesRequest
             {
-                NotifyOnParticipantJoined = false,
-                NotifyOnEventDeleted = false
+                Preferences =
+                [
+                    new NotificationTypePreferencePatch { Type = "participantjoined", Enabled = false },
+                    new NotificationTypePreferencePatch { Type = "eventdeleted", Enabled = false }
+                ]
             },
             ct).ConfigureAwait(false);
 
@@ -781,7 +787,7 @@ internal static class DevelopmentScenarioSeed
         CancellationToken ct)
     {
         var notifs = sp.GetRequiredService<IUserNotificationRepository>();
-        var devInbox = await notifs.ListByUserIdAsync(actors.Dev.Id, 50, ct).ConfigureAwait(false);
+        var devInbox = await notifs.ListByUserIdAsync(actors.Dev.Id, 50, offset: 0, ct: ct).ConfigureAwait(false);
         if (devInbox.Any(n => n.Type == UserNotificationType.EventDeleted
             && string.Equals(n.EventTitle, ScenarioDeletedTitle, StringComparison.Ordinal)))
         {
@@ -829,7 +835,7 @@ internal static class DevelopmentScenarioSeed
         {
             var recipients = await usersRepo.ListByIdsAsync(recipientIds, ct).ConfigureAwait(false);
             var now = DateTimeOffset.UtcNow;
-            foreach (var u in recipients.Where(u => u.NotifyOnEventDeleted))
+            foreach (var u in recipients.Where(u => u.NotifiesOn(UserNotificationType.EventDeleted)))
             {
                 await notifs.AddAsync(new UserNotification
                 {
@@ -963,7 +969,7 @@ internal static class DevelopmentScenarioSeed
 
         var users = await usersRepo.ListByIdsAsync(userIds, ct).ConfigureAwait(false);
         var now = DateTimeOffset.UtcNow;
-        foreach (var u in users.Where(u => u.NotifyOnMoviePicked))
+        foreach (var u in users.Where(u => u.NotifiesOn(UserNotificationType.MoviePicked)))
         {
             if (await notifs.ExistsAsync(u.Id, UserNotificationType.MoviePicked, evt.Id, ct).ConfigureAwait(false))
                 continue;

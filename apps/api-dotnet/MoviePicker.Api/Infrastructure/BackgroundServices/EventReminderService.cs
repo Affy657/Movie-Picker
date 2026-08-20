@@ -59,13 +59,15 @@ public sealed class EventReminderService : BackgroundService
         var services = new ReminderServices(
             scope.ServiceProvider.GetRequiredService<IParticipantRepository>(),
             scope.ServiceProvider.GetRequiredService<IUserRepository>(),
+            scope.ServiceProvider.GetRequiredService<IMovieRepository>(),
             scope.ServiceProvider.GetRequiredService<IPushSubscriptionRepository>(),
             scope.ServiceProvider.GetRequiredService<IPushNotificationSender>(),
-            scope.ServiceProvider.GetRequiredService<IUserNotificationRepository>());
+            scope.ServiceProvider.GetRequiredService<IUserNotificationRepository>(),
+            scope.ServiceProvider.GetRequiredService<IPushDedupRepository>());
 
         var now = _clock.GetUtcNow();
-        var upcomingEvents = await events.ListOpenEventsAsync(ct);
-        var eventsWithStart = upcomingEvents
+        var openEvents = await events.ListOpenEventsAsync(ct);
+        var eventsWithStart = openEvents
             .Select(e => (Event: e, HasStart: EventSchedule.TryGetStartUtc(e.Date, e.Time, out var startAt), StartUtc: startAt))
             .Where(x => x.HasStart)
             .Select(x => (x.Event, x.StartUtc))
@@ -73,13 +75,15 @@ public sealed class EventReminderService : BackgroundService
 
         await ProcessWindowAsync(
             eventsWithStart, now,
-            new ReminderWindow(Window1hMin, Window1hMax, UserNotificationType.EventReminder1h, "🎬 Soirée dans 1 heure"),
+            new ReminderWindow(Window1hMin, Window1hMax, UserNotificationType.EventReminder1h, "Dans 1 heure !"),
             services, ct);
 
         await ProcessWindowAsync(
             eventsWithStart, now,
-            new ReminderWindow(Window24hMin, Window24hMax, UserNotificationType.EventReminder24h, "🎬 Soirée demain"),
+            new ReminderWindow(Window24hMin, Window24hMax, UserNotificationType.EventReminder24h, "J-1 !"),
             services, ct);
+
+        await ProcessPendingEventsAsync(openEvents, now, services, ct);
     }
 
     private async Task ProcessWindowAsync(
@@ -104,8 +108,21 @@ public sealed class EventReminderService : BackgroundService
             "Rappels {Type} : {Count} soirée(s) dans la fenêtre [{Min}–{Max}]",
             window.NotifType, eventsInWindow.Count, window.Min, window.Max);
 
+        // La variante "aucun film choisi" ne s'applique qu'au rappel 1h — un seul aller-retour
+        // batch pour tous les événements de la fenêtre plutôt qu'un par événement.
+        IReadOnlySet<string> noMovieEventIds = new HashSet<string>();
+        if (window.NotifType == UserNotificationType.EventReminder1h)
+        {
+            var counts = await services.MovieRepo.CountByEventIdsAsync(
+                eventsInWindow.Select(e => e.Id).ToList(), ct);
+            noMovieEventIds = eventsInWindow
+                .Where(e => !counts.TryGetValue(e.Id, out var count) || count == 0)
+                .Select(e => e.Id)
+                .ToHashSet();
+        }
+
         foreach (var evt in eventsInWindow)
-            await ProcessEventRemindersAsync(evt, window, services, now, ct);
+            await ProcessEventRemindersAsync(evt, window, services, now, noMovieEventIds.Contains(evt.Id), ct);
     }
 
     private static async Task ProcessEventRemindersAsync(
@@ -113,6 +130,7 @@ public sealed class EventReminderService : BackgroundService
         ReminderWindow window,
         ReminderServices services,
         DateTimeOffset now,
+        bool noMovieYet,
         CancellationToken ct)
     {
         var eventParticipants = await services.ParticipantRepo.ListByEventIdAsync(evt.Id, ct);
@@ -125,30 +143,38 @@ public sealed class EventReminderService : BackgroundService
         if (userIds.Count == 0)
             return;
 
-        var usersWithPref = await services.UserRepo.ListByIdsAsync(userIds, ct);
-        var notifiableUsers = usersWithPref.Where(u => u.NotifyEventReminder).ToList();
+        var users = await services.UserRepo.ListByIdsAsync(userIds, ct);
+        var notifiableUsers = users.Where(u => u.NotifiesOn(window.NotifType)).ToList();
         if (notifiableUsers.Count == 0)
             return;
 
-        var pushBody = $"La soirée \"{evt.Title}\" commence bientôt !";
-        var pushSubs = await services.SubscriptionRepo.ListByUserIdsAsync(
-            notifiableUsers.Select(u => u.Id).ToHashSet(), ct);
+        var (pushTitle, pushBody) = noMovieYet
+            ? ("Toujours rien au programme ?", $"Plus qu'une heure avant {evt.Title} et toujours aucun film choisi… on en ajoute un ? 👀")
+            : (window.PushTitle, window.PushBody(evt.Title));
 
-        if (pushSubs.Count > 0)
-        {
-            var message = new PushMessage(
-                Title: window.PushTitle,
-                Body: pushBody,
-                Tag: $"reminder-{window.NotifType}-{evt.Id}",
-                Url: $"/e/{evt.Slug}"
-            );
-
-            foreach (var sub in pushSubs)
-                await services.Sender.SendAsync(sub, message, ct);
-        }
+        var subsByUser = (await services.SubscriptionRepo.ListByUserIdsAsync(
+                notifiableUsers.Select(u => u.Id).ToHashSet(), ct))
+            .GroupBy(s => s.UserId)
+            .ToDictionary(g => g.Key, g => g.ToList());
 
         foreach (var user in notifiableUsers)
         {
+            if (subsByUser.TryGetValue(user.Id, out var subs) && subs.Count > 0)
+            {
+                var claimed = await services.PushDedup.TryClaimAsync(user.Id, window.NotifType, evt.Id, ct);
+                if (claimed)
+                {
+                    var message = new PushMessage(
+                        Title: pushTitle,
+                        Body: pushBody,
+                        Tag: $"reminder-{window.NotifType}-{evt.Id}",
+                        Url: $"/e/{evt.Slug}"
+                    );
+                    foreach (var sub in subs)
+                        await services.Sender.SendAsync(sub, message, ct);
+                }
+            }
+
             var alreadySent = await services.NotificationRepo.ExistsAsync(user.Id, window.NotifType, evt.Id, ct);
             if (alreadySent)
                 continue;
@@ -166,16 +192,85 @@ public sealed class EventReminderService : BackgroundService
         }
     }
 
+    private async Task ProcessPendingEventsAsync(
+        IReadOnlyList<Event> openEvents,
+        DateTimeOffset now,
+        ReminderServices services,
+        CancellationToken ct)
+    {
+        var pendingEvents = openEvents
+            .Where(e => !string.IsNullOrEmpty(e.CreatorUserId) && e.Lifecycle(now) == EventLifecycle.Pending)
+            .ToList();
+
+        if (pendingEvents.Count == 0)
+            return;
+
+        _logger.LogInformation("Soirées en suspens détectées : {Count}", pendingEvents.Count);
+
+        foreach (var evt in pendingEvents)
+            await ProcessPendingEventAsync(evt, now, services, ct);
+    }
+
+    private static async Task ProcessPendingEventAsync(
+        Event evt,
+        DateTimeOffset now,
+        ReminderServices services,
+        CancellationToken ct)
+    {
+        var host = await services.UserRepo.GetByIdAsync(evt.CreatorUserId!, ct);
+        if (host is null || !host.NotifiesOn(UserNotificationType.EventPending))
+            return;
+
+        var subs = await services.SubscriptionRepo.ListByUserIdAsync(host.Id, ct);
+        if (subs.Count > 0)
+        {
+            var claimed = await services.PushDedup.TryClaimAsync(host.Id, UserNotificationType.EventPending, evt.Id, ct);
+            if (claimed)
+            {
+                var message = new PushMessage(
+                    Title: "Soirée en suspens 😅",
+                    Body: $"{evt.Title} s'est terminée sans qu'aucun film n'ait été choisi… on se rattrape la prochaine fois ?",
+                    Tag: $"pending-{evt.Id}",
+                    Url: $"/e/{evt.Slug}"
+                );
+                foreach (var sub in subs)
+                    await services.Sender.SendAsync(sub, message, ct);
+            }
+        }
+
+        var alreadySent = await services.NotificationRepo.ExistsAsync(host.Id, UserNotificationType.EventPending, evt.Id, ct);
+        if (alreadySent)
+            return;
+
+        await services.NotificationRepo.AddAsync(new UserNotification
+        {
+            UserId = host.Id,
+            Type = UserNotificationType.EventPending,
+            EventId = evt.Id,
+            EventSlug = evt.Slug,
+            EventTitle = evt.Title,
+            IsRead = false,
+            CreatedAt = now
+        }, ct);
+    }
+
     private sealed record ReminderWindow(
         TimeSpan Min,
         TimeSpan Max,
         UserNotificationType NotifType,
-        string PushTitle);
+        string PushTitle)
+    {
+        public string PushBody(string eventTitle) => NotifType == UserNotificationType.EventReminder24h
+            ? $"Demain, c'est {eventTitle} ! Prépare le canapé et le popcorn 🍿"
+            : $"⏰ {eventTitle} arrive à grands pas !";
+    }
 
     private sealed record ReminderServices(
         IParticipantRepository ParticipantRepo,
         IUserRepository UserRepo,
+        IMovieRepository MovieRepo,
         IPushSubscriptionRepository SubscriptionRepo,
         IPushNotificationSender Sender,
-        IUserNotificationRepository NotificationRepo);
+        IUserNotificationRepository NotificationRepo,
+        IPushDedupRepository PushDedup);
 }

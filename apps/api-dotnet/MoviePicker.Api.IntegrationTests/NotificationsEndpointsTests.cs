@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -56,8 +57,8 @@ public sealed class NotificationsEndpointsTests : IClassFixture<MoviePickerAppli
         var prefs = await client.GetFromJsonAsync<NotificationPreferencesResponse>("/api/v1/notifications/preferences", Json);
 
         Assert.NotNull(prefs);
-        Assert.True(prefs!.NotifyOnMovieAdded);
-        Assert.True(prefs.NotifyOnNewFollower);
+        Assert.False(prefs!.Preferences.Single(p => p.Type == "movieadded").Enabled);
+        Assert.True(prefs.Preferences.Single(p => p.Type == "newfollower").Enabled);
     }
 
     [Fact]
@@ -67,12 +68,12 @@ public sealed class NotificationsEndpointsTests : IClassFixture<MoviePickerAppli
 
         var res = await client.PatchAsJsonAsync(
             "/api/v1/notifications/preferences",
-            new { notifyOnMovieAdded = false });
+            new { preferences = new[] { new { type = "newfollower", enabled = false } } });
         Assert.Equal(HttpStatusCode.OK, res.StatusCode);
 
         var prefs = await res.Content.ReadFromJsonAsync<NotificationPreferencesResponse>(Json);
-        Assert.False(prefs!.NotifyOnMovieAdded);
-        Assert.True(prefs.NotifyOnNewFollower);
+        Assert.False(prefs!.Preferences.Single(p => p.Type == "newfollower").Enabled);
+        Assert.False(prefs.Preferences.Single(p => p.Type == "movieadded").Enabled);
     }
 
     [Fact]

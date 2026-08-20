@@ -22,6 +22,7 @@ const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswo
 const ResetPasswordPage = lazy(() => import('@/features/auth/pages/ResetPasswordPage'));
 const AccountPage = lazy(() => import('@/features/auth/pages/AccountPage'));
 const MyEventsPage = lazy(() => import('@/features/events/pages/MyEventsPage'));
+const NotificationsPage = lazy(() => import('@/features/notifications/pages/NotificationsPage'));
 const ProfilePage = lazy(() => import('@/features/profile/pages/ProfilePage'));
 const NotFoundPage = lazy(() => import('@/app/pages/NotFoundPage'));
 
@@ -97,6 +98,14 @@ export function AppRoutes() {
           element={
             <ProtectedRoute>
               <MyEventsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.notifications}
+          element={
+            <ProtectedRoute>
+              <NotificationsPage />
             </ProtectedRoute>
           }
         />

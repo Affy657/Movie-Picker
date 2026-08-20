@@ -10,6 +10,7 @@ public enum UserNotificationType
     EventReminder1h = 6,
     EventReminder24h = 7,
     EventInvitation = 8,
+    EventPending = 9,
 }
 
 public sealed record UserNotification

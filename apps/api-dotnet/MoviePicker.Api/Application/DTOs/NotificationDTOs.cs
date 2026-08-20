@@ -20,24 +20,29 @@ public sealed record UnsubscribePushRequest
     public string Endpoint { get; init; } = string.Empty;
 }
 
+public sealed record NotificationTypePreference
+{
+    public string Type { get; init; } = string.Empty;
+    public bool Enabled { get; init; }
+}
+
 public sealed record NotificationPreferencesResponse
 {
-    public bool NotifyOnParticipantJoined { get; init; }
-    public bool NotifyEventReminder { get; init; }
-    public bool NotifyOnMovieAdded { get; init; }
-    public bool NotifyOnMoviePicked { get; init; }
-    public bool NotifyOnEventDeleted { get; init; }
-    public bool NotifyOnNewFollower { get; init; }
+    public IReadOnlyList<NotificationTypePreference> Preferences { get; init; } = [];
+}
+
+public sealed record NotificationTypePreferencePatch
+{
+    [Required]
+    public string Type { get; init; } = string.Empty;
+
+    [Required]
+    public bool? Enabled { get; init; }
 }
 
 public sealed record PatchNotificationPreferencesRequest
 {
-    public bool? NotifyOnParticipantJoined { get; init; }
-    public bool? NotifyEventReminder { get; init; }
-    public bool? NotifyOnMovieAdded { get; init; }
-    public bool? NotifyOnMoviePicked { get; init; }
-    public bool? NotifyOnEventDeleted { get; init; }
-    public bool? NotifyOnNewFollower { get; init; }
+    public IReadOnlyList<NotificationTypePreferencePatch> Preferences { get; init; } = [];
 }
 
 public sealed record UserNotificationItem
@@ -58,4 +63,5 @@ public sealed record NotificationInboxResponse
 {
     public IReadOnlyList<UserNotificationItem> Items { get; init; } = [];
     public int UnreadCount { get; init; }
+    public bool HasMore { get; init; }
 }

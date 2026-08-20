@@ -7,6 +7,7 @@ import { usePushNotifications } from '@/features/notifications/hooks/usePushNoti
 import {
   fetchNotificationPreferences,
   patchNotificationPreferences,
+  type NotificationPreferences,
 } from '@/features/notifications/api/notificationsApi';
 
 vi.mock('@/shared/i18n', () => ({
@@ -37,13 +38,18 @@ const pushState = (overrides: Partial<ReturnType<typeof usePushNotifications>> =
   ...overrides,
 });
 
-const allPrefs = {
-  notifyOnParticipantJoined: true,
-  notifyEventReminder: true,
-  notifyOnMovieAdded: true,
-  notifyOnMoviePicked: true,
-  notifyOnEventDeleted: true,
-  notifyOnNewFollower: true,
+const allPrefs: NotificationPreferences = {
+  preferences: [
+    { type: 'participantjoined', enabled: true },
+    { type: 'movieadded', enabled: false },
+    { type: 'moviepicked', enabled: true },
+    { type: 'eventdeleted', enabled: true },
+    { type: 'eventreminder1h', enabled: true },
+    { type: 'eventreminder24h', enabled: true },
+    { type: 'eventinvitation', enabled: true },
+    { type: 'newfollower', enabled: true },
+    { type: 'eventpending', enabled: true },
+  ],
 };
 
 beforeEach(() => {
@@ -64,34 +70,8 @@ describe('NotificationsSection', () => {
     expect(screen.queryByRole('switch')).not.toBeInTheDocument();
   });
 
-  it('renders only the enable toggle when not subscribed', () => {
+  it('loads and renders the 9 preference toggles even when not subscribed to push', async () => {
     mockUsePush.mockReturnValue(pushState({ subscribed: false }));
-
-    render(<NotificationsSection />);
-
-    expect(screen.getAllByRole('switch')).toHaveLength(1);
-    expect(mockFetchPrefs).not.toHaveBeenCalled();
-  });
-
-  it('shows the push error message', () => {
-    mockUsePush.mockReturnValue(pushState({ error: 'boom' }));
-
-    render(<NotificationsSection />);
-
-    expect(screen.getByRole('alert')).toHaveTextContent('boom');
-  });
-
-  it('disables the toggle and shows a hint when permission is denied', () => {
-    mockUsePush.mockReturnValue(pushState({ permission: 'denied' }));
-
-    render(<NotificationsSection />);
-
-    expect(screen.getByText('notifications.permissionDenied')).toBeInTheDocument();
-    expect(screen.getByRole('switch')).toBeDisabled();
-  });
-
-  it('loads and renders preference toggles when subscribed', async () => {
-    mockUsePush.mockReturnValue(pushState({ subscribed: true }));
     mockFetchPrefs.mockResolvedValue(allPrefs);
 
     render(<NotificationsSection />);
@@ -100,13 +80,47 @@ describe('NotificationsSection', () => {
     expect(
       await screen.findByRole('switch', { name: 'notifications.prefParticipantJoined' })
     ).toBeInTheDocument();
-    expect(screen.getAllByRole('switch')).toHaveLength(7);
+    // 1 master push toggle + 9 per-type toggles
+    expect(screen.getAllByRole('switch')).toHaveLength(10);
+  });
+
+  it('shows the push error message', () => {
+    mockUsePush.mockReturnValue(pushState({ error: 'boom' }));
+    mockFetchPrefs.mockResolvedValue(allPrefs);
+
+    render(<NotificationsSection />);
+
+    expect(screen.getByRole('alert')).toHaveTextContent('boom');
+  });
+
+  it('disables the master toggle and shows a hint when permission is denied', () => {
+    mockUsePush.mockReturnValue(pushState({ permission: 'denied' }));
+    mockFetchPrefs.mockResolvedValue(allPrefs);
+
+    render(<NotificationsSection />);
+
+    expect(screen.getByText('notifications.permissionDenied')).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'notifications.enableButton' })).toBeDisabled();
+  });
+
+  it('reflects movieadded as disabled by default in the fetched preferences', async () => {
+    mockUsePush.mockReturnValue(pushState({ subscribed: false }));
+    mockFetchPrefs.mockResolvedValue(allPrefs);
+
+    render(<NotificationsSection />);
+
+    const toggle = await screen.findByRole('switch', { name: 'notifications.prefMovieAdded' });
+    expect(toggle).toHaveAttribute('aria-checked', 'false');
   });
 
   it('patches a preference when its toggle is clicked', async () => {
     mockUsePush.mockReturnValue(pushState({ subscribed: true }));
     mockFetchPrefs.mockResolvedValue(allPrefs);
-    mockPatchPrefs.mockResolvedValue({ ...allPrefs, notifyOnParticipantJoined: false });
+    mockPatchPrefs.mockResolvedValue({
+      preferences: allPrefs.preferences.map((p) =>
+        p.type === 'participantjoined' ? { ...p, enabled: false } : p
+      ),
+    });
 
     render(<NotificationsSection />);
 
@@ -115,6 +129,6 @@ describe('NotificationsSection', () => {
     });
     await userEvent.click(toggle);
 
-    expect(mockPatchPrefs).toHaveBeenCalledWith({ notifyOnParticipantJoined: false });
+    expect(mockPatchPrefs).toHaveBeenCalledWith([{ type: 'participantjoined', enabled: false }]);
   });
 });

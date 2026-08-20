@@ -74,11 +74,7 @@ public sealed class InMemoryUserRepository : IUserRepository
             UiTheme = user.UiTheme,
             AccentColor = user.AccentColor,
             RatingScale = user.RatingScale,
-            NotifyOnParticipantJoined = user.NotifyOnParticipantJoined,
-            NotifyEventReminder = user.NotifyEventReminder,
-            NotifyOnMovieAdded = user.NotifyOnMovieAdded,
-            NotifyOnMoviePicked = user.NotifyOnMoviePicked,
-            NotifyOnEventDeleted = user.NotifyOnEventDeleted,
+            NotificationPreferences = user.NotificationPreferences,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         };
@@ -114,11 +110,7 @@ public sealed class InMemoryUserRepository : IUserRepository
             UiTheme = user.UiTheme,
             AccentColor = user.AccentColor,
             RatingScale = user.RatingScale,
-            NotifyOnParticipantJoined = user.NotifyOnParticipantJoined,
-            NotifyEventReminder = user.NotifyEventReminder,
-            NotifyOnMovieAdded = user.NotifyOnMovieAdded,
-            NotifyOnMoviePicked = user.NotifyOnMoviePicked,
-            NotifyOnEventDeleted = user.NotifyOnEventDeleted,
+            NotificationPreferences = user.NotificationPreferences,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         };

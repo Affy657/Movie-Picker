@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.Notifications;
@@ -22,27 +23,30 @@ public sealed class PatchNotificationPreferencesHandler : IPatchNotificationPref
     {
         var user = await _users.GetByIdAsync(userId, ct) ?? throw new NotFoundException("Utilisateur introuvable");
 
-        var updated = user with
-        {
-            NotifyOnParticipantJoined = request.NotifyOnParticipantJoined ?? user.NotifyOnParticipantJoined,
-            NotifyEventReminder = request.NotifyEventReminder ?? user.NotifyEventReminder,
-            NotifyOnMovieAdded = request.NotifyOnMovieAdded ?? user.NotifyOnMovieAdded,
-            NotifyOnMoviePicked = request.NotifyOnMoviePicked ?? user.NotifyOnMoviePicked,
-            NotifyOnEventDeleted = request.NotifyOnEventDeleted ?? user.NotifyOnEventDeleted,
-            NotifyOnNewFollower = request.NotifyOnNewFollower ?? user.NotifyOnNewFollower,
-            UpdatedAt = _clock.GetUtcNow()
-        };
+        var merged = new Dictionary<UserNotificationType, bool>(
+            Enum.GetValues<UserNotificationType>().ToDictionary(t => t, user.NotifiesOn));
 
+        foreach (var patch in request.Preferences)
+        {
+            if (!Enum.TryParse<UserNotificationType>(patch.Type, ignoreCase: true, out var type))
+                throw new BadRequestException($"Type de notification inconnu : « {patch.Type} »");
+            if (patch.Enabled is null)
+                throw new BadRequestException($"« enabled » est requis pour le type « {patch.Type} »");
+            merged[type] = patch.Enabled.Value;
+        }
+
+        var updated = user with { NotificationPreferences = merged, UpdatedAt = _clock.GetUtcNow() };
         await _users.UpdateAsync(updated, ct);
 
         return new NotificationPreferencesResponse
         {
-            NotifyOnParticipantJoined = updated.NotifyOnParticipantJoined,
-            NotifyEventReminder = updated.NotifyEventReminder,
-            NotifyOnMovieAdded = updated.NotifyOnMovieAdded,
-            NotifyOnMoviePicked = updated.NotifyOnMoviePicked,
-            NotifyOnEventDeleted = updated.NotifyOnEventDeleted,
-            NotifyOnNewFollower = updated.NotifyOnNewFollower
+            Preferences = Enum.GetValues<UserNotificationType>()
+                .Select(type => new NotificationTypePreference
+                {
+                    Type = type.ToString().ToLowerInvariant(),
+                    Enabled = updated.NotifiesOn(type)
+                })
+                .ToList()
         };
     }
 }
