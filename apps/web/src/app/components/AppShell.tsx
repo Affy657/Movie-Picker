@@ -10,6 +10,7 @@ import InboxBell from '@/features/notifications/components/InboxBell';
 import Footer from './Footer';
 import PwaAutoUpdate from './PwaAutoUpdate';
 import ConsentBanner from './ConsentBanner';
+import InAppBrowserBanner from './InAppBrowserBanner';
 import styles from './AppShell.module.css';
 
 function navLinkClass({ isActive }: { isActive: boolean }): string {
@@ -108,6 +109,7 @@ export default function AppShell() {
       ) : null}
       <PwaAutoUpdate />
       <ConsentBanner />
+      <InAppBrowserBanner />
     </div>
   );
 }

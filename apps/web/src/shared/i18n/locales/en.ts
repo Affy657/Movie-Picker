@@ -713,4 +713,11 @@ export const en: Locale = {
       rejectAll: 'Reject all',
     },
   },
+  inAppBrowser: {
+    banner: {
+      title: "You're in this app's built-in browser",
+      description:
+        'These browsers can sometimes sign you out between openings. To stay signed in, open this link in your usual browser (⋯ menu, then "Open in browser").',
+    },
+  },
 };

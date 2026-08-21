@@ -727,6 +727,13 @@
       rejectAll: 'Tout refuser',
     },
   },
+  inAppBrowser: {
+    banner: {
+      title: 'Vous êtes dans le navigateur intégré de cette application',
+      description:
+        'Ces navigateurs effacent parfois votre connexion entre deux ouvertures. Pour rester connecté, ouvrez ce lien dans votre navigateur habituel (menu ⋯ puis « Ouvrir dans le navigateur »).',
+    },
+  },
 } as const;
 
 type DeepStringify<T> = {
