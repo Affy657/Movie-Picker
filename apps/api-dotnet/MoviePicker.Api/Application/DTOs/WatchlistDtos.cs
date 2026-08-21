@@ -38,6 +38,7 @@ public sealed class WatchlistItemResponse
     public string? PosterPath { get; init; }
     public double? VoteAverage { get; init; }
     public int? RuntimeMinutes { get; init; }
+    public IReadOnlyList<int> GenreIds { get; init; } = [];
     public DateTimeOffset CreatedAt { get; init; }
 
     public static WatchlistItemResponse FromDomain(WatchlistItem item) => new()
@@ -49,6 +50,7 @@ public sealed class WatchlistItemResponse
         PosterPath = item.PosterPath,
         VoteAverage = item.VoteAverage,
         RuntimeMinutes = item.RuntimeMinutes,
+        GenreIds = item.GenreIds,
         CreatedAt = item.CreatedAt
     };
 }

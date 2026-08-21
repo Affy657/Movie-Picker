@@ -173,4 +173,48 @@ public sealed class InMemoryWatchlistRepositoryTests
         Assert.Empty(await _sut.ListByUserIdAsync("u1"));
         Assert.Single(await _sut.ListByUserIdAsync("u2"));
     }
+
+    [Fact]
+    public async Task UpdateGenresAsync_ExistingItem_UpdatesGenres()
+    {
+        await _sut.AddAsync(Item());
+        var stored = await _sut.GetOneAsync("u1", 42, MovieMediaType.Movie);
+
+        await _sut.UpdateGenresAsync(stored!.Id, [28, 878]);
+
+        var updated = await _sut.GetOneAsync("u1", 42, MovieMediaType.Movie);
+        Assert.Equal(new[] { 28, 878 }, updated!.GenreIds);
+    }
+
+    [Fact]
+    public async Task UpdateGenresAsync_MissingItem_DoesNothing()
+    {
+        await _sut.UpdateGenresAsync("missing-id", [28]);
+
+        Assert.Empty(await _sut.ListByUserIdAsync("u1"));
+    }
+
+    [Fact]
+    public async Task ListMissingGenresAsync_ReturnsOnlyItemsWithoutGenres()
+    {
+        await _sut.AddAsync(Item(tmdbId: 1));
+        await _sut.AddAsync(Item(tmdbId: 2));
+        var withGenres = await _sut.GetOneAsync("u1", 2, MovieMediaType.Movie);
+        await _sut.UpdateGenresAsync(withGenres!.Id, [28]);
+
+        var missing = await _sut.ListMissingGenresAsync(10);
+
+        var only = Assert.Single(missing);
+        Assert.Equal(1, only.TmdbId);
+    }
+
+    [Fact]
+    public async Task ListMissingGenresAsync_LimitZeroOrLess_ReturnsEmpty()
+    {
+        await _sut.AddAsync(Item());
+
+        var missing = await _sut.ListMissingGenresAsync(0);
+
+        Assert.Empty(missing);
+    }
 }

@@ -9,6 +9,7 @@ export interface WatchlistItem {
   posterPath: string | null;
   voteAverage?: number | null;
   runtimeMinutes?: number | null;
+  genreIds?: number[];
   createdAt: string;
 }
 

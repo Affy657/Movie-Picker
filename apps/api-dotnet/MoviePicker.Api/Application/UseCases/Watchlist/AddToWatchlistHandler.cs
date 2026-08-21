@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.Posters;
@@ -11,20 +12,27 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
     private readonly IWatchlistRepository _watchlist;
     private readonly IPosterImageStore _posterImageStore;
     private readonly TimeProvider _clock;
+    private readonly ITmdbMovieSearch _tmdb;
+    private readonly ILogger<AddToWatchlistHandler> _logger;
 
     public AddToWatchlistHandler(
         IWatchlistRepository watchlist,
         IPosterImageStore posterImageStore,
-        TimeProvider clock)
+        TimeProvider clock,
+        ITmdbMovieSearch tmdb,
+        ILogger<AddToWatchlistHandler> logger)
     {
         _watchlist = watchlist;
         _posterImageStore = posterImageStore;
         _clock = clock;
+        _tmdb = tmdb;
+        _logger = logger;
     }
 
     public async Task<WatchlistItemResponse> HandleAsync(string userId, AddWatchlistItemRequest request, CancellationToken ct = default)
     {
         var poster = await ResolvePosterAsync(request.PosterPath, ct);
+        var genreIds = await FetchGenreIdsBestEffortAsync(request.TmdbId, request.MediaType, ct);
 
         var item = new WatchlistItem
         {
@@ -40,6 +48,7 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
             LetterboxdSlug = string.IsNullOrWhiteSpace(request.LetterboxdSlug)
                 ? null
                 : request.LetterboxdSlug.Trim(),
+            GenreIds = genreIds,
             CreatedAt = _clock.GetUtcNow()
         };
 
@@ -70,5 +79,19 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
         if (Uri.TryCreate(p, UriKind.Absolute, out var u) && u.Scheme == Uri.UriSchemeHttps)
             return true;
         return TmdbPosterUrlNormalizer.TryParsePosterKey(p, out _);
+    }
+
+    private async Task<IReadOnlyList<int>> FetchGenreIdsBestEffortAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct)
+    {
+        try
+        {
+            var details = await _tmdb.GetDetailsAsync(tmdbId, mediaType, ct);
+            return details?.GenreIds ?? [];
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Récupération des genres TMDB échouée pour {TmdbId} ; item ajouté à la watchlist sans genres", tmdbId);
+            return [];
+        }
     }
 }

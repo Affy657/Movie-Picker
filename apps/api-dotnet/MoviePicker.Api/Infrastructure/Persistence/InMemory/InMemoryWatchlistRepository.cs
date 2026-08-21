@@ -81,4 +81,24 @@ public sealed class InMemoryWatchlistRepository : IWatchlistRepository
 
         return Task.FromResult(count);
     }
+
+    public Task UpdateGenresAsync(string itemId, IReadOnlyList<int> genreIds, CancellationToken ct = default)
+    {
+        var entry = _store.FirstOrDefault(kv => kv.Value.Id == itemId);
+        if (entry.Key is not null)
+            _store.TryUpdate(entry.Key, entry.Value with { GenreIds = genreIds }, entry.Value);
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<WatchlistItem>> ListMissingGenresAsync(int limit, CancellationToken ct = default)
+    {
+        if (limit <= 0)
+            return Task.FromResult<IReadOnlyList<WatchlistItem>>([]);
+
+        IReadOnlyList<WatchlistItem> result = _store.Values
+            .Where(x => x.GenreIds.Count == 0)
+            .Take(limit)
+            .ToList();
+        return Task.FromResult(result);
+    }
 }
