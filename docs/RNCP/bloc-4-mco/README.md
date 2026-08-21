@@ -2,11 +2,11 @@
 
 > Grille officielle : [`../referentiel/bloc-04-maintenir-application-mco.md`](../referentiel/bloc-04-maintenir-application-mco.md) | Suivi : [`../suivi-rncp.md`](../suivi-rncp.md)
 
-**État : 🟢 dossier rédigé, relu, recentré sur la grille.** Le livrable est [`dossier-bloc-4.md`](dossier-bloc-4.md), couvrant les 8 éléments imposés. Volume : 8 640 mots, **19 pages** en rendu A4 dense (corps 10,5 pt, marges 18/16 mm, tableaux 9 pt, captures plafonnées à 75 mm de haut). Le gabarit dense est désormais obligatoire : en mise en page confortable (11 pt, marges 20 mm) le dossier dépasse les 20 pages réglementaires.
+**État : 🟢 dossier rédigé, relu, recentré sur la grille.** Le livrable est [`dossier-bloc-4.md`](dossier-bloc-4.md), couvrant les 8 éléments imposés. Volume : 8 640 mots, **19 pages** mesurées sur l'export [`dossier-bloc-4.pdf`](dossier-bloc-4.pdf), pour 20 pages autorisées. Rendu A4 dense : corps 10,5 pt, marges 18 mm en tête et 16 mm sur les côtés, tableaux 9 pt avec en-tête répété quand ils enjambent une page, captures plafonnées à 88 mm de haut et légendées, pied de page numéroté. Le gabarit dense est obligatoire : en mise en page confortable (11 pt, marges 20 mm) le dossier dépasse la limite réglementaire.
 
 Quatre captures sont retenues, chacune adossée à une compétence éliminatoire : `06-sondes.png` et `07-alerte-email.png` pour C4.1.2, `02-issue-67.png` pour C4.2.1, `04-releases.png` pour C4.3.2. Les trois autres ont été retirées du dossier, leur contenu étant intégralement décrit en texte : `01-dashboard-supervision.png` (à reprendre sur 7 ou 30 jours si tu veux la réintégrer, elle est actuellement prise sur « la dernière heure » avec un panneau vide), `03-pipeline-correctif.png` et `05-lien-support.png`. Elles restent dans `captures/`.
 
-Reste avant remise : confirmer que la redirection `contact@movie-picker.fr` délivre bien chez OVH, et exporter en PDF en vérifiant le compte de pages.
+Reste avant remise : confirmer que la redirection `contact@movie-picker.fr` délivre bien chez OVH, et réexporter le PDF si le fichier source bouge encore.
 
 ## Attendus du jury
 
