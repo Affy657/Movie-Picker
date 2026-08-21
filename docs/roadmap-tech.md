@@ -8,6 +8,8 @@ Découpage par version côté **plateforme, qualité, infra, observabilité, det
 
 > **Règle de tri** : seul le travail **transverse et indépendant de toute feature produit** a sa place ici — CI/CD, infra cloud, sécurité de la chaîne, observabilité, outillage qualité. L'implémentation technique d'une feature (schéma, endpoints, cache…) appartient à la feature elle-même.
 
+> **À faire** : ajouter une taille t-shirt (S/M/L/XL) par item pour comparer la charge entre versions plutôt qu'au nombre de tickets — pas encore fait, à appliquer rétroactivement.
+
 **Légende types** : 🏗️ Infra & déploiement · ⚙️ CI/CD & qualité · 🔒 Sécurité · 📊 Observabilité · ♿ Accessibilité
 
 ---
