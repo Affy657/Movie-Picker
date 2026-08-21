@@ -13,10 +13,21 @@ public sealed class GetInboxHandler : IGetInboxHandler
         _notifications = notifications;
     }
 
-    public async Task<NotificationInboxResponse> HandleAsync(string userId, CancellationToken ct = default)
+    private const int DefaultPageSize = 30;
+
+    public async Task<NotificationInboxResponse> HandleAsync(
+        string userId, int? limit, int? offset, CancellationToken ct = default)
     {
-        var items = await _notifications.ListByUserIdAsync(userId, limit: 50, ct);
-        var unreadCount = items.Count(n => !n.IsRead);
+        var pageSize = limit is null ? DefaultPageSize : Math.Clamp(limit.Value, 1, 100);
+        var skip = offset is null ? 0 : Math.Max(0, offset.Value);
+
+        // On demande une page de plus que nécessaire pour savoir s'il en reste, sans compter
+        // toute la collection (cohérent avec l'existant : voir ListMyEventsHandler).
+        var page = await _notifications.ListByUserIdAsync(userId, limit: pageSize + 1, offset: skip, ct);
+        var hasMore = page.Count > pageSize;
+        var items = hasMore ? page.Take(pageSize).ToList() : page;
+
+        var unreadCount = await _notifications.GetUnreadCountAsync(userId, ct);
 
         return new NotificationInboxResponse
         {
@@ -33,7 +44,8 @@ public sealed class GetInboxHandler : IGetInboxHandler
                 IsRead = n.IsRead,
                 CreatedAt = n.CreatedAt
             }).ToList(),
-            UnreadCount = unreadCount
+            UnreadCount = unreadCount,
+            HasMore = hasMore
         };
     }
 }

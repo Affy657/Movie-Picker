@@ -6,12 +6,14 @@ import styles from './EventLifecyclePill.module.css';
 const LIFECYCLE_LABEL_KEYS: Record<MyEventLifecycle, TranslationKey> = {
   upcoming: 'events.lifecycle.upcoming',
   live: 'events.lifecycle.live',
+  pending: 'events.lifecycle.pending',
   finished: 'events.lifecycle.finished',
 };
 
 const LIFECYCLE_CLASSES: Record<MyEventLifecycle, string | undefined> = {
   upcoming: styles.upcoming,
   live: styles.live,
+  pending: styles.pending,
   finished: styles.finished,
 };
 

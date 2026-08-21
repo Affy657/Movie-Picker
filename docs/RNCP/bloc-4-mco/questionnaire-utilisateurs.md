@@ -2,7 +2,7 @@
 
 > Support de collecte des retours pour les axes d'amélioration ([`axes-amelioration.md`](axes-amelioration.md), C4.3.1) et pour le suivi de la satisfaction.
 >
-> **Statut : à envoyer.** Cible : les 17 comptes inscrits en production. Durée annoncée : quatre minutes.
+> **Statut : envoyé, réponses en cours.** En ligne depuis le 18/08/2026 ; 7 réponses reçues en 48 h sur une cible de 17 comptes inscrits et une dizaine espérée au maximum. Synthèse dans [`axes-amelioration.md`](axes-amelioration.md) § 2 bis.
 > **Formulaire** : hébergé sur Google Forms, ossature initiale générée par [`questionnaire-google-form.gs`](questionnaire-google-form.gs). Seul le lien publié (`/viewform`) est diffusé aux répondants ; le lien d'édition n'a pas sa place dans un document remis à un tiers, puisqu'il donne les droits d'auteur sur le formulaire et sur les réponses déjà collectées.
 >
 > **Le formulaire en ligne fait foi.** Il a été retouché à la main après sa génération : questions retirées, libellés modifiés. Ce fichier décrit l'intention de chaque question et la façon de l'exploiter, pas l'état exact du formulaire. Rejouer le script d'ossature écraserait ces retouches, et les réponses reçues sur les questions supprimées deviendraient invisibles : le script refuse donc de s'exécuter sur un formulaire non vide tant que `ECRASER_LE_FORMULAIRE_EXISTANT` n'est pas passé à `true`.

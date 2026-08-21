@@ -197,20 +197,4 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
             new { maxParticipants = 1 });
         Assert.Equal(HttpStatusCode.Conflict, patch.StatusCode);
     }
-
-    [Fact]
-    public async Task PatchConfig_InvalidEndDate_Returns400()
-    {
-        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
-        var create = await client.PostAsJsonAsync(
-            "/api/v1/events",
-            new { title = "Bad date", date = "2035-06-01", time = "20:00" });
-        var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
-        Assert.NotNull(created);
-
-        var patch = await client.PatchAsJsonAsync(
-            $"/api/v1/events/{created!.Slug}/config",
-            new { endDate = "not-a-date" });
-        Assert.Equal(HttpStatusCode.BadRequest, patch.StatusCode);
-    }
 }

@@ -297,7 +297,6 @@ describe('EventDetail (MSW)', () => {
             ],
             config: {
               theme: null,
-              endDate: null,
               maxProposalsPerParticipant: null,
               maxParticipants: null,
               wheelMode: 'strictRandom',
@@ -347,7 +346,6 @@ describe('EventDetail (MSW)', () => {
             ],
             config: {
               theme: null,
-              endDate: null,
               maxProposalsPerParticipant: null,
               maxParticipants: null,
               wheelMode: 'strictRandom',

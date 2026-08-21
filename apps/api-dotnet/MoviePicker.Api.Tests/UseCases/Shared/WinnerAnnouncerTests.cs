@@ -66,7 +66,7 @@ public sealed class WinnerAnnouncerTests
     public async Task AnnounceAsync_NotifiableParticipant_SendsPushAndInbox()
     {
         HasParticipants("u1");
-        Users(new User { Id = "u1", NotifyOnMoviePicked = true });
+        Users(new User { Id = "u1", NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.MoviePicked] = true } });
         Subscriptions("u1");
 
         await _sut.AnnounceAsync(Soiree, "Winner", WinnerPickMethod.Wheel);
@@ -83,7 +83,7 @@ public sealed class WinnerAnnouncerTests
     public async Task AnnounceAsync_ManualPick_UsesManualTypeAndWording()
     {
         HasParticipants("u1");
-        Users(new User { Id = "u1", NotifyOnMoviePicked = true });
+        Users(new User { Id = "u1", NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.MoviePickedManually] = true } });
         Subscriptions("u1");
 
         await _sut.AnnounceAsync(Soiree, "Winner", WinnerPickMethod.Manual);
@@ -100,7 +100,7 @@ public sealed class WinnerAnnouncerTests
     public async Task AnnounceAsync_ParticipantOptedOut_DoesNotNotify()
     {
         HasParticipants("u1");
-        Users(new User { Id = "u1", NotifyOnMoviePicked = false });
+        Users(new User { Id = "u1", NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.MoviePicked] = false } });
 
         await _sut.AnnounceAsync(Soiree, "Winner", WinnerPickMethod.Wheel);
 

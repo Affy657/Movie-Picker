@@ -36,6 +36,12 @@
   border-color: color-mix(in srgb, var(--color-badge-finished-text) 40%, transparent);
 }
 
+.pending {
+  background: var(--color-badge-pending-bg);
+  color: var(--color-badge-pending-text);
+  border-color: color-mix(in srgb, var(--color-badge-pending-text) 32%, transparent);
+}
+
 .detail {
   font-weight: 500;
   opacity: 0.72;

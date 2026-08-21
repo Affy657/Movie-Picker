@@ -18,6 +18,7 @@ public sealed class EventDetailResponse
     public DateTimeOffset UpdatedAt { get; init; }
     public bool IsHost { get; init; }
     public bool IsFinished { get; init; }
+    public string Lifecycle { get; init; } = string.Empty;
     public WinnerMovieResponse? WinnerMovie { get; init; }
 
     public ParticipantResponse? MyParticipant { get; init; }

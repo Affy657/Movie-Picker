@@ -36,7 +36,6 @@ type HostEventSettingsPanelProps = {
 function normalizeConfig(c: EventConfigData | undefined): EventConfigData {
   return {
     theme: c?.theme ?? DEFAULT_EVENT_CONFIG.theme,
-    endDate: c?.endDate ?? DEFAULT_EVENT_CONFIG.endDate,
     maxProposalsPerParticipant:
       c?.maxProposalsPerParticipant ?? DEFAULT_EVENT_CONFIG.maxProposalsPerParticipant,
     maxParticipants: c?.maxParticipants ?? DEFAULT_EVENT_CONFIG.maxParticipants,

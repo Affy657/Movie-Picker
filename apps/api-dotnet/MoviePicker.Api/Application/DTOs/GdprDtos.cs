@@ -26,20 +26,11 @@ public sealed record ExportedProfile
     public string AvatarId { get; init; } = string.Empty;
     public bool HasPassword { get; init; }
     public IReadOnlyList<string> LinkedProviders { get; init; } = Array.Empty<string>();
-    public ExportedNotificationPreferences NotificationPreferences { get; init; } = new();
+    public IReadOnlyDictionary<string, bool> NotificationPreferences { get; init; } =
+        new Dictionary<string, bool>();
     public DateTimeOffset? SupporterSince { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
-}
-
-public sealed record ExportedNotificationPreferences
-{
-    public bool ParticipantJoined { get; init; }
-    public bool EventReminder { get; init; }
-    public bool MovieAdded { get; init; }
-    public bool MoviePicked { get; init; }
-    public bool EventDeleted { get; init; }
-    public bool NewFollower { get; init; }
 }
 
 public sealed record ExportedNotification

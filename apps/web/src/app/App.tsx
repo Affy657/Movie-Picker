@@ -27,6 +27,7 @@ const PrivacyPolicyPage = lazy(() => import('@/app/pages/PrivacyPolicyPage'));
 const DonatePage = lazy(() => import('@/app/pages/DonatePage'));
 const MyEventsPage = lazy(() => import('@/features/events/pages/MyEventsPage'));
 const WatchlistPage = lazy(() => import('@/features/watchlist/pages/WatchlistPage'));
+const NotificationsPage = lazy(() => import('@/features/notifications/pages/NotificationsPage'));
 const ProfilePage = lazy(() => import('@/features/profile/pages/ProfilePage'));
 const NotFoundPage = lazy(() => import('@/app/pages/NotFoundPage'));
 
@@ -114,6 +115,14 @@ export function AppRoutes() {
           element={
             <ProtectedRoute>
               <WatchlistPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.notifications}
+          element={
+            <ProtectedRoute>
+              <NotificationsPage />
             </ProtectedRoute>
           }
         />

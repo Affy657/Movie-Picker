@@ -13,6 +13,7 @@ import Footer from './Footer';
 import PwaAutoUpdate from './PwaAutoUpdate';
 import ConsentBanner from './ConsentBanner';
 import WhatsNewModal from './WhatsNewModal';
+import InAppBrowserBanner from './InAppBrowserBanner';
 import styles from './AppShell.module.css';
 
 function navLinkClass({ isActive }: { isActive: boolean }): string {
@@ -125,6 +126,7 @@ export default function AppShell() {
       {isAuthenticated ? (
         <WhatsNewModal open={whatsNewOpen} release={whatsNewRelease} onClose={closeWhatsNew} />
       ) : null}
+      <InAppBrowserBanner />
     </div>
   );
 }

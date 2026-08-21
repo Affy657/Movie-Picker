@@ -26,6 +26,7 @@ export type EventWheelState = {
   showRelaunch: boolean;
   showReset: boolean;
   showClose: boolean;
+  closeWithoutMovie: boolean;
   launch: () => void;
   reset: () => void;
   closeEvent: () => void;
@@ -168,6 +169,7 @@ export function useEventWheel({
   }, [onWheelDone]);
 
   const isOpenForActions = isHost && !!event && !event.isFinished;
+  const isPendingWithoutWinner = isOpenForActions && !winner && event?.lifecycle === 'pending';
 
   return {
     isHost,
@@ -181,7 +183,8 @@ export function useEventWheel({
     spinDisabled: moviesCount === 0 || noEligibleMovie,
     showRelaunch: isOpenForActions && !!winner && moviesCount > 0 && !manualMode,
     showReset: isOpenForActions && !!winner && !manualMode,
-    showClose: isOpenForActions && (!!winner || !!event?.closedAt),
+    showClose: isOpenForActions && (!!winner || !!event?.closedAt || isPendingWithoutWinner),
+    closeWithoutMovie: isPendingWithoutWinner,
     launch,
     reset,
     closeEvent,

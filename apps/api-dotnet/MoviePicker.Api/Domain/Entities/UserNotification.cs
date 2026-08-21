@@ -10,7 +10,8 @@ public enum UserNotificationType
     EventReminder1h = 6,
     EventReminder24h = 7,
     EventInvitation = 8,
-    MoviePickedManually = 9,
+    EventPending = 9,
+    MoviePickedManually = 10,
 }
 
 public sealed record UserNotification

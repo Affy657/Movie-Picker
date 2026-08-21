@@ -8,19 +8,21 @@ export const EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS = 3_500;
 
 export type EventLiveStrategy = 'polling';
 
-export type EventLivePhase = 'finished' | 'upcoming' | 'active';
+export type EventLivePhase = 'finished' | 'upcoming' | 'active' | 'pending';
 
 type EventLikeForSchedule = {
   isFinished?: boolean;
+  lifecycle?: string;
   date?: string;
   time?: string;
 };
 
 export function getEventLivePhase(
-  event: { isFinished?: boolean; date?: string; time?: string } | undefined,
+  event: { isFinished?: boolean; lifecycle?: string; date?: string; time?: string } | undefined,
   nowMs: number
 ): EventLivePhase {
   if (!event || event.isFinished) return 'finished';
+  if (event.lifecycle === 'pending') return 'pending';
   if (!event.date || !event.time) return 'active';
   const start = eventScheduledStartUtcMs({ date: event.date, time: event.time });
   if (start === null) return 'active';
@@ -33,6 +35,7 @@ function livePollIntervalMs(
   nowMs: number
 ): number | false {
   if (!event || event.isFinished) return false;
+  if (event.lifecycle === 'pending') return EVENT_LIVE_POLL_INTERVAL_UPCOMING_MS;
   if (!event.date || !event.time) return EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS;
   const start = eventScheduledStartUtcMs({ date: event.date, time: event.time });
   if (start === null) return EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS;
@@ -48,7 +51,7 @@ export function getLivePollingRefetchIntervalForEventQuery(
 }
 
 export function getLivePollingRefetchIntervalForMoviesQuery(
-  event: { isFinished?: boolean; date?: string; time?: string } | undefined,
+  event: { isFinished?: boolean; lifecycle?: string; date?: string; time?: string } | undefined,
   moviesQueryEnabled: boolean,
   nowMs: number = Date.now()
 ): number | false {

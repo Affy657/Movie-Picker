@@ -42,8 +42,12 @@ public sealed class WinnerAnnouncer : IWinnerAnnouncer
             if (userIds.Count == 0)
                 return;
 
+            var notificationType = method == WinnerPickMethod.Manual
+                ? UserNotificationType.MoviePickedManually
+                : UserNotificationType.MoviePicked;
+
             var users = await _userRepository.ListByIdsAsync(userIds, ct);
-            var notifiableIds = users.Where(u => u.NotifyOnMoviePicked).Select(u => u.Id).ToHashSet();
+            var notifiableIds = users.Where(u => u.NotifiesOn(notificationType)).Select(u => u.Id).ToHashSet();
             if (notifiableIds.Count == 0)
                 return;
 
@@ -61,9 +65,6 @@ public sealed class WinnerAnnouncer : IWinnerAnnouncer
                     await _pushSender.SendAsync(sub, message, ct);
             }
 
-            var notificationType = method == WinnerPickMethod.Manual
-                ? UserNotificationType.MoviePickedManually
-                : UserNotificationType.MoviePicked;
             var now = DateTimeOffset.UtcNow;
             foreach (var userId in notifiableIds)
             {

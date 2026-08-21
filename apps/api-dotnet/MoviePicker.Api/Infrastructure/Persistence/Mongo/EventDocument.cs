@@ -63,10 +63,6 @@ public sealed class EventConfigDocument
     [BsonIgnoreIfNull]
     public int? ThemeColor { get; set; }
 
-    [BsonElement("endDate")]
-    [BsonIgnoreIfNull]
-    public DateTime? EndDate { get; set; }
-
     [BsonElement("maxProposalsPerParticipant")]
     [BsonIgnoreIfNull]
     public int? MaxProposalsPerParticipant { get; set; }

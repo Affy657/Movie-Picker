@@ -2,7 +2,11 @@
 
 > Grille officielle : [`../referentiel/bloc-04-maintenir-application-mco.md`](../referentiel/bloc-04-maintenir-application-mco.md) | Suivi : [`../suivi-rncp.md`](../suivi-rncp.md)
 
-**État : 🟡 dossier rédigé, preuves à joindre.** Le livrable est [`dossier-bloc-4.md`](dossier-bloc-4.md), couvrant les 8 éléments. Restent : les sept captures d'écran de `captures/`, l'envoi du questionnaire et l'intégration de ses réponses au § 6, puis l'export PDF sous le plafond de 20 pages.
+**État : 🟢 dossier rédigé, relu, recentré sur la grille.** Le livrable est [`dossier-bloc-4.md`](dossier-bloc-4.md), couvrant les 8 éléments imposés. Volume : 8 640 mots, **19 pages** mesurées sur l'export [`dossier-bloc-4.pdf`](dossier-bloc-4.pdf), pour 20 pages autorisées. Rendu A4 dense : corps 10,5 pt, marges 18 mm en tête et 16 mm sur les côtés, tableaux 9 pt avec en-tête répété quand ils enjambent une page, captures plafonnées à 88 mm de haut et légendées, pied de page numéroté. Le gabarit dense est obligatoire : en mise en page confortable (11 pt, marges 20 mm) le dossier dépasse la limite réglementaire.
+
+Quatre captures sont retenues, chacune adossée à une compétence éliminatoire : `06-sondes.png` et `07-alerte-email.png` pour C4.1.2, `02-issue-67.png` pour C4.2.1, `04-releases.png` pour C4.3.2. Les trois autres ont été retirées du dossier, leur contenu étant intégralement décrit en texte : `01-dashboard-supervision.png` (à reprendre sur 7 ou 30 jours si tu veux la réintégrer, elle est actuellement prise sur « la dernière heure » avec un panneau vide), `03-pipeline-correctif.png` et `05-lien-support.png`. Elles restent dans `captures/`.
+
+Reste avant remise : confirmer que la redirection `contact@movie-picker.fr` délivre bien chez OVH, et réexporter le PDF si le fichier source bouge encore.
 
 ## Attendus du jury
 
@@ -22,7 +26,7 @@ Ordre des éléments imposé par le règlement : processus de mise à jour des d
 | C4.1.2 | Description du système de supervision (sondes, indicateurs, seuils, signalement, disponibilité) | ✅ | ✅ [`supervision.md`](supervision.md), 3 sondes actives, 5 politiques d'alerte, Sentry (3 règles/projet), tableau de bord, chaîne d'alerte testée |
 | C4.2.1 | Processus de collecte/consignation des anomalies **+ une fiche de consignation** | ✅ | ✅ [`processus-anomalies.md`](processus-anomalies.md), 5 canaux, gabarit, sévérités, cycle de vie ; fiche = issue #67 |
 | C4.2.2 | Traitement d'une anomalie détectée au cours du projet (via CI/CD) | | ✅ issue #67 + § 6 de [`processus-anomalies.md`](processus-anomalies.md) ; **reste** : captures du pipeline |
-| C4.3.1 | Recommandations argumentées d'amélioration (gains, coût, délai) | | ✅ [`axes-amelioration.md`](axes-amelioration.md), 6 recommandations chiffrées sur indicateurs réels ; **reste** : intégrer les retours du [`questionnaire`](questionnaire-utilisateurs.md) |
+| C4.3.1 | Recommandations argumentées d'amélioration (gains, coût, délai) | | ✅ [`axes-amelioration.md`](axes-amelioration.md), 7 recommandations chiffrées sur indicateurs réels et 7 premières réponses au [`questionnaire`](questionnaire-utilisateurs.md) |
 | C4.3.2 | Exemplaire du journal de version | ✅ | ✅ [`journal-versions.md`](journal-versions.md) + [`CHANGELOG.md`](../../../CHANGELOG.md) + 7 tags et 7 releases, dont **v1.3.2** du 25/07/2026 |
 | C4.3.3 | Exemple de problème résolu en collaboration avec le support client | | ✅ [`collaboration-support.md`](collaboration-support.md), dispositif + cas #67 + contribution des parties prenantes |
 
@@ -36,4 +40,4 @@ Ordre des éléments imposé par le règlement : processus de mise à jour des d
 | [`axes-amelioration.md`](axes-amelioration.md) | Recommandations argumentées (C4.3.1), matière du § 6 |
 | [`journal-versions.md`](journal-versions.md) | Journal des versions déployées (C4.3.2), matière du § 7 |
 | [`collaboration-support.md`](collaboration-support.md) | Problème résolu avec le support (C4.3.3), matière du § 8 |
-| [`questionnaire-utilisateurs.md`](questionnaire-utilisateurs.md) | Questionnaire de retour utilisateur, **à envoyer** |
+| [`questionnaire-utilisateurs.md`](questionnaire-utilisateurs.md) | Questionnaire de retour utilisateur, **envoyé, 7 réponses reçues** |

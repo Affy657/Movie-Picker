@@ -49,6 +49,8 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public string? AvatarId { get; set; }
 
+    // Anciens champs (pré-refonte notifications) : conservés en lecture seule pour la migration
+    // à la volée dans UserDocumentMapper. Ne sont plus jamais écrits (voir NotificationPreferences).
     [BsonElement("notifyOnParticipantJoined")]
     [BsonIgnoreIfNull]
     public bool? NotifyOnParticipantJoined { get; set; }
@@ -89,6 +91,10 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public string? LetterboxdLastSyncError { get; set; }
 
+    [BsonElement("notificationPreferences")]
+    [BsonIgnoreIfNull]
+    public List<NotificationPreferenceEntryDocument>? NotificationPreferences { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 
@@ -109,4 +115,13 @@ public sealed class UserIdentityDocument
 
     [BsonElement("linkedAt")]
     public DateTime LinkedAt { get; set; }
+}
+
+public sealed class NotificationPreferenceEntryDocument
+{
+    [BsonElement("type")]
+    public int Type { get; set; }
+
+    [BsonElement("enabled")]
+    public bool Enabled { get; set; }
 }

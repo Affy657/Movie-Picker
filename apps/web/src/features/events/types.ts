@@ -8,7 +8,6 @@ export const MAX_PROPOSALS_PER_PARTICIPANT = 10;
 
 export const DEFAULT_EVENT_CONFIG: EventConfigData = {
   theme: null,
-  endDate: null,
   maxProposalsPerParticipant: null,
   maxParticipants: null,
   wheelMode: 'strictRandom',
@@ -21,7 +20,6 @@ export type EventConfigPatchPayload = {
   theme: string;
   themeColor?: number | null;
   clearThemeColor?: boolean;
-  endDate?: string | null;
   maxProposalsPerParticipant: number;
   maxParticipants: number;
   wheelMode: WheelMode;

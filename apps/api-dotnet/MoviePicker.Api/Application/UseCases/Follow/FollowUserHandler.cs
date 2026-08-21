@@ -50,6 +50,9 @@ public sealed class FollowUserHandler : IFollowUserHandler
         if (follower is null)
             return;
 
+        if (!target.NotifiesOn(UserNotificationType.NewFollower))
+            return;
+
         var notification = new UserNotification
         {
             UserId = target.Id,
@@ -62,16 +65,13 @@ public sealed class FollowUserHandler : IFollowUserHandler
         };
         await _notifications.AddAsync(notification, ct);
 
-        if (target.NotifyOnNewFollower)
-        {
-            var subs = await _pushSubscriptions.ListByUserIdAsync(target.Id, ct);
-            var message = new PushMessage(
-                Title: $"{follower.DisplayName} vous suit",
-                Body: $"@{follower.Handle} a commencé à vous suivre.",
-                Tag: "new-follower",
-                Url: $"/u/{follower.Handle}");
-            foreach (var sub in subs)
-                await _pushSender.SendAsync(sub, message, ct);
-        }
+        var subs = await _pushSubscriptions.ListByUserIdAsync(target.Id, ct);
+        var message = new PushMessage(
+            Title: "Nouveau follower 👀",
+            Body: $"{follower.DisplayName} a commencé à vous suivre.",
+            Tag: "new-follower",
+            Url: $"/u/{follower.Handle}");
+        foreach (var sub in subs)
+            await _pushSender.SendAsync(sub, message, ct);
     }
 }

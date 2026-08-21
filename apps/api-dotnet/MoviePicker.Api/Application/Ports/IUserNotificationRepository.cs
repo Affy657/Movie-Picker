@@ -5,10 +5,12 @@ namespace MoviePicker.Api.Application.Ports;
 public interface IUserNotificationRepository
 {
     Task AddAsync(UserNotification notification, CancellationToken ct = default);
-    Task<IReadOnlyList<UserNotification>> ListByUserIdAsync(string userId, int limit = 50, CancellationToken ct = default);
+    Task<IReadOnlyList<UserNotification>> ListByUserIdAsync(string userId, int limit = 50, int offset = 0, CancellationToken ct = default);
     Task<int> GetUnreadCountAsync(string userId, CancellationToken ct = default);
     Task MarkAllReadAsync(string userId, CancellationToken ct = default);
+    Task MarkReadAsync(string userId, string notificationId, CancellationToken ct = default);
     Task<bool> ExistsAsync(string userId, UserNotificationType type, string eventId, CancellationToken ct = default);
     Task<IReadOnlySet<string>> ListUserIdsByTypeAndEventAsync(UserNotificationType type, string eventId, CancellationToken ct = default);
     Task<long> DeleteByUserIdAsync(string userId, CancellationToken ct = default);
+    Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default);
 }

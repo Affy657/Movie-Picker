@@ -147,22 +147,31 @@ public sealed class InMemoryUserRepositoryTests
     [Fact]
     public async Task AddAsync_PersistsNotifyOnNewFollower()
     {
-        var created = await _repo.AddAsync(Mk() with { NotifyOnNewFollower = false });
+        var created = await _repo.AddAsync(Mk() with
+        {
+            NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.NewFollower] = false }
+        });
 
-        Assert.False(created.NotifyOnNewFollower);
+        Assert.False(created.NotifiesOn(UserNotificationType.NewFollower));
     }
 
     [Fact]
     public async Task UpdateAsync_PersistsNotifyOnNewFollower()
     {
-        var created = await _repo.AddAsync(Mk() with { NotifyOnNewFollower = true });
-        var toUpdate = created with { NotifyOnNewFollower = false };
-        Assert.False(toUpdate.NotifyOnNewFollower);
+        var created = await _repo.AddAsync(Mk() with
+        {
+            NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.NewFollower] = true }
+        });
+        var toUpdate = created with
+        {
+            NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.NewFollower] = false }
+        };
+        Assert.False(toUpdate.NotifiesOn(UserNotificationType.NewFollower));
 
         var updated = await _repo.UpdateAsync(toUpdate);
 
-        Assert.False(updated.NotifyOnNewFollower);
-        Assert.False((await _repo.GetByIdAsync(created.Id))!.NotifyOnNewFollower);
+        Assert.False(updated.NotifiesOn(UserNotificationType.NewFollower));
+        Assert.False((await _repo.GetByIdAsync(created.Id))!.NotifiesOn(UserNotificationType.NewFollower));
     }
 
     [Fact]

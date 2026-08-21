@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 import EventStartReminderBanner from '@/features/events/components/EventStartReminderBanner';
+import { eventScheduledStartUtcMs } from '@/shared/utils/eventScheduled';
 
 describe('EventStartReminderBanner', () => {
   beforeEach(() => {
@@ -21,8 +22,8 @@ describe('EventStartReminderBanner', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
-  it('affiche la bannière dans les 30 minutes avant le début (UTC stocké)', () => {
-    const start = Date.parse('2030-12-01T21:00:00Z');
+  it('affiche la bannière dans les 30 minutes avant le début (heure Europe/Paris)', () => {
+    const start = eventScheduledStartUtcMs({ date: '2030-12-01', time: '21:00' })!;
     vi.setSystemTime(start - 15 * 60_000);
 
     render(<EventStartReminderBanner date="2030-12-01" time="21:00" isFinished={false} />);
@@ -34,7 +35,7 @@ describe('EventStartReminderBanner', () => {
   });
 
   it('programme l’affichage avant l’entrée dans la fenêtre', () => {
-    const start = Date.parse('2030-12-01T21:00:00Z');
+    const start = eventScheduledStartUtcMs({ date: '2030-12-01', time: '21:00' })!;
     const windowStart = start - 30 * 60_000;
     vi.setSystemTime(windowStart - 60_000);
 

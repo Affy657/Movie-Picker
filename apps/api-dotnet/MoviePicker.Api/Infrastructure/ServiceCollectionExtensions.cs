@@ -181,6 +181,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IWatchlistRepository, InMemoryWatchlistRepository>();
             services.AddSingleton<IUserNotificationRepository, InMemoryUserNotificationRepository>();
             services.AddSingleton<IKofiWebhookLogRepository, InMemoryKofiWebhookLogRepository>();
+            services.AddSingleton<IPushDedupRepository, InMemoryPushDedupRepository>();
             services.AddSingleton<IDatabaseHealthProbe, InMemoryDatabaseHealthProbe>();
             return;
         }
@@ -214,6 +215,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IWatchlistRepository, MongoWatchlistRepository>();
         services.AddScoped<IUserNotificationRepository, MongoUserNotificationRepository>();
         services.AddScoped<IKofiWebhookLogRepository, MongoKofiWebhookLogRepository>();
+        services.AddScoped<IPushDedupRepository, MongoPushDedupRepository>();
         services.AddSingleton<IDatabaseHealthProbe, MongoDatabaseHealthProbe>();
         services.AddHostedService<MongoIndexInitializer>();
         services.AddHostedService<UserHandleBackfillService>();

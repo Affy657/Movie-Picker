@@ -14,6 +14,7 @@ export const ROUTES = {
   legalNotice: '/mentions-legales',
   privacyPolicy: '/politique-de-confidentialite',
   donate: '/soutenir',
+  notifications: '/notifications',
 
   eventDetailPattern: `${EVENT_PREFIX}/:slug`,
 

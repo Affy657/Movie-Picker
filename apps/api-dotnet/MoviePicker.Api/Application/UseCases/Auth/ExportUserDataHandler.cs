@@ -48,7 +48,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
     {
         var user = await _users.GetByIdAsync(userId, ct) ?? throw new NotFoundException("Utilisateur introuvable.");
 
-        var notifications = await _notifications.ListByUserIdAsync(userId, MaxItems, ct);
+        var notifications = await _notifications.ListByUserIdAsync(userId, MaxItems, offset: 0, ct);
         var followingIds = await _follows.GetFollowingIdsAsync(userId, MaxItems, ct);
         var followerIds = await _follows.GetFollowerIdsAsync(userId, MaxItems, ct);
         var createdEvents = await _events.ListByCreatorUserIdAsync(userId, MaxItems, ct);
@@ -115,15 +115,8 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         AvatarId = user.AvatarId,
         HasPassword = !string.IsNullOrEmpty(user.PasswordHash),
         LinkedProviders = user.Identities.Select(i => i.Provider).ToList(),
-        NotificationPreferences = new ExportedNotificationPreferences
-        {
-            ParticipantJoined = user.NotifyOnParticipantJoined,
-            EventReminder = user.NotifyEventReminder,
-            MovieAdded = user.NotifyOnMovieAdded,
-            MoviePicked = user.NotifyOnMoviePicked,
-            EventDeleted = user.NotifyOnEventDeleted,
-            NewFollower = user.NotifyOnNewFollower
-        },
+        NotificationPreferences = user.NotificationPreferences
+            .ToDictionary(kv => kv.Key.ToString().ToLowerInvariant(), kv => kv.Value),
         SupporterSince = user.SupporterSince,
         CreatedAt = user.CreatedAt,
         UpdatedAt = user.UpdatedAt

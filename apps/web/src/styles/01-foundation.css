@@ -101,6 +101,8 @@
   --color-badge-upcoming-text: #92400e;
   --color-badge-live-bg: #d1fae5;
   --color-badge-live-text: #065f46;
+  --color-badge-pending-bg: #ffe1c2;
+  --color-badge-pending-text: #9a3412;
   --color-badge-host-bg: #e0e7ff;
   --color-badge-host-text: #3730a3;
   --color-badge-me-bg: #dbeafe;
@@ -231,6 +233,8 @@
   --color-badge-upcoming-text: #fbbf24;
   --color-badge-live-bg: #0e2818;
   --color-badge-live-text: #4ade80;
+  --color-badge-pending-bg: #3a1a08;
+  --color-badge-pending-text: #fb923c;
   --color-badge-host-bg: #1e1b4b;
   --color-badge-host-text: #c7d2fe;
   --color-badge-me-bg: #172554;

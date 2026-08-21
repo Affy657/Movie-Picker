@@ -4,12 +4,26 @@ import { usePushNotifications } from '@/features/notifications/hooks/usePushNoti
 import {
   fetchNotificationPreferences,
   patchNotificationPreferences,
-  type NotificationPreferences,
+  type NotificationTypeKey,
 } from '@/features/notifications/api/notificationsApi';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import Toggle from '@/shared/components/Toggle';
 import { getErrorMessage } from '@/shared/api/apiError';
+import { notifIcon } from '@/features/notifications/utils/notifIcon';
 import styles from './NotificationsSection.module.css';
+
+const PREF_TYPES: ReadonlyArray<{ type: NotificationTypeKey; labelKey: TranslationKey }> = [
+  { type: 'participantjoined', labelKey: 'notifications.prefParticipantJoined' },
+  { type: 'movieadded', labelKey: 'notifications.prefMovieAdded' },
+  { type: 'moviepicked', labelKey: 'notifications.prefMoviePicked' },
+  { type: 'moviepickedmanually', labelKey: 'notifications.prefMoviePickedManually' },
+  { type: 'eventdeleted', labelKey: 'notifications.prefEventDeleted' },
+  { type: 'eventreminder1h', labelKey: 'notifications.prefEventReminder1h' },
+  { type: 'eventreminder24h', labelKey: 'notifications.prefEventReminder24h' },
+  { type: 'eventinvitation', labelKey: 'notifications.prefEventInvitation' },
+  { type: 'newfollower', labelKey: 'notifications.prefNewFollower' },
+  { type: 'eventpending', labelKey: 'notifications.prefEventPending' },
+];
 
 export default function NotificationsSection() {
   const { t } = useTranslation();
@@ -23,24 +37,36 @@ export default function NotificationsSection() {
     unsubscribe,
   } = usePushNotifications();
 
-  const [prefs, setPrefs] = useState<NotificationPreferences | null>(null);
-  const [savingPref, setSavingPref] = useState<string | null>(null);
+  const [prefs, setPrefs] = useState<Record<NotificationTypeKey, boolean> | null>(null);
+  const [savingPref, setSavingPref] = useState<NotificationTypeKey | null>(null);
   const [prefsError, setPrefsError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!subscribed) return;
+    if (!supported) return;
     fetchNotificationPreferences()
-      .then(setPrefs)
+      .then((res) =>
+        setPrefs(
+          Object.fromEntries(res.preferences.map((p) => [p.type, p.enabled])) as Record<
+            NotificationTypeKey,
+            boolean
+          >
+        )
+      )
       .catch((err) => setPrefsError(getErrorMessage(err, t('notifications.prefsLoadError'))));
-  }, [subscribed, t]);
+  }, [supported, t]);
 
   const handleTogglePref = useCallback(
-    async (key: keyof NotificationPreferences) => {
+    async (type: NotificationTypeKey) => {
       if (!prefs) return;
-      setSavingPref(key);
+      setSavingPref(type);
       try {
-        const updated = await patchNotificationPreferences({ [key]: !prefs[key] });
-        setPrefs(updated);
+        const updated = await patchNotificationPreferences([{ type, enabled: !prefs[type] }]);
+        setPrefs(
+          Object.fromEntries(updated.preferences.map((p) => [p.type, p.enabled])) as Record<
+            NotificationTypeKey,
+            boolean
+          >
+        );
         setPrefsError(null);
       } catch (err) {
         setPrefsError(getErrorMessage(err, t('notifications.prefsSaveError')));
@@ -106,82 +132,29 @@ export default function NotificationsSection() {
           />
         </div>
 
-        {subscribed && prefs && (
+        {prefs && (
           <>
             <hr className={styles.prefsDivider} />
             <p className={styles.prefsTitle}>{t('notifications.prefsTitle')}</p>
 
-            <div className={styles.prefRow}>
-              <span id="notif-pref-participant-joined" className={styles.prefLabel}>
-                {t('notifications.prefParticipantJoined')}
-              </span>
-              <Toggle
-                checked={prefs.notifyOnParticipantJoined}
-                labelledBy="notif-pref-participant-joined"
-                disabled={savingPref === 'notifyOnParticipantJoined'}
-                onChange={() => handleTogglePref('notifyOnParticipantJoined')}
-              />
-            </div>
-
-            <div className={styles.prefRow}>
-              <span id="notif-pref-event-reminder" className={styles.prefLabel}>
-                {t('notifications.prefEventReminder')}
-              </span>
-              <Toggle
-                checked={prefs.notifyEventReminder}
-                labelledBy="notif-pref-event-reminder"
-                disabled={savingPref === 'notifyEventReminder'}
-                onChange={() => handleTogglePref('notifyEventReminder')}
-              />
-            </div>
-
-            <div className={styles.prefRow}>
-              <span id="notif-pref-movie-added" className={styles.prefLabel}>
-                {t('notifications.prefMovieAdded')}
-              </span>
-              <Toggle
-                checked={prefs.notifyOnMovieAdded}
-                labelledBy="notif-pref-movie-added"
-                disabled={savingPref === 'notifyOnMovieAdded'}
-                onChange={() => handleTogglePref('notifyOnMovieAdded')}
-              />
-            </div>
-
-            <div className={styles.prefRow}>
-              <span id="notif-pref-movie-picked" className={styles.prefLabel}>
-                {t('notifications.prefMoviePicked')}
-              </span>
-              <Toggle
-                checked={prefs.notifyOnMoviePicked}
-                labelledBy="notif-pref-movie-picked"
-                disabled={savingPref === 'notifyOnMoviePicked'}
-                onChange={() => handleTogglePref('notifyOnMoviePicked')}
-              />
-            </div>
-
-            <div className={styles.prefRow}>
-              <span id="notif-pref-event-deleted" className={styles.prefLabel}>
-                {t('notifications.prefEventDeleted')}
-              </span>
-              <Toggle
-                checked={prefs.notifyOnEventDeleted}
-                labelledBy="notif-pref-event-deleted"
-                disabled={savingPref === 'notifyOnEventDeleted'}
-                onChange={() => handleTogglePref('notifyOnEventDeleted')}
-              />
-            </div>
-
-            <div className={styles.prefRow}>
-              <span id="notif-pref-new-follower" className={styles.prefLabel}>
-                {t('notifications.prefNewFollower')}
-              </span>
-              <Toggle
-                checked={prefs.notifyOnNewFollower}
-                labelledBy="notif-pref-new-follower"
-                disabled={savingPref === 'notifyOnNewFollower'}
-                onChange={() => handleTogglePref('notifyOnNewFollower')}
-              />
-            </div>
+            {PREF_TYPES.map(({ type, labelKey }) => (
+              <div className={styles.prefRow} key={type}>
+                <span className={styles.prefLabelWrap}>
+                  <span className={styles.prefIcon} aria-hidden>
+                    {notifIcon(type)}
+                  </span>
+                  <span id={`notif-pref-${type}`} className={styles.prefLabel}>
+                    {t(labelKey)}
+                  </span>
+                </span>
+                <Toggle
+                  checked={prefs[type] ?? true}
+                  labelledBy={`notif-pref-${type}`}
+                  disabled={savingPref === type}
+                  onChange={() => handleTogglePref(type)}
+                />
+              </div>
+            ))}
           </>
         )}
       </div>

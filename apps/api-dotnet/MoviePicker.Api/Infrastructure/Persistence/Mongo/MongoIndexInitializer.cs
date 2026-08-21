@@ -32,6 +32,7 @@ public sealed class MongoIndexInitializer : IHostedService
             await EnsureWatchlistIndexesAsync(cancellationToken);
             await EnsureUserNotificationIndexesAsync(cancellationToken);
             await EnsureKofiWebhookLogIndexesAsync(cancellationToken);
+            await EnsurePushDedupIndexesAsync(cancellationToken);
             _logger.LogInformation("Index MongoDB initialisés.");
         }
         catch (Exception ex)
@@ -251,7 +252,32 @@ public sealed class MongoIndexInitializer : IHostedService
                 .Ascending(x => x.UserId)
                 .Ascending(x => x.IsRead),
             new CreateIndexOptions { Name = "user_notifications_userId_isRead" });
-        await col.Indexes.CreateManyAsync(new[] { byUser, unread }, ct);
+        var byEvent = new CreateIndexModel<UserNotificationDocument>(
+            Builders<UserNotificationDocument>.IndexKeys.Ascending(x => x.EventId),
+            new CreateIndexOptions<UserNotificationDocument>
+            {
+                Name = "user_notifications_eventId",
+                PartialFilterExpression = Builders<UserNotificationDocument>.Filter.Exists(x => x.EventId, true)
+            });
+        var ttl = new CreateIndexModel<UserNotificationDocument>(
+            Builders<UserNotificationDocument>.IndexKeys.Ascending(x => x.CreatedAt),
+            new CreateIndexOptions { Name = "user_notifications_createdAt_ttl", ExpireAfter = TimeSpan.FromDays(90) });
+        await col.Indexes.CreateManyAsync(new[] { byUser, unread, byEvent, ttl }, ct);
+    }
+
+    private async Task EnsurePushDedupIndexesAsync(CancellationToken ct)
+    {
+        var col = _database.GetCollection<PushDedupMarkerDocument>("push_dedup_markers");
+        var unique = new CreateIndexModel<PushDedupMarkerDocument>(
+            Builders<PushDedupMarkerDocument>.IndexKeys
+                .Ascending(x => x.UserId)
+                .Ascending(x => x.Type)
+                .Ascending(x => x.EventId),
+            new CreateIndexOptions { Name = "push_dedup_markers_unique", Unique = true });
+        var ttl = new CreateIndexModel<PushDedupMarkerDocument>(
+            Builders<PushDedupMarkerDocument>.IndexKeys.Ascending(x => x.CreatedAt),
+            new CreateIndexOptions { Name = "push_dedup_markers_createdAt_ttl", ExpireAfter = TimeSpan.FromDays(3) });
+        await col.Indexes.CreateManyAsync(new[] { unique, ttl }, ct);
     }
 
     private async Task EnsureKofiWebhookLogIndexesAsync(CancellationToken ct)
