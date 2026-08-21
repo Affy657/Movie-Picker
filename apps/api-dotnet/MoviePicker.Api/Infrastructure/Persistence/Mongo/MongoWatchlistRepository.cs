@@ -47,6 +47,7 @@ public sealed class MongoWatchlistRepository : IWatchlistRepository
             VoteAverage = item.VoteAverage,
             RuntimeMinutes = item.RuntimeMinutes,
             LetterboxdSlug = item.LetterboxdSlug,
+            GenreIds = item.GenreIds is { Count: > 0 } ? item.GenreIds.ToList() : null,
             CreatedAt = item.CreatedAt == default ? DateTime.UtcNow : item.CreatedAt.UtcDateTime
         };
         try
@@ -104,6 +105,26 @@ public sealed class MongoWatchlistRepository : IWatchlistRepository
         return res.IsAcknowledged ? res.DeletedCount : 0;
     }
 
+    public async Task UpdateGenresAsync(string itemId, IReadOnlyList<int> genreIds, CancellationToken ct = default)
+    {
+        var value = genreIds.Count > 0 ? genreIds.ToList() : null;
+        var update = Builders<WatchlistItemDocument>.Update.Set(x => x.GenreIds, value);
+        await _collection.UpdateOneAsync(x => x.Id == itemId, update, cancellationToken: ct);
+    }
+
+    public async Task<IReadOnlyList<WatchlistItem>> ListMissingGenresAsync(int limit, CancellationToken ct = default)
+    {
+        if (limit <= 0)
+            return [];
+
+        var filter = Builders<WatchlistItemDocument>.Filter.Or(
+            Builders<WatchlistItemDocument>.Filter.Exists(x => x.GenreIds, false),
+            Builders<WatchlistItemDocument>.Filter.Eq(x => x.GenreIds, null),
+            Builders<WatchlistItemDocument>.Filter.Size(x => x.GenreIds, 0));
+        var docs = await _collection.Find(filter).Limit(limit).ToListAsync(ct);
+        return docs.ConvertAll(ToDomain);
+    }
+
     private static WatchlistItem ToDomain(WatchlistItemDocument d) => new()
     {
         Id = d.Id,
@@ -116,6 +137,7 @@ public sealed class MongoWatchlistRepository : IWatchlistRepository
         VoteAverage = d.VoteAverage,
         RuntimeMinutes = d.RuntimeMinutes,
         LetterboxdSlug = d.LetterboxdSlug,
+        GenreIds = d.GenreIds is { Count: > 0 } ? d.GenreIds.ToList() : [],
         CreatedAt = new DateTimeOffset(d.CreatedAt, TimeSpan.Zero)
     };
 }

@@ -12,5 +12,6 @@ public sealed record WatchlistItem
     public double? VoteAverage { get; init; }
     public int? RuntimeMinutes { get; init; }
     public string? LetterboxdSlug { get; init; }
+    public IReadOnlyList<int> GenreIds { get; init; } = [];
     public DateTimeOffset CreatedAt { get; init; }
 }

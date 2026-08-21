@@ -7,10 +7,10 @@ using MoviePicker.Api.Domain.Entities;
 namespace MoviePicker.Api.Infrastructure.BackgroundServices;
 
 /// <summary>
-/// One-shot backfill that fetches and stores TMDB genre IDs on movies added before the
-/// user-statistics feature existed. Runs in the background AFTER the host has started so it
-/// never blocks Kestrel, and self-terminates once no movie is left without genres (re-running
-/// it on every startup is a no-op as soon as the backfill is complete).
+/// One-shot backfill that fetches and stores TMDB genre IDs on movies and watchlist items added
+/// before genre tracking existed. Runs in the background AFTER the host has started so it never
+/// blocks Kestrel, and self-terminates once nothing is left without genres (re-running it on
+/// every startup is a no-op as soon as the backfill is complete).
 /// </summary>
 public sealed class GenreBackfillService : BackgroundService
 {
@@ -42,6 +42,7 @@ public sealed class GenreBackfillService : BackgroundService
         {
             using var scope = _scopeFactory.CreateScope();
             var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+            var watchlist = scope.ServiceProvider.GetRequiredService<IWatchlistRepository>();
             var tmdb = scope.ServiceProvider.GetRequiredService<ITmdbMovieSearch>();
 
             // Movies whose genres TMDB can't supply stay "missing"; tracking attempted ids
@@ -66,6 +67,27 @@ public sealed class GenreBackfillService : BackgroundService
 
             if (attempted.Count > 0)
                 _logger.LogInformation("Backfill genres terminé : {Updated}/{Processed} films mis à jour", updated, attempted.Count);
+
+            var attemptedWatchlist = new HashSet<string>();
+            var updatedWatchlist = 0;
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                var batch = await watchlist.ListMissingGenresAsync(BatchSize, stoppingToken);
+                var fresh = batch.Where(i => attemptedWatchlist.Add(i.Id)).ToList();
+                if (fresh.Count == 0)
+                    break;
+
+                foreach (var item in fresh)
+                {
+                    if (stoppingToken.IsCancellationRequested)
+                        break;
+                    if (await TryBackfillWatchlistItemGenresAsync(item, tmdb, watchlist, stoppingToken))
+                        updatedWatchlist++;
+                }
+            }
+
+            if (attemptedWatchlist.Count > 0)
+                _logger.LogInformation("Backfill genres terminé : {Updated}/{Processed} items de watchlist mis à jour", updatedWatchlist, attemptedWatchlist.Count);
         }
         catch (OperationCanceledException)
         {
@@ -95,6 +117,28 @@ public sealed class GenreBackfillService : BackgroundService
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Échec backfill genres pour le film {MovieId} (TMDB {TmdbId})", movie.Id, movie.TmdbId);
+        }
+        return false;
+    }
+
+    private async Task<bool> TryBackfillWatchlistItemGenresAsync(
+        WatchlistItem item,
+        ITmdbMovieSearch tmdb,
+        IWatchlistRepository watchlist,
+        CancellationToken ct)
+    {
+        try
+        {
+            var details = await tmdb.GetDetailsAsync(item.TmdbId, item.MediaType, ct);
+            if (details is { GenreIds.Count: > 0 })
+            {
+                await watchlist.UpdateGenresAsync(item.Id, details.GenreIds, ct);
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Échec backfill genres pour l'item de watchlist {ItemId} (TMDB {TmdbId})", item.Id, item.TmdbId);
         }
         return false;
     }

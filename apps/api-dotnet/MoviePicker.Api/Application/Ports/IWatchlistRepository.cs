@@ -22,4 +22,8 @@ public interface IWatchlistRepository
     Task<long> RemoveForUsersAsync(IReadOnlyCollection<string> userIds, int tmdbId, MovieMediaType mediaType, CancellationToken ct = default);
 
     Task<long> DeleteAllForUserAsync(string userId, CancellationToken ct = default);
+
+    Task UpdateGenresAsync(string itemId, IReadOnlyList<int> genreIds, CancellationToken ct = default);
+
+    Task<IReadOnlyList<WatchlistItem>> ListMissingGenresAsync(int limit, CancellationToken ct = default);
 }

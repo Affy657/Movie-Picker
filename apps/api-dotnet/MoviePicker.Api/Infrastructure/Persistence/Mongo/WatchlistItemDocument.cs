@@ -40,6 +40,10 @@ public sealed class WatchlistItemDocument
     [BsonIgnoreIfNull]
     public string? LetterboxdSlug { get; set; }
 
+    [BsonElement("genreIds")]
+    [BsonIgnoreIfNull]
+    public List<int>? GenreIds { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 }
