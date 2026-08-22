@@ -19,7 +19,7 @@ function ParticipantStat({
   return (
     <span className={styles.participantStat}>
       <Users aria-hidden size={13} />
-      {countStr}
+      <span className={styles.statValue}>{countStr}</span>
     </span>
   );
 }
@@ -28,7 +28,7 @@ function MoviesStat({ count }: Readonly<{ count: number }>) {
   return (
     <span className={styles.participantStat}>
       <Film aria-hidden size={13} />
-      {count}
+      <span className={styles.statValue}>{count}</span>
     </span>
   );
 }

@@ -99,7 +99,7 @@ export default function JoinForm({
     <section className={styles.root}>
       <h2 className={styles.title}>
         <UserPlus size={18} aria-hidden className={styles.titleIcon} />
-        Rejoindre la soirée
+        <span className={styles.titleLabel}>Rejoindre la soirée</span>
       </h2>
       {body}
     </section>

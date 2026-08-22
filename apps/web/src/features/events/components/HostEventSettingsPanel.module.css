@@ -36,6 +36,7 @@
   flex-shrink: 0;
   padding: 0.85rem 1.1rem;
   border-bottom: 1px solid var(--color-border-subtle);
+  line-height: 1;
 }
 
 .panelTitle {
@@ -45,6 +46,7 @@
   font-size: var(--font-size-md);
   font-weight: 600;
   letter-spacing: var(--tracking-snug);
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .panelClose {
@@ -137,6 +139,10 @@
     background var(--duration-base) var(--ease-default),
     color var(--duration-base) var(--ease-default),
     border-color var(--duration-base) var(--ease-default);
+}
+
+.clearThemeLabel {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .clearThemeBtn:hover {

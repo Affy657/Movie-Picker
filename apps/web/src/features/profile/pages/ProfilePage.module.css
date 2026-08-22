@@ -90,3 +90,12 @@
   gap: 0.5rem;
   flex-wrap: nowrap;
 }
+
+.copyBtn,
+.followToggleBtn {
+  line-height: 1;
+}
+
+.btnLabel {
+  transform: translateY(var(--text-optical-nudge));
+}

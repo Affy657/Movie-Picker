@@ -11,7 +11,7 @@ export default function SupporterBadge() {
     <Tooltip label={description}>
       <span className={styles.badge} role="img" tabIndex={0} aria-label={description}>
         <Heart className={styles.icon} aria-hidden focusable="false" />
-        {t('profile.supporter.label')}
+        <span className={styles.label}>{t('profile.supporter.label')}</span>
       </span>
     </Tooltip>
   );

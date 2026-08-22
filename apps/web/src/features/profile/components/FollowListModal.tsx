@@ -185,7 +185,11 @@ export default function FollowListModal({
                   ) : (
                     <UserPlus size={16} aria-hidden />
                   )}
-                  {item.isFollowedByMe ? t('profile.follow.unfollow') : t('profile.follow.follow')}
+                  <span className={styles.btnLabel}>
+                    {item.isFollowedByMe
+                      ? t('profile.follow.unfollow')
+                      : t('profile.follow.follow')}
+                  </span>
                 </button>
               )}
             </li>

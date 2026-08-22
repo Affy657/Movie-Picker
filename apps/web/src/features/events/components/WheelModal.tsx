@@ -1,6 +1,6 @@
 import confetti from 'canvas-confetti';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { X } from 'lucide-react';
+import { ImageOff, X } from 'lucide-react';
 import type { MovieData } from '@/shared/types/movie';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import { useDialogOpen } from '@/shared/hooks/useDialogOpen';
@@ -168,7 +168,9 @@ export default function WheelModal({
               {posterSrc ? (
                 <img src={posterSrc} alt={winner.title} className={styles.poster} loading="lazy" />
               ) : (
-                <div className={styles.posterPlaceholder} aria-hidden />
+                <div className={styles.posterPlaceholder} aria-hidden>
+                  <ImageOff size={28} />
+                </div>
               )}
               <div className={styles.info}>
                 <p className={styles.winnerTitle}>{winner.title}</p>

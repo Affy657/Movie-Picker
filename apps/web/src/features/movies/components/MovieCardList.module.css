@@ -176,6 +176,11 @@
 
 .paidChip svg {
   display: block;
+  flex-shrink: 0;
+}
+
+.paidChipCount {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .providersEmpty {

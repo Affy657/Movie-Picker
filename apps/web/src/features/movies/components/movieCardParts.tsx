@@ -382,7 +382,7 @@ export function MovieNote({
               disabled={pending}
             >
               <X aria-hidden size={13} />
-              {t('movies.pitchNote.cancelButton')}
+              <span className={styles.noteBtnLabel}>{t('movies.pitchNote.cancelButton')}</span>
             </button>
             <button
               type="button"
@@ -391,7 +391,7 @@ export function MovieNote({
               disabled={pending || over}
             >
               <Check aria-hidden size={13} />
-              {t('movies.pitchNote.saveButton')}
+              <span className={styles.noteBtnLabel}>{t('movies.pitchNote.saveButton')}</span>
             </button>
           </div>
         </div>
@@ -497,7 +497,7 @@ function ExternalMenuLink({
       aria-label={label}
     >
       <ExternalLink aria-hidden size={14} />
-      <span>{label}</span>
+      <span className={styles.kebabItemLabel}>{label}</span>
     </a>
   );
 }
@@ -535,9 +535,11 @@ export function CardKebab({
     };
     document.addEventListener('mousedown', handlePointer);
     document.addEventListener('keydown', handleKey);
+    window.addEventListener('scroll', close, { capture: true, passive: true });
     return () => {
       document.removeEventListener('mousedown', handlePointer);
       document.removeEventListener('keydown', handleKey);
+      window.removeEventListener('scroll', close, { capture: true });
     };
   }, [open, close]);
 
@@ -623,7 +625,7 @@ export function CardKebab({
                 ) : (
                   <Bookmark aria-hidden size={14} />
                 )}
-                <span>
+                <span className={styles.kebabItemLabel}>
                   {inWatchlist ? t('watchlist.card.removeAction') : t('watchlist.card.addAction')}
                 </span>
               </button>
@@ -639,7 +641,7 @@ export function CardKebab({
                 }}
               >
                 <ListPlus aria-hidden size={14} />
-                <span>{t('watchlist.card.proposeAction')}</span>
+                <span className={styles.kebabItemLabel}>{t('watchlist.card.proposeAction')}</span>
               </button>
             )}
             {wheelExclusion && (
@@ -657,7 +659,7 @@ export function CardKebab({
                 ) : (
                   <Disc3 aria-hidden size={14} />
                 )}
-                <span>
+                <span className={styles.kebabItemLabel}>
                   {wheelExclusion.excluded
                     ? t('movies.list.includeInWheelAction')
                     : t('movies.list.excludeFromWheelAction')}
@@ -677,7 +679,7 @@ export function CardKebab({
                 title={!isMine && isHost ? t('movies.list.removeAsHostTitle') : undefined}
               >
                 <Trash2 aria-hidden size={14} />
-                <span>{t('movies.list.removeButton')}</span>
+                <span className={styles.kebabItemLabel}>{t('movies.list.removeButton')}</span>
               </button>
             )}
           </div>,
@@ -721,7 +723,7 @@ export function CardProposerFooter({
           aria-expanded={s.detailsOpen}
           onClick={() => s.setDetailsOpen(true)}
         >
-          <span>{t('movies.details.toggleShow')}</span>
+          <span className={styles.detailsToggleLabel}>{t('movies.details.toggleShow')}</span>
           <ChevronDown aria-hidden size={14} />
         </button>
       )}

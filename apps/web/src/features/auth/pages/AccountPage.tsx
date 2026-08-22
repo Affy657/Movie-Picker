@@ -95,7 +95,9 @@ function ChangePasswordSection({ hasPassword }: Readonly<{ hasPassword: boolean 
     <section className="section section--panel" aria-labelledby="change-password-heading">
       <h2 id="change-password-heading" className={styles.sectionTitle}>
         <KeyRound size={18} aria-hidden />
-        {t(hasPassword ? 'auth.account.changePasswordTitle' : 'auth.account.setPasswordTitle')}
+        <span className={styles.sectionTitleText}>
+          {t(hasPassword ? 'auth.account.changePasswordTitle' : 'auth.account.setPasswordTitle')}
+        </span>
       </h2>
       {!hasPassword && <p className="hint">{t('auth.account.setPasswordHint')}</p>}
       <form onSubmit={handleSubmit} className="form" autoComplete="off">
@@ -223,7 +225,7 @@ function ConnectionsSection({ user }: Readonly<{ user: UserProfile }>) {
     <section className="section section--panel" aria-labelledby="connections-heading">
       <h2 id="connections-heading" className={styles.sectionTitle}>
         <Link2 size={18} aria-hidden />
-        {t('auth.account.connectionsTitle')}
+        <span className={styles.sectionTitleText}>{t('auth.account.connectionsTitle')}</span>
       </h2>
       <p className="hint">{t('auth.account.connectionsDescription')}</p>
 
@@ -299,7 +301,7 @@ function PreferencesSection() {
     <section className="section section--panel" aria-labelledby="preferences-heading">
       <h2 id="preferences-heading" className={styles.sectionTitle}>
         <Sliders size={18} aria-hidden />
-        {t('auth.account.preferencesTitle')}
+        <span className={styles.sectionTitleText}>{t('auth.account.preferencesTitle')}</span>
       </h2>
       <div className="form">
         <label className="label" htmlFor="account-language">
@@ -343,7 +345,7 @@ function DataExportSection() {
     <section className="section section--panel" aria-labelledby="export-data-heading">
       <h2 id="export-data-heading" className={styles.sectionTitle}>
         <Download size={18} aria-hidden />
-        {t('auth.account.exportDataTitle')}
+        <span className={styles.sectionTitleText}>{t('auth.account.exportDataTitle')}</span>
       </h2>
       <p className="hint">{t('auth.account.exportDataDescription')}</p>
       {exportError && (
@@ -419,7 +421,7 @@ function DeleteAccountSection({ hasPassword }: Readonly<{ hasPassword: boolean }
     <section className="section section--panel" aria-labelledby="danger-zone-heading">
       <h2 id="danger-zone-heading" className={styles.sectionTitle}>
         <AlertCircle size={18} aria-hidden />
-        {t('auth.account.dangerZoneTitle')}
+        <span className={styles.sectionTitleText}>{t('auth.account.dangerZoneTitle')}</span>
       </h2>
       <p className="hint">{t('auth.account.deleteAccountDescription')}</p>
 
@@ -540,7 +542,7 @@ export default function AccountPage() {
       <section className="section section--panel" aria-labelledby="session-heading">
         <h2 id="session-heading" className={styles.sectionTitle}>
           <LogOut size={18} aria-hidden />
-          {t('auth.account.sessionTitle')}
+          <span className={styles.sectionTitleText}>{t('auth.account.sessionTitle')}</span>
         </h2>
         {logoutError && (
           <p className="error" role="alert">

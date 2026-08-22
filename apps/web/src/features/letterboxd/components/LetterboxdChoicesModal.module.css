@@ -113,6 +113,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  line-height: 1;
   padding: 0.25rem 0.35rem;
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -142,6 +143,7 @@
 .candidateTitle {
   font-size: var(--font-size-sm);
   color: var(--color-text);
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .skipLabel {

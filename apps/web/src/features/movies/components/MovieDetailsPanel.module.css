@@ -9,12 +9,21 @@
   padding: 0.35rem 0.75rem;
   font-size: var(--font-size-xs);
   font-weight: 500;
+  line-height: 1;
   background: transparent;
   color: var(--color-text-muted);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-pill);
   cursor: pointer;
   transition: background var(--duration-base) var(--ease-default), color var(--duration-base) var(--ease-default), border-color var(--duration-base) var(--ease-default);
+}
+
+.toggleBtn svg {
+  flex-shrink: 0;
+}
+
+.toggleBtnLabel {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .toggleBtn:hover,
@@ -100,10 +109,19 @@
   font-family: inherit;
   font-size: var(--font-size-xs);
   font-weight: 500;
+  line-height: 1;
   color: var(--color-primary);
   text-decoration: none;
   cursor: pointer;
   transition: opacity var(--duration-base) var(--ease-default);
+}
+
+.trailerLink svg {
+  flex-shrink: 0;
+}
+
+.trailerLinkLabel {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .trailerLink:hover {

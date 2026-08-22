@@ -222,9 +222,15 @@ export default function ProfilePage() {
 
         <div className={styles.actions}>
           <div className={styles.shareGroup}>
-            <button type="button" className="btn btn-sm" onClick={handleCopyLink}>
+            <button
+              type="button"
+              className={`btn btn-sm ${styles.copyBtn}`}
+              onClick={handleCopyLink}
+            >
               <Link2 size={14} aria-hidden />
-              {copied ? t('profile.linkCopied') : t('profile.copyLink')}
+              <span className={styles.btnLabel}>
+                {copied ? t('profile.linkCopied') : t('profile.copyLink')}
+              </span>
             </button>
 
             <QrCodeButton
@@ -240,7 +246,7 @@ export default function ProfilePage() {
           {user && !isOwnProfile && (
             <button
               type="button"
-              className={profile.isFollowedByMe ? 'btn btn-sm' : 'btn btn-sm btn-primary'}
+              className={`btn btn-sm ${styles.followToggleBtn}${profile.isFollowedByMe ? '' : ' btn-primary'}`}
               disabled={followPending}
               onClick={() =>
                 profile.isFollowedByMe ? unfollowMutation.mutate() : followMutation.mutate()
@@ -251,7 +257,9 @@ export default function ProfilePage() {
               ) : (
                 <UserPlus size={14} aria-hidden />
               )}
-              {profile.isFollowedByMe ? t('profile.follow.unfollow') : t('profile.follow.follow')}
+              <span className={styles.btnLabel}>
+                {profile.isFollowedByMe ? t('profile.follow.unfollow') : t('profile.follow.follow')}
+              </span>
             </button>
           )}
         </div>

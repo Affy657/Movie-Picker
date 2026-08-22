@@ -140,6 +140,11 @@
 
 .metaProvGroup svg {
   display: block;
+  flex-shrink: 0;
+}
+
+.metaProvCount {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .actionRow {

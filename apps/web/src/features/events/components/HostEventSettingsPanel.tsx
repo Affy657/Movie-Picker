@@ -282,7 +282,7 @@ export default function HostEventSettingsPanel({
                   aria-label="Supprimer le thème"
                 >
                   <X size={11} strokeWidth={2.5} />
-                  Effacer
+                  <span className={styles.clearThemeLabel}>Effacer</span>
                 </button>
               )}
             </div>

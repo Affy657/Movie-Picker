@@ -105,7 +105,7 @@ export default function EventShareMenu({
               }}
             >
               <UserPlus className={styles.icon} size={15} aria-hidden />
-              {t('events.share.inviteFriends')}
+              <span className={styles.itemLabel}>{t('events.share.inviteFriends')}</span>
             </button>
           ) : null}
 
@@ -115,7 +115,7 @@ export default function EventShareMenu({
             ) : (
               <Link2 className={styles.icon} size={15} aria-hidden />
             )}
-            {shareLabel}
+            <span className={styles.itemLabel}>{shareLabel}</span>
           </button>
 
           <QrCodeButton

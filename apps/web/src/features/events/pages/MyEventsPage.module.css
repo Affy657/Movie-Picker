@@ -231,6 +231,11 @@
   transition: background var(--duration-base) var(--ease-default);
   width: 100%;
   white-space: nowrap;
+  line-height: 1;
+}
+
+.itemKebabLabel {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .itemKebabItemDanger:hover,

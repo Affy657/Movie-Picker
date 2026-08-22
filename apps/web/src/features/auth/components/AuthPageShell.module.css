@@ -7,6 +7,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  line-height: 1;
   margin: 0 0 0.85rem clamp(0.5rem, 2vw, 1rem);
   padding: 0.35rem 0.6rem 0.35rem 0.4rem;
   font-size: var(--font-size-xs);
@@ -15,6 +16,10 @@
   text-decoration: none;
   border-radius: var(--radius-pill);
   transition: color var(--duration-base) var(--ease-default), background var(--duration-base) var(--ease-default);
+}
+
+.backLinkLabel {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .backLink:hover {

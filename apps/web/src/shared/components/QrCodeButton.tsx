@@ -88,7 +88,7 @@ export default function QrCodeButton({
         title={withLabel ? undefined : showLabel}
       >
         <QrCode size={withLabel ? 15 : 16} aria-hidden />
-        {withLabel ? showLabel : null}
+        {withLabel ? <span className={styles.showLabel}>{showLabel}</span> : null}
       </button>
       <dialog
         ref={dialogRef}

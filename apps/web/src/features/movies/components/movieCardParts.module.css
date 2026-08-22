@@ -53,8 +53,17 @@
   border: none;
   color: var(--mc-fg-muted, #94a3b8);
   font-size: var(--font-size-2xs);
+  line-height: 1;
   cursor: pointer;
   transition: color var(--duration-base) var(--ease-default);
+}
+
+.detailsToggle svg {
+  flex-shrink: 0;
+}
+
+.detailsToggleLabel {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .detailsToggle:hover,
@@ -102,6 +111,7 @@
   font-weight: 600;
   min-width: 0.9rem;
   text-align: center;
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .seenWrap {
@@ -146,6 +156,7 @@
 
 .seenLabel {
   font-size: var(--font-size-2xs);
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .seenAvatars {
@@ -283,11 +294,20 @@
   padding: 0.25rem 0.55rem;
   font-size: var(--font-size-4xs);
   font-weight: 500;
+  line-height: 1;
   border-radius: var(--radius-pill);
   border: 1px solid transparent;
   cursor: pointer;
   white-space: nowrap;
   transition: background var(--duration-base) var(--ease-default);
+}
+
+.noteBtn svg {
+  flex-shrink: 0;
+}
+
+.noteBtnLabel {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .noteBtn:disabled {
@@ -371,12 +391,21 @@
   border-radius: var(--radius-sm);
   color: var(--color-text);
   font-size: var(--font-size-sm);
+  line-height: 1;
   text-align: left;
   cursor: pointer;
   transition: background var(--duration-base) var(--ease-default);
   text-decoration: none;
   width: 100%;
   white-space: nowrap;
+}
+
+.kebabItem svg {
+  flex-shrink: 0;
+}
+
+.kebabItemLabel {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .kebabItem:hover,

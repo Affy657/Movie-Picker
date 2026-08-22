@@ -64,7 +64,7 @@ export default function PublicProfileSection() {
     <section className="section section--panel" aria-labelledby="profile-section-heading">
       <h2 id="profile-section-heading" className={styles.sectionTitle}>
         <User size={18} aria-hidden />
-        {t('auth.account.profileTitle')}
+        <span className={styles.sectionTitleText}>{t('auth.account.profileTitle')}</span>
       </h2>
 
       <div className={styles.avatarRow}>

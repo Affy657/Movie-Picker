@@ -125,7 +125,7 @@ export default function CreateEvent() {
     <PageLayout className={styles.layout}>
       <Link to={ROUTES.myEvents} className={styles.backLink}>
         <ArrowLeft size={16} aria-hidden />
-        Mes soirées
+        <span className={styles.backLinkLabel}>Mes soirées</span>
       </Link>
       <div className={styles.card}>
         <span className={styles.cardAccent} aria-hidden />

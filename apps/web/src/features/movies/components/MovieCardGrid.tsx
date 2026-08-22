@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import clsx from 'clsx';
+import { ImageOff } from 'lucide-react';
 import { ModeIcon, TYPE_ORDER } from '@/features/movies/components/WatchProviderChips';
 import {
   CardKebab,
@@ -89,7 +90,7 @@ export const MovieCardGrid = memo(function MovieCardGrid({
           />
         ) : (
           <div className={styles.posterPlaceholder} aria-hidden>
-            {t('movies.search.posterPlaceholder')}
+            <ImageOff size={28} />
           </div>
         )}
 
@@ -140,7 +141,7 @@ export const MovieCardGrid = memo(function MovieCardGrid({
                     {providerGroups.map((g) => (
                       <span key={g.type} className={styles.metaProvGroup}>
                         <ModeIcon type={g.type} size={12} />
-                        <span>{g.count}</span>
+                        <span className={styles.metaProvCount}>{g.count}</span>
                       </span>
                     ))}
                   </button>

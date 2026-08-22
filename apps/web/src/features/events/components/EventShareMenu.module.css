@@ -8,7 +8,12 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  line-height: 1;
   white-space: nowrap;
+}
+
+.triggerLabel {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .chevron {
@@ -56,7 +61,12 @@
   font-weight: 500;
   color: var(--color-text);
   cursor: pointer;
+  line-height: 1;
   transition: background var(--duration-fast) var(--ease-default);
+}
+
+.itemLabel {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .item:hover {

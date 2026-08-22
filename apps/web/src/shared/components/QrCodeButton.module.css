@@ -1,3 +1,7 @@
+.showLabel {
+  transform: translateY(var(--text-optical-nudge));
+}
+
 .qrDialog {
   width: min(420px, calc(100vw - 2rem));
   padding: 0;

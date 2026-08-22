@@ -92,7 +92,7 @@ function EventCardKebab({
               }}
             >
               <Trash2 aria-hidden size={14} />
-              <span>{t('events.danger.deleteButton')}</span>
+              <span className={styles.itemKebabLabel}>{t('events.danger.deleteButton')}</span>
             </button>
           )}
           {onLeave && (
@@ -107,7 +107,7 @@ function EventCardKebab({
               }}
             >
               <LogOut aria-hidden size={14} />
-              <span>{t('events.participants.leaveAction')}</span>
+              <span className={styles.itemKebabLabel}>{t('events.participants.leaveAction')}</span>
             </button>
           )}
         </div>

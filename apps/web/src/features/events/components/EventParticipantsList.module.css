@@ -18,8 +18,13 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  line-height: 1;
   margin-left: auto;
   flex-shrink: 0;
+}
+
+.manageBtnLabel {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .leaveRow {
@@ -37,6 +42,11 @@
   font-weight: 700;
   letter-spacing: var(--tracking-snug);
   color: var(--color-text);
+  line-height: 1;
+}
+
+.headerLabel {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .headerIcon {
@@ -87,6 +97,7 @@
   border: 1px solid var(--color-border-subtle);
   font-size: var(--font-size-sm);
   color: var(--color-text);
+  line-height: 1;
   transition:
     background var(--duration-base) var(--ease-default),
     border-color var(--duration-base) var(--ease-default);
@@ -94,13 +105,14 @@
 
 .chipLabel {
   line-height: 1;
-  margin-top: 2px;
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .profileLink {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  line-height: 1;
   text-decoration: none;
   color: inherit;
   border-radius: var(--radius-pill);
@@ -171,6 +183,10 @@
     background var(--duration-base) var(--ease-default),
     border-color var(--duration-base) var(--ease-default),
     color var(--duration-base) var(--ease-default);
+}
+
+.inviteChipLabel {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .inviteChip:hover,

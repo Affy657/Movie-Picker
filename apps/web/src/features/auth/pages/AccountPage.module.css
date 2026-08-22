@@ -26,11 +26,16 @@
   align-items: center;
   gap: 0.55rem;
   margin: 0 0 1.25rem;
+  line-height: 1;
 }
 
 .sectionTitle :global(svg) {
   flex-shrink: 0;
   color: var(--color-primary);
+}
+
+.sectionTitleText {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .avatarRow {
@@ -77,6 +82,7 @@
   align-items: center;
   gap: 0.6rem;
   margin-bottom: 1rem;
+  line-height: 1;
 }
 
 .visibilityIcon {
@@ -88,6 +94,7 @@
   flex: 1;
   font-size: var(--font-size-base);
   font-weight: 500;
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .actionRow {

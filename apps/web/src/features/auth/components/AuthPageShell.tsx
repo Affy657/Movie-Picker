@@ -19,7 +19,7 @@ export default function AuthPageShell({
     <>
       <Link to={ROUTES.home} className={styles.backLink}>
         <ArrowLeft size={16} aria-hidden />
-        Accueil
+        <span className={styles.backLinkLabel}>Accueil</span>
       </Link>
       <div className={styles.card}>
         <span className={styles.cardAccent} aria-hidden />

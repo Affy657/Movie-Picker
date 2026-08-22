@@ -3,11 +3,16 @@
   align-items: center;
   gap: 0.55rem;
   margin: 0 0 0.9rem;
+  line-height: 1;
 }
 
 .sectionTitleIcon {
   flex-shrink: 0;
   color: var(--color-primary);
+}
+
+.sectionTitleLabel {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 /* --- Winner card --- */

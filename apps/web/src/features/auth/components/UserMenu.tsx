@@ -67,16 +67,16 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
           {user.handle ? (
             <Link to={ROUTES.profile(user.handle)} className={styles.item} onClick={close}>
               <UserRound className={styles.icon} aria-hidden="true" focusable="false" />
-              {t('profile.settings.viewMyProfile')}
+              <span className={styles.itemLabel}>{t('profile.settings.viewMyProfile')}</span>
             </Link>
           ) : null}
           <Link to={ROUTES.account} className={styles.item} onClick={close}>
             <Settings className={styles.icon} aria-hidden="true" focusable="false" />
-            {t('nav.account')}
+            <span className={styles.itemLabel}>{t('nav.account')}</span>
           </Link>
           <Link to={ROUTES.donate} className={styles.item} onClick={close}>
             <HeartHandshake className={styles.icon} aria-hidden="true" focusable="false" />
-            {t('footer.donate')}
+            <span className={styles.itemLabel}>{t('footer.donate')}</span>
           </Link>
           <button
             type="button"
@@ -85,7 +85,9 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
             disabled={loggingOut}
           >
             <LogOut className={styles.icon} aria-hidden="true" focusable="false" />
-            {loggingOut ? t('auth.logout.submitting') : t('auth.account.logoutButton')}
+            <span className={styles.itemLabel}>
+              {loggingOut ? t('auth.logout.submitting') : t('auth.account.logoutButton')}
+            </span>
           </button>
           {logoutError ? (
             <p className={styles.error} role="alert">

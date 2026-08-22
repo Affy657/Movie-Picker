@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import clsx from 'clsx';
+import { ImageOff } from 'lucide-react';
 import WatchProviderChips, { ModeIcon } from '@/features/movies/components/WatchProviderChips';
 import {
   CardKebab,
@@ -91,7 +92,7 @@ export const MovieCardList = memo(function MovieCardList({
           </>
         ) : (
           <div className={styles.posterPlaceholder} aria-hidden>
-            {t('movies.search.posterPlaceholder')}
+            <ImageOff size={28} />
           </div>
         )}
         {m.mediaType === 'tv' && <span className={styles.tvBadge}>{t('movies.list.tvBadge')}</span>}
@@ -155,7 +156,7 @@ export const MovieCardList = memo(function MovieCardList({
                 })}
               >
                 <ModeIcon type="rent" size={13} />
-                {rentCount}
+                <span className={styles.paidChipCount}>{rentCount}</span>
               </button>
             )}
             {buyCount > 0 && (
@@ -169,7 +170,7 @@ export const MovieCardList = memo(function MovieCardList({
                 })}
               >
                 <ModeIcon type="buy" size={13} />
-                {buyCount}
+                <span className={styles.paidChipCount}>{buyCount}</span>
               </button>
             )}
           </div>

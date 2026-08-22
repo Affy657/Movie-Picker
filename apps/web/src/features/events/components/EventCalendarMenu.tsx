@@ -100,7 +100,7 @@ export default function EventCalendarMenu({
             onClick={close}
           >
             <ExternalLink className={styles.icon} size={15} aria-hidden />
-            {t('events.calendar.google')}
+            <span className={styles.itemLabel}>{t('events.calendar.google')}</span>
           </a>
           <a
             className={styles.item}
@@ -111,11 +111,11 @@ export default function EventCalendarMenu({
             onClick={close}
           >
             <ExternalLink className={styles.icon} size={15} aria-hidden />
-            {t('events.calendar.outlook')}
+            <span className={styles.itemLabel}>{t('events.calendar.outlook')}</span>
           </a>
           <button type="button" role="menuitem" className={styles.item} onClick={handleDownloadIcs}>
             <Download className={styles.icon} size={15} aria-hidden />
-            {t('events.calendar.apple')}
+            <span className={styles.itemLabel}>{t('events.calendar.apple')}</span>
           </button>
         </div>
       ) : null}

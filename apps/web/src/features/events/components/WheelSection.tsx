@@ -39,7 +39,7 @@ export default function WheelSection({
     <section className="section" aria-label={t('events.wheel.viewerTitle')}>
       <h2 className={styles.sectionTitle}>
         <Trophy size={18} aria-hidden className={styles.sectionTitleIcon} />
-        {t('events.wheel.viewerTitle')}
+        <span className={styles.sectionTitleLabel}>{t('events.wheel.viewerTitle')}</span>
       </h2>
 
       {!wheel.isModalOpen && (

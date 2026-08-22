@@ -142,9 +142,14 @@
   border: 1px solid transparent;
   cursor: pointer;
   flex-shrink: 0;
+  line-height: 1;
   transition:
     background var(--duration-base),
     color var(--duration-base);
+}
+
+.btnLabel {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .followBtn {
