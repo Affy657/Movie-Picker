@@ -216,6 +216,76 @@ describe('AddMovieForm (MSW)', () => {
     expect(screen.getByRole('img', { name: /achat \(2\).*film test/i })).toBeInTheDocument();
   });
 
+  it('affiche les genres du film sur la carte de résultat', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/movies/search`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: 102,
+              title: 'Film Avec Genres',
+              year: '2024',
+              posterPath: null,
+              voteAverage: 7.5,
+              genreIds: [28, 12, 35],
+              tmdbWatchPageUrl: null,
+            },
+          ],
+          watchProvidersRegion: 'FR',
+          disclaimer: '',
+          tmdbAttributionUrl: 'https://www.themoviedb.org/',
+        })
+      )
+    );
+    const user = userEvent.setup();
+    renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
+    await user.type(screen.getByPlaceholderText(/ajouter un film/i), 'Inception');
+
+    expect(await screen.findByText('2024, Action, Aventure')).toBeInTheDocument();
+  });
+
+  it('masque les providers de streaming et le rappel de région quand showWatchProviders est désactivé', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/movies/search`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: 103,
+              title: 'Film Sans Providers Affichés',
+              year: '2024',
+              posterPath: null,
+              voteAverage: 7.5,
+              watchProviders: [
+                { providerId: 1, name: 'Netflix Abonnement', logoPath: null, type: 'flatrate' },
+              ],
+              tmdbWatchPageUrl: null,
+            },
+          ],
+          watchProvidersRegion: 'FR',
+          disclaimer: '',
+          tmdbAttributionUrl: 'https://www.themoviedb.org/',
+        })
+      )
+    );
+    const user = userEvent.setup();
+    renderWithLocale(
+      <AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} showWatchProviders={false} />
+    );
+    await user.type(screen.getByPlaceholderText(/ajouter un film/i), 'Inception');
+
+    await waitFor(() =>
+      expect(screen.getByText('Film Sans Providers Affichés')).toBeInTheDocument()
+    );
+    expect(screen.queryByText('Netflix Abonnement')).not.toBeInTheDocument();
+    expect(screen.queryByText(/région/i)).not.toBeInTheDocument();
+  });
+
+  it('donne le focus au champ de recherche au montage', async () => {
+    renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
+
+    await waitFor(() => expect(screen.getByPlaceholderText(/ajouter un film/i)).toHaveFocus());
+  });
+
   it('un film disponible uniquement en location reste signalé sur la carte de résultat', async () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () =>

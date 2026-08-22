@@ -183,6 +183,7 @@ describe('WatchlistPage (MSW)', () => {
     renderPage();
     const user = userEvent.setup();
 
+    await user.click(await screen.findByRole('button', { name: /ajouter un film/i }));
     await user.type(screen.getByPlaceholderText(/rechercher un film à ajouter/i), 'Film Test');
     await waitFor(() => expect(screen.getByText('Film Test')).toBeInTheDocument(), {
       timeout: 3000,

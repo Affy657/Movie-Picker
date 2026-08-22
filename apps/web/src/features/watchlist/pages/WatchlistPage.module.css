@@ -30,7 +30,12 @@
   background: var(--color-surface-hover);
   border-radius: var(--radius-sm);
   text-decoration: none;
+  line-height: 1;
   transition: background var(--duration-base) var(--ease-default);
+}
+
+.letterboxdCtaLabel {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .letterboxdCta:hover,

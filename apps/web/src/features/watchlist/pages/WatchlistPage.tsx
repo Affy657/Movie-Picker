@@ -1,7 +1,7 @@
 import { useId, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { Link } from 'react-router';
-import { Bookmark, ChevronDown, Import } from 'lucide-react';
+import { Bookmark, ChevronDown, ImageOff, Import } from 'lucide-react';
 import { ROUTES } from '@/app/routes';
 import PageLayout from '@/shared/components/PageLayout';
 import EmptyState from '@/shared/components/EmptyState';
@@ -13,7 +13,7 @@ import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/post
 import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
-import AddMovieForm from '@/features/movies/components/AddMovieForm';
+import AddMoviePanel from '@/features/movies/components/AddMoviePanel';
 import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
 import MovieSearchFiltersPanel from '@/features/movies/components/MovieSearchFiltersPanel';
 import { useMovieSearchFilters } from '@/features/movies/hooks/useMovieSearchFilters';
@@ -111,7 +111,9 @@ export default function WatchlistPage() {
   return (
     <PageLayout className={styles.layout}>
       <section className="section">
-        <AddMovieForm
+        <AddMoviePanel
+          triggerLabel={t('watchlist.addPanel.trigger')}
+          panelTitle={t('watchlist.addPanel.title')}
           onAdded={() => undefined}
           onAddItem={async (item) => {
             await addMutation.mutateAsync({
@@ -131,13 +133,14 @@ export default function WatchlistPage() {
           searchPlaceholder={t('watchlist.search.placeholder')}
           searchAriaLabel={t('watchlist.search.label')}
           searchWrapClassName={styles.searchFixedWidth}
+          showWatchProviders={false}
         />
       </section>
 
       {!user?.letterboxdUsername && (
         <Link to={ROUTES.account} className={styles.letterboxdCta}>
           <Import size={14} aria-hidden />
-          {t('watchlist.letterboxdCta')}
+          <span className={styles.letterboxdCtaLabel}>{t('watchlist.letterboxdCta')}</span>
         </Link>
       )}
 
@@ -297,8 +300,8 @@ export default function WatchlistPage() {
                         {posterSrc ? (
                           <img src={posterSrc} alt="" loading="lazy" decoding="async" />
                         ) : (
-                          <div className={styles.posterPlaceholder}>
-                            {t('movies.search.posterPlaceholder')}
+                          <div className={styles.posterPlaceholder} aria-hidden>
+                            <ImageOff size={22} />
                           </div>
                         )}
                         {hasHover && (
@@ -349,7 +352,9 @@ export default function WatchlistPage() {
                           aria-haspopup="dialog"
                           onClick={() => setDetailsTarget(item)}
                         >
-                          <span>{t('movies.details.toggleShow')}</span>
+                          <span className={movieCardStyles.detailsToggleLabel}>
+                            {t('movies.details.toggleShow')}
+                          </span>
                           <ChevronDown aria-hidden size={14} />
                         </button>
                       </div>

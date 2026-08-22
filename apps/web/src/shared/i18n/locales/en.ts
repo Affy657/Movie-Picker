@@ -480,7 +480,6 @@ export const en: Locale = {
       duplicateHint: 'Already suggested for this event.',
       addError: 'Add failed',
       regionHint: 'Indicative availability for region {{region}}',
-      posterPlaceholder: 'Poster',
       tmdbVoteHint: 'TMDB average rating (indicative)',
       liveSearchMinCharsHint: 'Type at least {{min}} characters to search.',
       a11ySearching: 'Searching\u2026',
@@ -633,6 +632,10 @@ export const en: Locale = {
       placeholder: 'Search for a movie to add…',
       add: 'Add',
       alreadyAdded: 'Already in watchlist',
+    },
+    addPanel: {
+      trigger: 'Add a movie',
+      title: 'Add a movie to my watchlist',
     },
     card: {
       addAction: 'Add to my watchlist',

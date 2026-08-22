@@ -13,7 +13,7 @@ import {
 import { getErrorMessage } from '@/shared/api/apiError';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
-import AddMovieForm from '@/features/movies/components/AddMovieForm';
+import AddMoviePanel from '@/features/movies/components/AddMoviePanel';
 import MovieList from '@/features/movies/components/MovieList';
 import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
 import EventActionErrorBanner from '@/features/events/pages/event-detail/EventActionErrorBanner';
@@ -199,7 +199,9 @@ export default function EventMoviesSection({
     <section className="section section-movies" aria-label="Films proposés">
       {!isFinished && participant && (
         <div className={styles.addSection}>
-          <AddMovieForm
+          <AddMoviePanel
+            triggerLabel={t('movies.search.label')}
+            panelTitle={t('movies.search.label')}
             slug={slug}
             participantId={participant.participantId}
             participantPseudo={participant.pseudo}

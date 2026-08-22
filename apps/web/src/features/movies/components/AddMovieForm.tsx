@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
-import { Search } from 'lucide-react';
+import { ImageOff, Search } from 'lucide-react';
 import {
   addMovieToEvent,
   searchMovies,
@@ -13,8 +13,8 @@ import { getErrorMessage } from '@/shared/api/apiError';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import type { TranslationKey } from '@/shared/i18n/t';
 import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
-import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
+import { genreLabel } from '@/features/profile/lib/tmdbGenres';
 import type { MovieData } from '@/shared/types/movie';
 import { safeTmdbWatchUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
 import WatchProviderChips, { ModeIcon } from '@/features/movies/components/WatchProviderChips';
@@ -37,30 +37,23 @@ function isSameTmdbItem(m: MovieData, r: MovieSearchItem): boolean {
   return m.tmdbId === r.id && (m.mediaType ?? 'movie') === (r.mediaType ?? 'movie');
 }
 
-function ResultMeta({
-  year,
-  voteLabel,
-  runtimeLabel,
-  voteTitle,
-  runtimeTitle,
-}: Readonly<{
-  year?: string;
-  voteLabel: string | null;
-  runtimeLabel: string | null;
-  voteTitle: string;
-  runtimeTitle: string;
-}>) {
-  return (
-    <div className={styles.resultMeta}>
-      {year ? <span>{year}</span> : null}
-      {voteLabel ? (
-        <span className="tmdb-vote" title={voteTitle}>
-          {voteLabel}
-        </span>
-      ) : null}
-      {runtimeLabel ? <span title={runtimeTitle}>{runtimeLabel}</span> : null}
-    </div>
-  );
+const MAX_RESULT_GENRES = 2;
+
+function resultGenresLabel(genreIds: number[] | undefined, locale: string): string | null {
+  if (!genreIds?.length) return null;
+  return genreIds
+    .slice(0, MAX_RESULT_GENRES)
+    .map((id) => genreLabel(id, locale))
+    .join(', ');
+}
+
+function resultMetaLine(
+  year: string | undefined,
+  genresLabel: string | null,
+  runtimeLabel: string | null
+): string | null {
+  const parts = [year, genresLabel, runtimeLabel].filter((part): part is string => !!part);
+  return parts.length ? parts.join(', ') : null;
 }
 
 function PaidAvailabilityChip({
@@ -90,17 +83,17 @@ function PaidAvailabilityChip({
       rel="noreferrer noopener"
     >
       {icon}
-      {count}
+      <span className={styles.paidChipCount}>{count}</span>
     </a>
   ) : (
     <span className={styles.paidChip} role="img" aria-label={ariaLabel}>
       {icon}
-      {count}
+      <span className={styles.paidChipCount}>{count}</span>
     </span>
   );
 }
 
-interface AddMovieFormProps {
+export interface AddMovieFormProps {
   slug?: string;
   participantId?: string;
   participantPseudo?: string;
@@ -115,6 +108,7 @@ interface AddMovieFormProps {
   searchPlaceholder?: string;
   searchAriaLabel?: string;
   searchWrapClassName?: string;
+  showWatchProviders?: boolean;
 }
 
 export default function AddMovieForm({
@@ -132,6 +126,7 @@ export default function AddMovieForm({
   searchPlaceholder,
   searchAriaLabel,
   searchWrapClassName,
+  showWatchProviders = true,
 }: Readonly<AddMovieFormProps>) {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
@@ -163,8 +158,14 @@ export default function AddMovieForm({
   const immediateSearchRef = useRef(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const historyDropdownRef = useRef<HTMLDivElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => () => abortRef.current?.abort(), []);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => searchInputRef.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   const clearDebounceTimer = useCallback(() => {
     if (debounceTimerRef.current != null) {
@@ -408,6 +409,7 @@ export default function AddMovieForm({
               <Search size={15} aria-hidden />
             </button>
             <input
+              ref={searchInputRef}
               id="add-movie-search"
               type="search"
               className="input"
@@ -489,11 +491,14 @@ export default function AddMovieForm({
           </div>
           <button
             type="button"
-            className={`${styles.filterIconBtn} ${filters.filtersOpen ? styles.filterIconBtnActive : ''}`}
+            className={clsx(
+              styles.filterIconBtn,
+              styles.filterIconBtnLabeled,
+              filters.filtersOpen && styles.filterIconBtnActive
+            )}
             onClick={() => filters.setFiltersOpen((v) => !v)}
             aria-expanded={filters.filtersOpen}
             aria-controls={filtersPanelId}
-            aria-label={t('movies.search.filtersToggle')}
           >
             <svg
               width="14"
@@ -507,6 +512,7 @@ export default function AddMovieForm({
             >
               <path d="M1.5 3.5h11M4 7h6M6.5 10.5h1" />
             </svg>
+            <span className={styles.filterIconBtnLabel}>{t('movies.search.filtersToggle')}</span>
             {activeFiltersCount > 0 && (
               <span className={styles.filtersBadge} aria-hidden="true">
                 {activeFiltersCount}
@@ -520,7 +526,7 @@ export default function AddMovieForm({
         <div className={styles.activeFiltersRow} aria-label={t('movies.search.filtersToggle')}>
           {filters.activeFilterChips.map((chip) => (
             <span key={chip.key} className={styles.activeFilterChip}>
-              {chip.label}
+              <span className={styles.activeFilterChipLabel}>{chip.label}</span>
               <button
                 type="button"
                 className={styles.activeFilterChipRemove}
@@ -594,15 +600,16 @@ export default function AddMovieForm({
       ) : null}
       {hasResultsBlock && (
         <>
-          {searchMeta?.watchProvidersRegion ? (
+          {showWatchProviders && searchMeta?.watchProvidersRegion ? (
             <p className={styles.regionHint}>
               {t('movies.search.regionHint', { region: searchMeta.watchProvidersRegion })}
             </p>
           ) : null}
           <ul className={styles.results} aria-label={t('movies.search.resultsListAria')}>
             {displayedResults.map((r) => {
-              const voteLabel = formatTmdbVote(r.voteAverage, user?.ratingScale);
               const runtimeLabel = formatRuntimeMinutes(r.runtimeMinutes);
+              const genresLabel = resultGenresLabel(r.genreIds, tmdbLanguage);
+              const metaLine = resultMetaLine(r.year, genresLabel, runtimeLabel);
               const allProviders = r.watchProviders ?? [];
               const providers = allProviders.filter((p) => p.type === 'flatrate');
               const rentCount = allProviders.filter((p) => p.type === 'rent').length;
@@ -623,8 +630,8 @@ export default function AddMovieForm({
                     {posterSrc ? (
                       <img src={posterSrc} alt="" loading="lazy" decoding="async" />
                     ) : (
-                      <div className={styles.posterPlaceholder}>
-                        {t('movies.search.posterPlaceholder')}
+                      <div className={styles.posterPlaceholder} aria-hidden>
+                        <ImageOff size={20} />
                       </div>
                     )}
                   </div>
@@ -636,13 +643,7 @@ export default function AddMovieForm({
                           <span className={styles.mediaTypeBadge}>{t('movies.list.tvBadge')}</span>
                         )}
                       </span>
-                      <ResultMeta
-                        year={r.year}
-                        voteLabel={voteLabel}
-                        runtimeLabel={runtimeLabel}
-                        voteTitle={t('movies.search.tmdbVoteHint')}
-                        runtimeTitle={t('movies.list.runtimeTitle')}
-                      />
+                      {metaLine ? <span className={styles.resultMeta}>{metaLine}</span> : null}
                     </div>
                     {alreadyListed ? (
                       <p className={`${styles.resultDuplicate} hint`}>
@@ -650,33 +651,34 @@ export default function AddMovieForm({
                         {seenHint ? <> {seenHint}</> : null}
                       </p>
                     ) : null}
-                    {(providers.length > 0 || rentCount > 0 || buyCount > 0) && (
-                      <div className={styles.providersRow}>
-                        <WatchProviderChips
-                          providers={providers}
-                          variant="compact"
-                          watchPageUrl={safeWatchUrl}
-                        />
-                        {rentCount > 0 && (
-                          <PaidAvailabilityChip
-                            type="rent"
-                            count={rentCount}
-                            title={r.title}
+                    {showWatchProviders &&
+                      (providers.length > 0 || rentCount > 0 || buyCount > 0) && (
+                        <div className={styles.providersRow}>
+                          <WatchProviderChips
+                            providers={providers}
+                            variant="compact"
                             watchPageUrl={safeWatchUrl}
-                            t={t}
                           />
-                        )}
-                        {buyCount > 0 && (
-                          <PaidAvailabilityChip
-                            type="buy"
-                            count={buyCount}
-                            title={r.title}
-                            watchPageUrl={safeWatchUrl}
-                            t={t}
-                          />
-                        )}
-                      </div>
-                    )}
+                          {rentCount > 0 && (
+                            <PaidAvailabilityChip
+                              type="rent"
+                              count={rentCount}
+                              title={r.title}
+                              watchPageUrl={safeWatchUrl}
+                              t={t}
+                            />
+                          )}
+                          {buyCount > 0 && (
+                            <PaidAvailabilityChip
+                              type="buy"
+                              count={buyCount}
+                              title={r.title}
+                              watchPageUrl={safeWatchUrl}
+                              t={t}
+                            />
+                          )}
+                        </div>
+                      )}
                   </div>
                   <div className={styles.resultAction}>
                     <button

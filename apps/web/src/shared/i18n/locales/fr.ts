@@ -489,7 +489,6 @@
       duplicateHint: 'Déjà proposé dans cette soirée.',
       addError: 'Ajout impossible',
       regionHint: 'Disponibilités indicatives pour la région {{region}}',
-      posterPlaceholder: 'Affiche',
       tmdbVoteHint: 'Note moyenne TMDB (indicatif)',
       liveSearchMinCharsHint: 'Tapez au moins {{min}} caractères pour lancer une recherche.',
       a11ySearching: 'Recherche en cours\u2026',
@@ -645,6 +644,10 @@
       placeholder: 'Rechercher un film à ajouter…',
       add: 'Ajouter',
       alreadyAdded: 'Déjà dans la watchlist',
+    },
+    addPanel: {
+      trigger: 'Ajouter un film',
+      title: 'Ajouter un film à ma liste',
     },
     card: {
       addAction: 'Ajouter à ma watchlist',

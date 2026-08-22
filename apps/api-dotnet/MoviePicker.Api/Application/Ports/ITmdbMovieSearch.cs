@@ -9,7 +9,8 @@ public sealed record TmdbSearchItem(
     string Year,
     string? PosterPath,
     double? VoteAverage = null,
-    string? OriginalTitle = null);
+    string? OriginalTitle = null,
+    IReadOnlyList<int>? GenreIds = null);
 
 public sealed record TmdbWatchProviderOffer(int ProviderId, string ProviderName, string? LogoUrl, string MonetizationType);
 

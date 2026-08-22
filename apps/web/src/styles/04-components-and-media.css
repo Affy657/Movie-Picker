@@ -10,6 +10,33 @@
   border-color: var(--color-error);
 }
 
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-primary);
+  box-shadow: none;
+}
+
+.btn-ghost:hover {
+  background: var(--color-surface-hover);
+  border-color: transparent;
+}
+
+.icon-btn-outline {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.icon-btn-outline:hover,
+.icon-btn-outline:focus-visible {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  outline: none;
+}
+
 /* Utilitaires TMDB (partagés entre MovieList et AddMovieForm) */
 .tmdb-vote {
   color: var(--color-meta);

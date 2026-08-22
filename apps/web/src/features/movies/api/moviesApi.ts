@@ -21,6 +21,7 @@ export interface MovieSearchItem {
   runtimeMinutes?: number | null;
   watchProviders?: WatchProviderOffer[];
   tmdbWatchPageUrl?: string | null;
+  genreIds?: number[];
 }
 
 export interface MovieSearchListResponse {

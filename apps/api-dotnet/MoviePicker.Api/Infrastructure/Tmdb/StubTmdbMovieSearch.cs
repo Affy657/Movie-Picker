@@ -12,8 +12,8 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
                 ? Array.Empty<TmdbSearchItem>()
                 : new[]
                 {
-                    new TmdbSearchItem(999_001, MovieMediaType.Movie, "Film E2E Stub", "2024", null, 8.1),
-                    new TmdbSearchItem(999_002, MovieMediaType.Movie, "Autre film test", "2023", null, 7.0),
+                    new TmdbSearchItem(999_001, MovieMediaType.Movie, "Film E2E Stub", "2024", null, 8.1, GenreIds: new[] { 878, 12 }),
+                    new TmdbSearchItem(999_002, MovieMediaType.Movie, "Autre film test", "2023", null, 7.0, GenreIds: new[] { 18 }),
                 };
         return Task.FromResult(list);
     }
