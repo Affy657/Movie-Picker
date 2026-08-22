@@ -36,13 +36,19 @@ export function localizedName(fr: string, en: string, lang: string): string {
   return lang.startsWith('fr') ? fr : en;
 }
 
-export const RUNTIME_MIN_MINUTES = 10;
+export const RUNTIME_MIN_MINUTES = 0;
 export const RUNTIME_MAX_MINUTES = 180;
 export const RUNTIME_STEP_MINUTES = 5;
 
-export function runtimeRangeLabel(minutes: number, lang: string): string {
-  if (minutes <= RUNTIME_MIN_MINUTES)
-    return lang.startsWith('fr') ? '10 min ou moins' : '10 min or less';
-  if (minutes >= RUNTIME_MAX_MINUTES) return lang.startsWith('fr') ? '3h et plus' : '3h and more';
+export function runtimeRangeLabel(minutes: number, lang: string, bound?: 'min' | 'max'): string {
+  const inFrench = lang.startsWith('fr');
+  if (bound === 'min') {
+    if (minutes <= RUNTIME_MIN_MINUTES) return inFrench ? 'Aucun minimum' : 'No minimum';
+    return `${formatRuntimeMinutes(minutes) ?? minutes} ${inFrench ? 'ou plus' : 'or more'}`;
+  }
+  if (bound === 'max') {
+    if (minutes >= RUNTIME_MAX_MINUTES) return inFrench ? 'Aucun maximum' : 'No maximum';
+    return `${formatRuntimeMinutes(minutes) ?? minutes} ${inFrench ? 'ou moins' : 'or less'}`;
+  }
   return formatRuntimeMinutes(minutes) ?? String(minutes);
 }

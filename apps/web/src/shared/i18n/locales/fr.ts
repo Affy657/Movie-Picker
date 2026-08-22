@@ -16,7 +16,7 @@
   nav: {
     home: 'Accueil',
     myEvents: 'Mes soirées',
-    watchlist: 'Ma watchlist',
+    watchlist: 'Ma liste',
     account: 'Mon compte',
     createEvent: 'Nouvelle soirée',
     navLabel: 'Navigation principale',
@@ -208,8 +208,9 @@
         title: 'Letterboxd',
         helpTitle: 'Comment ça marche',
         helpSync:
-          'Vos deux watchlists restent alignées : ce que vous ajoutez sur Letterboxd arrive ici, ce que vous en sortez (vu, noté, commenté) est retiré d’ici.',
-        helpSafety: 'Les films ajoutés directement dans Movie Picker ne sont jamais retirés.',
+          'Vos deux listes restent alignées : ce que vous ajoutez sur Letterboxd arrive ici, ce que vous en sortez (vu, noté, commenté) est retiré d’ici.',
+        helpSafety:
+          'Les films ajoutés directement dans Movie Picker ne sont jamais retirés. Le sens inverse n’existe pas : ajouter, retirer ou proposer un film depuis Movie Picker ne modifie jamais votre liste Letterboxd.',
         helpUsername:
           'Votre pseudo est la fin de letterboxd.com/…, et votre profil doit être public. La synchronisation automatique tourne au plus une fois par jour, à l’ouverture de l’application.',
         usernameLabel: 'Pseudo Letterboxd',
@@ -217,6 +218,8 @@
         usernameEdit: 'Modifier le pseudo Letterboxd',
         usernameSave: 'Enregistrer le pseudo Letterboxd',
         usernameFallbackError: 'Enregistrement impossible.',
+        usernameDisconnect: 'Déconnecter le compte Letterboxd',
+        usernameDisconnectFallbackError: 'Déconnexion impossible.',
         statusOff: 'Ajoutez votre pseudo pour activer la synchronisation.',
         statusPending: 'Synchronisation active, première lecture à venir.',
         statusSyncedAt: 'Synchronisé le {{date}}.',
@@ -227,6 +230,8 @@
         reportPending: 'Choisir pour {{count}} film(s) ambigu(s)',
         reportUnmatched: 'Voir les {{count}} film(s) introuvable(s) sur TMDB',
         reportTruncated: '{{count}} film(s) non traité(s) : trop de films pour une seule fois.',
+        reconciliationPending:
+          'Réconciliation en attente : {{count}} film(s) à identifier manuellement',
         choicesTitle: 'Choisir les bonnes correspondances',
         choicesIntro:
           'TMDB propose plusieurs films pour {{count}} titre(s) Letterboxd, choisissez le bon.',
@@ -627,34 +632,34 @@
   },
 
   watchlist: {
-    title: 'Ma watchlist',
+    title: 'Ma liste',
     listHeading: 'À voir ({{count}})',
-    listAria: 'Films de ma watchlist',
-    loadError: 'Impossible de charger votre watchlist.',
-    addError: 'Ajout à la watchlist impossible.',
-    removeError: 'Retrait de la watchlist impossible.',
-    removeAria: 'Retirer « {{title}} » de ma watchlist',
+    listAria: 'Films de ma liste',
+    loadError: 'Impossible de charger votre liste.',
+    addError: 'Ajout à la liste impossible.',
+    removeError: 'Retrait de la liste impossible.',
+    removeAria: 'Retirer « {{title}} » de ma liste',
     letterboxdCta: 'Importer depuis Letterboxd',
     empty: {
-      title: 'Votre watchlist est vide',
+      title: 'Votre liste est vide',
       message: 'Cherchez un film ci-dessus pour l’ajouter à votre liste « à voir ».',
     },
     search: {
-      label: 'Rechercher un film à ajouter à ma watchlist',
+      label: 'Rechercher un film à ajouter à ma liste',
       placeholder: 'Rechercher un film à ajouter…',
       add: 'Ajouter',
-      alreadyAdded: 'Déjà dans la watchlist',
+      alreadyAdded: 'Déjà dans la liste',
     },
     addPanel: {
       trigger: 'Ajouter un film',
       title: 'Ajouter un film à ma liste',
     },
     card: {
-      addAction: 'Ajouter à ma watchlist',
-      removeAction: 'Retirer de ma watchlist',
+      addAction: 'Ajouter à ma liste',
+      removeAction: 'Retirer de ma liste',
       proposeAction: 'Proposer dans une soirée',
-      addError: 'Ajout à la watchlist impossible.',
-      removeError: 'Retrait de la watchlist impossible.',
+      addError: 'Ajout à la liste impossible.',
+      removeError: 'Retrait de la liste impossible.',
     },
     propose: {
       proposeError: 'Proposition impossible.',
@@ -664,8 +669,39 @@
       viewMore: 'Voir toutes mes soirées',
     },
     filter: {
-      toggleAria: 'Filtrer ma liste à voir',
+      toggleAria: 'Filtrer ma liste',
       empty: 'Aucun film pour ce filtre.',
+    },
+    toolbar: {
+      searchLabel: 'Rechercher dans ma liste',
+      searchPlaceholder: 'Rechercher dans ma liste…',
+      filtersToggleAria: 'Filtres',
+      filtersLabel: 'Filtres',
+      filtersSheetTitle: 'Filtrer ma liste',
+      filtersApply: 'Voir {{count}} titre(s)',
+      filtersReset: 'Réinitialiser',
+      filtersResetAll: 'Réinitialiser les filtres',
+      clearAll: 'Tout effacer',
+      resultCount: '{{count}} sur {{total}}',
+      sortLabel: 'Trier par',
+      sortMenuAria: 'Trier par',
+      sortAddedAt: 'Ajout',
+      sortTitle: 'Titre',
+      sortVoteAverage: 'Note',
+      sortDuration: 'Durée',
+      sortDirectionAsc: 'Croissant',
+      sortDirectionDesc: 'Décroissant',
+      filterGenre: 'Genre',
+      filterType: 'Type',
+      filterTypeMovie: 'Films',
+      filterTypeTv: 'Séries',
+      filterDecade: 'Décennie',
+      filterVoteMin: 'Note minimum',
+      filterDuration: 'Durée',
+      removeFilterAria: 'Retirer ce filtre',
+      emptyTitle: 'Aucun titre ne correspond',
+      emptyMessage:
+        'Aucun film de votre liste ne coche ces critères. Élargissez la recherche ou retirez un filtre.',
     },
   },
 
@@ -709,6 +745,7 @@
     prefEventInvitation: 'Invitation à une soirée',
     prefNewFollower: "Quelqu'un vous suit",
     prefEventPending: 'Soirée terminée sans film choisi',
+    prefLetterboxdReconciliationPending: 'Films Letterboxd à identifier manuellement',
     inboxAriaLabel: 'Notifications',
     inboxAriaLabelWithCount: 'Notifications, {{count}} non lues',
     inboxTitle: 'Notifications',
@@ -731,6 +768,8 @@
     eventInvitationText: '{{name}} vous invite à rejoindre **{{eventTitle}}**',
     eventPendingText:
       "**{{eventTitle}}** s'est terminée sans qu'aucun film n'ait été choisi… on se rattrape la prochaine fois ? 😅",
+    letterboxdReconciliationPendingText:
+      "La synchro Letterboxd n'a pas pu identifier certains films automatiquement. Réglez ça dans vos paramètres.",
   },
 
   footer: {
@@ -776,7 +815,7 @@
       'Cette page décrit les données personnelles traitées par Movie Picker et vos droits sur ces données.',
     privacyDataTitle: 'Données collectées',
     privacyDataBody:
-      'Compte : e-mail, pseudo, handle public, mot de passe (haché) ou identité liée via Google/GitHub. Usage du service : soirées créées, votes, participations, watchlist, notifications, abonnements. Mesure d’audience : PostHog, uniquement avec votre consentement.',
+      'Compte : e-mail, pseudo, handle public, mot de passe (haché) ou identité liée via Google/GitHub. Usage du service : soirées créées, votes, participations, liste, notifications, abonnements. Mesure d’audience : PostHog, uniquement avec votre consentement.',
     privacyOAuthTitle: 'Connexion via Google ou GitHub',
     privacyOAuthBody:
       'Si vous choisissez de vous connecter via Google ou GitHub, Movie Picker reçoit uniquement votre identifiant, votre adresse e-mail (si vérifiée par le fournisseur) et votre nom affiché. Aucune autre donnée du fournisseur n’est demandée ni stockée. Vous pouvez lier ou délier ces comptes à tout moment depuis la page Mon compte.',
@@ -948,8 +987,7 @@
     entries: {
       watchlist:
         'Constituez votre liste de films à voir et proposez-en un directement lors d’une soirée, en un clic.',
-      letterboxd:
-        'Votre watchlist Letterboxd se synchronise désormais toute seule avec Movie Picker.',
+      letterboxd: 'Votre liste Letterboxd se synchronise désormais toute seule avec Movie Picker.',
       manualPick:
         "L'hôte peut maintenant désigner lui-même le film gagnant, sans passer par la roue.",
       streak:

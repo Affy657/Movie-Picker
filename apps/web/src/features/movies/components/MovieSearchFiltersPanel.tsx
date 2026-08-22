@@ -154,7 +154,7 @@ export default function MovieSearchFiltersPanel({
           valueMin={runtimeRange[0]}
           valueMax={runtimeRange[1]}
           onChange={onChangeRuntimeRange}
-          formatLabel={(value) => runtimeRangeLabel(value, tmdbLanguage)}
+          formatLabel={(value, bound) => runtimeRangeLabel(value, tmdbLanguage, bound)}
           ariaLabelMin={t('movies.search.durationMinAria')}
           ariaLabelMax={t('movies.search.durationMaxAria')}
         />

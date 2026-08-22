@@ -159,9 +159,15 @@ export function useMovieSearchFilters(tmdbLanguage: string, ratingScale?: Rating
       });
     }
     if (runtimeMin !== undefined || runtimeMax !== undefined) {
+      const runtimeLabel =
+        runtimeMin !== undefined && runtimeMax !== undefined
+          ? `${runtimeRangeLabel(runtimeRange[0], tmdbLanguage)} - ${runtimeRangeLabel(runtimeRange[1], tmdbLanguage)}`
+          : runtimeMin !== undefined
+            ? runtimeRangeLabel(runtimeRange[0], tmdbLanguage, 'min')
+            : runtimeRangeLabel(runtimeRange[1], tmdbLanguage, 'max');
       chips.push({
         key: 'runtime',
-        label: `${runtimeRangeLabel(runtimeRange[0], tmdbLanguage)} - ${runtimeRangeLabel(runtimeRange[1], tmdbLanguage)}`,
+        label: runtimeLabel,
         onRemove: () => {
           filterChangedRef.current = true;
           setRuntimeRange([RUNTIME_MIN_MINUTES, RUNTIME_MAX_MINUTES]);

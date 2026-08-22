@@ -11,7 +11,7 @@ describe('useMovieSearchFilters', () => {
     expect(result.current.voteMin).toBeUndefined();
     expect(result.current.selectedLanguage).toBeUndefined();
     expect(result.current.availabilityFilter).toBeUndefined();
-    expect(result.current.runtimeRange).toEqual([10, 180]);
+    expect(result.current.runtimeRange).toEqual([0, 180]);
     expect(result.current.hasApiFilters).toBe(false);
     expect(result.current.activeFilterChips).toEqual([]);
     expect(result.current.activeFilters).toEqual({
@@ -103,7 +103,7 @@ describe('useMovieSearchFilters', () => {
     expect(result.current.voteMin).toBeUndefined();
     expect(result.current.selectedLanguage).toBeUndefined();
     expect(result.current.availabilityFilter).toBeUndefined();
-    expect(result.current.runtimeRange).toEqual([10, 180]);
+    expect(result.current.runtimeRange).toEqual([0, 180]);
     expect(result.current.hasApiFilters).toBe(false);
   });
 
@@ -119,7 +119,7 @@ describe('useMovieSearchFilters', () => {
 
   it('changeRuntimeRange aux bornes ne produit aucun filtre actif', () => {
     const { result } = renderHook(() => useMovieSearchFilters('fr'));
-    act(() => result.current.changeRuntimeRange(10, 180));
+    act(() => result.current.changeRuntimeRange(0, 180));
     expect(result.current.activeFilters.runtimeMin).toBeUndefined();
     expect(result.current.activeFilters.runtimeMax).toBeUndefined();
     expect(result.current.hasApiFilters).toBe(false);
@@ -131,7 +131,7 @@ describe('useMovieSearchFilters', () => {
     const chip = result.current.activeFilterChips.find((c) => c.key === 'runtime')!;
     expect(chip.label).toBe('1h - 2h');
     act(() => chip.onRemove());
-    expect(result.current.runtimeRange).toEqual([10, 180]);
+    expect(result.current.runtimeRange).toEqual([0, 180]);
     expect(result.current.activeFilters.runtimeMin).toBeUndefined();
   });
 

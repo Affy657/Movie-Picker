@@ -81,15 +81,15 @@ describe('WatchlistPage (MSW)', () => {
 
     renderPage();
 
-    expect(await screen.findByText(/votre watchlist est vide/i)).toBeInTheDocument();
+    expect(await screen.findByText(/votre liste est vide/i)).toBeInTheDocument();
   });
 
-  it('filtre la liste via le panneau de filtres avancés réutilisé de la recherche (note minimum)', async () => {
+  it('filtre la liste par note minimum puis réinitialise', async () => {
     server.use(authedUserHandler, watchlistHandler([ITEM_A, ITEM_B]));
 
     renderPage();
 
-    const list = await screen.findByRole('list', { name: /films de ma watchlist/i });
+    const list = await screen.findByRole('list', { name: /films de ma liste/i });
     const titlesInOrder = () =>
       within(list)
         .getAllByRole('listitem')
@@ -98,10 +98,7 @@ describe('WatchlistPage (MSW)', () => {
     await waitFor(() => expect(titlesInOrder()).toHaveLength(2));
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole('button', { name: /filtrer ma liste à voir/i }));
-
-    // Genre/langue/disponibilité ne sont pas stockés par film de la watchlist : masqués ici.
-    expect(screen.queryByText(/^genre$/i)).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^filtres$/i }));
 
     await user.click(screen.getByRole('button', { name: /8\+/ }));
     await waitFor(() => {
@@ -109,17 +106,67 @@ describe('WatchlistPage (MSW)', () => {
       expect(titles).toHaveLength(1);
       expect(titles[0]).toContain('Ancien Mais Bien Noté');
     });
+    expect(screen.getByText('1 sur 2')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /effacer les filtres/i }));
+    await user.click(screen.getByRole('button', { name: /réinitialiser les filtres/i }));
     await waitFor(() => expect(titlesInOrder()).toHaveLength(2));
   });
 
-  it('trie par ajout (défaut), note et durée', async () => {
+  it('recherche un titre dans la liste et efface tout depuis le compteur', async () => {
     server.use(authedUserHandler, watchlistHandler([ITEM_A, ITEM_B]));
 
     renderPage();
 
-    const list = await screen.findByRole('list', { name: /films de ma watchlist/i });
+    const list = await screen.findByRole('list', { name: /films de ma liste/i });
+    const titlesInOrder = () =>
+      within(list)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent ?? '');
+
+    await waitFor(() => expect(titlesInOrder()).toHaveLength(2));
+    expect(screen.queryByText(/sur 2/)).not.toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.type(screen.getByRole('searchbox', { name: /rechercher dans ma liste/i }), 'Ancien');
+
+    await waitFor(() => {
+      const titles = titlesInOrder();
+      expect(titles).toHaveLength(1);
+      expect(titles[0]).toContain('Ancien Mais Bien Noté');
+    });
+    expect(screen.getByText('1 sur 2')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /tout effacer/i }));
+    await waitFor(() => expect(titlesInOrder()).toHaveLength(2));
+  });
+
+  it("n'affiche aucun résultat quand la recherche ne correspond à rien, avec un bouton de réinitialisation", async () => {
+    server.use(authedUserHandler, watchlistHandler([ITEM_A, ITEM_B]));
+
+    renderPage();
+
+    await screen.findByRole('list', { name: /films de ma liste/i });
+
+    const user = userEvent.setup();
+    await user.type(
+      screen.getByRole('searchbox', { name: /rechercher dans ma liste/i }),
+      'Introuvable'
+    );
+
+    expect(await screen.findByText(/aucun titre ne correspond/i)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /réinitialiser les filtres/i }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('list', { name: /films de ma liste/i })).toBeInTheDocument()
+    );
+  });
+
+  it('trie par ajout (défaut), note et durée, et inverse le sens au second clic', async () => {
+    server.use(authedUserHandler, watchlistHandler([ITEM_A, ITEM_B]));
+
+    renderPage();
+
+    const list = await screen.findByRole('list', { name: /films de ma liste/i });
     const titlesInOrder = () =>
       within(list)
         .getAllByRole('listitem')
@@ -144,6 +191,13 @@ describe('WatchlistPage (MSW)', () => {
       const [first, second] = titlesInOrder();
       expect(first).toContain('Ancien Mais Bien Noté');
       expect(second).toContain('Recent Mais Mal Noté');
+    });
+
+    await user.click(screen.getByRole('button', { name: /^durée$/i }));
+    await waitFor(() => {
+      const [first, second] = titlesInOrder();
+      expect(first).toContain('Recent Mais Mal Noté');
+      expect(second).toContain('Ancien Mais Bien Noté');
     });
   });
 

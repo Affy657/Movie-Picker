@@ -53,9 +53,27 @@ public sealed class SearchMoviesHandlerTests
         Assert.Equal(8.4, item.VoteAverage);
         Assert.Null(item.RuntimeMinutes);
         Assert.Empty(item.WatchProviders);
+        Assert.Empty(item.GenreIds);
         Assert.Equal("FR", result.WatchProvidersRegion);
         Assert.False(string.IsNullOrEmpty(result.Disclaimer));
         _tmdb.Verify(t => t.GetEnrichmentAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_MapsGenreIdsFromTmdbRow()
+    {
+        _tmdb.Setup(t => t.SearchAsync("inception", true, It.IsAny<IReadOnlyList<int>?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([
+                new TmdbSearchItem(1, MovieMediaType.Movie, "Inception", "2010", "/p.jpg", 8.4, GenreIds: [28, 878]),
+            ]);
+        var sut = Build(new MoviePickerOptions { TmdbApiKey = "key", TmdbSearchMaxWatchProviderLookups = 0 });
+
+        var result = await sut.HandleAsync("inception", true);
+
+        var item = Assert.Single(result.Items);
+        Assert.Equal([28, 878], item.GenreIds);
     }
 
     [Fact]

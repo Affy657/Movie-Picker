@@ -1,10 +1,11 @@
 import { useId, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { Link } from 'react-router';
-import { Bookmark, ChevronDown, ImageOff, Import } from 'lucide-react';
+import { Bookmark, ChevronDown, ImageOff, Import, Search } from 'lucide-react';
 import { ROUTES } from '@/app/routes';
 import PageLayout from '@/shared/components/PageLayout';
 import EmptyState from '@/shared/components/EmptyState';
+import Sheet from '@/shared/components/Sheet';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -13,12 +14,10 @@ import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/post
 import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
+import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import AddMoviePanel from '@/features/movies/components/AddMoviePanel';
 import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
-import MovieSearchFiltersPanel from '@/features/movies/components/MovieSearchFiltersPanel';
-import { useMovieSearchFilters } from '@/features/movies/hooks/useMovieSearchFilters';
 import { CardKebab } from '@/features/movies/components/movieCardParts';
-import type { MovieSearchFilters } from '@/features/movies/api/moviesApi';
 import type { MovieMediaType } from '@/shared/types/movie';
 import {
   useAddToWatchlist,
@@ -26,47 +25,16 @@ import {
   useWatchlist,
 } from '@/features/watchlist/hooks/useWatchlist';
 import type { WatchlistItem } from '@/features/watchlist/api/watchlistApi';
+import { useWatchlistToolbar } from '@/features/watchlist/hooks/useWatchlistToolbar';
+import WatchlistToolbar from '@/features/watchlist/components/WatchlistToolbar';
+import WatchlistFiltersPanel from '@/features/watchlist/components/WatchlistFiltersPanel';
 import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventModal';
 import WatchlistProposeSubmenu from '@/features/watchlist/components/WatchlistProposeSubmenu';
 import movieCardStyles from '@/features/movies/components/movieCardParts.module.css';
-import addMovieFormStyles from '@/features/movies/components/AddMovieForm.module.css';
-import sortStyles from '@/features/events/pages/event-detail/EventMoviesSection.module.css';
 import styles from './WatchlistPage.module.css';
 
 function itemKey(tmdbId: number, mediaType: MovieMediaType | undefined): string {
   return `${tmdbId}|${mediaType ?? 'movie'}`;
-}
-
-type SortKey = 'createdAt' | 'voteAverage' | 'duration';
-
-function sortItems(items: WatchlistItem[], sortBy: SortKey): WatchlistItem[] {
-  return [...items].sort((a, b) => {
-    switch (sortBy) {
-      case 'voteAverage': {
-        const va = a.voteAverage ?? -Infinity;
-        const vb = b.voteAverage ?? -Infinity;
-        return vb - va;
-      }
-      case 'duration': {
-        const ra = a.runtimeMinutes ?? Infinity;
-        const rb = b.runtimeMinutes ?? Infinity;
-        return ra - rb;
-      }
-      case 'createdAt':
-      default:
-        return b.createdAt.localeCompare(a.createdAt);
-    }
-  });
-}
-
-function itemMatchesFilters(item: WatchlistItem, f: MovieSearchFilters): boolean {
-  const year = Number.parseInt(item.year, 10);
-  if (f.yearFrom != null && (Number.isNaN(year) || year < f.yearFrom)) return false;
-  if (f.yearTo != null && (Number.isNaN(year) || year > f.yearTo)) return false;
-  if (f.voteMin != null && (item.voteAverage ?? -Infinity) < f.voteMin) return false;
-  if (f.runtimeMin != null && (item.runtimeMinutes ?? -Infinity) < f.runtimeMin) return false;
-  if (f.runtimeMax != null && (item.runtimeMinutes ?? Infinity) > f.runtimeMax) return false;
-  return true;
 }
 
 export default function WatchlistPage() {
@@ -75,16 +43,30 @@ export default function WatchlistPage() {
   const { user } = useAuth();
   useDocumentTitle(pageTitle(t('watchlist.title')));
   const hasHover = useHasHoverCapability();
+  const isMobile = useIsMobile();
   const filtersPanelId = useId();
 
   const { data: items = [], isLoading, isError } = useWatchlist();
 
-  const [sortBy, setSortBy] = useState<SortKey>('createdAt');
   const [removeError, setRemoveError] = useState<string | null>(null);
   const [proposeTarget, setProposeTarget] = useState<WatchlistItem | null>(null);
   const [detailsTarget, setDetailsTarget] = useState<WatchlistItem | null>(null);
 
-  const filters = useMovieSearchFilters(tmdbLanguage, user?.ratingScale);
+  const mediaTypeLabels = useMemo(
+    () => ({
+      movie: t('watchlist.toolbar.filterTypeMovie'),
+      tv: t('watchlist.toolbar.filterTypeTv'),
+    }),
+    [t]
+  );
+
+  const toolbar = useWatchlistToolbar({
+    items,
+    userId: user?.userId,
+    tmdbLanguage,
+    ratingScale: user?.ratingScale,
+    mediaTypeLabels,
+  });
 
   const addMutation = useAddToWatchlist();
   const removeMutation = useRemoveFromWatchlist({
@@ -96,17 +78,12 @@ export default function WatchlistPage() {
     [items]
   );
 
-  const filteredItems = useMemo(
-    () => items.filter((i) => itemMatchesFilters(i, filters.activeFilters)),
-    [items, filters.activeFilters]
-  );
-
-  const sortedItems = useMemo(() => sortItems(filteredItems, sortBy), [filteredItems, sortBy]);
-
   const handleRemove = (tmdbId: number, mediaType: MovieMediaType) => {
     setRemoveError(null);
     removeMutation.mutate({ tmdbId, mediaType });
   };
+
+  const activeFilterCount = toolbar.activeFilterChips.length;
 
   return (
     <PageLayout className={styles.layout}>
@@ -169,127 +146,130 @@ export default function WatchlistPage() {
           />
         ) : (
           <>
-            <div className={addMovieFormStyles.searchRow}>
-              <button
-                type="button"
-                className={clsx(
-                  addMovieFormStyles.filterIconBtn,
-                  filters.filtersOpen && addMovieFormStyles.filterIconBtnActive
-                )}
-                onClick={() => filters.setFiltersOpen((v) => !v)}
-                aria-expanded={filters.filtersOpen}
-                aria-controls={filtersPanelId}
-                aria-label={t('watchlist.filter.toggleAria')}
-              >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 14 14"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  aria-hidden="true"
-                >
-                  <path d="M1.5 3.5h11M4 7h6M6.5 10.5h1" />
-                </svg>
-                {filters.activeFilterChips.length > 0 && (
-                  <span className={addMovieFormStyles.filtersBadge} aria-hidden="true">
-                    {filters.activeFilterChips.length}
-                  </span>
-                )}
-              </button>
-            </div>
-
-            {filters.activeFilterChips.length > 0 && (
-              <div
-                className={addMovieFormStyles.activeFiltersRow}
-                aria-label={t('watchlist.filter.toggleAria')}
-              >
-                {filters.activeFilterChips.map((chip) => (
-                  <span key={chip.key} className={addMovieFormStyles.activeFilterChip}>
-                    {chip.label}
-                    <button
-                      type="button"
-                      className={addMovieFormStyles.activeFilterChipRemove}
-                      onClick={chip.onRemove}
-                      aria-label={t('movies.search.removeFilterAria')}
-                    >
-                      <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
-                        <path
-                          d="M1 1l8 8M9 1 1 9"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          fill="none"
-                        />
-                      </svg>
-                    </button>
-                  </span>
-                ))}
-                <button
-                  type="button"
-                  className={addMovieFormStyles.filtersClearAll}
-                  onClick={filters.clearAllFilters}
-                >
-                  {t('movies.search.filtersClearAll')}
-                </button>
-              </div>
-            )}
-
-            {filters.filtersOpen && (
-              <MovieSearchFiltersPanel
-                panelId={filtersPanelId}
-                tmdbLanguage={tmdbLanguage}
-                selectedGenres={filters.selectedGenres}
-                selectedDecade={filters.selectedDecade}
-                voteMin={filters.voteMin}
-                selectedLanguage={filters.selectedLanguage}
-                availabilityFilter={filters.availabilityFilter}
-                runtimeRange={filters.runtimeRange}
-                ratingScale={user?.ratingScale}
-                onToggleDecade={filters.toggleDecade}
-                onToggleVoteMin={filters.toggleVoteMin}
-                onChangeRuntimeRange={filters.changeRuntimeRange}
+            <div className={styles.toolbarBlock}>
+              <WatchlistToolbar
+                search={toolbar.search}
+                onSearchChange={toolbar.setSearch}
+                filtersOpen={toolbar.filtersOpen}
+                onToggleFilters={() => toolbar.setFiltersOpen((v) => !v)}
+                filtersPanelId={filtersPanelId}
+                activeFilterCount={activeFilterCount}
+                sortBy={toolbar.sortBy}
+                sortDir={toolbar.sortDir}
+                onSetSort={toolbar.setSortBy}
+                isFiltered={toolbar.isFiltered}
+                visibleCount={toolbar.visibleCount}
+                totalCount={toolbar.totalCount}
+                onClearAll={toolbar.resetAll}
+                isMobile={isMobile}
               />
-            )}
 
-            {filteredItems.length > 1 && (
-              <div className={sortStyles.sortBar}>
-                <span className={sortStyles.sortLabel}>{t('movies.list.sortLabel')}</span>
+              {toolbar.filtersOpen && !isMobile && (
+                <WatchlistFiltersPanel
+                  panelId={filtersPanelId}
+                  boxed
+                  tmdbLanguage={tmdbLanguage}
+                  ratingScale={user?.ratingScale}
+                  selectedGenres={toolbar.selectedGenres}
+                  onToggleGenre={toolbar.toggleGenre}
+                  selectedMediaTypes={toolbar.selectedMediaTypes}
+                  onToggleMediaType={toolbar.toggleMediaType}
+                  selectedDecade={toolbar.selectedDecade}
+                  onToggleDecade={toolbar.toggleDecade}
+                  voteMin={toolbar.voteMin}
+                  onToggleVoteMin={toolbar.toggleVoteMin}
+                  runtimeRange={toolbar.runtimeRange}
+                  onChangeRuntimeRange={toolbar.changeRuntimeRange}
+                  onReset={toolbar.clearAllFilters}
+                />
+              )}
+
+              {activeFilterCount > 0 && (
                 <div
-                  className={sortStyles.sortPills}
-                  role="toolbar"
-                  aria-label={t('movies.list.sortLabel')}
+                  className={styles.activeFiltersRow}
+                  aria-label={t('watchlist.filter.toggleAria')}
                 >
-                  {(
-                    [
-                      { key: 'createdAt', label: t('movies.list.sortAddedAt') },
-                      { key: 'voteAverage', label: t('movies.list.sortTmdbVote') },
-                      { key: 'duration', label: t('movies.list.sortDuration') },
-                    ] as { key: SortKey; label: string }[]
-                  ).map(({ key, label }) => (
-                    <button
-                      key={key}
-                      type="button"
-                      className={clsx(
-                        sortStyles.sortPill,
-                        sortBy === key && sortStyles.sortPillActive
-                      )}
-                      aria-pressed={sortBy === key}
-                      onClick={() => setSortBy(key)}
-                    >
-                      {label}
-                    </button>
+                  {toolbar.activeFilterChips.map((chip) => (
+                    <span key={chip.key} className={styles.activeFilterChip}>
+                      <span className={styles.activeFilterChipLabel}>{chip.label}</span>
+                      <button
+                        type="button"
+                        className={styles.activeFilterChipRemove}
+                        onClick={chip.onRemove}
+                        aria-label={t('watchlist.toolbar.removeFilterAria')}
+                      >
+                        <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+                          <path
+                            d="M1 1l8 8M9 1 1 9"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            fill="none"
+                          />
+                        </svg>
+                      </button>
+                    </span>
                   ))}
                 </div>
-              </div>
+              )}
+            </div>
+
+            {isMobile && (
+              <Sheet
+                open={toolbar.filtersOpen}
+                title={t('watchlist.toolbar.filtersSheetTitle')}
+                onClose={() => toolbar.setFiltersOpen(false)}
+                footer={
+                  <>
+                    <button
+                      type="button"
+                      className={styles.sheetReset}
+                      onClick={toolbar.clearAllFilters}
+                    >
+                      {t('watchlist.toolbar.filtersReset')}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      onClick={() => toolbar.setFiltersOpen(false)}
+                    >
+                      {t('watchlist.toolbar.filtersApply', { count: toolbar.visibleCount })}
+                    </button>
+                  </>
+                }
+              >
+                <WatchlistFiltersPanel
+                  tmdbLanguage={tmdbLanguage}
+                  ratingScale={user?.ratingScale}
+                  selectedGenres={toolbar.selectedGenres}
+                  onToggleGenre={toolbar.toggleGenre}
+                  selectedMediaTypes={toolbar.selectedMediaTypes}
+                  onToggleMediaType={toolbar.toggleMediaType}
+                  selectedDecade={toolbar.selectedDecade}
+                  onToggleDecade={toolbar.toggleDecade}
+                  voteMin={toolbar.voteMin}
+                  onToggleVoteMin={toolbar.toggleVoteMin}
+                  runtimeRange={toolbar.runtimeRange}
+                  onChangeRuntimeRange={toolbar.changeRuntimeRange}
+                />
+              </Sheet>
             )}
-            {sortedItems.length === 0 ? (
-              <p className="placeholder">{t('watchlist.filter.empty')}</p>
+
+            {toolbar.visibleItems.length === 0 ? (
+              <EmptyState
+                compact
+                icon={<Search aria-hidden size={22} />}
+                title={t('watchlist.toolbar.emptyTitle')}
+                message={t('watchlist.toolbar.emptyMessage')}
+                actions={
+                  <button type="button" className="btn btn-sm" onClick={toolbar.resetAll}>
+                    {t('watchlist.toolbar.filtersResetAll')}
+                  </button>
+                }
+              />
             ) : (
               <ul className={styles.grid} aria-label={t('watchlist.listAria')}>
-                {sortedItems.map((item) => {
+                {toolbar.visibleItems.map((item) => {
                   const posterRaw = posterImageSrc(item.posterPath);
                   const posterSrc = posterRaw ? tmdbPosterSrcForListDisplay(posterRaw) : undefined;
                   const voteLabel = formatTmdbVote(item.voteAverage, user?.ratingScale);

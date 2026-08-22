@@ -1,4 +1,3 @@
-
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,7 +10,9 @@ let files;
 try {
   files = readdirSync(assetsDir).filter((f) => f.endsWith('.js'));
 } catch {
-  console.error('check-prod-bundle-secrets: dist/assets introuvable — lancez le build web d’abord.');
+  console.error(
+    'check-prod-bundle-secrets: dist/assets introuvable — lancez le build web d’abord.'
+  );
   process.exit(1);
 }
 

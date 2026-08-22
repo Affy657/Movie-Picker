@@ -8,7 +8,7 @@ interface DurationRangeSliderProps {
   valueMin: number;
   valueMax: number;
   onChange: (min: number, max: number) => void;
-  formatLabel: (value: number) => string;
+  formatLabel: (value: number, bound: 'min' | 'max') => string;
   ariaLabelMin: string;
   ariaLabelMax: string;
 }
@@ -72,8 +72,8 @@ export default function DurationRangeSlider({
         style={{ zIndex: minThumbOnTop ? 3 : 4 }}
       />
       <div className={styles.labels}>
-        <span>{formatLabel(valueMin)}</span>
-        <span>{formatLabel(valueMax)}</span>
+        <span>{formatLabel(valueMin, 'min')}</span>
+        <span>{formatLabel(valueMax, 'max')}</span>
       </div>
     </div>
   );

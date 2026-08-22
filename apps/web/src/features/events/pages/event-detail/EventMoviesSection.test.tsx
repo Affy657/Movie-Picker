@@ -114,7 +114,7 @@ describe('EventMoviesSection (MSW)', () => {
     const user = userEvent.setup();
 
     await user.click(await screen.findByRole('button', { name: /plus d.actions.*matrix/i }));
-    await user.click(await screen.findByRole('menuitem', { name: /ajouter à ma watchlist/i }));
+    await user.click(await screen.findByRole('menuitem', { name: /ajouter à ma liste/i }));
 
     await waitFor(() => expect(addedBody).not.toBeNull());
     expect(addedBody).toMatchObject({
@@ -148,7 +148,7 @@ describe('EventMoviesSection (MSW)', () => {
     const user = userEvent.setup();
 
     await user.click(await screen.findByRole('button', { name: /plus d.actions.*matrix/i }));
-    await user.click(await screen.findByRole('menuitem', { name: /retirer de ma watchlist/i }));
+    await user.click(await screen.findByRole('menuitem', { name: /retirer de ma liste/i }));
 
     await waitFor(() => expect(removeCalled).toBe(true));
   });

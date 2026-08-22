@@ -205,7 +205,8 @@ export const en: Locale = {
         helpTitle: 'How it works',
         helpSync:
           'Both watchlists stay aligned: what you add on Letterboxd shows up here, what you take off there (watched, rated, reviewed) is removed here.',
-        helpSafety: 'Films added directly in Movie Picker are never removed.',
+        helpSafety:
+          'Films added directly in Movie Picker are never removed. There is no reverse sync: adding, removing, or proposing a film from Movie Picker never changes your Letterboxd watchlist.',
         helpUsername:
           'Your username is the end of letterboxd.com/…, and your profile must be public. Automatic sync runs at most once a day, when you open the app.',
         usernameLabel: 'Letterboxd username',
@@ -213,6 +214,8 @@ export const en: Locale = {
         usernameEdit: 'Edit Letterboxd username',
         usernameSave: 'Save Letterboxd username',
         usernameFallbackError: 'Could not save.',
+        usernameDisconnect: 'Disconnect Letterboxd account',
+        usernameDisconnectFallbackError: 'Could not disconnect.',
         statusOff: 'Add your username to turn the sync on.',
         statusPending: 'Sync is on, first read coming up.',
         statusSyncedAt: 'Synced on {{date}}.',
@@ -223,6 +226,7 @@ export const en: Locale = {
         reportPending: 'Choose for {{count}} ambiguous film(s)',
         reportUnmatched: 'Show the {{count}} film(s) not found on TMDB',
         reportTruncated: '{{count}} film(s) skipped: too many films at once.',
+        reconciliationPending: 'Reconciliation pending: {{count}} film(s) to identify manually',
         choicesTitle: 'Pick the right matches',
         choicesIntro:
           'TMDB found several films for {{count}} Letterboxd title(s), pick the right one.',
@@ -655,6 +659,37 @@ export const en: Locale = {
       toggleAria: 'Filter my to-watch list',
       empty: 'No results for this filter.',
     },
+    toolbar: {
+      searchLabel: 'Search my list',
+      searchPlaceholder: 'Search my list…',
+      filtersToggleAria: 'Filters',
+      filtersLabel: 'Filters',
+      filtersSheetTitle: 'Filter my list',
+      filtersApply: 'View {{count}} title(s)',
+      filtersReset: 'Reset',
+      filtersResetAll: 'Reset filters',
+      clearAll: 'Clear all',
+      resultCount: '{{count}} of {{total}}',
+      sortLabel: 'Sort by',
+      sortMenuAria: 'Sort by',
+      sortAddedAt: 'Added',
+      sortTitle: 'Title',
+      sortVoteAverage: 'Rating',
+      sortDuration: 'Duration',
+      sortDirectionAsc: 'Ascending',
+      sortDirectionDesc: 'Descending',
+      filterGenre: 'Genre',
+      filterType: 'Type',
+      filterTypeMovie: 'Movies',
+      filterTypeTv: 'TV shows',
+      filterDecade: 'Decade',
+      filterVoteMin: 'Minimum rating',
+      filterDuration: 'Duration',
+      removeFilterAria: 'Remove this filter',
+      emptyTitle: 'No title matches',
+      emptyMessage:
+        'No movie in your list matches these criteria. Broaden your search or remove a filter.',
+    },
   },
 
   errors: {
@@ -696,6 +731,7 @@ export const en: Locale = {
     prefEventInvitation: 'Invitation to an event',
     prefNewFollower: 'Someone follows you',
     prefEventPending: 'Event finished with no movie picked',
+    prefLetterboxdReconciliationPending: 'Letterboxd films to identify manually',
     inboxAriaLabel: 'Notifications',
     inboxAriaLabelWithCount: 'Notifications, {{count}} unread',
     inboxTitle: 'Notifications',
@@ -717,6 +753,8 @@ export const en: Locale = {
     eventReminder24hText: 'Tomorrow is **{{eventTitle}}**! Get the couch and popcorn ready 🍿',
     eventInvitationText: '{{name}} invites you to join **{{eventTitle}}**',
     eventPendingText: '**{{eventTitle}}** ended with no movie picked... catch it next time? 😅',
+    letterboxdReconciliationPendingText:
+      'The Letterboxd sync could not automatically identify some films. Fix it in your settings.',
   },
 
   footer: {

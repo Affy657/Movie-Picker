@@ -168,6 +168,7 @@ describe('EventDetail (MSW)', () => {
     );
     await user.click(await screen.findByRole('button', { name: /rejoindre/i }));
 
+    await user.click(await screen.findByRole('button', { name: /proposer un film/i }));
     await waitFor(() =>
       expect(screen.getByPlaceholderText(/ajouter un film/i)).toBeInTheDocument()
     );
