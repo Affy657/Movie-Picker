@@ -101,11 +101,11 @@
 }
 
 .actions {
-  margin-left: auto;
+  flex: 1 1 100%;
   display: flex;
   align-items: center;
-  flex: 0 0 auto;
-  gap: 0.5rem;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
 .wheelActions,
@@ -113,6 +113,10 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.utilityActions {
+  margin-left: auto;
 }
 
 .wheelActions:empty,

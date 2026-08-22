@@ -118,7 +118,7 @@ public sealed class EventDocumentMapperTests
         Assert.Equal(evt.Id, back.Id);
         Assert.Equal(evt.Config?.Theme, back.Config?.Theme);
         Assert.Equal(evt.Config?.MaxProposalsPerParticipant, back.Config?.MaxProposalsPerParticipant);
-        Assert.Equal(WheelMode.StrictRandom, back.Config?.WheelMode);
+        Assert.Equal(WheelMode.WeightedByVotes, back.Config?.WheelMode);
     }
 
     [Fact]

@@ -176,7 +176,9 @@
 
 @media (max-width: 767px) {
   .aboveMobileNav {
-    padding-bottom: calc(3.25rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(
+      3.25rem + env(safe-area-inset-bottom, 0px) + var(--event-wheel-bar-height, 0px)
+    );
   }
 
   .aboveMobileNav .bottom {

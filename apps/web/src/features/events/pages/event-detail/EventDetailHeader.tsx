@@ -143,8 +143,30 @@ export default function EventDetailHeader({
   };
   const sentinelRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLElement>(null);
+  const wheelActionsRef = useRef<HTMLDivElement>(null);
   const [stickyBar, setStickyBar] = useState(false);
   const [condensed, setCondensed] = useState(false);
+
+  useEffect(() => {
+    const el = wheelActionsRef.current;
+    const root = document.documentElement;
+    if (!el || typeof ResizeObserver !== 'function') return;
+    const sync = () => {
+      const height = el.offsetHeight;
+      if (height > 0) {
+        root.style.setProperty('--event-wheel-bar-height', `${height}px`);
+      } else {
+        root.style.removeProperty('--event-wheel-bar-height');
+      }
+    };
+    sync();
+    const observer = new ResizeObserver(sync);
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty('--event-wheel-bar-height');
+    };
+  }, [wheelActions]);
 
   useEffect(() => {
     const query = globalThis.matchMedia?.(STICKY_BAR_MEDIA);
@@ -233,7 +255,9 @@ export default function EventDetailHeader({
         ) : null}
 
         <div className={styles.actions}>
-          <div className={styles.wheelActions}>{wheelActions}</div>
+          <div ref={wheelActionsRef} className={styles.wheelActions}>
+            {wheelActions}
+          </div>
           <div className={styles.utilityActions}>
             {!condensed && !isFinished && shareUrl ? (
               <>
