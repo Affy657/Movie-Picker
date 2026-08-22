@@ -21,6 +21,8 @@ export function useLetterboxdAutoSync(): void {
         void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
         if (report.added > 0 || report.removed > 0)
           void queryClient.invalidateQueries({ queryKey: queryKeys.watchlist.list });
+        if (report.pendingChoices.length > 0)
+          void queryClient.invalidateQueries({ queryKey: queryKeys.notifications.inbox });
       })
       .catch(() => undefined);
   }, [queryClient, user?.letterboxdUsername]);

@@ -19,6 +19,10 @@ public interface IUserRepository
         DateTimeOffset syncedAt,
         string? error,
         CancellationToken ct = default);
+    Task SetLetterboxdPendingReconciliationCountAsync(
+        string userId,
+        int pendingCount,
+        CancellationToken ct = default);
     Task<bool> MarkSupporterAsync(string userId, DateTimeOffset since, CancellationToken ct = default);
     Task<IReadOnlyList<PublicProfileRef>> ListPublicProfilesAsync(int limit, CancellationToken ct = default);
     Task<User> AddAsync(User user, CancellationToken ct = default);

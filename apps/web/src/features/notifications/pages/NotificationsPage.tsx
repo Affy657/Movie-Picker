@@ -31,6 +31,7 @@ function notifDestination(item: UserNotificationItem): string | null {
   if (item.type === 'newfollower')
     return item.actorHandle ? ROUTES.profile(item.actorHandle) : null;
   if (item.type === 'eventdeleted') return null;
+  if (item.type === 'letterboxdreconciliationpending') return ROUTES.account;
   return item.eventSlug ? ROUTES.eventDetail(item.eventSlug) : null;
 }
 
@@ -59,6 +60,8 @@ function notifText(item: UserNotificationItem, t: TFn): string {
       return t('notifications.eventInvitationText', { name, eventTitle });
     case 'eventpending':
       return t('notifications.eventPendingText', { eventTitle });
+    case 'letterboxdreconciliationpending':
+      return t('notifications.letterboxdReconciliationPendingText');
     default:
       return '';
   }

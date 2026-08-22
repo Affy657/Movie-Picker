@@ -7,6 +7,7 @@ import {
   Hourglass,
   Mail,
   MousePointerClick,
+  RefreshCw,
   Shuffle,
   UserPlus,
   Users,
@@ -35,6 +36,8 @@ export function notifIcon(type: string, size = 17): ReactNode {
       return <Mail size={size} aria-hidden />;
     case 'eventpending':
       return <Hourglass size={size} aria-hidden />;
+    case 'letterboxdreconciliationpending':
+      return <RefreshCw size={size} aria-hidden />;
     default:
       return <Bell size={size} aria-hidden />;
   }

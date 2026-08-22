@@ -23,6 +23,7 @@ const baseUser: UserProfile = {
   letterboxdUsername: null,
   letterboxdLastSyncAt: null,
   letterboxdLastSyncError: null,
+  letterboxdPendingReconciliationCount: 0,
   hasPassword: true,
   linkedProviders: [],
 };

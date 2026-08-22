@@ -68,6 +68,28 @@ public sealed class GetUserProfileHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_ReturnsLetterboxdPendingReconciliationCount()
+    {
+        var user = new User
+        {
+            Id = "id1",
+            Email = "bob@example.com",
+            PasswordHash = "h",
+            DisplayName = "Bob",
+            LetterboxdPendingReconciliationCount = 3,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("id1", It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var handler = new GetUserProfileHandler(users.Object);
+
+        var res = await handler.HandleAsync("id1");
+
+        Assert.Equal(3, res.LetterboxdPendingReconciliationCount);
+    }
+
+    [Fact]
     public async Task HandleAsync_NoPasswordWithLinkedIdentities_ReturnsHasPasswordFalseAndProviders()
     {
         var user = new User

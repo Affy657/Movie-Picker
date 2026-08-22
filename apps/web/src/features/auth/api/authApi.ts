@@ -25,6 +25,7 @@ export async function fetchAuthProfile(): Promise<UserProfile> {
     ...profile,
     hasPassword: profile.hasPassword ?? true,
     linkedProviders: profile.linkedProviders ?? [],
+    letterboxdPendingReconciliationCount: profile.letterboxdPendingReconciliationCount ?? 0,
   };
 }
 
@@ -90,6 +91,7 @@ export async function patchAuthProfile(patch: ProfilePatch): Promise<UserProfile
     ...profile,
     hasPassword: profile.hasPassword ?? true,
     linkedProviders: profile.linkedProviders ?? [],
+    letterboxdPendingReconciliationCount: profile.letterboxdPendingReconciliationCount ?? 0,
   };
 }
 

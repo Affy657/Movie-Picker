@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.LetterboxdImport;
@@ -9,15 +10,18 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
     private static readonly TimeSpan MinimumInterval = TimeSpan.FromDays(1);
 
     private readonly IUserRepository _users;
+    private readonly IUserNotificationRepository _notifications;
     private readonly LetterboxdWatchlistSynchronizer _synchronizer;
     private readonly TimeProvider _clock;
 
     public SyncLetterboxdWatchlistHandler(
         IUserRepository users,
+        IUserNotificationRepository notifications,
         LetterboxdWatchlistSynchronizer synchronizer,
         TimeProvider clock)
     {
         _users = users;
+        _notifications = notifications;
         _synchronizer = synchronizer;
         _clock = clock;
     }
@@ -50,6 +54,20 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
             if (force)
                 throw new BadRequestException(outcome.Error ?? "Synchronisation impossible.");
             return Skipped();
+        }
+
+        await _users.SetLetterboxdPendingReconciliationCountAsync(userId, outcome.PendingChoices.Count, ct);
+
+        if (!force && outcome.PendingChoices.Count > 0
+            && user.NotifiesOn(UserNotificationType.LetterboxdReconciliationPending))
+        {
+            await _notifications.AddAsync(new UserNotification
+            {
+                UserId = userId,
+                Type = UserNotificationType.LetterboxdReconciliationPending,
+                IsRead = false,
+                CreatedAt = now
+            }, ct);
         }
 
         return new LetterboxdSyncResponse

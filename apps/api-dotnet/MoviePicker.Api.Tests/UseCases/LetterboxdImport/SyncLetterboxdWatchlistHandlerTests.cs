@@ -26,6 +26,7 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
     private static readonly DateTimeOffset Now = new(2026, 8, 10, 12, 0, 0, TimeSpan.Zero);
 
     private readonly Mock<IUserRepository> _users = new();
+    private readonly Mock<IUserNotificationRepository> _notifications = new();
     private readonly Mock<IWatchlistRepository> _watchlist = new();
     private readonly Mock<ILetterboxdWatchlistClient> _letterboxd = new();
     private readonly Mock<ITmdbMovieSearch> _tmdb = new();
@@ -48,7 +49,33 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
             _tmdb.Object,
             _addToWatchlist.Object,
             NullLogger<LetterboxdWatchlistSynchronizer>.Instance);
-        _sut = new SyncLetterboxdWatchlistHandler(_users.Object, synchronizer, new FixedClock(Now));
+        _sut = new SyncLetterboxdWatchlistHandler(
+            _users.Object, _notifications.Object, synchronizer, new FixedClock(Now));
+    }
+
+    private void GivenAmbiguousLetterboxdFilm()
+    {
+        _letterboxd
+            .Setup(l => l.GetWatchlistAsync(Username, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new LetterboxdWatchlistSnapshot(
+                [new LetterboxdFilm("dune-part-two", "Dune : Deuxième partie", "2024")], true));
+        _tmdb
+            .Setup(t => t.SearchAsync(
+                "Dune : Deuxième partie",
+                true,
+                null,
+                It.IsAny<int?>(),
+                It.IsAny<int?>(),
+                null,
+                null,
+                null,
+                null,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<TmdbSearchItem>)
+            [
+                new TmdbSearchItem(1, MovieMediaType.Movie, "Autre film", "2024", null),
+                new TmdbSearchItem(2, MovieMediaType.Movie, "Un autre film encore", "2024", null)
+            ]);
     }
 
     private void GivenUser(string? username, DateTimeOffset? lastSyncAt) =>
@@ -167,6 +194,52 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
         var result = await _sut.HandleAsync(UserId, force: false);
 
         Assert.True(result.Skipped);
+    }
+
+    [Fact]
+    public async Task HandleAsync_Success_StoresThePendingReconciliationCount()
+    {
+        var result = await _sut.HandleAsync(UserId, force: true);
+
+        Assert.False(result.Skipped);
+        _users.Verify(
+            u => u.SetLetterboxdPendingReconciliationCountAsync(UserId, 0, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AutoSyncFindsAmbiguousFilm_CreatesReconciliationNotification()
+    {
+        GivenAmbiguousLetterboxdFilm();
+
+        var result = await _sut.HandleAsync(UserId, force: false);
+
+        Assert.False(result.Skipped);
+        Assert.Single(result.PendingChoices);
+        _users.Verify(
+            u => u.SetLetterboxdPendingReconciliationCountAsync(UserId, 1, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _notifications.Verify(
+            n => n.AddAsync(
+                It.Is<UserNotification>(x =>
+                    x.UserId == UserId && x.Type == UserNotificationType.LetterboxdReconciliationPending),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ManualSyncFindsAmbiguousFilm_DoesNotCreateNotification()
+    {
+        GivenUser(Username, Now.AddMinutes(-1));
+        GivenAmbiguousLetterboxdFilm();
+
+        var result = await _sut.HandleAsync(UserId, force: true);
+
+        Assert.False(result.Skipped);
+        Assert.Single(result.PendingChoices);
+        _notifications.Verify(
+            n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]

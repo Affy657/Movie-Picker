@@ -25,6 +25,7 @@ function meHandler(
     letterboxdUsername?: string | null;
     letterboxdLastSyncAt?: string | null;
     letterboxdLastSyncError?: string | null;
+    letterboxdPendingReconciliationCount?: number;
   } = {}
 ) {
   return http.get(`${TEST_API_V1}/auth/me`, () =>
@@ -42,6 +43,7 @@ function meHandler(
       letterboxdUsername: overrides.letterboxdUsername ?? null,
       letterboxdLastSyncAt: overrides.letterboxdLastSyncAt ?? null,
       letterboxdLastSyncError: overrides.letterboxdLastSyncError ?? null,
+      letterboxdPendingReconciliationCount: overrides.letterboxdPendingReconciliationCount ?? 0,
     })
   );
 }
@@ -114,6 +116,38 @@ describe('LetterboxdImportSection (MSW)', () => {
     await user.click(screen.getByRole('button', { name: 'Enregistrer le pseudo Letterboxd' }));
 
     await waitFor(() => expect(patched).toBe('newname'));
+  });
+
+  it('permet de déconnecter le compte Letterboxd via le bouton dédié', async () => {
+    const user = userEvent.setup();
+    let patched: string | null | undefined;
+
+    server.use(
+      meHandler({ letterboxdUsername: 'dave_v' }),
+      http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
+        const body = (await request.json()) as { letterboxdUsername?: string | null };
+        patched = body.letterboxdUsername;
+        return HttpResponse.json({
+          userId: 'u-acc',
+          displayName: 'Pat',
+          emailMasked: 'p***@test.local',
+          letterboxdUsername: null,
+          letterboxdLastSyncAt: null,
+          letterboxdLastSyncError: null,
+        });
+      })
+    );
+
+    renderAccount();
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Déconnecter le compte Letterboxd' })
+    );
+
+    await waitFor(() => expect(patched).toBe(''));
+    expect(
+      await screen.findByText('Ajoutez votre pseudo pour activer la synchronisation.')
+    ).toBeInTheDocument();
   });
 
   it('annule la modification du pseudo sans envoyer de PATCH', async () => {
@@ -230,6 +264,53 @@ describe('LetterboxdImportSection (MSW)', () => {
     expect(screen.getByText('Sermons de minuit (2021)')).toBeInTheDocument();
   });
 
+  it('affiche une réconciliation en attente et ouvre la modale de choix au clic', async () => {
+    const user = userEvent.setup();
+
+    server.use(
+      meHandler({ letterboxdUsername: 'affy657', letterboxdPendingReconciliationCount: 2 }),
+      http.post(`${TEST_API_V1}/letterboxd/sync`, () =>
+        HttpResponse.json({
+          skipped: false,
+          added: 0,
+          removed: 0,
+          unmatchedTitles: [],
+          pendingChoices: [
+            {
+              rowIndex: 1,
+              title: 'Midnight Mass',
+              year: '2021',
+              letterboxdSlug: 'midnight-mass-2021',
+              candidates: [
+                {
+                  tmdbId: 97400,
+                  mediaType: 'tv',
+                  title: 'Sermons de minuit',
+                  year: '2021',
+                  posterPath: null,
+                  voteAverage: 7.5,
+                },
+              ],
+            },
+          ],
+          totalOnLetterboxd: 1,
+          totalTruncated: 0,
+        })
+      )
+    );
+
+    renderAccount();
+
+    const pendingButton = await screen.findByRole('button', {
+      name: /Réconciliation en attente : 2 film\(s\)/,
+    });
+    await user.click(pendingButton);
+
+    expect(
+      await screen.findByRole('heading', { name: 'Choisir les bonnes correspondances' })
+    ).toBeInTheDocument();
+  });
+
   it('liste les films introuvables sur TMDB dans un dépliant', async () => {
     const user = userEvent.setup();
 
@@ -330,11 +411,11 @@ describe('LetterboxdImportSection (MSW)', () => {
     renderAccount();
 
     const trigger = await screen.findByRole('button', { name: 'Comment ça marche' });
-    expect(screen.queryByText(/Vos deux watchlists restent alignées/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Vos deux listes restent alignées/)).not.toBeInTheDocument();
 
     await user.click(trigger);
 
-    expect(screen.getByText(/Vos deux watchlists restent alignées/)).toBeInTheDocument();
+    expect(screen.getByText(/Vos deux listes restent alignées/)).toBeInTheDocument();
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
   });
 });

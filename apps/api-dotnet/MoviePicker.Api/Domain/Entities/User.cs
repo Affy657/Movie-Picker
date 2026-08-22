@@ -54,6 +54,7 @@ public sealed record User
     public string? LetterboxdUsername { get; init; }
     public DateTimeOffset? LetterboxdLastSyncAt { get; init; }
     public string? LetterboxdLastSyncError { get; init; }
+    public int LetterboxdPendingReconciliationCount { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
 }

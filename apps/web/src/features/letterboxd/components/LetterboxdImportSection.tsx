@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, Check, Pencil, RefreshCw, X } from 'lucide-react';
+import { AlertTriangle, Check, Pencil, RefreshCw, TriangleAlert, Unlink, X } from 'lucide-react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
@@ -44,7 +44,7 @@ export default function LetterboxdImportSection() {
 
   const saveUsernameAction = useCallback(async () => {
     const trimmed = draft.trim();
-    await patchProfile({ letterboxdUsername: trimmed === '' ? null : trimmed });
+    await patchProfile({ letterboxdUsername: trimmed });
     setEditing(false);
     setReport(null);
     setConfirmResult(null);
@@ -56,6 +56,21 @@ export default function LetterboxdImportSection() {
     error: saveUsernameError,
     clearError: clearSaveError,
   } = useAsyncAction(saveUsernameAction, t('auth.account.letterboxd.usernameFallbackError'));
+
+  const disconnectAction = useCallback(async () => {
+    await patchProfile({ letterboxdUsername: '' });
+    setReport(null);
+    setConfirmResult(null);
+  }, [patchProfile]);
+
+  const {
+    run: runDisconnect,
+    loading: disconnecting,
+    error: disconnectError,
+  } = useAsyncAction(
+    disconnectAction,
+    t('auth.account.letterboxd.usernameDisconnectFallbackError')
+  );
 
   const syncAction = useCallback(async () => {
     const result = await syncLetterboxd(true);
@@ -99,7 +114,7 @@ export default function LetterboxdImportSection() {
     <section className="section section--panel" aria-labelledby="letterboxd-heading">
       <h2 id="letterboxd-heading" className={accountStyles.sectionTitle}>
         <RefreshCw size={18} aria-hidden />
-        {t('auth.account.letterboxd.title')}
+        <span className={accountStyles.sectionTitleText}>{t('auth.account.letterboxd.title')}</span>
         <InfoBubble label={t('auth.account.letterboxd.helpTitle')}>
           <p>{t('auth.account.letterboxd.helpSync')}</p>
           <p>{t('auth.account.letterboxd.helpSafety')}</p>
@@ -137,7 +152,7 @@ export default function LetterboxdImportSection() {
             disabled={savingUsername}
             aria-label={t('auth.account.letterboxd.usernameSave')}
           >
-            <Check size={16} aria-hidden />
+            <Check size={20} aria-hidden />
           </button>
           {connected && (
             <button
@@ -149,7 +164,7 @@ export default function LetterboxdImportSection() {
               }}
               aria-label={t('common.cancel')}
             >
-              <X size={16} aria-hidden />
+              <X size={20} aria-hidden />
             </button>
           )}
         </form>
@@ -164,6 +179,15 @@ export default function LetterboxdImportSection() {
           >
             <Pencil size={14} aria-hidden />
           </button>
+          <button
+            type="button"
+            className={styles.iconBtn}
+            onClick={() => void runDisconnect()}
+            disabled={disconnecting}
+            aria-label={t('auth.account.letterboxd.usernameDisconnect')}
+          >
+            <Unlink size={14} aria-hidden />
+          </button>
         </p>
       )}
 
@@ -173,24 +197,48 @@ export default function LetterboxdImportSection() {
         </p>
       )}
 
+      {disconnectError && (
+        <p className="error" role="alert">
+          {disconnectError}
+        </p>
+      )}
+
       {!connected && <p className={styles.status}>{t('auth.account.letterboxd.statusOff')}</p>}
 
       {connected && lastSyncError && (
         <p className={styles.statusError} role="alert">
           <AlertTriangle size={14} aria-hidden />
-          {lastSyncError}
+          <span className={styles.statusLabel}>{lastSyncError}</span>
         </p>
       )}
 
       {connected && !lastSyncError && (
         <p className={styles.statusOk}>
           <Check size={14} aria-hidden />
-          {lastSyncAt
-            ? t('auth.account.letterboxd.statusSyncedAt', {
-                date: formatSyncDate(lastSyncAt, locale),
-              })
-            : t('auth.account.letterboxd.statusPending')}
+          <span className={styles.statusLabel}>
+            {lastSyncAt
+              ? t('auth.account.letterboxd.statusSyncedAt', {
+                  date: formatSyncDate(lastSyncAt, locale),
+                })
+              : t('auth.account.letterboxd.statusPending')}
+          </span>
         </p>
+      )}
+
+      {connected && !report && user.letterboxdPendingReconciliationCount > 0 && (
+        <button
+          type="button"
+          className={styles.reconciliationPending}
+          onClick={() => void handleSync()}
+          disabled={syncing}
+        >
+          <TriangleAlert size={14} aria-hidden />
+          <span className={styles.reconciliationPendingLabel}>
+            {t('auth.account.letterboxd.reconciliationPending', {
+              count: String(user.letterboxdPendingReconciliationCount),
+            })}
+          </span>
+        </button>
       )}
 
       <button
@@ -200,9 +248,11 @@ export default function LetterboxdImportSection() {
         disabled={syncing || !connected}
       >
         <RefreshCw size={15} aria-hidden />
-        {syncing
-          ? t('auth.account.letterboxd.syncSubmitting')
-          : t('auth.account.letterboxd.syncNow')}
+        <span className={styles.syncBtnLabel}>
+          {syncing
+            ? t('auth.account.letterboxd.syncSubmitting')
+            : t('auth.account.letterboxd.syncNow')}
+        </span>
       </button>
 
       {syncError && (

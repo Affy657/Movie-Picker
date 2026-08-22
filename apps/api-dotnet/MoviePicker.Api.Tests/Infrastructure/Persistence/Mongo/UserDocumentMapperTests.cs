@@ -16,12 +16,14 @@ public sealed class UserDocumentMapperTests
             PasswordHash = "hash",
             DisplayName = "Pseudo",
             UiTheme = UiThemePreference.Dark,
+            LetterboxdPendingReconciliationCount = 2,
             CreatedAt = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero),
             UpdatedAt = new DateTimeOffset(2025, 1, 2, 0, 0, 0, TimeSpan.Zero)
         };
 
         var doc = UserDocumentMapper.ToDocument(user);
         Assert.Equal("dark", doc.UiTheme);
+        Assert.Equal(2, doc.LetterboxdPendingReconciliationCount);
 
         var back = UserDocumentMapper.ToDomain(doc);
         Assert.Equal(user.Id, back.Id);
@@ -29,6 +31,7 @@ public sealed class UserDocumentMapperTests
         Assert.Equal(user.PasswordHash, back.PasswordHash);
         Assert.Equal(user.DisplayName, back.DisplayName);
         Assert.Equal(UiThemePreference.Dark, back.UiTheme);
+        Assert.Equal(2, back.LetterboxdPendingReconciliationCount);
     }
 
     [Theory]

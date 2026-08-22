@@ -38,6 +38,7 @@ const profile: UserProfile = {
   letterboxdUsername: null,
   letterboxdLastSyncAt: null,
   letterboxdLastSyncError: null,
+  letterboxdPendingReconciliationCount: 0,
   hasPassword: true,
   linkedProviders: [],
 };

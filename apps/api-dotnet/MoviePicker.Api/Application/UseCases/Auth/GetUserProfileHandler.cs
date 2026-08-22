@@ -28,6 +28,7 @@ public sealed class GetUserProfileHandler : IGetUserProfileHandler
             LetterboxdUsername = user.LetterboxdUsername,
             LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,
             LetterboxdLastSyncError = user.LetterboxdLastSyncError,
+            LetterboxdPendingReconciliationCount = user.LetterboxdPendingReconciliationCount,
             HasPassword = !string.IsNullOrEmpty(user.PasswordHash),
             LinkedProviders = user.Identities.Select(i => i.Provider).ToList()
         };

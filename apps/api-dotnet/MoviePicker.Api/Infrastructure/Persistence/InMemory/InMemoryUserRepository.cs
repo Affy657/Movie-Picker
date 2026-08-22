@@ -83,6 +83,19 @@ public sealed class InMemoryUserRepository : IUserRepository
         return Task.CompletedTask;
     }
 
+    public Task SetLetterboxdPendingReconciliationCountAsync(
+        string userId,
+        int pendingCount,
+        CancellationToken ct = default)
+    {
+        if (_byId.TryGetValue(userId, out var user))
+        {
+            _byId[userId] = user with { LetterboxdPendingReconciliationCount = pendingCount };
+        }
+
+        return Task.CompletedTask;
+    }
+
     public Task<bool> MarkSupporterAsync(string userId, DateTimeOffset since, CancellationToken ct = default)
     {
         if (!_byId.TryGetValue(userId, out var user) || user.SupporterSince is not null)
@@ -121,10 +134,13 @@ public sealed class InMemoryUserRepository : IUserRepository
             UiTheme = user.UiTheme,
             AccentColor = user.AccentColor,
             RatingScale = user.RatingScale,
+            AvatarId = user.AvatarId,
             NotificationPreferences = user.NotificationPreferences,
+            SupporterSince = user.SupporterSince,
             LetterboxdUsername = user.LetterboxdUsername,
             LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,
             LetterboxdLastSyncError = user.LetterboxdLastSyncError,
+            LetterboxdPendingReconciliationCount = user.LetterboxdPendingReconciliationCount,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         };
@@ -161,10 +177,13 @@ public sealed class InMemoryUserRepository : IUserRepository
             UiTheme = user.UiTheme,
             AccentColor = user.AccentColor,
             RatingScale = user.RatingScale,
+            AvatarId = user.AvatarId,
             NotificationPreferences = user.NotificationPreferences,
+            SupporterSince = user.SupporterSince,
             LetterboxdUsername = user.LetterboxdUsername,
             LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,
             LetterboxdLastSyncError = user.LetterboxdLastSyncError,
+            LetterboxdPendingReconciliationCount = user.LetterboxdPendingReconciliationCount,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         };

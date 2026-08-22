@@ -15,6 +15,7 @@ public static class NotificationPreferenceDefaults
             [UserNotificationType.EventInvitation] = true,
             [UserNotificationType.EventPending] = true,
             [UserNotificationType.MoviePickedManually] = true,
+            [UserNotificationType.LetterboxdReconciliationPending] = true,
         };
 
     public static bool For(UserNotificationType type) =>

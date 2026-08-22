@@ -28,6 +28,7 @@ public static class UserDocumentMapper
                 ? null
                 : new DateTimeOffset(doc.LetterboxdLastSyncAt.Value, TimeSpan.Zero),
             LetterboxdLastSyncError = doc.LetterboxdLastSyncError,
+            LetterboxdPendingReconciliationCount = doc.LetterboxdPendingReconciliationCount,
             CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero),
             UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)
         };
@@ -54,6 +55,7 @@ public static class UserDocumentMapper
             LetterboxdUsername = string.IsNullOrEmpty(user.LetterboxdUsername) ? null : user.LetterboxdUsername,
             LetterboxdLastSyncAt = user.LetterboxdLastSyncAt?.UtcDateTime,
             LetterboxdLastSyncError = user.LetterboxdLastSyncError,
+            LetterboxdPendingReconciliationCount = user.LetterboxdPendingReconciliationCount,
             CreatedAt = user.CreatedAt.UtcDateTime,
             UpdatedAt = user.UpdatedAt.UtcDateTime
         };
@@ -170,6 +172,7 @@ public static class UserDocumentMapper
             [UserNotificationType.EventInvitation] = true,
             [UserNotificationType.EventPending] = true,
             [UserNotificationType.MoviePickedManually] = true,
+            [UserNotificationType.LetterboxdReconciliationPending] = true,
         };
     }
 }

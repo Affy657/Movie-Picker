@@ -91,6 +91,10 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public string? LetterboxdLastSyncError { get; set; }
 
+    [BsonElement("letterboxdPendingReconciliationCount")]
+    [BsonIgnoreIfDefault]
+    public int LetterboxdPendingReconciliationCount { get; set; }
+
     [BsonElement("notificationPreferences")]
     [BsonIgnoreIfNull]
     public List<NotificationPreferenceEntryDocument>? NotificationPreferences { get; set; }

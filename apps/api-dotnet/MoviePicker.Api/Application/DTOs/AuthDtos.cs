@@ -57,6 +57,7 @@ public sealed class UserProfileResponse
     public string? LetterboxdUsername { get; init; }
     public DateTimeOffset? LetterboxdLastSyncAt { get; init; }
     public string? LetterboxdLastSyncError { get; init; }
+    public int LetterboxdPendingReconciliationCount { get; init; }
     public bool HasPassword { get; init; } = true;
     public IReadOnlyList<string> LinkedProviders { get; init; } = Array.Empty<string>();
 }

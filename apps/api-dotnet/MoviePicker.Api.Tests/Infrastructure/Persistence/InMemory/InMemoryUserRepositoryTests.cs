@@ -96,6 +96,22 @@ public sealed class InMemoryUserRepositoryTests
     }
 
     [Fact]
+    public async Task UpdateAsync_PreservesSupporterSinceAndAvatarId()
+    {
+        var since = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        var created = await _repo.AddAsync(Mk() with { SupporterSince = since, AvatarId = "bolt" });
+
+        var updated = await _repo.UpdateAsync(created with { DisplayName = "Alice renamed" });
+
+        Assert.Equal(since, updated.SupporterSince);
+        Assert.Equal("bolt", updated.AvatarId);
+
+        var reloaded = await _repo.GetByIdAsync(created.Id);
+        Assert.Equal(since, reloaded!.SupporterSince);
+        Assert.Equal("bolt", reloaded.AvatarId);
+    }
+
+    [Fact]
     public async Task DeleteAsync_RemovesUserAndIndexes()
     {
         var created = await _repo.AddAsync(Mk(email: "alice@test.local", handle: "alice"));
