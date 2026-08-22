@@ -1,0 +1,14 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.line {
+  height: 0.7rem;
+}
+
+.lineShort {
+  height: 0.7rem;
+  width: 55%;
+}

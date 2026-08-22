@@ -1,61 +1,64 @@
-.usernameRow {
+.connectionCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-input-bg);
+}
+
+.connectionRow {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin: 0;
+  min-height: 2.875rem;
+}
+
+.connectionActions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
 }
 
 .editRow {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-2);
-  margin: 0;
 }
 
 .usernameValue {
   font-size: var(--font-size-sm);
   font-weight: 600;
+  color: var(--color-text);
 }
 
-.editRow .input {
+.usernameInput {
   flex: 1;
   min-width: 0;
   max-width: 18rem;
-  padding: var(--space-1) var(--space-2);
-  font-size: var(--font-size-sm);
+  margin-bottom: 0;
 }
 
 .iconBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 2.875rem;
+  height: 2.875rem;
   flex-shrink: 0;
   padding: 0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  transition:
-    color var(--duration-fast) var(--ease-out),
-    border-color var(--duration-fast) var(--ease-out);
 }
 
-.editRow .iconBtn {
-  width: 46px;
-  height: 46px;
+.iconBtnDanger {
+  border-color: color-mix(in srgb, var(--color-error) 40%, transparent);
+  color: var(--color-error);
 }
 
-.iconBtn:hover:not(:disabled) {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-}
-
-.iconBtn:disabled {
-  opacity: 0.5;
-  cursor: default;
+.iconBtnDanger:hover:not(:disabled) {
+  border-color: var(--color-error);
+  color: var(--color-error);
 }
 
 .status,
@@ -64,7 +67,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-1);
-  margin: var(--space-2) 0 0;
+  margin: 0;
   font-size: var(--font-size-xs);
   line-height: var(--leading-snug);
 }
@@ -74,12 +77,12 @@
 }
 
 .statusOk {
-  color: var(--color-success, var(--color-text-muted));
+  color: var(--color-success);
   line-height: 1;
 }
 
 .statusError {
-  color: var(--color-danger);
+  color: var(--color-error);
   line-height: 1;
 }
 
@@ -97,7 +100,6 @@
   align-items: center;
   gap: var(--space-1);
   width: 100%;
-  margin-top: var(--space-2);
   padding: var(--space-1) var(--space-2);
   border: 1px solid color-mix(in srgb, var(--color-badge-pending-text) 32%, transparent);
   border-radius: var(--radius-sm);
@@ -129,40 +131,7 @@
 }
 
 .syncBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  margin-top: var(--space-3);
-  padding: var(--space-1) var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text);
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  line-height: 1;
-  cursor: pointer;
-  transition:
-    border-color var(--duration-fast) var(--ease-out),
-    color var(--duration-fast) var(--ease-out);
-}
-
-.syncBtn svg {
-  flex-shrink: 0;
-}
-
-.syncBtnLabel {
-  transform: translateY(var(--text-optical-nudge));
-}
-
-.syncBtn:hover:not(:disabled) {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-}
-
-.syncBtn:disabled {
-  opacity: 0.5;
-  cursor: default;
+  margin-top: 0.85rem;
 }
 
 .report {
@@ -170,6 +139,30 @@
   flex-direction: column;
   gap: var(--space-2);
   margin-top: var(--space-2);
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-input-bg);
+}
+
+.reportRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.reportIconOk {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-success) 16%, transparent);
+  color: var(--color-success);
 }
 
 .reportLine {
@@ -183,7 +176,7 @@
   padding: 0;
   border: none;
   background: transparent;
-  color: var(--color-accent);
+  color: var(--color-primary);
   font-size: var(--font-size-xs);
   font-weight: 600;
   cursor: pointer;

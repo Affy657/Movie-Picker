@@ -7,7 +7,6 @@ import { ROUTES } from '@/app/routes';
 import { useEligibleEventsForPropose } from '@/features/watchlist/hooks/useEligibleEventsForPropose';
 import { useProposeMovieToEvent } from '@/features/watchlist/hooks/useProposeMovieToEvent';
 import type { WatchlistItem } from '@/features/watchlist/api/watchlistApi';
-import kebabStyles from '@/features/movies/components/movieCardParts.module.css';
 import styles from './WatchlistProposeSubmenu.module.css';
 
 type RowState = { status: 'idle' | 'pending' | 'done' | 'error'; error?: string };
@@ -87,12 +86,13 @@ export default function WatchlistProposeSubmenu({
     >
       <button
         type="button"
-        className={kebabStyles.kebabBtn}
+        className={styles.triggerBtn}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={t('watchlist.card.proposeAction')}
       >
-        <ListPlus aria-hidden size={16} />
+        <ListPlus aria-hidden size={13} />
+        <span className={styles.triggerLabel}>{t('watchlist.card.proposeShortLabel')}</span>
       </button>
       {open && pos && (
         <div

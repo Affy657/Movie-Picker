@@ -217,4 +217,48 @@ public sealed class InMemoryWatchlistRepositoryTests
 
         Assert.Empty(missing);
     }
+
+    [Fact]
+    public async Task UpdateRuntimeAsync_ExistingItem_UpdatesRuntime()
+    {
+        await _sut.AddAsync(Item());
+        var stored = await _sut.GetOneAsync("u1", 42, MovieMediaType.Movie);
+
+        await _sut.UpdateRuntimeAsync(stored!.Id, 104);
+
+        var updated = await _sut.GetOneAsync("u1", 42, MovieMediaType.Movie);
+        Assert.Equal(104, updated!.RuntimeMinutes);
+    }
+
+    [Fact]
+    public async Task UpdateRuntimeAsync_MissingItem_DoesNothing()
+    {
+        await _sut.UpdateRuntimeAsync("missing-id", 104);
+
+        Assert.Empty(await _sut.ListByUserIdAsync("u1"));
+    }
+
+    [Fact]
+    public async Task ListMissingRuntimeAsync_ReturnsOnlyItemsWithoutRuntime()
+    {
+        await _sut.AddAsync(Item(tmdbId: 1));
+        await _sut.AddAsync(Item(tmdbId: 2));
+        var withRuntime = await _sut.GetOneAsync("u1", 2, MovieMediaType.Movie);
+        await _sut.UpdateRuntimeAsync(withRuntime!.Id, 104);
+
+        var missing = await _sut.ListMissingRuntimeAsync(10);
+
+        var only = Assert.Single(missing);
+        Assert.Equal(1, only.TmdbId);
+    }
+
+    [Fact]
+    public async Task ListMissingRuntimeAsync_LimitZeroOrLess_ReturnsEmpty()
+    {
+        await _sut.AddAsync(Item());
+
+        var missing = await _sut.ListMissingRuntimeAsync(0);
+
+        Assert.Empty(missing);
+    }
 }

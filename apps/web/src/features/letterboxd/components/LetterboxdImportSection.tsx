@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import clsx from 'clsx';
 import { AlertTriangle, Check, Pencil, RefreshCw, TriangleAlert, Unlink, X } from 'lucide-react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
@@ -9,6 +10,7 @@ import InfoBubble from '@/shared/components/InfoBubble';
 import {
   syncLetterboxd,
   type LetterboxdConfirmResult,
+  type LetterboxdPendingChoice,
   type LetterboxdSyncReport,
 } from '@/features/letterboxd/api/letterboxdApi';
 import LetterboxdChoicesModal from './LetterboxdChoicesModal';
@@ -32,6 +34,7 @@ export default function LetterboxdImportSection() {
   const [report, setReport] = useState<LetterboxdSyncReport | null>(null);
   const [choicesOpen, setChoicesOpen] = useState(false);
   const [confirmResult, setConfirmResult] = useState<LetterboxdConfirmResult | null>(null);
+  const [undecidedTitles, setUndecidedTitles] = useState<string[]>([]);
 
   useEffect(() => {
     if (editing) inputRef.current?.focus();
@@ -48,6 +51,7 @@ export default function LetterboxdImportSection() {
     setEditing(false);
     setReport(null);
     setConfirmResult(null);
+    setUndecidedTitles([]);
   }, [draft, patchProfile]);
 
   const {
@@ -61,6 +65,7 @@ export default function LetterboxdImportSection() {
     await patchProfile({ letterboxdUsername: '' });
     setReport(null);
     setConfirmResult(null);
+    setUndecidedTitles([]);
   }, [patchProfile]);
 
   const {
@@ -89,6 +94,7 @@ export default function LetterboxdImportSection() {
   const handleSync = async () => {
     clearSyncError();
     setConfirmResult(null);
+    setUndecidedTitles([]);
     setReport(null);
     const result = await runSync();
     if (!result) return;
@@ -96,10 +102,16 @@ export default function LetterboxdImportSection() {
     setChoicesOpen(result.pendingChoices.length > 0);
   };
 
-  const handleConfirmed = (result: LetterboxdConfirmResult) => {
+  const handleConfirmed = (
+    result: LetterboxdConfirmResult,
+    unresolved: LetterboxdPendingChoice[]
+  ) => {
     setChoicesOpen(false);
     setReport(null);
     setConfirmResult(result);
+    setUndecidedTitles(
+      unresolved.map((choice) => (choice.year ? `${choice.title} (${choice.year})` : choice.title))
+    );
     void queryClient.invalidateQueries({ queryKey: queryKeys.watchlist.list });
   };
 
@@ -122,74 +134,116 @@ export default function LetterboxdImportSection() {
         </InfoBubble>
       </h2>
 
-      {showInput ? (
-        <form
-          className={styles.editRow}
-          onSubmit={(e) => {
-            e.preventDefault();
-            void runSaveUsername();
-          }}
-        >
-          <label className="visually-hidden" htmlFor="letterboxd-username">
-            {t('auth.account.letterboxd.usernameLabel')}
-          </label>
-          <input
-            ref={inputRef}
-            id="letterboxd-username"
-            type="text"
-            className="input"
-            value={draft}
-            onChange={(e) => {
-              setDraft(e.target.value);
-              clearSaveError();
+      <div className={styles.connectionCard}>
+        {showInput ? (
+          <form
+            className={styles.editRow}
+            onSubmit={(e) => {
+              e.preventDefault();
+              void runSaveUsername();
             }}
-            placeholder={t('auth.account.letterboxd.usernamePlaceholder')}
-            maxLength={40}
-          />
-          <button
-            type="submit"
-            className={styles.iconBtn}
-            disabled={savingUsername}
-            aria-label={t('auth.account.letterboxd.usernameSave')}
           >
-            <Check size={20} aria-hidden />
-          </button>
-          {connected && (
-            <button
-              type="button"
-              className={styles.iconBtn}
-              onClick={() => {
+            <label className="visually-hidden" htmlFor="letterboxd-username">
+              {t('auth.account.letterboxd.usernameLabel')}
+            </label>
+            <input
+              ref={inputRef}
+              id="letterboxd-username"
+              type="text"
+              className={clsx('input', styles.usernameInput)}
+              value={draft}
+              onChange={(e) => {
+                setDraft(e.target.value);
                 clearSaveError();
-                setEditing(false);
               }}
-              aria-label={t('common.cancel')}
+              placeholder={t('auth.account.letterboxd.usernamePlaceholder')}
+              maxLength={40}
+            />
+            <button
+              type="submit"
+              className={clsx('icon-btn-outline', styles.iconBtn)}
+              disabled={savingUsername}
+              aria-label={t('auth.account.letterboxd.usernameSave')}
             >
-              <X size={20} aria-hidden />
+              <Check size={18} aria-hidden />
             </button>
-          )}
-        </form>
-      ) : (
-        <p className={styles.usernameRow}>
-          <span className={styles.usernameValue}>{savedUsername}</span>
+            {connected && (
+              <button
+                type="button"
+                className={clsx('icon-btn-outline', styles.iconBtn)}
+                onClick={() => {
+                  clearSaveError();
+                  setEditing(false);
+                }}
+                aria-label={t('common.cancel')}
+              >
+                <X size={18} aria-hidden />
+              </button>
+            )}
+          </form>
+        ) : (
+          <div className={styles.connectionRow}>
+            <span className={styles.usernameValue}>{savedUsername}</span>
+            <div className={styles.connectionActions}>
+              <button
+                type="button"
+                className={clsx('icon-btn-outline', styles.iconBtn)}
+                onClick={startEditing}
+                aria-label={t('auth.account.letterboxd.usernameEdit')}
+              >
+                <Pencil size={16} aria-hidden />
+              </button>
+              <button
+                type="button"
+                className={clsx('icon-btn-outline', styles.iconBtn, styles.iconBtnDanger)}
+                onClick={() => void runDisconnect()}
+                disabled={disconnecting}
+                aria-label={t('auth.account.letterboxd.usernameDisconnect')}
+              >
+                <Unlink size={16} aria-hidden />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!connected && <p className={styles.status}>{t('auth.account.letterboxd.statusOff')}</p>}
+
+        {connected && lastSyncError && (
+          <p className={styles.statusError} role="alert">
+            <AlertTriangle size={14} aria-hidden />
+            <span className={styles.statusLabel}>{lastSyncError}</span>
+          </p>
+        )}
+
+        {connected && !lastSyncError && (
+          <p className={styles.statusOk}>
+            <Check size={14} aria-hidden />
+            <span className={styles.statusLabel}>
+              {lastSyncAt
+                ? t('auth.account.letterboxd.statusSyncedAt', {
+                    date: formatSyncDate(lastSyncAt, locale),
+                  })
+                : t('auth.account.letterboxd.statusPending')}
+            </span>
+          </p>
+        )}
+
+        {connected && !report && user.letterboxdPendingReconciliationCount > 0 && (
           <button
             type="button"
-            className={styles.iconBtn}
-            onClick={startEditing}
-            aria-label={t('auth.account.letterboxd.usernameEdit')}
+            className={styles.reconciliationPending}
+            onClick={() => void handleSync()}
+            disabled={syncing}
           >
-            <Pencil size={14} aria-hidden />
+            <TriangleAlert size={14} aria-hidden />
+            <span className={styles.reconciliationPendingLabel}>
+              {t('auth.account.letterboxd.reconciliationPending', {
+                count: String(user.letterboxdPendingReconciliationCount),
+              })}
+            </span>
           </button>
-          <button
-            type="button"
-            className={styles.iconBtn}
-            onClick={() => void runDisconnect()}
-            disabled={disconnecting}
-            aria-label={t('auth.account.letterboxd.usernameDisconnect')}
-          >
-            <Unlink size={14} aria-hidden />
-          </button>
-        </p>
-      )}
+        )}
+      </div>
 
       {saveUsernameError && (
         <p className="error" role="alert">
@@ -203,52 +257,14 @@ export default function LetterboxdImportSection() {
         </p>
       )}
 
-      {!connected && <p className={styles.status}>{t('auth.account.letterboxd.statusOff')}</p>}
-
-      {connected && lastSyncError && (
-        <p className={styles.statusError} role="alert">
-          <AlertTriangle size={14} aria-hidden />
-          <span className={styles.statusLabel}>{lastSyncError}</span>
-        </p>
-      )}
-
-      {connected && !lastSyncError && (
-        <p className={styles.statusOk}>
-          <Check size={14} aria-hidden />
-          <span className={styles.statusLabel}>
-            {lastSyncAt
-              ? t('auth.account.letterboxd.statusSyncedAt', {
-                  date: formatSyncDate(lastSyncAt, locale),
-                })
-              : t('auth.account.letterboxd.statusPending')}
-          </span>
-        </p>
-      )}
-
-      {connected && !report && user.letterboxdPendingReconciliationCount > 0 && (
-        <button
-          type="button"
-          className={styles.reconciliationPending}
-          onClick={() => void handleSync()}
-          disabled={syncing}
-        >
-          <TriangleAlert size={14} aria-hidden />
-          <span className={styles.reconciliationPendingLabel}>
-            {t('auth.account.letterboxd.reconciliationPending', {
-              count: String(user.letterboxdPendingReconciliationCount),
-            })}
-          </span>
-        </button>
-      )}
-
       <button
         type="button"
-        className={styles.syncBtn}
+        className={clsx('btn', styles.syncBtn)}
         onClick={() => void handleSync()}
         disabled={syncing || !connected}
       >
         <RefreshCw size={15} aria-hidden />
-        <span className={styles.syncBtnLabel}>
+        <span>
           {syncing
             ? t('auth.account.letterboxd.syncSubmitting')
             : t('auth.account.letterboxd.syncNow')}
@@ -263,12 +279,17 @@ export default function LetterboxdImportSection() {
 
       {report && !syncError && (
         <div className={styles.report} role="status" aria-live="polite">
-          <p className={styles.reportLine}>
-            {t('auth.account.letterboxd.reportChanges', {
-              added: String(report.added),
-              removed: String(report.removed),
-            })}
-          </p>
+          <span className={styles.reportRow}>
+            <span className={styles.reportIconOk}>
+              <Check size={13} aria-hidden />
+            </span>
+            <span>
+              {t('auth.account.letterboxd.reportChanges', {
+                added: String(report.added),
+                removed: String(report.removed),
+              })}
+            </span>
+          </span>
 
           {report.pendingChoices.length > 0 && (
             <button
@@ -311,6 +332,21 @@ export default function LetterboxdImportSection() {
         <p className="hint" role="status" aria-live="polite">
           {t('auth.account.letterboxd.choicesApplied', { added: String(confirmResult.added) })}
         </p>
+      )}
+
+      {undecidedTitles.length > 0 && (
+        <details className={styles.unmatched}>
+          <summary>
+            {t('auth.account.letterboxd.reportUndecided', {
+              count: String(undecidedTitles.length),
+            })}
+          </summary>
+          <ul className={styles.unmatchedList}>
+            {undecidedTitles.map((title) => (
+              <li key={title}>{title}</li>
+            ))}
+          </ul>
+        </details>
       )}
 
       {choicesOpen && report && report.pendingChoices.length > 0 && (

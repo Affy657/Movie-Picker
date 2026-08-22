@@ -1,4 +1,4 @@
-import { useCallback, useId, useRef, useState } from 'react';
+import { useCallback, useId, useRef, useState, type RefObject } from 'react';
 import { Plus, X } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
@@ -9,27 +9,38 @@ import styles from './AddMoviePanel.module.css';
 type AddMoviePanelProps = AddMovieFormProps & {
   triggerLabel: string;
   panelTitle: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+  /** Element to refocus on close when hideTrigger is set (there's no internal trigger to fall back to). */
+  returnFocusRef?: RefObject<HTMLButtonElement | null>;
 };
 
 export default function AddMoviePanel({
   triggerLabel,
   panelTitle,
+  open: openProp,
+  onOpenChange,
+  hideTrigger = false,
+  returnFocusRef,
   ...formProps
 }: Readonly<AddMoviePanelProps>) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
-  const [open, setOpen] = useState(false);
+  const [openState, setOpenState] = useState(false);
+  const open = openProp ?? openState;
+  const setOpen = onOpenChange ?? setOpenState;
   const panelId = useId();
   const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   const close = useCallback(() => {
     setOpen(false);
-    requestAnimationFrame(() => triggerRef.current?.focus());
-  }, []);
+    requestAnimationFrame(() => (returnFocusRef?.current ?? triggerRef.current)?.focus());
+  }, [setOpen, returnFocusRef]);
 
   return (
     <div className={styles.root}>
-      {!open && (
+      {!open && !hideTrigger && (
         <button
           ref={triggerRef}
           type="button"

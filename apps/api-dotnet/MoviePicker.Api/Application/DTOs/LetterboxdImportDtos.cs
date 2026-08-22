@@ -11,6 +11,8 @@ public sealed class LetterboxdImportCandidateResponse
     public string Year { get; init; } = string.Empty;
     public string? PosterPath { get; init; }
     public double? VoteAverage { get; init; }
+    public IReadOnlyList<int> GenreIds { get; init; } = [];
+    public int? RuntimeMinutes { get; init; }
 }
 
 public sealed class LetterboxdImportRowResponse

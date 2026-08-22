@@ -1,8 +1,5 @@
-import { useId, useMemo, useState } from 'react';
-import clsx from 'clsx';
-import { Link } from 'react-router';
-import { Bookmark, ChevronDown, ImageOff, Import, Search } from 'lucide-react';
-import { ROUTES } from '@/app/routes';
+import { useId, useMemo, useRef, useState } from 'react';
+import { Bookmark, Import, Plus, Search } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import EmptyState from '@/shared/components/EmptyState';
 import Sheet from '@/shared/components/Sheet';
@@ -10,14 +7,11 @@ import { getErrorMessage } from '@/shared/api/apiError';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
-import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
-import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
-import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import AddMoviePanel from '@/features/movies/components/AddMoviePanel';
 import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
-import { CardKebab } from '@/features/movies/components/movieCardParts';
+import LetterboxdConnectModal from '@/features/letterboxd/components/LetterboxdConnectModal';
 import type { MovieMediaType } from '@/shared/types/movie';
 import {
   useAddToWatchlist,
@@ -28,9 +22,9 @@ import type { WatchlistItem } from '@/features/watchlist/api/watchlistApi';
 import { useWatchlistToolbar } from '@/features/watchlist/hooks/useWatchlistToolbar';
 import WatchlistToolbar from '@/features/watchlist/components/WatchlistToolbar';
 import WatchlistFiltersPanel from '@/features/watchlist/components/WatchlistFiltersPanel';
+import WatchlistMovieCard from '@/features/watchlist/components/WatchlistMovieCard';
+import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
 import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventModal';
-import WatchlistProposeSubmenu from '@/features/watchlist/components/WatchlistProposeSubmenu';
-import movieCardStyles from '@/features/movies/components/movieCardParts.module.css';
 import styles from './WatchlistPage.module.css';
 
 function itemKey(tmdbId: number, mediaType: MovieMediaType | undefined): string {
@@ -51,6 +45,9 @@ export default function WatchlistPage() {
   const [removeError, setRemoveError] = useState<string | null>(null);
   const [proposeTarget, setProposeTarget] = useState<WatchlistItem | null>(null);
   const [detailsTarget, setDetailsTarget] = useState<WatchlistItem | null>(null);
+  const [addPanelOpen, setAddPanelOpen] = useState(false);
+  const [letterboxdModalOpen, setLetterboxdModalOpen] = useState(false);
+  const addButtonRef = useRef<HTMLButtonElement>(null);
 
   const mediaTypeLabels = useMemo(
     () => ({
@@ -84,11 +81,75 @@ export default function WatchlistPage() {
   };
 
   const activeFilterCount = toolbar.activeFilterChips.length;
+  const subtitle =
+    items.length === 1
+      ? t('watchlist.header.subtitleOne', { count: 1 })
+      : t('watchlist.header.subtitle', { count: items.length });
+  const openAddPanel = () => setAddPanelOpen(true);
 
   return (
     <PageLayout className={styles.layout}>
-      <section className="section">
+      <div className={styles.headerBlock}>
+        <div className={styles.pageHeader}>
+          <div className={styles.pageTitleGroup}>
+            <h1 className={styles.pageTitle}>{t('watchlist.title')}</h1>
+            <p className={styles.pageSubtitle}>{subtitle}</p>
+          </div>
+
+          {isMobile ? (
+            <div className={styles.headerActionsMobile}>
+              {!user?.letterboxdUsername && (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => setLetterboxdModalOpen(true)}
+                >
+                  <Import size={14} aria-hidden />
+                  <span>{t('watchlist.letterboxdCtaShort')}</span>
+                </button>
+              )}
+              <button
+                type="button"
+                ref={addButtonRef}
+                className="btn btn-primary btn-sm"
+                onClick={openAddPanel}
+              >
+                <Plus size={15} aria-hidden />
+                <span>{t('watchlist.addPanel.triggerShort')}</span>
+              </button>
+            </div>
+          ) : (
+            <div className={styles.headerActions}>
+              {!user?.letterboxdUsername && (
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => setLetterboxdModalOpen(true)}
+                >
+                  <Import size={15} aria-hidden />
+                  <span>{t('watchlist.letterboxdCta')}</span>
+                </button>
+              )}
+              <button
+                type="button"
+                ref={addButtonRef}
+                className="btn btn-primary"
+                onClick={openAddPanel}
+              >
+                <Plus size={16} aria-hidden />
+                <span>{t('watchlist.addPanel.trigger')}</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className={addPanelOpen ? styles.addPanelOpenWrap : undefined}>
         <AddMoviePanel
+          open={addPanelOpen}
+          onOpenChange={setAddPanelOpen}
+          hideTrigger
+          returnFocusRef={addButtonRef}
           triggerLabel={t('watchlist.addPanel.trigger')}
           panelTitle={t('watchlist.addPanel.title')}
           onAdded={() => undefined}
@@ -112,20 +173,9 @@ export default function WatchlistPage() {
           searchWrapClassName={styles.searchFixedWidth}
           showWatchProviders={false}
         />
-      </section>
+      </div>
 
-      {!user?.letterboxdUsername && (
-        <Link to={ROUTES.account} className={styles.letterboxdCta}>
-          <Import size={14} aria-hidden />
-          <span className={styles.letterboxdCtaLabel}>{t('watchlist.letterboxdCta')}</span>
-        </Link>
-      )}
-
-      <section className="section" aria-labelledby="watchlist-list-heading">
-        <h2 id="watchlist-list-heading" className={styles.sectionTitle}>
-          {t('watchlist.listHeading', { count: items.length })}
-        </h2>
-
+      <section className="section">
         {removeError ? (
           <p className="error" role="alert">
             {removeError}
@@ -133,7 +183,7 @@ export default function WatchlistPage() {
         ) : null}
 
         {isLoading ? (
-          <p className="placeholder">{t('common.loading')}</p>
+          <WatchlistSkeleton label={t('watchlist.loadingDetail')} gridClassName={styles.grid} />
         ) : isError ? (
           <p className="error" role="alert">
             {t('watchlist.loadError')}
@@ -269,78 +319,19 @@ export default function WatchlistPage() {
               />
             ) : (
               <ul className={styles.grid} aria-label={t('watchlist.listAria')}>
-                {toolbar.visibleItems.map((item) => {
-                  const posterRaw = posterImageSrc(item.posterPath);
-                  const posterSrc = posterRaw ? tmdbPosterSrcForListDisplay(posterRaw) : undefined;
-                  const voteLabel = formatTmdbVote(item.voteAverage, user?.ratingScale);
-                  const runtimeLabel = formatRuntimeMinutes(item.runtimeMinutes);
-                  return (
-                    <li key={itemKey(item.tmdbId, item.mediaType)} className={styles.card}>
-                      <div className={styles.poster}>
-                        {posterSrc ? (
-                          <img src={posterSrc} alt="" loading="lazy" decoding="async" />
-                        ) : (
-                          <div className={styles.posterPlaceholder} aria-hidden>
-                            <ImageOff size={22} />
-                          </div>
-                        )}
-                        {hasHover && (
-                          <div className={styles.proposeSlot}>
-                            <WatchlistProposeSubmenu movie={item} onDone={() => undefined} />
-                          </div>
-                        )}
-                        <div className={styles.kebabSlot}>
-                          <CardKebab
-                            title={item.title}
-                            year={item.year}
-                            tmdbId={item.tmdbId}
-                            mediaType={item.mediaType}
-                            isMine
-                            isHost={false}
-                            canRemove
-                            onRemove={() => handleRemove(item.tmdbId, item.mediaType)}
-                            onProposeToEvent={!hasHover ? () => setProposeTarget(item) : undefined}
-                            t={t}
-                          />
-                        </div>
-                      </div>
-                      <div className={styles.cardBody}>
-                        <span className={styles.cardTitle}>
-                          {item.title}
-                          {item.mediaType === 'tv' ? (
-                            <span className={styles.mediaBadge}>{t('movies.list.tvBadge')}</span>
-                          ) : null}
-                        </span>
-                        <span className={styles.cardMetaRow}>
-                          {item.year ? <span>{item.year}</span> : null}
-                          {voteLabel ? (
-                            <span className="tmdb-vote">
-                              {item.year ? ' · ' : null}
-                              {voteLabel}
-                            </span>
-                          ) : null}
-                          {runtimeLabel ? (
-                            <span>
-                              {item.year || voteLabel ? ' · ' : null}
-                              {runtimeLabel}
-                            </span>
-                          ) : null}
-                        </span>
-                        <button
-                          type="button"
-                          className={clsx(movieCardStyles.detailsToggle, styles.cardDetailsBtn)}
-                          aria-haspopup="dialog"
-                          onClick={() => setDetailsTarget(item)}
-                        >
-                          <span className={movieCardStyles.detailsToggleLabel}>
-                            {t('movies.details.toggleShow')}
-                          </span>
-                          <ChevronDown aria-hidden size={14} />
-                        </button>
-                      </div>
-                    </li>
-                  );
-                })}
+                {toolbar.visibleItems.map((item) => (
+                  <WatchlistMovieCard
+                    key={itemKey(item.tmdbId, item.mediaType)}
+                    item={item}
+                    hasHover={hasHover}
+                    tmdbLanguage={tmdbLanguage}
+                    ratingScale={user?.ratingScale}
+                    t={t}
+                    onRemove={() => handleRemove(item.tmdbId, item.mediaType)}
+                    onOpenDetails={() => setDetailsTarget(item)}
+                    onProposeFallback={() => setProposeTarget(item)}
+                  />
+                ))}
               </ul>
             )}
           </>
@@ -363,6 +354,10 @@ export default function WatchlistPage() {
           mediaType={detailsTarget.mediaType}
           onClose={() => setDetailsTarget(null)}
         />
+      )}
+
+      {letterboxdModalOpen && (
+        <LetterboxdConnectModal open onClose={() => setLetterboxdModalOpen(false)} />
       )}
     </PageLayout>
   );

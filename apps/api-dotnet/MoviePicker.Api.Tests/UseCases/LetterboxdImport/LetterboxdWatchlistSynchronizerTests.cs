@@ -137,6 +137,31 @@ public sealed class LetterboxdWatchlistSynchronizerTests
     }
 
     [Fact]
+    public async Task SyncAsync_AmbiguousMatch_EnrichesCandidatesWithGenresAndRuntime()
+    {
+        GivenLetterboxd(true, new LetterboxdFilm("midnight-mass-2021", "Midnight Mass", "2021"));
+        GivenTmdbResults(
+            "Midnight Mass",
+            new TmdbSearchItem(
+                97400, MovieMediaType.Tv, "Sermons de minuit", "2021", null, 7.5, "Midnight Mass 2021",
+                GenreIds: [18, 9648]),
+            new TmdbSearchItem(714995, MovieMediaType.Movie, "The Manson Brothers", "2021", null, 4.2, "The Manson Brothers"));
+        _tmdb
+            .Setup(t => t.GetDetailsAsync(97400, MovieMediaType.Tv, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TmdbMovieDetails(97400, "Sermons de minuit", null, null, null, [], 62, [], [18, 9648], null));
+
+        var outcome = await _sut.SyncAsync(TheUser());
+
+        var pending = Assert.Single(outcome.PendingChoices);
+        var withRuntime = pending.Candidates.Single(c => c.TmdbId == 97400);
+        Assert.Equal(62, withRuntime.RuntimeMinutes);
+        Assert.Equal(new[] { 18, 9648 }, withRuntime.GenreIds);
+        var withoutDetails = pending.Candidates.Single(c => c.TmdbId == 714995);
+        Assert.Null(withoutDetails.RuntimeMinutes);
+        Assert.Empty(withoutDetails.GenreIds);
+    }
+
+    [Fact]
     public async Task SyncAsync_NoCandidate_IsReportedAsUnmatched()
     {
         GivenLetterboxd(true, new LetterboxdFilm("film-obscur", "Film Obscur", "1974"));

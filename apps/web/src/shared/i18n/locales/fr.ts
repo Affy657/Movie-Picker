@@ -208,11 +208,11 @@
         title: 'Letterboxd',
         helpTitle: 'Comment ça marche',
         helpSync:
-          'Vos deux listes restent alignées : ce que vous ajoutez sur Letterboxd arrive ici, ce que vous en sortez (vu, noté, commenté) est retiré d’ici.',
+          'Votre watchlist Letterboxd publique est recopiée ici, au plus une fois par jour à l’ouverture de l’application. Rien n’est écrit sur Letterboxd : ajouter, retirer ou proposer un film depuis Movie Picker ne modifie jamais votre liste là-bas.',
         helpSafety:
-          'Les films ajoutés directement dans Movie Picker ne sont jamais retirés. Le sens inverse n’existe pas : ajouter, retirer ou proposer un film depuis Movie Picker ne modifie jamais votre liste Letterboxd.',
+          'Les films reconnus avec certitude sont ajoutés directement, les titres ambigus vous sont soumis pour arbitrage. Si vous marquez un film comme vu, noté ou commenté sur Letterboxd, il est retiré de votre liste ici, mais les films ajoutés à la main dans Movie Picker ne sont jamais retirés.',
         helpUsername:
-          'Votre pseudo est la fin de letterboxd.com/…, et votre profil doit être public. La synchronisation automatique tourne au plus une fois par jour, à l’ouverture de l’application.',
+          'Votre pseudo est la fin de l’URL letterboxd.com/…, et votre profil doit être public pour que la synchronisation fonctionne.',
         usernameLabel: 'Pseudo Letterboxd',
         usernamePlaceholder: 'Votre pseudo Letterboxd',
         usernameEdit: 'Modifier le pseudo Letterboxd',
@@ -229,18 +229,52 @@
         reportChanges: '{{added}} film(s) ajouté(s), {{removed}} retiré(s).',
         reportPending: 'Choisir pour {{count}} film(s) ambigu(s)',
         reportUnmatched: 'Voir les {{count}} film(s) introuvable(s) sur TMDB',
+        reportUndecided:
+          'Voir les {{count}} film(s) laissé(s) en attente, à décider à la prochaine synchronisation',
         reportTruncated: '{{count}} film(s) non traité(s) : trop de films pour une seule fois.',
         reconciliationPending:
           'Réconciliation en attente : {{count}} film(s) à identifier manuellement',
-        choicesTitle: 'Choisir les bonnes correspondances',
-        choicesIntro:
-          'TMDB propose plusieurs films pour {{count}} titre(s) Letterboxd, choisissez le bon.',
+        choicesTitleOne: 'Un titre à confirmer',
+        choicesTitle: '{{count}} titres à confirmer',
+        choicesStepOf:
+          'Titre {{current}} sur {{total}}. Lequel de ces films correspond à votre entrée Letterboxd ?',
+        choicesAskedFrom: 'Letterboxd, {{year}}',
+        choicesRadioGroupAria: 'Correspondances possibles pour {{title}}',
+        choicesNoneOption: 'Aucun de ces films, ignorer ce titre',
+        choicesSkipStep: 'Passer',
+        choicesDecideLater: 'Décider plus tard',
+        choicesConfirmNext: 'Confirmer et suivant',
+        choicesConfirmFinish: 'Confirmer et terminer',
         choicesFallbackError: 'Impossible d’enregistrer votre choix. Réessayez.',
-        choicesFromLetterboxd: 'Depuis Letterboxd : {{title}} ({{year}})',
-        choicesSkip: 'Ignorer ce film',
         choicesSubmitting: 'Enregistrement…',
-        choicesSubmit: 'Valider ({{count}})',
         choicesApplied: '{{added}} film(s) ajouté(s).',
+        connectTitle: 'Importer depuis Letterboxd',
+        connectIntro:
+          'Votre watchlist Letterboxd est recopiée dans Movie Picker. Rien n’est écrit sur Letterboxd, et les films ajoutés à la main ici ne sont jamais touchés.',
+        connectStep1: 'Votre watchlist publique est lue, une fois par jour au maximum.',
+        connectStep2: 'Les films reconnus avec certitude sont ajoutés directement.',
+        connectStep3: 'Les titres ambigus vous sont soumis pour arbitrage.',
+        connectSubmit: 'Connecter et importer',
+        connectSubmitting: 'Connexion…',
+        connectSyncingAria: 'Synchronisation en cours',
+        connectSyncingHint:
+          'Lecture de votre watchlist Letterboxd… cela peut prendre jusqu’à une minute selon sa taille.',
+        connectFallbackError: 'Connexion impossible. Réessayez dans un instant.',
+        doneTitle: 'Import terminé',
+        doneAddedOne: '1 titre ajouté à votre liste',
+        doneAdded: '{{count}} titres ajoutés à votre liste',
+        doneConfirmedOne: '1 titre confirmé à la main',
+        doneConfirmed: '{{count}} titres confirmés à la main',
+        doneUnmatchedOne: '1 titre introuvable sur TMDB',
+        doneUnmatched: '{{count}} titres introuvables sur TMDB',
+        doneUnmatchedListToggle: 'Voir les titres à chercher à la main',
+        doneUndecidedOne: '1 titre laissé en attente, à décider à la prochaine synchronisation',
+        doneUndecided:
+          '{{count}} titres laissés en attente, à décider à la prochaine synchronisation',
+        doneUndecidedListToggle: 'Voir les titres en attente',
+        doneFooterNote:
+          'Votre watchlist Letterboxd sera relue automatiquement, au maximum une fois par jour. Vous pouvez la resynchroniser à la main depuis Mon compte.',
+        doneCta: 'Voir ma liste',
       },
     },
     logout: {
@@ -633,13 +667,18 @@
 
   watchlist: {
     title: 'Ma liste',
-    listHeading: 'À voir ({{count}})',
     listAria: 'Films de ma liste',
     loadError: 'Impossible de charger votre liste.',
+    loadingDetail: 'Chargement de votre liste…',
     addError: 'Ajout à la liste impossible.',
     removeError: 'Retrait de la liste impossible.',
     removeAria: 'Retirer « {{title}} » de ma liste',
     letterboxdCta: 'Importer depuis Letterboxd',
+    letterboxdCtaShort: 'Importer',
+    header: {
+      subtitleOne: '{{count}} titre à voir',
+      subtitle: '{{count}} titres à voir',
+    },
     empty: {
       title: 'Votre liste est vide',
       message: 'Cherchez un film ci-dessus pour l’ajouter à votre liste « à voir ».',
@@ -652,12 +691,16 @@
     },
     addPanel: {
       trigger: 'Ajouter un film',
+      triggerShort: 'Ajouter',
       title: 'Ajouter un film à ma liste',
     },
     card: {
       addAction: 'Ajouter à ma liste',
       removeAction: 'Retirer de ma liste',
       proposeAction: 'Proposer dans une soirée',
+      proposeShortLabel: 'Proposer',
+      detailsAction: 'Voir les détails',
+      openDetailsAria: 'Voir les détails de « {{title}} »',
       addError: 'Ajout à la liste impossible.',
       removeError: 'Retrait de la liste impossible.',
     },

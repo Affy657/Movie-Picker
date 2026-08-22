@@ -10,6 +10,7 @@ import {
   Disc3,
   ExternalLink,
   Eye,
+  Info,
   ListPlus,
   MessageSquarePlus,
   MoreVertical,
@@ -452,6 +453,7 @@ interface CardKebabProps {
   inWatchlist?: boolean;
   onToggleWatchlist?: () => void;
   onProposeToEvent?: () => void;
+  onViewDetails?: () => void;
   wheelExclusion?: MovieWheelExclusion;
   t: Translate;
 }
@@ -514,6 +516,7 @@ export function CardKebab({
   inWatchlist,
   onToggleWatchlist,
   onProposeToEvent,
+  onViewDetails,
   wheelExclusion,
   t,
 }: Readonly<CardKebabProps>) {
@@ -642,6 +645,20 @@ export function CardKebab({
               >
                 <ListPlus aria-hidden size={14} />
                 <span className={styles.kebabItemLabel}>{t('watchlist.card.proposeAction')}</span>
+              </button>
+            )}
+            {onViewDetails && (
+              <button
+                type="button"
+                role="menuitem"
+                className={styles.kebabItem}
+                onClick={() => {
+                  setOpen(false);
+                  onViewDetails();
+                }}
+              >
+                <Info aria-hidden size={14} />
+                <span className={styles.kebabItemLabel}>{t('watchlist.card.detailsAction')}</span>
               </button>
             )}
             {wheelExclusion && (

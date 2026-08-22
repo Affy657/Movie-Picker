@@ -259,9 +259,9 @@ describe('LetterboxdImportSection (MSW)', () => {
     await user.click(syncButton);
 
     expect(
-      await screen.findByRole('heading', { name: 'Choisir les bonnes correspondances' })
+      await screen.findByRole('heading', { name: 'Un titre à confirmer' })
     ).toBeInTheDocument();
-    expect(screen.getByText('Sermons de minuit (2021)')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Sermons de minuit/ })).toBeInTheDocument();
   });
 
   it('affiche une réconciliation en attente et ouvre la modale de choix au clic', async () => {
@@ -307,7 +307,7 @@ describe('LetterboxdImportSection (MSW)', () => {
     await user.click(pendingButton);
 
     expect(
-      await screen.findByRole('heading', { name: 'Choisir les bonnes correspondances' })
+      await screen.findByRole('heading', { name: 'Un titre à confirmer' })
     ).toBeInTheDocument();
   });
 
@@ -411,11 +411,15 @@ describe('LetterboxdImportSection (MSW)', () => {
     renderAccount();
 
     const trigger = await screen.findByRole('button', { name: 'Comment ça marche' });
-    expect(screen.queryByText(/Vos deux listes restent alignées/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Votre watchlist Letterboxd publique est recopiée ici/)
+    ).not.toBeInTheDocument();
 
     await user.click(trigger);
 
-    expect(screen.getByText(/Vos deux listes restent alignées/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Votre watchlist Letterboxd publique est recopiée ici/)
+    ).toBeInTheDocument();
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
   });
 });

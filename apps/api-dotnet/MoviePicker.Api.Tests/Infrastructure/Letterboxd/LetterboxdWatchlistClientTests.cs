@@ -76,6 +76,42 @@ public sealed class LetterboxdWatchlistClientTests
     }
 
     [Fact]
+    public async Task GetWatchlistAsync_OngoingSeriesWithOpenYearRange_ParsesStartYear()
+    {
+        var (sut, _) = CreateSut(Page(1, Poster("midnight-mass", "Midnight Mass (2021–)")));
+
+        var snapshot = await sut.GetWatchlistAsync("affy657");
+
+        var film = Assert.Single(snapshot.Films);
+        Assert.Equal("Midnight Mass", film.Title);
+        Assert.Equal("2021", film.Year);
+    }
+
+    [Fact]
+    public async Task GetWatchlistAsync_SeriesWithClosedYearRange_ParsesStartYear()
+    {
+        var (sut, _) = CreateSut(Page(1, Poster("some-show", "Some Show (2019-2021)")));
+
+        var snapshot = await sut.GetWatchlistAsync("affy657");
+
+        var film = Assert.Single(snapshot.Films);
+        Assert.Equal("Some Show", film.Title);
+        Assert.Equal("2019", film.Year);
+    }
+
+    [Fact]
+    public async Task GetWatchlistAsync_NoParsableYear_FallsBackToEmptyYear()
+    {
+        var (sut, _) = CreateSut(Page(1, Poster("mystery-title", "A Title Without A Year")));
+
+        var snapshot = await sut.GetWatchlistAsync("affy657");
+
+        var film = Assert.Single(snapshot.Films);
+        Assert.Equal("A Title Without A Year", film.Title);
+        Assert.Equal(string.Empty, film.Year);
+    }
+
+    [Fact]
     public async Task GetWatchlistAsync_FollowsPaginationUntilAnnouncedTotal()
     {
         var (sut, handler) = CreateSut(uri => new HttpResponseMessage(HttpStatusCode.OK)

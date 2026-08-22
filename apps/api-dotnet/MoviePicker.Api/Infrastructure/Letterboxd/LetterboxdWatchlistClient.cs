@@ -160,6 +160,6 @@ public sealed partial class LetterboxdWatchlistClient : ILetterboxdWatchlistClie
     [GeneratedRegex("data-num-entries=\"(\\d+)\"")]
     private static partial Regex TotalEntriesRegex();
 
-    [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)$")]
+    [GeneratedRegex(@"^(.*?)\s*\((\d{4})(?:[-–]\d*)?\)$")]
     private static partial Regex TitleYearRegex();
 }

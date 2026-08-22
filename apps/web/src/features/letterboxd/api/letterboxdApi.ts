@@ -8,6 +8,8 @@ export interface LetterboxdCandidate {
   year: string;
   posterPath: string | null;
   voteAverage?: number | null;
+  genreIds?: number[];
+  runtimeMinutes?: number | null;
 }
 
 export interface LetterboxdPendingChoice {

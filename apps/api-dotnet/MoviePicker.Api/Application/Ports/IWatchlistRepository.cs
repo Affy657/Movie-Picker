@@ -26,4 +26,8 @@ public interface IWatchlistRepository
     Task UpdateGenresAsync(string itemId, IReadOnlyList<int> genreIds, CancellationToken ct = default);
 
     Task<IReadOnlyList<WatchlistItem>> ListMissingGenresAsync(int limit, CancellationToken ct = default);
+
+    Task UpdateRuntimeAsync(string itemId, int runtimeMinutes, CancellationToken ct = default);
+
+    Task<IReadOnlyList<WatchlistItem>> ListMissingRuntimeAsync(int limit, CancellationToken ct = default);
 }

@@ -125,6 +125,24 @@ public sealed class MongoWatchlistRepository : IWatchlistRepository
         return docs.ConvertAll(ToDomain);
     }
 
+    public async Task UpdateRuntimeAsync(string itemId, int runtimeMinutes, CancellationToken ct = default)
+    {
+        var update = Builders<WatchlistItemDocument>.Update.Set(x => x.RuntimeMinutes, runtimeMinutes);
+        await _collection.UpdateOneAsync(x => x.Id == itemId, update, cancellationToken: ct);
+    }
+
+    public async Task<IReadOnlyList<WatchlistItem>> ListMissingRuntimeAsync(int limit, CancellationToken ct = default)
+    {
+        if (limit <= 0)
+            return [];
+
+        var filter = Builders<WatchlistItemDocument>.Filter.Or(
+            Builders<WatchlistItemDocument>.Filter.Exists(x => x.RuntimeMinutes, false),
+            Builders<WatchlistItemDocument>.Filter.Eq(x => x.RuntimeMinutes, null));
+        var docs = await _collection.Find(filter).Limit(limit).ToListAsync(ct);
+        return docs.ConvertAll(ToDomain);
+    }
+
     private static WatchlistItem ToDomain(WatchlistItemDocument d) => new()
     {
         Id = d.Id,

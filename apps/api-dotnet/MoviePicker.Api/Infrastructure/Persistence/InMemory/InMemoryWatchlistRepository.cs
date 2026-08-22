@@ -101,4 +101,24 @@ public sealed class InMemoryWatchlistRepository : IWatchlistRepository
             .ToList();
         return Task.FromResult(result);
     }
+
+    public Task UpdateRuntimeAsync(string itemId, int runtimeMinutes, CancellationToken ct = default)
+    {
+        var entry = _store.FirstOrDefault(kv => kv.Value.Id == itemId);
+        if (entry.Key is not null)
+            _store.TryUpdate(entry.Key, entry.Value with { RuntimeMinutes = runtimeMinutes }, entry.Value);
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<WatchlistItem>> ListMissingRuntimeAsync(int limit, CancellationToken ct = default)
+    {
+        if (limit <= 0)
+            return Task.FromResult<IReadOnlyList<WatchlistItem>>([]);
+
+        IReadOnlyList<WatchlistItem> result = _store.Values
+            .Where(x => x.RuntimeMinutes == null)
+            .Take(limit)
+            .ToList();
+        return Task.FromResult(result);
+    }
 }

@@ -220,6 +220,7 @@ public static class ServiceCollectionExtensions
         services.AddHostedService<MongoIndexInitializer>();
         services.AddHostedService<UserHandleBackfillService>();
         services.AddHostedService<GenreBackfillService>();
+        services.AddHostedService<RuntimeBackfillService>();
     }
 
     private static void RegisterTmdbSearch(IServiceCollection services, IConfiguration configuration)

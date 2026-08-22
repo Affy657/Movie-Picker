@@ -236,7 +236,14 @@ public sealed class MongoIndexInitializer : IHostedService
                 .Ascending(x => x.UserId)
                 .Descending(x => x.CreatedAt),
             new CreateIndexOptions { Name = "watchlist_userId_createdAt" });
-        await col.Indexes.CreateManyAsync(new[] { unique, byUserDate }, ct);
+        // RuntimeMinutes is [BsonIgnoreIfNull], so it's never stored as a literal null - only
+        // present or absent. A partial index can't express "$exists: false" (Mongo rejects it
+        // as an unsupported $not), but a regular index already covers missing/null values at
+        // its low end, so ListMissingRuntimeAsync's scan is covered without a partial filter.
+        var missingRuntime = new CreateIndexModel<WatchlistItemDocument>(
+            Builders<WatchlistItemDocument>.IndexKeys.Ascending(x => x.RuntimeMinutes),
+            new CreateIndexOptions { Name = "watchlist_runtimeMinutes_missing" });
+        await col.Indexes.CreateManyAsync(new[] { unique, byUserDate, missingRuntime }, ct);
     }
 
     private async Task EnsureUserNotificationIndexesAsync(CancellationToken ct)

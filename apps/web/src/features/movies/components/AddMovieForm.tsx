@@ -14,7 +14,7 @@ import { useLocale, useTranslation } from '@/shared/i18n';
 import type { TranslationKey } from '@/shared/i18n/t';
 import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
-import { genreLabel } from '@/features/profile/lib/tmdbGenres';
+import { metaGenresLabel, movieMetaLine } from '@/shared/utils/movieMetaLine';
 import type { MovieData } from '@/shared/types/movie';
 import { safeTmdbWatchUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
 import WatchProviderChips, { ModeIcon } from '@/features/movies/components/WatchProviderChips';
@@ -35,25 +35,6 @@ function makeSearchKey(term: string, filters: MovieSearchFilters): string {
 
 function isSameTmdbItem(m: MovieData, r: MovieSearchItem): boolean {
   return m.tmdbId === r.id && (m.mediaType ?? 'movie') === (r.mediaType ?? 'movie');
-}
-
-const MAX_RESULT_GENRES = 2;
-
-function resultGenresLabel(genreIds: number[] | undefined, locale: string): string | null {
-  if (!genreIds?.length) return null;
-  return genreIds
-    .slice(0, MAX_RESULT_GENRES)
-    .map((id) => genreLabel(id, locale))
-    .join(', ');
-}
-
-function resultMetaLine(
-  year: string | undefined,
-  genresLabel: string | null,
-  runtimeLabel: string | null
-): string | null {
-  const parts = [year, genresLabel, runtimeLabel].filter((part): part is string => !!part);
-  return parts.length ? parts.join(', ') : null;
 }
 
 function PaidAvailabilityChip({
@@ -608,8 +589,8 @@ export default function AddMovieForm({
           <ul className={styles.results} aria-label={t('movies.search.resultsListAria')}>
             {displayedResults.map((r) => {
               const runtimeLabel = formatRuntimeMinutes(r.runtimeMinutes);
-              const genresLabel = resultGenresLabel(r.genreIds, tmdbLanguage);
-              const metaLine = resultMetaLine(r.year, genresLabel, runtimeLabel);
+              const genresLabel = metaGenresLabel(r.genreIds, tmdbLanguage);
+              const metaLine = movieMetaLine(r.year, genresLabel, runtimeLabel);
               const allProviders = r.watchProviders ?? [];
               const providers = allProviders.filter((p) => p.type === 'flatrate');
               const rentCount = allProviders.filter((p) => p.type === 'rent').length;

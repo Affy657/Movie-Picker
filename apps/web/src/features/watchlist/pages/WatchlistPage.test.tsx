@@ -450,14 +450,18 @@ describe('WatchlistPage (MSW)', () => {
     vi.unstubAllGlobals();
   });
 
-  it("propose l'import Letterboxd quand aucun pseudo n'est configuré", async () => {
+  it("propose l'import Letterboxd quand aucun pseudo n'est configuré, et ouvre la modale de connexion", async () => {
     server.use(authedUserHandler, watchlistHandler([ITEM_A]));
 
     renderPage();
 
+    const trigger = await screen.findByRole('button', { name: /importer depuis letterboxd/i });
+    const user = userEvent.setup();
+    await user.click(trigger);
+
     expect(
-      await screen.findByRole('link', { name: /importer depuis letterboxd/i })
-    ).toHaveAttribute('href', '/settings');
+      await screen.findByRole('heading', { name: /importer depuis letterboxd/i })
+    ).toBeInTheDocument();
   });
 
   it("masque l'incitation Letterboxd une fois le pseudo configuré", async () => {
@@ -480,7 +484,30 @@ describe('WatchlistPage (MSW)', () => {
 
     await screen.findByText(ITEM_A.title);
     expect(
-      screen.queryByRole('link', { name: /importer depuis letterboxd/i })
+      screen.queryByRole('button', { name: /importer depuis letterboxd/i })
     ).not.toBeInTheDocument();
+  });
+
+  it('sur mobile, affiche Importer à côté de Ajouter avec un libellé court', async () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn((query: string) => ({
+        matches: true,
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      }))
+    );
+
+    server.use(authedUserHandler, watchlistHandler([ITEM_A]));
+
+    renderPage();
+
+    const importBtn = await screen.findByRole('button', { name: 'Importer' });
+    const addBtn = screen.getByRole('button', { name: 'Ajouter' });
+    expect(importBtn.parentElement).toBe(addBtn.parentElement);
+    expect(screen.queryByText('Importer depuis Letterboxd')).not.toBeInTheDocument();
+
+    vi.unstubAllGlobals();
   });
 });

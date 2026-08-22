@@ -127,7 +127,7 @@ public sealed class LetterboxdWatchlistSynchronizer
             var confident = LetterboxdTmdbMatcher.SelectConfident(film.Title, candidates);
             if (confident is null)
             {
-                pending.Add(ToRow(rowIndex, film, candidates));
+                pending.Add(await ToRowAsync(rowIndex, film, candidates, ct));
                 continue;
             }
 
@@ -160,25 +160,50 @@ public sealed class LetterboxdWatchlistSynchronizer
         LetterboxdSlug = slug
     };
 
-    private static LetterboxdImportRowResponse ToRow(
+    private async Task<LetterboxdImportRowResponse> ToRowAsync(
         int rowIndex,
         LetterboxdFilm film,
-        IReadOnlyList<TmdbSearchItem> candidates) => new()
+        IReadOnlyList<TmdbSearchItem> candidates,
+        CancellationToken ct)
+    {
+        // Candidates within a row are independent TMDB lookups: fetch them concurrently
+        // instead of one-by-one, otherwise a row with several ambiguous candidates pays
+        // their combined latency sequentially on every interactive sync request.
+        var runtimes = await Task.WhenAll(candidates.Select(c => GetRuntimeAsync(c.Id, c.MediaType, ct)));
+        var withCandidates = candidates.Select((c, i) => new LetterboxdImportCandidateResponse
+        {
+            TmdbId = c.Id,
+            MediaType = c.MediaType,
+            Title = c.Title,
+            Year = c.Year,
+            PosterPath = c.PosterPath,
+            VoteAverage = c.VoteAverage,
+            GenreIds = c.GenreIds ?? [],
+            RuntimeMinutes = runtimes[i]
+        }).ToList();
+
+        return new LetterboxdImportRowResponse
         {
             RowIndex = rowIndex,
             Title = film.Title,
             Year = film.Year,
             LetterboxdSlug = film.Slug,
-            Candidates = candidates.Select(c => new LetterboxdImportCandidateResponse
-            {
-                TmdbId = c.Id,
-                MediaType = c.MediaType,
-                Title = c.Title,
-                Year = c.Year,
-                PosterPath = c.PosterPath,
-                VoteAverage = c.VoteAverage
-            }).ToList()
+            Candidates = withCandidates
         };
+    }
+
+    private async Task<int?> GetRuntimeAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct)
+    {
+        try
+        {
+            var details = await _tmdb.GetDetailsAsync(tmdbId, mediaType, ct);
+            return details?.Runtime;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
 
     private sealed record AdditionResult(
         int Added,
