@@ -66,9 +66,16 @@ export default function WheelModal({
     const prevent = (e: Event) => {
       if (!animDone) e.preventDefault();
     };
+    const handleBackdropClick = (e: MouseEvent) => {
+      if (e.target === dlg && animDone) onClose();
+    };
     dlg.addEventListener('cancel', prevent);
-    return () => dlg.removeEventListener('cancel', prevent);
-  }, [animDone]);
+    dlg.addEventListener('click', handleBackdropClick);
+    return () => {
+      dlg.removeEventListener('cancel', prevent);
+      dlg.removeEventListener('click', handleBackdropClick);
+    };
+  }, [animDone, onClose]);
 
   const handleWheelDone = useCallback(() => {
     setAnimDone(true);

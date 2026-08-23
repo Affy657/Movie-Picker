@@ -76,8 +76,15 @@ export default function InviteModal({ open, slug, onClose }: Readonly<Props>) {
     const handleClose = () => {
       if (open) onCloseRef.current();
     };
+    const handleBackdropClick = (e: MouseEvent) => {
+      if (e.target === dlg) onCloseRef.current();
+    };
     dlg.addEventListener('close', handleClose);
-    return () => dlg.removeEventListener('close', handleClose);
+    dlg.addEventListener('click', handleBackdropClick);
+    return () => {
+      dlg.removeEventListener('close', handleClose);
+      dlg.removeEventListener('click', handleBackdropClick);
+    };
   }, [open]);
 
   const handleInvite = (item: EligibleFollowItem) => {

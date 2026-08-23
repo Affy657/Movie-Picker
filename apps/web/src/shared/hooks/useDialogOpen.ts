@@ -24,7 +24,13 @@ export function useModalDialog(
   useEffect(() => {
     const dlg = dialogRef.current;
     if (!dlg) return;
-    const handleClose = () => onCloseRef.current();
+    // Deps sur `open` : le listener doit etre retire avant que l'effet de
+    // useDialogOpen n'appelle dlg.close() ci-dessus, sinon la fermeture native
+    // qu'il declenche synchronement rappelle onClose une seconde fois alors
+    // que le parent a deja traite la fermeture (cf. ConfirmDialog).
+    const handleClose = () => {
+      if (open) onCloseRef.current();
+    };
     const handleBackdropClick = (e: MouseEvent) => {
       if (e.target === dlg) onCloseRef.current();
     };
@@ -34,7 +40,7 @@ export function useModalDialog(
       dlg.removeEventListener('close', handleClose);
       dlg.removeEventListener('click', handleBackdropClick);
     };
-  }, []);
+  }, [open]);
 
   return dialogRef;
 }
