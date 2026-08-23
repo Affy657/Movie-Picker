@@ -912,6 +912,7 @@ export const en: Locale = {
   profile: {
     notFound: 'This profile does not exist or is not public.',
     loadError: 'Unable to load this profile.',
+    loading: 'Loading profile…',
     backHome: 'Back to home',
     editProfile: 'Edit my profile',
     memberSince: 'Member since {{date}}',
@@ -923,6 +924,7 @@ export const en: Locale = {
     qrHint: 'Open your camera to access the profile on mobile.',
     follow: {
       follow: 'Follow',
+      followingIdle: 'Following',
       unfollow: 'Unfollow',
       following: 'following',
       followers: 'followers',
@@ -968,6 +970,8 @@ export const en: Locale = {
       legendLess: 'Less',
       legendMore: 'More',
       empty: 'No activity yet.',
+      loadError: 'Statistics could not be loaded.',
+      retry: 'Retry',
     },
     streak: {
       weekLabel: 'week in a row',

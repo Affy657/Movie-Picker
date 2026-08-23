@@ -26,16 +26,18 @@ describe('ActivityWeeks', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('rend un élément role=img pour une liste non vide', () => {
+  it('rend un groupe et une cellule accessible pour une liste non vide', () => {
     renderWeeks([{ date: '2026-01-01', count: 0 }]);
+    expect(screen.getByRole('group')).toBeInTheDocument();
     expect(screen.getByRole('img')).toBeInTheDocument();
   });
 
-  it('agrège les jours en une cellule par semaine', () => {
+  it('agrège les jours en une cellule par semaine, chacune focusable au clavier', () => {
     const points = days(new Array(21).fill(0), '2026-01-05');
     renderWeeks(points);
-    const cells = document.querySelectorAll('[class*="weekCell"]');
+    const cells = screen.getAllByRole('img');
     expect(cells).toHaveLength(3);
+    cells.forEach((cell) => expect(cell).toHaveAttribute('tabindex', '0'));
   });
 
   it('gère une date invalide sans planter (branche isNaN)', () => {
@@ -43,12 +45,12 @@ describe('ActivityWeeks', () => {
     expect(screen.getByRole('img')).toBeInTheDocument();
   });
 
-  it('affiche le total dans aria-label', () => {
+  it('affiche le total dans le libellé du groupe', () => {
     renderWeeks([
       { date: '2026-01-01', count: 2 },
       { date: '2026-01-02', count: 3 },
     ]);
-    expect(screen.getByRole('img', { name: /5 participation/ })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: /5 participation/ })).toBeInTheDocument();
   });
 
   it('affiche une légende avec 4 niveaux', () => {

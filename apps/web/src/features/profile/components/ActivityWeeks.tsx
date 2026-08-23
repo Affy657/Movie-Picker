@@ -49,7 +49,7 @@ export default function ActivityWeeks({ points }: Readonly<Props>) {
     <div className={styles.heatmapWrap}>
       <div
         className={styles.weekGroups}
-        role="img"
+        role="group"
         aria-label={t('profile.stats.activityImgAlt', { count: total })}
       >
         {rows.map((row, rowIndex) => {
@@ -68,12 +68,22 @@ export default function ActivityWeeks({ points }: Readonly<Props>) {
                       });
                   return (
                     <Tooltip key={week.weekStart} label={label} className={styles.cellSlot}>
-                      <span className={styles.weekCell} style={{ background: cellColor(level) }} />
+                      <span
+                        className={styles.weekCell}
+                        style={{ background: cellColor(level) }}
+                        role="img"
+                        aria-label={label}
+                        tabIndex={0}
+                      />
                     </Tooltip>
                   );
                 })}
               </div>
-              <div className={styles.weekMonths} style={{ ['--cols' as string]: row.length }}>
+              <div
+                className={styles.weekMonths}
+                style={{ ['--cols' as string]: row.length }}
+                aria-hidden
+              >
                 {row.map((week, index) => (
                   <span
                     key={week.weekStart}

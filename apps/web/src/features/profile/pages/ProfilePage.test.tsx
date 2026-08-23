@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
@@ -77,6 +77,70 @@ describe('ProfilePage (MSW)', () => {
     expect(screen.getByText('Grande cinéphile')).toBeInTheDocument();
     expect(screen.getByText(/membre depuis/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /copier le lien/i })).toBeInTheDocument();
+  });
+
+  it('affiche un squelette pendant le chargement du profil', () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE))
+    );
+
+    renderProfile('alice');
+
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Alice' })).not.toBeInTheDocument();
+  });
+
+  it('affiche une erreur avec un bouton Réessayer si les statistiques échouent, et se rétablit', async () => {
+    const user = userEvent.setup();
+    let statsCallCount = 0;
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      http.get(`${TEST_API_V1}/users/alice/stats`, () => {
+        statsCallCount += 1;
+        if (statsCallCount === 1) {
+          return HttpResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+        }
+        return HttpResponse.json(EMPTY_STATS);
+      })
+    );
+
+    renderProfile('alice');
+    await screen.findByRole('heading', { name: 'Alice' });
+
+    expect(await screen.findByText(/statistiques n'ont pas pu être chargées/i)).toBeInTheDocument();
+    const retryBtn = screen.getByRole('button', { name: /réessayer/i });
+
+    await user.click(retryBtn);
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: /réessayer/i })).not.toBeInTheDocument();
+    });
+  });
+
+  it('annonce la copie du lien via une région aria-live', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE))
+    );
+    vi.stubGlobal('navigator', {
+      clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+    } as unknown as Navigator);
+
+    try {
+      renderProfile('alice');
+      await screen.findByRole('heading', { name: 'Alice' });
+
+      await user.click(screen.getByRole('button', { name: /copier le lien/i }));
+
+      await waitFor(() => {
+        expect(screen.getByRole('status')).toHaveTextContent(/lien copié/i);
+      });
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('affiche le badge soutien uniquement pour un profil soutien', async () => {

@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import { Link2, Pencil, UserCheck, UserPlus } from 'lucide-react';
+import { Link2, Pencil, UserCheck, UserMinus, UserPlus } from 'lucide-react';
 import { ROUTES, withReturnTo } from '@/app/routes';
 import { useTranslation } from '@/shared/i18n';
 import QrCodeButton from '@/shared/components/QrCodeButton';
@@ -51,17 +51,34 @@ export default function ProfileActions({
       {!isOwnProfile && isLoggedIn && (
         <button
           type="button"
-          className={`btn ${styles.primary}${profile.isFollowedByMe ? '' : ' btn-primary'}`}
+          className={`btn ${styles.primary}${profile.isFollowedByMe ? ` ${styles.unfollowBtn}` : ' btn-primary'}`}
           disabled={followPending}
+          aria-label={
+            profile.isFollowedByMe
+              ? t('profile.follow.unfollowAriaLabel', { handle: profile.handle })
+              : t('profile.follow.followAriaLabel', { handle: profile.handle })
+          }
           onClick={() => (profile.isFollowedByMe ? onUnfollow() : onFollow())}
         >
-          {profile.isFollowedByMe ? (
-            <UserCheck size={16} aria-hidden />
+          {followPending ? (
+            <span className={styles.spinner} aria-hidden />
+          ) : profile.isFollowedByMe ? (
+            <>
+              <UserCheck size={16} aria-hidden className={styles.iconIdle} />
+              <UserMinus size={16} aria-hidden className={styles.iconActive} />
+            </>
           ) : (
             <UserPlus size={16} aria-hidden />
           )}
           <span className={styles.btnLabel}>
-            {profile.isFollowedByMe ? t('profile.follow.unfollow') : t('profile.follow.follow')}
+            {profile.isFollowedByMe ? (
+              <>
+                <span className={styles.labelIdle}>{t('profile.follow.followingIdle')}</span>
+                <span className={styles.labelActive}>{t('profile.follow.unfollow')}</span>
+              </>
+            ) : (
+              t('profile.follow.follow')
+            )}
           </span>
         </button>
       )}
@@ -83,6 +100,10 @@ export default function ProfileActions({
           className={`btn ${styles.qrBtn}`}
         />
       </div>
+
+      <span className="visually-hidden" role="status" aria-live="polite">
+        {copied ? t('profile.linkCopied') : ''}
+      </span>
     </div>
   );
 }

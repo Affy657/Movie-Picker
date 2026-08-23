@@ -41,3 +41,57 @@
 .btnLabel {
   transform: translateY(var(--text-optical-nudge));
 }
+
+/* ---------- Bouton Suivi : au repos "Suivi", au survol/focus "Ne plus suivre" ---------- */
+.iconActive,
+.labelActive {
+  display: none;
+}
+
+.unfollowBtn:hover .iconIdle,
+.unfollowBtn:focus-visible .iconIdle {
+  display: none;
+}
+
+.unfollowBtn:hover .iconActive,
+.unfollowBtn:focus-visible .iconActive {
+  display: inline;
+}
+
+.unfollowBtn:hover .labelIdle,
+.unfollowBtn:focus-visible .labelIdle {
+  display: none;
+}
+
+.unfollowBtn:hover .labelActive,
+.unfollowBtn:focus-visible .labelActive {
+  display: inline;
+}
+
+.unfollowBtn:hover,
+.unfollowBtn:focus-visible {
+  border-color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
+  color: var(--color-error);
+}
+
+.spinner {
+  width: 0.9375rem;
+  height: 0.9375rem;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, currentColor 35%, transparent);
+  border-top-color: currentColor;
+  animation: profile-actions-spin 0.8s linear infinite;
+}
+
+@keyframes profile-actions-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}

@@ -31,9 +31,10 @@ describe('ProfileStatsSection', () => {
     expect(screen.getByRole('heading', { level: 2 })).toBeInTheDocument();
   });
 
-  it("affiche l'état vide si toutes les stats sont à 0", () => {
+  it("affiche l'état vide si toutes les stats sont à 0, sans la grille de compteurs à zéro", () => {
     renderSection(EMPTY_STATS);
     expect(screen.getByText(/aucune activité/i)).toBeInTheDocument();
+    expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
   });
 
   it("n'affiche pas l'état vide si un compteur est > 0", () => {

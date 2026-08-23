@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
 import { ApiError, getErrorMessage } from '@/shared/api/apiError';
@@ -14,6 +14,9 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import ProfileIdentityCard from '@/features/profile/components/ProfileIdentityCard';
 import ProfileActions from '@/features/profile/components/ProfileActions';
+import ProfilePageSkeleton, {
+  ProfileStatsSkeleton,
+} from '@/features/profile/components/ProfilePageSkeleton';
 import {
   fetchPublicProfile,
   fetchUserStats,
@@ -133,10 +136,8 @@ export default function ProfilePage() {
 
   if (profileQuery.isPending && handle) {
     return (
-      <PageLayout className="page--centered">
-        <p className="placeholder" aria-busy="true">
-          {t('common.loading')}
-        </p>
+      <PageLayout className={styles.layout}>
+        <ProfilePageSkeleton label={t('profile.loading')} />
       </PageLayout>
     );
   }
@@ -208,8 +209,25 @@ export default function ProfilePage() {
         </aside>
 
         <div className={styles.content}>
+          {statsQuery.isPending && <ProfileStatsSkeleton />}
+
+          {statsQuery.isError && (
+            <div className={styles.statsError} role="alert">
+              <span className={styles.statsErrorIcon} aria-hidden>
+                <AlertCircle size={18} />
+              </span>
+              <div className={styles.statsErrorBody}>
+                <p className={styles.statsErrorMessage}>{t('profile.stats.loadError')}</p>
+                <button type="button" className="btn btn-sm" onClick={() => statsQuery.refetch()}>
+                  <RefreshCw size={15} aria-hidden />
+                  <span className={styles.btnLabel}>{t('profile.stats.retry')}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {statsQuery.data && (
-            <Suspense fallback={null}>
+            <Suspense fallback={<ProfileStatsSkeleton />}>
               <ProfileStatsSection stats={statsQuery.data} />
             </Suspense>
           )}

@@ -199,6 +199,11 @@
   min-width: 0;
 }
 
+.weekCell:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .weekMonths {
   display: grid;
   grid-template-columns: repeat(var(--cols), minmax(0, 1fr));

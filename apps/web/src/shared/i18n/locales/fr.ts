@@ -930,6 +930,7 @@
   profile: {
     notFound: "Ce profil n'existe pas ou n'est pas public.",
     loadError: 'Impossible de charger ce profil.',
+    loading: 'Chargement du profil…',
     backHome: "Retour à l'accueil",
     editProfile: 'Modifier mon profil',
     memberSince: 'Membre depuis {{date}}',
@@ -941,6 +942,7 @@
     qrHint: "Ouvrez l'appareil photo pour accéder au profil sur mobile.",
     follow: {
       follow: 'Suivre',
+      followingIdle: 'Suivi',
       unfollow: 'Ne plus suivre',
       following: 'abonnements',
       followers: 'abonnés',
@@ -986,6 +988,8 @@
       legendLess: 'Moins',
       legendMore: 'Plus',
       empty: 'Aucune activité pour le moment.',
+      loadError: "Les statistiques n'ont pas pu être chargées.",
+      retry: 'Réessayer',
     },
     streak: {
       weekLabel: 'semaine de suite',
