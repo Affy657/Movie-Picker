@@ -98,6 +98,12 @@ export default function ProfileActions({
           showLabel={t('profile.showQr')}
           closeLabel={t('profile.closeQr')}
           className={`btn ${styles.qrBtn}`}
+          avatarId={profile.avatarId}
+          displayName={profile.displayName}
+          handle={profile.handle}
+          copyLabel={t('profile.copyLink')}
+          copiedLabel={t('profile.linkCopied')}
+          downloadLabel={t('profile.qrDownload')}
         />
       </div>
 

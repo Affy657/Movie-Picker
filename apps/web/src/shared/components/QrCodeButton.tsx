@@ -1,11 +1,15 @@
-import { useEffect, useId, useRef, useState } from 'react';
-import { QrCode, X } from 'lucide-react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { Download, Link2, QrCode, X } from 'lucide-react';
 import QRCodeImport from 'react-qr-code';
+import Avatar from '@/shared/components/Avatar';
+import { copyTextToClipboard } from '@/shared/utils/copyTextToClipboard';
 import styles from './QrCodeButton.module.css';
 
 const QR_SIZE_MODAL = 240;
 const QR_BG_COLOR = '#ffffff';
 const QR_FG_COLOR = '#111827';
+const QR_EXPORT_SCALE = 4;
+const COPY_FEEDBACK_MS = 2000;
 
 const QRCode =
   typeof QRCodeImport === 'object' &&
@@ -25,6 +29,14 @@ interface QrCodeButtonProps {
   className?: string;
 
   withLabel?: boolean;
+
+  avatarId?: string | null;
+  displayName?: string;
+  handle?: string;
+
+  copyLabel?: string;
+  copiedLabel?: string;
+  downloadLabel?: string;
 }
 
 export default function QrCodeButton({
@@ -36,9 +48,17 @@ export default function QrCodeButton({
   closeLabel,
   className,
   withLabel = false,
+  avatarId,
+  displayName,
+  handle,
+  copyLabel,
+  copiedLabel,
+  downloadLabel,
 }: Readonly<QrCodeButtonProps>) {
   const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const qrWrapRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
 
   useEffect(() => {
@@ -77,6 +97,50 @@ export default function QrCodeButton({
     };
   }, [open]);
 
+  useEffect(() => {
+    if (!copied) return;
+    const id = globalThis.setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
+    return () => globalThis.clearTimeout(id);
+  }, [copied]);
+
+  const handleCopy = useCallback(() => {
+    void copyTextToClipboard(url).then((ok) => {
+      if (ok) setCopied(true);
+    });
+  }, [url]);
+
+  const handleDownload = useCallback(() => {
+    const svg = qrWrapRef.current?.querySelector('svg');
+    if (!svg) return;
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const svgUrl = URL.createObjectURL(svgBlob);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = QR_SIZE_MODAL * QR_EXPORT_SCALE;
+      canvas.height = QR_SIZE_MODAL * QR_EXPORT_SCALE;
+      const ctx = canvas.getContext('2d');
+      URL.revokeObjectURL(svgUrl);
+      if (!ctx) return;
+      ctx.fillStyle = QR_BG_COLOR;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = `qr-${handle ?? 'code'}.png`;
+        link.click();
+        URL.revokeObjectURL(blobUrl);
+      }, 'image/png');
+    };
+    img.src = svgUrl;
+  }, [handle]);
+
+  const showActions = open && !!copyLabel && !!copiedLabel && !!downloadLabel;
+
   return (
     <>
       <button
@@ -110,7 +174,18 @@ export default function QrCodeButton({
               <X size={18} aria-hidden />
             </button>
           </header>
-          <div className={styles.qrCanvas}>
+
+          {open && displayName && handle && (
+            <div className={styles.identity}>
+              <Avatar avatarId={avatarId} pseudo={displayName} size="md" />
+              <span className={styles.identityText}>
+                <span className={styles.identityName}>{displayName}</span>
+                <span className={styles.identityHandle}>@{handle}</span>
+              </span>
+            </div>
+          )}
+
+          <div className={styles.qrCanvas} ref={qrWrapRef}>
             <QRCode
               value={url}
               size={QR_SIZE_MODAL}
@@ -122,6 +197,27 @@ export default function QrCodeButton({
           </div>
           <p className={styles.qrHint}>{hint}</p>
           <p className={styles.qrUrl}>{displayUrl ?? url}</p>
+
+          {showActions && (
+            <div className={styles.actions}>
+              <button
+                type="button"
+                className={`btn btn-sm ${styles.actionBtn}`}
+                onClick={handleCopy}
+              >
+                <Link2 size={15} aria-hidden />
+                <span className={styles.btnLabel}>{copied ? copiedLabel : copyLabel}</span>
+              </button>
+              <button
+                type="button"
+                className={`btn btn-sm ${styles.actionBtn}`}
+                onClick={handleDownload}
+              >
+                <Download size={15} aria-hidden />
+                <span className={styles.btnLabel}>{downloadLabel}</span>
+              </button>
+            </div>
+          )}
         </div>
       </dialog>
     </>

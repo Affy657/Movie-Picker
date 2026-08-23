@@ -922,6 +922,7 @@ export const en: Locale = {
     closeQr: 'Close QR code',
     qrTitle: 'QR code — link to the profile',
     qrHint: 'Open your camera to access the profile on mobile.',
+    qrDownload: 'Download',
     follow: {
       follow: 'Follow',
       followingIdle: 'Following',
@@ -931,6 +932,8 @@ export const en: Locale = {
       followingCount: '{{count}} following',
       followersCount: '{{count}} followers',
       listTitle: 'Follow list',
+      sheetTitle: 'Follow list',
+      isMeBadge: 'You',
       empty: 'Nobody here yet.',
       followAriaLabel: 'Follow @{{handle}}',
       unfollowAriaLabel: 'Unfollow @{{handle}}',

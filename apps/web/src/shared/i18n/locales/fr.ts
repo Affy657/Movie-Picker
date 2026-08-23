@@ -940,6 +940,7 @@
     closeQr: 'Fermer le QR code',
     qrTitle: 'QR code — lien vers le profil',
     qrHint: "Ouvrez l'appareil photo pour accéder au profil sur mobile.",
+    qrDownload: 'Télécharger',
     follow: {
       follow: 'Suivre',
       followingIdle: 'Suivi',
@@ -949,6 +950,8 @@
       followingCount: '{{count}} abonnements',
       followersCount: '{{count}} abonnés',
       listTitle: 'Liste des abonnements',
+      sheetTitle: 'Abonnements',
+      isMeBadge: 'Vous',
       empty: 'Aucun utilisateur ici.',
       followAriaLabel: 'Suivre @{{handle}}',
       unfollowAriaLabel: 'Ne plus suivre @{{handle}}',

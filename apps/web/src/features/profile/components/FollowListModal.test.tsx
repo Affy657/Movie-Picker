@@ -128,6 +128,58 @@ describe('FollowListModal (MSW)', () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
+  it('affiche un badge "Vous" et aucun bouton pour sa propre ligne', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u-bob',
+          displayName: 'Bob',
+          emailMasked: 'b***@test.local',
+          uiTheme: 'system',
+          accentColor: 'default',
+          avatarId: '',
+          handle: 'bob',
+          bio: null,
+          isProfilePublic: true,
+        })
+      ),
+      http.get(`${TEST_API_V1}/users/alice/following`, () =>
+        HttpResponse.json({
+          items: [{ handle: 'bob', displayName: 'Bob', avatarId: '', isFollowedByMe: null }],
+        })
+      )
+    );
+
+    renderModal();
+
+    expect(await screen.findByText('Vous')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /suivre/i })).not.toBeInTheDocument();
+  });
+
+  it('bascule en feuille (Sheet) sous 768px', async () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn((query: string) => ({
+        matches: true,
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      }))
+    );
+    try {
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+        http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
+      );
+
+      renderModal();
+
+      expect(await screen.findByRole('heading', { name: 'Abonnements' })).toBeInTheDocument();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("démarre sur l'onglet Followers si initialTab='followers'", async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
