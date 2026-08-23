@@ -1,14 +1,22 @@
 import { useId } from 'react';
-import { Sparkles, Wand2, Wrench } from 'lucide-react';
+import { Link } from 'react-router';
+import clsx from 'clsx';
+import { ChevronRight, Sparkles, Wand2, Wrench } from 'lucide-react';
 import type { ComponentType, SVGProps } from 'react';
 import { useTranslation } from '@/shared/i18n';
 import { useModalDialog } from '@/shared/hooks/useDialogOpen';
-import type { WhatsNewCategory, WhatsNewRelease } from '@/shared/whatsNew';
+import {
+  whatsNewLinkPath,
+  type WhatsNewCategory,
+  type WhatsNewEntry,
+  type WhatsNewRelease,
+} from '@/shared/whatsNew';
 import styles from './WhatsNewModal.module.css';
 
 type Props = {
   open: boolean;
   release: WhatsNewRelease;
+  profileHandle?: string | null;
   onClose: () => void;
 };
 
@@ -31,11 +39,23 @@ const CATEGORY_ICON: Record<WhatsNewCategory, CategoryIcon> = {
   fixed: Wrench,
 };
 
-export default function WhatsNewModal({ open, release, onClose }: Readonly<Props>) {
+export default function WhatsNewModal({
+  open,
+  release,
+  profileHandle = null,
+  onClose,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const dialogRef = useModalDialog(open, onClose);
   const reactId = useId();
   const titleId = `whats-new-modal-title-${reactId}`;
+
+  const renderEntryContent = (entry: WhatsNewEntry) => (
+    <span className={styles.entryText}>
+      <span className={styles.entryTitle}>{t(entry.titleKey)}</span>
+      <span className={styles.entryDescription}>{t(entry.descriptionKey)}</span>
+    </span>
+  );
 
   return (
     <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>
@@ -61,11 +81,32 @@ export default function WhatsNewModal({ open, release, onClose }: Readonly<Props
                 <h3 className={styles.categoryTitle}>{t(CATEGORY_TITLE_KEY[category])}</h3>
               </div>
               <ul className={styles.entryList}>
-                {entries.map((entry) => (
-                  <li key={entry.textKey} className={styles.entry}>
-                    {t(entry.textKey)}
-                  </li>
-                ))}
+                {entries.map((entry) => {
+                  const to = whatsNewLinkPath(entry.link, profileHandle);
+                  return (
+                    <li key={entry.titleKey} className={styles.entry}>
+                      {to ? (
+                        <Link
+                          to={to}
+                          className={clsx(styles.entryInner, styles.entryLink)}
+                          onClick={onClose}
+                        >
+                          {renderEntryContent(entry)}
+                          <span className={styles.entryChevron}>
+                            <ChevronRight
+                              width={16}
+                              height={16}
+                              aria-hidden="true"
+                              focusable="false"
+                            />
+                          </span>
+                        </Link>
+                      ) : (
+                        <div className={styles.entryInner}>{renderEntryContent(entry)}</div>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </section>
           );

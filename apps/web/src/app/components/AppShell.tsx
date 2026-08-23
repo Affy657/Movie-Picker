@@ -124,7 +124,12 @@ export default function AppShell() {
       <PwaAutoUpdate />
       <ConsentBanner />
       {isAuthenticated ? (
-        <WhatsNewModal open={whatsNewOpen} release={whatsNewRelease} onClose={closeWhatsNew} />
+        <WhatsNewModal
+          open={whatsNewOpen}
+          release={whatsNewRelease}
+          profileHandle={user.handle}
+          onClose={closeWhatsNew}
+        />
       ) : null}
       <InAppBrowserBanner />
     </div>
