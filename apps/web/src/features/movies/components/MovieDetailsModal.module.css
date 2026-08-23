@@ -17,13 +17,37 @@
   flex-direction: column;
 }
 
-@media (max-width: 480px) {
+.handle {
+  display: none;
+  align-self: center;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 0.25rem;
+  margin-top: 0.6rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+}
+
+@media (max-width: 47.9375rem) {
   .dialog {
-    /* Sur mobile, laisse la modale utiliser (presque) toute la hauteur
-       disponible : les 620px + 75dvh du desktop ecrasaient les longues
-       descriptions dans une petite zone de scroll interne. */
+    position: fixed;
+    inset: auto 0 0 0;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    /* Laisse la modale utiliser (presque) toute la hauteur disponible : les
+       620px + 75dvh du desktop ecrasaient les longues descriptions dans une
+       petite zone de scroll interne. */
     max-height: 92dvh;
-    margin-top: max(0.75rem, env(safe-area-inset-top, 0px));
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .handle {
+    display: block;
+  }
+
+  .header {
+    padding-top: 0.4rem;
   }
 }
 
