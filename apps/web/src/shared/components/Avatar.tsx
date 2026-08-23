@@ -5,7 +5,7 @@ import styles from './Avatar.module.css';
 interface AvatarProps {
   avatarId: string | null | undefined;
   pseudo?: string;
-  size?: 'xs' | 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
 }
 
@@ -14,6 +14,7 @@ const SIZE_PX: Record<NonNullable<AvatarProps['size']>, number> = {
   sm: 26,
   md: 36,
   lg: 56,
+  xl: 96,
 };
 
 const INITIALS_COLORS = [

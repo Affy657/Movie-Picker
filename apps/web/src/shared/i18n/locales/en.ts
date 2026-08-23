@@ -913,6 +913,7 @@ export const en: Locale = {
     notFound: 'This profile does not exist or is not public.',
     loadError: 'Unable to load this profile.',
     backHome: 'Back to home',
+    editProfile: 'Edit my profile',
     memberSince: 'Member since {{date}}',
     copyLink: 'Copy profile link',
     linkCopied: 'Link copied!',
@@ -967,6 +968,9 @@ export const en: Locale = {
     streak: {
       weekLabel: 'week in a row',
       weeksLabel: 'weeks in a row',
+      broken: 'No active streak',
+      recordWeek: 'Record {{count}} week',
+      recordWeeks: 'Record {{count}} weeks',
     },
     supporter: {
       label: 'Supporter',

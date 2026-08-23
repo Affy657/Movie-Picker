@@ -7,40 +7,45 @@ const FLAME_PATH =
 
 interface Props {
   weeks: number;
+  bestWeeks: number;
 }
 
-export default function ProfileStreakFlame({ weeks }: Readonly<Props>) {
+export default function ProfileStreakFlame({ weeks, bestWeeks }: Readonly<Props>) {
   const { t } = useTranslation();
   const gradientId = `streak-flame-${useId().replaceAll(':', '')}`;
   const isLit = weeks > 0;
-  const label = t(weeks === 1 ? 'profile.streak.weekLabel' : 'profile.streak.weeksLabel');
+  const showRecord = bestWeeks > weeks;
+
+  const currentLabel = isLit
+    ? `${weeks} ${t(weeks === 1 ? 'profile.streak.weekLabel' : 'profile.streak.weeksLabel')}`
+    : t('profile.streak.broken');
+
+  const recordLabel = t(
+    bestWeeks === 1 ? 'profile.streak.recordWeek' : 'profile.streak.recordWeeks',
+    { count: String(bestWeeks) }
+  );
+
+  const ariaLabel = showRecord ? `${currentLabel}, ${recordLabel}` : currentLabel;
 
   return (
     <div
       className={isLit ? styles.streak : `${styles.streak} ${styles.out}`}
       role="group"
-      aria-label={`${weeks} ${label}`}
+      aria-label={ariaLabel}
     >
-      <span className={styles.flameWrap}>
-        <svg className={styles.flame} viewBox="0 0 64 80" aria-hidden focusable="false">
-          <defs>
-            <linearGradient id={gradientId} x1="0" y1="1" x2="0" y2="0">
-              <stop offset="0%" stopColor="#fbbf24" />
-              <stop offset="45%" stopColor="#f97316" />
-              <stop offset="100%" stopColor="#ef4444" />
-            </linearGradient>
-          </defs>
-          <path d={FLAME_PATH} fill={`url(#${gradientId})`} />
-        </svg>
-        <span
-          className={weeks >= 100 ? `${styles.count} ${styles.countLong}` : styles.count}
-          aria-hidden
-        >
-          {weeks}
-        </span>
-      </span>
-      <span className={styles.label} aria-hidden>
-        {label}
+      <svg className={styles.flame} viewBox="0 0 64 80" aria-hidden focusable="false">
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stopColor="#fbbf24" />
+            <stop offset="45%" stopColor="#f97316" />
+            <stop offset="100%" stopColor="#ef4444" />
+          </linearGradient>
+        </defs>
+        <path d={FLAME_PATH} fill={`url(#${gradientId})`} />
+      </svg>
+      <span className={styles.textStack} aria-hidden>
+        <span className={styles.current}>{currentLabel}</span>
+        {showRecord && <span className={styles.record}>{recordLabel}</span>}
       </span>
     </div>
   );

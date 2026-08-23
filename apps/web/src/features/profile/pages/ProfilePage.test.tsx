@@ -155,6 +155,20 @@ describe('ProfilePage (MSW)', () => {
     });
   });
 
+  it('propose un lien Suivre vers la connexion pour un visiteur non connecté', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () =>
+        HttpResponse.json({ ...ALICE_PROFILE, isFollowedByMe: null })
+      )
+    );
+
+    renderProfile('alice');
+
+    const link = await screen.findByRole('link', { name: /suivre/i });
+    expect(link).toHaveAttribute('href', expect.stringContaining('/login'));
+  });
+
   it('affiche le bouton Suivre quand connecté sur un profil tiers', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
@@ -198,6 +212,25 @@ describe('ProfilePage (MSW)', () => {
 
     await screen.findByRole('heading', { name: 'Moi' });
     expect(screen.queryByRole('button', { name: /suivre/i })).not.toBeInTheDocument();
+  });
+
+  it('propose Modifier mon profil sur son propre profil', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+      http.get(`${TEST_API_V1}/users/moi`, () =>
+        HttpResponse.json({
+          ...ALICE_PROFILE,
+          handle: 'moi',
+          displayName: 'Moi',
+          isFollowedByMe: null,
+        })
+      )
+    );
+
+    renderProfile('moi');
+
+    const link = await screen.findByRole('link', { name: /modifier mon profil/i });
+    expect(link).toHaveAttribute('href', '/settings');
   });
 
   it("affiche un état introuvable quand l'API renvoie 404", async () => {
@@ -283,7 +316,9 @@ describe('ProfilePage (MSW)', () => {
     await screen.findByRole('heading', { name: 'Alice' });
 
     await waitFor(() => {
-      expect(screen.getByRole('group', { name: '3 semaines de suite' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('group', { name: '3 semaines de suite, Record 5 semaines' })
+      ).toBeInTheDocument();
     });
   });
 

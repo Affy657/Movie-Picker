@@ -1,0 +1,43 @@
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  line-height: 1;
+}
+
+.shareGroup {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.shareBtn {
+  flex: 1 1 0;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  line-height: 1;
+}
+
+.qrBtn {
+  flex: 0 0 44px;
+  width: 44px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btnLabel {
+  transform: translateY(var(--text-optical-nudge));
+}

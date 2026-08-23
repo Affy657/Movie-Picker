@@ -42,6 +42,10 @@
   width: 56px;
   height: 56px;
 }
+.xl {
+  width: 96px;
+  height: 96px;
+}
 
 .initials.xs {
   font-size: 10px;
@@ -54,4 +58,7 @@
 }
 .initials.lg {
   font-size: 22px;
+}
+.initials.xl {
+  font-size: 36px;
 }

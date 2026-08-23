@@ -1,9 +1,8 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AlertCircle, Link2, UserPlus, UserCheck } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
-import Avatar from '@/shared/components/Avatar';
 import { ROUTES } from '@/app/routes';
 import { ApiError, getErrorMessage } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
@@ -13,9 +12,8 @@ import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
-import QrCodeButton from '@/shared/components/QrCodeButton';
-import ProfileStreakFlame from '@/features/profile/components/ProfileStreakFlame';
-import SupporterBadge from '@/features/profile/components/SupporterBadge';
+import ProfileIdentityCard from '@/features/profile/components/ProfileIdentityCard';
+import ProfileActions from '@/features/profile/components/ProfileActions';
 import {
   fetchPublicProfile,
   fetchUserStats,
@@ -175,107 +173,48 @@ export default function ProfilePage() {
   const memberSince = formatMemberSince(profile.memberSince, locale);
   const followPending = followMutation.isPending || unfollowMutation.isPending;
   const stats = statsQuery.data;
-  const hasStreakHistory = !!stats && (stats.currentStreakWeeks > 0 || stats.bestStreakWeeks > 0);
+  const streak =
+    stats && (stats.currentStreakWeeks > 0 || stats.bestStreakWeeks > 0)
+      ? { weeks: stats.currentStreakWeeks, bestWeeks: stats.bestStreakWeeks }
+      : null;
 
   return (
     <PageLayout className={styles.layout}>
-      <section className={styles.card} aria-labelledby="profile-heading">
-        <Avatar
-          avatarId={profile.avatarId}
-          pseudo={profile.displayName}
-          size="lg"
-          className={styles.avatar}
-        />
-        <h1 id="profile-heading" className={styles.displayName}>
-          {profile.displayName}
-        </h1>
-        <p className={styles.handle}>@{profile.handle}</p>
-
-        {profile.isSupporter && <SupporterBadge />}
-
-        {profile.bio && <p className={styles.bio}>{profile.bio}</p>}
-
-        {memberSince && (
-          <p className={styles.memberSince}>{t('profile.memberSince', { date: memberSince })}</p>
-        )}
-
-        {hasStreakHistory && <ProfileStreakFlame weeks={stats.currentStreakWeeks} />}
-
-        <div className={styles.followStats}>
-          <button
-            type="button"
-            className={styles.statBtn}
-            onClick={() => setFollowModal('following')}
+      <div className={styles.grid}>
+        <aside className={styles.rail} aria-labelledby="profile-heading">
+          <ProfileIdentityCard
+            profile={profile}
+            memberSince={memberSince}
+            streak={streak}
+            onOpenFollowModal={setFollowModal}
           >
-            <span className={styles.statCount}>{profile.followingCount}</span>
-            <span className={styles.statLabel}>{t('profile.follow.following')}</span>
-          </button>
-          <button
-            type="button"
-            className={styles.statBtn}
-            onClick={() => setFollowModal('followers')}
-          >
-            <span className={styles.statCount}>{profile.followersCount}</span>
-            <span className={styles.statLabel}>{t('profile.follow.followers')}</span>
-          </button>
-        </div>
-
-        <div className={styles.actions}>
-          <div className={styles.shareGroup}>
-            <button
-              type="button"
-              className={`btn btn-sm ${styles.copyBtn}`}
-              onClick={handleCopyLink}
-            >
-              <Link2 size={14} aria-hidden />
-              <span className={styles.btnLabel}>
-                {copied ? t('profile.linkCopied') : t('profile.copyLink')}
-              </span>
-            </button>
-
-            <QrCodeButton
-              url={globalThis.location.href}
-              dialogTitle={t('profile.qrTitle')}
-              hint={t('profile.qrHint')}
-              showLabel={t('profile.showQr')}
-              closeLabel={t('profile.closeQr')}
-              className="btn btn-sm"
+            <ProfileActions
+              profile={profile}
+              isOwnProfile={isOwnProfile}
+              isLoggedIn={!!user}
+              followPending={followPending}
+              onFollow={() => followMutation.mutate()}
+              onUnfollow={() => unfollowMutation.mutate()}
+              copied={copied}
+              onCopyLink={handleCopyLink}
             />
-          </div>
 
-          {user && !isOwnProfile && (
-            <button
-              type="button"
-              className={`btn btn-sm ${styles.followToggleBtn}${profile.isFollowedByMe ? '' : ' btn-primary'}`}
-              disabled={followPending}
-              onClick={() =>
-                profile.isFollowedByMe ? unfollowMutation.mutate() : followMutation.mutate()
-              }
-            >
-              {profile.isFollowedByMe ? (
-                <UserCheck size={14} aria-hidden />
-              ) : (
-                <UserPlus size={14} aria-hidden />
-              )}
-              <span className={styles.btnLabel}>
-                {profile.isFollowedByMe ? t('profile.follow.unfollow') : t('profile.follow.follow')}
-              </span>
-            </button>
+            {followError && (
+              <p className="error" role="alert">
+                {followError}
+              </p>
+            )}
+          </ProfileIdentityCard>
+        </aside>
+
+        <div className={styles.content}>
+          {statsQuery.data && (
+            <Suspense fallback={null}>
+              <ProfileStatsSection stats={statsQuery.data} />
+            </Suspense>
           )}
         </div>
-
-        {followError && (
-          <p className="error" role="alert">
-            {followError}
-          </p>
-        )}
-      </section>
-
-      {statsQuery.data && (
-        <Suspense fallback={null}>
-          <ProfileStatsSection stats={statsQuery.data} />
-        </Suspense>
-      )}
+      </div>
 
       {followModal !== null && (
         <Suspense fallback={null}>

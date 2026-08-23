@@ -931,6 +931,7 @@
     notFound: "Ce profil n'existe pas ou n'est pas public.",
     loadError: 'Impossible de charger ce profil.',
     backHome: "Retour à l'accueil",
+    editProfile: 'Modifier mon profil',
     memberSince: 'Membre depuis {{date}}',
     copyLink: 'Copier le lien du profil',
     linkCopied: 'Lien copié !',
@@ -985,6 +986,9 @@
     streak: {
       weekLabel: 'semaine de suite',
       weeksLabel: 'semaines de suite',
+      broken: 'Aucune série en cours',
+      recordWeek: 'Record {{count}} semaine',
+      recordWeeks: 'Record {{count}} semaines',
     },
     supporter: {
       label: 'Soutien',
