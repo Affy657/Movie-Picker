@@ -1,6 +1,6 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, type RefObject } from 'react';
 import clsx from 'clsx';
-import { LayoutGrid, List } from 'lucide-react';
+import { ArrowUpDown, LayoutGrid, List } from 'lucide-react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
@@ -69,6 +69,9 @@ export type EventMoviesSectionProps = {
   viewMode: 'grid' | 'list';
   onViewModeChange: (mode: 'grid' | 'list') => void;
   selection?: MovieCardSelection;
+  addMovieOpen: boolean;
+  onAddMovieOpenChange: (open: boolean) => void;
+  addMovieTriggerRef: RefObject<HTMLButtonElement | null>;
 };
 
 export default function EventMoviesSection({
@@ -85,6 +88,9 @@ export default function EventMoviesSection({
   viewMode,
   onViewModeChange,
   selection,
+  addMovieOpen,
+  onAddMovieOpenChange,
+  addMovieTriggerRef,
 }: Readonly<EventMoviesSectionProps>) {
   const isFinished = !!event.isFinished;
   const { track } = useAnalytics();
@@ -197,7 +203,7 @@ export default function EventMoviesSection({
 
   return (
     <section className="section section-movies" aria-label="Films proposés">
-      {!isFinished && participant && (
+      {!isFinished && participant && addMovieOpen && (
         <div className={styles.addSection}>
           <AddMoviePanel
             triggerLabel={t('movies.search.label')}
@@ -208,6 +214,10 @@ export default function EventMoviesSection({
             existingMovies={movies}
             onAdded={refreshAll}
             disabled={isFinished}
+            open={addMovieOpen}
+            onOpenChange={onAddMovieOpenChange}
+            hideTrigger
+            returnFocusRef={addMovieTriggerRef}
           />
         </div>
       )}
@@ -224,8 +234,9 @@ export default function EventMoviesSection({
       {moviesQuery.isSuccess && (
         <div className={styles.sortBar}>
           {movies.length > 1 && (
-            <>
+            <div className={styles.sortScroll}>
               <span className={styles.sortLabel}>{t('movies.list.sortLabel')}</span>
+              <ArrowUpDown aria-hidden size={15} className={styles.sortLabelIcon} />
               <div
                 className={styles.sortPills}
                 role="toolbar"
@@ -250,7 +261,7 @@ export default function EventMoviesSection({
                   </button>
                 ))}
               </div>
-            </>
+            </div>
           )}
           <div
             className={styles.viewToggle}

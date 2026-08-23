@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowLeft, ChevronDown, Settings } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Plus, Settings } from 'lucide-react';
 import clsx from 'clsx';
 import EventShareMenu from '@/features/events/components/EventShareMenu';
 import EventCalendarMenu from '@/features/events/components/EventCalendarMenu';
@@ -47,6 +47,7 @@ function ParticipantsStack({
       aria-controls={open ? 'event-participants-panel' : undefined}
       aria-label={ariaLabel}
       data-testid={testId}
+      data-participants-toggle
     >
       {participants.length > 0 ? (
         <span className={styles.avatars} aria-hidden>
@@ -107,6 +108,9 @@ export type EventDetailHeaderProps = {
   onOpenSettings?: () => void;
 
   wheelActions?: ReactNode;
+
+  onAddMovie?: () => void;
+  addMovieTriggerRef?: RefObject<HTMLButtonElement | null>;
 };
 
 export default function EventDetailHeader({
@@ -131,6 +135,8 @@ export default function EventDetailHeader({
   onInviteFriends,
   onOpenSettings,
   wheelActions,
+  onAddMovie,
+  addMovieTriggerRef,
 }: Readonly<EventDetailHeaderProps>) {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -256,6 +262,17 @@ export default function EventDetailHeader({
 
         <div className={styles.actions}>
           <div ref={wheelActionsRef} className={styles.wheelActions}>
+            {onAddMovie ? (
+              <button
+                ref={addMovieTriggerRef}
+                type="button"
+                className={clsx('btn btn-primary', styles.addMovieBtn)}
+                onClick={onAddMovie}
+              >
+                <Plus size={16} aria-hidden />
+                <span className={styles.addMovieLabel}>{t('movies.search.label')}</span>
+              </button>
+            ) : null}
             {wheelActions}
           </div>
           <div className={styles.utilityActions}>

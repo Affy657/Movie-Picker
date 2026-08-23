@@ -83,6 +83,9 @@ function renderSection(
           refreshAll={props.refreshAll ?? (() => undefined)}
           viewMode="grid"
           onViewModeChange={() => undefined}
+          addMovieOpen={false}
+          onAddMovieOpenChange={() => undefined}
+          addMovieTriggerRef={{ current: null }}
         />
       </MemoryRouter>
     </AppTestProviders>

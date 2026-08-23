@@ -35,6 +35,7 @@ import { useEventWheel } from '@/features/events/hooks/useEventWheel';
 import { eventCountdown, type EventCountdown } from '@/shared/utils/eventCountdown';
 import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
 import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
+import { useClickOutside } from '@/shared/hooks/useClickOutside';
 
 type ConfirmState =
   | { kind: 'remove'; participantId: string; pseudo: string }
@@ -88,8 +89,18 @@ export default function EventDetail() {
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [addMovieOpen, setAddMovieOpen] = useState(false);
+  const addMovieTriggerRef = useRef<HTMLButtonElement>(null);
   const moviesSectionRef = useRef<HTMLDivElement>(null);
   const [participantsOpen, setParticipantsOpen] = useState(false);
+  const participantsRef = useRef<HTMLDivElement>(null);
+  const closeParticipants = useCallback(() => setParticipantsOpen(false), []);
+  useClickOutside(
+    participantsRef,
+    closeParticipants,
+    participantsOpen,
+    '[data-participants-toggle]'
+  );
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
@@ -157,6 +168,12 @@ export default function EventDetail() {
       moviesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [wheel.manualMode]);
+
+  useEffect(() => {
+    if (addMovieOpen) {
+      moviesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [addMovieOpen]);
 
   const selection: MovieCardSelection | undefined = wheel.manualMode
     ? { active: true, pending: wheel.loading, onSelect: wheel.pickWinnerManually }
@@ -334,6 +351,7 @@ export default function EventDetail() {
       )
     : null;
   const canConfigure = !!event.isHost && !event.isFinished && !event.winnerMovie;
+  const canAddMovie = !event.isFinished && !!participant;
   const isFull =
     typeof maxParticipants === 'number' &&
     maxParticipants > 0 &&
@@ -379,6 +397,8 @@ export default function EventDetail() {
             />
           ) : null
         }
+        onAddMovie={canAddMovie ? () => setAddMovieOpen(true) : undefined}
+        addMovieTriggerRef={addMovieTriggerRef}
       />
       {lifecycle === 'pending' && <EventPendingBanner isHost={!!event.isHost} />}
       {canConfigure && (
@@ -417,23 +437,25 @@ export default function EventDetail() {
       {showContent && (
         <>
           {participantsOpen && (
-            <EventParticipantsList
-              participants={event.participants}
-              currentParticipantId={participant?.participantId ?? null}
-              maxParticipants={maxParticipants}
-              isHost={!!event.isHost}
-              pendingRemovalId={pendingRemovalId}
-              onRemoveParticipant={event.isFinished ? undefined : handleRemoveParticipant}
-              onInvite={
-                event.isHost && !event.isFinished ? () => setInviteModalOpen(true) : undefined
-              }
-              onLeave={canShowLeave ? handleLeaveEvent : undefined}
-              leaveDisabled={
-                isConnectedSelf &&
-                removeParticipantMutation.isPending &&
-                pendingRemovalId === participant?.participantId
-              }
-            />
+            <div ref={participantsRef}>
+              <EventParticipantsList
+                participants={event.participants}
+                currentParticipantId={participant?.participantId ?? null}
+                maxParticipants={maxParticipants}
+                isHost={!!event.isHost}
+                pendingRemovalId={pendingRemovalId}
+                onRemoveParticipant={event.isFinished ? undefined : handleRemoveParticipant}
+                onInvite={
+                  event.isHost && !event.isFinished ? () => setInviteModalOpen(true) : undefined
+                }
+                onLeave={canShowLeave ? handleLeaveEvent : undefined}
+                leaveDisabled={
+                  isConnectedSelf &&
+                  removeParticipantMutation.isPending &&
+                  pendingRemovalId === participant?.participantId
+                }
+              />
+            </div>
           )}
 
           {actionSuccess && (
@@ -462,6 +484,9 @@ export default function EventDetail() {
               viewMode={viewMode}
               onViewModeChange={handleViewModeChange}
               selection={selection}
+              addMovieOpen={addMovieOpen}
+              onAddMovieOpenChange={setAddMovieOpen}
+              addMovieTriggerRef={addMovieTriggerRef}
             />
           </div>
 
