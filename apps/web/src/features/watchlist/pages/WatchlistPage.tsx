@@ -192,6 +192,8 @@ export default function WatchlistPage() {
       </div>
 
       <section className="section">
+        <h2 className="visually-hidden">{t('watchlist.listAria')}</h2>
+
         {removeError ? (
           <p className="error" role="alert">
             {removeError}
