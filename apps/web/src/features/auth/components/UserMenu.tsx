@@ -7,6 +7,7 @@ import { useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useMenuFocus } from '@/shared/hooks/useMenuFocus';
+import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import type { UserProfile } from '@/features/auth/types';
 import styles from './UserMenu.module.css';
@@ -27,6 +28,7 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
   const close = useCallback(() => setOpen(false), []);
   useClickOutside(containerRef, close, open);
   useMenuFocus(open, panelRef, triggerRef);
+  const fitLeft = useMenuHorizontalFit(open, containerRef, panelRef);
 
   const logoutAction = useCallback(() => logout(), [logout]);
   const {
@@ -62,6 +64,7 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
           className={styles.dropdown}
           tabIndex={-1}
           aria-label={t('nav.accountMenu')}
+          style={fitLeft !== null ? { left: fitLeft, right: 'auto' } : undefined}
         >
           <p className={styles.heading}>{user.displayName}</p>
           {user.handle ? (

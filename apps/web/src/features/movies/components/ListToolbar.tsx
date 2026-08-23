@@ -84,6 +84,7 @@ export default function ListToolbar<TSortKey extends string>({
           aria-expanded={filtersOpen}
           aria-controls={filtersPanelId}
           aria-label={filtersToggleAriaLabel}
+          data-filters-toggle
         >
           <SlidersHorizontal size={15} aria-hidden />
           <span className={styles.filterBtnLabel}>{filtersLabel}</span>

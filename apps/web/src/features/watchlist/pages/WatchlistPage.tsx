@@ -9,6 +9,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
+import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import AddMoviePanel from '@/features/movies/components/AddMoviePanel';
 import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
 import LetterboxdConnectModal from '@/features/letterboxd/components/LetterboxdConnectModal';
@@ -48,6 +49,7 @@ export default function WatchlistPage() {
   const [addPanelOpen, setAddPanelOpen] = useState(false);
   const [letterboxdModalOpen, setLetterboxdModalOpen] = useState(false);
   const addButtonRef = useRef<HTMLButtonElement>(null);
+  const filtersPanelRef = useRef<HTMLDivElement>(null);
 
   const mediaTypeLabels = useMemo(
     () => ({
@@ -80,6 +82,12 @@ export default function WatchlistPage() {
     ratingScale: user?.ratingScale,
     mediaTypeLabels,
   });
+  useClickOutside(
+    filtersPanelRef,
+    () => toolbar.setFiltersOpen(false),
+    toolbar.filtersOpen && !isMobile,
+    '[data-filters-toggle]'
+  );
 
   const addMutation = useAddToWatchlist();
   const removeMutation = useRemoveFromWatchlist({
@@ -233,24 +241,26 @@ export default function WatchlistPage() {
               />
 
               {toolbar.filtersOpen && !isMobile && (
-                <MovieListFiltersPanel
-                  panelId={filtersPanelId}
-                  boxed
-                  tmdbLanguage={tmdbLanguage}
-                  labels={filtersLabels}
-                  ratingScale={user?.ratingScale}
-                  selectedGenres={toolbar.selectedGenres}
-                  onToggleGenre={toolbar.toggleGenre}
-                  selectedMediaTypes={toolbar.selectedMediaTypes}
-                  onToggleMediaType={toolbar.toggleMediaType}
-                  selectedDecade={toolbar.selectedDecade}
-                  onToggleDecade={toolbar.toggleDecade}
-                  voteMin={toolbar.voteMin}
-                  onToggleVoteMin={toolbar.toggleVoteMin}
-                  runtimeRange={toolbar.runtimeRange}
-                  onChangeRuntimeRange={toolbar.changeRuntimeRange}
-                  onReset={toolbar.clearAllFilters}
-                />
+                <div ref={filtersPanelRef}>
+                  <MovieListFiltersPanel
+                    panelId={filtersPanelId}
+                    boxed
+                    tmdbLanguage={tmdbLanguage}
+                    labels={filtersLabels}
+                    ratingScale={user?.ratingScale}
+                    selectedGenres={toolbar.selectedGenres}
+                    onToggleGenre={toolbar.toggleGenre}
+                    selectedMediaTypes={toolbar.selectedMediaTypes}
+                    onToggleMediaType={toolbar.toggleMediaType}
+                    selectedDecade={toolbar.selectedDecade}
+                    onToggleDecade={toolbar.toggleDecade}
+                    voteMin={toolbar.voteMin}
+                    onToggleVoteMin={toolbar.toggleVoteMin}
+                    runtimeRange={toolbar.runtimeRange}
+                    onChangeRuntimeRange={toolbar.changeRuntimeRange}
+                    onReset={toolbar.clearAllFilters}
+                  />
+                </div>
               )}
 
               {activeFilterCount > 0 && (

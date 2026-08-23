@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { CalendarPlus, Download, ExternalLink } from 'lucide-react';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useMenuFocus } from '@/shared/hooks/useMenuFocus';
+import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
 import { useTranslation } from '@/shared/i18n';
 import {
   buildIcsContent,
@@ -36,6 +37,7 @@ export default function EventCalendarMenu({
   const close = useCallback(() => setOpen(false), []);
   useClickOutside(containerRef, close, open);
   useMenuFocus(open, panelRef, triggerRef);
+  const fitLeft = useMenuHorizontalFit(open, containerRef, panelRef);
 
   const calendarEvent: CalendarEvent = {
     title,
@@ -90,6 +92,7 @@ export default function EventCalendarMenu({
           role="menu"
           tabIndex={-1}
           aria-label={t('events.calendar.menuLabel')}
+          style={fitLeft !== null ? { left: fitLeft, right: 'auto' } : undefined}
         >
           <a
             className={styles.item}

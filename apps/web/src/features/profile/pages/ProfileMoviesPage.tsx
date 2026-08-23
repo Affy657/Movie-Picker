@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { AlertCircle, ArrowLeft, Film, RefreshCw, Search } from 'lucide-react';
@@ -12,6 +12,7 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
+import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
@@ -79,6 +80,13 @@ export default function ProfileMoviesPage() {
   );
 
   const toolbar = useProfileMoviesToolbar({ items, tmdbLanguage, mediaTypeLabels });
+  const filtersPanelRef = useRef<HTMLDivElement>(null);
+  useClickOutside(
+    filtersPanelRef,
+    () => toolbar.setFiltersOpen(false),
+    toolbar.filtersOpen && !isMobile,
+    '[data-filters-toggle]'
+  );
 
   const filtersLabels = useMemo(
     () => ({
@@ -255,7 +263,7 @@ export default function ProfileMoviesPage() {
               isMobile={isMobile}
             />
 
-            {toolbar.filtersOpen && !isMobile && filtersPanel}
+            {toolbar.filtersOpen && !isMobile && <div ref={filtersPanelRef}>{filtersPanel}</div>}
 
             {activeFilterCount > 0 && (
               <div

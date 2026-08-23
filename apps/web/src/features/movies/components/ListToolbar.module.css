@@ -185,4 +185,17 @@
     width: 100%;
     max-width: none;
   }
+
+  .bottomRow {
+    flex-wrap: wrap;
+  }
+
+  .resultCount {
+    flex: 1 0 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    margin-left: 0;
+    white-space: normal;
+  }
 }

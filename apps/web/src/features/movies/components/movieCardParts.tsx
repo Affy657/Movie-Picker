@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import clsx from 'clsx';
 import {
@@ -479,6 +479,19 @@ function tmdbPageUrl(tmdbId: number, mediaType?: 'movie' | 'tv'): string {
   return `https://www.themoviedb.org/${type}/${tmdbId}`;
 }
 
+// Glyphes sans jambage (pas de g/j/p/q/y) : l'encre du texte a besoin du nudge optique
+// plus fort (--text-optical-nudge-caps), comme du texte tout-capitales. Cf. mémoire
+// feedback-icon-text-vertical-centering — la classification dépend du texte réellement
+// affiché (donc de la traduction active), pas d'une liste figée par clé de traduction.
+const DESCENDER_CHARS = /[gjpqy]/;
+const KEBAB_MENU_VIEWPORT_MARGIN = 8;
+
+function kebabLabelClassName(label: string): string | undefined {
+  return DESCENDER_CHARS.test(label)
+    ? styles.kebabItemLabel
+    : clsx(styles.kebabItemLabel, styles.kebabItemLabelCaps);
+}
+
 function ExternalMenuLink({
   href,
   label,
@@ -499,7 +512,7 @@ function ExternalMenuLink({
       aria-label={label}
     >
       <ExternalLink aria-hidden size={14} />
-      <span className={styles.kebabItemLabel}>{label}</span>
+      <span className={kebabLabelClassName(label)}>{label}</span>
     </a>
   );
 }
@@ -524,8 +537,28 @@ export function CardKebab({
   const rootRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const [menuPos, setMenuPos] = useState<{ top: number; right: number }>({ top: 0, right: 0 });
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number; ready: boolean }>({
+    top: 0,
+    right: 0,
+    ready: false,
+  });
   const close = useCallback(() => setOpen(false), []);
+
+  useLayoutEffect(() => {
+    if (!open || !btnRef.current || !menuRef.current) return;
+    const btnRect = btnRef.current.getBoundingClientRect();
+    const menuRect = menuRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - btnRect.bottom;
+    const top =
+      spaceBelow >= menuRect.height + KEBAB_MENU_VIEWPORT_MARGIN
+        ? btnRect.bottom + 4
+        : Math.max(KEBAB_MENU_VIEWPORT_MARGIN, btnRect.top - menuRect.height - 4);
+    const right = Math.min(
+      Math.max(window.innerWidth - btnRect.right, KEBAB_MENU_VIEWPORT_MARGIN),
+      window.innerWidth - menuRect.width - KEBAB_MENU_VIEWPORT_MARGIN
+    );
+    setMenuPos({ top, right, ready: true });
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -549,7 +582,7 @@ export function CardKebab({
   const handleToggle = () => {
     if (!open && btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect();
-      setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+      setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right, ready: false });
     }
     setOpen((v) => !v);
   };
@@ -562,6 +595,20 @@ export function CardKebab({
   const imdbHref = imdbUrl(title, year);
   const allocineHref = allocineUrl(title);
   const tmdbHref = tmdbPageUrl(tmdbId, mediaType);
+
+  const hasPrimaryGroup =
+    !!onToggleWatchlist || !!onProposeToEvent || !!onViewDetails || !!wheelExclusion;
+  const hasLinksGroup = tmdbId > 0;
+
+  const watchlistLabel = inWatchlist
+    ? t('watchlist.card.removeAction')
+    : t('watchlist.card.addAction');
+  const proposeLabel = t('watchlist.card.proposeAction');
+  const detailsLabel = t('watchlist.card.detailsAction');
+  const wheelLabel = wheelExclusion?.excluded
+    ? t('movies.list.includeInWheelAction')
+    : t('movies.list.excludeFromWheelAction');
+  const removeLabel = t('movies.list.removeButton');
 
   return (
     <div className={styles.kebab} ref={rootRef}>
@@ -587,9 +634,77 @@ export function CardKebab({
               top: `${menuPos.top}px`,
               right: `${menuPos.right}px`,
               zIndex: 9999,
+              visibility: menuPos.ready ? 'visible' : 'hidden',
             }}
           >
-            {tmdbId > 0 && (
+            {onToggleWatchlist && (
+              <button
+                type="button"
+                role="menuitem"
+                className={styles.kebabItem}
+                onClick={() => {
+                  setOpen(false);
+                  onToggleWatchlist();
+                }}
+              >
+                {inWatchlist ? (
+                  <BookmarkCheck aria-hidden size={14} />
+                ) : (
+                  <Bookmark aria-hidden size={14} />
+                )}
+                <span className={kebabLabelClassName(watchlistLabel)}>{watchlistLabel}</span>
+              </button>
+            )}
+            {onProposeToEvent && (
+              <button
+                type="button"
+                role="menuitem"
+                className={styles.kebabItem}
+                onClick={() => {
+                  setOpen(false);
+                  onProposeToEvent();
+                }}
+              >
+                <ListPlus aria-hidden size={14} />
+                <span className={kebabLabelClassName(proposeLabel)}>{proposeLabel}</span>
+              </button>
+            )}
+            {onViewDetails && (
+              <button
+                type="button"
+                role="menuitem"
+                className={styles.kebabItem}
+                onClick={() => {
+                  setOpen(false);
+                  onViewDetails();
+                }}
+              >
+                <Info aria-hidden size={14} />
+                <span className={kebabLabelClassName(detailsLabel)}>{detailsLabel}</span>
+              </button>
+            )}
+            {wheelExclusion && (
+              <button
+                type="button"
+                role="menuitem"
+                className={styles.kebabItem}
+                onClick={() => {
+                  setOpen(false);
+                  wheelExclusion.onToggle();
+                }}
+              >
+                {wheelExclusion.excluded ? (
+                  <RotateCcw aria-hidden size={14} />
+                ) : (
+                  <Disc3 aria-hidden size={14} />
+                )}
+                <span className={kebabLabelClassName(wheelLabel)}>{wheelLabel}</span>
+              </button>
+            )}
+            {hasPrimaryGroup && hasLinksGroup && (
+              <div className={styles.kebabDivider} role="separator" />
+            )}
+            {hasLinksGroup && (
               <>
                 <ExternalMenuLink
                   href={lbUrl}
@@ -613,75 +728,8 @@ export function CardKebab({
                 />
               </>
             )}
-            {onToggleWatchlist && (
-              <button
-                type="button"
-                role="menuitem"
-                className={styles.kebabItem}
-                onClick={() => {
-                  setOpen(false);
-                  onToggleWatchlist();
-                }}
-              >
-                {inWatchlist ? (
-                  <BookmarkCheck aria-hidden size={14} />
-                ) : (
-                  <Bookmark aria-hidden size={14} />
-                )}
-                <span className={styles.kebabItemLabel}>
-                  {inWatchlist ? t('watchlist.card.removeAction') : t('watchlist.card.addAction')}
-                </span>
-              </button>
-            )}
-            {onProposeToEvent && (
-              <button
-                type="button"
-                role="menuitem"
-                className={styles.kebabItem}
-                onClick={() => {
-                  setOpen(false);
-                  onProposeToEvent();
-                }}
-              >
-                <ListPlus aria-hidden size={14} />
-                <span className={styles.kebabItemLabel}>{t('watchlist.card.proposeAction')}</span>
-              </button>
-            )}
-            {onViewDetails && (
-              <button
-                type="button"
-                role="menuitem"
-                className={styles.kebabItem}
-                onClick={() => {
-                  setOpen(false);
-                  onViewDetails();
-                }}
-              >
-                <Info aria-hidden size={14} />
-                <span className={styles.kebabItemLabel}>{t('watchlist.card.detailsAction')}</span>
-              </button>
-            )}
-            {wheelExclusion && (
-              <button
-                type="button"
-                role="menuitem"
-                className={styles.kebabItem}
-                onClick={() => {
-                  setOpen(false);
-                  wheelExclusion.onToggle();
-                }}
-              >
-                {wheelExclusion.excluded ? (
-                  <RotateCcw aria-hidden size={14} />
-                ) : (
-                  <Disc3 aria-hidden size={14} />
-                )}
-                <span className={styles.kebabItemLabel}>
-                  {wheelExclusion.excluded
-                    ? t('movies.list.includeInWheelAction')
-                    : t('movies.list.excludeFromWheelAction')}
-                </span>
-              </button>
+            {canRemove && (hasPrimaryGroup || hasLinksGroup) && (
+              <div className={styles.kebabDivider} role="separator" />
             )}
             {canRemove && (
               <button
@@ -696,7 +744,7 @@ export function CardKebab({
                 title={!isMine && isHost ? t('movies.list.removeAsHostTitle') : undefined}
               >
                 <Trash2 aria-hidden size={14} />
-                <span className={styles.kebabItemLabel}>{t('movies.list.removeButton')}</span>
+                <span className={kebabLabelClassName(removeLabel)}>{removeLabel}</span>
               </button>
             )}
           </div>,

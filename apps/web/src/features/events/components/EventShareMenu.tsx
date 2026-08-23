@@ -5,6 +5,7 @@ import QrCodeButton from '@/shared/components/QrCodeButton';
 import { copyTextToClipboard } from '@/shared/utils/copyTextToClipboard';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useMenuFocus } from '@/shared/hooks/useMenuFocus';
+import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
 import { useTranslation } from '@/shared/i18n';
 import styles from './EventShareMenu.module.css';
 
@@ -38,6 +39,7 @@ export default function EventShareMenu({
   useClickOutside(containerRef, close, open);
   useMenuFocus(open, panelRef, triggerRef);
   useEffect(() => () => clearTimeout(copyTimerRef.current), []);
+  const fitLeft = useMenuHorizontalFit(open, containerRef, panelRef);
 
   const shareLabel = copied ? t('events.share.copiedButton') : t('events.share.shareButton');
 
@@ -94,6 +96,7 @@ export default function EventShareMenu({
           className={styles.dropdown}
           tabIndex={-1}
           aria-label={t('events.share.menuLabel')}
+          style={fitLeft !== null ? { left: fitLeft, right: 'auto' } : undefined}
         >
           {onInviteFriends ? (
             <button

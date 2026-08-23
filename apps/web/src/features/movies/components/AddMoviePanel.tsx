@@ -2,6 +2,7 @@ import { useCallback, useId, useRef, useState, type RefObject } from 'react';
 import { Plus, X } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
+import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import Sheet from '@/shared/components/Sheet';
 import AddMovieForm, { type AddMovieFormProps } from '@/features/movies/components/AddMovieForm';
 import styles from './AddMoviePanel.module.css';
@@ -32,14 +33,17 @@ export default function AddMoviePanel({
   const setOpen = onOpenChange ?? setOpenState;
   const panelId = useId();
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
 
   const close = useCallback(() => {
     setOpen(false);
     requestAnimationFrame(() => (returnFocusRef?.current ?? triggerRef.current)?.focus());
   }, [setOpen, returnFocusRef]);
 
+  useClickOutside(rootRef, close, open && !isMobile);
+
   return (
-    <div className={styles.root}>
+    <div ref={rootRef} className={styles.root}>
       {!open && !hideTrigger && (
         <button
           ref={triggerRef}

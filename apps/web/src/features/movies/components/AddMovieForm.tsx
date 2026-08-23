@@ -24,6 +24,7 @@ import { useSearchHistory } from '@/features/movies/hooks/useSearchHistory';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { useMovieSearchFilters } from '@/features/movies/hooks/useMovieSearchFilters';
 import MovieSearchFiltersPanel from '@/features/movies/components/MovieSearchFiltersPanel';
+import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import styles from './AddMovieForm.module.css';
 
 const SEARCH_DEBOUNCE_MS = 350;
@@ -140,6 +141,10 @@ export default function AddMovieForm({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const historyDropdownRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const filtersPanelRef = useRef<HTMLDivElement | null>(null);
+
+  const closeFilters = useCallback(() => filters.setFiltersOpen(false), [filters]);
+  useClickOutside(filtersPanelRef, closeFilters, filters.filtersOpen, '[data-filters-toggle]');
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
@@ -414,61 +419,6 @@ export default function AddMovieForm({
               aria-busy={searching}
               aria-describedby={showMinCharsHint ? minCharsHintId : undefined}
             />
-            {showHistory && (
-              <div
-                className={styles.historyDropdown}
-                id="add-movie-history"
-                ref={historyDropdownRef}
-              >
-                <div className={styles.historyHeader}>
-                  <span className={styles.historyTitle}>{t('movies.search.historyTitle')}</span>
-                  <button type="button" className={styles.historyClearBtn} onClick={clearHistory}>
-                    {t('movies.search.historyClear')}
-                  </button>
-                </div>
-                <ul className={styles.historyList}>
-                  {history.map((q) => (
-                    <li key={q} className={styles.historyItem}>
-                      <button
-                        type="button"
-                        className={styles.historyItemBtn}
-                        aria-label={t('movies.search.historySelectAria', { query: q })}
-                        onClick={() => selectHistoryItem(q)}
-                      >
-                        <svg
-                          className={styles.historyIcon}
-                          viewBox="0 0 16 16"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          aria-hidden="true"
-                        >
-                          <circle cx="6.5" cy="6.5" r="4.5" />
-                          <path d="M10.5 10.5 14 14" strokeLinecap="round" />
-                        </svg>
-                        <span className={styles.historyLabel}>{q}</span>
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.historyRemoveBtn}
-                        aria-label={t('movies.search.historyRemoveAria', { query: q })}
-                        onClick={() => removeFromHistory(q)}
-                      >
-                        <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">
-                          <path
-                            d="M1 1l10 10M11 1 1 11"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            fill="none"
-                          />
-                        </svg>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
           <button
             type="button"
@@ -480,6 +430,7 @@ export default function AddMovieForm({
             onClick={() => filters.setFiltersOpen((v) => !v)}
             aria-expanded={filters.filtersOpen}
             aria-controls={filtersPanelId}
+            data-filters-toggle
           >
             <svg
               width="14"
@@ -501,6 +452,58 @@ export default function AddMovieForm({
             )}
           </button>
         </div>
+
+        {showHistory && (
+          <div className={styles.historyDropdown} id="add-movie-history" ref={historyDropdownRef}>
+            <div className={styles.historyHeader}>
+              <span className={styles.historyTitle}>{t('movies.search.historyTitle')}</span>
+              <button type="button" className={styles.historyClearBtn} onClick={clearHistory}>
+                {t('movies.search.historyClear')}
+              </button>
+            </div>
+            <ul className={styles.historyList}>
+              {history.map((q) => (
+                <li key={q} className={styles.historyItem}>
+                  <button
+                    type="button"
+                    className={styles.historyItemBtn}
+                    aria-label={t('movies.search.historySelectAria', { query: q })}
+                    onClick={() => selectHistoryItem(q)}
+                  >
+                    <svg
+                      className={styles.historyIcon}
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      aria-hidden="true"
+                    >
+                      <circle cx="6.5" cy="6.5" r="4.5" />
+                      <path d="M10.5 10.5 14 14" strokeLinecap="round" />
+                    </svg>
+                    <span className={styles.historyLabel}>{q}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.historyRemoveBtn}
+                    aria-label={t('movies.search.historyRemoveAria', { query: q })}
+                    onClick={() => removeFromHistory(q)}
+                  >
+                    <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">
+                      <path
+                        d="M1 1l10 10M11 1 1 11"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        fill="none"
+                      />
+                    </svg>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       {filters.activeFilterChips.length > 0 && (
@@ -537,23 +540,25 @@ export default function AddMovieForm({
       )}
 
       {filters.filtersOpen && (
-        <MovieSearchFiltersPanel
-          panelId={filtersPanelId}
-          tmdbLanguage={tmdbLanguage}
-          selectedGenres={filters.selectedGenres}
-          selectedDecade={filters.selectedDecade}
-          voteMin={filters.voteMin}
-          selectedLanguage={filters.selectedLanguage}
-          availabilityFilter={filters.availabilityFilter}
-          runtimeRange={filters.runtimeRange}
-          ratingScale={user?.ratingScale}
-          onToggleGenre={filters.toggleGenre}
-          onToggleDecade={filters.toggleDecade}
-          onToggleVoteMin={filters.toggleVoteMin}
-          onToggleLanguage={filters.toggleLanguage}
-          onToggleAvailability={filters.toggleAvailability}
-          onChangeRuntimeRange={filters.changeRuntimeRange}
-        />
+        <div ref={filtersPanelRef}>
+          <MovieSearchFiltersPanel
+            panelId={filtersPanelId}
+            tmdbLanguage={tmdbLanguage}
+            selectedGenres={filters.selectedGenres}
+            selectedDecade={filters.selectedDecade}
+            voteMin={filters.voteMin}
+            selectedLanguage={filters.selectedLanguage}
+            availabilityFilter={filters.availabilityFilter}
+            runtimeRange={filters.runtimeRange}
+            ratingScale={user?.ratingScale}
+            onToggleGenre={filters.toggleGenre}
+            onToggleDecade={filters.toggleDecade}
+            onToggleVoteMin={filters.toggleVoteMin}
+            onToggleLanguage={filters.toggleLanguage}
+            onToggleAvailability={filters.toggleAvailability}
+            onChangeRuntimeRange={filters.changeRuntimeRange}
+          />
+        </div>
       )}
 
       {showMinCharsHint ? (

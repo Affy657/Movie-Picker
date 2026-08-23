@@ -3,17 +3,19 @@ import clsx from 'clsx';
 import { Check } from 'lucide-react';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useMenuFocus } from '@/shared/hooks/useMenuFocus';
+import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
 import styles from './Menu.module.css';
 
 interface MenuPanelProps {
   id?: string;
   label: string;
   className?: string;
+  style?: React.CSSProperties;
   children: React.ReactNode;
 }
 
 export const MenuPanel = forwardRef<HTMLDivElement, MenuPanelProps>(function MenuPanel(
-  { id, label, className, children },
+  { id, label, className, style, children },
   ref
 ) {
   return (
@@ -24,6 +26,7 @@ export const MenuPanel = forwardRef<HTMLDivElement, MenuPanelProps>(function Men
       aria-label={label}
       tabIndex={-1}
       className={clsx(styles.panel, className)}
+      style={style}
     >
       {children}
     </div>
@@ -64,6 +67,7 @@ export default function Menu({
   const close = useCallback(() => setOpen(false), []);
   useClickOutside(containerRef, close, open);
   useMenuFocus(open, panelRef, triggerRef);
+  const fitLeft = useMenuHorizontalFit(open, containerRef, panelRef);
 
   return (
     <div ref={containerRef} className={styles.container}>
@@ -81,7 +85,13 @@ export default function Menu({
       </button>
 
       {open ? (
-        <MenuPanel ref={panelRef} id={menuId} label={panelLabel} className={panelClassName}>
+        <MenuPanel
+          ref={panelRef}
+          id={menuId}
+          label={panelLabel}
+          className={panelClassName}
+          style={fitLeft !== null ? { left: fitLeft, right: 'auto' } : undefined}
+        >
           {children(close)}
         </MenuPanel>
       ) : null}

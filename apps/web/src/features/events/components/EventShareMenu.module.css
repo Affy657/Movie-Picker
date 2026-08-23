@@ -31,6 +31,7 @@
   top: calc(100% + 0.5rem);
   right: 0;
   width: 15rem;
+  max-width: calc(100vw - 1rem);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -125,10 +126,5 @@
     overflow: hidden;
     clip-path: inset(50%);
     white-space: nowrap;
-  }
-
-  .dropdown {
-    right: auto;
-    left: 0;
   }
 }
