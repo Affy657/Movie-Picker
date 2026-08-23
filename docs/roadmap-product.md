@@ -134,6 +134,7 @@ Découpage par version côté **métier / utilisateur**.
 - ⬜ **Collections TMDB** : carrousels de franchises et collections (Marvel, Pixar, trilogies…) ; clic sur un film ouvre sa fiche avec option « Proposer dans une soirée » — données nativement disponibles via l'API TMDB.
 - ⬜ **Recherche de films depuis la home** : barre de recherche TMDB accessible sans compte pour explorer et s'inspirer ; résultats avec fiche rapide (synopsis, note, streaming dispo).
 - ⬜ **Films populaires par genre** : onglets ou filtres (Action, Comédie, Thriller…) sur le bloc tendances pour affiner l'exploration.
+- ⬜ **Actuellement au cinéma** : carrousel des films encore en salles (endpoint TMDB « Now Playing », région FR) — encourage aussi la sortie ciné, pas seulement les soirées streaming à la maison.
 
 **Blocs visibles connecté uniquement**
 - ⬜ **Prochaine soirée mise en avant** : carte principale avec titre, heure et accès direct à la soirée imminente — évite de passer par « Mes soirées ».
@@ -184,3 +185,18 @@ Découpage par version côté **métier / utilisateur**.
 - **Proposition de film anonyme** : option dans les paramètres de la soirée activable par l'hôte — le nom du proposant n'est plus affiché sur les cards de films tant que la roue n'a pas été lancée, pour éviter les votes d'affinité plutôt que de goût.
 - **Chat de soirée** : panneau de discussion en temps réel accessible depuis la page soirée — bouton d'ouverture d'un panneau latéral sur desktop, onglet dédié sur mobile ; destiné à remplacer les mini-commentaires par film (peu utilisés, intégration visuelle imparfaite dans les cards) par un seul espace d'échange centralisé pour toute la soirée.
 - **Événements hebdomadaires** : dépend de la home page V1.5 — événement qui change chaque semaine, sous différentes formes possibles (thème à respecter dans le film gagnant d'une soirée, événement saisonnier type Halloween ou Noël, etc.) ; à définir plus précisément une fois la home page livrée.
+- **Pioche aléatoire dans la watchlist** : bouton qui tire un film au hasard parmi les films « à voir » de la watchlist, pour trancher rapidement quand on ne sait pas quoi proposer ; le film tiré peut ensuite être proposé dans une soirée en un clic, comme la proposition rapide existante depuis la watchlist.
+- **Écart watchlist Movie Picker / Letterboxd** : pour les utilisateurs synchronisés avec Letterboxd, badge sur les films de la watchlist Movie Picker absents de la watchlist Letterboxd — typiquement des films ajoutés depuis une soirée plutôt qu'importés, que la synchronisation à sens unique ne remonte jamais côté Letterboxd. Dépend de l'intégration Letterboxd (V1.4).
+- **Watchlist d'un autre utilisateur** : consulter la watchlist d'un autre utilisateur depuis son profil public `/u/:handle`, avec un réglage de visibilité dédié indépendant de celui du profil. Dépend de la watchlist personnelle (V1.4) et du profil public (V1.2).
+- **Description de soirée** : champ de description libre en complément du titre à la création d'une soirée, modifiable ensuite par l'hôte ; affiché sur la page soirée pour donner du contexte (thème de la soirée, consignes, etc.).
+- **Soirée à distance synchronisée** : intégrer dans le parcours soirée l'usage d'une extension de visionnage synchronisé existante (Teleparty, Scener…) — une fois le film gagnant désigné, la page soirée guide l'hôte pour lancer une session et partage le lien généré aux participants via le mécanisme d'invitation existant.
+- **Vrai support des séries (progression par épisode)** : suivre la progression de visionnage saison / épisode en cours et le prochain épisode à voir pour une série, via les endpoints TMDB dédiés — remplace le traitement actuel d'une série comme un simple film (réglage hôte « Séries TV OK » sans notion d'épisode). Synergie avec la soirée récurrente (backlog) pour un groupe qui suit la même série au fil des séances.
+- **Connexion Discord, Meta et Twitch** : trois fournisseurs OAuth supplémentaires aux côtés de Google et GitHub, dans la section « Connexions » existante.
+- **Passkeys (WebAuthn)** : connexion sans mot de passe via biométrie ou PIN de l'appareil, en complément de l'e-mail / mot de passe et des fournisseurs OAuth.
+- **Double authentification (2FA/TOTP)** : code à 6 chiffres généré par une app d'authentification, activable en option dans les paramètres de compte.
+- **Sessions actives** : liste des appareils et navigateurs connectés dans la section « Connexions », avec révocation individuelle.
+- **Alerte nouvelle connexion** : e-mail automatique envoyé à l'utilisateur lors d'une connexion depuis un nouvel appareil ou navigateur.
+- **FAQ / Centre d'aide** : page qui répond aux questions récurrentes (fonctionnement de la roue, invitation, votes…), accessible depuis le footer.
+- **Contact / Support** : formulaire ou adresse dédiée pour signaler un problème, distinct du bouton « Proposer une idée » réservé aux suggestions de features.
+- **Onboarding pour nouveaux utilisateurs** : mini tour guidé ou écran de bienvenue à la première connexion, expliquant le concept (créer une soirée, voter, la roue).
+- **Statut du service** : page publique indiquant si l'API et le site sont opérationnels.
