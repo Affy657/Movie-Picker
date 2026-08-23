@@ -282,6 +282,36 @@ html {
   scrollbar-gutter: stable;
 }
 
+@media (pointer: fine) {
+  dialog,
+  dialog * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+  }
+
+  dialog::-webkit-scrollbar,
+  dialog ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  dialog::-webkit-scrollbar-track,
+  dialog ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  dialog::-webkit-scrollbar-thumb,
+  dialog ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: var(--radius-pill);
+  }
+
+  dialog::-webkit-scrollbar-thumb:hover,
+  dialog ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary);
+  }
+}
+
 body {
   margin: 0;
   font-family:
