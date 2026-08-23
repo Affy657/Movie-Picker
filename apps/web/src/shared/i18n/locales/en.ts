@@ -976,6 +976,10 @@ export const en: Locale = {
       loadError: 'Statistics could not be loaded.',
       retry: 'Retry',
     },
+    movies: {
+      title: 'Recently proposed movies',
+      winnerBadge: 'Winning movie',
+    },
     streak: {
       weekLabel: 'week in a row',
       weeksLabel: 'weeks in a row',

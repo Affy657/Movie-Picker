@@ -132,6 +132,44 @@ public sealed class MongoMovieRepository : IMovieRepository
         return docs.ConvertAll(MovieMapper.ToDomain);
     }
 
+    public async Task<IReadOnlyList<Movie>> ListByParticipantIdsPagedAsync(
+        IReadOnlyCollection<string> participantIds,
+        int skip,
+        int take,
+        CancellationToken ct = default)
+    {
+        if (participantIds.Count == 0)
+            return [];
+
+        var ids = participantIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
+        if (ids.Count == 0)
+            return [];
+
+        var filter = Builders<MovieDocument>.Filter.In(x => x.ParticipantId, ids);
+        var docs = await _collection.Find(filter)
+            .SortByDescending(x => x.CreatedAt)
+            .Skip(skip)
+            .Limit(take)
+            .ToListAsync(ct);
+        return docs.ConvertAll(MovieMapper.ToDomain);
+    }
+
+    public async Task<int> CountByParticipantIdsAsync(
+        IReadOnlyCollection<string> participantIds,
+        CancellationToken ct = default)
+    {
+        if (participantIds.Count == 0)
+            return 0;
+
+        var ids = participantIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
+        if (ids.Count == 0)
+            return 0;
+
+        var filter = Builders<MovieDocument>.Filter.In(x => x.ParticipantId, ids);
+        var count = await _collection.CountDocumentsAsync(filter, cancellationToken: ct);
+        return (int)count;
+    }
+
     public async Task<IReadOnlyList<Movie>> ListMissingGenresAsync(int limit, CancellationToken ct = default)
     {
         if (limit <= 0)

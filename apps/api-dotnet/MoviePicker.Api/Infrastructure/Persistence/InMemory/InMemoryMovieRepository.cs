@@ -150,6 +150,40 @@ public sealed class InMemoryMovieRepository : IMovieRepository
         return Task.FromResult<IReadOnlyList<Movie>>(list);
     }
 
+    public Task<IReadOnlyList<Movie>> ListByParticipantIdsPagedAsync(
+        IReadOnlyCollection<string> participantIds,
+        int skip,
+        int take,
+        CancellationToken ct = default)
+    {
+        if (participantIds.Count == 0)
+            return Task.FromResult<IReadOnlyList<Movie>>(Array.Empty<Movie>());
+
+        var set = participantIds.Where(id => !string.IsNullOrWhiteSpace(id)).ToHashSet();
+        if (set.Count == 0)
+            return Task.FromResult<IReadOnlyList<Movie>>(Array.Empty<Movie>());
+
+        var list = _byId.Values
+            .Where(m => set.Contains(m.ParticipantId))
+            .OrderByDescending(m => m.CreatedAt)
+            .Skip(skip)
+            .Take(take)
+            .ToList();
+        return Task.FromResult<IReadOnlyList<Movie>>(list);
+    }
+
+    public Task<int> CountByParticipantIdsAsync(
+        IReadOnlyCollection<string> participantIds,
+        CancellationToken ct = default)
+    {
+        if (participantIds.Count == 0)
+            return Task.FromResult(0);
+
+        var set = participantIds.Where(id => !string.IsNullOrWhiteSpace(id)).ToHashSet();
+        var count = _byId.Values.Count(m => set.Contains(m.ParticipantId));
+        return Task.FromResult(count);
+    }
+
     public Task<IReadOnlyList<Movie>> ListMissingGenresAsync(int limit, CancellationToken ct = default)
     {
         if (limit <= 0)

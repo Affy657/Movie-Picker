@@ -1,4 +1,5 @@
 import { fetchApi } from '@/shared/api/client';
+import type { MovieMediaType } from '@/shared/types/movie';
 
 export interface PublicProfile {
   handle: string;
@@ -80,4 +81,31 @@ export async function fetchFollowers(handle: string): Promise<FollowListResponse
 
 export async function fetchUserStats(handle: string, signal?: AbortSignal): Promise<UserStats> {
   return fetchApi<UserStats>(`/users/${encodeURIComponent(handle)}/stats`, { signal });
+}
+
+export interface UserMovieItem {
+  title: string;
+  year: string;
+  posterPath: string | null;
+  genreIds: number[];
+  mediaType: MovieMediaType;
+  proposedAt: string;
+  isWinner: boolean;
+}
+
+export interface UserMoviesResponse {
+  items: UserMovieItem[];
+  totalCount: number;
+}
+
+export async function fetchUserMovies(
+  handle: string,
+  skip: number,
+  take: number,
+  signal?: AbortSignal
+): Promise<UserMoviesResponse> {
+  return fetchApi<UserMoviesResponse>(
+    `/users/${encodeURIComponent(handle)}/movies?skip=${skip}&take=${take}`,
+    { signal }
+  );
 }

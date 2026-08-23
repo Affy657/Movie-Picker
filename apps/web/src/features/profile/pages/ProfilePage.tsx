@@ -28,6 +28,9 @@ import styles from './ProfilePage.module.css';
 
 const FollowListModal = lazy(() => import('@/features/profile/components/FollowListModal'));
 const ProfileStatsSection = lazy(() => import('@/features/profile/components/ProfileStatsSection'));
+const ProfileMoviesSection = lazy(
+  () => import('@/features/profile/components/ProfileMoviesSection')
+);
 
 const COPY_FEEDBACK_MS = 2000;
 
@@ -231,6 +234,10 @@ export default function ProfilePage() {
               <ProfileStatsSection stats={statsQuery.data} />
             </Suspense>
           )}
+
+          <Suspense fallback={null}>
+            <ProfileMoviesSection handle={profile.handle} />
+          </Suspense>
         </div>
       </div>
 

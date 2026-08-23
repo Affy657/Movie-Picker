@@ -69,6 +69,44 @@ public sealed class PublicProfileEndpointsTests : IClassFixture<MoviePickerAppli
     }
 
     [Fact]
+    public async Task Movies_PublicProfile_ReturnsEmptyListWithZeroTotal()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Sans Film");
+        var me = await GetMeAsync(client);
+
+        var anon = _factory.CreateClient();
+        var res = await anon.GetAsync($"/api/v1/users/{me.Handle}/movies");
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+        var movies = await res.Content.ReadFromJsonAsync<UserMoviesResponse>(JsonOptions);
+        Assert.NotNull(movies);
+        Assert.Empty(movies!.Items);
+        Assert.Equal(0, movies.TotalCount);
+    }
+
+    [Fact]
+    public async Task Movies_PrivateProfile_Returns404()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Films Discrets");
+        var me = await GetMeAsync(client);
+
+        var patch = await client.PatchAsJsonAsync("/api/v1/auth/me", new { isProfilePublic = false });
+        Assert.Equal(HttpStatusCode.OK, patch.StatusCode);
+
+        var anon = _factory.CreateClient();
+        var res = await anon.GetAsync($"/api/v1/users/{me.Handle}/movies");
+        Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task Movies_UnknownHandle_Returns404()
+    {
+        var anon = _factory.CreateClient();
+        var res = await anon.GetAsync("/api/v1/users/nobody_here_xyz/movies");
+        Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
+    }
+
+    [Fact]
     public async Task HandleAvailable_ReflectsExistingHandles()
     {
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Taken User");

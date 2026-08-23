@@ -994,6 +994,10 @@
       loadError: "Les statistiques n'ont pas pu être chargées.",
       retry: 'Réessayer',
     },
+    movies: {
+      title: 'Derniers films proposés',
+      winnerBadge: 'Film gagnant',
+    },
     streak: {
       weekLabel: 'semaine de suite',
       weeksLabel: 'semaines de suite',
