@@ -10,6 +10,7 @@ public sealed class UserMoviesResponse
 
 public sealed class UserMovieItem
 {
+    public int TmdbId { get; init; }
     public string Title { get; init; } = string.Empty;
     public string Year { get; init; } = string.Empty;
     public string? PosterPath { get; init; }

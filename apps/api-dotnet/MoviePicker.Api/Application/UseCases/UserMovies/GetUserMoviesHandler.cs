@@ -66,6 +66,7 @@ public sealed class GetUserMoviesHandler : IGetUserMoviesHandler
                 var isWinner = evt is not null && evt.WinnerMovieId == m.Id && evt.IsFinished(now);
                 return new UserMovieItem
                 {
+                    TmdbId = m.TmdbId,
                     Title = m.Title,
                     Year = m.Year,
                     PosterPath = m.PosterPath,

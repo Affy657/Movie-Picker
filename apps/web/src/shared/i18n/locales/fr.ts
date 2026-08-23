@@ -935,6 +935,7 @@
     editProfile: 'Modifier mon profil',
     memberSince: 'Membre depuis {{date}}',
     copyLink: 'Copier le lien du profil',
+    qrCopyLabel: 'Copier le lien',
     linkCopied: 'Lien copié !',
     showQr: 'Afficher le QR code du profil',
     closeQr: 'Fermer le QR code',
@@ -998,6 +999,9 @@
       title: 'Derniers films proposés',
       winnerBadge: 'Film gagnant',
       winnerBadgeShort: 'Gagnant',
+      card: {
+        openDetailsAria: 'Voir les détails de « {{title}} »',
+      },
       seeAll: 'Tout voir',
       backLink: 'Retour au profil',
       pageTitle: 'Les films de {{name}}',

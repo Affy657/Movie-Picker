@@ -33,6 +33,7 @@ const STATS = {
 
 function movieItem(overrides: Record<string, unknown> = {}) {
   return {
+    tmdbId: 27205,
     title: 'Inception',
     year: '2010',
     posterPath: null,
@@ -71,6 +72,9 @@ describe('ProfileMoviesPage (MSW)', () => {
         ],
         totalCount: 3,
       })
+    ),
+    http.get(`${TEST_API_V1}/movies/tmdb/:tmdbId/details`, () =>
+      HttpResponse.json({ tmdbId: 27205, title: 'Inception', overview: 'Un voleur de rêves.' })
     )
   );
 
@@ -101,6 +105,16 @@ describe('ProfileMoviesPage (MSW)', () => {
 
     expect(screen.getByText('Arrival')).toBeInTheDocument();
     expect(screen.queryByText('Inception')).not.toBeInTheDocument();
+  });
+
+  it('ouvre la modale de détails au clic sur une affiche', async () => {
+    const user = userEvent.setup();
+    renderPage('alice');
+    await screen.findByText('Inception');
+
+    await user.click(screen.getByRole('button', { name: /voir les détails de « inception »/i }));
+
+    expect(await screen.findByRole('heading', { name: 'Inception', level: 2 })).toBeInTheDocument();
   });
 
   it("affiche l'introuvable pour un profil privé ou inconnu", async () => {

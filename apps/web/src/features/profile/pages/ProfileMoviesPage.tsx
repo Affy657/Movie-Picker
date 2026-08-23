@@ -1,7 +1,7 @@
-import { useId, useMemo } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
-import { AlertCircle, ArrowLeft, Film, RefreshCw, Search, Trophy } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Film, RefreshCw, Search } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import EmptyState from '@/shared/components/EmptyState';
 import Sheet from '@/shared/components/Sheet';
@@ -12,16 +12,17 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useLocale, useTranslation } from '@/shared/i18n';
-import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
-import { metaGenresLabel } from '@/shared/utils/movieMetaLine';
+import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
+import MovieListFiltersPanel from '@/features/movies/components/MovieListFiltersPanel';
 import {
   fetchPublicProfile,
   fetchUserStats,
   fetchUserMovies,
+  type UserMovieItem,
 } from '@/features/profile/api/profileApi';
 import { useProfileMoviesToolbar } from '@/features/profile/hooks/useProfileMoviesToolbar';
 import ProfileMoviesToolbar from '@/features/profile/components/ProfileMoviesToolbar';
-import WatchlistFiltersPanel from '@/features/watchlist/components/WatchlistFiltersPanel';
+import ProfileMovieCard from '@/features/profile/components/ProfileMovieCard';
 import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
 import styles from './ProfileMoviesPage.module.css';
 
@@ -72,6 +73,20 @@ export default function ProfileMoviesPage() {
 
   const toolbar = useProfileMoviesToolbar({ items, tmdbLanguage, mediaTypeLabels });
 
+  const filtersLabels = useMemo(
+    () => ({
+      genre: t('watchlist.toolbar.filterGenre'),
+      type: t('watchlist.toolbar.filterType'),
+      typeMovie: t('watchlist.toolbar.filterTypeMovie'),
+      typeTv: t('watchlist.toolbar.filterTypeTv'),
+      decade: t('watchlist.toolbar.filterDecade'),
+      resetAll: t('profile.movies.toolbar.filtersResetAll'),
+    }),
+    [t]
+  );
+
+  const [detailsTarget, setDetailsTarget] = useState<UserMovieItem | null>(null);
+
   useDocumentTitle(
     pageTitle(
       profile ? t('profile.movies.pageTitle', { name: profile.displayName }) : t('profile.loading')
@@ -121,10 +136,11 @@ export default function ProfileMoviesPage() {
   const subtitle = `${t(totalCount === 1 ? 'profile.movies.pageSubtitleOne' : 'profile.movies.pageSubtitle', { count: totalCount })}${winnersCount > 0 ? t(winnersCount === 1 ? 'profile.movies.pageWinnersOne' : 'profile.movies.pageWinners', { count: winnersCount }) : ''}`;
 
   const filtersPanel = (
-    <WatchlistFiltersPanel
+    <MovieListFiltersPanel
       panelId={filtersPanelId}
       boxed
       tmdbLanguage={tmdbLanguage}
+      labels={filtersLabels}
       selectedGenres={toolbar.selectedGenres}
       onToggleGenre={toolbar.toggleGenre}
       selectedMediaTypes={toolbar.selectedMediaTypes}
@@ -151,6 +167,8 @@ export default function ProfileMoviesPage() {
           <p className={styles.pageSubtitle}>{subtitle}</p>
         </div>
       </div>
+
+      <h2 className="visually-hidden">{t('profile.movies.listAria')}</h2>
 
       {moviesQuery.isPending ? (
         <WatchlistSkeleton label={t('profile.loading')} gridClassName={styles.grid} />
@@ -267,43 +285,14 @@ export default function ProfileMoviesPage() {
             />
           ) : (
             <ul className={styles.grid} aria-label={t('profile.movies.listAria')}>
-              {toolbar.revealedItems.map((item, index) => {
-                const posterRaw = posterImageSrc(item.posterPath);
-                const posterSrc = posterRaw ? tmdbPosterSrcForListDisplay(posterRaw) : undefined;
-                const genresLabel = metaGenresLabel(item.genreIds, tmdbLanguage) ?? '';
-                return (
-                  <li key={`${item.proposedAt}-${index}`} className={styles.card}>
-                    <span className={styles.posterWrap}>
-                      {posterSrc ? (
-                        <img
-                          src={posterSrc}
-                          alt=""
-                          className={styles.poster}
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      ) : (
-                        <span className={styles.posterPlaceholder} aria-hidden>
-                          <Film size={22} />
-                        </span>
-                      )}
-                      {item.isWinner && (
-                        <span className={styles.winnerBadge}>
-                          <Trophy size={11} aria-hidden />
-                          <span className={styles.winnerBadgeLabel}>
-                            {t('profile.movies.winnerBadgeShort')}
-                          </span>
-                        </span>
-                      )}
-                    </span>
-                    <div className={styles.cardBody}>
-                      <h2 className={styles.cardTitle}>{item.title}</h2>
-                      <span className={styles.cardMeta}>{item.year}</span>
-                      {genresLabel && <span className={styles.cardGenres}>{genresLabel}</span>}
-                    </div>
-                  </li>
-                );
-              })}
+              {toolbar.revealedItems.map((item, index) => (
+                <ProfileMovieCard
+                  key={`${item.proposedAt}-${index}`}
+                  item={item}
+                  tmdbLanguage={tmdbLanguage}
+                  onOpenDetails={() => setDetailsTarget(item)}
+                />
+              ))}
             </ul>
           )}
 
@@ -318,6 +307,16 @@ export default function ProfileMoviesPage() {
             </button>
           )}
         </>
+      )}
+
+      {detailsTarget && (
+        <MovieDetailsModal
+          open={!!detailsTarget}
+          movieTitle={detailsTarget.title}
+          tmdbId={detailsTarget.tmdbId}
+          mediaType={detailsTarget.mediaType}
+          onClose={() => setDetailsTarget(null)}
+        />
       )}
     </PageLayout>
   );

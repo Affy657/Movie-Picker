@@ -21,7 +21,7 @@ import {
 import type { WatchlistItem } from '@/features/watchlist/api/watchlistApi';
 import { useWatchlistToolbar } from '@/features/watchlist/hooks/useWatchlistToolbar';
 import WatchlistToolbar from '@/features/watchlist/components/WatchlistToolbar';
-import WatchlistFiltersPanel from '@/features/watchlist/components/WatchlistFiltersPanel';
+import MovieListFiltersPanel from '@/features/movies/components/MovieListFiltersPanel';
 import WatchlistMovieCard from '@/features/watchlist/components/WatchlistMovieCard';
 import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
 import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventModal';
@@ -53,6 +53,22 @@ export default function WatchlistPage() {
     () => ({
       movie: t('watchlist.toolbar.filterTypeMovie'),
       tv: t('watchlist.toolbar.filterTypeTv'),
+    }),
+    [t]
+  );
+
+  const filtersLabels = useMemo(
+    () => ({
+      genre: t('watchlist.toolbar.filterGenre'),
+      type: t('watchlist.toolbar.filterType'),
+      typeMovie: t('watchlist.toolbar.filterTypeMovie'),
+      typeTv: t('watchlist.toolbar.filterTypeTv'),
+      decade: t('watchlist.toolbar.filterDecade'),
+      voteMin: t('watchlist.toolbar.filterVoteMin'),
+      duration: t('watchlist.toolbar.filterDuration'),
+      durationMinAria: t('movies.search.durationMinAria'),
+      durationMaxAria: t('movies.search.durationMaxAria'),
+      resetAll: t('watchlist.toolbar.filtersResetAll'),
     }),
     [t]
   );
@@ -215,10 +231,11 @@ export default function WatchlistPage() {
               />
 
               {toolbar.filtersOpen && !isMobile && (
-                <WatchlistFiltersPanel
+                <MovieListFiltersPanel
                   panelId={filtersPanelId}
                   boxed
                   tmdbLanguage={tmdbLanguage}
+                  labels={filtersLabels}
                   ratingScale={user?.ratingScale}
                   selectedGenres={toolbar.selectedGenres}
                   onToggleGenre={toolbar.toggleGenre}
@@ -288,8 +305,9 @@ export default function WatchlistPage() {
                   </>
                 }
               >
-                <WatchlistFiltersPanel
+                <MovieListFiltersPanel
                   tmdbLanguage={tmdbLanguage}
+                  labels={filtersLabels}
                   ratingScale={user?.ratingScale}
                   selectedGenres={toolbar.selectedGenres}
                   onToggleGenre={toolbar.toggleGenre}

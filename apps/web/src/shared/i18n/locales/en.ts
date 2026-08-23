@@ -917,6 +917,7 @@ export const en: Locale = {
     editProfile: 'Edit my profile',
     memberSince: 'Member since {{date}}',
     copyLink: 'Copy profile link',
+    qrCopyLabel: 'Copy link',
     linkCopied: 'Link copied!',
     showQr: 'Show profile QR code',
     closeQr: 'Close QR code',
@@ -980,6 +981,9 @@ export const en: Locale = {
       title: 'Recently proposed movies',
       winnerBadge: 'Winning movie',
       winnerBadgeShort: 'Winner',
+      card: {
+        openDetailsAria: 'View details for "{{title}}"',
+      },
       seeAll: 'See all',
       backLink: 'Back to profile',
       pageTitle: "{{name}}'s movies",

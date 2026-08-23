@@ -17,8 +17,6 @@ export type SortDirection = 'asc' | 'desc';
 
 const SORT_KEYS: WatchlistSortKey[] = ['createdAt', 'title', 'voteAverage', 'duration'];
 
-export const WATCHLIST_VOTE_MIN_OPTIONS = [{ tmdb: 5 }, { tmdb: 6 }, { tmdb: 7 }, { tmdb: 8 }];
-
 const DEFAULT_DIRECTION: Record<WatchlistSortKey, SortDirection> = {
   createdAt: 'desc',
   title: 'asc',

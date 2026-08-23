@@ -7,6 +7,7 @@ const MEDIA_TYPE_LABELS = { movie: 'Films', tv: 'Séries' };
 
 function item(overrides: Partial<UserMovieItem>): UserMovieItem {
   return {
+    tmdbId: 1,
     title: 'Titre',
     year: '2020',
     posterPath: null,

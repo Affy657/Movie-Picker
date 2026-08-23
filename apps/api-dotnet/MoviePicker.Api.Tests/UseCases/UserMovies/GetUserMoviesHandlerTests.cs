@@ -151,6 +151,7 @@ public sealed class GetUserMoviesHandlerTests
 
         Assert.Equal(11, res.TotalCount);
         var item = Assert.Single(res.Items);
+        Assert.Equal(1, item.TmdbId);
         Assert.Equal("Movie m1", item.Title);
         Assert.Equal("2024", item.Year);
         Assert.Equal("/poster.jpg", item.PosterPath);

@@ -84,6 +84,7 @@ export async function fetchUserStats(handle: string, signal?: AbortSignal): Prom
 }
 
 export interface UserMovieItem {
+  tmdbId: number;
   title: string;
   year: string;
   posterPath: string | null;

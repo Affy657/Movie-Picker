@@ -101,7 +101,7 @@ export default function ProfileActions({
           avatarId={profile.avatarId}
           displayName={profile.displayName}
           handle={profile.handle}
-          copyLabel={t('profile.copyLink')}
+          copyLabel={t('profile.qrCopyLabel')}
           copiedLabel={t('profile.linkCopied')}
           downloadLabel={t('profile.qrDownload')}
         />
