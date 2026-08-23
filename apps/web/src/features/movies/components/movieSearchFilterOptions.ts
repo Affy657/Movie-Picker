@@ -7,6 +7,13 @@ export const MOVIE_GENRE_IDS = [
 
 export const VOTE_MIN_OPTIONS = [{ tmdb: 6 }, { tmdb: 7 }, { tmdb: 8 }] as const;
 
+export const MOVIE_LIST_VOTE_MIN_OPTIONS = [
+  { tmdb: 5 },
+  { tmdb: 6 },
+  { tmdb: 7 },
+  { tmdb: 8 },
+] as const;
+
 export function voteMinLabel(tmdb: number, scale: RatingScale = 'five'): string {
   if (scale === 'ten') return String(tmdb);
   const five = tmdb / 2;

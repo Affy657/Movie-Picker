@@ -29,6 +29,7 @@ const MyEventsPage = lazy(() => import('@/features/events/pages/MyEventsPage'));
 const WatchlistPage = lazy(() => import('@/features/watchlist/pages/WatchlistPage'));
 const NotificationsPage = lazy(() => import('@/features/notifications/pages/NotificationsPage'));
 const ProfilePage = lazy(() => import('@/features/profile/pages/ProfilePage'));
+const ProfileMoviesPage = lazy(() => import('@/features/profile/pages/ProfileMoviesPage'));
 const NotFoundPage = lazy(() => import('@/app/pages/NotFoundPage'));
 
 function PageFallback() {
@@ -134,6 +135,7 @@ export function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route path={ROUTES.profileMoviesPattern} element={<ProfileMoviesPage />} />
         <Route path={ROUTES.profilePattern} element={<ProfilePage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

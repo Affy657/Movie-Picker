@@ -10,15 +10,17 @@ import {
   eventSummaryCardStyles,
 } from '@/features/events/components/EventSummaryCard';
 import { useEligibleEventsForPropose } from '@/features/watchlist/hooks/useEligibleEventsForPropose';
-import { useProposeMovieToEvent } from '@/features/watchlist/hooks/useProposeMovieToEvent';
-import type { WatchlistItem } from '@/features/watchlist/api/watchlistApi';
+import {
+  useProposeMovieToEvent,
+  type ProposableMovie,
+} from '@/features/watchlist/hooks/useProposeMovieToEvent';
 import styles from './ProposeToEventModal.module.css';
 
 type RowState = { status: 'idle' | 'pending' | 'done' | 'error'; error?: string };
 
 interface ProposeToEventModalProps {
   open: boolean;
-  movie: WatchlistItem;
+  movie: ProposableMovie;
   onClose: () => void;
 }
 

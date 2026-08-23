@@ -140,7 +140,7 @@
   text-overflow: ellipsis;
 }
 
-.tvBadge {
+.badge {
   position: absolute;
   top: 0.5rem;
   left: 0.5rem;
@@ -159,4 +159,12 @@
   text-transform: uppercase;
   letter-spacing: var(--tracking-wide);
   line-height: var(--leading-none);
+}
+
+/* Neutralizes .badge's own absolute position when several badges are stacked
+   by a shared positioned wrapper (see ProfileMovieCard.module.css .badgeGroup). */
+.badgeStacked {
+  position: static;
+  top: auto;
+  left: auto;
 }

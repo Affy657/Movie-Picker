@@ -5,6 +5,7 @@ namespace MoviePicker.Api.Application.Ports;
 public interface IMovieRepository
 {
     Task<Movie?> GetByIdAsync(string movieId, CancellationToken ct = default);
+    Task<IReadOnlyList<Movie>> ListByIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default);
     Task<Movie?> GetByIdAndEventIdAsync(string movieId, string eventId, CancellationToken ct = default);
     Task<IReadOnlyList<Movie>> ListByEventIdAsync(string eventId, CancellationToken ct = default);
     Task<bool> ExistsByEventAndTmdbIdAsync(string eventId, int tmdbId, MovieMediaType mediaType, CancellationToken ct = default);
@@ -19,6 +20,14 @@ public interface IMovieRepository
     Task UpdateGenresAsync(string movieId, IReadOnlyList<int> genreIds, CancellationToken ct = default);
 
     Task<IReadOnlyList<Movie>> ListByParticipantIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default);
+
+    Task<IReadOnlyList<Movie>> ListByParticipantIdsPagedAsync(
+        IReadOnlyCollection<string> participantIds,
+        int skip,
+        int take,
+        CancellationToken ct = default);
+
+    Task<int> CountByParticipantIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default);
 
     Task<IReadOnlyList<Movie>> ListMissingGenresAsync(int limit, CancellationToken ct = default);
 

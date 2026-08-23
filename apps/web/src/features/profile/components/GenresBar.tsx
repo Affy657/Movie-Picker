@@ -1,12 +1,12 @@
-import { useLocale } from '@/shared/i18n';
+import { useLocale, useTranslation } from '@/shared/i18n';
 import type { GenreCount } from '@/features/profile/api/profileApi';
 import { genreLabel } from '@/features/profile/lib/tmdbGenres';
 import styles from './ProfileStatsSection.module.css';
 
-const PALETTE = ['#3db4f2', '#4cd6b4', '#9b7bff', '#f2698a', '#f5a623', '#5c7cfa'];
+const HUES = [255, 195, 155, 310, 65, 20];
 
 function genreColor(index: number): string {
-  return PALETTE[index % PALETTE.length]!;
+  return `oklch(0.72 0.13 ${HUES[index % HUES.length]})`;
 }
 
 interface Props {
@@ -15,6 +15,7 @@ interface Props {
 
 export default function GenresBar({ genres }: Readonly<Props>) {
   const { locale } = useLocale();
+  const { t } = useTranslation();
   const total = genres.reduce((sum, g) => sum + g.count, 0);
   if (total === 0) return null;
 
@@ -28,6 +29,9 @@ export default function GenresBar({ genres }: Readonly<Props>) {
 
   return (
     <div className={styles.genres}>
+      <p className={styles.genresCaption}>
+        {t('profile.stats.genresCumulative', { count: String(total) })}
+      </p>
       <ul className={styles.genreChips}>
         {segments.map((s) => (
           <li key={s.key} className={styles.genreChip}>

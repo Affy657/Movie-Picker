@@ -16,6 +16,8 @@ import MyEventsPage from '@/features/events/pages/MyEventsPage';
 import NotFoundPage from '@/app/pages/NotFoundPage';
 import DonatePage from '@/app/pages/DonatePage';
 import ProfilePage from '@/features/profile/pages/ProfilePage';
+import ProfileMoviesPage from '@/features/profile/pages/ProfileMoviesPage';
+import WatchlistPage from '@/features/watchlist/pages/WatchlistPage';
 import ServerErrorPage from '@/shared/components/ServerErrorPage';
 
 const AUTH_USER = {
@@ -168,6 +170,108 @@ describe('accessibilité (axe)', () => {
       </AppTestProviders>
     );
     await screen.findByRole('heading', { name: 'Alice' });
+    await assertNoViolations(container, queryClient);
+  });
+
+  it("ProfileMoviesPage n'a pas de violations", async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () =>
+        HttpResponse.json({
+          handle: 'alice',
+          displayName: 'Alice',
+          avatarId: 'alpha',
+          bio: 'Cinéphile',
+          memberSince: '2024-03-15T00:00:00Z',
+          followingCount: 2,
+          followersCount: 5,
+          isSupporter: false,
+          isFollowedByMe: null,
+        })
+      ),
+      http.get(`${TEST_API_V1}/users/alice/stats`, () =>
+        HttpResponse.json({
+          eventsCreated: 1,
+          eventsJoined: 1,
+          moviesProposed: 2,
+          votesCast: 1,
+          winningProposals: 1,
+          moviesSeen: 1,
+          currentStreakWeeks: 0,
+          bestStreakWeeks: 0,
+          favoriteGenres: [],
+          dailyActivity: [],
+        })
+      ),
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              tmdbId: 27205,
+              title: 'Inception',
+              year: '2010',
+              posterPath: null,
+              genreIds: [28],
+              mediaType: 'movie',
+              watchedAt: '2026-06-01T00:00:00Z',
+            },
+          ],
+        })
+      )
+    );
+    const queryClient = createTestQueryClient();
+    const { container } = render(
+      <AppTestProviders client={queryClient}>
+        <MemoryRouter initialEntries={['/u/alice/films']}>
+          <Routes>
+            <Route path="/u/:handle/films" element={<ProfileMoviesPage />} />
+            <Route path="/u/:handle" element={<div />} />
+          </Routes>
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+    await screen.findByText('Inception');
+    await assertNoViolations(container, queryClient);
+  });
+
+  it("WatchlistPage n'a pas de violations", async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u1',
+          displayName: 'Alice',
+          emailMasked: 'a***@test.local',
+          uiTheme: 'system',
+          accentColor: 'default',
+          ratingScale: 'ten',
+        })
+      ),
+      http.get(`${TEST_API_V1}/watchlist`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              tmdbId: 200,
+              mediaType: 'movie',
+              title: 'Ancien Mais Bien Noté',
+              year: '2000',
+              posterPath: null,
+              voteAverage: 9.0,
+              runtimeMinutes: 90,
+              createdAt: '2026-01-01T00:00:00Z',
+            },
+          ],
+        })
+      )
+    );
+    const queryClient = createTestQueryClient();
+    const { container } = render(
+      <AppTestProviders client={queryClient}>
+        <MemoryRouter initialEntries={['/watchlist']}>
+          <WatchlistPage />
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+    await screen.findByText('Ancien Mais Bien Noté');
     await assertNoViolations(container, queryClient);
   });
 });
