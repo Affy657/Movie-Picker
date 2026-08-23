@@ -1,11 +1,10 @@
 import { Info } from 'lucide-react';
 import MovieListCard from '@/features/movies/components/MovieListCard';
-import cardStyles from '@/features/movies/components/MovieListCard.module.css';
+import styles from '@/features/movies/components/MovieListCard.module.css';
 import { CardKebab, type Translate } from '@/features/movies/components/movieCardParts';
 import WatchlistProposeSubmenu from '@/features/watchlist/components/WatchlistProposeSubmenu';
 import type { WatchlistItem } from '@/features/watchlist/api/watchlistApi';
 import type { RatingScale } from '@/shared/types/theme';
-import styles from './WatchlistMovieCard.module.css';
 
 interface WatchlistMovieCardProps {
   item: WatchlistItem;
@@ -41,9 +40,7 @@ export default function WatchlistMovieCard({
       onOpenDetails={onOpenDetails}
       openDetailsAriaLabel={t('watchlist.card.openDetailsAria', { title: item.title })}
       badges={
-        item.mediaType === 'tv' && (
-          <span className={cardStyles.badge}>{t('movies.list.tvBadge')}</span>
-        )
+        item.mediaType === 'tv' && <span className={styles.badge}>{t('movies.list.tvBadge')}</span>
       }
       kebab={
         <CardKebab

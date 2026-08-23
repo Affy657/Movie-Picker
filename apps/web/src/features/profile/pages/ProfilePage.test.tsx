@@ -58,9 +58,7 @@ function renderProfile(handle: string) {
 describe('ProfilePage (MSW)', () => {
   const server = setupServer(
     http.get(`${TEST_API_V1}/users/:handle/stats`, () => HttpResponse.json(EMPTY_STATS)),
-    http.get(`${TEST_API_V1}/users/:handle/movies`, () =>
-      HttpResponse.json({ items: [], totalCount: 0 })
-    )
+    http.get(`${TEST_API_V1}/users/:handle/watched-movies`, () => HttpResponse.json({ items: [] }))
   );
 
   beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));

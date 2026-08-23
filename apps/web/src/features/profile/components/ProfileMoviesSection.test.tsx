@@ -28,9 +28,7 @@ describe('ProfileMoviesSection (MSW)', () => {
 
   it('ne rend rien si la liste est vide', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/users/alice/movies`, () =>
-        HttpResponse.json({ items: [], totalCount: 0 })
-      )
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () => HttpResponse.json({ items: [] }))
     );
 
     const { container } = renderSection('alice');
@@ -38,65 +36,56 @@ describe('ProfileMoviesSection (MSW)', () => {
     await waitFor(() => expect(container.firstChild).toBeNull());
   });
 
-  it('affiche le titre, les films et le badge gagnant', async () => {
+  it('affiche le titre et les films récemment vus', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/users/alice/movies`, () =>
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
         HttpResponse.json({
           items: [
             {
+              tmdbId: 27205,
               title: 'Inception',
               year: '2010',
               posterPath: '/x.jpg',
               genreIds: [28],
               mediaType: 'movie',
-              proposedAt: '2026-06-01T00:00:00Z',
-              isWinner: true,
+              watchedAt: '2026-06-01T00:00:00Z',
             },
             {
+              tmdbId: 157336,
               title: 'Interstellar',
               year: '2014',
               posterPath: null,
               genreIds: [],
               mediaType: 'movie',
-              proposedAt: '2026-05-01T00:00:00Z',
-              isWinner: false,
+              watchedAt: '2026-05-01T00:00:00Z',
             },
           ],
-          totalCount: 2,
         })
       )
     );
 
     renderSection('alice');
 
-    expect(
-      await screen.findByRole('heading', { name: /derniers films proposés/i })
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /derniers films vus/i })).toBeInTheDocument();
     expect(screen.getByText('Inception')).toBeInTheDocument();
     expect(screen.getByText('Interstellar')).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: /film gagnant/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /tout voir/i })).toHaveAttribute(
-      'href',
-      '/u/alice/films'
-    );
   });
 
-  it("n'affiche pas de badge gagnant sur un film sans affiche et sans victoire", async () => {
+  it('affiche un film sans affiche via le placeholder', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/users/bob/movies`, () =>
+      http.get(`${TEST_API_V1}/users/bob/watched-movies`, () =>
         HttpResponse.json({
           items: [
             {
+              tmdbId: 1,
               title: 'Sans affiche',
               year: '2020',
               posterPath: null,
               genreIds: [],
               mediaType: 'movie',
-              proposedAt: '2026-01-01T00:00:00Z',
-              isWinner: false,
+              watchedAt: '2026-01-01T00:00:00Z',
             },
           ],
-          totalCount: 1,
         })
       )
     );
@@ -104,6 +93,5 @@ describe('ProfileMoviesSection (MSW)', () => {
     renderSection('bob');
 
     await screen.findByText('Sans affiche');
-    expect(screen.queryByRole('img', { name: /film gagnant/i })).not.toBeInTheDocument();
   });
 });

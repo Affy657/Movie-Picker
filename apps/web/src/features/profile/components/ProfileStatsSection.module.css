@@ -164,7 +164,11 @@
 /* ---------- Activité: une cellule par semaine, repères de mois ---------- */
 .heatmapWrap {
   width: 100%;
-  overflow-x: auto;
+  /* Les cellules elles-memes ne debordent jamais (colonnes en minmax(0, 1fr)) :
+     seule la bulle de tooltip masquee (visibility: hidden, centree sur la
+     derniere cellule) peut deborder a droite. overflow: visible laisse ce
+     debordement invisible s'etendre sans jamais activer de scrollbar. */
+  overflow: visible;
 }
 
 .weekGroups {

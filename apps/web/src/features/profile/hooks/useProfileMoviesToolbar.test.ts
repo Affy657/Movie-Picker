@@ -1,3 +1,4 @@
+import { StrictMode } from 'react';
 import { describe, expect, it } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useProfileMoviesToolbar } from './useProfileMoviesToolbar';
@@ -37,6 +38,17 @@ function setup(items: UserMovieItem[] = ITEMS) {
   );
 }
 
+// L'app entière tourne sous <StrictMode>, qui double-invoque les fonctions de mise à jour
+// de useState en dev pour détecter les impuretés — un appel à setState imbriqué dans une
+// autre mise à jour se déclenche donc deux fois et annule son propre effet.
+function setupStrict(items: UserMovieItem[] = ITEMS) {
+  return renderHook(
+    () =>
+      useProfileMoviesToolbar({ items, tmdbLanguage: 'fr', mediaTypeLabels: MEDIA_TYPE_LABELS }),
+    { wrapper: StrictMode }
+  );
+}
+
 describe('useProfileMoviesToolbar', () => {
   it('trie par date de proposition (défaut, décroissant)', () => {
     const { result } = setup();
@@ -51,6 +63,15 @@ describe('useProfileMoviesToolbar', () => {
     act(() => result.current.setSortBy('title'));
     expect(result.current.sortDir).toBe('desc');
     expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Gamma', 'Beta', 'Alpha']);
+  });
+
+  it('inverse le sens sous StrictMode (non-regression double-invocation)', () => {
+    const { result } = setupStrict();
+    act(() => result.current.setSortBy('title'));
+    expect(result.current.sortDir).toBe('asc');
+
+    act(() => result.current.setSortBy('title'));
+    expect(result.current.sortDir).toBe('desc');
   });
 
   it('trie par année', () => {

@@ -79,6 +79,22 @@ public sealed class UsersController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{handle}/watched-movies")]
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingExtensions.PublicProfilePolicy)]
+    [ProducesResponseType(typeof(UserWatchedMoviesResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> GetUserWatchedMovies(
+        string handle,
+        [FromQuery] int take,
+        [FromServices] IGetUserWatchedMoviesHandler handler,
+        CancellationToken ct)
+    {
+        var result = await handler.HandleAsync(handle, take, ct);
+        return Ok(result);
+    }
+
     [HttpPost("{handle}/follow")]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.FollowMutationPolicy)]

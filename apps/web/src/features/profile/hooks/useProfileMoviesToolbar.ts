@@ -75,18 +75,21 @@ export function useProfileMoviesToolbar({
 }: UseProfileMoviesToolbarOptions) {
   const [search, setSearch] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [sortBy, setSortByState] = useState<ProfileMoviesSortKey>('proposedAt');
-  const [sortDir, setSortDir] = useState<SortDirection>('desc');
+  const [sort, setSort] = useState<{ by: ProfileMoviesSortKey; dir: SortDirection }>({
+    by: 'proposedAt',
+    dir: 'desc',
+  });
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const [revealCount, setRevealCount] = useState(INITIAL_REVEAL_COUNT);
+  const sortBy = sort.by;
+  const sortDir = sort.dir;
 
   const setSortBy = useCallback((key: ProfileMoviesSortKey) => {
-    setSortByState((prevKey) => {
-      setSortDir((prevDir) =>
-        prevKey === key ? (prevDir === 'asc' ? 'desc' : 'asc') : DEFAULT_DIRECTION[key]
-      );
-      return key;
-    });
+    setSort((prev) =>
+      prev.by === key
+        ? { by: key, dir: prev.dir === 'asc' ? 'desc' : 'asc' }
+        : { by: key, dir: DEFAULT_DIRECTION[key] }
+    );
   }, []);
 
   const toggleGenre = useCallback((id: number) => {

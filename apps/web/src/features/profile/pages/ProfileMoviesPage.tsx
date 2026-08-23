@@ -7,11 +7,13 @@ import EmptyState from '@/shared/components/EmptyState';
 import Sheet from '@/shared/components/Sheet';
 import Avatar from '@/shared/components/Avatar';
 import { ROUTES } from '@/app/routes';
-import { ApiError } from '@/shared/api/apiError';
+import { ApiError, getErrorMessage } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useLocale, useTranslation } from '@/shared/i18n';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
 import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
 import MovieListFiltersPanel from '@/features/movies/components/MovieListFiltersPanel';
 import {
@@ -23,16 +25,29 @@ import {
 import { useProfileMoviesToolbar } from '@/features/profile/hooks/useProfileMoviesToolbar';
 import ProfileMoviesToolbar from '@/features/profile/components/ProfileMoviesToolbar';
 import ProfileMovieCard from '@/features/profile/components/ProfileMovieCard';
+import {
+  useAddToWatchlist,
+  useRemoveFromWatchlist,
+  useWatchlist,
+} from '@/features/watchlist/hooks/useWatchlist';
+import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventModal';
 import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
 import styles from './ProfileMoviesPage.module.css';
 
 const MOVIES_TAKE = 60;
 
+function watchlistKey(tmdbId: number, mediaType: string): string {
+  return `${tmdbId}|${mediaType}`;
+}
+
 export default function ProfileMoviesPage() {
   const { handle } = useParams<{ handle: string }>();
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
+  const { user } = useAuth();
+  const isLoggedIn = !!user;
   const isMobile = useIsMobile();
+  const hasHover = useHasHoverCapability();
   const filtersPanelId = useId();
 
   const profileQuery = useQuery({
@@ -86,6 +101,35 @@ export default function ProfileMoviesPage() {
   );
 
   const [detailsTarget, setDetailsTarget] = useState<UserMovieItem | null>(null);
+  const [proposeTarget, setProposeTarget] = useState<UserMovieItem | null>(null);
+  const [watchlistError, setWatchlistError] = useState<string | null>(null);
+
+  const watchlistQuery = useWatchlist({ enabled: isLoggedIn });
+  const watchlistKeys = useMemo(
+    () => new Set((watchlistQuery.data ?? []).map((i) => watchlistKey(i.tmdbId, i.mediaType))),
+    [watchlistQuery.data]
+  );
+  const { mutate: addToWatchlist } = useAddToWatchlist({
+    onError: (err) => setWatchlistError(getErrorMessage(err, t('watchlist.card.addError'))),
+  });
+  const { mutate: removeFromWatchlist } = useRemoveFromWatchlist({
+    onError: (err) => setWatchlistError(getErrorMessage(err, t('watchlist.card.removeError'))),
+  });
+
+  const handleToggleWatchlist = (item: UserMovieItem) => {
+    setWatchlistError(null);
+    if (watchlistKeys.has(watchlistKey(item.tmdbId, item.mediaType))) {
+      removeFromWatchlist({ tmdbId: item.tmdbId, mediaType: item.mediaType });
+    } else {
+      addToWatchlist({
+        tmdbId: item.tmdbId,
+        mediaType: item.mediaType,
+        title: item.title,
+        year: item.year,
+        posterPath: item.posterPath,
+      });
+    }
+  };
 
   useDocumentTitle(
     pageTitle(
@@ -169,6 +213,12 @@ export default function ProfileMoviesPage() {
       </div>
 
       <h2 className="visually-hidden">{t('profile.movies.listAria')}</h2>
+
+      {watchlistError ? (
+        <p className="error" role="alert">
+          {watchlistError}
+        </p>
+      ) : null}
 
       {moviesQuery.isPending ? (
         <WatchlistSkeleton label={t('profile.loading')} gridClassName={styles.grid} />
@@ -290,7 +340,13 @@ export default function ProfileMoviesPage() {
                   key={`${item.proposedAt}-${index}`}
                   item={item}
                   tmdbLanguage={tmdbLanguage}
+                  hasHover={hasHover}
+                  isLoggedIn={isLoggedIn}
+                  inWatchlist={watchlistKeys.has(watchlistKey(item.tmdbId, item.mediaType))}
+                  onToggleWatchlist={() => handleToggleWatchlist(item)}
                   onOpenDetails={() => setDetailsTarget(item)}
+                  onProposeFallback={() => setProposeTarget(item)}
+                  t={t}
                 />
               ))}
             </ul>
@@ -316,6 +372,14 @@ export default function ProfileMoviesPage() {
           tmdbId={detailsTarget.tmdbId}
           mediaType={detailsTarget.mediaType}
           onClose={() => setDetailsTarget(null)}
+        />
+      )}
+
+      {proposeTarget && (
+        <ProposeToEventModal
+          open={!!proposeTarget}
+          movie={proposeTarget}
+          onClose={() => setProposeTarget(null)}
         />
       )}
     </PageLayout>

@@ -110,3 +110,28 @@ export async function fetchUserMovies(
     { signal }
   );
 }
+
+export interface UserWatchedMovieItem {
+  tmdbId: number;
+  title: string;
+  year: string;
+  posterPath: string | null;
+  genreIds: number[];
+  mediaType: MovieMediaType;
+  watchedAt: string;
+}
+
+export interface UserWatchedMoviesResponse {
+  items: UserWatchedMovieItem[];
+}
+
+export async function fetchUserWatchedMovies(
+  handle: string,
+  take: number,
+  signal?: AbortSignal
+): Promise<UserWatchedMoviesResponse> {
+  return fetchApi<UserWatchedMoviesResponse>(
+    `/users/${encodeURIComponent(handle)}/watched-movies?take=${take}`,
+    { signal }
+  );
+}

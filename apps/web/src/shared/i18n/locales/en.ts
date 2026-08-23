@@ -978,13 +978,12 @@ export const en: Locale = {
       retry: 'Retry',
     },
     movies: {
-      title: 'Recently proposed movies',
+      title: 'Recently watched movies',
       winnerBadge: 'Winning movie',
       winnerBadgeShort: 'Winner',
       card: {
         openDetailsAria: 'View details for "{{title}}"',
       },
-      seeAll: 'See all',
       backLink: 'Back to profile',
       pageTitle: "{{name}}'s movies",
       pageSubtitleOne: '{{count}} movie proposed',

@@ -996,13 +996,12 @@
       retry: 'Réessayer',
     },
     movies: {
-      title: 'Derniers films proposés',
+      title: 'Derniers films vus',
       winnerBadge: 'Film gagnant',
       winnerBadgeShort: 'Gagnant',
       card: {
         openDetailsAria: 'Voir les détails de « {{title}} »',
       },
-      seeAll: 'Tout voir',
       backLink: 'Retour au profil',
       pageTitle: 'Les films de {{name}}',
       pageSubtitleOne: '{{count}} film proposé',

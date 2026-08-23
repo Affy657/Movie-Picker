@@ -5,8 +5,10 @@ import { useTranslation } from '@/shared/i18n';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { ROUTES } from '@/app/routes';
 import { useEligibleEventsForPropose } from '@/features/watchlist/hooks/useEligibleEventsForPropose';
-import { useProposeMovieToEvent } from '@/features/watchlist/hooks/useProposeMovieToEvent';
-import type { WatchlistItem } from '@/features/watchlist/api/watchlistApi';
+import {
+  useProposeMovieToEvent,
+  type ProposableMovie,
+} from '@/features/watchlist/hooks/useProposeMovieToEvent';
 import styles from './WatchlistProposeSubmenu.module.css';
 
 type RowState = { status: 'idle' | 'pending' | 'done' | 'error'; error?: string };
@@ -15,7 +17,7 @@ const FLYOUT_WIDTH = 280;
 const CLOSE_DELAY_MS = 200;
 
 interface WatchlistProposeSubmenuProps {
-  movie: WatchlistItem;
+  movie: ProposableMovie;
   onDone: () => void;
 }
 
