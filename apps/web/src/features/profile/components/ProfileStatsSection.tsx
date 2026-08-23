@@ -1,12 +1,12 @@
 import { lazy, Suspense } from 'react';
-import { CalendarPlus, Film, Flame, Trophy, Users } from 'lucide-react';
+import { CalendarPlus, Film, Trophy, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import type { UserStats } from '@/features/profile/api/profileApi';
 import styles from './ProfileStatsSection.module.css';
 
 const GenresBar = lazy(() => import('./GenresBar'));
-const ActivityHeatmap = lazy(() => import('./ActivityHeatmap'));
+const ActivityWeeks = lazy(() => import('./ActivityWeeks'));
 
 interface Props {
   stats: UserStats;
@@ -40,12 +40,6 @@ export default function ProfileStatsSection({ stats }: Readonly<Props>) {
       label: t('profile.stats.winningProposals'),
       value: stats.winningProposals,
     },
-    {
-      key: 'bestStreak',
-      icon: Flame,
-      label: t('profile.stats.bestStreak'),
-      value: stats.bestStreakWeeks,
-    },
   ];
 
   const hasGenres = stats.favoriteGenres.length > 0;
@@ -60,27 +54,6 @@ export default function ProfileStatsSection({ stats }: Readonly<Props>) {
 
       {!hasAnyData && <p className={styles.empty}>{t('profile.stats.empty')}</p>}
 
-      {(hasGenres || hasActivity) && (
-        <div className={styles.panels}>
-          {hasActivity && (
-            <div className={styles.panel}>
-              <h3 className={styles.panelTitle}>{t('profile.stats.activityTitle')}</h3>
-              <Suspense fallback={null}>
-                <ActivityHeatmap points={stats.dailyActivity} />
-              </Suspense>
-            </div>
-          )}
-          {hasGenres && (
-            <div className={styles.panel}>
-              <h3 className={styles.panelTitle}>{t('profile.stats.genresTitle')}</h3>
-              <Suspense fallback={null}>
-                <GenresBar genres={stats.favoriteGenres} />
-              </Suspense>
-            </div>
-          )}
-        </div>
-      )}
-
       <ul className={styles.heroGrid}>
         {counters.map(({ key, icon: Icon, label, value }) => (
           <li key={key} className={styles.heroStat}>
@@ -94,6 +67,27 @@ export default function ProfileStatsSection({ stats }: Readonly<Props>) {
           </li>
         ))}
       </ul>
+
+      {(hasGenres || hasActivity) && (
+        <div className={styles.panels}>
+          {hasActivity && (
+            <div className={styles.panel}>
+              <h3 className={styles.panelTitle}>{t('profile.stats.activityTitle')}</h3>
+              <Suspense fallback={null}>
+                <ActivityWeeks points={stats.dailyActivity} />
+              </Suspense>
+            </div>
+          )}
+          {hasGenres && (
+            <div className={styles.panel}>
+              <h3 className={styles.panelTitle}>{t('profile.stats.genresTitle')}</h3>
+              <Suspense fallback={null}>
+                <GenresBar genres={stats.favoriteGenres} />
+              </Suspense>
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 }

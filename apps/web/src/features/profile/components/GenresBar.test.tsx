@@ -40,4 +40,12 @@ describe('GenresBar', () => {
     renderBar(genres);
     expect(screen.getAllByRole('listitem')).toHaveLength(8);
   });
+
+  it('affiche le total cumulé des genres affichés', () => {
+    renderBar([
+      { genreId: 28, count: 5 },
+      { genreId: 12, count: 3 },
+    ]);
+    expect(screen.getByText(/top 6 des 8 genres cumulés/i)).toBeInTheDocument();
+  });
 });

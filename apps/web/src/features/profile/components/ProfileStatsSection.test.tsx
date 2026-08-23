@@ -41,9 +41,9 @@ describe('ProfileStatsSection', () => {
     expect(screen.queryByText(/aucune activité/i)).toBeNull();
   });
 
-  it('affiche 5 entrées dans la grille des compteurs', () => {
+  it('affiche 4 entrées dans la grille des compteurs', () => {
     renderSection({ ...EMPTY_STATS, eventsCreated: 1 });
-    expect(screen.getAllByRole('listitem')).toHaveLength(5);
+    expect(screen.getAllByRole('listitem')).toHaveLength(4);
   });
 
   it('affiche la valeur du compteur eventsCreated', () => {
@@ -51,11 +51,9 @@ describe('ProfileStatsSection', () => {
     expect(screen.getByText('7')).toBeInTheDocument();
   });
 
-  it('affiche le record dans la grille des compteurs, pas le streak courant', () => {
+  it('ne montre plus le streak dans la grille des compteurs (déplacé dans la pastille de série)', () => {
     renderSection({ ...EMPTY_STATS, currentStreakWeeks: 3, bestStreakWeeks: 5 });
-    expect(screen.getByText(/meilleur streak/i)).toBeInTheDocument();
-    expect(screen.getByText('5')).toBeInTheDocument();
-    expect(screen.queryByText('3')).toBeNull();
+    expect(screen.queryByText(/meilleur streak/i)).toBeNull();
   });
 
   it('affiche le panneau activité si au moins un jour a count > 0', async () => {

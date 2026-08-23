@@ -961,8 +961,12 @@ export const en: Locale = {
       moviesSeen: 'Movies seen',
       bestStreak: 'Best streak',
       genresTitle: 'Favourite genres',
+      genresCumulative: 'Top 6 of {{count}} combined genres',
       activityTitle: 'Activity (6 months)',
       activityImgAlt: 'Activity heatmap: {{count}} participation(s) over 26 weeks',
+      weekTooltip: '{{count}} participation(s) — week of {{date}}',
+      legendLess: 'Less',
+      legendMore: 'More',
       empty: 'No activity yet.',
     },
     streak: {

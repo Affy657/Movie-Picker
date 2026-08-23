@@ -979,8 +979,12 @@
       moviesSeen: 'Films vus',
       bestStreak: 'Meilleur streak',
       genresTitle: 'Genres favoris',
+      genresCumulative: 'Top 6 des {{count}} genres cumulés',
       activityTitle: 'Activité (6 mois)',
       activityImgAlt: "Heatmap d'activité : {{count}} participation(s) sur 26 semaines",
+      weekTooltip: '{{count}} participation(s) — semaine du {{date}}',
+      legendLess: 'Moins',
+      legendMore: 'Plus',
       empty: 'Aucune activité pour le moment.',
     },
     streak: {
