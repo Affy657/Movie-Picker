@@ -29,10 +29,10 @@ interface WatchlistFiltersPanelProps {
   onToggleMediaType: (mediaType: MovieMediaType) => void;
   selectedDecade: string | undefined;
   onToggleDecade: (decade: string) => void;
-  voteMin: number | undefined;
-  onToggleVoteMin: (min: number) => void;
-  runtimeRange: [number, number];
-  onChangeRuntimeRange: (min: number, max: number) => void;
+  voteMin?: number | undefined;
+  onToggleVoteMin?: (min: number) => void;
+  runtimeRange?: [number, number];
+  onChangeRuntimeRange?: (min: number, max: number) => void;
 }
 
 export default function WatchlistFiltersPanel({
@@ -113,37 +113,41 @@ export default function WatchlistFiltersPanel({
         </div>
       </div>
 
-      <div className={styles.group}>
-        <span className={styles.groupLabel}>{t('watchlist.toolbar.filterVoteMin')}</span>
-        <div className={styles.chipRow}>
-          {WATCHLIST_VOTE_MIN_OPTIONS.map((opt) => (
-            <button
-              key={opt.tmdb}
-              type="button"
-              className={`${styles.chip} ${voteMin === opt.tmdb ? styles.chipActive : ''}`}
-              onClick={() => onToggleVoteMin(opt.tmdb)}
-              aria-pressed={voteMin === opt.tmdb}
-            >
-              <span className={styles.chipLabel}>★ {voteMinLabel(opt.tmdb, ratingScale)}+</span>
-            </button>
-          ))}
+      {onToggleVoteMin ? (
+        <div className={styles.group}>
+          <span className={styles.groupLabel}>{t('watchlist.toolbar.filterVoteMin')}</span>
+          <div className={styles.chipRow}>
+            {WATCHLIST_VOTE_MIN_OPTIONS.map((opt) => (
+              <button
+                key={opt.tmdb}
+                type="button"
+                className={`${styles.chip} ${voteMin === opt.tmdb ? styles.chipActive : ''}`}
+                onClick={() => onToggleVoteMin(opt.tmdb)}
+                aria-pressed={voteMin === opt.tmdb}
+              >
+                <span className={styles.chipLabel}>★ {voteMinLabel(opt.tmdb, ratingScale)}+</span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      ) : null}
 
-      <div className={styles.group}>
-        <span className={styles.groupLabel}>{t('watchlist.toolbar.filterDuration')}</span>
-        <DurationRangeSlider
-          min={RUNTIME_MIN_MINUTES}
-          max={RUNTIME_MAX_MINUTES}
-          step={RUNTIME_STEP_MINUTES}
-          valueMin={runtimeRange[0]}
-          valueMax={runtimeRange[1]}
-          onChange={onChangeRuntimeRange}
-          formatLabel={(value, bound) => runtimeRangeLabel(value, tmdbLanguage, bound)}
-          ariaLabelMin={t('movies.search.durationMinAria')}
-          ariaLabelMax={t('movies.search.durationMaxAria')}
-        />
-      </div>
+      {onChangeRuntimeRange && runtimeRange ? (
+        <div className={styles.group}>
+          <span className={styles.groupLabel}>{t('watchlist.toolbar.filterDuration')}</span>
+          <DurationRangeSlider
+            min={RUNTIME_MIN_MINUTES}
+            max={RUNTIME_MAX_MINUTES}
+            step={RUNTIME_STEP_MINUTES}
+            valueMin={runtimeRange[0]}
+            valueMax={runtimeRange[1]}
+            onChange={onChangeRuntimeRange}
+            formatLabel={(value, bound) => runtimeRangeLabel(value, tmdbLanguage, bound)}
+            ariaLabelMin={t('movies.search.durationMinAria')}
+            ariaLabelMax={t('movies.search.durationMaxAria')}
+          />
+        </div>
+      ) : null}
 
       {onReset ? (
         <div className={styles.footerRow}>

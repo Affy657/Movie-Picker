@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import ProfileMoviesSection from './ProfileMoviesSection';
@@ -9,7 +10,9 @@ import { TEST_API_V1 } from '@/mocks/handlers';
 function renderSection(handle: string) {
   return render(
     <AppTestProviders>
-      <ProfileMoviesSection handle={handle} />
+      <MemoryRouter>
+        <ProfileMoviesSection handle={handle} />
+      </MemoryRouter>
     </AppTestProviders>
   );
 }
@@ -72,6 +75,10 @@ describe('ProfileMoviesSection (MSW)', () => {
     expect(screen.getByText('Inception')).toBeInTheDocument();
     expect(screen.getByText('Interstellar')).toBeInTheDocument();
     expect(screen.getByRole('img', { name: /film gagnant/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /tout voir/i })).toHaveAttribute(
+      'href',
+      '/u/alice/films'
+    );
   });
 
   it("n'affiche pas de badge gagnant sur un film sans affiche et sans victoire", async () => {
