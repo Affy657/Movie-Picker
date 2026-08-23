@@ -219,6 +219,34 @@ public sealed class InMemoryMovieRepositoryTests
     }
 
     [Fact]
+    public async Task ListByParticipantIdsPagedAsync_BreaksTiesById_WhenCreatedAtIsEqual()
+    {
+        var t0 = DateTimeOffset.UtcNow.AddDays(-1);
+        var a = await _repo.InsertAsync(Mk(id: "movie-a", participantId: "p1", createdAt: t0));
+        var b = await _repo.InsertAsync(Mk(id: "movie-b", participantId: "p1", createdAt: t0));
+
+        var page = await _repo.ListByParticipantIdsPagedAsync(["p1"], 0, 10);
+
+        Assert.Equal([b.Id, a.Id], page.Select(m => m.Id));
+    }
+
+    [Fact]
+    public async Task ListByIdsAsync_FiltersBlanksAndUnknown()
+    {
+        var a = await _repo.InsertAsync(Mk());
+        var b = await _repo.InsertAsync(Mk());
+
+        Assert.Empty(await _repo.ListByIdsAsync([]));
+        Assert.Empty(await _repo.ListByIdsAsync(["", "   "]));
+        Assert.Empty(await _repo.ListByIdsAsync(["missing"]));
+
+        var found = await _repo.ListByIdsAsync([a.Id, b.Id, "missing"]);
+        Assert.Equal(2, found.Count);
+        Assert.Contains(found, m => m.Id == a.Id);
+        Assert.Contains(found, m => m.Id == b.Id);
+    }
+
+    [Fact]
     public async Task CountByParticipantIdsAsync_CountsOnlyMatching()
     {
         await _repo.InsertAsync(Mk(participantId: "p1"));

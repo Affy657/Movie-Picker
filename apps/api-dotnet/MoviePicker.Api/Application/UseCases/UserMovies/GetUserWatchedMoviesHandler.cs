@@ -3,7 +3,6 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Profile;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
-using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.UserMovies;
 
@@ -35,12 +34,7 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
 
     public async Task<UserWatchedMoviesResponse> HandleAsync(string handle, int take, CancellationToken ct = default)
     {
-        var normalized = HandlePolicy.Normalize(handle);
-        var user = await _users.GetByHandleAsync(normalized, ct);
-
-        // 404 (not 403) for both "unknown" and "private", same policy as the profile/stats/movies endpoints.
-        if (user is null || !user.IsProfilePublic)
-            throw new NotFoundException("Profil introuvable");
+        var user = await PublicProfileGuard.RequirePublicUserAsync(_users, handle, ct);
 
         var effectiveTake = take <= 0 ? DefaultTake : Math.Min(take, MaxTake);
 
@@ -62,11 +56,12 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
         if (qualifying.Count == 0)
             return new UserWatchedMoviesResponse { Items = [] };
 
-        var movies = await Task.WhenAll(
-            qualifying.Select(x => _movies.GetByIdAsync(x.Event.WinnerMovieId!, ct)));
+        var winnerMovieIds = qualifying.Select(x => x.Event.WinnerMovieId!).Distinct().ToList();
+        var movies = await _movies.ListByIdsAsync(winnerMovieIds, ct);
+        var movieById = movies.ToDictionary(m => m.Id);
 
         var items = qualifying
-            .Zip(movies, (x, movie) => (x.WatchedAt, Movie: movie))
+            .Select(x => (x.WatchedAt, Movie: movieById.GetValueOrDefault(x.Event.WinnerMovieId!)))
             .Where(x => x.Movie is not null)
             .Select(x => new UserWatchedMovieItem
             {

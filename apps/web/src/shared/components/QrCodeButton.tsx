@@ -2,14 +2,13 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Download, Link2, QrCode, X } from 'lucide-react';
 import QRCodeImport from 'react-qr-code';
 import Avatar from '@/shared/components/Avatar';
-import { copyTextToClipboard } from '@/shared/utils/copyTextToClipboard';
+import { useCopyFeedback } from '@/shared/hooks/useCopyFeedback';
 import styles from './QrCodeButton.module.css';
 
 const QR_SIZE_MODAL = 240;
 const QR_BG_COLOR = '#ffffff';
 const QR_FG_COLOR = '#111827';
 const QR_EXPORT_SCALE = 4;
-const COPY_FEEDBACK_MS = 2000;
 
 const QRCode =
   typeof QRCodeImport === 'object' &&
@@ -56,7 +55,7 @@ export default function QrCodeButton({
   downloadLabel,
 }: Readonly<QrCodeButtonProps>) {
   const [open, setOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyFeedback();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const qrWrapRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
@@ -97,17 +96,9 @@ export default function QrCodeButton({
     };
   }, [open]);
 
-  useEffect(() => {
-    if (!copied) return;
-    const id = globalThis.setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
-    return () => globalThis.clearTimeout(id);
-  }, [copied]);
-
   const handleCopy = useCallback(() => {
-    void copyTextToClipboard(url).then((ok) => {
-      if (ok) setCopied(true);
-    });
-  }, [url]);
+    copy(url);
+  }, [copy, url]);
 
   const handleDownload = useCallback(() => {
     const svg = qrWrapRef.current?.querySelector('svg');
@@ -116,6 +107,7 @@ export default function QrCodeButton({
     const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
     const svgUrl = URL.createObjectURL(svgBlob);
     const img = new Image();
+    img.onerror = () => URL.revokeObjectURL(svgUrl);
     img.onload = () => {
       const canvas = document.createElement('canvas');
       canvas.width = QR_SIZE_MODAL * QR_EXPORT_SCALE;
@@ -217,6 +209,12 @@ export default function QrCodeButton({
                 <span className={styles.btnLabel}>{downloadLabel}</span>
               </button>
             </div>
+          )}
+
+          {showActions && (
+            <span className="visually-hidden" role="status" aria-live="polite">
+              {copied ? copiedLabel : ''}
+            </span>
           )}
         </div>
       </dialog>

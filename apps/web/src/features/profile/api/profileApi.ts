@@ -83,34 +83,6 @@ export async function fetchUserStats(handle: string, signal?: AbortSignal): Prom
   return fetchApi<UserStats>(`/users/${encodeURIComponent(handle)}/stats`, { signal });
 }
 
-export interface UserMovieItem {
-  tmdbId: number;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  genreIds: number[];
-  mediaType: MovieMediaType;
-  proposedAt: string;
-  isWinner: boolean;
-}
-
-export interface UserMoviesResponse {
-  items: UserMovieItem[];
-  totalCount: number;
-}
-
-export async function fetchUserMovies(
-  handle: string,
-  skip: number,
-  take: number,
-  signal?: AbortSignal
-): Promise<UserMoviesResponse> {
-  return fetchApi<UserMoviesResponse>(
-    `/users/${encodeURIComponent(handle)}/movies?skip=${skip}&take=${take}`,
-    { signal }
-  );
-}
-
 export interface UserWatchedMovieItem {
   tmdbId: number;
   title: string;

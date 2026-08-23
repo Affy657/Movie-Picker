@@ -1,7 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Profile;
-using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.UserMovies;
 
@@ -33,12 +32,7 @@ public sealed class GetUserMoviesHandler : IGetUserMoviesHandler
 
     public async Task<UserMoviesResponse> HandleAsync(string handle, int skip, int take, CancellationToken ct = default)
     {
-        var normalized = HandlePolicy.Normalize(handle);
-        var user = await _users.GetByHandleAsync(normalized, ct);
-
-        // 404 (not 403) for both "unknown" and "private", same policy as the profile and stats endpoints.
-        if (user is null || !user.IsProfilePublic)
-            throw new NotFoundException("Profil introuvable");
+        var user = await PublicProfileGuard.RequirePublicUserAsync(_users, handle, ct);
 
         var effectiveSkip = Math.Max(0, skip);
         var effectiveTake = take <= 0 ? DefaultTake : Math.Min(take, MaxTake);

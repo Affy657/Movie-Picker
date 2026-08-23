@@ -46,6 +46,6 @@ describe('GenresBar', () => {
       { genreId: 28, count: 5 },
       { genreId: 12, count: 3 },
     ]);
-    expect(screen.getByText(/top 6 des 8 genres cumulés/i)).toBeInTheDocument();
+    expect(screen.getByText(/top 6 des genres, sur 8 occurrences cumulées/i)).toBeInTheDocument();
   });
 });

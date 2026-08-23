@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, RefreshCw } from 'lucide-react';
@@ -6,6 +6,7 @@ import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
 import { ApiError, getErrorMessage } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
+import { useCopyFeedback } from '@/shared/hooks/useCopyFeedback';
 import { APP_DOCUMENT_TITLE, pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
@@ -31,8 +32,6 @@ const ProfileStatsSection = lazy(() => import('@/features/profile/components/Pro
 const ProfileMoviesSection = lazy(
   () => import('@/features/profile/components/ProfileMoviesSection')
 );
-
-const COPY_FEEDBACK_MS = 2000;
 
 function formatMemberSince(iso: string, locale: string): string {
   const date = new Date(iso);
@@ -70,7 +69,7 @@ export default function ProfilePage() {
   const { user } = useAuth();
   const { track } = useAnalytics();
   const queryClient = useQueryClient();
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyFeedback();
   const [followModal, setFollowModal] = useState<FollowTab | null>(null);
   const [followError, setFollowError] = useState<string | null>(null);
 
@@ -106,16 +105,9 @@ export default function ProfilePage() {
       : { title: APP_DOCUMENT_TITLE, noindex: isNotFound }
   );
 
-  useEffect(() => {
-    if (!copied) return;
-    const id = globalThis.setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
-    return () => globalThis.clearTimeout(id);
-  }, [copied]);
-
   const handleCopyLink = useCallback(() => {
-    if (typeof navigator === 'undefined' || !navigator.clipboard) return;
-    void navigator.clipboard.writeText(globalThis.location.href).then(() => setCopied(true));
-  }, []);
+    copy(globalThis.location.href);
+  }, [copy]);
 
   const followMutation = useMutation({
     mutationFn: () => followUser(profile!.handle),

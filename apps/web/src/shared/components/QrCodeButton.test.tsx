@@ -130,6 +130,7 @@ describe('QrCodeButton', () => {
       await user.click(await screen.findByRole('button', { name: 'Copier le lien' }));
 
       expect(await screen.findByRole('button', { name: 'Lien copié !' })).toBeInTheDocument();
+      expect(await screen.findByRole('status')).toHaveTextContent('Lien copié !');
     } finally {
       vi.unstubAllGlobals();
     }

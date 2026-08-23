@@ -35,11 +35,11 @@ export default function ProfileMoviesSection({ handle }: Readonly<Props>) {
         </Link>
       </div>
       <ul className={styles.grid}>
-        {items.map((item, index) => {
+        {items.map((item) => {
           const posterRaw = posterImageSrc(item.posterPath);
           const posterSrc = posterRaw ? tmdbPosterSrcForListDisplay(posterRaw) : undefined;
           return (
-            <li key={`${item.watchedAt}-${index}`} className={styles.card}>
+            <li key={`${item.tmdbId}|${item.mediaType}|${item.watchedAt}`} className={styles.card}>
               <span className={styles.posterWrap}>
                 {posterSrc ? (
                   <img

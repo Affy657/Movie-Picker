@@ -6,7 +6,6 @@ import {
   fetchFollowers,
   fetchFollowing,
   fetchPublicProfile,
-  fetchUserMovies,
   fetchUserStats,
   followUser,
   unfollowUser,
@@ -65,16 +64,5 @@ describe('profileApi', () => {
     await fetchUserStats('bob', controller.signal);
 
     expect(mockFetchApi).toHaveBeenCalledWith('/users/bob/stats', { signal: controller.signal });
-  });
-
-  it('fetchUserMovies builds the query string and forwards the abort signal', async () => {
-    const controller = new AbortController();
-    mockFetchApi.mockResolvedValue({ items: [], totalCount: 0 });
-
-    await fetchUserMovies('bob', 6, 12, controller.signal);
-
-    expect(mockFetchApi).toHaveBeenCalledWith('/users/bob/movies?skip=6&take=12', {
-      signal: controller.signal,
-    });
   });
 });

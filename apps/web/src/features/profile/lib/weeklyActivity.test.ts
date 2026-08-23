@@ -28,6 +28,20 @@ describe('aggregateWeeklyActivity', () => {
     const weeks = aggregateWeeklyActivity(points);
     expect(weeks).toEqual([{ weekStart: '2026-01-05', count: 3 }]);
   });
+
+  it('gère une vraie plage de 6 mois franchissant le changement d’année', () => {
+    const counts = Array.from({ length: 182 }, () => 1);
+    const points = days(counts, '2025-11-01');
+    const weeks = aggregateWeeklyActivity(points);
+
+    expect(weeks).toHaveLength(26);
+    expect(weeks[0]).toEqual({ weekStart: '2025-11-01', count: 7 });
+    expect(weeks.at(-1)).toEqual({ weekStart: '2026-04-25', count: 7 });
+
+    const markers = monthMarkers(weeks, 'fr-FR');
+    const janMarker = markers.find((m) => m.label.toLowerCase().startsWith('janv'));
+    expect(janMarker).toBeDefined();
+  });
 });
 
 describe('weeklyIntensityLevel', () => {

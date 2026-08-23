@@ -131,7 +131,9 @@ public sealed class GetUserWatchedMoviesHandlerTests
         var res = await handler.HandleAsync("alice", 6);
 
         Assert.Empty(res.Items);
-        _movies.Verify(m => m.GetByIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _movies.Verify(
+            m => m.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -163,8 +165,8 @@ public sealed class GetUserWatchedMoviesHandlerTests
                 Evt("A", date: "2026-01-01", winnerMovieId: "m-old"),
                 Evt("B", date: "2026-05-01", winnerMovieId: "m-recent"),
             });
-        _movies.Setup(m => m.GetByIdAsync("m-old", It.IsAny<CancellationToken>())).ReturnsAsync(Mov("m-old", tmdbId: 10));
-        _movies.Setup(m => m.GetByIdAsync("m-recent", It.IsAny<CancellationToken>())).ReturnsAsync(Mov("m-recent", tmdbId: 20));
+        _movies.Setup(m => m.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Mov("m-old", tmdbId: 10), Mov("m-recent", tmdbId: 20) });
 
         var res = await handler.HandleAsync("alice", 6);
 
@@ -182,7 +184,8 @@ public sealed class GetUserWatchedMoviesHandlerTests
             .ReturnsAsync(new[] { Part("p1", "A") });
         _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Evt("A", winnerMovieId: "m-deleted") });
-        _movies.Setup(m => m.GetByIdAsync("m-deleted", It.IsAny<CancellationToken>())).ReturnsAsync((Movie?)null);
+        _movies.Setup(m => m.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Movie>());
 
         var res = await handler.HandleAsync("alice", 6);
 
@@ -201,8 +204,8 @@ public sealed class GetUserWatchedMoviesHandlerTests
             .ToArray();
         _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(events);
-        _movies.Setup(m => m.GetByIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((string id, CancellationToken _) => Mov(id));
+        _movies.Setup(m => m.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<string> ids, CancellationToken _) => ids.Select(id => Mov(id)).ToList());
 
         var res = await handler.HandleAsync("alice", 500);
 

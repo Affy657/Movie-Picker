@@ -329,9 +329,9 @@ export default function ProfileMoviesPage() {
             />
           ) : (
             <ul className={styles.grid} aria-label={t('profile.movies.listAria')}>
-              {toolbar.revealedItems.map((item, index) => (
+              {toolbar.revealedItems.map((item) => (
                 <ProfileMovieCard
-                  key={`${item.watchedAt}-${index}`}
+                  key={`${item.tmdbId}|${item.mediaType}|${item.watchedAt}`}
                   item={item}
                   tmdbLanguage={tmdbLanguage}
                   hasHover={hasHover}

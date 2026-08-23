@@ -13,6 +13,16 @@ public sealed class InMemoryMovieRepository : IMovieRepository
     public Task<Movie?> GetByIdAsync(string movieId, CancellationToken ct = default) =>
         Task.FromResult(_byId.TryGetValue(movieId, out var m) ? m : null);
 
+    public Task<IReadOnlyList<Movie>> ListByIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
+    {
+        if (movieIds.Count == 0)
+            return Task.FromResult<IReadOnlyList<Movie>>(Array.Empty<Movie>());
+
+        var ids = movieIds.Where(id => !string.IsNullOrWhiteSpace(id)).ToHashSet();
+        var list = _byId.Values.Where(m => ids.Contains(m.Id)).ToList();
+        return Task.FromResult<IReadOnlyList<Movie>>(list);
+    }
+
     public Task<Movie?> GetByIdAndEventIdAsync(string movieId, string eventId, CancellationToken ct = default)
     {
         if (_byId.TryGetValue(movieId, out var m) && m.EventId == eventId)
@@ -166,6 +176,7 @@ public sealed class InMemoryMovieRepository : IMovieRepository
         var list = _byId.Values
             .Where(m => set.Contains(m.ParticipantId))
             .OrderByDescending(m => m.CreatedAt)
+            .ThenByDescending(m => m.Id)
             .Skip(skip)
             .Take(take)
             .ToList();

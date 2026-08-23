@@ -23,6 +23,19 @@ public sealed class MongoMovieRepository : IMovieRepository
         return doc is null ? null : MovieMapper.ToDomain(doc);
     }
 
+    public async Task<IReadOnlyList<Movie>> ListByIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
+    {
+        if (movieIds.Count == 0)
+            return [];
+
+        var ids = movieIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
+        if (ids.Count == 0)
+            return [];
+
+        var docs = await _collection.Find(x => ids.Contains(x.Id)).ToListAsync(ct);
+        return docs.ConvertAll(MovieMapper.ToDomain);
+    }
+
     public async Task<Movie?> GetByIdAndEventIdAsync(string movieId, string eventId, CancellationToken ct = default)
     {
         var doc = await _collection.Find(x => x.Id == movieId && x.EventId == eventId).FirstOrDefaultAsync(ct);
@@ -148,6 +161,7 @@ public sealed class MongoMovieRepository : IMovieRepository
         var filter = Builders<MovieDocument>.Filter.In(x => x.ParticipantId, ids);
         var docs = await _collection.Find(filter)
             .SortByDescending(x => x.CreatedAt)
+            .ThenByDescending(x => x.Id)
             .Skip(skip)
             .Limit(take)
             .ToListAsync(ct);
