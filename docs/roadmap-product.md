@@ -200,3 +200,4 @@ Découpage par version côté **métier / utilisateur**.
 - **Contact / Support** : formulaire ou adresse dédiée pour signaler un problème, distinct du bouton « Proposer une idée » réservé aux suggestions de features.
 - **Onboarding pour nouveaux utilisateurs** : mini tour guidé ou écran de bienvenue à la première connexion, expliquant le concept (créer une soirée, voter, la roue).
 - **Statut du service** : page publique indiquant si l'API et le site sont opérationnels.
+- **Photo de profil personnalisée** : pouvoir uploader une image comme photo de profil, en remplacement de l'avatar généré (DiceBear) actuel.
