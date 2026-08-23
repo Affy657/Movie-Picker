@@ -2,13 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { genreLabel } from '@/features/profile/lib/tmdbGenres';
 import { DECADE_OPTIONS } from '@/features/movies/components/movieSearchFilterOptions';
 import type { MovieMediaType } from '@/shared/types/movie';
-import type { UserMovieItem } from '@/features/profile/api/profileApi';
+import type { UserWatchedMovieItem } from '@/features/profile/api/profileApi';
 
-export type ProfileMoviesSortKey = 'proposedAt' | 'title' | 'year';
+export type ProfileMoviesSortKey = 'watchedAt' | 'title' | 'year';
 export type SortDirection = 'asc' | 'desc';
 
 const DEFAULT_DIRECTION: Record<ProfileMoviesSortKey, SortDirection> = {
-  proposedAt: 'desc',
+  watchedAt: 'desc',
   title: 'asc',
   year: 'desc',
 };
@@ -27,25 +27,29 @@ const DEFAULT_FILTERS: FilterState = {
   decade: undefined,
 };
 
-function compareItems(a: UserMovieItem, b: UserMovieItem, sortBy: ProfileMoviesSortKey): number {
+function compareItems(
+  a: UserWatchedMovieItem,
+  b: UserWatchedMovieItem,
+  sortBy: ProfileMoviesSortKey
+): number {
   switch (sortBy) {
     case 'title':
       return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' });
     case 'year':
       return (Number.parseInt(a.year, 10) || 0) - (Number.parseInt(b.year, 10) || 0);
-    case 'proposedAt':
+    case 'watchedAt':
     default:
-      return a.proposedAt.localeCompare(b.proposedAt);
+      return a.watchedAt.localeCompare(b.watchedAt);
   }
 }
 
-function itemMatchesSearch(item: UserMovieItem, query: string): boolean {
+function itemMatchesSearch(item: UserWatchedMovieItem, query: string): boolean {
   const q = query.trim().toLowerCase();
   if (!q) return true;
   return item.title.toLowerCase().includes(q);
 }
 
-function itemMatchesFilters(item: UserMovieItem, f: FilterState): boolean {
+function itemMatchesFilters(item: UserWatchedMovieItem, f: FilterState): boolean {
   if (f.genres.length > 0 && !item.genreIds.some((g) => f.genres.includes(g))) return false;
   if (f.mediaTypes.length > 0 && !f.mediaTypes.includes(item.mediaType)) return false;
   if (f.decade != null) {
@@ -63,7 +67,7 @@ export interface ActiveToolbarChip {
 }
 
 interface UseProfileMoviesToolbarOptions {
-  items: UserMovieItem[];
+  items: UserWatchedMovieItem[];
   tmdbLanguage: string;
   mediaTypeLabels: Record<MovieMediaType, string>;
 }
@@ -76,7 +80,7 @@ export function useProfileMoviesToolbar({
   const [search, setSearch] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [sort, setSort] = useState<{ by: ProfileMoviesSortKey; dir: SortDirection }>({
-    by: 'proposedAt',
+    by: 'watchedAt',
     dir: 'desc',
   });
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);

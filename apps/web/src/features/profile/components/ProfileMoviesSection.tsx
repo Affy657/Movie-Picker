@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router';
 import { Film } from 'lucide-react';
+import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
 import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
@@ -24,9 +26,14 @@ export default function ProfileMoviesSection({ handle }: Readonly<Props>) {
 
   return (
     <section className={styles.section} aria-labelledby="profile-movies-heading">
-      <h2 id="profile-movies-heading" className={styles.heading}>
-        {t('profile.movies.title')}
-      </h2>
+      <div className={styles.headerRow}>
+        <h2 id="profile-movies-heading" className={styles.heading}>
+          {t('profile.movies.title')}
+        </h2>
+        <Link to={ROUTES.profileMovies(handle)} className={styles.seeAllLink}>
+          {t('profile.movies.seeAll')}
+        </Link>
+      </div>
       <ul className={styles.grid}>
         {items.map((item, index) => {
           const posterRaw = posterImageSrc(item.posterPath);

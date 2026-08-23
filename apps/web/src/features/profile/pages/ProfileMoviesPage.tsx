@@ -18,9 +18,8 @@ import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
 import MovieListFiltersPanel from '@/features/movies/components/MovieListFiltersPanel';
 import {
   fetchPublicProfile,
-  fetchUserStats,
-  fetchUserMovies,
-  type UserMovieItem,
+  fetchUserWatchedMovies,
+  type UserWatchedMovieItem,
 } from '@/features/profile/api/profileApi';
 import { useProfileMoviesToolbar } from '@/features/profile/hooks/useProfileMoviesToolbar';
 import ProfileMoviesToolbar from '@/features/profile/components/ProfileMoviesToolbar';
@@ -34,7 +33,7 @@ import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventM
 import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
 import styles from './ProfileMoviesPage.module.css';
 
-const MOVIES_TAKE = 60;
+const MOVIES_TAKE = 200;
 
 function watchlistKey(tmdbId: number, mediaType: string): string {
   return `${tmdbId}|${mediaType}`;
@@ -57,16 +56,9 @@ export default function ProfileMoviesPage() {
     retry: false,
   });
 
-  const statsQuery = useQuery({
-    queryKey: queryKeys.profile.stats(handle),
-    queryFn: ({ signal }) => fetchUserStats(handle ?? '', signal),
-    enabled: !!handle,
-    retry: false,
-  });
-
   const moviesQuery = useQuery({
-    queryKey: queryKeys.profile.movies(handle, 0, MOVIES_TAKE),
-    queryFn: ({ signal }) => fetchUserMovies(handle ?? '', 0, MOVIES_TAKE, signal),
+    queryKey: queryKeys.profile.watchedMovies(handle, MOVIES_TAKE),
+    queryFn: ({ signal }) => fetchUserWatchedMovies(handle ?? '', MOVIES_TAKE, signal),
     enabled: !!handle,
     retry: false,
   });
@@ -100,8 +92,8 @@ export default function ProfileMoviesPage() {
     [t]
   );
 
-  const [detailsTarget, setDetailsTarget] = useState<UserMovieItem | null>(null);
-  const [proposeTarget, setProposeTarget] = useState<UserMovieItem | null>(null);
+  const [detailsTarget, setDetailsTarget] = useState<UserWatchedMovieItem | null>(null);
+  const [proposeTarget, setProposeTarget] = useState<UserWatchedMovieItem | null>(null);
   const [watchlistError, setWatchlistError] = useState<string | null>(null);
 
   const watchlistQuery = useWatchlist({ enabled: isLoggedIn });
@@ -116,7 +108,7 @@ export default function ProfileMoviesPage() {
     onError: (err) => setWatchlistError(getErrorMessage(err, t('watchlist.card.removeError'))),
   });
 
-  const handleToggleWatchlist = (item: UserMovieItem) => {
+  const handleToggleWatchlist = (item: UserWatchedMovieItem) => {
     setWatchlistError(null);
     if (watchlistKeys.has(watchlistKey(item.tmdbId, item.mediaType))) {
       removeFromWatchlist({ tmdbId: item.tmdbId, mediaType: item.mediaType });
@@ -175,9 +167,11 @@ export default function ProfileMoviesPage() {
   }
 
   const activeFilterCount = toolbar.activeFilterChips.length;
-  const totalCount = moviesQuery.data?.totalCount ?? 0;
-  const winnersCount = statsQuery.data?.winningProposals ?? 0;
-  const subtitle = `${t(totalCount === 1 ? 'profile.movies.pageSubtitleOne' : 'profile.movies.pageSubtitle', { count: totalCount })}${winnersCount > 0 ? t(winnersCount === 1 ? 'profile.movies.pageWinnersOne' : 'profile.movies.pageWinners', { count: winnersCount }) : ''}`;
+  const totalCount = items.length;
+  const subtitle = t(
+    totalCount === 1 ? 'profile.movies.pageSubtitleOne' : 'profile.movies.pageSubtitle',
+    { count: totalCount }
+  );
 
   const filtersPanel = (
     <MovieListFiltersPanel
@@ -337,7 +331,7 @@ export default function ProfileMoviesPage() {
             <ul className={styles.grid} aria-label={t('profile.movies.listAria')}>
               {toolbar.revealedItems.map((item, index) => (
                 <ProfileMovieCard
-                  key={`${item.proposedAt}-${index}`}
+                  key={`${item.watchedAt}-${index}`}
                   item={item}
                   tmdbLanguage={tmdbLanguage}
                   hasHover={hasHover}

@@ -1,6 +1,6 @@
 .stats {
   width: 100%;
-  margin: 0 auto 2.5rem;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;

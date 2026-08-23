@@ -69,6 +69,10 @@ describe('ProfileMoviesSection (MSW)', () => {
     expect(await screen.findByRole('heading', { name: /derniers films vus/i })).toBeInTheDocument();
     expect(screen.getByText('Inception')).toBeInTheDocument();
     expect(screen.getByText('Interstellar')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /tout voir/i })).toHaveAttribute(
+      'href',
+      '/u/alice/films'
+    );
   });
 
   it('affiche un film sans affiche via le placeholder', async () => {

@@ -20,17 +20,6 @@ const ALICE_PROFILE = {
   isFollowedByMe: null,
 };
 
-const STATS = {
-  eventsCreated: 0,
-  eventsJoined: 0,
-  moviesProposed: 3,
-  votesCast: 0,
-  winningProposals: 1,
-  moviesSeen: 0,
-  favoriteGenres: [],
-  dailyActivity: [],
-};
-
 function movieItem(overrides: Record<string, unknown> = {}) {
   return {
     tmdbId: 27205,
@@ -39,8 +28,7 @@ function movieItem(overrides: Record<string, unknown> = {}) {
     posterPath: null,
     genreIds: [28],
     mediaType: 'movie',
-    proposedAt: '2026-06-01T00:00:00Z',
-    isWinner: false,
+    watchedAt: '2026-06-01T00:00:00Z',
     ...overrides,
   };
 }
@@ -62,15 +50,13 @@ function renderPage(handle: string) {
 describe('ProfileMoviesPage (MSW)', () => {
   const server = setupServer(
     http.get(`${TEST_API_V1}/users/:handle`, () => HttpResponse.json(ALICE_PROFILE)),
-    http.get(`${TEST_API_V1}/users/:handle/stats`, () => HttpResponse.json(STATS)),
-    http.get(`${TEST_API_V1}/users/:handle/movies`, () =>
+    http.get(`${TEST_API_V1}/users/:handle/watched-movies`, () =>
       HttpResponse.json({
         items: [
-          movieItem({ title: 'Inception', year: '2010', isWinner: true }),
+          movieItem({ title: 'Inception', year: '2010' }),
           movieItem({ title: 'Interstellar', year: '2014' }),
           movieItem({ title: 'Arrival', year: '2016' }),
         ],
-        totalCount: 3,
       })
     ),
     http.get(`${TEST_API_V1}/movies/tmdb/:tmdbId/details`, () =>
@@ -82,15 +68,16 @@ describe('ProfileMoviesPage (MSW)', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
-  it('affiche le titre, le sous-titre et les films avec le badge gagnant', async () => {
+  it('affiche le titre, le sous-titre et les films vus', async () => {
     renderPage('alice');
 
-    expect(await screen.findByRole('heading', { name: /les films de alice/i })).toBeInTheDocument();
-    expect(screen.getByText(/3 films proposés, 1 gagnant/i)).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: /les films vus par alice/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/3 films vus/i)).toBeInTheDocument();
     expect(screen.getByText('Inception')).toBeInTheDocument();
     expect(screen.getByText('Interstellar')).toBeInTheDocument();
     expect(screen.getByText('Arrival')).toBeInTheDocument();
-    expect(screen.getByText('Gagnant')).toBeInTheDocument();
   });
 
   it('filtre les films par la recherche', async () => {
@@ -132,18 +119,16 @@ describe('ProfileMoviesPage (MSW)', () => {
     const items = Array.from({ length: 30 }, (_, i) =>
       movieItem({
         title: `Film ${i}`,
-        proposedAt: `2026-01-${String(i + 1).padStart(2, '0')}T00:00:00Z`,
+        watchedAt: `2026-01-${String(i + 1).padStart(2, '0')}T00:00:00Z`,
       })
     );
     server.use(
-      http.get(`${TEST_API_V1}/users/:handle/movies`, () =>
-        HttpResponse.json({ items, totalCount: items.length })
-      )
+      http.get(`${TEST_API_V1}/users/:handle/watched-movies`, () => HttpResponse.json({ items }))
     );
     const user = userEvent.setup();
     renderPage('alice');
 
-    // Tri par défaut : proposition la plus récente d'abord, donc Film 29 (le 30) est visible
+    // Tri par défaut : film vu le plus récemment d'abord, donc Film 29 (le 30) est visible
     // en premier et Film 0 (le 1er) est le dernier des 30, masqué tant qu'on n'a pas chargé le reste.
     await screen.findByText('Film 29');
     expect(screen.queryByText('Film 0')).not.toBeInTheDocument();

@@ -194,9 +194,9 @@ public sealed class GetUserWatchedMoviesHandlerTests
     {
         var handler = Build();
         _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
-        var parts = Enumerable.Range(0, 40).Select(i => Part($"p{i}", $"e{i}")).ToArray();
+        var parts = Enumerable.Range(0, 250).Select(i => Part($"p{i}", $"e{i}")).ToArray();
         _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(parts);
-        var events = Enumerable.Range(0, 40)
+        var events = Enumerable.Range(0, 250)
             .Select(i => Evt($"e{i}", date: $"2026-01-{(i % 28) + 1:D2}", winnerMovieId: $"m{i}"))
             .ToArray();
         _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
@@ -206,6 +206,6 @@ public sealed class GetUserWatchedMoviesHandlerTests
 
         var res = await handler.HandleAsync("alice", 500);
 
-        Assert.Equal(30, res.Items.Count);
+        Assert.Equal(200, res.Items.Count);
     }
 }

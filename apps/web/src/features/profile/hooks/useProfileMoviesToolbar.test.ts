@@ -2,11 +2,11 @@ import { StrictMode } from 'react';
 import { describe, expect, it } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useProfileMoviesToolbar } from './useProfileMoviesToolbar';
-import type { UserMovieItem } from '@/features/profile/api/profileApi';
+import type { UserWatchedMovieItem } from '@/features/profile/api/profileApi';
 
 const MEDIA_TYPE_LABELS = { movie: 'Films', tv: 'Séries' };
 
-function item(overrides: Partial<UserMovieItem>): UserMovieItem {
+function item(overrides: Partial<UserWatchedMovieItem>): UserWatchedMovieItem {
   return {
     tmdbId: 1,
     title: 'Titre',
@@ -14,25 +14,23 @@ function item(overrides: Partial<UserMovieItem>): UserMovieItem {
     posterPath: null,
     genreIds: [],
     mediaType: 'movie',
-    proposedAt: '2026-01-01T00:00:00Z',
-    isWinner: false,
+    watchedAt: '2026-01-01T00:00:00Z',
     ...overrides,
   };
 }
 
-const ITEMS: UserMovieItem[] = [
-  item({ title: 'Alpha', year: '1990', proposedAt: '2026-01-01T00:00:00Z', genreIds: [12] }),
+const ITEMS: UserWatchedMovieItem[] = [
+  item({ title: 'Alpha', year: '1990', watchedAt: '2026-01-01T00:00:00Z', genreIds: [12] }),
   item({
     title: 'Beta',
     year: '2020',
-    proposedAt: '2026-03-01T00:00:00Z',
+    watchedAt: '2026-03-01T00:00:00Z',
     mediaType: 'tv',
-    isWinner: true,
   }),
-  item({ title: 'Gamma', year: '2010', proposedAt: '2026-02-01T00:00:00Z' }),
+  item({ title: 'Gamma', year: '2010', watchedAt: '2026-02-01T00:00:00Z' }),
 ];
 
-function setup(items: UserMovieItem[] = ITEMS) {
+function setup(items: UserWatchedMovieItem[] = ITEMS) {
   return renderHook(() =>
     useProfileMoviesToolbar({ items, tmdbLanguage: 'fr', mediaTypeLabels: MEDIA_TYPE_LABELS })
   );
@@ -41,7 +39,7 @@ function setup(items: UserMovieItem[] = ITEMS) {
 // L'app entière tourne sous <StrictMode>, qui double-invoque les fonctions de mise à jour
 // de useState en dev pour détecter les impuretés — un appel à setState imbriqué dans une
 // autre mise à jour se déclenche donc deux fois et annule son propre effet.
-function setupStrict(items: UserMovieItem[] = ITEMS) {
+function setupStrict(items: UserWatchedMovieItem[] = ITEMS) {
   return renderHook(
     () =>
       useProfileMoviesToolbar({ items, tmdbLanguage: 'fr', mediaTypeLabels: MEDIA_TYPE_LABELS }),
@@ -50,7 +48,7 @@ function setupStrict(items: UserMovieItem[] = ITEMS) {
 }
 
 describe('useProfileMoviesToolbar', () => {
-  it('trie par date de proposition (défaut, décroissant)', () => {
+  it('trie par date de visionnage (défaut, décroissant)', () => {
     const { result } = setup();
     expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Beta', 'Gamma', 'Alpha']);
   });
@@ -117,7 +115,7 @@ describe('useProfileMoviesToolbar', () => {
     const many = Array.from({ length: 30 }, (_, i) =>
       item({
         title: `Film ${i}`,
-        proposedAt: `2026-01-${String((i % 28) + 1).padStart(2, '0')}T00:00:00Z`,
+        watchedAt: `2026-01-${String((i % 28) + 1).padStart(2, '0')}T00:00:00Z`,
       })
     );
     const { result } = setup(many);
@@ -133,7 +131,7 @@ describe('useProfileMoviesToolbar', () => {
     const many = Array.from({ length: 30 }, (_, i) =>
       item({
         title: `Film ${i}`,
-        proposedAt: `2026-01-${String((i % 28) + 1).padStart(2, '0')}T00:00:00Z`,
+        watchedAt: `2026-01-${String((i % 28) + 1).padStart(2, '0')}T00:00:00Z`,
       })
     );
     const { result } = setup(many);

@@ -1,14 +1,14 @@
-import { Info, Trophy } from 'lucide-react';
+import { Info } from 'lucide-react';
 import clsx from 'clsx';
 import MovieListCard from '@/features/movies/components/MovieListCard';
 import styles from '@/features/movies/components/MovieListCard.module.css';
 import { CardKebab, type Translate } from '@/features/movies/components/movieCardParts';
 import WatchlistProposeSubmenu from '@/features/watchlist/components/WatchlistProposeSubmenu';
-import type { UserMovieItem } from '@/features/profile/api/profileApi';
+import type { UserWatchedMovieItem } from '@/features/profile/api/profileApi';
 import badgeStyles from './ProfileMovieCard.module.css';
 
 interface ProfileMovieCardProps {
-  item: UserMovieItem;
+  item: UserWatchedMovieItem;
   tmdbLanguage: string;
   hasHover: boolean;
   isLoggedIn: boolean;
@@ -42,21 +42,11 @@ export default function ProfileMovieCard({
       onOpenDetails={onOpenDetails}
       openDetailsAriaLabel={t('profile.movies.card.openDetailsAria', { title: item.title })}
       badges={
-        (isTv || item.isWinner) && (
+        isTv && (
           <div className={badgeStyles.badgeGroup}>
-            {isTv && (
-              <span className={clsx(styles.badge, styles.badgeStacked)}>
-                {t('movies.list.tvBadge')}
-              </span>
-            )}
-            {item.isWinner && (
-              <span className={clsx(styles.badge, styles.badgeStacked, badgeStyles.winnerBadge)}>
-                <Trophy size={11} aria-hidden />
-                <span className={badgeStyles.winnerBadgeLabel}>
-                  {t('profile.movies.winnerBadgeShort')}
-                </span>
-              </span>
-            )}
+            <span className={clsx(styles.badge, styles.badgeStacked)}>
+              {t('movies.list.tvBadge')}
+            </span>
           </div>
         )
       }

@@ -38,7 +38,7 @@ export default function ProfileMoviesToolbar(props: Readonly<ProfileMoviesToolba
       filtersLabel={t('profile.movies.toolbar.filtersLabel')}
       activeFilterCount={props.activeFilterCount}
       sortOptions={[
-        { key: 'proposedAt', label: t('profile.movies.toolbar.sortProposedAt') },
+        { key: 'watchedAt', label: t('profile.movies.toolbar.sortWatchedAt') },
         { key: 'title', label: t('profile.movies.toolbar.sortTitle') },
         { key: 'year', label: t('profile.movies.toolbar.sortYear') },
       ]}

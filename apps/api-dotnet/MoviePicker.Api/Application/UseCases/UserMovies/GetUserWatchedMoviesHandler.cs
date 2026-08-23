@@ -11,7 +11,7 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
 {
     private const int ParticipantsCap = 500;
     private const int DefaultTake = 6;
-    private const int MaxTake = 30;
+    private const int MaxTake = 200;
 
     private readonly IUserRepository _users;
     private readonly IParticipantRepository _participants;

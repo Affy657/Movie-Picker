@@ -203,7 +203,7 @@ describe('accessibilité (axe)', () => {
           dailyActivity: [],
         })
       ),
-      http.get(`${TEST_API_V1}/users/alice/movies`, () =>
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
         HttpResponse.json({
           items: [
             {
@@ -213,11 +213,9 @@ describe('accessibilité (axe)', () => {
               posterPath: null,
               genreIds: [28],
               mediaType: 'movie',
-              proposedAt: '2026-06-01T00:00:00Z',
-              isWinner: true,
+              watchedAt: '2026-06-01T00:00:00Z',
             },
           ],
-          totalCount: 1,
         })
       )
     );
