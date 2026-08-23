@@ -33,9 +33,9 @@ describe('DonatePage', () => {
     renderPage();
 
     expect(
-      screen.getByRole('heading', { name: /aucun avantage fonctionnel/i, level: 2 })
+      screen.getByRole('heading', { name: /rien à débloquer/i, level: 2 })
     ).toBeInTheDocument();
-    expect(screen.getByText(/aucune option payante/i)).toBeInTheDocument();
+    expect(screen.getByText(/pas de version payante/i)).toBeInTheDocument();
   });
 
   it('renvoie vers l’accueil', () => {

@@ -786,7 +786,7 @@ export const en: Locale = {
     seeMoreGroup: 'See {{count}} more',
     newFollowerText: '{{name}} started following you.',
     participantJoinedText: '{{name}} just joined **{{eventTitle}}**! 🎉',
-    movieAddedText: '**{{movie}}** was just added to **{{eventTitle}}**',
+    movieAddedText: '**{{movie}}** was added to the event **{{eventTitle}}**',
     moviePickedText: 'The verdict is in for **{{eventTitle}}**: it will be **{{movie}}**!',
     moviePickedManuallyText: 'The host has picked **{{movie}}** for **{{eventTitle}}**!',
     eventDeletedText: '**{{eventTitle}}** was cancelled.',
@@ -860,29 +860,28 @@ export const en: Locale = {
   donate: {
     title: 'Support Movie Picker',
     seoDescription:
-      'Movie Picker is free and ad-free. You can support the project with an optional donation through Ko-fi.',
+      'Movie Picker is free and ad-free. Support is optional and only pays for hosting, through a Ko-fi donation.',
     intro:
-      'Movie Picker is a personal project, free and ad-free. Donating is entirely optional: it unlocks no feature, and nothing changes if you do not donate.',
-    kofiTitle: 'Make a donation',
-    kofiBody:
-      'Donations go through Ko-fi. Movie Picker never sees your payment details: the whole payment happens on Ko-fi.',
+      'Movie Picker is built by one person, in their spare time. The service is free, ad-free, and will stay that way. Donations only pay for what keeps it running.',
+    kofiTitle: 'A helping hand',
+    kofiBody: 'Everything happens on Ko-fi: Movie Picker never sees your payment details.',
     kofiCta: 'Donate on Ko-fi',
     kofiCtaAria: 'Donate on Ko-fi (new tab)',
-    kofiNote: 'Any amount, one-off or monthly. No commitment, cancel at any time.',
-    costsTitle: 'What your support pays for',
-    costsIntro: 'Donations cover the running costs of the service:',
+    kofiNote: 'Any amount, one-off or monthly, no commitment.',
+    costsTitle: 'Where the money goes',
+    costsIntro: 'Movie Picker has fixed costs every month:',
     costsHosting: 'Website and API hosting (Amazon Web Services, Google Cloud Platform)',
     costsDatabase: 'Database (MongoDB Atlas)',
     costsDomain: 'The movie-picker.fr domain name',
     costsMonitoring: 'Error and performance monitoring (Sentry)',
-    noPerksTitle: 'No functional perks',
+    noPerksTitle: 'Nothing to unlock',
     noPerksBody:
-      'Every Movie Picker feature is and will remain available to everyone, with no donation required. There is no paid tier, no limit lifted by a donation, no reserved content.',
+      'Every feature is available to everyone, with or without a donation. No paid tier, no limit lifted by a donation, no reserved content.',
     badgeTitle: 'The supporter badge',
     badgeBody:
-      'A purely decorative badge appears on your public profile if you have supported the project. It is granted automatically when the email address used for the donation matches the one on your Movie Picker account.',
+      'A badge appears on your public profile when you support the project. It is purely decorative and is added automatically if the email address used for the donation is the one on your Movie Picker account.',
     badgeMismatch:
-      'If you donated with a different email address, or if you would rather not have the badge shown, write to {{email}}.',
+      'Donated with a different address, or would rather not have the badge shown? Write to {{email}}.',
     back: '← Back to Movie Picker',
   },
 
@@ -1056,22 +1055,49 @@ export const en: Locale = {
   },
   whatsNew: {
     title: "What's new?",
-    close: 'Close',
+    close: 'Got it',
     categories: {
       new: 'New',
       improved: 'Improved',
       fixed: 'Fixed',
     },
     entries: {
-      watchlist:
-        'Build your watchlist and suggest a title straight from it, right when movie night calls for one.',
-      letterboxd: 'Your Letterboxd watchlist now syncs with Movie Picker all by itself.',
-      manualPick: 'Hosts can now pick the winning movie themselves, no wheel required.',
-      streak: 'A flame lights up on your profile for every week you keep the streak alive.',
-      oauth: 'Sign in with one click using your Google or GitHub account.',
-      donations: 'A new “Support Movie Picker” page to give the project a boost.',
-      wheelExclusion:
-        'Hosts can set a movie aside from the draw without removing it from the list.',
+      watchlist: {
+        title: 'My list',
+        description: 'Park the films you fancy, suggest one in a click.',
+      },
+      letterboxd: {
+        title: 'Letterboxd sync',
+        description: 'Your Letterboxd watchlist lands here on its own.',
+      },
+      manualPick: {
+        title: 'Hand-picked winner',
+        description: 'Hosts can crown a film without spinning the wheel.',
+      },
+      streak: {
+        title: 'Streak flame',
+        description: 'One flame per week of movie night. Yours to keep alive.',
+      },
+      oauth: {
+        title: 'Google and GitHub sign-in',
+        description: 'One click and you are in, no password needed.',
+      },
+      donations: {
+        title: 'Support the project',
+        description: 'Movie Picker stays free. Donations pay for the servers.',
+      },
+      wheelExclusion: {
+        title: 'Films out of the draw',
+        description: 'Hosts can set a film aside without deleting it.',
+      },
+      profileRevamp: {
+        title: 'Public profile revamp',
+        description: 'Stats, followers and recently watched, better laid out.',
+      },
+      weightedWheel: {
+        title: 'Vote-weighted wheel by default',
+        description: 'Votes now count in the draw, nothing to set up.',
+      },
     },
   },
   inAppBrowser: {

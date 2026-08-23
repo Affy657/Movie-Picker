@@ -802,7 +802,7 @@
     seeMoreGroup: 'Voir les {{count}} autres',
     newFollowerText: '{{name}} a commencé à vous suivre.',
     participantJoinedText: '{{name}} vient de rejoindre **{{eventTitle}}** ! 🎉',
-    movieAddedText: "**{{movie}}** vient d'être ajouté à **{{eventTitle}}**",
+    movieAddedText: '**{{movie}}** a été ajouté à la soirée **{{eventTitle}}**',
     moviePickedText: 'Le verdict est tombé pour **{{eventTitle}}** : ce sera **{{movie}}** !',
     moviePickedManuallyText: "L'hôte a choisi **{{movie}}** pour **{{eventTitle}}** !",
     eventDeletedText: '**{{eventTitle}}** a été annulée.',
@@ -878,29 +878,28 @@
   donate: {
     title: 'Soutenir Movie Picker',
     seoDescription:
-      'Movie Picker est gratuit et sans publicité. Vous pouvez soutenir le projet par un don facultatif via Ko-fi.',
+      'Movie Picker est gratuit et sans publicité. Le soutien est facultatif et sert uniquement à payer l’hébergement, via un don Ko-fi.',
     intro:
-      'Movie Picker est un projet personnel, gratuit et sans publicité. Le don est totalement facultatif : il ne débloque aucune fonctionnalité et rien ne change si vous ne donnez pas.',
-    kofiTitle: 'Faire un don',
-    kofiBody:
-      'Les dons passent par Ko-fi. Movie Picker ne voit jamais vos données bancaires : le paiement se déroule entièrement chez Ko-fi.',
+      'Movie Picker est développé par une seule personne, sur son temps libre. Le service est gratuit, sans publicité, et le restera. Les dons servent uniquement à payer ce qui le fait tourner.',
+    kofiTitle: 'Un coup de pouce',
+    kofiBody: 'Tout se passe sur Ko-fi : Movie Picker ne voit jamais vos coordonnées bancaires.',
     kofiCta: 'Faire un don sur Ko-fi',
     kofiCtaAria: 'Faire un don sur Ko-fi (nouvel onglet)',
-    kofiNote: 'Montant libre, ponctuel ou mensuel. Aucun engagement, résiliable à tout moment.',
-    costsTitle: 'À quoi sert votre soutien',
-    costsIntro: 'Les dons couvrent les frais de fonctionnement du service :',
+    kofiNote: 'Montant libre, ponctuel ou mensuel, sans engagement.',
+    costsTitle: 'Où va l’argent',
+    costsIntro: 'Movie Picker a des frais fixes chaque mois :',
     costsHosting: 'Hébergement du site et de l’API (Amazon Web Services, Google Cloud Platform)',
     costsDatabase: 'Base de données (MongoDB Atlas)',
     costsDomain: 'Nom de domaine movie-picker.fr',
     costsMonitoring: 'Surveillance des erreurs et des performances (Sentry)',
-    noPerksTitle: 'Aucun avantage fonctionnel',
+    noPerksTitle: 'Rien à débloquer',
     noPerksBody:
-      'Toutes les fonctionnalités de Movie Picker sont et resteront accessibles à tout le monde, sans condition de don. Il n’existe aucune option payante, aucune limite levée par un don, aucun contenu réservé.',
+      'Toutes les fonctionnalités sont accessibles à tout le monde, avec ou sans don. Pas de version payante, pas de limite levée par un don, pas de contenu réservé.',
     badgeTitle: 'Le badge soutien',
     badgeBody:
-      'Un badge purement décoratif apparaît sur votre profil public si vous avez soutenu le projet. Il est attribué automatiquement lorsque l’adresse e-mail utilisée pour le don correspond à celle de votre compte Movie Picker.',
+      'Un badge apparaît sur votre profil public quand vous soutenez le projet. Il est purement décoratif et s’ajoute automatiquement si l’adresse e-mail du don est celle de votre compte Movie Picker.',
     badgeMismatch:
-      'Si vous avez donné avec une autre adresse e-mail, ou si vous préférez que le badge n’apparaisse pas, écrivez à {{email}}.',
+      'Vous avez donné avec une autre adresse, ou vous préférez que le badge n’apparaisse pas ? Écrivez à {{email}}.',
     back: '← Retour à Movie Picker',
   },
 
@@ -1077,25 +1076,49 @@
   },
   whatsNew: {
     title: 'Quoi de neuf ?',
-    close: 'Fermer',
+    close: 'C’est noté',
     categories: {
       new: 'Nouveautés',
       improved: 'Améliorations',
       fixed: 'Corrections',
     },
     entries: {
-      watchlist:
-        'Constituez votre liste de films à voir et proposez-en un directement lors d’une soirée, en un clic.',
-      letterboxd: 'Votre liste Letterboxd se synchronise désormais toute seule avec Movie Picker.',
-      manualPick:
-        "L'hôte peut maintenant désigner lui-même le film gagnant, sans passer par la roue.",
-      streak:
-        'Une flamme s’allume sur votre profil à chaque semaine de participation. À vous de la faire durer.',
-      oauth: 'Connectez-vous en un clic avec votre compte Google ou GitHub.',
-      donations:
-        'Une nouvelle page « Soutenir Movie Picker » pour donner un coup de pouce au projet.',
-      wheelExclusion:
-        "L'hôte peut écarter un film du tirage sans le retirer de la liste, pour garder toutes les options sous la main.",
+      watchlist: {
+        title: 'Ma liste',
+        description: 'Mettez vos envies de côté, proposez-en une en un clic.',
+      },
+      letterboxd: {
+        title: 'Synchro Letterboxd',
+        description: 'Votre watchlist Letterboxd arrive toute seule.',
+      },
+      manualPick: {
+        title: 'Gagnant désigné à la main',
+        description: 'L’hôte peut couronner un film sans passer par la roue.',
+      },
+      streak: {
+        title: 'Flamme de série',
+        description: 'Une flamme par semaine de soirée. À vous de la faire durer.',
+      },
+      oauth: {
+        title: 'Connexion Google et GitHub',
+        description: 'Un clic et vous êtes connecté, sans mot de passe.',
+      },
+      donations: {
+        title: 'Soutenir le projet',
+        description: 'Movie Picker reste gratuit. Les dons paient les serveurs.',
+      },
+      wheelExclusion: {
+        title: 'Films écartés du tirage',
+        description: 'L’hôte met un film de côté sans l’effacer de la liste.',
+      },
+      profileRevamp: {
+        title: 'Profil public repensé',
+        description: 'Statistiques, abonnés et derniers films vus, mieux rangés.',
+      },
+      weightedWheel: {
+        title: 'Roue pondérée par défaut',
+        description: 'Les votes comptent dans le tirage, sans rien régler.',
+      },
     },
   },
   inAppBrowser: {

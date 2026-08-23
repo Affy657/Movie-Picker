@@ -183,7 +183,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
             {
                 var message = new PushMessage(
                     Title: "Un film de plus au menu 🍿",
-                    Body: $"{movieTitle} vient d'être ajouté à {evt.Title}",
+                    Body: $"{movieTitle} a été ajouté à la soirée {evt.Title}",
                     Tag: $"movie-add-{evt.Id}",
                     Url: $"/e/{evt.Slug}"
                 );
