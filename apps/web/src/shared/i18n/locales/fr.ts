@@ -1022,6 +1022,8 @@
       },
       backLink: 'Retour au profil',
       pageTitle: 'Les films vus par {{name}}',
+      seoDescription:
+        'Films vus par {{name}} (@{{handle}}) sur Movie Picker : soirées ciné gagnées et films tirés au sort.',
       pageSubtitleOne: '{{count}} film vu',
       pageSubtitle: '{{count}} films vus',
       loadError: 'Impossible de charger les films vus par cet utilisateur.',

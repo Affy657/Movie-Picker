@@ -17,7 +17,9 @@ import EventDetailSkeleton from '@/features/events/pages/event-detail/EventDetai
 import EventMoviesLoadError from '@/features/events/pages/event-detail/EventMoviesLoadError';
 import EventMoviesSection from '@/features/events/pages/event-detail/EventMoviesSection';
 import { friendlyEventError } from '@/features/events/pages/event-detail/friendlyEventError';
-import { APP_DOCUMENT_TITLE, pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import { APP_DOCUMENT_TITLE, pageTitle } from '@/shared/hooks/useDocumentTitle';
+import { usePageSeo } from '@/shared/hooks/usePageSeo';
+import { absoluteUrl } from '@/shared/seo/siteMeta';
 import EventStartReminderBanner from '@/features/events/components/EventStartReminderBanner';
 import EventPendingBanner from '@/features/events/components/EventPendingBanner';
 import EventClosedWithoutMovieState from '@/features/events/pages/event-detail/EventClosedWithoutMovieState';
@@ -185,7 +187,11 @@ export default function EventDetail() {
     eventQuery.isError,
     event?.title
   );
-  useDocumentTitle(documentTitle);
+  usePageSeo({
+    title: documentTitle,
+    noindex: true,
+    canonical: slug ? absoluteUrl(ROUTES.eventDetail(slug)) : undefined,
+  });
 
   const isConnectedSelf =
     !!event?.myParticipant?.id && participant?.participantId === event.myParticipant.id;

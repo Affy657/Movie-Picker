@@ -14,5 +14,6 @@ Disallow: /login
 Disallow: /register
 Disallow: /forgot-password
 Disallow: /reset
+Disallow: /auth/
 
 Sitemap: https://web.movie-picker.fr/sitemap.xml

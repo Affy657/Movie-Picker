@@ -4,7 +4,8 @@ import AuthPageShell, { authPageShellStyles } from '@/features/auth/components/A
 import PageLayout from '@/shared/components/PageLayout';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import OAuthProviderButtons from '@/features/auth/components/OAuthProviderButtons';
-import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import { pageTitle } from '@/shared/hooks/useDocumentTitle';
+import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { safeReturnTo } from '@/shared/utils/returnTo';
 import { withReturnTo, ROUTES } from '@/app/routes';
@@ -13,7 +14,7 @@ import { isRegisterPasswordCompliant } from '@/shared/utils/authPasswordRules';
 
 export default function RegisterPage() {
   const { t } = useTranslation();
-  useDocumentTitle(pageTitle(t('auth.register.title')));
+  useNoindexPage(pageTitle(t('auth.register.title')), ROUTES.register);
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const returnTo = safeReturnTo(params.get('returnTo'));

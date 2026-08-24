@@ -9,7 +9,9 @@ import Avatar from '@/shared/components/Avatar';
 import { ROUTES } from '@/app/routes';
 import { ApiError, getErrorMessage } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
-import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import { pageTitle } from '@/shared/hooks/useDocumentTitle';
+import { usePageSeo } from '@/shared/hooks/usePageSeo';
+import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
@@ -131,10 +133,17 @@ export default function ProfileMoviesPage() {
     }
   };
 
-  useDocumentTitle(
-    pageTitle(
-      profile ? t('profile.movies.pageTitle', { name: profile.displayName }) : t('profile.loading')
-    )
+  usePageSeo(
+    profile
+      ? {
+          title: pageTitle(t('profile.movies.pageTitle', { name: profile.displayName })),
+          description: t('profile.movies.seoDescription', {
+            name: profile.displayName,
+            handle: profile.handle,
+          }),
+          canonical: absoluteUrl(ROUTES.profileMovies(profile.handle)),
+        }
+      : { title: pageTitle(t('profile.loading')), noindex: isNotFound }
   );
 
   if (profileQuery.isPending && handle) {

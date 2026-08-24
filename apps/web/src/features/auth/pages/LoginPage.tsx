@@ -9,7 +9,8 @@ import {
 } from '@/features/auth/devQuickLoginCredentials';
 import OAuthProviderButtons from '@/features/auth/components/OAuthProviderButtons';
 import { resolveOAuthErrorKey } from '@/features/auth/utils/oauthErrors';
-import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import { pageTitle } from '@/shared/hooks/useDocumentTitle';
+import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { safeReturnTo } from '@/shared/utils/returnTo';
 import { withReturnTo, ROUTES } from '@/app/routes';
@@ -20,7 +21,7 @@ type LoginSubmitMode = 'form' | 'devQuick';
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  useDocumentTitle(pageTitle(t('auth.login.title')));
+  useNoindexPage(pageTitle(t('auth.login.title')), ROUTES.login);
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const returnTo = safeReturnTo(params.get('returnTo'));

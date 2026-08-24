@@ -7,7 +7,8 @@ import EmptyState from '@/shared/components/EmptyState';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
-import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import { pageTitle } from '@/shared/hooks/useDocumentTitle';
+import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
 import type { LocaleCode } from '@/shared/i18n/locales';
 import { getErrorMessage } from '@/shared/api/apiError';
@@ -162,7 +163,7 @@ function NotifCard({
 export default function NotificationsPage() {
   const { t } = useTranslation();
   const { locale } = useLocale();
-  useDocumentTitle(pageTitle(t('notifications.inboxTitle')));
+  useNoindexPage(pageTitle(t('notifications.inboxTitle')), ROUTES.notifications);
   const queryClient = useQueryClient();
   const [actionError, setActionError] = useState<string | null>(null);
 

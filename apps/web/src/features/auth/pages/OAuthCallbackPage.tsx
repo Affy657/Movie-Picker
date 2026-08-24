@@ -2,6 +2,9 @@ import { useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import PageLayout from '@/shared/components/PageLayout';
+import { pageTitle } from '@/shared/hooks/useDocumentTitle';
+import { useNoindexPage } from '@/shared/hooks/usePageSeo';
+import { ROUTES } from '@/app/routes';
 import { setSessionHint } from '@/features/auth/session-hint';
 import { safeReturnTo } from '@/shared/utils/returnTo';
 import { queryKeys } from '@/shared/hooks/queryKeys';
@@ -10,6 +13,7 @@ import { useTranslation } from '@/shared/i18n';
 
 export default function OAuthCallbackPage() {
   const { t } = useTranslation();
+  useNoindexPage(pageTitle(t('auth.oauth.callbackLoading')), ROUTES.oauthCallback);
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();

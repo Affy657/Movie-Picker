@@ -2,7 +2,8 @@ import { useCallback, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import AuthPageShell, { authPageShellStyles } from '@/features/auth/components/AuthPageShell';
 import PageLayout from '@/shared/components/PageLayout';
-import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import { pageTitle } from '@/shared/hooks/useDocumentTitle';
+import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES, withReturnTo } from '@/app/routes';
@@ -11,7 +12,7 @@ import { postPasswordResetRequest } from '@/features/auth/api/authApi';
 
 export default function ForgotPasswordPage() {
   const { t, locale } = useTranslation();
-  useDocumentTitle(pageTitle(t('auth.forgotPassword.title')));
+  useNoindexPage(pageTitle(t('auth.forgotPassword.title')), ROUTES.forgotPassword);
   const [params] = useSearchParams();
   const loginTo = withReturnTo(ROUTES.login, safeReturnTo(params.get('returnTo')));
   const [email, setEmail] = useState('');

@@ -7,7 +7,8 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import NotificationsSection from '@/features/notifications/components/NotificationsSection';
 import PublicProfileSection from '@/features/profile/components/PublicProfileSection';
 import LetterboxdImportSection from '@/features/letterboxd/components/LetterboxdImportSection';
-import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import { pageTitle } from '@/shared/hooks/useDocumentTitle';
+import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
 import ThemeToggle from '@/app/components/ThemeToggle';
@@ -476,7 +477,7 @@ function DeleteAccountSection({ hasPassword }: Readonly<{ hasPassword: boolean }
 
 export default function AccountPage() {
   const { t } = useTranslation();
-  useDocumentTitle(pageTitle(t('auth.account.title')));
+  useNoindexPage(pageTitle(t('auth.account.title')), ROUTES.account);
   const { user, isLoading, logout } = useAuth();
 
   const logoutAction = useCallback(() => logout(), [logout]);

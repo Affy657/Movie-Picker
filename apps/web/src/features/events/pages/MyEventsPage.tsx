@@ -15,7 +15,8 @@ import PageLayout from '@/shared/components/PageLayout';
 import MyEventsSkeleton from '@/features/events/pages/MyEventsSkeleton';
 import { ApiError, getErrorMessage } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
-import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import { pageTitle } from '@/shared/hooks/useDocumentTitle';
+import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import type { MyEventSummary } from '@/features/events/types';
 import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
@@ -292,7 +293,7 @@ function HistoryEventsPanel({
 
 export default function MyEventsPage() {
   const { t } = useTranslation();
-  useDocumentTitle(pageTitle(t('events.myEvents.title')));
+  useNoindexPage(pageTitle(t('events.myEvents.title')), ROUTES.myEvents);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();

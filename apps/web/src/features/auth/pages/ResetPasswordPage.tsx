@@ -2,7 +2,8 @@ import { useCallback, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import AuthPageShell, { authPageShellStyles } from '@/features/auth/components/AuthPageShell';
 import PageLayout from '@/shared/components/PageLayout';
-import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import { pageTitle } from '@/shared/hooks/useDocumentTitle';
+import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
@@ -18,7 +19,7 @@ function isExpiredOrInvalidResetTokenMessage(message: string): boolean {
 
 export default function ResetPasswordPage() {
   const { t } = useTranslation();
-  useDocumentTitle(pageTitle(t('auth.resetPassword.title')));
+  useNoindexPage(pageTitle(t('auth.resetPassword.title')), ROUTES.resetPassword);
 
   const [params] = useSearchParams();
   const token = (params.get('token') ?? '').trim();

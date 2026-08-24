@@ -47,7 +47,7 @@ public sealed class GetEventSharePreviewHtmlHandler : IGetEventSharePreviewHtmlH
             pageTitle = "Movie Picker";
             ogTitle = "Movie Picker — Soirée ciné";
             ogDescription = "Tu as reçu une invitation pour une soirée ciné sur Movie Picker. Ouvre le lien pour rejoindre !";
-            ogImage = $"{webBase}/favicon.svg";
+            ogImage = $"{webBase}/og-image.png";
         }
         else
         {
@@ -89,7 +89,7 @@ public sealed class GetEventSharePreviewHtmlHandler : IGetEventSharePreviewHtmlH
 
     private async Task<string> ResolveOgImageAsync(Event evt, string apiBase, string webBase, CancellationToken ct)
     {
-        var fallback = $"{webBase}/favicon.svg";
+        var fallback = $"{webBase}/og-image.png";
         if (string.IsNullOrEmpty(evt.WinnerMovieId))
             return fallback;
 

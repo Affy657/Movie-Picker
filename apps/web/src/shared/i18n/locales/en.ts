@@ -1004,6 +1004,8 @@ export const en: Locale = {
       },
       backLink: 'Back to profile',
       pageTitle: 'Movies watched by {{name}}',
+      seoDescription:
+        'Movies watched by {{name}} (@{{handle}}) on Movie Picker: movie nights won and films picked together.',
       pageSubtitleOne: '{{count}} movie watched',
       pageSubtitle: '{{count}} movies watched',
       loadError: "Could not load this user's watched movies.",
