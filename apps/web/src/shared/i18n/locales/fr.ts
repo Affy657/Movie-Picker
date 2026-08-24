@@ -1139,6 +1139,37 @@
       },
     },
   },
+  pwaInstall: {
+    trigger: 'Installer l’app',
+    copyLink: 'Copier le lien',
+    copied: 'Lien copié',
+    guide: {
+      ios: {
+        title: 'Ajouter à l’écran d’accueil',
+        intro:
+          'Sur iPhone et iPad, Safari n’affiche pas de bouton d’installation. Voici comment faire :',
+        step1: 'Appuyez sur le bouton Partager (le carré avec la flèche vers le haut).',
+        step2: 'Faites défiler et choisissez « Sur l’écran d’accueil ».',
+        step3: 'Validez. Movie Picker apparaîtra comme une application.',
+      },
+      inApp: {
+        title: 'Ouvrir dans le navigateur',
+        intro:
+          'Instagram, TikTok ou Snapchat ne permettent pas d’installer l’app. Ouvrez Movie Picker dans Safari ou Chrome.',
+        step1: 'Appuyez sur le menu ⋯ de cette application.',
+        step2: 'Choisissez « Ouvrir dans le navigateur » (Safari ou Chrome).',
+        step3: 'Une fois dans le navigateur, revenez ici et appuyez sur « Installer l’app ».',
+      },
+      generic: {
+        title: 'Installer Movie Picker',
+        intro:
+          'Votre navigateur n’affiche pas de fenêtre d’installation. Cherchez l’option dans le menu du navigateur.',
+        step1: 'Ouvrez le menu du navigateur (⋮ ou ⋯).',
+        step2: 'Choisissez « Installer l’application » ou « Ajouter à l’écran d’accueil ».',
+        step3: 'Validez. Movie Picker s’ouvrira ensuite comme une application.',
+      },
+    },
+  },
   inAppBrowser: {
     banner: {
       title: 'Vous êtes dans le navigateur intégré de cette application',

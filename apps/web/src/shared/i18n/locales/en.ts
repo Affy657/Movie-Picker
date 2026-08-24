@@ -1118,6 +1118,36 @@ export const en: Locale = {
       },
     },
   },
+  pwaInstall: {
+    trigger: 'Install the app',
+    copyLink: 'Copy link',
+    copied: 'Link copied',
+    guide: {
+      ios: {
+        title: 'Add to Home Screen',
+        intro: 'On iPhone and iPad, Safari has no install button. Here is how to add Movie Picker:',
+        step1: 'Tap the Share button (the square with an arrow pointing up).',
+        step2: 'Scroll and choose “Add to Home Screen”.',
+        step3: 'Confirm. Movie Picker will appear as an app.',
+      },
+      inApp: {
+        title: 'Open in your browser',
+        intro:
+          'Instagram, TikTok, or Snapchat cannot install the app. Open Movie Picker in Safari or Chrome.',
+        step1: 'Tap this app’s ⋯ menu.',
+        step2: 'Choose “Open in browser” (Safari or Chrome).',
+        step3: 'Once in the browser, come back here and tap “Install the app”.',
+      },
+      generic: {
+        title: 'Install Movie Picker',
+        intro:
+          'Your browser is not showing an install prompt. Look for the option in the browser menu.',
+        step1: 'Open the browser menu (⋮ or ⋯).',
+        step2: 'Choose “Install app” or “Add to Home Screen”.',
+        step3: 'Confirm. Movie Picker will then open as an app.',
+      },
+    },
+  },
   inAppBrowser: {
     banner: {
       title: "You're in this app's built-in browser",

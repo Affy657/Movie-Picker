@@ -1,6 +1,14 @@
 import { useCallback, useId, useRef, useState } from 'react';
 import { Link } from 'react-router';
-import { ChevronDown, HeartHandshake, Lightbulb, LogOut, Settings, UserRound } from 'lucide-react';
+import {
+  ChevronDown,
+  Download,
+  HeartHandshake,
+  Lightbulb,
+  LogOut,
+  Settings,
+  UserRound,
+} from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
 import { ProposeIdeaDialog } from '@/app/components/ProposeIdeaButton';
 import { ROUTES } from '@/app/routes';
@@ -10,6 +18,8 @@ import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useMenuFocus } from '@/shared/hooks/useMenuFocus';
 import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
+import { usePwaInstallClick } from '@/shared/hooks/usePwaInstall';
+import InstallPwaDialog from '@/app/components/InstallPwaDialog';
 import type { UserProfile } from '@/features/auth/types';
 import styles from './UserMenu.module.css';
 
@@ -31,6 +41,15 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
   useClickOutside(containerRef, close, open);
   useMenuFocus(open, panelRef, triggerRef);
   const fitLeft = useMenuHorizontalFit(open, containerRef, panelRef);
+
+  const {
+    shouldShow: showInstall,
+    mode: installMode,
+    guideOpen: installGuideOpen,
+    guideMode: installGuideMode,
+    onClick: onInstallClick,
+    closeGuide: closeInstallGuide,
+  } = usePwaInstallClick('user_menu');
 
   const logoutAction = useCallback(() => logout(), [logout]);
   const {
@@ -94,6 +113,20 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
             <Lightbulb className={styles.icon} aria-hidden="true" focusable="false" />
             <span className={styles.itemLabel}>{t('proposeIdea.trigger')}</span>
           </button>
+          {showInstall ? (
+            <button
+              type="button"
+              className={styles.item}
+              aria-haspopup={installMode === 'native' ? undefined : 'dialog'}
+              onClick={() => {
+                close();
+                void onInstallClick();
+              }}
+            >
+              <Download className={styles.icon} aria-hidden="true" focusable="false" />
+              <span className={styles.itemLabel}>{t('pwaInstall.trigger')}</span>
+            </button>
+          ) : null}
           <button
             type="button"
             className={styles.item}
@@ -113,6 +146,9 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
         </div>
       ) : null}
       <ProposeIdeaDialog open={ideaDialogOpen} onClose={() => setIdeaDialogOpen(false)} />
+      {installGuideOpen ? (
+        <InstallPwaDialog open mode={installGuideMode} onClose={closeInstallGuide} />
+      ) : null}
     </div>
   );
 }

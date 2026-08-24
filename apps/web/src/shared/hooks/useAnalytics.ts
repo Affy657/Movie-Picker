@@ -18,7 +18,11 @@ export type AnalyticsEvent =
   | 'event_closed'
   | 'user_followed'
   | 'user_unfollowed'
-  | 'donation_link_clicked';
+  | 'donation_link_clicked'
+  | 'pwa_install_clicked'
+  | 'pwa_install_accepted'
+  | 'pwa_install_dismissed'
+  | 'pwa_install_guide_shown';
 
 export function useAnalytics() {
   const { analytics } = useConsent();

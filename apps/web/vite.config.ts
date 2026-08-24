@@ -146,6 +146,13 @@ export default defineConfig(({ mode }) => {
           start_url: '/',
           scope: '/',
           lang: 'fr',
+          prefer_related_applications: false,
+          related_applications: [
+            {
+              platform: 'webapp',
+              url: 'https://moviepicker.app/manifest.webmanifest',
+            },
+          ],
           icons: [
             {
               src: '/icons/pwa-64x64.png',

@@ -4,8 +4,10 @@ import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import { APP_VERSION } from '@/shared/appVersion';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { usePwaInstallClick } from '@/shared/hooks/usePwaInstall';
 import ProposeIdeaButton from './ProposeIdeaButton';
 import SupportReportButton from './SupportReportButton';
+import InstallPwaDialog from './InstallPwaDialog';
 import styles from './Footer.module.css';
 
 type FooterProps = {
@@ -54,6 +56,14 @@ const CURRENT_YEAR = new Date().getFullYear();
 export default function Footer({ clearMobileNav = false, onOpenWhatsNew }: Readonly<FooterProps>) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const {
+    shouldShow: showInstall,
+    mode: installMode,
+    guideOpen: installGuideOpen,
+    guideMode: installGuideMode,
+    onClick: onInstallClick,
+    closeGuide: closeInstallGuide,
+  } = usePwaInstallClick('footer');
 
   return (
     <footer
@@ -66,6 +76,16 @@ export default function Footer({ clearMobileNav = false, onOpenWhatsNew }: Reado
             <span className={styles.brandName}>Movie Picker</span>
           </Link>
           <p className={styles.brandTagline}>{t('footer.tagline')}</p>
+          {showInstall ? (
+            <button
+              type="button"
+              className={clsx(styles.colLink, styles.colButtonReset, styles.brandAction)}
+              aria-haspopup={installMode === 'native' ? undefined : 'dialog'}
+              onClick={() => void onInstallClick()}
+            >
+              {t('pwaInstall.trigger')}
+            </button>
+          ) : null}
         </div>
 
         <div className={styles.col}>
@@ -185,6 +205,9 @@ export default function Footer({ clearMobileNav = false, onOpenWhatsNew }: Reado
           ) : null}
         </div>
       </div>
+      {installGuideOpen ? (
+        <InstallPwaDialog open mode={installGuideMode} onClose={closeInstallGuide} />
+      ) : null}
     </footer>
   );
 }
