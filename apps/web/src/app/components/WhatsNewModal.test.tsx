@@ -49,11 +49,7 @@ const RELEASE: WhatsNewRelease = {
   ],
 };
 
-function renderModal(
-  profileHandle: string | null = null,
-  onClose = vi.fn(),
-  onAction = vi.fn()
-) {
+function renderModal(profileHandle: string | null = null, onClose = vi.fn(), onAction = vi.fn()) {
   render(
     <AppTestProviders>
       <MemoryRouter>

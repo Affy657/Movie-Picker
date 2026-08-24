@@ -118,8 +118,7 @@ export const LATEST_WHATS_NEW_RELEASE: WhatsNewRelease = getLatestRelease(WHATS_
 
 export const WHATS_NEW_NAV_RELEASED_AT_MS = Date.parse('2026-08-24T00:00:00.000Z');
 export const WHATS_NEW_NAV_VISIBLE_FOR_MS = 7 * 24 * 60 * 60 * 1000;
-export const WHATS_NEW_NAV_NEW_ACCOUNT_FROM_MS =
-  WHATS_NEW_NAV_RELEASED_AT_MS + 24 * 60 * 60 * 1000;
+export const WHATS_NEW_NAV_NEW_ACCOUNT_FROM_MS = WHATS_NEW_NAV_RELEASED_AT_MS + 24 * 60 * 60 * 1000;
 
 export function shouldShowWhatsNewNavChip(
   accountCreatedAt: string | undefined | null,

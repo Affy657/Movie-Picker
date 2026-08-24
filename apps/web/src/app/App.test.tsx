@@ -195,7 +195,9 @@ describe('App (routes)', () => {
       );
       renderRoutes(['/my-events']);
       await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 }, { timeout: 8000 });
-      expect(screen.queryByRole('button', { name: /voir les nouveautés/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /voir les nouveautés/i })
+      ).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: /^nouveautés$/i })).toBeInTheDocument();
     });
   });
