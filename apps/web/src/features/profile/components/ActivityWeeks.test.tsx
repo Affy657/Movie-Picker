@@ -29,20 +29,20 @@ describe('ActivityWeeks', () => {
   it('rend un groupe et une cellule accessible pour une liste non vide', () => {
     renderWeeks([{ date: '2026-01-01', count: 0 }]);
     expect(screen.getByRole('group')).toBeInTheDocument();
-    expect(screen.getByRole('img')).toBeInTheDocument();
+    expect(screen.getByRole('button')).toBeInTheDocument();
   });
 
   it('agrège les jours en une cellule par semaine, chacune focusable au clavier', () => {
     const points = days(new Array(21).fill(0), '2026-01-05');
     renderWeeks(points);
-    const cells = screen.getAllByRole('img');
+    const cells = screen.getAllByRole('button');
     expect(cells).toHaveLength(3);
-    cells.forEach((cell) => expect(cell).toHaveAttribute('tabindex', '0'));
+    cells.forEach((cell) => expect(cell).toBeInstanceOf(HTMLButtonElement));
   });
 
   it('gère une date invalide sans planter (branche isNaN)', () => {
     renderWeeks([{ date: 'pas-une-date', count: 3 }]);
-    expect(screen.getByRole('img')).toBeInTheDocument();
+    expect(screen.getByRole('button')).toBeInTheDocument();
   });
 
   it('affiche le total dans le libellé du groupe', () => {

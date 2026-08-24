@@ -96,6 +96,6 @@ describe('ProfileMoviesSection (MSW)', () => {
 
     renderSection('bob');
 
-    await screen.findByText('Sans affiche');
+    expect(await screen.findByText('Sans affiche')).toBeInTheDocument();
   });
 });

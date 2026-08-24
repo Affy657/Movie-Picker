@@ -107,12 +107,12 @@ function ConnectFormModal({
 
         {connecting ? (
           <div className={styles.progress}>
-            <div
-              className={styles.progressBar}
-              role="progressbar"
-              aria-label={t('auth.account.letterboxd.connectSyncingAria')}
-            >
-              <div className={styles.progressBarFill} />
+            <div className={styles.progressTrack}>
+              <progress
+                className={styles.progressControl}
+                aria-label={t('auth.account.letterboxd.connectSyncingAria')}
+              />
+              <span className={styles.progressBarFill} aria-hidden />
             </div>
             <p className={styles.progressText}>{t('auth.account.letterboxd.connectSyncingHint')}</p>
           </div>

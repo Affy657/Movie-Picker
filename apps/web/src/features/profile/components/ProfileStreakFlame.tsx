@@ -16,9 +16,8 @@ export default function ProfileStreakFlame({ weeks, bestWeeks }: Readonly<Props>
   const isLit = weeks > 0;
   const showRecord = bestWeeks > weeks;
 
-  const currentLabel = isLit
-    ? `${weeks} ${t(weeks === 1 ? 'profile.streak.weekLabel' : 'profile.streak.weeksLabel')}`
-    : t('profile.streak.broken');
+  const weekLabelKey = weeks === 1 ? 'profile.streak.weekLabel' : 'profile.streak.weeksLabel';
+  const currentLabel = isLit ? `${weeks} ${t(weekLabelKey)}` : t('profile.streak.broken');
 
   const recordLabel = t(
     bestWeeks === 1 ? 'profile.streak.recordWeek' : 'profile.streak.recordWeeks',
@@ -28,9 +27,8 @@ export default function ProfileStreakFlame({ weeks, bestWeeks }: Readonly<Props>
   const ariaLabel = showRecord ? `${currentLabel}, ${recordLabel}` : currentLabel;
 
   return (
-    <div
+    <section
       className={isLit ? styles.streak : `${styles.streak} ${styles.out}`}
-      role="group"
       aria-label={ariaLabel}
     >
       <svg className={styles.flame} viewBox="0 0 64 80" aria-hidden focusable="false">
@@ -47,6 +45,6 @@ export default function ProfileStreakFlame({ weeks, bestWeeks }: Readonly<Props>
         <span className={styles.current}>{currentLabel}</span>
         {showRecord && <span className={styles.record}>{recordLabel}</span>}
       </span>
-    </div>
+    </section>
   );
 }

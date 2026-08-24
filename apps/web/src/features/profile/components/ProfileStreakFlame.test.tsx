@@ -41,12 +41,12 @@ describe('ProfileStreakFlame', () => {
   it('expose un nom accessible regroupant le streak courant et le record', () => {
     renderFlame(3, 5);
     expect(
-      screen.getByRole('group', { name: '3 semaines de suite, Record 5 semaines' })
+      screen.getByRole('region', { name: '3 semaines de suite, Record 5 semaines' })
     ).toBeInTheDocument();
   });
 
   it('expose un nom accessible sans record en double quand ils sont égaux', () => {
     renderFlame(3, 3);
-    expect(screen.getByRole('group', { name: '3 semaines de suite' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: '3 semaines de suite' })).toBeInTheDocument();
   });
 });

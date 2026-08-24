@@ -12,6 +12,7 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
     private const int ParticipantsCap = 500;
     private const int FavoriteGenresTop = 6;
     private const int ActivityWeeks = 26;
+    private const string IsoDateFormat = "yyyy-MM-dd";
 
     private readonly IUserRepository _users;
     private readonly IParticipantRepository _participants;
@@ -130,11 +131,11 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
         var counts = new Dictionary<string, int>();
         foreach (var dateStr in eventDates)
         {
-            if (!DateTime.TryParseExact(dateStr, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var day))
+            if (!DateTime.TryParseExact(dateStr, IsoDateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var day))
                 continue;
             if (day < start || day > today)
                 continue;
-            var key = day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            var key = day.ToString(IsoDateFormat, CultureInfo.InvariantCulture);
             counts[key] = counts.TryGetValue(key, out var c) ? c + 1 : 1;
         }
 
@@ -142,7 +143,7 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
         var result = new List<DailyActivityPoint>(totalDays);
         for (var i = 0; i < totalDays; i++)
         {
-            var key = start.AddDays(i).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            var key = start.AddDays(i).ToString(IsoDateFormat, CultureInfo.InvariantCulture);
             result.Add(new DailyActivityPoint
             {
                 Date = key,
@@ -166,7 +167,7 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
     internal static (int Current, int Best) ComputeStreaks(IEnumerable<Event> qualifyingEvents, DateTimeOffset now)
     {
         var weeks = qualifyingEvents
-            .Select(e => DateTime.TryParseExact(e.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var day)
+            .Select(e => DateTime.TryParseExact(e.Date, IsoDateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var day)
                 ? MondayOfWeek(day)
                 : (DateTime?)null)
             .Where(w => w is not null)

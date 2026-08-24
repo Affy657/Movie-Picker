@@ -6,6 +6,40 @@ import QrCodeButton from '@/shared/components/QrCodeButton';
 import type { PublicProfile } from '@/features/profile/api/profileApi';
 import styles from './ProfileActions.module.css';
 
+function followButtonClass(
+  isFollowedByMe: boolean | null,
+  primary: string | undefined,
+  unfollowBtn: string | undefined
+): string {
+  if (isFollowedByMe) return `btn ${primary ?? ''} ${unfollowBtn ?? ''}`.trim();
+  return `btn ${primary ?? ''} btn-primary`.trim();
+}
+
+function FollowButtonIcon({
+  followPending,
+  isFollowedByMe,
+  spinnerClass,
+  iconIdle,
+  iconActive,
+}: Readonly<{
+  followPending: boolean;
+  isFollowedByMe: boolean | null;
+  spinnerClass: string | undefined;
+  iconIdle: string | undefined;
+  iconActive: string | undefined;
+}>) {
+  if (followPending) return <span className={spinnerClass} aria-hidden />;
+  if (isFollowedByMe) {
+    return (
+      <>
+        <UserCheck size={16} aria-hidden className={iconIdle} />
+        <UserMinus size={16} aria-hidden className={iconActive} />
+      </>
+    );
+  }
+  return <UserPlus size={16} aria-hidden />;
+}
+
 interface Props {
   profile: PublicProfile;
   isOwnProfile: boolean;
@@ -51,7 +85,7 @@ export default function ProfileActions({
       {!isOwnProfile && isLoggedIn && (
         <button
           type="button"
-          className={`btn ${styles.primary}${profile.isFollowedByMe ? ` ${styles.unfollowBtn}` : ' btn-primary'}`}
+          className={followButtonClass(profile.isFollowedByMe, styles.primary, styles.unfollowBtn)}
           disabled={followPending}
           aria-label={
             profile.isFollowedByMe
@@ -60,16 +94,13 @@ export default function ProfileActions({
           }
           onClick={() => (profile.isFollowedByMe ? onUnfollow() : onFollow())}
         >
-          {followPending ? (
-            <span className={styles.spinner} aria-hidden />
-          ) : profile.isFollowedByMe ? (
-            <>
-              <UserCheck size={16} aria-hidden className={styles.iconIdle} />
-              <UserMinus size={16} aria-hidden className={styles.iconActive} />
-            </>
-          ) : (
-            <UserPlus size={16} aria-hidden />
-          )}
+          <FollowButtonIcon
+            followPending={followPending}
+            isFollowedByMe={profile.isFollowedByMe}
+            spinnerClass={styles.spinner}
+            iconIdle={styles.iconIdle}
+            iconActive={styles.iconActive}
+          />
           <span className={styles.btnLabel}>
             {profile.isFollowedByMe ? (
               <>

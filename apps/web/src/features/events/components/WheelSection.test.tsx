@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import WheelSection from '@/features/events/components/WheelSection';
@@ -299,7 +299,7 @@ describe('WheelSection', () => {
     await userEvent.click(screen.getByRole('button', { name: 'test-select-movie' }));
 
     expect(postEventWinnerMock).toHaveBeenCalledWith('soiree', 'm0', 'ht');
-    await waitFor(() => expect(screen.getByTestId('wheel-modal-mock')).toBeInTheDocument());
+    expect(await screen.findByTestId('wheel-modal-mock')).toBeInTheDocument();
     expect(screen.getByTestId('wheel-modal-mock')).toHaveAttribute('data-skip-spin', 'true');
     expect(screen.getByTestId('wheel-modal-mock')).toHaveAttribute('data-has-relaunch', 'false');
     expect(screen.getByTestId('wheel-modal-mock')).toHaveTextContent('Inception');
@@ -314,7 +314,7 @@ describe('WheelSection', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /lancer la roue/i }));
 
-    await waitFor(() => expect(screen.getByTestId('wheel-modal-mock')).toBeInTheDocument());
+    expect(await screen.findByTestId('wheel-modal-mock')).toBeInTheDocument();
     expect(screen.getByTestId('wheel-modal-mock')).toHaveAttribute('data-skip-spin', 'false');
     expect(screen.getByTestId('wheel-modal-mock')).toHaveAttribute('data-has-relaunch', 'true');
   });

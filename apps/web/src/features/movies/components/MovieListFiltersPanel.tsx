@@ -42,7 +42,7 @@ interface MovieListFiltersPanelProps {
   onToggleMediaType: (mediaType: MovieMediaType) => void;
   selectedDecade: string | undefined;
   onToggleDecade: (decade: string) => void;
-  voteMin?: number | undefined;
+  voteMin?: number;
   onToggleVoteMin?: (min: number) => void;
   runtimeRange?: [number, number];
   onChangeRuntimeRange?: (min: number, max: number) => void;

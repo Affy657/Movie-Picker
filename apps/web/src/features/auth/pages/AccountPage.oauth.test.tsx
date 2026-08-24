@@ -135,6 +135,6 @@ describe('AccountPage — connexions et compte sans mot de passe (MSW)', () => {
     await user.click(screen.getByRole('button', { name: 'Supprimer définitivement' }));
 
     await waitFor(() => expect(sentConfirmation).toBe('oauthuser'));
-    await waitFor(() => expect(screen.getByTestId('home-marker')).toBeInTheDocument());
+    expect(await screen.findByTestId('home-marker')).toBeInTheDocument();
   });
 });

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
@@ -135,6 +135,6 @@ describe('ProfileMoviesPage (MSW)', () => {
 
     await user.click(screen.getByRole('button', { name: /charger les 6 films restants/i }));
 
-    await waitFor(() => expect(screen.getByText('Film 0')).toBeInTheDocument());
+    expect(await screen.findByText('Film 0')).toBeInTheDocument();
   });
 });

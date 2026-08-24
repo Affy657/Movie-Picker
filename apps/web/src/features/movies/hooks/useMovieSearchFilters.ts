@@ -9,7 +9,7 @@ import {
   RUNTIME_MIN_MINUTES,
   VOTE_MIN_OPTIONS,
   localizedName,
-  runtimeRangeLabel,
+  runtimeChipLabel,
   voteMinLabel,
 } from '@/features/movies/components/movieSearchFilterOptions';
 
@@ -17,6 +17,94 @@ export interface ActiveFilterChip {
   key: string;
   label: string;
   onRemove: () => void;
+}
+
+function collectSearchFilterChips(args: {
+  selectedGenres: number[];
+  tmdbLanguage: string;
+  removeGenre: (id: number) => void;
+  selectedDecade: string | undefined;
+  setSelectedDecade: (value: string | undefined) => void;
+  voteMin: number | undefined;
+  setVoteMin: (value: number | undefined) => void;
+  ratingScale?: RatingScale;
+  selectedLanguage: string | undefined;
+  setSelectedLanguage: (value: string | undefined) => void;
+  availabilityFilter: string | undefined;
+  setAvailabilityFilter: (value: string | undefined) => void;
+  runtimeMin: number | undefined;
+  runtimeMax: number | undefined;
+  runtimeRange: [number, number];
+  setRuntimeRange: (value: [number, number]) => void;
+  markFilterChanged: () => void;
+}): ActiveFilterChip[] {
+  const chips: ActiveFilterChip[] = [];
+  for (const id of args.selectedGenres) {
+    chips.push({
+      key: `g-${id}`,
+      label: genreLabel(id, args.tmdbLanguage),
+      onRemove: () => args.removeGenre(id),
+    });
+  }
+  if (args.selectedDecade != null) {
+    chips.push({
+      key: 'decade',
+      label: `${args.selectedDecade}s`,
+      onRemove: () => {
+        args.markFilterChanged();
+        args.setSelectedDecade(undefined);
+      },
+    });
+  }
+  if (args.voteMin != null) {
+    const voteOpt = VOTE_MIN_OPTIONS.find((o) => o.tmdb === args.voteMin);
+    chips.push({
+      key: 'vote',
+      label: voteOpt ? `★ ${voteMinLabel(voteOpt.tmdb, args.ratingScale)}+` : `★ ${args.voteMin}+`,
+      onRemove: () => {
+        args.markFilterChanged();
+        args.setVoteMin(undefined);
+      },
+    });
+  }
+  if (args.selectedLanguage != null) {
+    const opt = LANGUAGE_OPTIONS.find((l) => l.code === args.selectedLanguage);
+    const label = opt
+      ? `${opt.code.toUpperCase()} ${localizedName(opt.fr, opt.en, args.tmdbLanguage)}`
+      : args.selectedLanguage;
+    chips.push({
+      key: 'lang',
+      label,
+      onRemove: () => {
+        args.markFilterChanged();
+        args.setSelectedLanguage(undefined);
+      },
+    });
+  }
+  if (args.availabilityFilter != null) {
+    const opt = AVAILABILITY_OPTIONS.find((o) => o.type === args.availabilityFilter);
+    chips.push({
+      key: 'avail',
+      label: opt ? localizedName(opt.fr, opt.en, args.tmdbLanguage) : args.availabilityFilter,
+      onRemove: () => args.setAvailabilityFilter(undefined),
+    });
+  }
+  if (args.runtimeMin !== undefined || args.runtimeMax !== undefined) {
+    chips.push({
+      key: 'runtime',
+      label: runtimeChipLabel(
+        args.runtimeMin,
+        args.runtimeMax,
+        args.runtimeRange,
+        args.tmdbLanguage
+      ),
+      onRemove: () => {
+        args.markFilterChanged();
+        args.setRuntimeRange([RUNTIME_MIN_MINUTES, RUNTIME_MAX_MINUTES]);
+      },
+    });
+  }
+  return chips;
 }
 
 export function useMovieSearchFilters(tmdbLanguage: string, ratingScale?: RatingScale) {
@@ -106,88 +194,43 @@ export function useMovieSearchFilters(tmdbLanguage: string, ratingScale?: Rating
     setSelectedGenres((prev) => prev.filter((g) => g !== id));
   }, []);
 
-  const activeFilterChips = useMemo<ActiveFilterChip[]>(() => {
-    const chips: ActiveFilterChip[] = [];
-    for (const id of selectedGenres) {
-      chips.push({
-        key: `g-${id}`,
-        label: genreLabel(id, tmdbLanguage),
-        onRemove: () => removeGenre(id),
-      });
-    }
-    if (selectedDecade != null) {
-      chips.push({
-        key: 'decade',
-        label: `${selectedDecade}s`,
-        onRemove: () => {
+  const activeFilterChips = useMemo<ActiveFilterChip[]>(
+    () =>
+      collectSearchFilterChips({
+        selectedGenres,
+        tmdbLanguage,
+        removeGenre,
+        selectedDecade,
+        setSelectedDecade,
+        voteMin,
+        setVoteMin,
+        ratingScale,
+        selectedLanguage,
+        setSelectedLanguage,
+        availabilityFilter,
+        setAvailabilityFilter,
+        runtimeMin,
+        runtimeMax,
+        runtimeRange,
+        setRuntimeRange,
+        markFilterChanged: () => {
           filterChangedRef.current = true;
-          setSelectedDecade(undefined);
         },
-      });
-    }
-    if (voteMin != null) {
-      const voteOpt = VOTE_MIN_OPTIONS.find((o) => o.tmdb === voteMin);
-      chips.push({
-        key: 'vote',
-        label: voteOpt ? `★ ${voteMinLabel(voteOpt.tmdb, ratingScale)}+` : `★ ${voteMin}+`,
-        onRemove: () => {
-          filterChangedRef.current = true;
-          setVoteMin(undefined);
-        },
-      });
-    }
-    if (selectedLanguage != null) {
-      const opt = LANGUAGE_OPTIONS.find((l) => l.code === selectedLanguage);
-      const label = opt
-        ? `${opt.code.toUpperCase()} ${localizedName(opt.fr, opt.en, tmdbLanguage)}`
-        : selectedLanguage;
-      chips.push({
-        key: 'lang',
-        label,
-        onRemove: () => {
-          filterChangedRef.current = true;
-          setSelectedLanguage(undefined);
-        },
-      });
-    }
-    if (availabilityFilter != null) {
-      const opt = AVAILABILITY_OPTIONS.find((o) => o.type === availabilityFilter);
-      chips.push({
-        key: 'avail',
-        label: opt ? localizedName(opt.fr, opt.en, tmdbLanguage) : availabilityFilter,
-        onRemove: () => setAvailabilityFilter(undefined),
-      });
-    }
-    if (runtimeMin !== undefined || runtimeMax !== undefined) {
-      const runtimeLabel =
-        runtimeMin !== undefined && runtimeMax !== undefined
-          ? `${runtimeRangeLabel(runtimeRange[0], tmdbLanguage)} - ${runtimeRangeLabel(runtimeRange[1], tmdbLanguage)}`
-          : runtimeMin !== undefined
-            ? runtimeRangeLabel(runtimeRange[0], tmdbLanguage, 'min')
-            : runtimeRangeLabel(runtimeRange[1], tmdbLanguage, 'max');
-      chips.push({
-        key: 'runtime',
-        label: runtimeLabel,
-        onRemove: () => {
-          filterChangedRef.current = true;
-          setRuntimeRange([RUNTIME_MIN_MINUTES, RUNTIME_MAX_MINUTES]);
-        },
-      });
-    }
-    return chips;
-  }, [
-    selectedGenres,
-    selectedDecade,
-    voteMin,
-    selectedLanguage,
-    availabilityFilter,
-    runtimeMin,
-    runtimeMax,
-    runtimeRange,
-    tmdbLanguage,
-    ratingScale,
-    removeGenre,
-  ]);
+      }),
+    [
+      selectedGenres,
+      selectedDecade,
+      voteMin,
+      selectedLanguage,
+      availabilityFilter,
+      runtimeMin,
+      runtimeMax,
+      runtimeRange,
+      tmdbLanguage,
+      ratingScale,
+      removeGenre,
+    ]
+  );
 
   return {
     filtersOpen,

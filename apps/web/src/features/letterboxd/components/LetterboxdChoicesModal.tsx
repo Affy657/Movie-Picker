@@ -4,6 +4,7 @@ import { Check, X } from 'lucide-react';
 import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useLocale, useTranslation } from '@/shared/i18n';
+import type { TranslationKey } from '@/shared/i18n';
 import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { metaGenresLabel, movieMetaLine } from '@/shared/utils/movieMetaLine';
@@ -24,6 +25,25 @@ interface LetterboxdChoicesModalProps {
 }
 
 type Answer = { candidate: LetterboxdCandidate } | 'skip';
+
+function selectedCandidateIndex(
+  answer: Answer | undefined,
+  candidates: LetterboxdCandidate[]
+): number {
+  if (answer === 'skip') return candidates.length;
+  if (answer) return candidates.findIndex((c) => c.tmdbId === answer.candidate.tmdbId);
+  return -1;
+}
+
+function confirmStepLabel(
+  confirming: boolean,
+  isLast: boolean,
+  t: (key: TranslationKey) => string
+): string {
+  if (confirming) return t('auth.account.letterboxd.choicesSubmitting');
+  if (isLast) return t('auth.account.letterboxd.choicesConfirmFinish');
+  return t('auth.account.letterboxd.choicesConfirmNext');
+}
 
 function toSelection(
   candidate: LetterboxdCandidate,
@@ -103,12 +123,7 @@ export default function LetterboxdChoicesModal({
   const decideLater = () => void runConfirm(answers);
 
   const optionCount = current.candidates.length + 1;
-  const selectedOptionIndex =
-    currentAnswer === 'skip'
-      ? current.candidates.length
-      : currentAnswer
-        ? current.candidates.findIndex((c) => c.tmdbId === currentAnswer.candidate.tmdbId)
-        : -1;
+  const selectedOptionIndex = selectedCandidateIndex(currentAnswer, current.candidates);
 
   const selectOptionAt = (i: number) => {
     const candidate = current.candidates[i];
@@ -283,11 +298,7 @@ export default function LetterboxdChoicesModal({
             onClick={() => goToNext()}
             disabled={confirming || currentAnswer === undefined}
           >
-            {confirming
-              ? t('auth.account.letterboxd.choicesSubmitting')
-              : isLast
-                ? t('auth.account.letterboxd.choicesConfirmFinish')
-                : t('auth.account.letterboxd.choicesConfirmNext')}
+            {confirmStepLabel(confirming, isLast, t)}
           </button>
         </div>
       </div>

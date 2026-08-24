@@ -210,19 +210,22 @@ export default function WatchlistPage() {
           </p>
         ) : null}
 
-        {isLoading ? (
+        {isLoading && (
           <WatchlistSkeleton label={t('watchlist.loadingDetail')} gridClassName={styles.grid} />
-        ) : isError ? (
+        )}
+        {!isLoading && isError && (
           <p className="error" role="alert">
             {t('watchlist.loadError')}
           </p>
-        ) : items.length === 0 ? (
+        )}
+        {!isLoading && !isError && items.length === 0 && (
           <EmptyState
             icon={<Bookmark aria-hidden size={28} />}
             title={t('watchlist.empty.title')}
             message={t('watchlist.empty.message')}
           />
-        ) : (
+        )}
+        {!isLoading && !isError && items.length > 0 && (
           <>
             <div className={styles.toolbarBlock}>
               <WatchlistToolbar

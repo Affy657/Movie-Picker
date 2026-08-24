@@ -45,49 +45,8 @@ public sealed class GenreBackfillService : BackgroundService
             var watchlist = scope.ServiceProvider.GetRequiredService<IWatchlistRepository>();
             var tmdb = scope.ServiceProvider.GetRequiredService<ITmdbMovieSearch>();
 
-            // Movies whose genres TMDB can't supply stay "missing"; tracking attempted ids
-            // guarantees termination instead of re-reading the same rows forever.
-            var attempted = new HashSet<string>();
-            var updated = 0;
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                var batch = await movies.ListMissingGenresAsync(BatchSize, stoppingToken);
-                var fresh = batch.Where(m => attempted.Add(m.Id)).ToList();
-                if (fresh.Count == 0)
-                    break;
-
-                foreach (var movie in fresh)
-                {
-                    if (stoppingToken.IsCancellationRequested)
-                        break;
-                    if (await TryBackfillMovieGenresAsync(movie, tmdb, movies, stoppingToken))
-                        updated++;
-                }
-            }
-
-            if (attempted.Count > 0)
-                _logger.LogInformation("Backfill genres terminé : {Updated}/{Processed} films mis à jour", updated, attempted.Count);
-
-            var attemptedWatchlist = new HashSet<string>();
-            var updatedWatchlist = 0;
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                var batch = await watchlist.ListMissingGenresAsync(BatchSize, stoppingToken);
-                var fresh = batch.Where(i => attemptedWatchlist.Add(i.Id)).ToList();
-                if (fresh.Count == 0)
-                    break;
-
-                foreach (var item in fresh)
-                {
-                    if (stoppingToken.IsCancellationRequested)
-                        break;
-                    if (await TryBackfillWatchlistItemGenresAsync(item, tmdb, watchlist, stoppingToken))
-                        updatedWatchlist++;
-                }
-            }
-
-            if (attemptedWatchlist.Count > 0)
-                _logger.LogInformation("Backfill genres terminé : {Updated}/{Processed} items de watchlist mis à jour", updatedWatchlist, attemptedWatchlist.Count);
+            await BackfillMoviesAsync(movies, tmdb, stoppingToken);
+            await BackfillWatchlistAsync(watchlist, tmdb, stoppingToken);
         }
         catch (OperationCanceledException)
         {
@@ -97,6 +56,60 @@ public sealed class GenreBackfillService : BackgroundService
         {
             _logger.LogError(ex, "Échec du backfill des genres de films");
         }
+    }
+
+    private async Task BackfillMoviesAsync(
+        IMovieRepository movies,
+        ITmdbMovieSearch tmdb,
+        CancellationToken stoppingToken)
+    {
+        var attempted = new HashSet<string>();
+        var updated = 0;
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            var batch = await movies.ListMissingGenresAsync(BatchSize, stoppingToken);
+            var fresh = batch.Where(m => attempted.Add(m.Id)).ToList();
+            if (fresh.Count == 0)
+                break;
+
+            foreach (var movie in fresh)
+            {
+                if (stoppingToken.IsCancellationRequested)
+                    break;
+                if (await TryBackfillMovieGenresAsync(movie, tmdb, movies, stoppingToken))
+                    updated++;
+            }
+        }
+
+        if (attempted.Count > 0)
+            _logger.LogInformation("Backfill genres terminé : {Updated}/{Processed} films mis à jour", updated, attempted.Count);
+    }
+
+    private async Task BackfillWatchlistAsync(
+        IWatchlistRepository watchlist,
+        ITmdbMovieSearch tmdb,
+        CancellationToken stoppingToken)
+    {
+        var attemptedWatchlist = new HashSet<string>();
+        var updatedWatchlist = 0;
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            var batch = await watchlist.ListMissingGenresAsync(BatchSize, stoppingToken);
+            var fresh = batch.Where(i => attemptedWatchlist.Add(i.Id)).ToList();
+            if (fresh.Count == 0)
+                break;
+
+            foreach (var item in fresh)
+            {
+                if (stoppingToken.IsCancellationRequested)
+                    break;
+                if (await TryBackfillWatchlistItemGenresAsync(item, tmdb, watchlist, stoppingToken))
+                    updatedWatchlist++;
+            }
+        }
+
+        if (attemptedWatchlist.Count > 0)
+            _logger.LogInformation("Backfill genres terminé : {Updated}/{Processed} items de watchlist mis à jour", updatedWatchlist, attemptedWatchlist.Count);
     }
 
     private async Task<bool> TryBackfillMovieGenresAsync(

@@ -18,6 +18,34 @@ import styles from './MovieCardGrid.module.css';
 
 const KNOWN_PROVIDER_TYPES = new Set<string>(TYPE_ORDER);
 
+function GridPoster({
+  src,
+  srcSet,
+  eager,
+}: Readonly<{ src: string | null | undefined; srcSet?: string; eager: boolean }>) {
+  if (!src) {
+    return (
+      <div className={styles.posterPlaceholder} aria-hidden>
+        <ImageOff size={28} />
+      </div>
+    );
+  }
+  return (
+    <img
+      src={src}
+      srcSet={srcSet}
+      sizes="(max-width: 479px) 100vw, 220px"
+      alt=""
+      className={styles.poster}
+      width={120}
+      height={180}
+      loading={eager ? 'eager' : 'lazy'}
+      fetchPriority={eager ? 'high' : 'auto'}
+      decoding="async"
+    />
+  );
+}
+
 export const MovieCardGrid = memo(function MovieCardGrid({
   movie: m,
   slug,
@@ -75,24 +103,7 @@ export const MovieCardGrid = memo(function MovieCardGrid({
       {excluded && <span className="visually-hidden">{t('movies.list.excludedFromWheelSr')}</span>}
       {selecting && <CardSelectionOverlay movie={m} selection={selection} t={t} />}
       <div className={styles.posterRegion} inert={selecting}>
-        {s.posterSrc ? (
-          <img
-            src={s.posterSrc}
-            srcSet={s.posterSrcSet}
-            sizes="(max-width: 479px) 100vw, 220px"
-            alt=""
-            className={styles.poster}
-            width={120}
-            height={180}
-            loading={eager ? 'eager' : 'lazy'}
-            fetchPriority={eager ? 'high' : 'auto'}
-            decoding="async"
-          />
-        ) : (
-          <div className={styles.posterPlaceholder} aria-hidden>
-            <ImageOff size={28} />
-          </div>
-        )}
+        <GridPoster src={s.posterSrc} srcSet={s.posterSrcSet} eager={eager} />
 
         {m.mediaType === 'tv' && <span className={styles.tvBadge}>{t('movies.list.tvBadge')}</span>}
 

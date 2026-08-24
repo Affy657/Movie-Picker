@@ -702,7 +702,7 @@ export function CardKebab({
               </button>
             )}
             {hasPrimaryGroup && hasLinksGroup && (
-              <div className={styles.kebabDivider} role="separator" />
+              <hr className={styles.kebabDivider} />
             )}
             {hasLinksGroup && (
               <>
@@ -729,7 +729,7 @@ export function CardKebab({
               </>
             )}
             {canRemove && (hasPrimaryGroup || hasLinksGroup) && (
-              <div className={styles.kebabDivider} role="separator" />
+              <hr className={styles.kebabDivider} />
             )}
             {canRemove && (
               <button

@@ -7,11 +7,12 @@
   border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
   background: color-mix(in srgb, var(--color-accent) 12%, transparent);
   color: var(--color-accent);
+  font-family: inherit;
   font-size: var(--font-size-2xs);
   font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1;
-  cursor: default;
+  cursor: pointer;
 }
 
 .icon {

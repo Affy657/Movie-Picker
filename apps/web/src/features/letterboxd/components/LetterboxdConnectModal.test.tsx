@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
@@ -168,9 +168,7 @@ describe('LetterboxdConnectModal (MSW)', () => {
     expect(undecidedList).not.toBeNull();
     expect(undecidedList).not.toHaveTextContent('Unfindable Movie');
 
-    await waitFor(() =>
-      expect(screen.getByText('2 titres ajoutés à votre liste')).toBeInTheDocument()
-    );
+    expect(await screen.findByText('2 titres ajoutés à votre liste')).toBeInTheDocument();
     expect(screen.getByText('1 titre confirmé à la main')).toBeInTheDocument();
   });
 });

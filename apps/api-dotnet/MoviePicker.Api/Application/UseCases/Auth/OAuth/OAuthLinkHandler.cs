@@ -53,7 +53,7 @@ public sealed class OAuthLinkHandler : IOAuthLinkHandler
         }
         catch (ConflictException ex) when (ex.Message == "identity_conflict")
         {
-            _logger.LogWarning("OAuth link: race on identity {Provider} for userId={UserId}", info.Provider, currentUserId);
+            _logger.LogWarning(ex, "OAuth link: race on identity {Provider} for userId={UserId}", info.Provider, currentUserId);
             return new OAuthOutcome { Kind = OAuthOutcomeKind.IdentityLinkedToOtherAccount };
         }
 

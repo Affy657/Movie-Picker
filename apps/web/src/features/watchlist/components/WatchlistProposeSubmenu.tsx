@@ -100,6 +100,7 @@ export default function WatchlistProposeSubmenu({
         <div
           className={styles.flyout}
           role="menu"
+          tabIndex={-1}
           style={{
             position: 'fixed',
             top: `${pos.top}px`,
@@ -112,11 +113,11 @@ export default function WatchlistProposeSubmenu({
           onFocus={clearCloseTimer}
           onBlur={scheduleClose}
         >
-          {isLoading ? (
-            <p className={styles.hint}>{t('common.loading')}</p>
-          ) : eligible.length === 0 ? (
+          {isLoading && <p className={styles.hint}>{t('common.loading')}</p>}
+          {!isLoading && eligible.length === 0 && (
             <p className={styles.hint}>{t('watchlist.propose.noEvents')}</p>
-          ) : (
+          )}
+          {!isLoading && eligible.length > 0 && (
             <ul className={styles.list}>
               {eligible.map((e) => {
                 const row = rows[e.slug] ?? { status: 'idle' as const };

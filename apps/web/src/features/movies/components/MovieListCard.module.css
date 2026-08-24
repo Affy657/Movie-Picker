@@ -81,9 +81,9 @@
   font-size: var(--font-size-2xs);
   font-weight: 600;
   line-height: var(--leading-none);
-  color: #e2e8f0;
-  background: rgba(226, 232, 240, 0.12);
-  border: 1px solid rgba(226, 232, 240, 0.3);
+  color: #f8fafc;
+  background: #1e293b;
+  border: 1px solid rgba(248, 250, 252, 0.28);
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: background var(--duration-base) var(--ease-default);
@@ -114,7 +114,6 @@
   height: calc(2 * var(--leading-snug) * var(--font-size-sm));
   overflow: hidden;
   overflow-wrap: break-word;
-  word-break: break-word;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;

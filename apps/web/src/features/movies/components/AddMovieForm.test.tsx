@@ -273,9 +273,7 @@ describe('AddMovieForm (MSW)', () => {
     );
     await user.type(screen.getByPlaceholderText(/ajouter un film/i), 'Inception');
 
-    await waitFor(() =>
-      expect(screen.getByText('Film Sans Providers Affichés')).toBeInTheDocument()
-    );
+    expect(await screen.findByText('Film Sans Providers Affichés')).toBeInTheDocument();
     expect(screen.queryByText('Netflix Abonnement')).not.toBeInTheDocument();
     expect(screen.queryByText(/région/i)).not.toBeInTheDocument();
   });

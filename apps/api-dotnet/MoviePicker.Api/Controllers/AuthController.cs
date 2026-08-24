@@ -102,6 +102,7 @@ public sealed class AuthController : ControllerBase
     private const string FrontAccountPath = "/settings";
     private const string FrontCallbackPath = "/auth/callback";
     private const string ReturnToItemKey = "returnTo";
+    private const string OauthErrorQueryKey = "oauthError";
 
     [HttpGet("oauth/providers")]
     [ProducesResponseType(typeof(OAuthProvidersResponse), StatusCodes.Status200OK)]
@@ -142,13 +143,13 @@ public sealed class AuthController : ControllerBase
         var webBase = options.Value.ResolvedWebBaseUrl();
 
         if (!OAuthProviders.IsKnown(provider) || !catalog.IsEnabled(provider))
-            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, ("oauthError", "provider_disabled")));
+            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (OauthErrorQueryKey, "provider_disabled")));
 
         var externalResult = await HttpContext.AuthenticateAsync(AuthConstants.ExternalCookieScheme);
         await HttpContext.SignOutAsync(AuthConstants.ExternalCookieScheme);
 
         if (!externalResult.Succeeded || externalResult.Principal is null)
-            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, ("oauthError", "external_auth_failed")));
+            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (OauthErrorQueryKey, "external_auth_failed")));
 
         var returnTo = ReturnToPolicy.Sanitize(
             externalResult.Properties?.Items.TryGetValue(ReturnToItemKey, out var storedReturnTo) == true
@@ -157,7 +158,7 @@ public sealed class AuthController : ControllerBase
 
         var info = ExtractExternalLoginInfo(provider, externalResult.Principal);
         if (info is null)
-            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, ("oauthError", "provider_error"), ("returnTo", returnTo)));
+            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (OauthErrorQueryKey, "provider_error"), (ReturnToItemKey, returnTo)));
 
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!string.IsNullOrEmpty(currentUserId))
@@ -165,12 +166,12 @@ public sealed class AuthController : ControllerBase
             var linkOutcome = await linkHandler.HandleAsync(currentUserId, info, ct);
             return linkOutcome.Kind == OAuthOutcomeKind.Linked
                 ? Redirect(BuildFrontUrl(webBase, FrontAccountPath, ("oauthLinked", provider)))
-                : Redirect(BuildFrontUrl(webBase, FrontAccountPath, ("oauthError", "identity_taken")));
+                : Redirect(BuildFrontUrl(webBase, FrontAccountPath, (OauthErrorQueryKey, "identity_taken")));
         }
 
         var loginOutcome = await loginHandler.HandleAsync(info, ct);
         if (loginOutcome.Kind != OAuthOutcomeKind.SignedIn || loginOutcome.User is null)
-            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, ("oauthError", "email_not_verified"), ("returnTo", returnTo)));
+            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (OauthErrorQueryKey, "email_not_verified"), (ReturnToItemKey, returnTo)));
 
         await HttpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
@@ -180,7 +181,7 @@ public sealed class AuthController : ControllerBase
         return Redirect(BuildFrontUrl(
             webBase,
             FrontCallbackPath,
-            ("returnTo", returnTo),
+            (ReturnToItemKey, returnTo),
             ("provider", provider),
             ("event", loginOutcome.IsNewAccount ? "signup" : "login")));
     }

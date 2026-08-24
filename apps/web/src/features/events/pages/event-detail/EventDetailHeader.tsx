@@ -15,6 +15,45 @@ import styles from './EventDetailHeader.module.css';
 const MAX_STACKED_AVATARS = 4;
 const STICKY_BAR_MEDIA = '(min-width: 48rem)';
 
+function useWheelActionsHeight(
+  wheelActionsRef: RefObject<HTMLDivElement | null>,
+  wheelActions: ReactNode
+) {
+  useEffect(() => {
+    const el = wheelActionsRef.current;
+    const root = document.documentElement;
+    if (!el || typeof ResizeObserver !== 'function') return;
+    const sync = () => {
+      const height = el.offsetHeight;
+      if (height > 0) {
+        root.style.setProperty('--event-wheel-bar-height', `${height}px`);
+      } else {
+        root.style.removeProperty('--event-wheel-bar-height');
+      }
+    };
+    sync();
+    const observer = new ResizeObserver(sync);
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty('--event-wheel-bar-height');
+    };
+  }, [wheelActions, wheelActionsRef]);
+}
+
+function useStickyBarMedia(): boolean {
+  const [stickyBar, setStickyBar] = useState(false);
+  useEffect(() => {
+    const query = globalThis.matchMedia?.(STICKY_BAR_MEDIA);
+    if (!query) return;
+    const sync = () => setStickyBar(query.matches);
+    sync();
+    query.addEventListener('change', sync);
+    return () => query.removeEventListener('change', sync);
+  }, []);
+  return stickyBar;
+}
+
 type ParticipantsStackProps = {
   participants: EventParticipantSummary[];
   hiddenCount: number;
@@ -150,38 +189,9 @@ export default function EventDetailHeader({
   const sentinelRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLElement>(null);
   const wheelActionsRef = useRef<HTMLDivElement>(null);
-  const [stickyBar, setStickyBar] = useState(false);
+  useWheelActionsHeight(wheelActionsRef, wheelActions);
+  const stickyBar = useStickyBarMedia();
   const [condensed, setCondensed] = useState(false);
-
-  useEffect(() => {
-    const el = wheelActionsRef.current;
-    const root = document.documentElement;
-    if (!el || typeof ResizeObserver !== 'function') return;
-    const sync = () => {
-      const height = el.offsetHeight;
-      if (height > 0) {
-        root.style.setProperty('--event-wheel-bar-height', `${height}px`);
-      } else {
-        root.style.removeProperty('--event-wheel-bar-height');
-      }
-    };
-    sync();
-    const observer = new ResizeObserver(sync);
-    observer.observe(el);
-    return () => {
-      observer.disconnect();
-      root.style.removeProperty('--event-wheel-bar-height');
-    };
-  }, [wheelActions]);
-
-  useEffect(() => {
-    const query = globalThis.matchMedia?.(STICKY_BAR_MEDIA);
-    if (!query) return;
-    const sync = () => setStickyBar(query.matches);
-    sync();
-    query.addEventListener('change', sync);
-    return () => query.removeEventListener('change', sync);
-  }, []);
 
   useEffect(() => {
     if (!stickyBar) {

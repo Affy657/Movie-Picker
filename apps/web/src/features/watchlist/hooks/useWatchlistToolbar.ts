@@ -4,7 +4,7 @@ import {
   DECADE_OPTIONS,
   RUNTIME_MAX_MINUTES,
   RUNTIME_MIN_MINUTES,
-  runtimeRangeLabel,
+  runtimeChipLabel,
   voteMinLabel,
 } from '@/features/movies/components/movieSearchFilterOptions';
 import { safeLocalStorageGet, safeLocalStorageSet } from '@/shared/utils/safeStorage';
@@ -15,7 +15,7 @@ import type { WatchlistItem } from '@/features/watchlist/api/watchlistApi';
 export type WatchlistSortKey = 'createdAt' | 'title' | 'voteAverage' | 'duration';
 export type SortDirection = 'asc' | 'desc';
 
-const SORT_KEYS: WatchlistSortKey[] = ['createdAt', 'title', 'voteAverage', 'duration'];
+const SORT_KEYS = new Set<WatchlistSortKey>(['createdAt', 'title', 'voteAverage', 'duration']);
 
 const DEFAULT_DIRECTION: Record<WatchlistSortKey, SortDirection> = {
   createdAt: 'desc',
@@ -62,7 +62,7 @@ function readPersisted(userId: string): PersistedState {
         ? ([p.runtimeRange[0], p.runtimeRange[1]] as [number, number])
         : DEFAULT_STATE.runtimeRange;
     return {
-      sortBy: SORT_KEYS.includes(p.sortBy as WatchlistSortKey)
+      sortBy: SORT_KEYS.has(p.sortBy as WatchlistSortKey)
         ? (p.sortBy as WatchlistSortKey)
         : DEFAULT_STATE.sortBy,
       sortDir: p.sortDir === 'asc' || p.sortDir === 'desc' ? p.sortDir : DEFAULT_STATE.sortDir,
@@ -111,23 +111,30 @@ function itemMatchesSearch(item: WatchlistItem, query: string): boolean {
   return item.title.toLowerCase().includes(q);
 }
 
+function itemMatchesDecade(item: WatchlistItem, decade: string): boolean {
+  const year = Number.parseInt(item.year, 10);
+  const from = Number.parseInt(decade, 10);
+  if (Number.isNaN(year) || year < from || year > from + 9) return false;
+  return true;
+}
+
+function itemMatchesRuntime(item: WatchlistItem, range: [number, number]): boolean {
+  const runtimeMin = range[0] > RUNTIME_MIN_MINUTES ? range[0] : undefined;
+  const runtimeMax = range[1] < RUNTIME_MAX_MINUTES ? range[1] : undefined;
+  if (runtimeMin != null && (item.runtimeMinutes ?? -Infinity) < runtimeMin) return false;
+  if (runtimeMax != null && (item.runtimeMinutes ?? Infinity) > runtimeMax) return false;
+  return true;
+}
+
 function itemMatchesFilters(item: WatchlistItem, f: PersistedState): boolean {
   if (f.genres.length > 0) {
     const itemGenres = item.genreIds ?? [];
     if (!itemGenres.some((g) => f.genres.includes(g))) return false;
   }
   if (f.mediaTypes.length > 0 && !f.mediaTypes.includes(item.mediaType)) return false;
-  if (f.decade != null) {
-    const year = Number.parseInt(item.year, 10);
-    const from = Number.parseInt(f.decade, 10);
-    if (Number.isNaN(year) || year < from || year > from + 9) return false;
-  }
+  if (f.decade != null && !itemMatchesDecade(item, f.decade)) return false;
   if (f.voteMin != null && (item.voteAverage ?? -Infinity) < f.voteMin) return false;
-  const runtimeMin = f.runtimeRange[0] > RUNTIME_MIN_MINUTES ? f.runtimeRange[0] : undefined;
-  const runtimeMax = f.runtimeRange[1] < RUNTIME_MAX_MINUTES ? f.runtimeRange[1] : undefined;
-  if (runtimeMin != null && (item.runtimeMinutes ?? -Infinity) < runtimeMin) return false;
-  if (runtimeMax != null && (item.runtimeMinutes ?? Infinity) > runtimeMax) return false;
-  return true;
+  return itemMatchesRuntime(item, f.runtimeRange);
 }
 
 export interface ActiveToolbarChip {
@@ -273,12 +280,12 @@ export function useWatchlistToolbar({
     const runtimeMax =
       state.runtimeRange[1] < RUNTIME_MAX_MINUTES ? state.runtimeRange[1] : undefined;
     if (runtimeMin != null || runtimeMax != null) {
-      const label =
-        runtimeMin != null && runtimeMax != null
-          ? `${runtimeRangeLabel(state.runtimeRange[0], tmdbLanguage)} - ${runtimeRangeLabel(state.runtimeRange[1], tmdbLanguage)}`
-          : runtimeMin != null
-            ? runtimeRangeLabel(state.runtimeRange[0], tmdbLanguage, 'min')
-            : runtimeRangeLabel(state.runtimeRange[1], tmdbLanguage, 'max');
+      const label = runtimeChipLabel(
+        runtimeMin ?? undefined,
+        runtimeMax ?? undefined,
+        state.runtimeRange,
+        tmdbLanguage
+      );
       chips.push({
         key: 'runtime',
         label,

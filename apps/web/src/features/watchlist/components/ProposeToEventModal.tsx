@@ -68,11 +68,11 @@ export default function ProposeToEventModal({
         </button>
       </div>
 
-      {isLoading ? (
-        <p className="placeholder">{t('common.loading')}</p>
-      ) : eligible.length === 0 ? (
+      {isLoading && <p className="placeholder">{t('common.loading')}</p>}
+      {!isLoading && eligible.length === 0 && (
         <p className={styles.empty}>{t('watchlist.propose.noEvents')}</p>
-      ) : (
+      )}
+      {!isLoading && eligible.length > 0 && (
         <ul className={styles.list}>
           {eligible.map((e) => {
             const row = rows[e.slug] ?? { status: 'idle' as const };

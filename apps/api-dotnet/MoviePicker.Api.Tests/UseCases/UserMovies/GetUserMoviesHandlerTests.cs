@@ -20,6 +20,7 @@ public sealed class GetUserMoviesHandlerTests
     private readonly Mock<IEventRepository> _events = new();
     private readonly Mock<IMovieRepository> _movies = new();
     private readonly DateTimeOffset _now = new(2026, 6, 15, 0, 0, 0, TimeSpan.Zero);
+    private static readonly string[] SingleParticipantId = ["p1"];
 
     private static User PublicUser(bool isPublic = true) => new()
     {
@@ -140,7 +141,7 @@ public sealed class GetUserMoviesHandlerTests
 
         var proposedAt = new DateTimeOffset(2026, 6, 1, 12, 0, 0, TimeSpan.Zero);
         _movies.Setup(r => r.ListByParticipantIdsPagedAsync(
-                It.Is<IReadOnlyCollection<string>>(ids => ids.SequenceEqual(new[] { "p1" })), 2, 6, It.IsAny<CancellationToken>()))
+                It.Is<IReadOnlyCollection<string>>(ids => ids.SequenceEqual(SingleParticipantId)), 2, 6, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Mov("m1", "p1", "A", proposedAt, MovieMediaType.Tv) });
         _movies.Setup(r => r.CountByParticipantIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(11);

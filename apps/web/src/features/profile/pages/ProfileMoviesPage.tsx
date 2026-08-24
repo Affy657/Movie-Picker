@@ -231,9 +231,10 @@ export default function ProfileMoviesPage() {
         </p>
       ) : null}
 
-      {moviesQuery.isPending ? (
+      {moviesQuery.isPending && (
         <WatchlistSkeleton label={t('profile.loading')} gridClassName={styles.grid} />
-      ) : moviesQuery.isError ? (
+      )}
+      {!moviesQuery.isPending && moviesQuery.isError && (
         <div className={styles.moviesError} role="alert">
           <span className={styles.moviesErrorIcon} aria-hidden>
             <AlertCircle size={18} />
@@ -246,13 +247,15 @@ export default function ProfileMoviesPage() {
             </button>
           </div>
         </div>
-      ) : totalCount === 0 ? (
+      )}
+      {!moviesQuery.isPending && !moviesQuery.isError && totalCount === 0 && (
         <EmptyState
           icon={<Film aria-hidden size={28} />}
           title={t('profile.movies.emptyTitle')}
           message={t('profile.movies.emptyMessage')}
         />
-      ) : (
+      )}
+      {!moviesQuery.isPending && !moviesQuery.isError && totalCount > 0 && (
         <>
           <div className={styles.toolbarBlock}>
             <ProfileMoviesToolbar

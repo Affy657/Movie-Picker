@@ -9,10 +9,10 @@ export default function SupporterBadge() {
 
   return (
     <Tooltip label={description}>
-      <span className={styles.badge} role="img" tabIndex={0} aria-label={description}>
+      <button type="button" className={styles.badge} aria-label={description}>
         <Heart className={styles.icon} aria-hidden focusable="false" />
         <span className={styles.label}>{t('profile.supporter.label')}</span>
-      </span>
+      </button>
     </Tooltip>
   );
 }

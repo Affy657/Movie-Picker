@@ -50,4 +50,6 @@ public sealed class MoviePickerOptions
     public string GitHubRepoOwner { get; set; } = "Affy657";
 
     public string GitHubRepoName { get; set; } = "Movie-Picker";
+
+    public string GitHubApiBaseUrl { get; set; } = "https://api.github.com/";
 }

@@ -19,11 +19,9 @@ export default function EventWheelActions({
   const spinLabel = wheel.showRelaunch
     ? t('events.wheel.relaunchButton')
     : t('events.wheel.launchButton');
-  const disabledHint = wheel.noEligibleMovie
-    ? t('events.wheel.allExcludedHint')
-    : wheel.spinDisabled
-      ? t('events.wheel.emptyPlaceholder')
-      : undefined;
+  let disabledHint: string | undefined;
+  if (wheel.noEligibleMovie) disabledHint = t('events.wheel.allExcludedHint');
+  else if (wheel.spinDisabled) disabledHint = t('events.wheel.emptyPlaceholder');
 
   const closeLabel = wheel.closeWithoutMovie
     ? t('events.wheel.closeWithoutMovieButton')
@@ -40,7 +38,7 @@ export default function EventWheelActions({
   return (
     <>
       {wheel.manualMode ? (
-        <div className={styles.manualBar} role="status">
+        <output className={styles.manualBar}>
           <span className={styles.manualHint}>{t('events.wheel.manualPickHint')}</span>
           <button
             type="button"
@@ -49,7 +47,7 @@ export default function EventWheelActions({
           >
             {t('events.wheel.manualPickCancel')}
           </button>
-        </div>
+        </output>
       ) : (
         wheel.canSpin && (
           <>

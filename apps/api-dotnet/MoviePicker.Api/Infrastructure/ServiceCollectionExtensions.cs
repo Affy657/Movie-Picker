@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.LetterboxdImport;
@@ -73,9 +74,10 @@ public static class ServiceCollectionExtensions
             client.DefaultRequestHeaders.UserAgent.ParseAdd("MoviePicker-Api/1.0");
         });
 
-        services.AddHttpClient<IGitHubIssueClient, GitHubIssueClient>(client =>
+        services.AddHttpClient<IGitHubIssueClient, GitHubIssueClient>((sp, client) =>
         {
-            client.BaseAddress = new Uri("https://api.github.com/");
+            var githubApiBaseUrl = sp.GetRequiredService<IOptions<MoviePickerOptions>>().Value.GitHubApiBaseUrl;
+            client.BaseAddress = new Uri(githubApiBaseUrl);
             client.Timeout = TimeSpan.FromSeconds(10);
             client.DefaultRequestHeaders.UserAgent.ParseAdd("MoviePicker-Api/1.0");
             client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");

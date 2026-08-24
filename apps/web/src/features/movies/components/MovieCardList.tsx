@@ -16,6 +16,41 @@ import {
 import cardPartsStyles from './movieCardParts.module.css';
 import styles from './MovieCardList.module.css';
 
+function ListPoster({
+  src,
+  srcSet,
+  eager,
+}: Readonly<{ src: string | null | undefined; srcSet?: string; eager: boolean }>) {
+  if (!src) {
+    return (
+      <div className={styles.posterPlaceholder} aria-hidden>
+        <ImageOff size={28} />
+      </div>
+    );
+  }
+  return (
+    <>
+      <div
+        className={styles.posterBackdrop}
+        style={{ backgroundImage: `url("${encodeURI(src)}")` }}
+        aria-hidden
+      />
+      <img
+        src={src}
+        srcSet={srcSet}
+        sizes="(max-width: 479px) 33vw, 200px"
+        alt=""
+        className={styles.poster}
+        width={120}
+        height={180}
+        loading={eager ? 'eager' : 'lazy'}
+        fetchPriority={eager ? 'high' : 'auto'}
+        decoding="async"
+      />
+    </>
+  );
+}
+
 export const MovieCardList = memo(function MovieCardList({
   movie: m,
   slug,
@@ -70,31 +105,7 @@ export const MovieCardList = memo(function MovieCardList({
       {excluded && <span className="visually-hidden">{t('movies.list.excludedFromWheelSr')}</span>}
       {selecting && <CardSelectionOverlay movie={m} selection={selection} t={t} />}
       <div className={styles.posterCol} inert={selecting}>
-        {s.posterSrc ? (
-          <>
-            <div
-              className={styles.posterBackdrop}
-              style={{ backgroundImage: `url("${encodeURI(s.posterSrc)}")` }}
-              aria-hidden
-            />
-            <img
-              src={s.posterSrc}
-              srcSet={s.posterSrcSet}
-              sizes="(max-width: 479px) 33vw, 200px"
-              alt=""
-              className={styles.poster}
-              width={120}
-              height={180}
-              loading={eager ? 'eager' : 'lazy'}
-              fetchPriority={eager ? 'high' : 'auto'}
-              decoding="async"
-            />
-          </>
-        ) : (
-          <div className={styles.posterPlaceholder} aria-hidden>
-            <ImageOff size={28} />
-          </div>
-        )}
+        <ListPoster src={s.posterSrc} srcSet={s.posterSrcSet} eager={eager} />
         {m.mediaType === 'tv' && <span className={styles.tvBadge}>{t('movies.list.tvBadge')}</span>}
       </div>
 

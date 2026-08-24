@@ -13,6 +13,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 {
     private const string UserId = "u1";
     private const string Username = "affy657";
+    private static readonly int[] DramaMysteryGenreIds = [18, 9648];
 
     private readonly Mock<IWatchlistRepository> _watchlist = new();
     private readonly Mock<ILetterboxdWatchlistClient> _letterboxd = new();
@@ -144,18 +145,18 @@ public sealed class LetterboxdWatchlistSynchronizerTests
             "Midnight Mass",
             new TmdbSearchItem(
                 97400, MovieMediaType.Tv, "Sermons de minuit", "2021", null, 7.5, "Midnight Mass 2021",
-                GenreIds: [18, 9648]),
+                GenreIds: DramaMysteryGenreIds),
             new TmdbSearchItem(714995, MovieMediaType.Movie, "The Manson Brothers", "2021", null, 4.2, "The Manson Brothers"));
         _tmdb
             .Setup(t => t.GetDetailsAsync(97400, MovieMediaType.Tv, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TmdbMovieDetails(97400, "Sermons de minuit", null, null, null, [], 62, [], [18, 9648], null));
+            .ReturnsAsync(new TmdbMovieDetails(97400, "Sermons de minuit", null, null, null, [], 62, [], DramaMysteryGenreIds, null));
 
         var outcome = await _sut.SyncAsync(TheUser());
 
         var pending = Assert.Single(outcome.PendingChoices);
         var withRuntime = pending.Candidates.Single(c => c.TmdbId == 97400);
         Assert.Equal(62, withRuntime.RuntimeMinutes);
-        Assert.Equal(new[] { 18, 9648 }, withRuntime.GenreIds);
+        Assert.Equal(DramaMysteryGenreIds, withRuntime.GenreIds);
         var withoutDetails = pending.Candidates.Single(c => c.TmdbId == 714995);
         Assert.Null(withoutDetails.RuntimeMinutes);
         Assert.Empty(withoutDetails.GenreIds);

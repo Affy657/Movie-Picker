@@ -68,6 +68,35 @@ export default function WhatsNewModal({
     </span>
   );
 
+  const renderEntryBody = (entry: WhatsNewEntry) => {
+    const to = whatsNewLinkPath(entry.link, profileHandle);
+    const action = entry.action;
+    if (action && onAction) {
+      return (
+        <button
+          type="button"
+          className={clsx(styles.entryInner, styles.entryLink, styles.entryButton)}
+          onClick={() => {
+            onClose();
+            onAction(action);
+          }}
+        >
+          {renderEntryContent(entry)}
+          <EntryChevron />
+        </button>
+      );
+    }
+    if (to) {
+      return (
+        <Link to={to} className={clsx(styles.entryInner, styles.entryLink)} onClick={onClose}>
+          {renderEntryContent(entry)}
+          <EntryChevron />
+        </Link>
+      );
+    }
+    return <div className={styles.entryInner}>{renderEntryContent(entry)}</div>;
+  };
+
   return (
     <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>
       <div className={styles.accent} aria-hidden="true" />
@@ -92,38 +121,11 @@ export default function WhatsNewModal({
                 <h3 className={styles.categoryTitle}>{t(CATEGORY_TITLE_KEY[category])}</h3>
               </div>
               <ul className={styles.entryList}>
-                {entries.map((entry) => {
-                  const to = whatsNewLinkPath(entry.link, profileHandle);
-                  const action = entry.action;
-                  return (
-                    <li key={entry.titleKey} className={styles.entry}>
-                      {action && onAction ? (
-                        <button
-                          type="button"
-                          className={clsx(styles.entryInner, styles.entryLink, styles.entryButton)}
-                          onClick={() => {
-                            onClose();
-                            onAction(action);
-                          }}
-                        >
-                          {renderEntryContent(entry)}
-                          <EntryChevron />
-                        </button>
-                      ) : to ? (
-                        <Link
-                          to={to}
-                          className={clsx(styles.entryInner, styles.entryLink)}
-                          onClick={onClose}
-                        >
-                          {renderEntryContent(entry)}
-                          <EntryChevron />
-                        </Link>
-                      ) : (
-                        <div className={styles.entryInner}>{renderEntryContent(entry)}</div>
-                      )}
-                    </li>
-                  );
-                })}
+                {entries.map((entry) => (
+                  <li key={entry.titleKey} className={styles.entry}>
+                    {renderEntryBody(entry)}
+                  </li>
+                ))}
               </ul>
             </section>
           );

@@ -383,6 +383,8 @@
 }
 
 .kebabDivider {
+  display: block;
+  border: none;
   height: 1px;
   margin: 0.3rem 0.2rem;
   background: var(--color-border-subtle);

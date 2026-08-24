@@ -382,7 +382,7 @@ describe('ProfilePage (MSW)', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole('group', { name: '3 semaines de suite, Record 5 semaines' })
+        screen.getByRole('region', { name: '3 semaines de suite, Record 5 semaines' })
       ).toBeInTheDocument();
     });
   });

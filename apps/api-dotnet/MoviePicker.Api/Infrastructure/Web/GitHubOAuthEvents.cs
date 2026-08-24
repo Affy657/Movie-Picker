@@ -23,7 +23,7 @@ public static class GitHubOAuthEvents
         if (verifiedPrimaryEmail is not null)
         {
             context.Identity!.AddClaim(new Claim(ClaimTypes.Email, verifiedPrimaryEmail));
-            context.Identity!.AddClaim(new Claim("email_verified", "true"));
+            context.Identity.AddClaim(new Claim("email_verified", "true"));
         }
     }
 

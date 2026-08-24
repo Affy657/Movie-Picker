@@ -5,6 +5,9 @@ namespace MoviePicker.Api.Infrastructure.Tmdb;
 
 public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
 {
+    private static readonly int[] SciFiAdventureGenreIds = [878, 12];
+    private static readonly int[] DramaGenreIds = [18];
+
     public Task<IReadOnlyList<TmdbSearchItem>> SearchAsync(string query, bool allowSeries, IReadOnlyList<int>? genreIds = null, int? yearFrom = null, int? yearTo = null, double? voteMin = null, string? originalLanguage = null, int? runtimeMin = null, int? runtimeMax = null, CancellationToken ct = default)
     {
         IReadOnlyList<TmdbSearchItem> list =
@@ -12,8 +15,8 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
                 ? Array.Empty<TmdbSearchItem>()
                 : new[]
                 {
-                    new TmdbSearchItem(999_001, MovieMediaType.Movie, "Film E2E Stub", "2024", null, 8.1, GenreIds: new[] { 878, 12 }),
-                    new TmdbSearchItem(999_002, MovieMediaType.Movie, "Autre film test", "2023", null, 7.0, GenreIds: new[] { 18 }),
+                    new TmdbSearchItem(999_001, MovieMediaType.Movie, "Film E2E Stub", "2024", null, 8.1, GenreIds: SciFiAdventureGenreIds),
+                    new TmdbSearchItem(999_002, MovieMediaType.Movie, "Autre film test", "2023", null, 7.0, GenreIds: DramaGenreIds),
                 };
         return Task.FromResult(list);
     }

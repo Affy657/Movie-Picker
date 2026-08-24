@@ -49,13 +49,30 @@ export const RUNTIME_STEP_MINUTES = 5;
 
 export function runtimeRangeLabel(minutes: number, lang: string, bound?: 'min' | 'max'): string {
   const inFrench = lang.startsWith('fr');
-  if (bound === 'min') {
-    if (minutes <= RUNTIME_MIN_MINUTES) return inFrench ? 'Aucun minimum' : 'No minimum';
-    return `${formatRuntimeMinutes(minutes) ?? minutes} ${inFrench ? 'ou plus' : 'or more'}`;
-  }
-  if (bound === 'max') {
-    if (minutes >= RUNTIME_MAX_MINUTES) return inFrench ? 'Aucun maximum' : 'No maximum';
-    return `${formatRuntimeMinutes(minutes) ?? minutes} ${inFrench ? 'ou moins' : 'or less'}`;
-  }
+  if (bound === 'min') return runtimeMinBoundLabel(minutes, inFrench);
+  if (bound === 'max') return runtimeMaxBoundLabel(minutes, inFrench);
   return formatRuntimeMinutes(minutes) ?? String(minutes);
+}
+
+function runtimeMinBoundLabel(minutes: number, inFrench: boolean): string {
+  if (minutes <= RUNTIME_MIN_MINUTES) return inFrench ? 'Aucun minimum' : 'No minimum';
+  return `${formatRuntimeMinutes(minutes) ?? minutes} ${inFrench ? 'ou plus' : 'or more'}`;
+}
+
+function runtimeMaxBoundLabel(minutes: number, inFrench: boolean): string {
+  if (minutes >= RUNTIME_MAX_MINUTES) return inFrench ? 'Aucun maximum' : 'No maximum';
+  return `${formatRuntimeMinutes(minutes) ?? minutes} ${inFrench ? 'ou moins' : 'or less'}`;
+}
+
+export function runtimeChipLabel(
+  runtimeMin: number | undefined,
+  runtimeMax: number | undefined,
+  range: [number, number],
+  lang: string
+): string {
+  if (runtimeMin !== undefined && runtimeMax !== undefined) {
+    return `${runtimeRangeLabel(range[0], lang)} - ${runtimeRangeLabel(range[1], lang)}`;
+  }
+  if (runtimeMin !== undefined) return runtimeRangeLabel(range[0], lang, 'min');
+  return runtimeRangeLabel(range[1], lang, 'max');
 }

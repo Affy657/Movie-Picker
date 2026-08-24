@@ -11,6 +11,7 @@ import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
+import type { TranslationKey } from '@/shared/i18n';
 import ThemeToggle from '@/app/components/ThemeToggle';
 import LanguageSelector from '@/app/components/LanguageSelector';
 import AccentColorPicker from '@/app/components/AccentColorPicker';
@@ -33,6 +34,19 @@ import styles from './AccountPage.module.css';
 const PROVIDER_LABELS: Record<string, string> = { google: 'Google', github: 'GitHub' };
 
 const POST_PASSWORD_CHANGE_REDIRECT_MS = 1800;
+
+function passwordSubmitLabel(
+  changing: boolean,
+  hasPassword: boolean,
+  t: (key: TranslationKey) => string
+): string {
+  if (changing) {
+    if (hasPassword) return t('auth.account.changePasswordSubmitting');
+    return t('auth.account.setPasswordSubmitting');
+  }
+  if (hasPassword) return t('auth.account.changePasswordSubmit');
+  return t('auth.account.setPasswordSubmit');
+}
 
 function ChangePasswordSection({ hasPassword }: Readonly<{ hasPassword: boolean }>) {
   const { t } = useTranslation();
@@ -174,15 +188,7 @@ function ChangePasswordSection({ hasPassword }: Readonly<{ hasPassword: boolean 
         />
 
         <button type="submit" className="btn btn-primary" disabled={changing}>
-          {changing
-            ? t(
-                hasPassword
-                  ? 'auth.account.changePasswordSubmitting'
-                  : 'auth.account.setPasswordSubmitting'
-              )
-            : t(
-                hasPassword ? 'auth.account.changePasswordSubmit' : 'auth.account.setPasswordSubmit'
-              )}
+          {passwordSubmitLabel(changing, hasPassword, t)}
         </button>
       </form>
     </section>

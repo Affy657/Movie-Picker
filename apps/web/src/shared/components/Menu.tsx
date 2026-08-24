@@ -38,7 +38,7 @@ export function MenuLabel({ children }: Readonly<{ children: React.ReactNode }>)
 }
 
 export function MenuSeparator() {
-  return <div role="separator" className={styles.separator} />;
+  return <hr className={styles.separator} />;
 }
 
 interface MenuProps {

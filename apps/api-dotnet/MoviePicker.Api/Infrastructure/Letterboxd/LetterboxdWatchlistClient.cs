@@ -32,36 +32,11 @@ public sealed partial class LetterboxdWatchlistClient : ILetterboxdWatchlistClie
 
         for (var page = 1; page <= MaxPages; page++)
         {
-            var html = await FetchPageAsync(normalized, page, ct);
-            if (html is null)
+            var outcome = await ReadWatchlistPageAsync(normalized, page, expected, films, seen, ct);
+            if (outcome.Failed)
                 return LetterboxdWatchlistSnapshot.Failed();
-
-            if (page == 1)
-            {
-                expected = ParseTotalEntries(html) ?? -1;
-                if (expected < 0)
-                {
-                    _logger.LogWarning(
-                        "Watchlist Letterboxd illisible pour {Username} : compteur d'entrées introuvable",
-                        normalized);
-                    return LetterboxdWatchlistSnapshot.Failed();
-                }
-
-                if (expected == 0)
-                    return new LetterboxdWatchlistSnapshot([], true);
-            }
-
-            var pageFilms = ParseFilms(html);
-            if (pageFilms.Count == 0)
-                break;
-
-            foreach (var film in pageFilms)
-            {
-                if (seen.Add(film.Slug))
-                    films.Add(film);
-            }
-
-            if (films.Count >= expected)
+            expected = outcome.Expected;
+            if (outcome.Done)
                 break;
         }
 
@@ -76,6 +51,48 @@ public sealed partial class LetterboxdWatchlistClient : ILetterboxdWatchlistClie
         }
 
         return new LetterboxdWatchlistSnapshot(films, true);
+    }
+
+    private readonly record struct WatchlistPageOutcome(bool Failed, bool Done, int Expected);
+
+    private async Task<WatchlistPageOutcome> ReadWatchlistPageAsync(
+        string username,
+        int page,
+        int expected,
+        List<LetterboxdFilm> films,
+        HashSet<string> seen,
+        CancellationToken ct)
+    {
+        var html = await FetchPageAsync(username, page, ct);
+        if (html is null)
+            return new WatchlistPageOutcome(true, true, expected);
+
+        if (page == 1)
+        {
+            expected = ParseTotalEntries(html) ?? -1;
+            if (expected < 0)
+            {
+                _logger.LogWarning(
+                    "Watchlist Letterboxd illisible pour {Username} : compteur d'entrées introuvable",
+                    username);
+                return new WatchlistPageOutcome(true, true, expected);
+            }
+
+            if (expected == 0)
+                return new WatchlistPageOutcome(false, true, 0);
+        }
+
+        var pageFilms = ParseFilms(html);
+        if (pageFilms.Count == 0)
+            return new WatchlistPageOutcome(false, true, expected);
+
+        foreach (var film in pageFilms)
+        {
+            if (seen.Add(film.Slug))
+                films.Add(film);
+        }
+
+        return new WatchlistPageOutcome(false, films.Count >= expected, expected);
     }
 
     private async Task<string?> FetchPageAsync(string username, int page, CancellationToken ct)

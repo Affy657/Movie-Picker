@@ -52,10 +52,11 @@ export default function ActivityWeeks({ points }: Readonly<Props>) {
         role="group"
         aria-label={t('profile.stats.activityImgAlt', { count: total })}
       >
-        {rows.map((row, rowIndex) => {
+        {rows.map((row) => {
           const markers = monthMarkers(row, locale);
+          const rowKey = row[0]?.weekStart ?? row.map((w) => w.weekStart).join('-');
           return (
-            <div key={rowIndex} className={styles.weekRow}>
+            <div key={rowKey} className={styles.weekRow}>
               <div className={styles.weekGrid} style={{ ['--cols' as string]: row.length }}>
                 {row.map((week) => {
                   const level = weeklyIntensityLevel(week.count);
@@ -68,12 +69,11 @@ export default function ActivityWeeks({ points }: Readonly<Props>) {
                       });
                   return (
                     <Tooltip key={week.weekStart} label={label} className={styles.cellSlot}>
-                      <span
+                      <button
+                        type="button"
                         className={styles.weekCell}
                         style={{ background: cellColor(level) }}
-                        role="img"
                         aria-label={label}
-                        tabIndex={0}
                       />
                     </Tooltip>
                   );

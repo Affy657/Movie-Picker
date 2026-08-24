@@ -6,6 +6,7 @@ namespace MoviePicker.Api.Tests.Infrastructure.Persistence.InMemory;
 
 public sealed class InMemoryWatchlistRepositoryTests
 {
+    private static readonly int[] ActionSciFiGenreIds = [28, 878];
     private readonly InMemoryWatchlistRepository _sut = new();
 
     private static WatchlistItem Item(
@@ -183,7 +184,7 @@ public sealed class InMemoryWatchlistRepositoryTests
         await _sut.UpdateGenresAsync(stored!.Id, [28, 878]);
 
         var updated = await _sut.GetOneAsync("u1", 42, MovieMediaType.Movie);
-        Assert.Equal(new[] { 28, 878 }, updated!.GenreIds);
+        Assert.Equal(ActionSciFiGenreIds, updated!.GenreIds);
     }
 
     [Fact]

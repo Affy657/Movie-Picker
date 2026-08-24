@@ -20,7 +20,7 @@ public static class WheelWinnerPicker
         if (eligible.Count == 1)
             return eligible[0];
 
-        IReadOnlyList<Movie> pool = eligible;
+        List<Movie> pool = eligible;
         if (!string.IsNullOrEmpty(excludedMovieId))
         {
             var filtered = eligible.Where(m => !string.Equals(m.Id, excludedMovieId, StringComparison.Ordinal)).ToList();

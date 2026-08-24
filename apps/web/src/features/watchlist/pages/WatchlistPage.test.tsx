@@ -156,9 +156,7 @@ describe('WatchlistPage (MSW)', () => {
     expect(await screen.findByText(/aucun titre ne correspond/i)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /réinitialiser les filtres/i }));
 
-    await waitFor(() =>
-      expect(screen.getByRole('list', { name: /films de ma liste/i })).toBeInTheDocument()
-    );
+    expect(await screen.findByRole('list', { name: /films de ma liste/i })).toBeInTheDocument();
   });
 
   it('trie par ajout (défaut), note et durée, et inverse le sens au second clic', async () => {
@@ -239,9 +237,7 @@ describe('WatchlistPage (MSW)', () => {
 
     await user.click(await screen.findByRole('button', { name: /ajouter un film/i }));
     await user.type(screen.getByPlaceholderText(/rechercher un film à ajouter/i), 'Film Test');
-    await waitFor(() => expect(screen.getByText('Film Test')).toBeInTheDocument(), {
-      timeout: 3000,
-    });
+    expect(await screen.findByText('Film Test', {}, { timeout: 3000 })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /^ajouter$/i }));
 
