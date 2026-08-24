@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -32,6 +33,7 @@ public static class RateLimitingExtensions
     public const string WatchlistMutationPolicy = "watchlist-mutation";
     public const string LetterboxdImportPolicy = "letterboxd-import";
     public const string KofiWebhookPolicy = "kofi-webhook";
+    public const string IdeaSuggestionPolicy = "idea-suggestion";
 
     public static IServiceCollection AddMoviePickerRateLimiter(this IServiceCollection services, IHostEnvironment environment)
     {
@@ -83,6 +85,7 @@ public static class RateLimitingExtensions
                 options.AddPolicy(WatchlistMutationPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(LetterboxdImportPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 options.AddPolicy(KofiWebhookPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
+                options.AddPolicy(IdeaSuggestionPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
                 return;
             }
 
@@ -112,6 +115,7 @@ public static class RateLimitingExtensions
             options.AddPolicy(WatchlistMutationPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 60, windowMinutes: 1));
             options.AddPolicy(LetterboxdImportPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 10, windowMinutes: 1));
             options.AddPolicy(KofiWebhookPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 20, windowMinutes: 1));
+            options.AddPolicy(IdeaSuggestionPolicy, ctx => CreateUserFixedWindow(ctx, permitLimit: 10, windowMinutes: 60));
         });
 
         return services;
@@ -120,7 +124,22 @@ public static class RateLimitingExtensions
     private static RateLimitPartition<string> CreateFixedWindow(HttpContext httpContext, int permitLimit, int windowMinutes)
     {
         var key = ClientIpPartitionKey.Get(httpContext);
-        return RateLimitPartition.GetFixedWindowLimiter(
+        return BuildFixedWindow(key, permitLimit, windowMinutes);
+    }
+
+    /// <summary>
+    /// Partitionne par utilisateur authentifié plutôt que par IP : pertinent pour les endpoints
+    /// où un réseau partagé (bureau, CGNAT mobile) ne doit pas épuiser le quota de tout le monde
+    /// à la fois. Retombe sur l'IP si l'utilisateur n'est pas authentifié.
+    /// </summary>
+    private static RateLimitPartition<string> CreateUserFixedWindow(HttpContext httpContext, int permitLimit, int windowMinutes)
+    {
+        var key = UserOrIpPartitionKey.Get(httpContext);
+        return BuildFixedWindow(key, permitLimit, windowMinutes);
+    }
+
+    private static RateLimitPartition<string> BuildFixedWindow(string key, int permitLimit, int windowMinutes) =>
+        RateLimitPartition.GetFixedWindowLimiter(
             key,
             _ => new FixedWindowRateLimiterOptions
             {
@@ -130,7 +149,6 @@ public static class RateLimitingExtensions
                 QueueLimit = 0,
                 AutoReplenishment = true
             });
-    }
 }
 
 internal static class ClientIpPartitionKey
@@ -139,5 +157,16 @@ internal static class ClientIpPartitionKey
     {
         var ip = httpContext.Connection.RemoteIpAddress;
         return ip?.ToString() ?? "unknown";
+    }
+}
+
+internal static class UserOrIpPartitionKey
+{
+    internal static string Get(HttpContext httpContext)
+    {
+        var userId = httpContext.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return string.IsNullOrEmpty(userId)
+            ? $"ip:{ClientIpPartitionKey.Get(httpContext)}"
+            : $"user:{userId}";
     }
 }

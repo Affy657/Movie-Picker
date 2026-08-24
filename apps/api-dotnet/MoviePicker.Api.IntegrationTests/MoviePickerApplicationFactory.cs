@@ -14,6 +14,7 @@ namespace MoviePicker.Api.IntegrationTests;
 public sealed class MoviePickerApplicationFactory : WebApplicationFactory<Program>
 {
     public FakeEmailSender FakeEmail { get; } = new();
+    public FakeGitHubIssueClient FakeGitHubIssues { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -35,6 +36,9 @@ public sealed class MoviePickerApplicationFactory : WebApplicationFactory<Progra
         {
             services.RemoveAll<IEmailSender>();
             services.AddSingleton<IEmailSender>(FakeEmail);
+
+            services.RemoveAll<IGitHubIssueClient>();
+            services.AddSingleton<IGitHubIssueClient>(FakeGitHubIssues);
 
             // Force the deterministic, offline TMDB stub: AddMovie now fetches genres on add,
             // and the E2E_STUB_TMDB config flag isn't honoured under the minimal-hosting factory

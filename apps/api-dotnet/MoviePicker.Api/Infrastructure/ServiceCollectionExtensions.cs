@@ -10,6 +10,7 @@ using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.BackgroundServices;
 using MoviePicker.Api.Infrastructure.Development;
 using MoviePicker.Api.Infrastructure.Email;
+using MoviePicker.Api.Infrastructure.GitHub;
 using MoviePicker.Api.Infrastructure.Letterboxd;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
@@ -72,6 +73,15 @@ public static class ServiceCollectionExtensions
             client.DefaultRequestHeaders.UserAgent.ParseAdd("MoviePicker-Api/1.0");
         });
 
+        services.AddHttpClient<IGitHubIssueClient, GitHubIssueClient>(client =>
+        {
+            client.BaseAddress = new Uri("https://api.github.com/");
+            client.Timeout = TimeSpan.FromSeconds(10);
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("MoviePicker-Api/1.0");
+            client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
+            client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
+        });
+
         RegisterHandlers(services);
 
         services.AddSingleton<ValidationErrorFilter>();
@@ -103,6 +113,20 @@ public static class ServiceCollectionExtensions
         var kofiToken = cfg["KOFI_WEBHOOK_TOKEN"];
         if (!string.IsNullOrWhiteSpace(kofiToken))
             opts.KofiWebhookToken = kofiToken.Trim();
+
+        ConfigureGitHubOptions(opts, cfg);
+    }
+
+    private static void ConfigureGitHubOptions(MoviePickerOptions opts, IConfiguration cfg)
+    {
+        var token = cfg["GITHUB_TOKEN"];
+        opts.GitHubToken = string.IsNullOrWhiteSpace(token) ? null : token.Trim();
+        var owner = cfg["GITHUB_REPO_OWNER"];
+        if (!string.IsNullOrWhiteSpace(owner))
+            opts.GitHubRepoOwner = owner.Trim();
+        var repo = cfg["GITHUB_REPO_NAME"];
+        if (!string.IsNullOrWhiteSpace(repo))
+            opts.GitHubRepoName = repo.Trim();
     }
 
     private static void ConfigureTmdbOptions(MoviePickerOptions opts, IConfiguration cfg)

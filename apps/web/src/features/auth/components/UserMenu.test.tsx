@@ -110,6 +110,19 @@ describe('UserMenu', () => {
     expect(trigger).toHaveFocus();
   });
 
+  it('ouvre la modale « Proposer une idée » et la garde ouverte après fermeture du menu', async () => {
+    const user = userEvent.setup();
+    renderMenu();
+
+    await user.click(screen.getByRole('button', { name: /menu du compte/i }));
+    await user.click(screen.getByRole('button', { name: /proposer une idée/i }));
+
+    expect(screen.queryByRole('button', { name: /se déconnecter/i })).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /proposer une idée/i })).toBeInTheDocument();
+    });
+  });
+
   it('déclenche la déconnexion au clic sur Se déconnecter', async () => {
     const user = userEvent.setup();
     let loggedOut = false;

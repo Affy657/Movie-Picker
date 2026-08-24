@@ -44,4 +44,10 @@ public sealed class MoviePickerOptions
     public string VapidSubject { get; set; } = "mailto:noreply@movie-picker.fr";
 
     public string? KofiWebhookToken { get; set; }
+
+    public string? GitHubToken { get; set; }
+
+    public string GitHubRepoOwner { get; set; } = "Affy657";
+
+    public string GitHubRepoName { get; set; } = "Movie-Picker";
 }

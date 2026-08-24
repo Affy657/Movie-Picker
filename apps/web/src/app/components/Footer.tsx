@@ -3,6 +3,8 @@ import { Link } from 'react-router';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import { APP_VERSION } from '@/shared/appVersion';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
+import ProposeIdeaButton from './ProposeIdeaButton';
 import SupportReportButton from './SupportReportButton';
 import styles from './Footer.module.css';
 
@@ -51,6 +53,7 @@ const CURRENT_YEAR = new Date().getFullYear();
 
 export default function Footer({ clearMobileNav = false, onOpenWhatsNew }: Readonly<FooterProps>) {
   const { t } = useTranslation();
+  const { user } = useAuth();
 
   return (
     <footer
@@ -97,6 +100,11 @@ export default function Footer({ clearMobileNav = false, onOpenWhatsNew }: Reado
             <li>
               <SupportReportButton className={clsx(styles.colLink, styles.colButtonReset)} />
             </li>
+            {user ? (
+              <li>
+                <ProposeIdeaButton className={clsx(styles.colLink, styles.colButtonReset)} />
+              </li>
+            ) : null}
             <li>
               <Link to={ROUTES.donate} className={styles.colLink}>
                 {t('footer.donate')}

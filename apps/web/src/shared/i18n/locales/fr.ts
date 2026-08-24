@@ -926,6 +926,24 @@
     fallbackHint: 'Si votre messagerie ne s’ouvre pas, écrivez-nous directement à {{email}}.',
   },
 
+  proposeIdea: {
+    trigger: 'Proposer une idée',
+    dialogTitle: 'Proposer une idée',
+    dialogIntro:
+      'Titre et description suffisent : votre suggestion crée automatiquement une issue sur le dépôt GitHub du projet.',
+    categoryLabel: 'Catégorie',
+    categoryIdea: 'Idée',
+    categoryBug: 'Bug',
+    categoryImprovement: 'Amélioration',
+    titleLabel: 'Titre',
+    descriptionLabel: 'Description',
+    descriptionHint: '{{count}} caractères restants',
+    submit: 'Envoyer',
+    submitting: 'Envoi…',
+    submitError: 'Impossible d’envoyer votre suggestion pour le moment. Réessayez.',
+    successMessage: 'Merci ! Votre suggestion a bien été envoyée.',
+  },
+
   profile: {
     notFound: "Ce profil n'existe pas ou n'est pas public.",
     loadError: 'Impossible de charger ce profil.',

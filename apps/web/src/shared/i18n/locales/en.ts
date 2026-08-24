@@ -908,6 +908,24 @@ export const en: Locale = {
     fallbackHint: 'If your mail app does not open, write to us directly at {{email}}.',
   },
 
+  proposeIdea: {
+    trigger: 'Suggest an idea',
+    dialogTitle: 'Suggest an idea',
+    dialogIntro:
+      'A title and a description are enough: your suggestion automatically creates an issue on the project’s GitHub repository.',
+    categoryLabel: 'Category',
+    categoryIdea: 'Idea',
+    categoryBug: 'Bug',
+    categoryImprovement: 'Improvement',
+    titleLabel: 'Title',
+    descriptionLabel: 'Description',
+    descriptionHint: '{{count}} characters left',
+    submit: 'Send',
+    submitting: 'Sending…',
+    submitError: 'Could not send your suggestion right now. Please try again.',
+    successMessage: 'Thanks! Your suggestion was sent successfully.',
+  },
+
   profile: {
     notFound: 'This profile does not exist or is not public.',
     loadError: 'Unable to load this profile.',

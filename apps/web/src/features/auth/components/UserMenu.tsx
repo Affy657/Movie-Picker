@@ -1,7 +1,8 @@
 import { useCallback, useId, useRef, useState } from 'react';
 import { Link } from 'react-router';
-import { ChevronDown, HeartHandshake, LogOut, Settings, UserRound } from 'lucide-react';
+import { ChevronDown, HeartHandshake, Lightbulb, LogOut, Settings, UserRound } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
+import { ProposeIdeaDialog } from '@/app/components/ProposeIdeaButton';
 import { ROUTES } from '@/app/routes';
 import { useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -20,6 +21,7 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
   const { t } = useTranslation();
   const { logout } = useAuth();
   const [open, setOpen] = useState(false);
+  const [ideaDialogOpen, setIdeaDialogOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -84,6 +86,17 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
           <button
             type="button"
             className={styles.item}
+            onClick={() => {
+              close();
+              setIdeaDialogOpen(true);
+            }}
+          >
+            <Lightbulb className={styles.icon} aria-hidden="true" focusable="false" />
+            <span className={styles.itemLabel}>{t('proposeIdea.trigger')}</span>
+          </button>
+          <button
+            type="button"
+            className={styles.item}
             onClick={() => void runLogout()}
             disabled={loggingOut}
           >
@@ -99,6 +112,7 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
           ) : null}
         </div>
       ) : null}
+      <ProposeIdeaDialog open={ideaDialogOpen} onClose={() => setIdeaDialogOpen(false)} />
     </div>
   );
 }
