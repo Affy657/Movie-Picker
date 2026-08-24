@@ -111,4 +111,26 @@ public sealed class GetUserProfileHandlerTests
         Assert.False(res.HasPassword);
         Assert.Equal(["google"], res.LinkedProviders);
     }
+
+    [Fact]
+    public async Task HandleAsync_ReturnsCreatedAt()
+    {
+        var createdAt = new DateTimeOffset(2026, 6, 1, 12, 0, 0, TimeSpan.Zero);
+        var user = new User
+        {
+            Id = "id1",
+            Email = "bob@example.com",
+            PasswordHash = "h",
+            DisplayName = "Bob",
+            CreatedAt = createdAt,
+            UpdatedAt = createdAt
+        };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("id1", It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var handler = new GetUserProfileHandler(users.Object);
+
+        var res = await handler.HandleAsync("id1");
+
+        Assert.Equal(createdAt, res.CreatedAt);
+    }
 }

@@ -35,6 +35,12 @@ const RELEASE: WhatsNewRelease = {
       link: 'profile',
     },
     {
+      category: 'new',
+      titleKey: 'whatsNew.entries.proposeIdea.title',
+      descriptionKey: 'whatsNew.entries.proposeIdea.description',
+      action: 'proposeIdea',
+    },
+    {
       category: 'improved',
       titleKey: 'whatsNew.entries.wheelExclusion.title',
       descriptionKey: 'whatsNew.entries.wheelExclusion.description',
@@ -43,15 +49,25 @@ const RELEASE: WhatsNewRelease = {
   ],
 };
 
-function renderModal(profileHandle: string | null = null, onClose = vi.fn()) {
+function renderModal(
+  profileHandle: string | null = null,
+  onClose = vi.fn(),
+  onAction = vi.fn()
+) {
   render(
     <AppTestProviders>
       <MemoryRouter>
-        <WhatsNewModal open release={RELEASE} profileHandle={profileHandle} onClose={onClose} />
+        <WhatsNewModal
+          open
+          release={RELEASE}
+          profileHandle={profileHandle}
+          onClose={onClose}
+          onAction={onAction}
+        />
       </MemoryRouter>
     </AppTestProviders>
   );
-  return { onClose };
+  return { onClose, onAction };
 }
 
 describe('WhatsNewModal', () => {
@@ -99,5 +115,15 @@ describe('WhatsNewModal', () => {
 
     await user.click(screen.getByRole('button', { name: /c.est noté/i }));
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('ouvre l’action « Proposer une idée » et ferme la modale au clic', async () => {
+    const user = userEvent.setup();
+    const { onClose, onAction } = renderModal();
+
+    await user.click(screen.getByRole('button', { name: /proposer une idée/i }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onAction).toHaveBeenCalledTimes(1);
+    expect(onAction).toHaveBeenCalledWith('proposeIdea');
   });
 });

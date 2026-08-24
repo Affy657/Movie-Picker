@@ -23,6 +23,8 @@
     accountMenu: 'Menu du compte',
     brandLabel: 'Movie Picker \u2014 Accueil',
     skipToMain: 'Passer au contenu principal',
+    whatsNew: 'Nouveautés',
+    whatsNewAria: 'Voir les nouveautés',
   },
 
   home: {
@@ -1124,6 +1126,10 @@
       donations: {
         title: 'Soutenir le projet',
         description: 'Movie Picker reste gratuit. Les dons paient les serveurs.',
+      },
+      proposeIdea: {
+        title: 'Proposer une idée',
+        description: 'Une idée, un bug, une amélioration : envoyez-la en deux champs.',
       },
       wheelExclusion: {
         title: 'Films écartés du tirage',

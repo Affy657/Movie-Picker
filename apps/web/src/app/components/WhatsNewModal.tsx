@@ -7,6 +7,7 @@ import { useTranslation } from '@/shared/i18n';
 import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import {
   whatsNewLinkPath,
+  type WhatsNewAction,
   type WhatsNewCategory,
   type WhatsNewEntry,
   type WhatsNewRelease,
@@ -18,6 +19,7 @@ type Props = {
   release: WhatsNewRelease;
   profileHandle?: string | null;
   onClose: () => void;
+  onAction?: (action: WhatsNewAction) => void;
 };
 
 type CategoryIcon = ComponentType<SVGProps<SVGSVGElement>>;
@@ -39,11 +41,20 @@ const CATEGORY_ICON: Record<WhatsNewCategory, CategoryIcon> = {
   fixed: Wrench,
 };
 
+function EntryChevron() {
+  return (
+    <span className={styles.entryChevron}>
+      <ChevronRight width={16} height={16} aria-hidden="true" focusable="false" />
+    </span>
+  );
+}
+
 export default function WhatsNewModal({
   open,
   release,
   profileHandle = null,
   onClose,
+  onAction,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const dialogRef = useModalDialog(open, onClose);
@@ -83,23 +94,29 @@ export default function WhatsNewModal({
               <ul className={styles.entryList}>
                 {entries.map((entry) => {
                   const to = whatsNewLinkPath(entry.link, profileHandle);
+                  const action = entry.action;
                   return (
                     <li key={entry.titleKey} className={styles.entry}>
-                      {to ? (
+                      {action && onAction ? (
+                        <button
+                          type="button"
+                          className={clsx(styles.entryInner, styles.entryLink, styles.entryButton)}
+                          onClick={() => {
+                            onClose();
+                            onAction(action);
+                          }}
+                        >
+                          {renderEntryContent(entry)}
+                          <EntryChevron />
+                        </button>
+                      ) : to ? (
                         <Link
                           to={to}
                           className={clsx(styles.entryInner, styles.entryLink)}
                           onClick={onClose}
                         >
                           {renderEntryContent(entry)}
-                          <span className={styles.entryChevron}>
-                            <ChevronRight
-                              width={16}
-                              height={16}
-                              aria-hidden="true"
-                              focusable="false"
-                            />
-                          </span>
+                          <EntryChevron />
                         </Link>
                       ) : (
                         <div className={styles.entryInner}>{renderEntryContent(entry)}</div>

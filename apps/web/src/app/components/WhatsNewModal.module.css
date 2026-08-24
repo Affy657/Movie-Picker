@@ -123,6 +123,13 @@
   transition: background var(--duration-base) var(--ease-default);
 }
 
+.entryButton {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
 .entryLink:hover {
   background: color-mix(in srgb, var(--category-color) 12%, transparent);
 }

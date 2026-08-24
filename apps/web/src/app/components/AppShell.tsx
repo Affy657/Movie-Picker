@@ -1,11 +1,12 @@
 import clsx from 'clsx';
-import type { ComponentType, SVGProps } from 'react';
+import { useState, type ComponentType, type SVGProps } from 'react';
 import { Bookmark, CalendarDays, Plus } from 'lucide-react';
 import { Link, NavLink, Outlet } from 'react-router';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useLetterboxdAutoSync } from '@/features/letterboxd/hooks/useLetterboxdAutoSync';
 import { useWhatsNew } from '@/shared/hooks/useWhatsNew';
+import { shouldShowWhatsNewNavChip } from '@/shared/whatsNew';
 import { ROUTES } from '@/app/routes';
 import UserMenu from '@/features/auth/components/UserMenu';
 import InboxBell from '@/features/notifications/components/InboxBell';
@@ -13,6 +14,8 @@ import Footer from './Footer';
 import PwaAutoUpdate from './PwaAutoUpdate';
 import ConsentBanner from './ConsentBanner';
 import WhatsNewModal from './WhatsNewModal';
+import WhatsNewNavChip from './WhatsNewNavChip';
+import { ProposeIdeaDialog } from './ProposeIdeaButton';
 import InAppBrowserBanner from './InAppBrowserBanner';
 import styles from './AppShell.module.css';
 
@@ -64,6 +67,7 @@ export default function AppShell() {
     openOnDemand: openWhatsNew,
     close: closeWhatsNew,
   } = useWhatsNew(user?.userId);
+  const [proposeIdeaOpen, setProposeIdeaOpen] = useState(false);
 
   const isAuthenticated = !!user;
 
@@ -100,6 +104,9 @@ export default function AppShell() {
                 ))}
               </nav>
               <div className={styles.navActions}>
+                {shouldShowWhatsNewNavChip(user.createdAt) ? (
+                  <WhatsNewNavChip onOpen={openWhatsNew} />
+                ) : null}
                 <InboxBell />
                 <UserMenu user={user} />
               </div>
@@ -124,12 +131,18 @@ export default function AppShell() {
       <PwaAutoUpdate />
       <ConsentBanner />
       {isAuthenticated ? (
-        <WhatsNewModal
-          open={whatsNewOpen}
-          release={whatsNewRelease}
-          profileHandle={user.handle}
-          onClose={closeWhatsNew}
-        />
+        <>
+          <WhatsNewModal
+            open={whatsNewOpen}
+            release={whatsNewRelease}
+            profileHandle={user.handle}
+            onClose={closeWhatsNew}
+            onAction={(action) => {
+              if (action === 'proposeIdea') setProposeIdeaOpen(true);
+            }}
+          />
+          <ProposeIdeaDialog open={proposeIdeaOpen} onClose={() => setProposeIdeaOpen(false)} />
+        </>
       ) : null}
       <InAppBrowserBanner />
     </div>

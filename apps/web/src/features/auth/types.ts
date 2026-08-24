@@ -17,4 +17,5 @@ export interface UserProfile {
   letterboxdPendingReconciliationCount: number;
   hasPassword: boolean;
   linkedProviders: string[];
+  createdAt?: string;
 }

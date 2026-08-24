@@ -60,6 +60,8 @@ public sealed class AuthEndpointsTests : IClassFixture<MoviePickerApplicationFac
         Assert.NotNull(profile);
         Assert.Equal("Intégration", profile.DisplayName);
         Assert.Contains("***", profile.EmailMasked, StringComparison.Ordinal);
+        Assert.NotEqual(default, profile.CreatedAt);
+        Assert.True(profile.CreatedAt <= DateTimeOffset.UtcNow.AddMinutes(1));
     }
 
     [Fact]

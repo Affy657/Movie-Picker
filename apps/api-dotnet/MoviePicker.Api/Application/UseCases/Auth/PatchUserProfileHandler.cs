@@ -151,7 +151,8 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
         LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,
         LetterboxdLastSyncError = user.LetterboxdLastSyncError,
         HasPassword = !string.IsNullOrEmpty(user.PasswordHash),
-        LinkedProviders = user.Identities.Select(i => i.Provider).ToList()
+        LinkedProviders = user.Identities.Select(i => i.Provider).ToList(),
+        CreatedAt = user.CreatedAt
     };
 
     private static T ParseEnum<T>(string raw, T defaultValue) where T : struct, Enum =>

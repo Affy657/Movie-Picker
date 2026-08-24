@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
@@ -34,7 +34,10 @@ describe('App (routes)', () => {
   const server = setupServer();
 
   beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
-  afterEach(() => server.resetHandlers());
+  afterEach(() => {
+    server.resetHandlers();
+    vi.restoreAllMocks();
+  });
   afterAll(() => server.close());
 
   describe('visiteur anonyme', () => {
@@ -147,7 +150,53 @@ describe('App (routes)', () => {
       );
       renderRoutes(['/my-events']);
       await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 }, { timeout: 8000 });
-      expect(screen.getByRole('button', { name: /nouveautés/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^nouveautés$/i })).toBeInTheDocument();
+    });
+
+    it('AppShell expose la pastille Nouveautés devant les notifications pour un compte 1.3.x', async () => {
+      vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-08-26T12:00:00.000Z'));
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () =>
+          HttpResponse.json({
+            userId: 'u1',
+            displayName: 'Alice',
+            emailMasked: 'a***@test.local',
+            uiTheme: 'system',
+            accentColor: 'default',
+            createdAt: '2026-06-01T00:00:00.000Z',
+          })
+        ),
+        http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] })),
+        http.get(`${TEST_API_V1}/notifications/inbox`, () =>
+          HttpResponse.json({ items: [], unreadCount: 0 })
+        )
+      );
+      renderRoutes(['/my-events']);
+      await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 }, { timeout: 8000 });
+      const chip = screen.getByRole('button', { name: /voir les nouveautés/i });
+      const bell = screen.getByRole('link', { name: /^notifications$/i });
+      expect(chip.compareDocumentPosition(bell) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it("AppShell n'expose pas la pastille Nouveautés pour un compte créé à partir de la 1.4.0", async () => {
+      vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-08-26T12:00:00.000Z'));
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () =>
+          HttpResponse.json({
+            userId: 'u1',
+            displayName: 'Alice',
+            emailMasked: 'a***@test.local',
+            uiTheme: 'system',
+            accentColor: 'default',
+            createdAt: '2026-08-25T12:00:00.000Z',
+          })
+        ),
+        http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
+      );
+      renderRoutes(['/my-events']);
+      await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 }, { timeout: 8000 });
+      expect(screen.queryByRole('button', { name: /voir les nouveautés/i })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^nouveautés$/i })).toBeInTheDocument();
     });
   });
 

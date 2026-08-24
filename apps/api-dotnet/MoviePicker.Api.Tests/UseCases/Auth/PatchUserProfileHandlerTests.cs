@@ -46,6 +46,7 @@ public sealed class PatchUserProfileHandlerTests
         users.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
         Assert.Equal("Old", res.DisplayName);
         Assert.Equal(UiThemePreference.System, res.UiTheme);
+        Assert.Equal(u.CreatedAt, res.CreatedAt);
     }
 
     [Fact]

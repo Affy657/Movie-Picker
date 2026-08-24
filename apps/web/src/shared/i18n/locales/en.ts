@@ -25,6 +25,8 @@ export const en: Locale = {
     accountMenu: 'Account menu',
     brandLabel: 'Movie Picker \u2014 Home',
     skipToMain: 'Skip to main content',
+    whatsNew: "What's new",
+    whatsNewAria: "See what's new",
   },
 
   home: {
@@ -1103,6 +1105,10 @@ export const en: Locale = {
       donations: {
         title: 'Support the project',
         description: 'Movie Picker stays free. Donations pay for the servers.',
+      },
+      proposeIdea: {
+        title: 'Suggest an idea',
+        description: 'An idea, a bug, an improvement: send it in two fields.',
       },
       wheelExclusion: {
         title: 'Films out of the draw',
