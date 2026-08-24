@@ -8,6 +8,8 @@ Disallow: /e/
 Disallow: /my-events
 Disallow: /settings
 Disallow: /new
+Disallow: /watchlist
+Disallow: /notifications
 Disallow: /login
 Disallow: /register
 Disallow: /forgot-password

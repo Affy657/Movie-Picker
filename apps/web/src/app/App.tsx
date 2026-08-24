@@ -127,14 +127,7 @@ export function AppRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path={ROUTES.eventDetailPattern}
-          element={
-            <ProtectedRoute>
-              <EventDetail />
-            </ProtectedRoute>
-          }
-        />
+        <Route path={ROUTES.eventDetailPattern} element={<EventDetail />} />
         <Route path={ROUTES.profileMoviesPattern} element={<ProfileMoviesPage />} />
         <Route path={ROUTES.profilePattern} element={<ProfilePage />} />
         <Route path="*" element={<NotFoundPage />} />

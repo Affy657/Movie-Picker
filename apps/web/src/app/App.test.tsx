@@ -6,7 +6,12 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { AppRoutes } from '@/app/App';
-import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
+import {
+  authMeGuestHandler,
+  createEventDetailHandlers,
+  createUserStatsHandler,
+  TEST_API_V1,
+} from '@/mocks/handlers';
 
 function renderRoutes(initialEntries: string[]) {
   return render(
@@ -64,8 +69,9 @@ describe('App (routes)', () => {
     it.each([
       ['/new', '%2Fnew'],
       ['/my-events', '%2Fmy-events'],
-      ['/e/soiree-secrete', '%2Fe%2Fsoiree-secrete'],
       ['/settings', '%2Fsettings'],
+      ['/watchlist', '%2Fwatchlist'],
+      ['/notifications', '%2Fnotifications'],
     ])('route %s redirige vers /login avec un returnTo', async (path, encodedReturnTo) => {
       server.use(
         authMeGuestHandler,
@@ -79,6 +85,97 @@ describe('App (routes)', () => {
         'href',
         `/register?returnTo=${encodedReturnTo}`
       );
+    });
+
+    it.each([
+      ['/mentions-legales', /mentions légales/i],
+      ['/politique-de-confidentialite', /politique de confidentialité/i],
+      ['/soutenir', /soutenir movie picker/i],
+    ])('page %s reste accessible sans compte', async (path, heading) => {
+      server.use(authMeGuestHandler);
+      renderRoutes([path]);
+      expect(await screen.findByRole('heading', { name: heading, level: 1 })).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: /^connexion$/i })).not.toBeInTheDocument();
+    });
+
+    it('soirée /e/:slug accessible sans compte, avec CTA pour rejoindre', async () => {
+      server.use(
+        authMeGuestHandler,
+        ...createEventDetailHandlers({ slug: 'soiree-secrete', title: 'Soirée secrète' })
+      );
+      renderRoutes(['/e/soiree-secrete']);
+      expect(
+        await screen.findByRole('heading', { name: /soirée secrète/i }, { timeout: 8000 })
+      ).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /rejoindre la soirée/i })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /^se connecter$/i })).toHaveAttribute(
+        'href',
+        `/login?returnTo=${encodeURIComponent('/e/soiree-secrete')}`
+      );
+      expect(screen.getByRole('link', { name: /^créer un compte$/i })).toHaveAttribute(
+        'href',
+        `/register?returnTo=${encodeURIComponent('/e/soiree-secrete')}`
+      );
+      expect(screen.queryByRole('heading', { name: /^connexion$/i })).not.toBeInTheDocument();
+    });
+
+    it('profil public /u/:handle accessible sans compte', async () => {
+      server.use(
+        authMeGuestHandler,
+        http.get(`${TEST_API_V1}/users/alice`, () =>
+          HttpResponse.json({
+            handle: 'alice',
+            displayName: 'Alice',
+            avatarId: 'alpha',
+            bio: 'Grande cinéphile',
+            memberSince: '2024-03-15T00:00:00Z',
+            followingCount: 3,
+            followersCount: 7,
+            isSupporter: false,
+            isFollowedByMe: null,
+          })
+        ),
+        createUserStatsHandler('alice'),
+        http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+          HttpResponse.json({ items: [] })
+        )
+      );
+      renderRoutes(['/u/alice']);
+      expect(
+        await screen.findByRole('heading', { name: 'Alice' }, { timeout: 8000 })
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: /^connexion$/i })).not.toBeInTheDocument();
+    });
+
+    it('films vus /u/:handle/films accessible sans compte', async () => {
+      server.use(
+        authMeGuestHandler,
+        http.get(`${TEST_API_V1}/users/alice`, () =>
+          HttpResponse.json({
+            handle: 'alice',
+            displayName: 'Alice',
+            avatarId: 'alpha',
+            bio: null,
+            memberSince: '2024-03-15T00:00:00Z',
+            followingCount: 0,
+            followersCount: 0,
+            isSupporter: false,
+            isFollowedByMe: null,
+          })
+        ),
+        http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+          HttpResponse.json({ items: [] })
+        )
+      );
+      renderRoutes(['/u/alice/films']);
+      expect(
+        await screen.findByRole(
+          'heading',
+          { name: /les films vus par alice/i, level: 1 },
+          { timeout: 8000 }
+        )
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: /^connexion$/i })).not.toBeInTheDocument();
     });
 
     it("AppShell : aucune barre de navigation n'est exposée aux non-connectés", async () => {

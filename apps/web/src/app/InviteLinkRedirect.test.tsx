@@ -92,10 +92,13 @@ describe("lien d'invitation : retour vers la soirée après authentification", (
 
     renderRoutes([INVITE_PATH]);
 
+    await expectEventPage();
+    await userEvent.setup().click(screen.getByRole('link', { name: /^se connecter$/i }));
     await screen.findByRole('heading', { name: /^connexion$/i }, { timeout: 8000 });
     await submitLoginForm();
 
     await expectEventPage();
+    expect(screen.queryByRole('heading', { name: /^mes soirées$/i })).not.toBeInTheDocument();
   }, 25000);
 
   it('session déjà valide : /login?returnTo renvoie directement sur la soirée sans reclic du lien', async () => {
@@ -131,21 +134,23 @@ describe("lien d'invitation : retour vers la soirée après authentification", (
 
     renderRoutes([INVITE_PATH]);
 
+    await expectEventPage();
+    await userEvent.setup().click(screen.getByRole('link', { name: /^se connecter$/i }));
     await screen.findByRole('heading', { name: /^connexion$/i }, { timeout: 8000 });
     await submitLoginForm();
 
     await expectEventPage();
   });
 
-  it('vérification de session en échec : écran de réessai au lieu du formulaire de connexion', async () => {
+  it('vérification de session en échec : écran de réessai sur une page protégée', async () => {
+    localStorage.setItem(SESSION_HINT_KEY, '1');
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
         HttpResponse.json({ error: 'Panne' }, { status: 503 })
-      ),
-      ...createEventDetailHandlers({ slug: EVENT_SLUG, title: 'Soirée invitée' })
+      )
     );
 
-    renderRoutes([INVITE_PATH]);
+    renderRoutes(['/new']);
 
     expect(
       await screen.findByRole('button', { name: /^réessayer$/i }, { timeout: 12000 })

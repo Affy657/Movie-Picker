@@ -70,6 +70,20 @@ describe('EventDetail (MSW)', () => {
   });
   afterAll(() => server.close());
 
+  it('non connecté : affiche la soirée et les CTA pour rejoindre, pas les films', async () => {
+    renderEventDetail(`/e/${slug}`);
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
+    });
+    expect(screen.getByRole('heading', { name: /rejoindre la soirée/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /^se connecter$/i })).toHaveAttribute(
+      'href',
+      `/login?returnTo=${encodeURIComponent(`/e/${slug}`)}`
+    );
+    expect(screen.getByRole('link', { name: /^créer un compte$/i })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: /films proposés/i })).not.toBeInTheDocument();
+  });
+
   it('affiche une erreur si la soirée est introuvable (404)', async () => {
     server.use(
       http.get(`${TEST_API_V1}/events/slug/:s`, () =>
