@@ -74,7 +74,7 @@ public sealed class MongoPosterImageStore : IPosterImageStore
         if (doc.Data is { Length: > 0 } bytes
             && !string.IsNullOrWhiteSpace(doc.ContentType)
             && doc.ExpiresAtUtc > now)
-            return new PosterImageBlob(bytes, doc.ContentType!);
+            return new PosterImageBlob(bytes, doc.ContentType);
 
         if (string.IsNullOrWhiteSpace(doc.SourceUrl)
             || !TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(doc.SourceUrl, out var source))
@@ -90,7 +90,7 @@ public sealed class MongoPosterImageStore : IPosterImageStore
             if (blob is null)
             {
                 if (doc.Data is { Length: > 0 } stale && !string.IsNullOrWhiteSpace(doc.ContentType))
-                    return new PosterImageBlob(stale, doc.ContentType!);
+                    return new PosterImageBlob(stale, doc.ContentType);
                 return null;
             }
 
@@ -109,7 +109,7 @@ public sealed class MongoPosterImageStore : IPosterImageStore
         {
             _logger.LogWarning(ex, "Échec téléchargement affiche TMDB pour {Key}", k);
             if (doc.Data is { Length: > 0 } fallback && !string.IsNullOrWhiteSpace(doc.ContentType))
-                return new PosterImageBlob(fallback, doc.ContentType!);
+                return new PosterImageBlob(fallback, doc.ContentType);
             return null;
         }
     }

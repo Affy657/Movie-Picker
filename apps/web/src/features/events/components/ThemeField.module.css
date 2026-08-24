@@ -175,6 +175,9 @@
   margin-top: 1.4rem;
   margin-bottom: 0.9rem;
   flex-wrap: wrap;
+  border: none;
+  padding: 0;
+  min-width: 0;
 }
 
 .colorRowLabel {
@@ -185,6 +188,7 @@
   color: var(--color-text-muted);
   margin-right: 0.1rem;
   flex-shrink: 0;
+  padding: 0;
 }
 
 .colorSwatch {

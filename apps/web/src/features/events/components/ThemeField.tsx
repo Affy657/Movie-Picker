@@ -232,8 +232,8 @@ export default function ThemeField({
         </fieldset>
       )}
       {!disabled && (
-        <div className={styles.colorRow} role="group" aria-label="Couleur du tag">
-          <span className={styles.colorRowLabel}>Couleur</span>
+        <fieldset className={styles.colorRow}>
+          <legend className={styles.colorRowLabel}>Couleur</legend>
           <button
             type="button"
             className={clsx(
@@ -261,7 +261,7 @@ export default function ThemeField({
               title={s.label}
             />
           ))}
-        </div>
+        </fieldset>
       )}
     </>
   );

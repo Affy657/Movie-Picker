@@ -108,9 +108,7 @@ public sealed class EventReminderService : BackgroundService
             "Rappels {Type} : {Count} soirée(s) dans la fenêtre [{Min}–{Max}]",
             window.NotifType, eventsInWindow.Count, window.Min, window.Max);
 
-        // La variante "aucun film choisi" ne s'applique qu'au rappel 1h — un seul aller-retour
-        // batch pour tous les événements de la fenêtre plutôt qu'un par événement.
-        IReadOnlySet<string> noMovieEventIds = new HashSet<string>();
+        HashSet<string> noMovieEventIds = [];
         if (window.NotifType == UserNotificationType.EventReminder1h)
         {
             var counts = await services.MovieRepo.CountByEventIdsAsync(
@@ -158,38 +156,50 @@ public sealed class EventReminderService : BackgroundService
             .ToDictionary(g => g.Key, g => g.ToList());
 
         foreach (var user in notifiableUsers)
+            await NotifyUserReminderAsync(user, evt, window, services, now, pushTitle, pushBody, subsByUser, ct);
+    }
+
+    private static async Task NotifyUserReminderAsync(
+        User user,
+        Event evt,
+        ReminderWindow window,
+        ReminderServices services,
+        DateTimeOffset now,
+        string pushTitle,
+        string pushBody,
+        Dictionary<string, List<PushSubscription>> subsByUser,
+        CancellationToken ct)
+    {
+        if (subsByUser.TryGetValue(user.Id, out var subs) && subs.Count > 0)
         {
-            if (subsByUser.TryGetValue(user.Id, out var subs) && subs.Count > 0)
+            var claimed = await services.PushDedup.TryClaimAsync(user.Id, window.NotifType, evt.Id, ct);
+            if (claimed)
             {
-                var claimed = await services.PushDedup.TryClaimAsync(user.Id, window.NotifType, evt.Id, ct);
-                if (claimed)
-                {
-                    var message = new PushMessage(
-                        Title: pushTitle,
-                        Body: pushBody,
-                        Tag: $"reminder-{window.NotifType}-{evt.Id}",
-                        Url: $"/e/{evt.Slug}"
-                    );
-                    foreach (var sub in subs)
-                        await services.Sender.SendAsync(sub, message, ct);
-                }
+                var message = new PushMessage(
+                    Title: pushTitle,
+                    Body: pushBody,
+                    Tag: $"reminder-{window.NotifType}-{evt.Id}",
+                    Url: $"/e/{evt.Slug}"
+                );
+                foreach (var sub in subs)
+                    await services.Sender.SendAsync(sub, message, ct);
             }
-
-            var alreadySent = await services.NotificationRepo.ExistsAsync(user.Id, window.NotifType, evt.Id, ct);
-            if (alreadySent)
-                continue;
-
-            await services.NotificationRepo.AddAsync(new UserNotification
-            {
-                UserId = user.Id,
-                Type = window.NotifType,
-                EventId = evt.Id,
-                EventSlug = evt.Slug,
-                EventTitle = evt.Title,
-                IsRead = false,
-                CreatedAt = now
-            }, ct);
         }
+
+        var alreadySent = await services.NotificationRepo.ExistsAsync(user.Id, window.NotifType, evt.Id, ct);
+        if (alreadySent)
+            return;
+
+        await services.NotificationRepo.AddAsync(new UserNotification
+        {
+            UserId = user.Id,
+            Type = window.NotifType,
+            EventId = evt.Id,
+            EventSlug = evt.Slug,
+            EventTitle = evt.Title,
+            IsRead = false,
+            CreatedAt = now
+        }, ct);
     }
 
     private async Task ProcessPendingEventsAsync(

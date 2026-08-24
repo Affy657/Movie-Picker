@@ -8,7 +8,7 @@ export interface SortOption<TSortKey extends string> {
   label: string;
 }
 
-interface ListToolbarProps<TSortKey extends string> {
+export interface ListToolbarProps<TSortKey extends string> {
   search: string;
   onSearchChange: (value: string) => void;
   searchLabel: string;

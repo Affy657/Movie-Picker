@@ -64,9 +64,12 @@ public sealed class ResendEmailSender : IEmailSender
             break;
         }
 
+        if (res is null)
+            throw new EmailDeliveryException("Resend returned no response");
+
         try
         {
-            if (!res!.IsSuccessStatusCode)
+            if (!res.IsSuccessStatusCode)
             {
                 var status = (int)res.StatusCode;
                 string body;
@@ -84,7 +87,7 @@ public sealed class ResendEmailSender : IEmailSender
         }
         finally
         {
-            res!.Dispose();
+            res.Dispose();
         }
     }
 

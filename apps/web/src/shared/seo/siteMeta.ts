@@ -11,5 +11,6 @@ export const DEFAULT_OG_IMAGE_ALT = 'Movie Picker — choisissez le film de la s
 
 export function absoluteUrl(path: string): string {
   if (/^https?:\/\//i.test(path)) return path;
-  return `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+  const suffix = path.startsWith('/') ? path : `/${path}`;
+  return `${SITE_URL}${suffix}`;
 }

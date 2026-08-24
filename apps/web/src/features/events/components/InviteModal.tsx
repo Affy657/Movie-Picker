@@ -1,13 +1,14 @@
-import { useEffect, useId, useRef, useState } from 'react';
-import { X } from 'lucide-react';
+import { useEffect, useId, useState } from 'react';
 import { Link } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Avatar from '@/shared/components/Avatar';
+import DialogTitleBar from '@/shared/components/DialogTitleBar';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
+import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import { ROUTES } from '@/app/routes';
 import {
   getEligibleFollows,
@@ -26,7 +27,7 @@ export default function InviteModal({ open, slug, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { track } = useAnalytics();
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const dialogRef = useModalDialog(open, onClose);
   const titleId = useId();
   const queryClient = useQueryClient();
 
@@ -53,38 +54,10 @@ export default function InviteModal({ open, slug, onClose }: Readonly<Props>) {
     },
   });
 
-  const onCloseRef = useRef(onClose);
   useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
-
-  useEffect(() => {
-    const dlg = dialogRef.current;
-    if (!dlg) return;
-    if (open && !dlg.open) {
-      dlg.showModal();
-      setInvitedIds(new Set());
-      setItemError(null);
-    } else if (!open && dlg.open) {
-      dlg.close();
-    }
-  }, [open]);
-
-  useEffect(() => {
-    const dlg = dialogRef.current;
-    if (!dlg) return;
-    const handleClose = () => {
-      if (open) onCloseRef.current();
-    };
-    const handleBackdropClick = (e: MouseEvent) => {
-      if (e.target === dlg) onCloseRef.current();
-    };
-    dlg.addEventListener('close', handleClose);
-    dlg.addEventListener('click', handleBackdropClick);
-    return () => {
-      dlg.removeEventListener('close', handleClose);
-      dlg.removeEventListener('click', handleBackdropClick);
-    };
+    if (!open) return;
+    setInvitedIds(new Set());
+    setItemError(null);
   }, [open]);
 
   const handleInvite = (item: EligibleFollowItem) => {
@@ -97,19 +70,12 @@ export default function InviteModal({ open, slug, onClose }: Readonly<Props>) {
 
   return (
     <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>
-      <div className={styles.header}>
-        <h2 id={titleId} className={styles.title}>
-          {t('events.invite.modalTitle')}
-        </h2>
-        <button
-          type="button"
-          className={styles.closeBtn}
-          onClick={onClose}
-          aria-label={t('common.close')}
-        >
-          <X size={18} />
-        </button>
-      </div>
+      <DialogTitleBar
+        titleId={titleId}
+        title={t('events.invite.modalTitle')}
+        onClose={onClose}
+        closeLabel={t('common.close')}
+      />
 
       <div className={styles.body}>
         {followsQuery.isPending && <p className={styles.loadingState}>{t('common.loading')}</p>}

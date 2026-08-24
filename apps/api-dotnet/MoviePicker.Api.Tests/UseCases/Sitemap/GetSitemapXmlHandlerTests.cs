@@ -25,7 +25,7 @@ public sealed class GetSitemapXmlHandlerTests
         _users.Setup(r => r.ListPublicProfilesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(profiles);
 
-    private static IReadOnlyList<string> Locs(string xml) =>
+    private static List<string> Locs(string xml) =>
         XDocument.Parse(xml).Descendants(Ns + "loc").Select(e => e.Value).ToList();
 
     [Fact]

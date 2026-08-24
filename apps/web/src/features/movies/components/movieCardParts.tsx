@@ -458,6 +458,79 @@ interface CardKebabProps {
   t: Translate;
 }
 
+export function CardKebabWhenAvailable({
+  slotClassName,
+  hasDetails,
+  canRemove,
+  onToggleWatchlist,
+  onToggleWheelExclusion,
+  ...kebabProps
+}: Readonly<
+  CardKebabProps & {
+    slotClassName: string;
+    hasDetails: boolean;
+    onToggleWatchlist?: () => void;
+    onToggleWheelExclusion?: () => void;
+  }
+>) {
+  if (!hasDetails && !canRemove && !onToggleWatchlist && !onToggleWheelExclusion) return null;
+  return (
+    <div className={slotClassName}>
+      <CardKebab
+        {...kebabProps}
+        canRemove={canRemove}
+        onToggleWatchlist={onToggleWatchlist}
+        wheelExclusion={kebabProps.wheelExclusion}
+      />
+    </div>
+  );
+}
+
+export function MovieCardKebab({
+  movie,
+  card,
+  slotClassName,
+  isHost,
+  isInWatchlist,
+  onRemove,
+  onToggleWatchlist,
+  onToggleWheelExclusion,
+  t,
+}: Readonly<{
+  movie: MovieData;
+  card: { hasDetails: boolean; isMine: boolean; canRemove: boolean };
+  slotClassName: string;
+  isHost: boolean;
+  isInWatchlist?: boolean;
+  onRemove: (id: string) => void | Promise<void>;
+  onToggleWatchlist?: (movie: MovieData) => void;
+  onToggleWheelExclusion?: (movie: MovieData) => void;
+  t: Translate;
+}>) {
+  const excluded = !!movie.excludedFromWheel;
+  const toggleWatchlist = onToggleWatchlist ? () => onToggleWatchlist(movie) : undefined;
+  const toggleExclusion = onToggleWheelExclusion ? () => onToggleWheelExclusion(movie) : undefined;
+  return (
+    <CardKebabWhenAvailable
+      slotClassName={slotClassName}
+      hasDetails={card.hasDetails}
+      title={movie.title}
+      year={movie.year}
+      tmdbId={movie.tmdbId}
+      mediaType={movie.mediaType}
+      isMine={card.isMine}
+      isHost={isHost}
+      canRemove={card.canRemove}
+      onRemove={() => void onRemove(movie.id)}
+      inWatchlist={isInWatchlist}
+      onToggleWatchlist={toggleWatchlist}
+      onToggleWheelExclusion={toggleExclusion}
+      wheelExclusion={toggleExclusion ? { excluded, onToggle: toggleExclusion } : undefined}
+      t={t}
+    />
+  );
+}
+
 function letterboxdUrl(tmdbId: number, mediaType?: 'movie' | 'tv', title?: string): string {
   if (mediaType === 'tv') {
     return `https://letterboxd.com/search/films/${encodeURIComponent(title ?? '')}/`;
@@ -479,10 +552,6 @@ function tmdbPageUrl(tmdbId: number, mediaType?: 'movie' | 'tv'): string {
   return `https://www.themoviedb.org/${type}/${tmdbId}`;
 }
 
-// Glyphes sans jambage (pas de g/j/p/q/y) : l'encre du texte a besoin du nudge optique
-// plus fort (--text-optical-nudge-caps), comme du texte tout-capitales. Cf. mémoire
-// feedback-icon-text-vertical-centering — la classification dépend du texte réellement
-// affiché (donc de la traduction active), pas d'une liste figée par clé de traduction.
 const DESCENDER_CHARS = /[gjpqy]/;
 const KEBAB_MENU_VIEWPORT_MARGIN = 8;
 

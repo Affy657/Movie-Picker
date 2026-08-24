@@ -2,7 +2,7 @@ namespace MoviePicker.Api.Domain.Entities;
 
 public static class NotificationPreferenceDefaults
 {
-    private static readonly IReadOnlyDictionary<UserNotificationType, bool> Values =
+    private static readonly Dictionary<UserNotificationType, bool> Values =
         new Dictionary<UserNotificationType, bool>
         {
             [UserNotificationType.NewFollower] = true,
@@ -18,8 +18,12 @@ public static class NotificationPreferenceDefaults
             [UserNotificationType.LetterboxdReconciliationPending] = true,
         };
 
-    public static bool For(UserNotificationType type) =>
-        Values.TryGetValue(type, out var value) ? value : true;
+    public static bool For(UserNotificationType type)
+    {
+        if (Values.TryGetValue(type, out var value))
+            return value;
+        return true;
+    }
 
     public static IReadOnlyDictionary<UserNotificationType, bool> All() =>
         Enum.GetValues<UserNotificationType>().ToDictionary(t => t, For);

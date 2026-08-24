@@ -72,9 +72,7 @@ describe('EventDetail (MSW)', () => {
 
   it('non connecté : affiche la soirée et les CTA pour rejoindre, pas les films', async () => {
     renderEventDetail(`/e/${slug}`);
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /rejoindre la soirée/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /^se connecter$/i })).toHaveAttribute(
       'href',
@@ -92,18 +90,14 @@ describe('EventDetail (MSW)', () => {
       http.get(`${TEST_API_V1}/events/:s/movies`, () => HttpResponse.json([]))
     );
     renderEventDetail(`/e/inconnu`);
-    await waitFor(() => {
-      expect(screen.getByText(/n'existe pas|introuvable/i)).toBeInTheDocument();
-    });
+    expect(await screen.findByText(/n'existe pas|introuvable/i)).toBeInTheDocument();
     expect(document.title).toBe(pageTitle('Soirée introuvable'));
   });
 
   it('affiche le lien invité et le QR pour un simple participant (sans token hôte)', async () => {
     const user = userEvent.setup();
     renderEventDetail(`/e/${slug}`);
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /inviter/i }));
     expect(screen.getByRole('button', { name: /^partager$/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /afficher le qr code/i })).toBeInTheDocument();
@@ -114,9 +108,7 @@ describe('EventDetail (MSW)', () => {
     const user = userEvent.setup();
     const token = 'host-secret-token';
     renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     expect(document.title).toBe(pageTitle('Soirée démo'));
     await user.click(screen.getByRole('button', { name: /inviter/i }));
     expect(screen.getByRole('button', { name: /^partager$/i })).toBeInTheDocument();
@@ -131,9 +123,7 @@ describe('EventDetail (MSW)', () => {
       ...createSearchAndAddHandlers(slug)
     );
     renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     expect(screen.getByText('Comédie noire')).toBeInTheDocument();
     expect(screen.getByRole('status', { name: /Thème de soirée/i })).toBeInTheDocument();
 
@@ -154,12 +144,8 @@ describe('EventDetail (MSW)', () => {
       )
     );
     renderEventDetail(`/e/${slug}`);
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
-    });
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /réessayer/i })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /réessayer/i })).toBeInTheDocument();
     expect(screen.getByText(/indisponible|Service/i)).toBeInTheDocument();
   });
 
@@ -177,18 +163,14 @@ describe('EventDetail (MSW)', () => {
       )
     );
     renderEventDetail(`/e/${slug}`);
-    await waitFor(() =>
-      expect(screen.getByRole('heading', { name: /rejoindre/i })).toBeInTheDocument()
-    );
+    expect(await screen.findByRole('heading', { name: /rejoindre/i })).toBeInTheDocument();
     await user.click(await screen.findByRole('button', { name: /rejoindre/i }));
 
     await user.click(await screen.findByRole('button', { name: /proposer un film/i }));
-    await waitFor(() =>
-      expect(screen.getByPlaceholderText(/ajouter un film/i)).toBeInTheDocument()
-    );
+    expect(await screen.findByPlaceholderText(/ajouter un film/i)).toBeInTheDocument();
     await user.type(screen.getByPlaceholderText(/ajouter un film/i), 'Test');
     await user.click(screen.getByRole('button', { name: /^rechercher$/i }));
-    await waitFor(() => expect(screen.getByText(/film test/i)).toBeInTheDocument());
+    expect(await screen.findByText(/film test/i)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /^ajouter$/i }));
     await waitFor(() => expect(screen.queryByText(/film test/i)).not.toBeInTheDocument());
   });
@@ -217,9 +199,7 @@ describe('EventDetail (MSW)', () => {
       );
 
       renderEventDetail(`/e/${slug}?host=host-token`);
-      await waitFor(() =>
-        expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument()
-      );
+      expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
 
       await openParticipantsManageMode(user);
       const removeButton = await screen.findByTestId('remove-participant-p-msw-alice');
@@ -233,9 +213,7 @@ describe('EventDetail (MSW)', () => {
       expect(deleteUrl).toContain('/participants/p-msw-alice');
       expect(deleteUrl).toContain('host=host-token');
 
-      await waitFor(() =>
-        expect(screen.getByTestId('participants-action-success')).toBeInTheDocument()
-      );
+      expect(await screen.findByTestId('participants-action-success')).toBeInTheDocument();
       expect(screen.getByTestId('participants-action-success')).toHaveTextContent('Alice');
     });
 
@@ -283,7 +261,7 @@ describe('EventDetail (MSW)', () => {
       await user.click(removeButton);
       await user.click(screen.getByTestId('confirm-dialog-confirm'));
 
-      await waitFor(() => expect(screen.getByText(/déjà été lancée/i)).toBeInTheDocument());
+      expect(await screen.findByText(/déjà été lancée/i)).toBeInTheDocument();
     });
   });
 
@@ -321,9 +299,7 @@ describe('EventDetail (MSW)', () => {
       );
 
       renderEventDetail(`/e/${slug}?host=host-token`);
-      await waitFor(() =>
-        expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument()
-      );
+      expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
       await openParticipantsPanel(user);
 
       expect(screen.getByText('Alice')).toBeInTheDocument();
@@ -380,9 +356,7 @@ describe('EventDetail (MSW)', () => {
       );
 
       renderEventDetail(`/e/${slug}`);
-      await waitFor(() =>
-        expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument()
-      );
+      expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
 
       await openParticipantsPanel(user);
       const leaveButton = await screen.findByTestId('leave-event-button');
@@ -392,7 +366,7 @@ describe('EventDetail (MSW)', () => {
       await waitFor(() => expect(deleteCalled).toBe(true));
       expect(deleteUrl).toContain(`/participants/${myPid}`);
       await waitFor(() => expect(getStoredParticipant(slug)).toBeNull());
-      await waitFor(() => expect(screen.getByTestId('route-my-events')).toBeInTheDocument());
+      expect(await screen.findByTestId('route-my-events')).toBeInTheDocument();
     });
   });
 
@@ -402,9 +376,7 @@ describe('EventDetail (MSW)', () => {
       setStoredParticipant(slug, 'p-msw-host', 'Hôte');
 
       renderEventDetail(`/e/${slug}?host=host-token`);
-      await waitFor(() =>
-        expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument()
-      );
+      expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
 
       await openParticipantsManageMode(user);
       await user.click(await screen.findByTestId('remove-participant-p-msw-alice'));

@@ -20,70 +20,33 @@ export type WhatsNewRelease = {
   entries: readonly WhatsNewEntry[];
 };
 
+function entry(
+  slug: string,
+  category: WhatsNewCategory,
+  extra?: Pick<WhatsNewEntry, 'link' | 'action'>
+): WhatsNewEntry {
+  return {
+    category,
+    titleKey: `whatsNew.entries.${slug}.title` as TranslationKey,
+    descriptionKey: `whatsNew.entries.${slug}.description` as TranslationKey,
+    ...extra,
+  };
+}
+
 export const WHATS_NEW: readonly WhatsNewRelease[] = [
   {
     version: '1.4.0',
     entries: [
-      {
-        category: 'new',
-        titleKey: 'whatsNew.entries.watchlist.title',
-        descriptionKey: 'whatsNew.entries.watchlist.description',
-        link: 'watchlist',
-      },
-      {
-        category: 'new',
-        titleKey: 'whatsNew.entries.letterboxd.title',
-        descriptionKey: 'whatsNew.entries.letterboxd.description',
-        link: 'account',
-      },
-      {
-        category: 'new',
-        titleKey: 'whatsNew.entries.manualPick.title',
-        descriptionKey: 'whatsNew.entries.manualPick.description',
-        link: 'myEvents',
-      },
-      {
-        category: 'new',
-        titleKey: 'whatsNew.entries.streak.title',
-        descriptionKey: 'whatsNew.entries.streak.description',
-        link: 'profile',
-      },
-      {
-        category: 'new',
-        titleKey: 'whatsNew.entries.oauth.title',
-        descriptionKey: 'whatsNew.entries.oauth.description',
-        link: 'account',
-      },
-      {
-        category: 'new',
-        titleKey: 'whatsNew.entries.donations.title',
-        descriptionKey: 'whatsNew.entries.donations.description',
-        link: 'donate',
-      },
-      {
-        category: 'new',
-        titleKey: 'whatsNew.entries.proposeIdea.title',
-        descriptionKey: 'whatsNew.entries.proposeIdea.description',
-        action: 'proposeIdea',
-      },
-      {
-        category: 'improved',
-        titleKey: 'whatsNew.entries.profileRevamp.title',
-        descriptionKey: 'whatsNew.entries.profileRevamp.description',
-        link: 'profile',
-      },
-      {
-        category: 'improved',
-        titleKey: 'whatsNew.entries.wheelExclusion.title',
-        descriptionKey: 'whatsNew.entries.wheelExclusion.description',
-        link: 'myEvents',
-      },
-      {
-        category: 'improved',
-        titleKey: 'whatsNew.entries.weightedWheel.title',
-        descriptionKey: 'whatsNew.entries.weightedWheel.description',
-        link: 'myEvents',
-      },
+      entry('watchlist', 'new', { link: 'watchlist' }),
+      entry('letterboxd', 'new', { link: 'account' }),
+      entry('manualPick', 'new', { link: 'myEvents' }),
+      entry('streak', 'new', { link: 'profile' }),
+      entry('oauth', 'new', { link: 'account' }),
+      entry('donations', 'new', { link: 'donate' }),
+      entry('proposeIdea', 'new', { action: 'proposeIdea' }),
+      entry('profileRevamp', 'improved', { link: 'profile' }),
+      entry('wheelExclusion', 'improved', { link: 'myEvents' }),
+      entry('weightedWheel', 'improved', { link: 'myEvents' }),
     ],
   },
 ];

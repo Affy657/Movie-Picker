@@ -1,10 +1,10 @@
 import { lazy, Suspense, useCallback, useState } from 'react';
-import { Link, useParams } from 'react-router';
+import { useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { RefreshCw, AlertCircle } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
-import { ApiError, getErrorMessage } from '@/shared/api/apiError';
+import { getErrorMessage, ApiError } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useCopyFeedback } from '@/shared/hooks/useCopyFeedback';
 import { APP_DOCUMENT_TITLE, pageTitle } from '@/shared/hooks/useDocumentTitle';
@@ -18,6 +18,10 @@ import ProfileActions from '@/features/profile/components/ProfileActions';
 import ProfilePageSkeleton, {
   ProfileStatsSkeleton,
 } from '@/features/profile/components/ProfilePageSkeleton';
+import {
+  ProfileLoadErrorState,
+  ProfileNotFoundState,
+} from '@/features/profile/components/ProfileQueryStates';
 import {
   fetchPublicProfile,
   fetchUserStats,
@@ -138,32 +142,11 @@ export default function ProfilePage() {
   }
 
   if (isNotFound) {
-    return (
-      <PageLayout className="page--centered page--errorState">
-        <span className="errorStateIcon" aria-hidden>
-          <AlertCircle size={32} />
-        </span>
-        <p className="errorStateMessage" role="alert">
-          {t('profile.notFound')}
-        </p>
-        <Link to={ROUTES.home} className="btn">
-          {t('profile.backHome')}
-        </Link>
-      </PageLayout>
-    );
+    return <ProfileNotFoundState />;
   }
 
   if (profileQuery.isError || !profile) {
-    return (
-      <PageLayout className="page--centered page--errorState">
-        <span className="errorStateIcon" aria-hidden>
-          <AlertCircle size={32} />
-        </span>
-        <p className="errorStateMessage" role="alert">
-          {ApiError.is(profileQuery.error) ? profileQuery.error.message : t('profile.loadError')}
-        </p>
-      </PageLayout>
-    );
+    return <ProfileLoadErrorState error={profileQuery.error} />;
   }
 
   const memberSince = formatMemberSince(profile.memberSince, locale);

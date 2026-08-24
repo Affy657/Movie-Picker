@@ -1,8 +1,7 @@
 import { useId, useMemo, useRef, useState } from 'react';
-import { Bookmark, Import, Plus, Search } from 'lucide-react';
+import { Bookmark, Import, Plus } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import EmptyState from '@/shared/components/EmptyState';
-import Sheet from '@/shared/components/Sheet';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -14,6 +13,11 @@ import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import AddMoviePanel from '@/features/movies/components/AddMoviePanel';
 import ActiveFilterChips from '@/features/movies/components/ActiveFilterChips';
+import FilteredCollectionLayout, {
+  FilterSheet,
+  FilteredEmptyState,
+  toCollectionToolbarProps,
+} from '@/features/movies/components/FilteredCollectionLayout';
 import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
 import LetterboxdConnectModal from '@/features/letterboxd/components/LetterboxdConnectModal';
 import type { MovieMediaType } from '@/shared/types/movie';
@@ -108,6 +112,26 @@ export default function WatchlistPage() {
   };
 
   const activeFilterCount = toolbar.activeFilterChips.length;
+  const filtersPanel = (
+    <MovieListFiltersPanel
+      panelId={filtersPanelId}
+      boxed
+      tmdbLanguage={tmdbLanguage}
+      labels={filtersLabels}
+      ratingScale={user?.ratingScale}
+      selectedGenres={toolbar.selectedGenres}
+      onToggleGenre={toolbar.toggleGenre}
+      selectedMediaTypes={toolbar.selectedMediaTypes}
+      onToggleMediaType={toolbar.toggleMediaType}
+      selectedDecade={toolbar.selectedDecade}
+      onToggleDecade={toolbar.toggleDecade}
+      voteMin={toolbar.voteMin}
+      onToggleVoteMin={toolbar.toggleVoteMin}
+      runtimeRange={toolbar.runtimeRange}
+      onChangeRuntimeRange={toolbar.changeRuntimeRange}
+      onReset={toolbar.clearAllFilters}
+    />
+  );
   const subtitle =
     items.length === 1
       ? t('watchlist.header.subtitleOne', { count: 1 })
@@ -227,129 +251,73 @@ export default function WatchlistPage() {
           />
         )}
         {!isLoading && !isError && items.length > 0 && (
-          <>
-            <div className={styles.toolbarBlock}>
+          <FilteredCollectionLayout
+            toolbar={
               <WatchlistToolbar
-                search={toolbar.search}
-                onSearchChange={toolbar.setSearch}
-                filtersOpen={toolbar.filtersOpen}
-                onToggleFilters={() => toolbar.setFiltersOpen((v) => !v)}
-                filtersPanelId={filtersPanelId}
-                activeFilterCount={activeFilterCount}
-                sortBy={toolbar.sortBy}
-                sortDir={toolbar.sortDir}
-                onSetSort={toolbar.setSortBy}
-                isFiltered={toolbar.isFiltered}
-                visibleCount={toolbar.visibleCount}
-                totalCount={toolbar.totalCount}
-                onClearAll={toolbar.resetAll}
-                isMobile={isMobile}
+                {...toCollectionToolbarProps(toolbar, {
+                  filtersPanelId,
+                  activeFilterCount,
+                  isMobile,
+                })}
               />
-
-              {toolbar.filtersOpen && !isMobile && (
-                <div ref={filtersPanelRef}>
-                  <MovieListFiltersPanel
-                    panelId={filtersPanelId}
-                    boxed
-                    tmdbLanguage={tmdbLanguage}
-                    labels={filtersLabels}
-                    ratingScale={user?.ratingScale}
-                    selectedGenres={toolbar.selectedGenres}
-                    onToggleGenre={toolbar.toggleGenre}
-                    selectedMediaTypes={toolbar.selectedMediaTypes}
-                    onToggleMediaType={toolbar.toggleMediaType}
-                    selectedDecade={toolbar.selectedDecade}
-                    onToggleDecade={toolbar.toggleDecade}
-                    voteMin={toolbar.voteMin}
-                    onToggleVoteMin={toolbar.toggleVoteMin}
-                    runtimeRange={toolbar.runtimeRange}
-                    onChangeRuntimeRange={toolbar.changeRuntimeRange}
-                    onReset={toolbar.clearAllFilters}
-                  />
-                </div>
-              )}
-
-              {activeFilterCount > 0 && (
+            }
+            desktopFilters={
+              toolbar.filtersOpen && !isMobile ? (
+                <div ref={filtersPanelRef}>{filtersPanel}</div>
+              ) : null
+            }
+            chips={
+              activeFilterCount > 0 ? (
                 <ActiveFilterChips
                   chips={toolbar.activeFilterChips}
                   groupAriaLabel={t('watchlist.filter.toggleAria')}
                   removeAriaLabel={t('watchlist.toolbar.removeFilterAria')}
                 />
-              )}
-            </div>
-
-            {isMobile && (
-              <Sheet
-                open={toolbar.filtersOpen}
-                title={t('watchlist.toolbar.filtersSheetTitle')}
-                onClose={() => toolbar.setFiltersOpen(false)}
-                footer={
-                  <>
-                    <button
-                      type="button"
-                      className={styles.sheetReset}
-                      onClick={toolbar.clearAllFilters}
-                    >
-                      {t('watchlist.toolbar.filtersReset')}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-primary btn-sm"
-                      onClick={() => toolbar.setFiltersOpen(false)}
-                    >
-                      {t('watchlist.toolbar.filtersApply', { count: toolbar.visibleCount })}
-                    </button>
-                  </>
-                }
-              >
-                <MovieListFiltersPanel
-                  tmdbLanguage={tmdbLanguage}
-                  labels={filtersLabels}
-                  ratingScale={user?.ratingScale}
-                  selectedGenres={toolbar.selectedGenres}
-                  onToggleGenre={toolbar.toggleGenre}
-                  selectedMediaTypes={toolbar.selectedMediaTypes}
-                  onToggleMediaType={toolbar.toggleMediaType}
-                  selectedDecade={toolbar.selectedDecade}
-                  onToggleDecade={toolbar.toggleDecade}
-                  voteMin={toolbar.voteMin}
-                  onToggleVoteMin={toolbar.toggleVoteMin}
-                  runtimeRange={toolbar.runtimeRange}
-                  onChangeRuntimeRange={toolbar.changeRuntimeRange}
+              ) : null
+            }
+            mobileSheet={
+              isMobile ? (
+                <FilterSheet
+                  open={toolbar.filtersOpen}
+                  title={t('watchlist.toolbar.filtersSheetTitle')}
+                  onClose={() => toolbar.setFiltersOpen(false)}
+                  resetLabel={t('watchlist.toolbar.filtersReset')}
+                  applyLabel={t('watchlist.toolbar.filtersApply', {
+                    count: toolbar.visibleCount,
+                  })}
+                  onReset={toolbar.clearAllFilters}
+                >
+                  {filtersPanel}
+                </FilterSheet>
+              ) : null
+            }
+            emptyFiltered={
+              toolbar.visibleItems.length === 0 ? (
+                <FilteredEmptyState
+                  title={t('watchlist.toolbar.emptyTitle')}
+                  message={t('watchlist.toolbar.emptyMessage')}
+                  resetLabel={t('watchlist.toolbar.filtersResetAll')}
+                  onReset={toolbar.resetAll}
                 />
-              </Sheet>
-            )}
-
-            {toolbar.visibleItems.length === 0 ? (
-              <EmptyState
-                compact
-                icon={<Search aria-hidden size={22} />}
-                title={t('watchlist.toolbar.emptyTitle')}
-                message={t('watchlist.toolbar.emptyMessage')}
-                actions={
-                  <button type="button" className="btn btn-sm" onClick={toolbar.resetAll}>
-                    {t('watchlist.toolbar.filtersResetAll')}
-                  </button>
-                }
-              />
-            ) : (
-              <ul className={styles.grid} aria-label={t('watchlist.listAria')}>
-                {toolbar.visibleItems.map((item) => (
-                  <WatchlistMovieCard
-                    key={itemKey(item.tmdbId, item.mediaType)}
-                    item={item}
-                    hasHover={hasHover}
-                    tmdbLanguage={tmdbLanguage}
-                    ratingScale={user?.ratingScale}
-                    t={t}
-                    onRemove={() => handleRemove(item.tmdbId, item.mediaType)}
-                    onOpenDetails={() => setDetailsTarget(item)}
-                    onProposeFallback={() => setProposeTarget(item)}
-                  />
-                ))}
-              </ul>
-            )}
-          </>
+              ) : null
+            }
+          >
+            <ul className={styles.grid} aria-label={t('watchlist.listAria')}>
+              {toolbar.visibleItems.map((item) => (
+                <WatchlistMovieCard
+                  key={itemKey(item.tmdbId, item.mediaType)}
+                  item={item}
+                  hasHover={hasHover}
+                  tmdbLanguage={tmdbLanguage}
+                  ratingScale={user?.ratingScale}
+                  t={t}
+                  onRemove={() => handleRemove(item.tmdbId, item.mediaType)}
+                  onOpenDetails={() => setDetailsTarget(item)}
+                  onProposeFallback={() => setProposeTarget(item)}
+                />
+              ))}
+            </ul>
+          </FilteredCollectionLayout>
         )}
       </section>
 

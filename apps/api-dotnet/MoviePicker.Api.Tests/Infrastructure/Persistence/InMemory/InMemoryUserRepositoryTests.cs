@@ -6,6 +6,8 @@ namespace MoviePicker.Api.Tests.Infrastructure.Persistence.InMemory;
 
 public sealed class InMemoryUserRepositoryTests
 {
+    private static readonly string[] NewestHandlesFirst = ["newer", "older"];
+
     private readonly InMemoryUserRepository _repo = new();
 
     private static User Mk(
@@ -146,7 +148,7 @@ public sealed class InMemoryUserRepositoryTests
 
         var result = await _repo.ListPublicProfilesAsync(100);
 
-        Assert.Equal(new[] { "newer", "older" }, result.Select(p => p.Handle).ToArray());
+        Assert.Equal(NewestHandlesFirst, result.Select(p => p.Handle).ToArray());
     }
 
     [Fact]

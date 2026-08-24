@@ -59,8 +59,9 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
         };
         _byId[id] = created;
         _eventPseudoToId[(created.EventId, created.Pseudo)] = id;
-        if (!string.IsNullOrWhiteSpace(created.UserId))
-            _eventUserToId[(created.EventId, created.UserId!)] = id;
+        var createdUserId = created.UserId;
+        if (!string.IsNullOrWhiteSpace(createdUserId))
+            _eventUserToId[(created.EventId, createdUserId)] = id;
         return Task.FromResult(created);
     }
 
@@ -120,8 +121,9 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
 
         _byId.TryRemove(participantId, out _);
         _eventPseudoToId.TryRemove((p.EventId, p.Pseudo), out _);
-        if (!string.IsNullOrWhiteSpace(p.UserId))
-            _eventUserToId.TryRemove((p.EventId, p.UserId!), out _);
+        var deletedUserId = p.UserId;
+        if (!string.IsNullOrWhiteSpace(deletedUserId))
+            _eventUserToId.TryRemove((p.EventId, deletedUserId), out _);
         return Task.FromResult(true);
     }
 
@@ -135,8 +137,9 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
         {
             _byId.TryRemove(p.Id, out _);
             _eventPseudoToId.TryRemove((p.EventId, p.Pseudo), out _);
-            if (!string.IsNullOrWhiteSpace(p.UserId))
-                _eventUserToId.TryRemove((p.EventId, p.UserId!), out _);
+            var removedUserId = p.UserId;
+            if (!string.IsNullOrWhiteSpace(removedUserId))
+                _eventUserToId.TryRemove((p.EventId, removedUserId), out _);
         }
 
         return Task.FromResult((long)toRemove.Count);

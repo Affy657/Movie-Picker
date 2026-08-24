@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Check, Clock, Eye, Import, TriangleAlert, X } from 'lucide-react';
+import { Check, Clock, Eye, Import, TriangleAlert } from 'lucide-react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import { useTranslation } from '@/shared/i18n';
 import { queryKeys } from '@/shared/hooks/queryKeys';
+import DialogTitleBar from '@/shared/components/DialogTitleBar';
 import InfoBubble from '@/shared/components/InfoBubble';
 import {
   syncLetterboxd,
@@ -60,24 +61,21 @@ function ConnectFormModal({
 
   return (
     <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>
-      <div className={styles.header}>
-        <h2 id={titleId} className={styles.title}>
-          {t('auth.account.letterboxd.connectTitle')}
-          <InfoBubble label={t('auth.account.letterboxd.helpTitle')}>
-            <p>{t('auth.account.letterboxd.helpSync')}</p>
-            <p>{t('auth.account.letterboxd.helpSafety')}</p>
-            <p>{t('auth.account.letterboxd.helpUsername')}</p>
-          </InfoBubble>
-        </h2>
-        <button
-          type="button"
-          className={styles.closeBtn}
-          onClick={onClose}
-          aria-label={t('common.close')}
-        >
-          <X aria-hidden size={18} />
-        </button>
-      </div>
+      <DialogTitleBar
+        titleId={titleId}
+        title={
+          <>
+            {t('auth.account.letterboxd.connectTitle')}
+            <InfoBubble label={t('auth.account.letterboxd.helpTitle')}>
+              <p>{t('auth.account.letterboxd.helpSync')}</p>
+              <p>{t('auth.account.letterboxd.helpSafety')}</p>
+              <p>{t('auth.account.letterboxd.helpUsername')}</p>
+            </InfoBubble>
+          </>
+        }
+        onClose={onClose}
+        closeLabel={t('common.close')}
+      />
 
       <p className={styles.intro}>{t('auth.account.letterboxd.connectIntro')}</p>
 
@@ -188,19 +186,12 @@ function DoneModal({
 
   return (
     <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>
-      <div className={styles.header}>
-        <h2 id={titleId} className={styles.title}>
-          {t('auth.account.letterboxd.doneTitle')}
-        </h2>
-        <button
-          type="button"
-          className={styles.closeBtn}
-          onClick={onClose}
-          aria-label={t('common.close')}
-        >
-          <X aria-hidden size={18} />
-        </button>
-      </div>
+      <DialogTitleBar
+        titleId={titleId}
+        title={t('auth.account.letterboxd.doneTitle')}
+        onClose={onClose}
+        closeLabel={t('common.close')}
+      />
 
       <div className={styles.body}>
         <div className={styles.report}>

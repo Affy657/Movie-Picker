@@ -134,11 +134,7 @@ public static class UserDocumentMapper
             _ => "five"
         };
 
-    // Migration à la volée, sans écriture en base : tant que l'utilisateur n'a pas encore été
-    // sauvegardé avec le nouveau tableau `notificationPreferences`, on le reconstruit depuis les
-    // 6 anciens booléens. La bascule réelle a lieu au premier PATCH de préférences (ToDocument()
-    // n'écrit plus jamais les anciens champs).
-    private static IReadOnlyDictionary<UserNotificationType, bool> BuildNotificationPreferences(UserDocument doc)
+    private static Dictionary<UserNotificationType, bool> BuildNotificationPreferences(UserDocument doc)
     {
         if (doc.NotificationPreferences is { Count: > 0 })
         {
@@ -151,10 +147,6 @@ public static class UserDocumentMapper
 
         var participantJoined = doc.NotifyOnParticipantJoined ?? true;
         var reminder = doc.NotifyEventReminder ?? true;
-        // Ce document n'a jamais été migré : son comportement effectif historique était "true"
-        // (ancien code : `doc.NotifyOnMovieAdded ?? true`), qu'il ait explicitement choisi ou non.
-        // Le nouveau défaut `false` ne s'applique qu'aux comptes créés après la refonte (via
-        // NotificationPreferenceDefaults.All() sur un User tout neuf) — on ne le rejoue pas ici.
         var movieAdded = doc.NotifyOnMovieAdded ?? true;
         var moviePicked = doc.NotifyOnMoviePicked ?? true;
         var eventDeleted = doc.NotifyOnEventDeleted ?? true;

@@ -1,13 +1,12 @@
 import { useId, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
-import { AlertCircle, ArrowLeft, Film, RefreshCw, Search } from 'lucide-react';
+import { ArrowLeft, Film, RefreshCw, AlertCircle } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import EmptyState from '@/shared/components/EmptyState';
-import Sheet from '@/shared/components/Sheet';
 import Avatar from '@/shared/components/Avatar';
 import { ROUTES } from '@/app/routes';
-import { ApiError, getErrorMessage } from '@/shared/api/apiError';
+import { getErrorMessage, ApiError } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
@@ -20,6 +19,15 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
 import ActiveFilterChips from '@/features/movies/components/ActiveFilterChips';
 import MovieListFiltersPanel from '@/features/movies/components/MovieListFiltersPanel';
+import FilteredCollectionLayout, {
+  FilterSheet,
+  FilteredEmptyState,
+  toCollectionToolbarProps,
+} from '@/features/movies/components/FilteredCollectionLayout';
+import {
+  ProfileLoadErrorState,
+  ProfileNotFoundState,
+} from '@/features/profile/components/ProfileQueryStates';
 import {
   fetchPublicProfile,
   fetchUserWatchedMovies,
@@ -156,32 +164,11 @@ export default function ProfileMoviesPage() {
   }
 
   if (isNotFound) {
-    return (
-      <PageLayout className="page--centered page--errorState">
-        <span className="errorStateIcon" aria-hidden>
-          <AlertCircle size={32} />
-        </span>
-        <p className="errorStateMessage" role="alert">
-          {t('profile.notFound')}
-        </p>
-        <Link to={ROUTES.home} className="btn">
-          {t('profile.backHome')}
-        </Link>
-      </PageLayout>
-    );
+    return <ProfileNotFoundState />;
   }
 
   if (profileQuery.isError || !profile) {
-    return (
-      <PageLayout className="page--centered page--errorState">
-        <span className="errorStateIcon" aria-hidden>
-          <AlertCircle size={32} />
-        </span>
-        <p className="errorStateMessage" role="alert">
-          {ApiError.is(profileQuery.error) ? profileQuery.error.message : t('profile.loadError')}
-        </p>
-      </PageLayout>
-    );
+    return <ProfileLoadErrorState error={profileQuery.error} />;
   }
 
   const activeFilterCount = toolbar.activeFilterChips.length;
@@ -257,95 +244,73 @@ export default function ProfileMoviesPage() {
         />
       )}
       {!moviesQuery.isPending && !moviesQuery.isError && totalCount > 0 && (
-        <>
-          <div className={styles.toolbarBlock}>
+        <FilteredCollectionLayout
+          toolbar={
             <ProfileMoviesToolbar
-              search={toolbar.search}
-              onSearchChange={toolbar.setSearch}
-              filtersOpen={toolbar.filtersOpen}
-              onToggleFilters={() => toolbar.setFiltersOpen((v) => !v)}
-              filtersPanelId={filtersPanelId}
-              activeFilterCount={activeFilterCount}
-              sortBy={toolbar.sortBy}
-              sortDir={toolbar.sortDir}
-              onSetSort={toolbar.setSortBy}
-              isFiltered={toolbar.isFiltered}
-              visibleCount={toolbar.visibleCount}
-              totalCount={toolbar.totalCount}
-              onClearAll={toolbar.resetAll}
-              isMobile={isMobile}
+              {...toCollectionToolbarProps(toolbar, {
+                filtersPanelId,
+                activeFilterCount,
+                isMobile,
+              })}
             />
-
-            {toolbar.filtersOpen && !isMobile && <div ref={filtersPanelRef}>{filtersPanel}</div>}
-
-            {activeFilterCount > 0 && (
+          }
+          desktopFilters={
+            toolbar.filtersOpen && !isMobile ? (
+              <div ref={filtersPanelRef}>{filtersPanel}</div>
+            ) : null
+          }
+          chips={
+            activeFilterCount > 0 ? (
               <ActiveFilterChips
                 chips={toolbar.activeFilterChips}
                 groupAriaLabel={t('watchlist.filter.toggleAria')}
                 removeAriaLabel={t('profile.movies.toolbar.removeFilterAria')}
               />
-            )}
-          </div>
-
-          {isMobile && (
-            <Sheet
-              open={toolbar.filtersOpen}
-              title={t('profile.movies.toolbar.filtersSheetTitle')}
-              onClose={() => toolbar.setFiltersOpen(false)}
-              footer={
-                <>
-                  <button
-                    type="button"
-                    className={styles.sheetReset}
-                    onClick={toolbar.clearAllFilters}
-                  >
-                    {t('profile.movies.toolbar.filtersReset')}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-sm"
-                    onClick={() => toolbar.setFiltersOpen(false)}
-                  >
-                    {t('profile.movies.toolbar.filtersApply', { count: toolbar.visibleCount })}
-                  </button>
-                </>
-              }
-            >
-              {filtersPanel}
-            </Sheet>
-          )}
-
-          {toolbar.visibleItems.length === 0 ? (
-            <EmptyState
-              compact
-              icon={<Search aria-hidden size={22} />}
-              title={t('profile.movies.toolbar.emptyTitle')}
-              message={t('profile.movies.toolbar.emptyMessage')}
-              actions={
-                <button type="button" className="btn btn-sm" onClick={toolbar.resetAll}>
-                  {t('profile.movies.toolbar.filtersResetAll')}
-                </button>
-              }
-            />
-          ) : (
-            <ul className={styles.grid} aria-label={t('profile.movies.listAria')}>
-              {toolbar.revealedItems.map((item) => (
-                <ProfileMovieCard
-                  key={`${item.tmdbId}|${item.mediaType}|${item.watchedAt}`}
-                  item={item}
-                  tmdbLanguage={tmdbLanguage}
-                  hasHover={hasHover}
-                  isLoggedIn={isLoggedIn}
-                  inWatchlist={watchlistKeys.has(watchlistKey(item.tmdbId, item.mediaType))}
-                  onToggleWatchlist={() => handleToggleWatchlist(item)}
-                  onOpenDetails={() => setDetailsTarget(item)}
-                  onProposeFallback={() => setProposeTarget(item)}
-                  t={t}
-                />
-              ))}
-            </ul>
-          )}
-
+            ) : null
+          }
+          mobileSheet={
+            isMobile ? (
+              <FilterSheet
+                open={toolbar.filtersOpen}
+                title={t('profile.movies.toolbar.filtersSheetTitle')}
+                onClose={() => toolbar.setFiltersOpen(false)}
+                resetLabel={t('profile.movies.toolbar.filtersReset')}
+                applyLabel={t('profile.movies.toolbar.filtersApply', {
+                  count: toolbar.visibleCount,
+                })}
+                onReset={toolbar.clearAllFilters}
+              >
+                {filtersPanel}
+              </FilterSheet>
+            ) : null
+          }
+          emptyFiltered={
+            toolbar.visibleItems.length === 0 ? (
+              <FilteredEmptyState
+                title={t('profile.movies.toolbar.emptyTitle')}
+                message={t('profile.movies.toolbar.emptyMessage')}
+                resetLabel={t('profile.movies.toolbar.filtersResetAll')}
+                onReset={toolbar.resetAll}
+              />
+            ) : null
+          }
+        >
+          <ul className={styles.grid} aria-label={t('profile.movies.listAria')}>
+            {toolbar.revealedItems.map((item) => (
+              <ProfileMovieCard
+                key={`${item.tmdbId}|${item.mediaType}|${item.watchedAt}`}
+                item={item}
+                tmdbLanguage={tmdbLanguage}
+                hasHover={hasHover}
+                isLoggedIn={isLoggedIn}
+                inWatchlist={watchlistKeys.has(watchlistKey(item.tmdbId, item.mediaType))}
+                onToggleWatchlist={() => handleToggleWatchlist(item)}
+                onOpenDetails={() => setDetailsTarget(item)}
+                onProposeFallback={() => setProposeTarget(item)}
+                t={t}
+              />
+            ))}
+          </ul>
           {toolbar.remainingCount > 0 && (
             <button type="button" className={styles.loadMoreBtn} onClick={toolbar.revealMore}>
               {t(
@@ -356,7 +321,7 @@ export default function ProfileMoviesPage() {
               )}
             </button>
           )}
-        </>
+        </FilteredCollectionLayout>
       )}
 
       {detailsTarget && (

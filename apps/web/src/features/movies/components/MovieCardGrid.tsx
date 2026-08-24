@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { ImageOff } from 'lucide-react';
 import { ModeIcon, TYPE_ORDER } from '@/features/movies/components/WatchProviderChips';
 import {
-  CardKebab,
+  MovieCardKebab,
   CardModals,
   CardProposerFooter,
   CardSelectionOverlay,
@@ -107,28 +107,17 @@ export const MovieCardGrid = memo(function MovieCardGrid({
 
         {m.mediaType === 'tv' && <span className={styles.tvBadge}>{t('movies.list.tvBadge')}</span>}
 
-        {(s.hasDetails || s.canRemove || !!onToggleWatchlist || !!onToggleWheelExclusion) && (
-          <div className={styles.kebabSlot}>
-            <CardKebab
-              title={m.title}
-              year={m.year}
-              tmdbId={m.tmdbId}
-              mediaType={m.mediaType}
-              isMine={s.isMine}
-              isHost={isHost}
-              canRemove={s.canRemove}
-              onRemove={() => void onRemove(m.id)}
-              inWatchlist={isInWatchlist}
-              onToggleWatchlist={onToggleWatchlist ? () => onToggleWatchlist(m) : undefined}
-              wheelExclusion={
-                onToggleWheelExclusion
-                  ? { excluded, onToggle: () => onToggleWheelExclusion(m) }
-                  : undefined
-              }
-              t={t}
-            />
-          </div>
-        )}
+        <MovieCardKebab
+          movie={m}
+          card={s}
+          slotClassName={styles.kebabSlot ?? ''}
+          isHost={isHost}
+          isInWatchlist={isInWatchlist}
+          onRemove={onRemove}
+          onToggleWatchlist={onToggleWatchlist}
+          onToggleWheelExclusion={onToggleWheelExclusion}
+          t={t}
+        />
 
         <div className={styles.panel}>
           <div className={styles.titleBlock}>

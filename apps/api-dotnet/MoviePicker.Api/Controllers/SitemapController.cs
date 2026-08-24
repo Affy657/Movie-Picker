@@ -7,10 +7,11 @@ using MoviePicker.Api.Infrastructure.Web;
 namespace MoviePicker.Api.Controllers;
 
 [ApiController]
+[Route("/")]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 public sealed class SitemapController : ControllerBase
 {
-    [HttpGet("/sitemap.xml")]
+    [HttpGet("sitemap.xml")]
     [AllowAnonymous]
     [EnableRateLimiting(RateLimitingExtensions.PublicProfilePolicy)]
     [Produces("application/xml")]

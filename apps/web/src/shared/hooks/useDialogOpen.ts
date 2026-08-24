@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type RefObject } from 'react';
 
-export function useDialogOpen(ref: React.RefObject<HTMLDialogElement | null>, open: boolean): void {
+export function useDialogOpen(ref: RefObject<HTMLDialogElement | null>, open: boolean): void {
   useEffect(() => {
     const dlg = ref.current;
     if (!dlg) return;
@@ -12,7 +12,7 @@ export function useDialogOpen(ref: React.RefObject<HTMLDialogElement | null>, op
 export function useModalDialog(
   open: boolean,
   onClose: () => void
-): React.RefObject<HTMLDialogElement | null> {
+): RefObject<HTMLDialogElement | null> {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const onCloseRef = useRef(onClose);
   useEffect(() => {
@@ -24,10 +24,6 @@ export function useModalDialog(
   useEffect(() => {
     const dlg = dialogRef.current;
     if (!dlg) return;
-    // Deps sur `open` : le listener doit etre retire avant que l'effet de
-    // useDialogOpen n'appelle dlg.close() ci-dessus, sinon la fermeture native
-    // qu'il declenche synchronement rappelle onClose une seconde fois alors
-    // que le parent a deja traite la fermeture (cf. ConfirmDialog).
     const handleClose = () => {
       if (open) onCloseRef.current();
     };

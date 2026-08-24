@@ -97,7 +97,7 @@ describe('AccountPage — zone de danger (MSW)', () => {
     await user.click(screen.getByRole('button', { name: 'Supprimer définitivement' }));
 
     await waitFor(() => expect(deletedWith).toBe('abcd1234'));
-    await waitFor(() => expect(screen.getByTestId('home-marker')).toBeInTheDocument());
+    expect(await screen.findByTestId('home-marker')).toBeInTheDocument();
   });
 
   it('refuse la suppression sans mot de passe', async () => {
