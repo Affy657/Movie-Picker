@@ -15,6 +15,13 @@ export function asciiSlug(value: string): string {
   );
 }
 
+export async function fillCreateEventForm(page: Page, title: string): Promise<void> {
+  await page.locator('#create-title').fill(title);
+  await page.locator('#create-date').fill('2030-12-20');
+  await page.locator('#create-time').fill('20:30');
+  await page.getByRole('button', { name: /créer la soirée/i }).click();
+}
+
 export async function registerAccount(page: Page, displayName: string): Promise<void> {
   await page.goto('/register');
   await page.getByLabel('Pseudo').fill(displayName);

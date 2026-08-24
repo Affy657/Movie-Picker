@@ -1,5 +1,5 @@
 import { test, expect, type BrowserContext } from '@playwright/test';
-import { registerAccount } from './helpers';
+import { fillCreateEventForm, registerAccount } from './helpers';
 
 test.describe('Parcours critique', () => {
   test('inscription hôte → création soirée → invité rejoint → propose un film → hôte lance la roue', async ({
@@ -17,12 +17,7 @@ test.describe('Parcours critique', () => {
       await registerAccount(hostPage, 'HôteE2E');
 
       await hostPage.goto('/new');
-      const titleInput = hostPage.getByLabel(/^titre$/i);
-      await titleInput.fill('Soirée E2E Playwright');
-      await expect(titleInput).toHaveValue('Soirée E2E Playwright');
-      await hostPage.getByLabel(/^date$/i).fill('2030-12-20');
-      await hostPage.getByLabel(/^heure$/i).fill('20:30');
-      await hostPage.getByRole('button', { name: /créer la soirée/i }).click();
+      await fillCreateEventForm(hostPage, 'Soirée E2E Playwright');
 
       await expect(hostPage).toHaveURL(/\/e\/[^/?]+/, { timeout: 15_000 });
       const slug = hostPage.url().match(/\/e\/([^/?]+)/)?.[1];

@@ -339,6 +339,7 @@ jobs:
     if: >-
       always() && github.event_name != 'workflow_dispatch' &&
       github.actor != 'dependabot[bot]' &&
+      (github.event_name == 'pull_request' || github.ref == 'refs/heads/master') &&
       (needs.test-web.result == 'success' || needs.test-api.result == 'success')
     permissions:
       contents: read

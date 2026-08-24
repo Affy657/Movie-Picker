@@ -1,15 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { registerAccount } from './helpers';
+import { fillCreateEventForm, registerAccount } from './helpers';
 
 test.describe('Vote et roue (hote)', () => {
   test('propose un film, vote, lance la roue, annule le tirage puis relance', async ({ page }) => {
     await registerAccount(page, 'HoteRoue');
 
     await page.goto('/new');
-    await page.getByLabel(/^titre$/i).fill('Soirée vote E2E');
-    await page.getByLabel(/^date$/i).fill('2030-12-20');
-    await page.getByLabel(/^heure$/i).fill('20:30');
-    await page.getByRole('button', { name: /créer la soirée/i }).click();
+    await fillCreateEventForm(page, 'Soirée vote E2E');
     await expect(page).toHaveURL(/\/e\/[^/?]+/, { timeout: 15_000 });
 
     const search = page.getByRole('combobox', { name: /proposer un film/i });
