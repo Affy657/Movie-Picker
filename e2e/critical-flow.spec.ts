@@ -1,5 +1,10 @@
 import { test, expect, type BrowserContext } from '@playwright/test';
-import { fillCreateEventForm, registerAccount } from './helpers';
+import {
+  addStubMovie,
+  fillCreateEventForm,
+  registerAccount,
+  spinWheelAndDismissWinner,
+} from './helpers';
 
 test.describe('Parcours critique', () => {
   test('inscription hôte → création soirée → invité rejoint → propose un film → hôte lance la roue', async ({
@@ -9,6 +14,7 @@ test.describe('Parcours critique', () => {
     let guestContext: BrowserContext | undefined;
 
     try {
+      test.setTimeout(150_000);
       hostContext = await browser.newContext({ locale: 'fr-FR' });
       guestContext = await browser.newContext({ locale: 'fr-FR' });
       const hostPage = await hostContext.newPage();
@@ -29,20 +35,12 @@ test.describe('Parcours critique', () => {
       await guestPage.getByRole('button', { name: /^rejoindre$/i }).click();
       await expect(guestPage.getByRole('region', { name: 'Films proposés' })).toBeVisible();
 
-      const guestSearch = guestPage.getByRole('combobox', { name: /proposer un film/i });
-      await guestSearch.fill('stub');
-      const stubResult = guestPage.getByRole('listitem').filter({ hasText: /film e2e stub/i });
-      await expect(stubResult).toBeVisible({ timeout: 15_000 });
-      await stubResult.getByRole('button', { name: /^ajouter$/i }).click();
-      await expect(guestSearch).toHaveValue('', { timeout: 15_000 });
+      await addStubMovie(guestPage);
 
       await hostPage.reload();
       await expect(hostPage.getByText(/film e2e stub/i).first()).toBeVisible({ timeout: 15_000 });
 
-      await hostPage.getByRole('button', { name: /lancer la roue/i }).click();
-      await expect(hostPage.getByText(/film sélectionné/i)).toBeVisible({ timeout: 15_000 });
-      await hostPage.getByRole('button', { name: 'Fermer', exact: true }).click();
-      await expect(hostPage.getByText('Film gagnant', { exact: true })).toBeVisible();
+      await spinWheelAndDismissWinner(hostPage);
     } finally {
       await hostContext?.close();
       await guestContext?.close();

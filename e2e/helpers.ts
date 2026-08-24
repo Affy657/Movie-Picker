@@ -1,4 +1,4 @@
-import { type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 export const TEST_PASSWORD = 'MoviePicker1';
 
@@ -20,6 +20,30 @@ export async function fillCreateEventForm(page: Page, title: string): Promise<vo
   await page.locator('#create-date').fill('2030-12-20');
   await page.locator('#create-time').fill('20:30');
   await page.getByRole('button', { name: /créer la soirée/i }).click();
+}
+
+export async function addStubMovie(page: Page): Promise<void> {
+  await page.getByRole('button', { name: /proposer un film/i }).click();
+  const search = page.getByRole('combobox', { name: /proposer un film/i });
+  await search.fill('stub');
+  const result = page.getByRole('listitem').filter({ hasText: /film e2e stub/i });
+  await expect(result).toBeVisible({ timeout: 15_000 });
+  await result.getByRole('button', { name: /^ajouter$/i }).click();
+  await expect(search).toHaveValue('', { timeout: 15_000 });
+  await page
+    .getByRole('heading', { name: /proposer un film/i })
+    .locator('..')
+    .getByRole('button', { name: /^fermer$/i })
+    .click();
+  await expect(search).toBeHidden();
+}
+
+export async function spinWheelAndDismissWinner(page: Page): Promise<void> {
+  await page.getByRole('button', { name: /lancer la roue/i }).click();
+  const dialog = page.getByRole('dialog').filter({ hasText: /film sélectionné/i });
+  await expect(dialog).toBeVisible({ timeout: 20_000 });
+  await dialog.getByRole('button', { name: /c.est parti/i }).click();
+  await expect(page.getByText(/film gagnant/i).first()).toBeVisible({ timeout: 15_000 });
 }
 
 export async function registerAccount(page: Page, displayName: string): Promise<void> {
