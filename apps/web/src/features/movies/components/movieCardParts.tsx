@@ -701,9 +701,7 @@ export function CardKebab({
                 <span className={kebabLabelClassName(wheelLabel)}>{wheelLabel}</span>
               </button>
             )}
-            {hasPrimaryGroup && hasLinksGroup && (
-              <hr className={styles.kebabDivider} />
-            )}
+            {hasPrimaryGroup && hasLinksGroup && <hr className={styles.kebabDivider} />}
             {hasLinksGroup && (
               <>
                 <ExternalMenuLink
