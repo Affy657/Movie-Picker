@@ -18,6 +18,7 @@ import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
+import ActiveFilterChips from '@/features/movies/components/ActiveFilterChips';
 import MovieListFiltersPanel from '@/features/movies/components/MovieListFiltersPanel';
 import {
   fetchPublicProfile,
@@ -278,32 +279,11 @@ export default function ProfileMoviesPage() {
             {toolbar.filtersOpen && !isMobile && <div ref={filtersPanelRef}>{filtersPanel}</div>}
 
             {activeFilterCount > 0 && (
-              <div
-                className={styles.activeFiltersRow}
-                aria-label={t('watchlist.filter.toggleAria')}
-              >
-                {toolbar.activeFilterChips.map((chip) => (
-                  <span key={chip.key} className={styles.activeFilterChip}>
-                    <span className={styles.activeFilterChipLabel}>{chip.label}</span>
-                    <button
-                      type="button"
-                      className={styles.activeFilterChipRemove}
-                      onClick={chip.onRemove}
-                      aria-label={t('profile.movies.toolbar.removeFilterAria')}
-                    >
-                      <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
-                        <path
-                          d="M1 1l8 8M9 1 1 9"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          fill="none"
-                        />
-                      </svg>
-                    </button>
-                  </span>
-                ))}
-              </div>
+              <ActiveFilterChips
+                chips={toolbar.activeFilterChips}
+                groupAriaLabel={t('watchlist.filter.toggleAria')}
+                removeAriaLabel={t('profile.movies.toolbar.removeFilterAria')}
+              />
             )}
           </div>
 

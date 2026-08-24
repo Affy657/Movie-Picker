@@ -24,6 +24,7 @@ import { useSearchHistory } from '@/features/movies/hooks/useSearchHistory';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { useMovieSearchFilters } from '@/features/movies/hooks/useMovieSearchFilters';
 import MovieSearchFiltersPanel from '@/features/movies/components/MovieSearchFiltersPanel';
+import ActiveFilterChips from '@/features/movies/components/ActiveFilterChips';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import styles from './AddMovieForm.module.css';
 
@@ -506,38 +507,13 @@ export default function AddMovieForm({
         )}
       </div>
 
-      {filters.activeFilterChips.length > 0 && (
-        <div className={styles.activeFiltersRow} aria-label={t('movies.search.filtersToggle')}>
-          {filters.activeFilterChips.map((chip) => (
-            <span key={chip.key} className={styles.activeFilterChip}>
-              <span className={styles.activeFilterChipLabel}>{chip.label}</span>
-              <button
-                type="button"
-                className={styles.activeFilterChipRemove}
-                onClick={chip.onRemove}
-                aria-label={t('movies.search.removeFilterAria')}
-              >
-                <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
-                  <path
-                    d="M1 1l8 8M9 1 1 9"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    fill="none"
-                  />
-                </svg>
-              </button>
-            </span>
-          ))}
-          <button
-            type="button"
-            className={styles.filtersClearAll}
-            onClick={filters.clearAllFilters}
-          >
-            {t('movies.search.filtersClearAll')}
-          </button>
-        </div>
-      )}
+      <ActiveFilterChips
+        chips={filters.activeFilterChips}
+        groupAriaLabel={t('movies.search.filtersToggle')}
+        removeAriaLabel={t('movies.search.removeFilterAria')}
+        clearAllLabel={t('movies.search.filtersClearAll')}
+        onClearAll={filters.clearAllFilters}
+      />
 
       {filters.filtersOpen && (
         <div ref={filtersPanelRef}>

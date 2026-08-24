@@ -37,7 +37,15 @@ public static class GitHubOAuthEvents
 
         using var payload = JsonDocument.Parse(
             await response.Content.ReadAsStringAsync(context.HttpContext.RequestAborted));
-        foreach (var entry in payload.RootElement.EnumerateArray())
+        return FindVerifiedPrimaryEmail(payload.RootElement);
+    }
+
+    internal static string? FindVerifiedPrimaryEmail(JsonElement payload)
+    {
+        if (payload.ValueKind != JsonValueKind.Array)
+            return null;
+
+        foreach (var entry in payload.EnumerateArray())
         {
             var isPrimary = entry.TryGetProperty("primary", out var primaryProp) && primaryProp.GetBoolean();
             var isVerified = entry.TryGetProperty("verified", out var verifiedProp) && verifiedProp.GetBoolean();

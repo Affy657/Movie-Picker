@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import EventMoviesSection from '@/features/events/pages/event-detail/EventMoviesSection';
+import type { EventMoviesSectionProps } from '@/features/events/pages/event-detail/EventMoviesSection';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import type { EventData } from '@/features/events/types';
@@ -59,6 +60,10 @@ function renderSection(
     watchlistItems?: unknown[];
     event?: EventData;
     refreshAll?: () => void;
+    moviesQuery?: EventMoviesSectionProps['moviesQuery'];
+    actionError?: string | null;
+    viewMode?: 'grid' | 'list';
+    onViewModeChange?: (mode: 'grid' | 'list') => void;
   } = {}
 ) {
   return render(
@@ -70,19 +75,21 @@ function renderSection(
           participant={{ participantId: 'p1', pseudo: 'Alice' }}
           hostToken={null}
           movies={props.movies ?? [MOVIE]}
-          moviesQuery={{
-            isPending: false,
-            isError: false,
-            isSuccess: true,
-            error: null,
-            refetch: vi.fn(),
-          }}
-          actionError={null}
+          moviesQuery={
+            props.moviesQuery ?? {
+              isPending: false,
+              isError: false,
+              isSuccess: true,
+              error: null,
+              refetch: vi.fn(),
+            }
+          }
+          actionError={props.actionError ?? null}
           onDismissActionError={() => undefined}
           setActionError={() => undefined}
           refreshAll={props.refreshAll ?? (() => undefined)}
-          viewMode="grid"
-          onViewModeChange={() => undefined}
+          viewMode={props.viewMode ?? 'grid'}
+          onViewModeChange={props.onViewModeChange ?? (() => undefined)}
           addMovieOpen={false}
           onAddMovieOpenChange={() => undefined}
           addMovieTriggerRef={{ current: null }}
@@ -188,5 +195,43 @@ describe('EventMoviesSection (MSW)', () => {
 
     await user.click(await screen.findByRole('button', { name: /plus d.actions.*matrix/i }));
     expect(screen.queryByRole('menuitem', { name: /tirage/i })).not.toBeInTheDocument();
+  });
+
+  it('affiche le chargement et le bandeau d’erreur', () => {
+    server.use(authedUserHandler, watchlistHandler([]));
+    renderSection({
+      moviesQuery: {
+        isPending: true,
+        isError: false,
+        isSuccess: false,
+        error: null,
+        refetch: vi.fn(),
+      },
+      actionError: 'Vote impossible',
+      movies: [],
+    });
+
+    expect(screen.getByText(/chargement des films/i)).toBeInTheDocument();
+    expect(screen.getByText('Vote impossible')).toBeInTheDocument();
+  });
+
+  it('permet de trier et de passer en vue liste', async () => {
+    server.use(authedUserHandler, watchlistHandler([]));
+    const onViewModeChange = vi.fn();
+    const second: MovieData = { ...MOVIE, id: 'm2', title: 'Inception', score: 4 };
+    renderSection({
+      movies: [MOVIE, second],
+      viewMode: 'grid',
+      onViewModeChange,
+    });
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: /^votes$/i }));
+    expect(screen.getByRole('button', { name: /^votes$/i })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    await user.click(screen.getByRole('button', { name: /affichage liste/i }));
+    expect(onViewModeChange).toHaveBeenCalledWith('list');
   });
 });

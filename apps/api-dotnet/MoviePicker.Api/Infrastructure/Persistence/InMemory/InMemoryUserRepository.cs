@@ -121,7 +121,50 @@ public sealed class InMemoryUserRepository : IUserRepository
         var id = string.IsNullOrEmpty(user.Id) ? Guid.NewGuid().ToString("N")[..24] : user.Id;
         var email = Normalize(user.Email) ?? user.Email.Trim();
         var handle = NormalizeHandle(user.Handle);
-        var created = new User
+        var created = Copy(user, id, email, handle);
+        _byId[id] = created;
+        _emailToId[email] = id;
+        if (handle is not null)
+            _handleToId[handle] = id;
+        return Task.FromResult(created);
+    }
+
+    public Task<User> UpdateAsync(User user, CancellationToken ct = default)
+    {
+        if (_byId.TryGetValue(user.Id, out var previous))
+        {
+            var prevEmail = Normalize(previous.Email) ?? previous.Email.Trim();
+            _emailToId.TryRemove(prevEmail, out _);
+            var prevHandle = NormalizeHandle(previous.Handle);
+            if (prevHandle is not null)
+                _handleToId.TryRemove(prevHandle, out _);
+        }
+
+        var email = Normalize(user.Email) ?? user.Email.Trim();
+        var handle = NormalizeHandle(user.Handle);
+        var updated = Copy(user, user.Id, email, handle);
+        _byId[user.Id] = updated;
+        _emailToId[email] = user.Id;
+        if (handle is not null)
+            _handleToId[handle] = user.Id;
+        return Task.FromResult(updated);
+    }
+
+    public Task<bool> DeleteAsync(string id, CancellationToken ct = default)
+    {
+        if (!_byId.TryRemove(id, out var removed))
+            return Task.FromResult(false);
+
+        var email = Normalize(removed.Email) ?? removed.Email.Trim();
+        _emailToId.TryRemove(email, out _);
+        var handle = NormalizeHandle(removed.Handle);
+        if (handle is not null)
+            _handleToId.TryRemove(handle, out _);
+        return Task.FromResult(true);
+    }
+
+    private static User Copy(User user, string id, string email, string? handle) =>
+        new()
         {
             Id = id,
             Email = email,
@@ -144,68 +187,6 @@ public sealed class InMemoryUserRepository : IUserRepository
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         };
-        _byId[id] = created;
-        _emailToId[email] = id;
-        if (handle is not null)
-            _handleToId[handle] = id;
-        return Task.FromResult(created);
-    }
-
-    public Task<User> UpdateAsync(User user, CancellationToken ct = default)
-    {
-        if (_byId.TryGetValue(user.Id, out var previous))
-        {
-            var prevEmail = Normalize(previous.Email) ?? previous.Email.Trim();
-            _emailToId.TryRemove(prevEmail, out _);
-            var prevHandle = NormalizeHandle(previous.Handle);
-            if (prevHandle is not null)
-                _handleToId.TryRemove(prevHandle, out _);
-        }
-
-        var email = Normalize(user.Email) ?? user.Email.Trim();
-        var handle = NormalizeHandle(user.Handle);
-        var updated = new User
-        {
-            Id = user.Id,
-            Email = email,
-            PasswordHash = user.PasswordHash,
-            DisplayName = user.DisplayName,
-            Identities = user.Identities,
-            Handle = handle ?? string.Empty,
-            Bio = user.Bio,
-            IsProfilePublic = user.IsProfilePublic,
-            UiTheme = user.UiTheme,
-            AccentColor = user.AccentColor,
-            RatingScale = user.RatingScale,
-            AvatarId = user.AvatarId,
-            NotificationPreferences = user.NotificationPreferences,
-            SupporterSince = user.SupporterSince,
-            LetterboxdUsername = user.LetterboxdUsername,
-            LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,
-            LetterboxdLastSyncError = user.LetterboxdLastSyncError,
-            LetterboxdPendingReconciliationCount = user.LetterboxdPendingReconciliationCount,
-            CreatedAt = user.CreatedAt,
-            UpdatedAt = user.UpdatedAt
-        };
-        _byId[user.Id] = updated;
-        _emailToId[email] = user.Id;
-        if (handle is not null)
-            _handleToId[handle] = user.Id;
-        return Task.FromResult(updated);
-    }
-
-    public Task<bool> DeleteAsync(string id, CancellationToken ct = default)
-    {
-        if (!_byId.TryRemove(id, out var removed))
-            return Task.FromResult(false);
-
-        var email = Normalize(removed.Email) ?? removed.Email.Trim();
-        _emailToId.TryRemove(email, out _);
-        var handle = NormalizeHandle(removed.Handle);
-        if (handle is not null)
-            _handleToId.TryRemove(handle, out _);
-        return Task.FromResult(true);
-    }
 
     private static string? Normalize(string? email)
     {
