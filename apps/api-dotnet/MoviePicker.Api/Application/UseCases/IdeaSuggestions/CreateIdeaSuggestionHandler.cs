@@ -58,7 +58,10 @@ public sealed class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionHandler
         return new GitHubIssueDraft(title, string.Join('\n', bodyLines), [label, "user-feedback"]);
     }
 
-    private static readonly Regex MentionPattern = new(@"@(?=\w)", RegexOptions.Compiled);
+    private static readonly Regex MentionPattern = new(
+        @"@(?=\w)",
+        RegexOptions.Compiled,
+        TimeSpan.FromMilliseconds(100));
 
     /// <summary>
     /// Insère un espace de largeur nulle après chaque « @ » suivi d'un caractère de mot,

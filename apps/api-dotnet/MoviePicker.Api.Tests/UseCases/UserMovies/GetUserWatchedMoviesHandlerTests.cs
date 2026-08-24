@@ -63,19 +63,19 @@ public sealed class GetUserWatchedMoviesHandlerTests
         string date = "2026-06-01",
         string? winnerMovieId = null,
         DateTimeOffset? closedAt = null) => new()
-    {
-        Id = id,
-        Title = "E",
-        Date = date,
-        Time = "20:00",
-        Slug = id,
-        HostToken = "ht",
-        CreatorUserId = "u1",
-        WinnerMovieId = winnerMovieId,
-        ClosedAt = closedAt,
-        CreatedAt = DateTimeOffset.UtcNow,
-        UpdatedAt = DateTimeOffset.UtcNow
-    };
+        {
+            Id = id,
+            Title = "E",
+            Date = date,
+            Time = "20:00",
+            Slug = id,
+            HostToken = "ht",
+            CreatorUserId = "u1",
+            WinnerMovieId = winnerMovieId,
+            ClosedAt = closedAt,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
 
     private GetUserWatchedMoviesHandler Build()
     {

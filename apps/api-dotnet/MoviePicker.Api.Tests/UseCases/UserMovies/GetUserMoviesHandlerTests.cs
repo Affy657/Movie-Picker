@@ -50,19 +50,19 @@ public sealed class GetUserMoviesHandlerTests
         string eventId,
         DateTimeOffset createdAt,
         MovieMediaType mediaType = MovieMediaType.Movie) => new()
-    {
-        Id = id,
-        EventId = eventId,
-        ParticipantId = participantId,
-        TmdbId = 1,
-        MediaType = mediaType,
-        Title = $"Movie {id}",
-        Year = "2024",
-        PosterPath = "/poster.jpg",
-        GenreIds = [28],
-        CreatedAt = createdAt,
-        UpdatedAt = createdAt
-    };
+        {
+            Id = id,
+            EventId = eventId,
+            ParticipantId = participantId,
+            TmdbId = 1,
+            MediaType = mediaType,
+            Title = $"Movie {id}",
+            Year = "2024",
+            PosterPath = "/poster.jpg",
+            GenreIds = [28],
+            CreatedAt = createdAt,
+            UpdatedAt = createdAt
+        };
 
     private static Event Evt(string id, string? winnerMovieId = null, DateTimeOffset? closedAt = null, string date = "2026-06-01") => new()
     {

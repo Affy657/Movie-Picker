@@ -39,10 +39,11 @@ export async function dismissWhatsNewModal(page: Page): Promise<void> {
     .waitFor({ state: 'visible', timeout: 10_000 })
     .catch(() => {});
   const modal = page.getByRole('dialog', { name: /quoi de neuf/i });
-  try {
-    await modal.waitFor({ state: 'visible', timeout: 3000 });
-    await modal.getByRole('button', { name: 'Fermer' }).click();
-  } catch {
-    // Pas de modale affichée : rien à fermer.
-  }
+  const appeared = await modal
+    .waitFor({ state: 'visible', timeout: 3000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!appeared) return;
+  await modal.getByRole('button', { name: /c.est noté/i }).click();
+  await modal.waitFor({ state: 'hidden', timeout: 5000 });
 }
