@@ -386,7 +386,7 @@ jobs:
         run: |
           dotnet tool install --global dotnet-sonarscanner --version 11.2.1
           echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
-      - name: Analyse SonarCloud (begin + build + tests)
+      - name: Analyse SonarCloud (begin + build + tests + Quality Gate)
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           EVENT_NAME: ${{ github.event_name }}
@@ -414,6 +414,8 @@ jobs:
             /d:sonar.host.url="https://sonarcloud.io" \
             /d:sonar.token="$SONAR_TOKEN" \
             /d:sonar.scanner.skipJreProvisioning=true \
+            /d:sonar.projectBaseDir="$GITHUB_WORKSPACE" \
+            /d:sonar.architecture.enabled=false \
             /v:"$VERSION" \
             /d:sonar.exclusions="$EXCL" \
             /d:sonar.coverage.exclusions="$COV_EXCL" \
@@ -428,18 +430,13 @@ jobs:
             --collect:"XPlat Code Coverage" \
             --settings apps/api-dotnet/coverlet.runsettings \
             --results-directory apps/api-dotnet/MoviePicker.Api.Tests/TestResults
-      - name: Quality Gate (bloquant — échoue le job si le QG est rouge)
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          set -eo pipefail
           for attempt in 1 2 3; do
             if dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"; then
               exit 0
             fi
             if [ "$attempt" -lt 3 ]; then
-              echo "Sonar end a échoué (tentative $attempt/3), nouvel essai dans 30 s..."
-              sleep 30
+              echo "Sonar end a échoué (tentative $attempt/3), nouvel essai dans 45 s..."
+              sleep 45
             fi
           done
           echo "::error::Sonar end a échoué après 3 tentatives"
