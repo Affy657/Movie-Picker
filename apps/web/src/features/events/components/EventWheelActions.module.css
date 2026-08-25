@@ -1,6 +1,7 @@
 .spin,
 .manualPick,
-.close {
+.close,
+.reset {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
@@ -9,7 +10,8 @@
 }
 
 .spinLabel,
-.manualPickLabel {
+.manualPickLabel,
+.resetLabel {
   white-space: nowrap;
   transform: translateY(var(--text-optical-nudge));
 }
@@ -18,7 +20,7 @@
   transform: translateY(var(--text-optical-nudge));
 }
 
-  .manualBar {
+.manualBar {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -41,13 +43,24 @@
 }
 
 @media (max-width: 47.9375rem) {
-  .spin {
-    flex: 1;
+  .spinGrow {
+    flex: 1 1 auto;
     justify-content: center;
   }
 
+  .reset,
+  .manualPick,
+  .close,
+  .spin:not(.spinGrow) {
+    flex: 0 0 auto;
+    padding-left: 0.55rem;
+    padding-right: 0.55rem;
+  }
+
+  .iconOnlyLabel,
   .manualPickLabel,
-  .closeLabel {
+  .closeLabel,
+  .resetLabel {
     position: absolute;
     width: 1px;
     height: 1px;

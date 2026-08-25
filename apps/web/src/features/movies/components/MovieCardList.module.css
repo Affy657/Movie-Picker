@@ -14,6 +14,10 @@
   box-shadow: var(--shadow-md);
 }
 
+.cardWinner {
+  border-color: color-mix(in srgb, var(--color-primary) 52%, var(--color-border-subtle));
+}
+
 .posterCol {
   position: relative;
   flex: 0 0 clamp(7rem, 32%, 12rem);
@@ -108,9 +112,17 @@
   z-index: 2;
 }
 
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding-right: 2rem;
+}
+
 .title {
   margin: 0;
-  padding-right: 2rem;
+  flex: 1 1 0;
+  min-width: 0;
   font-size: var(--font-size-base);
   font-weight: 600;
   line-height: var(--leading-tight);
@@ -121,6 +133,22 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   overflow-wrap: break-word;
+}
+
+.winnerBadge {
+  flex: 0 0 auto;
+  margin-top: 0.12rem;
+  padding: calc(0.18rem + var(--text-optical-nudge-caps)) 0.45rem
+    calc(0.18rem - var(--text-optical-nudge-caps));
+  line-height: 1;
+  font-size: var(--font-size-4xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-primary-text);
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 42%, transparent);
+  border-radius: var(--radius-sm);
 }
 
 .metaLine {

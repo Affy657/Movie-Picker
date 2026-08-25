@@ -64,6 +64,7 @@ function renderSection(
     actionError?: string | null;
     viewMode?: 'grid' | 'list';
     onViewModeChange?: (mode: 'grid' | 'list') => void;
+    winnerMovieId?: string;
   } = {}
 ) {
   return render(
@@ -93,6 +94,7 @@ function renderSection(
           addMovieOpen={false}
           onAddMovieOpenChange={() => undefined}
           addMovieTriggerRef={{ current: null }}
+          winnerMovieId={props.winnerMovieId}
         />
       </MemoryRouter>
     </AppTestProviders>
@@ -233,5 +235,25 @@ describe('EventMoviesSection (MSW)', () => {
     );
     await user.click(screen.getByRole('button', { name: /affichage liste/i }));
     expect(onViewModeChange).toHaveBeenCalledWith('list');
+  });
+
+  it('épingle le film gagnant en tête et affiche son badge', () => {
+    server.use(authedUserHandler, watchlistHandler([]));
+    const later: MovieData = {
+      ...MOVIE,
+      id: 'm2',
+      title: 'Inception',
+      createdAt: '2030-01-02',
+    };
+    const earlier: MovieData = { ...MOVIE, createdAt: '2030-01-01' };
+    renderSection({
+      movies: [earlier, later],
+      viewMode: 'list',
+      winnerMovieId: 'm2',
+    });
+
+    const headings = screen.getAllByRole('heading', { level: 3 });
+    expect(headings[0]).toHaveTextContent('Inception');
+    expect(screen.getByText('Gagnant')).toBeInTheDocument();
   });
 });

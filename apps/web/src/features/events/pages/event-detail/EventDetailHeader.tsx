@@ -183,6 +183,7 @@ export type EventDetailHeaderProps = {
   wheelActions?: ReactNode;
 
   onAddMovie?: () => void;
+  addMoviePrimary?: boolean;
   addMovieTriggerRef?: RefObject<HTMLButtonElement | null>;
 };
 
@@ -209,6 +210,7 @@ export default function EventDetailHeader({
   onOpenSettings,
   wheelActions,
   onAddMovie,
+  addMoviePrimary = true,
   addMovieTriggerRef,
 }: Readonly<EventDetailHeaderProps>) {
   const navigate = useNavigate();
@@ -258,7 +260,6 @@ export default function EventDetailHeader({
           {t('events.detail.backNav')}
         </button>
       </div>
-      <EventThemeBanner theme={eventTheme} themeColor={eventThemeColor} />
 
       <div ref={sentinelRef} className={styles.sentinel} aria-hidden />
 
@@ -274,7 +275,14 @@ export default function EventDetailHeader({
             <ArrowLeft size={18} aria-hidden />
           </button>
         ) : null}
-        <h1 className={styles.title}>{title}</h1>
+        <div className={styles.heading}>
+          <h1 className={styles.title}>{title}</h1>
+          <EventThemeBanner
+            className={styles.theme}
+            theme={eventTheme}
+            themeColor={eventThemeColor}
+          />
+        </div>
         {showLifecyclePill ? (
           <EventLifecyclePill
             lifecycle={lifecycle}
@@ -300,7 +308,7 @@ export default function EventDetailHeader({
               <button
                 ref={addMovieTriggerRef}
                 type="button"
-                className={clsx('btn btn-primary', styles.addMovieBtn)}
+                className={clsx('btn', addMoviePrimary && 'btn-primary', styles.addMovieBtn)}
                 onClick={onAddMovie}
               >
                 <Plus size={16} aria-hidden />

@@ -1,4 +1,4 @@
-import { Disc3, Lock, MousePointerClick } from 'lucide-react';
+import { Disc3, Lock, MousePointerClick, Undo2 } from 'lucide-react';
 import clsx from 'clsx';
 import type { EventWheelState } from '@/features/events/hooks/useEventWheel';
 import { useTranslation } from '@/shared/i18n';
@@ -6,12 +6,14 @@ import styles from './EventWheelActions.module.css';
 
 type EventWheelActionsProps = {
   wheel: EventWheelState;
+  onRequestReset: () => void;
   onRequestCloseWithoutMovie?: () => void;
 };
 
 export default function EventWheelActions({
   wheel,
   onRequestCloseWithoutMovie,
+  onRequestReset,
 }: Readonly<EventWheelActionsProps>) {
   const { t } = useTranslation();
   if (!wheel.canSpin && !wheel.manualMode && !wheel.showClose) return null;
@@ -53,13 +55,18 @@ export default function EventWheelActions({
           <>
             <button
               type="button"
-              className={clsx('btn btn-primary', styles.spin)}
+              className={clsx(
+                'btn',
+                !wheel.showRelaunch && 'btn-primary',
+                styles.spin,
+                !wheel.showRelaunch && styles.spinGrow
+              )}
               onClick={wheel.launch}
               disabled={wheel.loading || wheel.spinDisabled}
-              title={disabledHint}
+              title={disabledHint ?? (wheel.showRelaunch ? spinLabel : undefined)}
             >
               <Disc3 size={16} aria-hidden />
-              <span className={styles.spinLabel}>
+              <span className={clsx(styles.spinLabel, wheel.showRelaunch && styles.iconOnlyLabel)}>
                 {wheel.loading ? t('events.wheel.spinning') : spinLabel}
               </span>
             </button>
@@ -76,12 +83,25 @@ export default function EventWheelActions({
           </>
         )
       )}
+      {wheel.showReset ? (
+        <button
+          type="button"
+          className={clsx('btn', styles.reset)}
+          onClick={onRequestReset}
+          disabled={wheel.loading}
+          title={t('events.wheel.resetButton')}
+        >
+          <Undo2 size={15} aria-hidden />
+          <span className={styles.resetLabel}>{t('events.wheel.resetButton')}</span>
+        </button>
+      ) : null}
       {wheel.showClose && (
         <button
           type="button"
           className={clsx('btn', styles.close)}
           onClick={handleCloseClick}
           disabled={wheel.loading}
+          title={closeLabel}
         >
           <Lock size={15} aria-hidden />
           <span className={styles.closeLabel}>{closeLabel}</span>

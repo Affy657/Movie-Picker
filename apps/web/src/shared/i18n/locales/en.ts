@@ -347,6 +347,7 @@ export const en: Locale = {
       votesCount: '{{count}} votes',
       participantsToggleOne: '1 participant',
       participantsToggle: '{{count}} participants',
+      themeAria: 'Event theme: {{theme}}',
     },
     myEvents: {
       title: 'My events',
@@ -467,6 +468,10 @@ export const en: Locale = {
         'The event "{{title}}" will be closed without a movie. This action is final.',
       closeWithoutMovieConfirmAction: 'Close without a movie',
       resetButton: 'Cancel draw',
+      resetConfirmTitle: 'Cancel the draw?',
+      resetConfirmMessage:
+        'The winning movie will be cleared. Suggestions and votes stay in place.',
+      resetConfirmAction: 'Cancel the draw',
       launchError: 'Spin failed',
       closeError: 'Close failed',
       resetError: 'Cancel failed',
@@ -575,6 +580,7 @@ export const en: Locale = {
       tmdbVoteTitle: 'TMDB average rating (indicative)',
       runtimeTitle: 'Movie runtime',
       tvBadge: 'Series',
+      winnerBadge: 'Winner',
       sectionLabel: 'Suggested movies',
       loadingPlaceholder: 'Loading movies\u2026',
       sortLabel: 'Sort by',

@@ -66,6 +66,7 @@ export const MovieCardGrid = memo(function MovieCardGrid({
   onToggleWatchlist,
   onToggleWheelExclusion,
   selection,
+  isWinner = false,
 }: MovieCardCommonProps) {
   const s = useMovieCardState({
     movie: m,
@@ -96,6 +97,7 @@ export const MovieCardGrid = memo(function MovieCardGrid({
     <li
       className={clsx(
         styles.card,
+        isWinner && styles.cardWinner,
         excluded && cardPartsStyles.excluded,
         selecting && cardPartsStyles.selectable
       )}
@@ -105,7 +107,16 @@ export const MovieCardGrid = memo(function MovieCardGrid({
       <div className={styles.posterRegion} inert={selecting}>
         <GridPoster src={s.posterSrc} srcSet={s.posterSrcSet} eager={eager} />
 
-        {m.mediaType === 'tv' && <span className={styles.tvBadge}>{t('movies.list.tvBadge')}</span>}
+        {(isWinner || m.mediaType === 'tv') && (
+          <div className={styles.badgeStack}>
+            {isWinner ? (
+              <span className={styles.winnerBadge}>{t('movies.list.winnerBadge')}</span>
+            ) : null}
+            {m.mediaType === 'tv' ? (
+              <span className={styles.tvBadge}>{t('movies.list.tvBadge')}</span>
+            ) : null}
+          </div>
+        )}
 
         <MovieCardKebab
           movie={m}

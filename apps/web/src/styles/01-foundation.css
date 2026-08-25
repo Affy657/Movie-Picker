@@ -349,7 +349,9 @@ textarea {
 
 @media (max-width: 47.9375rem) {
   main.page.page-event {
-    padding-bottom: calc(var(--mobile-nav-height, 3.25rem) + 5rem);
+    padding-bottom: calc(
+      var(--mobile-nav-height, 3.25rem) + 1.25rem + var(--event-wheel-bar-height, 0px)
+    );
   }
 }
 

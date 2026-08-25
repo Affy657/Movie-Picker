@@ -30,6 +30,7 @@ interface MovieListProps {
   onToggleWatchlist?: (movie: MovieData) => void;
   onToggleWheelExclusion?: (movie: MovieData) => void;
   selection?: MovieCardSelection;
+  winnerMovieId?: string;
 }
 
 export default function MovieList({
@@ -51,6 +52,7 @@ export default function MovieList({
   onToggleWatchlist,
   onToggleWheelExclusion,
   selection,
+  winnerMovieId,
 }: Readonly<MovieListProps>) {
   const { t } = useTranslation();
 
@@ -90,6 +92,7 @@ export default function MovieList({
             onToggleWatchlist={onToggleWatchlist}
             onToggleWheelExclusion={onToggleWheelExclusion}
             selection={selection}
+            isWinner={m.id === winnerMovieId}
             t={t}
           />
         ))}

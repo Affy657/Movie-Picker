@@ -71,6 +71,7 @@ export const MovieCardList = memo(function MovieCardList({
   onToggleWatchlist,
   onToggleWheelExclusion,
   selection,
+  isWinner = false,
 }: MovieCardCommonProps) {
   const s = useMovieCardState({
     movie: m,
@@ -98,6 +99,7 @@ export const MovieCardList = memo(function MovieCardList({
     <li
       className={clsx(
         styles.card,
+        isWinner && styles.cardWinner,
         excluded && cardPartsStyles.excluded,
         selecting && cardPartsStyles.selectable
       )}
@@ -121,9 +123,14 @@ export const MovieCardList = memo(function MovieCardList({
           onToggleWheelExclusion={onToggleWheelExclusion}
           t={t}
         />
-        <h3 className={styles.title} title={m.title}>
-          {m.title}
-        </h3>
+        <div className={styles.titleRow}>
+          <h3 className={styles.title} title={m.title}>
+            {m.title}
+          </h3>
+          {isWinner ? (
+            <span className={styles.winnerBadge}>{t('movies.list.winnerBadge')}</span>
+          ) : null}
+        </div>
 
         <p className={styles.metaLine}>
           {m.year ? <span>{m.year}</span> : null}

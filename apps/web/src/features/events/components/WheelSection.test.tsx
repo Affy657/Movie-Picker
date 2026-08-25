@@ -78,9 +78,15 @@ type HarnessProps = {
   event: EventData;
   movies: MovieData[];
   hostToken: string | null;
+  onRequestReset?: () => void;
 };
 
-function WheelHarness({ event, movies, hostToken }: Readonly<HarnessProps>) {
+function WheelHarness({
+  event,
+  movies,
+  hostToken,
+  onRequestReset = () => {},
+}: Readonly<HarnessProps>) {
   const wheel = useEventWheel({
     slug: 'soiree',
     event,
@@ -91,8 +97,8 @@ function WheelHarness({ event, movies, hostToken }: Readonly<HarnessProps>) {
   });
   return (
     <>
-      <EventWheelActions wheel={wheel} />
-      <WheelSection slug="soiree" event={event} movies={movies} wheel={wheel} viewMode="grid" />
+      <EventWheelActions wheel={wheel} onRequestReset={onRequestReset} />
+      <WheelSection movies={movies} wheel={wheel} />
       {wheel.manualMode && movies[0] && (
         <button type="button" onClick={() => wheel.pickWinnerManually(movies[0]!)}>
           test-select-movie
@@ -181,9 +187,9 @@ describe('WheelSection', () => {
         hostToken={null}
       />
     );
-    expect(screen.getByRole('heading', { name: /résultat du tirage/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /lancer la roue/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Inception' })).toBeInTheDocument();
     expect(screen.getByText(/film gagnant/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /lancer la roue/i })).not.toBeInTheDocument();
     expect(screen.getByText('Inception')).toBeInTheDocument();
   });
 
@@ -198,6 +204,21 @@ describe('WheelSection', () => {
     expect(screen.getByRole('button', { name: /relancer la roue/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /annuler le tirage/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /clôturer/i })).toBeInTheDocument();
+  });
+
+  it('Annuler le tirage appelle onRequestReset au lieu de resetter immédiatement', async () => {
+    const onRequestReset = vi.fn();
+    renderWheel(
+      <WheelHarness
+        event={{ ...baseEvent, isHost: true, winnerMovie: sampleWinner }}
+        movies={makeMovies(1)}
+        hostToken="ht"
+        onRequestReset={onRequestReset}
+      />
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: /annuler le tirage/i }));
+    expect(onRequestReset).toHaveBeenCalledTimes(1);
   });
 
   it('met a jour le gagnant quand winnerMovie arrive (polling live)', () => {
@@ -317,6 +338,8 @@ describe('WheelSection', () => {
     expect(await screen.findByTestId('wheel-modal-mock')).toBeInTheDocument();
     expect(screen.getByTestId('wheel-modal-mock')).toHaveAttribute('data-skip-spin', 'false');
     expect(screen.getByTestId('wheel-modal-mock')).toHaveAttribute('data-has-relaunch', 'true');
+    expect(screen.getByRole('region', { name: 'Film 2' })).toBeInTheDocument();
+    expect(document.getElementById('event-winner-heading')).toHaveClass('visually-hidden');
   });
 
   it('tous les films exclus : désactive le tirage et affiche l’aide', () => {

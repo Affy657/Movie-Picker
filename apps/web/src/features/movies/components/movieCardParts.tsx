@@ -78,6 +78,7 @@ export interface MovieCardCommonProps {
   onToggleWatchlist?: (movie: MovieData) => void;
   onToggleWheelExclusion?: (movie: MovieData) => void;
   selection?: MovieCardSelection;
+  isWinner?: boolean;
 }
 
 export function CardSelectionOverlay({

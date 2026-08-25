@@ -14,10 +14,7 @@ public static class EnvLoader
         {
             var path = Path.Combine(dir, ".env");
             if (File.Exists(path))
-            {
                 ApplyEnvFile(path);
-                return;
-            }
             dir = Path.GetDirectoryName(dir);
         }
     }

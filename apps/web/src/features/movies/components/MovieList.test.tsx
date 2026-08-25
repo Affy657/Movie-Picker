@@ -293,6 +293,26 @@ describe('MovieList', () => {
     expect(screen.getByText('Matrix')).toBeInTheDocument();
   });
 
+  it('affiche le badge gagnant uniquement sur le film désigné', () => {
+    renderWithLocale(
+      <MovieList
+        movies={movies}
+        slug="s"
+        participantId={null}
+        participantPseudo={null}
+        isFinished={false}
+        onVote={vi.fn()}
+        onRemove={vi.fn()}
+        refresh={vi.fn()}
+        onActionError={vi.fn()}
+        viewMode="list"
+        winnerMovieId="m1"
+      />
+    );
+    expect(screen.getByText('Gagnant')).toBeInTheDocument();
+    expect(screen.getAllByText('Gagnant')).toHaveLength(1);
+  });
+
   it('affiche vote et déjà-vu en vue liste avec participantId', async () => {
     const onVote = vi.fn().mockResolvedValue(undefined);
     renderWithLocale(

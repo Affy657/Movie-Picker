@@ -31,6 +31,15 @@ function watchlistKey(tmdbId: number, mediaType: MovieData['mediaType']): string
 
 type SortKey = 'score' | 'voteAverage' | 'duration' | 'createdAt';
 
+function pinWinnerFirst(movies: MovieData[], winnerMovieId?: string): MovieData[] {
+  if (!winnerMovieId) return movies;
+  const index = movies.findIndex((m) => m.id === winnerMovieId);
+  if (index <= 0) return movies;
+  const next = [...movies];
+  const [winner] = next.splice(index, 1);
+  return [winner!, ...next];
+}
+
 function sortMovies(movies: MovieData[], sortBy: SortKey): MovieData[] {
   return [...movies].sort((a, b) => {
     switch (sortBy) {
@@ -72,6 +81,7 @@ export type EventMoviesSectionProps = {
   addMovieOpen: boolean;
   onAddMovieOpenChange: (open: boolean) => void;
   addMovieTriggerRef: RefObject<HTMLButtonElement | null>;
+  winnerMovieId?: string;
 };
 
 export default function EventMoviesSection({
@@ -91,6 +101,7 @@ export default function EventMoviesSection({
   addMovieOpen,
   onAddMovieOpenChange,
   addMovieTriggerRef,
+  winnerMovieId,
 }: Readonly<EventMoviesSectionProps>) {
   const isFinished = !!event.isFinished;
   const { track } = useAnalytics();
@@ -193,6 +204,11 @@ export default function EventMoviesSection({
   );
 
   const handleActionError = useCallback((msg: string) => setActionError(msg), [setActionError]);
+
+  const displayedMovies = useMemo(
+    () => pinWinnerFirst(sortMovies(movies, sortBy), winnerMovieId),
+    [movies, sortBy, winnerMovieId]
+  );
 
   const participantAvatars = Object.fromEntries(
     (event.participants ?? []).filter((p) => p.avatarId).map((p) => [p.id, p.avatarId!])
@@ -299,7 +315,8 @@ export default function EventMoviesSection({
       {moviesQuery.isSuccess && (
         <div className={viewMode === 'list' ? styles.movieListBleed : undefined}>
           <MovieList
-            movies={sortMovies(movies, sortBy)}
+            movies={displayedMovies}
+            winnerMovieId={winnerMovieId}
             slug={slug}
             participantId={participant?.participantId ?? null}
             participantPseudo={participant?.pseudo ?? null}

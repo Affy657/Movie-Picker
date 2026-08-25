@@ -354,6 +354,7 @@
       votesCount: '{{count}} votes',
       participantsToggleOne: '1 participant',
       participantsToggle: '{{count}} participants',
+      themeAria: 'Thème de soirée : {{theme}}',
     },
     myEvents: {
       title: 'Mes soirées',
@@ -479,6 +480,10 @@
         'La soirée « {{title}} » sera clôturée sans film. Cette action est définitive.',
       closeWithoutMovieConfirmAction: 'Clôturer sans film',
       resetButton: 'Annuler le tirage',
+      resetConfirmTitle: 'Annuler le tirage\u00a0?',
+      resetConfirmMessage:
+        'Le film gagnant sera oublié. Les propositions et les votes restent en place.',
+      resetConfirmAction: 'Annuler le tirage',
       launchError: 'Tirage impossible',
       closeError: 'Clôture impossible',
       resetError: 'Annulation impossible',
@@ -589,6 +594,7 @@
       tmdbVoteTitle: 'Note moyenne TMDB (indicatif)',
       runtimeTitle: 'Durée du film',
       tvBadge: 'Série',
+      winnerBadge: 'Gagnant',
       sectionLabel: 'Films proposés',
       loadingPlaceholder: 'Chargement des films\u2026',
       sortLabel: 'Trier par',
