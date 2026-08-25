@@ -415,7 +415,7 @@ jobs:
             /d:sonar.token="$SONAR_TOKEN" \
             /d:sonar.scanner.skipJreProvisioning=true \
             /d:sonar.projectBaseDir="$GITHUB_WORKSPACE" \
-            /d:sonar.architecture.enabled=false \
+            /d:sonar.architecture.enable=false \
             /v:"$VERSION" \
             /d:sonar.exclusions="$EXCL" \
             /d:sonar.coverage.exclusions="$COV_EXCL" \
@@ -430,17 +430,7 @@ jobs:
             --collect:"XPlat Code Coverage" \
             --settings apps/api-dotnet/coverlet.runsettings \
             --results-directory apps/api-dotnet/MoviePicker.Api.Tests/TestResults
-          for attempt in 1 2 3; do
-            if dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"; then
-              exit 0
-            fi
-            if [ "$attempt" -lt 3 ]; then
-              echo "Sonar end a échoué (tentative $attempt/3), nouvel essai dans 45 s..."
-              sleep 45
-            fi
-          done
-          echo "::error::Sonar end a échoué après 3 tentatives"
-          exit 1
+          dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
 
   docker-api:
     name: Docker API → Artifact Registry
