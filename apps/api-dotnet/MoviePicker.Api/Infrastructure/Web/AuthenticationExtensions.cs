@@ -38,9 +38,9 @@ public static class AuthenticationExtensions
                 options.SlidingExpiration = false;
             });
 
-        var googleClientId = configuration["OAUTH_GOOGLE_CLIENT_ID"];
-        var googleClientSecret = configuration["OAUTH_GOOGLE_CLIENT_SECRET"];
-        if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
+        var googleClientId = OAuthProviderCatalog.ReadCredential(configuration, "OAUTH_GOOGLE_CLIENT_ID");
+        var googleClientSecret = OAuthProviderCatalog.ReadCredential(configuration, "OAUTH_GOOGLE_CLIENT_SECRET");
+        if (googleClientId is not null && googleClientSecret is not null)
         {
             authBuilder.AddGoogle(OAuthProviders.Google, options =>
             {
@@ -57,9 +57,9 @@ public static class AuthenticationExtensions
             });
         }
 
-        var githubClientId = configuration["OAUTH_GITHUB_CLIENT_ID"];
-        var githubClientSecret = configuration["OAUTH_GITHUB_CLIENT_SECRET"];
-        if (!string.IsNullOrWhiteSpace(githubClientId) && !string.IsNullOrWhiteSpace(githubClientSecret))
+        var githubClientId = OAuthProviderCatalog.ReadCredential(configuration, "OAUTH_GITHUB_CLIENT_ID");
+        var githubClientSecret = OAuthProviderCatalog.ReadCredential(configuration, "OAUTH_GITHUB_CLIENT_SECRET");
+        if (githubClientId is not null && githubClientSecret is not null)
         {
             authBuilder.AddOAuth(OAuthProviders.GitHub, options =>
             {

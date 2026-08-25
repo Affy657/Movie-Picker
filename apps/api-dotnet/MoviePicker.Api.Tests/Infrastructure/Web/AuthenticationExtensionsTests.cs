@@ -81,4 +81,27 @@ public sealed class AuthenticationExtensionsTests
         Assert.True(catalog.IsEnabled(OAuthProviders.Google));
         Assert.True(catalog.IsEnabled(OAuthProviders.GitHub));
     }
+
+    [Fact]
+    public async Task AddMoviePickerAuthentication_TrimsTrailingWhitespaceOnOAuthCredentials()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["OAUTH_GOOGLE_CLIENT_ID"] = "google-id\n",
+                ["OAUTH_GOOGLE_CLIENT_SECRET"] = "google-secret\n",
+                ["OAUTH_GITHUB_CLIENT_ID"] = "github-id\n",
+                ["OAUTH_GITHUB_CLIENT_SECRET"] = "github-secret\n"
+            })
+            .Build();
+        using var provider = BuildProvider(configuration);
+        var schemeProvider = provider.GetRequiredService<IAuthenticationSchemeProvider>();
+        var schemes = (await schemeProvider.GetAllSchemesAsync()).Select(s => s.Name).ToList();
+
+        Assert.Equal("google-id", OAuthProviderCatalog.ReadCredential(configuration, "OAUTH_GOOGLE_CLIENT_ID"));
+        Assert.Equal("google-secret", OAuthProviderCatalog.ReadCredential(configuration, "OAUTH_GOOGLE_CLIENT_SECRET"));
+        Assert.Contains(OAuthProviders.Google, schemes);
+        Assert.Contains(OAuthProviders.GitHub, schemes);
+        Assert.True(provider.GetRequiredService<OAuthProviderCatalog>().IsEnabled(OAuthProviders.Google));
+    }
 }
