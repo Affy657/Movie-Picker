@@ -77,6 +77,7 @@ export interface MovieCardCommonProps {
   isInWatchlist?: boolean;
   onToggleWatchlist?: (movie: MovieData) => void;
   onToggleWheelExclusion?: (movie: MovieData) => void;
+  onProposeToEvent?: (movie: MovieData) => void;
   selection?: MovieCardSelection;
   isWinner?: boolean;
 }
@@ -465,6 +466,7 @@ export function CardKebabWhenAvailable({
   canRemove,
   onToggleWatchlist,
   onToggleWheelExclusion,
+  onProposeToEvent,
   ...kebabProps
 }: Readonly<
   CardKebabProps & {
@@ -474,13 +476,21 @@ export function CardKebabWhenAvailable({
     onToggleWheelExclusion?: () => void;
   }
 >) {
-  if (!hasDetails && !canRemove && !onToggleWatchlist && !onToggleWheelExclusion) return null;
+  if (
+    !hasDetails &&
+    !canRemove &&
+    !onToggleWatchlist &&
+    !onToggleWheelExclusion &&
+    !onProposeToEvent
+  )
+    return null;
   return (
     <div className={slotClassName}>
       <CardKebab
         {...kebabProps}
         canRemove={canRemove}
         onToggleWatchlist={onToggleWatchlist}
+        onProposeToEvent={onProposeToEvent}
         wheelExclusion={kebabProps.wheelExclusion}
       />
     </div>
@@ -496,6 +506,7 @@ export function MovieCardKebab({
   onRemove,
   onToggleWatchlist,
   onToggleWheelExclusion,
+  onProposeToEvent,
   t,
 }: Readonly<{
   movie: MovieData;
@@ -506,6 +517,7 @@ export function MovieCardKebab({
   onRemove: (id: string) => void | Promise<void>;
   onToggleWatchlist?: (movie: MovieData) => void;
   onToggleWheelExclusion?: (movie: MovieData) => void;
+  onProposeToEvent?: (movie: MovieData) => void;
   t: Translate;
 }>) {
   const excluded = !!movie.excludedFromWheel;
@@ -525,6 +537,7 @@ export function MovieCardKebab({
       onRemove={() => void onRemove(movie.id)}
       inWatchlist={isInWatchlist}
       onToggleWatchlist={toggleWatchlist}
+      onProposeToEvent={onProposeToEvent ? () => onProposeToEvent(movie) : undefined}
       onToggleWheelExclusion={toggleExclusion}
       wheelExclusion={toggleExclusion ? { excluded, onToggle: toggleExclusion } : undefined}
       t={t}
