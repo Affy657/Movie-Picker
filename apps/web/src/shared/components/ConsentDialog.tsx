@@ -1,6 +1,7 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { useTranslation } from '@/shared/i18n';
 import { useConsent } from '@/shared/contexts/ConsentContext';
+import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import styles from './ConsentDialog.module.css';
 
 type Props = {
@@ -12,35 +13,13 @@ export default function ConsentDialog({ open, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const { analytics, acceptAll, rejectAll, savePreferences } = useConsent();
   const [analyticsChecked, setAnalyticsChecked] = useState(analytics);
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const dialogRef = useModalDialog(open, onClose);
   const reactId = useId();
   const titleId = `consent-dialog-title-${reactId}`;
 
-  const onCloseRef = useRef(onClose);
   useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
-
-  useEffect(() => {
-    const dlg = dialogRef.current;
-    if (!dlg) return;
-    if (open && !dlg.open) {
-      setAnalyticsChecked(analytics);
-      dlg.showModal();
-    } else if (!open && dlg.open) {
-      dlg.close();
-    }
+    if (open) setAnalyticsChecked(analytics);
   }, [open, analytics]);
-
-  useEffect(() => {
-    const dlg = dialogRef.current;
-    if (!dlg) return;
-    const handleClose = () => {
-      if (open) onCloseRef.current();
-    };
-    dlg.addEventListener('close', handleClose);
-    return () => dlg.removeEventListener('close', handleClose);
-  }, [open]);
 
   function handleSave() {
     savePreferences({ analytics: analyticsChecked });

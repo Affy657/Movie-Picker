@@ -1,15 +1,21 @@
 import clsx from 'clsx';
-import type { ComponentType, SVGProps } from 'react';
-import { CalendarDays, Plus } from 'lucide-react';
+import { useState, type ComponentType, type SVGProps } from 'react';
+import { Bookmark, CalendarDays, Plus } from 'lucide-react';
 import { Link, NavLink, Outlet } from 'react-router';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { useLetterboxdAutoSync } from '@/features/letterboxd/hooks/useLetterboxdAutoSync';
+import { useWhatsNew } from '@/shared/hooks/useWhatsNew';
+import { shouldShowWhatsNewNavChip } from '@/shared/whatsNew';
 import { ROUTES } from '@/app/routes';
 import UserMenu from '@/features/auth/components/UserMenu';
 import InboxBell from '@/features/notifications/components/InboxBell';
 import Footer from './Footer';
 import PwaAutoUpdate from './PwaAutoUpdate';
 import ConsentBanner from './ConsentBanner';
+import WhatsNewModal from './WhatsNewModal';
+import WhatsNewNavChip from './WhatsNewNavChip';
+import { ProposeIdeaDialog } from './ProposeIdeaButton';
 import InAppBrowserBanner from './InAppBrowserBanner';
 import styles from './AppShell.module.css';
 
@@ -31,6 +37,7 @@ type NavItemSpec = Omit<NavItemDef, 'label'> & { labelKey: TranslationKey };
 const AUTHENTICATED_NAV_ITEMS: ReadonlyArray<NavItemSpec> = [
   { to: ROUTES.myEvents, labelKey: 'nav.myEvents', Icon: CalendarDays },
   { to: ROUTES.createEvent, labelKey: 'nav.createEvent', Icon: Plus },
+  { to: ROUTES.watchlist, labelKey: 'nav.watchlist', Icon: Bookmark },
 ];
 
 function DesktopNavItem({ to, end, label }: Readonly<Omit<NavItemDef, 'Icon'>>) {
@@ -53,6 +60,14 @@ function MobileNavItem({ to, end, label, Icon }: Readonly<NavItemDef>) {
 export default function AppShell() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  useLetterboxdAutoSync();
+  const {
+    isOpen: whatsNewOpen,
+    release: whatsNewRelease,
+    openOnDemand: openWhatsNew,
+    close: closeWhatsNew,
+  } = useWhatsNew(user?.userId);
+  const [proposeIdeaOpen, setProposeIdeaOpen] = useState(false);
 
   const isAuthenticated = !!user;
 
@@ -89,6 +104,9 @@ export default function AppShell() {
                 ))}
               </nav>
               <div className={styles.navActions}>
+                {shouldShowWhatsNewNavChip(user.createdAt) ? (
+                  <WhatsNewNavChip onOpen={openWhatsNew} />
+                ) : null}
                 <InboxBell />
                 <UserMenu user={user} />
               </div>
@@ -99,7 +117,10 @@ export default function AppShell() {
       <div className={styles.content}>
         <Outlet />
       </div>
-      <Footer clearMobileNav={isAuthenticated} />
+      <Footer
+        clearMobileNav={isAuthenticated}
+        onOpenWhatsNew={isAuthenticated ? openWhatsNew : undefined}
+      />
       {isAuthenticated ? (
         <nav className={styles.navMobile} aria-label={t('nav.navLabel')}>
           {items.map((item) => (
@@ -109,6 +130,20 @@ export default function AppShell() {
       ) : null}
       <PwaAutoUpdate />
       <ConsentBanner />
+      {isAuthenticated ? (
+        <>
+          <WhatsNewModal
+            open={whatsNewOpen}
+            release={whatsNewRelease}
+            profileHandle={user.handle}
+            onClose={closeWhatsNew}
+            onAction={(action) => {
+              if (action === 'proposeIdea') setProposeIdeaOpen(true);
+            }}
+          />
+          <ProposeIdeaDialog open={proposeIdeaOpen} onClose={() => setProposeIdeaOpen(false)} />
+        </>
+      ) : null}
       <InAppBrowserBanner />
     </div>
   );

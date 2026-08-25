@@ -11,6 +11,9 @@ namespace MoviePicker.Api.Tests.UseCases.CloseEvent;
 public sealed class CloseEventHandlerTests
 {
     private readonly Mock<IEventRepository> _eventRepo;
+    private readonly Mock<IMovieRepository> _movieRepo;
+    private readonly Mock<IParticipantRepository> _participantRepo;
+    private readonly Mock<IWatchlistRepository> _watchlistRepo;
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor;
     private readonly Mock<ICurrentUserAccessor> _currentUser;
     private readonly CloseEventHandler _sut;
@@ -30,10 +33,20 @@ public sealed class CloseEventHandlerTests
     public CloseEventHandlerTests()
     {
         _eventRepo = new Mock<IEventRepository>();
+        _movieRepo = new Mock<IMovieRepository>();
+        _participantRepo = new Mock<IParticipantRepository>();
+        _watchlistRepo = new Mock<IWatchlistRepository>();
         _hostTokenAccessor = new Mock<IHostTokenAccessor>();
         _currentUser = new Mock<ICurrentUserAccessor>();
         _currentUser.Setup(c => c.GetUserId()).Returns((string?)null);
-        _sut = new CloseEventHandler(_eventRepo.Object, _hostTokenAccessor.Object, _currentUser.Object, NullLogger<CloseEventHandler>.Instance);
+        _sut = new CloseEventHandler(
+            _eventRepo.Object,
+            _movieRepo.Object,
+            _participantRepo.Object,
+            _watchlistRepo.Object,
+            _hostTokenAccessor.Object,
+            _currentUser.Object,
+            NullLogger<CloseEventHandler>.Instance);
     }
 
     [Fact]

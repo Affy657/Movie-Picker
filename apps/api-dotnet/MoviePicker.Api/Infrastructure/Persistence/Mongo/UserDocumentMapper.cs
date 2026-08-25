@@ -11,6 +11,7 @@ public static class UserDocumentMapper
             Email = doc.Email,
             PasswordHash = doc.PasswordHash,
             DisplayName = doc.DisplayName,
+            Identities = (doc.Identities ?? []).ConvertAll(ToIdentityDomain),
             Handle = doc.Handle ?? string.Empty,
             Bio = doc.Bio,
             IsProfilePublic = doc.IsProfilePublic ?? true,
@@ -19,6 +20,15 @@ public static class UserDocumentMapper
             RatingScale = ParseRatingScale(doc.RatingScale),
             AvatarId = doc.AvatarId ?? string.Empty,
             NotificationPreferences = BuildNotificationPreferences(doc),
+            SupporterSince = doc.SupporterSince is null
+                ? null
+                : new DateTimeOffset(doc.SupporterSince.Value, TimeSpan.Zero),
+            LetterboxdUsername = doc.LetterboxdUsername,
+            LetterboxdLastSyncAt = doc.LetterboxdLastSyncAt is null
+                ? null
+                : new DateTimeOffset(doc.LetterboxdLastSyncAt.Value, TimeSpan.Zero),
+            LetterboxdLastSyncError = doc.LetterboxdLastSyncError,
+            LetterboxdPendingReconciliationCount = doc.LetterboxdPendingReconciliationCount,
             CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero),
             UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)
         };
@@ -30,6 +40,7 @@ public static class UserDocumentMapper
             Email = user.Email,
             PasswordHash = user.PasswordHash,
             DisplayName = user.DisplayName,
+            Identities = user.Identities.Count == 0 ? null : user.Identities.Select(ToIdentityDocument).ToList(),
             Handle = string.IsNullOrEmpty(user.Handle) ? null : user.Handle,
             Bio = string.IsNullOrEmpty(user.Bio) ? null : user.Bio,
             IsProfilePublic = user.IsProfilePublic,
@@ -40,9 +51,30 @@ public static class UserDocumentMapper
             NotificationPreferences = user.NotificationPreferences
                 .Select(kv => new NotificationPreferenceEntryDocument { Type = (int)kv.Key, Enabled = kv.Value })
                 .ToList(),
+            SupporterSince = user.SupporterSince?.UtcDateTime,
+            LetterboxdUsername = string.IsNullOrEmpty(user.LetterboxdUsername) ? null : user.LetterboxdUsername,
+            LetterboxdLastSyncAt = user.LetterboxdLastSyncAt?.UtcDateTime,
+            LetterboxdLastSyncError = user.LetterboxdLastSyncError,
+            LetterboxdPendingReconciliationCount = user.LetterboxdPendingReconciliationCount,
             CreatedAt = user.CreatedAt.UtcDateTime,
             UpdatedAt = user.UpdatedAt.UtcDateTime
         };
+
+    private static LinkedIdentity ToIdentityDomain(UserIdentityDocument doc) => new()
+    {
+        Provider = doc.Provider,
+        Subject = doc.Subject,
+        Email = doc.Email,
+        LinkedAt = new DateTimeOffset(doc.LinkedAt, TimeSpan.Zero)
+    };
+
+    private static UserIdentityDocument ToIdentityDocument(LinkedIdentity identity) => new()
+    {
+        Provider = identity.Provider,
+        Subject = identity.Subject,
+        Email = identity.Email,
+        LinkedAt = identity.LinkedAt.UtcDateTime
+    };
 
     private static UiThemePreference ParseTheme(string? s) =>
         s?.ToLowerInvariant() switch
@@ -102,11 +134,7 @@ public static class UserDocumentMapper
             _ => "five"
         };
 
-    // Migration à la volée, sans écriture en base : tant que l'utilisateur n'a pas encore été
-    // sauvegardé avec le nouveau tableau `notificationPreferences`, on le reconstruit depuis les
-    // 6 anciens booléens. La bascule réelle a lieu au premier PATCH de préférences (ToDocument()
-    // n'écrit plus jamais les anciens champs).
-    private static IReadOnlyDictionary<UserNotificationType, bool> BuildNotificationPreferences(UserDocument doc)
+    private static Dictionary<UserNotificationType, bool> BuildNotificationPreferences(UserDocument doc)
     {
         if (doc.NotificationPreferences is { Count: > 0 })
         {
@@ -119,10 +147,6 @@ public static class UserDocumentMapper
 
         var participantJoined = doc.NotifyOnParticipantJoined ?? true;
         var reminder = doc.NotifyEventReminder ?? true;
-        // Ce document n'a jamais été migré : son comportement effectif historique était "true"
-        // (ancien code : `doc.NotifyOnMovieAdded ?? true`), qu'il ait explicitement choisi ou non.
-        // Le nouveau défaut `false` ne s'applique qu'aux comptes créés après la refonte (via
-        // NotificationPreferenceDefaults.All() sur un User tout neuf) — on ne le rejoue pas ici.
         var movieAdded = doc.NotifyOnMovieAdded ?? true;
         var moviePicked = doc.NotifyOnMoviePicked ?? true;
         var eventDeleted = doc.NotifyOnEventDeleted ?? true;
@@ -139,6 +163,8 @@ public static class UserDocumentMapper
             [UserNotificationType.EventReminder24h] = reminder,
             [UserNotificationType.EventInvitation] = true,
             [UserNotificationType.EventPending] = true,
+            [UserNotificationType.MoviePickedManually] = true,
+            [UserNotificationType.LetterboxdReconciliationPending] = true,
         };
     }
 }

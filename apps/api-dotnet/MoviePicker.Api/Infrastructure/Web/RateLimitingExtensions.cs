@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -28,87 +29,92 @@ public static class RateLimitingExtensions
     public const string PublicProfilePolicy = "public-profile";
     public const string FollowMutationPolicy = "follow-mutation";
     public const string InviteUserPolicy = "invite-user";
+    public const string WatchlistReadPolicy = "watchlist-read";
+    public const string WatchlistMutationPolicy = "watchlist-mutation";
+    public const string LetterboxdImportPolicy = "letterboxd-import";
+    public const string KofiWebhookPolicy = "kofi-webhook";
+    public const string IdeaSuggestionPolicy = "idea-suggestion";
 
-    public static IServiceCollection AddMoviePickerRateLimiter(this IServiceCollection services, IHostEnvironment environment)
+    private static readonly PolicySpec[] Policies =
+    [
+        new(CreateEventPolicy, 20, 1, false),
+        new(JoinEventPolicy, 60, 1, false),
+        new(SearchMoviesPolicy, 40, 1, false),
+        new(MovieDetailsPolicy, 120, 1, false),
+        new(AuthRegisterPolicy, 10, 1, false),
+        new(AuthLoginPolicy, 30, 1, false),
+        new(AuthPasswordResetRequestPolicy, 5, 1, false),
+        new(AuthPasswordResetConfirmPolicy, 30, 1, false),
+        new(AuthChangePasswordPolicy, 10, 1, false),
+        new(AuthPatchProfilePolicy, 60, 1, false),
+        new(AuthExportDataPolicy, 5, 1, false),
+        new(AuthDeleteAccountPolicy, 5, 1, false),
+        new(PatchEventConfigPolicy, 40, 1, false),
+        new(VoteMutationPolicy, 120, 1, false),
+        new(SeenMarksMutationPolicy, 120, 1, false),
+        new(NoteMutationPolicy, 60, 1, false),
+        new(RemoveParticipantPolicy, 40, 1, false),
+        new(DeleteEventPolicy, 10, 1, false),
+        new(PostersPolicy, 300, 1, false),
+        new(PublicProfilePolicy, 120, 1, false),
+        new(FollowMutationPolicy, 60, 1, false),
+        new(InviteUserPolicy, 60, 1, false),
+        new(WatchlistReadPolicy, 120, 1, false),
+        new(WatchlistMutationPolicy, 60, 1, false),
+        new(LetterboxdImportPolicy, 10, 1, false),
+        new(KofiWebhookPolicy, 20, 1, false),
+        new(IdeaSuggestionPolicy, 10, 60, true)
+    ];
+
+    public static IServiceCollection AddMoviePickerRateLimiter(
+        this IServiceCollection services,
+        IHostEnvironment environment)
     {
+        var isDevelopment = environment.IsDevelopment();
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-            options.OnRejected = async (context, cancellationToken) =>
+            options.OnRejected = WriteRejectedAsync;
+            foreach (var spec in Policies)
             {
-                context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-                if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
-                {
-                    var seconds = Math.Max(1, (int)Math.Ceiling(retryAfter.TotalSeconds));
-                    context.HttpContext.Response.Headers.RetryAfter = seconds.ToString(CultureInfo.InvariantCulture);
-                }
-
-                context.HttpContext.Response.ContentType = "application/json";
-                var json = ApiErrorJson.Serialize(
-                    context.HttpContext,
-                    StatusCodes.Status429TooManyRequests,
-                    "Trop de requêtes. Réessayez dans un instant.");
-                await context.HttpContext.Response.WriteAsync(json, cancellationToken);
-            };
-
-            if (environment.IsDevelopment())
-            {
-                options.AddPolicy(CreateEventPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                options.AddPolicy(JoinEventPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                options.AddPolicy(SearchMoviesPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                options.AddPolicy(MovieDetailsPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                options.AddPolicy(AuthRegisterPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                options.AddPolicy(AuthLoginPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                options.AddPolicy(AuthPasswordResetRequestPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                options.AddPolicy(AuthPasswordResetConfirmPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                options.AddPolicy(AuthChangePasswordPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                options.AddPolicy(AuthPatchProfilePolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                options.AddPolicy(AuthExportDataPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                options.AddPolicy(AuthDeleteAccountPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                options.AddPolicy(PatchEventConfigPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                options.AddPolicy(VoteMutationPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                options.AddPolicy(SeenMarksMutationPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                options.AddPolicy(NoteMutationPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                options.AddPolicy(RemoveParticipantPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                options.AddPolicy(DeleteEventPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                options.AddPolicy(PostersPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                options.AddPolicy(PublicProfilePolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                options.AddPolicy(FollowMutationPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                options.AddPolicy(InviteUserPolicy, _ => RateLimitPartition.GetNoLimiter("dev"));
-                return;
+                var captured = spec;
+                if (isDevelopment)
+                    options.AddPolicy(captured.Name, _ => RateLimitPartition.GetNoLimiter("dev"));
+                else
+                    options.AddPolicy(captured.Name, ctx => CreatePartition(ctx, captured));
             }
-
-            options.AddPolicy(CreateEventPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 20, windowMinutes: 1));
-            options.AddPolicy(JoinEventPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 60, windowMinutes: 1));
-            options.AddPolicy(SearchMoviesPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 40, windowMinutes: 1));
-            options.AddPolicy(MovieDetailsPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 120, windowMinutes: 1));
-            options.AddPolicy(AuthRegisterPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 10, windowMinutes: 1));
-            options.AddPolicy(AuthLoginPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 30, windowMinutes: 1));
-            options.AddPolicy(AuthPasswordResetRequestPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 5, windowMinutes: 1));
-            options.AddPolicy(AuthPasswordResetConfirmPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 30, windowMinutes: 1));
-            options.AddPolicy(AuthChangePasswordPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 10, windowMinutes: 1));
-            options.AddPolicy(AuthPatchProfilePolicy, ctx => CreateFixedWindow(ctx, permitLimit: 60, windowMinutes: 1));
-            options.AddPolicy(AuthExportDataPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 5, windowMinutes: 1));
-            options.AddPolicy(AuthDeleteAccountPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 5, windowMinutes: 1));
-            options.AddPolicy(PatchEventConfigPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 40, windowMinutes: 1));
-            options.AddPolicy(VoteMutationPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 120, windowMinutes: 1));
-            options.AddPolicy(SeenMarksMutationPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 120, windowMinutes: 1));
-            options.AddPolicy(NoteMutationPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 60, windowMinutes: 1));
-            options.AddPolicy(RemoveParticipantPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 40, windowMinutes: 1));
-            options.AddPolicy(DeleteEventPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 10, windowMinutes: 1));
-            options.AddPolicy(PostersPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 300, windowMinutes: 1));
-            options.AddPolicy(PublicProfilePolicy, ctx => CreateFixedWindow(ctx, permitLimit: 120, windowMinutes: 1));
-            options.AddPolicy(FollowMutationPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 60, windowMinutes: 1));
-            options.AddPolicy(InviteUserPolicy, ctx => CreateFixedWindow(ctx, permitLimit: 60, windowMinutes: 1));
         });
 
         return services;
     }
 
-    private static RateLimitPartition<string> CreateFixedWindow(HttpContext httpContext, int permitLimit, int windowMinutes)
+    internal static async ValueTask WriteRejectedAsync(
+        OnRejectedContext context,
+        CancellationToken cancellationToken)
     {
-        var key = ClientIpPartitionKey.Get(httpContext);
-        return RateLimitPartition.GetFixedWindowLimiter(
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        {
+            var seconds = Math.Max(1, (int)Math.Ceiling(retryAfter.TotalSeconds));
+            context.HttpContext.Response.Headers.RetryAfter = seconds.ToString(CultureInfo.InvariantCulture);
+        }
+
+        context.HttpContext.Response.ContentType = "application/json";
+        var json = ApiErrorJson.Serialize(
+            context.HttpContext,
+            StatusCodes.Status429TooManyRequests,
+            "Trop de requêtes. Réessayez dans un instant.");
+        await context.HttpContext.Response.WriteAsync(json, cancellationToken);
+    }
+
+    internal static RateLimitPartition<string> CreatePartition(HttpContext httpContext, PolicySpec spec)
+    {
+        var key = spec.ByUser ? UserOrIpPartitionKey.Get(httpContext) : ClientIpPartitionKey.Get(httpContext);
+        return BuildFixedWindow(key, spec.PermitLimit, spec.WindowMinutes);
+    }
+
+    internal static RateLimitPartition<string> BuildFixedWindow(string key, int permitLimit, int windowMinutes) =>
+        RateLimitPartition.GetFixedWindowLimiter(
             key,
             _ => new FixedWindowRateLimiterOptions
             {
@@ -118,7 +124,8 @@ public static class RateLimitingExtensions
                 QueueLimit = 0,
                 AutoReplenishment = true
             });
-    }
+
+    internal readonly record struct PolicySpec(string Name, int PermitLimit, int WindowMinutes, bool ByUser);
 }
 
 internal static class ClientIpPartitionKey
@@ -127,5 +134,16 @@ internal static class ClientIpPartitionKey
     {
         var ip = httpContext.Connection.RemoteIpAddress;
         return ip?.ToString() ?? "unknown";
+    }
+}
+
+internal static class UserOrIpPartitionKey
+{
+    internal static string Get(HttpContext httpContext)
+    {
+        var userId = httpContext.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return string.IsNullOrEmpty(userId)
+            ? $"ip:{ClientIpPartitionKey.Get(httpContext)}"
+            : $"user:{userId}";
     }
 }

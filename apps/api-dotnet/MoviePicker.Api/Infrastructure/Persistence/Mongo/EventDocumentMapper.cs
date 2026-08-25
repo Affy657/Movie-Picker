@@ -33,6 +33,7 @@ public static class EventDocumentMapper
             Config = config,
             ClosedAt = doc.ClosedAt.HasValue ? new DateTimeOffset(doc.ClosedAt.Value, TimeSpan.Zero) : null,
             WinnerMovieId = doc.WinnerMovieId,
+            WinnerPickMethod = ParseWinnerPickMethod(doc.WinnerPickMethod),
             CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero),
             UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)
         };
@@ -67,6 +68,7 @@ public static class EventDocumentMapper
             Config = config,
             ClosedAt = evt.ClosedAt?.UtcDateTime,
             WinnerMovieId = evt.WinnerMovieId,
+            WinnerPickMethod = ToWinnerPickMethodString(evt.WinnerPickMethod),
             CreatedAt = evt.CreatedAt.UtcDateTime,
             UpdatedAt = evt.UpdatedAt.UtcDateTime
         };
@@ -81,4 +83,20 @@ public static class EventDocumentMapper
 
     private static string ToWheelModeString(WheelMode mode) =>
         mode == WheelMode.WeightedByVotes ? "weightedByVotes" : "strictRandom";
+
+    private static WinnerPickMethod? ParseWinnerPickMethod(string? raw) =>
+        raw?.Trim().ToLowerInvariant() switch
+        {
+            "manual" => WinnerPickMethod.Manual,
+            "wheel" => WinnerPickMethod.Wheel,
+            _ => null
+        };
+
+    private static string? ToWinnerPickMethodString(WinnerPickMethod? method) =>
+        method switch
+        {
+            WinnerPickMethod.Manual => "manual",
+            WinnerPickMethod.Wheel => "wheel",
+            _ => null
+        };
 }

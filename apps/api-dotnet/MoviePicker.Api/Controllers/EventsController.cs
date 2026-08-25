@@ -16,6 +16,7 @@ using MoviePicker.Api.Application.UseCases.LaunchWheel;
 using MoviePicker.Api.Application.UseCases.ListMyEvents;
 using MoviePicker.Api.Application.UseCases.RemoveParticipant;
 using MoviePicker.Api.Application.UseCases.ResetWheel;
+using MoviePicker.Api.Application.UseCases.SetManualWinner;
 using MoviePicker.Api.Infrastructure.Web;
 
 namespace MoviePicker.Api.Controllers;
@@ -162,6 +163,23 @@ public sealed class EventsController : ControllerBase
         CancellationToken ct)
     {
         var result = await handler.HandleAsync(idOrSlug, ct);
+        return Ok(result);
+    }
+
+    [HttpPost("{idOrSlug}/winner")]
+    [ProducesResponseType(typeof(WheelResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status415UnsupportedMediaType)]
+    public async Task<IActionResult> SetManualWinner(
+        string idOrSlug,
+        [FromBody] SetManualWinnerRequest request,
+        [FromServices] ISetManualWinnerHandler handler,
+        CancellationToken ct)
+    {
+        var result = await handler.HandleAsync(idOrSlug, request, ct);
         return Ok(result);
     }
 

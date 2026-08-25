@@ -126,6 +126,87 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
     }
 
     [Fact]
+    public async Task PostWinner_WithMovieId_SetsManualWinner_VisibleInEventDetail()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "HôteManuel");
+
+        var createBody = new { title = "Soirée choix manuel", date = "2030-06-16", time = "19:00" };
+        var createRes = await client.PostAsJsonAsync("/api/v1/events", createBody);
+        createRes.EnsureSuccessStatusCode();
+        var created = await createRes.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
+        var slug = created!.Slug;
+        var participantId = created.CreatorParticipant!.Id;
+
+        var addMovieRes = await client.PostAsJsonAsync($"/api/v1/events/{slug}/movies", new
+        {
+            tmdbId = 603,
+            title = "The Matrix",
+            year = "1999",
+            posterPath = (string?)null,
+            participantId
+        });
+        addMovieRes.EnsureSuccessStatusCode();
+        var movieJson = await addMovieRes.Content.ReadFromJsonAsync<JsonElement>();
+        var movieId = movieJson.GetProperty("_id").GetString()!;
+
+        var winnerRes = await client.PostAsJsonAsync($"/api/v1/events/{slug}/winner", new { movieId });
+        winnerRes.EnsureSuccessStatusCode();
+        var winnerJson = await winnerRes.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(movieId, winnerJson.GetProperty("winner").GetProperty("_id").GetString());
+
+        var detailRes = await client.GetAsync($"/api/v1/events/slug/{slug}");
+        detailRes.EnsureSuccessStatusCode();
+        var detailJson = await detailRes.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(movieId, detailJson.GetProperty("winnerMovieId").GetString());
+        Assert.Equal("manual", detailJson.GetProperty("winnerPickMethod").GetString());
+    }
+
+    [Fact]
+    public async Task PostWinner_UnknownMovieId_Returns404()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "HôteManuel404");
+
+        var createBody = new { title = "Soirée choix manuel 404", date = "2030-06-17", time = "19:00" };
+        var createRes = await client.PostAsJsonAsync("/api/v1/events", createBody);
+        createRes.EnsureSuccessStatusCode();
+        var created = await createRes.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
+        var slug = created!.Slug;
+
+        var winnerRes = await client.PostAsJsonAsync(
+            $"/api/v1/events/{slug}/winner",
+            new { movieId = "64a1b2c3d4e5f6a7b8c9d0e1" });
+        Assert.Equal(HttpStatusCode.NotFound, winnerRes.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostWinner_WithoutHostAccess_Returns403()
+    {
+        var hostClient = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "HôteManuel403");
+        var createBody = new { title = "Soirée choix manuel 403", date = "2030-06-18", time = "19:00" };
+        var createRes = await hostClient.PostAsJsonAsync("/api/v1/events", createBody);
+        createRes.EnsureSuccessStatusCode();
+        var created = await createRes.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
+        var slug = created!.Slug;
+        var participantId = created.CreatorParticipant!.Id;
+
+        var addMovieRes = await hostClient.PostAsJsonAsync($"/api/v1/events/{slug}/movies", new
+        {
+            tmdbId = 604,
+            title = "The Matrix Reloaded",
+            year = "2003",
+            posterPath = (string?)null,
+            participantId
+        });
+        addMovieRes.EnsureSuccessStatusCode();
+        var movieJson = await addMovieRes.Content.ReadFromJsonAsync<JsonElement>();
+        var movieId = movieJson.GetProperty("_id").GetString()!;
+
+        var anonymousClient = _factory.CreateClient();
+        var winnerRes = await anonymousClient.PostAsJsonAsync($"/api/v1/events/{slug}/winner", new { movieId });
+        Assert.Equal(HttpStatusCode.Forbidden, winnerRes.StatusCode);
+    }
+
+    [Fact]
     public async Task PostWheelAndClose_WithoutJsonBody_Returns415()
     {
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "GardeCsrf");

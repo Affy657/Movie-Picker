@@ -59,7 +59,7 @@ public sealed class GetUserStatsHandlerTests
         UpdatedAt = DateTimeOffset.UtcNow
     };
 
-    private static Event Evt(string id, string date = "2030-01-01") => new()
+    private static Event Evt(string id, string date = "2030-01-01", string? winnerMovieId = null, DateTimeOffset? closedAt = null) => new()
     {
         Id = id,
         Title = "E",
@@ -68,6 +68,8 @@ public sealed class GetUserStatsHandlerTests
         Slug = id,
         HostToken = "ht",
         CreatorUserId = "u1",
+        WinnerMovieId = winnerMovieId,
+        ClosedAt = closedAt,
         CreatedAt = DateTimeOffset.UtcNow,
         UpdatedAt = DateTimeOffset.UtcNow
     };
@@ -128,6 +130,8 @@ public sealed class GetUserStatsHandlerTests
         Assert.Equal(0, res.VotesCast);
         Assert.Equal(0, res.WinningProposals);
         Assert.Equal(0, res.MoviesSeen);
+        Assert.Equal(0, res.CurrentStreakWeeks);
+        Assert.Equal(0, res.BestStreakWeeks);
         Assert.Empty(res.FavoriteGenres);
         // 2026-06-15 is a Monday → 26-week window starts on Monday 2025-12-22 and ends today (176 days).
         Assert.Equal(176, res.DailyActivity.Count);
@@ -205,5 +209,81 @@ public sealed class GetUserStatsHandlerTests
         Assert.Equal(1, res.DailyActivity.Single(p => p.Date == "2026-06-10").Count);
         Assert.Equal(1, res.DailyActivity.Single(p => p.Date == "2026-01-05").Count);
         Assert.Equal(2, res.DailyActivity.Sum(p => p.Count)); // 2025-12-01 soirée date excluded
+    }
+
+    [Fact]
+    public async Task Streak_ExcludesEventsWithWinnerButNotFinished()
+    {
+        var handler = Build();
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
+        var parts = new[] { Part("p1", "A", DateTimeOffset.UtcNow) };
+        _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(parts);
+        // Winner already picked, but the soirée itself hasn't finished (future date, no ClosedAt/Config.EndDate).
+        _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Evt("A", "2030-01-01", winnerMovieId: "m1") });
+
+        var res = await handler.HandleAsync("alice");
+
+        Assert.Equal(0, res.CurrentStreakWeeks);
+        Assert.Equal(0, res.BestStreakWeeks);
+    }
+
+    [Fact]
+    public async Task Streak_ExcludesFinishedEventsWithoutWinner()
+    {
+        var handler = Build();
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
+        var parts = new[] { Part("p1", "A", DateTimeOffset.UtcNow) };
+        _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(parts);
+        // Soirée closed (cancelled?) but no tirage ever happened.
+        _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Evt("A", "2026-06-01", closedAt: _now) });
+
+        var res = await handler.HandleAsync("alice");
+
+        Assert.Equal(0, res.CurrentStreakWeeks);
+        Assert.Equal(0, res.BestStreakWeeks);
+    }
+
+    [Fact]
+    public async Task Streak_IgnoresParticipantsWhoseEventWasDeleted()
+    {
+        var handler = Build();
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
+        var parts = new[] { Part("p1", "ghost-event", DateTimeOffset.UtcNow) };
+        _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(parts);
+        // ListByIdsAsync returns nothing for "ghost-event" — the event no longer exists.
+        _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Event>());
+
+        var res = await handler.HandleAsync("alice");
+
+        Assert.Equal(0, res.CurrentStreakWeeks);
+        Assert.Equal(0, res.BestStreakWeeks);
+    }
+
+    [Fact]
+    public async Task Streak_ReturnsCurrentAndBestFromFinishedEventsWithWinner()
+    {
+        var handler = Build();
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
+        var parts = new[]
+        {
+            Part("p1", "A", DateTimeOffset.UtcNow),
+            Part("p2", "B", DateTimeOffset.UtcNow),
+        };
+        _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(parts);
+        // Two finished soirées with a tirage, on two consecutive weeks ending this week (_now = 2026-06-15, a Monday).
+        _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                Evt("A", "2026-06-15", winnerMovieId: "m1", closedAt: _now),
+                Evt("B", "2026-06-08", winnerMovieId: "m2", closedAt: _now),
+            });
+
+        var res = await handler.HandleAsync("alice");
+
+        Assert.Equal(2, res.CurrentStreakWeeks);
+        Assert.Equal(2, res.BestStreakWeeks);
     }
 }

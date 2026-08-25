@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.Follow;
 using MoviePicker.Api.Application.UseCases.Profile;
+using MoviePicker.Api.Application.UseCases.UserMovies;
 using MoviePicker.Api.Application.UseCases.UserStats;
 using MoviePicker.Api.Infrastructure.Web;
 
@@ -59,6 +60,39 @@ public sealed class UsersController : ControllerBase
     {
         var stats = await handler.HandleAsync(handle, ct);
         return Ok(stats);
+    }
+
+    [HttpGet("{handle}/movies")]
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingExtensions.PublicProfilePolicy)]
+    [ProducesResponseType(typeof(UserMoviesResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> GetUserMovies(
+        string handle,
+        [FromQuery] int skip,
+        [FromQuery] int take,
+        [FromServices] IGetUserMoviesHandler handler,
+        CancellationToken ct)
+    {
+        var result = await handler.HandleAsync(handle, skip, take, ct);
+        return Ok(result);
+    }
+
+    [HttpGet("{handle}/watched-movies")]
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingExtensions.PublicProfilePolicy)]
+    [ProducesResponseType(typeof(UserWatchedMoviesResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> GetUserWatchedMovies(
+        string handle,
+        [FromQuery] int take,
+        [FromServices] IGetUserWatchedMoviesHandler handler,
+        CancellationToken ct)
+    {
+        var result = await handler.HandleAsync(handle, take, ct);
+        return Ok(result);
     }
 
     [HttpPost("{handle}/follow")]

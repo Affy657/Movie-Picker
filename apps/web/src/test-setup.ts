@@ -17,6 +17,10 @@ HTMLCanvasElement.prototype.getContext = function mockCanvasGetContext(
   return null;
 } as HTMLCanvasElement['getContext'];
 
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = function scrollIntoView() {};
+}
+
 if (!HTMLDialogElement.prototype.showModal) {
   HTMLDialogElement.prototype.showModal = function showModal() {
     this.setAttribute('open', '');

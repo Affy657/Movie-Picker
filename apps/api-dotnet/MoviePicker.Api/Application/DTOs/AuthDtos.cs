@@ -54,6 +54,13 @@ public sealed class UserProfileResponse
     public string Handle { get; init; } = string.Empty;
     public string? Bio { get; init; }
     public bool IsProfilePublic { get; init; } = true;
+    public string? LetterboxdUsername { get; init; }
+    public DateTimeOffset? LetterboxdLastSyncAt { get; init; }
+    public string? LetterboxdLastSyncError { get; init; }
+    public int LetterboxdPendingReconciliationCount { get; init; }
+    public bool HasPassword { get; init; } = true;
+    public IReadOnlyList<string> LinkedProviders { get; init; } = Array.Empty<string>();
+    public DateTimeOffset CreatedAt { get; init; }
 }
 
 public sealed class PatchUserProfileRequest
@@ -86,12 +93,15 @@ public sealed class PatchUserProfileRequest
     public string? Bio { get; init; }
 
     public bool? IsProfilePublic { get; init; }
+
+    // Format validé (après normalisation) dans le handler — source unique de vérité.
+    [MaxLength(40, ErrorMessage = "Le pseudo Letterboxd est trop long.")]
+    public string? LetterboxdUsername { get; init; }
 }
 
 public sealed class ChangePasswordRequest
 {
-    [Required(ErrorMessage = "Le mot de passe actuel est requis.")]
-    public string CurrentPassword { get; init; } = string.Empty;
+    public string? CurrentPassword { get; init; }
 
     [Required(ErrorMessage = "Le nouveau mot de passe est requis.")]
     [MinLength(8, ErrorMessage = "Le mot de passe doit contenir au moins 8 caractères.")]
@@ -100,6 +110,7 @@ public sealed class ChangePasswordRequest
 
 public sealed class DeleteAccountRequest
 {
-    [Required(ErrorMessage = "Le mot de passe est requis.")]
-    public string Password { get; init; } = string.Empty;
+    public string? Password { get; init; }
+
+    public string? Confirmation { get; init; }
 }

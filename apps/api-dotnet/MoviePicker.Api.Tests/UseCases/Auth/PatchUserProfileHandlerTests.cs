@@ -46,6 +46,7 @@ public sealed class PatchUserProfileHandlerTests
         users.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
         Assert.Equal("Old", res.DisplayName);
         Assert.Equal(UiThemePreference.System, res.UiTheme);
+        Assert.Equal(u.CreatedAt, res.CreatedAt);
     }
 
     [Fact]
@@ -213,5 +214,53 @@ public sealed class PatchUserProfileHandlerTests
         users.Verify(
             x => x.UpdateAsync(It.Is<User>(y => !y.IsProfilePublic), It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_UpdatesLetterboxdUsername()
+    {
+        var u = User();
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(u);
+        users
+            .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User x, CancellationToken _) => x);
+        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+
+        var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { LetterboxdUsername = "  dave_v  " });
+
+        Assert.Equal("dave_v", res.LetterboxdUsername);
+        users.Verify(
+            x => x.UpdateAsync(It.Is<User>(y => y.LetterboxdUsername == "dave_v"), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_InvalidLetterboxdUsername_ThrowsBadRequest()
+    {
+        var u = User();
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(u);
+        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+
+        await Assert.ThrowsAsync<BadRequestException>(() =>
+            handler.HandleAsync("u1", new PatchUserProfileRequest { LetterboxdUsername = "dave/v" }));
+        users.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_EmptyLetterboxdUsername_ClearsIt()
+    {
+        var u = User() with { LetterboxdUsername = "dave_v" };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(u);
+        users
+            .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User x, CancellationToken _) => x);
+        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+
+        var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { LetterboxdUsername = "" });
+
+        Assert.Null(res.LetterboxdUsername);
     }
 }

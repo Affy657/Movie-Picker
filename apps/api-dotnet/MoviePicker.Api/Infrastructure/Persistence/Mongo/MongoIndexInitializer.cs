@@ -29,7 +29,9 @@ public sealed class MongoIndexInitializer : IHostedService
             await EnsurePasswordResetTokenIndexesAsync(cancellationToken);
             await EnsurePushSubscriptionIndexesAsync(cancellationToken);
             await EnsureFollowIndexesAsync(cancellationToken);
+            await EnsureWatchlistIndexesAsync(cancellationToken);
             await EnsureUserNotificationIndexesAsync(cancellationToken);
+            await EnsureKofiWebhookLogIndexesAsync(cancellationToken);
             await EnsurePushDedupIndexesAsync(cancellationToken);
             _logger.LogInformation("Index MongoDB initialisés.");
         }
@@ -58,7 +60,12 @@ public sealed class MongoIndexInitializer : IHostedService
         var updatedAt = new CreateIndexModel<UserDocument>(
             Builders<UserDocument>.IndexKeys.Descending(x => x.UpdatedAt),
             new CreateIndexOptions { Name = "users_updatedAt" });
-        await col.Indexes.CreateManyAsync(new[] { email, handle, updatedAt }, ct);
+        var identity = new CreateIndexModel<UserDocument>(
+            Builders<UserDocument>.IndexKeys
+                .Ascending("identities.provider")
+                .Ascending("identities.subject"),
+            new CreateIndexOptions { Name = "users_identities_provider_subject_unique", Unique = true, Sparse = true });
+        await col.Indexes.CreateManyAsync(new[] { email, handle, updatedAt, identity }, ct);
     }
 
     private async Task EnsureEventIndexesAsync(CancellationToken ct)
@@ -215,6 +222,30 @@ public sealed class MongoIndexInitializer : IHostedService
         await col.Indexes.CreateManyAsync(new[] { unique, byFollowerDate, byFolloweeDate }, ct);
     }
 
+    private async Task EnsureWatchlistIndexesAsync(CancellationToken ct)
+    {
+        var col = _database.GetCollection<WatchlistItemDocument>("watchlist");
+        var unique = new CreateIndexModel<WatchlistItemDocument>(
+            Builders<WatchlistItemDocument>.IndexKeys
+                .Ascending(x => x.UserId)
+                .Ascending(x => x.TmdbId)
+                .Ascending(x => x.MediaType),
+            new CreateIndexOptions { Name = "watchlist_userId_tmdbId_mediaType_unique", Unique = true });
+        var byUserDate = new CreateIndexModel<WatchlistItemDocument>(
+            Builders<WatchlistItemDocument>.IndexKeys
+                .Ascending(x => x.UserId)
+                .Descending(x => x.CreatedAt),
+            new CreateIndexOptions { Name = "watchlist_userId_createdAt" });
+        // RuntimeMinutes is [BsonIgnoreIfNull], so it's never stored as a literal null - only
+        // present or absent. A partial index can't express "$exists: false" (Mongo rejects it
+        // as an unsupported $not), but a regular index already covers missing/null values at
+        // its low end, so ListMissingRuntimeAsync's scan is covered without a partial filter.
+        var missingRuntime = new CreateIndexModel<WatchlistItemDocument>(
+            Builders<WatchlistItemDocument>.IndexKeys.Ascending(x => x.RuntimeMinutes),
+            new CreateIndexOptions { Name = "watchlist_runtimeMinutes_missing" });
+        await col.Indexes.CreateManyAsync(new[] { unique, byUserDate, missingRuntime }, ct);
+    }
+
     private async Task EnsureUserNotificationIndexesAsync(CancellationToken ct)
     {
         var col = _database.GetCollection<UserNotificationDocument>("user_notifications");
@@ -254,6 +285,15 @@ public sealed class MongoIndexInitializer : IHostedService
             Builders<PushDedupMarkerDocument>.IndexKeys.Ascending(x => x.CreatedAt),
             new CreateIndexOptions { Name = "push_dedup_markers_createdAt_ttl", ExpireAfter = TimeSpan.FromDays(3) });
         await col.Indexes.CreateManyAsync(new[] { unique, ttl }, ct);
+    }
+
+    private async Task EnsureKofiWebhookLogIndexesAsync(CancellationToken ct)
+    {
+        var col = _database.GetCollection<KofiWebhookLogDocument>("kofi_webhook_log");
+        var ttl = new CreateIndexModel<KofiWebhookLogDocument>(
+            Builders<KofiWebhookLogDocument>.IndexKeys.Ascending(x => x.ReceivedAt),
+            new CreateIndexOptions { Name = "kofi_webhook_log_receivedAt_ttl", ExpireAfter = TimeSpan.FromDays(365) });
+        await col.Indexes.CreateOneAsync(ttl, cancellationToken: ct);
     }
 
     private static async Task DropIndexIfExistsAsync<T>(IMongoCollection<T> col, string name, CancellationToken ct)

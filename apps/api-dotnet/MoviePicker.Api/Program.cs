@@ -48,7 +48,7 @@ if (!builder.Environment.IsDevelopment())
 }
 
 builder.Services.AddMoviePicker(builder.Configuration, builder.Environment);
-builder.Services.AddMoviePickerAuthentication();
+builder.Services.AddMoviePickerAuthentication(builder.Configuration);
 builder.Services.AddMoviePickerRateLimiter(builder.Environment);
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>

@@ -6,6 +6,8 @@ namespace MoviePicker.Api.Tests.Infrastructure.Persistence.InMemory;
 
 public sealed class InMemoryUserRepositoryTests
 {
+    private static readonly string[] NewestHandlesFirst = ["newer", "older"];
+
     private readonly InMemoryUserRepository _repo = new();
 
     private static User Mk(
@@ -96,6 +98,22 @@ public sealed class InMemoryUserRepositoryTests
     }
 
     [Fact]
+    public async Task UpdateAsync_PreservesSupporterSinceAndAvatarId()
+    {
+        var since = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        var created = await _repo.AddAsync(Mk() with { SupporterSince = since, AvatarId = "bolt" });
+
+        var updated = await _repo.UpdateAsync(created with { DisplayName = "Alice renamed" });
+
+        Assert.Equal(since, updated.SupporterSince);
+        Assert.Equal("bolt", updated.AvatarId);
+
+        var reloaded = await _repo.GetByIdAsync(created.Id);
+        Assert.Equal(since, reloaded!.SupporterSince);
+        Assert.Equal("bolt", reloaded.AvatarId);
+    }
+
+    [Fact]
     public async Task DeleteAsync_RemovesUserAndIndexes()
     {
         var created = await _repo.AddAsync(Mk(email: "alice@test.local", handle: "alice"));
@@ -130,7 +148,7 @@ public sealed class InMemoryUserRepositoryTests
 
         var result = await _repo.ListPublicProfilesAsync(100);
 
-        Assert.Equal(new[] { "newer", "older" }, result.Select(p => p.Handle).ToArray());
+        Assert.Equal(NewestHandlesFirst, result.Select(p => p.Handle).ToArray());
     }
 
     [Fact]
@@ -142,5 +160,56 @@ public sealed class InMemoryUserRepositoryTests
         var result = await _repo.ListPublicProfilesAsync(3);
 
         Assert.Equal(3, result.Count);
+    }
+
+    [Fact]
+    public async Task AddAsync_PersistsNotifyOnNewFollower()
+    {
+        var created = await _repo.AddAsync(Mk() with
+        {
+            NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.NewFollower] = false }
+        });
+
+        Assert.False(created.NotifiesOn(UserNotificationType.NewFollower));
+    }
+
+    [Fact]
+    public async Task UpdateAsync_PersistsNotifyOnNewFollower()
+    {
+        var created = await _repo.AddAsync(Mk() with
+        {
+            NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.NewFollower] = true }
+        });
+        var toUpdate = created with
+        {
+            NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.NewFollower] = false }
+        };
+        Assert.False(toUpdate.NotifiesOn(UserNotificationType.NewFollower));
+
+        var updated = await _repo.UpdateAsync(toUpdate);
+
+        Assert.False(updated.NotifiesOn(UserNotificationType.NewFollower));
+        Assert.False((await _repo.GetByIdAsync(created.Id))!.NotifiesOn(UserNotificationType.NewFollower));
+    }
+
+    [Fact]
+    public async Task AddAsync_PersistsLetterboxdUsername()
+    {
+        var created = await _repo.AddAsync(Mk() with { LetterboxdUsername = "dave_v" });
+
+        Assert.Equal("dave_v", created.LetterboxdUsername);
+    }
+
+    [Fact]
+    public async Task ListWithLetterboxdSyncEnabledAsync_ReturnsOnlyConfiguredUsers()
+    {
+        await _repo.AddAsync(Mk(email: "a@test.local", handle: "a") with { LetterboxdUsername = "dave_v" });
+        await _repo.AddAsync(Mk(email: "b@test.local", handle: "b"));
+        await _repo.AddAsync(Mk(email: "c@test.local", handle: "c") with { LetterboxdUsername = "" });
+
+        var result = await _repo.ListWithLetterboxdSyncEnabledAsync();
+
+        Assert.Single(result);
+        Assert.Equal("dave_v", result[0].LetterboxdUsername);
     }
 }

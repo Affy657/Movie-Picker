@@ -1,9 +1,12 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from '@/app/App';
+import { startPwaInstallRuntime } from '@/shared/hooks/usePwaInstall';
 import { initPostHog } from '@/shared/analytics/posthog';
 import { initSentry } from '@/shared/observability/sentry';
 import './index.css';
+
+startPwaInstallRuntime();
 
 void initSentry();
 

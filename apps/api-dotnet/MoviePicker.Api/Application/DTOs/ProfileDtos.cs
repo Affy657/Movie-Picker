@@ -9,6 +9,7 @@ public sealed class PublicProfileResponse
     public DateTimeOffset MemberSince { get; init; }
     public int FollowingCount { get; init; }
     public int FollowersCount { get; init; }
+    public bool IsSupporter { get; init; }
     public bool? IsFollowedByMe { get; init; }
 }
 

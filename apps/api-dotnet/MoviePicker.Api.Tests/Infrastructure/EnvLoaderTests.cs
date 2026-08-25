@@ -96,6 +96,38 @@ public sealed class EnvLoaderTests : IDisposable
     }
 
     [Fact]
+    public void LoadFromEnvFileIfExists_MergesParentEnvAfterNestedEnv()
+    {
+        var parent = NewTempDir();
+        var child = Path.Combine(parent, "api");
+        Directory.CreateDirectory(child);
+        var nestedKey = UniqueKey();
+        var parentKey = UniqueKey();
+        File.WriteAllText(Path.Combine(child, ".env"), $"{nestedKey}=nested-only\n");
+        File.WriteAllText(Path.Combine(parent, ".env"), $"{parentKey}=from-root\n");
+
+        EnvLoader.LoadFromEnvFileIfExists(child);
+
+        Assert.Equal("nested-only", Environment.GetEnvironmentVariable(nestedKey));
+        Assert.Equal("from-root", Environment.GetEnvironmentVariable(parentKey));
+    }
+
+    [Fact]
+    public void LoadFromEnvFileIfExists_CloserEnvWinsOverParentForSameKey()
+    {
+        var parent = NewTempDir();
+        var child = Path.Combine(parent, "api");
+        Directory.CreateDirectory(child);
+        var key = UniqueKey();
+        File.WriteAllText(Path.Combine(child, ".env"), $"{key}=nested\n");
+        File.WriteAllText(Path.Combine(parent, ".env"), $"{key}=from-root\n");
+
+        EnvLoader.LoadFromEnvFileIfExists(child);
+
+        Assert.Equal("nested", Environment.GetEnvironmentVariable(key));
+    }
+
+    [Fact]
     public void LoadFromEnvFileIfExists_DoesNotOverrideExistingVariable()
     {
         var dir = NewTempDir();

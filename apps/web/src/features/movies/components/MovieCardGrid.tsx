@@ -1,18 +1,50 @@
 import { memo } from 'react';
+import clsx from 'clsx';
+import { ImageOff } from 'lucide-react';
 import { ModeIcon, TYPE_ORDER } from '@/features/movies/components/WatchProviderChips';
 import {
-  CardKebab,
+  MovieCardKebab,
   CardModals,
   CardProposerFooter,
+  CardSelectionOverlay,
   MovieNote,
   SeenButton,
   VoteBar,
   useMovieCardState,
   type MovieCardCommonProps,
 } from '@/features/movies/components/movieCardParts';
+import cardPartsStyles from './movieCardParts.module.css';
 import styles from './MovieCardGrid.module.css';
 
 const KNOWN_PROVIDER_TYPES = new Set<string>(TYPE_ORDER);
+
+function GridPoster({
+  src,
+  srcSet,
+  eager,
+}: Readonly<{ src: string | null | undefined; srcSet?: string; eager: boolean }>) {
+  if (!src) {
+    return (
+      <div className={styles.posterPlaceholder} aria-hidden>
+        <ImageOff size={28} />
+      </div>
+    );
+  }
+  return (
+    <img
+      src={src}
+      srcSet={srcSet}
+      sizes="(max-width: 479px) 100vw, 220px"
+      alt=""
+      className={styles.poster}
+      width={120}
+      height={180}
+      loading={eager ? 'eager' : 'lazy'}
+      fetchPriority={eager ? 'high' : 'auto'}
+      decoding="async"
+    />
+  );
+}
 
 export const MovieCardGrid = memo(function MovieCardGrid({
   movie: m,
@@ -30,6 +62,11 @@ export const MovieCardGrid = memo(function MovieCardGrid({
   participantAvatarsByPseudo,
   ratingScale,
   eager = false,
+  isInWatchlist,
+  onToggleWatchlist,
+  onToggleWheelExclusion,
+  selection,
+  isWinner = false,
 }: MovieCardCommonProps) {
   const s = useMovieCardState({
     movie: m,
@@ -53,45 +90,45 @@ export const MovieCardGrid = memo(function MovieCardGrid({
     { type: 'other', count: s.providers.filter((p) => !KNOWN_PROVIDER_TYPES.has(p.type)).length },
   ].filter((g) => g.count > 0);
 
+  const excluded = !!m.excludedFromWheel;
+  const selecting = !!selection?.active && !excluded;
+
   return (
-    <li className={styles.card}>
-      <div className={styles.posterRegion}>
-        {s.posterSrc ? (
-          <img
-            src={s.posterSrc}
-            srcSet={s.posterSrcSet}
-            sizes="(max-width: 479px) 100vw, 220px"
-            alt=""
-            className={styles.poster}
-            width={120}
-            height={180}
-            loading={eager ? 'eager' : 'lazy'}
-            fetchPriority={eager ? 'high' : 'auto'}
-            decoding="async"
-          />
-        ) : (
-          <div className={styles.posterPlaceholder} aria-hidden>
-            {t('movies.search.posterPlaceholder')}
+    <li
+      className={clsx(
+        styles.card,
+        isWinner && styles.cardWinner,
+        excluded && cardPartsStyles.excluded,
+        selecting && cardPartsStyles.selectable
+      )}
+    >
+      {excluded && <span className="visually-hidden">{t('movies.list.excludedFromWheelSr')}</span>}
+      {selecting && <CardSelectionOverlay movie={m} selection={selection} t={t} />}
+      <div className={styles.posterRegion} inert={selecting}>
+        <GridPoster src={s.posterSrc} srcSet={s.posterSrcSet} eager={eager} />
+
+        {(isWinner || m.mediaType === 'tv') && (
+          <div className={styles.badgeStack}>
+            {isWinner ? (
+              <span className={styles.winnerBadge}>{t('movies.list.winnerBadge')}</span>
+            ) : null}
+            {m.mediaType === 'tv' ? (
+              <span className={styles.tvBadge}>{t('movies.list.tvBadge')}</span>
+            ) : null}
           </div>
         )}
 
-        {m.mediaType === 'tv' && <span className={styles.tvBadge}>{t('movies.list.tvBadge')}</span>}
-
-        {(s.hasDetails || s.canRemove) && (
-          <div className={styles.kebabSlot}>
-            <CardKebab
-              title={m.title}
-              year={m.year}
-              tmdbId={m.tmdbId}
-              mediaType={m.mediaType}
-              isMine={s.isMine}
-              isHost={isHost}
-              canRemove={s.canRemove}
-              onRemove={() => void onRemove(m.id)}
-              t={t}
-            />
-          </div>
-        )}
+        <MovieCardKebab
+          movie={m}
+          card={s}
+          slotClassName={styles.kebabSlot ?? ''}
+          isHost={isHost}
+          isInWatchlist={isInWatchlist}
+          onRemove={onRemove}
+          onToggleWatchlist={onToggleWatchlist}
+          onToggleWheelExclusion={onToggleWheelExclusion}
+          t={t}
+        />
 
         <div className={styles.panel}>
           <div className={styles.titleBlock}>
@@ -115,7 +152,7 @@ export const MovieCardGrid = memo(function MovieCardGrid({
                     {providerGroups.map((g) => (
                       <span key={g.type} className={styles.metaProvGroup}>
                         <ModeIcon type={g.type} size={12} />
-                        <span>{g.count}</span>
+                        <span className={styles.metaProvCount}>{g.count}</span>
                       </span>
                     ))}
                   </button>

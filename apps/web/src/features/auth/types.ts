@@ -11,4 +11,11 @@ export interface UserProfile {
   handle: string;
   bio: string | null;
   isProfilePublic: boolean;
+  letterboxdUsername: string | null;
+  letterboxdLastSyncAt: string | null;
+  letterboxdLastSyncError: string | null;
+  letterboxdPendingReconciliationCount: number;
+  hasPassword: boolean;
+  linkedProviders: string[];
+  createdAt?: string;
 }

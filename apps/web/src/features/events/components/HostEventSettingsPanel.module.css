@@ -24,6 +24,33 @@
   backdrop-filter: blur(2px);
 }
 
+.handle {
+  display: none;
+  align-self: center;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 0.25rem;
+  margin-top: 0.6rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+}
+
+@media (max-width: 47.9375rem) {
+  .dialog {
+    position: fixed;
+    inset: auto 0 0 0;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    max-height: min(680px, 90dvh);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .handle {
+    display: block;
+  }
+}
+
 .dialogBody {
   overflow-y: auto;
   flex: 1 1 auto;
@@ -36,6 +63,7 @@
   flex-shrink: 0;
   padding: 0.85rem 1.1rem;
   border-bottom: 1px solid var(--color-border-subtle);
+  line-height: 1;
 }
 
 .panelTitle {
@@ -45,6 +73,7 @@
   font-size: var(--font-size-md);
   font-weight: 600;
   letter-spacing: var(--tracking-snug);
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .panelClose {
@@ -137,6 +166,10 @@
     background var(--duration-base) var(--ease-default),
     color var(--duration-base) var(--ease-default),
     border-color var(--duration-base) var(--ease-default);
+}
+
+.clearThemeLabel {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .clearThemeBtn:hover {

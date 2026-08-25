@@ -41,6 +41,10 @@ public sealed class MovieDocument
     [BsonIgnoreIfNull]
     public List<int>? GenreIds { get; set; }
 
+    [BsonElement("excludedFromWheel")]
+    [BsonIgnoreIfDefault]
+    public bool ExcludedFromWheel { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 

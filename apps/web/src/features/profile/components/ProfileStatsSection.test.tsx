@@ -11,6 +11,8 @@ const EMPTY_STATS: UserStats = {
   votesCast: 0,
   winningProposals: 0,
   moviesSeen: 0,
+  currentStreakWeeks: 0,
+  bestStreakWeeks: 0,
   favoriteGenres: [],
   dailyActivity: [],
 };
@@ -29,9 +31,10 @@ describe('ProfileStatsSection', () => {
     expect(screen.getByRole('heading', { level: 2 })).toBeInTheDocument();
   });
 
-  it("affiche l'état vide si toutes les stats sont à 0", () => {
+  it("affiche l'état vide si toutes les stats sont à 0, sans la grille de compteurs à zéro", () => {
     renderSection(EMPTY_STATS);
     expect(screen.getByText(/aucune activité/i)).toBeInTheDocument();
+    expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
   });
 
   it("n'affiche pas l'état vide si un compteur est > 0", () => {
@@ -47,6 +50,11 @@ describe('ProfileStatsSection', () => {
   it('affiche la valeur du compteur eventsCreated', () => {
     renderSection({ ...EMPTY_STATS, eventsCreated: 7 });
     expect(screen.getByText('7')).toBeInTheDocument();
+  });
+
+  it('ne montre plus le streak dans la grille des compteurs (déplacé dans la pastille de série)', () => {
+    renderSection({ ...EMPTY_STATS, currentStreakWeeks: 3, bestStreakWeeks: 5 });
+    expect(screen.queryByText(/meilleur streak/i)).toBeNull();
   });
 
   it('affiche le panneau activité si au moins un jour a count > 0', async () => {

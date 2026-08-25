@@ -98,6 +98,13 @@ describe('EventDetailHeader', () => {
     expect(onToggleParticipants).toHaveBeenCalledTimes(1);
   });
 
+  it('affiche le thème sous le titre de la soirée', () => {
+    renderHeader(<EventDetailHeader {...baseProps} eventTheme="Comédie noire" />);
+    const heading = screen.getByRole('heading', { name: 'Soirée ciné' });
+    const theme = screen.getByRole('status', { name: /Thème de soirée : Comédie noire/i });
+    expect(heading.compareDocumentPosition(theme) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('n’expose l’engrenage de réglages que si un gestionnaire est fourni', () => {
     const { unmount } = renderHeader(<EventDetailHeader {...baseProps} />);
     expect(

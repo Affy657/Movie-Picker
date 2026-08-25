@@ -74,7 +74,7 @@ public sealed class MemoryPosterImageStore : IPosterImageStore
         if (entry.Data is { Length: > 0 } bytes
             && !string.IsNullOrWhiteSpace(entry.ContentType)
             && entry.ExpiresAtUtc > now)
-            return new PosterImageBlob(bytes, entry.ContentType!);
+            return new PosterImageBlob(bytes, entry.ContentType);
 
         if (string.IsNullOrWhiteSpace(entry.SourceUrl)
             || !TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(entry.SourceUrl, out var source))
@@ -87,7 +87,7 @@ public sealed class MemoryPosterImageStore : IPosterImageStore
             if (blob is null)
             {
                 if (entry.Data is { Length: > 0 } stale && !string.IsNullOrWhiteSpace(entry.ContentType))
-                    return new PosterImageBlob(stale, entry.ContentType!);
+                    return new PosterImageBlob(stale, entry.ContentType);
                 return null;
             }
 
@@ -100,7 +100,7 @@ public sealed class MemoryPosterImageStore : IPosterImageStore
         {
             _logger.LogWarning(ex, "Échec téléchargement affiche TMDB (mémoire) pour {Key}", k);
             if (entry.Data is { Length: > 0 } fallback && !string.IsNullOrWhiteSpace(entry.ContentType))
-                return new PosterImageBlob(fallback, entry.ContentType!);
+                return new PosterImageBlob(fallback, entry.ContentType);
             return null;
         }
     }

@@ -36,6 +36,7 @@ export default function MovieDetailsModal({
     <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>
       {open && (
         <>
+          <span className={styles.handle} aria-hidden="true" />
           <div className={styles.header}>
             <h2 id={titleId} className={styles.title}>
               {movieTitle}

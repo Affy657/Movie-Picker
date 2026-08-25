@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
@@ -71,7 +71,7 @@ describe('InviteModal (MSW)', () => {
     renderModal();
     await screen.findByText('Bob');
     await user.click(screen.getByRole('button', { name: /inviter bob/i }));
-    await waitFor(() => expect(screen.getByText(/invité/i)).toBeInTheDocument());
+    expect(await screen.findByText(/invité/i)).toBeInTheDocument();
     expect(posted).toBe(true);
     expect(screen.queryByRole('button', { name: /inviter bob/i })).not.toBeInTheDocument();
   });

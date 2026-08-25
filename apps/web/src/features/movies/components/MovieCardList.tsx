@@ -1,16 +1,55 @@
 import { memo } from 'react';
+import clsx from 'clsx';
+import { ImageOff } from 'lucide-react';
 import WatchProviderChips, { ModeIcon } from '@/features/movies/components/WatchProviderChips';
 import {
-  CardKebab,
+  MovieCardKebab,
   CardModals,
   CardProposerFooter,
+  CardSelectionOverlay,
   MovieNote,
   SeenButton,
   VoteBar,
   useMovieCardState,
   type MovieCardCommonProps,
 } from '@/features/movies/components/movieCardParts';
+import cardPartsStyles from './movieCardParts.module.css';
 import styles from './MovieCardList.module.css';
+
+function ListPoster({
+  src,
+  srcSet,
+  eager,
+}: Readonly<{ src: string | null | undefined; srcSet?: string; eager: boolean }>) {
+  if (!src) {
+    return (
+      <div className={styles.posterPlaceholder} aria-hidden>
+        <ImageOff size={28} />
+      </div>
+    );
+  }
+  return (
+    <>
+      <div
+        className={styles.posterBackdrop}
+        style={{ backgroundImage: `url("${encodeURI(src)}")` }}
+        aria-hidden
+      />
+      <img
+        src={src}
+        srcSet={srcSet}
+        sizes="(max-width: 479px) 33vw, 200px"
+        alt=""
+        className={styles.poster}
+        width={120}
+        height={180}
+        loading={eager ? 'eager' : 'lazy'}
+        fetchPriority={eager ? 'high' : 'auto'}
+        decoding="async"
+      />
+    </>
+  );
+}
 
 export const MovieCardList = memo(function MovieCardList({
   movie: m,
@@ -28,6 +67,11 @@ export const MovieCardList = memo(function MovieCardList({
   participantAvatarsByPseudo,
   ratingScale,
   eager = false,
+  isInWatchlist,
+  onToggleWatchlist,
+  onToggleWheelExclusion,
+  selection,
+  isWinner = false,
 }: MovieCardCommonProps) {
   const s = useMovieCardState({
     movie: m,
@@ -48,56 +92,45 @@ export const MovieCardList = memo(function MovieCardList({
   const buyCount = s.providers.filter((p) => p.type === 'buy').length;
   const hasRenderableOffers = flatrateProviders.length > 0 || rentCount > 0 || buyCount > 0;
 
+  const excluded = !!m.excludedFromWheel;
+  const selecting = !!selection?.active && !excluded;
+
   return (
-    <li className={styles.card}>
-      <div className={styles.posterCol}>
-        {s.posterSrc ? (
-          <>
-            <div
-              className={styles.posterBackdrop}
-              style={{ backgroundImage: `url("${encodeURI(s.posterSrc)}")` }}
-              aria-hidden
-            />
-            <img
-              src={s.posterSrc}
-              srcSet={s.posterSrcSet}
-              sizes="(max-width: 479px) 33vw, 200px"
-              alt=""
-              className={styles.poster}
-              width={120}
-              height={180}
-              loading={eager ? 'eager' : 'lazy'}
-              fetchPriority={eager ? 'high' : 'auto'}
-              decoding="async"
-            />
-          </>
-        ) : (
-          <div className={styles.posterPlaceholder} aria-hidden>
-            {t('movies.search.posterPlaceholder')}
-          </div>
-        )}
+    <li
+      className={clsx(
+        styles.card,
+        isWinner && styles.cardWinner,
+        excluded && cardPartsStyles.excluded,
+        selecting && cardPartsStyles.selectable
+      )}
+    >
+      {excluded && <span className="visually-hidden">{t('movies.list.excludedFromWheelSr')}</span>}
+      {selecting && <CardSelectionOverlay movie={m} selection={selection} t={t} />}
+      <div className={styles.posterCol} inert={selecting}>
+        <ListPoster src={s.posterSrc} srcSet={s.posterSrcSet} eager={eager} />
         {m.mediaType === 'tv' && <span className={styles.tvBadge}>{t('movies.list.tvBadge')}</span>}
       </div>
 
-      <div className={styles.info}>
-        {(s.hasDetails || s.canRemove) && (
-          <div className={styles.kebabSlot}>
-            <CardKebab
-              title={m.title}
-              year={m.year}
-              tmdbId={m.tmdbId}
-              mediaType={m.mediaType}
-              isMine={s.isMine}
-              isHost={isHost}
-              canRemove={s.canRemove}
-              onRemove={() => void onRemove(m.id)}
-              t={t}
-            />
-          </div>
-        )}
-        <h3 className={styles.title} title={m.title}>
-          {m.title}
-        </h3>
+      <div className={styles.info} inert={selecting}>
+        <MovieCardKebab
+          movie={m}
+          card={s}
+          slotClassName={styles.kebabSlot ?? ''}
+          isHost={isHost}
+          isInWatchlist={isInWatchlist}
+          onRemove={onRemove}
+          onToggleWatchlist={onToggleWatchlist}
+          onToggleWheelExclusion={onToggleWheelExclusion}
+          t={t}
+        />
+        <div className={styles.titleRow}>
+          <h3 className={styles.title} title={m.title}>
+            {m.title}
+          </h3>
+          {isWinner ? (
+            <span className={styles.winnerBadge}>{t('movies.list.winnerBadge')}</span>
+          ) : null}
+        </div>
 
         <p className={styles.metaLine}>
           {m.year ? <span>{m.year}</span> : null}
@@ -130,7 +163,7 @@ export const MovieCardList = memo(function MovieCardList({
                 })}
               >
                 <ModeIcon type="rent" size={13} />
-                {rentCount}
+                <span className={styles.paidChipCount}>{rentCount}</span>
               </button>
             )}
             {buyCount > 0 && (
@@ -144,7 +177,7 @@ export const MovieCardList = memo(function MovieCardList({
                 })}
               >
                 <ModeIcon type="buy" size={13} />
-                {buyCount}
+                <span className={styles.paidChipCount}>{buyCount}</span>
               </button>
             )}
           </div>

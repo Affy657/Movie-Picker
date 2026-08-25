@@ -16,8 +16,13 @@ describe('formatTmdbVote', () => {
     expect(formatTmdbVote(8.46)).toBe('4.2/5');
   });
 
-  it('formate zéro', () => {
-    expect(formatTmdbVote(0)).toBe('0.0/5');
+  it('retourne null pour une note nulle (film non noté)', () => {
+    expect(formatTmdbVote(0)).toBeNull();
+    expect(formatTmdbVote(0, 'ten')).toBeNull();
+  });
+
+  it('formate une note faible mais réelle', () => {
+    expect(formatTmdbVote(0.4)).toBe('0.2/5');
   });
 
   it('plafond TMDB (10) → 5/5', () => {

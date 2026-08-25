@@ -76,6 +76,8 @@ export interface MockUserStats {
   votesCast?: number;
   winningProposals?: number;
   moviesSeen?: number;
+  currentStreakWeeks?: number;
+  bestStreakWeeks?: number;
   favoriteGenres?: { genreId: number; count: number }[];
   dailyActivity?: { date: string; count: number }[];
 }
@@ -89,6 +91,8 @@ export function createUserStatsHandler(handle: string, stats?: MockUserStats) {
       votesCast: stats?.votesCast ?? 0,
       winningProposals: stats?.winningProposals ?? 0,
       moviesSeen: stats?.moviesSeen ?? 0,
+      currentStreakWeeks: stats?.currentStreakWeeks ?? 0,
+      bestStreakWeeks: stats?.bestStreakWeeks ?? 0,
       favoriteGenres: stats?.favoriteGenres ?? [],
       dailyActivity: stats?.dailyActivity ?? [],
     })

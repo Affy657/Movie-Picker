@@ -27,9 +27,27 @@ public sealed class ResendEmailSender : IEmailSender
     public async Task SendAsync(EmailMessage message, CancellationToken ct = default)
     {
         var payload = BuildPayload(message);
+        using var res = await PostWithRetryAsync(payload, ct);
+        if (!res.IsSuccessStatusCode)
+        {
+            var status = (int)res.StatusCode;
+            string body;
+            try { body = await res.Content.ReadAsStringAsync(ct); }
+            catch { body = "<unreadable>"; }
+            _logger.LogWarning("Resend send failed status={Status} tag={Tag} body={Body}",
+                status, message.Tag ?? "n/a", Truncate(body, 256));
+            throw new EmailDeliveryException(
+                $"Resend returned {status}",
+                statusCode: status);
+        }
 
+        _logger.LogInformation("EmailSent tag={Tag} to_masked={ToMasked} status={Status}",
+            message.Tag ?? "n/a", EmailMasking.Mask(message.ToEmail), (int)res.StatusCode);
+    }
+
+    private async Task<HttpResponseMessage> PostWithRetryAsync(object payload, CancellationToken ct)
+    {
         var attempt = 0;
-        HttpResponseMessage? res = null;
         while (true)
         {
             attempt++;
@@ -53,38 +71,14 @@ public sealed class ResendEmailSender : IEmailSender
                 throw new EmailDeliveryException("Timeout sending email", inner: ex);
             }
 
-            res = response;
-
-            if (res.StatusCode == HttpStatusCode.TooManyRequests && attempt == 1)
+            if (response.StatusCode == HttpStatusCode.TooManyRequests && attempt == 1)
             {
-                res.Dispose();
+                response.Dispose();
                 await Task.Delay(RetryDelay, ct);
                 continue;
             }
-            break;
-        }
 
-        try
-        {
-            if (!res!.IsSuccessStatusCode)
-            {
-                var status = (int)res.StatusCode;
-                string body;
-                try { body = await res.Content.ReadAsStringAsync(ct); }
-                catch { body = "<unreadable>"; }
-                _logger.LogWarning("Resend send failed status={Status} tag={Tag} body={Body}",
-                    status, message.Tag ?? "n/a", Truncate(body, 256));
-                throw new EmailDeliveryException(
-                    $"Resend returned {status}",
-                    statusCode: status);
-            }
-
-            _logger.LogInformation("EmailSent tag={Tag} to_masked={ToMasked} status={Status}",
-                message.Tag ?? "n/a", EmailMasking.Mask(message.ToEmail), (int)res.StatusCode);
-        }
-        finally
-        {
-            res!.Dispose();
+            return response;
         }
     }
 

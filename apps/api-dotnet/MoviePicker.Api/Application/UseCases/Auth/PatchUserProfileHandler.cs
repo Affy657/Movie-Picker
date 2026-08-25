@@ -31,11 +31,28 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             && request.AvatarId is null
             && request.Handle is null
             && request.Bio is null
-            && request.IsProfilePublic is null;
+            && request.IsProfilePublic is null
+            && request.LetterboxdUsername is null;
 
         if (nothingToUpdate)
             return ToResponse(user);
 
+        var updated = await ApplyRequestAsync(user, request, ct);
+
+        User saved;
+        try
+        {
+            saved = await _users.UpdateAsync(updated, ct);
+        }
+        catch (ConflictException ex) when (ex.Message == "handle_conflict")
+        {
+            throw new ConflictException("Ce handle est déjà pris.");
+        }
+        return ToResponse(saved);
+    }
+
+    private async Task<User> ApplyRequestAsync(User user, PatchUserProfileRequest request, CancellationToken ct)
+    {
         var displayName = user.DisplayName;
         if (request.DisplayName is not null)
         {
@@ -63,19 +80,16 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
         if (request.Handle is not null)
             handle = await ResolveHandleAsync(request.Handle, user, ct);
 
-        var bio = user.Bio;
-        if (request.Bio is not null)
-        {
-            var bioErr = HandlePolicy.ValidateBio(request.Bio);
-            if (bioErr is not null)
-                throw new BadRequestException(bioErr);
-            var trimmed = request.Bio.Trim();
-            bio = trimmed.Length == 0 ? null : trimmed;
-        }
-
+        var bio = ApplyBio(user.Bio, request.Bio);
         var isProfilePublic = request.IsProfilePublic ?? user.IsProfilePublic;
+        var letterboxdUsername = ApplyLetterboxdUsername(user.LetterboxdUsername, request.LetterboxdUsername);
 
-        var updated = user with
+        var letterboxdChanged = !string.Equals(
+            letterboxdUsername,
+            user.LetterboxdUsername,
+            StringComparison.OrdinalIgnoreCase);
+
+        return user with
         {
             DisplayName = displayName,
             UiTheme = theme,
@@ -85,19 +99,11 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             Handle = handle,
             Bio = bio,
             IsProfilePublic = isProfilePublic,
+            LetterboxdUsername = letterboxdUsername,
+            LetterboxdLastSyncAt = letterboxdChanged ? null : user.LetterboxdLastSyncAt,
+            LetterboxdLastSyncError = letterboxdChanged ? null : user.LetterboxdLastSyncError,
             UpdatedAt = _clock.GetUtcNow()
         };
-
-        User saved;
-        try
-        {
-            saved = await _users.UpdateAsync(updated, ct);
-        }
-        catch (ConflictException ex) when (ex.Message == "handle_conflict")
-        {
-            throw new ConflictException("Ce handle est déjà pris.");
-        }
-        return ToResponse(saved);
     }
 
     private async Task<string> ResolveHandleAsync(string requested, User user, CancellationToken ct)
@@ -128,9 +134,39 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
         AvatarId = user.AvatarId,
         Handle = user.Handle,
         Bio = user.Bio,
-        IsProfilePublic = user.IsProfilePublic
+        IsProfilePublic = user.IsProfilePublic,
+        LetterboxdUsername = user.LetterboxdUsername,
+        LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,
+        LetterboxdLastSyncError = user.LetterboxdLastSyncError,
+        HasPassword = !string.IsNullOrEmpty(user.PasswordHash),
+        LinkedProviders = user.Identities.Select(i => i.Provider).ToList(),
+        CreatedAt = user.CreatedAt
     };
 
     private static T ParseEnum<T>(string raw, T defaultValue) where T : struct, Enum =>
         Enum.TryParse<T>(raw, ignoreCase: true, out var result) ? result : defaultValue;
+
+    private static string? ApplyBio(string? current, string? requested)
+    {
+        if (requested is null)
+            return current;
+        var bioErr = HandlePolicy.ValidateBio(requested);
+        if (bioErr is not null)
+            throw new BadRequestException(bioErr);
+        var trimmed = requested.Trim();
+        return trimmed.Length == 0 ? null : trimmed;
+    }
+
+    private static string? ApplyLetterboxdUsername(string? current, string? requested)
+    {
+        if (requested is null)
+            return current;
+        var trimmed = requested.Trim();
+        if (trimmed.Length > 0 && !IsValidLetterboxdUsername(trimmed))
+            throw new BadRequestException("Le pseudo Letterboxd ne peut contenir que des lettres, chiffres et underscores.");
+        return trimmed.Length == 0 ? null : trimmed;
+    }
+
+    private static bool IsValidLetterboxdUsername(string username) =>
+        username.Length <= 40 && username.All(c => char.IsAsciiLetterOrDigit(c) || c == '_');
 }

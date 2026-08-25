@@ -12,8 +12,9 @@ Découpage par version côté **métier / utilisateur**.
 
 - **MVP** : parcours minimal utilisable côté utilisateur.
 - **V1, V1.1, V1.2** : releases produit progressives sur la spec complète, sans casser le cœur métier.
-- **V1.3, V1.4, V1.5** : polish, enrichissement, outils hôte et nouvelles surfaces produit.
+- **V1.3, V1.4, V1.5, V1.6** : polish, enrichissement, outils hôte et nouvelles surfaces produit.
 - **Backlog** : idées et sujets non planifiés sur une date de release (tri régulier).
+- **À faire** : ajouter une taille t-shirt (S/M/L/XL) par item pour comparer la charge entre versions plutôt qu'au nombre de tickets — pas encore fait, à appliquer rétroactivement.
 
 ---
 
@@ -104,15 +105,18 @@ Découpage par version côté **métier / utilisateur**.
 
 ## 📋 V1.4 – Planifiée
 
-**Objectif** : outils hôte avancés, bibliothèque personnelle, engagement utilisateur et ouverture de la plateforme — watchlist, intégration Letterboxd, sélection manuelle, streak de soirées, connexion sociale et dons.
+**Objectif** : outils hôte avancés, bibliothèque personnelle, engagement utilisateur et ouverture de la plateforme — watchlist, intégration Letterboxd, sélection manuelle, streak de soirées, connexion sociale, dons, bouton pour proposer une idée et modale de nouveautés.
 
-- ⬜ **Watchlist personnelle** : liste de films « à voir » par utilisateur ; ajout depuis la recherche TMDB ; proposition rapide d'un film depuis sa watchlist directement dans une soirée.
-- ⬜ **Intégration Letterboxd** : import de la watchlist (films à voir) et de la liste « déjà vu » depuis un export CSV Letterboxd ou via leur flux RSS public.
-- ⬜ **Sélection manuelle du film choisi** : en alternative au tirage par la roue, l'hôte peut activer un mode « choix manuel » — toutes les cards de films entrent en animation de tremblement, l'hôte clique sur le film choisi, puis l'animation de fin habituelle (identique à la roue) se déclenche pour le révéler. Nécessite de remplacer « film gagnant / vainqueur » par « film choisi » dans toute l'UI (libellés, i18n FR/EN, meta SEO) avant ce chantier, sans quoi le vocabulaire présuppose la roue.
-- ⬜ **Flamme streak de soirées** : compteur de semaines consécutives durant lesquelles l'utilisateur a participé à au moins une soirée ; icône flamme + chiffre affichés sur le profil public ; remise à zéro automatique si une semaine calendar entière passe sans activité.
-- ⬜ **Exclusion d'un film de la roue** : l'hôte peut, via le menu d'actions (trois petits points) d'une card film, exclure ce film du prochain tirage sans le retirer de la liste de propositions ; le film reste visible, votable et commentable, mais affiché avec une mise en évidence visuelle (grisé, contour rouge) signalant son exclusion ; réversible par l'hôte tant que la roue n'a pas été lancée.
-- ⬜ **Connexion sociale (OAuth)** : Google, Apple, GitHub, Microsoft en complément de l'email / mot de passe.
-- ⬜ **Système de dons** : page de soutien au projet (Stripe, Buy Me a Coffee, Ko-fi) ; strictement facultatif, sans impact fonctionnel.
+- ✅ **Watchlist personnelle** : liste de films « à voir » par utilisateur ; ajout depuis la recherche TMDB ; proposition rapide d'un film depuis sa watchlist directement dans une soirée.
+- ✅ **Intégration Letterboxd** : synchronisation bidirectionnelle de la watchlist à partir du pseudo Letterboxd, rafraîchie automatiquement. Import immédiat à la demande avec écran de revue des correspondances, sans jamais toucher aux films ajoutés directement dans Movie Picker.
+- ✅ **Sélection manuelle du film gagnant** : alternative au tirage par la roue — l'hôte bascule en « choix manuel », les cards de films se mettent à trembler et il désigne lui-même le gagnant. Même animation de révélation qu'un tirage, badge « Choisi par l'hôte » et notification aux participants.
+- ✅ **Flamme streak de soirées** : compteur de semaines consécutives où l'utilisateur a participé à une soirée avec tirage, affiché en flamme sur son profil public. Colorée et animée tant que le streak est actif, grisée sinon ; le meilleur streak atteint figure dans les statistiques.
+- ✅ **Exclusion d'un film de la roue** : l'hôte écarte un film du tirage sans le retirer de la liste — il reste visible, votable et commentable, mais grisé. Réversible à tout moment, y compris après un tirage.
+- ✅ **Connexion sociale (OAuth)** : connexion et inscription via Google ou GitHub en complément de l'e-mail / mot de passe. Section « Connexions » sur la page Compte pour lier ou délier un fournisseur, sans jamais pouvoir retirer sa dernière méthode de connexion.
+- ✅ **Système de dons** : page publique « Soutenir Movie Picker » qui expose les frais réels du service et renvoie vers Ko-fi pour un don libre, ponctuel ou mensuel. Strictement facultatif — aucune fonctionnalité réservée aux donateurs, la seule contrepartie est un badge « Soutien » décoratif sur le profil public.
+- ✅ **Modale de nouveautés** : à la première visite suivant une mise à jour, une modale résume ce qui a changé dans la version. Affichée une seule fois par version, et consultable ensuite à la demande.
+- ✅ **Bouton « Proposer une idée »** : action unique accessible depuis le footer ou le menu compte — titre + description libre ; la soumission crée automatiquement une GitHub Issue sur le dépôt via l'API GitHub (token serveur, aucune credential exposée côté client) ; confirmation visuelle après envoi.
+- ✅ **Bouton d'installation PWA** (2026-08-24) : « Installer l'app » dans le footer et le menu compte ; prompt natif Chrome/Edge/Android, guide iOS et navigateurs in-app, masqué une fois l'app ouverte en standalone.
 
 ---
 
@@ -122,7 +126,7 @@ Découpage par version côté **métier / utilisateur**.
 
 ### 🏠 Home page
 
-> Page accessible sans compte, avec des blocs supplémentaires qui apparaissent une fois connecté. Remplace et enrichit la landing page actuelle. À découper en plusieurs sprints. Les blocs connecté dépendent de V1.4 (watchlist) et du backlog (templates de soirée).
+> Page accessible sans compte, avec des blocs supplémentaires qui apparaissent une fois connecté. Remplace et enrichit la landing page actuelle. À découper en plusieurs sprints. Les blocs connecté dépendent de V1.4 (watchlist) et de V1.6 (templates de soirée).
 
 **Blocs visibles sans compte**
 - ⬜ **Films tendance de la semaine** : carrousel des films populaires TMDB du moment — nourrit l'inspiration avant même de créer un compte.
@@ -131,14 +135,34 @@ Découpage par version côté **métier / utilisateur**.
 - ⬜ **Collections TMDB** : carrousels de franchises et collections (Marvel, Pixar, trilogies…) ; clic sur un film ouvre sa fiche avec option « Proposer dans une soirée » — données nativement disponibles via l'API TMDB.
 - ⬜ **Recherche de films depuis la home** : barre de recherche TMDB accessible sans compte pour explorer et s'inspirer ; résultats avec fiche rapide (synopsis, note, streaming dispo).
 - ⬜ **Films populaires par genre** : onglets ou filtres (Action, Comédie, Thriller…) sur le bloc tendances pour affiner l'exploration.
+- ⬜ **Actuellement au cinéma** : carrousel des films encore en salles (endpoint TMDB « Now Playing », région FR) — encourage aussi la sortie ciné, pas seulement les soirées streaming à la maison.
 
 **Blocs visibles connecté uniquement**
 - ⬜ **Prochaine soirée mise en avant** : carte principale avec titre, heure et accès direct à la soirée imminente — évite de passer par « Mes soirées ».
 - ⬜ **Invitations en attente** : rappel des invitations non répondues directement sur la home — plus visible que les notifications seules.
-- ⬜ **Soirée rapide** : bouton « Créer une soirée » avec la dernière config utilisée en un clic (dépend des templates de soirée, actuellement au backlog).
+- ⬜ **Soirée rapide** : bouton « Créer une soirée » avec la dernière config utilisée en un clic (dépend des templates de soirée, V1.6).
 - ⬜ **Derniers films gagnants** : les 3-4 films tirés dans ses soirées récentes — évite de reproposer un film qu'on vient de voir.
 - ⬜ **Activité des follows** : fil léger — soirée créée par un ami, film gagnant d'une soirée — donne vie à la dimension sociale sans quitter la home.
 - ⬜ **Films de la watchlist** : accès rapide pour proposer un film en un clic depuis la home (dépend de la watchlist personnelle).
+
+---
+
+## 📋 V1.6 – Planifiée
+
+**Objectif** : diversifier les formats de soirée disponibles pour l'hôte, approfondir la dimension sociale du profil et moderniser l'expérience technique.
+
+- ⬜ **Recherche d'utilisateurs** : trouver un utilisateur par pseudo ou handle pour le suivre ou l'inviter — manque structurel dès lors que le follow existe.
+- ⬜ **Top 3 films préférés sur le profil** : sélectionner et afficher 3 films favoris sur son profil public `/u/:handle` via une recherche TMDB ; cartes visibles par tous les visiteurs, modifiables depuis les paramètres du profil.
+- ⬜ **Détail des films vus** : le compteur « films vus » des statistiques du profil devient cliquable ; ouvre la liste des films marqués « déjà vu » par l'utilisateur sur Movie Picker.
+- ⬜ **Mode Battle / Tournoi** : alternative à la roue — l'hôte lance un tournoi en duels ; deux films s'affrontent, les participants votent, le gagnant passe au tour suivant jusqu'au film champion.
+- ⬜ **Thème imposé par l'hôte** : contrainte de proposition définie à la création ou dans les paramètres de la soirée (genre TMDB, décennie, acteur, réalisateur, ou classification d'âge maximale pour un mode famille) ; les films proposés qui ne respectent pas la contrainte sont refusés côté back avec message explicite ; la contrainte est affichée en bannière sur la page soirée.
+- ⬜ **Avertissements de contenu** : badges violence / horreur / 18+ sur les fiches films ; option hôte « masquer les films 18+ » pour soirées familiales.
+- ⬜ **Co-hôte** : l'hôte peut désigner un ou plusieurs participants comme co-hôtes ; mêmes droits que l'hôte (lancer la roue, expulser un participant, modifier les paramètres) sauf supprimer la soirée.
+- ⬜ **Soirée récurrente** : option à la création pour définir une récurrence (hebdomadaire, bimensuelle, mensuelle) ; à chaque occurrence, une nouvelle soirée est créée automatiquement avec la même configuration et les mêmes participants invités ; l'hôte peut arrêter la récurrence à tout moment.
+- ⬜ **Plusieurs films gagnants par soirée** : l'hôte peut relancer la roue un nombre indéfini de fois sur la même soirée ; chaque nouveau lancement tire parmi les films restants (les gagnants précédents sont exclus du tirage) ; possibilité de relancer la roue sur la sélection complète reste disponible en parallèle ; dépend de la sélection manuelle du film gagnant (V1.4).
+- ⬜ **Templates de soirée** : sauvegarder une configuration de soirée (genres, limite de propositions, type de roue) et la réutiliser en un clic à la création.
+- ⬜ **Synchronisation temps réel et présence** : remplacer le polling actuel par une connexion temps réel — propositions, votes et arrivées de participants apparaissent instantanément sans délai perceptible ; indicateur de présence sur la page soirée (avatars des participants actuellement connectés, signal « en train de proposer un film »).
+- ⬜ **Palette de commandes (Cmd+K)** : accès clavier global aux actions et à la navigation — recherche floue sur les soirées, les films et les utilisateurs, création de soirée, changement de thème ; navigation entièrement au clavier dans la palette.
 
 ---
 
@@ -149,31 +173,32 @@ Découpage par version côté **métier / utilisateur**.
 - **Mode hors-ligne léger** : cache de la dernière vue soirée, bannière « Données en cache, reconnexion en cours » — complexité élevée dans un contexte collaboratif temps réel, à traiter comme un sprint dédié.
 - **Plage de votes configurable** : l'hôte peut définir le nombre max de votes up/down par participant.
 - **i18n étendue** : langues supplémentaires au-delà de FR / EN ; variantes régionales, RTL si besoin.
-- **Avertissements de contenu** : badges violence / horreur / 18+ sur les fiches films ; option hôte « masquer les films 18+ » pour soirées familiales.
 - **Cercles d'amis** : groupes persistants d'utilisateurs réutilisables d'une soirée à l'autre ; invitation en un clic de tout le cercle.
 - **Note d'un film vu** : noter sur 5 un film qu'on vient de voir directement dans Movie Picker ; bouton pour aller aussi le noter sur Letterboxd / IMDb (redirection vers la fiche film).
 - **Partage de soirée (story)** : carte recap partageable (film gagnant, participants, note de chacun) à poster sur les réseaux.
 - **Réactions rapides sur les films** : emojis (❤️ 🔥 😴…) posés sur une card film en complément des votes up/down — plus expressif, moins binaire.
 - **Badges / achievements** : 4 badges (Organisateur, Cinéphile, Faiseur de rois, Juré assidu) — code de calcul supprimé ; à concevoir avec un design abouti et réimplémenter.
 - **Compatibilité ciné** : score de compatibilité cinématographique avec un ami basé sur les films « déjà vu » en commun ; nécessite les statistiques utilisateur et potentiellement l'intégration Letterboxd pour être complet.
-- **Recherche d'utilisateurs** : trouver un utilisateur par pseudo ou handle pour le suivre ou l'inviter — manque structurel dès lors que le follow existe.
 - **Statistique : note moyenne des films gagnants** : ajouter dans la section stats du profil public la moyenne des notes TMDB des films tirés gagnants dans les soirées auxquelles l'utilisateur a participé — aucune infra supplémentaire, les notes TMDB sont déjà stockées avec les films.
-- **Top 3 films préférés sur le profil** : permettre à l'utilisateur de sélectionner et d'afficher 3 films favoris sur son profil public `/u/:handle` via une recherche TMDB ; cartes visibles par tous les visiteurs, modifiables depuis les paramètres du profil.
-- **Formulaire de retour utilisateur** : formulaire in-app accessible depuis le footer ou le menu compte — catégorie (idée de feature / bug / autre), titre, description libre ; la soumission crée automatiquement une GitHub Issue sur le dépôt via l'API GitHub (token serveur, aucune credential exposée côté client) ; confirmation visuelle après envoi.
-- **Mode Battle / Tournoi** : alternative à la roue — l'hôte lance un tournoi en duels ; deux films s'affrontent, les participants votent, le gagnant passe au tour suivant jusqu'au film champion ; plus interactif et peut animer toute la soirée.
-- **Thème imposé par l'hôte** : contrainte de proposition définie à la création ou dans les paramètres de la soirée (genre TMDB, décennie, acteur, réalisateur) ; les films proposés qui ne respectent pas la contrainte sont refusés côté back avec message explicite ; le thème est affiché en bannière sur la page soirée.
-- **Co-hôte** : l'hôte peut désigner un ou plusieurs participants comme co-hôtes ; un co-hôte dispose des mêmes droits que l'hôte (lancer la roue, expulser un participant, modifier les paramètres) sauf supprimer la soirée — couvre le cas où l'organisateur doit s'absenter.
-- **Soirée récurrente** : option à la création pour définir une récurrence (hebdomadaire, bimensuelle, mensuelle) ; à chaque nouvelle occurrence, une nouvelle soirée est créée automatiquement avec la même configuration et les mêmes participants invités ; l'hôte peut arrêter la récurrence à tout moment.
 - **Sondage de disponibilité** : avant de créer une soirée, l'hôte propose plusieurs créneaux (date + heure) à ses follows ou à une liste de contacts ; chaque invité sélectionne les créneaux où il est disponible ; l'hôte voit le récapitulatif des disponibilités et choisit le créneau final — crée automatiquement la soirée avec ce créneau.
 - **Plateformes streaming par compte** : chaque utilisateur renseigne ses abonnements streaming dans ses paramètres de compte (Netflix, Prime Video, Disney+, Canal+…) ; sur la page d'une soirée, un bloc « Plateformes communes » affiche les plateformes partagées par l'ensemble des participants connectés ; les films peuvent optionnellement être filtrés aux seuls disponibles sur ces plateformes communes.
 - **Messages privés** : messagerie directe entre deux utilisateurs qui se suivent mutuellement ; accessible depuis le profil public ou la liste de follows ; permet d'organiser une soirée ou d'échanger en dehors du contexte d'une soirée existante.
-- **Mode famille** : l'hôte définit une classification d'âge maximale à la création ou dans les paramètres (tout public, -12, -16) ; les films proposés dont la certification TMDB (région FR) dépasse le seuil sont refusés côté back avec message explicite ; la contrainte est affichée en bannière sur la page soirée.
 - **Proposition de film anonyme** : option dans les paramètres de la soirée activable par l'hôte — le nom du proposant n'est plus affiché sur les cards de films tant que la roue n'a pas été lancée, pour éviter les votes d'affinité plutôt que de goût.
 - **Chat de soirée** : panneau de discussion en temps réel accessible depuis la page soirée — bouton d'ouverture d'un panneau latéral sur desktop, onglet dédié sur mobile ; destiné à remplacer les mini-commentaires par film (peu utilisés, intégration visuelle imparfaite dans les cards) par un seul espace d'échange centralisé pour toute la soirée.
-- **Modale de nouveautés (« What's new »)** : à chaque nouvelle version majeure, une modale s'affiche aux utilisateurs listant les nouveautés, améliorations et corrections de bugs de la release.
 - **Événements hebdomadaires** : dépend de la home page V1.5 — événement qui change chaque semaine, sous différentes formes possibles (thème à respecter dans le film gagnant d'une soirée, événement saisonnier type Halloween ou Noël, etc.) ; à définir plus précisément une fois la home page livrée.
-- **Plusieurs films gagnants par soirée** : l'hôte peut relancer la roue un nombre indéfini de fois sur la même soirée ; chaque nouveau lancement tire parmi les films restants (les gagnants précédents sont exclus du tirage) ; couvre les soirées à plusieurs films (thème court métrage, plusieurs épisodes d'une franchise…) ; possibilité de relancer la roue sur la sélection complète reste disponible en parallèle ; dépend de la sélection manuelle du film gagnant (V1.4).
-- **Timer avant le début de la soirée** : compte à rebours visible par tous les participants depuis la page soirée jusqu'à l'heure de début prévue.
-- **Templates de soirée** : sauvegarder une configuration de soirée (genres, limite de propositions, type de roue) et la réutiliser en un clic à la création.
-- **Synchronisation temps réel et présence** : remplacer le polling actuel par une connexion temps réel — propositions, votes et arrivées de participants apparaissent instantanément sans délai perceptible ; indicateur de présence sur la page soirée (avatars des participants actuellement connectés, signal « en train de proposer un film »).
-- **Palette de commandes (Cmd+K)** : accès clavier global aux actions et à la navigation — recherche floue sur les soirées, les films et les utilisateurs, création de soirée, changement de thème ; navigation entièrement au clavier dans la palette.
+- **Pioche aléatoire dans la watchlist** : bouton qui tire un film au hasard parmi les films « à voir » de la watchlist, pour trancher rapidement quand on ne sait pas quoi proposer ; le film tiré peut ensuite être proposé dans une soirée en un clic, comme la proposition rapide existante depuis la watchlist.
+- **Écart watchlist Movie Picker / Letterboxd** : pour les utilisateurs synchronisés avec Letterboxd, badge sur les films de la watchlist Movie Picker absents de la watchlist Letterboxd — typiquement des films ajoutés depuis une soirée plutôt qu'importés, que la synchronisation à sens unique ne remonte jamais côté Letterboxd. Dépend de l'intégration Letterboxd (V1.4).
+- **Watchlist d'un autre utilisateur** : consulter la watchlist d'un autre utilisateur depuis son profil public `/u/:handle`, avec un réglage de visibilité dédié indépendant de celui du profil. Dépend de la watchlist personnelle (V1.4) et du profil public (V1.2).
+- **Description de soirée** : champ de description libre en complément du titre à la création d'une soirée, modifiable ensuite par l'hôte ; affiché sur la page soirée pour donner du contexte (thème de la soirée, consignes, etc.).
+- **Soirée à distance synchronisée** : intégrer dans le parcours soirée l'usage d'une extension de visionnage synchronisé existante (Teleparty, Scener…) — une fois le film gagnant désigné, la page soirée guide l'hôte pour lancer une session et partage le lien généré aux participants via le mécanisme d'invitation existant.
+- **Vrai support des séries (progression par épisode)** : suivre la progression de visionnage saison / épisode en cours et le prochain épisode à voir pour une série, via les endpoints TMDB dédiés — remplace le traitement actuel d'une série comme un simple film (réglage hôte « Séries TV OK » sans notion d'épisode). Synergie avec la soirée récurrente (backlog) pour un groupe qui suit la même série au fil des séances.
+- **Connexion Discord, Meta et Twitch** : trois fournisseurs OAuth supplémentaires aux côtés de Google et GitHub, dans la section « Connexions » existante.
+- **Passkeys (WebAuthn)** : connexion sans mot de passe via biométrie ou PIN de l'appareil, en complément de l'e-mail / mot de passe et des fournisseurs OAuth.
+- **Double authentification (2FA/TOTP)** : code à 6 chiffres généré par une app d'authentification, activable en option dans les paramètres de compte.
+- **Sessions actives** : liste des appareils et navigateurs connectés dans la section « Connexions », avec révocation individuelle.
+- **Alerte nouvelle connexion** : e-mail automatique envoyé à l'utilisateur lors d'une connexion depuis un nouvel appareil ou navigateur.
+- **FAQ / Centre d'aide** : page qui répond aux questions récurrentes (fonctionnement de la roue, invitation, votes…), accessible depuis le footer.
+- **Contact / Support** : formulaire ou adresse dédiée pour signaler un problème, distinct du bouton « Proposer une idée » réservé aux suggestions de features.
+- **Onboarding pour nouveaux utilisateurs** : mini tour guidé ou écran de bienvenue à la première connexion, expliquant le concept (créer une soirée, voter, la roue).
+- **Statut du service** : page publique indiquant si l'API et le site sont opérationnels.
+- **Photo de profil personnalisée** : pouvoir uploader une image comme photo de profil, en remplacement de l'avatar généré (DiceBear) actuel.

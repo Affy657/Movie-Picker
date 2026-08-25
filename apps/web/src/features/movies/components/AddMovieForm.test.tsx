@@ -36,9 +36,7 @@ describe('AddMovieForm (MSW)', () => {
     renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
 
     await user.type(screen.getByPlaceholderText(/ajouter un film/i), 'Inception');
-    await waitFor(() => expect(screen.getByText(/film test/i)).toBeInTheDocument(), {
-      timeout: 3000,
-    });
+    expect(await screen.findByText(/film test/i, {}, { timeout: 3000 })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /^ajouter$/i }));
 
     await waitFor(() => expect(onAdded).toHaveBeenCalled());
@@ -53,9 +51,7 @@ describe('AddMovieForm (MSW)', () => {
     const user = userEvent.setup();
     renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
     await user.type(screen.getByPlaceholderText(/ajouter un film/i), 'xx');
-    await waitFor(() => expect(screen.getByText(/TMDB down|503/i)).toBeInTheDocument(), {
-      timeout: 3000,
-    });
+    expect(await screen.findByText(/TMDB down|503/i, {}, { timeout: 3000 })).toBeInTheDocument();
   });
 
   it('une seule requête si la frappe continue avant la fin du debounce', async () => {
@@ -87,9 +83,7 @@ describe('AddMovieForm (MSW)', () => {
     await user.type(input, 'ab');
     await new Promise((r) => setTimeout(r, 100));
     await user.type(input, 'c');
-    await waitFor(() => expect(screen.getByText(/film test/i)).toBeInTheDocument(), {
-      timeout: 3000,
-    });
+    expect(await screen.findByText(/film test/i, {}, { timeout: 3000 })).toBeInTheDocument();
     expect(searchCalls).toBe(1);
   });
 
@@ -107,7 +101,7 @@ describe('AddMovieForm (MSW)', () => {
     const user = userEvent.setup();
     renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
     await user.type(screen.getByPlaceholderText(/ajouter un film/i), 'zzz');
-    await waitFor(() => expect(screen.getByText(/aucun film ne correspond/i)).toBeInTheDocument());
+    expect(await screen.findByText(/aucun film ne correspond/i)).toBeInTheDocument();
   });
 
   it('ne relance pas la recherche si seuls des espaces sont ajoutés après le terme', async () => {
@@ -137,9 +131,7 @@ describe('AddMovieForm (MSW)', () => {
     renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
     const input = screen.getByPlaceholderText(/ajouter un film/i);
     await user.type(input, 'ab');
-    await waitFor(() => expect(screen.getByText(/film test/i)).toBeInTheDocument(), {
-      timeout: 3000,
-    });
+    expect(await screen.findByText(/film test/i, {}, { timeout: 3000 })).toBeInTheDocument();
     expect(searchCalls).toBe(1);
 
     await user.type(input, '   ');
@@ -214,6 +206,74 @@ describe('AddMovieForm (MSW)', () => {
     expect(screen.queryByText('Acheter Ici')).not.toBeInTheDocument();
     expect(screen.getByRole('img', { name: /location \(1\).*film test/i })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: /achat \(2\).*film test/i })).toBeInTheDocument();
+  });
+
+  it('affiche les genres du film sur la carte de résultat', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/movies/search`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: 102,
+              title: 'Film Avec Genres',
+              year: '2024',
+              posterPath: null,
+              voteAverage: 7.5,
+              genreIds: [28, 12, 35],
+              tmdbWatchPageUrl: null,
+            },
+          ],
+          watchProvidersRegion: 'FR',
+          disclaimer: '',
+          tmdbAttributionUrl: 'https://www.themoviedb.org/',
+        })
+      )
+    );
+    const user = userEvent.setup();
+    renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
+    await user.type(screen.getByPlaceholderText(/ajouter un film/i), 'Inception');
+
+    expect(await screen.findByText('2024, Action, Aventure')).toBeInTheDocument();
+  });
+
+  it('masque les providers de streaming et le rappel de région quand showWatchProviders est désactivé', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/movies/search`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: 103,
+              title: 'Film Sans Providers Affichés',
+              year: '2024',
+              posterPath: null,
+              voteAverage: 7.5,
+              watchProviders: [
+                { providerId: 1, name: 'Netflix Abonnement', logoPath: null, type: 'flatrate' },
+              ],
+              tmdbWatchPageUrl: null,
+            },
+          ],
+          watchProvidersRegion: 'FR',
+          disclaimer: '',
+          tmdbAttributionUrl: 'https://www.themoviedb.org/',
+        })
+      )
+    );
+    const user = userEvent.setup();
+    renderWithLocale(
+      <AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} showWatchProviders={false} />
+    );
+    await user.type(screen.getByPlaceholderText(/ajouter un film/i), 'Inception');
+
+    expect(await screen.findByText('Film Sans Providers Affichés')).toBeInTheDocument();
+    expect(screen.queryByText('Netflix Abonnement')).not.toBeInTheDocument();
+    expect(screen.queryByText(/région/i)).not.toBeInTheDocument();
+  });
+
+  it('donne le focus au champ de recherche au montage', async () => {
+    renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
+
+    await waitFor(() => expect(screen.getByPlaceholderText(/ajouter un film/i)).toHaveFocus());
   });
 
   it('un film disponible uniquement en location reste signalé sur la carte de résultat', async () => {

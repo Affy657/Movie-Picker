@@ -41,6 +41,10 @@ public sealed class EventDocument
     [BsonRepresentation(BsonType.ObjectId)]
     public string? WinnerMovieId { get; set; }
 
+    [BsonElement("winnerPickMethod")]
+    [BsonIgnoreIfNull]
+    public string? WinnerPickMethod { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 
@@ -68,7 +72,7 @@ public sealed class EventConfigDocument
     public int? MaxParticipants { get; set; }
 
     [BsonElement("wheelMode")]
-    public string WheelMode { get; set; } = "strictRandom";
+    public string WheelMode { get; set; } = "weightedByVotes";
 
     [BsonElement("richSharePreview")]
     [BsonIgnoreIfDefault]

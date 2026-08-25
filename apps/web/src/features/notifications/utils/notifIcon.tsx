@@ -6,6 +6,8 @@ import {
   Film,
   Hourglass,
   Mail,
+  MousePointerClick,
+  RefreshCw,
   Shuffle,
   UserPlus,
   Users,
@@ -22,6 +24,8 @@ export function notifIcon(type: string, size = 17): ReactNode {
       return <Film size={size} aria-hidden />;
     case 'moviepicked':
       return <Shuffle size={size} aria-hidden />;
+    case 'moviepickedmanually':
+      return <MousePointerClick size={size} aria-hidden />;
     case 'eventdeleted':
       return <XCircle size={size} aria-hidden />;
     case 'eventreminder1h':
@@ -32,6 +36,8 @@ export function notifIcon(type: string, size = 17): ReactNode {
       return <Mail size={size} aria-hidden />;
     case 'eventpending':
       return <Hourglass size={size} aria-hidden />;
+    case 'letterboxdreconciliationpending':
+      return <RefreshCw size={size} aria-hidden />;
     default:
       return <Bell size={size} aria-hidden />;
   }

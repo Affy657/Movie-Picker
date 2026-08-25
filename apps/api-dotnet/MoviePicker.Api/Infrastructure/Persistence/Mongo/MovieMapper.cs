@@ -16,6 +16,7 @@ public static class MovieMapper
         PosterPath = d.PosterPath,
         PitchNote = string.IsNullOrWhiteSpace(d.PitchNote) ? null : d.PitchNote,
         GenreIds = d.GenreIds is { Count: > 0 } ? d.GenreIds.ToList() : [],
+        ExcludedFromWheel = d.ExcludedFromWheel,
         CreatedAt = new DateTimeOffset(d.CreatedAt, TimeSpan.Zero),
         UpdatedAt = new DateTimeOffset(d.UpdatedAt, TimeSpan.Zero)
     };
@@ -32,6 +33,7 @@ public static class MovieMapper
         PosterPath = m.PosterPath,
         PitchNote = m.PitchNote,
         GenreIds = m.GenreIds is { Count: > 0 } ? m.GenreIds.ToList() : null,
+        ExcludedFromWheel = m.ExcludedFromWheel,
         CreatedAt = m.CreatedAt.UtcDateTime,
         UpdatedAt = m.UpdatedAt.UtcDateTime
     };
@@ -39,7 +41,7 @@ public static class MovieMapper
     public static string MediaTypeToString(MovieMediaType m) =>
         m == MovieMediaType.Tv ? "tv" : "movie";
 
-    private static MovieMediaType ParseMediaType(string? raw) =>
+    public static MovieMediaType ParseMediaType(string? raw) =>
         string.Equals(raw?.Trim(), "tv", StringComparison.OrdinalIgnoreCase)
             ? MovieMediaType.Tv
             : MovieMediaType.Movie;

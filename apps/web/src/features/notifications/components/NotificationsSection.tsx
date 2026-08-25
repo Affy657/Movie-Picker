@@ -16,12 +16,17 @@ const PREF_TYPES: ReadonlyArray<{ type: NotificationTypeKey; labelKey: Translati
   { type: 'participantjoined', labelKey: 'notifications.prefParticipantJoined' },
   { type: 'movieadded', labelKey: 'notifications.prefMovieAdded' },
   { type: 'moviepicked', labelKey: 'notifications.prefMoviePicked' },
+  { type: 'moviepickedmanually', labelKey: 'notifications.prefMoviePickedManually' },
   { type: 'eventdeleted', labelKey: 'notifications.prefEventDeleted' },
   { type: 'eventreminder1h', labelKey: 'notifications.prefEventReminder1h' },
   { type: 'eventreminder24h', labelKey: 'notifications.prefEventReminder24h' },
   { type: 'eventinvitation', labelKey: 'notifications.prefEventInvitation' },
   { type: 'newfollower', labelKey: 'notifications.prefNewFollower' },
   { type: 'eventpending', labelKey: 'notifications.prefEventPending' },
+  {
+    type: 'letterboxdreconciliationpending',
+    labelKey: 'notifications.prefLetterboxdReconciliationPending',
+  },
 ];
 
 export default function NotificationsSection() {
@@ -81,7 +86,7 @@ export default function NotificationsSection() {
       <section className="section section--panel" aria-labelledby="notifications-heading">
         <h2 id="notifications-heading" className={styles.sectionTitle}>
           <Bell size={18} aria-hidden />
-          {t('notifications.title')}
+          <span className={styles.sectionTitleText}>{t('notifications.title')}</span>
         </h2>
         <p className="hint">{t('notifications.unsupported')}</p>
       </section>
@@ -92,7 +97,7 @@ export default function NotificationsSection() {
     <section className="section section--panel" aria-labelledby="notifications-heading">
       <h2 id="notifications-heading" className={styles.sectionTitle}>
         <Bell size={18} aria-hidden />
-        {t('notifications.title')}
+        <span className={styles.sectionTitleText}>{t('notifications.title')}</span>
       </h2>
 
       {pushError && (

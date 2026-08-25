@@ -7,6 +7,7 @@ import { http, HttpResponse } from 'msw';
 import UserMenu from '@/features/auth/components/UserMenu';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
+import { resetPwaInstallRuntime } from '@/shared/hooks/usePwaInstall';
 import type { UserProfile } from '@/features/auth/types';
 
 const baseUser: UserProfile = {
@@ -20,6 +21,12 @@ const baseUser: UserProfile = {
   handle: 'alice',
   bio: null,
   isProfilePublic: true,
+  letterboxdUsername: null,
+  letterboxdLastSyncAt: null,
+  letterboxdLastSyncError: null,
+  letterboxdPendingReconciliationCount: 0,
+  hasPassword: true,
+  linkedProviders: [],
 };
 
 function renderMenu(user: UserProfile = baseUser) {
@@ -36,7 +43,10 @@ describe('UserMenu', () => {
   const server = setupServer();
 
   beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
-  afterEach(() => server.resetHandlers());
+  afterEach(() => {
+    server.resetHandlers();
+    resetPwaInstallRuntime();
+  });
   afterAll(() => server.close());
 
   it('le menu est fermé par défaut', () => {
@@ -60,6 +70,11 @@ describe('UserMenu', () => {
       '/u/alice'
     );
     expect(screen.getByRole('link', { name: /mon compte/i })).toHaveAttribute('href', '/settings');
+    expect(screen.getByRole('link', { name: /soutenir le projet/i })).toHaveAttribute(
+      'href',
+      '/soutenir'
+    );
+    expect(screen.getByRole('button', { name: /installer l['’]app/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /se déconnecter/i })).toBeInTheDocument();
   });
 
@@ -98,6 +113,32 @@ describe('UserMenu', () => {
       expect(screen.queryByRole('button', { name: /se déconnecter/i })).not.toBeInTheDocument()
     );
     expect(trigger).toHaveFocus();
+  });
+
+  it('ouvre la modale « Proposer une idée » et la garde ouverte après fermeture du menu', async () => {
+    const user = userEvent.setup();
+    renderMenu();
+
+    await user.click(screen.getByRole('button', { name: /menu du compte/i }));
+    await user.click(screen.getByRole('button', { name: /proposer une idée/i }));
+
+    expect(screen.queryByRole('button', { name: /se déconnecter/i })).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /proposer une idée/i })).toBeInTheDocument();
+    });
+  });
+
+  it('ouvre le guide d’installation et ferme le menu', async () => {
+    const user = userEvent.setup();
+    renderMenu();
+
+    await user.click(screen.getByRole('button', { name: /menu du compte/i }));
+    await user.click(screen.getByRole('button', { name: /installer l['’]app/i }));
+
+    expect(screen.queryByRole('button', { name: /se déconnecter/i })).not.toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: /installer movie picker/i })
+    ).toBeInTheDocument();
   });
 
   it('déclenche la déconnexion au clic sur Se déconnecter', async () => {

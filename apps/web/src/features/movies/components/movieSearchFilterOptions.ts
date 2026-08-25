@@ -7,6 +7,13 @@ export const MOVIE_GENRE_IDS = [
 
 export const VOTE_MIN_OPTIONS = [{ tmdb: 6 }, { tmdb: 7 }, { tmdb: 8 }] as const;
 
+export const MOVIE_LIST_VOTE_MIN_OPTIONS = [
+  { tmdb: 5 },
+  { tmdb: 6 },
+  { tmdb: 7 },
+  { tmdb: 8 },
+] as const;
+
 export function voteMinLabel(tmdb: number, scale: RatingScale = 'five'): string {
   if (scale === 'ten') return String(tmdb);
   const five = tmdb / 2;
@@ -36,13 +43,36 @@ export function localizedName(fr: string, en: string, lang: string): string {
   return lang.startsWith('fr') ? fr : en;
 }
 
-export const RUNTIME_MIN_MINUTES = 10;
+export const RUNTIME_MIN_MINUTES = 0;
 export const RUNTIME_MAX_MINUTES = 180;
 export const RUNTIME_STEP_MINUTES = 5;
 
-export function runtimeRangeLabel(minutes: number, lang: string): string {
-  if (minutes <= RUNTIME_MIN_MINUTES)
-    return lang.startsWith('fr') ? '10 min ou moins' : '10 min or less';
-  if (minutes >= RUNTIME_MAX_MINUTES) return lang.startsWith('fr') ? '3h et plus' : '3h and more';
+export function runtimeRangeLabel(minutes: number, lang: string, bound?: 'min' | 'max'): string {
+  const inFrench = lang.startsWith('fr');
+  if (bound === 'min') return runtimeMinBoundLabel(minutes, inFrench);
+  if (bound === 'max') return runtimeMaxBoundLabel(minutes, inFrench);
   return formatRuntimeMinutes(minutes) ?? String(minutes);
+}
+
+function runtimeMinBoundLabel(minutes: number, inFrench: boolean): string {
+  if (minutes <= RUNTIME_MIN_MINUTES) return inFrench ? 'Aucun minimum' : 'No minimum';
+  return `${formatRuntimeMinutes(minutes) ?? minutes} ${inFrench ? 'ou plus' : 'or more'}`;
+}
+
+function runtimeMaxBoundLabel(minutes: number, inFrench: boolean): string {
+  if (minutes >= RUNTIME_MAX_MINUTES) return inFrench ? 'Aucun maximum' : 'No maximum';
+  return `${formatRuntimeMinutes(minutes) ?? minutes} ${inFrench ? 'ou moins' : 'or less'}`;
+}
+
+export function runtimeChipLabel(
+  runtimeMin: number | undefined,
+  runtimeMax: number | undefined,
+  range: [number, number],
+  lang: string
+): string {
+  if (runtimeMin !== undefined && runtimeMax !== undefined) {
+    return `${runtimeRangeLabel(range[0], lang)} - ${runtimeRangeLabel(range[1], lang)}`;
+  }
+  if (runtimeMin !== undefined) return runtimeRangeLabel(range[0], lang, 'min');
+  return runtimeRangeLabel(range[1], lang, 'max');
 }

@@ -1,0 +1,201 @@
+.toolbar {
+  position: sticky;
+  top: var(--header-height, 3.5rem);
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 0.85rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.searchWrap {
+  position: relative;
+  flex: 1 1 15rem;
+  min-width: 0;
+  max-width: 22rem;
+}
+
+.searchIcon {
+  position: absolute;
+  top: 50%;
+  left: 0.7rem;
+  transform: translateY(-50%);
+  color: var(--color-placeholder);
+}
+
+.input {
+  width: 100%;
+  min-height: 40px;
+  padding: 0.5rem 0.8rem 0.5rem 2.2rem;
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  background: var(--color-input-bg);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.input::placeholder {
+  color: var(--color-placeholder);
+}
+
+.bottomRow {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.filterBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 40px;
+  padding: 0 0.85rem;
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.filterBtnLabel {
+  line-height: var(--leading-none);
+  transform: translateY(var(--text-optical-nudge));
+}
+
+.filterBtnActive,
+.filterBtn[aria-expanded='true'] {
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border-color: var(--color-primary);
+}
+
+.badgeCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.2rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+  font-size: var(--font-size-4xs);
+  font-weight: 700;
+  line-height: var(--leading-none);
+}
+
+.badgeCountText {
+  transform: translateY(var(--text-optical-nudge));
+}
+
+.divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--color-border-subtle);
+}
+
+.sortPillsRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.sortLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.75rem;
+  font-family: inherit;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: var(--leading-none);
+}
+
+.pillLabel {
+  transform: translateY(var(--text-optical-nudge));
+}
+
+.pillActive {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  font-weight: 600;
+}
+
+.sortMenuPanel {
+  left: 0;
+  right: auto;
+}
+
+.resultCount {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-meta);
+  white-space: nowrap;
+}
+
+.linkReset {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+@media (max-width: 767px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .searchWrap {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: none;
+  }
+
+  .bottomRow {
+    flex-wrap: wrap;
+  }
+
+  .resultCount {
+    flex: 1 0 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    margin-left: 0;
+    white-space: normal;
+  }
+}

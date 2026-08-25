@@ -1,9 +1,9 @@
 import { useId } from 'react';
-import { X } from 'lucide-react';
 import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import { useTranslation } from '@/shared/i18n';
 import type { WatchProviderOffer } from '@/shared/types/movie';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
+import DialogTitleBar from '@/shared/components/DialogTitleBar';
 import styles from './WatchProvidersModal.module.css';
 
 interface WatchProvidersModalProps {
@@ -27,19 +27,12 @@ export default function WatchProvidersModal({
 
   return (
     <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>
-      <div className={styles.header}>
-        <h2 id={titleId} className={styles.title}>
-          {t('movies.watchProviders.modalTitle')}
-        </h2>
-        <button
-          type="button"
-          className={styles.closeBtn}
-          onClick={onClose}
-          aria-label={t('common.close')}
-        >
-          <X aria-hidden size={18} />
-        </button>
-      </div>
+      <DialogTitleBar
+        titleId={titleId}
+        title={t('movies.watchProviders.modalTitle')}
+        onClose={onClose}
+        closeLabel={t('common.close')}
+      />
       <p className={styles.subtitle}>{movieTitle}</p>
       <div className={styles.body}>
         {providers.length > 0 ? (

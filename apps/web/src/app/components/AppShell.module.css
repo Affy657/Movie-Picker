@@ -79,6 +79,7 @@
   align-items: center;
   gap: 0.6rem;
   flex-shrink: 0;
+  line-height: 1;
   text-decoration: none;
   color: inherit;
 }
@@ -96,6 +97,7 @@
   font-weight: 800;
   letter-spacing: var(--tracking-narrow);
   color: var(--color-text);
+  transform: translateY(var(--text-optical-nudge));
 }
 
 @media (max-width: 479px) {
@@ -226,7 +228,9 @@
 
 @media (max-width: 767px) {
   .root :global(.page) {
-    padding-bottom: calc(var(--mobile-nav-height) + 1.25rem);
+    padding-bottom: calc(
+      var(--mobile-nav-height) + 1.25rem + var(--event-wheel-bar-height, 0px)
+    );
   }
 }
 

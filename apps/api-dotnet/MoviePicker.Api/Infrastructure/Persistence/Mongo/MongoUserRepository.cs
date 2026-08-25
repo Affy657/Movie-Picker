@@ -50,6 +50,19 @@ public sealed class MongoUserRepository : IUserRepository
         return doc is null ? null : UserDocumentMapper.ToDomain(doc);
     }
 
+    public async Task<User?> GetByIdentityAsync(string provider, string subject, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(provider) || string.IsNullOrWhiteSpace(subject))
+            return null;
+        var filter = Builders<UserDocument>.Filter.ElemMatch(
+            x => x.Identities,
+            Builders<UserIdentityDocument>.Filter.And(
+                Builders<UserIdentityDocument>.Filter.Eq(i => i.Provider, provider),
+                Builders<UserIdentityDocument>.Filter.Eq(i => i.Subject, subject)));
+        var doc = await _collection.Find(filter).FirstOrDefaultAsync(ct);
+        return doc is null ? null : UserDocumentMapper.ToDomain(doc);
+    }
+
     public async Task<IReadOnlyList<User>> ListMissingHandleAsync(CancellationToken ct = default)
     {
         var filter = Builders<UserDocument>.Filter.Or(
@@ -58,6 +71,53 @@ public sealed class MongoUserRepository : IUserRepository
             Builders<UserDocument>.Filter.Eq(x => x.Handle, string.Empty));
         var docs = await _collection.Find(filter).ToListAsync(ct);
         return docs.ConvertAll(UserDocumentMapper.ToDomain);
+    }
+
+    public async Task<IReadOnlyList<User>> ListWithLetterboxdSyncEnabledAsync(CancellationToken ct = default)
+    {
+        var filter = Builders<UserDocument>.Filter.And(
+            Builders<UserDocument>.Filter.Ne(x => x.LetterboxdUsername, null),
+            Builders<UserDocument>.Filter.Ne(x => x.LetterboxdUsername, string.Empty));
+        var docs = await _collection.Find(filter).ToListAsync(ct);
+        return docs.ConvertAll(UserDocumentMapper.ToDomain);
+    }
+
+    public async Task SetLetterboxdSyncStatusAsync(
+        string userId,
+        DateTimeOffset syncedAt,
+        string? error,
+        CancellationToken ct = default)
+    {
+        var update = Builders<UserDocument>.Update
+            .Set(x => x.LetterboxdLastSyncAt, syncedAt.UtcDateTime)
+            .Set(x => x.LetterboxdLastSyncError, error);
+        await _collection.UpdateOneAsync(x => x.Id == userId, update, cancellationToken: ct);
+    }
+
+    public async Task SetLetterboxdPendingReconciliationCountAsync(
+        string userId,
+        int pendingCount,
+        CancellationToken ct = default)
+    {
+        var update = Builders<UserDocument>.Update
+            .Set(x => x.LetterboxdPendingReconciliationCount, pendingCount);
+        await _collection.UpdateOneAsync(x => x.Id == userId, update, cancellationToken: ct);
+    }
+
+    public async Task<bool> MarkSupporterAsync(string userId, DateTimeOffset since, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return false;
+
+        var filter = Builders<UserDocument>.Filter.And(
+            Builders<UserDocument>.Filter.Eq(x => x.Id, userId),
+            Builders<UserDocument>.Filter.Eq(x => x.SupporterSince, null));
+        var update = Builders<UserDocument>.Update
+            .Set(x => x.SupporterSince, since.UtcDateTime)
+            .Set(x => x.UpdatedAt, since.UtcDateTime);
+
+        var result = await _collection.UpdateOneAsync(filter, update, cancellationToken: ct);
+        return result.ModifiedCount > 0;
     }
 
     public async Task<IReadOnlyList<PublicProfileRef>> ListPublicProfilesAsync(int limit, CancellationToken ct = default)
@@ -135,6 +195,8 @@ public sealed class MongoUserRepository : IUserRepository
         var msg = ex.WriteError?.Message ?? string.Empty;
         if (msg.Contains("users_handle_unique", StringComparison.OrdinalIgnoreCase))
             throw new ConflictException("handle_conflict");
+        if (msg.Contains("users_identities_provider_subject_unique", StringComparison.OrdinalIgnoreCase))
+            throw new ConflictException("identity_conflict");
         throw new ConflictException("Un compte existe déjà pour cette adresse e-mail.");
     }
 

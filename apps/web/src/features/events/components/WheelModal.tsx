@@ -1,6 +1,6 @@
 import confetti from 'canvas-confetti';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { X } from 'lucide-react';
+import { ImageOff, X } from 'lucide-react';
 import type { MovieData } from '@/shared/types/movie';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import { useDialogOpen } from '@/shared/hooks/useDialogOpen';
@@ -19,6 +19,7 @@ interface WheelModalProps {
   wheelKey: number;
   onClose: () => void;
   onRelaunch?: () => void;
+  skipSpin?: boolean;
 }
 
 export default function WheelModal({
@@ -29,11 +30,12 @@ export default function WheelModal({
   wheelKey,
   onClose,
   onRelaunch,
+  skipSpin = false,
 }: Readonly<WheelModalProps>) {
   const { t } = useTranslation();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const confettiOverlayRef = useRef<HTMLDivElement>(null);
-  const [animDone, setAnimDone] = useState(false);
+  const [animDone, setAnimDone] = useState(skipSpin);
   const confettiTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const confettiCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -49,10 +51,10 @@ export default function WheelModal({
 
   useEffect(() => {
     if (open) {
-      setAnimDone(false);
+      setAnimDone(skipSpin);
       cleanupConfettiOverlay();
     }
-  }, [open, wheelKey, cleanupConfettiOverlay]);
+  }, [open, wheelKey, skipSpin, cleanupConfettiOverlay]);
 
   useEffect(() => {
     return () => cleanupConfettiOverlay();
@@ -64,11 +66,18 @@ export default function WheelModal({
     const prevent = (e: Event) => {
       if (!animDone) e.preventDefault();
     };
+    const handleBackdropClick = (e: MouseEvent) => {
+      if (e.target === dlg && animDone) onClose();
+    };
     dlg.addEventListener('cancel', prevent);
-    return () => dlg.removeEventListener('cancel', prevent);
-  }, [animDone]);
+    dlg.addEventListener('click', handleBackdropClick);
+    return () => {
+      dlg.removeEventListener('cancel', prevent);
+      dlg.removeEventListener('click', handleBackdropClick);
+    };
+  }, [animDone, onClose]);
 
-  const handleWheelDone = () => {
+  const handleWheelDone = useCallback(() => {
     setAnimDone(true);
 
     requestAnimationFrame(() => {
@@ -112,7 +121,13 @@ export default function WheelModal({
         confettiTimerRef.current = setTimeout(cleanupConfettiOverlay, 4500);
       }, 180);
     });
-  };
+  }, [cleanupConfettiOverlay]);
+
+  useEffect(() => {
+    if (open && skipSpin) {
+      handleWheelDone();
+    }
+  }, [open, wheelKey, skipSpin, handleWheelDone]);
 
   const posterSrc = posterImageSrc(winner.posterPath);
   const providers = winner.watchProviders ?? [];
@@ -142,7 +157,9 @@ export default function WheelModal({
           <>
             <div className={styles.header}>
               <h2 id="wheel-modal-title" className={styles.title}>
-                {t('events.wheel.modal.winnerTitle')}
+                {skipSpin
+                  ? t('events.wheel.modal.manualWinnerTitle')
+                  : t('events.wheel.modal.winnerTitle')}
               </h2>
               <button
                 type="button"
@@ -158,7 +175,9 @@ export default function WheelModal({
               {posterSrc ? (
                 <img src={posterSrc} alt={winner.title} className={styles.poster} loading="lazy" />
               ) : (
-                <div className={styles.posterPlaceholder} aria-hidden />
+                <div className={styles.posterPlaceholder} aria-hidden>
+                  <ImageOff size={28} />
+                </div>
               )}
               <div className={styles.info}>
                 <p className={styles.winnerTitle}>{winner.title}</p>

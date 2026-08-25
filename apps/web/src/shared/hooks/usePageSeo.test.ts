@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { usePageSeo } from '@/shared/hooks/usePageSeo';
+import { usePageSeo, useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { DEFAULT_DESCRIPTION, DEFAULT_OG_IMAGE, SITE_URL } from '@/shared/seo/siteMeta';
 
 function meta(selector: string): string | null {
@@ -63,6 +63,34 @@ describe('usePageSeo', () => {
     expect(JSON.parse(scripts[0]?.textContent ?? '{}')).toMatchObject({ name: 'Alice' });
   });
 
+  it('masque le JSON-LD d’accueil hors de la home et le restaure au démontage', () => {
+    const homeLd = document.createElement('script');
+    homeLd.type = 'application/ld+json';
+    homeLd.textContent = '{"@type":"WebSite"}';
+    document.head.appendChild(homeLd);
+
+    const { unmount } = renderHook(() =>
+      usePageSeo({
+        title: 'Alice',
+        canonical: `${SITE_URL}/u/alice`,
+        jsonLd: { '@type': 'Person', name: 'Alice' },
+      })
+    );
+
+    const active = [...document.head.querySelectorAll('script[type="application/ld+json"]')];
+    expect(active).toHaveLength(1);
+    expect(JSON.parse(active[0]?.textContent ?? '{}')).toMatchObject({ name: 'Alice' });
+    expect(
+      document.head.querySelector('script[type="application/ld+json-inactive"]')?.textContent
+    ).toContain('WebSite');
+
+    unmount();
+
+    const restored = [...document.head.querySelectorAll('script[type="application/ld+json"]')];
+    expect(restored).toHaveLength(1);
+    expect(JSON.parse(restored[0]?.textContent ?? '{}')).toMatchObject({ '@type': 'WebSite' });
+  });
+
   it('réinitialise les balises aux valeurs par défaut au démontage', () => {
     const { unmount } = renderHook(() =>
       usePageSeo({
@@ -85,5 +113,14 @@ describe('usePageSeo', () => {
       `${SITE_URL}/`
     );
     expect(document.head.querySelector('script[type="application/ld+json"]')).toBeNull();
+  });
+
+  it('useNoindexPage pose noindex et un canonical de la route', () => {
+    renderHook(() => useNoindexPage('Connexion — Movie Picker', '/login'));
+    expect(document.title).toBe('Connexion — Movie Picker');
+    expect(meta('meta[name="robots"]')).toBe('noindex, nofollow');
+    expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe(
+      `${SITE_URL}/login`
+    );
   });
 });

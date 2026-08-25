@@ -1,13 +1,18 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.LetterboxdImport;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.BackgroundServices;
 using MoviePicker.Api.Infrastructure.Development;
 using MoviePicker.Api.Infrastructure.Email;
+using MoviePicker.Api.Infrastructure.GitHub;
+using MoviePicker.Api.Infrastructure.Letterboxd;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
 using MoviePicker.Api.Infrastructure.Posters;
@@ -63,6 +68,22 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPushNotificationSender, WebPushSender>();
         services.AddHostedService<EventReminderService>();
 
+        services.AddHttpClient<ILetterboxdWatchlistClient, LetterboxdWatchlistClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(15);
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("MoviePicker-Api/1.0");
+        });
+
+        services.AddHttpClient<IGitHubIssueClient, GitHubIssueClient>((sp, client) =>
+        {
+            var githubApiBaseUrl = sp.GetRequiredService<IOptions<MoviePickerOptions>>().Value.GitHubApiBaseUrl;
+            client.BaseAddress = new Uri(githubApiBaseUrl);
+            client.Timeout = TimeSpan.FromSeconds(10);
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("MoviePicker-Api/1.0");
+            client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
+            client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
+        });
+
         RegisterHandlers(services);
 
         services.AddSingleton<ValidationErrorFilter>();
@@ -90,6 +111,24 @@ public static class ServiceCollectionExtensions
 
         ConfigureEmailOptions(opts, cfg);
         ConfigureVapidOptions(opts, cfg);
+
+        var kofiToken = cfg["KOFI_WEBHOOK_TOKEN"];
+        if (!string.IsNullOrWhiteSpace(kofiToken))
+            opts.KofiWebhookToken = kofiToken.Trim();
+
+        ConfigureGitHubOptions(opts, cfg);
+    }
+
+    private static void ConfigureGitHubOptions(MoviePickerOptions opts, IConfiguration cfg)
+    {
+        var token = cfg["GITHUB_TOKEN"];
+        opts.GitHubToken = string.IsNullOrWhiteSpace(token) ? null : token.Trim();
+        var owner = cfg["GITHUB_REPO_OWNER"];
+        if (!string.IsNullOrWhiteSpace(owner))
+            opts.GitHubRepoOwner = owner.Trim();
+        var repo = cfg["GITHUB_REPO_NAME"];
+        if (!string.IsNullOrWhiteSpace(repo))
+            opts.GitHubRepoName = repo.Trim();
     }
 
     private static void ConfigureTmdbOptions(MoviePickerOptions opts, IConfiguration cfg)
@@ -165,7 +204,9 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IAuthSessionInvalidator, InMemoryAuthSessionInvalidator>();
             services.AddSingleton<IPushSubscriptionRepository, InMemoryPushSubscriptionRepository>();
             services.AddSingleton<IFollowRepository, InMemoryFollowRepository>();
+            services.AddSingleton<IWatchlistRepository, InMemoryWatchlistRepository>();
             services.AddSingleton<IUserNotificationRepository, InMemoryUserNotificationRepository>();
+            services.AddSingleton<IKofiWebhookLogRepository, InMemoryKofiWebhookLogRepository>();
             services.AddSingleton<IPushDedupRepository, InMemoryPushDedupRepository>();
             services.AddSingleton<IDatabaseHealthProbe, InMemoryDatabaseHealthProbe>();
             return;
@@ -197,12 +238,15 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuthSessionInvalidator, MongoAuthSessionInvalidator>();
         services.AddScoped<IPushSubscriptionRepository, MongoPushSubscriptionRepository>();
         services.AddScoped<IFollowRepository, MongoFollowRepository>();
+        services.AddScoped<IWatchlistRepository, MongoWatchlistRepository>();
         services.AddScoped<IUserNotificationRepository, MongoUserNotificationRepository>();
+        services.AddScoped<IKofiWebhookLogRepository, MongoKofiWebhookLogRepository>();
         services.AddScoped<IPushDedupRepository, MongoPushDedupRepository>();
         services.AddSingleton<IDatabaseHealthProbe, MongoDatabaseHealthProbe>();
         services.AddHostedService<MongoIndexInitializer>();
         services.AddHostedService<UserHandleBackfillService>();
         services.AddHostedService<GenreBackfillService>();
+        services.AddHostedService<RuntimeBackfillService>();
     }
 
     private static void RegisterTmdbSearch(IServiceCollection services, IConfiguration configuration)
@@ -245,6 +289,9 @@ public static class ServiceCollectionExtensions
 
     private static void RegisterHandlers(IServiceCollection services)
     {
+        services.AddScoped<LetterboxdWatchlistSynchronizer>();
+        services.AddScoped<IWinnerAnnouncer, WinnerAnnouncer>();
+
         var handlerNamespace = "MoviePicker.Api.Application.UseCases";
         var types = typeof(ServiceCollectionExtensions).Assembly.GetTypes()
             .Where(t => t is { IsClass: true, IsAbstract: false }

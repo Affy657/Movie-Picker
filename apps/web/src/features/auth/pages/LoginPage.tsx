@@ -7,7 +7,10 @@ import {
   DEV_QUICK_LOGIN_EMAIL,
   DEV_QUICK_LOGIN_PASSWORD,
 } from '@/features/auth/devQuickLoginCredentials';
-import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import OAuthProviderButtons from '@/features/auth/components/OAuthProviderButtons';
+import { resolveOAuthErrorKey } from '@/features/auth/utils/oauthErrors';
+import { pageTitle } from '@/shared/hooks/useDocumentTitle';
+import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { safeReturnTo } from '@/shared/utils/returnTo';
 import { withReturnTo, ROUTES } from '@/app/routes';
@@ -18,7 +21,7 @@ type LoginSubmitMode = 'form' | 'devQuick';
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  useDocumentTitle(pageTitle(t('auth.login.title')));
+  useNoindexPage(pageTitle(t('auth.login.title')), ROUTES.login);
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const returnTo = safeReturnTo(params.get('returnTo'));
@@ -26,6 +29,7 @@ export default function LoginPage() {
   const { login, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const oauthErrorKey = resolveOAuthErrorKey(params.get('oauthError'));
 
   const loginAction = useCallback(
     async (mode: LoginSubmitMode) => {
@@ -66,9 +70,9 @@ export default function LoginPage() {
           className="form"
           aria-describedby={error ? 'login-form-error' : undefined}
         >
-          {error && (
+          {(error || oauthErrorKey) && (
             <p id="login-form-error" className="error" role="alert">
-              {error}
+              {error || (oauthErrorKey ? t(oauthErrorKey) : null)}
             </p>
           )}
           <label className="label" htmlFor="login-email">
@@ -115,6 +119,7 @@ export default function LoginPage() {
             </div>
           ) : null}
         </form>
+        <OAuthProviderButtons returnTo={returnTo} />
         <p className="muted">
           <Link to={withReturnTo(ROUTES.forgotPassword, returnTo)}>
             {t('auth.login.forgotPasswordLink')}

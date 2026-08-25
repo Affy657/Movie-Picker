@@ -44,4 +44,93 @@ public sealed class GetUserProfileHandlerTests
         Assert.Contains("***", res.EmailMasked, StringComparison.Ordinal);
         Assert.DoesNotContain("bob@", res.EmailMasked, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public async Task HandleAsync_ReturnsLetterboxdUsername()
+    {
+        var user = new User
+        {
+            Id = "id1",
+            Email = "bob@example.com",
+            PasswordHash = "h",
+            DisplayName = "Bob",
+            LetterboxdUsername = "affy657",
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("id1", It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var handler = new GetUserProfileHandler(users.Object);
+
+        var res = await handler.HandleAsync("id1");
+
+        Assert.Equal("affy657", res.LetterboxdUsername);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ReturnsLetterboxdPendingReconciliationCount()
+    {
+        var user = new User
+        {
+            Id = "id1",
+            Email = "bob@example.com",
+            PasswordHash = "h",
+            DisplayName = "Bob",
+            LetterboxdPendingReconciliationCount = 3,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("id1", It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var handler = new GetUserProfileHandler(users.Object);
+
+        var res = await handler.HandleAsync("id1");
+
+        Assert.Equal(3, res.LetterboxdPendingReconciliationCount);
+    }
+
+    [Fact]
+    public async Task HandleAsync_NoPasswordWithLinkedIdentities_ReturnsHasPasswordFalseAndProviders()
+    {
+        var user = new User
+        {
+            Id = "id1",
+            Email = "bob@example.com",
+            PasswordHash = string.Empty,
+            DisplayName = "Bob",
+            Identities = [new LinkedIdentity { Provider = "google", Subject = "g-1", Email = "bob@example.com", LinkedAt = DateTimeOffset.UtcNow }],
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("id1", It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var handler = new GetUserProfileHandler(users.Object);
+
+        var res = await handler.HandleAsync("id1");
+
+        Assert.False(res.HasPassword);
+        Assert.Equal(["google"], res.LinkedProviders);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ReturnsCreatedAt()
+    {
+        var createdAt = new DateTimeOffset(2026, 6, 1, 12, 0, 0, TimeSpan.Zero);
+        var user = new User
+        {
+            Id = "id1",
+            Email = "bob@example.com",
+            PasswordHash = "h",
+            DisplayName = "Bob",
+            CreatedAt = createdAt,
+            UpdatedAt = createdAt
+        };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("id1", It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var handler = new GetUserProfileHandler(users.Object);
+
+        var res = await handler.HandleAsync("id1");
+
+        Assert.Equal(createdAt, res.CreatedAt);
+    }
 }

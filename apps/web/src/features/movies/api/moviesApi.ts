@@ -21,6 +21,7 @@ export interface MovieSearchItem {
   runtimeMinutes?: number | null;
   watchProviders?: WatchProviderOffer[];
   tmdbWatchPageUrl?: string | null;
+  genreIds?: number[];
 }
 
 export interface MovieSearchListResponse {
@@ -179,6 +180,19 @@ export async function removeMovieFromEvent(
   await fetchApi(`/events/${slug}/movies/${movieId}${suffix}`, {
     method: 'DELETE',
     body: JSON.stringify({ participantId }),
+  });
+}
+
+export async function setMovieWheelExclusion(
+  slug: string,
+  movieId: string,
+  excluded: boolean,
+  hostToken?: string | null
+): Promise<void> {
+  const suffix = hostToken ? `?host=${encodeURIComponent(hostToken)}` : '';
+  await fetchApi(`/events/${slug}/movies/${movieId}/wheel-exclusion${suffix}`, {
+    method: 'PUT',
+    body: JSON.stringify({ excluded }),
   });
 }
 

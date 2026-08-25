@@ -36,7 +36,7 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
         Assert.Equal(HttpStatusCode.OK, res.StatusCode);
         var body = await res.Content.ReadFromJsonAsync<EventConfigResponse>(JsonOptions);
         Assert.NotNull(body);
-        Assert.Equal(WheelMode.StrictRandom, body!.WheelMode);
+        Assert.Equal(WheelMode.WeightedByVotes, body!.WheelMode);
     }
 
     [Fact]

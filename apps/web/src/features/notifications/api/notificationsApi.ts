@@ -9,7 +9,9 @@ export type NotificationTypeKey =
   | 'eventreminder1h'
   | 'eventreminder24h'
   | 'eventinvitation'
-  | 'eventpending';
+  | 'eventpending'
+  | 'moviepickedmanually'
+  | 'letterboxdreconciliationpending';
 
 export interface NotificationTypePreference {
   type: NotificationTypeKey;

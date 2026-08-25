@@ -35,6 +35,8 @@ public sealed class MovieSearchItemResponse
         Array.Empty<WatchProviderOfferResponse>();
 
     public string? TmdbWatchPageUrl { get; init; }
+
+    public IReadOnlyList<int> GenreIds { get; init; } = Array.Empty<int>();
 }
 
 public sealed class WatchProviderOfferResponse

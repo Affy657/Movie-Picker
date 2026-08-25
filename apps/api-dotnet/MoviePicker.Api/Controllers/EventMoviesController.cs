@@ -9,6 +9,7 @@ using MoviePicker.Api.Application.UseCases.DeleteMoviePitchNote;
 using MoviePicker.Api.Application.UseCases.ListMovies;
 using MoviePicker.Api.Application.UseCases.SeenMarks;
 using MoviePicker.Api.Application.UseCases.SetMoviePitchNote;
+using MoviePicker.Api.Application.UseCases.SetMovieWheelExclusion;
 using MoviePicker.Api.Application.UseCases.VoteMovie;
 using MoviePicker.Api.Infrastructure.Web;
 
@@ -156,6 +157,22 @@ public sealed class EventMoviesController : ControllerBase
         string movieId,
         [FromBody] DeleteMoviePitchNoteRequest request,
         [FromServices] IDeleteMoviePitchNoteHandler handler,
+        CancellationToken ct)
+    {
+        await handler.HandleAsync(idOrSlug, movieId, request, ct);
+        return NoContent();
+    }
+
+    [HttpPut("{movieId}/wheel-exclusion")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> SetWheelExclusion(
+        string idOrSlug,
+        string movieId,
+        [FromBody] SetMovieWheelExclusionRequest request,
+        [FromServices] ISetMovieWheelExclusionHandler handler,
         CancellationToken ct)
     {
         await handler.HandleAsync(idOrSlug, movieId, request, ct);

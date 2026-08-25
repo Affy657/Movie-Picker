@@ -58,6 +58,7 @@
   border-radius: var(--radius-md);
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22);
   min-width: 210px;
+  max-width: calc(100vw - 1rem);
 }
 
 .emojiOpt {
@@ -174,6 +175,9 @@
   margin-top: 1.4rem;
   margin-bottom: 0.9rem;
   flex-wrap: wrap;
+  border: none;
+  padding: 0;
+  min-width: 0;
 }
 
 .colorRowLabel {
@@ -184,6 +188,7 @@
   color: var(--color-text-muted);
   margin-right: 0.1rem;
   flex-shrink: 0;
+  padding: 0;
 }
 
 .colorSwatch {
@@ -194,7 +199,9 @@
   cursor: pointer;
   padding: 0;
   flex-shrink: 0;
-  transition: transform var(--duration-fast) var(--ease-default), box-shadow var(--duration-fast) var(--ease-default);
+  transition:
+    transform var(--duration-fast) var(--ease-default),
+    box-shadow var(--duration-fast) var(--ease-default);
   background: hsl(var(--swatch-hue, 0) 65% 55%);
   outline-offset: 3px;
 }

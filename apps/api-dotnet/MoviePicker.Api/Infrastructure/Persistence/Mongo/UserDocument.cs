@@ -19,6 +19,10 @@ public sealed class UserDocument
     [BsonElement("displayName")]
     public string DisplayName { get; set; } = string.Empty;
 
+    [BsonElement("identities")]
+    [BsonIgnoreIfNull]
+    public List<UserIdentityDocument>? Identities { get; set; }
+
     [BsonElement("handle")]
     [BsonIgnoreIfNull]
     public string? Handle { get; set; }
@@ -71,6 +75,26 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public bool? NotifyOnNewFollower { get; set; }
 
+    [BsonElement("supporterSince")]
+    [BsonIgnoreIfNull]
+    public DateTime? SupporterSince { get; set; }
+
+    [BsonElement("letterboxdUsername")]
+    [BsonIgnoreIfNull]
+    public string? LetterboxdUsername { get; set; }
+
+    [BsonElement("letterboxdLastSyncAt")]
+    [BsonIgnoreIfNull]
+    public DateTime? LetterboxdLastSyncAt { get; set; }
+
+    [BsonElement("letterboxdLastSyncError")]
+    [BsonIgnoreIfNull]
+    public string? LetterboxdLastSyncError { get; set; }
+
+    [BsonElement("letterboxdPendingReconciliationCount")]
+    [BsonIgnoreIfDefault]
+    public int LetterboxdPendingReconciliationCount { get; set; }
+
     [BsonElement("notificationPreferences")]
     [BsonIgnoreIfNull]
     public List<NotificationPreferenceEntryDocument>? NotificationPreferences { get; set; }
@@ -80,6 +104,21 @@ public sealed class UserDocument
 
     [BsonElement("updatedAt")]
     public DateTime UpdatedAt { get; set; }
+}
+
+public sealed class UserIdentityDocument
+{
+    [BsonElement("provider")]
+    public string Provider { get; set; } = string.Empty;
+
+    [BsonElement("subject")]
+    public string Subject { get; set; } = string.Empty;
+
+    [BsonElement("email")]
+    public string Email { get; set; } = string.Empty;
+
+    [BsonElement("linkedAt")]
+    public DateTime LinkedAt { get; set; }
 }
 
 public sealed class NotificationPreferenceEntryDocument

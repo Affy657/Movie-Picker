@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
@@ -50,9 +50,7 @@ describe('InboxBell (MSW)', () => {
 
     renderBell();
 
-    await waitFor(() => {
-      expect(screen.getByText('4')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('4')).toBeInTheDocument();
   });
 
   it('affiche 9+ quand le nombre de non lus dépasse 9', async () => {
@@ -65,8 +63,6 @@ describe('InboxBell (MSW)', () => {
 
     renderBell();
 
-    await waitFor(() => {
-      expect(screen.getByText('9+')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('9+')).toBeInTheDocument();
   });
 });

@@ -8,9 +8,18 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
-### À faire
+## [1.4.0] - 2026-08-17
 
-- Préparation V1.4 : sélection manuelle du film et flamme de régularité (streak).
+### Added
+
+- **Watchlist personnelle** : liste de films « à voir » par utilisateur, alimentée depuis la recherche TMDB, avec proposition rapide d'un film de la watchlist directement dans une soirée.
+- **Intégration Letterboxd** : synchronisation bidirectionnelle de la watchlist à partir du pseudo Letterboxd, rafraîchie automatiquement (plafonnée à une fois par jour côté serveur) avec un écran de revue des correspondances à l'import.
+- **Sélection manuelle du film gagnant** : alternative au tirage par la roue, l'hôte bascule en « choix manuel » et désigne lui-même le gagnant, avec la même animation de révélation et un badge « Choisi par l'hôte ».
+- **Exclusion d'un film de la roue** : l'hôte écarte un film du tirage sans le retirer de la liste ; réversible à tout moment, y compris après un tirage.
+- **Flamme streak de soirées** : compteur de semaines consécutives de participation à une soirée avec tirage, affiché sur le profil public, mis en avant sur la carte de profil.
+- **Connexion sociale (OAuth)** : connexion et inscription via Google ou GitHub, avec une section « Connexions » sur la page Compte pour lier ou délier un fournisseur.
+- **Système de dons** : page publique « Soutenir Movie Picker » exposant les frais réels du service, renvoyant vers Ko-fi, avec un badge « Soutien » décoratif sur le profil public des donateurs.
+- **Modale de nouveautés** : à la première visite suivant une mise à jour, une modale résume ce qui a changé dans la version ; affichée une seule fois par version connectée, consultable ensuite à la demande depuis le pied de page.
 
 ## [1.3.2] - 2026-07-25
 

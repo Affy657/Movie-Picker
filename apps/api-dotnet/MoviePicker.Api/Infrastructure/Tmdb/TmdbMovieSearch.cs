@@ -111,7 +111,8 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         if (mediaType is null)
             return null;
 
-        if (!MatchesGenres(item, genreIds))
+        var itemGenreIds = ReadGenreIdArray(item);
+        if (!MatchesGenres(itemGenreIds, genreIds))
             return null;
 
         if (!MatchesYearRange(item, mediaType.Value, yearFrom, yearTo))
@@ -131,14 +132,14 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         var id = item.GetProperty("id").GetInt32();
         var year = ReadYear(item, mediaType.Value);
         var posterPath = ReadPosterUrl(item);
-        return new TmdbSearchItem(id, mediaType.Value, title, year, posterPath, voteAverage);
+        var originalTitle = ReadOriginalTitle(item, mediaType.Value);
+        return new TmdbSearchItem(id, mediaType.Value, title, year, posterPath, voteAverage, originalTitle, itemGenreIds);
     }
 
-    private static bool MatchesGenres(JsonElement item, IReadOnlyList<int>? genreIds)
+    private static bool MatchesGenres(IReadOnlyList<int> itemGenreIds, IReadOnlyList<int>? genreIds)
     {
         if (!(genreIds?.Count > 0))
             return true;
-        var itemGenreIds = ReadGenreIdArray(item);
         return genreIds.Any(itemGenreIds.Contains);
     }
 
@@ -208,7 +209,8 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         var year = ReadYear(item, MovieMediaType.Movie);
         var posterPath = ReadPosterUrl(item);
         var voteAverage = ReadVoteAverage(item);
-        return new TmdbSearchItem(id, MovieMediaType.Movie, title, year, posterPath, voteAverage);
+        var genreIds = ReadGenreIdArray(item);
+        return new TmdbSearchItem(id, MovieMediaType.Movie, title, year, posterPath, voteAverage, GenreIds: genreIds);
     }
 
     private static List<int> ReadGenreIdArray(JsonElement item)
@@ -525,6 +527,14 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
             "tv" => MovieMediaType.Tv,
             _ => null
         };
+    }
+
+    private static string? ReadOriginalTitle(JsonElement el, MovieMediaType mediaType)
+    {
+        var property = mediaType == MovieMediaType.Tv ? "original_name" : "original_title";
+        if (el.TryGetProperty(property, out var value) && value.ValueKind == JsonValueKind.String)
+            return value.GetString();
+        return null;
     }
 
     private static string ReadTitle(JsonElement el, MovieMediaType mediaType)

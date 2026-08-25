@@ -60,7 +60,7 @@ export default function EventParticipantsList({
       <div className={styles.headerRow}>
         <h2 id="participants-heading" className={styles.header}>
           <Users aria-hidden size={18} className={styles.headerIcon} />
-          {t('events.participants.title')}
+          <span className={styles.headerLabel}>{t('events.participants.title')}</span>
           <span className={styles.count}>({countLabel})</span>
           {isFull && (
             <span className={styles.fullBadge} aria-label={t('events.participants.fullBadgeAria')}>
@@ -79,12 +79,14 @@ export default function EventParticipantsList({
             {managing ? (
               <>
                 <Check aria-hidden size={14} />
-                {t('events.participants.manageDone')}
+                <span className={styles.manageBtnLabel}>{t('events.participants.manageDone')}</span>
               </>
             ) : (
               <>
                 <Settings2 aria-hidden size={14} />
-                {t('events.participants.manageAction')}
+                <span className={styles.manageBtnLabel}>
+                  {t('events.participants.manageAction')}
+                </span>
               </>
             )}
           </button>
@@ -163,7 +165,9 @@ export default function EventParticipantsList({
                 aria-label={t('events.participants.inviteAriaLabel')}
               >
                 <UserPlus aria-hidden size={14} />
-                {t('events.participants.inviteAction')}
+                <span className={styles.inviteChipLabel}>
+                  {t('events.participants.inviteAction')}
+                </span>
               </button>
             </li>
           )}

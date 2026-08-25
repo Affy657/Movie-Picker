@@ -209,6 +209,7 @@ export default function HostEventSettingsPanel({
 
   return (
     <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>
+      <span className={styles.handle} aria-hidden="true" />
       <div className={styles.panelHead}>
         <Settings size={18} aria-hidden className={styles.summaryIcon} />
         <h2 id={titleId} className={styles.panelTitle}>
@@ -282,7 +283,7 @@ export default function HostEventSettingsPanel({
                   aria-label="Supprimer le thème"
                 >
                   <X size={11} strokeWidth={2.5} />
-                  Effacer
+                  <span className={styles.clearThemeLabel}>Effacer</span>
                 </button>
               )}
             </div>

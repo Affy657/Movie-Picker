@@ -26,11 +26,11 @@ interface MovieSearchFiltersPanelProps {
   availabilityFilter: string | undefined;
   runtimeRange: [number, number];
   ratingScale?: RatingScale;
-  onToggleGenre: (id: number) => void;
+  onToggleGenre?: (id: number) => void;
   onToggleDecade: (decade: string) => void;
   onToggleVoteMin: (min: number) => void;
-  onToggleLanguage: (code: string) => void;
-  onToggleAvailability: (type: string) => void;
+  onToggleLanguage?: (code: string) => void;
+  onToggleAvailability?: (type: string) => void;
   onChangeRuntimeRange: (min: number, max: number) => void;
 }
 
@@ -56,22 +56,24 @@ export default function MovieSearchFiltersPanel({
 
   return (
     <div id={panelId} className={styles.filtersPanel}>
-      <div className={styles.filterGroup}>
-        <span className={styles.filterLabel}>{t('movies.search.filterGenre')}</span>
-        <div className={styles.genreChips}>
-          {MOVIE_GENRE_IDS.map((id) => (
-            <button
-              key={id}
-              type="button"
-              className={`${styles.genreChip} ${selectedGenres.includes(id) ? styles.genreChipActive : ''}`}
-              onClick={() => onToggleGenre(id)}
-              aria-pressed={selectedGenres.includes(id)}
-            >
-              {genreLabel(id, tmdbLanguage)}
-            </button>
-          ))}
+      {onToggleGenre && (
+        <div className={styles.filterGroup}>
+          <span className={styles.filterLabel}>{t('movies.search.filterGenre')}</span>
+          <div className={styles.genreChips}>
+            {MOVIE_GENRE_IDS.map((id) => (
+              <button
+                key={id}
+                type="button"
+                className={`${styles.genreChip} ${selectedGenres.includes(id) ? styles.genreChipActive : ''}`}
+                onClick={() => onToggleGenre(id)}
+                aria-pressed={selectedGenres.includes(id)}
+              >
+                {genreLabel(id, tmdbLanguage)}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
       <div className={styles.filterGroup}>
         <span className={styles.filterLabel}>{t('movies.search.filterYear')}</span>
         <div className={styles.decadeChips}>
@@ -104,41 +106,45 @@ export default function MovieSearchFiltersPanel({
           ))}
         </div>
       </div>
-      <div className={styles.filterGroup}>
-        <span className={styles.filterLabel}>{t('movies.search.filterLanguage')}</span>
-        <div className={styles.langChips}>
-          {LANGUAGE_OPTIONS.map((lang) => (
-            <button
-              key={lang.code}
-              type="button"
-              className={`${styles.langChip} ${selectedLanguage === lang.code ? styles.langChipActive : ''}`}
-              onClick={() => onToggleLanguage(lang.code)}
-              aria-pressed={selectedLanguage === lang.code}
-            >
-              <span className={styles.langCode} aria-hidden="true">
-                <span className={styles.langCodeText}>{lang.code.toUpperCase()}</span>
-              </span>
-              {inFrench ? lang.fr : lang.en}
-            </button>
-          ))}
+      {onToggleLanguage && (
+        <div className={styles.filterGroup}>
+          <span className={styles.filterLabel}>{t('movies.search.filterLanguage')}</span>
+          <div className={styles.langChips}>
+            {LANGUAGE_OPTIONS.map((lang) => (
+              <button
+                key={lang.code}
+                type="button"
+                className={`${styles.langChip} ${selectedLanguage === lang.code ? styles.langChipActive : ''}`}
+                onClick={() => onToggleLanguage(lang.code)}
+                aria-pressed={selectedLanguage === lang.code}
+              >
+                <span className={styles.langCode} aria-hidden="true">
+                  <span className={styles.langCodeText}>{lang.code.toUpperCase()}</span>
+                </span>
+                {inFrench ? lang.fr : lang.en}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
-      <div className={styles.filterGroup}>
-        <span className={styles.filterLabel}>{t('movies.search.filterAvailability')}</span>
-        <div className={styles.availabilityChips}>
-          {AVAILABILITY_OPTIONS.map((opt) => (
-            <button
-              key={opt.type}
-              type="button"
-              className={`${styles.availabilityChip} ${availabilityFilter === opt.type ? styles.availabilityChipActive : ''}`}
-              onClick={() => onToggleAvailability(opt.type)}
-              aria-pressed={availabilityFilter === opt.type}
-            >
-              {inFrench ? opt.fr : opt.en}
-            </button>
-          ))}
+      )}
+      {onToggleAvailability && (
+        <div className={styles.filterGroup}>
+          <span className={styles.filterLabel}>{t('movies.search.filterAvailability')}</span>
+          <div className={styles.availabilityChips}>
+            {AVAILABILITY_OPTIONS.map((opt) => (
+              <button
+                key={opt.type}
+                type="button"
+                className={`${styles.availabilityChip} ${availabilityFilter === opt.type ? styles.availabilityChipActive : ''}`}
+                onClick={() => onToggleAvailability(opt.type)}
+                aria-pressed={availabilityFilter === opt.type}
+              >
+                {inFrench ? opt.fr : opt.en}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
       <div className={styles.filterGroup}>
         <span className={styles.filterLabel}>{t('movies.search.filterDuration')}</span>
         <DurationRangeSlider
@@ -148,7 +154,7 @@ export default function MovieSearchFiltersPanel({
           valueMin={runtimeRange[0]}
           valueMax={runtimeRange[1]}
           onChange={onChangeRuntimeRange}
-          formatLabel={(value) => runtimeRangeLabel(value, tmdbLanguage)}
+          formatLabel={(value, bound) => runtimeRangeLabel(value, tmdbLanguage, bound)}
           ariaLabelMin={t('movies.search.durationMinAria')}
           ariaLabelMax={t('movies.search.durationMaxAria')}
         />

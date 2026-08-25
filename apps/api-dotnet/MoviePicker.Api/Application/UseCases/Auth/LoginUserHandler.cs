@@ -20,7 +20,7 @@ public sealed class LoginUserHandler : ILoginUserHandler
     public async Task<LoginResponse> HandleAsync(LoginRequest request, CancellationToken ct = default)
     {
         var user = await _users.GetByEmailAsync(request.Email.Trim(), ct);
-        if (user is null)
+        if (user is null || string.IsNullOrEmpty(user.PasswordHash))
             throw new UnauthorizedException("Identifiants incorrects.");
 
         var verify = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);

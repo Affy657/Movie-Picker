@@ -15,6 +15,10 @@
   box-shadow: var(--shadow-md);
 }
 
+.cardWinner {
+  border-color: color-mix(in srgb, var(--color-primary) 52%, var(--color-border-subtle));
+}
+
 .posterRegion {
   position: relative;
   width: 100%;
@@ -41,13 +45,33 @@
   font-size: var(--font-size-2xs);
 }
 
-.tvBadge {
+.badgeStack {
   position: absolute;
   top: 0.5rem;
   left: 0.5rem;
   z-index: 3;
-  /* Horizontal: padding-right reduced by the trailing letter-spacing. Vertical:
-     padding-top +0.11em / padding-bottom -0.11em to optically center the caps. */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.28rem;
+  pointer-events: none;
+}
+
+.winnerBadge {
+  padding: calc(0.1rem + var(--text-optical-nudge-caps)) 0.4rem
+    calc(0.1rem - var(--text-optical-nudge-caps));
+  line-height: 1;
+  font-size: var(--font-size-4xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-primary-text);
+  background: color-mix(in srgb, var(--color-primary) 55%, rgba(7, 11, 22, 0.72));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 55%, transparent);
+  border-radius: var(--radius-sm);
+}
+
+.tvBadge {
   padding: calc(0.1rem + 0.11em) calc(0.4rem - var(--tracking-wide)) calc(0.1rem - 0.11em) 0.4rem;
   font-size: var(--font-size-4xs);
   font-weight: 600;
@@ -140,6 +164,11 @@
 
 .metaProvGroup svg {
   display: block;
+  flex-shrink: 0;
+}
+
+.metaProvCount {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .actionRow {

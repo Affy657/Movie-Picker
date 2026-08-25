@@ -6,7 +6,8 @@ import NumberInput from '@/shared/components/NumberInput';
 import { useQueryClient } from '@tanstack/react-query';
 import PageLayout from '@/shared/components/PageLayout';
 import { createEvent as createEventApi, patchEventConfig } from '@/features/events/api/eventsApi';
-import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import { pageTitle } from '@/shared/hooks/useDocumentTitle';
+import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { setStoredParticipant } from '@/features/events/storage';
@@ -39,7 +40,7 @@ function getDefaultTime(): string {
 }
 
 export default function CreateEvent() {
-  useDocumentTitle(pageTitle('Nouvelle soirée'));
+  useNoindexPage(pageTitle('Nouvelle soirée'), ROUTES.createEvent);
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -125,7 +126,7 @@ export default function CreateEvent() {
     <PageLayout className={styles.layout}>
       <Link to={ROUTES.myEvents} className={styles.backLink}>
         <ArrowLeft size={16} aria-hidden />
-        Mes soirées
+        <span className={styles.backLinkLabel}>Mes soirées</span>
       </Link>
       <div className={styles.card}>
         <span className={styles.cardAccent} aria-hidden />

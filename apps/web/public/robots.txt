@@ -8,9 +8,12 @@ Disallow: /e/
 Disallow: /my-events
 Disallow: /settings
 Disallow: /new
+Disallow: /watchlist
+Disallow: /notifications
 Disallow: /login
 Disallow: /register
 Disallow: /forgot-password
 Disallow: /reset
+Disallow: /auth/
 
 Sitemap: https://web.movie-picker.fr/sitemap.xml

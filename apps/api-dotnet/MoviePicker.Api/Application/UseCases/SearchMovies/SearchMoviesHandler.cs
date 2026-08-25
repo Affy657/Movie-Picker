@@ -111,7 +111,8 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
                     VoteAverage = vote,
                     RuntimeMinutes = runtime,
                     WatchProviders = providers,
-                    TmdbWatchPageUrl = watchPage
+                    TmdbWatchPageUrl = watchPage,
+                    GenreIds = row.GenreIds ?? Array.Empty<int>()
                 });
         }
 

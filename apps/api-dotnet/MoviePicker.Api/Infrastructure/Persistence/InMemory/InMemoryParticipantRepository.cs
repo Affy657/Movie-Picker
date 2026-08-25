@@ -59,8 +59,9 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
         };
         _byId[id] = created;
         _eventPseudoToId[(created.EventId, created.Pseudo)] = id;
-        if (!string.IsNullOrWhiteSpace(created.UserId))
-            _eventUserToId[(created.EventId, created.UserId!)] = id;
+        var createdUserId = created.UserId;
+        if (!string.IsNullOrWhiteSpace(createdUserId))
+            _eventUserToId[(created.EventId, createdUserId)] = id;
         return Task.FromResult(created);
     }
 
@@ -82,10 +83,9 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
         if (string.IsNullOrWhiteSpace(userId))
             return Task.FromResult<IReadOnlyList<Participant>>(Array.Empty<Participant>());
 
-        var query = _byId.Values.Where(p => p.UserId == userId);
-        if (limit > 0)
-            query = query.Take(limit);
-        return Task.FromResult<IReadOnlyList<Participant>>(query.ToList());
+        var query = _byId.Values.Where(p => p.UserId == userId).OrderByDescending(p => p.CreatedAt);
+        var result = limit > 0 ? query.Take(limit) : query;
+        return Task.FromResult<IReadOnlyList<Participant>>(result.ToList());
     }
 
     public Task<int> CountByEventIdAsync(string eventId, CancellationToken ct = default)
@@ -121,8 +121,9 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
 
         _byId.TryRemove(participantId, out _);
         _eventPseudoToId.TryRemove((p.EventId, p.Pseudo), out _);
-        if (!string.IsNullOrWhiteSpace(p.UserId))
-            _eventUserToId.TryRemove((p.EventId, p.UserId!), out _);
+        var deletedUserId = p.UserId;
+        if (!string.IsNullOrWhiteSpace(deletedUserId))
+            _eventUserToId.TryRemove((p.EventId, deletedUserId), out _);
         return Task.FromResult(true);
     }
 
@@ -136,8 +137,9 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
         {
             _byId.TryRemove(p.Id, out _);
             _eventPseudoToId.TryRemove((p.EventId, p.Pseudo), out _);
-            if (!string.IsNullOrWhiteSpace(p.UserId))
-                _eventUserToId.TryRemove((p.EventId, p.UserId!), out _);
+            var removedUserId = p.UserId;
+            if (!string.IsNullOrWhiteSpace(removedUserId))
+                _eventUserToId.TryRemove((p.EventId, removedUserId), out _);
         }
 
         return Task.FromResult((long)toRemove.Count);

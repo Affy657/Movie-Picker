@@ -1,108 +1,92 @@
-import clsx from 'clsx';
-import { Trophy } from 'lucide-react';
-import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 import type { EventWheelState } from '@/features/events/hooks/useEventWheel';
+import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import { useTranslation } from '@/shared/i18n';
-import { MovieCardGrid } from '@/features/movies/components/MovieCardGrid';
-import { MovieCardList } from '@/features/movies/components/MovieCardList';
+import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
 import WheelModal from './WheelModal';
 import styles from './WheelSection.module.css';
 
 interface WheelSectionProps {
-  slug: string;
-  event: EventData;
   movies: MovieData[];
   wheel: EventWheelState;
-  viewMode: 'grid' | 'list';
 }
 
-export default function WheelSection({
-  slug,
-  event,
-  movies,
-  wheel,
-  viewMode,
-}: Readonly<WheelSectionProps>) {
+export default function WheelSection({ movies, wheel }: Readonly<WheelSectionProps>) {
   const { t } = useTranslation();
-  const safeMovies = movies ?? [];
-  const { winner } = wheel;
+  const { winner, pickMethod } = wheel;
 
   if (!winner) return null;
 
-  const winnerFull = safeMovies.find((m) => m.id === winner.id) ?? winner;
-  const participantAvatars = Object.fromEntries(
-    (event.participants ?? []).filter((p) => p.avatarId).map((p) => [p.id, p.avatarId as string])
-  );
+  const winnerFull = movies.find((m) => m.id === winner.id) ?? winner;
+  const posterSrc = posterImageSrc(winnerFull.posterPath);
+  const posterSrcSet = tmdbPosterSrcSetForList(posterSrc);
+  const providers = winnerFull.watchProviders ?? [];
 
   return (
-    <section className="section" aria-label={t('events.wheel.viewerTitle')}>
-      <h2 className={styles.sectionTitle}>
-        <Trophy size={18} aria-hidden className={styles.sectionTitleIcon} />
-        {t('events.wheel.viewerTitle')}
-      </h2>
+    <section className={styles.section} aria-labelledby="event-winner-heading">
+      {wheel.isModalOpen ? (
+        <h2 id="event-winner-heading" className="visually-hidden">
+          {winnerFull.title}
+        </h2>
+      ) : (
+        <div className={styles.lockup} aria-live="polite">
+          {posterSrc ? (
+            <div className={styles.posterFrame}>
+              <img
+                src={posterSrc}
+                srcSet={posterSrcSet}
+                sizes="108px"
+                alt=""
+                className={styles.poster}
+                width={108}
+                height={162}
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+              />
+            </div>
+          ) : null}
 
-      {!wheel.isModalOpen && (
-        <div className={styles.winnerSection} aria-live="polite">
-          <p className={styles.winnerLabel}>{t('events.wheel.winnerLabel')}</p>
-          <ul
-            className={clsx(
-              styles.winnerWrapper,
-              viewMode === 'list' ? styles.winnerWrapperList : styles.winnerWrapperGrid
-            )}
-          >
-            {viewMode === 'list' ? (
-              <MovieCardList
-                movie={winnerFull}
-                slug={slug}
-                participantId={null}
-                participantPseudo={null}
-                isFinished={true}
-                isHost={false}
-                onVote={async () => {}}
-                onRemove={async () => {}}
-                refresh={() => {}}
-                onActionError={() => {}}
-                participantAvatars={participantAvatars}
-                t={t}
-                eager
-              />
-            ) : (
-              <MovieCardGrid
-                movie={winnerFull}
-                slug={slug}
-                participantId={null}
-                participantPseudo={null}
-                isFinished={true}
-                isHost={false}
-                onVote={async () => {}}
-                onRemove={async () => {}}
-                refresh={() => {}}
-                onActionError={() => {}}
-                participantAvatars={participantAvatars}
-                t={t}
-                eager
-              />
-            )}
-          </ul>
+          <div className={styles.body}>
+            <p className={styles.kicker}>
+              <span className={styles.kickerLabel}>{t('events.wheel.winnerLabel')}</span>
+              {pickMethod === 'manual' ? (
+                <span className={styles.methodBadge}>{t('events.wheel.manualPickBadge')}</span>
+              ) : null}
+            </p>
+            <h2 id="event-winner-heading" className={styles.title}>
+              {winnerFull.title}
+            </h2>
+            <p className={styles.meta}>
+              {winnerFull.year ? <span>{winnerFull.year}</span> : null}
+              {winnerFull.proposerPseudo ? (
+                <span>{t('movies.list.proposedBy', { pseudo: winnerFull.proposerPseudo })}</span>
+              ) : null}
+            </p>
+            {providers.length > 0 ? (
+              <div className={styles.providers}>
+                <WatchProviderChips
+                  providers={providers}
+                  watchPageUrl={winnerFull.tmdbWatchPageUrl}
+                  variant="compact"
+                  maxVisible={6}
+                />
+              </div>
+            ) : null}
+          </div>
         </div>
-      )}
-
-      {wheel.showReset && (
-        <button type="button" className="btn" onClick={wheel.reset} disabled={wheel.loading}>
-          {t('events.wheel.resetButton')}
-        </button>
       )}
 
       {wheel.isModalOpen && wheel.winnerIndex >= 0 && (
         <WheelModal
           open={wheel.isModalOpen}
-          movies={safeMovies}
+          movies={wheel.eligibleMovies}
           winnerIndex={wheel.winnerIndex}
           winner={winner}
           wheelKey={wheel.wheelKey}
           onClose={wheel.dismissModal}
-          onRelaunch={wheel.showRelaunch ? wheel.launch : undefined}
+          onRelaunch={wheel.showRelaunch && !wheel.manualReveal ? wheel.launch : undefined}
+          skipSpin={wheel.manualReveal}
         />
       )}
     </section>

@@ -1,4 +1,5 @@
 import { fetchApi } from '@/shared/api/client';
+import type { MovieMediaType } from '@/shared/types/movie';
 
 export interface PublicProfile {
   handle: string;
@@ -8,6 +9,7 @@ export interface PublicProfile {
   memberSince: string;
   followingCount: number;
   followersCount: number;
+  isSupporter: boolean;
   isFollowedByMe: boolean | null;
 }
 
@@ -45,6 +47,8 @@ export interface UserStats {
   votesCast: number;
   winningProposals: number;
   moviesSeen: number;
+  currentStreakWeeks: number;
+  bestStreakWeeks: number;
   favoriteGenres: GenreCount[];
   dailyActivity: DailyActivityPoint[];
 }
@@ -77,4 +81,29 @@ export async function fetchFollowers(handle: string): Promise<FollowListResponse
 
 export async function fetchUserStats(handle: string, signal?: AbortSignal): Promise<UserStats> {
   return fetchApi<UserStats>(`/users/${encodeURIComponent(handle)}/stats`, { signal });
+}
+
+export interface UserWatchedMovieItem {
+  tmdbId: number;
+  title: string;
+  year: string;
+  posterPath: string | null;
+  genreIds: number[];
+  mediaType: MovieMediaType;
+  watchedAt: string;
+}
+
+export interface UserWatchedMoviesResponse {
+  items: UserWatchedMovieItem[];
+}
+
+export async function fetchUserWatchedMovies(
+  handle: string,
+  take: number,
+  signal?: AbortSignal
+): Promise<UserWatchedMoviesResponse> {
+  return fetchApi<UserWatchedMoviesResponse>(
+    `/users/${encodeURIComponent(handle)}/watched-movies?take=${take}`,
+    { signal }
+  );
 }

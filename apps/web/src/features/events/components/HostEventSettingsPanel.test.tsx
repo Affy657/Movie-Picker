@@ -284,7 +284,7 @@ describe('HostEventSettingsPanel', () => {
       await waitFor(() => expect(getStoredParticipant(slug)).toBeNull());
       expect(getStoredHostToken(slug)).toBeNull();
 
-      await waitFor(() => expect(screen.getByTestId('route-my-events')).toBeInTheDocument());
+      expect(await screen.findByTestId('route-my-events')).toBeInTheDocument();
     });
 
     it('annule la modale → aucun DELETE émis', async () => {
@@ -336,7 +336,7 @@ describe('HostEventSettingsPanel', () => {
       await user.click(screen.getByTestId('delete-event-button'));
       await user.click(await screen.findByTestId('delete-event-confirm-dialog-confirm'));
 
-      await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/seul le créateur/i));
+      expect(await screen.findByRole('alert')).toHaveTextContent(/seul le créateur/i);
       expect(screen.queryByTestId('route-my-events')).not.toBeInTheDocument();
     });
   });

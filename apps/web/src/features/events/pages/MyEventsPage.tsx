@@ -1,17 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import clsx from 'clsx';
-import {
-  CalendarPlus,
-  Crown,
-  Film,
-  History,
-  LogOut,
-  MoreVertical,
-  Trash2,
-  Trophy,
-  Users,
-} from 'lucide-react';
-import { posterImageSrc } from '@/shared/utils/posterUrl';
+import { CalendarPlus, History, LogOut, MoreVertical, Trash2 } from 'lucide-react';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import {
@@ -26,17 +15,20 @@ import PageLayout from '@/shared/components/PageLayout';
 import MyEventsSkeleton from '@/features/events/pages/MyEventsSkeleton';
 import { ApiError, getErrorMessage } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
-import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import { pageTitle } from '@/shared/hooks/useDocumentTitle';
+import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import type { MyEventSummary } from '@/features/events/types';
 import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
-import { useLocale, useTranslation } from '@/shared/i18n';
-import { formatMyEventsListDate, formatEventTime } from '@/shared/utils/formatMyEventsListDate';
+import { useTranslation } from '@/shared/i18n';
 import { parseEventLocalStartMs } from '@/shared/utils/eventScheduleLocal';
 import { withReturnTo, ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
-import EventLifecyclePill from '@/shared/components/EventLifecyclePill';
+import {
+  EventSummaryCardBody,
+  eventSummaryCardStyles,
+} from '@/features/events/components/EventSummaryCard';
 import styles from './MyEventsPage.module.css';
 
 function isFinishedEvent(ev: MyEventSummary): boolean {
@@ -53,27 +45,6 @@ function sortActiveChrono(a: MyEventSummary, b: MyEventSummary): number {
 
 function sortHistoryChrono(a: MyEventSummary, b: MyEventSummary): number {
   return eventDateTimeMs(b) - eventDateTimeMs(a);
-}
-
-function cardJoinedLabel(participantCount: number, maxParticipants: number | null | undefined) {
-  const n = participantCount;
-  const hasCap = typeof maxParticipants === 'number' && maxParticipants > 0;
-  const countStr = hasCap ? `${n} / ${maxParticipants}` : String(n);
-  return (
-    <span className={styles.participantStat}>
-      <Users aria-hidden size={13} />
-      {countStr}
-    </span>
-  );
-}
-
-function cardMoviesLabel(movieCount: number) {
-  return (
-    <span className={styles.participantStat}>
-      <Film aria-hidden size={13} />
-      {movieCount}
-    </span>
-  );
 }
 
 function EventCardKebab({
@@ -122,7 +93,7 @@ function EventCardKebab({
               }}
             >
               <Trash2 aria-hidden size={14} />
-              <span>{t('events.danger.deleteButton')}</span>
+              <span className={styles.itemKebabLabel}>{t('events.danger.deleteButton')}</span>
             </button>
           )}
           {onLeave && (
@@ -137,7 +108,7 @@ function EventCardKebab({
               }}
             >
               <LogOut aria-hidden size={14} />
-              <span>{t('events.participants.leaveAction')}</span>
+              <span className={styles.itemKebabLabel}>{t('events.participants.leaveAction')}</span>
             </button>
           )}
         </div>
@@ -161,9 +132,6 @@ function EventListBlock({
   onDeleteEvent?: (slug: string) => void;
   onLeaveEvent?: (slug: string) => void;
 }>) {
-  const { t } = useTranslation();
-  const { locale } = useLocale();
-
   if (events.length === 0) {
     return null;
   }
@@ -174,74 +142,26 @@ function EventListBlock({
         {heading}
       </h2>
       <ul className={styles.list}>
-        {events.map((ev) => {
-          const lifecycle = normalizeMyEventLifecycle(ev.lifecycle);
-          const dateLabel = formatMyEventsListDate(ev.date, locale);
-          return (
-            <li key={ev.id} className={styles.item}>
-              <Link
-                to={ROUTES.eventDetail(ev.slug)}
-                className={clsx(
-                  styles.link,
-                  ev.winnerMovieTitle && styles.winnerCard,
-                  ((onDeleteEvent && ev.isCreator) || (onLeaveEvent && !ev.isCreator)) &&
-                    styles.linkWithKebab
-                )}
-              >
-                <span className={styles.rowTop}>
-                  <span className={styles.title}>{ev.title}</span>
-                  {ev.isCreator ? (
-                    <span
-                      className={styles.badgeHost}
-                      title={t('events.myEvents.hostBadgeTitle')}
-                      aria-label={t('events.myEvents.hostBadge')}
-                    >
-                      <Crown aria-hidden size={14} />
-                    </span>
-                  ) : null}
-                </span>
-                {ev.theme ? <span className={styles.cardTheme}>{ev.theme}</span> : null}
-                {ev.winnerMovieTitle ? (
-                  <span className={styles.winnerRow}>
-                    {ev.winnerMoviePosterPath ? (
-                      <img
-                        src={posterImageSrc(ev.winnerMoviePosterPath)}
-                        alt=""
-                        aria-hidden
-                        className={styles.winnerPoster}
-                        width={28}
-                        height={42}
-                      />
-                    ) : (
-                      <Trophy aria-hidden size={13} className={styles.winnerIcon} />
-                    )}
-                    <span className={styles.winnerTitle}>{ev.winnerMovieTitle}</span>
-                  </span>
-                ) : null}
-                <div className={styles.linkFooter}>
-                  <span className={styles.cardStats}>
-                    {cardJoinedLabel(ev.participantCount ?? 0, ev.maxParticipants)}
-                    {cardMoviesLabel(ev.movieCount ?? 0)}
-                  </span>
-                  <span className={styles.metaRight}>
-                    {showLifecycleBadge && lifecycle !== 'upcoming' ? (
-                      <EventLifecyclePill lifecycle={lifecycle} />
-                    ) : null}
-                    <span className={styles.meta}>
-                      {formatEventTime(ev.time)} – {dateLabel}
-                    </span>
-                  </span>
-                </div>
-              </Link>
-              {onDeleteEvent && ev.isCreator && (
-                <EventCardKebab title={ev.title} onDelete={() => onDeleteEvent(ev.slug)} />
+        {events.map((ev) => (
+          <li key={ev.id} className={styles.item}>
+            <Link
+              to={ROUTES.eventDetail(ev.slug)}
+              className={clsx(
+                eventSummaryCardStyles.card,
+                ((onDeleteEvent && ev.isCreator) || (onLeaveEvent && !ev.isCreator)) &&
+                  styles.linkWithKebab
               )}
-              {onLeaveEvent && !ev.isCreator && (
-                <EventCardKebab title={ev.title} onLeave={() => onLeaveEvent(ev.slug)} />
-              )}
-            </li>
-          );
-        })}
+            >
+              <EventSummaryCardBody event={ev} showLifecycleBadge={showLifecycleBadge} />
+            </Link>
+            {onDeleteEvent && ev.isCreator && (
+              <EventCardKebab title={ev.title} onDelete={() => onDeleteEvent(ev.slug)} />
+            )}
+            {onLeaveEvent && !ev.isCreator && (
+              <EventCardKebab title={ev.title} onLeave={() => onLeaveEvent(ev.slug)} />
+            )}
+          </li>
+        ))}
       </ul>
     </section>
   );
@@ -373,7 +293,7 @@ function HistoryEventsPanel({
 
 export default function MyEventsPage() {
   const { t } = useTranslation();
-  useDocumentTitle(pageTitle(t('events.myEvents.title')));
+  useNoindexPage(pageTitle(t('events.myEvents.title')), ROUTES.myEvents);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();

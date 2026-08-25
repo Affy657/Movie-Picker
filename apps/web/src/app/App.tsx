@@ -20,10 +20,16 @@ const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('@/features/auth/pages/ResetPasswordPage'));
+const OAuthCallbackPage = lazy(() => import('@/features/auth/pages/OAuthCallbackPage'));
 const AccountPage = lazy(() => import('@/features/auth/pages/AccountPage'));
+const LegalNoticePage = lazy(() => import('@/app/pages/LegalNoticePage'));
+const PrivacyPolicyPage = lazy(() => import('@/app/pages/PrivacyPolicyPage'));
+const DonatePage = lazy(() => import('@/app/pages/DonatePage'));
 const MyEventsPage = lazy(() => import('@/features/events/pages/MyEventsPage'));
+const WatchlistPage = lazy(() => import('@/features/watchlist/pages/WatchlistPage'));
 const NotificationsPage = lazy(() => import('@/features/notifications/pages/NotificationsPage'));
 const ProfilePage = lazy(() => import('@/features/profile/pages/ProfilePage'));
+const ProfileMoviesPage = lazy(() => import('@/features/profile/pages/ProfileMoviesPage'));
 const NotFoundPage = lazy(() => import('@/app/pages/NotFoundPage'));
 
 function PageFallback() {
@@ -85,6 +91,10 @@ export function AppRoutes() {
         <Route path={ROUTES.register} element={<RegisterPage />} />
         <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
         <Route path={ROUTES.resetPassword} element={<ResetPasswordPage />} />
+        <Route path={ROUTES.oauthCallback} element={<OAuthCallbackPage />} />
+        <Route path={ROUTES.legalNotice} element={<LegalNoticePage />} />
+        <Route path={ROUTES.privacyPolicy} element={<PrivacyPolicyPage />} />
+        <Route path={ROUTES.donate} element={<DonatePage />} />
         <Route
           path={ROUTES.account}
           element={
@@ -102,6 +112,14 @@ export function AppRoutes() {
           }
         />
         <Route
+          path={ROUTES.watchlist}
+          element={
+            <ProtectedRoute>
+              <WatchlistPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path={ROUTES.notifications}
           element={
             <ProtectedRoute>
@@ -109,14 +127,8 @@ export function AppRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path={ROUTES.eventDetailPattern}
-          element={
-            <ProtectedRoute>
-              <EventDetail />
-            </ProtectedRoute>
-          }
-        />
+        <Route path={ROUTES.eventDetailPattern} element={<EventDetail />} />
+        <Route path={ROUTES.profileMoviesPattern} element={<ProfileMoviesPage />} />
         <Route path={ROUTES.profilePattern} element={<ProfilePage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

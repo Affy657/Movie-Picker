@@ -1,5 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { registerAccount, uniqueEmail, asciiSlug, TEST_PASSWORD } from './helpers';
+import {
+  registerAccount,
+  uniqueEmail,
+  asciiSlug,
+  TEST_PASSWORD,
+  dismissWhatsNewModal,
+} from './helpers';
 
 test.describe('Parcours authentification', () => {
   test('inscription puis deconnexion puis reconnexion via une page protegee (returnTo)', async ({
@@ -14,6 +20,7 @@ test.describe('Parcours authentification', () => {
     await page.getByLabel('Mot de passe').fill(TEST_PASSWORD);
     await page.getByRole('button', { name: 'Créer mon compte' }).click();
     await page.waitForURL((url) => !url.pathname.startsWith('/register'));
+    await dismissWhatsNewModal(page);
 
     await page.getByRole('button', { name: 'Menu du compte' }).click();
     await page.getByRole('button', { name: 'Se déconnecter' }).click();

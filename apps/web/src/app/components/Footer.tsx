@@ -3,11 +3,16 @@ import { Link } from 'react-router';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import { APP_VERSION } from '@/shared/appVersion';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { usePwaInstallClick } from '@/shared/hooks/usePwaInstall';
+import ProposeIdeaButton from './ProposeIdeaButton';
 import SupportReportButton from './SupportReportButton';
+import InstallPwaDialog from './InstallPwaDialog';
 import styles from './Footer.module.css';
 
 type FooterProps = {
   clearMobileNav?: boolean;
+  onOpenWhatsNew?: () => void;
 };
 
 function GitHubIcon() {
@@ -48,8 +53,17 @@ function LinkedInIcon() {
 
 const CURRENT_YEAR = new Date().getFullYear();
 
-export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>) {
+export default function Footer({ clearMobileNav = false, onOpenWhatsNew }: Readonly<FooterProps>) {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const {
+    shouldShow: showInstall,
+    mode: installMode,
+    guideOpen: installGuideOpen,
+    guideMode: installGuideMode,
+    onClick: onInstallClick,
+    closeGuide: closeInstallGuide,
+  } = usePwaInstallClick('footer');
 
   return (
     <footer
@@ -62,6 +76,16 @@ export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>
             <span className={styles.brandName}>Movie Picker</span>
           </Link>
           <p className={styles.brandTagline}>{t('footer.tagline')}</p>
+          {showInstall ? (
+            <button
+              type="button"
+              className={clsx(styles.colLink, styles.colButtonReset, styles.brandAction)}
+              aria-haspopup={installMode === 'native' ? undefined : 'dialog'}
+              onClick={() => void onInstallClick()}
+            >
+              {t('pwaInstall.trigger')}
+            </button>
+          ) : null}
         </div>
 
         <div className={styles.col}>
@@ -82,6 +106,11 @@ export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>
                 {t('nav.createEvent')}
               </Link>
             </li>
+            <li>
+              <Link to={ROUTES.watchlist} className={styles.colLink}>
+                {t('nav.watchlist')}
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -90,6 +119,32 @@ export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>
           <ul className={styles.colList}>
             <li>
               <SupportReportButton className={clsx(styles.colLink, styles.colButtonReset)} />
+            </li>
+            {user ? (
+              <li>
+                <ProposeIdeaButton className={clsx(styles.colLink, styles.colButtonReset)} />
+              </li>
+            ) : null}
+            <li>
+              <Link to={ROUTES.donate} className={styles.colLink}>
+                {t('footer.donate')}
+              </Link>
+            </li>
+          </ul>
+        </div>
+
+        <div className={styles.col}>
+          <p className={styles.colTitle}>{t('footer.legalTitle')}</p>
+          <ul className={styles.colList}>
+            <li>
+              <Link to={ROUTES.legalNotice} className={styles.colLink}>
+                {t('footer.legalNotice')}
+              </Link>
+            </li>
+            <li>
+              <Link to={ROUTES.privacyPolicy} className={styles.colLink}>
+                {t('footer.privacyPolicy')}
+              </Link>
             </li>
           </ul>
         </div>
@@ -139,10 +194,20 @@ export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>
           </a>
           {t('footer.tmdbSuffix')}
         </p>
-        <p className={styles.copyright}>
-          {t('footer.copyright', { year: String(CURRENT_YEAR), version: APP_VERSION })}
-        </p>
+        <div className={styles.copyrightRow}>
+          <p className={styles.copyright}>
+            {t('footer.copyright', { year: String(CURRENT_YEAR), version: APP_VERSION })}
+          </p>
+          {onOpenWhatsNew ? (
+            <button type="button" className={styles.whatsNewLink} onClick={onOpenWhatsNew}>
+              {t('footer.whatsNew')}
+            </button>
+          ) : null}
+        </div>
       </div>
+      {installGuideOpen ? (
+        <InstallPwaDialog open mode={installGuideMode} onClose={closeInstallGuide} />
+      ) : null}
     </footer>
   );
 }

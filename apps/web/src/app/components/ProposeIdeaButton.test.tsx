@@ -1,0 +1,141 @@
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router';
+import { setupServer } from 'msw/node';
+import { http, HttpResponse } from 'msw';
+import { LocaleProvider } from '@/shared/i18n';
+import { TEST_API_V1 } from '@/mocks/handlers';
+import ProposeIdeaButton from '@/app/components/ProposeIdeaButton';
+
+function renderButton(path = '/e/soiree-cine') {
+  return render(
+    <LocaleProvider>
+      <MemoryRouter initialEntries={[path]}>
+        <ProposeIdeaButton />
+      </MemoryRouter>
+    </LocaleProvider>
+  );
+}
+
+async function openDialog() {
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('button', { name: /proposer une idée/i }));
+  return user;
+}
+
+async function fillForm(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(await screen.findByLabelText(/titre/i), 'Ajouter un mode battle');
+  await user.type(screen.getByLabelText(/description/i), 'Ce serait top !');
+}
+
+describe('ProposeIdeaButton', () => {
+  const server = setupServer();
+
+  beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+  afterEach(() => server.resetHandlers());
+  afterAll(() => server.close());
+
+  beforeAll(() => {
+    localStorage.setItem('moviepicker-locale', 'fr');
+  });
+
+  it('la boîte de dialogue est fermée au départ', () => {
+    const { container } = renderButton();
+    expect(container.querySelector('dialog')?.hasAttribute('open')).toBe(false);
+  });
+
+  it('ouvre la boîte de dialogue au clic et affiche le formulaire', async () => {
+    const { container } = renderButton();
+    await openDialog();
+
+    await waitFor(() => {
+      expect(container.querySelector('dialog')?.hasAttribute('open')).toBe(true);
+    });
+    expect(screen.getByLabelText(/catégorie/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/titre/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
+  });
+
+  it('envoie la suggestion et affiche la confirmation', async () => {
+    let receivedBody: unknown = null;
+    server.use(
+      http.post(`${TEST_API_V1}/idea-suggestions`, async ({ request }) => {
+        receivedBody = await request.json();
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+
+    renderButton('/e/soiree-cine');
+    const user = await openDialog();
+    await fillForm(user);
+    await user.click(screen.getByRole('button', { name: /envoyer/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toHaveTextContent(/merci/i);
+    });
+    expect(receivedBody).toMatchObject({
+      category: 'idea',
+      title: 'Ajouter un mode battle',
+      description: 'Ce serait top !',
+      pagePath: '/e/soiree-cine',
+    });
+  });
+
+  it('envoie la catégorie sélectionnée (Bug) plutôt que la valeur par défaut', async () => {
+    let receivedBody: unknown = null;
+    server.use(
+      http.post(`${TEST_API_V1}/idea-suggestions`, async ({ request }) => {
+        receivedBody = await request.json();
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+
+    renderButton();
+    const user = await openDialog();
+    await user.click(screen.getByLabelText(/catégorie/i));
+    await user.click(await screen.findByRole('option', { name: /^bug$/i }));
+    await fillForm(user);
+    await user.click(screen.getByRole('button', { name: /envoyer/i }));
+
+    await waitFor(() => {
+      expect(receivedBody).toMatchObject({ category: 'bug' });
+    });
+  });
+
+  it("affiche une erreur explicite et garde le texte saisi si l'envoi échoue", async () => {
+    server.use(
+      http.post(`${TEST_API_V1}/idea-suggestions`, () =>
+        HttpResponse.json(
+          { error: 'Impossible de créer la suggestion pour le moment.' },
+          { status: 503 }
+        )
+      )
+    );
+
+    renderButton();
+    const user = await openDialog();
+    await fillForm(user);
+    await user.click(screen.getByRole('button', { name: /envoyer/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(/impossible de créer la suggestion/i);
+    });
+    expect(screen.getByLabelText(/titre/i)).toHaveValue('Ajouter un mode battle');
+  });
+
+  it('se ferme via le bouton de fermeture', async () => {
+    const { container } = renderButton();
+    const user = await openDialog();
+
+    await waitFor(() => {
+      expect(container.querySelector('dialog')?.hasAttribute('open')).toBe(true);
+    });
+
+    await user.click(screen.getByRole('button', { name: /^fermer$/i }));
+
+    await waitFor(() => {
+      expect(container.querySelector('dialog')?.hasAttribute('open')).toBe(false);
+    });
+  });
+});

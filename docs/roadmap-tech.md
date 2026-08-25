@@ -8,6 +8,8 @@ Découpage par version côté **plateforme, qualité, infra, observabilité, det
 
 > **Règle de tri** : seul le travail **transverse et indépendant de toute feature produit** a sa place ici — CI/CD, infra cloud, sécurité de la chaîne, observabilité, outillage qualité. L'implémentation technique d'une feature (schéma, endpoints, cache…) appartient à la feature elle-même.
 
+> **À faire** : ajouter une taille t-shirt (S/M/L/XL) par item pour comparer la charge entre versions plutôt qu'au nombre de tickets — pas encore fait, à appliquer rétroactivement.
+
 **Légende types** : 🏗️ Infra & déploiement · ⚙️ CI/CD & qualité · 🔒 Sécurité · 📊 Observabilité · ♿ Accessibilité
 
 ---
@@ -68,7 +70,7 @@ Découpage par version côté **plateforme, qualité, infra, observabilité, det
 
 **Objectif** : ouverture OAuth.
 
-- ⬜ 🔒 **OAuth — volet infra** : librairie OAuth côté API .NET, secrets dédiés par provider, écran de consentement, mentions légales à jour — à poser après que le profil utilisateur (V1.2 produit) soit stabilisé.
+- ✅ 🔒 **OAuth — volet infra** (2026-08-12) : librairie OAuth côté API .NET (Google + GitHub), secrets dédiés par provider (`OAUTH_GOOGLE_CLIENT_ID`/`_SECRET`, `OAUTH_GITHUB_CLIENT_ID`/`_SECRET`, absents = provider masqué sans erreur), mentions légales à jour. Reste à faire côté externe (hors code) : créer les apps OAuth Google Cloud Console / GitHub Developer settings (dev et prod), configurer l'écran de consentement Google, et poser les secrets de prod dans GCP Secret Manager + la ligne `--set-secrets` de `ci-cd.yml`.
 
 ---
 

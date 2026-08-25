@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import QrCodeButton from '@/shared/components/QrCodeButton';
@@ -88,5 +88,78 @@ describe('QrCodeButton', () => {
 
     await user.click(dialog);
     await waitFor(() => expect(dialog.hasAttribute('open')).toBe(false));
+  });
+
+  it('affiche le bloc identité quand displayName et handle sont fournis', async () => {
+    const user = userEvent.setup();
+    render(<QrCodeButton {...BASE_PROPS} displayName="Alice" handle="alice" />);
+
+    await user.click(screen.getByRole('button', { name: BASE_PROPS.showLabel }));
+
+    expect(await screen.findByText('Alice')).toBeInTheDocument();
+    expect(screen.getByText('@alice')).toBeInTheDocument();
+  });
+
+  it("n'affiche ni le bloc identité ni les actions par défaut", async () => {
+    const user = userEvent.setup();
+    render(<QrCodeButton {...BASE_PROPS} />);
+
+    await user.click(screen.getByRole('button', { name: BASE_PROPS.showLabel }));
+    await screen.findByRole('heading', { name: BASE_PROPS.dialogTitle });
+
+    expect(screen.queryByRole('button', { name: /télécharger/i })).not.toBeInTheDocument();
+  });
+
+  it('copie le lien et affiche la confirmation quand les libellés sont fournis', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal('navigator', {
+      clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+    } as unknown as Navigator);
+
+    try {
+      render(
+        <QrCodeButton
+          {...BASE_PROPS}
+          copyLabel="Copier le lien"
+          copiedLabel="Lien copié !"
+          downloadLabel="Télécharger"
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: BASE_PROPS.showLabel }));
+      await user.click(await screen.findByRole('button', { name: 'Copier le lien' }));
+
+      expect(await screen.findByRole('button', { name: 'Lien copié !' })).toBeInTheDocument();
+      expect(await screen.findByRole('status')).toHaveTextContent('Lien copié !');
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('lit le SVG du QR code au clic sur Télécharger', async () => {
+    const user = userEvent.setup();
+    const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:fake');
+    const revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+    try {
+      render(
+        <QrCodeButton
+          {...BASE_PROPS}
+          copyLabel="Copier le lien"
+          copiedLabel="Lien copié !"
+          downloadLabel="Télécharger"
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: BASE_PROPS.showLabel }));
+      await user.click(await screen.findByRole('button', { name: 'Télécharger' }));
+
+      expect(createObjectURLSpy).toHaveBeenCalled();
+      const blobArg = createObjectURLSpy.mock.calls[0]?.[0] as Blob;
+      expect(blobArg.type).toContain('svg');
+    } finally {
+      createObjectURLSpy.mockRestore();
+      revokeObjectURLSpy.mockRestore();
+    }
   });
 });

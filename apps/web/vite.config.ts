@@ -146,6 +146,7 @@ export default defineConfig(({ mode }) => {
           start_url: '/',
           scope: '/',
           lang: 'fr',
+          prefer_related_applications: false,
           icons: [
             {
               src: '/icons/pwa-64x64.png',

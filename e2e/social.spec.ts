@@ -1,5 +1,5 @@
 import { test, expect, type BrowserContext } from '@playwright/test';
-import { registerAccount } from './helpers';
+import { fillCreateEventForm, registerAccount } from './helpers';
 
 test.describe('Parcours social (suivre puis inviter)', () => {
   test("un hote suit un ami puis l'invite a sa soiree", async ({ browser }) => {
@@ -26,10 +26,7 @@ test.describe('Parcours social (suivre puis inviter)', () => {
       });
 
       await pageA.goto('/new');
-      await pageA.getByLabel(/^titre$/i).fill('Soirée social E2E');
-      await pageA.getByLabel(/^date$/i).fill('2030-12-20');
-      await pageA.getByLabel(/^heure$/i).fill('20:30');
-      await pageA.getByRole('button', { name: /créer la soirée/i }).click();
+      await fillCreateEventForm(pageA, 'Soirée social E2E');
       await expect(pageA).toHaveURL(/\/e\/[^/?]+/, { timeout: 15_000 });
 
       await pageA.getByRole('button', { name: 'Inviter' }).click();

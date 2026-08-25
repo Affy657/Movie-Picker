@@ -339,6 +339,7 @@ jobs:
     if: >-
       always() && github.event_name != 'workflow_dispatch' &&
       github.actor != 'dependabot[bot]' &&
+      (github.event_name == 'pull_request' || github.ref == 'refs/heads/master') &&
       (needs.test-web.result == 'success' || needs.test-api.result == 'success')
     permissions:
       contents: read
@@ -547,7 +548,7 @@ jobs:
             --region ${{ env.GCP_REGION }} \
             --platform managed \
             --allow-unauthenticated \
-            --set-secrets "MONGODB_URI=MONGODB_URI:latest,TMDB_API_KEY=TMDB_API_KEY:latest,AUTH_DATAPROTECTION_KEYRING=AUTH_DATAPROTECTION_KEYRING:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest,RESEND_API_KEY=RESEND_API_KEY:latest" \
+            --set-secrets "MONGODB_URI=MONGODB_URI:latest,TMDB_API_KEY=TMDB_API_KEY:latest,AUTH_DATAPROTECTION_KEYRING=AUTH_DATAPROTECTION_KEYRING:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest,RESEND_API_KEY=RESEND_API_KEY:latest,KOFI_WEBHOOK_TOKEN=KOFI_WEBHOOK_TOKEN:latest,OAUTH_GOOGLE_CLIENT_ID=OAUTH_GOOGLE_CLIENT_ID:latest,OAUTH_GOOGLE_CLIENT_SECRET=OAUTH_GOOGLE_CLIENT_SECRET:latest,OAUTH_GITHUB_CLIENT_ID=OAUTH_GITHUB_CLIENT_ID:latest,OAUTH_GITHUB_CLIENT_SECRET=OAUTH_GITHUB_CLIENT_SECRET:latest" \
             --set-env-vars "^##^ALLOWED_ORIGINS=$CORS##SENTRY_ENVIRONMENT=production##SENTRY_RELEASE=${{ github.sha }}##EMAIL_PROVIDER=resend"
       - name: Smoke test API (GET /health puis /health/ready)
         env:

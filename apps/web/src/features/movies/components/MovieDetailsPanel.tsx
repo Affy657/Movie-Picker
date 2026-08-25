@@ -51,7 +51,9 @@ export function MovieDetailsToggle({
       aria-controls={panelId}
     >
       <Info aria-hidden size={14} />
-      <span>{open ? t('movies.details.toggleHide') : t('movies.details.toggleShow')}</span>
+      <span className={styles.toggleBtnLabel}>
+        {open ? t('movies.details.toggleHide') : t('movies.details.toggleShow')}
+      </span>
       <Icon aria-hidden size={14} />
     </button>
   );
@@ -148,7 +150,7 @@ function MovieDetailsBody({ data, onPlayTrailer }: Readonly<MovieDetailsBodyProp
               onClick={() => onPlayTrailer(safeTrailerUrl)}
             >
               <PlayCircle aria-hidden size={14} />
-              <span>{t('movies.details.trailerLink')}</span>
+              <span className={styles.trailerLinkLabel}>{t('movies.details.trailerLink')}</span>
             </button>
           </div>
         ) : (
@@ -160,7 +162,7 @@ function MovieDetailsBody({ data, onPlayTrailer }: Readonly<MovieDetailsBodyProp
               className={styles.trailerLink}
             >
               <PlayCircle aria-hidden size={14} />
-              <span>{t('movies.details.trailerLink')}</span>
+              <span className={styles.trailerLinkLabel}>{t('movies.details.trailerLink')}</span>
             </a>
           </div>
         ))}

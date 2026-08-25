@@ -1,4 +1,4 @@
-import { fetchApi } from '@/shared/api/client';
+import { apiUrl, fetchApi } from '@/shared/api/client';
 import { ApiError } from '@/shared/api/apiError';
 import type { AccentColor, RatingScale, UiThemePreference } from '@/shared/types/theme';
 import type { UserProfile } from '@/features/auth/types';
@@ -20,7 +20,13 @@ export async function fetchAuthMeForSession(): Promise<UserProfile | null> {
 }
 
 export async function fetchAuthProfile(): Promise<UserProfile> {
-  return fetchApi<UserProfile>('/auth/me');
+  const profile = await fetchApi<UserProfile>('/auth/me');
+  return {
+    ...profile,
+    hasPassword: profile.hasPassword ?? true,
+    linkedProviders: profile.linkedProviders ?? [],
+    letterboxdPendingReconciliationCount: profile.letterboxdPendingReconciliationCount ?? 0,
+  };
 }
 
 export async function postAuthLogin(email: string, password: string): Promise<void> {
@@ -51,6 +57,19 @@ export async function postAuthLogout(): Promise<void> {
   }
 }
 
+export async function fetchOAuthProviders(): Promise<string[]> {
+  const res = await fetchApi<{ providers: string[] }>('/auth/oauth/providers');
+  return res.providers;
+}
+
+export function oauthStartUrl(provider: string, returnTo: string): string {
+  return apiUrl(`/auth/oauth/${provider}/start?returnTo=${encodeURIComponent(returnTo)}`);
+}
+
+export async function unlinkOAuthProvider(provider: string): Promise<void> {
+  await fetchApi(`/auth/me/identities/${provider}`, { method: 'DELETE' });
+}
+
 export interface ProfilePatch {
   displayName?: string;
   uiTheme?: UiThemePreference;
@@ -60,13 +79,20 @@ export interface ProfilePatch {
   handle?: string;
   bio?: string | null;
   isProfilePublic?: boolean;
+  letterboxdUsername?: string | null;
 }
 
 export async function patchAuthProfile(patch: ProfilePatch): Promise<UserProfile> {
-  return fetchApi<UserProfile>('/auth/me', {
+  const profile = await fetchApi<UserProfile>('/auth/me', {
     method: 'PATCH',
     body: JSON.stringify(patch),
   });
+  return {
+    ...profile,
+    hasPassword: profile.hasPassword ?? true,
+    linkedProviders: profile.linkedProviders ?? [],
+    letterboxdPendingReconciliationCount: profile.letterboxdPendingReconciliationCount ?? 0,
+  };
 }
 
 export async function patchChangePassword(
@@ -124,10 +150,13 @@ export async function downloadMyDataExport(): Promise<void> {
   triggerBlobDownload(blob, buildExportFilename());
 }
 
-export async function deleteAccount(password: string): Promise<void> {
+export async function deleteAccount(payload: {
+  password?: string;
+  confirmation?: string;
+}): Promise<void> {
   await fetchApi('/auth/me', {
     method: 'DELETE',
-    body: JSON.stringify({ password }),
+    body: JSON.stringify(payload),
   });
   clearSessionHint();
 }

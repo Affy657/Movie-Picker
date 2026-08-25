@@ -1,6 +1,6 @@
-import { useEffect, useId, useRef } from 'react';
+import { useId } from 'react';
 import { useTranslation } from '@/shared/i18n';
-import { useDialogOpen } from '@/shared/hooks/useDialogOpen';
+import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import styles from './ConfirmDialog.module.css';
 
 type ConfirmDialogProps = {
@@ -36,27 +36,11 @@ export default function ConfirmDialog({
   testId = 'confirm-dialog',
 }: Readonly<ConfirmDialogProps>) {
   const { t } = useTranslation();
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const reactId = useId();
   const titleId = `confirm-dialog-title-${reactId}`;
   const messageId = `confirm-dialog-message-${reactId}`;
 
-  const onCancelRef = useRef(onCancel);
-  useEffect(() => {
-    onCancelRef.current = onCancel;
-  }, [onCancel]);
-
-  useDialogOpen(dialogRef, open);
-
-  useEffect(() => {
-    const dlg = dialogRef.current;
-    if (!dlg) return;
-    const handleClose = () => {
-      if (open) onCancelRef.current();
-    };
-    dlg.addEventListener('close', handleClose);
-    return () => dlg.removeEventListener('close', handleClose);
-  }, [open]);
+  const dialogRef = useModalDialog(open, onCancel);
 
   const confirmText = confirmLabel ?? t('common.confirm');
   const cancelText = cancelLabel ?? t('common.cancel');

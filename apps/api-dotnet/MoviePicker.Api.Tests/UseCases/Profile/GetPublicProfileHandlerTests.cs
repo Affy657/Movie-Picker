@@ -9,7 +9,7 @@ namespace MoviePicker.Api.Tests.UseCases.Profile;
 
 public sealed class GetPublicProfileHandlerTests
 {
-    private static User User(bool isPublic) => new()
+    private static User User(bool isPublic, DateTimeOffset? supporterSince = null) => new()
     {
         Id = "u1",
         Email = "secret@private.co",
@@ -19,6 +19,7 @@ public sealed class GetPublicProfileHandlerTests
         Bio = "Cinéphile",
         AvatarId = "alpha",
         IsProfilePublic = isPublic,
+        SupporterSince = supporterSince,
         CreatedAt = new DateTimeOffset(2024, 3, 1, 0, 0, 0, TimeSpan.Zero),
         UpdatedAt = DateTimeOffset.UtcNow
     };
@@ -48,6 +49,19 @@ public sealed class GetPublicProfileHandlerTests
         Assert.Equal("Cinéphile", res.Bio);
         Assert.Equal("alpha", res.AvatarId);
         Assert.Equal(new DateTimeOffset(2024, 3, 1, 0, 0, 0, TimeSpan.Zero), res.MemberSince);
+        Assert.False(res.IsSupporter);
+    }
+
+    [Fact]
+    public async Task HandleAsync_SupporterProfile_FlagsSupporterWithoutExposingDonationDate()
+    {
+        var (users, _, handler) = Build();
+        users.Setup(x => x.GetByHandleAsync("alice", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(User(true, new DateTimeOffset(2026, 8, 13, 12, 0, 0, TimeSpan.Zero)));
+
+        var res = await handler.HandleAsync("alice");
+
+        Assert.True(res.IsSupporter);
     }
 
     [Fact]

@@ -38,12 +38,71 @@ public sealed class InMemoryUserRepository : IUserRepository
         return Task.FromResult(_handleToId.TryGetValue(n, out var id) && _byId.TryGetValue(id, out var u) ? u : null);
     }
 
+    public Task<User?> GetByIdentityAsync(string provider, string subject, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(provider) || string.IsNullOrWhiteSpace(subject))
+            return Task.FromResult<User?>(null);
+        var match = _byId.Values.FirstOrDefault(u =>
+            u.Identities.Any(i =>
+                string.Equals(i.Provider, provider, StringComparison.Ordinal)
+                && string.Equals(i.Subject, subject, StringComparison.Ordinal)));
+        return Task.FromResult(match);
+    }
+
     public Task<IReadOnlyList<User>> ListMissingHandleAsync(CancellationToken ct = default)
     {
         IReadOnlyList<User> result = _byId.Values
             .Where(u => string.IsNullOrEmpty(u.Handle))
             .ToList();
         return Task.FromResult(result);
+    }
+
+    public Task<IReadOnlyList<User>> ListWithLetterboxdSyncEnabledAsync(CancellationToken ct = default)
+    {
+        IReadOnlyList<User> result = _byId.Values
+            .Where(u => !string.IsNullOrWhiteSpace(u.LetterboxdUsername))
+            .ToList();
+        return Task.FromResult(result);
+    }
+
+    public Task SetLetterboxdSyncStatusAsync(
+        string userId,
+        DateTimeOffset syncedAt,
+        string? error,
+        CancellationToken ct = default)
+    {
+        if (_byId.TryGetValue(userId, out var user))
+        {
+            _byId[userId] = user with
+            {
+                LetterboxdLastSyncAt = syncedAt,
+                LetterboxdLastSyncError = error
+            };
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task SetLetterboxdPendingReconciliationCountAsync(
+        string userId,
+        int pendingCount,
+        CancellationToken ct = default)
+    {
+        if (_byId.TryGetValue(userId, out var user))
+        {
+            _byId[userId] = user with { LetterboxdPendingReconciliationCount = pendingCount };
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task<bool> MarkSupporterAsync(string userId, DateTimeOffset since, CancellationToken ct = default)
+    {
+        if (!_byId.TryGetValue(userId, out var user) || user.SupporterSince is not null)
+            return Task.FromResult(false);
+
+        _byId[userId] = user with { SupporterSince = since, UpdatedAt = since };
+        return Task.FromResult(true);
     }
 
     public Task<IReadOnlyList<PublicProfileRef>> ListPublicProfilesAsync(int limit, CancellationToken ct = default)
@@ -62,22 +121,7 @@ public sealed class InMemoryUserRepository : IUserRepository
         var id = string.IsNullOrEmpty(user.Id) ? Guid.NewGuid().ToString("N")[..24] : user.Id;
         var email = Normalize(user.Email) ?? user.Email.Trim();
         var handle = NormalizeHandle(user.Handle);
-        var created = new User
-        {
-            Id = id,
-            Email = email,
-            PasswordHash = user.PasswordHash,
-            DisplayName = user.DisplayName,
-            Handle = handle ?? string.Empty,
-            Bio = user.Bio,
-            IsProfilePublic = user.IsProfilePublic,
-            UiTheme = user.UiTheme,
-            AccentColor = user.AccentColor,
-            RatingScale = user.RatingScale,
-            NotificationPreferences = user.NotificationPreferences,
-            CreatedAt = user.CreatedAt,
-            UpdatedAt = user.UpdatedAt
-        };
+        var created = Copy(user, id, email, handle);
         _byId[id] = created;
         _emailToId[email] = id;
         if (handle is not null)
@@ -98,22 +142,7 @@ public sealed class InMemoryUserRepository : IUserRepository
 
         var email = Normalize(user.Email) ?? user.Email.Trim();
         var handle = NormalizeHandle(user.Handle);
-        var updated = new User
-        {
-            Id = user.Id,
-            Email = email,
-            PasswordHash = user.PasswordHash,
-            DisplayName = user.DisplayName,
-            Handle = handle ?? string.Empty,
-            Bio = user.Bio,
-            IsProfilePublic = user.IsProfilePublic,
-            UiTheme = user.UiTheme,
-            AccentColor = user.AccentColor,
-            RatingScale = user.RatingScale,
-            NotificationPreferences = user.NotificationPreferences,
-            CreatedAt = user.CreatedAt,
-            UpdatedAt = user.UpdatedAt
-        };
+        var updated = Copy(user, user.Id, email, handle);
         _byId[user.Id] = updated;
         _emailToId[email] = user.Id;
         if (handle is not null)
@@ -133,6 +162,31 @@ public sealed class InMemoryUserRepository : IUserRepository
             _handleToId.TryRemove(handle, out _);
         return Task.FromResult(true);
     }
+
+    private static User Copy(User user, string id, string email, string? handle) =>
+        new()
+        {
+            Id = id,
+            Email = email,
+            PasswordHash = user.PasswordHash,
+            DisplayName = user.DisplayName,
+            Identities = user.Identities,
+            Handle = handle ?? string.Empty,
+            Bio = user.Bio,
+            IsProfilePublic = user.IsProfilePublic,
+            UiTheme = user.UiTheme,
+            AccentColor = user.AccentColor,
+            RatingScale = user.RatingScale,
+            AvatarId = user.AvatarId,
+            NotificationPreferences = user.NotificationPreferences,
+            SupporterSince = user.SupporterSince,
+            LetterboxdUsername = user.LetterboxdUsername,
+            LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,
+            LetterboxdLastSyncError = user.LetterboxdLastSyncError,
+            LetterboxdPendingReconciliationCount = user.LetterboxdPendingReconciliationCount,
+            CreatedAt = user.CreatedAt,
+            UpdatedAt = user.UpdatedAt
+        };
 
     private static string? Normalize(string? email)
     {

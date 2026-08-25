@@ -27,6 +27,7 @@ public sealed class ExportUserDataHandlerTests
         public InMemoryVoteRepository Votes { get; } = new();
         public InMemorySeenMarkRepository SeenMarks { get; } = new();
         public InMemoryPushSubscriptionRepository Push { get; } = new();
+        public InMemoryWatchlistRepository Watchlist { get; } = new();
 
         public ExportUserDataHandler CreateHandler() =>
             new(
@@ -38,6 +39,7 @@ public sealed class ExportUserDataHandlerTests
                 Votes,
                 SeenMarks,
                 Push,
+                Watchlist,
                 new FakeTimeProvider(TestEpoch));
     }
 

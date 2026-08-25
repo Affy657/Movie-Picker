@@ -1,19 +1,27 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router';
+import { lazy, Suspense, useCallback, useState } from 'react';
+import { useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AlertCircle, Link2, UserPlus, UserCheck } from 'lucide-react';
+import { RefreshCw, AlertCircle } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
-import Avatar from '@/shared/components/Avatar';
 import { ROUTES } from '@/app/routes';
-import { ApiError, getErrorMessage } from '@/shared/api/apiError';
+import { getErrorMessage, ApiError } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
+import { useCopyFeedback } from '@/shared/hooks/useCopyFeedback';
 import { APP_DOCUMENT_TITLE, pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
-import QrCodeButton from '@/shared/components/QrCodeButton';
+import ProfileIdentityCard from '@/features/profile/components/ProfileIdentityCard';
+import ProfileActions from '@/features/profile/components/ProfileActions';
+import ProfilePageSkeleton, {
+  ProfileStatsSkeleton,
+} from '@/features/profile/components/ProfilePageSkeleton';
+import {
+  ProfileLoadErrorState,
+  ProfileNotFoundState,
+} from '@/features/profile/components/ProfileQueryStates';
 import {
   fetchPublicProfile,
   fetchUserStats,
@@ -25,8 +33,9 @@ import styles from './ProfilePage.module.css';
 
 const FollowListModal = lazy(() => import('@/features/profile/components/FollowListModal'));
 const ProfileStatsSection = lazy(() => import('@/features/profile/components/ProfileStatsSection'));
-
-const COPY_FEEDBACK_MS = 2000;
+const ProfileMoviesSection = lazy(
+  () => import('@/features/profile/components/ProfileMoviesSection')
+);
 
 function formatMemberSince(iso: string, locale: string): string {
   const date = new Date(iso);
@@ -64,7 +73,7 @@ export default function ProfilePage() {
   const { user } = useAuth();
   const { track } = useAnalytics();
   const queryClient = useQueryClient();
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyFeedback();
   const [followModal, setFollowModal] = useState<FollowTab | null>(null);
   const [followError, setFollowError] = useState<string | null>(null);
 
@@ -100,16 +109,9 @@ export default function ProfilePage() {
       : { title: APP_DOCUMENT_TITLE, noindex: isNotFound }
   );
 
-  useEffect(() => {
-    if (!copied) return;
-    const id = globalThis.setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
-    return () => globalThis.clearTimeout(id);
-  }, [copied]);
-
   const handleCopyLink = useCallback(() => {
-    if (typeof navigator === 'undefined' || !navigator.clipboard) return;
-    void navigator.clipboard.writeText(globalThis.location.href).then(() => setCopied(true));
-  }, []);
+    copy(globalThis.location.href);
+  }, [copy]);
 
   const followMutation = useMutation({
     mutationFn: () => followUser(profile!.handle),
@@ -133,133 +135,86 @@ export default function ProfilePage() {
 
   if (profileQuery.isPending && handle) {
     return (
-      <PageLayout className="page--centered">
-        <p className="placeholder" aria-busy="true">
-          {t('common.loading')}
-        </p>
+      <PageLayout className={styles.layout}>
+        <ProfilePageSkeleton label={t('profile.loading')} />
       </PageLayout>
     );
   }
 
   if (isNotFound) {
-    return (
-      <PageLayout className="page--centered page--errorState">
-        <span className="errorStateIcon" aria-hidden>
-          <AlertCircle size={32} />
-        </span>
-        <p className="errorStateMessage" role="alert">
-          {t('profile.notFound')}
-        </p>
-        <Link to={ROUTES.home} className="btn">
-          {t('profile.backHome')}
-        </Link>
-      </PageLayout>
-    );
+    return <ProfileNotFoundState />;
   }
 
   if (profileQuery.isError || !profile) {
-    return (
-      <PageLayout className="page--centered page--errorState">
-        <span className="errorStateIcon" aria-hidden>
-          <AlertCircle size={32} />
-        </span>
-        <p className="errorStateMessage" role="alert">
-          {ApiError.is(profileQuery.error) ? profileQuery.error.message : t('profile.loadError')}
-        </p>
-      </PageLayout>
-    );
+    return <ProfileLoadErrorState error={profileQuery.error} />;
   }
 
   const memberSince = formatMemberSince(profile.memberSince, locale);
   const followPending = followMutation.isPending || unfollowMutation.isPending;
+  const stats = statsQuery.data;
+  const streak =
+    stats && (stats.currentStreakWeeks > 0 || stats.bestStreakWeeks > 0)
+      ? { weeks: stats.currentStreakWeeks, bestWeeks: stats.bestStreakWeeks }
+      : null;
 
   return (
     <PageLayout className={styles.layout}>
-      <section className={styles.card} aria-labelledby="profile-heading">
-        <Avatar
-          avatarId={profile.avatarId}
-          pseudo={profile.displayName}
-          size="lg"
-          className={styles.avatar}
-        />
-        <h1 id="profile-heading" className={styles.displayName}>
-          {profile.displayName}
-        </h1>
-        <p className={styles.handle}>@{profile.handle}</p>
-
-        {profile.bio && <p className={styles.bio}>{profile.bio}</p>}
-
-        {memberSince && (
-          <p className={styles.memberSince}>{t('profile.memberSince', { date: memberSince })}</p>
-        )}
-
-        <div className={styles.followStats}>
-          <button
-            type="button"
-            className={styles.statBtn}
-            onClick={() => setFollowModal('following')}
+      <div className={styles.grid}>
+        <aside className={styles.rail} aria-labelledby="profile-heading">
+          <ProfileIdentityCard
+            profile={profile}
+            memberSince={memberSince}
+            streak={streak}
+            onOpenFollowModal={setFollowModal}
           >
-            <span className={styles.statCount}>{profile.followingCount}</span>
-            <span className={styles.statLabel}>{t('profile.follow.following')}</span>
-          </button>
-          <button
-            type="button"
-            className={styles.statBtn}
-            onClick={() => setFollowModal('followers')}
-          >
-            <span className={styles.statCount}>{profile.followersCount}</span>
-            <span className={styles.statLabel}>{t('profile.follow.followers')}</span>
-          </button>
-        </div>
-
-        <div className={styles.actions}>
-          <div className={styles.shareGroup}>
-            <button type="button" className="btn btn-sm" onClick={handleCopyLink}>
-              <Link2 size={14} aria-hidden />
-              {copied ? t('profile.linkCopied') : t('profile.copyLink')}
-            </button>
-
-            <QrCodeButton
-              url={globalThis.location.href}
-              dialogTitle={t('profile.qrTitle')}
-              hint={t('profile.qrHint')}
-              showLabel={t('profile.showQr')}
-              closeLabel={t('profile.closeQr')}
-              className="btn btn-sm"
+            <ProfileActions
+              profile={profile}
+              isOwnProfile={isOwnProfile}
+              isLoggedIn={!!user}
+              followPending={followPending}
+              onFollow={() => followMutation.mutate()}
+              onUnfollow={() => unfollowMutation.mutate()}
+              copied={copied}
+              onCopyLink={handleCopyLink}
             />
-          </div>
 
-          {user && !isOwnProfile && (
-            <button
-              type="button"
-              className={profile.isFollowedByMe ? 'btn btn-sm' : 'btn btn-sm btn-primary'}
-              disabled={followPending}
-              onClick={() =>
-                profile.isFollowedByMe ? unfollowMutation.mutate() : followMutation.mutate()
-              }
-            >
-              {profile.isFollowedByMe ? (
-                <UserCheck size={14} aria-hidden />
-              ) : (
-                <UserPlus size={14} aria-hidden />
-              )}
-              {profile.isFollowedByMe ? t('profile.follow.unfollow') : t('profile.follow.follow')}
-            </button>
+            {followError && (
+              <p className="error" role="alert">
+                {followError}
+              </p>
+            )}
+          </ProfileIdentityCard>
+        </aside>
+
+        <div className={styles.content}>
+          {statsQuery.isPending && <ProfileStatsSkeleton />}
+
+          {statsQuery.isError && (
+            <div className={styles.statsError} role="alert">
+              <span className={styles.statsErrorIcon} aria-hidden>
+                <AlertCircle size={18} />
+              </span>
+              <div className={styles.statsErrorBody}>
+                <p className={styles.statsErrorMessage}>{t('profile.stats.loadError')}</p>
+                <button type="button" className="btn btn-sm" onClick={() => statsQuery.refetch()}>
+                  <RefreshCw size={15} aria-hidden />
+                  <span className={styles.btnLabel}>{t('profile.stats.retry')}</span>
+                </button>
+              </div>
+            </div>
           )}
+
+          {statsQuery.data && (
+            <Suspense fallback={<ProfileStatsSkeleton />}>
+              <ProfileStatsSection stats={statsQuery.data} />
+            </Suspense>
+          )}
+
+          <Suspense fallback={null}>
+            <ProfileMoviesSection handle={profile.handle} />
+          </Suspense>
         </div>
-
-        {followError && (
-          <p className="error" role="alert">
-            {followError}
-          </p>
-        )}
-      </section>
-
-      {statsQuery.data && (
-        <Suspense fallback={null}>
-          <ProfileStatsSection stats={statsQuery.data} />
-        </Suspense>
-      )}
+      </div>
 
       {followModal !== null && (
         <Suspense fallback={null}>

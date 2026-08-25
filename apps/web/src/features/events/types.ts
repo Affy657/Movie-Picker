@@ -10,7 +10,7 @@ export const DEFAULT_EVENT_CONFIG: EventConfigData = {
   theme: null,
   maxProposalsPerParticipant: null,
   maxParticipants: null,
-  wheelMode: 'strictRandom',
+  wheelMode: 'weightedByVotes',
   richSharePreview: true,
   allowSeries: false,
 };

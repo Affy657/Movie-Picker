@@ -6,6 +6,7 @@ import type { RatingScale } from '@/shared/types/theme';
 import { useTranslation } from '@/shared/i18n';
 import { MovieCardGrid } from '@/features/movies/components/MovieCardGrid';
 import { MovieCardList } from '@/features/movies/components/MovieCardList';
+import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
 import styles from './MovieList.module.css';
 
 export { MovieCardGrid as MovieCard } from '@/features/movies/components/MovieCardGrid';
@@ -25,6 +26,11 @@ interface MovieListProps {
   participantAvatarsByPseudo?: Record<string, string>;
   ratingScale?: RatingScale;
   viewMode?: 'grid' | 'list';
+  isInWatchlist?: (movie: MovieData) => boolean;
+  onToggleWatchlist?: (movie: MovieData) => void;
+  onToggleWheelExclusion?: (movie: MovieData) => void;
+  selection?: MovieCardSelection;
+  winnerMovieId?: string;
 }
 
 export default function MovieList({
@@ -42,6 +48,11 @@ export default function MovieList({
   participantAvatarsByPseudo,
   ratingScale,
   viewMode = 'list',
+  isInWatchlist,
+  onToggleWatchlist,
+  onToggleWheelExclusion,
+  selection,
+  winnerMovieId,
 }: Readonly<MovieListProps>) {
   const { t } = useTranslation();
 
@@ -77,6 +88,11 @@ export default function MovieList({
             participantAvatars={participantAvatars}
             participantAvatarsByPseudo={participantAvatarsByPseudo}
             ratingScale={ratingScale}
+            isInWatchlist={isInWatchlist?.(m)}
+            onToggleWatchlist={onToggleWatchlist}
+            onToggleWheelExclusion={onToggleWheelExclusion}
+            selection={selection}
+            isWinner={m.id === winnerMovieId}
             t={t}
           />
         ))}

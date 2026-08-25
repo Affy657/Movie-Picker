@@ -24,7 +24,14 @@ public sealed class GetUserProfileHandler : IGetUserProfileHandler
             AvatarId = user.AvatarId,
             Handle = user.Handle,
             Bio = user.Bio,
-            IsProfilePublic = user.IsProfilePublic
+            IsProfilePublic = user.IsProfilePublic,
+            LetterboxdUsername = user.LetterboxdUsername,
+            LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,
+            LetterboxdLastSyncError = user.LetterboxdLastSyncError,
+            LetterboxdPendingReconciliationCount = user.LetterboxdPendingReconciliationCount,
+            HasPassword = !string.IsNullOrEmpty(user.PasswordHash),
+            LinkedProviders = user.Identities.Select(i => i.Provider).ToList(),
+            CreatedAt = user.CreatedAt
         };
     }
 }

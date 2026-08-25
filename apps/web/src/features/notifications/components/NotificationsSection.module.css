@@ -3,11 +3,16 @@
   align-items: center;
   gap: 0.55rem;
   margin: 0 0 0.9rem;
+  line-height: 1;
 }
 
 .sectionTitle :global(svg) {
   flex-shrink: 0;
   color: var(--color-primary);
+}
+
+.sectionTitleText {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .row {
@@ -23,6 +28,7 @@
   gap: 0.75rem;
   flex: 1;
   min-width: 0;
+  line-height: 1;
 }
 
 .rowIcon {
@@ -38,6 +44,7 @@
   margin: 0;
   font-weight: 500;
   font-size: var(--font-size-base);
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .rowHint {
@@ -75,6 +82,7 @@
   align-items: center;
   gap: 0.6rem;
   min-width: 0;
+  line-height: 1;
 }
 
 .prefIcon {
@@ -85,4 +93,5 @@
 
 .prefLabel {
   font-size: var(--font-size-base);
+  transform: translateY(var(--text-optical-nudge));
 }

@@ -35,6 +35,12 @@ const profile: UserProfile = {
   handle: 'profilcompte',
   bio: null,
   isProfilePublic: true,
+  letterboxdUsername: null,
+  letterboxdLastSyncAt: null,
+  letterboxdLastSyncError: null,
+  letterboxdPendingReconciliationCount: 0,
+  hasPassword: true,
+  linkedProviders: [],
 };
 
 function renderForm(node: ReactElement) {

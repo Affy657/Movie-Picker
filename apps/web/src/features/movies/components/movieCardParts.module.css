@@ -53,8 +53,17 @@
   border: none;
   color: var(--mc-fg-muted, #94a3b8);
   font-size: var(--font-size-2xs);
+  line-height: 1;
   cursor: pointer;
   transition: color var(--duration-base) var(--ease-default);
+}
+
+.detailsToggle svg {
+  flex-shrink: 0;
+}
+
+.detailsToggleLabel {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .detailsToggle:hover,
@@ -102,6 +111,7 @@
   font-weight: 600;
   min-width: 0.9rem;
   text-align: center;
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .seenWrap {
@@ -146,6 +156,7 @@
 
 .seenLabel {
   font-size: var(--font-size-2xs);
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .seenAvatars {
@@ -283,11 +294,20 @@
   padding: 0.25rem 0.55rem;
   font-size: var(--font-size-4xs);
   font-weight: 500;
+  line-height: 1;
   border-radius: var(--radius-pill);
   border: 1px solid transparent;
   cursor: pointer;
   white-space: nowrap;
   transition: background var(--duration-base) var(--ease-default);
+}
+
+.noteBtn svg {
+  flex-shrink: 0;
+}
+
+.noteBtnLabel {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .noteBtn:disabled {
@@ -351,14 +371,23 @@
   right: 0;
   z-index: 10;
   min-width: 10rem;
+  max-width: calc(100vw - 1rem);
   padding: 0.3rem;
   background: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
+}
+
+.kebabDivider {
+  display: block;
+  border: none;
+  height: 1px;
+  margin: 0.3rem 0.2rem;
+  background: var(--color-border-subtle);
 }
 
 .kebabItem {
@@ -371,12 +400,25 @@
   border-radius: var(--radius-sm);
   color: var(--color-text);
   font-size: var(--font-size-sm);
+  line-height: 1;
   text-align: left;
   cursor: pointer;
   transition: background var(--duration-base) var(--ease-default);
   text-decoration: none;
   width: 100%;
   white-space: nowrap;
+}
+
+.kebabItem svg {
+  flex-shrink: 0;
+}
+
+.kebabItemLabel {
+  transform: translateY(var(--text-optical-nudge));
+}
+
+.kebabItemLabelCaps {
+  transform: translateY(var(--text-optical-nudge-caps));
 }
 
 .kebabItem:hover,
@@ -392,4 +434,78 @@
 .kebabItemDanger:hover,
 .kebabItemDanger:focus-visible {
   background: color-mix(in srgb, var(--color-error) 12%, transparent);
+}
+
+.excluded {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+.selectable {
+  position: relative;
+  cursor: pointer;
+  animation: cardShake 0.55s var(--ease-default) infinite;
+}
+
+.selectable:nth-child(2n) {
+  animation-delay: -0.18s;
+}
+
+.selectable:nth-child(3n) {
+  animation-delay: -0.31s;
+}
+
+.selectable:nth-child(5n) {
+  animation-delay: -0.42s;
+}
+
+.selectOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: inherit;
+  cursor: pointer;
+}
+
+.selectOverlay:hover,
+.selectOverlay:focus-visible {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  outline: none;
+}
+
+.selectOverlay:disabled {
+  cursor: progress;
+}
+
+@keyframes cardShake {
+  0%,
+  100% {
+    transform: rotate(-0.6deg) translateY(0);
+  }
+  25% {
+    transform: rotate(0.7deg) translateY(-2px);
+  }
+  50% {
+    transform: rotate(-0.4deg) translateY(1px);
+  }
+  75% {
+    transform: rotate(0.5deg) translateY(-1px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .selectable {
+    animation: none;
+  }
+
+  .selectOverlay {
+    border-color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  }
 }

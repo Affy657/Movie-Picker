@@ -7,8 +7,13 @@ export const ROUTES = {
   register: '/register',
   forgotPassword: '/forgot-password',
   resetPassword: '/reset',
+  oauthCallback: '/auth/callback',
   account: '/settings',
   myEvents: '/my-events',
+  watchlist: '/watchlist',
+  legalNotice: '/mentions-legales',
+  privacyPolicy: '/politique-de-confidentialite',
+  donate: '/soutenir',
   notifications: '/notifications',
 
   eventDetailPattern: `${EVENT_PREFIX}/:slug`,
@@ -18,6 +23,10 @@ export const ROUTES = {
   profilePattern: '/u/:handle',
 
   profile: (handle: string) => `/u/${handle}`,
+
+  profileMoviesPattern: '/u/:handle/films',
+
+  profileMovies: (handle: string) => `/u/${handle}/films`,
 } as const;
 
 export function withReturnTo(path: string, returnTo: string): string {

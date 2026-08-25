@@ -38,7 +38,7 @@
   top: var(--header-height, 3.5rem);
   z-index: 20;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   flex-wrap: wrap;
   gap: 0.6rem 0.75rem;
   min-height: 4rem;
@@ -53,10 +53,13 @@
   border-bottom-color: var(--color-border-subtle);
 }
 
+.bar[data-condensed] .heading {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .bar[data-condensed] .title {
   font-size: var(--font-size-lg);
-  flex: 0 1 auto;
-  min-width: 0;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -90,6 +93,15 @@
   outline-offset: 2px;
 }
 
+.heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
 .title {
   margin: 0;
   font-size: clamp(1.5rem, 3vw, 1.875rem);
@@ -101,11 +113,11 @@
 }
 
 .actions {
-  margin-left: auto;
+  flex: 1 1 100%;
   display: flex;
   align-items: center;
-  flex: 0 0 auto;
-  gap: 0.5rem;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
 .wheelActions,
@@ -115,9 +127,26 @@
   gap: 0.5rem;
 }
 
+.utilityActions {
+  margin-left: auto;
+}
+
 .wheelActions:empty,
 .utilityActions:empty {
   display: none;
+}
+
+.addMovieBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.addMovieLabel {
+  white-space: nowrap;
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .settingsBtn {
@@ -253,9 +282,15 @@
     border-bottom: none;
   }
 
-  .title {
+  .heading {
     flex: 1 1 100%;
-    min-width: 0;
+  }
+
+  .theme {
+    max-width: 100%;
+  }
+
+  .title {
     font-size: 1.35rem;
   }
 
@@ -281,10 +316,29 @@
     right: 0;
     bottom: var(--mobile-nav-height, 3.25rem);
     z-index: 39;
-    padding: 0.6rem 0.9rem;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 0.35rem;
+    padding: 0.45rem 0.7rem;
     background: color-mix(in srgb, var(--color-bg) 94%, transparent);
     backdrop-filter: saturate(180%) blur(10px);
     -webkit-backdrop-filter: saturate(180%) blur(10px);
     border-top: 1px solid var(--color-border-subtle);
+  }
+
+  .wheelActions:not(:empty) :global(.btn) {
+    min-width: 2.625rem;
+  }
+
+  .addMovieLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }

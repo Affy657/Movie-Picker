@@ -25,7 +25,7 @@ public sealed class GetSitemapXmlHandlerTests
         _users.Setup(r => r.ListPublicProfilesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(profiles);
 
-    private static IReadOnlyList<string> Locs(string xml) =>
+    private static List<string> Locs(string xml) =>
         XDocument.Parse(xml).Descendants(Ns + "loc").Select(e => e.Value).ToList();
 
     [Fact]
@@ -36,6 +36,15 @@ public sealed class GetSitemapXmlHandlerTests
 
         Assert.Contains("https://web.example/", Locs(xml));
         Assert.NotNull(XDocument.Parse(xml).Root);
+    }
+
+    [Fact]
+    public async Task BuildXmlAsync_AlwaysIncludesDonatePage()
+    {
+        SetupProfiles();
+        var xml = await CreateSut().BuildXmlAsync();
+
+        Assert.Contains("https://web.example/soutenir", Locs(xml));
     }
 
     [Fact]
@@ -71,6 +80,6 @@ public sealed class GetSitemapXmlHandlerTests
         var root = XDocument.Parse(xml).Root;
         Assert.NotNull(root);
         Assert.Equal(Ns + "urlset", root!.Name);
-        Assert.Equal(2, root.Elements(Ns + "url").Count());
+        Assert.Equal(3, root.Elements(Ns + "url").Count());
     }
 }

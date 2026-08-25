@@ -1,0 +1,43 @@
+.kofiCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-8);
+  padding: var(--space-6) var(--space-5);
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.kofiIcon {
+  display: inline-flex;
+  color: var(--color-accent);
+}
+
+.kofiTitle {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+}
+
+.kofiBody {
+  margin: 0;
+}
+
+.kofiNote {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.costs {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-5);
+}
+
+.costs li + li {
+  margin-top: var(--space-1);
+}

@@ -2,7 +2,8 @@ import { Link } from 'react-router';
 import { ServerCrash } from 'lucide-react';
 import ErrorState from '@/shared/components/ErrorState';
 import { ROUTES } from '@/app/routes';
-import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import { pageTitle } from '@/shared/hooks/useDocumentTitle';
+import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 
 type ServerErrorPageProps = {
   error?: Error | null;
@@ -10,7 +11,7 @@ type ServerErrorPageProps = {
 };
 
 export default function ServerErrorPage({ error, onRetry }: Readonly<ServerErrorPageProps>) {
-  useDocumentTitle(pageTitle('Erreur serveur'));
+  useNoindexPage(pageTitle('Erreur serveur'));
 
   const message = import.meta.env.PROD
     ? 'Une erreur inattendue s’est produite. Vous pouvez réessayer ou recharger la page.'

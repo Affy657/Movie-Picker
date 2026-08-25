@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import {
+  absoluteUrl,
   DEFAULT_DESCRIPTION,
   DEFAULT_OG_IMAGE,
   DEFAULT_OG_IMAGE_ALT,
@@ -32,11 +33,13 @@ interface ResolvedSeo {
 }
 
 const JSON_LD_MARKER = 'data-page-seo';
+const INACTIVE_JSON_LD_TYPE = 'application/ld+json-inactive';
+const HOME_URL = `${SITE_URL}/`;
 
 const SEO_DEFAULTS: ResolvedSeo = {
   title: SITE_NAME,
   description: DEFAULT_DESCRIPTION,
-  url: `${SITE_URL}/`,
+  url: HOME_URL,
   ogType: 'website',
   image: DEFAULT_OG_IMAGE,
   imageAlt: DEFAULT_OG_IMAGE_ALT,
@@ -77,6 +80,24 @@ function setRobots(noindex: boolean): void {
   }
 }
 
+function setDefaultJsonLdVisible(visible: boolean): void {
+  if (visible) {
+    document.head
+      .querySelectorAll<HTMLScriptElement>(`script[type="${INACTIVE_JSON_LD_TYPE}"]`)
+      .forEach((el) => {
+        el.type = 'application/ld+json';
+      });
+    return;
+  }
+  document.head
+    .querySelectorAll<HTMLScriptElement>(
+      `script[type="application/ld+json"]:not([${JSON_LD_MARKER}])`
+    )
+    .forEach((el) => {
+      el.type = INACTIVE_JSON_LD_TYPE;
+    });
+}
+
 function setJsonLd(serialized: string): void {
   const existing = document.head.querySelector(`script[${JSON_LD_MARKER}]`);
   if (existing) existing.remove();
@@ -103,7 +124,17 @@ function applySeo(seo: ResolvedSeo): void {
   upsertMeta('name', 'twitter:image', seo.image);
   upsertMeta('name', 'twitter:image:alt', seo.imageAlt);
   setRobots(seo.noindex);
+  setDefaultJsonLdVisible(seo.url === HOME_URL && !seo.noindex);
   setJsonLd(seo.jsonLdSerialized);
+}
+
+function resolveCanonical(canonical: string | undefined, noindex: boolean): string {
+  if (canonical) return canonical;
+  if (noindex) {
+    const path = globalThis.location?.pathname;
+    if (path && path !== '/') return absoluteUrl(path);
+  }
+  return HOME_URL;
 }
 
 export function usePageSeo(seo: PageSeo): void {
@@ -117,7 +148,7 @@ export function usePageSeo(seo: PageSeo): void {
     noindex = false,
     jsonLd = null,
   } = seo;
-  const url = canonical ?? `${SITE_URL}/`;
+  const url = resolveCanonical(canonical, noindex);
   const jsonLdSerialized = jsonLd ? JSON.stringify(jsonLd) : '';
 
   useEffect(() => {
@@ -125,4 +156,8 @@ export function usePageSeo(seo: PageSeo): void {
   }, [title, description, url, ogType, image, imageAlt, noindex, jsonLdSerialized]);
 
   useEffect(() => () => applySeo(SEO_DEFAULTS), []);
+}
+
+export function useNoindexPage(title: string, path?: string): void {
+  usePageSeo({ title, noindex: true, canonical: path ? absoluteUrl(path) : undefined });
 }

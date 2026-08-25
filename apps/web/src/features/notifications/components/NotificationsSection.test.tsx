@@ -43,12 +43,14 @@ const allPrefs: NotificationPreferences = {
     { type: 'participantjoined', enabled: true },
     { type: 'movieadded', enabled: false },
     { type: 'moviepicked', enabled: true },
+    { type: 'moviepickedmanually', enabled: true },
     { type: 'eventdeleted', enabled: true },
     { type: 'eventreminder1h', enabled: true },
     { type: 'eventreminder24h', enabled: true },
     { type: 'eventinvitation', enabled: true },
     { type: 'newfollower', enabled: true },
     { type: 'eventpending', enabled: true },
+    { type: 'letterboxdreconciliationpending', enabled: true },
   ],
 };
 
@@ -70,7 +72,7 @@ describe('NotificationsSection', () => {
     expect(screen.queryByRole('switch')).not.toBeInTheDocument();
   });
 
-  it('loads and renders the 9 preference toggles even when not subscribed to push', async () => {
+  it('loads and renders the 11 preference toggles even when not subscribed to push', async () => {
     mockUsePush.mockReturnValue(pushState({ subscribed: false }));
     mockFetchPrefs.mockResolvedValue(allPrefs);
 
@@ -80,8 +82,8 @@ describe('NotificationsSection', () => {
     expect(
       await screen.findByRole('switch', { name: 'notifications.prefParticipantJoined' })
     ).toBeInTheDocument();
-    // 1 master push toggle + 9 per-type toggles
-    expect(screen.getAllByRole('switch')).toHaveLength(10);
+    // 1 master push toggle + 11 per-type toggles
+    expect(screen.getAllByRole('switch')).toHaveLength(12);
   });
 
   it('shows the push error message', () => {

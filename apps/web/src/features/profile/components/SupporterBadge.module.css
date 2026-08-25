@@ -1,0 +1,27 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  color: var(--color-accent);
+  font-family: inherit;
+  font-size: var(--font-size-2xs);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+.label {
+  transform: translateY(var(--text-optical-nudge));
+}

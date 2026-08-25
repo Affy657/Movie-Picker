@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type RefObject } from 'react';
 
-export function useDialogOpen(ref: React.RefObject<HTMLDialogElement | null>, open: boolean): void {
+export function useDialogOpen(ref: RefObject<HTMLDialogElement | null>, open: boolean): void {
   useEffect(() => {
     const dlg = ref.current;
     if (!dlg) return;
@@ -12,7 +12,7 @@ export function useDialogOpen(ref: React.RefObject<HTMLDialogElement | null>, op
 export function useModalDialog(
   open: boolean,
   onClose: () => void
-): React.RefObject<HTMLDialogElement | null> {
+): RefObject<HTMLDialogElement | null> {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const onCloseRef = useRef(onClose);
   useEffect(() => {
@@ -24,7 +24,9 @@ export function useModalDialog(
   useEffect(() => {
     const dlg = dialogRef.current;
     if (!dlg) return;
-    const handleClose = () => onCloseRef.current();
+    const handleClose = () => {
+      if (open) onCloseRef.current();
+    };
     const handleBackdropClick = (e: MouseEvent) => {
       if (e.target === dlg) onCloseRef.current();
     };
@@ -34,7 +36,7 @@ export function useModalDialog(
       dlg.removeEventListener('close', handleClose);
       dlg.removeEventListener('click', handleBackdropClick);
     };
-  }, []);
+  }, [open]);
 
   return dialogRef;
 }

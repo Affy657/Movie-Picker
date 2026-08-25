@@ -54,6 +54,7 @@ public sealed class TmdbMovieSearchAdvancedTests
 
         var item = Assert.Single(result);
         Assert.Equal(1, item.Id);
+        Assert.Equal([28, 12], item.GenreIds);
     }
 
     [Fact]
@@ -139,7 +140,8 @@ public sealed class TmdbMovieSearchAdvancedTests
         var handler = Handler(req =>
         {
             capturedUrl = req.RequestUri?.ToString();
-            return Json("""{"results":[{"id":10,"title":"Popular","release_date":"2022-02-02","vote_average":9.0}]}""");
+            return Json(
+                """{"results":[{"id":10,"title":"Popular","release_date":"2022-02-02","vote_average":9.0,"genre_ids":[28,12]}]}""");
         });
         var sut = CreateSut(CreateHttpClient(handler.Object));
 
@@ -148,6 +150,7 @@ public sealed class TmdbMovieSearchAdvancedTests
 
         var item = Assert.Single(result);
         Assert.Equal(10, item.Id);
+        Assert.Equal([28, 12], item.GenreIds);
         Assert.NotNull(capturedUrl);
         Assert.Contains("discover/movie", capturedUrl);
         Assert.Contains("with_genres=28,12", capturedUrl);

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ChevronUp, MoreHorizontal } from 'lucide-react';
 import clsx from 'clsx';
+import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
 import styles from './ThemeField.module.css';
 
 export const THEME_EMOJIS = [
@@ -113,6 +114,8 @@ export default function ThemeField({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [presetsExpanded, setPresetsExpanded] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
+  const emojiGridRef = useRef<HTMLDivElement>(null);
+  const fitLeft = useMenuHorizontalFit(pickerOpen, pickerRef, emojiGridRef, 'left');
 
   useEffect(() => {
     if (!pickerOpen) return;
@@ -140,7 +143,13 @@ export default function ThemeField({
             {emoji || '🎬'}
           </button>
           {pickerOpen && (
-            <div className={styles.emojiGrid} role="listbox" aria-label="Emojis">
+            <div
+              ref={emojiGridRef}
+              className={styles.emojiGrid}
+              role="listbox"
+              aria-label="Emojis"
+              style={fitLeft !== null ? { left: fitLeft } : undefined}
+            >
               <button
                 type="button"
                 role="option"
@@ -223,8 +232,8 @@ export default function ThemeField({
         </fieldset>
       )}
       {!disabled && (
-        <div className={styles.colorRow} role="group" aria-label="Couleur du tag">
-          <span className={styles.colorRowLabel}>Couleur</span>
+        <fieldset className={styles.colorRow}>
+          <legend className={styles.colorRowLabel}>Couleur</legend>
           <button
             type="button"
             className={clsx(
@@ -252,7 +261,7 @@ export default function ThemeField({
               title={s.label}
             />
           ))}
-        </div>
+        </fieldset>
       )}
     </>
   );

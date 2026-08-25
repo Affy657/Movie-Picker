@@ -17,11 +17,16 @@
   font-weight: 700;
   letter-spacing: var(--tracking-close);
   color: var(--color-text);
+  line-height: 1;
 }
 
 .titleIcon {
   flex-shrink: 0;
   color: var(--color-primary);
+}
+
+.titleLabel {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .intro {

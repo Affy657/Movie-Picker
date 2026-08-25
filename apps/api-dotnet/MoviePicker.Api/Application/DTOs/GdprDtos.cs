@@ -10,6 +10,7 @@ public sealed record UserDataExportResponse
     public IReadOnlyList<ExportedCreatedEvent> CreatedEvents { get; init; } = Array.Empty<ExportedCreatedEvent>();
     public IReadOnlyList<ExportedParticipation> Participations { get; init; } = Array.Empty<ExportedParticipation>();
     public IReadOnlyList<ExportedPushSubscription> PushSubscriptions { get; init; } = Array.Empty<ExportedPushSubscription>();
+    public IReadOnlyList<ExportedWatchlistItem> Watchlist { get; init; } = Array.Empty<ExportedWatchlistItem>();
 }
 
 public sealed record ExportedProfile
@@ -23,8 +24,11 @@ public sealed record ExportedProfile
     public string UiTheme { get; init; } = string.Empty;
     public string AccentColor { get; init; } = string.Empty;
     public string AvatarId { get; init; } = string.Empty;
+    public bool HasPassword { get; init; }
+    public IReadOnlyList<string> LinkedProviders { get; init; } = Array.Empty<string>();
     public IReadOnlyDictionary<string, bool> NotificationPreferences { get; init; } =
         new Dictionary<string, bool>();
+    public DateTimeOffset? SupporterSince { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
 }
@@ -83,5 +87,14 @@ public sealed record ExportedSeenMark
 public sealed record ExportedPushSubscription
 {
     public string Endpoint { get; init; } = string.Empty;
+    public DateTimeOffset CreatedAt { get; init; }
+}
+
+public sealed record ExportedWatchlistItem
+{
+    public int TmdbId { get; init; }
+    public string MediaType { get; init; } = string.Empty;
+    public string Title { get; init; } = string.Empty;
+    public string Year { get; init; } = string.Empty;
     public DateTimeOffset CreatedAt { get; init; }
 }

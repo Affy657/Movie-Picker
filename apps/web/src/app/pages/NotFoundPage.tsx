@@ -2,10 +2,11 @@ import { Link } from 'react-router';
 import { Compass } from 'lucide-react';
 import ErrorState from '@/shared/components/ErrorState';
 import { ROUTES } from '@/app/routes';
-import { pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import { pageTitle } from '@/shared/hooks/useDocumentTitle';
+import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 
 export default function NotFoundPage() {
-  useDocumentTitle(pageTitle('Page introuvable'));
+  useNoindexPage(pageTitle('Page introuvable'));
 
   return (
     <ErrorState

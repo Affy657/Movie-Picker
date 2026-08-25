@@ -8,6 +8,8 @@ public sealed class UserStatsResponse
     public int VotesCast { get; init; }
     public int WinningProposals { get; init; }
     public int MoviesSeen { get; init; }
+    public int CurrentStreakWeeks { get; init; }
+    public int BestStreakWeeks { get; init; }
     public IReadOnlyList<GenreCount> FavoriteGenres { get; init; } = [];
     public IReadOnlyList<DailyActivityPoint> DailyActivity { get; init; } = [];
 }

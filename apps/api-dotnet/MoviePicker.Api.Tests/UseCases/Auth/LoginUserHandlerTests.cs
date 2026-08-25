@@ -56,6 +56,22 @@ public sealed class LoginUserHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_NoPasswordSet_ThrowsUnauthorized()
+    {
+        var user = SampleUser() with { PasswordHash = string.Empty };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByEmailAsync("a@b.co", It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var hasher = new Mock<IPasswordHasher<User>>();
+        var handler = new LoginUserHandler(users.Object, hasher.Object);
+
+        await Assert.ThrowsAsync<UnauthorizedException>(() =>
+            handler.HandleAsync(new LoginRequest { Email = "a@b.co", Password = "abcd1234" }));
+        hasher.Verify(
+            x => x.VerifyHashedPassword(It.IsAny<User>(), It.IsAny<string>(), It.IsAny<string>()),
+            Times.Never);
+    }
+
+    [Fact]
     public async Task HandleAsync_ValidCredentials_ReturnsResponse()
     {
         var user = SampleUser();

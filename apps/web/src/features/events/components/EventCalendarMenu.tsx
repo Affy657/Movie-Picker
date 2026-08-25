@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { CalendarPlus, Download, ExternalLink } from 'lucide-react';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useMenuFocus } from '@/shared/hooks/useMenuFocus';
+import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
 import { useTranslation } from '@/shared/i18n';
 import {
   buildIcsContent,
@@ -36,6 +37,7 @@ export default function EventCalendarMenu({
   const close = useCallback(() => setOpen(false), []);
   useClickOutside(containerRef, close, open);
   useMenuFocus(open, panelRef, triggerRef);
+  const fitLeft = useMenuHorizontalFit(open, containerRef, panelRef);
 
   const calendarEvent: CalendarEvent = {
     title,
@@ -90,6 +92,7 @@ export default function EventCalendarMenu({
           role="menu"
           tabIndex={-1}
           aria-label={t('events.calendar.menuLabel')}
+          style={fitLeft !== null ? { left: fitLeft, right: 'auto' } : undefined}
         >
           <a
             className={styles.item}
@@ -100,7 +103,7 @@ export default function EventCalendarMenu({
             onClick={close}
           >
             <ExternalLink className={styles.icon} size={15} aria-hidden />
-            {t('events.calendar.google')}
+            <span className={styles.itemLabel}>{t('events.calendar.google')}</span>
           </a>
           <a
             className={styles.item}
@@ -111,11 +114,11 @@ export default function EventCalendarMenu({
             onClick={close}
           >
             <ExternalLink className={styles.icon} size={15} aria-hidden />
-            {t('events.calendar.outlook')}
+            <span className={styles.itemLabel}>{t('events.calendar.outlook')}</span>
           </a>
           <button type="button" role="menuitem" className={styles.item} onClick={handleDownloadIcs}>
             <Download className={styles.icon} size={15} aria-hidden />
-            {t('events.calendar.apple')}
+            <span className={styles.itemLabel}>{t('events.calendar.apple')}</span>
           </button>
         </div>
       ) : null}

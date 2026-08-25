@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.LaunchWheel;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
@@ -16,10 +17,7 @@ public sealed class LaunchWheelHandlerTests
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor;
     private readonly Mock<ICurrentUserAccessor> _currentUserAccessor;
     private readonly Mock<IPosterImageStore> _posterStore;
-    private readonly Mock<IParticipantRepository> _participantRepo;
-    private readonly Mock<IUserRepository> _userRepo;
-    private readonly Mock<IPushSubscriptionRepository> _pushSubRepo;
-    private readonly Mock<IPushNotificationSender> _pushSender;
+    private readonly Mock<IWinnerAnnouncer> _winnerAnnouncer;
     private readonly LaunchWheelHandler _sut;
 
     private static Event ActiveEvent(string hostToken = "ht1") => new()
@@ -50,13 +48,7 @@ public sealed class LaunchWheelHandlerTests
         _posterStore
             .Setup(s => s.RegisterTmdbSourcesAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
-        _participantRepo = new Mock<IParticipantRepository>();
-        _participantRepo
-            .Setup(r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-        _userRepo = new Mock<IUserRepository>();
-        _pushSubRepo = new Mock<IPushSubscriptionRepository>();
-        _pushSender = new Mock<IPushNotificationSender>();
+        _winnerAnnouncer = new Mock<IWinnerAnnouncer>();
         _sut = new LaunchWheelHandler(
             _eventRepo.Object,
             _movieRepo.Object,
@@ -64,11 +56,7 @@ public sealed class LaunchWheelHandlerTests
             _hostTokenAccessor.Object,
             _currentUserAccessor.Object,
             _posterStore.Object,
-            _participantRepo.Object,
-            _userRepo.Object,
-            _pushSubRepo.Object,
-            _pushSender.Object,
-            Mock.Of<IUserNotificationRepository>(),
+            _winnerAnnouncer.Object,
             NullLogger<LaunchWheelHandler>.Instance);
     }
 
@@ -138,6 +126,68 @@ public sealed class LaunchWheelHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_AllMoviesExcludedFromWheel_ThrowsBadRequestException()
+    {
+        var evt = ActiveEvent();
+        var movies = new List<Movie>
+        {
+            new() { Id = "mov1", EventId = evt.Id, ParticipantId = "p1", TmdbId = 1, Title = "A", Year = "2020", ExcludedFromWheel = true, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
+            new() { Id = "mov2", EventId = evt.Id, ParticipantId = "p2", TmdbId = 2, Title = "B", Year = "2021", ExcludedFromWheel = true, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
+        };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
+        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movies);
+
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1"));
+        Assert.Contains("exclus", ex.Message);
+        _eventRepo.Verify(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ExcludedMovieIsNeverPicked()
+    {
+        var evt = ActiveEvent();
+        var movies = new List<Movie>
+        {
+            new() { Id = "mov1", EventId = evt.Id, ParticipantId = "p1", TmdbId = 1, Title = "Excluded", Year = "2020", ExcludedFromWheel = true, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
+            new() { Id = "mov2", EventId = evt.Id, ParticipantId = "p2", TmdbId = 2, Title = "A", Year = "2021", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
+            new() { Id = "mov3", EventId = evt.Id, ParticipantId = "p3", TmdbId = 3, Title = "B", Year = "2022", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
+        };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
+        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movies);
+        _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+
+        for (var i = 0; i < 30; i++)
+        {
+            var result = await _sut.HandleAsync("evt1");
+            Assert.NotEqual("mov1", result.Winner.Id);
+        }
+    }
+
+    [Fact]
+    public async Task HandleAsync_SingleEligibleMovie_ReturnsDirectWinnerMessage()
+    {
+        var evt = ActiveEvent();
+        var movies = new List<Movie>
+        {
+            new() { Id = "mov1", EventId = evt.Id, ParticipantId = "p1", TmdbId = 1, Title = "Excluded", Year = "2020", ExcludedFromWheel = true, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
+            new() { Id = "mov2", EventId = evt.Id, ParticipantId = "p2", TmdbId = 2, Title = "Seul candidat", Year = "2021", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
+        };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
+        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movies);
+        _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+
+        var result = await _sut.HandleAsync("evt1");
+
+        Assert.Equal("mov2", result.Winner.Id);
+        Assert.Contains("gagnant direct", result.Message);
+    }
+
+    [Fact]
     public async Task HandleAsync_Success_UpdatesEventWithWinnerAndReturnsResponse()
     {
         var evt = ActiveEvent();
@@ -160,7 +210,11 @@ public sealed class LaunchWheelHandlerTests
         Assert.Equal("Winner", result.Winner.Title);
         Assert.NotNull(captured);
         Assert.Equal("mov1", captured.WinnerMovieId);
+        Assert.Equal(WinnerPickMethod.Wheel, captured.WinnerPickMethod);
         Assert.Contains("gagnant direct", result.Message);
+        _winnerAnnouncer.Verify(
+            a => a.AnnounceAsync(It.IsAny<Event>(), "Winner", WinnerPickMethod.Wheel, It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]

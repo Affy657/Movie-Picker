@@ -23,6 +23,19 @@ public sealed class MongoMovieRepository : IMovieRepository
         return doc is null ? null : MovieMapper.ToDomain(doc);
     }
 
+    public async Task<IReadOnlyList<Movie>> ListByIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
+    {
+        if (movieIds.Count == 0)
+            return [];
+
+        var ids = movieIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
+        if (ids.Count == 0)
+            return [];
+
+        var docs = await _collection.Find(x => ids.Contains(x.Id)).ToListAsync(ct);
+        return docs.ConvertAll(MovieMapper.ToDomain);
+    }
+
     public async Task<Movie?> GetByIdAndEventIdAsync(string movieId, string eventId, CancellationToken ct = default)
     {
         var doc = await _collection.Find(x => x.Id == movieId && x.EventId == eventId).FirstOrDefaultAsync(ct);
@@ -97,6 +110,16 @@ public sealed class MongoMovieRepository : IMovieRepository
             throw new NotFoundException("Film introuvable");
     }
 
+    public async Task UpdateWheelExclusionAsync(string movieId, bool excluded, CancellationToken ct = default)
+    {
+        var update = Builders<MovieDocument>.Update
+            .Set(x => x.ExcludedFromWheel, excluded)
+            .Set(x => x.UpdatedAt, DateTime.UtcNow);
+        var result = await _collection.UpdateOneAsync(x => x.Id == movieId, update, cancellationToken: ct);
+        if (result.MatchedCount == 0)
+            throw new NotFoundException("Film introuvable");
+    }
+
     public async Task UpdateGenresAsync(string movieId, IReadOnlyList<int> genreIds, CancellationToken ct = default)
     {
         var value = genreIds.Count > 0 ? genreIds.ToList() : null;
@@ -120,6 +143,45 @@ public sealed class MongoMovieRepository : IMovieRepository
         var filter = Builders<MovieDocument>.Filter.In(x => x.ParticipantId, ids);
         var docs = await _collection.Find(filter).ToListAsync(ct);
         return docs.ConvertAll(MovieMapper.ToDomain);
+    }
+
+    public async Task<IReadOnlyList<Movie>> ListByParticipantIdsPagedAsync(
+        IReadOnlyCollection<string> participantIds,
+        int skip,
+        int take,
+        CancellationToken ct = default)
+    {
+        if (participantIds.Count == 0)
+            return [];
+
+        var ids = participantIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
+        if (ids.Count == 0)
+            return [];
+
+        var filter = Builders<MovieDocument>.Filter.In(x => x.ParticipantId, ids);
+        var docs = await _collection.Find(filter)
+            .SortByDescending(x => x.CreatedAt)
+            .ThenByDescending(x => x.Id)
+            .Skip(skip)
+            .Limit(take)
+            .ToListAsync(ct);
+        return docs.ConvertAll(MovieMapper.ToDomain);
+    }
+
+    public async Task<int> CountByParticipantIdsAsync(
+        IReadOnlyCollection<string> participantIds,
+        CancellationToken ct = default)
+    {
+        if (participantIds.Count == 0)
+            return 0;
+
+        var ids = participantIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
+        if (ids.Count == 0)
+            return 0;
+
+        var filter = Builders<MovieDocument>.Filter.In(x => x.ParticipantId, ids);
+        var count = await _collection.CountDocumentsAsync(filter, cancellationToken: ct);
+        return (int)count;
     }
 
     public async Task<IReadOnlyList<Movie>> ListMissingGenresAsync(int limit, CancellationToken ct = default)

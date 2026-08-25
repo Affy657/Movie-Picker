@@ -3,7 +3,8 @@ import { useEffect, useRef } from 'react';
 export function useClickOutside(
   ref: React.RefObject<HTMLElement | null>,
   onClose: () => void,
-  enabled: boolean
+  enabled: boolean,
+  ignoreSelector?: string
 ): void {
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -11,7 +12,15 @@ export function useClickOutside(
   useEffect(() => {
     if (!enabled) return;
     const handlePointer = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onCloseRef.current();
+      const target = e.target as Node;
+      if (ref.current?.contains(target)) return;
+      if (!(target instanceof Element)) return;
+      if (ignoreSelector && target.closest(ignoreSelector)) return;
+      // Un dialogue natif ouvert (ConfirmDialog, etc.) capture deja
+      // l'interaction : un clic dedans ne doit jamais fermer un panneau
+      // sous-jacent, meme si ce dialogue est rendu hors de `ref`.
+      if (target.closest('dialog[open]')) return;
+      onCloseRef.current();
     };
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onCloseRef.current();
@@ -22,5 +31,5 @@ export function useClickOutside(
       document.removeEventListener('mousedown', handlePointer);
       document.removeEventListener('keydown', handleKey);
     };
-  }, [enabled, ref]);
+  }, [enabled, ref, ignoreSelector]);
 }

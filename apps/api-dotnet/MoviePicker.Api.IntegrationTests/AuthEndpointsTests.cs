@@ -60,6 +60,8 @@ public sealed class AuthEndpointsTests : IClassFixture<MoviePickerApplicationFac
         Assert.NotNull(profile);
         Assert.Equal("Intégration", profile.DisplayName);
         Assert.Contains("***", profile.EmailMasked, StringComparison.Ordinal);
+        Assert.NotEqual(default, profile.CreatedAt);
+        Assert.True(profile.CreatedAt <= DateTimeOffset.UtcNow.AddMinutes(1));
     }
 
     [Fact]
@@ -348,5 +350,54 @@ public sealed class AuthEndpointsTests : IClassFixture<MoviePickerApplicationFac
             "/api/v1/auth/me",
             new { ratingScale = "seven" });
         Assert.Equal(HttpStatusCode.BadRequest, patch.StatusCode);
+    }
+
+    [Fact]
+    public async Task OAuthProviders_NoneConfigured_ReturnsEmptyList()
+    {
+        var client = _factory.CreateClient();
+        var res = await client.GetAsync("/api/v1/auth/oauth/providers");
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        var body = await res.Content.ReadFromJsonAsync<OAuthProvidersResponse>(JsonReadOptions);
+        Assert.NotNull(body);
+        Assert.Empty(body!.Providers);
+    }
+
+    [Fact]
+    public async Task OAuthStart_ProviderDisabled_Returns404()
+    {
+        var client = _factory.CreateClient();
+        var res = await client.GetAsync("/api/v1/auth/oauth/google/start");
+        Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task OAuthStart_UnknownProvider_Returns404()
+    {
+        var client = _factory.CreateClient();
+        var res = await client.GetAsync("/api/v1/auth/oauth/facebook/start");
+        Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task UnlinkIdentity_Unauthenticated_Returns401()
+    {
+        var client = _factory.CreateClient();
+        var res = await client.DeleteAsync("/api/v1/auth/me/identities/google");
+        Assert.Equal(HttpStatusCode.Unauthorized, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task UnlinkIdentity_NotLinked_Returns404()
+    {
+        var client = _factory.CreateClient();
+        var email = $"unlink{Guid.NewGuid():N}@test.local";
+        var reg = await client.PostAsJsonAsync(
+            "/api/v1/auth/register",
+            new RegisterRequest { Email = email, Password = "abcd1234", DisplayName = "U" });
+        ApplySessionCookie(client, reg);
+
+        var res = await client.DeleteAsync("/api/v1/auth/me/identities/google");
+        Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
     }
 }
