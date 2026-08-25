@@ -8,7 +8,7 @@ import EventThemeBanner from '@/features/events/components/EventThemeBanner';
 import EventLifecyclePill from '@/shared/components/EventLifecyclePill';
 import Avatar from '@/shared/components/Avatar';
 import type { EventParticipantSummary, MyEventLifecycle } from '@/shared/types/event';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import styles from './EventDetailHeader.module.css';
 
@@ -39,6 +39,40 @@ function useWheelActionsHeight(
       root.style.removeProperty('--event-wheel-bar-height');
     };
   }, [wheelActions, wheelActionsRef]);
+}
+
+function pluralizeCount(
+  count: number,
+  oneKey: TranslationKey,
+  manyKey: TranslationKey,
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string
+) {
+  if (count === 1) return t(oneKey);
+  return t(manyKey, { count });
+}
+
+function useCondensedStickyBar(
+  stickyBar: boolean,
+  sentinelRef: RefObject<HTMLDivElement | null>,
+  barRef: RefObject<HTMLElement | null>
+) {
+  const [condensed, setCondensed] = useState(false);
+  useEffect(() => {
+    if (!stickyBar) {
+      setCondensed(false);
+      return;
+    }
+    const sentinel = sentinelRef.current;
+    const bar = barRef.current;
+    if (!sentinel || !bar || typeof IntersectionObserver !== 'function') return;
+    const stickyOffsetPx = Number.parseFloat(getComputedStyle(bar).top) || 0;
+    const observer = new IntersectionObserver(([entry]) => setCondensed(!entry?.isIntersecting), {
+      rootMargin: `-${stickyOffsetPx}px 0px 0px 0px`,
+    });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [stickyBar, sentinelRef, barRef]);
+  return condensed;
 }
 
 function useStickyBarMedia(): boolean {
@@ -191,38 +225,28 @@ export default function EventDetailHeader({
   const wheelActionsRef = useRef<HTMLDivElement>(null);
   useWheelActionsHeight(wheelActionsRef, wheelActions);
   const stickyBar = useStickyBarMedia();
-  const [condensed, setCondensed] = useState(false);
-
-  useEffect(() => {
-    if (!stickyBar) {
-      setCondensed(false);
-      return;
-    }
-    const sentinel = sentinelRef.current;
-    const bar = barRef.current;
-    if (!sentinel || !bar || typeof IntersectionObserver !== 'function') return;
-    const stickyOffsetPx = Number.parseFloat(getComputedStyle(bar).top) || 0;
-    const observer = new IntersectionObserver(([entry]) => setCondensed(!entry?.isIntersecting), {
-      rootMargin: `-${stickyOffsetPx}px 0px 0px 0px`,
-    });
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [stickyBar]);
+  const condensed = useCondensedStickyBar(stickyBar, sentinelRef, barRef);
 
   const stacked = (participants ?? []).slice(0, MAX_STACKED_AVATARS);
   const hiddenCount = Math.max(participantCount - stacked.length, 0);
-  const participantsLabel =
-    participantCount === 1
-      ? t('events.detail.participantsToggleOne')
-      : t('events.detail.participantsToggle', { count: participantCount });
-  const moviesLabel =
-    moviesCount === 1
-      ? t('events.detail.moviesCountOne')
-      : t('events.detail.moviesCount', { count: moviesCount });
-  const votesLabel =
-    votesCount === 1
-      ? t('events.detail.votesCountOne')
-      : t('events.detail.votesCount', { count: votesCount });
+  const participantsLabel = pluralizeCount(
+    participantCount,
+    'events.detail.participantsToggleOne',
+    'events.detail.participantsToggle',
+    t
+  );
+  const moviesLabel = pluralizeCount(
+    moviesCount,
+    'events.detail.moviesCountOne',
+    'events.detail.moviesCount',
+    t
+  );
+  const votesLabel = pluralizeCount(
+    votesCount,
+    'events.detail.votesCountOne',
+    'events.detail.votesCount',
+    t
+  );
   const isUpcoming = lifecycle === 'upcoming';
   const showLifecyclePill = !isUpcoming || !!countdownLabel;
 

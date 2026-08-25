@@ -47,9 +47,8 @@ export default function ActivityWeeks({ points }: Readonly<Props>) {
 
   return (
     <div className={styles.heatmapWrap}>
-      <div
+      <fieldset
         className={styles.weekGroups}
-        role="group"
         aria-label={t('profile.stats.activityImgAlt', { count: total })}
       >
         {rows.map((row) => {
@@ -97,7 +96,7 @@ export default function ActivityWeeks({ points }: Readonly<Props>) {
             </div>
           );
         })}
-      </div>
+      </fieldset>
       <div className={styles.weekLegend} aria-hidden>
         <span className={styles.legendText}>{t('profile.stats.legendLess')}</span>
         {[0, 1, 2, 3].map((level) => (

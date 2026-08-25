@@ -139,7 +139,7 @@ export default function EventDetailSession({
   actionError,
   setActionError,
   refreshAll,
-}: EventDetailSessionProps) {
+}: Readonly<EventDetailSessionProps>) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
@@ -468,7 +468,7 @@ function EventDetailSessionChrome({
   needsJoin,
   isFull,
   maxParticipants,
-}: {
+}: Readonly<{
   slug: string;
   hostToken: string | null;
   event: EventData;
@@ -501,7 +501,7 @@ function EventDetailSessionChrome({
   needsJoin: boolean;
   isFull: boolean;
   maxParticipants: number | null;
-}) {
+}>) {
   const hostCanInvite = !!event.isHost && !event.isFinished;
   return (
     <>
@@ -605,7 +605,7 @@ function EventDetailSessionBody({
   removePending,
   actionSuccess,
   wheel,
-}: {
+}: Readonly<{
   slug: string;
   event: EventData;
   participant: ParticipantRef | null;
@@ -633,7 +633,7 @@ function EventDetailSessionBody({
   removePending: boolean;
   actionSuccess: string | null;
   wheel: WheelApi;
-}) {
+}>) {
   const hostCanInvite = !!event.isHost && !event.isFinished;
   return (
     <>
