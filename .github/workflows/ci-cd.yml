@@ -433,7 +433,17 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           set -eo pipefail
-          dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+          for attempt in 1 2 3; do
+            if dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              echo "Sonar end a échoué (tentative $attempt/3), nouvel essai dans 30 s..."
+              sleep 30
+            fi
+          done
+          echo "::error::Sonar end a échoué après 3 tentatives"
+          exit 1
 
   docker-api:
     name: Docker API → Artifact Registry

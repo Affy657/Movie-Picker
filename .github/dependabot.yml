@@ -46,8 +46,9 @@ updates:
           - "*"
 
   # Slides Slidev archivées (archive/, non maintenues) : neutralise Dependabot
-  # (version + sécurité) sur ce manifeste figé — sinon les security updates
-  # échouent sur des deps transitives vulnérables (ex. dompurify) qu'on ne patche pas.
+  # version sur ce manifeste figé. Le package-lock.json local n'est pas versionné
+  # (cf. archive/.../slides/.gitignore) pour éviter les security updates GitHub
+  # qui échouent avec all_versions_ignored alors que le lockfile reste vulnérable.
   - package-ecosystem: npm
     directory: /archive/docs/RNCP/bloc-1-cadrage/slides
     schedule:

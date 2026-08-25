@@ -8,7 +8,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
-## [1.4.0] - 2026-08-17
+## [1.4.0] - 2026-08-25
 
 ### Added
 
