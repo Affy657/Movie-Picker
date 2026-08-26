@@ -1,9 +1,11 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.HttpOverrides;
 using MoviePicker.Api.Infrastructure;
 using MoviePicker.Api.Infrastructure.Web;
 using Sentry;
+using Sentry.Extensibility;
 
 EnvLoader.LoadFromEnvFileIfExists();
 
@@ -21,15 +23,14 @@ if (!string.IsNullOrWhiteSpace(sentryDsn))
         options.Dsn = sentryDsn;
         options.Environment = builder.Configuration["SENTRY_ENVIRONMENT"] ?? builder.Environment.EnvironmentName;
         options.Release = builder.Configuration["SENTRY_RELEASE"];
-        options.TracesSampleRate = 0.1;
         options.SendDefaultPii = false;
-        options.SetBeforeSend((SentryEvent sentryEvent) =>
-        {
-            sentryEvent.User.IpAddress = null;
-            sentryEvent.User.Email = null;
-            sentryEvent.User.Username = null;
-            return sentryEvent;
-        });
+        options.MaxRequestBodySize = RequestSize.None;
+        options.AddExceptionFilterForType<AuthenticationFailureException>();
+        options.SetBeforeSend(SentryBeforeSend.Prepare);
+        options.TracesSampler = context => SentryBeforeSend.SampleTrace(context.TransactionContext.Name);
+        var revision = Environment.GetEnvironmentVariable("K_REVISION");
+        if (!string.IsNullOrWhiteSpace(revision))
+            options.ServerName = revision;
     });
 }
 

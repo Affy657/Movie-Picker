@@ -1,3 +1,10 @@
+import { useEffect } from 'react';
+import {
+  createRoutesFromChildren,
+  matchRoutes,
+  useLocation,
+  useNavigationType,
+} from 'react-router';
 import type { ErrorEvent } from '@sentry/react';
 
 type SentryApi = typeof import('@sentry/react');
@@ -13,6 +20,19 @@ export function shouldDropSentryEvent(event: {
   return values.some((item) => IN_APP_BROWSER_NOISE.test(item.value ?? ''));
 }
 
+export function sentryTracePropagationTargets(
+  apiUrl = import.meta.env.VITE_API_URL
+): Array<string> {
+  const raw = (apiUrl ?? '').trim();
+  if (!raw) return [];
+  const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+  try {
+    return [new URL(withScheme).origin];
+  } catch {
+    return [];
+  }
+}
+
 function prepareEvent(event: ErrorEvent): ErrorEvent | null {
   if (shouldDropSentryEvent(event)) return null;
   delete event.user;
@@ -24,6 +44,12 @@ function prepareEvent(event: ErrorEvent): ErrorEvent | null {
   return event;
 }
 
+type InstrumentedRoutes = Parameters<SentryApi['withSentryReactRouterV7Routing']>[0];
+
+export function getInstrumentedRoutes(routesComponent: InstrumentedRoutes): InstrumentedRoutes {
+  return api ? api.withSentryReactRouterV7Routing(routesComponent) : routesComponent;
+}
+
 export async function initSentry(): Promise<void> {
   const dsn = import.meta.env.VITE_SENTRY_DSN;
   if (api || !dsn || !import.meta.env.PROD) return;
@@ -32,7 +58,16 @@ export async function initSentry(): Promise<void> {
     dsn,
     environment: 'production',
     tracesSampleRate: 0.1,
-    integrations: [Sentry.browserTracingIntegration()],
+    tracePropagationTargets: sentryTracePropagationTargets(),
+    integrations: [
+      Sentry.reactRouterV7BrowserTracingIntegration({
+        useEffect,
+        useLocation,
+        useNavigationType,
+        createRoutesFromChildren,
+        matchRoutes,
+      }),
+    ],
     sendDefaultPii: false,
     ignoreErrors: ['SCDynimacBridge'],
     beforeSend: prepareEvent,

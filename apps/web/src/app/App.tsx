@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from '@/features/auth/contexts/AuthContext';
 import UserThemeSync from '@/app/components/UserThemeSync';
 import AnalyticsSync from '@/app/components/AnalyticsSync';
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
+import { getInstrumentedRoutes } from '@/shared/observability/sentry';
 import AppShell from '@/app/components/AppShell';
 import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute';
 import PageLayout from '@/shared/components/PageLayout';
@@ -74,9 +75,11 @@ function createAppQueryClient() {
   });
 }
 
+const SentryRoutes = getInstrumentedRoutes(Routes);
+
 export function AppRoutes() {
   return (
-    <Routes>
+    <SentryRoutes>
       <Route element={<AppShell />}>
         <Route path={ROUTES.home} element={<HomeRoute />} />
         <Route
@@ -132,7 +135,7 @@ export function AppRoutes() {
         <Route path={ROUTES.profilePattern} element={<ProfilePage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
-    </Routes>
+    </SentryRoutes>
   );
 }
 

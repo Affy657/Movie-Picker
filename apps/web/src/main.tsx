@@ -1,6 +1,5 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import App from '@/app/App';
 import { startPwaInstallRuntime } from '@/shared/hooks/usePwaInstall';
 import { initPostHog } from '@/shared/analytics/posthog';
 import { initSentry } from '@/shared/observability/sentry';
@@ -8,22 +7,28 @@ import './index.css';
 
 startPwaInstallRuntime();
 
-void initSentry();
-
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
-
-void initPostHog();
-
-requestAnimationFrame(() => {
+function hideSplash(): void {
   requestAnimationFrame(() => {
-    const splash = document.getElementById('splash');
-    if (splash) {
-      splash.classList.add('out');
-      setTimeout(() => splash.remove(), 260);
-    }
+    requestAnimationFrame(() => {
+      const splash = document.getElementById('splash');
+      if (splash) {
+        splash.classList.add('out');
+        setTimeout(() => splash.remove(), 260);
+      }
+    });
   });
-});
+}
+
+async function boot(): Promise<void> {
+  await initSentry();
+  const { default: App } = await import('@/app/App');
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>
+  );
+  void initPostHog();
+  hideSplash();
+}
+
+void boot();

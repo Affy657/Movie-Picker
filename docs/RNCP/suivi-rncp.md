@@ -161,7 +161,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 > **Objectif RNCP — C4.1.2 (ÉLIM)** : « système de supervision adapté ; sondes mises en place explicitées ; modalité des signalements configurée ; surveille la disponibilité ». Logs structurés + métriques Cloud Run par défaut ne suffisent pas : il faut **sondes actives** + **alertes**.
 
-- [ ] **Sentry** (ou **GlitchTip** self-hosted, OSS) — projet front + projet API .NET
+- [x] **Sentry** (ou **GlitchTip** self-hosted, OSS) — projet front + projet API .NET
   - Front : `pnpm add @sentry/react` + init dans `apps/web/src/main.tsx` ; DSN par env (`VITE_SENTRY_DSN`) ; `tracesSampleRate` raisonnable (0.1 prod) ; release liée au tag (§ 6)
   - API .NET : `dotnet add package Sentry.AspNetCore` (vérifier la dernière version stable compatible **.NET 10** au moment du `dotnet add`) + `builder.WebHost.UseSentry()` + DSN via GCP Secret Manager (`SENTRY_DSN`) ; intégration **logging** + **performance**
   - **PII** : `SendDefaultPii = false` ; pas d'email en clair dans les breadcrumbs

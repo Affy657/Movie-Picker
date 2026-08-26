@@ -570,6 +570,19 @@ jobs:
             echo "::error::/health/ready signale MongoDB comme non joignable"
             exit 1
           }
+      - name: Enregistrer le déploiement Sentry (API)
+        if: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_URL: ${{ vars.SENTRY_URL }}
+          SENTRY_RELEASE: ${{ github.sha }}
+        run: |
+          curl -sSfL "https://github.com/getsentry/sentry-cli/releases/download/2.58.6/sentry-cli-Linux-x86_64" -o sentry-cli
+          chmod +x sentry-cli
+          extra=()
+          if [ -n "$SENTRY_URL" ]; then extra+=(--url "$SENTRY_URL"); fi
+          ./sentry-cli "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e production -n "api-${{ github.sha }}"
 
   deploy-front:
     name: Deploy Front → S3 & CloudFront
@@ -678,3 +691,14 @@ jobs:
           code="$(curl -sS -o /dev/null -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 "https://$DOMAIN/")"
           echo "GET / -> $code"
           test "$code" = "200"
+      - name: Enregistrer le déploiement Sentry (front)
+        if: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_URL: ${{ vars.SENTRY_URL }}
+          SENTRY_RELEASE: ${{ github.sha }}
+        run: |
+          extra=()
+          if [ -n "$SENTRY_URL" ]; then extra+=(--url "$SENTRY_URL"); fi
+          pnpm --filter web exec sentry-cli -- "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e production -n "front-${{ github.sha }}"

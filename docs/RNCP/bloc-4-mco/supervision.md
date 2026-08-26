@@ -79,7 +79,7 @@ Finalité : nommer la cause d'une anomalie là où les sondes précédentes ne c
 
 - **Exceptions front non gérées**, erreurs JavaScript et rejets de promesses (handlers globaux du SDK), plus les erreurs de rendu React remontées par l'`ErrorBoundary` (`apps/web/src/shared/components/ErrorBoundary.tsx`).
 - **Erreurs serveur 5xx**, capturées dans le filtre d'exceptions global (`MoviePickerExceptionFilter`), branche « erreur inattendue » uniquement. Les erreurs métier attendues (4xx : validation, non-trouvé, conflit, non-autorisé) ne sont **pas** envoyées, pour éviter le bruit.
-- **Traces de performance**, échantillonnage à 10 % (`tracesSampleRate = 0.1`) côté front et API.
+- **Traces de performance**, échantillonnage à 10 % (`tracesSampleRate = 0.1`) côté front et API. Les transactions front sont nommées d'après le motif de route (`/e/:slug`, `/u/:handle`) via `reactRouterV7BrowserTracingIntegration`. Les en-têtes `sentry-trace` et `baggage` sont envoyés vers l'origine de l'API (`tracePropagationTargets`) pour relier une page web à l'appel serveur. Les sondes `/health` et le trafic scanner (`/.env`) ne sont pas échantillonnés.
 - **Contexte attaché**, `environment = production`, `release = <SHA du commit déployé>`, route, navigateur / runtime.
 
 Les incidents sont regroupés par empreinte, avec compteur d'occurrences, première et dernière apparition, et release d'introduction. Les **source maps** du front sont uploadées pendant le build CI puis retirées de l'artefact publié : les stack traces sont lisibles sans exposer les sources.
@@ -133,9 +133,10 @@ Le monitoring d'erreurs relève de l'**intérêt légitime** (sécurité et stab
 
 Minimisation appliquée (**zéro donnée personnelle**) :
 
-- `SendDefaultPii = false` sur les deux SDK Sentry (ni IP, ni cookies, ni corps de requête, ni identifiant utilisateur).
-- `beforeSend` qui efface IP / e-mail / nom d'utilisateur de tout événement, côté front et API.
-- Côté serveur Sentry : scrubbing des adresses IP, data scrubber et scrubbers par défaut activés sur les deux projets.
+- `SendDefaultPii = false` sur les deux SDK Sentry (ni IP, ni cookies, ni corps de requête).
+- `beforeSend` qui supprime l'objet `user` entier (front et API), y compris un identifiant technique.
+- Filtre des échecs OAuth attendus (`AuthenticationFailureException` / state CSRF) pour ne pas les traiter comme des incidents.
+- Côté serveur Sentry : option **Prevent Storing of IP Addresses** (sans elle, Sentry infère encore une ville depuis l'IP de connexion, même avec `SendDefaultPii = false`), data scrubber et scrubbers par défaut activés sur les deux projets.
 - Pas de session replay, pas de capture d'écran.
 - Les sondes de disponibilité n'interrogent que des endpoints techniques, sans authentification ni donnée utilisateur.
 
