@@ -4,7 +4,17 @@ type SentryApi = typeof import('@sentry/react');
 
 let api: SentryApi | null = null;
 
-function stripPii(event: ErrorEvent): ErrorEvent {
+const IN_APP_BROWSER_NOISE = /SCDynimacBridge/i;
+
+export function shouldDropSentryEvent(event: {
+  exception?: { values?: Array<{ value?: string }> };
+}): boolean {
+  const values = event.exception?.values ?? [];
+  return values.some((item) => IN_APP_BROWSER_NOISE.test(item.value ?? ''));
+}
+
+function prepareEvent(event: ErrorEvent): ErrorEvent | null {
+  if (shouldDropSentryEvent(event)) return null;
   delete event.user;
   if (event.request) {
     delete event.request.cookies;
@@ -24,7 +34,8 @@ export async function initSentry(): Promise<void> {
     tracesSampleRate: 0.1,
     integrations: [Sentry.browserTracingIntegration()],
     sendDefaultPii: false,
-    beforeSend: stripPii,
+    ignoreErrors: ['SCDynimacBridge'],
+    beforeSend: prepareEvent,
   });
   api = Sentry;
 }
