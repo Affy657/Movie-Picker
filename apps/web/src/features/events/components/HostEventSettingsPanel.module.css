@@ -24,17 +24,6 @@
   backdrop-filter: blur(2px);
 }
 
-.handle {
-  display: none;
-  align-self: center;
-  flex-shrink: 0;
-  width: 2.5rem;
-  height: 0.25rem;
-  margin-top: 0.6rem;
-  border-radius: var(--radius-pill);
-  background: var(--color-border);
-}
-
 @media (max-width: 47.9375rem) {
   .dialog {
     position: fixed;
@@ -44,10 +33,6 @@
     max-width: 100%;
     max-height: min(680px, 90dvh);
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  }
-
-  .handle {
-    display: block;
   }
 }
 

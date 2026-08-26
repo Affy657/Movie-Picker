@@ -24,16 +24,6 @@
   background: var(--overlay-backdrop);
 }
 
-.handle {
-  align-self: center;
-  flex-shrink: 0;
-  width: 2.5rem;
-  height: 0.25rem;
-  margin-top: 0.6rem;
-  border-radius: var(--radius-pill);
-  background: var(--color-border);
-}
-
 .head {
   display: flex;
   align-items: center;

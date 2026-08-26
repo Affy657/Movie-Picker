@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import clsx from 'clsx';
 import { useNavigate } from 'react-router';
 import { Settings, X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -11,6 +12,8 @@ import { ROUTES } from '@/app/routes';
 import { clearStoredHostToken, removeStoredParticipant } from '@/features/events/storage';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useModalDialog } from '@/shared/hooks/useDialogOpen';
+import { useSheetDrag } from '@/shared/hooks/useSheetDrag';
+import dragStyles from '@/shared/components/sheetDrag.module.css';
 import styles from './HostEventSettingsPanel.module.css';
 import { eventDateTimeToLocal, splitDateTimeLocal } from '@/shared/utils/eventDateTimeLocal';
 import type {
@@ -114,6 +117,7 @@ export default function HostEventSettingsPanel({
   }, [open, hydrateFromEvent]);
 
   const dialogRef = useModalDialog(open, onClose);
+  const dragBind = useSheetDrag(dialogRef, onClose, open);
 
   const mutation = useMutation({
     mutationFn: (body: EventConfigPatchPayload) => patchEventConfig(slug, hostToken, body),
@@ -208,21 +212,27 @@ export default function HostEventSettingsPanel({
   };
 
   return (
-    <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>
-      <span className={styles.handle} aria-hidden="true" />
-      <div className={styles.panelHead}>
-        <Settings size={18} aria-hidden className={styles.summaryIcon} />
-        <h2 id={titleId} className={styles.panelTitle}>
-          {t('events.settings.title')}
-        </h2>
-        <button
-          type="button"
-          className={styles.panelClose}
-          onClick={onClose}
-          aria-label={t('common.close')}
-        >
-          <X size={16} aria-hidden />
-        </button>
+    <dialog
+      ref={dialogRef}
+      className={clsx(styles.dialog, dragStyles.surface)}
+      aria-labelledby={titleId}
+    >
+      <div className={dragStyles.grab} {...dragBind}>
+        <span className={clsx(dragStyles.handle, dragStyles.handleMobileOnly)} aria-hidden="true" />
+        <div className={styles.panelHead}>
+          <Settings size={18} aria-hidden className={styles.summaryIcon} />
+          <h2 id={titleId} className={styles.panelTitle}>
+            {t('events.settings.title')}
+          </h2>
+          <button
+            type="button"
+            className={styles.panelClose}
+            onClick={onClose}
+            aria-label={t('common.close')}
+          >
+            <X size={16} aria-hidden />
+          </button>
+        </div>
       </div>
       <div className={styles.dialogBody}>
         {formError && (

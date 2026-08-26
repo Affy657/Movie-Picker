@@ -17,6 +17,7 @@ import AddMoviePanel from '@/features/movies/components/AddMoviePanel';
 import MovieList from '@/features/movies/components/MovieList';
 import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
 import EventActionErrorBanner from '@/features/events/pages/event-detail/EventActionErrorBanner';
+import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventModal';
 import {
   useAddToWatchlist,
   useRemoveFromWatchlist,
@@ -109,6 +110,7 @@ export default function EventMoviesSection({
   const ratingScale = user?.ratingScale;
   const { t } = useTranslation();
   const [sortBy, setSortBy] = useState<SortKey>('createdAt');
+  const [proposeTarget, setProposeTarget] = useState<MovieData | null>(null);
 
   const watchlistQuery = useWatchlist({ enabled: !!user });
   const watchlistItems = useMemo(() => watchlistQuery.data ?? [], [watchlistQuery.data]);
@@ -332,6 +334,7 @@ export default function EventMoviesSection({
             viewMode={viewMode}
             isInWatchlist={user ? isInWatchlist : undefined}
             onToggleWatchlist={user ? handleToggleWatchlist : undefined}
+            onProposeToEvent={user && isFinished ? setProposeTarget : undefined}
             onToggleWheelExclusion={
               event.isHost && !isFinished ? handleToggleWheelExclusion : undefined
             }
@@ -339,6 +342,19 @@ export default function EventMoviesSection({
           />
         </div>
       )}
+      {proposeTarget ? (
+        <ProposeToEventModal
+          open
+          movie={{
+            tmdbId: proposeTarget.tmdbId,
+            mediaType: proposeTarget.mediaType ?? 'movie',
+            title: proposeTarget.title,
+            year: proposeTarget.year,
+            posterPath: proposeTarget.posterPath,
+          }}
+          onClose={() => setProposeTarget(null)}
+        />
+      ) : null}
     </section>
   );
 }

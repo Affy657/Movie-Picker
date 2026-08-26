@@ -70,6 +70,7 @@ export const MovieCardList = memo(function MovieCardList({
   isInWatchlist,
   onToggleWatchlist,
   onToggleWheelExclusion,
+  onProposeToEvent,
   selection,
   isWinner = false,
 }: MovieCardCommonProps) {
@@ -121,6 +122,7 @@ export const MovieCardList = memo(function MovieCardList({
           onRemove={onRemove}
           onToggleWatchlist={onToggleWatchlist}
           onToggleWheelExclusion={onToggleWheelExclusion}
+          onProposeToEvent={onProposeToEvent}
           t={t}
         />
         <div className={styles.titleRow}>

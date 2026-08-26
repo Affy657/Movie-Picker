@@ -29,6 +29,7 @@ interface MovieListProps {
   isInWatchlist?: (movie: MovieData) => boolean;
   onToggleWatchlist?: (movie: MovieData) => void;
   onToggleWheelExclusion?: (movie: MovieData) => void;
+  onProposeToEvent?: (movie: MovieData) => void;
   selection?: MovieCardSelection;
   winnerMovieId?: string;
 }
@@ -51,6 +52,7 @@ export default function MovieList({
   isInWatchlist,
   onToggleWatchlist,
   onToggleWheelExclusion,
+  onProposeToEvent,
   selection,
   winnerMovieId,
 }: Readonly<MovieListProps>) {
@@ -91,6 +93,7 @@ export default function MovieList({
             isInWatchlist={isInWatchlist?.(m)}
             onToggleWatchlist={onToggleWatchlist}
             onToggleWheelExclusion={onToggleWheelExclusion}
+            onProposeToEvent={onProposeToEvent}
             selection={selection}
             isWinner={m.id === winnerMovieId}
             t={t}

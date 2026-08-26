@@ -65,6 +65,7 @@ export const MovieCardGrid = memo(function MovieCardGrid({
   isInWatchlist,
   onToggleWatchlist,
   onToggleWheelExclusion,
+  onProposeToEvent,
   selection,
   isWinner = false,
 }: MovieCardCommonProps) {
@@ -127,6 +128,7 @@ export const MovieCardGrid = memo(function MovieCardGrid({
           onRemove={onRemove}
           onToggleWatchlist={onToggleWatchlist}
           onToggleWheelExclusion={onToggleWheelExclusion}
+          onProposeToEvent={onProposeToEvent}
           t={t}
         />
 

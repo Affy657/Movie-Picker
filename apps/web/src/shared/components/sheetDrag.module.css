@@ -1,0 +1,108 @@
+.surface {
+  --sheet-drag-progress: 0;
+}
+
+.surface[data-sheet-dragging] {
+  animation: none;
+  transition: none;
+}
+
+.surface[data-sheet-settling] {
+  animation: none;
+}
+
+.surface::backdrop {
+  opacity: calc(1 - var(--sheet-drag-progress, 0));
+}
+
+.surface[data-sheet-dragging]::backdrop {
+  animation: none;
+  transition: none;
+}
+
+.surface[data-sheet-settling]::backdrop {
+  animation: none;
+  transition: opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.grab {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  touch-action: none;
+}
+
+.handle {
+  align-self: center;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 0.25rem;
+  margin-top: 0.55rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+  pointer-events: none;
+  transition:
+    width var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
+}
+
+.handleMobileOnly {
+  display: none;
+}
+
+.surface[data-sheet-dragging] .handle {
+  width: 3rem;
+  background: var(--color-text-muted);
+}
+
+@media (max-width: 47.9375rem) {
+  .grab {
+    cursor: grab;
+  }
+
+  .grab:active {
+    cursor: grabbing;
+  }
+
+  .handleMobileOnly {
+    display: block;
+  }
+
+  .surface[open] {
+    animation: sheet-enter 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .surface[open]::backdrop {
+    animation: sheet-backdrop-enter 0.3s var(--ease-out);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .surface[open] {
+    animation: none;
+  }
+
+  .surface[open]::backdrop {
+    animation: none;
+  }
+}
+
+@keyframes sheet-enter {
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes sheet-backdrop-enter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}

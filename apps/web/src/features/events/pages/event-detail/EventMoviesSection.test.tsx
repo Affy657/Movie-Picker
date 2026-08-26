@@ -256,4 +256,32 @@ describe('EventMoviesSection (MSW)', () => {
     expect(headings[0]).toHaveTextContent('Inception');
     expect(screen.getByText('Gagnant')).toBeInTheDocument();
   });
+
+  it('propose le film vers une soirée en cours depuis une soirée terminée', async () => {
+    server.use(
+      authedUserHandler,
+      watchlistHandler([]),
+      http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
+    );
+
+    renderSection({ event: { ...EVENT, isFinished: true } });
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: /plus d.actions.*matrix/i }));
+    await user.click(await screen.findByRole('menuitem', { name: /proposer dans une soirée/i }));
+
+    expect(await screen.findByText(/proposer «\s*matrix\s*» dans une soirée/i)).toBeInTheDocument();
+  });
+
+  it('n’affiche pas l’action de proposition tant que la soirée n’est pas terminée', async () => {
+    server.use(authedUserHandler, watchlistHandler([]));
+
+    renderSection();
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: /plus d.actions.*matrix/i }));
+    expect(
+      screen.queryByRole('menuitem', { name: /proposer dans une soirée/i })
+    ).not.toBeInTheDocument();
+  });
 });

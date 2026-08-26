@@ -597,6 +597,47 @@ describe('MovieList', () => {
     expect(screen.queryByRole('menuitem', { name: /tirage/ })).not.toBeInTheDocument();
   });
 
+  it('menu kebab : propose d’ajouter le film à une soirée en cours', async () => {
+    const onProposeToEvent = vi.fn();
+    renderWithLocale(
+      <MovieList
+        movies={[movies[0]!]}
+        slug="s"
+        participantId="p0"
+        participantPseudo="Alice"
+        isFinished
+        onVote={vi.fn()}
+        onRemove={vi.fn()}
+        refresh={vi.fn()}
+        onActionError={vi.fn()}
+        onProposeToEvent={onProposeToEvent}
+      />
+    );
+    await userEvent.click(screen.getByRole('button', { name: /Plus d’actions/ }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Proposer dans une soirée' }));
+    expect(onProposeToEvent).toHaveBeenCalledWith(expect.objectContaining({ id: 'm1' }));
+  });
+
+  it('sans callback, aucune action de proposition dans le menu', async () => {
+    renderWithLocale(
+      <MovieList
+        movies={[movies[0]!]}
+        slug="s"
+        participantId="p1"
+        participantPseudo="Alice"
+        isFinished
+        onVote={vi.fn()}
+        onRemove={vi.fn()}
+        refresh={vi.fn()}
+        onActionError={vi.fn()}
+      />
+    );
+    await userEvent.click(screen.getByRole('button', { name: /Plus d’actions/ }));
+    expect(
+      screen.queryByRole('menuitem', { name: /proposer dans une soirée/i })
+    ).not.toBeInTheDocument();
+  });
+
   it('film exclu : annonce son état aux lecteurs d’écran', () => {
     renderWithLocale(
       <MovieList

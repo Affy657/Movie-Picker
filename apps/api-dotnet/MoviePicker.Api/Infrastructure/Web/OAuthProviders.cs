@@ -30,6 +30,12 @@ public sealed class OAuthProviderCatalog
 
     public IReadOnlyCollection<string> Enabled => _enabled;
 
+    internal static string? ReadCredential(IConfiguration configuration, string key)
+    {
+        var value = configuration[key]?.Trim();
+        return string.IsNullOrEmpty(value) ? null : value;
+    }
+
     private static bool HasCredentials(IConfiguration configuration, string idKey, string secretKey) =>
-        !string.IsNullOrWhiteSpace(configuration[idKey]) && !string.IsNullOrWhiteSpace(configuration[secretKey]);
+        ReadCredential(configuration, idKey) is not null && ReadCredential(configuration, secretKey) is not null;
 }
