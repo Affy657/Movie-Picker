@@ -1166,7 +1166,10 @@ export const en: Locale = {
     banner: {
       title: "You're in this app's built-in browser",
       description:
-        'These browsers can sometimes sign you out between openings. To stay signed in, open this link in your usual browser (⋯ menu, then "Open in browser").',
+        'Snapchat, Instagram, and TikTok often sign you out when you close them. Open this link in Safari or Chrome to stay signed in.',
+      openInBrowser: 'Open in browser',
+      copyLink: 'Copy link',
+      copied: 'Link copied',
     },
   },
 };

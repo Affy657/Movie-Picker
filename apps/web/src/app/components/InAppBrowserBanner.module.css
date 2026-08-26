@@ -5,8 +5,8 @@
   right: 1rem;
   z-index: 50;
   display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
+  flex-direction: column;
+  gap: 0.875rem;
   padding: 0.875rem 1rem;
   border-radius: var(--radius-md);
   background: var(--color-surface);
@@ -35,6 +35,12 @@
   }
 }
 
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
 .content {
   flex: 1;
   min-width: 0;
@@ -57,6 +63,21 @@
   line-height: var(--leading-normal);
 }
 
+.actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.openLink {
+  white-space: nowrap;
+}
+
+.copyBtn {
+  white-space: nowrap;
+}
+
 .closeBtn {
   flex-shrink: 0;
   display: flex;
@@ -65,11 +86,24 @@
   width: 1.75rem;
   height: 1.75rem;
   border: none;
+  border-radius: var(--radius-pill);
   background: transparent;
   color: var(--color-text-muted);
   cursor: pointer;
 }
 
 .closeBtn:hover {
+  background: color-mix(in srgb, var(--color-text-muted) 14%, transparent);
   color: var(--color-text);
+}
+
+.closeBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .actions :global(.btn) {
+    flex: 1 1 100%;
+  }
 }
