@@ -51,17 +51,17 @@ public sealed class EventsControllerTests
     {
         var handler = new Mock<IListMyEventsHandler>();
 
-        var result = await Controller("u1").ListMine(handler.Object, null, null, CancellationToken.None);
+        var result = await Controller("u1").ListMine(handler.Object, null, null, null, null, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
-        handler.Verify(h => h.HandleAsync("u1", null, null, It.IsAny<CancellationToken>()), Times.Once);
+        handler.Verify(h => h.HandleAsync("u1", null, null, null, null, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task ListMine_Anonymous_ReturnsUnauthorized()
     {
         var result = await Controller(null).ListMine(
-            new Mock<IListMyEventsHandler>().Object, null, null, CancellationToken.None);
+            new Mock<IListMyEventsHandler>().Object, null, null, null, null, CancellationToken.None);
 
         Assert.IsType<UnauthorizedResult>(result);
     }

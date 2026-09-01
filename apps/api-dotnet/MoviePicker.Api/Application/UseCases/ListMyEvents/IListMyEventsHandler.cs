@@ -4,5 +4,6 @@ namespace MoviePicker.Api.Application.UseCases.ListMyEvents;
 
 public interface IListMyEventsHandler
 {
-    Task<MyEventsListResponse> HandleAsync(string userId, int? limit, int? offset, CancellationToken ct = default);
+    Task<MyEventsListResponse> HandleAsync(
+        string userId, string? scope, int? limit, int? offset, string? q, CancellationToken ct = default);
 }
