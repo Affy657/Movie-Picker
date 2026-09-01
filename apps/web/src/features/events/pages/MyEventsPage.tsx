@@ -445,6 +445,7 @@ export default function MyEventsPage() {
                   <HistoryToolbar
                     search={historyToolbar.search}
                     onSearchChange={historyToolbar.setSearch}
+                    sortBy={historyToolbar.sortBy}
                     sortDir={historyToolbar.sortDir}
                     onSetSort={historyToolbar.setSortBy}
                     filtersOpen={historyToolbar.filtersOpen}
@@ -482,48 +483,75 @@ export default function MyEventsPage() {
                     />
                   ) : (
                     <>
-                      {monthGroups.map((group) => (
-                        <section
-                          key={group.key}
-                          className={styles.monthSection}
-                          aria-labelledby={`my-events-month-${group.key}`}
-                        >
-                          <div className={styles.monthHeading}>
-                            <h2 id={`my-events-month-${group.key}`} className={styles.sectionTitle}>
-                              {group.label}
-                            </h2>
-                            <span className={styles.monthRule} aria-hidden />
-                            <span className={styles.monthCount}>
-                              {group.events.length === 1
-                                ? t('events.myEvents.monthGroupCountOne')
-                                : t('events.myEvents.monthGroupCountMany', {
-                                    count: group.events.length,
-                                  })}
-                            </span>
-                          </div>
-                          <div className={styles.historyList}>
-                            {group.events.map((ev) => (
-                              <HistoryEventRow
-                                key={ev.id}
-                                event={ev}
-                                onDelete={
-                                  ev.isCreator
-                                    ? () => {
-                                        setDeleteError(null);
-                                        setConfirmDeleteSlug(ev.slug);
-                                      }
-                                    : undefined
-                                }
-                                onRemove={
-                                  !ev.isCreator
-                                    ? () => handleHistoryRemove(ev.slug, ev.title)
-                                    : undefined
-                                }
-                              />
-                            ))}
-                          </div>
-                        </section>
-                      ))}
+                      {historyToolbar.sortBy === 'date' ? (
+                        monthGroups.map((group) => (
+                          <section
+                            key={group.key}
+                            className={styles.monthSection}
+                            aria-labelledby={`my-events-month-${group.key}`}
+                          >
+                            <div className={styles.monthHeading}>
+                              <h2
+                                id={`my-events-month-${group.key}`}
+                                className={styles.sectionTitle}
+                              >
+                                {group.label}
+                              </h2>
+                              <span className={styles.monthRule} aria-hidden />
+                              <span className={styles.monthCount}>
+                                {group.events.length === 1
+                                  ? t('events.myEvents.monthGroupCountOne')
+                                  : t('events.myEvents.monthGroupCountMany', {
+                                      count: group.events.length,
+                                    })}
+                              </span>
+                            </div>
+                            <div className={styles.historyList}>
+                              {group.events.map((ev) => (
+                                <HistoryEventRow
+                                  key={ev.id}
+                                  event={ev}
+                                  onDelete={
+                                    ev.isCreator
+                                      ? () => {
+                                          setDeleteError(null);
+                                          setConfirmDeleteSlug(ev.slug);
+                                        }
+                                      : undefined
+                                  }
+                                  onRemove={
+                                    !ev.isCreator
+                                      ? () => handleHistoryRemove(ev.slug, ev.title)
+                                      : undefined
+                                  }
+                                />
+                              ))}
+                            </div>
+                          </section>
+                        ))
+                      ) : (
+                        <div className={styles.historyList}>
+                          {historyToolbar.visibleEvents.map((ev) => (
+                            <HistoryEventRow
+                              key={ev.id}
+                              event={ev}
+                              onDelete={
+                                ev.isCreator
+                                  ? () => {
+                                      setDeleteError(null);
+                                      setConfirmDeleteSlug(ev.slug);
+                                    }
+                                  : undefined
+                              }
+                              onRemove={
+                                !ev.isCreator
+                                  ? () => handleHistoryRemove(ev.slug, ev.title)
+                                  : undefined
+                              }
+                            />
+                          ))}
+                        </div>
+                      )}
                       {historyQuery.hasNextPage ? (
                         <button
                           type="button"

@@ -421,6 +421,8 @@
       sortLabel: 'Trier par',
       sortMenuAria: 'Trier par',
       sortByDate: 'Date',
+      sortByTitle: 'Titre',
+      sortByMovieCount: 'Films proposés',
       sortDirectionAsc: 'Croissant',
       sortDirectionDesc: 'D\u00e9croissant',
       historyNoResultsForFilters: 'Aucune soir\u00e9e ne correspond \u00e0 ce filtre.',

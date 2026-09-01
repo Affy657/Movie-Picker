@@ -412,6 +412,8 @@ export const en: Locale = {
       sortLabel: 'Sort by',
       sortMenuAria: 'Sort by',
       sortByDate: 'Date',
+      sortByTitle: 'Title',
+      sortByMovieCount: 'Movies proposed',
       sortDirectionAsc: 'Ascending',
       sortDirectionDesc: 'Descending',
       historyNoResultsForFilters: 'No event matches this filter.',

@@ -6,6 +6,7 @@ import type { HistorySortDirection, HistorySortKey } from './useHistoryToolbar';
 interface HistoryToolbarProps {
   search: string;
   onSearchChange: (value: string) => void;
+  sortBy: HistorySortKey;
   sortDir: HistorySortDirection;
   onSetSort: (key: HistorySortKey) => void;
   filtersOpen: boolean;
@@ -21,6 +22,7 @@ interface HistoryToolbarProps {
 export default function HistoryToolbar({
   search,
   onSearchChange,
+  sortBy,
   sortDir,
   onSetSort,
   filtersOpen,
@@ -47,8 +49,12 @@ export default function HistoryToolbar({
       filtersToggleAriaLabel={t('events.myEvents.filtersToggleAria')}
       filtersLabel={t('events.myEvents.filtersLabel')}
       activeFilterCount={activeFilterCount}
-      sortOptions={[{ key: 'date', label: t('events.myEvents.sortByDate') }]}
-      sortBy="date"
+      sortOptions={[
+        { key: 'date', label: t('events.myEvents.sortByDate') },
+        { key: 'title', label: t('events.myEvents.sortByTitle') },
+        { key: 'movieCount', label: t('events.myEvents.sortByMovieCount') },
+      ]}
+      sortBy={sortBy}
       sortDir={sortDir}
       onSetSort={onSetSort}
       sortLabel={t('events.myEvents.sortLabel')}

@@ -37,7 +37,7 @@
 .rowTop {
   display: flex;
   flex-wrap: nowrap;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 0.4rem 0.75rem;
   flex-shrink: 0;
