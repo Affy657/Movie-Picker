@@ -79,7 +79,7 @@ export function MoviesStat({
   );
 }
 
-function HostBadge({ t }: Readonly<{ t: (key: TranslationKey) => string }>) {
+export function HostBadge({ t }: Readonly<{ t: (key: TranslationKey) => string }>) {
   return (
     <span className={styles.badgeHost}>
       <Crown aria-hidden size={12} />

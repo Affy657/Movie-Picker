@@ -34,6 +34,17 @@ internal static class DevelopmentScenarioSeed
     internal const string ScenarioEmptyTitle = "Scénario seed — Soirée vide (fraîche)";
     internal const string ScenarioDeletedTitle = "Scénario seed — Soirée annulée";
 
+    internal const string ShowcaseLiveTitle = "Vitrine seed — En direct maintenant";
+    internal const string ShowcaseNoThemeTitle = "Vitrine seed — Sans thème ni limite";
+    internal const string ShowcaseFarFutureLongTitle =
+        "Vitrine seed — Dans plusieurs mois avec un titre vraiment très long pour tester la troncature de la carte";
+    internal const string ShowcaseJoinedOnlyTitle = "Vitrine seed — Rejointe, pas organisée";
+    internal const string ShowcasePendingHostTitle = "Vitrine seed — En suspens (organisée par moi)";
+    internal const string ShowcasePendingNoMovieTitle = "Vitrine seed — En suspens, aucun film proposé";
+    internal const string ShowcaseFinishedThisMonthTitle = "Vitrine seed — Terminée avec gagnant (récente)";
+    internal const string ShowcaseFinishedNoMovieTitle = "Vitrine seed — Terminée sans film choisi";
+    internal const string ShowcaseFinishedJoinedOnlyTitle = "Vitrine seed — Terminée, rejointe seulement";
+
     internal static async Task TrySeedAsync(
         IServiceProvider sp,
         DevelopmentSeedActors actors,
@@ -56,6 +67,16 @@ internal static class DevelopmentScenarioSeed
             await RunStepAsync(logger, "soirée vide", () => TrySeedEmptyEventScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "soirée annulée", () => TrySeedDeletedEventScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "rappels", () => TrySeedReminderNotificationsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+
+            await RunStepAsync(logger, "vitrine — en direct", () => TrySeedShowcaseLiveScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "vitrine — sans thème", () => TrySeedShowcaseNoThemeScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "vitrine — lointaine, titre long", () => TrySeedShowcaseFarFutureLongTitleScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "vitrine — rejointe seulement", () => TrySeedShowcaseJoinedOnlyScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "vitrine — en suspens (hôte=dev)", () => TrySeedShowcasePendingHostScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "vitrine — en suspens, aucun film", () => TrySeedShowcasePendingNoMovieScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "vitrine — terminée récente", () => TrySeedShowcaseFinishedThisMonthScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "vitrine — terminée sans film", () => TrySeedShowcaseFinishedNoMovieScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "vitrine — terminée, rejointe seulement", () => TrySeedShowcaseFinishedJoinedOnlyScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
         }
         finally
         {
@@ -906,6 +927,454 @@ internal static class DevelopmentScenarioSeed
         }, ct).ConfigureAwait(false);
 
         logger.LogInformation("DevelopmentSeed : rappels (24h + 1h) ajoutés pour la soirée {Slug}.", target.Slug);
+    }
+
+    private static async Task TrySeedShowcaseLiveScenarioAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var events = sp.GetRequiredService<IEventRepository>();
+        var existing = await events.FindByCreatorAndTitleAsync(actors.Dev.Id, ShowcaseLiveTitle, ct).ConfigureAwait(false);
+        if (existing is not null)
+        {
+            logger.LogInformation("DevelopmentSeed : vitrine « en direct » déjà présente — ignorée.");
+            return;
+        }
+
+        var create = sp.GetRequiredService<ICreateEventHandler>();
+        var join = sp.GetRequiredService<IJoinEventHandler>();
+        var addMovie = sp.GetRequiredService<IAddMovieHandler>();
+
+        var utc = DateTimeOffset.UtcNow;
+        var startedParis = TimeZoneInfo.ConvertTime(utc.AddMinutes(-30), EventSchedule.ParisTimeZone);
+        var created = await create
+            .HandleAsync(
+                new CreateEventRequest
+                {
+                    Title = ShowcaseLiveTitle,
+                    Date = startedParis.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    Time = startedParis.ToString("HH:mm", CultureInfo.InvariantCulture)
+                },
+                actors.Dev.Id,
+                ct)
+            .ConfigureAwait(false);
+
+        var slug = created.Slug;
+        var devPart = created.CreatorParticipant?.Id
+            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+
+        await ApplyConfigAsync(
+            events,
+            slug,
+            new EventConfig { Theme = "Comédie", MaxProposalsPerParticipant = 4, WheelMode = WheelMode.WeightedByVotes },
+            ct).ConfigureAwait(false);
+
+        var joinAlice = await join
+            .HandleAsync(slug, new JoinEventRequest { Pseudo = "Alice invitée" }, actors.Alice.Id, ct)
+            .ConfigureAwait(false);
+
+        await AddMovieAsync(addMovie, slug, 105, "Back to the Future", "1985", devPart, actors.Dev.Id, ct).ConfigureAwait(false);
+        await AddMovieAsync(addMovie, slug, 13, "Forrest Gump", "1994", joinAlice.Participant.Id, actors.Alice.Id, ct).ConfigureAwait(false);
+
+        logger.LogInformation("DevelopmentSeed : vitrine « en direct » créée (slug={Slug}, hôte=dev, commencée il y a 30 min).", slug);
+    }
+
+    private static async Task TrySeedShowcaseNoThemeScenarioAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var events = sp.GetRequiredService<IEventRepository>();
+        var existing = await events.FindByCreatorAndTitleAsync(actors.Dev.Id, ShowcaseNoThemeTitle, ct).ConfigureAwait(false);
+        if (existing is not null)
+        {
+            logger.LogInformation("DevelopmentSeed : vitrine « sans thème » déjà présente — ignorée.");
+            return;
+        }
+
+        var create = sp.GetRequiredService<ICreateEventHandler>();
+        var utc = DateTimeOffset.UtcNow;
+        var created = await create
+            .HandleAsync(
+                new CreateEventRequest
+                {
+                    Title = ShowcaseNoThemeTitle,
+                    Date = FormatDate(utc.AddDays(5)),
+                    Time = "18:45"
+                },
+                actors.Dev.Id,
+                ct)
+            .ConfigureAwait(false);
+
+        logger.LogInformation("DevelopmentSeed : vitrine « sans thème » créée (slug={Slug}, aucune config).", created.Slug);
+    }
+
+    private static async Task TrySeedShowcaseFarFutureLongTitleScenarioAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var events = sp.GetRequiredService<IEventRepository>();
+        var existing = await events.FindByCreatorAndTitleAsync(actors.Dev.Id, ShowcaseFarFutureLongTitle, ct).ConfigureAwait(false);
+        if (existing is not null)
+        {
+            logger.LogInformation("DevelopmentSeed : vitrine « lointaine, titre long » déjà présente — ignorée.");
+            return;
+        }
+
+        var create = sp.GetRequiredService<ICreateEventHandler>();
+        var utc = DateTimeOffset.UtcNow;
+        var created = await create
+            .HandleAsync(
+                new CreateEventRequest
+                {
+                    Title = ShowcaseFarFutureLongTitle,
+                    Date = FormatDate(utc.AddDays(95)),
+                    Time = "19:00"
+                },
+                actors.Dev.Id,
+                ct)
+            .ConfigureAwait(false);
+
+        await ApplyConfigAsync(
+            events,
+            created.Slug,
+            new EventConfig { Theme = "Rétrospective — cinéma muet et premiers essais couleur", MaxParticipants = 4 },
+            ct).ConfigureAwait(false);
+
+        logger.LogInformation("DevelopmentSeed : vitrine « lointaine, titre long » créée (slug={Slug}, +95 jours).", created.Slug);
+    }
+
+    private static async Task TrySeedShowcaseJoinedOnlyScenarioAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var events = sp.GetRequiredService<IEventRepository>();
+        var existing = await events.FindByCreatorAndTitleAsync(actors.Alice.Id, ShowcaseJoinedOnlyTitle, ct).ConfigureAwait(false);
+        if (existing is not null)
+        {
+            logger.LogInformation("DevelopmentSeed : vitrine « rejointe seulement » déjà présente — ignorée.");
+            return;
+        }
+
+        var create = sp.GetRequiredService<ICreateEventHandler>();
+        var join = sp.GetRequiredService<IJoinEventHandler>();
+
+        var utc = DateTimeOffset.UtcNow;
+        var created = await create
+            .HandleAsync(
+                new CreateEventRequest
+                {
+                    Title = ShowcaseJoinedOnlyTitle,
+                    Date = FormatDate(utc.AddDays(2)),
+                    Time = "20:15"
+                },
+                actors.Alice.Id,
+                ct)
+            .ConfigureAwait(false);
+
+        var slug = created.Slug;
+        await ApplyConfigAsync(
+            events,
+            slug,
+            new EventConfig { Theme = "Comédie romantique" },
+            ct).ConfigureAwait(false);
+
+        await join.HandleAsync(slug, new JoinEventRequest { Pseudo = "Dev invité" }, actors.Dev.Id, ct).ConfigureAwait(false);
+
+        logger.LogInformation("DevelopmentSeed : vitrine « rejointe seulement » créée (slug={Slug}, hôte=Alice, dev=participant).", slug);
+    }
+
+    private static async Task TrySeedShowcasePendingHostScenarioAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var events = sp.GetRequiredService<IEventRepository>();
+        var existing = await events.FindByCreatorAndTitleAsync(actors.Dev.Id, ShowcasePendingHostTitle, ct).ConfigureAwait(false);
+        if (existing is not null)
+        {
+            logger.LogInformation("DevelopmentSeed : vitrine « en suspens, hôte=dev » déjà présente — ignorée.");
+            return;
+        }
+
+        var create = sp.GetRequiredService<ICreateEventHandler>();
+        var join = sp.GetRequiredService<IJoinEventHandler>();
+        var addMovie = sp.GetRequiredService<IAddMovieHandler>();
+
+        var utc = DateTimeOffset.UtcNow;
+        var created = await create
+            .HandleAsync(
+                new CreateEventRequest
+                {
+                    Title = ShowcasePendingHostTitle,
+                    Date = FormatDate(utc.AddDays(1)),
+                    Time = "20:00"
+                },
+                actors.Dev.Id,
+                ct)
+            .ConfigureAwait(false);
+
+        var slug = created.Slug;
+        var devPart = created.CreatorParticipant?.Id
+            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+
+        await ApplyConfigAsync(
+            events,
+            slug,
+            new EventConfig { Theme = "Thriller", MaxProposalsPerParticipant = 3, MaxParticipants = 5 },
+            ct).ConfigureAwait(false);
+
+        var joinBob = await join
+            .HandleAsync(slug, new JoinEventRequest { Pseudo = "Bob invité" }, actors.Bob.Id, ct)
+            .ConfigureAwait(false);
+
+        await AddMovieAsync(addMovie, slug, 807, "Se7en", "1995", devPart, actors.Dev.Id, ct).ConfigureAwait(false);
+        await AddMovieAsync(addMovie, slug, 274, "The Silence of the Lambs", "1991", joinBob.Participant.Id, actors.Bob.Id, ct).ConfigureAwait(false);
+
+        var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("Soirée vitrine en suspens introuvable.");
+
+        var startedParis = TimeZoneInfo.ConvertTime(utc.AddHours(-3), EventSchedule.ParisTimeZone);
+        var now = DateTimeOffset.UtcNow;
+        var pending = evt with
+        {
+            Date = startedParis.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            Time = startedParis.ToString("HH:mm", CultureInfo.InvariantCulture),
+            UpdatedAt = now
+        };
+        await events.UpdateAsync(pending, ct).ConfigureAwait(false);
+
+        logger.LogInformation("DevelopmentSeed : vitrine « en suspens, hôte=dev » créée (slug={Slug}, début -3h).", slug);
+    }
+
+    private static async Task TrySeedShowcasePendingNoMovieScenarioAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var events = sp.GetRequiredService<IEventRepository>();
+        var existing = await events.FindByCreatorAndTitleAsync(actors.Dev.Id, ShowcasePendingNoMovieTitle, ct).ConfigureAwait(false);
+        if (existing is not null)
+        {
+            logger.LogInformation("DevelopmentSeed : vitrine « en suspens, aucun film » déjà présente — ignorée.");
+            return;
+        }
+
+        var create = sp.GetRequiredService<ICreateEventHandler>();
+        var join = sp.GetRequiredService<IJoinEventHandler>();
+
+        var utc = DateTimeOffset.UtcNow;
+        var created = await create
+            .HandleAsync(
+                new CreateEventRequest
+                {
+                    Title = ShowcasePendingNoMovieTitle,
+                    Date = FormatDate(utc.AddDays(1)),
+                    Time = "20:00"
+                },
+                actors.Dev.Id,
+                ct)
+            .ConfigureAwait(false);
+
+        var slug = created.Slug;
+
+        await ApplyConfigAsync(
+            events,
+            slug,
+            new EventConfig { Theme = "Au choix", MaxParticipants = 6 },
+            ct).ConfigureAwait(false);
+
+        await join.HandleAsync(slug, new JoinEventRequest { Pseudo = "Bob invité" }, actors.Bob.Id, ct).ConfigureAwait(false);
+
+        var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("Soirée vitrine en suspens sans film introuvable.");
+
+        var startedParis = TimeZoneInfo.ConvertTime(utc.AddHours(-3), EventSchedule.ParisTimeZone);
+        var now = DateTimeOffset.UtcNow;
+        var pending = evt with
+        {
+            Date = startedParis.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            Time = startedParis.ToString("HH:mm", CultureInfo.InvariantCulture),
+            UpdatedAt = now
+        };
+        await events.UpdateAsync(pending, ct).ConfigureAwait(false);
+
+        logger.LogInformation("DevelopmentSeed : vitrine « en suspens, aucun film » créée (slug={Slug}, début -3h, 0 proposition).", slug);
+    }
+
+    private static async Task TrySeedShowcaseFinishedThisMonthScenarioAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var events = sp.GetRequiredService<IEventRepository>();
+        var existing = await events.FindByCreatorAndTitleAsync(actors.Dev.Id, ShowcaseFinishedThisMonthTitle, ct).ConfigureAwait(false);
+        if (existing is not null)
+        {
+            logger.LogInformation("DevelopmentSeed : vitrine « terminée récente » déjà présente — ignorée.");
+            return;
+        }
+
+        var create = sp.GetRequiredService<ICreateEventHandler>();
+        var join = sp.GetRequiredService<IJoinEventHandler>();
+        var addMovie = sp.GetRequiredService<IAddMovieHandler>();
+
+        var utc = DateTimeOffset.UtcNow;
+        var created = await create
+            .HandleAsync(
+                new CreateEventRequest
+                {
+                    Title = ShowcaseFinishedThisMonthTitle,
+                    Date = FormatDate(utc.AddDays(1)),
+                    Time = "20:00"
+                },
+                actors.Dev.Id,
+                ct)
+            .ConfigureAwait(false);
+
+        var slug = created.Slug;
+        var devPart = created.CreatorParticipant?.Id
+            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+
+        var joinAlice = await join
+            .HandleAsync(slug, new JoinEventRequest { Pseudo = "Alice invitée" }, actors.Alice.Id, ct)
+            .ConfigureAwait(false);
+
+        var winnerMovie = await AddMovieAsync(addMovie, slug, 155, "The Dark Knight", "2008", devPart, actors.Dev.Id, ct).ConfigureAwait(false);
+        await AddMovieAsync(addMovie, slug, 496243, "Parasite", "2019", joinAlice.Participant.Id, actors.Alice.Id, ct).ConfigureAwait(false);
+
+        var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("Soirée vitrine terminée récente introuvable.");
+
+        var now = DateTimeOffset.UtcNow;
+        var closedDate = utc.AddDays(-5);
+        var finished = evt with
+        {
+            Date = FormatDate(closedDate),
+            Time = "20:00",
+            WinnerMovieId = winnerMovie.Id,
+            ClosedAt = closedDate,
+            UpdatedAt = now
+        };
+        await events.UpdateAsync(finished, ct).ConfigureAwait(false);
+
+        logger.LogInformation("DevelopmentSeed : vitrine « terminée récente » créée (slug={Slug}, il y a 5 jours, gagnant={WinnerId}).", slug, winnerMovie.Id);
+    }
+
+    private static async Task TrySeedShowcaseFinishedNoMovieScenarioAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var events = sp.GetRequiredService<IEventRepository>();
+        var existing = await events.FindByCreatorAndTitleAsync(actors.Dev.Id, ShowcaseFinishedNoMovieTitle, ct).ConfigureAwait(false);
+        if (existing is not null)
+        {
+            logger.LogInformation("DevelopmentSeed : vitrine « terminée sans film » déjà présente — ignorée.");
+            return;
+        }
+
+        var create = sp.GetRequiredService<ICreateEventHandler>();
+        var utc = DateTimeOffset.UtcNow;
+        var created = await create
+            .HandleAsync(
+                new CreateEventRequest
+                {
+                    Title = ShowcaseFinishedNoMovieTitle,
+                    Date = FormatDate(utc.AddDays(1)),
+                    Time = "20:00"
+                },
+                actors.Dev.Id,
+                ct)
+            .ConfigureAwait(false);
+
+        var slug = created.Slug;
+        var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("Soirée vitrine terminée sans film introuvable.");
+
+        var now = DateTimeOffset.UtcNow;
+        var closedDate = utc.AddDays(-62);
+        var finished = evt with
+        {
+            Date = FormatDate(closedDate),
+            Time = "20:00",
+            ClosedAt = closedDate,
+            UpdatedAt = now
+        };
+        await events.UpdateAsync(finished, ct).ConfigureAwait(false);
+
+        logger.LogInformation("DevelopmentSeed : vitrine « terminée sans film » créée (slug={Slug}, il y a 2 mois, aucun gagnant).", slug);
+    }
+
+    private static async Task TrySeedShowcaseFinishedJoinedOnlyScenarioAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var events = sp.GetRequiredService<IEventRepository>();
+        var existing = await events.FindByCreatorAndTitleAsync(actors.Carla.Id, ShowcaseFinishedJoinedOnlyTitle, ct).ConfigureAwait(false);
+        if (existing is not null)
+        {
+            logger.LogInformation("DevelopmentSeed : vitrine « terminée, rejointe seulement » déjà présente — ignorée.");
+            return;
+        }
+
+        var create = sp.GetRequiredService<ICreateEventHandler>();
+        var join = sp.GetRequiredService<IJoinEventHandler>();
+        var addMovie = sp.GetRequiredService<IAddMovieHandler>();
+
+        var utc = DateTimeOffset.UtcNow;
+        var created = await create
+            .HandleAsync(
+                new CreateEventRequest
+                {
+                    Title = ShowcaseFinishedJoinedOnlyTitle,
+                    Date = FormatDate(utc.AddDays(1)),
+                    Time = "19:30"
+                },
+                actors.Carla.Id,
+                ct)
+            .ConfigureAwait(false);
+
+        var slug = created.Slug;
+        var carlaPart = created.CreatorParticipant?.Id
+            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+
+        var joinDev = await join
+            .HandleAsync(slug, new JoinEventRequest { Pseudo = "Dev invité" }, actors.Dev.Id, ct)
+            .ConfigureAwait(false);
+
+        var winnerMovie = await AddMovieAsync(addMovie, slug, 424, "Schindler's List", "1993", carlaPart, actors.Carla.Id, ct).ConfigureAwait(false);
+        await AddMovieAsync(addMovie, slug, 129, "Spirited Away", "2001", joinDev.Participant.Id, actors.Dev.Id, ct).ConfigureAwait(false);
+
+        var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("Soirée vitrine terminée rejointe introuvable.");
+
+        var now = DateTimeOffset.UtcNow;
+        var closedDate = utc.AddDays(-124);
+        var finished = evt with
+        {
+            Date = FormatDate(closedDate),
+            Time = "19:30",
+            WinnerMovieId = winnerMovie.Id,
+            ClosedAt = closedDate,
+            UpdatedAt = now
+        };
+        await events.UpdateAsync(finished, ct).ConfigureAwait(false);
+
+        logger.LogInformation("DevelopmentSeed : vitrine « terminée, rejointe seulement » créée (slug={Slug}, hôte=Carla, dev=participant, il y a 4 mois).", slug);
     }
 
     private static async Task<MovieWithScoreResponse> AddMovieAsync(

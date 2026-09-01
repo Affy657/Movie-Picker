@@ -1,7 +1,11 @@
 import { Link } from 'react-router';
 import { Clock } from 'lucide-react';
 import EventLifecyclePill from '@/shared/components/EventLifecyclePill';
-import { ParticipantStat, MoviesStat } from '@/features/events/components/EventSummaryCard';
+import {
+  ParticipantStat,
+  MoviesStat,
+  HostBadge,
+} from '@/features/events/components/EventSummaryCard';
 import { formatEventTime } from '@/shared/utils/formatMyEventsListDate';
 import { formatRelativeTime } from '@/shared/utils/formatRelativeTime';
 import { useLocale, useTranslation } from '@/shared/i18n';
@@ -68,9 +72,7 @@ export default function PendingEventCard({
             {event.theme ? <span className={styles.theme}>{event.theme}</span> : null}
           </span>
         </div>
-        {event.isCreator ? (
-          <span className={styles.badgeHost}>{t('events.myEvents.hostBadge')}</span>
-        ) : null}
+        {event.isCreator ? <HostBadge t={t} /> : null}
       </div>
 
       <p className={styles.description}>
@@ -89,13 +91,13 @@ export default function PendingEventCard({
         <div className={styles.actions}>
           {event.isCreator ? (
             <>
-              <Link to={ROUTES.eventDetail(event.slug)} className={styles.primaryAction}>
+              <Link to={ROUTES.eventDetail(event.slug)} className="btn btn-primary">
                 {t('events.myEvents.pendingChooseMovieAction')}
               </Link>
               {onCloseWithoutMovie ? (
                 <button
                   type="button"
-                  className={styles.secondaryAction}
+                  className="btn"
                   onClick={onCloseWithoutMovie}
                   disabled={closing}
                 >
@@ -104,7 +106,7 @@ export default function PendingEventCard({
               ) : null}
             </>
           ) : (
-            <Link to={ROUTES.eventDetail(event.slug)} className={styles.secondaryAction}>
+            <Link to={ROUTES.eventDetail(event.slug)} className="btn">
               {t('events.myEvents.pendingViewEventAction')}
             </Link>
           )}

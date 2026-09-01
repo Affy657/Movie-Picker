@@ -34,8 +34,12 @@ import {
 import PendingEventsSection from '@/features/events/pages/my-events/PendingEventsSection';
 import HistoryRecap from '@/features/events/pages/my-events/HistoryRecap';
 import HistoryToolbar from '@/features/events/pages/my-events/HistoryToolbar';
+import HistoryFiltersPanel from '@/features/events/pages/my-events/HistoryFiltersPanel';
+import { useHistoryToolbar } from '@/features/events/pages/my-events/useHistoryToolbar';
 import HistoryEventRow from '@/features/events/pages/my-events/HistoryEventRow';
 import styles from './MyEventsPage.module.css';
+
+const HISTORY_FILTERS_PANEL_ID = 'my-events-history-filters';
 
 type MyEventsTab = 'active' | 'history';
 
@@ -58,12 +62,7 @@ export default function MyEventsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const tab: MyEventsTab = searchParams.get('tab') === 'history' ? 'history' : 'active';
 
-  const [historySearchInput, setHistorySearchInput] = useState('');
-  const [historySearch, setHistorySearch] = useState('');
-  useEffect(() => {
-    const id = setTimeout(() => setHistorySearch(historySearchInput.trim()), 300);
-    return () => clearTimeout(id);
-  }, [historySearchInput]);
+  const [historySearchQuery, setHistorySearchQuery] = useState('');
 
   const [confirmDeleteSlug, setConfirmDeleteSlug] = useState<string | null>(null);
   const [confirmLeave, setConfirmLeave] = useState<{ slug: string; participantId: string } | null>(
@@ -186,9 +185,9 @@ export default function MyEventsPage() {
   });
 
   const historyQuery = useInfiniteQuery({
-    queryKey: queryKeys.myEvents.finished(historySearch),
+    queryKey: queryKeys.myEvents.finished(historySearchQuery),
     queryFn: ({ pageParam }: { pageParam: number }) =>
-      fetchMyEventsList('finished', pageParam, historySearch || undefined),
+      fetchMyEventsList('finished', pageParam, historySearchQuery || undefined),
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {
       if (!lastPage?.hasMore) return undefined;
@@ -214,6 +213,12 @@ export default function MyEventsPage() {
   const activeEvents = useMemo(() => flattenEvents(activeQuery.data?.pages), [activeQuery.data]);
   const historyEvents = useMemo(() => flattenEvents(historyQuery.data?.pages), [historyQuery.data]);
 
+  const historyToolbar = useHistoryToolbar({ events: historyEvents });
+  useEffect(() => {
+    const id = setTimeout(() => setHistorySearchQuery(historyToolbar.search.trim()), 300);
+    return () => clearTimeout(id);
+  }, [historyToolbar.search]);
+
   const pendingEvents = useMemo(() => activeEvents.filter(isPendingEvent), [activeEvents]);
   const upcomingEvents = useMemo(
     () => activeEvents.filter((e) => !isPendingEvent(e)),
@@ -234,8 +239,8 @@ export default function MyEventsPage() {
   const tablist = useTablistKeyboard(tabs, tab, setTab);
 
   const monthGroups = useMemo(
-    () => groupEventsByMonth(historyEvents, locale),
-    [historyEvents, locale]
+    () => groupEventsByMonth(historyToolbar.visibleEvents, locale),
+    [historyToolbar.visibleEvents, locale]
   );
 
   const isFirstLoad = authLoading || !user || activeQuery.isLoading;
@@ -363,7 +368,7 @@ export default function MyEventsPage() {
                   }
                 />
               ) : (
-                <>
+                <div className={styles.activeLayout}>
                   <PendingEventsSection
                     events={pendingEvents}
                     onCloseWithoutMovie={(slug) => {
@@ -412,7 +417,7 @@ export default function MyEventsPage() {
                       </ul>
                     </section>
                   ) : null}
-                </>
+                </div>
               )}
             </div>
           ) : (
@@ -437,7 +442,27 @@ export default function MyEventsPage() {
               ) : (
                 <div className={styles.historyLayout}>
                   <HistoryRecap totalFinished={totalFinished} />
-                  <HistoryToolbar value={historySearchInput} onChange={setHistorySearchInput} />
+                  <HistoryToolbar
+                    search={historyToolbar.search}
+                    onSearchChange={historyToolbar.setSearch}
+                    sortDir={historyToolbar.sortDir}
+                    onSetSort={historyToolbar.setSortBy}
+                    filtersOpen={historyToolbar.filtersOpen}
+                    onToggleFilters={() => historyToolbar.setFiltersOpen((v) => !v)}
+                    filtersPanelId={HISTORY_FILTERS_PANEL_ID}
+                    activeFilterCount={historyToolbar.activeFilterCount}
+                    isFiltered={historyToolbar.isFiltered}
+                    visibleCount={historyToolbar.visibleEvents.length}
+                    totalCount={historyEvents.length}
+                    onClearAll={historyToolbar.clearAllFilters}
+                  />
+                  {historyToolbar.filtersOpen ? (
+                    <HistoryFiltersPanel
+                      panelId={HISTORY_FILTERS_PANEL_ID}
+                      roles={historyToolbar.roles}
+                      onToggleRole={historyToolbar.toggleRole}
+                    />
+                  ) : null}
 
                   {historyQuery.isLoading ? (
                     <p className="placeholder">{t('common.loading')}</p>
@@ -446,7 +471,14 @@ export default function MyEventsPage() {
                       compact
                       icon={<History size={22} aria-hidden />}
                       title={t('events.myEvents.searchNoResultsTitle')}
-                      message={t('events.myEvents.searchNoResults', { query: historySearch })}
+                      message={t('events.myEvents.searchNoResults', { query: historySearchQuery })}
+                    />
+                  ) : historyToolbar.visibleEvents.length === 0 ? (
+                    <EmptyState
+                      compact
+                      icon={<History size={22} aria-hidden />}
+                      title={t('events.myEvents.searchNoResultsTitle')}
+                      message={t('events.myEvents.historyNoResultsForFilters')}
                     />
                   ) : (
                     <>
@@ -499,7 +531,7 @@ export default function MyEventsPage() {
                           onClick={() => historyQuery.fetchNextPage()}
                           disabled={historyQuery.isFetchingNextPage}
                         >
-                          {historySearch
+                          {historySearchQuery
                             ? t('events.myEvents.loadMore')
                             : t('events.myEvents.loadMoreCount', {
                                 count: Math.max(totalFinished - historyEvents.length, 0),

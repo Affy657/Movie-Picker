@@ -196,6 +196,12 @@
   border-color: var(--color-primary);
 }
 
+.activeLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.85rem;
+}
+
 .historyLayout {
   display: flex;
   flex-direction: column;
