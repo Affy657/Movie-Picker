@@ -19,7 +19,8 @@ export const queryKeys = {
   },
   myEvents: {
     list: ['events', 'mine'] as const,
-    listPaged: ['events', 'mine', 'paged'] as const,
+    active: ['events', 'mine', 'active'] as const,
+    finished: (q: string) => ['events', 'mine', 'finished', q] as const,
   },
   event: {
     all: ['event'] as const,

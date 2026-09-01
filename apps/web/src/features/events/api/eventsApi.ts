@@ -12,6 +12,7 @@ import type {
   EventConfigPatchPayload,
   EventData,
   MyEventsListResponse,
+  MyEventsScope,
 } from '@/features/events/types';
 import type { MovieData, ParticipantData } from '@/shared/types/movie';
 
@@ -53,9 +54,15 @@ export async function createEvent(body: CreateEventBody): Promise<CreateEventRes
   };
 }
 
-export function fetchMyEventsList(offset = 0): Promise<MyEventsListResponse> {
-  const params = offset > 0 ? `?offset=${offset}` : '';
-  return fetchApi<MyEventsListResponse>(`/events/mine${params}`);
+export function fetchMyEventsList(
+  scope: MyEventsScope,
+  offset = 0,
+  q?: string
+): Promise<MyEventsListResponse> {
+  const params = new URLSearchParams({ scope });
+  if (offset > 0) params.set('offset', String(offset));
+  if (q) params.set('q', q);
+  return fetchApi<MyEventsListResponse>(`/events/mine?${params.toString()}`);
 }
 
 export type JoinEventResponse = {

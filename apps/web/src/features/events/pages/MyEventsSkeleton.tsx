@@ -9,6 +9,10 @@ export default function MyEventsSkeleton({ label }: Readonly<Props>) {
   return (
     <SkeletonScreen label={label} className={styles.root}>
       <Skeleton variant="text" className={styles.pageTitle} />
+      <div className={styles.tabs}>
+        <Skeleton className={styles.tab} />
+        <Skeleton className={styles.tab} />
+      </div>
 
       {['a', 'b'].map((section) => (
         <div key={section} className={styles.section}>

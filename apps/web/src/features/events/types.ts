@@ -29,6 +29,8 @@ export type EventConfigPatchPayload = {
   time?: string;
 };
 
+export type MyEventsScope = 'active' | 'finished';
+
 export interface MyEventSummary {
   id: string;
   slug: string;
@@ -51,9 +53,13 @@ export interface MyEventSummary {
   winnerMovieTitle?: string | null;
 
   winnerMoviePosterPath?: string | null;
+
+  autoCloseAt?: string | null;
 }
 
 export interface MyEventsListResponse {
   events: MyEventSummary[];
   hasMore?: boolean;
+  totalActive: number;
+  totalFinished: number;
 }
