@@ -282,6 +282,63 @@ describe('MyEventsPage (MSW)', () => {
     await waitFor(() => expect(removeCalled).toBe(true));
   });
 
+  it('historique : filtrer par résultat (avec/sans film choisi)', async () => {
+    const user = (await import('@testing-library/user-event')).default.setup();
+    server.use(
+      authMeHandler,
+      statsHandler,
+      myEventsHandler(
+        [],
+        [
+          {
+            id: 'e5',
+            slug: 'avec-film',
+            title: 'Soirée avec film',
+            date: '2020-01-01',
+            time: '20:00',
+            createdAt: '2019-01-01T00:00:00Z',
+            updatedAt: '2020-01-02T00:00:00Z',
+            isCreator: true,
+            isParticipant: true,
+            lifecycle: 'finished',
+            participantCount: 2,
+            movieCount: 3,
+            winnerMovieTitle: 'Matrix',
+          },
+          {
+            id: 'e6',
+            slug: 'sans-film',
+            title: 'Soirée sans film',
+            date: '2020-02-01',
+            time: '20:00',
+            createdAt: '2019-01-01T00:00:00Z',
+            updatedAt: '2020-02-02T00:00:00Z',
+            isCreator: true,
+            isParticipant: true,
+            lifecycle: 'finished',
+            participantCount: 2,
+            movieCount: 0,
+            winnerMovieTitle: null,
+          },
+        ],
+        { active: 0, finished: 2 }
+      )
+    );
+
+    renderMyEvents();
+
+    const historyTab = await screen.findByRole('tab', { name: /historique/i }, { timeout: 5000 });
+    await user.click(historyTab);
+    await screen.findByRole('link', { name: /Soirée avec film/i });
+    expect(screen.getByRole('link', { name: /Soirée sans film/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /filtres/i }));
+    await user.click(screen.getByRole('button', { name: /sans film choisi/i }));
+
+    expect(screen.getByRole('link', { name: /Soirée sans film/i })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Soirée avec film/i })).not.toBeInTheDocument();
+  });
+
   it('non connecté : ne rend pas la liste (redirection vers login)', async () => {
     server.use(authMeGuestHandler);
 

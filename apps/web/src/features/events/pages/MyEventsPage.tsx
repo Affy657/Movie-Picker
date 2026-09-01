@@ -462,6 +462,8 @@ export default function MyEventsPage() {
                       panelId={HISTORY_FILTERS_PANEL_ID}
                       roles={historyToolbar.roles}
                       onToggleRole={historyToolbar.toggleRole}
+                      outcomes={historyToolbar.outcomes}
+                      onToggleOutcome={historyToolbar.toggleOutcome}
                     />
                   ) : null}
 

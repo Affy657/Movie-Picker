@@ -53,6 +53,7 @@ export default function HistoryToolbar({
         { key: 'date', label: t('events.myEvents.sortByDate') },
         { key: 'title', label: t('events.myEvents.sortByTitle') },
         { key: 'movieCount', label: t('events.myEvents.sortByMovieCount') },
+        { key: 'participantCount', label: t('events.myEvents.sortByParticipantCount') },
       ]}
       sortBy={sortBy}
       sortDir={sortDir}
