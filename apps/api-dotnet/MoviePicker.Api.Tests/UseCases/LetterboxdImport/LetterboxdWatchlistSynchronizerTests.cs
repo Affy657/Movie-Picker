@@ -205,6 +205,31 @@ public sealed class LetterboxdWatchlistSynchronizerTests
     }
 
     [Fact]
+    public async Task SyncAsync_AmbiguousMatchAlreadyChosen_StaysPendingWithoutAttachingSlug()
+    {
+        GivenWatchlist(Item(97400, "Sermons de minuit", null) with { MediaType = MovieMediaType.Tv });
+        GivenLetterboxd(true, new LetterboxdFilm("midnight-mass-2021", "Midnight Mass", "2021"));
+        GivenTmdbResults(
+            "Midnight Mass",
+            new TmdbSearchItem(97400, MovieMediaType.Tv, "Sermons de minuit", "2021", null, 7.5, "Midnight Mass 2021"),
+            new TmdbSearchItem(714995, MovieMediaType.Movie, "The Manson Brothers", "2021", null, 4.2, "The Manson Brothers"));
+
+        var outcome = await _sut.SyncAsync(TheUser());
+
+        Assert.Equal(0, outcome.Added);
+        Assert.Equal("Midnight Mass", Assert.Single(outcome.PendingChoices).Title);
+        VerifyNothingAdded();
+        _watchlist.Verify(
+            w => w.SetLetterboxdSlugAsync(
+                It.IsAny<string>(),
+                It.IsAny<int>(),
+                It.IsAny<MovieMediaType>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
     public async Task SyncAsync_ConfidentMatchAlreadyPresentWithoutSlug_AttachesSlugInsteadOfDuplicating()
     {
         GivenWatchlist(Item(5255, "Le Pôle express", null));

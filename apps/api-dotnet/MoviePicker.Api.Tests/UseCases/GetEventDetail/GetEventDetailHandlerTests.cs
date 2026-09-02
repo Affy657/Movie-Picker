@@ -122,7 +122,8 @@ public sealed class GetEventDetailHandlerTests
     [Fact]
     public async Task HandleAsync_WithWinnerMovieId_LoadsWinnerMovie()
     {
-        var evt = new Event { Id = "evt1", Title = "Soirée", Date = "2030-01-01", Time = "20:00", Slug = "soiree", HostToken = "ht1", WinnerMovieId = "mov1", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        var pickedAt = new DateTimeOffset(2026, 5, 1, 18, 0, 0, TimeSpan.Zero);
+        var evt = new Event { Id = "evt1", Title = "Soirée", Date = "2030-01-01", Time = "20:00", Slug = "soiree", HostToken = "ht1", WinnerMovieId = "mov1", WinnerPickedAt = pickedAt, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         var winnerMovie = new Movie { Id = "mov1", EventId = evt.Id, Title = "Inception", TmdbId = 27205, Year = "2010", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
@@ -133,6 +134,7 @@ public sealed class GetEventDetailHandlerTests
         Assert.NotNull(result.WinnerMovie);
         Assert.Equal("mov1", result.WinnerMovie.Id);
         Assert.Equal("Inception", result.WinnerMovie.Title);
+        Assert.Equal(evt.WinnerPickedAt, result.WinnerPickedAt);
     }
 
     [Fact]

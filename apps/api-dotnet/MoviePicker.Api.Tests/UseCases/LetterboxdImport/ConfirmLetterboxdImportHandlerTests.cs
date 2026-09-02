@@ -15,6 +15,7 @@ public sealed class ConfirmLetterboxdImportHandlerTests
 
     private readonly Mock<IWatchlistRepository> _watchlist = new();
     private readonly Mock<IAddToWatchlistHandler> _addToWatchlist = new();
+    private readonly Mock<IUserRepository> _users = new();
     private readonly ConfirmLetterboxdImportHandler _sut;
 
     public ConfirmLetterboxdImportHandlerTests()
@@ -22,7 +23,15 @@ public sealed class ConfirmLetterboxdImportHandlerTests
         _watchlist
             .Setup(w => w.ListByUserIdAsync(UserId, It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<WatchlistItem>)[]);
-        _sut = new ConfirmLetterboxdImportHandler(_watchlist.Object, _addToWatchlist.Object);
+        _users
+            .Setup(u => u.GetByIdAsync(UserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User
+            {
+                Id = UserId,
+                Email = "a@b.c",
+                LetterboxdPendingReconciliationCount = 4
+            });
+        _sut = new ConfirmLetterboxdImportHandler(_watchlist.Object, _addToWatchlist.Object, _users.Object);
     }
 
     private static AddWatchlistItemRequest Selection(
@@ -38,15 +47,21 @@ public sealed class ConfirmLetterboxdImportHandlerTests
         };
 
     [Fact]
-    public async Task HandleAsync_EmptySelections_ReturnsZeroesWithoutCalls()
+    public async Task HandleAsync_EmptySelections_UpdatesPendingCountWithoutWatchlistCalls()
     {
-        var result = await _sut.HandleAsync(UserId, new LetterboxdImportConfirmRequest { Selections = [] });
+        var result = await _sut.HandleAsync(
+            UserId,
+            new LetterboxdImportConfirmRequest { Selections = [], RemainingUnresolvedCount = 3 });
 
         Assert.Equal(0, result.Added);
         Assert.Equal(0, result.AlreadyPresent);
+        Assert.Equal(4, result.PendingReconciliationCount);
         _addToWatchlist.Verify(
             a => a.HandleAsync(It.IsAny<string>(), It.IsAny<AddWatchlistItemRequest>(), It.IsAny<CancellationToken>()),
             Times.Never);
+        _users.Verify(
+            u => u.SetLetterboxdPendingReconciliationCountAsync(UserId, 4, It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
@@ -71,9 +86,6 @@ public sealed class ConfirmLetterboxdImportHandlerTests
         Assert.Equal(0, result.AlreadyPresent);
         _addToWatchlist.Verify(
             a => a.HandleAsync(UserId, It.Is<AddWatchlistItemRequest>(r => r.TmdbId == 42), It.IsAny<CancellationToken>()),
-            Times.Once);
-        _watchlist.Verify(
-            w => w.ListByUserIdAsync(UserId, int.MaxValue, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -148,6 +160,66 @@ public sealed class ConfirmLetterboxdImportHandlerTests
                 UserId,
                 It.Is<AddWatchlistItemRequest>(r => r.LetterboxdSlug == "the-matrix"),
                 It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_RemainingUnresolvedCount_PersistsThatCount()
+    {
+        var result = await _sut.HandleAsync(
+            UserId,
+            new LetterboxdImportConfirmRequest
+            {
+                Selections = [Selection(42)],
+                RemainingUnresolvedCount = 3
+            });
+
+        Assert.Equal(3, result.PendingReconciliationCount);
+        _users.Verify(
+            u => u.SetLetterboxdPendingReconciliationCountAsync(UserId, 3, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_RemainingUnresolvedCountZeroWithNoSelections_KeepsCurrentCount()
+    {
+        var result = await _sut.HandleAsync(
+            UserId,
+            new LetterboxdImportConfirmRequest { Selections = [], RemainingUnresolvedCount = 0 });
+
+        Assert.Equal(4, result.PendingReconciliationCount);
+        _users.Verify(
+            u => u.SetLetterboxdPendingReconciliationCountAsync(UserId, 4, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ClientCannotDropPendingBelowResolvedCount()
+    {
+        var result = await _sut.HandleAsync(
+            UserId,
+            new LetterboxdImportConfirmRequest
+            {
+                Selections = [Selection(42)],
+                RemainingUnresolvedCount = 0
+            });
+
+        Assert.Equal(3, result.PendingReconciliationCount);
+        _users.Verify(
+            u => u.SetLetterboxdPendingReconciliationCountAsync(UserId, 3, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithoutRemainingCount_DecrementsStoredPendingCount()
+    {
+        var result = await _sut.HandleAsync(
+            UserId,
+            new LetterboxdImportConfirmRequest { Selections = [Selection(42), Selection(43)] });
+
+        Assert.Equal(2, result.PendingReconciliationCount);
+        _users.Verify(
+            u => u.SetLetterboxdPendingReconciliationCountAsync(UserId, 2, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 }

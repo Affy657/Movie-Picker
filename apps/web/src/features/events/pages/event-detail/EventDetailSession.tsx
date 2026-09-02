@@ -23,7 +23,6 @@ import EventParticipantsList from '@/features/events/components/EventParticipant
 import EventDetailHeader from '@/features/events/pages/event-detail/EventDetailHeader';
 import EventMoviesLoadError from '@/features/events/pages/event-detail/EventMoviesLoadError';
 import EventMoviesSection from '@/features/events/pages/event-detail/EventMoviesSection';
-import EventStartReminderBanner from '@/features/events/components/EventStartReminderBanner';
 import EventPendingBanner from '@/features/events/components/EventPendingBanner';
 import EventClosedWithoutMovieState from '@/features/events/pages/event-detail/EventClosedWithoutMovieState';
 import PageLayout from '@/shared/components/PageLayout';
@@ -541,13 +540,6 @@ function EventDetailSessionChrome({
   const hostCanInvite = !!event.isHost && !event.isFinished;
   return (
     <>
-      {event.isFinished ? null : (
-        <EventStartReminderBanner
-          date={event.date}
-          time={event.time}
-          isFinished={!!event.isFinished}
-        />
-      )}
       <EventDetailHeader
         title={event.title}
         dateFormatted={dateFormatted}

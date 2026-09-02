@@ -118,9 +118,9 @@ export default function NotificationsSection() {
         <div className={styles.row}>
           <div className={styles.rowInfo}>
             {subscribed ? (
-              <BellOff size={18} aria-hidden className={styles.rowIcon} />
-            ) : (
               <Bell size={18} aria-hidden className={styles.rowIcon} />
+            ) : (
+              <BellOff size={18} aria-hidden className={styles.rowIcon} />
             )}
             <div className={styles.rowText}>
               <p className={styles.rowLabel}>

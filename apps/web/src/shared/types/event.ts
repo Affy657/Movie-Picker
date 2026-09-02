@@ -40,6 +40,7 @@ export interface EventData {
   winnerMovie?: MovieData | null;
 
   winnerPickMethod?: WinnerPickMethod | null;
+  winnerPickedAt?: string | null;
 
   config?: EventConfigData;
 

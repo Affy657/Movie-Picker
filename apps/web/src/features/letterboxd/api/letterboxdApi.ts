@@ -43,6 +43,7 @@ export interface LetterboxdSelection {
 export interface LetterboxdConfirmResult {
   added: number;
   alreadyPresent: number;
+  pendingReconciliationCount: number;
 }
 
 export async function syncLetterboxd(force: boolean): Promise<LetterboxdSyncReport> {
@@ -52,10 +53,15 @@ export async function syncLetterboxd(force: boolean): Promise<LetterboxdSyncRepo
 }
 
 export async function confirmLetterboxdChoices(
-  selections: LetterboxdSelection[]
+  selections: LetterboxdSelection[],
+  remainingUnresolvedCount: number
 ): Promise<LetterboxdConfirmResult> {
-  return fetchApi<LetterboxdConfirmResult>('/letterboxd/confirm', {
+  const result = await fetchApi<LetterboxdConfirmResult>('/letterboxd/confirm', {
     method: 'POST',
-    body: JSON.stringify({ selections }),
+    body: JSON.stringify({ selections, remainingUnresolvedCount }),
   });
+  return {
+    ...result,
+    pendingReconciliationCount: result.pendingReconciliationCount ?? remainingUnresolvedCount,
+  };
 }

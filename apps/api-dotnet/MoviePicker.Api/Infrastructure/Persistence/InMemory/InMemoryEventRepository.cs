@@ -36,6 +36,8 @@ public sealed class InMemoryEventRepository : IEventRepository
             Config = evt.Config,
             ClosedAt = evt.ClosedAt,
             WinnerMovieId = evt.WinnerMovieId,
+            WinnerPickMethod = evt.WinnerPickMethod,
+            WinnerPickedAt = evt.WinnerPickedAt,
             CreatedAt = evt.CreatedAt,
             UpdatedAt = evt.UpdatedAt
         };

@@ -11,11 +11,16 @@ public sealed class ConfirmLetterboxdImportHandler : IConfirmLetterboxdImportHan
 
     private readonly IWatchlistRepository _watchlist;
     private readonly IAddToWatchlistHandler _addToWatchlist;
+    private readonly IUserRepository _users;
 
-    public ConfirmLetterboxdImportHandler(IWatchlistRepository watchlist, IAddToWatchlistHandler addToWatchlist)
+    public ConfirmLetterboxdImportHandler(
+        IWatchlistRepository watchlist,
+        IAddToWatchlistHandler addToWatchlist,
+        IUserRepository users)
     {
         _watchlist = watchlist;
         _addToWatchlist = addToWatchlist;
+        _users = users;
     }
 
     public async Task<LetterboxdImportConfirmResponse> HandleAsync(
@@ -23,39 +28,65 @@ public sealed class ConfirmLetterboxdImportHandler : IConfirmLetterboxdImportHan
         LetterboxdImportConfirmRequest request,
         CancellationToken ct = default)
     {
-        if (request.Selections.Count == 0)
-            return new LetterboxdImportConfirmResponse { Added = 0, AlreadyPresent = 0 };
-
         if (request.Selections.Count > MaxSelections)
             throw new BadRequestException($"Trop d'éléments sélectionnés (maximum {MaxSelections}).");
 
-        var existingItems = await _watchlist.ListByUserIdAsync(userId, int.MaxValue, ct);
-        var existingKeys = existingItems.Select(i => (i.TmdbId, i.MediaType)).ToHashSet();
-
         var added = 0;
         var alreadyPresent = 0;
-        foreach (var selection in request.Selections)
+        if (request.Selections.Count > 0)
         {
-            if (existingKeys.Contains((selection.TmdbId, selection.MediaType)))
+            var existingItems = await _watchlist.ListByUserIdAsync(userId, int.MaxValue, ct);
+            var existingKeys = existingItems.Select(i => (i.TmdbId, i.MediaType)).ToHashSet();
+
+            foreach (var selection in request.Selections)
             {
-                alreadyPresent++;
-                if (!string.IsNullOrWhiteSpace(selection.LetterboxdSlug))
+                if (existingKeys.Contains((selection.TmdbId, selection.MediaType)))
                 {
-                    await _watchlist.SetLetterboxdSlugAsync(
-                        userId,
-                        selection.TmdbId,
-                        selection.MediaType,
-                        selection.LetterboxdSlug.Trim(),
-                        ct);
+                    alreadyPresent++;
+                    if (!string.IsNullOrWhiteSpace(selection.LetterboxdSlug))
+                    {
+                        await _watchlist.SetLetterboxdSlugAsync(
+                            userId,
+                            selection.TmdbId,
+                            selection.MediaType,
+                            selection.LetterboxdSlug.Trim(),
+                            ct);
+                    }
+
+                    continue;
                 }
 
-                continue;
+                await _addToWatchlist.HandleAsync(userId, selection, ct);
+                added++;
             }
-
-            await _addToWatchlist.HandleAsync(userId, selection, ct);
-            added++;
         }
 
-        return new LetterboxdImportConfirmResponse { Added = added, AlreadyPresent = alreadyPresent };
+        var pendingCount = await PersistPendingCountAsync(userId, request, ct);
+        return new LetterboxdImportConfirmResponse
+        {
+            Added = added,
+            AlreadyPresent = alreadyPresent,
+            PendingReconciliationCount = pendingCount
+        };
+    }
+
+    private async Task<int> PersistPendingCountAsync(
+        string userId,
+        LetterboxdImportConfirmRequest request,
+        CancellationToken ct)
+    {
+        var user = await _users.GetByIdAsync(userId, ct)
+            ?? throw new NotFoundException("Utilisateur introuvable.");
+        var current = user.LetterboxdPendingReconciliationCount;
+        var floor = Math.Max(0, current - request.Selections.Count);
+        var requested = request.RemainingUnresolvedCount is >= 0
+            ? request.RemainingUnresolvedCount.Value
+            : floor;
+        var pendingCount = Math.Min(
+            Math.Clamp(requested, floor, current),
+            LetterboxdImportLimits.MaxRows);
+
+        await _users.SetLetterboxdPendingReconciliationCountAsync(userId, pendingCount, ct);
+        return pendingCount;
     }
 }

@@ -13,22 +13,22 @@ interface WheelSectionProps {
 
 export default function WheelSection({ movies, wheel }: Readonly<WheelSectionProps>) {
   const { t } = useTranslation();
-  const { winner, pickMethod } = wheel;
+  const { winner, spinWinner, pickMethod } = wheel;
+  const modalMovie = spinWinner ?? winner;
 
-  if (!winner) return null;
+  if (!winner && !wheel.isModalOpen) return null;
 
-  const winnerFull = movies.find((m) => m.id === winner.id) ?? winner;
+  const pageMovie = winner ?? modalMovie;
+  if (!pageMovie) return null;
+
+  const winnerFull = movies.find((m) => m.id === pageMovie.id) ?? pageMovie;
   const posterSrc = posterImageSrc(winnerFull.posterPath);
   const posterSrcSet = tmdbPosterSrcSetForList(posterSrc);
   const providers = winnerFull.watchProviders ?? [];
 
   return (
     <section className={styles.section} aria-labelledby="event-winner-heading">
-      {wheel.isModalOpen ? (
-        <h2 id="event-winner-heading" className="visually-hidden">
-          {winnerFull.title}
-        </h2>
-      ) : (
+      {winner ? (
         <div className={styles.lockup} aria-live="polite">
           {posterSrc ? (
             <div className={styles.posterFrame}>
@@ -75,16 +75,21 @@ export default function WheelSection({ movies, wheel }: Readonly<WheelSectionPro
             ) : null}
           </div>
         </div>
+      ) : (
+        <h2 id="event-winner-heading" className="visually-hidden">
+          {t('events.wheel.modal.spinningTitle')}
+        </h2>
       )}
 
-      {wheel.isModalOpen && wheel.winnerIndex >= 0 && (
+      {wheel.isModalOpen && wheel.winnerIndex >= 0 && modalMovie && (
         <WheelModal
           open={wheel.isModalOpen}
           movies={wheel.eligibleMovies}
           winnerIndex={wheel.winnerIndex}
-          winner={winner}
+          winner={modalMovie}
           wheelKey={wheel.wheelKey}
           onClose={wheel.dismissModal}
+          onSpinComplete={wheel.revealWinner}
           onRelaunch={wheel.showRelaunch && !wheel.manualReveal ? wheel.launch : undefined}
           skipSpin={wheel.manualReveal}
         />

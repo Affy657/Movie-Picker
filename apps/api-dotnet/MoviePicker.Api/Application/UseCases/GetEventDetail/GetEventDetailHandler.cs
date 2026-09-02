@@ -90,6 +90,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             ClosedAt = evt.ClosedAt,
             WinnerMovieId = evt.WinnerMovieId,
             WinnerPickMethod = ToWinnerPickMethodString(evt.WinnerPickMethod),
+            WinnerPickedAt = evt.WinnerPickedAt,
             CreatedAt = evt.CreatedAt,
             UpdatedAt = evt.UpdatedAt,
             IsHost = isHost,
