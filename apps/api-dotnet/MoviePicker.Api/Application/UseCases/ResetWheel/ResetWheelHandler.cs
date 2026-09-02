@@ -42,7 +42,13 @@ public sealed class ResetWheelHandler : IResetWheelHandler
             return new ResetWheelResponse { Message = "Aucun tirage à annuler." };
 
         var now = DateTimeOffset.UtcNow;
-        var updated = evt with { WinnerMovieId = null, WinnerPickMethod = null, UpdatedAt = now };
+        var updated = evt with
+        {
+            WinnerMovieId = null,
+            WinnerPickMethod = null,
+            WinnerPickedAt = null,
+            UpdatedAt = now
+        };
         await _eventRepository.UpdateAsync(updated, ct);
         _logger.LogInformation("Wheel reset for event {EventId}", evt.Id);
 

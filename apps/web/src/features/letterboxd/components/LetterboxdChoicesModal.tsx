@@ -89,12 +89,13 @@ export default function LetterboxdChoicesModal({
           : null;
       })
       .filter((s): s is LetterboxdSelection => s !== null);
-    const unresolved = choices.filter((choice) => {
+    const unanswered = choices.filter((choice) => !finalAnswers[choice.rowIndex]);
+    const remainingForApi = choices.filter((choice) => {
       const answer = finalAnswers[choice.rowIndex];
       return !answer || answer === 'skip';
-    });
+    }).length;
 
-    onConfirmed(await confirmLetterboxdChoices(selections), unresolved);
+    onConfirmed(await confirmLetterboxdChoices(selections, remainingForApi), unanswered);
   };
 
   const {

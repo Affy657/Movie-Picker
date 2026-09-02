@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import WheelSection from '@/features/events/components/WheelSection';
@@ -9,16 +9,19 @@ import { useEventWheel } from '@/features/events/hooks/useEventWheel';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 import { LocaleProvider } from '@/shared/i18n';
+import { WHEEL_SPIN_DURATION_MS } from '@/shared/utils/wheelSpin';
 
 vi.mock('./WheelModal', () => ({
   default: ({
     winner,
     skipSpin,
     onRelaunch,
+    onSpinComplete,
   }: {
     winner: MovieData;
     skipSpin?: boolean;
     onRelaunch?: () => void;
+    onSpinComplete?: () => void;
   }) => (
     <div
       data-testid="wheel-modal-mock"
@@ -26,6 +29,9 @@ vi.mock('./WheelModal', () => ({
       data-has-relaunch={onRelaunch ? 'true' : 'false'}
     >
       {winner.title}
+      <button type="button" data-testid="spin-complete" onClick={() => onSpinComplete?.()}>
+        spin-complete
+      </button>
     </div>
   ),
 }));
@@ -327,7 +333,7 @@ describe('WheelSection', () => {
     expect(screen.queryByRole('button', { name: 'test-select-movie' })).not.toBeInTheDocument();
   });
 
-  it('tirage à la roue : la modale reçoit un relaunch et pas de skipSpin', async () => {
+  it('tirage à la roue : la page ne montre le gagnant qu’à la fin de la rotation', async () => {
     postEventWheelMock.mockResolvedValueOnce({ winner: sampleWinner, message: 'Roue lancée.' });
     renderWheel(
       <WheelHarness event={{ ...baseEvent, isHost: true }} movies={makeMovies(2)} hostToken="ht" />
@@ -337,9 +343,50 @@ describe('WheelSection', () => {
 
     expect(await screen.findByTestId('wheel-modal-mock')).toBeInTheDocument();
     expect(screen.getByTestId('wheel-modal-mock')).toHaveAttribute('data-skip-spin', 'false');
-    expect(screen.getByTestId('wheel-modal-mock')).toHaveAttribute('data-has-relaunch', 'true');
-    expect(screen.getByRole('region', { name: 'Film 2' })).toBeInTheDocument();
+    expect(screen.getByTestId('wheel-modal-mock')).toHaveAttribute('data-has-relaunch', 'false');
+    expect(screen.getByRole('region', { name: /tirage en cours/i })).toBeInTheDocument();
     expect(document.getElementById('event-winner-heading')).toHaveClass('visually-hidden');
+    expect(screen.queryByText(/film gagnant/i)).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByTestId('spin-complete'));
+
+    expect(screen.getByText(/film gagnant/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Film 2' })).toBeInTheDocument();
+    expect(screen.getByTestId('wheel-modal-mock')).toHaveAttribute('data-has-relaunch', 'true');
+  });
+
+  it("invite : n'affiche pas le gagnant roue avant la fin de la rotation", async () => {
+    vi.useFakeTimers();
+    try {
+      const pickedAt = new Date().toISOString();
+      renderWheel(
+        <WheelHarness
+          event={{
+            ...baseEvent,
+            winnerMovie: sampleWinner,
+            winnerPickMethod: 'wheel',
+            winnerPickedAt: pickedAt,
+          }}
+          movies={makeMovies(1)}
+          hostToken={null}
+        />
+      );
+
+      expect(screen.queryByText(/film gagnant/i)).not.toBeInTheDocument();
+
+      await act(async () => {
+        vi.advanceTimersByTime(WHEEL_SPIN_DURATION_MS - 1);
+      });
+      expect(screen.queryByText(/film gagnant/i)).not.toBeInTheDocument();
+
+      await act(async () => {
+        vi.advanceTimersByTime(1);
+      });
+      expect(screen.getByText(/film gagnant/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Inception' })).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('tous les films exclus : désactive le tirage et affiche l’aide', () => {

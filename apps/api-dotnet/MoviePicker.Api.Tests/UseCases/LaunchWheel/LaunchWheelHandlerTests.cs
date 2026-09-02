@@ -211,6 +211,7 @@ public sealed class LaunchWheelHandlerTests
         Assert.NotNull(captured);
         Assert.Equal("mov1", captured.WinnerMovieId);
         Assert.Equal(WinnerPickMethod.Wheel, captured.WinnerPickMethod);
+        Assert.NotNull(captured.WinnerPickedAt);
         Assert.Contains("gagnant direct", result.Message);
         _winnerAnnouncer.Verify(
             a => a.AnnounceAsync(It.IsAny<Event>(), "Winner", WinnerPickMethod.Wheel, It.IsAny<CancellationToken>()),

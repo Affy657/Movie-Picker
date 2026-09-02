@@ -144,6 +144,7 @@ public sealed class SetManualWinnerHandlerTests
         Assert.NotNull(captured);
         Assert.Equal("mov1", captured.WinnerMovieId);
         Assert.Equal(WinnerPickMethod.Manual, captured.WinnerPickMethod);
+        Assert.NotNull(captured.WinnerPickedAt);
         _winnerAnnouncer.Verify(
             a => a.AnnounceAsync(It.IsAny<Event>(), "Choisi", WinnerPickMethod.Manual, It.IsAny<CancellationToken>()),
             Times.Once);

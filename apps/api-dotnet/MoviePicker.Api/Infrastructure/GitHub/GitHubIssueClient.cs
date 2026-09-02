@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;
@@ -32,37 +33,17 @@ public sealed class GitHubIssueClient : IGitHubIssueClient
             throw new ServiceUnavailableException(UnavailableMessage);
         }
 
-        using var req = new HttpRequestMessage(
-            HttpMethod.Post,
-            $"repos/{_options.GitHubRepoOwner}/{_options.GitHubRepoName}/issues")
+        var res = await PostIssueAsync(draft.Title, draft.Body, draft.Labels, ct);
+        try
         {
-            Content = JsonContent.Create(new
+            if (res.StatusCode == HttpStatusCode.UnprocessableEntity && draft.Labels.Count > 0)
             {
-                title = draft.Title,
-                body = draft.Body,
-                labels = draft.Labels
-            })
-        };
-        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _options.GitHubToken);
+                _logger.LogWarning(
+                    "Création d'issue GitHub 422 avec labels, nouvel essai sans labels");
+                res.Dispose();
+                res = await PostIssueAsync(draft.Title, draft.Body, [], ct);
+            }
 
-        HttpResponseMessage res;
-        try
-        {
-            res = await _http.SendAsync(req, ct);
-        }
-        catch (HttpRequestException ex)
-        {
-            _logger.LogWarning(ex, "Échec réseau lors de la création de l'issue GitHub");
-            throw new ServiceUnavailableException(UnavailableMessage);
-        }
-        catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
-        {
-            _logger.LogWarning(ex, "Timeout lors de la création de l'issue GitHub");
-            throw new ServiceUnavailableException(UnavailableMessage);
-        }
-
-        try
-        {
             if (!res.IsSuccessStatusCode)
             {
                 string body;
@@ -78,6 +59,40 @@ public sealed class GitHubIssueClient : IGitHubIssueClient
         finally
         {
             res.Dispose();
+        }
+    }
+
+    private async Task<HttpResponseMessage> PostIssueAsync(
+        string title,
+        string body,
+        IReadOnlyList<string> labels,
+        CancellationToken ct)
+    {
+        object payload = labels.Count > 0
+            ? new { title, body, labels }
+            : new { title, body };
+
+        using var req = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"repos/{_options.GitHubRepoOwner}/{_options.GitHubRepoName}/issues")
+        {
+            Content = JsonContent.Create(payload)
+        };
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _options.GitHubToken);
+
+        try
+        {
+            return await _http.SendAsync(req, ct);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Échec réseau lors de la création de l'issue GitHub");
+            throw new ServiceUnavailableException(UnavailableMessage);
+        }
+        catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
+        {
+            _logger.LogWarning(ex, "Timeout lors de la création de l'issue GitHub");
+            throw new ServiceUnavailableException(UnavailableMessage);
         }
     }
 

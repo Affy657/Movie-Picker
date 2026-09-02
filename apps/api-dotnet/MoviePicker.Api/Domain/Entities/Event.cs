@@ -15,6 +15,7 @@ public sealed record Event
     public DateTimeOffset? ClosedAt { get; init; }
     public string? WinnerMovieId { get; init; }
     public WinnerPickMethod? WinnerPickMethod { get; init; }
+    public DateTimeOffset? WinnerPickedAt { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
 

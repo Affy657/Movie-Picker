@@ -50,37 +50,3 @@ export function formatEventStartInUserTimezone(
     return `${date} à ${time}`;
   }
 }
-
-export const EVENT_START_REMINDER_WINDOW_MINUTES = 30;
-
-export type EventStartReminderState =
-  { visible: false } | { visible: true; line1: string; line2: string };
-
-export function computeEventStartReminder(
-  date: string,
-  time: string,
-  isFinished: boolean,
-  nowMs: number,
-  options?: { windowMinutes?: number }
-): EventStartReminderState {
-  if (isFinished) return { visible: false };
-  const startMs = eventScheduledStartUtcMs({ date, time });
-  if (startMs === null) return { visible: false };
-  const delta = startMs - nowMs;
-  const windowMs = (options?.windowMinutes ?? EVENT_START_REMINDER_WINDOW_MINUTES) * 60_000;
-  if (delta <= 0 || delta > windowMs) return { visible: false };
-
-  const formatted = formatEventStartInUserTimezone(date, time) ?? `${date} à ${time}`;
-  let line1: string;
-  if (delta < 60_000) {
-    line1 = "La soirée commence dans moins d'une minute.";
-  } else {
-    const minutes = Math.ceil(delta / 60_000);
-    line1 =
-      minutes === 1
-        ? 'La soirée commence dans 1 minute.'
-        : `La soirée commence dans ${minutes} minutes.`;
-  }
-  const line2 = `Début prévu : ${formatted} (heure de votre appareil).`;
-  return { visible: true, line1, line2 };
-}

@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react';
 import type { MovieData } from '@/shared/types/movie';
+import { WHEEL_SPIN_DURATION_MS } from '@/shared/utils/wheelSpin';
 import styles from './SpinningWheel.module.css';
 
 const SIZE = 460;
 const RADIUS = 200;
 const SPIN_ROTATIONS = 8;
-const SPIN_DURATION_MS = 7500;
 
 const COLORS = [
   '#2563EB',
@@ -159,7 +159,7 @@ export default function SpinningWheel({
 
     function animate(ts: number): void {
       startTime ??= ts;
-      const t = Math.min((ts - startTime) / SPIN_DURATION_MS, 1);
+      const t = Math.min((ts - startTime) / WHEEL_SPIN_DURATION_MS, 1);
       drawFrame(ctx!, movies, easeOutQuint(t) * targetRotation);
 
       if (t < ANIM_CUT) {

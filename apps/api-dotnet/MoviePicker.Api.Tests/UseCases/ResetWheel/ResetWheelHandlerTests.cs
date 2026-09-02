@@ -83,6 +83,10 @@ public sealed class ResetWheelHandlerTests
         var result = await _sut.HandleAsync("evt1");
 
         Assert.Equal("Tirage annulé.", result.Message);
-        _events.Verify(e => e.UpdateAsync(It.Is<Event>(x => x.WinnerMovieId == null), It.IsAny<CancellationToken>()), Times.Once);
+        _events.Verify(
+            e => e.UpdateAsync(
+                It.Is<Event>(x => x.WinnerMovieId == null && x.WinnerPickMethod == null && x.WinnerPickedAt == null),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 }

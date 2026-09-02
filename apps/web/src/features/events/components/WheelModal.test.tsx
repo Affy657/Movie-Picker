@@ -208,4 +208,72 @@ describe('WheelModal', () => {
     expect(screen.getByText(/choisi par l.hôte/i)).toBeInTheDocument();
     expect(screen.getByText('Interstellar')).toBeInTheDocument();
   });
+
+  it('appelle onSpinComplete à la fin de la rotation', () => {
+    const onSpinComplete = vi.fn();
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+        onSpinComplete={onSpinComplete}
+      />
+    );
+    expect(onSpinComplete).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByTestId('spin-done-trigger'));
+    expect(onSpinComplete).toHaveBeenCalledOnce();
+  });
+
+  it('skipSpin : appelle onSpinComplete sans attendre la rotation', () => {
+    const onSpinComplete = vi.fn();
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+        onSpinComplete={onSpinComplete}
+        skipSpin
+      />
+    );
+    expect(onSpinComplete).toHaveBeenCalledOnce();
+  });
+
+  it("skipSpin : n'appelle onSpinComplete qu'une fois si le parent rerend", () => {
+    const onSpinComplete = vi.fn();
+    const { rerender } = wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+        onSpinComplete={onSpinComplete}
+        skipSpin
+      />
+    );
+    expect(onSpinComplete).toHaveBeenCalledOnce();
+
+    rerender(
+      <LocaleProvider>
+        <WheelModal
+          open
+          movies={movies}
+          winnerIndex={0}
+          winner={baseMovie}
+          wheelKey={1}
+          onClose={vi.fn()}
+          onSpinComplete={() => onSpinComplete()}
+          skipSpin
+        />
+      </LocaleProvider>
+    );
+    expect(onSpinComplete).toHaveBeenCalledOnce();
+  });
 });

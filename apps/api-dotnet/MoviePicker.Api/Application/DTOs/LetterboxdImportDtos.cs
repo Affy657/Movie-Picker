@@ -39,10 +39,13 @@ public sealed class LetterboxdImportConfirmRequest
 {
     [Required]
     public IReadOnlyList<AddWatchlistItemRequest> Selections { get; init; } = [];
+
+    public int? RemainingUnresolvedCount { get; init; }
 }
 
 public sealed class LetterboxdImportConfirmResponse
 {
     public int Added { get; init; }
     public int AlreadyPresent { get; init; }
+    public int PendingReconciliationCount { get; init; }
 }

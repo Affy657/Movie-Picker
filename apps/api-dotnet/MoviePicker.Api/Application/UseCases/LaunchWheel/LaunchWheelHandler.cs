@@ -77,6 +77,7 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         {
             WinnerMovieId = winner.Id,
             WinnerPickMethod = WinnerPickMethod.Wheel,
+            WinnerPickedAt = now,
             UpdatedAt = now
         };
 

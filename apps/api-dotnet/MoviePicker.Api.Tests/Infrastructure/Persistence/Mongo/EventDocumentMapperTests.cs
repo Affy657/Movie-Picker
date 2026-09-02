@@ -172,4 +172,30 @@ public sealed class EventDocumentMapperTests
 
         Assert.Equal(7, domain.Config?.MaxProposalsPerParticipant);
     }
+
+    [Fact]
+    public void ToDocument_WithWinnerPickedAt_RoundTrips()
+    {
+        var pickedAt = new DateTimeOffset(2026, 5, 1, 18, 30, 0, TimeSpan.Zero);
+        var evt = new Event
+        {
+            Id = "evt1",
+            Title = "Soirée",
+            Date = "2030-01-01",
+            Time = "20:00",
+            HostToken = "ht",
+            Slug = "s",
+            WinnerMovieId = "mov1",
+            WinnerPickMethod = WinnerPickMethod.Wheel,
+            WinnerPickedAt = pickedAt,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+
+        var back = EventDocumentMapper.ToDomain(EventDocumentMapper.ToDocument(evt));
+
+        Assert.Equal("mov1", back.WinnerMovieId);
+        Assert.Equal(WinnerPickMethod.Wheel, back.WinnerPickMethod);
+        Assert.Equal(pickedAt, back.WinnerPickedAt);
+    }
 }
