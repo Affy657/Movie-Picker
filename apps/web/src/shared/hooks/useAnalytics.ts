@@ -12,6 +12,8 @@ export type AnalyticsEvent =
   | 'event_joined'
   | 'event_left'
   | 'invitation_sent'
+  | 'link_shared'
+  | 'vote_cast'
   | 'movie_added'
   | 'movie_removed'
   | 'movie_picked'
