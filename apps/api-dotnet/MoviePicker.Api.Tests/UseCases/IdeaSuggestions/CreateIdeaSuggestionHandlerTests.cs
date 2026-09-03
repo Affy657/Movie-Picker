@@ -12,6 +12,9 @@ public sealed class CreateIdeaSuggestionHandlerTests
 {
     private const string UserId = "u1";
 
+    /// <summary>Base64 de la signature PNG (8 octets) : valide pour la vérification magic-bytes.</summary>
+    private const string ValidPngBase64 = "iVBORw0KGgo=";
+
     private readonly Mock<IUserRepository> _users = new();
     private readonly Mock<IGitHubIssueClient> _github = new();
     private readonly CreateIdeaSuggestionHandler _sut;
@@ -22,13 +25,15 @@ public sealed class CreateIdeaSuggestionHandlerTests
     }
 
     private static CreateIdeaSuggestionRequest Request(
-        IdeaSuggestionCategory category = IdeaSuggestionCategory.Idea) => new()
+        IdeaSuggestionCategory category = IdeaSuggestionCategory.Idea,
+        IReadOnlyList<IdeaSuggestionAttachmentDto>? attachments = null) => new()
         {
             Category = category,
             Title = "Ajouter un mode battle",
             Description = "Ce serait top d'avoir un mode tournoi.",
             PagePath = "/e/abc123",
-            AppVersion = "1.4.0"
+            AppVersion = "1.4.0",
+            Attachments = attachments
         };
 
     private static User Author() => new()
@@ -127,5 +132,101 @@ public sealed class CreateIdeaSuggestionHandlerTests
             .ThrowsAsync(new ServiceUnavailableException("Impossible de créer la suggestion pour le moment. Réessayez dans un instant."));
 
         await Assert.ThrowsAsync<ServiceUnavailableException>(() => _sut.HandleAsync(UserId, Request()));
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithAttachments_UploadsEachAndAppendsScreenshotsSectionToBody()
+    {
+        _users.Setup(u => u.GetByIdAsync(UserId, It.IsAny<CancellationToken>())).ReturnsAsync(Author());
+        _github.Setup(g => g.UploadAttachmentAsync(It.IsAny<GitHubAttachmentUpload>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((GitHubAttachmentUpload a, CancellationToken _) => $"https://raw.githubusercontent.com/x/{a.FileName}");
+        GitHubIssueDraft? captured = null;
+        _github.Setup(g => g.CreateIssueAsync(It.IsAny<GitHubIssueDraft>(), It.IsAny<CancellationToken>()))
+            .Callback<GitHubIssueDraft, CancellationToken>((d, _) => captured = d)
+            .Returns(Task.CompletedTask);
+
+        var request = Request(attachments:
+        [
+            new IdeaSuggestionAttachmentDto { FileName = "a.png", ContentType = "image/png", Base64Content = ValidPngBase64 },
+            new IdeaSuggestionAttachmentDto { FileName = "b.png", ContentType = "image/png", Base64Content = ValidPngBase64 },
+        ]);
+
+        await _sut.HandleAsync(UserId, request);
+
+        Assert.NotNull(captured);
+        Assert.Contains("### Captures d'écran", captured!.Body);
+        Assert.Contains("![capture 1](https://raw.githubusercontent.com/x/a.png)", captured.Body);
+        Assert.Contains("![capture 2](https://raw.githubusercontent.com/x/b.png)", captured.Body);
+        _github.Verify(
+            g => g.UploadAttachmentAsync(It.IsAny<GitHubAttachmentUpload>(), It.IsAny<CancellationToken>()),
+            Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task HandleAsync_AttachmentUploadFails_SkipsItButStillCreatesIssue()
+    {
+        _users.Setup(u => u.GetByIdAsync(UserId, It.IsAny<CancellationToken>())).ReturnsAsync(Author());
+        _github.Setup(g => g.UploadAttachmentAsync(It.IsAny<GitHubAttachmentUpload>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((string?)null);
+        GitHubIssueDraft? captured = null;
+        _github.Setup(g => g.CreateIssueAsync(It.IsAny<GitHubIssueDraft>(), It.IsAny<CancellationToken>()))
+            .Callback<GitHubIssueDraft, CancellationToken>((d, _) => captured = d)
+            .Returns(Task.CompletedTask);
+
+        var request = Request(attachments:
+        [
+            new IdeaSuggestionAttachmentDto { FileName = "a.png", ContentType = "image/png", Base64Content = ValidPngBase64 },
+        ]);
+
+        await _sut.HandleAsync(UserId, request);
+
+        Assert.NotNull(captured);
+        Assert.DoesNotContain("Captures d'écran", captured!.Body);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TooManyAttachments_ThrowsBadRequest_WithoutCallingGitHub()
+    {
+        var request = Request(attachments: Enumerable.Range(0, 5)
+            .Select(i => new IdeaSuggestionAttachmentDto
+            {
+                FileName = $"{i}.png",
+                ContentType = "image/png",
+                Base64Content = "QQ=="
+            })
+            .ToList());
+
+        await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(UserId, request));
+
+        _github.Verify(g => g.CreateIssueAsync(It.IsAny<GitHubIssueDraft>(), It.IsAny<CancellationToken>()), Times.Never);
+        _github.Verify(g => g.UploadAttachmentAsync(It.IsAny<GitHubAttachmentUpload>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AttachmentContentDoesNotMatchDeclaredType_ThrowsBadRequest_WithoutCallingGitHub()
+    {
+        // "QQ==" décode en un seul octet 'A' (0x41) : ne correspond à aucune signature PNG/JPEG/WebP/GIF.
+        var request = Request(attachments:
+        [
+            new IdeaSuggestionAttachmentDto { FileName = "fake.png", ContentType = "image/png", Base64Content = "QQ==" },
+        ]);
+
+        await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(UserId, request));
+
+        _github.Verify(g => g.CreateIssueAsync(It.IsAny<GitHubIssueDraft>(), It.IsAny<CancellationToken>()), Times.Never);
+        _github.Verify(g => g.UploadAttachmentAsync(It.IsAny<GitHubAttachmentUpload>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AttachmentBase64Malformed_ThrowsBadRequest_WithoutCallingGitHub()
+    {
+        var request = Request(attachments:
+        [
+            new IdeaSuggestionAttachmentDto { FileName = "bad.png", ContentType = "image/png", Base64Content = "not-base64!!" },
+        ]);
+
+        await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(UserId, request));
+
+        _github.Verify(g => g.UploadAttachmentAsync(It.IsAny<GitHubAttachmentUpload>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

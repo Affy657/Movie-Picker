@@ -1046,8 +1046,6 @@ export const en: Locale = {
   proposeIdea: {
     trigger: 'Suggest an idea',
     dialogTitle: 'Suggest an idea',
-    dialogIntro:
-      'A title and a description are enough: your suggestion automatically creates an issue on the project’s GitHub repository.',
     categoryLabel: 'Category',
     categoryIdea: 'Idea',
     categoryBug: 'Bug',
@@ -1055,6 +1053,14 @@ export const en: Locale = {
     titleLabel: 'Title',
     descriptionLabel: 'Description',
     descriptionHint: '{{count}} characters left',
+    attachmentsLabel: 'Screenshots (optional)',
+    attachmentsAddButton: 'Add an image',
+    attachmentsDropHint:
+      'Drag and drop, paste, or choose up to {{max}} images (PNG, JPEG, WebP or GIF, 4 MB max)',
+    attachmentsRemove: 'Remove this image',
+    attachmentsTooMany: 'You can only attach up to {{max}} images.',
+    attachmentsTooLarge: 'Image too large (4 MB max): {{name}}',
+    attachmentsUnsupportedType: 'Unsupported format (PNG, JPEG, WebP or GIF only): {{name}}',
     submit: 'Send',
     submitting: 'Sending…',
     submitError: 'Could not send your suggestion right now. Please try again.',

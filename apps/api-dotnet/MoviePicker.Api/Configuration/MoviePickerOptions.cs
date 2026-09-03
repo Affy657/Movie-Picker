@@ -52,4 +52,6 @@ public sealed class MoviePickerOptions
     public string GitHubRepoName { get; set; } = "Movie-Picker";
 
     public string GitHubApiBaseUrl { get; set; } = "https://api.github.com/";
+
+    public string GitHubAttachmentsBranch { get; set; } = "feedback-attachments";
 }

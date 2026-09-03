@@ -1066,8 +1066,6 @@
   proposeIdea: {
     trigger: 'Proposer une idée',
     dialogTitle: 'Proposer une idée',
-    dialogIntro:
-      'Titre et description suffisent : votre suggestion crée automatiquement une issue sur le dépôt GitHub du projet.',
     categoryLabel: 'Catégorie',
     categoryIdea: 'Idée',
     categoryBug: 'Bug',
@@ -1075,6 +1073,15 @@
     titleLabel: 'Titre',
     descriptionLabel: 'Description',
     descriptionHint: '{{count}} caractères restants',
+    attachmentsLabel: 'Captures d’écran (optionnel)',
+    attachmentsAddButton: 'Ajouter une image',
+    attachmentsDropHint:
+      'Glissez-déposez, collez ou choisissez jusqu’à {{max}} images (PNG, JPEG, WebP ou GIF, 4 Mo max)',
+    attachmentsRemove: 'Retirer cette image',
+    attachmentsTooMany: 'Vous ne pouvez joindre que {{max}} images maximum.',
+    attachmentsTooLarge: 'Image trop lourde (4 Mo maximum) : {{name}}',
+    attachmentsUnsupportedType:
+      'Format non supporté (PNG, JPEG, WebP ou GIF uniquement) : {{name}}',
     submit: 'Envoyer',
     submitting: 'Envoi…',
     submitError: 'Impossible d’envoyer votre suggestion pour le moment. Réessayez.',

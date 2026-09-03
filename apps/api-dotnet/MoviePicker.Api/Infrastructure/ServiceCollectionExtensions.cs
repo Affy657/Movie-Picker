@@ -129,6 +129,9 @@ public static class ServiceCollectionExtensions
         var repo = cfg["GITHUB_REPO_NAME"];
         if (!string.IsNullOrWhiteSpace(repo))
             opts.GitHubRepoName = repo.Trim();
+        var attachmentsBranch = cfg["GITHUB_ATTACHMENTS_BRANCH"];
+        if (!string.IsNullOrWhiteSpace(attachmentsBranch))
+            opts.GitHubAttachmentsBranch = attachmentsBranch.Trim();
     }
 
     private static void ConfigureTmdbOptions(MoviePickerOptions opts, IConfiguration cfg)

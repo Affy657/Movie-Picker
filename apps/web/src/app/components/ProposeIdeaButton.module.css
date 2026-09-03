@@ -59,13 +59,6 @@
   color: var(--color-text);
 }
 
-.intro {
-  margin: 0 0 0.3rem;
-  font-size: var(--font-size-sm);
-  line-height: var(--leading-base);
-  color: var(--color-text-muted);
-}
-
 .categoryDropdown {
   margin-bottom: 1.1rem;
 }
@@ -97,4 +90,91 @@
   font-size: var(--font-size-sm);
   line-height: var(--leading-base);
   color: var(--color-text);
+}
+
+.attachmentsSection {
+  margin-top: 0.9rem;
+}
+
+.attachmentsLabel {
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.dropZone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.25rem 1rem;
+  border: 1.5px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-hover);
+  text-align: center;
+  transition:
+    border-color var(--duration-base) var(--ease-default),
+    background var(--duration-base) var(--ease-default);
+}
+
+.dropZoneActive {
+  border-color: var(--color-primary);
+  border-style: solid;
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface-hover));
+}
+
+.attachmentsHint {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.thumbnails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.thumbnail {
+  position: relative;
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  background: var(--color-input-bg);
+  box-shadow: var(--shadow-sm);
+}
+
+.thumbnailImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.thumbnailRemove {
+  position: absolute;
+  top: 0.2rem;
+  right: 0.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, white 25%, transparent);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, black 70%, transparent);
+  color: white;
+  cursor: pointer;
+  transition: background var(--duration-base) var(--ease-default);
+}
+
+.thumbnailRemove:hover {
+  background: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.attachmentsError {
+  margin-top: 0.5rem;
 }
