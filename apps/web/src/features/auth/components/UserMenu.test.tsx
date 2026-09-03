@@ -69,7 +69,7 @@ describe('UserMenu', () => {
       'href',
       '/u/alice'
     );
-    expect(screen.getByRole('link', { name: /mon compte/i })).toHaveAttribute('href', '/settings');
+    expect(screen.getByRole('link', { name: /paramètres/i })).toHaveAttribute('href', '/settings');
     expect(screen.getByRole('link', { name: /soutenir le projet/i })).toHaveAttribute(
       'href',
       '/soutenir'
@@ -96,7 +96,7 @@ describe('UserMenu', () => {
     await user.click(screen.getByRole('button', { name: /menu du compte/i }));
 
     expect(screen.queryByRole('link', { name: /voir mon profil public/i })).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /mon compte/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /paramètres/i })).toBeInTheDocument();
   });
 
   it('ferme le menu avec Échap et rend le focus au déclencheur', async () => {

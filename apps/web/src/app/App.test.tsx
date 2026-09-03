@@ -218,7 +218,7 @@ describe('App (routes)', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('AppShell expose Mes soirées + Nouvelle soirée dans la nav (Mon compte est dans le menu avatar)', async () => {
+    it('AppShell expose Mes soirées + Nouvelle soirée dans la nav (Paramètres est dans le menu avatar)', async () => {
       server.use(
         authedUserHandler,
         http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
@@ -235,7 +235,7 @@ describe('App (routes)', () => {
         within(mobileNav).getByRole('link', { name: /^Nouvelle soirée$/i })
       ).toBeInTheDocument();
       expect(
-        within(mobileNav).queryByRole('link', { name: /^Mon compte$/i })
+        within(mobileNav).queryByRole('link', { name: /^Paramètres$/i })
       ).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: /menu du compte/i })).toBeInTheDocument();
     });

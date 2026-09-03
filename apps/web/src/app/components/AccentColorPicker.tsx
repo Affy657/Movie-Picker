@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { Check } from 'lucide-react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -46,14 +46,19 @@ const PATCH_DEBOUNCE_MS = 400;
 
 export default function AccentColorPicker({
   id,
+  ariaLabelledBy,
   className = '',
+  onSaved,
 }: Readonly<{
   id?: string;
+  ariaLabelledBy?: string;
   className?: string;
+  onSaved?: () => void;
 }>) {
   const { accent, setAccent } = useTheme();
   const { user, patchProfile } = useAuth();
   const { t } = useTranslation();
+  const [error, setError] = useState<string | null>(null);
 
   const lastCommittedRef = useRef<AccentColor>(accent);
   const accentRef = useRef(accent);
@@ -70,13 +75,15 @@ export default function AccentColorPicker({
     []
   );
 
-  const effectiveSelection: PickerColor = (PICKER_COLORS as readonly string[]).includes(accent)
-    ? (accent as PickerColor)
-    : 'blue';
+  const toPickerColor = (color: AccentColor): PickerColor =>
+    (PICKER_COLORS as readonly string[]).includes(color) ? (color as PickerColor) : 'blue';
+
+  const effectiveSelection: PickerColor = toPickerColor(accent);
 
   const commit = useCallback(
     (next: PickerColor) => {
       if (next === effectiveSelection) return;
+      setError(null);
       setAccent(next);
       if (!user) {
         lastCommittedRef.current = next;
@@ -89,13 +96,20 @@ export default function AccentColorPicker({
         void patchProfile({ accentColor: next })
           .then(() => {
             lastCommittedRef.current = next;
+            onSaved?.();
           })
           .catch(() => {
             setAccent(rollback);
+            setError(
+              t('auth.account.accentColorSaveError', {
+                color: t(ACCENT_LABEL_KEY[next]),
+                previous: t(ACCENT_LABEL_KEY[toPickerColor(rollback)]),
+              })
+            );
           });
       }, PATCH_DEBOUNCE_MS);
     },
-    [effectiveSelection, setAccent, user, patchProfile]
+    [effectiveSelection, setAccent, user, patchProfile, onSaved, t]
   );
 
   const handleKey = (e: React.KeyboardEvent, idx: number) => {
@@ -116,32 +130,40 @@ export default function AccentColorPicker({
   };
 
   return (
-    <div
-      id={id}
-      role="radiogroup"
-      aria-label={id ? undefined : t('auth.account.accentColorLabel')}
-      className={clsx(styles.root, className || undefined)}
-    >
-      {PICKER_COLORS.map((color, idx) => {
-        const selected = color === effectiveSelection;
-        return (
-          <button
-            key={color}
-            type="button"
-            role="radio"
-            aria-checked={selected}
-            aria-label={t(ACCENT_LABEL_KEY[color])}
-            tabIndex={selected ? 0 : -1}
-            className={clsx(styles.swatch, selected && styles.swatchSelected)}
-            data-accent={color}
-            style={{ ['--swatch-color' as string]: SWATCH_COLORS[color] }}
-            onClick={() => commit(color)}
-            onKeyDown={(e) => handleKey(e, idx)}
-          >
-            {selected ? <Check size={16} className={styles.check} aria-hidden /> : null}
-          </button>
-        );
-      })}
-    </div>
+    <>
+      <div
+        id={id}
+        role="radiogroup"
+        aria-label={ariaLabelledBy ? undefined : t('auth.account.accentColorLabel')}
+        aria-labelledby={ariaLabelledBy}
+        className={clsx(styles.root, className || undefined)}
+      >
+        {PICKER_COLORS.map((color, idx) => {
+          const selected = color === effectiveSelection;
+          return (
+            <button
+              key={color}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              aria-label={t(ACCENT_LABEL_KEY[color])}
+              tabIndex={selected ? 0 : -1}
+              className={clsx(styles.swatch, selected && styles.swatchSelected)}
+              data-accent={color}
+              style={{ ['--swatch-color' as string]: SWATCH_COLORS[color] }}
+              onClick={() => commit(color)}
+              onKeyDown={(e) => handleKey(e, idx)}
+            >
+              {selected ? <Check size={16} className={styles.check} aria-hidden /> : null}
+            </button>
+          );
+        })}
+      </div>
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+    </>
   );
 }

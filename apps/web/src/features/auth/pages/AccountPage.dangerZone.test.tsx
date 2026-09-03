@@ -20,12 +20,12 @@ const ME = {
   avatarId: 'alpha',
 };
 
-function renderAccount() {
+function renderAccount(initialPath = '/settings/securite') {
   return render(
     <AppTestProviders>
-      <MemoryRouter initialEntries={['/settings']}>
+      <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
-          <Route path="/settings" element={<AccountPage />} />
+          <Route path="/settings/*" element={<AccountPage />} />
           <Route path="/" element={<div data-testid="home-marker">Accueil</div>} />
         </Routes>
       </MemoryRouter>

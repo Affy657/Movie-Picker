@@ -99,7 +99,7 @@ export function AppRoutes() {
         <Route path={ROUTES.privacyPolicy} element={<PrivacyPolicyPage />} />
         <Route path={ROUTES.donate} element={<DonatePage />} />
         <Route
-          path={ROUTES.account}
+          path={`${ROUTES.account}/*`}
           element={
             <ProtectedRoute>
               <AccountPage />

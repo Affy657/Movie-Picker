@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
-import { AlertTriangle, Check, Pencil, RefreshCw, TriangleAlert, Unlink, X } from 'lucide-react';
+import { AlertTriangle, Check, RefreshCw, TriangleAlert, X } from 'lucide-react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
@@ -14,7 +14,7 @@ import {
   type LetterboxdSyncReport,
 } from '@/features/letterboxd/api/letterboxdApi';
 import LetterboxdChoicesModal from './LetterboxdChoicesModal';
-import accountStyles from '@/features/auth/pages/AccountPage.module.css';
+import sharedStyles from '@/features/auth/pages/account/AccountShared.module.css';
 import styles from './LetterboxdImportSection.module.css';
 
 function formatSyncDate(iso: string, locale: string): string {
@@ -113,6 +113,7 @@ export default function LetterboxdImportSection() {
       unresolved.map((choice) => (choice.year ? `${choice.title} (${choice.year})` : choice.title))
     );
     void queryClient.invalidateQueries({ queryKey: queryKeys.watchlist.list });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
   };
 
   if (!user) return null;
@@ -123,18 +124,17 @@ export default function LetterboxdImportSection() {
   const showInput = editing || !connected;
 
   return (
-    <section className="section section--panel" aria-labelledby="letterboxd-heading">
-      <h2 id="letterboxd-heading" className={accountStyles.sectionTitle}>
-        <RefreshCw size={18} aria-hidden />
-        <span className={accountStyles.sectionTitleText}>{t('auth.account.letterboxd.title')}</span>
+    <div className={sharedStyles.card}>
+      <p className={sharedStyles.cardTitle}>
+        <span>{t('auth.account.letterboxd.title')}</span>
         <InfoBubble label={t('auth.account.letterboxd.helpTitle')}>
           <p>{t('auth.account.letterboxd.helpSync')}</p>
           <p>{t('auth.account.letterboxd.helpSafety')}</p>
           <p>{t('auth.account.letterboxd.helpUsername')}</p>
         </InfoBubble>
-      </h2>
+      </p>
 
-      <div className={styles.connectionCard}>
+      <div className={sharedStyles.field} style={{ borderTop: 'none' }}>
         {showInput ? (
           <form
             className={styles.editRow}
@@ -187,20 +187,18 @@ export default function LetterboxdImportSection() {
             <div className={styles.connectionActions}>
               <button
                 type="button"
-                className={clsx('icon-btn-outline', styles.iconBtn)}
+                className={clsx('btn', sharedStyles.smallBtn)}
                 onClick={startEditing}
-                aria-label={t('auth.account.letterboxd.usernameEdit')}
               >
-                <Pencil size={16} aria-hidden />
+                {t('auth.account.letterboxd.usernameEdit')}
               </button>
               <button
                 type="button"
-                className={clsx('icon-btn-outline', styles.iconBtn, styles.iconBtnDanger)}
+                className={clsx('btn', 'btn-danger', sharedStyles.smallBtn)}
                 onClick={() => void runDisconnect()}
                 disabled={disconnecting}
-                aria-label={t('auth.account.letterboxd.usernameDisconnect')}
               >
-                <Unlink size={16} aria-hidden />
+                {t('auth.account.letterboxd.usernameDisconnect')}
               </button>
             </div>
           </div>
@@ -227,23 +225,26 @@ export default function LetterboxdImportSection() {
             </span>
           </p>
         )}
+      </div>
 
-        {connected && !report && user.letterboxdPendingReconciliationCount > 0 && (
+      {connected && !report && user.letterboxdPendingReconciliationCount > 0 && (
+        <div className={sharedStyles.attention} role="status">
+          <TriangleAlert size={15} aria-hidden />
+          <p>
+            {t('auth.account.letterboxd.attentionMessage', {
+              count: String(user.letterboxdPendingReconciliationCount),
+            })}
+          </p>
           <button
             type="button"
-            className={styles.reconciliationPending}
+            className={clsx('btn', sharedStyles.attentionBtn)}
             onClick={() => void handleSync()}
             disabled={syncing}
           >
-            <TriangleAlert size={14} aria-hidden />
-            <span className={styles.reconciliationPendingLabel}>
-              {t('auth.account.letterboxd.reconciliationPending', {
-                count: String(user.letterboxdPendingReconciliationCount),
-              })}
-            </span>
+            {t('auth.account.letterboxd.attentionConfirm')}
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {saveUsernameError && (
         <p className="error" role="alert">
@@ -257,19 +258,28 @@ export default function LetterboxdImportSection() {
         </p>
       )}
 
-      <button
-        type="button"
-        className={clsx('btn', styles.syncBtn)}
-        onClick={() => void handleSync()}
-        disabled={syncing || !connected}
-      >
-        <RefreshCw size={15} aria-hidden />
-        <span>
-          {syncing
-            ? t('auth.account.letterboxd.syncSubmitting')
-            : t('auth.account.letterboxd.syncNow')}
-        </span>
-      </button>
+      {connected && (
+        <div className={sharedStyles.row}>
+          <div className={sharedStyles.rowMain}>
+            <p className={sharedStyles.rowSub} style={{ margin: 0 }}>
+              {t('auth.account.letterboxd.syncPersistentHint')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={clsx('btn', 'btn-primary', styles.syncBtn)}
+            onClick={() => void handleSync()}
+            disabled={syncing}
+          >
+            <RefreshCw size={15} aria-hidden />
+            <span>
+              {syncing
+                ? t('auth.account.letterboxd.syncSubmitting')
+                : t('auth.account.letterboxd.syncNow')}
+            </span>
+          </button>
+        </div>
+      )}
 
       {syncError && (
         <p className="error" role="alert">
@@ -357,6 +367,6 @@ export default function LetterboxdImportSection() {
           onConfirmed={handleConfirmed}
         />
       )}
-    </section>
+    </div>
   );
 }

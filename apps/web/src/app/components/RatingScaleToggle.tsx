@@ -13,7 +13,14 @@ const LABEL_KEY: Record<RatingScale, TranslationKey> = {
 export default function RatingScaleToggle({
   className = '',
   id,
-}: Readonly<{ className?: string; id?: string }>) {
+  ariaLabelledBy,
+  onSaved,
+}: Readonly<{
+  className?: string;
+  id?: string;
+  ariaLabelledBy?: string;
+  onSaved?: () => void;
+}>) {
   const { user, patchProfile } = useAuth();
   const { t } = useTranslation();
   const current: RatingScale = user?.ratingScale ?? 'five';
@@ -29,7 +36,7 @@ export default function RatingScaleToggle({
 
   const commit = (value: RatingScale) => {
     if (!user || value === current) return;
-    void patchProfile({ ratingScale: value });
+    void patchProfile({ ratingScale: value }).then(() => onSaved?.());
   };
 
   return (
@@ -38,6 +45,7 @@ export default function RatingScaleToggle({
       value={current}
       onChange={commit}
       ariaLabel={t('auth.account.ratingScaleLabel')}
+      ariaLabelledBy={ariaLabelledBy}
       className={className}
       id={id}
     />

@@ -1,71 +1,20 @@
-﻿.sectionTitle {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  margin: 0 0 0.9rem;
-  line-height: 1;
-}
-
-.sectionTitle :global(svg) {
-  flex-shrink: 0;
-  color: var(--color-primary);
-}
-
-.sectionTitleText {
-  transform: translateY(var(--text-optical-nudge));
-}
-
-.row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.rowInfo {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex: 1;
-  min-width: 0;
-  line-height: 1;
-}
-
-.rowIcon {
-  flex-shrink: 0;
-  color: var(--color-text-muted);
-}
-
-.rowText {
-  min-width: 0;
-}
-
-.rowLabel {
-  margin: 0;
-  font-weight: 500;
-  font-size: var(--font-size-base);
-  transform: translateY(var(--text-optical-nudge));
-}
-
-.rowHint {
-  margin: 0.125rem 0 0;
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-}
-
-.prefsDivider {
-  margin: 1rem 0;
+﻿.prefGroup {
   border: none;
-  border-top: 1px solid var(--color-border);
-  opacity: 0.4;
+  border-top: 1px solid var(--color-border-subtle);
+  margin: 0;
+  padding: 0.35rem 0 0.55rem;
 }
 
-.prefsTitle {
-  margin: 0 0 0.5rem;
-  font-size: var(--font-size-xs);
-  font-weight: 600;
+.prefGroup:first-of-type {
+  border-top: none;
+}
+
+.prefGroupLegend {
+  padding: 0.6rem 0 0.4rem;
+  font-size: var(--font-size-2xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-widest);
   text-transform: uppercase;
-  letter-spacing: var(--tracking-wide-lg);
   color: var(--color-text-muted);
 }
 
@@ -77,21 +26,8 @@
   padding: 0.3rem 0;
 }
 
-.prefLabelWrap {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  min-width: 0;
-  line-height: 1;
-}
-
-.prefIcon {
-  flex-shrink: 0;
-  display: flex;
-  color: var(--color-text-muted);
-}
-
 .prefLabel {
+  min-width: 0;
   font-size: var(--font-size-base);
   transform: translateY(var(--text-optical-nudge));
 }
