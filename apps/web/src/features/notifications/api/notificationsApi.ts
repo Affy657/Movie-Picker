@@ -11,7 +11,8 @@ export type NotificationTypeKey =
   | 'eventinvitation'
   | 'eventpending'
   | 'moviepickedmanually'
-  | 'letterboxdreconciliationpending';
+  | 'letterboxdreconciliationpending'
+  | 'eventdatechanged';
 
 export interface NotificationTypePreference {
   type: NotificationTypeKey;

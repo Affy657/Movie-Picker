@@ -53,6 +53,8 @@ function notifText(item: UserNotificationItem, t: TFn): string {
       return t('notifications.moviePickedManuallyText', { movie, eventTitle });
     case 'eventdeleted':
       return t('notifications.eventDeletedText', { eventTitle });
+    case 'eventdatechanged':
+      return t('notifications.eventDateChangedText', { eventTitle });
     case 'eventreminder1h':
       return t('notifications.eventReminder1hText', { eventTitle });
     case 'eventreminder24h':

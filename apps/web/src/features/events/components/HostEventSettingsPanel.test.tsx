@@ -102,7 +102,7 @@ describe('HostEventSettingsPanel', () => {
       qc
     );
 
-    await user.selectOptions(screen.getByLabelText(/mode de la roue/i), 'weightedByVotes');
+    await user.click(screen.getByRole('radio', { name: /pondéré par les votes/i }));
 
     await waitFor(() => expect(patched).toBe(true));
   });
@@ -134,8 +134,8 @@ describe('HostEventSettingsPanel', () => {
       />
     );
 
-    await user.clear(screen.getByLabelText(/maximum de participants/i));
-    await user.type(screen.getByLabelText(/maximum de participants/i), '8');
+    await user.clear(screen.getByLabelText(/participants max/i));
+    await user.type(screen.getByLabelText(/participants max/i), '8');
 
     await waitFor(() => expect(seenMax).toBe(8), { timeout: 3000 });
   });
@@ -160,8 +160,8 @@ describe('HostEventSettingsPanel', () => {
       />
     );
 
-    await user.clear(screen.getByLabelText(/maximum de participants/i));
-    await user.type(screen.getByLabelText(/maximum de participants/i), '3');
+    await user.clear(screen.getByLabelText(/participants max/i));
+    await user.type(screen.getByLabelText(/participants max/i), '3');
 
     expect(
       await screen.findByText(/Impossible de réduire la capacité/i, {}, { timeout: 3000 })

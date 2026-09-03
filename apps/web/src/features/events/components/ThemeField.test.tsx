@@ -7,25 +7,21 @@ function renderField(
   overrides: Partial<{
     emoji: string;
     text: string;
-    themeColor: number | null;
     disabled: boolean;
   }> = {}
 ) {
   const onEmojiChange = vi.fn();
   const onTextChange = vi.fn();
-  const onThemeColorChange = vi.fn();
   render(
     <ThemeField
       emoji={overrides.emoji ?? ''}
       text={overrides.text ?? ''}
-      themeColor={overrides.themeColor ?? null}
       onEmojiChange={onEmojiChange}
       onTextChange={onTextChange}
-      onThemeColorChange={onThemeColorChange}
       disabled={overrides.disabled}
     />
   );
-  return { onEmojiChange, onTextChange, onThemeColorChange };
+  return { onEmojiChange, onTextChange };
 }
 
 describe('parseTheme', () => {
@@ -58,21 +54,17 @@ describe('ThemeField', () => {
     expect(onTextChange).toHaveBeenCalledWith('Horreur');
   });
 
-  it('déplie les thèmes et choisit une couleur', async () => {
+  it('déplie la liste des thèmes suggérés', async () => {
     const user = userEvent.setup();
-    const { onThemeColorChange } = renderField({ emoji: '🎃', text: 'Horreur' });
+    renderField({ emoji: '🎃', text: 'Horreur' });
 
     expect(screen.queryByRole('button', { name: /western/i })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Plus de thèmes' }));
     expect(screen.getByRole('button', { name: /western/i })).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Rouge' }));
-    expect(onThemeColorChange).toHaveBeenCalledWith(0);
   });
 
-  it('masque presets et couleurs quand disabled', () => {
+  it('masque les thèmes suggérés quand disabled', () => {
     renderField({ disabled: true });
     expect(screen.queryByText('Thèmes suggérés')).not.toBeInTheDocument();
-    expect(screen.queryByRole('group', { name: 'Couleur du tag' })).not.toBeInTheDocument();
   });
 });

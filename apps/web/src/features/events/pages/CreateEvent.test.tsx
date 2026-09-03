@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router';
 import CreateEvent from '@/features/events/pages/CreateEvent';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { QueryClientWrapper } from '@/test-utils/queryWrapper';
+import { LocaleProvider } from '@/shared/i18n';
 
 const mockFetchApi = vi.fn();
 vi.mock('@/shared/api/client', () => ({ fetchApi: (...args: unknown[]) => mockFetchApi(...args) }));
@@ -18,9 +19,11 @@ vi.mock('@/shared/hooks/useAnalytics', () => ({
 function RenderCreateEvent() {
   return render(
     <QueryClientWrapper>
-      <MemoryRouter>
-        <CreateEvent />
-      </MemoryRouter>
+      <LocaleProvider>
+        <MemoryRouter>
+          <CreateEvent />
+        </MemoryRouter>
+      </LocaleProvider>
     </QueryClientWrapper>
   );
 }

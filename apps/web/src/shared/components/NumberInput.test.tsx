@@ -32,12 +32,10 @@ describe('NumberInput', () => {
     expect(onChange).toHaveBeenCalledWith('4');
   });
 
-  it('clears the value when decrementing below min', async () => {
-    const { onChange, minus } = setup({ value: '0', min: 0 });
+  it('disables decrement at the minimum', () => {
+    const { minus } = setup({ value: '0', min: 0 });
 
-    await userEvent.click(minus);
-
-    expect(onChange).toHaveBeenCalledWith('');
+    expect(minus).toBeDisabled();
   });
 
   it('starts from 1 when incrementing an empty value with no min', async () => {

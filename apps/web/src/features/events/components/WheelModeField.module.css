@@ -1,0 +1,45 @@
+.radioCards {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.radioCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-text) 3%, transparent);
+  cursor: pointer;
+  transition: border-color var(--duration-base) var(--ease-default);
+}
+
+.radioCardSelected {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+.radioInput {
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.radioName {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.radioDesc {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-muted);
+  line-height: var(--leading-normal);
+}

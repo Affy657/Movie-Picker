@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronUp, MoreHorizontal } from 'lucide-react';
 import clsx from 'clsx';
 import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
@@ -78,25 +78,11 @@ export function parseTheme(s: string | null | undefined): { emoji: string; text:
   return { emoji: '', text: raw };
 }
 
-export const COLOR_SWATCHES: { label: string; hue: number }[] = [
-  { label: 'Rouge', hue: 0 },
-  { label: 'Orange', hue: 28 },
-  { label: 'Jaune', hue: 52 },
-  { label: 'Lime', hue: 90 },
-  { label: 'Vert', hue: 135 },
-  { label: 'Cyan', hue: 185 },
-  { label: 'Bleu', hue: 220 },
-  { label: 'Violet', hue: 268 },
-  { label: 'Rose', hue: 320 },
-];
-
 type ThemeFieldProps = {
   emoji: string;
   text: string;
-  themeColor: number | null;
   onEmojiChange: (e: string) => void;
   onTextChange: (t: string) => void;
-  onThemeColorChange: (hue: number | null) => void;
   disabled?: boolean;
   textInputId?: string;
 };
@@ -104,10 +90,8 @@ type ThemeFieldProps = {
 export default function ThemeField({
   emoji,
   text,
-  themeColor,
   onEmojiChange,
   onTextChange,
-  onThemeColorChange,
   disabled,
   textInputId,
 }: Readonly<ThemeFieldProps>) {
@@ -229,38 +213,6 @@ export default function ThemeField({
               <MoreHorizontal size={14} aria-hidden />
             )}
           </button>
-        </fieldset>
-      )}
-      {!disabled && (
-        <fieldset className={styles.colorRow}>
-          <legend className={styles.colorRowLabel}>Couleur</legend>
-          <button
-            type="button"
-            className={clsx(
-              styles.colorSwatch,
-              styles.colorSwatchAuto,
-              themeColor === null && styles.colorSwatchSelected
-            )}
-            onClick={() => onThemeColorChange(null)}
-            aria-label="Automatique"
-            aria-pressed={themeColor === null}
-            title="Automatique"
-          />
-          {COLOR_SWATCHES.map((s) => (
-            <button
-              key={s.hue}
-              type="button"
-              className={clsx(
-                styles.colorSwatch,
-                themeColor === s.hue && styles.colorSwatchSelected
-              )}
-              style={{ '--swatch-hue': s.hue } as CSSProperties}
-              onClick={() => onThemeColorChange(s.hue)}
-              aria-label={s.label}
-              aria-pressed={themeColor === s.hue}
-              title={s.label}
-            />
-          ))}
         </fieldset>
       )}
     </>

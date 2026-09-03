@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain;
@@ -12,17 +13,32 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
     private readonly IParticipantRepository _participants;
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
+    private readonly IUserRepository _userRepository;
+    private readonly IPushSubscriptionRepository _pushSubscriptions;
+    private readonly IPushNotificationSender _pushSender;
+    private readonly IUserNotificationRepository _notifications;
+    private readonly ILogger<PatchEventConfigHandler> _logger;
 
     public PatchEventConfigHandler(
         IEventRepository events,
         IParticipantRepository participants,
         IHostTokenAccessor hostTokenAccessor,
-        ICurrentUserAccessor currentUserAccessor)
+        ICurrentUserAccessor currentUserAccessor,
+        IUserRepository userRepository,
+        IPushSubscriptionRepository pushSubscriptions,
+        IPushNotificationSender pushSender,
+        IUserNotificationRepository notifications,
+        ILogger<PatchEventConfigHandler> logger)
     {
         _events = events;
         _participants = participants;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
+        _userRepository = userRepository;
+        _pushSubscriptions = pushSubscriptions;
+        _pushSender = pushSender;
+        _notifications = notifications;
+        _logger = logger;
     }
 
     public async Task<EventConfigResponse> HandleAsync(
@@ -84,7 +100,65 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         var updated = evt with { Title = title, Date = date, Time = time, Config = nextConfig, UpdatedAt = now };
 
         var saved = await _events.UpdateAsync(updated, ct);
+
+        var dateChanged = date != evt.Date || time != evt.Time;
+        if (dateChanged && request.NotifyParticipantsOfDateChange == true)
+            _ = NotifyParticipantsOnDateChangedAsync(saved, userId, CancellationToken.None);
+
         return EventConfigResponse.FromEvent(saved);
+    }
+
+    private async Task NotifyParticipantsOnDateChangedAsync(Event evt, string? actingUserId, CancellationToken ct)
+    {
+        try
+        {
+            var participants = await _participants.ListByEventIdAsync(evt.Id, ct);
+            var userIds = participants
+                .Where(p => !string.IsNullOrEmpty(p.UserId) && p.UserId != actingUserId)
+                .Select(p => p.UserId!)
+                .Distinct()
+                .ToList();
+            if (userIds.Count == 0)
+                return;
+
+            var users = await _userRepository.ListByIdsAsync(userIds, ct);
+            var notifiableIds = users.Where(u => u.NotifiesOn(UserNotificationType.EventDateChanged)).Select(u => u.Id).ToHashSet();
+            if (notifiableIds.Count == 0)
+                return;
+
+            var subs = await _pushSubscriptions.ListByUserIdsAsync(notifiableIds, ct);
+            if (subs.Count > 0)
+            {
+                var message = new PushMessage(
+                    Title: "Nouvelle date pour la soirée 📅",
+                    Body: $"{evt.Title} a été reprogrammée.",
+                    Tag: $"event-date-changed-{evt.Id}",
+                    Url: $"/e/{evt.Slug}"
+                );
+
+                foreach (var sub in subs.Where(s => notifiableIds.Contains(s.UserId)))
+                    await _pushSender.SendAsync(sub, message, ct);
+            }
+
+            var now = DateTimeOffset.UtcNow;
+            foreach (var userId in notifiableIds)
+            {
+                await _notifications.AddAsync(new UserNotification
+                {
+                    UserId = userId,
+                    Type = UserNotificationType.EventDateChanged,
+                    EventId = evt.Id,
+                    EventSlug = evt.Slug,
+                    EventTitle = evt.Title,
+                    IsRead = false,
+                    CreatedAt = now
+                }, ct);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Échec de la notification changement de date pour la soirée {EventId}", evt.Id);
+        }
     }
 
     private static bool HasConfigChange(PatchEventConfigRequest request) =>

@@ -124,8 +124,8 @@ describe('EventDetail (MSW)', () => {
     );
     renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
     expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
-    expect(screen.getByText('Comédie noire')).toBeInTheDocument();
-    expect(screen.getByRole('status', { name: /Thème de soirée/i })).toBeInTheDocument();
+    const themeBanner = screen.getByRole('status', { name: /Thème de soirée/i });
+    expect(themeBanner).toHaveTextContent('Comédie noire');
 
     const settingsToggle = screen.getByRole('button', { name: 'Paramètres de la soirée' });
     expect(settingsToggle).toHaveAttribute('aria-haspopup', 'dialog');

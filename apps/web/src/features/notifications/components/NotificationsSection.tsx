@@ -26,6 +26,7 @@ const PREF_GROUPS: readonly PrefGroup[] = [
       { type: 'moviepicked', labelKey: 'notifications.prefMoviePicked' },
       { type: 'moviepickedmanually', labelKey: 'notifications.prefMoviePickedManually' },
       { type: 'eventdeleted', labelKey: 'notifications.prefEventDeleted' },
+      { type: 'eventdatechanged', labelKey: 'notifications.prefEventDateChanged' },
       { type: 'eventpending', labelKey: 'notifications.prefEventPending' },
     ],
   },

@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { ArrowLeft, Settings2 } from 'lucide-react';
 import ThemeField from '@/features/events/components/ThemeField';
+import WheelModeField from '@/features/events/components/WheelModeField';
 import NumberInput from '@/shared/components/NumberInput';
+import Toggle from '@/shared/components/Toggle';
 import { useQueryClient } from '@tanstack/react-query';
 import PageLayout from '@/shared/components/PageLayout';
 import { createEvent as createEventApi, patchEventConfig } from '@/features/events/api/eventsApi';
@@ -17,8 +19,10 @@ import {
   MAX_EVENT_PARTICIPANTS,
   MAX_PROPOSALS_PER_PARTICIPANT,
 } from '@/features/events/types';
+import type { WheelMode } from '@/features/events/types';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
+import { useTranslation } from '@/shared/i18n';
 import styles from './CreateEvent.module.css';
 
 function getDefaultDate(): string {
@@ -41,6 +45,8 @@ function getDefaultTime(): string {
 
 export default function CreateEvent() {
   useNoindexPage(pageTitle('Nouvelle soirée'), ROUTES.createEvent);
+  const { t } = useTranslation();
+  const wheelModeLabelId = useId();
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -59,9 +65,10 @@ export default function CreateEvent() {
   const [time, setTime] = useState(getDefaultTime);
   const [themeEmoji, setThemeEmoji] = useState('');
   const [themeText, setThemeText] = useState('');
-  const [themeColor, setThemeColor] = useState<number | null>(null);
-  const [maxParticipants, setMaxParticipants] = useState('');
-  const [maxProposals, setMaxProposals] = useState('');
+  const [maxParticipants, setMaxParticipants] = useState(String(MAX_EVENT_PARTICIPANTS));
+  const [maxProposals, setMaxProposals] = useState(String(MAX_PROPOSALS_PER_PARTICIPANT));
+  const [wheelMode, setWheelMode] = useState<WheelMode>(DEFAULT_EVENT_CONFIG.wheelMode);
+  const [allowSeries, setAllowSeries] = useState(DEFAULT_EVENT_CONFIG.allowSeries ?? false);
 
   const createAction = useCallback(async () => {
     const res = await createEventApi({ title, date, time });
@@ -75,26 +82,17 @@ export default function CreateEvent() {
     const maxPartParsed = maxParticipants.trim() === '' ? 0 : Number(maxParticipants);
     const maxPropParsed = maxProposals.trim() === '' ? 0 : Number(maxProposals);
 
-    const needsConfigPatch =
-      themeTrimmed !== '' ||
-      themeColor !== null ||
-      (Number.isFinite(maxPartParsed) && maxPartParsed > 0) ||
-      (Number.isFinite(maxPropParsed) && maxPropParsed > 0);
-
-    if (needsConfigPatch) {
-      try {
-        await patchEventConfig(res.slug, null, {
-          theme: themeTrimmed,
-          themeColor: themeColor ?? undefined,
-          maxProposalsPerParticipant: Number.isFinite(maxPropParsed) ? maxPropParsed : 0,
-          maxParticipants: Number.isFinite(maxPartParsed) ? maxPartParsed : 0,
-          wheelMode: DEFAULT_EVENT_CONFIG.wheelMode,
-          richSharePreview: true,
-          allowSeries: DEFAULT_EVENT_CONFIG.allowSeries ?? false,
-        });
-      } catch {
-        // Config patch is optional — event was already created, proceed to navigation
-      }
+    try {
+      await patchEventConfig(res.slug, null, {
+        theme: themeTrimmed,
+        maxProposalsPerParticipant: Number.isFinite(maxPropParsed) ? maxPropParsed : 0,
+        maxParticipants: Number.isFinite(maxPartParsed) ? maxPartParsed : 0,
+        wheelMode,
+        richSharePreview: true,
+        allowSeries,
+      });
+    } catch {
+      // Config patch is optional — event was already created, proceed to navigation
     }
 
     queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
@@ -107,9 +105,10 @@ export default function CreateEvent() {
     time,
     themeEmoji,
     themeText,
-    themeColor,
     maxParticipants,
     maxProposals,
+    wheelMode,
+    allowSeries,
     queryClient,
     navigate,
     track,
@@ -191,35 +190,20 @@ export default function CreateEvent() {
             </summary>
             <div className={styles.advancedBody}>
               <label className="label" htmlFor="create-theme">
-                Thème / ambiance
+                {t('events.settings.themeLabel')}
               </label>
               <ThemeField
                 textInputId="create-theme"
                 emoji={themeEmoji}
                 text={themeText}
-                themeColor={themeColor}
                 onEmojiChange={setThemeEmoji}
                 onTextChange={setThemeText}
-                onThemeColorChange={setThemeColor}
               />
 
               <div className={styles.fieldGrid}>
                 <div>
-                  <label className="label" htmlFor="create-max-participants">
-                    Participants max
-                  </label>
-                  <NumberInput
-                    id="create-max-participants"
-                    value={maxParticipants}
-                    onChange={setMaxParticipants}
-                    min={1}
-                    max={MAX_EVENT_PARTICIPANTS}
-                    placeholder="Illimité"
-                  />
-                </div>
-                <div>
                   <label className="label" htmlFor="create-max-proposals">
-                    Films par personne
+                    {t('events.settings.maxProposalsLabel')}
                   </label>
                   <NumberInput
                     id="create-max-proposals"
@@ -227,9 +211,44 @@ export default function CreateEvent() {
                     onChange={setMaxProposals}
                     min={1}
                     max={MAX_PROPOSALS_PER_PARTICIPANT}
-                    placeholder="Illimité"
                   />
                 </div>
+                <div>
+                  <label className="label" htmlFor="create-max-participants">
+                    {t('events.settings.maxParticipantsLabel')}
+                  </label>
+                  <NumberInput
+                    id="create-max-participants"
+                    value={maxParticipants}
+                    onChange={setMaxParticipants}
+                    min={1}
+                    max={MAX_EVENT_PARTICIPANTS}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.field}>
+                <span className="label" id={wheelModeLabelId}>
+                  {t('events.settings.wheelModeLabel')}
+                </span>
+                <WheelModeField
+                  name="create-wheel-mode"
+                  value={wheelMode}
+                  labelId={wheelModeLabelId}
+                  onChange={setWheelMode}
+                />
+              </div>
+
+              <div className={styles.toggleRow}>
+                <span>
+                  <span className={styles.toggleName}>{t('events.settings.allowSeriesLabel')}</span>
+                  <span className={styles.toggleDesc}>{t('events.settings.allowSeriesDesc')}</span>
+                </span>
+                <Toggle
+                  checked={allowSeries}
+                  label={t('events.settings.allowSeriesLabel')}
+                  onChange={() => setAllowSeries((v) => !v)}
+                />
               </div>
             </div>
           </details>
