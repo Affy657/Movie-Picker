@@ -12,6 +12,15 @@
     pageTitle: '{{segment}} \u2014 Movie Picker',
     languageLabel: 'Langue',
   },
+  share: {
+    trigger: 'Partager',
+    tabLink: 'Lien et QR',
+    tabFriends: 'Amis',
+    copy: 'Copier le lien',
+    copied: 'Lien copi\u00e9 !',
+    download: 'T\u00e9l\u00e9charger',
+    downloadQr: 'Enregistrer le QR',
+  },
 
   nav: {
     home: 'Accueil',
@@ -462,21 +471,11 @@
       historyNoResultsForFilters: 'Aucune soir\u00e9e ne correspond \u00e0 ce filtre.',
     },
     share: {
-      shareButton: 'Partager',
-      copiedButton: 'Lien copié !',
+      dialogTitle: 'Partager la soirée',
       shareText: "Je t'invite à {{title}} le {{date}} à {{time}} sur Movie Picker !",
       shareTextNoDate: "Je t'invite à {{title}} à {{time}} sur Movie Picker !",
       shareTextFallback: 'Tu es invité·e à une soirée ciné sur Movie Picker !',
-      showQr: 'Afficher le QR code',
-      hideQr: 'Masquer le QR code',
-      closeQr: 'Fermer le QR code',
-      qrTitle: 'QR code \u2014 lien vers la soirée',
       qrHint: "Ouvrez l'appareil photo pour rejoindre la soirée sur mobile.",
-      groupLabel: 'Inviter des participants',
-      menuTrigger: 'Inviter',
-      menuLabel: 'Inviter et partager',
-      inviteFriends: 'Inviter des amis',
-      calendarGroupLabel: 'Ajouter au calendrier',
     },
     calendar: {
       addButton: 'Ajouter au calendrier',
@@ -488,8 +487,6 @@
       icsDescriptionNoUrl: 'Soirée ciné sur Movie Picker.',
     },
     invite: {
-      buttonLabel: 'Inviter des amis',
-      modalTitle: 'Inviter des amis',
       inviteAction: 'Inviter',
       inviteAriaLabel: 'Inviter {{name}}',
       invitedBadge: 'Invité ✓',
@@ -500,6 +497,8 @@
       emptyLink: 'Allez sur votre profil pour suivre des utilisateurs →',
       loadError: 'Impossible de charger la liste.',
       inviteError: 'Invitation impossible.',
+      searchPlaceholder: 'Rechercher un ami',
+      searchNoResults: 'Aucun ami ne correspond à « {{query}} ».',
     },
 
     danger: {
@@ -1089,14 +1088,8 @@
     backHome: "Retour à l'accueil",
     editProfile: 'Modifier mon profil',
     memberSince: 'Membre depuis {{date}}',
-    copyLink: 'Copier le lien du profil',
-    qrCopyLabel: 'Copier le lien',
-    linkCopied: 'Lien copié !',
-    showQr: 'Afficher le QR code du profil',
-    closeQr: 'Fermer le QR code',
-    qrTitle: 'QR code — lien vers le profil',
+    shareTitle: 'Partager ce profil',
     qrHint: "Ouvrez l'appareil photo pour accéder au profil sur mobile.",
-    qrDownload: 'Télécharger',
     follow: {
       follow: 'Suivre',
       followingIdle: 'Suivi',

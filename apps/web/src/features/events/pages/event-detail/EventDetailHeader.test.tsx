@@ -22,8 +22,6 @@ function renderHeader(ui: ReactElement) {
 const baseProps: EventDetailHeaderProps = {
   title: 'Soirée ciné',
   dateFormatted: 'lundi 15 juin à 19h00',
-  eventTime: '19:00',
-  eventDate: '15 juin 2026',
   rawDate: '2026-06-15',
   rawTime: '19:00',
   isFinished: false,
@@ -64,25 +62,27 @@ describe('EventDetailHeader', () => {
     expect(screen.queryByText('22 h')).not.toBeInTheDocument();
   });
 
-  it('regroupe partage et QR dans le menu Inviter, calendrier à part', async () => {
+  it('affiche le bouton Partager et le calendrier à part', async () => {
     const user = userEvent.setup();
-    renderHeader(<EventDetailHeader {...baseProps} />);
+    const onOpenShare = vi.fn();
+    renderHeader(<EventDetailHeader {...baseProps} onOpenShare={onOpenShare} />);
 
-    expect(screen.queryByRole('button', { name: /^partager$/i })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /^inviter$/i }));
+    const shareButton = screen.getByRole('button', { name: /^partager$/i });
+    expect(shareButton).toBeInTheDocument();
+    await user.click(shareButton);
+    expect(onOpenShare).toHaveBeenCalledTimes(1);
 
-    expect(screen.getByRole('button', { name: /^partager$/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /afficher le qr code/i })).toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: /google calendar/i })).not.toBeInTheDocument();
-
     await user.click(screen.getByRole('button', { name: /ajouter au calendrier/i }));
     expect(screen.getByRole('menuitem', { name: /google calendar/i })).toBeInTheDocument();
   });
 
-  it('masque le menu de partage pour une soirée terminée', () => {
-    renderHeader(<EventDetailHeader {...baseProps} isFinished lifecycle="finished" />);
+  it('garde le bouton Partager visible mais masque le calendrier pour une soirée terminée', () => {
+    renderHeader(
+      <EventDetailHeader {...baseProps} isFinished lifecycle="finished" onOpenShare={() => {}} />
+    );
     expect(screen.getByText('Terminée')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /^inviter$/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^partager$/i })).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /ajouter au calendrier/i })
     ).not.toBeInTheDocument();

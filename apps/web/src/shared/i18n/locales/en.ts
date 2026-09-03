@@ -14,6 +14,15 @@ export const en: Locale = {
     pageTitle: '{{segment}} \u2014 Movie Picker',
     languageLabel: 'Language',
   },
+  share: {
+    trigger: 'Share',
+    tabLink: 'Link and QR',
+    tabFriends: 'Friends',
+    copy: 'Copy link',
+    copied: 'Link copied!',
+    download: 'Download',
+    downloadQr: 'Save the QR',
+  },
 
   nav: {
     home: 'Home',
@@ -452,21 +461,11 @@ export const en: Locale = {
       historyNoResultsForFilters: 'No event matches this filter.',
     },
     share: {
-      shareButton: 'Share',
-      copiedButton: 'Link copied!',
+      dialogTitle: 'Share the event',
       shareText: "You're invited to {{title}} on {{date}} at {{time}} on Movie Picker!",
       shareTextNoDate: "You're invited to {{title}} at {{time}} on Movie Picker!",
       shareTextFallback: "You're invited to a movie night on Movie Picker!",
-      showQr: 'Show QR code',
-      hideQr: 'Hide QR code',
-      closeQr: 'Close QR code',
-      qrTitle: 'QR code \u2014 link to the event',
       qrHint: 'Open your camera to join the event on mobile.',
-      groupLabel: 'Invite participants',
-      menuTrigger: 'Invite',
-      menuLabel: 'Invite and share',
-      inviteFriends: 'Invite friends',
-      calendarGroupLabel: 'Add to calendar',
     },
     calendar: {
       addButton: 'Add to calendar',
@@ -478,8 +477,6 @@ export const en: Locale = {
       icsDescriptionNoUrl: 'Movie night on Movie Picker.',
     },
     invite: {
-      buttonLabel: 'Invite friends',
-      modalTitle: 'Invite friends',
       inviteAction: 'Invite',
       inviteAriaLabel: 'Invite {{name}}',
       invitedBadge: 'Invited ✓',
@@ -489,6 +486,8 @@ export const en: Locale = {
       emptyLink: 'Go to your profile to follow users →',
       loadError: 'Unable to load the list.',
       inviteError: 'Invitation failed.',
+      searchPlaceholder: 'Search a friend',
+      searchNoResults: 'No friend matches "{{query}}".',
     },
 
     danger: {
@@ -1069,14 +1068,8 @@ export const en: Locale = {
     backHome: 'Back to home',
     editProfile: 'Edit my profile',
     memberSince: 'Member since {{date}}',
-    copyLink: 'Copy profile link',
-    qrCopyLabel: 'Copy link',
-    linkCopied: 'Link copied!',
-    showQr: 'Show profile QR code',
-    closeQr: 'Close QR code',
-    qrTitle: 'QR code — link to the profile',
+    shareTitle: 'Share this profile',
     qrHint: 'Open your camera to access the profile on mobile.',
-    qrDownload: 'Download',
     follow: {
       follow: 'Follow',
       followingIdle: 'Following',

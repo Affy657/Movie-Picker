@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'rea
 import { useNavigate } from 'react-router';
 import { ArrowLeft, ChevronDown, LayoutGrid, List, Plus, Settings } from 'lucide-react';
 import clsx from 'clsx';
-import EventShareMenu from '@/features/events/components/EventShareMenu';
+import EventShareButton from '@/features/events/components/EventShareButton';
 import EventCalendarMenu from '@/features/events/components/EventCalendarMenu';
 import EventThemeBanner from '@/features/events/components/EventThemeBanner';
 import EventLifecyclePill from '@/shared/components/EventLifecyclePill';
@@ -142,13 +142,10 @@ function ParticipantsStack({
 export type EventDetailHeaderProps = {
   title: string;
   dateFormatted: string;
-  eventTime: string;
-  eventDate: string;
   rawDate: string;
   rawTime: string;
   isFinished: boolean;
   eventTheme: string | null | undefined;
-  eventThemeColor?: number | null;
   shareUrl: string;
 
   lifecycle: MyEventLifecycle;
@@ -167,7 +164,7 @@ export type EventDetailHeaderProps = {
 
   onToggleParticipants: () => void;
 
-  onInviteFriends?: () => void;
+  onOpenShare?: () => void;
 
   onOpenSettings?: () => void;
 
@@ -184,13 +181,10 @@ export type EventDetailHeaderProps = {
 export default function EventDetailHeader({
   title,
   dateFormatted,
-  eventTime,
-  eventDate,
   rawDate,
   rawTime,
   isFinished,
   eventTheme,
-  eventThemeColor,
   shareUrl,
   lifecycle,
   countdownLabel,
@@ -200,7 +194,7 @@ export default function EventDetailHeader({
   votersCount,
   participantsOpen,
   onToggleParticipants,
-  onInviteFriends,
+  onOpenShare,
   onOpenSettings,
   wheelActions,
   onAddMovie,
@@ -274,11 +268,7 @@ export default function EventDetailHeader({
         ) : null}
         <div className={styles.heading}>
           <h1 className={styles.title}>{title}</h1>
-          <EventThemeBanner
-            className={styles.theme}
-            theme={eventTheme}
-            themeColor={eventThemeColor}
-          />
+          <EventThemeBanner className={styles.theme} theme={eventTheme} />
         </div>
         {showLifecyclePill ? (
           <EventLifecyclePill
@@ -315,17 +305,11 @@ export default function EventDetailHeader({
             {wheelActions}
           </div>
           <div className={styles.utilityActions}>
+            {shareUrl && onOpenShare ? (
+              <EventShareButton condensed={condensed} onClick={onOpenShare} />
+            ) : null}
             {!condensed && !isFinished && shareUrl ? (
-              <>
-                <EventShareMenu
-                  url={shareUrl}
-                  title={title}
-                  eventTime={eventTime}
-                  eventDate={eventDate}
-                  onInviteFriends={onInviteFriends}
-                />
-                <EventCalendarMenu title={title} date={rawDate} time={rawTime} url={shareUrl} />
-              </>
+              <EventCalendarMenu title={title} date={rawDate} time={rawTime} url={shareUrl} />
             ) : null}
             {onOpenSettings ? (
               <button

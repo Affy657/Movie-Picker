@@ -29,15 +29,6 @@
   line-height: 1;
 }
 
-.qrBtn {
-  flex: 0 0 44px;
-  width: 44px;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .btnLabel {
   transform: translateY(var(--text-optical-nudge));
 }

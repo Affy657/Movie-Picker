@@ -94,13 +94,13 @@ describe('EventDetail (MSW)', () => {
     expect(document.title).toBe(pageTitle('Soirée introuvable'));
   });
 
-  it('affiche le lien invité et le QR pour un simple participant (sans token hôte)', async () => {
+  it('affiche le lien et le QR pour un simple participant (sans token hôte)', async () => {
     const user = userEvent.setup();
     renderEventDetail(`/e/${slug}`);
     expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /inviter/i }));
-    expect(screen.getByRole('button', { name: /^partager$/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /afficher le qr code/i })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^partager$/i }));
+    expect(screen.getByRole('button', { name: /copier le lien/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /télécharger/i })).toBeInTheDocument();
     expect(screen.queryByText('Votre lien hôte (ne pas partager)')).not.toBeInTheDocument();
   });
 
@@ -110,8 +110,8 @@ describe('EventDetail (MSW)', () => {
     renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
     expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     expect(document.title).toBe(pageTitle('Soirée démo'));
-    await user.click(screen.getByRole('button', { name: /inviter/i }));
-    expect(screen.getByRole('button', { name: /^partager$/i })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^partager$/i }));
+    expect(screen.getByRole('button', { name: /copier le lien/i })).toBeInTheDocument();
     expect(screen.queryByText('Votre lien hôte (ne pas partager)')).not.toBeInTheDocument();
   });
 

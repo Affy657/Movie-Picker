@@ -9,7 +9,8 @@ import {
   type SetStateAction,
 } from 'react';
 import { useNavigate } from 'react-router';
-import { useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
+import { Film, Users } from 'lucide-react';
 import { ROUTES } from '@/app/routes';
 import {
   formatMyEventsListDate,
@@ -28,7 +29,11 @@ import EventPendingBanner from '@/features/events/components/EventPendingBanner'
 import EventClosedWithoutMovieState from '@/features/events/pages/event-detail/EventClosedWithoutMovieState';
 import PageLayout from '@/shared/components/PageLayout';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import { removeEventParticipant, eventFrontendUrl } from '@/features/events/api/eventsApi';
+import {
+  removeEventParticipant,
+  eventFrontendUrl,
+  getEligibleFollows,
+} from '@/features/events/api/eventsApi';
 import { removeMovieFromEvent } from '@/features/movies/api/moviesApi';
 import { removeStoredParticipant } from '@/features/events/storage';
 import { queryKeys } from '@/shared/hooks/queryKeys';
@@ -36,7 +41,8 @@ import { getErrorMessage } from '@/shared/api/apiError';
 import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
-import InviteModal from '@/features/events/components/InviteModal';
+import ShareDialog from '@/shared/components/ShareDialog';
+import EventInviteFriendsTab from '@/features/events/components/EventInviteFriendsTab';
 import EventWheelActions from '@/features/events/components/EventWheelActions';
 import { useEventWheel } from '@/features/events/hooks/useEventWheel';
 import { eventCountdown, type EventCountdown } from '@/shared/utils/eventCountdown';
@@ -187,7 +193,12 @@ export default function EventDetailSession({
   const [pendingRemovalId, setPendingRemovalId] = useState<string | null>(null);
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
-  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareInitialTab, setShareInitialTab] = useState<'link' | 'friends'>('link');
+  const openShare = useCallback((tab: 'link' | 'friends' = 'link') => {
+    setShareInitialTab(tab);
+    setShareOpen(true);
+  }, []);
   const [addMovieOpen, setAddMovieOpen] = useState(false);
   const addMovieTriggerRef = useRef<HTMLButtonElement>(null);
   const moviesSectionRef = useRef<HTMLDivElement>(null);
@@ -480,7 +491,7 @@ export default function EventDetailSession({
         votersCount={votersCount}
         participantsOpen={participantsOpen}
         onToggleParticipants={() => setParticipantsOpen((value) => !value)}
-        onInviteFriends={() => setInviteModalOpen(true)}
+        onOpenShare={openShare}
         onOpenSettings={() => setSettingsOpen(true)}
         onAddMovie={() => setAddMovieOpen(true)}
         addMovieTriggerRef={addMovieTriggerRef}
@@ -492,8 +503,9 @@ export default function EventDetailSession({
         canAddMovie={canAddMovie}
         settingsOpen={settingsOpen}
         onCloseSettings={() => setSettingsOpen(false)}
-        inviteModalOpen={inviteModalOpen}
-        onCloseInvite={() => setInviteModalOpen(false)}
+        shareOpen={shareOpen}
+        shareInitialTab={shareInitialTab}
+        onCloseShare={() => setShareOpen(false)}
         needsJoin={!!needsJoin}
         isFull={isFull}
         maxParticipants={maxParticipants}
@@ -523,7 +535,7 @@ export default function EventDetailSession({
           pendingRemovalId={pendingRemovalId}
           onRemoveParticipant={handleRemoveParticipant}
           onRequestRemoveMovie={handleRequestRemoveMovie}
-          onInviteFriends={() => setInviteModalOpen(true)}
+          onInviteFriends={() => openShare('friends')}
           onLeave={handleLeaveEvent}
           canShowLeave={canShowLeave}
           isConnectedSelf={isConnectedSelf}
@@ -565,7 +577,7 @@ function EventDetailSessionChrome({
   votersCount,
   participantsOpen,
   onToggleParticipants,
-  onInviteFriends,
+  onOpenShare,
   onOpenSettings,
   onAddMovie,
   addMovieTriggerRef,
@@ -577,8 +589,9 @@ function EventDetailSessionChrome({
   canAddMovie,
   settingsOpen,
   onCloseSettings,
-  inviteModalOpen,
-  onCloseInvite,
+  shareOpen,
+  shareInitialTab,
+  onCloseShare,
   needsJoin,
   isFull,
   maxParticipants,
@@ -601,7 +614,7 @@ function EventDetailSessionChrome({
   votersCount: number;
   participantsOpen: boolean;
   onToggleParticipants: () => void;
-  onInviteFriends: () => void;
+  onOpenShare: (tab?: 'link' | 'friends') => void;
   onOpenSettings: () => void;
   onAddMovie: () => void;
   addMovieTriggerRef: RefObject<HTMLButtonElement | null>;
@@ -613,15 +626,29 @@ function EventDetailSessionChrome({
   canAddMovie: boolean;
   settingsOpen: boolean;
   onCloseSettings: () => void;
-  inviteModalOpen: boolean;
-  onCloseInvite: () => void;
+  shareOpen: boolean;
+  shareInitialTab: 'link' | 'friends';
+  onCloseShare: () => void;
   needsJoin: boolean;
   isFull: boolean;
   maxParticipants: number | null;
   viewMode: 'grid' | 'list';
   onViewModeChange: (mode: 'grid' | 'list') => void;
 }>) {
+  const { t } = useTranslation();
   const hostCanInvite = !!event.isHost && !event.isFinished;
+  const eligibleFollowsQuery = useQuery({
+    queryKey: queryKeys.event.eligibleFollows(slug),
+    queryFn: () => getEligibleFollows(slug),
+    enabled: hostCanInvite,
+    staleTime: 30_000,
+  });
+  const participantsLabel = pluralizeCount(
+    participantCount,
+    'events.detail.participantsToggleOne',
+    'events.detail.participantsToggle',
+    t
+  );
   return (
     <>
       {event.isFinished ? null : (
@@ -634,13 +661,10 @@ function EventDetailSessionChrome({
       <EventDetailHeader
         title={event.title}
         dateFormatted={dateFormatted}
-        eventTime={timeFormatted}
-        eventDate={dateLabel}
         rawDate={event.date}
         rawTime={event.time}
         isFinished={!!event.isFinished}
         eventTheme={event.config?.theme}
-        eventThemeColor={event.config?.themeColor}
         shareUrl={shareUrl}
         lifecycle={lifecycle}
         countdownLabel={countdownLabel}
@@ -650,7 +674,7 @@ function EventDetailSessionChrome({
         votersCount={votersCount}
         participantsOpen={participantsOpen}
         onToggleParticipants={onToggleParticipants}
-        onInviteFriends={hostCanInvite ? onInviteFriends : undefined}
+        onOpenShare={shareUrl ? () => onOpenShare('link') : undefined}
         onOpenSettings={canConfigure ? onOpenSettings : undefined}
         wheelActions={
           showContent ? (
@@ -682,9 +706,37 @@ function EventDetailSessionChrome({
           {wheel.error}
         </p>
       ) : null}
-      {hostCanInvite ? (
-        <InviteModal open={inviteModalOpen} slug={slug} onClose={onCloseInvite} />
-      ) : null}
+      <ShareDialog
+        open={shareOpen}
+        onClose={onCloseShare}
+        title={t('events.share.dialogTitle')}
+        url={shareUrl}
+        qrHint={t('events.share.qrHint')}
+        fileSlug={slug}
+        preview={{
+          icon: <Film size={20} aria-hidden />,
+          name: event.title,
+          meta: [dateFormatted, participantsLabel],
+        }}
+        shareText={t('events.share.shareText', {
+          title: event.title,
+          time: timeFormatted,
+          date: dateLabel,
+        })}
+        surface="event"
+        initialTab={shareInitialTab}
+        extraTab={
+          hostCanInvite
+            ? {
+                id: 'friends',
+                label: t('share.tabFriends'),
+                icon: <Users size={15} aria-hidden />,
+                badge: eligibleFollowsQuery.data?.follows.length,
+                content: <EventInviteFriendsTab slug={slug} onNavigate={onCloseShare} />,
+              }
+            : undefined
+        }
+      />
       {moviesQuery.isError ? (
         <EventMoviesLoadError error={moviesQuery.error} onRetry={() => moviesQuery.refetch()} />
       ) : null}

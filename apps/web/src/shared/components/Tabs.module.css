@@ -64,3 +64,32 @@
   background: color-mix(in srgb, var(--color-primary) 18%, transparent);
   color: var(--color-primary);
 }
+
+/* ---- variante pastille (segmented control) ---- */
+.pillList {
+  gap: 0.25rem;
+  padding: 0.2rem;
+  background: var(--color-input-readonly);
+  border-radius: var(--radius-pill);
+}
+
+.pillTab {
+  flex: 1 1 0;
+  min-width: 0;
+  height: auto;
+  padding: 0.45rem 0.6rem;
+  border-bottom: none;
+  border-radius: var(--radius-pill);
+  justify-content: center;
+}
+
+.pillTabActive {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.pillTab .tabBadge {
+  background: var(--color-badge-host-bg);
+  color: var(--color-badge-host-text);
+}

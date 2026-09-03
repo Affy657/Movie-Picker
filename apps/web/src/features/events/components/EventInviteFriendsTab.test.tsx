@@ -1,25 +1,24 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
+import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
-import InviteModal from '@/features/events/components/InviteModal';
+import EventInviteFriendsTab from '@/features/events/components/EventInviteFriendsTab';
 import type { EligibleFollowItem } from '@/features/events/api/eventsApi';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
 
 const SLUG = 'soiree-msw';
 
-function renderModal(onClose = vi.fn()) {
+function renderTab() {
   render(
     <AppTestProviders>
       <MemoryRouter>
-        <InviteModal open slug={SLUG} onClose={onClose} />
+        <EventInviteFriendsTab slug={SLUG} />
       </MemoryRouter>
     </AppTestProviders>
   );
-  return onClose;
 }
 
 function follow(overrides: Partial<EligibleFollowItem> = {}): EligibleFollowItem {
@@ -42,7 +41,7 @@ const eligible = (follows: EligibleFollowItem[]) =>
     HttpResponse.json({ follows })
   );
 
-describe('InviteModal (MSW)', () => {
+describe('EventInviteFriendsTab (MSW)', () => {
   const server = setupServer();
 
   beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
@@ -51,10 +50,35 @@ describe('InviteModal (MSW)', () => {
 
   it('liste les follows eligibles', async () => {
     server.use(guestMe(), eligible([follow()]));
-    renderModal();
+    renderTab();
     expect(await screen.findByText('Bob')).toBeInTheDocument();
     expect(screen.getByText('@bob')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /inviter bob/i })).toBeInTheDocument();
+  });
+
+  it('filtre la liste avec le champ de recherche', async () => {
+    const user = userEvent.setup();
+    server.use(
+      guestMe(),
+      eligible([follow(), follow({ userId: 'u-alice', handle: 'alice', displayName: 'Alice' })])
+    );
+    renderTab();
+    await screen.findByText('Bob');
+    expect(screen.getByText('Alice')).toBeInTheDocument();
+
+    await user.type(screen.getByRole('searchbox'), 'ali');
+    expect(screen.getByText('Alice')).toBeInTheDocument();
+    expect(screen.queryByText('Bob')).not.toBeInTheDocument();
+  });
+
+  it('affiche un message quand la recherche ne correspond à rien', async () => {
+    const user = userEvent.setup();
+    server.use(guestMe(), eligible([follow()]));
+    renderTab();
+    await screen.findByText('Bob');
+
+    await user.type(screen.getByRole('searchbox'), 'zzz');
+    expect(await screen.findByText(/aucun ami ne correspond/i)).toBeInTheDocument();
   });
 
   it('invite un follow puis affiche le badge invite', async () => {
@@ -68,7 +92,7 @@ describe('InviteModal (MSW)', () => {
         return new HttpResponse(null, { status: 204 });
       })
     );
-    renderModal();
+    renderTab();
     await screen.findByText('Bob');
     await user.click(screen.getByRole('button', { name: /inviter bob/i }));
     expect(await screen.findByText(/invité/i)).toBeInTheDocument();
@@ -85,7 +109,7 @@ describe('InviteModal (MSW)', () => {
         HttpResponse.json({ error: 'Nope', code: 400 }, { status: 400 })
       )
     );
-    renderModal();
+    renderTab();
     await screen.findByText('Bob');
     await user.click(screen.getByRole('button', { name: /inviter bob/i }));
     expect(await screen.findByRole('alert')).toBeInTheDocument();
@@ -93,14 +117,14 @@ describe('InviteModal (MSW)', () => {
 
   it('affiche le badge deja participant sans bouton inviter', async () => {
     server.use(guestMe(), eligible([follow({ isAlreadyParticipant: true })]));
-    renderModal();
+    renderTab();
     expect(await screen.findByText(/déjà participant/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /inviter bob/i })).not.toBeInTheDocument();
   });
 
   it('affiche le badge invite si deja invite', async () => {
     server.use(guestMe(), eligible([follow({ isAlreadyInvited: true })]));
-    renderModal();
+    renderTab();
     expect(await screen.findByText(/invité/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /inviter bob/i })).not.toBeInTheDocument();
   });
@@ -112,13 +136,13 @@ describe('InviteModal (MSW)', () => {
         HttpResponse.json({ error: 'boom', code: 500 }, { status: 500 })
       )
     );
-    renderModal();
+    renderTab();
     expect(await screen.findByText(/impossible de charger la liste/i)).toBeInTheDocument();
   });
 
   it('etat vide sans lien profil pour un visiteur non connecte', async () => {
     server.use(guestMe(), eligible([]));
-    renderModal();
+    renderTab();
     expect(await screen.findByText(/vous ne suivez encore personne/i)).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /profil/i })).not.toBeInTheDocument();
   });
@@ -137,16 +161,7 @@ describe('InviteModal (MSW)', () => {
       ),
       eligible([])
     );
-    renderModal();
+    renderTab();
     expect(await screen.findByRole('link', { name: /profil/i })).toBeInTheDocument();
-  });
-
-  it('appelle onClose au clic sur la croix', async () => {
-    const user = userEvent.setup();
-    server.use(guestMe(), eligible([]));
-    const onClose = renderModal();
-    await screen.findByText(/vous ne suivez encore personne/i);
-    await user.click(screen.getByRole('button', { name: /fermer/i }));
-    expect(onClose).toHaveBeenCalled();
   });
 });

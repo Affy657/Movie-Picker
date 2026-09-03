@@ -25,6 +25,7 @@ interface TabsProps<T extends string> {
   onChange: (tab: T) => void;
   ariaLabel: string;
   className?: string;
+  variant?: 'underline' | 'pill';
 }
 
 export function Tabs<T extends string>({
@@ -34,13 +35,15 @@ export function Tabs<T extends string>({
   onChange,
   ariaLabel,
   className,
+  variant = 'underline',
 }: Readonly<TabsProps<T>>) {
   const keys = tabs.map((tab) => tab.key);
   const { onKeyDown, registerTab, tabIndexFor } = useTablistKeyboard(keys, active, onChange);
+  const isPill = variant === 'pill';
 
   return (
     <div
-      className={clsx(styles.list, className)}
+      className={clsx(styles.list, isPill && styles.pillList, className)}
       role="tablist"
       aria-label={ariaLabel}
       onKeyDown={onKeyDown}
@@ -57,7 +60,11 @@ export function Tabs<T extends string>({
             aria-selected={isActive}
             aria-controls={tabPanelId(idBase, tab.key)}
             tabIndex={tabIndexFor(tab.key)}
-            className={clsx(styles.tab, isActive && styles.tabActive)}
+            className={clsx(
+              styles.tab,
+              isPill && styles.pillTab,
+              isActive && (isPill ? styles.pillTabActive : styles.tabActive)
+            )}
             onClick={() => onChange(tab.key)}
           >
             {tab.icon}
