@@ -19,7 +19,9 @@ export interface MovieData {
   posterPath: string | null;
   pitchNote?: string | null;
   excludedFromWheel?: boolean;
+  genreIds?: number[];
   proposerPseudo: string;
+  proposerHandle?: string | null;
   score: number;
   up: number;
   down: number;
@@ -30,12 +32,15 @@ export interface MovieData {
   tmdbWatchPageUrl?: string | null;
 
   runtimeMinutes?: number | null;
+  releaseDate?: string | null;
 
   createdAt?: string;
 
   seenCount?: number;
 
   seenByPseudos?: string[];
+
+  votersUpPseudos?: string[];
 }
 
 export interface ParticipantData {

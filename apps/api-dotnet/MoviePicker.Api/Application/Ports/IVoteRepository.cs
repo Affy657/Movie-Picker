@@ -19,6 +19,10 @@ public interface IVoteRepository
         IReadOnlyCollection<string> movieIds,
         CancellationToken ct = default);
 
+    Task<IReadOnlyDictionary<string, IReadOnlyList<string>>> AggregateUpVotersByMovieIdsAsync(
+        IReadOnlyCollection<string> movieIds,
+        CancellationToken ct = default);
+
     Task<IReadOnlyDictionary<string, int>> GetParticipantVotesByEventAsync(
         string eventId,
         string participantId,
@@ -27,4 +31,6 @@ public interface IVoteRepository
     Task<int> CountByParticipantIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default);
 
     Task<IReadOnlyList<Vote>> ListByParticipantIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default);
+
+    Task<int> CountDistinctVotersByEventIdAsync(string eventId, CancellationToken ct = default);
 }

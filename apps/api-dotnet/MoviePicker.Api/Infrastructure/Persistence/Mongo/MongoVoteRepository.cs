@@ -128,6 +128,54 @@ public sealed class MongoVoteRepository : IVoteRepository
         return dict;
     }
 
+    public async Task<IReadOnlyDictionary<string, IReadOnlyList<string>>> AggregateUpVotersByMovieIdsAsync(
+        IReadOnlyCollection<string> movieIds,
+        CancellationToken ct = default)
+    {
+        if (movieIds.Count == 0)
+            return new Dictionary<string, IReadOnlyList<string>>();
+
+        var oids = new List<ObjectId>();
+        foreach (var id in movieIds)
+        {
+            if (ObjectId.TryParse(id, out var oid))
+                oids.Add(oid);
+        }
+
+        if (oids.Count == 0)
+            return new Dictionary<string, IReadOnlyList<string>>();
+
+        var pipeline = new[]
+        {
+            new BsonDocument(
+                "$match",
+                new BsonDocument
+                {
+                    { "movieId", new BsonDocument("$in", new BsonArray(oids)) },
+                    { "value", 1 }
+                }),
+            new BsonDocument(
+                "$group",
+                new BsonDocument
+                {
+                    { "_id", "$movieId" },
+                    { "participantIds", new BsonDocument("$push", "$participantId") }
+                })
+        };
+
+        using var cursor = await _collection.AggregateAsync<BsonDocument>(pipeline, cancellationToken: ct);
+        var results = await cursor.ToListAsync(ct);
+        var dict = new Dictionary<string, IReadOnlyList<string>>();
+        foreach (var r in results)
+        {
+            var id = r["_id"].AsObjectId.ToString();
+            var pids = r["participantIds"].AsBsonArray.Select(v => v.AsObjectId.ToString()).ToList();
+            dict[id] = pids;
+        }
+
+        return dict;
+    }
+
     public async Task<IReadOnlyDictionary<string, int>> GetParticipantVotesByEventAsync(
         string eventId,
         string participantId,
@@ -172,5 +220,16 @@ public sealed class MongoVoteRepository : IVoteRepository
         var filter = Builders<VoteDocument>.Filter.In(x => x.ParticipantId, ids);
         var docs = await _collection.Find(filter).ToListAsync(ct);
         return docs.ConvertAll(VoteMapper.ToDomain);
+    }
+
+    public async Task<int> CountDistinctVotersByEventIdAsync(string eventId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(eventId))
+            return 0;
+
+        var filter = Builders<VoteDocument>.Filter.Eq(x => x.EventId, eventId);
+        var cursor = await _collection.DistinctAsync(x => x.ParticipantId, filter, cancellationToken: ct);
+        var ids = await cursor.ToListAsync(ct);
+        return ids.Count;
     }
 }

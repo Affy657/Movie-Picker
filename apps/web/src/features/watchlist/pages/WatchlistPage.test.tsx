@@ -294,6 +294,8 @@ describe('WatchlistPage (MSW)', () => {
           genres: ['Drame'],
           releaseDate: '2000-01-01',
           trailerUrl: null,
+          watchProviders: [{ providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' }],
+          tmdbWatchPageUrl: 'https://www.themoviedb.org/movie/200/watch',
         })
       )
     );
@@ -306,6 +308,9 @@ describe('WatchlistPage (MSW)', () => {
 
     expect(await screen.findByText('Une Réalisatrice')).toBeInTheDocument();
     expect(screen.getByText(/un synopsis de test/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: /où regarder/i }));
+    expect(await screen.findByText('Netflix')).toBeInTheDocument();
   });
 
   it('propose un film à une soirée depuis la modal (fallback tactile)', async () => {

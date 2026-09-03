@@ -393,4 +393,88 @@ describe('EventDetail (MSW)', () => {
       expect(screen.queryByText(/retirer.*alice/i)).not.toBeInTheDocument();
     });
   });
+
+  describe('retrait d’un film (menu de la carte → confirmation)', () => {
+    function movieHandler(removed: () => boolean) {
+      return http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
+        HttpResponse.json(
+          removed()
+            ? []
+            : [
+                {
+                  _id: 'm-msw-1',
+                  eventId: 'evt-msw',
+                  participantId: 'p-msw-host',
+                  tmdbId: 42,
+                  mediaType: 'movie',
+                  title: 'Matrix',
+                  year: '1999',
+                  posterPath: null,
+                  proposerPseudo: 'Hôte',
+                  score: 2,
+                  up: 2,
+                  down: 0,
+                },
+              ]
+        )
+      );
+    }
+
+    it('confirme la modale → DELETE appelé et le film disparaît de la liste', async () => {
+      const user = userEvent.setup();
+      setStoredParticipant(slug, 'p-msw-host', 'Hôte');
+      let deleteCalled = false;
+      let removed = false;
+      server.use(
+        movieHandler(() => removed),
+        http.delete(`${TEST_API_V1}/events/${slug}/movies/m-msw-1`, () => {
+          deleteCalled = true;
+          removed = true;
+          return new HttpResponse(null, { status: 204 });
+        })
+      );
+
+      renderEventDetail(`/e/${slug}`);
+      expect(await screen.findByRole('heading', { name: 'Matrix' })).toBeInTheDocument();
+
+      await user.click(await screen.findByRole('button', { name: /plus d.actions.*matrix/i }));
+      await user.click(await screen.findByRole('menuitem', { name: /retirer matrix/i }));
+
+      const dialog = await screen.findByTestId('confirm-dialog');
+      expect(dialog).toHaveAttribute('open');
+      expect(dialog).toHaveTextContent(/retirer ce film de la soirée/i);
+      expect(dialog).toHaveTextContent(/2 votes/);
+
+      await user.click(screen.getByTestId('confirm-dialog-confirm'));
+
+      await waitFor(() => expect(deleteCalled).toBe(true));
+      await waitFor(() =>
+        expect(screen.queryByRole('heading', { name: 'Matrix' })).not.toBeInTheDocument()
+      );
+    });
+
+    it('annule la modale → aucun DELETE émis, le film reste', async () => {
+      const user = userEvent.setup();
+      setStoredParticipant(slug, 'p-msw-host', 'Hôte');
+      let deleteCalled = false;
+      server.use(
+        movieHandler(() => false),
+        http.delete(`${TEST_API_V1}/events/${slug}/movies/m-msw-1`, () => {
+          deleteCalled = true;
+          return new HttpResponse(null, { status: 204 });
+        })
+      );
+
+      renderEventDetail(`/e/${slug}`);
+      expect(await screen.findByRole('heading', { name: 'Matrix' })).toBeInTheDocument();
+
+      await user.click(await screen.findByRole('button', { name: /plus d.actions.*matrix/i }));
+      await user.click(await screen.findByRole('menuitem', { name: /retirer matrix/i }));
+      await screen.findByTestId('confirm-dialog');
+      await user.click(screen.getByTestId('confirm-dialog-cancel'));
+
+      expect(deleteCalled).toBe(false);
+      expect(screen.getByRole('heading', { name: 'Matrix' })).toBeInTheDocument();
+    });
+  });
 });

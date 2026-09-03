@@ -51,6 +51,8 @@ describe('useMovieDetails', () => {
       runtimeMinutes: null,
       genres: [],
       releaseDate: null,
+      watchProviders: [],
+      tmdbWatchPageUrl: null,
     });
 
     const { result } = renderHook(() => useMovieDetails(27205, true, 'movie'), {

@@ -289,6 +289,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
 
         double? voteAverage = null;
         int? runtimeMinutes = null;
+        string? releaseDate = null;
         using var detailRes = await detailTask.ConfigureAwait(false);
         if (detailRes.IsSuccessStatusCode)
         {
@@ -297,6 +298,9 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
             if (detailDoc.RootElement.TryGetProperty("vote_average", out var va) && va.ValueKind == JsonValueKind.Number)
                 voteAverage = va.GetDouble();
             runtimeMinutes = ReadRuntimeMinutes(detailDoc.RootElement, mediaType);
+            releaseDate = mediaType == MovieMediaType.Tv
+                ? ReadStringProp(detailDoc.RootElement, "first_air_date")
+                : ReadStringProp(detailDoc.RootElement, "release_date");
         }
 
         string? watchPageUrl = null;
@@ -307,10 +311,10 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
             await using var watchStream = await watchRes.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
             using var watchDoc = await JsonDocument.ParseAsync(watchStream, cancellationToken: ct).ConfigureAwait(false);
             if (!watchDoc.RootElement.TryGetProperty(ResultsProperty, out var results))
-                return new TmdbMovieEnrichment(voteAverage, offers, null, runtimeMinutes);
+                return new TmdbMovieEnrichment(voteAverage, offers, null, runtimeMinutes, releaseDate);
 
             if (!results.TryGetProperty(region, out var regionObj) || regionObj.ValueKind != JsonValueKind.Object)
-                return new TmdbMovieEnrichment(voteAverage, offers, null, runtimeMinutes);
+                return new TmdbMovieEnrichment(voteAverage, offers, null, runtimeMinutes, releaseDate);
 
             if (regionObj.TryGetProperty("link", out var linkEl) && linkEl.ValueKind == JsonValueKind.String)
                 watchPageUrl = linkEl.GetString();
@@ -321,7 +325,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         }
 
         var deduped = DedupeProviders(offers);
-        return new TmdbMovieEnrichment(voteAverage, deduped, watchPageUrl, runtimeMinutes);
+        return new TmdbMovieEnrichment(voteAverage, deduped, watchPageUrl, runtimeMinutes, releaseDate);
     }
 
     private static void AppendProviders(JsonElement regionObj, string jsonKey, string type, List<TmdbWatchProviderOffer> list)

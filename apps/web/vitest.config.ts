@@ -40,7 +40,6 @@ export default defineConfig({
         'src/main.tsx',
         'src/sw.ts',
         'src/shared/analytics/**',
-        'src/app/components/AnalyticsSync.tsx',
         'src/features/events/components/SpinningWheel.tsx',
       ],
       thresholds: {

@@ -1,23 +1,20 @@
-import { useCallback, useMemo, useState, type RefObject } from 'react';
+import { useCallback, useId, useMemo, useState, type RefObject } from 'react';
 import clsx from 'clsx';
-import { ArrowUpDown, LayoutGrid, List } from 'lucide-react';
+import { LayoutGrid, List } from 'lucide-react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
-import {
-  clearMovieVote,
-  removeMovieFromEvent,
-  setMovieWheelExclusion,
-  voteMovie,
-} from '@/features/movies/api/moviesApi';
+import { useIsMobile } from '@/shared/hooks/useIsMobile';
+import { clearMovieVote, setMovieWheelExclusion, voteMovie } from '@/features/movies/api/moviesApi';
 import { getErrorMessage } from '@/shared/api/apiError';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 import AddMoviePanel from '@/features/movies/components/AddMoviePanel';
-import MovieList from '@/features/movies/components/MovieList';
+import MovieList, { type MovieRowSortKey } from '@/features/movies/components/MovieList';
+import SortControl from '@/features/movies/components/SortControl';
 import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
 import EventActionErrorBanner from '@/features/events/pages/event-detail/EventActionErrorBanner';
-import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventModal';
+import { Skeleton } from '@/shared/components/Skeleton';
 import {
   useAddToWatchlist,
   useRemoveFromWatchlist,
@@ -30,7 +27,15 @@ function watchlistKey(tmdbId: number, mediaType: MovieData['mediaType']): string
   return `${tmdbId}|${mediaType ?? 'movie'}`;
 }
 
-type SortKey = 'score' | 'voteAverage' | 'duration' | 'createdAt';
+const DEFAULT_SORT_DIRECTION: Record<MovieRowSortKey, 'asc' | 'desc'> = {
+  score: 'desc',
+  voteAverage: 'desc',
+  duration: 'asc',
+  createdAt: 'asc',
+  availability: 'desc',
+  seen: 'desc',
+  releaseDate: 'desc',
+};
 
 function pinWinnerFirst(movies: MovieData[], winnerMovieId?: string): MovieData[] {
   if (!winnerMovieId) return movies;
@@ -41,25 +46,34 @@ function pinWinnerFirst(movies: MovieData[], winnerMovieId?: string): MovieData[
   return [winner!, ...next];
 }
 
-function sortMovies(movies: MovieData[], sortBy: SortKey): MovieData[] {
-  return [...movies].sort((a, b) => {
-    switch (sortBy) {
-      case 'score':
-        return b.score - a.score;
-      case 'voteAverage': {
-        const va = a.voteAverage ?? -Infinity;
-        const vb = b.voteAverage ?? -Infinity;
-        return vb - va;
-      }
-      case 'duration': {
-        const ra = a.runtimeMinutes ?? Infinity;
-        const rb = b.runtimeMinutes ?? Infinity;
-        return ra - rb;
-      }
-      case 'createdAt':
-        return (a.createdAt ?? '').localeCompare(b.createdAt ?? '');
+function compareMovies(a: MovieData, b: MovieData, sortBy: MovieRowSortKey): number {
+  switch (sortBy) {
+    case 'score':
+      return a.score - b.score;
+    case 'voteAverage': {
+      const va = a.voteAverage ?? -Infinity;
+      const vb = b.voteAverage ?? -Infinity;
+      return va - vb;
     }
-  });
+    case 'duration': {
+      const ra = a.runtimeMinutes ?? Infinity;
+      const rb = b.runtimeMinutes ?? Infinity;
+      return ra - rb;
+    }
+    case 'createdAt':
+      return (a.createdAt ?? '').localeCompare(b.createdAt ?? '');
+    case 'availability':
+      return (a.watchProviders?.length ?? 0) - (b.watchProviders?.length ?? 0);
+    case 'seen':
+      return (a.seenCount ?? 0) - (b.seenCount ?? 0);
+    case 'releaseDate':
+      return (a.releaseDate ?? '').localeCompare(b.releaseDate ?? '');
+  }
+}
+
+function sortMovies(movies: MovieData[], sortBy: MovieRowSortKey, sortDir: 'asc' | 'desc') {
+  const dir = sortDir === 'desc' ? -1 : 1;
+  return [...movies].sort((a, b) => compareMovies(a, b, sortBy) * dir);
 }
 
 export type EventMoviesSectionProps = {
@@ -76,6 +90,7 @@ export type EventMoviesSectionProps = {
   onDismissActionError: () => void;
   setActionError: (message: string | null) => void;
   refreshAll: () => void;
+  onRequestRemove: (movie: MovieData) => void;
   viewMode: 'grid' | 'list';
   onViewModeChange: (mode: 'grid' | 'list') => void;
   selection?: MovieCardSelection;
@@ -96,6 +111,7 @@ export default function EventMoviesSection({
   onDismissActionError,
   setActionError,
   refreshAll,
+  onRequestRemove,
   viewMode,
   onViewModeChange,
   selection,
@@ -109,8 +125,22 @@ export default function EventMoviesSection({
   const { user } = useAuth();
   const ratingScale = user?.ratingScale;
   const { t } = useTranslation();
-  const [sortBy, setSortBy] = useState<SortKey>('createdAt');
-  const [proposeTarget, setProposeTarget] = useState<MovieData | null>(null);
+  const isMobile = useIsMobile();
+  const sectionHeadingId = useId();
+  const [sortBy, setSortByKey] = useState<MovieRowSortKey>('score');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  const handleSetSort = useCallback(
+    (key: MovieRowSortKey) => {
+      if (key === sortBy) {
+        setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+      } else {
+        setSortByKey(key);
+        setSortDir(DEFAULT_SORT_DIRECTION[key]);
+      }
+    },
+    [sortBy]
+  );
 
   const watchlistQuery = useWatchlist({ enabled: !!user });
   const watchlistItems = useMemo(() => watchlistQuery.data ?? [], [watchlistQuery.data]);
@@ -151,38 +181,53 @@ export default function EventMoviesSection({
     [watchlistKeys, addToWatchlist, removeFromWatchlist, setActionError]
   );
 
+  const [voteErrors, setVoteErrors] = useState<Record<string, { message: string; value: 1 | -1 }>>(
+    {}
+  );
+
+  const clearVoteError = useCallback((movieId: string) => {
+    setVoteErrors((prev) => {
+      if (!(movieId in prev)) return prev;
+      const next = { ...prev };
+      delete next[movieId];
+      return next;
+    });
+  }, []);
+
   const handleVote = useCallback(
     async (movieId: string, value: 1 | -1) => {
       if (!participant) return;
       setActionError(null);
+      clearVoteError(movieId);
       const current = movies.find((m) => m.id === movieId)?.myVote ?? null;
       try {
         if (current === value) {
           await clearMovieVote(slug, movieId, participant.participantId);
+          track('vote_cast', { value, cleared: true });
         } else {
           await voteMovie(slug, movieId, participant.participantId, value);
+          track('vote_cast', { value });
         }
         refreshAll();
       } catch (e) {
-        setActionError(getErrorMessage(e, 'Erreur lors du vote'));
+        if (viewMode === 'list') {
+          const message = getErrorMessage(e, t('movies.list.voteErrorRow'));
+          setVoteErrors((prev) => ({ ...prev, [movieId]: { message, value } }));
+        } else {
+          setActionError(getErrorMessage(e, t('movies.list.voteError')));
+        }
       }
     },
-    [slug, participant, movies, setActionError, refreshAll]
+    [slug, participant, movies, setActionError, refreshAll, track, t, viewMode, clearVoteError]
   );
 
-  const handleRemove = useCallback(
-    async (movieId: string) => {
-      if (!participant) return;
-      setActionError(null);
-      try {
-        await removeMovieFromEvent(slug, movieId, participant.participantId, hostToken);
-        track('movie_removed');
-        refreshAll();
-      } catch (e) {
-        setActionError(getErrorMessage(e, 'Erreur lors de la suppression'));
-      }
+  const handleRetryVote = useCallback(
+    (movieId: string) => {
+      const pending = voteErrors[movieId];
+      if (!pending) return;
+      void handleVote(movieId, pending.value);
     },
-    [slug, participant, hostToken, setActionError, refreshAll, track]
+    [voteErrors, handleVote]
   );
 
   const handleToggleWheelExclusion = useCallback(
@@ -207,20 +252,78 @@ export default function EventMoviesSection({
 
   const handleActionError = useCallback((msg: string) => setActionError(msg), [setActionError]);
 
-  const displayedMovies = useMemo(
-    () => pinWinnerFirst(sortMovies(movies, sortBy), winnerMovieId),
-    [movies, sortBy, winnerMovieId]
+  const sortedMovies = useMemo(
+    () => sortMovies(movies, sortBy, sortDir),
+    [movies, sortBy, sortDir]
+  );
+  const inWheelMovies = useMemo(
+    () =>
+      pinWinnerFirst(
+        sortedMovies.filter((m) => !m.excludedFromWheel),
+        winnerMovieId
+      ),
+    [sortedMovies, winnerMovieId]
+  );
+  const excludedMovies = useMemo(
+    () => sortedMovies.filter((m) => m.excludedFromWheel),
+    [sortedMovies]
   );
 
-  const participantAvatars = Object.fromEntries(
-    (event.participants ?? []).filter((p) => p.avatarId).map((p) => [p.id, p.avatarId!])
+  const participantAvatars = useMemo(
+    () =>
+      Object.fromEntries(
+        (event.participants ?? []).filter((p) => p.avatarId).map((p) => [p.id, p.avatarId!])
+      ),
+    [event.participants]
   );
-  const participantAvatarsByPseudo = Object.fromEntries(
-    (event.participants ?? []).filter((p) => p.avatarId).map((p) => [p.pseudo, p.avatarId!])
+  const participantAvatarsByPseudo = useMemo(
+    () =>
+      Object.fromEntries(
+        (event.participants ?? []).filter((p) => p.avatarId).map((p) => [p.pseudo, p.avatarId!])
+      ),
+    [event.participants]
   );
+
+  const sortOptions = [
+    { key: 'createdAt' as const, label: t('movies.list.sortAddedAt') },
+    { key: 'score' as const, label: t('movies.list.sortScore') },
+    { key: 'voteAverage' as const, label: t('movies.list.sortTmdbVote') },
+    { key: 'duration' as const, label: t('movies.list.sortDuration') },
+    { key: 'availability' as const, label: t('movies.list.sortAvailability') },
+    { key: 'seen' as const, label: t('movies.list.sortSeen') },
+    { key: 'releaseDate' as const, label: t('movies.list.sortReleaseDate') },
+  ];
+
+  const sharedListProps = {
+    slug,
+    participantId: participant?.participantId ?? null,
+    participantPseudo: participant?.pseudo ?? null,
+    isFinished,
+    isHost: !!event.isHost,
+    onActionError: handleActionError,
+    onVote: handleVote,
+    onRemove: onRequestRemove,
+    refresh: refreshAll,
+    participantAvatars,
+    participantAvatarsByPseudo,
+    ratingScale,
+    viewMode,
+    isMobile,
+    isInWatchlist: user ? isInWatchlist : undefined,
+    onToggleWatchlist: user ? handleToggleWatchlist : undefined,
+    onToggleWheelExclusion: event.isHost && !isFinished ? handleToggleWheelExclusion : undefined,
+    voteErrors,
+    onRetryVote: handleRetryVote,
+    selection,
+    winnerMovieId,
+    participantCount: event.participants?.length ?? 0,
+  };
 
   return (
-    <section className="section section-movies" aria-label="Films proposés">
+    <section className="section section-movies" aria-labelledby={sectionHeadingId}>
+      <h2 id={sectionHeadingId} className="visually-hidden">
+        {t('movies.list.sectionLabel')}
+      </h2>
       {!isFinished && participant && addMovieOpen && (
         <div className={styles.addSection}>
           <AddMoviePanel
@@ -244,117 +347,94 @@ export default function EventMoviesSection({
       )}
 
       {moviesQuery.isPending && !moviesQuery.isError && (
-        <p className="placeholder" aria-busy="true">
-          Chargement des films…
-        </p>
+        <div className={styles.loadingState} aria-busy="true">
+          <span className="visually-hidden">{t('movies.list.loadingPlaceholder')}</span>
+          <Skeleton variant="block" height={48} className={styles.skeletonHeader} />
+          <Skeleton variant="block" height={90} className={styles.skeletonRow} />
+          <Skeleton variant="block" height={90} className={styles.skeletonRow} />
+          <Skeleton variant="block" height={90} className={styles.skeletonRow} />
+        </div>
       )}
 
-      {moviesQuery.isSuccess && (
-        <div className={styles.sortBar}>
-          {movies.length > 1 && (
-            <div className={styles.sortScroll}>
-              <span className={styles.sortLabel}>{t('movies.list.sortLabel')}</span>
-              <ArrowUpDown aria-hidden size={15} className={styles.sortLabelIcon} />
-              <div
-                className={styles.sortPills}
-                role="toolbar"
-                aria-label={t('movies.list.sortLabel')}
+      {moviesQuery.isSuccess && ((viewMode === 'grid' && movies.length > 1) || isMobile) && (
+        <div className={styles.sectionHeader}>
+          {(viewMode === 'grid' || isMobile) && movies.length > 1 && (
+            <SortControl
+              sortOptions={sortOptions}
+              sortBy={sortBy}
+              sortDir={sortDir}
+              onSetSort={handleSetSort}
+              sortLabel={t('movies.list.sortLabel')}
+              sortMenuAriaLabel={t('movies.list.sortLabel')}
+              sortDirectionAscLabel={t('events.myEvents.sortDirectionAsc')}
+              sortDirectionDescLabel={t('events.myEvents.sortDirectionDesc')}
+              isMobile={isMobile}
+            />
+          )}
+          {isMobile && (
+            <div
+              className={styles.viewToggle}
+              role="toolbar"
+              aria-label={t('movies.list.viewToggleAria')}
+            >
+              <button
+                type="button"
+                className={clsx(
+                  styles.viewToggleBtn,
+                  viewMode === 'list' && styles.viewToggleBtnActive
+                )}
+                aria-pressed={viewMode === 'list'}
+                aria-label={t('movies.list.viewListAria')}
+                onClick={() => onViewModeChange('list')}
               >
-                {(
-                  [
-                    { key: 'createdAt', label: t('movies.list.sortAddedAt') },
-                    { key: 'score', label: t('movies.list.sortScore') },
-                    { key: 'voteAverage', label: t('movies.list.sortTmdbVote') },
-                    { key: 'duration', label: t('movies.list.sortDuration') },
-                  ] as { key: SortKey; label: string }[]
-                ).map(({ key, label }) => (
-                  <button
-                    key={key}
-                    type="button"
-                    className={clsx(styles.sortPill, sortBy === key && styles.sortPillActive)}
-                    aria-pressed={sortBy === key}
-                    onClick={() => setSortBy(key)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+                <List aria-hidden size={15} />
+              </button>
+              <button
+                type="button"
+                className={clsx(
+                  styles.viewToggleBtn,
+                  viewMode === 'grid' && styles.viewToggleBtnActive
+                )}
+                aria-pressed={viewMode === 'grid'}
+                aria-label={t('movies.list.viewGridAria')}
+                onClick={() => onViewModeChange('grid')}
+              >
+                <LayoutGrid aria-hidden size={15} />
+              </button>
             </div>
           )}
-          <div
-            className={styles.viewToggle}
-            role="toolbar"
-            aria-label={t('movies.list.viewToggleAria')}
-          >
-            <button
-              type="button"
-              className={clsx(
-                styles.viewToggleBtn,
-                viewMode === 'list' && styles.viewToggleBtnActive
-              )}
-              aria-pressed={viewMode === 'list'}
-              aria-label={t('movies.list.viewListAria')}
-              onClick={() => onViewModeChange('list')}
-            >
-              <List aria-hidden size={15} />
-            </button>
-            <button
-              type="button"
-              className={clsx(
-                styles.viewToggleBtn,
-                viewMode === 'grid' && styles.viewToggleBtnActive
-              )}
-              aria-pressed={viewMode === 'grid'}
-              aria-label={t('movies.list.viewGridAria')}
-              onClick={() => onViewModeChange('grid')}
-            >
-              <LayoutGrid aria-hidden size={15} />
-            </button>
-          </div>
         </div>
       )}
 
       {moviesQuery.isSuccess && (
-        <div className={viewMode === 'list' ? styles.movieListBleed : undefined}>
-          <MovieList
-            movies={displayedMovies}
-            winnerMovieId={winnerMovieId}
-            slug={slug}
-            participantId={participant?.participantId ?? null}
-            participantPseudo={participant?.pseudo ?? null}
-            isFinished={isFinished}
-            isHost={!!event.isHost}
-            onActionError={handleActionError}
-            onVote={handleVote}
-            onRemove={handleRemove}
-            refresh={refreshAll}
-            participantAvatars={participantAvatars}
-            participantAvatarsByPseudo={participantAvatarsByPseudo}
-            ratingScale={ratingScale}
-            viewMode={viewMode}
-            isInWatchlist={user ? isInWatchlist : undefined}
-            onToggleWatchlist={user ? handleToggleWatchlist : undefined}
-            onProposeToEvent={user && isFinished ? setProposeTarget : undefined}
-            onToggleWheelExclusion={
-              event.isHost && !isFinished ? handleToggleWheelExclusion : undefined
-            }
-            selection={selection}
-          />
-        </div>
+        <>
+          <div className={viewMode === 'list' ? styles.movieListBleed : undefined}>
+            <MovieList
+              movies={inWheelMovies}
+              {...sharedListProps}
+              showRank={sortBy === 'score' && sortDir === 'desc'}
+              showHeader
+              sortBy={sortBy}
+              sortDir={sortDir}
+              onSetSort={handleSetSort}
+            />
+          </div>
+          {excludedMovies.length > 0 && (
+            <>
+              <div className={styles.wheelDivider}>
+                <span className={styles.wheelDividerLabel}>
+                  {t('movies.list.excludedGroupLabel')}
+                </span>
+                <span className={styles.wheelDividerCount}>{excludedMovies.length}</span>
+                <span className={styles.wheelDividerLine} aria-hidden />
+              </div>
+              <div className={viewMode === 'list' ? styles.movieListBleed : undefined}>
+                <MovieList movies={excludedMovies} {...sharedListProps} showHeader={false} />
+              </div>
+            </>
+          )}
+        </>
       )}
-      {proposeTarget ? (
-        <ProposeToEventModal
-          open
-          movie={{
-            tmdbId: proposeTarget.tmdbId,
-            mediaType: proposeTarget.mediaType ?? 'movie',
-            title: proposeTarget.title,
-            year: proposeTarget.year,
-            posterPath: proposeTarget.posterPath,
-          }}
-          onClose={() => setProposeTarget(null)}
-        />
-      ) : null}
     </section>
   );
 }

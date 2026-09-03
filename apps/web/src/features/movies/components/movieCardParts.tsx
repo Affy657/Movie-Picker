@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router';
 import clsx from 'clsx';
 import {
   Bookmark,
@@ -21,10 +22,20 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
+import { ROUTES } from '@/app/routes';
 import Avatar from '@/shared/components/Avatar';
 import Tooltip from '@/shared/components/Tooltip';
-import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
-import WatchProvidersModal from '@/features/movies/components/WatchProvidersModal';
+import MovieDetailsModal, {
+  type MovieDetailsEventContext,
+  type MovieDetailsTabKey,
+} from '@/features/movies/components/MovieDetailsModal';
+import { ModeIcon } from '@/features/movies/components/WatchProviderChips';
+import {
+  allocineUrl,
+  imdbUrl,
+  letterboxdUrl,
+  tmdbPageUrl,
+} from '@/features/movies/utils/movieExternalLinks';
 import type { MovieData } from '@/shared/types/movie';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
 import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
@@ -66,7 +77,7 @@ export interface MovieCardCommonProps {
   isFinished: boolean;
   isHost: boolean;
   onVote: (movieId: string, value: 1 | -1) => Promise<void>;
-  onRemove: (movieId: string) => Promise<void>;
+  onRemove: (movie: MovieData) => void;
   refresh: () => void;
   onActionError: (message: string) => void;
   t: Translate;
@@ -77,9 +88,10 @@ export interface MovieCardCommonProps {
   isInWatchlist?: boolean;
   onToggleWatchlist?: (movie: MovieData) => void;
   onToggleWheelExclusion?: (movie: MovieData) => void;
-  onProposeToEvent?: (movie: MovieData) => void;
   selection?: MovieCardSelection;
   isWinner?: boolean;
+  isMobile?: boolean;
+  participantCount?: number;
 }
 
 export function CardSelectionOverlay({
@@ -139,11 +151,20 @@ export function useMovieCardState({
 
   const [seenPending, setSeenPending] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [providersOpen, setProvidersOpen] = useState(false);
+  const [detailsInitialTab, setDetailsInitialTab] = useState<MovieDetailsTabKey>('soiree');
   const [noteEditing, setNoteEditing] = useState(false);
   const detailsPanelId = useId();
   const hasDetails = m.tmdbId > 0;
   const showAddNote = canAct && isMine && !m.pitchNote && !noteEditing;
+
+  const openDetails = useCallback(
+    (tab: MovieDetailsTabKey = 'soiree') => {
+      if (!hasDetails) return;
+      setDetailsInitialTab(tab);
+      setDetailsOpen(true);
+    },
+    [hasDetails]
+  );
 
   const handleToggleSeen = async () => {
     if (!participantId || seenPending) return;
@@ -178,12 +199,12 @@ export function useMovieCardState({
     seenPending,
     detailsOpen,
     setDetailsOpen,
-    providersOpen,
-    setProvidersOpen,
-    noteEditing,
-    setNoteEditing,
+    detailsInitialTab,
+    openDetails,
     detailsPanelId,
     hasDetails,
+    noteEditing,
+    setNoteEditing,
     showAddNote,
     handleToggleSeen,
   };
@@ -199,7 +220,11 @@ export function VoteBar({
   t: Translate;
 }>) {
   return (
-    <div className={styles.votes} role="toolbar" aria-label={m.title}>
+    <div
+      className={styles.votes}
+      role="toolbar"
+      aria-label={t('movies.list.voteToolbarAria', { title: m.title })}
+    >
       <button
         type="button"
         className={clsx(styles.voteBtn, m.myVote === 1 && styles.voteActive)}
@@ -240,6 +265,7 @@ export function SeenButton({
   others,
   othersHint,
   avatarsByPseudo,
+  alwaysShowCount = false,
   t,
 }: Readonly<{
   m: MovieData;
@@ -249,6 +275,7 @@ export function SeenButton({
   others: string[];
   othersHint: string | null;
   avatarsByPseudo?: Record<string, string>;
+  alwaysShowCount?: boolean;
   t: Translate;
 }>) {
   return (
@@ -268,8 +295,8 @@ export function SeenButton({
       >
         <Eye aria-hidden size={15} />
         <span className={styles.seenLabel}>
-          {m.seenCount
-            ? t('movies.seen.labelWithCount', { count: m.seenCount })
+          {m.seenCount || alwaysShowCount
+            ? t('movies.seen.labelWithCount', { count: m.seenCount ?? 0 })
             : t('movies.seen.label')}
         </span>
       </button>
@@ -287,6 +314,501 @@ export function SeenButton({
             ))}
           </span>
         </Tooltip>
+      )}
+    </span>
+  );
+}
+
+export function PaidOfferChip({
+  type,
+  count,
+  onClick,
+  ariaLabel,
+}: Readonly<{
+  type: 'rent' | 'buy';
+  count: number;
+  onClick: () => void;
+  ariaLabel: string;
+}>) {
+  return (
+    <button type="button" className={styles.paidChip} onClick={onClick} aria-label={ariaLabel}>
+      <ModeIcon type={type} size={13} />
+      <span className={styles.paidChipCount}>{count}</span>
+    </button>
+  );
+}
+
+interface CardKebabProps {
+  title: string;
+  year?: string;
+  tmdbId: number;
+  mediaType?: 'movie' | 'tv';
+  isMine: boolean;
+  isHost: boolean;
+  canRemove: boolean;
+  onRemove: () => void;
+  inWatchlist?: boolean;
+  onToggleWatchlist?: () => void;
+  onProposeToEvent?: () => void;
+  onViewDetails?: () => void;
+  showExternalLinks?: boolean;
+  wheelExclusion?: MovieWheelExclusion;
+  t: Translate;
+}
+
+export function CardKebabWhenAvailable({
+  slotClassName,
+  canRemove,
+  onToggleWatchlist,
+  onToggleWheelExclusion,
+  ...kebabProps
+}: Readonly<
+  CardKebabProps & {
+    slotClassName: string;
+    onToggleWatchlist?: () => void;
+    onToggleWheelExclusion?: () => void;
+  }
+>) {
+  if (!canRemove && !onToggleWatchlist && !onToggleWheelExclusion && !kebabProps.onViewDetails)
+    return null;
+  return (
+    <div className={slotClassName}>
+      <CardKebab
+        {...kebabProps}
+        canRemove={canRemove}
+        onToggleWatchlist={onToggleWatchlist}
+        wheelExclusion={kebabProps.wheelExclusion}
+      />
+    </div>
+  );
+}
+
+function deriveWheelToggle(
+  movie: MovieData,
+  onToggleWatchlist?: (movie: MovieData) => void,
+  onToggleWheelExclusion?: (movie: MovieData) => void
+) {
+  const excluded = !!movie.excludedFromWheel;
+  const toggleWatchlist = onToggleWatchlist ? () => onToggleWatchlist(movie) : undefined;
+  const toggleExclusion = onToggleWheelExclusion ? () => onToggleWheelExclusion(movie) : undefined;
+  return { excluded, toggleWatchlist, toggleExclusion };
+}
+
+export function MovieCardKebab({
+  movie,
+  card,
+  slotClassName,
+  isHost,
+  isInWatchlist,
+  onRemove,
+  onToggleWatchlist,
+  onToggleWheelExclusion,
+  t,
+}: Readonly<{
+  movie: MovieData;
+  card: {
+    isMine: boolean;
+    canRemove: boolean;
+    hasDetails: boolean;
+    openDetails: (tab?: MovieDetailsTabKey) => void;
+  };
+  slotClassName: string;
+  isHost: boolean;
+  isInWatchlist?: boolean;
+  onRemove: (movie: MovieData) => void;
+  onToggleWatchlist?: (movie: MovieData) => void;
+  onToggleWheelExclusion?: (movie: MovieData) => void;
+  t: Translate;
+}>) {
+  const { excluded, toggleWatchlist, toggleExclusion } = deriveWheelToggle(
+    movie,
+    onToggleWatchlist,
+    onToggleWheelExclusion
+  );
+  return (
+    <CardKebabWhenAvailable
+      slotClassName={slotClassName}
+      title={movie.title}
+      year={movie.year}
+      tmdbId={movie.tmdbId}
+      mediaType={movie.mediaType}
+      showExternalLinks={false}
+      isMine={card.isMine}
+      isHost={isHost}
+      canRemove={card.canRemove}
+      onRemove={() => onRemove(movie)}
+      inWatchlist={isInWatchlist}
+      onToggleWatchlist={toggleWatchlist}
+      onToggleWheelExclusion={toggleExclusion}
+      onViewDetails={card.hasDetails ? () => card.openDetails('soiree') : undefined}
+      wheelExclusion={toggleExclusion ? { excluded, onToggle: toggleExclusion } : undefined}
+      t={t}
+    />
+  );
+}
+
+const DESCENDER_CHARS = /[gjpqy]/;
+const KEBAB_MENU_VIEWPORT_MARGIN = 8;
+
+function kebabLabelClassName(label: string): string | undefined {
+  return DESCENDER_CHARS.test(label)
+    ? styles.kebabItemLabel
+    : clsx(styles.kebabItemLabel, styles.kebabItemLabelCaps);
+}
+
+function ExternalMenuLink({
+  href,
+  label,
+  onClose,
+}: Readonly<{
+  href: string;
+  label: string;
+  onClose: () => void;
+}>) {
+  return (
+    <a
+      role="menuitem"
+      className={styles.kebabItem}
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={onClose}
+      aria-label={label}
+    >
+      <ExternalLink aria-hidden size={14} />
+      <span className={kebabLabelClassName(label)}>{label}</span>
+    </a>
+  );
+}
+
+export function CardKebab({
+  title,
+  year,
+  tmdbId,
+  mediaType,
+  isMine,
+  isHost,
+  canRemove,
+  onRemove,
+  inWatchlist,
+  onToggleWatchlist,
+  onProposeToEvent,
+  onViewDetails,
+  showExternalLinks = true,
+  wheelExclusion,
+  t,
+}: Readonly<CardKebabProps>) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number; ready: boolean }>({
+    top: 0,
+    right: 0,
+    ready: false,
+  });
+  const close = useCallback(() => setOpen(false), []);
+
+  const repositionMenu = useCallback(() => {
+    if (!btnRef.current || !menuRef.current) return;
+    const btnRect = btnRef.current.getBoundingClientRect();
+    const menuRect = menuRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - btnRect.bottom;
+    const top =
+      spaceBelow >= menuRect.height + KEBAB_MENU_VIEWPORT_MARGIN
+        ? btnRect.bottom + 4
+        : Math.max(KEBAB_MENU_VIEWPORT_MARGIN, btnRect.top - menuRect.height - 4);
+    const right = Math.min(
+      Math.max(window.innerWidth - btnRect.right, KEBAB_MENU_VIEWPORT_MARGIN),
+      window.innerWidth - menuRect.width - KEBAB_MENU_VIEWPORT_MARGIN
+    );
+    setMenuPos({ top, right, ready: true });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    repositionMenu();
+  }, [open, repositionMenu]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handlePointer = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (!rootRef.current?.contains(target) && !menuRef.current?.contains(target)) close();
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        close();
+        btnRef.current?.focus();
+      }
+    };
+    document.addEventListener('mousedown', handlePointer);
+    document.addEventListener('keydown', handleKey);
+    window.addEventListener('scroll', repositionMenu, { capture: true, passive: true });
+    return () => {
+      document.removeEventListener('mousedown', handlePointer);
+      document.removeEventListener('keydown', handleKey);
+      window.removeEventListener('scroll', repositionMenu, true);
+    };
+  }, [open, close, repositionMenu]);
+
+  useEffect(() => {
+    if (!open || !menuPos.ready) return;
+    const firstItem = menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]');
+    firstItem?.focus();
+  }, [open, menuPos.ready]);
+
+  const handleMenuKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return;
+    e.preventDefault();
+    const items = Array.from(
+      menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []
+    );
+    if (items.length === 0) return;
+    const currentIndex = items.indexOf(document.activeElement as HTMLElement);
+    let nextIndex = currentIndex;
+    if (e.key === 'ArrowDown') nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
+    else if (e.key === 'ArrowUp')
+      nextIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
+    else if (e.key === 'Home') nextIndex = 0;
+    else if (e.key === 'End') nextIndex = items.length - 1;
+    items[nextIndex]?.focus();
+  };
+
+  const handleToggle = () => {
+    if (!open && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right, ready: false });
+    }
+    setOpen((v) => !v);
+  };
+
+  const removeAria = isMine
+    ? `${t('movies.list.removeButton')} ${title}`
+    : t('movies.list.removeAsHostAria', { title });
+
+  const lbUrl = letterboxdUrl(tmdbId, mediaType, title);
+  const imdbHref = imdbUrl(title, year);
+  const allocineHref = allocineUrl(title);
+  const tmdbHref = tmdbPageUrl(tmdbId, mediaType);
+
+  const hasPrimaryGroup =
+    !!onToggleWatchlist || !!onProposeToEvent || !!onViewDetails || !!wheelExclusion;
+  const hasLinksGroup = showExternalLinks && tmdbId > 0;
+
+  const watchlistLabel = inWatchlist
+    ? t('watchlist.card.removeAction')
+    : t('watchlist.card.addAction');
+  const proposeLabel = t('watchlist.card.proposeAction');
+  const detailsLabel = t('watchlist.card.detailsAction');
+  const wheelLabel = wheelExclusion?.excluded
+    ? t('movies.list.includeInWheelAction')
+    : t('movies.list.excludeFromWheelAction');
+  const removeLabel = t('movies.list.removeButton');
+
+  return (
+    <div className={styles.kebab} ref={rootRef}>
+      <button
+        ref={btnRef}
+        type="button"
+        className={styles.kebabBtn}
+        onClick={handleToggle}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={t('movies.list.moreActionsAria', { title })}
+      >
+        <MoreVertical aria-hidden size={18} />
+      </button>
+      {open &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className={styles.kebabMenu}
+            role="menu"
+            onKeyDown={handleMenuKeyDown}
+            style={{
+              position: 'fixed',
+              top: `${menuPos.top}px`,
+              right: `${menuPos.right}px`,
+              zIndex: 9999,
+              visibility: menuPos.ready ? 'visible' : 'hidden',
+            }}
+          >
+            {onToggleWatchlist && (
+              <button
+                type="button"
+                role="menuitem"
+                className={styles.kebabItem}
+                onClick={() => {
+                  setOpen(false);
+                  onToggleWatchlist();
+                }}
+              >
+                {inWatchlist ? (
+                  <BookmarkCheck aria-hidden size={14} />
+                ) : (
+                  <Bookmark aria-hidden size={14} />
+                )}
+                <span className={kebabLabelClassName(watchlistLabel)}>{watchlistLabel}</span>
+              </button>
+            )}
+            {onProposeToEvent && (
+              <button
+                type="button"
+                role="menuitem"
+                className={styles.kebabItem}
+                onClick={() => {
+                  setOpen(false);
+                  onProposeToEvent();
+                }}
+              >
+                <ListPlus aria-hidden size={14} />
+                <span className={kebabLabelClassName(proposeLabel)}>{proposeLabel}</span>
+              </button>
+            )}
+            {onViewDetails && (
+              <button
+                type="button"
+                role="menuitem"
+                className={styles.kebabItem}
+                onClick={() => {
+                  setOpen(false);
+                  onViewDetails();
+                }}
+              >
+                <Info aria-hidden size={14} />
+                <span className={kebabLabelClassName(detailsLabel)}>{detailsLabel}</span>
+              </button>
+            )}
+            {wheelExclusion && (
+              <button
+                type="button"
+                role="menuitem"
+                className={styles.kebabItem}
+                onClick={() => {
+                  setOpen(false);
+                  wheelExclusion.onToggle();
+                }}
+              >
+                {wheelExclusion.excluded ? (
+                  <RotateCcw aria-hidden size={14} />
+                ) : (
+                  <Disc3 aria-hidden size={14} />
+                )}
+                <span className={kebabLabelClassName(wheelLabel)}>{wheelLabel}</span>
+              </button>
+            )}
+            {hasPrimaryGroup && hasLinksGroup && <hr className={styles.kebabDivider} />}
+            {hasLinksGroup && (
+              <>
+                <ExternalMenuLink
+                  href={lbUrl}
+                  label={t('movies.list.letterboxdButton')}
+                  onClose={close}
+                />
+                <ExternalMenuLink
+                  href={imdbHref}
+                  label={t('movies.list.imdbButton')}
+                  onClose={close}
+                />
+                <ExternalMenuLink
+                  href={allocineHref}
+                  label={t('movies.list.allocineButton')}
+                  onClose={close}
+                />
+                <ExternalMenuLink
+                  href={tmdbHref}
+                  label={t('movies.list.tmdbButton')}
+                  onClose={close}
+                />
+              </>
+            )}
+            {canRemove && (hasPrimaryGroup || hasLinksGroup) && (
+              <hr className={styles.kebabDivider} />
+            )}
+            {canRemove && (
+              <button
+                type="button"
+                role="menuitem"
+                className={clsx(styles.kebabItem, styles.kebabItemDanger)}
+                onClick={() => {
+                  setOpen(false);
+                  onRemove();
+                }}
+                aria-label={removeAria}
+                title={!isMine && isHost ? t('movies.list.removeAsHostTitle') : undefined}
+              >
+                <Trash2 aria-hidden size={14} />
+                <span className={kebabLabelClassName(removeLabel)}>{removeLabel}</span>
+              </button>
+            )}
+          </div>,
+          document.body
+        )}
+    </div>
+  );
+}
+
+export function ProposerBadge({
+  avatarId,
+  pseudo,
+  handle,
+  t,
+}: Readonly<{
+  avatarId: string;
+  pseudo: string;
+  handle?: string | null;
+  t: Translate;
+}>) {
+  const content = (
+    <>
+      <Avatar avatarId={avatarId} pseudo={pseudo} size="xs" />
+      <span className={styles.proposerName}>{pseudo}</span>
+    </>
+  );
+  if (!handle) {
+    return <span className={styles.proposer}>{content}</span>;
+  }
+  return (
+    <Tooltip label={pseudo}>
+      <Link
+        to={ROUTES.profile(handle)}
+        className={clsx(styles.proposer, styles.proposerLink)}
+        aria-label={t('movies.details.viewProposerProfileAria', { pseudo })}
+      >
+        {content}
+      </Link>
+    </Tooltip>
+  );
+}
+
+export function CardProposerFooter({
+  s,
+  m,
+  t,
+}: Readonly<{
+  s: ReturnType<typeof useMovieCardState>;
+  m: MovieData;
+  t: Translate;
+}>) {
+  return (
+    <span className={styles.proposerGroup}>
+      <ProposerBadge
+        avatarId={s.proposerAvatarId}
+        pseudo={m.proposerPseudo}
+        handle={m.proposerHandle}
+        t={t}
+      />
+      {s.showAddNote && (
+        <button
+          type="button"
+          className={styles.addNote}
+          onClick={() => s.setNoteEditing(true)}
+          aria-label={t('movies.pitchNote.addButton')}
+          title={t('movies.pitchNote.addButton')}
+        >
+          <MessageSquarePlus aria-hidden size={15} />
+        </button>
       )}
     </span>
   );
@@ -443,465 +965,130 @@ export function MovieNote({
   );
 }
 
-interface CardKebabProps {
-  title: string;
-  year?: string;
-  tmdbId: number;
-  mediaType?: 'movie' | 'tv';
-  isMine: boolean;
-  isHost: boolean;
-  canRemove: boolean;
-  onRemove: () => void;
-  inWatchlist?: boolean;
-  onToggleWatchlist?: () => void;
-  onProposeToEvent?: () => void;
-  onViewDetails?: () => void;
-  wheelExclusion?: MovieWheelExclusion;
-  t: Translate;
-}
-
-export function CardKebabWhenAvailable({
-  slotClassName,
+export function DetailsInfoButton({
   hasDetails,
-  canRemove,
-  onToggleWatchlist,
-  onToggleWheelExclusion,
-  onProposeToEvent,
-  ...kebabProps
-}: Readonly<
-  CardKebabProps & {
-    slotClassName: string;
-    hasDetails: boolean;
-    onToggleWatchlist?: () => void;
-    onToggleWheelExclusion?: () => void;
-  }
->) {
-  if (
-    !hasDetails &&
-    !canRemove &&
-    !onToggleWatchlist &&
-    !onToggleWheelExclusion &&
-    !onProposeToEvent
-  )
-    return null;
-  return (
-    <div className={slotClassName}>
-      <CardKebab
-        {...kebabProps}
-        canRemove={canRemove}
-        onToggleWatchlist={onToggleWatchlist}
-        onProposeToEvent={onProposeToEvent}
-        wheelExclusion={kebabProps.wheelExclusion}
-      />
-    </div>
-  );
-}
-
-export function MovieCardKebab({
-  movie,
-  card,
-  slotClassName,
-  isHost,
-  isInWatchlist,
-  onRemove,
-  onToggleWatchlist,
-  onToggleWheelExclusion,
-  onProposeToEvent,
-  t,
-}: Readonly<{
-  movie: MovieData;
-  card: { hasDetails: boolean; isMine: boolean; canRemove: boolean };
-  slotClassName: string;
-  isHost: boolean;
-  isInWatchlist?: boolean;
-  onRemove: (id: string) => void | Promise<void>;
-  onToggleWatchlist?: (movie: MovieData) => void;
-  onToggleWheelExclusion?: (movie: MovieData) => void;
-  onProposeToEvent?: (movie: MovieData) => void;
-  t: Translate;
-}>) {
-  const excluded = !!movie.excludedFromWheel;
-  const toggleWatchlist = onToggleWatchlist ? () => onToggleWatchlist(movie) : undefined;
-  const toggleExclusion = onToggleWheelExclusion ? () => onToggleWheelExclusion(movie) : undefined;
-  return (
-    <CardKebabWhenAvailable
-      slotClassName={slotClassName}
-      hasDetails={card.hasDetails}
-      title={movie.title}
-      year={movie.year}
-      tmdbId={movie.tmdbId}
-      mediaType={movie.mediaType}
-      isMine={card.isMine}
-      isHost={isHost}
-      canRemove={card.canRemove}
-      onRemove={() => void onRemove(movie.id)}
-      inWatchlist={isInWatchlist}
-      onToggleWatchlist={toggleWatchlist}
-      onProposeToEvent={onProposeToEvent ? () => onProposeToEvent(movie) : undefined}
-      onToggleWheelExclusion={toggleExclusion}
-      wheelExclusion={toggleExclusion ? { excluded, onToggle: toggleExclusion } : undefined}
-      t={t}
-    />
-  );
-}
-
-function letterboxdUrl(tmdbId: number, mediaType?: 'movie' | 'tv', title?: string): string {
-  if (mediaType === 'tv') {
-    return `https://letterboxd.com/search/films/${encodeURIComponent(title ?? '')}/`;
-  }
-  return `https://letterboxd.com/tmdb/${tmdbId}/`;
-}
-
-function imdbUrl(title: string, year?: string): string {
-  const q = year ? `${title} ${year}` : title;
-  return `https://www.imdb.com/find/?q=${encodeURIComponent(q)}&s=tt`;
-}
-
-function allocineUrl(title: string): string {
-  return `https://www.allocine.fr/recherche/?q=${encodeURIComponent(title)}`;
-}
-
-function tmdbPageUrl(tmdbId: number, mediaType?: 'movie' | 'tv'): string {
-  const type = mediaType === 'tv' ? 'tv' : 'movie';
-  return `https://www.themoviedb.org/${type}/${tmdbId}`;
-}
-
-const DESCENDER_CHARS = /[gjpqy]/;
-const KEBAB_MENU_VIEWPORT_MARGIN = 8;
-
-function kebabLabelClassName(label: string): string | undefined {
-  return DESCENDER_CHARS.test(label)
-    ? styles.kebabItemLabel
-    : clsx(styles.kebabItemLabel, styles.kebabItemLabelCaps);
-}
-
-function ExternalMenuLink({
-  href,
-  label,
-  onClose,
-}: Readonly<{
-  href: string;
-  label: string;
-  onClose: () => void;
-}>) {
-  return (
-    <a
-      role="menuitem"
-      className={styles.kebabItem}
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={onClose}
-      aria-label={label}
-    >
-      <ExternalLink aria-hidden size={14} />
-      <span className={kebabLabelClassName(label)}>{label}</span>
-    </a>
-  );
-}
-
-export function CardKebab({
+  onOpen,
   title,
-  year,
-  tmdbId,
-  mediaType,
-  isMine,
-  isHost,
-  canRemove,
-  onRemove,
-  inWatchlist,
-  onToggleWatchlist,
-  onProposeToEvent,
-  onViewDetails,
-  wheelExclusion,
+  className,
   t,
-}: Readonly<CardKebabProps>) {
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const btnRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const [menuPos, setMenuPos] = useState<{ top: number; right: number; ready: boolean }>({
-    top: 0,
-    right: 0,
-    ready: false,
-  });
-  const close = useCallback(() => setOpen(false), []);
-
-  useLayoutEffect(() => {
-    if (!open || !btnRef.current || !menuRef.current) return;
-    const btnRect = btnRef.current.getBoundingClientRect();
-    const menuRect = menuRef.current.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - btnRect.bottom;
-    const top =
-      spaceBelow >= menuRect.height + KEBAB_MENU_VIEWPORT_MARGIN
-        ? btnRect.bottom + 4
-        : Math.max(KEBAB_MENU_VIEWPORT_MARGIN, btnRect.top - menuRect.height - 4);
-    const right = Math.min(
-      Math.max(window.innerWidth - btnRect.right, KEBAB_MENU_VIEWPORT_MARGIN),
-      window.innerWidth - menuRect.width - KEBAB_MENU_VIEWPORT_MARGIN
-    );
-    setMenuPos({ top, right, ready: true });
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const handlePointer = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (!rootRef.current?.contains(target) && !menuRef.current?.contains(target)) close();
-    };
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close();
-    };
-    document.addEventListener('mousedown', handlePointer);
-    document.addEventListener('keydown', handleKey);
-    window.addEventListener('scroll', close, { capture: true, passive: true });
-    return () => {
-      document.removeEventListener('mousedown', handlePointer);
-      document.removeEventListener('keydown', handleKey);
-      window.removeEventListener('scroll', close, { capture: true });
-    };
-  }, [open, close]);
-
-  const handleToggle = () => {
-    if (!open && btnRef.current) {
-      const rect = btnRef.current.getBoundingClientRect();
-      setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right, ready: false });
-    }
-    setOpen((v) => !v);
-  };
-
-  const removeAria = isMine
-    ? `${t('movies.list.removeButton')} ${title}`
-    : t('movies.list.removeAsHostAria', { title });
-
-  const lbUrl = letterboxdUrl(tmdbId, mediaType, title);
-  const imdbHref = imdbUrl(title, year);
-  const allocineHref = allocineUrl(title);
-  const tmdbHref = tmdbPageUrl(tmdbId, mediaType);
-
-  const hasPrimaryGroup =
-    !!onToggleWatchlist || !!onProposeToEvent || !!onViewDetails || !!wheelExclusion;
-  const hasLinksGroup = tmdbId > 0;
-
-  const watchlistLabel = inWatchlist
-    ? t('watchlist.card.removeAction')
-    : t('watchlist.card.addAction');
-  const proposeLabel = t('watchlist.card.proposeAction');
-  const detailsLabel = t('watchlist.card.detailsAction');
-  const wheelLabel = wheelExclusion?.excluded
-    ? t('movies.list.includeInWheelAction')
-    : t('movies.list.excludeFromWheelAction');
-  const removeLabel = t('movies.list.removeButton');
-
+}: Readonly<{
+  hasDetails: boolean;
+  onOpen: () => void;
+  title: string;
+  className?: string;
+  t: Translate;
+}>) {
+  if (!hasDetails) return null;
   return (
-    <div className={styles.kebab} ref={rootRef}>
-      <button
-        ref={btnRef}
-        type="button"
-        className={styles.kebabBtn}
-        onClick={handleToggle}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label={t('movies.list.moreActionsAria', { title })}
-      >
-        <MoreVertical aria-hidden size={18} />
-      </button>
-      {open &&
-        createPortal(
-          <div
-            ref={menuRef}
-            className={styles.kebabMenu}
-            role="menu"
-            style={{
-              position: 'fixed',
-              top: `${menuPos.top}px`,
-              right: `${menuPos.right}px`,
-              zIndex: 9999,
-              visibility: menuPos.ready ? 'visible' : 'hidden',
-            }}
-          >
-            {onToggleWatchlist && (
-              <button
-                type="button"
-                role="menuitem"
-                className={styles.kebabItem}
-                onClick={() => {
-                  setOpen(false);
-                  onToggleWatchlist();
-                }}
-              >
-                {inWatchlist ? (
-                  <BookmarkCheck aria-hidden size={14} />
-                ) : (
-                  <Bookmark aria-hidden size={14} />
-                )}
-                <span className={kebabLabelClassName(watchlistLabel)}>{watchlistLabel}</span>
-              </button>
-            )}
-            {onProposeToEvent && (
-              <button
-                type="button"
-                role="menuitem"
-                className={styles.kebabItem}
-                onClick={() => {
-                  setOpen(false);
-                  onProposeToEvent();
-                }}
-              >
-                <ListPlus aria-hidden size={14} />
-                <span className={kebabLabelClassName(proposeLabel)}>{proposeLabel}</span>
-              </button>
-            )}
-            {onViewDetails && (
-              <button
-                type="button"
-                role="menuitem"
-                className={styles.kebabItem}
-                onClick={() => {
-                  setOpen(false);
-                  onViewDetails();
-                }}
-              >
-                <Info aria-hidden size={14} />
-                <span className={kebabLabelClassName(detailsLabel)}>{detailsLabel}</span>
-              </button>
-            )}
-            {wheelExclusion && (
-              <button
-                type="button"
-                role="menuitem"
-                className={styles.kebabItem}
-                onClick={() => {
-                  setOpen(false);
-                  wheelExclusion.onToggle();
-                }}
-              >
-                {wheelExclusion.excluded ? (
-                  <RotateCcw aria-hidden size={14} />
-                ) : (
-                  <Disc3 aria-hidden size={14} />
-                )}
-                <span className={kebabLabelClassName(wheelLabel)}>{wheelLabel}</span>
-              </button>
-            )}
-            {hasPrimaryGroup && hasLinksGroup && <hr className={styles.kebabDivider} />}
-            {hasLinksGroup && (
-              <>
-                <ExternalMenuLink
-                  href={lbUrl}
-                  label={t('movies.list.letterboxdButton')}
-                  onClose={close}
-                />
-                <ExternalMenuLink
-                  href={imdbHref}
-                  label={t('movies.list.imdbButton')}
-                  onClose={close}
-                />
-                <ExternalMenuLink
-                  href={allocineHref}
-                  label={t('movies.list.allocineButton')}
-                  onClose={close}
-                />
-                <ExternalMenuLink
-                  href={tmdbHref}
-                  label={t('movies.list.tmdbButton')}
-                  onClose={close}
-                />
-              </>
-            )}
-            {canRemove && (hasPrimaryGroup || hasLinksGroup) && (
-              <hr className={styles.kebabDivider} />
-            )}
-            {canRemove && (
-              <button
-                type="button"
-                role="menuitem"
-                className={clsx(styles.kebabItem, styles.kebabItemDanger)}
-                onClick={() => {
-                  setOpen(false);
-                  onRemove();
-                }}
-                aria-label={removeAria}
-                title={!isMine && isHost ? t('movies.list.removeAsHostTitle') : undefined}
-              >
-                <Trash2 aria-hidden size={14} />
-                <span className={kebabLabelClassName(removeLabel)}>{removeLabel}</span>
-              </button>
-            )}
-          </div>,
-          document.body
-        )}
-    </div>
+    <button
+      type="button"
+      className={clsx(styles.infoBtn, className)}
+      onClick={onOpen}
+      aria-label={t('watchlist.card.openDetailsAria', { title })}
+    >
+      <Info aria-hidden size={14} />
+    </button>
   );
 }
 
-export function CardProposerFooter({
-  s,
-  m,
-  t,
-}: Readonly<{
-  s: ReturnType<typeof useMovieCardState>;
-  m: MovieData;
-  t: Translate;
-}>) {
+export function OverflowChip({
+  count,
+  onClick,
+  ariaLabel,
+}: Readonly<{ count: number; onClick: () => void; ariaLabel: string }>) {
   return (
-    <>
-      <span className={styles.proposer}>
-        <Avatar avatarId={s.proposerAvatarId} pseudo={m.proposerPseudo} size="xs" />
-        <span className={styles.proposerName}>{m.proposerPseudo}</span>
-        {s.showAddNote && (
-          <button
-            type="button"
-            className={styles.addNote}
-            onClick={() => s.setNoteEditing(true)}
-            aria-label={t('movies.pitchNote.addButton')}
-            title={t('movies.pitchNote.addButton')}
-          >
-            <MessageSquarePlus aria-hidden size={15} />
-          </button>
-        )}
-      </span>
-      {s.hasDetails && (
-        <button
-          type="button"
-          className={styles.detailsToggle}
-          aria-haspopup="dialog"
-          aria-expanded={s.detailsOpen}
-          onClick={() => s.setDetailsOpen(true)}
-        >
-          <span className={styles.detailsToggleLabel}>{t('movies.details.toggleShow')}</span>
-          <ChevronDown aria-hidden size={14} />
-        </button>
-      )}
-    </>
+    <button type="button" className={styles.paidChip} onClick={onClick} aria-label={ariaLabel}>
+      <span className={styles.paidChipCount}>+{count}</span>
+    </button>
+  );
+}
+
+export function WatchlistBadge({
+  inWatchlist,
+  t,
+}: Readonly<{ inWatchlist?: boolean; t: Translate }>) {
+  if (!inWatchlist) return null;
+  return (
+    <span
+      className={styles.watchlistBadge}
+      role="img"
+      aria-label={t('watchlist.card.inWatchlistBadgeAria')}
+    >
+      <Bookmark aria-hidden size={11} fill="currentColor" />
+    </span>
   );
 }
 
 export function CardModals({
   s,
   m,
+  isHost,
+  onVote,
+  onRemove,
+  isInWatchlist,
+  onToggleWatchlist,
+  onToggleWheelExclusion,
+  avatarsByPseudo,
+  participantCount,
 }: Readonly<{
   s: ReturnType<typeof useMovieCardState>;
   m: MovieData;
+  isHost: boolean;
+  onVote: (movieId: string, value: 1 | -1) => Promise<void>;
+  onRemove: (movie: MovieData) => void;
+  isInWatchlist?: boolean;
+  onToggleWatchlist?: (movie: MovieData) => void;
+  onToggleWheelExclusion?: (movie: MovieData) => void;
+  avatarsByPseudo?: Record<string, string>;
+  participantCount?: number;
 }>) {
+  const { excluded, toggleWatchlist, toggleExclusion } = deriveWheelToggle(
+    m,
+    onToggleWatchlist,
+    onToggleWheelExclusion
+  );
+
+  const eventContext: MovieDetailsEventContext = {
+    movie: m,
+    canAct: s.canAct,
+    participantCount,
+    onVote: (value) => void onVote(m.id, value),
+    iMarkedSeen: s.iMarkedSeen,
+    seenPending: s.seenPending,
+    onToggleSeen: () => void s.handleToggleSeen(),
+    seenOthers: s.others,
+    seenOthersHint: s.othersHint,
+    avatarsByPseudo,
+    proposerAvatarId: s.proposerAvatarId,
+    isInWatchlist,
+    onToggleWatchlist: toggleWatchlist,
+    wheelExclusion: toggleExclusion ? { excluded, onToggle: toggleExclusion } : undefined,
+    canRemove: s.canRemove,
+    isMine: s.isMine,
+    isHost,
+    onRemove: () => {
+      s.setDetailsOpen(false);
+      onRemove(m);
+    },
+  };
+
   return (
     <>
       {s.hasDetails && (
         <MovieDetailsModal
           open={s.detailsOpen}
-          movieTitle={m.title}
+          title={m.title}
+          year={m.year}
           tmdbId={m.tmdbId}
           mediaType={m.mediaType}
-          onClose={() => s.setDetailsOpen(false)}
-        />
-      )}
-      {s.providers.length > 0 && (
-        <WatchProvidersModal
-          open={s.providersOpen}
-          movieTitle={m.title}
-          providers={s.providers}
+          posterSrc={s.posterSrc}
+          voteLabel={s.voteLabel}
+          runtimeLabel={s.runtimeLabel}
+          watchProviders={s.providers}
           watchPageUrl={m.tmdbWatchPageUrl}
-          onClose={() => s.setProvidersOpen(false)}
+          initialTab={s.detailsInitialTab}
+          eventContext={eventContext}
+          onClose={() => s.setDetailsOpen(false)}
         />
       )}
     </>

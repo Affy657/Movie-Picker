@@ -58,6 +58,21 @@ public sealed class InMemoryVoteRepositoryTests
     }
 
     [Fact]
+    public async Task AggregateUpVotersByMovieIdsAsync_CollectsOnlyUpVoters_AndSkipsMoviesWithoutUpVotes()
+    {
+        await _repo.UpsertAsync(Mk(movieId: "mov1", participantId: "p1", value: 1));
+        await _repo.UpsertAsync(Mk(movieId: "mov1", participantId: "p2", value: 1));
+        await _repo.UpsertAsync(Mk(movieId: "mov1", participantId: "p3", value: -1));
+        await _repo.UpsertAsync(Mk(movieId: "mov2", participantId: "p4", value: -1));
+
+        var upVoters = await _repo.AggregateUpVotersByMovieIdsAsync(["mov1", "mov2", "unknown"]);
+
+        Assert.Equal(new[] { "p1", "p2" }, upVoters["mov1"]);
+        Assert.False(upVoters.ContainsKey("mov2"));
+        Assert.False(upVoters.ContainsKey("unknown"));
+    }
+
+    [Fact]
     public async Task DeleteByMovieIdAsync_RemovesAllVotesForMovie()
     {
         await _repo.UpsertAsync(Mk(movieId: "mov1", participantId: "p1"));
@@ -143,5 +158,35 @@ public sealed class InMemoryVoteRepositoryTests
         Assert.Empty(await _repo.ListByParticipantIdsAsync([]));
         var byP1 = await _repo.ListByParticipantIdsAsync(["p1"]);
         Assert.Equal("m1", byP1.Single().MovieId);
+    }
+
+    [Fact]
+    public async Task CountDistinctVotersByEventIdAsync_CountsEachParticipantOnce_AcrossDifferentMovies()
+    {
+        await _repo.UpsertAsync(Mk(eventId: "evt1", movieId: "m1", participantId: "p1"));
+        await _repo.UpsertAsync(Mk(eventId: "evt1", movieId: "m2", participantId: "p1"));
+        await _repo.UpsertAsync(Mk(eventId: "evt1", movieId: "m3", participantId: "p1"));
+
+        Assert.Equal(1, await _repo.CountDistinctVotersByEventIdAsync("evt1"));
+    }
+
+    [Fact]
+    public async Task CountDistinctVotersByEventIdAsync_CountsDistinctParticipantsOnDifferentMovies()
+    {
+        await _repo.UpsertAsync(Mk(eventId: "evt1", movieId: "m1", participantId: "p1"));
+        await _repo.UpsertAsync(Mk(eventId: "evt1", movieId: "m2", participantId: "p2"));
+
+        Assert.Equal(2, await _repo.CountDistinctVotersByEventIdAsync("evt1"));
+    }
+
+    [Fact]
+    public async Task CountDistinctVotersByEventIdAsync_ExcludesParticipantAfterVoteCleared()
+    {
+        await _repo.UpsertAsync(Mk(eventId: "evt1", movieId: "m1", participantId: "p1"));
+        await _repo.UpsertAsync(Mk(eventId: "evt1", movieId: "m2", participantId: "p2"));
+
+        await _repo.DeleteByMovieAndParticipantAsync("m1", "p1");
+
+        Assert.Equal(1, await _repo.CountDistinctVotersByEventIdAsync("evt1"));
     }
 }

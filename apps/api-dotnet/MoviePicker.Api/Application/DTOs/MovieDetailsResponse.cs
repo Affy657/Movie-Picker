@@ -15,4 +15,7 @@ public sealed class MovieDetailsResponse
     public IReadOnlyList<string> Genres { get; init; } = Array.Empty<string>();
     public string? ReleaseDate { get; init; }
     public string? TrailerUrl { get; init; }
+    public IReadOnlyList<WatchProviderOfferResponse> WatchProviders { get; init; } =
+        Array.Empty<WatchProviderOfferResponse>();
+    public string? TmdbWatchPageUrl { get; init; }
 }

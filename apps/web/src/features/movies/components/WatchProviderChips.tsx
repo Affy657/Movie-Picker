@@ -47,6 +47,8 @@ interface WatchProviderChipsProps {
   maxVisible?: number;
   onMoreClick?: () => void;
   separators?: boolean;
+  chipMaxWidth?: string;
+  showTypeIcon?: boolean;
 }
 
 export default function WatchProviderChips({
@@ -57,6 +59,8 @@ export default function WatchProviderChips({
   maxVisible,
   onMoreClick,
   separators = false,
+  chipMaxWidth,
+  showTypeIcon = true,
 }: Readonly<WatchProviderChipsProps>) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
@@ -64,6 +68,9 @@ export default function WatchProviderChips({
   if (!providers.length) return null;
   const compact = variant === 'compact';
   const rootClass = clsx(styles.root, compact && styles.compact, className);
+  const rootStyle = chipMaxWidth
+    ? ({ '--chip-max-width': chipMaxWidth } as React.CSSProperties)
+    : undefined;
   const safeWatchHref = (() => {
     if (!watchPageUrl) return null;
     try {
@@ -123,7 +130,12 @@ export default function WatchProviderChips({
   };
 
   return (
-    <dl className={rootClass} id={rootId} aria-label={t('movies.watchProviders.listAria')}>
+    <dl
+      className={rootClass}
+      id={rootId}
+      style={rootStyle}
+      aria-label={t('movies.watchProviders.listAria')}
+    >
       {groups.map((g, i) => {
         const label = monetizationLabel(t, g.type);
         const hadOverflow = !!maxVisible && g.items.length > maxVisible;
@@ -131,9 +143,11 @@ export default function WatchProviderChips({
         const hidden = g.items.length - limited.length;
         return (
           <div key={g.type} className={clsx(styles.group, separators && i > 0 && styles.groupSep)}>
-            <dt className={styles.label} aria-label={label} title={label}>
-              <ModeIcon type={g.type} size={compact ? 15 : 17} />
-            </dt>
+            {showTypeIcon ? (
+              <dt className={styles.label} aria-label={label} title={label}>
+                <ModeIcon type={g.type} size={compact ? 15 : 17} />
+              </dt>
+            ) : null}
             <dd className={styles.logos}>
               {limited.map(renderChip)}
               {hadOverflow ? (

@@ -11,13 +11,14 @@ namespace MoviePicker.Api.Application.UseCases.ListMovies;
 
 public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
 {
-    private const int MaxSeenByPseudosPerMovie = 30;
+    private const int MaxPseudosPerMovie = 30;
 
     private readonly IEventRepository _eventRepository;
     private readonly IMovieRepository _movieRepository;
     private readonly IVoteRepository _voteRepository;
     private readonly IParticipantRepository _participantRepository;
     private readonly ISeenMarkRepository _seenMarkRepository;
+    private readonly IUserRepository _userRepository;
     private readonly ITmdbMovieSearch _tmdbMovieSearch;
     private readonly IPosterImageStore _posterImageStore;
     private readonly MoviePickerOptions _options;
@@ -28,6 +29,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         IVoteRepository voteRepository,
         IParticipantRepository participantRepository,
         ISeenMarkRepository seenMarkRepository,
+        IUserRepository userRepository,
         ITmdbMovieSearch tmdbMovieSearch,
         IPosterImageStore posterImageStore,
         IOptions<MoviePickerOptions> options)
@@ -37,6 +39,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         _voteRepository = voteRepository;
         _participantRepository = participantRepository;
         _seenMarkRepository = seenMarkRepository;
+        _userRepository = userRepository;
         _tmdbMovieSearch = tmdbMovieSearch;
         _posterImageStore = posterImageStore;
         _options = options.Value;
@@ -51,15 +54,39 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
 
         var movies = await _movieRepository.ListByEventIdAsync(evt.Id, ct);
         var movieIds = movies.Select(m => m.Id).ToList();
-        var scores = await _voteRepository.AggregateScoresByMovieIdsAsync(movieIds, ct);
-        var seenAgg = await _seenMarkRepository.AggregateByMovieIdsAsync(evt.Id, movieIds, ct);
+        var scoresTask = _voteRepository.AggregateScoresByMovieIdsAsync(movieIds, ct);
+        var seenAggTask = _seenMarkRepository.AggregateByMovieIdsAsync(evt.Id, movieIds, ct);
+        var upVotersAggTask = _voteRepository.AggregateUpVotersByMovieIdsAsync(movieIds, ct);
+        var eventParticipantsTask = _participantRepository.ListByEventIdAsync(evt.Id, ct);
+        await Task.WhenAll(scoresTask, seenAggTask, upVotersAggTask, eventParticipantsTask);
+        var scores = await scoresTask;
+        var seenAgg = await seenAggTask;
+        var upVotersAgg = await upVotersAggTask;
+        var eventParticipants = await eventParticipantsTask;
 
         IReadOnlyDictionary<string, int> myVotes = string.IsNullOrEmpty(participantId)
             ? new Dictionary<string, int>()
             : await _voteRepository.GetParticipantVotesByEventAsync(evt.Id, participantId, ct);
         var seenParticipantIds = seenAgg.Values.SelectMany(v => v.ParticipantIds).Distinct().ToList();
-        var participantIds = movies.Select(m => m.ParticipantId).Concat(seenParticipantIds).Distinct().ToList();
-        var pseudos = await _participantRepository.GetPseudosByIdsAsync(participantIds, ct);
+        var upVoterParticipantIds = upVotersAgg.Values.SelectMany(v => v).Distinct().ToList();
+        var participantIds = movies.Select(m => m.ParticipantId).Concat(seenParticipantIds).Concat(upVoterParticipantIds).Distinct().ToList();
+
+        var participantById = eventParticipants.ToDictionary(p => p.Id);
+        var proposerUserIds = movies
+            .Select(m => participantById.TryGetValue(m.ParticipantId, out var pp) ? pp.UserId : null)
+            .Where(id => !string.IsNullOrEmpty(id))
+            .Select(id => id!)
+            .Distinct()
+            .ToList();
+
+        var pseudosTask = _participantRepository.GetPseudosByIdsAsync(participantIds, ct);
+        var proposerUsersTask = proposerUserIds.Count > 0
+            ? _userRepository.ListByIdsAsync(proposerUserIds, ct)
+            : Task.FromResult<IReadOnlyList<User>>(Array.Empty<User>());
+        await Task.WhenAll(pseudosTask, proposerUsersTask);
+        var pseudos = await pseudosTask;
+        var proposerUsers = await proposerUsersTask;
+        var userById = proposerUsers.ToDictionary(u => u.Id);
 
         var enrichmentByKey = await BuildEnrichmentMapAsync(movies, ct);
 
@@ -71,12 +98,25 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
             scores.TryGetValue(m.Id, out var s);
             pseudos.TryGetValue(m.ParticipantId, out var pseudo);
 
+            User? proposerUser = participantById.TryGetValue(m.ParticipantId, out var proposerParticipant) &&
+                proposerParticipant.UserId is not null &&
+                userById.TryGetValue(proposerParticipant.UserId, out var pu)
+                    ? pu
+                    : null;
+            var proposerHandle = PublicHandleResolver.Resolve(proposerUser);
+
             var seenCount = 0;
             IReadOnlyList<string> seenByPseudos = Array.Empty<string>();
             if (seenAgg.TryGetValue(m.Id, out var seen))
             {
                 seenCount = seen.Count;
-                seenByPseudos = ResolveSeenPseudos(seen.ParticipantIds, pseudos);
+                seenByPseudos = ResolvePseudos(seen.ParticipantIds, pseudos);
+            }
+
+            IReadOnlyList<string> votersUpPseudos = Array.Empty<string>();
+            if (upVotersAgg.TryGetValue(m.Id, out var upVoters))
+            {
+                votersUpPseudos = ResolvePseudos(upVoters, pseudos);
             }
 
             enrichmentByKey.TryGetValue((m.TmdbId, m.MediaType.ToString()), out var enr);
@@ -96,20 +136,24 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
                     Year = m.Year,
                     PosterPath = posterOut,
                     PitchNote = m.PitchNote,
+                    GenreIds = m.GenreIds,
                     ExcludedFromWheel = m.ExcludedFromWheel,
                     CreatedAt = m.CreatedAt,
                     UpdatedAt = m.UpdatedAt,
                     ProposerPseudo = pseudo ?? string.Empty,
+                    ProposerHandle = proposerHandle,
                     Score = s.Score,
                     Up = s.Up,
                     Down = s.Down,
                     MyVote = myVote,
                     SeenCount = seenCount,
                     SeenByPseudos = seenByPseudos,
+                    VotersUpPseudos = votersUpPseudos,
                     VoteAverage = enr?.VoteAverage,
                     WatchProviders = enr is null ? Array.Empty<WatchProviderOfferResponse>() : WatchProviderMapping.ToDto(enr.WatchProviders),
                     TmdbWatchPageUrl = enr?.TmdbWatchPageUrl,
-                    RuntimeMinutes = enr?.RuntimeMinutes
+                    RuntimeMinutes = enr?.RuntimeMinutes,
+                    ReleaseDate = enr?.ReleaseDate
                 });
         }
 
@@ -153,14 +197,14 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         return sources;
     }
 
-    private static List<string> ResolveSeenPseudos(
+    private static List<string> ResolvePseudos(
         IEnumerable<string> participantIds,
         IReadOnlyDictionary<string, string> pseudos)
     {
         var result = new List<string>();
         foreach (var pid in participantIds)
         {
-            if (result.Count >= MaxSeenByPseudosPerMovie)
+            if (result.Count >= MaxPseudosPerMovie)
                 break;
             if (pseudos.TryGetValue(pid, out var p) && !string.IsNullOrWhiteSpace(p))
                 result.Add(p);

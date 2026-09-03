@@ -1,12 +1,9 @@
-import { ArrowDown, ArrowUp, Search, SlidersHorizontal } from 'lucide-react';
+import { Search, SlidersHorizontal } from 'lucide-react';
 import clsx from 'clsx';
-import Menu, { MenuItem, MenuLabel, MenuSeparator } from '@/shared/components/Menu';
+import SortControl, { type SortOption } from '@/features/movies/components/SortControl';
 import styles from './ListToolbar.module.css';
 
-export interface SortOption<TSortKey extends string> {
-  key: TSortKey;
-  label: string;
-}
+export type { SortOption };
 
 export interface ListToolbarProps<TSortKey extends string> {
   search: string;
@@ -59,9 +56,6 @@ export default function ListToolbar<TSortKey extends string>({
   onClearAll,
   isMobile,
 }: Readonly<ListToolbarProps<TSortKey>>) {
-  const DirectionIcon = sortDir === 'asc' ? ArrowUp : ArrowDown;
-  const activeSort = sortOptions.find((opt) => opt.key === sortBy) ?? sortOptions[0];
-
   return (
     <div className={styles.toolbar}>
       <span className={styles.searchWrap}>
@@ -97,61 +91,17 @@ export default function ListToolbar<TSortKey extends string>({
 
         <span className={styles.divider} aria-hidden="true" />
 
-        {isMobile ? (
-          <span className={styles.sortMenuWrap}>
-            <Menu
-              triggerLabel={activeSort?.label ?? ''}
-              triggerIcon={<DirectionIcon size={12} aria-hidden />}
-              triggerClassName={styles.filterBtn}
-              panelClassName={styles.sortMenuPanel}
-              panelLabel={sortMenuAriaLabel}
-            >
-              {(close) => (
-                <>
-                  <MenuLabel>{sortLabel}</MenuLabel>
-                  {sortOptions.map((opt) => (
-                    <MenuItem
-                      key={opt.key}
-                      selected={sortBy === opt.key}
-                      onClick={() => {
-                        onSetSort(opt.key);
-                        close();
-                      }}
-                    >
-                      {opt.label}
-                    </MenuItem>
-                  ))}
-                  <MenuSeparator />
-                  <MenuItem
-                    icon={<DirectionIcon size={13} aria-hidden />}
-                    onClick={() => {
-                      onSetSort(sortBy);
-                      close();
-                    }}
-                  >
-                    {sortDir === 'asc' ? sortDirectionAscLabel : sortDirectionDescLabel}
-                  </MenuItem>
-                </>
-              )}
-            </Menu>
-          </span>
-        ) : (
-          <span className={styles.sortPillsRow} role="toolbar" aria-label={sortLabel}>
-            <span className={styles.sortLabel}>{sortLabel}</span>
-            {sortOptions.map((opt) => (
-              <button
-                key={opt.key}
-                type="button"
-                className={clsx(styles.pill, sortBy === opt.key && styles.pillActive)}
-                aria-pressed={sortBy === opt.key}
-                onClick={() => onSetSort(opt.key)}
-              >
-                <span className={styles.pillLabel}>{opt.label}</span>
-                {sortBy === opt.key ? <DirectionIcon size={12} aria-hidden /> : null}
-              </button>
-            ))}
-          </span>
-        )}
+        <SortControl
+          sortOptions={sortOptions}
+          sortBy={sortBy}
+          sortDir={sortDir}
+          onSetSort={onSetSort}
+          sortLabel={sortLabel}
+          sortMenuAriaLabel={sortMenuAriaLabel}
+          sortDirectionAscLabel={sortDirectionAscLabel}
+          sortDirectionDescLabel={sortDirectionDescLabel}
+          isMobile={isMobile}
+        />
 
         {isFiltered ? (
           <span className={styles.resultCount}>

@@ -19,6 +19,14 @@ import ProfilePage from '@/features/profile/pages/ProfilePage';
 import ProfileMoviesPage from '@/features/profile/pages/ProfileMoviesPage';
 import WatchlistPage from '@/features/watchlist/pages/WatchlistPage';
 import ServerErrorPage from '@/shared/components/ServerErrorPage';
+import type { UseQueryResult } from '@tanstack/react-query';
+import EventDetailSession from '@/features/events/pages/event-detail/EventDetailSession';
+import type { EventData } from '@/features/events/types';
+import type { MovieData } from '@/shared/types/movie';
+
+function watchlistHandler(items: unknown[]) {
+  return http.get(`${TEST_API_V1}/watchlist`, () => HttpResponse.json({ items }));
+}
 
 const AUTH_USER = {
   userId: 'u-a11y',
@@ -273,5 +281,120 @@ describe('accessibilité (axe)', () => {
     );
     await screen.findByText('Ancien Mais Bien Noté');
     await assertNoViolations(container, queryClient);
+  });
+
+  describe('EventDetailSession (page soirée)', () => {
+    const EVENT: EventData = {
+      id: 'evt-a11y',
+      title: 'Soirée ciné accessible',
+      date: '2035-08-01',
+      time: '21:00',
+      slug: 'soiree-a11y',
+      isFinished: false,
+      isHost: true,
+      myParticipant: { id: 'p1', pseudo: 'Alice' },
+      participantCount: 2,
+      votersCount: 1,
+      movieCount: 3,
+      participants: [
+        { id: 'p1', pseudo: 'Alice', isCreator: true },
+        { id: 'p2', pseudo: 'Bob' },
+      ],
+    };
+
+    const MOVIES: MovieData[] = [
+      {
+        id: 'm1',
+        eventId: 'evt-a11y',
+        participantId: 'p1',
+        tmdbId: 27205,
+        title: 'Inception',
+        year: '2010',
+        posterPath: null,
+        proposerPseudo: 'Alice',
+        score: 2,
+        up: 2,
+        down: 0,
+        voteAverage: 8.3,
+        runtimeMinutes: 148,
+        genreIds: [28, 878],
+        watchProviders: [{ providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' }],
+      },
+      {
+        id: 'm2',
+        eventId: 'evt-a11y',
+        participantId: 'p2',
+        tmdbId: 603,
+        title: 'The Matrix',
+        year: '1999',
+        posterPath: null,
+        proposerPseudo: 'Bob',
+        score: -1,
+        up: 0,
+        down: 1,
+        myVote: -1,
+      },
+      {
+        id: 'm3',
+        eventId: 'evt-a11y',
+        participantId: 'p2',
+        tmdbId: 218,
+        title: 'La Cité de la peur',
+        year: '1994',
+        posterPath: null,
+        proposerPseudo: 'Bob',
+        score: 0,
+        up: 0,
+        down: 0,
+        excludedFromWheel: true,
+      },
+    ];
+
+    function renderEventSession(viewMode: 'grid' | 'list') {
+      localStorage.setItem('movies-view', viewMode);
+      const queryClient = createTestQueryClient();
+      const { container } = render(
+        <AppTestProviders client={queryClient}>
+          <MemoryRouter>
+            <EventDetailSession
+              slug="soiree-a11y"
+              hostToken={null}
+              event={EVENT}
+              moviesQuery={
+                {
+                  isPending: false,
+                  isError: false,
+                  isSuccess: true,
+                  error: null,
+                  data: MOVIES,
+                  refetch: () => Promise.resolve() as never,
+                } as unknown as UseQueryResult<MovieData[]>
+              }
+              movies={MOVIES}
+              participant={{ participantId: 'p1', pseudo: 'Alice' }}
+              setParticipant={() => undefined}
+              actionError={null}
+              setActionError={() => undefined}
+              refreshAll={() => undefined}
+            />
+          </MemoryRouter>
+        </AppTestProviders>
+      );
+      return { container, queryClient };
+    }
+
+    it("vue liste (ligne dense) n'a pas de violations", async () => {
+      server.use(authMeGuestHandler, watchlistHandler([]));
+      const { container, queryClient } = renderEventSession('list');
+      await screen.findByRole('heading', { name: 'Inception' });
+      await assertNoViolations(container, queryClient);
+    });
+
+    it("vue grille n'a pas de violations", async () => {
+      server.use(authMeGuestHandler, watchlistHandler([]));
+      const { container, queryClient } = renderEventSession('grid');
+      await screen.findByRole('heading', { name: 'Inception' });
+      await assertNoViolations(container, queryClient);
+    });
   });
 });

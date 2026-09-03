@@ -6,6 +6,7 @@ import { copyTextToClipboard } from '@/shared/utils/copyTextToClipboard';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useMenuFocus } from '@/shared/hooks/useMenuFocus';
 import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
+import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { useTranslation } from '@/shared/i18n';
 import styles from './EventShareMenu.module.css';
 
@@ -27,6 +28,7 @@ export default function EventShareMenu({
   onInviteFriends,
 }: Readonly<EventShareMenuProps>) {
   const { t } = useTranslation();
+  const { track } = useAnalytics();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -51,6 +53,7 @@ export default function EventShareMenu({
           url,
           text: t('events.share.shareText', { title, time: eventTime, date: eventDate }),
         });
+        track('link_shared', { method: 'native' });
         close();
         return;
       } catch (e) {
@@ -60,6 +63,7 @@ export default function EventShareMenu({
     }
     const ok = await copyTextToClipboard(url);
     if (ok) {
+      track('link_shared', { method: 'clipboard' });
       setCopied(true);
       clearTimeout(copyTimerRef.current);
       copyTimerRef.current = globalThis.setTimeout(() => setCopied(false), COPIED_RESET_MS);

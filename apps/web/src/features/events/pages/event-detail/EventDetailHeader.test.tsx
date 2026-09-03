@@ -7,11 +7,14 @@ import EventDetailHeader, {
   type EventDetailHeaderProps,
 } from '@/features/events/pages/event-detail/EventDetailHeader';
 import { LocaleProvider } from '@/shared/i18n';
+import { ConsentProvider } from '@/shared/contexts/ConsentContext';
 
 function renderHeader(ui: ReactElement) {
   return render(
     <LocaleProvider>
-      <MemoryRouter>{ui}</MemoryRouter>
+      <ConsentProvider>
+        <MemoryRouter>{ui}</MemoryRouter>
+      </ConsentProvider>
     </LocaleProvider>
   );
 }
@@ -29,7 +32,7 @@ const baseProps: EventDetailHeaderProps = {
   lifecycle: 'upcoming',
   participantCount: 3,
   moviesCount: 2,
-  votesCount: 5,
+  votersCount: 2,
   participantsOpen: false,
   onToggleParticipants: () => {},
 };
@@ -46,7 +49,7 @@ describe('EventDetailHeader', () => {
     expect(screen.getByText('22 h')).toBeInTheDocument();
     expect(screen.getByText('lundi 15 juin à 19h00')).toBeInTheDocument();
     expect(screen.getByText('2 films')).toBeInTheDocument();
-    expect(screen.getByText('5 votes')).toBeInTheDocument();
+    expect(screen.getByText('2 votants sur 3')).toBeInTheDocument();
   });
 
   it('masque la pastille tant que la soirée n’est pas dans les 24 h', () => {

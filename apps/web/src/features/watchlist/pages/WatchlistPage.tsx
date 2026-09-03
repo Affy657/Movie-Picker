@@ -19,6 +19,9 @@ import FilteredCollectionLayout, {
   toCollectionToolbarProps,
 } from '@/features/movies/components/FilteredCollectionLayout';
 import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
+import { posterImageSrc } from '@/shared/utils/posterUrl';
+import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
+import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import LetterboxdConnectModal from '@/features/letterboxd/components/LetterboxdConnectModal';
 import type { MovieMediaType } from '@/shared/types/movie';
 import {
@@ -332,9 +335,13 @@ export default function WatchlistPage() {
       {detailsTarget && (
         <MovieDetailsModal
           open={!!detailsTarget}
-          movieTitle={detailsTarget.title}
+          title={detailsTarget.title}
+          year={detailsTarget.year}
           tmdbId={detailsTarget.tmdbId}
           mediaType={detailsTarget.mediaType}
+          posterSrc={posterImageSrc(detailsTarget.posterPath)}
+          voteLabel={formatTmdbVote(detailsTarget.voteAverage, user?.ratingScale)}
+          runtimeLabel={formatRuntimeMinutes(detailsTarget.runtimeMinutes)}
           onClose={() => setDetailsTarget(null)}
         />
       )}

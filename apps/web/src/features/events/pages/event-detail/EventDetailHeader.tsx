@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowLeft, ChevronDown, Plus, Settings } from 'lucide-react';
+import { ArrowLeft, ChevronDown, LayoutGrid, List, Plus, Settings } from 'lucide-react';
 import clsx from 'clsx';
 import EventShareMenu from '@/features/events/components/EventShareMenu';
 import EventCalendarMenu from '@/features/events/components/EventCalendarMenu';
@@ -8,7 +8,8 @@ import EventThemeBanner from '@/features/events/components/EventThemeBanner';
 import EventLifecyclePill from '@/shared/components/EventLifecyclePill';
 import Avatar from '@/shared/components/Avatar';
 import type { EventParticipantSummary, MyEventLifecycle } from '@/shared/types/event';
-import { useTranslation, type TranslationKey } from '@/shared/i18n';
+import { useTranslation } from '@/shared/i18n';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { ROUTES } from '@/app/routes';
 import styles from './EventDetailHeader.module.css';
 
@@ -39,16 +40,6 @@ function useWheelActionsHeight(
       root.style.removeProperty('--event-wheel-bar-height');
     };
   }, [wheelActions, wheelActionsRef]);
-}
-
-function pluralizeCount(
-  count: number,
-  oneKey: TranslationKey,
-  manyKey: TranslationKey,
-  t: (key: TranslationKey, vars?: Record<string, string | number>) => string
-) {
-  if (count === 1) return t(oneKey);
-  return t(manyKey, { count });
 }
 
 function useCondensedStickyBar(
@@ -170,7 +161,7 @@ export type EventDetailHeaderProps = {
 
   moviesCount: number;
 
-  votesCount: number;
+  votersCount: number;
 
   participantsOpen: boolean;
 
@@ -185,6 +176,9 @@ export type EventDetailHeaderProps = {
   onAddMovie?: () => void;
   addMoviePrimary?: boolean;
   addMovieTriggerRef?: RefObject<HTMLButtonElement | null>;
+
+  viewMode?: 'grid' | 'list';
+  onViewModeChange?: (mode: 'grid' | 'list') => void;
 };
 
 export default function EventDetailHeader({
@@ -203,7 +197,7 @@ export default function EventDetailHeader({
   participants,
   participantCount,
   moviesCount,
-  votesCount,
+  votersCount,
   participantsOpen,
   onToggleParticipants,
   onInviteFriends,
@@ -212,6 +206,8 @@ export default function EventDetailHeader({
   onAddMovie,
   addMoviePrimary = true,
   addMovieTriggerRef,
+  viewMode,
+  onViewModeChange,
 }: Readonly<EventDetailHeaderProps>) {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -243,11 +239,12 @@ export default function EventDetailHeader({
     'events.detail.moviesCount',
     t
   );
-  const votesLabel = pluralizeCount(
-    votesCount,
-    'events.detail.votesCountOne',
-    'events.detail.votesCount',
-    t
+  const votersLabel = pluralizeCount(
+    votersCount,
+    'events.detail.votersCountOne',
+    'events.detail.votersCount',
+    t,
+    { total: participantCount }
   );
   const isUpcoming = lifecycle === 'upcoming';
   const showLifecyclePill = !isUpcoming || !!countdownLabel;
@@ -367,10 +364,42 @@ export default function EventDetailHeader({
           {moviesCount > 0 ? (
             <>
               <span className={styles.sep} aria-hidden />
-              <span>{votesLabel}</span>
+              <span>{votersLabel}</span>
             </>
           ) : null}
         </span>
+        {onViewModeChange ? (
+          <div
+            className={styles.viewToggle}
+            role="toolbar"
+            aria-label={t('movies.list.viewToggleAria')}
+          >
+            <button
+              type="button"
+              className={clsx(
+                styles.viewToggleBtn,
+                viewMode === 'list' && styles.viewToggleBtnActive
+              )}
+              aria-pressed={viewMode === 'list'}
+              aria-label={t('movies.list.viewListAria')}
+              onClick={() => onViewModeChange('list')}
+            >
+              <List aria-hidden size={15} />
+            </button>
+            <button
+              type="button"
+              className={clsx(
+                styles.viewToggleBtn,
+                viewMode === 'grid' && styles.viewToggleBtnActive
+              )}
+              aria-pressed={viewMode === 'grid'}
+              aria-label={t('movies.list.viewGridAria')}
+              onClick={() => onViewModeChange('grid')}
+            >
+              <LayoutGrid aria-hidden size={15} />
+            </button>
+          </div>
+        ) : null}
       </div>
     </>
   );

@@ -13,6 +13,7 @@ public sealed class GetEventDetailHandlerTests
     private readonly Mock<IEventRepository> _eventRepo;
     private readonly Mock<IMovieRepository> _movieRepo;
     private readonly Mock<IParticipantRepository> _participantRepo;
+    private readonly Mock<IVoteRepository> _voteRepo;
     private readonly Mock<IUserRepository> _userRepo;
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor;
     private readonly Mock<ICurrentUserAccessor> _currentUserAccessor;
@@ -57,6 +58,10 @@ public sealed class GetEventDetailHandlerTests
         _movieRepo
             .Setup(r => r.CountByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
+        _voteRepo = new Mock<IVoteRepository>();
+        _voteRepo
+            .Setup(r => r.CountDistinctVotersByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
         _userRepo = new Mock<IUserRepository>();
         _userRepo
             .Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
@@ -65,6 +70,7 @@ public sealed class GetEventDetailHandlerTests
             _eventRepo.Object,
             _movieRepo.Object,
             _participantRepo.Object,
+            _voteRepo.Object,
             _userRepo.Object,
             _hostTokenAccessor.Object,
             _currentUserAccessor.Object,
@@ -261,11 +267,15 @@ public sealed class GetEventDetailHandlerTests
         _movieRepo
             .Setup(r => r.CountByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(4);
+        _voteRepo
+            .Setup(r => r.CountDistinctVotersByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(3);
 
         var result = await _sut.HandleAsync("evt1");
 
         Assert.Equal(12, result.ParticipantCount);
         Assert.Equal(4, result.MovieCount);
+        Assert.Equal(3, result.VotersCount);
         Assert.Equal(12, result.Participants.Count);
         Assert.Equal("User1", result.Participants[0].Pseudo);
     }

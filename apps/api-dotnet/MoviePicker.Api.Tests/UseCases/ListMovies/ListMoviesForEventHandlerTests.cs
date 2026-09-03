@@ -16,11 +16,13 @@ public sealed class ListMoviesForEventHandlerTests
     private readonly Mock<IVoteRepository> _voteRepo;
     private readonly Mock<IParticipantRepository> _participantRepo;
     private readonly Mock<ISeenMarkRepository> _seenMarkRepo;
+    private readonly Mock<IUserRepository> _userRepo;
     private readonly Mock<ITmdbMovieSearch> _tmdb;
     private readonly Mock<IPosterImageStore> _posterStore;
     private readonly ListMoviesForEventHandler _sut;
     private static readonly string[] ParticipantIds = new[] { "p2", "p3" };
     private static readonly string[] expected = new[] { "Bob", "Chloé" };
+    private static readonly int[] GenreIds = new[] { 28, 878 };
 
     private static Event ActiveEvent() => new()
     {
@@ -41,6 +43,7 @@ public sealed class ListMoviesForEventHandlerTests
         _voteRepo = new Mock<IVoteRepository>();
         _participantRepo = new Mock<IParticipantRepository>();
         _seenMarkRepo = new Mock<ISeenMarkRepository>();
+        _userRepo = new Mock<IUserRepository>();
         _tmdb = new Mock<ITmdbMovieSearch>();
         _posterStore = new Mock<IPosterImageStore>();
         _posterStore.Setup(s => s.ToPublicPosterPath(It.IsAny<string?>())).Returns((string? u) => u);
@@ -51,6 +54,15 @@ public sealed class ListMoviesForEventHandlerTests
         _seenMarkRepo
             .Setup(r => r.AggregateByMovieIdsAsync(It.IsAny<string>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<string, SeenMarkAggregate>());
+        _voteRepo
+            .Setup(r => r.AggregateUpVotersByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, IReadOnlyList<string>>());
+        _participantRepo
+            .Setup(r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Participant>());
+        _userRepo
+            .Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<User>());
         var opts = Options.Create(new MoviePickerOptions { TmdbApiKey = null });
         _sut = new ListMoviesForEventHandler(
             _eventRepo.Object,
@@ -58,6 +70,7 @@ public sealed class ListMoviesForEventHandlerTests
             _voteRepo.Object,
             _participantRepo.Object,
             _seenMarkRepo.Object,
+            _userRepo.Object,
             _tmdb.Object,
             _posterStore.Object,
             opts);
@@ -78,7 +91,7 @@ public sealed class ListMoviesForEventHandlerTests
         var evt = ActiveEvent();
         var movies = new List<Movie>
         {
-            new() { Id = "mov1", EventId = evt.Id, ParticipantId = "p1", TmdbId = 1, Title = "Film A", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
+            new() { Id = "mov1", EventId = evt.Id, ParticipantId = "p1", TmdbId = 1, Title = "Film A", Year = "2020", GenreIds = GenreIds, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
             new() { Id = "mov2", EventId = evt.Id, ParticipantId = "p2", TmdbId = 2, Title = "Film B", Year = "2021", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
         };
         var scores = new Dictionary<string, VoteScoreAggregate>
@@ -101,14 +114,18 @@ public sealed class ListMoviesForEventHandlerTests
         Assert.Equal(2, a.Score);
         Assert.Equal(3, a.Up);
         Assert.Equal(1, a.Down);
+        Assert.Equal(GenreIds, a.GenreIds);
         var b = result.First(m => m.Id == "mov2");
         Assert.Equal("Film B", b.Title);
         Assert.Equal("Bob", b.ProposerPseudo);
         Assert.Equal(-1, b.Score);
+        Assert.Empty(b.GenreIds);
         Assert.Equal(0, a.SeenCount);
         Assert.Empty(a.SeenByPseudos);
+        Assert.Empty(a.VotersUpPseudos);
         Assert.Equal(0, b.SeenCount);
         Assert.Empty(b.SeenByPseudos);
+        Assert.Empty(b.VotersUpPseudos);
     }
 
     [Fact]
@@ -141,6 +158,40 @@ public sealed class ListMoviesForEventHandlerTests
         var m = Assert.Single(result);
         Assert.Equal(2, m.SeenCount);
         Assert.Equal(expected, m.SeenByPseudos);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AggregatesUpVotersAndResolvesPseudos()
+    {
+        var evt = ActiveEvent();
+        var movies = new List<Movie>
+        {
+            new() { Id = "mov1", EventId = evt.Id, ParticipantId = "p1", TmdbId = 1, Title = "Film A", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
+            new() { Id = "mov2", EventId = evt.Id, ParticipantId = "p1", TmdbId = 2, Title = "Film B", Year = "2021", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
+        };
+        var pseudos = new Dictionary<string, string> { ["p1"] = "Alice", ["p2"] = "Bob", ["p3"] = "Chloé" };
+
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movies);
+        _voteRepo
+            .Setup(r => r.AggregateScoresByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, VoteScoreAggregate> { ["mov1"] = new(2, 2, 0) });
+        _voteRepo
+            .Setup(r => r.AggregateUpVotersByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, IReadOnlyList<string>>
+            {
+                ["mov1"] = ParticipantIds
+            });
+        _participantRepo
+            .Setup(r => r.GetPseudosByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(pseudos);
+
+        var result = await _sut.HandleAsync("evt1");
+
+        var a = result.First(m => m.Id == "mov1");
+        Assert.Equal(expected, a.VotersUpPseudos);
+        var b = result.First(m => m.Id == "mov2");
+        Assert.Empty(b.VotersUpPseudos);
     }
 
     [Fact]
@@ -241,6 +292,7 @@ public sealed class ListMoviesForEventHandlerTests
             _voteRepo.Object,
             _participantRepo.Object,
             _seenMarkRepo.Object,
+            _userRepo.Object,
             _tmdb.Object,
             _posterStore.Object,
             Options.Create(

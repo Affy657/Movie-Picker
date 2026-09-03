@@ -69,6 +69,9 @@ export default function EventWheelActions({
               <span className={clsx(styles.spinLabel, wheel.showRelaunch && styles.iconOnlyLabel)}>
                 {wheel.loading ? t('events.wheel.spinning') : spinLabel}
               </span>
+              {!wheel.showRelaunch && wheel.eligibleMovies.length > 0 ? (
+                <span className={styles.spinCount}>{wheel.eligibleMovies.length}</span>
+              ) : null}
             </button>
             <button
               type="button"

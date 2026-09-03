@@ -47,6 +47,8 @@ export interface EventData {
 
   participantCount?: number;
 
+  votersCount?: number;
+
   movieCount?: number;
 
   participants?: EventParticipantSummary[];

@@ -17,7 +17,7 @@
   color: var(--color-primary-contrast);
   background: var(--color-primary);
   border: 1px solid var(--color-primary);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition: background var(--duration-base) var(--ease-default);
 }

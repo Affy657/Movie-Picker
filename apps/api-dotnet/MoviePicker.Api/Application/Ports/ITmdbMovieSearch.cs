@@ -18,7 +18,8 @@ public sealed record TmdbMovieEnrichment(
     double? VoteAverage,
     IReadOnlyList<TmdbWatchProviderOffer> WatchProviders,
     string? TmdbWatchPageUrl,
-    int? RuntimeMinutes);
+    int? RuntimeMinutes,
+    string? ReleaseDate = null);
 
 public sealed record TmdbMovieDetails(
     int Id,

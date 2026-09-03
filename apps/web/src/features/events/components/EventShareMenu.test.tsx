@@ -4,14 +4,24 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import EventShareMenu from '@/features/events/components/EventShareMenu';
 import { LocaleProvider } from '@/shared/i18n';
+import { ConsentProvider } from '@/shared/contexts/ConsentContext';
 import { copyTextToClipboard } from '@/shared/utils/copyTextToClipboard';
+
+const track = vi.fn();
+vi.mock('@/shared/hooks/useAnalytics', () => ({
+  useAnalytics: () => ({ track }),
+}));
 
 vi.mock('@/shared/utils/copyTextToClipboard', () => ({
   copyTextToClipboard: vi.fn().mockResolvedValue(false),
 }));
 
 function renderMenu(ui: ReactElement) {
-  return render(<LocaleProvider>{ui}</LocaleProvider>);
+  return render(
+    <LocaleProvider>
+      <ConsentProvider>{ui}</ConsentProvider>
+    </LocaleProvider>
+  );
 }
 
 const props = {
@@ -24,6 +34,7 @@ const props = {
 describe('EventShareMenu', () => {
   beforeEach(() => {
     localStorage.setItem('moviepicker-locale', 'fr');
+    track.mockReset();
     vi.mocked(copyTextToClipboard).mockReset();
     vi.mocked(copyTextToClipboard).mockResolvedValue(false);
     globalThis.URL.createObjectURL = vi.fn(() => 'blob:mock');
@@ -80,6 +91,7 @@ describe('EventShareMenu', () => {
         expect(copyTextToClipboard).toHaveBeenCalledWith(props.url);
         expect(screen.getByRole('button', { name: /lien copié/i })).toBeInTheDocument();
       });
+      expect(track).toHaveBeenCalledWith('link_shared', { method: 'clipboard' });
     } finally {
       vi.unstubAllGlobals();
     }
