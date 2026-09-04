@@ -31,7 +31,7 @@ export default function ServerErrorPage({ error, onRetry }: Readonly<ServerError
               Réessayer
             </button>
           ) : null}
-          <Link to={ROUTES.home} className="btn">
+          <Link to={ROUTES.discover} className="btn">
             Accueil
           </Link>
         </>

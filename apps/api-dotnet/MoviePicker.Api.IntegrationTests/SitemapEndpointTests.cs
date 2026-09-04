@@ -44,7 +44,7 @@ public sealed class SitemapEndpointTests : IClassFixture<MoviePickerApplicationF
 
         var xml = await res.Content.ReadAsStringAsync();
         Assert.Contains("<urlset", xml);
-        Assert.Contains("https://web.integration.test/", xml);
+        Assert.Contains("https://web.integration.test/decouvrir", xml);
     }
 
     [Fact]

@@ -8,7 +8,7 @@ import {
 } from './helpers';
 
 test.describe('Parcours authentification', () => {
-  test('inscription puis deconnexion puis reconnexion via une page protegee (returnTo)', async ({
+  test('inscription puis deconnexion puis reconnexion depuis une page ouverte sans compte (returnTo)', async ({
     page,
   }) => {
     const displayName = 'AuthE2E';
@@ -27,6 +27,8 @@ test.describe('Parcours authentification', () => {
     await expect(page.getByRole('button', { name: 'Menu du compte' })).toBeHidden();
 
     await page.goto('/new');
+    await expect(page).toHaveURL(/\/new$/);
+    await page.getByRole('main').getByRole('link', { name: 'Se connecter' }).click();
     await expect(page).toHaveURL(/\/login\?returnTo=/);
 
     await page.getByLabel('E-mail', { exact: true }).fill(email);
@@ -42,9 +44,10 @@ test.describe('Parcours authentification', () => {
     await page.getByRole('button', { name: 'Supprimer mon compte' }).click();
     await page.getByLabel('Saisissez votre mot de passe pour confirmer').fill(TEST_PASSWORD);
     await page.getByRole('button', { name: 'Supprimer définitivement' }).click();
-    await expect(page).toHaveURL(/\/login/, { timeout: 15_000 });
+    await expect(page).toHaveURL(/\/decouvrir/, { timeout: 15_000 });
 
     await page.goto('/new');
-    await expect(page).toHaveURL(/\/login\?returnTo=/);
+    await expect(page).toHaveURL(/\/new$/);
+    await expect(page.getByRole('main').getByRole('link', { name: 'Se connecter' })).toBeVisible();
   });
 });

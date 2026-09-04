@@ -20,6 +20,7 @@ export const ROUTES = {
   privacyPolicy: '/politique-de-confidentialite',
   donate: '/soutenir',
   notifications: '/notifications',
+  discover: '/decouvrir',
 
   eventDetailPattern: `${EVENT_PREFIX}/:slug`,
 

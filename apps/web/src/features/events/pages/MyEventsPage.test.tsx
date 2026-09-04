@@ -339,14 +339,16 @@ describe('MyEventsPage (MSW)', () => {
     expect(screen.queryByRole('link', { name: /Soirée avec film/i })).not.toBeInTheDocument();
   });
 
-  it('non connecté : ne rend pas la liste (redirection vers login)', async () => {
+  it('non connecté : affiche un état déconnecté avec un CTA de connexion, pas la liste', async () => {
     server.use(authMeGuestHandler);
 
     renderMyEvents();
 
-    await waitFor(() => {
-      expect(screen.getByTestId('route-login')).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('link', { name: /^se connecter$/i })).toHaveAttribute(
+      'href',
+      '/login?returnTo=%2Fmy-events'
+    );
     expect(screen.queryByRole('link', { name: /Créer une soirée/i })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('route-login')).not.toBeInTheDocument();
   });
 });

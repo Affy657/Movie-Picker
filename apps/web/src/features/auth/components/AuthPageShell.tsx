@@ -17,7 +17,7 @@ export default function AuthPageShell({
 }: Readonly<AuthPageShellProps>) {
   return (
     <>
-      <Link to={ROUTES.home} className={styles.backLink}>
+      <Link to={ROUTES.discover} className={styles.backLink}>
         <ArrowLeft size={16} aria-hidden />
         <span className={styles.backLinkLabel}>Accueil</span>
       </Link>

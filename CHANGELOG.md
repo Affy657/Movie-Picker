@@ -8,6 +8,14 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Navigation ouverte aux visiteurs sans compte** : la nav, le pied de page et cinq pages (Mes soirées, Nouvelle soirée, Ma liste, Notifications, Paramètres) sont désormais accessibles sans compte, avec un état déconnecté dédié par page et un appel à l'action vers la connexion ou l'inscription.
+
+### Changed
+
+- La racine `/` redirige désormais vers Mes soirées ; la landing publique déménage sur `/decouvrir`, qui devient la page indexable de présentation du produit.
+
 ## [1.4.0] - 2026-08-25
 
 ### Added

@@ -2,6 +2,8 @@ import { useId, useMemo, useRef, useState } from 'react';
 import { Bookmark, Import, Plus } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import EmptyState from '@/shared/components/EmptyState';
+import SignedOutState from '@/shared/components/SignedOutState';
+import SessionCheckErrorState from '@/shared/components/SessionCheckErrorState';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -45,13 +47,13 @@ function itemKey(tmdbId: number, mediaType: MovieMediaType | undefined): string 
 export default function WatchlistPage() {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading, authCheckFailed } = useAuth();
   useNoindexPage(pageTitle(t('watchlist.title')), ROUTES.watchlist);
   const hasHover = useHasHoverCapability();
   const isMobile = useIsMobile();
   const filtersPanelId = useId();
 
-  const { data: items = [], isLoading, isError } = useWatchlist();
+  const { data: items = [], isLoading, isError } = useWatchlist({ enabled: !!user });
 
   const [removeError, setRemoveError] = useState<string | null>(null);
   const [proposeTarget, setProposeTarget] = useState<WatchlistItem | null>(null);
@@ -140,6 +142,33 @@ export default function WatchlistPage() {
       ? t('watchlist.header.subtitleOne', { count: 1 })
       : t('watchlist.header.subtitle', { count: items.length });
   const openAddPanel = () => setAddPanelOpen(true);
+
+  if (authLoading) {
+    return (
+      <PageLayout className={styles.layout}>
+        <h1 className="visually-hidden">{t('watchlist.title')}</h1>
+        <WatchlistSkeleton label={t('watchlist.loadingDetail')} gridClassName={styles.grid} />
+      </PageLayout>
+    );
+  }
+
+  if (!user && authCheckFailed) {
+    return <SessionCheckErrorState />;
+  }
+
+  if (!user) {
+    return (
+      <PageLayout className={styles.layout}>
+        <h1 className={styles.pageTitle}>{t('watchlist.title')}</h1>
+        <SignedOutState
+          icon={<Bookmark aria-hidden size={28} />}
+          title={t('watchlist.signedOutTitle')}
+          message={t('watchlist.signedOutMessage')}
+          returnTo={ROUTES.watchlist}
+        />
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout className={styles.layout}>

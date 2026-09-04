@@ -92,8 +92,8 @@ export default function Footer({ clearMobileNav = false, onOpenWhatsNew }: Reado
           <p className={styles.colTitle}>{t('footer.navTitle')}</p>
           <ul className={styles.colList}>
             <li>
-              <Link to={ROUTES.home} className={styles.colLink}>
-                {t('nav.home')}
+              <Link to={ROUTES.discover} className={styles.colLink}>
+                {t('nav.discover')}
               </Link>
             </li>
             <li>
@@ -109,6 +109,11 @@ export default function Footer({ clearMobileNav = false, onOpenWhatsNew }: Reado
             <li>
               <Link to={ROUTES.watchlist} className={styles.colLink}>
                 {t('nav.watchlist')}
+              </Link>
+            </li>
+            <li>
+              <Link to={ROUTES.account} className={styles.colLink}>
+                {t('nav.account')}
               </Link>
             </li>
           </ul>

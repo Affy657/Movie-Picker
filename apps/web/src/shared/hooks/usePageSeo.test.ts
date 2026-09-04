@@ -40,7 +40,7 @@ describe('usePageSeo', () => {
     expect(meta('meta[name="description"]')).toBe(DEFAULT_DESCRIPTION);
     expect(meta('meta[property="og:type"]')).toBe('website');
     expect(meta('meta[property="og:image"]')).toBe(DEFAULT_OG_IMAGE);
-    expect(meta('meta[property="og:url"]')).toBe(`${SITE_URL}/`);
+    expect(meta('meta[property="og:url"]')).toBe(`${SITE_URL}/decouvrir`);
   });
 
   it('émet noindex quand demandé', () => {
@@ -110,7 +110,7 @@ describe('usePageSeo', () => {
     expect(meta('meta[property="og:type"]')).toBe('website');
     expect(meta('meta[name="robots"]')).toBe('index, follow');
     expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe(
-      `${SITE_URL}/`
+      `${SITE_URL}/decouvrir`
     );
     expect(document.head.querySelector('script[type="application/ld+json"]')).toBeNull();
   });

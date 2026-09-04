@@ -70,7 +70,7 @@ export default function EventDetail() {
         <p className="errorStateMessage" role="alert">
           {errorMessage}
         </p>
-        <Link to={ROUTES.home} className="btn">
+        <Link to={ROUTES.discover} className="btn">
           Retour à l&apos;accueil
         </Link>
       </PageLayout>

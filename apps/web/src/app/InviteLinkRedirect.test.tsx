@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { describe, it, expect, beforeAll, afterEach, afterAll, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
@@ -93,7 +93,9 @@ describe("lien d'invitation : retour vers la soirée après authentification", (
     renderRoutes([INVITE_PATH]);
 
     await expectEventPage();
-    await userEvent.setup().click(screen.getByRole('link', { name: /^se connecter$/i }));
+    await userEvent
+      .setup()
+      .click(within(screen.getByRole('main')).getByRole('link', { name: /^se connecter$/i }));
     await screen.findByRole('heading', { name: /^connexion$/i }, { timeout: 8000 });
     await submitLoginForm();
 
@@ -135,7 +137,9 @@ describe("lien d'invitation : retour vers la soirée après authentification", (
     renderRoutes([INVITE_PATH]);
 
     await expectEventPage();
-    await userEvent.setup().click(screen.getByRole('link', { name: /^se connecter$/i }));
+    await userEvent
+      .setup()
+      .click(within(screen.getByRole('main')).getByRole('link', { name: /^se connecter$/i }));
     await screen.findByRole('heading', { name: /^connexion$/i }, { timeout: 8000 });
     await submitLoginForm();
 
@@ -156,6 +160,9 @@ describe("lien d'invitation : retour vers la soirée après authentification", (
       await screen.findByRole('button', { name: /^réessayer$/i }, { timeout: 12000 })
     ).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /^connexion$/i })).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /retour à l.accueil/i })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: /retour à l.accueil/i })).toHaveAttribute(
+      'href',
+      '/decouvrir'
+    );
   });
 });

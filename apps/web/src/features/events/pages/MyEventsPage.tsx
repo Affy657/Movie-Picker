@@ -11,6 +11,8 @@ import {
 } from '@/features/events/api/eventsApi';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import EmptyState from '@/shared/components/EmptyState';
+import SignedOutState from '@/shared/components/SignedOutState';
+import SessionCheckErrorState from '@/shared/components/SessionCheckErrorState';
 import { getStoredParticipant, removeStoredParticipant } from '@/features/events/storage';
 import PageLayout from '@/shared/components/PageLayout';
 import MyEventsSkeleton from '@/features/events/pages/MyEventsSkeleton';
@@ -56,7 +58,7 @@ export default function MyEventsPage() {
   useNoindexPage(pageTitle(t('events.myEvents.title')), ROUTES.myEvents);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, authCheckFailed } = useAuth();
   const { track } = useAnalytics();
   const { locale } = useLocale();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -198,11 +200,6 @@ export default function MyEventsPage() {
   });
 
   useEffect(() => {
-    if (authLoading || user) return;
-    navigate(withReturnTo(ROUTES.login, ROUTES.myEvents), { replace: true });
-  }, [authLoading, user, navigate]);
-
-  useEffect(() => {
     if (!user) return;
     if (!activeQuery.isError || !ApiError.is(activeQuery.error)) return;
     if (activeQuery.error.code !== 401) return;
@@ -243,9 +240,34 @@ export default function MyEventsPage() {
     [historyToolbar.visibleEvents, locale]
   );
 
-  const isFirstLoad = authLoading || !user || activeQuery.isLoading;
+  if (authLoading) {
+    return (
+      <PageLayout className={styles.layout}>
+        <h1 className="visually-hidden">{t('events.myEvents.title')}</h1>
+        <MyEventsSkeleton label={t('events.myEvents.loadingDetail')} />
+      </PageLayout>
+    );
+  }
 
-  if (isFirstLoad) {
+  if (!user && authCheckFailed) {
+    return <SessionCheckErrorState />;
+  }
+
+  if (!user) {
+    return (
+      <PageLayout className={styles.layout}>
+        <h1 className={styles.pageTitle}>{t('events.myEvents.title')}</h1>
+        <SignedOutState
+          icon={<CalendarPlus size={26} aria-hidden />}
+          title={t('events.myEvents.signedOutTitle')}
+          message={t('events.myEvents.signedOutMessage')}
+          returnTo={ROUTES.myEvents}
+        />
+      </PageLayout>
+    );
+  }
+
+  if (activeQuery.isLoading) {
     return (
       <PageLayout className={styles.layout}>
         <h1 className="visually-hidden">{t('events.myEvents.title')}</h1>

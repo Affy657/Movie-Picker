@@ -128,6 +128,8 @@ Découpage par version côté **métier / utilisateur**.
 
 > Page accessible sans compte, avec des blocs supplémentaires qui apparaissent une fois connecté. Remplace et enrichit la landing page actuelle. À découper en plusieurs sprints. Les blocs connecté dépendent de V1.4 (watchlist) et de V1.6 (templates de soirée).
 
+- ✅ **Navigation ouverte aux visiteurs sans compte** (v1.4.1) : préalable technique livré — nav, footer et cinq pages (Mes soirées, Nouvelle soirée, Ma liste, Notifications, Paramètres) accessibles sans compte, avec un état déconnecté dédié et un appel à l'action vers la connexion ou l'inscription ; `/decouvrir` reprend le rôle de page publique indexable à la place de la racine `/`.
+
 **Blocs visibles sans compte**
 - ⬜ **Films tendance de la semaine** : carrousel des films populaires TMDB du moment — nourrit l'inspiration avant même de créer un compte.
 - ⬜ **Suggestions thématiques** : carrousels contextuels selon la saison ou l'occasion (« Films d'horreur », « Comédies de Noël », « Soirée années 80 ») — données 100 % TMDB, sans infra custom.

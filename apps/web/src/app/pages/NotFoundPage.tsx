@@ -15,7 +15,7 @@ export default function NotFoundPage() {
       title="Page introuvable"
       message="Cette page n'existe pas ou a été déplacée. Pas de panique, on vous remet sur les rails."
       actions={
-        <Link to={ROUTES.home} className="btn btn-primary">
+        <Link to={ROUTES.discover} className="btn btn-primary">
           Retour à l&apos;accueil
         </Link>
       }

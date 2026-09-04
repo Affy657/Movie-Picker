@@ -24,6 +24,7 @@
 
   nav: {
     home: 'Accueil',
+    discover: 'Découvrir',
     myEvents: 'Mes soirées',
     watchlist: 'Ma liste',
     account: 'Paramètres',
@@ -334,6 +335,9 @@
       submit: 'Créer la soirée',
       submitting: 'Création\u2026',
       fallbackError: 'Création impossible',
+      signedOutTitle: 'Créez votre soirée',
+      signedOutMessage:
+        'Connectez-vous ou créez un compte pour organiser une soirée et inviter vos amis.',
     },
     join: {
       title: 'Rejoindre la soirée',
@@ -417,6 +421,9 @@
         'Créez une nouvelle soirée pour rassembler vos amis et choisir un film ensemble.',
       historyEmptyTitle: 'Pas encore d’historique',
       historyEmpty: 'Vos soirées terminées apparaîtront ici.',
+      signedOutTitle: 'Organisez votre prochaine soirée film',
+      signedOutMessage:
+        'Connectez-vous ou créez un compte pour créer une soirée, inviter vos amis et retrouver votre historique.',
       joinedCountOne: '1 participant',
       joinedCountMany: '{{count}} participants',
       joinedCountWithCapOne: '1 / {{max}} participant',
@@ -814,6 +821,9 @@
       title: 'Votre liste est vide',
       message: 'Cherchez un film ci-dessus pour l’ajouter à votre liste « à voir ».',
     },
+    signedOutTitle: 'Gardez vos films à voir',
+    signedOutMessage:
+      'Connectez-vous ou créez un compte pour constituer votre liste de films à voir.',
     search: {
       label: 'Rechercher un film à ajouter à ma liste',
       placeholder: 'Rechercher un film à ajouter…',
@@ -929,6 +939,8 @@
     inboxAriaLabelWithCount: 'Notifications, {{count}} non lues',
     inboxTitle: 'Notifications',
     inboxEmpty: 'Aucune notification pour le moment.',
+    signedOutTitle: 'Restez informé',
+    signedOutMessage: 'Connectez-vous ou créez un compte pour recevoir vos notifications.',
     markAllButton: 'Tout marquer comme lu',
     loadMoreButton: 'Charger la suite',
     markReadError: 'Impossible de marquer les notifications comme lues.',

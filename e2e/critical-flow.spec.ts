@@ -47,11 +47,14 @@ test.describe('Parcours critique', () => {
     }
   });
 
-  test('une page protégée redirige les visiteurs non connectés vers la connexion', async ({
+  test('une page réservée aux comptes reste ouverte aux visiteurs non connectés, avec un CTA de connexion', async ({
     page,
   }) => {
     await page.goto('/new');
-    await expect(page).toHaveURL(/\/login\?returnTo=/);
-    await expect(page.getByRole('button', { name: 'Se connecter' })).toBeVisible();
+    await expect(page).toHaveURL(/\/new$/);
+    await expect(page.getByRole('main').getByRole('link', { name: 'Se connecter' })).toBeVisible();
+    await expect(
+      page.getByRole('main').getByRole('link', { name: 'Créer un compte' })
+    ).toBeVisible();
   });
 });

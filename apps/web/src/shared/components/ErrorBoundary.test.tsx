@@ -48,6 +48,6 @@ describe('ErrorBoundary', () => {
         </ErrorBoundary>
       </MemoryRouter>
     );
-    expect(screen.getByRole('link', { name: /accueil/i })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: /accueil/i })).toHaveAttribute('href', '/decouvrir');
   });
 });

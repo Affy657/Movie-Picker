@@ -10,7 +10,11 @@ import { LocaleProvider } from '@/shared/i18n';
 const mockFetchApi = vi.fn();
 vi.mock('@/shared/api/client', () => ({ fetchApi: (...args: unknown[]) => mockFetchApi(...args) }));
 vi.mock('@/features/auth/contexts/AuthContext', () => ({
-  useAuth: () => ({ user: null, isLoading: false }),
+  useAuth: () => ({
+    user: { userId: 'u1', displayName: 'Vitest', emailMasked: 'v***@test.local' },
+    isLoading: false,
+    authCheckFailed: false,
+  }),
 }));
 vi.mock('@/shared/hooks/useAnalytics', () => ({
   useAnalytics: () => ({ track: vi.fn() }),

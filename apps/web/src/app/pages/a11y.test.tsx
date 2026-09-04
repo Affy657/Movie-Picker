@@ -18,6 +18,7 @@ import DonatePage from '@/app/pages/DonatePage';
 import ProfilePage from '@/features/profile/pages/ProfilePage';
 import ProfileMoviesPage from '@/features/profile/pages/ProfileMoviesPage';
 import WatchlistPage from '@/features/watchlist/pages/WatchlistPage';
+import NotificationsPage from '@/features/notifications/pages/NotificationsPage';
 import ServerErrorPage from '@/shared/components/ServerErrorPage';
 import type { UseQueryResult } from '@tanstack/react-query';
 import EventDetailSession from '@/features/events/pages/event-detail/EventDetailSession';
@@ -281,6 +282,32 @@ describe('accessibilité (axe)', () => {
     );
     await screen.findByText('Ancien Mais Bien Noté');
     await assertNoViolations(container, queryClient);
+  });
+
+  describe('états déconnectés (C4)', () => {
+    it("MyEventsPage (déconnecté) n'a pas de violations", async () => {
+      const { container, queryClient } = renderPage(<MyEventsPage />);
+      await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 });
+      await assertNoViolations(container, queryClient);
+    });
+
+    it("WatchlistPage (déconnecté) n'a pas de violations", async () => {
+      const { container, queryClient } = renderPage(<WatchlistPage />);
+      await screen.findByRole('heading', { name: /^ma liste$/i, level: 1 });
+      await assertNoViolations(container, queryClient);
+    });
+
+    it("NotificationsPage (déconnecté) n'a pas de violations", async () => {
+      const { container, queryClient } = renderPage(<NotificationsPage />);
+      await screen.findByRole('heading', { name: /^notifications$/i, level: 1 });
+      await assertNoViolations(container, queryClient);
+    });
+
+    it("CreateEvent (déconnecté) n'a pas de violations", async () => {
+      const { container, queryClient } = renderPage(<CreateEvent />);
+      await screen.findByRole('link', { name: /^se connecter$/i });
+      await assertNoViolations(container, queryClient);
+    });
   });
 
   describe('EventDetailSession (page soirée)', () => {

@@ -9,7 +9,11 @@ import { ROUTES } from '@/app/routes';
 import styles from './LandingPage.module.css';
 
 export default function LandingPage() {
-  usePageSeo({ title: APP_DOCUMENT_TITLE, canonical: `${SITE_URL}/`, ogType: 'website' });
+  usePageSeo({
+    title: APP_DOCUMENT_TITLE,
+    canonical: `${SITE_URL}${ROUTES.discover}`,
+    ogType: 'website',
+  });
   const { t } = useTranslation();
 
   return (

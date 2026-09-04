@@ -292,7 +292,7 @@ function DeleteAccountZone({ hasPassword }: Readonly<{ hasPassword: boolean }>) 
     await deleteAccount(hasPassword ? { password: value } : { confirmation: value });
     queryClient.setQueryData(queryKeys.auth.me, null);
     await queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
-    navigate(ROUTES.home, { replace: true });
+    navigate(ROUTES.discover, { replace: true });
   }, [hasPassword, value, queryClient, navigate]);
 
   const {

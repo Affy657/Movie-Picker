@@ -4,11 +4,14 @@ import { Inbox } from 'lucide-react';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Avatar from '@/shared/components/Avatar';
 import EmptyState from '@/shared/components/EmptyState';
+import SignedOutState from '@/shared/components/SignedOutState';
+import SessionCheckErrorState from '@/shared/components/SessionCheckErrorState';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
 import type { LocaleCode } from '@/shared/i18n/locales';
 import { getErrorMessage } from '@/shared/api/apiError';
@@ -166,6 +169,7 @@ export default function NotificationsPage() {
   const { t } = useTranslation();
   const { locale } = useLocale();
   useNoindexPage(pageTitle(t('notifications.inboxTitle')), ROUTES.notifications);
+  const { user, isLoading: authLoading, authCheckFailed } = useAuth();
   const queryClient = useQueryClient();
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -177,6 +181,7 @@ export default function NotificationsPage() {
       if (!lastPage.hasMore) return undefined;
       return allPages.reduce((sum, p) => sum + p.items.length, 0);
     },
+    enabled: !authLoading && !!user,
   });
 
   const invalidateInbox = useCallback(() => {
@@ -211,6 +216,33 @@ export default function NotificationsPage() {
   const unreadCount = inboxQuery.data?.pages[0]?.unreadCount ?? 0;
   const groups = useMemo(() => groupInboxItems(items), [items]);
   const handleRead = useCallback((id: string) => markOneMutation.mutate(id), [markOneMutation]);
+
+  if (authLoading) {
+    return (
+      <PageLayout>
+        <h1 className="visually-hidden">{t('notifications.inboxTitle')}</h1>
+        <p className="placeholder">{t('common.loading')}</p>
+      </PageLayout>
+    );
+  }
+
+  if (!user && authCheckFailed) {
+    return <SessionCheckErrorState />;
+  }
+
+  if (!user) {
+    return (
+      <PageLayout>
+        <h1 className={styles.pageTitle}>{t('notifications.inboxTitle')}</h1>
+        <SignedOutState
+          icon={<Inbox size={26} aria-hidden />}
+          title={t('notifications.signedOutTitle')}
+          message={t('notifications.signedOutMessage')}
+          returnTo={ROUTES.notifications}
+        />
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout>

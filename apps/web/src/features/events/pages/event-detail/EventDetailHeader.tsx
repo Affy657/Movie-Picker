@@ -209,7 +209,7 @@ export default function EventDetailHeader({
     if (globalThis.history.length > 1) {
       navigate(-1);
     } else {
-      navigate(ROUTES.home);
+      navigate(ROUTES.discover);
     }
   };
   const sentinelRef = useRef<HTMLDivElement>(null);

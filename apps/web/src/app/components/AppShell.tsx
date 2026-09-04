@@ -1,13 +1,13 @@
 import clsx from 'clsx';
 import { useState, type ComponentType, type SVGProps } from 'react';
 import { Bookmark, CalendarDays, Plus } from 'lucide-react';
-import { Link, NavLink, Outlet } from 'react-router';
+import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useLetterboxdAutoSync } from '@/features/letterboxd/hooks/useLetterboxdAutoSync';
 import { useWhatsNew } from '@/shared/hooks/useWhatsNew';
 import { shouldShowWhatsNewNavChip } from '@/shared/whatsNew';
-import { ROUTES } from '@/app/routes';
+import { withReturnTo, ROUTES } from '@/app/routes';
 import UserMenu from '@/features/auth/components/UserMenu';
 import InboxBell from '@/features/notifications/components/InboxBell';
 import Footer from './Footer';
@@ -34,7 +34,7 @@ type NavItemDef = {
 
 type NavItemSpec = Omit<NavItemDef, 'label'> & { labelKey: TranslationKey };
 
-const AUTHENTICATED_NAV_ITEMS: ReadonlyArray<NavItemSpec> = [
+const NAV_ITEMS: ReadonlyArray<NavItemSpec> = [
   { to: ROUTES.myEvents, labelKey: 'nav.myEvents', Icon: CalendarDays },
   { to: ROUTES.createEvent, labelKey: 'nav.createEvent', Icon: Plus },
   { to: ROUTES.watchlist, labelKey: 'nav.watchlist', Icon: Bookmark },
@@ -59,7 +59,8 @@ function MobileNavItem({ to, end, label, Icon }: Readonly<NavItemDef>) {
 
 export default function AppShell() {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+  const location = useLocation();
   useLetterboxdAutoSync();
   const {
     isOpen: whatsNewOpen,
@@ -70,13 +71,12 @@ export default function AppShell() {
   const [proposeIdeaOpen, setProposeIdeaOpen] = useState(false);
 
   const isAuthenticated = !!user;
+  const returnTo = `${location.pathname}${location.search}`;
 
-  const items: NavItemDef[] = isAuthenticated
-    ? AUTHENTICATED_NAV_ITEMS.map(({ labelKey, ...rest }) => ({
-        ...rest,
-        label: t(labelKey),
-      }))
-    : [];
+  const items: NavItemDef[] = NAV_ITEMS.map(({ labelKey, ...rest }) => ({
+    ...rest,
+    label: t(labelKey),
+  }));
 
   return (
     <div className={styles.root}>
@@ -96,38 +96,42 @@ export default function AppShell() {
             />
             <span className={styles.brandName}>Movie Picker</span>
           </Link>
-          {isAuthenticated ? (
-            <>
-              <nav className={styles.navDesktop} aria-label={t('nav.navLabel')}>
-                {items.map((item) => (
-                  <DesktopNavItem key={item.to} {...item} />
-                ))}
-              </nav>
-              <div className={styles.navActions}>
-                {shouldShowWhatsNewNavChip(user.createdAt) ? (
-                  <WhatsNewNavChip onOpen={openWhatsNew} />
-                ) : null}
-                <InboxBell />
-                <UserMenu user={user} />
-              </div>
-            </>
-          ) : null}
+          <nav className={styles.navDesktop} aria-label={t('nav.navLabel')}>
+            {items.map((item) => (
+              <DesktopNavItem key={item.to} {...item} />
+            ))}
+          </nav>
+          {isLoading ? (
+            <div className={styles.navActions} />
+          ) : isAuthenticated ? (
+            <div className={styles.navActions}>
+              {shouldShowWhatsNewNavChip(user.createdAt) ? (
+                <WhatsNewNavChip onOpen={openWhatsNew} />
+              ) : null}
+              <InboxBell />
+              <UserMenu user={user} />
+            </div>
+          ) : (
+            <div className={styles.navActions}>
+              <Link to={withReturnTo(ROUTES.login, returnTo)} className="btn btn-sm">
+                {t('home.ctaLogin')}
+              </Link>
+              <Link to={withReturnTo(ROUTES.register, returnTo)} className="btn btn-primary btn-sm">
+                {t('home.ctaRegister')}
+              </Link>
+            </div>
+          )}
         </div>
       </header>
       <div className={styles.content}>
         <Outlet />
       </div>
-      <Footer
-        clearMobileNav={isAuthenticated}
-        onOpenWhatsNew={isAuthenticated ? openWhatsNew : undefined}
-      />
-      {isAuthenticated ? (
-        <nav className={styles.navMobile} aria-label={t('nav.navLabel')}>
-          {items.map((item) => (
-            <MobileNavItem key={item.to} {...item} />
-          ))}
-        </nav>
-      ) : null}
+      <Footer clearMobileNav onOpenWhatsNew={isAuthenticated ? openWhatsNew : undefined} />
+      <nav className={styles.navMobile} aria-label={t('nav.navLabel')}>
+        {items.map((item) => (
+          <MobileNavItem key={item.to} {...item} />
+        ))}
+      </nav>
       <PwaAutoUpdate />
       <ConsentBanner />
       {isAuthenticated ? (

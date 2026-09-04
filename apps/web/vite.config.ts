@@ -143,7 +143,7 @@ export default defineConfig(({ mode }) => {
           background_color: '#0f172a',
           display: 'standalone',
           orientation: 'portrait',
-          start_url: '/',
+          start_url: '/my-events',
           scope: '/',
           lang: 'fr',
           prefer_related_applications: false,

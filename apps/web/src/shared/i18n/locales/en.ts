@@ -26,6 +26,7 @@ export const en: Locale = {
 
   nav: {
     home: 'Home',
+    discover: 'Discover',
     myEvents: 'My events',
     watchlist: 'My watchlist',
     account: 'Settings',
@@ -326,6 +327,8 @@ export const en: Locale = {
       submit: 'Create event',
       submitting: 'Creating\u2026',
       fallbackError: 'Creation failed',
+      signedOutTitle: 'Create your event',
+      signedOutMessage: 'Log in or create an account to organize an event and invite friends.',
     },
     join: {
       title: 'Join the event',
@@ -407,6 +410,9 @@ export const en: Locale = {
       activeEmpty: 'Create a new event to gather your friends and pick a film together.',
       historyEmptyTitle: 'No history yet',
       historyEmpty: 'Your finished events will appear here.',
+      signedOutTitle: 'Plan your next movie night',
+      signedOutMessage:
+        'Log in or create an account to create an event, invite friends and keep your history.',
       joinedCountOne: '1 participant',
       joinedCountMany: '{{count}} participants',
       joinedCountWithCapOne: '1 / {{max}} participant',
@@ -797,6 +803,8 @@ export const en: Locale = {
       title: 'Your watchlist is empty',
       message: 'Search for a movie above to add it to your "to watch" list.',
     },
+    signedOutTitle: 'Keep track of what to watch',
+    signedOutMessage: 'Log in or create an account to build your watchlist.',
     search: {
       label: 'Search for a movie to add to my watchlist',
       placeholder: 'Search for a movie to add…',
@@ -911,6 +919,8 @@ export const en: Locale = {
     inboxAriaLabelWithCount: 'Notifications, {{count}} unread',
     inboxTitle: 'Notifications',
     inboxEmpty: 'No notifications yet.',
+    signedOutTitle: 'Stay in the loop',
+    signedOutMessage: 'Log in or create an account to receive your notifications.',
     markAllButton: 'Mark all as read',
     loadMoreButton: 'Load more',
     markReadError: 'Could not mark notifications as read.',

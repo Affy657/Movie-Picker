@@ -46,9 +46,9 @@ describe('App (routes)', () => {
   afterAll(() => server.close());
 
   describe('visiteur anonyme', () => {
-    it("route / affiche la landing publique avec les CTA d'authentification", async () => {
+    it("route /decouvrir affiche la landing publique avec les CTA d'authentification", async () => {
       server.use(authMeGuestHandler);
-      renderRoutes(['/']);
+      renderRoutes(['/decouvrir']);
       expect(
         await screen.findByRole(
           'heading',
@@ -56,34 +56,67 @@ describe('App (routes)', () => {
           { timeout: 8000 }
         )
       ).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: /^se connecter$/i })).toHaveAttribute(
+      const main = screen.getByRole('main');
+      expect(within(main).getByRole('link', { name: /^se connecter$/i })).toHaveAttribute(
         'href',
         '/login'
       );
-      expect(screen.getByRole('link', { name: /^créer un compte$/i })).toHaveAttribute(
+      expect(within(main).getByRole('link', { name: /^créer un compte$/i })).toHaveAttribute(
         'href',
         '/register'
       );
     });
 
+    it('route / redirige vers Mes soirées, à l’état déconnecté', async () => {
+      server.use(authMeGuestHandler);
+      renderRoutes(['/']);
+      expect(
+        await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 }, { timeout: 8000 })
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('heading', { name: /choisissez le film de la soirée/i })
+      ).not.toBeInTheDocument();
+    });
+
     it.each([
       ['/new', '%2Fnew'],
       ['/my-events', '%2Fmy-events'],
-      ['/settings', '%2Fsettings'],
       ['/watchlist', '%2Fwatchlist'],
       ['/notifications', '%2Fnotifications'],
-    ])('route %s redirige vers /login avec un returnTo', async (path, encodedReturnTo) => {
-      server.use(
-        authMeGuestHandler,
-        http.get(`${TEST_API_V1}/auth/oauth/providers`, () => HttpResponse.json({ providers: [] }))
-      );
-      renderRoutes([path]);
+    ])(
+      'route %s reste accessible sans compte, avec un CTA de connexion (returnTo=%s)',
+      async (path, encodedReturnTo) => {
+        server.use(authMeGuestHandler);
+        renderRoutes([path]);
+        const main = await waitFor(() => screen.getByRole('main'), { timeout: 8000 });
+        const loginLink = await within(main).findByRole(
+          'link',
+          { name: /^se connecter$/i },
+          { timeout: 8000 }
+        );
+        expect(loginLink).toHaveAttribute('href', `/login?returnTo=${encodedReturnTo}`);
+        expect(within(main).getByRole('link', { name: /^créer un compte$/i })).toHaveAttribute(
+          'href',
+          `/register?returnTo=${encodedReturnTo}`
+        );
+        expect(screen.queryByRole('heading', { name: /^connexion$/i })).not.toBeInTheDocument();
+      }
+    );
+
+    it('route /settings affiche les préférences visiteur avec un CTA de connexion', async () => {
+      server.use(authMeGuestHandler);
+      renderRoutes(['/settings']);
       expect(
-        await screen.findByRole('heading', { name: /^connexion$/i }, { timeout: 8000 })
+        await screen.findByRole('heading', { name: /^paramètres$/i, level: 1 }, { timeout: 8000 })
       ).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: /créer un compte/i })).toHaveAttribute(
+      const main = screen.getByRole('main');
+      expect(within(main).getByRole('link', { name: /^se connecter$/i })).toHaveAttribute(
         'href',
-        `/register?returnTo=${encodedReturnTo}`
+        '/login?returnTo=%2Fsettings'
+      );
+      expect(within(main).getByRole('link', { name: /créer un compte/i })).toHaveAttribute(
+        'href',
+        '/register?returnTo=%2Fsettings'
       );
     });
 
@@ -108,11 +141,12 @@ describe('App (routes)', () => {
         await screen.findByRole('heading', { name: /soirée secrète/i }, { timeout: 8000 })
       ).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: /rejoindre la soirée/i })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: /^se connecter$/i })).toHaveAttribute(
+      const main = screen.getByRole('main');
+      expect(within(main).getByRole('link', { name: /^se connecter$/i })).toHaveAttribute(
         'href',
         `/login?returnTo=${encodeURIComponent('/e/soiree-secrete')}`
       );
-      expect(screen.getByRole('link', { name: /^créer un compte$/i })).toHaveAttribute(
+      expect(within(main).getByRole('link', { name: /^créer un compte$/i })).toHaveAttribute(
         'href',
         `/register?returnTo=${encodeURIComponent('/e/soiree-secrete')}`
       );
@@ -178,22 +212,54 @@ describe('App (routes)', () => {
       expect(screen.queryByRole('heading', { name: /^connexion$/i })).not.toBeInTheDocument();
     });
 
-    it("AppShell : aucune barre de navigation n'est exposée aux non-connectés", async () => {
+    it('AppShell : la navigation principale est exposée aux non-connectés', async () => {
       server.use(authMeGuestHandler);
-      renderRoutes(['/']);
+      renderRoutes(['/decouvrir']);
       await screen.findByRole(
         'heading',
         { name: /choisissez le film de la soirée/i, level: 1 },
         { timeout: 8000 }
       );
       expect(
-        screen.queryByRole('navigation', { name: /navigation principale/i })
-      ).not.toBeInTheDocument();
+        screen.queryAllByRole('navigation', { name: /navigation principale/i }).length
+      ).toBeGreaterThan(0);
+    });
+
+    it('AppShell : les boutons de connexion et inscription remplacent la cloche et le menu du compte', async () => {
+      server.use(authMeGuestHandler);
+      renderRoutes(['/decouvrir']);
+      await screen.findByRole(
+        'heading',
+        { name: /choisissez le film de la soirée/i, level: 1 },
+        { timeout: 8000 }
+      );
+      const loginLinks = await waitFor(() => {
+        const links = screen.getAllByRole('link', { name: /^se connecter$/i });
+        expect(links.length).toBeGreaterThan(1);
+        return links;
+      });
+      const headerLoginLink = loginLinks.find((el) =>
+        el.getAttribute('href')?.includes('returnTo=')
+      );
+      expect(headerLoginLink).toHaveAttribute(
+        'href',
+        `/login?returnTo=${encodeURIComponent('/decouvrir')}`
+      );
+      const registerLinks = screen.getAllByRole('link', { name: /^créer un compte$/i });
+      const headerRegisterLink = registerLinks.find((el) =>
+        el.getAttribute('href')?.includes('returnTo=')
+      );
+      expect(headerRegisterLink).toHaveAttribute(
+        'href',
+        `/register?returnTo=${encodeURIComponent('/decouvrir')}`
+      );
+      expect(screen.queryByRole('button', { name: /menu du compte/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /^notifications$/i })).not.toBeInTheDocument();
     });
 
     it("AppShell : aucun lien « Nouveautés » n'est exposé aux non-connectés", async () => {
       server.use(authMeGuestHandler);
-      renderRoutes(['/']);
+      renderRoutes(['/decouvrir']);
       await screen.findByRole(
         'heading',
         { name: /choisissez le film de la soirée/i, level: 1 },
@@ -224,7 +290,7 @@ describe('App (routes)', () => {
         http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
       );
       renderRoutes(['/my-events']);
-      await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 }, { timeout: 8000 });
+      await screen.findByRole('button', { name: /menu du compte/i }, { timeout: 8000 });
       const navs = screen.getAllByRole('navigation', { name: /navigation principale/i });
       expect(navs).toHaveLength(2);
       const mobileNav = navs.at(-1);
@@ -237,7 +303,6 @@ describe('App (routes)', () => {
       expect(
         within(mobileNav).queryByRole('link', { name: /^Paramètres$/i })
       ).not.toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /menu du compte/i })).toBeInTheDocument();
     });
 
     it('AppShell expose le lien « Nouveautés » dans le pied de page pour les connectés', async () => {
@@ -246,7 +311,7 @@ describe('App (routes)', () => {
         http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
       );
       renderRoutes(['/my-events']);
-      await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 }, { timeout: 8000 });
+      await screen.findByRole('button', { name: /menu du compte/i }, { timeout: 8000 });
       expect(screen.getByRole('button', { name: /^nouveautés$/i })).toBeInTheDocument();
     });
 
@@ -269,8 +334,11 @@ describe('App (routes)', () => {
         )
       );
       renderRoutes(['/my-events']);
-      await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 }, { timeout: 8000 });
-      const chip = screen.getByRole('button', { name: /voir les nouveautés/i });
+      const chip = await screen.findByRole(
+        'button',
+        { name: /voir les nouveautés/i },
+        { timeout: 8000 }
+      );
       const bell = screen.getByRole('link', { name: /^notifications$/i });
       expect(chip.compareDocumentPosition(bell) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
@@ -291,7 +359,7 @@ describe('App (routes)', () => {
         http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
       );
       renderRoutes(['/my-events']);
-      await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 }, { timeout: 8000 });
+      await screen.findByRole('button', { name: /menu du compte/i }, { timeout: 8000 });
       expect(
         screen.queryByRole('button', { name: /voir les nouveautés/i })
       ).not.toBeInTheDocument();
@@ -301,7 +369,7 @@ describe('App (routes)', () => {
 
   it('le brand mène toujours à la racine du site', async () => {
     server.use(authMeGuestHandler);
-    renderRoutes(['/']);
+    renderRoutes(['/decouvrir']);
     await screen.findByRole(
       'heading',
       { name: /choisissez le film de la soirée/i, level: 1 },

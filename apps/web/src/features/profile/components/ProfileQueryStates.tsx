@@ -15,7 +15,7 @@ export function ProfileNotFoundState() {
       <p className="errorStateMessage" role="alert">
         {t('profile.notFound')}
       </p>
-      <Link to={ROUTES.home} className="btn">
+      <Link to={ROUTES.discover} className="btn">
         {t('profile.backHome')}
       </Link>
     </PageLayout>
