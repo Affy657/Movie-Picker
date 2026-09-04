@@ -1,103 +1,191 @@
 import clsx from 'clsx';
 import { Crown, Film, Trophy, Users } from 'lucide-react';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
-import { useLocale, useTranslation } from '@/shared/i18n';
+import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
 import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
 import { formatEventTime, formatMyEventsListDate } from '@/shared/utils/formatMyEventsListDate';
+import { formatRelativeEventDate } from '@/shared/utils/formatRelativeEventDate';
 import EventLifecyclePill from '@/shared/components/EventLifecyclePill';
+import EventDateChip from '@/features/events/components/EventDateChip';
 import type { MyEventSummary } from '@/features/events/types';
 import styles from './EventSummaryCard.module.css';
 
 export { styles as eventSummaryCardStyles };
 
-function ParticipantStat({
+function pluralize(
+  count: number,
+  oneKey: TranslationKey,
+  manyKey: TranslationKey,
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
+  vars?: Record<string, string | number>
+): string {
+  return count === 1 ? t(oneKey, vars) : t(manyKey, { count, ...vars });
+}
+
+export function ParticipantStat({
   count,
   maxParticipants,
-}: Readonly<{ count: number; maxParticipants: number | null | undefined }>) {
+  t,
+}: Readonly<{
+  count: number;
+  maxParticipants: number | null | undefined;
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
+}>) {
   const hasCap = typeof maxParticipants === 'number' && maxParticipants > 0;
   const countStr = hasCap ? `${count} / ${maxParticipants}` : String(count);
+  const a11yLabel = hasCap
+    ? pluralize(
+        count,
+        'events.myEvents.joinedCountWithCapOne',
+        'events.myEvents.joinedCountWithCapMany',
+        t,
+        {
+          max: maxParticipants,
+        }
+      )
+    : pluralize(count, 'events.myEvents.joinedCountOne', 'events.myEvents.joinedCountMany', t);
   return (
     <span className={styles.participantStat}>
       <Users aria-hidden size={13} />
-      <span className={styles.statValue}>{countStr}</span>
+      <span className={styles.statValue} aria-hidden="true">
+        {countStr}
+      </span>
+      <span className="visually-hidden">{a11yLabel}</span>
     </span>
   );
 }
 
-function MoviesStat({ count }: Readonly<{ count: number }>) {
+export function MoviesStat({
+  count,
+  t,
+}: Readonly<{
+  count: number;
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
+}>) {
+  const a11yLabel = pluralize(
+    count,
+    'events.myEvents.movieProposedOne',
+    'events.myEvents.movieProposedMany',
+    t
+  );
   return (
     <span className={styles.participantStat}>
       <Film aria-hidden size={13} />
-      <span className={styles.statValue}>{count}</span>
+      <span className={styles.statValue} aria-hidden="true">
+        {count}
+      </span>
+      <span className="visually-hidden">{a11yLabel}</span>
+    </span>
+  );
+}
+
+export function HostBadge({ t }: Readonly<{ t: (key: TranslationKey) => string }>) {
+  return (
+    <span className={styles.badgeHost}>
+      <Crown aria-hidden size={12} />
+      <span className={styles.badgeHostLabel}>{t('events.myEvents.hostBadge')}</span>
     </span>
   );
 }
 
 interface EventSummaryCardBodyProps {
   event: MyEventSummary;
-  showLifecycleBadge?: boolean;
+  variant?: 'list' | 'picker';
 }
 
 export function EventSummaryCardBody({
   event,
-  showLifecycleBadge = true,
+  variant = 'list',
 }: Readonly<EventSummaryCardBodyProps>) {
   const { t } = useTranslation();
   const { locale } = useLocale();
   const lifecycle = normalizeMyEventLifecycle(event.lifecycle);
   const dateLabel = formatMyEventsListDate(event.date, locale);
 
-  return (
-    <>
-      <span className={styles.rowTop}>
-        <span className={styles.title}>{event.title}</span>
-        {event.isCreator ? (
+  if (variant === 'picker') {
+    return (
+      <>
+        <span className={styles.rowTop}>
+          <span className={styles.title}>{event.title}</span>
+          {event.isCreator ? <HostBadge t={t} /> : null}
+        </span>
+        {event.theme ? <span className={styles.cardTheme}>{event.theme}</span> : null}
+        {event.winnerMovieTitle ? (
           <span
-            className={styles.badgeHost}
-            title={t('events.myEvents.hostBadgeTitle')}
-            aria-label={t('events.myEvents.hostBadge')}
+            className={styles.winnerRow}
+            aria-label={t('events.myEvents.winnerMovieLabel', { title: event.winnerMovieTitle })}
           >
-            <Crown aria-hidden size={14} />
+            {event.winnerMoviePosterPath ? (
+              <img
+                src={posterImageSrc(event.winnerMoviePosterPath)}
+                alt=""
+                aria-hidden
+                className={styles.winnerPoster}
+                width={28}
+                height={42}
+              />
+            ) : (
+              <Trophy aria-hidden size={13} className={styles.winnerIcon} />
+            )}
+            <span className={styles.winnerTitle} aria-hidden="true">
+              {event.winnerMovieTitle}
+            </span>
           </span>
         ) : null}
-      </span>
-      {event.theme ? <span className={styles.cardTheme}>{event.theme}</span> : null}
-      {event.winnerMovieTitle ? (
-        <span className={styles.winnerRow}>
-          {event.winnerMoviePosterPath ? (
-            <img
-              src={posterImageSrc(event.winnerMoviePosterPath)}
-              alt=""
-              aria-hidden
-              className={styles.winnerPoster}
-              width={28}
-              height={42}
-            />
-          ) : (
-            <Trophy aria-hidden size={13} className={styles.winnerIcon} />
+        <div
+          className={clsx(
+            styles.linkFooter,
+            event.winnerMovieTitle && styles.linkFooterAfterWinner
           )}
-          <span className={styles.winnerTitle}>{event.winnerMovieTitle}</span>
-        </span>
-      ) : null}
-      <div
-        className={clsx(styles.linkFooter, event.winnerMovieTitle && styles.linkFooterAfterWinner)}
-      >
-        <span className={styles.cardStats}>
-          <ParticipantStat
-            count={event.participantCount ?? 0}
-            maxParticipants={event.maxParticipants}
-          />
-          <MoviesStat count={event.movieCount ?? 0} />
-        </span>
-        <span className={styles.metaRight}>
-          {showLifecycleBadge && lifecycle !== 'upcoming' ? (
-            <EventLifecyclePill lifecycle={lifecycle} />
-          ) : null}
-          <span className={styles.meta}>
-            {formatEventTime(event.time)} – {dateLabel}
+        >
+          <span className={styles.cardStats}>
+            <ParticipantStat
+              count={event.participantCount ?? 0}
+              maxParticipants={event.maxParticipants}
+              t={t}
+            />
+            <MoviesStat count={event.movieCount ?? 0} t={t} />
           </span>
+          <span className={styles.metaRight}>
+            <span className={styles.meta}>
+              {formatEventTime(event.time)} – {dateLabel}
+            </span>
+          </span>
+        </div>
+      </>
+    );
+  }
+
+  const isLive = lifecycle === 'live';
+
+  return (
+    <div className={styles.listRow}>
+      <EventDateChip date={event.date} live={isLive} />
+      <div className={styles.listBody}>
+        <span className={styles.rowTop}>
+          <span className={styles.title}>{event.title}</span>
+          {event.isCreator ? <HostBadge t={t} /> : null}
         </span>
+        {event.theme ? <span className={styles.cardTheme}>{event.theme}</span> : null}
+        <div className={styles.listFooter}>
+          {isLive ? (
+            <EventLifecyclePill lifecycle={lifecycle} />
+          ) : (
+            <span className={styles.relativeDatePill}>
+              {formatRelativeEventDate(event.date, locale)}
+            </span>
+          )}
+          <span className={styles.timeValue}>{formatEventTime(event.time)}</span>
+          <span className={clsx(styles.cardStats, styles.listStats)}>
+            <ParticipantStat
+              count={event.participantCount ?? 0}
+              maxParticipants={event.maxParticipants}
+              t={t}
+            />
+            <MoviesStat count={event.movieCount ?? 0} t={t} />
+          </span>
+        </div>
       </div>
-    </>
+    </div>
   );
 }

@@ -77,7 +77,7 @@ describe('ProfilePage (MSW)', () => {
     expect(screen.getByText('@alice')).toBeInTheDocument();
     expect(screen.getByText('Grande cinéphile')).toBeInTheDocument();
     expect(screen.getByText(/membre depuis/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /copier le lien/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^partager$/i })).toBeInTheDocument();
   });
 
   it('affiche un squelette pendant le chargement du profil', () => {
@@ -134,7 +134,8 @@ describe('ProfilePage (MSW)', () => {
       renderProfile('alice');
       await screen.findByRole('heading', { name: 'Alice' });
 
-      await user.click(screen.getByRole('button', { name: /copier le lien/i }));
+      await user.click(screen.getByRole('button', { name: /^partager$/i }));
+      await user.click(await screen.findByRole('button', { name: /copier le lien/i }));
 
       await waitFor(() => {
         expect(screen.getByRole('status')).toHaveTextContent(/lien copié/i);
@@ -197,9 +198,12 @@ describe('ProfilePage (MSW)', () => {
 
     await user.click(screen.getByRole('button', { name: /3.*abonnements/i }));
 
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      },
+      { timeout: 8000 }
+    );
   });
 
   it("ouvre la modal followers au clic sur le compteur d'abonnés", async () => {

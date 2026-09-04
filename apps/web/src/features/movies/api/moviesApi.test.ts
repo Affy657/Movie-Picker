@@ -4,13 +4,11 @@ import { fetchApi } from '@/shared/api/client';
 import {
   addMovieToEvent,
   clearMovieVote,
-  deleteMoviePitchNote,
   fetchEventMovies,
   fetchMovieDetails,
   markMovieAsSeen,
   removeMovieFromEvent,
   searchMovies,
-  setMoviePitchNote,
   setMovieWheelExclusion,
   unmarkMovieAsSeen,
   voteMovie,
@@ -214,24 +212,6 @@ describe('movie mutations', () => {
     expect(mockFetchApi).toHaveBeenCalledWith('/events/soiree/movies/m1/wheel-exclusion', {
       method: 'PUT',
       body: JSON.stringify({ excluded: false }),
-    });
-  });
-
-  it('setMoviePitchNote puts the note', async () => {
-    await setMoviePitchNote('soiree', 'm1', 'p1', 'top film');
-
-    expect(mockFetchApi).toHaveBeenCalledWith('/events/soiree/movies/m1/note', {
-      method: 'PUT',
-      body: JSON.stringify({ participantId: 'p1', pitchNote: 'top film' }),
-    });
-  });
-
-  it('deleteMoviePitchNote deletes the note', async () => {
-    await deleteMoviePitchNote('soiree', 'm1', 'p1');
-
-    expect(mockFetchApi).toHaveBeenCalledWith('/events/soiree/movies/m1/note', {
-      method: 'DELETE',
-      body: JSON.stringify({ participantId: 'p1' }),
     });
   });
 

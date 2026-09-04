@@ -11,9 +11,9 @@ import { TEST_API_V1 } from '@/mocks/handlers';
 function renderAccount() {
   return render(
     <AppTestProviders>
-      <MemoryRouter initialEntries={['/settings']}>
+      <MemoryRouter initialEntries={['/settings/integrations']}>
         <Routes>
-          <Route path="/settings" element={<AccountPage />} />
+          <Route path="/settings/*" element={<AccountPage />} />
         </Routes>
       </MemoryRouter>
     </AppTestProviders>
@@ -79,9 +79,7 @@ describe('LetterboxdImportSection (MSW)', () => {
 
     expect(await screen.findByText('dave_v')).toBeInTheDocument();
     expect(screen.queryByLabelText('Pseudo Letterboxd')).not.toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Modifier le pseudo Letterboxd' })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Modifier' })).toBeInTheDocument();
   });
 
   it('permet de modifier le pseudo via le crayon puis de valider', async () => {
@@ -106,7 +104,7 @@ describe('LetterboxdImportSection (MSW)', () => {
 
     renderAccount();
 
-    await user.click(await screen.findByRole('button', { name: 'Modifier le pseudo Letterboxd' }));
+    await user.click(await screen.findByRole('button', { name: 'Modifier' }));
 
     const input = screen.getByLabelText('Pseudo Letterboxd');
     expect(input).toHaveValue('dave_v');
@@ -140,9 +138,7 @@ describe('LetterboxdImportSection (MSW)', () => {
 
     renderAccount();
 
-    await user.click(
-      await screen.findByRole('button', { name: 'Déconnecter le compte Letterboxd' })
-    );
+    await user.click(await screen.findByRole('button', { name: 'Déconnecter' }));
 
     await waitFor(() => expect(patched).toBe(''));
     expect(
@@ -164,7 +160,7 @@ describe('LetterboxdImportSection (MSW)', () => {
 
     renderAccount();
 
-    await user.click(await screen.findByRole('button', { name: 'Modifier le pseudo Letterboxd' }));
+    await user.click(await screen.findByRole('button', { name: 'Modifier' }));
     await user.type(screen.getByLabelText('Pseudo Letterboxd'), 'xyz');
     await user.click(screen.getByRole('button', { name: 'Annuler' }));
 
@@ -179,9 +175,7 @@ describe('LetterboxdImportSection (MSW)', () => {
     renderAccount();
 
     expect(await screen.findByLabelText('Pseudo Letterboxd')).toHaveValue('');
-    expect(
-      screen.queryByRole('button', { name: 'Modifier le pseudo Letterboxd' })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Modifier' })).not.toBeInTheDocument();
   });
 
   it('synchronise et affiche le bilan ajouts/retraits sans ouvrir de modale quand tout est certain', async () => {
@@ -301,9 +295,10 @@ describe('LetterboxdImportSection (MSW)', () => {
 
     renderAccount();
 
-    const pendingButton = await screen.findByRole('button', {
-      name: /Réconciliation en attente : 2 film\(s\)/,
-    });
+    expect(
+      await screen.findByText(/2 film\(s\) n.ont pas pu être identifiés automatiquement\./)
+    ).toBeInTheDocument();
+    const pendingButton = await screen.findByRole('button', { name: 'Les confirmer' });
     await user.click(pendingButton);
 
     expect(
@@ -367,9 +362,7 @@ describe('LetterboxdImportSection (MSW)', () => {
 
     renderAccount();
 
-    const pendingButton = await screen.findByRole('button', {
-      name: /Réconciliation en attente : 2 film\(s\)/,
-    });
+    const pendingButton = await screen.findByRole('button', { name: 'Les confirmer' });
     await user.click(pendingButton);
 
     expect(
@@ -380,9 +373,7 @@ describe('LetterboxdImportSection (MSW)', () => {
 
     expect(await screen.findByText('1 film(s) ajouté(s).')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Choisir pour 1 film/ })).toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: /Réconciliation en attente : 2 film\(s\)/ })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Les confirmer' })).not.toBeInTheDocument();
   });
 
   it('liste les films introuvables sur TMDB dans un dépliant', async () => {
@@ -415,16 +406,17 @@ describe('LetterboxdImportSection (MSW)', () => {
     expect(screen.getByText('Film Obscur (1974)')).toBeInTheDocument();
   });
 
-  it('désactive la synchronisation et signale qu’elle est inactive sans pseudo', async () => {
+  it('masque la synchronisation et signale qu’elle est inactive sans pseudo', async () => {
     server.use(meHandler({ letterboxdUsername: null }));
 
     renderAccount();
 
-    const syncButton = await screen.findByRole('button', { name: /Synchroniser maintenant/ });
-    expect(syncButton).toBeDisabled();
     expect(
-      screen.getByText('Ajoutez votre pseudo pour activer la synchronisation.')
+      await screen.findByText('Ajoutez votre pseudo pour activer la synchronisation.')
     ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Synchroniser maintenant/ })
+    ).not.toBeInTheDocument();
   });
 
   it('affiche la date de dernière synchronisation réussie', async () => {

@@ -21,6 +21,16 @@ function renderPage() {
 
 const base = { actorAvatarId: '', isRead: false, createdAt: '2026-06-03T10:00:00Z' };
 
+const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
+  HttpResponse.json({
+    userId: 'u1',
+    displayName: 'Alice',
+    emailMasked: 'a***@test.local',
+    uiTheme: 'system',
+    accentColor: 'default',
+  })
+);
+
 describe('NotificationsPage (MSW)', () => {
   const server = setupServer();
 
@@ -30,7 +40,7 @@ describe('NotificationsPage (MSW)', () => {
 
   it("affiche l'état vide quand il n'y a aucune notification", async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authedUserHandler,
       http.get(`${TEST_API_V1}/notifications/inbox`, () =>
         HttpResponse.json({ items: [], unreadCount: 0 })
       )
@@ -43,7 +53,7 @@ describe('NotificationsPage (MSW)', () => {
 
   it('regroupe deux notifications de la même soirée sous un seul en-tête', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authedUserHandler,
       http.get(`${TEST_API_V1}/notifications/inbox`, () =>
         HttpResponse.json({
           items: [
@@ -81,7 +91,7 @@ describe('NotificationsPage (MSW)', () => {
     const user = userEvent.setup();
     let markedId: string | null = null;
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authedUserHandler,
       http.get(`${TEST_API_V1}/notifications/inbox`, () =>
         HttpResponse.json({
           items: [
@@ -113,7 +123,7 @@ describe('NotificationsPage (MSW)', () => {
 
   it("une notification 'soirée annulée' n'est pas cliquable vers une destination", async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authedUserHandler,
       http.get(`${TEST_API_V1}/notifications/inbox`, () =>
         HttpResponse.json({
           items: [{ ...base, id: 'd', type: 'eventdeleted', eventTitle: 'Soiree Annulee' }],
@@ -133,7 +143,7 @@ describe('NotificationsPage (MSW)', () => {
     const user = userEvent.setup();
     let readAll = 0;
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authedUserHandler,
       http.get(`${TEST_API_V1}/notifications/inbox`, () =>
         HttpResponse.json({
           items: [{ ...base, id: 'a', type: 'eventdeleted', eventTitle: 'Soiree' }],
@@ -157,7 +167,7 @@ describe('NotificationsPage (MSW)', () => {
   it("affiche 'charger la suite' quand hasMore est vrai, et charge la page suivante au clic", async () => {
     const user = userEvent.setup();
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authedUserHandler,
       http.get(`${TEST_API_V1}/notifications/inbox`, ({ request }) => {
         const offset = new URL(request.url).searchParams.get('offset');
         if (offset === '1') {
@@ -188,7 +198,7 @@ describe('NotificationsPage (MSW)', () => {
 
   it("n'affiche pas le bouton 'charger la suite' quand hasMore est faux", async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authedUserHandler,
       http.get(`${TEST_API_V1}/notifications/inbox`, () =>
         HttpResponse.json({
           items: [{ ...base, id: 'a', type: 'eventdeleted', eventTitle: 'Soiree' }],
@@ -206,7 +216,7 @@ describe('NotificationsPage (MSW)', () => {
 
   it("n'affiche pas le bouton 'tout marquer comme lu' quand il n'y a aucun non-lu", async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authedUserHandler,
       http.get(`${TEST_API_V1}/notifications/inbox`, () =>
         HttpResponse.json({
           items: [{ ...base, id: 'a', type: 'eventdeleted', eventTitle: 'Soiree', isRead: true }],

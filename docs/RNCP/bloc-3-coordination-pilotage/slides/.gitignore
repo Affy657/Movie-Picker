@@ -1,0 +1,6 @@
+node_modules/
+package-lock.json
+dist/
+.slidev/
+*-export.pdf
+*-export.pptx

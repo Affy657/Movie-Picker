@@ -1,13 +1,3 @@
-.connectionCard {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.85rem 0.9rem;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  background: var(--color-input-bg);
-}
-
 .connectionRow {
   display: flex;
   align-items: center;
@@ -95,43 +85,8 @@
   transform: translateY(var(--text-optical-nudge));
 }
 
-.reconciliationPending {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  width: 100%;
-  padding: var(--space-1) var(--space-2);
-  border: 1px solid color-mix(in srgb, var(--color-badge-pending-text) 32%, transparent);
-  border-radius: var(--radius-sm);
-  background: var(--color-badge-pending-bg);
-  color: var(--color-badge-pending-text);
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  line-height: 1;
-  text-align: left;
-  cursor: pointer;
-  transition: border-color var(--duration-fast) var(--ease-out);
-}
-
-.reconciliationPending svg {
-  flex-shrink: 0;
-}
-
-.reconciliationPendingLabel {
-  transform: translateY(var(--text-optical-nudge));
-}
-
-.reconciliationPending:hover:not(:disabled) {
-  border-color: var(--color-badge-pending-text);
-}
-
-.reconciliationPending:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
 .syncBtn {
-  margin-top: 0.85rem;
+  flex-shrink: 0;
 }
 
 .report {

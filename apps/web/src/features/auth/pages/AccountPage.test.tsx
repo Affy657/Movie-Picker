@@ -8,12 +8,12 @@ import AccountPage from '@/features/auth/pages/AccountPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1, authMeGuestHandler } from '@/mocks/handlers';
 
-function renderAccount() {
+function renderAccount(initialPath = '/settings') {
   return render(
     <AppTestProviders>
-      <MemoryRouter initialEntries={['/settings']}>
+      <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
-          <Route path="/settings" element={<AccountPage />} />
+          <Route path="/settings/*" element={<AccountPage />} />
         </Routes>
       </MemoryRouter>
     </AppTestProviders>
@@ -57,13 +57,9 @@ describe('AccountPage (MSW)', () => {
       })
     );
 
-    renderAccount();
+    renderAccount('/settings/preferences');
 
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Mon compte' })).toBeInTheDocument();
-    });
-
-    expect(screen.getByRole('heading', { name: 'Préférences' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Préférences' })).toBeInTheDocument();
 
     const darkRadio = await screen.findByRole('radio', { name: /sombre/i });
     await user.click(darkRadio);
@@ -99,11 +95,9 @@ describe('AccountPage (MSW)', () => {
       })
     );
 
-    renderAccount();
+    renderAccount('/settings/preferences');
 
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Mon compte' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('heading', { name: 'Préférences' })).toBeInTheDocument();
 
     const tenRadio = await screen.findByRole('radio', { name: 'Sur 10' });
     await user.click(tenRadio);
@@ -116,7 +110,7 @@ describe('AccountPage (MSW)', () => {
     renderAccount();
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Mon compte' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Paramètres' })).toBeInTheDocument();
     });
 
     expect(screen.queryByText('Échelle des notes')).not.toBeInTheDocument();

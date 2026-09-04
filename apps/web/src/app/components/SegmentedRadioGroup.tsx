@@ -11,6 +11,7 @@ export default function SegmentedRadioGroup<T extends string>({
   value,
   onChange,
   ariaLabel,
+  ariaLabelledBy,
   className = '',
   id,
 }: Readonly<{
@@ -18,6 +19,7 @@ export default function SegmentedRadioGroup<T extends string>({
   value: T;
   onChange: (value: T) => void;
   ariaLabel: string;
+  ariaLabelledBy?: string;
   className?: string;
   id?: string;
 }>) {
@@ -42,7 +44,8 @@ export default function SegmentedRadioGroup<T extends string>({
     <div
       id={id}
       role="radiogroup"
-      aria-label={id ? undefined : ariaLabel}
+      aria-label={ariaLabelledBy ? undefined : ariaLabel}
+      aria-labelledby={ariaLabelledBy}
       className={clsx(styles.root, className || undefined)}
     >
       {options.map((opt, idx) => {

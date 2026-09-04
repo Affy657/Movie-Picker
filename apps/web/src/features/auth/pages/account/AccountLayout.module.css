@@ -1,0 +1,119 @@
+.account {
+  display: grid;
+  grid-template-columns: 14.5rem 1fr;
+  gap: 0 var(--space-7);
+}
+
+.rubrics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  align-self: start;
+  position: sticky;
+  top: var(--space-4);
+}
+
+.rubric {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: inherit;
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  line-height: 1;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background var(--duration-base) var(--ease-default),
+    color var(--duration-base) var(--ease-default);
+}
+
+.rubric span:not(.rubricDot) {
+  transform: translateY(var(--text-optical-nudge));
+}
+
+.rubric svg {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.rubric:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.rubricActive {
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  color: var(--color-primary-hover);
+  font-weight: 600;
+}
+
+.rubricActive svg {
+  opacity: 1;
+}
+
+.rubric:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.rubricDot {
+  margin-left: auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-badge-pending-text);
+  flex-shrink: 0;
+}
+
+.mobileSubHeader {
+  grid-column: 1 / -1;
+  margin-bottom: 0.35rem;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.55rem 0.35rem 0.3rem;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-primary-hover);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.back span {
+  transform: translateY(var(--text-optical-nudge));
+}
+
+.back:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.panel {
+  grid-column: 2 / 3;
+  min-width: 0;
+}
+
+@media (max-width: 47.9375rem) {
+  .account {
+    grid-template-columns: 1fr;
+  }
+
+  .panel {
+    grid-column: 1 / -1;
+  }
+}

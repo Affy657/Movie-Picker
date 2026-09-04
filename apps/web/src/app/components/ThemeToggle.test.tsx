@@ -73,6 +73,25 @@ describe('ThemeToggle', () => {
     await waitFor(() => expect(setUiPreference).toHaveBeenCalledWith('system'));
   });
 
+  it('shows an inline error when persistence fails', async () => {
+    configure('system', { id: 'u1' }, vi.fn().mockRejectedValue(new Error('nope')));
+
+    render(<ThemeToggle />);
+    await userEvent.click(screen.getByRole('radio', { name: 'theme.dark' }));
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+  });
+
+  it('calls onSaved after a successful patch', async () => {
+    const onSaved = vi.fn();
+    configure('system', { id: 'u1' }, vi.fn().mockResolvedValue(undefined));
+
+    render(<ThemeToggle onSaved={onSaved} />);
+    await userEvent.click(screen.getByRole('radio', { name: 'theme.dark' }));
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+  });
+
   it('moves to the next theme with ArrowRight', () => {
     configure('system');
 

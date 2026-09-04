@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, AlertCircle } from 'lucide-react';
@@ -6,7 +6,6 @@ import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
 import { getErrorMessage, ApiError } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
-import { useCopyFeedback } from '@/shared/hooks/useCopyFeedback';
 import { APP_DOCUMENT_TITLE, pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
@@ -73,7 +72,6 @@ export default function ProfilePage() {
   const { user } = useAuth();
   const { track } = useAnalytics();
   const queryClient = useQueryClient();
-  const { copied, copy } = useCopyFeedback();
   const [followModal, setFollowModal] = useState<FollowTab | null>(null);
   const [followError, setFollowError] = useState<string | null>(null);
 
@@ -108,10 +106,6 @@ export default function ProfilePage() {
         }
       : { title: APP_DOCUMENT_TITLE, noindex: isNotFound }
   );
-
-  const handleCopyLink = useCallback(() => {
-    copy(globalThis.location.href);
-  }, [copy]);
 
   const followMutation = useMutation({
     mutationFn: () => followUser(profile!.handle),
@@ -172,10 +166,9 @@ export default function ProfilePage() {
               isOwnProfile={isOwnProfile}
               isLoggedIn={!!user}
               followPending={followPending}
+              memberSinceLabel={t('profile.memberSince', { date: memberSince })}
               onFollow={() => followMutation.mutate()}
               onUnfollow={() => unfollowMutation.mutate()}
-              copied={copied}
-              onCopyLink={handleCopyLink}
             />
 
             {followError && (

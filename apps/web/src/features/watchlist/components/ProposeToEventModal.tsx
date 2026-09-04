@@ -85,7 +85,7 @@ export default function ProposeToEventModal({
                   onClick={() => handlePropose(e.slug)}
                   disabled={row.status === 'pending' || isDone}
                 >
-                  <EventSummaryCardBody event={e} showLifecycleBadge={false} />
+                  <EventSummaryCardBody event={e} variant="picker" />
                 </button>
                 <div className={styles.rowStatus}>
                   {row.status === 'pending' && <span>{t('common.loading')}</span>}

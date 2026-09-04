@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.Posters;
@@ -77,7 +78,11 @@ public sealed class AddMovieHandler : IAddMovieHandler
 
         var now = DateTimeOffset.UtcNow;
         var pitchNote = string.IsNullOrWhiteSpace(request.PitchNote) ? null : request.PitchNote.Trim();
-        var genreIds = await FetchGenreIdsBestEffortAsync(request.TmdbId, request.MediaType, ct);
+        var genreIdsTask = FetchGenreIdsBestEffortAsync(request.TmdbId, request.MediaType, ct);
+        var proposerUserTask = _userRepository.GetByIdAsync(currentUserId, ct);
+        await Task.WhenAll(genreIdsTask, proposerUserTask);
+        var genreIds = await genreIdsTask;
+        var proposerHandle = PublicHandleResolver.Resolve(await proposerUserTask);
 
         var movie = new Movie
         {
@@ -110,14 +115,17 @@ public sealed class AddMovieHandler : IAddMovieHandler
             Year = created.Year,
             PosterPath = created.PosterPath,
             PitchNote = created.PitchNote,
+            GenreIds = created.GenreIds,
             CreatedAt = created.CreatedAt,
             UpdatedAt = created.UpdatedAt,
             ProposerPseudo = participant.Pseudo,
+            ProposerHandle = proposerHandle,
             Score = 0,
             Up = 0,
             Down = 0,
             SeenCount = 0,
-            SeenByPseudos = Array.Empty<string>()
+            SeenByPseudos = Array.Empty<string>(),
+            VotersUpPseudos = Array.Empty<string>()
         };
     }
 

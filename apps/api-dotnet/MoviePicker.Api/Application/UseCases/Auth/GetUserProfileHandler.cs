@@ -18,6 +18,7 @@ public sealed class GetUserProfileHandler : IGetUserProfileHandler
             UserId = user.Id,
             DisplayName = user.DisplayName,
             EmailMasked = EmailMasking.Mask(user.Email),
+            Email = user.Email,
             UiTheme = user.UiTheme,
             AccentColor = user.AccentColor,
             RatingScale = user.RatingScale,

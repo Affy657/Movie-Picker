@@ -1,0 +1,95 @@
+.list {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  overflow-x: auto;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  height: 2.625rem;
+  padding: 0 0.875rem;
+  flex-shrink: 0;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color var(--duration-base) var(--ease-default),
+    border-color var(--duration-base) var(--ease-default);
+}
+
+.tab:hover {
+  color: var(--color-text);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.tabActive {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.tabLabel {
+  transform: translateY(0.06em);
+}
+
+.tabBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.125rem;
+  padding: 0 0.3125rem;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-3xs);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabActive .tabBadge {
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  color: var(--color-primary);
+}
+
+/* ---- variante pastille (segmented control) ---- */
+.pillList {
+  gap: 0.25rem;
+  padding: 0.2rem;
+  background: var(--color-input-readonly);
+  border-radius: var(--radius-pill);
+}
+
+.pillTab {
+  flex: 1 1 0;
+  min-width: 0;
+  height: auto;
+  padding: 0.45rem 0.6rem;
+  border-bottom: none;
+  border-radius: var(--radius-pill);
+  justify-content: center;
+}
+
+.pillTabActive {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.pillTab .tabBadge {
+  background: var(--color-badge-host-bg);
+  color: var(--color-badge-host-text);
+}

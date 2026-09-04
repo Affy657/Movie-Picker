@@ -2,9 +2,9 @@ import type { EventConfigData, MyEventLifecycle, WheelMode } from '@/shared/type
 
 export type { WheelMode, EventConfigData, EventData } from '@/shared/types/event';
 
-export const MAX_EVENT_PARTICIPANTS = 30;
+export const MAX_EVENT_PARTICIPANTS = 300;
 
-export const MAX_PROPOSALS_PER_PARTICIPANT = 10;
+export const MAX_PROPOSALS_PER_PARTICIPANT = 15;
 
 export const DEFAULT_EVENT_CONFIG: EventConfigData = {
   theme: null,
@@ -18,8 +18,6 @@ export const DEFAULT_EVENT_CONFIG: EventConfigData = {
 export type EventConfigPatchPayload = {
   title?: string;
   theme: string;
-  themeColor?: number | null;
-  clearThemeColor?: boolean;
   maxProposalsPerParticipant: number;
   maxParticipants: number;
   wheelMode: WheelMode;
@@ -27,7 +25,10 @@ export type EventConfigPatchPayload = {
   allowSeries: boolean;
   date?: string;
   time?: string;
+  notifyParticipantsOfDateChange?: boolean;
 };
+
+export type MyEventsScope = 'active' | 'finished';
 
 export interface MyEventSummary {
   id: string;
@@ -51,9 +52,13 @@ export interface MyEventSummary {
   winnerMovieTitle?: string | null;
 
   winnerMoviePosterPath?: string | null;
+
+  autoCloseAt?: string | null;
 }
 
 export interface MyEventsListResponse {
   events: MyEventSummary[];
   hasMore?: boolean;
+  totalActive: number;
+  totalFinished: number;
 }

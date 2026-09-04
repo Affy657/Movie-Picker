@@ -1,15 +1,15 @@
-import clsx from 'clsx';
 import { Film } from 'lucide-react';
 import EmptyState from '@/shared/components/EmptyState';
 import type { MovieData } from '@/shared/types/movie';
 import type { RatingScale } from '@/shared/types/theme';
 import { useTranslation } from '@/shared/i18n';
-import { MovieCardGrid } from '@/features/movies/components/MovieCardGrid';
 import { MovieCardList } from '@/features/movies/components/MovieCardList';
+import { MovieCardRow, MovieRowHeader } from '@/features/movies/components/MovieCardRow';
 import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
 import styles from './MovieList.module.css';
 
-export { MovieCardGrid as MovieCard } from '@/features/movies/components/MovieCardGrid';
+export type MovieRowSortKey =
+  'createdAt' | 'voteAverage' | 'duration' | 'score' | 'availability' | 'seen' | 'releaseDate';
 
 interface MovieListProps {
   movies: MovieData[];
@@ -19,7 +19,7 @@ interface MovieListProps {
   isFinished: boolean;
   isHost?: boolean;
   onVote: (movieId: string, value: 1 | -1) => Promise<void>;
-  onRemove: (movieId: string) => Promise<void>;
+  onRemove: (movie: MovieData) => void;
   refresh: () => void;
   onActionError: (message: string) => void;
   participantAvatars?: Record<string, string>;
@@ -29,9 +29,17 @@ interface MovieListProps {
   isInWatchlist?: (movie: MovieData) => boolean;
   onToggleWatchlist?: (movie: MovieData) => void;
   onToggleWheelExclusion?: (movie: MovieData) => void;
-  onProposeToEvent?: (movie: MovieData) => void;
   selection?: MovieCardSelection;
   winnerMovieId?: string;
+  isMobile: boolean;
+  showRank?: boolean;
+  showHeader?: boolean;
+  sortBy?: MovieRowSortKey;
+  sortDir?: 'asc' | 'desc';
+  onSetSort?: (key: MovieRowSortKey) => void;
+  voteErrors?: Record<string, { message: string }>;
+  onRetryVote?: (movieId: string) => void;
+  participantCount?: number;
 }
 
 export default function MovieList({
@@ -52,9 +60,17 @@ export default function MovieList({
   isInWatchlist,
   onToggleWatchlist,
   onToggleWheelExclusion,
-  onProposeToEvent,
   selection,
   winnerMovieId,
+  isMobile,
+  showRank = false,
+  showHeader = true,
+  sortBy,
+  sortDir,
+  onSetSort,
+  voteErrors,
+  onRetryVote,
+  participantCount,
 }: Readonly<MovieListProps>) {
   const { t } = useTranslation();
 
@@ -68,38 +84,76 @@ export default function MovieList({
     );
   }
 
-  const Card = viewMode === 'list' ? MovieCardList : MovieCardGrid;
+  const commonCardProps = (m: MovieData) => ({
+    movie: m,
+    slug,
+    participantId,
+    participantPseudo,
+    isFinished,
+    isHost,
+    onVote,
+    onRemove,
+    refresh,
+    onActionError,
+    participantAvatars,
+    participantAvatarsByPseudo,
+    ratingScale,
+    isInWatchlist: isInWatchlist?.(m),
+    onToggleWatchlist,
+    onToggleWheelExclusion,
+    selection,
+    isWinner: m.id === winnerMovieId,
+    isMobile,
+    participantCount,
+    t,
+  });
+
+  if (viewMode === 'list') {
+    return (
+      <div className={styles.table}>
+        {!isMobile && showHeader && sortBy && sortDir && onSetSort ? (
+          <MovieRowHeader
+            columns={[
+              { key: 'createdAt', label: t('movies.list.columnAddedAt') },
+              { key: 'voteAverage', label: t('movies.list.columnTmdbVote') },
+              { key: 'duration', label: t('movies.list.columnDuration') },
+              { key: 'releaseDate', label: t('movies.list.columnReleaseDate') },
+              { key: 'availability', label: t('movies.watchProviders.columnLabel') },
+              { key: 'seen', label: t('movies.seen.columnLabel') },
+              { key: 'score', label: t('movies.list.columnScore') },
+            ]}
+            sortBy={sortBy}
+            sortDir={sortDir}
+            onSetSort={onSetSort}
+          />
+        ) : null}
+        <ul className={styles.rows}>
+          {movies.map((m, i) => {
+            const rowError = voteErrors?.[m.id];
+            return (
+              <MovieCardRow
+                key={m.id}
+                {...commonCardProps(m)}
+                eager={i < 3}
+                rank={showRank ? i + 1 : undefined}
+                voteError={
+                  rowError
+                    ? { message: rowError.message, onRetry: () => onRetryVote?.(m.id) }
+                    : undefined
+                }
+              />
+            );
+          })}
+        </ul>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <ul className={clsx(styles.list, viewMode === 'list' && styles.listView)}>
-        {movies.map((m, i) => (
-          <Card
-            key={m.id}
-            movie={m}
-            slug={slug}
-            participantId={participantId}
-            participantPseudo={participantPseudo}
-            isFinished={isFinished}
-            isHost={isHost}
-            eager={i < 3}
-            onVote={onVote}
-            onRemove={onRemove}
-            refresh={refresh}
-            onActionError={onActionError}
-            participantAvatars={participantAvatars}
-            participantAvatarsByPseudo={participantAvatarsByPseudo}
-            ratingScale={ratingScale}
-            isInWatchlist={isInWatchlist?.(m)}
-            onToggleWatchlist={onToggleWatchlist}
-            onToggleWheelExclusion={onToggleWheelExclusion}
-            onProposeToEvent={onProposeToEvent}
-            selection={selection}
-            isWinner={m.id === winnerMovieId}
-            t={t}
-          />
-        ))}
-      </ul>
-    </div>
+    <ul className={styles.grid}>
+      {movies.map((m, i) => (
+        <MovieCardList key={m.id} {...commonCardProps(m)} eager={i < 3} />
+      ))}
+    </ul>
   );
 }

@@ -3,7 +3,8 @@ import type { TranslationKey } from '@/shared/i18n';
 
 export type WhatsNewCategory = 'new' | 'improved' | 'fixed';
 
-export type WhatsNewLinkTarget = 'watchlist' | 'account' | 'myEvents' | 'profile' | 'donate';
+export type WhatsNewLinkTarget =
+  'watchlist' | 'account' | 'myEvents' | 'profile' | 'donate' | 'discover' | 'notifications';
 
 export type WhatsNewAction = 'proposeIdea';
 
@@ -44,9 +45,30 @@ export const WHATS_NEW: readonly WhatsNewRelease[] = [
       entry('oauth', 'new', { link: 'account' }),
       entry('donations', 'new', { link: 'donate' }),
       entry('proposeIdea', 'new', { action: 'proposeIdea' }),
+      entry('pwaInstall', 'new'),
       entry('profileRevamp', 'improved', { link: 'profile' }),
       entry('wheelExclusion', 'improved', { link: 'myEvents' }),
       entry('weightedWheel', 'improved', { link: 'myEvents' }),
+    ],
+  },
+  {
+    version: '1.4.1',
+    entries: [
+      entry('openBrowsing', 'new', { link: 'myEvents' }),
+      entry('historyToEvent', 'new', { link: 'myEvents' }),
+      entry('rescheduleNotice', 'new', { link: 'notifications' }),
+      entry('ideaAttachments', 'new', { action: 'proposeIdea' }),
+      entry('myEventsRevamp', 'improved', { link: 'myEvents' }),
+      entry('historyTools', 'improved', { link: 'myEvents' }),
+      entry('settingsPage', 'improved', { link: 'account' }),
+      entry('eventSettings', 'improved', { link: 'myEvents' }),
+      entry('movieList', 'improved', { link: 'myEvents' }),
+      entry('unifiedShare', 'improved', { link: 'myEvents' }),
+      entry('discoverHome', 'improved', { link: 'discover' }),
+      entry('fasterFirstLoad', 'improved'),
+      entry('readableContrast', 'improved'),
+      entry('analyticsPrivacy', 'improved', { link: 'account' }),
+      entry('inAppBrowser', 'fixed'),
     ],
   },
 ];
@@ -64,6 +86,10 @@ export function whatsNewLinkPath(
       return ROUTES.myEvents;
     case 'donate':
       return ROUTES.donate;
+    case 'discover':
+      return ROUTES.discover;
+    case 'notifications':
+      return ROUTES.notifications;
     case 'profile':
       return profileHandle ? ROUTES.profile(profileHandle) : null;
     default:
@@ -79,7 +105,7 @@ function getLatestRelease(releases: readonly WhatsNewRelease[]): WhatsNewRelease
 
 export const LATEST_WHATS_NEW_RELEASE: WhatsNewRelease = getLatestRelease(WHATS_NEW);
 
-export const WHATS_NEW_NAV_RELEASED_AT_MS = Date.parse('2026-08-24T00:00:00.000Z');
+export const WHATS_NEW_NAV_RELEASED_AT_MS = Date.parse('2026-09-04T00:00:00.000Z');
 export const WHATS_NEW_NAV_VISIBLE_FOR_MS = 7 * 24 * 60 * 60 * 1000;
 export const WHATS_NEW_NAV_NEW_ACCOUNT_FROM_MS = WHATS_NEW_NAV_RELEASED_AT_MS + 24 * 60 * 60 * 1000;
 

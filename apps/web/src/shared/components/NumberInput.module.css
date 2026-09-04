@@ -5,12 +5,18 @@
   border-radius: var(--radius-md);
   overflow: hidden;
   background: var(--color-input-bg, var(--color-surface));
-  transition: border-color var(--duration-base) var(--ease-default), box-shadow var(--duration-base) var(--ease-default);
+  transition:
+    border-color var(--duration-base) var(--ease-default),
+    box-shadow var(--duration-base) var(--ease-default);
 }
 
 .wrap:focus-within {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+.wrapInvalid {
+  border-color: var(--color-error);
 }
 
 /* Supprime le style propre de .input pour que le wrap gère la bordure */
@@ -48,7 +54,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background var(--duration-fast), color var(--duration-fast);
+  transition:
+    background var(--duration-fast),
+    color var(--duration-fast);
   user-select: none;
 }
 

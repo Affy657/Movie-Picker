@@ -64,7 +64,7 @@
   font-weight: 700;
   letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--color-primary) 30%, #f8fafc);
+  color: color-mix(in srgb, var(--color-primary) 15%, #f8fafc);
   background: color-mix(in srgb, var(--color-primary) 22%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
   border-radius: var(--radius-pill);
@@ -87,15 +87,7 @@
 }
 
 .titleAccent {
-  background: linear-gradient(
-    120deg,
-    color-mix(in srgb, var(--color-primary) 60%, #ffffff),
-    var(--color-accent-warm)
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
+  color: color-mix(in srgb, var(--color-accent-warm) 80%, #f8fafc);
 }
 
 .tagline {
@@ -103,7 +95,7 @@
   max-width: 32rem;
   font-size: clamp(1rem, 1.5vw, 1.15rem);
   line-height: var(--leading-loose);
-  color: color-mix(in srgb, #f8fafc 75%, transparent);
+  color: color-mix(in srgb, #f8fafc 90%, transparent);
 }
 
 .cta {
@@ -136,7 +128,7 @@
 .ctaSecondary {
   background: transparent;
   border: none;
-  color: color-mix(in srgb, #f8fafc 80%, transparent);
+  color: #f8fafc;
   padding: 0.75rem 1rem;
   font-size: var(--font-size-base);
   font-weight: 500;
@@ -148,6 +140,7 @@
 
 .ctaSecondary:hover {
   background: color-mix(in srgb, #f8fafc 8%, transparent);
+  color: #f8fafc;
   transform: none;
   box-shadow: none;
 }

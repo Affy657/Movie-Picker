@@ -4,6 +4,7 @@ import ErrorState from '@/shared/components/ErrorState';
 import { ROUTES } from '@/app/routes';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
+import { useTranslation } from '@/shared/i18n';
 
 type ServerErrorPageProps = {
   error?: Error | null;
@@ -11,28 +12,29 @@ type ServerErrorPageProps = {
 };
 
 export default function ServerErrorPage({ error, onRetry }: Readonly<ServerErrorPageProps>) {
-  useNoindexPage(pageTitle('Erreur serveur'));
+  const { t } = useTranslation();
+  useNoindexPage(pageTitle(t('errors.serverTitle')));
 
   const message = import.meta.env.PROD
-    ? 'Une erreur inattendue s’est produite. Vous pouvez réessayer ou recharger la page.'
-    : (error?.message ?? 'Une erreur inattendue s’est produite.');
+    ? t('errors.boundary.messageProd')
+    : (error?.message ?? t('errors.unexpected'));
 
   return (
     <ErrorState
       icon={<ServerCrash size={32} />}
-      code="Erreur 500"
-      title="Un problème est survenu"
+      code={t('errors.serverCode')}
+      title={t('errors.boundary.title')}
       message={message}
       messageRole="alert"
       actions={
         <>
           {onRetry ? (
             <button type="button" className="btn btn-primary" onClick={onRetry}>
-              Réessayer
+              {t('errors.boundary.retryButton')}
             </button>
           ) : null}
-          <Link to={ROUTES.home} className="btn">
-            Accueil
+          <Link to={ROUTES.discover} className="btn">
+            {t('errors.boundary.homeButton')}
           </Link>
         </>
       }

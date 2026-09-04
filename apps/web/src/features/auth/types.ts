@@ -4,6 +4,7 @@ export interface UserProfile {
   userId: string;
   displayName: string;
   emailMasked: string;
+  email?: string;
   uiTheme: UiThemePreference;
   accentColor: AccentColor;
   ratingScale: RatingScale;

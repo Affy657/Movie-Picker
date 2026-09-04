@@ -1,11 +1,16 @@
 import { ApiError, getErrorMessage } from '@/shared/api/apiError';
 
-export function friendlyEventError(err: unknown): string {
+type FriendlyEventErrorMessages = {
+  notFound: string;
+  fallback: string;
+};
+
+export function friendlyEventError(err: unknown, messages: FriendlyEventErrorMessages): string {
   if (ApiError.is(err)) {
-    if (err.code === 404 || /introuvable|404/i.test(err.message)) {
-      return "Cette soirée n'existe pas ou a été supprimée.";
+    if (err.code === 404 || /introuvable|404|not found/i.test(err.message)) {
+      return messages.notFound;
     }
     return err.message;
   }
-  return getErrorMessage(err);
+  return getErrorMessage(err, messages.fallback);
 }

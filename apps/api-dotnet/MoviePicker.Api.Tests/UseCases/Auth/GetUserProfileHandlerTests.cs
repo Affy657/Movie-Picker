@@ -46,6 +46,27 @@ public sealed class GetUserProfileHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_ReturnsUnmaskedEmail()
+    {
+        var user = new User
+        {
+            Id = "id1",
+            Email = "bob@example.com",
+            PasswordHash = "h",
+            DisplayName = "Bob",
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("id1", It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var handler = new GetUserProfileHandler(users.Object);
+
+        var res = await handler.HandleAsync("id1");
+
+        Assert.Equal("bob@example.com", res.Email);
+    }
+
+    [Fact]
     public async Task HandleAsync_ReturnsLetterboxdUsername()
     {
         var user = new User

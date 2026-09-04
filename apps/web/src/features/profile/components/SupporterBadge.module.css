@@ -3,7 +3,7 @@
   align-items: center;
   gap: 0.3rem;
   padding: 0.15rem 0.55rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
   background: color-mix(in srgb, var(--color-accent) 12%, transparent);
   color: var(--color-accent);

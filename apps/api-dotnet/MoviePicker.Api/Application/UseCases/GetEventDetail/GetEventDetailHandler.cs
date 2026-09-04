@@ -1,3 +1,4 @@
+using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.Posters;
@@ -13,6 +14,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
     private readonly IEventRepository _eventRepository;
     private readonly IMovieRepository _movieRepository;
     private readonly IParticipantRepository _participantRepository;
+    private readonly IVoteRepository _voteRepository;
     private readonly IUserRepository _userRepository;
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
@@ -22,6 +24,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
         IParticipantRepository participantRepository,
+        IVoteRepository voteRepository,
         IUserRepository userRepository,
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
@@ -30,6 +33,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _participantRepository = participantRepository;
+        _voteRepository = voteRepository;
         _userRepository = userRepository;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
@@ -52,9 +56,11 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
 
         var participantsTask = _participantRepository.ListByEventIdAsync(evt.Id, ct);
         var movieCountTask = _movieRepository.CountByEventIdAsync(evt.Id, ct);
-        await Task.WhenAll(participantsTask, movieCountTask);
+        var votersCountTask = _voteRepository.CountDistinctVotersByEventIdAsync(evt.Id, ct);
+        await Task.WhenAll(participantsTask, movieCountTask, votersCountTask);
         var participants = await participantsTask;
         var movieCount = await movieCountTask;
+        var votersCount = await votersCountTask;
 
         ParticipantResponse? myParticipant = null;
         if (!string.IsNullOrEmpty(currentUserId))
@@ -100,6 +106,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             MyParticipant = myParticipant,
             ParticipantCount = participants.Count,
             MovieCount = movieCount,
+            VotersCount = votersCount,
             Participants = participantsSummary,
         };
     }
@@ -138,9 +145,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             Pseudo = p.Pseudo,
             IsCreator = !string.IsNullOrEmpty(creatorUserId) && p.UserId == creatorUserId,
             AvatarId = linkedUser?.AvatarId ?? string.Empty,
-            Handle = (linkedUser?.IsProfilePublic == true && !string.IsNullOrEmpty(linkedUser.Handle))
-                ? linkedUser.Handle
-                : null,
+            Handle = PublicHandleResolver.Resolve(linkedUser),
         };
     }
 }

@@ -9,7 +9,8 @@ import {
   type SetStateAction,
 } from 'react';
 import { useNavigate } from 'react-router';
-import { useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
+import { Film, Users } from 'lucide-react';
 import { ROUTES } from '@/app/routes';
 import {
   formatMyEventsListDate,
@@ -27,12 +28,20 @@ import EventPendingBanner from '@/features/events/components/EventPendingBanner'
 import EventClosedWithoutMovieState from '@/features/events/pages/event-detail/EventClosedWithoutMovieState';
 import PageLayout from '@/shared/components/PageLayout';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import { removeEventParticipant, eventFrontendUrl } from '@/features/events/api/eventsApi';
+import {
+  removeEventParticipant,
+  eventFrontendUrl,
+  getEligibleFollows,
+} from '@/features/events/api/eventsApi';
+import { removeMovieFromEvent } from '@/features/movies/api/moviesApi';
 import { removeStoredParticipant } from '@/features/events/storage';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
-import InviteModal from '@/features/events/components/InviteModal';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
+import { useAnalytics } from '@/shared/hooks/useAnalytics';
+import ShareDialog from '@/shared/components/ShareDialog';
+import EventInviteFriendsTab from '@/features/events/components/EventInviteFriendsTab';
 import EventWheelActions from '@/features/events/components/EventWheelActions';
 import { useEventWheel } from '@/features/events/hooks/useEventWheel';
 import { eventCountdown, type EventCountdown } from '@/shared/utils/eventCountdown';
@@ -49,6 +58,7 @@ type ConfirmState =
   | { kind: 'leave' }
   | { kind: 'closeWithoutMovie' }
   | { kind: 'resetWheel' }
+  | { kind: 'removeMovie'; movieId: string; movieTitle: string; voteCount: number }
   | null;
 
 type EventDetailSessionProps = {
@@ -95,6 +105,8 @@ function countdownParams(countdown: EventCountdown) {
   return { count: countdown.count };
 }
 
+type ConfirmBusyByKind = Record<NonNullable<ConfirmState>['kind'], boolean>;
+
 function buildConfirmDialogContent(
   confirmState: ConfirmState,
   t: ReturnType<typeof useTranslation>['t'],
@@ -102,15 +114,19 @@ function buildConfirmDialogContent(
   confirmRemove: (participantId: string, pseudo: string) => void,
   confirmLeave: () => void,
   confirmCloseWithoutMovie: () => void,
-  confirmResetWheel: () => void
+  confirmResetWheel: () => void,
+  confirmRemoveMovie: (movieId: string) => void,
+  busyByKind: ConfirmBusyByKind
 ) {
   if (!confirmState) return null;
+  const busy = busyByKind[confirmState.kind];
   if (confirmState.kind === 'remove') {
     return {
       title: t('events.participants.removeConfirmTitle'),
       message: t('events.participants.removeConfirm', { pseudo: confirmState.pseudo }),
       confirmLabel: t('events.participants.removeConfirmAction'),
       onConfirm: () => confirmRemove(confirmState.participantId, confirmState.pseudo),
+      busy,
     };
   }
   if (confirmState.kind === 'closeWithoutMovie') {
@@ -119,6 +135,7 @@ function buildConfirmDialogContent(
       message: t('events.wheel.closeWithoutMovieConfirmMessage', { title: eventTitle }),
       confirmLabel: t('events.wheel.closeWithoutMovieConfirmAction'),
       onConfirm: confirmCloseWithoutMovie,
+      busy,
     };
   }
   if (confirmState.kind === 'resetWheel') {
@@ -127,6 +144,22 @@ function buildConfirmDialogContent(
       message: t('events.wheel.resetConfirmMessage'),
       confirmLabel: t('events.wheel.resetConfirmAction'),
       onConfirm: confirmResetWheel,
+      busy,
+    };
+  }
+  if (confirmState.kind === 'removeMovie') {
+    return {
+      title: t('movies.list.removeConfirmTitle'),
+      message: pluralizeCount(
+        confirmState.voteCount,
+        'movies.list.removeConfirmMessageOne',
+        'movies.list.removeConfirmMessage',
+        t,
+        { title: confirmState.movieTitle }
+      ),
+      confirmLabel: t('movies.list.removeConfirmAction'),
+      onConfirm: () => confirmRemoveMovie(confirmState.movieId),
+      busy,
     };
   }
   return {
@@ -134,6 +167,7 @@ function buildConfirmDialogContent(
     message: t('events.participants.leaveConfirm'),
     confirmLabel: t('events.participants.leaveConfirmAction'),
     onConfirm: confirmLeave,
+    busy,
   };
 }
 
@@ -153,11 +187,17 @@ export default function EventDetailSession({
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const { locale } = useLocale();
+  const { track } = useAnalytics();
 
   const [pendingRemovalId, setPendingRemovalId] = useState<string | null>(null);
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
-  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareInitialTab, setShareInitialTab] = useState<'link' | 'friends'>('link');
+  const openShare = useCallback((tab: 'link' | 'friends' = 'link') => {
+    setShareInitialTab(tab);
+    setShareOpen(true);
+  }, []);
   const [addMovieOpen, setAddMovieOpen] = useState(false);
   const addMovieTriggerRef = useRef<HTMLButtonElement>(null);
   const moviesSectionRef = useRef<HTMLDivElement>(null);
@@ -211,6 +251,13 @@ export default function EventDetailSession({
     },
   });
 
+  const removeMovieMutation = useMutation({
+    mutationFn: (movieId: string) => {
+      if (!participant) return Promise.reject(new Error('No participant'));
+      return removeMovieFromEvent(slug, movieId, participant.participantId, hostToken);
+    },
+  });
+
   const wheel = useEventWheel({
     slug,
     event,
@@ -243,6 +290,15 @@ export default function EventDetailSession({
     setConfirmState({ kind: 'remove', participantId, pseudo });
   }, []);
 
+  const handleRequestRemoveMovie = useCallback((movie: MovieData) => {
+    setConfirmState({
+      kind: 'removeMovie',
+      movieId: movie.id,
+      movieTitle: movie.title,
+      voteCount: movie.up + movie.down,
+    });
+  }, []);
+
   const handleLeaveEvent = useCallback(() => {
     if (!participant) return;
     setConfirmState({ kind: 'leave' });
@@ -271,6 +327,26 @@ export default function EventDetailSession({
       );
     },
     [removeParticipantMutation, setActionError, t]
+  );
+
+  const confirmRemoveMovie = useCallback(
+    (movieId: string) => {
+      if (!participant) return;
+      setActionError(null);
+      removeMovieMutation.mutate(movieId, {
+        onSuccess: () => {
+          track('movie_removed');
+          refreshAll();
+        },
+        onError: (err) => {
+          setActionError(getErrorMessage(err, t('movies.list.removeError')));
+        },
+        onSettled: () => {
+          setConfirmState(null);
+        },
+      });
+    },
+    [participant, removeMovieMutation, setActionError, track, refreshAll, t]
   );
 
   const confirmLeave = useCallback(() => {
@@ -323,6 +399,17 @@ export default function EventDetailSession({
     }
   }, [resetWheelRequested, wheel.loading]);
 
+  const confirmBusyByKind: ConfirmBusyByKind = useMemo(
+    () => ({
+      remove: removeParticipantMutation.isPending,
+      leave: removeParticipantMutation.isPending,
+      closeWithoutMovie: wheel.loading,
+      resetWheel: wheel.loading,
+      removeMovie: removeMovieMutation.isPending,
+    }),
+    [removeParticipantMutation.isPending, wheel.loading, removeMovieMutation.isPending]
+  );
+
   const confirmDialogContent = useMemo(
     () =>
       buildConfirmDialogContent(
@@ -332,7 +419,9 @@ export default function EventDetailSession({
         confirmRemove,
         confirmLeave,
         confirmCloseWithoutMovie,
-        confirmResetWheel
+        confirmResetWheel,
+        confirmRemoveMovie,
+        confirmBusyByKind
       ),
     [
       confirmState,
@@ -341,7 +430,9 @@ export default function EventDetailSession({
       confirmLeave,
       confirmCloseWithoutMovie,
       confirmResetWheel,
+      confirmRemoveMovie,
       event.title,
+      confirmBusyByKind,
     ]
   );
 
@@ -367,7 +458,7 @@ export default function EventDetailSession({
   const participantCount = event.participantCount ?? event.participants?.length ?? 0;
   let moviesCount = event.movieCount ?? 0;
   if (moviesQuery.isSuccess) moviesCount = movies.length;
-  const votesCount = movies.reduce((total, m) => total + m.up + m.down, 0);
+  const votersCount = event.votersCount ?? 0;
   const lifecycle = normalizeMyEventLifecycle(event.lifecycle);
   const countdown = eventCountdown(event.date, event.time, nowMs);
   const countdownLabel = countdown
@@ -396,10 +487,10 @@ export default function EventDetailSession({
         countdownLabel={countdownLabel}
         participantCount={participantCount}
         moviesCount={moviesCount}
-        votesCount={votesCount}
+        votersCount={votersCount}
         participantsOpen={participantsOpen}
         onToggleParticipants={() => setParticipantsOpen((value) => !value)}
-        onInviteFriends={() => setInviteModalOpen(true)}
+        onOpenShare={openShare}
         onOpenSettings={() => setSettingsOpen(true)}
         onAddMovie={() => setAddMovieOpen(true)}
         addMovieTriggerRef={addMovieTriggerRef}
@@ -411,11 +502,14 @@ export default function EventDetailSession({
         canAddMovie={canAddMovie}
         settingsOpen={settingsOpen}
         onCloseSettings={() => setSettingsOpen(false)}
-        inviteModalOpen={inviteModalOpen}
-        onCloseInvite={() => setInviteModalOpen(false)}
+        shareOpen={shareOpen}
+        shareInitialTab={shareInitialTab}
+        onCloseShare={() => setShareOpen(false)}
         needsJoin={!!needsJoin}
         isFull={isFull}
         maxParticipants={maxParticipants}
+        viewMode={viewMode}
+        onViewModeChange={handleViewModeChange}
       />
       {showContent ? (
         <EventDetailSessionBody
@@ -439,7 +533,8 @@ export default function EventDetailSession({
           participantsRef={participantsRef}
           pendingRemovalId={pendingRemovalId}
           onRemoveParticipant={handleRemoveParticipant}
-          onInviteFriends={() => setInviteModalOpen(true)}
+          onRequestRemoveMovie={handleRequestRemoveMovie}
+          onInviteFriends={() => openShare('friends')}
           onLeave={handleLeaveEvent}
           canShowLeave={canShowLeave}
           isConnectedSelf={isConnectedSelf}
@@ -454,11 +549,7 @@ export default function EventDetailSession({
         message={confirmDialogContent?.message ?? ''}
         confirmLabel={confirmDialogContent?.confirmLabel ?? ''}
         confirmVariant="danger"
-        busy={
-          confirmState?.kind === 'closeWithoutMovie' || confirmState?.kind === 'resetWheel'
-            ? wheel.loading
-            : removeParticipantMutation.isPending
-        }
+        busy={confirmDialogContent?.busy ?? false}
         onConfirm={confirmDialogContent?.onConfirm ?? closeConfirm}
         onCancel={closeConfirm}
       />
@@ -482,10 +573,10 @@ function EventDetailSessionChrome({
   countdownLabel,
   participantCount,
   moviesCount,
-  votesCount,
+  votersCount,
   participantsOpen,
   onToggleParticipants,
-  onInviteFriends,
+  onOpenShare,
   onOpenSettings,
   onAddMovie,
   addMovieTriggerRef,
@@ -497,11 +588,14 @@ function EventDetailSessionChrome({
   canAddMovie,
   settingsOpen,
   onCloseSettings,
-  inviteModalOpen,
-  onCloseInvite,
+  shareOpen,
+  shareInitialTab,
+  onCloseShare,
   needsJoin,
   isFull,
   maxParticipants,
+  viewMode,
+  onViewModeChange,
 }: Readonly<{
   slug: string;
   hostToken: string | null;
@@ -516,10 +610,10 @@ function EventDetailSessionChrome({
   countdownLabel: string | null;
   participantCount: number;
   moviesCount: number;
-  votesCount: number;
+  votersCount: number;
   participantsOpen: boolean;
   onToggleParticipants: () => void;
-  onInviteFriends: () => void;
+  onOpenShare: (tab?: 'link' | 'friends') => void;
   onOpenSettings: () => void;
   onAddMovie: () => void;
   addMovieTriggerRef: RefObject<HTMLButtonElement | null>;
@@ -531,35 +625,48 @@ function EventDetailSessionChrome({
   canAddMovie: boolean;
   settingsOpen: boolean;
   onCloseSettings: () => void;
-  inviteModalOpen: boolean;
-  onCloseInvite: () => void;
+  shareOpen: boolean;
+  shareInitialTab: 'link' | 'friends';
+  onCloseShare: () => void;
   needsJoin: boolean;
   isFull: boolean;
   maxParticipants: number | null;
+  viewMode: 'grid' | 'list';
+  onViewModeChange: (mode: 'grid' | 'list') => void;
 }>) {
+  const { t } = useTranslation();
   const hostCanInvite = !!event.isHost && !event.isFinished;
+  const eligibleFollowsQuery = useQuery({
+    queryKey: queryKeys.event.eligibleFollows(slug),
+    queryFn: () => getEligibleFollows(slug),
+    enabled: hostCanInvite,
+    staleTime: 30_000,
+  });
+  const participantsLabel = pluralizeCount(
+    participantCount,
+    'events.detail.participantsToggleOne',
+    'events.detail.participantsToggle',
+    t
+  );
   return (
     <>
       <EventDetailHeader
         title={event.title}
         dateFormatted={dateFormatted}
-        eventTime={timeFormatted}
-        eventDate={dateLabel}
         rawDate={event.date}
         rawTime={event.time}
         isFinished={!!event.isFinished}
         eventTheme={event.config?.theme}
-        eventThemeColor={event.config?.themeColor}
         shareUrl={shareUrl}
         lifecycle={lifecycle}
         countdownLabel={countdownLabel}
         participants={event.participants}
         participantCount={participantCount}
         moviesCount={moviesCount}
-        votesCount={votesCount}
+        votersCount={votersCount}
         participantsOpen={participantsOpen}
         onToggleParticipants={onToggleParticipants}
-        onInviteFriends={hostCanInvite ? onInviteFriends : undefined}
+        onOpenShare={shareUrl ? () => onOpenShare('link') : undefined}
         onOpenSettings={canConfigure ? onOpenSettings : undefined}
         wheelActions={
           showContent ? (
@@ -573,6 +680,8 @@ function EventDetailSessionChrome({
         onAddMovie={canAddMovie ? onAddMovie : undefined}
         addMoviePrimary={!wheel.winner}
         addMovieTriggerRef={addMovieTriggerRef}
+        viewMode={viewMode}
+        onViewModeChange={onViewModeChange}
       />
       {lifecycle === 'pending' ? <EventPendingBanner isHost={!!event.isHost} /> : null}
       {canConfigure ? (
@@ -589,9 +698,37 @@ function EventDetailSessionChrome({
           {wheel.error}
         </p>
       ) : null}
-      {hostCanInvite ? (
-        <InviteModal open={inviteModalOpen} slug={slug} onClose={onCloseInvite} />
-      ) : null}
+      <ShareDialog
+        open={shareOpen}
+        onClose={onCloseShare}
+        title={t('events.share.dialogTitle')}
+        url={shareUrl}
+        qrHint={t('events.share.qrHint')}
+        fileSlug={slug}
+        preview={{
+          icon: <Film size={20} aria-hidden />,
+          name: event.title,
+          meta: [dateFormatted, participantsLabel],
+        }}
+        shareText={t('events.share.shareText', {
+          title: event.title,
+          time: timeFormatted,
+          date: dateLabel,
+        })}
+        surface="event"
+        initialTab={shareInitialTab}
+        extraTab={
+          hostCanInvite
+            ? {
+                id: 'friends',
+                label: t('share.tabFriends'),
+                icon: <Users size={15} aria-hidden />,
+                badge: eligibleFollowsQuery.data?.follows.length,
+                content: <EventInviteFriendsTab slug={slug} onNavigate={onCloseShare} />,
+              }
+            : undefined
+        }
+      />
       {moviesQuery.isError ? (
         <EventMoviesLoadError error={moviesQuery.error} onRetry={() => moviesQuery.refetch()} />
       ) : null}
@@ -628,6 +765,7 @@ function EventDetailSessionBody({
   participantsRef,
   pendingRemovalId,
   onRemoveParticipant,
+  onRequestRemoveMovie,
   onInviteFriends,
   onLeave,
   canShowLeave,
@@ -656,6 +794,7 @@ function EventDetailSessionBody({
   participantsRef: RefObject<HTMLDivElement | null>;
   pendingRemovalId: string | null;
   onRemoveParticipant: (participantId: string, pseudo: string) => void;
+  onRequestRemoveMovie: (movie: MovieData) => void;
   onInviteFriends: () => void;
   onLeave: () => void;
   canShowLeave: boolean;
@@ -707,6 +846,7 @@ function EventDetailSessionBody({
           onDismissActionError={() => setActionError(null)}
           setActionError={setActionError}
           refreshAll={refreshAll}
+          onRequestRemove={onRequestRemoveMovie}
           viewMode={viewMode}
           onViewModeChange={onViewModeChange}
           selection={selection}

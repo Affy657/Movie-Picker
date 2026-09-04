@@ -9,12 +9,18 @@ export const ROUTES = {
   resetPassword: '/reset',
   oauthCallback: '/auth/callback',
   account: '/settings',
+  accountProfile: '/settings/profil',
+  accountPreferences: '/settings/preferences',
+  accountNotifications: '/settings/notifications',
+  accountIntegrations: '/settings/integrations',
+  accountSecurity: '/settings/securite',
   myEvents: '/my-events',
   watchlist: '/watchlist',
   legalNotice: '/mentions-legales',
   privacyPolicy: '/politique-de-confidentialite',
   donate: '/soutenir',
   notifications: '/notifications',
+  discover: '/decouvrir',
 
   eventDetailPattern: `${EVENT_PREFIX}/:slug`,
 

@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { useTranslation } from '@/shared/i18n';
 import styles from './NumberInput.module.css';
 
 type NumberInputProps = {
@@ -11,6 +12,8 @@ type NumberInputProps = {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  invalid?: boolean;
+  ariaDescribedBy?: string;
 };
 
 export default function NumberInput({
@@ -23,17 +26,17 @@ export default function NumberInput({
   placeholder,
   disabled,
   className,
+  invalid,
+  ariaDescribedBy,
 }: Readonly<NumberInputProps>) {
+  const { t } = useTranslation();
   const numVal = value === '' ? null : Number(value);
 
   const decrement = () => {
     if (numVal === null) return;
     const next = numVal - step;
-    if (min !== undefined && next < min) {
-      onChange('');
-    } else {
-      onChange(String(next));
-    }
+    if (min !== undefined && next < min) return;
+    onChange(String(next));
   };
 
   const increment = () => {
@@ -43,17 +46,17 @@ export default function NumberInput({
     onChange(String(next));
   };
 
-  const canDecrement = !disabled && numVal !== null;
+  const canDecrement = !disabled && numVal !== null && (min === undefined || numVal > min);
   const canIncrement = !disabled && (max === undefined || (numVal ?? 0) < max);
 
   return (
-    <div className={clsx(styles.wrap, className)}>
+    <div className={clsx(styles.wrap, invalid && styles.wrapInvalid, className)}>
       <button
         type="button"
         className={styles.stepBtn}
         onClick={decrement}
         disabled={!canDecrement}
-        aria-label="Diminuer"
+        aria-label={t('common.decrement')}
         tabIndex={-1}
       >
         −
@@ -70,13 +73,15 @@ export default function NumberInput({
         placeholder={placeholder}
         disabled={disabled}
         inputMode="numeric"
+        aria-invalid={invalid || undefined}
+        aria-describedby={ariaDescribedBy}
       />
       <button
         type="button"
         className={styles.stepBtn}
         onClick={increment}
         disabled={!canIncrement}
-        aria-label="Augmenter"
+        aria-label={t('common.increment')}
         tabIndex={-1}
       >
         +

@@ -3,10 +3,15 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import NumberInput from '@/shared/components/NumberInput';
+import { LocaleProvider } from '@/shared/i18n';
 
 const setup = (props: Partial<Parameters<typeof NumberInput>[0]> = {}) => {
   const onChange = vi.fn();
-  render(<NumberInput value="" onChange={onChange} {...props} />);
+  render(
+    <LocaleProvider>
+      <NumberInput value="" onChange={onChange} {...props} />
+    </LocaleProvider>
+  );
   return {
     onChange,
     input: screen.getByRole('spinbutton'),
@@ -32,12 +37,10 @@ describe('NumberInput', () => {
     expect(onChange).toHaveBeenCalledWith('4');
   });
 
-  it('clears the value when decrementing below min', async () => {
-    const { onChange, minus } = setup({ value: '0', min: 0 });
+  it('disables decrement at the minimum', () => {
+    const { minus } = setup({ value: '0', min: 0 });
 
-    await userEvent.click(minus);
-
-    expect(onChange).toHaveBeenCalledWith('');
+    expect(minus).toBeDisabled();
   });
 
   it('starts from 1 when incrementing an empty value with no min', async () => {

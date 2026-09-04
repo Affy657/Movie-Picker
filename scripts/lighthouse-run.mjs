@@ -1,4 +1,4 @@
-/** Usage : `pnpm run lighthouse` à la racine (build web puis mesure /, /new, /e/…). */
+/** Usage : `pnpm run lighthouse` à la racine (build web puis mesure des pages publiques). */
 import { spawn, execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -19,17 +19,28 @@ const BUDGETS_PATH = path.join(ROOT, 'configs', 'lighthouse-budgets.json');
 const OUT = path.join(ROOT, 'artifacts', 'lighthouse');
 
 /**
- * Routes alignées sur App.tsx : /new (création), pas /create.
+ * Routes alignées sur App.tsx.
  * `indexable: false` => la catégorie SEO n'est pas évaluée contre le seuil
- * (la page est volontairement `Disallow:` dans robots.txt — /new derrière auth,
- * /e/:slug = soirée privée par lien ; Lighthouse pénalise sinon ce qui est
- * justement voulu par la politique d'indexation).
+ * (la page est volontairement `Disallow:` dans robots.txt ou `noindex` —
+ * Lighthouse pénalise sinon ce qui est voulu par la politique d'indexation).
  * `skipPerformance: true` => le chunk EventDetail dépasse le budget 80 de la
  * landing ; la perf reste mesurée et loguée, sans faire échouer le job.
  */
 const URLS = [
-  { path: '/', slug: 'home', indexable: true },
+  { path: '/decouvrir', slug: 'discover', indexable: true },
+  { path: '/soutenir', slug: 'donate', indexable: true },
+  { path: '/u/lighthouse', slug: 'profile', indexable: true },
+  { path: '/', slug: 'home', indexable: false },
+  { path: '/my-events', slug: 'my-events', indexable: false },
   { path: '/new', slug: 'new', indexable: false },
+  { path: '/watchlist', slug: 'watchlist', indexable: false },
+  { path: '/notifications', slug: 'notifications', indexable: false },
+  { path: '/settings', slug: 'settings', indexable: false },
+  { path: '/login', slug: 'login', indexable: false },
+  { path: '/register', slug: 'register', indexable: false },
+  { path: '/forgot-password', slug: 'forgot-password', indexable: false },
+  { path: '/mentions-legales', slug: 'legal', indexable: false },
+  { path: '/politique-de-confidentialite', slug: 'privacy', indexable: false },
   { path: '/e/lighthouse-smoke', slug: 'event-slug', indexable: false, skipPerformance: true },
 ];
 
@@ -89,6 +100,43 @@ function startApiStub(port) {
         .end(JSON.stringify({ providers: [] }));
       return;
     }
+    if (urlPath === '/api/v1/users/lighthouse') {
+      res.writeHead(200, { 'Content-Type': 'application/json' }).end(
+        JSON.stringify({
+          handle: 'lighthouse',
+          displayName: 'Lighthouse',
+          avatarId: 'alpha',
+          bio: 'Profil de recette Lighthouse',
+          memberSince: '2024-03-15T00:00:00Z',
+          followingCount: 0,
+          followersCount: 0,
+          isSupporter: false,
+          isFollowedByMe: null,
+        })
+      );
+      return;
+    }
+    if (urlPath === '/api/v1/users/lighthouse/stats') {
+      res.writeHead(200, { 'Content-Type': 'application/json' }).end(
+        JSON.stringify({
+          eventsCreated: 0,
+          eventsJoined: 0,
+          moviesProposed: 0,
+          votesCast: 0,
+          winningProposals: 0,
+          moviesSeen: 0,
+          currentStreakWeeks: 0,
+          bestStreakWeeks: 0,
+          favoriteGenres: [],
+          dailyActivity: [],
+        })
+      );
+      return;
+    }
+    if (urlPath === '/api/v1/users/lighthouse/watched-movies') {
+      res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ items: [] }));
+      return;
+    }
     if (urlPath.startsWith('/api/v1/events/slug/')) {
       const slug = urlPath.slice('/api/v1/events/slug/'.length);
       res.writeHead(200, { 'Content-Type': 'application/json' }).end(
@@ -144,7 +192,43 @@ const mins = budgets.minimumScores;
 
 fs.mkdirSync(OUT, { recursive: true });
 
-const serve = spawn(`pnpm exec serve -s "${DIST}" -l ${PORT}`, {
+const serveConfigPath = path.join(DIST, 'serve.json');
+fs.writeFileSync(
+  serveConfigPath,
+  JSON.stringify({
+    headers: [
+      {
+        source: 'assets/**',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: 'icons/**',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '**/*.@(woff2|svg|png)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ],
+  })
+);
+
+const serve = spawn(`pnpm exec serve -s "${DIST}" -l ${PORT} -c "${serveConfigPath}"`, {
   cwd: ROOT,
   stdio: 'ignore',
   shell: true,

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useTheme } from '@/shared/contexts/ThemeContext';
 import type { UiThemePreference } from '@/shared/types/theme';
@@ -17,10 +17,18 @@ const LABEL_KEY: Record<UiThemePreference, TranslationKey> = {
 export default function ThemeToggle({
   className = '',
   id,
-}: Readonly<{ className?: string; id?: string }>) {
+  ariaLabelledBy,
+  onSaved,
+}: Readonly<{
+  className?: string;
+  id?: string;
+  ariaLabelledBy?: string;
+  onSaved?: () => void;
+}>) {
   const { preference, setUiPreference } = useTheme();
   const { user, patchProfile } = useAuth();
   const { t } = useTranslation();
+  const [error, setError] = useState<string | null>(null);
 
   const options = useMemo(
     () =>
@@ -34,22 +42,39 @@ export default function ThemeToggle({
   const commit = (value: UiThemePreference) => {
     if (!isUiThemePreference(value)) return;
     const prev = preference;
+    setError(null);
     setUiPreference(value);
     if (user) {
-      void patchProfile({ uiTheme: value }).catch(() => {
-        setUiPreference(prev);
-      });
+      void patchProfile({ uiTheme: value })
+        .then(() => onSaved?.())
+        .catch(() => {
+          setUiPreference(prev);
+          setError(
+            t('auth.account.themeSaveError', {
+              theme: t(LABEL_KEY[value]),
+              previous: t(LABEL_KEY[prev]),
+            })
+          );
+        });
     }
   };
 
   return (
-    <SegmentedRadioGroup
-      options={options}
-      value={preference}
-      onChange={commit}
-      ariaLabel={t('auth.account.themeLabel')}
-      className={className}
-      id={id}
-    />
+    <>
+      <SegmentedRadioGroup
+        options={options}
+        value={preference}
+        onChange={commit}
+        ariaLabel={t('auth.account.themeLabel')}
+        ariaLabelledBy={ariaLabelledBy}
+        className={className}
+        id={id}
+      />
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+    </>
   );
 }

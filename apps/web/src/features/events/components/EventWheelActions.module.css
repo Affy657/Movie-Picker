@@ -20,6 +20,22 @@
   transform: translateY(var(--text-optical-nudge));
 }
 
+.spinCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, currentColor 16%, transparent);
+  font-size: var(--font-size-3xs);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  transform: translateY(var(--text-optical-nudge));
+}
+
 .manualBar {
   display: flex;
   align-items: center;

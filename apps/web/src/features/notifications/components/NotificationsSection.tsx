@@ -9,27 +9,48 @@ import {
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import Toggle from '@/shared/components/Toggle';
 import { getErrorMessage } from '@/shared/api/apiError';
-import { notifIcon } from '@/features/notifications/utils/notifIcon';
+import sharedStyles from '@/features/auth/pages/account/AccountShared.module.css';
 import styles from './NotificationsSection.module.css';
 
-const PREF_TYPES: ReadonlyArray<{ type: NotificationTypeKey; labelKey: TranslationKey }> = [
-  { type: 'participantjoined', labelKey: 'notifications.prefParticipantJoined' },
-  { type: 'movieadded', labelKey: 'notifications.prefMovieAdded' },
-  { type: 'moviepicked', labelKey: 'notifications.prefMoviePicked' },
-  { type: 'moviepickedmanually', labelKey: 'notifications.prefMoviePickedManually' },
-  { type: 'eventdeleted', labelKey: 'notifications.prefEventDeleted' },
-  { type: 'eventreminder1h', labelKey: 'notifications.prefEventReminder1h' },
-  { type: 'eventreminder24h', labelKey: 'notifications.prefEventReminder24h' },
-  { type: 'eventinvitation', labelKey: 'notifications.prefEventInvitation' },
-  { type: 'newfollower', labelKey: 'notifications.prefNewFollower' },
-  { type: 'eventpending', labelKey: 'notifications.prefEventPending' },
+interface PrefGroup {
+  legendKey: TranslationKey;
+  items: ReadonlyArray<{ type: NotificationTypeKey; labelKey: TranslationKey }>;
+}
+
+const PREF_GROUPS: readonly PrefGroup[] = [
   {
-    type: 'letterboxdreconciliationpending',
-    labelKey: 'notifications.prefLetterboxdReconciliationPending',
+    legendKey: 'notifications.groupEvents',
+    items: [
+      { type: 'participantjoined', labelKey: 'notifications.prefParticipantJoined' },
+      { type: 'movieadded', labelKey: 'notifications.prefMovieAdded' },
+      { type: 'moviepicked', labelKey: 'notifications.prefMoviePicked' },
+      { type: 'moviepickedmanually', labelKey: 'notifications.prefMoviePickedManually' },
+      { type: 'eventdeleted', labelKey: 'notifications.prefEventDeleted' },
+      { type: 'eventdatechanged', labelKey: 'notifications.prefEventDateChanged' },
+      { type: 'eventpending', labelKey: 'notifications.prefEventPending' },
+    ],
+  },
+  {
+    legendKey: 'notifications.groupReminders',
+    items: [
+      { type: 'eventreminder1h', labelKey: 'notifications.prefEventReminder1h' },
+      { type: 'eventreminder24h', labelKey: 'notifications.prefEventReminder24h' },
+    ],
+  },
+  {
+    legendKey: 'notifications.groupSocial',
+    items: [
+      { type: 'eventinvitation', labelKey: 'notifications.prefEventInvitation' },
+      { type: 'newfollower', labelKey: 'notifications.prefNewFollower' },
+      {
+        type: 'letterboxdreconciliationpending',
+        labelKey: 'notifications.prefLetterboxdReconciliationPending',
+      },
+    ],
   },
 ];
 
-export default function NotificationsSection() {
+export default function NotificationsSection({ onSaved }: Readonly<{ onSaved?: () => void }> = {}) {
   const { t } = useTranslation();
   const {
     supported,
@@ -72,34 +93,26 @@ export default function NotificationsSection() {
           >
         );
         setPrefsError(null);
+        onSaved?.();
       } catch (err) {
         setPrefsError(getErrorMessage(err, t('notifications.prefsSaveError')));
       } finally {
         setSavingPref(null);
       }
     },
-    [prefs, t]
+    [prefs, t, onSaved]
   );
 
+  const togglePush = () => {
+    void (subscribed ? unsubscribe() : subscribe());
+  };
+
   if (!supported) {
-    return (
-      <section className="section section--panel" aria-labelledby="notifications-heading">
-        <h2 id="notifications-heading" className={styles.sectionTitle}>
-          <Bell size={18} aria-hidden />
-          <span className={styles.sectionTitleText}>{t('notifications.title')}</span>
-        </h2>
-        <p className="hint">{t('notifications.unsupported')}</p>
-      </section>
-    );
+    return <p className="hint">{t('notifications.unsupported')}</p>;
   }
 
   return (
-    <section className="section section--panel" aria-labelledby="notifications-heading">
-      <h2 id="notifications-heading" className={styles.sectionTitle}>
-        <Bell size={18} aria-hidden />
-        <span className={styles.sectionTitleText}>{t('notifications.title')}</span>
-      </h2>
-
+    <>
       {pushError && (
         <p className="error" role="alert">
           {pushError}
@@ -114,54 +127,49 @@ export default function NotificationsSection() {
 
       {permission === 'denied' && <p className="hint">{t('notifications.permissionDenied')}</p>}
 
-      <div className="form">
-        <div className={styles.row}>
-          <div className={styles.rowInfo}>
-            {subscribed ? (
-              <Bell size={18} aria-hidden className={styles.rowIcon} />
-            ) : (
-              <BellOff size={18} aria-hidden className={styles.rowIcon} />
-            )}
-            <div className={styles.rowText}>
-              <p className={styles.rowLabel}>
-                {subscribed ? t('notifications.enabledLabel') : t('notifications.disabledLabel')}
-              </p>
-            </div>
+      <div className={sharedStyles.card}>
+        <div className={sharedStyles.row} style={{ borderTop: 'none' }}>
+          {subscribed ? (
+            <Bell size={18} aria-hidden className={sharedStyles.rowIcon} />
+          ) : (
+            <BellOff size={18} aria-hidden className={sharedStyles.rowIcon} />
+          )}
+          <div className={sharedStyles.rowMain}>
+            <p className={sharedStyles.rowLabel}>
+              {subscribed ? t('notifications.enabledLabel') : t('notifications.disabledLabel')}
+            </p>
           </div>
           <Toggle
             checked={subscribed}
             disabled={pushLoading || permission === 'denied'}
-            onChange={() => void (subscribed ? unsubscribe() : subscribe())}
+            onChange={togglePush}
             label={subscribed ? t('notifications.disableButton') : t('notifications.enableButton')}
           />
         </div>
+      </div>
 
-        {prefs && (
-          <>
-            <hr className={styles.prefsDivider} />
-            <p className={styles.prefsTitle}>{t('notifications.prefsTitle')}</p>
-
-            {PREF_TYPES.map(({ type, labelKey }) => (
-              <div className={styles.prefRow} key={type}>
-                <span className={styles.prefLabelWrap}>
-                  <span className={styles.prefIcon} aria-hidden>
-                    {notifIcon(type)}
-                  </span>
+      {prefs && (
+        <div className={sharedStyles.card}>
+          {PREF_GROUPS.map((group) => (
+            <fieldset className={styles.prefGroup} key={group.legendKey}>
+              <legend className={styles.prefGroupLegend}>{t(group.legendKey)}</legend>
+              {group.items.map(({ type, labelKey }) => (
+                <div className={styles.prefRow} key={type}>
                   <span id={`notif-pref-${type}`} className={styles.prefLabel}>
                     {t(labelKey)}
                   </span>
-                </span>
-                <Toggle
-                  checked={prefs[type] ?? true}
-                  labelledBy={`notif-pref-${type}`}
-                  disabled={savingPref === type}
-                  onChange={() => handleTogglePref(type)}
-                />
-              </div>
-            ))}
-          </>
-        )}
-      </div>
-    </section>
+                  <Toggle
+                    checked={prefs[type] ?? true}
+                    labelledBy={`notif-pref-${type}`}
+                    disabled={savingPref === type}
+                    onChange={() => handleTogglePref(type)}
+                  />
+                </div>
+              ))}
+            </fieldset>
+          ))}
+        </div>
+      )}
+    </>
   );
 }

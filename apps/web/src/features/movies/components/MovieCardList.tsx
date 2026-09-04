@@ -1,15 +1,18 @@
 import { memo } from 'react';
 import clsx from 'clsx';
 import { ImageOff } from 'lucide-react';
-import WatchProviderChips, { ModeIcon } from '@/features/movies/components/WatchProviderChips';
+import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import {
   MovieCardKebab,
   CardModals,
   CardProposerFooter,
   CardSelectionOverlay,
+  DetailsInfoButton,
   MovieNote,
+  PaidOfferChip,
   SeenButton,
   VoteBar,
+  WatchlistBadge,
   useMovieCardState,
   type MovieCardCommonProps,
 } from '@/features/movies/components/movieCardParts';
@@ -70,9 +73,9 @@ export const MovieCardList = memo(function MovieCardList({
   isInWatchlist,
   onToggleWatchlist,
   onToggleWheelExclusion,
-  onProposeToEvent,
   selection,
   isWinner = false,
+  participantCount,
 }: MovieCardCommonProps) {
   const s = useMovieCardState({
     movie: m,
@@ -110,6 +113,7 @@ export const MovieCardList = memo(function MovieCardList({
       <div className={styles.posterCol} inert={selecting}>
         <ListPoster src={s.posterSrc} srcSet={s.posterSrcSet} eager={eager} />
         {m.mediaType === 'tv' && <span className={styles.tvBadge}>{t('movies.list.tvBadge')}</span>}
+        <WatchlistBadge inWatchlist={isInWatchlist} t={t} />
       </div>
 
       <div className={styles.info} inert={selecting}>
@@ -122,7 +126,6 @@ export const MovieCardList = memo(function MovieCardList({
           onRemove={onRemove}
           onToggleWatchlist={onToggleWatchlist}
           onToggleWheelExclusion={onToggleWheelExclusion}
-          onProposeToEvent={onProposeToEvent}
           t={t}
         />
         <div className={styles.titleRow}>
@@ -130,7 +133,7 @@ export const MovieCardList = memo(function MovieCardList({
             {m.title}
           </h3>
           {isWinner ? (
-            <span className={styles.winnerBadge}>{t('movies.list.winnerBadge')}</span>
+            <span className={styles.winnerBadge}>{t('events.wheel.winnerLabel')}</span>
           ) : null}
         </div>
 
@@ -151,36 +154,30 @@ export const MovieCardList = memo(function MovieCardList({
                 className={styles.cardProviders}
                 watchPageUrl={m.tmdbWatchPageUrl}
                 maxVisible={3}
-                onMoreClick={() => s.setProvidersOpen(true)}
+                onMoreClick={() => s.openDetails('dispo')}
               />
             )}
             {rentCount > 0 && (
-              <button
-                type="button"
-                className={styles.paidChip}
-                onClick={() => s.setProvidersOpen(true)}
-                aria-label={t('movies.watchProviders.alsoRentAria', {
+              <PaidOfferChip
+                type="rent"
+                count={rentCount}
+                onClick={() => s.openDetails('dispo')}
+                ariaLabel={t('movies.watchProviders.alsoRentAria', {
                   count: rentCount,
                   title: m.title,
                 })}
-              >
-                <ModeIcon type="rent" size={13} />
-                <span className={styles.paidChipCount}>{rentCount}</span>
-              </button>
+              />
             )}
             {buyCount > 0 && (
-              <button
-                type="button"
-                className={styles.paidChip}
-                onClick={() => s.setProvidersOpen(true)}
-                aria-label={t('movies.watchProviders.alsoBuyAria', {
+              <PaidOfferChip
+                type="buy"
+                count={buyCount}
+                onClick={() => s.openDetails('dispo')}
+                ariaLabel={t('movies.watchProviders.alsoBuyAria', {
                   count: buyCount,
                   title: m.title,
                 })}
-              >
-                <ModeIcon type="buy" size={13} />
-                <span className={styles.paidChipCount}>{buyCount}</span>
-              </button>
+              />
             )}
           </div>
         ) : (
@@ -223,11 +220,28 @@ export const MovieCardList = memo(function MovieCardList({
 
           <div className={styles.proposerRow}>
             <CardProposerFooter s={s} m={m} t={t} />
+            <DetailsInfoButton
+              hasDetails={s.hasDetails}
+              onOpen={() => s.openDetails('soiree')}
+              title={m.title}
+              t={t}
+            />
           </div>
         </div>
       </div>
 
-      <CardModals s={s} m={m} />
+      <CardModals
+        s={s}
+        m={m}
+        isHost={isHost}
+        onVote={onVote}
+        onRemove={onRemove}
+        isInWatchlist={isInWatchlist}
+        onToggleWatchlist={onToggleWatchlist}
+        onToggleWheelExclusion={onToggleWheelExclusion}
+        avatarsByPseudo={participantAvatarsByPseudo}
+        participantCount={participantCount}
+      />
     </li>
   );
 });

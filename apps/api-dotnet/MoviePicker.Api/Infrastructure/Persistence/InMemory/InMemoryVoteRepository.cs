@@ -113,6 +113,28 @@ public sealed class InMemoryVoteRepository : IVoteRepository
         return Task.FromResult<IReadOnlyDictionary<string, VoteScoreAggregate>>(result);
     }
 
+    public Task<IReadOnlyDictionary<string, IReadOnlyList<string>>> AggregateUpVotersByMovieIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
+    {
+        var result = new Dictionary<string, IReadOnlyList<string>>();
+        foreach (var movieId in movieIds)
+        {
+            if (!_byMovieId.TryGetValue(movieId, out var list))
+                continue;
+            var upVoters = new List<string>();
+            lock (list)
+            {
+                foreach (var v in list)
+                {
+                    if (v.Value == 1)
+                        upVoters.Add(v.ParticipantId);
+                }
+            }
+            if (upVoters.Count > 0)
+                result[movieId] = upVoters;
+        }
+        return Task.FromResult<IReadOnlyDictionary<string, IReadOnlyList<string>>>(result);
+    }
+
     public Task<IReadOnlyDictionary<string, int>> GetParticipantVotesByEventAsync(
         string eventId,
         string participantId,
@@ -145,5 +167,11 @@ public sealed class InMemoryVoteRepository : IVoteRepository
         var set = participantIds.Where(id => !string.IsNullOrWhiteSpace(id)).ToHashSet();
         IReadOnlyList<Vote> result = _byId.Values.Where(v => set.Contains(v.ParticipantId)).ToList();
         return Task.FromResult(result);
+    }
+
+    public Task<int> CountDistinctVotersByEventIdAsync(string eventId, CancellationToken ct = default)
+    {
+        var n = _byId.Values.Where(v => v.EventId == eventId).Select(v => v.ParticipantId).Distinct().Count();
+        return Task.FromResult(n);
     }
 }

@@ -3,26 +3,11 @@
   margin-right: -1rem;
 }
 
-.sortBar {
+.sectionHeader {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  flex-wrap: nowrap;
+  gap: 0.6rem;
   margin-bottom: 0.75rem;
-}
-
-.sortScroll {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.sortScroll::-webkit-scrollbar {
-  display: none;
 }
 
 .viewToggle {
@@ -69,70 +54,46 @@
   color: var(--color-primary-contrast);
 }
 
-.sortLabel {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.sortLabelIcon {
-  display: none;
-  flex-shrink: 0;
-  color: var(--color-text-muted);
-}
-
-@media (max-width: 47.9375rem) {
-  .sortLabel {
-    display: none;
-  }
-
-  .sortLabelIcon {
-    display: block;
-  }
-}
-
-.sortPills {
+.wheelDivider {
   display: flex;
-  flex-wrap: nowrap;
-  flex-shrink: 0;
-  gap: 0.35rem;
-}
-
-.sortPill {
-  display: inline-flex;
   align-items: center;
-  flex-shrink: 0;
-  padding: 0.3rem 0.75rem;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition:
-    background var(--duration-base) var(--ease-default),
-    color var(--duration-base) var(--ease-default),
-    border-color var(--duration-base) var(--ease-default);
+  gap: 0.75rem;
+  margin: 1.5rem 0 0.6rem;
 }
 
-.sortPill:hover:not(.sortPillActive) {
-  background: color-mix(in srgb, var(--color-text) 7%, transparent);
-  color: var(--color-text);
-  border-color: color-mix(in srgb, var(--color-text) 25%, transparent);
+.wheelDividerLabel {
+  font-size: var(--font-size-3xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-meta);
 }
 
-.sortPill:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+.wheelDividerCount {
+  font-size: var(--font-size-3xs);
+  font-weight: 700;
+  color: var(--color-meta);
+  font-variant-numeric: tabular-nums;
 }
 
-.sortPillActive {
-  background: var(--color-primary);
-  color: var(--color-primary-contrast);
-  border-color: var(--color-primary);
+.wheelDividerLine {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border-subtle);
+}
+
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.skeletonHeader {
+  border-radius: var(--radius-md);
+}
+
+.skeletonRow {
+  border-radius: var(--radius-md);
 }
 
 .addSection {

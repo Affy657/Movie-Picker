@@ -105,52 +105,6 @@
   background: var(--color-border-subtle);
 }
 
-.sortPillsRow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-width: 0;
-}
-
-.sortLabel {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-  white-space: nowrap;
-}
-
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.3rem 0.75rem;
-  font-family: inherit;
-  font-size: var(--font-size-xs);
-  font-weight: 500;
-  color: var(--color-text-muted);
-  background: transparent;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-  white-space: nowrap;
-  line-height: var(--leading-none);
-}
-
-.pillLabel {
-  transform: translateY(var(--text-optical-nudge));
-}
-
-.pillActive {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: var(--color-primary-contrast);
-  font-weight: 600;
-}
-
-.sortMenuPanel {
-  left: 0;
-  right: auto;
-}
-
 .resultCount {
   margin-left: auto;
   display: inline-flex;

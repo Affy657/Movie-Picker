@@ -8,7 +8,6 @@ export type WinnerPickMethod = 'wheel' | 'manual';
 
 export interface EventConfigData {
   theme: string | null;
-  themeColor?: number | null;
   maxProposalsPerParticipant: number | null;
 
   maxParticipants: number | null;
@@ -47,6 +46,8 @@ export interface EventData {
   myParticipant?: { id: string; pseudo: string } | null;
 
   participantCount?: number;
+
+  votersCount?: number;
 
   movieCount?: number;
 

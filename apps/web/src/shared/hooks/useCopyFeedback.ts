@@ -13,8 +13,9 @@ export function useCopyFeedback(feedbackMs = DEFAULT_FEEDBACK_MS) {
   }, [copied, feedbackMs]);
 
   const copy = useCallback((text: string) => {
-    void copyTextToClipboard(text).then((ok) => {
+    return copyTextToClipboard(text).then((ok) => {
       if (ok) setCopied(true);
+      return ok;
     });
   }, []);
 

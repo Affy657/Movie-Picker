@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
@@ -14,6 +15,10 @@ public sealed class PatchEventConfigHandlerTests
     private readonly Mock<IParticipantRepository> _participants;
     private readonly Mock<IHostTokenAccessor> _hostToken;
     private readonly Mock<ICurrentUserAccessor> _user;
+    private readonly Mock<IUserRepository> _userRepo = new();
+    private readonly Mock<IPushSubscriptionRepository> _pushSubRepo = new();
+    private readonly Mock<IPushNotificationSender> _pushSender = new();
+    private readonly Mock<IUserNotificationRepository> _notifications = new();
     private readonly PatchEventConfigHandler _sut;
 
     public PatchEventConfigHandlerTests()
@@ -22,7 +27,16 @@ public sealed class PatchEventConfigHandlerTests
         _participants = new Mock<IParticipantRepository>();
         _hostToken = new Mock<IHostTokenAccessor>();
         _user = new Mock<ICurrentUserAccessor>();
-        _sut = new PatchEventConfigHandler(_events.Object, _participants.Object, _hostToken.Object, _user.Object);
+        _sut = new PatchEventConfigHandler(
+            _events.Object,
+            _participants.Object,
+            _hostToken.Object,
+            _user.Object,
+            _userRepo.Object,
+            _pushSubRepo.Object,
+            _pushSender.Object,
+            _notifications.Object,
+            NullLogger<PatchEventConfigHandler>.Instance);
     }
 
     private static Event Evt() => new()

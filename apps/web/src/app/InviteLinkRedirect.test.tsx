@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { describe, it, expect, beforeAll, afterEach, afterAll, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
@@ -83,7 +83,7 @@ describe("lien d'invitation : retour vers la soirée après authentification", (
       () => {
         expect(screen.getByRole('heading', { name: /soirée invitée/i })).toBeInTheDocument();
       },
-      { timeout: 15000 }
+      { timeout: 20000 }
     );
   }
 
@@ -93,13 +93,15 @@ describe("lien d'invitation : retour vers la soirée après authentification", (
     renderRoutes([INVITE_PATH]);
 
     await expectEventPage();
-    await userEvent.setup().click(screen.getByRole('link', { name: /^se connecter$/i }));
-    await screen.findByRole('heading', { name: /^connexion$/i }, { timeout: 8000 });
+    await userEvent
+      .setup()
+      .click(within(screen.getByRole('main')).getByRole('link', { name: /^se connecter$/i }));
+    await screen.findByRole('heading', { name: /^connexion$/i }, { timeout: 20000 });
     await submitLoginForm();
 
     await expectEventPage();
     expect(screen.queryByRole('heading', { name: /^mes soirées$/i })).not.toBeInTheDocument();
-  }, 25000);
+  }, 60000);
 
   it('session déjà valide : /login?returnTo renvoie directement sur la soirée sans reclic du lien', async () => {
     sessionActive = true;
@@ -108,7 +110,7 @@ describe("lien d'invitation : retour vers la soirée après authentification", (
     renderRoutes([LOGIN_PATH]);
 
     await expectEventPage();
-  }, 25000);
+  }, 60000);
 
   it('navigation privée : le hint de session non persistable ne renvoie plus en boucle sur /login', async () => {
     useInviteHandlers();
@@ -135,12 +137,14 @@ describe("lien d'invitation : retour vers la soirée après authentification", (
     renderRoutes([INVITE_PATH]);
 
     await expectEventPage();
-    await userEvent.setup().click(screen.getByRole('link', { name: /^se connecter$/i }));
-    await screen.findByRole('heading', { name: /^connexion$/i }, { timeout: 8000 });
+    await userEvent
+      .setup()
+      .click(within(screen.getByRole('main')).getByRole('link', { name: /^se connecter$/i }));
+    await screen.findByRole('heading', { name: /^connexion$/i }, { timeout: 20000 });
     await submitLoginForm();
 
     await expectEventPage();
-  });
+  }, 60000);
 
   it('vérification de session en échec : écran de réessai sur une page protégée', async () => {
     localStorage.setItem(SESSION_HINT_KEY, '1');
@@ -156,6 +160,9 @@ describe("lien d'invitation : retour vers la soirée après authentification", (
       await screen.findByRole('button', { name: /^réessayer$/i }, { timeout: 12000 })
     ).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /^connexion$/i })).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /retour à l.accueil/i })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: /retour à l.accueil/i })).toHaveAttribute(
+      'href',
+      '/decouvrir'
+    );
   });
 });

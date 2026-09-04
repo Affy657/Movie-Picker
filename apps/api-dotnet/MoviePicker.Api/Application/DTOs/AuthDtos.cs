@@ -47,6 +47,7 @@ public sealed class UserProfileResponse
     public string DisplayName { get; init; } = string.Empty;
 
     public string EmailMasked { get; init; } = string.Empty;
+    public string Email { get; init; } = string.Empty;
     public UiThemePreference UiTheme { get; init; }
     public AccentColor AccentColor { get; init; }
     public RatingScale RatingScale { get; init; }

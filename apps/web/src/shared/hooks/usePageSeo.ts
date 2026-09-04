@@ -5,8 +5,8 @@ import {
   DEFAULT_OG_IMAGE,
   DEFAULT_OG_IMAGE_ALT,
   SITE_NAME,
-  SITE_URL,
 } from '@/shared/seo/siteMeta';
+import { ROUTES } from '@/app/routes';
 
 export type OgType = 'website' | 'profile' | 'article';
 
@@ -34,12 +34,12 @@ interface ResolvedSeo {
 
 const JSON_LD_MARKER = 'data-page-seo';
 const INACTIVE_JSON_LD_TYPE = 'application/ld+json-inactive';
-const HOME_URL = `${SITE_URL}/`;
+const LANDING_URL = absoluteUrl(ROUTES.discover);
 
 const SEO_DEFAULTS: ResolvedSeo = {
   title: SITE_NAME,
   description: DEFAULT_DESCRIPTION,
-  url: HOME_URL,
+  url: LANDING_URL,
   ogType: 'website',
   image: DEFAULT_OG_IMAGE,
   imageAlt: DEFAULT_OG_IMAGE_ALT,
@@ -124,7 +124,7 @@ function applySeo(seo: ResolvedSeo): void {
   upsertMeta('name', 'twitter:image', seo.image);
   upsertMeta('name', 'twitter:image:alt', seo.imageAlt);
   setRobots(seo.noindex);
-  setDefaultJsonLdVisible(seo.url === HOME_URL && !seo.noindex);
+  setDefaultJsonLdVisible(seo.url === LANDING_URL && !seo.noindex);
   setJsonLd(seo.jsonLdSerialized);
 }
 
@@ -134,7 +134,7 @@ function resolveCanonical(canonical: string | undefined, noindex: boolean): stri
     const path = globalThis.location?.pathname;
     if (path && path !== '/') return absoluteUrl(path);
   }
-  return HOME_URL;
+  return LANDING_URL;
 }
 
 export function usePageSeo(seo: PageSeo): void {

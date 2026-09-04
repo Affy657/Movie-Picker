@@ -15,10 +15,12 @@ public sealed class MovieWithScoreResponse
     public string Year { get; init; } = string.Empty;
     public string? PosterPath { get; init; }
     public string? PitchNote { get; init; }
+    public IReadOnlyList<int> GenreIds { get; init; } = Array.Empty<int>();
     public bool ExcludedFromWheel { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
     public string ProposerPseudo { get; init; } = string.Empty;
+    public string? ProposerHandle { get; init; }
     public int Score { get; init; }
     public int Up { get; init; }
     public int Down { get; init; }
@@ -29,10 +31,13 @@ public sealed class MovieWithScoreResponse
 
     public IReadOnlyList<string> SeenByPseudos { get; init; } = Array.Empty<string>();
 
+    public IReadOnlyList<string> VotersUpPseudos { get; init; } = Array.Empty<string>();
+
     public double? VoteAverage { get; init; }
     public IReadOnlyList<WatchProviderOfferResponse> WatchProviders { get; init; } =
         Array.Empty<WatchProviderOfferResponse>();
     public string? TmdbWatchPageUrl { get; init; }
 
     public int? RuntimeMinutes { get; init; }
+    public string? ReleaseDate { get; init; }
 }

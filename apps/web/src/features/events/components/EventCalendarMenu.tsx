@@ -12,7 +12,7 @@ import {
   outlookCalendarUrl,
   type CalendarEvent,
 } from '@/shared/utils/icsCalendar';
-import styles from './EventShareMenu.module.css';
+import styles from './MenuPanel.module.css';
 
 type EventCalendarMenuProps = {
   title: string;

@@ -22,7 +22,7 @@ export default function AnalyticsSync() {
       return;
     }
     if (user) {
-      identify(user.userId, { displayName: user.displayName, handle: user.handle });
+      identify(user.userId);
     } else {
       resetIdentity();
     }

@@ -1,10 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router';
-import { ArrowLeft, Settings2 } from 'lucide-react';
+import { ArrowLeft, CalendarPlus, Settings2 } from 'lucide-react';
 import ThemeField from '@/features/events/components/ThemeField';
+import WheelModeField from '@/features/events/components/WheelModeField';
 import NumberInput from '@/shared/components/NumberInput';
+import Toggle from '@/shared/components/Toggle';
 import { useQueryClient } from '@tanstack/react-query';
 import PageLayout from '@/shared/components/PageLayout';
+import SignedOutState from '@/shared/components/SignedOutState';
+import SessionCheckErrorState from '@/shared/components/SessionCheckErrorState';
 import { createEvent as createEventApi, patchEventConfig } from '@/features/events/api/eventsApi';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
@@ -17,8 +21,10 @@ import {
   MAX_EVENT_PARTICIPANTS,
   MAX_PROPOSALS_PER_PARTICIPANT,
 } from '@/features/events/types';
+import type { WheelMode } from '@/features/events/types';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
+import { useTranslation } from '@/shared/i18n';
 import styles from './CreateEvent.module.css';
 
 function getDefaultDate(): string {
@@ -40,11 +46,13 @@ function getDefaultTime(): string {
 }
 
 export default function CreateEvent() {
-  useNoindexPage(pageTitle('Nouvelle soirée'), ROUTES.createEvent);
+  const { t } = useTranslation();
+  useNoindexPage(pageTitle(t('nav.createEvent')), ROUTES.createEvent);
+  const wheelModeLabelId = useId();
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading, authCheckFailed } = useAuth();
   const { track } = useAnalytics();
   const [title, setTitle] = useState('');
   const titleInitialized = useRef(false);
@@ -52,16 +60,17 @@ export default function CreateEvent() {
   useEffect(() => {
     if (user && !titleInitialized.current) {
       titleInitialized.current = true;
-      setTitle(`Soirée film chez ${user.displayName}`);
+      setTitle(t('events.create.defaultTitle', { name: user.displayName }));
     }
-  }, [user]);
+  }, [user, t]);
   const [date, setDate] = useState(getDefaultDate);
   const [time, setTime] = useState(getDefaultTime);
   const [themeEmoji, setThemeEmoji] = useState('');
   const [themeText, setThemeText] = useState('');
-  const [themeColor, setThemeColor] = useState<number | null>(null);
-  const [maxParticipants, setMaxParticipants] = useState('');
-  const [maxProposals, setMaxProposals] = useState('');
+  const [maxParticipants, setMaxParticipants] = useState(String(MAX_EVENT_PARTICIPANTS));
+  const [maxProposals, setMaxProposals] = useState(String(MAX_PROPOSALS_PER_PARTICIPANT));
+  const [wheelMode, setWheelMode] = useState<WheelMode>(DEFAULT_EVENT_CONFIG.wheelMode);
+  const [allowSeries, setAllowSeries] = useState(DEFAULT_EVENT_CONFIG.allowSeries ?? false);
 
   const createAction = useCallback(async () => {
     const res = await createEventApi({ title, date, time });
@@ -75,26 +84,17 @@ export default function CreateEvent() {
     const maxPartParsed = maxParticipants.trim() === '' ? 0 : Number(maxParticipants);
     const maxPropParsed = maxProposals.trim() === '' ? 0 : Number(maxProposals);
 
-    const needsConfigPatch =
-      themeTrimmed !== '' ||
-      themeColor !== null ||
-      (Number.isFinite(maxPartParsed) && maxPartParsed > 0) ||
-      (Number.isFinite(maxPropParsed) && maxPropParsed > 0);
-
-    if (needsConfigPatch) {
-      try {
-        await patchEventConfig(res.slug, null, {
-          theme: themeTrimmed,
-          themeColor: themeColor ?? undefined,
-          maxProposalsPerParticipant: Number.isFinite(maxPropParsed) ? maxPropParsed : 0,
-          maxParticipants: Number.isFinite(maxPartParsed) ? maxPartParsed : 0,
-          wheelMode: DEFAULT_EVENT_CONFIG.wheelMode,
-          richSharePreview: true,
-          allowSeries: DEFAULT_EVENT_CONFIG.allowSeries ?? false,
-        });
-      } catch {
-        // Config patch is optional — event was already created, proceed to navigation
-      }
+    try {
+      await patchEventConfig(res.slug, null, {
+        theme: themeTrimmed,
+        maxProposalsPerParticipant: Number.isFinite(maxPropParsed) ? maxPropParsed : 0,
+        maxParticipants: Number.isFinite(maxPartParsed) ? maxPartParsed : 0,
+        wheelMode,
+        richSharePreview: true,
+        allowSeries,
+      });
+    } catch {
+      // Config patch is optional — event was already created, proceed to navigation
     }
 
     queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
@@ -107,34 +107,66 @@ export default function CreateEvent() {
     time,
     themeEmoji,
     themeText,
-    themeColor,
     maxParticipants,
     maxProposals,
+    wheelMode,
+    allowSeries,
     queryClient,
     navigate,
     track,
   ]);
 
-  const { run: submit, loading, error } = useAsyncAction(createAction, 'Création impossible');
+  const {
+    run: submit,
+    loading,
+    error,
+  } = useAsyncAction(createAction, t('events.create.fallbackError'));
 
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     void submit();
   };
 
+  if (authLoading) {
+    return (
+      <PageLayout className={styles.layout}>
+        <p className="placeholder">{t('common.loading')}</p>
+      </PageLayout>
+    );
+  }
+
+  if (!user && authCheckFailed) {
+    return <SessionCheckErrorState />;
+  }
+
+  if (!user) {
+    return (
+      <PageLayout className={styles.layout}>
+        <h1 className="visually-hidden">{t('nav.createEvent')}</h1>
+        <Link to={ROUTES.myEvents} className={styles.backLink}>
+          <ArrowLeft size={16} aria-hidden />
+          <span className={styles.backLinkLabel}>{t('nav.myEvents')}</span>
+        </Link>
+        <SignedOutState
+          icon={<CalendarPlus size={26} aria-hidden />}
+          title={t('events.create.signedOutTitle')}
+          message={t('events.create.signedOutMessage')}
+          returnTo={ROUTES.createEvent}
+        />
+      </PageLayout>
+    );
+  }
+
   return (
     <PageLayout className={styles.layout}>
       <Link to={ROUTES.myEvents} className={styles.backLink}>
         <ArrowLeft size={16} aria-hidden />
-        <span className={styles.backLinkLabel}>Mes soirées</span>
+        <span className={styles.backLinkLabel}>{t('nav.myEvents')}</span>
       </Link>
       <div className={styles.card}>
         <span className={styles.cardAccent} aria-hidden />
-        <h1 className={styles.title}>Créer une soirée</h1>
-        <p className={styles.description}>
-          Donnez-lui un titre, une date et une heure. Vous pourrez ajuster les paramètres plus tard
-          si besoin.
-        </p>
+        <h1 className={styles.title}>{t('events.create.title')}</h1>
+        <p className={styles.description}>{t('events.create.description')}</p>
         <form onSubmit={handleSubmit} className="form">
           {error && (
             <p className="error" role="alert">
@@ -142,7 +174,7 @@ export default function CreateEvent() {
             </p>
           )}
           <label className="label" htmlFor="create-title">
-            Titre
+            {t('events.create.titleLabel')}
           </label>
           <input
             id="create-title"
@@ -152,12 +184,12 @@ export default function CreateEvent() {
             onChange={(e) => setTitle(e.target.value)}
             required
             maxLength={200}
-            placeholder="Ex : Soirée film du vendredi"
+            placeholder={t('events.create.titlePlaceholder')}
           />
           <div className={styles.fieldGrid}>
             <div>
               <label className="label" htmlFor="create-date">
-                Date
+                {t('events.create.dateLabel')}
               </label>
               <input
                 id="create-date"
@@ -170,7 +202,7 @@ export default function CreateEvent() {
             </div>
             <div>
               <label className="label" htmlFor="create-time">
-                Heure
+                {t('events.create.timeLabel')}
               </label>
               <input
                 id="create-time"
@@ -186,40 +218,25 @@ export default function CreateEvent() {
           <details className={styles.advanced}>
             <summary className={styles.advancedSummary}>
               <Settings2 size={16} aria-hidden className={styles.advancedIcon} />
-              <span className={styles.advancedLabel}>Options avancées (optionnel)</span>
+              <span className={styles.advancedLabel}>{t('events.create.advancedOptions')}</span>
               <span className={styles.advancedChevron} aria-hidden />
             </summary>
             <div className={styles.advancedBody}>
               <label className="label" htmlFor="create-theme">
-                Thème / ambiance
+                {t('events.settings.themeLabel')}
               </label>
               <ThemeField
                 textInputId="create-theme"
                 emoji={themeEmoji}
                 text={themeText}
-                themeColor={themeColor}
                 onEmojiChange={setThemeEmoji}
                 onTextChange={setThemeText}
-                onThemeColorChange={setThemeColor}
               />
 
               <div className={styles.fieldGrid}>
                 <div>
-                  <label className="label" htmlFor="create-max-participants">
-                    Participants max
-                  </label>
-                  <NumberInput
-                    id="create-max-participants"
-                    value={maxParticipants}
-                    onChange={setMaxParticipants}
-                    min={1}
-                    max={MAX_EVENT_PARTICIPANTS}
-                    placeholder="Illimité"
-                  />
-                </div>
-                <div>
                   <label className="label" htmlFor="create-max-proposals">
-                    Films par personne
+                    {t('events.settings.maxProposalsLabel')}
                   </label>
                   <NumberInput
                     id="create-max-proposals"
@@ -227,15 +244,50 @@ export default function CreateEvent() {
                     onChange={setMaxProposals}
                     min={1}
                     max={MAX_PROPOSALS_PER_PARTICIPANT}
-                    placeholder="Illimité"
                   />
                 </div>
+                <div>
+                  <label className="label" htmlFor="create-max-participants">
+                    {t('events.settings.maxParticipantsLabel')}
+                  </label>
+                  <NumberInput
+                    id="create-max-participants"
+                    value={maxParticipants}
+                    onChange={setMaxParticipants}
+                    min={1}
+                    max={MAX_EVENT_PARTICIPANTS}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.field}>
+                <span className="label" id={wheelModeLabelId}>
+                  {t('events.settings.wheelModeLabel')}
+                </span>
+                <WheelModeField
+                  name="create-wheel-mode"
+                  value={wheelMode}
+                  labelId={wheelModeLabelId}
+                  onChange={setWheelMode}
+                />
+              </div>
+
+              <div className={styles.toggleRow}>
+                <span>
+                  <span className={styles.toggleName}>{t('events.settings.allowSeriesLabel')}</span>
+                  <span className={styles.toggleDesc}>{t('events.settings.allowSeriesDesc')}</span>
+                </span>
+                <Toggle
+                  checked={allowSeries}
+                  label={t('events.settings.allowSeriesLabel')}
+                  onChange={() => setAllowSeries((v) => !v)}
+                />
               </div>
             </div>
           </details>
 
           <button type="submit" className={`btn btn-primary ${styles.submit}`} disabled={loading}>
-            {loading ? 'Création…' : 'Créer la soirée'}
+            {loading ? t('events.create.submitting') : t('events.create.submit')}
           </button>
         </form>
       </div>

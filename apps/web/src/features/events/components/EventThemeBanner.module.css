@@ -6,15 +6,9 @@
   line-height: 1;
   padding: 0.28rem 0.55rem 0.28rem 0.4rem;
   border-radius: var(--radius-pill);
-  border: 1px solid hsl(var(--event-theme-hue, 200) 48% 75%);
-  background: hsl(var(--event-theme-hue, 200) 65% 96%);
-  color: hsl(var(--event-theme-hue, 200) 65% 28%);
-}
-
-:global([data-theme='dark']) .root {
-  background: hsl(var(--event-theme-hue, 200) 40% 16%);
-  border-color: hsl(var(--event-theme-hue, 200) 45% 32%);
-  color: hsl(var(--event-theme-hue, 200) 70% 82%);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-primary);
 }
 
 .iconWrap {

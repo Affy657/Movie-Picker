@@ -8,6 +8,7 @@
     <link rel="dns-prefetch" href="https://image.tmdb.org" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta id="theme-color-meta" name="theme-color" content="#f4f6fa" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Movie Picker" />
@@ -22,7 +23,7 @@
       content="Créez une soirée film, invitez vos amis, votez et lancez la roue pour choisir le film."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://web.movie-picker.fr/" />
+    <meta property="og:url" content="https://web.movie-picker.fr/decouvrir" />
     <meta property="og:locale" content="fr_FR" />
     <meta property="og:image" content="https://web.movie-picker.fr/og-image.png" />
     <meta property="og:image:width" content="1200" />
@@ -42,7 +43,7 @@
       name="twitter:image:alt"
       content="Movie Picker — choisissez le film de la soirée ensemble"
     />
-    <link rel="canonical" href="https://web.movie-picker.fr/" />
+    <link rel="canonical" href="https://web.movie-picker.fr/decouvrir" />
     <title>Movie Picker</title>
     <script type="application/ld+json">
       {
@@ -50,8 +51,8 @@
         "@graph": [
           {
             "@type": "WebSite",
-            "@id": "https://web.movie-picker.fr/#website",
-            "url": "https://web.movie-picker.fr/",
+            "@id": "https://web.movie-picker.fr/decouvrir#website",
+            "url": "https://web.movie-picker.fr/decouvrir",
             "name": "Movie Picker",
             "inLanguage": "fr-FR",
             "description": "Organisez une soirée cinéma : créez un événement, partagez le lien, proposez des films, votez et tirez au sort le film gagnant."
@@ -61,7 +62,7 @@
             "name": "Movie Picker",
             "applicationCategory": "EntertainmentApplication",
             "operatingSystem": "Web",
-            "url": "https://web.movie-picker.fr/",
+            "url": "https://web.movie-picker.fr/decouvrir",
             "inLanguage": "fr-FR",
             "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
             "description": "Application web pour organiser une soirée cinéma entre amis : propositions de films via TMDB, votes et tirage au sort du film gagnant."
@@ -97,14 +98,9 @@
         justify-content: center;
         gap: 1rem;
         background: #f4f6fa;
-        transition: opacity 0.25s ease;
       }
       [data-theme='dark'] #splash {
         background: #0f172a;
-      }
-      #splash.out {
-        opacity: 0;
-        pointer-events: none;
       }
       #splash img {
         width: 72px;

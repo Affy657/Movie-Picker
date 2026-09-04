@@ -13,9 +13,17 @@ interface SheetProps {
   onClose: () => void;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  size?: 'default' | 'tall';
 }
 
-export default function Sheet({ open, title, onClose, children, footer }: Readonly<SheetProps>) {
+export default function Sheet({
+  open,
+  title,
+  onClose,
+  children,
+  footer,
+  size = 'default',
+}: Readonly<SheetProps>) {
   const { t } = useTranslation();
   const titleId = useId();
   const dialogRef = useModalDialog(open, onClose);
@@ -24,7 +32,7 @@ export default function Sheet({ open, title, onClose, children, footer }: Readon
   return (
     <dialog
       ref={dialogRef}
-      className={clsx(styles.dialog, dragStyles.surface)}
+      className={clsx(styles.dialog, size === 'tall' && styles.dialogTall, dragStyles.surface)}
       aria-labelledby={titleId}
     >
       {open && (

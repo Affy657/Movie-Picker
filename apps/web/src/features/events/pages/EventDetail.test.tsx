@@ -94,13 +94,13 @@ describe('EventDetail (MSW)', () => {
     expect(document.title).toBe(pageTitle('Soirée introuvable'));
   });
 
-  it('affiche le lien invité et le QR pour un simple participant (sans token hôte)', async () => {
+  it('affiche le lien et le QR pour un simple participant (sans token hôte)', async () => {
     const user = userEvent.setup();
     renderEventDetail(`/e/${slug}`);
     expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /inviter/i }));
-    expect(screen.getByRole('button', { name: /^partager$/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /afficher le qr code/i })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^partager$/i }));
+    expect(screen.getByRole('button', { name: /copier le lien/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /télécharger/i })).toBeInTheDocument();
     expect(screen.queryByText('Votre lien hôte (ne pas partager)')).not.toBeInTheDocument();
   });
 
@@ -110,8 +110,8 @@ describe('EventDetail (MSW)', () => {
     renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
     expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     expect(document.title).toBe(pageTitle('Soirée démo'));
-    await user.click(screen.getByRole('button', { name: /inviter/i }));
-    expect(screen.getByRole('button', { name: /^partager$/i })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^partager$/i }));
+    expect(screen.getByRole('button', { name: /copier le lien/i })).toBeInTheDocument();
     expect(screen.queryByText('Votre lien hôte (ne pas partager)')).not.toBeInTheDocument();
   });
 
@@ -124,8 +124,8 @@ describe('EventDetail (MSW)', () => {
     );
     renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
     expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
-    expect(screen.getByText('Comédie noire')).toBeInTheDocument();
-    expect(screen.getByRole('status', { name: /Thème de soirée/i })).toBeInTheDocument();
+    const themeBanner = screen.getByRole('status', { name: /Thème de soirée/i });
+    expect(themeBanner).toHaveTextContent('Comédie noire');
 
     const settingsToggle = screen.getByRole('button', { name: 'Paramètres de la soirée' });
     expect(settingsToggle).toHaveAttribute('aria-haspopup', 'dialog');
@@ -391,6 +391,90 @@ describe('EventDetail (MSW)', () => {
       await waitFor(() => expect(screen.getByTestId('confirm-dialog')).toHaveAttribute('open'));
       expect(screen.getByTestId('confirm-dialog-confirm')).toHaveTextContent(/quitter/i);
       expect(screen.queryByText(/retirer.*alice/i)).not.toBeInTheDocument();
+    });
+  });
+
+  describe('retrait d’un film (menu de la carte → confirmation)', () => {
+    function movieHandler(removed: () => boolean) {
+      return http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
+        HttpResponse.json(
+          removed()
+            ? []
+            : [
+                {
+                  _id: 'm-msw-1',
+                  eventId: 'evt-msw',
+                  participantId: 'p-msw-host',
+                  tmdbId: 42,
+                  mediaType: 'movie',
+                  title: 'Matrix',
+                  year: '1999',
+                  posterPath: null,
+                  proposerPseudo: 'Hôte',
+                  score: 2,
+                  up: 2,
+                  down: 0,
+                },
+              ]
+        )
+      );
+    }
+
+    it('confirme la modale → DELETE appelé et le film disparaît de la liste', async () => {
+      const user = userEvent.setup();
+      setStoredParticipant(slug, 'p-msw-host', 'Hôte');
+      let deleteCalled = false;
+      let removed = false;
+      server.use(
+        movieHandler(() => removed),
+        http.delete(`${TEST_API_V1}/events/${slug}/movies/m-msw-1`, () => {
+          deleteCalled = true;
+          removed = true;
+          return new HttpResponse(null, { status: 204 });
+        })
+      );
+
+      renderEventDetail(`/e/${slug}`);
+      expect(await screen.findByRole('heading', { name: 'Matrix' })).toBeInTheDocument();
+
+      await user.click(await screen.findByRole('button', { name: /plus d.actions.*matrix/i }));
+      await user.click(await screen.findByRole('menuitem', { name: /retirer matrix/i }));
+
+      const dialog = await screen.findByTestId('confirm-dialog');
+      expect(dialog).toHaveAttribute('open');
+      expect(dialog).toHaveTextContent(/retirer ce film de la soirée/i);
+      expect(dialog).toHaveTextContent(/2 votes/);
+
+      await user.click(screen.getByTestId('confirm-dialog-confirm'));
+
+      await waitFor(() => expect(deleteCalled).toBe(true));
+      await waitFor(() =>
+        expect(screen.queryByRole('heading', { name: 'Matrix' })).not.toBeInTheDocument()
+      );
+    });
+
+    it('annule la modale → aucun DELETE émis, le film reste', async () => {
+      const user = userEvent.setup();
+      setStoredParticipant(slug, 'p-msw-host', 'Hôte');
+      let deleteCalled = false;
+      server.use(
+        movieHandler(() => false),
+        http.delete(`${TEST_API_V1}/events/${slug}/movies/m-msw-1`, () => {
+          deleteCalled = true;
+          return new HttpResponse(null, { status: 204 });
+        })
+      );
+
+      renderEventDetail(`/e/${slug}`);
+      expect(await screen.findByRole('heading', { name: 'Matrix' })).toBeInTheDocument();
+
+      await user.click(await screen.findByRole('button', { name: /plus d.actions.*matrix/i }));
+      await user.click(await screen.findByRole('menuitem', { name: /retirer matrix/i }));
+      await screen.findByTestId('confirm-dialog');
+      await user.click(screen.getByTestId('confirm-dialog-cancel'));
+
+      expect(deleteCalled).toBe(false);
+      expect(screen.getByRole('heading', { name: 'Matrix' })).toBeInTheDocument();
     });
   });
 });

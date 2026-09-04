@@ -13,6 +13,7 @@ public enum UserNotificationType
     EventPending = 9,
     MoviePickedManually = 10,
     LetterboxdReconciliationPending = 11,
+    EventDateChanged = 12,
 }
 
 public sealed record UserNotification

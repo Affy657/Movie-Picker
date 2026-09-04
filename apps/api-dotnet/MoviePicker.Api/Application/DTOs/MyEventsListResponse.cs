@@ -4,6 +4,8 @@ public sealed class MyEventsListResponse
 {
     public IReadOnlyList<MyEventSummaryDto> Events { get; init; } = Array.Empty<MyEventSummaryDto>();
     public bool HasMore { get; init; }
+    public int TotalActive { get; init; }
+    public int TotalFinished { get; init; }
 }
 
 public sealed class MyEventSummaryDto
@@ -31,4 +33,6 @@ public sealed class MyEventSummaryDto
     public string? WinnerMovieTitle { get; init; }
 
     public string? WinnerMoviePosterPath { get; init; }
+
+    public DateTimeOffset? AutoCloseAt { get; init; }
 }

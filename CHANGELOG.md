@@ -8,6 +8,32 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.4.1] - 2026-09-04
+
+### Added
+
+- **Navigation ouverte aux visiteurs sans compte** : la nav, le pied de page et cinq pages (Mes soirées, Nouvelle soirée, Ma liste, Notifications, Paramètres) sont désormais accessibles sans compte, avec un état déconnecté dédié par page et un appel à l'action vers la connexion ou l'inscription.
+- **Pièces jointes sur « Proposer une idée »** : jusqu'à 4 images (bouton, glisser-déposer ou collage) jointes à une suggestion de feature ou de bug.
+- **Resservir un film déjà vu** : proposer un film de son historique vers une soirée en cours, sans le rechercher.
+- **Alerte de date changée** : quand l'hôte reprogramme une soirée, les participants reçoivent une notification push et un message in-app.
+
+### Changed
+
+- La racine `/` redirige désormais vers Mes soirées ; la landing publique déménage sur `/decouvrir`, qui devient la page indexable de présentation du produit (FR / EN).
+- **Mes soirées repensée** : onglets Actives et Historique, bloc « À traiter » pour les soirées en suspens, cartes adaptées au mobile.
+- **Historique fouillable** : recherche, tris (date, titre, films, participants) et filtre sur les soirées restées sans film choisi.
+- **Mon compte devient Paramètres** : cinq rubriques (Profil, Préférences, Notifications, Intégrations, Compte et sécurité), enregistrement automatique.
+- **Panneau de soirée revu** : enregistrement en direct, erreurs par champ, mode de roue et séries TV dès la création ; jusqu'à 15 films par personne et 300 participants.
+- **Liste de films** : vue liste en plus de la grille, date de sortie, indicateur Ma liste, plateformes redessinées, fiche film en un geste.
+- **Partage unifié** : une seule fenêtre pour le lien, le QR code et l'invitation des abonnements, sur la soirée comme sur le profil.
+- Premier affichage plus rapide : le chunk App et sa CSS sont préchargés en parallèle de l'entrée.
+
+### Fixed
+
+- Contraste du libellé actif de la navigation mobile et de l'option de thème sélectionnée en mode sombre (ratio AA).
+- Navigateurs intégrés (Snapchat, etc.) : un bandeau propose d'ouvrir Movie Picker dans Safari ou Chrome, au lieu de perdre la session.
+- Pseudo et identifiant public exclus des événements d'analytics.
+
 ## [1.4.0] - 2026-08-25
 
 ### Added
@@ -20,6 +46,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 - **Connexion sociale (OAuth)** : connexion et inscription via Google ou GitHub, avec une section « Connexions » sur la page Compte pour lier ou délier un fournisseur.
 - **Système de dons** : page publique « Soutenir Movie Picker » exposant les frais réels du service, renvoyant vers Ko-fi, avec un badge « Soutien » décoratif sur le profil public des donateurs.
 - **Modale de nouveautés** : à la première visite suivant une mise à jour, une modale résume ce qui a changé dans la version ; affichée une seule fois par version connectée, consultable ensuite à la demande depuis le pied de page.
+- **Bouton « Proposer une idée »** : depuis le pied de page ou le menu compte, titre + description ; la soumission crée une GitHub Issue côté serveur.
+- **Bouton d'installation PWA** : « Installer l'app » dans le pied de page et le menu compte ; prompt natif Chrome/Edge/Android, guide iOS et navigateurs in-app.
 
 ## [1.3.2] - 2026-07-25
 
@@ -184,7 +212,9 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage — front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.3.2...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/Affy657/Movie-Picker/compare/v1.4.0...v1.4.1
+[1.4.0]: https://github.com/Affy657/Movie-Picker/compare/v1.3.2...v1.4.0
 [1.3.2]: https://github.com/Affy657/Movie-Picker/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/Affy657/Movie-Picker/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/Affy657/Movie-Picker/compare/v1.2.0...v1.3.0

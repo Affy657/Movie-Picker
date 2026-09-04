@@ -3,14 +3,13 @@ import { BrowserRouter, Navigate, Routes, Route, useLocation } from 'react-route
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/shared/contexts/ThemeContext';
 import { ConsentProvider } from '@/shared/contexts/ConsentContext';
-import { LocaleProvider, useTranslation } from '@/shared/i18n';
-import { AuthProvider, useAuth } from '@/features/auth/contexts/AuthContext';
+import { useTranslation, LocaleProvider } from '@/shared/i18n';
+import { AuthProvider } from '@/features/auth/contexts/AuthContext';
 import UserThemeSync from '@/app/components/UserThemeSync';
 import AnalyticsSync from '@/app/components/AnalyticsSync';
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
 import { getInstrumentedRoutes } from '@/shared/observability/sentry';
 import AppShell from '@/app/components/AppShell';
-import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
 
@@ -42,25 +41,6 @@ function PageFallback() {
   );
 }
 
-function HomeRoute() {
-  const { user, isLoading } = useAuth();
-  const { t } = useTranslation();
-
-  if (isLoading) {
-    return (
-      <PageLayout>
-        <p className="placeholder">{t('common.loading')}</p>
-      </PageLayout>
-    );
-  }
-
-  if (user) {
-    return <Navigate to={ROUTES.myEvents} replace />;
-  }
-
-  return <LandingPage />;
-}
-
 function createAppQueryClient() {
   return new QueryClient({
     defaultOptions: {
@@ -81,15 +61,9 @@ export function AppRoutes() {
   return (
     <SentryRoutes>
       <Route element={<AppShell />}>
-        <Route path={ROUTES.home} element={<HomeRoute />} />
-        <Route
-          path={ROUTES.createEvent}
-          element={
-            <ProtectedRoute>
-              <CreateEvent />
-            </ProtectedRoute>
-          }
-        />
+        <Route path={ROUTES.home} element={<Navigate to={ROUTES.myEvents} replace />} />
+        <Route path={ROUTES.discover} element={<LandingPage />} />
+        <Route path={ROUTES.createEvent} element={<CreateEvent />} />
         <Route path={ROUTES.login} element={<LoginPage />} />
         <Route path={ROUTES.register} element={<RegisterPage />} />
         <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
@@ -98,38 +72,10 @@ export function AppRoutes() {
         <Route path={ROUTES.legalNotice} element={<LegalNoticePage />} />
         <Route path={ROUTES.privacyPolicy} element={<PrivacyPolicyPage />} />
         <Route path={ROUTES.donate} element={<DonatePage />} />
-        <Route
-          path={ROUTES.account}
-          element={
-            <ProtectedRoute>
-              <AccountPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.myEvents}
-          element={
-            <ProtectedRoute>
-              <MyEventsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.watchlist}
-          element={
-            <ProtectedRoute>
-              <WatchlistPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.notifications}
-          element={
-            <ProtectedRoute>
-              <NotificationsPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path={`${ROUTES.account}/*`} element={<AccountPage />} />
+        <Route path={ROUTES.myEvents} element={<MyEventsPage />} />
+        <Route path={ROUTES.watchlist} element={<WatchlistPage />} />
+        <Route path={ROUTES.notifications} element={<NotificationsPage />} />
         <Route path={ROUTES.eventDetailPattern} element={<EventDetail />} />
         <Route path={ROUTES.profileMoviesPattern} element={<ProfileMoviesPage />} />
         <Route path={ROUTES.profilePattern} element={<ProfilePage />} />

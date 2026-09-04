@@ -16,6 +16,10 @@
   overflow: hidden;
 }
 
+.dialogTall {
+  max-height: min(90vh, 760px);
+}
+
 .dialog:not([open]) {
   display: none;
 }

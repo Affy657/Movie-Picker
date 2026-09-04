@@ -20,6 +20,29 @@
   transform: translateY(0.13em);
 }
 
+.proposerLink {
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: opacity var(--duration-base) var(--ease-default);
+}
+
+.proposerLink:hover,
+.proposerLink:focus-visible {
+  opacity: 0.8;
+}
+
+.proposerLink:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.proposerGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
 .addNote {
   display: inline-flex;
   align-items: center;
@@ -41,35 +64,49 @@
   outline: none;
 }
 
-.detailsToggle {
+.infoBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.2rem;
   flex-shrink: 0;
-  min-height: 1.75rem;
-  padding: 0 0.25rem;
-  background: none;
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
   border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
   color: var(--mc-fg-muted, #94a3b8);
-  font-size: var(--font-size-2xs);
-  line-height: 1;
   cursor: pointer;
-  transition: color var(--duration-base) var(--ease-default);
+  transition:
+    background var(--duration-base) var(--ease-default),
+    color var(--duration-base) var(--ease-default);
 }
 
-.detailsToggle svg {
-  flex-shrink: 0;
-}
-
-.detailsToggleLabel {
-  transform: translateY(var(--text-optical-nudge));
-}
-
-.detailsToggle:hover,
-.detailsToggle:focus-visible {
+.infoBtn:hover,
+.infoBtn:focus-visible {
+  background: var(--mc-overlay-hover-soft, rgba(255, 255, 255, 0.07));
   color: var(--mc-fg, #e2e8f0);
   outline: none;
+}
+
+.infoBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.watchlistBadge {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: var(--radius-pill);
+  background: rgba(7, 11, 22, 0.8);
+  color: #e2e8f0;
 }
 
 .votes {
@@ -99,7 +136,11 @@
 .voteBtn:hover:not(:disabled),
 .voteBtn:focus-visible {
   background: var(--mc-overlay-hover, rgba(255, 255, 255, 0.1));
-  outline: none;
+}
+
+.voteBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .voteActive {
@@ -140,7 +181,11 @@
 .seenBtn:hover:not(:disabled),
 .seenBtn:focus-visible {
   background: var(--mc-overlay-hover-soft, rgba(255, 255, 255, 0.07));
-  outline: none;
+}
+
+.seenBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .seenBtn:disabled {
@@ -339,6 +384,45 @@
   outline: none;
 }
 
+.paidChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  height: 1.75rem;
+  min-width: 1.75rem;
+  padding: 0 0.3rem;
+  border-radius: 5px;
+  border: 1px dashed var(--mc-border, #3a4861);
+  background: transparent;
+  color: var(--mc-fg-muted, #94a3b8);
+  font-size: var(--font-size-3xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    color var(--duration-base) var(--ease-default),
+    border-color var(--duration-base) var(--ease-default);
+}
+
+.paidChip:hover,
+.paidChip:focus-visible {
+  color: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--mc-border, #3a4861));
+  outline: none;
+}
+
+.paidChip svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.paidChipCount {
+  transform: translateY(var(--text-optical-nudge));
+}
+
 .kebab {
   position: relative;
 }
@@ -362,7 +446,11 @@
 .kebabBtn:focus-visible {
   background: var(--mc-kebab-bg-hover, rgba(7, 11, 22, 0.85));
   color: var(--mc-kebab-fg-hover, var(--mc-kebab-fg, #f1f5f9));
-  outline: none;
+}
+
+.kebabBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .kebabMenu {
@@ -424,7 +512,11 @@
 .kebabItem:hover,
 .kebabItem:focus-visible {
   background: color-mix(in srgb, var(--color-text) 10%, transparent);
-  outline: none;
+}
+
+.kebabItem:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
 }
 
 .kebabItemDanger {
@@ -476,7 +568,11 @@
 .selectOverlay:focus-visible {
   border-color: var(--color-accent);
   background: color-mix(in srgb, var(--color-accent) 12%, transparent);
-  outline: none;
+}
+
+.selectOverlay:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .selectOverlay:disabled {

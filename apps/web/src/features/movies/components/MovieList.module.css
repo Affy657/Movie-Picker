@@ -1,15 +1,45 @@
-.list {
+.table {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  --mc-fg: var(--color-text);
+  --mc-fg-strong: var(--color-text);
+  --mc-fg-muted: var(--color-text-muted);
+  --mc-fg-soft: var(--color-text-muted);
+  --mc-fg-subtle: var(--color-text-muted);
+  --mc-icon-muted: var(--color-text-muted);
+  --mc-border: var(--color-border-subtle);
+  --mc-surface-ring: var(--color-surface);
+  --mc-overlay-hover: color-mix(in srgb, var(--color-text) 8%, transparent);
+  --mc-overlay-active: color-mix(in srgb, var(--color-text) 12%, transparent);
+  --mc-overlay-hover-soft: color-mix(in srgb, var(--color-text) 6%, transparent);
+  --mc-active-bg: var(--color-surface-hover);
+  --mc-input-bg: var(--color-input-bg);
+  --mc-kebab-bg: transparent;
+  --mc-kebab-bg-hover: var(--color-surface-hover);
+  --mc-kebab-fg: var(--color-text-muted);
+  --mc-kebab-fg-hover: var(--color-text);
+}
+
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.grid {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
   align-items: start;
 }
 
-.listView {
-  grid-template-columns: repeat(auto-fill, minmax(min(370px, 100%), 1fr));
-  gap: 0.6rem;
-  align-items: stretch;
+@media (max-width: 47.9375rem) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }

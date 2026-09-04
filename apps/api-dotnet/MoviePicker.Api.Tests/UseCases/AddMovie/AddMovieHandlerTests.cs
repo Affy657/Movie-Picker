@@ -188,10 +188,11 @@ public sealed class AddMovieHandlerTests
             .Setup(t => t.GetDetailsAsync(27205, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TmdbMovieDetails(27205, "Inception", null, null, null, Array.Empty<string>(), 148, Genres, GenreIds, "2010-07-16"));
 
-        await _sut.HandleAsync("evt1", Request(participant.Id), null);
+        var result = await _sut.HandleAsync("evt1", Request(participant.Id), null);
 
         Assert.NotNull(inserted);
         Assert.Equal(GenreIds, inserted!.GenreIds);
+        Assert.Equal(GenreIds, result.GenreIds);
     }
 
     [Fact]
@@ -316,5 +317,7 @@ public sealed class AddMovieHandlerTests
         Assert.Equal(0, result.Score);
         Assert.Equal(0, result.Up);
         Assert.Equal(0, result.Down);
+        Assert.Empty(result.SeenByPseudos);
+        Assert.Empty(result.VotersUpPseudos);
     }
 }

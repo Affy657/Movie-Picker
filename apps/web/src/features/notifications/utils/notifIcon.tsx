@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import {
   Bell,
   CalendarClock,
+  CalendarSync,
   Clock,
   Film,
   Hourglass,
@@ -28,6 +29,8 @@ export function notifIcon(type: string, size = 17): ReactNode {
       return <MousePointerClick size={size} aria-hidden />;
     case 'eventdeleted':
       return <XCircle size={size} aria-hidden />;
+    case 'eventdatechanged':
+      return <CalendarSync size={size} aria-hidden />;
     case 'eventreminder1h':
       return <Clock size={size} aria-hidden />;
     case 'eventreminder24h':

@@ -1,5 +1,9 @@
-﻿.layout {
+.layout {
   --page-max-width: 36rem;
+}
+
+.layoutWide {
+  --page-max-width: 56rem;
 }
 
 .header {
@@ -13,113 +17,4 @@
   letter-spacing: var(--tracking-tight);
   line-height: var(--leading-tight);
   color: var(--color-text);
-}
-
-.email {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-}
-
-.sectionTitle {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  margin: 0 0 1.25rem;
-  line-height: 1;
-}
-
-.sectionTitle :global(svg) {
-  flex-shrink: 0;
-  color: var(--color-primary);
-}
-
-.sectionTitleText {
-  transform: translateY(var(--text-optical-nudge));
-}
-
-.avatarRow {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 1rem;
-}
-
-.avatarButton {
-  position: relative;
-  display: inline-flex;
-  padding: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  border-radius: 50%;
-}
-
-.avatarButton:hover .avatarEditOverlay,
-.avatarButton:focus-visible .avatarEditOverlay {
-  opacity: 1;
-}
-
-.avatarButton:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 3px;
-}
-
-.avatarEditOverlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.45);
-  color: #fff;
-  opacity: 0;
-  transition: opacity var(--duration-base) var(--ease-default);
-}
-
-.visibilityRow {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin-bottom: 1rem;
-  line-height: 1;
-}
-
-.visibilityIcon {
-  flex-shrink: 0;
-  color: var(--color-text-muted);
-}
-
-.visibilityLabel {
-  flex: 1;
-  font-size: var(--font-size-base);
-  font-weight: 500;
-  transform: translateY(var(--text-optical-nudge));
-}
-
-.actionRow {
-  margin-top: 1.25rem;
-}
-
-.connectionsList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  margin: var(--space-4) 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.connectionRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-}
-
-.connectionRow > span:first-child {
-  flex: 1;
-  font-weight: 600;
 }

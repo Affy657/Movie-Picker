@@ -1,0 +1,11 @@
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.triggerLabel {
+  transform: translateY(var(--text-optical-nudge));
+}

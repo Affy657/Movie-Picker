@@ -28,6 +28,8 @@ public sealed class EventDetailResponse
 
     public int MovieCount { get; init; }
 
+    public int VotersCount { get; init; }
+
     public IReadOnlyList<EventParticipantSummaryResponse> Participants { get; init; } =
         Array.Empty<EventParticipantSummaryResponse>();
 }

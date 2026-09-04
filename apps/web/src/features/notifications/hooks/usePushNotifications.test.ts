@@ -7,6 +7,9 @@ import {
   postPushSubscription,
 } from '@/features/notifications/api/notificationsApi';
 import { usePushNotifications } from '@/features/notifications/hooks/usePushNotifications';
+import { LocaleProvider } from '@/shared/i18n';
+
+const renderPushHook = () => renderHook(() => usePushNotifications(), { wrapper: LocaleProvider });
 
 vi.mock('@/features/notifications/api/notificationsApi', () => ({
   fetchVapidPublicKey: vi.fn(),
@@ -25,7 +28,7 @@ afterEach(() => {
 
 describe('usePushNotifications (unsupported)', () => {
   it('reports unsupported and no-ops subscribe', async () => {
-    const { result } = renderHook(() => usePushNotifications());
+    const { result } = renderPushHook();
 
     expect(result.current.supported).toBe(false);
     expect(result.current.permission).toBe('unsupported');
@@ -60,7 +63,7 @@ describe('usePushNotifications (supported)', () => {
   it('detects an existing subscription on mount', async () => {
     getSubscription.mockResolvedValue({ endpoint: 'https://push/x' });
 
-    const { result } = renderHook(() => usePushNotifications());
+    const { result } = renderPushHook();
 
     expect(result.current.supported).toBe(true);
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -68,7 +71,7 @@ describe('usePushNotifications (supported)', () => {
   });
 
   it('reports not subscribed when none exists', async () => {
-    const { result } = renderHook(() => usePushNotifications());
+    const { result } = renderPushHook();
 
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.subscribed).toBe(false);
@@ -81,7 +84,7 @@ describe('usePushNotifications (supported)', () => {
     pmSubscribe.mockResolvedValue({ toJSON: () => subJson });
     mockPost.mockResolvedValue(undefined);
 
-    const { result } = renderHook(() => usePushNotifications());
+    const { result } = renderPushHook();
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     await act(async () => {
@@ -98,7 +101,7 @@ describe('usePushNotifications (supported)', () => {
   it('subscribe() stops when permission is denied', async () => {
     requestPermission.mockResolvedValue('denied');
 
-    const { result } = renderHook(() => usePushNotifications());
+    const { result } = renderPushHook();
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     await act(async () => {
@@ -115,7 +118,7 @@ describe('usePushNotifications (supported)', () => {
     getSubscription.mockResolvedValue({ endpoint: 'https://push/x', unsubscribe });
     mockDelete.mockResolvedValue(undefined);
 
-    const { result } = renderHook(() => usePushNotifications());
+    const { result } = renderPushHook();
     await waitFor(() => expect(result.current.subscribed).toBe(true));
 
     await act(async () => {

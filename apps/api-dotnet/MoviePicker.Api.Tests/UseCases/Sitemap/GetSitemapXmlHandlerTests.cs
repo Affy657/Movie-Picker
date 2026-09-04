@@ -29,12 +29,12 @@ public sealed class GetSitemapXmlHandlerTests
         XDocument.Parse(xml).Descendants(Ns + "loc").Select(e => e.Value).ToList();
 
     [Fact]
-    public async Task BuildXmlAsync_AlwaysIncludesHomepage()
+    public async Task BuildXmlAsync_AlwaysIncludesDiscoverPage()
     {
         SetupProfiles();
         var xml = await CreateSut().BuildXmlAsync();
 
-        Assert.Contains("https://web.example/", Locs(xml));
+        Assert.Contains("https://web.example/decouvrir", Locs(xml));
         Assert.NotNull(XDocument.Parse(xml).Root);
     }
 
@@ -69,6 +69,7 @@ public sealed class GetSitemapXmlHandlerTests
 
         Assert.Contains("https://web.example/u/alice", Locs(xml));
         Assert.DoesNotContain("https://web.example//u/alice", xml);
+        Assert.DoesNotContain("https://web.example//decouvrir", xml);
     }
 
     [Fact]

@@ -83,6 +83,25 @@ describe('AccentColorPicker', () => {
     await waitFor(() => expect(setAccent).toHaveBeenCalledWith('blue'));
   });
 
+  it('shows an inline error when the patch fails', async () => {
+    configure('blue', { userId: 'u1' }, vi.fn().mockRejectedValue(new Error('nope')));
+
+    render(<AccentColorPicker />);
+    await userEvent.click(green());
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+  });
+
+  it('calls onSaved after a successful patch', async () => {
+    const onSaved = vi.fn();
+    configure('blue', { userId: 'u1' }, vi.fn().mockResolvedValue(undefined));
+
+    render(<AccentColorPicker onSaved={onSaved} />);
+    await userEvent.click(green());
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+  });
+
   it('moves to the next swatch with ArrowRight', () => {
     configure('blue');
 

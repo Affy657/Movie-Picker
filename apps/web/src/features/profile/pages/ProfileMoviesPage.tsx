@@ -17,6 +17,7 @@ import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
+import { posterImageSrc } from '@/shared/utils/posterUrl';
 import ActiveFilterChips from '@/features/movies/components/ActiveFilterChips';
 import MovieListFiltersPanel from '@/features/movies/components/MovieListFiltersPanel';
 import FilteredCollectionLayout, {
@@ -327,9 +328,11 @@ export default function ProfileMoviesPage() {
       {detailsTarget && (
         <MovieDetailsModal
           open={!!detailsTarget}
-          movieTitle={detailsTarget.title}
+          title={detailsTarget.title}
+          year={detailsTarget.year}
           tmdbId={detailsTarget.tmdbId}
           mediaType={detailsTarget.mediaType}
+          posterSrc={posterImageSrc(detailsTarget.posterPath)}
           onClose={() => setDetailsTarget(null)}
         />
       )}

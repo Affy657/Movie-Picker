@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
-import { Link2, Pencil, UserCheck, UserMinus, UserPlus } from 'lucide-react';
+import { Pencil, Share2, UserCheck, UserMinus, UserPlus } from 'lucide-react';
 import { ROUTES, withReturnTo } from '@/app/routes';
 import { useTranslation } from '@/shared/i18n';
-import QrCodeButton from '@/shared/components/QrCodeButton';
+import ShareDialog from '@/shared/components/ShareDialog';
+import { absoluteUrl } from '@/shared/seo/siteMeta';
 import type { PublicProfile } from '@/features/profile/api/profileApi';
 import styles from './ProfileActions.module.css';
 
@@ -47,8 +49,7 @@ interface Props {
   followPending: boolean;
   onFollow: () => void;
   onUnfollow: () => void;
-  copied: boolean;
-  onCopyLink: () => void;
+  memberSinceLabel: string;
 }
 
 export default function ProfileActions({
@@ -58,10 +59,11 @@ export default function ProfileActions({
   followPending,
   onFollow,
   onUnfollow,
-  copied,
-  onCopyLink,
+  memberSinceLabel,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const [shareOpen, setShareOpen] = useState(false);
+  const shareUrl = absoluteUrl(ROUTES.profile(profile.handle));
 
   return (
     <div className={styles.actions}>
@@ -115,32 +117,30 @@ export default function ProfileActions({
       )}
 
       <div className={styles.shareGroup}>
-        <button type="button" className={`btn ${styles.shareBtn}`} onClick={onCopyLink}>
-          <Link2 size={14} aria-hidden />
-          <span className={styles.btnLabel}>
-            {copied ? t('profile.linkCopied') : t('profile.copyLink')}
-          </span>
+        <button
+          type="button"
+          className={`btn ${styles.shareBtn}`}
+          onClick={() => setShareOpen(true)}
+        >
+          <Share2 size={14} aria-hidden />
+          <span className={styles.btnLabel}>{t('share.trigger')}</span>
         </button>
-
-        <QrCodeButton
-          url={globalThis.location.href}
-          dialogTitle={t('profile.qrTitle')}
-          hint={t('profile.qrHint')}
-          showLabel={t('profile.showQr')}
-          closeLabel={t('profile.closeQr')}
-          className={`btn ${styles.qrBtn}`}
-          avatarId={profile.avatarId}
-          displayName={profile.displayName}
-          handle={profile.handle}
-          copyLabel={t('profile.qrCopyLabel')}
-          copiedLabel={t('profile.linkCopied')}
-          downloadLabel={t('profile.qrDownload')}
-        />
       </div>
 
-      <span className="visually-hidden" role="status" aria-live="polite">
-        {copied ? t('profile.linkCopied') : ''}
-      </span>
+      <ShareDialog
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        title={t('profile.shareTitle')}
+        url={shareUrl}
+        qrHint={t('profile.qrHint')}
+        fileSlug={profile.handle}
+        preview={{
+          avatarId: profile.avatarId,
+          name: profile.displayName,
+          meta: [`@${profile.handle}`, memberSinceLabel],
+        }}
+        surface="profile"
+      />
     </div>
   );
 }

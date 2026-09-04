@@ -52,15 +52,17 @@ public sealed class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> ListMine(
         [FromServices] IListMyEventsHandler handler,
+        [FromQuery] string? scope,
         [FromQuery] int? limit,
         [FromQuery] int? offset,
+        [FromQuery] string? q,
         CancellationToken ct)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
             return Unauthorized();
 
-        var result = await handler.HandleAsync(userId, limit, offset, ct);
+        var result = await handler.HandleAsync(userId, scope, limit, offset, q, ct);
         return Ok(result);
     }
 
