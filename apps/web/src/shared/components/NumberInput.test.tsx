@@ -3,10 +3,15 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import NumberInput from '@/shared/components/NumberInput';
+import { LocaleProvider } from '@/shared/i18n';
 
 const setup = (props: Partial<Parameters<typeof NumberInput>[0]> = {}) => {
   const onChange = vi.fn();
-  render(<NumberInput value="" onChange={onChange} {...props} />);
+  render(
+    <LocaleProvider>
+      <NumberInput value="" onChange={onChange} {...props} />
+    </LocaleProvider>
+  );
   return {
     onChange,
     input: screen.getByRole('spinbutton'),

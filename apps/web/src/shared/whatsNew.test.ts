@@ -88,4 +88,33 @@ describe('whatsNewLinkPath', () => {
   it('résout myEvents vers /my-events', () => {
     expect(whatsNewLinkPath('myEvents', null)).toBe(ROUTES.myEvents);
   });
+
+  it('résout notifications vers /notifications', () => {
+    expect(whatsNewLinkPath('notifications', null)).toBe(ROUTES.notifications);
+  });
+});
+
+describe('WHATS_NEW 1.4.1', () => {
+  it('couvre les changements visibles de la version', () => {
+    const slugs = LATEST_WHATS_NEW_RELEASE.entries.map((entry) =>
+      entry.titleKey.replace('whatsNew.entries.', '').replace('.title', '')
+    );
+    expect(slugs).toEqual([
+      'openBrowsing',
+      'historyToEvent',
+      'rescheduleNotice',
+      'ideaAttachments',
+      'myEventsRevamp',
+      'historyTools',
+      'settingsPage',
+      'eventSettings',
+      'movieList',
+      'unifiedShare',
+      'discoverHome',
+      'fasterFirstLoad',
+      'readableContrast',
+      'analyticsPrivacy',
+      'inAppBrowser',
+    ]);
+  });
 });

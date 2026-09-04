@@ -1,4 +1,5 @@
 import { getErrorMessage } from '@/shared/api/apiError';
+import { useTranslation } from '@/shared/i18n';
 
 type Props = {
   error: unknown;
@@ -6,16 +7,12 @@ type Props = {
 };
 
 export default function EventMoviesLoadError({ error, onRetry }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <div className="error movies-load-error" role="alert">
-      <p>
-        {getErrorMessage(
-          error,
-          'Impossible de charger la liste des films. Vérifiez votre connexion ou réessayez.'
-        )}
-      </p>
+      <p>{getErrorMessage(error, t('events.detail.moviesLoadError'))}</p>
       <button type="button" className="btn btn-primary" onClick={() => onRetry()}>
-        Réessayer
+        {t('common.retry')}
       </button>
     </div>
   );

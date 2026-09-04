@@ -1,9 +1,11 @@
 import { Skeleton, SkeletonScreen } from '@/shared/components/Skeleton';
+import { useTranslation } from '@/shared/i18n';
 import styles from './EventDetailSkeleton.module.css';
 
 export default function EventDetailSkeleton() {
+  const { t } = useTranslation();
   return (
-    <SkeletonScreen label="Chargement de la soirée…" className={styles.root}>
+    <SkeletonScreen label={t('events.detail.skeletonLabel')} className={styles.root}>
       <div className={styles.header}>
         <div className={styles.titleRow}>
           <Skeleton variant="text" className={styles.title} />

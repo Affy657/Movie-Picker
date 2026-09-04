@@ -4,6 +4,7 @@ import {
   fetchVapidPublicKey,
   postPushSubscription,
 } from '@/features/notifications/api/notificationsApi';
+import { useTranslation } from '@/shared/i18n';
 
 type PermissionState = 'default' | 'granted' | 'denied' | 'unsupported';
 
@@ -28,6 +29,7 @@ function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
 }
 
 export function usePushNotifications(): PushNotificationsState {
+  const { t } = useTranslation();
   const supported =
     globalThis.window !== undefined &&
     'serviceWorker' in navigator &&
@@ -84,11 +86,11 @@ export function usePushNotifications(): PushNotificationsState {
       await postPushSubscription(sub.toJSON());
       setSubscribed(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur lors de l'activation des notifications");
+      setError(e instanceof Error ? e.message : t('notifications.enableError'));
     } finally {
       setLoading(false);
     }
-  }, [supported]);
+  }, [supported, t]);
 
   const unsubscribe = useCallback(async () => {
     if (!supported) return;
@@ -103,11 +105,11 @@ export function usePushNotifications(): PushNotificationsState {
       }
       setSubscribed(false);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erreur lors de la désactivation');
+      setError(e instanceof Error ? e.message : t('notifications.disableError'));
     } finally {
       setLoading(false);
     }
-  }, [supported]);
+  }, [supported, t]);
 
   return { supported, permission, subscribed, loading, error, subscribe, unsubscribe };
 }

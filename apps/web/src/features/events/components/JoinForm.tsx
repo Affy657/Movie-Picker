@@ -38,7 +38,11 @@ export default function JoinForm({
     onJoined(id, res.participant.pseudo);
   }, [user, slug, onJoined, track]);
 
-  const { run: submit, loading, error } = useAsyncAction(joinAction, 'Impossible de rejoindre');
+  const {
+    run: submit,
+    loading,
+    error,
+  } = useAsyncAction(joinAction, t('events.join.fallbackError'));
 
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -62,7 +66,7 @@ export default function JoinForm({
   } else if (user) {
     body = (
       <>
-        <p className={styles.intro}>Rejoins la soirée pour proposer des films et voter.</p>
+        <p className={styles.intro}>{t('events.join.intro')}</p>
         <form
           onSubmit={handleSubmit}
           className="form"
@@ -74,7 +78,7 @@ export default function JoinForm({
             </p>
           )}
           <button type="submit" className={`btn btn-primary ${styles.submit}`} disabled={loading}>
-            {loading ? 'Envoi…' : 'Rejoindre'}
+            {loading ? t('events.join.submitting') : t('events.join.submit')}
           </button>
         </form>
       </>
@@ -82,13 +86,13 @@ export default function JoinForm({
   } else {
     body = (
       <>
-        <p className={styles.intro}>Connecte-toi ou crée un compte pour rejoindre la soirée.</p>
+        <p className={styles.intro}>{t('events.join.signedOutIntro')}</p>
         <nav className="nav-actions">
           <Link to={withReturnTo(ROUTES.login, returnTo)} className="btn btn-primary">
-            Se connecter
+            {t('home.ctaLogin')}
           </Link>
           <Link to={withReturnTo(ROUTES.register, returnTo)} className="btn">
-            Créer un compte
+            {t('home.ctaRegister')}
           </Link>
         </nav>
       </>
@@ -99,7 +103,7 @@ export default function JoinForm({
     <section className={styles.root}>
       <h2 className={styles.title}>
         <UserPlus size={18} aria-hidden className={styles.titleIcon} />
-        <span className={styles.titleLabel}>Rejoindre la soirée</span>
+        <span className={styles.titleLabel}>{t('events.join.title')}</span>
       </h2>
       {body}
     </section>

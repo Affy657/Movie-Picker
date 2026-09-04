@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { LocaleProvider } from '@/shared/i18n';
 import ThemeField, { parseTheme } from './ThemeField';
 
 function renderField(
@@ -13,13 +14,15 @@ function renderField(
   const onEmojiChange = vi.fn();
   const onTextChange = vi.fn();
   render(
-    <ThemeField
-      emoji={overrides.emoji ?? ''}
-      text={overrides.text ?? ''}
-      onEmojiChange={onEmojiChange}
-      onTextChange={onTextChange}
-      disabled={overrides.disabled}
-    />
+    <LocaleProvider>
+      <ThemeField
+        emoji={overrides.emoji ?? ''}
+        text={overrides.text ?? ''}
+        onEmojiChange={onEmojiChange}
+        onTextChange={onTextChange}
+        disabled={overrides.disabled}
+      />
+    </LocaleProvider>
   );
   return { onEmojiChange, onTextChange };
 }
@@ -66,5 +69,11 @@ describe('ThemeField', () => {
   it('masque les thèmes suggérés quand disabled', () => {
     renderField({ disabled: true });
     expect(screen.queryByText('Thèmes suggérés')).not.toBeInTheDocument();
+  });
+
+  it('reconnaît un thème enregistré dans l’autre langue', () => {
+    localStorage.setItem('moviepicker-locale', 'en');
+    renderField({ emoji: '🎃', text: 'Horreur' });
+    expect(screen.getByRole('button', { name: /horror/i }).className).toMatch(/presetChipActive/);
   });
 });

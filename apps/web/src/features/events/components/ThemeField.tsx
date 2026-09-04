@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ChevronUp, MoreHorizontal } from 'lucide-react';
 import clsx from 'clsx';
 import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
+import { t as translate, SUPPORTED_LOCALES, useTranslation } from '@/shared/i18n';
 import styles from './ThemeField.module.css';
 
 export const THEME_EMOJIS = [
@@ -45,25 +46,37 @@ export const THEME_EMOJIS = [
 const PRESETS_VISIBLE = 5;
 
 export const THEME_PRESETS = [
-  { emoji: '🎃', text: 'Horreur' },
-  { emoji: '😂', text: 'Comédie' },
-  { emoji: '🎨', text: 'Animation' },
-  { emoji: '🚀', text: 'Sci-fi' },
-  { emoji: '❤️', text: 'Romance' },
-  { emoji: '🎬', text: 'Action' },
-  { emoji: '🕵️', text: 'Thriller' },
-  { emoji: '🧟', text: 'Zombie' },
-  { emoji: '🦸', text: 'Super-héros' },
-  { emoji: '🎭', text: 'Drame' },
-  { emoji: '🏃', text: 'Aventure' },
-  { emoji: '👻', text: 'Fantastique' },
-  { emoji: '🎵', text: 'Musical' },
-  { emoji: '👨‍👩‍👧', text: 'Famille' },
-  { emoji: '🔍', text: 'Policier' },
-  { emoji: '📜', text: 'Historique' },
-  { emoji: '🤠', text: 'Western' },
-  { emoji: '⭐', text: 'Classiques' },
-];
+  { emoji: '🎃', slug: 'horror' },
+  { emoji: '😂', slug: 'comedy' },
+  { emoji: '🎨', slug: 'animation' },
+  { emoji: '🚀', slug: 'scifi' },
+  { emoji: '❤️', slug: 'romance' },
+  { emoji: '🎬', slug: 'action' },
+  { emoji: '🕵️', slug: 'thriller' },
+  { emoji: '🧟', slug: 'zombie' },
+  { emoji: '🦸', slug: 'superhero' },
+  { emoji: '🎭', slug: 'drama' },
+  { emoji: '🏃', slug: 'adventure' },
+  { emoji: '👻', slug: 'fantasy' },
+  { emoji: '🎵', slug: 'musical' },
+  { emoji: '👨‍👩‍👧', slug: 'family' },
+  { emoji: '🔍', slug: 'crime' },
+  { emoji: '📜', slug: 'history' },
+  { emoji: '🤠', slug: 'western' },
+  { emoji: '⭐', slug: 'classics' },
+] as const;
+
+function isPresetSelected(
+  slug: (typeof THEME_PRESETS)[number]['slug'],
+  presetEmoji: string,
+  emoji: string,
+  text: string
+): boolean {
+  if (emoji !== presetEmoji) return false;
+  return SUPPORTED_LOCALES.some(
+    (locale) => translate(`events.settings.themePresets.${slug}`, undefined, locale) === text
+  );
+}
 
 export function parseTheme(s: string | null | undefined): { emoji: string; text: string } {
   const raw = (s ?? '').trim();
@@ -95,6 +108,7 @@ export default function ThemeField({
   disabled,
   textInputId,
 }: Readonly<ThemeFieldProps>) {
+  const { t } = useTranslation();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [presetsExpanded, setPresetsExpanded] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
@@ -121,7 +135,7 @@ export default function ThemeField({
             className={styles.emojiBtn}
             onClick={() => setPickerOpen((o) => !o)}
             disabled={disabled}
-            aria-label="Choisir un emoji"
+            aria-label={t('events.settings.emojiPickerLabel')}
             aria-expanded={pickerOpen}
           >
             {emoji || '🎬'}
@@ -131,14 +145,14 @@ export default function ThemeField({
               ref={emojiGridRef}
               className={styles.emojiGrid}
               role="listbox"
-              aria-label="Emojis"
+              aria-label={t('events.settings.emojiListLabel')}
               style={fitLeft !== null ? { left: fitLeft } : undefined}
             >
               <button
                 type="button"
                 role="option"
                 aria-selected={emoji === ''}
-                aria-label="Sans emoji"
+                aria-label={t('events.settings.emojiNoneLabel')}
                 className={clsx(
                   styles.emojiOpt,
                   styles.emojiOptNone,
@@ -174,7 +188,7 @@ export default function ThemeField({
           className={clsx('input', styles.textInput)}
           type="text"
           autoComplete="off"
-          placeholder="Horreur, Comédie…"
+          placeholder={t('events.settings.themeFieldPlaceholder')}
           value={text}
           onChange={(e) => onTextChange(e.target.value)}
           disabled={disabled}
@@ -182,30 +196,43 @@ export default function ThemeField({
       </div>
       {!disabled && (
         <fieldset className={styles.presets}>
-          <legend className={styles.presetsLegend}>Thèmes suggérés</legend>
-          {(presetsExpanded ? THEME_PRESETS : THEME_PRESETS.slice(0, PRESETS_VISIBLE)).map((p) => (
-            <button
-              key={p.text}
-              type="button"
-              className={clsx(
-                styles.presetChip,
-                text === p.text && emoji === p.emoji && styles.presetChipActive
-              )}
-              onClick={() => {
-                onEmojiChange(p.emoji);
-                onTextChange(p.text);
-              }}
-            >
-              {p.emoji} {p.text}
-            </button>
-          ))}
+          <legend className={styles.presetsLegend}>
+            {t('events.settings.themePresetsLegend')}
+          </legend>
+          {(presetsExpanded ? THEME_PRESETS : THEME_PRESETS.slice(0, PRESETS_VISIBLE)).map((p) => {
+            const presetText = t(`events.settings.themePresets.${p.slug}`);
+            return (
+              <button
+                key={p.slug}
+                type="button"
+                className={clsx(
+                  styles.presetChip,
+                  isPresetSelected(p.slug, p.emoji, emoji, text) && styles.presetChipActive
+                )}
+                onClick={() => {
+                  onEmojiChange(p.emoji);
+                  onTextChange(presetText);
+                }}
+              >
+                {p.emoji} {presetText}
+              </button>
+            );
+          })}
           <button
             type="button"
             className={styles.presetMore}
             onClick={() => setPresetsExpanded((v) => !v)}
             aria-expanded={presetsExpanded}
-            aria-label={presetsExpanded ? 'Moins de thèmes' : 'Plus de thèmes'}
-            title={presetsExpanded ? 'Moins de thèmes' : 'Plus de thèmes'}
+            aria-label={t(
+              presetsExpanded
+                ? 'events.settings.themePresetsLess'
+                : 'events.settings.themePresetsMore'
+            )}
+            title={t(
+              presetsExpanded
+                ? 'events.settings.themePresetsLess'
+                : 'events.settings.themePresetsMore'
+            )}
           >
             {presetsExpanded ? (
               <ChevronUp size={14} aria-hidden />

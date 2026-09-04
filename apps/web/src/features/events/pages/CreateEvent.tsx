@@ -46,8 +46,8 @@ function getDefaultTime(): string {
 }
 
 export default function CreateEvent() {
-  useNoindexPage(pageTitle('Nouvelle soirée'), ROUTES.createEvent);
   const { t } = useTranslation();
+  useNoindexPage(pageTitle(t('nav.createEvent')), ROUTES.createEvent);
   const wheelModeLabelId = useId();
 
   const navigate = useNavigate();
@@ -60,9 +60,9 @@ export default function CreateEvent() {
   useEffect(() => {
     if (user && !titleInitialized.current) {
       titleInitialized.current = true;
-      setTitle(`Soirée film chez ${user.displayName}`);
+      setTitle(t('events.create.defaultTitle', { name: user.displayName }));
     }
-  }, [user]);
+  }, [user, t]);
   const [date, setDate] = useState(getDefaultDate);
   const [time, setTime] = useState(getDefaultTime);
   const [themeEmoji, setThemeEmoji] = useState('');
@@ -116,7 +116,11 @@ export default function CreateEvent() {
     track,
   ]);
 
-  const { run: submit, loading, error } = useAsyncAction(createAction, 'Création impossible');
+  const {
+    run: submit,
+    loading,
+    error,
+  } = useAsyncAction(createAction, t('events.create.fallbackError'));
 
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -138,10 +142,10 @@ export default function CreateEvent() {
   if (!user) {
     return (
       <PageLayout className={styles.layout}>
-        <h1 className="visually-hidden">Nouvelle soirée</h1>
+        <h1 className="visually-hidden">{t('nav.createEvent')}</h1>
         <Link to={ROUTES.myEvents} className={styles.backLink}>
           <ArrowLeft size={16} aria-hidden />
-          <span className={styles.backLinkLabel}>Mes soirées</span>
+          <span className={styles.backLinkLabel}>{t('nav.myEvents')}</span>
         </Link>
         <SignedOutState
           icon={<CalendarPlus size={26} aria-hidden />}
@@ -157,15 +161,12 @@ export default function CreateEvent() {
     <PageLayout className={styles.layout}>
       <Link to={ROUTES.myEvents} className={styles.backLink}>
         <ArrowLeft size={16} aria-hidden />
-        <span className={styles.backLinkLabel}>Mes soirées</span>
+        <span className={styles.backLinkLabel}>{t('nav.myEvents')}</span>
       </Link>
       <div className={styles.card}>
         <span className={styles.cardAccent} aria-hidden />
-        <h1 className={styles.title}>Créer une soirée</h1>
-        <p className={styles.description}>
-          Donnez-lui un titre, une date et une heure. Vous pourrez ajuster les paramètres plus tard
-          si besoin.
-        </p>
+        <h1 className={styles.title}>{t('events.create.title')}</h1>
+        <p className={styles.description}>{t('events.create.description')}</p>
         <form onSubmit={handleSubmit} className="form">
           {error && (
             <p className="error" role="alert">
@@ -173,7 +174,7 @@ export default function CreateEvent() {
             </p>
           )}
           <label className="label" htmlFor="create-title">
-            Titre
+            {t('events.create.titleLabel')}
           </label>
           <input
             id="create-title"
@@ -183,12 +184,12 @@ export default function CreateEvent() {
             onChange={(e) => setTitle(e.target.value)}
             required
             maxLength={200}
-            placeholder="Ex : Soirée film du vendredi"
+            placeholder={t('events.create.titlePlaceholder')}
           />
           <div className={styles.fieldGrid}>
             <div>
               <label className="label" htmlFor="create-date">
-                Date
+                {t('events.create.dateLabel')}
               </label>
               <input
                 id="create-date"
@@ -201,7 +202,7 @@ export default function CreateEvent() {
             </div>
             <div>
               <label className="label" htmlFor="create-time">
-                Heure
+                {t('events.create.timeLabel')}
               </label>
               <input
                 id="create-time"
@@ -217,7 +218,7 @@ export default function CreateEvent() {
           <details className={styles.advanced}>
             <summary className={styles.advancedSummary}>
               <Settings2 size={16} aria-hidden className={styles.advancedIcon} />
-              <span className={styles.advancedLabel}>Options avancées (optionnel)</span>
+              <span className={styles.advancedLabel}>{t('events.create.advancedOptions')}</span>
               <span className={styles.advancedChevron} aria-hidden />
             </summary>
             <div className={styles.advancedBody}>
@@ -286,7 +287,7 @@ export default function CreateEvent() {
           </details>
 
           <button type="submit" className={`btn btn-primary ${styles.submit}`} disabled={loading}>
-            {loading ? 'Création…' : 'Créer la soirée'}
+            {loading ? t('events.create.submitting') : t('events.create.submit')}
           </button>
         </form>
       </div>

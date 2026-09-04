@@ -11,6 +11,8 @@
     send: 'Envoi\u2026',
     pageTitle: '{{segment}} \u2014 Movie Picker',
     languageLabel: 'Langue',
+    decrement: 'Diminuer',
+    increment: 'Augmenter',
   },
   share: {
     trigger: 'Partager',
@@ -41,6 +43,38 @@
     actionsAriaLabel: 'Actions principales',
     ctaLogin: 'Se connecter',
     ctaRegister: 'Créer un compte',
+  },
+
+  landing: {
+    kicker: 'Movie night, simplifiée',
+    titleLead: 'Choisissez le film de la soirée',
+    titleAccent: 'ensemble.',
+    tagline:
+      'Plus de débats interminables. Créez un événement, invitez vos amis, votez sur les propositions — et laissez la roue trancher si besoin.',
+    seoDescription:
+      'Movie Picker — organisez une soirée cinéma : créez un événement, partagez le lien, proposez des films (TMDB), votez et tirez au sort le film gagnant.',
+    ogImageAlt: 'Movie Picker — choisissez le film de la soirée ensemble',
+    stepsKicker: 'En 4 étapes',
+    stepsTitle: 'De l’invitation au générique',
+    stepsSubtitle: 'Une soirée ciné qui démarre vraiment à l’heure. Promis.',
+    steps: {
+      invite: {
+        title: 'Lancez la soirée',
+        text: 'Un lien, un QR code — tout le monde rejoint en deux clics.',
+      },
+      propose: {
+        title: 'Proposez vos films',
+        text: 'Affiches, infos, plateformes : la liste se construit toute seule depuis TMDB.',
+      },
+      vote: {
+        title: 'Votez ensemble',
+        text: 'Pouce en l’air, déjà vu, on garde — les favoris du groupe ressortent vite.',
+      },
+      wheel: {
+        title: 'La roue tranche',
+        text: 'Toujours pas d’accord ? Un coup de roue et le verdict tombe.',
+      },
+    },
   },
 
   auth: {
@@ -338,6 +372,10 @@
       signedOutTitle: 'Créez votre soirée',
       signedOutMessage:
         'Connectez-vous ou créez un compte pour organiser une soirée et inviter vos amis.',
+      defaultTitle: 'Soirée film chez {{name}}',
+      description:
+        'Donnez-lui un titre, une date et une heure. Vous pourrez ajuster les paramètres plus tard si besoin.',
+      advancedOptions: 'Options avancées (optionnel)',
     },
     join: {
       title: 'Rejoindre la soirée',
@@ -350,6 +388,8 @@
       fullWithCap:
         "La soirée est complète ({{max}} participants maximum). Demande à l'hôte d'augmenter la capacité pour rejoindre.",
       full: "La soirée est complète. Demande à l'hôte d'augmenter la capacité pour rejoindre.",
+      intro: 'Rejoins la soirée pour proposer des films et voter.',
+      signedOutIntro: 'Connecte-toi ou crée un compte pour rejoindre la soirée.',
     },
     participants: {
       title: 'Participants',
@@ -380,7 +420,11 @@
     },
     detail: {
       loading: 'Chargement\u2026',
+      skeletonLabel: 'Chargement de la soirée\u2026',
+      moviesLoadError:
+        'Impossible de charger la liste des films. Vérifiez votre connexion ou réessayez.',
       errorFallback: 'Soirée introuvable',
+      missing: "Cette soirée n'existe pas ou a été supprimée.",
       backHome: "Retour à l'accueil",
       backNav: 'Retour',
       finishedBadge: 'Terminée',
@@ -537,6 +581,33 @@
       themePlaceholder: 'Ex: Horreur, Sci-fi, Comédie…',
       clearThemeAria: 'Supprimer le thème',
       clearThemeButton: 'Effacer',
+      themeFieldPlaceholder: 'Horreur, Comédie\u2026',
+      emojiPickerLabel: 'Choisir un emoji',
+      emojiListLabel: 'Emojis',
+      emojiNoneLabel: 'Sans emoji',
+      themePresetsLegend: 'Thèmes suggérés',
+      themePresetsMore: 'Plus de thèmes',
+      themePresetsLess: 'Moins de thèmes',
+      themePresets: {
+        horror: 'Horreur',
+        comedy: 'Comédie',
+        animation: 'Animation',
+        scifi: 'Sci-fi',
+        romance: 'Romance',
+        action: 'Action',
+        thriller: 'Thriller',
+        zombie: 'Zombie',
+        superhero: 'Super-héros',
+        drama: 'Drame',
+        adventure: 'Aventure',
+        fantasy: 'Fantastique',
+        musical: 'Musical',
+        family: 'Famille',
+        crime: 'Policier',
+        history: 'Historique',
+        western: 'Western',
+        classics: 'Classiques',
+      },
       maxProposalsLabel: 'Films max par personne',
       maxProposalsHint: '{{max}} au maximum.',
       maxProposalsInvalid: 'Films par personne : nombre entier entre 1 et {{max}}.',
@@ -894,6 +965,13 @@
     network: 'Problème de connexion au serveur. Vérifiez votre réseau.',
     generic: 'Une erreur est survenue.',
     notFound: 'Page introuvable',
+    notFoundCode: 'Erreur 404',
+    notFoundMessage:
+      'Cette page n’existe pas ou a été déplacée. Pas de panique, on vous remet sur les rails.',
+    backHome: 'Retour à l’accueil',
+    serverTitle: 'Erreur serveur',
+    serverCode: 'Erreur 500',
+    unexpected: 'Une erreur inattendue s’est produite.',
     boundary: {
       title: 'Un problème est survenu',
       messageProd:
@@ -919,6 +997,8 @@
     disabledLabel: 'Notifications push désactivées',
     enableButton: 'Activer',
     disableButton: 'Désactiver',
+    enableError: 'Erreur lors de l’activation des notifications',
+    disableError: 'Erreur lors de la désactivation',
     prefsTitle: 'Choisissez les notifications à recevoir',
     groupEvents: 'Vos soirées',
     groupReminders: 'Rappels',
@@ -1281,6 +1361,11 @@
         title: 'Proposer une idée',
         description: 'Une idée, un bug, une amélioration : envoyez-la en deux champs.',
       },
+      pwaInstall: {
+        title: 'Installer l’app',
+        description:
+          'Un bouton dans le pied de page et le menu compte : prompt natif sur Chrome, guide sur iPhone.',
+      },
       wheelExclusion: {
         title: 'Films écartés du tirage',
         description: 'L’hôte met un film de côté sans l’effacer de la liste.',
@@ -1302,6 +1387,70 @@
         title: 'Page Découvrir',
         description:
           'La présentation du produit est sur Découvrir. L’accueil, c’est désormais Mes soirées.',
+      },
+      ideaAttachments: {
+        title: 'Captures dans vos idées',
+        description:
+          'Joignez jusqu’à 4 images à une suggestion : bouton, glisser-déposer ou simple collage.',
+      },
+      historyToEvent: {
+        title: 'Resservir un film déjà vu',
+        description:
+          'Proposez un film de votre historique à une soirée en cours, sans le rechercher.',
+      },
+      rescheduleNotice: {
+        title: 'Alerte de date changée',
+        description:
+          'Quand l’hôte reprogramme la soirée, tout le monde reçoit une notification push et un message.',
+      },
+      myEventsRevamp: {
+        title: 'Mes soirées repensées',
+        description:
+          'Onglets Actives et Historique, bloc « À traiter » pour les soirées en suspens, et cartes qui tiennent enfin sur mobile.',
+      },
+      historyTools: {
+        title: 'Historique fouillable',
+        description:
+          'Recherche, tris par date, titre, films ou participants, et filtre sur les soirées restées sans film choisi.',
+      },
+      settingsPage: {
+        title: 'Paramètres en cinq rubriques',
+        description:
+          'Mon compte devient Paramètres : Profil, Préférences, Notifications, Intégrations, Compte et sécurité — le tout enregistré automatiquement.',
+      },
+      eventSettings: {
+        title: 'Panneau de soirée revu',
+        description:
+          'Enregistrement en direct, erreurs par champ, mode de roue et séries TV dès la création. Jusqu’à 15 films par personne et 300 participants.',
+      },
+      movieList: {
+        title: 'Films en liste ou en grille',
+        description:
+          'Nouvelle vue liste, date de sortie, indicateur Ma liste, plateformes redessinées et fiche du film en un geste.',
+      },
+      unifiedShare: {
+        title: 'Partage unifié',
+        description:
+          'Une seule fenêtre pour le lien, le QR code et l’invitation de vos abonnements, sur la soirée comme sur le profil.',
+      },
+      fasterFirstLoad: {
+        title: 'Ouverture plus rapide',
+        description:
+          'L’app récupère son cœur en parallèle du reste : le premier affichage arrive nettement plus tôt.',
+      },
+      readableContrast: {
+        title: 'Contrastes renforcés',
+        description: 'Textes et pastilles actives passent le niveau AA, en clair comme en sombre.',
+      },
+      analyticsPrivacy: {
+        title: 'Moins de données envoyées',
+        description:
+          'Ni votre pseudo ni votre identifiant public ne partent plus dans les statistiques d’usage.',
+      },
+      inAppBrowser: {
+        title: 'Ouverture depuis Snapchat',
+        description:
+          'Les navigateurs intégrés aux réseaux effaçaient votre session. Un bandeau propose maintenant d’ouvrir Movie Picker dans Safari ou Chrome.',
       },
     },
   },

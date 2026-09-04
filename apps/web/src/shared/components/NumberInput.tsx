@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { useTranslation } from '@/shared/i18n';
 import styles from './NumberInput.module.css';
 
 type NumberInputProps = {
@@ -28,6 +29,7 @@ export default function NumberInput({
   invalid,
   ariaDescribedBy,
 }: Readonly<NumberInputProps>) {
+  const { t } = useTranslation();
   const numVal = value === '' ? null : Number(value);
 
   const decrement = () => {
@@ -54,7 +56,7 @@ export default function NumberInput({
         className={styles.stepBtn}
         onClick={decrement}
         disabled={!canDecrement}
-        aria-label="Diminuer"
+        aria-label={t('common.decrement')}
         tabIndex={-1}
       >
         −
@@ -79,7 +81,7 @@ export default function NumberInput({
         className={styles.stepBtn}
         onClick={increment}
         disabled={!canIncrement}
-        aria-label="Augmenter"
+        aria-label={t('common.increment')}
         tabIndex={-1}
       >
         +

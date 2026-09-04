@@ -4,7 +4,7 @@ import type { TranslationKey } from '@/shared/i18n';
 export type WhatsNewCategory = 'new' | 'improved' | 'fixed';
 
 export type WhatsNewLinkTarget =
-  'watchlist' | 'account' | 'myEvents' | 'profile' | 'donate' | 'discover';
+  'watchlist' | 'account' | 'myEvents' | 'profile' | 'donate' | 'discover' | 'notifications';
 
 export type WhatsNewAction = 'proposeIdea';
 
@@ -45,6 +45,7 @@ export const WHATS_NEW: readonly WhatsNewRelease[] = [
       entry('oauth', 'new', { link: 'account' }),
       entry('donations', 'new', { link: 'donate' }),
       entry('proposeIdea', 'new', { action: 'proposeIdea' }),
+      entry('pwaInstall', 'new'),
       entry('profileRevamp', 'improved', { link: 'profile' }),
       entry('wheelExclusion', 'improved', { link: 'myEvents' }),
       entry('weightedWheel', 'improved', { link: 'myEvents' }),
@@ -54,7 +55,20 @@ export const WHATS_NEW: readonly WhatsNewRelease[] = [
     version: '1.4.1',
     entries: [
       entry('openBrowsing', 'new', { link: 'myEvents' }),
+      entry('historyToEvent', 'new', { link: 'myEvents' }),
+      entry('rescheduleNotice', 'new', { link: 'notifications' }),
+      entry('ideaAttachments', 'new', { action: 'proposeIdea' }),
+      entry('myEventsRevamp', 'improved', { link: 'myEvents' }),
+      entry('historyTools', 'improved', { link: 'myEvents' }),
+      entry('settingsPage', 'improved', { link: 'account' }),
+      entry('eventSettings', 'improved', { link: 'myEvents' }),
+      entry('movieList', 'improved', { link: 'myEvents' }),
+      entry('unifiedShare', 'improved', { link: 'myEvents' }),
       entry('discoverHome', 'improved', { link: 'discover' }),
+      entry('fasterFirstLoad', 'improved'),
+      entry('readableContrast', 'improved'),
+      entry('analyticsPrivacy', 'improved', { link: 'account' }),
+      entry('inAppBrowser', 'fixed'),
     ],
   },
 ];
@@ -74,6 +88,8 @@ export function whatsNewLinkPath(
       return ROUTES.donate;
     case 'discover':
       return ROUTES.discover;
+    case 'notifications':
+      return ROUTES.notifications;
     case 'profile':
       return profileHandle ? ROUTES.profile(profileHandle) : null;
     default:

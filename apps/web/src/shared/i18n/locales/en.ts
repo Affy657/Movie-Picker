@@ -13,6 +13,8 @@ export const en: Locale = {
     send: 'Sending\u2026',
     pageTitle: '{{segment}} \u2014 Movie Picker',
     languageLabel: 'Language',
+    decrement: 'Decrease',
+    increment: 'Increase',
   },
   share: {
     trigger: 'Share',
@@ -43,6 +45,38 @@ export const en: Locale = {
     actionsAriaLabel: 'Main actions',
     ctaLogin: 'Log in',
     ctaRegister: 'Create an account',
+  },
+
+  landing: {
+    kicker: 'Movie night, simplified',
+    titleLead: 'Choose tonight’s film',
+    titleAccent: 'together.',
+    tagline:
+      'No more endless debates. Create an event, invite your friends, vote on the suggestions — and let the wheel settle it if you have to.',
+    seoDescription:
+      'Movie Picker — plan a movie night: create an event, share the link, suggest films (TMDB), vote and spin the wheel to pick a winner.',
+    ogImageAlt: 'Movie Picker — choose tonight’s film together',
+    stepsKicker: 'In 4 steps',
+    stepsTitle: 'From the invite to the credits',
+    stepsSubtitle: 'A movie night that actually starts on time. Promise.',
+    steps: {
+      invite: {
+        title: 'Start the night',
+        text: 'One link, one QR code — everyone joins in two clicks.',
+      },
+      propose: {
+        title: 'Suggest your films',
+        text: 'Posters, details, platforms: the list builds itself from TMDB.',
+      },
+      vote: {
+        title: 'Vote together',
+        text: 'Thumbs up, already seen, keep it — the group favourites surface fast.',
+      },
+      wheel: {
+        title: 'The wheel decides',
+        text: 'Still no agreement? One spin and the verdict is in.',
+      },
+    },
   },
 
   auth: {
@@ -329,6 +363,10 @@ export const en: Locale = {
       fallbackError: 'Creation failed',
       signedOutTitle: 'Create your event',
       signedOutMessage: 'Log in or create an account to organize an event and invite friends.',
+      defaultTitle: 'Movie night at {{name}}’s',
+      description:
+        'Give it a title, a date and a time. You can adjust the settings later if you need to.',
+      advancedOptions: 'Advanced options (optional)',
     },
     join: {
       title: 'Join the event',
@@ -341,6 +379,8 @@ export const en: Locale = {
       fullWithCap:
         'The event is full ({{max}} participants max). Ask the host to raise the capacity to join.',
       full: 'The event is full. Ask the host to raise the capacity to join.',
+      intro: 'Join the event to suggest films and vote.',
+      signedOutIntro: 'Log in or create an account to join the event.',
     },
     participants: {
       title: 'Participants',
@@ -371,7 +411,10 @@ export const en: Locale = {
     },
     detail: {
       loading: 'Loading\u2026',
+      skeletonLabel: 'Loading the event\u2026',
+      moviesLoadError: 'Could not load the film list. Check your connection or try again.',
       errorFallback: 'Event not found',
+      missing: 'This event does not exist or has been deleted.',
       backHome: 'Back to home',
       backNav: 'Back',
       finishedBadge: 'Finished',
@@ -524,6 +567,33 @@ export const en: Locale = {
       themePlaceholder: 'E.g. Horror, Sci-fi, Comedy…',
       clearThemeAria: 'Remove the theme',
       clearThemeButton: 'Clear',
+      themeFieldPlaceholder: 'Horror, Comedy\u2026',
+      emojiPickerLabel: 'Choose an emoji',
+      emojiListLabel: 'Emojis',
+      emojiNoneLabel: 'No emoji',
+      themePresetsLegend: 'Suggested themes',
+      themePresetsMore: 'More themes',
+      themePresetsLess: 'Fewer themes',
+      themePresets: {
+        horror: 'Horror',
+        comedy: 'Comedy',
+        animation: 'Animation',
+        scifi: 'Sci-fi',
+        romance: 'Romance',
+        action: 'Action',
+        thriller: 'Thriller',
+        zombie: 'Zombie',
+        superhero: 'Superhero',
+        drama: 'Drama',
+        adventure: 'Adventure',
+        fantasy: 'Fantasy',
+        musical: 'Musical',
+        family: 'Family',
+        crime: 'Crime',
+        history: 'History',
+        western: 'Western',
+        classics: 'Classics',
+      },
       maxProposalsLabel: 'Max movies per person',
       maxProposalsHint: '{{max}} at most.',
       maxProposalsInvalid: 'Movies per person: whole number between 1 and {{max}}.',
@@ -875,6 +945,13 @@ export const en: Locale = {
     network: 'Could not reach the server. Check your connection.',
     generic: 'An error occurred.',
     notFound: 'Page not found',
+    notFoundCode: 'Error 404',
+    notFoundMessage:
+      'This page does not exist or has moved. No panic, we will put you back on track.',
+    backHome: 'Back to home',
+    serverTitle: 'Server error',
+    serverCode: 'Error 500',
+    unexpected: 'An unexpected error occurred.',
     boundary: {
       title: 'Something went wrong',
       messageProd: 'An unexpected error occurred. You can retry or reload the page.',
@@ -899,6 +976,8 @@ export const en: Locale = {
     disabledLabel: 'Push notifications disabled',
     enableButton: 'Enable',
     disableButton: 'Disable',
+    enableError: 'Could not enable notifications',
+    disableError: 'Could not disable notifications',
     prefsTitle: 'Choose which notifications to receive',
     groupEvents: 'Your events',
     groupReminders: 'Reminders',
@@ -1255,6 +1334,11 @@ export const en: Locale = {
         title: 'Suggest an idea',
         description: 'An idea, a bug, an improvement: send it in two fields.',
       },
+      pwaInstall: {
+        title: 'Install the app',
+        description:
+          'A button in the footer and the account menu: native prompt on Chrome, a short guide on iPhone.',
+      },
       wheelExclusion: {
         title: 'Films out of the draw',
         description: 'Hosts can set a film aside without deleting it.',
@@ -1275,6 +1359,69 @@ export const en: Locale = {
       discoverHome: {
         title: 'Discover page',
         description: 'The product intro now lives on Discover. Home is My events.',
+      },
+      ideaAttachments: {
+        title: 'Screenshots with your ideas',
+        description:
+          'Attach up to 4 images to a suggestion: button, drag-and-drop or a plain paste.',
+      },
+      historyToEvent: {
+        title: 'Re-suggest a film you saw',
+        description: 'Send a film from your history to an ongoing event, no searching needed.',
+      },
+      rescheduleNotice: {
+        title: 'Heads-up when the date moves',
+        description:
+          'When the host reschedules, everyone gets a push notification and an inbox message.',
+      },
+      myEventsRevamp: {
+        title: 'My events, rebuilt',
+        description:
+          'Active and History tabs, a "Needs attention" block for events left hanging, and cards that finally fit on mobile.',
+      },
+      historyTools: {
+        title: 'Searchable history',
+        description:
+          'Search, sorting by date, title, films or guests, and a filter for nights that never got a film.',
+      },
+      settingsPage: {
+        title: 'Settings in five sections',
+        description:
+          'My account becomes Settings: Profile, Preferences, Notifications, Integrations, Account and security — all saved automatically.',
+      },
+      eventSettings: {
+        title: 'Event panel revamped',
+        description:
+          'Live saving, per-field errors, wheel mode and TV shows right from creation. Up to 15 films per person and 300 guests.',
+      },
+      movieList: {
+        title: 'Films as a list or a grid',
+        description:
+          'New list view, release date, My-list marker, redrawn platforms and film details in one tap.',
+      },
+      unifiedShare: {
+        title: 'One share dialog',
+        description:
+          'A single window for the link, the QR code and inviting the people you follow, on events and profiles alike.',
+      },
+      fasterFirstLoad: {
+        title: 'Faster to open',
+        description:
+          'The app fetches its core alongside everything else, so the first screen lands noticeably sooner.',
+      },
+      readableContrast: {
+        title: 'Stronger contrast',
+        description: 'Text and active chips now clear level AA, in both light and dark mode.',
+      },
+      analyticsPrivacy: {
+        title: 'Less data sent out',
+        description:
+          'Neither your display name nor your handle goes into usage analytics any more.',
+      },
+      inAppBrowser: {
+        title: 'Opening from Snapchat',
+        description:
+          'In-app browsers were wiping your session. A banner now offers to open Movie Picker in Safari or Chrome.',
       },
     },
   },

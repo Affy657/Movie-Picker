@@ -37,6 +37,7 @@ localStorage.setItem('moviepicker-locale', 'fr');
 
 beforeEach(() => {
   localStorage.setItem('mp.session-hint', '1');
+  localStorage.setItem('moviepicker-locale', 'fr');
 });
 
 Object.defineProperty(window, 'matchMedia', {
