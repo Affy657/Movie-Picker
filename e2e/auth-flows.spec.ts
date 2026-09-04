@@ -40,7 +40,7 @@ test.describe('Parcours authentification', () => {
   test('suppression de compte RGPD depuis les reglages', async ({ page }) => {
     await registerAccount(page, 'DeleteE2E');
 
-    await page.goto('/settings');
+    await page.goto('/settings/securite');
     await page.getByRole('button', { name: 'Supprimer mon compte' }).click();
     await page.getByLabel('Saisissez votre mot de passe pour confirmer').fill(TEST_PASSWORD);
     await page.getByRole('button', { name: 'Supprimer définitivement' }).click();
