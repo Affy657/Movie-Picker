@@ -438,7 +438,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     needs: [changes, gitleaks, lint-api, test-api, audit]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master' && needs.changes.outputs.api == 'true'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master' && needs.changes.outputs.api == 'true'
     permissions:
       contents: read
       id-token: write
@@ -507,7 +507,7 @@ jobs:
     needs: [docker-api, e2e, sonar]
     if: >-
       always() &&
-      github.event_name == 'push' && github.ref == 'refs/heads/master' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master' &&
       needs.docker-api.result == 'success' &&
       needs.e2e.result == 'success' &&
       needs.sonar.result == 'success'
@@ -595,7 +595,7 @@ jobs:
     needs: [changes, gitleaks, lint-web, test-web, audit, lighthouse, e2e, sonar]
     if: >-
       always() &&
-      github.event_name == 'push' && github.ref == 'refs/heads/master' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master' &&
       needs.changes.outputs.web == 'true' &&
       needs.changes.result == 'success' &&
       needs.gitleaks.result == 'success' &&
