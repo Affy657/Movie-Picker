@@ -37,10 +37,9 @@
 .optionSelected {
   background: color-mix(in srgb, var(--color-primary) 14%, transparent);
   border-color: var(--color-primary);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .optionSelected:hover {
-  /* Pas de hover spécifique : l'état sélectionné prime visuellement. */
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }

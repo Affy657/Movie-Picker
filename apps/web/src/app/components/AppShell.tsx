@@ -113,10 +113,16 @@ export default function AppShell() {
             </div>
           ) : (
             <div className={styles.navActions}>
-              <Link to={withReturnTo(ROUTES.login, returnTo)} className="btn btn-sm">
+              <Link
+                to={withReturnTo(ROUTES.login, returnTo)}
+                className={`btn btn-sm ${styles.guestLogin}`}
+              >
                 {t('home.ctaLogin')}
               </Link>
-              <Link to={withReturnTo(ROUTES.register, returnTo)} className="btn btn-primary btn-sm">
+              <Link
+                to={withReturnTo(ROUTES.register, returnTo)}
+                className={`btn btn-primary btn-sm ${styles.guestRegister}`}
+              >
                 {t('home.ctaRegister')}
               </Link>
             </div>

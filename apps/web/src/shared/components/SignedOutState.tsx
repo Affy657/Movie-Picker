@@ -27,6 +27,7 @@ export default function SignedOutState({
     <EmptyState
       icon={icon}
       title={title}
+      titleTag="h2"
       message={message}
       compact={compact}
       actions={

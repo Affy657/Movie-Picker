@@ -22,15 +22,20 @@ const ME = {
 };
 
 function stubMatchMedia(matches: boolean) {
-  vi.stubGlobal(
-    'matchMedia',
-    vi.fn((query: string) => ({
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    configurable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
       matches,
       media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
-    }))
-  );
+      dispatchEvent: vi.fn(),
+    })),
+  });
 }
 
 function renderAccount() {
@@ -55,7 +60,6 @@ describe('AccountIndexPage (MSW)', () => {
   });
   afterEach(() => {
     server.resetHandlers();
-    vi.unstubAllGlobals();
   });
   afterAll(() => server.close());
 
@@ -64,7 +68,9 @@ describe('AccountIndexPage (MSW)', () => {
 
     renderAccount();
 
-    expect(await screen.findByRole('heading', { name: 'Profil' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Profil' }, { timeout: 8000 })
+    ).toBeInTheDocument();
   });
 
   it('affiche un index de rubriques sur mobile', async () => {

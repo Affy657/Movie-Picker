@@ -3,7 +3,7 @@ import { Clapperboard, Disc3, Link2, Sparkles, ThumbsUp } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import { APP_DOCUMENT_TITLE } from '@/shared/hooks/useDocumentTitle';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
-import { SITE_URL } from '@/shared/seo/siteMeta';
+import { DEFAULT_DESCRIPTION, SITE_URL } from '@/shared/seo/siteMeta';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import styles from './LandingPage.module.css';
@@ -11,6 +11,7 @@ import styles from './LandingPage.module.css';
 export default function LandingPage() {
   usePageSeo({
     title: APP_DOCUMENT_TITLE,
+    description: DEFAULT_DESCRIPTION,
     canonical: `${SITE_URL}${ROUTES.discover}`,
     ogType: 'website',
   });

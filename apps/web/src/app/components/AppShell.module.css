@@ -121,6 +121,17 @@
   flex-shrink: 0;
 }
 
+.guestLogin,
+.guestRegister {
+  min-height: 44px;
+}
+
+@media (max-width: 479px) {
+  .guestLogin {
+    display: none;
+  }
+}
+
 .navMobile {
   position: fixed;
   min-height: var(--mobile-nav-height);

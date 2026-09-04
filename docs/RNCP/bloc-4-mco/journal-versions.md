@@ -32,7 +32,9 @@ Les entrées sont classées selon les catégories Keep a Changelog, *Added*, *Ch
 
 | Version | Date | Contenu principal |
 |---------|------|-------------------|
-| **1.3.2** | 25/07/2026 | Supervision de production, sonde de readiness, canal « Signaler un problème », montée de sécurité react-router |
+| **1.4.1** | 04/09/2026 | Navigation ouverte sans compte, landing publique sur `/decouvrir` |
+| 1.4.0 | 25/08/2026 | Watchlist, Letterboxd, choix manuel du gagnant, flamme de participation, OAuth, dons |
+| 1.3.2 | 25/07/2026 | Supervision de production, sonde de readiness, canal « Signaler un problème », montée de sécurité react-router |
 | 1.3.1 | 08/07/2026 | Filtre de durée, échelle de notes, CSP front, refonte du pipeline CI/CD |
 | 1.3.0 | 19/06/2026 | États vides, export calendrier `.ics`, infobulles, refonte de la navigation |
 | 1.2.0 | 11/06/2026 | Profil public, notifications in-app, accessibilité étendue, RGPD, analytics |
@@ -40,7 +42,7 @@ Les entrées sont classées selon les catégories Keep a Changelog, *Added*, *Ch
 | 1.0.0 | 19/05/2026 | Première version de production |
 | 0.1.0 | 27/02/2026 | Prototype initial (MVP) |
 
-Sept versions publiées, chacune associée à un tag et à une release.
+Neuf versions publiées, chacune associée à un tag et à une release.
 
 ## 4. Exemplaire : version 1.3.2
 

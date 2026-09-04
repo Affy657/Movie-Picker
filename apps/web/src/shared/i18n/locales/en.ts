@@ -1267,6 +1267,15 @@ export const en: Locale = {
         title: 'Vote-weighted wheel by default',
         description: 'Votes now count in the draw, nothing to set up.',
       },
+      openBrowsing: {
+        title: 'Browse without an account',
+        description:
+          'Nav, My events, My list, Settings: all open without signing in. Log in only when you want to act.',
+      },
+      discoverHome: {
+        title: 'Discover page',
+        description: 'The product intro now lives on Discover. Home is My events.',
+      },
     },
   },
   pwaInstall: {

@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.4.1] - 2026-09-04
+
 ### Added
 
 - **Navigation ouverte aux visiteurs sans compte** : la nav, le pied de page et cinq pages (Mes soirées, Nouvelle soirée, Ma liste, Notifications, Paramètres) sont désormais accessibles sans compte, avec un état déconnecté dédié par page et un appel à l'action vers la connexion ou l'inscription.
@@ -15,6 +17,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 ### Changed
 
 - La racine `/` redirige désormais vers Mes soirées ; la landing publique déménage sur `/decouvrir`, qui devient la page indexable de présentation du produit.
+
+### Fixed
+
+- Contraste du libellé actif de la navigation mobile et de l'option de thème sélectionnée en mode sombre (ratio AA).
 
 ## [1.4.0] - 2026-08-25
 
@@ -192,7 +198,9 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage — front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.3.2...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/Affy657/Movie-Picker/compare/v1.4.0...v1.4.1
+[1.4.0]: https://github.com/Affy657/Movie-Picker/compare/v1.3.2...v1.4.0
 [1.3.2]: https://github.com/Affy657/Movie-Picker/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/Affy657/Movie-Picker/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/Affy657/Movie-Picker/compare/v1.2.0...v1.3.0

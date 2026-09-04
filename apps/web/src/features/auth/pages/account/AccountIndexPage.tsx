@@ -13,7 +13,7 @@ export default function AccountIndexPage({ user }: Readonly<{ user: UserProfile 
   const needsAttention = user.letterboxdPendingReconciliationCount > 0;
 
   if (!isMobile) {
-    return <Navigate to={ACCOUNT_RUBRIQUES[0]!.to} replace />;
+    return <Navigate to={ACCOUNT_RUBRIQUES[0]!.key} replace />;
   }
 
   return (

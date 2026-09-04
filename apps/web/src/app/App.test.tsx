@@ -316,7 +316,7 @@ describe('App (routes)', () => {
     });
 
     it('AppShell expose la pastille Nouveautés devant les notifications pour un compte 1.3.x', async () => {
-      vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-08-26T12:00:00.000Z'));
+      vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-09-06T12:00:00.000Z'));
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () =>
           HttpResponse.json({
@@ -343,8 +343,8 @@ describe('App (routes)', () => {
       expect(chip.compareDocumentPosition(bell) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 
-    it("AppShell n'expose pas la pastille Nouveautés pour un compte créé à partir de la 1.4.0", async () => {
-      vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-08-26T12:00:00.000Z'));
+    it("AppShell n'expose pas la pastille Nouveautés pour un compte créé à partir de la 1.4.1", async () => {
+      vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-09-06T12:00:00.000Z'));
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () =>
           HttpResponse.json({
@@ -353,7 +353,7 @@ describe('App (routes)', () => {
             emailMasked: 'a***@test.local',
             uiTheme: 'system',
             accentColor: 'default',
-            createdAt: '2026-08-25T12:00:00.000Z',
+            createdAt: '2026-09-05T12:00:00.000Z',
           })
         ),
         http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))

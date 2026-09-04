@@ -1293,6 +1293,16 @@
         title: 'Roue pondérée par défaut',
         description: 'Les votes comptent dans le tirage, sans rien régler.',
       },
+      openBrowsing: {
+        title: 'Visite libre',
+        description:
+          'Nav, Mes soirées, Ma liste, Réglages : tout s’ouvre sans compte. Connectez-vous seulement pour agir.',
+      },
+      discoverHome: {
+        title: 'Page Découvrir',
+        description:
+          'La présentation du produit est sur Découvrir. L’accueil, c’est désormais Mes soirées.',
+      },
     },
   },
   pwaInstall: {
