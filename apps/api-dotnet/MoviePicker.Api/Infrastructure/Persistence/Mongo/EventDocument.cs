@@ -45,6 +45,10 @@ public sealed class EventDocument
     [BsonIgnoreIfNull]
     public string? WinnerPickMethod { get; set; }
 
+    [BsonElement("winnerPickedAt")]
+    [BsonIgnoreIfNull]
+    public DateTime? WinnerPickedAt { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 

@@ -116,6 +116,18 @@ describe('NotificationsSection', () => {
     expect(toggle).toHaveAttribute('aria-checked', 'false');
   });
 
+  it('shows a muted bell when push is off and a bell when subscribed', () => {
+    mockUsePush.mockReturnValue(pushState({ subscribed: false }));
+    mockFetchPrefs.mockResolvedValue(allPrefs);
+
+    const { rerender } = render(<NotificationsSection />);
+    expect(document.querySelector('.lucide-bell-off')).toBeTruthy();
+
+    mockUsePush.mockReturnValue(pushState({ subscribed: true }));
+    rerender(<NotificationsSection />);
+    expect(document.querySelector('.lucide-bell-off')).toBeNull();
+  });
+
   it('patches a preference when its toggle is clicked', async () => {
     mockUsePush.mockReturnValue(pushState({ subscribed: true }));
     mockFetchPrefs.mockResolvedValue(allPrefs);

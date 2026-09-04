@@ -110,12 +110,12 @@ describe('LetterboxdChoicesModal (MSW)', () => {
     server.use(
       http.post(`${TEST_API_V1}/letterboxd/confirm`, async ({ request }) => {
         received = (await request.json()) as { selections: unknown };
-        return HttpResponse.json({ added: 1, alreadyPresent: 0 });
+        return HttpResponse.json({ added: 1, alreadyPresent: 0, pendingReconciliationCount: 0 });
       })
     );
 
     const onConfirmed = (result: { added: number; alreadyPresent: number }) => {
-      expect(result).toEqual({ added: 1, alreadyPresent: 0 });
+      expect(result).toEqual({ added: 1, alreadyPresent: 0, pendingReconciliationCount: 0 });
     };
     renderModal(ONE_CHOICE, onConfirmed);
 
@@ -135,6 +135,7 @@ describe('LetterboxdChoicesModal (MSW)', () => {
             letterboxdSlug: 'midnight-mass-2021',
           },
         ],
+        remainingUnresolvedCount: 0,
       })
     );
   });
@@ -155,7 +156,7 @@ describe('LetterboxdChoicesModal (MSW)', () => {
     server.use(
       http.post(`${TEST_API_V1}/letterboxd/confirm`, async ({ request }) => {
         received = (await request.json()) as { selections: unknown };
-        return HttpResponse.json({ added: 1, alreadyPresent: 0 });
+        return HttpResponse.json({ added: 1, alreadyPresent: 0, pendingReconciliationCount: 0 });
       })
     );
 
@@ -187,6 +188,7 @@ describe('LetterboxdChoicesModal (MSW)', () => {
             letterboxdSlug: 'spider-man-1977',
           },
         ],
+        remainingUnresolvedCount: 1,
       })
     );
   });
@@ -198,7 +200,7 @@ describe('LetterboxdChoicesModal (MSW)', () => {
     server.use(
       http.post(`${TEST_API_V1}/letterboxd/confirm`, async ({ request }) => {
         received = (await request.json()) as { selections: unknown };
-        return HttpResponse.json({ added: 1, alreadyPresent: 0 });
+        return HttpResponse.json({ added: 1, alreadyPresent: 0, pendingReconciliationCount: 1 });
       })
     );
 
@@ -206,7 +208,7 @@ describe('LetterboxdChoicesModal (MSW)', () => {
       result: { added: number; alreadyPresent: number },
       unresolved: LetterboxdPendingChoice[]
     ) => {
-      expect(result).toEqual({ added: 1, alreadyPresent: 0 });
+      expect(result).toEqual({ added: 1, alreadyPresent: 0, pendingReconciliationCount: 1 });
       expect(unresolved.map((c) => c.title)).toEqual(['Spider-Man']);
     };
     renderModal(TWO_CHOICES, onConfirmed);
@@ -227,6 +229,7 @@ describe('LetterboxdChoicesModal (MSW)', () => {
             letterboxdSlug: 'midnight-mass-2021',
           },
         ],
+        remainingUnresolvedCount: 1,
       })
     );
   });

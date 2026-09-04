@@ -11,10 +11,12 @@ import type { WinnerPickMethod } from '@/shared/types/event';
 import type { MovieData } from '@/shared/types/movie';
 import { useTranslation } from '@/shared/i18n';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
+import { remainingWheelRevealDelayMs } from '@/shared/utils/wheelSpin';
 
 export type EventWheelState = {
   isHost: boolean;
   winner: MovieData | null;
+  spinWinner: MovieData | null;
   winnerIndex: number;
   wheelKey: number;
   loading: boolean;
@@ -31,6 +33,7 @@ export type EventWheelState = {
   reset: () => void;
   closeEvent: () => void;
   dismissModal: () => void;
+  revealWinner: () => void;
 
   pickMethod: WinnerPickMethod | null;
   manualReveal: boolean;
@@ -66,7 +69,12 @@ export function useEventWheel({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [winnerIndex, setWinnerIndex] = useState(-1);
   const [wheelKey, setWheelKey] = useState(0);
-  const [winner, setWinner] = useState<MovieData | null>(event?.winnerMovie ?? null);
+  const [winner, setWinner] = useState<MovieData | null>(() => {
+    if (!event?.winnerMovie) return null;
+    if (remainingWheelRevealDelayMs(event.winnerPickMethod, event.winnerPickedAt) > 0) return null;
+    return event.winnerMovie;
+  });
+  const [spinWinner, setSpinWinner] = useState<MovieData | null>(null);
   const [pickMethod, setPickMethod] = useState<WinnerPickMethod | null>(
     event?.winnerPickMethod ?? null
   );
@@ -83,9 +91,26 @@ export function useEventWheel({
   const noEligibleMovie = moviesCount > 0 && eligibleMovies.length === 0;
 
   useEffect(() => {
-    setWinner(event?.winnerMovie ?? null);
-    setPickMethod(event?.winnerPickMethod ?? null);
-  }, [event?.winnerMovie, event?.winnerPickMethod]);
+    if (isModalOpen) return undefined;
+    const movie = event?.winnerMovie ?? null;
+    const method = event?.winnerPickMethod ?? null;
+    const delay = remainingWheelRevealDelayMs(event?.winnerPickMethod, event?.winnerPickedAt);
+    if (delay <= 0) {
+      setWinner(movie);
+      setPickMethod(method);
+      setSpinWinner(null);
+      return undefined;
+    }
+    setWinner(null);
+    setPickMethod(method);
+    setSpinWinner(null);
+    const timer = window.setTimeout(() => {
+      setWinner(movie);
+      setPickMethod(method);
+      setSpinWinner(null);
+    }, delay);
+    return () => window.clearTimeout(timer);
+  }, [event?.winnerMovie, event?.winnerPickMethod, event?.winnerPickedAt, isModalOpen]);
 
   const cancelManualMode = useCallback(() => setManualMode(false), []);
   const enterManualMode = useCallback(() => setManualMode(true), []);
@@ -105,7 +130,8 @@ export function useEventWheel({
     postEventWheel(slug, hostToken)
       .then((res) => {
         const idx = eligibleMovies.findIndex((m) => m.id === res.winner.id);
-        setWinner(res.winner);
+        setWinner(null);
+        setSpinWinner(res.winner);
         setPickMethod('wheel');
         setWinnerIndex(Math.max(idx, 0));
         setManualReveal(false);
@@ -123,6 +149,7 @@ export function useEventWheel({
       setLoading(true);
       postEventWinner(slug, movie.id, hostToken)
         .then((res) => {
+          setSpinWinner(res.winner);
           setWinner(res.winner);
           setPickMethod('manual');
           setWinnerIndex(0);
@@ -144,6 +171,7 @@ export function useEventWheel({
     deleteEventWheel(slug, hostToken)
       .then(() => {
         setWinner(null);
+        setSpinWinner(null);
         setPickMethod(null);
         onWheelDone();
       })
@@ -163,10 +191,15 @@ export function useEventWheel({
       .finally(() => setLoading(false));
   }, [slug, hostToken, onCloseDone, track, t]);
 
+  const revealWinner = useCallback(() => {
+    setWinner(spinWinner);
+  }, [spinWinner]);
+
   const dismissModal = useCallback(() => {
     setIsModalOpen(false);
+    setWinner((current) => current ?? spinWinner);
     onWheelDone();
-  }, [onWheelDone]);
+  }, [onWheelDone, spinWinner]);
 
   const isOpenForActions = isHost && !!event && !event.isFinished;
   const isPendingWithoutWinner = isOpenForActions && !winner && event?.lifecycle === 'pending';
@@ -174,6 +207,7 @@ export function useEventWheel({
   return {
     isHost,
     winner,
+    spinWinner,
     winnerIndex,
     wheelKey,
     loading,
@@ -189,6 +223,7 @@ export function useEventWheel({
     reset,
     closeEvent,
     dismissModal,
+    revealWinner,
 
     pickMethod,
     manualReveal,

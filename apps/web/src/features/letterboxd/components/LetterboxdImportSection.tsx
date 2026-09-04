@@ -13,6 +13,7 @@ import {
   type LetterboxdPendingChoice,
   type LetterboxdSyncReport,
 } from '@/features/letterboxd/api/letterboxdApi';
+import type { UserProfile } from '@/features/auth/types';
 import LetterboxdChoicesModal from './LetterboxdChoicesModal';
 import sharedStyles from '@/features/auth/pages/account/AccountShared.module.css';
 import styles from './LetterboxdImportSection.module.css';
@@ -34,7 +35,6 @@ export default function LetterboxdImportSection() {
   const [report, setReport] = useState<LetterboxdSyncReport | null>(null);
   const [choicesOpen, setChoicesOpen] = useState(false);
   const [confirmResult, setConfirmResult] = useState<LetterboxdConfirmResult | null>(null);
-  const [undecidedTitles, setUndecidedTitles] = useState<string[]>([]);
 
   useEffect(() => {
     if (editing) inputRef.current?.focus();
@@ -51,7 +51,6 @@ export default function LetterboxdImportSection() {
     setEditing(false);
     setReport(null);
     setConfirmResult(null);
-    setUndecidedTitles([]);
   }, [draft, patchProfile]);
 
   const {
@@ -65,7 +64,6 @@ export default function LetterboxdImportSection() {
     await patchProfile({ letterboxdUsername: '' });
     setReport(null);
     setConfirmResult(null);
-    setUndecidedTitles([]);
   }, [patchProfile]);
 
   const {
@@ -94,7 +92,6 @@ export default function LetterboxdImportSection() {
   const handleSync = async () => {
     clearSyncError();
     setConfirmResult(null);
-    setUndecidedTitles([]);
     setReport(null);
     const result = await runSync();
     if (!result) return;
@@ -107,10 +104,15 @@ export default function LetterboxdImportSection() {
     unresolved: LetterboxdPendingChoice[]
   ) => {
     setChoicesOpen(false);
-    setReport(null);
+    setReport((prev) => (prev ? { ...prev, pendingChoices: unresolved } : prev));
     setConfirmResult(result);
-    setUndecidedTitles(
-      unresolved.map((choice) => (choice.year ? `${choice.title} (${choice.year})` : choice.title))
+    queryClient.setQueryData(queryKeys.auth.me, (prev: UserProfile | null | undefined) =>
+      prev
+        ? {
+            ...prev,
+            letterboxdPendingReconciliationCount: result.pendingReconciliationCount,
+          }
+        : prev
     );
     void queryClient.invalidateQueries({ queryKey: queryKeys.watchlist.list });
     void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
@@ -227,7 +229,7 @@ export default function LetterboxdImportSection() {
         )}
       </div>
 
-      {connected && !report && user.letterboxdPendingReconciliationCount > 0 && (
+      {connected && !report && !confirmResult && user.letterboxdPendingReconciliationCount > 0 && (
         <div className={sharedStyles.attention} role="status">
           <TriangleAlert size={15} aria-hidden />
           <p>
@@ -342,21 +344,6 @@ export default function LetterboxdImportSection() {
         <p className="hint" role="status" aria-live="polite">
           {t('auth.account.letterboxd.choicesApplied', { added: String(confirmResult.added) })}
         </p>
-      )}
-
-      {undecidedTitles.length > 0 && (
-        <details className={styles.unmatched}>
-          <summary>
-            {t('auth.account.letterboxd.reportUndecided', {
-              count: String(undecidedTitles.length),
-            })}
-          </summary>
-          <ul className={styles.unmatchedList}>
-            {undecidedTitles.map((title) => (
-              <li key={title}>{title}</li>
-            ))}
-          </ul>
-        </details>
       )}
 
       {choicesOpen && report && report.pendingChoices.length > 0 && (

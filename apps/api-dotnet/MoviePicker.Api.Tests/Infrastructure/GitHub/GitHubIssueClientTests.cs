@@ -84,14 +84,50 @@ public class GitHubIssueClientTests
     [Fact]
     public async Task CreateIssueAsync_NonSuccessStatus_ThrowsServiceUnavailable()
     {
-        var handler = new RecordingHandler((_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.UnprocessableEntity)
+        var handler = new RecordingHandler((_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.InternalServerError)
         {
-            Content = new StringContent("{\"message\":\"Validation failed\"}")
+            Content = new StringContent("{\"message\":\"boom\"}")
         }));
         var http = new HttpClient(handler) { BaseAddress = new Uri("https://api.github.com/") };
         var client = new GitHubIssueClient(http, Options.Create(OptionsWith()), NullLogger<GitHubIssueClient>.Instance);
 
         await Assert.ThrowsAsync<ServiceUnavailableException>(() => client.CreateIssueAsync(SampleDraft()));
+    }
+
+    [Fact]
+    public async Task CreateIssueAsync_UnprocessableLabels_RetriesWithoutLabelsAndSucceeds()
+    {
+        var bodies = new List<string>();
+        var handler = new RecordingHandler(async (req, ct) =>
+        {
+            bodies.Add(await (req.Content?.ReadAsStringAsync(ct) ?? Task.FromResult(string.Empty)));
+            if (bodies.Count == 1)
+            {
+                return new HttpResponseMessage(HttpStatusCode.UnprocessableEntity)
+                {
+                    Content = new StringContent("{\"message\":\"Validation Failed\"}")
+                };
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.Created)
+            {
+                Content = JsonContent.Create(new { number = 2 })
+            };
+        });
+        var http = new HttpClient(handler) { BaseAddress = new Uri("https://api.github.com/") };
+        var client = new GitHubIssueClient(http, Options.Create(OptionsWith()), NullLogger<GitHubIssueClient>.Instance);
+
+        await client.CreateIssueAsync(SampleDraft());
+
+        Assert.Equal(2, bodies.Count);
+        using (var first = JsonDocument.Parse(bodies[0]))
+        {
+            Assert.True(first.RootElement.TryGetProperty("labels", out _));
+        }
+        using (var second = JsonDocument.Parse(bodies[1]))
+        {
+            Assert.False(second.RootElement.TryGetProperty("labels", out _));
+        }
     }
 
     [Fact]

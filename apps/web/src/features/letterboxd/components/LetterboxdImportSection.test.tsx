@@ -306,6 +306,80 @@ describe('LetterboxdImportSection (MSW)', () => {
     ).toBeInTheDocument();
   });
 
+  it('met à jour le nombre de films restants après une réconciliation partielle', async () => {
+    const user = userEvent.setup();
+
+    server.use(
+      meHandler({ letterboxdUsername: 'affy657', letterboxdPendingReconciliationCount: 2 }),
+      http.post(`${TEST_API_V1}/letterboxd/sync`, () =>
+        HttpResponse.json({
+          skipped: false,
+          added: 0,
+          removed: 0,
+          unmatchedTitles: [],
+          pendingChoices: [
+            {
+              rowIndex: 1,
+              title: 'Midnight Mass',
+              year: '2021',
+              letterboxdSlug: 'midnight-mass-2021',
+              candidates: [
+                {
+                  tmdbId: 97400,
+                  mediaType: 'tv',
+                  title: 'Sermons de minuit',
+                  year: '2021',
+                  posterPath: null,
+                  voteAverage: 7.5,
+                },
+              ],
+            },
+            {
+              rowIndex: 2,
+              title: 'Spider-Man',
+              year: '1977',
+              letterboxdSlug: 'spider-man-1977',
+              candidates: [
+                {
+                  tmdbId: 1,
+                  mediaType: 'movie',
+                  title: 'Spider-Man',
+                  year: '1977',
+                  posterPath: null,
+                  voteAverage: 5.1,
+                },
+              ],
+            },
+          ],
+          totalOnLetterboxd: 2,
+          totalTruncated: 0,
+        })
+      ),
+      http.post(`${TEST_API_V1}/letterboxd/confirm`, () =>
+        HttpResponse.json({ added: 1, alreadyPresent: 0, pendingReconciliationCount: 1 })
+      )
+    );
+
+    renderAccount();
+
+    const pendingButton = await screen.findByRole('button', {
+      name: /Réconciliation en attente : 2 film\(s\)/,
+    });
+    await user.click(pendingButton);
+
+    expect(
+      await screen.findByRole('heading', { name: '2 titres à confirmer' })
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('radio', { name: /Sermons de minuit/ }));
+    await user.click(screen.getByRole('button', { name: 'Décider plus tard' }));
+
+    expect(await screen.findByText('1 film(s) ajouté(s).')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Choisir pour 1 film/ })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Réconciliation en attente : 2 film\(s\)/ })
+    ).not.toBeInTheDocument();
+  });
+
   it('liste les films introuvables sur TMDB dans un dépliant', async () => {
     const user = userEvent.setup();
 

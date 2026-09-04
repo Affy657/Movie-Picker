@@ -19,6 +19,7 @@ interface WheelModalProps {
   wheelKey: number;
   onClose: () => void;
   onRelaunch?: () => void;
+  onSpinComplete?: () => void;
   skipSpin?: boolean;
 }
 
@@ -30,6 +31,7 @@ export default function WheelModal({
   wheelKey,
   onClose,
   onRelaunch,
+  onSpinComplete,
   skipSpin = false,
 }: Readonly<WheelModalProps>) {
   const { t } = useTranslation();
@@ -77,8 +79,12 @@ export default function WheelModal({
     };
   }, [animDone, onClose]);
 
+  const onSpinCompleteRef = useRef(onSpinComplete);
+  onSpinCompleteRef.current = onSpinComplete;
+
   const handleWheelDone = useCallback(() => {
     setAnimDone(true);
+    onSpinCompleteRef.current?.();
 
     requestAnimationFrame(() => {
       cleanupConfettiOverlay();

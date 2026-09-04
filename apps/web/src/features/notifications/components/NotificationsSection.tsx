@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Bell } from 'lucide-react';
+import { Bell, BellOff } from 'lucide-react';
 import { usePushNotifications } from '@/features/notifications/hooks/usePushNotifications';
 import {
   fetchNotificationPreferences,
@@ -129,7 +129,11 @@ export default function NotificationsSection({ onSaved }: Readonly<{ onSaved?: (
 
       <div className={sharedStyles.card}>
         <div className={sharedStyles.row} style={{ borderTop: 'none' }}>
-          <Bell size={18} aria-hidden className={sharedStyles.rowIcon} />
+          {subscribed ? (
+            <Bell size={18} aria-hidden className={sharedStyles.rowIcon} />
+          ) : (
+            <BellOff size={18} aria-hidden className={sharedStyles.rowIcon} />
+          )}
           <div className={sharedStyles.rowMain}>
             <p className={sharedStyles.rowLabel}>
               {subscribed ? t('notifications.enabledLabel') : t('notifications.disabledLabel')}

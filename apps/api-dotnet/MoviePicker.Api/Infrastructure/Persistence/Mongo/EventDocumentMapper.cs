@@ -34,6 +34,9 @@ public static class EventDocumentMapper
             ClosedAt = doc.ClosedAt.HasValue ? new DateTimeOffset(doc.ClosedAt.Value, TimeSpan.Zero) : null,
             WinnerMovieId = doc.WinnerMovieId,
             WinnerPickMethod = ParseWinnerPickMethod(doc.WinnerPickMethod),
+            WinnerPickedAt = doc.WinnerPickedAt.HasValue
+                ? new DateTimeOffset(doc.WinnerPickedAt.Value, TimeSpan.Zero)
+                : null,
             CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero),
             UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)
         };
@@ -69,6 +72,7 @@ public static class EventDocumentMapper
             ClosedAt = evt.ClosedAt?.UtcDateTime,
             WinnerMovieId = evt.WinnerMovieId,
             WinnerPickMethod = ToWinnerPickMethodString(evt.WinnerPickMethod),
+            WinnerPickedAt = evt.WinnerPickedAt?.UtcDateTime,
             CreatedAt = evt.CreatedAt.UtcDateTime,
             UpdatedAt = evt.UpdatedAt.UtcDateTime
         };
