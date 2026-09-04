@@ -41,8 +41,14 @@
     {
       "name": "slides",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "docs/RNCP/bloc-1-cadrage/slides", "run", "dev"],
+      "runtimeArgs": ["--prefix", "archive/docs/RNCP/bloc-1-cadrage/slides", "run", "dev"],
       "port": 3030
+    },
+    {
+      "name": "slides-bloc3",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "docs/RNCP/bloc-3-coordination-pilotage/slides", "run", "preview"],
+      "port": 3031
     }
   ]
 }

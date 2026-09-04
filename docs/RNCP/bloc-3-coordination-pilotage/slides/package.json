@@ -1,0 +1,26 @@
+{
+  "name": "movie-picker-bloc3-slides",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "slidev --open",
+    "preview": "slidev --port 3031",
+    "build": "slidev build",
+    "export": "slidev export"
+  },
+  "dependencies": {
+    "@slidev/cli": "latest",
+    "@slidev/theme-default": "^0.25.0"
+  },
+  "devDependencies": {
+    "playwright-chromium": "^1.60.0"
+  },
+  "overrides": {
+    "nanoid": ">=3.3.18 <4.0.0",
+    "dompurify": "^3.4.13",
+    "js-yaml": ">=4.3.0",
+    "gray-matter": {
+      "js-yaml": "^3.15.0"
+    }
+  }
+}

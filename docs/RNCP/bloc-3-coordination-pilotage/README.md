@@ -2,7 +2,7 @@
 
 > Grille officielle : [`../referentiel/bloc-03-coordonner-piloter-projet.md`](../referentiel/bloc-03-coordonner-piloter-projet.md) · Suivi : [`../suivi-rncp.md`](../suivi-rncp.md)
 
-**État : 🟡 plan de présentation arrêté, matière et support à produire.** Structure, minutage et mapping des 14 éléments imposés dans [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md).
+**État : 🟡 plan arrêté, chapitre 1 produit (C3.1), chapitres 2 à 8 à produire.** Structure, minutage et mapping des 14 éléments imposés dans [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md).
 
 ## Attendus du jury
 
@@ -23,8 +23,8 @@ Le projet a été **exécuté seul**, comme les livrables des Blocs 1, 2 et 4 l'
 
 | Compétence | Livrable attendu | ÉLIM | Matériau |
 |------------|------------------|:----:|----------|
-| C3.1 | Méthodologie choisie, planning détaillé, ressources nécessaires | ✅ | `01-planification.md` à produire ; chiffrage 98 J/H et budget repris du Bloc 1 |
-| C3.2.1 | L'outil de suivi de projet, ses indicateurs et ses tableaux de bord | ✅ | `02-suivi-indicateurs.md` à produire ; 713 commits, 71 issues, 66 PR, tableau GitHub Projects à structurer |
+| C3.1 | Méthodologie choisie, planning détaillé, ressources nécessaires | ✅ | ✅ [`01-planification.md`](01-planification.md) et diapos 4 à 10 |
+| C3.2.1 | L'outil de suivi de projet, ses indicateurs et ses tableaux de bord | ✅ | `02-suivi-indicateurs.md` à produire ; 799 commits, 76 PR dont 25 fusionnées, 4 fiches d'anomalie, tableau GitHub Projects à structurer |
 | C3.2.2 | Un cas d'arbitrage rencontré au cours du projet, logigramme à l'appui | | `03-arbitrage.md` à produire ; cas pressenti : migration de l'API vers ASP.NET Core |
 | C3.3.1 | Affectation des missions, styles managériaux, outils de communication | | `04-management-equipe.md` à produire ; organisation cible à 4 profils |
 | C3.3.2 | Grille d'évaluation des compétences et plan de développement | | `05-competences.md` à produire |
@@ -36,3 +36,5 @@ Le projet a été **exécuté seul**, comme les livrables des Blocs 1, 2 et 4 l'
 | Fichier | Contenu |
 |---------|---------|
 | [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md) | Cadre de l'épreuve, minutage des 30 minutes, déroulé des 32 diapositives, script de démonstration, préparation des questions du jury |
+| [`01-planification.md`](01-planification.md) | **C3.1** : méthodologie et alternatives écartées, rétroplanning et Gantt, planning en 5 phases, découpage en 4 lots et 98 J/H, ressources humaines, matérielles et financières, matrice RACI et prise en compte du handicap, 7 points de vigilance |
+| [`slides/`](slides/) | Le support Slidev. Chapitres 0 et 1 produits, diapositives 1 à 10 |

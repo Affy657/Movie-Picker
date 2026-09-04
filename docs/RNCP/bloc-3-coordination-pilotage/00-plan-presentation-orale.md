@@ -43,7 +43,7 @@ Le règlement énumère 14 éléments que la présentation doit comporter. Chacu
 
 Le projet a été **exécuté seul**, ce qui est déjà écrit dans les livrables des Blocs 1, 2 et 4. Le Bloc 3, lui, évalue le pilotage d'une équipe. La présentation tient donc deux registres, distingués à voix haute dès la diapositive 3 et jamais confondus ensuite :
 
-- **Le réel**, chiffré et vérifiable : 713 commits du 27 février au 21 août 2026, 71 issues, 66 pull requests, 7 versions livrées en production, 17 comptes utilisateurs, 19 soirées créées.
+- **Le réel**, chiffré et vérifiable : 799 commits du 27 février au 26 août 2026, 8 versions livrées en production, 76 pull requests dont 25 fusionnées, 4 fiches d'anomalie toutes fermées, 17 comptes utilisateurs, 19 soirées créées.
 - **L'organisation cible**, annoncée comme telle : une équipe de 4 profils sur laquelle sont construits la matrice RACI, l'affectation des missions, la grille de compétences et le plan de développement. C'est la projection d'industrialisation du projet, pas une équipe qui a existé.
 
 Cette annonce explicite est ce qui protège les 15 minutes de questions. Un jury qui découvre le caractère projeté en fin de présentation le vit comme une dissimulation ; un jury prévenu dès le début l'évalue comme un exercice de conception d'organisation.
@@ -74,7 +74,7 @@ Répartition volontaire : les trois compétences éliminatoires absorbent **17 d
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
 | 1 | Movie Picker, piloter un projet de développement logiciel | 0:10 | Titre, Bloc 3 RNCP 39583, Adrien MORAND, 16 septembre 2026 |
-| 2 | Le produit et son état aujourd'hui | 0:40 | Capture de l'application en production. 7 versions livrées de février à juillet 2026, 17 comptes, 19 soirées, 74 % menées jusqu'au tirage. Objectif : établir qu'on parle d'un logiciel réellement exploité, pas d'une maquette |
+| 2 | Le produit et son état aujourd'hui | 0:40 | Capture de l'application en production. 8 versions livrées de février à août 2026, 17 comptes, 19 soirées, 74 % menées jusqu'au tirage. Objectif : établir qu'on parle d'un logiciel réellement exploité, pas d'une maquette |
 | 3 | Cadre de la présentation et plan | 0:40 | Les deux registres, réel et organisation cible. Plan en 7 temps |
 
 ### Chapitre 1 : planifier l'exécution du projet (6:30, 7 diapos), C3.1 ÉLIMINATOIRE
@@ -99,7 +99,7 @@ Critères visés : outil de suivi en adéquation avec le projet et la méthodolo
 |:-:|-------|------:|------------------------------|
 | 11 | L'outil de suivi | 1:00 | GitHub comme outil unique : issues pour le travail à faire, pull requests pour la revue, tableau Projects pour le flux, Actions pour la vérification. Pourquoi c'est en adéquation avec Kanban : colonnes de flux, limite de travail en cours, pas de planification par sprint. Capture du tableau |
 | 12 | Les indicateurs retenus | 1:00 | Tableau des indicateurs par axe, chacun mesurable et quantifiable, avec sa source et sa fréquence de relevé. Cinq axes : avancement, délais, coûts, risques, ressources humaines |
-| 13 | Tableau de bord : avancement et délais | 1:00 | Commits par mois (1, 28, 72, 150, 227, 192, 43), versions livrées et leurs dates réelles, délai moyen entre ouverture d'issue et fusion, taux d'aboutissement des pull requests |
+| 13 | Tableau de bord : avancement et délais | 1:00 | Commits par mois (1, 28, 72, 150, 227, 194, 127), les 8 versions livrées et leurs dates réelles, cadence de livraison, répartition des 76 pull requests entre travail produit et mise à jour de dépendances |
 | 14 | Tableau de bord : coûts, risques, ressources | 1:00 | Coût d'infrastructure réel comparé au budget prévisionnel, vulnérabilités ouvertes, stabilité de la chaîne d'intégration, couverture de tests, et pour les ressources humaines l'indicateur de soutenabilité de la charge hebdomadaire |
 | 15 | L'écart entre le prévisionnel et le réel | 1:00 | Les 98 J/H prévus face à la charge réellement consommée, l'origine des écarts, et ce que le pilotage en a fait. C'est la diapositive qui prouve que le suivi a servi à décider et pas seulement à mesurer. Elle amène naturellement le chapitre suivant |
 
@@ -143,7 +143,7 @@ Critères visés : comptes rendus clairs et ordonnés, facilitant la prise de d�
 
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
-| 27 | La planification des points de validation | 0:50 | Les 7 versions livrées comme points de validation datés : 0.1.0 le 27/02, 1.0.0 le 19/05, 1.1.0 le 25/05, 1.2.0 le 11/06, 1.3.0 le 19/06, 1.3.1 le 08/07, 1.3.2 le 25/07. Ce que chaque point validait et comment il assurait le suivi qualité |
+| 27 | La planification des points de validation | 0:50 | Les 8 versions livrées comme points de validation datés : 0.1.0 le 27/02, 1.0.0 le 19/05, 1.1.0 le 25/05, 1.2.0 le 11/06, 1.3.0 le 19/06, 1.3.1 le 08/07, 1.3.2 le 25/07, 1.4.0 le 25/08. Ce que chaque point validait et comment il assurait le suivi qualité |
 | 28 | Le compte rendu type | 0:50 | Le format retenu et un exemple complet sur une version : périmètre livré, écarts, décisions à prendre. Montrer en quoi il **facilite une décision** et ne se limite pas à informer |
 | 29 | Les indicateurs de satisfaction | 0:50 | Les indicateurs réellement en place et leurs mesures : recommandation moyenne 9,6 sur 10 (7 répondants sur 17, limite d'échantillon assumée), 74 % des soirées menées jusqu'au tirage, 18 % d'adoption des notifications, latence p95 à 207 ms, taux d'erreur de 0,026 %. Et surtout : les deux décisions produit que ces retours ont déclenchées |
 
@@ -213,13 +213,15 @@ Un fichier source par chapitre, qui alimente les diapositives. Le support ne se 
 
 | Fichier | Alimente | État |
 |---------|----------|------|
-| `01-planification.md` | Diapos 4 à 10, C3.1 | À produire |
+| `01-planification.md` | Diapos 4 à 10, C3.1 | ✅ Produit |
 | `02-suivi-indicateurs.md` | Diapos 11 à 15, C3.2.1 | À produire |
 | `03-arbitrage.md` | Diapos 16 à 18, C3.2.2 | À produire |
 | `04-management-equipe.md` | Diapos 19 à 23, C3.3.1 | À produire |
 | `05-competences.md` | Diapos 24 à 26, C3.3.2 | À produire |
 | `06-comptes-rendus.md` | Diapos 27 à 29, C3.4.1 | À produire |
 | `07-demonstration.md` | Diapos 30 et 31, C3.4.2 | À produire |
-| `slides/slides.md` | Le support complet | À produire |
+| `slides/slides.md` | Le support complet | 🟡 Chapitres 0 et 1, diapos 1 à 10 |
+
+**Règle de numérotation du support** : aucune diapositive de séparation de chapitre. La page `N` de Slidev correspond exactement à la diapositive `N` de ce plan, et donc au rattachement des 14 éléments imposés du § 1. Le titre de chapitre est porté par la première diapositive du chapitre. Toute insertion impose de mettre à jour ce plan et la table `REFS` de `global-bottom.vue` dans le même mouvement.
 
 Deux actions hors rédaction restent à mener : structurer le tableau GitHub Projects, et relever les mesures de coût d'infrastructure réel pour la diapositive 14.
