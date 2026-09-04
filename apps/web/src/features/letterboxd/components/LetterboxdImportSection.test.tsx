@@ -362,9 +362,7 @@ describe('LetterboxdImportSection (MSW)', () => {
 
     renderAccount();
 
-    const pendingButton = await screen.findByRole('button', {
-      name: /Réconciliation en attente : 2 film\(s\)/,
-    });
+    const pendingButton = await screen.findByRole('button', { name: 'Les confirmer' });
     await user.click(pendingButton);
 
     expect(
@@ -375,9 +373,7 @@ describe('LetterboxdImportSection (MSW)', () => {
 
     expect(await screen.findByText('1 film(s) ajouté(s).')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Choisir pour 1 film/ })).toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: /Réconciliation en attente : 2 film\(s\)/ })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Les confirmer' })).not.toBeInTheDocument();
   });
 
   it('liste les films introuvables sur TMDB dans un dépliant', async () => {
