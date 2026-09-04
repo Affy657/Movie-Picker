@@ -9,11 +9,6 @@
 @import '@fontsource/overpass/latin-600.css';
 @import '@fontsource/overpass/latin-700.css';
 @import '@fontsource/overpass/latin-800.css';
-@import '@fontsource/overpass/latin-ext-400.css';
-@import '@fontsource/overpass/latin-ext-500.css';
-@import '@fontsource/overpass/latin-ext-600.css';
-@import '@fontsource/overpass/latin-ext-700.css';
-@import '@fontsource/overpass/latin-ext-800.css';
 
 @import './styles/01-foundation.css';
 @import './styles/02-forms-and-content.css';

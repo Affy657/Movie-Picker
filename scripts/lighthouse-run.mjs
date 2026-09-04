@@ -192,7 +192,43 @@ const mins = budgets.minimumScores;
 
 fs.mkdirSync(OUT, { recursive: true });
 
-const serve = spawn(`pnpm exec serve -s "${DIST}" -l ${PORT}`, {
+const serveConfigPath = path.join(DIST, 'serve.json');
+fs.writeFileSync(
+  serveConfigPath,
+  JSON.stringify({
+    headers: [
+      {
+        source: 'assets/**',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: 'icons/**',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '**/*.@(woff2|svg|png)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ],
+  })
+);
+
+const serve = spawn(`pnpm exec serve -s "${DIST}" -l ${PORT} -c "${serveConfigPath}"`, {
   cwd: ROOT,
   stdio: 'ignore',
   shell: true,

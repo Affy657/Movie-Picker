@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { defineConfig, loadEnv, type Plugin } from 'vite';
+import { defineConfig, loadEnv, type HtmlTagDescriptor, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
@@ -90,30 +90,57 @@ function cspMetaPlugin(apiOrigin: string, sentryOrigin: string): Plugin {
   };
 }
 
-function preloadFontsPlugin(): Plugin {
+const CRITICAL_FONT_BASES = [
+  'overpass-latin-400-normal',
+  'overpass-latin-700-normal',
+  'overpass-latin-800-normal',
+];
+
+const APP_SHELL_CHUNK = /(?:^|\/)App-[\w-]+\.js$/;
+const APP_SHELL_STYLES = /(?:^|\/)App-[\w-]+\.css$/;
+
+function preloadCriticalAssetsPlugin(): Plugin {
   return {
-    name: 'moviepicker-preload-fonts',
+    name: 'moviepicker-preload-critical-assets',
     apply: 'build',
     enforce: 'post',
     transformIndexHtml(html, ctx) {
-      const bundle = ctx.bundle ?? {};
-      const preloads = ['overpass-latin-400-normal', 'overpass-latin-700-normal']
-        .map((base) => Object.keys(bundle).find((f) => f.includes(base) && f.endsWith('.woff2')))
-        .filter((f): f is string => Boolean(f));
-      return {
-        html,
-        tags: preloads.map((href) => ({
+      const files = Object.keys(ctx.bundle ?? {});
+      const tags: Array<HtmlTagDescriptor> = CRITICAL_FONT_BASES.map((base) =>
+        files.find((file) => file.includes(base) && file.endsWith('.woff2'))
+      )
+        .filter((file): file is string => Boolean(file))
+        .map((file) => ({
           tag: 'link',
           attrs: {
             rel: 'preload',
-            href: '/' + href,
+            href: '/' + file,
             as: 'font',
             type: 'font/woff2',
             crossorigin: '',
           },
           injectTo: 'head-prepend',
-        })),
-      };
+        }));
+
+      const appChunk = files.find((file) => APP_SHELL_CHUNK.test(file));
+      if (appChunk) {
+        tags.push({
+          tag: 'link',
+          attrs: { rel: 'modulepreload', crossorigin: '', href: '/' + appChunk },
+          injectTo: 'head-prepend',
+        });
+      }
+
+      const appStyles = files.find((file) => APP_SHELL_STYLES.test(file));
+      if (appStyles) {
+        tags.push({
+          tag: 'link',
+          attrs: { rel: 'preload', as: 'style', href: '/' + appStyles },
+          injectTo: 'head-prepend',
+        });
+      }
+
+      return { html, tags };
     },
   };
 }
@@ -180,7 +207,7 @@ export default defineConfig(({ mode }) => {
         },
       }),
       cspMetaPlugin(apiOrigin, sentryOrigin),
-      preloadFontsPlugin(),
+      preloadCriticalAssetsPlugin(),
       ...(sentryAuthToken
         ? sentryVitePlugin({
             org: process.env.SENTRY_ORG,

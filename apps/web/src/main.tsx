@@ -10,11 +10,7 @@ startPwaInstallRuntime();
 function hideSplash(): void {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      const splash = document.getElementById('splash');
-      if (splash) {
-        splash.classList.add('out');
-        setTimeout(() => splash.remove(), 260);
-      }
+      document.getElementById('splash')?.remove();
     });
   });
 }

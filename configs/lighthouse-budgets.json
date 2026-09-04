@@ -1,9 +1,9 @@
 {
   "minimumScores": {
     "performance": 80,
-    "accessibility": 98,
-    "best-practices": 95,
-    "seo": 90
+    "accessibility": 100,
+    "best-practices": 100,
+    "seo": 95
   },
-  "notes": "Roadmap MVP §34 — scores sur 100. Seuils relevés après optimisations Lighthouse (contraste a11y, CLS footer, bundle PostHog dynamique + manualChunks, polices latin/latin-ext). Médiane de LH_RUNS runs (défaut 3) pour lisser la variance du runner CI."
+  "notes": "Roadmap MVP §34 — scores sur 100. Seuils a11y / best-practices / seo relevés après contrastes AA, cache immutable des assets hachés et polices latin uniquement. Médiane de LH_RUNS runs (défaut 3) pour lisser la variance du runner CI. La perf reste à 80 pour absorber un runner CI plus lent : en local les médianes vont de 88 (watchlist) à 96 (legal / privacy / donate) depuis le préchargement du chunk App et de sa CSS. SEO 95 s'applique aux pages indexables uniquement."
 }
