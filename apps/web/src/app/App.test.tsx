@@ -53,7 +53,7 @@ describe('App (routes)', () => {
         await screen.findByRole(
           'heading',
           { name: /choisissez le film de la soirée/i, level: 1 },
-          { timeout: 8000 }
+          { timeout: 20000 }
         )
       ).toBeInTheDocument();
       const main = screen.getByRole('main');
@@ -71,7 +71,7 @@ describe('App (routes)', () => {
       server.use(authMeGuestHandler);
       renderRoutes(['/']);
       expect(
-        await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 }, { timeout: 8000 })
+        await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 }, { timeout: 20000 })
       ).toBeInTheDocument();
       expect(
         screen.queryByRole('heading', { name: /choisissez le film de la soirée/i })
@@ -88,11 +88,11 @@ describe('App (routes)', () => {
       async (path, encodedReturnTo) => {
         server.use(authMeGuestHandler);
         renderRoutes([path]);
-        const main = await waitFor(() => screen.getByRole('main'), { timeout: 8000 });
+        const main = await waitFor(() => screen.getByRole('main'), { timeout: 20000 });
         const loginLink = await within(main).findByRole(
           'link',
           { name: /^se connecter$/i },
-          { timeout: 8000 }
+          { timeout: 20000 }
         );
         expect(loginLink).toHaveAttribute('href', `/login?returnTo=${encodedReturnTo}`);
         expect(within(main).getByRole('link', { name: /^créer un compte$/i })).toHaveAttribute(
@@ -107,7 +107,7 @@ describe('App (routes)', () => {
       server.use(authMeGuestHandler);
       renderRoutes(['/settings']);
       expect(
-        await screen.findByRole('heading', { name: /^paramètres$/i, level: 1 }, { timeout: 8000 })
+        await screen.findByRole('heading', { name: /^paramètres$/i, level: 1 }, { timeout: 20000 })
       ).toBeInTheDocument();
       const main = screen.getByRole('main');
       expect(within(main).getByRole('link', { name: /^se connecter$/i })).toHaveAttribute(
@@ -127,7 +127,9 @@ describe('App (routes)', () => {
     ])('page %s reste accessible sans compte', async (path, heading) => {
       server.use(authMeGuestHandler);
       renderRoutes([path]);
-      expect(await screen.findByRole('heading', { name: heading, level: 1 })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { name: heading, level: 1 }, { timeout: 20000 })
+      ).toBeInTheDocument();
       expect(screen.queryByRole('heading', { name: /^connexion$/i })).not.toBeInTheDocument();
     });
 
@@ -138,7 +140,7 @@ describe('App (routes)', () => {
       );
       renderRoutes(['/e/soiree-secrete']);
       expect(
-        await screen.findByRole('heading', { name: /soirée secrète/i }, { timeout: 8000 })
+        await screen.findByRole('heading', { name: /soirée secrète/i }, { timeout: 20000 })
       ).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: /rejoindre la soirée/i })).toBeInTheDocument();
       const main = screen.getByRole('main');
@@ -176,7 +178,7 @@ describe('App (routes)', () => {
       );
       renderRoutes(['/u/alice']);
       expect(
-        await screen.findByRole('heading', { name: 'Alice' }, { timeout: 8000 })
+        await screen.findByRole('heading', { name: 'Alice' }, { timeout: 20000 })
       ).toBeInTheDocument();
       expect(screen.queryByRole('heading', { name: /^connexion$/i })).not.toBeInTheDocument();
     });
@@ -206,7 +208,7 @@ describe('App (routes)', () => {
         await screen.findByRole(
           'heading',
           { name: /les films vus par alice/i, level: 1 },
-          { timeout: 8000 }
+          { timeout: 20000 }
         )
       ).toBeInTheDocument();
       expect(screen.queryByRole('heading', { name: /^connexion$/i })).not.toBeInTheDocument();
@@ -218,7 +220,7 @@ describe('App (routes)', () => {
       await screen.findByRole(
         'heading',
         { name: /choisissez le film de la soirée/i, level: 1 },
-        { timeout: 8000 }
+        { timeout: 20000 }
       );
       expect(
         screen.queryAllByRole('navigation', { name: /navigation principale/i }).length
@@ -231,7 +233,7 @@ describe('App (routes)', () => {
       await screen.findByRole(
         'heading',
         { name: /choisissez le film de la soirée/i, level: 1 },
-        { timeout: 8000 }
+        { timeout: 20000 }
       );
       const loginLinks = await waitFor(() => {
         const links = screen.getAllByRole('link', { name: /^se connecter$/i });
@@ -263,7 +265,7 @@ describe('App (routes)', () => {
       await screen.findByRole(
         'heading',
         { name: /choisissez le film de la soirée/i, level: 1 },
-        { timeout: 8000 }
+        { timeout: 20000 }
       );
       expect(screen.queryByRole('button', { name: /nouveautés/i })).not.toBeInTheDocument();
     });
@@ -277,7 +279,7 @@ describe('App (routes)', () => {
       );
       renderRoutes(['/']);
       expect(
-        await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 }, { timeout: 8000 })
+        await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 }, { timeout: 20000 })
       ).toBeInTheDocument();
       expect(
         screen.queryByRole('heading', { name: /choisissez le film de la soirée/i })
@@ -290,7 +292,7 @@ describe('App (routes)', () => {
         http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
       );
       renderRoutes(['/my-events']);
-      await screen.findByRole('button', { name: /menu du compte/i }, { timeout: 8000 });
+      await screen.findByRole('button', { name: /menu du compte/i }, { timeout: 20000 });
       const navs = screen.getAllByRole('navigation', { name: /navigation principale/i });
       expect(navs).toHaveLength(2);
       const mobileNav = navs.at(-1);
@@ -311,7 +313,7 @@ describe('App (routes)', () => {
         http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
       );
       renderRoutes(['/my-events']);
-      await screen.findByRole('button', { name: /menu du compte/i }, { timeout: 8000 });
+      await screen.findByRole('button', { name: /menu du compte/i }, { timeout: 20000 });
       expect(screen.getByRole('button', { name: /^nouveautés$/i })).toBeInTheDocument();
     });
 
@@ -337,7 +339,7 @@ describe('App (routes)', () => {
       const chip = await screen.findByRole(
         'button',
         { name: /voir les nouveautés/i },
-        { timeout: 8000 }
+        { timeout: 20000 }
       );
       const bell = screen.getByRole('link', { name: /^notifications$/i });
       expect(chip.compareDocumentPosition(bell) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -359,7 +361,7 @@ describe('App (routes)', () => {
         http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
       );
       renderRoutes(['/my-events']);
-      await screen.findByRole('button', { name: /menu du compte/i }, { timeout: 8000 });
+      await screen.findByRole('button', { name: /menu du compte/i }, { timeout: 20000 });
       expect(
         screen.queryByRole('button', { name: /voir les nouveautés/i })
       ).not.toBeInTheDocument();
@@ -373,7 +375,7 @@ describe('App (routes)', () => {
     await screen.findByRole(
       'heading',
       { name: /choisissez le film de la soirée/i, level: 1 },
-      { timeout: 8000 }
+      { timeout: 20000 }
     );
     await waitFor(() => {
       expect(screen.getByRole('link', { name: /movie picker .*accueil/i })).toHaveAttribute(

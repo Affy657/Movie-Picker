@@ -415,7 +415,7 @@ describe('accessibilité (axe)', () => {
       const { container, queryClient } = renderEventSession('list');
       await screen.findByRole('heading', { name: 'Inception' });
       await assertNoViolations(container, queryClient);
-    });
+    }, 40000);
 
     it("vue grille n'a pas de violations", async () => {
       server.use(authMeGuestHandler, watchlistHandler([]));

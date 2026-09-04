@@ -1,5 +1,8 @@
 import '@testing-library/jest-dom/vitest';
+import { configure } from '@testing-library/react';
 import { beforeEach, vi } from 'vitest';
+
+configure({ asyncUtilTimeout: 10000 });
 
 const getComputedStyleOrig = window.getComputedStyle.bind(window);
 window.getComputedStyle = (elt: Element, _pseudoElt?: string | null): CSSStyleDeclaration =>

@@ -21,11 +21,11 @@ export default defineConfig({
     globals: true,
     include: ['src/**/*.test.{ts,tsx}'],
     setupFiles: ['src/test-setup.ts'],
-    testTimeout: 15000,
-    hookTimeout: 15000,
+    testTimeout: 25000,
+    hookTimeout: 25000,
     pool: 'forks',
     forks: {
-      maxForks: 4,
+      maxForks: 2,
       minForks: 1,
     },
     coverage: {

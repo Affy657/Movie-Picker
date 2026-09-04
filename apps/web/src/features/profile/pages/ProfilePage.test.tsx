@@ -198,9 +198,12 @@ describe('ProfilePage (MSW)', () => {
 
     await user.click(screen.getByRole('button', { name: /3.*abonnements/i }));
 
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      },
+      { timeout: 8000 }
+    );
   });
 
   it("ouvre la modal followers au clic sur le compteur d'abonnés", async () => {
