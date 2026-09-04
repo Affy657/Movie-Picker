@@ -572,6 +572,7 @@ jobs:
             exit 1
           }
       - name: Enregistrer le déploiement Sentry (API)
+        continue-on-error: true
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ vars.SENTRY_ORG }}
@@ -586,6 +587,7 @@ jobs:
           chmod +x sentry-cli
           extra=()
           if [ -n "$SENTRY_URL" ]; then extra+=(--url "$SENTRY_URL"); fi
+          ./sentry-cli "${extra[@]}" releases new "$SENTRY_RELEASE" || true
           ./sentry-cli "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e production -n "api-${{ github.sha }}"
 
   deploy-front:
@@ -696,6 +698,7 @@ jobs:
           echo "GET / -> $code"
           test "$code" = "200"
       - name: Enregistrer le déploiement Sentry (front)
+        continue-on-error: true
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ vars.SENTRY_ORG }}
@@ -708,4 +711,5 @@ jobs:
           fi
           extra=()
           if [ -n "$SENTRY_URL" ]; then extra+=(--url "$SENTRY_URL"); fi
+          pnpm --filter web exec sentry-cli -- "${extra[@]}" releases new "$SENTRY_RELEASE" || true
           pnpm --filter web exec sentry-cli -- "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e production -n "front-${{ github.sha }}"
