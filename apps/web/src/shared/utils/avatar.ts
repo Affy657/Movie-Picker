@@ -1,4 +1,3 @@
-// Must match regex in AuthDtos.cs → PatchUserProfileRequest.AvatarId
 export const BOTTTS_IDS = [
   'alpha',
   'beta',

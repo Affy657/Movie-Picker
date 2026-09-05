@@ -185,11 +185,6 @@ public sealed class MongoUserRepository : IUserRepository
         return result.IsAcknowledged && result.DeletedCount > 0;
     }
 
-    /// <summary>
-    /// Rethrows a duplicate-key error as a <see cref="ConflictException"/> with a message
-    /// that indicates whether the collision is on the handle index or the email index.
-    /// This lets callers distinguish the two cases without depending on MongoDB internals.
-    /// </summary>
     private static void ThrowTypedDuplicateKey(MongoWriteException ex)
     {
         var msg = ex.WriteError?.Message ?? string.Empty;

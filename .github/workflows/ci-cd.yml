@@ -120,6 +120,7 @@ jobs:
           key: turbo-lintweb-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
             turbo-lintweb-${{ runner.os }}-
+      - run: pnpm run check:architecture
       - run: pnpm run lint
       - run: pnpm run lint:eslint
       - run: pnpm run format:check

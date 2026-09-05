@@ -242,10 +242,6 @@ export default function AddMovieForm({
 
   useEffect(() => {
     const trimmed = trimmedForSearch;
-    // Un changement de filtre ne doit jamais declencher de recherche automatique
-    // tant que la barre est vide (ou trop courte) : les filtres seuls ne
-    // suffisent pas a lancer une recherche implicite, seule une recherche
-    // explicite (bouton / Entree, cf. searchAllowed) peut le faire.
     const shouldSearch = trimmed.length >= SEARCH_MIN_CHARS;
 
     if (!shouldSearch) {

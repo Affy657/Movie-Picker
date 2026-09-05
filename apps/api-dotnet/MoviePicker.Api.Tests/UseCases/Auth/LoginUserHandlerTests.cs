@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Identity;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
@@ -29,13 +28,13 @@ public sealed class LoginUserHandlerTests
         var users = new Mock<IUserRepository>();
         users.Setup(x => x.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
-        var hasher = new Mock<IPasswordHasher<User>>();
+        var hasher = new Mock<IPasswordHasher>();
         var handler = new LoginUserHandler(users.Object, hasher.Object);
 
         await Assert.ThrowsAsync<UnauthorizedException>(() =>
             handler.HandleAsync(new LoginRequest { Email = "x@y.z", Password = "abcd1234" }));
         hasher.Verify(
-            x => x.VerifyHashedPassword(It.IsAny<User>(), It.IsAny<string>(), It.IsAny<string>()),
+            x => x.Verify(It.IsAny<string>(), It.IsAny<string>()),
             Times.Never);
     }
 
@@ -45,10 +44,10 @@ public sealed class LoginUserHandlerTests
         var user = SampleUser();
         var users = new Mock<IUserRepository>();
         users.Setup(x => x.GetByEmailAsync("a@b.co", It.IsAny<CancellationToken>())).ReturnsAsync(user);
-        var hasher = new Mock<IPasswordHasher<User>>();
+        var hasher = new Mock<IPasswordHasher>();
         hasher
-            .Setup(x => x.VerifyHashedPassword(user, user.PasswordHash, "wrong"))
-            .Returns(PasswordVerificationResult.Failed);
+            .Setup(x => x.Verify(user.PasswordHash, "wrong"))
+            .Returns(PasswordVerification.Failed);
         var handler = new LoginUserHandler(users.Object, hasher.Object);
 
         await Assert.ThrowsAsync<UnauthorizedException>(() =>
@@ -61,13 +60,13 @@ public sealed class LoginUserHandlerTests
         var user = SampleUser() with { PasswordHash = string.Empty };
         var users = new Mock<IUserRepository>();
         users.Setup(x => x.GetByEmailAsync("a@b.co", It.IsAny<CancellationToken>())).ReturnsAsync(user);
-        var hasher = new Mock<IPasswordHasher<User>>();
+        var hasher = new Mock<IPasswordHasher>();
         var handler = new LoginUserHandler(users.Object, hasher.Object);
 
         await Assert.ThrowsAsync<UnauthorizedException>(() =>
             handler.HandleAsync(new LoginRequest { Email = "a@b.co", Password = "abcd1234" }));
         hasher.Verify(
-            x => x.VerifyHashedPassword(It.IsAny<User>(), It.IsAny<string>(), It.IsAny<string>()),
+            x => x.Verify(It.IsAny<string>(), It.IsAny<string>()),
             Times.Never);
     }
 
@@ -77,10 +76,10 @@ public sealed class LoginUserHandlerTests
         var user = SampleUser();
         var users = new Mock<IUserRepository>();
         users.Setup(x => x.GetByEmailAsync("a@b.co", It.IsAny<CancellationToken>())).ReturnsAsync(user);
-        var hasher = new Mock<IPasswordHasher<User>>();
+        var hasher = new Mock<IPasswordHasher>();
         hasher
-            .Setup(x => x.VerifyHashedPassword(user, user.PasswordHash, "abcd1234"))
-            .Returns(PasswordVerificationResult.Success);
+            .Setup(x => x.Verify(user.PasswordHash, "abcd1234"))
+            .Returns(PasswordVerification.Success);
         var handler = new LoginUserHandler(users.Object, hasher.Object);
 
         var res = await handler.HandleAsync(new LoginRequest { Email = "a@b.co", Password = "abcd1234" });

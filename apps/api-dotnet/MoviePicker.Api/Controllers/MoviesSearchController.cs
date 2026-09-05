@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
-using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.GetMovieDetails;
 using MoviePicker.Api.Application.UseCases.SearchMovies;
 using MoviePicker.Api.Domain.Entities;
@@ -30,23 +29,8 @@ public sealed class MoviesSearchController : ControllerBase
         [FromQuery] int? runtimeMin,
         [FromQuery] int? runtimeMax,
         [FromServices] ISearchMoviesHandler handler,
-        [FromServices] IEventRepository eventRepository,
         CancellationToken ct)
     {
-        bool allowSeries = false;
-        if (!string.IsNullOrWhiteSpace(eventSlug))
-        {
-            try
-            {
-                var evt = await eventRepository.GetRequiredByIdOrSlugAsync(eventSlug, ct);
-                allowSeries = evt.Config?.AllowSeries ?? false;
-            }
-            catch
-            {
-                allowSeries = false;
-            }
-        }
-
         var parsedGenreIds = ParseGenreIds(genreIds);
         MovieSearchFilters? filters = null;
         if (parsedGenreIds.Count > 0 || yearFrom.HasValue || yearTo.HasValue || voteMin.HasValue
@@ -54,7 +38,7 @@ public sealed class MoviesSearchController : ControllerBase
             filters = new MovieSearchFilters(
                 parsedGenreIds, yearFrom, yearTo, voteMin, language?.Trim().ToLowerInvariant(), runtimeMin, runtimeMax);
 
-        var results = await handler.HandleAsync(q ?? string.Empty, allowSeries, filters, ct);
+        var results = await handler.HandleAsync(q ?? string.Empty, eventSlug, filters, ct);
         return Ok(results);
     }
 

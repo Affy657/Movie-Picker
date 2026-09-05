@@ -25,7 +25,6 @@ public static partial class HandlePolicy
 
     public static bool IsReserved(string normalized) => Reserved.Contains(normalized);
 
-    /// <summary>Returns an error message when the handle is invalid, or null when valid.</summary>
     public static string? Validate(string? raw)
     {
         var normalized = Normalize(raw);
@@ -51,11 +50,6 @@ public static partial class HandlePolicy
         return null;
     }
 
-    /// <summary>
-    /// Builds a candidate handle base from a display name: lowercases, strips accents,
-    /// keeps [a-z0-9_], collapses the rest, and pads/truncates to the allowed length.
-    /// Never returns a reserved or empty value (falls back to "user").
-    /// </summary>
     public static string SlugifyBase(string? displayName)
     {
         var normalized = (displayName ?? string.Empty).Normalize(NormalizationForm.FormD);

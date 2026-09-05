@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
@@ -7,6 +6,7 @@ using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
+using MoviePicker.Api.Infrastructure.Security;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.Auth;
@@ -26,7 +26,7 @@ public sealed class DeleteAccountHandlerTests
         public InMemoryVoteRepository Votes { get; } = new();
         public InMemorySeenMarkRepository SeenMarks { get; } = new();
         public Mock<IAuthSessionInvalidator> Sessions { get; } = new();
-        public PasswordHasher<User> Hasher { get; } = new PasswordHasher<User>();
+        public IdentityPasswordHasher Hasher { get; } = new IdentityPasswordHasher();
 
         public DeleteAccountHandler CreateHandler() =>
             new(
@@ -53,7 +53,7 @@ public sealed class DeleteAccountHandlerTests
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
-        user = user with { PasswordHash = f.Hasher.HashPassword(user, password) };
+        user = user with { PasswordHash = f.Hasher.Hash(password) };
         return await f.Users.AddAsync(user);
     }
 

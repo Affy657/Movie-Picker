@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
@@ -12,7 +11,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
     public const string AnonymizedParticipantPseudo = "Compte supprimé";
 
     private readonly IUserRepository _users;
-    private readonly IPasswordHasher<User> _passwordHasher;
+    private readonly IPasswordHasher _passwordHasher;
     private readonly IEventRepository _events;
     private readonly IParticipantRepository _participants;
     private readonly IUserNotificationRepository _notifications;
@@ -25,7 +24,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
 
     public DeleteAccountHandler(
         IUserRepository users,
-        IPasswordHasher<User> passwordHasher,
+        IPasswordHasher passwordHasher,
         IEventRepository events,
         IParticipantRepository participants,
         IUserNotificationRepository notifications,
@@ -67,8 +66,8 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         }
         else
         {
-            var verify = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password ?? string.Empty);
-            if (verify == PasswordVerificationResult.Failed)
+            var verify = _passwordHasher.Verify(user.PasswordHash, request.Password ?? string.Empty);
+            if (verify == PasswordVerification.Failed)
             {
                 _logger.LogWarning("DeleteAccount: incorrect password for {UserId}", userId);
                 throw new UnauthorizedException("Mot de passe incorrect.");

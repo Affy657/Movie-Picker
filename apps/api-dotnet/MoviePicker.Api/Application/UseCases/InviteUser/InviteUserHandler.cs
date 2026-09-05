@@ -69,9 +69,6 @@ public sealed class InviteUserHandler : IInviteUserHandler
 
         var actor = await _users.GetByIdAsync(currentUserId, ct);
 
-        // L'invitation reste toujours créée en in-app (c'est le mécanisme même de l'invitation,
-        // pas une simple notification informative) : la désactiver couperait la fonctionnalité.
-        // Seul l'envoi du push est gaté par la préférence de l'invité.
         await _notifications.AddAsync(new UserNotification
         {
             UserId = targetUserId,

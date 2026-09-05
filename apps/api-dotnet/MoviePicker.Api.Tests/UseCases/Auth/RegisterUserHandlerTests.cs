@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
@@ -27,7 +26,7 @@ public sealed class RegisterUserHandlerTests
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow
             });
-        var hasher = new Mock<IPasswordHasher<User>>();
+        var hasher = new Mock<IPasswordHasher>();
         var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance);
 
         await Assert.ThrowsAsync<ConflictException>(() =>
@@ -41,7 +40,7 @@ public sealed class RegisterUserHandlerTests
         var users = new Mock<IUserRepository>();
         users.Setup(x => x.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
-        var hasher = new Mock<IPasswordHasher<User>>();
+        var hasher = new Mock<IPasswordHasher>();
         var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance);
 
         await Assert.ThrowsAsync<BadRequestException>(() =>
@@ -55,7 +54,7 @@ public sealed class RegisterUserHandlerTests
         var users = new Mock<IUserRepository>();
         users.Setup(x => x.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
-        var hasher = new Mock<IPasswordHasher<User>>();
+        var hasher = new Mock<IPasswordHasher>();
         var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance);
 
         await Assert.ThrowsAsync<BadRequestException>(() =>
@@ -69,7 +68,7 @@ public sealed class RegisterUserHandlerTests
         var users = new Mock<IUserRepository>();
         users.Setup(x => x.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
-        var hasher = new Mock<IPasswordHasher<User>>();
+        var hasher = new Mock<IPasswordHasher>();
         var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance);
 
         await Assert.ThrowsAsync<BadRequestException>(() =>
@@ -100,9 +99,9 @@ public sealed class RegisterUserHandlerTests
                     UpdatedAt = u.UpdatedAt
                 };
             });
-        var hasher = new Mock<IPasswordHasher<User>>();
+        var hasher = new Mock<IPasswordHasher>();
         hasher
-            .Setup(x => x.HashPassword(It.IsAny<User>(), "abcd1234"))
+            .Setup(x => x.Hash("abcd1234"))
             .Returns("HASH_FROM_HASHER");
 
         var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance);
@@ -131,8 +130,8 @@ public sealed class RegisterUserHandlerTests
                 captured = u;
                 return u with { Id = "generated-id" };
             });
-        var hasher = new Mock<IPasswordHasher<User>>();
-        hasher.Setup(x => x.HashPassword(It.IsAny<User>(), It.IsAny<string>())).Returns("HASH");
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Hash(It.IsAny<string>())).Returns("HASH");
 
         var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance);
         await handler.HandleAsync(
@@ -158,8 +157,8 @@ public sealed class RegisterUserHandlerTests
                 captured = u;
                 return u with { Id = "id2" };
             });
-        var hasher = new Mock<IPasswordHasher<User>>();
-        hasher.Setup(x => x.HashPassword(It.IsAny<User>(), It.IsAny<string>())).Returns("HASH");
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Hash(It.IsAny<string>())).Returns("HASH");
 
         var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance);
         await handler.HandleAsync(

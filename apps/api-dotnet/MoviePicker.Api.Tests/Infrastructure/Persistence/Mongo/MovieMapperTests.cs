@@ -62,7 +62,6 @@ public sealed class MovieMapperTests
         var domain = new Movie { Id = "m1", EventId = "e1", ParticipantId = "p1", TmdbId = 1, Title = "X", Year = "2020", GenreIds = [], CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         var doc = MovieMapper.ToDocument(domain);
         Assert.Null(doc.GenreIds);
-        // null round-trips back to an empty (never null) list.
         Assert.Empty(MovieMapper.ToDomain(doc).GenreIds);
     }
 

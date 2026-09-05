@@ -40,9 +40,6 @@ public sealed class MoviePickerApplicationFactory : WebApplicationFactory<Progra
             services.RemoveAll<IGitHubIssueClient>();
             services.AddSingleton<IGitHubIssueClient>(FakeGitHubIssues);
 
-            // Force the deterministic, offline TMDB stub: AddMovie now fetches genres on add,
-            // and the E2E_STUB_TMDB config flag isn't honoured under the minimal-hosting factory
-            // (AddMoviePicker runs before the in-memory config is merged).
             services.RemoveAll<ITmdbMovieSearch>();
             services.AddSingleton<ITmdbMovieSearch, StubTmdbMovieSearch>();
         });

@@ -207,13 +207,11 @@ public sealed class MongoIndexInitializer : IHostedService
                 .Ascending(x => x.FollowerId)
                 .Ascending(x => x.FolloweeId),
             new CreateIndexOptions { Name = "follows_followerId_followeeId_unique", Unique = true });
-        // Index pour GetFollowingIdsAsync : query par FollowerId + tri par CreatedAt
         var byFollowerDate = new CreateIndexModel<FollowDocument>(
             Builders<FollowDocument>.IndexKeys
                 .Ascending(x => x.FollowerId)
                 .Descending(x => x.CreatedAt),
             new CreateIndexOptions { Name = "follows_followerId_createdAt" });
-        // Index pour GetFollowerIdsAsync : query par FolloweeId + tri par CreatedAt
         var byFolloweeDate = new CreateIndexModel<FollowDocument>(
             Builders<FollowDocument>.IndexKeys
                 .Ascending(x => x.FolloweeId)
@@ -236,10 +234,6 @@ public sealed class MongoIndexInitializer : IHostedService
                 .Ascending(x => x.UserId)
                 .Descending(x => x.CreatedAt),
             new CreateIndexOptions { Name = "watchlist_userId_createdAt" });
-        // RuntimeMinutes is [BsonIgnoreIfNull], so it's never stored as a literal null - only
-        // present or absent. A partial index can't express "$exists: false" (Mongo rejects it
-        // as an unsupported $not), but a regular index already covers missing/null values at
-        // its low end, so ListMissingRuntimeAsync's scan is covered without a partial filter.
         var missingRuntime = new CreateIndexModel<WatchlistItemDocument>(
             Builders<WatchlistItemDocument>.IndexKeys.Ascending(x => x.RuntimeMinutes),
             new CreateIndexOptions { Name = "watchlist_runtimeMinutes_missing" });
@@ -301,7 +295,6 @@ public sealed class MongoIndexInitializer : IHostedService
         try { await col.Indexes.DropOneAsync(name, ct); }
         catch (MongoCommandException ex) when (ex.Code == MongoErrorCodes.IndexNotFound)
         {
-            // L'index n'existe pas — rien à supprimer.
         }
     }
 }

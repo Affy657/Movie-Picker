@@ -287,8 +287,6 @@
   justify-self: center;
 }
 
-/* En-tête de colonnes */
-
 .colHeaderCell {
   min-width: 0;
 }
@@ -338,8 +336,6 @@
 .colHeaderBtnActive {
   color: var(--color-primary);
 }
-
-/* Vue mobile : 3 niveaux, hauteur constante */
 
 .mobileRow {
   position: relative;

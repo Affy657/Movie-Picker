@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -17,6 +16,7 @@ using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
 using MoviePicker.Api.Infrastructure.Posters;
 using MoviePicker.Api.Infrastructure.Push;
+using MoviePicker.Api.Infrastructure.Security;
 using MoviePicker.Api.Infrastructure.Tmdb;
 using MoviePicker.Api.Infrastructure.Web;
 
@@ -63,7 +63,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
 
         services.AddSingleton(TimeProvider.System);
-        services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
+        services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
         services.AddEmailSender(configuration, environment);
         services.AddSingleton<IPushNotificationSender, WebPushSender>();
         services.AddHostedService<EventReminderService>();

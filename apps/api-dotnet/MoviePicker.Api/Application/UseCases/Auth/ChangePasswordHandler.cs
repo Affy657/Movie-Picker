@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
@@ -10,14 +9,14 @@ namespace MoviePicker.Api.Application.UseCases.Auth;
 public sealed class ChangePasswordHandler : IChangePasswordHandler
 {
     private readonly IUserRepository _users;
-    private readonly IPasswordHasher<User> _passwordHasher;
+    private readonly IPasswordHasher _passwordHasher;
     private readonly IAuthSessionInvalidator _sessionInvalidator;
     private readonly TimeProvider _clock;
     private readonly ILogger<ChangePasswordHandler> _logger;
 
     public ChangePasswordHandler(
         IUserRepository users,
-        IPasswordHasher<User> passwordHasher,
+        IPasswordHasher passwordHasher,
         IAuthSessionInvalidator sessionInvalidator,
         TimeProvider clock,
         ILogger<ChangePasswordHandler> logger)
@@ -35,9 +34,8 @@ public sealed class ChangePasswordHandler : IChangePasswordHandler
 
         if (!string.IsNullOrEmpty(user.PasswordHash))
         {
-            var verify = _passwordHasher.VerifyHashedPassword(
-                user, user.PasswordHash, request.CurrentPassword ?? string.Empty);
-            if (verify == PasswordVerificationResult.Failed)
+            var verify = _passwordHasher.Verify(user.PasswordHash, request.CurrentPassword ?? string.Empty);
+            if (verify == PasswordVerification.Failed)
             {
                 _logger.LogWarning("ChangePassword: incorrect current password for {UserId}", userId);
                 throw new UnauthorizedException("Mot de passe actuel incorrect.");
@@ -49,7 +47,7 @@ public sealed class ChangePasswordHandler : IChangePasswordHandler
             throw new BadRequestException(validationError);
 
         var now = _clock.GetUtcNow();
-        var newHash = _passwordHasher.HashPassword(user, request.NewPassword);
+        var newHash = _passwordHasher.Hash(request.NewPassword);
         var updated = user with { PasswordHash = newHash, UpdatedAt = now };
         await _users.UpdateAsync(updated, ct);
 

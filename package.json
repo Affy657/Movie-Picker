@@ -2,7 +2,7 @@
   "name": "movie-picker",
   "private": true,
   "simple-git-hooks": {
-    "pre-push": "pnpm run lint && pnpm run format:check"
+    "pre-push": "pnpm run check:architecture && pnpm run lint && pnpm run format:check"
   },
   "scripts": {
     "prepare": "simple-git-hooks",
@@ -15,6 +15,7 @@
     "dev:full": "concurrently -n web,api -c blue,green \"pnpm run dev:web\" \"pnpm run dev:api-dotnet\"",
     "lint": "turbo run lint",
     "lint:eslint": "eslint \"apps/web/src/**/*.{ts,tsx}\"",
+    "check:architecture": "node scripts/check-architecture.mjs",
     "format": "prettier --write \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts eslint.config.mjs",
     "format:check": "prettier --check \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts eslint.config.mjs",
     "format:dotnet": "dotnet format apps/api-dotnet/MoviePicker.slnx --verbosity minimal",

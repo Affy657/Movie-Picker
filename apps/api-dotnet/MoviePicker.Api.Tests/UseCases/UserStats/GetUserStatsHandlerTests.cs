@@ -133,7 +133,6 @@ public sealed class GetUserStatsHandlerTests
         Assert.Equal(0, res.CurrentStreakWeeks);
         Assert.Equal(0, res.BestStreakWeeks);
         Assert.Empty(res.FavoriteGenres);
-        // 2026-06-15 is a Monday → 26-week window starts on Monday 2025-12-22 and ends today (176 days).
         Assert.Equal(176, res.DailyActivity.Count);
         Assert.Equal("2025-12-22", res.DailyActivity[0].Date);
         Assert.Equal("2026-06-15", res.DailyActivity[^1].Date);
@@ -146,7 +145,6 @@ public sealed class GetUserStatsHandlerTests
         var handler = Build();
         _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
 
-        // p1 → event A (created by the user, soirée 2026-06-01), p2 → event B (joined only, soirée 2026-05-01).
         var parts = new[]
         {
             Part("p1", "A", new DateTimeOffset(2026, 5, 20, 0, 0, 0, TimeSpan.Zero)),
@@ -166,13 +164,12 @@ public sealed class GetUserStatsHandlerTests
         var res = await handler.HandleAsync("alice");
 
         Assert.Equal(1, res.EventsCreated);
-        Assert.Equal(1, res.EventsJoined); // participated in {A,B}, created {A} → 1 joined
+        Assert.Equal(1, res.EventsJoined);
         Assert.Equal(3, res.MoviesProposed);
         Assert.Equal(5, res.VotesCast);
         Assert.Equal(2, res.MoviesSeen);
         Assert.Equal(1, res.WinningProposals);
 
-        // Genre 28 ×2, genre 878 ×1 → sorted by count desc then id asc.
         Assert.Equal(2, res.FavoriteGenres.Count);
         Assert.Equal(28, res.FavoriteGenres[0].GenreId);
         Assert.Equal(2, res.FavoriteGenres[0].Count);
@@ -198,9 +195,9 @@ public sealed class GetUserStatsHandlerTests
         _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
-                Evt("A", "2026-06-10"),  // in window
-                Evt("B", "2026-01-05"),  // in window
-                Evt("C", "2025-12-01"),  // before 2025-12-22 → dropped
+                Evt("A", "2026-06-10"),
+                Evt("B", "2026-01-05"),
+                Evt("C", "2025-12-01"),
             });
 
         var res = await handler.HandleAsync("alice");
@@ -208,7 +205,7 @@ public sealed class GetUserStatsHandlerTests
         Assert.Equal(176, res.DailyActivity.Count);
         Assert.Equal(1, res.DailyActivity.Single(p => p.Date == "2026-06-10").Count);
         Assert.Equal(1, res.DailyActivity.Single(p => p.Date == "2026-01-05").Count);
-        Assert.Equal(2, res.DailyActivity.Sum(p => p.Count)); // 2025-12-01 soirée date excluded
+        Assert.Equal(2, res.DailyActivity.Sum(p => p.Count));
     }
 
     [Fact]
@@ -218,7 +215,6 @@ public sealed class GetUserStatsHandlerTests
         _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
         var parts = new[] { Part("p1", "A", DateTimeOffset.UtcNow) };
         _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(parts);
-        // Winner already picked, but the soirée itself hasn't finished (future date, no ClosedAt/Config.EndDate).
         _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Evt("A", "2030-01-01", winnerMovieId: "m1") });
 
@@ -235,7 +231,6 @@ public sealed class GetUserStatsHandlerTests
         _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
         var parts = new[] { Part("p1", "A", DateTimeOffset.UtcNow) };
         _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(parts);
-        // Soirée closed (cancelled?) but no tirage ever happened.
         _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Evt("A", "2026-06-01", closedAt: _now) });
 
@@ -252,7 +247,6 @@ public sealed class GetUserStatsHandlerTests
         _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
         var parts = new[] { Part("p1", "ghost-event", DateTimeOffset.UtcNow) };
         _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(parts);
-        // ListByIdsAsync returns nothing for "ghost-event" — the event no longer exists.
         _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Event>());
 
@@ -273,7 +267,6 @@ public sealed class GetUserStatsHandlerTests
             Part("p2", "B", DateTimeOffset.UtcNow),
         };
         _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(parts);
-        // Two finished soirées with a tirage, on two consecutive weeks ending this week (_now = 2026-06-15, a Monday).
         _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {

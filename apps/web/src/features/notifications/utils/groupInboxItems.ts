@@ -1,7 +1,5 @@
 import type { UserNotificationItem } from '@/features/notifications/api/notificationsApi';
 
-// Ces types restent toujours isolés (pas de regroupement par soirée) : ils concernent une
-// personne (follower) ou sont individuellement importants (invitation à accepter/refuser).
 const UNGROUPABLE_TYPES = new Set(['newfollower', 'eventinvitation']);
 
 export type InboxGroup =

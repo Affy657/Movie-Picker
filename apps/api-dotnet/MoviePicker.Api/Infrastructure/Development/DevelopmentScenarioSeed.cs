@@ -172,7 +172,6 @@ internal static class DevelopmentScenarioSeed
             },
             ct).ConfigureAwait(false);
 
-        // Variété de préférences de notification (le reste reste ON par défaut).
         await prefs.HandleAsync(
             actors.Bob.Id,
             new PatchNotificationPreferencesRequest
@@ -204,7 +203,6 @@ internal static class DevelopmentScenarioSeed
     {
         var follow = sp.GetRequiredService<IFollowUserHandler>();
 
-        // (follower, cible publique) — Carla est privée donc jamais ciblée (suivre Carla = 404).
         var pairs = new (User Follower, User Target)[]
         {
             (actors.Dev, actors.Alice),
@@ -633,7 +631,6 @@ internal static class DevelopmentScenarioSeed
         var vote = sp.GetRequiredService<IVoteMovieHandler>();
 
         var utc = DateTimeOffset.UtcNow;
-        // Créée dans le futur pour pouvoir ajouter films/votes, puis datée dans le passé (lecture seule).
         var created = await create
             .HandleAsync(
                 new CreateEventRequest
@@ -845,7 +842,6 @@ internal static class DevelopmentScenarioSeed
         var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException("Soirée annulée seed introuvable.");
 
-        // Notifs EventDeleted aux participants (hors créateur) qui ont opté pour ce type — miroir de DeleteEventHandler.
         var participants = await participantsRepo.ListByEventIdAsync(evt.Id, ct).ConfigureAwait(false);
         var recipientIds = participants
             .Where(p => !string.IsNullOrEmpty(p.UserId) && p.UserId != actors.David.Id)
@@ -870,7 +866,6 @@ internal static class DevelopmentScenarioSeed
             }
         }
 
-        // Cascade de suppression (même ordre que DeleteEventHandler).
         await votesRepo.DeleteByEventIdAsync(evt.Id, ct).ConfigureAwait(false);
         await seenRepo.DeleteByEventIdAsync(evt.Id, ct).ConfigureAwait(false);
         await moviesRepo.DeleteByEventIdAsync(evt.Id, ct).ConfigureAwait(false);

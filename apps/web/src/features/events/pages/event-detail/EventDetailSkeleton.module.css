@@ -1,5 +1,3 @@
-/* Skeleton calibré sur la structure réelle de la page soirée.
-   Réserve une hauteur proche du contenu final pour minimiser CLS. */
 
 .root {
   display: flex;

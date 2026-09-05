@@ -6,16 +6,8 @@ using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Infrastructure.BackgroundServices;
 
-/// <summary>
-/// One-shot backfill that fetches and stores TMDB runtime on watchlist items added before runtime
-/// tracking existed. Runs in the background AFTER the host has started so it never blocks Kestrel,
-/// and self-terminates once nothing is left without a runtime (re-running it on every startup is a
-/// no-op as soon as the backfill is complete). Mirrors <see cref="GenreBackfillService"/>.
-/// </summary>
 public sealed class RuntimeBackfillService : BackgroundService
 {
-    // Staggered well past GenreBackfillService's own 5s delay so the two one-shot backfills
-    // don't both hammer TMDB concurrently right after every restart.
     private static readonly TimeSpan StartupDelay = TimeSpan.FromSeconds(45);
     private const int BatchSize = 100;
 
@@ -45,8 +37,6 @@ public sealed class RuntimeBackfillService : BackgroundService
             var watchlist = scope.ServiceProvider.GetRequiredService<IWatchlistRepository>();
             var tmdb = scope.ServiceProvider.GetRequiredService<ITmdbMovieSearch>();
 
-            // Items whose runtime TMDB can't supply stay "missing"; tracking attempted ids
-            // guarantees termination instead of re-reading the same rows forever.
             var attempted = new HashSet<string>();
             var updated = 0;
             while (!stoppingToken.IsCancellationRequested)
@@ -70,7 +60,6 @@ public sealed class RuntimeBackfillService : BackgroundService
         }
         catch (OperationCanceledException)
         {
-            // Shutdown requested mid-backfill — fine, it resumes on next startup.
         }
         catch (Exception ex)
         {
@@ -90,10 +79,6 @@ public sealed class RuntimeBackfillService : BackgroundService
             if (details is null)
                 return false;
 
-            // TMDB answered but has no runtime for this item (common for TV): persist the 0
-            // sentinel so ListMissingRuntimeAsync stops re-selecting it on every future restart.
-            // A thrown exception above (transient failure) leaves the field untouched so it's
-            // retried next time, unlike this confirmed "no data" case.
             await watchlist.UpdateRuntimeAsync(item.Id, Math.Max(0, details.Runtime ?? 0), ct);
             return details.Runtime is > 0;
         }

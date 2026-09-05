@@ -36,9 +36,6 @@ function setup(items: UserWatchedMovieItem[] = ITEMS) {
   );
 }
 
-// L'app entière tourne sous <StrictMode>, qui double-invoque les fonctions de mise à jour
-// de useState en dev pour détecter les impuretés — un appel à setState imbriqué dans une
-// autre mise à jour se déclenche donc deux fois et annule son propre effet.
 function setupStrict(items: UserWatchedMovieItem[] = ITEMS) {
   return renderHook(
     () =>

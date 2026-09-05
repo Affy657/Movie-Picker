@@ -1,12 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
-using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.GetMovieDetails;
 using MoviePicker.Api.Application.UseCases.SearchMovies;
 using MoviePicker.Api.Controllers;
 using MoviePicker.Api.Domain.Entities;
-using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.Controllers;
@@ -17,14 +15,13 @@ public sealed class MoviesSearchControllerTests
     public async Task Search_NoFilters_CallsHandlerWithEmptyQueryAndNoFilters()
     {
         var handler = new Mock<ISearchMoviesHandler>();
-        var repo = new Mock<IEventRepository>();
         var controller = new MoviesSearchController().WithContext();
 
         var result = await controller.Search(
-            null, null, null, null, null, null, null, null, null, handler.Object, repo.Object, CancellationToken.None);
+            null, null, null, null, null, null, null, null, null, handler.Object, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
-        handler.Verify(h => h.HandleAsync("", false, null, It.IsAny<CancellationToken>()), Times.Once);
+        handler.Verify(h => h.HandleAsync("", null, null, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private static readonly int[] expected = new[] { 28, 12 };
@@ -36,14 +33,13 @@ public sealed class MoviesSearchControllerTests
         var handler = new Mock<ISearchMoviesHandler>();
         handler
             .Setup(h => h.HandleAsync(
-                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<MovieSearchFilters?>(), It.IsAny<CancellationToken>()))
-            .Callback<string, bool, MovieSearchFilters?, CancellationToken>((_, _, f, _) => captured = f);
-        var repo = new Mock<IEventRepository>();
+                It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MovieSearchFilters?>(), It.IsAny<CancellationToken>()))
+            .Callback<string, string?, MovieSearchFilters?, CancellationToken>((_, _, f, _) => captured = f);
         var controller = new MoviesSearchController().WithContext();
 
         await controller.Search(
             "bat", null, "28, 12, x, -3, 0", 2000, 2010, 7.5, "EN", 60, 150,
-            handler.Object, repo.Object, CancellationToken.None);
+            handler.Object, CancellationToken.None);
 
         Assert.NotNull(captured);
         Assert.Equal(expected, captured!.GenreIds);
@@ -62,13 +58,12 @@ public sealed class MoviesSearchControllerTests
         var handler = new Mock<ISearchMoviesHandler>();
         handler
             .Setup(h => h.HandleAsync(
-                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<MovieSearchFilters?>(), It.IsAny<CancellationToken>()))
-            .Callback<string, bool, MovieSearchFilters?, CancellationToken>((_, _, f, _) => captured = f);
-        var repo = new Mock<IEventRepository>();
+                It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MovieSearchFilters?>(), It.IsAny<CancellationToken>()))
+            .Callback<string, string?, MovieSearchFilters?, CancellationToken>((_, _, f, _) => captured = f);
         var controller = new MoviesSearchController().WithContext();
 
         await controller.Search(
-            "bat", null, null, null, null, null, null, 60, null, handler.Object, repo.Object, CancellationToken.None);
+            "bat", null, null, null, null, null, null, 60, null, handler.Object, CancellationToken.None);
 
         Assert.NotNull(captured);
         Assert.Equal(60, captured!.RuntimeMin);
@@ -76,33 +71,15 @@ public sealed class MoviesSearchControllerTests
     }
 
     [Fact]
-    public async Task Search_WithEventSlug_UsesEventAllowSeriesConfig()
+    public async Task Search_WithEventSlug_ForwardsSlugToHandler()
     {
         var handler = new Mock<ISearchMoviesHandler>();
-        var repo = new Mock<IEventRepository>();
-        var evt = new EventEntityBuilder().WithSlug("soiree").Build() with { Config = new EventConfig { AllowSeries = true } };
-        repo.Setup(r => r.GetByIdOrSlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         var controller = new MoviesSearchController().WithContext();
 
-        await controller.Search("q", "soiree", null, null, null, null, null, null, null, handler.Object, repo.Object, CancellationToken.None);
+        await controller.Search("q", "soiree", null, null, null, null, null, null, null, handler.Object, CancellationToken.None);
 
         handler.Verify(
-            h => h.HandleAsync("q", true, It.IsAny<MovieSearchFilters?>(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task Search_EventLookupThrows_DefaultsToAllowSeriesFalse()
-    {
-        var handler = new Mock<ISearchMoviesHandler>();
-        var repo = new Mock<IEventRepository>();
-        repo.Setup(r => r.GetByIdOrSlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException("boom"));
-        var controller = new MoviesSearchController().WithContext();
-
-        await controller.Search("q", "missing", null, null, null, null, null, null, null, handler.Object, repo.Object, CancellationToken.None);
-
-        handler.Verify(
-            h => h.HandleAsync("q", false, It.IsAny<MovieSearchFilters?>(), It.IsAny<CancellationToken>()), Times.Once);
+            h => h.HandleAsync("q", "soiree", It.IsAny<MovieSearchFilters?>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

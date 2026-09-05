@@ -26,6 +26,7 @@ function run(title, command, args, options = {}) {
   }
 }
 
+run("Règles d'architecture", 'node', ['scripts/check-architecture.mjs']);
 run('pnpm lint (turbo)', 'pnpm', ['run', 'lint']);
 run('ESLint', 'pnpm', ['run', 'lint:eslint']);
 run('Prettier check', 'pnpm', ['run', 'format:check']);

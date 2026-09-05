@@ -6,11 +6,6 @@ using MoviePicker.Api.Application.UseCases.Profile;
 
 namespace MoviePicker.Api.Infrastructure.BackgroundServices;
 
-/// <summary>
-/// One-shot backfill that assigns a generated, unique handle to every account created
-/// before the public-profile feature existed. Runs in the background AFTER the host has
-/// started so it never blocks Kestrel from binding (the work can span many DB round-trips).
-/// </summary>
 public sealed class UserHandleBackfillService : BackgroundService
 {
     private static readonly TimeSpan StartupDelay = TimeSpan.FromSeconds(5);
@@ -26,7 +21,6 @@ public sealed class UserHandleBackfillService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        // Let the app finish starting (and bind Kestrel) before doing any DB work.
         try
         {
             await Task.Delay(StartupDelay, stoppingToken);
@@ -66,7 +60,6 @@ public sealed class UserHandleBackfillService : BackgroundService
         }
         catch (OperationCanceledException)
         {
-            // Shutdown requested mid-backfill — fine, it resumes on next startup.
         }
         catch (Exception ex)
         {

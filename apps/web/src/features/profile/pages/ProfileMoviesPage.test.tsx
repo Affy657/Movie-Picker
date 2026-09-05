@@ -128,8 +128,6 @@ describe('ProfileMoviesPage (MSW)', () => {
     const user = userEvent.setup();
     renderPage('alice');
 
-    // Tri par défaut : film vu le plus récemment d'abord, donc Film 29 (le 30) est visible
-    // en premier et Film 0 (le 1er) est le dernier des 30, masqué tant qu'on n'a pas chargé le reste.
     await screen.findByText('Film 29');
     expect(screen.queryByText('Film 0')).not.toBeInTheDocument();
 

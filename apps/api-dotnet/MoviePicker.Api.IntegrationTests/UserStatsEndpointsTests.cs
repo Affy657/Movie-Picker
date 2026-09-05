@@ -71,9 +71,9 @@ public sealed class UserStatsEndpointsTests : IClassFixture<MoviePickerApplicati
         Assert.True(stats.MoviesProposed >= 1);
         Assert.True(stats.VotesCast >= 1);
         Assert.True(stats.WinningProposals >= 1);
-        Assert.NotEmpty(stats.FavoriteGenres); // the stub TMDB client supplies genre ids
-        Assert.NotEmpty(stats.DailyActivity); // zero-filled daily heatmap window
-        Assert.Contains(stats.DailyActivity, p => p.Count >= 1); // today's participation lights up a cell
+        Assert.NotEmpty(stats.FavoriteGenres);
+        Assert.NotEmpty(stats.DailyActivity);
+        Assert.Contains(stats.DailyActivity, p => p.Count >= 1);
     }
 
     [Fact]
