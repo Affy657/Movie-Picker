@@ -1377,7 +1377,7 @@ suivante est celle qui compte pour ce chapitre.
 
 # Analyse critique d'une posture
 
-<div class="grid grid-cols-2 gap-6 text-sm">
+<div class="grid grid-cols-2 gap-6 text-sm dense">
 <div>
 
 ### La situation : 17 au 26 août 2026
@@ -1595,7 +1595,7 @@ Actions classées par **coût d'un écart non comblé** : bloque une porte de qu
 **Total : 20 J/H** d'actions de formation (hors pratique encadrée), dont **6 en externe** · **2 100 €** · soit **20 % de la charge projet**.
 
 </div>
-<div class="col-span-2 text-sm">
+<div class="col-span-2 text-sm dense">
 
 ### Recruter ou former — note aux RH
 
@@ -1612,15 +1612,10 @@ Actions classées par **coût d'un écart non comblé** : bloque une porte de qu
 
 ### Modalités adaptées au handicap
 
-Posées **par défaut**, sans demande ni justification :
+Posées **par défaut**, sans demande ni justification : **tiers-temps de droit** · support en **texte structuré** · matériel adapté **pendant** la formation · **accessibilité de la plateforme = critère de sélection** du prestataire.
 
-- **tiers-temps de droit** sur toute formation et son évaluation
-- support en **texte structuré** systématique
-- matériel adapté disponible **pendant** la formation
-- **accessibilité de la plateforme = critère de sélection** du prestataire
-
-<div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
-Le compagnonnage interne est écrit et asynchrone — <b>c'est le mode de travail normal du projet</b>, pas un aménagement rapporté.
+<div class="mt-1 p-1 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
+Le compagnonnage interne est écrit et asynchrone : <b>le mode de travail normal du projet</b>, pas un aménagement rapporté.
 </div>
 
 </div>
@@ -2262,7 +2257,7 @@ Borne haute atteinte si la base passe au premier palier payant (~9 $/mois).
 
 # Annexe A5 — La chaîne d'intégration et de déploiement
 
-<div class="grid grid-cols-2 gap-5">
+<div class="grid grid-cols-2 gap-5 dense">
 <div>
 
 ```mermaid {scale: 0.55}
@@ -2280,6 +2275,10 @@ flowchart TD
   GATE -->|push master| CD["docker-api →<br/>deploy-api · deploy-front"]
   CD --> SMOKE["smoke test<br/>readiness base de données"]
 ```
+
+<div class="text-xs opacity-75 mt-1">
+Anti-chaîne d'approvisionnement : actions épinglées par SHA, images par digest, secrets par <code>env:</code>.
+</div>
 
 </div>
 <div class="dense">
@@ -2304,9 +2303,6 @@ flowchart TD
 | `deploy-front` | S3 et CloudFront | — |
 | `deploy-guard` | Garde-fou de déploiement sur `master` | — |
 
-<div class="text-xs opacity-75 mt-1">
-Mesures anti-chaîne d'approvisionnement : actions épinglées par SHA, images par digest, <code>persist-credentials: false</code>, secrets par <code>env:</code>.
-</div>
 
 </div>
 </div>
