@@ -68,11 +68,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPushNotificationSender, WebPushSender>();
         services.AddHostedService<EventReminderService>();
 
-        services.AddHttpClient<ILetterboxdWatchlistClient, LetterboxdWatchlistClient>(client =>
-        {
-            client.Timeout = TimeSpan.FromSeconds(15);
-            client.DefaultRequestHeaders.UserAgent.ParseAdd("MoviePicker-Api/1.0");
-        });
+        RegisterLetterboxdClient(services, configuration);
 
         services.AddHttpClient<IGitHubIssueClient, GitHubIssueClient>((sp, client) =>
         {
@@ -250,6 +246,21 @@ public static class ServiceCollectionExtensions
         services.AddHostedService<UserHandleBackfillService>();
         services.AddHostedService<GenreBackfillService>();
         services.AddHostedService<RuntimeBackfillService>();
+    }
+
+    private static void RegisterLetterboxdClient(IServiceCollection services, IConfiguration configuration)
+    {
+        if (string.Equals(configuration["E2E_STUB_LETTERBOXD"], "1", StringComparison.Ordinal))
+        {
+            services.AddSingleton<ILetterboxdWatchlistClient, StubLetterboxdWatchlistClient>();
+            return;
+        }
+
+        services.AddHttpClient<ILetterboxdWatchlistClient, LetterboxdWatchlistClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(15);
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("MoviePicker-Api/1.0");
+        });
     }
 
     private static void RegisterTmdbSearch(IServiceCollection services, IConfiguration configuration)

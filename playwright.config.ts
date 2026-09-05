@@ -24,7 +24,7 @@ export default defineConfig({
   webServer: [
     {
       command:
-        'cross-env E2E_STUB_TMDB=1 TMDB_API_KEY=e2e-stub MONGODB_URI= DevelopmentSeed__Enabled=false ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://127.0.0.1:5010 dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj --no-launch-profile',
+        'cross-env E2E_STUB_TMDB=1 E2E_STUB_LETTERBOXD=1 TMDB_API_KEY=e2e-stub MONGODB_URI= DevelopmentSeed__Enabled=false ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://127.0.0.1:5010 dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj --no-launch-profile',
       cwd: '.',
       url: 'http://127.0.0.1:5010/health',
       reuseExistingServer: !process.env.CI,
