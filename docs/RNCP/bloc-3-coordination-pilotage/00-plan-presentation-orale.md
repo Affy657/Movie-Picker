@@ -194,7 +194,7 @@ Placées après la conclusion, jamais présentées, appelées seulement si une q
 | A2 | **34** | Le logigramme d'arbitrage en version complète, avec le chemin réellement suivi le 18/03/2026 |
 | A3 | **35** | Les deux arbitrages de réserve : la porte de qualité instable (52 % → 94 %), l'abandon de l'application mobile |
 | A4 | **36** | Le budget prévisionnel détaillé : valeur de développement par lot, infrastructure poste par poste |
-| A5 | **37** | La chaîne d'intégration et de déploiement, les 11 jobs et leur caractère bloquant |
+| A5 | **37** | La chaîne d'intégration et de déploiement, ses 14 jobs et leur caractère bloquant |
 | A6 | **38** | La matrice RACI complète, 15 lignes, et ses trois propriétés |
 | A7 | **39** | Le journal des versions et le détail de la v1.3.2, avec la traçabilité bidirectionnelle |
 | A8 | **40** | Les retours utilisateurs question par question, et ce qu'ils ont produit |

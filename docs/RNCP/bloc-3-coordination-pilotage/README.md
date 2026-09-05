@@ -35,6 +35,7 @@ Le projet a été **exécuté seul**, comme les livrables des Blocs 1, 2 et 4 l'
 
 | Fichier | Contenu |
 |---------|---------|
+| [`RESTE-A-FAIRE.md`](RESTE-A-FAIRE.md) | **Ce qui reste à faire** : actions bloquantes pour la compétence éliminatoire, preuves à produire, finalisation du support, points de vigilance de relecture, décisions en suspens |
 | [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md) | Cadre de l'épreuve, minutage des 30 minutes, déroulé des 32 diapositives, script de démonstration, préparation des questions du jury |
 | [`01-planification.md`](01-planification.md) | **C3.1** : méthodologie et alternatives écartées, rétroplanning et Gantt, planning en 5 phases, découpage en 4 lots et 98 J/H, ressources humaines, matérielles et financières, matrice RACI et prise en compte du handicap, 7 points de vigilance |
 | [`02-suivi-indicateurs.md`](02-suivi-indicateurs.md) | **C3.2.1** : l'outil de suivi et son adéquation avec Kanban, les limites assumées du dispositif, 25 indicateurs sur 5 axes, deux tableaux de bord (avancement et délais ; coûts, risques et ressources humaines), analyse de l'écart prévisionnel / réel et les 3 décisions prises à partir d'une mesure |
@@ -47,19 +48,10 @@ Le projet a été **exécuté seul**, comme les livrables des Blocs 1, 2 et 4 l'
 
 ---
 
-## Actions hors rédaction, à mener avant le 16 septembre
+## Ce qui reste à faire
 
-Le support est écrit. Ce qui reste ne peut pas l'être.
+La rédaction est terminée. Tout ce qui reste est **matériel ou humain** et ne peut pas être rédigé : répétitions minutées, jeu de données de démonstration, vidéo de repli, environnement local, deux captures de preuve, export PDF.
 
-| # | Action | Pour | Échéance conseillée |
-|:-:|--------|------|---------------------|
-| 1 | **Répéter le parcours de démonstration**, chronomètre en main. 4 min 50, c'est court | C3.4.2 **ÉLIM** | Au moins trois passages avant le 16/09 |
-| 2 | **Créer le jeu de données de démonstration** : compte principal, second compte sur le second appareil, deux soirées terminées dont une avec gagnant, flamme de participation active | C3.4.2 **ÉLIM** | La veille (§ 4.1 de [`07-demonstration.md`](07-demonstration.md)) |
-| 3 | **Enregistrer la vidéo** du parcours complet, commentée | C3.4.2 **ÉLIM**, repli niveau 3 | La veille |
-| 4 | **Préparer l'environnement local** prêt à démarrer | C3.4.2 **ÉLIM**, repli niveau 2 | La veille |
-| 5 | **Structurer le tableau GitHub Projects** et en produire une capture | C3.2.1 **ÉLIM**, diapo 11 | Avant l'export du support |
-| 6 | **Relever une capture de facturation** GCP et AWS | C3.2.1 **ÉLIM**, diapo 14 | Avant l'export du support |
-| 7 | **Exporter le support en PDF** (`npm run export`) et le tester sur le matériel de la salle | Toutes | Une semaine avant |
-| 8 | **Répéter le minutage global** : 30 minutes, dont 17 sur les trois compétences éliminatoires | Toutes | Deux passages complets |
+👉 **La liste complète, priorisée, est dans [`RESTE-A-FAIRE.md`](RESTE-A-FAIRE.md)** — avec les points de vigilance relevés en relecture et les décisions en suspens.
 
-> Les points 1 à 4 conditionnent une compétence **éliminatoire** qui ne peut pas dépendre du réseau d'une salle d'examen.
+> Quatre des actions listées conditionnent **C3.4.2**, compétence éliminatoire qui ne peut pas dépendre du réseau d'une salle d'examen.

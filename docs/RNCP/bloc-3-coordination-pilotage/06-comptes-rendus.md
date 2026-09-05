@@ -65,7 +65,7 @@ Chaque version est un point de validation **daté, versionné et vérifiable**, 
 
 ### 2.3 Ce qui fait d'une livraison un point de validation qualité
 
-Le critère de la grille est précis : les points de validation doivent être **organisés de manière à assurer le suivi qualité**. Une date de livraison n'y suffit pas. Sur ce projet, une version n'existe que si elle a franchi une séquence de contrôles, dont trois sont **bloquants**.
+Le critère de la grille est précis : les points de validation doivent être **organisés de manière à assurer le suivi qualité**. Une date de livraison n'y suffit pas. Sur ce projet, une version n'existe que si elle a franchi une séquence de contrôles, dont **cinq sont bloquants** : quatre avant l'intégration, un après le déploiement.
 
 | Étape | Contrôle | Bloquant |
 |-------|----------|:--------:|

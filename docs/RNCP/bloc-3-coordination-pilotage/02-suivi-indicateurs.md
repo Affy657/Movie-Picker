@@ -229,12 +229,14 @@ Les 31 jours de la v1.4.0 ont une autre cause, également identifiée par le sui
 
 ### 3.4 Le respect des échéances
 
-| Jalon | Date cible | Date réelle | Écart |
-|-------|-----------|-------------|-------|
-| Restitution orale Bloc 1 | 11/06/2026 | 11/06/2026 | **0** |
-| Remise du dossier Bloc 2 | 23/07/2026 | 23/07/2026 | **0** |
-| Remise du dossier Bloc 4 | 21/08/2026 | 21/08/2026 | **0** |
-| Restitution orale Bloc 3 | 16/09/2026 | à venir | — |
+| Jalon | Date cible | Date réelle | Écart | Corroboration dans le dépôt |
+|-------|-----------|-------------|-------|------------------------------|
+| Restitution orale Bloc 1 | 11/06/2026 | 11/06/2026 | **0** | Livrables du Bloc 1 archivés le 29/06 |
+| Remise du dossier Bloc 2 | 23/07/2026 | 23/07/2026 | **0** | Dernier commit du dossier : **23/07/2026** |
+| Remise du dossier Bloc 4 | 21/08/2026 | 21/08/2026 | **0** | Export PDF du dossier : **21/08/2026** |
+| Restitution orale Bloc 3 | 16/09/2026 | à venir | — | — |
+
+**La dernière colonne est ce qui distingue une affirmation d'une preuve.** Deux des trois échéances passées sont horodatées dans l'historique du dépôt au jour près : le dossier du Bloc 2 reçoit sa passe finale le 23 juillet, celui du Bloc 4 est exporté en PDF le 21 août. Un examinateur peut le vérifier sans me croire sur parole.
 
 Les quatre échéances non négociables sont tenues. Ce n'est pas un effet de discipline, c'est un effet de méthode : le rétroplanning du chapitre 1 les traite comme des **dates de fin de lot**, et c'est le périmètre de la version qui absorbe la variation, jamais la date. La preuve en est lisible dans le tableau précédent : quand la capacité s'est réduite en août, c'est l'intervalle entre deux versions qui s'est allongé, pas une échéance qui a glissé.
 
@@ -313,7 +315,7 @@ C'est la diapositive qui prouve que le suivi a servi à **décider**, et pas seu
 | | Prévu au cadrage | Réel reconstitué | Écart |
 |--|------------------|------------------|-------|
 | Charge | 98 J/H | ≈ 88 J/H | **−10 %** |
-| Périmètre | MVP + migration + V1 + clôture du titre | **+ 4 versions produit** (V1.1 à V1.4.1) non chiffrées | **+ 37 items** |
+| Périmètre | MVP + migration + V1 + clôture du titre | **+ 7 livraisons** après la V1 (V1.1.0 à V1.4.1), dont **4 versions mineures** apportant des fonctionnalités — aucune chiffrée | **+ 37 items** |
 | Délais | 4 échéances de restitution | 4 tenues | **0** |
 | Coûts d'infrastructure | 20 à 190 €/an | ≈ 10 €/an | **borne basse** |
 
@@ -328,7 +330,7 @@ Le chiffrage initial couvrait quatre lots s'arrêtant à la V1 et à la clôture
 | 27/02 au 19/05 | Lots 1 à 3, prototype, migration, V1 | 23 | 26 % |
 | 20/05 au 05/09 | **Hors chiffrage initial** : V1.1 à V1.4.1, plus le lot de clôture du titre | 65 | 74 % |
 
-Les quatre versions produit livrées après la V1 n'ont **jamais été chiffrées**. Elles représentent 37 des 61 items de périmètre livrés, soit 61 % du produit final. Formulé sans détour : **le périmètre a plus que doublé pendant que la charge totale restait dans l'enveloppe prévue.**
+Les sept livraisons qui suivent la V1 n'ont **jamais été chiffrées**. Les quatre versions mineures qu'elles contiennent (V1.1 à V1.4) portent à elles seules **37 des 61 items** de périmètre livrés, soit 61 % du produit final. Formulé sans détour : **le périmètre a plus que doublé pendant que la charge totale restait dans l'enveloppe prévue.**
 
 Cela ne signifie pas qu'on a fait deux fois plus avec autant. Cela signifie que le chiffrage initial était **large sur les trois premiers lots** — la marge de 20 % a couvert la migration .NET — et que l'extension de périmètre a consommé cette marge plus la capacité libérée. Le suivi n'a pas détecté une dérive de charge, il a détecté un **glissement de périmètre invisible**, parce qu'aucun indicateur ne comparait le périmètre courant au périmètre chiffré.
 

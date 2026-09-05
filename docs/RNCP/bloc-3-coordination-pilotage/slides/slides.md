@@ -771,7 +771,7 @@ Médiane <b>17 jours</b>, moyenne 23,6. L'écart entre les deux tient à un seul
 </div>
 
 <div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-sm">
-<b>Les 4 échéances de restitution du titre sont tenues à la date, écart 0.</b> Ce n'est pas de la discipline, c'est la méthode : le rétroplanning traite ces dates comme des fins de lot, et c'est le <b>périmètre de la version</b> qui absorbe la variation, jamais la date. Quand la capacité s'est réduite en août, c'est l'intervalle entre deux versions qui s'est allongé.
+<b>Les 4 échéances de restitution du titre sont tenues à la date, écart 0</b> — et deux d'entre elles sont <b>horodatées dans le dépôt</b> : passe finale du dossier Bloc 2 le 23/07, export PDF du Bloc 4 le 21/08. Ce n'est pas de la discipline, c'est la méthode : le rétroplanning traite ces dates comme des fins de lot, et c'est le <b>périmètre de la version</b> qui absorbe la variation, jamais la date. Quand la capacité s'est réduite en août, c'est l'intervalle entre deux versions qui s'est allongé.
 </div>
 
 <!--
@@ -890,7 +890,7 @@ septembre porte sur huit executions.
 | | Prévu | Réel | Écart |
 |--|------|------|------:|
 | Charge | 98 J/H | ≈ 88 J/H | **−10 %** |
-| Périmètre | MVP + migration + V1 + clôture | **+ 4 versions** non chiffrées | **+ 37 items** |
+| Périmètre | MVP + migration + V1 + clôture | **+ 7 livraisons** non chiffrées, dont 4 versions mineures | **+ 37 items** |
 | Délais | 4 échéances | 4 tenues | **0** |
 | Coûts | 20 à 190 €/an | ≈ 10 €/an | borne basse |
 
@@ -905,7 +905,7 @@ Pris seul, l'écart de charge de −10 % tombe dans la marge de 20 % et donnerai
 | 27/02 → 19/05 | Lots 1 à 3, chiffrés | 23 (26 %) |
 | 20/05 → 05/09 | **Hors chiffrage initial** | **65 (74 %)** |
 
-Les 4 versions livrées après la V1 représentent **37 des 61 items** du produit final et n'ont jamais été chiffrées.
+Les 4 versions mineures livrées après la V1 représentent **37 des 61 items** du produit final. Aucune des 7 livraisons qui suivent la V1 n'a été chiffrée.
 
 </div>
 </div>
@@ -1581,15 +1581,15 @@ presente dans le depot avec une date d'introduction verifiable.
 Actions classées par **coût d'un écart non comblé** : bloque une porte de qualité (1) · crée une dépendance unique (2) · ralentit sans bloquer (3).
 
 | Profil | Action | Modalité | Durée | Indicateur de réussite | P |
-|--------|--------|----------|-------|------------------------|:-:|
-| Front | **Accessibilité** | Certifiante externe (Opquast) + pratique encadrée | 3 j + 2 sem. | Une livraison passe la porte **sans reprise** | **1** |
+|--------|--------|----------|------:|------------------------|:-:|
+| Front | **Accessibilité** | Certifiante externe + pratique | 3 j | Une livraison passe la porte **sans reprise** | **1** |
 | DevOps | **Supervision** | Compagnonnage + astreinte simulée | 5 j | Traite seul une alerte de bout en bout | **1** |
-| Back | Architecture hexagonale | Lecture guidée + revue systématique 1 mois | 1 mois partiel | Livre un cas d'usage sans violation de couche | 2 |
-| Back | Sécurité applicative | Autoformation cadrée OWASP + revue croisée | 4 j | Aucune vulnérabilité OWASP sur un trimestre | 2 |
-| DevOps | Veille de vulnérabilités | Compagnonnage sur le processus existant | 2 j | Qualifie seul un avis et décide du traitement | 2 |
-| Lead | Chiffrage et arbitrage | Formation courte externe + pratique documentée | 3 j | Arbitrage consigné **au moment où il est pris** | 2 |
-| Lead | Revue et transmission | Revue croisée obligatoire sur le structurant | continu | 100 % des changements structurants en revue | 2 |
-| Front | App installable, i18n | Autoformation + pratique dédiée | 3 j | Livre une fonctionnalité hors ligne et traduite | 3 |
+| Back | Architecture hexagonale | Lecture guidée + revue 1 mois | ~ | Un cas d'usage sans violation de couche | 2 |
+| Back | Sécurité applicative | Autoformation OWASP + revue croisée | 4 j | Aucune vulnérabilité OWASP sur un trimestre | 2 |
+| DevOps | Veille de vulnérabilités | Compagnonnage | 2 j | Qualifie seul un avis et décide | 2 |
+| Lead | Chiffrage et arbitrage | Formation courte + pratique | 3 j | Arbitrage consigné **quand il est pris** | 2 |
+| Lead | Revue et transmission | Revue croisée obligatoire | cont. | 100 % du structurant en revue | 2 |
+| Front | App installable, i18n | Autoformation + pratique dédiée | 3 j | Une fonctionnalité hors ligne et traduite | 3 |
 
 **Total : 20 J/H** d'actions de formation (hors pratique encadrée), dont **6 en externe** · **2 100 €** · soit **20 % de la charge projet**.
 
@@ -1609,7 +1609,12 @@ Actions classées par **coût d'un écart non comblé** : bloque une porte de qu
 
 ### Modalités adaptées au handicap
 
-Posées **par défaut**, sans demande ni justification : tiers-temps de droit sur toute formation et son évaluation · support en **texte structuré** systématique, vidéo seulement si sous-titrée et transcrite · matériel adapté disponible **pendant** la formation · distanciel et séquences courtes enregistrées · **accessibilité de la plateforme = critère de sélection du prestataire**.
+Posées **par défaut**, sans demande ni justification :
+
+- **tiers-temps de droit** sur toute formation et son évaluation
+- support en **texte structuré** systématique
+- matériel adapté disponible **pendant** la formation
+- **accessibilité de la plateforme = critère de sélection** du prestataire
 
 <div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
 Le compagnonnage interne est écrit et asynchrone — <b>c'est le mode de travail normal du projet</b>, pas un aménagement rapporté.
@@ -2276,8 +2281,11 @@ flowchart TD
 </div>
 <div class="dense">
 
+**14 jobs.** Les 9 jobs de vérification sont tous bloquants.
+
 | Job | Rôle | Bloquant |
 |-----|------|:--------:|
+| `changes` | Path-filtering, calcule les lanes web / api | — |
 | `gitleaks` | Scan de secrets sur l'arbre | ✅ |
 | `lint-web` | TypeScript, ESLint, Prettier | ✅ |
 | `lint-api` | Format, build `-warnaserror`, export OpenAPI | ✅ |
@@ -2287,8 +2295,10 @@ flowchart TD
 | `sonar` | SonarCloud, Quality Gate code nouveau | ✅ |
 | `lighthouse` | Performance et accessibilité, médiane de 3 | ✅ |
 | `e2e` | Playwright, parcours de bout en bout | ✅ |
-| `deploy-*` | Cloud Run et S3/CloudFront | — |
-| `smoke test` | Joignabilité réelle de la base | ✅ |
+| `docker-api` | Image conteneurisée → Artifact Registry | — |
+| `deploy-api` | Cloud Run, **avec test de fumée readiness** | ✅ |
+| `deploy-front` | S3 et CloudFront | — |
+| `deploy-guard` | Garde-fou de déploiement sur `master` | — |
 
 <div class="text-xs opacity-75 mt-1">
 Mesures anti-chaîne d'approvisionnement : actions épinglées par SHA, images par digest, <code>persist-credentials: false</code>, secrets par <code>env:</code>.
