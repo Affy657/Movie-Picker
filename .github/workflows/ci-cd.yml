@@ -486,9 +486,10 @@ jobs:
             "https://sonarcloud.io/api/qualitygates/project_status" +
             "?projectKey=Affy657_Movie-Picker&branch=" + encodeURIComponent(branch);
 
-          const response = await fetch(url, {
-            headers: { Authorization: "Basic " + Buffer.from(token + ":").toString("base64") },
-          });
+          const auth = {
+            Authorization: "Basic " + Buffer.from(token + ":").toString("base64"),
+          };
+          const response = await fetch(url, { headers: auth });
           const body = await response.text();
 
           let parsed;
@@ -506,6 +507,7 @@ jobs:
           }
 
           console.log("Quality Gate : " + project.status);
+
           const failing = (project.conditions || []).filter((c) => c.status !== "OK");
           if (failing.length === 0) {
             console.log("Aucune condition en echec : echec probablement technique.");
@@ -517,6 +519,30 @@ jobs:
               "::error::" + c.metricKey + " = " + c.actualValue +
                 " (seuil " + c.comparator + " " + c.errorThreshold + ")"
             );
+          }
+
+          if (!failing.some((c) => c.metricKey.includes("duplicated"))) process.exit(0);
+
+          const treeUrl =
+            "https://sonarcloud.io/api/measures/component_tree" +
+            "?component=Affy657_Movie-Picker&branch=" + encodeURIComponent(branch) +
+            "&metricKeys=new_duplicated_lines,duplicated_lines_density&qualifiers=FIL" +
+            "&s=metric&metricSort=new_duplicated_lines&asc=false&ps=15";
+          const treeResponse = await fetch(treeUrl, { headers: auth });
+          const tree = JSON.parse(await treeResponse.text());
+          if (!tree.components) {
+            console.log("Detail par fichier indisponible.");
+            process.exit(0);
+          }
+
+          console.log("Fichiers portant le plus de lignes dupliquees :");
+          for (const component of tree.components) {
+            const measure = (component.measures || []).find(
+              (m) => m.metricKey === "new_duplicated_lines"
+            );
+            const lines = measure?.period?.value ?? measure?.value ?? "0";
+            if (lines === "0") continue;
+            console.log("  " + lines + " lignes  " + component.path);
           }
           NODESCRIPT
           node qg-report.mjs
