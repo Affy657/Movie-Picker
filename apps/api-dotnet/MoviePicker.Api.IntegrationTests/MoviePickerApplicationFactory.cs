@@ -16,6 +16,13 @@ public sealed class MoviePickerApplicationFactory : WebApplicationFactory<Progra
 {
     private readonly string _mongoUri = IntegrationTestMongo.BuildIsolatedDatabaseUri();
 
+    public MoviePickerApplicationFactory()
+    {
+        Environment.SetEnvironmentVariable(
+            "MONGODB_URI",
+            _mongoUri.Length > 0 ? _mongoUri : null);
+    }
+
     public FakeEmailSender FakeEmail { get; } = new();
     public FakeGitHubIssueClient FakeGitHubIssues { get; } = new();
 
@@ -53,7 +60,10 @@ public sealed class MoviePickerApplicationFactory : WebApplicationFactory<Progra
     protected override void Dispose(bool disposing)
     {
         if (disposing && RunsAgainstMongo)
+        {
             IntegrationTestMongo.DropDatabase(_mongoUri);
+            Environment.SetEnvironmentVariable("MONGODB_URI", null);
+        }
 
         base.Dispose(disposing);
     }
