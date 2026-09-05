@@ -2,7 +2,7 @@
 
 > Grille officielle : [`../referentiel/bloc-03-coordonner-piloter-projet.md`](../referentiel/bloc-03-coordonner-piloter-projet.md) · Suivi : [`../suivi-rncp.md`](../suivi-rncp.md)
 
-**État : 🟡 plan arrêté, chapitres 1 à 6 produits (C3.1, C3.2.1, C3.2.2, C3.3.1, C3.3.2, C3.4.1). Restent le chapitre 7 (C3.4.2, ÉLIM), la conclusion et les annexes.** Structure, minutage et mapping des 14 éléments imposés dans [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md).
+**État : 🟡 les 7 chapitres produits, dont les 3 compétences éliminatoires (C3.1, C3.2.1, C3.4.2). Restent la conclusion (diapo 32) et les 8 annexes.** Structure, minutage et mapping des 14 éléments imposés dans [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md).
 
 ## Attendus du jury
 
@@ -29,7 +29,7 @@ Le projet a été **exécuté seul**, comme les livrables des Blocs 1, 2 et 4 l'
 | C3.3.1 | Affectation des missions, styles managériaux, outils de communication | | ✅ [`04-management-equipe.md`](04-management-equipe.md) et diapos 19 à 23. Organisation cible à 4 profils **et** dispositif réel de délégation, analyse critique sur la série de 10 jours du 17 au 26/08/2026 |
 | C3.3.2 | Grille d'évaluation des compétences et plan de développement | | ✅ [`05-competences.md`](05-competences.md) et diapos 24 à 26. Grille étalonnée sur la chronologie d'introduction réelle des technologies dans le dépôt |
 | C3.4.1 | Comptes rendus, points de validation planifiés, indicateurs de satisfaction | | ✅ [`06-comptes-rendus.md`](06-comptes-rendus.md) et diapos 27 à 29. Deux commanditaires distingués, 3 niveaux de compte rendu, gabarit décisionnel, et la boucle retour → production mesurée à 17 jours |
-| C3.4.2 | Démonstration des fonctionnalités devant le jury | ✅ | `07-demonstration.md` à produire ; application en production, parcours minuté et plan de repli |
+| C3.4.2 | Démonstration des fonctionnalités devant le jury | ✅ | ✅ [`07-demonstration.md`](07-demonstration.md) et diapos 30 à 31. Parcours minuté en 6 étapes sur les libellés réels de l'interface, glossaire de vocabulaire client, préparation en 16 points, plan de repli à 4 niveaux, séquence de clôture qui **demande** la validation |
 
 ## Fichiers du dossier
 
@@ -42,4 +42,5 @@ Le projet a été **exécuté seul**, comme les livrables des Blocs 1, 2 et 4 l'
 | [`04-management-equipe.md`](04-management-equipe.md) | **C3.3.1** : le dispositif réel de délégation et ce qu'il apprend, puis l'organisation cible — affectation des missions, équilibrage de la charge vérifié dans le temps, les 4 styles managériaux situés sur des situations du projet, les 8 outils collaboratifs et ce que chacun partage, l'inclusion traitée par l'écrit asynchrone. Analyse critique d'une posture datée et ses 3 recommandations |
 | [`05-competences.md`](05-competences.md) | **C3.3.2** : la chronologie d'introduction des technologies en 4 vagues, la cartographie des compétences déduite des lots, une grille d'évaluation à échelle comportementale commentée en 4 lectures, un plan de développement de 8 actions classées par coût d'un écart non comblé (20 J/H, 2 100 €), la logique recruter / former transmise aux RH, et les modalités de formation adaptées au handicap |
 | [`06-comptes-rendus.md`](06-comptes-rendus.md) | **C3.4.1** : les deux commanditaires et leurs rythmes, les 9 versions et les 4 échéances comme points de validation, les 5 contrôles bloquants qui font d'une livraison un point qualité, 3 niveaux de compte rendu dont un poussé, le gabarit décisionnel et son exemple réel, les indicateurs de satisfaction en 3 familles avec leur limite d'échantillon, et la boucle retour → production mesurée à 17 jours |
-| [`slides/`](slides/) | Le support Slidev. Chapitres 0 à 6 produits, diapositives 1 à 29 |
+| [`07-demonstration.md`](07-demonstration.md) | **C3.4.2 ÉLIM** : les 4 critères traduits en exigences concrètes, le parcours en 6 étapes minutées avec l'écran, le geste et la phrase, la vérification de couverture fonctionnelle, le glossaire de traduction technique → client, la préparation la veille et le jour même, le plan de repli à 4 niveaux, et la séquence de clôture qui demande la validation |
+| [`slides/`](slides/) | Le support Slidev. Chapitres 0 à 7 produits, diapositives 1 à 31 |

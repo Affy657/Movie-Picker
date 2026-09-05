@@ -428,7 +428,15 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
   - [x] **Gabarit décisionnel** en 5 blocs dont 3 ne sont pas de l'information, règle *aucun constat sans proposition, aucune proposition sans coût*, avec un exemple réel complet et son critère d'arrêt énoncé d'avance
   - [x] **Indicateurs de satisfaction** en 3 familles (comportementale, déclarative, opérationnelle), avec la limite d'échantillon assumée — le 9,6 présenté comme l'absence de détracteur parmi les engagés, pas comme une mesure
   - [x] **Effets mesurés** : une décision déclenchée et livrée, une confirmée, une instruite non livrée. Boucle retour → production **mesurée à 17 jours**. Limite dite : dispositif ponctuel, pas continu
-- [ ] Créer **`docs/RNCP/bloc-3-coordination-pilotage/07-demonstration.md`** (C3.4.2, **ÉLIM**) : parcours minuté sur la version en production, vocabulaire client, compte et soirée de démonstration préparés la veille, et **plan de repli** si le réseau de la salle tombe
+- [ ] **`docs/RNCP/bloc-3-coordination-pilotage/07-demonstration.md`** (C3.4.2, **ÉLIM**) — *rédigé, en attente de fusion sur `master`* :
+  - [x] Les **4 critères traduits en exigences concrètes**, dont celui qui se rate : la démonstration doit *aboutir à une validation*, ce qui suppose de la demander
+  - [x] **Parcours en 6 étapes minutées** (4:50) sur la version en production, chacune avec l'écran, le geste et la phrase, en reprenant les **libellés réels de l'interface** mot pour mot
+  - [x] **Vérification de couverture** : les 3 profils d'utilisateurs du Bloc 1 et les 8 fonctionnalités majeures, avec ce qui est assumé comme cité mais non montré
+  - [x] **Glossaire de traduction** technique → client, et la liste courte des mots à ne pas prononcer
+  - [x] **Préparation** : 8 points la veille — dont l'absorption de la fenêtre « Nouveautés » qui interromprait la démonstration — et 8 vérifications dans les dix minutes précédentes
+  - [x] **Plan de repli à 4 niveaux** avec sa phrase de bascule préparée : la compétence est éliminatoire, elle ne peut pas dépendre du wifi d'une salle
+  - [x] **Séquence de clôture** en 3 temps, se terminant par la demande de validation formulée telle quelle
+  - [ ] **À faire hors rédaction** : créer le jeu de données de démonstration, enregistrer la vidéo de repli, répéter le parcours minuté
 
 ---
 

@@ -155,9 +155,9 @@ Critères visés : le logiciel est utilisable, la démonstration reprend les fon
 
 | # | Titre | Durée | Contenu |
 |:-:|-------|------:|---------|
-| 30 | Ce que je vais vous montrer | 0:20 | Annonce du parcours en vocabulaire client, sans terme technique. Précision que la démonstration se déroule sur la version en production |
+| 30 | Ce que je vais vous montrer | 0:20 | Annonce des 6 temps en vocabulaire client. **Changement de registre qui doit s'entendre** : diapositive épurée, débit ralenti. Précision que la démonstration se déroule sur la version en production, avec deux appareils. Le plan de repli à 4 niveaux est en note de présentateur |
 | | **Démonstration en direct** | 4:50 | Parcours détaillé au point 5 |
-| 31 | Ce qui est validé, ce qui vient ensuite | 0:20 | Retour sur support : le périmètre validé, et les évolutions suivantes déjà arbitrées |
+| 31 | Ce qui est validé, ce qui vient ensuite | 0:20 | Le périmètre validé énoncé en 6 verbes, les 3 évolutions suivantes chiffrées et priorisées, puis **la demande de validation formulée telle quelle** : *sur cette base, je vous demande de valider le périmètre livré, pour engager le lot suivant*. C'est ce geste, et non la qualité de la démonstration, qui satisfait le 4e critère de C3.4.2 |
 
 ### Chapitre 8 : conclusion (0:30, 1 diapo)
 
@@ -178,7 +178,9 @@ Critères visés : le logiciel est utilisable, la démonstration reprend les fon
 | 5 | 1:00 | Configuration puis lancement de la roue, film gagnant | Cœur du produit |
 | 6 | 0:50 | Clôture, historique, profil public et statistiques | Suivi et dimension sociale |
 
-**Préparation obligatoire** : un compte de démonstration et une soirée pré-remplie créés la veille, un second appareil pour le rôle du participant, et un **plan de repli** si le réseau de la salle tombe : vidéo du parcours complet enregistrée à l'avance, plus l'environnement local prêt à démarrer. La compétence est éliminatoire, elle ne peut pas dépendre du wifi d'une salle d'examen.
+**Préparation obligatoire** : la liste complète est en § 4 de [`07-demonstration.md`](07-demonstration.md) — 8 points la veille, 8 vérifications dans les dix minutes précédentes. Le **plan de repli à quatre niveaux** est en § 5, avec sa phrase de bascule préparée. La compétence est éliminatoire, elle ne peut pas dépendre du wifi d'une salle d'examen.
+
+> **Détail du parcours, glossaire de vocabulaire client et séquence de clôture** : [`07-demonstration.md`](07-demonstration.md). Le tableau ci-dessus en est le résumé ; le script d'exécution, mot pour mot avec les libellés réels de l'interface, est dans le chapitre.
 
 ## 6. Diapositives annexes pour les 15 minutes d'échange
 
@@ -221,8 +223,8 @@ Un fichier source par chapitre, qui alimente les diapositives. Le support ne se 
 | `04-management-equipe.md` | Diapos 19 à 23, C3.3.1 | ✅ Produit |
 | `05-competences.md` | Diapos 24 à 26, C3.3.2 | ✅ Produit |
 | `06-comptes-rendus.md` | Diapos 27 à 29, C3.4.1 | ✅ Produit |
-| `07-demonstration.md` | Diapos 30 et 31, C3.4.2 | À produire |
-| `slides/slides.md` | Le support complet | 🟡 Chapitres 0 à 6, diapos 1 à 29 |
+| `07-demonstration.md` | Diapos 30 et 31, C3.4.2 | ✅ Produit |
+| `slides/slides.md` | Le support complet | 🟡 Chapitres 0 à 7, diapos 1 à 31. Restent la conclusion (diapo 32) et les annexes |
 
 **Règle de numérotation du support** : aucune diapositive de séparation de chapitre. La page `N` de Slidev correspond exactement à la diapositive `N` de ce plan, et donc au rattachement des 14 éléments imposés du § 1. Le titre de chapitre est porté par la première diapositive du chapitre. Toute insertion impose de mettre à jour ce plan et la table `REFS` de `global-bottom.vue` dans le même mouvement.
 

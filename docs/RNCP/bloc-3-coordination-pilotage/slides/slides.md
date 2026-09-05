@@ -1853,3 +1853,137 @@ Terminer sur les 17 jours, puis IMMEDIATEMENT sur ce qui manque : le dispositif
 est ponctuel. Un questionnaire diffuse une fois donne un point, pas une tendance.
 Enchainer sur la demonstration.
 -->
+
+---
+
+# 7. Ce que je vais vous montrer
+
+<div class="text-lg mt-2 mb-6 text-center">
+Choisir à plusieurs quel film regarder, de l'invitation au générique.
+</div>
+
+<div class="grid grid-cols-3 gap-4 text-left text-sm max-w-3xl mx-auto">
+<div class="p-3 rounded border-l-4 border-teal-500">
+<b>1. J'organise</b><br>
+<span class="opacity-75">Une soirée, une date, quelques règles</span>
+</div>
+<div class="p-3 rounded border-l-4 border-teal-500">
+<b>2. J'invite</b><br>
+<span class="opacity-75">Un lien, un QR code — rien à installer</span>
+</div>
+<div class="p-3 rounded border-l-4 border-teal-500">
+<b>3. On propose</b><br>
+<span class="opacity-75">Chacun ajoute les films qu'il a envie de voir</span>
+</div>
+<div class="p-3 rounded border-l-4 border-teal-500">
+<b>4. On vote</b><br>
+<span class="opacity-75">Et on signale ce qu'on a déjà vu</span>
+</div>
+<div class="p-3 rounded border-l-4 border-teal-500">
+<b>5. La roue tranche</b><br>
+<span class="opacity-75">Le film de la soirée est désigné</span>
+</div>
+<div class="p-3 rounded border-l-4 border-teal-500">
+<b>6. Il en reste une trace</b><br>
+<span class="opacity-75">Historique, profil, envie de revenir</span>
+</div>
+</div>
+
+<div class="mt-8 text-sm opacity-80 text-center">
+Sur la version <b>en production</b>, celle qu'utilisent les 17 comptes inscrits. Deux appareils : le mien, et celui d'un invité.
+</div>
+
+<!--
+DUREE 0:20. ELEMENT IMPOSE 14 : la demonstration des fonctionnalites.
+COMPETENCE C3.4.2, ELIMINATOIRE. Le chapitre commence ici.
+
+CHANGEMENT DE REGISTRE, il doit s'entendre. Les six chapitres precedents
+s'adressaient a un jury de professionnels ; celui-ci s'adresse a un client. Le
+vocabulaire change, le debit ralentit, les diapos se vident.
+
+Vingt secondes, pas plus. Annoncer les six temps en les lisant presque tels
+quels, puis la derniere ligne, qui est la seule qui compte pour le critere « le
+logiciel est utilisable » : c'est la version en production, pas une maquette, et
+il y a un second appareil.
+
+MOTS INTERDITS pendant toute la demonstration : API, base de donnees,
+deploiement, cache, jeton. Si l'un sort, NE PAS se reprendre a voix haute — se
+reprendre attire l'attention sur l'erreur. Continuer.
+
+Si une question technique arrive en cours de demonstration : repondre dans le
+registre client, puis « je peux le detailler apres la demonstration si vous le
+souhaitez ». Ne pas basculer au milieu du parcours.
+
+=== BASCULE DE REPLI, si le reseau lache ===
+Niveau 1, reseau lent : partage de connexion du telephone, deja active.
+Niveau 2, reseau indisponible : environnement local deja demarre. DIRE la
+phrase preparee : « le reseau de la salle ne suit pas, je bascule sur la meme
+version, installee sur mon poste. » Puis continuer sans commentaire.
+Niveau 3, poste defaillant : video enregistree, commentee par-dessus.
+Niveau 4 : captures imprimees.
+Un incident annonce calmement se lit comme de la preparation ; un incident subi
+en silence se lit comme une defaillance du logiciel.
+-->
+
+---
+
+# Ce qui est validé, ce qui vient ensuite
+
+<div class="grid grid-cols-2 gap-8 mt-6">
+<div>
+
+### Ce que vous venez de voir
+
+En ligne, utilisé, et couvrant **l'intégralité du parcours annoncé** :
+
+organiser · inviter · proposer · voter · trancher · garder une trace
+
+<div class="mt-4 text-sm opacity-80">
+Non montré faute de temps, accessible à la demande : la liste personnelle « Ma liste » et la synchronisation avec un service tiers, les notifications, l'installation sur téléphone, la connexion avec un compte Google ou GitHub.
+</div>
+
+</div>
+<div>
+
+### Ce qui vient ensuite, déjà arbitré
+
+| Évolution | Coût |
+|-----------|-----:|
+| Rendre les notifications atteignables | 1 j |
+| Réconcilier le vote et son effet sur le tirage | 2 à 3 j |
+| Boucle de retour utilisateur continue | 1 à 2 j |
+
+<div class="text-xs opacity-75 mt-1">Chiffrées, priorisées, issues des mesures d'usage et des retours.</div>
+
+<div class="mt-5 p-3 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40">
+<b>Sur cette base, je vous demande de valider le périmètre livré, pour engager le lot suivant.</b>
+</div>
+
+</div>
+</div>
+
+<!--
+DUREE 0:20. C'EST LA DIAPO QUI SATISFAIT LE QUATRIEME CRITERE DE C3.4.2 :
+« la demonstration permet d'aboutir a une VALIDATION du projet ».
+
+Ce critere n'est pas une consequence automatique d'une bonne demonstration. Une
+demonstration qui se termine par « voila, c'est tout » ne laisse rien a valider.
+Il faut DEMANDER la validation, et la derniere phrase est ecrite pour cela.
+
+Trois temps, vingt secondes :
+
+1. Ce qui est valide. Enumerer les six verbes du parcours, pas les
+fonctionnalites. C'est la promesse produit qui est validee, pas une liste.
+
+2. Ce qui vient ensuite. Trois evolutions CHIFFREES et PRIORISEES, issues des
+mesures et des retours du chapitre 6. Montrer que la suite est instruite et non
+improvisee.
+
+3. LA DEMANDE, prononcee telle qu'elle est ecrite, sans l'adoucir : « sur cette
+base, je vous demande de valider le perimetre livre, pour engager le lot
+suivant. » Puis SE TAIRE et laisser le silence. C'est la fin de la
+demonstration.
+
+Cette formulation place la demonstration dans un cycle de projet — le sujet du
+Bloc 3 — au lieu d'en faire une presentation de produit isolee.
+-->
