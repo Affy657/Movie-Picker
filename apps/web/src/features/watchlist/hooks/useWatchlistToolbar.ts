@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { genreLabel } from '@/features/profile/lib/tmdbGenres';
+import { genreLabel } from '@/shared/utils/tmdbGenres';
 import {
   DECADE_OPTIONS,
   RUNTIME_MAX_MINUTES,

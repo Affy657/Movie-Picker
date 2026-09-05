@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { genreLabel } from '@/features/profile/lib/tmdbGenres';
+import { genreLabel } from '@/shared/utils/tmdbGenres';
 import DurationRangeSlider from '@/features/movies/components/DurationRangeSlider';
 import {
   DECADE_OPTIONS,

@@ -146,8 +146,6 @@
   z-index: 3;
   display: inline-flex;
   align-items: center;
-  /* Horizontal: padding-right reduced by the trailing letter-spacing. Vertical:
-     padding-top +0.11em / padding-bottom -0.11em to optically center the caps. */
   padding: calc(0.1rem + 0.11em) calc(0.4rem - var(--tracking-wide)) calc(0.1rem - 0.11em) 0.4rem;
   border-radius: var(--radius-sm);
   background: rgba(7, 11, 22, 0.7);
@@ -160,8 +158,6 @@
   line-height: var(--leading-none);
 }
 
-/* Neutralizes .badge's own absolute position when several badges are stacked
-   by a shared positioned wrapper (see ProfileMovieCard.module.css .badgeGroup). */
 .badgeStacked {
   position: static;
   top: auto;

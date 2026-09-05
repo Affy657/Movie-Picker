@@ -32,7 +32,6 @@ public sealed class GetInboxHandlerTests
         Assert.Equal(2, result.Items.Count);
         Assert.Equal("newfollower", result.Items[0].Type);
         Assert.Equal("bob", result.Items[0].ActorHandle);
-        // Le nombre de non-lus vient du total (toutes pages), pas seulement de la page affichée.
         Assert.Equal(9, result.UnreadCount);
         Assert.False(result.HasMore);
     }

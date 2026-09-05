@@ -6,11 +6,11 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoFollowRepository : IFollowRepository
 {
-    private readonly IMongoCollection<FollowDocument> _collection;
+    private readonly TransactionalCollection<FollowDocument> _collection;
 
-    public MongoFollowRepository(IMongoDatabase database)
+    public MongoFollowRepository(MongoCollectionFactory collections)
     {
-        _collection = database.GetCollection<FollowDocument>("follows");
+        _collection = collections.GetCollection<FollowDocument>("follows");
     }
 
     public async Task<bool> FollowAsync(string followerId, string followeeId, CancellationToken ct = default)

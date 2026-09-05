@@ -2,7 +2,7 @@
   "name": "movie-picker",
   "private": true,
   "simple-git-hooks": {
-    "pre-push": "pnpm run lint && pnpm run format:check"
+    "pre-push": "pnpm run check:architecture && pnpm run lint && pnpm run format:check"
   },
   "scripts": {
     "prepare": "simple-git-hooks",
@@ -15,13 +15,17 @@
     "dev:full": "concurrently -n web,api -c blue,green \"pnpm run dev:web\" \"pnpm run dev:api-dotnet\"",
     "lint": "turbo run lint",
     "lint:eslint": "eslint \"apps/web/src/**/*.{ts,tsx}\"",
+    "check:architecture": "node scripts/check-architecture.mjs",
     "format": "prettier --write \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts eslint.config.mjs",
     "format:check": "prettier --check \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts eslint.config.mjs",
     "format:dotnet": "dotnet format apps/api-dotnet/MoviePicker.slnx --verbosity minimal",
     "format:dotnet:check": "dotnet format apps/api-dotnet/MoviePicker.slnx --verify-no-changes --verbosity minimal",
     "openapi:export": "node scripts/export-openapi.cjs",
+    "openapi:types": "openapi-typescript artifacts/openapi-v1.json -o apps/web/src/shared/api/generated/openapiSchema.ts",
+    "openapi:types:check": "node scripts/check-openapi-types.mjs",
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
+    "test:api:mongo": "node scripts/test-api-mongo.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ci": "cross-env VITE_API_URL=http://127.0.0.1:5010 pnpm --filter \"./apps/web\" run build && cross-env CI=1 pnpm run test:e2e",
     "audit": "pnpm audit --audit-level=high",
@@ -39,6 +43,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.11.0",
     "lighthouse": "^13.4.1",
+    "openapi-typescript": "^7.13.0",
     "prettier": "^3.9.6",
     "serve": "^14.2.6",
     "simple-git-hooks": "^2.14.0",

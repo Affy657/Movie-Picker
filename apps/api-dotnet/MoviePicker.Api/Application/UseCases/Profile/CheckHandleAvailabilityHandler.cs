@@ -20,7 +20,6 @@ public sealed class CheckHandleAvailabilityHandler : ICheckHandleAvailabilityHan
             return new HandleAvailabilityResponse { Handle = normalized, Available = false, Reason = error };
 
         var existing = await _users.GetByHandleAsync(normalized, ct);
-        // The user's own current handle counts as available to them.
         var available = existing is null || existing.Id == currentUserId;
 
         return new HandleAvailabilityResponse

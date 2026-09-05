@@ -13,22 +13,29 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
     private const string TmdbHomeUrl = "https://www.themoviedb.org/";
 
     private readonly ITmdbMovieSearch _tmdb;
+    private readonly IEventRepository _events;
     private readonly MoviePickerOptions _options;
 
-    public SearchMoviesHandler(ITmdbMovieSearch tmdb, IOptions<MoviePickerOptions> options)
+    public SearchMoviesHandler(
+        ITmdbMovieSearch tmdb,
+        IEventRepository events,
+        IOptions<MoviePickerOptions> options)
     {
         _tmdb = tmdb;
+        _events = events;
         _options = options.Value;
     }
 
     public async Task<MovieSearchListResponse> HandleAsync(
         string query,
-        bool allowSeries,
+        string? eventSlug,
         MovieSearchFilters? filters = null,
         CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(_options.TmdbApiKey))
             throw new ServiceUnavailableException("Recherche films temporairement indisponible");
+
+        var allowSeries = await AllowsSeriesAsync(eventSlug, ct);
 
         IReadOnlyList<TmdbSearchItem> rows;
         try
@@ -56,9 +63,6 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
         var maxLookups = Math.Clamp(_options.TmdbSearchMaxWatchProviderLookups, 0, 20);
         var maxParallelism = Math.Clamp(_options.TmdbListEnrichmentMaxParallelism, 1, 16);
 
-        // TMDB's text search endpoint doesn't return runtime or accept a runtime filter, so when the
-        // user filters by duration on a text query we must enrich every candidate (not just the
-        // configured lookup cap) to know their runtime before filtering the response.
         var hasTextQuery = !string.IsNullOrWhiteSpace(query);
         var hasRuntimeFilter = filters?.RuntimeMin.HasValue == true || filters?.RuntimeMax.HasValue == true;
         var runtimeFilterNeedsEnrichment = hasRuntimeFilter && hasTextQuery;
@@ -123,6 +127,15 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
             Disclaimer = TmdbIndicativeCopy.Disclaimer,
             TmdbAttributionUrl = TmdbHomeUrl
         };
+    }
+
+    private async Task<bool> AllowsSeriesAsync(string? eventSlug, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(eventSlug))
+            return false;
+
+        var evt = await _events.GetByIdOrSlugAsync(eventSlug.Trim(), ct);
+        return evt?.Config?.AllowSeries ?? false;
     }
 
     private static bool MatchesRuntime(int? runtime, int? runtimeMin, int? runtimeMax) =>

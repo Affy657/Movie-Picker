@@ -18,6 +18,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
     private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly IPushNotificationSender _pushSender;
     private readonly IUserNotificationRepository _notifications;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<DeleteEventHandler> _logger;
 
     public DeleteEventHandler(
@@ -31,6 +32,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         IPushSubscriptionRepository pushSubscriptions,
         IPushNotificationSender pushSender,
         IUserNotificationRepository notifications,
+        IUnitOfWork unitOfWork,
         ILogger<DeleteEventHandler> logger)
     {
         _eventRepository = eventRepository;
@@ -43,6 +45,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         _pushSubscriptions = pushSubscriptions;
         _pushSender = pushSender;
         _notifications = notifications;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
@@ -66,13 +69,24 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
 
         _ = NotifyParticipantsOnEventDeletedAsync(evt, participantUserIds, CancellationToken.None);
 
-        var removedVotes = await _voteRepository.DeleteByEventIdAsync(evt.Id, ct);
-        var removedSeenMarks = await _seenMarkRepository.DeleteByEventIdAsync(evt.Id, ct);
-        var removedMovies = await _movieRepository.DeleteByEventIdAsync(evt.Id, ct);
-        var removedParticipants = await _participantRepository.DeleteByEventIdAsync(evt.Id, ct);
-        await _notifications.DeleteByEventIdAsync(evt.Id, ct);
+        long removedVotes = 0;
+        long removedSeenMarks = 0;
+        long removedMovies = 0;
+        long removedParticipants = 0;
+        var deleted = false;
 
-        var deleted = await _eventRepository.DeleteAsync(evt.Id, ct);
+        await _unitOfWork.ExecuteAsync(
+            async token =>
+            {
+                removedVotes = await _voteRepository.DeleteByEventIdAsync(evt.Id, token);
+                removedSeenMarks = await _seenMarkRepository.DeleteByEventIdAsync(evt.Id, token);
+                removedMovies = await _movieRepository.DeleteByEventIdAsync(evt.Id, token);
+                removedParticipants = await _participantRepository.DeleteByEventIdAsync(evt.Id, token);
+                await _notifications.DeleteByEventIdAsync(evt.Id, token);
+                deleted = await _eventRepository.DeleteAsync(evt.Id, token);
+            },
+            ct);
+
         if (!deleted)
         {
             _logger.LogWarning(

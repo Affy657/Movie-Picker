@@ -64,8 +64,6 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
             .DistinctBy(e => e.Id);
         var (currentStreakWeeks, bestStreakWeeks) = ComputeStreaks(qualifyingEvents, now);
 
-        // The user's own created events double as the "created" count and the set we subtract
-        // from participations to avoid counting a hosted soirée as "joined".
         var createdEvents = await _events.ListByCreatorUserIdAsync(user.Id, CreatedEventsCap, ct);
         var createdEventIds = createdEvents.Select(e => e.Id).ToHashSet();
         var eventsJoined = participants
@@ -118,10 +116,6 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
         };
     }
 
-    // Heatmap-style window: one bucket per day over the last ActivityWeeks weeks (~6 months),
-    // aligned so the grid starts on a Monday and ends today. Each entry in eventDates is an event's
-    // date string ("yyyy-MM-dd") — the date of the soirée, not the join timestamp.
-    // Days outside the window are ignored.
     private List<DailyActivityPoint> BuildDailyActivity(IReadOnlyList<string> eventDates)
     {
         var today = _clock.GetUtcNow().UtcDateTime.Date;
@@ -154,16 +148,12 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
         return result;
     }
 
-    // ISO week convention shared with BuildDailyActivity: weeks run Monday-to-Sunday, in UTC.
     internal static DateTime MondayOfWeek(DateTime date)
     {
         var daysFromMonday = ((int)date.DayOfWeek + 6) % 7;
         return date.Date.AddDays(-daysFromMonday);
     }
 
-    // Current streak = consecutive weeks with a qualifying soirée, walking back from this week
-    // (or last week if this week has none yet, so an in-progress week never breaks the streak).
-    // Best streak = the longest such run anywhere in the user's history.
     internal static (int Current, int Best) ComputeStreaks(IEnumerable<Event> qualifyingEvents, DateTimeOffset now)
     {
         var weeks = qualifyingEvents

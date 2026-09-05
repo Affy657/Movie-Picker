@@ -143,7 +143,6 @@ public sealed class GetUserWatchedMoviesHandlerTests
         _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
         _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Part("p1", "A") });
-        // Winner already picked, but the soirée itself is scheduled in the future and not yet finished.
         _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Evt("A", date: "2030-01-01", winnerMovieId: "m1") });
 

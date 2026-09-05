@@ -3,6 +3,7 @@ using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.DeleteEvent;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.DeleteEvent;
@@ -46,7 +47,8 @@ public sealed class DeleteEventHandlerNotificationTests
         _sut = new DeleteEventHandler(
             _eventRepo.Object, _participantRepo.Object, _movieRepo.Object, _voteRepo.Object,
             _seenMarkRepo.Object, _currentUser.Object, _userRepo.Object, _pushSubRepo.Object,
-            _pushSender.Object, _notifications.Object, NullLogger<DeleteEventHandler>.Instance);
+            _pushSender.Object, _notifications.Object, new InMemoryUnitOfWork(),
+            NullLogger<DeleteEventHandler>.Instance);
     }
 
     private void Participants(params string[] userIds) =>

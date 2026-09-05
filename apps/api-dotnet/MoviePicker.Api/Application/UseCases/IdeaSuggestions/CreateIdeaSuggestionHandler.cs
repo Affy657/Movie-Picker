@@ -36,11 +36,6 @@ public sealed class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionHandler
         await _github.CreateIssueAsync(draft, ct);
     }
 
-    /// <summary>
-    /// Vérifie que le contenu base64 décodé correspond réellement au ContentType déclaré
-    /// (signature binaire), pour empêcher qu'un fichier arbitraire soit committé dans le
-    /// dépôt public sous une étiquette « image » trompeuse.
-    /// </summary>
     private static void ValidateAttachmentContent(IdeaSuggestionAttachmentDto attachment)
     {
         byte[] bytes;
@@ -78,8 +73,6 @@ public sealed class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionHandler
         if (attachments is null || attachments.Count == 0)
             return [];
 
-        // En parallèle : chaque upload s'assure indépendamment que la branche existe,
-        // et une éventuelle course à la création est tolérée (422 "already exists") côté GitHubIssueClient.
         var uploads = await Task.WhenAll(attachments.Select(a => _github.UploadAttachmentAsync(
             new GitHubAttachmentUpload(a.FileName, a.ContentType, a.Base64Content),
             ct)));
@@ -136,10 +129,5 @@ public sealed class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionHandler
         RegexOptions.Compiled,
         TimeSpan.FromMilliseconds(100));
 
-    /// <summary>
-    /// Insère un espace de largeur nulle après chaque « @ » suivi d'un caractère de mot,
-    /// pour empêcher qu'un titre/description/pseudo arbitraire ne déclenche une notification
-    /// GitHub vers un compte tiers non consentant (mention involontaire ou abus).
-    /// </summary>
     private static string NeutralizeMentions(string text) => MentionPattern.Replace(text, "@\u200b");
 }

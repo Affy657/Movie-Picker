@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Linq;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -102,7 +101,7 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
             using var scope = _scopeFactory.CreateScope();
             var sp = scope.ServiceProvider;
             var users = sp.GetRequiredService<IUserRepository>();
-            var hasher = sp.GetRequiredService<IPasswordHasher<User>>();
+            var hasher = sp.GetRequiredService<IPasswordHasher>();
 
             var user = await EnsureUserAsync(users, hasher, email, password, displayName, cancellationToken).ConfigureAwait(false);
 
@@ -208,7 +207,7 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
 
     private async Task<User> EnsureUserAsync(
         IUserRepository users,
-        IPasswordHasher<User> hasher,
+        IPasswordHasher hasher,
         string email,
         string password,
         string displayName,
@@ -217,12 +216,12 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
         var existing = await users.GetByEmailAsync(email, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            var verify = hasher.VerifyHashedPassword(existing, existing.PasswordHash, password);
-            if (verify == PasswordVerificationResult.Failed)
+            var verify = hasher.Verify(existing.PasswordHash, password);
+            if (verify == PasswordVerification.Failed)
             {
                 var rehashed = existing with
                 {
-                    PasswordHash = hasher.HashPassword(existing, password),
+                    PasswordHash = hasher.Hash(password),
                     UpdatedAt = DateTimeOffset.UtcNow
                 };
                 var updated = await users.UpdateAsync(rehashed, ct).ConfigureAwait(false);
@@ -251,7 +250,7 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
             CreatedAt = now,
             UpdatedAt = now
         };
-        var hash = hasher.HashPassword(draft, password);
+        var hash = hasher.Hash(password);
         var handle = await HandleAllocator
             .AllocateFromDisplayNameAsync(users, draft.DisplayName, ct)
             .ConfigureAwait(false);

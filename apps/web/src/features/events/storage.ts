@@ -16,17 +16,13 @@ export function getStoredParticipant(
 export function setStoredParticipant(slug: string, participantId: string, pseudo: string): void {
   try {
     sessionStorage.setItem(PARTICIPANT_KEY + slug, JSON.stringify({ participantId, pseudo }));
-  } catch {
-    // Storage unavailable (private browsing or quota exceeded) — write fails silently
-  }
+  } catch {}
 }
 
 export function removeStoredParticipant(slug: string): void {
   try {
     sessionStorage.removeItem(PARTICIPANT_KEY + slug);
-  } catch {
-    // Storage unavailable (private browsing or quota exceeded) — remove fails silently
-  }
+  } catch {}
 }
 
 const HOST_KEY = 'moviepicker_host_';
@@ -42,15 +38,11 @@ export function getStoredHostToken(slug: string): string | null {
 export function setStoredHostToken(slug: string, token: string): void {
   try {
     sessionStorage.setItem(HOST_KEY + slug, token);
-  } catch {
-    // Storage unavailable (private browsing or quota exceeded) — write fails silently
-  }
+  } catch {}
 }
 
 export function clearStoredHostToken(slug: string): void {
   try {
     sessionStorage.removeItem(HOST_KEY + slug);
-  } catch {
-    // Storage unavailable (private browsing or quota exceeded) — remove fails silently
-  }
+  } catch {}
 }

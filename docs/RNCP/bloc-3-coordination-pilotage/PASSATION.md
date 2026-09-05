@@ -140,7 +140,17 @@ curl -sS "https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@200;400;600"
 rm -rf docs/RNCP/bloc-3-coordination-pilotage/slides/{node_modules,dist}
 ```
 
-### 4.6 Prettier ne touche pas à ce dossier
+### 4.6 Le pipeline bouge — revérifier avant de citer un nombre de jobs
+
+L'annexe A5 énumère les jobs de `ci-cd.yml`. Ce fichier évolue : un job `test-api-mongo` a été ajouté sur `master` le 5 septembre, faisant passer le total de 14 à 15 pendant que cette PR était ouverte. **Avant toute relecture du dossier, recompter :**
+
+```bash
+git show origin/master:.github/workflows/ci-cd.yml | grep -cE '^  [a-z0-9-]+:$'   # retirer 1 pour « push », qui est un déclencheur
+```
+
+Et vérifier le caractère bloquant d'un job par sa présence dans les `needs` de `docker-api`, `deploy-api` ou `deploy-front`.
+
+### 4.7 Prettier ne touche pas à ce dossier
 
 `.prettierignore` exclut `*.md` et `docs/`, et `format:check` ne cible que `apps/`, `configs/` et `e2e/`. **Aucun formatage automatique à craindre ni à lancer** sur ce dossier. La CI ignore d'ailleurs entièrement une PR qui ne touche que `docs/` — seuls `changes` et `gitleaks` s'exécutent, tout le reste est *skipped* par le path-filtering. C'est normal, ce n'est pas un échec.
 

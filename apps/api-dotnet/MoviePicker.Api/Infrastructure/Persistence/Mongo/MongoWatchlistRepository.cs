@@ -7,11 +7,11 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoWatchlistRepository : IWatchlistRepository
 {
-    private readonly IMongoCollection<WatchlistItemDocument> _collection;
+    private readonly TransactionalCollection<WatchlistItemDocument> _collection;
 
-    public MongoWatchlistRepository(IMongoDatabase database)
+    public MongoWatchlistRepository(MongoCollectionFactory collections)
     {
-        _collection = database.GetCollection<WatchlistItemDocument>("watchlist");
+        _collection = collections.GetCollection<WatchlistItemDocument>("watchlist");
     }
 
     public async Task<IReadOnlyList<WatchlistItem>> ListByUserIdAsync(string userId, int limit = 500, CancellationToken ct = default)
@@ -23,6 +23,24 @@ public sealed class MongoWatchlistRepository : IWatchlistRepository
             .ToListAsync(ct);
         return docs.ConvertAll(ToDomain);
     }
+
+    public async Task<IReadOnlyList<WatchlistItem>> ListPageByUserIdAsync(
+        string userId,
+        int skip,
+        int take,
+        CancellationToken ct = default)
+    {
+        var docs = await _collection
+            .Find(x => x.UserId == userId)
+            .SortByDescending(x => x.CreatedAt)
+            .Skip(skip)
+            .Limit(take)
+            .ToListAsync(ct);
+        return docs.ConvertAll(ToDomain);
+    }
+
+    public Task<long> CountByUserIdAsync(string userId, CancellationToken ct = default) =>
+        _collection.CountDocumentsAsync(x => x.UserId == userId, cancellationToken: ct);
 
     public async Task<WatchlistItem?> GetOneAsync(string userId, int tmdbId, MovieMediaType mediaType, CancellationToken ct = default)
     {

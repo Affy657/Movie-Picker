@@ -20,7 +20,7 @@ public sealed class WatchlistControllerTests
         _currentUser.Setup(c => c.GetUserId()).Returns((string?)null);
         var handler = new Mock<IGetWatchlistHandler>();
 
-        var result = await _sut.Get(handler.Object, _currentUser.Object, CancellationToken.None);
+        var result = await _sut.Get(0, null, handler.Object, _currentUser.Object, CancellationToken.None);
 
         Assert.IsType<UnauthorizedResult>(result);
     }
@@ -31,9 +31,9 @@ public sealed class WatchlistControllerTests
         _currentUser.Setup(c => c.GetUserId()).Returns("u1");
         var handler = new Mock<IGetWatchlistHandler>();
         var response = new WatchlistResponse { Items = [] };
-        handler.Setup(h => h.HandleAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(response);
+        handler.Setup(h => h.HandleAsync("u1", 0, null, It.IsAny<CancellationToken>())).ReturnsAsync(response);
 
-        var result = await _sut.Get(handler.Object, _currentUser.Object, CancellationToken.None);
+        var result = await _sut.Get(0, null, handler.Object, _currentUser.Object, CancellationToken.None);
 
         var ok = Assert.IsType<OkObjectResult>(result);
         Assert.Same(response, ok.Value);

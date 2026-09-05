@@ -4,7 +4,6 @@
   border-radius: var(--radius-sm);
   position: relative;
   overflow: hidden;
-  /* Empêche la grille/flex de rétrécir les blocs prévus pour réserver une hauteur. */
   flex-shrink: 0;
 }
 
@@ -34,7 +33,6 @@
   }
 }
 
-/* Variantes — largeur/hauteur laissées au consommateur via style inline ou classes. */
 .text {
   height: 1em;
   border-radius: calc(var(--radius-sm) / 2);

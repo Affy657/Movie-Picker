@@ -49,8 +49,6 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public string? AvatarId { get; set; }
 
-    // Anciens champs (pré-refonte notifications) : conservés en lecture seule pour la migration
-    // à la volée dans UserDocumentMapper. Ne sont plus jamais écrits (voir NotificationPreferences).
     [BsonElement("notifyOnParticipantJoined")]
     [BsonIgnoreIfNull]
     public bool? NotifyOnParticipantJoined { get; set; }

@@ -83,7 +83,6 @@ describe('NotificationsSection', () => {
     expect(
       await screen.findByRole('switch', { name: 'notifications.prefParticipantJoined' })
     ).toBeInTheDocument();
-    // 1 master push toggle + 12 per-type toggles
     expect(screen.getAllByRole('switch')).toHaveLength(13);
   });
 

@@ -16,12 +16,9 @@ public static class AuthenticationExtensions
         IConfiguration configuration)
     {
         services.AddSingleton<ITicketStore>(sp =>
-        {
-            var config = sp.GetRequiredService<IConfiguration>();
-            if (string.IsNullOrWhiteSpace(config["MONGODB_URI"]))
-                return new MemoryAuthTicketStore();
-            return new MongoAuthTicketStore(sp.GetRequiredService<IMongoDatabase>());
-        });
+            sp.GetService<MongoCollectionFactory>() is { } collections
+                ? new MongoAuthTicketStore(collections)
+                : new MemoryAuthTicketStore());
 
         services.AddSingleton<IConfigureOptions<CookieAuthenticationOptions>, MoviePickerCookieAuthenticationConfigurer>();
         services.AddSingleton<OAuthProviderCatalog>();

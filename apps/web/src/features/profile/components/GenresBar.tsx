@@ -1,6 +1,6 @@
 import { useLocale, useTranslation } from '@/shared/i18n';
 import type { GenreCount } from '@/features/profile/api/profileApi';
-import { genreLabel } from '@/features/profile/lib/tmdbGenres';
+import { genreLabel } from '@/shared/utils/tmdbGenres';
 import styles from './ProfileStatsSection.module.css';
 
 const HUES = [255, 195, 155, 310, 65, 20];

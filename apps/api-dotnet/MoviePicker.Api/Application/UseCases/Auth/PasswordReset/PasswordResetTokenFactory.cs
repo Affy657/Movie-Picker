@@ -1,6 +1,6 @@
+using System.Buffers.Text;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.AspNetCore.WebUtilities;
 
 namespace MoviePicker.Api.Application.UseCases.Auth.PasswordReset;
 
@@ -10,7 +10,7 @@ public static class PasswordResetTokenFactory
     {
         Span<byte> bytes = stackalloc byte[32];
         RandomNumberGenerator.Fill(bytes);
-        var plain = WebEncoders.Base64UrlEncode(bytes);
+        var plain = Base64Url.EncodeToString(bytes);
         return (plain, Hash(plain));
     }
 

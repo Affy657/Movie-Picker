@@ -33,7 +33,6 @@
   transform: translateY(var(--text-optical-nudge));
 }
 
-/* ---------- Bouton Suivi : au repos "Suivi", au survol/focus "Ne plus suivre" ---------- */
 .iconActive,
 .labelActive {
   display: none;

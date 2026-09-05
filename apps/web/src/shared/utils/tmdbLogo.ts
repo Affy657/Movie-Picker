@@ -10,9 +10,7 @@ export function toAbsoluteTmdbLogoUrl(raw: string): string {
       u.protocol = 'https:';
       return u.toString();
     }
-  } catch {
-    // not a parseable absolute URL
-  }
+  } catch {}
   return t;
 }
 

@@ -172,7 +172,6 @@ public sealed class GetUserMoviesHandlerTests
         _movies.Setup(r => r.ListByParticipantIdsPagedAsync(
                 It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Mov("m1", "p1", "A", DateTimeOffset.UtcNow) });
-        // Winner already picked, but the soirée itself hasn't finished (future date, no ClosedAt).
         _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Evt("A", winnerMovieId: "m1", closedAt: null, date: "2030-01-01") });
 
