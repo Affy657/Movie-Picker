@@ -1,10 +1,10 @@
 ﻿.layout {
-  --page-max-width: min(64rem, 100%);
+  --page-max-width: min(var(--container-xl), 100%);
   padding-left: max(1.15rem, calc(1rem + env(safe-area-inset-left, 0px)));
   padding-right: max(1.15rem, calc(1rem + env(safe-area-inset-right, 0px)));
 }
 
-@media (min-width: 640px) {
+@media (min-width: 40rem) {
   .layout {
     padding-left: max(1.5rem, calc(1.5rem + env(safe-area-inset-left, 0px)));
     padding-right: max(1.5rem, calc(1.5rem + env(safe-area-inset-right, 0px)));
@@ -12,7 +12,7 @@
 }
 
 .pageTitle {
-  margin: 0 0 1.25rem;
+  margin: 0 0 var(--space-5);
   font-size: clamp(1.5rem, 4vw, 1.875rem);
   font-weight: 800;
   letter-spacing: var(--tracking-tight);
@@ -22,9 +22,9 @@
 
 .tabs {
   display: flex;
-  gap: 0.25rem;
-  margin: 0 0 1.5rem;
-  padding: 0.3rem;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-6);
+  padding: var(--space-1);
   background: var(--color-bg);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
@@ -36,8 +36,8 @@
 .tab {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.5rem 0.95rem;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
   font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--color-text-muted);
@@ -51,8 +51,10 @@
     color var(--duration-base) var(--ease-default);
 }
 
-.tab:hover:not(.tabActive) {
-  color: var(--color-text);
+@media (hover: hover) {
+  .tab:hover:not(.tabActive) {
+    color: var(--color-text);
+  }
 }
 
 .tab:focus-visible {
@@ -72,7 +74,7 @@
   justify-content: center;
   min-width: 1.3rem;
   height: 1.3rem;
-  padding: 0 0.35rem;
+  padding: 0 var(--space-1-5);
   font-size: var(--font-size-3xs);
   font-weight: 700;
   border-radius: var(--radius-pill);
@@ -90,11 +92,11 @@
 }
 
 .section + .section {
-  margin-top: 1.85rem;
+  margin-top: var(--space-7);
 }
 
 .sectionTitle {
-  margin: 0 0 0.6rem;
+  margin: 0 0 var(--space-2-5);
   font-size: var(--font-size-2xs);
   font-weight: 700;
   letter-spacing: var(--tracking-widest);
@@ -109,13 +111,13 @@
   width: 100%;
   box-sizing: border-box;
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 48rem) {
   .list {
     grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+    gap: var(--space-4);
   }
 }
 
@@ -127,7 +129,7 @@
 }
 
 .ctaNav {
-  margin-top: 1.65rem;
+  margin-top: var(--space-7);
   margin-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
 }
 
@@ -139,10 +141,10 @@
   display: block;
   width: fit-content;
   max-width: 100%;
-  margin-top: 0.5rem;
+  margin-top: var(--space-2);
   margin-left: auto;
   margin-right: auto;
-  padding: 0.55rem 1rem;
+  padding: var(--space-2) var(--space-4);
   font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--color-text-muted);
@@ -155,20 +157,22 @@
     border-color var(--duration-base) var(--ease-default);
 }
 
-.loadMoreBtn:hover {
-  color: var(--color-text);
-  border-color: color-mix(in srgb, var(--color-text) 35%, transparent);
+@media (hover: hover) {
+  .loadMoreBtn:hover {
+    color: var(--color-text);
+    border-color: color-mix(in srgb, var(--color-text) 35%, transparent);
+  }
 }
 
 .linkWithKebab {
-  padding-right: 2.75rem;
+  padding-right: var(--space-11);
 }
 
 .itemKebab {
   position: absolute;
   top: 0.6rem;
   right: 0.6rem;
-  z-index: 2;
+  z-index: var(--z-raised);
 }
 
 .ghostCard {
@@ -176,10 +180,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-height: 6rem;
   height: 100%;
-  padding: 1rem;
+  padding: var(--space-4);
   border: 1px dashed var(--color-border);
   border-radius: var(--radius-md);
   color: var(--color-text-muted);
@@ -191,33 +195,35 @@
     border-color var(--duration-base) var(--ease-default);
 }
 
-.ghostCard:hover {
-  color: var(--color-primary);
-  border-color: var(--color-primary);
+@media (hover: hover) {
+  .ghostCard:hover {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+  }
 }
 
 .activeLayout {
   display: flex;
   flex-direction: column;
-  gap: 1.85rem;
+  gap: var(--space-7);
 }
 
 .historyLayout {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--space-5);
 }
 
 .monthSection {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .monthHeading {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: var(--space-3-5);
 }
 
 .monthHeading .sectionTitle {
@@ -240,5 +246,5 @@
 .historyList {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: var(--space-2-5);
 }

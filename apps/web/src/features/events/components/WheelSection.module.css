@@ -1,11 +1,11 @@
 .section {
-  margin: 0 0 1.35rem;
+  margin: 0 0 var(--space-5);
 }
 
 .lockup {
   display: flex;
   align-items: flex-start;
-  gap: 1.15rem;
+  gap: var(--space-5);
 }
 
 .posterFrame {
@@ -27,14 +27,14 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.28rem;
-  padding-top: 0.1rem;
+  gap: var(--space-1);
+  padding-top: var(--space-0-5);
 }
 
 .kicker {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--space-1-5);
   margin: 0;
   line-height: 1;
   font-size: var(--font-size-2xs);
@@ -74,14 +74,14 @@
 .meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem 0.75rem;
+  gap: var(--space-1-5) var(--space-3);
   margin: 0;
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
 }
 
 .providers {
-  margin-top: 0.35rem;
+  margin-top: var(--space-1-5);
 }
 
 @media (max-width: 47.9375rem) {
@@ -91,6 +91,6 @@
   }
 
   .lockup {
-    gap: 0.85rem;
+    gap: var(--space-3-5);
   }
 }

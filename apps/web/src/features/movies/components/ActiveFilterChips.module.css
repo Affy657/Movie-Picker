@@ -1,41 +1,7 @@
 .row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.28rem 0.7rem;
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-pill);
-  line-height: var(--leading-none);
-}
-
-.label {
-  transform: translateY(var(--text-optical-nudge));
-}
-
-.remove {
-  display: inline-flex;
-  align-items: center;
-  opacity: 0.75;
-  background: none;
-  border: none;
-  padding: 0;
-  color: inherit;
-  cursor: pointer;
-}
-
-.remove:hover,
-.remove:focus-visible {
-  opacity: 1;
+  gap: var(--space-1-5);
 }
 
 .clearAll {
@@ -44,7 +10,7 @@
   color: var(--color-primary);
   background: none;
   border: none;
-  padding: 0.28rem 0.4rem;
+  padding: var(--space-1) var(--space-1-5);
   font-family: inherit;
   cursor: pointer;
 }

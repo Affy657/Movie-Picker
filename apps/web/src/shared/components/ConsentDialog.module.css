@@ -1,26 +1,12 @@
-.dialog {
-  width: min(500px, calc(100vw - 2rem));
-  padding: 1.5rem;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-lg);
-  color: var(--color-text);
-}
-
-.dialog::backdrop {
-  background: var(--overlay-backdrop, rgba(0, 0, 0, 0.55));
-}
-
 .title {
-  margin: 0 0 0.5rem;
+  margin: 0 0 var(--space-2);
   font-size: var(--font-size-lg);
   font-weight: 700;
   color: var(--color-text);
 }
 
 .description {
-  margin: 0 0 1.25rem;
+  margin: 0 0 var(--space-5);
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
   line-height: var(--leading-relaxed);
@@ -28,18 +14,18 @@
 
 .categories {
   list-style: none;
-  margin: 0 0 1.5rem;
+  margin: 0 0 var(--space-6);
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .category {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.875rem 1rem;
+  gap: var(--space-3);
+  padding: var(--space-3-5) var(--space-4);
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border-subtle);
   background: color-mix(in srgb, var(--color-text) 3%, transparent);
@@ -48,7 +34,7 @@
 .categoryLabel {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
   width: 100%;
   cursor: pointer;
 }
@@ -66,7 +52,7 @@
 }
 
 .categoryDesc {
-  margin: 0.2rem 0 0;
+  margin: var(--space-1) 0 0;
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
   line-height: var(--leading-normal);
@@ -74,7 +60,7 @@
 
 .requiredBadge {
   flex-shrink: 0;
-  padding: 0.15rem 0.55rem;
+  padding: var(--space-0-5) var(--space-2);
   border-radius: var(--radius-pill);
   font-size: var(--font-size-xs);
   font-weight: 600;
@@ -92,7 +78,7 @@
 
 .actions {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .actionBtn {
@@ -104,6 +90,8 @@
   color: var(--color-text-muted);
 }
 
-.rejectBtn:hover {
-  color: var(--color-text);
+@media (hover: hover) {
+  .rejectBtn:hover {
+    color: var(--color-text);
+  }
 }

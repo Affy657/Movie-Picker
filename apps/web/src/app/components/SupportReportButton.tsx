@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { useLocation } from 'react-router';
 import { X } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
@@ -9,6 +9,7 @@ import {
   buildSupportReportText,
   type SupportContext,
 } from '@/shared/support/supportMailto';
+import Modal from '@/shared/components/Modal';
 import styles from './SupportReportButton.module.css';
 
 type CopyState = 'idle' | 'copied' | 'failed';
@@ -22,7 +23,6 @@ export default function SupportReportButton({ className }: Readonly<Props>) {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [copyState, setCopyState] = useState<CopyState>('idle');
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const reportId = useId();
 
@@ -56,30 +56,6 @@ export default function SupportReportButton({ className }: Readonly<Props>) {
 
   const mailtoHref = useMemo(() => buildSupportMailto(context), [context]);
 
-  useEffect(() => {
-    const dlg = dialogRef.current;
-    if (!dlg) return;
-    if (open && !dlg.open) dlg.showModal();
-    else if (!open && dlg.open) dlg.close();
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const dlg = dialogRef.current;
-    const onBackdropClick = (e: MouseEvent) => {
-      if (e.target === dlg) setOpen(false);
-    };
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-    dlg?.addEventListener('click', onBackdropClick);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      dlg?.removeEventListener('click', onBackdropClick);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [open]);
-
   const handleCopy = async () => {
     const ok = await copyTextToClipboard(reportText);
     setCopyState(ok ? 'copied' : 'failed');
@@ -98,12 +74,7 @@ export default function SupportReportButton({ className }: Readonly<Props>) {
       >
         {t('footer.reportIssue')}
       </button>
-      <dialog
-        ref={dialogRef}
-        className={styles.dialog}
-        aria-labelledby={titleId}
-        onClose={() => setOpen(false)}
-      >
+      <Modal open={open} onClose={() => setOpen(false)} size="md" labelledBy={titleId}>
         <div className={styles.inner}>
           <header className={styles.header}>
             <h2 id={titleId} className={styles.title}>
@@ -142,7 +113,7 @@ export default function SupportReportButton({ className }: Readonly<Props>) {
 
           <p className={styles.hint}>{t('support.fallbackHint', { email: SUPPORT_EMAIL })}</p>
         </div>
-      </dialog>
+      </Modal>
     </>
   );
 }

@@ -1,25 +1,25 @@
 .movieListBleed {
-  margin-left: -1rem;
-  margin-right: -1rem;
+  margin-left: calc(var(--space-4) * -1);
+  margin-right: calc(var(--space-4) * -1);
 }
 
 .sectionHeader {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  margin-bottom: 0.75rem;
+  gap: var(--space-2-5);
+  margin-bottom: var(--space-3);
 }
 
 .viewToggle {
   display: flex;
   align-items: center;
-  gap: 0.1rem;
+  gap: var(--space-0-5);
   flex-shrink: 0;
   margin-left: auto;
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
-  padding: 0.15rem;
+  padding: var(--space-0-5);
 }
 
 .viewToggleBtn {
@@ -39,9 +39,11 @@
     color var(--duration-base) var(--ease-default);
 }
 
-.viewToggleBtn:hover:not(.viewToggleBtnActive) {
-  background: color-mix(in srgb, var(--color-text) 8%, transparent);
-  color: var(--color-text);
+@media (hover: hover) {
+  .viewToggleBtn:hover:not(.viewToggleBtnActive) {
+    background: color-mix(in srgb, var(--color-text) 8%, transparent);
+    color: var(--color-text);
+  }
 }
 
 .viewToggleBtn:focus-visible {
@@ -57,8 +59,8 @@
 .wheelDivider {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin: 1.5rem 0 0.6rem;
+  gap: var(--space-3);
+  margin: var(--space-6) 0 var(--space-2-5);
 }
 
 .wheelDividerLabel {
@@ -85,7 +87,7 @@
 .loadingState {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: var(--space-2-5);
 }
 
 .skeletonHeader {
@@ -97,5 +99,5 @@
 }
 
 .addSection {
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }

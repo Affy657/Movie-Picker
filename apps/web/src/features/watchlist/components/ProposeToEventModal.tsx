@@ -1,7 +1,6 @@
 import { useId, useState } from 'react';
 import { X } from 'lucide-react';
 import { Link } from 'react-router';
-import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import { useTranslation } from '@/shared/i18n';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { ROUTES } from '@/app/routes';
@@ -15,6 +14,7 @@ import {
   type ProposableMovie,
 } from '@/features/watchlist/hooks/useProposeMovieToEvent';
 import styles from './ProposeToEventModal.module.css';
+import Modal from '@/shared/components/Modal';
 
 type RowState = { status: 'idle' | 'pending' | 'done' | 'error'; error?: string };
 
@@ -30,7 +30,6 @@ export default function ProposeToEventModal({
   onClose,
 }: Readonly<ProposeToEventModalProps>) {
   const { t } = useTranslation();
-  const dialogRef = useModalDialog(open, onClose);
   const titleId = useId();
   const [rows, setRows] = useState<Record<string, RowState>>({});
   const propose = useProposeMovieToEvent();
@@ -53,7 +52,7 @@ export default function ProposeToEventModal({
   };
 
   return (
-    <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>
+    <Modal open={open} onClose={onClose} size="md" column labelledBy={titleId}>
       <div className={styles.header}>
         <h2 id={titleId} className={styles.title}>
           {t('watchlist.propose.modalTitle', { title: movie.title })}
@@ -109,6 +108,6 @@ export default function ProposeToEventModal({
           {t('watchlist.propose.viewMore')}
         </Link>
       ) : null}
-    </dialog>
+    </Modal>
   );
 }

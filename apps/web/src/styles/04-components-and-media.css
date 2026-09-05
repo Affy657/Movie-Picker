@@ -1,6 +1,6 @@
 .btn-sm {
-  padding: 0.4rem 1rem;
-  font-size: 0.875rem;
+  padding: var(--space-1-5) var(--space-4);
+  font-size: var(--font-size-sm);
   min-height: 36px;
 }
 
@@ -16,9 +16,11 @@
   box-shadow: none;
 }
 
-.btn-ghost:hover {
-  background: var(--color-surface-hover);
-  border-color: transparent;
+@media (hover: hover) {
+  .btn-ghost:hover {
+    background: var(--color-surface-hover);
+    border-color: transparent;
+  }
 }
 
 .icon-btn-outline {
@@ -29,26 +31,35 @@
   cursor: pointer;
 }
 
-.icon-btn-outline:hover,
 .icon-btn-outline:focus-visible {
   border-color: var(--color-primary);
   color: var(--color-primary);
   outline: none;
 }
 
+@media (hover: hover) {
+  .icon-btn-outline:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    outline: none;
+  }
+}
+
 .tmdb-vote {
   color: var(--color-meta);
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: normal;
 }
 
 .tmdb-watch-link {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--color-primary);
   text-decoration: none;
   align-self: flex-start;
 }
 
-.tmdb-watch-link:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  .tmdb-watch-link:hover {
+    text-decoration: underline;
+  }
 }

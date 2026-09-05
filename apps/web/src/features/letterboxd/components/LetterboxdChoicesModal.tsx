@@ -1,7 +1,6 @@
 import { useId, useRef, useState, type KeyboardEvent } from 'react';
 import clsx from 'clsx';
 import { Check, X } from 'lucide-react';
-import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import type { TranslationKey } from '@/shared/i18n';
@@ -16,6 +15,7 @@ import {
   type LetterboxdSelection,
 } from '@/features/letterboxd/api/letterboxdApi';
 import styles from './LetterboxdChoicesModal.module.css';
+import Modal from '@/shared/components/Modal';
 
 interface LetterboxdChoicesModalProps {
   open: boolean;
@@ -68,7 +68,6 @@ export default function LetterboxdChoicesModal({
 }: Readonly<LetterboxdChoicesModalProps>) {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
-  const dialogRef = useModalDialog(open, onClose);
   const titleId = useId();
 
   const [index, setIndex] = useState(0);
@@ -159,7 +158,7 @@ export default function LetterboxdChoicesModal({
   };
 
   return (
-    <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>
+    <Modal open={open} onClose={onClose} size="lg" column labelledBy={titleId}>
       <div className={styles.header}>
         <div className={styles.headTextGroup}>
           <h2 id={titleId} className={styles.title}>
@@ -303,6 +302,6 @@ export default function LetterboxdChoicesModal({
           </button>
         </div>
       </div>
-    </dialog>
+    </Modal>
   );
 }

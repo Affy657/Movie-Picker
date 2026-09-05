@@ -9,7 +9,7 @@
   justify-content: center;
   width: 2.75rem;
   height: 2.75rem;
-  margin: -0.475rem;
+  margin: calc(var(--space-2) * -1);
   padding: 0;
   border: none;
   border-radius: var(--radius-pill);
@@ -21,9 +21,16 @@
     color var(--duration-base) var(--ease-default);
 }
 
-.trigger:hover,
 .trigger:focus-visible {
   background: color-mix(in srgb, var(--color-text-muted) 14%, transparent);
   color: var(--color-text);
   outline: none;
+}
+
+@media (hover: hover) {
+  .trigger:hover {
+    background: color-mix(in srgb, var(--color-text-muted) 14%, transparent);
+    color: var(--color-text);
+    outline: none;
+  }
 }

@@ -13,9 +13,9 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { ROUTES } from '@/app/routes';
 import { clearStoredHostToken, removeStoredParticipant } from '@/features/events/storage';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import { useSheetDrag } from '@/shared/hooks/useSheetDrag';
 import dragStyles from '@/shared/components/sheetDrag.module.css';
+import Modal from '@/shared/components/Modal';
 import styles from './HostEventSettingsPanel.module.css';
 import { eventDateTimeToLocal, splitDateTimeLocal } from '@/shared/utils/eventDateTimeLocal';
 import { formatRelativeEventDate } from '@/shared/utils/formatRelativeEventDate';
@@ -139,7 +139,7 @@ export default function HostEventSettingsPanel({
     wasOpenRef.current = open;
   }, [open, hydrateFromEvent]);
 
-  const dialogRef = useModalDialog(open, onClose);
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const dragBind = useSheetDrag(dialogRef, onClose, open);
 
   const mutation = useMutation({
@@ -263,10 +263,14 @@ export default function HostEventSettingsPanel({
         : t('events.settings.saveStatusSaved');
 
   return (
-    <dialog
-      ref={dialogRef}
+    <Modal
+      open={open}
+      onClose={onClose}
+      size="lg"
+      column
+      labelledBy={titleId}
+      dialogRef={dialogRef}
       className={clsx(styles.dialog, dragStyles.surface)}
-      aria-labelledby={titleId}
     >
       <div className={dragStyles.grab} {...dragBind}>
         <span className={clsx(dragStyles.handle, dragStyles.handleMobileOnly)} aria-hidden="true" />
@@ -573,6 +577,6 @@ export default function HostEventSettingsPanel({
           testId="delete-event-confirm-dialog"
         />
       </div>
-    </dialog>
+    </Modal>
   );
 }

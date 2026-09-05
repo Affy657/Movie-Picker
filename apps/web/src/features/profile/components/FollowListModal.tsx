@@ -5,7 +5,6 @@ import { Link } from 'react-router';
 import Avatar from '@/shared/components/Avatar';
 import EmptyState from '@/shared/components/EmptyState';
 import Sheet from '@/shared/components/Sheet';
-import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
@@ -20,6 +19,7 @@ import {
   type FollowUserItem,
 } from '@/features/profile/api/profileApi';
 import styles from './FollowListModal.module.css';
+import Modal from '@/shared/components/Modal';
 
 type Tab = 'following' | 'followers';
 
@@ -44,8 +44,6 @@ export default function FollowListModal({
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<Tab>(initialTab);
   const [followError, setFollowError] = useState<string | null>(null);
-  const dialogRef = useModalDialog(true, onClose);
-
   const followingQuery = useQuery({
     queryKey: queryKeys.profile.following(handle),
     queryFn: () => fetchFollowing(handle),
@@ -180,7 +178,7 @@ export default function FollowListModal({
   }
 
   return (
-    <dialog ref={dialogRef} className={styles.dialog} aria-label={t('profile.follow.listTitle')}>
+    <Modal open onClose={onClose} size="md" column ariaLabel={t('profile.follow.listTitle')}>
       <div className={styles.header}>
         {tabs}
         <button
@@ -200,6 +198,6 @@ export default function FollowListModal({
       )}
 
       {list}
-    </dialog>
+    </Modal>
   );
 }

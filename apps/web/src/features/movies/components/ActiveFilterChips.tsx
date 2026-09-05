@@ -1,3 +1,4 @@
+import Chip from '@/shared/components/Chip';
 import styles from './ActiveFilterChips.module.css';
 
 interface ActiveFilterChipItem {
@@ -26,25 +27,9 @@ export default function ActiveFilterChips({
   return (
     <div className={styles.row} aria-label={groupAriaLabel}>
       {chips.map((chip) => (
-        <span key={chip.key} className={styles.chip}>
-          <span className={styles.label}>{chip.label}</span>
-          <button
-            type="button"
-            className={styles.remove}
-            onClick={chip.onRemove}
-            aria-label={removeAriaLabel}
-          >
-            <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
-              <path
-                d="M1 1l8 8M9 1 1 9"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                fill="none"
-              />
-            </svg>
-          </button>
-        </span>
+        <Chip key={chip.key} tone="primary" onRemove={chip.onRemove} removeLabel={removeAriaLabel}>
+          {chip.label}
+        </Chip>
       ))}
       {onClearAll && clearAllLabel ? (
         <button type="button" className={styles.clearAll} onClick={onClearAll}>

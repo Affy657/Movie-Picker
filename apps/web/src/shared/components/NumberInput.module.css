@@ -12,7 +12,7 @@
 
 .wrap:focus-within {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
+  box-shadow: var(--ring-focus);
 }
 
 .wrapInvalid {
@@ -58,8 +58,10 @@
   user-select: none;
 }
 
-.stepBtn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-primary) 16%, var(--color-surface));
+@media (hover: hover) {
+  .stepBtn:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--color-primary) 16%, var(--color-surface));
+  }
 }
 
 .stepBtn:active:not(:disabled) {

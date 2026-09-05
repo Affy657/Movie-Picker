@@ -1,14 +1,14 @@
 .card {
   display: flex;
   flex-direction: column;
-  padding: 1.5rem;
+  padding: var(--space-6);
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-lg);
 }
 
 .avatar {
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 
 @media (max-width: 47.9375rem) {
@@ -29,9 +29,9 @@
 .handleRow {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   flex-wrap: wrap;
-  margin-top: 0.375rem;
+  margin-top: var(--space-1-5);
 }
 
 .handle {
@@ -41,7 +41,7 @@
 }
 
 .bio {
-  margin: 0.875rem 0 0;
+  margin: var(--space-3-5) 0 0;
   font-size: var(--font-size-base);
   line-height: var(--leading-base);
   white-space: pre-wrap;
@@ -53,15 +53,15 @@
 }
 
 .memberSince {
-  margin: 0.625rem 0 0;
+  margin: var(--space-2-5) 0 0;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
 }
 
 .followStats {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 1.125rem;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
 }
 
 .statCell {
@@ -70,9 +70,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.375rem;
+  gap: var(--space-1-5);
   min-height: 44px;
-  padding: 0.5rem 0.75rem;
+  padding: var(--space-2) var(--space-3);
   background: var(--color-bg);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
@@ -81,14 +81,16 @@
   transition: background var(--duration-fast);
 }
 
-.statCell:hover {
-  background: var(--color-surface-hover);
+@media (hover: hover) {
+  .statCell:hover {
+    background: var(--color-surface-hover);
+  }
 }
 
 .statCellText {
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
+  gap: var(--space-0-5);
   min-width: 0;
 }
 
@@ -113,5 +115,5 @@
 .divider {
   height: 1px;
   background: var(--color-border-subtle);
-  margin: 1.25rem 0;
+  margin: var(--space-5) 0;
 }

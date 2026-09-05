@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import { useTranslation } from '@/shared/i18n';
-import { useModalDialog } from '@/shared/hooks/useDialogOpen';
+import Button from './Button';
+import Modal from './Modal';
 import styles from './ConfirmDialog.module.css';
 
 type ConfirmDialogProps = {
@@ -40,18 +41,18 @@ export default function ConfirmDialog({
   const titleId = `confirm-dialog-title-${reactId}`;
   const messageId = `confirm-dialog-message-${reactId}`;
 
-  const dialogRef = useModalDialog(open, onCancel);
-
   const confirmText = confirmLabel ?? t('common.confirm');
   const cancelText = cancelLabel ?? t('common.cancel');
 
   return (
-    <dialog
-      ref={dialogRef}
-      className={styles.dialog}
-      aria-labelledby={titleId}
-      aria-describedby={messageId}
-      data-testid={testId}
+    <Modal
+      open={open}
+      onClose={onCancel}
+      size="sm"
+      padded
+      labelledBy={titleId}
+      describedBy={messageId}
+      testId={testId}
     >
       <h2 id={titleId} className={styles.title}>
         {title}
@@ -60,25 +61,20 @@ export default function ConfirmDialog({
         {message}
       </p>
       <div className={styles.actions}>
-        <button
-          type="button"
-          className="btn btn-sm"
-          onClick={onCancel}
-          data-testid={`${testId}-cancel`}
-        >
+        <Button size="sm" onClick={onCancel} data-testid={`${testId}-cancel`}>
           {cancelText}
-        </button>
-        <button
-          type="button"
-          className={`btn btn-sm ${confirmVariant === 'danger' ? 'btn-danger' : 'btn-primary'}`}
+        </Button>
+        <Button
+          size="sm"
+          variant={confirmVariant}
           onClick={onConfirm}
           disabled={busy}
           data-testid={`${testId}-confirm`}
           autoFocus
         >
           {confirmText}
-        </button>
+        </Button>
       </div>
-    </dialog>
+    </Modal>
   );
 }

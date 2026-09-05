@@ -19,14 +19,14 @@
 
   display: flex;
   flex-direction: column;
-  gap: 1.05rem;
+  gap: var(--space-4);
 }
 
 .row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.6rem 0.75rem;
+  gap: var(--space-2-5) var(--space-3);
 }
 
 .rowLabel {
@@ -84,26 +84,26 @@
 }
 
 .avatarStackItem {
-  box-shadow: 0 0 0 2px var(--color-surface);
+  box-shadow: var(--ring-surface);
 }
 
 .avatarStackItem + .avatarStackItem {
-  margin-left: -0.4375rem;
+  margin-left: calc(var(--space-1-5) * -1);
 }
 
 .voteButtons {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .voteBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-height: 2.25rem;
-  padding: 0 0.875rem;
+  padding: 0 var(--space-3-5);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
   background: transparent;
@@ -123,9 +123,11 @@
   transform: translateY(var(--text-optical-nudge));
 }
 
-.voteBtn:hover {
-  border-color: var(--color-text-muted);
-  color: var(--color-text);
+@media (hover: hover) {
+  .voteBtn:hover {
+    border-color: var(--color-text-muted);
+    color: var(--color-text);
+  }
 }
 
 .voteBtn:focus-visible {
@@ -150,7 +152,7 @@
 .proposer {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -168,9 +170,14 @@
   transition: opacity var(--duration-base) var(--ease-default);
 }
 
-.proposerLink:hover,
 .proposerLink:focus-visible {
   opacity: 0.75;
+}
+
+@media (hover: hover) {
+  .proposerLink:hover {
+    opacity: 0.75;
+  }
 }
 
 .proposerLink:focus-visible {

@@ -2,7 +2,7 @@
   border: none;
   border-top: 1px solid var(--color-border-subtle);
   margin: 0;
-  padding: 0.35rem 0 0.55rem;
+  padding: var(--space-1-5) 0 var(--space-2);
 }
 
 .prefGroup:first-of-type {
@@ -10,7 +10,7 @@
 }
 
 .prefGroupLegend {
-  padding: 0.6rem 0 0.4rem;
+  padding: var(--space-2-5) 0 var(--space-1-5);
   font-size: var(--font-size-2xs);
   font-weight: 700;
   letter-spacing: var(--tracking-widest);
@@ -22,8 +22,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.3rem 0;
+  gap: var(--space-4);
+  padding: var(--space-1) 0;
 }
 
 .prefLabel {

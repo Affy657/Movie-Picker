@@ -5,11 +5,11 @@ import Avatar from '@/shared/components/Avatar';
 import QrCode from '@/shared/components/QrCode';
 import Sheet from '@/shared/components/Sheet';
 import { Tabs, TabPanel, type TabDef } from '@/shared/components/Tabs';
-import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useShareAction } from '@/shared/hooks/useShareAction';
 import { downloadQrPng } from '@/shared/utils/downloadQrPng';
 import { useTranslation } from '@/shared/i18n';
+import Modal from './Modal';
 import styles from './ShareDialog.module.css';
 
 type ShareSurface = 'event' | 'profile';
@@ -171,7 +171,6 @@ export default function ShareDialog({
   const isMobile = useIsMobile();
   const titleId = useId();
   const tabsIdBase = useId();
-  const dialogRef = useModalDialog(open, onClose);
   const [tab, setTab] = useState<string>('link');
 
   useEffect(() => {
@@ -232,10 +231,13 @@ export default function ShareDialog({
   }
 
   return (
-    <dialog
-      ref={dialogRef}
-      className={clsx(styles.dialog, extraTab && styles.dialogWithTabs)}
-      aria-labelledby={titleId}
+    <Modal
+      open={open}
+      onClose={onClose}
+      size="sm"
+      column
+      labelledBy={titleId}
+      className={clsx(extraTab && styles.dialogWithTabs)}
     >
       {open && (
         <>
@@ -256,6 +258,6 @@ export default function ShareDialog({
           <div className={styles.body}>{panels}</div>
         </>
       )}
-    </dialog>
+    </Modal>
   );
 }

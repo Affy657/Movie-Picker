@@ -10,8 +10,10 @@
   transition: background var(--duration-base);
 }
 
-.bellButton:hover {
-  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+@media (hover: hover) {
+  .bellButton:hover {
+    background: color-mix(in srgb, var(--color-text) 8%, transparent);
+  }
 }
 
 .badge {
@@ -20,7 +22,7 @@
   right: 2px;
   min-width: 1rem;
   height: 1rem;
-  padding: 0 0.2rem;
+  padding: 0 var(--space-1);
   background: var(--color-accent);
   color: var(--color-primary-contrast);
   border-radius: 9999px;

@@ -50,17 +50,17 @@
     titleLead: 'Choisissez le film de la soirée',
     titleAccent: 'ensemble.',
     tagline:
-      'Plus de débats interminables. Créez un événement, invitez vos amis, votez sur les propositions — et laissez la roue trancher si besoin.',
+      'Plus de débats interminables. Créez un événement, invitez vos amis, votez sur les propositions, et laissez la roue trancher si besoin.',
     seoDescription:
-      'Movie Picker — organisez une soirée cinéma : créez un événement, partagez le lien, proposez des films (TMDB), votez et tirez au sort le film gagnant.',
-    ogImageAlt: 'Movie Picker — choisissez le film de la soirée ensemble',
+      'Movie Picker, organisez une soirée cinéma : créez un événement, partagez le lien, proposez des films (TMDB), votez et tirez au sort le film gagnant.',
+    ogImageAlt: 'Movie Picker : choisissez le film de la soirée ensemble',
     stepsKicker: 'En 4 étapes',
     stepsTitle: 'De l’invitation au générique',
     stepsSubtitle: 'Une soirée ciné qui démarre vraiment à l’heure. Promis.',
     steps: {
       invite: {
         title: 'Lancez la soirée',
-        text: 'Un lien, un QR code — tout le monde rejoint en deux clics.',
+        text: 'Un lien, un QR code, et tout le monde rejoint en deux clics.',
       },
       propose: {
         title: 'Proposez vos films',
@@ -68,7 +68,7 @@
       },
       vote: {
         title: 'Votez ensemble',
-        text: 'Pouce en l’air, déjà vu, on garde — les favoris du groupe ressortent vite.',
+        text: 'Pouce en l’air, déjà vu, on garde : les favoris du groupe ressortent vite.',
       },
       wheel: {
         title: 'La roue tranche',
@@ -577,7 +577,7 @@
       notifyDateChangeLabel: 'Prévenir les participants du changement de date',
       themeLabel: 'Thème / ambiance',
       themeEmptyTitle: 'Ajouter un thème',
-      themeEmptySubtitle: 'Optionnel — donne le ton de la soirée.',
+      themeEmptySubtitle: 'Optionnel : donne le ton de la soirée.',
       themePlaceholder: 'Ex: Horreur, Sci-fi, Comédie…',
       clearThemeAria: 'Supprimer le thème',
       clearThemeButton: 'Effacer',
@@ -849,7 +849,7 @@
         'Les notes et les offres de visionnage (streaming / VOD) sont indicatives, issues de The Movie Database (TMDB). Les services disponibles peuvent varier.',
       attributionPrefix: 'Données fournies par',
       attributionLinkLabel: 'TMDB',
-      attributionLinkAria: 'TMDB — ouvrir le site The Movie Database (nouvel onglet)',
+      attributionLinkAria: 'TMDB : ouvrir le site The Movie Database (nouvel onglet)',
     },
     watchProviders: {
       listAria: 'Offres de visionnage indicatives',
@@ -858,14 +858,14 @@
       typeBuy: 'Achat',
       chipAria: '{{provider}} ({{type}})',
       chipLinkAria:
-        '{{provider}} — {{type}}. Ouvrir sur TMDB la page « où regarder ce film » (nouvel onglet).',
+        '{{provider}}, {{type}}. Ouvrir sur TMDB la page « où regarder ce film » (nouvel onglet).',
       showMoreAria: 'Afficher {{count}} plateforme(s) supplémentaire(s)',
       showLessAria: 'Réduire la liste des plateformes',
       emptyLabel: 'Pas en streaming',
       columnLabel: 'Dispo',
-      alsoRentAria: 'Location ({{count}}) — voir où regarder « {{title}} »',
-      alsoBuyAria: 'Achat ({{count}}) — voir où regarder « {{title}} »',
-      alsoAvailableAria: '{{count}} autres offres — voir où regarder « {{title}} »',
+      alsoRentAria: 'Location ({{count}}) : voir où regarder « {{title}} »',
+      alsoBuyAria: 'Achat ({{count}}) : voir où regarder « {{title}} »',
+      alsoAvailableAria: '{{count}} autres offres : voir où regarder « {{title}} »',
     },
     closed: {
       emptyTitle: "Aucun film n'a été choisi",
@@ -1057,7 +1057,7 @@
     linkedinLabel: 'Profil LinkedIn (nouvel onglet)',
     tmdbPrefix: 'Données fournies par',
     tmdbSuffix: '. Les notes et disponibilités sont indicatives.',
-    tmdbLinkAria: 'TMDB — ouvrir The Movie Database (nouvel onglet)',
+    tmdbLinkAria: 'TMDB : ouvrir The Movie Database (nouvel onglet)',
     copyright: '© {{year}} Movie Picker v{{version}}',
     legalTitle: 'Informations légales',
     legalNotice: 'Mentions légales',
@@ -1069,7 +1069,7 @@
     noticeIntro:
       'Movie Picker est un projet développé et édité à titre personnel par Adrien Morand.',
     noticeEditorTitle: 'Éditeur du site',
-    noticeEditorBody: 'Adrien Morand — contact : {{email}}',
+    noticeEditorBody: 'Adrien Morand, contact : {{email}}',
     noticeHostingTitle: 'Hébergement',
     noticeHostingBody:
       'Le site (front) est hébergé par Amazon Web Services (AWS S3 / CloudFront). L’API est hébergée par Google Cloud Platform (Cloud Run). La base de données est hébergée par MongoDB Atlas.',
@@ -1235,7 +1235,7 @@
       genresCumulative: 'Top 6 des genres, sur {{count}} occurrences cumulées',
       activityTitle: 'Activité (6 mois)',
       activityImgAlt: "Heatmap d'activité : {{count}} participation(s) sur 26 semaines",
-      weekTooltip: '{{count}} participation(s) — semaine du {{date}}',
+      weekTooltip: '{{count}} participation(s), semaine du {{date}}',
       legendLess: 'Moins',
       legendMore: 'Plus',
       empty: 'Aucune activité pour le moment.',
@@ -1416,7 +1416,7 @@
       settingsPage: {
         title: 'Paramètres en cinq rubriques',
         description:
-          'Mon compte devient Paramètres : Profil, Préférences, Notifications, Intégrations, Compte et sécurité — le tout enregistré automatiquement.',
+          'Mon compte devient Paramètres : Profil, Préférences, Notifications, Intégrations, Compte et sécurité, le tout enregistré automatiquement.',
       },
       eventSettings: {
         title: 'Panneau de soirée revu',

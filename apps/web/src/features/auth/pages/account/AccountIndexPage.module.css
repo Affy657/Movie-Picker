@@ -10,8 +10,8 @@
 .navItem {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  padding: 0.85rem 0.9rem;
+  gap: var(--space-3);
+  padding: var(--space-3-5) var(--space-3-5);
   color: var(--color-text);
   text-decoration: none;
   border-top: 1px solid var(--color-border-subtle);
@@ -21,8 +21,10 @@
   border-top: none;
 }
 
-.navItem:hover {
-  background: var(--color-surface-hover);
+@media (hover: hover) {
+  .navItem:hover {
+    background: var(--color-surface-hover);
+  }
 }
 
 .navIcon {

@@ -1,9 +1,9 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useId, useState } from 'react';
 import clsx from 'clsx';
 import { Check, X } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import { BOTTTS_IDS, EMOJI_IDS, avatarUrl } from '@/shared/utils/avatar';
-import { useDialogOpen } from '@/shared/hooks/useDialogOpen';
+import Modal from '@/shared/components/Modal';
 import styles from './AvatarPickerModal.module.css';
 
 type Category = 'bottts' | 'emoji';
@@ -22,7 +22,6 @@ export default function AvatarPickerModal({
   onClose,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const reactId = useId();
   const titleId = `avatar-modal-title-${reactId}`;
 
@@ -31,32 +30,8 @@ export default function AvatarPickerModal({
   );
   const ids = category === 'bottts' ? BOTTTS_IDS : EMOJI_IDS;
 
-  const onCloseRef = useRef(onClose);
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
-
-  useDialogOpen(dialogRef, open);
-
-  useEffect(() => {
-    const dlg = dialogRef.current;
-    if (!dlg) return;
-    const handleClose = () => {
-      if (open) onCloseRef.current();
-    };
-    const handleBackdrop = (e: MouseEvent) => {
-      if (e.target === dlg) onCloseRef.current();
-    };
-    dlg.addEventListener('close', handleClose);
-    dlg.addEventListener('click', handleBackdrop);
-    return () => {
-      dlg.removeEventListener('close', handleClose);
-      dlg.removeEventListener('click', handleBackdrop);
-    };
-  }, [open]);
-
   return (
-    <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>
+    <Modal open={open} onClose={onClose} size="md" padded labelledBy={titleId}>
       <div className={styles.header}>
         <h2 id={titleId} className={styles.title}>
           {t('auth.account.avatarLabel')}
@@ -120,6 +95,6 @@ export default function AvatarPickerModal({
           );
         })}
       </div>
-    </dialog>
+    </Modal>
   );
 }

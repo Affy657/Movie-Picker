@@ -15,7 +15,7 @@
   justify-content: center;
   font-weight: 700;
   line-height: 1;
-  color: #fff;
+  color: var(--color-fixed-white);
   user-select: none;
   letter-spacing: 0.02em;
 }
@@ -46,17 +46,17 @@
 }
 
 .initials.xs {
-  font-size: 10px;
+  font-size: var(--font-size-4xs);
 }
 .initials.sm {
-  font-size: 12px;
+  font-size: var(--font-size-2xs);
 }
 .initials.md {
-  font-size: 15px;
+  font-size: var(--font-size-base);
 }
 .initials.lg {
-  font-size: 22px;
+  font-size: var(--font-size-lg-plus);
 }
 .initials.xl {
-  font-size: 36px;
+  font-size: var(--font-size-3xl);
 }

@@ -2,8 +2,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin: 0 0 1.25rem;
+  gap: var(--space-4);
+  margin: 0 0 var(--space-5);
 }
 
 .pageTitle {
@@ -20,7 +20,7 @@
   background: transparent;
   color: var(--color-text);
   border-radius: var(--radius-sm);
-  padding: 0.45rem 0.8rem;
+  padding: var(--space-2) var(--space-3);
   font-size: var(--font-size-sm);
   font-weight: 600;
   cursor: pointer;
@@ -28,8 +28,10 @@
   flex-shrink: 0;
 }
 
-.markAllBtn:hover:not(:disabled) {
-  background: var(--color-surface-hover);
+@media (hover: hover) {
+  .markAllBtn:hover:not(:disabled) {
+    background: var(--color-surface-hover);
+  }
 }
 
 .markAllBtn:disabled {
@@ -40,7 +42,7 @@
 .list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .card {
@@ -53,7 +55,7 @@
 
 .cardHead {
   margin: 0;
-  padding: 0.8rem 1.1rem 0.3rem;
+  padding: var(--space-3) var(--space-4) var(--space-1);
   font-size: var(--font-size-xs);
   font-weight: 700;
   color: var(--color-text-muted);
@@ -62,9 +64,9 @@
 .item {
   display: flex;
   align-items: flex-start;
-  gap: 0.7rem;
+  gap: var(--space-3);
   width: 100%;
-  padding: 0.75rem 1.1rem;
+  padding: var(--space-3) var(--space-4);
   border: none;
   border-left: 3px solid transparent;
   background: none;
@@ -84,8 +86,10 @@
   border-top: 1px solid var(--color-border-subtle);
 }
 
-.item:hover {
-  background: var(--color-surface-hover);
+@media (hover: hover) {
+  .item:hover {
+    background: var(--color-surface-hover);
+  }
 }
 
 .item:focus-visible {
@@ -125,13 +129,13 @@
   font-size: var(--font-size-2xs);
   color: var(--color-meta);
   white-space: nowrap;
-  padding-top: 0.1rem;
+  padding-top: var(--space-0-5);
 }
 
 .seeMore {
   display: block;
   width: 100%;
-  padding: 0.55rem 1.1rem 0.85rem;
+  padding: var(--space-2) var(--space-4) var(--space-3-5);
   font-size: var(--font-size-sm);
   color: var(--color-primary);
   font-weight: 600;
@@ -143,15 +147,17 @@
   font-family: inherit;
 }
 
-.seeMore:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  .seeMore:hover {
+    text-decoration: underline;
+  }
 }
 
 .loadMoreBtn {
   display: block;
   width: 100%;
-  margin-top: 0.75rem;
-  padding: 0.65rem;
+  margin-top: var(--space-3);
+  padding: var(--space-2-5);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
@@ -162,8 +168,10 @@
   font-family: inherit;
 }
 
-.loadMoreBtn:hover:not(:disabled) {
-  background: var(--color-surface-hover);
+@media (hover: hover) {
+  .loadMoreBtn:hover:not(:disabled) {
+    background: var(--color-surface-hover);
+  }
 }
 
 .loadMoreBtn:disabled {

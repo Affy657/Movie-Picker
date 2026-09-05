@@ -3,7 +3,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Check, Clock, Eye, Import, TriangleAlert } from 'lucide-react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
-import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import { useTranslation } from '@/shared/i18n';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import DialogTitleBar from '@/shared/components/DialogTitleBar';
@@ -17,6 +16,7 @@ import {
 import type { UserProfile } from '@/features/auth/types';
 import LetterboxdChoicesModal from './LetterboxdChoicesModal';
 import styles from './LetterboxdConnectModal.module.css';
+import Modal from '@/shared/components/Modal';
 
 interface LetterboxdConnectModalProps {
   open: boolean;
@@ -32,7 +32,6 @@ function ConnectFormModal({
   const { t } = useTranslation();
   const { patchProfile } = useAuth();
   const queryClient = useQueryClient();
-  const dialogRef = useModalDialog(true, onClose);
   const titleId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [username, setUsername] = useState('');
@@ -61,7 +60,7 @@ function ConnectFormModal({
   };
 
   return (
-    <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>
+    <Modal open onClose={onClose} size="md" column labelledBy={titleId}>
       <DialogTitleBar
         titleId={titleId}
         title={
@@ -162,7 +161,7 @@ function ConnectFormModal({
           </button>
         </div>
       </form>
-    </dialog>
+    </Modal>
   );
 }
 
@@ -180,13 +179,12 @@ function DoneModal({
   undecidedTitles: string[];
 }>) {
   const { t } = useTranslation();
-  const dialogRef = useModalDialog(true, onClose);
   const titleId = useId();
   const unmatchedCount = unmatchedTitles.length;
   const undecidedCount = undecidedTitles.length;
 
   return (
-    <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>
+    <Modal open onClose={onClose} size="md" column labelledBy={titleId}>
       <DialogTitleBar
         titleId={titleId}
         title={t('auth.account.letterboxd.doneTitle')}
@@ -275,7 +273,7 @@ function DoneModal({
           </button>
         </div>
       </div>
-    </dialog>
+    </Modal>
   );
 }
 

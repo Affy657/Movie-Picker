@@ -5,11 +5,11 @@
   );
   left: 1rem;
   right: 1rem;
-  z-index: 50;
+  z-index: var(--z-header);
   display: flex;
   flex-direction: column;
-  gap: 0.875rem;
-  padding: 1rem 1.25rem;
+  gap: var(--space-3-5);
+  padding: var(--space-4) var(--space-5);
   border-radius: var(--radius-md);
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
@@ -17,7 +17,7 @@
   animation: slideUp 0.25s var(--ease-out) both;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 48rem) {
   .root {
     bottom: 1.5rem;
     left: 50%;
@@ -41,12 +41,12 @@
 .content {
   flex: 1;
   min-width: 0;
-  padding-left: 0.75rem;
+  padding-left: var(--space-3);
   border-left: 2px solid var(--color-primary);
 }
 
 .title {
-  margin: 0 0 0.25rem;
+  margin: 0 0 var(--space-1);
   font-size: var(--font-size-sm);
   font-weight: 700;
   color: var(--color-text);
@@ -64,7 +64,7 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
   flex-shrink: 0;
 }
 
@@ -72,8 +72,10 @@
   color: var(--color-text-muted);
 }
 
-.rejectBtn:hover {
-  color: var(--color-text);
+@media (hover: hover) {
+  .rejectBtn:hover {
+    color: var(--color-text);
+  }
 }
 
 .customizeBtn {
@@ -82,4 +84,10 @@
 
 .acceptBtn {
   white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root {
+    animation: none;
+  }
 }

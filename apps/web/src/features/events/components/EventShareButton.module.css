@@ -1,7 +1,7 @@
 .trigger {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--space-1-5);
   line-height: 1;
   white-space: nowrap;
 }
