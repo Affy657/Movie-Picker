@@ -4906,7 +4906,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    skip?: number;
+                    take?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -5864,6 +5867,9 @@ export interface components {
         };
         WatchlistResponse: {
             items?: components["schemas"]["WatchlistItemResponse"][] | null;
+            /** Format: int64 */
+            total?: number;
+            hasMore?: boolean;
         };
         /** @enum {string} */
         WheelMode: "strictRandom" | "weightedByVotes";
