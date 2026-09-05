@@ -199,7 +199,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 - [ ] Créer **`docs/RNCP/bloc-1-cadrage/01-parties-prenantes.md`** :
   - Tableau **acteur → rôle → niveau d'implication** : commanditaire (Ynov / formateur), développeur (candidat), architecte (candidat), administrateur (candidat — Cloud Run / S3), utilisateurs finaux (créateurs de soirée, invités), acteurs externes (TMDB, GCP, AWS, MongoDB Atlas, Sentry, Dependabot)
-  - **Personas utilisateurs** : « hôte qui organise une soirée ciné », « participant invité rejoignant via lien (compte requis) », « groupe d'amis récurrent ». Caractéristiques : âge, équipement (mobile-first, cf. [`../spec.md`](../spec.md) § 9), contexte d'usage, attentes
+  - **Personas utilisateurs** : « hôte qui organise une soirée ciné », « participant invité rejoignant via lien (compte requis) », « groupe d'amis récurrent ». Caractéristiques : âge, équipement (mobile-first, cf. [`spec.md`](../../archive/docs/spec.md) § 9), contexte d'usage, attentes
   - Pour chaque persona : **scénario d'usage** clé en 3-4 lignes
 - [ ] Créer **`docs/RNCP/bloc-1-cadrage/02-analyse-demande.md`** (couvre C1.1.2) :
   - **Problématique** : « comment choisir un film à plusieurs sans 30 min de débat improductif ? »
@@ -278,7 +278,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
   - **Diagramme de fonctionnalités** : visuel (Mermaid `mindmap` ou `flowchart`) listant les features V1 hiérarchisées en **principales** (création soirée, vote, roue, compte), **secondaires** (déjà vu, watch providers, QR code, OG dynamiques), **complémentaires** (i18n EN, mode sombre persisté, rappels in-app)
   - **Estimation J/H** : tableau feature × estimation (en jours-homme) — granularité section de [`livraison-v1.md`](../../archive/docs/v1-produit/livraison-v1.md) § 1-22 (≈ 22 lots) → total V1 ; idem pour MVP en rétrospectif
   - **Couverture technique des besoins fonctionnels** : argumentée (chaque feature → endpoint + écran + tests prévus)
-  - **Expérience utilisateur** : référence à [`../spec.md`](../spec.md) § 9 (Mobile first) et § 8 (Interface et confort)
+  - **Expérience utilisateur** : référence à [`spec.md`](../../archive/docs/spec.md) § 9 (Mobile first) et § 8 (Interface et confort)
 
 ---
 
@@ -446,7 +446,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 - [x] **8 annexes** (pages 33 à 40), jamais présentées, appelées sur question : architecture, logigramme complet, arbitrages de réserve, budget détaillé, chaîne CI/CD, matrice RACI complète, journal des versions, retours utilisateurs question par question
 - [x] Le support Slidev est **complet** : 40 diapositives, table `REFS` à jour, mention `ANNEXE` sur les pages 33 et suivantes
 
-> **Le Bloc 3 est écrit.** Ce qui reste est matériel et ne peut pas être rédigé : répétitions minutées, jeu de données de démonstration, vidéo de repli, environnement local, tableau GitHub Projects, capture de facturation, export PDF testé sur le matériel de la salle. La liste complète est en fin de [`bloc-3-coordination-pilotage/README.md`](bloc-3-coordination-pilotage/README.md).
+> **Le Bloc 3 est écrit.** Ce qui reste est matériel et ne peut pas être rédigé : répétitions minutées, jeu de données de démonstration, vidéo de repli, environnement local, tableau GitHub Projects, capture de facturation, export PDF testé sur le matériel de la salle. La liste complète et priorisée est dans [`bloc-3-coordination-pilotage/RESTE-A-FAIRE.md`](bloc-3-coordination-pilotage/RESTE-A-FAIRE.md), et la note de passation pour reprendre le travail dans [`bloc-3-coordination-pilotage/PASSATION.md`](bloc-3-coordination-pilotage/PASSATION.md).
 
 ---
 

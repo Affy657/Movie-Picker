@@ -4,6 +4,8 @@
 
 **État : ✅ support complet — 7 chapitres de matière, 40 diapositives (32 présentées + 8 annexes), les 14 éléments imposés rattachés et les 3 compétences éliminatoires couvertes. Reste la préparation matérielle de la démonstration (§ *Actions hors rédaction*).** Structure, minutage et mapping des 14 éléments imposés dans [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md).
 
+> 🧭 **Vous reprenez ce dossier ?** Commencez par [`PASSATION.md`](PASSATION.md) — il dit comment travailler ici sans casser ce qui existe. Ce qui reste à faire est dans [`RESTE-A-FAIRE.md`](RESTE-A-FAIRE.md).
+
 ## Attendus du jury
 
 - **Type d'évaluation** : simulation d'une situation de travail sous forme de **présentation orale** (pas de dossier écrit).
@@ -35,6 +37,7 @@ Le projet a été **exécuté seul**, comme les livrables des Blocs 1, 2 et 4 l'
 
 | Fichier | Contenu |
 |---------|---------|
+| [`PASSATION.md`](PASSATION.md) | **À lire avant de toucher au dossier** : état exact, règles d'écriture à ne pas enfreindre, sources de vérité des chiffres, pièges rencontrés, et scripts de vérification prêts à l'emploi |
 | [`RESTE-A-FAIRE.md`](RESTE-A-FAIRE.md) | **Ce qui reste à faire** : actions bloquantes pour la compétence éliminatoire, preuves à produire, finalisation du support, points de vigilance de relecture, décisions en suspens |
 | [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md) | Cadre de l'épreuve, minutage des 30 minutes, déroulé des 32 diapositives, script de démonstration, préparation des questions du jury |
 | [`01-planification.md`](01-planification.md) | **C3.1** : méthodologie et alternatives écartées, rétroplanning et Gantt, planning en 5 phases, découpage en 4 lots et 98 J/H, ressources humaines, matérielles et financières, matrice RACI et prise en compte du handicap, 7 points de vigilance |

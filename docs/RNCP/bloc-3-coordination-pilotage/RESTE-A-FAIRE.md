@@ -4,6 +4,8 @@
 >
 > **La rédaction est terminée** : 7 chapitres de matière, 40 diapositives (32 présentées + 8 annexes), les 14 éléments imposés rattachés, les 7 compétences couvertes. Tout ce qui figure ci-dessous est **matériel ou humain**, et ne peut pas être rédigé.
 
+> Pour **comment** travailler dans ce dossier — règles d'écriture, sources de vérité des chiffres, pièges et scripts de vérification — voir [`PASSATION.md`](PASSATION.md).
+
 ---
 
 ## 1. Bloquant — conditionne une compétence éliminatoire
@@ -74,3 +76,4 @@ Sans effet sur l'oral du 16 septembre, mais à ne pas perdre.
 | 19 | **La chaîne d'intégration est à 38 % de succès sur les premiers jours de septembre** (8 exécutions). Une dette d'intégration est en cours de traitement sur la branche courante | Chapitre 2 § 4.2 |
 | 20 | Le dispositif de **satisfaction est ponctuel, pas continu** : un questionnaire diffusé une fois donne un point, pas une tendance. La boucle continue est instruite et chiffrée à 1–2 jours | Chapitre 6 § 4.3 |
 | 21 | **Aucun indicateur ne compare le périmètre courant au périmètre chiffré**, ce qui a laissé passer 37 items hors chiffrage. Un compteur d'items hors chiffrage initial est la correction proposée | Chapitre 2 § 5.5 |
+| 22 | ~~Deux liens cassés vers `../spec.md` dans `suivi-rncp.md`~~ — le fichier avait été déplacé vers `archive/docs/` en juin sans que les liens suivent. **Corrigé** le 05/09/2026 | `suivi-rncp.md` |
