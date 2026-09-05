@@ -33,12 +33,12 @@ L'ordre dans lequel les compétences ont dû être mobilisées est lisible dans 
 
 | Vague | Période | Compétences mobilisées | Ce qui la déclenche |
 |-------|---------|------------------------|---------------------|
-| **1. Produire** | 16 au 18 mars 2026 | Chaîne d'intégration continue, C# et ASP.NET Core, architecture hexagonale, driver MongoDB, tests unitaires et d'intégration .NET, contrat OpenAPI, conteneurisation | L'arbitrage du chapitre 3. Le document de décision identifiait explicitement la **courbe d'apprentissage** comme un risque assumé |
+| **1. Produire** | 16 au 19 mars 2026 | Chaîne d'intégration continue, C# et ASP.NET Core, architecture hexagonale, driver MongoDB, tests unitaires et d'intégration .NET, contrat OpenAPI, conteneurisation | L'arbitrage du chapitre 3. Le document de décision identifiait explicitement la **courbe d'apprentissage** comme un risque assumé |
 | **2. Fiabiliser** | avril à mai 2026 | Mesure de performance et d'accessibilité, analyse statique et portes de qualité, scan de vulnérabilités et de secrets, internationalisation, application installable et service worker, notifications push | La préparation de la V1 : ce qui est livré à des utilisateurs doit être vérifié avant, pas après |
 | **3. Exploiter** | juillet 2026 | Supervision applicative, sondes de disponibilité, politiques d'alerte, traçabilité release / incident | La production a des utilisateurs réels : il faut savoir ce qui s'y passe |
 | **4. Enrichir** | août 2026 | Identité fédérée, intégration d'un service tiers bidirectionnel | Le périmètre produit hors chiffrage initial (chapitre 2) |
 
-**Le commentaire à porter à l'oral** : la vague 1 est concentrée sur **trois jours**. C'est le coût de compétence de l'arbitrage du chapitre 3, et il n'apparaît nulle part dans le chiffrage en jours-homme. Un plan de développement des compétences sert précisément à rendre ce coût visible avant de le payer.
+**Le commentaire à porter à l'oral** : la vague 1 est concentrée sur **quatre jours** — du MVP figé le 16 mars à la migration terminée le 19 (chapitre 3, § 2.1). C'est le coût de compétence de l'arbitrage du chapitre 3, et il n'apparaît nulle part dans le chiffrage en jours-homme. Un plan de développement des compétences sert précisément à rendre ce coût visible avant de le payer.
 
 ### 1.3 La cartographie
 
@@ -108,7 +108,7 @@ Le critère exige que la grille soit **commentée**, pas seulement affichée. Qu
 
 **3. Les deux écarts à +2 du lead ne sont pas techniques.** Arbitrage et chiffrage, revue de code et transmission : ce sont les deux compétences que le projet réel a le plus sollicitées et le moins bien exercées. Le chapitre 2 montre un chiffrage formalisé a posteriori ; le chapitre 3 montre 87 lignes intégrées sans revue. **La grille désigne donc les mêmes faiblesses que les indicateurs, ce qui la rend crédible.**
 
-**4. Ce que la colonne réelle apprend.** Sur le projet, ces écarts ont été franchis par autoformation, en production, sans plan et sans budget. La vague 1 du § 1.2 en donne le coût : trois jours pour absorber un changement de socle complet. **C'est faisable une fois, à une personne, sur un projet dont on est propriétaire. Ce n'est pas un modèle transposable à une équipe** — d'où le plan qui suit.
+**4. Ce que la colonne réelle apprend.** Sur le projet, ces écarts ont été franchis par autoformation, en production, sans plan et sans budget. La vague 1 du § 1.2 en donne le coût : quatre jours pour absorber un changement de socle complet. **C'est faisable une fois, à une personne, sur un projet dont on est propriétaire. Ce n'est pas un modèle transposable à une équipe** — d'où le plan qui suit.
 
 ---
 

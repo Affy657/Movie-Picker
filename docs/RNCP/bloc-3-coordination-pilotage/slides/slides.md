@@ -276,10 +276,11 @@ ici : le Gantt porte les phases et les jalons, pas le contenu des fiches.
 <div class="row"><div class="lab">Lot 1, MVP</div><div class="track"><i style="grid-column:1/18"></i></div></div>
 <div class="row"><div class="lab">Lot 2, migration de l'API vers .NET</div><div class="track"><i style="grid-column:20/27"></i></div></div>
 <div class="row"><div class="lab">Lot 3, V1 produit</div><div class="track"><i style="grid-column:27/82"></i></div></div>
-<div class="row"><div class="lab">Lot 4, versions V1.1 à V1.4</div><div class="track"><i style="grid-column:83/180"></i></div></div>
+<div class="row"><div class="lab">Lot 4, clôture du titre</div><div class="track"><i style="grid-column:83/180"></i></div></div>
+<div class="row"><div class="lab">V1.1 à V1.4.1, <i>hors chiffrage initial</i></div><div class="track"><i style="grid-column:83/191"></i></div></div>
 
 <div class="sec">Restitution</div>
-<div class="row"><div class="lab">Mises en production, v0.1.0 à v1.4.0</div><div class="track"><i style="grid-column:1/180"></i></div></div>
+<div class="row"><div class="lab">Mises en production, v0.1.0 à v1.4.1</div><div class="track"><i style="grid-column:1/191"></i></div></div>
 <div class="row"><div class="lab">Restitutions au commanditaire</div><div class="track"><b style="grid-column:105/106"></b><b style="grid-column:147/148"></b><b style="grid-column:176/177"></b><b style="grid-column:202/203"></b></div></div>
 
 </div>
@@ -339,7 +340,7 @@ Contenu de chaque phase, a dire en balayant le diagramme :
 - CONCEPTION : modele de donnees, architecture hexagonale, contrat d'interface,
   systeme de composants mobile-first.
 - REALISATION : les 4 lots.
-- RESTITUTION : deux registres, les 8 mises en production vers l'utilisateur, et
+- RESTITUTION : deux registres, les 9 mises en production vers l'utilisateur, et
   les restitutions du titre vers le commanditaire.
 
 LE POINT A NE PAS MANQUER : dire explicitement que les barres se recouvrent, et
@@ -442,7 +443,7 @@ Le back porte la charge la plus lourde, conséquence du lot de migration, absorb
 | Poste | Montant |
 |-------|--------:|
 | Valeur de développement | 34 300 € HT |
-| Infrastructure | 1 à 5 €/mois |
+| Infrastructure | 0 €/mois, 1 à 5 € ensuite |
 | Domaine | 10 €/an |
 | Licences | **0 €** |
 | **Trésorerie réelle** | **20 à 190 €/an** |
@@ -963,7 +964,7 @@ superieure a 88 J/H. Un indicateur ne mesure que la pratique qui le produit.
 
 | Date | Événement |
 |------|-----------|
-| 16/03 16:48 | **MVP terminé**, API Node/Express : 944 lignes, 21 fichiers, 12 routes |
+| 16/03 16:48 | **MVP terminé**, API Node/Express : 944 lignes, 18 fichiers, 12 routes |
 | 16/03 | La feuille de route du MVP s'arrête à l'étape 16. **Aucune migration n'y figure** |
 | 18/03 11:57 | Décision exécutée, document d'aide à la décision versionné |
 | 18/03 12:12 | **Bascule** : l'ancienne API retirée, 15 min après |
@@ -983,7 +984,7 @@ La migration est <b>absente</b> de la feuille de route au moment où le MVP est 
 | Typage fort, analyse bloquante à la compilation | Typage effacé à l'exécution |
 | Sécurité fournie par le cadre | Composants à assembler un par un |
 | Support long terme | Cycle court, veille plus fréquente |
-| Architecture en couches | 21 fichiers, aucune séparation |
+| Architecture en couches | 18 fichiers, aucune séparation |
 
 ### La conséquence : une fenêtre qui se referme
 
@@ -1478,7 +1479,7 @@ La question posée pour chaque lot : **que faut-il savoir faire pour que ce lot 
 | **4. Enrichir** | août | Périmètre hors chiffrage : identité fédérée, intégration tierce |
 
 <div class="mt-3 p-2 border-l-4 border-amber-500 bg-amber-50 bg-opacity-40 text-xs">
-<b>La vague 1 est concentrée sur trois jours.</b> C'est le coût de compétence de l'arbitrage du chapitre 3 — et il n'apparaît <b>nulle part</b> dans le chiffrage en jours-homme. Un plan de développement sert à rendre ce coût visible <b>avant</b> de le payer.
+<b>La vague 1 est concentrée sur quatre jours.</b> C'est le coût de compétence de l'arbitrage du chapitre 3 — et il n'apparaît <b>nulle part</b> dans le chiffrage en jours-homme. Un plan de développement sert à rendre ce coût visible <b>avant</b> de le payer.
 </div>
 
 </div>
@@ -1497,7 +1498,7 @@ Puis les quatre vagues, dans l'ordre : produire, fiabiliser, exploiter, enrichir
 Cet ordre n'a rien d'aleatoire, c'est celui d'un produit qui va en production.
 
 Finir sur le bandeau, qui est le lien avec le chapitre 3 : la vague 1 tient sur
-trois jours, c'est le cout de competence de l'arbitrage, et il n'est dans aucune
+quatre jours, c'est le cout de competence de l'arbitrage, et il n'est dans aucune
 ligne du chiffrage. C'est la justification meme de l'existence d'un plan de
 developpement des competences.
 -->

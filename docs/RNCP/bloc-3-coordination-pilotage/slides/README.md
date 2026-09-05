@@ -13,6 +13,16 @@ npm run dev
 - **Mode présentateur**, avec les notes orales, les durées et les critères visés : http://localhost:3030/presenter
 - Navigation : flèches ou espace. Vue d'ensemble : touche `o`.
 
+## Vérifier le rendu
+
+```bash
+npm run build
+npx http-server dist -p 8099 --silent &
+npm run verify:rendu
+```
+
+Détecte les diapositives dont le contenu est **coupé par le bas du cadre** — ce qu'aucun autre contrôle du dossier ne voit. Mode d'emploi complet, dont la récupération de la police du thème, en tête de [`verifier-rendu.mjs`](verifier-rendu.mjs).
+
 ## Exporter
 
 ```bash
@@ -20,12 +30,15 @@ npm run export
 ```
 
 > Le premier export peut demander d'installer Playwright : `npx playwright install chromium`.
+>
+> ⚠️ L'export **ne corrige rien** : une diapositive coupée à l'écran l'est aussi dans le PDF. Passer `verify:rendu` avant. En revanche l'export **fige les polices**, ce qui met le support à l'abri d'une salle sans réseau — le thème charge sinon Nunito Sans depuis Google Fonts au moment du rendu.
 
 ## Conventions du support
 
 - Les blocs `<!-- ... -->` en fin de diapositive sont les **notes du présentateur**, invisibles à l'écran. Elles portent la durée cible, l'élément imposé et le critère visé, ce qu'il faut dire à voix haute, et les réponses préparées aux questions probables.
 - `global-bottom.vue` affiche en bas à gauche le **code de compétence** visé par la diapositive courante, et en bas à droite la pagination. La table `REFS` doit être tenue à jour à chaque ajout de diapositive.
-- Les diagrammes Mermaid (Gantt de la diapo 6, logigramme de la diapo 17) sont rendus nativement par Slidev, sans bibliothèque supplémentaire. La syntaxe `{scale: 0.52}` après l'ouverture du bloc ajuste la taille du rendu.
+- Le Gantt de la diapositive 6 est en **HTML et CSS** (grille `.gantt`), pas en Mermaid : c'est ce qui permet de le caler au pixel sur l'axe des mois. Les deux seuls blocs Mermaid du support sont le **logigramme de la diapositive 17** et sa version complète en **annexe A2 (diapo 34)**, rendus nativement par Slidev.
+- ⚠️ La syntaxe `{scale: 0.52}` après l'ouverture d'un bloc Mermaid **n'a aucun effet** dans cette version : la diapositive 17 rend le logigramme en taille pleine et n'en montre que 3 nœuds sur 8. À corriger par CSS. Voir `../RESTE-A-FAIRE.md` § 0.
 - Classe utilitaire `dense` sur un conteneur pour réduire la taille des tableaux larges.
 
 ## Avancement
@@ -43,7 +56,7 @@ npm run export
 | 8. Conclusion | 32 | | ✅ |
 | Annexes pour les questions | 33 à 40 | | ✅ |
 
-**Support complet : 40 diapositives**, dont 32 présentées et 8 annexes appelées uniquement sur question. Les annexes portent la mention `ANNEXE` en bas à gauche à la place du code de compétence.
+**Support complet : 40 diapositives**, dont 32 présentées et 8 annexes appelées uniquement sur question. ⚠️ **Mise en page à reprendre sur 17 d'entre elles**, dont le contenu est coupé à l'écran — voir [`../RESTE-A-FAIRE.md`](../RESTE-A-FAIRE.md) § 0. Les annexes portent la mention `ANNEXE` en bas à gauche à la place du code de compétence.
 
 **Navigation pendant les questions** : en mode présentateur, taper le numéro de page puis `Entrée` va directement à la diapositive. A1 architecture = **33**, A2 logigramme = **34**, A3 arbitrages de réserve = **35**, A4 budget = **36**, A5 chaîne CI/CD = **37**, A6 RACI = **38**, A7 journal des versions = **39**, A8 retours utilisateurs = **40**.
 

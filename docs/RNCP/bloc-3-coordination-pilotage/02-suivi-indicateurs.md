@@ -13,7 +13,9 @@
 
 Alimente les diapositives 11 à 15.
 
-**Date de relevé** : toutes les valeurs de ce document sont arrêtées au **5 septembre 2026**, sauf mention contraire. Chacune porte sa source, et chaque source est interrogeable sans passer par la mémoire du candidat.
+**Date de relevé** : toutes les valeurs de ce document sont arrêtées au **5 septembre 2026**, sur l'état de `origin/master` au commit **`5ce0a05f`**, sauf mention contraire. Chacune porte sa source, et chaque source est interrogeable sans passer par la mémoire du candidat.
+
+Nommer le commit de référence n'est pas une précaution de style : la branche principale continue d'avancer, et un recomptage fait un autre jour donnera d'autres valeurs sans qu'aucune des deux soit fausse. C'est ce qui rend les chiffres de ce chapitre **reproductibles** plutôt que simplement affirmés.
 
 **Rappel de posture** : l'exécution a été menée seule. Les indicateurs de ce chapitre sont donc des **mesures réelles**, pas une projection. L'axe « ressources humaines » du tableau de bord mesure la soutenabilité de la charge d'un exécutant unique, et c'est précisément ce qu'il révèle qui justifie l'organisation cible présentée au chapitre 4.
 
@@ -182,7 +184,7 @@ Deux lectures à porter à l'oral.
 
 **Le pic de juin n'est pas un pic de production, c'est un changement de pratique.** Les fusions passent de 6 à 39 d'un mois sur l'autre alors que les commits ne font que passer de 150 à 227. Ce qui a changé, c'est le découpage : le travail est passé d'une série de commits directs à des branches courtes fusionnées une par une. L'indicateur de fusions ne mesure donc pas la même chose avant et après juin, et il faut le dire avant qu'on le remarque.
 
-**La décroissance d'août et septembre est voulue.** Le périmètre produit se referme au profit des livrables de restitution du titre : 80 des 711 commits hors fusion portent sur la documentation, concentrés sur cette fin de période.
+**La décroissance d'août et septembre est voulue.** Le périmètre produit se referme au profit des livrables de restitution du titre. Les 80 commits de documentation du projet le montrent : **50 d'entre eux tombent en juillet et en août**, autour des deux remises de dossier — Bloc 2 le 23 juillet, Bloc 4 le 21 août. La documentation n'est pas un lot de fin de projet, c'est un lot qui suit les échéances de restitution.
 
 ### 3.2 La nature du travail intégré
 

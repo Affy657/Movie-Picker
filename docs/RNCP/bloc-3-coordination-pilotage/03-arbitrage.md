@@ -40,7 +40,7 @@ La chronologie est celle de l'historique du dépôt, à l'heure près.
 | Date et heure | Événement | Trace |
 |---------------|-----------|-------|
 | 27/02/2026 16:16 | Premier commit du projet | `steps 1 to 12` |
-| 16/03/2026 16:48 | **MVP terminé**, API Node.js / Express, 944 lignes TypeScript, 21 fichiers, 12 routes | `mvp done` |
+| 16/03/2026 16:48 | **MVP terminé**, API Node.js / Express, 944 lignes TypeScript, 18 fichiers, 12 routes | `mvp done` |
 | 16/03/2026 | La feuille de route du MVP s'arrête à l'étape 16. **Aucune migration n'y figure** | `docs/mvp/roadmap-mvp.md` à ce commit |
 | entre le 16 et le 18/03 | Rédaction du document d'aide à la décision : avantages, inconvénients, risques, périmètre. Il est versionné avec le commit suivant, sa date de rédaction n'est donc pas horodatée séparément | `docs/migration-dotnet/contexte-et-perimetre.md` |
 | 18/03/2026 11:57 | **Décision exécutée.** Le document de migration est versionné et une étape 17 est ajoutée à la feuille de route du MVP | `mirgation api to dot net 10` |
@@ -58,7 +58,7 @@ L'API du MVP répondait à un seul critère : livrer vite. Confrontée aux exige
 | Typage fort et analyse statique bloquante à la compilation | Typage TypeScript effacé à l'exécution : une rupture de contrat entre deux couches n'est pas arrêtée par le compilateur du serveur |
 | Sécurité applicative fournie par le cadre (CORS, limitation de débit, en-têtes, antiforgery) | Composants à assembler et à maintenir un par un |
 | Socle à support long terme, pour limiter la charge de veille | Écosystème npm à cadence de publication rapide, veille plus fréquente — 59 des 77 pull requests du projet sont des montées de dépendances |
-| Architecture en couches imposée par l'outillage | 21 fichiers sans séparation domaine / application / infrastructure |
+| Architecture en couches imposée par l'outillage | 18 fichiers sans séparation domaine / application / infrastructure |
 
 Ce n'est pas une dérive de délai ni de budget : **c'est un écart entre ce qui est livré et ce sur quoi les six mois suivants allaient être construits.**
 
@@ -178,13 +178,13 @@ Quatre arguments, dans l'ordre où ils ont pesé.
 
 Deux écarts, énoncés ici plutôt que laissés à découvrir.
 
-**Le front a bougé de 87 lignes.** L'objectif annoncé était « aucune modification du front ». Le commit de bascule touche 9 fichiers de l'interface, pour 87 insertions et 34 suppressions, essentiellement des ajustements de typage et d'affichage sur l'écran de détail d'une soirée. Le critère de succès était donc **presque** tenu : le contrat des URL a été respecté, celui des types ne l'a pas été à la ligne près. Sur un projet à plusieurs, ces 87 lignes auraient été un incident d'intégration entre deux personnes ; à une seule, elles sont passées inaperçues. C'est un argument de plus pour la revue croisée de l'organisation cible.
+**Le front a bougé de 87 lignes.** L'objectif annoncé était « aucune modification du front ». Le commit de migration — celui de 11 h 57, et non le retrait de l'ancienne API à 12 h 12 — touche 9 fichiers de l'interface, pour 87 insertions et 34 suppressions, essentiellement des ajustements de typage et d'affichage sur l'écran de détail d'une soirée. Le critère de succès était donc **presque** tenu : le contrat des URL a été respecté, celui des types ne l'a pas été à la ligne près. Sur un projet à plusieurs, ces 87 lignes auraient été un incident d'intégration entre deux personnes ; à une seule, elles sont passées inaperçues. C'est un argument de plus pour la revue croisée de l'organisation cible.
 
 **Le lot est chiffré 13 J/H, l'exécution du cœur tient sur deux journées.** Le chiffrage du Bloc 1 (8 de réécriture, 3 de tests et de contrat, 2 de redéploiement) a été formalisé en juin 2026, donc après coup. L'historique montre une exécution concentrée du 18 mars à 11 h 57 au 19 mars à 16 h 52. Trois raisons à l'écart, aucune ne l'annule complètement : la reconstitution de charge est **faible sur mars**, les commits de cette période étant groupés (chapitre 2, § 5.3) ; le travail préparatoire — contrat OpenAPI, analyse des options, architecture cible — précède le premier commit et n'y figure pas ; et les tests d'intégration comme l'adaptation complète de la chaîne se sont étalés au-delà de mars. **Formulé honnêtement : le lot a été chiffré a posteriori sur son périmètre complet, et l'historique ne permet pas de le vérifier au jour près.**
 
 ### 6.3 La prédiction du document d'aide à la décision, vérifiée
 
-Le document d'aide à la décision annonçait un inconvénient : « C# est plus verbeux que TypeScript ». Mesure : **944 lignes TypeScript remplacées par 4 653 lignes C#**, soit un facteur 4,9. L'inconvénient annoncé s'est réalisé, il avait été accepté en connaissance de cause, et il est compensé par la séparation en couches que ce volume porte — 111 fichiers structurés en domaine, application et infrastructure, là où l'API Node en comptait 21 sans séparation.
+Le document d'aide à la décision annonçait un inconvénient : « C# est plus verbeux que TypeScript ». Mesure : **944 lignes TypeScript remplacées par 4 653 lignes C#**, soit un facteur 4,9. L'inconvénient annoncé s'est réalisé, il avait été accepté en connaissance de cause, et il est compensé par la séparation en couches que ce volume porte — 111 fichiers structurés en domaine, application et infrastructure, là où l'API Node en comptait 18 sans séparation.
 
 Un arbitrage dont on peut vérifier après coup que les inconvénients annoncés étaient les bons est un arbitrage instruit. C'est la phrase de conclusion du chapitre.
 

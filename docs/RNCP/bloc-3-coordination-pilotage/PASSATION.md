@@ -12,10 +12,10 @@
 | | |
 |--|--|
 | **Épreuve** | Oral de 45 min (30 de présentation + 15 de questions), le **16 septembre 2026** |
-| **État** | ✅ **Rédaction terminée.** 7 chapitres de matière, support Slidev de 40 diapositives (32 présentées + 8 annexes) |
+| **État** | Rédaction terminée (7 chapitres, 40 diapositives). ⚠️ **Mais 17 diapositives sont coupées à l'écran** — le support n'avait jamais été rendu. Voir [`RESTE-A-FAIRE.md`](RESTE-A-FAIRE.md) § 0 |
 | **Branche** | `claude/rncp-03-title-crwwov`, head `a9c2859`, **10 commits** d'avance sur `master` |
 | **Pull request** | [#83](https://github.com/Affy657/Movie-Picker/pull/83) — ouverte, CI verte, `mergeable_state: clean`, aucune revue |
-| **Reste** | Uniquement du **matériel** : répétitions, jeu de données de démonstration, vidéo de repli, 2 captures |
+| **Reste** | **Reprendre la mise en page de 17 diapositives** (§ 0 de `RESTE-A-FAIRE.md`), puis du matériel : répétitions, jeu de données de démonstration, vidéo de repli, 2 captures |
 
 **Tant que la PR n'est pas fusionnée**, les cases du Bloc 3 dans [`../suivi-rncp.md`](../suivi-rncp.md) restent décochées : la convention du dossier veut qu'un livrable ne soit coché qu'une fois mergé sur `master`.
 
@@ -117,7 +117,22 @@ npm run build   # doit afficher « ✓ built in … »
 
 `npm run build` **n'a pas besoin de navigateur** ; seul `npm run export` (PDF) en a un.
 
-### 4.5 Penser à nettoyer avant de committer
+### 4.5 La police du thème est chargée depuis Google Fonts, au rendu
+
+Le thème demande **Nunito Sans** à `fonts.googleapis.com` au moment où la page s'affiche ; aucune police n'est embarquée dans le dépôt ni dans le build. Deux conséquences.
+
+**Pour vérifier le rendu**, il faut la police, sinon le navigateur retombe sur une police plus large et signale des débordements qui n'existent pas. La placer à côté du build :
+
+```bash
+cd docs/RNCP/bloc-3-coordination-pilotage/slides
+curl -sS "https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@200;400;600" \
+  -A "Mozilla/5.0 Chrome/120" | grep -o 'https://[^)]*woff2' | head -1 \
+  | xargs curl -sS -o dist/nunitosans.woff2
+```
+
+**Pour l'oral**, c'est une dépendance réseau non déclarée : présenter le support en ligne dans une salle sans réseau dégrade la mise en page de toutes les diapositives. **L'export PDF fige les polices** — c'est la raison la plus solide de présenter depuis le PDF.
+
+### 4.6 Penser à nettoyer avant de committer
 
 `node_modules/` et `dist/` du dossier `slides/` sont ignorés par `.gitignore`, mais ils pèsent lourd sur l'allocation disque de la session :
 
@@ -200,7 +215,21 @@ PY
 
 **Cibles** : 40 diapositives · 32 durées · total 30:00 · chapitres 1:30 / 6:30 / 5:00 / 2:30 / 3:30 / 2:30 / 2:30 / 5:30 / 0:30.
 
-### 5.4 Liens et tableaux
+### 5.4 Rendu du support — le contrôle que les autres ne font pas
+
+Les contrôles du § 5.3 lisent le Markdown : ils restent **verts sur une diapositive dont le tiers inférieur est invisible**. C'est ce qui a laissé passer 17 diapositives coupées. Le contrôle de rendu est dans [`slides/verifier-rendu.mjs`](slides/verifier-rendu.mjs).
+
+```bash
+cd docs/RNCP/bloc-3-coordination-pilotage/slides
+npm run build
+# puis récupérer la police, cf. § 4.5
+npx http-server dist -p 8099 --silent &
+node verifier-rendu.mjs      # code de sortie 1 s'il reste un débordement
+```
+
+**À relancer après toute retouche du support, et avant l'export PDF.** Un `npm run export` ne signale rien : il produit un PDF dont les pages sont coupées exactement comme l'écran.
+
+### 5.5 Liens et tableaux
 
 ```bash
 cd /home/user/Movie-Picker/docs/RNCP/bloc-3-coordination-pilotage
@@ -277,3 +306,15 @@ a9c2859  référence la PR #83 dans le suivi des restes
 
 **Point de départ de la session** : plan arrêté, chapitre 1 produit, chapitres 2 à 8 à produire.
 **Point d'arrivée** : support complet, revu, PR ouverte et verte.
+
+## 10. Seconde relecture du 5 septembre 2026
+
+Relecture de vérification : chaque chiffre recoupé contre le dépôt, chaque libellé d'interface contre `fr.ts`, chaque fichier cité contre son contenu, et — pour la première fois — **le support rendu dans un navigateur**.
+
+**Ce qui tient.** Les 25 libellés d'interface du script de démonstration existent tous, au mot près. Le dispositif de délégation du chapitre 4 est exact (7 étapes, 3 arrêts en majuscules, 6 contrôles de pull request). Les 944 lignes TypeScript, les 4 653 lignes C# sur 111 fichiers, les 87 lignes de front, la médiane de 17 jours, les 7 écarts à +2 de la grille, le budget de 20 J/H et 2 100 €, les 5 contrôles bloquants : tous vérifiés exacts.
+
+**Ce qui a été corrigé** : 11 écarts, listés en § 4 bis de [`RESTE-A-FAIRE.md`](RESTE-A-FAIRE.md).
+
+**Ce qui a été découvert** : le support n'avait jamais été rendu, et 17 diapositives sont coupées (§ 0 de `RESTE-A-FAIRE.md`). D'où le nouveau contrôle du § 5.4 ci-dessus.
+
+**La leçon de méthode, pour la prochaine reprise** : les contrôles du § 5.3 vérifient la *structure* du support — nombre de diapositives, équilibre des balises, minutage. Aucun ne vérifiait qu'il **s'affiche**. Un contrôle qui lit la source ne remplace pas un contrôle qui regarde le résultat.

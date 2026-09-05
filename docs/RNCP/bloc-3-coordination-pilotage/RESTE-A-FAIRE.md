@@ -2,9 +2,48 @@
 
 > Point de situation au **5 septembre 2026**. Oral le **16 septembre 2026**, soit **11 jours**.
 >
-> **La rédaction est terminée** : 7 chapitres de matière, 40 diapositives (32 présentées + 8 annexes), les 14 éléments imposés rattachés, les 7 compétences couvertes. Tout ce qui figure ci-dessous est **matériel ou humain**, et ne peut pas être rédigé.
+> **La rédaction est terminée** : 7 chapitres de matière, 40 diapositives (32 présentées + 8 annexes), les 14 éléments imposés rattachés, les 7 compétences couvertes.
+>
+> ⚠️ **Mais une seconde relecture, le 5 septembre, a rendu le support pour la première fois et découvert que 17 diapositives sont coupées par le bas du cadre.** C'est désormais le point bloquant n° 1, avant la démonstration. Voir § 0.
 
 > Pour **comment** travailler dans ce dossier — règles d'écriture, sources de vérité des chiffres, pièges et scripts de vérification — voir [`PASSATION.md`](PASSATION.md).
+
+---
+
+## 0. Bloquant — le support est coupé à l'écran
+
+**Le support n'avait jamais été rendu visuellement.** Les contrôles du dossier (compte de diapositives, équilibre des `<div>`, minutage) restent tous verts sur une diapositive dont le tiers inférieur est invisible : ils lisent le Markdown, pas la page.
+
+Le rendu à 1280 × 720 avec la police du thème donne **17 diapositives dont du contenu passe sous le bas du cadre** — 13 présentées sur 32, et 4 annexes sur 8. Ce qui disparaît n'est pas du décor : c'est souvent la conclusion de la diapositive.
+
+| Diapo | Compétence | Ce qui est coupé | Dépassement |
+|:-----:|:----------:|------------------|------------:|
+| 11 | **C3.2.1** ÉLIM | La phrase sur la distance entre le travail et sa trace | 13 px |
+| 12 | **C3.2.1** ÉLIM | Fin du tableau des indicateurs (axe coûts) | 67 px |
+| 15 | **C3.2.1** ÉLIM | Le tableau de répartition des 88 jours **et** le bandeau « ce que le suivi n'a pas vu », qui est la conclusion du chapitre | 132 px |
+| 16 | C3.2.2 | Fin de la chronologie de l'arbitrage | 42 px |
+| 17 | C3.2.2 | **Le logigramme**, nommé explicitement par la grille : 3 nœuds sur 8 sont visibles. Le `{scale: 0.52}` du bloc Mermaid **n'est pas appliqué** au rendu | 677 px |
+| 21 | C3.3.1 | La phrase sur l'absence de messagerie | 20 px |
+| 23 | C3.3.1 | Les trois recommandations de l'analyse critique | 167 px |
+| 24 | C3.3.2 | Fin de la cartographie des compétences | 194 px |
+| 25 | C3.3.2 | La lecture qui rend la grille crédible | 21 px |
+| 26 | C3.3.2 | **Les modalités de formation adaptées au handicap** — un critère de la grille, entièrement invisible | 282 px |
+| 27 | C3.4.1 | Fin des contrôles bloquants | 87 px |
+| 28 | C3.4.1 | **Trois des cinq blocs du gabarit décisionnel** — donc le point de la diapositive | 206 px |
+| 29 | C3.4.1 | Ce que les retours ont produit | 157 px |
+| 32 | — | La phrase de clôture et le remerciement | 68 px |
+| 34 | annexe | **A2, le logigramme complet** — celui qu'on ouvre justement si le jury interroge la 17 | 187 px |
+| 37 | annexe | A5, la chaîne d'intégration et de déploiement | 122 px |
+| 40 | annexe | A8, les retours utilisateurs question par question | 54 px |
+
+**Deux natures de problème, deux remèdes :**
+
+1. **La diapositive 17 est un défaut mécanique**, pas un excès de contenu : le paramètre d'échelle du bloc Mermaid n'a aucun effet dans cette version. À traiter en réduisant l'échelle par CSS, ou en scindant le logigramme.
+2. **Les seize autres sont un excès de contenu** pour la hauteur disponible. Chaque diapositive demande un arbitrage éditorial — que couper, que renvoyer en note de présentateur — qui appartient au propriétaire du dossier. Le minutage n'en est pas affecté : ce qui est coupé n'était de toute façon pas lisible par le jury.
+
+**Le contrôle est désormais outillé et rejouable** : [`slides/verifier-rendu.mjs`](slides/verifier-rendu.mjs), mode d'emploi en tête du fichier. À relancer après chaque retouche, et **avant** l'export PDF.
+
+> ⚠️ **Piège de rendu** : la police du thème (Nunito Sans) est chargée depuis Google Fonts **au moment du rendu**. Sans réseau, le navigateur retombe sur une police plus large et **le support se dégrade encore**. L'export PDF fige les polices : c'est un argument de plus pour présenter depuis le PDF (§ 3, action 7) et non depuis le support en ligne.
 
 ---
 
@@ -37,8 +76,8 @@ Ces quatre points portent **C3.4.2**, éliminatoire. Une démonstration qui éch
 | # | Action | Détail |
 |:-:|--------|--------|
 | 7 | **Exporter le support en PDF** | `cd slides && npm install && npm run export`. Le premier export peut demander `npx playwright install chromium` |
-| 8 | **Tester l'export sur le matériel de la salle** | Vidéoprojecteur, résolution, lisibilité depuis le fond. Vérifier en particulier les deux diagrammes Mermaid (diapos 6 et 17) et la diapositive 26, la plus dense |
-| 9 | **Répéter le minutage global** | 30 minutes, dont 17 sur les trois compétences éliminatoires. Deux passages complets. Le contrôle automatique donne **30 min 10 s**, l'écart de 10 s venant du chapitre 1 (6:40 pour une cible de 6:30) |
+| 8 | **Tester l'export sur le matériel de la salle** | Vidéoprojecteur, résolution, lisibilité depuis le fond. Le seul diagramme Mermaid du support présenté est celui de la **diapositive 17** — la 6 est un Gantt en HTML, l'annexe 34 le second Mermaid. Après le traitement du § 0, relancer `verifier-rendu.mjs` puis contrôler le PDF page à page |
+| 9 | **Répéter le minutage global** | 30 minutes, dont 17 sur les trois compétences éliminatoires. Deux passages complets. Le contrôle automatique donne **30:00 pile**, exact chapitre par chapitre |
 | 10 | **Mémoriser les numéros de page des annexes** | A1 = 33 · A2 = 34 · A3 = 35 · A4 = 36 · A5 = 37 · A6 = 38 · A7 = 39 · A8 = 40. En mode présentateur, taper le numéro puis `Entrée` |
 
 ---
@@ -56,6 +95,28 @@ Les cinq points relevés le 5 septembre ont été corrigés dans le support, ils
 | 15 | **Le chapitre 1 débordait de 10 secondes** (6:40 pour 6:30) | La diapositive 6 passe de 1:20 à 1:10. **Le minutage est désormais exact chapitre par chapitre, et le total tombe à 30:00 pile** |
 
 **Reste une seule vigilance, purement orale** : la diapositive 26 demeure parmi les plus denses. C'est une diapositive **preuve**, à désigner en commentant trois points, jamais à lire.
+
+## 4 bis. Seconde relecture du 5 septembre — corrections appliquées
+
+Onze écarts trouvés en recoupant chaque chiffre contre le dépôt, et corrigés dans le même mouvement. Les deux premiers étaient **vérifiables par le jury** et auraient été trouvés par un examinateur qui ouvre le dépôt.
+
+| # | Écart | Correction |
+|:-:|-------|-----------|
+| 23 | **L'API Node du MVP comptait 18 fichiers, pas 21** (944 lignes, vérifié au commit `mvp done`). Le chiffre servait aussi à la comparaison « 111 fichiers structurés contre 21 » du chapitre 3 | 4 occurrences corrigées, chapitre 3 et diapositive 16 |
+| 24 | **Les 87 lignes de front sont dans le commit de 11 h 57**, pas dans celui de 12 h 12 que la chronologie du chapitre nomme « Bascule » — lequel ne touche aucun fichier du front. Un examinateur qui vérifiait tombait sur zéro | Le commit est désormais désigné sans ambiguïté |
+| 25 | **Le chapitre 1 comptait 8 versions et s'arrêtait à la v1.4.0**, quand les chapitres 2 et 6 et la diapositive 2 en comptent 9 | Le chapitre 1, son Gantt et la note de la diapositive 6 passent à 9 versions, v1.4.1 comprise |
+| 26 | **Le Gantt appelait « Lot 4 » les versions V1.1 à V1.4**, alors que le lot 4 du chiffrage est la clôture du titre. Cette confusion effaçait le constat central du chapitre 2 : ces versions sont **hors chiffrage initial** | Deux barres distinctes, dont une explicitement « hors chiffrage initial » |
+| 27 | **La phase de restitution était datée du 03/06**, alors que son propre contenu et le Gantt la font commencer au 27/02 avec la première mise en production | Corrigé en 27/02 |
+| 28 | **La ligne « infrastructure : 1 à 5 €/mois » de la diapositive 8** contredisait le « 0 €/mois » de la diapositive 14, faute de rappeler les 12 mois offerts | Les deux diapositives et le chapitre 1 portent désormais la même formulation que l'annexe A4 |
+| 29 | **Les commits de documentation ne sont pas concentrés en août-septembre** : 50 des 80 tombent en juillet et août, autour des remises des Blocs 2 et 4. L'affirmation était contredite par l'historique | Reformulé sur la mesure réelle, l'argument en sort renforcé |
+| 30 | **La vague 1 des compétences était datée « 16 au 18 mars »**, soit une fenêtre fermée le jour de la décision, avant que le travail .NET commence (18–19 mars au chapitre 3) | Fenêtre portée au 16–19 mars, « trois jours » devient « quatre jours » |
+| 31 | **La densité hebdomadaire valait 3,2 dans le plan et 3,1 partout ailleurs** (88 jours / 28 semaines) | Plan aligné sur 3,1 |
+| 32 | **Le plan n'avait pas suivi le rééquilibrage du minutage** : son tableau diapositive par diapositive gardait 1:20 pour la 6, 0:25 pour la 22 et 0:40 pour la 23, en contradiction avec son propre § 3 et avec le support | Les trois lignes sont alignées sur le support |
+| 33 | **Les chiffres n'étaient datés que par le jour**, alors que `master` a avancé de 5 commits dans la journée du 5 septembre | Le chapitre 2 ancre désormais son relevé sur le commit `5ce0a05f`, ce qui rend chaque comptage reproductible |
+
+**Un point n'a pas été corrigé, il demande un arbitrage** : le chapitre 3 § 2.2 justifie l'exigence de « socle à support long terme » par *« 59 des 77 pull requests du projet sont des montées de dépendances »*. C'est une mesure de **septembre 2026**, présentée parmi les quatre exigences connues au **18 mars**. Le chapitre est par ailleurs scrupuleux sur cette distinction — il précise lui-même que le rapport de 1 à 47 est « la justification a posteriori de la décision, pas son argument d'origine ». Il manque ici la même précaution.
+
+---
 
 ## 5. Décisions en suspens — elles t'appartiennent
 
