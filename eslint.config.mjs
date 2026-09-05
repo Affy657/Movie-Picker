@@ -18,6 +18,7 @@ export default defineConfig(
       'artifacts/**',
       'apps/web/dist/**',
       'mcps/**',
+      'apps/web/src/shared/api/generated/**',
     ],
   },
   {

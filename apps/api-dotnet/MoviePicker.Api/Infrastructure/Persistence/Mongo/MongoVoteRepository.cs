@@ -7,11 +7,11 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoVoteRepository : IVoteRepository
 {
-    private readonly IMongoCollection<VoteDocument> _collection;
+    private readonly TransactionalCollection<VoteDocument> _collection;
 
-    public MongoVoteRepository(IMongoDatabase database)
+    public MongoVoteRepository(MongoCollectionFactory collections)
     {
-        _collection = database.GetCollection<VoteDocument>("votes");
+        _collection = collections.GetCollection<VoteDocument>("votes");
     }
 
     public async Task DeleteByMovieIdAsync(string movieId, CancellationToken ct = default)

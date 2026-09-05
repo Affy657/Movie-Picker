@@ -40,8 +40,6 @@ public sealed class GetMovieDetailsHandler : IGetMovieDetailsHandler
         var region = string.IsNullOrWhiteSpace(_options.TmdbWatchProvidersRegion)
             ? "FR"
             : _options.TmdbWatchProvidersRegion.Trim().ToUpperInvariant();
-        // No try/catch here: unlike GetDetailsAsync, GetEnrichmentAsync already swallows
-        // upstream TMDB failures internally and returns null, so it never throws.
         var enrichment = await _tmdb.GetEnrichmentAsync(tmdbId, mediaType, region, ct).ConfigureAwait(false);
 
         return new MovieDetailsResponse

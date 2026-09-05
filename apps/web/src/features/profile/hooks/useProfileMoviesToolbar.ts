@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { genreLabel } from '@/features/profile/lib/tmdbGenres';
+import { genreLabel } from '@/shared/utils/tmdbGenres';
 import { DECADE_OPTIONS } from '@/features/movies/components/movieSearchFilterOptions';
 import type { MovieMediaType } from '@/shared/types/movie';
 import type { UserWatchedMovieItem } from '@/features/profile/api/profileApi';

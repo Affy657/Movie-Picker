@@ -21,6 +21,8 @@ public sealed class WatchlistController : ControllerBase
     [ProducesResponseType(typeof(WatchlistResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Get(
+        [FromQuery] int skip,
+        [FromQuery] int? take,
         [FromServices] IGetWatchlistHandler handler,
         [FromServices] ICurrentUserAccessor currentUser,
         CancellationToken ct)
@@ -29,7 +31,7 @@ public sealed class WatchlistController : ControllerBase
         if (string.IsNullOrEmpty(userId))
             return Unauthorized();
 
-        var result = await handler.HandleAsync(userId, ct);
+        var result = await handler.HandleAsync(userId, skip, take, ct);
         return Ok(result);
     }
 

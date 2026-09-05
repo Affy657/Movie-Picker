@@ -76,14 +76,12 @@
   padding: 0.85rem 1.15rem 1.15rem;
 }
 
-/* ---- panneau Lien & QR ---- */
 .linkPanel {
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
 }
 
-/* ---- aperçu de ce qu'on partage ---- */
 .preview {
   display: flex;
   align-items: center;
@@ -171,7 +169,6 @@
   user-select: all;
 }
 
-/* ---- actions ---- */
 .actionsStack {
   display: flex;
   flex-direction: column;

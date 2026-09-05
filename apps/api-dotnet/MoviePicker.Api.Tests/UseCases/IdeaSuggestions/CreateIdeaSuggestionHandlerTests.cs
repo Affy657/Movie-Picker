@@ -12,7 +12,6 @@ public sealed class CreateIdeaSuggestionHandlerTests
 {
     private const string UserId = "u1";
 
-    /// <summary>Base64 de la signature PNG (8 octets) : valide pour la vérification magic-bytes.</summary>
     private const string ValidPngBase64 = "iVBORw0KGgo=";
 
     private readonly Mock<IUserRepository> _users = new();
@@ -205,7 +204,6 @@ public sealed class CreateIdeaSuggestionHandlerTests
     [Fact]
     public async Task HandleAsync_AttachmentContentDoesNotMatchDeclaredType_ThrowsBadRequest_WithoutCallingGitHub()
     {
-        // "QQ==" décode en un seul octet 'A' (0x41) : ne correspond à aucune signature PNG/JPEG/WebP/GIF.
         var request = Request(attachments:
         [
             new IdeaSuggestionAttachmentDto { FileName = "fake.png", ContentType = "image/png", Base64Content = "QQ==" },

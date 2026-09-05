@@ -1,5 +1,3 @@
-/* Le composant LanguageSelector délègue maintenant son rendu à <Dropdown>.
-   Module conservé en cas de besoin futur d'override local. */
 .placeholder {
   display: none;
 }

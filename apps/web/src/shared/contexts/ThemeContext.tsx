@@ -47,18 +47,14 @@ function readStoredPreference(): UiThemePreference {
       localStorage.removeItem(MIGRATE_FROM_STORAGE_KEY);
       return migrated;
     }
-  } catch {
-    // Storage unavailable or invalid value — return default theme
-  }
+  } catch {}
   return 'system';
 }
 
 function persistPreference(p: UiThemePreference): void {
   try {
     localStorage.setItem(PREFERENCE_STORAGE_KEY, p);
-  } catch {
-    // Storage unavailable (private browsing or quota exceeded) — write fails silently
-  }
+  } catch {}
 }
 
 function readStoredAccent(): AccentColor {
@@ -66,18 +62,14 @@ function readStoredAccent(): AccentColor {
   try {
     const stored = localStorage.getItem(ACCENT_STORAGE_KEY);
     if (isAccentColor(stored)) return stored;
-  } catch {
-    // Storage unavailable — return default accent
-  }
+  } catch {}
   return 'default';
 }
 
 function persistAccent(c: AccentColor): void {
   try {
     localStorage.setItem(ACCENT_STORAGE_KEY, c);
-  } catch {
-    // Storage unavailable (private browsing or quota exceeded) — write fails silently
-  }
+  } catch {}
 }
 
 function resolveTheme(preference: UiThemePreference, systemDark: boolean): ResolvedTheme {

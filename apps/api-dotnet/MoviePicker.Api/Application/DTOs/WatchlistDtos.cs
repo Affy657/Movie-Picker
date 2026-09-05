@@ -58,4 +58,8 @@ public sealed class WatchlistItemResponse
 public sealed class WatchlistResponse
 {
     public IReadOnlyList<WatchlistItemResponse> Items { get; init; } = [];
+
+    public long Total { get; init; }
+
+    public bool HasMore { get; init; }
 }

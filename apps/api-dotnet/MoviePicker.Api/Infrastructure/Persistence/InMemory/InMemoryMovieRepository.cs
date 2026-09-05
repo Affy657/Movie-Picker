@@ -33,7 +33,11 @@ public sealed class InMemoryMovieRepository : IMovieRepository
     public Task<IReadOnlyList<Movie>> ListByEventIdAsync(string eventId, CancellationToken ct = default)
     {
         var list = _byEventId.GetOrAdd(eventId, _ => []);
-        lock (list) { return Task.FromResult<IReadOnlyList<Movie>>(list.ToList()); }
+        lock (list)
+        {
+            return Task.FromResult<IReadOnlyList<Movie>>(
+                list.Take(EventConfig.MaxMoviesPerEventCap).ToList());
+        }
     }
 
     public Task<bool> ExistsByEventAndTmdbIdAsync(

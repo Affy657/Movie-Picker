@@ -8,11 +8,11 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoParticipantRepository : IParticipantRepository
 {
-    private readonly IMongoCollection<ParticipantDocument> _collection;
+    private readonly TransactionalCollection<ParticipantDocument> _collection;
 
-    public MongoParticipantRepository(IMongoDatabase database)
+    public MongoParticipantRepository(MongoCollectionFactory collections)
     {
-        _collection = database.GetCollection<ParticipantDocument>("participants");
+        _collection = collections.GetCollection<ParticipantDocument>("participants");
     }
 
     public async Task<Participant?> FindByEventAndPseudoAsync(string eventId, string pseudo, CancellationToken ct = default)

@@ -1,5 +1,5 @@
 import { useTranslation } from '@/shared/i18n';
-import { genreLabel } from '@/features/profile/lib/tmdbGenres';
+import { genreLabel } from '@/shared/utils/tmdbGenres';
 import type { RatingScale } from '@/shared/types/theme';
 import DurationRangeSlider from './DurationRangeSlider';
 import {

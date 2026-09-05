@@ -81,8 +81,6 @@ describe('NotificationsPage (MSW)', () => {
 
     renderPage();
 
-    // Le titre de la soirée apparaît aussi en gras dans chaque ligne — seul l'en-tête du groupe
-    // (un <p>, pas un <strong>) doit être unique.
     const headers = await screen.findAllByText('Soiree Groupee', { selector: 'p' });
     expect(headers).toHaveLength(1);
   });

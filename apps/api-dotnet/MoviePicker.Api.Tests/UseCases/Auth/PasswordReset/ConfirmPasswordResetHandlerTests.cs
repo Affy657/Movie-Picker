@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
@@ -52,7 +51,7 @@ public sealed class ConfirmPasswordResetHandlerTests
     private static ConfirmPasswordResetHandler CreateHandler(
         IUserRepository users,
         IPasswordResetTokenRepository tokens,
-        IPasswordHasher<User> hasher,
+        IPasswordHasher hasher,
         IAuthSessionInvalidator sessions,
         TimeProvider clock) =>
         new(users, tokens, hasher, sessions, clock, NullLogger<ConfirmPasswordResetHandler>.Instance);
@@ -63,7 +62,7 @@ public sealed class ConfirmPasswordResetHandlerTests
         var clock = new FakeTimeProvider(TestEpoch);
         var users = new Mock<IUserRepository>();
         var tokens = new Mock<IPasswordResetTokenRepository>();
-        var hasher = new Mock<IPasswordHasher<User>>();
+        var hasher = new Mock<IPasswordHasher>();
         var sessions = new Mock<IAuthSessionInvalidator>();
 
         var handler = CreateHandler(users.Object, tokens.Object, hasher.Object, sessions.Object, clock);
@@ -81,7 +80,7 @@ public sealed class ConfirmPasswordResetHandlerTests
         var clock = new FakeTimeProvider(TestEpoch);
         var users = new Mock<IUserRepository>();
         var tokens = new Mock<IPasswordResetTokenRepository>();
-        var hasher = new Mock<IPasswordHasher<User>>();
+        var hasher = new Mock<IPasswordHasher>();
         var sessions = new Mock<IAuthSessionInvalidator>();
 
         var handler = CreateHandler(users.Object, tokens.Object, hasher.Object, sessions.Object, clock);
@@ -99,7 +98,7 @@ public sealed class ConfirmPasswordResetHandlerTests
         var clock = new FakeTimeProvider(TestEpoch);
         var users = new Mock<IUserRepository>();
         var tokens = new Mock<IPasswordResetTokenRepository>();
-        var hasher = new Mock<IPasswordHasher<User>>();
+        var hasher = new Mock<IPasswordHasher>();
         var sessions = new Mock<IAuthSessionInvalidator>();
 
         var handler = CreateHandler(users.Object, tokens.Object, hasher.Object, sessions.Object, clock);
@@ -117,7 +116,7 @@ public sealed class ConfirmPasswordResetHandlerTests
         var clock = new FakeTimeProvider(TestEpoch);
         var users = new Mock<IUserRepository>();
         var tokens = new Mock<IPasswordResetTokenRepository>();
-        var hasher = new Mock<IPasswordHasher<User>>();
+        var hasher = new Mock<IPasswordHasher>();
         var sessions = new Mock<IAuthSessionInvalidator>();
 
         var handler = CreateHandler(users.Object, tokens.Object, hasher.Object, sessions.Object, clock);
@@ -138,7 +137,7 @@ public sealed class ConfirmPasswordResetHandlerTests
         tokens
             .Setup(x => x.GetByTokenHashAsync(PasswordResetTokenFactory.Hash(PlainToken), It.IsAny<CancellationToken>()))
             .ReturnsAsync((PasswordResetToken?)null);
-        var hasher = new Mock<IPasswordHasher<User>>();
+        var hasher = new Mock<IPasswordHasher>();
         var sessions = new Mock<IAuthSessionInvalidator>();
 
         var handler = CreateHandler(users.Object, tokens.Object, hasher.Object, sessions.Object, clock);
@@ -171,7 +170,7 @@ public sealed class ConfirmPasswordResetHandlerTests
         var tokens = new Mock<IPasswordResetTokenRepository>();
         tokens.Setup(x => x.GetByTokenHashAsync(hash, It.IsAny<CancellationToken>())).ReturnsAsync(stored);
 
-        var hasher = new Mock<IPasswordHasher<User>>();
+        var hasher = new Mock<IPasswordHasher>();
         var sessions = new Mock<IAuthSessionInvalidator>();
 
         var handler = CreateHandler(users.Object, tokens.Object, hasher.Object, sessions.Object, clock);
@@ -217,8 +216,8 @@ public sealed class ConfirmPasswordResetHandlerTests
         tokens.Setup(x => x.InvalidateActiveForUserAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var hasher = new Mock<IPasswordHasher<User>>();
-        hasher.Setup(x => x.HashPassword(It.IsAny<User>(), "abcd1234")).Returns("NEW_HASH_FROM_HASHER");
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Hash("abcd1234")).Returns("NEW_HASH_FROM_HASHER");
 
         var sessions = new Mock<IAuthSessionInvalidator>();
         sessions.Setup(x => x.InvalidateAllForUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(2L);
@@ -227,7 +226,7 @@ public sealed class ConfirmPasswordResetHandlerTests
 
         await handler.HandleAsync(new PasswordResetConfirmRequest { Token = PlainToken, NewPassword = "abcd1234" });
 
-        hasher.Verify(x => x.HashPassword(It.Is<User>(u => u.Id == user.Id), "abcd1234"), Times.Once);
+        hasher.Verify(x => x.Hash("abcd1234"), Times.Once);
         Assert.NotNull(capturedUpdate);
         Assert.Equal("NEW_HASH_FROM_HASHER", capturedUpdate!.PasswordHash);
         Assert.Equal(TestEpoch, capturedUpdate.UpdatedAt);
@@ -260,8 +259,8 @@ public sealed class ConfirmPasswordResetHandlerTests
         tokens.Setup(x => x.InvalidateActiveForUserAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var hasher = new Mock<IPasswordHasher<User>>();
-        hasher.Setup(x => x.HashPassword(It.IsAny<User>(), It.IsAny<string>())).Returns("hash");
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Hash(It.IsAny<string>())).Returns("hash");
 
         var sessions = new Mock<IAuthSessionInvalidator>();
         sessions.Setup(x => x.InvalidateAllForUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(0L);
@@ -310,8 +309,8 @@ public sealed class ConfirmPasswordResetHandlerTests
             .Callback(() => callOrder.Add("invalidateTokens"))
             .Returns(Task.CompletedTask);
 
-        var hasher = new Mock<IPasswordHasher<User>>();
-        hasher.Setup(x => x.HashPassword(It.IsAny<User>(), It.IsAny<string>())).Returns("hash");
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Hash(It.IsAny<string>())).Returns("hash");
 
         var sessions = new Mock<IAuthSessionInvalidator>();
         sessions
@@ -353,8 +352,8 @@ public sealed class ConfirmPasswordResetHandlerTests
         tokens.Setup(x => x.InvalidateActiveForUserAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var hasher = new Mock<IPasswordHasher<User>>();
-        hasher.Setup(x => x.HashPassword(It.IsAny<User>(), It.IsAny<string>())).Returns("hash");
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Hash(It.IsAny<string>())).Returns("hash");
 
         var sessions = new Mock<IAuthSessionInvalidator>();
         sessions.Setup(x => x.InvalidateAllForUserAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(4L);
@@ -393,8 +392,8 @@ public sealed class ConfirmPasswordResetHandlerTests
         tokens.Setup(x => x.InvalidateActiveForUserAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var hasher = new Mock<IPasswordHasher<User>>();
-        hasher.Setup(x => x.HashPassword(It.IsAny<User>(), It.IsAny<string>())).Returns("hash");
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Hash(It.IsAny<string>())).Returns("hash");
 
         var sessions = new Mock<IAuthSessionInvalidator>();
         sessions.Setup(x => x.InvalidateAllForUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(0L);

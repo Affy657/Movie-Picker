@@ -49,10 +49,6 @@
   box-sizing: border-box;
 }
 
-/*
- * Cadre du logo posé directement sur le chip (pas de wrapper) ; hauteur fixe,
- * largeur auto pour s'adapter aux wordmarks larges comme aux icônes carrées.
- */
 .chipLogo {
   height: 1.75rem;
   min-width: 1.75rem;

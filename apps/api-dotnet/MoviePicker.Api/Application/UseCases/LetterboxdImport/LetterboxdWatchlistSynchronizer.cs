@@ -166,9 +166,6 @@ public sealed class LetterboxdWatchlistSynchronizer
         IReadOnlyList<TmdbSearchItem> candidates,
         CancellationToken ct)
     {
-        // Candidates within a row are independent TMDB lookups: fetch them concurrently
-        // instead of one-by-one, otherwise a row with several ambiguous candidates pays
-        // their combined latency sequentially on every interactive sync request.
         var runtimes = await Task.WhenAll(candidates.Select(c => GetRuntimeAsync(c.Id, c.MediaType, ct)));
         var withCandidates = candidates.Select((c, i) => new LetterboxdImportCandidateResponse
         {

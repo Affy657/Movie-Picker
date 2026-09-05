@@ -19,7 +19,6 @@
   border-color: var(--color-error);
 }
 
-/* Supprime le style propre de .input pour que le wrap gère la bordure */
 .input {
   border: none !important;
   border-radius: 0 !important;
@@ -29,7 +28,6 @@
   flex: 1;
   min-width: 0;
   background: transparent;
-  /* Cache les spinners natifs */
   -webkit-appearance: textfield;
   appearance: textfield;
   -moz-appearance: textfield;
@@ -73,7 +71,6 @@
   cursor: default;
 }
 
-/* Séparateurs visuels */
 .stepBtn:first-child {
   border-right: 1px solid var(--color-border-subtle);
 }

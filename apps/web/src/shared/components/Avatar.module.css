@@ -20,8 +20,6 @@
   letter-spacing: 0.02em;
 }
 
-/* Uppercase caps sit high in the line box; nudge the text down so it
-   aligns optically with the vertical center of the circle. */
 .initialsText {
   transform: translateY(0.13em);
 }

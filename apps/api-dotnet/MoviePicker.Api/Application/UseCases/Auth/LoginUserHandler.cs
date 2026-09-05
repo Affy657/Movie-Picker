@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Identity;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
@@ -9,9 +8,9 @@ namespace MoviePicker.Api.Application.UseCases.Auth;
 public sealed class LoginUserHandler : ILoginUserHandler
 {
     private readonly IUserRepository _users;
-    private readonly IPasswordHasher<User> _passwordHasher;
+    private readonly IPasswordHasher _passwordHasher;
 
-    public LoginUserHandler(IUserRepository users, IPasswordHasher<User> passwordHasher)
+    public LoginUserHandler(IUserRepository users, IPasswordHasher passwordHasher)
     {
         _users = users;
         _passwordHasher = passwordHasher;
@@ -23,8 +22,8 @@ public sealed class LoginUserHandler : ILoginUserHandler
         if (user is null || string.IsNullOrEmpty(user.PasswordHash))
             throw new UnauthorizedException("Identifiants incorrects.");
 
-        var verify = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
-        if (verify == PasswordVerificationResult.Failed)
+        var verify = _passwordHasher.Verify(user.PasswordHash, request.Password);
+        if (verify == PasswordVerification.Failed)
             throw new UnauthorizedException("Identifiants incorrects.");
 
         return new LoginResponse { UserId = user.Id, DisplayName = user.DisplayName };

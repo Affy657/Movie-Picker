@@ -4,6 +4,7 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.DeleteEvent;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.DeleteEvent;
@@ -53,6 +54,7 @@ public sealed class DeleteEventHandlerTests
             _pushSubRepo.Object,
             _pushSender.Object,
             Mock.Of<IUserNotificationRepository>(),
+            new InMemoryUnitOfWork(),
             NullLogger<DeleteEventHandler>.Instance);
     }
 

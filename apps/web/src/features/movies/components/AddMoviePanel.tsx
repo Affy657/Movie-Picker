@@ -13,7 +13,6 @@ type AddMoviePanelProps = AddMovieFormProps & {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   hideTrigger?: boolean;
-  /** Element to refocus on close when hideTrigger is set (there's no internal trigger to fall back to). */
   returnFocusRef?: RefObject<HTMLButtonElement | null>;
 };
 

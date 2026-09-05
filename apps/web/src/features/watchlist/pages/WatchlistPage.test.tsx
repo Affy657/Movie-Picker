@@ -249,7 +249,6 @@ describe('WatchlistPage (MSW)', () => {
       runtimeMinutes: 112,
     });
 
-    // The search bar clears/closes once the movie has been added.
     await waitFor(() =>
       expect(screen.queryByRole('button', { name: /^ajouter$/i })).not.toBeInTheDocument()
     );

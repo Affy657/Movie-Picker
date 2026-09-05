@@ -22,16 +22,16 @@ public static class DataProtectionConfiguration
         {
             builder.Services.AddSingleton<IConfigureOptions<KeyManagementOptions>>(sp =>
             {
-                var database = sp.GetRequiredService<IMongoDatabase>();
+                var collections = sp.GetService<MongoCollectionFactory>();
                 return new ConfigureOptions<KeyManagementOptions>(options =>
-                    options.XmlRepository = new MongoXmlRepository(database));
+                {
+                    if (collections is not null)
+                        options.XmlRepository = new MongoXmlRepository(collections);
+                });
             });
             return;
         }
 
-        // Repli utilisé uniquement en dev sans Mongo : en production MONGODB_URI est
-        // toujours renseigné, donc cette branche (et le secret AUTH_DATAPROTECTION_KEYRING)
-        // n'est jamais atteinte.
         var xml =
             builder.Configuration[KeyRingXmlEnvName]
             ?? Environment.GetEnvironmentVariable(KeyRingXmlEnvName);

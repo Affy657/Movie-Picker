@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { genreLabel } from '@/features/profile/lib/tmdbGenres';
+import { genreLabel } from '@/shared/utils/tmdbGenres';
 import type { MovieSearchFilters } from '@/features/movies/api/moviesApi';
 import type { RatingScale } from '@/shared/types/theme';
 import {

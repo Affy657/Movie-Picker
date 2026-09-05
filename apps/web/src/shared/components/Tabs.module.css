@@ -65,7 +65,6 @@
   color: var(--color-primary);
 }
 
-/* ---- variante pastille (segmented control) ---- */
 .pillList {
   gap: 0.25rem;
   padding: 0.2rem;

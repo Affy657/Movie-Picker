@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
@@ -12,7 +11,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
     public const string AnonymizedParticipantPseudo = "Compte supprimé";
 
     private readonly IUserRepository _users;
-    private readonly IPasswordHasher<User> _passwordHasher;
+    private readonly IPasswordHasher _passwordHasher;
     private readonly IEventRepository _events;
     private readonly IParticipantRepository _participants;
     private readonly IUserNotificationRepository _notifications;
@@ -21,11 +20,12 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
     private readonly IWatchlistRepository _watchlist;
     private readonly IPasswordResetTokenRepository _resetTokens;
     private readonly IAuthSessionInvalidator _sessionInvalidator;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<DeleteAccountHandler> _logger;
 
     public DeleteAccountHandler(
         IUserRepository users,
-        IPasswordHasher<User> passwordHasher,
+        IPasswordHasher passwordHasher,
         IEventRepository events,
         IParticipantRepository participants,
         IUserNotificationRepository notifications,
@@ -34,6 +34,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         IWatchlistRepository watchlist,
         IPasswordResetTokenRepository resetTokens,
         IAuthSessionInvalidator sessionInvalidator,
+        IUnitOfWork unitOfWork,
         ILogger<DeleteAccountHandler> logger)
     {
         _users = users;
@@ -46,6 +47,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         _watchlist = watchlist;
         _resetTokens = resetTokens;
         _sessionInvalidator = sessionInvalidator;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
@@ -67,23 +69,33 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         }
         else
         {
-            var verify = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password ?? string.Empty);
-            if (verify == PasswordVerificationResult.Failed)
+            var verify = _passwordHasher.Verify(user.PasswordHash, request.Password ?? string.Empty);
+            if (verify == PasswordVerification.Failed)
             {
                 _logger.LogWarning("DeleteAccount: incorrect password for {UserId}", userId);
                 throw new UnauthorizedException("Mot de passe incorrect.");
             }
         }
 
-        var anonymizedEvents = await _events.AnonymizeCreatorAsync(userId, ct);
-        var anonymizedParticipations = await _participants.AnonymizeByUserIdAsync(userId, AnonymizedParticipantPseudo, ct);
-        await _notifications.DeleteByUserIdAsync(userId, ct);
-        await _pushSubscriptions.DeleteByUserIdAsync(userId, ct);
-        await _follows.DeleteAllForUserAsync(userId, ct);
-        await _watchlist.DeleteAllForUserAsync(userId, ct);
-        await _resetTokens.DeleteByUserIdAsync(userId, ct);
+        long anonymizedEvents = 0;
+        long anonymizedParticipations = 0;
+
+        await _unitOfWork.ExecuteAsync(
+            async token =>
+            {
+                anonymizedEvents = await _events.AnonymizeCreatorAsync(userId, token);
+                anonymizedParticipations = await _participants.AnonymizeByUserIdAsync(
+                    userId, AnonymizedParticipantPseudo, token);
+                await _notifications.DeleteByUserIdAsync(userId, token);
+                await _pushSubscriptions.DeleteByUserIdAsync(userId, token);
+                await _follows.DeleteAllForUserAsync(userId, token);
+                await _watchlist.DeleteAllForUserAsync(userId, token);
+                await _resetTokens.DeleteByUserIdAsync(userId, token);
+                await _users.DeleteAsync(userId, token);
+            },
+            ct);
+
         await _sessionInvalidator.InvalidateAllForUserAsync(userId, ct);
-        await _users.DeleteAsync(userId, ct);
 
         _logger.LogInformation(
             "DeleteAccount: success for {EmailMasked} (userId={UserId}, anonymizedEvents={Events}, anonymizedParticipations={Participations})",

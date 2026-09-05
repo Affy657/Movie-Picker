@@ -3,7 +3,7 @@ import { Bookmark, Import, Plus } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import EmptyState from '@/shared/components/EmptyState';
 import SignedOutState from '@/shared/components/SignedOutState';
-import SessionCheckErrorState from '@/shared/components/SessionCheckErrorState';
+import SessionCheckErrorState from '@/features/auth/components/SessionCheckErrorState';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';

@@ -1,6 +1,3 @@
-// Static TMDB genre id → localized label map (movie + TV genres).
-// The API returns raw genre ids (locale-independent); the client resolves labels.
-// Ids are stable in the TMDB API; overlapping movie/TV ids share the same label.
 interface GenreLabel {
   fr: string;
   en: string;
@@ -26,7 +23,6 @@ const TMDB_GENRES: Record<number, GenreLabel> = {
   53: { fr: 'Thriller', en: 'Thriller' },
   10752: { fr: 'Guerre', en: 'War' },
   37: { fr: 'Western', en: 'Western' },
-  // TV-specific genres
   10759: { fr: 'Action & Aventure', en: 'Action & Adventure' },
   10762: { fr: 'Enfants', en: 'Kids' },
   10763: { fr: 'Actualités', en: 'News' },

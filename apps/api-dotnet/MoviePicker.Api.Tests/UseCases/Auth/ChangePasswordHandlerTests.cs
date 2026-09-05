@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
@@ -36,7 +35,7 @@ public sealed class ChangePasswordHandlerTests
 
     private static ChangePasswordHandler CreateHandler(
         IUserRepository users,
-        IPasswordHasher<User> hasher,
+        IPasswordHasher hasher,
         IAuthSessionInvalidator sessions,
         TimeProvider clock) =>
         new(users, hasher, sessions, clock, NullLogger<ChangePasswordHandler>.Instance);
@@ -47,7 +46,7 @@ public sealed class ChangePasswordHandlerTests
         var users = new Mock<IUserRepository>();
         users.Setup(x => x.GetByIdAsync("missing", It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
-        var hasher = new Mock<IPasswordHasher<User>>();
+        var hasher = new Mock<IPasswordHasher>();
         var sessions = new Mock<IAuthSessionInvalidator>();
 
         var handler = CreateHandler(users.Object, hasher.Object, sessions.Object, new FakeTimeProvider(TestEpoch));
@@ -69,9 +68,9 @@ public sealed class ChangePasswordHandlerTests
         var users = new Mock<IUserRepository>();
         users.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
 
-        var hasher = new Mock<IPasswordHasher<User>>();
-        hasher.Setup(x => x.VerifyHashedPassword(user, "old-hash", "wrong"))
-            .Returns(PasswordVerificationResult.Failed);
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Verify("old-hash", "wrong"))
+            .Returns(PasswordVerification.Failed);
 
         var sessions = new Mock<IAuthSessionInvalidator>();
 
@@ -96,9 +95,9 @@ public sealed class ChangePasswordHandlerTests
         var users = new Mock<IUserRepository>();
         users.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
 
-        var hasher = new Mock<IPasswordHasher<User>>();
-        hasher.Setup(x => x.VerifyHashedPassword(user, "old-hash", "abcd1234"))
-            .Returns(PasswordVerificationResult.Success);
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Verify("old-hash", "abcd1234"))
+            .Returns(PasswordVerification.Success);
 
         var sessions = new Mock<IAuthSessionInvalidator>();
 
@@ -123,9 +122,9 @@ public sealed class ChangePasswordHandlerTests
         var users = new Mock<IUserRepository>();
         users.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
 
-        var hasher = new Mock<IPasswordHasher<User>>();
-        hasher.Setup(x => x.VerifyHashedPassword(user, "old-hash", "abcd1234"))
-            .Returns(PasswordVerificationResult.Success);
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Verify("old-hash", "abcd1234"))
+            .Returns(PasswordVerification.Success);
 
         var sessions = new Mock<IAuthSessionInvalidator>();
 
@@ -152,10 +151,10 @@ public sealed class ChangePasswordHandlerTests
             .Callback<User, CancellationToken>((u, _) => captured = u)
             .ReturnsAsync((User u, CancellationToken _) => u);
 
-        var hasher = new Mock<IPasswordHasher<User>>();
-        hasher.Setup(x => x.VerifyHashedPassword(user, "old-hash", "abcd1234"))
-            .Returns(PasswordVerificationResult.Success);
-        hasher.Setup(x => x.HashPassword(user, "wxyz5678"))
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Verify("old-hash", "abcd1234"))
+            .Returns(PasswordVerification.Success);
+        hasher.Setup(x => x.Hash("wxyz5678"))
             .Returns("new-hash");
 
         var sessions = new Mock<IAuthSessionInvalidator>();
@@ -188,8 +187,8 @@ public sealed class ChangePasswordHandlerTests
             .Callback<User, CancellationToken>((u, _) => captured = u)
             .ReturnsAsync((User u, CancellationToken _) => u);
 
-        var hasher = new Mock<IPasswordHasher<User>>();
-        hasher.Setup(x => x.HashPassword(user, "wxyz5678")).Returns("new-hash");
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Hash("wxyz5678")).Returns("new-hash");
 
         var sessions = new Mock<IAuthSessionInvalidator>();
         sessions.Setup(x => x.InvalidateAllForUserAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(1L);
@@ -203,7 +202,7 @@ public sealed class ChangePasswordHandlerTests
         });
 
         hasher.Verify(
-            x => x.VerifyHashedPassword(It.IsAny<User>(), It.IsAny<string>(), It.IsAny<string>()),
+            x => x.Verify(It.IsAny<string>(), It.IsAny<string>()),
             Times.Never);
         Assert.Equal("new-hash", captured!.PasswordHash);
         sessions.Verify(x => x.InvalidateAllForUserAsync(user.Id, It.IsAny<CancellationToken>()), Times.Once);
@@ -218,10 +217,10 @@ public sealed class ChangePasswordHandlerTests
         users.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User u, CancellationToken _) => u);
 
-        var hasher = new Mock<IPasswordHasher<User>>();
-        hasher.Setup(x => x.VerifyHashedPassword(user, "old-hash", "abcd1234"))
-            .Returns(PasswordVerificationResult.SuccessRehashNeeded);
-        hasher.Setup(x => x.HashPassword(user, "wxyz5678")).Returns("new-hash");
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Verify("old-hash", "abcd1234"))
+            .Returns(PasswordVerification.SuccessNeedsRehash);
+        hasher.Setup(x => x.Hash("wxyz5678")).Returns("new-hash");
 
         var sessions = new Mock<IAuthSessionInvalidator>();
         sessions.Setup(x => x.InvalidateAllForUserAsync(user.Id, It.IsAny<CancellationToken>()))

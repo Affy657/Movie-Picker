@@ -12,8 +12,6 @@
 }
 
 @media (max-width: 47.9375rem) {
-  /* Avatar sets width/height inline for the initials/placeholder variants,
-     so only !important reliably shrinks it for the mobile identity card. */
   .avatar {
     width: 72px !important;
     height: 72px !important;

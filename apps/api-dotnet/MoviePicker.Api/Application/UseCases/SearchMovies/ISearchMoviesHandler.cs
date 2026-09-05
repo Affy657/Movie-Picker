@@ -15,7 +15,7 @@ public interface ISearchMoviesHandler
 {
     Task<MovieSearchListResponse> HandleAsync(
         string query,
-        bool allowSeries,
+        string? eventSlug,
         MovieSearchFilters? filters = null,
         CancellationToken ct = default);
 }

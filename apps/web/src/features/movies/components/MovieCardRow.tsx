@@ -1,3 +1,5 @@
+import SeenButton from '@/features/movies/components/SeenButton';
+import type { Translate } from '@/features/movies/types';
 import { Fragment, memo } from 'react';
 import clsx from 'clsx';
 import {
@@ -19,12 +21,10 @@ import {
   OverflowChip,
   PaidOfferChip,
   ProposerBadge,
-  SeenButton,
   VoteBar,
   WatchlistBadge,
   useMovieCardState,
   type MovieCardCommonProps,
-  type Translate,
 } from '@/features/movies/components/movieCardParts';
 import Tooltip from '@/shared/components/Tooltip';
 import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';

@@ -10,11 +10,11 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoMovieRepository : IMovieRepository
 {
-    private readonly IMongoCollection<MovieDocument> _collection;
+    private readonly TransactionalCollection<MovieDocument> _collection;
 
-    public MongoMovieRepository(IMongoDatabase database)
+    public MongoMovieRepository(MongoCollectionFactory collections)
     {
-        _collection = database.GetCollection<MovieDocument>("movies");
+        _collection = collections.GetCollection<MovieDocument>("movies");
     }
 
     public async Task<Movie?> GetByIdAsync(string movieId, CancellationToken ct = default)
@@ -44,7 +44,10 @@ public sealed class MongoMovieRepository : IMovieRepository
 
     public async Task<IReadOnlyList<Movie>> ListByEventIdAsync(string eventId, CancellationToken ct = default)
     {
-        var list = await _collection.Find(x => x.EventId == eventId).ToListAsync(ct);
+        var list = await _collection
+            .Find(x => x.EventId == eventId)
+            .Limit(EventConfig.MaxMoviesPerEventCap)
+            .ToListAsync(ct);
         return list.ConvertAll(MovieMapper.ToDomain);
     }
 

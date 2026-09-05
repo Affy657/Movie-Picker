@@ -7,7 +7,6 @@ namespace MoviePicker.Api.Tests.UseCases.UserStats;
 
 public sealed class StreakCalculatorTests
 {
-    // 2026-06-15 is a Monday — same reference "today" used by GetUserStatsHandlerTests.
     private static readonly DateTimeOffset Now = new(2026, 6, 15, 0, 0, 0, TimeSpan.Zero);
 
     private static Event Evt(string date) => new() { Id = date, Date = date };
@@ -88,9 +87,9 @@ public sealed class StreakCalculatorTests
     {
         var events = new[]
         {
-            Evt(WeeksAgo(0)), Evt(WeeksAgo(1)), Evt(WeeksAgo(2)),                        // current run: 3 weeks
-            Evt(WeeksAgo(10)), Evt(WeeksAgo(11)), Evt(WeeksAgo(12)), Evt(WeeksAgo(13)),  // older run: 4 weeks (longest)
-            Evt(WeeksAgo(20)), Evt(WeeksAgo(21)),                                        // oldest run: 2 weeks
+            Evt(WeeksAgo(0)), Evt(WeeksAgo(1)), Evt(WeeksAgo(2)),
+            Evt(WeeksAgo(10)), Evt(WeeksAgo(11)), Evt(WeeksAgo(12)), Evt(WeeksAgo(13)),
+            Evt(WeeksAgo(20)), Evt(WeeksAgo(21)),
         };
 
         var (current, best) = GetUserStatsHandler.ComputeStreaks(events, Now);
@@ -102,8 +101,6 @@ public sealed class StreakCalculatorTests
     [Fact]
     public void WeekSpanningYearBoundary_MergesIntoSingleWeek()
     {
-        // 2020-01-01 is a Wednesday, so the Monday of its ISO week is 2019-12-30 and the
-        // Sunday of that same week is 2020-01-05 — a single ISO week spanning two calendar years.
         var yearBoundaryMonday = new DateTimeOffset(2019, 12, 30, 0, 0, 0, TimeSpan.Zero);
         var events = new[] { Evt("2019-12-30"), Evt("2020-01-05") };
 

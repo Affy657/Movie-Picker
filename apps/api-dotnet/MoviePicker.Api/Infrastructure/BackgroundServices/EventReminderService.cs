@@ -48,7 +48,6 @@ public sealed class EventReminderService : BackgroundService
         }
         catch (OperationCanceledException)
         {
-            // Arrêt normal du service (annulation demandée) — rien à faire.
         }
     }
 

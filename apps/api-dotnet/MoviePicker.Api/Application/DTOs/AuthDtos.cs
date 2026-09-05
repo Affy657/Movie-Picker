@@ -80,13 +80,11 @@ public sealed class PatchUserProfileRequest
     [RegularExpression("^(five|ten)$", ErrorMessage = "ratingScale doit être five ou ten.")]
     public string? RatingScale { get; init; }
 
-    // Seeds must match AVATAR_IDS in apps/web/src/shared/utils/avatar.ts
     [RegularExpression(
         "^(alpha|beta|bolt|byte|crux|delta|flux|forge|gamma|jolt|kilo|laser|dex|sigma|droid|theta|chip|vibe|cute|wink|hero|halo|grin|cool|keen|jazz|fizz|zest|bold|epic|bask|nod|glow|zoom|snap|luxe)$",
         ErrorMessage = "avatarId invalide.")]
     public string? AvatarId { get; init; }
 
-    // Format/réservés validés (après normalisation) par HandlePolicy dans le handler — source unique de vérité.
     [MaxLength(20, ErrorMessage = "Handle trop long.")]
     public string? Handle { get; init; }
 
@@ -95,7 +93,6 @@ public sealed class PatchUserProfileRequest
 
     public bool? IsProfilePublic { get; init; }
 
-    // Format validé (après normalisation) dans le handler — source unique de vérité.
     [MaxLength(40, ErrorMessage = "Le pseudo Letterboxd est trop long.")]
     public string? LetterboxdUsername { get; init; }
 }

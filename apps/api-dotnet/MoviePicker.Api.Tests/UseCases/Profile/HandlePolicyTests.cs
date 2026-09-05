@@ -30,7 +30,6 @@ public sealed class HandlePolicyTests
     [Fact]
     public void Validate_NormalizesCaseBeforeChecking()
     {
-        // Validate normalizes (lowercases) first, so mixed-case input is accepted.
         Assert.Null(HandlePolicy.Validate("Alice"));
     }
 

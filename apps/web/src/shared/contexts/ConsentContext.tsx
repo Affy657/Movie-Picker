@@ -33,18 +33,14 @@ function readStored(): ConsentPrefs {
     ) {
       return { decided: p.decided, analytics: p.analytics };
     }
-  } catch {
-    // Storage unavailable or invalid JSON — return default consent state
-  }
+  } catch {}
   return { decided: false, analytics: false };
 }
 
 function persist(prefs: ConsentPrefs): void {
   try {
     localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(prefs));
-  } catch {
-    // Storage unavailable (private browsing or quota exceeded) — write fails silently
-  }
+  } catch {}
 }
 
 export function ConsentProvider({ children }: Readonly<{ children: ReactNode }>) {
@@ -73,9 +69,7 @@ export function ConsentProvider({ children }: Readonly<{ children: ReactNode }>)
     setPrefs(next);
     try {
       localStorage.removeItem(CONSENT_STORAGE_KEY);
-    } catch {
-      // Storage unavailable (private browsing or quota exceeded) — remove fails silently
-    }
+    } catch {}
   }, []);
 
   const value = useMemo<ConsentContextValue>(
