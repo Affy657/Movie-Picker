@@ -713,3 +713,37 @@ jobs:
           if [ -n "$SENTRY_URL" ]; then extra+=(--url "$SENTRY_URL"); fi
           pnpm --filter web exec sentry-cli -- "${extra[@]}" releases new "$SENTRY_RELEASE" || true
           pnpm --filter web exec sentry-cli -- "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e production -n "front-${{ github.sha }}"
+
+  deploy-guard:
+    name: Garde-fou déploiement (master)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    needs: [changes, deploy-api, deploy-front]
+    if: >-
+      always() &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master'
+    permissions:
+      contents: read
+    steps:
+      - name: Vérifier qu'un périmètre modifié a bien été déployé
+        env:
+          WEB_CHANGED: ${{ needs.changes.outputs.web }}
+          API_CHANGED: ${{ needs.changes.outputs.api }}
+          FRONT_RESULT: ${{ needs.deploy-front.result }}
+          API_RESULT: ${{ needs.deploy-api.result }}
+        run: |
+          echo "front : changé=$WEB_CHANGED déploiement=$FRONT_RESULT"
+          echo "api   : changé=$API_CHANGED déploiement=$API_RESULT"
+          fail=0
+          if [ "$WEB_CHANGED" = "true" ] && [ "$FRONT_RESULT" != "success" ]; then
+            echo "::error::Le front a changé mais Deploy Front est '$FRONT_RESULT' : la production n'est pas à jour."
+            fail=1
+          fi
+          if [ "$API_CHANGED" = "true" ] && [ "$API_RESULT" != "success" ]; then
+            echo "::error::L'API a changé mais Deploy API est '$API_RESULT' : la production n'est pas à jour."
+            fail=1
+          fi
+          if [ "$fail" = "0" ]; then
+            echo "Déploiements cohérents avec le périmètre modifié."
+          fi
+          exit "$fail"

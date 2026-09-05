@@ -189,6 +189,7 @@ if (!fs.existsSync(DIST)) {
 
 const budgets = JSON.parse(fs.readFileSync(BUDGETS_PATH, 'utf8'));
 const mins = budgets.minimumScores;
+const perPageMins = budgets.perPageMinimumScores ?? {};
 
 fs.mkdirSync(OUT, { recursive: true });
 
@@ -268,7 +269,8 @@ try {
       fs.writeFileSync(path.join(OUT, `report-${slug}.json`), JSON.stringify(repLhr, null, 2));
       fs.writeFileSync(path.join(OUT, `report-${slug}.html`), generateReport(repLhr, 'html'));
 
-      for (const [cat, min] of Object.entries(mins)) {
+      for (const cat of Object.keys(mins)) {
+        const min = perPageMins[slug]?.[cat] ?? mins[cat];
         const scores = lhrs
           .map((l) => l.categories[cat])
           .filter((c) => c && typeof c.score === 'number')
