@@ -472,6 +472,45 @@ jobs:
             --settings apps/api-dotnet/coverlet.runsettings \
             --results-directory apps/api-dotnet/MoviePicker.Api.Tests/TestResults
           dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+      - name: "Quality Gate — detail des conditions en echec"
+        if: failure()
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+        run: |
+          set -eo pipefail
+          cat > qg-report.js <<'NODESCRIPT'
+          let raw = '';
+          process.stdin.on('data', (chunk) => (raw += chunk)).on('end', () => {
+            let parsed;
+            try {
+              parsed = JSON.parse(raw);
+            } catch {
+              console.log('Reponse SonarCloud illisible : ' + raw.slice(0, 500));
+              return;
+            }
+            const project = parsed.projectStatus;
+            if (!project) {
+              console.log('Pas de projectStatus : ' + JSON.stringify(parsed).slice(0, 500));
+              return;
+            }
+            console.log('Quality Gate : ' + project.status);
+            const failing = (project.conditions || []).filter((c) => c.status !== 'OK');
+            if (failing.length === 0) {
+              console.log('Aucune condition en echec : echec probablement technique.');
+              return;
+            }
+            for (const c of failing) {
+              console.log(
+                '::error::' + c.metricKey + ' = ' + c.actualValue +
+                  ' (seuil ' + c.comparator + ' ' + c.errorThreshold + ')'
+              );
+            }
+          });
+          NODESCRIPT
+          curl -sS -u "$SONAR_TOKEN:" \
+            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=Affy657_Movie-Picker&branch=$BRANCH_NAME" \
+            | node qg-report.js
 
   docker-api:
     name: Docker API → Artifact Registry
