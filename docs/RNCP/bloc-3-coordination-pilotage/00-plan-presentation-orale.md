@@ -123,11 +123,11 @@ Critères visés : handicap pris en compte, charge répartie de manière équili
 
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
-| 19 | L'organisation cible et l'affectation des missions | 0:50 | Les 4 profils, les missions affectées selon les compétences, et la répartition des 98 J/H montrant l'équilibrage de la charge. Rappel qu'il s'agit de l'organisation cible |
+| 19 | L'organisation cible et l'affectation des missions | 0:50 | Les 4 profils, le critère d'affectation (compétence attestée, jamais disponibilité), et la répartition des 98 J/H. Le point à défendre : **une somme équilibrée n'est pas un équilibre** — le back porte 36 %, et l'équilibre se vérifie sur le profil de charge dans le temps |
 | 20 | Les quatre styles managériaux | 0:55 | Directif, persuasif, participatif, délégatif : chacun situé sur une situation concrète du projet plutôt que défini en théorie. Le style dominant est identifié et décrit |
-| 21 | Techniques d'animation et outils de communication | 0:40 | Chaque outil avec son objectif, et le critère de partage de ressources traité explicitement : dépôt, revue de code écrite, journal des décisions, documentation versionnée |
-| 22 | Inclusion : handicap et contexte multiculturel | 0:25 | Intégration et poste de travail adapté, et le volet international : documentation et code en anglais, interface bilingue, fuseaux horaires |
-| 23 | Analyse critique d'une posture et recommandations | 0:40 | Une situation où la posture adoptée a été contre-productive, l'analyse de ce qui n'a pas fonctionné, et deux ou trois recommandations réalistes. C'est la diapositive la plus discriminante du chapitre : un jury de professionnels distingue immédiatement une autocritique sincère d'une autocritique de façade |
+| 21 | Techniques d'animation et outils de communication | 0:40 | **Le dispositif réel de délégation** : le projet a été exécuté seul mais pas sans déléguer — conventions opposables (`AGENTS.md`), procédure à 3 points d'arrêt, revue en sortie. Puis les 8 outils avec ce que chacun **partage**. Aucun n'est une messagerie, et c'est délibéré : aucun n'exige la simultanéité |
+| 22 | Inclusion : handicap et contexte multiculturel | 0:25 | Une seule idée : le **même dispositif** — l'écrit asynchrone versionné — répond au handicap, aux fuseaux horaires et à la langue. Ce n'est pas trois politiques, c'est une décision d'organisation. Preuves sur le réel : produit bilingue FR/EN, accessibilité en porte bloquante |
+| 23 | Analyse critique d'une posture et recommandations | 0:40 | **Situation retenue : du 17 au 26 août 2026, 10 jours travaillés consécutifs** pour absorber deux échéances superposées (dossier Bloc 4 le 21, v1.4.0 le 25). Les deux sont tenues, et la chaîne passe de 94 % à 78 % le mois même, puis 38 % début septembre. La phrase centrale : *l'arbitrage n'a pas été perdu, il n'a pas été posé*. Trois recommandations avec leur indicateur de contrôle. Diapositive la plus discriminante du chapitre — le marqueur de sincérité est que la posture critiquée a **réussi** |
 
 ### Chapitre 5 : les besoins en compétences (2:30, 3 diapos), C3.3.2
 
@@ -218,11 +218,11 @@ Un fichier source par chapitre, qui alimente les diapositives. Le support ne se 
 | `01-planification.md` | Diapos 4 à 10, C3.1 | ✅ Produit |
 | `02-suivi-indicateurs.md` | Diapos 11 à 15, C3.2.1 | ✅ Produit |
 | `03-arbitrage.md` | Diapos 16 à 18, C3.2.2 | ✅ Produit |
-| `04-management-equipe.md` | Diapos 19 à 23, C3.3.1 | À produire |
+| `04-management-equipe.md` | Diapos 19 à 23, C3.3.1 | ✅ Produit |
 | `05-competences.md` | Diapos 24 à 26, C3.3.2 | À produire |
 | `06-comptes-rendus.md` | Diapos 27 à 29, C3.4.1 | À produire |
 | `07-demonstration.md` | Diapos 30 et 31, C3.4.2 | À produire |
-| `slides/slides.md` | Le support complet | 🟡 Chapitres 0 à 3, diapos 1 à 18 |
+| `slides/slides.md` | Le support complet | 🟡 Chapitres 0 à 4, diapos 1 à 23 |
 
 **Règle de numérotation du support** : aucune diapositive de séparation de chapitre. La page `N` de Slidev correspond exactement à la diapositive `N` de ce plan, et donc au rattachement des 14 éléments imposés du § 1. Le titre de chapitre est porté par la première diapositive du chapitre. Toute insertion impose de mettre à jour ce plan et la table `REFS` de `global-bottom.vue` dans le même mouvement.
 

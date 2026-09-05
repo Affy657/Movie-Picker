@@ -691,9 +691,9 @@ Règle de sélection : mesurable sans saisie déclarative · quantifiable · <b>
 
 | Indicateur | Valeur |
 |------------|-------:|
-| Densité d'activité | 3,2 j/semaine |
+| Densité d'activité | 3,1 j/semaine |
 | Plus longue série continue | **10 jours** |
-| Semaines sans activité | 4 / 27 |
+| Semaines sans activité | 5 / 28 |
 | Facteur de bus | **1** |
 
 <div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
@@ -854,7 +854,7 @@ Le passage de 52 à 94 % suit une correction <b>décidée à partir de cet indic
 </div>
 
 <div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-sm">
-<b>Ressources humaines : 88 jours actifs sur 191, soit 3,2 jours par semaine — mais une amplitude de 1 à 7 jours, une série de 10 jours consécutifs et 4 semaines à zéro.</b> La charge a été <b>absorbée, pas pilotée</b>. C'est cette mesure, et non une intuition, qui justifie l'organisation cible à quatre profils du chapitre 4.
+<b>Ressources humaines : 88 jours actifs sur 191, soit 3,1 jours par semaine — mais une amplitude de 1 à 7 jours, une série de 10 jours consécutifs et 5 semaines à zéro.</b> La charge a été <b>absorbée, pas pilotée</b>. C'est cette mesure, et non une intuition, qui justifie l'organisation cible à quatre profils du chapitre 4.
 </div>
 
 <!--
@@ -1152,4 +1152,293 @@ decision annoncait que C# serait plus verbeux. 944 lignes TypeScript sont
 devenues 4 653 lignes C#. L'inconvenient annonce s'est realise, il avait ete
 accepte en connaissance de cause. Un arbitrage dont on peut verifier apres coup
 que les inconvenients annonces etaient les bons est un arbitrage instruit. »
+-->
+
+---
+
+# 4. Piloter l'équipe : l'affectation des missions
+
+<div class="text-sm mb-2">
+Organisation cible à 4 profils — <b>projection d'industrialisation</b>, annoncée depuis la diapositive 3.
+</div>
+
+<div class="grid grid-cols-2 gap-6 text-sm">
+<div>
+
+| Profil | Mission | Critère d'affectation |
+|--------|---------|-----------------------|
+| **Lead, chef de projet** | Conception d'ensemble, arbitrages, planning, restitutions | Seul rôle portant l'**approbation** : un responsable unique par activité |
+| **Développeur front** | Interface, parcours, accessibilité, app installable | React, TypeScript, mobile-first, critères d'accessibilité |
+| **Développeur back** | API, modèle, règles métier, intégrations | C#, ASP.NET Core, architecture hexagonale |
+| **DevOps et QA**, mi-temps | Chaîne de livraison, infra, supervision, recette | Intégration continue, conteneurisation, sécurité |
+
+<div class="text-xs opacity-75 mt-1">L'affectation suit la <b>compétence attestée</b>, jamais la disponibilité.</div>
+
+</div>
+<div class="dense">
+
+| Lot | Total | Lead | Front | Back | DevOps |
+|-----|------:|-----:|------:|-----:|-------:|
+| 1. MVP | 27 | 2 | 9 | 11 | 5 |
+| 2. Migration | 13 | 3 | 0 | 8 | 2 |
+| 3. V1 produit | 35 | 3 | 12 | 16 | 4 |
+| 4. Clôture du titre | 23 | 11 | 4 | 0 | 8 |
+| **Total** | **98** | **19** | **25** | **35** | **19** |
+| **Part** | | 19 % | 26 % | **36 %** | 19 % |
+
+<div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
+<b>Une somme équilibrée n'est pas un équilibre.</b> Le back porte 36 %, conséquence du lot de migration. Le déséquilibre est <b>décalé dans le temps</b> : pic back en mars-avril, pic front en avril-mai. À aucun moment un profil n'est saturé pendant qu'un autre attend.<br>
+Quatre profils à 24,5 J/H seraient parfaits sur le papier et impossibles dans le calendrier : les compétences ne sont pas interchangeables.
+</div>
+
+</div>
+</div>
+
+<!--
+DUREE 0:50. ELEMENT IMPOSE 6 : l'affectation des missions.
+CRITERE : la charge est repartie de maniere EQUILIBREE sur l'ensemble de
+l'equipe.
+
+Premier mot : rappeler que c'est l'organisation cible. C'est le quatrieme rappel
+et il doit rester naturel.
+
+Ne pas lire les profils. Dire le critere d'affectation — la competence attestee,
+pas la disponibilite — et le fait qu'une seule ligne porte l'approbation.
+
+Tout le temps utile va au bandeau : le back a 36 %, et c'est assume. Un jury de
+professionnels va poser la question, autant y repondre avant. La reponse est que
+l'equilibre se verifie sur le PROFIL DE CHARGE DANS LE TEMPS, pas sur la colonne
+des totaux. Et la phrase qui ferme : quatre profils a 24,5 J/H seraient
+equilibres sur le papier et impossibles dans le calendrier.
+-->
+
+---
+
+# Les quatre styles managériaux
+
+<div class="dense">
+
+| Style | Situation réelle du projet | Pourquoi celui-là |
+|-------|---------------------------|-------------------|
+| **Directif** | Durcissement des portes de qualité en juillet : chaîne à **52 %** de succès, échecs devenus contournables. La règle est posée sans négociation — un contrôle rouge bloque le déploiement | La compétence n'était pas en cause, **la discipline l'était**. Seul style qui tienne quand contourner est possible |
+| **Persuasif** | Les conventions de code : chaque règle est accompagnée de son motif — si l'intention n'est pas exprimable par le nommage, c'est le code qu'il faut refactoriser | Une règle contre-intuitive énoncée seule est contournée dès la première gêne |
+| **Participatif** | Le cadrage d'une fonctionnalité : questions ouvertes, reformulation, **arrêt obligatoire avant toute ligne de code**. Et les retours utilisateurs, qui ont déclenché deux décisions produit | Celui qui exécute détient une information que le responsable n'a pas |
+| **Délégatif** | L'étape « développement en autonomie » : exécution confiée entièrement, sans contrôle intermédiaire, reprise en revue et en tests | Possible **uniquement** parce que le cadre est écrit et la porte de sortie automatisée |
+
+</div>
+
+<div class="mt-3 p-3 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-sm">
+<b>Style dominant : le délégatif encadré.</b> Déléguer l'exécution, conserver la décision, contrôler en sortie par des portes automatisées. C'est le seul style soutenable quand la capacité de supervision est la ressource la plus rare.<br>
+<b>Sa condition de validité</b> : le cadre doit être écrit <i>avant</i>. Un délégatif sans référentiel de conventions n'est pas de la délégation, c'est de l'abandon — et le travail non conforme coûte plus cher que de l'avoir fait soi-même.
+</div>
+
+<!--
+DUREE 0:55. ELEMENT IMPOSE 7 : le ou les styles manageriaux utilises.
+CRITERE : le style est IDENTIFIE ET DECRIT.
+
+Ne pas definir les quatre styles en theorie, le jury les connait. Les situer :
+une situation du projet par style, et le motif du choix.
+
+Le style a developper est le DIRECTIF, parce que c'est le seul ou la decision est
+verifiable : juillet, chaine a 52 %, portes rendues bloquantes, 94 % le mois
+suivant. Un style manageral qui produit un indicateur mesurable est plus
+convaincant qu'une declaration d'intention.
+
+Puis annoncer le dominant et sa CONDITION DE VALIDITE. C'est la phrase qui compte
+et il ne faut pas la sauter : « un delegatif sans referentiel de conventions
+n'est pas de la delegation, c'est de l'abandon. »
+
+SI ON QUESTIONNE : « delegue a qui ? » Reponse honnete, elle est en diapo 21 :
+la delegation reelle du projet a ete faite a des agents d'assistance au
+developpement, avec un cadre ecrit et des points d'arret. Ce n'est pas du
+management humain et je ne le presente pas ainsi.
+-->
+
+---
+
+# Animation et outils de communication
+
+<div class="grid grid-cols-2 gap-5 text-sm">
+<div>
+
+### Le dispositif réel de délégation
+
+Le projet a été exécuté seul, **mais pas sans délégation** : une part de la production a été confiée à des agents d'assistance, encadrés par un dispositif versionné.
+
+| Élément | Rôle managérial |
+|---------|-----------------|
+| `AGENTS.md` | Conventions **opposables**, avec leurs motifs |
+| Procédure de réalisation | 7 étapes, **3 points d'arrêt obligatoires** |
+| Procédure de vérification | La vérification ne dépend pas d'une connaissance orale |
+| Gabarit de pull request | 6 contrôles avant intégration |
+
+<div class="text-xs opacity-75 mt-1">
+Les 3 points d'arrêt se placent après le cadrage, après la maquette, après le test manuel — les 3 moments où seul le responsable peut trancher.
+</div>
+
+</div>
+<div>
+
+### Les outils, et ce qu'ils partagent
+
+| Outil | Ce qu'il partage |
+|-------|------------------|
+| Monorepo unique | Tout le contexte projet, versionné |
+| `AGENTS.md` | Le référentiel de règles et leurs motifs |
+| Gabarits d'issue | Une qualification comparable |
+| Gabarit de PR | Six vérifications identiques pour tous |
+| Actions composites | Des briques de CI réutilisables |
+| Procédures exécutables | Le flux de réalisation, pas un savoir oral |
+| `CHANGELOG` et releases | L'état livré, sans lire le code |
+| Feuilles de route versionnées | Le périmètre et ses évolutions datées |
+
+<div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
+<b>Aucun de ces outils n'est une messagerie, et c'est délibéré.</b> Aucun n'exige la simultanéité. L'écrit versionné reste consultable après coup ; un fil de discussion perd l'information.
+</div>
+
+</div>
+</div>
+
+<!--
+DUREE 0:40. ELEMENT IMPOSE 8 : les outils de communication et leurs objectifs.
+CRITERE : les outils collaboratifs INTEGRENT LE PARTAGE DE RESSOURCES, et les
+choix sont pertinents au regard de l'objectif.
+
+Colonne de gauche : c'est le moment d'etre franc sur la delegation reelle. Dire
+« le projet a ete execute seul, mais pas sans deleguer », expliquer le dispositif
+en trois mots — cadre ecrit, points d'arret, revue en sortie — et ne PAS
+sur-vendre : un agent n'a ni motivation ni progression, ce qui retire au
+management sa moitie humaine. Ce qui se transpose est l'autre moitie.
+
+Colonne de droite : ne pas lire les huit lignes. La colonne « ce qu'il partage »
+EST la reponse au critere, la designer d'un geste.
+
+Finir sur le bandeau, qui est la vraie justification du choix d'outils : aucun
+n'exige la simultaneite. C'est ce qui les rend compatibles avec la diapo
+suivante.
+-->
+
+---
+
+# Inclusion : handicap et contexte international
+
+<div class="grid grid-cols-2 gap-6 text-sm">
+<div>
+
+### Un même dispositif, trois contraintes
+
+Tout le dispositif de la diapositive précédente est **asynchrone et écrit**. Or l'asynchrone écrit répond à trois contraintes qu'on traite d'habitude séparément.
+
+| Contrainte | Ce que l'asynchrone écrit apporte |
+|------------|-----------------------------------|
+| **Handicap** | Documentation en texte structuré versionné, compatible lecteur d'écran et navigation clavier. Suivre le projet ne suppose pas d'être présent en direct |
+| **Fuseaux horaires** | Aucun dispositif n'exige la simultanéité |
+| **Langue** | Le contexte est lisible et traduisible ; une réunion orale ne l'est pas |
+
+</div>
+<div>
+
+### Sur le réel
+
+**Produit bilingue** français / anglais, page publique de présentation indexable dans les deux langues. Le produit ne suppose pas un utilisateur francophone.
+
+**Accessibilité** : porte de qualité **bloquante** dans la chaîne, au niveau maximum mesuré sur l'ensemble des écrans.
+
+### Dans l'organisation cible
+
+Accordés **à la demande, sans justification médicale à produire à l'équipe** : poste adapté, outillage compatible lecteur d'écran et navigation clavier, télétravail et horaires aménagés, temps supplémentaire en recette et en formation.
+
+<div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
+Une équipe qui livre un produit inaccessible ne peut pas prétendre à une organisation inclusive.
+</div>
+
+</div>
+</div>
+
+<!--
+DUREE 0:25. DIAPO COURTE, NE PAS DEBORDER.
+CRITERES : les specificites des personnes en situation de handicap sont prises
+en compte, et les specificites d'un contexte multiculturel et international sont
+integrees.
+
+Une seule idee a faire passer, celle de gauche : le meme dispositif — l'ecrit
+asynchrone versionne — repond au handicap, aux fuseaux horaires et a la langue.
+Ce n'est pas trois politiques, c'est une seule decision d'organisation.
+
+Puis deux preuves rapides a droite : le produit est bilingue, et l'accessibilite
+est une porte BLOQUANTE, pas une intention.
+
+Fermer sur la phrase du bandeau et enchainer. Ne pas s'attarder : la diapo
+suivante est celle qui compte pour ce chapitre.
+-->
+
+---
+
+# Analyse critique d'une posture
+
+<div class="grid grid-cols-2 gap-6 text-sm">
+<div>
+
+### La situation : 17 au 26 août 2026
+
+| | |
+|--|--|
+| Fait mesuré | **10 jours travaillés consécutifs**, la plus longue série du projet |
+| Cause | Deux échéances superposées : dossier Bloc 4 le **21/08**, version 1.4.0 le **25/08** |
+| Posture adoptée | **Absorber.** Ne pas arbitrer le périmètre, ne pas décaler, compenser par l'intensité |
+| Résultat immédiat | Les deux échéances sont tenues |
+
+### Ce que ça a coûté
+
+| Constat | Mesure |
+|---------|--------|
+| La qualité de la chaîne baisse le mois même | **94 % en juillet → 78 % en août** |
+| La dette est déplacée, pas absorbée | **38 %** début septembre |
+| Le découpage du travail se relâche | Branche avant intégration : **2,7 commits en juillet → 6,1 en août** |
+
+</div>
+<div>
+
+<div class="p-3 border-l-4 border-amber-500 bg-amber-50 bg-opacity-40 mb-3">
+<b>La posture a réussi, et c'est exactement le problème.</b> Une posture qui produit le résultat attendu ne s'auto-corrige pas : elle se répète. Appliquée à une équipe, elle porte un nom — demander un effort exceptionnel plutôt qu'arbitrer le périmètre. Elle fonctionne une fois ; à la deuxième elle devient la norme.<br><br>
+<b>L'arbitrage n'a pas été perdu, il n'a pas été posé.</b>
+</div>
+
+### Trois recommandations
+
+| # | Recommandation | Indicateur de contrôle |
+|:-:|----------------|------------------------|
+| **1** | Traiter un chevauchement d'échéances comme un **arbitrage** : poser les trois options — décaler, réduire, absorber — et écrire celle qui est retenue | Chevauchements ayant donné lieu à une décision écrite |
+| **2** | Poser une **limite de charge** comme une limite de travail en cours : au-delà de **5 jours consécutifs**, c'est la version qui décale | Plus longue série consécutive, **déjà au tableau de bord** |
+| **3** | Rendre la **revue croisée obligatoire** sur les changements structurants | Part des changements structurants passés en revue |
+
+<div class="text-xs opacity-75 mt-1">Seule la n° 2 aurait empêché la situation. C'est aussi la plus difficile : elle oblige à annoncer un décalage <b>avant</b> d'avoir essayé d'y échapper.</div>
+
+</div>
+</div>
+
+<!--
+DUREE 0:40. LA DIAPO LA PLUS DISCRIMINANTE DU CHAPITRE.
+CRITERES : une analyse critique d'une situation ou d'une posture manageriale est
+presentee, ET les recommandations sont realistes et realisables.
+
+Un jury de professionnels distingue immediatement une autocritique sincere d'une
+autocritique de facade. Le marqueur de sincerite ici est que la posture critiquee
+a REUSSI : les deux echeances ont ete tenues. Personne ne s'autocritique sur un
+succes, donc c'est credible.
+
+Dire dans l'ordre :
+1. Les faits, dates et chiffres. Dix jours d'affilee, deux echeances superposees.
+2. Le cout mesure : 94 % puis 78 % puis 38 %. La chaine a paye le mois meme.
+3. La phrase centrale : « l'arbitrage n'a pas ete perdu, il n'a pas ete pose. »
+4. La transposition equipe : demander un effort exceptionnel plutot qu'arbitrer
+le perimetre. Ca marche une fois, a la deuxieme c'est la norme, et le
+responsable qui l'a instauree n'a plus d'argument pour la refuser.
+
+NE PAS tomber dans la flagellation : les deux echeances etaient reelles et non
+negociables, et le perimetre de la 1.4.0 avait une valeur produit verifiee. La
+faute n'est pas d'avoir travaille dix jours, c'est de ne pas avoir instruit
+l'option de decaler.
+
+Terminer sur la recommandation 2 en disant qu'elle est la plus difficile a tenir.
 -->

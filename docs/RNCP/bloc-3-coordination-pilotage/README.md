@@ -2,7 +2,7 @@
 
 > Grille officielle : [`../referentiel/bloc-03-coordonner-piloter-projet.md`](../referentiel/bloc-03-coordonner-piloter-projet.md) · Suivi : [`../suivi-rncp.md`](../suivi-rncp.md)
 
-**État : 🟡 plan arrêté, chapitres 1 à 3 produits (C3.1, C3.2.1, C3.2.2), chapitres 4 à 8 à produire.** Structure, minutage et mapping des 14 éléments imposés dans [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md).
+**État : 🟡 plan arrêté, chapitres 1 à 4 produits (C3.1, C3.2.1, C3.2.2, C3.3.1), chapitres 5 à 8 à produire.** Structure, minutage et mapping des 14 éléments imposés dans [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md).
 
 ## Attendus du jury
 
@@ -26,7 +26,7 @@ Le projet a été **exécuté seul**, comme les livrables des Blocs 1, 2 et 4 l'
 | C3.1 | Méthodologie choisie, planning détaillé, ressources nécessaires | ✅ | ✅ [`01-planification.md`](01-planification.md) et diapos 4 à 10 |
 | C3.2.1 | L'outil de suivi de projet, ses indicateurs et ses tableaux de bord | ✅ | ✅ [`02-suivi-indicateurs.md`](02-suivi-indicateurs.md) et diapos 11 à 15. Reste à produire hors rédaction : capture du tableau GitHub Projects, capture de facturation GCP et AWS |
 | C3.2.2 | Un cas d'arbitrage rencontré au cours du projet, logigramme à l'appui | | ✅ [`03-arbitrage.md`](03-arbitrage.md) et diapos 16 à 18. Cas confirmé : le remplacement de l'API Node/Express par ASP.NET Core, décidé le 18/03/2026 |
-| C3.3.1 | Affectation des missions, styles managériaux, outils de communication | | `04-management-equipe.md` à produire ; organisation cible à 4 profils |
+| C3.3.1 | Affectation des missions, styles managériaux, outils de communication | | ✅ [`04-management-equipe.md`](04-management-equipe.md) et diapos 19 à 23. Organisation cible à 4 profils **et** dispositif réel de délégation, analyse critique sur la série de 10 jours du 17 au 26/08/2026 |
 | C3.3.2 | Grille d'évaluation des compétences et plan de développement | | `05-competences.md` à produire |
 | C3.4.1 | Comptes rendus, points de validation planifiés, indicateurs de satisfaction | | `06-comptes-rendus.md` à produire ; 9 versions datées du CHANGELOG, questionnaire utilisateurs (7 réponses, recommandation moyenne 9,6/10) |
 | C3.4.2 | Démonstration des fonctionnalités devant le jury | ✅ | `07-demonstration.md` à produire ; application en production, parcours minuté et plan de repli |
@@ -39,4 +39,5 @@ Le projet a été **exécuté seul**, comme les livrables des Blocs 1, 2 et 4 l'
 | [`01-planification.md`](01-planification.md) | **C3.1** : méthodologie et alternatives écartées, rétroplanning et Gantt, planning en 5 phases, découpage en 4 lots et 98 J/H, ressources humaines, matérielles et financières, matrice RACI et prise en compte du handicap, 7 points de vigilance |
 | [`02-suivi-indicateurs.md`](02-suivi-indicateurs.md) | **C3.2.1** : l'outil de suivi et son adéquation avec Kanban, les limites assumées du dispositif, 25 indicateurs sur 5 axes, deux tableaux de bord (avancement et délais ; coûts, risques et ressources humaines), analyse de l'écart prévisionnel / réel et les 3 décisions prises à partir d'une mesure |
 | [`03-arbitrage.md`](03-arbitrage.md) | **C3.2.2** : le cas d'arbitrage instruit (remplacement de l'API), sa chronologie datée, les 4 options avec leur coût et leur risque, les 5 critères de décision, le **logigramme** réutilisable, la décision argumentée et son résultat mesuré — y compris les deux objectifs non tenus. Les 2 arbitrages de réserve pour les questions |
-| [`slides/`](slides/) | Le support Slidev. Chapitres 0 à 3 produits, diapositives 1 à 18 |
+| [`04-management-equipe.md`](04-management-equipe.md) | **C3.3.1** : le dispositif réel de délégation et ce qu'il apprend, puis l'organisation cible — affectation des missions, équilibrage de la charge vérifié dans le temps, les 4 styles managériaux situés sur des situations du projet, les 8 outils collaboratifs et ce que chacun partage, l'inclusion traitée par l'écrit asynchrone. Analyse critique d'une posture datée et ses 3 recommandations |
+| [`slides/`](slides/) | Le support Slidev. Chapitres 0 à 4 produits, diapositives 1 à 23 |

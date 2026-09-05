@@ -153,9 +153,9 @@ C'est le même défaut que celui relevé au chapitre 1 sur les documents de cadr
 
 | Indicateur | Définition | Source | Fréquence | Valeur au 05/09/2026 |
 |------------|------------|--------|-----------|----------------------|
-| Densité d'activité | Jours actifs par semaine calendaire | Historique Git | Hebdomadaire | **3,2** (3,8 sur les semaines actives) |
+| Densité d'activité | Jours actifs par semaine calendaire | Historique Git | Hebdomadaire | **3,1** (3,8 sur les semaines actives) |
 | Continuité | Plus longue série de jours consécutifs travaillés | Historique Git | Mensuel | **10 jours** |
-| Interruptions | Semaines sans aucune activité | Historique Git | Mensuel | **4 sur 27** |
+| Interruptions | Semaines sans aucune activité | Historique Git | Mensuel | **5 sur 28** |
 | Facteur de bus | Personnes capables de mener une mise en production | Organisation | Trimestriel | **1** |
 
 Les trois premiers indicateurs de cet axe mesurent la **soutenabilité**, pas la productivité. Une série de 10 jours consécutifs suivie d'une semaine à zéro n'est pas un rythme de travail : c'est le signal d'une charge qui absorbe la capacité disponible au lieu d'être lissée par elle. Le quatrième est le point de vigilance n° 1 du chapitre 1, ramené à un nombre.
@@ -293,14 +293,14 @@ La courbe raconte une décision et sa conséquence. Le creux de juin correspond 
 | Indicateur | Valeur | Lecture |
 |------------|--------|---------|
 | Jours actifs | **88 sur 191** jours calendaires | 46 % des jours du projet portent une trace de travail |
-| Densité hebdomadaire | **3,2** jours par semaine calendaire | Compatible avec une alternance école / entreprise |
-| Densité sur semaines actives | **3,8** jours | 23 semaines actives sur 27 |
-| Semaines sans activité | **4** | Périodes d'école ou d'échéance externe |
+| Densité hebdomadaire | **3,1** jours par semaine calendaire | Compatible avec une alternance école / entreprise |
+| Densité sur semaines actives | **3,8** jours | 23 semaines actives sur 28 |
+| Semaines sans activité | **5** | Toutes situées avant le 10 mai : le rythme s'est densifié ensuite sans retrouver de respiration |
 | Plus longue série continue | **10 jours consécutifs** | Signal de surcharge ponctuelle |
 | Répartition hebdomadaire | 1 j : 2 sem. · 2 j : 1 · 3 j : 8 · 4 j : 4 · 5 j : 5 · 6 j : 2 · 7 j : 1 | Amplitude de 1 à 7 : la charge n'est pas lissée |
 | Facteur de bus | **1** | Aucune redondance de compétence ni d'accès |
 
-**Ce que cet axe démontre, et c'est l'enchaînement vers le chapitre 4** : la charge a été absorbée, pas pilotée. Une semaine à 7 jours travaillés suivie d'une semaine à zéro tient sur sept mois de projet étudiant ; elle ne tient pas sur une équipe et une exploitation dans la durée. C'est la mesure — pas une intuition — qui justifie l'organisation cible à quatre profils et le lissage de charge présenté au chapitre 4.
+**Ce que cet axe démontre, et c'est l'enchaînement vers le chapitre 4** : la charge a été absorbée, pas pilotée. La plus longue série, **10 jours consécutifs du 17 au 26 août 2026**, encadre deux échéances superposées : la remise du dossier Bloc 4 le 21 août et la version 1.4.0 le 25. Une semaine à sept jours travaillés suivie d'une semaine à zéro tient sur sept mois de projet étudiant ; elle ne tient pas sur une équipe et une exploitation dans la durée. C'est la mesure — pas une intuition — qui justifie l'organisation cible à quatre profils et le lissage de charge présenté au chapitre 4.
 
 ---
 
