@@ -1987,3 +1987,414 @@ demonstration.
 Cette formulation place la demonstration dans un cycle de projet — le sujet du
 Bloc 3 — au lieu d'en faire une presentation de produit isolee.
 -->
+
+---
+
+# 8. Bilan de pilotage
+
+<div class="grid grid-cols-3 gap-5 mt-6 text-sm">
+<div class="p-4 rounded border-l-4 border-teal-500">
+
+### 1. Méthode
+
+**Un indicateur ne mesure que la pratique qui le produit.**
+
+La régularité du commit n'était pas une exigence de qualité au départ. Elle est devenue la **condition d'existence** de l'indicateur d'avancement.
+
+<div class="text-xs opacity-75 mt-2">
+Corollaire : une mesure qu'on n'a pas instrumentée ne se rattrape pas rétroactivement. Les cinq premières semaines du projet restent non mesurables.
+</div>
+
+</div>
+<div class="p-4 rounded border-l-4 border-teal-500">
+
+### 2. Arbitrage
+
+**Quand le coût d'une décision croît avec le temps, décider tôt a une valeur propre.**
+
+Le 18 mars, le périmètre à réécrire pesait **944 lignes**. La même API en porte **44 663** aujourd'hui.
+
+<div class="text-xs opacity-75 mt-2">
+Le bénéfice de cet arbitrage n'était pas dans son résultat, il était dans sa date.
+</div>
+
+</div>
+<div class="p-4 rounded border-l-4 border-amber-500">
+
+### 3. L'échec
+
+**L'arbitrage n'a pas été perdu : il n'a pas été posé.**
+
+Deux fois. Sur le **périmètre** — 37 items livrés hors chiffrage, qu'aucun indicateur ne comparait au prévu. Sur la **charge** — dix jours consécutifs en août pour absorber deux échéances, au lieu de décider ce qui ne serait pas livré.
+
+<div class="text-xs opacity-75 mt-2">
+Même racine : une option non instruite n'est pas un arbitrage, c'est une absence de décision.
+</div>
+
+</div>
+</div>
+
+<div class="mt-8 text-center text-base">
+Ce que ce projet m'a appris du pilotage tient en une phrase :<br>
+<b>ce qui n'est pas mesuré ne se pilote pas, et ce qui n'est pas arbitré se décide tout seul.</b>
+</div>
+
+<div class="mt-6 text-center text-sm opacity-70">
+Merci. Je suis à votre disposition pour vos questions.
+</div>
+
+<!--
+DUREE 0:30. DERNIERE DIAPO PRESENTEE.
+
+Trois enseignements, une phrase chacun, sans developper : ils sont a l'ecran et
+ils ont tous ete demontres dans les chapitres precedents.
+
+Le troisieme est celui qui compte. Ne pas l'edulcorer, ne pas l'enrober. Un jury
+de professionnels a passe trente minutes a entendre un candidat qui mesure et qui
+arbitre : entendre en cloture qu'il a rate deux arbitrages, avec les chiffres,
+est ce qui rend credible tout ce qui precede.
+
+Prononcer la phrase de cloture lentement, puis MARQUER UN TEMPS avant de remercier.
+C'est la derniere chose que le jury entendra avant les questions.
+
+Les huit annexes qui suivent ne sont JAMAIS presentees. Elles sont appelees
+uniquement si une question les demande. Connaitre leur ordre :
+A1 architecture · A2 logigramme complet · A3 arbitrages de reserve ·
+A4 budget · A5 chaine CI/CD · A6 RACI complete · A7 journal des versions ·
+A8 retours utilisateurs question par question.
+-->
+
+---
+
+# Annexe A1 — Architecture technique
+
+<div class="grid grid-cols-2 gap-6 text-sm">
+<div>
+
+```mermaid {scale: 0.62}
+flowchart LR
+  U["Navigateur / PWA"]
+  subgraph AWS
+    CF["CloudFront CDN"] --> S3["S3 — SPA statique"]
+  end
+  subgraph GCP
+    CR["API ASP.NET Core<br/>Cloud Run"]
+    SM["Secret Manager"]
+    SM -.->|au déploiement| CR
+  end
+  U -->|assets HTTPS| CF
+  U -->|/api/v1 — cookie session| CR
+  CR --> M[("MongoDB Atlas")]
+  CR --> TMDB["TMDB"]
+  CR --> RS["Resend"]
+```
+
+</div>
+<div>
+
+### L'API en architecture hexagonale
+
+| Couche | Contenu |
+|--------|---------|
+| **Entrée** | Contrôleurs `/api/v1`, middleware de sécurité : CORS, limitation de débit, CSP, en-têtes, identifiant de corrélation |
+| **Application** | Cas d'usage et **ports** (interfaces) |
+| **Domaine** | Règles métier : soirée, lien de partage, vote, roue |
+| **Infrastructure** | Adaptateurs : MongoDB, catalogue de films, e-mail, notifications |
+
+| | |
+|--|--|
+| Volume | **44 663 lignes**, 544 fichiers |
+| Couverture | **86,6 %** (lignes 91,2 %, branches 77,3 %) |
+| Qualité | Quality Gate **Passed**, A / A / A, duplication 1,3 % |
+
+</div>
+</div>
+
+---
+
+# Annexe A2 — Le logigramme d'arbitrage, complet
+
+<div class="grid grid-cols-3 gap-4">
+<div class="col-span-2">
+
+```mermaid {scale: 0.46}
+flowchart TD
+    S(["Changement de socle technique<br/>envisagé en cours de projet"]) --> Q1{"Produit déjà<br/>déployé et utilisé ?"}
+    Q1 -->|non| L1["Contrainte de contrat<br/>inexistante"]
+    Q1 -->|oui| Q2{"Contrat d'interface<br/>intégralement préservable ?"}
+    Q2 -->|non| R1["REFUS — le coût réel est<br/>celui de la migration<br/>+ celui du client"]
+    Q2 -->|oui| Q3{"Périmètre à réécrire<br/>connu et figé ?"}
+    Q3 -->|non| R2["DIFFÉRER au prochain point<br/>de stabilité fonctionnelle"]
+    Q3 -->|oui| Q4{"Coût de la décision<br/>croissant avec le temps ?"}
+    Q4 -->|non| R3["DIFFÉRER — arbitrer<br/>sur le seul bénéfice"]
+    Q4 -->|oui| Q5{"Charge soutenable<br/>par l'effectif réel ?"}
+    Q5 -->|non| R4["RÉDUIRE LE PÉRIMÈTRE<br/>ou renoncer"]
+    Q5 -->|oui| Q6{"Critère de bascule<br/>mesurable définissable ?"}
+    Q6 -->|non| R5["REFUS — une migration sans<br/>critère de succès<br/>ne se pilote pas"]
+    Q6 -->|oui| D["DÉCIDER MAINTENANT<br/>bascule en une fois,<br/>contrat figé comme référence"]
+    D --> V{"Parité fonctionnelle<br/>vérifiée sur le contrat ?"}
+    V -->|non| RB["RETOUR ARRIÈRE — l'ancien socle<br/>reste déployé et redéployable"]
+    V -->|oui| F(["BASCULE — retrait de l'ancien socle"])
+    L1 --> Q3
+    classDef refus fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
+    classDef diff fill:#fef3c7,stroke:#d97706,color:#78350f
+    classDef ok fill:#ccfbf1,stroke:#0d9488,color:#134e4a
+    class R1,R5 refus
+    class R2,R3,R4,RB diff
+    class D,F ok
+```
+
+</div>
+<div class="text-sm">
+
+### Le chemin suivi le 18/03/2026
+
+| Question | Réponse |
+|----------|---------|
+| Produit déployé ? | **oui** |
+| Contrat préservable ? | **oui** — le contrat OpenAPI de l'API Node sert de référence |
+| Périmètre figé ? | **oui** — le MVP venait d'être déclaré terminé |
+| Coût croissant ? | **oui** |
+| Charge soutenable ? | **oui** — 13 J/H |
+| Critère mesurable ? | **oui** — la parité sur les 12 routes |
+
+→ **Décider maintenant.**
+
+<div class="mt-3 text-xs opacity-75">
+Écrit pour être réutilisable : aucune technologie n'y figure. La dernière branche — parité non vérifiée = retour arrière — est ce qui rendait la décision réversible.
+</div>
+
+</div>
+</div>
+
+---
+
+# Annexe A3 — Les deux arbitrages de réserve
+
+<div class="grid grid-cols-2 gap-6 text-sm">
+<div>
+
+### La porte de qualité instable
+
+| | |
+|--|--|
+| **Écart** | Chaîne d'intégration à **52 %** de succès en juin 2026, échecs sans cause réelle bloquant les fusions |
+| **Conséquence** | Érosion de la confiance dans la chaîne, et tentation de contourner la porte |
+| **Options** | Désactiver la porte · abaisser les seuils · **rendre la mesure déterministe** · changer d'outil |
+| **Décision** | Médiane de trois exécutions et seuils recalibrés, **plutôt que baisser l'exigence** |
+| **Résultat** | **52 % → 94 %** le mois suivant. Portes rendues bloquantes en v1.3.1 |
+
+</div>
+<div>
+
+### L'abandon de l'application mobile
+
+| | |
+|--|--|
+| **Écart** | Application mobile démarrée le **16/05/2026**, parcours complet livré en une journée |
+| **Conséquence** | Deux surfaces produit à maintenir, pour un seul exécutant |
+| **Options** | Poursuivre en parallèle du web · geler · **archiver** |
+| **Décision** | Archivée le **26/05/2026** : le web porte la totalité des utilisateurs, et deux surfaces sont hors de portée d'un effectif de 1 |
+| **Résultat** | Code conservé dans `archive/`, **aucune dette de maintenance, aucun utilisateur impacté** |
+
+</div>
+</div>
+
+<div class="mt-4 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-sm">
+Ces deux cas partagent le critère qui a tranché le cas principal : <b>la soutenabilité par l'effectif réel</b>. C'est le critère 5 du logigramme, et c'est celui qui revient le plus souvent sur ce projet.
+</div>
+
+---
+
+# Annexe A4 — Le budget prévisionnel détaillé
+
+<div class="grid grid-cols-2 gap-6 dense">
+<div>
+
+### Valeur de développement
+
+| Lot | Charge | TJM simulé | Coût HT |
+|-----|-------:|-----------:|--------:|
+| MVP | 27 J/H | 350 € | 9 450 € |
+| Migration .NET | 13 J/H | 350 € | 4 550 € |
+| V1 produit | 35 J/H | 350 € | 12 250 € |
+| Clôture du titre | 23 J/H | 350 € | 8 050 € |
+| **Total** | **98 J/H** | | **34 300 €** |
+
+<div class="text-xs opacity-75 mt-1">
+Coût de trésorerie nul dans le cadre de la formation. Ce montant matérialise la valeur de l'effort pour le commanditaire.
+</div>
+
+</div>
+<div>
+
+### Infrastructure récurrente
+
+| Poste | Palier gratuit | Estimation |
+|-------|----------------|-----------:|
+| Hébergement API (Cloud Run) | 2 M req/mois | ~0 € |
+| Registre d'images, secrets, supervision | inclus | ~0 € |
+| Hébergement front (S3 + CloudFront) | 12 mois | ~1–5 €/mois **ensuite** |
+| Base de données (Atlas M0) | 512 Mo | ~0 € |
+| E-mail (Resend) | 3 000/mois | ~0 € |
+| Supervision d'erreurs (Sentry) | 5 000 év./mois | ~0 € |
+| Chaîne d'intégration | inclus | ~0 € |
+| Nom de domaine | — | ~10 €/an |
+| **Licences** | 100 % libre ou palier gratuit | **0 €** |
+| **Trésorerie réelle** | | **20 à 190 €/an** |
+
+<div class="text-xs opacity-75 mt-1">
+Borne haute atteinte si la base passe au premier palier payant (~9 $/mois).
+</div>
+
+</div>
+</div>
+
+---
+
+# Annexe A5 — La chaîne d'intégration et de déploiement
+
+<div class="grid grid-cols-2 gap-5">
+<div>
+
+```mermaid {scale: 0.55}
+flowchart TD
+  T["PR ou push sur master"] --> CH["changes<br/>path-filtering web / api"]
+  T --> GL["gitleaks<br/>scan de secrets"]
+  CH --> LA["lint-web · lint-api · audit"]
+  CH --> TESTS["test-web · test-api<br/>couverture ≥ 80 % back"]
+  TESTS --> SO["sonar<br/>Quality Gate bloquant"]
+  CH --> NB["lighthouse · e2e Playwright"]
+  SO --> GATE{{"pipeline vert ?"}}
+  NB --> GATE
+  LA --> GATE
+  GL --> GATE
+  GATE -->|push master| CD["docker-api →<br/>deploy-api · deploy-front"]
+  CD --> SMOKE["smoke test<br/>readiness base de données"]
+```
+
+</div>
+<div class="dense">
+
+| Job | Rôle | Bloquant |
+|-----|------|:--------:|
+| `gitleaks` | Scan de secrets sur l'arbre | ✅ |
+| `lint-web` | TypeScript, ESLint, Prettier | ✅ |
+| `lint-api` | Format, build `-warnaserror`, export OpenAPI | ✅ |
+| `audit` | Trivy sur le lock, NuGet vulnérables | ✅ |
+| `test-web` | Vitest + seuils de couverture | ✅ |
+| `test-api` | xUnit unitaires et intégration, **≥ 80 %** | ✅ |
+| `sonar` | SonarCloud, Quality Gate code nouveau | ✅ |
+| `lighthouse` | Performance et accessibilité, médiane de 3 | ✅ |
+| `e2e` | Playwright, parcours de bout en bout | ✅ |
+| `deploy-*` | Cloud Run et S3/CloudFront | — |
+| `smoke test` | Joignabilité réelle de la base | ✅ |
+
+<div class="text-xs opacity-75 mt-1">
+Mesures anti-chaîne d'approvisionnement : actions épinglées par SHA, images par digest, <code>persist-credentials: false</code>, secrets par <code>env:</code>.
+</div>
+
+</div>
+</div>
+
+---
+
+# Annexe A6 — La matrice RACI complète
+
+<div class="dense">
+
+**R** réalise · **A** approuve et rend compte · **C** consulté · **I** informé
+
+| Activité | Lead, CDP | Front | Back | DevOps, QA | Commanditaire | Utilisateurs |
+|----------|:---------:|:-----:|:----:|:----------:|:-------------:|:------------:|
+| Cadrage et périmètre de version | A, R | C | C | C | C | I |
+| Architecture applicative | A, R | C | R | C | I | |
+| Modèle de données et contrat d'interface | A | C | R | C | | |
+| Développement de l'interface | A | R | C | C | | I |
+| Développement de l'API | A | C | R | C | | |
+| Intégration des services tiers | A | C | R | C | | |
+| Accessibilité du produit | A | R | C | C | C | C |
+| Chaîne d'intégration et de déploiement | A | C | C | R | | |
+| Supervision et exploitation | A | I | C | R | I | |
+| Sécurité applicative | A | C | C | R | I | |
+| Recette et tests de bout en bout | A | C | C | R | C | C |
+| Arbitrage de périmètre ou de charge | A, R | C | C | C | C | I |
+| Mise en production | A | I | I | R | I | I |
+| Restitution et compte rendu | A, R | C | C | C | C | I |
+| **Inclusion et adaptation des postes** | **A, R** | C | C | C | I | |
+
+</div>
+
+<div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
+<b>Une seule approbation par ligne</b> : le rôle A n'est jamais partagé, condition pour qu'un arbitrage puisse être tranché. <b>L'affectation suit la compétence, pas la disponibilité.</b> <b>Les acteurs externes y figurent</b> : un acteur absent de la matrice est un acteur qu'on oubliera de solliciter.
+</div>
+
+---
+
+# Annexe A7 — Le journal des versions
+
+<div class="grid grid-cols-2 gap-6 text-sm">
+<div class="dense">
+
+| Version | Date | Contenu principal |
+|---------|------|-------------------|
+| **1.4.1** | 04/09/2026 | Navigation sans compte, landing bilingue sur `/decouvrir` |
+| 1.4.0 | 25/08/2026 | Watchlist, Letterboxd, choix manuel, flamme, OAuth, dons |
+| 1.3.2 | 25/07/2026 | Supervision, sonde de readiness, canal de support |
+| 1.3.1 | 08/07/2026 | Filtre de durée, échelle de notes, CSP, refonte CI/CD |
+| 1.3.0 | 19/06/2026 | États vides, export calendrier, refonte de la navigation |
+| 1.2.0 | 11/06/2026 | Profil public, notifications in-app, RGPD, analytique |
+| 1.1.0 | 25/05/2026 | Application installable, notifications push, séries |
+| 1.0.0 | 19/05/2026 | Première version de production |
+| 0.1.0 | 27/02/2026 | Prototype initial |
+
+<div class="text-xs opacity-75 mt-1">
+Format <b>Keep a Changelog</b>, versionnage sémantique. Un tag annoté et une release publiée par version. La version est visible en pied de page et exposée par la sonde de readiness.
+</div>
+
+</div>
+<div>
+
+### Détail d'une release — v1.3.2
+
+**Ajouté**
+- Lien « Signaler un problème » avec contexte technique pré-rempli
+- Sonde `GET /health/ready` vérifiant la joignabilité de MongoDB et exposant la version déployée
+- Supervision : 3 sondes sur 3 continents, 5 politiques d'alerte, tableau de bord d'exploitation
+- Contrôle de la readiness dans le test de fumée de déploiement
+
+**Modifié**
+- Portes de qualité rendues **bloquantes** (Quality Gate, Lighthouse, E2E)
+- Réduction de la duplication de code
+
+<div class="mt-3 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
+<b>Traçabilité bidirectionnelle</b> : la fiche d'anomalie référence le commit correctif, le commit appartient à une étiquette, l'étiquette correspond à une entrée du journal. Et chaque événement d'erreur en production porte la version déployée.
+</div>
+
+</div>
+</div>
+
+---
+
+# Annexe A8 — Les retours utilisateurs, question par question
+
+<div class="dense">
+
+**7 réponses pour 17 comptes inscrits.** Échantillon réduit et orienté : 5 des 7 répondants utilisent l'application à chaque soirée film.
+
+| Question | Réponses (n = 7) | Lecture |
+|----------|------------------|---------|
+| Usage des boutons de vote | 6/7 ont voté au moins une fois ; 1/7 jamais | Le vote est pratiqué, malgré un faible taux mesuré en production |
+| Effet du vote sur le tirage | 4/7 pensent que ça dépend d'un réglage de l'hôte ; 1/7 croit les plus votés favorisés ; **1/7 identifie la réalité** ; 1/7 ne s'est jamais posé la question | La majorité sait le mécanisme configurable, quasi personne ne sait qu'il n'est **jamais activé** |
+| Décision réelle du groupe | 5/7 « ça dépend des soirées » ; **1/7 relance la roue jusqu'à un résultat qui convient à tous** ; 1/7 fait confiance au tirage | Confirme le contournement manuel du tirage, hypothèse posée **avant** l'envoi du questionnaire |
+| Attente vis-à-vis du vote | **3/7 veulent écarter du tirage les films rejetés** ; 2/7 le veulent indicatif ; 1/7 le veut pondéré ; 1/7 sans avis | La préférence la plus citée est un mécanisme d'**élimination**, qui n'existe pas |
+| Connaissance des notifications | **4/7 ignoraient que l'activation était possible** ; 3/7 les ont activées | Plus de la moitié ignore le réglage, dans un échantillon d'assidus |
+| Connaissance du réglage de la roue | 5/7 connaissaient le réglage aléatoire / pondéré | Repéré mais **jamais actionné** : 0 soirée sur 19 |
+| Ce qui ferait revenir plus souvent | 5/7 « rien de particulier, je l'utilise quand j'en ai besoin » | Usage par événement plutôt que par habitude |
+| Recommandation (0 à 10) | 10, 10, 10, 8, 9, 10, 10 → **moyenne 9,6** | Aucun détracteur — signal de biais autant que bon résultat |
+
+</div>
+
+<div class="mt-2 p-2 border-l-4 border-amber-500 bg-amber-50 bg-opacity-40 text-xs">
+<b>Ce que ces réponses ont produit</b> : une décision <b>déclenchée</b> et livrée (le bandeau des navigateurs intégrés, v1.4.1, 17 jours du retour à la production), une <b>confirmée</b> mais non déclenchée (la watchlist, déjà au périmètre), une <b>instruite</b> et non livrée (voir quels films un utilisateur a proposés).
+</div>

@@ -436,7 +436,17 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
   - [x] **Préparation** : 8 points la veille — dont l'absorption de la fenêtre « Nouveautés » qui interromprait la démonstration — et 8 vérifications dans les dix minutes précédentes
   - [x] **Plan de repli à 4 niveaux** avec sa phrase de bascule préparée : la compétence est éliminatoire, elle ne peut pas dépendre du wifi d'une salle
   - [x] **Séquence de clôture** en 3 temps, se terminant par la demande de validation formulée telle quelle
-  - [ ] **À faire hors rédaction** : créer le jeu de données de démonstration, enregistrer la vidéo de repli, répéter le parcours minuté
+  - [ ] **À faire hors rédaction** : créer le jeu de données de démonstration, enregistrer la vidéo de repli, préparer l'environnement local, répéter le parcours minuté
+
+---
+
+### Conclusion et annexes du support
+
+- [x] **Diapositive 32, bilan de pilotage** — trois enseignements dont un échec assumé : *un indicateur ne mesure que la pratique qui le produit* · *quand le coût d'une décision croît, décider tôt a une valeur propre* · *l'arbitrage n'a pas été perdu, il n'a pas été posé*
+- [x] **8 annexes** (pages 33 à 40), jamais présentées, appelées sur question : architecture, logigramme complet, arbitrages de réserve, budget détaillé, chaîne CI/CD, matrice RACI complète, journal des versions, retours utilisateurs question par question
+- [x] Le support Slidev est **complet** : 40 diapositives, table `REFS` à jour, mention `ANNEXE` sur les pages 33 et suivantes
+
+> **Le Bloc 3 est écrit.** Ce qui reste est matériel et ne peut pas être rédigé : répétitions minutées, jeu de données de démonstration, vidéo de repli, environnement local, tableau GitHub Projects, capture de facturation, export PDF testé sur le matériel de la salle. La liste complète est en fin de [`bloc-3-coordination-pilotage/README.md`](bloc-3-coordination-pilotage/README.md).
 
 ---
 

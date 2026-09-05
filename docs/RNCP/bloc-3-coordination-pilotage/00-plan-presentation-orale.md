@@ -65,6 +65,8 @@ Cette annonce explicite est ce qui protège les 15 minutes de questions. Un jury
 | 8 | Conclusion | 0:30 | 1 | |
 | | **Total** | **30:00** | **32** | |
 
+**Contrôle du minutage réel du support** (somme des durées portées en note de présentateur, au 5 septembre 2026) : **30 minutes 10 secondes**. Le minutage est exact chapitre par chapitre, à une exception près — le chapitre 1 totalise 6:40 pour une cible de 6:30. Les dix secondes s'absorbent naturellement sur la diapositive 4, il n'y a pas lieu de retoucher le support pour cela ; il faut simplement le savoir en répétant.
+
 Répartition volontaire : les trois compétences éliminatoires absorbent **17 des 30 minutes**, soit 57 %. Les quatre non éliminatoires se partagent 11 minutes. Une diapositive dure en moyenne 50 secondes hors démonstration, ce qui suppose des diapositives qui montrent une preuve et non un paragraphe.
 
 ## 4. Déroulé diapositive par diapositive
@@ -186,16 +188,18 @@ Critères visés : le logiciel est utilisable, la démonstration reprend les fon
 
 Placées après la conclusion, jamais présentées, appelées seulement si une question les demande.
 
-| # | Contenu |
-|:-:|---------|
-| A1 | Architecture technique de l'application |
-| A2 | Le logigramme d'arbitrage en version complète (§ 4 de `03-arbitrage.md`, avec la branche « produit déjà déployé »)|
-| A3 | Les deux arbitrages de réserve : le contrôle de performance instable, l'abandon de l'application mobile (§ 7 de `03-arbitrage.md`) |
-| A4 | Le budget prévisionnel détaillé |
-| A5 | La chaîne d'intégration et de déploiement continus |
-| A6 | La matrice RACI en version complète |
-| A7 | Le journal des versions et le détail d'une release |
-| A8 | Les retours utilisateurs question par question |
+| # | Page | Contenu |
+|:-:|:----:|---------|
+| A1 | **33** | Architecture technique : déploiement, découpage hexagonal de l'API, volume et qualité |
+| A2 | **34** | Le logigramme d'arbitrage en version complète, avec le chemin réellement suivi le 18/03/2026 |
+| A3 | **35** | Les deux arbitrages de réserve : la porte de qualité instable (52 % → 94 %), l'abandon de l'application mobile |
+| A4 | **36** | Le budget prévisionnel détaillé : valeur de développement par lot, infrastructure poste par poste |
+| A5 | **37** | La chaîne d'intégration et de déploiement, les 11 jobs et leur caractère bloquant |
+| A6 | **38** | La matrice RACI complète, 15 lignes, et ses trois propriétés |
+| A7 | **39** | Le journal des versions et le détail de la v1.3.2, avec la traçabilité bidirectionnelle |
+| A8 | **40** | Les retours utilisateurs question par question, et ce qu'ils ont produit |
+
+**Navigation pendant les échanges** : en mode présentateur, taper le numéro de page puis `Entrée`. Les huit annexes ne sont jamais présentées ; elles portent la mention `ANNEXE` en bas à gauche.
 
 ## 7. Préparation des questions du jury
 
@@ -224,7 +228,7 @@ Un fichier source par chapitre, qui alimente les diapositives. Le support ne se 
 | `05-competences.md` | Diapos 24 à 26, C3.3.2 | ✅ Produit |
 | `06-comptes-rendus.md` | Diapos 27 à 29, C3.4.1 | ✅ Produit |
 | `07-demonstration.md` | Diapos 30 et 31, C3.4.2 | ✅ Produit |
-| `slides/slides.md` | Le support complet | 🟡 Chapitres 0 à 7, diapos 1 à 31. Restent la conclusion (diapo 32) et les annexes |
+| `slides/slides.md` | Le support complet | ✅ **40 diapositives** : les 32 présentées et les 8 annexes |
 
 **Règle de numérotation du support** : aucune diapositive de séparation de chapitre. La page `N` de Slidev correspond exactement à la diapositive `N` de ce plan, et donc au rattachement des 14 éléments imposés du § 1. Le titre de chapitre est porté par la première diapositive du chapitre. Toute insertion impose de mettre à jour ce plan et la table `REFS` de `global-bottom.vue` dans le même mouvement.
 

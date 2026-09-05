@@ -2,7 +2,7 @@
 
 > Grille officielle : [`../referentiel/bloc-03-coordonner-piloter-projet.md`](../referentiel/bloc-03-coordonner-piloter-projet.md) · Suivi : [`../suivi-rncp.md`](../suivi-rncp.md)
 
-**État : 🟡 les 7 chapitres produits, dont les 3 compétences éliminatoires (C3.1, C3.2.1, C3.4.2). Restent la conclusion (diapo 32) et les 8 annexes.** Structure, minutage et mapping des 14 éléments imposés dans [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md).
+**État : ✅ support complet — 7 chapitres de matière, 40 diapositives (32 présentées + 8 annexes), les 14 éléments imposés rattachés et les 3 compétences éliminatoires couvertes. Reste la préparation matérielle de la démonstration (§ *Actions hors rédaction*).** Structure, minutage et mapping des 14 éléments imposés dans [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md).
 
 ## Attendus du jury
 
@@ -43,4 +43,23 @@ Le projet a été **exécuté seul**, comme les livrables des Blocs 1, 2 et 4 l'
 | [`05-competences.md`](05-competences.md) | **C3.3.2** : la chronologie d'introduction des technologies en 4 vagues, la cartographie des compétences déduite des lots, une grille d'évaluation à échelle comportementale commentée en 4 lectures, un plan de développement de 8 actions classées par coût d'un écart non comblé (20 J/H, 2 100 €), la logique recruter / former transmise aux RH, et les modalités de formation adaptées au handicap |
 | [`06-comptes-rendus.md`](06-comptes-rendus.md) | **C3.4.1** : les deux commanditaires et leurs rythmes, les 9 versions et les 4 échéances comme points de validation, les 5 contrôles bloquants qui font d'une livraison un point qualité, 3 niveaux de compte rendu dont un poussé, le gabarit décisionnel et son exemple réel, les indicateurs de satisfaction en 3 familles avec leur limite d'échantillon, et la boucle retour → production mesurée à 17 jours |
 | [`07-demonstration.md`](07-demonstration.md) | **C3.4.2 ÉLIM** : les 4 critères traduits en exigences concrètes, le parcours en 6 étapes minutées avec l'écran, le geste et la phrase, la vérification de couverture fonctionnelle, le glossaire de traduction technique → client, la préparation la veille et le jour même, le plan de repli à 4 niveaux, et la séquence de clôture qui demande la validation |
-| [`slides/`](slides/) | Le support Slidev. Chapitres 0 à 7 produits, diapositives 1 à 31 |
+| [`slides/`](slides/) | Le support Slidev **complet** : 40 diapositives, dont 32 présentées et 8 annexes appelées sur question |
+
+---
+
+## Actions hors rédaction, à mener avant le 16 septembre
+
+Le support est écrit. Ce qui reste ne peut pas l'être.
+
+| # | Action | Pour | Échéance conseillée |
+|:-:|--------|------|---------------------|
+| 1 | **Répéter le parcours de démonstration**, chronomètre en main. 4 min 50, c'est court | C3.4.2 **ÉLIM** | Au moins trois passages avant le 16/09 |
+| 2 | **Créer le jeu de données de démonstration** : compte principal, second compte sur le second appareil, deux soirées terminées dont une avec gagnant, flamme de participation active | C3.4.2 **ÉLIM** | La veille (§ 4.1 de [`07-demonstration.md`](07-demonstration.md)) |
+| 3 | **Enregistrer la vidéo** du parcours complet, commentée | C3.4.2 **ÉLIM**, repli niveau 3 | La veille |
+| 4 | **Préparer l'environnement local** prêt à démarrer | C3.4.2 **ÉLIM**, repli niveau 2 | La veille |
+| 5 | **Structurer le tableau GitHub Projects** et en produire une capture | C3.2.1 **ÉLIM**, diapo 11 | Avant l'export du support |
+| 6 | **Relever une capture de facturation** GCP et AWS | C3.2.1 **ÉLIM**, diapo 14 | Avant l'export du support |
+| 7 | **Exporter le support en PDF** (`npm run export`) et le tester sur le matériel de la salle | Toutes | Une semaine avant |
+| 8 | **Répéter le minutage global** : 30 minutes, dont 17 sur les trois compétences éliminatoires | Toutes | Deux passages complets |
+
+> Les points 1 à 4 conditionnent une compétence **éliminatoire** qui ne peut pas dépendre du réseau d'une salle d'examen.

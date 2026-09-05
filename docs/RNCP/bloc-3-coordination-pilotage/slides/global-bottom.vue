@@ -19,6 +19,13 @@ const REFS = {
   </footer>
 
   <footer
+    v-else-if="$slidev.nav.currentPage > 32"
+    class="abs-bl m-3 text-xs font-mono opacity-60 select-none"
+  >
+    ANNEXE
+  </footer>
+
+  <footer
     v-if="$slidev.nav.currentPage > 1"
     class="abs-br m-3 text-xs opacity-40 select-none"
   >

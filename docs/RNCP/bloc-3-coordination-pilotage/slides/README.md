@@ -40,7 +40,11 @@ npm run export
 | 5. Les besoins en compétences | 24 à 26 | C3.3.2 | ✅ |
 | 6. Rendre compte au commanditaire | 27 à 29 | C3.4.1 | ✅ |
 | 7. La démonstration | 30, 31 | **C3.4.2** ÉLIM | ✅ |
-| 8. Conclusion | 32 | | ⬜ |
-| Annexes pour les questions | A1 à A8 | | ⬜ |
+| 8. Conclusion | 32 | | ✅ |
+| Annexes pour les questions | 33 à 40 | | ✅ |
+
+**Support complet : 40 diapositives**, dont 32 présentées et 8 annexes appelées uniquement sur question. Les annexes portent la mention `ANNEXE` en bas à gauche à la place du code de compétence.
+
+**Navigation pendant les questions** : en mode présentateur, taper le numéro de page puis `Entrée` va directement à la diapositive. A1 architecture = **33**, A2 logigramme = **34**, A3 arbitrages de réserve = **35**, A4 budget = **36**, A5 chaîne CI/CD = **37**, A6 RACI = **38**, A7 journal des versions = **39**, A8 retours utilisateurs = **40**.
 
 **Règle de numérotation** : aucune diapositive de séparation de chapitre. La page `N` de Slidev correspond exactement à la diapositive `N` du plan, et donc au rattachement des 14 éléments imposés établi dans ce plan. Le titre de chapitre est porté par la première diapositive du chapitre. Toute insertion de diapositive impose de mettre à jour le plan et la table `REFS` dans le même mouvement.
