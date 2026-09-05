@@ -59,7 +59,7 @@ Les cinq points relevés le 5 septembre ont été corrigés dans le support, ils
 
 | # | Décision | Enjeu |
 |:-:|----------|-------|
-| 16 | **Ouvrir une pull request** pour la branche `claude/rncp-03-title-crwwov` | 7 commits d'avance sur `master`. Tant que ce n'est pas fusionné, les cases de `suivi-rncp.md` restent non cochées, la convention du dossier exigeant un livrable mergé |
+| 16 | ~~Ouvrir une pull request~~ → **[PR #83](https://github.com/Affy657/Movie-Picker/pull/83) ouverte** le 05/09/2026 | ✅ Fait. Reste à la **relire et la fusionner** : tant que ce n'est pas fusionné, les cases de `suivi-rncp.md` restent non cochées, la convention du dossier exigeant un livrable mergé |
 | 17 | **Garder ou retirer la partie A du chapitre 4** (la délégation à des agents d'assistance comme ancrage réel du management) | C'est un pari : il donne au chapitre le plus théorique un ancrage vérifiable, mais tous les jurys ne le recevront pas de la même façon. Le chapitre tient sans — il perd son volet réel. Retrait en deux minutes si besoin |
 | 18 | **Le cas d'arbitrage de réserve « environnement de test rejeté malgré un gain de 30 % »**, envisagé au plan initial, n'a **aucune trace dans le dépôt** et a été remplacé par l'abandon de l'application mobile | S'il correspond à une décision réelle non tracée, le dire et il sera réintégré en annexe A3 |
 
