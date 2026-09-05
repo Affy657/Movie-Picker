@@ -951,3 +951,205 @@ les cinq premieres semaines, ou les commits etaient groupes — le premier commi
 du projet porte 3 400 lignes a lui seul. La charge reelle est vraisemblablement
 superieure a 88 J/H. Un indicateur ne mesure que la pratique qui le produit.
 -->
+
+---
+
+# 3. Un cas d'arbitrage : la dérive constatée
+
+<div class="grid grid-cols-2 gap-6 text-sm">
+<div>
+
+### Ce que l'historique montre, à l'heure près
+
+| Date | Événement |
+|------|-----------|
+| 16/03 16:48 | **MVP terminé**, API Node/Express : 944 lignes, 21 fichiers, 12 routes |
+| 16/03 | La feuille de route du MVP s'arrête à l'étape 16. **Aucune migration n'y figure** |
+| 18/03 11:57 | Décision exécutée, document d'aide à la décision versionné |
+| 18/03 12:12 | **Bascule** : l'ancienne API retirée, 15 min après |
+| 19/03 16:52 | Migration terminée |
+
+<div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
+La migration est <b>absente</b> de la feuille de route au moment où le MVP est déclaré terminé, et ajoutée deux jours plus tard. C'est ce qui en fait un arbitrage et non l'exécution d'un plan.
+</div>
+
+</div>
+<div>
+
+### L'écart : livré ≠ ce sur quoi on va construire
+
+| Exigence pour la suite | L'API du MVP |
+|------------------------|--------------|
+| Typage fort, analyse bloquante à la compilation | Typage effacé à l'exécution |
+| Sécurité fournie par le cadre | Composants à assembler un par un |
+| Support long terme | Cycle court, veille plus fréquente |
+| Architecture en couches | 21 fichiers, aucune séparation |
+
+### La conséquence : une fenêtre qui se referme
+
+<div class="p-2 border-l-4 border-amber-500 bg-amber-50 bg-opacity-40 mt-2">
+Au 18 mars, le périmètre à réécrire pesait <b>944 lignes</b>.<br>
+La même API en porte <b>44 663</b> aujourd'hui.<br>
+<b>Rapport de 1 à 47.</b> Le coût de la décision croissait chaque jour.
+</div>
+
+</div>
+</div>
+
+<!--
+DUREE 0:50. ELEMENT IMPOSE 5 (1/3).
+CRITERE : la problematique qui necessite un arbitrage est exposee AVEC SES
+CONSEQUENCES.
+
+Ouvrir par la phrase qui desamorce la question piege : « le MVP a ete livre sur
+une pile que je ne voulais pas garder pour la suite. L'etude comparative du
+Bloc 1 retient .NET, mais elle a ete formalisee en juin : elle consigne la
+decision finale, pas la chronologie. La verite est celle de l'historique. »
+
+Puis le tableau de gauche, une seule ligne a dire : la migration est ABSENTE de
+la feuille de route quand le MVP est declare termine, et ajoutee deux jours plus
+tard. C'est ce qui fait de ce cas un arbitrage.
+
+Terminer sur le chiffre de droite, qui est celui que le jury retiendra : 944
+lignes a migrer le 18 mars, 44 663 aujourd'hui. Preciser aussitot que ce chiffre
+est la justification A POSTERIORI, pas l'argument d'origine : le 18 mars on
+savait que le cout croitrait, pas de combien. C'est la nature meme d'un
+arbitrage.
+-->
+
+---
+
+# Les options et le logigramme de décision
+
+<div class="grid grid-cols-5 gap-4">
+<div class="col-span-3 dense">
+
+| # | Option | Coût | Risque principal |
+|:-:|--------|------|------------------|
+| A | Ne rien changer, poursuivre la V1 sur Node | 0 J/H | Les 4 écarts subsistent 6 mois. Risque **cumulatif**, pas immédiat |
+| **B** | **Migrer maintenant**, bascule en une fois | **13 J/H**<br/>(8 réécriture, 3 tests et contrat, 2 redéploiement) | Rupture du contrat avec un front **déjà déployé** |
+| C | Migrer après la V1 | Même travail, périmètre plusieurs fois supérieur | Le report devient un renoncement ; réécriture **avec des utilisateurs en production** |
+| D | Migrer progressivement, deux API en parallèle | Migration **+** double maintenance de chaque évolution | Deux bases à tenir **par une seule personne**. L'option la plus progressive est ici la plus risquée |
+
+**Les 5 critères de décision** — 1. contrat d'interface préservé *(éliminatoire)* · 2. le coût croît-il avec le temps ? · 3. fenêtre de stabilité fonctionnelle ? · 4. réversibilité · 5. charge soutenable par l'effectif réel
+
+</div>
+<div class="col-span-2">
+
+```mermaid {scale: 0.52}
+flowchart TD
+    Q2{"Contrat d'interface<br/>préservable ?"}
+    Q2 -->|non| R1["REFUS"]
+    Q2 -->|oui| Q3{"Périmètre figé<br/>maintenant ?"}
+    Q3 -->|non| R2["DIFFÉRER"]
+    Q3 -->|oui| Q4{"Coût croissant<br/>avec le temps ?"}
+    Q4 -->|non| R3["DIFFÉRER"]
+    Q4 -->|oui| Q5{"Charge soutenable<br/>à effectif réel ?"}
+    Q5 -->|non| R4["RÉDUIRE<br/>ou renoncer"]
+    Q5 -->|oui| Q6{"Critère de bascule<br/>mesurable ?"}
+    Q6 -->|non| R5["REFUS"]
+    Q6 -->|oui| D["DÉCIDER<br/>MAINTENANT"]
+    D --> V{"Parité vérifiée<br/>sur le contrat ?"}
+    V -->|non| RB["RETOUR ARRIÈRE"]
+    V -->|oui| F(["BASCULE"])
+    classDef refus fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
+    classDef diff fill:#fef3c7,stroke:#d97706,color:#78350f
+    classDef ok fill:#ccfbf1,stroke:#0d9488,color:#134e4a
+    class R1,R5 refus
+    class R2,R3,R4,RB diff
+    class D,F ok
+```
+
+<div class="text-xs opacity-75 mt-1">
+Écrit pour être <b>réutilisable</b> : aucune techno n'y figure. Version complète en annexe.
+</div>
+
+</div>
+</div>
+
+<!--
+DUREE 1:00. ELEMENT IMPOSE 5 (2/3).
+CRITERE : les differentes options possibles sont DETAILLEES. La grille nomme
+explicitement le LOGIGRAMME comme outil d'aide a la decision : il doit etre a
+l'ecran et commente, pas seulement affiche.
+
+Les quatre options, une phrase chacune, sans lire le tableau. Le temps utile est
+sur l'option D, la plus contre-intuitive : migrer progressivement parait plus
+prudent, et c'est faux a effectif 1. Deux bases de code en parallele, sur une
+equipe le cout se repartit, sur une personne il s'ajoute. C'est le critere 5.
+
+Puis le logigramme, en le PARCOURANT a voix haute sur le chemin reellement
+suivi le 18 mars : produit deploye oui, contrat preservable oui grace au contrat
+OpenAPI de l'API Node, perimetre fige oui puisque le MVP venait d'etre termine,
+cout croissant oui, charge soutenable oui, critere de bascule definissable oui
+— la parite sur les 12 routes. Donc decider maintenant.
+
+Insister sur la DERNIERE branche : parite non verifiee = retour arriere,
+l'ancien socle restant deployable. C'est ce qui rendait la decision reversible.
+-->
+
+---
+
+# La décision et son résultat mesuré
+
+<div class="grid grid-cols-2 gap-6 text-sm">
+<div>
+
+### Option B, argumentée en 4 temps
+
+**1. La fenêtre était ouverte et allait se refermer.** Le MVP venait d'être figé : seul moment où le périmètre à réécrire était complet **et** arrêté.
+
+**2. Le coût de l'option A n'est pas nul, il est différé.** Ne rien faire, c'était payer plus tard à un prix inconnu — ou ne jamais payer.
+
+**3. La bascule en une fois est moins risquée que la coexistence, à effectif 1.**
+
+**4. La décision restait réversible** jusqu'à la vérification de parité.
+
+<div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
+<b>Ce qui la rendait pilotable</b> : un critère de succès défini <b>avant</b> de commencer — le front ne change pas, parce que les URL et le format JSON ne changent pas. Binaire, vérifiable.
+</div>
+
+</div>
+<div>
+
+### Ce qui a été tenu
+
+| Objectif | Résultat mesuré |
+|----------|-----------------|
+| Réécrire à l'identique du contrat | 12 routes, 944 lignes TS → **4 653 lignes C#**, 111 fichiers |
+| Bascule sans double maintenance | Ancienne API retirée **15 min** après |
+| Ne pas décaler la V1 | **v1.0.0 le 19/05**, aucune échéance du titre décalée |
+| Décision non rejouée | **Aucun retour arrière**, 8 versions livrées depuis |
+| Socle tenable | 44 663 lignes, couverture **86,6 %**, **A/A/A** |
+
+<div class="mt-2 p-2 border-l-4 border-amber-500 bg-amber-50 bg-opacity-40 text-xs">
+<b>Ce qui n'a pas été tenu.</b> L'objectif était « aucune modification du front » : le réel est <b>87 lignes sur 9 fichiers</b>, du typage et de l'affichage. À plusieurs, c'était un incident d'intégration détecté en revue. Et le lot est chiffré 13 J/H <b>a posteriori</b> : l'historique ne permet pas de le vérifier au jour près.
+</div>
+
+</div>
+</div>
+
+<!--
+DUREE 0:40. ELEMENT IMPOSE 5 (3/3).
+CRITERE : la decision d'arbitrage est argumentee ET permet de resoudre la
+problematique. Les deux moities comptent : l'argumentation ET la preuve que ca a
+marche.
+
+Ne pas relire les quatre arguments, ils sont a l'ecran. En dire DEUX : la fenetre
+qui se referme, et le cout non nul de l'option A.
+
+Puis le tableau de droite en un seul geste : « aucun retour arriere, huit
+versions produit livrees sur ce socle depuis, et le socle porte aujourd'hui
+44 663 lignes a 86,6 % de couverture. »
+
+Le bandeau orange est OBLIGATOIRE a dire, ne pas le sauter par manque de temps.
+C'est lui qui distingue un bilan d'un plaidoyer. Les 87 lignes de front sont le
+detail qui prouve qu'on a verifie, et l'aveu sur le chiffrage a posteriori
+enchaine directement avec ce qui a ete dit au chapitre 2.
+
+CONCLUSION DU CHAPITRE, phrase a dire telle quelle : « le document d'aide a la
+decision annoncait que C# serait plus verbeux. 944 lignes TypeScript sont
+devenues 4 653 lignes C#. L'inconvenient annonce s'est realise, il avait ete
+accepte en connaissance de cause. Un arbitrage dont on peut verifier apres coup
+que les inconvenients annonces etaient les bons est un arbitrage instruit. »
+-->

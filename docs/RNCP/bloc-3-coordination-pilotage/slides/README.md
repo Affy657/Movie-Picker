@@ -25,7 +25,7 @@ npm run export
 
 - Les blocs `<!-- ... -->` en fin de diapositive sont les **notes du présentateur**, invisibles à l'écran. Elles portent la durée cible, l'élément imposé et le critère visé, ce qu'il faut dire à voix haute, et les réponses préparées aux questions probables.
 - `global-bottom.vue` affiche en bas à gauche le **code de compétence** visé par la diapositive courante, et en bas à droite la pagination. La table `REFS` doit être tenue à jour à chaque ajout de diapositive.
-- Le diagramme de Gantt est rendu nativement par Slidev, sans bibliothèque supplémentaire.
+- Les diagrammes Mermaid (Gantt de la diapo 6, logigramme de la diapo 17) sont rendus nativement par Slidev, sans bibliothèque supplémentaire. La syntaxe `{scale: 0.52}` après l'ouverture du bloc ajuste la taille du rendu.
 - Classe utilitaire `dense` sur un conteneur pour réduire la taille des tableaux larges.
 
 ## Avancement
@@ -35,7 +35,7 @@ npm run export
 | 0. Ouverture, produit, cadre | 1 à 3 | | ✅ |
 | 1. Planifier l'exécution | 4 à 10 | **C3.1** ÉLIM | ✅ |
 | 2. Piloter l'avancement | 11 à 15 | **C3.2.1** ÉLIM | ✅ |
-| 3. Le cas d'arbitrage | 16 à 18 | C3.2.2 | ⬜ |
+| 3. Le cas d'arbitrage | 16 à 18 | C3.2.2 | ✅ |
 | 4. Piloter l'équipe | 19 à 23 | C3.3.1 | ⬜ |
 | 5. Les besoins en compétences | 24 à 26 | C3.3.2 | ⬜ |
 | 6. Rendre compte au commanditaire | 27 à 29 | C3.4.1 | ⬜ |

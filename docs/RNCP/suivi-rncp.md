@@ -53,8 +53,8 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 - [x] **C3.1** ÉLIM — Méthodologie + planning + RACI — voir § 15
 - [ ] **C3.2.1** ÉLIM — Outil de suivi + indicateurs + tableaux de bord — voir § 16
-- [ ] **C3.2.2** — Cas d'arbitrage (ADR) — voir § 17
-- [ ] **C3.3.1** — Pilotage de l'équipe (analyse réflexive si projet solo) — voir § 17
+- [ ] **C3.2.2** — Cas d'arbitrage + logigramme — voir § 17
+- [ ] **C3.3.1** — Pilotage de l'équipe (organisation cible à 4 profils) — voir § 17
 - [ ] **C3.3.2** — Évaluation des besoins en compétences — voir § 17
 - [ ] **C3.4.1** — Comptes rendus d'activités — voir § 17
 
@@ -389,27 +389,26 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 ---
 
-## 17. ADR + comptes rendus + analyse réflexive (pilotage solo)
+## 17. Arbitrage + pilotage d'équipe + compétences + comptes rendus
 
 > **Objectifs RNCP** :
-> - **C3.2.2** (non ÉLIM) : « problématique d'arbitrage exposée avec conséquences ; options détaillées ; décision argumentée »
-> - **C3.3.1** / **C3.3.2** (non ÉLIM, projet solo) : « pilotage équipe » et « besoins en compétences » → adapter en **analyse réflexive** sur le pilotage de soi et la montée en compétences personnelle
+> - **C3.2.2** (non ÉLIM) : « problématique d'arbitrage exposée avec conséquences ; options détaillées ; décision argumentée » — la grille nomme explicitement le **logigramme** comme outil d'aide à la décision
+> - **C3.3.1** / **C3.3.2** (non ÉLIM) : « pilotage d'équipe » et « besoins en compétences »
 > - **C3.4.1** (non ÉLIM) : « comptes rendus clairs et ordonnés ; points de validation organisés ; indicateurs de satisfaction définis »
 
-- [ ] Créer **`docs/RNCP/bloc-3-coordination-pilotage/adr/`** avec template ADR (Markdown light, format Michael Nygard) et au minimum **3 ADR** documentant les arbitrages majeurs déjà pris :
-  - `0001-choix-stack-back-dotnet.md` : Node/Express → ASP.NET Core .NET 10 (contexte, options, conséquences)
-  - `0002-cookie-sessions-vs-jwt.md` : sessions cookie HttpOnly retenues vs JWT
-  - `0003-deploiement-direct-vs-canary.md` : déploiement direct Cloud Run, canary écarté pour V1 (cf. C2.2.4)
-  - Bonus : `0004-release-please-vs-changesets.md`, `0005-mongodb-vs-postgres.md`
-- [ ] Créer **`docs/RNCP/bloc-3-coordination-pilotage/03-analyse-reflexive.md`** (couvre C3.3.1 / C3.3.2 adapté au solo) :
-  - **Style de pilotage** : autonome avec **revues régulières** (PR self-review + agent `mp-code-reviewer`)
-  - **Grille d'évaluation des compétences** : tableau **compétence → niveau initial → niveau visé → niveau atteint** (.NET, MongoDB, Cloud Run, Sentry, Playwright, OWASP, RGAA / OPQUAST)
-  - **Plan de développement personnel** : formations / ressources consultées (docs officielles, blogs identifiés § 13, courses en ligne le cas échéant)
-  - **Outils de communication** : agents Cursor (`mp-po`, `mp-code-reviewer`, `mp-pre-push`) explicités comme « équipe virtuelle » — choix d'outils argumenté
-  - **Prise en compte du handicap** dans l'environnement de travail (raccourcis clavier, contraste IDE, lecteurs d'écran compatibles)
-- [ ] Créer **`docs/RNCP/bloc-3-coordination-pilotage/04-comptes-rendus/`** : un fichier par revue (au moins **3 comptes rendus** sur la durée du projet) :
-  - Format court : avancement, blocages, décisions, prochaines étapes
-  - **Indicateurs de satisfaction** : auto-évaluation (sur 5) + écart vs objectif initial ; le cas échéant, retours formateur Ynov
+> **Changement d'approche, acté dans [`bloc-3-coordination-pilotage/00-plan-presentation-orale.md`](bloc-3-coordination-pilotage/00-plan-presentation-orale.md) § 2.** La piste « analyse réflexive sur le pilotage de soi » envisagée ici est abandonnée : les critères de C3.3.1 et C3.3.2 (répartition équilibrée de la charge, styles managériaux, grille d'évaluation par profil, plan de développement) ne sont pas transposables à un exécutant unique sans les vider. Ils sont traités sur une **organisation cible de 4 profils**, annoncée comme projection dès l'ouverture de la présentation et jamais présentée comme une équipe réelle. La piste d'un dossier `adr/` est également abandonnée : le cas d'arbitrage est un livrable **oral**, et un recueil de décisions d'architecture répondrait à une autre question que celle de la grille.
+
+- [ ] **`docs/RNCP/bloc-3-coordination-pilotage/03-arbitrage.md`** (C3.2.2) — *rédigé, en attente de fusion sur `master`* :
+  - [x] **Cas retenu** : le remplacement de l'API Node/Express par ASP.NET Core, décidé le 18/03/2026, deux jours après la livraison du MVP. Confirmé par l'historique : la migration est absente de la feuille de route du MVP au moment où celui-ci est déclaré terminé
+  - [x] **Problématique et conséquences** : chronologie datée à l'heure près, les 4 exigences non satisfaites par l'API du MVP, et la fenêtre qui se referme — 944 lignes à réécrire le 18/03 contre 44 663 aujourd'hui
+  - [x] **4 options détaillées** avec coût, effet sur le planning et risque, plus les **5 critères de décision** dont un éliminatoire
+  - [x] **Logigramme** Mermaid réutilisable (aucune techno n'y figure), avec la branche de retour arrière
+  - [x] **Décision argumentée** en 4 temps, critère de succès défini avant exécution, et **résultat mesuré** — y compris les 2 objectifs non tenus (87 lignes de front modifiées contre un objectif de zéro ; lot chiffré 13 J/H a posteriori)
+  - [x] **2 arbitrages de réserve** pour les questions : le contrôle de performance instable (52 % → 94 %), l'abandon de l'application mobile
+- [ ] Créer **`docs/RNCP/bloc-3-coordination-pilotage/04-management-equipe.md`** (C3.3.1) : affectation des missions sur les 4 profils et équilibrage de la charge, les 4 styles managériaux situés sur des situations concrètes, techniques d'animation et outils de communication avec partage de ressources, inclusion (handicap, contexte multiculturel et international), et **analyse critique** d'une posture avec recommandations réalistes
+- [ ] Créer **`docs/RNCP/bloc-3-coordination-pilotage/05-competences.md`** (C3.3.2) : cartographie des compétences à mobiliser, **grille d'évaluation** niveau actuel / niveau cible / écart par profil, plan de développement détaillé, formations préconisées, et modalités adaptées au handicap
+- [ ] Créer **`docs/RNCP/bloc-3-coordination-pilotage/06-comptes-rendus.md`** (C3.4.1) : les 9 versions comme points de validation datés, le format de compte rendu type et un exemple complet montrant en quoi il **facilite une décision**, et les indicateurs de satisfaction en place avec les décisions produit qu'ils ont déclenchées
+- [ ] Créer **`docs/RNCP/bloc-3-coordination-pilotage/07-demonstration.md`** (C3.4.2, **ÉLIM**) : parcours minuté sur la version en production, vocabulaire client, compte et soirée de démonstration préparés la veille, et **plan de repli** si le réseau de la salle tombe
 
 ---
 

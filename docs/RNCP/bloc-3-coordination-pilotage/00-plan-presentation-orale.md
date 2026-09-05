@@ -107,13 +107,15 @@ Critères visés : outil de suivi en adéquation avec le projet et la méthodolo
 
 Critères visés : problématique exposée avec ses conséquences, options détaillées, décision argumentée qui résout la problématique. La grille nomme explicitement le **logigramme** comme outil d'aide à la décision.
 
-**Cas retenu** : la migration de l'API de Node/Express vers ASP.NET Core en cours de projet, 13 J/H non prévus au chiffrage initial. À confirmer. Deux cas de réserve pour les questions : le contrôle Lighthouse instable qui bloquait les fusions, et le remplacement de l'environnement de test rejeté malgré son gain de 30 %.
+**Cas retenu, confirmé par l'historique** : le remplacement de l'API Node/Express par ASP.NET Core, décidé le 18 mars 2026, deux jours après la livraison du MVP. La migration est **absente** de la feuille de route du MVP au moment où celui-ci est déclaré terminé, ce qui établit qu'il s'agit d'une décision prise en cours de projet et non de l'exécution d'un plan. Le lot est chiffré 13 J/H au Bloc 1, mais ce chiffrage a été formalisé en juin 2026, donc a posteriori : la formulation « non prévu au chiffrage » est à éviter, elle serait démentie par le dossier du Bloc 1 lui-même.
+
+Deux cas de réserve pour les questions : le contrôle de performance instable qui bloquait les fusions (52 % → 94 % de succès de la chaîne), et l'abandon de l'application mobile (démarrée le 16/05/2026, archivée le 26/05). Le cas « environnement de test rejeté malgré un gain de 30 % » envisagé initialement n'a **aucune trace dans le dépôt** et a été retiré.
 
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
-| 16 | La dérive constatée et ses conséquences | 0:50 | Le constat mesuré, et ce qu'il menaçait : décalage de la V1, charge non budgétée, risque sur les livrables du titre |
-| 17 | Les options et le logigramme de décision | 1:00 | **Logigramme** Mermaid des critères de décision, et les trois options détaillées avec leur coût, leur délai et leur risque |
-| 18 | La décision et son résultat mesuré | 0:40 | La décision, son argumentation, et la vérification a posteriori : ce que l'indicateur a montré après l'arbitrage |
+| 16 | La dérive constatée et ses conséquences | 0:50 | La chronologie à l'heure près, les 4 exigences que l'API du MVP ne satisfaisait pas, et la conséquence qui tranche : le périmètre à réécrire pesait 944 lignes le 18 mars, la même API en porte 44 663 aujourd'hui. Le coût de la décision croissait chaque jour |
+| 17 | Les options et le logigramme de décision | 1:00 | **Logigramme** Mermaid, écrit pour être réutilisable (aucune techno n'y figure), parcouru à voix haute sur le chemin réellement suivi. Les **quatre** options avec leur coût et leur risque, le temps utile allant à l'option D : migrer progressivement paraît plus prudent et ne l'est pas à effectif 1 |
+| 18 | La décision et son résultat mesuré | 0:40 | L'argumentation en 4 temps, le critère de succès défini avant de commencer, les 5 objectifs et leur résultat mesuré, et le bandeau d'honnêteté : les 87 lignes de front modifiées contre un objectif de zéro, et le chiffrage a posteriori du lot |
 
 ### Chapitre 4 : piloter l'équipe (3:30, 5 diapos), C3.3.1
 
@@ -185,8 +187,8 @@ Placées après la conclusion, jamais présentées, appelées seulement si une q
 | # | Contenu |
 |:-:|---------|
 | A1 | Architecture technique de l'application |
-| A2 | Le logigramme d'arbitrage en version complète |
-| A3 | Les deux arbitrages de réserve |
+| A2 | Le logigramme d'arbitrage en version complète (§ 4 de `03-arbitrage.md`, avec la branche « produit déjà déployé »)|
+| A3 | Les deux arbitrages de réserve : le contrôle de performance instable, l'abandon de l'application mobile (§ 7 de `03-arbitrage.md`) |
 | A4 | Le budget prévisionnel détaillé |
 | A5 | La chaîne d'intégration et de déploiement continus |
 | A6 | La matrice RACI en version complète |
@@ -215,12 +217,12 @@ Un fichier source par chapitre, qui alimente les diapositives. Le support ne se 
 |---------|----------|------|
 | `01-planification.md` | Diapos 4 à 10, C3.1 | ✅ Produit |
 | `02-suivi-indicateurs.md` | Diapos 11 à 15, C3.2.1 | ✅ Produit |
-| `03-arbitrage.md` | Diapos 16 à 18, C3.2.2 | À produire |
+| `03-arbitrage.md` | Diapos 16 à 18, C3.2.2 | ✅ Produit |
 | `04-management-equipe.md` | Diapos 19 à 23, C3.3.1 | À produire |
 | `05-competences.md` | Diapos 24 à 26, C3.3.2 | À produire |
 | `06-comptes-rendus.md` | Diapos 27 à 29, C3.4.1 | À produire |
 | `07-demonstration.md` | Diapos 30 et 31, C3.4.2 | À produire |
-| `slides/slides.md` | Le support complet | 🟡 Chapitres 0 à 2, diapos 1 à 15 |
+| `slides/slides.md` | Le support complet | 🟡 Chapitres 0 à 3, diapos 1 à 18 |
 
 **Règle de numérotation du support** : aucune diapositive de séparation de chapitre. La page `N` de Slidev correspond exactement à la diapositive `N` de ce plan, et donc au rattachement des 14 éléments imposés du § 1. Le titre de chapitre est porté par la première diapositive du chapitre. Toute insertion impose de mettre à jour ce plan et la table `REFS` de `global-bottom.vue` dans le même mouvement.
 
