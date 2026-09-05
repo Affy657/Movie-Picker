@@ -2269,7 +2269,7 @@ flowchart TD
   T["PR ou push sur master"] --> CH["changes<br/>path-filtering web / api"]
   T --> GL["gitleaks<br/>scan de secrets"]
   CH --> LA["lint-web · lint-api · audit"]
-  CH --> TESTS["test-web · test-api<br/>couverture ≥ 80 % back"]
+  CH --> TESTS["test-web · test-api<br/>test-api-mongo · couverture ≥ 80 %"]
   TESTS --> SO["sonar<br/>Quality Gate bloquant"]
   CH --> NB["lighthouse · e2e Playwright"]
   SO --> GATE{{"pipeline vert ?"}}
@@ -2283,7 +2283,7 @@ flowchart TD
 </div>
 <div class="dense">
 
-**14 jobs.** Les 9 jobs de vérification sont tous bloquants.
+**15 jobs.** Les 10 jobs de vérification sont tous bloquants.
 
 | Job | Rôle | Bloquant |
 |-----|------|:--------:|
@@ -2294,6 +2294,7 @@ flowchart TD
 | `audit` | Trivy sur le lock, NuGet vulnérables | ✅ |
 | `test-web` | Vitest + seuils de couverture | ✅ |
 | `test-api` | xUnit unitaires et intégration, **≥ 80 %** | ✅ |
+| `test-api-mongo` | Tests d'intégration sur **MongoDB réel** | ✅ |
 | `sonar` | SonarCloud, Quality Gate code nouveau | ✅ |
 | `lighthouse` | Performance et accessibilité, médiane de 3 | ✅ |
 | `e2e` | Playwright, parcours de bout en bout | ✅ |
