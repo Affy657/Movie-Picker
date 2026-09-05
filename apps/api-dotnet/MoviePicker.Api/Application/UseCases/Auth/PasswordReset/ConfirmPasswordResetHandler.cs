@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
@@ -15,7 +14,7 @@ public sealed class ConfirmPasswordResetHandler : IConfirmPasswordResetHandler
 
     private readonly IUserRepository _users;
     private readonly IPasswordResetTokenRepository _tokens;
-    private readonly IPasswordHasher<User> _passwordHasher;
+    private readonly IPasswordHasher _passwordHasher;
     private readonly IAuthSessionInvalidator _sessionInvalidator;
     private readonly TimeProvider _clock;
     private readonly ILogger<ConfirmPasswordResetHandler> _logger;
@@ -23,7 +22,7 @@ public sealed class ConfirmPasswordResetHandler : IConfirmPasswordResetHandler
     public ConfirmPasswordResetHandler(
         IUserRepository users,
         IPasswordResetTokenRepository tokens,
-        IPasswordHasher<User> passwordHasher,
+        IPasswordHasher passwordHasher,
         IAuthSessionInvalidator sessionInvalidator,
         TimeProvider clock,
         ILogger<ConfirmPasswordResetHandler> logger)
@@ -62,7 +61,7 @@ public sealed class ConfirmPasswordResetHandler : IConfirmPasswordResetHandler
         }
 
         var now = _clock.GetUtcNow();
-        var newPasswordHash = _passwordHasher.HashPassword(user, request.NewPassword);
+        var newPasswordHash = _passwordHasher.Hash(request.NewPassword);
         var updated = user with { PasswordHash = newPasswordHash, UpdatedAt = now };
         await _users.UpdateAsync(updated, ct);
 

@@ -8,7 +8,7 @@ import Toggle from '@/shared/components/Toggle';
 import { useQueryClient } from '@tanstack/react-query';
 import PageLayout from '@/shared/components/PageLayout';
 import SignedOutState from '@/shared/components/SignedOutState';
-import SessionCheckErrorState from '@/shared/components/SessionCheckErrorState';
+import SessionCheckErrorState from '@/features/auth/components/SessionCheckErrorState';
 import { createEvent as createEventApi, patchEventConfig } from '@/features/events/api/eventsApi';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
@@ -93,9 +93,7 @@ export default function CreateEvent() {
         richSharePreview: true,
         allowSeries,
       });
-    } catch {
-      // Config patch is optional — event was already created, proceed to navigation
-    }
+    } catch {}
 
     queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
     navigate(ROUTES.eventDetail(res.slug), {

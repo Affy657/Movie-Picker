@@ -26,6 +26,7 @@ function run(title, command, args, options = {}) {
   }
 }
 
+run("Règles d'architecture", 'node', ['scripts/check-architecture.mjs']);
 run('pnpm lint (turbo)', 'pnpm', ['run', 'lint']);
 run('ESLint', 'pnpm', ['run', 'lint:eslint']);
 run('Prettier check', 'pnpm', ['run', 'format:check']);
@@ -54,6 +55,8 @@ run('Export OpenAPI (SKIP_OPENAPI_BUILD)', 'node', ['scripts/export-openapi.cjs'
     ASPNETCORE_ENVIRONMENT: 'Development',
   },
 });
+
+run('Types OpenAPI (dérive du contrat)', 'node', ['scripts/check-openapi-types.mjs']);
 
 run('Audit npm (Trivy fs — pnpm audit indisponible depuis le 2026-07-15, cf. pnpm/pnpm#11265)', 'docker', [
   'run',

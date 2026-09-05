@@ -7,11 +7,11 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoUserNotificationRepository : IUserNotificationRepository
 {
-    private readonly IMongoCollection<UserNotificationDocument> _collection;
+    private readonly TransactionalCollection<UserNotificationDocument> _collection;
 
-    public MongoUserNotificationRepository(IMongoDatabase database)
+    public MongoUserNotificationRepository(MongoCollectionFactory collections)
     {
-        _collection = database.GetCollection<UserNotificationDocument>("user_notifications");
+        _collection = collections.GetCollection<UserNotificationDocument>("user_notifications");
     }
 
     public async Task AddAsync(UserNotification notification, CancellationToken ct = default)

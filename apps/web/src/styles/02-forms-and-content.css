@@ -1,4 +1,3 @@
-﻿/* Utilitaires typographiques globaux */
 .lead {
   font-size: 1.2rem;
   color: var(--color-text-muted);
@@ -12,7 +11,6 @@
   gap: 0.75rem;
 }
 
-/* Boutons */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -71,7 +69,6 @@
   outline-offset: 2px;
 }
 
-/* Lien retour */
 .back-link {
   display: inline-block;
   margin-bottom: 0.75rem;
@@ -91,7 +88,6 @@ button.back-link-button {
   padding: 0;
 }
 
-/* Sections */
 .section {
   margin-bottom: 2rem;
 }
@@ -104,7 +100,6 @@ button.back-link-button {
   letter-spacing: -0.01em;
 }
 
-/* États textuels */
 .placeholder {
   color: var(--color-placeholder);
   font-size: 0.9375rem;
@@ -118,7 +113,6 @@ button.back-link-button {
   margin: 0.5rem 0 0 0;
 }
 
-/* Hint juste après un champ : on le rapproche de l'input et on l'éloigne du bouton suivant. */
 .input + .hint {
   margin-top: -0.6rem;
   margin-bottom: 1.25rem;
@@ -135,7 +129,6 @@ button.back-link-button {
   border-radius: var(--radius-md);
 }
 
-/* Pendant du `.error` : confirmation inline en vert. */
 .success {
   margin: 0 0 1rem;
   padding: 0.75rem 0.95rem;
@@ -168,8 +161,6 @@ button.back-link-button {
   margin: 0.75rem 0 1rem;
 }
 
-/* Lien par défaut : éviter le bleu navigateur `#0000ee` qui échoue le contraste
-   (WCAG AA) sur fond sombre — `--color-primary` est validé clair comme sombre. */
 a {
   color: var(--color-primary);
 }
@@ -214,7 +205,6 @@ a:focus-visible {
   background: color-mix(in srgb, var(--color-error) 14%, transparent);
 }
 
-/* Formulaires */
 .form {
   margin-top: 0.5rem;
 }
@@ -228,8 +218,6 @@ a:focus-visible {
   letter-spacing: 0.005em;
 }
 
-/* Espacement entre les groupes label/champ dans un formulaire.
-   Cible uniquement les composants custom (div) — pas les <input> ni <p>. */
 .form > div + .label {
   margin-top: 1.25rem;
 }

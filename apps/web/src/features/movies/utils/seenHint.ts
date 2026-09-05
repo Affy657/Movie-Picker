@@ -1,6 +1,4 @@
-import type { TranslationKey } from '@/shared/i18n';
-
-type Translate = (key: TranslationKey, vars?: Record<string, string | number>) => string;
+import type { Translate } from '@/features/movies/types';
 
 export function othersAlreadySeenHint(
   seenByPseudos: readonly string[] | undefined,

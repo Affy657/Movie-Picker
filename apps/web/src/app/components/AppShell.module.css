@@ -55,9 +55,6 @@
   -webkit-backdrop-filter: saturate(180%) blur(12px);
 }
 
-/* Séparé de .header pour que le padding de la safe-area (au-dessus) ne
-   déséquilibre pas le centrage vertical de cette rangée : .header peut
-   grandir vers le haut sans jamais décaler le logo/les icônes du centre. */
 .headerInner {
   display: flex;
   flex-wrap: nowrap;

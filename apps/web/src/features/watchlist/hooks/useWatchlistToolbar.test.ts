@@ -85,8 +85,6 @@ describe('useWatchlistToolbar', () => {
   it('ne borne pas la duree maximum quand seul le minimum est touche', () => {
     const { result } = setup();
     act(() => result.current.changeRuntimeRange(5, 180));
-    // Alpha (80), Beta (150), Gamma (100) sont tous >= 5 min : aucun n'est exclu par une
-    // borne maximum implicite (180 = plafond du curseur = "aucun maximum").
     expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Beta', 'Gamma', 'Alpha']);
     const chip = result.current.activeFilterChips.find((c) => c.key === 'runtime');
     expect(chip?.label).toBe('5min ou plus');
@@ -95,7 +93,6 @@ describe('useWatchlistToolbar', () => {
   it('ne borne pas la duree minimum quand seul le maximum est touche', () => {
     const { result } = setup();
     act(() => result.current.changeRuntimeRange(0, 90));
-    // Beta (150) et Gamma (100) depassent 90 min et doivent etre exclus ; seul Alpha (80) reste.
     expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Alpha']);
     const chip = result.current.activeFilterChips.find((c) => c.key === 'runtime');
     expect(chip?.label).toBe('1h30 ou moins');

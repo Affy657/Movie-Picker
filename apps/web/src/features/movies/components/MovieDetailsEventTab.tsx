@@ -6,7 +6,8 @@ import Avatar from '@/shared/components/Avatar';
 import Tooltip from '@/shared/components/Tooltip';
 import { useLocale } from '@/shared/i18n';
 import type { MovieData } from '@/shared/types/movie';
-import { SeenButton, type Translate } from '@/features/movies/components/movieCardParts';
+import SeenButton from '@/features/movies/components/SeenButton';
+import type { Translate } from '@/features/movies/types';
 import styles from './MovieDetailsEventTab.module.css';
 
 export interface MovieDetailsEventContext {

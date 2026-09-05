@@ -48,12 +48,6 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-/**
- * Rendu séparé du déclencheur : à monter une seule fois, hors de tout arbre
- * qui pourrait se démonter (ex. un dropdown qui se ferme au clic), sous
- * peine de voir la modale disparaître avec son déclencheur avant d'avoir
- * pu s'afficher.
- */
 export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
   const { t } = useTranslation();
   const location = useLocation();
@@ -71,8 +65,6 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
   const descriptionFieldId = useId();
   const attachmentsLabelId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  // Compteur plutôt qu'un simple booléen : dragenter/dragleave bullent depuis les
-  // vignettes enfants, un booléen ferait clignoter la zone au survol des miniatures.
   const dragCounterRef = useRef(0);
 
   const dialogRef = useModalDialog(open, onClose);

@@ -6,11 +6,11 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoPushSubscriptionRepository : IPushSubscriptionRepository
 {
-    private readonly IMongoCollection<PushSubscriptionDocument> _collection;
+    private readonly TransactionalCollection<PushSubscriptionDocument> _collection;
 
-    public MongoPushSubscriptionRepository(IMongoDatabase database)
+    public MongoPushSubscriptionRepository(MongoCollectionFactory collections)
     {
-        _collection = database.GetCollection<PushSubscriptionDocument>("push_subscriptions");
+        _collection = collections.GetCollection<PushSubscriptionDocument>("push_subscriptions");
     }
 
     public async Task UpsertAsync(PushSubscription subscription, CancellationToken ct = default)

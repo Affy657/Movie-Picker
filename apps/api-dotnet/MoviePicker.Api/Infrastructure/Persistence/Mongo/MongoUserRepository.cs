@@ -8,11 +8,11 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoUserRepository : IUserRepository
 {
-    private readonly IMongoCollection<UserDocument> _collection;
+    private readonly TransactionalCollection<UserDocument> _collection;
 
-    public MongoUserRepository(IMongoDatabase database)
+    public MongoUserRepository(MongoCollectionFactory collections)
     {
-        _collection = database.GetCollection<UserDocument>("users");
+        _collection = collections.GetCollection<UserDocument>("users");
     }
 
     public async Task<User?> GetByIdAsync(string id, CancellationToken ct = default)
@@ -185,11 +185,6 @@ public sealed class MongoUserRepository : IUserRepository
         return result.IsAcknowledged && result.DeletedCount > 0;
     }
 
-    /// <summary>
-    /// Rethrows a duplicate-key error as a <see cref="ConflictException"/> with a message
-    /// that indicates whether the collision is on the handle index or the email index.
-    /// This lets callers distinguish the two cases without depending on MongoDB internals.
-    /// </summary>
     private static void ThrowTypedDuplicateKey(MongoWriteException ex)
     {
         var msg = ex.WriteError?.Message ?? string.Empty;

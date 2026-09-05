@@ -1,7 +1,8 @@
 import { Info } from 'lucide-react';
 import MovieListCard from '@/features/movies/components/MovieListCard';
 import styles from '@/features/movies/components/MovieListCard.module.css';
-import { CardKebab, type Translate } from '@/features/movies/components/movieCardParts';
+import { CardKebab } from '@/features/movies/components/movieCardParts';
+import type { Translate } from '@/features/movies/types';
 import WatchlistProposeSubmenu from '@/features/watchlist/components/WatchlistProposeSubmenu';
 import type { WatchlistItem } from '@/features/watchlist/api/watchlistApi';
 import type { RatingScale } from '@/shared/types/theme';

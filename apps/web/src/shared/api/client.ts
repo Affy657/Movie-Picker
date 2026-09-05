@@ -108,9 +108,7 @@ function handleErrorResponse(res: Response, text: string, isJson: boolean): neve
   if (isJson && text.trim()) {
     try {
       parsed = JSON.parse(text) as { error?: string };
-    } catch {
-      // JSON parse failed — keep the statusText fallback set above
-    }
+    } catch {}
   }
   throw new ApiError(parsed.error ?? `HTTP ${res.status}`, { code: res.status });
 }

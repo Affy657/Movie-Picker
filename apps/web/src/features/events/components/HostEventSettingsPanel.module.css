@@ -94,7 +94,6 @@
   color: var(--color-primary);
 }
 
-/* ---------- statut d'enregistrement ---------- */
 .saveStatus {
   display: inline-flex;
   align-items: center;
@@ -161,7 +160,6 @@
   margin: 0;
 }
 
-/* ---------- sections ---------- */
 .section {
   margin-bottom: 1.15rem;
   padding-bottom: 0.95rem;
@@ -226,7 +224,6 @@
   margin-bottom: 0;
 }
 
-/* Deux champs côte à côte */
 .fieldRow {
   display: flex;
   gap: 0.75rem;
@@ -260,7 +257,6 @@
   color: var(--color-error);
 }
 
-/* ---------- date : notifier les participants ---------- */
 .notifyRow {
   display: flex;
   align-items: center;
@@ -283,7 +279,6 @@
   cursor: pointer;
 }
 
-/* ---------- thème : carte repliable ---------- */
 .themeCard {
   border: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
   border-radius: var(--radius-md);
@@ -377,7 +372,6 @@
   background: var(--color-surface);
 }
 
-/* ---------- séries TV : ligne toggle ---------- */
 .toggleRow {
   display: flex;
   align-items: center;
@@ -400,7 +394,6 @@
   line-height: var(--leading-normal);
 }
 
-/* ---------- zone de danger ---------- */
 .dangerSection {
   margin: 1.15rem 1rem 1rem;
   padding-top: 0.95rem;

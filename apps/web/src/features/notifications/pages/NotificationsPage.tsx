@@ -5,7 +5,7 @@ import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-q
 import Avatar from '@/shared/components/Avatar';
 import EmptyState from '@/shared/components/EmptyState';
 import SignedOutState from '@/shared/components/SignedOutState';
-import SessionCheckErrorState from '@/shared/components/SessionCheckErrorState';
+import SessionCheckErrorState from '@/features/auth/components/SessionCheckErrorState';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
@@ -185,8 +185,6 @@ export default function NotificationsPage() {
   });
 
   const invalidateInbox = useCallback(() => {
-    // Le badge de la cloche (clé non paginée) et cette page (clé paginée) partagent le même
-    // compteur de non-lus côté serveur : les deux doivent être invalidés ensemble.
     queryClient.invalidateQueries({ queryKey: queryKeys.notifications.inbox });
     queryClient.invalidateQueries({ queryKey: queryKeys.notifications.inboxPaged });
   }, [queryClient]);

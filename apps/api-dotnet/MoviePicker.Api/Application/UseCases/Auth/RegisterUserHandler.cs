@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
@@ -11,10 +10,10 @@ namespace MoviePicker.Api.Application.UseCases.Auth;
 public sealed class RegisterUserHandler : IRegisterUserHandler
 {
     private readonly IUserRepository _users;
-    private readonly IPasswordHasher<User> _passwordHasher;
+    private readonly IPasswordHasher _passwordHasher;
     private readonly ILogger<RegisterUserHandler> _logger;
 
-    public RegisterUserHandler(IUserRepository users, IPasswordHasher<User> passwordHasher, ILogger<RegisterUserHandler> logger)
+    public RegisterUserHandler(IUserRepository users, IPasswordHasher passwordHasher, ILogger<RegisterUserHandler> logger)
     {
         _users = users;
         _passwordHasher = passwordHasher;
@@ -52,7 +51,7 @@ public sealed class RegisterUserHandler : IRegisterUserHandler
                     CreatedAt = now,
                     UpdatedAt = now
                 };
-                return draft with { PasswordHash = _passwordHasher.HashPassword(draft, request.Password) };
+                return draft with { PasswordHash = _passwordHasher.Hash(request.Password) };
             },
             ct);
 

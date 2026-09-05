@@ -60,8 +60,6 @@
   top: 0.5rem;
   left: 0.5rem;
   z-index: 2;
-  /* Horizontal: padding-right reduced by the trailing letter-spacing. Vertical:
-     padding-top +0.11em / padding-bottom -0.11em to optically center the caps. */
   padding: calc(0.1rem + 0.11em) calc(0.4rem - var(--tracking-wide)) calc(0.1rem - 0.11em) 0.4rem;
   font-size: var(--font-size-4xs);
   font-weight: 600;
@@ -82,10 +80,6 @@
   flex-direction: column;
   gap: 0.25rem;
   padding: 0.7rem 0.85rem;
-  /* Re-theme les pieces partagees de movieCardParts.module.css : en vue
-     grille elles reposent sur le bandeau sombre qui recouvre l'affiche
-     (leurs valeurs par defaut conviennent), mais ici .info est un panneau
-     de contenu ordinaire qui suit le theme clair/sombre. */
   --mc-fg: var(--color-text);
   --mc-fg-strong: var(--color-text);
   --mc-fg-muted: var(--color-text-muted);

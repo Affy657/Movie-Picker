@@ -7,11 +7,11 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoSeenMarkRepository : ISeenMarkRepository
 {
-    private readonly IMongoCollection<SeenMarkDocument> _collection;
+    private readonly TransactionalCollection<SeenMarkDocument> _collection;
 
-    public MongoSeenMarkRepository(IMongoDatabase database)
+    public MongoSeenMarkRepository(MongoCollectionFactory collections)
     {
-        _collection = database.GetCollection<SeenMarkDocument>("seen_marks");
+        _collection = collections.GetCollection<SeenMarkDocument>("seen_marks");
     }
 
     public async Task<SeenMark> AddAsync(SeenMark mark, CancellationToken ct = default)

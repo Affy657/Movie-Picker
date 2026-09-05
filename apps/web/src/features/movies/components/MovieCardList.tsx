@@ -1,3 +1,4 @@
+import SeenButton from '@/features/movies/components/SeenButton';
 import { memo } from 'react';
 import clsx from 'clsx';
 import { ImageOff } from 'lucide-react';
@@ -10,7 +11,6 @@ import {
   DetailsInfoButton,
   MovieNote,
   PaidOfferChip,
-  SeenButton,
   VoteBar,
   WatchlistBadge,
   useMovieCardState,

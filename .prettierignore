@@ -6,3 +6,4 @@ pnpm-lock.yaml
 docs
 .github
 **/.expo
+apps/web/src/shared/api/generated

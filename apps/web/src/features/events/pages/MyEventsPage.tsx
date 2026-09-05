@@ -12,7 +12,7 @@ import {
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import EmptyState from '@/shared/components/EmptyState';
 import SignedOutState from '@/shared/components/SignedOutState';
-import SessionCheckErrorState from '@/shared/components/SessionCheckErrorState';
+import SessionCheckErrorState from '@/features/auth/components/SessionCheckErrorState';
 import { getStoredParticipant, removeStoredParticipant } from '@/features/events/storage';
 import PageLayout from '@/shared/components/PageLayout';
 import MyEventsSkeleton from '@/features/events/pages/MyEventsSkeleton';
@@ -23,7 +23,7 @@ import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useTablistKeyboard } from '@/shared/hooks/useTablistKeyboard';
 import type { MyEventSummary } from '@/features/events/types';
 import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
-import { groupEventsByMonth } from '@/shared/utils/groupEventsByMonth';
+import { groupEventsByMonth } from '@/features/events/utils/groupEventsByMonth';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { withReturnTo, ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';

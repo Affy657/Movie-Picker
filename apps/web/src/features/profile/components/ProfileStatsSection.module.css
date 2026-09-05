@@ -19,7 +19,6 @@
   font-size: var(--font-size-sm);
 }
 
-/* ---------- Hero counters: étalés directement dans la page ---------- */
 .heroGrid {
   list-style: none;
   margin: 0;
@@ -73,7 +72,6 @@
   line-height: var(--leading-snug);
 }
 
-/* ---------- Panels (un par groupe, jamais une card unique, toujours empiles) ---------- */
 .panels {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -99,7 +97,6 @@
   color: var(--color-section-heading);
 }
 
-/* ---------- Genres: chips + barre segmentée façon AniList ---------- */
 .genres {
   display: flex;
   flex-direction: column;
@@ -161,13 +158,8 @@
   border-right: 2px solid var(--color-surface);
 }
 
-/* ---------- Activité: une cellule par semaine, repères de mois ---------- */
 .heatmapWrap {
   width: 100%;
-  /* Les cellules elles-memes ne debordent jamais (colonnes en minmax(0, 1fr)) :
-     seule la bulle de tooltip masquee (visibility: hidden, centree sur la
-     derniere cellule) peut deborder a droite. overflow: visible laisse ce
-     debordement invisible s'etendre sans jamais activer de scrollbar. */
   overflow: visible;
 }
 
@@ -248,7 +240,6 @@
   line-height: 1;
 }
 
-/* ---------- Responsive ---------- */
 @media (max-width: 48rem) {
   .heroGrid {
     grid-template-columns: repeat(2, 1fr);

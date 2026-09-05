@@ -11,17 +11,27 @@ namespace MoviePicker.Api.Tests.UseCases.SearchMovies;
 
 public sealed class SearchMoviesHandlerTests
 {
+    private const string SeriesEventSlug = "soiree-series";
+
     private readonly Mock<ITmdbMovieSearch> _tmdb = new();
+    private readonly Mock<IEventRepository> _events = new();
+
+    public SearchMoviesHandlerTests()
+    {
+        _events
+            .Setup(r => r.GetByIdOrSlugAsync(SeriesEventSlug, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Event { Slug = SeriesEventSlug, Config = new EventConfig { AllowSeries = true } });
+    }
 
     private SearchMoviesHandler Build(MoviePickerOptions? options = null) =>
-        new(_tmdb.Object, Options.Create(options ?? new MoviePickerOptions { TmdbApiKey = "key" }));
+        new(_tmdb.Object, _events.Object, Options.Create(options ?? new MoviePickerOptions { TmdbApiKey = "key" }));
 
     [Fact]
     public async Task HandleAsync_NoApiKey_ThrowsServiceUnavailable()
     {
         var sut = Build(new MoviePickerOptions { TmdbApiKey = null });
 
-        await Assert.ThrowsAsync<ServiceUnavailableException>(() => sut.HandleAsync("inception", true));
+        await Assert.ThrowsAsync<ServiceUnavailableException>(() => sut.HandleAsync("inception", SeriesEventSlug));
     }
 
     [Fact]
@@ -33,7 +43,7 @@ public sealed class SearchMoviesHandlerTests
             .ThrowsAsync(new HttpRequestException("boom"));
         var sut = Build();
 
-        await Assert.ThrowsAsync<ServiceUnavailableException>(() => sut.HandleAsync("inception", true));
+        await Assert.ThrowsAsync<ServiceUnavailableException>(() => sut.HandleAsync("inception", SeriesEventSlug));
     }
 
     [Fact]
@@ -45,7 +55,7 @@ public sealed class SearchMoviesHandlerTests
             .ReturnsAsync([new TmdbSearchItem(1, MovieMediaType.Movie, "Inception", "2010", "/p.jpg", 8.4)]);
         var sut = Build(new MoviePickerOptions { TmdbApiKey = "key", TmdbSearchMaxWatchProviderLookups = 0 });
 
-        var result = await sut.HandleAsync("inception", true);
+        var result = await sut.HandleAsync("inception", SeriesEventSlug);
 
         var item = Assert.Single(result.Items);
         Assert.Equal(1, item.Id);
@@ -70,7 +80,7 @@ public sealed class SearchMoviesHandlerTests
             ]);
         var sut = Build(new MoviePickerOptions { TmdbApiKey = "key", TmdbSearchMaxWatchProviderLookups = 0 });
 
-        var result = await sut.HandleAsync("inception", true);
+        var result = await sut.HandleAsync("inception", SeriesEventSlug);
 
         var item = Assert.Single(result.Items);
         Assert.Equal([28, 878], item.GenreIds);
@@ -91,7 +101,7 @@ public sealed class SearchMoviesHandlerTests
                 148));
         var sut = Build();
 
-        var result = await sut.HandleAsync("inception", true);
+        var result = await sut.HandleAsync("inception", SeriesEventSlug);
 
         var item = Assert.Single(result.Items);
         Assert.Equal(7.9, item.VoteAverage);
@@ -123,7 +133,7 @@ public sealed class SearchMoviesHandlerTests
         var sut = Build(new MoviePickerOptions { TmdbApiKey = "key", TmdbSearchMaxWatchProviderLookups = 0 });
         var filters = new MovieSearchFilters(Array.Empty<int>(), null, null, RuntimeMin: 90, RuntimeMax: 120);
 
-        var result = await sut.HandleAsync("inception", true, filters);
+        var result = await sut.HandleAsync("inception", SeriesEventSlug, filters);
 
         var item = Assert.Single(result.Items);
         Assert.Equal(1, item.Id);
@@ -140,8 +150,44 @@ public sealed class SearchMoviesHandlerTests
             .ReturnsAsync([]);
         var sut = Build(new MoviePickerOptions { TmdbApiKey = "key", TmdbWatchProvidersRegion = " us " });
 
-        var result = await sut.HandleAsync("x", false);
+        var result = await sut.HandleAsync("x", null);
 
         Assert.Equal("US", result.WatchProvidersRegion);
+    }
+
+    [Fact]
+    public async Task HandleAsync_UnknownEventSlug_SearchesMoviesOnly()
+    {
+        _tmdb.Setup(t => t.SearchAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<int>?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        var sut = Build();
+
+        await sut.HandleAsync("inception", "slug-inconnu");
+
+        _tmdb.Verify(
+            t => t.SearchAsync("inception", false, It.IsAny<IReadOnlyList<int>?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_EventAllowingSeries_SearchesMoviesAndSeries()
+    {
+        _tmdb.Setup(t => t.SearchAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<int>?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        var sut = Build();
+
+        await sut.HandleAsync("inception", SeriesEventSlug);
+
+        _tmdb.Verify(
+            t => t.SearchAsync("inception", true, It.IsAny<IReadOnlyList<int>?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 }

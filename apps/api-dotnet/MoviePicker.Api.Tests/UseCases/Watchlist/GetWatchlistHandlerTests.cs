@@ -19,8 +19,9 @@ public sealed class GetWatchlistHandlerTests
     [Fact]
     public async Task HandleAsync_NoItems_ReturnsEmptyList()
     {
-        _watchlist.Setup(w => w.ListByUserIdAsync("u1", 500, It.IsAny<CancellationToken>()))
+        _watchlist.Setup(w => w.ListPageByUserIdAsync("u1", 0, 500, It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<WatchlistItem>)Array.Empty<WatchlistItem>());
+        _watchlist.Setup(w => w.CountByUserIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(0);
 
         var result = await _sut.HandleAsync("u1");
 
@@ -45,8 +46,9 @@ public sealed class GetWatchlistHandlerTests
                 CreatedAt = DateTimeOffset.UtcNow
             }
         };
-        _watchlist.Setup(w => w.ListByUserIdAsync("u1", 500, It.IsAny<CancellationToken>()))
+        _watchlist.Setup(w => w.ListPageByUserIdAsync("u1", 0, 500, It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<WatchlistItem>)items);
+        _watchlist.Setup(w => w.CountByUserIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(items.Count);
 
         var result = await _sut.HandleAsync("u1");
 
@@ -54,5 +56,39 @@ public sealed class GetWatchlistHandlerTests
         Assert.Equal(42, response.TmdbId);
         Assert.Equal("Matrix", response.Title);
         Assert.Equal(8.3, response.VoteAverage);
+        Assert.Equal(1, result.Total);
+        Assert.False(result.HasMore);
+    }
+
+    [Fact]
+    public async Task HandleAsync_MoreItemsThanRequested_FlagsHasMore()
+    {
+        _watchlist.Setup(w => w.ListPageByUserIdAsync("u1", 0, 2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<WatchlistItem>)
+            [
+                new() { Id = "1", UserId = "u1", TmdbId = 1, Title = "A", CreatedAt = DateTimeOffset.UtcNow },
+                new() { Id = "2", UserId = "u1", TmdbId = 2, Title = "B", CreatedAt = DateTimeOffset.UtcNow }
+            ]);
+        _watchlist.Setup(w => w.CountByUserIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(7);
+
+        var result = await _sut.HandleAsync("u1", 0, 2);
+
+        Assert.Equal(2, result.Items.Count);
+        Assert.Equal(7, result.Total);
+        Assert.True(result.HasMore);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TakeAboveCap_IsClampedToFiveHundred()
+    {
+        _watchlist.Setup(w => w.ListPageByUserIdAsync("u1", 10, 500, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<WatchlistItem>)Array.Empty<WatchlistItem>());
+        _watchlist.Setup(w => w.CountByUserIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(0);
+
+        await _sut.HandleAsync("u1", 10, 5000);
+
+        _watchlist.Verify(
+            w => w.ListPageByUserIdAsync("u1", 10, 500, It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 }

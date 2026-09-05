@@ -16,9 +16,6 @@ export function useClickOutside(
       if (ref.current?.contains(target)) return;
       if (!(target instanceof Element)) return;
       if (ignoreSelector && target.closest(ignoreSelector)) return;
-      // Un dialogue natif ouvert (ConfirmDialog, etc.) capture deja
-      // l'interaction : un clic dedans ne doit jamais fermer un panneau
-      // sous-jacent, meme si ce dialogue est rendu hors de `ref`.
       if (target.closest('dialog[open]')) return;
       onCloseRef.current();
     };

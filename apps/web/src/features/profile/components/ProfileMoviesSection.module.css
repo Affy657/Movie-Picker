@@ -35,9 +35,6 @@
   padding: 0;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
-  /* Une seule rangee : tout item qui ne tient pas est place sur une rangee
-     implicite de hauteur 0, puis masque par overflow (jamais de carte a
-     moitie affichee, jamais de scroll). */
   grid-template-rows: auto;
   grid-auto-rows: 0;
   overflow: hidden;

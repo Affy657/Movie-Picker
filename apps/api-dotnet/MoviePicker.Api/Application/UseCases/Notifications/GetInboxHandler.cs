@@ -21,8 +21,6 @@ public sealed class GetInboxHandler : IGetInboxHandler
         var pageSize = limit is null ? DefaultPageSize : Math.Clamp(limit.Value, 1, 100);
         var skip = offset is null ? 0 : Math.Max(0, offset.Value);
 
-        // On demande une page de plus que nécessaire pour savoir s'il en reste, sans compter
-        // toute la collection (cohérent avec l'existant : voir ListMyEventsHandler).
         var page = await _notifications.ListByUserIdAsync(userId, limit: pageSize + 1, offset: skip, ct);
         var hasMore = page.Count > pageSize;
         var items = hasMore ? page.Take(pageSize).ToList() : page;

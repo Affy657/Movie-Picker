@@ -47,7 +47,6 @@
   margin-top: 0.65rem;
 }
 
-/* Variante compacte — pour les surfaces déjà délimitées (carte, menu déroulant, modale) */
 .compact {
   gap: 0.35rem;
   padding: 1.75rem 1rem;

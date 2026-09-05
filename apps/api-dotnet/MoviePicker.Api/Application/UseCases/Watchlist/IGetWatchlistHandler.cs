@@ -4,5 +4,9 @@ namespace MoviePicker.Api.Application.UseCases.Watchlist;
 
 public interface IGetWatchlistHandler
 {
-    Task<WatchlistResponse> HandleAsync(string userId, CancellationToken ct = default);
+    Task<WatchlistResponse> HandleAsync(
+        string userId,
+        int skip = 0,
+        int? take = null,
+        CancellationToken ct = default);
 }

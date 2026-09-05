@@ -1,9 +1,4 @@
-/* Styles découpés pour la maintenance ; Vite regroupe tout au build (S3 / CloudFront inchangé). */
 
-/* Overpass self-hébergée via @fontsource — évite la chaîne critique
-   googleapis → gstatic (Lighthouse render-blocking-insight) et supprime la
-   dépendance externe. `swap` laisse le fallback système s'afficher pendant
-   le chargement. */
 @import '@fontsource/overpass/latin-400.css';
 @import '@fontsource/overpass/latin-500.css';
 @import '@fontsource/overpass/latin-600.css';

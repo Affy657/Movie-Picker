@@ -1,4 +1,4 @@
-import { genreLabel } from '@/features/profile/lib/tmdbGenres';
+import { genreLabel } from '@/shared/utils/tmdbGenres';
 
 const MAX_META_GENRES = 2;
 
