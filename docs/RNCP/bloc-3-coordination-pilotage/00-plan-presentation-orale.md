@@ -65,7 +65,7 @@ Cette annonce explicite est ce qui protège les 15 minutes de questions. Un jury
 | 8 | Conclusion | 0:30 | 1 | |
 | | **Total** | **30:00** | **32** | |
 
-**Contrôle du minutage réel du support** (somme des durées portées en note de présentateur, au 5 septembre 2026) : **30 minutes 10 secondes**. Le minutage est exact chapitre par chapitre, à une exception près — le chapitre 1 totalise 6:40 pour une cible de 6:30. Les dix secondes s'absorbent naturellement sur la diapositive 4, il n'y a pas lieu de retoucher le support pour cela ; il faut simplement le savoir en répétant.
+**Contrôle du minutage réel du support** (somme des durées portées en note de présentateur) : **30 minutes exactement**, et le minutage est exact **chapitre par chapitre**. Il a été rééquilibré le 5 septembre 2026 : la diapositive 6 passe de 1:20 à 1:10 pour ramener le chapitre 1 à sa cible de 6:30, et le chapitre 4 redistribue cinq secondes de la diapositive 22 vers la diapositive 23, la plus discriminante du chapitre.
 
 Répartition volontaire : les trois compétences éliminatoires absorbent **17 des 30 minutes**, soit 57 %. Les quatre non éliminatoires se partagent 11 minutes. Une diapositive dure en moyenne 50 secondes hors démonstration, ce qui suppose des diapositives qui montrent une preuve et non un paragraphe.
 

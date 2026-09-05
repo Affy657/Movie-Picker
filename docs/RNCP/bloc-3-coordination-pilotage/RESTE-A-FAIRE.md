@@ -41,19 +41,19 @@ Ces quatre points portent **C3.4.2**, éliminatoire. Une démonstration qui éch
 
 ---
 
-## 4. Points de vigilance relevés en relecture
+## 4. Points de vigilance relevés en relecture — **traités**
 
-Aucun n'est bloquant. Ils se traitent à l'oral, pas dans le support.
+Les cinq points relevés le 5 septembre ont été corrigés dans le support, ils ne relèvent plus de la vigilance orale.
 
-| # | Point | Conduite à tenir |
-|:-:|-------|------------------|
-| 11 | **« 17 jours » désigne deux choses** : la cadence médiane entre deux versions (diapo 13) et le délai de la boucle retour → production (diapo 29) | À l'oral, nommer les deux : *« une version toutes les 17 jours »* et *« 17 jours entre le retour et sa livraison »*. Ne jamais dire « 17 jours » seul |
-| 12 | **Le passage 52 % → 94 % revient trois fois** dans le support présenté (diapos 14, 15, 20) | Chaque usage sert un critère différent — constat, décision, style directif. Le dire différemment à chaque fois plutôt que répéter la même phrase |
-| 13 | **La diapositive 26 est la plus dense du support** (~2 000 caractères pour 50 s) | C'est une diapositive **preuve**, pas une diapositive support : la désigner, en commenter trois points, ne pas la lire. La note de présentateur le rappelle |
-| 14 | **La diapositive 23 est courte pour son enjeu** (40 s pour l'analyse critique, la plus discriminante du chapitre 4) | Ne pas rogner dessus si le minutage dérape. Rogner plutôt sur la diapositive 22 (inclusion, 25 s), dont l'idée tient en une phrase |
-| 15 | **Le chapitre 1 déborde de 10 secondes** (6:40 pour 6:30) | Absorbé naturellement. Ne pas retoucher un chapitre validé pour dix secondes |
+| # | Point | Traitement appliqué |
+|:-:|-------|---------------------|
+| 11 | **« 17 jours » désignait deux choses** : la cadence entre versions et la boucle retour → production | Les quatre occurrences sont désormais explicites : *« une version toutes les 17 jours »* d'un côté, *« 17 jours entre le retour d'un utilisateur et sa mise en production »* de l'autre |
+| 12 | **Le passage 52 % → 94 % revenait trois fois** littéralement | La troisième occurrence (diapositive 20, style directif) est reformulée en *« une chaîne qui échouait une fois sur deux »*. Le chiffre exact ne figure plus qu'aux diapositives 14 et 15, où il sert le constat puis la décision |
+| 13 | **La diapositive 26 était la plus dense** du support (2 303 caractères pour 50 s) | Condensée à **1 915 caractères**, soit −17 %. Elle rejoint le niveau des diapositives 6, 10 et 25 au lieu de le dominer |
+| 14 | **La diapositive 23 était courte** pour son enjeu (40 s pour l'analyse critique) | Portée à **0:45**, financées par la diapositive 22 ramenée à 0:20. Le chapitre 4 reste à 3:30 |
+| 15 | **Le chapitre 1 débordait de 10 secondes** (6:40 pour 6:30) | La diapositive 6 passe de 1:20 à 1:10. **Le minutage est désormais exact chapitre par chapitre, et le total tombe à 30:00 pile** |
 
----
+**Reste une seule vigilance, purement orale** : la diapositive 26 demeure parmi les plus denses. C'est une diapositive **preuve**, à désigner en commentant trois points, jamais à lire.
 
 ## 5. Décisions en suspens — elles t'appartiennent
 

@@ -43,7 +43,7 @@ Une application web de décision collective : choisir à plusieurs quel film reg
 | | |
 |--|--|
 | Versions en production | **9**, du 27/02 au 04/09/2026 |
-| Rythme de livraison | une toutes les 17 jours (médiane) |
+| Rythme de livraison | une **version** toutes les 17 jours (médiane) |
 | Commits sur la branche principale | 833 |
 | Coût de fonctionnement | moins de 200 € par an |
 
@@ -325,7 +325,7 @@ Les phases <b>se chevauchent</b>, elles ne se succèdent pas. La conception cour
 </div>
 
 <!--
-DUREE 1:20, la plus longue diapo du chapitre. ELEMENT IMPOSE 2 (suite).
+DUREE 1:10, la plus longue diapo du chapitre. ELEMENT IMPOSE 2 (suite).
 CRITERE : le planning permet de visualiser les phases d'ETUDE, de MESURE, de
 CONCEPTION, de REALISATION, de RESTITUTION. Les cinq mots sont dans la grille,
 les cinq sections sont a l'ecran. Les nommer a voix haute une par une.
@@ -764,7 +764,7 @@ Le pic de juin n'est pas un pic de production : c'est le passage au travail par 
 | 1.4.1 | 04/09 | 10 j |
 
 <div class="text-xs opacity-75 mt-1">
-Médiane <b>17 jours</b>, moyenne 23,6. L'écart entre les deux tient à un seul intervalle.
+Médiane de <b>17 jours entre deux versions</b>, moyenne 23,6. L'écart entre les deux tient à un seul intervalle.
 </div>
 
 </div>
@@ -915,7 +915,7 @@ Les 4 versions mineures livrées après la V1 représentent **37 des 61 items** 
 
 | Mesure | Décision | Effet mesuré |
 |--------|----------|--------------|
-| 81 jours entre le prototype et la V1 | Arbitrer la migration de l'API — **chapitre 3** | Retour à 17 jours de médiane |
+| 81 jours entre le prototype et la V1 | Arbitrer la migration de l'API — **chapitre 3** | Retour à **une version tous les 17 jours** |
 | Chaîne à 52 %, échecs sans cause réelle | Portes de qualité bloquantes **et** déterministes (v1.3.1) | **94 %** le mois suivant |
 | 59 PR de dépendances ouvertes pour 9 fusionnées | Regroupement mensuel, filet déplacé sur l'audit à chaque commit | **0 vulnérabilité** ouverte, sans fusion non relue |
 
@@ -1220,7 +1220,7 @@ equilibres sur le papier et impossibles dans le calendrier.
 
 | Style | Situation réelle du projet | Pourquoi celui-là |
 |-------|---------------------------|-------------------|
-| **Directif** | Durcissement des portes de qualité en juillet : chaîne à **52 %** de succès, échecs devenus contournables. La règle est posée sans négociation — un contrôle rouge bloque le déploiement | La compétence n'était pas en cause, **la discipline l'était**. Seul style qui tienne quand contourner est possible |
+| **Directif** | Durcissement des portes de qualité en juillet, sur une chaîne qui **échouait une fois sur deux** et dont les échecs étaient devenus contournables. La règle est posée sans négociation — un contrôle rouge bloque le déploiement | La compétence n'était pas en cause, **la discipline l'était**. Seul style qui tienne quand contourner est possible |
 | **Persuasif** | Les conventions de code : chaque règle est accompagnée de son motif — si l'intention n'est pas exprimable par le nommage, c'est le code qu'il faut refactoriser | Une règle contre-intuitive énoncée seule est contournée dès la première gêne |
 | **Participatif** | Le cadrage d'une fonctionnalité : questions ouvertes, reformulation, **arrêt obligatoire avant toute ligne de code**. Et les retours utilisateurs, qui ont déclenché deux décisions produit | Celui qui exécute détient une information que le responsable n'a pas |
 | **Délégatif** | L'étape « développement en autonomie » : exécution confiée entièrement, sans contrôle intermédiaire, reprise en revue et en tests | Possible **uniquement** parce que le cadre est écrit et la porte de sortie automatisée |
@@ -1356,7 +1356,7 @@ Une équipe qui livre un produit inaccessible ne peut pas prétendre à une orga
 </div>
 
 <!--
-DUREE 0:25. DIAPO COURTE, NE PAS DEBORDER.
+DUREE 0:20. DIAPO COURTE, NE PAS DEBORDER.
 CRITERES : les specificites des personnes en situation de handicap sont prises
 en compte, et les specificites d'un contexte multiculturel et international sont
 integrees.
@@ -1418,7 +1418,7 @@ suivante est celle qui compte pour ce chapitre.
 </div>
 
 <!--
-DUREE 0:40. LA DIAPO LA PLUS DISCRIMINANTE DU CHAPITRE.
+DUREE 0:45. LA DIAPO LA PLUS DISCRIMINANTE DU CHAPITRE.
 CRITERES : une analyse critique d'une situation ou d'une posture manageriale est
 presentee, ET les recommandations sont realistes et realisables.
 
@@ -1596,16 +1596,18 @@ Actions classées par **coût d'un écart non comblé** : bloque une porte de qu
 </div>
 <div class="col-span-2 text-sm">
 
-### Recruter ou former
+### Recruter ou former — note aux RH
 
-| Profil | Exigé au **recrutement** | Construit **en interne** |
-|--------|--------------------------|--------------------------|
-| Lead | Architecture n. 3, conduite de projet | Arbitrage, chiffrage, transmission |
-| Front | React / TS n. 3 | Accessibilité, service worker, i18n |
-| Back | C# / ASP.NET Core n. 3 | Hexagonal, sécurité applicative |
-| DevOps | CI/CD, conteneurisation n. 2 | Supervision, exploitation, veille |
+<div class="p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 mb-2">
+<b>Recruter sur le langage et l'expérience de conduite. Former sur le contexte et la conformité.</b>
+</div>
 
-<div class="text-xs opacity-75 mt-1">Note aux RH, en une phrase : <b>recruter sur le langage et l'expérience de conduite, former sur le contexte et la conformité.</b></div>
+| Profil | Exigé au recrutement | Formé en interne |
+|--------|----------------------|------------------|
+| Lead | Architecture n. 3 | Arbitrage, transmission |
+| Front | React / TS n. 3 | Accessibilité, i18n |
+| Back | C# / ASP.NET n. 3 | Hexagonal, sécurité |
+| DevOps | CI/CD n. 2 | Supervision, veille |
 
 ### Modalités adaptées au handicap
 
@@ -1825,7 +1827,7 @@ Le <b>9,6 n'est pas présenté comme une mesure de satisfaction</b>, mais comme 
 <div class="mt-2 p-3 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40">
 <b>La boucle, mesurée.</b><br>
 Questionnaire en ligne le <b>18/08</b> → retour consigné en fiche le <b>19/08</b> → fiche close le <b>26/08</b> → correctif en production le <b>04/09</b>.<br>
-<b>17 jours du retour de l'utilisateur à sa livraison.</b>
+<b>17 jours entre le retour d'un utilisateur et sa mise en production.</b>
 </div>
 
 <div class="mt-2 text-xs opacity-75">
