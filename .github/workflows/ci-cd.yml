@@ -526,23 +526,46 @@ jobs:
           const treeUrl =
             "https://sonarcloud.io/api/measures/component_tree" +
             "?component=Affy657_Movie-Picker&branch=" + encodeURIComponent(branch) +
-            "&metricKeys=new_duplicated_lines,duplicated_lines_density&qualifiers=FIL" +
-            "&s=metric&metricSort=new_duplicated_lines&asc=false&ps=15";
+            "&metricKeys=new_duplicated_lines,duplicated_lines,duplicated_lines_density" +
+            "&qualifiers=FIL&s=metric&metricSort=duplicated_lines&asc=false&ps=20";
           const treeResponse = await fetch(treeUrl, { headers: auth });
-          const tree = JSON.parse(await treeResponse.text());
-          if (!tree.components) {
-            console.log("Detail par fichier indisponible.");
+          const treeBody = await treeResponse.text();
+
+          let tree;
+          try {
+            tree = JSON.parse(treeBody);
+          } catch {
+            console.log("component_tree illisible : " + treeBody.slice(0, 800));
             process.exit(0);
           }
 
-          console.log("Fichiers portant le plus de lignes dupliquees :");
-          for (const component of tree.components) {
-            const measure = (component.measures || []).find(
-              (m) => m.metricKey === "new_duplicated_lines"
+          const readMeasure = (component, key) => {
+            const m = (component.measures || []).find((x) => x.metricKey === key);
+            if (!m) return null;
+            return m.value ?? m.period?.value ?? m.periods?.[0]?.value ?? null;
+          };
+
+          const rows = (tree.components || [])
+            .map((component) => ({
+              path: component.path,
+              neuf: readMeasure(component, "new_duplicated_lines"),
+              total: readMeasure(component, "duplicated_lines"),
+              densite: readMeasure(component, "duplicated_lines_density"),
+            }))
+            .filter((r) => r.neuf !== null || r.total !== null);
+
+          if (rows.length === 0) {
+            console.log("Aucune mesure par fichier. Reponse brute :");
+            console.log(treeBody.slice(0, 1500));
+            process.exit(0);
+          }
+
+          console.log("Fichiers les plus dupliques (neuf / total / densite) :");
+          for (const r of rows) {
+            console.log(
+              "  " + (r.neuf ?? "-") + " / " + (r.total ?? "-") + " / " +
+                (r.densite ?? "-") + "%  " + r.path
             );
-            const lines = measure?.period?.value ?? measure?.value ?? "0";
-            if (lines === "0") continue;
-            console.log("  " + lines + " lignes  " + component.path);
           }
           NODESCRIPT
           node qg-report.mjs
