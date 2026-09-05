@@ -43,7 +43,7 @@ Le règlement énumère 14 éléments que la présentation doit comporter. Chacu
 
 Le projet a été **exécuté seul**, ce qui est déjà écrit dans les livrables des Blocs 1, 2 et 4. Le Bloc 3, lui, évalue le pilotage d'une équipe. La présentation tient donc deux registres, distingués à voix haute dès la diapositive 3 et jamais confondus ensuite :
 
-- **Le réel**, chiffré et vérifiable : 799 commits du 27 février au 26 août 2026, 8 versions livrées en production, 76 pull requests dont 25 fusionnées, 4 fiches d'anomalie toutes fermées, 17 comptes utilisateurs, 19 soirées créées.
+- **Le réel**, chiffré et vérifiable : 833 commits du 27 février au 5 septembre 2026, 9 versions livrées en production, 77 pull requests dont 26 fusionnées, 3 fiches d'anomalie toutes fermées, 17 comptes utilisateurs, 19 soirées créées.
 - **L'organisation cible**, annoncée comme telle : une équipe de 4 profils sur laquelle sont construits la matrice RACI, l'affectation des missions, la grille de compétences et le plan de développement. C'est la projection d'industrialisation du projet, pas une équipe qui a existé.
 
 Cette annonce explicite est ce qui protège les 15 minutes de questions. Un jury qui découvre le caractère projeté en fin de présentation le vit comme une dissimulation ; un jury prévenu dès le début l'évalue comme un exercice de conception d'organisation.
@@ -74,7 +74,7 @@ Répartition volontaire : les trois compétences éliminatoires absorbent **17 d
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
 | 1 | Movie Picker, piloter un projet de développement logiciel | 0:10 | Titre, Bloc 3 RNCP 39583, Adrien MORAND, 16 septembre 2026 |
-| 2 | Le produit et son état aujourd'hui | 0:40 | Capture de l'application en production. 8 versions livrées de février à août 2026, 17 comptes, 19 soirées, 74 % menées jusqu'au tirage. Objectif : établir qu'on parle d'un logiciel réellement exploité, pas d'une maquette |
+| 2 | Le produit et son état aujourd'hui | 0:40 | Capture de l'application en production. 9 versions livrées de février à septembre 2026, 17 comptes, 19 soirées, 74 % menées jusqu'au tirage. Objectif : établir qu'on parle d'un logiciel réellement exploité, pas d'une maquette |
 | 3 | Cadre de la présentation et plan | 0:40 | Les deux registres, réel et organisation cible. Plan en 7 temps |
 
 ### Chapitre 1 : planifier l'exécution du projet (6:30, 7 diapos), C3.1 ÉLIMINATOIRE
@@ -97,11 +97,11 @@ Critères visés : outil de suivi en adéquation avec le projet et la méthodolo
 
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
-| 11 | L'outil de suivi | 1:00 | GitHub comme outil unique : issues pour le travail à faire, pull requests pour la revue, tableau Projects pour le flux, Actions pour la vérification. Pourquoi c'est en adéquation avec Kanban : colonnes de flux, limite de travail en cours, pas de planification par sprint. Capture du tableau |
-| 12 | Les indicateurs retenus | 1:00 | Tableau des indicateurs par axe, chacun mesurable et quantifiable, avec sa source et sa fréquence de relevé. Cinq axes : avancement, délais, coûts, risques, ressources humaines |
-| 13 | Tableau de bord : avancement et délais | 1:00 | Commits par mois (1, 28, 72, 150, 227, 194, 127), les 8 versions livrées et leurs dates réelles, cadence de livraison, répartition des 76 pull requests entre travail produit et mise à jour de dépendances |
-| 14 | Tableau de bord : coûts, risques, ressources | 1:00 | Coût d'infrastructure réel comparé au budget prévisionnel, vulnérabilités ouvertes, stabilité de la chaîne d'intégration, couverture de tests, et pour les ressources humaines l'indicateur de soutenabilité de la charge hebdomadaire |
-| 15 | L'écart entre le prévisionnel et le réel | 1:00 | Les 98 J/H prévus face à la charge réellement consommée, l'origine des écarts, et ce que le pilotage en a fait. C'est la diapositive qui prouve que le suivi a servi à décider et pas seulement à mesurer. Elle amène naturellement le chapitre suivant |
+| 11 | L'outil de suivi | 1:00 | GitHub comme outil unique, cinq surfaces : issues, pull requests, Actions, releases, fichiers de feuille de route versionnés. Le critère de choix énoncé : la distance entre le travail et sa trace, aucun indicateur ne reposant sur une saisie déclarative. Adéquation avec Kanban vérifiée propriété par propriété. Capture du tableau de flux si structuré avant l'oral |
+| 12 | Les indicateurs retenus | 1:00 | La règle de sélection en quatre conditions, dont « rattaché à une décision ». Les cinq axes : avancement, délais, coûts, risques, ressources humaines. Et les trois indicateurs **écartés** faute de mesurabilité |
+| 13 | Tableau de bord : avancement et délais | 1:00 | Commits, jours actifs et fusions par mois (833, 88, 122), les 9 versions et leurs écarts réels, médiane de 17 jours, et les 4 échéances de restitution tenues. Deux lectures d'indicateur à porter à voix haute : le pic de fusions de juin est un changement de pratique, pas de production |
+| 14 | Tableau de bord : coûts, risques, ressources | 1:00 | Coût réel contre budget, les deux échéances de coût suivies bien qu'elles vaillent zéro, les huit indicateurs de risque dont deux en alerte, le détail mensuel de la stabilité de la chaîne (52 % → 94 % après correction), et la soutenabilité de la charge : 3,2 jours par semaine mais une amplitude de 1 à 7 |
+| 15 | L'écart entre le prévisionnel et le réel | 1:00 | 98 J/H prévus contre 88 reconstitués, mais un périmètre de +37 items jamais chiffrés : l'écart n'est pas un écart de charge, c'est un glissement de périmètre que rien ne mesurait. Les trois décisions prises à partir d'une mesure, et l'autocritique du dispositif. Elle amène naturellement le chapitre suivant |
 
 ### Chapitre 3 : le cas d'arbitrage (2:30, 3 diapos), C3.2.2
 
@@ -201,7 +201,7 @@ Les questions les plus probables sont celles qui touchent aux points faibles con
 |-------------------|------------------|
 | Combien de personnes dans l'équipe ? | Le projet a été exécuté seul. L'organisation cible à 4 profils est annoncée comme projection dès le début de la présentation. Elle sert à démontrer la conception des outils de pilotage, pas à faire croire à une équipe |
 | Vos étiquettes de version ont-elles été posées au fil de l'eau ? | Les dates de livraison réelles sont celles du journal des versions, vérifiables dans l'historique des commits et des déploiements. La formalisation du versionnage est intervenue en juillet 2026, les six premières étiquettes ont donc été posées à ce moment-là |
-| Votre tableau de suivi semble récent | Le suivi quotidien s'est fait sur les issues et les pull requests, datées et vérifiables. Le tableau consolide cette matière |
+| Votre tableau de suivi semble récent | Le suivi quotidien s'est fait sur les issues, les pull requests, les exécutions du pipeline et les releases, toutes horodatées au moment du geste. Le tableau consolide cette matière, il ne la crée pas. La limite est écrite en 1.5 du chapitre 2 |
 | Comment avez-vous estimé les 98 J/H ? | Méthode analogique par comparaison entre lots de complexité voisine, marge d'incertitude de 20 % assumée au chiffrage |
 | Sept réponses, est-ce un échantillon valable ? | Non, et c'est écrit tel quel dans l'analyse. L'échantillon est réduit et orienté vers les utilisateurs les plus engagés. Les retours sont traités comme des signaux à confirmer, pas comme des mesures |
 | Pourquoi aucun déploiement progressif ? | Arbitrage documenté : coût de mise en place face au volume réel et à la tolérance de panne acceptée. Décision réversible, tracée |
@@ -214,14 +214,14 @@ Un fichier source par chapitre, qui alimente les diapositives. Le support ne se 
 | Fichier | Alimente | État |
 |---------|----------|------|
 | `01-planification.md` | Diapos 4 à 10, C3.1 | ✅ Produit |
-| `02-suivi-indicateurs.md` | Diapos 11 à 15, C3.2.1 | À produire |
+| `02-suivi-indicateurs.md` | Diapos 11 à 15, C3.2.1 | ✅ Produit |
 | `03-arbitrage.md` | Diapos 16 à 18, C3.2.2 | À produire |
 | `04-management-equipe.md` | Diapos 19 à 23, C3.3.1 | À produire |
 | `05-competences.md` | Diapos 24 à 26, C3.3.2 | À produire |
 | `06-comptes-rendus.md` | Diapos 27 à 29, C3.4.1 | À produire |
 | `07-demonstration.md` | Diapos 30 et 31, C3.4.2 | À produire |
-| `slides/slides.md` | Le support complet | 🟡 Chapitres 0 et 1, diapos 1 à 10 |
+| `slides/slides.md` | Le support complet | 🟡 Chapitres 0 à 2, diapos 1 à 15 |
 
 **Règle de numérotation du support** : aucune diapositive de séparation de chapitre. La page `N` de Slidev correspond exactement à la diapositive `N` de ce plan, et donc au rattachement des 14 éléments imposés du § 1. Le titre de chapitre est porté par la première diapositive du chapitre. Toute insertion impose de mettre à jour ce plan et la table `REFS` de `global-bottom.vue` dans le même mouvement.
 
-Deux actions hors rédaction restent à mener : structurer le tableau GitHub Projects, et relever les mesures de coût d'infrastructure réel pour la diapositive 14.
+Deux actions hors rédaction restent à mener : structurer le tableau GitHub Projects et en produire une capture pour la diapositive 11, et relever une capture de facturation GCP et AWS pour étayer la ligne « coût réel » de la diapositive 14.

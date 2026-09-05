@@ -1,6 +1,6 @@
 # Diapos Slidev, oral Bloc 3 (Movie Picker)
 
-Support de la présentation orale du 16 septembre 2026. Le contenu est dérivé des fichiers de matière du dossier parent (`01-planification.md` et suivants), qui restent la **source de vérité**. La structure et le minutage sont arrêtés dans [`../00-plan-presentation-orale.md`](../00-plan-presentation-orale.md).
+Support de la présentation orale du 16 septembre 2026. Le contenu est dérivé des fichiers de matière du dossier parent (`01-planification.md`, `02-suivi-indicateurs.md` et suivants), qui restent la **source de vérité**. La structure et le minutage sont arrêtés dans [`../00-plan-presentation-orale.md`](../00-plan-presentation-orale.md).
 
 ## Lancer en local
 
@@ -34,7 +34,7 @@ npm run export
 |----------|:------:|:----------:|------|
 | 0. Ouverture, produit, cadre | 1 à 3 | | ✅ |
 | 1. Planifier l'exécution | 4 à 10 | **C3.1** ÉLIM | ✅ |
-| 2. Piloter l'avancement | 11 à 15 | **C3.2.1** ÉLIM | ⬜ |
+| 2. Piloter l'avancement | 11 à 15 | **C3.2.1** ÉLIM | ✅ |
 | 3. Le cas d'arbitrage | 16 à 18 | C3.2.2 | ⬜ |
 | 4. Piloter l'équipe | 19 à 23 | C3.3.1 | ⬜ |
 | 5. Les besoins en compétences | 24 à 26 | C3.3.2 | ⬜ |

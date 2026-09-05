@@ -51,7 +51,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 ### Bloc 3 — Coordonner et piloter
 
-- [ ] **C3.1** ÉLIM — Méthodologie + planning + RACI — voir § 15
+- [x] **C3.1** ÉLIM — Méthodologie + planning + RACI — voir § 15
 - [ ] **C3.2.1** ÉLIM — Outil de suivi + indicateurs + tableaux de bord — voir § 16
 - [ ] **C3.2.2** — Cas d'arbitrage (ADR) — voir § 17
 - [ ] **C3.3.1** — Pilotage de l'équipe (analyse réflexive si projet solo) — voir § 17
@@ -349,7 +349,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 > **Objectif RNCP — C3.1 (ÉLIM)** : « méthodologie de gestion de projet justifiée (Agile, Scrum, Kanban, V) ; outil de planification justifié (Gantt, PERT, rétroplanning) ; planning découpé en phases / tâches / lots ; tâches assignées via RACI / RASCI tenant compte des personnes en situation de handicap ; points de vigilance soulignés ».
 
-- [ ] Créer **`docs/RNCP/bloc-3-coordination-pilotage/01-planification.md`** :
+- [x] **`docs/RNCP/bloc-3-coordination-pilotage/01-planification.md`** — produit et fusionné :
   - **Méthodologie retenue** : **Kanban léger** (projet solo, pas de sprints fixes) + **revues hebdomadaires** ; justification : flexibilité, pas de cérémonies lourdes inadaptées au solo, flux continu cohérent avec la roadmap par version (cf. [`../roadmap-product.md`](../roadmap-product.md))
   - **Outil de planification** : combinaison **GitHub Projects** (Kanban des tickets) + **diagramme de Gantt Mermaid** dans ce fichier (vue d'ensemble par phase) — justifié : versionné dans le repo, pas de SaaS supplémentaire à gérer
   - **Découpage en phases** : MVP → Migration .NET → V1 (sous-phases auth → config → enrichissements → OG → i18n → sécurité CI → clôture RNCP) → V1.1
@@ -377,24 +377,15 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 > **Objectif RNCP — C3.2.1 (ÉLIM)** : « outil de suivi en adéquation avec le projet et la méthodologie ; indicateurs mesurables et quantifiables (délais, coûts, avancement) ; tableaux de bord intégrant avancement, coûts, délais, risques, RH ».
 
-- [ ] Créer **`docs/RNCP/bloc-3-coordination-pilotage/02-suivi-indicateurs.md`** :
-  - **Outil de suivi** : **GitHub Projects** (Kanban + vues filtrées) en cohérence avec la méthodologie Kanban (§ 15) ; lien vers la board (capture si non publique)
-  - **Indicateurs d'avancement** :
-    - % de cases cochées par section dans `livraison-v1.md` et la présente carte (script ou capture périodique)
-    - Nombre d'items V1 fermés / total (catalog [`../roadmap-product.md`](../roadmap-product.md) § V1)
-    - Nombre de PR mergées / semaine
-    - Couverture de tests (Coverlet API + Vitest front, exposée par CI)
-  - **Indicateurs de délai** :
-    - Date cible V1 vs date réelle (Gantt § 15)
-    - Lead time moyen issue → PR mergée
-  - **Indicateurs de coût** :
-    - Coût cloud mensuel réel (capture facture GCP + AWS) vs estimation § 14
-    - Temps passé (si suivi)
-  - **Indicateurs de risque** :
-    - Vulnérabilités ouvertes (Dependabot + `pnpm audit` + `dotnet list package --vulnerable` + scan image)
-    - CI rouge / verte (taux de stabilité)
-  - **Indicateurs RH** : projet solo → indicateur de **soutenabilité** (heures / semaine, charge ressentie) si suivi
-  - **Tableau de bord récapitulatif** : capture / export hebdomadaire dans le fichier (au moins 3 snapshots sur la durée du projet pour démontrer le suivi)
+- [ ] **`docs/RNCP/bloc-3-coordination-pilotage/02-suivi-indicateurs.md`** — *rédigé, en attente de fusion sur `master`* :
+  - [x] **Outil de suivi** : GitHub comme plateforme unique, cinq surfaces (issues, pull requests, Actions, releases, feuilles de route versionnées) ; adéquation avec le Kanban léger du § 15 vérifiée propriété par propriété ; limites du dispositif énoncées (temps non saisi, toutes les intégrations ne passent pas par une PR, tableau de flux postérieur au travail)
+  - [x] **Indicateurs d'avancement** : items de feuille de route livrés (61 / 86 produit, 19 / 20 technique), poids livré en points t-shirt, versions publiées, commits intégrés, PR fusionnées / ouvertes
+  - [x] **Indicateurs de délai** : cadence de livraison (médiane 17 j), échéances de restitution tenues (4 / 4), jours d'activité (88 / 191), délai de traitement d'anomalie
+  - [x] **Indicateurs de coût** : coût d'infrastructure réel contre budget, coût annuel engagé, licences, valeur de développement consommée (≈ 30 800 € / 34 300 €)
+  - [x] **Indicateurs de risque** : vulnérabilités ouvertes, stabilité de la chaîne (78 %, série mensuelle), couverture (86,6 %), Quality Gate, anomalies ouvertes, taux d'erreur serveur, disponibilité
+  - [x] **Indicateurs RH** : densité d'activité (3,2 j/semaine), plus longue série continue (10 j), semaines sans activité (4 / 27), facteur de bus (1)
+  - [x] **Tableaux de bord** : deux tableaux consolidés (avancement et délais ; coûts, risques et RH), plus l'analyse de l'écart prévisionnel / réel et les 3 décisions prises à partir d'une mesure
+  - [ ] **Captures à produire** : tableau de flux GitHub Projects (diapo 11), facturation GCP et AWS (diapo 14)
 
 ---
 
