@@ -1442,3 +1442,206 @@ l'option de decaler.
 
 Terminer sur la recommandation 2 en disant qu'elle est la plus difficile a tenir.
 -->
+
+---
+
+# 5. Les compétences à mobiliser
+
+<div class="grid grid-cols-2 gap-6 text-sm">
+<div>
+
+### Déduites des lots, pas d'un référentiel
+
+La question posée pour chaque lot : **que faut-il savoir faire pour que ce lot soit livrable et exploitable ?** Chaque compétence correspond ainsi à une technologie réellement présente dans le dépôt, avec une date d'introduction vérifiable.
+
+| Domaine | Compétences clés |
+|---------|------------------|
+| Back | ASP.NET Core, hexagonal, modélisation documentaire, contrat d'API |
+| Front | React et TypeScript, mobile-first, cache de données distantes, i18n |
+| Accessibilité | Critères, tests automatisés, contraste et clavier |
+| Chaîne | CI/CD, conteneurisation, sans serveur, secrets |
+| Qualité | Tests unitaires à E2E, analyse statique, performance |
+| Sécurité | Session, identité fédérée, CSP, veille de vulnérabilités |
+| Exploitation | Sondes, alertes, traitement d'anomalie |
+| Transverses | Arbitrage, chiffrage, revue, écrit asynchrone |
+
+</div>
+<div>
+
+### La chronologie mesurée : 4 vagues
+
+| Vague | Période | Ce qui la déclenche |
+|-------|---------|---------------------|
+| **1. Produire** | 16 au **18 mars** | L'arbitrage du chapitre 3 : chaîne d'intégration, C#, hexagonal, MongoDB, tests .NET, OpenAPI, conteneur |
+| **2. Fiabiliser** | avril à mai | La V1 : performance, accessibilité, analyse statique, scan de vulnérabilités, i18n, app installable, push |
+| **3. Exploiter** | juillet | Des utilisateurs réels : supervision, sondes, alertes, traçabilité |
+| **4. Enrichir** | août | Périmètre hors chiffrage : identité fédérée, intégration tierce |
+
+<div class="mt-3 p-2 border-l-4 border-amber-500 bg-amber-50 bg-opacity-40 text-xs">
+<b>La vague 1 est concentrée sur trois jours.</b> C'est le coût de compétence de l'arbitrage du chapitre 3 — et il n'apparaît <b>nulle part</b> dans le chiffrage en jours-homme. Un plan de développement sert à rendre ce coût visible <b>avant</b> de le payer.
+</div>
+
+</div>
+</div>
+
+<!--
+DUREE 0:40. CRITERE : les competences a mobiliser dans le cadre du projet sont
+IDENTIFIEES.
+
+Ne pas lire la cartographie. Dire la METHODE, qui est ce qui distingue ce
+chapitre d'un catalogue : les competences sont deduites des lots, et chacune
+correspond a une techno reellement presente dans le depot, avec une date
+d'introduction verifiable.
+
+Puis les quatre vagues, dans l'ordre : produire, fiabiliser, exploiter, enrichir.
+Cet ordre n'a rien d'aleatoire, c'est celui d'un produit qui va en production.
+
+Finir sur le bandeau, qui est le lien avec le chapitre 3 : la vague 1 tient sur
+trois jours, c'est le cout de competence de l'arbitrage, et il n'est dans aucune
+ligne du chiffrage. C'est la justification meme de l'existence d'un plan de
+developpement des competences.
+-->
+
+---
+
+# La grille d'évaluation des compétences
+
+<div class="text-xs mb-2">
+Échelle comportementale — <b>0</b> non acquis · <b>1</b> lit et modifie accompagné · <b>2</b> autonome sur une tâche courante · <b>3</b> conçoit, arbitre, traite le cas non nominal · <b>4</b> définit le standard et forme.
+<b>Le niveau 2 est le seuil d'autonomie, le 3 le seuil de responsabilité</b> : un profil qui porte le « R » de la matrice RACI doit être à 3.
+</div>
+
+<div class="grid grid-cols-5 gap-4">
+<div class="col-span-2 dense">
+
+| Profil | Compétence | Act. | Cible | Écart |
+|--------|------------|:----:|:-----:|:-----:|
+| **Lead** | Architecture applicative | 3 | 4 | +1 |
+| | Arbitrage et chiffrage | 2 | 4 | **+2** |
+| | Revue et transmission | 2 | 4 | **+2** |
+| **Front** | React et TypeScript | 3 | 3 | 0 |
+| | **Accessibilité** | 1 | 3 | **+2** |
+| | App installable, i18n | 1 | 2 | +1 |
+| **Back** | C# et ASP.NET Core | 3 | 3 | 0 |
+| | **Architecture hexagonale** | 1 | 3 | **+2** |
+| | Sécurité et identité | 1 | 3 | **+2** |
+| **DevOps** | CI/CD, conteneurisation | 2 | 3 | +1 |
+| | **Supervision** | 1 | 3 | **+2** |
+| | Veille de vulnérabilités | 1 | 3 | **+2** |
+
+<div class="text-xs opacity-75 mt-1">Extrait. Grille complète de 19 lignes dans le dossier.</div>
+
+</div>
+<div class="col-span-3 text-sm">
+
+### Ce que la grille dit
+
+**Le niveau « actuel » n'évalue personne** : c'est le socle attendu d'un profil **au recrutement**, junior confirmé de 2 à 3 ans. L'écart mesure ce que le projet exige au-delà.
+
+**1. Les écarts se concentrent sur ce que le marché ne fournit pas.** Écart nul sur React/TypeScript et C#/ASP.NET Core — un recrutement les apporte. Les <b>sept</b> écarts à **+2** portent sur l'hexagonal, l'accessibilité, la sécurité, la supervision, la veille, l'arbitrage et la transmission : **des compétences de contexte, pas de langage.**
+
+**2. L'accessibilité est le seul écart à effet bloquant immédiat.** La porte de qualité échoue le déploiement : un front recruté au niveau 1 casse la chaîne à sa première livraison.
+
+<div class="mt-2 p-2 border-l-4 border-amber-500 bg-amber-50 bg-opacity-40 text-xs">
+<b>3. Les deux plus gros écarts du lead ne sont pas techniques.</b> Arbitrage, chiffrage, transmission : ce sont les compétences que le projet réel a le plus sollicitées et le moins bien exercées — chiffrage formalisé <i>a posteriori</i> (ch. 2), 87 lignes intégrées sans revue (ch. 3). <b>La grille désigne les mêmes faiblesses que les indicateurs</b>, sinon elle serait de complaisance.
+</div>
+
+</div>
+</div>
+
+<!--
+DUREE 1:00. ELEMENT IMPOSE 9 : l'evaluation des besoins en competences via
+grille. CRITERE : la grille est COMMENTEE — le mot est dans la grille officielle,
+un tableau affiche sans commentaire ne suffit pas.
+
+PREMIERE PHRASE OBLIGATOIRE, avant tout le reste : « le niveau actuel n'est
+l'evaluation de personne, c'est le socle attendu d'un profil au recrutement ».
+Sans cette phrase, le jury entend qu'on note des collaborateurs fictifs.
+
+Puis commenter, pas lire. Trois lectures, dans l'ordre :
+1. Les ecarts nuls sont sur les langages, les ecarts a +2 sur le contexte. Un
+recrutement apporte un langage, il n'apporte pas une conformite.
+2. L'accessibilite est le seul ecart a effet bloquant immediat.
+3. Le bandeau, qui est le plus important : les deux plus gros ecarts du lead ne
+sont pas techniques, et ils designent exactement les faiblesses deja montrees aux
+chapitres 2 et 3. C'est ce qui rend la grille credible plutot que flatteuse.
+
+SI ON QUESTIONNE : « comment avez-vous etalonne les cibles ? » Reponse : sur ce
+que le projet a reellement exige, chaque competence correspondant a une techno
+presente dans le depot avec une date d'introduction verifiable.
+-->
+
+---
+
+# Le plan de développement des compétences
+
+<div class="grid grid-cols-5 gap-4">
+<div class="col-span-3 dense">
+
+Actions classées par **coût d'un écart non comblé** : bloque une porte de qualité (1) · crée une dépendance unique (2) · ralentit sans bloquer (3).
+
+| Profil | Action | Modalité | Durée | Indicateur de réussite | P |
+|--------|--------|----------|-------|------------------------|:-:|
+| Front | **Accessibilité** | Certifiante externe (Opquast) + pratique encadrée | 3 j + 2 sem. | Une livraison passe la porte **sans reprise** | **1** |
+| DevOps | **Supervision** | Compagnonnage + astreinte simulée | 5 j | Traite seul une alerte de bout en bout | **1** |
+| Back | Architecture hexagonale | Lecture guidée + revue systématique 1 mois | 1 mois partiel | Livre un cas d'usage sans violation de couche | 2 |
+| Back | Sécurité applicative | Autoformation cadrée OWASP + revue croisée | 4 j | Aucune vulnérabilité OWASP sur un trimestre | 2 |
+| DevOps | Veille de vulnérabilités | Compagnonnage sur le processus existant | 2 j | Qualifie seul un avis et décide du traitement | 2 |
+| Lead | Chiffrage et arbitrage | Formation courte externe + pratique documentée | 3 j | Arbitrage consigné **au moment où il est pris** | 2 |
+| Lead | Revue et transmission | Revue croisée obligatoire sur le structurant | continu | 100 % des changements structurants en revue | 2 |
+| Front | App installable, i18n | Autoformation + pratique dédiée | 3 j | Livre une fonctionnalité hors ligne et traduite | 3 |
+
+**Total : 20 J/H** d'actions de formation (hors pratique encadrée), dont **6 en externe** · **2 100 €** · soit **20 % de la charge projet**.
+
+</div>
+<div class="col-span-2 text-sm">
+
+### Recruter ou former
+
+| Profil | Exigé au **recrutement** | Construit **en interne** |
+|--------|--------------------------|--------------------------|
+| Lead | Architecture n. 3, conduite de projet | Arbitrage, chiffrage, transmission |
+| Front | React / TS n. 3 | Accessibilité, service worker, i18n |
+| Back | C# / ASP.NET Core n. 3 | Hexagonal, sécurité applicative |
+| DevOps | CI/CD, conteneurisation n. 2 | Supervision, exploitation, veille |
+
+<div class="text-xs opacity-75 mt-1">Note aux RH, en une phrase : <b>recruter sur le langage et l'expérience de conduite, former sur le contexte et la conformité.</b></div>
+
+### Modalités adaptées au handicap
+
+Posées **par défaut**, sans demande ni justification : tiers-temps de droit sur toute formation et son évaluation · support en **texte structuré** systématique, vidéo seulement si sous-titrée et transcrite · matériel adapté disponible **pendant** la formation · distanciel et séquences courtes enregistrées · **accessibilité de la plateforme = critère de sélection du prestataire**.
+
+<div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
+Le compagnonnage interne est écrit et asynchrone — <b>c'est le mode de travail normal du projet</b>, pas un aménagement rapporté.
+</div>
+
+</div>
+</div>
+
+<!--
+DUREE 0:50. ELEMENT IMPOSE 10 : le plan de developpement des competences.
+CRITERES : le plan est etabli et DETAILLE, des FORMATIONS sont preconisees selon
+les besoins et les profils, et les MODALITES sont adaptees au handicap.
+
+Trois choses a dire, une par bloc :
+
+1. Le principe d'ordonnancement. Les actions ne sont pas classees par importance
+mais par COUT D'UN ECART NON COMBLE. Citer la priorite 1 : l'accessibilite et la
+supervision, parce que l'une bloque une porte de qualite et l'autre laisse une
+production sans surveillance.
+
+2. La colonne « indicateur de reussite ». C'est elle qui distingue un plan d'une
+liste de vux : chaque action se termine par un fait verifiable, pas par une
+attestation de presence.
+
+3. La logique recruter / former, qui est la reponse a « transmettre les besoins
+en recrutement au service RH ». La phrase a dire : recruter sur le langage et
+l'experience de conduite, former sur le contexte et la conformite. Exiger
+l'accessibilite et l'hexagonal des le recrutement restreindrait le vivier sans
+necessite, ces deux competences se construisant en un mois de pratique encadree.
+
+Sur le handicap, ne citer que les trois modalites qui ont un COUT REEL, donc
+verifiables : le tiers-temps de droit, le support en texte structure
+systematique, et l'accessibilite de la plateforme comme critere de selection du
+prestataire. Puis le bandeau.
+-->

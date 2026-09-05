@@ -135,9 +135,9 @@ Critères visés : compétences à mobiliser identifiées, grille des compétenc
 
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
-| 24 | Les compétences à mobiliser | 0:40 | Cartographie des compétences que le projet exige, techniques et transverses, rattachées aux lots qui les mobilisent |
-| 25 | La grille d'évaluation des compétences | 1:00 | Grille niveau actuel, niveau cible, écart, par profil et par compétence, avec l'échelle utilisée. **Commentée à l'oral** : le critère exige un commentaire et pas seulement un tableau affiché |
-| 26 | Le plan de développement des compétences | 0:50 | Les actions de montée en compétences, les formations préconisées par profil, et les modalités adaptées au handicap : aménagement matériel, temps supplémentaire, supports accessibles |
+| 24 | Les compétences à mobiliser | 0:40 | La **méthode** avant le catalogue : les compétences sont déduites des lots, et chacune correspond à une technologie présente dans le dépôt avec une date d'introduction vérifiable. La chronologie en **4 vagues** — produire, fiabiliser, exploiter, enrichir — et le lien avec le chapitre 3 : la vague 1 tient sur trois jours et n'apparaît dans aucune ligne du chiffrage |
+| 25 | La grille d'évaluation des compétences | 1:00 | Échelle **comportementale** en 5 niveaux, grille par profil, et surtout la phrase d'ouverture obligatoire : *le niveau actuel n'évalue personne, c'est le socle attendu au recrutement*. **Commentée à l'oral** en trois lectures, dont celle qui la rend crédible : les deux plus gros écarts du lead ne sont pas techniques et désignent les mêmes faiblesses que les indicateurs des chapitres 2 et 3 |
+| 26 | Le plan de développement des compétences | 0:50 | 8 actions classées par **coût d'un écart non comblé**, chacune avec sa modalité, sa durée et son **indicateur de réussite** — 20 J/H, 2 100 €, 20 % de la charge projet. La logique **recruter ou former** transmise aux RH. Modalités handicap posées par défaut, en citant les trois qui ont un coût réel donc vérifiable |
 
 ### Chapitre 6 : rendre compte au commanditaire (2:30, 3 diapos), C3.4.1
 
@@ -219,10 +219,10 @@ Un fichier source par chapitre, qui alimente les diapositives. Le support ne se 
 | `02-suivi-indicateurs.md` | Diapos 11 à 15, C3.2.1 | ✅ Produit |
 | `03-arbitrage.md` | Diapos 16 à 18, C3.2.2 | ✅ Produit |
 | `04-management-equipe.md` | Diapos 19 à 23, C3.3.1 | ✅ Produit |
-| `05-competences.md` | Diapos 24 à 26, C3.3.2 | À produire |
+| `05-competences.md` | Diapos 24 à 26, C3.3.2 | ✅ Produit |
 | `06-comptes-rendus.md` | Diapos 27 à 29, C3.4.1 | À produire |
 | `07-demonstration.md` | Diapos 30 et 31, C3.4.2 | À produire |
-| `slides/slides.md` | Le support complet | 🟡 Chapitres 0 à 4, diapos 1 à 23 |
+| `slides/slides.md` | Le support complet | 🟡 Chapitres 0 à 5, diapos 1 à 26 |
 
 **Règle de numérotation du support** : aucune diapositive de séparation de chapitre. La page `N` de Slidev correspond exactement à la diapositive `N` de ce plan, et donc au rattachement des 14 éléments imposés du § 1. Le titre de chapitre est porté par la première diapositive du chapitre. Toute insertion impose de mettre à jour ce plan et la table `REFS` de `global-bottom.vue` dans le même mouvement.
 

@@ -37,7 +37,7 @@ npm run export
 | 2. Piloter l'avancement | 11 à 15 | **C3.2.1** ÉLIM | ✅ |
 | 3. Le cas d'arbitrage | 16 à 18 | C3.2.2 | ✅ |
 | 4. Piloter l'équipe | 19 à 23 | C3.3.1 | ✅ |
-| 5. Les besoins en compétences | 24 à 26 | C3.3.2 | ⬜ |
+| 5. Les besoins en compétences | 24 à 26 | C3.3.2 | ✅ |
 | 6. Rendre compte au commanditaire | 27 à 29 | C3.4.1 | ⬜ |
 | 7. La démonstration | 30, 31 | **C3.4.2** ÉLIM | ⬜ |
 | 8. Conclusion | 32 | | ⬜ |

@@ -413,7 +413,14 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
   - [x] **Techniques d'animation** traduites en dispositifs, et **8 outils collaboratifs** avec ce que chacun partage. Aucune messagerie : aucun dispositif n'exige la simultanéité
   - [x] **Inclusion** : l'écrit asynchrone versionné répond simultanément au handicap, aux fuseaux horaires et à la langue. Produit bilingue FR/EN, accessibilité en porte bloquante
   - [x] **Analyse critique** : la série de 10 jours consécutifs du 17 au 26/08/2026, ses effets mesurés (94 % → 78 % → 38 % de succès de la chaîne), et 3 recommandations avec leur indicateur de contrôle
-- [ ] Créer **`docs/RNCP/bloc-3-coordination-pilotage/05-competences.md`** (C3.3.2) : cartographie des compétences à mobiliser, **grille d'évaluation** niveau actuel / niveau cible / écart par profil, plan de développement détaillé, formations préconisées, et modalités adaptées au handicap
+- [ ] **`docs/RNCP/bloc-3-coordination-pilotage/05-competences.md`** (C3.3.2) — *rédigé, en attente de fusion sur `master`* :
+  - [x] **Chronologie d'introduction** des technologies dans le dépôt, en 4 vagues datées — produire (16-18/03), fiabiliser (avril-mai), exploiter (juillet), enrichir (août). La vague 1 tient sur trois jours et n'apparaît dans aucune ligne du chiffrage
+  - [x] **Cartographie** des compétences déduite des lots et non d'un référentiel : 9 domaines, chacun rattaché aux lots qui le mobilisent
+  - [x] **Grille d'évaluation** à échelle comportementale en 5 niveaux, 19 lignes sur 4 profils, avec la convention de lecture — le niveau actuel est le socle attendu **au recrutement**, il n'évalue personne
+  - [x] **Commentaire de la grille** en 4 lectures, dont celle qui la rend crédible : les deux plus gros écarts du lead ne sont pas techniques et désignent les mêmes faiblesses que les indicateurs des chapitres 2 et 3
+  - [x] **Plan de développement** : 8 actions classées par coût d'un écart non comblé, chacune avec sa modalité, sa durée, son coût et son **indicateur de réussite** — 20 J/H, 2 100 €, 20 % de la charge projet
+  - [x] **Besoins de recrutement transmis aux RH** : logique recruter sur le langage et l'expérience de conduite, former sur le contexte et la conformité
+  - [x] **Modalités de formation adaptées au handicap**, posées par défaut, dont trois à coût réel donc vérifiables
 - [ ] Créer **`docs/RNCP/bloc-3-coordination-pilotage/06-comptes-rendus.md`** (C3.4.1) : les 9 versions comme points de validation datés, le format de compte rendu type et un exemple complet montrant en quoi il **facilite une décision**, et les indicateurs de satisfaction en place avec les décisions produit qu'ils ont déclenchées
 - [ ] Créer **`docs/RNCP/bloc-3-coordination-pilotage/07-demonstration.md`** (C3.4.2, **ÉLIM**) : parcours minuté sur la version en production, vocabulaire client, compte et soirée de démonstration préparés la veille, et **plan de repli** si le réseau de la salle tombe
 
