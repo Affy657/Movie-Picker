@@ -421,7 +421,13 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
   - [x] **Plan de développement** : 8 actions classées par coût d'un écart non comblé, chacune avec sa modalité, sa durée, son coût et son **indicateur de réussite** — 20 J/H, 2 100 €, 20 % de la charge projet
   - [x] **Besoins de recrutement transmis aux RH** : logique recruter sur le langage et l'expérience de conduite, former sur le contexte et la conformité
   - [x] **Modalités de formation adaptées au handicap**, posées par défaut, dont trois à coût réel donc vérifiables
-- [ ] Créer **`docs/RNCP/bloc-3-coordination-pilotage/06-comptes-rendus.md`** (C3.4.1) : les 9 versions comme points de validation datés, le format de compte rendu type et un exemple complet montrant en quoi il **facilite une décision**, et les indicateurs de satisfaction en place avec les décisions produit qu'ils ont déclenchées
+- [ ] **`docs/RNCP/bloc-3-coordination-pilotage/06-comptes-rendus.md`** (C3.4.1) — *rédigé, en attente de fusion sur `master`* :
+  - [x] **Deux commanditaires distingués** : le jury valide la conformité sur 4 échéances, les 17 utilisateurs valident l'usage sur 9 versions. Un seul format de compte rendu en servirait mal au moins un des deux
+  - [x] **Points de validation** : les 9 versions avec ce que chacune validait, les 4 échéances de restitution, et les **5 contrôles bloquants** plus le test de fumée qui font d'une livraison un point de validation qualité
+  - [x] **3 niveaux de compte rendu** : la fenêtre de nouveautés in-app (seul canal **poussé**), le journal des versions et les notes de version, le compte rendu d'arbitrage
+  - [x] **Gabarit décisionnel** en 5 blocs dont 3 ne sont pas de l'information, règle *aucun constat sans proposition, aucune proposition sans coût*, avec un exemple réel complet et son critère d'arrêt énoncé d'avance
+  - [x] **Indicateurs de satisfaction** en 3 familles (comportementale, déclarative, opérationnelle), avec la limite d'échantillon assumée — le 9,6 présenté comme l'absence de détracteur parmi les engagés, pas comme une mesure
+  - [x] **Effets mesurés** : une décision déclenchée et livrée, une confirmée, une instruite non livrée. Boucle retour → production **mesurée à 17 jours**. Limite dite : dispositif ponctuel, pas continu
 - [ ] Créer **`docs/RNCP/bloc-3-coordination-pilotage/07-demonstration.md`** (C3.4.2, **ÉLIM**) : parcours minuté sur la version en production, vocabulaire client, compte et soirée de démonstration préparés la veille, et **plan de repli** si le réseau de la salle tombe
 
 ---

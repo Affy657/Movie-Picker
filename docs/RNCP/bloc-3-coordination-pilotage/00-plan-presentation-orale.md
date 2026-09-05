@@ -145,9 +145,9 @@ Critères visés : comptes rendus clairs et ordonnés, facilitant la prise de d�
 
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
-| 27 | La planification des points de validation | 0:50 | Les 8 versions livrées comme points de validation datés : 0.1.0 le 27/02, 1.0.0 le 19/05, 1.1.0 le 25/05, 1.2.0 le 11/06, 1.3.0 le 19/06, 1.3.1 le 08/07, 1.3.2 le 25/07, 1.4.0 le 25/08. Ce que chaque point validait et comment il assurait le suivi qualité |
-| 28 | Le compte rendu type | 0:50 | Le format retenu et un exemple complet sur une version : périmètre livré, écarts, décisions à prendre. Montrer en quoi il **facilite une décision** et ne se limite pas à informer |
-| 29 | Les indicateurs de satisfaction | 0:50 | Les indicateurs réellement en place et leurs mesures : recommandation moyenne 9,6 sur 10 (7 répondants sur 17, limite d'échantillon assumée), 74 % des soirées menées jusqu'au tirage, 18 % d'adoption des notifications, latence p95 à 207 ms, taux d'erreur de 0,026 %. Et surtout : les deux décisions produit que ces retours ont déclenchées |
+| 27 | La planification des points de validation | 0:50 | **Deux commanditaires, deux rythmes** : le jury valide la conformité sur 4 échéances, les 17 utilisateurs valident l'usage sur 9 versions. Ce que chaque version validait, et surtout ce qui fait d'une livraison un point de validation **qualité** : 5 contrôles bloquants puis un test de fumée après déploiement. Un contrôle rouge annule la livraison |
+| 28 | Le compte rendu type | 0:50 | Trois niveaux, du plus automatique au plus décisionnel — dont la fenêtre de nouveautés in-app, seul compte rendu **poussé**. Le gabarit en 5 blocs dont 3 ne sont pas de l'information, la règle *aucun constat sans proposition, aucune proposition sans coût*, et un exemple réel complet avec son **critère d'arrêt énoncé d'avance** |
+| 29 | Les indicateurs de satisfaction | 0:50 | Trois familles — comportementale, déclarative, opérationnelle — parce qu'à 17 comptes un indice de recommandation n'a aucune validité. Le 9,6 présenté pour ce qu'il est : l'absence de détracteur parmi les engagés, pas une mesure de satisfaction. Puis ce que les retours ont produit, en distinguant **déclenchée, confirmée, instruite non livrée**, et la boucle mesurée : **17 jours** du retour à la production |
 
 ### Chapitre 7 : la démonstration (5:30, 2 diapos), C3.4.2 ÉLIMINATOIRE
 
@@ -205,7 +205,7 @@ Les questions les plus probables sont celles qui touchent aux points faibles con
 | Vos étiquettes de version ont-elles été posées au fil de l'eau ? | Les dates de livraison réelles sont celles du journal des versions, vérifiables dans l'historique des commits et des déploiements. La formalisation du versionnage est intervenue en juillet 2026, les six premières étiquettes ont donc été posées à ce moment-là |
 | Votre tableau de suivi semble récent | Le suivi quotidien s'est fait sur les issues, les pull requests, les exécutions du pipeline et les releases, toutes horodatées au moment du geste. Le tableau consolide cette matière, il ne la crée pas. La limite est écrite en 1.5 du chapitre 2 |
 | Comment avez-vous estimé les 98 J/H ? | Méthode analogique par comparaison entre lots de complexité voisine, marge d'incertitude de 20 % assumée au chiffrage |
-| Sept réponses, est-ce un échantillon valable ? | Non, et c'est écrit tel quel dans l'analyse. L'échantillon est réduit et orienté vers les utilisateurs les plus engagés. Les retours sont traités comme des signaux à confirmer, pas comme des mesures |
+| Sept réponses, est-ce un échantillon valable ? | Non, et c'est écrit tel quel dans l'analyse. L'échantillon est réduit et orienté vers les utilisateurs les plus engagés. Le 9,6 n'est donc pas présenté comme une mesure de satisfaction mais comme l'absence de détracteur parmi les engagés ; les indicateurs comportementaux pèsent plus lourd dans les décisions |
 | Pourquoi aucun déploiement progressif ? | Arbitrage documenté : coût de mise en place face au volume réel et à la tolérance de panne acceptée. Décision réversible, tracée |
 | Qu'auriez-vous fait différemment ? | Réponse préparée sur la diapositive 23, avec une décision précise et son coût |
 
@@ -220,9 +220,9 @@ Un fichier source par chapitre, qui alimente les diapositives. Le support ne se 
 | `03-arbitrage.md` | Diapos 16 à 18, C3.2.2 | ✅ Produit |
 | `04-management-equipe.md` | Diapos 19 à 23, C3.3.1 | ✅ Produit |
 | `05-competences.md` | Diapos 24 à 26, C3.3.2 | ✅ Produit |
-| `06-comptes-rendus.md` | Diapos 27 à 29, C3.4.1 | À produire |
+| `06-comptes-rendus.md` | Diapos 27 à 29, C3.4.1 | ✅ Produit |
 | `07-demonstration.md` | Diapos 30 et 31, C3.4.2 | À produire |
-| `slides/slides.md` | Le support complet | 🟡 Chapitres 0 à 5, diapos 1 à 26 |
+| `slides/slides.md` | Le support complet | 🟡 Chapitres 0 à 6, diapos 1 à 29 |
 
 **Règle de numérotation du support** : aucune diapositive de séparation de chapitre. La page `N` de Slidev correspond exactement à la diapositive `N` de ce plan, et donc au rattachement des 14 éléments imposés du § 1. Le titre de chapitre est porté par la première diapositive du chapitre. Toute insertion impose de mettre à jour ce plan et la table `REFS` de `global-bottom.vue` dans le même mouvement.
 

@@ -1645,3 +1645,211 @@ verifiables : le tiers-temps de droit, le support en texte structure
 systematique, et l'accessibilite de la plateforme comme critere de selection du
 prestataire. Puis le bandeau.
 -->
+
+---
+
+# 6. Rendre compte : les points de validation
+
+<div class="text-sm mb-2">
+<b>Deux commanditaires, deux rythmes.</b> Le formateur et le jury valident la conformité au référentiel, sur 4 échéances. Les 17 utilisateurs valident que ce qui est livré sert, sur 9 versions.
+</div>
+
+<div class="grid grid-cols-5 gap-4">
+<div class="col-span-3 dense">
+
+| Version | Date | Ce que ce point validait |
+|---------|------|--------------------------|
+| 0.1.0 | 27/02 | Que le parcours minimal tient debout |
+| 1.0.0 | 19/05 | Utilisable par un compte réel, sur la nouvelle API |
+| 1.1.0 | 25/05 | L'application s'installe et sait notifier |
+| 1.2.0 | 11/06 | Dimension sociale et conformité RGPD tenables |
+| 1.3.0 | 19/06 | La navigation ne bloque pas un nouvel arrivant |
+| 1.3.1 | 08/07 | Chaîne et sécurité du contenu ne dégradent rien |
+| 1.3.2 | 25/07 | La production est **observable**, l'utilisateur peut signaler |
+| 1.4.0 | 25/08 | Le produit dépasse la soirée ponctuelle |
+| 1.4.1 | 04/09 | Consultable **sans compte**, frictions levées |
+
+</div>
+<div class="col-span-2 text-sm">
+
+### Une date ne suffit pas
+
+Une version n'existe que si elle a franchi **5 contrôles bloquants**, puis un contrôle après déploiement.
+
+| Étape | Contrôle |
+|-------|----------|
+| Avant | Tests, lint, couverture minimale |
+| Avant | Analyse statique, porte de qualité |
+| Avant | E2E, performance, **accessibilité** |
+| Avant | Scan de vulnérabilités et de secrets |
+| Après | **Test de fumée** : joignabilité réelle de la base |
+| Continu | Sondes depuis trois continents |
+
+<div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
+<b>Un contrôle rouge annule la livraison.</b> Et l'adéquation entre le développement et l'attendu se lit dans le <b>diff daté</b> de la feuille de route : un item livré hors périmètre s'y voit.
+</div>
+
+</div>
+</div>
+
+<!--
+DUREE 0:50. ELEMENT IMPOSE 12 : la planification des points de validation.
+CRITERE : les points de validation sont organises de maniere a assurer le SUIVI
+QUALITE (adequation developpement / fonctionnalites attendues, delais).
+
+Ouvrir par les deux commanditaires. C'est la distinction qui structure tout le
+chapitre, et elle est rarement faite : rendre compte a un jury et rendre compte a
+un utilisateur ne se font pas avec le meme document. Le premier attend une
+demonstration de conformite, le second attend de savoir ce qui a change pour lui.
+
+Ne pas lire les neuf lignes. Dire que chaque version est un point DATE et
+VERIFIABLE, adosse a une etiquette posee sur le commit exact deploye.
+
+Le temps utile va a la colonne de droite, qui est la reponse au critere : une
+date de livraison ne suffit pas a faire un point de validation qualite. Cinq
+controles bloquants, puis un test de fumee apres deploiement qui verifie la
+joignabilite reelle de la base. Un controle rouge annule la livraison.
+
+SI ON QUESTIONNE l'adequation avec les fonctionnalites attendues : elle se lit
+dans le diff de la feuille de route, qui est versionnee. Un item livre hors
+perimetre s'y voit, date.
+-->
+
+---
+
+# Le compte rendu type
+
+<div class="grid grid-cols-2 gap-6 text-sm">
+<div>
+
+### Trois niveaux
+
+| Support | Déclenchement | Ce qu'il permet |
+|---------|---------------|-----------------|
+| **Fenêtre de nouveautés** in-app<br/><span class="text-xs opacity-70">livrée en v1.4.0</span> | Automatique, à chaque version | Savoir ce qui a changé **sans rien demander** |
+| **Journal des versions**, note de version, étiquette | À chaque version | Retrouver ce qui a été livré et sur quel commit |
+| **Compte rendu d'arbitrage** | À chaque revue de cycle | **Prendre une décision** |
+
+### Le gabarit décisionnel
+
+| Bloc | Rôle |
+|------|------|
+| Constat mesuré, avec sa source | Information |
+| Analyse : ce que le code explique | Information |
+| **Proposition** exécutable | **Décision** |
+| **Coût, délai, gain attendu** | **Décision** |
+| **Priorité et dépendances** | **Décision** |
+
+<div class="text-xs opacity-75 mt-1">
+Règle : <b>aucun constat sans proposition, aucune proposition sans coût.</b>
+</div>
+
+</div>
+<div>
+
+### Exemple réel — l'adoption des notifications
+
+<div class="p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
+<b>Constat.</b> 3 abonnements actifs pour 17 inscrits (18 %), alors que la V1.1 a investi dans les clés, cinq déclencheurs et une interface de préférences.<br><br>
+<b>Analyse.</b> La demande d'autorisation n'est appelée que par un réglage de la page de compte. Aucune sollicitation dans le parcours. <b>Le taux ne mesure pas un refus, il mesure une absence d'occasion.</b><br><br>
+<b>Confirmation.</b> Sur 7 réponses, <b>4 ignoraient que l'activation existait</b>. L'un demande une notification qui <b>existe déjà</b> mais qu'il ne peut pas recevoir.<br><br>
+<b>Proposition.</b> Proposer l'activation une fois, au moment utile, en énonçant ce qui sera reçu.<br><br>
+<b>Coût 1 j · une itération · adoption visée > 40 %. Priorité 3.</b><br><br>
+<i>Si l'adoption ne dépasse pas 40 % sous deux mois, le gel devient défendable — mais il ne l'est pas tant que personne n'a eu l'occasion d'accepter.</i>
+</div>
+
+</div>
+</div>
+
+<!--
+DUREE 0:50. ELEMENT IMPOSE 11 : les comptes rendus sur les evolutions et
+ameliorations. CRITERES : clairs et ordonnes, et surtout ils FACILITENT LA PRISE
+DE DECISION DU CLIENT.
+
+Le second critere est celui qui se rate. Un compte rendu qui informe ne le
+satisfait pas. Dire la regle de redaction telle quelle : aucun constat sans
+proposition, aucune proposition sans cout. Un constat seul renvoie la charge de
+la decision au destinataire, un cout manquant la rend impossible.
+
+Souligner le niveau 1, le seul compte rendu POUSSE : une fenetre presente les
+nouveautes a la premiere visite suivant une mise a jour. Un journal des versions
+que personne n'ouvre est une archive, pas un compte rendu.
+
+Puis lire l'encadre de droite en s'arretant sur DEUX choses :
+1. « le taux ne mesure pas un refus, il mesure une absence d'occasion » — c'est
+l'analyse qui transforme un mauvais chiffre en question tranchable ;
+2. le critere d'arret enonce d'avance, 40 % sous deux mois. Le destinataire sait
+a quoi il s'engage en validant, et la decision suivante est deja cadree.
+-->
+
+---
+
+# Les indicateurs de satisfaction
+
+<div class="grid grid-cols-2 gap-6 text-sm">
+<div>
+
+À 17 comptes, un indice de recommandation net n'a **aucune validité statistique**. Trois familles, et c'est leur combinaison qui fait la mesure.
+
+| Famille | Indicateur | Mesure |
+|---------|-----------|--------|
+| **Comportementale** | Soirées menées jusqu'au tirage | **14 / 19 = 74 %** |
+| | Adoption des notifications | 3 / 17 = 18 % |
+| | Usage à chaque soirée | 5 répondants / 7 |
+| **Déclarative** | Recommandation (0 à 10) | **moyenne 9,6** (n = 7) |
+| **Opérationnelle** | Latence p95 | 207 ms |
+| | Taux d'erreur serveur | 0,026 % |
+| | Disponibilité | 100 % |
+
+<div class="mt-2 p-2 border-l-4 border-amber-500 bg-amber-50 bg-opacity-40 text-xs">
+<b>7 réponses pour 17 comptes.</b> Échantillon réduit et orienté : 5 des 7 répondants sont les plus engagés, aucun détracteur — signal de biais autant que bon résultat.<br>
+Le <b>9,6 n'est pas présenté comme une mesure de satisfaction</b>, mais comme l'absence de détracteur parmi les utilisateurs engagés. Les indicateurs comportementaux pèsent plus lourd : ils mesurent ce que les gens <b>font</b>.
+</div>
+
+</div>
+<div>
+
+### Ce que ces retours ont produit
+
+| Retour | Effet | Statut |
+|--------|-------|--------|
+| Reconnexion à chaque ouverture depuis un navigateur intégré | **Décision déclenchée** : détecter et proposer le navigateur système | ✅ **v1.4.1** |
+| Suggestion d'une liste de films à voir | **Décision confirmée**, déjà au périmètre — le retour n'a pas déclenché | ✅ v1.4.0 |
+| Voir *quels* films un utilisateur a proposés | Instruite, chiffrée 0,5 j, priorité 4 | ⬜ |
+
+<div class="mt-2 p-3 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40">
+<b>La boucle, mesurée.</b><br>
+Questionnaire en ligne le <b>18/08</b> → retour consigné en fiche le <b>19/08</b> → fiche close le <b>26/08</b> → correctif en production le <b>04/09</b>.<br>
+<b>17 jours du retour de l'utilisateur à sa livraison.</b>
+</div>
+
+<div class="mt-2 text-xs opacity-75">
+<b>Ce qui manque</b> : le dispositif est ponctuel, pas continu. Un questionnaire diffusé une fois donne un point, pas une tendance. La boucle continue est instruite, chiffrée 1 à 2 j, priorité 3.
+</div>
+
+</div>
+</div>
+
+<!--
+DUREE 0:50. ELEMENT IMPOSE 13 : les indicateurs de satisfaction mis en place.
+CRITERE : ils sont definis et COHERENTS AU REGARD DU PROJET.
+
+La coherence est le mot du critere, et c'est la que se joue la note. Dire
+d'emblee : a 17 comptes et 19 soirees, un NPS n'a aucune validite statistique.
+D'ou trois familles, et c'est leur COMBINAISON qui fait la mesure.
+
+Puis la limite, avant qu'on la trouve : sept reponses, echantillon oriente vers
+les plus engages, aucun detracteur. La phrase a dire : « je ne presente pas le
+9,6 comme une mesure de satisfaction, mais comme l'absence de detracteur parmi
+les utilisateurs engages. C'est une information differente et beaucoup plus
+modeste. »
+
+La colonne de droite est ce qui prouve que les indicateurs SERVENT. Distinguer
+les trois statuts a voix haute — declenchee, confirmee, instruite non livree —
+et dire pourquoi on les distingue : presenter une confirmation comme un
+declenchement serait surevaluer la boucle.
+
+Terminer sur les 17 jours, puis IMMEDIATEMENT sur ce qui manque : le dispositif
+est ponctuel. Un questionnaire diffuse une fois donne un point, pas une tendance.
+Enchainer sur la demonstration.
+-->
