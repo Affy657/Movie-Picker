@@ -21,6 +21,24 @@ public sealed class InMemoryWatchlistRepository : IWatchlistRepository
         return Task.FromResult(result);
     }
 
+    public Task<IReadOnlyList<WatchlistItem>> ListPageByUserIdAsync(
+        string userId,
+        int skip,
+        int take,
+        CancellationToken ct = default)
+    {
+        IReadOnlyList<WatchlistItem> result = _store.Values
+            .Where(x => x.UserId == userId)
+            .OrderByDescending(x => x.CreatedAt)
+            .Skip(skip)
+            .Take(take)
+            .ToList();
+        return Task.FromResult(result);
+    }
+
+    public Task<long> CountByUserIdAsync(string userId, CancellationToken ct = default) =>
+        Task.FromResult(_store.Values.LongCount(x => x.UserId == userId));
+
     public Task<WatchlistItem?> GetOneAsync(string userId, int tmdbId, MovieMediaType mediaType, CancellationToken ct = default)
     {
         _store.TryGetValue(Key(userId, tmdbId, mediaType), out var item);

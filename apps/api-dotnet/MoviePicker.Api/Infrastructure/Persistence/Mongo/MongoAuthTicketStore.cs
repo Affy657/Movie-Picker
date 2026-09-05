@@ -9,11 +9,11 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoAuthTicketStore : ITicketStore
 {
-    private readonly IMongoCollection<AuthSessionDocument> _collection;
+    private readonly TransactionalCollection<AuthSessionDocument> _collection;
 
-    public MongoAuthTicketStore(IMongoDatabase database)
+    public MongoAuthTicketStore(MongoCollectionFactory collections)
     {
-        _collection = database.GetCollection<AuthSessionDocument>("auth_sessions");
+        _collection = collections.GetCollection<AuthSessionDocument>("auth_sessions");
     }
 
     public async Task<string> StoreAsync(AuthenticationTicket ticket)

@@ -13,7 +13,7 @@ export interface WatchlistItem {
   createdAt: string;
 }
 
-interface WatchlistResponse {
+export interface WatchlistResponse {
   items: WatchlistItem[];
 }
 

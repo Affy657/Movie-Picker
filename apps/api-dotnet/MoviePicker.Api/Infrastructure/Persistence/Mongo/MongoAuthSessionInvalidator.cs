@@ -5,11 +5,11 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoAuthSessionInvalidator : IAuthSessionInvalidator
 {
-    private readonly IMongoCollection<AuthSessionDocument> _collection;
+    private readonly TransactionalCollection<AuthSessionDocument> _collection;
 
-    public MongoAuthSessionInvalidator(IMongoDatabase database)
+    public MongoAuthSessionInvalidator(MongoCollectionFactory collections)
     {
-        _collection = database.GetCollection<AuthSessionDocument>("auth_sessions");
+        _collection = collections.GetCollection<AuthSessionDocument>("auth_sessions");
     }
 
     public async Task<long> InvalidateAllForUserAsync(string userId, CancellationToken ct = default)

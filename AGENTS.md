@@ -36,6 +36,18 @@ Pour toute nouvelle barre sticky dont le contenu change de hauteur :
 
 `pnpm run check:architecture` (premier pas de `verify:local`, rejoué au pre-push et dans le job `lint-web`) échoue sur : un commentaire hors directive fonctionnelle, un `using` interdit dans `Domain/`, `Application/` ou `Controllers/`, un import de `shared/` vers une feature, un cycle d'imports côté front.
 
+`pnpm run test:api:mongo` rejoue la suite d'intégration API contre une vraie MongoDB en replica set (conteneur Docker créé à la volée, base jetable par classe de test) : c'est le seul chemin qui exécute les adaptateurs Mongo et les transactions. La CI le rejoue dans le job `test-api-mongo`, dont dépend le déploiement API.
+
+`pnpm run openapi:types:check` régénère `apps/web/src/shared/api/generated/openapiSchema.ts` depuis le contrat exporté et échoue s'il a dérivé ; `apps/web/src/shared/api/apiContract.test.ts` vérifie au niveau des types que les champs lus par le front existent bien dans ce contrat.
+
+## Migrations de données
+
+Une correction de données en base est une migration, pas un service de démarrage : ajouter une classe `IDataMigration` dans `Infrastructure/Migrations/` (identifiant daté, `ExecuteAsync` idempotent), l'enregistrer dans `DataMigrationServiceCollectionExtensions`, et c'est tout. `DataMigrationRunner` l'applique une fois, consigne le passage dans la collection `migrations` et la rejoue au démarrage suivant si elle a échoué.
+
+## Écritures multi-documents
+
+Toute suite d'écritures qui doit être tout-ou-rien passe par `IUnitOfWork.ExecuteAsync` (transaction MongoDB côté Mongo, verrou côté InMemory). Les repositories participent automatiquement via `TransactionalCollection` : ne jamais injecter `IMongoDatabase` directement dans un repository, prendre `MongoCollectionFactory`.
+
 - Ne jamais skip les hooks pre-push.
 - Préférer éditer les fichiers existants à en créer de nouveaux.
 

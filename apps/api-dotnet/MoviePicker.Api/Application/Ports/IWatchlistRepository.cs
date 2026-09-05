@@ -6,6 +6,14 @@ public interface IWatchlistRepository
 {
     Task<IReadOnlyList<WatchlistItem>> ListByUserIdAsync(string userId, int limit = 500, CancellationToken ct = default);
 
+    Task<IReadOnlyList<WatchlistItem>> ListPageByUserIdAsync(
+        string userId,
+        int skip,
+        int take,
+        CancellationToken ct = default);
+
+    Task<long> CountByUserIdAsync(string userId, CancellationToken ct = default);
+
     Task<WatchlistItem?> GetOneAsync(string userId, int tmdbId, MovieMediaType mediaType, CancellationToken ct = default);
 
     Task<bool> AddAsync(WatchlistItem item, CancellationToken ct = default);

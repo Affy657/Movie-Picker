@@ -12,17 +12,20 @@ public sealed class CreateEventHandler : ICreateEventHandler
     private readonly IEventRepository _eventRepository;
     private readonly IUserRepository _userRepository;
     private readonly IParticipantRepository _participantRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<CreateEventHandler> _logger;
 
     public CreateEventHandler(
         IEventRepository eventRepository,
         IUserRepository userRepository,
         IParticipantRepository participantRepository,
+        IUnitOfWork unitOfWork,
         ILogger<CreateEventHandler> logger)
     {
         _eventRepository = eventRepository;
         _userRepository = userRepository;
         _participantRepository = participantRepository;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
@@ -60,9 +63,6 @@ public sealed class CreateEventHandler : ICreateEventHandler
             UpdatedAt = now
         };
 
-        var created = await _eventRepository.AddAsync(evt, ct);
-        _logger.LogInformation("Event created: {EventId} by user {UserId}", created.Id, ownerId);
-
         var user = await _userRepository.GetByIdAsync(ownerId, ct)
             ?? throw new NotFoundException("Utilisateur introuvable");
         var pseudo = string.IsNullOrWhiteSpace(user.DisplayName)
@@ -71,16 +71,28 @@ public sealed class CreateEventHandler : ICreateEventHandler
         if (string.IsNullOrEmpty(pseudo))
             pseudo = "Participant";
 
-        var participant = new Participant
-        {
-            Id = string.Empty,
-            EventId = created.Id,
-            Pseudo = pseudo,
-            UserId = ownerId,
-            CreatedAt = now,
-            UpdatedAt = now
-        };
-        var createdParticipant = await _participantRepository.AddAsync(participant, ct);
+        Event created = null!;
+        Participant createdParticipant = null!;
+
+        await _unitOfWork.ExecuteAsync(
+            async token =>
+            {
+                created = await _eventRepository.AddAsync(evt, token);
+                createdParticipant = await _participantRepository.AddAsync(
+                    new Participant
+                    {
+                        Id = string.Empty,
+                        EventId = created.Id,
+                        Pseudo = pseudo,
+                        UserId = ownerId,
+                        CreatedAt = now,
+                        UpdatedAt = now
+                    },
+                    token);
+            },
+            ct);
+
+        _logger.LogInformation("Event created: {EventId} by user {UserId}", created.Id, ownerId);
 
         return new CreateEventResponse
         {

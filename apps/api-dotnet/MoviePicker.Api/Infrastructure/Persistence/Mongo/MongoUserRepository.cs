@@ -8,11 +8,11 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoUserRepository : IUserRepository
 {
-    private readonly IMongoCollection<UserDocument> _collection;
+    private readonly TransactionalCollection<UserDocument> _collection;
 
-    public MongoUserRepository(IMongoDatabase database)
+    public MongoUserRepository(MongoCollectionFactory collections)
     {
-        _collection = database.GetCollection<UserDocument>("users");
+        _collection = collections.GetCollection<UserDocument>("users");
     }
 
     public async Task<User?> GetByIdAsync(string id, CancellationToken ct = default)

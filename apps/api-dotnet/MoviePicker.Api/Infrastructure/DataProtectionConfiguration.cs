@@ -22,9 +22,9 @@ public static class DataProtectionConfiguration
         {
             builder.Services.AddSingleton<IConfigureOptions<KeyManagementOptions>>(sp =>
             {
-                var database = sp.GetRequiredService<IMongoDatabase>();
+                var collections = sp.GetRequiredService<MongoCollectionFactory>();
                 return new ConfigureOptions<KeyManagementOptions>(options =>
-                    options.XmlRepository = new MongoXmlRepository(database));
+                    options.XmlRepository = new MongoXmlRepository(collections));
             });
             return;
         }

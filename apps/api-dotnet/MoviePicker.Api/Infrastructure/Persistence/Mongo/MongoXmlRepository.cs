@@ -6,11 +6,11 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoXmlRepository : IXmlRepository
 {
-    private readonly IMongoCollection<DataProtectionKeyDocument> _collection;
+    private readonly TransactionalCollection<DataProtectionKeyDocument> _collection;
 
-    public MongoXmlRepository(IMongoDatabase database)
+    public MongoXmlRepository(MongoCollectionFactory collections)
     {
-        _collection = database.GetCollection<DataProtectionKeyDocument>("data_protection_keys");
+        _collection = collections.GetCollection<DataProtectionKeyDocument>("data_protection_keys");
     }
 
     public IReadOnlyCollection<XElement> GetAllElements()

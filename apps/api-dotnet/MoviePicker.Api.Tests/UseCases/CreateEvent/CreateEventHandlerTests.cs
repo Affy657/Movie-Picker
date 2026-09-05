@@ -5,6 +5,7 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.CreateEvent;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
@@ -22,7 +23,8 @@ public sealed class CreateEventHandlerTests
         _eventRepo = new Mock<IEventRepository>();
         _userRepo = new Mock<IUserRepository>();
         _participantRepo = new Mock<IParticipantRepository>();
-        _sut = new CreateEventHandler(_eventRepo.Object, _userRepo.Object, _participantRepo.Object, NullLogger<CreateEventHandler>.Instance);
+        _sut = new CreateEventHandler(_eventRepo.Object, _userRepo.Object, _participantRepo.Object, new InMemoryUnitOfWork(),
+            NullLogger<CreateEventHandler>.Instance);
     }
 
     [Fact]

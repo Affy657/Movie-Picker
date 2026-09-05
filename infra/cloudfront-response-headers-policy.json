@@ -1,0 +1,37 @@
+{
+  "Name": "movie-picker-front-security-headers",
+  "Comment": "En-tetes de securite du front S3/CloudFront, alignes sur SecurityHeadersMiddleware cote API. La CSP se limite a frame-ancestors : les autres directives casseraient la SPA et sont deja portees par l'API pour ses propres reponses.",
+  "SecurityHeadersConfig": {
+    "FrameOptions": {
+      "Override": true,
+      "FrameOption": "DENY"
+    },
+    "ReferrerPolicy": {
+      "Override": true,
+      "ReferrerPolicy": "strict-origin-when-cross-origin"
+    },
+    "ContentSecurityPolicy": {
+      "Override": true,
+      "ContentSecurityPolicy": "frame-ancestors 'none'"
+    },
+    "ContentTypeOptions": {
+      "Override": true
+    },
+    "StrictTransportSecurity": {
+      "Override": true,
+      "AccessControlMaxAgeSec": 31536000,
+      "IncludeSubdomains": false,
+      "Preload": false
+    }
+  },
+  "CustomHeadersConfig": {
+    "Quantity": 1,
+    "Items": [
+      {
+        "Header": "Permissions-Policy",
+        "Value": "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()",
+        "Override": true
+      }
+    ]
+  }
+}

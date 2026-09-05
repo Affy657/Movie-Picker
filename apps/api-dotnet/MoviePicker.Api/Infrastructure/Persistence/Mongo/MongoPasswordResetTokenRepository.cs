@@ -7,11 +7,11 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoPasswordResetTokenRepository : IPasswordResetTokenRepository
 {
-    private readonly IMongoCollection<PasswordResetTokenDocument> _collection;
+    private readonly TransactionalCollection<PasswordResetTokenDocument> _collection;
 
-    public MongoPasswordResetTokenRepository(IMongoDatabase database)
+    public MongoPasswordResetTokenRepository(MongoCollectionFactory collections)
     {
-        _collection = database.GetCollection<PasswordResetTokenDocument>("password_reset_tokens");
+        _collection = collections.GetCollection<PasswordResetTokenDocument>("password_reset_tokens");
     }
 
     public async Task<PasswordResetToken> AddAsync(PasswordResetToken token, CancellationToken ct = default)

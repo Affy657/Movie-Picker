@@ -40,7 +40,8 @@ public sealed class DeleteAccountHandlerTests
                 Watchlist,
                 ResetTokens,
                 Sessions.Object,
-                NullLogger<DeleteAccountHandler>.Instance);
+                new InMemoryUnitOfWork(),
+            NullLogger<DeleteAccountHandler>.Instance);
     }
 
     private static async Task<User> SeedUserAsync(Fixture f, string password)

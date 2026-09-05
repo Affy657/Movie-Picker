@@ -5,11 +5,11 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoKofiWebhookLogRepository : IKofiWebhookLogRepository
 {
-    private readonly IMongoCollection<KofiWebhookLogDocument> _collection;
+    private readonly TransactionalCollection<KofiWebhookLogDocument> _collection;
 
-    public MongoKofiWebhookLogRepository(IMongoDatabase database)
+    public MongoKofiWebhookLogRepository(MongoCollectionFactory collections)
     {
-        _collection = database.GetCollection<KofiWebhookLogDocument>("kofi_webhook_log");
+        _collection = collections.GetCollection<KofiWebhookLogDocument>("kofi_webhook_log");
     }
 
     public async Task<bool> HasProcessedAsync(string messageId, CancellationToken ct = default)

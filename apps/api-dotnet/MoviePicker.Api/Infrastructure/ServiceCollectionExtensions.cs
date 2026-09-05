@@ -12,6 +12,7 @@ using MoviePicker.Api.Infrastructure.Development;
 using MoviePicker.Api.Infrastructure.Email;
 using MoviePicker.Api.Infrastructure.GitHub;
 using MoviePicker.Api.Infrastructure.Letterboxd;
+using MoviePicker.Api.Infrastructure.Migrations;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
 using MoviePicker.Api.Infrastructure.Posters;
@@ -208,6 +209,8 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IKofiWebhookLogRepository, InMemoryKofiWebhookLogRepository>();
             services.AddSingleton<IPushDedupRepository, InMemoryPushDedupRepository>();
             services.AddSingleton<IDatabaseHealthProbe, InMemoryDatabaseHealthProbe>();
+            services.AddSingleton<IMigrationHistoryRepository, InMemoryMigrationHistoryRepository>();
+            services.AddSingleton<IUnitOfWork, InMemoryUnitOfWork>();
             return;
         }
 
@@ -222,6 +225,9 @@ public static class ServiceCollectionExtensions
                 + "La base 'moviepicker' n'est autorisée qu'en Production.");
         }
         services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoUrl));
+        services.AddSingleton<MongoSessionAccessor>();
+        services.AddSingleton<MongoCollectionFactory>();
+        services.AddScoped<IUnitOfWork, MongoUnitOfWork>();
         services.AddSingleton<IMongoDatabase>(sp =>
         {
             var client = sp.GetRequiredService<IMongoClient>();
@@ -242,10 +248,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IKofiWebhookLogRepository, MongoKofiWebhookLogRepository>();
         services.AddScoped<IPushDedupRepository, MongoPushDedupRepository>();
         services.AddSingleton<IDatabaseHealthProbe, MongoDatabaseHealthProbe>();
+        services.AddScoped<IMigrationHistoryRepository, MongoMigrationHistoryRepository>();
         services.AddHostedService<MongoIndexInitializer>();
-        services.AddHostedService<UserHandleBackfillService>();
-        services.AddHostedService<GenreBackfillService>();
-        services.AddHostedService<RuntimeBackfillService>();
+        services.AddDataMigrations();
     }
 
     private static void RegisterLetterboxdClient(IServiceCollection services, IConfiguration configuration)

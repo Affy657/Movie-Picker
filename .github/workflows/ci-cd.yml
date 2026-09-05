@@ -151,6 +151,11 @@ jobs:
         env:
           SKIP_OPENAPI_BUILD: '1'
         run: node scripts/export-openapi.cjs
+      - name: Types front alignés sur le contrat OpenAPI
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+          node scripts/check-openapi-types.mjs
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: openapi-v1
@@ -282,6 +287,42 @@ jobs:
           path: coverage-unit
           if-no-files-found: warn
           retention-days: 7
+
+  test-api-mongo:
+    name: Tests API .NET sur MongoDB réel
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-dotnet-cache
+      - name: Démarrer MongoDB en replica set (transactions)
+        run: |
+          set -eo pipefail
+          docker run -d --name mongo-it -p 27017:27017 mongo:8 --replSet rs0 --bind_ip_all
+          for i in $(seq 1 30); do
+            if docker exec mongo-it mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' >/dev/null 2>&1; then
+              break
+            fi
+            sleep 2
+          done
+          docker exec mongo-it mongosh --quiet --eval             'rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "127.0.0.1:27017" }] })'
+          for i in $(seq 1 30); do
+            if [ "$(docker exec mongo-it mongosh --quiet --eval 'db.hello().isWritablePrimary')" = "true" ]; then
+              break
+            fi
+            sleep 2
+          done
+      - name: Tests intégration sur MongoDB
+        run: dotnet test apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj -c Debug --verbosity normal
+        env:
+          MONGODB_URI: ""
+          MONGODB_TEST_URI: mongodb://127.0.0.1:27017/?directConnection=true
 
   lighthouse:
     name: Lighthouse front (seuils bloquants)
@@ -436,7 +477,7 @@ jobs:
     name: Docker API → Artifact Registry
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    needs: [changes, gitleaks, lint-api, test-api, audit]
+    needs: [changes, gitleaks, lint-api, test-api, test-api-mongo, audit]
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master' && needs.changes.outputs.api == 'true'
     permissions:
       contents: read

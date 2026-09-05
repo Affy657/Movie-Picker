@@ -56,6 +56,8 @@ run('Export OpenAPI (SKIP_OPENAPI_BUILD)', 'node', ['scripts/export-openapi.cjs'
   },
 });
 
+run('Types OpenAPI (dérive du contrat)', 'node', ['scripts/check-openapi-types.mjs']);
+
 run('Audit npm (Trivy fs — pnpm audit indisponible depuis le 2026-07-15, cf. pnpm/pnpm#11265)', 'docker', [
   'run',
   '--rm',

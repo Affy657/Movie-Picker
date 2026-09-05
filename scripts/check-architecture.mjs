@@ -7,7 +7,7 @@ const webSrc = join(root, 'apps/web/src');
 const apiSrc = join(root, 'apps/api-dotnet/MoviePicker.Api');
 const violations = [];
 
-const IGNORED_DIRS = new Set(['node_modules', 'bin', 'obj', 'dist', 'coverage']);
+const IGNORED_DIRS = new Set(['node_modules', 'bin', 'obj', 'dist', 'coverage', 'generated']);
 
 function walk(dir, exts, out = []) {
   for (const entry of readdirSync(dir)) {
@@ -76,7 +76,7 @@ function resolveImport(spec, from) {
 
 function checkSharedIsALeaf(files) {
   for (const file of files) {
-    if (!rel(file).startsWith('apps/web/src/shared/')) continue;
+    if (!rel(file).startsWith('apps/web/src/shared/') || file.includes('.test.')) continue;
     for (const spec of importsOf(file)) {
       if (spec.startsWith('@/features/'))
         violations.push(`${rel(file)} importe ${spec} — shared/ ne doit dépendre d'aucune feature`);

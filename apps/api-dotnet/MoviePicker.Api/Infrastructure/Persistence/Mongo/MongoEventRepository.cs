@@ -7,11 +7,11 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoEventRepository : IEventRepository
 {
-    private readonly IMongoCollection<EventDocument> _collection;
+    private readonly TransactionalCollection<EventDocument> _collection;
 
-    public MongoEventRepository(IMongoDatabase database)
+    public MongoEventRepository(MongoCollectionFactory collections)
     {
-        _collection = database.GetCollection<EventDocument>("events");
+        _collection = collections.GetCollection<EventDocument>("events");
     }
 
     public async Task<Event?> GetByIdOrSlugAsync(string idOrSlug, CancellationToken ct = default)
