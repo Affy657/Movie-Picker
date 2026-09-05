@@ -14,6 +14,7 @@ import {
   type LetterboxdPendingChoice,
   type LetterboxdSyncReport,
 } from '@/features/letterboxd/api/letterboxdApi';
+import type { UserProfile } from '@/features/auth/types';
 import LetterboxdChoicesModal from './LetterboxdChoicesModal';
 import styles from './LetterboxdConnectModal.module.css';
 
@@ -282,6 +283,7 @@ export default function LetterboxdConnectModal({
   open,
   onClose,
 }: Readonly<LetterboxdConnectModalProps>) {
+  const queryClient = useQueryClient();
   const [step, setStep] = useState<Step>('form');
   const [report, setReport] = useState<LetterboxdSyncReport | null>(null);
   const [confirmResult, setConfirmResult] = useState<LetterboxdConfirmResult | null>(null);
@@ -309,6 +311,16 @@ export default function LetterboxdConnectModal({
     setConfirmResult(result);
     setUnresolvedChoices(unresolved);
     setStep('done');
+    queryClient.setQueryData(queryKeys.auth.me, (prev: UserProfile | null | undefined) =>
+      prev
+        ? {
+            ...prev,
+            letterboxdPendingReconciliationCount: result.pendingReconciliationCount,
+          }
+        : prev
+    );
+    void queryClient.invalidateQueries({ queryKey: queryKeys.watchlist.list });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
   };
 
   if (step === 'form') {
