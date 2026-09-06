@@ -31,69 +31,56 @@ Ne rien commenter ici. Enchainer immediatement sur la diapo 2.
 
 ---
 
-# Le produit et son état aujourd'hui
+# Un logiciel exploité, pas une maquette
 
-Une application web de décision collective : choisir à plusieurs quel film regarder.
+<div class="lede">Movie Picker choisit à plusieurs quel film regarder. En ligne depuis février, et utilisé.</div>
 
-<div class="grid grid-cols-2 gap-6 mt-6">
-<div>
-
-**Ce qui est livré**
-
-| | |
-|--|--|
-| Versions en production | **9**, du 27/02 au 04/09/2026 |
-| Rythme de livraison | une **version** toutes les 17 jours (médiane) |
-| Commits sur la branche principale | 833 |
-| Coût de fonctionnement | moins de 200 € par an |
-
-</div>
-<div>
-
-**Ce qui est mesuré en production**
-
-| | |
-|--|--|
-| Comptes utilisateurs | 17 |
-| Soirées créées | 19 |
-| Soirées menées jusqu'au tirage | **74 %** |
-| Latence de l'API au 95e centile | 207 ms |
-| Taux d'erreur serveur | 0,026 % |
-
-</div>
+<div class="kpi grid-cols-4 mt-6">
+<div><b>9</b><span>versions en production<br>du 27/02 au 04/09/2026</span></div>
+<div><b>17</b><span>comptes utilisateurs<br>19 soirées créées</span></div>
+<div><b>74 %</b><span>des soirées menées<br>jusqu'au tirage</span></div>
+<div><b>100 %</b><span>de disponibilité<br>sondes sur 3 continents</span></div>
 </div>
 
-<div class="mt-4 text-sm opacity-75">
-Usage mesuré du 8 avril au 21 juillet 2026. Le service est en ligne et utilisé.
+<div class="note mt-8 text-sm">
+C'est cette version que je vous montrerai en fin de présentation. Tout ce qui suit — planning, indicateurs, arbitrage — porte sur ce logiciel-là.
 </div>
 
 <!--
 DUREE 0:40.
 
-Objectif unique de cette diapo : etablir qu'on parle d'un logiciel reellement
-exploite, pas d'une maquette. Tout le reste de la presentation en depend, et la
-demonstration de la fin se fera sur cette version.
+Objectif unique : etablir qu'on parle d'un logiciel reellement exploite. Tout le
+reste de la presentation en depend, et la demonstration se fera dessus.
 
-Ne pas detailler les fonctionnalites : elles seront montrees en direct.
+Quatre chiffres, pas plus. Le plus parlant est le 74 % : ce n'est pas un chiffre
+d'inscription, c'est un chiffre d'USAGE ABOUTI. Les gens qui creent une soiree
+vont au bout dans trois cas sur quatre.
 
-A PREPARER : inserer une capture de l'application en production a gauche du
-tableau si le rendu le permet, sinon laisser les chiffres seuls.
+Ne pas detailler les fonctionnalites, elles seront montrees en direct.
+
+A PREPARER : capture de l'application en production a inserer sous les chiffres
+si le rendu le permet.
+
+SI ON QUESTIONNE le volume : 17 comptes, c'est modeste et je ne le presente pas
+autrement. C'est un usage reel et mesure, pas un usage de masse.
 -->
 
 ---
 
-# Cadre de la présentation
+# Deux registres, annoncés maintenant
 
-<div class="grid grid-cols-2 gap-8 mt-4">
+<div class="grid grid-cols-2 gap-8 mt-6 text-sm">
 <div>
 
-### Deux registres, jamais confondus
+<div class="note mb-3">
+<b>Le réel</b> — chiffré, daté, vérifiable.<br>
+Le projet a été <b>exécuté seul</b>. Commits, versions, mesures de production et retours utilisateurs sont ceux d'un projet à une personne.
+</div>
 
-**Le réel, chiffré et vérifiable**<br>
-Le projet a été **exécuté seul**. Les commits, les versions, les mesures de production et les retours utilisateurs sont ceux d'un projet à une personne.
-
-**L'organisation cible, annoncée comme telle**<br>
-Une équipe de **4 profils** sur laquelle sont construits la matrice RACI, l'affectation des missions, la grille de compétences et le plan de développement. C'est la projection d'industrialisation du projet, pas une équipe qui a existé.
+<div class="alert">
+<b>L'organisation cible</b> — une projection, jamais une équipe qui a existé.<br>
+4 profils, sur lesquels sont construits la matrice RACI, l'affectation des missions, la grille de compétences et le plan de développement.
+</div>
 
 </div>
 <div>
@@ -127,98 +114,95 @@ Ne pas s'excuser, ne pas justifier longuement. Annoncer, puis avancer.
 
 ---
 
-# 1. Planifier l'exécution : la méthodologie
+# 1. Planifier : Kanban léger à revues de version
 
-Kanban léger à revues de version
+<div class="lede">Deux règles, aucune cérémonie. L'outillage est dimensionné à la taille réelle du projet.</div>
 
 <div class="grid grid-cols-2 gap-6 text-sm">
 <div>
 
-### Le choix
+### Les deux règles
 
-Un flux continu : une fiche est tirée dès qu'une capacité se libère, menée jusqu'à la production, puis consolidée dans une **revue de version** qui vaut point de validation.
+<div class="note mb-2">
+<b>Travail en cours limité à 1.</b> Un seul sujet fonctionnel à la fois, hors correctif de production.
+</div>
+<div class="note">
+<b>Critère de sortie.</b> Rien n'est terminé avant d'être déployé <i>et vérifié</i> en production.
+</div>
 
-Deux règles, pas plus :
+### Écartés, et pourquoi
 
-- **Limite de travail en cours** : un seul sujet fonctionnel à la fois, hors correctif de production
-- **Critère de sortie** : rien n'est terminé avant d'être déployé et vérifié en production
+| | |
+|--|--|
+| **Scrum** | Cérémonies coûteuses, sans bénéfice de synchronisation à une personne |
+| **Cycle en V** | Périmètre figé avant de disposer des mesures de production |
 
 </div>
 <div>
 
-### Les bénéfices attendus, et leur résultat
+### Le bénéfice attendu, et ce qu'il a produit
 
-| Bénéfice | Résultat |
-|----------|----------|
-| Priorisation permanente | Périmètre revu 8 fois sans replanification |
+| Attendu | Constaté |
+|---------|----------|
+| Priorisation permanente | Périmètre revu **9 fois** sans replanification globale |
 | Pas de cérémonie non soutenable | Le temps va à la production et à la revue |
-| Délai de mise à disposition court | 8 livraisons en 6 mois |
-| Réaction à un signal de production | Anomalies traitées hors du flux |
+| Délai de mise à disposition court | **9 livraisons**, une toutes les 17 jours (médiane) |
+| Réaction à un signal de production | Anomalies traitées **hors** du flux fonctionnel |
 
 </div>
-</div>
-
-<div class="mt-3 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-sm">
-<b>Écartés</b> : <b>Scrum</b>, cérémonies coûteuses sans bénéfice de synchronisation à une personne. <b>Cycle en V</b>, périmètre figé avant les mesures de production.
 </div>
 
 <!--
 DUREE 1:10. ELEMENT IMPOSE 1 : presentation de la methodologie choisie.
 CRITERE : le choix est justifie AVEC LES BENEFICES ATTENDUS.
 
-Ne pas definir Kanban en theorie, le jury connait. Passer directement au
-« pourquoi ici » et surtout aux benefices constates.
+Ne pas definir Kanban, le jury connait. Aller au « pourquoi ici » et aux
+benefices constates, colonne de droite.
 
-Insister sur la formule : « Kanban leger » n'est pas un Kanban degrade, c'est un
-Kanban dont l'outillage a ete dimensionne a la taille reelle du projet. Ce qui a
-ete ecarte du Kanban lui-meme, ce sont les metriques de flux (temps de cycle par
-classe de service, diagramme de flux cumule), qui exigent un volume de fiches que
+La formule a dire : « Kanban leger » n'est pas un Kanban degrade, c'est un Kanban
+dont l'outillage a ete dimensionne a la taille reelle du projet. Ce qui a ete
+ecarte du Kanban lui-meme, ce sont les metriques de flux — temps de cycle par
+classe de service, diagramme de flux cumule — qui exigent un volume de fiches que
 ce projet n'atteint pas.
 
 Le motif d'ecartement de Scrum doit etre dit sans mepris : ce n'est pas Scrum qui
 est mauvais, c'est son rapport cout / benefice a une personne.
 
 SI ON QUESTIONNE : « pourquoi pas Scrum en solo, juste pour la discipline ? »
-Reponse : la discipline vient de la limite de travail en cours et du critere de
-sortie, qui sont conserves. Ce qui est ecarte, ce sont les rituels sans
-interlocuteur.
+La discipline vient de la limite de travail en cours et du critere de sortie, qui
+sont conserves. Ce qui est ecarte, ce sont les rituels sans interlocuteur.
 -->
 
 ---
 
-# Les outils de planification
+# Deux outils de planification, deux horizons
 
-Deux outils, deux échelles de temps
+<div class="lede">C'est la différence d'horizon qui rend un Gantt compatible avec un pilotage en flux.</div>
 
-<div class="grid grid-cols-2 gap-6 text-sm">
+<div class="grid grid-cols-2 gap-6 text-sm mt-4">
 <div>
 
-### Rétroplanning, l'échelle des échéances
+| Horizon | Outil | Question à laquelle il répond |
+|---------|-------|-------------------------------|
+| Le mois, le trimestre | **Rétroplanning** et **Gantt** | Où en est-on des phases et des échéances ? |
+| La journée, la semaine | **Tableau de flux** | Que fait-on maintenant, qu'est-ce qui bloque ? |
 
-À rebours depuis les dates non négociables : Bloc 1 le 11 juin, Bloc 2 le 23 juillet, Bloc 4 le 21 août, Bloc 3 le 16 septembre.
-
-**Bénéfice attendu** : transformer une date imposée en date de fin de lot. Une échéance qui ne bouge pas impose une capacité, donc un périmètre.
-
-**Ce qu'il a produit** : le contenu de chaque version arrêté par la capacité restante, et non par une liste de souhaits.
-
-### Gantt, l'échelle des phases
-
-**Bénéfice attendu** : rendre visibles les deux choses qu'une liste de tâches masque, les **chevauchements** entre phases et la position des **jalons de version**.
+<div class="note mt-3">
+Le Gantt porte les phases et les jalons, <b>jamais le contenu des fiches</b>. Aucune fiche ne porte de date de fin engagée — <b>seules les versions en portent une.</b>
+</div>
 
 </div>
 <div>
 
-### Compatibilité avec Kanban
+### Le bénéfice de chacun
 
-Les deux outils n'opèrent pas au même horizon.
+| Outil | Ce qu'il apporte |
+|-------|------------------|
+| **Rétroplanning** | Transforme une date imposée en date de fin de lot. Une échéance qui ne bouge pas impose une capacité, donc un périmètre |
+| **Gantt** | Rend visibles les deux choses qu'une liste de tâches masque : les **chevauchements** de phases et les **jalons de version** |
 
-| Horizon | Outil | Question à laquelle il répond |
-|---------|-------|-------------------------------|
-| Le mois, le trimestre | Rétroplanning et Gantt | Où en est-on des phases et des échéances ? |
-| La journée, la semaine | Tableau de flux | Que fait-on maintenant, et qu'est-ce qui bloque ? |
-
-<div class="mt-4 p-3 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40">
-Le Gantt porte les phases et les jalons, jamais le contenu des fiches. <b>Aucune fiche du tableau ne porte de date de fin engagée. Seules les versions en portent.</b>
+<div class="text-xs opacity-75 mt-3">
+Les quatre dates non négociables sont les jalons ◆ du planning, diapositive suivante.
 </div>
 
 </div>
@@ -231,17 +215,21 @@ ET il est compatible avec la methodologie choisie.
 
 Le critere de compatibilite est celui que les candidats ratent : ils presentent
 un Gantt sur une methode agile sans expliquer comment les deux coexistent. Le
-tableau du bas est la reponse, et la derniere phrase en gras est la formulation
-a dire mot pour mot.
+tableau de gauche est la reponse, et la phrase en gras est a dire mot pour mot.
 
 La contradiction classique entre Gantt et Kanban nait quand on tente de planifier
 des taches individuelles a date fixe dans un flux. Ce n'est pas ce qui est fait
-ici : le Gantt porte les phases et les jalons, pas le contenu des fiches.
--->
+ici.
 
+Ce que le retroplanning a produit concretement : le contenu de chaque version a
+ete arrete par la capacite restante avant la prochaine echeance, pas par une
+liste de souhaits.
+-->
 ---
 
 # Le planning en cinq phases
+
+<div class="lede">Les phases <b>se chevauchent</b> — c'est la signature d'un pilotage en flux, et ce qu'un cycle en V interdit.</div>
 
 <div class="gantt">
 
@@ -260,39 +248,39 @@ ici : le Gantt porte les phases et les jalons, pas le contenu des fiches.
 </div>
 
 <div class="sec">Étude</div>
-<div class="row"><div class="lab">Analyse de la demande, parties prenantes</div><div class="track"><i style="grid-column:1/22"></i></div></div>
-<div class="row"><div class="lab">Comparatif de stack, faisabilité, veille</div><div class="track"><i style="grid-column:3/48"></i></div></div>
+<div class="row"><div class="lab">Demande, parties prenantes</div><div class="track"><i style="grid-column:1/22"></i></div></div>
+<div class="row"><div class="lab">Comparatif de stack, faisabilité</div><div class="track"><i style="grid-column:3/48"></i></div></div>
 
 <div class="sec">Mesure</div>
 <div class="row"><div class="lab">Chiffrage 98 J/H, budget, risques</div><div class="track"><i style="grid-column:22/63"></i></div></div>
-<div class="row"><div class="lab">Mesure de l'usage réel en production</div><div class="track"><i style="grid-column:41/145"></i></div></div>
+<div class="row"><div class="lab">Usage réel en production</div><div class="track"><i style="grid-column:41/145"></i></div></div>
 
 <div class="sec">Conception</div>
-<div class="row"><div class="lab">Modèle de données, contrat d'interface</div><div class="track"><i style="grid-column:3/43"></i></div></div>
-<div class="row"><div class="lab">Architecture hexagonale de l'API</div><div class="track"><i style="grid-column:17/63"></i></div></div>
-<div class="row"><div class="lab">Système de composants mobile-first</div><div class="track"><i style="grid-column:34/94"></i></div></div>
+<div class="row"><div class="lab">Modèle de données, contrat d'API</div><div class="track"><i style="grid-column:3/43"></i></div></div>
+<div class="row"><div class="lab">Architecture hexagonale</div><div class="track"><i style="grid-column:17/63"></i></div></div>
+<div class="row"><div class="lab">Composants mobile-first</div><div class="track"><i style="grid-column:34/94"></i></div></div>
 
 <div class="sec">Réalisation</div>
 <div class="row"><div class="lab">Lot 1, MVP</div><div class="track"><i style="grid-column:1/18"></i></div></div>
-<div class="row"><div class="lab">Lot 2, migration de l'API vers .NET</div><div class="track"><i style="grid-column:20/27"></i></div></div>
+<div class="row"><div class="lab">Lot 2, migration de l'API</div><div class="track"><i style="grid-column:20/27"></i></div></div>
 <div class="row"><div class="lab">Lot 3, V1 produit</div><div class="track"><i style="grid-column:27/82"></i></div></div>
 <div class="row"><div class="lab">Lot 4, clôture du titre</div><div class="track"><i style="grid-column:83/180"></i></div></div>
-<div class="row"><div class="lab">V1.1 à V1.4.1, <i>hors chiffrage initial</i></div><div class="track"><i style="grid-column:83/191"></i></div></div>
+<div class="row"><div class="lab">V1.1 à V1.4.1, <i>hors chiffrage</i></div><div class="track"><i class="off" style="grid-column:83/191"></i></div></div>
 
 <div class="sec">Restitution</div>
-<div class="row"><div class="lab">Mises en production, v0.1.0 à v1.4.1</div><div class="track"><i style="grid-column:1/191"></i></div></div>
+<div class="row"><div class="lab">Mises en production, v0.1.0 → v1.4.1</div><div class="track"><i style="grid-column:1/191"></i></div></div>
 <div class="row"><div class="lab">Restitutions au commanditaire</div><div class="track"><b style="grid-column:105/106"></b><b style="grid-column:147/148"></b><b style="grid-column:176/177"></b><b style="grid-column:202/203"></b></div></div>
 
 </div>
 
-<div class="text-xs opacity-70 mt-1 ml-2">
-Du 27 février au 16 septembre 2026. Restitutions au commanditaire : Bloc 1 le 11/06, Bloc 2 le 23/07, Bloc 4 le 21/08, <b>Bloc 3 le 16/09</b>.
+<div class="text-xs opacity-70 mt-2 ml-2">
+Du 27 février au 16 septembre 2026. Jalons ◆ : Bloc 1 le 11/06, Bloc 2 le 23/07, Bloc 4 le 21/08, <b>Bloc 3 le 16/09</b>.
 </div>
 
 <style>
-.gantt { font-size: 0.66rem; line-height: 1.1; margin-top: 0.4rem; }
+.gantt { font-size: 0.68rem; line-height: 1.1; margin-top: 0.4rem; }
 .gantt .row { display: flex; align-items: center; gap: 0.5rem; }
-.gantt .lab { width: 15rem; flex: none; text-align: right; opacity: 0.9; }
+.gantt .lab { width: 14rem; flex: none; text-align: right; opacity: 0.9; }
 .gantt .track {
   flex: 1;
   display: grid;
@@ -303,6 +291,7 @@ Du 27 février au 16 septembre 2026. Restitutions au commanditaire : Bloc 1 le 1
   opacity: 0.95;
 }
 .gantt .track i { height: 0.6rem; border-radius: 3px; background: var(--slidev-theme-primary); }
+.gantt .track i.off { background: #d97706; }
 .gantt .track b {
   width: 0.55rem; height: 0.55rem;
   transform: rotate(45deg);
@@ -317,13 +306,9 @@ Du 27 février au 16 septembre 2026. Restitutions au commanditaire : Bloc 1 le 1
 }
 .gantt .sec {
   font-weight: 700; color: var(--slidev-theme-primary);
-  margin: 0.3rem 0 0.1rem; padding-left: 0.1rem;
+  margin: 0.28rem 0 0.08rem; padding-left: 0.1rem;
 }
 </style>
-
-<div class="text-sm p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40">
-Les phases <b>se chevauchent</b>, elles ne se succèdent pas. La conception court jusqu'en mai alors que la réalisation a commencé en février, et la phase de mesure se rouvre en production. C'est ce qu'un cycle en V interdit.
-</div>
 
 <!--
 DUREE 1:10, la plus longue diapo du chapitre. ELEMENT IMPOSE 2 (suite).
@@ -331,44 +316,43 @@ CRITERE : le planning permet de visualiser les phases d'ETUDE, de MESURE, de
 CONCEPTION, de REALISATION, de RESTITUTION. Les cinq mots sont dans la grille,
 les cinq sections sont a l'ecran. Les nommer a voix haute une par une.
 
-Contenu de chaque phase, a dire en balayant le diagramme :
-- ETUDE : analyse de la demande, parties prenantes, comparatif de stack,
-  faisabilite, veille, hierarchisation MoSCoW.
+Contenu de chaque phase, en balayant le diagramme :
+- ETUDE : demande, parties prenantes, comparatif de stack, faisabilite, veille,
+  hierarchisation MoSCoW.
 - MESURE : deux temps, et c'est volontaire. En amont le chiffrage en jours-homme,
   le budget, la cartographie des risques. En production le releve de l'usage
   reel, qui a alimente les arbitrages de la V1.4.
 - CONCEPTION : modele de donnees, architecture hexagonale, contrat d'interface,
   systeme de composants mobile-first.
-- REALISATION : les 4 lots.
+- REALISATION : les 4 lots. La barre ORANGE est celle qui compte : les versions
+  V1.1 a V1.4.1 sont hors du chiffrage initial. On y revient en diapo 15.
 - RESTITUTION : deux registres, les 9 mises en production vers l'utilisateur, et
-  les restitutions du titre vers le commanditaire.
+  les 4 restitutions du titre vers le commanditaire.
 
 LE POINT A NE PAS MANQUER : dire explicitement que les barres se recouvrent, et
 pourquoi c'est la signature d'un pilotage en flux. Un Gantt dont les barres se
 suivent sans se recouvrir decrirait un cycle en V.
 
 SI ON QUESTIONNE : « vos documents de cadrage sont dates de juin, votre phase
-d'etude de fevrier. » Reponse preparee : les DECISIONS d'etude ont ete prises en
-fevrier et mars, tracees dans l'historique du depot et dans les choix techniques
-eux-memes. Leur FORMALISATION documentaire est intervenue en juin pour la
-restitution du Bloc 1. La decision precede le document. C'est une faiblesse de
-tracabilite, assumee, et corrigee depuis : les arbitrages sont desormais
-consignes au moment ou ils sont pris.
+d'etude de fevrier. » Les DECISIONS d'etude ont ete prises en fevrier et mars,
+tracees dans l'historique du depot et dans les choix techniques eux-memes. Leur
+FORMALISATION documentaire est intervenue en juin pour le Bloc 1. La decision
+precede le document. Faiblesse de tracabilite assumee, corrigee depuis.
 -->
 
 ---
 
-# Le découpage en lots et la charge
+# Quatre lots, 98 jours-homme
 
-<div class="grid grid-cols-2 gap-6 text-sm">
-<div class="dense">
+<div class="grid grid-cols-2 gap-6 text-sm mt-2">
+<div>
 
 | Lot | Contenu | Charge |
 |-----|---------|-------:|
-| **1. MVP** | Socle, API des soirées, catalogue de films, vote, tirage, interface mobile-first, déploiement | 27 J/H |
+| **1. MVP** | Socle, API des soirées, catalogue de films, vote, tirage, premier déploiement | 27 J/H |
 | **2. Migration** | ASP.NET Core, architecture hexagonale, tests d'intégration, redéploiement | 13 J/H |
-| **3. V1 produit** | Comptes, mot de passe oublié, historique, configuration hôte, déjà vu, partage, temps réel, thème, internationalisation, sécurité de la chaîne | 35 J/H |
-| **4. Clôture** | Cadrage, pilotage, sécurité et accessibilité, recette, exploitation | 23 J/H |
+| **3. V1 produit** | Comptes, historique, partage, temps réel, thème, i18n, sécurité de la chaîne | 35 J/H |
+| **4. Clôture du titre** | Cadrage, pilotage, sécurité et accessibilité, recette, exploitation | 23 J/H |
 | | **Total** | **98 J/H** |
 
 </div>
@@ -376,12 +360,12 @@ consignes au moment ou ils sont pris.
 
 ### La méthode d'estimation
 
-**Analogique**, par comparaison entre lots de complexité voisine. Aucune méthode paramétrique n'était applicable faute d'historique de projets comparables.
+**Analogique**, par comparaison entre lots de complexité voisine. Aucune méthode paramétrique n'était applicable, faute d'historique de projets comparables.
 
 **Marge d'incertitude assumée : 20 %** sur les lots de développement.
 
-<div class="mt-6 p-3 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-sm">
-Ce chiffrage n'est pas rétrospectif : il est établi au cadrage et sert de base au budget prévisionnel. L'écart entre ces 98 J/H et la charge réellement consommée est traité au chapitre 2.
+<div class="note mt-4">
+Ce chiffrage n'est pas rétrospectif : il est établi au cadrage et sert de base au budget prévisionnel. <b>L'écart entre ces 98 J/H et la charge réellement consommée est traité au chapitre 2</b> — et il ne dit pas ce qu'on croit.
 </div>
 
 </div>
@@ -398,31 +382,30 @@ Annoncer des maintenant que l'ecart previsionnel / reel sera traite au chapitre 
 Cela evite la question « et ca a tenu ? » posee trop tot, et cela montre que le
 chiffrage a servi de reference de pilotage et pas seulement de piece a produire.
 
-SI ON QUESTIONNE : « 20 % de marge, c'est beaucoup ou peu ? » Reponse : c'est la
-marge usuelle d'une estimation analogique sans historique. Sur les lots
-documentaires, elle s'est revelee insuffisante, c'est le point de vigilance 2.
+SI ON QUESTIONNE : « 20 % de marge, c'est beaucoup ou peu ? » C'est la marge
+usuelle d'une estimation analogique sans historique. Sur les lots documentaires
+elle s'est revelee insuffisante — c'est le point de vigilance 2.
 -->
 
 ---
 
 # Les ressources nécessaires
 
-<div class="grid grid-cols-3 gap-4 text-sm">
+<div class="grid grid-cols-3 gap-5 text-sm mt-4">
 <div>
 
 ### Humaines
 
-Les 4 profils de l'organisation cible.
+Les 4 profils de l'**organisation cible**, définis par la compétence qu'ils portent.
 
-| Profil | Charge | Part |
-|--------|-------:|-----:|
-| Lead dev, chef de projet | 19 J/H | 19 % |
-| Développeur front | 25 J/H | 26 % |
-| Développeur back | 35 J/H | 36 % |
-| DevOps et QA, mi-temps | 19 J/H | 19 % |
-| **Total** | **98 J/H** | |
+| Profil | Compétence pivot |
+|--------|------------------|
+| Lead, chef de projet | Architecture, arbitrage, relation commanditaire |
+| Développeur front | React, TypeScript, accessibilité |
+| Développeur back | C#, ASP.NET Core, hexagonal |
+| DevOps et QA, **mi-temps** | CI/CD, conteneurisation, supervision |
 
-Le back porte la charge la plus lourde, conséquence du lot de migration, absorbée par le décalage temporel des lots.
+<div class="text-xs opacity-75 mt-2">Répartition des 98 J/H en diapositive 19.</div>
 
 </div>
 <div>
@@ -430,9 +413,9 @@ Le back porte la charge la plus lourde, conséquence du lot de migration, absorb
 ### Matérielles et techniques
 
 - Un poste par profil, environnement local reproductible
-- Dépôt unique en monorepo, outillage de test, d'analyse statique et de formatage
-- Chaîne d'intégration et de déploiement continus, analyse de qualité et de sécurité, tests de bout en bout
-- Exécution conteneurisée sans serveur, diffusion du front par réseau de contenu, base managée
+- Monorepo, outillage de test, d'analyse statique et de formatage
+- Chaîne d'intégration et de déploiement continus
+- Exécution conteneurisée sans serveur, front par réseau de contenu, base managée
 - Services tiers : catalogue de films, e-mails, supervision, mesure d'usage, secrets
 
 </div>
@@ -448,7 +431,9 @@ Le back porte la charge la plus lourde, conséquence du lot de migration, absorb
 | Licences | **0 €** |
 | **Trésorerie réelle** | **20 à 190 €/an** |
 
-98 J/H au taux journalier junior simulé de 350 €. Coût de trésorerie nul en formation : ce montant matérialise la valeur de l'effort pour le commanditaire.
+<div class="note mt-3 text-xs">
+<b>Moins de 200 € par an</b> de trésorerie, pour <b>34 300 €</b> de valeur de développement. Aucune licence payante : c'est une décision de conception prise sous contrainte de budget, pas une conséquence.
+</div>
 
 </div>
 </div>
@@ -456,61 +441,63 @@ Le back porte la charge la plus lourde, conséquence du lot de migration, absorb
 <!--
 DUREE 0:50. ELEMENT IMPOSE 3 : les ressources necessaires.
 
-Trois familles, une phrase forte par famille, pas de lecture de tableau.
+Trois familles, une phrase forte par famille, aucune lecture de tableau.
 
 HUMAINES : rappeler d'un mot qu'il s'agit de l'organisation cible. C'est le
-deuxieme rappel apres la diapo 3, et il faut qu'il soit naturel, pas defensif.
+deuxieme rappel apres la diapo 3, il doit etre naturel, pas defensif. Le critere
+d'affectation est la COMPETENCE PIVOT, pas la disponibilite.
 
-MATERIELLES : ne pas enumerer, dire « poste de travail, outillage, chaine de
+MATERIELLES : ne pas enumerer. Dire « poste de travail, outillage, chaine de
 livraison, hebergement, services tiers » et laisser lire.
 
-FINANCIERES : la phrase a dire est « moins de 200 euros par an de tresorerie
-reelle, pour une valeur de developpement de 34 300 euros ». C'est le contraste qui
-parle a un jury de professionnels. Et l'absence de licence payante est une
-decision de conception prise sous contrainte de budget, ce qui conditionne la
-soutenabilite du service au-dela du titre.
+FINANCIERES : la phrase a dire est celle du bandeau, le contraste entre 200 euros
+et 34 300 euros. C'est ce qui parle a un jury de professionnels. L'absence de
+licence payante conditionne la soutenabilite du service au-dela du titre.
+
+SI ON QUESTIONNE le « 0 euro/mois » : l'hebergement du front est dans ses douze
+mois offerts. La ligne suivante du budget est donc datee, pas hypothetique — voir
+diapo 14.
 -->
 
 ---
 
-# La matrice RACI
+# La matrice RACI, et le handicap dedans
 
-<div class="grid grid-cols-3 gap-4">
-<div class="col-span-2 dense">
+<div class="grid grid-cols-5 gap-4">
+<div class="col-span-3 dense">
 
-**R** réalise, **A** approuve et rend compte, **C** consulté, **I** informé
+**R** réalise · **A** approuve et rend compte · **C** consulté · **I** informé
 
-| Activité | Lead | Front | Back | DevOps QA | Commanditaire | Utilisateurs |
-|----------|:----:|:-----:|:----:|:---------:|:-------------:|:------------:|
-| Cadrage et périmètre de version | A R | C | C | C | C | I |
-| Architecture applicative | A R | C | R | C | I | |
-| Développement de l'interface | A | R | C | C | | I |
-| Développement de l'API | A | C | R | C | | |
-| Accessibilité du produit | A | R | C | C | C | C |
-| Chaîne, supervision, sécurité | A | C | C | R | I | |
-| Recette et tests de bout en bout | A | C | C | R | C | C |
-| Arbitrage de périmètre ou de charge | A R | C | C | C | C | I |
-| **Inclusion et adaptation des postes** | **A R** | C | C | C | I | |
+| Activité | Lead | Front | Back | DevOps | Commanditaire |
+|----------|:----:|:-----:|:----:|:------:|:-------------:|
+| Cadrage et périmètre de version | **A R** | C | C | C | C |
+| Architecture applicative | **A R** | C | R | C | I |
+| Développement de l'interface | **A** | R | C | C | |
+| Développement de l'API | **A** | C | R | C | |
+| Accessibilité du produit | **A** | R | C | C | C |
+| Chaîne, supervision, sécurité | **A** | C | C | R | I |
+| Arbitrage de périmètre ou de charge | **A R** | C | C | C | C |
+| **Inclusion et adaptation des postes** | **A R** | C | C | C | I |
 
-<div class="text-xs opacity-70 mt-1">Extrait de 9 lignes. Matrice complète de 15 lignes en annexe.</div>
+<div class="text-xs opacity-70 mt-1">Extrait de 8 lignes. Matrice complète de 15 lignes en annexe A6.</div>
 
 </div>
-<div class="text-xs">
+<div class="col-span-2 text-sm">
 
 ### Trois propriétés
 
-**Une seule approbation par ligne.** Le rôle A n'est jamais partagé : c'est la condition pour qu'un arbitrage puisse être tranché.
+**Une seule approbation par ligne.** Le « A » n'est jamais partagé : c'est la condition pour qu'un arbitrage puisse être tranché.
 
-**L'affectation suit la compétence, pas la disponibilité.**
+**Le « R » se lit avec le « A ».** Qui réalise n'est pas qui rend compte : c'est ce qui évite qu'un arbitrage soit tranché par celui qui exécute.
 
 **Les acteurs externes y figurent.** Un acteur absent de la matrice est un acteur qu'on oubliera de solliciter.
 
-</div>
+<div class="note mt-3 text-xs">
+<b>Le handicap n'est pas une mention, c'est une ligne.</b> Aucune activité ne présuppose une capacité physique, et « inclusion et adaptation des postes » porte un <b>responsable identifié</b> — pas un sujet diffus dont personne ne répond.<br>
+Les aménagements et le volet produit : diapositive 22.
 </div>
 
-<div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
-<b>Prise en compte du handicap, trois niveaux.</b><br>
-<b>Affectation</b> : aucune activité ne présuppose une capacité physique, une ligne dédiée porte un responsable identifié. <b>Poste et organisation</b> : poste adapté, outillage compatible lecteur d'écran et navigation clavier, horaires aménagés, temps supplémentaire en recette et en formation, comptes rendus écrits, sans justification à produire à l'équipe. <b>Produit</b> : accessibilité vérifiée automatiquement à chaque livraison, au niveau maximum sur tous les écrans.
+</div>
 </div>
 
 <!--
@@ -518,15 +505,12 @@ DUREE 0:50. CRITERE : les taches sont assignees selon les competences (RACI) ET
 tiennent compte des personnes en situation de handicap. Le second point est un
 critere a part entiere, pas une remarque.
 
-Ne pas lire la matrice. Dire les trois proprietes, puis consacrer la moitie du
-temps au bandeau du bas.
+Ne pas lire la matrice. Dire les trois proprietes, puis la ligne handicap.
 
-Sur le handicap, la phrase a dire : « le sujet porte un responsable identifie
-dans la matrice, des amenagements nommes, et une exigence d'accessibilite du
-produit verifiee automatiquement. Une equipe qui livre un produit inaccessible ne
-peut pas pretendre a une organisation inclusive. » C'est ce qui distingue une
-prise en compte reelle d'une clause de style, et un jury de professionnels fait
-la difference immediatement.
+Sur le handicap ici, une seule idee : le sujet porte un RESPONSABLE IDENTIFIE
+dans la matrice. C'est ce qui distingue une prise en compte reelle d'une clause
+de style. Les amenagements concrets et l'accessibilite du produit sont en diapo
+22, ne pas les anticiper ici — ce serait la meme chose dite deux fois.
 
 Rappel de posture : c'est l'organisation cible. Troisieme et dernier rappel avant
 le chapitre 4.
@@ -536,80 +520,81 @@ le chapitre 4.
 
 # Les points de vigilance
 
+<div class="lede">Six risques de projet, chacun avec son indicateur. Et un risque d'organisation, qui est d'une autre nature.</div>
+
 <div class="dense">
 
-| # | Point de vigilance | Ce qu'il menace | Indicateur de contrôle | Parade |
-|:-:|--------------------|-----------------|------------------------|--------|
-| **1** | **Concentration des rôles sur une personne** | La continuité du projet | Nombre de personnes capables de mener une mise en production : **1** | Procédures écrites et versionnées, infrastructure décrite en code, décisions consignées |
-| **2** | Sous-estimation des lots documentaires | Le calendrier du titre | Écart charge prévue / consommée sur le lot de clôture | Rétroplanning depuis les échéances, périmètre ajusté sur la capacité restante |
-| **3** | Dépendance au catalogue de films externe | Le cœur du produit | Taux d'erreur des appels au catalogue | Cache des métadonnées, limitation du débit, repli de saisie manuelle |
-| **4** | Transport des e-mails transactionnels | Mot de passe oublié, invitations | Volume quotidien rapporté au plafond du palier gratuit | Envoi limité à l'indispensable, fournisseur substituable derrière un port applicatif |
-| **5** | Durcissement de la politique de sécurité du contenu | L'affichage, blocage silencieux de ressources légitimes | Sondes de disponibilité, vérification visuelle après modification | Inventaire des domaines externes tenu à jour, vérification obligatoire avant mise en production |
-| **6** | Absence de déploiement progressif | La disponibilité lors d'une bascule | Test de fumée post-déploiement, taux d'erreur serveur | Arbitrage assumé et réversible, test de fumée bloquant, retour arrière par redéploiement |
-| **7** | Instabilité de la chaîne de vérification | La cadence de livraison, la confiance dans la chaîne | Part des échecs sans cause réelle | Contrôle de performance rendu déterministe, seuils recalibrés, vérification en local avant remontée |
+| # | Point de vigilance | Indicateur de contrôle | Parade |
+|:-:|--------------------|------------------------|--------|
+| **1** | **Concentration des rôles sur une personne** | Personnes capables de mener une mise en production : **1** | Procédures écrites et versionnées, infrastructure en code, décisions consignées |
+| 2 | Sous-estimation des lots documentaires | Écart charge prévue / consommée sur le lot de clôture | Rétroplanning depuis les échéances, périmètre ajusté sur la capacité |
+| 3 | Dépendance au catalogue de films externe | Taux d'erreur des appels au catalogue | Cache des métadonnées, limitation du débit, repli de saisie manuelle |
+| 4 | Transport des e-mails transactionnels | Volume quotidien / plafond du palier gratuit | Envoi limité à l'indispensable, fournisseur substituable |
+| 5 | Durcissement de la politique de sécurité du contenu | Sondes, vérification visuelle après modification | Inventaire des domaines externes, vérification avant mise en production |
+| 6 | Absence de déploiement progressif | Test de fumée post-déploiement, taux d'erreur 5xx | Arbitrage assumé et réversible, retour arrière par redéploiement |
+| 7 | Instabilité de la chaîne de vérification | Part des échecs sans cause réelle | Contrôle de performance rendu déterministe, seuils recalibrés |
 
 </div>
 
-<div class="mt-3 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40">
-Les points 2 à 7 sont des risques de projet. Le point 1 est un risque d'organisation, et c'est lui qui justifie la conception de l'organisation cible présentée dans la suite.
+<div class="note mt-3">
+Le point 1 est le seul <b>risque d'organisation</b>. Son indicateur vaut <b>1</b>, et c'est cette valeur qui rend l'organisation cible nécessaire plutôt que décorative.
 </div>
 
 <!--
 DUREE 0:50. CRITERE : les points de vigilance sont soulignes. Dernier critere de
 C3.1, competence ELIMINATOIRE : le chapitre ne peut pas se terminer sans lui.
 
-Ne pas lire les sept lignes. Structurer en deux temps :
+Ne pas lire les sept lignes. Deux temps :
 
-1. « Cinq de ces points sont techniques et chacun porte un indicateur de controle
-et une parade. » Citer le point 5 comme exemple, parce qu'il s'est REALISE en
+1. « Six de ces points sont techniques, chacun porte un indicateur et une
+parade. » Citer le point 5 comme exemple, parce qu'il s'est REALISE en
 production : un durcissement de la politique de securite du contenu a bloque les
-affiches de films et les avatars. L'incident et sa correction sont tracees. Un
+affiches de films et les avatars. L'incident et sa correction sont traces. Un
 point de vigilance qui s'est realise et qui a ete traite vaut mieux qu'une liste
 theorique.
 
-2. « Le point 1 est d'une autre nature. » C'est la transition du chapitre :
-l'indicateur vaut 1, et cette valeur est le probleme. Enchainer sur le fait que
-c'est ce risque qui rend l'organisation cible necessaire.
+Le point 6, absence de deploiement progressif, est une faiblesse assumee. La dire
+ici plutot que de la laisser decouvrir.
 
-Le point 6, absence de deploiement progressif, est une faiblesse assumee et
-tracee. La dire ici plutot que de la laisser decouvrir par le jury.
+2. « Le point 1 est d'une autre nature. » C'est la transition : l'indicateur vaut
+1, et cette valeur EST le probleme. Enchainer sur le fait que c'est ce risque qui
+rend l'organisation cible necessaire.
 -->
-
 ---
 
 # 2. Piloter l'avancement : l'outil de suivi
 
-Le suivi est tenu **dans GitHub**, sans outil de gestion de projet séparé.
+<div class="lede">Le suivi est tenu <b>dans GitHub</b>, là où le travail se produit. Le critère de choix est la <b>distance entre le travail et sa trace</b>.</div>
 
-<div class="grid grid-cols-2 gap-6 mt-2 text-sm">
+<div class="grid grid-cols-2 gap-6 text-sm">
 <div>
 
 ### Cinq surfaces, cinq natures de trace
 
 | Surface | Ce qu'elle porte | Volume |
 |---------|------------------|-------:|
-| Issues | Anomalies qualifiées, demandes entrantes | 5 |
-| Pull requests | Revue et décision d'intégration | 77 / **26 fusionnées** |
-| Actions | Vérification automatisée et déploiement | 449 exécutions |
-| Releases et tags | Points de livraison datés | **9 versions** |
-| Fichiers versionnés | Feuilles de route, journal des versions | 106 items suivis |
+| Issues | Anomalies, demandes entrantes | 5 |
+| Pull requests | Revue et décision d'intégration | 26 / 77 |
+| Actions | Vérification automatisée, déploiement | 449 exéc. |
+| Releases et tags | Points de livraison datés | **9** |
+| Fichiers versionnés | Feuilles de route, journal des versions | 106 items |
 
-<div class="mt-3 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
-Le critère de choix n'est pas la richesse fonctionnelle, c'est la <b>distance entre le travail et sa trace</b>. Aucun indicateur retenu ne demande de saisie déclarative : la trace est produite par le geste de travail lui-même.
+<div class="note mt-3 text-xs">
+Un outil extérieur au dépôt impose une <b>double saisie</b> — et la double saisie est la première chose abandonnée sous pression. <b>Aucun indicateur retenu ne demande de saisie déclarative</b> : la trace naît du geste de travail lui-même.
 </div>
 
 </div>
 <div>
 
-### L'adéquation avec Kanban
+### L'adéquation avec Kanban, propriété par propriété
 
 | Propriété de la méthode | Ce que l'outil fournit |
 |-------------------------|------------------------|
-| Flux continu, pas d'itération fixe | Aucune notion de sprint. Les fiches n'ont pas d'échéance, **les versions en ont une** |
+| Flux continu, pas d'itération fixe | Aucune notion de sprint ; les fiches n'ont pas d'échéance, **les versions en ont une** |
 | Travail en cours limité à 1 | Une branche fonctionnelle à la fois |
-| Priorisation permanente | Feuilles de route réordonnées par commit, sans replanification |
-| Sortie = déployé et vérifié | Fusion → déploiement → test de fumée bloquant |
-| Correctif prioritaire | Anomalies étiquetées en sévérité, hors flux fonctionnel |
+| Priorisation permanente | Feuilles de route réordonnées par commit |
+| Sortie = déployé **et vérifié** | Fusion → déploiement → test de fumée bloquant |
+| Correctif prioritaire | Anomalies étiquetées en sévérité, hors flux |
 
 </div>
 </div>
@@ -629,180 +614,159 @@ la propriete de la methode et ce que l'outil fournit. Insister sur la premiere :
 un outil a sprints aurait impose une cadence que l'alternance ne permet pas de
 tenir, et aurait produit des indicateurs faux.
 
-SI ON QUESTIONNE : « pourquoi pas Jira ou Trello ? » Reponse : la saisie
-declarative. Pas « c'etait plus simple ».
+DIRE AUSSI LA LIMITE, avant qu'on la trouve : le tableau de flux consolide est
+POSTERIEUR au travail qu'il represente. La matiere, elle, est datee au geste
+pres — 833 commits, 77 pull requests, 449 executions, 9 releases, toutes
+horodatees au moment ou elles se sont produites. Le tableau change la lisibilite
+de cette matiere, il ne la cree pas.
+
+SI ON QUESTIONNE : « pourquoi pas Jira ou Trello ? » La saisie declarative. Pas
+« c'etait plus simple ».
 
 A PREPARER : capture du tableau de flux GitHub Projects, a inserer a gauche si le
-tableau est structure avant l'oral. Sinon, laisser les cinq surfaces.
+tableau est structure avant l'oral.
 -->
 
 ---
 
-# Les indicateurs retenus
+# Comment un indicateur entre au tableau de bord
 
-<div class="text-xs mb-2">
-Règle de sélection : mesurable sans saisie déclarative · quantifiable · <b>rattaché à une décision</b> · reproductible par un tiers.
+<div class="lede">Quatre conditions. Celles qui échouent sont écartées explicitement — un tableau de bord exhaustif dont la moitié n'est jamais relevée ne pilote rien.</div>
+
+<div class="grid grid-cols-4 gap-3 text-sm mt-4">
+<div class="note"><b>1. Mesurable sans saisie</b><br><span class="text-xs">Produit par un outil, pas par une déclaration</span></div>
+<div class="note"><b>2. Quantifiable</b><br><span class="text-xs">Il porte un nombre, pas une appréciation</span></div>
+<div class="note"><b>3. Rattaché à une décision</b><br><span class="text-xs">On sait d'avance ce qu'on ferait s'il franchissait un seuil</span></div>
+<div class="note"><b>4. Reproductible</b><br><span class="text-xs">Un tiers le recalcule depuis le dépôt public</span></div>
 </div>
 
-<div class="grid grid-cols-2 gap-4 dense">
-<div>
-
-**Avancement**
-
-| Indicateur | Valeur |
-|------------|-------:|
-| Items de périmètre livrés | **61 / 86** (71 %) |
-| Items techniques livrés | 19 / 20 (95 %) |
-| Versions publiées | **9** |
-| Commits intégrés | 833 |
-| Travail soumis à revue | 26 / 77 PR |
-
-**Délais**
-
-| Indicateur | Valeur |
-|------------|-------:|
-| Cadence de livraison (médiane) | **17 jours** |
-| Échéances de restitution tenues | **4 / 4** |
-| Jours d'activité | 88 / 191 (46 %) |
-
-**Coûts**
-
-| Indicateur | Valeur |
-|------------|-------:|
-| Infrastructure récurrente | **0 €/mois** |
-| Coût annuel engagé | ≈ 10 € (domaine) |
-| Valeur de développement consommée | 30 800 € / 34 300 € |
-
-</div>
-<div>
-
-**Risques**
-
-| Indicateur | Valeur |
-|------------|-------:|
-| Vulnérabilités HIGH / CRITICAL ouvertes | **0** |
-| Stabilité de la chaîne (branche principale) | **78 %** |
-| Couverture de tests | 86,6 % |
-| Porte de qualité | Passed, A/A/A |
-| Anomalies ouvertes | 0 / 3 |
-| Taux d'erreur serveur | 0,026 % |
-| Disponibilité | 100 % |
-
-**Ressources humaines**
-
-| Indicateur | Valeur |
-|------------|-------:|
-| Densité d'activité | 3,1 j/semaine |
-| Plus longue série continue | **10 jours** |
-| Semaines sans activité | 5 / 28 |
-| Facteur de bus | **1** |
-
-<div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
-Écartés faute de mesurabilité : vélocité en points, temps de cycle d'une fiche, charge ressentie.
+<div class="grid grid-cols-5 gap-3 text-sm mt-6">
+<div class="tl"><div><b>Avancement</b><span>Où en est le périmètre ?</span></div></div>
+<div class="tl"><div><b>Délais</b><span>La cadence tient-elle ?</span></div></div>
+<div class="tl"><div><b>Coûts</b><span>Le budget dérive-t-il ?</span></div></div>
+<div class="tl"><div><b>Risques</b><span>Qu'est-ce qui menace la livraison ?</span></div></div>
+<div class="tl"><div><b>Ressources humaines</b><span>La charge est-elle soutenable ?</span></div></div>
 </div>
 
-</div>
+<div class="alert mt-6 text-sm">
+<b>Écartés faute de mesurabilité</b> — et le dire vaut mieux qu'un tableau où tout est vert.<br>
+La <b>vélocité en points</b> : pas d'estimation systématique en amont. Le <b>temps de cycle d'une fiche</b> : l'entrée en flux n'est pas horodatée de façon fiable. La <b>charge ressentie</b> : non quantifiable en l'état.
 </div>
 
 <!--
 DUREE 1:00. CRITERE : les indicateurs sont mesurables et quantifiables, et
-permettent de suivre les DELAIS, les COUTS et l'AVANCEMENT. Les cinq axes du
-critere « tableaux de bord » sont deja couverts ici.
+permettent de suivre les DELAIS, les COUTS et l'AVANCEMENT.
 
-Ne lire aucun tableau. Dire les quatre conditions de la regle de selection, en
-appuyant sur la troisieme : « un indicateur sans decision associee est un
-ornement ». Puis annoncer les cinq axes et enchainer sur les deux diapos de
-tableaux de bord.
+Cette diapo ne donne AUCUNE valeur : elle donne la methode. Les valeurs sont sur
+les deux tableaux de bord qui suivent. Ne pas les anticiper ici.
 
-Le geste qui compte : citer les trois indicateurs ECARTES et pourquoi. Un
+Dire les quatre conditions en appuyant sur la TROISIEME : « un indicateur sans
+decision associee est un ornement ». C'est la condition qui a fait le tri.
+
+Puis annoncer les cinq axes, qui sont exactement les cinq que la grille demande —
+avancement, couts, delais, risques, ressources humaines — et dire qu'ils
+arrivent sur les deux diapos suivantes, l'une pour l'avancement et les delais,
+l'autre pour les couts, les risques et les ressources.
+
+LE GESTE QUI COMPTE : citer les trois indicateurs ECARTES et pourquoi. Un
 candidat qui dit ce qu'il n'a pas su mesurer est plus credible qu'un candidat
-dont tous les voyants sont au vert.
-
-Deux valeurs sont volontairement en alerte, elles seront commentees en diapo 14 :
-la stabilite de la chaine a 78 % et le facteur de bus a 1.
+dont tous les voyants sont au vert. C'est trente secondes bien depensees.
 -->
 
 ---
 
 # Tableau de bord : avancement et délais
 
-<div class="grid grid-cols-2 gap-4 dense">
-<div>
+<div class="grid grid-cols-5 gap-5">
+<div class="col-span-3">
 
-**L'activité mois par mois**
+<div class="text-xs opacity-75 mb-1">Commits intégrés sur la branche principale — <b>833</b></div>
+<div class="cols" style="height:4.6rem">
+<div><i style="height:0.4%"></i></div>
+<div><i style="height:12%"></i></div>
+<div><i style="height:32%"></i></div>
+<div><em>150</em><i style="height:66%"></i></div>
+<div><em>227</em><i style="height:100%"></i></div>
+<div><i style="height:85%"></i></div>
+<div><i style="height:56%"></i></div>
+<div><i style="height:15%"></i></div>
+</div>
 
-| Mois | Commits | Jours actifs | Fusions |
-|------|--------:|-------------:|--------:|
-| Février | 1 | 1 | 0 |
-| Mars | 28 | 3 | 0 |
-| Avril | 72 | 11 | 1 |
-| Mai | 150 | 14 | 6 |
-| Juin | 227 | 19 | **39** |
-| Juillet | 194 | 18 | **52** |
-| Août | 127 | 17 | 18 |
-| Septembre (5 j.) | 34 | 5 | 6 |
-| **Total** | **833** | **88** | **122** |
+<div class="text-xs opacity-75 mt-3 mb-1">Fusions sur la branche principale — <b>122</b></div>
+<div class="cols" style="height:4.6rem">
+<div><i class="b" style="height:0%"></i></div>
+<div><i class="b" style="height:0%"></i></div>
+<div><i class="b" style="height:2%"></i></div>
+<div><em>6</em><i class="b" style="height:12%"></i></div>
+<div><em>39</em><i class="b" style="height:75%"></i></div>
+<div><em>52</em><i class="b" style="height:100%"></i></div>
+<div><i class="b" style="height:35%"></i></div>
+<div><i class="b" style="height:12%"></i></div>
+</div>
 
-<div class="text-xs opacity-75 mt-1">
-Le pic de juin n'est pas un pic de production : c'est le passage au travail par branches courtes. L'indicateur de fusions ne mesure pas la même chose avant et après.
+<div class="xlab">
+<div>fév.</div><div>mars</div><div>avril</div><div>mai</div><div>juin</div><div>juil.</div><div>août</div><div>sept.</div>
+</div>
+
+<div class="alert mt-3 text-xs">
+<b>Le pic de juin n'est pas un pic de production.</b> Les fusions passent de 6 à 39 quand les commits ne passent que de 150 à 227. Ce qui a changé, c'est le <b>découpage</b> : le travail est passé de commits directs à des branches courtes. L'indicateur de fusions ne mesure pas la même chose avant et après juin.
 </div>
 
 </div>
-<div>
+<div class="col-span-2 text-sm">
 
-**Les 9 points de livraison**
+### Cadence de livraison
+
+<div class="kpi grid-cols-2 mb-3">
+<div><b>17 j</b><span>écart médian entre deux versions</span></div>
+<div><b>4 / 4</b><span>échéances de restitution tenues, écart 0</span></div>
+</div>
 
 | Version | Date | Écart |
 |---------|------|------:|
-| 0.1.0 | 27/02 | — |
-| 1.0.0 | 19/05 | **81 j** |
-| 1.1.0 | 25/05 | 6 j |
-| 1.2.0 | 11/06 | 17 j |
-| 1.3.0 | 19/06 | 8 j |
-| 1.3.1 | 08/07 | 19 j |
-| 1.3.2 | 25/07 | 17 j |
-| 1.4.0 | 25/08 | 31 j |
-| 1.4.1 | 04/09 | 10 j |
+| 0.1.0 → 1.0.0 | 27/02 → 19/05 | **81 j** |
+| 1.0.0 → 1.3.2 | mai → juillet | 6 à 19 j |
+| 1.3.2 → 1.4.0 | 25/07 → 25/08 | 31 j |
+| 1.4.0 → 1.4.1 | 25/08 → 04/09 | 10 j |
 
-<div class="text-xs opacity-75 mt-1">
-Médiane de <b>17 jours entre deux versions</b>, moyenne 23,6. L'écart entre les deux tient à un seul intervalle.
+<div class="note mt-3 text-xs">
+Un seul intervalle est anormal : les <b>81 jours</b> entre le prototype et la première version de production. Il contient la migration de l'API — <b>c'est cet indicateur qui a transformé une dérive en arbitrage explicite.</b> C'est le chapitre 3.
 </div>
 
 </div>
-</div>
-
-<div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-sm">
-<b>Les 4 échéances de restitution du titre sont tenues à la date, écart 0</b> — et deux d'entre elles sont <b>horodatées dans le dépôt</b> : passe finale du dossier Bloc 2 le 23/07, export PDF du Bloc 4 le 21/08. Ce n'est pas de la discipline, c'est la méthode : le rétroplanning traite ces dates comme des fins de lot, et c'est le <b>périmètre de la version</b> qui absorbe la variation, jamais la date. Quand la capacité s'est réduite en août, c'est l'intervalle entre deux versions qui s'est allongé.
 </div>
 
 <!--
 DUREE 1:00. CRITERE : le tableau de bord integre l'avancement et le suivi des
 delais.
 
-Deux chiffres a dire, pas plus : 833 commits sur 88 jours actifs, et 9 versions a
-une mediane de 17 jours.
+Ne PAS commenter les huit mois un par un. Deux lectures, pas plus :
 
-Puis les deux lectures qui prouvent qu'on lit ses propres indicateurs au lieu de
-les afficher :
+1. Le pic de fusions de juin — 6 puis 39 — alors que les commits ne passent que
+de 150 a 227. Ce qui a change c'est la pratique de decoupage, pas la production.
+Le dire AVANT que le jury le remarque : c'est ce qui prouve qu'on lit ses propres
+indicateurs au lieu de les afficher.
 
-1. Le pic de fusions de juin (6 -> 39) alors que les commits ne passent que de
-150 a 227. Ce qui a change, c'est la pratique de decoupage, pas la production. Le
-dire AVANT que le jury le remarque.
-
-2. Les 81 jours entre le prototype et la premiere version de production. C'est le
-seul intervalle anormal, il contient la migration de l'API, et c'est cet
-indicateur qui a transforme la migration en arbitrage explicite. Annoncer le
+2. Les 81 jours entre le prototype et la V1. Seul intervalle anormal, il contient
+la migration de l'API, et c'est lui qui a rendu l'arbitrage visible. Annoncer le
 chapitre 3 ici.
 
-Terminer par le bandeau : ecart de delai nul sur les quatre echeances, parce que
-c'est le perimetre qui absorbe, jamais la date.
+Sur les echeances : ecart zero sur les quatre, et deux d'entre elles sont
+HORODATEES dans le depot — passe finale du dossier Bloc 2 le 23/07, export PDF du
+Bloc 4 le 21/08. Ce n'est pas de la discipline, c'est de la methode : le
+retroplanning traite ces dates comme des fins de lot, et c'est le PERIMETRE de la
+version qui absorbe la variation, jamais la date. La preuve : quand la capacite
+s'est reduite en aout, c'est l'intervalle entre versions qui s'est allonge.
+
+SI ON QUESTIONNE la decroissance d'aout et septembre : elle est voulue, le
+perimetre produit se referme au profit des livrables de restitution du titre.
 -->
 
 ---
 
 # Tableau de bord : coûts, risques, ressources
 
-<div class="grid grid-cols-3 gap-3 dense">
+<div class="grid grid-cols-3 gap-5 text-sm">
 <div>
 
 ### Coûts, prévu / réel
@@ -810,13 +774,11 @@ c'est le perimetre qui absorbe, jamais la date.
 | Poste | Prévu | Réel |
 |-------|------:|-----:|
 | Infrastructure | 1 à 5 €/mois | **0 €** |
-| Domaine | 10 €/an | 10 €/an |
-| Licences | 0 € | **0 €** |
-| Trésorerie | 20 à 190 €/an | **≈ 10 €/an** |
+| Trésorerie | 20 à 190 €/an | **≈ 10 €** |
 | Valeur de dév. | 34 300 € | ≈ 30 800 € |
 
-<div class="text-xs opacity-75 mt-1">
-Deux échéances de coût sont suivies bien qu'elles vaillent zéro aujourd'hui : fin des 12 mois gratuits du front, et franchissement des 512 Mo de la base.
+<div class="note mt-3 text-xs">
+<b>Deux échéances de coût sont suivies bien qu'elles vaillent zéro aujourd'hui</b> : la fin des 12 mois offerts du front, et le franchissement des 512 Mo de la base. Un budget qui ne suit que la dépense actuelle ne pilote rien.
 </div>
 
 </div>
@@ -824,104 +786,115 @@ Deux échéances de coût sont suivies bien qu'elles vaillent zéro aujourd'hui 
 
 ### Risques
 
-| Risque | Valeur | État |
-|--------|-------:|:----:|
-| Vulnérabilités ouvertes | 0 | ✅ |
-| Couverture de tests | 86,6 % | ✅ |
-| Quality Gate | Passed | ✅ |
-| Stabilité de la chaîne | **78 %** | ⚠️ |
-| Disponibilité | 100 % | ✅ |
-| Erreurs serveur | 0,026 % | ✅ |
-| Anomalies ouvertes | 0 / 3 | ✅ |
-| Facteur de bus | **1** | ⚠️ |
+<div class="chips">
+<div><span>Vulnérabilités HIGH/CRITICAL</span><u style="color:var(--ok)">0 ✓</u></div>
+<div><span>Couverture de tests</span><u style="color:var(--ok)">86,6 % ✓</u></div>
+<div><span>Quality Gate</span><u style="color:var(--ok)">A/A/A ✓</u></div>
+<div><span>Disponibilité</span><u style="color:var(--ok)">100 % ✓</u></div>
+<div><span>Erreurs serveur</span><u style="color:var(--ok)">0,026 % ✓</u></div>
+<div><span>Anomalies ouvertes</span><u style="color:var(--ok)">0 / 3 ✓</u></div>
+<div><span>Stabilité de la chaîne</span><u style="color:#b45309">78 % ⚠ alerte</u></div>
+<div><span>Facteur de bus</span><u style="color:#b45309">1 ⚠ alerte</u></div>
+</div>
+
+<div class="text-xs opacity-75 mt-2">Seuil de décision de la chaîne : <b>80 %</b>. En dessous, analyse des causes.</div>
 
 </div>
 <div>
 
-### Stabilité de la chaîne, détail
+### Stabilité de la chaîne
 
-| Période | Exéc. | Taux |
-|---------|------:|-----:|
-| Juin (dès le 19) | 48 | **52 %** |
-| Juillet | 99 | **94 %** |
-| Août | 36 | 78 % |
-| Sept. (5 j.) | 8 | 38 % |
+<div class="cols" style="height:6.2rem;position:relative">
+<div style="position:absolute;left:0;right:0;bottom:80%;top:auto;height:0;flex:none;border-top:1px dashed #94a3b8;z-index:1"></div>
+<div><em>52 %</em><i style="height:52%;background:#d97706"></i></div>
+<div><em>94 %</em><i style="height:94%"></i></div>
+<div><em>78 %</em><i style="height:78%;background:#d97706"></i></div>
+<div><em>38 %</em><i style="height:38%;background:#d97706"></i></div>
+</div>
+<div class="xlab">
+<div>juin<br><span class="opacity-60">48 exéc.</span></div>
+<div>juil.<br><span class="opacity-60">99</span></div>
+<div>août<br><span class="opacity-60">36</span></div>
+<div>sept.<br><span class="opacity-60">8</span></div>
+</div>
 
-<div class="text-xs opacity-75 mt-1">
-Le passage de 52 à 94 % suit une correction <b>décidée à partir de cet indicateur</b> : portes de qualité rendues déterministes en v1.3.1. La valeur de septembre porte sur 8 exécutions et ne se lit pas comme une tendance.
+<div class="note mt-2 text-xs">
+Le passage de <b>52 à 94 %</b> suit une correction <b>décidée à partir de cet indicateur</b> (v1.3.1). La valeur de septembre porte sur <b>8 exécutions</b> : elle ne se lit pas comme une tendance.
 </div>
 
 </div>
 </div>
 
-<div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-sm">
-<b>Ressources humaines : 88 jours actifs sur 191, soit 3,1 jours par semaine — mais une amplitude de 1 à 7 jours, une série de 10 jours consécutifs et 5 semaines à zéro.</b> La charge a été <b>absorbée, pas pilotée</b>. C'est cette mesure, et non une intuition, qui justifie l'organisation cible à quatre profils du chapitre 4.
+<div class="alert mt-3 text-sm">
+<b>Ressources humaines : 88 jours actifs sur 191, soit 3,1 par semaine — mais une amplitude de 1 à 7, une série de 10 jours consécutifs, 5 semaines à zéro.</b> La charge a été <b>absorbée, pas pilotée</b>. C'est cette mesure, et non une intuition, qui justifie l'organisation cible du chapitre 4.
 </div>
 
 <!--
 DUREE 1:00. CRITERE : le tableau de bord integre le suivi des COUTS, des RISQUES
 et des RESSOURCES HUMAINES. Les trois axes restants du critere sont ici.
 
-COUTS, une phrase : le budget d'infrastructure tient parce qu'il a ete concu pour
-tenir, avec une contrepartie technique assumee, le demarrage a froid de 3,8 s.
-Puis le point de pilotage : deux echeances de cout sont suivies alors qu'elles
-valent zero aujourd'hui, parce qu'un budget qui ne suit que la depense actuelle
-ne pilote rien.
+COUTS, une phrase : le budget tient parce qu'il a ete concu pour tenir, avec une
+contrepartie technique assumee — le demarrage a froid de 3,8 s. Puis le point de
+pilotage : deux echeances de cout suivies alors qu'elles valent zero aujourd'hui.
 
-RISQUES : ne pas parcourir la colonne. Aller directement aux deux voyants
-oranges. Le premier, la stabilite de la chaine, est celui qui prouve la boucle
-mesure -> decision -> effet mesure : 52 %, correction, 94 %.
+RISQUES : ne pas parcourir la colonne. Aller aux DEUX voyants oranges. Le
+premier, la stabilite de la chaine, est celui qui prouve la boucle mesure ->
+decision -> effet remesure : 52 %, correction, 94 %. C'est l'histogramme de
+droite, et c'est la seule chose a commenter de ce cote.
 
-RH : c'est la transition du chapitre 4. La phrase a dire : « une semaine a sept
-jours travailles suivie d'une semaine a zero tient sur sept mois de projet
+RH : c'est la transition vers le chapitre 4. La phrase a dire : « une semaine a
+sept jours travailles suivie d'une semaine a zero tient sur sept mois de projet
 etudiant, elle ne tient pas sur une equipe et une exploitation dans la duree. »
 
-SI ON QUESTIONNE : « votre chaine echoue une fois sur cinq. » Reponse : sur la
-fenetre complete oui, la serie mensuelle est plus parlante, et la valeur de
+SI ON QUESTIONNE : « votre chaine echoue une fois sur cinq. » Sur la fenetre
+complete oui, 78 %. La serie mensuelle est plus parlante, et la valeur de
 septembre porte sur huit executions.
 -->
 
 ---
 
-# L'écart entre le prévisionnel et le réel
+# L'écart n'est pas où on le cherche
 
 <div class="grid grid-cols-2 gap-6">
 <div>
 
-| | Prévu | Réel | Écart |
-|--|------|------|------:|
-| Charge | 98 J/H | ≈ 88 J/H | **−10 %** |
-| Périmètre | MVP + migration + V1 + clôture | **+ 7 livraisons** non chiffrées, dont 4 versions mineures | **+ 37 items** |
-| Délais | 4 échéances | 4 tenues | **0** |
-| Coûts | 20 à 190 €/an | ≈ 10 €/an | borne basse |
+<div class="text-sm mb-1">Charge : <b>98 J/H prévus</b> → <b>≈ 88 reconstitués</b>, soit <b>−10 %</b>, dans la marge de 20 %.</div>
+<div class="text-xs opacity-75 mb-4">Pris seul, cet écart donnerait l'image d'une estimation juste.</div>
 
-<div class="mt-3 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-sm">
-Pris seul, l'écart de charge de −10 % tombe dans la marge de 20 % et donnerait l'image d'une estimation juste. <b>Pris avec la ligne du périmètre, il dit l'inverse.</b>
+<div class="text-xs opacity-75 mb-1">Où sont passés les 88 jours actifs</div>
+<div class="stack">
+<i style="width:26%;background:var(--s1)">23 j · 26 %</i>
+<i style="width:74%;background:#d97706">65 j · 74 %</i>
 </div>
 
-<div class="text-xs mt-3">
+<div class="text-xs opacity-75 mt-4 mb-1">D'où viennent les 61 items de périmètre livrés</div>
+<div class="stack">
+<i style="width:39%;background:var(--s1)">24 items</i>
+<i style="width:61%;background:#d97706">37 items · 61 %</i>
+</div>
 
-| Fenêtre | Contenu | Jours actifs |
-|---------|---------|-------------:|
-| 27/02 → 19/05 | Lots 1 à 3, chiffrés | 23 (26 %) |
-| 20/05 → 05/09 | **Hors chiffrage initial** | **65 (74 %)** |
+<div class="legend mt-2">
+<span style="--c:var(--s1)">Lots 1 à 3, chiffrés au cadrage</span>
+<span style="color:#d97706">Hors chiffrage initial (V1.1 → V1.4.1)</span>
+</div>
 
-Les 4 versions mineures livrées après la V1 représentent **37 des 61 items** du produit final. Aucune des 7 livraisons qui suivent la V1 n'a été chiffrée.
+<div class="alert mt-4 text-sm">
+<b>Ce n'était pas une dérive de charge, c'était un glissement de périmètre.</b> Sept livraisons après la V1, dont quatre versions mineures, <b>jamais chiffrées</b>. Le périmètre a plus que doublé pendant que la charge restait dans l'enveloppe.
+</div>
 
 </div>
-</div>
-<div>
+<div class="text-sm">
 
 ### Trois décisions prises à partir d'une mesure
 
-| Mesure | Décision | Effet mesuré |
-|--------|----------|--------------|
+| Mesure | Décision | Effet remesuré |
+|--------|----------|----------------|
 | 81 jours entre le prototype et la V1 | Arbitrer la migration de l'API — **chapitre 3** | Retour à **une version tous les 17 jours** |
-| Chaîne à 52 %, échecs sans cause réelle | Portes de qualité bloquantes **et** déterministes (v1.3.1) | **94 %** le mois suivant |
-| 59 PR de dépendances ouvertes pour 9 fusionnées | Regroupement mensuel, filet déplacé sur l'audit à chaque commit | **0 vulnérabilité** ouverte, sans fusion non relue |
+| Chaîne à 52 %, échecs sans cause réelle | Portes de qualité bloquantes **et** déterministes | **94 %** le mois suivant |
+| 59 PR de dépendances pour 9 fusionnées | Regroupement mensuel, audit à chaque commit | **0 vulnérabilité** ouverte, sans fusion non relue |
 
-<div class="mt-2 p-2 border-l-4 border-amber-500 bg-amber-50 bg-opacity-40 text-xs">
-<b>Ce que le suivi n'a pas vu.</b> Aucun indicateur ne comparait le périmètre courant au périmètre chiffré : le glissement de 37 items n'a été visible qu'a posteriori. C'est le premier compteur que j'ajouterais.
+<div class="alert mt-4">
+<b>Ce que le suivi n'a pas vu.</b> Aucun indicateur ne comparait le périmètre courant au périmètre chiffré : le glissement de 37 items n'a été visible qu'<i>a posteriori</i>. <b>C'est le premier compteur que j'ajouterais.</b>
 </div>
 
 </div>
@@ -931,31 +904,36 @@ Les 4 versions mineures livrées après la V1 représentent **37 des 61 items** 
 DUREE 1:00. C'est la diapo qui prouve que le suivi a servi a DECIDER et pas
 seulement a mesurer. Elle amene le chapitre 3.
 
-Structurer en trois temps, sans lire les tableaux :
+Trois temps, sans lire les tableaux :
 
-1. « L'ecart de charge est de moins 10 %, dans la marge. Ce n'est pas la bonne
-lecture. » Puis la ligne du perimetre : quatre versions produit livrees apres la
-V1, 37 des 61 items du produit final, jamais chiffrees. Le perimetre a plus que
-double pendant que la charge restait dans l'enveloppe. La derive n'etait pas une
-derive de charge, c'etait un glissement de perimetre que rien ne mesurait.
+1. Les deux barres de gauche. « L'ecart de charge est de moins 10 %, dans la
+marge. Ce n'est pas la bonne lecture. » Puis designer la barre orange : 74 % des
+jours actifs et 61 % du produit final sont HORS du chiffrage initial. La derive
+n'etait pas une derive de charge, c'etait un glissement de perimetre que rien ne
+mesurait.
 
 2. Les trois decisions. C'est le coeur de la competence : chaque ligne est une
-mesure, une decision, et un effet remesure ensuite.
+mesure, une decision, et un effet REMESURE ensuite. Ne pas en developper plus
+d'une — la troisieme est la plus parlante : cinquante pull requests ouvertes puis
+fermees sans fusion ne sont pas un gaspillage, c'est le symptome qu'un
+automatisme etait mal regle. L'indicateur a servi a regler la frequence de
+l'automatisme, pas a juger le travail.
 
 3. L'autocritique du bandeau orange. Ne pas l'escamoter, c'est elle qui rend les
 deux premiers temps credibles.
 
 SI ON QUESTIONNE : « comment reconstituez-vous 88 J/H sans releve de temps ? »
-Reponse honnete : par les jours distincts portant au moins un commit, 1 jour
-actif pour 1 J/H, incertitude d'au moins 20 %. La reconstitution est FAIBLE sur
-les cinq premieres semaines, ou les commits etaient groupes — le premier commit
-du projet porte 3 400 lignes a lui seul. La charge reelle est vraisemblablement
-superieure a 88 J/H. Un indicateur ne mesure que la pratique qui le produit.
+Par les jours distincts portant au moins un commit, 1 jour actif pour 1 J/H,
+incertitude d'au moins 20 %. La reconstitution est FAIBLE sur les cinq premieres
+semaines, ou les commits etaient groupes — le premier commit du projet porte
+3 400 lignes a lui seul. La charge reelle est vraisemblablement SUPERIEURE a 88.
+Un indicateur ne mesure que la pratique qui le produit.
 -->
-
 ---
 
 # 3. Un cas d'arbitrage : la dérive constatée
+
+<div class="lede">Le MVP est livré sur une pile qui ne portera pas la suite. Et le coût de la corriger croît chaque jour.</div>
 
 <div class="grid grid-cols-2 gap-6 text-sm">
 <div>
@@ -964,34 +942,30 @@ superieure a 88 J/H. Un indicateur ne mesure que la pratique qui le produit.
 
 | Date | Événement |
 |------|-----------|
-| 16/03 16:48 | **MVP terminé**, API Node/Express : 944 lignes, 18 fichiers, 12 routes |
-| 16/03 | La feuille de route du MVP s'arrête à l'étape 16. **Aucune migration n'y figure** |
+| 16/03 16:48 | **MVP terminé** — 944 lignes, 18 fichiers, 12 routes. La feuille de route s'arrête à l'étape 16, **aucune migration n'y figure** |
 | 18/03 11:57 | Décision exécutée, document d'aide à la décision versionné |
-| 18/03 12:12 | **Bascule** : l'ancienne API retirée, 15 min après |
+| 18/03 12:12 | Ancienne API retirée, **15 min** après |
 | 19/03 16:52 | Migration terminée |
 
-<div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
-La migration est <b>absente</b> de la feuille de route au moment où le MVP est déclaré terminé, et ajoutée deux jours plus tard. C'est ce qui en fait un arbitrage et non l'exécution d'un plan.
+<div class="note mt-2 text-xs">
+La migration est <b>absente</b> de la feuille de route quand le MVP est déclaré terminé, et ajoutée deux jours plus tard. <b>C'est ce qui en fait un arbitrage et non l'exécution d'un plan.</b>
 </div>
 
 </div>
 <div>
 
-### L'écart : livré ≠ ce sur quoi on va construire
+### Quatre exigences que l'API du MVP ne tenait pas
 
-| Exigence pour la suite | L'API du MVP |
-|------------------------|--------------|
-| Typage fort, analyse bloquante à la compilation | Typage effacé à l'exécution |
+| Exigence pour la suite | Ce qui était livré |
+|------------------------|--------------------|
+| Typage arrêté à la compilation | Typage effacé à l'exécution |
 | Sécurité fournie par le cadre | Composants à assembler un par un |
-| Support long terme | Cycle court, veille plus fréquente |
+| Socle à support long terme | Cycle court, veille plus fréquente |
 | Architecture en couches | 18 fichiers, aucune séparation |
 
-### La conséquence : une fenêtre qui se referme
-
-<div class="p-2 border-l-4 border-amber-500 bg-amber-50 bg-opacity-40 mt-2">
-Au 18 mars, le périmètre à réécrire pesait <b>944 lignes</b>.<br>
-La même API en porte <b>44 663</b> aujourd'hui.<br>
-<b>Rapport de 1 à 47.</b> Le coût de la décision croissait chaque jour.
+<div class="alert mt-3 text-xs">
+<b class="text-2xl" style="color:#b45309">1 → 47</b><br>
+Au 18 mars, le périmètre à réécrire pesait <b>944 lignes</b>. La même API en porte <b>44 663</b> aujourd'hui. <b>Le coût de la décision croissait chaque jour.</b>
 </div>
 
 </div>
@@ -1007,62 +981,63 @@ une pile que je ne voulais pas garder pour la suite. L'etude comparative du
 Bloc 1 retient .NET, mais elle a ete formalisee en juin : elle consigne la
 decision finale, pas la chronologie. La verite est celle de l'historique. »
 
-Puis le tableau de gauche, une seule ligne a dire : la migration est ABSENTE de
-la feuille de route quand le MVP est declare termine, et ajoutee deux jours plus
+Puis UNE seule ligne du tableau de gauche : la migration est ABSENTE de la
+feuille de route quand le MVP est declare termine, et ajoutee deux jours plus
 tard. C'est ce qui fait de ce cas un arbitrage.
 
-Terminer sur le chiffre de droite, qui est celui que le jury retiendra : 944
-lignes a migrer le 18 mars, 44 663 aujourd'hui. Preciser aussitot que ce chiffre
-est la justification A POSTERIORI, pas l'argument d'origine : le 18 mars on
-savait que le cout croitrait, pas de combien. C'est la nature meme d'un
-arbitrage.
+Terminer sur le rapport de 1 a 47, que le jury retiendra. Preciser AUSSITOT que
+ce chiffre est la justification A POSTERIORI, pas l'argument d'origine : le 18
+mars on savait que le cout croitrait, pas de combien. C'est la nature meme d'un
+arbitrage — decider avec l'information disponible pendant que la fenetre est
+ouverte.
+
+Sur la troisieme exigence, si on la conteste : la charge de veille de
+l'ecosysteme npm s'est verifiee ensuite — 59 des 78 pull requests du projet sont
+des montees de dependances — mais c'etait une ANTICIPATION en mars, pas une
+mesure.
 -->
 
 ---
 
-# Les options et le logigramme de décision
+# Quatre options, et le logigramme qui tranche
 
-<div class="grid grid-cols-5 gap-4">
+<div class="grid grid-cols-5 gap-5">
 <div class="col-span-3 dense">
 
 | # | Option | Coût | Risque principal |
 |:-:|--------|------|------------------|
-| A | Ne rien changer, poursuivre la V1 sur Node | 0 J/H | Les 4 écarts subsistent 6 mois. Risque **cumulatif**, pas immédiat |
-| **B** | **Migrer maintenant**, bascule en une fois | **13 J/H**<br/>(8 réécriture, 3 tests et contrat, 2 redéploiement) | Rupture du contrat avec un front **déjà déployé** |
-| C | Migrer après la V1 | Même travail, périmètre plusieurs fois supérieur | Le report devient un renoncement ; réécriture **avec des utilisateurs en production** |
-| D | Migrer progressivement, deux API en parallèle | Migration **+** double maintenance de chaque évolution | Deux bases à tenir **par une seule personne**. L'option la plus progressive est ici la plus risquée |
+| A | Ne rien changer | 0 J/H | Les 4 écarts subsistent 6 mois. Risque **cumulatif**, pas immédiat |
+| **B** | **Migrer maintenant**, bascule en une fois | **13 J/H** | Rupture du contrat avec un front **déjà déployé** |
+| C | Migrer après la V1 | Périmètre plusieurs fois supérieur | Le report devient un renoncement ; réécriture **avec des utilisateurs en production** |
+| D | Migrer progressivement, deux API en parallèle | Migration **+** double maintenance | Deux bases à tenir **par une seule personne** |
 
-**Les 5 critères de décision** — 1. contrat d'interface préservé *(éliminatoire)* · 2. le coût croît-il avec le temps ? · 3. fenêtre de stabilité fonctionnelle ? · 4. réversibilité · 5. charge soutenable par l'effectif réel
+<div class="alert mt-3 text-sm">
+<b>D paraît la plus prudente et ne l'est pas.</b> Sur une équipe, le coût de la double maintenance se répartit ; à effectif 1, il s'ajoute. <b>C'est le critère 5 qui l'écarte.</b>
+</div>
+
+<div class="text-xs opacity-75 mt-3">
+Le logigramme ne mentionne aucune technologie : il énonce les questions qu'un changement de socle impose de trancher, <b>dans l'ordre où elles doivent l'être</b>. Version complète en annexe A2.
+</div>
 
 </div>
 <div class="col-span-2">
 
-```mermaid {scale: 0.52}
-flowchart TD
-    Q2{"Contrat d'interface<br/>préservable ?"}
-    Q2 -->|non| R1["REFUS"]
-    Q2 -->|oui| Q3{"Périmètre figé<br/>maintenant ?"}
-    Q3 -->|non| R2["DIFFÉRER"]
-    Q3 -->|oui| Q4{"Coût croissant<br/>avec le temps ?"}
-    Q4 -->|non| R3["DIFFÉRER"]
-    Q4 -->|oui| Q5{"Charge soutenable<br/>à effectif réel ?"}
-    Q5 -->|non| R4["RÉDUIRE<br/>ou renoncer"]
-    Q5 -->|oui| Q6{"Critère de bascule<br/>mesurable ?"}
-    Q6 -->|non| R5["REFUS"]
-    Q6 -->|oui| D["DÉCIDER<br/>MAINTENANT"]
-    D --> V{"Parité vérifiée<br/>sur le contrat ?"}
-    V -->|non| RB["RETOUR ARRIÈRE"]
-    V -->|oui| F(["BASCULE"])
-    classDef refus fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
-    classDef diff fill:#fef3c7,stroke:#d97706,color:#78350f
-    classDef ok fill:#ccfbf1,stroke:#0d9488,color:#134e4a
-    class R1,R5 refus
-    class R2,R3,R4,RB diff
-    class D,F ok
-```
-
-<div class="text-xs opacity-75 mt-1">
-Écrit pour être <b>réutilisable</b> : aucune techno n'y figure. Version complète en annexe.
+<div class="flow">
+<div class="row"><div class="q">Contrat d'interface<br>intégralement préservable ?</div><div class="r no">REFUS</div></div>
+<div class="arrow">↓ oui &nbsp;·&nbsp; non →</div>
+<div class="row"><div class="q">Périmètre à réécrire<br>connu et figé <i>maintenant</i> ?</div><div class="r">DIFFÉRER</div></div>
+<div class="arrow">↓ oui &nbsp;·&nbsp; non →</div>
+<div class="row"><div class="q">Le coût de la décision<br>croît-il avec le temps ?</div><div class="r">DIFFÉRER</div></div>
+<div class="arrow">↓ oui &nbsp;·&nbsp; non →</div>
+<div class="row"><div class="q">Charge soutenable<br>par l'effectif <i>réel</i> ?</div><div class="r">RÉDUIRE</div></div>
+<div class="arrow">↓ oui &nbsp;·&nbsp; non →</div>
+<div class="row"><div class="q">Critère de bascule<br>mesurable définissable ?</div><div class="r no">REFUS</div></div>
+<div class="arrow">↓ oui</div>
+<div class="r go">DÉCIDER MAINTENANT — bascule en une fois</div>
+<div class="arrow">↓</div>
+<div class="row"><div class="q">Parité vérifiée<br>sur tout le contrat ?</div><div class="r">RETOUR<br>ARRIÈRE</div></div>
+<div class="arrow">↓ oui</div>
+<div class="r go">BASCULE — retrait de l'ancien socle</div>
 </div>
 
 </div>
@@ -1072,59 +1047,57 @@ flowchart TD
 DUREE 1:00. ELEMENT IMPOSE 5 (2/3).
 CRITERE : les differentes options possibles sont DETAILLEES. La grille nomme
 explicitement le LOGIGRAMME comme outil d'aide a la decision : il doit etre a
-l'ecran et commente, pas seulement affiche.
+l'ecran ET COMMENTE, pas seulement affiche.
 
-Les quatre options, une phrase chacune, sans lire le tableau. Le temps utile est
-sur l'option D, la plus contre-intuitive : migrer progressivement parait plus
-prudent, et c'est faux a effectif 1. Deux bases de code en parallele, sur une
-equipe le cout se repartit, sur une personne il s'ajoute. C'est le critere 5.
+Les quatre options, une phrase chacune, sans lire le tableau. Le temps utile va a
+l'option D, la plus contre-intuitive.
 
-Puis le logigramme, en le PARCOURANT a voix haute sur le chemin reellement
-suivi le 18 mars : produit deploye oui, contrat preservable oui grace au contrat
-OpenAPI de l'API Node, perimetre fige oui puisque le MVP venait d'etre termine,
-cout croissant oui, charge soutenable oui, critere de bascule definissable oui
-— la parite sur les 12 routes. Donc decider maintenant.
+Puis PARCOURIR le logigramme a voix haute sur le chemin reellement suivi le 18
+mars, en descendant du doigt : contrat preservable OUI, grace au contrat OpenAPI
+de l'API Node — perimetre fige OUI, le MVP venait d'etre declare termine — cout
+croissant OUI — charge soutenable OUI, 13 J/H pour un executant — critere de
+bascule definissable OUI, la parite sur les 12 routes. Donc DECIDER MAINTENANT.
 
-Insister sur la DERNIERE branche : parite non verifiee = retour arriere,
-l'ancien socle restant deployable. C'est ce qui rendait la decision reversible.
+Insister sur la DERNIERE branche : parite non verifiee = retour arriere, l'ancien
+socle restant deployable. C'est ce qui rendait la decision reversible, et c'est
+ce qui distingue un arbitrage d'un pari.
+
+Dire aussi qu'il est REUTILISABLE : aucune techno n'y figure. Un jury de
+professionnels reconnait tout de suite un outil de decision d'un schema
+decoratif.
 -->
 
 ---
 
-# La décision et son résultat mesuré
+# La décision, et ce qu'elle a produit
 
 <div class="grid grid-cols-2 gap-6 text-sm">
 <div>
 
-### Option B, argumentée en 4 temps
+### Option B, argumentée
 
-**1. La fenêtre était ouverte et allait se refermer.** Le MVP venait d'être figé : seul moment où le périmètre à réécrire était complet **et** arrêté.
+**La fenêtre était ouverte et allait se refermer.** Le MVP venait d'être figé : seul moment où le périmètre à réécrire était complet **et** arrêté.
 
-**2. Le coût de l'option A n'est pas nul, il est différé.** Ne rien faire, c'était payer plus tard à un prix inconnu — ou ne jamais payer.
+**Le coût de l'option A n'est pas nul, il est différé.** Ne rien faire, c'était payer plus tard à un prix inconnu — ou ne jamais payer.
 
-**3. La bascule en une fois est moins risquée que la coexistence, à effectif 1.**
-
-**4. La décision restait réversible** jusqu'à la vérification de parité.
-
-<div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
-<b>Ce qui la rendait pilotable</b> : un critère de succès défini <b>avant</b> de commencer — le front ne change pas, parce que les URL et le format JSON ne changent pas. Binaire, vérifiable.
+<div class="note mt-3">
+<b>Ce qui la rendait pilotable</b> : un critère de succès défini <b>avant</b> de commencer — <i>le front ne change pas, parce que les URL et le format JSON ne changent pas</i>. Binaire, vérifiable, et il transforme une réécriture en objectif mesurable.
 </div>
 
 </div>
 <div>
 
-### Ce qui a été tenu
+### Le résultat, mesuré
 
-| Objectif | Résultat mesuré |
-|----------|-----------------|
-| Réécrire à l'identique du contrat | 12 routes, 944 lignes TS → **4 653 lignes C#**, 111 fichiers |
+| Objectif | Résultat |
+|----------|----------|
+| Réécrire à l'identique du contrat | 12 routes · 944 lignes TS → **4 653 lignes C#** |
 | Bascule sans double maintenance | Ancienne API retirée **15 min** après |
-| Ne pas décaler la V1 | **v1.0.0 le 19/05**, aucune échéance du titre décalée |
-| Décision non rejouée | **Aucun retour arrière**, 8 versions livrées depuis |
-| Socle tenable | 44 663 lignes, couverture **86,6 %**, **A/A/A** |
+| Ne pas décaler la V1 | **v1.0.0 le 19/05**, aucune échéance décalée |
+| Décision non rejouée | **Aucun retour arrière**, 8 versions depuis |
 
-<div class="mt-2 p-2 border-l-4 border-amber-500 bg-amber-50 bg-opacity-40 text-xs">
-<b>Ce qui n'a pas été tenu.</b> L'objectif était « aucune modification du front » : le réel est <b>87 lignes sur 9 fichiers</b>, du typage et de l'affichage. À plusieurs, c'était un incident d'intégration détecté en revue. Et le lot est chiffré 13 J/H <b>a posteriori</b> : l'historique ne permet pas de le vérifier au jour près.
+<div class="alert mt-3 text-xs">
+<b>Ce qui n'a pas été tenu.</b> L'objectif était « aucune modification du front » : le réel est <b>87 lignes sur 9 fichiers</b>. À plusieurs, c'était un incident d'intégration détecté en revue — à une personne, il est passé inaperçu. Et le lot est chiffré 13 J/H <b>a posteriori</b> : l'historique ne permet pas de le vérifier au jour près.
 </div>
 
 </div>
@@ -1133,112 +1106,145 @@ l'ancien socle restant deployable. C'est ce qui rendait la decision reversible.
 <!--
 DUREE 0:40. ELEMENT IMPOSE 5 (3/3).
 CRITERE : la decision d'arbitrage est argumentee ET permet de resoudre la
-problematique. Les deux moities comptent : l'argumentation ET la preuve que ca a
-marche.
+problematique. Les deux moities comptent.
 
-Ne pas relire les quatre arguments, ils sont a l'ecran. En dire DEUX : la fenetre
-qui se referme, et le cout non nul de l'option A.
+Diapo courte, ne pas deborder. Deux arguments seulement, ils sont a l'ecran : la
+fenetre qui se referme, et le cout non nul de l'option A. Ne pas les relire.
 
 Puis le tableau de droite en un seul geste : « aucun retour arriere, huit
-versions produit livrees sur ce socle depuis, et le socle porte aujourd'hui
-44 663 lignes a 86,6 % de couverture. »
+versions produit livrees sur ce socle depuis. »
 
-Le bandeau orange est OBLIGATOIRE a dire, ne pas le sauter par manque de temps.
-C'est lui qui distingue un bilan d'un plaidoyer. Les 87 lignes de front sont le
-detail qui prouve qu'on a verifie, et l'aveu sur le chiffrage a posteriori
-enchaine directement avec ce qui a ete dit au chapitre 2.
+Le bandeau orange est OBLIGATOIRE, ne pas le sauter par manque de temps. C'est
+lui qui distingue un bilan d'un plaidoyer. Les 87 lignes sont le detail qui
+prouve qu'on a verifie, et l'aveu sur le chiffrage a posteriori enchaine avec ce
+qui a ete dit au chapitre 2.
 
 CONCLUSION DU CHAPITRE, phrase a dire telle quelle : « le document d'aide a la
 decision annoncait que C# serait plus verbeux. 944 lignes TypeScript sont
-devenues 4 653 lignes C#. L'inconvenient annonce s'est realise, il avait ete
-accepte en connaissance de cause. Un arbitrage dont on peut verifier apres coup
-que les inconvenients annonces etaient les bons est un arbitrage instruit. »
+devenues 4 653 lignes C#, un facteur 4,9. L'inconvenient annonce s'est realise,
+il avait ete accepte en connaissance de cause. Un arbitrage dont on peut verifier
+apres coup que les inconvenients annonces etaient les bons est un arbitrage
+instruit. »
 -->
 
 ---
 
 # 4. Piloter l'équipe : l'affectation des missions
 
-<div class="text-sm mb-2">
-Organisation cible à 4 profils — <b>projection d'industrialisation</b>, annoncée depuis la diapositive 3.
-</div>
+<div class="lede">L'affectation suit la <b>compétence attestée</b>, jamais la disponibilité. <span class="opacity-70">Organisation cible — projection, annoncée depuis la diapositive 3.</span></div>
 
-<div class="grid grid-cols-2 gap-6 text-sm">
-<div>
+<div class="grid grid-cols-5 gap-5 text-sm">
+<div class="col-span-2">
 
-| Profil | Mission | Critère d'affectation |
-|--------|---------|-----------------------|
-| **Lead, chef de projet** | Conception d'ensemble, arbitrages, planning, restitutions | Seul rôle portant l'**approbation** : un responsable unique par activité |
-| **Développeur front** | Interface, parcours, accessibilité, app installable | React, TypeScript, mobile-first, critères d'accessibilité |
-| **Développeur back** | API, modèle, règles métier, intégrations | C#, ASP.NET Core, architecture hexagonale |
-| **DevOps et QA**, mi-temps | Chaîne de livraison, infra, supervision, recette | Intégration continue, conteneurisation, sécurité |
-
-<div class="text-xs opacity-75 mt-1">L'affectation suit la <b>compétence attestée</b>, jamais la disponibilité.</div>
+| Profil | Mission confiée |
+|--------|-----------------|
+| **Lead, chef de projet** | Conception d'ensemble, arbitrages, planning, restitutions |
+| **Développeur front** | Interface, parcours, accessibilité, app installable |
+| **Développeur back** | API, modèle, règles métier, intégrations |
+| **DevOps et QA** | Chaîne de livraison, infra, supervision, recette |
 
 </div>
-<div class="dense">
+<div class="col-span-3">
 
-| Lot | Total | Lead | Front | Back | DevOps |
-|-----|------:|-----:|------:|-----:|-------:|
-| 1. MVP | 27 | 2 | 9 | 11 | 5 |
-| 2. Migration | 13 | 3 | 0 | 8 | 2 |
-| 3. V1 produit | 35 | 3 | 12 | 16 | 4 |
-| 4. Clôture du titre | 23 | 11 | 4 | 0 | 8 |
-| **Total** | **98** | **19** | **25** | **35** | **19** |
-| **Part** | | 19 % | 26 % | **36 %** | 19 % |
+<div class="text-xs opacity-75 mb-2">Répartition des 98 J/H — largeur de barre proportionnelle à la charge du lot</div>
 
-<div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
-<b>Une somme équilibrée n'est pas un équilibre.</b> Le back porte 36 %, conséquence du lot de migration. Le déséquilibre est <b>décalé dans le temps</b> : pic back en mars-avril, pic front en avril-mai. À aucun moment un profil n'est saturé pendant qu'un autre attend.<br>
-Quatre profils à 24,5 J/H seraient parfaits sur le papier et impossibles dans le calendrier : les compétences ne sont pas interchangeables.
+<div class="lots">
+<div>1. MVP</div>
+<div><div class="stack" style="width:77%"><i style="width:7.4%;background:var(--s1)"></i><i style="width:33.3%;background:var(--s2)">9</i><i style="width:40.7%;background:var(--s3)">11</i><i style="width:18.5%;background:var(--s4)">5</i></div></div>
+<div><b>27</b></div>
+
+<div>2. Migration</div>
+<div><div class="stack" style="width:37%"><i style="width:23.1%;background:var(--s1)">3</i><i style="width:61.5%;background:var(--s3)">8</i><i style="width:15.4%;background:var(--s4)"></i></div></div>
+<div><b>13</b></div>
+
+<div>3. V1 produit</div>
+<div><div class="stack" style="width:100%"><i style="width:8.6%;background:var(--s1)"></i><i style="width:34.3%;background:var(--s2)">12</i><i style="width:45.7%;background:var(--s3)">16</i><i style="width:11.4%;background:var(--s4)">4</i></div></div>
+<div><b>35</b></div>
+
+<div>4. Clôture</div>
+<div><div class="stack" style="width:66%"><i style="width:47.8%;background:var(--s1)">11</i><i style="width:17.4%;background:var(--s2)">4</i><i style="width:34.8%;background:var(--s4)">8</i></div></div>
+<div><b>23</b></div>
+</div>
+
+<div class="legend">
+<span style="--c:var(--s1)">Lead 19 J/H · 19 %</span>
+<span style="--c:var(--s2)">Front 25 · 26 %</span>
+<span style="--c:var(--s3)">Back 35 · 36 %</span>
+<span style="--c:var(--s4)">DevOps 19 · 19 %</span>
+</div>
+
+<div class="alert mt-3 text-xs">
+<b>Une somme équilibrée n'est pas un équilibre.</b> Le back porte 36 %, conséquence du lot de migration — mais le déséquilibre est <b>décalé dans le temps</b> : pic back en mars-avril, pic front en avril-mai. À aucun moment un profil n'est saturé pendant qu'un autre attend.
 </div>
 
 </div>
 </div>
+
+<style>
+.lots { display: grid; grid-template-columns: max-content 1fr 2.2rem; gap: 0.35rem 0.6rem; align-items: center; font-size: 0.74rem; }
+.lots > div:nth-child(3n+1) { color: var(--ink-2); white-space: nowrap; }
+.lots > div:nth-child(3n) { text-align: right; }
+.lots .stack { height: 1.3rem; }
+</style>
 
 <!--
 DUREE 0:50. ELEMENT IMPOSE 6 : l'affectation des missions.
 CRITERE : la charge est repartie de maniere EQUILIBREE sur l'ensemble de
 l'equipe.
 
-Premier mot : rappeler que c'est l'organisation cible. C'est le quatrieme rappel
-et il doit rester naturel.
+Premier mot : rappeler que c'est l'organisation cible. Quatrieme rappel, il doit
+rester naturel.
 
 Ne pas lire les profils. Dire le critere d'affectation — la competence attestee,
-pas la disponibilite — et le fait qu'une seule ligne porte l'approbation.
+pas la disponibilite.
 
-Tout le temps utile va au bandeau : le back a 36 %, et c'est assume. Un jury de
+Tout le temps utile va au graphique et au bandeau. Le back a 36 %, un jury de
 professionnels va poser la question, autant y repondre avant. La reponse est que
 l'equilibre se verifie sur le PROFIL DE CHARGE DANS LE TEMPS, pas sur la colonne
-des totaux. Et la phrase qui ferme : quatre profils a 24,5 J/H seraient
-equilibres sur le papier et impossibles dans le calendrier.
--->
+des totaux. Designer la barre du lot 2, entierement back, et celle du lot 4,
+majoritairement lead : les pics ne se superposent pas.
 
+La phrase qui ferme : quatre profils a 24,5 J/H seraient equilibres sur le papier
+et impossibles dans le calendrier, les competences n'etant pas interchangeables.
+
+SI ON QUESTIONNE le DevOps a mi-temps : ses 19 J/H sont etales sur toute la duree
+et non concentres — la chaine de livraison se construit tot et s'entretient
+ensuite.
+-->
 ---
 
-# Les quatre styles managériaux
+# Les quatre styles managériaux, situés
+
+<div class="lede">Chaque style est rattaché à une situation réelle du projet, pas défini en théorie.</div>
 
 <div class="dense">
 
-| Style | Situation réelle du projet | Pourquoi celui-là |
-|-------|---------------------------|-------------------|
-| **Directif** | Durcissement des portes de qualité en juillet, sur une chaîne qui **échouait une fois sur deux** et dont les échecs étaient devenus contournables. La règle est posée sans négociation — un contrôle rouge bloque le déploiement | La compétence n'était pas en cause, **la discipline l'était**. Seul style qui tienne quand contourner est possible |
-| **Persuasif** | Les conventions de code : chaque règle est accompagnée de son motif — si l'intention n'est pas exprimable par le nommage, c'est le code qu'il faut refactoriser | Une règle contre-intuitive énoncée seule est contournée dès la première gêne |
-| **Participatif** | Le cadrage d'une fonctionnalité : questions ouvertes, reformulation, **arrêt obligatoire avant toute ligne de code**. Et les retours utilisateurs, qui ont déclenché deux décisions produit | Celui qui exécute détient une information que le responsable n'a pas |
-| **Délégatif** | L'étape « développement en autonomie » : exécution confiée entièrement, sans contrôle intermédiaire, reprise en revue et en tests | Possible **uniquement** parce que le cadre est écrit et la porte de sortie automatisée |
+| Style | Situation | Pourquoi celui-là |
+|-------|-----------|-------------------|
+| **Directif** | Durcissement des portes de qualité en juillet, sur une chaîne qui **échouait une fois sur deux**. La règle est posée sans négociation | La compétence n'était pas en cause, **la discipline l'était**. Seul style qui tienne quand contourner reste possible |
+| **Persuasif** | Les conventions de code : chaque règle est accompagnée de **son motif** | Une règle contre-intuitive énoncée seule est contournée dès la première gêne |
+| **Participatif** | Le cadrage d'une fonctionnalité : questions ouvertes, reformulation, **arrêt obligatoire avant toute ligne de code** | Celui qui exécute détient une information que le responsable n'a pas |
+| **Délégatif** | L'étape « développement en autonomie » : exécution confiée entièrement, reprise en revue et en tests | Possible **uniquement** parce que le cadre est écrit et la sortie automatisée |
 
 </div>
 
-<div class="mt-3 p-3 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-sm">
-<b>Style dominant : le délégatif encadré.</b> Déléguer l'exécution, conserver la décision, contrôler en sortie par des portes automatisées. C'est le seul style soutenable quand la capacité de supervision est la ressource la plus rare.<br>
-<b>Sa condition de validité</b> : le cadre doit être écrit <i>avant</i>. Un délégatif sans référentiel de conventions n'est pas de la délégation, c'est de l'abandon — et le travail non conforme coûte plus cher que de l'avoir fait soi-même.
+<div class="grid grid-cols-2 gap-5 mt-4 text-sm">
+<div class="note">
+<b>Style dominant : le délégatif encadré.</b><br>
+Déléguer l'exécution, conserver la décision, contrôler en sortie par des portes automatisées. C'est le seul style soutenable quand <b>la capacité de supervision est la ressource la plus rare</b>.
+</div>
+<div class="alert">
+<b>Sa condition de validité</b> : le cadre doit être écrit <i>avant</i>.<br>
+Un délégatif sans référentiel de conventions n'est pas de la délégation, <b>c'est de l'abandon</b> — et reprendre du travail non conforme coûte plus cher que de l'avoir fait soi-même.
+</div>
 </div>
 
 <!--
 DUREE 0:55. ELEMENT IMPOSE 7 : le ou les styles manageriaux utilises.
 CRITERE : le style est IDENTIFIE ET DECRIT.
 
-Ne pas definir les quatre styles en theorie, le jury les connait. Les situer :
-une situation du projet par style, et le motif du choix.
+Ne pas definir les quatre styles, le jury les connait. Les SITUER : une situation
+du projet par style, et le motif du choix.
 
 Le style a developper est le DIRECTIF, parce que c'est le seul ou la decision est
 verifiable : juillet, chaine a 52 %, portes rendues bloquantes, 94 % le mois
@@ -1249,51 +1255,54 @@ Puis annoncer le dominant et sa CONDITION DE VALIDITE. C'est la phrase qui compt
 et il ne faut pas la sauter : « un delegatif sans referentiel de conventions
 n'est pas de la delegation, c'est de l'abandon. »
 
-SI ON QUESTIONNE : « delegue a qui ? » Reponse honnete, elle est en diapo 21 :
-la delegation reelle du projet a ete faite a des agents d'assistance au
-developpement, avec un cadre ecrit et des points d'arret. Ce n'est pas du
-management humain et je ne le presente pas ainsi.
+Sur les principes que la grille nomme — empathie, ecoute, bienveillance,
+leadership — chacun est incarne dans un dispositif, pas dans une intention :
+l'ecoute par trois canaux entrants outilles, la bienveillance par un gabarit
+d'anomalie qui decrit un comportement et jamais une responsabilite, l'empathie
+par les points d'arret, le leadership par la decision ecrite avec ses
+inconvenients acceptes.
+
+SI ON QUESTIONNE : « delegue a qui ? » Reponse honnete, elle est en diapo 21.
 -->
 
 ---
 
-# Animation et outils de communication
+# Animation, et les outils qui portent le partage
 
 <div class="grid grid-cols-2 gap-5 text-sm">
 <div>
 
-### Le dispositif réel de délégation
+### La délégation réelle du projet
 
-Le projet a été exécuté seul, **mais pas sans délégation** : une part de la production a été confiée à des agents d'assistance, encadrés par un dispositif versionné.
+Le projet a été exécuté seul, **mais pas sans déléguer** : une part de la production a été confiée à des agents d'assistance, encadrés par un dispositif versionné.
 
 | Élément | Rôle managérial |
 |---------|-----------------|
 | `AGENTS.md` | Conventions **opposables**, avec leurs motifs |
 | Procédure de réalisation | 7 étapes, **3 points d'arrêt obligatoires** |
-| Procédure de vérification | La vérification ne dépend pas d'une connaissance orale |
-| Gabarit de pull request | 6 contrôles avant intégration |
+| Procédure de vérification | La vérification ne dépend pas d'un savoir oral |
+| Gabarit de pull request | **6 contrôles** avant intégration |
 
-<div class="text-xs opacity-75 mt-1">
-Les 3 points d'arrêt se placent après le cadrage, après la maquette, après le test manuel — les 3 moments où seul le responsable peut trancher.
+<div class="note mt-2 text-xs">
+Les 3 points d'arrêt se placent après le cadrage, après la maquette, après le test manuel — <b>les 3 moments où seul le responsable peut trancher</b>. Le contrôle est en sortie, jamais en cours d'exécution.
 </div>
 
 </div>
 <div>
 
-### Les outils, et ce qu'ils partagent
+### Les outils, et ce que chacun partage
 
 | Outil | Ce qu'il partage |
 |-------|------------------|
 | Monorepo unique | Tout le contexte projet, versionné |
 | `AGENTS.md` | Le référentiel de règles et leurs motifs |
-| Gabarits d'issue | Une qualification comparable |
-| Gabarit de PR | Six vérifications identiques pour tous |
-| Actions composites | Des briques de CI réutilisables |
+| Gabarits d'issue et de PR | Une qualification et des contrôles identiques pour tous |
+| Actions composites | Des briques d'intégration réutilisables |
 | Procédures exécutables | Le flux de réalisation, pas un savoir oral |
 | `CHANGELOG` et releases | L'état livré, sans lire le code |
 | Feuilles de route versionnées | Le périmètre et ses évolutions datées |
 
-<div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
+<div class="alert mt-2 text-xs">
 <b>Aucun de ces outils n'est une messagerie, et c'est délibéré.</b> Aucun n'exige la simultanéité. L'écrit versionné reste consultable après coup ; un fil de discussion perd l'information.
 </div>
 
@@ -1303,53 +1312,52 @@ Les 3 points d'arrêt se placent après le cadrage, après la maquette, après l
 <!--
 DUREE 0:40. ELEMENT IMPOSE 8 : les outils de communication et leurs objectifs.
 CRITERE : les outils collaboratifs INTEGRENT LE PARTAGE DE RESSOURCES, et les
-choix sont pertinents au regard de l'objectif.
+choix sont pertinents au regard de l'objectif poursuivi.
 
-Colonne de gauche : c'est le moment d'etre franc sur la delegation reelle. Dire
-« le projet a ete execute seul, mais pas sans deleguer », expliquer le dispositif
-en trois mots — cadre ecrit, points d'arret, revue en sortie — et ne PAS
-sur-vendre : un agent n'a ni motivation ni progression, ce qui retire au
-management sa moitie humaine. Ce qui se transpose est l'autre moitie.
+Colonne de gauche : etre franc sur la delegation reelle. Dire « le projet a ete
+execute seul, mais pas sans deleguer », expliquer le dispositif en trois mots —
+cadre ecrit, points d'arret, revue en sortie — et ne PAS sur-vendre : un agent
+n'a ni motivation ni progression, ce qui retire au management sa moitie humaine.
+Ce qui se transpose est l'autre moitie : ecrire le cadre AVANT de deleguer,
+placer le controle en sortie, et accepter qu'une regle non ecrite ne soit pas une
+regle.
 
-Colonne de droite : ne pas lire les huit lignes. La colonne « ce qu'il partage »
+Colonne de droite : ne pas lire les sept lignes. La colonne « ce qu'il partage »
 EST la reponse au critere, la designer d'un geste.
 
 Finir sur le bandeau, qui est la vraie justification du choix d'outils : aucun
-n'exige la simultaneite. C'est ce qui les rend compatibles avec la diapo
-suivante.
+n'exige la simultaneite. C'est ce qui les rend compatibles avec la diapo suivante.
 -->
 
 ---
 
-# Inclusion : handicap et contexte international
+# Inclusion : un seul dispositif, trois contraintes
 
-<div class="grid grid-cols-2 gap-6 text-sm">
+<div class="grid grid-cols-2 gap-6 text-sm mt-2">
 <div>
 
-### Un même dispositif, trois contraintes
-
-Tout le dispositif de la diapositive précédente est **asynchrone et écrit**. Or l'asynchrone écrit répond à trois contraintes qu'on traite d'habitude séparément.
+Tout le dispositif de la diapositive précédente est **asynchrone et écrit**. Ce n'est pas trois politiques, c'est **une seule décision d'organisation**.
 
 | Contrainte | Ce que l'asynchrone écrit apporte |
 |------------|-----------------------------------|
-| **Handicap** | Documentation en texte structuré versionné, compatible lecteur d'écran et navigation clavier. Suivre le projet ne suppose pas d'être présent en direct |
+| **Handicap** | Documentation en texte structuré, compatible lecteur d'écran et navigation clavier. Suivre le projet ne suppose pas d'être présent en direct |
 | **Fuseaux horaires** | Aucun dispositif n'exige la simultanéité |
 | **Langue** | Le contexte est lisible et traduisible ; une réunion orale ne l'est pas |
 
 </div>
 <div>
 
-### Sur le réel
-
-**Produit bilingue** français / anglais, page publique de présentation indexable dans les deux langues. Le produit ne suppose pas un utilisateur francophone.
-
-**Accessibilité** : porte de qualité **bloquante** dans la chaîne, au niveau maximum mesuré sur l'ensemble des écrans.
-
-### Dans l'organisation cible
+### Les aménagements de l'organisation cible
 
 Accordés **à la demande, sans justification médicale à produire à l'équipe** : poste adapté, outillage compatible lecteur d'écran et navigation clavier, télétravail et horaires aménagés, temps supplémentaire en recette et en formation.
 
-<div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
+### Sur le produit livré
+
+**Bilingue** français / anglais, page publique indexable dans les deux langues.
+
+**Accessibilité** : porte de qualité **bloquante** dans la chaîne, au niveau maximum sur l'ensemble des écrans.
+
+<div class="note mt-3 text-xs">
 Une équipe qui livre un produit inaccessible ne peut pas prétendre à une organisation inclusive.
 </div>
 
@@ -1364,10 +1372,10 @@ integrees.
 
 Une seule idee a faire passer, celle de gauche : le meme dispositif — l'ecrit
 asynchrone versionne — repond au handicap, aux fuseaux horaires et a la langue.
-Ce n'est pas trois politiques, c'est une seule decision d'organisation.
 
-Puis deux preuves rapides a droite : le produit est bilingue, et l'accessibilite
-est une porte BLOQUANTE, pas une intention.
+Puis deux preuves rapides a droite, en dix secondes : les amenagements sont
+accordes SANS justification a produire, et l'accessibilite du produit est une
+porte BLOQUANTE, pas une intention.
 
 Fermer sur la phrase du bandeau et enchainer. Ne pas s'attarder : la diapo
 suivante est celle qui compte pour ce chapitre.
@@ -1375,45 +1383,49 @@ suivante est celle qui compte pour ce chapitre.
 
 ---
 
-# Analyse critique d'une posture
+# Analyse critique : une posture qui a réussi
 
-<div class="grid grid-cols-2 gap-6 text-sm">
-<div>
+<div class="grid grid-cols-5 gap-5 text-sm">
+<div class="col-span-2">
 
-### La situation : 17 au 26 août 2026
+### 17 au 26 août 2026
 
 | | |
 |--|--|
 | Fait mesuré | **10 jours travaillés consécutifs**, la plus longue série du projet |
 | Cause | Deux échéances superposées : dossier Bloc 4 le **21/08**, version 1.4.0 le **25/08** |
-| Posture adoptée | **Absorber.** Ne pas arbitrer le périmètre, ne pas décaler, compenser par l'intensité |
-| Résultat immédiat | Les deux échéances sont tenues |
+| Posture | **Absorber.** Ne pas arbitrer le périmètre, compenser par l'intensité |
+| Résultat | Les deux échéances sont tenues |
 
-### Ce que ça a coûté
+<div class="text-xs opacity-75 mt-3 mb-1">Ce que la chaîne a payé, le mois même et après</div>
+<div class="cols" style="height:3.6rem">
+<div><em>94 %</em><i style="height:94%"></i></div>
+<div><em>78 %</em><i style="height:78%;background:#d97706"></i></div>
+<div><em>38 %</em><i style="height:38%;background:#d97706"></i></div>
+</div>
+<div class="xlab"><div>juillet</div><div>août</div><div>septembre</div></div>
 
-| Constat | Mesure |
-|---------|--------|
-| La qualité de la chaîne baisse le mois même | **94 % en juillet → 78 % en août** |
-| La dette est déplacée, pas absorbée | **38 %** début septembre |
-| Le découpage du travail se relâche | Branche avant intégration : **2,7 commits en juillet → 6,1 en août** |
+<div class="text-xs opacity-75 mt-2">
+Et le découpage se relâche : branche avant intégration, <b>2,7 commits en juillet → 6,1 en août</b>.
+</div>
 
 </div>
-<div>
+<div class="col-span-3">
 
-<div class="p-3 border-l-4 border-amber-500 bg-amber-50 bg-opacity-40 mb-3">
-<b>La posture a réussi, et c'est exactement le problème.</b> Une posture qui produit le résultat attendu ne s'auto-corrige pas : elle se répète. Appliquée à une équipe, elle porte un nom — demander un effort exceptionnel plutôt qu'arbitrer le périmètre. Elle fonctionne une fois ; à la deuxième elle devient la norme.<br><br>
+<div class="alert mb-2 text-xs">
+<b>La posture a réussi, et c'est exactement le problème.</b> Une posture qui produit le résultat attendu ne s'auto-corrige pas : elle se répète. Appliquée à une équipe, elle porte un nom — demander un effort exceptionnel plutôt qu'arbitrer le périmètre. Elle fonctionne une fois ; à la deuxième, elle devient la norme.<br>
 <b>L'arbitrage n'a pas été perdu, il n'a pas été posé.</b>
 </div>
 
 ### Trois recommandations
 
-| # | Recommandation | Indicateur de contrôle |
-|:-:|----------------|------------------------|
-| **1** | Traiter un chevauchement d'échéances comme un **arbitrage** : poser les trois options — décaler, réduire, absorber — et écrire celle qui est retenue | Chevauchements ayant donné lieu à une décision écrite |
-| **2** | Poser une **limite de charge** comme une limite de travail en cours : au-delà de **5 jours consécutifs**, c'est la version qui décale | Plus longue série consécutive, **déjà au tableau de bord** |
-| **3** | Rendre la **revue croisée obligatoire** sur les changements structurants | Part des changements structurants passés en revue |
+| # | Recommandation | Indicateur |
+|:-:|----------------|------------|
+| **1** | Traiter un chevauchement d'échéances comme un **arbitrage** : poser les trois options — décaler, réduire, absorber — et écrire la retenue | Chevauchements ayant donné lieu à une décision écrite |
+| **2** | Poser une **limite de charge** : au-delà de **5 jours consécutifs**, c'est la version qui décale | Plus longue série, **déjà au tableau de bord** |
+| **3** | **Revue croisée obligatoire** sur les changements structurants | Part du structurant passé en revue |
 
-<div class="text-xs opacity-75 mt-1">Seule la n° 2 aurait empêché la situation. C'est aussi la plus difficile : elle oblige à annoncer un décalage <b>avant</b> d'avoir essayé d'y échapper.</div>
+<div class="text-xs opacity-75 mt-1">Seule la n° 2 aurait empêché la situation, et c'est la plus difficile : elle oblige à annoncer un décalage <b>avant</b> d'avoir essayé d'y échapper.</div>
 
 </div>
 </div>
@@ -1428,17 +1440,18 @@ autocritique de facade. Le marqueur de sincerite ici est que la posture critique
 a REUSSI : les deux echeances ont ete tenues. Personne ne s'autocritique sur un
 succes, donc c'est credible.
 
-Dire dans l'ordre :
-1. Les faits, dates et chiffres. Dix jours d'affilee, deux echeances superposees.
-2. Le cout mesure : 94 % puis 78 % puis 38 %. La chaine a paye le mois meme.
+Dans l'ordre :
+1. Les faits. Dix jours d'affilee, deux echeances superposees, les deux tenues.
+2. Le cout mesure, en designant l'histogramme : 94, 78, 38. La chaine a paye le
+mois meme, et la dette a ete deplacee, pas absorbee.
 3. La phrase centrale : « l'arbitrage n'a pas ete perdu, il n'a pas ete pose. »
 4. La transposition equipe : demander un effort exceptionnel plutot qu'arbitrer
-le perimetre. Ca marche une fois, a la deuxieme c'est la norme, et le
+le perimetre. Ca marche une fois ; a la deuxieme c'est la norme, et le
 responsable qui l'a instauree n'a plus d'argument pour la refuser.
 
 NE PAS tomber dans la flagellation : les deux echeances etaient reelles et non
 negociables, et le perimetre de la 1.4.0 avait une valeur produit verifiee. La
-faute n'est pas d'avoir travaille dix jours, c'est de ne pas avoir instruit
+faute n'est pas d'avoir travaille dix jours, c'est de ne pas avoir INSTRUIT
 l'option de decaler.
 
 Terminer sur la recommandation 2 en disant qu'elle est la plus difficile a tenir.
@@ -1446,40 +1459,39 @@ Terminer sur la recommandation 2 en disant qu'elle est la plus difficile a tenir
 
 ---
 
-# 5. Les compétences à mobiliser
+# 5. Les compétences, déduites des lots
+
+<div class="lede">Pour chaque lot : <b>que faut-il savoir faire pour qu'il soit livrable et exploitable ?</b> Chaque compétence correspond ainsi à une technologie du dépôt, avec une date d'introduction vérifiable.</div>
 
 <div class="grid grid-cols-2 gap-6 text-sm">
-<div>
-
-### Déduites des lots, pas d'un référentiel
-
-La question posée pour chaque lot : **que faut-il savoir faire pour que ce lot soit livrable et exploitable ?** Chaque compétence correspond ainsi à une technologie réellement présente dans le dépôt, avec une date d'introduction vérifiable.
+<div class="dense">
 
 | Domaine | Compétences clés |
 |---------|------------------|
-| Back | ASP.NET Core, hexagonal, modélisation documentaire, contrat d'API |
-| Front | React et TypeScript, mobile-first, cache de données distantes, i18n |
-| Accessibilité | Critères, tests automatisés, contraste et clavier |
-| Chaîne | CI/CD, conteneurisation, sans serveur, secrets |
-| Qualité | Tests unitaires à E2E, analyse statique, performance |
-| Sécurité | Session, identité fédérée, CSP, veille de vulnérabilités |
-| Exploitation | Sondes, alertes, traitement d'anomalie |
-| Transverses | Arbitrage, chiffrage, revue, écrit asynchrone |
+| **Back** | ASP.NET Core, hexagonal, modélisation documentaire, contrat d'API |
+| **Front** | React et TypeScript, mobile-first, cache de données distantes, i18n |
+| **Accessibilité** | Critères, tests automatisés, contraste et clavier |
+| **Chaîne** | CI/CD, conteneurisation, sans serveur, secrets |
+| **Qualité** | Tests unitaires à E2E, analyse statique, performance |
+| **Sécurité** | Session, identité fédérée, CSP, veille de vulnérabilités |
+| **Exploitation** | Sondes, alertes, traitement d'anomalie |
+| **Transverses** | Arbitrage, chiffrage, revue, écrit asynchrone |
 
 </div>
 <div>
 
-### La chronologie mesurée : 4 vagues
+<div class="text-xs opacity-75 mb-1">L'ordre d'apparition dans le dépôt — celui d'un produit qui va en production</div>
 
-| Vague | Période | Ce qui la déclenche |
-|-------|---------|---------------------|
-| **1. Produire** | 16 au **18 mars** | L'arbitrage du chapitre 3 : chaîne d'intégration, C#, hexagonal, MongoDB, tests .NET, OpenAPI, conteneur |
-| **2. Fiabiliser** | avril à mai | La V1 : performance, accessibilité, analyse statique, scan de vulnérabilités, i18n, app installable, push |
-| **3. Exploiter** | juillet | Des utilisateurs réels : supervision, sondes, alertes, traçabilité |
-| **4. Enrichir** | août | Périmètre hors chiffrage : identité fédérée, intégration tierce |
+<div class="tl mb-3">
+<div><b>1. Produire</b><span>16 → 19 mars<br>C#, hexagonal, Mongo, CI, OpenAPI</span></div>
+<div><b>2. Fiabiliser</b><span>avril–mai<br>Performance, a11y, scans, i18n, push</span></div>
+<div><b>3. Exploiter</b><span>juillet<br>Supervision, sondes, alertes</span></div>
+<div><b>4. Enrichir</b><span>août<br>Identité fédérée, service tiers</span></div>
+</div>
 
-<div class="mt-3 p-2 border-l-4 border-amber-500 bg-amber-50 bg-opacity-40 text-xs">
-<b>La vague 1 est concentrée sur quatre jours.</b> C'est le coût de compétence de l'arbitrage du chapitre 3 — et il n'apparaît <b>nulle part</b> dans le chiffrage en jours-homme. Un plan de développement sert à rendre ce coût visible <b>avant</b> de le payer.
+<div class="alert">
+<b>La vague 1 tient sur quatre jours.</b> C'est le coût de compétence de l'arbitrage du chapitre 3 — un changement de socle complet absorbé par autoformation, en production.<br><br>
+Et il n'apparaît <b>dans aucune ligne du chiffrage en jours-homme</b>. Un plan de développement des compétences sert exactement à ça : rendre ce coût visible <b>avant</b> de le payer.
 </div>
 
 </div>
@@ -1494,61 +1506,74 @@ chapitre d'un catalogue : les competences sont deduites des lots, et chacune
 correspond a une techno reellement presente dans le depot, avec une date
 d'introduction verifiable.
 
-Puis les quatre vagues, dans l'ordre : produire, fiabiliser, exploiter, enrichir.
-Cet ordre n'a rien d'aleatoire, c'est celui d'un produit qui va en production.
+Puis la frise, dans l'ordre : produire, fiabiliser, exploiter, enrichir. Cet
+ordre n'a rien d'aleatoire, c'est celui d'un produit qui va en production.
 
 Finir sur le bandeau, qui est le lien avec le chapitre 3 : la vague 1 tient sur
-quatre jours, c'est le cout de competence de l'arbitrage, et il n'est dans aucune
-ligne du chiffrage. C'est la justification meme de l'existence d'un plan de
-developpement des competences.
--->
+quatre jours et n'est dans aucune ligne du chiffrage. C'est la justification meme
+de l'existence d'un plan de developpement des competences.
 
+SI ON QUESTIONNE : « quatre jours pour changer de socle, c'est peu. » Le
+perimetre etait de 944 lignes et 12 routes, avec un contrat deja specifie. Et la
+reconstitution de charge est faible sur mars — voir diapo 15.
+-->
 ---
 
-# La grille d'évaluation des compétences
+# La grille d'évaluation, et ce qu'elle avoue
 
-<div class="text-xs mb-2">
-Échelle comportementale — <b>0</b> non acquis · <b>1</b> lit et modifie accompagné · <b>2</b> autonome sur une tâche courante · <b>3</b> conçoit, arbitre, traite le cas non nominal · <b>4</b> définit le standard et forme.
-<b>Le niveau 2 est le seuil d'autonomie, le 3 le seuil de responsabilité</b> : un profil qui porte le « R » de la matrice RACI doit être à 3.
+<div class="text-xs opacity-80 mb-1">
+<b>0</b> non acquis · <b>1</b> lit et modifie accompagné · <b>2</b> autonome sur une tâche courante · <b>3</b> conçoit, arbitre, traite le cas non nominal · <b>4</b> définit le standard et forme.
+Le <b>2</b> est le seuil d'autonomie, le <b>3</b> le seuil de responsabilité : un profil qui porte le « R » de la matrice RACI doit être à 3.
 </div>
 
-<div class="grid grid-cols-5 gap-4">
-<div class="col-span-2 dense">
+<div class="grid grid-cols-5 gap-5 mt-3">
+<div class="col-span-3">
 
-| Profil | Compétence | Act. | Cible | Écart |
-|--------|------------|:----:|:-----:|:-----:|
-| **Lead** | Architecture applicative | 3 | 4 | +1 |
-| | Arbitrage et chiffrage | 2 | 4 | **+2** |
-| | Revue et transmission | 2 | 4 | **+2** |
-| **Front** | React et TypeScript | 3 | 3 | 0 |
-| | **Accessibilité** | 1 | 3 | **+2** |
-| | App installable, i18n | 1 | 2 | +1 |
-| **Back** | C# et ASP.NET Core | 3 | 3 | 0 |
-| | **Architecture hexagonale** | 1 | 3 | **+2** |
-| | Sécurité et identité | 1 | 3 | **+2** |
-| **DevOps** | CI/CD, conteneurisation | 2 | 3 | +1 |
-| | **Supervision** | 1 | 3 | **+2** |
-| | Veille de vulnérabilités | 1 | 3 | **+2** |
-
-<div class="text-xs opacity-75 mt-1">Extrait. Grille complète de 19 lignes dans le dossier.</div>
-
+<div class="dumb">
+<div class="lbl"></div><div class="scale"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div>
+<div class="lbl">Lead · Architecture</div><div class="track"><i class="bar" style="left:75%;width:25%"></i><u class="a" style="left:75%"></u><u class="c" style="left:100%"></u></div>
+<div class="lbl">Lead · Arbitrage, chiffrage</div><div class="track"><i class="bar big" style="left:50%;width:50%"></i><u class="a" style="left:50%"></u><u class="c" style="left:100%"></u></div>
+<div class="lbl">Lead · Revue, transmission</div><div class="track"><i class="bar big" style="left:50%;width:50%"></i><u class="a" style="left:50%"></u><u class="c" style="left:100%"></u></div>
+<div class="lbl">Front · React, TypeScript</div><div class="track"><u class="c" style="left:75%"></u></div>
+<div class="lbl">Front · Accessibilité</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
+<div class="lbl">Front · App installable, i18n</div><div class="track"><i class="bar" style="left:25%;width:25%"></i><u class="a" style="left:25%"></u><u class="c" style="left:50%"></u></div>
+<div class="lbl">Back · C#, ASP.NET Core</div><div class="track"><u class="c" style="left:75%"></u></div>
+<div class="lbl">Back · Architecture hexagonale</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
+<div class="lbl">Back · Sécurité, identité</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
+<div class="lbl">DevOps · CI/CD, conteneurs</div><div class="track"><i class="bar" style="left:50%;width:25%"></i><u class="a" style="left:50%"></u><u class="c" style="left:75%"></u></div>
+<div class="lbl">DevOps · Supervision</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
+<div class="lbl">DevOps · Veille de vulnérabilités</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
 </div>
-<div class="col-span-3 text-sm">
 
-### Ce que la grille dit
-
-**Le niveau « actuel » n'évalue personne** : c'est le socle attendu d'un profil **au recrutement**, junior confirmé de 2 à 3 ans. L'écart mesure ce que le projet exige au-delà.
-
-**1. Les écarts se concentrent sur ce que le marché ne fournit pas.** Écart nul sur React/TypeScript et C#/ASP.NET Core — un recrutement les apporte. Les <b>sept</b> écarts à **+2** portent sur l'hexagonal, l'accessibilité, la sécurité, la supervision, la veille, l'arbitrage et la transmission : **des compétences de contexte, pas de langage.**
-
-**2. L'accessibilité est le seul écart à effet bloquant immédiat.** La porte de qualité échoue le déploiement : un front recruté au niveau 1 casse la chaîne à sa première livraison.
-
-<div class="mt-2 p-2 border-l-4 border-amber-500 bg-amber-50 bg-opacity-40 text-xs">
-<b>3. Les deux plus gros écarts du lead ne sont pas techniques.</b> Arbitrage, chiffrage, transmission : ce sont les compétences que le projet réel a le plus sollicitées et le moins bien exercées — chiffrage formalisé <i>a posteriori</i> (ch. 2), 87 lignes intégrées sans revue (ch. 3). <b>La grille désigne les mêmes faiblesses que les indicateurs</b>, sinon elle serait de complaisance.
+<div class="legend mt-1">
+<span style="color:#a7b0ae">Socle attendu au recrutement</span>
+<span style="--c:var(--s1)">Niveau que le projet exige</span>
+<span class="nokey" style="opacity:.75">— trait épais = écart de +2</span>
 </div>
 
 </div>
+<div class="col-span-2 text-sm">
+
+<div class="note mb-2">
+<b>Le niveau « actuel » n'évalue personne</b> : c'est le socle attendu d'un profil <b>au recrutement</b>, junior confirmé de 2 à 3 ans. L'écart mesure ce que le projet exige au-delà.
 </div>
+
+**Les écarts nuls sont sur les langages.** React/TypeScript et C#/ASP.NET Core : un recrutement les apporte.
+
+**Les sept écarts à +2 sont des compétences de contexte**, pas de langage. Elles ne s'achètent pas sur une fiche de poste, elles se construisent sur le projet.
+
+<div class="alert mt-2 text-xs">
+<b>Les deux plus gros écarts du lead ne sont pas techniques.</b> Arbitrage, chiffrage, transmission : ce sont les compétences que le projet réel a le plus sollicitées et le moins bien exercées — chiffrage formalisé <i>a posteriori</i> (ch. 2), 87 lignes intégrées sans revue (ch. 3). <b>La grille désigne les mêmes faiblesses que les indicateurs</b>, sinon elle serait de complaisance.
+</div>
+
+</div>
+</div>
+
+<style>
+.dumb .scale { position: relative; display: flex; justify-content: space-between; font-size: 0.66rem; color: var(--ink-2); }
+.dumb .bar { position: absolute; top: 50%; transform: translateY(-50%); height: 3px; background: var(--s1); opacity: 0.45; border-radius: 2px; }
+.dumb .bar.big { opacity: 1; height: 5px; }
+</style>
 
 <!--
 DUREE 1:00. ELEMENT IMPOSE 9 : l'evaluation des besoins en competences via
@@ -1559,68 +1584,64 @@ PREMIERE PHRASE OBLIGATOIRE, avant tout le reste : « le niveau actuel n'est
 l'evaluation de personne, c'est le socle attendu d'un profil au recrutement ».
 Sans cette phrase, le jury entend qu'on note des collaborateurs fictifs.
 
-Puis commenter, pas lire. Trois lectures, dans l'ordre :
-1. Les ecarts nuls sont sur les langages, les ecarts a +2 sur le contexte. Un
-recrutement apporte un langage, il n'apporte pas une conformite.
-2. L'accessibilite est le seul ecart a effet bloquant immediat.
-3. Le bandeau, qui est le plus important : les deux plus gros ecarts du lead ne
-sont pas techniques, et ils designent exactement les faiblesses deja montrees aux
+Puis COMMENTER, en designant le graphique — les traits epais sautent aux yeux,
+c'est le but :
+1. Les deux lignes sans trait sont les langages. Un recrutement les apporte.
+2. Les sept traits epais sont des competences de CONTEXTE : hexagonal,
+accessibilite, securite, supervision, veille, arbitrage, transmission. Un
+recrutement n'apporte pas une conformite.
+3. L'accessibilite est le seul ecart a effet bloquant IMMEDIAT : la porte de
+qualite echoue le deploiement, un front recrute au niveau 1 casse la chaine a sa
+premiere livraison.
+4. Le bandeau, le plus important : les deux plus gros ecarts du lead ne sont pas
+techniques, et ils designent exactement les faiblesses deja montrees aux
 chapitres 2 et 3. C'est ce qui rend la grille credible plutot que flatteuse.
 
-SI ON QUESTIONNE : « comment avez-vous etalonne les cibles ? » Reponse : sur ce
-que le projet a reellement exige, chaque competence correspondant a une techno
-presente dans le depot avec une date d'introduction verifiable.
+SI ON QUESTIONNE l'etalonnage des cibles : sur ce que le projet a reellement
+exige, chaque competence correspondant a une techno presente dans le depot avec
+une date d'introduction verifiable.
 -->
 
 ---
 
 # Le plan de développement des compétences
 
-<div class="grid grid-cols-5 gap-4">
+<div class="lede">Classé par <b>coût d'un écart non comblé</b> : bloque une porte de qualité <b>(1)</b> · crée une dépendance unique <b>(2)</b> · ralentit sans bloquer <b>(3)</b>.</div>
+
+<div class="grid grid-cols-5 gap-5">
 <div class="col-span-3 dense">
 
-Actions classées par **coût d'un écart non comblé** : bloque une porte de qualité (1) · crée une dépendance unique (2) · ralentit sans bloquer (3).
+| P | Action · <span class="opacity-70">modalité</span> | Durée | Indicateur de réussite |
+|:-:|-----------------|------:|------------------------|
+| **1** | Front · **Accessibilité** <span class="opacity-70">certifiante externe</span> | 3 j | Une livraison passe la porte **sans reprise** |
+| **1** | DevOps · **Supervision** <span class="opacity-70">compagnonnage, astreinte simulée</span> | 5 j | Traite seul une alerte de bout en bout |
+| 2 | Back · Hexagonal <span class="opacity-70">lecture guidée, revue 1 mois</span> | ~ | Un cas d'usage sans violation de couche |
+| 2 | Back · Sécurité <span class="opacity-70">autoformation OWASP, revue croisée</span> | 4 j | Aucune vulnérabilité OWASP sur un trimestre |
+| 2 | DevOps · Veille <span class="opacity-70">compagnonnage</span> | 2 j | Qualifie seul un avis et décide |
+| 2 | Lead · Chiffrage <span class="opacity-70">formation courte, pratique</span> | 3 j | Arbitrage consigné **quand il est pris** |
+| 2 | Lead · Revue <span class="opacity-70">revue croisée obligatoire</span> | cont. | 100 % du structurant passé en revue |
+| 3 | Front · App installable, i18n <span class="opacity-70">autoformation</span> | 3 j | Une fonctionnalité hors ligne et traduite |
 
-| Profil | Action | Modalité | Durée | Indicateur de réussite | P |
-|--------|--------|----------|------:|------------------------|:-:|
-| Front | **Accessibilité** | Certifiante externe + pratique | 3 j | Une livraison passe la porte **sans reprise** | **1** |
-| DevOps | **Supervision** | Compagnonnage + astreinte simulée | 5 j | Traite seul une alerte de bout en bout | **1** |
-| Back | Architecture hexagonale | Lecture guidée + revue 1 mois | ~ | Un cas d'usage sans violation de couche | 2 |
-| Back | Sécurité applicative | Autoformation OWASP + revue croisée | 4 j | Aucune vulnérabilité OWASP sur un trimestre | 2 |
-| DevOps | Veille de vulnérabilités | Compagnonnage | 2 j | Qualifie seul un avis et décide | 2 |
-| Lead | Chiffrage et arbitrage | Formation courte + pratique | 3 j | Arbitrage consigné **quand il est pris** | 2 |
-| Lead | Revue et transmission | Revue croisée obligatoire | cont. | 100 % du structurant en revue | 2 |
-| Front | App installable, i18n | Autoformation + pratique dédiée | 3 j | Une fonctionnalité hors ligne et traduite | 3 |
-
-**Total : 20 J/H** d'actions de formation (hors pratique encadrée), dont **6 en externe** · **2 100 €** · soit **20 % de la charge projet**.
+<div class="note mt-2 text-xs">
+<b>20 J/H · 2 100 € · 20 % de la charge projet</b>, dont 6 jours en externe. C'est le prix de la conversion d'un projet à une personne en projet d'équipe, et il est payé une fois.
+</div>
 
 </div>
 <div class="col-span-2 text-sm">
 
-### Recruter ou former — note aux RH
-
-<div class="p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 mb-2">
-<b>Recruter sur le langage et l'expérience de conduite. Former sur le contexte et la conformité.</b>
+<div class="note mb-2">
+<b>Note aux RH — recruter sur le langage et l'expérience de conduite, former sur le contexte et la conformité.</b>
 </div>
 
-| Profil | Exigé au recrutement | Formé en interne |
-|--------|----------------------|------------------|
+| Profil | Au recrutement | Formé en interne |
+|--------|----------------|------------------|
 | Lead | Architecture n. 3 | Arbitrage, transmission |
 | Front | React / TS n. 3 | Accessibilité, i18n |
 | Back | C# / ASP.NET n. 3 | Hexagonal, sécurité |
 | DevOps | CI/CD n. 2 | Supervision, veille |
 
-### Modalités adaptées au handicap
-
-Posées **par défaut**, sans demande ni justification :
-
-- **tiers-temps de droit** sur toute formation et son évaluation
-- support en **texte structuré** systématique
-- matériel adapté disponible **pendant** la formation
-- **accessibilité de la plateforme = critère de sélection** du prestataire
-
-<div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
-Le compagnonnage interne est écrit et asynchrone — <b>c'est le mode de travail normal du projet</b>, pas un aménagement rapporté.
+<div class="alert mt-3 text-xs">
+<b>Modalités handicap, posées par défaut</b> — sans demande ni justification : <b>tiers-temps de droit</b> sur toute formation et son évaluation · support en <b>texte structuré</b> systématique · matériel adapté <b>pendant</b> la formation · <b>accessibilité de la plateforme = critère de sélection</b> du prestataire.
 </div>
 
 </div>
@@ -1631,70 +1652,79 @@ DUREE 0:50. ELEMENT IMPOSE 10 : le plan de developpement des competences.
 CRITERES : le plan est etabli et DETAILLE, des FORMATIONS sont preconisees selon
 les besoins et les profils, et les MODALITES sont adaptees au handicap.
 
-Trois choses a dire, une par bloc :
+Trois choses, une par bloc :
 
 1. Le principe d'ordonnancement. Les actions ne sont pas classees par importance
-mais par COUT D'UN ECART NON COMBLE. Citer la priorite 1 : l'accessibilite et la
-supervision, parce que l'une bloque une porte de qualite et l'autre laisse une
-production sans surveillance.
+mais par COUT D'UN ECART NON COMBLE. Citer les deux priorites 1 : l'accessibilite
+bloque une porte de qualite, la supervision laisse une production sans
+surveillance.
 
 2. La colonne « indicateur de reussite ». C'est elle qui distingue un plan d'une
 liste de vux : chaque action se termine par un fait verifiable, pas par une
-attestation de presence.
+attestation de presence. La designer d'un geste.
 
 3. La logique recruter / former, qui est la reponse a « transmettre les besoins
-en recrutement au service RH ». La phrase a dire : recruter sur le langage et
-l'experience de conduite, former sur le contexte et la conformite. Exiger
-l'accessibilite et l'hexagonal des le recrutement restreindrait le vivier sans
-necessite, ces deux competences se construisant en un mois de pratique encadree.
+en recrutement au service RH ». Exiger l'accessibilite et l'hexagonal des le
+recrutement restreindrait le vivier sans necessite : ces deux competences se
+construisent en un mois de pratique encadree.
 
-Sur le handicap, ne citer que les trois modalites qui ont un COUT REEL, donc
+Sur le handicap, ne citer que les modalites qui ont un COUT REEL, donc
 verifiables : le tiers-temps de droit, le support en texte structure
 systematique, et l'accessibilite de la plateforme comme critere de selection du
-prestataire. Puis le bandeau.
+prestataire. Ajouter que le compagnonnage interne est deja ecrit et asynchrone —
+c'est le mode de travail normal du projet, pas un amenagement rapporte.
+
+SI ON QUESTIONNE : « 20 % de la charge en formation, n'est-ce pas beaucoup ? »
+C'est le prix de la conversion d'un projet a une personne en projet d'equipe. Sur
+le projet reel, ces memes ecarts ont ete franchis sans plan ni budget, en
+autoformation et en production. C'est faisable une fois, a une personne, sur un
+projet dont on est proprietaire — ce n'est pas un modele.
 -->
 
 ---
 
 # 6. Rendre compte : les points de validation
 
-<div class="text-sm mb-2">
-<b>Deux commanditaires, deux rythmes.</b> Le formateur et le jury valident la conformité au référentiel, sur 4 échéances. Les 17 utilisateurs valident que ce qui est livré sert, sur 9 versions.
+<div class="lede"><b>Deux commanditaires, deux rythmes.</b> Le jury valide la conformité au référentiel sur 4 échéances. Les 17 utilisateurs valident que ce qui est livré sert, sur 9 versions.</div>
+
+<div class="tl mt-3">
+<div><b>0.1.0</b><span>27/02<br>Parcours minimal</span></div>
+<div><b>1.0.0</b><span>19/05<br>Compte réel</span></div>
+<div><b>1.1.0</b><span>25/05<br>Installe et notifie</span></div>
+<div><b>1.2.0</b><span>11/06<br>Social, RGPD</span></div>
+<div><b>1.3.0</b><span>19/06<br>Navigation</span></div>
+<div><b>1.3.1</b><span>08/07<br>Chaîne, sécurité</span></div>
+<div><b>1.3.2</b><span>25/07<br>Observable</span></div>
+<div><b>1.4.0</b><span>25/08<br>Au-delà de la soirée</span></div>
+<div><b>1.4.1</b><span>04/09<br>Sans compte</span></div>
 </div>
 
-<div class="grid grid-cols-5 gap-4">
-<div class="col-span-3 dense">
+<div class="grid grid-cols-2 gap-6 mt-4 text-sm">
+<div>
 
-| Version | Date | Ce que ce point validait |
-|---------|------|--------------------------|
-| 0.1.0 | 27/02 | Que le parcours minimal tient debout |
-| 1.0.0 | 19/05 | Utilisable par un compte réel, sur la nouvelle API |
-| 1.1.0 | 25/05 | L'application s'installe et sait notifier |
-| 1.2.0 | 11/06 | Dimension sociale et conformité RGPD tenables |
-| 1.3.0 | 19/06 | La navigation ne bloque pas un nouvel arrivant |
-| 1.3.1 | 08/07 | Chaîne et sécurité du contenu ne dégradent rien |
-| 1.3.2 | 25/07 | La production est **observable**, l'utilisateur peut signaler |
-| 1.4.0 | 25/08 | Le produit dépasse la soirée ponctuelle |
-| 1.4.1 | 04/09 | Consultable **sans compte**, frictions levées |
+### Une date ne suffit pas à faire un point qualité
 
-</div>
-<div class="col-span-2 text-sm">
-
-### Une date ne suffit pas
-
-Une version n'existe que si elle a franchi **5 contrôles bloquants**, puis un contrôle après déploiement.
-
-| Étape | Contrôle |
-|-------|----------|
+| | Contrôle bloquant |
+|--|-------------------|
 | Avant | Tests, lint, couverture minimale |
 | Avant | Analyse statique, porte de qualité |
 | Avant | E2E, performance, **accessibilité** |
 | Avant | Scan de vulnérabilités et de secrets |
 | Après | **Test de fumée** : joignabilité réelle de la base |
-| Continu | Sondes depuis trois continents |
 
-<div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
-<b>Un contrôle rouge annule la livraison.</b> Et l'adéquation entre le développement et l'attendu se lit dans le <b>diff daté</b> de la feuille de route : un item livré hors périmètre s'y voit.
+</div>
+<div>
+
+<div class="note">
+<b>Un contrôle rouge annule la livraison.</b> Ce n'est pas une recommandation : la chaîne refuse le déploiement.
+</div>
+
+<div class="note mt-2">
+<b>L'adéquation entre le développement et l'attendu se lit dans le <i>diff daté</i> de la feuille de route.</b> Un item livré hors périmètre s'y voit, daté.
+</div>
+
+<div class="text-xs opacity-75 mt-2">
+Les 4 échéances du titre — 11/06, 23/07, 21/08, 16/09 — toutes tenues, écart 0.
 </div>
 
 </div>
@@ -1709,61 +1739,59 @@ Ouvrir par les deux commanditaires. C'est la distinction qui structure tout le
 chapitre, et elle est rarement faite : rendre compte a un jury et rendre compte a
 un utilisateur ne se font pas avec le meme document. Le premier attend une
 demonstration de conformite, le second attend de savoir ce qui a change pour lui.
+Un projet qui n'a qu'un seul format de compte rendu en sert mal au moins un des
+deux.
 
-Ne pas lire les neuf lignes. Dire que chaque version est un point DATE et
-VERIFIABLE, adosse a une etiquette posee sur le commit exact deploye.
+Ne PAS lire les neuf versions. Balayer la frise d'un geste et dire que chaque
+point est DATE et VERIFIABLE, adosse a une etiquette posee sur le commit exact
+deploye.
 
-Le temps utile va a la colonne de droite, qui est la reponse au critere : une
-date de livraison ne suffit pas a faire un point de validation qualite. Cinq
-controles bloquants, puis un test de fumee apres deploiement qui verifie la
-joignabilite reelle de la base. Un controle rouge annule la livraison.
+Le temps utile va en bas a gauche, qui est la reponse au critere : une date de
+livraison ne suffit pas a faire un point de validation qualite. Cinq controles
+bloquants, puis un test de fumee apres deploiement qui verifie la joignabilite
+reelle de la base. Un controle rouge annule la livraison.
 
 SI ON QUESTIONNE l'adequation avec les fonctionnalites attendues : elle se lit
 dans le diff de la feuille de route, qui est versionnee. Un item livre hors
 perimetre s'y voit, date.
 -->
-
 ---
 
-# Le compte rendu type
+# Le compte rendu qui fait décider
+
+<div class="lede">Un compte rendu qui se contente d'informer ne satisfait pas le critère. <b>Trois des cinq blocs ne sont pas de l'information.</b></div>
 
 <div class="grid grid-cols-2 gap-6 text-sm">
 <div>
 
-### Trois niveaux
+### Le gabarit, et son exemple réel
 
-| Support | Déclenchement | Ce qu'il permet |
-|---------|---------------|-----------------|
-| **Fenêtre de nouveautés** in-app<br/><span class="text-xs opacity-70">livrée en v1.4.0</span> | Automatique, à chaque version | Savoir ce qui a changé **sans rien demander** |
-| **Journal des versions**, note de version, étiquette | À chaque version | Retrouver ce qui a été livré et sur quel commit |
-| **Compte rendu d'arbitrage** | À chaque revue de cycle | **Prendre une décision** |
+| Bloc | Rôle | *L'adoption des notifications* |
+|------|:----:|--------------------------------|
+| **Constat** mesuré, avec sa source | info | 3 abonnements pour 17 inscrits, **18 %** |
+| **Analyse** : ce que le code explique | info | L'autorisation n'est demandée que dans un réglage de compte. **Le taux ne mesure pas un refus, il mesure une absence d'occasion** |
 
-### Le gabarit décisionnel
+| **Proposition** exécutable | **décision** | Proposer l'activation une fois, au moment utile |
+| **Coût, délai, gain attendu** | **décision** | 1 j · une itération · adoption visée > 40 % |
+| **Priorité et dépendances** | **décision** | Priorité 3 |
 
-| Bloc | Rôle |
-|------|------|
-| Constat mesuré, avec sa source | Information |
-| Analyse : ce que le code explique | Information |
-| **Proposition** exécutable | **Décision** |
-| **Coût, délai, gain attendu** | **Décision** |
-| **Priorité et dépendances** | **Décision** |
-
-<div class="text-xs opacity-75 mt-1">
-Règle : <b>aucun constat sans proposition, aucune proposition sans coût.</b>
+<div class="note mt-1 text-xs">
+<b>Aucun constat sans proposition, aucune proposition sans coût.</b> Un constat seul renvoie la charge de la décision au destinataire ; un coût manquant la rend impossible.
 </div>
 
 </div>
 <div>
 
-### Exemple réel — l'adoption des notifications
+### Trois niveaux, du plus automatique au plus décisionnel
 
-<div class="p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
-<b>Constat.</b> 3 abonnements actifs pour 17 inscrits (18 %), alors que la V1.1 a investi dans les clés, cinq déclencheurs et une interface de préférences.<br><br>
-<b>Analyse.</b> La demande d'autorisation n'est appelée que par un réglage de la page de compte. Aucune sollicitation dans le parcours. <b>Le taux ne mesure pas un refus, il mesure une absence d'occasion.</b><br><br>
-<b>Confirmation.</b> Sur 7 réponses, <b>4 ignoraient que l'activation existait</b>. L'un demande une notification qui <b>existe déjà</b> mais qu'il ne peut pas recevoir.<br><br>
-<b>Proposition.</b> Proposer l'activation une fois, au moment utile, en énonçant ce qui sera reçu.<br><br>
-<b>Coût 1 j · une itération · adoption visée > 40 %. Priorité 3.</b><br><br>
-<i>Si l'adoption ne dépasse pas 40 % sous deux mois, le gel devient défendable — mais il ne l'est pas tant que personne n'a eu l'occasion d'accepter.</i>
+| Support | Déclenchement | Ce qu'il permet |
+|---------|---------------|-----------------|
+| **Fenêtre de nouveautés** in-app | Automatique, à chaque version | Savoir ce qui a changé **sans rien demander** |
+| **Journal des versions**, note, étiquette | À chaque version | Retrouver ce qui a été livré, sur quel commit |
+| **Compte rendu d'arbitrage** | À chaque revue de cycle | **Prendre une décision** |
+
+<div class="alert mt-3 text-xs">
+<b>Le critère d'arrêt est énoncé d'avance</b> : <i>si l'adoption ne dépasse pas 40 % sous deux mois, le gel devient défendable — mais il ne l'est pas tant que personne n'a eu l'occasion d'accepter.</i> Le destinataire sait à quoi il s'engage en validant.
 </div>
 
 </div>
@@ -1774,44 +1802,42 @@ DUREE 0:50. ELEMENT IMPOSE 11 : les comptes rendus sur les evolutions et
 ameliorations. CRITERES : clairs et ordonnes, et surtout ils FACILITENT LA PRISE
 DE DECISION DU CLIENT.
 
-Le second critere est celui qui se rate. Un compte rendu qui informe ne le
-satisfait pas. Dire la regle de redaction telle quelle : aucun constat sans
-proposition, aucune proposition sans cout. Un constat seul renvoie la charge de
-la decision au destinataire, un cout manquant la rend impossible.
+Le second critere est celui qui se rate. Lire le tableau de gauche EN DIAGONALE :
+la colonne du milieu montre que trois blocs sur cinq ne sont pas de
+l'information. Dire la regle de redaction telle quelle : aucun constat sans
+proposition, aucune proposition sans cout.
 
-Souligner le niveau 1, le seul compte rendu POUSSE : une fenetre presente les
-nouveautes a la premiere visite suivant une mise a jour. Un journal des versions
-que personne n'ouvre est une archive, pas un compte rendu.
-
-Puis lire l'encadre de droite en s'arretant sur DEUX choses :
+S'arreter sur DEUX choses de l'exemple :
 1. « le taux ne mesure pas un refus, il mesure une absence d'occasion » — c'est
-l'analyse qui transforme un mauvais chiffre en question tranchable ;
-2. le critere d'arret enonce d'avance, 40 % sous deux mois. Le destinataire sait
-a quoi il s'engage en validant, et la decision suivante est deja cadree.
+l'analyse qui transforme un mauvais chiffre en question tranchable. Presente
+seul, 18 % conduit a « la fonctionnalite ne marche pas, on l'abandonne ».
+2. le critere d'arret enonce d'avance, 40 % sous deux mois.
+
+Souligner le niveau 1, le seul compte rendu POUSSE : un journal des versions que
+personne n'ouvre est une archive, pas un compte rendu. A DIRE HONNETEMENT : ce
+canal n'existe que depuis la v1.4.0. Les huit versions precedentes n'ont ete
+annoncees qu'au niveau 2. Le dispositif s'est corrige en cours de projet, il
+n'etait pas complet des le depart.
 -->
 
 ---
 
 # Les indicateurs de satisfaction
 
+<div class="lede">À 17 comptes, un indice de recommandation n'a <b>aucune validité statistique</b>. Trois familles, et c'est leur <b>combinaison</b> qui fait la mesure.</div>
+
 <div class="grid grid-cols-2 gap-6 text-sm">
 <div>
 
-À 17 comptes, un indice de recommandation net n'a **aucune validité statistique**. Trois familles, et c'est leur combinaison qui fait la mesure.
-
 | Famille | Indicateur | Mesure |
 |---------|-----------|--------|
-| **Comportementale** | Soirées menées jusqu'au tirage | **14 / 19 = 74 %** |
+| **Comportementale** <span class="text-xs opacity-70">mesure un acte, la plus fiable</span> | Soirées menées jusqu'au tirage | **14 / 19 = 74 %** |
 | | Adoption des notifications | 3 / 17 = 18 % |
-| | Usage à chaque soirée | 5 répondants / 7 |
-| **Déclarative** | Recommandation (0 à 10) | **moyenne 9,6** (n = 7) |
-| **Opérationnelle** | Latence p95 | 207 ms |
-| | Taux d'erreur serveur | 0,026 % |
-| | Disponibilité | 100 % |
+| **Déclarative** <span class="text-xs opacity-70">la moins fiable</span> | Recommandation, 0 à 10 | **9,6** (n = 7) |
+| **Opérationnelle** <span class="text-xs opacity-70">la satisfaction commence par un service qui répond</span> | Latence, erreurs, disponibilité | 207 ms · 0,026 % · 100 % |
 
-<div class="mt-2 p-2 border-l-4 border-amber-500 bg-amber-50 bg-opacity-40 text-xs">
-<b>7 réponses pour 17 comptes.</b> Échantillon réduit et orienté : 5 des 7 répondants sont les plus engagés, aucun détracteur — signal de biais autant que bon résultat.<br>
-Le <b>9,6 n'est pas présenté comme une mesure de satisfaction</b>, mais comme l'absence de détracteur parmi les utilisateurs engagés. Les indicateurs comportementaux pèsent plus lourd : ils mesurent ce que les gens <b>font</b>.
+<div class="alert mt-2 text-xs">
+<b>7 réponses pour 17 comptes.</b> Échantillon réduit et orienté : 5 des 7 répondants sont les plus assidus, aucun détracteur — <b>signal de biais autant que bon résultat</b>. Le <b>9,6 n'est donc pas une mesure de satisfaction</b>, mais l'absence de détracteur parmi les engagés. C'est une information différente, et beaucoup plus modeste.
 </div>
 
 </div>
@@ -1820,19 +1846,17 @@ Le <b>9,6 n'est pas présenté comme une mesure de satisfaction</b>, mais comme 
 ### Ce que ces retours ont produit
 
 | Retour | Effet | Statut |
-|--------|-------|--------|
-| Reconnexion à chaque ouverture depuis un navigateur intégré | **Décision déclenchée** : détecter et proposer le navigateur système | ✅ **v1.4.1** |
-| Suggestion d'une liste de films à voir | **Décision confirmée**, déjà au périmètre — le retour n'a pas déclenché | ✅ v1.4.0 |
-| Voir *quels* films un utilisateur a proposés | Instruite, chiffrée 0,5 j, priorité 4 | ⬜ |
+|--------|-------|:------:|
+| Reconnexion à chaque ouverture depuis un navigateur intégré | **Déclenchée** : détecter et proposer le navigateur système | ✅ v1.4.1 |
+| Suggestion d'une liste de films à voir | **Confirmée**, déjà au périmètre — le retour n'a rien déclenché | ✅ v1.4.0 |
+| Voir *quels* films un utilisateur a proposés | **Instruite**, chiffrée 0,5 j, priorité 4 | ⬜ |
 
-<div class="mt-2 p-3 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40">
-<b>La boucle, mesurée.</b><br>
-Questionnaire en ligne le <b>18/08</b> → retour consigné en fiche le <b>19/08</b> → fiche close le <b>26/08</b> → correctif en production le <b>04/09</b>.<br>
-<b>17 jours entre le retour d'un utilisateur et sa mise en production.</b>
+<div class="note mt-2 text-xs">
+<b>La boucle, mesurée.</b> Questionnaire en ligne le <b>18/08</b> → fiche ouverte le 19/08 → close le 26/08 → correctif en production le <b>04/09</b>. <b>17 jours entre le retour d'un utilisateur et sa mise en production.</b>
 </div>
 
-<div class="mt-2 text-xs opacity-75">
-<b>Ce qui manque</b> : le dispositif est ponctuel, pas continu. Un questionnaire diffusé une fois donne un point, pas une tendance. La boucle continue est instruite, chiffrée 1 à 2 j, priorité 3.
+<div class="alert mt-2 text-xs">
+<b>Ce qui manque</b> : le dispositif est <b>ponctuel, pas continu</b>. Un questionnaire diffusé une fois donne un point, pas une tendance. La boucle continue est chiffrée à 1–2 jours.
 </div>
 
 </div>
@@ -1847,19 +1871,20 @@ d'emblee : a 17 comptes et 19 soirees, un NPS n'a aucune validite statistique.
 D'ou trois familles, et c'est leur COMBINAISON qui fait la mesure.
 
 Puis la limite, avant qu'on la trouve : sept reponses, echantillon oriente vers
-les plus engages, aucun detracteur. La phrase a dire : « je ne presente pas le
+les plus assidus, aucun detracteur. La phrase a dire : « je ne presente pas le
 9,6 comme une mesure de satisfaction, mais comme l'absence de detracteur parmi
-les utilisateurs engages. C'est une information differente et beaucoup plus
-modeste. »
+les utilisateurs engages. »
 
-La colonne de droite est ce qui prouve que les indicateurs SERVENT. Distinguer
-les trois statuts a voix haute — declenchee, confirmee, instruite non livree —
-et dire pourquoi on les distingue : presenter une confirmation comme un
-declenchement serait surevaluer la boucle.
+Les indicateurs COMPORTEMENTAUX pesent plus lourd dans les decisions, parce
+qu'ils mesurent ce que les gens FONT et non ce qu'ils disent.
 
-Terminer sur les 17 jours, puis IMMEDIATEMENT sur ce qui manque : le dispositif
-est ponctuel. Un questionnaire diffuse une fois donne un point, pas une tendance.
-Enchainer sur la demonstration.
+La colonne de droite prouve que les indicateurs SERVENT. Distinguer les trois
+statuts a voix haute — declenchee, confirmee, instruite non livree — et dire
+POURQUOI on les distingue : presenter une confirmation comme un declenchement
+serait surevaluer la boucle.
+
+Terminer sur les 17 jours, puis IMMEDIATEMENT sur ce qui manque. Enchainer sur la
+demonstration : changement de registre.
 -->
 
 ---
@@ -1909,10 +1934,9 @@ CHANGEMENT DE REGISTRE, il doit s'entendre. Les six chapitres precedents
 s'adressaient a un jury de professionnels ; celui-ci s'adresse a un client. Le
 vocabulaire change, le debit ralentit, les diapos se vident.
 
-Vingt secondes, pas plus. Annoncer les six temps en les lisant presque tels
-quels, puis la derniere ligne, qui est la seule qui compte pour le critere « le
-logiciel est utilisable » : c'est la version en production, pas une maquette, et
-il y a un second appareil.
+Vingt secondes, pas plus. Annoncer les six temps presque tels quels, puis la
+derniere ligne, seule qui compte pour le critere « le logiciel est utilisable » :
+c'est la version en production, pas une maquette, et il y a un second appareil.
 
 MOTS INTERDITS pendant toute la demonstration : API, base de donnees,
 deploiement, cache, jeton. Si l'un sort, NE PAS se reprendre a voix haute — se
@@ -1937,16 +1961,16 @@ en silence se lit comme une defaillance du logiciel.
 
 # Ce qui est validé, ce qui vient ensuite
 
-<div class="grid grid-cols-2 gap-8 mt-6">
+<div class="grid grid-cols-2 gap-8 mt-8">
 <div>
 
 ### Ce que vous venez de voir
 
 En ligne, utilisé, et couvrant **l'intégralité du parcours annoncé** :
 
-organiser · inviter · proposer · voter · trancher · garder une trace
+<div class="text-lg my-4">organiser · inviter · proposer · voter · trancher · garder une trace</div>
 
-<div class="mt-4 text-sm opacity-80">
+<div class="text-sm opacity-80">
 Non montré faute de temps, accessible à la demande : la liste personnelle « Ma liste » et la synchronisation avec un service tiers, les notifications, l'installation sur téléphone, la connexion avec un compte Google ou GitHub.
 </div>
 
@@ -1963,7 +1987,7 @@ Non montré faute de temps, accessible à la demande : la liste personnelle « M
 
 <div class="text-xs opacity-75 mt-1">Chiffrées, priorisées, issues des mesures d'usage et des retours.</div>
 
-<div class="mt-5 p-3 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40">
+<div class="note mt-5 text-base">
 <b>Sur cette base, je vous demande de valider le périmètre livré, pour engager le lot suivant.</b>
 </div>
 
@@ -1989,8 +2013,7 @@ improvisee.
 
 3. LA DEMANDE, prononcee telle qu'elle est ecrite, sans l'adoucir : « sur cette
 base, je vous demande de valider le perimetre livre, pour engager le lot
-suivant. » Puis SE TAIRE et laisser le silence. C'est la fin de la
-demonstration.
+suivant. » Puis SE TAIRE et laisser le silence. C'est la fin de la demonstration.
 
 Cette formulation place la demonstration dans un cycle de projet — le sujet du
 Bloc 3 — au lieu d'en faire une presentation de produit isolee.
@@ -2000,8 +2023,8 @@ Bloc 3 — au lieu d'en faire une presentation de produit isolee.
 
 # 8. Bilan de pilotage
 
-<div class="grid grid-cols-3 gap-5 mt-6 text-sm">
-<div class="p-4 rounded border-l-4 border-teal-500">
+<div class="grid grid-cols-3 gap-5 mt-8 text-sm">
+<div class="note">
 
 ### 1. Méthode
 
@@ -2009,42 +2032,29 @@ Bloc 3 — au lieu d'en faire une presentation de produit isolee.
 
 La régularité du commit n'était pas une exigence de qualité au départ. Elle est devenue la **condition d'existence** de l'indicateur d'avancement.
 
-<div class="text-xs opacity-75 mt-2">
-Corollaire : une mesure qu'on n'a pas instrumentée ne se rattrape pas rétroactivement. Les cinq premières semaines du projet restent non mesurables.
 </div>
-
-</div>
-<div class="p-4 rounded border-l-4 border-teal-500">
+<div class="note">
 
 ### 2. Arbitrage
 
 **Quand le coût d'une décision croît avec le temps, décider tôt a une valeur propre.**
 
-Le 18 mars, le périmètre à réécrire pesait **944 lignes**. La même API en porte **44 663** aujourd'hui.
-
-<div class="text-xs opacity-75 mt-2">
-Le bénéfice de cet arbitrage n'était pas dans son résultat, il était dans sa date.
-</div>
+944 lignes à migrer le 18 mars, 44 663 aujourd'hui. Le bénéfice de cet arbitrage n'était pas dans son résultat, il était dans sa **date**.
 
 </div>
-<div class="p-4 rounded border-l-4 border-amber-500">
+<div class="alert">
 
 ### 3. L'échec
 
-**L'arbitrage n'a pas été perdu : il n'a pas été posé.**
+**L'arbitrage n'a pas été perdu : il n'a pas été posé.** Deux fois.
 
-Deux fois. Sur le **périmètre** — 37 items livrés hors chiffrage, qu'aucun indicateur ne comparait au prévu. Sur la **charge** — dix jours consécutifs en août pour absorber deux échéances, au lieu de décider ce qui ne serait pas livré.
-
-<div class="text-xs opacity-75 mt-2">
-Même racine : une option non instruite n'est pas un arbitrage, c'est une absence de décision.
-</div>
+Sur le **périmètre** — 37 items hors chiffrage, qu'aucun indicateur ne comparait au prévu. Sur la **charge** — dix jours consécutifs en août plutôt que décider ce qui ne serait pas livré.
 
 </div>
 </div>
 
-<div class="mt-8 text-center text-base">
-Ce que ce projet m'a appris du pilotage tient en une phrase :<br>
-<b>ce qui n'est pas mesuré ne se pilote pas, et ce qui n'est pas arbitré se décide tout seul.</b>
+<div class="mt-10 text-center text-base">
+<b>Ce qui n'est pas mesuré ne se pilote pas, et ce qui n'est pas arbitré se décide tout seul.</b>
 </div>
 
 <div class="mt-6 text-center text-sm opacity-70">
@@ -2062,16 +2072,18 @@ de professionnels a passe trente minutes a entendre un candidat qui mesure et qu
 arbitre : entendre en cloture qu'il a rate deux arbitrages, avec les chiffres,
 est ce qui rend credible tout ce qui precede.
 
-Prononcer la phrase de cloture lentement, puis MARQUER UN TEMPS avant de remercier.
-C'est la derniere chose que le jury entendra avant les questions.
+Les deux echecs ont la MEME RACINE, et c'est la phrase qui les relie : une option
+non instruite n'est pas un arbitrage, c'est une absence de decision.
+
+Prononcer la phrase de cloture lentement, puis MARQUER UN TEMPS avant de
+remercier. C'est la derniere chose que le jury entendra avant les questions.
 
 Les huit annexes qui suivent ne sont JAMAIS presentees. Elles sont appelees
 uniquement si une question les demande. Connaitre leur ordre :
-A1 architecture · A2 logigramme complet · A3 arbitrages de reserve ·
-A4 budget · A5 chaine CI/CD · A6 RACI complete · A7 journal des versions ·
-A8 retours utilisateurs question par question.
+A1 architecture 33 · A2 logigramme complet 34 · A3 arbitrages de reserve 35 ·
+A4 budget 36 · A5 chaine CI/CD 37 · A6 RACI complete 38 · A7 journal des
+versions 39 · A8 retours utilisateurs 40.
 -->
-
 ---
 
 # Annexe A1 — Architecture technique
@@ -2079,23 +2091,19 @@ A8 retours utilisateurs question par question.
 <div class="grid grid-cols-2 gap-6 text-sm">
 <div>
 
-```mermaid {scale: 0.62}
+```mermaid
 flowchart LR
   U["Navigateur / PWA"]
-  subgraph AWS
-    CF["CloudFront CDN"] --> S3["S3 — SPA statique"]
-  end
-  subgraph GCP
-    CR["API ASP.NET Core<br/>Cloud Run"]
-    SM["Secret Manager"]
-    SM -.->|au déploiement| CR
-  end
-  U -->|assets HTTPS| CF
-  U -->|/api/v1 — cookie session| CR
+  U -->|assets| CF["CloudFront + S3<br/>AWS"]
+  U -->|/api/v1| CR["ASP.NET Core<br/>Cloud Run · GCP"]
   CR --> M[("MongoDB Atlas")]
   CR --> TMDB["TMDB"]
   CR --> RS["Resend"]
 ```
+
+<div class="text-xs opacity-75 mt-2">
+Secrets injectés au déploiement par Secret Manager. Session par cookie, jamais par jeton en stockage local.
+</div>
 
 </div>
 <div>
@@ -2104,10 +2112,10 @@ flowchart LR
 
 | Couche | Contenu |
 |--------|---------|
-| **Entrée** | Contrôleurs `/api/v1`, middleware de sécurité : CORS, limitation de débit, CSP, en-têtes, identifiant de corrélation |
+| **Entrée** | Contrôleurs `/api/v1`, sécurité : CORS, limitation de débit, CSP, en-têtes, corrélation |
 | **Application** | Cas d'usage et **ports** (interfaces) |
-| **Domaine** | Règles métier : soirée, lien de partage, vote, roue |
-| **Infrastructure** | Adaptateurs : MongoDB, catalogue de films, e-mail, notifications |
+| **Domaine** | Règles métier : soirée, partage, vote, roue |
+| **Infrastructure** | Adaptateurs : MongoDB, catalogue, e-mail, notifications |
 
 | | |
 |--|--|
@@ -2120,60 +2128,63 @@ flowchart LR
 
 ---
 
-# Annexe A2 — Le logigramme d'arbitrage, complet
+# Annexe A2 — Le logigramme complet, et le chemin suivi
 
-<div class="grid grid-cols-3 gap-4">
-<div class="col-span-2">
+<div class="grid grid-cols-2 gap-6">
+<div>
 
-```mermaid {scale: 0.46}
-flowchart TD
-    S(["Changement de socle technique<br/>envisagé en cours de projet"]) --> Q1{"Produit déjà<br/>déployé et utilisé ?"}
-    Q1 -->|non| L1["Contrainte de contrat<br/>inexistante"]
-    Q1 -->|oui| Q2{"Contrat d'interface<br/>intégralement préservable ?"}
-    Q2 -->|non| R1["REFUS — le coût réel est<br/>celui de la migration<br/>+ celui du client"]
-    Q2 -->|oui| Q3{"Périmètre à réécrire<br/>connu et figé ?"}
-    Q3 -->|non| R2["DIFFÉRER au prochain point<br/>de stabilité fonctionnelle"]
-    Q3 -->|oui| Q4{"Coût de la décision<br/>croissant avec le temps ?"}
-    Q4 -->|non| R3["DIFFÉRER — arbitrer<br/>sur le seul bénéfice"]
-    Q4 -->|oui| Q5{"Charge soutenable<br/>par l'effectif réel ?"}
-    Q5 -->|non| R4["RÉDUIRE LE PÉRIMÈTRE<br/>ou renoncer"]
-    Q5 -->|oui| Q6{"Critère de bascule<br/>mesurable définissable ?"}
-    Q6 -->|non| R5["REFUS — une migration sans<br/>critère de succès<br/>ne se pilote pas"]
-    Q6 -->|oui| D["DÉCIDER MAINTENANT<br/>bascule en une fois,<br/>contrat figé comme référence"]
-    D --> V{"Parité fonctionnelle<br/>vérifiée sur le contrat ?"}
-    V -->|non| RB["RETOUR ARRIÈRE — l'ancien socle<br/>reste déployé et redéployable"]
-    V -->|oui| F(["BASCULE — retrait de l'ancien socle"])
-    L1 --> Q3
-    classDef refus fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
-    classDef diff fill:#fef3c7,stroke:#d97706,color:#78350f
-    classDef ok fill:#ccfbf1,stroke:#0d9488,color:#134e4a
-    class R1,R5 refus
-    class R2,R3,R4,RB diff
-    class D,F ok
-```
+<div class="flow tight">
+<div class="row"><div class="q">Un produit est-il déjà<br>déployé et utilisé ?</div><div class="r go" style="font-weight:400">Liberté<br>totale</div></div>
+<div class="arrow">↓ oui &nbsp;·&nbsp; non →</div>
+<div class="row"><div class="q">Contrat d'interface<br>intégralement préservable ?</div><div class="r no">REFUS</div></div>
+<div class="arrow">↓ oui &nbsp;·&nbsp; non →</div>
+<div class="row"><div class="q">Périmètre à réécrire<br>connu et figé <i>maintenant</i> ?</div><div class="r">DIFFÉRER</div></div>
+<div class="arrow">↓ oui &nbsp;·&nbsp; non →</div>
+<div class="row"><div class="q">Le coût de la décision<br>croît-il avec le temps ?</div><div class="r">DIFFÉRER</div></div>
+<div class="arrow">↓ oui &nbsp;·&nbsp; non →</div>
+<div class="row"><div class="q">Charge soutenable<br>par l'effectif <i>réel</i> ?</div><div class="r">RÉDUIRE</div></div>
+<div class="arrow">↓ oui &nbsp;·&nbsp; non →</div>
+<div class="row"><div class="q">Critère de bascule<br>mesurable définissable ?</div><div class="r no">REFUS</div></div>
+<div class="arrow">↓ oui</div>
+<div class="r go">DÉCIDER MAINTENANT</div>
+<div class="arrow">↓</div>
+<div class="row"><div class="q">Parité vérifiée<br>sur tout le contrat ?</div><div class="r">RETOUR<br>ARRIÈRE</div></div>
+<div class="arrow">↓ oui</div>
+<div class="r go">BASCULE — retrait de l'ancien socle</div>
+</div>
 
 </div>
 <div class="text-sm">
 
-### Le chemin suivi le 18/03/2026
+### Le chemin réellement suivi, le 18 mars 2026
 
-| Question | Réponse |
-|----------|---------|
-| Produit déployé ? | **oui** |
-| Contrat préservable ? | **oui** — le contrat OpenAPI de l'API Node sert de référence |
-| Périmètre figé ? | **oui** — le MVP venait d'être déclaré terminé |
-| Coût croissant ? | **oui** |
-| Charge soutenable ? | **oui** — 13 J/H |
-| Critère mesurable ? | **oui** — la parité sur les 12 routes |
+<div class="dense">
 
-→ **Décider maintenant.**
+| Question | Ce qui fonde le « oui » |
+|----------|-------------------------|
+| Produit déployé ? | Le MVP est en ligne depuis le 16/03 |
+| Contrat préservable ? | Le contrat OpenAPI de l'API Node sert de spécification |
+| Périmètre figé ? | Le MVP venait d'être déclaré terminé |
+| Coût croissant ? | Chaque jour de V1 augmente le volume à réécrire |
+| Charge soutenable ? | 13 J/H pour un exécutant |
+| Critère de bascule ? | La parité sur les **12 routes** |
+| **Parité vérifiée ?** | D'où le retrait de l'ancien socle, 15 min après |
 
-<div class="mt-3 text-xs opacity-75">
-Écrit pour être réutilisable : aucune technologie n'y figure. La dernière branche — parité non vérifiée = retour arrière — est ce qui rendait la décision réversible.
+</div>
+
+<div class="note mt-2 text-xs">
+Le logigramme est <b>réutilisable</b> : aucune technologie n'y figure. Il énonce les questions qu'un changement de socle impose de trancher, <b>dans l'ordre où elles doivent l'être</b> — la question éliminatoire du contrat vient avant toute considération de coût.
 </div>
 
 </div>
 </div>
+
+<style>
+.flow.tight { font-size: 0.6rem; }
+.flow.tight .q, .flow.tight .r { padding: 0.16rem 0.35rem; }
+.flow.tight .arrow { font-size: 0.56rem; line-height: 0.8; }
+.flow.tight .row { gap: 0.25rem; grid-template-columns: 1fr 4.6rem; }
+</style>
 
 ---
 
@@ -2186,9 +2197,9 @@ flowchart TD
 
 | | |
 |--|--|
-| **Écart** | Chaîne d'intégration à **52 %** de succès en juin 2026, échecs sans cause réelle bloquant les fusions |
-| **Conséquence** | Érosion de la confiance dans la chaîne, et tentation de contourner la porte |
-| **Options** | Désactiver la porte · abaisser les seuils · **rendre la mesure déterministe** · changer d'outil |
+| **Écart** | Chaîne à **52 %** de succès en juin 2026, échecs sans cause réelle bloquant les fusions |
+| **Conséquence** | Érosion de la confiance dans la chaîne, tentation de contourner la porte |
+| **Options** | Désactiver · abaisser les seuils · **rendre la mesure déterministe** · changer d'outil |
 | **Décision** | Médiane de trois exécutions et seuils recalibrés, **plutôt que baisser l'exigence** |
 | **Résultat** | **52 % → 94 %** le mois suivant. Portes rendues bloquantes en v1.3.1 |
 
@@ -2201,15 +2212,15 @@ flowchart TD
 |--|--|
 | **Écart** | Application mobile démarrée le **16/05/2026**, parcours complet livré en une journée |
 | **Conséquence** | Deux surfaces produit à maintenir, pour un seul exécutant |
-| **Options** | Poursuivre en parallèle du web · geler · **archiver** |
-| **Décision** | Archivée le **26/05/2026** : le web porte la totalité des utilisateurs, et deux surfaces sont hors de portée d'un effectif de 1 |
+| **Options** | Poursuivre en parallèle · geler · **archiver** |
+| **Décision** | Archivée le **26/05/2026** : le web porte la totalité des utilisateurs |
 | **Résultat** | Code conservé dans `archive/`, **aucune dette de maintenance, aucun utilisateur impacté** |
 
 </div>
 </div>
 
-<div class="mt-4 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-sm">
-Ces deux cas partagent le critère qui a tranché le cas principal : <b>la soutenabilité par l'effectif réel</b>. C'est le critère 5 du logigramme, et c'est celui qui revient le plus souvent sur ce projet.
+<div class="note mt-4 text-sm">
+Ces deux cas partagent le critère qui a tranché le cas principal : <b>la soutenabilité par l'effectif réel</b>. C'est le critère 5 du logigramme, et celui qui revient le plus souvent sur ce projet.
 </div>
 
 ---
@@ -2241,12 +2252,11 @@ Coût de trésorerie nul dans le cadre de la formation. Ce montant matérialise 
 | Poste | Palier gratuit | Estimation |
 |-------|----------------|-----------:|
 | Hébergement API (Cloud Run) | 2 M req/mois | ~0 € |
-| Registre d'images, secrets, supervision | inclus | ~0 € |
-| Hébergement front (S3 + CloudFront) | 12 mois | ~1–5 €/mois **ensuite** |
+| Registre, secrets, supervision | inclus | ~0 € |
+| Hébergement front (S3 + CloudFront) | **12 mois** | ~1–5 €/mois **ensuite** |
 | Base de données (Atlas M0) | 512 Mo | ~0 € |
 | E-mail (Resend) | 3 000/mois | ~0 € |
 | Supervision d'erreurs (Sentry) | 5 000 év./mois | ~0 € |
-| Chaîne d'intégration | inclus | ~0 € |
 | Nom de domaine | — | ~10 €/an |
 | **Licences** | 100 % libre ou palier gratuit | **0 €** |
 | **Trésorerie réelle** | | **20 à 190 €/an** |
@@ -2262,41 +2272,28 @@ Borne haute atteinte si la base passe au premier palier payant (~9 $/mois).
 
 # Annexe A5 — La chaîne d'intégration et de déploiement
 
-<div class="grid grid-cols-2 gap-5">
+<div class="lede text-sm"><b>15 jobs</b>, dont <b>10 bloquants</b>. Un contrôle rouge refuse le déploiement — ce n'est pas une recommandation.</div>
+
+<div class="grid grid-cols-2 gap-6 dense">
 <div>
-
-```mermaid {scale: 0.55}
-flowchart TD
-  T["PR ou push sur master"] --> CH["changes<br/>path-filtering web / api"]
-  T --> GL["gitleaks<br/>scan de secrets"]
-  CH --> LA["lint-web · lint-api · audit"]
-  CH --> TESTS["test-web · test-api<br/>test-api-mongo · couverture ≥ 80 %"]
-  TESTS --> SO["sonar<br/>Quality Gate bloquant"]
-  CH --> NB["lighthouse · e2e Playwright"]
-  SO --> GATE{{"pipeline vert ?"}}
-  NB --> GATE
-  LA --> GATE
-  GL --> GATE
-  GATE -->|push master| CD["docker-api →<br/>deploy-api · deploy-front"]
-  CD --> SMOKE["smoke test<br/>readiness base de données"]
-```
-
-</div>
-<div class="dense">
-
-**15 jobs.** Les 10 jobs de vérification sont tous bloquants.
 
 | Job | Rôle | Bloquant |
 |-----|------|:--------:|
-| `changes` | Path-filtering, calcule les lanes web / api | — |
+| `changes` | Path-filtering, lanes web / api | — |
 | `gitleaks` | Scan de secrets sur l'arbre | ✅ |
 | `lint-web` | TypeScript, ESLint, Prettier | ✅ |
 | `lint-api` | Format, build `-warnaserror`, export OpenAPI | ✅ |
 | `audit` | Trivy sur le lock, NuGet vulnérables | ✅ |
 | `test-web` | Vitest + seuils de couverture | ✅ |
 | `test-api` | xUnit unitaires et intégration, **≥ 80 %** | ✅ |
-| `test-api-mongo` | Tests d'intégration sur **MongoDB réel** | ✅ |
-| `sonar` | SonarCloud, Quality Gate code nouveau | ✅ |
+
+</div>
+<div>
+
+| Job | Rôle | Bloquant |
+|-----|------|:--------:|
+| `test-api-mongo` | Intégration sur **MongoDB réel** | ✅ |
+| `sonar` | Quality Gate sur le code nouveau | ✅ |
 | `lighthouse` | Performance et accessibilité, médiane de 3 | ✅ |
 | `e2e` | Playwright, parcours de bout en bout | ✅ |
 | `docker-api` | Image conteneurisée → Artifact Registry | — |
@@ -2304,11 +2301,11 @@ flowchart TD
 | `deploy-front` | S3 et CloudFront | — |
 | `deploy-guard` | Garde-fou de déploiement sur `master` | — |
 
-<div class="text-xs opacity-75 mt-1">
-Mesures anti-chaîne d'approvisionnement : actions épinglées par SHA, images par digest, <code>persist-credentials: false</code>, secrets par <code>env:</code>.
+</div>
 </div>
 
-</div>
+<div class="note mt-3 text-xs">
+Mesures anti-chaîne d'approvisionnement : actions épinglées par SHA, images par digest, <code>persist-credentials: false</code>, secrets passés par <code>env:</code>.
 </div>
 
 ---
@@ -2339,7 +2336,7 @@ Mesures anti-chaîne d'approvisionnement : actions épinglées par SHA, images p
 
 </div>
 
-<div class="mt-2 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
+<div class="note mt-2 text-xs">
 <b>Une seule approbation par ligne</b> : le rôle A n'est jamais partagé, condition pour qu'un arbitrage puisse être tranché. <b>L'affectation suit la compétence, pas la disponibilité.</b> <b>Les acteurs externes y figurent</b> : un acteur absent de la matrice est un acteur qu'on oubliera de solliciter.
 </div>
 
@@ -2352,18 +2349,18 @@ Mesures anti-chaîne d'approvisionnement : actions épinglées par SHA, images p
 
 | Version | Date | Contenu principal |
 |---------|------|-------------------|
-| **1.4.1** | 04/09/2026 | Navigation sans compte, landing bilingue sur `/decouvrir` |
-| 1.4.0 | 25/08/2026 | Watchlist, Letterboxd, choix manuel, flamme, OAuth, dons |
+| **1.4.1** | 04/09/2026 | Navigation sans compte, landing bilingue |
+| 1.4.0 | 25/08/2026 | Watchlist, Letterboxd, choix manuel, flamme, OAuth |
 | 1.3.2 | 25/07/2026 | Supervision, sonde de readiness, canal de support |
 | 1.3.1 | 08/07/2026 | Filtre de durée, échelle de notes, CSP, refonte CI/CD |
-| 1.3.0 | 19/06/2026 | États vides, export calendrier, refonte de la navigation |
-| 1.2.0 | 11/06/2026 | Profil public, notifications in-app, RGPD, analytique |
+| 1.3.0 | 19/06/2026 | États vides, export calendrier, navigation |
+| 1.2.0 | 11/06/2026 | Profil public, notifications in-app, RGPD |
 | 1.1.0 | 25/05/2026 | Application installable, notifications push, séries |
 | 1.0.0 | 19/05/2026 | Première version de production |
 | 0.1.0 | 27/02/2026 | Prototype initial |
 
 <div class="text-xs opacity-75 mt-1">
-Format <b>Keep a Changelog</b>, versionnage sémantique. Un tag annoté et une release publiée par version. La version est visible en pied de page et exposée par la sonde de readiness.
+Format <b>Keep a Changelog</b>, versionnage sémantique. Un tag annoté et une release par version. La version est en pied de page et exposée par la sonde de readiness.
 </div>
 
 </div>
@@ -2371,17 +2368,11 @@ Format <b>Keep a Changelog</b>, versionnage sémantique. Un tag annoté et une r
 
 ### Détail d'une release — v1.3.2
 
-**Ajouté**
-- Lien « Signaler un problème » avec contexte technique pré-rempli
-- Sonde `GET /health/ready` vérifiant la joignabilité de MongoDB et exposant la version déployée
-- Supervision : 3 sondes sur 3 continents, 5 politiques d'alerte, tableau de bord d'exploitation
-- Contrôle de la readiness dans le test de fumée de déploiement
+**Ajouté** — lien « Signaler un problème » avec contexte pré-rempli · sonde `GET /health/ready` vérifiant MongoDB et exposant la version déployée · 3 sondes sur 3 continents, 5 politiques d'alerte · contrôle de readiness dans le test de fumée.
 
-**Modifié**
-- Portes de qualité rendues **bloquantes** (Quality Gate, Lighthouse, E2E)
-- Réduction de la duplication de code
+**Modifié** — portes de qualité rendues **bloquantes** (Quality Gate, Lighthouse, E2E) · réduction de la duplication.
 
-<div class="mt-3 p-2 border-l-4 border-teal-500 bg-teal-50 bg-opacity-40 text-xs">
+<div class="note mt-4 text-xs">
 <b>Traçabilité bidirectionnelle</b> : la fiche d'anomalie référence le commit correctif, le commit appartient à une étiquette, l'étiquette correspond à une entrée du journal. Et chaque événement d'erreur en production porte la version déployée.
 </div>
 
@@ -2392,23 +2383,25 @@ Format <b>Keep a Changelog</b>, versionnage sémantique. Un tag annoté et une r
 
 # Annexe A8 — Les retours utilisateurs, question par question
 
+<div class="text-sm mb-2">
+<b>7 réponses pour 17 comptes.</b> Échantillon réduit et orienté : 5 des 7 répondants utilisent l'application à chaque soirée.
+</div>
+
 <div class="dense">
 
-**7 réponses pour 17 comptes inscrits.** Échantillon réduit et orienté : 5 des 7 répondants utilisent l'application à chaque soirée film.
-
-| Question | Réponses (n = 7) | Lecture |
-|----------|------------------|---------|
-| Usage des boutons de vote | 6/7 ont voté au moins une fois ; 1/7 jamais | Le vote est pratiqué, malgré un faible taux mesuré en production |
-| Effet du vote sur le tirage | 4/7 pensent que ça dépend d'un réglage de l'hôte ; 1/7 croit les plus votés favorisés ; **1/7 identifie la réalité** ; 1/7 ne s'est jamais posé la question | La majorité sait le mécanisme configurable, quasi personne ne sait qu'il n'est **jamais activé** |
-| Décision réelle du groupe | 5/7 « ça dépend des soirées » ; **1/7 relance la roue jusqu'à un résultat qui convient à tous** ; 1/7 fait confiance au tirage | Confirme le contournement manuel du tirage, hypothèse posée **avant** l'envoi du questionnaire |
-| Attente vis-à-vis du vote | **3/7 veulent écarter du tirage les films rejetés** ; 2/7 le veulent indicatif ; 1/7 le veut pondéré ; 1/7 sans avis | La préférence la plus citée est un mécanisme d'**élimination**, qui n'existe pas |
-| Connaissance des notifications | **4/7 ignoraient que l'activation était possible** ; 3/7 les ont activées | Plus de la moitié ignore le réglage, dans un échantillon d'assidus |
-| Connaissance du réglage de la roue | 5/7 connaissaient le réglage aléatoire / pondéré | Repéré mais **jamais actionné** : 0 soirée sur 19 |
-| Ce qui ferait revenir plus souvent | 5/7 « rien de particulier, je l'utilise quand j'en ai besoin » | Usage par événement plutôt que par habitude |
-| Recommandation (0 à 10) | 10, 10, 10, 8, 9, 10, 10 → **moyenne 9,6** | Aucun détracteur — signal de biais autant que bon résultat |
+| Question | Réponses (n = 7) |
+|----------|------------------|
+| Usage des boutons de vote | 6/7 ont voté au moins une fois ; 1/7 jamais |
+| Effet du vote sur le tirage | 4/7 « ça dépend d'un réglage de l'hôte » ; **1/7 identifie la réalité** — le réglage n'est jamais activé |
+| Décision réelle du groupe | 5/7 « ça dépend des soirées » ; **1/7 relance la roue jusqu'à un résultat qui convient** |
+| Attente vis-à-vis du vote | **3/7 veulent écarter du tirage les films rejetés** — un mécanisme d'élimination qui n'existe pas |
+| Connaissance des notifications | **4/7 ignoraient que l'activation était possible** ; 3/7 les ont activées |
+| Connaissance du réglage de la roue | 5/7 le connaissaient — repéré mais **jamais actionné** : 0 soirée sur 19 |
+| Ce qui ferait revenir plus souvent | 5/7 « rien de particulier, je l'utilise quand j'en ai besoin » |
+| Recommandation (0 à 10) | 10, 10, 10, 8, 9, 10, 10 → **moyenne 9,6**, aucun détracteur |
 
 </div>
 
-<div class="mt-2 p-2 border-l-4 border-amber-500 bg-amber-50 bg-opacity-40 text-xs">
+<div class="alert mt-3 text-xs">
 <b>Ce que ces réponses ont produit</b> : une décision <b>déclenchée</b> et livrée (le bandeau des navigateurs intégrés, v1.4.1, 17 jours du retour à la production), une <b>confirmée</b> mais non déclenchée (la watchlist, déjà au périmètre), une <b>instruite</b> et non livrée (voir quels films un utilisateur a proposés).
 </div>

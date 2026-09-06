@@ -37,8 +37,26 @@ npm run export
 
 - Les blocs `<!-- ... -->` en fin de diapositive sont les **notes du présentateur**, invisibles à l'écran. Elles portent la durée cible, l'élément imposé et le critère visé, ce qu'il faut dire à voix haute, et les réponses préparées aux questions probables.
 - `global-bottom.vue` affiche en bas à gauche le **code de compétence** visé par la diapositive courante, et en bas à droite la pagination. La table `REFS` doit être tenue à jour à chaque ajout de diapositive.
-- Le Gantt de la diapositive 6 est en **HTML et CSS** (grille `.gantt`), pas en Mermaid : c'est ce qui permet de le caler au pixel sur l'axe des mois. Les deux seuls blocs Mermaid du support sont le **logigramme de la diapositive 17** et sa version complète en **annexe A2 (diapo 34)**, rendus nativement par Slidev.
-- ⚠️ La syntaxe `{scale: 0.52}` après l'ouverture d'un bloc Mermaid **n'a aucun effet** dans cette version : la diapositive 17 rend le logigramme en taille pleine et n'en montre que 3 nœuds sur 8. À corriger par CSS. Voir `../RESTE-A-FAIRE.md` § 0.
+- **Les schémas sont en HTML et CSS, pas en Mermaid.** La syntaxe `{scale: …}` d'un bloc Mermaid **n'a aucun effet** dans cette version : le diagramme rend en taille pleine et déborde. Les primitives sont dans `global-bottom.vue` et documentées ci-dessous. Le seul Mermaid restant est le schéma d'architecture de l'annexe A1, assez petit pour tenir.
+- **Une diapositive = une idée, énoncée dans le titre**, une preuve visuelle, et le reste en note de présentateur. Le jury n'a que les diapositives : ce qui doit être vu est à l'écran, ce qui doit être dit est dans la note.
+
+### Les primitives graphiques (`global-bottom.vue`)
+
+| Classe | Usage |
+|--------|-------|
+| `.lede` | Le message de la diapositive, sous le titre |
+| `.note` / `.alert` | Bandeau teal (constat) / ambre (limite assumée, autocritique) |
+| `.kpi` | Rangée d'indicateurs — grand nombre + libellé |
+| `.cols` + `.xlab` | Histogramme en colonnes, étiquettes de valeur en `<em>` |
+| `.stack` + `.legend` | Barre empilée, étiquetée en direct |
+| `.dumb` | Écart actuel → cible (haltères) |
+| `.flow` | Logigramme : `.q` question, `.r` issue, `.r.no` refus, `.r.go` décision |
+| `.tl` | Frise |
+| `.chips` | Liste d'états valeur / verdict |
+
+**Palette de séries** : `--s1` à `--s4`, validée (pire paire adjacente ΔE 10.7 en vision déficiente, 27.5 en vision normale). `--s4` est sous 3:1 de contraste : **toujours l'étiqueter en direct**. Les couleurs d'état (`--ok`, `--warn`, `--bad`) ne servent jamais de couleur de série et vont toujours avec un libellé.
+
+⚠️ **Piège markdown** : à l'intérieur d'un bloc HTML, une ligne qui commence par une balise **inline** (`<b>`, `<span>`) après une ligne vide est enveloppée dans un `<p>` et casse la grille. Commencer chaque ligne par `<div>`.
 - Classe utilitaire `dense` sur un conteneur pour réduire la taille des tableaux larges.
 
 ## Avancement
@@ -56,7 +74,7 @@ npm run export
 | 8. Conclusion | 32 | | ✅ |
 | Annexes pour les questions | 33 à 40 | | ✅ |
 
-**Support complet : 40 diapositives**, dont 32 présentées et 8 annexes appelées uniquement sur question. ⚠️ **Mise en page à reprendre sur 17 d'entre elles**, dont le contenu est coupé à l'écran — voir [`../RESTE-A-FAIRE.md`](../RESTE-A-FAIRE.md) § 0. Les annexes portent la mention `ANNEXE` en bas à gauche à la place du code de compétence.
+**Support complet : 40 diapositives**, dont 32 présentées et 8 annexes appelées uniquement sur question. Les 40 **tiennent dans le cadre**, vérifié par `npm run verify:rendu`. Les annexes portent la mention `ANNEXE` en bas à gauche à la place du code de compétence.
 
 **Navigation pendant les questions** : en mode présentateur, taper le numéro de page puis `Entrée` va directement à la diapositive. A1 architecture = **33**, A2 logigramme = **34**, A3 arbitrages de réserve = **35**, A4 budget = **36**, A5 chaîne CI/CD = **37**, A6 RACI = **38**, A7 journal des versions = **39**, A8 retours utilisateurs = **40**.
 

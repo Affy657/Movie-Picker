@@ -4,46 +4,33 @@
 >
 > **La rédaction est terminée** : 7 chapitres de matière, 40 diapositives (32 présentées + 8 annexes), les 14 éléments imposés rattachés, les 7 compétences couvertes.
 >
-> ⚠️ **Mais une seconde relecture, le 5 septembre, a rendu le support pour la première fois et découvert que 17 diapositives sont coupées par le bas du cadre.** C'est désormais le point bloquant n° 1, avant la démonstration. Voir § 0.
+> ✅ **Le support a été refondu le 5 septembre** : la seconde relecture l'a rendu pour la première fois et a trouvé 17 diapositives coupées. Elles sont corrigées, le support est épuré et les tableaux les plus lourds sont devenus des schémas. Détail en § 0.
 
 > Pour **comment** travailler dans ce dossier — règles d'écriture, sources de vérité des chiffres, pièges et scripts de vérification — voir [`PASSATION.md`](PASSATION.md).
 
 ---
 
-## 0. Bloquant — le support est coupé à l'écran
+## 0. Le support a été refondu — ✅ traité
 
-**Le support n'avait jamais été rendu visuellement.** Les contrôles du dossier (compte de diapositives, équilibre des `<div>`, minutage) restent tous verts sur une diapositive dont le tiers inférieur est invisible : ils lisent le Markdown, pas la page.
+**Le support n'avait jamais été rendu visuellement.** Les contrôles du dossier (compte de diapositives, équilibre des `<div>`, minutage) lisent le Markdown : ils restaient tous verts sur une diapositive dont le tiers inférieur était invisible. Au rendu, **17 diapositives sur 40 étaient coupées** — dont la conclusion de la 15 (C3.2.1, éliminatoire), les modalités handicap de la 26 (un critère de C3.3.2), trois des cinq blocs du gabarit de la 28, et le **logigramme de la 17**, dont 3 nœuds sur 8 étaient visibles.
 
-Le rendu à 1280 × 720 avec la police du thème donne **17 diapositives dont du contenu passe sous le bas du cadre** — 13 présentées sur 32, et 4 annexes sur 8. Ce qui disparaît n'est pas du décor : c'est souvent la conclusion de la diapositive.
+### Ce qui a été fait
 
-| Diapo | Compétence | Ce qui est coupé | Dépassement |
-|:-----:|:----------:|------------------|------------:|
-| 11 | **C3.2.1** ÉLIM | La phrase sur la distance entre le travail et sa trace | 13 px |
-| 12 | **C3.2.1** ÉLIM | Fin du tableau des indicateurs (axe coûts) | 67 px |
-| 15 | **C3.2.1** ÉLIM | Le tableau de répartition des 88 jours **et** le bandeau « ce que le suivi n'a pas vu », qui est la conclusion du chapitre | 132 px |
-| 16 | C3.2.2 | Fin de la chronologie de l'arbitrage | 42 px |
-| 17 | C3.2.2 | **Le logigramme**, nommé explicitement par la grille : 3 nœuds sur 8 sont visibles. Le `{scale: 0.52}` du bloc Mermaid **n'est pas appliqué** au rendu | 677 px |
-| 21 | C3.3.1 | La phrase sur l'absence de messagerie | 20 px |
-| 23 | C3.3.1 | Les trois recommandations de l'analyse critique | 167 px |
-| 24 | C3.3.2 | Fin de la cartographie des compétences | 194 px |
-| 25 | C3.3.2 | La lecture qui rend la grille crédible | 21 px |
-| 26 | C3.3.2 | **Les modalités de formation adaptées au handicap** — un critère de la grille, entièrement invisible | 282 px |
-| 27 | C3.4.1 | Fin des contrôles bloquants | 87 px |
-| 28 | C3.4.1 | **Trois des cinq blocs du gabarit décisionnel** — donc le point de la diapositive | 206 px |
-| 29 | C3.4.1 | Ce que les retours ont produit | 157 px |
-| 32 | — | La phrase de clôture et le remerciement | 68 px |
-| 34 | annexe | **A2, le logigramme complet** — celui qu'on ouvre justement si le jury interroge la 17 | 187 px |
-| 37 | annexe | A5, la chaîne d'intégration et de déploiement | 122 px |
-| 40 | annexe | A8, les retours utilisateurs question par question | 54 px |
+| | |
+|--|--|
+| **Toutes les diapositives tiennent** | Vérifié par [`slides/verifier-rendu.mjs`](slides/verifier-rendu.mjs) : *« les 40 diapositives tiennent dans le cadre »* |
+| **Le support est épuré** | Une idée par diapositive, énoncée dans le titre ; la preuve à l'écran, l'argumentation en note de présentateur. Densité maximale ramenée de 2 289 à 1 967 caractères, moyenne 1 217 |
+| **Sept tableaux remplacés par des schémas** | Histogrammes d'activité (13), stabilité de la chaîne (14), barres empilées du glissement de périmètre (15), **logigramme en HTML** (17 et A2), répartition de charge par lot (19), grille de compétences en haltères (25), frise des versions (27) |
+| **Le mur de 25 indicateurs a disparu** | La diapositive 12 porte désormais la *méthode* de sélection et les 5 axes ; les valeurs vivent sur les deux tableaux de bord, sans doublon |
+| **Répétitions supprimées** | *« l'affectation suit la compétence attestée »* (9 et 19), les quatre échéances (5 et 6), les 88 jours actifs (13 et 14). Le seul rappel littéral conservé est volontaire : *« l'arbitrage n'a pas été perdu, il n'a pas été posé »*, thèse de la 23 rappelée en conclusion |
+| **Ordre des chapitres vérifié** | Identique à celui du référentiel — C3.1 → C3.2.1 → C3.2.2 → C3.3.1 → C3.3.2 → C3.4.1 → C3.4.2 — et chaque renvoi entre chapitres est une annonce vers l'avant, sauf un rappel arrière assumé (24 → chapitre 3) |
+| **Numérotation préservée** | 40 diapositives, 32 présentées, **30:00 pile** chapitre par chapitre, rattachement des 14 éléments imposés inchangé |
 
-**Deux natures de problème, deux remèdes :**
+### Ce qui reste, sur le rendu
 
-1. **La diapositive 17 est un défaut mécanique**, pas un excès de contenu : le paramètre d'échelle du bloc Mermaid n'a aucun effet dans cette version. À traiter en réduisant l'échelle par CSS, ou en scindant le logigramme.
-2. **Les seize autres sont un excès de contenu** pour la hauteur disponible. Chaque diapositive demande un arbitrage éditorial — que couper, que renvoyer en note de présentateur — qui appartient au propriétaire du dossier. Le minutage n'en est pas affecté : ce qui est coupé n'était de toute façon pas lisible par le jury.
+> ⚠️ **La police du thème est chargée depuis Google Fonts au moment du rendu.** Sans réseau, le navigateur retombe sur une police plus large et le support se dégrade. **L'export PDF fige les polices** : c'est la raison la plus solide de présenter depuis le PDF (§ 3, action 7) et non depuis le support en ligne. Le mode d'emploi pour récupérer la police localement est en tête de `verifier-rendu.mjs`.
 
-**Le contrôle est désormais outillé et rejouable** : [`slides/verifier-rendu.mjs`](slides/verifier-rendu.mjs), mode d'emploi en tête du fichier. À relancer après chaque retouche, et **avant** l'export PDF.
-
-> ⚠️ **Piège de rendu** : la police du thème (Nunito Sans) est chargée depuis Google Fonts **au moment du rendu**. Sans réseau, le navigateur retombe sur une police plus large et **le support se dégrade encore**. L'export PDF fige les polices : c'est un argument de plus pour présenter depuis le PDF (§ 3, action 7) et non depuis le support en ligne.
+**Relancer `npm run verify:rendu` après toute retouche du support, et avant l'export PDF.**
 
 ---
 

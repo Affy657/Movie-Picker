@@ -12,10 +12,10 @@
 | | |
 |--|--|
 | **Épreuve** | Oral de 45 min (30 de présentation + 15 de questions), le **16 septembre 2026** |
-| **État** | Rédaction terminée (7 chapitres, 40 diapositives). ⚠️ **Mais 17 diapositives sont coupées à l'écran** — le support n'avait jamais été rendu. Voir [`RESTE-A-FAIRE.md`](RESTE-A-FAIRE.md) § 0 |
+| **État** | ✅ Rédaction terminée et **support refondu** : 7 chapitres, 40 diapositives, toutes vérifiées au rendu. Épuré, schémas à la place des gros tableaux, sans répétition |
 | **Branche** | `claude/rncp-03-title-crwwov`, head `a9c2859`, **10 commits** d'avance sur `master` |
 | **Pull request** | [#83](https://github.com/Affy657/Movie-Picker/pull/83) — ouverte, CI verte, `mergeable_state: clean`, aucune revue |
-| **Reste** | **Reprendre la mise en page de 17 diapositives** (§ 0 de `RESTE-A-FAIRE.md`), puis du matériel : répétitions, jeu de données de démonstration, vidéo de repli, 2 captures |
+| **Reste** | Uniquement du **matériel** : répétitions minutées, jeu de données de démonstration, vidéo de repli, 2 captures, export PDF |
 
 **Tant que la PR n'est pas fusionnée**, les cases du Bloc 3 dans [`../suivi-rncp.md`](../suivi-rncp.md) restent décochées : la convention du dossier veut qu'un livrable ne soit coché qu'une fois mergé sur `master`.
 
@@ -56,9 +56,19 @@ Chaque chapitre part d'un fait vérifiable, puis **énonce lui-même sa faibless
 - Le titre de chapitre est porté par sa **première diapositive** (ex. diapo 11 : « 2. Piloter l'avancement : l'outil de suivi »).
 - **Toute insertion ou suppression de diapositive** oblige à mettre à jour, dans le même commit : le plan (§ 1 et § 4), la table `REFS` de `slides/global-bottom.vue`, et le tableau d'avancement de `slides/README.md`.
 
-### 2.4 Le minutage est exact et doit le rester
+### 2.4 Le support est épuré, et doit le rester
 
-Le support fait **30:00 pile**, exact chapitre par chapitre. Toute modification de contenu qui change une durée doit être compensée **dans le même chapitre**. Le script du § 5.3 le vérifie.
+Le jury **n'a que les diapositives** : il n'ouvrira pas le dépôt, et il ne lira pas un paragraphe affiché 30 secondes. Trois règles en découlent.
+
+1. **Une idée par diapositive, énoncée dans le titre.** Le titre est une assertion (« L'écart n'est pas où on le cherche »), pas une étiquette de rubrique.
+2. **La preuve est à l'écran, l'argumentation est en note.** Un chiffre qui compte se montre — histogramme, barre empilée, haltère, frise. Un raisonnement se dit.
+3. **Pas de tableau de plus de 8 lignes sur une diapositive présentée.** Au-delà, c'est un schéma, ou c'est une annexe.
+
+Les primitives graphiques et la palette validée sont dans `slides/global-bottom.vue`, documentées dans [`slides/README.md`](slides/README.md).
+
+### 2.5 Le minutage est exact et doit le rester
+
+Le support fait **30:00 pile**, exact chapitre par chapitre. Toute modification de contenu qui change une durée doit être compensée **dans le même chapitre**. Le script du § 5.3 le vérifie, et `verify:rendu` (§ 5.4) vérifie que le contenu tient.
 
 ---
 
@@ -227,7 +237,7 @@ PY
 
 ### 5.4 Rendu du support — le contrôle que les autres ne font pas
 
-Les contrôles du § 5.3 lisent le Markdown : ils restent **verts sur une diapositive dont le tiers inférieur est invisible**. C'est ce qui a laissé passer 17 diapositives coupées. Le contrôle de rendu est dans [`slides/verifier-rendu.mjs`](slides/verifier-rendu.mjs).
+Les contrôles du § 5.3 lisent le Markdown : ils restent **verts sur une diapositive dont le tiers inférieur est invisible**. C'est ce qui avait laissé passer 17 diapositives coupées. Le contrôle de rendu est dans [`slides/verifier-rendu.mjs`](slides/verifier-rendu.mjs).
 
 ```bash
 cd docs/RNCP/bloc-3-coordination-pilotage/slides
@@ -328,3 +338,13 @@ Relecture de vérification : chaque chiffre recoupé contre le dépôt, chaque l
 **Ce qui a été découvert** : le support n'avait jamais été rendu, et 17 diapositives sont coupées (§ 0 de `RESTE-A-FAIRE.md`). D'où le nouveau contrôle du § 5.4 ci-dessus.
 
 **La leçon de méthode, pour la prochaine reprise** : les contrôles du § 5.3 vérifient la *structure* du support — nombre de diapositives, équilibre des balises, minutage. Aucun ne vérifiait qu'il **s'affiche**. Un contrôle qui lit la source ne remplace pas un contrôle qui regarde le résultat.
+
+## 11. Refonte du support, 5 septembre 2026
+
+Déclenchée par une remarque du propriétaire du projet, et elle change la règle de rédaction du support : **le jury n'a accès qu'aux diapositives**. Il n'ouvrira pas le dépôt, et il ne lira pas un paragraphe affiché trente secondes.
+
+**Ce qui a changé.** Une idée par diapositive, énoncée dans le titre. La preuve à l'écran, l'argumentation en note de présentateur. Sept tableaux devenus des schémas (§ 0 de `RESTE-A-FAIRE.md`). Le mur de 25 indicateurs de la diapositive 12 remplacé par la méthode de sélection et les 5 axes, les valeurs restant sur les deux tableaux de bord. Trois répétitions littérales supprimées.
+
+**Ce qui n'a pas changé, et ne doit pas changer** : les 40 diapositives, la numérotation, le rattachement des 14 éléments imposés, le minutage à 30:00 exact chapitre par chapitre, et l'ordre des chapitres — qui est celui du référentiel, ce qui permet au jury de cocher compétence par compétence sans chercher.
+
+**Le piège de rédaction à connaître** : dans un bloc HTML, une ligne qui commence par une balise **inline** (`<b>`, `<span>`) après une ligne vide est enveloppée dans un `<p>` par markdown, ce qui casse la grille CSS. Commencer chaque ligne par `<div>`. C'est ce qui avait cassé la grille de compétences au premier essai.

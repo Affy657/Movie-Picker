@@ -36,9 +36,26 @@ const REFS = {
 <style>
 :root {
   --slidev-theme-primary: #0d9488;
+
+  /* Palette categorielle, validee (pire paire adjacente : CVD dE 10.7,
+     vision normale dE 27.5). Ordre d'empilement impose. */
+  --s1: #0d9488; /* lead */
+  --s2: #eb6834; /* front */
+  --s3: #2a78d6; /* back */
+  --s4: #eda100; /* devops — contraste < 3:1, toujours etiquete en direct */
+
+  /* Statuts : jamais utilises comme couleur de serie, toujours avec un libelle */
+  --ok: #0ca30c;
+  --warn: #fab219;
+  --bad: #d03b3b;
+
+  --ink-2: #52514e;
+  --grid: #d9d8d4;
 }
+
 .slidev-layout:not(.cover) h1 {
   color: var(--slidev-theme-primary);
+  margin-bottom: 0.1rem;
 }
 .slidev-layout h1 + p {
   opacity: 1;
@@ -53,5 +70,277 @@ const REFS = {
 .dense table td {
   padding: 0.18rem 0.4rem;
   line-height: 1.25;
+}
+
+/* ---- Le message de la diapositive, sous le titre ---- */
+.lede {
+  font-size: 1.02rem;
+  line-height: 1.35;
+  margin: 0.1rem 0 0.7rem;
+}
+
+/* ---- Bandeaux ---- */
+.note,
+.alert {
+  border-left: 4px solid var(--slidev-theme-primary);
+  background: rgb(13 148 136 / 7%);
+  padding: 0.5rem 0.7rem;
+  line-height: 1.35;
+}
+.alert {
+  border-left-color: #d97706;
+  background: rgb(217 119 6 / 8%);
+}
+
+/* ---- Rangee d'indicateurs ---- */
+.kpi {
+  display: grid;
+  gap: 0.6rem;
+}
+.kpi > div {
+  border-left: 3px solid var(--slidev-theme-primary);
+  padding: 0.15rem 0 0.15rem 0.6rem;
+}
+.kpi b {
+  display: block;
+  font-size: 1.55rem;
+  line-height: 1.1;
+  color: var(--slidev-theme-primary);
+}
+.kpi span {
+  font-size: 0.76rem;
+  color: var(--ink-2);
+}
+
+/* ---- Histogramme en colonnes ---- */
+.cols {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  height: 8.5rem;
+  border-bottom: 1px solid var(--grid);
+}
+.cols > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  height: 100%;
+}
+.cols i {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  background: var(--s1);
+  display: block;
+}
+.cols i.b {
+  background: var(--s3);
+}
+.cols em {
+  font-style: normal;
+  font-size: 0.66rem;
+  color: var(--ink-2);
+  line-height: 1.1;
+}
+.cols .pair {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  width: 100%;
+  flex: 1;
+}
+.cols .pair > i {
+  flex: 1;
+}
+.xlab {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+}
+.xlab > div {
+  flex: 1;
+  text-align: center;
+  font-size: 0.68rem;
+  color: var(--ink-2);
+}
+
+/* ---- Barre empilee ---- */
+.stack {
+  display: flex;
+  width: 100%;
+  height: 1.5rem;
+  gap: 2px;
+}
+.stack > i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-style: normal;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #fff;
+  border-radius: 3px;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 0.9rem;
+  font-size: 0.7rem;
+  color: var(--ink-2);
+  margin-top: 0.3rem;
+}
+.legend span {
+  color: var(--ink-2);
+}
+.legend span.nokey::before {
+  display: none;
+}
+.legend span::before {
+  content: '';
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 2px;
+  margin-right: 0.28rem;
+  background: var(--c, currentColor);
+  vertical-align: baseline;
+}
+
+/* ---- Ecart actuel -> cible ---- */
+.dumb {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.1rem 0.6rem;
+  align-items: center;
+  font-size: 0.74rem;
+}
+.dumb .lbl {
+  color: var(--ink-2);
+  text-align: right;
+  line-height: 1.15;
+}
+.dumb .track {
+  position: relative;
+  height: 1.05rem;
+}
+.dumb .track::before {
+  content: '';
+  position: absolute;
+  inset: 50% 0 auto;
+  height: 1px;
+  background: var(--grid);
+}
+.dumb .track u {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 0.62rem;
+  height: 0.62rem;
+  border-radius: 50%;
+  text-decoration: none;
+}
+.dumb .track .a {
+  background: #a7b0ae;
+}
+.dumb .track .c {
+  background: var(--s1);
+}
+.dumb .track .bar {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 3px;
+  background: var(--s1);
+  opacity: 0.45;
+  border-radius: 2px;
+}
+.dumb .track .bar.big {
+  opacity: 1;
+  height: 5px;
+}
+
+/* ---- Logigramme ---- */
+.flow {
+  font-size: 0.7rem;
+  line-height: 1.2;
+}
+.flow .q,
+.flow .r {
+  border-radius: 5px;
+  padding: 0.3rem 0.5rem;
+  text-align: center;
+}
+.flow .q {
+  border: 1.5px solid #94a3b8;
+  background: #f1f5f9;
+}
+.flow .r {
+  border: 1.5px solid #d97706;
+  background: #fef3c7;
+  color: #78350f;
+  font-weight: 600;
+}
+.flow .r.no {
+  border-color: #dc2626;
+  background: #fee2e2;
+  color: #7f1d1d;
+}
+.flow .r.go {
+  border-color: #0d9488;
+  background: #ccfbf1;
+  color: #134e4a;
+}
+.flow .row {
+  display: grid;
+  grid-template-columns: 1fr 5.4rem;
+  gap: 0.35rem;
+  align-items: center;
+}
+.flow .arrow {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.66rem;
+  line-height: 0.9;
+}
+
+/* ---- Frise ---- */
+.tl {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  font-size: 0.66rem;
+}
+.tl > div {
+  flex: 1;
+  border-top: 3px solid var(--s1);
+  padding-top: 0.28rem;
+  line-height: 1.2;
+}
+.tl b {
+  display: block;
+  color: var(--slidev-theme-primary);
+}
+.tl span {
+  color: var(--ink-2);
+}
+
+/* ---- Pastilles d'etat ---- */
+.chips {
+  display: grid;
+  gap: 0.22rem 0.6rem;
+  font-size: 0.74rem;
+}
+.chips > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.4rem;
+  border-bottom: 1px solid var(--grid);
+  padding-bottom: 0.12rem;
+}
+.chips u {
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
 }
 </style>

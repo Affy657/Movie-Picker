@@ -56,13 +56,13 @@ Cette annonce explicite est ce qui protège les 15 minutes de questions. Un jury
 |:---:|----------|------:|:------:|:----------:|
 | 0 | Ouverture, produit, cadre | 1:30 | 3 | |
 | 1 | Méthodologie, planning, ressources | 6:30 | 7 | **C3.1** ÉLIM |
-| 2 | Outil de suivi, indicateurs, tableaux de bord | 5:00 | 5 | **C3.2.1** ÉLIM |
-| 3 | Cas d'arbitrage | 2:30 | 3 | C3.2.2 |
-| 4 | Missions, styles managériaux, communication | 3:30 | 5 | C3.3.1 |
-| 5 | Grille de compétences, plan de développement | 2:30 | 3 | C3.3.2 |
-| 6 | Comptes rendus, points de validation, satisfaction | 2:30 | 3 | C3.4.1 |
-| 7 | Démonstration en production | 5:30 | 2 | **C3.4.2** ÉLIM |
-| 8 | Conclusion | 0:30 | 1 | |
+| 2 | Le produit : un logiciel exploité, pas une maquette | 5:00 | 5 | **C3.2.1** ÉLIM |
+| 3 | Deux registres, annoncés maintenant | 2:30 | 3 | C3.2.2 |
+| 4 | La méthodologie : Kanban léger à revues de version | 3:30 | 5 | C3.3.1 |
+| 5 | Deux outils de planification, deux horizons | 2:30 | 3 | C3.3.2 |
+| 6 | Le planning en cinq phases | 2:30 | 3 | C3.4.1 |
+| 7 | Quatre lots, 98 jours-homme | 5:30 | 2 | **C3.4.2** ÉLIM |
+| 8 | Les ressources nécessaires | 0:30 | 1 | |
 | | **Total** | **30:00** | **32** | |
 
 **Contrôle du minutage réel du support** (somme des durées portées en note de présentateur) : **30 minutes exactement**, et le minutage est exact **chapitre par chapitre**. Il a été rééquilibré le 5 septembre 2026 : la diapositive 6 passe de 1:20 à 1:10 pour ramener le chapitre 1 à sa cible de 6:30, et le chapitre 4 redistribue cinq secondes de la diapositive 22 vers la diapositive 23, la plus discriminante du chapitre.
@@ -76,8 +76,8 @@ Répartition volontaire : les trois compétences éliminatoires absorbent **17 d
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
 | 1 | Movie Picker, piloter un projet de développement logiciel | 0:10 | Titre, Bloc 3 RNCP 39583, Adrien MORAND, 16 septembre 2026 |
-| 2 | Le produit et son état aujourd'hui | 0:40 | Capture de l'application en production. 9 versions livrées de février à septembre 2026, 17 comptes, 19 soirées, 74 % menées jusqu'au tirage. Objectif : établir qu'on parle d'un logiciel réellement exploité, pas d'une maquette |
-| 3 | Cadre de la présentation et plan | 0:40 | Les deux registres, réel et organisation cible. Plan en 7 temps |
+| 2 | Le produit : un logiciel exploité, pas une maquette | 0:40 | Capture de l'application en production. 9 versions livrées de février à septembre 2026, 17 comptes, 19 soirées, 74 % menées jusqu'au tirage. Objectif : établir qu'on parle d'un logiciel réellement exploité, pas d'une maquette |
+| 3 | Deux registres, annoncés maintenant | 0:40 | Les deux registres, réel et organisation cible. Plan en 7 temps |
 
 ### Chapitre 1 : planifier l'exécution du projet (6:30, 7 diapos), C3.1 ÉLIMINATOIRE
 
@@ -86,11 +86,11 @@ Critères visés : méthodologie justifiée avec bénéfices attendus, outil de 
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
 | 4 | La méthodologie : Kanban léger à revues de version | 1:10 | Le choix et ses bénéfices attendus : flux continu, priorisation permanente, pas de cérémonie inadaptée. Tableau des alternatives écartées avec le motif : Scrum (sprints et cérémonies calibrés pour une équipe), cycle en V (périmètre figé incompatible avec une roadmap par versions) |
-| 5 | L'outil de planification : rétroplanning et Gantt | 0:50 | Pourquoi ces deux outils, leurs bénéfices, et surtout leur **compatibilité avec Kanban** : le Gantt porte les phases et les jalons de version, le tableau Kanban porte le flux quotidien. Les deux ne se contredisent pas, ils opèrent à deux échelles de temps |
-| 6 | Le planning en 5 phases | 1:10 | Diagramme de Gantt Mermaid, du 27 février au 16 septembre 2026, avec les 5 phases exigées : étude, mesure, conception, réalisation, restitution. Dire explicitement que les phases se **chevauchent**, propriété d'un flux Kanban, et non se succèdent comme dans un cycle en V |
-| 7 | Le découpage en lots et la charge | 0:50 | Les 4 lots et leur charge : MVP 27 J/H, migration .NET 13, V1 produit 35, clôture RNCP 23. Total 98 J/H, méthode analogique, marge de 20 %. Source : chiffrage du Bloc 1 |
+| 5 | Deux outils de planification, deux horizons | 0:50 | Pourquoi ces deux outils, leurs bénéfices, et surtout leur **compatibilité avec Kanban** : le Gantt porte les phases et les jalons de version, le tableau Kanban porte le flux quotidien. Les deux ne se contredisent pas, ils opèrent à deux échelles de temps |
+| 6 | Le planning en cinq phases | 1:10 | Diagramme de Gantt Mermaid, du 27 février au 16 septembre 2026, avec les 5 phases exigées : étude, mesure, conception, réalisation, restitution. Dire explicitement que les phases se **chevauchent**, propriété d'un flux Kanban, et non se succèdent comme dans un cycle en V |
+| 7 | Quatre lots, 98 jours-homme | 0:50 | Les 4 lots et leur charge : MVP 27 J/H, migration .NET 13, V1 produit 35, clôture RNCP 23. Total 98 J/H, méthode analogique, marge de 20 %. Source : chiffrage du Bloc 1 |
 | 8 | Les ressources nécessaires | 0:50 | Trois familles. Humaines : les 4 profils de l'organisation cible et leur charge. Matérielles : poste de développement, outillage, services tiers. Financières : 34 300 € de valeur de développement, moins de 200 € par an de trésorerie réelle |
-| 9 | La matrice RACI | 0:50 | Tableau tâche par rôle avec R, A, C, I sur les 4 profils, plus les acteurs consultés et informés. Ligne dédiée à la prise en compte du handicap : poste adapté, outillage compatible lecteur d'écran, accessibilité du produit traitée comme exigence et non comme option |
+| 9 | La matrice RACI, et le handicap dedans | 0:50 | Tableau tâche par rôle avec R, A, C, I sur les 4 profils, plus les acteurs consultés et informés. Ligne dédiée à la prise en compte du handicap : poste adapté, outillage compatible lecteur d'écran, accessibilité du produit traitée comme exigence et non comme option |
 | 10 | Les points de vigilance | 0:50 | Dépendance à l'API TMDB (clé, quotas, rupture de contrat), transport des emails transactionnels, durcissement CSP côté front, absence assumée de déploiement progressif, et le point de vigilance structurel : la concentration des rôles sur une personne |
 
 ### Chapitre 2 : piloter l'avancement (5:00, 5 diapos), C3.2.1 ÉLIMINATOIRE
@@ -100,10 +100,10 @@ Critères visés : outil de suivi en adéquation avec le projet et la méthodolo
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
 | 11 | L'outil de suivi | 1:00 | GitHub comme outil unique, cinq surfaces : issues, pull requests, Actions, releases, fichiers de feuille de route versionnés. Le critère de choix énoncé : la distance entre le travail et sa trace, aucun indicateur ne reposant sur une saisie déclarative. Adéquation avec Kanban vérifiée propriété par propriété. Capture du tableau de flux si structuré avant l'oral |
-| 12 | Les indicateurs retenus | 1:00 | La règle de sélection en quatre conditions, dont « rattaché à une décision ». Les cinq axes : avancement, délais, coûts, risques, ressources humaines. Et les trois indicateurs **écartés** faute de mesurabilité |
+| 12 | Comment un indicateur entre au tableau de bord | 1:00 | La règle de sélection en quatre conditions, dont « rattaché à une décision ». Les cinq axes : avancement, délais, coûts, risques, ressources humaines. Et les trois indicateurs **écartés** faute de mesurabilité |
 | 13 | Tableau de bord : avancement et délais | 1:00 | Commits, jours actifs et fusions par mois (833, 88, 122), les 9 versions et leurs écarts réels, médiane de 17 jours, et les 4 échéances de restitution tenues. Deux lectures d'indicateur à porter à voix haute : le pic de fusions de juin est un changement de pratique, pas de production |
 | 14 | Tableau de bord : coûts, risques, ressources | 1:00 | Coût réel contre budget, les deux échéances de coût suivies bien qu'elles vaillent zéro, les huit indicateurs de risque dont deux en alerte, le détail mensuel de la stabilité de la chaîne (52 % → 94 % après correction), et la soutenabilité de la charge : 3,1 jours par semaine mais une amplitude de 1 à 7 |
-| 15 | L'écart entre le prévisionnel et le réel | 1:00 | 98 J/H prévus contre 88 reconstitués, mais un périmètre de +37 items jamais chiffrés : l'écart n'est pas un écart de charge, c'est un glissement de périmètre que rien ne mesurait. Les trois décisions prises à partir d'une mesure, et l'autocritique du dispositif. Elle amène naturellement le chapitre suivant |
+| 15 | L'écart n'est pas où on le cherche | 1:00 | 98 J/H prévus contre 88 reconstitués, mais un périmètre de +37 items jamais chiffrés : l'écart n'est pas un écart de charge, c'est un glissement de périmètre que rien ne mesurait. Les trois décisions prises à partir d'une mesure, et l'autocritique du dispositif. Elle amène naturellement le chapitre suivant |
 
 ### Chapitre 3 : le cas d'arbitrage (2:30, 3 diapos), C3.2.2
 
@@ -116,8 +116,8 @@ Deux cas de réserve pour les questions : le contrôle de performance instable q
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
 | 16 | La dérive constatée et ses conséquences | 0:50 | La chronologie à l'heure près, les 4 exigences que l'API du MVP ne satisfaisait pas, et la conséquence qui tranche : le périmètre à réécrire pesait 944 lignes le 18 mars, la même API en porte 44 663 aujourd'hui. Le coût de la décision croissait chaque jour |
-| 17 | Les options et le logigramme de décision | 1:00 | **Logigramme** Mermaid, écrit pour être réutilisable (aucune techno n'y figure), parcouru à voix haute sur le chemin réellement suivi. Les **quatre** options avec leur coût et leur risque, le temps utile allant à l'option D : migrer progressivement paraît plus prudent et ne l'est pas à effectif 1 |
-| 18 | La décision et son résultat mesuré | 0:40 | L'argumentation en 4 temps, le critère de succès défini avant de commencer, les 5 objectifs et leur résultat mesuré, et le bandeau d'honnêteté : les 87 lignes de front modifiées contre un objectif de zéro, et le chiffrage a posteriori du lot |
+| 17 | Quatre options, et le logigramme qui tranche | 1:00 | **Logigramme** Mermaid, écrit pour être réutilisable (aucune techno n'y figure), parcouru à voix haute sur le chemin réellement suivi. Les **quatre** options avec leur coût et leur risque, le temps utile allant à l'option D : migrer progressivement paraît plus prudent et ne l'est pas à effectif 1 |
+| 18 | La décision, et ce qu'elle a produit | 0:40 | L'argumentation en 4 temps, le critère de succès défini avant de commencer, les 5 objectifs et leur résultat mesuré, et le bandeau d'honnêteté : les 87 lignes de front modifiées contre un objectif de zéro, et le chiffrage a posteriori du lot |
 
 ### Chapitre 4 : piloter l'équipe (3:30, 5 diapos), C3.3.1
 
@@ -126,10 +126,10 @@ Critères visés : handicap pris en compte, charge répartie de manière équili
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
 | 19 | L'organisation cible et l'affectation des missions | 0:50 | Les 4 profils, le critère d'affectation (compétence attestée, jamais disponibilité), et la répartition des 98 J/H. Le point à défendre : **une somme équilibrée n'est pas un équilibre** — le back porte 36 %, et l'équilibre se vérifie sur le profil de charge dans le temps |
-| 20 | Les quatre styles managériaux | 0:55 | Directif, persuasif, participatif, délégatif : chacun situé sur une situation concrète du projet plutôt que défini en théorie. Le style dominant est identifié et décrit |
-| 21 | Techniques d'animation et outils de communication | 0:40 | **Le dispositif réel de délégation** : le projet a été exécuté seul mais pas sans déléguer — conventions opposables (`AGENTS.md`), procédure à 3 points d'arrêt, revue en sortie. Puis les 8 outils avec ce que chacun **partage**. Aucun n'est une messagerie, et c'est délibéré : aucun n'exige la simultanéité |
-| 22 | Inclusion : handicap et contexte multiculturel | 0:20 | Une seule idée : le **même dispositif** — l'écrit asynchrone versionné — répond au handicap, aux fuseaux horaires et à la langue. Ce n'est pas trois politiques, c'est une décision d'organisation. Preuves sur le réel : produit bilingue FR/EN, accessibilité en porte bloquante |
-| 23 | Analyse critique d'une posture et recommandations | 0:45 | **Situation retenue : du 17 au 26 août 2026, 10 jours travaillés consécutifs** pour absorber deux échéances superposées (dossier Bloc 4 le 21, v1.4.0 le 25). Les deux sont tenues, et la chaîne passe de 94 % à 78 % le mois même, puis 38 % début septembre. La phrase centrale : *l'arbitrage n'a pas été perdu, il n'a pas été posé*. Trois recommandations avec leur indicateur de contrôle. Diapositive la plus discriminante du chapitre — le marqueur de sincérité est que la posture critiquée a **réussi** |
+| 20 | Les quatre styles managériaux, situés | 0:55 | Directif, persuasif, participatif, délégatif : chacun situé sur une situation concrète du projet plutôt que défini en théorie. Le style dominant est identifié et décrit |
+| 21 | Animation, et les outils qui portent le partage | 0:40 | **Le dispositif réel de délégation** : le projet a été exécuté seul mais pas sans déléguer — conventions opposables (`AGENTS.md`), procédure à 3 points d'arrêt, revue en sortie. Puis les 8 outils avec ce que chacun **partage**. Aucun n'est une messagerie, et c'est délibéré : aucun n'exige la simultanéité |
+| 22 | Inclusion : un seul dispositif, trois contraintes | 0:20 | Une seule idée : le **même dispositif** — l'écrit asynchrone versionné — répond au handicap, aux fuseaux horaires et à la langue. Ce n'est pas trois politiques, c'est une décision d'organisation. Preuves sur le réel : produit bilingue FR/EN, accessibilité en porte bloquante |
+| 23 | Analyse critique : une posture qui a réussi | 0:45 | **Situation retenue : du 17 au 26 août 2026, 10 jours travaillés consécutifs** pour absorber deux échéances superposées (dossier Bloc 4 le 21, v1.4.0 le 25). Les deux sont tenues, et la chaîne passe de 94 % à 78 % le mois même, puis 38 % début septembre. La phrase centrale : *l'arbitrage n'a pas été perdu, il n'a pas été posé*. Trois recommandations avec leur indicateur de contrôle. Diapositive la plus discriminante du chapitre — le marqueur de sincérité est que la posture critiquée a **réussi** |
 
 ### Chapitre 5 : les besoins en compétences (2:30, 3 diapos), C3.3.2
 
@@ -137,8 +137,8 @@ Critères visés : compétences à mobiliser identifiées, grille des compétenc
 
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
-| 24 | Les compétences à mobiliser | 0:40 | La **méthode** avant le catalogue : les compétences sont déduites des lots, et chacune correspond à une technologie présente dans le dépôt avec une date d'introduction vérifiable. La chronologie en **4 vagues** — produire, fiabiliser, exploiter, enrichir — et le lien avec le chapitre 3 : la vague 1 tient sur quatre jours et n'apparaît dans aucune ligne du chiffrage |
-| 25 | La grille d'évaluation des compétences | 1:00 | Échelle **comportementale** en 5 niveaux, grille par profil, et surtout la phrase d'ouverture obligatoire : *le niveau actuel n'évalue personne, c'est le socle attendu au recrutement*. **Commentée à l'oral** en trois lectures, dont celle qui la rend crédible : les deux plus gros écarts du lead ne sont pas techniques et désignent les mêmes faiblesses que les indicateurs des chapitres 2 et 3 |
+| 24 | Les compétences, déduites des lots | 0:40 | La **méthode** avant le catalogue : les compétences sont déduites des lots, et chacune correspond à une technologie présente dans le dépôt avec une date d'introduction vérifiable. La chronologie en **4 vagues** — produire, fiabiliser, exploiter, enrichir — et le lien avec le chapitre 3 : la vague 1 tient sur quatre jours et n'apparaît dans aucune ligne du chiffrage |
+| 25 | La grille d'évaluation, et ce qu'elle avoue | 1:00 | Échelle **comportementale** en 5 niveaux, grille par profil, et surtout la phrase d'ouverture obligatoire : *le niveau actuel n'évalue personne, c'est le socle attendu au recrutement*. **Commentée à l'oral** en trois lectures, dont celle qui la rend crédible : les deux plus gros écarts du lead ne sont pas techniques et désignent les mêmes faiblesses que les indicateurs des chapitres 2 et 3 |
 | 26 | Le plan de développement des compétences | 0:50 | 8 actions classées par **coût d'un écart non comblé**, chacune avec sa modalité, sa durée et son **indicateur de réussite** — 20 J/H, 2 100 €, 20 % de la charge projet. La logique **recruter ou former** transmise aux RH. Modalités handicap posées par défaut, en citant les trois qui ont un coût réel donc vérifiable |
 
 ### Chapitre 6 : rendre compte au commanditaire (2:30, 3 diapos), C3.4.1
@@ -147,8 +147,8 @@ Critères visés : comptes rendus clairs et ordonnés, facilitant la prise de d�
 
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
-| 27 | La planification des points de validation | 0:50 | **Deux commanditaires, deux rythmes** : le jury valide la conformité sur 4 échéances, les 17 utilisateurs valident l'usage sur 9 versions. Ce que chaque version validait, et surtout ce qui fait d'une livraison un point de validation **qualité** : 5 contrôles bloquants puis un test de fumée après déploiement. Un contrôle rouge annule la livraison |
-| 28 | Le compte rendu type | 0:50 | Trois niveaux, du plus automatique au plus décisionnel — dont la fenêtre de nouveautés in-app, seul compte rendu **poussé**. Le gabarit en 5 blocs dont 3 ne sont pas de l'information, la règle *aucun constat sans proposition, aucune proposition sans coût*, et un exemple réel complet avec son **critère d'arrêt énoncé d'avance** |
+| 27 | Les points de validation | 0:50 | **Deux commanditaires, deux rythmes** : le jury valide la conformité sur 4 échéances, les 17 utilisateurs valident l'usage sur 9 versions. Ce que chaque version validait, et surtout ce qui fait d'une livraison un point de validation **qualité** : 5 contrôles bloquants puis un test de fumée après déploiement. Un contrôle rouge annule la livraison |
+| 28 | Le compte rendu qui fait décider | 0:50 | Trois niveaux, du plus automatique au plus décisionnel — dont la fenêtre de nouveautés in-app, seul compte rendu **poussé**. Le gabarit en 5 blocs dont 3 ne sont pas de l'information, la règle *aucun constat sans proposition, aucune proposition sans coût*, et un exemple réel complet avec son **critère d'arrêt énoncé d'avance** |
 | 29 | Les indicateurs de satisfaction | 0:50 | Trois familles — comportementale, déclarative, opérationnelle — parce qu'à 17 comptes un indice de recommandation n'a aucune validité. Le 9,6 présenté pour ce qu'il est : l'absence de détracteur parmi les engagés, pas une mesure de satisfaction. Puis ce que les retours ont produit, en distinguant **déclenchée, confirmée, instruite non livrée**, et la boucle mesurée : **17 jours** du retour à la production |
 
 ### Chapitre 7 : la démonstration (5:30, 2 diapos), C3.4.2 ÉLIMINATOIRE

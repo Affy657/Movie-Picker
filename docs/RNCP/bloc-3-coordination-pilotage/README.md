@@ -2,7 +2,7 @@
 
 > Grille officielle : [`../referentiel/bloc-03-coordonner-piloter-projet.md`](../referentiel/bloc-03-coordonner-piloter-projet.md) · Suivi : [`../suivi-rncp.md`](../suivi-rncp.md)
 
-**État : rédaction terminée — 7 chapitres de matière, 40 diapositives (32 présentées + 8 annexes), les 14 éléments imposés rattachés et les 3 compétences éliminatoires couvertes. ⚠️ Mais la seconde relecture du 5 septembre a rendu le support pour la première fois : 17 diapositives sont coupées par le bas du cadre, et c'est le point bloquant n° 1 — voir [`RESTE-A-FAIRE.md`](RESTE-A-FAIRE.md) § 0. Reste ensuite la préparation matérielle de la démonstration.** Structure, minutage et mapping des 14 éléments imposés dans [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md).
+**État : ✅ support complet et refondu — 7 chapitres de matière, 40 diapositives (32 présentées + 8 annexes), les 14 éléments imposés rattachés et les 3 compétences éliminatoires couvertes. Le support est épuré, ses gros tableaux sont devenus des schémas, et les 40 diapositives sont vérifiées au rendu. Reste la préparation matérielle de la démonstration.** Structure, minutage et mapping des 14 éléments imposés dans [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md).
 
 > 🧭 **Vous reprenez ce dossier ?** Commencez par [`PASSATION.md`](PASSATION.md) — il dit comment travailler ici sans casser ce qui existe. Ce qui reste à faire est dans [`RESTE-A-FAIRE.md`](RESTE-A-FAIRE.md).
 
@@ -53,7 +53,7 @@ Le projet a été **exécuté seul**, comme les livrables des Blocs 1, 2 et 4 l'
 
 ## Ce qui reste à faire
 
-La rédaction est terminée, mais **le support ne tient pas dans son cadre** : 17 diapositives ont du contenu coupé par le bas, dont la conclusion de la diapositive 15 (C3.2.1, éliminatoire), les modalités handicap de la 26 et trois des cinq blocs du gabarit de la 28. Aucun contrôle du dossier ne le voyait, parce qu'ils lisent tous le Markdown et jamais la page rendue. C'est désormais outillé : `slides/verifier-rendu.mjs`.
+La rédaction est terminée et le support a été refondu : épuré, sept tableaux remplacés par des schémas, sans répétition, et **les 40 diapositives tiennent dans le cadre** — vérifié par `slides/verifier-rendu.mjs`, un contrôle qui n'existait pas et qui avait laissé passer 17 diapositives coupées.
 
 Le reste est **matériel ou humain** et ne peut pas être rédigé : répétitions minutées, jeu de données de démonstration, vidéo de repli, environnement local, deux captures de preuve, export PDF.
 
