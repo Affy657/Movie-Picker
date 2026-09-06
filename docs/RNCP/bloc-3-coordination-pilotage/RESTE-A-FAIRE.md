@@ -70,7 +70,7 @@ Ces quatre points portent **C3.4.2**, éliminatoire. Une démonstration qui éch
 | # | Action | Détail |
 |:-:|--------|--------|
 | 7 | **Exporter le support en PDF** | `cd slides && npm install && npm run export`. Le premier export peut demander `npx playwright install chromium` |
-| 8 | **Tester l'export sur le matériel de la salle** | Vidéoprojecteur, résolution, lisibilité depuis le fond. Le seul diagramme Mermaid du support présenté est celui de la **diapositive 17** — la 6 est un Gantt en HTML, l'annexe 34 le second Mermaid. Après le traitement du § 0, relancer `verifier-rendu.mjs` puis contrôler le PDF page à page |
+| 8 | **Tester l'export sur le matériel de la salle** | Vidéoprojecteur, résolution, lisibilité depuis le fond. **Le seul bloc Mermaid restant est le schéma d'architecture de l'annexe A1 (diapositive 33)** — tous les autres schémas, dont le Gantt de la 6 et le logigramme de la 17, sont en HTML et CSS. Après le traitement du § 0, relancer `verifier-rendu.mjs` puis contrôler le PDF page à page |
 | 9 | **Répéter le minutage global** | 30 minutes, dont 17 sur les trois compétences éliminatoires. Deux passages complets. Le contrôle automatique donne **30:00 pile**, exact chapitre par chapitre |
 | 10 | **Mémoriser les numéros de page des annexes** | A1 = 33 · A2 = 34 · A3 = 35 · A4 = 36 · A5 = 37 · A6 = 38 · A7 = 39 · A8 = 40. En mode présentateur, taper le numéro puis `Entrée` |
 

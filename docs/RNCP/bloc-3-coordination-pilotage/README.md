@@ -53,7 +53,7 @@ Le projet a été **exécuté seul**, comme les livrables des Blocs 1, 2 et 4 l'
 
 ## Ce qui reste à faire
 
-La rédaction est terminée et le support a été refondu : épuré, sept tableaux remplacés par des schémas, sans répétition, et **les 40 diapositives tiennent dans le cadre** — vérifié par `slides/verifier-rendu.mjs`, un contrôle qui n'existait pas et qui avait laissé passer 17 diapositives coupées.
+La rédaction est terminée et le support a été refondu : épuré, sept tableaux remplacés par des schémas, sans répétition, et **les 40 diapositives tiennent dans le cadre** — vérifié par `slides/verifier-rendu.mjs`, un contrôle qui n'existait pas et qui avait laissé passer 17 à 22 diapositives coupées selon la finesse de la mesure.
 
 Le reste est **matériel ou humain** et ne peut pas être rédigé : répétitions minutées, jeu de données de démonstration, vidéo de repli, environnement local, deux captures de preuve, export PDF.
 

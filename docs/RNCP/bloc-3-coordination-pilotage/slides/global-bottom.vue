@@ -37,17 +37,8 @@ const REFS = {
 :root {
   --slidev-theme-primary: #0d9488;
 
-  /* Palette categorielle, validee (pire paire adjacente : CVD dE 10.7,
-     vision normale dE 27.5). Ordre d'empilement impose. */
-  --s1: #0d9488; /* lead */
-  --s2: #eb6834; /* front */
-  --s3: #2a78d6; /* back */
-  --s4: #eda100; /* devops — contraste < 3:1, toujours etiquete en direct */
-
-  /* Statuts : jamais utilises comme couleur de serie, toujours avec un libelle */
+  --s1: #0d9488;  --s2: #eb6834;  --s3: #2a78d6;  --s4: #eda100;
   --ok: #0ca30c;
-  --warn: #fab219;
-  --bad: #d03b3b;
 
   --ink-2: #52514e;
   --grid: #d9d8d4;
@@ -60,10 +51,6 @@ const REFS = {
 .slidev-layout h1 + p {
   opacity: 1;
 }
-/* Le contenu ayant ete allege diapositive par diapositive, la taille de
-   texte est remontee : un support projete se lit depuis le fond de la
-   salle. Toute nouvelle baisse doit etre le dernier recours, apres avoir
-   coupe du contenu. */
 .slidev-layout table {
   font-size: 0.8em;
 }
@@ -81,29 +68,16 @@ const REFS = {
   line-height: 1.2;
 }
 
-/* --- Contraintes de rendu ---------------------------------------------
-   Ajoutées le 05/09/2026 après le premier rendu réel du support : 22 des
-   40 diapositives avaient du contenu coupé par le bas du cadre. Les
-   contrôles qui lisent le Markdown ne voient pas ce défaut ; seul
-   `verifier-rendu.mjs` le détecte. Relancer ce contrôle après toute
-   retouche de ces règles. ---------------------------------------------- */
-
-/* Les diagrammes Mermaid ignorent le `{scale: …}` du bloc de code dans
-   cette version de Slidev : on contraint le SVG lui-même. Sans cela, le
-   logigramme de la diapositive 17 — nommé explicitement par la grille
-   C3.2.2 — dépasse de 677 px et n'affiche que 3 nœuds sur 8. */
 .slidev-layout .mermaid,
 .slidev-layout .mermaid svg,
 .slidev-layout svg[id^='mermaid'] {
-  max-height: 52vh;
+  max-height: 287px;
   height: auto;
   width: 100%;
   display: block;
   margin: 0 auto;
 }
 
-/* Resserre le corps de texte et les blocs encadrés, qui portent souvent la
-   conclusion de la diapositive — donc ce qui disparaît en premier. */
 .slidev-layout h1 {
   margin-bottom: 0.5rem;
   line-height: 1.15;
@@ -124,14 +98,12 @@ const REFS = {
   margin-bottom: 0.1rem;
 }
 
-/* ---- Le message de la diapositive, sous le titre ---- */
 .lede {
   font-size: 1.02rem;
   line-height: 1.35;
   margin: 0.1rem 0 0.7rem;
 }
 
-/* ---- Bandeaux ---- */
 .note,
 .alert {
   border-left: 4px solid var(--slidev-theme-primary);
@@ -144,7 +116,6 @@ const REFS = {
   background: rgb(217 119 6 / 8%);
 }
 
-/* ---- Rangee d'indicateurs ---- */
 .kpi {
   display: grid;
   gap: 0.6rem;
@@ -164,7 +135,6 @@ const REFS = {
   color: var(--ink-2);
 }
 
-/* ---- Histogramme en colonnes ---- */
 .cols {
   display: flex;
   align-items: flex-end;
@@ -195,16 +165,6 @@ const REFS = {
   color: var(--ink-2);
   line-height: 1.1;
 }
-.cols .pair {
-  display: flex;
-  gap: 2px;
-  align-items: flex-end;
-  width: 100%;
-  flex: 1;
-}
-.cols .pair > i {
-  flex: 1;
-}
 .xlab {
   display: flex;
   gap: 0.5rem;
@@ -217,7 +177,6 @@ const REFS = {
   color: var(--ink-2);
 }
 
-/* ---- Barre empilee ---- */
 .stack {
   display: flex;
   width: 100%;
@@ -259,7 +218,6 @@ const REFS = {
   vertical-align: baseline;
 }
 
-/* ---- Ecart actuel -> cible ---- */
 .dumb {
   display: grid;
   grid-template-columns: max-content 1fr;
@@ -312,7 +270,6 @@ const REFS = {
   height: 5px;
 }
 
-/* ---- Logigramme ---- */
 .flow {
   font-size: 0.7rem;
   line-height: 1.2;
@@ -356,7 +313,6 @@ const REFS = {
   line-height: 0.9;
 }
 
-/* ---- Frise ---- */
 .tl {
   display: flex;
   align-items: stretch;
@@ -377,7 +333,6 @@ const REFS = {
   color: var(--ink-2);
 }
 
-/* ---- Pastilles d'etat ---- */
 .chips {
   display: grid;
   gap: 0.22rem 0.6rem;

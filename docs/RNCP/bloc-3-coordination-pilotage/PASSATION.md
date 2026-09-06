@@ -131,14 +131,7 @@ npm run build   # doit afficher « ✓ built in … »
 
 Le thème demande **Nunito Sans** à `fonts.googleapis.com` au moment où la page s'affiche ; aucune police n'est embarquée dans le dépôt ni dans le build. Deux conséquences.
 
-**Pour vérifier le rendu**, il faut la police, sinon le navigateur retombe sur une police plus large et signale des débordements qui n'existent pas. La placer à côté du build :
-
-```bash
-cd docs/RNCP/bloc-3-coordination-pilotage/slides
-curl -sS "https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@200;400;600" \
-  -A "Mozilla/5.0 Chrome/120" | grep -o 'https://[^)]*woff2' | head -1 \
-  | xargs curl -sS -o dist/nunitosans.woff2
-```
+**Pour vérifier le rendu**, il faut la police, sinon le navigateur retombe sur une police plus large et signale des débordements qui n'existent pas. `npm run verify:rendu` la récupère tout seul, et **refuse de tourner** s'il n'y parvient pas plutôt que de rendre un verdict faux.
 
 **Pour l'oral**, c'est une dépendance réseau non déclarée : présenter le support en ligne dans une salle sans réseau dégrade la mise en page de toutes les diapositives. **L'export PDF fige les polices** — c'est la raison la plus solide de présenter depuis le PDF.
 
@@ -150,7 +143,7 @@ curl -sS "https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@200;400;600"
 rm -rf docs/RNCP/bloc-3-coordination-pilotage/slides/{node_modules,dist}
 ```
 
-### 4.6 Le pipeline bouge — revérifier avant de citer un nombre de jobs
+### 4.7 Le pipeline bouge — revérifier avant de citer un nombre de jobs
 
 L'annexe A5 énumère les jobs de `ci-cd.yml`. Ce fichier évolue : un job `test-api-mongo` a été ajouté sur `master` le 5 septembre, faisant passer le total de 14 à 15 pendant que cette PR était ouverte. **Avant toute relecture du dossier, recompter :**
 
@@ -159,23 +152,6 @@ git show origin/master:.github/workflows/ci-cd.yml | grep -cE '^  [a-z0-9-]+:$' 
 ```
 
 Et vérifier le caractère bloquant d'un job par sa présence dans les `needs` de `docker-api`, `deploy-api` ou `deploy-front`.
-
-### 4.7 Un build vert ne dit rien du rendu
-
-`npm run build` compile ; il ne vérifie pas que le contenu **tient dans le cadre**. Les contrôles qui lisent le Markdown — compte de diapositives, équilibre des `<div>`, minutage — restent tous verts sur une diapositive dont le tiers inférieur est invisible. Le premier rendu réel du support, le 5 septembre, a trouvé **22 diapositives coupées sur 40**.
-
-```bash
-cd slides && npm run build
-UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-curl -sS "https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@200;400;600" -A "$UA" \
-  | grep -oE "https://[^)\"' ]+\.woff2" | head -1 | xargs curl -sS -o dist/nunitosans.woff2
-npx http-server dist -p 8099 --silent --proxy "http://127.0.0.1:8099?" &
-CHROME_PATH=/opt/pw-browsers/chromium node verifier-rendu.mjs
-```
-
-Trois pièges dans cette commande : un **User-Agent tronqué** fait renvoyer du TTF au lieu du WOFF2 et l'extraction échoue ; `dist/` est une **SPA**, donc sans `--proxy` le serveur renvoie 404 ; et Playwright cherche un navigateur qu'il n'a pas, d'où `CHROME_PATH`. Sans la police, le rendu utilise un repli plus large et signale de faux débordements.
-
-**À relancer après toute retouche du support, et avant l'export PDF.**
 
 ### 4.8 Prettier ne touche pas à ce dossier
 
@@ -254,15 +230,14 @@ PY
 
 ### 5.4 Rendu du support — le contrôle que les autres ne font pas
 
-Les contrôles du § 5.3 lisent le Markdown : ils restent **verts sur une diapositive dont le tiers inférieur est invisible**. C'est ce qui avait laissé passer 17 diapositives coupées. Le contrôle de rendu est dans [`slides/verifier-rendu.mjs`](slides/verifier-rendu.mjs).
+Les contrôles du § 5.3 lisent le Markdown : ils restent **verts sur une diapositive dont le tiers inférieur est invisible**. C'est ce qui avait laissé passer 17 à 22 diapositives coupées.
 
 ```bash
 cd docs/RNCP/bloc-3-coordination-pilotage/slides
-npm run build
-# puis récupérer la police, cf. § 4.5
-npx http-server dist -p 8099 --silent &
-node verifier-rendu.mjs      # code de sortie 1 s'il reste un débordement
+npm run verify:rendu
 ```
+
+Une seule commande : elle construit, sert, récupère la police du thème, rend les 40 pages et mesure. **Elle échoue** si une diapositive déborde, si `dist/` manque ou si une page n'a rien rendu — un vert signifie que les pages ont réellement été mesurées, pas seulement que rien n'a été trouvé.
 
 **À relancer après toute retouche du support, et avant l'export PDF.** Un `npm run export` ne signale rien : il produit un PDF dont les pages sont coupées exactement comme l'écran.
 

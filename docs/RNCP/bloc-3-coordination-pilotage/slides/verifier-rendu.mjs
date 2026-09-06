@@ -1,92 +1,170 @@
-// Contrôle de rendu du support : détecte les diapositives dont le contenu est
-// coupé par le bas du cadre. Aucun autre contrôle du dossier ne voit ce défaut —
-// le compte de diapositives, l'équilibre des <div> et le minutage restent verts
-// sur une diapositive dont le tiers inférieur est invisible.
-//
-// Mode d'emploi :
-//   npm run build
-//   # la police du thème (Nunito Sans) est chargée depuis Google Fonts au rendu.
-//   # Sans réseau, le navigateur retombe sur une police plus large et le contrôle
-//   # signale de faux débordements. On la place donc à côté du build :
-//   UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-//   curl -sS "https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@200;400;600" -A "$UA" \
-//     | grep -oE 'https://[^)"'"'"' ]+\.woff2' | head -1 | xargs curl -sS -o dist/nunitosans.woff2
-//   # Un User-Agent tronque fait renvoyer du TTF par Google Fonts : l'extraction echoue.
-//   # dist/ est une SPA : sans --proxy, le serveur statique renvoie 404 sur /1.
-//   npx http-server dist -p 8099 --silent --proxy "http://127.0.0.1:8099?" &
-//   CHROME_PATH=/opt/pw-browsers/chromium node verifier-rendu.mjs
-//
-// Sort en code 1 si au moins une diapositive déborde.
-
 import { chromium } from 'playwright-chromium'
-import { existsSync } from 'node:fs'
+import { createServer } from 'node:http'
+import { readFile, writeFile, access } from 'node:fs/promises'
+import { extname, join, resolve } from 'node:path'
 
-const BASE = process.env.SLIDES_URL ?? 'http://127.0.0.1:8099'
-const NB_DIAPOS = 40
-const FONT = 'nunitosans.woff2'
+const RACINE = resolve(import.meta.dirname, 'dist')
+const SOURCE = resolve(import.meta.dirname, 'slides.md')
+const POLICE = 'nunitosans.woff2'
+const CADRE = 720
+const MARGE = 4
 
-const face = existsSync(`dist/${FONT}`)
-  ? `@font-face{font-family:'Nunito Sans';font-style:normal;font-weight:200 700;font-stretch:100%;src:url('/${FONT}') format('woff2');}`
-  : null
+const TYPES = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript',
+  '.css': 'text/css',
+  '.json': 'application/json',
+  '.woff2': 'font/woff2',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+}
 
-if (!face) {
-  console.warn(
-    `⚠️  dist/${FONT} absent : le rendu utilisera une police de repli, plus large que\n` +
-    `   Nunito Sans, et signalera des débordements qui n'existent pas. Voir l'en-tête du fichier.`,
+const echec = (message) => {
+  console.error(`\n❌ ${message}`)
+  process.exit(1)
+}
+
+async function compterDiapositives() {
+  const source = await readFile(SOURCE, 'utf8').catch(() => echec(`slides.md introuvable : ${SOURCE}`))
+  const separateurs = source.split('\n').filter((ligne) => ligne.trim() === '---').length
+  if (separateurs < 3) echec('slides.md ne contient pas de séparateur de diapositive.')
+  return separateurs - 1
+}
+
+async function assurerPolice() {
+  const cible = join(RACINE, POLICE)
+  if (await access(cible).then(() => true, () => false)) return
+
+  const entete = {
+    'user-agent':
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  }
+  const css = await fetch('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@200;400;600', {
+    headers: entete,
+  })
+    .then((r) => (r.ok ? r.text() : null))
+    .catch(() => null)
+
+  const url = css?.match(/https:\/\/[^)"' ]+\.woff2/)?.[0]
+  const octets = url
+    ? await fetch(url, { headers: entete })
+        .then((r) => (r.ok ? r.arrayBuffer() : null))
+        .catch(() => null)
+    : null
+
+  if (!octets) {
+    echec(
+      `police du thème absente et non téléchargeable.\n` +
+        `   Sans Nunito Sans le navigateur retombe sur une police plus large et le contrôle\n` +
+        `   signale des débordements qui n'existent pas. Placer le fichier puis relancer :\n` +
+        `   dist/${POLICE}`,
+    )
+  }
+  await writeFile(cible, Buffer.from(octets))
+}
+
+function servir() {
+  const serveur = createServer(async (requete, reponse) => {
+    const chemin = decodeURIComponent(new URL(requete.url, 'http://x').pathname)
+    const candidat = join(RACINE, chemin)
+    const fichier = candidat.startsWith(RACINE)
+      ? await readFile(candidat).catch(() => null)
+      : null
+    const corps = fichier ?? (await readFile(join(RACINE, 'index.html')).catch(() => null))
+    if (!corps) {
+      reponse.writeHead(500).end()
+      return
+    }
+    reponse.writeHead(200, {
+      'content-type': fichier ? (TYPES[extname(candidat)] ?? 'application/octet-stream') : TYPES['.html'],
+    })
+    reponse.end(corps)
+  })
+  return new Promise((ok) => serveur.listen(0, '127.0.0.1', () => ok(serveur)))
+}
+
+const mesurer = (numero) => {
+  const racine =
+    document.querySelector(`[data-slidev-no="${numero}"]`) ??
+    [...document.querySelectorAll('.slidev-layout')].find((e) => e.getBoundingClientRect().height > 10)
+  if (!racine) return { absent: true }
+  let bas = 0
+  let extrait = ''
+  const noter = (el, libelle) => {
+    const r = el.getBoundingClientRect()
+    if (r.height < 1 || r.width < 1 || r.bottom <= bas) return
+    bas = r.bottom
+    extrait = libelle
+  }
+  for (const el of racine.querySelectorAll('*')) {
+    if (el.closest('footer, nav')) continue
+    if (el.tagName === 'svg') {
+      noter(el, '(diagramme)')
+      continue
+    }
+    const texte = (el.textContent ?? '').trim()
+    noter(el, texte ? texte.slice(0, 45) : `<${el.tagName.toLowerCase()}>`)
+  }
+  return { bas: Math.round(bas), extrait }
+}
+
+const FACE = `@font-face{font-family:'Nunito Sans';font-style:normal;font-weight:200 700;font-stretch:100%;src:url('/${POLICE}') format('woff2');}`
+
+const total = await compterDiapositives()
+await readFile(join(RACINE, 'index.html')).catch(() =>
+  echec(`dist/ absent ou incomplet. Lancer « npm run build » d'abord.`),
+)
+await assurerPolice()
+
+const serveur = await servir()
+const base = `http://127.0.0.1:${serveur.address().port}`
+const navigateur = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined })
+const debordent = []
+const muettes = []
+
+try {
+  const page = await navigateur.newPage({ viewport: { width: 1280, height: CADRE } })
+
+  for (let numero = 1; numero <= total; numero += 1) {
+    const rendue = await page
+      .goto(`${base}/${numero}`, { waitUntil: 'networkidle', timeout: 20000 })
+      .then(async () => {
+        await page.addStyleTag({ content: FACE })
+        await page.evaluate(() => document.fonts.ready)
+        await page.waitForFunction(
+          (n) => document.querySelector(`[data-slidev-no="${n}"]`) !== null,
+          numero,
+          { timeout: 15000 },
+        )
+        return true
+      })
+      .catch(() => false)
+
+    const mesure = rendue ? await page.evaluate(mesurer, numero) : { absent: true }
+
+    if (mesure.absent || mesure.bas === 0) {
+      muettes.push(numero)
+      console.error(`❌ diapo ${numero} : rien de mesurable — la page ne s'est pas rendue`)
+      continue
+    }
+    const depassement = mesure.bas - CADRE
+    if (depassement > MARGE) {
+      debordent.push(numero)
+      console.log(`⚠️  diapo ${numero} : déborde de ${depassement} px — « ${mesure.extrait} »`)
+    }
+  }
+} finally {
+  await navigateur.close()
+  serveur.close()
+}
+
+if (muettes.length) {
+  echec(
+    `${muettes.length} diapositive(s) n'ont rien rendu : ${muettes.join(', ')}.\n` +
+      `   Le contrôle n'a rien vérifié — ne pas lire ce résultat comme un succès.`,
   )
 }
-
-const navigateur = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined })
-const page = await navigateur.newPage({ viewport: { width: 1280, height: 720 } })
-const CADRE = 720
-const debordent = []
-
-for (let n = 1; n <= NB_DIAPOS; n++) {
-  await page.goto(`${BASE}/${n}`, { waitUntil: 'networkidle' })
-  if (face) {
-    await page.addStyleTag({ content: face })
-    await page.evaluate(() => document.fonts.ready)
-  }
-  await page.waitForTimeout(1200)
-
-  const mesure = await page.evaluate(() => {
-    const visibles = [...document.querySelectorAll('.slidev-layout')].filter((e) => {
-      const r = e.getBoundingClientRect()
-      return r.height > 10 && r.top > -50 && r.top < 100 && r.left > -50 && r.left < 200
-    })
-    let bas = 0
-    let extrait = ''
-    for (const racine of visibles) {
-      const noter = (el, libelle) => {
-        const r = el.getBoundingClientRect()
-        if (r.height < 1 || r.width < 1) return
-        if (r.bottom > bas) {
-          bas = r.bottom
-          extrait = libelle
-        }
-      }
-      racine.querySelectorAll('*').forEach((el) => {
-        if (el.children.length || el.closest('footer, nav')) return
-        const texte = (el.textContent ?? '').trim()
-        if (texte) noter(el, texte.slice(0, 45))
-      })
-      racine.querySelectorAll('svg').forEach((el) => noter(el, '(diagramme)'))
-    }
-    return { bas: Math.round(bas), extrait }
-  })
-
-  const depassement = mesure.bas - CADRE
-  if (depassement > 4) {
-    debordent.push({ n, depassement, extrait: mesure.extrait })
-    console.log(`⚠️  diapo ${String(n).padStart(2)} : déborde de ${depassement} px — « ${mesure.extrait} »`)
-  }
+if (debordent.length) {
+  echec(`${debordent.length} diapositive(s) coupée(s) : ${debordent.join(', ')}`)
 }
-
-console.log(
-  debordent.length
-    ? `\n❌ ${debordent.length} diapositive(s) coupée(s) : ${debordent.map((d) => d.n).join(', ')}`
-    : '\n✅ les 40 diapositives tiennent dans le cadre',
-)
-
-await navigateur.close()
-process.exit(debordent.length ? 1 : 0)
+console.log(`\n✅ les ${total} diapositives tiennent dans le cadre`)

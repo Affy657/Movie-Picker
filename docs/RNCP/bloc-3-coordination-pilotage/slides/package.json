@@ -7,7 +7,7 @@
     "preview": "slidev --port 3031",
     "build": "slidev build",
     "export": "slidev export",
-    "verify:rendu": "node verifier-rendu.mjs"
+    "verify:rendu": "slidev build && node verifier-rendu.mjs"
   },
   "dependencies": {
     "@slidev/cli": "latest",

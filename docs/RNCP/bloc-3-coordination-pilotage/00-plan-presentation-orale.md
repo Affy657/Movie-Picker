@@ -56,13 +56,13 @@ Cette annonce explicite est ce qui protège les 15 minutes de questions. Un jury
 |:---:|----------|------:|:------:|:----------:|
 | 0 | Ouverture, produit, cadre | 1:30 | 3 | |
 | 1 | Méthodologie, planning, ressources | 6:30 | 7 | **C3.1** ÉLIM |
-| 2 | Le produit : un logiciel exploité, pas une maquette | 5:00 | 5 | **C3.2.1** ÉLIM |
-| 3 | Deux registres, annoncés maintenant | 2:30 | 3 | C3.2.2 |
-| 4 | La méthodologie : Kanban léger à revues de version | 3:30 | 5 | C3.3.1 |
-| 5 | Deux outils de planification, deux horizons | 2:30 | 3 | C3.3.2 |
-| 6 | Le planning en cinq phases | 2:30 | 3 | C3.4.1 |
-| 7 | Quatre lots, 98 jours-homme | 5:30 | 2 | **C3.4.2** ÉLIM |
-| 8 | Les ressources nécessaires | 0:30 | 1 | |
+| 2 | Outil de suivi, indicateurs, tableaux de bord | 5:00 | 5 | **C3.2.1** ÉLIM |
+| 3 | Cas d'arbitrage | 2:30 | 3 | C3.2.2 |
+| 4 | Missions, styles managériaux, communication | 3:30 | 5 | C3.3.1 |
+| 5 | Grille de compétences, plan de développement | 2:30 | 3 | C3.3.2 |
+| 6 | Comptes rendus, points de validation, satisfaction | 2:30 | 3 | C3.4.1 |
+| 7 | Démonstration en production | 5:30 | 2 | **C3.4.2** ÉLIM |
+| 8 | Conclusion | 0:30 | 1 | |
 | | **Total** | **30:00** | **32** | |
 
 **Contrôle du minutage réel du support** (somme des durées portées en note de présentateur) : **30 minutes exactement**, et le minutage est exact **chapitre par chapitre**. Il a été rééquilibré le 5 septembre 2026 : la diapositive 6 passe de 1:20 à 1:10 pour ramener le chapitre 1 à sa cible de 6:30, et le chapitre 4 redistribue cinq secondes de la diapositive 22 vers la diapositive 23, la plus discriminante du chapitre.
@@ -87,7 +87,7 @@ Critères visés : méthodologie justifiée avec bénéfices attendus, outil de 
 |:-:|-------|------:|------------------------------|
 | 4 | La méthodologie : Kanban léger à revues de version | 1:10 | Le choix et ses bénéfices attendus : flux continu, priorisation permanente, pas de cérémonie inadaptée. Tableau des alternatives écartées avec le motif : Scrum (sprints et cérémonies calibrés pour une équipe), cycle en V (périmètre figé incompatible avec une roadmap par versions) |
 | 5 | Deux outils de planification, deux horizons | 0:50 | Pourquoi ces deux outils, leurs bénéfices, et surtout leur **compatibilité avec Kanban** : le Gantt porte les phases et les jalons de version, le tableau Kanban porte le flux quotidien. Les deux ne se contredisent pas, ils opèrent à deux échelles de temps |
-| 6 | Le planning en cinq phases | 1:10 | Diagramme de Gantt Mermaid, du 27 février au 16 septembre 2026, avec les 5 phases exigées : étude, mesure, conception, réalisation, restitution. Dire explicitement que les phases se **chevauchent**, propriété d'un flux Kanban, et non se succèdent comme dans un cycle en V |
+| 6 | Le planning en cinq phases | 1:10 | Diagramme de Gantt en HTML et CSS, du 27 février au 16 septembre 2026, avec les 5 phases exigées : étude, mesure, conception, réalisation, restitution. Dire explicitement que les phases se **chevauchent**, propriété d'un flux Kanban, et non se succèdent comme dans un cycle en V |
 | 7 | Quatre lots, 98 jours-homme | 0:50 | Les 4 lots et leur charge : MVP 27 J/H, migration .NET 13, V1 produit 35, clôture RNCP 23. Total 98 J/H, méthode analogique, marge de 20 %. Source : chiffrage du Bloc 1 |
 | 8 | Les ressources nécessaires | 0:50 | Trois familles. Humaines : les 4 profils de l'organisation cible et leur charge. Matérielles : poste de développement, outillage, services tiers. Financières : 34 300 € de valeur de développement, moins de 200 € par an de trésorerie réelle |
 | 9 | La matrice RACI, et le handicap dedans | 0:50 | Tableau tâche par rôle avec R, A, C, I sur les 4 profils, plus les acteurs consultés et informés. Ligne dédiée à la prise en compte du handicap : poste adapté, outillage compatible lecteur d'écran, accessibilité du produit traitée comme exigence et non comme option |
@@ -116,7 +116,7 @@ Deux cas de réserve pour les questions : le contrôle de performance instable q
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
 | 16 | La dérive constatée et ses conséquences | 0:50 | La chronologie à l'heure près, les 4 exigences que l'API du MVP ne satisfaisait pas, et la conséquence qui tranche : le périmètre à réécrire pesait 944 lignes le 18 mars, la même API en porte 44 663 aujourd'hui. Le coût de la décision croissait chaque jour |
-| 17 | Quatre options, et le logigramme qui tranche | 1:00 | **Logigramme** Mermaid, écrit pour être réutilisable (aucune techno n'y figure), parcouru à voix haute sur le chemin réellement suivi. Les **quatre** options avec leur coût et leur risque, le temps utile allant à l'option D : migrer progressivement paraît plus prudent et ne l'est pas à effectif 1 |
+| 17 | Quatre options, et le logigramme qui tranche | 1:00 | **Logigramme** en HTML et CSS, écrit pour être réutilisable (aucune techno n'y figure), parcouru à voix haute sur le chemin réellement suivi. Les **quatre** options avec leur coût et leur risque, le temps utile allant à l'option D : migrer progressivement paraît plus prudent et ne l'est pas à effectif 1 |
 | 18 | La décision, et ce qu'elle a produit | 0:40 | L'argumentation en 4 temps, le critère de succès défini avant de commencer, les 5 objectifs et leur résultat mesuré, et le bandeau d'honnêteté : les 87 lignes de front modifiées contre un objectif de zéro, et le chiffrage a posteriori du lot |
 
 ### Chapitre 4 : piloter l'équipe (3:30, 5 diapos), C3.3.1

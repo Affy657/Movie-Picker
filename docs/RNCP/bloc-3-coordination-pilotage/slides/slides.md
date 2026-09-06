@@ -1571,8 +1571,6 @@ Le <b>2</b> est le seuil d'autonomie, le <b>3</b> le seuil de responsabilité : 
 
 <style>
 .dumb .scale { position: relative; display: flex; justify-content: space-between; font-size: 0.66rem; color: var(--ink-2); }
-.dumb .bar { position: absolute; top: 50%; transform: translateY(-50%); height: 3px; background: var(--s1); opacity: 0.45; border-radius: 2px; }
-.dumb .bar.big { opacity: 1; height: 5px; }
 </style>
 
 <!--

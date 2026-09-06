@@ -383,7 +383,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
   - [x] **Indicateurs de délai** : cadence de livraison (médiane 17 j), échéances de restitution tenues (4 / 4), jours d'activité (88 / 191), délai de traitement d'anomalie
   - [x] **Indicateurs de coût** : coût d'infrastructure réel contre budget, coût annuel engagé, licences, valeur de développement consommée (≈ 30 800 € / 34 300 €)
   - [x] **Indicateurs de risque** : vulnérabilités ouvertes, stabilité de la chaîne (78 %, série mensuelle), couverture (86,6 %), Quality Gate, anomalies ouvertes, taux d'erreur serveur, disponibilité
-  - [x] **Indicateurs RH** : densité d'activité (3,2 j/semaine), plus longue série continue (10 j), semaines sans activité (4 / 27), facteur de bus (1)
+  - [x] **Indicateurs RH** : densité d'activité (3,1 j/semaine), plus longue série continue (10 j), semaines sans activité (5 / 28), facteur de bus (1)
   - [x] **Tableaux de bord** : deux tableaux consolidés (avancement et délais ; coûts, risques et RH), plus l'analyse de l'écart prévisionnel / réel et les 3 décisions prises à partir d'une mesure
   - [ ] **Captures à produire** : tableau de flux GitHub Projects (diapo 11), facturation GCP et AWS (diapo 14)
 
@@ -402,7 +402,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
   - [x] **Cas retenu** : le remplacement de l'API Node/Express par ASP.NET Core, décidé le 18/03/2026, deux jours après la livraison du MVP. Confirmé par l'historique : la migration est absente de la feuille de route du MVP au moment où celui-ci est déclaré terminé
   - [x] **Problématique et conséquences** : chronologie datée à l'heure près, les 4 exigences non satisfaites par l'API du MVP, et la fenêtre qui se referme — 944 lignes à réécrire le 18/03 contre 44 663 aujourd'hui
   - [x] **4 options détaillées** avec coût, effet sur le planning et risque, plus les **5 critères de décision** dont un éliminatoire
-  - [x] **Logigramme** Mermaid réutilisable (aucune techno n'y figure), avec la branche de retour arrière
+  - [x] **Logigramme** réutilisable en HTML et CSS (aucune techno n'y figure), avec la branche de retour arrière
   - [x] **Décision argumentée** en 4 temps, critère de succès défini avant exécution, et **résultat mesuré** — y compris les 2 objectifs non tenus (87 lignes de front modifiées contre un objectif de zéro ; lot chiffré 13 J/H a posteriori)
   - [x] **2 arbitrages de réserve** pour les questions : le contrôle de performance instable (52 % → 94 %), l'abandon de l'application mobile
 - [ ] **`docs/RNCP/bloc-3-coordination-pilotage/04-management-equipe.md`** (C3.3.1) — *rédigé, en attente de fusion sur `master`* :
@@ -414,7 +414,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
   - [x] **Inclusion** : l'écrit asynchrone versionné répond simultanément au handicap, aux fuseaux horaires et à la langue. Produit bilingue FR/EN, accessibilité en porte bloquante
   - [x] **Analyse critique** : la série de 10 jours consécutifs du 17 au 26/08/2026, ses effets mesurés (94 % → 78 % → 38 % de succès de la chaîne), et 3 recommandations avec leur indicateur de contrôle
 - [ ] **`docs/RNCP/bloc-3-coordination-pilotage/05-competences.md`** (C3.3.2) — *rédigé, en attente de fusion sur `master`* :
-  - [x] **Chronologie d'introduction** des technologies dans le dépôt, en 4 vagues datées — produire (16-18/03), fiabiliser (avril-mai), exploiter (juillet), enrichir (août). La vague 1 tient sur trois jours et n'apparaît dans aucune ligne du chiffrage
+  - [x] **Chronologie d'introduction** des technologies dans le dépôt, en 4 vagues datées — produire (16-19/03), fiabiliser (avril-mai), exploiter (juillet), enrichir (août). La vague 1 tient sur quatre jours et n'apparaît dans aucune ligne du chiffrage
   - [x] **Cartographie** des compétences déduite des lots et non d'un référentiel : 9 domaines, chacun rattaché aux lots qui le mobilisent
   - [x] **Grille d'évaluation** à échelle comportementale en 5 niveaux, 19 lignes sur 4 profils, avec la convention de lecture — le niveau actuel est le socle attendu **au recrutement**, il n'évalue personne
   - [x] **Commentaire de la grille** en 4 lectures, dont celle qui la rend crédible : les deux plus gros écarts du lead ne sont pas techniques et désignent les mêmes faiblesses que les indicateurs des chapitres 2 et 3

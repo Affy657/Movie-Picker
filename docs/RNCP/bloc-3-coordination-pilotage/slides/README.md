@@ -16,12 +16,12 @@ npm run dev
 ## Vérifier le rendu
 
 ```bash
-npm run build
-npx http-server dist -p 8099 --silent &
 npm run verify:rendu
 ```
 
-Détecte les diapositives dont le contenu est **coupé par le bas du cadre** — ce qu'aucun autre contrôle du dossier ne voit. Mode d'emploi complet, dont la récupération de la police du thème, en tête de [`verifier-rendu.mjs`](verifier-rendu.mjs).
+Construit le support, le sert, le rend dans un navigateur et signale les diapositives dont le contenu est **coupé par le bas du cadre** — ce qu'aucun autre contrôle du dossier ne voit. Il **échoue** (code 1) si une diapositive déborde, si `dist/` manque, ou s'il n'a rien pu mesurer : un résultat vert signifie que les 40 pages ont réellement été rendues et mesurées.
+
+> La police du thème est récupérée automatiquement dans `dist/`. Sans elle le navigateur retombe sur une police plus large et le contrôle signalerait de faux débordements — il refuse donc de tourner plutôt que de mentir. `CHROME_PATH` permet de désigner un Chromium déjà installé.
 
 ## Exporter
 
@@ -53,6 +53,10 @@ npm run export
 | `.flow` | Logigramme : `.q` question, `.r` issue, `.r.no` refus, `.r.go` décision |
 | `.tl` | Frise |
 | `.chips` | Liste d'états valeur / verdict |
+
+**Contraintes de rendu.** Les blocs Mermaid ignorent leur `{scale: …}` dans cette version de Slidev : le SVG est contraint par `max-height` en **pixels** et non en `vh` — la toile Slidev fait 552 px de haut et n'est que mise à l'échelle par `transform`, donc une unité de fenêtre cesserait de contraindre dès que la fenêtre dépasse 1062 px.
+
+**Taille de texte.** Les tableaux sont à `0.8em` (`0.7em` en classe `dense`). Le contenu ayant été allégé diapositive par diapositive, toute nouvelle baisse doit être le **dernier recours**, après avoir coupé du contenu : un support projeté se lit depuis le fond de la salle.
 
 **Palette de séries** : `--s1` à `--s4`, validée (pire paire adjacente ΔE 10.7 en vision déficiente, 27.5 en vision normale). `--s4` est sous 3:1 de contraste : **toujours l'étiqueter en direct**. Les couleurs d'état (`--ok`, `--warn`, `--bad`) ne servent jamais de couleur de série et vont toujours avec un libellé.
 
