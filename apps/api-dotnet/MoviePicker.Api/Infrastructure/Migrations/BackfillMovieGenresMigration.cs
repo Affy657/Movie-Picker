@@ -29,96 +29,54 @@ public sealed class BackfillMovieGenresMigration : IDataMigration
 
     public async Task<long> ExecuteAsync(CancellationToken ct = default)
     {
-        var updated = await BackfillMoviesAsync(ct);
-        updated += await BackfillWatchlistAsync(ct);
+        var updated = await BackfillSteps.RunBatchesAsync<Movie>(
+            _movies.ListMissingGenresAsync,
+            movie => movie.Id,
+            TryBackfillMovieAsync,
+            BatchSize,
+            ct);
+
+        updated += await BackfillSteps.RunBatchesAsync<WatchlistItem>(
+            _watchlist.ListMissingGenresAsync,
+            item => item.Id,
+            TryBackfillWatchlistItemAsync,
+            BatchSize,
+            ct);
+
         return updated;
     }
 
-    private async Task<long> BackfillMoviesAsync(CancellationToken ct)
-    {
-        var attempted = new HashSet<string>();
-        var updated = 0L;
-
-        while (true)
-        {
-            ct.ThrowIfCancellationRequested();
-            var batch = await _movies.ListMissingGenresAsync(BatchSize, ct);
-            var fresh = batch.Where(m => attempted.Add(m.Id)).ToList();
-            if (fresh.Count == 0)
-                return updated;
-
-            foreach (var movie in fresh)
+    private Task<bool> TryBackfillMovieAsync(Movie movie, CancellationToken ct) =>
+        BackfillSteps.TryApplyAsync(
+            async () =>
             {
-                ct.ThrowIfCancellationRequested();
-                if (await TryBackfillMovieAsync(movie, ct))
-                    updated++;
-            }
-        }
-    }
+                var details = await _tmdb.GetDetailsAsync(movie.TmdbId, movie.MediaType, ct);
+                if (details is not { GenreIds.Count: > 0 })
+                    return false;
 
-    private async Task<long> BackfillWatchlistAsync(CancellationToken ct)
-    {
-        var attempted = new HashSet<string>();
-        var updated = 0L;
-
-        while (true)
-        {
-            ct.ThrowIfCancellationRequested();
-            var batch = await _watchlist.ListMissingGenresAsync(BatchSize, ct);
-            var fresh = batch.Where(i => attempted.Add(i.Id)).ToList();
-            if (fresh.Count == 0)
-                return updated;
-
-            foreach (var item in fresh)
-            {
-                ct.ThrowIfCancellationRequested();
-                if (await TryBackfillWatchlistItemAsync(item, ct))
-                    updated++;
-            }
-        }
-    }
-
-    private async Task<bool> TryBackfillMovieAsync(Movie movie, CancellationToken ct)
-    {
-        try
-        {
-            var details = await _tmdb.GetDetailsAsync(movie.TmdbId, movie.MediaType, ct);
-            if (details is not { GenreIds.Count: > 0 })
-                return false;
-
-            await _movies.UpdateGenresAsync(movie.Id, details.GenreIds, ct);
-            return true;
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            _logger.LogWarning(
+                await _movies.UpdateGenresAsync(movie.Id, details.GenreIds, ct);
+                return true;
+            },
+            ex => _logger.LogWarning(
                 ex,
                 "Genres non récupérés pour le film {MovieId} (TMDB {TmdbId})",
                 movie.Id,
-                movie.TmdbId);
-            return false;
-        }
-    }
+                movie.TmdbId));
 
-    private async Task<bool> TryBackfillWatchlistItemAsync(WatchlistItem item, CancellationToken ct)
-    {
-        try
-        {
-            var details = await _tmdb.GetDetailsAsync(item.TmdbId, item.MediaType, ct);
-            if (details is not { GenreIds.Count: > 0 })
-                return false;
+    private Task<bool> TryBackfillWatchlistItemAsync(WatchlistItem item, CancellationToken ct) =>
+        BackfillSteps.TryApplyAsync(
+            async () =>
+            {
+                var details = await _tmdb.GetDetailsAsync(item.TmdbId, item.MediaType, ct);
+                if (details is not { GenreIds.Count: > 0 })
+                    return false;
 
-            await _watchlist.UpdateGenresAsync(item.Id, details.GenreIds, ct);
-            return true;
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            _logger.LogWarning(
+                await _watchlist.UpdateGenresAsync(item.Id, details.GenreIds, ct);
+                return true;
+            },
+            ex => _logger.LogWarning(
                 ex,
                 "Genres non récupérés pour l'item de watchlist {ItemId} (TMDB {TmdbId})",
                 item.Id,
-                item.TmdbId);
-            return false;
-        }
-    }
+                item.TmdbId));
 }

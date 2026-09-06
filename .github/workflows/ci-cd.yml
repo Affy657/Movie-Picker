@@ -472,7 +472,103 @@ jobs:
             --settings apps/api-dotnet/coverlet.runsettings \
             --results-directory apps/api-dotnet/MoviePicker.Api.Tests/TestResults
           dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+      - name: "Quality Gate — detail des conditions en echec"
+        if: failure()
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+        run: |
+          set -eo pipefail
+          cat > qg-report.mjs <<'NODESCRIPT'
+          const token = process.env.SONAR_TOKEN ?? "";
+          const branch = process.env.BRANCH_NAME ?? "";
+          const url =
+            "https://sonarcloud.io/api/qualitygates/project_status" +
+            "?projectKey=Affy657_Movie-Picker&branch=" + encodeURIComponent(branch);
 
+          const auth = {
+            Authorization: "Basic " + Buffer.from(token + ":").toString("base64"),
+          };
+          const response = await fetch(url, { headers: auth });
+          const body = await response.text();
+
+          let parsed;
+          try {
+            parsed = JSON.parse(body);
+          } catch {
+            console.log("Reponse SonarCloud illisible : " + body.slice(0, 500));
+            process.exit(0);
+          }
+
+          const project = parsed.projectStatus;
+          if (!project) {
+            console.log("Pas de projectStatus : " + JSON.stringify(parsed).slice(0, 500));
+            process.exit(0);
+          }
+
+          console.log("Quality Gate : " + project.status);
+
+          const failing = (project.conditions || []).filter((c) => c.status !== "OK");
+          if (failing.length === 0) {
+            console.log("Aucune condition en echec : echec probablement technique.");
+            process.exit(0);
+          }
+
+          for (const c of failing) {
+            console.log(
+              "::error::" + c.metricKey + " = " + c.actualValue +
+                " (seuil " + c.comparator + " " + c.errorThreshold + ")"
+            );
+          }
+
+          if (!failing.some((c) => c.metricKey.includes("duplicated"))) process.exit(0);
+
+          const treeUrl =
+            "https://sonarcloud.io/api/measures/component_tree" +
+            "?component=Affy657_Movie-Picker&branch=" + encodeURIComponent(branch) +
+            "&metricKeys=new_duplicated_lines,duplicated_lines,duplicated_lines_density" +
+            "&qualifiers=FIL&s=metric&metricSort=duplicated_lines&asc=false&ps=20";
+          const treeResponse = await fetch(treeUrl, { headers: auth });
+          const treeBody = await treeResponse.text();
+
+          let tree;
+          try {
+            tree = JSON.parse(treeBody);
+          } catch {
+            console.log("component_tree illisible : " + treeBody.slice(0, 800));
+            process.exit(0);
+          }
+
+          const readMeasure = (component, key) => {
+            const m = (component.measures || []).find((x) => x.metricKey === key);
+            if (!m) return null;
+            return m.value ?? m.period?.value ?? m.periods?.[0]?.value ?? null;
+          };
+
+          const rows = (tree.components || [])
+            .map((component) => ({
+              path: component.path,
+              neuf: readMeasure(component, "new_duplicated_lines"),
+              total: readMeasure(component, "duplicated_lines"),
+              densite: readMeasure(component, "duplicated_lines_density"),
+            }))
+            .filter((r) => r.neuf !== null || r.total !== null);
+
+          if (rows.length === 0) {
+            console.log("Aucune mesure par fichier. Reponse brute :");
+            console.log(treeBody.slice(0, 1500));
+            process.exit(0);
+          }
+
+          console.log("Fichiers les plus dupliques (neuf / total / densite) :");
+          for (const r of rows) {
+            console.log(
+              "  " + (r.neuf ?? "-") + " / " + (r.total ?? "-") + " / " +
+                (r.densite ?? "-") + "%  " + r.path
+            );
+          }
+          NODESCRIPT
+          node qg-report.mjs
   docker-api:
     name: Docker API → Artifact Registry
     runs-on: ubuntu-24.04

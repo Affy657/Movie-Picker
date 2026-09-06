@@ -24,47 +24,28 @@ public sealed class BackfillWatchlistRuntimesMigration : IDataMigration
 
     public string Id => "2026-09-05-003-backfill-watchlist-runtimes";
 
-    public async Task<long> ExecuteAsync(CancellationToken ct = default)
-    {
-        var attempted = new HashSet<string>();
-        var updated = 0L;
+    public Task<long> ExecuteAsync(CancellationToken ct = default) =>
+        BackfillSteps.RunBatchesAsync<WatchlistItem>(
+            _watchlist.ListMissingRuntimeAsync,
+            item => item.Id,
+            TryBackfillRuntimeAsync,
+            BatchSize,
+            ct);
 
-        while (true)
-        {
-            ct.ThrowIfCancellationRequested();
-            var batch = await _watchlist.ListMissingRuntimeAsync(BatchSize, ct);
-            var fresh = batch.Where(i => attempted.Add(i.Id)).ToList();
-            if (fresh.Count == 0)
-                return updated;
-
-            foreach (var item in fresh)
+    private Task<bool> TryBackfillRuntimeAsync(WatchlistItem item, CancellationToken ct) =>
+        BackfillSteps.TryApplyAsync(
+            async () =>
             {
-                ct.ThrowIfCancellationRequested();
-                if (await TryBackfillRuntimeAsync(item, ct))
-                    updated++;
-            }
-        }
-    }
+                var details = await _tmdb.GetDetailsAsync(item.TmdbId, item.MediaType, ct);
+                if (details is null)
+                    return false;
 
-    private async Task<bool> TryBackfillRuntimeAsync(WatchlistItem item, CancellationToken ct)
-    {
-        try
-        {
-            var details = await _tmdb.GetDetailsAsync(item.TmdbId, item.MediaType, ct);
-            if (details is null)
-                return false;
-
-            await _watchlist.UpdateRuntimeAsync(item.Id, Math.Max(0, details.Runtime ?? 0), ct);
-            return details.Runtime is > 0;
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            _logger.LogWarning(
+                await _watchlist.UpdateRuntimeAsync(item.Id, Math.Max(0, details.Runtime ?? 0), ct);
+                return details.Runtime is > 0;
+            },
+            ex => _logger.LogWarning(
                 ex,
                 "Durée non récupérée pour l'item de watchlist {ItemId} (TMDB {TmdbId})",
                 item.Id,
-                item.TmdbId);
-            return false;
-        }
-    }
+                item.TmdbId));
 }
