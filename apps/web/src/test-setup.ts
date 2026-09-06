@@ -8,8 +8,25 @@ const getComputedStyleOrig = window.getComputedStyle.bind(window);
 window.getComputedStyle = (elt: Element, _pseudoElt?: string | null): CSSStyleDeclaration =>
   getComputedStyleOrig(elt);
 
+const noop = (): void => {};
+
 const canvas2dStub = {
   measureText: () => ({ width: 0 }),
+  clearRect: noop,
+  beginPath: noop,
+  closePath: noop,
+  moveTo: noop,
+  lineTo: noop,
+  arc: noop,
+  fill: noop,
+  stroke: noop,
+  save: noop,
+  restore: noop,
+  translate: noop,
+  rotate: noop,
+  scale: noop,
+  fillText: noop,
+  setTransform: noop,
 } as unknown as CanvasRenderingContext2D;
 
 HTMLCanvasElement.prototype.getContext = function mockCanvasGetContext(

@@ -4,6 +4,12 @@
   min-height: 36px;
 }
 
+.btn-lg {
+  padding: var(--space-3) var(--space-7);
+  font-size: var(--font-size-md);
+  min-height: 52px;
+}
+
 .btn-danger {
   color: var(--color-error);
   border-color: var(--color-error);

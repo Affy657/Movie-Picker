@@ -40,6 +40,11 @@
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 1px rgba(15, 23, 42, 0.03);
   --shadow-md: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 18px rgba(15, 23, 42, 0.06);
   --shadow-lg: 0 4px 10px rgba(15, 23, 42, 0.06), 0 18px 40px rgba(15, 23, 42, 0.08);
+  --shadow-hero-card: 0 24px 70px rgba(2, 6, 23, 0.55);
+  --shadow-wheel: 0 22px 45px rgba(2, 6, 23, 0.55);
+
+  --section-pad: clamp(var(--space-16), 8vw, var(--space-24));
+  --gutter: clamp(var(--space-5), 4vw, var(--space-10));
 
   --overlay-backdrop: rgba(0, 0, 0, 0.55);
   --overlay-backdrop-strong: rgba(0, 0, 0, 0.82);
@@ -80,6 +85,7 @@
   --color-media-letterbox: #000000;
   --color-streak: #f97316;
   --color-streak-soft: #fb923c;
+  --on-dark-success: #4ade80;
   --gradient-hero: linear-gradient(135deg, #0b1228 0%, #050817 55%, #0a0b1f 100%);
 
   --duration-instant: 0.1s;
@@ -87,10 +93,17 @@
   --duration-base: 0.15s;
   --duration-medium: 0.18s;
   --duration-slow: 0.2s;
+  --duration-reveal: 0.6s;
   --ease-default: ease;
   --ease-in-out: ease-in-out;
   --ease-out: ease-out;
+  --ease-reveal: cubic-bezier(0.22, 1, 0.36, 1);
 
+  --font-body: 'Overpass', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Overpass Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  --font-size-6xs: 0.4375rem;
+  --font-size-5xs: 0.5625rem;
   --font-size-4xs: 0.65rem;
   --font-size-3xs: 0.7rem;
   --font-size-2xs: 0.75rem;
@@ -103,6 +116,8 @@
   --font-size-lg-plus: 1.35rem;
   --font-size-xl: 1.5rem;
   --font-size-3xl: 2.25rem;
+  --font-size-4xl: 2.85rem;
+  --font-size-5xl: 4.25rem;
 
   --tracking-tight: -0.025em;
   --tracking-narrow: -0.02em;
@@ -116,8 +131,10 @@
   --tracking-widest: 0.08em;
   --tracking-caps: 0.12em;
   --tracking-caps-wide: 0.14em;
+  --tracking-display: -0.032em;
 
   --leading-none: 1;
+  --leading-flush: 0.98;
   --leading-compact: 1.15;
   --leading-tight: 1.2;
   --leading-snug: 1.35;
@@ -196,6 +213,10 @@
   --color-primary-text: var(--color-primary-hover);
   --color-surface-hover: color-mix(in srgb, var(--color-text) 6%, transparent);
   --color-success-bg: color-mix(in srgb, var(--color-success) 12%, transparent);
+  --color-bg-tint: color-mix(in srgb, var(--color-text) 3%, var(--color-bg));
+  --surface-sunken: color-mix(in srgb, var(--color-text) 4%, var(--color-surface));
+  --color-primary-soft: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  --color-streak-fg: color-mix(in srgb, var(--color-streak) 58%, black);
 }
 
 [data-accent='blue'] {
@@ -324,6 +345,53 @@
   --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.55);
   --color-surface-hover: color-mix(in srgb, var(--color-text) 6%, transparent);
   --color-success-bg: color-mix(in srgb, var(--color-success) 12%, transparent);
+  --color-bg-tint: color-mix(in srgb, var(--color-text) 3%, var(--color-bg));
+  --surface-sunken: color-mix(in srgb, var(--color-text) 4%, var(--color-surface));
+  --color-primary-soft: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  --color-streak-fg: var(--color-streak-soft);
+}
+
+.on-dark {
+  --color-surface: #131a2b;
+  --color-text: #f8fafc;
+  --color-text-muted: #cbd5e1;
+  --color-text-secondary: #cbd5e1;
+  --color-meta: #94a3b8;
+  --color-section-heading: #cbd5e1;
+  --color-border: #3a4861;
+  --color-border-subtle: rgba(248, 250, 252, 0.22);
+  --color-placeholder: #64748b;
+  --color-error: #f87171;
+  --color-error-hover: #fca5a5;
+  --color-success: var(--on-dark-success);
+  --color-accent-warm: #22d3ee;
+  --color-primary-text: color-mix(in srgb, var(--color-primary) 55%, white);
+  --color-badge-finished-bg: #1e293b;
+  --color-badge-finished-text: #cbd5e1;
+  --color-badge-upcoming-bg: #2a1e08;
+  --color-badge-upcoming-text: #fbbf24;
+  --color-badge-live-bg: #0e2818;
+  --color-badge-live-text: #4ade80;
+  --color-badge-pending-bg: #3a1a08;
+  --color-badge-pending-text: #fb923c;
+  --color-badge-host-bg: #1e1b4b;
+  --color-badge-host-text: #c7d2fe;
+  --color-input-bg: #0f1524;
+  --color-poster-placeholder: #1e293b;
+  --color-surface-hover: rgba(255, 255, 255, 0.08);
+  --color-success-bg: color-mix(in srgb, var(--on-dark-success) 12%, transparent);
+  --color-bg-tint: rgba(255, 255, 255, 0.04);
+  --surface-sunken: rgba(255, 255, 255, 0.06);
+  --color-primary-soft: color-mix(in srgb, var(--color-primary) 30%, transparent);
+  --color-streak-fg: var(--color-streak-soft);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.55);
+  color: var(--color-text);
+}
+
+.on-dark :focus-visible {
+  outline-color: var(--color-accent-warm);
 }
 
 .visually-hidden {
@@ -387,11 +455,7 @@ html {
 
 body {
   margin: 0;
-  font-family:
-    'Overpass',
-    system-ui,
-    -apple-system,
-    sans-serif;
+  font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.6;
   color: var(--color-text);

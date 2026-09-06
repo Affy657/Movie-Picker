@@ -1,0 +1,30 @@
+.section {
+  --section-intrinsic-height: 22rem;
+  --section-block-pad: clamp(var(--space-12), 5vw, var(--space-16));
+}
+
+.grid {
+  display: grid;
+  gap: var(--space-6) var(--space-8);
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+  padding-top: var(--space-4);
+  border-top: 2px solid var(--color-primary);
+}
+
+.title {
+  font-weight: 800;
+  font-size: var(--font-size-md);
+  letter-spacing: var(--tracking-close);
+}
+
+.text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: var(--leading-loose);
+}

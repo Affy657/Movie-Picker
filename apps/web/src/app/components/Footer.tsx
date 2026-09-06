@@ -92,8 +92,8 @@ export default function Footer({ clearMobileNav = false, onOpenWhatsNew }: Reado
           <p className={styles.colTitle}>{t('footer.navTitle')}</p>
           <ul className={styles.colList}>
             <li>
-              <Link to={ROUTES.discover} className={styles.colLink}>
-                {t('nav.discover')}
+              <Link to={ROUTES.home} className={styles.colLink}>
+                {t('nav.home')}
               </Link>
             </li>
             <li>

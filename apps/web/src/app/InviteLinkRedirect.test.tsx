@@ -160,9 +160,6 @@ describe("lien d'invitation : retour vers la soirée après authentification", (
       await screen.findByRole('button', { name: /^réessayer$/i }, { timeout: 12000 })
     ).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /^connexion$/i })).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /retour à l.accueil/i })).toHaveAttribute(
-      'href',
-      '/decouvrir'
-    );
+    expect(screen.getByRole('link', { name: /retour à l.accueil/i })).toHaveAttribute('href', '/');
   });
 });

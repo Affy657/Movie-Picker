@@ -27,10 +27,9 @@ const OUT = path.join(ROOT, 'artifacts', 'lighthouse');
  * landing ; la perf reste mesurée et loguée, sans faire échouer le job.
  */
 const URLS = [
-  { path: '/decouvrir', slug: 'discover', indexable: true },
+  { path: '/', slug: 'home', indexable: true },
   { path: '/soutenir', slug: 'donate', indexable: true },
   { path: '/u/lighthouse', slug: 'profile', indexable: true },
-  { path: '/', slug: 'home', indexable: false },
   { path: '/my-events', slug: 'my-events', indexable: false },
   { path: '/new', slug: 'new', indexable: false },
   { path: '/watchlist', slug: 'watchlist', indexable: false },
@@ -248,8 +247,14 @@ try {
   const median = (nums) => [...nums].sort((a, b) => a - b)[Math.floor(nums.length / 2)];
   const RUNS = Number(process.env.LH_RUNS || 3);
 
+  const only = (process.env.LH_ONLY || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const selected = only.length > 0 ? URLS.filter((u) => only.includes(u.slug)) : URLS;
+
   try {
-    for (const { path: pth, slug, indexable, skipPerformance } of URLS) {
+    for (const { path: pth, slug, indexable, skipPerformance } of selected) {
       const url = BASE + pth;
       const lhrs = [];
       for (let i = 0; i < RUNS; i++) {

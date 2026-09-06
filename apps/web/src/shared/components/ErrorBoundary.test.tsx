@@ -54,6 +54,6 @@ describe('ErrorBoundary', () => {
         <Bomb fail />
       </BoundaryHarness>
     );
-    expect(screen.getByRole('link', { name: /accueil/i })).toHaveAttribute('href', '/decouvrir');
+    expect(screen.getByRole('link', { name: /accueil/i })).toHaveAttribute('href', '/');
   });
 });

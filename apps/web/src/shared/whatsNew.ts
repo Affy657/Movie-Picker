@@ -4,7 +4,7 @@ import type { TranslationKey } from '@/shared/i18n';
 export type WhatsNewCategory = 'new' | 'improved' | 'fixed';
 
 export type WhatsNewLinkTarget =
-  'watchlist' | 'account' | 'myEvents' | 'profile' | 'donate' | 'discover' | 'notifications';
+  'watchlist' | 'account' | 'myEvents' | 'profile' | 'donate' | 'home' | 'notifications';
 
 export type WhatsNewAction = 'proposeIdea';
 
@@ -64,7 +64,7 @@ export const WHATS_NEW: readonly WhatsNewRelease[] = [
       entry('eventSettings', 'improved', { link: 'myEvents' }),
       entry('movieList', 'improved', { link: 'myEvents' }),
       entry('unifiedShare', 'improved', { link: 'myEvents' }),
-      entry('discoverHome', 'improved', { link: 'discover' }),
+      entry('discoverHome', 'improved', { link: 'home' }),
       entry('fasterFirstLoad', 'improved'),
       entry('readableContrast', 'improved'),
       entry('analyticsPrivacy', 'improved', { link: 'account' }),
@@ -86,8 +86,8 @@ export function whatsNewLinkPath(
       return ROUTES.myEvents;
     case 'donate':
       return ROUTES.donate;
-    case 'discover':
-      return ROUTES.discover;
+    case 'home':
+      return ROUTES.home;
     case 'notifications':
       return ROUTES.notifications;
     case 'profile':

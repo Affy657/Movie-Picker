@@ -39,6 +39,12 @@ export const en: Locale = {
     skipToMain: 'Skip to main content',
     whatsNew: "What's new",
     whatsNewAria: "See what's new",
+    landing: {
+      howItWorks: 'How it works',
+      wheel: 'The wheel',
+      features: 'Features',
+      faq: 'Questions',
+    },
   },
 
   home: {
@@ -48,37 +54,212 @@ export const en: Locale = {
   },
 
   landing: {
-    kicker: 'Movie night, simplified',
-    titleLead: 'Choose tonight’s film',
-    titleAccent: 'together.',
-    tagline:
-      'No more endless debates. Create an event, invite your friends, vote on the suggestions, and let the wheel settle it if you have to.',
     seoDescription:
-      'Movie Picker, plan a movie night: create an event, share the link, suggest films (TMDB), vote and spin the wheel to pick a winner.',
+      'Movie Picker, plan a movie night: create an event, share the link, suggest films (TMDB), vote and let the wheel settle it.',
     ogImageAlt: 'Movie Picker: choose tonight’s film together',
-    stepsKicker: 'In 4 steps',
-    stepsTitle: 'From the invite to the credits',
-    stepsSubtitle: 'A movie night that actually starts on time. Promise.',
-    steps: {
-      invite: {
-        title: 'Start the night',
-        text: 'One link, one QR code, and everyone joins in two clicks.',
+    hero: {
+      badge: 'Movie night, together',
+      titleLead: 'Pick tonight’s film',
+      titleAccent: 'without losing the night to it.',
+      lead: 'Create the event, share the link, everyone suggests films and votes. Still no agreement? The wheel decides.',
+      free: 'Free, no ads.',
+      alreadyAccount: 'Already have an account?',
+      seeHow: 'See how it works',
+    },
+    demo: {
+      cardLabel: 'Preview of a movie night in Movie Picker',
+      url: 'movie-picker.fr/e/chez-lea',
+      eventTitle: 'Movie night at Léa’s',
+      when: 'Friday 9:00 pm',
+      votesOpen: 'Voting open',
+      host: 'Léa is hosting',
+      participants: 'Four participants and two more',
+      more: '+2',
+      spin: 'Spin the wheel',
+      noteProposed: 'Sam suggested',
+      noteVoted: 'Inès voted for',
+    },
+    problem: {
+      eyebrow: 'The problem',
+      title: 'Everyone has an opinion. Nobody decides.',
+      lead: 'Two people suggest something, the rest reply “dunno”, the poll gets lost in the thread, and by 11 pm you are rewatching a series for the third time.',
+      threadLabel: 'The group chat, Friday 8:41 pm',
+      thread: {
+        m1: 'what are we watching tonight?',
+        m2: 'dunno, suggest something',
+        m3: 'Interstellar?',
+        m4: 'seen it twice already',
+        m5: 'can someone run a poll?',
       },
-      propose: {
-        title: 'Suggest your films',
-        text: 'Posters, details, platforms: the list builds itself from TMDB.',
+      threadEnd: '11:12 pm, we put The Office back on.',
+      timelineLabel: 'The same night, with Movie Picker',
+      timeline: {
+        t1: {
+          time: '8:41',
+          title: 'Léa creates the event',
+          text: 'A title, a date, and a link to share.',
+        },
+        t2: {
+          time: '8:44',
+          title: 'Six people have joined',
+          text: 'Straight from the link, nothing to install.',
+        },
+        t3: {
+          time: '8:52',
+          title: 'Nine films suggested, everyone voted',
+          text: 'Posters, runtime, rating and platforms all shown.',
+        },
+        t4: {
+          time: '8:56',
+          title: 'The wheel decides',
+          text: 'Seven seconds of suspense in front of everyone.',
+        },
+      },
+      winnerLabel: 'Film of the night',
+    },
+    steps: {
+      eyebrow: 'In four steps',
+      title: 'From the invite to the credits',
+      subtitle: 'A movie night that actually starts when it was meant to.',
+      create: {
+        title: 'Create the event',
+        text: 'A title, a date, a time. That is all it takes to open the door.',
+        fieldTitle: 'Event title',
+        fieldWhen: 'When',
+        whenValue: 'Fri 12 Sep 9:00 pm',
+      },
+      share: {
+        title: 'Share the link',
+        text: 'Link or QR code: your friends join in two clicks, nothing to install.',
+        qrTitle: 'QR code for the demo event',
       },
       vote: {
-        title: 'Vote together',
-        text: 'Thumbs up, already seen, keep it: the group favourites surface fast.',
+        title: 'Suggest and vote',
+        text: 'Everyone adds films from the TMDB search. Thumbs up, thumbs down, already seen.',
+        alreadySeen: 'Already seen',
       },
       wheel: {
         title: 'The wheel decides',
-        text: 'Still no agreement? One spin and the verdict is in.',
+        text: 'Favourites weigh more. One click, seven seconds of suspense, and the verdict lands.',
+        legend: 'Spinning…',
       },
     },
+    wheel: {
+      eyebrow: 'The tiebreaker',
+      title: 'When nobody wants to decide.',
+      lead: 'The wheel takes the films still in the running, gives more room to the ones that convinced the group, and names the winner in front of everyone. This is the real one: give it a spin.',
+      tag1: 'Weighted by the group’s votes',
+      tag2: 'The host can drop a film from the draw',
+      tag3: 'Or name the winner directly',
+      canvasLabel: 'Spinning wheel with six films in the running',
+      spin: 'Spin the wheel',
+      spinAgain: 'Spin again',
+      spinning: 'Spinning…',
+      hint: 'Six films in the running, one winner.',
+      hintSpinning: 'Seven seconds of suspense.',
+      resultLabel: 'Film of the night',
+    },
+    features: {
+      eyebrow: 'And also',
+      title: 'What happens between two movie nights',
+      lead: 'Movie Picker is not only there to settle a Friday evening.',
+      watchlist: {
+        title: 'Your watchlist',
+        text: 'Add a film whenever it crosses your mind, find it again when it is time to suggest one. And if you already keep a watchlist on Letterboxd, it syncs on its own.',
+        addedHere: 'Added here',
+      },
+      details: {
+        title: 'Every detail about the film, right away',
+        text: 'Poster, year, runtime, rating, synopsis and the streaming platforms where the film is available. Enough to decide without opening six tabs.',
+        query: 'parasi',
+        morePlatforms: '+3',
+      },
+      notifications: {
+        title: 'You get notified',
+        text: 'A film suggested, a vote, a draw, a reminder before the start: it reaches your phone as well as the app.',
+        demo: 'The wheel picked:',
+      },
+      calendar: {
+        title: 'In your calendar',
+        text: 'One button, and the event lands in Google Calendar, Outlook or Apple Calendar.',
+        demo: 'movie-night-at-leas.ics',
+      },
+      pwa: {
+        title: 'Like a real app',
+        text: 'Movie Picker installs on your home screen and opens full screen, no app store involved.',
+        demo: 'Add to home screen',
+      },
+      theme: {
+        title: 'Your way',
+        text: 'Light theme, dark theme, and eight accent colours so the app looks like you.',
+      },
+    },
+    social: {
+      eyebrow: 'Among friends',
+      title: 'The night carries on after the credits',
+      lead: 'Everyone has a public profile: their movie nights, the films they have watched, and a streak that lights up every week spent in front of a film with others. Follow your friends, see what they watched, borrow their ideas.',
+      profileLabel: 'Preview of a public profile',
+      handle: '@lea',
+      streak: '7 weeks',
+      statEvents: 'nights',
+      statMovies: 'films seen',
+      statWinners: 'winners',
+      lastSeen: 'Recently watched',
+    },
+    trust: {
+      srTitle: 'What you should know before creating an account',
+      free: {
+        title: 'Free, no ads',
+        text: 'No paid features. Donations are voluntary and unlock nothing beyond a decorative badge.',
+      },
+      data: {
+        title: 'Your data stays yours',
+        text: 'Full export of your account in one click, permanent deletion whenever you want. Nothing is sold on.',
+      },
+      a11y: {
+        title: 'Built to be accessible',
+        text: 'Keyboard navigation, checked contrast, screen readers supported across the whole journey.',
+      },
+      tmdb: {
+        title: 'Films come from TMDB',
+        text: 'Posters, runtimes, ratings and streaming platforms come from the community-run TMDB database.',
+      },
+    },
+    faq: {
+      eyebrow: 'Questions',
+      title: 'What we get asked the most',
+      q1: {
+        q: 'Do I need an account to join a movie night?',
+        a: 'Yes. It takes thirty seconds with an email, or one click with Google or GitHub. That is what lets you find your events again and know who suggested and voted for what.',
+      },
+      q2: {
+        q: 'Is it really free?',
+        a: 'Entirely. Movie Picker is a personal project, and hosting costs are covered by voluntary donations. No feature is reserved for donors.',
+      },
+      q3: {
+        q: 'How many people can take part?',
+        a: 'There is no set limit. Everyone joins from the same link, suggests their films and votes on their own device, on phone as well as desktop.',
+      },
+      q4: {
+        q: 'What if the wheel lands on a film nobody wants?',
+        a: 'The host can drop a film from the draw without removing it from the list, spin again, or name the winner directly if they would rather decide.',
+      },
+      q5: {
+        q: 'Does it work on a phone?',
+        a: 'That is the main use case. The site is built mobile first and installs on your home screen like an application, notifications included.',
+      },
+      q6: {
+        q: 'Can we suggest series?',
+        a: 'Yes, if the host allows it. Each event has a setting to open suggestions to series as well as films; by default the search only returns films.',
+      },
+    },
+    final: {
+      eyebrow: 'Ready?',
+      title: 'Your next movie night starts here.',
+      lead: 'Create the first one in under a minute. The only debate left will be who brings the popcorn.',
+      note: 'Free, no ads, no commitment.',
+    },
   },
-
   auth: {
     sessionCheck: {
       failed: 'We could not verify your session. Check your connection and try again.',

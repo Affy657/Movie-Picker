@@ -28,7 +28,7 @@ function renderAccount(initialPath = '/settings') {
       <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
           <Route path="/settings/*" element={<AccountPage />} />
-          <Route path="/decouvrir" element={<div data-testid="home-marker" />} />
+          <Route path="/" element={<div data-testid="home-marker" />} />
         </Routes>
       </MemoryRouter>
     </AppTestProviders>

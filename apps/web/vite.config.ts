@@ -98,6 +98,7 @@ const CRITICAL_FONT_BASES = [
 
 const APP_SHELL_CHUNK = /(?:^|\/)App-[\w-]+\.js$/;
 const APP_SHELL_STYLES = /(?:^|\/)App-[\w-]+\.css$/;
+const I18N_CHUNK = /(?:^|\/)i18n-[\w-]+\.js$/;
 
 function preloadCriticalAssetsPlugin(): Plugin {
   return {
@@ -136,6 +137,15 @@ function preloadCriticalAssetsPlugin(): Plugin {
         tags.push({
           tag: 'link',
           attrs: { rel: 'preload', as: 'style', href: '/' + appStyles },
+          injectTo: 'head-prepend',
+        });
+      }
+
+      const i18nChunk = files.find((file) => I18N_CHUNK.test(file));
+      if (i18nChunk) {
+        tags.push({
+          tag: 'link',
+          attrs: { rel: 'modulepreload', crossorigin: '', href: '/' + i18nChunk },
           injectTo: 'head-prepend',
         });
       }

@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/shared/contexts/ThemeContext';
 import { ConsentProvider } from '@/shared/contexts/ConsentContext';
 import { useTranslation, LocaleProvider } from '@/shared/i18n';
-import { AuthProvider } from '@/features/auth/contexts/AuthContext';
+import { AuthProvider, useAuth } from '@/features/auth/contexts/AuthContext';
 import UserThemeSync from '@/app/components/UserThemeSync';
 import AnalyticsSync from '@/app/components/AnalyticsSync';
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
@@ -57,12 +57,18 @@ function createAppQueryClient() {
 
 const SentryRoutes = getInstrumentedRoutes(Routes);
 
+function RootRoute() {
+  const { user, isLoading } = useAuth();
+  if (!isLoading && user) return <Navigate to={ROUTES.myEvents} replace />;
+  return <LandingPage />;
+}
+
 export function AppRoutes() {
   return (
     <SentryRoutes>
       <Route element={<AppShell />}>
-        <Route path={ROUTES.home} element={<Navigate to={ROUTES.myEvents} replace />} />
-        <Route path={ROUTES.discover} element={<LandingPage />} />
+        <Route path={ROUTES.home} element={<RootRoute />} />
+        <Route path={ROUTES.discover} element={<Navigate to={ROUTES.home} replace />} />
         <Route path={ROUTES.createEvent} element={<CreateEvent />} />
         <Route path={ROUTES.login} element={<LoginPage />} />
         <Route path={ROUTES.register} element={<RegisterPage />} />

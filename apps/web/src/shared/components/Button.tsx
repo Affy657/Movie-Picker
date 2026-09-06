@@ -3,7 +3,7 @@ import clsx from 'clsx';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
 
-export type ButtonSize = 'sm' | 'md';
+export type ButtonSize = 'sm' | 'md' | 'lg';
 
 const VARIANT_CLASS: Record<ButtonVariant, string | null> = {
   primary: 'btn-primary',
@@ -12,12 +12,18 @@ const VARIANT_CLASS: Record<ButtonVariant, string | null> = {
   ghost: 'btn-ghost',
 };
 
+const SIZE_CLASS: Record<ButtonSize, string | null> = {
+  sm: 'btn-sm',
+  md: null,
+  lg: 'btn-lg',
+};
+
 export function buttonClass({
   variant = 'secondary',
   size = 'md',
   className,
 }: Readonly<{ variant?: ButtonVariant; size?: ButtonSize; className?: string }> = {}): string {
-  return clsx('btn', VARIANT_CLASS[variant], size === 'sm' && 'btn-sm', className);
+  return clsx('btn', VARIANT_CLASS[variant], SIZE_CLASS[size], className);
 }
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {

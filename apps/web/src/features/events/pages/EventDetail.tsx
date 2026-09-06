@@ -76,7 +76,7 @@ export default function EventDetail() {
             fallback: t('errors.generic'),
           })}
         </p>
-        <Link to={ROUTES.discover} className="btn">
+        <Link to={ROUTES.home} className="btn">
           {t('events.detail.backHome')}
         </Link>
       </PageLayout>

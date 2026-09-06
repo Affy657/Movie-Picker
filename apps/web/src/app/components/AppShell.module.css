@@ -251,3 +251,13 @@
     display: flex;
   }
 }
+
+.navDesktop.navLanding {
+  display: none;
+}
+
+@media (min-width: 64rem) {
+  .navDesktop.navLanding {
+    display: flex;
+  }
+}
