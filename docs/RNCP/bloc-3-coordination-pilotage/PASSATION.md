@@ -160,7 +160,24 @@ git show origin/master:.github/workflows/ci-cd.yml | grep -cE '^  [a-z0-9-]+:$' 
 
 Et vérifier le caractère bloquant d'un job par sa présence dans les `needs` de `docker-api`, `deploy-api` ou `deploy-front`.
 
-### 4.7 Prettier ne touche pas à ce dossier
+### 4.7 Un build vert ne dit rien du rendu
+
+`npm run build` compile ; il ne vérifie pas que le contenu **tient dans le cadre**. Les contrôles qui lisent le Markdown — compte de diapositives, équilibre des `<div>`, minutage — restent tous verts sur une diapositive dont le tiers inférieur est invisible. Le premier rendu réel du support, le 5 septembre, a trouvé **22 diapositives coupées sur 40**.
+
+```bash
+cd slides && npm run build
+UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+curl -sS "https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@200;400;600" -A "$UA" \
+  | grep -oE "https://[^)\"' ]+\.woff2" | head -1 | xargs curl -sS -o dist/nunitosans.woff2
+npx http-server dist -p 8099 --silent --proxy "http://127.0.0.1:8099?" &
+CHROME_PATH=/opt/pw-browsers/chromium node verifier-rendu.mjs
+```
+
+Trois pièges dans cette commande : un **User-Agent tronqué** fait renvoyer du TTF au lieu du WOFF2 et l'extraction échoue ; `dist/` est une **SPA**, donc sans `--proxy` le serveur renvoie 404 ; et Playwright cherche un navigateur qu'il n'a pas, d'où `CHROME_PATH`. Sans la police, le rendu utilise un repli plus large et signale de faux débordements.
+
+**À relancer après toute retouche du support, et avant l'export PDF.**
+
+### 4.8 Prettier ne touche pas à ce dossier
 
 `.prettierignore` exclut `*.md` et `docs/`, et `format:check` ne cible que `apps/`, `configs/` et `e2e/`. **Aucun formatage automatique à craindre ni à lancer** sur ce dossier. La CI ignore d'ailleurs entièrement une PR qui ne touche que `docs/` — seuls `changes` et `gitleaks` s'exécutent, tout le reste est *skipped* par le path-filtering. C'est normal, ce n'est pas un échec.
 

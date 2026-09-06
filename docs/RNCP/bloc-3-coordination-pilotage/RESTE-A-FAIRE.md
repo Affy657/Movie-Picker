@@ -4,7 +4,7 @@
 >
 > **La rédaction est terminée** : 7 chapitres de matière, 40 diapositives (32 présentées + 8 annexes), les 14 éléments imposés rattachés, les 7 compétences couvertes.
 >
-> ✅ **Le support a été refondu le 5 septembre** : la seconde relecture l'a rendu pour la première fois et a trouvé 17 diapositives coupées. Elles sont corrigées, le support est épuré et les tableaux les plus lourds sont devenus des schémas. Détail en § 0.
+> ✅ **Le support a été rendu, corrigé puis refondu le 5 septembre.** Le premier rendu réel a montré que des diapositives étaient coupées par le bas du cadre — 17 à la première mesure, 22 au contrôle rejoué. Elles tiennent toutes désormais, et le support a été **épuré** dans la foulée. Détail en § 0.
 
 > Pour **comment** travailler dans ce dossier — règles d'écriture, sources de vérité des chiffres, pièges et scripts de vérification — voir [`PASSATION.md`](PASSATION.md).
 
@@ -13,6 +13,13 @@
 ## 0. Le support a été refondu — ✅ traité
 
 **Le support n'avait jamais été rendu visuellement.** Les contrôles du dossier (compte de diapositives, équilibre des `<div>`, minutage) lisent le Markdown : ils restaient tous verts sur une diapositive dont le tiers inférieur était invisible. Au rendu, **17 diapositives sur 40 étaient coupées** — dont la conclusion de la 15 (C3.2.1, éliminatoire), les modalités handicap de la 26 (un critère de C3.3.2), trois des cinq blocs du gabarit de la 28, et le **logigramme de la 17**, dont 3 nœuds sur 8 étaient visibles.
+
+### Les deux causes techniques, corrigées
+
+| Cause | Correction |
+|-------|-----------|
+| Le `{scale: …}` d'un bloc **Mermaid n'est pas appliqué** dans cette version de Slidev : le diagramme rend en taille pleine | Les schémas sont désormais en **HTML et CSS**. Le seul Mermaid restant, l'annexe A1, est contraint par `max-height` |
+| Tableaux et interlignes trop généreux pour la hauteur disponible | Densité réduite globalement dans `global-bottom.vue`, et **contenu allégé** diapositive par diapositive |
 
 ### Ce qui a été fait
 

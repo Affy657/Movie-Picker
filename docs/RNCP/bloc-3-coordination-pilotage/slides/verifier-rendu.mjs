@@ -8,11 +8,13 @@
 //   # la police du thème (Nunito Sans) est chargée depuis Google Fonts au rendu.
 //   # Sans réseau, le navigateur retombe sur une police plus large et le contrôle
 //   # signale de faux débordements. On la place donc à côté du build :
-//   curl -sS "https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@200;400;600" \
-//     -A "Mozilla/5.0 Chrome/120" | grep -o 'https://[^)]*woff2' | head -1 \
-//     | xargs curl -sS -o dist/nunitosans.woff2
-//   npx http-server dist -p 8099 --silent &
-//   node verifier-rendu.mjs
+//   UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+//   curl -sS "https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@200;400;600" -A "$UA" \
+//     | grep -oE 'https://[^)"'"'"' ]+\.woff2' | head -1 | xargs curl -sS -o dist/nunitosans.woff2
+//   # Un User-Agent tronque fait renvoyer du TTF par Google Fonts : l'extraction echoue.
+//   # dist/ est une SPA : sans --proxy, le serveur statique renvoie 404 sur /1.
+//   npx http-server dist -p 8099 --silent --proxy "http://127.0.0.1:8099?" &
+//   CHROME_PATH=/opt/pw-browsers/chromium node verifier-rendu.mjs
 //
 // Sort en code 1 si au moins une diapositive déborde.
 

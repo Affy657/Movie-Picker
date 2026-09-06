@@ -60,16 +60,68 @@ const REFS = {
 .slidev-layout h1 + p {
   opacity: 1;
 }
+/* Le contenu ayant ete allege diapositive par diapositive, la taille de
+   texte est remontee : un support projete se lit depuis le fond de la
+   salle. Toute nouvelle baisse doit etre le dernier recours, apres avoir
+   coupe du contenu. */
 .slidev-layout table {
-  font-size: 0.82em;
+  font-size: 0.8em;
+}
+.slidev-layout table th,
+.slidev-layout table td {
+  padding: 0.2rem 0.45rem;
+  line-height: 1.3;
 }
 .dense table {
-  font-size: 0.72em;
+  font-size: 0.7em;
 }
 .dense table th,
 .dense table td {
-  padding: 0.18rem 0.4rem;
-  line-height: 1.25;
+  padding: 0.14rem 0.35rem;
+  line-height: 1.2;
+}
+
+/* --- Contraintes de rendu ---------------------------------------------
+   Ajoutées le 05/09/2026 après le premier rendu réel du support : 22 des
+   40 diapositives avaient du contenu coupé par le bas du cadre. Les
+   contrôles qui lisent le Markdown ne voient pas ce défaut ; seul
+   `verifier-rendu.mjs` le détecte. Relancer ce contrôle après toute
+   retouche de ces règles. ---------------------------------------------- */
+
+/* Les diagrammes Mermaid ignorent le `{scale: …}` du bloc de code dans
+   cette version de Slidev : on contraint le SVG lui-même. Sans cela, le
+   logigramme de la diapositive 17 — nommé explicitement par la grille
+   C3.2.2 — dépasse de 677 px et n'affiche que 3 nœuds sur 8. */
+.slidev-layout .mermaid,
+.slidev-layout .mermaid svg,
+.slidev-layout svg[id^='mermaid'] {
+  max-height: 52vh;
+  height: auto;
+  width: 100%;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Resserre le corps de texte et les blocs encadrés, qui portent souvent la
+   conclusion de la diapositive — donc ce qui disparaît en premier. */
+.slidev-layout h1 {
+  margin-bottom: 0.5rem;
+  line-height: 1.15;
+}
+.slidev-layout h3 {
+  margin-top: 0.35rem;
+  margin-bottom: 0.3rem;
+}
+.slidev-layout p,
+.slidev-layout ul,
+.slidev-layout ol {
+  margin-top: 0.35rem;
+  margin-bottom: 0.35rem;
+  line-height: 1.35;
+}
+.slidev-layout li {
+  margin-top: 0.1rem;
+  margin-bottom: 0.1rem;
 }
 
 /* ---- Le message de la diapositive, sous le titre ---- */
