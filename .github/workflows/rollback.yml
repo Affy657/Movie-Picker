@@ -2,13 +2,26 @@
 #   - Déclenché à la main (workflow_dispatch).
 #   - Input `revision` vide → révision précédente (2e plus récente).
 #   - Cloud Run conserve les révisions : le rollback ne redéploie rien, il route le trafic.
+#   - `--to-revisions` ÉPINGLE le trafic : tant que le service est épinglé, `gcloud run deploy`
+#     ne route plus rien vers les nouvelles révisions. Le déploiement suivant rebranche
+#     `latestRevision` via `--to-latest` (cf. ci-cd.yml), ce qui lève l'épinglage tout seul.
+#
+# NB : ci-cd.yml ne déploie plus « puis vérifie ». Chaque révision part SANS trafic, est validée
+#      sur son URL taguée, et n'est promue qu'une fois verte : une mauvaise révision n'atteint
+#      jamais un utilisateur, donc il n'y a plus de retour arrière automatique à déclencher. Ce
+#      workflow sert les cas que la chaîne ne peut pas voir : régression constatée après coup,
+#      révision précise à cibler, incident sans rapport avec un déploiement.
+#
 # NB : rollback front (S3/CloudFront) non couvert ici — l'hébergement ne garde pas les versions.
-#      Le job deploy-front archive cependant chaque `dist` en artefact (front-dist-<sha>, 30 jours) :
-#      un retour arrière consiste à télécharger celui du commit visé et à le renvoyer sur S3,
-#      sans rejouer toute la chaîne de portes.
-# NB : le retour arrière API est désormais AUTOMATIQUE quand le smoke test d'une nouvelle révision
-#      échoue (cf. ci-cd.yml). Ce workflow reste la porte manuelle : régression vue après coup,
-#      révision précise à cibler, ou échec passé au travers des smoke tests.
+#      deploy-front archive chaque `dist` en artefact (front-dist-<sha>, 30 jours), ce qui évite
+#      de rejouer toute la chaîne de portes. ATTENTION : ne pas renvoyer cette archive par un
+#      `aws s3 sync` nu. L'envoi doit reproduire les trois passes de deploy-front — assets hachés
+#      en `immutable`, `sitemap.xml` à une heure, puis `sw.js`, `manifest.webmanifest` et
+#      `index.html` en `no-cache` **en dernier**. Un envoi à plat pose index.html et le Service
+#      Worker avec le cache par défaut de CloudFront et désynchronise les PWA installées de leurs
+#      bundles : une panne ajoutée à celle qu'on répare.
+#      À noter : un commit qui ne touche pas le front ne produit aucun artefact (deploy-front est
+#      filtré sur `changes.outputs.web`) — reprendre celui du dernier commit front.
 
 name: Rollback API (Cloud Run)
 
