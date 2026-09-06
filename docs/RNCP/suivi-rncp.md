@@ -51,10 +51,10 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 ### Bloc 3 — Coordonner et piloter
 
-- [ ] **C3.1** ÉLIM — Méthodologie + planning + RACI — voir § 15
+- [x] **C3.1** ÉLIM — Méthodologie + planning + RACI — voir § 15
 - [ ] **C3.2.1** ÉLIM — Outil de suivi + indicateurs + tableaux de bord — voir § 16
-- [ ] **C3.2.2** — Cas d'arbitrage (ADR) — voir § 17
-- [ ] **C3.3.1** — Pilotage de l'équipe (analyse réflexive si projet solo) — voir § 17
+- [ ] **C3.2.2** — Cas d'arbitrage + logigramme — voir § 17
+- [ ] **C3.3.1** — Pilotage de l'équipe (organisation cible à 4 profils) — voir § 17
 - [ ] **C3.3.2** — Évaluation des besoins en compétences — voir § 17
 - [ ] **C3.4.1** — Comptes rendus d'activités — voir § 17
 
@@ -199,7 +199,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 - [ ] Créer **`docs/RNCP/bloc-1-cadrage/01-parties-prenantes.md`** :
   - Tableau **acteur → rôle → niveau d'implication** : commanditaire (Ynov / formateur), développeur (candidat), architecte (candidat), administrateur (candidat — Cloud Run / S3), utilisateurs finaux (créateurs de soirée, invités), acteurs externes (TMDB, GCP, AWS, MongoDB Atlas, Sentry, Dependabot)
-  - **Personas utilisateurs** : « hôte qui organise une soirée ciné », « participant invité rejoignant via lien (compte requis) », « groupe d'amis récurrent ». Caractéristiques : âge, équipement (mobile-first, cf. [`../spec.md`](../spec.md) § 9), contexte d'usage, attentes
+  - **Personas utilisateurs** : « hôte qui organise une soirée ciné », « participant invité rejoignant via lien (compte requis) », « groupe d'amis récurrent ». Caractéristiques : âge, équipement (mobile-first, cf. [`spec.md`](../../archive/docs/spec.md) § 9), contexte d'usage, attentes
   - Pour chaque persona : **scénario d'usage** clé en 3-4 lignes
 - [ ] Créer **`docs/RNCP/bloc-1-cadrage/02-analyse-demande.md`** (couvre C1.1.2) :
   - **Problématique** : « comment choisir un film à plusieurs sans 30 min de débat improductif ? »
@@ -278,7 +278,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
   - **Diagramme de fonctionnalités** : visuel (Mermaid `mindmap` ou `flowchart`) listant les features V1 hiérarchisées en **principales** (création soirée, vote, roue, compte), **secondaires** (déjà vu, watch providers, QR code, OG dynamiques), **complémentaires** (i18n EN, mode sombre persisté, rappels in-app)
   - **Estimation J/H** : tableau feature × estimation (en jours-homme) — granularité section de [`livraison-v1.md`](../../archive/docs/v1-produit/livraison-v1.md) § 1-22 (≈ 22 lots) → total V1 ; idem pour MVP en rétrospectif
   - **Couverture technique des besoins fonctionnels** : argumentée (chaque feature → endpoint + écran + tests prévus)
-  - **Expérience utilisateur** : référence à [`../spec.md`](../spec.md) § 9 (Mobile first) et § 8 (Interface et confort)
+  - **Expérience utilisateur** : référence à [`spec.md`](../../archive/docs/spec.md) § 9 (Mobile first) et § 8 (Interface et confort)
 
 ---
 
@@ -349,7 +349,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 > **Objectif RNCP — C3.1 (ÉLIM)** : « méthodologie de gestion de projet justifiée (Agile, Scrum, Kanban, V) ; outil de planification justifié (Gantt, PERT, rétroplanning) ; planning découpé en phases / tâches / lots ; tâches assignées via RACI / RASCI tenant compte des personnes en situation de handicap ; points de vigilance soulignés ».
 
-- [ ] Créer **`docs/RNCP/bloc-3-coordination-pilotage/01-planification.md`** :
+- [x] **`docs/RNCP/bloc-3-coordination-pilotage/01-planification.md`** — produit et fusionné :
   - **Méthodologie retenue** : **Kanban léger** (projet solo, pas de sprints fixes) + **revues hebdomadaires** ; justification : flexibilité, pas de cérémonies lourdes inadaptées au solo, flux continu cohérent avec la roadmap par version (cf. [`../roadmap-product.md`](../roadmap-product.md))
   - **Outil de planification** : combinaison **GitHub Projects** (Kanban des tickets) + **diagramme de Gantt Mermaid** dans ce fichier (vue d'ensemble par phase) — justifié : versionné dans le repo, pas de SaaS supplémentaire à gérer
   - **Découpage en phases** : MVP → Migration .NET → V1 (sous-phases auth → config → enrichissements → OG → i18n → sécurité CI → clôture RNCP) → V1.1
@@ -377,48 +377,76 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 > **Objectif RNCP — C3.2.1 (ÉLIM)** : « outil de suivi en adéquation avec le projet et la méthodologie ; indicateurs mesurables et quantifiables (délais, coûts, avancement) ; tableaux de bord intégrant avancement, coûts, délais, risques, RH ».
 
-- [ ] Créer **`docs/RNCP/bloc-3-coordination-pilotage/02-suivi-indicateurs.md`** :
-  - **Outil de suivi** : **GitHub Projects** (Kanban + vues filtrées) en cohérence avec la méthodologie Kanban (§ 15) ; lien vers la board (capture si non publique)
-  - **Indicateurs d'avancement** :
-    - % de cases cochées par section dans `livraison-v1.md` et la présente carte (script ou capture périodique)
-    - Nombre d'items V1 fermés / total (catalog [`../roadmap-product.md`](../roadmap-product.md) § V1)
-    - Nombre de PR mergées / semaine
-    - Couverture de tests (Coverlet API + Vitest front, exposée par CI)
-  - **Indicateurs de délai** :
-    - Date cible V1 vs date réelle (Gantt § 15)
-    - Lead time moyen issue → PR mergée
-  - **Indicateurs de coût** :
-    - Coût cloud mensuel réel (capture facture GCP + AWS) vs estimation § 14
-    - Temps passé (si suivi)
-  - **Indicateurs de risque** :
-    - Vulnérabilités ouvertes (Dependabot + `pnpm audit` + `dotnet list package --vulnerable` + scan image)
-    - CI rouge / verte (taux de stabilité)
-  - **Indicateurs RH** : projet solo → indicateur de **soutenabilité** (heures / semaine, charge ressentie) si suivi
-  - **Tableau de bord récapitulatif** : capture / export hebdomadaire dans le fichier (au moins 3 snapshots sur la durée du projet pour démontrer le suivi)
+- [ ] **`docs/RNCP/bloc-3-coordination-pilotage/02-suivi-indicateurs.md`** — *rédigé, en attente de fusion sur `master`* :
+  - [x] **Outil de suivi** : GitHub comme plateforme unique, cinq surfaces (issues, pull requests, Actions, releases, feuilles de route versionnées) ; adéquation avec le Kanban léger du § 15 vérifiée propriété par propriété ; limites du dispositif énoncées (temps non saisi, toutes les intégrations ne passent pas par une PR, tableau de flux postérieur au travail)
+  - [x] **Indicateurs d'avancement** : items de feuille de route livrés (61 / 86 produit, 19 / 20 technique), poids livré en points t-shirt, versions publiées, commits intégrés, PR fusionnées / ouvertes
+  - [x] **Indicateurs de délai** : cadence de livraison (médiane 17 j), échéances de restitution tenues (4 / 4), jours d'activité (88 / 191), délai de traitement d'anomalie
+  - [x] **Indicateurs de coût** : coût d'infrastructure réel contre budget, coût annuel engagé, licences, valeur de développement consommée (≈ 30 800 € / 34 300 €)
+  - [x] **Indicateurs de risque** : vulnérabilités ouvertes, stabilité de la chaîne (78 %, série mensuelle), couverture (86,6 %), Quality Gate, anomalies ouvertes, taux d'erreur serveur, disponibilité
+  - [x] **Indicateurs RH** : densité d'activité (3,1 j/semaine), plus longue série continue (10 j), semaines sans activité (5 / 28), facteur de bus (1)
+  - [x] **Tableaux de bord** : deux tableaux consolidés (avancement et délais ; coûts, risques et RH), plus l'analyse de l'écart prévisionnel / réel et les 3 décisions prises à partir d'une mesure
+  - [ ] **Captures à produire** : tableau de flux GitHub Projects (diapo 11), facturation GCP et AWS (diapo 14)
 
 ---
 
-## 17. ADR + comptes rendus + analyse réflexive (pilotage solo)
+## 17. Arbitrage + pilotage d'équipe + compétences + comptes rendus
 
 > **Objectifs RNCP** :
-> - **C3.2.2** (non ÉLIM) : « problématique d'arbitrage exposée avec conséquences ; options détaillées ; décision argumentée »
-> - **C3.3.1** / **C3.3.2** (non ÉLIM, projet solo) : « pilotage équipe » et « besoins en compétences » → adapter en **analyse réflexive** sur le pilotage de soi et la montée en compétences personnelle
+> - **C3.2.2** (non ÉLIM) : « problématique d'arbitrage exposée avec conséquences ; options détaillées ; décision argumentée » — la grille nomme explicitement le **logigramme** comme outil d'aide à la décision
+> - **C3.3.1** / **C3.3.2** (non ÉLIM) : « pilotage d'équipe » et « besoins en compétences »
 > - **C3.4.1** (non ÉLIM) : « comptes rendus clairs et ordonnés ; points de validation organisés ; indicateurs de satisfaction définis »
 
-- [ ] Créer **`docs/RNCP/bloc-3-coordination-pilotage/adr/`** avec template ADR (Markdown light, format Michael Nygard) et au minimum **3 ADR** documentant les arbitrages majeurs déjà pris :
-  - `0001-choix-stack-back-dotnet.md` : Node/Express → ASP.NET Core .NET 10 (contexte, options, conséquences)
-  - `0002-cookie-sessions-vs-jwt.md` : sessions cookie HttpOnly retenues vs JWT
-  - `0003-deploiement-direct-vs-canary.md` : déploiement direct Cloud Run, canary écarté pour V1 (cf. C2.2.4)
-  - Bonus : `0004-release-please-vs-changesets.md`, `0005-mongodb-vs-postgres.md`
-- [ ] Créer **`docs/RNCP/bloc-3-coordination-pilotage/03-analyse-reflexive.md`** (couvre C3.3.1 / C3.3.2 adapté au solo) :
-  - **Style de pilotage** : autonome avec **revues régulières** (PR self-review + agent `mp-code-reviewer`)
-  - **Grille d'évaluation des compétences** : tableau **compétence → niveau initial → niveau visé → niveau atteint** (.NET, MongoDB, Cloud Run, Sentry, Playwright, OWASP, RGAA / OPQUAST)
-  - **Plan de développement personnel** : formations / ressources consultées (docs officielles, blogs identifiés § 13, courses en ligne le cas échéant)
-  - **Outils de communication** : agents Cursor (`mp-po`, `mp-code-reviewer`, `mp-pre-push`) explicités comme « équipe virtuelle » — choix d'outils argumenté
-  - **Prise en compte du handicap** dans l'environnement de travail (raccourcis clavier, contraste IDE, lecteurs d'écran compatibles)
-- [ ] Créer **`docs/RNCP/bloc-3-coordination-pilotage/04-comptes-rendus/`** : un fichier par revue (au moins **3 comptes rendus** sur la durée du projet) :
-  - Format court : avancement, blocages, décisions, prochaines étapes
-  - **Indicateurs de satisfaction** : auto-évaluation (sur 5) + écart vs objectif initial ; le cas échéant, retours formateur Ynov
+> **Changement d'approche, acté dans [`bloc-3-coordination-pilotage/00-plan-presentation-orale.md`](bloc-3-coordination-pilotage/00-plan-presentation-orale.md) § 2.** La piste « analyse réflexive sur le pilotage de soi » envisagée ici est abandonnée : les critères de C3.3.1 et C3.3.2 (répartition équilibrée de la charge, styles managériaux, grille d'évaluation par profil, plan de développement) ne sont pas transposables à un exécutant unique sans les vider. Ils sont traités sur une **organisation cible de 4 profils**, annoncée comme projection dès l'ouverture de la présentation et jamais présentée comme une équipe réelle. La piste d'un dossier `adr/` est également abandonnée : le cas d'arbitrage est un livrable **oral**, et un recueil de décisions d'architecture répondrait à une autre question que celle de la grille.
+
+- [ ] **`docs/RNCP/bloc-3-coordination-pilotage/03-arbitrage.md`** (C3.2.2) — *rédigé, en attente de fusion sur `master`* :
+  - [x] **Cas retenu** : le remplacement de l'API Node/Express par ASP.NET Core, décidé le 18/03/2026, deux jours après la livraison du MVP. Confirmé par l'historique : la migration est absente de la feuille de route du MVP au moment où celui-ci est déclaré terminé
+  - [x] **Problématique et conséquences** : chronologie datée à l'heure près, les 4 exigences non satisfaites par l'API du MVP, et la fenêtre qui se referme — 944 lignes à réécrire le 18/03 contre 44 663 aujourd'hui
+  - [x] **4 options détaillées** avec coût, effet sur le planning et risque, plus les **5 critères de décision** dont un éliminatoire
+  - [x] **Logigramme** réutilisable en HTML et CSS (aucune techno n'y figure), avec la branche de retour arrière
+  - [x] **Décision argumentée** en 4 temps, critère de succès défini avant exécution, et **résultat mesuré** — y compris les 2 objectifs non tenus (87 lignes de front modifiées contre un objectif de zéro ; lot chiffré 13 J/H a posteriori)
+  - [x] **2 arbitrages de réserve** pour les questions : le contrôle de performance instable (52 % → 94 %), l'abandon de l'application mobile
+- [ ] **`docs/RNCP/bloc-3-coordination-pilotage/04-management-equipe.md`** (C3.3.1) — *rédigé, en attente de fusion sur `master`* :
+  - [x] **Dispositif réel de délégation** : `AGENTS.md` (conventions opposables et argumentées), procédure de réalisation à 3 points d'arrêt, procédure de vérification, gabarit de pull request à 6 contrôles. Quatre enseignements transposables à une équipe
+  - [x] **Affectation des missions** sur les 4 profils, avec le critère retenu — la compétence attestée, jamais la disponibilité
+  - [x] **Équilibrage de la charge** : le back porte 36 %, déséquilibre assumé et décalé dans le temps. Une somme équilibrée n'est pas un équilibre
+  - [x] **Les 4 styles managériaux** situés chacun sur une situation réelle du projet, style dominant identifié (délégatif encadré) avec sa condition de validité
+  - [x] **Techniques d'animation** traduites en dispositifs, et **8 outils collaboratifs** avec ce que chacun partage. Aucune messagerie : aucun dispositif n'exige la simultanéité
+  - [x] **Inclusion** : l'écrit asynchrone versionné répond simultanément au handicap, aux fuseaux horaires et à la langue. Produit bilingue FR/EN, accessibilité en porte bloquante
+  - [x] **Analyse critique** : la série de 10 jours consécutifs du 17 au 26/08/2026, ses effets mesurés (94 % → 78 % → 38 % de succès de la chaîne), et 3 recommandations avec leur indicateur de contrôle
+- [ ] **`docs/RNCP/bloc-3-coordination-pilotage/05-competences.md`** (C3.3.2) — *rédigé, en attente de fusion sur `master`* :
+  - [x] **Chronologie d'introduction** des technologies dans le dépôt, en 4 vagues datées — produire (16-19/03), fiabiliser (avril-mai), exploiter (juillet), enrichir (août). La vague 1 tient sur quatre jours et n'apparaît dans aucune ligne du chiffrage
+  - [x] **Cartographie** des compétences déduite des lots et non d'un référentiel : 9 domaines, chacun rattaché aux lots qui le mobilisent
+  - [x] **Grille d'évaluation** à échelle comportementale en 5 niveaux, 19 lignes sur 4 profils, avec la convention de lecture — le niveau actuel est le socle attendu **au recrutement**, il n'évalue personne
+  - [x] **Commentaire de la grille** en 4 lectures, dont celle qui la rend crédible : les deux plus gros écarts du lead ne sont pas techniques et désignent les mêmes faiblesses que les indicateurs des chapitres 2 et 3
+  - [x] **Plan de développement** : 8 actions classées par coût d'un écart non comblé, chacune avec sa modalité, sa durée, son coût et son **indicateur de réussite** — 20 J/H, 2 100 €, 20 % de la charge projet
+  - [x] **Besoins de recrutement transmis aux RH** : logique recruter sur le langage et l'expérience de conduite, former sur le contexte et la conformité
+  - [x] **Modalités de formation adaptées au handicap**, posées par défaut, dont trois à coût réel donc vérifiables
+- [ ] **`docs/RNCP/bloc-3-coordination-pilotage/06-comptes-rendus.md`** (C3.4.1) — *rédigé, en attente de fusion sur `master`* :
+  - [x] **Deux commanditaires distingués** : le jury valide la conformité sur 4 échéances, les 17 utilisateurs valident l'usage sur 9 versions. Un seul format de compte rendu en servirait mal au moins un des deux
+  - [x] **Points de validation** : les 9 versions avec ce que chacune validait, les 4 échéances de restitution, et les **5 contrôles bloquants** plus le test de fumée qui font d'une livraison un point de validation qualité
+  - [x] **3 niveaux de compte rendu** : la fenêtre de nouveautés in-app (seul canal **poussé**), le journal des versions et les notes de version, le compte rendu d'arbitrage
+  - [x] **Gabarit décisionnel** en 5 blocs dont 3 ne sont pas de l'information, règle *aucun constat sans proposition, aucune proposition sans coût*, avec un exemple réel complet et son critère d'arrêt énoncé d'avance
+  - [x] **Indicateurs de satisfaction** en 3 familles (comportementale, déclarative, opérationnelle), avec la limite d'échantillon assumée — le 9,6 présenté comme l'absence de détracteur parmi les engagés, pas comme une mesure
+  - [x] **Effets mesurés** : une décision déclenchée et livrée, une confirmée, une instruite non livrée. Boucle retour → production **mesurée à 17 jours**. Limite dite : dispositif ponctuel, pas continu
+- [ ] **`docs/RNCP/bloc-3-coordination-pilotage/07-demonstration.md`** (C3.4.2, **ÉLIM**) — *rédigé, en attente de fusion sur `master`* :
+  - [x] Les **4 critères traduits en exigences concrètes**, dont celui qui se rate : la démonstration doit *aboutir à une validation*, ce qui suppose de la demander
+  - [x] **Parcours en 6 étapes minutées** (4:50) sur la version en production, chacune avec l'écran, le geste et la phrase, en reprenant les **libellés réels de l'interface** mot pour mot
+  - [x] **Vérification de couverture** : les 3 profils d'utilisateurs du Bloc 1 et les 8 fonctionnalités majeures, avec ce qui est assumé comme cité mais non montré
+  - [x] **Glossaire de traduction** technique → client, et la liste courte des mots à ne pas prononcer
+  - [x] **Préparation** : 8 points la veille — dont l'absorption de la fenêtre « Nouveautés » qui interromprait la démonstration — et 8 vérifications dans les dix minutes précédentes
+  - [x] **Plan de repli à 4 niveaux** avec sa phrase de bascule préparée : la compétence est éliminatoire, elle ne peut pas dépendre du wifi d'une salle
+  - [x] **Séquence de clôture** en 3 temps, se terminant par la demande de validation formulée telle quelle
+  - [ ] **À faire hors rédaction** : créer le jeu de données de démonstration, enregistrer la vidéo de repli, préparer l'environnement local, répéter le parcours minuté
+
+---
+
+### Conclusion et annexes du support
+
+- [x] **Diapositive 32, bilan de pilotage** — trois enseignements dont un échec assumé : *un indicateur ne mesure que la pratique qui le produit* · *quand le coût d'une décision croît, décider tôt a une valeur propre* · *l'arbitrage n'a pas été perdu, il n'a pas été posé*
+- [x] **8 annexes** (pages 33 à 40), jamais présentées, appelées sur question : architecture, logigramme complet, arbitrages de réserve, budget détaillé, chaîne CI/CD, matrice RACI complète, journal des versions, retours utilisateurs question par question
+- [x] Le support Slidev est **complet** : 40 diapositives, table `REFS` à jour, mention `ANNEXE` sur les pages 33 et suivantes
+
+> **Le Bloc 3 est écrit.** Ce qui reste est matériel et ne peut pas être rédigé : répétitions minutées, jeu de données de démonstration, vidéo de repli, environnement local, tableau GitHub Projects, capture de facturation, export PDF testé sur le matériel de la salle. La liste complète et priorisée est dans [`bloc-3-coordination-pilotage/RESTE-A-FAIRE.md`](bloc-3-coordination-pilotage/RESTE-A-FAIRE.md), et la note de passation pour reprendre le travail dans [`bloc-3-coordination-pilotage/PASSATION.md`](bloc-3-coordination-pilotage/PASSATION.md).
 
 ---
 

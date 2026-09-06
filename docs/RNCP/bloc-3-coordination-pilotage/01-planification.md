@@ -39,7 +39,7 @@ Deux règles structurent ce flux :
 |------------------|--------------------------|
 | Priorisation permanente plutôt que périmètre figé | Le périmètre a évolué 8 fois sans replanification globale, de la V0.1 à la V1.4 |
 | Absence de cérémonie non soutenable | Aucun rituel calibré pour un collectif imposé à une exécution solo : le temps va à la production et à la revue |
-| Délai de mise à disposition court | 8 mises en production entre le 27 février et le 25 août 2026, soit un point de livraison toutes les 3 semaines et demie en moyenne |
+| Délai de mise à disposition court | 9 mises en production entre le 27 février et le 4 septembre 2026, soit un point de livraison toutes les 3 semaines et demie en moyenne |
 | Réponse rapide à un signal de production | Les anomalies remontées ont été traitées en dehors du flux fonctionnel, sans attendre une fin d'itération |
 
 ### 1.3 Les alternatives écartées, et pourquoi
@@ -100,7 +100,7 @@ Le Gantt fait apparaître les cinq phases exigées par la grille. Leur contenu s
 | **Mesure** | 20/03 au 30/04, puis 08/04 au 21/07 | Deux temps. En amont : chiffrage de la charge en jours-homme, budget prévisionnel, cartographie des risques, définition des indicateurs de pilotage. En production : instrumentation et relevé de l'usage réel, qui alimente les arbitrages de la V1.4 |
 | **Conception** | 01/03 au 31/05/2026 | Modèle de données, architecture hexagonale de l'API, contrat d'interface, système de composants mobile-first, parcours utilisateur |
 | **Réalisation** | 27/02 au 25/08/2026 | Les 4 lots de développement, du socle du MVP à la V1.4 |
-| **Restitution** | 03/06 au 16/09/2026 | Deux registres également. Vers l'utilisateur : les 8 mises en production. Vers le commanditaire : les restitutions du titre, oral Bloc 1, dossiers Blocs 2 et 4, oral Bloc 3 |
+| **Restitution** | 27/02 au 16/09/2026 | Deux registres également. Vers l'utilisateur : les 9 mises en production, de la v0.1.0 à la v1.4.1. Vers le commanditaire : les restitutions du titre, oral Bloc 1, dossiers Blocs 2 et 4, oral Bloc 3 |
 
 **Le point à dire à voix haute** : ces phases **se chevauchent**, elles ne se succèdent pas. La conception court jusqu'en mai alors que la réalisation a commencé en février, et la phase de mesure se rouvre en production. C'est précisément ce qu'un cycle en V interdit, et c'est la signature d'un pilotage en flux. Un Gantt dont les barres se suivent sans se recouvrir décrirait un autre projet que celui-ci.
 
@@ -130,10 +130,11 @@ gantt
     Lot 1 MVP                                   :2026-02-27, 17d
     Lot 2 migration de l API vers .NET          :2026-03-18, 7d
     Lot 3 V1 produit                            :2026-03-25, 55d
-    Lot 4 versions V1.1 a V1.4                  :2026-05-20, 97d
+    Lot 4 cloture du titre                      :2026-05-20, 97d
+    V1.1 a V1.4.1 hors chiffrage initial        :2026-05-20, 107d
 
     section Restitution
-    Mises en production v0.1.0 a v1.4.0         :2026-02-27, 179d
+    Mises en production v0.1.0 a v1.4.1         :2026-02-27, 189d
     Restitution Bloc 1                         :milestone, 2026-06-11, 0d
     Remise Bloc 2                              :milestone, 2026-07-23, 0d
     Remise Bloc 4                              :milestone, 2026-08-21, 0d
@@ -154,6 +155,7 @@ Chaque version est un jalon daté, vérifiable dans le journal des versions et d
 | 1.3.1 | 08/07/2026 | Consolidation des tests, échelle de notes, optimisations de performance |
 | 1.3.2 | 25/07/2026 | Supervision de production, référencement, portes de qualité bloquantes |
 | 1.4.0 | 25/08/2026 | Watchlist, intégration Letterboxd, choix manuel du gagnant, flamme de participation, connexion sociale |
+| 1.4.1 | 04/09/2026 | Navigation ouverte sans compte, page de découverte bilingue, frictions remontées levées |
 
 ### 3.4 Le découpage en lots et la charge
 
@@ -209,7 +211,7 @@ Le profil back porte la charge la plus lourde, conséquence directe du lot de mi
 | Poste | Montant | Nature |
 |-------|---------|--------|
 | Valeur de développement | 34 300 € HT | 98 J/H au taux journalier junior simulé de 350 €. Coût de trésorerie nul dans le cadre de la formation, cette valeur matérialise l'effort pour le commanditaire |
-| Infrastructure récurrente | 1 à 5 €/mois | Ensemble des services dimensionnés sur leurs paliers gratuits, seul le stockage et la diffusion du front sortent du gratuit |
+| Infrastructure récurrente | 0 €/mois aujourd'hui, 1 à 5 €/mois ensuite | Ensemble des services dimensionnés sur leurs paliers gratuits. Seules le stockage et la diffusion du front sortiront du gratuit, à la fin des 12 mois offerts |
 | Frais annuels | environ 10 €/an | Nom de domaine |
 | Licences | 0 € | Chaîne intégralement en licence libre ou en palier gratuit |
 | **Coût réel de trésorerie** | **20 à 190 €/an** | Borne haute atteinte en cas de passage de la base de données au premier palier payant |

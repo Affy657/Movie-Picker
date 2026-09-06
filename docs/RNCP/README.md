@@ -25,7 +25,7 @@ Dossier regroupant **tous les livrables liés au titre RNCP 39583** pour le proj
 |------|----------|------------------|------|
 | **1** | Cadrer un projet de développement | C1.1.1, C1.2.2, C1.3.2, C1.4.1, C1.6 | ✅ **Écrit complet** (oral C1.6 à préparer) |
 | **2** | Concevoir et développer | C2.2.1✅, C2.2.2✅, C2.2.3, C2.3.1 | 🟡 Code livré, docs à produire |
-| **3** | Coordonner et piloter | C3.1, C3.2.1, C3.4.2 | ⬜ À produire |
+| **3** | Coordonner et piloter | C3.1, C3.2.1, C3.4.2 | ✅ **Support complet** (7 chapitres, 40 diapos) — oral du 16/09 à préparer |
 | **4** | Maintenir en condition opérationnelle | C4.1.2, C4.2.1, C4.3.2 | ⬜ À produire |
 
 > Détail exhaustif des cases (cochées / à faire) dans [`suivi-rncp.md`](suivi-rncp.md).
