@@ -14,10 +14,10 @@
 | **Épreuve** | Oral de 45 min (30 de présentation + 15 de questions), le **16 septembre 2026** |
 | **État** | ✅ Rédaction terminée et **support refondu** : 7 chapitres, 40 diapositives, toutes vérifiées au rendu. Épuré, schémas à la place des gros tableaux, sans répétition |
 | **Branche** | `claude/rncp-03-title-crwwov`, head `a9c2859`, **10 commits** d'avance sur `master` |
-| **Pull request** | [#83](https://github.com/Affy657/Movie-Picker/pull/83) — ouverte, CI verte, `mergeable_state: clean`, aucune revue |
+| **Pull request** | [#83](https://github.com/Affy657/Movie-Picker/pull/83) — ✅ **fusionnée sur `master` le 06/09/2026**. Tout travail ultérieur repart de `master` : une PR fusionnée ne se réutilise pas |
 | **Reste** | Uniquement du **matériel** : répétitions minutées, jeu de données de démonstration, vidéo de repli, 2 captures, export PDF |
 
-**Tant que la PR n'est pas fusionnée**, les cases du Bloc 3 dans [`../suivi-rncp.md`](../suivi-rncp.md) restent décochées : la convention du dossier veut qu'un livrable ne soit coché qu'une fois mergé sur `master`.
+Les cases du Bloc 3 dans [`../suivi-rncp.md`](../suivi-rncp.md) sont **cochées** depuis la fusion — la convention du dossier veut qu'un livrable ne le soit qu'une fois mergé sur `master`. **C3.4.2 reste hors carte** : c'est un livrable oral, il ne se coche pas avant l'épreuve.
 
 ---
 
@@ -297,7 +297,7 @@ PY
 
 1. **Garder ou retirer la partie A du chapitre 4** (délégation aux agents).
 2. **Le cas d'arbitrage « environnement de test / 30 % »** correspond-il à une décision réelle non tracée ?
-3. **Fusionner la PR #83** — sans quoi les cases de `suivi-rncp.md` restent décochées.
+3. ~~Fusionner la PR #83~~ — ✅ fait le 06/09/2026, les cases de `suivi-rncp.md` sont cochées.
 
 ---
 
