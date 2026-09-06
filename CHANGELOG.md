@@ -8,6 +8,19 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Nouvelle landing page** : neuf sections, l'interface du produit reconstruite en CSS et une roue de tirage réellement jouable depuis la page. Première livraison de la V1.5.
+- Contexte `.on-dark` dans le design system : une bande sombre redéfinit les jetons de thème pour ses descendants, si bien que `Button`, `Card`, `Chip` et `Avatar` s'y posent sans classe locale.
+- Taille `lg` sur `Button` et `buttonClass`, pour les appels à l'action de page d'accueil.
+- Test de parité des clés d'internationalisation : une clé française sans équivalent anglais fait désormais échouer la suite.
+
+### Changed
+
+- La landing publique revient sur la racine `/`, qui redirige vers Mes soirées dès qu'une session existe. `/decouvrir` redirige vers `/` et n'est plus annoncée dans le sitemap.
+- La roue de tirage s'adapte enfin à la largeur de son conteneur au lieu d'être figée à 460 pixels.
+- Les pastilles `Chip` de ton primaire passent sur le bleu de texte, mieux contrasté que le bleu de fond en thème clair comme en thème sombre.
+
 ## [1.4.1] - 2026-09-04
 
 ### Added

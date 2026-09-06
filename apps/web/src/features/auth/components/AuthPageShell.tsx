@@ -19,7 +19,7 @@ export default function AuthPageShell({
   const { t } = useTranslation();
   return (
     <>
-      <Link to={ROUTES.discover} className={styles.backLink}>
+      <Link to={ROUTES.home} className={styles.backLink}>
         <ArrowLeft size={16} aria-hidden />
         <span className={styles.backLinkLabel}>{t('nav.home')}</span>
       </Link>

@@ -135,6 +135,8 @@ Découpage par version côté **métier / utilisateur**.
 
 - ✅ `M` **Navigation ouverte aux visiteurs sans compte** (v1.4.1) : préalable technique livré — nav, footer et cinq pages (Mes soirées, Nouvelle soirée, Ma liste, Notifications, Paramètres) accessibles sans compte, avec un état déconnecté dédié et un appel à l'action vers la connexion ou l'inscription ; `/decouvrir` reprend le rôle de page publique indexable à la place de la racine `/`.
 
+- ✅ `L` **Refonte de la landing page** (V1.5) : neuf sections (accroche, problème, parcours en quatre étapes, roue jouable, bento de fonctionnalités, profil public, réassurance, FAQ, appel à l'action), interface du produit reconstruite en CSS, contenus FR / EN. La racine `/` redevient la page publique indexable et redirige vers Mes soirées dès qu'une session existe.
+
 **Blocs visibles sans compte**
 - ⬜ `M` **Films tendance de la semaine** : carrousel des films populaires TMDB du moment — nourrit l'inspiration avant même de créer un compte.
 - ⬜ `S` **Suggestions thématiques** : carrousels contextuels selon la saison ou l'occasion (« Films d'horreur », « Comédies de Noël », « Soirée années 80 ») — données 100 % TMDB, sans infra custom.

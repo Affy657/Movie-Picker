@@ -33,7 +33,7 @@ export default function ServerErrorPage({ error, onRetry }: Readonly<ServerError
               {t('errors.boundary.retryButton')}
             </button>
           ) : null}
-          <Link to={ROUTES.discover} className="btn">
+          <Link to={ROUTES.home} className="btn">
             {t('errors.boundary.homeButton')}
           </Link>
         </>

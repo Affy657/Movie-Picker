@@ -138,8 +138,6 @@ export default function SpinningWheel({
     const dpr = window.devicePixelRatio || 1;
     canvas.width = SIZE * dpr;
     canvas.height = SIZE * dpr;
-    canvas.style.width = `${SIZE}px`;
-    canvas.style.height = `${SIZE}px`;
     ctx.scale(dpr, dpr);
 
     const N = movies.length;

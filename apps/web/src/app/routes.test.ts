@@ -10,9 +10,9 @@ describe('withReturnTo', () => {
     expect(withReturnTo(ROUTES.login, '')).toBe(ROUTES.login);
   });
 
-  it('ajoute le returnTo encodé pour toute autre page, y compris /decouvrir', () => {
-    expect(withReturnTo(ROUTES.login, ROUTES.discover)).toBe(
-      `${ROUTES.login}?returnTo=${encodeURIComponent(ROUTES.discover)}`
+  it('ajoute le returnTo encodé pour toute autre page', () => {
+    expect(withReturnTo(ROUTES.login, ROUTES.watchlist)).toBe(
+      `${ROUTES.login}?returnTo=${encodeURIComponent(ROUTES.watchlist)}`
     );
     expect(withReturnTo(ROUTES.login, ROUTES.myEvents)).toBe(
       `${ROUTES.login}?returnTo=${encodeURIComponent(ROUTES.myEvents)}`
@@ -21,7 +21,7 @@ describe('withReturnTo', () => {
 });
 
 describe('ROUTES', () => {
-  it('sépare la racine (home, redirection) de la landing publique indexable (discover)', () => {
+  it('sert la landing sur la racine et conserve /decouvrir pour la redirection', () => {
     expect(ROUTES.home).toBe('/');
     expect(ROUTES.discover).toBe('/decouvrir');
     expect(ROUTES.discover).not.toBe(ROUTES.home);

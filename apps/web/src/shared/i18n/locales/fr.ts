@@ -37,6 +37,12 @@
     skipToMain: 'Passer au contenu principal',
     whatsNew: 'Nouveautés',
     whatsNewAria: 'Voir les nouveautés',
+    landing: {
+      howItWorks: 'Comment ça marche',
+      wheel: 'La roue',
+      features: 'Fonctionnalités',
+      faq: 'Questions',
+    },
   },
 
   home: {
@@ -46,37 +52,212 @@
   },
 
   landing: {
-    kicker: 'Movie night, simplifiée',
-    titleLead: 'Choisissez le film de la soirée',
-    titleAccent: 'ensemble.',
-    tagline:
-      'Plus de débats interminables. Créez un événement, invitez vos amis, votez sur les propositions, et laissez la roue trancher si besoin.',
     seoDescription:
-      'Movie Picker, organisez une soirée cinéma : créez un événement, partagez le lien, proposez des films (TMDB), votez et tirez au sort le film gagnant.',
+      'Movie Picker, organisez une soirée cinéma : créez une soirée, partagez le lien, proposez des films (TMDB), votez et laissez la roue trancher.',
     ogImageAlt: 'Movie Picker : choisissez le film de la soirée ensemble',
-    stepsKicker: 'En 4 étapes',
-    stepsTitle: 'De l’invitation au générique',
-    stepsSubtitle: 'Une soirée ciné qui démarre vraiment à l’heure. Promis.',
-    steps: {
-      invite: {
-        title: 'Lancez la soirée',
-        text: 'Un lien, un QR code, et tout le monde rejoint en deux clics.',
+    hero: {
+      badge: 'Soirée ciné à plusieurs',
+      titleLead: 'Choisissez le film de la soirée,',
+      titleAccent: 'sans y passer la soirée.',
+      lead: 'Créez la soirée, partagez le lien, chacun propose ses films et vote. Toujours pas d’accord ? La roue tranche.',
+      free: 'Gratuit, sans publicité.',
+      alreadyAccount: 'Déjà un compte ?',
+      seeHow: 'Voir comment ça marche',
+    },
+    demo: {
+      cardLabel: 'Aperçu d’une soirée dans Movie Picker',
+      url: 'movie-picker.fr/e/chez-lea',
+      eventTitle: 'Soirée film chez Léa',
+      when: 'Vendredi 21h00',
+      votesOpen: 'Votes ouverts',
+      host: 'Léa est l’hôte',
+      participants: 'Quatre participants et deux autres',
+      more: '+2',
+      spin: 'Lancer la roue',
+      noteProposed: 'Sam a proposé',
+      noteVoted: 'Inès a voté pour',
+    },
+    problem: {
+      eyebrow: 'Le problème',
+      title: 'Tout le monde a un avis. Personne ne tranche.',
+      lead: 'Deux personnes proposent, les autres répondent « jsp », le sondage se perd dans la conversation, et à 23 h on relance une série déjà vue trois fois.',
+      threadLabel: 'Le groupe, vendredi 20h41',
+      thread: {
+        m1: 'on regarde quoi ce soir ?',
+        m2: 'jsp, proposez',
+        m3: 'Interstellar ?',
+        m4: 'déjà vu deux fois',
+        m5: 'quelqu’un fait un sondage ?',
       },
-      propose: {
-        title: 'Proposez vos films',
-        text: 'Affiches, infos, plateformes : la liste se construit toute seule depuis TMDB.',
+      threadEnd: '23:12, on a relancé The Office.',
+      timelineLabel: 'La même soirée, avec Movie Picker',
+      timeline: {
+        t1: {
+          time: '20:41',
+          title: 'Léa crée la soirée',
+          text: 'Un titre, une date, et un lien à partager.',
+        },
+        t2: {
+          time: '20:44',
+          title: 'Six personnes ont rejoint',
+          text: 'Depuis le lien, sans rien installer.',
+        },
+        t3: {
+          time: '20:52',
+          title: 'Neuf films proposés, tout le monde a voté',
+          text: 'Affiches, durée, note et plateformes affichées.',
+        },
+        t4: {
+          time: '20:56',
+          title: 'La roue tranche',
+          text: 'Sept secondes de suspense devant tout le monde.',
+        },
+      },
+      winnerLabel: 'Film de la soirée',
+    },
+    steps: {
+      eyebrow: 'En quatre étapes',
+      title: 'De l’invitation au générique',
+      subtitle: 'Une soirée qui démarre vraiment à l’heure prévue.',
+      create: {
+        title: 'Créez la soirée',
+        text: 'Un titre, une date, une heure. C’est tout ce qu’il faut pour ouvrir la porte.',
+        fieldTitle: 'Titre de la soirée',
+        fieldWhen: 'Quand',
+        whenValue: 'ven. 12 sept. 21:00',
+      },
+      share: {
+        title: 'Partagez le lien',
+        text: 'Lien ou QR code : vos amis rejoignent en deux clics, sans rien installer.',
+        qrTitle: 'QR code de la soirée de démonstration',
       },
       vote: {
-        title: 'Votez ensemble',
-        text: 'Pouce en l’air, déjà vu, on garde : les favoris du groupe ressortent vite.',
+        title: 'Proposez et votez',
+        text: 'Chacun ajoute ses films depuis la recherche TMDB. Pouce en l’air, pouce en bas, déjà vu.',
+        alreadySeen: 'Déjà vu',
       },
       wheel: {
         title: 'La roue tranche',
-        text: 'Toujours pas d’accord ? Un coup de roue et le verdict tombe.',
+        text: 'Les favoris pèsent plus lourd. Un clic, sept secondes de suspense, et le verdict tombe.',
+        legend: 'Tirage en cours…',
       },
     },
+    wheel: {
+      eyebrow: 'Le juge de paix',
+      title: 'Quand personne ne veut trancher.',
+      lead: 'La roue prend les films en lice, donne plus de place à ceux qui ont convaincu, et désigne le gagnant devant tout le monde. Celle-ci est la vraie : lancez-la.',
+      tag1: 'Pondérée par les votes du groupe',
+      tag2: 'L’hôte peut écarter un film du tirage',
+      tag3: 'Ou désigner lui-même le gagnant',
+      canvasLabel: 'Roue de tirage avec six films en lice',
+      spin: 'Lancer la roue',
+      spinAgain: 'Relancer la roue',
+      spinning: 'Tirage en cours…',
+      hint: 'Six films en lice, un seul gagnant.',
+      hintSpinning: 'Sept secondes de suspense.',
+      resultLabel: 'Film de la soirée',
+    },
+    features: {
+      eyebrow: 'Et aussi',
+      title: 'Ce qui se passe entre deux soirées',
+      lead: 'Movie Picker ne sert pas qu’à trancher un vendredi soir.',
+      watchlist: {
+        title: 'Votre liste de films à voir',
+        text: 'Ajoutez un film quand vous y pensez, retrouvez-le au moment de proposer. Et si vous tenez déjà une watchlist sur Letterboxd, elle se synchronise toute seule.',
+        addedHere: 'Ajouté ici',
+      },
+      details: {
+        title: 'Toutes les infos du film, tout de suite',
+        text: 'Affiche, année, durée, note, synopsis et plateformes de streaming où le film est disponible. De quoi trancher sans ouvrir six onglets.',
+        query: 'parasi',
+        morePlatforms: '+3',
+      },
+      notifications: {
+        title: 'Vous êtes prévenu',
+        text: 'Un film proposé, un vote, un tirage, un rappel avant le début : l’info arrive sur le téléphone comme dans l’app.',
+        demo: 'La roue a tranché :',
+      },
+      calendar: {
+        title: 'Dans votre agenda',
+        text: 'Un bouton, et la soirée part dans Google Agenda, Outlook ou Apple Calendrier.',
+        demo: 'soiree-chez-lea.ics',
+      },
+      pwa: {
+        title: 'Comme une vraie app',
+        text: 'Movie Picker s’installe sur l’écran d’accueil et s’ouvre en plein écran, sans passer par un store.',
+        demo: 'Ajouter à l’écran d’accueil',
+      },
+      theme: {
+        title: 'À votre goût',
+        text: 'Thème clair, thème sombre, et huit couleurs d’accent pour que l’app vous ressemble.',
+      },
+    },
+    social: {
+      eyebrow: 'Entre amis',
+      title: 'La soirée continue après le générique',
+      lead: 'Chaque personne a un profil public : ses soirées, les films qu’elle a vus, et une flamme qui s’allume à chaque semaine passée devant un film avec les autres. Suivez vos amis, voyez ce qu’ils ont regardé, piochez vos idées chez eux.',
+      profileLabel: 'Aperçu d’un profil public',
+      handle: '@lea',
+      streak: '7 semaines',
+      statEvents: 'soirées',
+      statMovies: 'films vus',
+      statWinners: 'gagnants',
+      lastSeen: 'Derniers films vus',
+    },
+    trust: {
+      srTitle: 'Ce que vous devez savoir avant de créer un compte',
+      free: {
+        title: 'Gratuit, sans publicité',
+        text: 'Aucune fonctionnalité payante. Les dons sont libres et ne débloquent rien, à part un badge décoratif.',
+      },
+      data: {
+        title: 'Vos données restent les vôtres',
+        text: 'Export complet de votre compte en un clic, suppression définitive quand vous voulez. Rien n’est revendu.',
+      },
+      a11y: {
+        title: 'Pensé pour être accessible',
+        text: 'Navigation au clavier, contrastes vérifiés, lecteurs d’écran pris en charge sur tout le parcours.',
+      },
+      tmdb: {
+        title: 'Les films viennent de TMDB',
+        text: 'Affiches, durées, notes et plateformes de streaming proviennent de la base communautaire TMDB.',
+      },
+    },
+    faq: {
+      eyebrow: 'Questions',
+      title: 'Ce qu’on nous demande le plus',
+      q1: {
+        q: 'Faut-il un compte pour rejoindre une soirée ?',
+        a: 'Oui. Il se crée en trente secondes avec un e-mail, ou en un clic avec Google ou GitHub. C’est ce qui permet de retrouver vos soirées et de savoir qui a proposé et voté quoi.',
+      },
+      q2: {
+        q: 'C’est vraiment gratuit ?',
+        a: 'Entièrement. Movie Picker est un projet personnel, et les frais d’hébergement sont couverts par des dons libres. Aucune fonctionnalité n’est réservée aux donateurs.',
+      },
+      q3: {
+        q: 'Combien de personnes peuvent participer ?',
+        a: 'Il n’y a pas de limite fixée. Tout le monde rejoint depuis le même lien, propose ses films et vote de son côté, sur téléphone comme sur ordinateur.',
+      },
+      q4: {
+        q: 'Et si la roue tombe sur un film que personne ne veut ?',
+        a: 'L’hôte peut écarter un film du tirage sans le supprimer de la liste, relancer la roue, ou désigner directement le gagnant s’il préfère trancher lui-même.',
+      },
+      q5: {
+        q: 'Est-ce que ça marche sur téléphone ?',
+        a: 'C’est même le cas d’usage principal. Le site est conçu mobile d’abord et s’installe sur l’écran d’accueil comme une application, notifications comprises.',
+      },
+      q6: {
+        q: 'Peut-on proposer des séries ?',
+        a: 'Oui, si l’hôte les autorise. Chaque soirée a un réglage pour ouvrir les propositions aux séries en plus des films ; par défaut, la recherche ne renvoie que des films.',
+      },
+    },
+    final: {
+      eyebrow: 'Prêt ?',
+      title: 'Votre prochaine soirée commence ici.',
+      lead: 'Créez la première en moins d’une minute. Le seul débat qui restera, c’est de savoir qui apporte le pop-corn.',
+      note: 'Gratuit, sans publicité, sans engagement.',
+    },
   },
-
   auth: {
     sessionCheck: {
       failed: 'Impossible de vérifier votre session. Vérifiez votre connexion puis réessayez.',

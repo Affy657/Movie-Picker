@@ -44,7 +44,7 @@ test.describe('Parcours authentification', () => {
     await page.getByRole('button', { name: 'Supprimer mon compte' }).click();
     await page.getByLabel('Saisissez votre mot de passe pour confirmer').fill(TEST_PASSWORD);
     await page.getByRole('button', { name: 'Supprimer définitivement' }).click();
-    await expect(page).toHaveURL(/\/decouvrir/, { timeout: 15_000 });
+    await expect(page).toHaveURL(/\/\/[^/]+\/$/, { timeout: 15_000 });
 
     await page.goto('/new');
     await expect(page).toHaveURL(/\/new$/);

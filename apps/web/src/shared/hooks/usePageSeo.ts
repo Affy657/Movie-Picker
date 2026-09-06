@@ -34,7 +34,7 @@ interface ResolvedSeo {
 
 const JSON_LD_MARKER = 'data-page-seo';
 const INACTIVE_JSON_LD_TYPE = 'application/ld+json-inactive';
-const LANDING_URL = absoluteUrl(ROUTES.discover);
+const LANDING_URL = absoluteUrl(ROUTES.home);
 
 const SEO_DEFAULTS: ResolvedSeo = {
   title: SITE_NAME,

@@ -17,7 +17,7 @@ export default function NotFoundPage() {
       title={t('errors.notFound')}
       message={t('errors.notFoundMessage')}
       actions={
-        <Link to={ROUTES.discover} className="btn btn-primary">
+        <Link to={ROUTES.home} className="btn btn-primary">
           {t('errors.backHome')}
         </Link>
       }

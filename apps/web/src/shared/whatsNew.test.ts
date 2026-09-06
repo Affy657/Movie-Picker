@@ -81,8 +81,8 @@ describe('LATEST_WHATS_NEW_RELEASE', () => {
 });
 
 describe('whatsNewLinkPath', () => {
-  it('résout discover vers /decouvrir', () => {
-    expect(whatsNewLinkPath('discover', null)).toBe(ROUTES.discover);
+  it('résout home vers la racine', () => {
+    expect(whatsNewLinkPath('home', null)).toBe(ROUTES.home);
   });
 
   it('résout myEvents vers /my-events', () => {

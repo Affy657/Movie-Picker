@@ -1,0 +1,50 @@
+.landingPalette {
+  --poster-1a: #f59e0b;
+  --poster-1b: #7c2d12;
+  --poster-2a: #38bdf8;
+  --poster-2b: #0f172a;
+  --poster-3a: #ef4444;
+  --poster-3b: #450a0a;
+  --poster-4a: #a78bfa;
+  --poster-4b: #312e81;
+  --poster-5a: #22d3ee;
+  --poster-5b: #164e63;
+  --poster-6a: #fbbf24;
+  --poster-6b: #78350f;
+  --poster-sheen: rgba(255, 255, 255, 0.3);
+  --poster-grain: rgba(255, 255, 255, 0.07);
+  --poster-ring: rgba(255, 255, 255, 0.09);
+  --poster-label-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+  --poster-label-fg: rgba(255, 255, 255, 0.92);
+
+  --platform-netflix: #c1070f;
+  --platform-prime: #0b6fc4;
+  --brand-letterboxd: #00b083;
+  --color-letterboxd-fg: color-mix(in srgb, var(--brand-letterboxd) 62%, black);
+  --color-letterboxd-bg: color-mix(in srgb, var(--brand-letterboxd) 14%, transparent);
+
+  --wheel-1: #2563eb;
+  --wheel-2: #7c3aed;
+  --wheel-3: #06b6d4;
+  --wheel-4: #ec4899;
+  --wheel-5: #f97316;
+  --wheel-6: #10b981;
+
+  --accent-swatch-blue: #2563eb;
+  --accent-swatch-green: #16a34a;
+  --accent-swatch-purple: #7c3aed;
+  --accent-swatch-pink: #db2777;
+  --accent-swatch-orange: #ea580c;
+  --accent-swatch-cyan: #0891b2;
+  --swatch-ring-inner: rgba(15, 23, 42, 0.15);
+}
+
+[data-theme='dark'] .landingPalette {
+  --color-letterboxd-fg: color-mix(in srgb, var(--brand-letterboxd) 55%, white);
+  --color-letterboxd-bg: color-mix(in srgb, var(--brand-letterboxd) 16%, transparent);
+}
+
+.landingPalette .on-dark {
+  --color-letterboxd-fg: color-mix(in srgb, var(--brand-letterboxd) 55%, white);
+  --color-letterboxd-bg: color-mix(in srgb, var(--brand-letterboxd) 16%, transparent);
+}

@@ -20,7 +20,7 @@ export default function SessionCheckErrorState() {
       <button type="button" className="btn btn-primary" onClick={retryAuthCheck}>
         {t('common.retry')}
       </button>
-      <Link to={ROUTES.discover} className="btn">
+      <Link to={ROUTES.home} className="btn">
         {t('auth.sessionCheck.backHome')}
       </Link>
     </PageLayout>

@@ -8,6 +8,7 @@ import { useLetterboxdAutoSync } from '@/features/letterboxd/hooks/useLetterboxd
 import { useWhatsNew } from '@/shared/hooks/useWhatsNew';
 import { shouldShowWhatsNewNavChip } from '@/shared/whatsNew';
 import { withReturnTo, ROUTES } from '@/app/routes';
+import { LANDING_ANCHORS } from '@/app/pages/landing/anchors';
 import UserMenu from '@/features/auth/components/UserMenu';
 import InboxBell from '@/features/notifications/components/InboxBell';
 import Footer from './Footer';
@@ -40,11 +41,26 @@ const NAV_ITEMS: ReadonlyArray<NavItemSpec> = [
   { to: ROUTES.watchlist, labelKey: 'nav.watchlist', Icon: Bookmark },
 ];
 
+const LANDING_NAV_ITEMS: ReadonlyArray<{ anchor: string; labelKey: TranslationKey }> = [
+  { anchor: LANDING_ANCHORS.steps, labelKey: 'nav.landing.howItWorks' },
+  { anchor: LANDING_ANCHORS.wheel, labelKey: 'nav.landing.wheel' },
+  { anchor: LANDING_ANCHORS.features, labelKey: 'nav.landing.features' },
+  { anchor: LANDING_ANCHORS.faq, labelKey: 'nav.landing.faq' },
+];
+
 function DesktopNavItem({ to, end, label }: Readonly<Omit<NavItemDef, 'Icon'>>) {
   return (
     <NavLink to={to} end={end} className={navLinkClass}>
       {label}
     </NavLink>
+  );
+}
+
+function LandingNavItem({ anchor, label }: Readonly<{ anchor: string; label: string }>) {
+  return (
+    <a href={`#${anchor}`} className={styles.navLink}>
+      {label}
+    </a>
   );
 }
 
@@ -71,6 +87,7 @@ export default function AppShell() {
   const [proposeIdeaOpen, setProposeIdeaOpen] = useState(false);
 
   const isAuthenticated = !!user;
+  const isLandingRoute = location.pathname === ROUTES.home && !isAuthenticated;
   const returnTo = `${location.pathname}${location.search}`;
   const isOnAuthRoute = (
     [ROUTES.login, ROUTES.register, ROUTES.forgotPassword, ROUTES.resetPassword] as string[]
@@ -99,10 +116,15 @@ export default function AppShell() {
             />
             <span className={styles.brandName}>Movie Picker</span>
           </Link>
-          <nav className={styles.navDesktop} aria-label={t('nav.navLabel')}>
-            {items.map((item) => (
-              <DesktopNavItem key={item.to} {...item} />
-            ))}
+          <nav
+            className={clsx(styles.navDesktop, isLandingRoute && styles.navLanding)}
+            aria-label={t('nav.navLabel')}
+          >
+            {isLandingRoute
+              ? LANDING_NAV_ITEMS.map((item) => (
+                  <LandingNavItem key={item.anchor} anchor={item.anchor} label={t(item.labelKey)} />
+                ))
+              : items.map((item) => <DesktopNavItem key={item.to} {...item} />)}
           </nav>
           {isLoading || (!isAuthenticated && isOnAuthRoute) ? (
             <div className={styles.navActions} />
@@ -135,12 +157,17 @@ export default function AppShell() {
       <div className={styles.content}>
         <Outlet />
       </div>
-      <Footer clearMobileNav onOpenWhatsNew={isAuthenticated ? openWhatsNew : undefined} />
-      <nav className={styles.navMobile} aria-label={t('nav.navLabel')}>
-        {items.map((item) => (
-          <MobileNavItem key={item.to} {...item} />
-        ))}
-      </nav>
+      <Footer
+        clearMobileNav={!isLandingRoute}
+        onOpenWhatsNew={isAuthenticated ? openWhatsNew : undefined}
+      />
+      {isLandingRoute ? null : (
+        <nav className={styles.navMobile} aria-label={t('nav.navLabel')}>
+          {items.map((item) => (
+            <MobileNavItem key={item.to} {...item} />
+          ))}
+        </nav>
+      )}
       <PwaAutoUpdate />
       <ConsentBanner />
       {isAuthenticated ? (
