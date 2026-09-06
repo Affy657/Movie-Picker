@@ -2,7 +2,13 @@
 #   - Déclenché à la main (workflow_dispatch).
 #   - Input `revision` vide → révision précédente (2e plus récente).
 #   - Cloud Run conserve les révisions : le rollback ne redéploie rien, il route le trafic.
-# NB : rollback front (S3/CloudFront) non couvert ici (pas d'artefacts versionnés en l'état).
+# NB : rollback front (S3/CloudFront) non couvert ici — l'hébergement ne garde pas les versions.
+#      Le job deploy-front archive cependant chaque `dist` en artefact (front-dist-<sha>, 30 jours) :
+#      un retour arrière consiste à télécharger celui du commit visé et à le renvoyer sur S3,
+#      sans rejouer toute la chaîne de portes.
+# NB : le retour arrière API est désormais AUTOMATIQUE quand le smoke test d'une nouvelle révision
+#      échoue (cf. ci-cd.yml). Ce workflow reste la porte manuelle : régression vue après coup,
+#      révision précise à cibler, ou échec passé au travers des smoke tests.
 
 name: Rollback API (Cloud Run)
 

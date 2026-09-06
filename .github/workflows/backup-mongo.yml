@@ -1,0 +1,168 @@
+# Sauvegarde quotidienne de la base de production, avec restauration vérifiée dans la foulée.
+#
+# Pourquoi : le palier gratuit Atlas ne fournit aucun snapshot. Sans ce workflow, une migration
+# de données boguée (DataMigrationRunner applique les migrations au démarrage de chaque révision,
+# et rejoue celles qui ont échoué) ou une erreur d'exploitation est irrécupérable. Le retour
+# arrière Cloud Run restaure le code, jamais les données.
+#
+# La restauration est rejouée à chaque exécution, dans une MongoDB jetable du runner : une archive
+# jamais restaurée n'est pas une sauvegarde. Elle attrape les pannes réelles — archive tronquée,
+# envoi partiel, incompatibilité d'outils — plutôt que de comparer des compteurs à une base vivante
+# qui bouge pendant le dump, ce qui produirait de fausses alertes.
+#
+# L'URI est lu dans Secret Manager plutôt que dupliqué en secret GitHub : une seule source.
+#
+# Prérequis, une fois pour toutes :
+#   gcloud storage buckets create gs://movie-picker-backups --location=europe-west1 \
+#     --uniform-bucket-level-access --public-access-prevention
+#   gcloud storage buckets update gs://movie-picker-backups --versioning
+#   printf '{"rule":[{"action":{"type":"Delete"},"condition":{"age":30}}]}' > /tmp/lifecycle.json
+#   gcloud storage buckets update gs://movie-picker-backups --lifecycle-file=/tmp/lifecycle.json
+#   gcloud secrets add-iam-policy-binding MONGODB_URI --member="serviceAccount:<SA_CI>" \
+#     --role=roles/secretmanager.secretAccessor
+# puis GitHub → Settings → Secrets and variables → Actions → Variables :
+#   BACKUP_BUCKET = movie-picker-backups
+#
+# Le bucket contient des données personnelles (adresses e-mail, empreintes de mots de passe) :
+# accès public interdit, et l'archive n'est jamais publiée en artefact GitHub.
+
+name: Sauvegarde MongoDB
+
+on:
+  schedule:
+    - cron: "31 2 * * *" # tous les jours, 02:31 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup-mongo
+  cancel-in-progress: false
+
+env:
+  MDB_TOOLS_VERSION: "100.12.0"
+  MDB_TOOLS_SHA256: "012f767812b84947a6378a3fc3be3a4dce19bfae096e1907470d20e5ff613da9"
+
+jobs:
+  backup:
+    name: Dump, envoi, puis restauration vérifiée
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Vérifier la configuration
+        env:
+          BACKUP_BUCKET: ${{ vars.BACKUP_BUCKET }}
+        run: |
+          if [ -z "$BACKUP_BUCKET" ]; then
+            echo "::error::Variable BACKUP_BUCKET absente : aucune sauvegarde n'est effectuée."
+            echo "::error::Créer le bucket puis la variable — commandes en tête de ce fichier."
+            exit 1
+          fi
+          echo "Bucket de destination : gs://$BACKUP_BUCKET"
+
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      # Outils épinglés par version *et* par empreinte, comme les actions le sont par SHA et les
+      # images de base par digest : une archive substituée en amont ne passe pas.
+      - name: Installer mongodump / mongorestore
+        run: |
+          set -eo pipefail
+          ARCHIVE_NAME="mongodb-database-tools-ubuntu2404-x86_64-${MDB_TOOLS_VERSION}"
+          curl -sSL --retry 3 --retry-all-errors \
+            -o "$RUNNER_TEMP/mongotools.tgz" \
+            "https://fastdl.mongodb.org/tools/db/${ARCHIVE_NAME}.tgz"
+          echo "${MDB_TOOLS_SHA256}  $RUNNER_TEMP/mongotools.tgz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/mongotools"
+          tar xzf "$RUNNER_TEMP/mongotools.tgz" --strip-components=2 \
+            -C "$RUNNER_TEMP/mongotools" \
+            "${ARCHIVE_NAME}/bin/mongodump" "${ARCHIVE_NAME}/bin/mongorestore"
+          echo "$RUNNER_TEMP/mongotools" >> "$GITHUB_PATH"
+
+      - name: Dump de la production
+        id: dump
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        run: |
+          set -eo pipefail
+          if ! URI="$(gcloud secrets versions access latest --secret=MONGODB_URI --project="$GCP_PROJECT_ID")"; then
+            echo "::error::Lecture du secret MONGODB_URI refusée : accorder roles/secretmanager.secretAccessor au compte de service de la CI."
+            exit 1
+          fi
+          echo "::add-mask::$URI"
+          STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+          ARCHIVE="$RUNNER_TEMP/moviepicker-${STAMP}.archive.gz"
+          mongodump --uri="$URI" --archive="$ARCHIVE" --gzip
+          SIZE="$(stat -c%s "$ARCHIVE")"
+          echo "Archive : $ARCHIVE ($SIZE octets)"
+          if [ "$SIZE" -lt 1024 ]; then
+            echo "::error::Archive suspecte (${SIZE} octets) : dump probablement vide."
+            exit 1
+          fi
+          echo "archive=$ARCHIVE" >> "$GITHUB_OUTPUT"
+          echo "stamp=$STAMP" >> "$GITHUB_OUTPUT"
+
+      - name: Envoi vers Cloud Storage
+        env:
+          BACKUP_BUCKET: ${{ vars.BACKUP_BUCKET }}
+          ARCHIVE: ${{ steps.dump.outputs.archive }}
+          STAMP: ${{ steps.dump.outputs.stamp }}
+        run: |
+          set -eo pipefail
+          DEST="gs://${BACKUP_BUCKET}/mongodb/$(date -u +%Y/%m)/moviepicker-${STAMP}.archive.gz"
+          gcloud storage cp "$ARCHIVE" "$DEST"
+          gcloud storage ls -l "$DEST"
+          echo "Sauvegarde déposée : $DEST"
+
+      # Ce qui distingue une sauvegarde d'un fichier : la preuve qu'elle se relit.
+      - name: Restauration vérifiée dans une MongoDB jetable
+        env:
+          ARCHIVE: ${{ steps.dump.outputs.archive }}
+        run: |
+          set -eo pipefail
+          docker run -d --name mongo-verify -p 27017:27017 mongo:8
+          for _ in $(seq 1 30); do
+            if docker exec mongo-verify mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' >/dev/null 2>&1; then
+              break
+            fi
+            sleep 2
+          done
+          mongorestore --uri="mongodb://127.0.0.1:27017" --archive="$ARCHIVE" --gzip
+          cat > "$RUNNER_TEMP/verify.js" <<'JS'
+          const ignorees = new Set(["admin", "config", "local"]);
+          let collections = 0;
+          let documents = 0;
+          for (const base of db.adminCommand({ listDatabases: 1 }).databases) {
+            if (ignorees.has(base.name)) continue;
+            const cible = db.getSiblingDB(base.name);
+            for (const nom of cible.getCollectionNames()) {
+              const n = cible.getCollection(nom).countDocuments();
+              collections += 1;
+              documents += n;
+              print(`${base.name}.${nom} : ${n}`);
+            }
+          }
+          print(`TOTAL : ${collections} collection(s), ${documents} document(s)`);
+          if (collections === 0 || documents === 0) {
+            print("Restauration vide : l'archive n'est pas exploitable.");
+            quit(1);
+          }
+          JS
+          docker cp "$RUNNER_TEMP/verify.js" mongo-verify:/verify.js
+          docker exec mongo-verify mongosh --quiet --file /verify.js
+
+      - name: Arrêter la MongoDB de vérification
+        if: always()
+        run: docker rm -f mongo-verify 2>/dev/null || true
