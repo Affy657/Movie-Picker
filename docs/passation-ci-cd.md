@@ -1,0 +1,179 @@
+# Passation — chantier CI/CD & sauvegarde
+
+> Écrit le **2026-09-06** à l'attention de quiconque, humain ou agent, reprend ce travail.
+> Ce document est autonome : état constaté, décisions actées, gestes restants et façon de vérifier.
+>
+> **Deux gestes externes sont en attente** (§ 3). Tant qu'ils ne sont pas faits, la sauvegarde
+> échoue chaque nuit — volontairement bruyante plutôt que silencieusement inutile.
+
+---
+
+## 1. Où on en est, en une minute
+
+| | |
+|--|--|
+| **Branche** | `claude/terraform-feature-split-62jckg`, en avance sur `master` (`git log --oneline origin/master..HEAD`) |
+| **Pull request** | **aucune ouverte** — rien n'a été demandé en ce sens |
+| **Contenu** | 2 commits de roadmap (découpage Terraform en 8 lots), 2 commits de CI/CD livrés, ce document |
+| **État CI** | jamais exécutée : les workflows modifiés ne tournent qu'une fois sur `master` ou en PR |
+| **Reste** | 2 gestes GCP (§ 3), puis un `workflow_dispatch` manuel de la sauvegarde |
+
+Ce qui est **livré et vérifiable dans le dépôt** :
+
+- `.github/workflows/backup-mongo.yml` — sauvegarde quotidienne, restaurée et vérifiée avant publication.
+- `.github/workflows/ci-cd.yml` — déploiement API sans trafic puis promotion sur validation, déploiement
+  par digest, smoke tests sur les domaines publics, archive du build front, porte `lint-workflows`.
+- `.github/workflows/rollback.yml` — en-tête corrigé (procédure de restauration front, épinglage du trafic).
+
+Ce qui est **planifié mais pas commencé** : les 8 lots Terraform de
+[`roadmap-tech.md`](roadmap-tech.md), dont la migration du front d'AWS vers GCP.
+
+---
+
+## 2. La seule chose à comprendre avant de toucher au déploiement
+
+Le déploiement API **ne suit plus** le schéma « déployer, vérifier, revenir en arrière ». Il suit
+« déployer sans trafic, valider, promouvoir ». C'est délibéré, et le revenir en arrière casserait la prod.
+
+```
+gcloud run deploy --no-traffic --tag "s-<sha7>"   →  la révision existe, personne ne la voit
+   ↓  sondes /health et /health/ready sur l'URL taguée
+gcloud run services update-traffic --to-latest    →  promotion, seulement si vert
+   ↓  vérification post-promotion + domaine public
+gcloud run services update-traffic --remove-tags  →  nettoyage (if: always())
+```
+
+**Pourquoi pas un retour arrière automatique**, qui semble plus naturel : une première version en
+avait un, et il portait deux défauts qui pouvaient casser la production en silence.
+
+1. `update-traffic --to-revisions REV=100` **épingle** le trafic — il retire `latestRevision: true`.
+   Rien ne le rebranchait. Après un seul retour arrière, chaque déploiement suivant aurait créé une
+   révision à 0 % de trafic, pendant que les smoke tests, répondus par l'ancienne révision épinglée,
+   seraient restés **verts**. La prod aurait cessé de se mettre à jour sans aucun signal rouge.
+2. Il visait `status.latestReadyRevisionName`, qui est la dernière révision **prête**, pas celle qui
+   **sert**. Après un premier retour arrière, un second aurait basculé la prod sur la révision déjà
+   jugée mauvaise.
+
+Le schéma actuel supprime les deux à la racine, plus la fenêtre d'exposition (35–90 s pendant
+lesquelles les utilisateurs touchaient la mauvaise révision) et le cas du job annulé sur *timeout*,
+où `if: failure()` ne s'exécute pas et aucun rattrapage n'avait lieu. `--to-latest` désépingle au
+passage un service figé par un `rollback.yml` manuel.
+
+**Corollaire** : `rollback.yml` n'est plus le filet du déploiement. Il sert les cas que la chaîne ne
+peut pas voir — régression constatée après coup, incident sans rapport avec un déploiement.
+
+---
+
+## 3. Les deux gestes en attente — aucun agent ne peut les faire
+
+Aucun MCP GCP n'est disponible, et le MCP GitHub n'expose pas l'API des variables de dépôt. Ces
+commandes demandent un `gcloud` authentifié ; elles sont à passer à la main, une fois.
+
+```bash
+gcloud storage buckets create gs://movie-picker-backups --location=europe-west1 \
+  --uniform-bucket-level-access --public-access-prevention
+gcloud storage buckets update gs://movie-picker-backups --versioning
+printf '{"rule":[{"action":{"type":"Delete"},"condition":{"age":30}}]}' > /tmp/lifecycle.json
+gcloud storage buckets update gs://movie-picker-backups --lifecycle-file=/tmp/lifecycle.json
+
+gcloud secrets add-iam-policy-binding MONGODB_URI --member="serviceAccount:<SA_CI>" \
+  --role=roles/secretmanager.secretAccessor
+gcloud storage buckets add-iam-policy-binding gs://movie-picker-backups \
+  --member="serviceAccount:<SA_CI>" --role=roles/storage.objectAdmin
+```
+
+Puis GitHub → Settings → Secrets and variables → Actions → Variables :
+`BACKUP_BUCKET = movie-picker-backups`.
+
+**Ensuite, lancer `backup-mongo.yml` à la main** (`workflow_dispatch`) plutôt que d'attendre 02:31 UTC :
+c'est le seul moyen d'observer le cycle complet, qui n'a jamais tourné en vrai (§ 6).
+
+Le bucket contient des données personnelles (adresses e-mail, empreintes de mots de passe) : accès
+public interdit, et l'archive n'est jamais publiée en artefact GitHub.
+
+---
+
+## 4. Deux pièges trouvés dans l'existant, **non corrigés**
+
+Ils préexistaient au chantier. Aucun ne casse quoi que ce soit aujourd'hui, et corriger l'un des deux
+sans pouvoir le tester serait plus risqué que de le documenter.
+
+### 4.1 `ci-cd.yml` — un pseudo-ternaire qui ne fait pas ce qu'il dit
+
+```yaml
+base: ${{ github.ref == 'refs/heads/master' && '' || 'master' }}
+```
+
+`''` est *falsy* : la branche « vraie » ne peut jamais gagner, l'expression vaut **toujours**
+`'master'`. Ça ne casse rien parce que `dorny/paths-filter` traite spécialement le cas « base ==
+branche poussée » et compare alors au commit précédent — le comportement voulu est donc obtenu par
+accident. **Ne pas corriger à l'aveugle** : ça touche le calcul de ce qui se déploie.
+
+### 4.2 La migration `www` n'a jamais été exécutée
+
+`docs/runbook-migration-domaine-www.md` décrit une migration `web.` → `www.` annoncée « à exécuter ».
+Constat du 2026-09-06, mesuré :
+
+| Hôte | Réalité |
+|---|---|
+| `web.movie-picker.fr` | CNAME → CloudFront, **200** — c'est le front live |
+| `www.movie-picker.fr` | A `213.186.33.5` (redirection OVH), **ne répond pas** |
+| `api.movie-picker.fr` | **200**, `{"status":"ok","service":"movie-picker-api"}` |
+
+Les mentions de `www` dans le dépôt sont **toutes dans le runbook** plus une ligne commentée de
+`.env.example` : rien en production ne pointe vers un domaine mort.
+
+Conséquence pour la CI : les smoke tests de domaine public ne réécrivent **pas** ces valeurs. L'API est
+dérivée de `secrets.VITE_API_URL`, le front de la première entrée de `vars.ALLOWED_ORIGINS`. Les deux
+restent justes après la migration sans qu'on ait à y toucher — c'était le but.
+
+---
+
+## 5. Ce qui a été écarté volontairement
+
+Ne pas les reprendre pour « finir le travail » sans relire la raison.
+
+| Écarté | Raison |
+|---|---|
+| Factoriser `auth`+`setup-gcloud` (5 copies) et les smoke tests en actions composites | Juste sur le fond, mais ça touche 4 workflows dont 2 hors périmètre. À faire dans un lot dédié, pas en fin de diff. |
+| `mongodump --oplog` (cohérence transactionnelle) | Impose un dump de l'instance entière et des droits supplémentaires. **La limite est écrite dans l'en-tête de `backup-mongo.yml`** : la vérification prouve que l'archive se restaure, pas qu'elle est cohérente entre collections. |
+| 4 mentions devenues obsolètes dans `docs/RNCP/` | Décision du propriétaire du dépôt : le dossier RNCP est hors périmètre de ce chantier. C'est un choix, pas un oubli. |
+| Descendre zizmor au seuil `low` | 9 constats cosmétiques (`self-repository`, `template-injection` de confiance basse). Le seuil `medium` est vert aujourd'hui et n'attrape que du sérieux. |
+
+---
+
+## 6. Vérifier — et ce qui n'a pas pu l'être
+
+Les workflows ne sont couverts par **aucune étape de `verify:local`** : `check:architecture` ne lit que
+`apps/` et `e2e/`, Prettier ignore `.github/`. Les vraies portes sont celles du job `lint-workflows`,
+qu'on peut rejouer à la main aux versions exactes épinglées dans `ci-cd.yml` et `backup-mongo.yml` :
+
+```bash
+# actionlint 1.7.7 — délègue aux blocs run: à shellcheck (0.10.0), à avoir dans le PATH
+actionlint
+# zizmor 1.30.0, seuil identique à la CI
+zizmor --offline --no-progress --min-severity medium --format plain .github/workflows/
+# parsing YAML des 5 workflows
+for f in .github/workflows/*.yml; do python3 -c "import yaml; yaml.safe_load(open('$f'))"; done
+```
+
+Au 2026-09-06 : **0 constat** sur les trois, et `check:architecture` passe.
+
+Ce qui a été testé pour de vrai, hors syntaxe : extraction du nom de base depuis l'URI Mongo sur
+4 formes (un nom de machine est bien rejeté), dérivation du préfixe de mois sur un horodatage à
+cheval sur un changement de mois, lecture `jq` de l'URL taguée sur ses cas limites, première origine
+de `ALLOWED_ORIGINS`, et le script de vérification de restauration rejoué sur base pleine / base
+parasite seule / base vide.
+
+**Ce qui n'a pas pu être testé**, et qu'il faut donc observer au premier run :
+
+- le cycle `mongodump` → envoi → relecture → `mongorestore` complet — pas de Docker ni d'accès Atlas
+  dans une session web ;
+- le comportement réel de `--no-traffic --tag` et de `--to-latest` sur le service — pas de `gcloud`
+  authentifié. En cas d'erreur, la chaîne **échoue en sécurité** : le déploiement rate et la
+  production reste sur la révision précédente.
+
+Le tier du cluster Atlas n'a pas pu être confirmé non plus (accès MCP désactivé au niveau des
+organisations). La conclusion « aucune sauvegarde » repose sur la documentation MongoDB — le palier
+gratuit ne fournit pas de snapshot — et sur l'absence totale de mécanisme dans le dépôt
+(`git grep -niE "mongodump|mongorestore|backup"` ne renvoyait rien avant ce chantier).
