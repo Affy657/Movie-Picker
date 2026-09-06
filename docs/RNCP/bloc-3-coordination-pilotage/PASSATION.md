@@ -135,15 +135,7 @@ Le thème demande **Nunito Sans** à `fonts.googleapis.com` au moment où la pag
 
 **Pour l'oral**, c'est une dépendance réseau non déclarée : présenter le support en ligne dans une salle sans réseau dégrade la mise en page de toutes les diapositives. **L'export PDF fige les polices** — c'est la raison la plus solide de présenter depuis le PDF.
 
-### 4.6 Penser à nettoyer avant de committer
-
-`node_modules/` et `dist/` du dossier `slides/` sont ignorés par `.gitignore`, mais ils pèsent lourd sur l'allocation disque de la session :
-
-```bash
-rm -rf docs/RNCP/bloc-3-coordination-pilotage/slides/{node_modules,dist}
-```
-
-### 4.7 Le pipeline bouge — revérifier avant de citer un nombre de jobs
+### 4.6 Le pipeline bouge — revérifier avant de citer un nombre de jobs
 
 L'annexe A5 énumère les jobs de `ci-cd.yml`. Ce fichier évolue : un job `test-api-mongo` a été ajouté sur `master` le 5 septembre, faisant passer le total de 14 à 15 pendant que cette PR était ouverte. **Avant toute relecture du dossier, recompter :**
 
@@ -153,9 +145,17 @@ git show origin/master:.github/workflows/ci-cd.yml | grep -cE '^  [a-z0-9-]+:$' 
 
 Et vérifier le caractère bloquant d'un job par sa présence dans les `needs` de `docker-api`, `deploy-api` ou `deploy-front`.
 
-### 4.8 Prettier ne touche pas à ce dossier
+### 4.7 Prettier ne touche pas à ce dossier
 
 `.prettierignore` exclut `*.md` et `docs/`, et `format:check` ne cible que `apps/`, `configs/` et `e2e/`. **Aucun formatage automatique à craindre ni à lancer** sur ce dossier. La CI ignore d'ailleurs entièrement une PR qui ne touche que `docs/` — seuls `changes` et `gitleaks` s'exécutent, tout le reste est *skipped* par le path-filtering. C'est normal, ce n'est pas un échec.
+
+### 4.8 Penser à nettoyer avant de committer
+
+`node_modules/` et `dist/` du dossier `slides/` sont ignorés par `.gitignore`, mais ils pèsent lourd sur l'allocation disque de la session :
+
+```bash
+rm -rf docs/RNCP/bloc-3-coordination-pilotage/slides/{node_modules,dist}
+```
 
 ---
 
