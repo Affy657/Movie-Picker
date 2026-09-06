@@ -48,6 +48,15 @@ public sealed class GetSitemapXmlHandlerTests
     }
 
     [Fact]
+    public async Task BuildXmlAsync_AlwaysIncludesTechPage()
+    {
+        SetupProfiles();
+        var xml = await CreateSut().BuildXmlAsync();
+
+        Assert.Contains("https://web.example/tech", Locs(xml));
+    }
+
+    [Fact]
     public async Task BuildXmlAsync_IncludesPublicProfileUrls()
     {
         SetupProfiles(
@@ -81,6 +90,6 @@ public sealed class GetSitemapXmlHandlerTests
         var root = XDocument.Parse(xml).Root;
         Assert.NotNull(root);
         Assert.Equal(Ns + "urlset", root!.Name);
-        Assert.Equal(3, root.Elements(Ns + "url").Count());
+        Assert.Equal(4, root.Elements(Ns + "url").Count());
     }
 }

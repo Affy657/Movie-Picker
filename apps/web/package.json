@@ -4,13 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc -b && vite build && node scripts/check-prod-bundle-secrets.mjs",
+    "build": "node scripts/generate-tech-metrics.mjs && tsc -b && vite build && node scripts/check-prod-bundle-secrets.mjs",
     "dev": "vite",
     "lint": "tsc --noEmit && eslint src",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "generate:icons": "node scripts/generate-pwa-icons.mjs",
-    "generate:og": "node scripts/generate-og-image.mjs"
+    "generate:og": "node scripts/generate-og-image.mjs",
+    "generate:tech-metrics": "node scripts/generate-tech-metrics.mjs"
   },
   "dependencies": {
     "@fontsource/overpass": "^5.3.0",
