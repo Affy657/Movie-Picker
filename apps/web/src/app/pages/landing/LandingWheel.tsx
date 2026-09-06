@@ -29,7 +29,8 @@ const WHEEL_MOVIES: MovieData[] = DEMO_WHEEL_MOVIES.map((title, index) => ({
 }));
 
 function pickWinnerIndex(): number {
-  return Math.floor(Math.random() * WHEEL_MOVIES.length);
+  const [value] = crypto.getRandomValues(new Uint32Array(1));
+  return Math.floor((value! / 0x1_0000_0000) * WHEEL_MOVIES.length);
 }
 
 export default function LandingWheel() {
