@@ -1,12 +1,12 @@
 ﻿.toggleRow {
-  margin-top: 0.4rem;
+  margin-top: var(--space-1-5);
 }
 
 .toggleBtn {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.75rem;
+  gap: var(--space-1-5);
+  padding: var(--space-1-5) var(--space-3);
   font-size: var(--font-size-xs);
   font-weight: 500;
   line-height: 1;
@@ -15,7 +15,10 @@
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: background var(--duration-base) var(--ease-default), color var(--duration-base) var(--ease-default), border-color var(--duration-base) var(--ease-default);
+  transition:
+    background var(--duration-base) var(--ease-default),
+    color var(--duration-base) var(--ease-default),
+    border-color var(--duration-base) var(--ease-default);
 }
 
 .toggleBtn svg {
@@ -26,7 +29,6 @@
   transform: translateY(var(--text-optical-nudge));
 }
 
-.toggleBtn:hover,
 .toggleBtn:focus-visible {
   background: color-mix(in srgb, var(--color-primary) 8%, transparent);
   border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-border-subtle));
@@ -34,9 +36,18 @@
   outline: none;
 }
 
+@media (hover: hover) {
+  .toggleBtn:hover {
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-border-subtle));
+    color: var(--color-primary);
+    outline: none;
+  }
+}
+
 .panel {
-  margin-top: 0.65rem;
-  padding: 0.95rem 1.05rem;
+  margin-top: var(--space-2-5);
+  padding: var(--space-4) var(--space-4);
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--color-bg) 60%, transparent);
   border: 1px solid var(--color-border-subtle);
@@ -44,7 +55,7 @@
   color: var(--color-text);
   display: flex;
   flex-direction: column;
-  gap: var(--details-gap, 0.45rem);
+  gap: var(--details-gap, var(--space-2));
 }
 
 .tagline {
@@ -70,7 +81,7 @@
   list-style: none;
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: var(--fact-row-gap, 0.25rem) var(--fact-col-gap, 0.65rem);
+  gap: var(--fact-row-gap, var(--space-1)) var(--fact-col-gap, var(--space-2-5));
   font-size: var(--fact-font-size, var(--font-size-xs));
 }
 
@@ -96,13 +107,13 @@
 }
 
 .trailerRow {
-  margin-top: 0.25rem;
+  margin-top: var(--space-1);
 }
 
 .trailerLink {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--space-1-5);
   padding: 0;
   background: none;
   border: none;
@@ -124,7 +135,9 @@
   transform: translateY(var(--text-optical-nudge));
 }
 
-.trailerLink:hover {
-  opacity: 0.8;
-  text-decoration: underline;
+@media (hover: hover) {
+  .trailerLink:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+  }
 }

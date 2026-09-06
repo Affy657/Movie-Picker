@@ -1,8 +1,7 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useState, useRef } from 'react';
 import clsx from 'clsx';
 import { Bookmark, BookmarkCheck, Disc3, ImageOff, RotateCcw, Trash2, X } from 'lucide-react';
 import { Tabs, TabPanel } from '@/shared/components/Tabs';
-import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import { useSheetDrag } from '@/shared/hooks/useSheetDrag';
 import { useMovieDetails } from '@/features/movies/hooks/useMovieDetails';
 import { useTranslation } from '@/shared/i18n';
@@ -15,6 +14,7 @@ import MovieDetailsEventTab, {
 import { MovieDetailsContent } from '@/features/movies/components/MovieDetailsPanel';
 import TrailerModal from '@/features/movies/components/TrailerModal';
 import dragStyles from '@/shared/components/sheetDrag.module.css';
+import Modal from '@/shared/components/Modal';
 import styles from './MovieDetailsModal.module.css';
 
 export type MovieDetailsTabKey = 'soiree' | 'film' | 'dispo';
@@ -52,7 +52,7 @@ export default function MovieDetailsModal({
   onClose,
 }: Readonly<MovieDetailsModalProps>) {
   const { t } = useTranslation();
-  const dialogRef = useModalDialog(open, onClose);
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const dragBind = useSheetDrag(dialogRef, onClose, open);
   const titleId = useId();
   const idBase = useId();
@@ -99,10 +99,15 @@ export default function MovieDetailsModal({
     (!!eventContext.onToggleWatchlist || !!eventContext.wheelExclusion || eventContext.canRemove);
 
   return (
-    <dialog
-      ref={dialogRef}
+    <Modal
+      open={open}
+      onClose={onClose}
+      size="xl"
+      column
+      anchoredTop
+      labelledBy={titleId}
+      dialogRef={dialogRef}
       className={clsx(styles.dialog, dragStyles.surface)}
-      aria-labelledby={titleId}
     >
       {open && (
         <>
@@ -252,6 +257,6 @@ export default function MovieDetailsModal({
           />
         </>
       )}
-    </dialog>
+    </Modal>
   );
 }

@@ -7,6 +7,7 @@ import { useDialogOpen } from '@/shared/hooks/useDialogOpen';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import { useTranslation } from '@/shared/i18n';
 import SpinningWheel from './SpinningWheel';
+import Modal from '@/shared/components/Modal';
 import styles from './WheelModal.module.css';
 
 const noop = () => {};
@@ -140,10 +141,14 @@ export default function WheelModal({
 
   return (
     <>
-      <dialog
-        ref={dialogRef}
-        className={`${styles.dialog} ${animDone ? styles.dialogDone : styles.dialogSpin}`}
-        aria-labelledby="wheel-modal-title"
+      <Modal
+        open={open}
+        onClose={onClose}
+        size="lg"
+        surface="bare"
+        strongBackdrop
+        labelledBy="wheel-modal-title"
+        className={animDone ? styles.dialogDone : styles.dialogSpin}
       >
         {!animDone && (
           <div className={styles.spinPhase}>
@@ -212,7 +217,7 @@ export default function WheelModal({
             </div>
           </>
         )}
-      </dialog>
+      </Modal>
       <div
         ref={confettiOverlayRef}
         className={styles.confettiOverlay}

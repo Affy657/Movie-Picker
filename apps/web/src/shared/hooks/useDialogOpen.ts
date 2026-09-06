@@ -11,9 +11,11 @@ export function useDialogOpen(ref: RefObject<HTMLDialogElement | null>, open: bo
 
 export function useModalDialog(
   open: boolean,
-  onClose: () => void
+  onClose: () => void,
+  externalRef?: RefObject<HTMLDialogElement | null>
 ): RefObject<HTMLDialogElement | null> {
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const localRef = useRef<HTMLDialogElement>(null);
+  const dialogRef = externalRef ?? localRef;
   const onCloseRef = useRef(onClose);
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -36,7 +38,7 @@ export function useModalDialog(
       dlg.removeEventListener('close', handleClose);
       dlg.removeEventListener('click', handleBackdropClick);
     };
-  }, [open]);
+  }, [open, dialogRef]);
 
   return dialogRef;
 }

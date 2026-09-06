@@ -52,17 +52,17 @@ export const en: Locale = {
     titleLead: 'Choose tonight’s film',
     titleAccent: 'together.',
     tagline:
-      'No more endless debates. Create an event, invite your friends, vote on the suggestions — and let the wheel settle it if you have to.',
+      'No more endless debates. Create an event, invite your friends, vote on the suggestions, and let the wheel settle it if you have to.',
     seoDescription:
-      'Movie Picker — plan a movie night: create an event, share the link, suggest films (TMDB), vote and spin the wheel to pick a winner.',
-    ogImageAlt: 'Movie Picker — choose tonight’s film together',
+      'Movie Picker, plan a movie night: create an event, share the link, suggest films (TMDB), vote and spin the wheel to pick a winner.',
+    ogImageAlt: 'Movie Picker: choose tonight’s film together',
     stepsKicker: 'In 4 steps',
     stepsTitle: 'From the invite to the credits',
     stepsSubtitle: 'A movie night that actually starts on time. Promise.',
     steps: {
       invite: {
         title: 'Start the night',
-        text: 'One link, one QR code — everyone joins in two clicks.',
+        text: 'One link, one QR code, and everyone joins in two clicks.',
       },
       propose: {
         title: 'Suggest your films',
@@ -70,7 +70,7 @@ export const en: Locale = {
       },
       vote: {
         title: 'Vote together',
-        text: 'Thumbs up, already seen, keep it — the group favourites surface fast.',
+        text: 'Thumbs up, already seen, keep it: the group favourites surface fast.',
       },
       wheel: {
         title: 'The wheel decides',
@@ -563,7 +563,7 @@ export const en: Locale = {
       notifyDateChangeLabel: 'Notify participants of the date change',
       themeLabel: 'Theme / mood',
       themeEmptyTitle: 'Add a theme',
-      themeEmptySubtitle: 'Optional — sets the mood for the event.',
+      themeEmptySubtitle: 'Optional: sets the mood for the event.',
       themePlaceholder: 'E.g. Horror, Sci-fi, Comedy…',
       clearThemeAria: 'Remove the theme',
       clearThemeButton: 'Clear',
@@ -830,7 +830,7 @@ export const en: Locale = {
         'Ratings and streaming availability are indicative, sourced from The Movie Database (TMDB). Available services may vary.',
       attributionPrefix: 'Data provided by',
       attributionLinkLabel: 'TMDB',
-      attributionLinkAria: 'TMDB — open The Movie Database website (new tab)',
+      attributionLinkAria: 'TMDB: open The Movie Database website (new tab)',
     },
     watchProviders: {
       listAria: 'Indicative streaming availability',
@@ -839,14 +839,14 @@ export const en: Locale = {
       typeBuy: 'Buy',
       chipAria: '{{provider}} ({{type}})',
       chipLinkAria:
-        '{{provider}} — {{type}}. Open TMDB’s “where to watch” page for this movie (new tab).',
+        '{{provider}}, {{type}}. Open TMDB’s “where to watch” page for this movie (new tab).',
       showMoreAria: 'Show {{count}} more platform(s)',
       showLessAria: 'Collapse the platforms list',
       emptyLabel: 'Not streaming',
       columnLabel: 'Where',
-      alsoRentAria: 'Rent ({{count}}) — see where to watch “{{title}}”',
-      alsoBuyAria: 'Buy ({{count}}) — see where to watch “{{title}}”',
-      alsoAvailableAria: '{{count}} more offers — see where to watch “{{title}}”',
+      alsoRentAria: 'Rent ({{count}}): see where to watch “{{title}}”',
+      alsoBuyAria: 'Buy ({{count}}): see where to watch “{{title}}”',
+      alsoAvailableAria: '{{count}} more offers: see where to watch “{{title}}”',
     },
     closed: {
       emptyTitle: 'No movie was picked',
@@ -1035,7 +1035,7 @@ export const en: Locale = {
     linkedinLabel: 'LinkedIn profile (new tab)',
     tmdbPrefix: 'Data provided by',
     tmdbSuffix: '. Ratings and availability are indicative.',
-    tmdbLinkAria: 'TMDB — open The Movie Database (new tab)',
+    tmdbLinkAria: 'TMDB: open The Movie Database (new tab)',
     copyright: '© {{year}} Movie Picker v{{version}}',
     legalTitle: 'Legal information',
     legalNotice: 'Legal notice',
@@ -1046,7 +1046,7 @@ export const en: Locale = {
     noticeTitle: 'Legal notice',
     noticeIntro: 'Movie Picker is a personal project developed and published by Adrien Morand.',
     noticeEditorTitle: 'Publisher',
-    noticeEditorBody: 'Adrien Morand — contact: {{email}}',
+    noticeEditorBody: 'Adrien Morand, contact: {{email}}',
     noticeHostingTitle: 'Hosting',
     noticeHostingBody:
       'The website (front-end) is hosted by Amazon Web Services (AWS S3 / CloudFront). The API is hosted by Google Cloud Platform (Cloud Run). The database is hosted by MongoDB Atlas.',
@@ -1211,7 +1211,7 @@ export const en: Locale = {
       genresCumulative: 'Top 6 genres, out of {{count}} combined occurrences',
       activityTitle: 'Activity (6 months)',
       activityImgAlt: 'Activity heatmap: {{count}} participation(s) over 26 weeks',
-      weekTooltip: '{{count}} participation(s) — week of {{date}}',
+      weekTooltip: '{{count}} participation(s), week of {{date}}',
       legendLess: 'Less',
       legendMore: 'More',
       empty: 'No activity yet.',
@@ -1387,7 +1387,7 @@ export const en: Locale = {
       settingsPage: {
         title: 'Settings in five sections',
         description:
-          'My account becomes Settings: Profile, Preferences, Notifications, Integrations, Account and security — all saved automatically.',
+          'My account becomes Settings: Profile, Preferences, Notifications, Integrations, Account and security, all saved automatically.',
       },
       eventSettings: {
         title: 'Event panel revamped',

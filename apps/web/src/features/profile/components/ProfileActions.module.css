@@ -1,22 +1,22 @@
 .actions {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }
 
 .primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
+  gap: var(--space-1-5);
   width: 100%;
   line-height: 1;
 }
 
 .shareGroup {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .shareBtn {
@@ -25,7 +25,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
+  gap: var(--space-1-5);
   line-height: 1;
 }
 
@@ -38,31 +38,58 @@
   display: none;
 }
 
-.unfollowBtn:hover .iconIdle,
 .unfollowBtn:focus-visible .iconIdle {
   display: none;
 }
 
-.unfollowBtn:hover .iconActive,
+@media (hover: hover) {
+  .unfollowBtn:hover .iconIdle {
+    display: none;
+  }
+}
+
 .unfollowBtn:focus-visible .iconActive {
   display: inline;
 }
 
-.unfollowBtn:hover .labelIdle,
+@media (hover: hover) {
+  .unfollowBtn:hover .iconActive {
+    display: inline;
+  }
+}
+
 .unfollowBtn:focus-visible .labelIdle {
   display: none;
 }
 
-.unfollowBtn:hover .labelActive,
+@media (hover: hover) {
+  .unfollowBtn:hover .labelIdle {
+    display: none;
+  }
+}
+
 .unfollowBtn:focus-visible .labelActive {
   display: inline;
 }
 
-.unfollowBtn:hover,
+@media (hover: hover) {
+  .unfollowBtn:hover .labelActive {
+    display: inline;
+  }
+}
+
 .unfollowBtn:focus-visible {
   border-color: var(--color-error);
   background: color-mix(in srgb, var(--color-error) 10%, transparent);
   color: var(--color-error);
+}
+
+@media (hover: hover) {
+  .unfollowBtn:hover {
+    border-color: var(--color-error);
+    background: color-mix(in srgb, var(--color-error) 10%, transparent);
+    color: var(--color-error);
+  }
 }
 
 .spinner {

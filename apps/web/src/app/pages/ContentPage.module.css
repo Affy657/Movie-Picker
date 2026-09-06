@@ -1,5 +1,5 @@
 .layout {
-  --page-max-width: 42rem;
+  --page-max-width: var(--container-base);
 }
 
 .title {

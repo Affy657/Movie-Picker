@@ -1,10 +1,10 @@
 import { useId } from 'react';
 import { X } from 'lucide-react';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
-import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import { useCopyFeedback } from '@/shared/hooks/useCopyFeedback';
 import type { PwaInstallGuideMode } from '@/shared/pwa/pwaInstall';
 import styles from './InstallPwaDialog.module.css';
+import Modal from '@/shared/components/Modal';
 
 const GUIDE_COPY: Record<
   PwaInstallGuideMode,
@@ -48,7 +48,6 @@ type InstallPwaDialogProps = {
 export default function InstallPwaDialog({ open, mode, onClose }: Readonly<InstallPwaDialogProps>) {
   const { t } = useTranslation();
   const titleId = useId();
-  const dialogRef = useModalDialog(open, onClose);
   const { copied, copy } = useCopyFeedback();
 
   const copyKeys = GUIDE_COPY[mode];
@@ -57,7 +56,7 @@ export default function InstallPwaDialog({ open, mode, onClose }: Readonly<Insta
   const steps = copyKeys.steps.map((key) => t(key));
 
   return (
-    <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>
+    <Modal open={open} onClose={onClose} size="sm" labelledBy={titleId}>
       <div className={styles.inner}>
         <header className={styles.header}>
           <h2 id={titleId} className={styles.title}>
@@ -98,6 +97,6 @@ export default function InstallPwaDialog({ open, mode, onClose }: Readonly<Insta
           </div>
         )}
       </div>
-    </dialog>
+    </Modal>
   );
 }

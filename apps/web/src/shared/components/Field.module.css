@@ -1,0 +1,24 @@
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  margin-bottom: var(--space-2);
+}
+
+.field :global(.input) {
+  margin-bottom: 0;
+}
+
+.error {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  line-height: var(--leading-comfortable);
+  color: var(--color-error);
+}
+
+.hint {
+  margin-top: var(--space-2);
+}

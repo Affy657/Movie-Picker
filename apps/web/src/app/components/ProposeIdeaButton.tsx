@@ -13,12 +13,12 @@ import {
 import { useLocation } from 'react-router';
 import { ImagePlus, X } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
-import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { APP_VERSION } from '@/shared/appVersion';
 import Dropdown from '@/shared/components/Dropdown';
 import { createIdeaSuggestion, type IdeaSuggestionCategory } from '@/shared/api/ideaSuggestionsApi';
 import styles from './ProposeIdeaButton.module.css';
+import Modal from '@/shared/components/Modal';
 
 const TITLE_MAX_LENGTH = 100;
 const DESCRIPTION_MAX_LENGTH = 2000;
@@ -66,9 +66,6 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
   const attachmentsLabelId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounterRef = useRef(0);
-
-  const dialogRef = useModalDialog(open, onClose);
-
   const addAttachments = (files: FileList | File[]) => {
     setAttachmentError(null);
     const incoming = Array.from(files).filter((f) => f.type.startsWith('image/'));
@@ -186,7 +183,7 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
   };
 
   return (
-    <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>
+    <Modal open={open} onClose={onClose} size="md" labelledBy={titleId}>
       <div className={styles.inner}>
         <header className={styles.header}>
           <h2 id={titleId} className={styles.title}>
@@ -328,7 +325,7 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
           </form>
         )}
       </div>
-    </dialog>
+    </Modal>
   );
 }
 

@@ -13,6 +13,7 @@ import {
 } from '@/features/movies/components/movieSearchFilterOptions';
 import type { RatingScale } from '@/shared/types/theme';
 import type { MovieMediaType } from '@/shared/types/movie';
+import Chip from '@/shared/components/Chip';
 import styles from './MovieListFiltersPanel.module.css';
 
 interface MovieListFiltersPanelLabels {
@@ -73,15 +74,14 @@ export default function MovieListFiltersPanel({
         <span className={styles.groupLabel}>{labels.genre}</span>
         <div className={styles.chipRow}>
           {MOVIE_GENRE_IDS.map((id) => (
-            <button
+            <Chip
               key={id}
-              type="button"
-              className={`${styles.chip} ${selectedGenres.includes(id) ? styles.chipActive : ''}`}
               onClick={() => onToggleGenre(id)}
-              aria-pressed={selectedGenres.includes(id)}
+              pressed={selectedGenres.includes(id)}
+              selected={selectedGenres.includes(id)}
             >
-              <span className={styles.chipLabel}>{genreLabel(id, tmdbLanguage)}</span>
-            </button>
+              {genreLabel(id, tmdbLanguage)}
+            </Chip>
           ))}
         </div>
       </div>
@@ -89,22 +89,20 @@ export default function MovieListFiltersPanel({
       <div className={styles.group}>
         <span className={styles.groupLabel}>{labels.type}</span>
         <div className={styles.chipRow}>
-          <button
-            type="button"
-            className={`${styles.chip} ${selectedMediaTypes.includes('movie') ? styles.chipActive : ''}`}
+          <Chip
             onClick={() => onToggleMediaType('movie')}
-            aria-pressed={selectedMediaTypes.includes('movie')}
+            pressed={selectedMediaTypes.includes('movie')}
+            selected={selectedMediaTypes.includes('movie')}
           >
-            <span className={styles.chipLabel}>{labels.typeMovie}</span>
-          </button>
-          <button
-            type="button"
-            className={`${styles.chip} ${selectedMediaTypes.includes('tv') ? styles.chipActive : ''}`}
+            {labels.typeMovie}
+          </Chip>
+          <Chip
             onClick={() => onToggleMediaType('tv')}
-            aria-pressed={selectedMediaTypes.includes('tv')}
+            pressed={selectedMediaTypes.includes('tv')}
+            selected={selectedMediaTypes.includes('tv')}
           >
-            <span className={styles.chipLabel}>{labels.typeTv}</span>
-          </button>
+            {labels.typeTv}
+          </Chip>
         </div>
       </div>
 
@@ -112,15 +110,14 @@ export default function MovieListFiltersPanel({
         <span className={styles.groupLabel}>{labels.decade}</span>
         <div className={styles.chipRow}>
           {DECADE_OPTIONS.map((decade) => (
-            <button
+            <Chip
               key={decade}
-              type="button"
-              className={`${styles.chip} ${selectedDecade === decade ? styles.chipActive : ''}`}
               onClick={() => onToggleDecade(decade)}
-              aria-pressed={selectedDecade === decade}
+              pressed={selectedDecade === decade}
+              selected={selectedDecade === decade}
             >
-              <span className={styles.chipLabel}>{decade}s</span>
-            </button>
+              {decade}s
+            </Chip>
           ))}
         </div>
       </div>
@@ -130,15 +127,14 @@ export default function MovieListFiltersPanel({
           <span className={styles.groupLabel}>{labels.voteMin}</span>
           <div className={styles.chipRow}>
             {MOVIE_LIST_VOTE_MIN_OPTIONS.map((opt) => (
-              <button
+              <Chip
                 key={opt.tmdb}
-                type="button"
-                className={`${styles.chip} ${voteMin === opt.tmdb ? styles.chipActive : ''}`}
                 onClick={() => onToggleVoteMin(opt.tmdb)}
-                aria-pressed={voteMin === opt.tmdb}
+                pressed={voteMin === opt.tmdb}
+                selected={voteMin === opt.tmdb}
               >
-                <span className={styles.chipLabel}>★ {voteMinLabel(opt.tmdb, ratingScale)}+</span>
-              </button>
+                ★ {voteMinLabel(opt.tmdb, ratingScale)}+
+              </Chip>
             ))}
           </div>
         </div>

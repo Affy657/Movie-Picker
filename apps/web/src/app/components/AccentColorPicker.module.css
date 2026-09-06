@@ -1,7 +1,7 @@
 ﻿.root {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.55rem;
+  gap: var(--space-2);
   align-items: center;
 }
 
@@ -24,20 +24,21 @@
     border-color var(--duration-fast) var(--ease-default),
     box-shadow var(--duration-fast) var(--ease-default);
 }
-
-.swatch:hover {
-  transform: scale(1.06);
+@media (hover: hover) {
+  .swatch:hover {
+    transform: scale(1.06);
+  }
 }
 
 .swatch:focus-visible {
   outline: none;
   border-color: var(--color-text);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 35%, transparent);
+  box-shadow: var(--ring-focus);
 }
 
 .swatchSelected {
   border-color: var(--color-text);
-  box-shadow: 0 0 0 2px var(--color-surface);
+  box-shadow: var(--ring-surface);
 }
 
 .check {

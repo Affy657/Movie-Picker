@@ -36,7 +36,7 @@
   height: 1.25rem;
   border-radius: var(--radius-pill);
   background: var(--color-toggle-thumb);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-sm);
   transition: transform var(--duration-slow) var(--ease-default);
   pointer-events: none;
 }

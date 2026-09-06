@@ -8,7 +8,7 @@
 
 .panelHeading {
   margin: 0;
-  font-size: 1.125rem;
+  font-size: var(--font-size-md-plus);
   font-weight: 700;
   letter-spacing: var(--tracking-close);
   line-height: 1;
@@ -18,9 +18,9 @@
 .saved {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: var(--space-1);
   margin-left: auto;
-  padding: 0.25rem 0.55rem;
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-pill);
   background: var(--color-success-bg);
   color: var(--color-success);
@@ -46,7 +46,7 @@
 .cardTitle {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   margin: var(--space-4) 0 0.15rem;
   font-size: var(--font-size-2xs);
   font-weight: 700;
@@ -61,7 +61,7 @@
 }
 
 .field {
-  padding: 0.95rem 0;
+  padding: var(--space-4) 0;
   border-top: 1px solid var(--color-border-subtle);
 }
 
@@ -74,7 +74,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.6rem var(--space-4);
-  padding: 0.85rem 0;
+  padding: var(--space-3-5) 0;
   border-top: 1px solid var(--color-border-subtle);
 }
 
@@ -101,7 +101,7 @@
 }
 
 .rowSub {
-  margin: 0.1rem 0 0;
+  margin: var(--space-0-5) 0 0;
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
 }
@@ -115,7 +115,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: 0.6rem 0.75rem;
+  padding: var(--space-2-5) var(--space-3);
   border-radius: var(--radius-sm);
   background: var(--color-badge-pending-bg);
   border: 1px solid color-mix(in srgb, var(--color-badge-pending-text) 30%, transparent);
@@ -135,20 +135,22 @@
 
 .attentionBtn {
   min-height: 34px;
-  padding: 0.35rem 0.7rem;
+  padding: var(--space-1-5) var(--space-3);
   font-size: var(--font-size-xs);
   border-color: color-mix(in srgb, var(--color-badge-pending-text) 50%, transparent);
   color: var(--color-badge-pending-text);
 }
 
-.attentionBtn:hover {
-  border-color: var(--color-badge-pending-text);
-  color: var(--color-badge-pending-text);
+@media (hover: hover) {
+  .attentionBtn:hover {
+    border-color: var(--color-badge-pending-text);
+    color: var(--color-badge-pending-text);
+  }
 }
 
 .dangerZone {
   margin-top: var(--space-4);
-  padding: 1.15rem 1.2rem;
+  padding: var(--space-5) var(--space-5);
   border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--color-error) 7%, transparent);
@@ -168,6 +170,6 @@
 
 .smallBtn {
   min-height: 34px;
-  padding: 0.35rem 0.7rem;
+  padding: var(--space-1-5) var(--space-3);
   font-size: var(--font-size-xs);
 }

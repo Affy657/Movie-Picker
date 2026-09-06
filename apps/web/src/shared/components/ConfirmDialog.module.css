@@ -1,20 +1,5 @@
-﻿.dialog {
-  width: min(460px, calc(100vw - 2rem));
-  padding: 1.5rem 1.6rem;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border-subtle);
-  background: var(--color-surface);
-  color: var(--color-text);
-  box-shadow: var(--shadow-lg);
-}
-
-.dialog::backdrop {
-  background: var(--overlay-backdrop);
-  backdrop-filter: blur(4px);
-}
-
 .title {
-  margin: 0 0 0.6rem 0;
+  margin: 0 0 var(--space-2-5) 0;
   font-size: var(--font-size-lg);
   font-weight: 700;
   letter-spacing: var(--tracking-close);
@@ -22,7 +7,7 @@
 }
 
 .message {
-  margin: 0 0 1.4rem 0;
+  margin: 0 0 var(--space-6) 0;
   font-size: var(--font-size-base);
   line-height: var(--leading-loose);
   color: var(--color-text-muted);
@@ -31,10 +16,10 @@
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.65rem;
+  gap: var(--space-2-5);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 29.9375rem) {
   .actions {
     flex-direction: column-reverse;
   }

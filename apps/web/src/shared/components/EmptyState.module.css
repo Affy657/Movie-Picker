@@ -3,8 +3,8 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 0.45rem;
-  padding: 2.25rem 1.5rem;
+  gap: var(--space-2);
+  padding: var(--space-9) var(--space-6);
   border: 1px dashed var(--color-border-subtle);
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--color-surface) 60%, transparent);
@@ -16,7 +16,7 @@
   justify-content: center;
   width: 3.25rem;
   height: 3.25rem;
-  margin-bottom: 0.35rem;
+  margin-bottom: var(--space-1-5);
   border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--color-primary) 12%, transparent);
   color: var(--color-primary);
@@ -43,13 +43,13 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.5rem;
-  margin-top: 0.65rem;
+  gap: var(--space-2);
+  margin-top: var(--space-2-5);
 }
 
 .compact {
-  gap: 0.35rem;
-  padding: 1.75rem 1rem;
+  gap: var(--space-1-5);
+  padding: var(--space-7) var(--space-4);
   border: none;
   background: transparent;
 }
@@ -57,7 +57,7 @@
 .compact .iconWrap {
   width: 2.5rem;
   height: 2.5rem;
-  margin-bottom: 0.25rem;
+  margin-bottom: var(--space-1);
 }
 
 .compact .title {

@@ -72,6 +72,9 @@ export default function AppShell() {
 
   const isAuthenticated = !!user;
   const returnTo = `${location.pathname}${location.search}`;
+  const isOnAuthRoute = (
+    [ROUTES.login, ROUTES.register, ROUTES.forgotPassword, ROUTES.resetPassword] as string[]
+  ).includes(location.pathname);
 
   const items: NavItemDef[] = NAV_ITEMS.map(({ labelKey, ...rest }) => ({
     ...rest,
@@ -101,7 +104,7 @@ export default function AppShell() {
               <DesktopNavItem key={item.to} {...item} />
             ))}
           </nav>
-          {isLoading ? (
+          {isLoading || (!isAuthenticated && isOnAuthRoute) ? (
             <div className={styles.navActions} />
           ) : isAuthenticated ? (
             <div className={styles.navActions}>

@@ -1,30 +1,9 @@
-﻿.dialog {
-  width: min(30rem, calc(100vw - 2rem));
-  max-height: 80vh;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  color: var(--color-text);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  overflow: hidden;
-}
-
-.dialog[open] {
-  display: flex;
-  flex-direction: column;
-}
-
-.dialog::backdrop {
-  background: var(--overlay-backdrop);
-}
-
 .header {
   display: flex;
   align-items: stretch;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0 0.5rem 0 1rem;
+  gap: var(--space-3);
+  padding: 0 var(--space-2) 0 var(--space-4);
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
@@ -32,7 +11,7 @@
 .tabs {
   display: flex;
   align-items: stretch;
-  gap: 0.25rem;
+  gap: var(--space-1);
 }
 
 .tab,
@@ -40,7 +19,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 3rem;
-  padding: 0 0.75rem;
+  padding: 0 var(--space-3);
   border: none;
   border-bottom: 2px solid transparent;
   font-size: var(--font-size-sm);
@@ -59,8 +38,10 @@
   font-weight: 700;
 }
 
-.tab:hover {
-  color: var(--color-text);
+@media (hover: hover) {
+  .tab:hover {
+    color: var(--color-text);
+  }
 }
 
 .closeButton {
@@ -78,20 +59,22 @@
   color: var(--color-text-muted);
 }
 
-.closeButton:hover {
-  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+@media (hover: hover) {
+  .closeButton:hover {
+    background: color-mix(in srgb, var(--color-text) 6%, transparent);
+  }
 }
 
 .list {
   list-style: none;
   margin: 0;
-  padding: 0.5rem 0;
+  padding: var(--space-2) 0;
   overflow-y: auto;
   flex: 1;
 }
 
 .placeholder {
-  padding: 2rem 1rem;
+  padding: var(--space-8) var(--space-4);
   text-align: center;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
@@ -100,20 +83,22 @@
 .item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-height: 3.75rem;
-  padding: 0.25rem 1rem;
+  padding: var(--space-1) var(--space-4);
 }
 
-.item:hover {
-  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+@media (hover: hover) {
+  .item:hover {
+    background: color-mix(in srgb, var(--color-text) 6%, transparent);
+  }
 }
 
 .itemLink {
   display: flex;
   align-self: stretch;
   align-items: center;
-  gap: 0.625rem;
+  gap: var(--space-2-5);
   flex: 1;
   min-width: 0;
   min-height: 44px;
@@ -151,9 +136,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.3rem;
+  gap: var(--space-1);
   min-height: 36px;
-  padding: 0 0.875rem;
+  padding: 0 var(--space-3-5);
   border-radius: var(--radius-md);
   font-size: var(--font-size-xs);
   font-weight: 600;
@@ -177,7 +162,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 28px;
-  padding: 0 0.75rem;
+  padding: 0 var(--space-3);
   border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--color-primary) 14%, transparent);
   color: var(--color-primary);
@@ -196,8 +181,10 @@
   color: var(--color-primary-contrast);
 }
 
-.followBtn:hover {
-  opacity: 0.88;
+@media (hover: hover) {
+  .followBtn:hover {
+    opacity: 0.88;
+  }
 }
 
 .unfollowBtn {
@@ -206,6 +193,8 @@
   color: var(--color-text-muted);
 }
 
-.unfollowBtn:hover {
-  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+@media (hover: hover) {
+  .unfollowBtn:hover {
+    background: color-mix(in srgb, var(--color-text) 6%, transparent);
+  }
 }

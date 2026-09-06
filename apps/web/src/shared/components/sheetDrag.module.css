@@ -37,7 +37,7 @@
   flex-shrink: 0;
   width: 2.5rem;
   height: 0.25rem;
-  margin-top: 0.55rem;
+  margin-top: var(--space-2);
   border-radius: var(--radius-pill);
   background: var(--color-border);
   pointer-events: none;

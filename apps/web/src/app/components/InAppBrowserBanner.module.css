@@ -3,11 +3,11 @@
   top: calc(0.75rem + env(safe-area-inset-top, 0px));
   left: 1rem;
   right: 1rem;
-  z-index: 50;
+  z-index: var(--z-header);
   display: flex;
   flex-direction: column;
-  gap: 0.875rem;
-  padding: 0.875rem 1rem;
+  gap: var(--space-3-5);
+  padding: var(--space-3-5) var(--space-4);
   border-radius: var(--radius-md);
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
@@ -15,7 +15,7 @@
   animation: slideDown 0.25s var(--ease-out) both;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 48rem) {
   .root {
     left: 50%;
     right: auto;
@@ -38,18 +38,18 @@
 .header {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .content {
   flex: 1;
   min-width: 0;
-  padding-left: 0.75rem;
+  padding-left: var(--space-3);
   border-left: 2px solid var(--color-primary);
 }
 
 .title {
-  margin: 0 0 0.25rem;
+  margin: 0 0 var(--space-1);
   font-size: var(--font-size-sm);
   font-weight: 700;
   color: var(--color-text);
@@ -67,7 +67,7 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .openLink {
@@ -92,9 +92,11 @@
   cursor: pointer;
 }
 
-.closeBtn:hover {
-  background: color-mix(in srgb, var(--color-text-muted) 14%, transparent);
-  color: var(--color-text);
+@media (hover: hover) {
+  .closeBtn:hover {
+    background: color-mix(in srgb, var(--color-text-muted) 14%, transparent);
+    color: var(--color-text);
+  }
 }
 
 .closeBtn:focus-visible {
@@ -102,8 +104,14 @@
   outline-offset: 2px;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 29.9375rem) {
   .actions :global(.btn) {
     flex: 1 1 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root {
+    animation: none;
   }
 }

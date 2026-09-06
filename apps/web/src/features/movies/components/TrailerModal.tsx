@@ -1,9 +1,9 @@
 import { useId } from 'react';
 import { X } from 'lucide-react';
-import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import { useTranslation } from '@/shared/i18n';
 import { extractYouTubeId } from '@/shared/utils/youtube';
 import styles from './TrailerModal.module.css';
+import Modal from '@/shared/components/Modal';
 
 interface TrailerModalProps {
   open: boolean;
@@ -25,11 +25,8 @@ export default function TrailerModal({
     ? `https://www.youtube.com/embed/${encodeURIComponent(trailerYtId)}`
     : null;
   const visible = open && !!embedUrl;
-
-  const dialogRef = useModalDialog(visible, onClose);
-
   return (
-    <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>
+    <Modal open={visible} onClose={onClose} size="xxl" surface="media" labelledBy={titleId}>
       {visible && (
         <>
           <div className={styles.header}>
@@ -57,6 +54,6 @@ export default function TrailerModal({
           </div>
         </>
       )}
-    </dialog>
+    </Modal>
   );
 }

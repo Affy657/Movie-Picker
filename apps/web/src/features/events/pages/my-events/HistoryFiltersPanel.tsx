@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import Chip from '@/shared/components/Chip';
 import { useTranslation } from '@/shared/i18n';
 import type { HistoryOutcome, HistoryRole } from './useHistoryToolbar';
 import styles from './HistoryFiltersPanel.module.css';
@@ -20,6 +20,16 @@ export default function HistoryFiltersPanel({
 }: Readonly<HistoryFiltersPanelProps>) {
   const { t } = useTranslation();
 
+  const roleChips: ReadonlyArray<[HistoryRole, string]> = [
+    ['hosted', t('events.myEvents.filtersRoleHosted')],
+    ['joined', t('events.myEvents.filtersRoleJoined')],
+  ];
+
+  const outcomeChips: ReadonlyArray<[HistoryOutcome, string]> = [
+    ['withWinner', t('events.myEvents.filtersOutcomeWithWinner')],
+    ['withoutWinner', t('events.myEvents.filtersOutcomeWithoutWinner')],
+  ];
+
   return (
     <div id={panelId} className={styles.panel}>
       <div className={styles.group} role="group" aria-labelledby={`${panelId}-role-label`}>
@@ -27,22 +37,16 @@ export default function HistoryFiltersPanel({
           {t('events.myEvents.filtersRoleLabel')}
         </span>
         <div className={styles.chipRow}>
-          <button
-            type="button"
-            className={clsx(styles.chip, roles.has('hosted') && styles.chipActive)}
-            onClick={() => onToggleRole('hosted')}
-            aria-pressed={roles.has('hosted')}
-          >
-            <span className={styles.chipLabel}>{t('events.myEvents.filtersRoleHosted')}</span>
-          </button>
-          <button
-            type="button"
-            className={clsx(styles.chip, roles.has('joined') && styles.chipActive)}
-            onClick={() => onToggleRole('joined')}
-            aria-pressed={roles.has('joined')}
-          >
-            <span className={styles.chipLabel}>{t('events.myEvents.filtersRoleJoined')}</span>
-          </button>
+          {roleChips.map(([role, label]) => (
+            <Chip
+              key={role}
+              onClick={() => onToggleRole(role)}
+              pressed={roles.has(role)}
+              selected={roles.has(role)}
+            >
+              {label}
+            </Chip>
+          ))}
         </div>
       </div>
 
@@ -51,26 +55,16 @@ export default function HistoryFiltersPanel({
           {t('events.myEvents.filtersOutcomeLabel')}
         </span>
         <div className={styles.chipRow}>
-          <button
-            type="button"
-            className={clsx(styles.chip, outcomes.has('withWinner') && styles.chipActive)}
-            onClick={() => onToggleOutcome('withWinner')}
-            aria-pressed={outcomes.has('withWinner')}
-          >
-            <span className={styles.chipLabel}>
-              {t('events.myEvents.filtersOutcomeWithWinner')}
-            </span>
-          </button>
-          <button
-            type="button"
-            className={clsx(styles.chip, outcomes.has('withoutWinner') && styles.chipActive)}
-            onClick={() => onToggleOutcome('withoutWinner')}
-            aria-pressed={outcomes.has('withoutWinner')}
-          >
-            <span className={styles.chipLabel}>
-              {t('events.myEvents.filtersOutcomeWithoutWinner')}
-            </span>
-          </button>
+          {outcomeChips.map(([outcome, label]) => (
+            <Chip
+              key={outcome}
+              onClick={() => onToggleOutcome(outcome)}
+              pressed={outcomes.has(outcome)}
+              selected={outcomes.has(outcome)}
+            >
+              {label}
+            </Chip>
+          ))}
         </div>
       </div>
     </div>

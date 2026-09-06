@@ -1,13 +1,13 @@
 ﻿.root {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .option {
   flex: 1 1 auto;
   min-width: 5.5rem;
-  padding: 0.55rem 1rem;
+  padding: var(--space-2) var(--space-4);
   font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--color-text);
@@ -23,15 +23,17 @@
     transform var(--duration-base) var(--ease-default);
 }
 
-.option:hover:not(.optionSelected) {
-  border-color: color-mix(in srgb, var(--color-primary) 50%, var(--color-border));
-  color: var(--color-primary);
+@media (hover: hover) {
+  .option:hover:not(.optionSelected) {
+    border-color: color-mix(in srgb, var(--color-primary) 50%, var(--color-border));
+    color: var(--color-primary);
+  }
 }
 
 .option:focus-visible {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 25%, transparent);
+  box-shadow: var(--ring-focus);
 }
 
 .optionSelected {
@@ -40,6 +42,8 @@
   color: var(--color-primary-text);
 }
 
-.optionSelected:hover {
-  color: var(--color-primary-text);
+@media (hover: hover) {
+  .optionSelected:hover {
+    color: var(--color-primary-text);
+  }
 }

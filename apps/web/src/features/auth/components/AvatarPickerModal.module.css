@@ -1,23 +1,8 @@
-﻿.dialog {
-  width: min(480px, calc(100vw - 2rem));
-  padding: 1.4rem 1.5rem 1.6rem;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border-subtle);
-  background: var(--color-surface);
-  color: var(--color-text);
-  box-shadow: var(--shadow-lg);
-}
-
-.dialog::backdrop {
-  background: var(--overlay-backdrop);
-  backdrop-filter: blur(4px);
-}
-
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 0 0 0.4rem;
+  margin: 0 0 var(--space-1-5);
 }
 
 .title {
@@ -40,29 +25,33 @@
   background: transparent;
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: background var(--duration-base) var(--ease-default), color var(--duration-base) var(--ease-default);
+  transition:
+    background var(--duration-base) var(--ease-default),
+    color var(--duration-base) var(--ease-default);
 }
 
-.closeBtn:hover {
-  background: var(--color-border-subtle);
-  color: var(--color-text);
+@media (hover: hover) {
+  .closeBtn:hover {
+    background: var(--color-border-subtle);
+    color: var(--color-text);
+  }
 }
 
 .hint {
-  margin: 0 0 1.1rem;
+  margin: 0 0 var(--space-4);
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
 }
 
 .tabs {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
 }
 
 .tab {
   flex: 1;
-  padding: 0.45rem 0;
+  padding: var(--space-2) 0;
   border-radius: var(--radius-md);
   border: 1.5px solid var(--color-border-subtle);
   background: transparent;
@@ -70,12 +59,17 @@
   cursor: pointer;
   font-size: var(--font-size-sm);
   font-weight: 500;
-  transition: background var(--duration-base) var(--ease-default), border-color var(--duration-base) var(--ease-default), color var(--duration-base) var(--ease-default);
+  transition:
+    background var(--duration-base) var(--ease-default),
+    border-color var(--duration-base) var(--ease-default),
+    color var(--duration-base) var(--ease-default);
 }
 
-.tab:hover {
-  background: var(--color-border-subtle);
-  color: var(--color-text);
+@media (hover: hover) {
+  .tab:hover {
+    background: var(--color-border-subtle);
+    color: var(--color-text);
+  }
 }
 
 .tabActive {
@@ -88,10 +82,10 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 0.6rem;
+  gap: var(--space-2-5);
 }
 
-@media (max-width: 400px) {
+@media (max-width: 24.9375rem) {
   .grid {
     grid-template-columns: repeat(4, 1fr);
   }
@@ -102,17 +96,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.25rem;
+  padding: var(--space-1);
   border-radius: var(--radius-md);
   border: 2px solid transparent;
   background: transparent;
   cursor: pointer;
-  transition: border-color var(--duration-base) var(--ease-default), background var(--duration-base) var(--ease-default);
+  transition:
+    border-color var(--duration-base) var(--ease-default),
+    background var(--duration-base) var(--ease-default);
 }
 
-.option:hover {
-  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-  border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+@media (hover: hover) {
+  .option:hover {
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+  }
 }
 
 .optionSelected {

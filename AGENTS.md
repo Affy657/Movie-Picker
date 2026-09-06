@@ -12,6 +12,39 @@ Règles pour les agents IA travaillant sur ce repo.
 
 Si on ne peut pas exprimer l'intention via le nommage ou la structure, refactoriser le code — pas ajouter un commentaire.
 
+## Design system
+
+**Avant d'écrire du CSS ou un composant d'interface, chercher ce qui existe déjà.** Le réflexe par défaut est de réutiliser une primitive de `apps/web/src/shared/components/`, puis d'ajouter une variante à cette primitive, et seulement en dernier recours d'écrire un composant local.
+
+Primitives disponibles :
+
+| Besoin | Composant | Remarques |
+|---|---|---|
+| Bouton | `Button` (`buttonClass` pour un `<Link>`) | variantes `primary` / `secondary` / `danger` / `ghost`, tailles `sm` / `md` |
+| Fenêtre modale | `Modal` | seul endroit du projet où `<dialog>` et `::backdrop` sont autorisés |
+| Feuille mobile | `Sheet` | modale ancrée en bas, glissable |
+| Pastille, badge, filtre | `Chip` | centrage optique déjà intégré |
+| Surface de contenu | `Card` | `padding` `none`/`sm`/`md`/`lg`, `elevated`, `interactive` |
+| Champ de formulaire | `Field` | câble `label`, `aria-describedby`, message d'erreur |
+| Menu, onglets, info-bulle, état vide, squelette | `Menu`, `Dropdown`, `Tabs`, `Tooltip`, `InfoBubble`, `EmptyState`, `Skeleton` | |
+
+Aucune valeur littérale dans les CSS modules : espacements, tailles de police, `z-index` et couleurs passent par les jetons de `apps/web/src/styles/01-foundation.css`.
+
+- espacement : `var(--space-0-5 … --space-24)`, base 4 px avec demi-pas jusqu'à 14 px ;
+- typographie : `var(--font-size-4xs … --font-size-3xl)` ;
+- profondeur : `var(--z-below … --z-skip-link)`, jamais un nombre ;
+- largeur de page : `var(--container-xs … --container-2xl)` posé sur `--page-max-width` ;
+- couleur : `var(--color-*)`, `var(--on-poster-*)` pour ce qui se pose sur une affiche.
+
+Points de rupture, échelle fermée : `24.9375rem`, `29.9375rem`, `39.9375rem`, `47.9375rem`, `63.9375rem` en `max-width` ; `30rem`, `40rem`, `48rem`, `64rem`, `80rem` en `min-width`. Toute autre valeur est refusée.
+
+Deux règles de comportement :
+
+1. tout bloc `:hover` vit dans `@media (hover: hover)`, sinon l'état reste collé après un tap sur mobile ;
+2. toute `animation` a son pendant `@media (prefers-reduced-motion: reduce)`.
+
+`pnpm run check:architecture` échoue sur chacun de ces points (valeur littérale, `z-index` nu, point de rupture hors échelle, `<dialog>` ou `::backdrop` écrit hors de `Modal`), et il tourne dans `verify:local`, au pre-push et dans le job `lint-web`.
+
 ## Centrage vertical du texte
 
 Un texte centré dans un petit élément (pastille, badge, puce, chip) n'est **pas** optiquement centré par `align-items: center` seul : le centre des glyphes se situe au-dessus du centre de la boîte de ligne, donc le texte paraît trop haut et le vide s'accumule sous lui.

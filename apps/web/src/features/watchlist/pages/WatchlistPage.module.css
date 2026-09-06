@@ -1,11 +1,11 @@
 .layout {
-  --page-max-width: 640px;
+  --page-max-width: var(--container-base);
   overflow-anchor: none;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 40rem) {
   .layout {
-    --page-max-width: 75vw;
+    --page-max-width: var(--container-2xl);
   }
 }
 
@@ -16,8 +16,8 @@
 .headerBlock {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
-  margin-bottom: 1.25rem;
+  gap: var(--space-2-5);
+  margin-bottom: var(--space-5);
 }
 
 .pageHeader {
@@ -25,13 +25,13 @@
   align-items: flex-end;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 0.75rem 1rem;
+  gap: var(--space-3) var(--space-4);
 }
 
 .pageTitleGroup {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -53,19 +53,19 @@
 .headerActions {
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--space-2-5);
   flex-shrink: 0;
 }
 
 .headerActionsMobile {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   flex-shrink: 0;
 }
 
 .addPanelOpenWrap {
-  margin-bottom: 1.25rem;
+  margin-bottom: var(--space-5);
 }
 
 .grid {
@@ -74,5 +74,5 @@
   margin: 0;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(8.4rem, 1fr));
-  gap: 0.9rem;
+  gap: var(--space-3-5);
 }

@@ -1,8 +1,8 @@
 import { useEffect, useId, useState } from 'react';
 import { useTranslation } from '@/shared/i18n';
 import { useConsent } from '@/shared/contexts/ConsentContext';
-import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import styles from './ConsentDialog.module.css';
+import Modal from './Modal';
 
 type Props = {
   open: boolean;
@@ -13,7 +13,6 @@ export default function ConsentDialog({ open, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const { analytics, acceptAll, rejectAll, savePreferences } = useConsent();
   const [analyticsChecked, setAnalyticsChecked] = useState(analytics);
-  const dialogRef = useModalDialog(open, onClose);
   const reactId = useId();
   const titleId = `consent-dialog-title-${reactId}`;
 
@@ -37,7 +36,7 @@ export default function ConsentDialog({ open, onClose }: Readonly<Props>) {
   }
 
   return (
-    <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>
+    <Modal open={open} onClose={onClose} size="md" padded labelledBy={titleId}>
       <h2 id={titleId} className={styles.title}>
         {t('consent.dialog.title')}
       </h2>
@@ -98,6 +97,6 @@ export default function ConsentDialog({ open, onClose }: Readonly<Props>) {
           {t('consent.dialog.acceptAll')}
         </button>
       </div>
-    </dialog>
+    </Modal>
   );
 }

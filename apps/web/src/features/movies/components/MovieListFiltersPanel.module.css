@@ -1,11 +1,11 @@
 .panel {
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: var(--space-3-5);
 }
 
 .boxed {
-  padding: 1rem 1.1rem;
+  padding: var(--space-4) var(--space-4);
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
@@ -15,7 +15,7 @@
 .group {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: var(--space-2);
 }
 
 .groupLabel {
@@ -30,49 +30,15 @@
 .chipRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.28rem 0.7rem;
-  font-family: inherit;
-  font-size: var(--font-size-xs);
-  font-weight: 500;
-  color: var(--color-text-muted);
-  background: transparent;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-  line-height: var(--leading-none);
-  white-space: nowrap;
-}
-
-.chipLabel {
-  transform: translateY(var(--text-optical-nudge));
-}
-
-.chip:hover,
-.chip:focus-visible {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  outline: none;
-}
-
-.chipActive {
-  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  font-weight: 600;
+  gap: var(--space-1-5);
 }
 
 .footerRow {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  margin: 0 -1.1rem -1rem;
-  padding: 1rem 1.1rem;
+  margin: 0 calc(var(--space-4) * -1) calc(var(--space-4) * -1);
+  padding: var(--space-4) var(--space-4);
   border-top: 1px solid var(--color-border-subtle);
 }
 

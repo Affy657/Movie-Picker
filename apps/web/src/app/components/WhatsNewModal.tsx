@@ -4,7 +4,6 @@ import clsx from 'clsx';
 import { ChevronRight, Sparkles, Wand2, Wrench } from 'lucide-react';
 import type { ComponentType, SVGProps } from 'react';
 import { useTranslation } from '@/shared/i18n';
-import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import {
   whatsNewLinkPath,
   type WhatsNewAction,
@@ -13,6 +12,7 @@ import {
   type WhatsNewRelease,
 } from '@/shared/whatsNew';
 import styles from './WhatsNewModal.module.css';
+import Modal from '@/shared/components/Modal';
 
 type Props = {
   open: boolean;
@@ -57,7 +57,6 @@ export default function WhatsNewModal({
   onAction,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const dialogRef = useModalDialog(open, onClose);
   const reactId = useId();
   const titleId = `whats-new-modal-title-${reactId}`;
 
@@ -98,7 +97,7 @@ export default function WhatsNewModal({
   };
 
   return (
-    <dialog ref={dialogRef} className={styles.dialog} aria-labelledby={titleId}>
+    <Modal open={open} onClose={onClose} size="md" column labelledBy={titleId}>
       <div className={styles.accent} aria-hidden="true" />
 
       <div className={styles.body}>
@@ -137,6 +136,6 @@ export default function WhatsNewModal({
           {t('whatsNew.close')}
         </button>
       </div>
-    </dialog>
+    </Modal>
   );
 }

@@ -1,10 +1,11 @@
 import { useId } from 'react';
 import clsx from 'clsx';
 import { X } from 'lucide-react';
-import { useModalDialog } from '@/shared/hooks/useDialogOpen';
+import { useRef } from 'react';
 import { useSheetDrag } from '@/shared/hooks/useSheetDrag';
 import { useTranslation } from '@/shared/i18n';
 import dragStyles from './sheetDrag.module.css';
+import Modal from './Modal';
 import styles from './Sheet.module.css';
 
 interface SheetProps {
@@ -26,14 +27,16 @@ export default function Sheet({
 }: Readonly<SheetProps>) {
   const { t } = useTranslation();
   const titleId = useId();
-  const dialogRef = useModalDialog(open, onClose);
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const dragBind = useSheetDrag(dialogRef, onClose, open);
 
   return (
-    <dialog
-      ref={dialogRef}
+    <Modal
+      open={open}
+      onClose={onClose}
+      labelledBy={titleId}
+      dialogRef={dialogRef}
       className={clsx(styles.dialog, size === 'tall' && styles.dialogTall, dragStyles.surface)}
-      aria-labelledby={titleId}
     >
       {open && (
         <>
@@ -57,6 +60,6 @@ export default function Sheet({
           {footer ? <div className={styles.footer}>{footer}</div> : null}
         </>
       )}
-    </dialog>
+    </Modal>
   );
 }
