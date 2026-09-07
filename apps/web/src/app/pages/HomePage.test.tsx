@@ -275,4 +275,21 @@ describe('HomePage', () => {
       screen.getByRole('heading', { name: /on regarde ce soir/i, level: 1 })
     ).toBeInTheDocument();
   });
+
+  it('garde un panneau d’onglets valide même quand la section échoue', async () => {
+    server.use(
+      authMeGuestHandler,
+      collectionsHandler,
+      http.get(`${TEST_API_V1}/movies/showcase`, () => new HttpResponse(null, { status: 503 }))
+    );
+    renderPage();
+
+    const tabs = await screen.findAllByRole('tab', { selected: true });
+    expect(tabs.length).toBeGreaterThan(0);
+    for (const tab of tabs) {
+      const panelId = tab.getAttribute('aria-controls');
+      expect(panelId).toBeTruthy();
+      expect(document.getElementById(panelId as string)).not.toBeNull();
+    }
+  });
 });

@@ -108,14 +108,16 @@ export default function HomeShowcaseRow<T extends string>({
     return null;
   } else if (items.length === 0) {
     body = <p className={styles.state}>{t('showcase.empty')}</p>;
-  } else if (tabConfig) {
-    body = (
-      <TabPanel idBase={panelIdBase} tabKey={tabConfig.active} active className={styles.panel}>
-        {grid}
-      </TabPanel>
-    );
   } else {
     body = grid;
+  }
+
+  if (tabConfig) {
+    body = (
+      <TabPanel idBase={panelIdBase} tabKey={tabConfig.active} active className={styles.panel}>
+        {body}
+      </TabPanel>
+    );
   }
 
   return (

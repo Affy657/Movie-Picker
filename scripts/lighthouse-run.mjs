@@ -77,6 +77,23 @@ function killServe(proc) {
   }
 }
 
+const SHOWCASE_ITEM_COUNT = 20;
+
+function showcaseItems(ranked = false) {
+  return Array.from({ length: SHOWCASE_ITEM_COUNT }, (_, index) => ({
+    id: 1000 + index,
+    mediaType: 'movie',
+    title: `Film de recette ${index + 1}`,
+    year: `${2000 + (index % 25)}`,
+    posterPath: null,
+    voteAverage: 7.5,
+    runtimeMinutes: 100 + index,
+    genreIds: [28],
+    rank: ranked ? index + 1 : null,
+    eventCount: ranked ? 5 : null,
+  }));
+}
+
 /**
  * Stub minimal de l'API, requis pour que les pages testées non authentifiées
  * (redirigées vers /login) puissent résoudre leur appel `GET /auth/oauth/providers`
@@ -97,6 +114,35 @@ function startApiStub(port) {
       res
         .writeHead(200, { 'Content-Type': 'application/json' })
         .end(JSON.stringify({ providers: [] }));
+      return;
+    }
+    if (urlPath === '/api/v1/movies/showcase') {
+      const section = new URL(req.url ?? '/', BASE).searchParams.get('section') ?? 'trending';
+      res.writeHead(200, { 'Content-Type': 'application/json' }).end(
+        JSON.stringify({
+          section,
+          theme: null,
+          items: showcaseItems(section === 'most-proposed'),
+          disclaimer: 'Données de recette',
+          tmdbAttributionUrl: 'https://www.themoviedb.org/',
+        })
+      );
+      return;
+    }
+    if (urlPath === '/api/v1/movies/collections') {
+      res.writeHead(200, { 'Content-Type': 'application/json' }).end(
+        JSON.stringify({
+          items: Array.from({ length: 12 }, (_, index) => ({
+            id: 500 + index,
+            name: `Saga de recette ${index + 1}`,
+            overview: null,
+            posterPath: null,
+            movieCount: 3 + index,
+          })),
+          disclaimer: 'Données de recette',
+          tmdbAttributionUrl: 'https://www.themoviedb.org/',
+        })
+      );
       return;
     }
     if (urlPath === '/api/v1/users/lighthouse') {

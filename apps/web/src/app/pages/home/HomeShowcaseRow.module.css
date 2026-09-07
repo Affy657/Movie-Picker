@@ -3,12 +3,14 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
-  grid-template-rows: auto;
-  grid-auto-rows: 0;
+  grid-auto-flow: column;
+  grid-auto-columns: 9rem;
+  gap: var(--space-3-5);
   overflow: hidden;
-  column-gap: var(--space-3-5);
-  row-gap: 0;
+}
+
+.skeletonGridWide {
+  grid-auto-columns: 17rem;
 }
 
 .skeletonCard {

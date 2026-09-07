@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import Button from '@/shared/components/Button';
 import { Skeleton, SkeletonScreen } from '@/shared/components/Skeleton';
 import { useTranslation } from '@/shared/i18n';
@@ -10,7 +11,8 @@ import { useMovieCollections } from '@/features/movies/hooks/useMovieShowcase';
 import { RAIL_PREVIEW_COUNT } from './HomeShowcaseRow';
 import styles from './HomeShowcaseRow.module.css';
 
-const SKELETON_CARDS = 3;
+const SKELETON_CARDS = 6;
+const COLLECTION_CARD_HEIGHT = 102;
 
 export default function HomeCollectionsRow() {
   const { t } = useTranslation();
@@ -22,10 +24,10 @@ export default function HomeCollectionsRow() {
   if (collections.isPending) {
     body = (
       <SkeletonScreen label={t('showcase.loading')}>
-        <ul className={styles.skeletonGrid}>
+        <ul className={clsx(styles.skeletonGrid, styles.skeletonGridWide)}>
           {Array.from({ length: SKELETON_CARDS }, (_, index) => (
             <li key={index} className={styles.skeletonCard}>
-              <Skeleton variant="block" height={72} />
+              <Skeleton variant="block" height={COLLECTION_CARD_HEIGHT} />
             </li>
           ))}
         </ul>
