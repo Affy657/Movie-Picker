@@ -1,0 +1,216 @@
+.section {
+  display: grid;
+  gap: var(--space-5);
+  min-width: 0;
+  scroll-margin-top: var(--space-8);
+}
+
+.head {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.eyebrow {
+  margin: var(--space-0);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-3xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-primary-text);
+}
+
+.title {
+  margin: var(--space-0);
+  font-size: clamp(var(--font-size-xl), 2.6vw, var(--font-size-3xl));
+  font-weight: 700;
+  letter-spacing: var(--tracking-display);
+  line-height: var(--leading-compact);
+  text-wrap: balance;
+}
+
+.lead {
+  margin: var(--space-0);
+  max-width: var(--container-md);
+  color: var(--color-text-muted);
+}
+
+.note {
+  margin: var(--space-0);
+  max-width: var(--container-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.note strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.figure {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+}
+
+.figureScroll {
+  overflow-x: auto;
+}
+
+.figureScroll svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 52rem;
+}
+
+.svgTitle {
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.svgLabel {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-2xs);
+  letter-spacing: var(--tracking-slight);
+}
+
+.svgSub {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-3xs);
+}
+
+.caption {
+  margin: var(--space-4) var(--space-0) var(--space-0);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-meta);
+}
+
+.specs {
+  margin: var(--space-0);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.specRow {
+  display: grid;
+  gap: var(--space-1) var(--space-6);
+  padding: var(--space-3) var(--space-0);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+@media (min-width: 40rem) {
+  .specRow {
+    grid-template-columns: 10.5rem minmax(0, 1fr);
+    align-items: baseline;
+  }
+}
+
+.specTerm {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-3xs);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-meta);
+}
+
+.specDetail {
+  margin: var(--space-0);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.specDetailStrong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+
+.tag {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-2xs);
+  line-height: var(--leading-none);
+  padding: var(--space-1-5) var(--space-2-5) var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+}
+
+.incident {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: 1px solid var(--color-error);
+  border-left-width: 3px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-error) 8%, transparent);
+}
+
+.incidentHead {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.incidentKicker {
+  margin: var(--space-0);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-4xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-error);
+}
+
+.incidentTitle {
+  margin: var(--space-0);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+
+.incidentSteps {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 48rem) {
+  .incidentSteps {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+  }
+}
+
+.step {
+  display: grid;
+  gap: var(--space-1);
+  align-content: start;
+  padding-top: var(--space-2);
+  border-top: 2px solid var(--color-error);
+}
+
+.stepLabel {
+  margin: var(--space-0);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-4xs);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-error);
+}
+
+.stepText {
+  margin: var(--space-0);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
