@@ -11,6 +11,7 @@ public static class RateLimitingExtensions
     public const string JoinEventPolicy = "join-event";
     public const string SearchMoviesPolicy = "search-movies";
     public const string MovieDetailsPolicy = "movie-details";
+    public const string MovieShowcasePolicy = "movie-showcase";
     public const string AuthRegisterPolicy = "auth-register";
     public const string AuthLoginPolicy = "auth-login";
     public const string AuthPasswordResetRequestPolicy = "auth-password-reset-request";
@@ -42,6 +43,7 @@ public static class RateLimitingExtensions
         new(JoinEventPolicy, 60, 1, false),
         new(SearchMoviesPolicy, 40, 1, false),
         new(MovieDetailsPolicy, 120, 1, false),
+        new(MovieShowcasePolicy, 240, 1, false),
         new(AuthRegisterPolicy, 10, 1, false),
         new(AuthLoginPolicy, 30, 1, false),
         new(AuthPasswordResetRequestPolicy, 5, 1, false),

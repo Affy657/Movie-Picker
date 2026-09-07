@@ -1,10 +1,10 @@
 import { lazy, Suspense, useState } from 'react';
-import { BrowserRouter, Navigate, Routes, Route, useLocation } from 'react-router';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/shared/contexts/ThemeContext';
 import { ConsentProvider } from '@/shared/contexts/ConsentContext';
 import { useTranslation, LocaleProvider } from '@/shared/i18n';
-import { AuthProvider, useAuth } from '@/features/auth/contexts/AuthContext';
+import { AuthProvider } from '@/features/auth/contexts/AuthContext';
 import UserThemeSync from '@/app/components/UserThemeSync';
 import AnalyticsSync from '@/app/components/AnalyticsSync';
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
@@ -13,6 +13,9 @@ import AppShell from '@/app/components/AppShell';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
 
+const HomePage = lazy(() => import('@/app/pages/HomePage'));
+const ShowcaseListPage = lazy(() => import('@/app/pages/ShowcaseListPage'));
+const MovieCollectionsPage = lazy(() => import('@/app/pages/MovieCollectionsPage'));
 const LandingPage = lazy(() => import('@/app/pages/LandingPage'));
 const CreateEvent = lazy(() => import('@/features/events/pages/CreateEvent'));
 const EventDetail = lazy(() => import('@/features/events/pages/EventDetail'));
@@ -58,18 +61,36 @@ function createAppQueryClient() {
 
 const SentryRoutes = getInstrumentedRoutes(Routes);
 
-function RootRoute() {
-  const { user, isLoading } = useAuth();
-  if (!isLoading && user) return <Navigate to={ROUTES.myEvents} replace />;
-  return <LandingPage />;
-}
-
 export function AppRoutes() {
   return (
     <SentryRoutes>
       <Route element={<AppShell />}>
-        <Route path={ROUTES.home} element={<RootRoute />} />
-        <Route path={ROUTES.discover} element={<Navigate to={ROUTES.home} replace />} />
+        <Route path={ROUTES.home} element={<HomePage />} />
+        <Route path={ROUTES.discover} element={<LandingPage />} />
+        <Route path={ROUTES.movieSearch} element={<ShowcaseListPage variant="search" />} />
+        <Route path={ROUTES.movieCollections} element={<MovieCollectionsPage />} />
+        <Route path={ROUTES.showcaseTrending} element={<ShowcaseListPage variant="trending" />} />
+        <Route
+          path={ROUTES.showcaseNowPlaying}
+          element={<ShowcaseListPage variant="now-playing" />}
+        />
+        <Route
+          path={ROUTES.showcaseMostProposed}
+          element={<ShowcaseListPage variant="most-proposed" />}
+        />
+        <Route
+          path={ROUTES.showcaseProviderPattern}
+          element={<ShowcaseListPage variant="provider" />}
+        />
+        <Route
+          path={ROUTES.showcaseRecommendationsPattern}
+          element={<ShowcaseListPage variant="recommendations" />}
+        />
+        <Route path={ROUTES.showcaseThemePattern} element={<ShowcaseListPage variant="theme" />} />
+        <Route
+          path={ROUTES.movieCollectionPattern}
+          element={<ShowcaseListPage variant="collection" />}
+        />
         <Route path={ROUTES.createEvent} element={<CreateEvent />} />
         <Route path={ROUTES.login} element={<LoginPage />} />
         <Route path={ROUTES.register} element={<RegisterPage />} />

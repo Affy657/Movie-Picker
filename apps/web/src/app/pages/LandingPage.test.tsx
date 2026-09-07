@@ -3,7 +3,7 @@ import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import LandingPage from '@/app/pages/LandingPage';
-import { APP_DOCUMENT_TITLE } from '@/shared/hooks/useDocumentTitle';
+import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { SITE_URL } from '@/shared/seo/siteMeta';
 
 vi.mock('@/features/events/components/SpinningWheel', () => ({
@@ -25,14 +25,14 @@ describe('LandingPage', () => {
     localStorage.setItem('moviepicker-locale', 'fr');
   });
 
-  it('affiche le titre principal et le canonical de la racine', () => {
+  it('affiche le titre principal et le canonical de sa propre route', () => {
     renderLanding();
     expect(
       screen.getByRole('heading', { name: /choisissez le film de la soirée/i, level: 1 })
     ).toBeInTheDocument();
-    expect(document.title).toBe(APP_DOCUMENT_TITLE);
+    expect(document.title).toBe(pageTitle('Comment ça marche'));
     expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe(
-      `${SITE_URL}/`
+      `${SITE_URL}/decouvrir`
     );
   });
 

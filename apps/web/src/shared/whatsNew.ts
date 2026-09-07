@@ -4,7 +4,14 @@ import type { TranslationKey } from '@/shared/i18n';
 export type WhatsNewCategory = 'new' | 'improved' | 'fixed';
 
 export type WhatsNewLinkTarget =
-  'watchlist' | 'account' | 'myEvents' | 'profile' | 'donate' | 'home' | 'notifications';
+  | 'watchlist'
+  | 'account'
+  | 'myEvents'
+  | 'profile'
+  | 'donate'
+  | 'home'
+  | 'discover'
+  | 'notifications';
 
 export type WhatsNewAction = 'proposeIdea';
 
@@ -71,6 +78,23 @@ export const WHATS_NEW: readonly WhatsNewRelease[] = [
       entry('inAppBrowser', 'fixed'),
     ],
   },
+  {
+    version: '1.5.0',
+    entries: [
+      entry('explorationHome', 'new', { link: 'home' }),
+      entry('homeSearch', 'new', { link: 'home' }),
+      entry('visitorNav', 'new', { link: 'home' }),
+      entry('landingRevamp', 'new', { link: 'discover' }),
+      entry('personalRows', 'new', { link: 'home' }),
+      entry('streamingRow', 'new', { link: 'home' }),
+      entry('themeSelections', 'new', { link: 'home' }),
+      entry('sagas', 'new', { link: 'home' }),
+      entry('communityRanking', 'new', { link: 'home' }),
+      entry('browseLists', 'new', { link: 'home' }),
+      entry('carousels', 'new', { link: 'home' }),
+      entry('listCardDetails', 'improved', { link: 'profile' }),
+    ],
+  },
 ];
 
 export function whatsNewLinkPath(
@@ -88,6 +112,8 @@ export function whatsNewLinkPath(
       return ROUTES.donate;
     case 'home':
       return ROUTES.home;
+    case 'discover':
+      return ROUTES.discover;
     case 'notifications':
       return ROUTES.notifications;
     case 'profile':
@@ -105,7 +131,7 @@ function getLatestRelease(releases: readonly WhatsNewRelease[]): WhatsNewRelease
 
 export const LATEST_WHATS_NEW_RELEASE: WhatsNewRelease = getLatestRelease(WHATS_NEW);
 
-export const WHATS_NEW_NAV_RELEASED_AT_MS = Date.parse('2026-09-04T00:00:00.000Z');
+export const WHATS_NEW_NAV_RELEASED_AT_MS = Date.parse('2026-09-07T00:00:00.000Z');
 export const WHATS_NEW_NAV_VISIBLE_FOR_MS = 7 * 24 * 60 * 60 * 1000;
 export const WHATS_NEW_NAV_NEW_ACCOUNT_FROM_MS = WHATS_NEW_NAV_RELEASED_AT_MS + 24 * 60 * 60 * 1000;
 

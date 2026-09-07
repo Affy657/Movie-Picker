@@ -23,6 +23,31 @@ export const ROUTES = {
   notifications: '/notifications',
   discover: '/decouvrir',
 
+  movieSearch: '/films/recherche',
+  movieCollections: '/films/collections',
+  showcaseTrending: '/films/tendances',
+
+  showcaseTrendingForGenre: (genreId?: number) =>
+    genreId ? `/films/tendances?genre=${genreId}` : '/films/tendances',
+
+  showcaseNowPlaying: '/films/au-cinema',
+  showcaseMostProposed: '/films/les-plus-proposes',
+
+  showcaseRecommendationsPattern: '/films/similaires/:seedTmdbId',
+  showcaseRecommendations: (seedTmdbId: number) => `/films/similaires/${seedTmdbId}`,
+  showcaseProviderPattern: '/films/streaming/:provider',
+  showcaseProvider: (provider: string) => `/films/streaming/${provider}`,
+  showcaseThemePattern: '/films/theme/:theme',
+
+  showcaseTheme: (theme: string) => `/films/theme/${theme}`,
+
+  movieCollectionPattern: '/films/collection/:collectionId',
+
+  movieCollection: (collectionId: number | string) => `/films/collection/${collectionId}`,
+
+  movieSearchFor: (query: string) =>
+    query.trim() ? `/films/recherche?q=${encodeURIComponent(query.trim())}` : '/films/recherche',
+
   eventDetailPattern: `${EVENT_PREFIX}/:slug`,
 
   eventDetail: (slug: string) => `${EVENT_PREFIX}/${slug}`,

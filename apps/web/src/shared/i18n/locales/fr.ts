@@ -25,6 +25,7 @@
   },
 
   nav: {
+    explore: 'Explorer',
     home: 'Accueil',
     discover: 'Découvrir',
     myEvents: 'Mes soirées',
@@ -49,6 +50,106 @@
     actionsAriaLabel: 'Actions principales',
     ctaLogin: 'Se connecter',
     ctaRegister: 'Créer un compte',
+    title: "Qu'est-ce qu'on regarde ce soir ?",
+    intro: 'Cherchez un film ou parcourez les sélections.',
+    seoDescription:
+      'Cherchez un film, parcourez les tendances, les sorties en salles et les sélections thématiques, puis créez la soirée qui va avec.',
+    ctaBand: {
+      title: 'Vous tenez votre film ?',
+      body: 'Créez la soirée, invitez vos amis, laissez la roue trancher.',
+      action: 'Créer une soirée',
+    },
+    searchLabel: 'Chercher un film',
+    searchPlaceholder: 'Titre, réalisateur, acteur',
+    searchSubmit: 'Chercher',
+    searchExamplesLabel: 'Par exemple',
+  },
+
+  showcase: {
+    railScrollBack: 'Faire défiler vers la gauche',
+    railScrollForward: 'Faire défiler vers la droite',
+    seeAllMovies: 'Voir les {{count}} films',
+    seeAllMoviesOne: 'Voir le film',
+    seeAllCollections: 'Voir les {{count}} collections',
+    genreLabel: 'Genre',
+    themeLabel: 'Thème',
+    allGenres: 'Tous',
+    loading: 'Chargement de la sélection',
+    error: 'Cette sélection est momentanément indisponible.',
+    retry: 'Réessayer',
+    empty: 'Aucun film dans cette sélection pour le moment.',
+    emptyMessage: 'Revenez plus tard, la sélection est mise à jour plusieurs fois par jour.',
+    unknownSelection: 'Cette sélection n’existe pas.',
+    unknownSelectionMessage:
+      'Le lien est peut-être périmé. Repartez de l’accueil pour retrouver les sélections du moment.',
+    rank: 'Rang {{rank}}',
+    eventCount: 'Dans {{count}} soirées',
+    eventCountOne: 'Dans 1 soirée',
+    collectionMovies: '{{count}} films',
+    collectionMoviesOne: '1 film',
+    sectionsHeading: 'Films de la sélection',
+    resultCount: '{{count}} films',
+    resultCountOne: '1 film',
+    filteredCount: '{{shown}} films sur {{total}}',
+    collectionsFilteredCount: '{{shown}} sagas sur {{total}}',
+    collectionsToolbar: {
+      searchLabel: 'Filtrer les sagas',
+      searchPlaceholder: 'Nom de saga',
+      sortPopularity: 'Popularité',
+      sortName: 'Nom',
+      sortSize: 'Nombre de films',
+      noMatch: 'Aucune saga ne correspond',
+      noMatchMessage: 'Essayez un autre nom, ou effacez le filtre.',
+    },
+    sections: {
+      trendingTitle: 'Tendances de la semaine',
+      trendingSubtitle: 'Les films dont tout le monde parle',
+      nowPlayingTitle: 'Actuellement au cinéma',
+      nowPlayingSubtitle: 'Encore en salles en France',
+      mostProposedTitle: 'Les plus proposés',
+      mostProposedSubtitle: 'Classement sur les soirées créées',
+      themeTitle: 'Suggestions thématiques',
+      themeSubtitle: 'Une sélection prête à lancer',
+      collectionsTitle: 'Sagas et collections',
+      collectionsSubtitle: 'Toute une franchise en une liste',
+      searchTitle: 'Résultats de recherche',
+      searchSubtitle: 'Films correspondant à votre recherche',
+      providerTitle: 'Ce soir en streaming',
+      providerSubtitle: 'Disponible sur votre abonnement',
+      recommendationsTitle: 'Parce que vous avez aimé',
+      recommendationsSubtitle: 'À partir de votre dernière soirée',
+      watchlistTitle: 'Dans votre liste',
+      friendsTitle: 'Vos amis ont vu',
+    },
+    themes: {
+      frissons: "Frissons d'automne",
+      comediesFrancaises: 'Comédies françaises',
+      annees80: 'Années 80',
+      braquages: 'Films de braquage',
+      pepitesA24: 'Pépites A24',
+      annees90: 'Années 90',
+      annees2000: 'Années 2000',
+      moinsDe90Min: 'Moins de 90 minutes',
+      indetronables: 'Les indétrônables',
+      enFamille: 'En famille',
+    },
+    providers: {
+      netflix: 'Netflix',
+      primeVideo: 'Prime Video',
+      disneyPlus: 'Disney+',
+      canalPlus: 'Canal+',
+      appleTvPlus: 'Apple TV+',
+    },
+    seeWatchlist: 'Voir ma liste',
+    providerLabel: 'Plateforme',
+    searchHeading: 'Résultats pour « {{query}} »',
+    searchEmptyQuery: 'Entrez un titre pour lancer la recherche.',
+    backToHome: "Retour à l'accueil",
+    toolbar: {
+      sortRelevance: 'Pertinence',
+      searchLabel: 'Filtrer dans cette liste',
+      searchPlaceholder: 'Filtrer dans cette liste',
+    },
   },
 
   landing: {
@@ -1559,6 +1660,66 @@
       weightedWheel: {
         title: 'Roue pondérée par défaut',
         description: 'Les votes comptent dans le tirage, sans rien régler.',
+      },
+      explorationHome: {
+        title: 'Un accueil qui vous propose des films',
+        description:
+          'Ouvrez le site, les films sont déjà là. Des dizaines de sélections classées par envie, avec ou sans compte.',
+      },
+      homeSearch: {
+        title: 'La recherche en tête de page',
+        description:
+          'Un titre, un réalisateur, un genre : tapez, on trouve. Trois exemples vous lancent quand l’inspiration manque.',
+      },
+      visitorNav: {
+        title: 'Tout est ouvert, même sans compte',
+        description:
+          'Explorer, chercher, ouvrir une fiche film : plus rien n’est verrouillé. Le compte sert au moment de lancer une soirée.',
+      },
+      landingRevamp: {
+        title: 'Une vitrine repensée',
+        description:
+          'La page de présentation a été refaite, plus claire et plus vivante, avec la roue jouable directement à l’écran.',
+      },
+      personalRows: {
+        title: 'Un accueil qui vous connaît',
+        description:
+          'Votre liste, ce qu’ont vu les personnes que vous suivez et des recommandations tirées du dernier film que vous avez regardé en soirée.',
+      },
+      streamingRow: {
+        title: 'Ce soir en streaming',
+        description:
+          'Netflix, Prime Video, Disney+, Canal+, Apple TV+ : voyez d’un coup d’œil ce qui est déjà inclus dans vos abonnements.',
+      },
+      themeSelections: {
+        title: 'Dix sélections thématiques',
+        description:
+          'Frissons, comédies françaises, années 80 à 2000, braquages, pépites A24, moins de 90 minutes, indétrônables, en famille.',
+      },
+      sagas: {
+        title: 'Cent vingt sagas',
+        description:
+          'Star Wars, Harry Potter, James Bond, Marvel, Astérix : les grandes franchises réunies, chacune avec sa page.',
+      },
+      communityRanking: {
+        title: 'Le palmarès de la communauté',
+        description:
+          'Les films que les soirées proposent le plus souvent, classés. De quoi trancher quand personne ne se décide.',
+      },
+      browseLists: {
+        title: 'Chaque rangée a sa page',
+        description:
+          'Un clic sur « voir tout » ouvre la liste complète, avec filtres par genre et par type, tri et recherche.',
+      },
+      carousels: {
+        title: 'Des rangées qui défilent',
+        description:
+          'Au doigt, à la molette ou aux flèches, les films défilent sans jamais quitter la page.',
+      },
+      listCardDetails: {
+        title: 'Note et durée sur les cartes',
+        description:
+          'Les listes de films et les profils affichent la note et la durée, comme Ma liste, pour trancher sans ouvrir la fiche.',
       },
       openBrowsing: {
         title: 'Visite libre',

@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { useState, type ComponentType, type SVGProps } from 'react';
-import { Bookmark, CalendarDays, Plus } from 'lucide-react';
+import { Bookmark, CalendarDays, Compass, HelpCircle, Plus } from 'lucide-react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -48,9 +48,18 @@ const LANDING_NAV_ITEMS: ReadonlyArray<{ anchor: string; labelKey: TranslationKe
   { anchor: LANDING_ANCHORS.faq, labelKey: 'nav.landing.faq' },
 ];
 
-function DesktopNavItem({ to, end, label }: Readonly<Omit<NavItemDef, 'Icon'>>) {
+function DesktopNavItem({
+  to,
+  end,
+  label,
+  wideOnly,
+}: Readonly<Omit<NavItemDef, 'Icon'> & { wideOnly?: boolean }>) {
   return (
-    <NavLink to={to} end={end} className={navLinkClass}>
+    <NavLink
+      to={to}
+      end={end}
+      className={(state) => clsx(navLinkClass(state), wideOnly && styles.navLinkWideOnly)}
+    >
       {label}
     </NavLink>
   );
@@ -87,16 +96,37 @@ export default function AppShell() {
   const [proposeIdeaOpen, setProposeIdeaOpen] = useState(false);
 
   const isAuthenticated = !!user;
-  const isLandingRoute = location.pathname === ROUTES.home && !isAuthenticated;
+  const isLandingRoute = location.pathname === ROUTES.discover && !isAuthenticated;
   const returnTo = `${location.pathname}${location.search}`;
   const isOnAuthRoute = (
     [ROUTES.login, ROUTES.register, ROUTES.forgotPassword, ROUTES.resetPassword] as string[]
   ).includes(location.pathname);
 
+  const exploreItem: NavItemDef = {
+    to: ROUTES.home,
+    end: true,
+    label: t('nav.explore'),
+    Icon: Compass,
+  };
+
   const items: NavItemDef[] = NAV_ITEMS.map(({ labelKey, ...rest }) => ({
     ...rest,
     label: t(labelKey),
   }));
+
+  const mobileItems: NavItemDef[] = isAuthenticated ? [exploreItem, ...items] : items;
+
+  const desktopItems: (NavItemDef & { wideOnly?: boolean })[] = isAuthenticated
+    ? [exploreItem, ...items]
+    : [
+        {
+          to: ROUTES.discover,
+          label: t('nav.landing.howItWorks'),
+          Icon: HelpCircle,
+          wideOnly: true,
+        },
+        ...items,
+      ];
 
   return (
     <div className={styles.root}>
@@ -124,7 +154,7 @@ export default function AppShell() {
               ? LANDING_NAV_ITEMS.map((item) => (
                   <LandingNavItem key={item.anchor} anchor={item.anchor} label={t(item.labelKey)} />
                 ))
-              : items.map((item) => <DesktopNavItem key={item.to} {...item} />)}
+              : desktopItems.map((item) => <DesktopNavItem key={item.to} {...item} />)}
           </nav>
           {isLoading || (!isAuthenticated && isOnAuthRoute) ? (
             <div className={styles.navActions} />
@@ -163,7 +193,7 @@ export default function AppShell() {
       />
       {isLandingRoute ? null : (
         <nav className={styles.navMobile} aria-label={t('nav.navLabel')}>
-          {items.map((item) => (
+          {mobileItems.map((item) => (
             <MobileNavItem key={item.to} {...item} />
           ))}
         </nav>

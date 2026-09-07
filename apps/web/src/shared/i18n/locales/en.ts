@@ -27,6 +27,7 @@ export const en: Locale = {
   },
 
   nav: {
+    explore: 'Explore',
     home: 'Home',
     discover: 'Discover',
     myEvents: 'My events',
@@ -51,6 +52,106 @@ export const en: Locale = {
     actionsAriaLabel: 'Main actions',
     ctaLogin: 'Log in',
     ctaRegister: 'Create an account',
+    title: 'What are we watching tonight?',
+    intro: 'Search for a film or browse the selections.',
+    seoDescription:
+      'Search for a film, browse trending titles, cinema releases and themed selections, then create the movie night that goes with it.',
+    ctaBand: {
+      title: 'Found your film?',
+      body: 'Create the night, invite your friends, let the wheel decide.',
+      action: 'Create a night',
+    },
+    searchLabel: 'Search for a film',
+    searchPlaceholder: 'Title, director, actor',
+    searchSubmit: 'Search',
+    searchExamplesLabel: 'For example',
+  },
+
+  showcase: {
+    railScrollBack: 'Scroll left',
+    railScrollForward: 'Scroll right',
+    seeAllMovies: 'See all {{count}} films',
+    seeAllMoviesOne: 'See the film',
+    seeAllCollections: 'See all {{count}} collections',
+    genreLabel: 'Genre',
+    themeLabel: 'Theme',
+    allGenres: 'All',
+    loading: 'Loading the selection',
+    error: 'This selection is temporarily unavailable.',
+    retry: 'Try again',
+    empty: 'No film in this selection yet.',
+    emptyMessage: 'Come back later, the selection is refreshed several times a day.',
+    unknownSelection: 'This selection does not exist.',
+    unknownSelectionMessage:
+      'The link may be stale. Head back to the home page to find the current selections.',
+    rank: 'Rank {{rank}}',
+    eventCount: 'In {{count}} nights',
+    eventCountOne: 'In 1 night',
+    collectionMovies: '{{count}} films',
+    collectionMoviesOne: '1 film',
+    sectionsHeading: 'Films in this selection',
+    resultCount: '{{count}} films',
+    resultCountOne: '1 film',
+    filteredCount: '{{shown}} of {{total}} films',
+    collectionsFilteredCount: '{{shown}} of {{total}} sagas',
+    collectionsToolbar: {
+      searchLabel: 'Filter the sagas',
+      searchPlaceholder: 'Saga name',
+      sortPopularity: 'Popularity',
+      sortName: 'Name',
+      sortSize: 'Number of films',
+      noMatch: 'No saga matches',
+      noMatchMessage: 'Try another name, or clear the filter.',
+    },
+    sections: {
+      trendingTitle: 'Trending this week',
+      trendingSubtitle: 'The films everyone is talking about',
+      nowPlayingTitle: 'Now in cinemas',
+      nowPlayingSubtitle: 'Still on screens in France',
+      mostProposedTitle: 'Most proposed',
+      mostProposedSubtitle: 'Ranked across the nights created here',
+      themeTitle: 'Themed picks',
+      themeSubtitle: 'A selection ready to go',
+      collectionsTitle: 'Sagas and collections',
+      collectionsSubtitle: 'A whole franchise in one list',
+      searchTitle: 'Search results',
+      searchSubtitle: 'Films matching your search',
+      providerTitle: 'Streaming tonight',
+      providerSubtitle: 'Available on your subscription',
+      recommendationsTitle: 'Because you liked',
+      recommendationsSubtitle: 'Based on your last movie night',
+      watchlistTitle: 'In your list',
+      friendsTitle: 'Your friends watched',
+    },
+    themes: {
+      frissons: 'Autumn chills',
+      comediesFrancaises: 'French comedies',
+      annees80: 'The eighties',
+      braquages: 'Heist films',
+      pepitesA24: 'A24 gems',
+      annees90: 'The 90s',
+      annees2000: 'The 2000s',
+      moinsDe90Min: 'Under 90 minutes',
+      indetronables: 'All-time greats',
+      enFamille: 'Family night',
+    },
+    providers: {
+      netflix: 'Netflix',
+      primeVideo: 'Prime Video',
+      disneyPlus: 'Disney+',
+      canalPlus: 'Canal+',
+      appleTvPlus: 'Apple TV+',
+    },
+    seeWatchlist: 'Open my list',
+    providerLabel: 'Platform',
+    searchHeading: 'Results for "{{query}}"',
+    searchEmptyQuery: 'Type a title to start searching.',
+    backToHome: 'Back to home',
+    toolbar: {
+      sortRelevance: 'Relevance',
+      searchLabel: 'Filter within this list',
+      searchPlaceholder: 'Filter within this list',
+    },
   },
 
   landing: {
@@ -1532,6 +1633,66 @@ export const en: Locale = {
       weightedWheel: {
         title: 'Vote-weighted wheel by default',
         description: 'Votes now count in the draw, nothing to set up.',
+      },
+      explorationHome: {
+        title: 'A home page that suggests films',
+        description:
+          'Open the site and the films are already there. Dozens of selections sorted by mood, with or without an account.',
+      },
+      homeSearch: {
+        title: 'Search right at the top',
+        description:
+          'A title, a director, a genre: type it, we find it. Three examples get you started when inspiration runs dry.',
+      },
+      visitorNav: {
+        title: 'Everything is open, even without an account',
+        description:
+          'Browse, search, open a film sheet: nothing is locked any more. The account is for when you start a movie night.',
+      },
+      landingRevamp: {
+        title: 'A rebuilt showcase',
+        description:
+          'The presentation page has been redesigned, clearer and livelier, with the wheel playable right on screen.',
+      },
+      personalRows: {
+        title: 'A home page that knows you',
+        description:
+          'Your list, what the people you follow have watched, and recommendations drawn from the last film you saw on a movie night.',
+      },
+      streamingRow: {
+        title: 'Streaming tonight',
+        description:
+          'Netflix, Prime Video, Disney+, Canal+, Apple TV+: see at a glance what your subscriptions already include.',
+      },
+      themeSelections: {
+        title: 'Ten themed selections',
+        description:
+          'Chills, French comedies, the 80s to the 2000s, heists, A24 gems, under 90 minutes, all-time greats, family night.',
+      },
+      sagas: {
+        title: 'One hundred and twenty sagas',
+        description:
+          'Star Wars, Harry Potter, James Bond, Marvel, Asterix: the great franchises gathered, each with its own page.',
+      },
+      communityRanking: {
+        title: 'The community leaderboard',
+        description:
+          'The films movie nights propose the most, ranked. Just what you need when nobody can decide.',
+      },
+      browseLists: {
+        title: 'Every row has its page',
+        description:
+          'One click on "see all" opens the full list, with genre and type filters, sorting and search.',
+      },
+      carousels: {
+        title: 'Rows that scroll',
+        description:
+          'By finger, by wheel or with the arrows, the films scroll without ever leaving the page.',
+      },
+      listCardDetails: {
+        title: 'Rating and runtime on cards',
+        description:
+          'Movie lists and profiles show the rating and the runtime, like My list, so you can decide without opening the details.',
       },
       openBrowsing: {
         title: 'Browse without an account',
