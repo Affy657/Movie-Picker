@@ -7,3 +7,4 @@ docs
 .github
 **/.expo
 apps/web/src/shared/api/generated
+apps/web/src/app/pages/tech/generated

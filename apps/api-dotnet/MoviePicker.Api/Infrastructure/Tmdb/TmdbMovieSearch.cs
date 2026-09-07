@@ -15,10 +15,18 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
     private const string YoutubeWatchBase = "https://www.youtube.com/watch?v=";
     private const string ResultsProperty = "results";
 
+    private sealed class TmdbUnavailableMarker
+    {
+        public static readonly TmdbUnavailableMarker Instance = new();
+    }
+
     private readonly HttpClient _http;
     private readonly MoviePickerOptions _options;
     private readonly IMemoryCache _cache;
     private readonly ILogger<TmdbMovieSearch> _logger;
+
+    private TimeSpan FailureCacheTtl() =>
+        TimeSpan.FromMinutes(Math.Clamp(_options.TmdbFailureCacheMinutes, 1, 60));
 
     public TmdbMovieSearch(
         HttpClient http,
@@ -246,8 +254,13 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         var cacheKey = $"tmdb-enrich-v2:{typeSegment}:{r}:{tmdbId}";
         var ttl = TimeSpan.FromHours(Math.Clamp(_options.TmdbEnrichmentCacheHours, 1, 168));
 
-        if (_cache.TryGetValue(cacheKey, out object? boxed) && boxed is TmdbMovieEnrichment cached)
-            return cached;
+        if (_cache.TryGetValue(cacheKey, out object? boxed))
+        {
+            if (boxed is TmdbMovieEnrichment cached)
+                return cached;
+            if (boxed is TmdbUnavailableMarker)
+                return null;
+        }
 
         try
         {
@@ -268,6 +281,10 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
                 typeSegment,
                 tmdbId,
                 r);
+            _cache.Set(
+                cacheKey,
+                TmdbUnavailableMarker.Instance,
+                new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = FailureCacheTtl() });
             return null;
         }
     }

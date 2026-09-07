@@ -68,7 +68,7 @@ public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
         await _eventRepository.UpdateAsync(updated, ct);
         _logger.LogInformation("Manual winner set for event {EventId}, winner: {MovieId}", evt.Id, winner.Id);
 
-        _ = _winnerAnnouncer.AnnounceAsync(evt, winner.Title, WinnerPickMethod.Manual, CancellationToken.None);
+        await _winnerAnnouncer.AnnounceAsync(evt, winner.Title, WinnerPickMethod.Manual, CancellationToken.None);
 
         if (winner.PosterPath is not null &&
             TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(winner.PosterPath, out var normalizedPoster))

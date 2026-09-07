@@ -10,6 +10,10 @@ public sealed class MoviePickerOptions
 
     public int TmdbEnrichmentCacheHours { get; set; } = 24;
 
+    public int TmdbHttpTimeoutSeconds { get; set; } = 3;
+
+    public int TmdbFailureCacheMinutes { get; set; } = 5;
+
     public int TmdbSearchMaxWatchProviderLookups { get; set; } = 10;
 
     public int TmdbListEnrichmentMaxParallelism { get; set; } = 4;
@@ -44,6 +48,10 @@ public sealed class MoviePickerOptions
     public string VapidSubject { get; set; } = "mailto:noreply@movie-picker.fr";
 
     public string? KofiWebhookToken { get; set; }
+
+    public string? SchedulerToken { get; set; }
+
+    public bool InProcessRemindersEnabled { get; set; }
 
     public string? GitHubToken { get; set; }
 

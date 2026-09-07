@@ -19,6 +19,7 @@ export const ROUTES = {
   legalNotice: '/mentions-legales',
   privacyPolicy: '/politique-de-confidentialite',
   donate: '/soutenir',
+  tech: '/tech',
   notifications: '/notifications',
   discover: '/decouvrir',
 

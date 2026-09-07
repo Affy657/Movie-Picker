@@ -752,6 +752,12 @@ jobs:
           fi
           TAG="s-${GITHUB_SHA:0:7}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          SECRETS="MONGODB_URI=MONGODB_URI:latest,TMDB_API_KEY=TMDB_API_KEY:latest,AUTH_DATAPROTECTION_KEYRING=AUTH_DATAPROTECTION_KEYRING:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest,RESEND_API_KEY=RESEND_API_KEY:latest,KOFI_WEBHOOK_TOKEN=KOFI_WEBHOOK_TOKEN:latest,OAUTH_GOOGLE_CLIENT_ID=OAUTH_GOOGLE_CLIENT_ID:latest,OAUTH_GOOGLE_CLIENT_SECRET=OAUTH_GOOGLE_CLIENT_SECRET:latest,OAUTH_GITHUB_CLIENT_ID=OAUTH_GITHUB_CLIENT_ID:latest,OAUTH_GITHUB_CLIENT_SECRET=OAUTH_GITHUB_CLIENT_SECRET:latest,GITHUB_TOKEN=GITHUB_TOKEN:latest"
+          if gcloud secrets describe SCHEDULER_TOKEN >/dev/null 2>&1; then
+            SECRETS="$SECRETS,SCHEDULER_TOKEN=SCHEDULER_TOKEN:latest"
+          else
+            echo "::warning::Secret SCHEDULER_TOKEN absent de Secret Manager. L'API démarre sans, mais POST /api/v1/scheduler/event-reminders répondra 503 et les rappels de soirée ne partiront pas. Crée le secret puis relance ce déploiement."
+          fi
           # --set-env-vars dict parsing treats ':' and ',' specially; ^##^ sets an alternate delimiter (gcloud topic escaping).
           gcloud run deploy "$CLOUD_RUN_SERVICE_NAME" \
             --image "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${GCP_ARTIFACT_REPO}/api@${IMAGE_DIGEST}" \
@@ -761,7 +767,7 @@ jobs:
             --cpu-boost \
             --no-traffic \
             --tag "$TAG" \
-            --set-secrets "MONGODB_URI=MONGODB_URI:latest,TMDB_API_KEY=TMDB_API_KEY:latest,AUTH_DATAPROTECTION_KEYRING=AUTH_DATAPROTECTION_KEYRING:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest,RESEND_API_KEY=RESEND_API_KEY:latest,KOFI_WEBHOOK_TOKEN=KOFI_WEBHOOK_TOKEN:latest,OAUTH_GOOGLE_CLIENT_ID=OAUTH_GOOGLE_CLIENT_ID:latest,OAUTH_GOOGLE_CLIENT_SECRET=OAUTH_GOOGLE_CLIENT_SECRET:latest,OAUTH_GITHUB_CLIENT_ID=OAUTH_GITHUB_CLIENT_ID:latest,OAUTH_GITHUB_CLIENT_SECRET=OAUTH_GITHUB_CLIENT_SECRET:latest,GITHUB_TOKEN=GITHUB_TOKEN:latest" \
+            --set-secrets "$SECRETS" \
             --set-env-vars "^##^ALLOWED_ORIGINS=$CORS##SENTRY_ENVIRONMENT=production##SENTRY_RELEASE=${GITHUB_SHA}##EMAIL_PROVIDER=resend"
           TAG_URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format=json \
             | jq -r --arg t "$TAG" '[.status.traffic[]? | select(.tag == $t) | .url] | first // ""')"
@@ -805,6 +811,34 @@ jobs:
         run: |
           set -eo pipefail
           gcloud run services update-traffic "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --to-latest
+      # Repris de master. Déplacé après la promotion : le job vise l'URL du service, il ne
+      # doit donc être (re)configuré que pour une révision réellement en ligne. Une révision
+      # recalée à la validation laisse le job pointer sur la production inchangée.
+      - name: Rappels de soirée — Cloud Scheduler (toutes les 30 min)
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        run: |
+          set -eo pipefail
+          if ! gcloud secrets describe SCHEDULER_TOKEN >/dev/null 2>&1; then
+            echo "::warning::Secret SCHEDULER_TOKEN absent : job Cloud Scheduler non configuré, les rappels de soirée ne partiront pas."
+            exit 0
+          fi
+          URL="$(gcloud run services describe ${{ env.CLOUD_RUN_SERVICE_NAME }} --region ${{ env.GCP_REGION }} --format='value(status.url)')"
+          TOKEN="$(gcloud secrets versions access latest --secret=SCHEDULER_TOKEN)"
+          JOB=movie-picker-event-reminders
+          COMMON=(
+            --location "${{ env.GCP_REGION }}"
+            --schedule "*/30 * * * *"
+            --time-zone "Europe/Paris"
+            --uri "$URL/api/v1/scheduler/event-reminders"
+            --http-method POST
+            --attempt-deadline 300s
+          )
+          if gcloud scheduler jobs describe "$JOB" --location "${{ env.GCP_REGION }}" >/dev/null 2>&1; then
+            gcloud scheduler jobs update http "$JOB" "${COMMON[@]}" --update-headers "X-Scheduler-Token=$TOKEN"
+          else
+            gcloud scheduler jobs create http "$JOB" "${COMMON[@]}" --headers "X-Scheduler-Token=$TOKEN"
+          fi
       # La révision est déjà prouvée : ce qui est vérifié ici, c'est que le trafic a bien basculé et
       # que le domaine public y mène. Un échec relève du routage, du DNS ou du certificat, pas du
       # code — d'où l'absence de retour arrière. PUBLIC_API_URL est dérivé de VITE_API_URL, l'URL

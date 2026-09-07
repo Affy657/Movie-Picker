@@ -90,7 +90,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
 
         var created = await _participantRepository.AddAsync(participant, ct);
 
-        _ = NotifyHostAsync(evt, pseudo, userId, CancellationToken.None);
+        await NotifyHostAsync(evt, pseudo, userId, CancellationToken.None);
 
         return new JoinEventResult
         {

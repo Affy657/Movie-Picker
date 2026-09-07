@@ -25,6 +25,7 @@ const AccountPage = lazy(() => import('@/features/auth/pages/AccountPage'));
 const LegalNoticePage = lazy(() => import('@/app/pages/LegalNoticePage'));
 const PrivacyPolicyPage = lazy(() => import('@/app/pages/PrivacyPolicyPage'));
 const DonatePage = lazy(() => import('@/app/pages/DonatePage'));
+const TechPage = lazy(() => import('@/app/pages/TechPage'));
 const MyEventsPage = lazy(() => import('@/features/events/pages/MyEventsPage'));
 const WatchlistPage = lazy(() => import('@/features/watchlist/pages/WatchlistPage'));
 const NotificationsPage = lazy(() => import('@/features/notifications/pages/NotificationsPage'));
@@ -78,6 +79,7 @@ export function AppRoutes() {
         <Route path={ROUTES.legalNotice} element={<LegalNoticePage />} />
         <Route path={ROUTES.privacyPolicy} element={<PrivacyPolicyPage />} />
         <Route path={ROUTES.donate} element={<DonatePage />} />
+        <Route path={ROUTES.tech} element={<TechPage />} />
         <Route path={`${ROUTES.account}/*`} element={<AccountPage />} />
         <Route path={ROUTES.myEvents} element={<MyEventsPage />} />
         <Route path={ROUTES.watchlist} element={<WatchlistPage />} />

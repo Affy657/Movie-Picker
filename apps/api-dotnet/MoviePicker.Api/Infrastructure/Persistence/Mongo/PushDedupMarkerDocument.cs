@@ -18,6 +18,10 @@ public sealed class PushDedupMarkerDocument
     [BsonElement("eventId")]
     public string EventId { get; set; } = string.Empty;
 
+    [BsonElement("channel")]
+    [BsonIgnoreIfDefault]
+    public int Channel { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 }

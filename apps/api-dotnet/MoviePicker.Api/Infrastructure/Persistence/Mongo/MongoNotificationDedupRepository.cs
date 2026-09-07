@@ -5,16 +5,21 @@ using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
-public sealed class MongoPushDedupRepository : IPushDedupRepository
+public sealed class MongoNotificationDedupRepository : INotificationDedupRepository
 {
     private readonly TransactionalCollection<PushDedupMarkerDocument> _collection;
 
-    public MongoPushDedupRepository(MongoCollectionFactory collections)
+    public MongoNotificationDedupRepository(MongoCollectionFactory collections)
     {
         _collection = collections.GetCollection<PushDedupMarkerDocument>("push_dedup_markers");
     }
 
-    public async Task<bool> TryClaimAsync(string userId, UserNotificationType type, string eventId, CancellationToken ct = default)
+    public async Task<bool> TryClaimAsync(
+        string userId,
+        UserNotificationType type,
+        string eventId,
+        NotificationDedupChannel channel = NotificationDedupChannel.Push,
+        CancellationToken ct = default)
     {
         var doc = new PushDedupMarkerDocument
         {
@@ -22,6 +27,7 @@ public sealed class MongoPushDedupRepository : IPushDedupRepository
             UserId = userId,
             Type = (int)type,
             EventId = eventId,
+            Channel = (int)channel,
             CreatedAt = DateTime.UtcNow
         };
         try

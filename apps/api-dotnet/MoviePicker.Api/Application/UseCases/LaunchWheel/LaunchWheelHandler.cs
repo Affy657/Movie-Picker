@@ -84,7 +84,7 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         await _eventRepository.UpdateAsync(updated, ct);
         _logger.LogInformation("Wheel launched for event {EventId}, winner: {MovieId} (mode: {WheelMode})", evt.Id, winner.Id, mode);
 
-        _ = _winnerAnnouncer.AnnounceAsync(evt, winner.Title, WinnerPickMethod.Wheel, CancellationToken.None);
+        await _winnerAnnouncer.AnnounceAsync(evt, winner.Title, WinnerPickMethod.Wheel, CancellationToken.None);
 
         var message = eligibleCount == 1
             ? "Un seul film dans le tirage : gagnant direct."

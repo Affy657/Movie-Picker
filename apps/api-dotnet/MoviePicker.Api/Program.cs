@@ -63,6 +63,7 @@ builder.Services
     {
         o.Filters.Add<ValidationErrorFilter>();
         o.Filters.Add<MoviePickerExceptionFilter>();
+        o.Filters.Add<SharedRateLimitFilter>();
     })
     .AddJsonOptions(o =>
     {

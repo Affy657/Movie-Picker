@@ -61,8 +61,11 @@ public sealed class WinnerAnnouncer : IWinnerAnnouncer
                     Url: $"/e/{evt.Slug}"
                 );
 
-                foreach (var sub in subs.Where(s => notifiableIds.Contains(s.UserId)))
-                    await _pushSender.SendAsync(sub, message, ct);
+                await PushFanOut.SendToAllAsync(
+                    _pushSender,
+                    subs.Where(s => notifiableIds.Contains(s.UserId)),
+                    message,
+                    ct);
             }
 
             var now = DateTimeOffset.UtcNow;

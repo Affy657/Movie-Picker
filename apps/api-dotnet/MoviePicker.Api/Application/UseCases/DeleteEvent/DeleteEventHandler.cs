@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -67,8 +68,6 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
             .Distinct()
             .ToList();
 
-        _ = NotifyParticipantsOnEventDeletedAsync(evt, participantUserIds, CancellationToken.None);
-
         long removedVotes = 0;
         long removedSeenMarks = 0;
         long removedMovies = 0;
@@ -94,6 +93,8 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
                 evt.Id);
             throw new NotFoundException("Soirée introuvable");
         }
+
+        await NotifyParticipantsOnEventDeletedAsync(evt, participantUserIds, CancellationToken.None);
 
         _logger.LogInformation(
             "Event deleted: {EventId} (slug={Slug}, by={UserId}, cascadedVotes={Votes}, seenMarks={Seen}, movies={Movies}, participants={Participants})",
@@ -139,8 +140,11 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
                     Url: "/"
                 );
 
-                foreach (var sub in subs.Where(s => notifiableIds.Contains(s.UserId)))
-                    await _pushSender.SendAsync(sub, message, ct);
+                await PushFanOut.SendToAllAsync(
+                    _pushSender,
+                    subs.Where(s => notifiableIds.Contains(s.UserId)),
+                    message,
+                    ct);
             }
 
             var now = DateTimeOffset.UtcNow;

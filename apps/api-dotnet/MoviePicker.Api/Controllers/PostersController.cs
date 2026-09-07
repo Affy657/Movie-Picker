@@ -16,6 +16,7 @@ public sealed class PostersController : ControllerBase
     [EnableRateLimiting(RateLimitingExtensions.PostersPolicy)]
     [Produces("image/jpeg", "image/png", "image/webp")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status304NotModified)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Get(string posterKey, [FromServices] IPosterImageStore store, CancellationToken ct)
     {
@@ -23,11 +24,21 @@ public sealed class PostersController : ControllerBase
         if (!TmdbPosterUrlNormalizer.IsValidPosterKey(k))
             return NotFound();
 
+        var entityTag = $"\"{k}\"";
+        Response.Headers.CacheControl = "public,max-age=86400,immutable";
+        Response.Headers.ETag = entityTag;
+
+        if (Request.Headers.IfNoneMatch.Contains(entityTag))
+            return StatusCode(StatusCodes.Status304NotModified);
+
         var blob = await store.GetByKeyAsync(k, ct);
         if (blob is null)
+        {
+            Response.Headers.Remove("Cache-Control");
+            Response.Headers.Remove("ETag");
             return NotFound();
+        }
 
-        Response.Headers.CacheControl = "public,max-age=86400";
         return File(blob.Data, blob.ContentType);
     }
 }

@@ -52,6 +52,7 @@ public sealed class AuthController : ControllerBase
 
     [HttpPost("register")]
     [EnableRateLimiting(RateLimitingExtensions.AuthRegisterPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.AuthRegisterPolicy)]
     [ProducesResponseType(typeof(RegisterResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -71,6 +72,7 @@ public sealed class AuthController : ControllerBase
 
     [HttpPost("login")]
     [EnableRateLimiting(RateLimitingExtensions.AuthLoginPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.AuthLoginPolicy)]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -277,6 +279,7 @@ public sealed class AuthController : ControllerBase
     [HttpPatch("me/password")]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.AuthChangePasswordPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.AuthChangePasswordPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -305,6 +308,7 @@ public sealed class AuthController : ControllerBase
     [HttpGet("me/export")]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.AuthExportDataPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.AuthExportDataPolicy)]
     [ProducesResponseType(typeof(UserDataExportResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -330,6 +334,7 @@ public sealed class AuthController : ControllerBase
     [HttpDelete("me")]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.AuthDeleteAccountPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.AuthDeleteAccountPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -357,6 +362,7 @@ public sealed class AuthController : ControllerBase
 
     [HttpPost("password-reset/request")]
     [EnableRateLimiting(RateLimitingExtensions.AuthPasswordResetRequestPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.AuthPasswordResetRequestPolicy)]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> RequestPasswordReset(
@@ -373,6 +379,7 @@ public sealed class AuthController : ControllerBase
 
     [HttpPost("password-reset/confirm")]
     [EnableRateLimiting(RateLimitingExtensions.AuthPasswordResetConfirmPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.AuthPasswordResetConfirmPolicy)]
     [ProducesResponseType(typeof(PasswordResetConfirmResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
