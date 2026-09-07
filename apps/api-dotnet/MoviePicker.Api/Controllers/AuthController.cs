@@ -113,7 +113,6 @@ public sealed class AuthController : ControllerBase
 
     [HttpGet("oauth/{provider}/start")]
     [EnableRateLimiting(RateLimitingExtensions.AuthLoginPolicy)]
-    [SharedRateLimit(RateLimitingExtensions.AuthLoginPolicy)]
     [ProducesResponseType(StatusCodes.Status302Found)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult OAuthStart(
@@ -134,7 +133,6 @@ public sealed class AuthController : ControllerBase
 
     [HttpGet("oauth/{provider}/callback")]
     [EnableRateLimiting(RateLimitingExtensions.AuthLoginPolicy)]
-    [SharedRateLimit(RateLimitingExtensions.AuthLoginPolicy)]
     [ProducesResponseType(StatusCodes.Status302Found)]
     public async Task<IActionResult> OAuthCallback(
         string provider,

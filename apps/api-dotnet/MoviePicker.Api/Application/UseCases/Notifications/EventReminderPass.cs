@@ -184,12 +184,12 @@ public sealed class EventReminderPass : IEventReminderPass
             }
         }
 
+        if (await _notifications.ExistsAsync(user.Id, window.NotifType, evt.Id, ct))
+            return;
+
         var inAppClaimed = await _dedup.TryClaimAsync(
             user.Id, window.NotifType, evt.Id, NotificationDedupChannel.InApp, ct);
         if (!inAppClaimed)
-            return;
-
-        if (await _notifications.ExistsAsync(user.Id, window.NotifType, evt.Id, ct))
             return;
 
         await _notifications.AddAsync(new UserNotification
@@ -248,12 +248,12 @@ public sealed class EventReminderPass : IEventReminderPass
             }
         }
 
+        if (await _notifications.ExistsAsync(host.Id, UserNotificationType.EventPending, evt.Id, ct))
+            return;
+
         var inAppClaimed = await _dedup.TryClaimAsync(
             host.Id, UserNotificationType.EventPending, evt.Id, NotificationDedupChannel.InApp, ct);
         if (!inAppClaimed)
-            return;
-
-        if (await _notifications.ExistsAsync(host.Id, UserNotificationType.EventPending, evt.Id, ct))
             return;
 
         await _notifications.AddAsync(new UserNotification

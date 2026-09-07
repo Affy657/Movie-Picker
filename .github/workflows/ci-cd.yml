@@ -676,19 +676,29 @@ jobs:
             echo "::error::  • ou Secret du même nom (ALLOWED_ORIGINS) si tu préfères."
             exit 1
           fi
+          SECRETS="MONGODB_URI=MONGODB_URI:latest,TMDB_API_KEY=TMDB_API_KEY:latest,AUTH_DATAPROTECTION_KEYRING=AUTH_DATAPROTECTION_KEYRING:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest,RESEND_API_KEY=RESEND_API_KEY:latest,KOFI_WEBHOOK_TOKEN=KOFI_WEBHOOK_TOKEN:latest,OAUTH_GOOGLE_CLIENT_ID=OAUTH_GOOGLE_CLIENT_ID:latest,OAUTH_GOOGLE_CLIENT_SECRET=OAUTH_GOOGLE_CLIENT_SECRET:latest,OAUTH_GITHUB_CLIENT_ID=OAUTH_GITHUB_CLIENT_ID:latest,OAUTH_GITHUB_CLIENT_SECRET=OAUTH_GITHUB_CLIENT_SECRET:latest,GITHUB_TOKEN=GITHUB_TOKEN:latest"
+          if gcloud secrets describe SCHEDULER_TOKEN >/dev/null 2>&1; then
+            SECRETS="$SECRETS,SCHEDULER_TOKEN=SCHEDULER_TOKEN:latest"
+          else
+            echo "::warning::Secret SCHEDULER_TOKEN absent de Secret Manager. L'API démarre sans, mais POST /api/v1/scheduler/event-reminders répondra 503 et les rappels de soirée ne partiront pas. Crée le secret puis relance ce déploiement."
+          fi
           # --set-env-vars dict parsing treats ':' and ',' specially; ^##^ sets an alternate delimiter (gcloud topic escaping).
           gcloud run deploy ${{ env.CLOUD_RUN_SERVICE_NAME }} \
             --image ${{ env.GCP_REGION }}-docker.pkg.dev/$GCP_PROJECT_ID/${{ env.GCP_ARTIFACT_REPO }}/api:${{ github.sha }} \
             --region ${{ env.GCP_REGION }} \
             --platform managed \
             --allow-unauthenticated \
-            --set-secrets "MONGODB_URI=MONGODB_URI:latest,TMDB_API_KEY=TMDB_API_KEY:latest,AUTH_DATAPROTECTION_KEYRING=AUTH_DATAPROTECTION_KEYRING:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest,RESEND_API_KEY=RESEND_API_KEY:latest,KOFI_WEBHOOK_TOKEN=KOFI_WEBHOOK_TOKEN:latest,OAUTH_GOOGLE_CLIENT_ID=OAUTH_GOOGLE_CLIENT_ID:latest,OAUTH_GOOGLE_CLIENT_SECRET=OAUTH_GOOGLE_CLIENT_SECRET:latest,OAUTH_GITHUB_CLIENT_ID=OAUTH_GITHUB_CLIENT_ID:latest,OAUTH_GITHUB_CLIENT_SECRET=OAUTH_GITHUB_CLIENT_SECRET:latest,GITHUB_TOKEN=GITHUB_TOKEN:latest,SCHEDULER_TOKEN=SCHEDULER_TOKEN:latest" \
+            --set-secrets "$SECRETS" \
             --set-env-vars "^##^ALLOWED_ORIGINS=$CORS##SENTRY_ENVIRONMENT=production##SENTRY_RELEASE=${{ github.sha }}##EMAIL_PROVIDER=resend"
       - name: Rappels de soirée — Cloud Scheduler (toutes les 30 min)
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
           set -eo pipefail
+          if ! gcloud secrets describe SCHEDULER_TOKEN >/dev/null 2>&1; then
+            echo "::warning::Secret SCHEDULER_TOKEN absent : job Cloud Scheduler non configuré, les rappels de soirée ne partiront pas."
+            exit 0
+          fi
           URL="$(gcloud run services describe ${{ env.CLOUD_RUN_SERVICE_NAME }} --region ${{ env.GCP_REGION }} --format='value(status.url)')"
           TOKEN="$(gcloud secrets versions access latest --secret=SCHEDULER_TOKEN)"
           JOB=movie-picker-event-reminders
@@ -698,13 +708,12 @@ jobs:
             --time-zone "Europe/Paris"
             --uri "$URL/api/v1/scheduler/event-reminders"
             --http-method POST
-            --update-headers "X-Scheduler-Token=$TOKEN"
             --attempt-deadline 300s
           )
           if gcloud scheduler jobs describe "$JOB" --location "${{ env.GCP_REGION }}" >/dev/null 2>&1; then
-            gcloud scheduler jobs update http "$JOB" "${COMMON[@]}"
+            gcloud scheduler jobs update http "$JOB" "${COMMON[@]}" --update-headers "X-Scheduler-Token=$TOKEN"
           else
-            gcloud scheduler jobs create http "$JOB" "${COMMON[@]}"
+            gcloud scheduler jobs create http "$JOB" "${COMMON[@]}" --headers "X-Scheduler-Token=$TOKEN"
           fi
       - name: Smoke test API (GET /health puis /health/ready)
         env:
