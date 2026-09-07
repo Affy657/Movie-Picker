@@ -1,18 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
 
 const QUERY = '(hover: hover) and (pointer: fine)';
 
 export function useHasHoverCapability(): boolean {
-  const [hasHover, setHasHover] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia(QUERY).matches
-  );
-
-  useEffect(() => {
-    const mql = window.matchMedia(QUERY);
-    const onChange = () => setHasHover(mql.matches);
-    mql.addEventListener('change', onChange);
-    return () => mql.removeEventListener('change', onChange);
-  }, []);
-
-  return hasHover;
+  return useMediaQuery(QUERY);
 }

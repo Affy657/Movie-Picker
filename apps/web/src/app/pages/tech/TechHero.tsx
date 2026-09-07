@@ -1,5 +1,6 @@
 import { useTranslation } from '@/shared/i18n';
 import { TECH_METRICS, TECH_METRICS_BUILD_DATE } from './generated/techMetrics';
+import { TechHint } from './TechBlocks';
 import styles from './techPage.module.css';
 
 function formatNumber(value: number, locale: string) {
@@ -19,10 +20,26 @@ export default function TechHero() {
   ];
 
   const metrics = [
-    { value: TECH_METRICS.linesOfCode, label: t('tech.hero.metricLines') },
-    { value: TECH_METRICS.endpoints, label: t('tech.hero.metricEndpoints') },
-    { value: TECH_METRICS.testFiles, label: t('tech.hero.metricTests') },
-    { value: TECH_METRICS.ciJobs, label: t('tech.hero.metricJobs') },
+    {
+      value: TECH_METRICS.linesOfCode,
+      label: t('tech.hero.metricLines'),
+      hint: t('tech.hero.metricLinesHint'),
+    },
+    {
+      value: TECH_METRICS.endpoints,
+      label: t('tech.hero.metricEndpoints'),
+      hint: t('tech.hero.metricEndpointsHint'),
+    },
+    {
+      value: TECH_METRICS.testFiles,
+      label: t('tech.hero.metricTests'),
+      hint: t('tech.hero.metricTestsHint'),
+    },
+    {
+      value: TECH_METRICS.ciJobs,
+      label: t('tech.hero.metricJobs'),
+      hint: t('tech.hero.metricJobsHint'),
+    },
   ];
 
   return (
@@ -49,7 +66,11 @@ export default function TechHero() {
           {metrics.map((metric) => (
             <li className={styles.metric} key={metric.label}>
               <span className={styles.metricValue}>{formatNumber(metric.value, locale)}</span>
-              <span className={styles.metricLabel}>{metric.label}</span>
+              <span className={styles.metricLabel}>
+                <TechHint label={metric.hint} placement="bottom">
+                  {metric.label}
+                </TechHint>
+              </span>
             </li>
           ))}
         </ul>
