@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import clsx from 'clsx';
+import { ChevronDown } from 'lucide-react';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import styles from './techPage.module.css';
 
@@ -10,13 +11,10 @@ export const TECH_SECTIONS = [
   'server',
   'contract',
   'data',
-  'domain',
   'tests',
   'ci',
   'production',
   'method',
-  'decisions',
-  'debt',
 ] as const;
 
 export type TechSectionId = (typeof TECH_SECTIONS)[number];
@@ -63,17 +61,38 @@ function useVisibleSection() {
 export default function TechRail() {
   const { t } = useTranslation();
   const visible = useVisibleSection();
+  const [expanded, setExpanded] = useState(false);
+  const listId = useId();
 
   return (
-    <nav className={styles.rail} aria-label={t('tech.railTitle')}>
+    <nav className={styles.rail} aria-label={t('tech.railTitle')} data-expanded={expanded}>
       <p className={styles.railTitle}>{t('tech.railTitle')}</p>
-      <ol className={styles.railList}>
+      <button
+        type="button"
+        className={styles.railToggle}
+        aria-expanded={expanded}
+        aria-controls={listId}
+        onClick={() => setExpanded((previous) => !previous)}
+      >
+        <span className={styles.railToggleLabel}>{t('tech.railTitle')}</span>
+        <span className={styles.railCurrent}>
+          <span className={styles.railProgress}>
+            {sectionNumber(visible)} / {TECH_SECTIONS.length}
+          </span>
+          <span className={styles.railCurrentName}>
+            {t(`tech.nav.${visible}` as TranslationKey)}
+          </span>
+        </span>
+        <ChevronDown className={styles.railChevron} size={16} aria-hidden focusable="false" />
+      </button>
+      <ol className={styles.railList} id={listId}>
         {TECH_SECTIONS.map((id) => (
           <li key={id}>
             <a
               className={clsx(styles.railLink, id === visible && styles.railLinkVisible)}
               href={`#${id}`}
               aria-current={id === visible ? 'location' : undefined}
+              onClick={() => setExpanded(false)}
             >
               <span className={styles.railNum}>{sectionNumber(id)}</span>
               <span>{t(`tech.nav.${id}` as TranslationKey)}</span>

@@ -1,5 +1,24 @@
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { TECH_METRICS } from './generated/techMetrics';
+import {
+  AwsLogo,
+  ClaudeLogo,
+  DotNetLogo,
+  GitHubLogo,
+  GoogleCloudLogo,
+  KofiLogo,
+  LetterboxdLogo,
+  MongoLogo,
+  PostHogLogo,
+  ReactLogo,
+  ResendLogo,
+  SentryLogo,
+  SonarLogo,
+  TmdbLogo,
+  TypeScriptLogo,
+  ViteLogo,
+  WebPushLogo,
+} from './TechLogos';
 import styles from './techShared.module.css';
 
 const SURFACE = 'var(--surface-sunken)';
@@ -25,109 +44,126 @@ function ArrowMarker({ id, fill }: Readonly<{ id: string; fill: string }>) {
   );
 }
 
+const EXTERNAL_SERVICES = [
+  { key: 'tmdb', name: 'TMDB', Logo: TmdbLogo },
+  { key: 'letterboxd', name: 'Letterboxd', Logo: LetterboxdLogo },
+  { key: 'google', name: 'OAuth Google', Logo: GoogleCloudLogo },
+  { key: 'github', name: 'OAuth GitHub', Logo: GitHubLogo },
+  { key: 'push', name: 'Web Push VAPID', Logo: WebPushLogo },
+  { key: 'issues', name: 'GitHub Issues', Logo: GitHubLogo },
+  { key: 'kofi', name: 'Ko-fi', Logo: KofiLogo },
+] as const;
+
 export function ArchitectureDiagram() {
   const { t } = useTranslation();
   return (
-    <svg viewBox="0 0 880 430" role="img" aria-labelledby="tech-arch-title">
+    <svg viewBox="0 0 880 470" role="img" aria-labelledby="tech-arch-title">
       <title id="tech-arch-title">{t('tech.diagram.architectureTitle')}</title>
       <defs>
         <ArrowMarker id="tech-arrow-arch" fill={META} />
       </defs>
 
-      <rect x="8" y="150" width="150" height="96" rx="12" fill={SURFACE} stroke={BORDER} />
-      <text x="83" y="188" textAnchor="middle" className={styles.svgTitle} fill={TEXT}>
+      <rect x="8" y="150" width="160" height="118" rx="12" fill={SURFACE} stroke={BORDER} />
+      <ReactLogo x={55} y={164} size={18} />
+      <TypeScriptLogo x={79} y={164} size={18} />
+      <ViteLogo x={103} y={164} size={18} />
+      <text x="88" y="206" textAnchor="middle" className={styles.svgTitle} fill={TEXT}>
         {t('tech.diagram.browser')}
       </text>
-      <text x="83" y="208" textAnchor="middle" className={styles.svgSub} fill={META}>
+      <text x="88" y="226" textAnchor="middle" className={styles.svgSub} fill={META}>
         {t('tech.diagram.browserPwa')}
       </text>
-      <text x="83" y="224" textAnchor="middle" className={styles.svgSub} fill={META}>
+      <text x="88" y="242" textAnchor="middle" className={styles.svgSub} fill={META}>
         {t('tech.diagram.browserWorker')}
       </text>
 
       <line
-        x1="160"
-        y1="176"
+        x1="170"
+        y1="180"
         x2="252"
-        y2="112"
+        y2="140"
         stroke={META}
         strokeWidth="1.5"
         markerEnd="url(#tech-arrow-arch)"
       />
-      <text x="196" y="132" textAnchor="middle" className={styles.svgSub} fill={META}>
+      <text x="204" y="150" textAnchor="middle" className={styles.svgSub} fill={META}>
         {t('tech.diagram.assets')}
       </text>
 
       <line
-        x1="160"
-        y1="220"
+        x1="170"
+        y1="240"
         x2="252"
-        y2="268"
+        y2="290"
         stroke={PRIMARY}
         strokeWidth="2"
         markerEnd="url(#tech-arrow-arch)"
       />
-      <text x="200" y="264" textAnchor="middle" className={styles.svgSub} fill={PRIMARY}>
+      <text x="208" y="286" textAnchor="middle" className={styles.svgSub} fill={PRIMARY}>
         /api/v1
       </text>
 
-      <rect x="258" y="60" width="196" height="90" rx="12" fill={SURFACE} stroke={BORDER} />
-      <text x="356" y="94" textAnchor="middle" className={styles.svgTitle} fill={TEXT}>
+      <rect x="258" y="52" width="200" height="104" rx="12" fill={SURFACE} stroke={BORDER} />
+      <AwsLogo x={348} y={64} size={20} />
+      <text x="358" y="106" textAnchor="middle" className={styles.svgTitle} fill={TEXT}>
         {t('tech.diagram.cdn')}
       </text>
-      <text x="356" y="114" textAnchor="middle" className={styles.svgSub} fill={META}>
+      <text x="358" y="126" textAnchor="middle" className={styles.svgSub} fill={META}>
         {t('tech.diagram.cdnBundle')}
       </text>
-      <text x="356" y="130" textAnchor="middle" className={styles.svgSub} fill={META}>
+      <text x="358" y="142" textAnchor="middle" className={styles.svgSub} fill={META}>
         {t('tech.diagram.cdnFallback')}
       </text>
 
       <rect
         x="258"
-        y="230"
-        width="196"
-        height="100"
+        y="250"
+        width="200"
+        height="118"
         rx="12"
         fill={PRIMARY_SOFT}
         stroke={PRIMARY}
         strokeWidth="1.5"
       />
-      <text x="356" y="266" textAnchor="middle" className={styles.svgTitle} fill={TEXT}>
+      <DotNetLogo x={334} y={262} size={20} />
+      <GoogleCloudLogo x={362} y={262} size={20} />
+      <text x="358" y="304" textAnchor="middle" className={styles.svgTitle} fill={TEXT}>
         {t('tech.diagram.api')}
       </text>
-      <text x="356" y="286" textAnchor="middle" className={styles.svgSub} fill={META}>
+      <text x="358" y="324" textAnchor="middle" className={styles.svgSub} fill={META}>
         {t('tech.diagram.apiHost')}
       </text>
-      <text x="356" y="302" textAnchor="middle" className={styles.svgSub} fill={META}>
+      <text x="358" y="340" textAnchor="middle" className={styles.svgSub} fill={META}>
         {t('tech.diagram.apiEndpoints', { endpoints: String(TECH_METRICS.endpoints) })}
       </text>
 
       <line
-        x1="454"
-        y1="280"
-        x2="530"
-        y2="280"
+        x1="462"
+        y1="300"
+        x2="532"
+        y2="300"
         stroke={META}
         strokeWidth="1.5"
         markerEnd="url(#tech-arrow-arch)"
       />
 
-      <rect x="538" y="230" width="170" height="100" rx="12" fill={SURFACE} stroke={BORDER} />
-      <text x="623" y="266" textAnchor="middle" className={styles.svgTitle} fill={TEXT}>
+      <rect x="538" y="250" width="176" height="118" rx="12" fill={SURFACE} stroke={BORDER} />
+      <MongoLogo x={616} y={262} size={20} />
+      <text x="626" y="304" textAnchor="middle" className={styles.svgTitle} fill={TEXT}>
         {t('tech.diagram.database')}
       </text>
-      <text x="623" y="286" textAnchor="middle" className={styles.svgSub} fill={META}>
+      <text x="626" y="324" textAnchor="middle" className={styles.svgSub} fill={META}>
         {t('tech.diagram.databaseReplica')}
       </text>
-      <text x="623" y="302" textAnchor="middle" className={styles.svgSub} fill={META}>
+      <text x="626" y="340" textAnchor="middle" className={styles.svgSub} fill={META}>
         {t('tech.diagram.databaseTransactions')}
       </text>
 
       <line
-        x1="454"
-        y1="244"
-        x2="700"
-        y2="140"
+        x1="462"
+        y1="262"
+        x2="716"
+        y2="152"
         stroke={META}
         strokeWidth="1.5"
         strokeDasharray="4 3"
@@ -135,71 +171,65 @@ export function ArchitectureDiagram() {
       />
 
       <rect
-        x="706"
-        y="34"
-        width="166"
-        height="204"
+        x="722"
+        y="30"
+        width="150"
+        height="222"
         rx="12"
         fill="none"
         stroke={BORDER}
         strokeDasharray="4 3"
       />
-      <text x="789" y="56" textAnchor="middle" className={styles.svgSub} fill={META}>
+      <text x="797" y="52" textAnchor="middle" className={styles.svgSub} fill={META}>
         {t('tech.diagram.externalServices')}
       </text>
-      {[
-        'TMDB',
-        'Letterboxd',
-        'OAuth Google',
-        'OAuth GitHub',
-        'Web Push VAPID',
-        'GitHub Issues',
-        'Ko-fi',
-      ].map((name, index) => (
-        <text
-          key={name}
-          x="789"
-          y={82 + index * 22}
-          textAnchor="middle"
-          className={styles.svgLabel}
-          fill={MUTED}
-        >
-          {name}
-        </text>
-      ))}
+      {EXTERNAL_SERVICES.map((service, index) => {
+        const rowY = 74 + index * 25;
+        return (
+          <g key={service.key}>
+            <service.Logo x={736} y={rowY - 12} size={16} />
+            <text x="760" y={rowY} className={styles.svgLabel} fill={MUTED}>
+              {service.name}
+            </text>
+          </g>
+        );
+      })}
 
       <line
-        x1="356"
-        y1="330"
-        x2="356"
-        y2="368"
+        x1="358"
+        y1="368"
+        x2="358"
+        y2="392"
         stroke={META}
         strokeWidth="1.5"
         strokeDasharray="4 3"
         markerEnd="url(#tech-arrow-arch)"
       />
       <line
-        x1="83"
-        y1="246"
-        x2="83"
-        y2="368"
+        x1="88"
+        y1="268"
+        x2="88"
+        y2="392"
         stroke={META}
         strokeWidth="1.5"
         strokeDasharray="4 3"
         markerEnd="url(#tech-arrow-arch)"
       />
 
-      <rect x="8" y="374" width="700" height="48" rx="12" fill={SURFACE} stroke={BORDER} />
-      <text x="30" y="404" className={styles.svgLabel} fill={TEXT}>
+      <rect x="8" y="398" width="706" height="52" rx="12" fill={SURFACE} stroke={BORDER} />
+      <text x="28" y="429" className={styles.svgLabel} fill={TEXT}>
         {t('tech.diagram.observability')}
       </text>
-      <text x="180" y="404" className={styles.svgLabel} fill={MUTED}>
+      <SentryLogo x={152} y={415} size={16} />
+      <text x="176" y="429" className={styles.svgLabel} fill={MUTED}>
         {t('tech.diagram.observabilityErrors')}
       </text>
-      <text x="360" y="404" className={styles.svgLabel} fill={MUTED}>
+      <PostHogLogo x={356} y={415} size={16} />
+      <text x="380" y="429" className={styles.svgLabel} fill={MUTED}>
         {t('tech.diagram.observabilityUsage')}
       </text>
-      <text x="590" y="404" className={styles.svgLabel} fill={MUTED}>
+      <GoogleCloudLogo x={578} y={415} size={16} />
+      <text x="602" y="429" className={styles.svgLabel} fill={MUTED}>
         {t('tech.diagram.observabilityLogs')}
       </text>
     </svg>
@@ -537,11 +567,28 @@ export function CiGraphDiagram() {
   );
 }
 
+const MCP_TOOLS = [
+  { key: 'github', name: 'GitHub', reads: 'tech.diagram.mcpGithub', Logo: GitHubLogo },
+  { key: 'gcp', name: 'Google Cloud', reads: 'tech.diagram.mcpGcp', Logo: GoogleCloudLogo },
+  { key: 'aws', name: 'AWS', reads: 'tech.diagram.mcpAws', Logo: AwsLogo },
+  { key: 'sonar', name: 'SonarCloud', reads: 'tech.diagram.mcpSonar', Logo: SonarLogo },
+  { key: 'sentry', name: 'Sentry', reads: 'tech.diagram.mcpSentry', Logo: SentryLogo },
+  { key: 'posthog', name: 'PostHog', reads: 'tech.diagram.mcpPosthog', Logo: PostHogLogo },
+  { key: 'mongo', name: 'MongoDB', reads: 'tech.diagram.mcpMongo', Logo: MongoLogo },
+  { key: 'resend', name: 'Resend', reads: 'tech.diagram.mcpResend', Logo: ResendLogo },
+].map((tool, index) => ({ ...tool, column: 8 + index * 109 })) as readonly {
+  key: string;
+  name: string;
+  reads: TranslationKey;
+  Logo: (props: { x: number; y: number; size: number }) => React.ReactElement;
+  column: number;
+}[];
+
 export function FeatureFlowDiagram() {
   const { t } = useTranslation();
   const stop = t('tech.diagram.flowStop');
   return (
-    <svg viewBox="0 0 880 296" role="img" aria-labelledby="tech-featureflow-title">
+    <svg viewBox="0 0 880 470" role="img" aria-labelledby="tech-featureflow-title">
       <title id="tech-featureflow-title">{t('tech.diagram.featureFlowTitle')}</title>
       <defs>
         <ArrowMarker id="tech-arrow-feature" fill={BORDER} />
@@ -674,6 +721,68 @@ export function FeatureFlowDiagram() {
       <text x="40" y="267" className={styles.svgSub} fill={WARN}>
         {t('tech.diagram.flowNote2')}
       </text>
+
+      <line x1="10" y1="296" x2="870" y2="296" stroke={BORDER} strokeDasharray="4 4" />
+      <text x="10" y="320" className={styles.svgSub} fill={META}>
+        {t('tech.diagram.mcpLabel')}
+      </text>
+
+      <rect
+        x="374"
+        y="334"
+        width="132"
+        height="42"
+        rx="10"
+        fill={PRIMARY_SOFT}
+        stroke={PRIMARY}
+        strokeWidth="1.5"
+      />
+      <ClaudeLogo x={386} y={345} size={20} />
+      <text x="414" y="360" className={styles.svgLabel} fill={TEXT}>
+        {t('tech.diagram.mcpAssistant')}
+      </text>
+
+      <g stroke={BORDER} strokeWidth="1.2" strokeDasharray="4 3" fill="none">
+        {MCP_TOOLS.map((tool) => (
+          <path
+            key={tool.key}
+            d={`M 440 376 C 440 390, ${tool.column + 49} 386, ${tool.column + 49} 396`}
+          />
+        ))}
+      </g>
+
+      {MCP_TOOLS.map((tool) => (
+        <g key={tool.key}>
+          <rect
+            x={tool.column}
+            y="396"
+            width="98"
+            height="58"
+            rx="10"
+            fill={SURFACE}
+            stroke={BORDER}
+          />
+          <tool.Logo x={tool.column + 40} y={404} size={18} />
+          <text
+            x={tool.column + 49}
+            y="437"
+            textAnchor="middle"
+            className={styles.svgLabel}
+            fill={TEXT}
+          >
+            {tool.name}
+          </text>
+          <text
+            x={tool.column + 49}
+            y="449"
+            textAnchor="middle"
+            className={styles.svgSub}
+            fill={META}
+          >
+            {t(tool.reads)}
+          </text>
+        </g>
+      ))}
     </svg>
   );
 }
@@ -807,6 +916,254 @@ export function ControlPyramidDiagram() {
           </text>
         </g>
       ))}
+    </svg>
+  );
+}
+
+const FRONT_DOMAINS = [
+  'domainAuth',
+  'domainEvents',
+  'domainMovies',
+  'domainWatchlist',
+  'domainNotifications',
+  'domainProfiles',
+  'domainLetterboxd',
+] as const;
+
+const FRONT_STACK = [
+  { name: 'React 19', x: 66, width: 120, Logo: ReactLogo },
+  { name: 'TypeScript 6', x: 198, width: 146, Logo: TypeScriptLogo },
+  { name: 'Vite 8', x: 356, width: 110, Logo: ViteLogo },
+  { name: 'React Router 8', x: 478, width: 150, Logo: null },
+  { name: 'TanStack Query', x: 640, width: 158, Logo: null },
+] as const;
+
+export function FrontGraphDiagram() {
+  const { t } = useTranslation();
+  return (
+    <svg viewBox="0 0 880 298" role="img" aria-labelledby="tech-frontgraph-title">
+      <title id="tech-frontgraph-title">{t('tech.diagram.frontGraphTitle')}</title>
+      <defs>
+        <ArrowMarker id="tech-arrow-front" fill={BORDER} />
+      </defs>
+      <text x="10" y="20" className={styles.svgSub} fill={META}>
+        {t('tech.diagram.frontGraphLabel')}
+      </text>
+
+      <g stroke={BORDER} strokeWidth="1.2" fill="none" markerEnd="url(#tech-arrow-front)">
+        {FRONT_DOMAINS.map((domain, index) => {
+          const from = 66 + index * 125;
+          const to = 240 + index * 68;
+          return <path key={domain} d={`M ${from} 90 C ${from} 122, ${to} 118, ${to} 148`} />;
+        })}
+      </g>
+
+      {FRONT_DOMAINS.map((domain, index) => (
+        <g key={domain}>
+          <rect
+            x={10 + index * 125}
+            y="46"
+            width="112"
+            height="44"
+            rx="10"
+            fill={SURFACE}
+            stroke={BORDER}
+          />
+          <text
+            x={66 + index * 125}
+            y="73"
+            textAnchor="middle"
+            className={styles.svgLabel}
+            fill={TEXT}
+          >
+            {t(`tech.diagram.${domain}` as 'tech.diagram.domainAuth')}
+          </text>
+        </g>
+      ))}
+
+      <rect
+        x="190"
+        y="154"
+        width="500"
+        height="56"
+        rx="12"
+        fill={PRIMARY_SOFT}
+        stroke={PRIMARY}
+        strokeWidth="1.5"
+      />
+      <text x="440" y="180" textAnchor="middle" className={styles.svgTitle} fill={TEXT}>
+        {t('tech.diagram.sharedCore', { components: String(TECH_METRICS.sharedComponents) })}
+      </text>
+      <text x="440" y="198" textAnchor="middle" className={styles.svgSub} fill={META}>
+        {t('tech.diagram.sharedCoreSub')}
+      </text>
+
+      <text x="10" y="240" className={styles.svgSub} fill={META}>
+        {t('tech.diagram.stackLabel')}
+      </text>
+
+      {FRONT_STACK.map((entry) => (
+        <g key={entry.name}>
+          <rect
+            x={entry.x}
+            y="250"
+            width={entry.width}
+            height="36"
+            rx="8"
+            fill={SURFACE}
+            stroke={BORDER}
+          />
+          {entry.Logo ? <entry.Logo x={entry.x + 12} y={260} size={16} /> : null}
+          <text
+            x={entry.x + (entry.Logo ? 36 : 14)}
+            y="273"
+            className={styles.svgLabel}
+            fill={TEXT}
+          >
+            {entry.name}
+          </text>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+const DELETED_COLLECTIONS = [
+  'users',
+  'events',
+  'movies',
+  'votes',
+  'watchlists',
+  'notifications',
+  'follows',
+  'sessions',
+] as const;
+
+export function UnitOfWorkDiagram() {
+  const { t } = useTranslation();
+  return (
+    <svg viewBox="0 0 880 250" role="img" aria-labelledby="tech-unitofwork-title">
+      <title id="tech-unitofwork-title">{t('tech.diagram.unitOfWorkTitle')}</title>
+      <defs>
+        <ArrowMarker id="tech-arrow-uow" fill={BORDER} />
+        <ArrowMarker id="tech-arrow-uow-ok" fill={SUCCESS} />
+        <ArrowMarker id="tech-arrow-uow-ko" fill={DANGER} />
+      </defs>
+      <text x="10" y="20" className={styles.svgSub} fill={META}>
+        {t('tech.diagram.unitOfWorkLabel')}
+      </text>
+
+      <rect x="8" y="104" width="150" height="48" rx="10" fill={SURFACE} stroke={BORDER} />
+      <text x="83" y="133" textAnchor="middle" className={styles.svgLabel} fill={TEXT}>
+        DELETE /auth/me
+      </text>
+
+      <line
+        x1="160"
+        y1="128"
+        x2="184"
+        y2="128"
+        stroke={BORDER}
+        strokeWidth="1.4"
+        markerEnd="url(#tech-arrow-uow)"
+      />
+
+      <rect
+        x="190"
+        y="42"
+        width="440"
+        height="172"
+        rx="14"
+        fill="none"
+        stroke={PRIMARY}
+        strokeWidth="1.5"
+        strokeDasharray="5 4"
+      />
+      <text x="410" y="68" textAnchor="middle" className={styles.svgLabel} fill={PRIMARY}>
+        {t('tech.diagram.unitOfWorkEnvelope')}
+      </text>
+
+      {DELETED_COLLECTIONS.map((collection, index) => {
+        const column = index % 4;
+        const row = Math.floor(index / 4);
+        return (
+          <g key={collection}>
+            <rect
+              x={206 + column * 106}
+              y={86 + row * 48}
+              width="96"
+              height="36"
+              rx="8"
+              fill={SURFACE}
+              stroke={BORDER}
+            />
+            <text
+              x={254 + column * 106}
+              y={109 + row * 48}
+              textAnchor="middle"
+              className={styles.svgSub}
+              fill={MUTED}
+            >
+              {collection}
+            </text>
+          </g>
+        );
+      })}
+
+      <text x="410" y="200" textAnchor="middle" className={styles.svgSub} fill={META}>
+        {t('tech.diagram.unitOfWorkCollections')}
+      </text>
+
+      <g strokeWidth="1.6" fill="none">
+        <path
+          d="M 632 128 C 664 128, 664 100, 692 100"
+          stroke={SUCCESS}
+          markerEnd="url(#tech-arrow-uow-ok)"
+        />
+        <path
+          d="M 632 128 C 664 128, 664 174, 692 174"
+          stroke={DANGER}
+          markerEnd="url(#tech-arrow-uow-ko)"
+        />
+      </g>
+
+      <rect
+        x="700"
+        y="78"
+        width="172"
+        height="44"
+        rx="10"
+        fill={SUCCESS_SOFT}
+        stroke={SUCCESS}
+        strokeWidth="1.5"
+      />
+      <text x="786" y="99" textAnchor="middle" className={styles.svgLabel} fill={SUCCESS}>
+        {t('tech.diagram.unitOfWorkCommit')}
+      </text>
+      <text x="786" y="113" textAnchor="middle" className={styles.svgSub} fill={SUCCESS}>
+        {t('tech.diagram.unitOfWorkCommitSub')}
+      </text>
+
+      <rect
+        x="700"
+        y="152"
+        width="172"
+        height="44"
+        rx="10"
+        fill={DANGER_SOFT}
+        stroke={DANGER}
+        strokeWidth="1.5"
+      />
+      <text x="786" y="173" textAnchor="middle" className={styles.svgLabel} fill={DANGER}>
+        {t('tech.diagram.unitOfWorkRollback')}
+      </text>
+      <text x="786" y="187" textAnchor="middle" className={styles.svgSub} fill={DANGER}>
+        {t('tech.diagram.unitOfWorkRollbackSub')}
+      </text>
+
+      <text x="10" y="238" className={styles.svgSub} fill={META}>
+        {t('tech.diagram.unitOfWorkNote')}
+      </text>
     </svg>
   );
 }
