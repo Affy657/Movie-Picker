@@ -181,6 +181,11 @@ export default function Footer({ clearMobileNav = false, onOpenWhatsNew }: Reado
                 LinkedIn
               </a>
             </li>
+            <li>
+              <Link to={ROUTES.tech} className={styles.colLink}>
+                {t('footer.tech')}
+              </Link>
+            </li>
           </ul>
         </div>
       </div>

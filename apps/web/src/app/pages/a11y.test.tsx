@@ -15,6 +15,7 @@ import AccountPage from '@/features/auth/pages/AccountPage';
 import MyEventsPage from '@/features/events/pages/MyEventsPage';
 import NotFoundPage from '@/app/pages/NotFoundPage';
 import DonatePage from '@/app/pages/DonatePage';
+import TechPage from '@/app/pages/TechPage';
 import ProfilePage from '@/features/profile/pages/ProfilePage';
 import ProfileMoviesPage from '@/features/profile/pages/ProfileMoviesPage';
 import WatchlistPage from '@/features/watchlist/pages/WatchlistPage';
@@ -96,6 +97,11 @@ describe('accessibilité (axe)', () => {
 
   it("AccountPage (visiteur) n'a pas de violations", async () => {
     const { container, queryClient } = renderPage(<AccountPage />);
+    await assertNoViolations(container, queryClient);
+  });
+
+  it("TechPage n'a pas de violations", async () => {
+    const { container, queryClient } = renderPage(<TechPage />);
     await assertNoViolations(container, queryClient);
   });
 
