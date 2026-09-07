@@ -186,8 +186,7 @@ describe('HomePage', () => {
     server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
     renderPage();
 
-    await userEvent.type(screen.getByLabelText(/chercher un film/i), 'dune');
-    await userEvent.click(screen.getByRole('button', { name: /^chercher$/i }));
+    await userEvent.type(screen.getByLabelText(/chercher un film/i), 'dune{enter}');
 
     await waitFor(() => {
       expect(screen.getByTestId('location')).toHaveTextContent('/films/recherche?q=dune');

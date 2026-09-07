@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -14,11 +16,27 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
     private const string LogoBase = "https://image.tmdb.org/t/p/w45";
     private const string YoutubeWatchBase = "https://www.youtube.com/watch?v=";
     private const string ResultsProperty = "results";
+    private const int MaxResults = 20;
+    private const int MinPersonQueryLength = 3;
+    private const double MinPersonPopularity = 1d;
 
     private sealed class TmdbUnavailableMarker
     {
         public static readonly TmdbUnavailableMarker Instance = new();
     }
+
+    private sealed record PersonMatch(int Id, bool LeadsResults);
+
+    private sealed record PersonCreditMatches(IReadOnlyList<TmdbSearchItem> Items, bool LeadsResults)
+    {
+        public static readonly PersonCreditMatches None = new(Array.Empty<TmdbSearchItem>(), false);
+    }
+
+    private static readonly (string Property, Func<JsonElement, bool> KeepCredit)[] PersonCreditSources =
+    [
+        ("cast", static _ => true),
+        ("crew", IsDirectingCredit)
+    ];
 
     private readonly HttpClient _http;
     private readonly MoviePickerOptions _options;
@@ -76,10 +94,16 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         var endpoint = allowSeries ? "search/multi" : "search/movie";
         var url = $"https://api.themoviedb.org/3/{endpoint}?api_key={key}&query={q}&language=fr-FR";
 
-        return await FetchAndMapResultsAsync(
+        var titleMatchesTask = FetchAndMapResultsAsync(
             url,
             item => TryMapSearchItem(item, allowSeries, genreIds, yearFrom, yearTo, voteMin, originalLanguage),
             ct);
+        var creditMatchesTask = SearchByPersonCreditsAsync(
+            trimmedQuery, key, allowSeries, genreIds, yearFrom, yearTo, voteMin, originalLanguage, ct);
+
+        await Task.WhenAll(titleMatchesTask, creditMatchesTask);
+
+        return MergeTitleAndCreditMatches(await titleMatchesTask, await creditMatchesTask);
     }
 
     private async Task<List<TmdbSearchItem>> FetchAndMapResultsAsync(
@@ -98,7 +122,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         var list = new List<TmdbSearchItem>();
         foreach (var item in results.EnumerateArray())
         {
-            if (list.Count >= 20)
+            if (list.Count >= MaxResults)
                 break;
 
             var mapped = mapItem(item);
@@ -107,6 +131,206 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         }
 
         return list;
+    }
+
+    private async Task<PersonCreditMatches> SearchByPersonCreditsAsync(
+        string query,
+        string apiKey,
+        bool allowSeries,
+        IReadOnlyList<int>? genreIds,
+        int? yearFrom,
+        int? yearTo,
+        double? voteMin,
+        string? originalLanguage,
+        CancellationToken ct)
+    {
+        var normalizedQuery = NormalizeSearchText(query);
+        if (normalizedQuery.Length < MinPersonQueryLength)
+            return PersonCreditMatches.None;
+
+        try
+        {
+            var person = await FindBestMatchingPersonAsync(normalizedQuery, query, apiKey, ct);
+            if (person is null)
+                return PersonCreditMatches.None;
+
+            var credits = await FetchPersonCreditsAsync(
+                person.Id, apiKey, allowSeries, genreIds, yearFrom, yearTo, voteMin, originalLanguage, ct);
+
+            return credits.Count == 0
+                ? PersonCreditMatches.None
+                : new PersonCreditMatches(credits, person.LeadsResults);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
+        {
+            _logger.LogWarning(ex, "TMDB recherche par personne indisponible");
+            return PersonCreditMatches.None;
+        }
+    }
+
+    private async Task<PersonMatch?> FindBestMatchingPersonAsync(
+        string normalizedQuery,
+        string rawQuery,
+        string apiKey,
+        CancellationToken ct)
+    {
+        var url = $"https://api.themoviedb.org/3/search/person?api_key={apiKey}"
+            + $"&query={Uri.EscapeDataString(rawQuery)}&language=fr-FR";
+
+        using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
+        res.EnsureSuccessStatusCode();
+
+        await using var stream = await res.Content.ReadAsStreamAsync(ct);
+        using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+        if (!doc.RootElement.TryGetProperty(ResultsProperty, out var results) || results.ValueKind != JsonValueKind.Array)
+            return null;
+
+        var candidates = new List<(int Id, bool NameMatchesWholeWords, double Popularity)>();
+        foreach (var candidate in results.EnumerateArray())
+        {
+            if (!candidate.TryGetProperty("name", out var nameElement) || nameElement.ValueKind != JsonValueKind.String)
+                continue;
+            if (!candidate.TryGetProperty("id", out var idElement) || idElement.ValueKind != JsonValueKind.Number)
+                continue;
+
+            var normalizedName = NormalizeSearchText(nameElement.GetString() ?? string.Empty);
+            if (!normalizedName.Contains(normalizedQuery, StringComparison.Ordinal))
+                continue;
+
+            var popularity = ReadPopularity(candidate);
+            if (popularity < MinPersonPopularity)
+                continue;
+
+            candidates.Add((
+                idElement.GetInt32(),
+                MatchesWholeWords(normalizedName, normalizedQuery),
+                popularity));
+        }
+
+        if (candidates.Count == 0)
+            return null;
+
+        var best = candidates
+            .OrderByDescending(candidate => candidate.NameMatchesWholeWords)
+            .ThenByDescending(candidate => candidate.Popularity)
+            .First();
+
+        return new PersonMatch(best.Id, best.NameMatchesWholeWords);
+    }
+
+    private static bool MatchesWholeWords(string normalizedName, string normalizedQuery) =>
+        $" {normalizedName} ".Contains($" {normalizedQuery} ", StringComparison.Ordinal);
+
+    private async Task<IReadOnlyList<TmdbSearchItem>> FetchPersonCreditsAsync(
+        int personId,
+        string apiKey,
+        bool allowSeries,
+        IReadOnlyList<int>? genreIds,
+        int? yearFrom,
+        int? yearTo,
+        double? voteMin,
+        string? originalLanguage,
+        CancellationToken ct)
+    {
+        var url = $"https://api.themoviedb.org/3/person/{personId}/combined_credits?api_key={apiKey}&language=fr-FR";
+
+        using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
+        res.EnsureSuccessStatusCode();
+
+        await using var stream = await res.Content.ReadAsStreamAsync(ct);
+        using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+
+        var scored = new List<(double Popularity, TmdbSearchItem Item)>();
+        var alreadyKept = new HashSet<(int, MovieMediaType)>();
+
+        foreach (var (property, keepCredit) in PersonCreditSources)
+        {
+            if (!doc.RootElement.TryGetProperty(property, out var credits) || credits.ValueKind != JsonValueKind.Array)
+                continue;
+
+            foreach (var credit in credits.EnumerateArray())
+            {
+                if (!keepCredit(credit))
+                    continue;
+
+                var mapped = TryMapSearchItem(credit, true, genreIds, yearFrom, yearTo, voteMin, originalLanguage);
+                if (mapped is null)
+                    continue;
+                if (!allowSeries && mapped.MediaType != MovieMediaType.Movie)
+                    continue;
+                if (!alreadyKept.Add((mapped.Id, mapped.MediaType)))
+                    continue;
+
+                scored.Add((ReadPopularity(credit), mapped));
+            }
+        }
+
+        return scored
+            .OrderByDescending(entry => entry.Popularity)
+            .Take(MaxResults)
+            .Select(entry => entry.Item)
+            .ToList();
+    }
+
+    private static IReadOnlyList<TmdbSearchItem> MergeTitleAndCreditMatches(
+        IReadOnlyList<TmdbSearchItem> titleMatches,
+        PersonCreditMatches creditMatches)
+    {
+        if (creditMatches.Items.Count == 0)
+            return titleMatches;
+
+        var ordered = creditMatches.LeadsResults
+            ? creditMatches.Items.Concat(titleMatches)
+            : titleMatches.Concat(creditMatches.Items);
+
+        var alreadyKept = new HashSet<(int, MovieMediaType)>();
+        var merged = new List<TmdbSearchItem>(MaxResults);
+        foreach (var item in ordered)
+        {
+            if (merged.Count >= MaxResults)
+                break;
+            if (alreadyKept.Add((item.Id, item.MediaType)))
+                merged.Add(item);
+        }
+
+        return merged;
+    }
+
+    private static bool IsDirectingCredit(JsonElement credit) =>
+        credit.TryGetProperty("job", out var job)
+        && job.ValueKind == JsonValueKind.String
+        && string.Equals(job.GetString(), "Director", StringComparison.OrdinalIgnoreCase);
+
+    private static double ReadPopularity(JsonElement item) =>
+        item.TryGetProperty("popularity", out var popularity) && popularity.ValueKind == JsonValueKind.Number
+            ? popularity.GetDouble()
+            : 0d;
+
+    private static string NormalizeSearchText(string value)
+    {
+        var decomposed = value.Normalize(NormalizationForm.FormD);
+        var builder = new StringBuilder(decomposed.Length);
+        var separatorPending = false;
+
+        foreach (var character in decomposed)
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(character) == UnicodeCategory.NonSpacingMark)
+                continue;
+
+            if (char.IsLetterOrDigit(character))
+            {
+                if (separatorPending && builder.Length > 0)
+                    builder.Append(' ');
+                builder.Append(char.ToLowerInvariant(character));
+                separatorPending = false;
+            }
+            else
+            {
+                separatorPending = true;
+            }
+        }
+
+        return builder.ToString();
     }
 
     private static TmdbSearchItem? TryMapSearchItem(

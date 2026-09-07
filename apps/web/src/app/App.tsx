@@ -10,6 +10,7 @@ import AnalyticsSync from '@/app/components/AnalyticsSync';
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
 import { getInstrumentedRoutes } from '@/shared/observability/sentry';
 import AppShell from '@/app/components/AppShell';
+import ScrollToTop from '@/app/components/ScrollToTop';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
 
@@ -117,11 +118,14 @@ export function AppRoutes() {
 function AppRoutesWithErrorBoundary() {
   const location = useLocation();
   return (
-    <ErrorBoundary key={location.pathname}>
-      <Suspense fallback={<PageFallback />}>
-        <AppRoutes />
-      </Suspense>
-    </ErrorBoundary>
+    <>
+      <ScrollToTop />
+      <ErrorBoundary key={location.pathname}>
+        <Suspense fallback={<PageFallback />}>
+          <AppRoutes />
+        </Suspense>
+      </ErrorBoundary>
+    </>
   );
 }
 

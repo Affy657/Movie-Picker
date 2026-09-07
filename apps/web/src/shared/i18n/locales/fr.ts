@@ -61,7 +61,6 @@
     },
     searchLabel: 'Chercher un film',
     searchPlaceholder: 'Titre, réalisateur, acteur',
-    searchSubmit: 'Chercher',
     searchExamplesLabel: 'Par exemple',
   },
 

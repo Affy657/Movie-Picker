@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
 import PageLayout from '@/shared/components/PageLayout';
-import Button, { buttonClass } from '@/shared/components/Button';
+import { buttonClass } from '@/shared/components/Button';
 import SearchField from '@/shared/components/SearchField';
 import { APP_DOCUMENT_TITLE } from '@/shared/hooks/useDocumentTitle';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
@@ -37,7 +37,7 @@ import styles from './HomePage.module.css';
 
 type GenreTabKey = 'all' | `${number}`;
 
-const SEARCH_EXAMPLES = ['Dune', 'Bong Joon-ho', 'comédie française'];
+const SEARCH_EXAMPLES = ['Dune', 'Bong Joon-ho'];
 
 interface SelectedMovie {
   tmdbId: number;
@@ -130,9 +130,6 @@ export default function HomePage() {
             placeholder={t('home.searchPlaceholder')}
             iconSize={16}
           />
-          <Button type="submit" variant="primary" className={styles.searchSubmit}>
-            {t('home.searchSubmit')}
-          </Button>
         </form>
         <p className={styles.examples}>
           <span className={styles.examplesLabel}>{t('home.searchExamplesLabel')}</span>

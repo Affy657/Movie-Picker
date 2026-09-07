@@ -45,9 +45,16 @@ export function Tabs<T extends string>({
   const { canScrollBack, canScrollForward } = useRailScroll(listRef, tabs.length);
 
   useEffect(() => {
-    listRef.current
-      ?.querySelector('[aria-selected="true"]')
-      ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    const list = listRef.current;
+    const selected = list?.querySelector('[aria-selected="true"]');
+    if (!list || !selected) return;
+    const listBounds = list.getBoundingClientRect();
+    const selectedBounds = selected.getBoundingClientRect();
+    const overflowStart = listBounds.left - selectedBounds.left;
+    const overflowEnd = selectedBounds.right - listBounds.right;
+    if (overflowStart <= 0 && overflowEnd <= 0) return;
+    const delta = overflowStart > 0 ? -overflowStart : overflowEnd;
+    list.scrollTo({ left: list.scrollLeft + delta, behavior: 'instant' });
   }, [active]);
 
   const fade =
