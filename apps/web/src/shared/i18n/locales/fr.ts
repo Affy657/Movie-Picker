@@ -1330,6 +1330,7 @@
     tagline: 'Choisissez votre prochain film ensemble.',
     navTitle: 'Navigation',
     socialTitle: 'Réseaux',
+    appearanceTitle: 'Apparence',
     helpTitle: 'Aide',
     reportIssue: 'Signaler un problème',
     donate: 'Soutenir le projet',

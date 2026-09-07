@@ -1308,6 +1308,7 @@ export const en: Locale = {
     tagline: 'Pick your next movie together.',
     navTitle: 'Navigation',
     socialTitle: 'Social',
+    appearanceTitle: 'Appearance',
     helpTitle: 'Help',
     reportIssue: 'Report an issue',
     donate: 'Support the project',

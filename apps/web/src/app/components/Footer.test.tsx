@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import Footer from '@/app/components/Footer';
@@ -95,5 +95,34 @@ describe('Footer PWA install', () => {
     expect(
       screen.queryByRole('heading', { name: /installer movie picker/i })
     ).not.toBeInTheDocument();
+  });
+});
+
+describe('Footer theme control', () => {
+  afterEach(() => {
+    localStorage.removeItem('moviepicker-ui-preference');
+    delete document.documentElement.dataset.theme;
+  });
+
+  it('expose un groupe de thèmes libellé Apparence avec une option par thème', () => {
+    renderFooter();
+
+    const group = screen.getByRole('radiogroup', { name: /apparence/i });
+    expect(group).toBeInTheDocument();
+    expect(within(group).getAllByRole('radio')).toHaveLength(3);
+    expect(within(group).getByRole('radio', { name: /système/i })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
+  });
+
+  it('applique et mémorise le thème choisi', async () => {
+    const user = userEvent.setup();
+    renderFooter();
+
+    await user.click(screen.getByRole('radio', { name: /clair/i }));
+
+    expect(document.documentElement.dataset.theme).toBe('light');
+    expect(localStorage.getItem('moviepicker-ui-preference')).toBe('light');
   });
 });
