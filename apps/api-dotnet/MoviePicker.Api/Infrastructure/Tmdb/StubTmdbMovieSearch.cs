@@ -5,6 +5,8 @@ namespace MoviePicker.Api.Infrastructure.Tmdb;
 
 public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
 {
+    private const int ShowcaseItemsPerPage = 20;
+
     private static readonly int[] SciFiAdventureGenreIds = [878, 12];
     private static readonly int[] DramaGenreIds = [18];
 
@@ -49,5 +51,51 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
             "2024-01-01",
             null);
         return Task.FromResult<TmdbMovieDetails?>(details);
+    }
+
+    public Task<IReadOnlyList<TmdbSearchItem>> GetTrendingMoviesAsync(int pages, CancellationToken ct = default) =>
+        Task.FromResult(BuildSection(700_000, "Tendance stub", pages));
+
+    public Task<IReadOnlyList<TmdbSearchItem>> GetNowPlayingMoviesAsync(string region, int pages, CancellationToken ct = default) =>
+        Task.FromResult(BuildSection(710_000, "En salles stub", pages));
+
+    public Task<IReadOnlyList<TmdbSearchItem>> DiscoverMoviesAsync(TmdbDiscoveryCriteria criteria, int pages, CancellationToken ct = default)
+    {
+        var firstGenre = criteria.GenreIds is { Count: > 0 } ? criteria.GenreIds[0] : 0;
+        return Task.FromResult(BuildSection(720_000 + (firstGenre * 1_000), "Sélection stub", pages, firstGenre));
+    }
+
+    public Task<TmdbCollectionSummary?> GetCollectionAsync(int collectionId, CancellationToken ct = default) =>
+        Task.FromResult<TmdbCollectionSummary?>(
+            new TmdbCollectionSummary(collectionId, $"Saga stub {collectionId}", "Collection générée par le stub TMDB.", null, 4));
+
+    public Task<IReadOnlyList<TmdbSearchItem>> GetRecommendationsAsync(int tmdbId, CancellationToken ct = default) =>
+        Task.FromResult(BuildSection(740_000 + tmdbId, $"Recommandation stub {tmdbId}", 1, itemCount: 6));
+
+    public Task<IReadOnlyList<TmdbSearchItem>> GetCollectionMoviesAsync(int collectionId, CancellationToken ct = default) =>
+        Task.FromResult(BuildSection(730_000 + collectionId, $"Saga stub {collectionId}", 1, itemCount: 4));
+
+    private static IReadOnlyList<TmdbSearchItem> BuildSection(
+        int idBase,
+        string titlePrefix,
+        int pages,
+        int genreId = 0,
+        int? itemCount = null)
+    {
+        var count = itemCount ?? (Math.Clamp(pages, 1, 10) * ShowcaseItemsPerPage);
+        var genreIds = genreId > 0 ? new[] { genreId } : SciFiAdventureGenreIds;
+        var items = new List<TmdbSearchItem>(count);
+        for (var index = 0; index < count; index++)
+        {
+            items.Add(new TmdbSearchItem(
+                idBase + index,
+                MovieMediaType.Movie,
+                $"{titlePrefix} {index + 1}",
+                (2026 - (index % 12)).ToString(System.Globalization.CultureInfo.InvariantCulture),
+                null,
+                Math.Round(9.0 - (index % 30) * 0.1, 1),
+                GenreIds: genreIds));
+        }
+        return items;
     }
 }

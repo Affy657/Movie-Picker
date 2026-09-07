@@ -65,25 +65,6 @@ function roundToThousand(value) {
   return Math.round(value / 1000) * 1000;
 }
 
-function extractWheelSnippet() {
-  const file = join(repoRoot, 'apps/api-dotnet/MoviePicker.Api/Domain/WheelWinnerPicker.cs');
-  const source = readText(file);
-  const opening = '    public static Movie Pick(';
-  const closing = '\n    }';
-  const start = source.indexOf(opening);
-  const end = start === -1 ? -1 : source.indexOf(`${closing}\n`, start);
-  if (end === -1) throw new Error('WheelWinnerPicker.Pick introuvable');
-  return source
-    .slice(start, end + closing.length)
-    .split('\n')
-    .map((line) => (line.startsWith('    ') ? line.slice(4) : line).trimEnd())
-    .join('\n');
-}
-
-function toTemplateLiteral(text) {
-  return text.replaceAll('\\', '\\\\').replaceAll('`', '\\`').replaceAll('${', '\\${');
-}
-
 function computeMetrics(previous) {
   const webSources = walk(join(repoRoot, 'apps/web/src'), (name) => /\.(ts|tsx|css)$/.test(name));
   const apiSources = walk(join(repoRoot, 'apps/api-dotnet'), (name) => name.endsWith('.cs'));
@@ -168,10 +149,8 @@ const previous = readPreviousMetrics();
 const measurable = Object.values(previous).length > 0;
 
 let metrics;
-let wheelSnippet;
 try {
   metrics = computeMetrics(previous);
-  wheelSnippet = extractWheelSnippet();
 } catch (error) {
   if (!measurable) throw error;
   process.stderr.write(
@@ -197,8 +176,6 @@ ${Object.entries(metrics)
 } as const;
 
 export const TECH_METRICS_BUILD_DATE = '${buildDate}';
-
-export const TECH_WHEEL_SNIPPET = \`${toTemplateLiteral(wheelSnippet)}\`;
 `;
 
 mkdirSync(outputDir, { recursive: true });

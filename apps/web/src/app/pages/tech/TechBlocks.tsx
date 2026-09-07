@@ -1,5 +1,7 @@
 import clsx from 'clsx';
 import type { ReactNode } from 'react';
+import Card from '@/shared/components/Card';
+import Tooltip from '@/shared/components/Tooltip';
 import styles from './techShared.module.css';
 
 type TechSectionProps = {
@@ -26,24 +28,60 @@ export function TechSection({ id, eyebrow, title, lead, children }: Readonly<Tec
   );
 }
 
-export type SpecItem = {
+export function TechHint({
+  label,
+  placement = 'top',
+  className,
+  children,
+}: Readonly<{
+  label: string;
+  placement?: 'top' | 'bottom' | 'left' | 'right';
+  className?: string;
+  children: ReactNode;
+}>) {
+  return (
+    <Tooltip label={label} placement={placement} focusable className={className}>
+      {children}
+    </Tooltip>
+  );
+}
+
+export type FactItem = {
+  key: string;
+  icon: ReactNode;
   term: string;
   detail: string;
+  hint: string;
   emphasis?: boolean;
 };
 
-export function SpecList({ items }: Readonly<{ items: readonly SpecItem[] }>) {
+export function FactGrid({
+  heading,
+  items,
+}: Readonly<{ heading?: string; items: readonly FactItem[] }>) {
   return (
-    <dl className={styles.specs}>
-      {items.map((item) => (
-        <div className={styles.specRow} key={item.term}>
-          <dt className={styles.specTerm}>{item.term}</dt>
-          <dd className={clsx(styles.specDetail, item.emphasis && styles.specDetailStrong)}>
-            {item.detail}
-          </dd>
-        </div>
-      ))}
-    </dl>
+    <div className={styles.facts}>
+      {heading ? <p className={styles.groupHeading}>{heading}</p> : null}
+      <ul className={styles.factList}>
+        {items.map((item) => (
+          <li key={item.key}>
+            <Card
+              as="article"
+              padding="sm"
+              className={clsx(styles.fact, item.emphasis && styles.factStrong)}
+            >
+              <span className={styles.factIcon} aria-hidden>
+                {item.icon}
+              </span>
+              <h3 className={styles.factTerm}>
+                <TechHint label={item.hint}>{item.term}</TechHint>
+              </h3>
+              <p className={styles.factDetail}>{item.detail}</p>
+            </Card>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -55,35 +93,5 @@ export function Figure({ caption, children }: Readonly<{ caption?: string; child
       </div>
       {caption ? <figcaption className={styles.caption}>{caption}</figcaption> : null}
     </figure>
-  );
-}
-
-type IncidentStep = {
-  label: string;
-  text: string;
-};
-
-type IncidentProps = {
-  kicker: string;
-  title: string;
-  steps: readonly IncidentStep[];
-};
-
-export function Incident({ kicker, title, steps }: Readonly<IncidentProps>) {
-  return (
-    <div className={styles.incident}>
-      <div className={styles.incidentHead}>
-        <p className={styles.incidentKicker}>{kicker}</p>
-        <h3 className={styles.incidentTitle}>{title}</h3>
-      </div>
-      <div className={styles.incidentSteps}>
-        {steps.map((step) => (
-          <div className={styles.step} key={step.label}>
-            <p className={styles.stepLabel}>{step.label}</p>
-            <p className={styles.stepText}>{step.text}</p>
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }

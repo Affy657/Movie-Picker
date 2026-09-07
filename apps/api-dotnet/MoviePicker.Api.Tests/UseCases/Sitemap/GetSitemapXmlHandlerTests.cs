@@ -39,6 +39,15 @@ public sealed class GetSitemapXmlHandlerTests
     }
 
     [Fact]
+    public async Task BuildXmlAsync_AlwaysIncludesDiscoverPage()
+    {
+        SetupProfiles();
+        var xml = await CreateSut().BuildXmlAsync();
+
+        Assert.Contains("https://web.example/decouvrir", Locs(xml));
+    }
+
+    [Fact]
     public async Task BuildXmlAsync_AlwaysIncludesDonatePage()
     {
         SetupProfiles();
@@ -90,6 +99,6 @@ public sealed class GetSitemapXmlHandlerTests
         var root = XDocument.Parse(xml).Root;
         Assert.NotNull(root);
         Assert.Equal(Ns + "urlset", root!.Name);
-        Assert.Equal(4, root.Elements(Ns + "url").Count());
+        Assert.Equal(5, root.Elements(Ns + "url").Count());
     }
 }

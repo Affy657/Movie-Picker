@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import PageLayout from '@/shared/components/PageLayout';
-import { APP_DOCUMENT_TITLE } from '@/shared/hooks/useDocumentTitle';
+import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
 import { SITE_URL } from '@/shared/seo/siteMeta';
 import { useTranslation } from '@/shared/i18n';
@@ -24,10 +24,10 @@ export default function LandingPage() {
   const rootRef = useRef<HTMLElement>(null);
 
   usePageSeo({
-    title: APP_DOCUMENT_TITLE,
+    title: pageTitle(t('nav.landing.howItWorks')),
     description: t('landing.seoDescription'),
     imageAlt: t('landing.ogImageAlt'),
-    canonical: `${SITE_URL}${ROUTES.home}`,
+    canonical: `${SITE_URL}${ROUTES.discover}`,
     ogType: 'website',
   });
 

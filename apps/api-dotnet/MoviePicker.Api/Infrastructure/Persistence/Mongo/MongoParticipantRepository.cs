@@ -107,6 +107,24 @@ public sealed class MongoParticipantRepository : IParticipantRepository
         return docs.Select(ParticipantDocumentMapper.ToDomain).ToList();
     }
 
+    public async Task<IReadOnlyList<Participant>> ListByUserIdsAsync(
+        IReadOnlyCollection<string> userIds,
+        int limit = 0,
+        CancellationToken ct = default)
+    {
+        var ids = userIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
+        if (ids.Count == 0)
+            return [];
+
+        IFindFluent<ParticipantDocument, ParticipantDocument> query = _collection
+            .Find(x => x.UserId != null && ids.Contains(x.UserId))
+            .SortByDescending(x => x.CreatedAt);
+        if (limit > 0)
+            query = query.Limit(limit);
+        var docs = await query.ToListAsync(ct);
+        return docs.Select(ParticipantDocumentMapper.ToDomain).ToList();
+    }
+
     public async Task<int> CountByEventIdAsync(string eventId, CancellationToken ct = default)
     {
         var c = await _collection.CountDocumentsAsync(x => x.EventId == eventId, cancellationToken: ct);

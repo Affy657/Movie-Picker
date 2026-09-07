@@ -210,4 +210,23 @@ public sealed class GetUserWatchedMoviesHandlerTests
 
         Assert.Equal(200, res.Items.Count);
     }
+
+    [Fact]
+    public async Task HandleForUser_PrivateProfile_StillReturnsWatchedMovies()
+    {
+        var handler = Build();
+        _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Part("p1", "A") });
+        _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Evt("A", winnerMovieId: "m1") });
+        _movies.Setup(m => m.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Mov("m1", tmdbId: 27_205) });
+
+        var res = await handler.HandleForUserAsync("u1", 1);
+
+        Assert.Equal(27_205, Assert.Single(res.Items).TmdbId);
+        _users.Verify(
+            r => r.GetByHandleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
 }

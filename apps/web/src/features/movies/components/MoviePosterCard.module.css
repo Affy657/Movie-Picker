@@ -1,0 +1,93 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+  min-width: 0;
+}
+
+.cardButton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+  min-width: 0;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.posterWrap {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-subtle);
+  overflow: hidden;
+}
+
+.poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.posterPlaceholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+}
+
+.rank {
+  position: absolute;
+  top: var(--space-1-5);
+  left: var(--space-1-5);
+  z-index: var(--z-raised-above);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--space-5);
+  padding: var(--space-1) var(--space-1-5);
+  border-radius: var(--radius-sm);
+  background: var(--on-poster-scrim);
+  color: var(--on-poster-badge-fg);
+  border: 1px solid var(--on-poster-border);
+  font-size: var(--font-size-4xs);
+  font-weight: 700;
+  line-height: var(--leading-none);
+}
+
+.rankValue {
+  display: inline-block;
+  transform: translateY(var(--text-optical-nudge-caps));
+}
+
+.cardTitle {
+  font-size: var(--font-size-2xs);
+  font-weight: 600;
+  line-height: var(--leading-snug);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardMeta {
+  font-size: var(--font-size-2xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-muted);
+}
+
+@media (hover: hover) {
+  .cardButton:hover .posterWrap {
+    border-color: var(--color-primary);
+  }
+}

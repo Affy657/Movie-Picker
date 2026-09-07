@@ -228,6 +228,43 @@ public sealed class InMemoryMovieRepository : IMovieRepository
         lock (list) { return Task.FromResult(list.Count); }
     }
 
+    public Task<IReadOnlyList<ProposedMovieRanking>> ListMostProposedAsync(
+        int minEventCount,
+        int limit,
+        CancellationToken ct = default)
+    {
+        if (limit <= 0)
+            return Task.FromResult<IReadOnlyList<ProposedMovieRanking>>([]);
+
+        var threshold = Math.Max(minEventCount, 1);
+        var ranking = _byId.Values
+            .GroupBy(m => (m.TmdbId, m.MediaType))
+            .Select(group => new
+            {
+                Group = group,
+                EventCount = group.Select(m => m.EventId).Distinct().Count(),
+            })
+            .Where(row => row.EventCount >= threshold)
+            .OrderByDescending(row => row.EventCount)
+            .ThenBy(row => row.Group.Key.TmdbId)
+            .Take(limit)
+            .Select(row =>
+            {
+                var first = row.Group.First();
+                return new ProposedMovieRanking(
+                    first.TmdbId,
+                    first.MediaType,
+                    first.Title,
+                    first.Year,
+                    first.PosterPath,
+                    first.GenreIds,
+                    row.EventCount);
+            })
+            .ToList();
+
+        return Task.FromResult<IReadOnlyList<ProposedMovieRanking>>(ranking);
+    }
+
     public Task<IReadOnlyDictionary<string, int>> CountByEventIdsAsync(
         IReadOnlyCollection<string> eventIds,
         CancellationToken ct = default)

@@ -27,6 +27,7 @@ export const en: Locale = {
   },
 
   nav: {
+    explore: 'Explore',
     home: 'Home',
     discover: 'Discover',
     myEvents: 'My events',
@@ -51,6 +52,106 @@ export const en: Locale = {
     actionsAriaLabel: 'Main actions',
     ctaLogin: 'Log in',
     ctaRegister: 'Create an account',
+    title: 'What are we watching tonight?',
+    intro: 'Search for a film or browse the selections.',
+    seoDescription:
+      'Search for a film, browse trending titles, cinema releases and themed selections, then create the movie night that goes with it.',
+    ctaBand: {
+      title: 'Found your film?',
+      body: 'Create the night, invite your friends, let the wheel decide.',
+      action: 'Create a night',
+    },
+    searchLabel: 'Search for a film',
+    searchPlaceholder: 'Title, director, actor',
+    searchSubmit: 'Search',
+    searchExamplesLabel: 'For example',
+  },
+
+  showcase: {
+    railScrollBack: 'Scroll left',
+    railScrollForward: 'Scroll right',
+    seeAllMovies: 'See all {{count}} films',
+    seeAllMoviesOne: 'See the film',
+    seeAllCollections: 'See all {{count}} collections',
+    genreLabel: 'Genre',
+    themeLabel: 'Theme',
+    allGenres: 'All',
+    loading: 'Loading the selection',
+    error: 'This selection is temporarily unavailable.',
+    retry: 'Try again',
+    empty: 'No film in this selection yet.',
+    emptyMessage: 'Come back later, the selection is refreshed several times a day.',
+    unknownSelection: 'This selection does not exist.',
+    unknownSelectionMessage:
+      'The link may be stale. Head back to the home page to find the current selections.',
+    rank: 'Rank {{rank}}',
+    eventCount: 'In {{count}} nights',
+    eventCountOne: 'In 1 night',
+    collectionMovies: '{{count}} films',
+    collectionMoviesOne: '1 film',
+    sectionsHeading: 'Films in this selection',
+    resultCount: '{{count}} films',
+    resultCountOne: '1 film',
+    filteredCount: '{{shown}} of {{total}} films',
+    collectionsFilteredCount: '{{shown}} of {{total}} sagas',
+    collectionsToolbar: {
+      searchLabel: 'Filter the sagas',
+      searchPlaceholder: 'Saga name',
+      sortPopularity: 'Popularity',
+      sortName: 'Name',
+      sortSize: 'Number of films',
+      noMatch: 'No saga matches',
+      noMatchMessage: 'Try another name, or clear the filter.',
+    },
+    sections: {
+      trendingTitle: 'Trending this week',
+      trendingSubtitle: 'The films everyone is talking about',
+      nowPlayingTitle: 'Now in cinemas',
+      nowPlayingSubtitle: 'Still on screens in France',
+      mostProposedTitle: 'Most proposed',
+      mostProposedSubtitle: 'Ranked across the nights created here',
+      themeTitle: 'Themed picks',
+      themeSubtitle: 'A selection ready to go',
+      collectionsTitle: 'Sagas and collections',
+      collectionsSubtitle: 'A whole franchise in one list',
+      searchTitle: 'Search results',
+      searchSubtitle: 'Films matching your search',
+      providerTitle: 'Streaming tonight',
+      providerSubtitle: 'Available on your subscription',
+      recommendationsTitle: 'Because you liked',
+      recommendationsSubtitle: 'Based on your last movie night',
+      watchlistTitle: 'In your list',
+      friendsTitle: 'Your friends watched',
+    },
+    themes: {
+      frissons: 'Autumn chills',
+      comediesFrancaises: 'French comedies',
+      annees80: 'The eighties',
+      braquages: 'Heist films',
+      pepitesA24: 'A24 gems',
+      annees90: 'The 90s',
+      annees2000: 'The 2000s',
+      moinsDe90Min: 'Under 90 minutes',
+      indetronables: 'All-time greats',
+      enFamille: 'Family night',
+    },
+    providers: {
+      netflix: 'Netflix',
+      primeVideo: 'Prime Video',
+      disneyPlus: 'Disney+',
+      canalPlus: 'Canal+',
+      appleTvPlus: 'Apple TV+',
+    },
+    seeWatchlist: 'Open my list',
+    providerLabel: 'Platform',
+    searchHeading: 'Results for "{{query}}"',
+    searchEmptyQuery: 'Type a title to start searching.',
+    backToHome: 'Back to home',
+    toolbar: {
+      sortRelevance: 'Relevance',
+      searchLabel: 'Filter within this list',
+      searchPlaceholder: 'Filter within this list',
+    },
   },
 
   landing: {
@@ -1533,6 +1634,66 @@ export const en: Locale = {
         title: 'Vote-weighted wheel by default',
         description: 'Votes now count in the draw, nothing to set up.',
       },
+      explorationHome: {
+        title: 'A home page that suggests films',
+        description:
+          'Open the site and the films are already there. Dozens of selections sorted by mood, with or without an account.',
+      },
+      homeSearch: {
+        title: 'Search right at the top',
+        description:
+          'A title, a director, a genre: type it, we find it. Three examples get you started when inspiration runs dry.',
+      },
+      visitorNav: {
+        title: 'Everything is open, even without an account',
+        description:
+          'Browse, search, open a film sheet: nothing is locked any more. The account is for when you start a movie night.',
+      },
+      landingRevamp: {
+        title: 'A rebuilt showcase',
+        description:
+          'The presentation page has been redesigned, clearer and livelier, with the wheel playable right on screen.',
+      },
+      personalRows: {
+        title: 'A home page that knows you',
+        description:
+          'Your list, what the people you follow have watched, and recommendations drawn from the last film you saw on a movie night.',
+      },
+      streamingRow: {
+        title: 'Streaming tonight',
+        description:
+          'Netflix, Prime Video, Disney+, Canal+, Apple TV+: see at a glance what your subscriptions already include.',
+      },
+      themeSelections: {
+        title: 'Ten themed selections',
+        description:
+          'Chills, French comedies, the 80s to the 2000s, heists, A24 gems, under 90 minutes, all-time greats, family night.',
+      },
+      sagas: {
+        title: 'One hundred and twenty sagas',
+        description:
+          'Star Wars, Harry Potter, James Bond, Marvel, Asterix: the great franchises gathered, each with its own page.',
+      },
+      communityRanking: {
+        title: 'The community leaderboard',
+        description:
+          'The films movie nights propose the most, ranked. Just what you need when nobody can decide.',
+      },
+      browseLists: {
+        title: 'Every row has its page',
+        description:
+          'One click on "see all" opens the full list, with genre and type filters, sorting and search.',
+      },
+      carousels: {
+        title: 'Rows that scroll',
+        description:
+          'By finger, by wheel or with the arrows, the films scroll without ever leaving the page.',
+      },
+      listCardDetails: {
+        title: 'Rating and runtime on cards',
+        description:
+          'Movie lists and profiles show the rating and the runtime, like My list, so you can decide without opening the details.',
+      },
       openBrowsing: {
         title: 'Browse without an account',
         description:
@@ -1640,18 +1801,17 @@ export const en: Locale = {
   tech: {
     seoTitle: 'Engineering dossier',
     seoDescription:
-      'How Movie Picker is built: architecture, API contract, tests, delivery pipeline, working method and acknowledged debt.',
+      'How Movie Picker is built: architecture, API contract, tests, delivery pipeline and working method.',
     ogImageAlt: 'Movie Picker engineering dossier',
     railTitle: 'Contents',
-    incidentKicker: 'Incident',
-    symptom: 'Symptom',
-    cause: 'Cause',
-    fix: 'Fix',
+    signature: 'Adrien Morand.',
+    signatureText:
+      'A personal project designed, built and operated alone, from the first line to production. Figures are measured in the repository at build time, not estimated.',
     hero: {
       eyebrow: 'Engineering dossier',
       titleLead: "What's under",
       titleAccent: 'the wheel',
-      lead: 'Movie Picker picks a film for a group of friends. Here is how it is built.',
+      lead: 'Picking a film together usually takes longer than watching it. Movie Picker removes that negotiation: everyone suggests, everyone votes, a wheel settles it. This page describes what had to be built behind that, from the boundary between the two applications to the checks that decide whether a line of code reaches production.',
       creditsLabel: 'Project spec sheet',
       production: 'Production',
       productionValue: 'Adrien Morand, sole developer',
@@ -1666,9 +1826,17 @@ export const en: Locale = {
       delivery: 'Delivery',
       deliveryValue: 'Cloud Run, CloudFront',
       metricLines: 'lines of code',
+      metricLinesHint:
+        'Front-end .ts, .tsx and .css files plus the server .cs files, counted at build time and rounded to the thousand.',
       metricEndpoints: 'HTTP endpoints',
+      metricEndpointsHint:
+        '[HttpGet], [HttpPost] and similar attributes, counted across the server controllers.',
       metricTests: 'test files',
+      metricTestsHint:
+        'Front-end and server test files, excluding end-to-end scenarios which are counted separately.',
       metricJobs: 'CI jobs',
+      metricJobsHint:
+        'Jobs declared in the continuous integration pipeline, from the secret scan to the deployment guard.',
       stamp: 'Figures measured at the {{date}} build',
     },
     nav: {
@@ -1678,30 +1846,40 @@ export const en: Locale = {
       server: 'Server',
       contract: 'The contract',
       data: 'Data',
-      domain: 'A piece of domain',
       tests: 'Tests',
       ci: 'Continuous integration',
       production: 'Production',
       method: 'Working method',
-      decisions: 'Decisions',
-      debt: 'Acknowledged debt',
     },
     architecture: {
       title: 'Two applications, one clean boundary',
       lead: 'A static front on a CDN, a containerised API, a managed database. What matters: the boundary between them is a contract, not a habit.',
       caption: 'The solid blue line is the only data path.',
+      servicesHeading: 'What comes from outside',
       tmdb: 'TMDB',
-      tmdbValue: 'metadata and posters',
+      tmdbValue: 'Metadata, genres and posters.',
+      tmdbHint:
+        'The Movie Database, the open catalogue supplying titles, synopses, genres and posters.',
       letterboxd: 'Letterboxd',
-      letterboxdValue: 'watchlist import from the public profile',
+      letterboxdValue: 'Watchlist import from the public profile.',
+      letterboxdHint:
+        "A social network for film lovers: a profile's public list is read, then matched against the catalogue.",
       oauth: 'Google, GitHub',
-      oauthValue: 'sign-in; an unconfigured provider disappears from the screen instead of failing',
+      oauthValue:
+        'Delegated sign-in; an unconfigured provider disappears from the screen instead of failing.',
+      oauthHint:
+        'Delegated identity: the password stays with the provider, the application only ever receives a token.',
       push: 'Web Push',
-      pushValue: 'notifications, VAPID protocol',
+      pushValue: 'Browser notifications, VAPID protocol.',
+      pushHint:
+        'VAPID signs every notification so the browser can prove which server it came from.',
       kofi: 'Ko-fi',
-      kofiValue: 'donations, through a webhook',
+      kofiValue: 'Donations, confirmed through a webhook.',
+      kofiHint: 'A donation platform; an outbound call from it confirms the payment to the server.',
       issues: 'GitHub Issues',
-      issuesValue: 'a suggestion sent from the app opens an issue, screenshot included',
+      issuesValue: 'A suggestion sent from the app opens an issue, screenshot included.',
+      issuesHint:
+        "GitHub's bug tracker, fed directly by the suggestion form inside the application.",
     },
     trajectory: {
       title: 'Seven months, six milestones',
@@ -1710,53 +1888,78 @@ export const en: Locale = {
       mvpWhat: 'MVP',
       mvpDetail:
         'The full flow of a movie night, a Node and Express API, automated deployment from day one.',
+      mvpHint:
+        'The point was to validate the flow, not the technology: production exists from the first days.',
       migrationWhen: 'March 2026',
       migrationWhat: 'Server migration',
       migrationDetail:
         'Node replaced by ASP.NET Core without changing a single route or JSON field. Front end untouched.',
+      migrationHint:
+        'The switch happened behind an identical contract: the front end acts as the control, it does not move.',
       v1When: 'April to May 2026',
       v1What: 'V1 and V1.1',
       v1Detail: 'Blocking static analysis, dependency and image scanning, PWA, push notifications.',
+      v1Hint:
+        'The first milestone where a push can be refused by a machine rather than by a reviewer.',
       v12When: 'June to July 2026',
       v12What: 'V1.2 and V1.3',
       v12Detail: 'Consent, account export and deletion, audited accessibility, error capture.',
+      v12Hint:
+        'The regulatory milestone: the product can be opened to third parties without legal debt.',
       v14When: 'August 2026',
       v14What: 'V1.4',
       v14Detail: 'External sign-in, Letterboxd import, public profiles.',
+      v14Hint:
+        'Opening outwards: delegated identities and data imported from a third-party service.',
       v15When: 'September 2026',
       v15What: 'V1.5',
       v15Detail: 'Closed-token design system, with an automated check on hard-coded values.',
+      v15Hint:
+        'Interface rules move from document to script: a hard-coded value now fails the build.',
     },
     ui: {
       title: 'Split by purpose, not by file type',
       lead: '{{features}} self-contained domains and a shared core that knows none of them. Checked mechanically: the core is a leaf of the graph, no cycle tolerated.',
       stack: 'Core',
-      stackValue: 'React 19, TypeScript 6, Vite 8, React Router 8, TanStack Query for server state',
+      stackValue:
+        'React 19, TypeScript 6, Vite 8, React Router 8, TanStack Query for server state.',
+      stackHint:
+        'The libraries chosen once and for all; TanStack Query holds the cache of server data.',
       domains: 'Domains',
       domainsValue: 'auth, movie nights, films, watchlist, notifications, profiles, Letterboxd',
+      domainsHint:
+        'A domain gathers the pages, components and network calls of one purpose, without depending on the others.',
       design: 'Design',
-      designValue:
-        '{{components}} shared components, closed tokens, no literal value allowed in CSS',
+      designValue: 'Closed tokens: no literal value allowed in CSS.',
+      designHint:
+        'A token is a single CSS variable standing for a colour, a spacing step or a text size.',
       offline: 'Offline',
-      offlineValue: 'installable, shell and posters cached, partial browsing without network',
+      offlineValue: 'Installable, shell and posters cached, browsable without a network.',
+      offlineHint:
+        'The service worker serves the app shell and already-seen posters when the network is missing.',
       languages: 'Languages',
-      languagesValue: 'French and English, switched without reloading',
+      languagesValue: 'French and English, switched without reloading.',
+      languagesHint:
+        'Texts come from one dictionary per language, type-checked at compile time against the French keys.',
       a11y: 'Accessibility',
-      a11yValue: 'automated audit on {{views}} views on every test run',
-      incidentTitle: 'The bar that oscillated forever',
-      incidentSymptom: 'On slow scroll, a sticky bar collapsed and expanded in a loop.',
-      incidentCause:
-        'Its height changed; Chrome adjusted the scroll position by the difference, which flipped it back to the other state.',
-      incidentFix:
-        'Height made constant, scroll anchoring disabled as a safety net. Rule added to the repository conventions.',
+      a11yValue: 'Automated audit on {{views}} views on every test run.',
+      a11yHint:
+        'axe-core replays the WCAG rules on the rendering of each view during the test suite.',
     },
     server: {
       title: 'The domain knows neither the database nor the web',
       lead: 'Four layers, one rule: everything points inwards. Checked on every CI run, not merely written down.',
       caption:
         '{{ports}} ports, {{repositories}} repositories implemented twice: in memory and on MongoDB.',
-      note: 'every repository exists in two versions, one in memory and one on MongoDB. The server unit suite therefore runs without a database, in seconds, and the integration suite is replayed in CI against a real containerised MongoDB. Without that separation, the first one could not exist.',
       noteLead: 'What it buys:',
+      unitSuite: 'Unit suite',
+      unitSuiteValue: 'Runs without a database, in seconds, on the in-memory doubles.',
+      unitSuiteHint: 'Without the doubled repositories, this suite could not be written at all.',
+      integrationSuite: 'Integration suite',
+      integrationSuiteValue:
+        'Replayed in CI against a real containerised MongoDB, transactions included.',
+      integrationSuiteHint:
+        'It is the only path that actually exercises the Mongo adapters and the transactions.',
     },
     contract: {
       title: 'The boundary is a file, not a convention',
@@ -1765,29 +1968,26 @@ export const en: Locale = {
     },
     data: {
       title: 'All or nothing, and never twice',
+      caption:
+        'Deleting an account touches eight collections inside a single transaction: no intermediate state is ever observable.',
       atomicity: 'Atomicity',
-      atomicityValue:
-        'Grouped writes go through a unit of work: a MongoDB transaction in production, an in-memory lock in tests. Deleting an account touches eight collections and cannot stop halfway.',
+      atomicityValue: 'Every grouped write goes through a unit of work, and cannot stop halfway.',
+      atomicityHint:
+        'A transaction groups several writes together: either all of them land, or none of them do.',
       migrations: 'Migrations',
       migrationsValue:
-        'A data fix is a dated, idempotent migration, applied once at startup, recorded, and replayed if it failed. {{migrations}} in production so far.',
+        'Dated, idempotent, applied once at startup then recorded. {{migrations}} in production.',
+      migrationsHint:
+        'Idempotent means a second run no longer changes anything the first one produced.',
       isolation: 'Isolation',
       isolationValue:
-        'Dev and prod databases are separate, with a guard that refuses to let a development environment point at production.',
+        'Dev and prod databases are separate, with a refusal to start if an environment targets the wrong one.',
+      isolationHint:
+        'The guard compares the database name against the environment and refuses to start if they are mixed.',
       posters: 'Posters',
-      postersValue:
-        'Fetched once then stored server-side, so no third-party CDN is needed on every render.',
-    },
-    domain: {
-      title: 'The wheel, with no side effects',
-      lead: 'The only code excerpt on this page: the product\u2019s core business rule.',
-      codeLabel: 'Wheel draw algorithm, in C#',
-      exclusion: 'Exclusion',
-      exclusionValue: 'the host can take a film out of the draw',
-      repeat: 'No repeats',
-      repeatValue: 'the previous winner is set aside whenever possible',
-      weight: 'Minimum weight of 1',
-      weightValue: 'a rejected film keeps a chance: a wheel with a known outcome amuses nobody',
+      postersValue: 'Fetched once then stored server-side, never reloaded from the provider.',
+      postersHint:
+        'Images are copied server-side, so a URL change at the provider no longer breaks anything.',
     },
     tests: {
       title: '{{tests}} files, and a linter written for the job',
@@ -1796,49 +1996,82 @@ export const en: Locale = {
       noteLead: 'The architecture check',
       note: 'is a home-made script of about {{lines}} lines, run before every push and in CI. It fails the build on five families of mistakes no off-the-shelf linter can forbid:',
       ruleComment: 'a comment outside a functional directive',
+      ruleCommentHint:
+        'Rejects // and /* */, except directives such as @ts-expect-error, eslint-disable or a shebang.',
       ruleLiteral: 'a literal value in CSS',
+      ruleLiteralHint:
+        'Rejects a spacing step or a colour hard-coded in a CSS module instead of the matching token.',
       ruleBreakpoint: 'a breakpoint off the scale',
+      ruleBreakpointHint:
+        'Only a closed list of widths is allowed; any other value fails the build.',
       ruleImport: 'a forbidden import between layers',
+      ruleImportHint:
+        'Rejects an import from the shared core into a domain, or from the domain layer into the database and the web.',
       ruleCycle: 'an import cycle',
+      ruleCycleHint:
+        'Rejects two modules that end up importing each other, directly or through a detour.',
     },
     ci: {
       title: '{{jobs}} checks before production',
       lead: 'A single graph, explicit dependencies, and a deployment that only happens if everything before it is green.',
       caption:
         'The final link checks that the deployments actually ran, not merely that they did not fail.',
-      incidentTitle: 'Ten days of stale production, without a single alert',
-      incidentSymptom:
-        'Ten days of commits never shipped, with a pipeline that looked perfectly healthy.',
-      incidentCause:
-        'An upstream performance check was failing. The deployment that depended on it did not fail: it was skipped.',
-      incidentFix:
-        'Check made reliable and treated as blocking, plus a final link that verifies the deployment actually ran.',
-      note: 'Three other pipelines complete the set: a manually triggered rollback, image registry cleanup, and a scheduled security scan.',
+      otherPipelines: 'Three other pipelines, outside the main graph',
+      rollback: 'rollback',
+      rollbackHint: 'Manually triggered to put the previous image back online.',
+      registry: 'registry cleanup',
+      registryHint: 'Purges old Docker images so the registry does not grow forever.',
+      securityScan: 'security scan',
+      securityScanHint:
+        'Scheduled, independent of pushes, to catch vulnerabilities published after the fact.',
     },
     production: {
       title: 'Security and observability',
+      securityHeading: 'What protects',
+      observabilityHeading: 'What is measured',
       secrets: 'Secrets',
-      secretsValue: 'detection on every push, push protection, prod secrets in a dedicated manager',
+      secretsValue:
+        'Detection on every push, push protection, prod secrets in a dedicated manager.',
+      secretsHint:
+        'Every diff is scanned for keys, and the platform additionally blocks the push if it spots one.',
       dependencies: 'Dependencies',
       dependenciesValue:
-        'npm and NuGet audits, CVE scan of the image before publishing, automated updates',
+        'npm and NuGet audits, CVE scan of the image before publishing, automated updates.',
+      dependenciesHint:
+        'A CVE is a publicly identified vulnerability; the image is scanned before it is published.',
       browser: 'Browser',
-      browserValue: 'content security policy, protection headers, declared origins',
+      browserValue: 'Content security policy, protection headers, declared origins.',
+      browserHint:
+        'The content security policy lists the allowed origins and blocks everything else.',
       sessions: 'Sessions',
-      sessionsValue: 'signing keys persisted in the database, so a deployment signs nobody out',
+      sessionsValue: 'Signing keys persisted in the database, so a deployment signs nobody out.',
+      sessionsHint:
+        'Without persisted keys, every deployment would change the cookie signature and sign everyone out.',
       abuse: 'Abuse',
-      abuseValue: 'rate limiting on every sensitive route',
+      abuseValue: 'Rate limiting on every sensitive route.',
+      abuseHint:
+        'Rate limiting caps the number of calls per address on the sign-in and write routes.',
       startup: 'Startup',
       startupValue:
-        'in production, the app refuses to start when a secret is missing rather than running degraded',
+        'In production, the app refuses to start when a secret is missing rather than running degraded.',
+      startupHint:
+        'A visible failure at startup beats a service running without notifications or encryption.',
       gdpr: 'GDPR',
-      gdprValue: 'self-service account export and deletion, consent before any third-party script',
+      gdprValue: 'Self-service account export and deletion, consent before any third-party script.',
+      gdprHint:
+        'Export and deletion are triggered from the account page, with no written request needed.',
       errors: 'Errors',
-      errorsValue: 'front and server capture into EU-hosted projects, with no personal data',
+      errorsValue: 'Front and server capture into EU-hosted projects, with no personal data.',
+      errorsHint:
+        'Traces are scrubbed before they are sent: no email address, no session identifier.',
       usage: 'Usage',
-      usageValue: 'analytics loaded only after acceptance, therefore blind before the user chooses',
+      usageValue: 'Loaded only after acceptance, therefore blind before the user chooses.',
+      usageHint:
+        'The measurement script only loads after explicit consent, so nothing is measured before it.',
       traces: 'Traces',
-      tracesValue: 'structured logs, end-to-end correlation id, health probe',
+      tracesValue: 'Structured logs, end-to-end correlation id, health probe.',
+      tracesHint:
+        'A single identifier follows one request from the browser through to the server logs.',
     },
     method: {
       title: 'Assisted execution, decisions that are not',
@@ -1846,55 +2079,30 @@ export const en: Locale = {
       featureCaption: 'No code is pushed before I have tested the feature myself.',
       bugCaption:
         'The test comes before the fix. Without it, nothing proves the cause was addressed.',
+      mcpNoteLead: 'The connected tools:',
+      mcpNote:
+        'eight connectors give the assistant a direct reading of the real state, rather than whatever I tell it. They exist to observe: none decides, and none bypasses the three stops or the check pipeline.',
       reliabilityKicker: 'Reliability',
       reliabilityTitle: 'Executable rules',
       reliabilityText: 'A rule no script enforces ends up being bypassed, whoever wrote the line.',
+      reliabilityHint: 'An untooled convention depends on vigilance; a script does not.',
       memoryKicker: 'Memory',
       memoryTitle: 'Pitfalls are versioned',
       memoryText:
         'Every pitfall diagnosed once is written down and reloaded. The same problem is not diagnosed twice.',
+      memoryHint:
+        'Pitfalls are written into versioned files that the assistant reloads at every session.',
       controlKicker: 'Control',
       controlTitle: 'Three mandatory stops',
       controlText: 'Scoping, mockup, manual test. That is where product decisions are made.',
+      controlHint:
+        'Three moments where the machine halts and waits for a human decision before carrying on.',
       arbitrationKicker: 'Arbitration',
       arbitrationTitle: 'The pipeline, not trust',
       arbitrationText:
         '{{jobs}} checks separate a line of code from production, whatever its origin.',
-    },
-    decisions: {
-      title: 'Three choices worth debating',
-      columnChoice: 'Choice',
-      columnWhy: 'Why',
-      columnCost: 'What it costs',
-      mongoChoice: 'MongoDB rather than a relational database',
-      mongoWhy:
-        'A movie night is a natural aggregate, read as one block on every request. No mapping layer to write.',
-      mongoCost: 'No referential integrity from the engine: invariants are upheld in the code.',
-      dotnetChoice: '.NET rather than Node',
-      dotnetWhy:
-        'In TypeScript, types vanish at compile time: nothing validates at runtime the actual shape of a request or a document. The ecosystem ships dependency injection, validation and rate limiting as standard.',
-      dotnetCost: 'Two ecosystems and two toolchains in one repository, a longer CI.',
-      monolithChoice: 'Modular monolith',
-      monolithWhy:
-        'One developer, one deployment, no need for independent scaling. Microservices would have added network hops and partial failures for nothing.',
-      monolithCost:
-        'Nothing today. The split into ports leaves the door open if load ever justifies it.',
-    },
-    debt: {
-      title: 'What is not done, and why',
-      lead: 'An engineering dossier that only lists successes is not an engineering dossier.',
-      iacWhat: 'No infrastructure as code',
-      iacWhy:
-        'Cloud resources created by hand then documented. Acceptable for a single environment, not for a second one.',
-      stagingWhat: 'No staging environment',
-      stagingWhy:
-        'The pipeline goes from the development machine to production. First job on the list if a second developer joins.',
-      keysWhat: 'Long-lived deployment keys',
-      keysWhy:
-        'CI authenticates with stored credentials. Keyless federation is open, not finished.',
-      signature: 'Adrien Morand.',
-      signatureText:
-        'A personal project designed, built and operated alone, from the first line to production. Figures are measured in the repository at build time, not estimated.',
+      arbitrationHint:
+        'The same mandatory path applies to a hand-written line and to a generated one.',
     },
     diagram: {
       architectureTitle:
@@ -1965,7 +2173,8 @@ export const en: Locale = {
       ciDeployFront: 'deploy front',
       ciGuard1: 'deploy',
       ciGuard2: 'guard',
-      featureFlowTitle: 'Feature development cycle, with its three human stops',
+      featureFlowTitle:
+        'Feature development cycle, its three human stops and the tools connected to the assistant',
       featureFlowLabel: 'FEATURE FLOW',
       flowRoadmap: 'roadmap',
       flowScoping: 'scoping',
@@ -1980,6 +2189,40 @@ export const en: Locale = {
       flowProduction: 'production',
       flowNote1: 'The three amber blocks are stops.',
       flowNote2: 'Nothing moves on without human sign-off.',
+      mcpLabel: 'TOOLS CONNECTED TO THE ASSISTANT (MCP AND COMMAND LINE)',
+      mcpAssistant: 'assistant',
+      mcpGithub: 'PRs and CI',
+      mcpGcp: 'logs',
+      mcpAws: 'delivery',
+      mcpSonar: 'quality',
+      mcpSentry: 'errors',
+      mcpPosthog: 'usage',
+      mcpMongo: 'dev database',
+      mcpResend: 'emails',
+      frontGraphTitle: 'Front-end import graph: seven domains all pointing at the shared core',
+      frontGraphLabel: 'FRONT-END IMPORT GRAPH',
+      stackLabel: 'TECHNICAL CORE',
+      domainAuth: 'auth',
+      domainEvents: 'movie nights',
+      domainMovies: 'films',
+      domainWatchlist: 'watchlist',
+      domainNotifications: 'notifications',
+      domainProfiles: 'profiles',
+      domainLetterboxd: 'Letterboxd',
+      sharedCore: 'shared/ — {{components}} components, hooks, HTTP client',
+      sharedCoreSub: 'knows no feature',
+      frontGraphNote: 'The core is a leaf of the graph: no arrow leaves it. A cycle fails the CI.',
+      unitOfWorkTitle:
+        'Account deletion: eight collections written inside one transaction, committed or rolled back together',
+      unitOfWorkLabel: 'UNIT OF WORK',
+      unitOfWorkEnvelope: 'IUnitOfWork.ExecuteAsync',
+      unitOfWorkCollections: 'eight collections touched',
+      unitOfWorkCommit: 'commit',
+      unitOfWorkCommitSub: 'all eight writes',
+      unitOfWorkRollback: 'rollback',
+      unitOfWorkRollbackSub: 'none of the eight',
+      unitOfWorkNote:
+        'A MongoDB transaction in production, an in-memory lock in tests: the same code on both sides.',
       bugFlowTitle: 'Handling a defect, from report to regression cover',
       bugFlowLabel: 'DEFECT FLOW',
       bugReproduce: 'reproduce',

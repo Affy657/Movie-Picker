@@ -125,34 +125,36 @@ Découpage par version côté **métier / utilisateur**.
 
 ---
 
-## 📋 V1.5 – Planifiée
+## ✅ V1.5 – Livré
 
 **Objectif** : home page inspirationnelle — transformer l'accueil en vrai point d'entrée du produit, accessible sans compte et enrichi une fois connecté.
 
+Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est nécessaire pour que la home tienne debout, et deux dépendent d'un chantier d'une autre version.
+
 ### 🏠 Home page
 
-> Page accessible sans compte, avec des blocs supplémentaires qui apparaissent une fois connecté. Remplace et enrichit la landing page actuelle. À découper en plusieurs sprints. Les blocs connecté dépendent de V1.4 (watchlist) et de V1.6 (templates de soirée).
+> Page accessible avec ou sans compte, enrichie de rangées personnelles une fois connecté. La landing marketing est déplacée sur `/decouvrir` plutôt que remplacée.
 
 - ✅ `M` **Navigation ouverte aux visiteurs sans compte** (v1.4.1) : préalable technique livré — nav, footer et cinq pages (Mes soirées, Nouvelle soirée, Ma liste, Notifications, Paramètres) accessibles sans compte, avec un état déconnecté dédié et un appel à l'action vers la connexion ou l'inscription ; `/decouvrir` reprend le rôle de page publique indexable à la place de la racine `/`.
 
-- ✅ `L` **Refonte de la landing page** (V1.5) : neuf sections (accroche, problème, parcours en quatre étapes, roue jouable, bento de fonctionnalités, profil public, réassurance, FAQ, appel à l'action), interface du produit reconstruite en CSS, contenus FR / EN. La racine `/` redevient la page publique indexable et redirige vers Mes soirées dès qu'une session existe.
+- ✅ `L` **Refonte de la landing page** (V1.5) : neuf sections (accroche, problème, parcours en quatre étapes, roue jouable, bento de fonctionnalités, profil public, réassurance, FAQ, appel à l'action), interface du produit reconstruite en CSS, contenus FR / EN. Devenue la page « Comment ça marche » sur `/decouvrir` quand la home d'exploration a repris la racine.
 
-**Blocs visibles sans compte**
-- ⬜ `M` **Films tendance de la semaine** : carrousel des films populaires TMDB du moment — nourrit l'inspiration avant même de créer un compte.
-- ⬜ `S` **Suggestions thématiques** : carrousels contextuels selon la saison ou l'occasion (« Films d'horreur », « Comédies de Noël », « Soirée années 80 ») — données 100 % TMDB, sans infra custom.
-- ⬜ `M` **Les plus proposés sur Movie Picker** : films les plus souvent mis en soirée par la communauté — dimension sociale sans nécessiter de compte.
-- ⬜ `S` **Collections TMDB** : carrousels de franchises et collections (Marvel, Pixar, trilogies…) ; clic sur un film ouvre sa fiche avec option « Proposer dans une soirée » — données nativement disponibles via l'API TMDB.
-- ⬜ `M` **Recherche de films depuis la home** : barre de recherche TMDB accessible sans compte pour explorer et s'inspirer ; résultats avec fiche rapide (synopsis, note, streaming dispo).
-- ⬜ `S` **Films populaires par genre** : onglets ou filtres (Action, Comédie, Thriller…) sur le bloc tendances pour affiner l'exploration.
-- ⬜ `S` **Actuellement au cinéma** : carrousel des films encore en salles (endpoint TMDB « Now Playing », région FR) — encourage aussi la sortie ciné, pas seulement les soirées streaming à la maison.
+**Blocs visibles sans compte** — livrés en V1.5. La racine `/` porte la home d'exploration pour tout le monde, connecté ou non, la landing marketing vit sur `/decouvrir`, et chaque bloc a sa page liste filtrable (`ShowcaseListPage`) alimentée par `GET /api/v1/movies/showcase`. Chaque bloc est un carrousel à défilement horizontal, avec flèches sur appareil pointeur et balayage au doigt.
+- ✅ `M` **Films tendance de la semaine** (V1.5) : carrousel sur la racine, cent films chargés par section dont vingt montés dans le carrousel, lien « Voir les N films » vers la page liste filtrable.
+- ✅ `S` **Suggestions thématiques** (V1.5) : dix thèmes déclarés côté API (frissons, comédies françaises, années 80, années 90, années 2000, braquages, pépites A24, moins de 90 minutes, les indétrônables, en famille), sélectionnables en onglets.
+- ✅ `M` **Les plus proposés sur Movie Picker** (V1.5) : agrégation sur les films de soirées, un film entre au classement à partir de deux soirées distinctes, le bloc s'affiche à partir de trente films distincts.
+- ✅ `S` **Collections TMDB** (V1.5) : douze franchises curées, grille dédiée sur `/films/collections`, page par saga sur `/films/collection/:id`.
+- ✅ `M` **Recherche de films depuis la home** (V1.5) : champ en tête de page qui ouvre `/films/recherche?q=…`, la même page liste que les autres blocs, fiche film comprise.
+- ✅ `S` **Films populaires par genre** (V1.5) : onglets en pastilles sur le bloc tendances, clavier compris, réutilisant la primitive `Tabs`.
+- ✅ `S` **Actuellement au cinéma** (V1.5) : endpoint TMDB « Now Playing » région FR, même rangée et même page liste que les autres blocs.
+- ✅ `S` **Ce soir en streaming** (V1.5) : onglets par plateforme (Netflix, Prime Video, Disney+, Canal+, Apple TV+) via `with_watch_providers` sur la région configurée, page liste sur `/films/streaming/:provider`.
 
-**Blocs visibles connecté uniquement**
-- ⬜ `S` **Prochaine soirée mise en avant** : carte principale avec titre, heure et accès direct à la soirée imminente — évite de passer par « Mes soirées ».
-- ⬜ `S` **Invitations en attente** : rappel des invitations non répondues directement sur la home — plus visible que les notifications seules.
-- ⬜ `S` **Soirée rapide** : bouton « Créer une soirée » avec la dernière config utilisée en un clic (dépend des templates de soirée, V1.6).
-- ⬜ `S` **Derniers films gagnants** : les 3-4 films tirés dans ses soirées récentes — évite de reproposer un film qu'on vient de voir.
-- ⬜ `M` **Activité des follows** : fil léger — soirée créée par un ami, film gagnant d'une soirée — donne vie à la dimension sociale sans quitter la home.
-- ⬜ `S` **Films de la watchlist** : accès rapide pour proposer un film en un clic depuis la home (dépend de la watchlist personnelle).
+**Blocs visibles connecté uniquement** — la racine ne redirige plus vers Mes soirées, elle sert la même home enrichie de rangées personnelles ; une entrée « Explorer » ouvre la page depuis la nav et depuis la barre du bas mobile. Une rangée personnelle vide ne se rend pas du tout.
+
+- ✅ `S` **Films de la watchlist** (V1.5) : rangée « Dans votre liste » alimentée par la watchlist personnelle, fiche film et lien vers `/watchlist`.
+- ✅ `M` **Films des personnes suivies** (V1.5) : rangée « Vos amis ont vu » sur `GET /api/v1/users/me/following-watched-movies`, agrégation des soirées terminées des comptes suivis, dédoublonnée par film ; les profils passés en privé sont exclus.
+- ✅ `S` **Films de la prochaine soirée** (V1.5) : rangée « À voir avant votre prochaine soirée » listant les films proposés pour la soirée active la plus proche, avec accès direct à cette soirée.
+- ✅ `M` **Recommandations personnelles** (V1.5) : rangée « Parce que vous avez aimé », recommandations TMDB amorcées sur le dernier film vu, page liste sur `/films/similaires/:seedTmdbId`.
 
 ---
 
@@ -196,6 +198,11 @@ Découpage par version côté **métier / utilisateur**.
 - `L` **Badges / achievements** : 4 badges (Organisateur, Cinéphile, Faiseur de rois, Juré assidu) — code de calcul supprimé ; à concevoir avec un design abouti et réimplémenter.
 - `M` **Compatibilité ciné** : score de compatibilité cinématographique avec un ami basé sur les films « déjà vu » en commun ; nécessite les statistiques utilisateur et potentiellement l'intégration Letterboxd pour être complet.
 - `S` **Statistique : note moyenne des films gagnants** : ajouter dans la section stats du profil public la moyenne des notes TMDB des films tirés gagnants dans les soirées auxquelles l'utilisateur a participé — aucune infra supplémentaire, les notes TMDB sont déjà stockées avec les films.
+- `S` **Home : prochaine soirée mise en avant** : carte principale avec titre, heure et accès direct à la soirée imminente — évite de passer par « Mes soirées ». La rangée « À voir avant votre prochaine soirée » livrée en V1.5 donne déjà l'accès, sans la mise en avant.
+- `S` **Home : invitations en attente** : rappel des invitations non répondues directement sur la home — plus visible que les notifications seules.
+- `S` **Home : soirée rapide** : bouton « Créer une soirée » avec la dernière config utilisée en un clic ; dépend des templates de soirée (V1.6).
+- `S` **Home : derniers films gagnants** : les 3-4 films tirés dans ses propres soirées récentes — évite de reproposer un film qu'on vient de voir. Distinct de « Vos amis ont vu », livré en V1.5, qui couvre les soirées des comptes suivis.
+- `M` **Fil d'activité des follows** : événements sociaux — soirée créée par un ami, soirée clôturée — au-delà des seuls films vus, dont la rangée « Vos amis ont vu » couvre déjà la moitié.
 - `L` **Sondage de disponibilité** : avant de créer une soirée, l'hôte propose plusieurs créneaux (date + heure) à ses follows ou à une liste de contacts ; chaque invité sélectionne les créneaux où il est disponible ; l'hôte voit le récapitulatif des disponibilités et choisit le créneau final — crée automatiquement la soirée avec ce créneau.
 - `L` **Plateformes streaming par compte** : chaque utilisateur renseigne ses abonnements streaming dans ses paramètres de compte (Netflix, Prime Video, Disney+, Canal+…) ; sur la page d'une soirée, un bloc « Plateformes communes » affiche les plateformes partagées par l'ensemble des participants connectés ; les films peuvent optionnellement être filtrés aux seuls disponibles sur ces plateformes communes.
 - `XL` **Messages privés** : messagerie directe entre deux utilisateurs qui se suivent mutuellement ; accessible depuis le profil public ou la liste de follows ; permet d'organiser une soirée ou d'échanger en dehors du contexte d'une soirée existante.

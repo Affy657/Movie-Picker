@@ -107,3 +107,19 @@ export async function fetchUserWatchedMovies(
     { signal }
   );
 }
+
+export async function fetchMyWatchedMovies(
+  take: number,
+  signal?: AbortSignal
+): Promise<UserWatchedMoviesResponse> {
+  return fetchApi<UserWatchedMoviesResponse>(`/users/me/watched-movies?take=${take}`, { signal });
+}
+
+export async function fetchFollowingWatchedMovies(
+  take: number,
+  signal?: AbortSignal
+): Promise<UserWatchedMoviesResponse> {
+  return fetchApi<UserWatchedMoviesResponse>(`/users/me/following-watched-movies?take=${take}`, {
+    signal,
+  });
+}

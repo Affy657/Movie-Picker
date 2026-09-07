@@ -3783,6 +3783,148 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/movies/showcase": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    section?: string;
+                    theme?: string;
+                    genreIds?: string;
+                    collectionId?: number;
+                    provider?: string;
+                    seedTmdbId?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MovieShowcaseListResponse"];
+                        "application/json": components["schemas"]["MovieShowcaseListResponse"];
+                        "text/json": components["schemas"]["MovieShowcaseListResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Service Unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/movies/collections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MovieCollectionListResponse"];
+                        "application/json": components["schemas"]["MovieCollectionListResponse"];
+                        "text/json": components["schemas"]["MovieCollectionListResponse"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Service Unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/notifications/vapid-public-key": {
         parameters: {
             query?: never;
@@ -4696,6 +4838,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/me/watched-movies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    take?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["UserWatchedMoviesResponse"];
+                        "application/json": components["schemas"]["UserWatchedMoviesResponse"];
+                        "text/json": components["schemas"]["UserWatchedMoviesResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/me/following-watched-movies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    take?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["UserWatchedMoviesResponse"];
+                        "application/json": components["schemas"]["UserWatchedMoviesResponse"];
+                        "text/json": components["schemas"]["UserWatchedMoviesResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/{handle}/follow": {
         parameters: {
             query?: never;
@@ -5553,6 +5831,20 @@ export interface components {
         MarkAsSeenRequest: {
             participantId: string;
         };
+        MovieCollectionListResponse: {
+            items?: components["schemas"]["MovieCollectionResponse"][] | null;
+            disclaimer?: string | null;
+            tmdbAttributionUrl?: string | null;
+        };
+        MovieCollectionResponse: {
+            /** Format: int32 */
+            id?: number;
+            name?: string | null;
+            overview?: string | null;
+            posterPath?: string | null;
+            /** Format: int32 */
+            movieCount?: number;
+        };
         MovieDetailsResponse: {
             /** Format: int32 */
             tmdbId?: number;
@@ -5590,6 +5882,30 @@ export interface components {
         MovieSearchListResponse: {
             items?: components["schemas"]["MovieSearchItemResponse"][] | null;
             watchProvidersRegion?: string | null;
+            disclaimer?: string | null;
+            tmdbAttributionUrl?: string | null;
+        };
+        MovieShowcaseItemResponse: {
+            /** Format: int32 */
+            id?: number;
+            mediaType?: components["schemas"]["MovieMediaType"];
+            title?: string | null;
+            year?: string | null;
+            posterPath?: string | null;
+            /** Format: double */
+            voteAverage?: number | null;
+            /** Format: int32 */
+            runtimeMinutes?: number | null;
+            genreIds?: number[] | null;
+            /** Format: int32 */
+            rank?: number | null;
+            /** Format: int32 */
+            eventCount?: number | null;
+        };
+        MovieShowcaseListResponse: {
+            section?: string | null;
+            theme?: string | null;
+            items?: components["schemas"]["MovieShowcaseItemResponse"][] | null;
             disclaimer?: string | null;
             tmdbAttributionUrl?: string | null;
         };

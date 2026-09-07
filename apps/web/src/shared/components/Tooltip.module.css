@@ -12,10 +12,14 @@
   border-radius: var(--radius-sm);
   background: var(--color-text);
   color: var(--color-bg);
+  font-family: var(--font-body);
   font-size: var(--font-size-2xs);
   font-weight: 500;
+  letter-spacing: normal;
   line-height: var(--leading-snug);
   text-align: center;
+  text-transform: none;
+  white-space: normal;
   box-shadow: var(--shadow-md);
   pointer-events: none;
   opacity: 0;
@@ -105,4 +109,15 @@
       opacity var(--duration-fast) var(--ease-out),
       visibility var(--duration-fast) var(--ease-out);
   }
+}
+
+.wrapperFocusable {
+  border-bottom: 1px dashed var(--color-border);
+  cursor: help;
+}
+
+.wrapperFocusable:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }

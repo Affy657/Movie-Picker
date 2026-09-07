@@ -23,7 +23,7 @@ describe('shouldShowWhatsNewNavChip', () => {
     expect(shouldShowWhatsNewNavChip('not-a-date', WITHIN_WINDOW_MS)).toBe(false);
   });
 
-  it('reste masquée pour un compte créé à partir du lendemain de la 1.4.1', () => {
+  it('reste masquée pour un compte créé à partir du lendemain de la livraison', () => {
     expect(
       shouldShowWhatsNewNavChip(
         new Date(WHATS_NEW_NAV_NEW_ACCOUNT_FROM_MS).toISOString(),
@@ -38,7 +38,7 @@ describe('shouldShowWhatsNewNavChip', () => {
     ).toBe(false);
   });
 
-  it('s’affiche pour un compte créé le jour de la livraison de la 1.4.1', () => {
+  it('s’affiche pour un compte créé le jour de la livraison', () => {
     expect(
       shouldShowWhatsNewNavChip(
         new Date(WHATS_NEW_NAV_RELEASED_AT_MS + 12 * 60 * 60 * 1000).toISOString(),
@@ -47,13 +47,13 @@ describe('shouldShowWhatsNewNavChip', () => {
     ).toBe(true);
   });
 
-  it('reste masquée avant la livraison de la 1.4.1', () => {
+  it('reste masquée avant la livraison', () => {
     expect(shouldShowWhatsNewNavChip(LEGACY_CREATED_AT, WHATS_NEW_NAV_RELEASED_AT_MS - 1)).toBe(
       false
     );
   });
 
-  it('s’affiche pendant une semaine après la livraison pour un compte 1.3.x', () => {
+  it('s’affiche pendant une semaine après la livraison pour un compte antérieur', () => {
     expect(shouldShowWhatsNewNavChip(LEGACY_CREATED_AT, WHATS_NEW_NAV_RELEASED_AT_MS)).toBe(true);
     expect(shouldShowWhatsNewNavChip(LEGACY_CREATED_AT, WITHIN_WINDOW_MS)).toBe(true);
     expect(
@@ -75,8 +75,8 @@ describe('shouldShowWhatsNewNavChip', () => {
 });
 
 describe('LATEST_WHATS_NEW_RELEASE', () => {
-  it('pointe sur la 1.4.1', () => {
-    expect(LATEST_WHATS_NEW_RELEASE.version).toBe('1.4.1');
+  it('pointe sur la 1.5.0', () => {
+    expect(LATEST_WHATS_NEW_RELEASE.version).toBe('1.5.0');
   });
 });
 
@@ -92,29 +92,30 @@ describe('whatsNewLinkPath', () => {
   it('résout notifications vers /notifications', () => {
     expect(whatsNewLinkPath('notifications', null)).toBe(ROUTES.notifications);
   });
+
+  it('résout discover vers /decouvrir', () => {
+    expect(whatsNewLinkPath('discover', null)).toBe(ROUTES.discover);
+  });
 });
 
-describe('WHATS_NEW 1.4.1', () => {
+describe('WHATS_NEW 1.5.0', () => {
   it('couvre les changements visibles de la version', () => {
     const slugs = LATEST_WHATS_NEW_RELEASE.entries.map((entry) =>
       entry.titleKey.replace('whatsNew.entries.', '').replace('.title', '')
     );
     expect(slugs).toEqual([
-      'openBrowsing',
-      'historyToEvent',
-      'rescheduleNotice',
-      'ideaAttachments',
-      'myEventsRevamp',
-      'historyTools',
-      'settingsPage',
-      'eventSettings',
-      'movieList',
-      'unifiedShare',
-      'discoverHome',
-      'fasterFirstLoad',
-      'readableContrast',
-      'analyticsPrivacy',
-      'inAppBrowser',
+      'explorationHome',
+      'homeSearch',
+      'visitorNav',
+      'landingRevamp',
+      'personalRows',
+      'streamingRow',
+      'themeSelections',
+      'sagas',
+      'communityRanking',
+      'browseLists',
+      'carousels',
+      'listCardDetails',
     ]);
   });
 });

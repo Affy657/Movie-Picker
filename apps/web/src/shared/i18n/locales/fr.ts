@@ -25,6 +25,7 @@
   },
 
   nav: {
+    explore: 'Explorer',
     home: 'Accueil',
     discover: 'Découvrir',
     myEvents: 'Mes soirées',
@@ -49,6 +50,106 @@
     actionsAriaLabel: 'Actions principales',
     ctaLogin: 'Se connecter',
     ctaRegister: 'Créer un compte',
+    title: "Qu'est-ce qu'on regarde ce soir ?",
+    intro: 'Cherchez un film ou parcourez les sélections.',
+    seoDescription:
+      'Cherchez un film, parcourez les tendances, les sorties en salles et les sélections thématiques, puis créez la soirée qui va avec.',
+    ctaBand: {
+      title: 'Vous tenez votre film ?',
+      body: 'Créez la soirée, invitez vos amis, laissez la roue trancher.',
+      action: 'Créer une soirée',
+    },
+    searchLabel: 'Chercher un film',
+    searchPlaceholder: 'Titre, réalisateur, acteur',
+    searchSubmit: 'Chercher',
+    searchExamplesLabel: 'Par exemple',
+  },
+
+  showcase: {
+    railScrollBack: 'Faire défiler vers la gauche',
+    railScrollForward: 'Faire défiler vers la droite',
+    seeAllMovies: 'Voir les {{count}} films',
+    seeAllMoviesOne: 'Voir le film',
+    seeAllCollections: 'Voir les {{count}} collections',
+    genreLabel: 'Genre',
+    themeLabel: 'Thème',
+    allGenres: 'Tous',
+    loading: 'Chargement de la sélection',
+    error: 'Cette sélection est momentanément indisponible.',
+    retry: 'Réessayer',
+    empty: 'Aucun film dans cette sélection pour le moment.',
+    emptyMessage: 'Revenez plus tard, la sélection est mise à jour plusieurs fois par jour.',
+    unknownSelection: 'Cette sélection n’existe pas.',
+    unknownSelectionMessage:
+      'Le lien est peut-être périmé. Repartez de l’accueil pour retrouver les sélections du moment.',
+    rank: 'Rang {{rank}}',
+    eventCount: 'Dans {{count}} soirées',
+    eventCountOne: 'Dans 1 soirée',
+    collectionMovies: '{{count}} films',
+    collectionMoviesOne: '1 film',
+    sectionsHeading: 'Films de la sélection',
+    resultCount: '{{count}} films',
+    resultCountOne: '1 film',
+    filteredCount: '{{shown}} films sur {{total}}',
+    collectionsFilteredCount: '{{shown}} sagas sur {{total}}',
+    collectionsToolbar: {
+      searchLabel: 'Filtrer les sagas',
+      searchPlaceholder: 'Nom de saga',
+      sortPopularity: 'Popularité',
+      sortName: 'Nom',
+      sortSize: 'Nombre de films',
+      noMatch: 'Aucune saga ne correspond',
+      noMatchMessage: 'Essayez un autre nom, ou effacez le filtre.',
+    },
+    sections: {
+      trendingTitle: 'Tendances de la semaine',
+      trendingSubtitle: 'Les films dont tout le monde parle',
+      nowPlayingTitle: 'Actuellement au cinéma',
+      nowPlayingSubtitle: 'Encore en salles en France',
+      mostProposedTitle: 'Les plus proposés',
+      mostProposedSubtitle: 'Classement sur les soirées créées',
+      themeTitle: 'Suggestions thématiques',
+      themeSubtitle: 'Une sélection prête à lancer',
+      collectionsTitle: 'Sagas et collections',
+      collectionsSubtitle: 'Toute une franchise en une liste',
+      searchTitle: 'Résultats de recherche',
+      searchSubtitle: 'Films correspondant à votre recherche',
+      providerTitle: 'Ce soir en streaming',
+      providerSubtitle: 'Disponible sur votre abonnement',
+      recommendationsTitle: 'Parce que vous avez aimé',
+      recommendationsSubtitle: 'À partir de votre dernière soirée',
+      watchlistTitle: 'Dans votre liste',
+      friendsTitle: 'Vos amis ont vu',
+    },
+    themes: {
+      frissons: "Frissons d'automne",
+      comediesFrancaises: 'Comédies françaises',
+      annees80: 'Années 80',
+      braquages: 'Films de braquage',
+      pepitesA24: 'Pépites A24',
+      annees90: 'Années 90',
+      annees2000: 'Années 2000',
+      moinsDe90Min: 'Moins de 90 minutes',
+      indetronables: 'Les indétrônables',
+      enFamille: 'En famille',
+    },
+    providers: {
+      netflix: 'Netflix',
+      primeVideo: 'Prime Video',
+      disneyPlus: 'Disney+',
+      canalPlus: 'Canal+',
+      appleTvPlus: 'Apple TV+',
+    },
+    seeWatchlist: 'Voir ma liste',
+    providerLabel: 'Plateforme',
+    searchHeading: 'Résultats pour « {{query}} »',
+    searchEmptyQuery: 'Entrez un titre pour lancer la recherche.',
+    backToHome: "Retour à l'accueil",
+    toolbar: {
+      sortRelevance: 'Pertinence',
+      searchLabel: 'Filtrer dans cette liste',
+      searchPlaceholder: 'Filtrer dans cette liste',
+    },
   },
 
   landing: {
@@ -1560,6 +1661,66 @@
         title: 'Roue pondérée par défaut',
         description: 'Les votes comptent dans le tirage, sans rien régler.',
       },
+      explorationHome: {
+        title: 'Un accueil qui vous propose des films',
+        description:
+          'Ouvrez le site, les films sont déjà là. Des dizaines de sélections classées par envie, avec ou sans compte.',
+      },
+      homeSearch: {
+        title: 'La recherche en tête de page',
+        description:
+          'Un titre, un réalisateur, un genre : tapez, on trouve. Trois exemples vous lancent quand l’inspiration manque.',
+      },
+      visitorNav: {
+        title: 'Tout est ouvert, même sans compte',
+        description:
+          'Explorer, chercher, ouvrir une fiche film : plus rien n’est verrouillé. Le compte sert au moment de lancer une soirée.',
+      },
+      landingRevamp: {
+        title: 'Une vitrine repensée',
+        description:
+          'La page de présentation a été refaite, plus claire et plus vivante, avec la roue jouable directement à l’écran.',
+      },
+      personalRows: {
+        title: 'Un accueil qui vous connaît',
+        description:
+          'Votre liste, ce qu’ont vu les personnes que vous suivez et des recommandations tirées du dernier film que vous avez regardé en soirée.',
+      },
+      streamingRow: {
+        title: 'Ce soir en streaming',
+        description:
+          'Netflix, Prime Video, Disney+, Canal+, Apple TV+ : voyez d’un coup d’œil ce qui est déjà inclus dans vos abonnements.',
+      },
+      themeSelections: {
+        title: 'Dix sélections thématiques',
+        description:
+          'Frissons, comédies françaises, années 80 à 2000, braquages, pépites A24, moins de 90 minutes, indétrônables, en famille.',
+      },
+      sagas: {
+        title: 'Cent vingt sagas',
+        description:
+          'Star Wars, Harry Potter, James Bond, Marvel, Astérix : les grandes franchises réunies, chacune avec sa page.',
+      },
+      communityRanking: {
+        title: 'Le palmarès de la communauté',
+        description:
+          'Les films que les soirées proposent le plus souvent, classés. De quoi trancher quand personne ne se décide.',
+      },
+      browseLists: {
+        title: 'Chaque rangée a sa page',
+        description:
+          'Un clic sur « voir tout » ouvre la liste complète, avec filtres par genre et par type, tri et recherche.',
+      },
+      carousels: {
+        title: 'Des rangées qui défilent',
+        description:
+          'Au doigt, à la molette ou aux flèches, les films défilent sans jamais quitter la page.',
+      },
+      listCardDetails: {
+        title: 'Note et durée sur les cartes',
+        description:
+          'Les listes de films et les profils affichent la note et la durée, comme Ma liste, pour trancher sans ouvrir la fiche.',
+      },
       openBrowsing: {
         title: 'Visite libre',
         description:
@@ -1670,18 +1831,17 @@
   tech: {
     seoTitle: 'Dossier technique',
     seoDescription:
-      "Comment Movie Picker est construit : architecture, contrat d'API, tests, chaîne de livraison, méthode de travail et dette assumée.",
+      "Comment Movie Picker est construit : architecture, contrat d'API, tests, chaîne de livraison et méthode de travail.",
     ogImageAlt: 'Dossier technique de Movie Picker',
     railTitle: 'Sommaire',
-    incidentKicker: 'Incident',
-    symptom: 'Symptôme',
-    cause: 'Cause',
-    fix: 'Correctif',
+    signature: 'Adrien Morand.',
+    signatureText:
+      'Projet personnel conçu, développé et exploité seul, de la première ligne à la mise en production. Les chiffres sont mesurés dans le dépôt au build, pas estimés.',
     hero: {
       eyebrow: 'Dossier technique',
       titleLead: "Ce qu'il y a",
       titleAccent: 'sous la roue',
-      lead: "Movie Picker choisit un film pour une bande de potes. Voici comment c'est construit.",
+      lead: "Choisir un film à plusieurs prend souvent plus de temps que le regarder. Movie Picker supprime cette négociation : chacun propose, tout le monde vote, une roue tranche. Cette page décrit ce qu'il a fallu construire derrière, de la frontière entre les deux applications jusqu'aux contrôles qui décident si une ligne de code atteint la production.",
       creditsLabel: 'Fiche technique du projet',
       production: 'Production',
       productionValue: 'Adrien Morand, seul développeur',
@@ -1696,9 +1856,17 @@
       delivery: 'Diffusion',
       deliveryValue: 'Cloud Run, CloudFront',
       metricLines: 'lignes de code',
+      metricLinesHint:
+        'Fichiers .ts, .tsx et .css du front plus les .cs du serveur, comptés au build et arrondis au millier.',
       metricEndpoints: 'endpoints HTTP',
+      metricEndpointsHint:
+        'Attributs [HttpGet], [HttpPost] et suivants, comptés dans les contrôleurs du serveur.',
       metricTests: 'fichiers de test',
+      metricTestsHint:
+        'Fichiers de test du front et du serveur, hors scénarios de bout en bout qui sont comptés à part.',
       metricJobs: 'jobs de CI',
+      metricJobsHint:
+        "Jobs déclarés dans la chaîne d'intégration continue, du scan de secrets au contrôle de déploiement.",
       stamp: 'Chiffres relevés au build du {{date}}',
     },
     nav: {
@@ -1708,30 +1876,41 @@
       server: 'Serveur',
       contract: 'Le contrat',
       data: 'Données',
-      domain: 'Un bout de domaine',
       tests: 'Tests',
       ci: 'Intégration continue',
       production: 'Production',
       method: 'Méthode de travail',
-      decisions: 'Décisions',
-      debt: 'Dette assumée',
     },
     architecture: {
       title: 'Deux applications, une frontière nette',
       lead: 'Un front statique sur CDN, une API conteneurisée, une base managée. Ce qui compte : la frontière entre les deux est un contrat, pas une habitude.',
       caption: 'Le trait plein bleu est le seul chemin de données.',
+      servicesHeading: "Ce qui vient de l'extérieur",
       tmdb: 'TMDB',
-      tmdbValue: 'métadonnées et affiches',
+      tmdbValue: 'Métadonnées, genres et affiches.',
+      tmdbHint:
+        'The Movie Database, la base ouverte qui fournit titres, résumés, genres et affiches.',
       letterboxd: 'Letterboxd',
-      letterboxdValue: 'import de watchlist depuis le profil public',
+      letterboxdValue: 'Import de watchlist depuis le profil public.',
+      letterboxdHint:
+        "Réseau social de cinéphiles : la liste publique d'un profil est lue puis rapprochée du catalogue.",
       oauth: 'Google, GitHub',
-      oauthValue: "connexion ; un fournisseur non configuré disparaît de l'écran au lieu d'échouer",
+      oauthValue:
+        "Connexion déléguée ; un fournisseur non configuré disparaît de l'écran au lieu d'échouer.",
+      oauthHint:
+        "Délégation d'identité : le mot de passe reste chez le fournisseur, l'application ne reçoit qu'un jeton.",
       push: 'Web Push',
-      pushValue: 'notifications, protocole VAPID',
+      pushValue: 'Notifications navigateur, protocole VAPID.',
+      pushHint:
+        "VAPID signe chaque notification pour prouver au navigateur quel serveur en est à l'origine.",
       kofi: 'Ko-fi',
-      kofiValue: 'dons, par webhook',
+      kofiValue: 'Dons, confirmés par webhook.',
+      kofiHint:
+        'Plateforme de dons ; un appel sortant de sa part vient confirmer le paiement au serveur.',
       issues: 'GitHub Issues',
-      issuesValue: "une suggestion envoyée dans l'app ouvre une issue, capture d'écran comprise",
+      issuesValue: "Une suggestion envoyée dans l'app ouvre une issue, capture d'écran comprise.",
+      issuesHint:
+        "Le suivi de bugs de GitHub, alimenté directement par le formulaire de suggestion de l'app.",
     },
     trajectory: {
       title: 'Sept mois, six paliers',
@@ -1740,59 +1919,82 @@
       mvpWhat: 'MVP',
       mvpDetail:
         "Parcours complet d'une soirée, API Node et Express, déploiement automatisé dès le départ.",
+      mvpHint:
+        'Le but était de valider le parcours, pas la technique : la production existe dès les premiers jours.',
       migrationWhen: 'Mars 2026',
       migrationWhat: 'Migration du serveur',
       migrationDetail:
         'Node remplacé par ASP.NET Core sans changer une route ni un champ JSON. Front intact.',
+      migrationHint:
+        'La bascule est faite à contrat identique : le front sert de témoin, il ne bouge pas.',
       v1When: 'Avril à mai 2026',
       v1What: 'V1 et V1.1',
       v1Detail:
         "Analyse statique bloquante, scan des dépendances et de l'image, PWA, notifications push.",
+      v1Hint:
+        'Premier palier où un envoi de code peut être refusé par une machine plutôt que par une relecture.',
       v12When: 'Juin à juil. 2026',
       v12What: 'V1.2 et V1.3',
       v12Detail:
         "Consentement, export et suppression de compte, accessibilité auditée, capture d'erreurs.",
+      v12Hint:
+        'Palier réglementaire : le produit devient ouvrable à des tiers sans dette juridique.',
       v14When: 'Août 2026',
       v14What: 'V1.4',
       v14Detail: 'Connexion externe, import Letterboxd, profils publics.',
+      v14Hint:
+        "Ouverture vers l'extérieur : identités déléguées et données importées d'un service tiers.",
       v15When: 'Septembre 2026',
       v15What: 'V1.5',
       v15Detail:
         'Système de design à jetons fermés, avec contrôle automatique des valeurs écrites en dur.',
+      v15Hint:
+        "Les règles d'interface passent du document au script : une valeur en dur fait échouer la construction.",
     },
     ui: {
       title: 'Découpé par usage, pas par type de fichier',
       lead: "{{features}} domaines autonomes, un socle partagé qui n'en connaît aucun. Vérifié mécaniquement : le socle est une feuille du graphe, aucun cycle toléré.",
       stack: 'Socle',
       stackValue:
-        "React 19, TypeScript 6, Vite 8, React Router 8, TanStack Query pour l'état serveur",
+        "React 19, TypeScript 6, Vite 8, React Router 8, TanStack Query pour l'état serveur.",
+      stackHint:
+        'Les bibliothèques choisies une fois pour toutes ; TanStack Query tient le cache des données du serveur.',
       domains: 'Domaines',
       domainsValue: 'auth, soirées, films, watchlist, notifications, profils, Letterboxd',
+      domainsHint:
+        "Un domaine réunit pages, composants et appels réseau d'un même usage, sans dépendre des autres.",
       design: 'Design',
-      designValue:
-        '{{components}} composants partagés, jetons fermés, aucune valeur littérale acceptée en CSS',
+      designValue: 'Jetons fermés : aucune valeur littérale acceptée en CSS.',
+      designHint:
+        'Un jeton est une variable CSS unique pour une couleur, un espacement ou une taille de texte.',
       offline: 'Hors ligne',
-      offlineValue:
-        'installable, coquille et affiches en cache, consultation partielle sans réseau',
+      offlineValue: 'Installable, coquille et affiches en cache, consultable sans réseau.',
+      offlineHint:
+        "Le service worker sert la coquille de l'app et les affiches déjà vues quand le réseau manque.",
       languages: 'Langues',
-      languagesValue: 'français et anglais, bascule sans rechargement',
+      languagesValue: 'Français et anglais, bascule sans rechargement.',
+      languagesHint:
+        "Les textes viennent d'un dictionnaire par langue, vérifié à la compilation contre les clés du français.",
       a11y: 'Accessibilité',
-      a11yValue: 'audit automatisé sur {{views}} vues à chaque exécution des tests',
-      incidentTitle: "La barre qui oscillait à l'infini",
-      incidentSymptom:
-        'Au défilement lent, une barre collante se repliait et se dépliait en boucle.',
-      incidentCause:
-        "Sa hauteur changeait ; Chrome recalait le défilement de la différence, ce qui la remettait dans l'autre état.",
-      incidentFix:
-        'Hauteur rendue constante, ancrage de défilement neutralisé en filet. Règle ajoutée aux conventions du dépôt.',
+      a11yValue: 'Audit automatisé sur {{views}} vues à chaque exécution des tests.',
+      a11yHint:
+        'axe-core rejoue les règles WCAG sur le rendu de chaque vue pendant la suite de tests.',
     },
     server: {
       title: 'Le métier ne connaît ni la base ni le web',
       lead: "Quatre couches, une seule règle : tout pointe vers l'intérieur. Vérifiée à chaque exécution de la CI, pas seulement écrite.",
       caption:
         '{{ports}} ports, {{repositories}} dépôts implémentés deux fois : en mémoire et sur MongoDB.',
-      note: "chaque dépôt existe en deux versions, une en mémoire et une sur MongoDB. La suite unitaire du serveur tourne donc sans base, en quelques secondes, et la suite d'intégration est rejouée en CI contre une vraie MongoDB en conteneur. Sans cette séparation, la première serait impossible à écrire.",
       noteLead: 'Ce que ça achète :',
+      unitSuite: 'Suite unitaire',
+      unitSuiteValue: 'Tourne sans base, en quelques secondes, sur les doublures en mémoire.',
+      unitSuiteHint:
+        'Sans la double implémentation des dépôts, cette suite serait impossible à écrire.',
+      integrationSuite: "Suite d'intégration",
+      integrationSuiteValue:
+        'Rejouée en CI contre une vraie MongoDB en conteneur, transactions comprises.',
+      integrationSuiteHint:
+        "C'est le seul chemin qui exécute réellement les adaptateurs Mongo et les transactions.",
     },
     contract: {
       title: 'La frontière est un fichier, pas une convention',
@@ -1801,30 +2003,28 @@
     },
     data: {
       title: 'Tout ou rien, et jamais deux fois',
+      caption:
+        "Supprimer un compte touche huit collections dans une seule transaction : aucun état intermédiaire n'est observable.",
       atomicity: 'Atomicité',
       atomicityValue:
-        "Les écritures groupées passent par une unité de travail : transaction MongoDB en production, verrou en mémoire dans les tests. Supprimer un compte touche huit collections et ne peut pas s'arrêter à mi-chemin.",
+        "Toute écriture groupée passe par une unité de travail, et ne peut pas s'arrêter à mi-chemin.",
+      atomicityHint:
+        'Une transaction regroupe plusieurs écritures : soit toutes aboutissent, soit aucune.',
       migrations: 'Migrations',
       migrationsValue:
-        'Une correction en base est une migration datée et idempotente, appliquée une fois au démarrage, consignée, rejouée si elle a échoué. {{migrations}} en production à ce jour.',
+        'Datée, idempotente, appliquée une fois au démarrage puis consignée. {{migrations}} en production.',
+      migrationsHint:
+        "Idempotente veut dire qu'une deuxième exécution ne change plus rien au résultat de la première.",
       isolation: 'Isolation',
       isolationValue:
-        "Bases dev et prod séparées, avec un garde-fou qui refuse qu'un environnement de développement pointe vers la production.",
+        'Bases dev et prod séparées, avec refus de démarrer si un environnement vise la mauvaise.',
+      isolationHint:
+        "Le garde-fou compare le nom de la base à l'environnement et refuse de démarrer en cas de mélange.",
       posters: 'Affiches',
       postersValue:
-        "Récupérées une fois puis stockées côté serveur, pour ne pas dépendre du CDN d'un tiers à chaque affichage.",
-    },
-    domain: {
-      title: 'La roue, sans effet de bord',
-      lead: 'Le seul extrait de code de la page : la règle métier centrale du produit.',
-      codeLabel: 'Algorithme de tirage de la roue, en C#',
-      exclusion: 'Exclusion',
-      exclusionValue: "l'hôte peut sortir un film du tirage",
-      repeat: 'Anti-répétition',
-      repeatValue: "le gagnant précédent est écarté quand c'est possible",
-      weight: 'Poids minimal 1',
-      weightValue:
-        "un film rejeté garde une chance : une roue dont on connaît le résultat n'amuse personne",
+        'Récupérées une fois puis stockées côté serveur, jamais rechargées chez le fournisseur.',
+      postersHint:
+        "Les images sont copiées côté serveur : un changement d'URL chez le fournisseur ne casse plus rien.",
     },
     tests: {
       title: '{{tests}} fichiers, et un linter écrit sur mesure',
@@ -1833,55 +2033,88 @@
       noteLead: "Le contrôle d'architecture",
       note: "est un script maison d'environ {{lines}} lignes, joué avant chaque envoi de code et en CI. Il fait échouer la construction sur cinq familles de fautes qu'aucun linter du marché ne sait interdire :",
       ruleComment: 'un commentaire hors directive fonctionnelle',
+      ruleCommentHint:
+        'Rejette // et /* */, sauf les directives comme @ts-expect-error, eslint-disable ou un shebang.',
       ruleLiteral: 'une valeur littérale en CSS',
+      ruleLiteralHint:
+        'Rejette un espacement ou une couleur écrits en dur dans un module CSS au lieu du jeton correspondant.',
       ruleBreakpoint: 'un point de rupture hors échelle',
+      ruleBreakpointHint:
+        'Seule une liste fermée de largeurs est admise ; toute autre valeur fait échouer la construction.',
       ruleImport: 'un import interdit entre couches',
+      ruleImportHint:
+        'Rejette un import du socle partagé vers un domaine, ou du métier vers la base et le web.',
       ruleCycle: "un cycle d'imports",
+      ruleCycleHint:
+        "Rejette deux modules qui finissent par s'importer l'un l'autre, directement ou par un détour.",
     },
     ci: {
       title: '{{jobs}} contrôles avant la production',
       lead: "Un seul graphe, des dépendances explicites, un déploiement qui n'a lieu que si tout ce qui le précède est vert.",
       caption:
         "Le dernier maillon vérifie que les déploiements ont eu lieu, pas seulement qu'ils n'ont pas échoué.",
-      incidentTitle: 'Dix jours de production périmée, sans une seule alerte',
-      incidentSymptom:
-        "Dix jours de commits jamais mis en ligne, avec une chaîne d'intégration d'apparence saine.",
-      incidentCause:
-        "Un contrôle de performance en amont échouait. Le déploiement, qui en dépendait, n'a pas échoué : il a été ignoré.",
-      incidentFix:
-        'Contrôle fiabilisé et traité comme bloquant, plus un maillon final qui vérifie que le déploiement a bien tourné.',
-      note: "Trois autres chaînes complètent l'ensemble : retour arrière déclenchable à la main, nettoyage du registre d'images, analyse de sécurité planifiée.",
+      otherPipelines: 'Trois autres chaînes, hors du graphe principal',
+      rollback: 'retour arrière',
+      rollbackHint: "Déclenchable à la main pour remettre en ligne l'image précédente.",
+      registry: 'nettoyage du registre',
+      registryHint:
+        'Purge les anciennes images Docker pour que le registre ne gonfle pas indéfiniment.',
+      securityScan: 'analyse de sécurité',
+      securityScanHint:
+        'Planifiée, indépendante des envois de code, pour attraper les failles publiées après coup.',
     },
     production: {
       title: 'Sécurité et observabilité',
+      securityHeading: 'Ce qui protège',
+      observabilityHeading: 'Ce qui se mesure',
       secrets: 'Secrets',
       secretsValue:
-        'détection à chaque envoi, protection au push, secrets de prod dans un gestionnaire dédié',
+        'Détection à chaque envoi, protection au push, secrets de prod dans un gestionnaire dédié.',
+      secretsHint:
+        'Chaque diff est relu à la recherche de clés, et la plateforme bloque le push si elle en repère une.',
       dependencies: 'Dépendances',
       dependenciesValue:
-        "audit npm et NuGet, scan CVE de l'image avant publication, mises à jour automatisées",
+        "Audit npm et NuGet, scan CVE de l'image avant publication, mises à jour automatisées.",
+      dependenciesHint:
+        "Une CVE est une faille publiée avec un identifiant public ; l'image est scannée avant publication.",
       browser: 'Navigateur',
-      browserValue: 'politique de sécurité du contenu, en-têtes de protection, origines déclarées',
+      browserValue: 'Politique de sécurité du contenu, en-têtes de protection, origines déclarées.',
+      browserHint:
+        'La politique de sécurité du contenu liste les origines autorisées et bloque tout le reste.',
       sessions: 'Sessions',
       sessionsValue:
-        "clés de signature persistées en base, pour qu'un déploiement ne déconnecte personne",
+        "Clés de signature persistées en base, pour qu'un déploiement ne déconnecte personne.",
+      sessionsHint:
+        'Sans clés persistées, chaque déploiement changerait la signature des cookies et déconnecterait tout le monde.',
       abuse: 'Abus',
-      abuseValue: 'limitation de débit par route sensible',
+      abuseValue: 'Limitation de débit sur chaque route sensible.',
+      abuseHint:
+        "La limitation plafonne le nombre d'appels par adresse sur les routes de connexion et d'écriture.",
       startup: 'Démarrage',
       startupValue:
-        "en production, l'app refuse de démarrer s'il manque un secret plutôt que de tourner dégradée",
+        "En production, l'app refuse de démarrer s'il manque un secret plutôt que de tourner dégradée.",
+      startupHint:
+        "Mieux vaut une panne visible au démarrage qu'un service qui tourne sans notification ni chiffrement.",
       gdpr: 'RGPD',
       gdprValue:
-        'export et suppression de compte en autonomie, consentement avant tout script tiers',
+        'Export et suppression de compte en autonomie, consentement avant tout script tiers.',
+      gdprHint:
+        'Export et suppression se déclenchent depuis la page de compte, sans passer par une demande écrite.',
       errors: 'Erreurs',
       errorsValue:
-        'capture front et serveur vers des projets hébergés en UE, sans donnée personnelle',
+        'Capture front et serveur vers des projets hébergés en UE, sans donnée personnelle.',
+      errorsHint:
+        'Les traces sont nettoyées avant envoi : ni adresse e-mail, ni identifiant de session.',
       usage: 'Usage',
       usageValue:
-        "analytics chargée seulement après acceptation, donc aveugle avant le choix de l'utilisateur",
+        "Chargée seulement après acceptation, donc aveugle avant le choix de l'utilisateur.",
+      usageHint:
+        "Le script de mesure ne se charge qu'après un consentement explicite : rien n'est mesuré avant.",
       traces: 'Traces',
       tracesValue:
-        'logs structurés, identifiant de corrélation de bout en bout, sonde de disponibilité',
+        'Logs structurés, identifiant de corrélation de bout en bout, sonde de disponibilité.',
+      tracesHint:
+        "Un identifiant unique suit une requête du navigateur jusqu'aux journaux du serveur.",
     },
     method: {
       title: 'Une exécution assistée, des décisions qui ne le sont pas',
@@ -1889,59 +2122,32 @@
       featureCaption: "Aucun code n'est envoyé avant que j'aie testé la fonctionnalité moi-même.",
       bugCaption:
         'Le test précède le correctif. Sans lui, rien ne prouve que la cause a été traitée.',
+      mcpNoteLead: 'Les outils branchés :',
+      mcpNote:
+        "huit connecteurs donnent à l'assistant une lecture directe de l'état réel, au lieu de ce que je lui en raconte. Ils servent à constater : aucun ne décide, aucun ne court-circuite les trois arrêts ni la chaîne de contrôle.",
       reliabilityKicker: 'Fiabilité',
       reliabilityTitle: 'Des règles exécutables',
       reliabilityText:
         "Une règle qu'aucun script ne vérifie finit par être contournée, quel que soit l'auteur de la ligne.",
+      reliabilityHint: 'Une convention non outillée dépend de la vigilance ; un script, non.',
       memoryKicker: 'Mémoire',
       memoryTitle: 'Les pièges sont versionnés',
       memoryText:
         'Chaque piège diagnostiqué une fois est consigné et rechargé. Le même problème ne se diagnostique pas deux fois.',
+      memoryHint:
+        "Les pièges sont écrits dans des fichiers versionnés que l'assistant relit à chaque session.",
       controlKicker: 'Contrôle',
       controlTitle: 'Trois arrêts obligatoires',
       controlText:
         "Cadrage, maquette, test manuel. C'est là que les décisions produit se prennent.",
+      controlHint:
+        "Trois moments où la machine s'arrête et attend une décision humaine avant de continuer.",
       arbitrationKicker: 'Arbitrage',
       arbitrationTitle: 'La chaîne, pas la confiance',
       arbitrationText:
         '{{jobs}} contrôles séparent une ligne de la production, quelle que soit son origine.',
-    },
-    decisions: {
-      title: 'Trois choix qui se discutent',
-      columnChoice: 'Choix',
-      columnWhy: 'Pourquoi',
-      columnCost: 'Ce que ça coûte',
-      mongoChoice: "MongoDB plutôt qu'un relationnel",
-      mongoWhy:
-        "Une soirée est un agrégat naturel, lu d'un bloc à chaque requête. Pas de couche de correspondance à écrire.",
-      mongoCost:
-        'Aucune intégrité référentielle offerte par le moteur : les invariants sont tenus dans le code.',
-      dotnetChoice: '.NET plutôt que Node',
-      dotnetWhy:
-        "En TypeScript, les types disparaissent à la compilation : rien ne valide à l'exécution la forme d'une requête ou d'un document. L'écosystème fournit en standard l'injection, la validation, la limitation de débit.",
-      dotnetCost:
-        "Deux écosystèmes et deux chaînes d'outillage dans un même dépôt, une CI plus longue.",
-      monolithChoice: 'Monolithe modulaire',
-      monolithWhy:
-        "Un développeur, un déploiement, aucun besoin de mise à l'échelle indépendante. Des microservices auraient ajouté du réseau et des pannes partielles pour rien.",
-      monolithCost:
-        "Rien aujourd'hui. Le découpage en ports laisse la porte ouverte si la charge le justifie.",
-    },
-    debt: {
-      title: "Ce qui n'est pas fait, et pourquoi",
-      lead: "Un dossier technique qui ne liste que des réussites n'est pas un dossier technique.",
-      iacWhat: "Pas d'infrastructure en code",
-      iacWhy:
-        'Ressources cloud créées à la main puis documentées. Acceptable pour un environnement unique, plus au deuxième.',
-      stagingWhat: 'Pas de pré-production',
-      stagingWhy:
-        'La chaîne va du poste de développement à la production. Premier chantier si un deuxième développeur arrive.',
-      keysWhat: 'Clés de déploiement longue durée',
-      keysWhy:
-        "La CI s'authentifie avec des identifiants stockés. La fédération sans clé est ouverte, pas terminée.",
-      signature: 'Adrien Morand.',
-      signatureText:
-        'Projet personnel conçu, développé et exploité seul, de la première ligne à la mise en production. Les chiffres sont mesurés dans le dépôt au build, pas estimés.',
+      arbitrationHint:
+        "Le même passage obligé s'applique à une ligne écrite à la main et à une ligne générée.",
     },
     diagram: {
       architectureTitle:
@@ -2013,7 +2219,7 @@
       ciGuard1: 'deploy',
       ciGuard2: 'guard',
       featureFlowTitle:
-        "Cycle de développement d'une fonctionnalité, avec ses trois points d'arrêt humains",
+        "Cycle de développement d'une fonctionnalité, ses trois arrêts humains et les outils branchés sur l'assistant",
       featureFlowLabel: "FLOT D'UNE FONCTIONNALITÉ",
       flowRoadmap: 'roadmap',
       flowScoping: 'cadrage',
@@ -2028,6 +2234,42 @@
       flowProduction: 'production',
       flowNote1: 'Les trois blocs ambrés sont des arrêts.',
       flowNote2: 'Rien ne continue sans validation humaine.',
+      mcpLabel: "OUTILS BRANCHÉS SUR L'ASSISTANT (MCP ET LIGNE DE COMMANDE)",
+      mcpAssistant: 'assistant',
+      mcpGithub: 'PR et CI',
+      mcpGcp: 'journaux',
+      mcpAws: 'diffusion',
+      mcpSonar: 'qualité',
+      mcpSentry: 'erreurs',
+      mcpPosthog: 'usage',
+      mcpMongo: 'base dev',
+      mcpResend: 'e-mails',
+      frontGraphTitle:
+        "Graphe d'imports du front : sept domaines qui pointent tous vers le socle partagé",
+      frontGraphLabel: "GRAPHE D'IMPORTS DU FRONT",
+      stackLabel: 'SOCLE TECHNIQUE',
+      domainAuth: 'auth',
+      domainEvents: 'soirées',
+      domainMovies: 'films',
+      domainWatchlist: 'watchlist',
+      domainNotifications: 'notifications',
+      domainProfiles: 'profils',
+      domainLetterboxd: 'Letterboxd',
+      sharedCore: 'shared/ — {{components}} composants, hooks, client HTTP',
+      sharedCoreSub: 'ne connaît aucune feature',
+      frontGraphNote:
+        "Le socle est une feuille du graphe : aucune flèche n'en repart. Un cycle fait échouer la CI.",
+      unitOfWorkTitle:
+        'Suppression de compte : huit collections écrites dans une transaction, validées ou annulées ensemble',
+      unitOfWorkLabel: 'UNITÉ DE TRAVAIL',
+      unitOfWorkEnvelope: 'IUnitOfWork.ExecuteAsync',
+      unitOfWorkCollections: 'huit collections touchées',
+      unitOfWorkCommit: 'commit',
+      unitOfWorkCommitSub: 'les huit écritures',
+      unitOfWorkRollback: 'rollback',
+      unitOfWorkRollbackSub: 'aucune des huit',
+      unitOfWorkNote:
+        'Transaction MongoDB en production, verrou en mémoire dans les tests : le même code des deux côtés.',
       bugFlowTitle: "Traitement d'une anomalie, du signalement à la non-régression",
       bugFlowLabel: "FLOT D'UNE ANOMALIE",
       bugReproduce: 'reproduire',

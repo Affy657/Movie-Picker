@@ -43,6 +43,7 @@ public sealed class GetSitemapXmlHandler : IGetSitemapXmlHandler
         sb.Append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         sb.Append("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
         AppendUrl(sb, $"{webBase}/", null, "weekly", "1.0");
+        AppendUrl(sb, $"{webBase}/decouvrir", null, "monthly", "0.8");
         AppendUrl(sb, $"{webBase}/tech", null, "monthly", "0.5");
         AppendUrl(sb, $"{webBase}/soutenir", null, "monthly", "0.3");
         foreach (var profile in profiles)

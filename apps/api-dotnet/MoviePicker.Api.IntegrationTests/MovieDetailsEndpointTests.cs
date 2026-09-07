@@ -110,5 +110,23 @@ public sealed class MovieDetailsEndpointTests : IClassFixture<MoviePickerApplica
                 throw new HttpRequestException("tmdb down");
             return Task.FromResult(Details);
         }
+
+        public Task<IReadOnlyList<TmdbSearchItem>> GetTrendingMoviesAsync(int pages, CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<TmdbSearchItem>>(Array.Empty<TmdbSearchItem>());
+
+        public Task<IReadOnlyList<TmdbSearchItem>> GetNowPlayingMoviesAsync(string region, int pages, CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<TmdbSearchItem>>(Array.Empty<TmdbSearchItem>());
+
+        public Task<IReadOnlyList<TmdbSearchItem>> DiscoverMoviesAsync(TmdbDiscoveryCriteria criteria, int pages, CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<TmdbSearchItem>>(Array.Empty<TmdbSearchItem>());
+
+        public Task<TmdbCollectionSummary?> GetCollectionAsync(int collectionId, CancellationToken ct = default)
+            => Task.FromResult<TmdbCollectionSummary?>(null);
+
+        public Task<IReadOnlyList<TmdbSearchItem>> GetCollectionMoviesAsync(int collectionId, CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<TmdbSearchItem>>(Array.Empty<TmdbSearchItem>());
+
+        public Task<IReadOnlyList<TmdbSearchItem>> GetRecommendationsAsync(int tmdbId, CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<TmdbSearchItem>>(Array.Empty<TmdbSearchItem>());
     }
 }

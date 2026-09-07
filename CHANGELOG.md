@@ -13,19 +13,47 @@ version publiée est associée à un tag Git et à une release GitHub.
 - **Sauvegarde quotidienne de la base de production** : le palier gratuit Atlas ne fournit aucun instantané, et rien ne sauvegardait la base. Un dump part chaque nuit vers un bucket Cloud Storage versionné, puis est relu depuis ce bucket et restauré dans une MongoDB jetable avant d'être publié — une archive qui échoue la restauration ne devient jamais la sauvegarde du jour.
 - **Archive du build front à chaque déploiement** (30 jours) : l'hébergement ne conserve aucune version, un retour arrière ne demande plus de rejouer toute la chaîne de portes.
 - Porte de qualité sur les workflows eux-mêmes (`actionlint`, `shellcheck`, `zizmor`), bloquante pour le déploiement : jusqu'ici la chaîne qui garde le code n'était gardée par rien.
-- **Nouvelle landing page** : neuf sections, l'interface du produit reconstruite en CSS et une roue de tirage réellement jouable depuis la page. Première livraison de la V1.5.
-- Contexte `.on-dark` dans le design system : une bande sombre redéfinit les jetons de thème pour ses descendants, si bien que `Button`, `Card`, `Chip` et `Avatar` s'y posent sans classe locale.
-- Taille `lg` sur `Button` et `buttonClass`, pour les appels à l'action de page d'accueil.
-- Test de parité des clés d'internationalisation : une clé française sans équivalent anglais fait désormais échouer la suite.
 
 ### Changed
 
 - **Déploiement API validé avant exposition** : chaque révision est déployée sans trafic, éprouvée sur son URL taguée, et n'est promue qu'une fois ses sondes vertes. Une révision défaillante n'atteint plus aucun utilisateur, là où le trafic basculait auparavant avant toute vérification.
 - L'image de l'API est déployée par digest et non plus par tag : la révision en production désigne exactement les octets scannés par Trivy.
 - Les vérifications de fin de déploiement couvrent aussi les domaines publics de l'API et du front, et non plus seulement les URL internes.
-- La landing publique revient sur la racine `/`, qui redirige vers Mes soirées dès qu'une session existe. `/decouvrir` redirige vers `/` et n'est plus annoncée dans le sitemap.
+
+## [1.5.0] - 2026-09-07
+
+### Added
+
+- **Page d'accueil d'exploration** : la racine `/` propose des films à tout le monde, connecté ou non, en huit rangées ordonnées du plus personnel au plus exploratoire. Une entrée « Explorer » ouvre la page depuis la nav et depuis la barre du bas mobile.
+- **Recherche en tête d'accueil** : un champ de recherche et trois exemples cliquables, sans compte requis.
+- **Rangées personnelles** : votre liste triée par note, des recommandations tirées du dernier film vu en soirée, et ce qu'ont vu les personnes que vous suivez.
+- **Ce soir en streaming** : Netflix, Prime Video, Disney+, Canal+ et Apple TV+, avec bascule d'une plateforme à l'autre.
+- **Cent vingt sagas** : les grandes franchises réunies, chacune avec sa page, et une barre de recherche et de tri sur la page qui les liste.
+- **Dix sélections thématiques** : frissons, comédies françaises, années 80 à 2000, braquages, pépites A24, moins de 90 minutes, indétrônables, en famille.
+- **Classement communautaire** : les films que les soirées proposent le plus souvent, un film y entrant à partir de deux soirées distinctes.
+- **Nouvelle landing page** : neuf sections, l'interface du produit reconstruite en CSS et une roue de tirage réellement jouable depuis la page.
+- Pages listes complètes derrière chaque rangée, avec filtres par genre et par type, tri et recherche.
+- Composant partagé `SearchField`, extrait de la barre d'outils des listes et réutilisé par la recherche d'accueil.
+- Endpoints `GET /movies/showcase`, `GET /movies/collections`, `GET /users/me/watched-movies` et `GET /users/me/following-watched-movies`, avec cache mémoire de six heures par section.
+- Contexte `.on-dark` dans le design system : une bande sombre redéfinit les jetons de thème pour ses descendants, si bien que `Button`, `Card`, `Chip` et `Avatar` s'y posent sans classe locale.
+- Taille `lg` sur `Button` et `buttonClass`, pour les appels à l'action de page d'accueil.
+- Test de parité des clés d'internationalisation : une clé française sans équivalent anglais fait désormais échouer la suite.
+
+### Changed
+
+- La racine `/` sert la page d'exploration ; la présentation du produit vit sur `/decouvrir`, annoncée dans le sitemap.
+- Les listes de films et les profils affichent la note et la durée, comme Ma liste.
+- Les rangées d'onglets signalent leur débordement par un dégradé et ramènent l'onglet actif dans le champ de vision.
+- Les recommandations d'accueil passent par un endpoint authentifié plutôt que par le profil public : un compte au profil privé garde sa rangée.
+- Sur mobile, le titre d'une rangée tient sur une ligne et le lien « voir tout » descend sous lui, aligné à droite, quand la place manque.
 - La roue de tirage s'adapte enfin à la largeur de son conteneur au lieu d'être figée à 460 pixels.
 - Les pastilles `Chip` de ton primaire passent sur le bleu de texte, mieux contrasté que le bleu de fond en thème clair comme en thème sombre.
+
+### Fixed
+
+- La fiche film ouverte depuis un carrousel d'accueil affiche son affiche et son année.
+- Le service worker de développement ne s'enregistre plus par défaut : un worker obsolète interceptait `/api/v1/*` sur `localhost` et vidait toutes les sections sans le moindre message d'erreur. Il revient avec `VITE_DEV_SERVICE_WORKER=true`.
+- La rangée « Vos amis ont vu » exclut les profils passés en privé.
 
 ## [1.4.1] - 2026-09-04
 

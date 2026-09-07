@@ -36,7 +36,7 @@ import {
 } from '@/features/profile/api/profileApi';
 import { useProfileMoviesToolbar } from '@/features/profile/hooks/useProfileMoviesToolbar';
 import ProfileMoviesToolbar from '@/features/profile/components/ProfileMoviesToolbar';
-import ProfileMovieCard from '@/features/profile/components/ProfileMovieCard';
+import MovieBrowseCard from '@/features/movies/components/MovieBrowseCard';
 import {
   useAddToWatchlist,
   useRemoveFromWatchlist,
@@ -298,9 +298,13 @@ export default function ProfileMoviesPage() {
         >
           <ul className={styles.grid} aria-label={t('profile.movies.listAria')}>
             {toolbar.revealedItems.map((item) => (
-              <ProfileMovieCard
+              <MovieBrowseCard
                 key={`${item.tmdbId}|${item.mediaType}|${item.watchedAt}`}
                 item={item}
+                openDetailsAriaLabel={t('profile.movies.card.openDetailsAria', {
+                  title: item.title,
+                })}
+                ratingScale={user?.ratingScale}
                 tmdbLanguage={tmdbLanguage}
                 hasHover={hasHover}
                 isLoggedIn={isLoggedIn}

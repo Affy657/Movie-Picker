@@ -2,6 +2,15 @@ using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.Ports;
 
+public sealed record ProposedMovieRanking(
+    int TmdbId,
+    MovieMediaType MediaType,
+    string Title,
+    string Year,
+    string? PosterPath,
+    IReadOnlyList<int> GenreIds,
+    int EventCount);
+
 public interface IMovieRepository
 {
     Task<Movie?> GetByIdAsync(string movieId, CancellationToken ct = default);
@@ -38,4 +47,9 @@ public interface IMovieRepository
     Task<IReadOnlyDictionary<string, int>> CountByEventIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default);
 
     Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default);
+
+    Task<IReadOnlyList<ProposedMovieRanking>> ListMostProposedAsync(
+        int minEventCount,
+        int limit,
+        CancellationToken ct = default);
 }

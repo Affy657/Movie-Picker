@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import clsx from 'clsx';
 import { useTablistKeyboard } from '@/shared/hooks/useTablistKeyboard';
+import { useRailScroll } from '@/shared/hooks/useRailScroll';
 import styles from './Tabs.module.css';
 
 export interface TabDef<T extends string> {
@@ -40,39 +41,60 @@ export function Tabs<T extends string>({
   const keys = tabs.map((tab) => tab.key);
   const { onKeyDown, registerTab, tabIndexFor } = useTablistKeyboard(keys, active, onChange);
   const isPill = variant === 'pill';
+  const listRef = useRef<HTMLDivElement>(null);
+  const { canScrollBack, canScrollForward } = useRailScroll(listRef, tabs.length);
+
+  useEffect(() => {
+    listRef.current
+      ?.querySelector('[aria-selected="true"]')
+      ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }, [active]);
+
+  const fade =
+    canScrollBack && canScrollForward
+      ? 'both'
+      : canScrollBack
+        ? 'start'
+        : canScrollForward
+          ? 'end'
+          : undefined;
 
   return (
-    <div
-      className={clsx(styles.list, isPill && styles.pillList, className)}
-      role="tablist"
-      aria-label={ariaLabel}
-      onKeyDown={onKeyDown}
-    >
-      {tabs.map((tab) => {
-        const isActive = tab.key === active;
-        return (
-          <button
-            key={tab.key}
-            ref={registerTab(tab.key)}
-            type="button"
-            role="tab"
-            id={tabButtonId(idBase, tab.key)}
-            aria-selected={isActive}
-            aria-controls={tabPanelId(idBase, tab.key)}
-            tabIndex={tabIndexFor(tab.key)}
-            className={clsx(
-              styles.tab,
-              isPill && styles.pillTab,
-              isActive && (isPill ? styles.pillTabActive : styles.tabActive)
-            )}
-            onClick={() => onChange(tab.key)}
-          >
-            {tab.icon}
-            <span className={styles.tabLabel}>{tab.label}</span>
-            {tab.badge != null && <span className={styles.tabBadge}>{tab.badge}</span>}
-          </button>
-        );
-      })}
+    <div className={clsx(styles.listWrap, isPill && styles.pillWrap, className)}>
+      <div
+        ref={listRef}
+        className={clsx(styles.list, isPill && styles.pillList)}
+        role="tablist"
+        aria-label={ariaLabel}
+        onKeyDown={onKeyDown}
+        data-fade={fade}
+      >
+        {tabs.map((tab) => {
+          const isActive = tab.key === active;
+          return (
+            <button
+              key={tab.key}
+              ref={registerTab(tab.key)}
+              type="button"
+              role="tab"
+              id={tabButtonId(idBase, tab.key)}
+              aria-selected={isActive}
+              aria-controls={tabPanelId(idBase, tab.key)}
+              tabIndex={tabIndexFor(tab.key)}
+              className={clsx(
+                styles.tab,
+                isPill && styles.pillTab,
+                isActive && (isPill ? styles.pillTabActive : styles.tabActive)
+              )}
+              onClick={() => onChange(tab.key)}
+            >
+              {tab.icon}
+              <span className={styles.tabLabel}>{tab.label}</span>
+              {tab.badge != null && <span className={styles.tabBadge}>{tab.badge}</span>}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

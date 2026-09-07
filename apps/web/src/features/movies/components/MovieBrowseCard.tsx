@@ -1,15 +1,17 @@
+import type { ReactNode } from 'react';
 import { Info } from 'lucide-react';
 import clsx from 'clsx';
 import MovieListCard from '@/features/movies/components/MovieListCard';
 import styles from '@/features/movies/components/MovieListCard.module.css';
 import { CardKebab } from '@/features/movies/components/movieCardParts';
+import type { MovieListItemLike } from '@/features/movies/hooks/useMovieListToolbar';
 import type { Translate } from '@/features/movies/types';
+import type { RatingScale } from '@/shared/types/theme';
 import WatchlistProposeSubmenu from '@/features/watchlist/components/WatchlistProposeSubmenu';
-import type { UserWatchedMovieItem } from '@/features/profile/api/profileApi';
-import badgeStyles from './ProfileMovieCard.module.css';
+import badgeStyles from './MovieBrowseCard.module.css';
 
-interface ProfileMovieCardProps {
-  item: UserWatchedMovieItem;
+interface MovieBrowseCardProps {
+  item: MovieListItemLike;
   tmdbLanguage: string;
   hasHover: boolean;
   isLoggedIn: boolean;
@@ -17,10 +19,13 @@ interface ProfileMovieCardProps {
   onToggleWatchlist: () => void;
   onOpenDetails: () => void;
   onProposeFallback: () => void;
+  openDetailsAriaLabel: string;
+  leadingBadge?: ReactNode;
+  ratingScale?: RatingScale;
   t: Translate;
 }
 
-export default function ProfileMovieCard({
+export default function MovieBrowseCard({
   item,
   tmdbLanguage,
   hasHover,
@@ -29,9 +34,13 @@ export default function ProfileMovieCard({
   onToggleWatchlist,
   onOpenDetails,
   onProposeFallback,
+  openDetailsAriaLabel,
+  leadingBadge,
+  ratingScale,
   t,
-}: Readonly<ProfileMovieCardProps>) {
+}: Readonly<MovieBrowseCardProps>) {
   const isTv = item.mediaType === 'tv';
+  const hasBadges = isTv || leadingBadge != null;
 
   return (
     <MovieListCard
@@ -40,14 +49,20 @@ export default function ProfileMovieCard({
       posterPath={item.posterPath}
       tmdbLanguage={tmdbLanguage}
       genreIds={item.genreIds}
+      voteAverage={item.voteAverage}
+      ratingScale={ratingScale}
+      runtimeMinutes={item.runtimeMinutes}
       onOpenDetails={onOpenDetails}
-      openDetailsAriaLabel={t('profile.movies.card.openDetailsAria', { title: item.title })}
+      openDetailsAriaLabel={openDetailsAriaLabel}
       badges={
-        isTv && (
+        hasBadges && (
           <div className={badgeStyles.badgeGroup}>
-            <span className={clsx(styles.badge, styles.badgeStacked)}>
-              {t('movies.list.tvBadge')}
-            </span>
+            {leadingBadge}
+            {isTv && (
+              <span className={clsx(styles.badge, styles.badgeStacked)}>
+                {t('movies.list.tvBadge')}
+              </span>
+            )}
           </div>
         )
       }

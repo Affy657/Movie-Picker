@@ -242,4 +242,89 @@ public sealed class MongoMovieRepository : IMovieRepository
         var res = await _collection.DeleteManyAsync(x => x.EventId == eventId, ct);
         return res.IsAcknowledged ? res.DeletedCount : 0;
     }
+
+    private sealed class MovieInEventKey
+    {
+        public int TmdbId { get; set; }
+        public string MediaType { get; set; } = string.Empty;
+        public string EventId { get; set; } = string.Empty;
+    }
+
+    private sealed class MovieKey
+    {
+        public int TmdbId { get; set; }
+        public string MediaType { get; set; } = string.Empty;
+    }
+
+    private sealed class MovieInEventRow
+    {
+        public MovieInEventKey Key { get; set; } = new();
+        public string Title { get; set; } = string.Empty;
+        public string Year { get; set; } = string.Empty;
+        public string? PosterPath { get; set; }
+        public List<int>? GenreIds { get; set; }
+    }
+
+    private sealed class ProposedMovieRow
+    {
+        public MovieKey Key { get; set; } = new();
+        public int EventCount { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Year { get; set; } = string.Empty;
+        public string? PosterPath { get; set; }
+        public List<int>? GenreIds { get; set; }
+    }
+
+    public async Task<IReadOnlyList<ProposedMovieRanking>> ListMostProposedAsync(
+        int minEventCount,
+        int limit,
+        CancellationToken ct = default)
+    {
+        if (limit <= 0)
+            return [];
+
+        var threshold = Math.Max(minEventCount, 1);
+        var rows = await _collection.Aggregate()
+            .Group(
+                doc => new MovieInEventKey
+                {
+                    TmdbId = doc.TmdbId,
+                    MediaType = doc.MediaType,
+                    EventId = doc.EventId,
+                },
+                g => new MovieInEventRow
+                {
+                    Key = g.Key,
+                    Title = g.First().Title,
+                    Year = g.First().Year,
+                    PosterPath = g.First().PosterPath,
+                    GenreIds = g.First().GenreIds,
+                })
+            .Group(
+                row => new MovieKey { TmdbId = row.Key.TmdbId, MediaType = row.Key.MediaType },
+                g => new ProposedMovieRow
+                {
+                    Key = g.Key,
+                    EventCount = g.Count(),
+                    Title = g.First().Title,
+                    Year = g.First().Year,
+                    PosterPath = g.First().PosterPath,
+                    GenreIds = g.First().GenreIds,
+                })
+            .Match(row => row.EventCount >= threshold)
+            .SortByDescending(row => row.EventCount)
+            .Limit(limit)
+            .ToListAsync(ct);
+
+        return rows
+            .Select(row => new ProposedMovieRanking(
+                row.Key.TmdbId,
+                MovieMapper.ParseMediaType(row.Key.MediaType),
+                row.Title,
+                row.Year,
+                row.PosterPath,
+                row.GenreIds ?? [],
+                row.EventCount))
+            .ToList();
+    }
 }

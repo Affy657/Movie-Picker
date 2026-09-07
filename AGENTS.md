@@ -113,4 +113,5 @@ Outils configurés pour qu'un agent IA travaille sur le projet sans intervention
 | SonarCloud | MCP `sonarqube` (Docker — requiert Docker Desktop lancé + image `mcp/sonarqube`) | consulter qualité / issues / hotspots ; l'analyse tourne en CI (job `sonar`, SonarScanner for .NET) |
 | PostHog | MCP `posthog` (HTTP) | analytics, events produit |
 | MongoDB | MCP `mongodb` | base dev `moviepicker_dev` |
-| Resend | non configuré | envoi mail = à la demande |
+| Sentry | MCP `sentry` | erreurs front et API ; org `adrien-morand`, projets `movie-picker-web` et `movie-picker-api`, région UE |
+| Resend | MCP `resend` | e-mails transactionnels ; domaine `movie-picker.fr` vérifié, `eu-west-1`, envoi seul |
