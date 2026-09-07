@@ -13,7 +13,7 @@
 | | |
 |--|--|
 | **Branche** | `claude/terraform-feature-split-62jckg`, en avance sur `master` (`git log --oneline origin/master..HEAD`) |
-| **Pull request** | **aucune ouverte** — rien n'a été demandé en ce sens |
+| **Pull request** | [#85](https://github.com/Affy657/Movie-Picker/pull/85) — ouverte, non fusionnée. Une PR fusionnée ne se réutilise pas : tout travail ultérieur repart de `master` |
 | **Contenu** | 2 commits de roadmap (découpage Terraform en 8 lots), 2 commits de CI/CD livrés, ce document |
 | **État CI** | jamais exécutée : les workflows modifiés ne tournent qu'une fois sur `master` ou en PR |
 | **Reste** | 2 gestes GCP (§ 3), puis un `workflow_dispatch` manuel de la sauvegarde |
