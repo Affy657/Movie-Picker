@@ -10,6 +10,9 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Added
 
+- **Sauvegarde quotidienne de la base de production** : le palier gratuit Atlas ne fournit aucun instantané, et rien ne sauvegardait la base. Un dump part chaque nuit vers un bucket Cloud Storage versionné, puis est relu depuis ce bucket et restauré dans une MongoDB jetable avant d'être publié — une archive qui échoue la restauration ne devient jamais la sauvegarde du jour.
+- **Archive du build front à chaque déploiement** (30 jours) : l'hébergement ne conserve aucune version, un retour arrière ne demande plus de rejouer toute la chaîne de portes.
+- Porte de qualité sur les workflows eux-mêmes (`actionlint`, `shellcheck`, `zizmor`), bloquante pour le déploiement : jusqu'ici la chaîne qui garde le code n'était gardée par rien.
 - **Nouvelle landing page** : neuf sections, l'interface du produit reconstruite en CSS et une roue de tirage réellement jouable depuis la page. Première livraison de la V1.5.
 - Contexte `.on-dark` dans le design system : une bande sombre redéfinit les jetons de thème pour ses descendants, si bien que `Button`, `Card`, `Chip` et `Avatar` s'y posent sans classe locale.
 - Taille `lg` sur `Button` et `buttonClass`, pour les appels à l'action de page d'accueil.
@@ -17,6 +20,9 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Changed
 
+- **Déploiement API validé avant exposition** : chaque révision est déployée sans trafic, éprouvée sur son URL taguée, et n'est promue qu'une fois ses sondes vertes. Une révision défaillante n'atteint plus aucun utilisateur, là où le trafic basculait auparavant avant toute vérification.
+- L'image de l'API est déployée par digest et non plus par tag : la révision en production désigne exactement les octets scannés par Trivy.
+- Les vérifications de fin de déploiement couvrent aussi les domaines publics de l'API et du front, et non plus seulement les URL internes.
 - La landing publique revient sur la racine `/`, qui redirige vers Mes soirées dès qu'une session existe. `/decouvrir` redirige vers `/` et n'est plus annoncée dans le sitemap.
 - La roue de tirage s'adapte enfin à la largeur de son conteneur au lieu d'être figée à 460 pixels.
 - Les pastilles `Chip` de ton primaire passent sur le bleu de texte, mieux contrasté que le bleu de fond en thème clair comme en thème sombre.
