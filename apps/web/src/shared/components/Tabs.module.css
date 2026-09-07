@@ -1,8 +1,44 @@
+.listWrap {
+  position: relative;
+  min-width: 0;
+}
+
 .list {
   display: flex;
   align-items: center;
   gap: var(--space-0-5);
   overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
+.list::-webkit-scrollbar {
+  display: none;
+}
+
+.list[data-fade='end'] {
+  mask-image: linear-gradient(to right, currentColor calc(100% - var(--space-10)), transparent);
+}
+
+.list[data-fade='start'] {
+  mask-image: linear-gradient(to right, transparent, currentColor var(--space-10));
+}
+
+.list[data-fade='both'] {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    currentColor var(--space-10),
+    currentColor calc(100% - var(--space-10)),
+    transparent
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .list {
+    scroll-behavior: auto;
+  }
 }
 
 .tab {
@@ -67,16 +103,19 @@
   color: var(--color-primary);
 }
 
-.pillList {
-  gap: var(--space-1);
+.pillWrap {
   padding: var(--space-1);
   background: var(--color-input-readonly);
   border-radius: var(--radius-pill);
 }
 
+.pillList {
+  gap: var(--space-1);
+}
+
 .pillTab {
   flex: 1 1 0;
-  min-width: 0;
+  min-width: max-content;
   height: auto;
   padding: var(--space-2) var(--space-2-5);
   border-bottom: none;
@@ -93,4 +132,10 @@
 .pillTab .tabBadge {
   background: var(--color-badge-host-bg);
   color: var(--color-badge-host-text);
+}
+
+@media (hover: none) {
+  .pillTab {
+    min-height: var(--space-11);
+  }
 }

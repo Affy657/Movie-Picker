@@ -5,4 +5,6 @@ namespace MoviePicker.Api.Application.UseCases.UserMovies;
 public interface IGetUserWatchedMoviesHandler
 {
     Task<UserWatchedMoviesResponse> HandleAsync(string handle, int take, CancellationToken ct = default);
+
+    Task<UserWatchedMoviesResponse> HandleForUserAsync(string userId, int take, CancellationToken ct = default);
 }

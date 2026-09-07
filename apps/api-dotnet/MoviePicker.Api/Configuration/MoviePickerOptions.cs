@@ -14,6 +14,10 @@ public sealed class MoviePickerOptions
 
     public int TmdbFailureCacheMinutes { get; set; } = 5;
 
+    public int MovieShowcaseCacheHours { get; set; } = 6;
+
+    public int MovieShowcaseEnrichedCount { get; set; } = 24;
+
     public int TmdbSearchMaxWatchProviderLookups { get; set; } = 10;
 
     public int TmdbListEnrichmentMaxParallelism { get; set; } = 4;

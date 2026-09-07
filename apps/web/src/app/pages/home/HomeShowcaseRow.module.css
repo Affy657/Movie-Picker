@@ -1,0 +1,44 @@
+.skeletonGrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 9rem;
+  gap: var(--space-3-5);
+  overflow: hidden;
+}
+
+.skeletonGridWide {
+  grid-auto-columns: 17rem;
+}
+
+.skeletonCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+}
+
+.state {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.tabs {
+  margin: 0;
+}
+
+.panel {
+  min-width: 0;
+}
+
+.panel:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: var(--space-1);
+  border-radius: var(--radius-sm);
+}

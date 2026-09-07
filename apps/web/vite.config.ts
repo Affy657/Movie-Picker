@@ -212,7 +212,7 @@ export default defineConfig(({ mode }) => {
           globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         },
         devOptions: {
-          enabled: true,
+          enabled: env.VITE_DEV_SERVICE_WORKER === 'true',
           type: 'module',
         },
       }),

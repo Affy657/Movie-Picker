@@ -28,7 +28,7 @@ export default function ProfileMoviesToolbar(props: Readonly<ProfileMoviesToolba
     <CollectionToolbar
       {...props}
       sortOptions={[
-        { key: 'watchedAt', label: t('profile.movies.toolbar.sortWatchedAt') },
+        { key: 'primary', label: t('profile.movies.toolbar.sortWatchedAt') },
         { key: 'title', label: t('profile.movies.toolbar.sortTitle') },
         { key: 'year', label: t('profile.movies.toolbar.sortYear') },
       ]}

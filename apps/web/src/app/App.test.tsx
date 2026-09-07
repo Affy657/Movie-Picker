@@ -46,9 +46,9 @@ describe('App (routes)', () => {
   afterAll(() => server.close());
 
   describe('visiteur anonyme', () => {
-    it("route / affiche la landing publique avec les CTA d'authentification", async () => {
+    it("route /decouvrir affiche la landing publique avec les CTA d'authentification", async () => {
       server.use(authMeGuestHandler);
-      renderRoutes(['/']);
+      renderRoutes(['/decouvrir']);
       expect(
         await screen.findByRole(
           'heading',
@@ -67,7 +67,7 @@ describe('App (routes)', () => {
 
     it('AppShell : la landing remplace la navigation applicative par ses ancres', async () => {
       server.use(authMeGuestHandler);
-      renderRoutes(['/']);
+      renderRoutes(['/decouvrir']);
       await screen.findByRole(
         'heading',
         { name: /choisissez le film de la soirée/i, level: 1 },
@@ -84,16 +84,39 @@ describe('App (routes)', () => {
       expect(screen.getAllByRole('navigation', { name: /navigation principale/i })).toHaveLength(1);
     });
 
-    it('route /decouvrir redirige vers la racine', async () => {
+    it("route / affiche la home d'exploration, plus la landing", async () => {
       server.use(authMeGuestHandler);
-      renderRoutes(['/decouvrir']);
+      renderRoutes(['/']);
       expect(
         await screen.findByRole(
           'heading',
-          { name: /choisissez le film de la soirée/i, level: 1 },
+          { name: /on regarde ce soir/i, level: 1 },
           { timeout: 20000 }
         )
       ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('heading', { name: /choisissez le film de la soirée/i })
+      ).not.toBeInTheDocument();
+    });
+
+    it('AppShell : la home mène à la landing par la nav et le pied de page', async () => {
+      server.use(authMeGuestHandler);
+      renderRoutes(['/']);
+      await screen.findByRole(
+        'heading',
+        { name: /on regarde ce soir/i, level: 1 },
+        { timeout: 20000 }
+      );
+      const banner = screen.getByRole('banner');
+      expect(within(banner).getByRole('link', { name: /comment ça marche/i })).toHaveAttribute(
+        'href',
+        '/decouvrir'
+      );
+      const contentinfo = screen.getByRole('contentinfo');
+      expect(within(contentinfo).getByRole('link', { name: /comment ça marche/i })).toHaveAttribute(
+        'href',
+        '/decouvrir'
+      );
     });
 
     it.each([
@@ -237,7 +260,7 @@ describe('App (routes)', () => {
       renderRoutes(['/']);
       await screen.findByRole(
         'heading',
-        { name: /choisissez le film de la soirée/i, level: 1 },
+        { name: /on regarde ce soir/i, level: 1 },
         { timeout: 20000 }
       );
       expect(
@@ -250,7 +273,7 @@ describe('App (routes)', () => {
       renderRoutes(['/']);
       await screen.findByRole(
         'heading',
-        { name: /choisissez le film de la soirée/i, level: 1 },
+        { name: /on regarde ce soir/i, level: 1 },
         { timeout: 20000 }
       );
       const banner = screen.getByRole('banner');
@@ -273,7 +296,7 @@ describe('App (routes)', () => {
       renderRoutes(['/']);
       await screen.findByRole(
         'heading',
-        { name: /choisissez le film de la soirée/i, level: 1 },
+        { name: /on regarde ce soir/i, level: 1 },
         { timeout: 20000 }
       );
       expect(screen.queryByRole('button', { name: /nouveautés/i })).not.toBeInTheDocument();
@@ -281,18 +304,35 @@ describe('App (routes)', () => {
   });
 
   describe('utilisateur connecté', () => {
-    it('route / redirige vers /my-events', async () => {
+    it("route / sert la page d'exploration au lieu de rediriger", async () => {
       server.use(
         authedUserHandler,
         http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
       );
       renderRoutes(['/']);
       expect(
-        await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 }, { timeout: 20000 })
+        await screen.findByRole(
+          'heading',
+          { name: /on regarde ce soir/i, level: 1 },
+          { timeout: 20000 }
+        )
       ).toBeInTheDocument();
       expect(
-        screen.queryByRole('heading', { name: /choisissez le film de la soirée/i })
+        screen.queryByRole('heading', { name: /^mes soirées$/i, level: 1 })
       ).not.toBeInTheDocument();
+    });
+
+    it('expose Explorer dans la nav une fois connecté', async () => {
+      server.use(
+        authedUserHandler,
+        http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
+      );
+      renderRoutes(['/my-events']);
+      const exploreLinks = await screen.findAllByRole('link', { name: /explorer/i });
+      expect(exploreLinks.length).toBeGreaterThan(0);
+      for (const link of exploreLinks) {
+        expect(link).toHaveAttribute('href', '/');
+      }
     });
 
     it('AppShell expose Mes soirées + Nouvelle soirée dans la nav (Paramètres est dans le menu avatar)', async () => {
@@ -326,8 +366,8 @@ describe('App (routes)', () => {
       expect(screen.getByRole('button', { name: /^nouveautés$/i })).toBeInTheDocument();
     });
 
-    it('AppShell expose la pastille Nouveautés devant les notifications pour un compte 1.3.x', async () => {
-      vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-09-06T12:00:00.000Z'));
+    it('AppShell expose la pastille Nouveautés devant les notifications pour un compte antérieur', async () => {
+      vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-09-08T12:00:00.000Z'));
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () =>
           HttpResponse.json({
@@ -354,8 +394,8 @@ describe('App (routes)', () => {
       expect(chip.compareDocumentPosition(bell) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 
-    it("AppShell n'expose pas la pastille Nouveautés pour un compte créé à partir de la 1.4.1", async () => {
-      vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-09-06T12:00:00.000Z'));
+    it("AppShell n'expose pas la pastille Nouveautés pour un compte créé à partir de la 1.5.0", async () => {
+      vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-09-08T12:00:00.000Z'));
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () =>
           HttpResponse.json({
@@ -364,7 +404,7 @@ describe('App (routes)', () => {
             emailMasked: 'a***@test.local',
             uiTheme: 'system',
             accentColor: 'default',
-            createdAt: '2026-09-05T12:00:00.000Z',
+            createdAt: '2026-09-08T06:00:00.000Z',
           })
         ),
         http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
@@ -383,7 +423,7 @@ describe('App (routes)', () => {
     renderRoutes(['/']);
     await screen.findByRole(
       'heading',
-      { name: /choisissez le film de la soirée/i, level: 1 },
+      { name: /on regarde ce soir/i, level: 1 },
       { timeout: 20000 }
     );
     await waitFor(() => {

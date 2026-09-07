@@ -7,6 +7,9 @@ import { axe } from 'vitest-axe';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
 import LandingPage from '@/app/pages/LandingPage';
+import HomePage from '@/app/pages/HomePage';
+import ShowcaseListPage from '@/app/pages/ShowcaseListPage';
+import MovieCollectionsPage from '@/app/pages/MovieCollectionsPage';
 import CreateEvent from '@/features/events/pages/CreateEvent';
 import LoginPage from '@/features/auth/pages/LoginPage';
 import RegisterPage from '@/features/auth/pages/RegisterPage';
@@ -72,6 +75,59 @@ describe('accessibilité (axe)', () => {
 
   it("LandingPage n'a pas de violations", async () => {
     const { container, queryClient } = renderPage(<LandingPage />);
+    await assertNoViolations(container, queryClient);
+  });
+
+  const showcaseItems = [
+    {
+      id: 2001,
+      mediaType: 'movie',
+      title: 'Film vitrine',
+      year: '2024',
+      posterPath: null,
+      voteAverage: 7.4,
+      genreIds: [18],
+      rank: 1,
+      eventCount: 4,
+    },
+  ];
+
+  function showcaseHandlers() {
+    return [
+      http.get(`${TEST_API_V1}/movies/showcase`, ({ request }) =>
+        HttpResponse.json({
+          section: new URL(request.url).searchParams.get('section') ?? 'trending',
+          theme: null,
+          items: showcaseItems,
+          disclaimer: 'TMDB',
+          tmdbAttributionUrl: 'https://www.themoviedb.org/',
+        })
+      ),
+      http.get(`${TEST_API_V1}/movies/collections`, () =>
+        HttpResponse.json({
+          items: [{ id: 10, name: 'Star Wars', overview: null, posterPath: null, movieCount: 9 }],
+          disclaimer: 'TMDB',
+          tmdbAttributionUrl: 'https://www.themoviedb.org/',
+        })
+      ),
+    ];
+  }
+
+  it("HomePage n'a pas de violations", async () => {
+    server.use(...showcaseHandlers());
+    const { container, queryClient } = renderPage(<HomePage />);
+    await assertNoViolations(container, queryClient);
+  });
+
+  it("ShowcaseListPage n'a pas de violations", async () => {
+    server.use(...showcaseHandlers());
+    const { container, queryClient } = renderPage(<ShowcaseListPage variant="most-proposed" />);
+    await assertNoViolations(container, queryClient);
+  });
+
+  it("MovieCollectionsPage n'a pas de violations", async () => {
+    server.use(...showcaseHandlers());
+    const { container, queryClient } = renderPage(<MovieCollectionsPage />);
     await assertNoViolations(container, queryClient);
   });
 

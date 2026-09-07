@@ -67,7 +67,10 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         var key = Uri.EscapeDataString(_options.TmdbApiKey);
 
         if (!hasText)
-            return await DiscoverMoviesAsync(key, genreIds, yearFrom, yearTo, voteMin, originalLanguage, runtimeMin, runtimeMax, ct);
+            return await DiscoverMoviesAsync(
+                new TmdbDiscoveryCriteria(genreIds, yearFrom, yearTo, voteMin, originalLanguage, runtimeMin, runtimeMax),
+                1,
+                ct);
 
         var q = Uri.EscapeDataString(trimmedQuery);
         var endpoint = allowSeries ? "search/multi" : "search/movie";
@@ -177,34 +180,187 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
             ? vaEl.GetDouble()
             : null;
 
-    private async Task<IReadOnlyList<TmdbSearchItem>> DiscoverMoviesAsync(
-        string apiKey,
-        IReadOnlyList<int>? genreIds,
-        int? yearFrom,
-        int? yearTo,
-        double? voteMin,
-        string? originalLanguage,
-        int? runtimeMin,
-        int? runtimeMax,
+    private string BuildDiscoverUrl(string apiKey, TmdbDiscoveryCriteria criteria, int page)
+    {
+        var sortBy = string.IsNullOrWhiteSpace(criteria.SortBy) ? "popularity.desc" : criteria.SortBy.Trim();
+        var url = $"https://api.themoviedb.org/3/discover/movie?api_key={apiKey}&language=fr-FR"
+            + $"&sort_by={Uri.EscapeDataString(sortBy)}&page={page}";
+        if (criteria.GenreIds?.Count > 0)
+            url += $"&with_genres={string.Join(",", criteria.GenreIds)}";
+        if (criteria.YearFrom.HasValue)
+            url += $"&primary_release_date.gte={criteria.YearFrom.Value}-01-01";
+        if (criteria.YearTo.HasValue)
+            url += $"&primary_release_date.lte={criteria.YearTo.Value}-12-31";
+        if (criteria.VoteMin.HasValue)
+            url += $"&vote_average.gte={criteria.VoteMin.Value.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)}";
+        if (!string.IsNullOrWhiteSpace(criteria.OriginalLanguage))
+            url += $"&with_original_language={Uri.EscapeDataString(criteria.OriginalLanguage.Trim())}";
+        if (criteria.RuntimeMin.HasValue)
+            url += $"&with_runtime.gte={criteria.RuntimeMin.Value}";
+        if (criteria.RuntimeMax.HasValue)
+            url += $"&with_runtime.lte={criteria.RuntimeMax.Value}";
+        if (criteria.CompanyIds?.Count > 0)
+            url += $"&with_companies={string.Join("|", criteria.CompanyIds)}";
+        if (criteria.VoteCountMin.HasValue)
+            url += $"&vote_count.gte={criteria.VoteCountMin.Value}";
+        if (criteria.WatchProviderIds?.Count > 0 && !string.IsNullOrWhiteSpace(criteria.WatchRegion))
+        {
+            url += $"&with_watch_providers={string.Join("|", criteria.WatchProviderIds)}";
+            url += $"&watch_region={Uri.EscapeDataString(criteria.WatchRegion.Trim())}";
+        }
+        return url;
+    }
+
+    public Task<IReadOnlyList<TmdbSearchItem>> DiscoverMoviesAsync(
+        TmdbDiscoveryCriteria criteria,
+        int pages,
+        CancellationToken ct = default)
+    {
+        var key = RequireApiKey();
+        return FetchPagesAsync(page => BuildDiscoverUrl(key, criteria, page), pages, ct);
+    }
+
+    public Task<IReadOnlyList<TmdbSearchItem>> GetTrendingMoviesAsync(int pages, CancellationToken ct = default)
+    {
+        var key = RequireApiKey();
+        return FetchPagesAsync(
+            page => $"https://api.themoviedb.org/3/trending/movie/week?api_key={key}&language=fr-FR&page={page}",
+            pages,
+            ct);
+    }
+
+    public Task<IReadOnlyList<TmdbSearchItem>> GetNowPlayingMoviesAsync(
+        string region,
+        int pages,
+        CancellationToken ct = default)
+    {
+        var key = RequireApiKey();
+        var r = string.IsNullOrWhiteSpace(region) ? "FR" : region.Trim().ToUpperInvariant();
+        return FetchPagesAsync(
+            page => $"https://api.themoviedb.org/3/movie/now_playing?api_key={key}&language=fr-FR&region={r}&page={page}",
+            pages,
+            ct);
+    }
+
+    public Task<IReadOnlyList<TmdbSearchItem>> GetRecommendationsAsync(
+        int tmdbId,
+        CancellationToken ct = default)
+    {
+        var key = RequireApiKey();
+        return FetchPagesAsync(
+            page => $"https://api.themoviedb.org/3/movie/{tmdbId}/recommendations?api_key={key}&language=fr-FR&page={page}",
+            2,
+            ct);
+    }
+
+    public async Task<TmdbCollectionSummary?> GetCollectionAsync(int collectionId, CancellationToken ct = default)
+    {
+        var root = await FetchCollectionRootAsync(collectionId, ct).ConfigureAwait(false);
+        if (root is null)
+            return null;
+
+        using var doc = root;
+        var element = doc.RootElement;
+        var name = element.TryGetProperty("name", out var nameEl) && nameEl.ValueKind == JsonValueKind.String
+            ? nameEl.GetString() ?? string.Empty
+            : string.Empty;
+        if (string.IsNullOrEmpty(name))
+            return null;
+
+        var overview = element.TryGetProperty("overview", out var overviewEl) && overviewEl.ValueKind == JsonValueKind.String
+            ? overviewEl.GetString()
+            : null;
+        var movieCount = element.TryGetProperty("parts", out var parts) && parts.ValueKind == JsonValueKind.Array
+            ? parts.GetArrayLength()
+            : 0;
+
+        return new TmdbCollectionSummary(collectionId, name, overview, ReadPosterUrl(element), movieCount);
+    }
+
+    public async Task<IReadOnlyList<TmdbSearchItem>> GetCollectionMoviesAsync(
+        int collectionId,
+        CancellationToken ct = default)
+    {
+        var root = await FetchCollectionRootAsync(collectionId, ct).ConfigureAwait(false);
+        if (root is null)
+            return [];
+
+        using var doc = root;
+        if (!doc.RootElement.TryGetProperty("parts", out var parts) || parts.ValueKind != JsonValueKind.Array)
+            return [];
+
+        var list = new List<TmdbSearchItem>();
+        foreach (var item in parts.EnumerateArray())
+        {
+            var mapped = MapDiscoverItem(item);
+            if (mapped is not null)
+                list.Add(mapped);
+        }
+        return list;
+    }
+
+    private async Task<JsonDocument?> FetchCollectionRootAsync(int collectionId, CancellationToken ct)
+    {
+        var key = RequireApiKey();
+        var url = $"https://api.themoviedb.org/3/collection/{collectionId}?api_key={key}&language=fr-FR";
+
+        using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
+        if (!res.IsSuccessStatusCode)
+            return null;
+
+        await using var stream = await res.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+        return await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
+    }
+
+    private string RequireApiKey()
+    {
+        if (string.IsNullOrWhiteSpace(_options.TmdbApiKey))
+            throw new InvalidOperationException("TMDB_API_KEY manquante");
+        return Uri.EscapeDataString(_options.TmdbApiKey);
+    }
+
+    private async Task<IReadOnlyList<TmdbSearchItem>> FetchPagesAsync(
+        Func<int, string> urlForPage,
+        int pages,
         CancellationToken ct)
     {
-        var url = $"https://api.themoviedb.org/3/discover/movie?api_key={apiKey}&language=fr-FR&sort_by=popularity.desc";
-        if (genreIds?.Count > 0)
-            url += $"&with_genres={string.Join(",", genreIds)}";
-        if (yearFrom.HasValue)
-            url += $"&primary_release_date.gte={yearFrom.Value}-01-01";
-        if (yearTo.HasValue)
-            url += $"&primary_release_date.lte={yearTo.Value}-12-31";
-        if (voteMin.HasValue)
-            url += $"&vote_average.gte={voteMin.Value.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)}";
-        if (!string.IsNullOrWhiteSpace(originalLanguage))
-            url += $"&with_original_language={Uri.EscapeDataString(originalLanguage.Trim())}";
-        if (runtimeMin.HasValue)
-            url += $"&with_runtime.gte={runtimeMin.Value}";
-        if (runtimeMax.HasValue)
-            url += $"&with_runtime.lte={runtimeMax.Value}";
+        var pageCount = Math.Clamp(pages, 1, 10);
+        var seen = new HashSet<int>();
+        var list = new List<TmdbSearchItem>();
 
-        return await FetchAndMapResultsAsync(url, MapDiscoverItem, ct);
+        for (var page = 1; page <= pageCount; page++)
+        {
+            var items = await FetchPageAsync(urlForPage(page), ct).ConfigureAwait(false);
+            if (items.Count == 0)
+                break;
+            foreach (var item in items)
+            {
+                if (seen.Add(item.Id))
+                    list.Add(item);
+            }
+        }
+
+        return list;
+    }
+
+    private async Task<List<TmdbSearchItem>> FetchPageAsync(string url, CancellationToken ct)
+    {
+        using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
+        res.EnsureSuccessStatusCode();
+
+        await using var stream = await res.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+        using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
+        if (!doc.RootElement.TryGetProperty(ResultsProperty, out var results) || results.ValueKind != JsonValueKind.Array)
+            return [];
+
+        var list = new List<TmdbSearchItem>();
+        foreach (var item in results.EnumerateArray())
+        {
+            var mapped = MapDiscoverItem(item);
+            if (mapped is not null)
+                list.Add(mapped);
+        }
+        return list;
     }
 
     private static TmdbSearchItem? MapDiscoverItem(JsonElement item)

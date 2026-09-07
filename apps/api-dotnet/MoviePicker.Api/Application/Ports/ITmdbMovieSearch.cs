@@ -34,6 +34,27 @@ public sealed record TmdbMovieDetails(
     string? ReleaseDate,
     string? TrailerUrl = null);
 
+public sealed record TmdbDiscoveryCriteria(
+    IReadOnlyList<int>? GenreIds = null,
+    int? YearFrom = null,
+    int? YearTo = null,
+    double? VoteMin = null,
+    string? OriginalLanguage = null,
+    int? RuntimeMin = null,
+    int? RuntimeMax = null,
+    string? SortBy = null,
+    IReadOnlyList<int>? CompanyIds = null,
+    int? VoteCountMin = null,
+    IReadOnlyList<int>? WatchProviderIds = null,
+    string? WatchRegion = null);
+
+public sealed record TmdbCollectionSummary(
+    int Id,
+    string Name,
+    string? Overview,
+    string? PosterPath,
+    int MovieCount);
+
 public interface ITmdbMovieSearch
 {
     Task<IReadOnlyList<TmdbSearchItem>> SearchAsync(
@@ -51,4 +72,18 @@ public interface ITmdbMovieSearch
     Task<TmdbMovieEnrichment?> GetEnrichmentAsync(int tmdbId, MovieMediaType mediaType, string region, CancellationToken ct = default);
 
     Task<TmdbMovieDetails?> GetDetailsAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct = default);
+
+    Task<IReadOnlyList<TmdbSearchItem>> GetTrendingMoviesAsync(int pages, CancellationToken ct = default);
+
+    Task<IReadOnlyList<TmdbSearchItem>> GetNowPlayingMoviesAsync(string region, int pages, CancellationToken ct = default);
+
+    Task<IReadOnlyList<TmdbSearchItem>> DiscoverMoviesAsync(TmdbDiscoveryCriteria criteria, int pages, CancellationToken ct = default);
+
+    Task<IReadOnlyList<TmdbSearchItem>> GetRecommendationsAsync(
+        int tmdbId,
+        CancellationToken ct = default);
+
+    Task<TmdbCollectionSummary?> GetCollectionAsync(int collectionId, CancellationToken ct = default);
+
+    Task<IReadOnlyList<TmdbSearchItem>> GetCollectionMoviesAsync(int collectionId, CancellationToken ct = default);
 }

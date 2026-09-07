@@ -1,12 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router';
-import { Film } from 'lucide-react';
 import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
 import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
+import MoviePreviewRow, { MoviePreviewRail } from '@/features/movies/components/MoviePreviewRow';
+import MoviePosterCard from '@/features/movies/components/MoviePosterCard';
 import { fetchUserWatchedMovies } from '@/features/profile/api/profileApi';
-import styles from './ProfileMoviesSection.module.css';
 
 const PREVIEW_TAKE = 6;
 
@@ -25,42 +24,24 @@ export default function ProfileMoviesSection({ handle }: Readonly<Props>) {
   if (items.length === 0) return null;
 
   return (
-    <section className={styles.section} aria-labelledby="profile-movies-heading">
-      <div className={styles.headerRow}>
-        <h2 id="profile-movies-heading" className={styles.heading}>
-          {t('profile.movies.title')}
-        </h2>
-        <Link to={ROUTES.profileMovies(handle)} className={styles.seeAllLink}>
-          {t('profile.movies.seeAll')}
-        </Link>
-      </div>
-      <ul className={styles.grid}>
+    <MoviePreviewRow
+      heading={t('profile.movies.title')}
+      seeAllTo={ROUTES.profileMovies(handle)}
+      seeAllLabel={t('profile.movies.seeAll')}
+    >
+      <MoviePreviewRail itemCount={items.length}>
         {items.map((item) => {
           const posterRaw = posterImageSrc(item.posterPath);
-          const posterSrc = posterRaw ? tmdbPosterSrcForListDisplay(posterRaw) : undefined;
           return (
-            <li key={`${item.tmdbId}|${item.mediaType}|${item.watchedAt}`} className={styles.card}>
-              <span className={styles.posterWrap}>
-                {posterSrc ? (
-                  <img
-                    src={posterSrc}
-                    alt=""
-                    className={styles.poster}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                ) : (
-                  <span className={styles.posterPlaceholder} aria-hidden>
-                    <Film size={22} />
-                  </span>
-                )}
-              </span>
-              <span className={styles.cardTitle}>{item.title}</span>
-              <span className={styles.cardYear}>{item.year}</span>
-            </li>
+            <MoviePosterCard
+              key={`${item.tmdbId}|${item.mediaType}|${item.watchedAt}`}
+              title={item.title}
+              meta={item.year}
+              posterSrc={posterRaw ? tmdbPosterSrcForListDisplay(posterRaw) : undefined}
+            />
           );
         })}
-      </ul>
-    </section>
+      </MoviePreviewRail>
+    </MoviePreviewRow>
   );
 }

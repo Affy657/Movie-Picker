@@ -88,6 +88,22 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
         return Task.FromResult<IReadOnlyList<Participant>>(result.ToList());
     }
 
+    public Task<IReadOnlyList<Participant>> ListByUserIdsAsync(
+        IReadOnlyCollection<string> userIds,
+        int limit = 0,
+        CancellationToken ct = default)
+    {
+        var ids = userIds.Where(id => !string.IsNullOrWhiteSpace(id)).ToHashSet();
+        if (ids.Count == 0)
+            return Task.FromResult<IReadOnlyList<Participant>>(Array.Empty<Participant>());
+
+        var query = _byId.Values
+            .Where(p => p.UserId is not null && ids.Contains(p.UserId))
+            .OrderByDescending(p => p.CreatedAt);
+        var result = limit > 0 ? query.Take(limit) : query;
+        return Task.FromResult<IReadOnlyList<Participant>>(result.ToList());
+    }
+
     public Task<int> CountByEventIdAsync(string eventId, CancellationToken ct = default)
     {
         var n = _byId.Values.Count(p => p.EventId == eventId);

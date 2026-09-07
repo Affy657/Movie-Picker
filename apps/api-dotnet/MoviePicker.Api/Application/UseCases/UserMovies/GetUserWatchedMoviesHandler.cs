@@ -35,10 +35,17 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
     public async Task<UserWatchedMoviesResponse> HandleAsync(string handle, int take, CancellationToken ct = default)
     {
         var user = await PublicProfileGuard.RequirePublicUserAsync(_users, handle, ct);
+        return await HandleForUserAsync(user.Id, take, ct);
+    }
 
+    public async Task<UserWatchedMoviesResponse> HandleForUserAsync(
+        string userId,
+        int take,
+        CancellationToken ct = default)
+    {
         var effectiveTake = take <= 0 ? DefaultTake : Math.Min(take, MaxTake);
 
-        var participants = await _participants.ListByUserIdAsync(user.Id, ParticipantsCap, ct);
+        var participants = await _participants.ListByUserIdAsync(userId, ParticipantsCap, ct);
         if (participants.Count == 0)
             return new UserWatchedMoviesResponse { Items = [] };
 
