@@ -47,3 +47,34 @@
     color: var(--color-primary-text);
   }
 }
+
+.rootSm {
+  flex-wrap: nowrap;
+  gap: var(--space-1);
+}
+
+.optionSm {
+  flex: 0 0 auto;
+  min-width: 0;
+  padding: calc(var(--space-2) + var(--text-optical-nudge)) var(--space-3)
+    calc(var(--space-2) - var(--text-optical-nudge));
+  font-size: var(--font-size-2xs);
+  line-height: 1;
+  border-width: 1px;
+  border-radius: var(--radius-pill);
+}
+
+.optionIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-9);
+  height: var(--space-9);
+  padding: 0;
+  color: var(--color-text-muted);
+  border-radius: var(--radius-pill);
+}
+
+.optionIcon.optionSelected {
+  color: var(--color-primary-text);
+}
