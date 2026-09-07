@@ -4,6 +4,8 @@
 # ne tourne que si sa lane est impactée (skip sinon). workflow_dispatch force les 2 lanes.
 #   - Lane web : lint-web, test-web, lighthouse, deploy-front.
 #   - Lane api : lint-api, test-api, docker-api, deploy-api.
+#   - sonar ne tourne pas sur workflow_dispatch : les deploiements acceptent alors un sonar 'skipped',
+#     sans quoi un redeploiement manuel serait impossible.
 #   - Transverses : gitleaks (toujours), audit npm/NuGet, sonar (analyse globale + Quality Gate bloquant).
 #   - E2E Playwright : job CI bloquant (gate du déploiement) + exécution locale.
 #
@@ -646,7 +648,8 @@ jobs:
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master' &&
       needs.docker-api.result == 'success' &&
       needs.e2e.result == 'success' &&
-      needs.sonar.result == 'success'
+      (needs.sonar.result == 'success' ||
+      (github.event_name == 'workflow_dispatch' && needs.sonar.result == 'skipped'))
     environment: production
     permissions:
       contents: read
@@ -773,7 +776,8 @@ jobs:
       needs.audit.result == 'success' &&
       needs.lighthouse.result == 'success' &&
       needs.e2e.result == 'success' &&
-      needs.sonar.result == 'success'
+      (needs.sonar.result == 'success' ||
+      (github.event_name == 'workflow_dispatch' && needs.sonar.result == 'skipped'))
     environment: production
     permissions:
       contents: read
