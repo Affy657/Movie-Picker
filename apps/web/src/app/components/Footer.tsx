@@ -8,6 +8,7 @@ import { usePwaInstallClick } from '@/shared/hooks/usePwaInstall';
 import ProposeIdeaButton from './ProposeIdeaButton';
 import SupportReportButton from './SupportReportButton';
 import InstallPwaDialog from './InstallPwaDialog';
+import ThemeToggle from './ThemeToggle';
 import styles from './Footer.module.css';
 
 type FooterProps = {
@@ -86,6 +87,32 @@ export default function Footer({ clearMobileNav = false, onOpenWhatsNew }: Reado
               {t('pwaInstall.trigger')}
             </button>
           ) : null}
+          <ul className={styles.socialList} aria-label={t('footer.socialTitle')}>
+            <li>
+              <a
+                href="https://github.com/Affy657"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialLink}
+                aria-label={t('footer.githubLabel')}
+              >
+                <GitHubIcon />
+                GitHub
+              </a>
+            </li>
+            <li>
+              <a
+                href="https://www.linkedin.com/in/adrien-morand/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialLink}
+                aria-label={t('footer.linkedinLabel')}
+              >
+                <LinkedInIcon />
+                LinkedIn
+              </a>
+            </li>
+          </ul>
         </div>
 
         <div className={styles.col}>
@@ -140,6 +167,11 @@ export default function Footer({ clearMobileNav = false, onOpenWhatsNew }: Reado
                 {t('footer.donate')}
               </Link>
             </li>
+            <li>
+              <Link to={ROUTES.tech} className={styles.colLink}>
+                {t('footer.tech')}
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -158,66 +190,46 @@ export default function Footer({ clearMobileNav = false, onOpenWhatsNew }: Reado
             </li>
           </ul>
         </div>
-
-        <div className={styles.col}>
-          <p className={styles.colTitle}>{t('footer.socialTitle')}</p>
-          <ul className={styles.colList}>
-            <li>
-              <a
-                href="https://github.com/Affy657"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.socialLink}
-                aria-label={t('footer.githubLabel')}
-              >
-                <GitHubIcon />
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://www.linkedin.com/in/adrien-morand/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.socialLink}
-                aria-label={t('footer.linkedinLabel')}
-              >
-                <LinkedInIcon />
-                LinkedIn
-              </a>
-            </li>
-            <li>
-              <Link to={ROUTES.tech} className={styles.colLink}>
-                {t('footer.tech')}
-              </Link>
-            </li>
-          </ul>
-        </div>
       </div>
 
       <div className={styles.bottom}>
-        <p className={styles.tmdb}>
-          {t('footer.tmdbPrefix')}{' '}
-          <a
-            href="https://www.themoviedb.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.tmdbLink}
-            aria-label={t('footer.tmdbLinkAria')}
-          >
-            TMDB
-          </a>
-          {t('footer.tmdbSuffix')}
-        </p>
-        <div className={styles.copyrightRow}>
-          <p className={styles.copyright}>
-            {t('footer.copyright', { year: String(CURRENT_YEAR), version: APP_VERSION })}
+        <div className={styles.meta}>
+          <div className={styles.copyrightRow}>
+            <p className={styles.copyright}>
+              {t('footer.copyright', { year: String(CURRENT_YEAR), version: APP_VERSION })}
+            </p>
+            {onOpenWhatsNew ? (
+              <button type="button" className={styles.whatsNewLink} onClick={onOpenWhatsNew}>
+                {t('footer.whatsNew')}
+              </button>
+            ) : null}
+          </div>
+          <p className={styles.tmdb}>
+            {t('footer.tmdbPrefix')}{' '}
+            <a
+              href="https://www.themoviedb.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.tmdbLink}
+              aria-label={t('footer.tmdbLinkAria')}
+            >
+              TMDB
+            </a>
+            {t('footer.tmdbSuffix')}
           </p>
-          {onOpenWhatsNew ? (
-            <button type="button" className={styles.whatsNewLink} onClick={onOpenWhatsNew}>
-              {t('footer.whatsNew')}
-            </button>
-          ) : null}
+        </div>
+
+        <div className={styles.appearance}>
+          <span className={styles.appearanceLabel} id="footer-theme-label">
+            {t('footer.appearanceTitle')}
+          </span>
+          <ThemeToggle
+            id="footer-theme"
+            ariaLabelledBy="footer-theme-label"
+            size="sm"
+            iconOnly
+            className={styles.appearanceToggle}
+          />
         </div>
       </div>
       {installGuideOpen ? (
