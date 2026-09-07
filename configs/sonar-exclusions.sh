@@ -35,7 +35,8 @@ EXCL=$(sonar_join \
   '**/Dockerfile' \
   '**/Dockerfile.*' \
   'pnpm-lock.yaml' \
-  '**/*.module.css' \
+  '**/*.css' \
+  'apps/web/index.html' \
   '**/vite.config.ts' \
   '**/vitest.config.ts' \
   'prettier.config.cjs' \
