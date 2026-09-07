@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.LetterboxdImport;
+using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
@@ -67,7 +68,13 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
         services.AddEmailSender(configuration, environment);
         services.AddSingleton<IPushNotificationSender, WebPushSender>();
-        services.AddHostedService<EventReminderService>();
+        services.AddSingleton<ISchedulerTokenValidator, SchedulerTokenValidator>();
+        services.AddScoped<IEventReminderPass, EventReminderPass>();
+
+        var runsRemindersInProcess = environment.IsDevelopment()
+            || IsInProcessRemindersEnabled(configuration);
+        if (runsRemindersInProcess)
+            services.AddHostedService<EventReminderService>();
 
         RegisterLetterboxdClient(services, configuration);
 
@@ -83,6 +90,7 @@ public static class ServiceCollectionExtensions
 
         RegisterHandlers(services);
 
+        services.AddScoped<SharedRateLimitFilter>();
         services.AddSingleton<ValidationErrorFilter>();
         services.AddSingleton<MoviePickerExceptionFilter>();
 
@@ -94,6 +102,22 @@ public static class ServiceCollectionExtensions
         }
 
         return services;
+    }
+
+    private static MongoClientSettings BuildMongoClientSettings(MongoUrl url)
+    {
+        var settings = MongoClientSettings.FromUrl(url);
+        if (url.MaxConnectionPoolSize == 0)
+            settings.MaxConnectionPoolSize = 50;
+        settings.ServerSelectionTimeout = TimeSpan.FromSeconds(10);
+        return settings;
+    }
+
+    private static bool IsInProcessRemindersEnabled(IConfiguration cfg)
+    {
+        var flag = cfg["IN_PROCESS_REMINDERS_ENABLED"];
+        return !string.IsNullOrWhiteSpace(flag)
+            && (flag == "1" || flag.Equals("true", StringComparison.OrdinalIgnoreCase));
     }
 
     private static void ConfigureMoviePickerOptions(MoviePickerOptions opts, IConfiguration cfg)
@@ -112,6 +136,13 @@ public static class ServiceCollectionExtensions
         var kofiToken = cfg["KOFI_WEBHOOK_TOKEN"];
         if (!string.IsNullOrWhiteSpace(kofiToken))
             opts.KofiWebhookToken = kofiToken.Trim();
+
+        var schedulerToken = cfg["SCHEDULER_TOKEN"];
+        opts.SchedulerToken = string.IsNullOrWhiteSpace(schedulerToken) ? null : schedulerToken.Trim();
+
+        var inProcessReminders = cfg["IN_PROCESS_REMINDERS_ENABLED"];
+        opts.InProcessRemindersEnabled = !string.IsNullOrWhiteSpace(inProcessReminders)
+            && (inProcessReminders == "1" || inProcessReminders.Equals("true", StringComparison.OrdinalIgnoreCase));
 
         ConfigureGitHubOptions(opts, cfg);
     }
@@ -143,6 +174,10 @@ public static class ServiceCollectionExtensions
             opts.TmdbSearchMaxWatchProviderLookups = maxLp;
         if (int.TryParse(cfg["TMDB_LIST_ENRICHMENT_MAX_PARALLEL"], out var par) && par > 0)
             opts.TmdbListEnrichmentMaxParallelism = Math.Min(par, 16);
+        if (int.TryParse(cfg["TMDB_HTTP_TIMEOUT_SECONDS"], out var timeout) && timeout > 0)
+            opts.TmdbHttpTimeoutSeconds = timeout;
+        if (int.TryParse(cfg["TMDB_FAILURE_CACHE_MINUTES"], out var failTtl) && failTtl > 0)
+            opts.TmdbFailureCacheMinutes = failTtl;
     }
 
     private static void ConfigurePosterOptions(MoviePickerOptions opts, IConfiguration cfg)
@@ -207,7 +242,8 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IWatchlistRepository, InMemoryWatchlistRepository>();
             services.AddSingleton<IUserNotificationRepository, InMemoryUserNotificationRepository>();
             services.AddSingleton<IKofiWebhookLogRepository, InMemoryKofiWebhookLogRepository>();
-            services.AddSingleton<IPushDedupRepository, InMemoryPushDedupRepository>();
+            services.AddSingleton<INotificationDedupRepository, InMemoryNotificationDedupRepository>();
+            services.AddSingleton<IRateLimitCounterStore, InMemoryRateLimitCounterStore>();
             services.AddSingleton<IDatabaseHealthProbe, InMemoryDatabaseHealthProbe>();
             services.AddSingleton<IMigrationHistoryRepository, InMemoryMigrationHistoryRepository>();
             services.AddSingleton<IUnitOfWork, InMemoryUnitOfWork>();
@@ -224,7 +260,7 @@ public static class ServiceCollectionExtensions
                 + "Utilise une base dédiée et jetable (ex. 'moviepicker_dev'). "
                 + "La base 'moviepicker' n'est autorisée qu'en Production.");
         }
-        services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoUrl));
+        services.AddSingleton<IMongoClient>(_ => new MongoClient(BuildMongoClientSettings(mongoUrl)));
         services.AddSingleton<MongoSessionAccessor>();
         services.AddSingleton<MongoCollectionFactory>();
         services.AddScoped<IUnitOfWork, MongoUnitOfWork>();
@@ -246,7 +282,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IWatchlistRepository, MongoWatchlistRepository>();
         services.AddScoped<IUserNotificationRepository, MongoUserNotificationRepository>();
         services.AddScoped<IKofiWebhookLogRepository, MongoKofiWebhookLogRepository>();
-        services.AddScoped<IPushDedupRepository, MongoPushDedupRepository>();
+        services.AddScoped<INotificationDedupRepository, MongoNotificationDedupRepository>();
+        services.AddScoped<IRateLimitCounterStore, MongoRateLimitCounterStore>();
         services.AddSingleton<IDatabaseHealthProbe, MongoDatabaseHealthProbe>();
         services.AddScoped<IMigrationHistoryRepository, MongoMigrationHistoryRepository>();
         services.AddHostedService<MongoIndexInitializer>();
@@ -276,7 +313,12 @@ public static class ServiceCollectionExtensions
             return;
         }
 
-        services.AddHttpClient<ITmdbMovieSearch, TmdbMovieSearch>()
+        services.AddHttpClient<ITmdbMovieSearch, TmdbMovieSearch>((sp, client) =>
+            {
+                var timeoutSeconds = sp.GetRequiredService<IOptions<MoviePickerOptions>>()
+                    .Value.TmdbHttpTimeoutSeconds;
+                client.Timeout = TimeSpan.FromSeconds(Math.Clamp(timeoutSeconds, 1, 30));
+            })
             .ConfigurePrimaryHttpMessageHandler(static () => new HttpClientHandler
             {
                 AutomaticDecompression = System.Net.DecompressionMethods.GZip

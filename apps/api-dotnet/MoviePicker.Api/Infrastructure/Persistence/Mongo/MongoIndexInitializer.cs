@@ -33,6 +33,7 @@ public sealed class MongoIndexInitializer : IHostedService
             await EnsureUserNotificationIndexesAsync(cancellationToken);
             await EnsureKofiWebhookLogIndexesAsync(cancellationToken);
             await EnsurePushDedupIndexesAsync(cancellationToken);
+            await EnsureRateLimitCounterIndexesAsync(cancellationToken);
             _logger.LogInformation("Index MongoDB initialisés.");
         }
         catch (Exception ex)
@@ -269,16 +270,27 @@ public sealed class MongoIndexInitializer : IHostedService
     private async Task EnsurePushDedupIndexesAsync(CancellationToken ct)
     {
         var col = _database.GetCollection<PushDedupMarkerDocument>("push_dedup_markers");
+        await DropIndexIfExistsAsync(col, "push_dedup_markers_unique", ct);
         var unique = new CreateIndexModel<PushDedupMarkerDocument>(
             Builders<PushDedupMarkerDocument>.IndexKeys
                 .Ascending(x => x.UserId)
                 .Ascending(x => x.Type)
-                .Ascending(x => x.EventId),
-            new CreateIndexOptions { Name = "push_dedup_markers_unique", Unique = true });
+                .Ascending(x => x.EventId)
+                .Ascending(x => x.Channel),
+            new CreateIndexOptions { Name = "push_dedup_markers_channel_unique", Unique = true });
         var ttl = new CreateIndexModel<PushDedupMarkerDocument>(
             Builders<PushDedupMarkerDocument>.IndexKeys.Ascending(x => x.CreatedAt),
             new CreateIndexOptions { Name = "push_dedup_markers_createdAt_ttl", ExpireAfter = TimeSpan.FromDays(3) });
         await col.Indexes.CreateManyAsync(new[] { unique, ttl }, ct);
+    }
+
+    private async Task EnsureRateLimitCounterIndexesAsync(CancellationToken ct)
+    {
+        var col = _database.GetCollection<RateLimitCounterDocument>("rate_limit_counters");
+        var ttl = new CreateIndexModel<RateLimitCounterDocument>(
+            Builders<RateLimitCounterDocument>.IndexKeys.Ascending(x => x.ExpiresAt),
+            new CreateIndexOptions { Name = "rate_limit_counters_expiresAt_ttl", ExpireAfter = TimeSpan.Zero });
+        await col.Indexes.CreateOneAsync(ttl, cancellationToken: ct);
     }
 
     private async Task EnsureKofiWebhookLogIndexesAsync(CancellationToken ct)

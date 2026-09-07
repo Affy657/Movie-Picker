@@ -34,6 +34,7 @@ public static class RateLimitingExtensions
     public const string LetterboxdImportPolicy = "letterboxd-import";
     public const string KofiWebhookPolicy = "kofi-webhook";
     public const string IdeaSuggestionPolicy = "idea-suggestion";
+    public const string SchedulerPolicy = "scheduler";
 
     private static readonly PolicySpec[] Policies =
     [
@@ -63,7 +64,8 @@ public static class RateLimitingExtensions
         new(WatchlistMutationPolicy, 60, 1, false),
         new(LetterboxdImportPolicy, 10, 1, false),
         new(KofiWebhookPolicy, 20, 1, false),
-        new(IdeaSuggestionPolicy, 10, 60, true)
+        new(IdeaSuggestionPolicy, 10, 60, true),
+        new(SchedulerPolicy, 10, 1, false)
     ];
 
     public static IServiceCollection AddMoviePickerRateLimiter(
@@ -106,6 +108,19 @@ public static class RateLimitingExtensions
             "Trop de requêtes. Réessayez dans un instant.");
         await context.HttpContext.Response.WriteAsync(json, cancellationToken);
     }
+
+    internal static PolicySpec? FindPolicy(string name)
+    {
+        foreach (var spec in Policies)
+        {
+            if (string.Equals(spec.Name, name, StringComparison.Ordinal))
+                return spec;
+        }
+        return null;
+    }
+
+    internal static string PartitionKeyFor(HttpContext httpContext, PolicySpec spec) =>
+        spec.ByUser ? UserOrIpPartitionKey.Get(httpContext) : ClientIpPartitionKey.Get(httpContext);
 
     internal static RateLimitPartition<string> CreatePartition(HttpContext httpContext, PolicySpec spec)
     {

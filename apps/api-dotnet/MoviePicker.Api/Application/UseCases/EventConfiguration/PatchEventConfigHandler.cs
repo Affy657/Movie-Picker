@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -103,7 +104,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
 
         var dateChanged = date != evt.Date || time != evt.Time;
         if (dateChanged && request.NotifyParticipantsOfDateChange == true)
-            _ = NotifyParticipantsOnDateChangedAsync(saved, userId, CancellationToken.None);
+            await NotifyParticipantsOnDateChangedAsync(saved, userId, CancellationToken.None);
 
         return EventConfigResponse.FromEvent(saved);
     }
@@ -136,8 +137,11 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
                     Url: $"/e/{evt.Slug}"
                 );
 
-                foreach (var sub in subs.Where(s => notifiableIds.Contains(s.UserId)))
-                    await _pushSender.SendAsync(sub, message, ct);
+                await PushFanOut.SendToAllAsync(
+                    _pushSender,
+                    subs.Where(s => notifiableIds.Contains(s.UserId)),
+                    message,
+                    ct);
             }
 
             var now = DateTimeOffset.UtcNow;

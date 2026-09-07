@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using MoviePicker.Api.Application.Ports;
@@ -47,6 +48,23 @@ public sealed class PostersControllerTests
         var file = Assert.IsType<FileContentResult>(result);
         Assert.Equal("image/jpeg", file.ContentType);
         Assert.Equal(blob.Data, file.FileContents);
-        Assert.Equal("public,max-age=86400", controller.Response.Headers.CacheControl);
+        Assert.Equal("public,max-age=86400,immutable", controller.Response.Headers.CacheControl);
+        Assert.Equal($"\"{ValidKey}\"", controller.Response.Headers.ETag);
+    }
+
+    [Fact]
+    public async Task Get_MatchingIfNoneMatch_Returns304_WithoutReadingStore()
+    {
+        var store = new Mock<IPosterImageStore>();
+        var controller = new PostersController().WithContext();
+        controller.Request.Headers.IfNoneMatch = $"\"{ValidKey}\"";
+
+        var result = await controller.Get(ValidKey, store.Object, CancellationToken.None);
+
+        var status = Assert.IsType<StatusCodeResult>(result);
+        Assert.Equal(StatusCodes.Status304NotModified, status.StatusCode);
+        store.Verify(
+            s => s.GetByKeyAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }

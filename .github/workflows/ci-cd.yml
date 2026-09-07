@@ -682,8 +682,30 @@ jobs:
             --region ${{ env.GCP_REGION }} \
             --platform managed \
             --allow-unauthenticated \
-            --set-secrets "MONGODB_URI=MONGODB_URI:latest,TMDB_API_KEY=TMDB_API_KEY:latest,AUTH_DATAPROTECTION_KEYRING=AUTH_DATAPROTECTION_KEYRING:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest,RESEND_API_KEY=RESEND_API_KEY:latest,KOFI_WEBHOOK_TOKEN=KOFI_WEBHOOK_TOKEN:latest,OAUTH_GOOGLE_CLIENT_ID=OAUTH_GOOGLE_CLIENT_ID:latest,OAUTH_GOOGLE_CLIENT_SECRET=OAUTH_GOOGLE_CLIENT_SECRET:latest,OAUTH_GITHUB_CLIENT_ID=OAUTH_GITHUB_CLIENT_ID:latest,OAUTH_GITHUB_CLIENT_SECRET=OAUTH_GITHUB_CLIENT_SECRET:latest,GITHUB_TOKEN=GITHUB_TOKEN:latest" \
+            --set-secrets "MONGODB_URI=MONGODB_URI:latest,TMDB_API_KEY=TMDB_API_KEY:latest,AUTH_DATAPROTECTION_KEYRING=AUTH_DATAPROTECTION_KEYRING:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest,RESEND_API_KEY=RESEND_API_KEY:latest,KOFI_WEBHOOK_TOKEN=KOFI_WEBHOOK_TOKEN:latest,OAUTH_GOOGLE_CLIENT_ID=OAUTH_GOOGLE_CLIENT_ID:latest,OAUTH_GOOGLE_CLIENT_SECRET=OAUTH_GOOGLE_CLIENT_SECRET:latest,OAUTH_GITHUB_CLIENT_ID=OAUTH_GITHUB_CLIENT_ID:latest,OAUTH_GITHUB_CLIENT_SECRET=OAUTH_GITHUB_CLIENT_SECRET:latest,GITHUB_TOKEN=GITHUB_TOKEN:latest,SCHEDULER_TOKEN=SCHEDULER_TOKEN:latest" \
             --set-env-vars "^##^ALLOWED_ORIGINS=$CORS##SENTRY_ENVIRONMENT=production##SENTRY_RELEASE=${{ github.sha }}##EMAIL_PROVIDER=resend"
+      - name: Rappels de soirée — Cloud Scheduler (toutes les 30 min)
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        run: |
+          set -eo pipefail
+          URL="$(gcloud run services describe ${{ env.CLOUD_RUN_SERVICE_NAME }} --region ${{ env.GCP_REGION }} --format='value(status.url)')"
+          TOKEN="$(gcloud secrets versions access latest --secret=SCHEDULER_TOKEN)"
+          JOB=movie-picker-event-reminders
+          COMMON=(
+            --location "${{ env.GCP_REGION }}"
+            --schedule "*/30 * * * *"
+            --time-zone "Europe/Paris"
+            --uri "$URL/api/v1/scheduler/event-reminders"
+            --http-method POST
+            --update-headers "X-Scheduler-Token=$TOKEN"
+            --attempt-deadline 300s
+          )
+          if gcloud scheduler jobs describe "$JOB" --location "${{ env.GCP_REGION }}" >/dev/null 2>&1; then
+            gcloud scheduler jobs update http "$JOB" "${COMMON[@]}"
+          else
+            gcloud scheduler jobs create http "$JOB" "${COMMON[@]}"
+          fi
       - name: Smoke test API (GET /health puis /health/ready)
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}

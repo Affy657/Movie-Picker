@@ -3,6 +3,7 @@ using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.Posters;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -102,7 +103,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
 
         var created = await _movieRepository.InsertAsync(movie, ct);
 
-        _ = NotifyParticipantsOnMovieAddedAsync(evt, created.Title, participant.UserId, CancellationToken.None);
+        await NotifyParticipantsOnMovieAddedAsync(evt, created.Title, participant.UserId, CancellationToken.None);
 
         return new MovieWithScoreResponse
         {
@@ -196,8 +197,11 @@ public sealed class AddMovieHandler : IAddMovieHandler
                     Url: $"/e/{evt.Slug}"
                 );
 
-                foreach (var sub in subs.Where(s => notifiableIds.Contains(s.UserId)))
-                    await _pushSender.SendAsync(sub, message, ct);
+                await PushFanOut.SendToAllAsync(
+                    _pushSender,
+                    subs.Where(s => notifiableIds.Contains(s.UserId)),
+                    message,
+                    ct);
             }
 
             var now = DateTimeOffset.UtcNow;
