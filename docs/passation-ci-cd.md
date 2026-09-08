@@ -307,3 +307,42 @@ Deux précautions apprises en le faisant :
 - dans un environnement **au réseau sortant restreint**, la page `profile` échoue
   `best-practices: 96 < 100` sur `errors-in-console` : l'avatar `api.dicebear.com` répond
   `ERR_CONNECTION_RESET`. C'est un artefact local, pas une régression — en CI la page est à 100.
+
+### 7.6 `home` a rejoint les pages malades — constat du 2026-09-08
+
+Depuis `d7c3e7e`, la page d'accueil échoue à son tour : **78–79 en CI pour un plancher de 85**, de
+façon reproductible (deux exécutions successives à 5 passages). Ce n'est pas de la variance.
+
+**Ce n'est pas le regroupement des chunks.** A/B sur le *même* code fusionné, seule la configuration
+Vite changeant, médiane de 5 passages : `home` donne **83** avec la configuration de `master` et
+**84** avec le regroupement. Le regroupement fait un point de mieux.
+
+La bascule s'est produite dans `master` entre `23382f6` et `d7c3e7e`, qui touche `HomePage.tsx`,
+`HomePage.module.css`, `App.tsx`, `Tabs.tsx`, `MoviePreviewRow.module.css` et ajoute `ScrollToTop`.
+
+**Le mécanisme, mesuré.** La décomposition du LCP de `home` a changé de nature :
+
+| | avant (`23382f6`) | après (`d7c3e7e`) |
+|--|--|--|
+| LCP | 2,5 s | **4,5 s** |
+| `time to first byte` | 34,6 ms | 5,7 ms |
+| `resource load delay` + `duration` | 44,6 + 88,3 ms | **absentes** |
+| `element render delay` | 52,4 ms | **532,7 ms** |
+
+Avant, l'élément le plus grand était une **image** (une affiche) : elle se chargeait en parallèle du
+JS. Après, il n'y a plus aucune phase de chargement de ressource — l'élément le plus grand est du
+**DOM rendu par le JS**, donc il attend l'exécution du bundle. C'est exactement la signature de
+`watchlist` et `my-events`, décrite au § 7.2.
+
+Le reste des métriques est sain : FCP 1,7 s, Speed Index 1,7 s, CLS 0,006, TBT 100 ms, aucune tâche
+longue au-delà de 50 ms. Une seule métrique coule la page, et c'est toujours le LCP.
+
+**Piste à explorer en premier** : `MoviePreviewRow.module.css` perd 18 lignes et
+`HomePage.module.css` 10 dans ce diff. Si la rangée d'affiches a été réduite, masquée ou déplacée
+sous la ligne de flottaison, l'élément le plus grand devient le bloc de texte au-dessus — et le LCP
+bascule du réseau vers l'exécution. Vérifier quel élément Lighthouse désigne désormais comme LCP
+avant de changer quoi que ce soit.
+
+**Conséquence pour `master`** : son run sur `d7c3e7e` est passé, mais le même code mesure 83 chez
+moi pour un plancher de 85. `master` va rougir sur `home` au premier échantillon défavorable — et
+cette fois sur la page publique indexée, pas sur une vue authentifiée.
