@@ -180,9 +180,12 @@ gratuit ne fournit pas de snapshot — et sur l'absence totale de mécanisme dan
 
 ---
 
-## 7. La porte Lighthouse bloque `master` — diagnostic et état
+## 7. La porte Lighthouse a bloqué `master` : diagnostic, correctif, reliquat
 
-> Ajouté le **2026-09-08**. C'est le sujet ouvert le plus urgent de ce document.
+> Ajouté le **2026-09-08**, clos le jour même au § 7.8. Les § 7.1 à 7.7 racontent l'enquête dans
+> l'ordre où elle a été menée et gardent leur valeur : ils disent ce qui a été essayé, ce qui n'a
+> rien donné et pourquoi. Le § 7.8 porte le geste qui a débloqué la porte et les trois conditions
+> qui le font tenir.
 
 ### 7.1 Ce qui se passe
 
@@ -389,4 +392,47 @@ réglage de build.
 (`moviepicker-locale`), la liste des langues et la règle de détection, parce que la configuration de
 build ne peut pas importer `src/`. Si `preferredLocale()` change, changer aussi
 `activeLocalePreloadScript` dans `apps/web/vite.config.ts`.
+
+### 7.8 Le mur franchi : la coquille de démarrage, mesurée le 2026-09-08
+
+Le § 7.7 concluait que le seul levier restant portait sur le fait que le plus grand élément de la
+page n'existe qu'après le montage de React. C'est ce levier qui a été pris, dans sa version la plus
+petite qui suffise : **le titre de la page d'accueil est écrit dans `apps/web/index.html`**, à
+l'intérieur de l'écran de démarrage, et seulement quand la page ouverte est `/`.
+
+```
+home — performance, médiane de 5 passages, mesure locale
+  avant   80        LCP 4,2 s
+  après   95        LCP 2,3 s        CLS 0,001 (inchangé)
+```
+
+Le mécanisme tient en une phrase : le plus grand élément peint n'attend plus le bundle. Trois points
+le font tenir, et casser l'un des trois annule le gain sans rien signaler.
+
+1. **L'écran de démarrage couvre toute la page.** Il est `position: fixed; inset: 0` avec un fond
+   opaque, et il n'est retiré qu'après `createRoot().render()`. Rien de ce qui est peint dessous ne
+   peut compter comme LCP tant qu'il est là : c'est pour cette raison que peindre le titre *dans*
+   l'écran de démarrage fonctionne, alors que le précharger n'avait rien donné.
+2. **La boîte du titre de la coquille doit rester au moins aussi grande que celle du `<h1>` réel.**
+   Chrome ne remplace un candidat LCP que par un candidat *plus grand*. Mesuré dans le navigateur,
+   même police calculée pour les deux (`700 32px / 51.2px Overpass`), hauteur identique de 51 px, et
+   520 px de large pour la coquille contre 488 px pour le `<h1>` : le titre rendu par React n'est
+   jamais un nouveau candidat. Toucher à `font-size`, `line-height`, `max-width` ou au texte lui-même
+   d'un seul des deux côtés fait repasser le LCP après le montage, **sans erreur ni avertissement**.
+3. **La feuille de style de l'entrée est bloquante dans le `<head>`.** Overpass est donc déjà
+   déclarée quand la coquille est peinte : pas de substitution de police tardive, qui changerait la
+   taille de la boîte et créerait un nouveau candidat.
+
+Le texte du titre est **dupliqué** dans `index.html`, comme l'est déjà la règle de détection de
+langue. `apps/web/src/startShell.test.ts` compare les deux chaînes en dur à `fr.home.title` et
+`en.home.title` et échoue si l'une dérive. La détection de langue de l'écran de démarrage reprend
+`preferredLocale()` : même clé de stockage, même règle `en` sinon `fr`. Le test le vérifie aussi.
+
+Effet de bord utile : `<html lang>` était figé à `fr` dans le fichier et n'était corrigé qu'au
+montage de React. Il porte maintenant la langue réelle dès la première peinture.
+
+**Ce qui n'a pas été fait**, et reste ouvert : la page d'accueil est la seule à recevoir sa coquille.
+`watchlist` (81) et `my-events` (86) tiennent sur des seuils par page abaissés, et leur LCP reste du
+DOM rendu par React. Le même geste leur est applicable, à ceci près qu'elles sont authentifiées et
+que leur plus grand élément dépend des données : il faudrait peindre un squelette, pas un titre.
 

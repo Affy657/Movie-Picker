@@ -19,6 +19,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 - **Déploiement API validé avant exposition** : chaque révision est déployée sans trafic, éprouvée sur son URL taguée, et n'est promue qu'une fois ses sondes vertes. Une révision défaillante n'atteint plus aucun utilisateur, là où le trafic basculait auparavant avant toute vérification.
 - L'image de l'API est déployée par digest et non plus par tag : la révision en production désigne exactement les octets scannés par Trivy.
 - Les vérifications de fin de déploiement couvrent aussi les domaines publics de l'API et du front, et non plus seulement les URL internes.
+- **Démarrage de la page d'accueil deux fois plus rapide** : son titre est désormais peint dès le HTML initial au lieu d'attendre le montage de React. Le plus grand élément de la page s'affiche en 2,3 s au lieu de 4,2 s (score Lighthouse 80 puis 95, médiane de 5 passages), ce qui remet la porte de performance au vert et débloque le déploiement du front.
+- Le front ne charge plus que la langue affichée : la langue inactive, environ 93 Ko, quitte le chemin de démarrage.
+- Les icônes sont regroupées en un seul fichier au lieu d'une quarantaine : autant d'allers-retours réseau en moins avant le premier rendu.
+- `<html lang>` porte la langue réelle du visiteur dès la première peinture, au lieu d'être corrigé après le montage de React.
 
 ## [1.5.0] - 2026-09-07
 
