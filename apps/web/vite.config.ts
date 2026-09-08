@@ -100,8 +100,6 @@ const APP_SHELL_CHUNK = /(?:^|\/)App-[\w-]+\.js$/;
 const APP_SHELL_STYLES = /(?:^|\/)App-[\w-]+\.css$/;
 const I18N_CHUNK = /(?:^|\/)i18n-[\w-]+\.js$/;
 
-const I18N_LAYER = /[\\/]src[\\/]shared[\\/]i18n[\\/]/;
-const SHARED_LAYER = /[\\/]src[\\/]shared[\\/]/;
 const REACT_VENDOR = /[\\/](react|react-dom|react-router|scheduler)[\\/]/;
 const ICON_VENDOR = /[\\/]lucide-react[\\/]/;
 const VENDORS_LOADED_ON_DEMAND = /[\\/](@sentry|posthog-js|canvas-confetti|react-qr-code)[\\/]/;
@@ -263,11 +261,7 @@ export default defineConfig(({ mode }) => {
           assetFileNames: 'assets/[name]-[hash][extname]',
           experimentalMinChunkSize: CHUNK_SIZE_NOT_WORTH_A_ROUND_TRIP,
           manualChunks(id) {
-            if (!id.includes('node_modules')) {
-              if (I18N_LAYER.test(id)) return 'i18n';
-              if (SHARED_LAYER.test(id)) return 'shared';
-              return undefined;
-            }
+            if (!id.includes('node_modules')) return undefined;
             if (VENDORS_LOADED_ON_DEMAND.test(id)) return undefined;
             if (REACT_VENDOR.test(id)) return 'react-vendor';
             if (id.includes('@tanstack')) return 'query-vendor';
