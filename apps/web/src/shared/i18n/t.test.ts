@@ -77,4 +77,16 @@ describe('t (i18n)', () => {
       expect(t(badKey, undefined, 'en')).toBe('nonexistent.key');
     });
   });
+
+  describe('résilience du registre', () => {
+    it('retourne la clé brute quand elle désigne un groupe et non une chaîne', () => {
+      const groupKey = 'common' as Parameters<typeof t>[0];
+      expect(t(groupKey)).toBe('common');
+    });
+
+    it('se replie sur une langue chargée quand la langue demandée est absente', () => {
+      const unknownLocale = 'de' as Parameters<typeof t>[2];
+      expect(t('common.loading', undefined, unknownLocale)).toBe('Chargement\u2026');
+    });
+  });
 });
