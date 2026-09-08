@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { fr, en } from './locales';
+import { fr } from './locales/fr';
+import { en } from './locales/en';
 
 function flatten(node: unknown, prefix = ''): Array<[string, unknown]> {
   if (typeof node !== 'object' || node === null) return [[prefix, node]];

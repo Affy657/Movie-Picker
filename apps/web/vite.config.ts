@@ -98,7 +98,34 @@ const CRITICAL_FONT_BASES = [
 
 const APP_SHELL_CHUNK = /(?:^|\/)App-[\w-]+\.js$/;
 const APP_SHELL_STYLES = /(?:^|\/)App-[\w-]+\.css$/;
-const I18N_CHUNK = /(?:^|\/)i18n-[\w-]+\.js$/;
+
+const LOCALE_MODULE = /[\\/]shared[\\/]i18n[\\/]locales[\\/](fr|en)\.ts$/;
+const LOCALE_CODES = ['fr', 'en'] as const;
+const LOCALE_STORAGE_KEY = 'moviepicker-locale';
+const DEFAULT_LOCALE = 'fr';
+
+function localeChunkByCode(files: ReadonlyArray<string>): Record<string, string> {
+  const found: Record<string, string> = {};
+  for (const code of LOCALE_CODES) {
+    const chunk = files.find((file) => new RegExp(`(?:^|/)i18n-${code}-[\\w-]+\\.js$`).test(file));
+    if (chunk) found[code] = chunk;
+  }
+  return found;
+}
+
+function activeLocalePreloadScript(chunkByCode: Record<string, string>): string {
+  return [
+    '(function(){try{',
+    `var c=${JSON.stringify(chunkByCode)};`,
+    `var s=localStorage.getItem(${JSON.stringify(LOCALE_STORAGE_KEY)});`,
+    "var l=c[s]?s:((navigator.language||'').toLowerCase().indexOf('en')===0?'en':",
+    `${JSON.stringify(DEFAULT_LOCALE)});`,
+    'var h=c[l];if(!h)return;',
+    "var e=document.createElement('link');e.rel='modulepreload';e.crossOrigin='';",
+    "e.href='/'+h;document.head.appendChild(e);",
+    '}catch(_){}})()',
+  ].join('');
+}
 
 const REACT_VENDOR = /[\\/](react|react-dom|react-router|scheduler)[\\/]/;
 const ICON_VENDOR = /[\\/]lucide-react[\\/]/;
@@ -146,11 +173,11 @@ function preloadCriticalAssetsPlugin(): Plugin {
         });
       }
 
-      const i18nChunk = files.find((file) => I18N_CHUNK.test(file));
-      if (i18nChunk) {
+      const chunkByLocale = localeChunkByCode(files);
+      if (Object.keys(chunkByLocale).length > 0) {
         tags.push({
-          tag: 'link',
-          attrs: { rel: 'modulepreload', crossorigin: '', href: '/' + i18nChunk },
+          tag: 'script',
+          children: activeLocalePreloadScript(chunkByLocale),
           injectTo: 'head-prepend',
         });
       }
@@ -261,6 +288,8 @@ export default defineConfig(({ mode }) => {
           assetFileNames: 'assets/[name]-[hash][extname]',
           experimentalMinChunkSize: CHUNK_SIZE_NOT_WORTH_A_ROUND_TRIP,
           manualChunks(id) {
+            const localeModule = LOCALE_MODULE.exec(id);
+            if (localeModule) return `i18n-${localeModule[1]}`;
             if (!id.includes('node_modules')) return undefined;
             if (VENDORS_LOADED_ON_DEMAND.test(id)) return undefined;
             if (REACT_VENDOR.test(id)) return 'react-vendor';

@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { isLocaleCode, type LocaleCode } from './locales';
+import { isLocaleCode, loadLocale, loadedLocale, type Locale, type LocaleCode } from './locales';
 
 const STORAGE_KEY = 'moviepicker-locale';
 
@@ -16,6 +16,7 @@ type LocaleContextValue = {
   setLocale: (code: LocaleCode) => void;
 
   tmdbLanguage: string;
+  translations: Locale | undefined;
 };
 
 const TMDB_LANGUAGE_MAP: Record<LocaleCode, string> = {
@@ -32,7 +33,7 @@ function detectBrowserLocale(): LocaleCode {
   return 'fr';
 }
 
-function readStoredLocale(): LocaleCode {
+export function preferredLocale(): LocaleCode {
   if (globalThis.window === undefined) return 'fr';
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -48,7 +49,10 @@ function persistLocale(code: LocaleCode): void {
 }
 
 export function LocaleProvider({ children }: Readonly<{ children: ReactNode }>) {
-  const [localeState, setLocaleState] = useState<LocaleCode>(readStoredLocale);
+  const [localeState, setLocaleState] = useState<LocaleCode>(preferredLocale);
+  const [translations, setTranslations] = useState<Locale | undefined>(() =>
+    loadedLocale(localeState)
+  );
 
   const setLocale = useCallback((code: LocaleCode) => {
     setLocaleState(code);
@@ -59,11 +63,26 @@ export function LocaleProvider({ children }: Readonly<{ children: ReactNode }>) 
     document.documentElement.lang = localeState;
   }, [localeState]);
 
+  useEffect(() => {
+    const alreadyLoaded = loadedLocale(localeState);
+    if (alreadyLoaded) {
+      setTranslations(alreadyLoaded);
+      return;
+    }
+    let stillWanted = true;
+    void loadLocale(localeState).then(() => {
+      if (stillWanted) setTranslations(loadedLocale(localeState));
+    });
+    return () => {
+      stillWanted = false;
+    };
+  }, [localeState]);
+
   const tmdbLanguage = TMDB_LANGUAGE_MAP[localeState];
 
   const value = useMemo<LocaleContextValue>(
-    () => ({ locale: localeState, setLocale, tmdbLanguage }),
-    [localeState, setLocale, tmdbLanguage]
+    () => ({ locale: localeState, setLocale, tmdbLanguage, translations }),
+    [localeState, setLocale, tmdbLanguage, translations]
   );
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
