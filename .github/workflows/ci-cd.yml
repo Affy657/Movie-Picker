@@ -82,10 +82,12 @@ jobs:
               - 'e2e/**'
               - 'scripts/**'
               - '.github/workflows/ci-cd.yml'
+              - '.github/actions/**'
             api:
               - 'apps/api-dotnet/**'
               - 'scripts/**'
               - '.github/workflows/ci-cd.yml'
+              - '.github/actions/**'
 
   gitleaks:
     name: Secret scan (Gitleaks)
@@ -263,7 +265,7 @@ jobs:
             --results-directory ./coverage-unit
         env:
           MONGODB_URI: ""
-      - name: Gate couverture back (lignes >= 80%)
+      - name: Gate couverture back (lignes >= 90%, branches >= 78%)
         run: |
           set -eo pipefail
           report="$(find ./coverage-unit -name coverage.opencover.xml | head -1)"
@@ -271,14 +273,20 @@ jobs:
             echo "::error::Rapport de couverture OpenCover introuvable"
             exit 1
           fi
-          cov="$(grep -m1 -o 'sequenceCoverage="[0-9.]*"' "$report" | grep -o '[0-9.]*')"
-          echo "Couverture lignes back : ${cov}% (seuil 80%)"
-          if awk -v c="$cov" 'BEGIN { exit !(c + 0 >= 80) }'; then
-            echo "OK : couverture back suffisante"
-          else
-            echo "::error::Couverture back ${cov}% < 80% requis"
-            exit 1
+          fail=0
+          seq="$(grep -m1 -o 'sequenceCoverage="[0-9.]*"' "$report" | grep -o '[0-9.]*')"
+          branch="$(grep -m1 -o 'branchCoverage="[0-9.]*"' "$report" | grep -o '[0-9.]*')"
+          echo "Couverture lignes back   : ${seq}% (seuil 90%)"
+          echo "Couverture branches back : ${branch}% (seuil 78%)"
+          if ! awk -v c="$seq" 'BEGIN { exit !(c + 0 >= 90) }'; then
+            echo "::error::Couverture lignes back ${seq}% < 90% requis"
+            fail=1
           fi
+          if ! awk -v c="$branch" 'BEGIN { exit !(c + 0 >= 78) }'; then
+            echo "::error::Couverture branches back ${branch}% < 78% requis"
+            fail=1
+          fi
+          exit $fail
       - name: Tests intégration
         run: dotnet test apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj -c Debug --verbosity normal
         env:
@@ -373,6 +381,55 @@ jobs:
           name: playwright-traces
           path: test-results
           # Playwright n'écrit test-results/ qu'en cas d'échec/retry ; vide sur run vert = normal.
+          if-no-files-found: ignore
+          retention-days: 7
+
+  e2e-mongo:
+    # Seul job qui joue la pile complète : navigateur réel + API branchée sur un vrai MongoDB.
+    # Le job e2e tourne sur la base mémoire, test-api-mongo tourne sans navigateur : sans celui-ci,
+    # la combinaison qui tourne en production n'est reproduite nulle part avant le déploiement.
+    name: E2E parcours critique sur MongoDB réel (bloquant)
+    needs: changes
+    if: needs.changes.outputs.web == 'true' || needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-web
+      - uses: ./.github/actions/setup-dotnet-cache
+      - name: Démarrer MongoDB en replica set (transactions)
+        run: |
+          set -eo pipefail
+          docker run -d --name mongo-e2e -p 27017:27017 mongo:8 --replSet rs0 --bind_ip_all
+          for i in $(seq 1 30); do
+            if docker exec mongo-e2e mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' >/dev/null 2>&1; then
+              break
+            fi
+            sleep 2
+          done
+          docker exec mongo-e2e mongosh --quiet --eval 'rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "127.0.0.1:27017" }] })'
+          for i in $(seq 1 30); do
+            if [ "$(docker exec mongo-e2e mongosh --quiet --eval 'db.hello().isWritablePrimary')" = "true" ]; then
+              break
+            fi
+            sleep 2
+          done
+      - name: Installer le navigateur Playwright
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Parcours critique (front buildé + API sur MongoDB + Playwright)
+        run: pnpm run test:e2e:mongo
+        env:
+          # Base dédiée : le garde-fou Development refuse la base 'moviepicker'.
+          E2E_MONGODB_URI: mongodb://127.0.0.1:27017/moviepicker_e2e?directConnection=true
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always()
+        with:
+          name: playwright-traces-mongo
+          path: test-results
           if-no-files-found: ignore
           retention-days: 7
 
@@ -642,12 +699,13 @@ jobs:
     name: Deploy API → Cloud Run
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    needs: [docker-api, e2e, sonar]
+    needs: [docker-api, e2e, e2e-mongo, sonar]
     if: >-
       always() &&
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master' &&
       needs.docker-api.result == 'success' &&
       needs.e2e.result == 'success' &&
+      needs.e2e-mongo.result == 'success' &&
       (needs.sonar.result == 'success' ||
       (github.event_name == 'workflow_dispatch' && needs.sonar.result == 'skipped'))
     environment: production
@@ -764,7 +822,7 @@ jobs:
     name: Deploy Front → S3 & CloudFront
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    needs: [changes, gitleaks, lint-web, test-web, audit, lighthouse, e2e, sonar]
+    needs: [changes, gitleaks, lint-web, test-web, audit, lighthouse, e2e, e2e-mongo, sonar]
     if: >-
       always() &&
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master' &&
@@ -776,6 +834,7 @@ jobs:
       needs.audit.result == 'success' &&
       needs.lighthouse.result == 'success' &&
       needs.e2e.result == 'success' &&
+      needs.e2e-mongo.result == 'success' &&
       (needs.sonar.result == 'success' ||
       (github.event_name == 'workflow_dispatch' && needs.sonar.result == 'skipped'))
     environment: production

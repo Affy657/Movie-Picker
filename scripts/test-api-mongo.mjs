@@ -5,10 +5,14 @@ import { resolve } from 'node:path';
 const root = resolve(import.meta.dirname, '..');
 const container = 'movie-picker-mongo-test';
 const port = process.env.MONGO_TEST_PORT ?? '27018';
-const shell = process.platform === 'win32';
+// Pas de `shell: true` sous Windows : cmd.exe retire les guillemets internes de --eval,
+// ce qui casse le script mongosh de rs.initiate. On vise directement l'exécutable.
+const onWindows = process.platform === 'win32';
+const dockerBin = onWindows ? 'docker.exe' : 'docker';
+const dotnetBin = onWindows ? 'dotnet.exe' : 'dotnet';
 
 const docker = (args, options = {}) =>
-  execFileSync('docker', args, { stdio: options.quiet ? 'pipe' : 'inherit', shell, ...options });
+  execFileSync(dockerBin, args, { stdio: options.quiet ? 'pipe' : 'inherit', ...options });
 
 const alreadyRunning = () =>
   docker(['ps', '--filter', `name=${container}`, '--format', '{{.Names}}'], { quiet: true })
@@ -50,7 +54,7 @@ if (!alreadyRunning()) {
 }
 
 const result = spawnSync(
-  'dotnet',
+  dotnetBin,
   [
     'test',
     'apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj',
@@ -60,7 +64,6 @@ const result = spawnSync(
   {
     cwd: root,
     stdio: 'inherit',
-    shell,
     env: {
       ...process.env,
       MONGODB_URI: '',

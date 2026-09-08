@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/stryker-mutator/stryker-net/master/src/Stryker.Core/Stryker.Core/Schemas/stryker-config.json",
+  "stryker-config": {
+    "project": "MoviePicker.Api.csproj",
+    "test-projects": ["MoviePicker.Api.Tests/MoviePicker.Api.Tests.csproj"],
+    "mutate": [
+      "**/Domain/**/*.cs",
+      "**/Application/UseCases/**/*.cs",
+      "!**/*.g.cs",
+      "!**/obj/**",
+      "!**/*Request.cs",
+      "!**/*Response.cs"
+    ],
+    "reporters": ["html", "progress", "json"],
+    "thresholds": { "high": 80, "low": 65, "break": 0 },
+    "concurrency": 4,
+    "coverage-analysis": "perTest"
+  }
+}

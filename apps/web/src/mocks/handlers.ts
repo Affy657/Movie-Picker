@@ -1,4 +1,11 @@
 import { http, HttpResponse } from 'msw';
+import type { components } from '@/shared/api/generated/openapiSchema';
+
+type Schemas = components['schemas'];
+
+type EventDetailPayload = Omit<Schemas['EventDetailResponse'], 'winnerMovie'> & {
+  winnerMovie: Schemas['WinnerMovieResponse'] | null;
+};
 
 export const TEST_API_BASE = 'http://127.0.0.1:3999';
 
@@ -15,7 +22,7 @@ export interface MockEventOptions {
   title?: string;
   isFinished?: boolean;
   lifecycle?: string;
-  winnerMovie?: unknown;
+  winnerMovie?: Schemas['WinnerMovieResponse'];
 
   theme?: string | null;
 }
@@ -27,7 +34,7 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
   return [
     http.get(`${V1}/events/slug/${slug}`, ({ request }) => {
       const host = new URL(request.url).searchParams.get('host');
-      return HttpResponse.json({
+      const body: EventDetailPayload = {
         _id: 'evt-msw',
         title,
         date: '2030-12-15',
@@ -50,23 +57,24 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
           maxParticipants: null,
           wheelMode: 'strictRandom',
         },
-      });
+      };
+      return HttpResponse.json(body);
     }),
-    http.get(`${V1}/events/${slug}/movies`, () => HttpResponse.json([])),
+    http.get(`${V1}/events/${slug}/movies`, () =>
+      HttpResponse.json([] satisfies Schemas['MovieWithScoreResponse'][])
+    ),
   ];
 }
 
 export function createJoinHandler(slug: string) {
-  return http.post(`${V1}/events/${slug}/join`, async () =>
-    HttpResponse.json(
-      {
-        participant: { _id: 'p-msw-1', eventId: 'evt-msw', pseudo: 'Alice' },
-        isNew: true,
-        message: '',
-      },
-      { status: 201 }
-    )
-  );
+  return http.post(`${V1}/events/${slug}/join`, async () => {
+    const body: Schemas['JoinEventResult'] = {
+      participant: { _id: 'p-msw-1', eventId: 'evt-msw', pseudo: 'Alice' },
+      isNew: true,
+      message: '',
+    };
+    return HttpResponse.json(body, { status: 201 });
+  });
 }
 
 export interface MockUserStats {
@@ -78,13 +86,13 @@ export interface MockUserStats {
   moviesSeen?: number;
   currentStreakWeeks?: number;
   bestStreakWeeks?: number;
-  favoriteGenres?: { genreId: number; count: number }[];
-  dailyActivity?: { date: string; count: number }[];
+  favoriteGenres?: Schemas['GenreCount'][];
+  dailyActivity?: Schemas['DailyActivityPoint'][];
 }
 
 export function createUserStatsHandler(handle: string, stats?: MockUserStats) {
-  return http.get(`${V1}/users/${handle}/stats`, () =>
-    HttpResponse.json({
+  return http.get(`${V1}/users/${handle}/stats`, () => {
+    const body: Schemas['UserStatsResponse'] = {
       eventsCreated: stats?.eventsCreated ?? 0,
       eventsJoined: stats?.eventsJoined ?? 0,
       moviesProposed: stats?.moviesProposed ?? 0,
@@ -95,14 +103,15 @@ export function createUserStatsHandler(handle: string, stats?: MockUserStats) {
       bestStreakWeeks: stats?.bestStreakWeeks ?? 0,
       favoriteGenres: stats?.favoriteGenres ?? [],
       dailyActivity: stats?.dailyActivity ?? [],
-    })
-  );
+    };
+    return HttpResponse.json(body);
+  });
 }
 
 export function createSearchAndAddHandlers(slug: string) {
   return [
-    http.get(`${V1}/movies/search`, () =>
-      HttpResponse.json({
+    http.get(`${V1}/movies/search`, () => {
+      const body: Schemas['MovieSearchListResponse'] = {
         items: [
           {
             id: 100,
@@ -121,10 +130,12 @@ export function createSearchAndAddHandlers(slug: string) {
         disclaimer:
           'Les notes et les offres de visionnage (streaming / VOD) sont indicatives, issues de The Movie Database (TMDB). Les services disponibles peuvent varier.',
         tmdbAttributionUrl: 'https://www.themoviedb.org/',
-      })
-    ),
-    http.post(`${V1}/events/${slug}/movies`, async () =>
-      HttpResponse.json({ _id: 'm-new', title: 'Film Test' }, { status: 201 })
-    ),
+      };
+      return HttpResponse.json(body);
+    }),
+    http.post(`${V1}/events/${slug}/movies`, async () => {
+      const body: Schemas['MovieWithScoreResponse'] = { _id: 'm-new', title: 'Film Test' };
+      return HttpResponse.json(body, { status: 201 });
+    }),
   ];
 }
