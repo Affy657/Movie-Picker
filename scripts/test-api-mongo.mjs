@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { execFileSync, spawnSync } from 'node:child_process';
+import { rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
@@ -53,6 +54,9 @@ if (!alreadyRunning()) {
   ]);
 }
 
+const coverageDirectory = 'coverage-mongo';
+rmSync(resolve(root, coverageDirectory), { recursive: true, force: true });
+
 const result = spawnSync(
   dotnetBin,
   [
@@ -60,6 +64,11 @@ const result = spawnSync(
     'apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj',
     '-c',
     'Debug',
+    '--collect:XPlat Code Coverage',
+    '--settings',
+    'apps/api-dotnet/coverlet.integration.runsettings',
+    '--results-directory',
+    coverageDirectory,
   ],
   {
     cwd: root,
@@ -72,4 +81,11 @@ const result = spawnSync(
   }
 );
 
-process.exit(result.status ?? 1);
+if (result.status !== 0) process.exit(result.status ?? 1);
+
+const gate = spawnSync(process.execPath, ['scripts/check-mongo-coverage.mjs', coverageDirectory], {
+  cwd: root,
+  stdio: 'inherit',
+});
+
+process.exit(gate.status ?? 1);

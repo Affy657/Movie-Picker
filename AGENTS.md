@@ -69,7 +69,9 @@ Pour toute nouvelle barre sticky dont le contenu change de hauteur :
 
 `pnpm run check:architecture` (premier pas de `verify:local`, rejoué au pre-push et dans le job `lint-web`) échoue sur : un commentaire hors directive fonctionnelle, un `using` interdit dans `Domain/`, `Application/` ou `Controllers/`, un import de `shared/` vers une feature, un cycle d'imports côté front.
 
-`pnpm run test:api:mongo` rejoue la suite d'intégration API contre une vraie MongoDB en replica set (conteneur Docker créé à la volée, base jetable par classe de test) : c'est le seul chemin qui exécute les adaptateurs Mongo et les transactions. La CI le rejoue dans le job `test-api-mongo`, dont dépend le déploiement API.
+`pnpm run test:api:mongo` rejoue la suite d'intégration API contre une vraie MongoDB en replica set (conteneur Docker créé à la volée, base jetable par classe de test) : c'est le seul chemin qui exécute les adaptateurs Mongo et les transactions. La CI le rejoue dans le job `test-api-mongo`, dont dépend le déploiement API. Il collecte sa propre couverture (`apps/api-dotnet/coverlet.integration.runsettings`) et `scripts/check-mongo-coverage.mjs` la contrôle sur le seul espace de noms `Infrastructure.Persistence.Mongo` : ces classes sont exclues du rapport du job `test-api`, donc sans cette porte la couche qui ne tourne qu'en production ne serait mesurée nulle part.
+
+`MongoIndexInventoryTests` compare les index réellement créés à la liste attendue (nom, unicité, TTL). Trois garanties n'existent que dans ces index : l'expiration des compteurs de rate limiting, celle des sessions et celle des jetons de réinitialisation. Ajouter un index dans `MongoIndexInitializer` sans l'ajouter à cette liste fait échouer le test — c'est voulu. `MongoDuplicateKeyMappingTests` couvre l'autre moitié : `MongoUserRepository` distingue les conflits en cherchant le nom de l'index dans le message d'erreur Mongo, donc un renommage change le code d'erreur rendu au front.
 
 `pnpm run test:e2e:mongo` rejoue le seul parcours critique Playwright contre l'API branchée sur un vrai MongoDB (variable `E2E_MONGODB_URI`, base dédiée `moviepicker_e2e` : le garde-fou Development refuse la base `moviepicker`). La CI le rejoue dans le job `e2e-mongo`, bloquant pour les deux déploiements. C'est le seul endroit où navigateur réel et base réelle tournent ensemble : `e2e` tourne sur la base mémoire, `test-api-mongo` tourne sans navigateur.
 
@@ -77,7 +79,7 @@ Pour toute nouvelle barre sticky dont le contenu change de hauteur :
 
 `pnpm run test:api:mutation` lance une passe Stryker.NET sur `Domain/` et `Application/UseCases/` (rapport HTML dans `artifacts/stryker`). Hors CI : c'est un outil de diagnostic, à lancer quand on veut savoir si les tests d'une zone vérifient vraiment quelque chose, pas seulement si elle est exécutée.
 
-Seuils de couverture, à relever quand ils décrochent du réel : front `statements 84 / lines 86 / functions 81 / branches 77` (`apps/web/vitest.config.ts`), API `lignes 90 / branches 78` (job `test-api`).
+Seuils de couverture, à relever quand ils décrochent du réel : front `statements 84 / lines 86 / functions 81 / branches 77` (`apps/web/vitest.config.ts`), API `lignes 90 / branches 78` (job `test-api`), adaptateurs Mongo `lignes 86 / branches 58` (`scripts/check-mongo-coverage.mjs`, job `test-api-mongo`).
 
 ## Migrations de données
 

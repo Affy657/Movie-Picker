@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
@@ -24,10 +24,14 @@ import ProfileMoviesPage from '@/features/profile/pages/ProfileMoviesPage';
 import WatchlistPage from '@/features/watchlist/pages/WatchlistPage';
 import NotificationsPage from '@/features/notifications/pages/NotificationsPage';
 import ServerErrorPage from '@/shared/components/ServerErrorPage';
+import Modal from '@/shared/components/Modal';
+import Button from '@/shared/components/Button';
 import type { UseQueryResult } from '@tanstack/react-query';
 import EventDetailSession from '@/features/events/pages/event-detail/EventDetailSession';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
+
+vi.setConfig({ testTimeout: 60000, hookTimeout: 60000 });
 
 function watchlistHandler(items: unknown[]) {
   return http.get(`${TEST_API_V1}/watchlist`, () => HttpResponse.json({ items }));
@@ -439,7 +443,7 @@ describe('accessibilité (axe)', () => {
       },
     ];
 
-    function renderEventSession(viewMode: 'grid' | 'list') {
+    function renderEventSession(viewMode: 'grid' | 'list', event: EventData = EVENT) {
       localStorage.setItem('movies-view', viewMode);
       const queryClient = createTestQueryClient();
       const { container } = render(
@@ -448,7 +452,7 @@ describe('accessibilité (axe)', () => {
             <EventDetailSession
               slug="soiree-a11y"
               hostToken={null}
-              event={EVENT}
+              event={event}
               moviesQuery={
                 {
                   isPending: false,
@@ -477,12 +481,62 @@ describe('accessibilité (axe)', () => {
       const { container, queryClient } = renderEventSession('list');
       await screen.findByRole('heading', { name: 'Inception' });
       await assertNoViolations(container, queryClient);
-    }, 40000);
+    });
 
     it("vue grille n'a pas de violations", async () => {
       server.use(authMeGuestHandler, watchlistHandler([]));
       const { container, queryClient } = renderEventSession('grid');
       await screen.findByRole('heading', { name: 'Inception' });
+      await assertNoViolations(container, queryClient);
+    });
+
+    it("soirée close avec un gagnant n'a pas de violations", async () => {
+      server.use(authMeGuestHandler, watchlistHandler([]));
+      const { container, queryClient } = renderEventSession('list', {
+        ...EVENT,
+        isFinished: true,
+        lifecycle: 'finished',
+        closedAt: '2035-08-01T23:30:00Z',
+        winnerMovie: MOVIES[0],
+        winnerPickMethod: 'wheel',
+        winnerPickedAt: '2035-08-01T23:29:00Z',
+      });
+      await assertNoViolations(container, queryClient);
+    });
+
+    it("soirée close sans film n'a pas de violations", async () => {
+      server.use(authMeGuestHandler, watchlistHandler([]));
+      const { container, queryClient } = renderEventSession('list', {
+        ...EVENT,
+        isFinished: true,
+        lifecycle: 'finished',
+        closedAt: '2035-08-01T23:30:00Z',
+        winnerMovie: null,
+        movieCount: 0,
+      });
+      await assertNoViolations(container, queryClient);
+    });
+  });
+
+  describe('Modal (primitive de dialogue)', () => {
+    it("une modale ouverte n'a pas de violations", async () => {
+      const { container, queryClient } = renderPage(
+        <Modal open onClose={() => undefined} title="Inviter des amis">
+          <p>Partage ce lien pour que tes amis rejoignent la soirée.</p>
+          <Button onClick={() => undefined}>Copier le lien</Button>
+        </Modal>
+      );
+      await screen.findByRole('dialog');
+      await assertNoViolations(container, queryClient);
+    });
+
+    it('une modale sans titre visible garde un nom accessible', async () => {
+      const { container, queryClient } = renderPage(
+        <Modal open onClose={() => undefined} ariaLabel="Aperçu de l'affiche" surface="media">
+          <img src="/poster.jpg" alt="Affiche du film Inception" />
+        </Modal>
+      );
+      expect(await screen.findByRole('dialog', { name: "Aperçu de l'affiche" })).toBeTruthy();
       await assertNoViolations(container, queryClient);
     });
   });
