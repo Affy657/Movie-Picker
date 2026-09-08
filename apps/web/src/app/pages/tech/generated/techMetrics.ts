@@ -1,14 +1,14 @@
 // Généré par apps/web/scripts/generate-tech-metrics.mjs — ne pas éditer à la main.
 
 export const TECH_METRICS = {
-  linesOfCode: 131000,
+  linesOfCode: 134000,
   endpoints: 74,
-  testFiles: 345,
+  testFiles: 358,
   webTestFiles: 161,
-  apiTestFiles: 184,
+  apiTestFiles: 197,
   e2eScenarios: 5,
-  ciJobs: 16,
-  commits: 887,
+  ciJobs: 17,
+  commits: 931,
   controllers: 15,
   ports: 29,
   useCases: 66,
@@ -18,9 +18,9 @@ export const TECH_METRICS = {
   a11yViews: 23,
   migrations: 3,
   architectureScriptLines: 260,
-  coverageLines: 82,
-  coverageFunctions: 76,
-  coverageBranches: 74,
+  coverageLines: 86,
+  coverageFunctions: 81,
+  coverageBranches: 77,
 } as const;
 
 export const TECH_METRICS_BUILD_DATE = '2026-09-08';

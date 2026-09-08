@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const apiMongoUri = process.env.E2E_MONGODB_URI ?? '';
+
 /** Prérequis local : `VITE_API_URL=http://127.0.0.1:5010 pnpm --filter web build` */
 export default defineConfig({
   testDir: './e2e',
@@ -23,8 +25,7 @@ export default defineConfig({
   // renvoie « temporairement indisponible » en CI (pas de clé), alors qu'en local une vraie clé masque le souci.
   webServer: [
     {
-      command:
-        'cross-env E2E_STUB_TMDB=1 E2E_STUB_LETTERBOXD=1 TMDB_API_KEY=e2e-stub MONGODB_URI= DevelopmentSeed__Enabled=false ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://127.0.0.1:5010 dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj --no-launch-profile',
+      command: `cross-env E2E_STUB_TMDB=1 E2E_STUB_LETTERBOXD=1 TMDB_API_KEY=e2e-stub MONGODB_URI=${apiMongoUri} DevelopmentSeed__Enabled=false ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://127.0.0.1:5010 dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj --no-launch-profile`,
       cwd: '.',
       url: 'http://127.0.0.1:5010/health',
       reuseExistingServer: !process.env.CI,
