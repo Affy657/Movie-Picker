@@ -113,16 +113,25 @@ function localeChunkByCode(files: ReadonlyArray<string>): Record<string, string>
   return found;
 }
 
-function activeLocalePreloadScript(chunkByCode: Record<string, string>): string {
+const LANDING_ROUTE_CHUNK = /(?:^|\/)HomePage-[\w-]+\.js$/;
+const LANDING_ROUTE_PATH = '/';
+
+function criticalPreloadScript(
+  chunkByLocale: Record<string, string>,
+  landingRouteChunk: string | undefined
+): string {
   return [
     '(function(){try{',
-    `var c=${JSON.stringify(chunkByCode)};`,
+    "var p=function(h){var e=document.createElement('link');e.rel='modulepreload';",
+    "e.crossOrigin='';e.href='/'+h;document.head.appendChild(e);};",
+    `var c=${JSON.stringify(chunkByLocale)};`,
     `var s=localStorage.getItem(${JSON.stringify(LOCALE_STORAGE_KEY)});`,
     "var l=c[s]?s:((navigator.language||'').toLowerCase().indexOf('en')===0?'en':",
     `${JSON.stringify(DEFAULT_LOCALE)});`,
-    'var h=c[l];if(!h)return;',
-    "var e=document.createElement('link');e.rel='modulepreload';e.crossOrigin='';",
-    "e.href='/'+h;document.head.appendChild(e);",
+    'if(c[l])p(c[l]);',
+    landingRouteChunk
+      ? `if(location.pathname===${JSON.stringify(LANDING_ROUTE_PATH)})p(${JSON.stringify(landingRouteChunk)});`
+      : '',
     '}catch(_){}})()',
   ].join('');
 }
@@ -174,10 +183,11 @@ function preloadCriticalAssetsPlugin(): Plugin {
       }
 
       const chunkByLocale = localeChunkByCode(files);
-      if (Object.keys(chunkByLocale).length > 0) {
+      const landingRouteChunk = files.find((file) => LANDING_ROUTE_CHUNK.test(file));
+      if (Object.keys(chunkByLocale).length > 0 || landingRouteChunk) {
         tags.push({
           tag: 'script',
-          children: activeLocalePreloadScript(chunkByLocale),
+          children: criticalPreloadScript(chunkByLocale, landingRouteChunk),
           injectTo: 'head-prepend',
         });
       }
