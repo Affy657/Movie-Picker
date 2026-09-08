@@ -3,8 +3,7 @@
 > Écrit le **2026-09-06** à l'attention de quiconque, humain ou agent, reprend ce travail.
 > Ce document est autonome : état constaté, décisions actées, gestes restants et façon de vérifier.
 >
-> **Deux gestes externes sont en attente** (§ 3). Tant qu'ils ne sont pas faits, la sauvegarde
-> échoue chaque nuit — volontairement bruyante plutôt que silencieusement inutile.
+> Les gestes d'installation sont faits (§ 3) et la sauvegarde a tourné en vrai le 2026-09-08 (§ 6).
 
 ---
 
@@ -12,11 +11,11 @@
 
 | | |
 |--|--|
-| **Branche** | `claude/terraform-feature-split-62jckg`, en avance sur `master` (`git log --oneline origin/master..HEAD`) |
-| **Pull request** | [#85](https://github.com/Affy657/Movie-Picker/pull/85) — ouverte, non fusionnée. Une PR fusionnée ne se réutilise pas : tout travail ultérieur repart de `master` |
+| **Branche** | `claude/terraform-feature-split-62jckg`, fusionnée dans `master` |
+| **Pull request** | [#85](https://github.com/Affy657/Movie-Picker/pull/85) — fusionnée le 2026-09-08 (`9fb24df`). Une PR fusionnée ne se réutilise pas : tout travail ultérieur repart de `master` |
 | **Contenu** | 2 commits de roadmap (découpage Terraform en 8 lots), 2 commits de CI/CD livrés, ce document |
-| **État CI** | jamais exécutée : les workflows modifiés ne tournent qu'une fois sur `master` ou en PR |
-| **Reste** | 2 gestes GCP (§ 3), puis un `workflow_dispatch` manuel de la sauvegarde |
+| **État CI** | verte, déploiements API et front passés (§ 6) |
+| **Reste** | rien sur ce chantier ; les 8 lots Terraform de [`roadmap-tech.md`](roadmap-tech.md) restent à ouvrir |
 
 Ce qui est **livré et vérifiable dans le dépôt** :
 
@@ -64,10 +63,23 @@ peut pas voir — régression constatée après coup, incident sans rapport avec
 
 ---
 
-## 3. Les deux gestes en attente — aucun agent ne peut les faire
+## 3. Les gestes d'installation : faits le 2026-09-08
 
-Aucun MCP GCP n'est disponible, et le MCP GitHub n'expose pas l'API des variables de dépôt. Ces
-commandes demandent un `gcloud` authentifié ; elles sont à passer à la main, une fois.
+Le bucket existe, la variable est posée, et la sauvegarde a tourné en vrai (§ 6). Rien ne reste à
+faire ici. Les commandes sont conservées telles quelles : elles disent ce qui a été appliqué, et
+servent de recette si le bucket doit être recréé ailleurs.
+
+```
+gs://movie-picker-backups   europe-west1, versioning actif, suppression à 30 jours,
+                            accès public interdit, accès uniforme au niveau du bucket
+vars.BACKUP_BUCKET          movie-picker-backups
+```
+
+Les deux liaisons IAM n'ont pas eu besoin d'être ajoutées : le compte de service de la CI
+(`353234044853-compute@developer.gserviceaccount.com`, le seul du projet) porte `roles/editor`, qui
+couvre déjà la lecture du secret et l'écriture dans le bucket, et la première exécution l'a confirmé.
+C'est aussi une dette : ce compte est bien trop large, et le jour où il sera réduit à son juste
+périmètre, ces deux liaisons deviendront nécessaires.
 
 ```bash
 gcloud storage buckets create gs://movie-picker-backups --location=europe-west1 \
@@ -85,8 +97,8 @@ gcloud storage buckets add-iam-policy-binding gs://movie-picker-backups \
 Puis GitHub → Settings → Secrets and variables → Actions → Variables :
 `BACKUP_BUCKET = movie-picker-backups`.
 
-**Ensuite, lancer `backup-mongo.yml` à la main** (`workflow_dispatch`) plutôt que d'attendre 02:31 UTC :
-c'est le seul moyen d'observer le cycle complet, qui n'a jamais tourné en vrai (§ 6).
+Le premier cycle a été lancé à la main (`workflow_dispatch`) plutôt qu'attendu à 02:31 UTC, pour
+l'observer en entier : il est passé (§ 6).
 
 Le bucket contient des données personnelles (adresses e-mail, empreintes de mots de passe) : accès
 public interdit, et l'archive n'est jamais publiée en artefact GitHub.
@@ -165,13 +177,18 @@ cheval sur un changement de mois, lecture `jq` de l'URL taguée sur ses cas limi
 de `ALLOWED_ORIGINS`, et le script de vérification de restauration rejoué sur base pleine / base
 parasite seule / base vide.
 
-**Ce qui n'a pas pu être testé**, et qu'il faut donc observer au premier run :
+**Ce qui n'avait pas pu être testé, et qui a tourné le 2026-09-08 :**
 
-- le cycle `mongodump` → envoi → relecture → `mongorestore` complet — pas de Docker ni d'accès Atlas
-  dans une session web ;
-- le comportement réel de `--no-traffic --tag` et de `--to-latest` sur le service — pas de `gcloud`
-  authentifié. En cas d'erreur, la chaîne **échoue en sécurité** : le déploiement rate et la
-  production reste sur la révision précédente.
+- le cycle `mongodump` → envoi → relecture → `mongorestore` : vert au premier essai
+  ([run 34264984104](https://github.com/Affy657/Movie-Picker/actions/runs/34264984104)). L'archive
+  publiée est `gs://movie-picker-backups/mongodb/2026/09/moviepicker-20260908T184618Z.archive.gz`,
+  44 Mo, restaurée dans une MongoDB jetable avant d'être publiée ;
+- `--no-traffic --tag` puis `--to-latest` : le déploiement de `9fb24df` est passé par ce chemin et a
+  promu la révision après ses sondes
+  ([run 34263545382](https://github.com/Affy657/Movie-Picker/actions/runs/34263545382)).
+
+En cas d'erreur, la chaîne **échoue en sécurité** : le déploiement rate et la production reste sur la
+révision précédente.
 
 Le tier du cluster Atlas n'a pas pu être confirmé non plus (accès MCP désactivé au niveau des
 organisations). La conclusion « aucune sauvegarde » repose sur la documentation MongoDB — le palier
