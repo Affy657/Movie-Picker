@@ -346,3 +346,47 @@ avant de changer quoi que ce soit.
 **Conséquence pour `master`** : son run sur `d7c3e7e` est passé, mais le même code mesure 83 chez
 moi pour un plancher de 85. `master` va rougir sur `home` au premier échantillon défavorable — et
 cette fois sur la page publique indexée, pas sur une vue authentifiée.
+
+### 7.7 Le LCP attaqué — ce qui a marché, ce qui n'a rien donné
+
+> Ajouté le **2026-09-08**, après avoir mesuré chaque levier séparément.
+
+**Un fait à connaître avant toute mesure : la porte évalue l'application EN ANGLAIS.** Le Chrome
+de Lighthouse annonce `navigator.language = en-US`, donc `detectBrowserLocale()` renvoie `'en'`.
+Vérifié en retrouvant `"What are we watching tonight?"` dans le rapport — chaîne qui n'existe que
+dans `en.ts` — et zéro chaîne française. Toute optimisation qui privilégie `fr` améliore l'expérience
+réelle sans bouger le score, et l'inverse est vrai aussi.
+
+| levier | effet mesuré | sort |
+|---|---|---|
+| Regrouper les 81 icônes `lucide-react` en un chunk | +2 sur `watchlist` et `my-events` | gardé |
+| Ne charger que la langue active (~93 Ko de moins partout) | +1 | gardé |
+| Regrouper la couche `shared/` | 0 point, et `register` sous son plancher | retiré |
+| Précharger le chunk de la route d'accueil sur `/` | 0 point | retiré |
+
+Les deux derniers ont été **retirés après mesure**. Le préchargement de route partait d'une
+hypothèse fausse : le LCP n'attend pas les 9 Ko du chunk, il attend React.
+
+**Le mur, chiffré.** Sur `home`, l'élément LCP est le `<h1>` de `HomePage`, lu dans le rapport :
+`div._content > main#main-content > div._opener > h1._title`. C'est du texte rendu par React, donc
+il ne peut pas exister avant que le framework ait monté. Et le coût de démarrage est là :
+
+```
+Script Evaluation            516 ms
+  dont react-vendor.js       665 ms de bootup   (220 Ko)
+LCP = TTFB 7 ms + element render delay 501 ms
+FCP 1,8 s (l'écran de démarrage)  →  LCP 4,2 s (le titre)
+```
+
+Aucun découpage de bundle ne franchit ce mur : les 185 Ko d'i18n retirés n'ont rendu qu'un point
+parce que c'étaient des **chaînes de caractères**, pas du code — un objet littéral s'analyse bien
+plus vite que de l'exécutable à poids égal. Le seul levier qui reste porte sur le fait que le plus
+grand élément de la page n'existe qu'après le montage de React : **prérendu ou rendu serveur de la
+coquille**, pour que le `<h1>` soit dans le HTML initial. C'est un choix d'architecture, pas un
+réglage de build.
+
+**Duplication assumée** : le script en ligne de préchargement de langue réécrit la clé de stockage
+(`moviepicker-locale`), la liste des langues et la règle de détection, parce que la configuration de
+build ne peut pas importer `src/`. Si `preferredLocale()` change, changer aussi
+`activeLocalePreloadScript` dans `apps/web/vite.config.ts`.
+
