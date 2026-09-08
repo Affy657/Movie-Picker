@@ -1,12 +1,9 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-
 import { describe, expect, it } from 'vitest';
 
 import { en } from '@/shared/i18n/locales/en';
 import { fr } from '@/shared/i18n/locales/fr';
 
-const indexHtml = readFileSync(join(process.cwd(), 'index.html'), 'utf8');
+import indexHtml from '../index.html?raw';
 
 describe('coquille de demarrage', () => {
   it('reprend mot pour mot le titre de la page d accueil dans les deux langues', () => {
