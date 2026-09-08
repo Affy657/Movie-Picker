@@ -110,7 +110,9 @@ Attendre que les checks de la PR soient verts : ce sont eux qui conditionnent le
 
 **2. Aucun job de déploiement en `skipped` alors que son périmètre a bougé.** `deploy-front` dépend de `gitleaks`, `lint-web`, `test-web`, `audit`, `lighthouse`, `e2e` et `sonar` ; `deploy-api` dépend de `docker-api`, `e2e` et `sonar`. Un seul de ces gates rouge laisse le déploiement en `skipped` : le run n'apparaît pas en échec et la prod reste périmée en silence. C'est comme ça que le front est resté dix jours en retard.
 
-**3. La production sert bien le SHA de master.** Côté API, le signal qui fait foi est l'image de la révision Cloud Run active : elle est taguée par le SHA du commit, à comparer avec `git rev-parse origin/master`. Côté front, c'est le résultat du job `deploy-front`, qui attend la fin de l'invalidation CloudFront et fait son propre smoke test.
+**3. La production sert bien le SHA de master.** Côté API, le signal qui fait foi est l'image de la révision Cloud Run active : elle est taguée par le SHA du commit, à comparer avec `git rev-parse origin/master`.
+
+Côté front, **le job vert ne prouve rien** : ses étapes d'invalidation CloudFront et de smoke test sont gardées par `vars.AWS_CLOUDFRONT_DISTRIBUTION_ID`, qui n'est pas définie dans le dépôt, donc elles sortent en `skipped` à chaque déploiement. La vérification doit se faire à la main sur `web.movie-picker.fr`, qui est le domaine du front.
 
 Le pipeline enregistre aussi une release Sentry par déploiement, nommée d'après le SHA. Elle corrobore, elle ne prouve pas : les deux étapes qui la publient sont en `continue-on-error: true` et sortent sans rien faire quand `SENTRY_AUTH_TOKEN` est absent. Une release manquante ne veut donc pas dire que le déploiement a échoué.
 

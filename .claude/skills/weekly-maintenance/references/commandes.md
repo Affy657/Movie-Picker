@@ -95,15 +95,18 @@ Le cluster dev et le cluster prod sont encore partagés (dette connue) : bien v�
 
 ## Domaine et certificat
 
+Le front est sur **`web.movie-picker.fr`**, l'API sur **`api.movie-picker.fr`**. Ni `movie-picker.fr` ni `www.movie-picker.fr` ne servent l'application : ils pointent encore sur OVH, la bascule décrite dans [docs/runbook-migration-domaine-www.md](../../../../docs/runbook-migration-domaine-www.md) n'a jamais été exécutée. Viser un de ces deux hôtes donne un `curl` à 000 et fait conclure à tort que la prod est morte.
+
 ```bash
-echo | openssl s_client -connect api.movie-picker.fr:443 -servername api.movie-picker.fr 2>/dev/null \
-  | openssl x509 -noout -enddate -issuer
-curl -sS -o /dev/null -w "%{http_code}\n" --max-time 15 https://api.movie-picker.fr/health
+for host in web.movie-picker.fr api.movie-picker.fr; do
+  echo | openssl s_client -connect "$host:443" -servername "$host" 2>/dev/null \
+    | openssl x509 -noout -enddate -subject
+done
+curl -sS -o /dev/null -w "front %{http_code}\n" --max-time 15 https://web.movie-picker.fr/
+curl -sS -o /dev/null -w "api %{http_code}\n" --max-time 15 https://api.movie-picker.fr/health
 ```
 
-Rejouer sur le domaine qui sert réellement le front.
-
-> **Note à supprimer une fois tranchée.** Au 7 septembre 2026, `movie-picker.fr` et `www.movie-picker.fr` résolvent vers `213.186.33.5` (OVH) et réinitialisent la connexion, alors que `api.movie-picker.fr` répond 200. La bascule DNS vers CloudFront n'a jamais été exécutée, voir [docs/runbook-migration-domaine-www.md](../../../../docs/runbook-migration-domaine-www.md). Établir quel domaine est censé servir le front, inscrire ce domaine ci-dessus, et retirer cette note.
+Le smoke test front du pipeline ne tourne jamais : il est gardé par `vars.AWS_CLOUDFRONT_DISTRIBUTION_ID`, absente des variables Actions du dépôt. C'est ce `curl` qui en tient lieu.
 
 ## SonarCloud
 
