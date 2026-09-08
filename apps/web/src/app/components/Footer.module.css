@@ -6,17 +6,19 @@
 }
 
 .inner {
-  max-width: 56rem;
+  max-width: var(--container-lg);
   margin: 0 auto;
   padding: var(--space-8) var(--space-6) var(--space-6);
   display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-8);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-7) var(--space-5);
 }
 
 .brand {
+  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: var(--space-2);
 }
 
@@ -100,6 +102,17 @@
   cursor: pointer;
 }
 
+.socialList {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-1) 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--space-5);
+  row-gap: var(--space-2);
+}
+
 .socialLink {
   display: inline-flex;
   align-items: center;
@@ -122,15 +135,42 @@
 }
 
 .bottom {
-  max-width: 56rem;
+  max-width: var(--container-lg);
   margin: 0 auto;
-  padding: 1rem 1.5rem calc(1rem + env(safe-area-inset-bottom, 0));
+  padding: var(--space-4) var(--space-6) calc(var(--space-4) + env(safe-area-inset-bottom, 0));
   border-top: 1px solid var(--color-border-subtle);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-1-5);
+  gap: var(--space-4);
   text-align: center;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1-5);
+}
+
+.appearance {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2-5);
+}
+
+.appearanceLabel {
+  font-size: var(--font-size-2xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-extra);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.appearanceToggle {
+  flex-shrink: 0;
 }
 
 .tmdb {
@@ -196,19 +236,10 @@
   }
 }
 
-@media (min-width: 30rem) {
-  .inner {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .brand {
-    grid-column: 1 / -1;
-  }
-}
-
 @media (min-width: 48rem) {
   .inner {
-    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-columns: 1.7fr 1fr 1fr 1fr;
+    gap: var(--space-8);
     padding-top: var(--space-10);
   }
 
@@ -219,11 +250,15 @@
   .bottom {
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
     text-align: left;
   }
 
+  .meta {
+    align-items: flex-start;
+  }
+
   .copyrightRow {
-    justify-content: flex-end;
-    text-align: right;
+    justify-content: flex-start;
   }
 }

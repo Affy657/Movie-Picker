@@ -1,8 +1,4 @@
 .section {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
   display: flex;
   flex-direction: column;
   gap: var(--space-3-5);
@@ -86,7 +82,7 @@
   top: 50%;
   transform: translateY(calc(-50% - var(--space-5)));
   z-index: var(--z-raised-above);
-  display: none;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   width: var(--space-9);
@@ -111,18 +107,14 @@
 }
 
 .railArrowBack {
-  left: calc(-1 * var(--space-4));
+  left: calc(-1 * var(--space-3));
 }
 
 .railArrowForward {
-  right: calc(-1 * var(--space-4));
+  right: calc(-1 * var(--space-3));
 }
 
 @media (hover: hover) {
-  .railArrow {
-    display: inline-flex;
-  }
-
   .railArrow:hover:not(:disabled) {
     background: var(--on-poster-kebab-bg-hover);
     border-color: var(--color-primary);
@@ -130,10 +122,6 @@
 }
 
 @media (max-width: 39.9375rem) {
-  .section {
-    padding: var(--space-4);
-  }
-
   .heading {
     font-size: var(--font-size-md-plus);
   }

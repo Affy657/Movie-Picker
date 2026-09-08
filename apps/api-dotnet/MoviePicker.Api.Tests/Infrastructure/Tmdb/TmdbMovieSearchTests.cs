@@ -84,7 +84,7 @@ public sealed class TmdbMovieSearchTests
         var mockHandler = new Mock<HttpMessageHandler>();
         mockHandler.Protected()
             .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
-            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json) });
+            .Returns(() => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json) }));
         var client = CreateHttpClient(mockHandler.Object);
         var sut = CreateSut(client, options);
 
@@ -113,7 +113,7 @@ public sealed class TmdbMovieSearchTests
         var mockHandler = new Mock<HttpMessageHandler>();
         mockHandler.Protected()
             .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
-            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{}") });
+            .Returns(() => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{}") }));
         var client = CreateHttpClient(mockHandler.Object);
         var sut = CreateSut(client, options);
 
@@ -139,19 +139,21 @@ public sealed class TmdbMovieSearchTests
     [Fact]
     public async Task SearchAsync_RequestUsesCorrectUrlAndKey()
     {
-        HttpRequestMessage? capturedRequest = null;
+        var capturedRequests = new System.Collections.Concurrent.ConcurrentBag<HttpRequestMessage>();
         var options = Options.Create(new MoviePickerOptions { TmdbApiKey = "my-secret-key" });
         var mockHandler = new Mock<HttpMessageHandler>();
         mockHandler.Protected()
             .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
-            .Callback<HttpRequestMessage, CancellationToken>((req, _) => capturedRequest = req)
-            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{\"results\":[]}") });
+            .Callback<HttpRequestMessage, CancellationToken>((req, _) => capturedRequests.Add(req))
+            .Returns(() => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{\"results\":[]}") }));
         var client = CreateHttpClient(mockHandler.Object);
         var sut = CreateSut(client, options);
 
         await sut.SearchAsync("matrix", false);
 
-        Assert.NotNull(capturedRequest);
+        var capturedRequest = Assert.Single(
+            capturedRequests,
+            request => request.RequestUri!.ToString().Contains("/search/movie", StringComparison.Ordinal));
         Assert.Equal(HttpMethod.Get, capturedRequest.Method);
         var uri = capturedRequest.RequestUri?.ToString() ?? "";
         Assert.Contains("api.themoviedb.org", uri);

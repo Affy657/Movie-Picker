@@ -41,11 +41,6 @@
   min-width: 0;
 }
 
-.searchSubmit {
-  flex: 0 0 auto;
-  min-height: 40px;
-}
-
 .examples {
   display: flex;
   align-items: center;
@@ -111,11 +106,6 @@
 }
 
 @media (max-width: 39.9375rem) {
-  .searchForm {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
   .ctaBand {
     align-items: stretch;
     flex-direction: column;
