@@ -71,7 +71,13 @@ Pour toute nouvelle barre sticky dont le contenu change de hauteur :
 
 `pnpm run test:api:mongo` rejoue la suite d'intégration API contre une vraie MongoDB en replica set (conteneur Docker créé à la volée, base jetable par classe de test) : c'est le seul chemin qui exécute les adaptateurs Mongo et les transactions. La CI le rejoue dans le job `test-api-mongo`, dont dépend le déploiement API.
 
-`pnpm run openapi:types:check` régénère `apps/web/src/shared/api/generated/openapiSchema.ts` depuis le contrat exporté et échoue s'il a dérivé ; `apps/web/src/shared/api/apiContract.test.ts` vérifie au niveau des types que les champs lus par le front existent bien dans ce contrat.
+`pnpm run test:e2e:mongo` rejoue le seul parcours critique Playwright contre l'API branchée sur un vrai MongoDB (variable `E2E_MONGODB_URI`, base dédiée `moviepicker_e2e` : le garde-fou Development refuse la base `moviepicker`). La CI le rejoue dans le job `e2e-mongo`, bloquant pour les deux déploiements. C'est le seul endroit où navigateur réel et base réelle tournent ensemble : `e2e` tourne sur la base mémoire, `test-api-mongo` tourne sans navigateur.
+
+`pnpm run openapi:types:check` régénère `apps/web/src/shared/api/generated/openapiSchema.ts` depuis le contrat exporté et échoue s'il a dérivé ; `apps/web/src/shared/api/apiContract.test.ts` vérifie au niveau des types que les champs lus par le front existent bien dans ce contrat, et que chaque route appelée par le front existe encore dans `paths`. Les réponses simulées de `apps/web/src/mocks/handlers.ts` sont typées sur ce même contrat : une dérive casse `tsc`, donc le job `lint-web`.
+
+`pnpm run test:api:mutation` lance une passe Stryker.NET sur `Domain/` et `Application/UseCases/` (rapport HTML dans `artifacts/stryker`). Hors CI : c'est un outil de diagnostic, à lancer quand on veut savoir si les tests d'une zone vérifient vraiment quelque chose, pas seulement si elle est exécutée.
+
+Seuils de couverture, à relever quand ils décrochent du réel : front `statements 84 / lines 86 / functions 81 / branches 77` (`apps/web/vitest.config.ts`), API `lignes 90 / branches 78` (job `test-api`).
 
 ## Migrations de données
 
