@@ -1,11 +1,11 @@
 // Généré par apps/web/scripts/generate-tech-metrics.mjs — ne pas éditer à la main.
 
 export const TECH_METRICS = {
-  linesOfCode: 130000,
+  linesOfCode: 131000,
   endpoints: 74,
-  testFiles: 343,
-  webTestFiles: 160,
-  apiTestFiles: 183,
+  testFiles: 345,
+  webTestFiles: 161,
+  apiTestFiles: 184,
   e2eScenarios: 5,
   ciJobs: 16,
   commits: 887,
