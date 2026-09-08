@@ -113,25 +113,16 @@ function localeChunkByCode(files: ReadonlyArray<string>): Record<string, string>
   return found;
 }
 
-const LANDING_ROUTE_CHUNK = /(?:^|\/)HomePage-[\w-]+\.js$/;
-const LANDING_ROUTE_PATH = '/';
-
-function criticalPreloadScript(
-  chunkByLocale: Record<string, string>,
-  landingRouteChunk: string | undefined
-): string {
+function activeLocalePreloadScript(chunkByCode: Record<string, string>): string {
   return [
     '(function(){try{',
-    "var p=function(h){var e=document.createElement('link');e.rel='modulepreload';",
-    "e.crossOrigin='';e.href='/'+h;document.head.appendChild(e);};",
-    `var c=${JSON.stringify(chunkByLocale)};`,
+    `var c=${JSON.stringify(chunkByCode)};`,
     `var s=localStorage.getItem(${JSON.stringify(LOCALE_STORAGE_KEY)});`,
     "var l=c[s]?s:((navigator.language||'').toLowerCase().indexOf('en')===0?'en':",
     `${JSON.stringify(DEFAULT_LOCALE)});`,
-    'if(c[l])p(c[l]);',
-    landingRouteChunk
-      ? `if(location.pathname===${JSON.stringify(LANDING_ROUTE_PATH)})p(${JSON.stringify(landingRouteChunk)});`
-      : '',
+    'var h=c[l];if(!h)return;',
+    "var e=document.createElement('link');e.rel='modulepreload';e.crossOrigin='';",
+    "e.href='/'+h;document.head.appendChild(e);",
     '}catch(_){}})()',
   ].join('');
 }
@@ -183,11 +174,10 @@ function preloadCriticalAssetsPlugin(): Plugin {
       }
 
       const chunkByLocale = localeChunkByCode(files);
-      const landingRouteChunk = files.find((file) => LANDING_ROUTE_CHUNK.test(file));
-      if (Object.keys(chunkByLocale).length > 0 || landingRouteChunk) {
+      if (Object.keys(chunkByLocale).length > 0) {
         tags.push({
           tag: 'script',
-          children: criticalPreloadScript(chunkByLocale, landingRouteChunk),
+          children: activeLocalePreloadScript(chunkByLocale),
           injectTo: 'head-prepend',
         });
       }
