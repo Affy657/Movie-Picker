@@ -177,3 +177,117 @@ Le tier du cluster Atlas n'a pas pu être confirmé non plus (accès MCP désact
 organisations). La conclusion « aucune sauvegarde » repose sur la documentation MongoDB — le palier
 gratuit ne fournit pas de snapshot — et sur l'absence totale de mécanisme dans le dépôt
 (`git grep -niE "mongodump|mongorestore|backup"` ne renvoyait rien avant ce chantier).
+
+---
+
+## 7. La porte Lighthouse bloque `master` — diagnostic et état
+
+> Ajouté le **2026-09-08**. C'est le sujet ouvert le plus urgent de ce document.
+
+### 7.1 Ce qui se passe
+
+Le 2026-09-07 à 21:26, la fusion du sélecteur de thème (V1.5.0) a rendu `master` rouge
+([run 34163165678](https://github.com/Affy657/Movie-Picker/actions/runs/34163165678)) :
+
+```
+Lighthouse front (seuils bloquants)   ✗   my-events 83 < 85   watchlist 79 < 80
+Garde-fou déploiement (master)        ✗   « Le front a changé mais Deploy Front est
+                                            'skipped' : la production n'est pas à jour. »
+```
+
+Conséquence directe : **`deploy-front` ne s'exécute plus, et le front fusionné n'atteint pas la
+production.** Un `workflow_dispatch` manuel ne contourne rien — `deploy-front` dépend de
+`lighthouse`, qui tournerait et échouerait pareil. Le garde-fou fait exactement son travail :
+il refuse de laisser croire que la prod est à jour.
+
+Ce n'est pas du bruit de mesure. Sur trois exécutions du 2026-09-07 avec un front identique au
+bit près, `watchlist` a donné 83, 79, 79. La médiane sur 5 passages (`LH_RUNS`) a stabilisé la
+mesure et confirmé un déficit réel.
+
+### 7.2 La cause, mesurée
+
+Décomposition du LCP sur `watchlist` (rapports du run de `master`, téléchargés et lus) :
+
+| | watchlist | my-events | home |
+|--|--|--|--|
+| FCP | 1,5 s ✅ | 1,4 s ✅ | 1,4 s |
+| **LCP** | **4,8 s** (score 0,31) | **4,3 s** (0,42) | 2,7 s |
+| CLS / Speed Index | parfaits | parfaits | parfaits |
+
+Une seule métrique coule ces pages. Et sa décomposition est sans ambiguïté : `time to first byte`
+5 ms, **aucune phase de chargement de ressource**, puis 590 ms de « element render delay ».
+L'élément le plus grand n'est pas une image tardive — c'est du DOM qui attend l'exécution du JS.
+
+Ce JS arrivait en **79 requêtes dont 51 scripts** pour une seule page mobile, avec 56 chunks sous
+2 Ko (`x-HtGcU3QY.js` : 154 octets ; `pluralizeCount` : 77 octets). Sous l'étranglement mobile
+simulé de Lighthouse, chacun paie un aller-retour réseau complet.
+
+### 7.3 Ce qui a été fait
+
+Regroupement des chunks dans `apps/web/vite.config.ts` (`icons-vendor`, `shared`, `i18n` nommé
+explicitement). Mesure locale, médiane de 3 passages :
+
+```
+watchlist   82 -> 84    76 requêtes -> 43    48 scripts -> 21
+my-events   86 -> 88    64 -> 35             42 -> 18
+home        95 -> 95    59 -> 40             34 -> 17
+```
+
+**Attention à deux pièges qui ont été évités et qu'il ne faut pas réintroduire :**
+
+1. `preloadCriticalAssetsPlugin` cherche `App-[hash].js`, `App-[hash].css` et `i18n-[hash].js`
+   dans le bundle. Tout regroupement qui renomme ou absorbe ces chunks fait disparaître les
+   préchargements **en silence**, et le LCP empire. D'où le `return 'i18n'` explicite.
+2. `@sentry`, `posthog-js`, `canvas-confetti` et `react-qr-code` sont chargés à la demande.
+   Les placer dans un chunk partagé avec du code eager les rendrait eager à leur tour.
+
+### 7.4 Ce qui reste — le levier suivant, chiffré
+
+**Ce regroupement ne suffit pas.** Reporté en CI (la machine locale note ~3 points au-dessus des
+runners), il donne environ 81 et 85 pour des planchers de 80 et 85 : la porte repasserait au vert,
+mais de justesse, et resterait à la merci de la variance.
+
+Le chemin critique mesuré après regroupement, c'est **559 Ko de JS chargés au démarrage** :
+
+| chunk | poids | part |
+|--|--|--|
+| `react-vendor` | 220 Ko | 39 % |
+| **`i18n`** | **185 Ko** | **33 %** |
+| `shared` | 92 Ko | 16 % |
+| `App` | 47 Ko | 8 % |
+| `icons-vendor` | 27 Ko | 5 % |
+
+`i18n` est l'anomalie : `src/shared/i18n/locales/fr.ts` (112 Ko) **et** `en.ts` (100 Ko) sont tous
+deux importés statiquement par `locales/index.ts`. Chaque visiteur télécharge et exécute les deux
+langues alors qu'il n'en lit qu'une. Retirer la langue inactive du chemin critique enlèverait
+environ 90 Ko de JS à parser avant le premier rendu — précisément le « element render delay » qui
+coule ces pages.
+
+Ce n'est pas un simple changement de *bundling* : rendre une locale paresseuse rend son chargement
+asynchrone et touche `LocaleContext`. Une piste à moindre risque : garder `fr` (la locale par
+défaut, `lang: 'fr'` dans le manifeste) en statique et ne charger `en` qu'au changement de langue.
+Le chemin par défaut n'attend alors jamais.
+
+**Ce qu'il ne faut pas faire pour débloquer** : baisser un seuil, retirer une page de la porte, ou
+la passer en non bloquante. Le déficit est réel et mesuré ; desserrer la barre reviendrait à
+supprimer la seule garde qui a détecté que la production ne se déployait plus.
+
+### 7.5 Rejouer la porte en local
+
+```bash
+pnpm install --filter web...
+CHROME_PATH=<binaire chrome> LH_ONLY=watchlist,my-events LH_RUNS=3 pnpm run lighthouse
+```
+
+`LH_ONLY` (liste de *slugs* séparés par des virgules) et `LH_RUNS` existent déjà dans
+`scripts/lighthouse-run.mjs` : ils évitent de rejouer les 14 pages à chaque itération.
+
+Deux précautions apprises en le faisant :
+
+- **ne rien exécuter d'autre pendant la mesure.** Lighthouse mesure du temps ; un `pnpm test` en
+  parallèle décale les scores de plusieurs points.
+- **une machine de développement note plus haut qu'un runner GitHub** — environ 3 points d'écart
+  constatés. Comparer des écarts avant/après, jamais un score local à un seuil de CI.
+- dans un environnement **au réseau sortant restreint**, la page `profile` échoue
+  `best-practices: 96 < 100` sur `errors-in-console` : l'avatar `api.dicebear.com` répond
+  `ERR_CONNECTION_RESET`. C'est un artefact local, pas une régression — en CI la page est à 100.
