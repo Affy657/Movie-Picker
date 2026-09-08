@@ -196,16 +196,20 @@ Pipeline GitHub Actions : `.github/workflows/ci-cd.yml`, déclenché sur `master
 
 | Phase | Contenu |
 |-------|---------|
-| **Sécurité repo** | Gitleaks (scan de secrets dans l'arbre Git) |
+| **Sécurité repo** | Gitleaks (scan de secrets dans l'arbre Git) ; `actionlint` + `shellcheck` + `zizmor` sur les workflows eux-mêmes |
 | **Lint / qualité** | ESLint + Prettier, `dotnet format`, build API Release, export OpenAPI, `pnpm audit`, audit NuGet (échec si High/Critical) |
 | **Tests** | Vitest + couverture (web) ; xUnit + intégration + `OpenApiContractTests` (API) |
 | **Qualité (Sonar)** | SonarScanner for .NET → SonarCloud (front + API, couverture lcov + opencover) ; Quality Gate **bloquant** (`sonar.qualitygate.wait`) |
 | **Lighthouse** | Seuils perf/a11y front — **bloquant** (médiane 3 passes) |
-| **Image API** *(push `master`)* | Build Docker → scan **Trivy** (HIGH/CRITICAL, bloquant) → push Artifact Registry |
-| **Déploiement** *(push `master`)* | **Cloud Run** (secrets Secret Manager + `ALLOWED_ORIGINS`) ; front → **S3** + invalidation **CloudFront** |
+| **Image API** *(push `master`)* | Build Docker → scan **Trivy** (HIGH/CRITICAL, bloquant) → push Artifact Registry, digest relevé |
+| **Déploiement** *(push `master`)* | **Cloud Run** déployé **par digest** (secrets Secret Manager + `ALLOWED_ORIGINS`) ; front → **S3** + invalidation **CloudFront** |
+| **Après déploiement** | L'API part **sans trafic**, est validée sur son URL taguée, et n'est promue qu'une fois verte ; puis smoke tests sur l'URL interne **et** sur le domaine public |
 
 - **Quality Gate SonarCloud** : calculé à chaque run (visible dans SonarCloud / sur les PR) ; **bloquant** pour le déploiement — un Quality Gate rouge échoue le pipeline. E2E Playwright et Lighthouse sont eux aussi **bloquants**.
-- **Déploiement front** : push S3 en 3 étapes (`index.html` et Service Worker en dernier, assets hachés en cache long) puis invalidation CloudFront, pour éviter toute désynchronisation Service Worker / bundles.
+- **Déploiement front** : push S3 en 3 étapes (`index.html` et Service Worker en dernier, assets hachés en cache long) puis invalidation CloudFront, pour éviter toute désynchronisation Service Worker / bundles. Le `dist` est archivé en artefact (30 jours) : le front n'a pas de retour arrière côté hébergement, l'archive évite d'avoir à rejouer toute la chaîne.
+- **Déploiement API** : chaque révision est déployée sans trafic et validée sur son URL taguée avant promotion — une révision qui échoue ses sondes n'est jamais servie à un utilisateur, il n'y a donc rien à annuler. `rollback.yml` reste la porte manuelle pour une régression constatée après coup.
+
+Workflows annexes : `backup-mongo.yml` (sauvegarde quotidienne de la base, restaurée et vérifiée à chaque exécution), `rollback.yml` (retour arrière API manuel), `registry-cleanup.yml` (rétention Artifact Registry), `security-scan.yml` (scan de vulnérabilités hebdomadaire).
 
 Branche par défaut : **`master`**.
 

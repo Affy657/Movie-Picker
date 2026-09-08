@@ -43,6 +43,10 @@ env:
   GCP_REGION: europe-west1
   GCP_ARTIFACT_REPO: movie-picker
   CLOUD_RUN_SERVICE_NAME: movie-picker-api
+  ACTIONLINT_VERSION: "1.7.7"
+  ACTIONLINT_SHA256: "023070a287cd8cccd71515fedc843f1985bf96c436b7effaecce67290e7e0757"
+  ZIZMOR_VERSION: "1.30.0"
+  ZIZMOR_SHA256: "ec8c95cd800845abb9bbc5f377ec7c57d2eb8e2386a00a201d3a74ee4092e5ed"
 
 jobs:
   changes:
@@ -104,6 +108,43 @@ jobs:
           docker run --rm -v "${PWD}:/repo:ro" \
             ghcr.io/gitleaks/gitleaks:v8.24.3@sha256:e1b35e12a8c6fa8901f060459cfb6b2fc4c484d3afbe3b029733a3bbfab07055 \
             dir --no-banner --redact --verbose --exit-code 1 /repo
+
+  # ci-cd.yml est un gros fichier de YAML et de bash que ni check:architecture, ni ESLint, ni
+  # Prettier ne regardent : la chaîne qui garde le code n'était elle-même gardée par rien.
+  # Inconditionnel comme gitleaks, et comme lui présent dans les `needs:` de docker-api et
+  # deploy-front — sans quoi la porte serait rouge pendant que la production part quand même.
+  #   - actionlint : erreurs de syntaxe, expressions ${{ }} invalides, permissions incohérentes.
+  #     Il délègue aux blocs `run:` à shellcheck, préinstallé sur les runners GitHub.
+  #   - zizmor : audit sécurité des workflows. Seuil `medium` — le dépôt est à 0 medium et 0 high,
+  #     donc la porte est verte aujourd'hui et n'attrape que du sérieux (injection depuis un
+  #     contexte non fiable, secrets exposés). Descendre à `low` demanderait de traiter 9 constats
+  #     cosmétiques. `--offline` pour que la porte ne dépende pas de l'API GitHub.
+  lint-workflows:
+    name: Lint workflows (actionlint + zizmor)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: actionlint (+ shellcheck sur les blocs run)
+        run: |
+          set -eo pipefail
+          curl -sSL --retry 3 --retry-all-errors -o "$RUNNER_TEMP/actionlint.tgz" \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          echo "${ACTIONLINT_SHA256}  $RUNNER_TEMP/actionlint.tgz" | sha256sum -c -
+          tar xzf "$RUNNER_TEMP/actionlint.tgz" -C "$RUNNER_TEMP" actionlint
+          "$RUNNER_TEMP/actionlint" -color
+      - name: zizmor (audit sécurité, seuil medium)
+        run: |
+          set -eo pipefail
+          curl -sSL --retry 3 --retry-all-errors -o "$RUNNER_TEMP/zizmor.tgz" \
+            "https://github.com/zizmorcore/zizmor/releases/download/v${ZIZMOR_VERSION}/zizmor-x86_64-unknown-linux-gnu.tar.gz"
+          echo "${ZIZMOR_SHA256}  $RUNNER_TEMP/zizmor.tgz" | sha256sum -c -
+          tar xzf "$RUNNER_TEMP/zizmor.tgz" -C "$RUNNER_TEMP" zizmor
+          "$RUNNER_TEMP/zizmor" --offline --no-progress --min-severity medium --format plain .github/workflows/
 
   lint-web:
     name: Lint front (tsc + eslint + prettier)
@@ -315,14 +356,14 @@ jobs:
         run: |
           set -eo pipefail
           docker run -d --name mongo-it -p 27017:27017 mongo:8 --replSet rs0 --bind_ip_all
-          for i in $(seq 1 30); do
+          for _ in $(seq 1 30); do
             if docker exec mongo-it mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' >/dev/null 2>&1; then
               break
             fi
             sleep 2
           done
           docker exec mongo-it mongosh --quiet --eval             'rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "127.0.0.1:27017" }] })'
-          for i in $(seq 1 30); do
+          for _ in $(seq 1 30); do
             if [ "$(docker exec mongo-it mongosh --quiet --eval 'db.hello().isWritablePrimary')" = "true" ]; then
               break
             fi
@@ -348,7 +389,14 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup-web
       - uses: browser-actions/setup-chrome@48ad923757ca74d66703209fe939badbdf80f2f4 # v2
+      # Médiane sur 5 passages au lieu de 3. Aucun seuil n'est abaissé : c'est la MESURE qui est
+      # fiabilisée, pas la barre. Sur un même commit, deux exécutions ont donné à la page d'accueil
+      # 82 puis 93, et fait échouer deux pages différentes — la variance des runners dépasse la
+      # marge qui sépare plusieurs pages de leur plancher, donc la porte virait au rouge au hasard,
+      # y compris sur des PR sans le moindre changement front.
       - run: pnpm run lighthouse
+        env:
+          LH_RUNS: 5
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always()
         with:
@@ -405,14 +453,14 @@ jobs:
         run: |
           set -eo pipefail
           docker run -d --name mongo-e2e -p 27017:27017 mongo:8 --replSet rs0 --bind_ip_all
-          for i in $(seq 1 30); do
+          for _ in $(seq 1 30); do
             if docker exec mongo-e2e mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' >/dev/null 2>&1; then
               break
             fi
             sleep 2
           done
           docker exec mongo-e2e mongosh --quiet --eval 'rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "127.0.0.1:27017" }] })'
-          for i in $(seq 1 30); do
+          for _ in $(seq 1 30); do
             if [ "$(docker exec mongo-e2e mongosh --quiet --eval 'db.hello().isWritablePrimary')" = "true" ]; then
               break
             fi
@@ -632,7 +680,9 @@ jobs:
     name: Docker API → Artifact Registry
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    needs: [changes, gitleaks, lint-api, test-api, test-api-mongo, audit]
+    needs: [changes, gitleaks, lint-workflows, lint-api, test-api, test-api-mongo, audit]
+    outputs:
+      image_digest: ${{ steps.push.outputs.digest }}
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master' && needs.changes.outputs.api == 'true'
     permissions:
       contents: read
@@ -674,13 +724,30 @@ jobs:
           ignore-unfixed: true
           vuln-type: os,library
           cache: true
+      # Le digest est relevé après push et sert de cible au déploiement : un tag reste
+      # réinscriptible, un digest désigne exactement les octets que Trivy vient de scanner.
       - name: Tag & push image
+        id: push
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
-          IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/$GCP_PROJECT_ID/${{ env.GCP_ARTIFACT_REPO }}/api:${{ github.sha }}"
+          set -eo pipefail
+          IMAGE="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${GCP_ARTIFACT_REPO}/api:${GITHUB_SHA}"
           docker tag movie-picker-api "$IMAGE"
           docker push "$IMAGE"
+          # `|| true` est indispensable : sans lui, un RepoDigests vide fait échouer le template
+          # Go et `set -e` tue l'étape avant le diagnostic ci-dessous, qui ne s'afficherait jamais.
+          # Le digest est filtré sur le dépôt cible plutôt que pris à l'index 0.
+          REPO="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${GCP_ARTIFACT_REPO}/api"
+          DIGEST="$(docker inspect --format='{{range .RepoDigests}}{{println .}}{{end}}' "$IMAGE" 2>/dev/null \
+            | grep -F "${REPO}@" | head -1 | cut -d'@' -f2 || true)"
+          if ! printf '%s' "$DIGEST" | grep -qE '^sha256:[0-9a-f]{64}$'; then
+            echo "::error::Digest introuvable après push pour ${REPO} (relevé : '$DIGEST')"
+            exit 1
+          fi
+          echo "Image poussée : $IMAGE"
+          echo "Digest : $DIGEST"
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
       - name: SBOM de l'image (Trivy → CycloneDX, artefact)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -723,20 +790,36 @@ jobs:
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: gcloud services enable secretmanager.googleapis.com --project="$GCP_PROJECT_ID"
-      - name: Deploy Cloud Run (secrets GCP + CORS)
+      # La révision est déployée SANS trafic puis validée sur son URL taguée : un conteneur qui
+      # échoue ses sondes n'atteint jamais un utilisateur. Ce schéma remplace « déployer, constater,
+      # revenir en arrière », qui exposait la mauvaise révision le temps des smoke tests et laissait
+      # ensuite le trafic épinglé sur une révision nommée — état dans lequel `gcloud run deploy`
+      # n'envoie plus aucun trafic aux révisions suivantes, sans que rien ne vire au rouge.
+      - name: Déployer sans trafic (secrets GCP + CORS)
+        id: deploy
         env:
           # Variables (recommandé) ou Secret de secours si tu as tout mis dans Secrets
           ALLOWED_ORIGINS_VARS: ${{ vars.ALLOWED_ORIGINS }}
           ALLOWED_ORIGINS_SECRET: ${{ secrets.ALLOWED_ORIGINS }}
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          IMAGE_DIGEST: ${{ needs.docker-api.outputs.image_digest }}
         run: |
+          set -eo pipefail
           CORS="${ALLOWED_ORIGINS_VARS:-$ALLOWED_ORIGINS_SECRET}"
           if [ -z "$CORS" ]; then
             echo "::error::ALLOWED_ORIGINS est vide. Définis-la au choix :"
-            echo "::error::  • GitHub → Settings → Secrets and variables → Actions → Variables → New repository variable : ALLOWED_ORIGINS = https://TON_ID.cloudfront.net (sans slash final ; plusieurs origines : virgules)"
+            echo "::error::  • GitHub → Settings → Secrets and variables → Actions → Variables → New repository variable : ALLOWED_ORIGINS = https://TON_DOMAINE (sans slash final ; plusieurs origines : virgules)"
             echo "::error::  • ou Secret du même nom (ALLOWED_ORIGINS) si tu préfères."
             exit 1
           fi
+          # Le format est déjà validé côté docker-api ; ici on vérifie seulement que la valeur a
+          # bien traversé la frontière entre les deux jobs.
+          if [ -z "$IMAGE_DIGEST" ]; then
+            echo "::error::Digest d'image absent : le job docker-api ne l'a pas transmis."
+            exit 1
+          fi
+          TAG="s-${GITHUB_SHA:0:7}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           SECRETS="MONGODB_URI=MONGODB_URI:latest,TMDB_API_KEY=TMDB_API_KEY:latest,AUTH_DATAPROTECTION_KEYRING=AUTH_DATAPROTECTION_KEYRING:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest,RESEND_API_KEY=RESEND_API_KEY:latest,KOFI_WEBHOOK_TOKEN=KOFI_WEBHOOK_TOKEN:latest,OAUTH_GOOGLE_CLIENT_ID=OAUTH_GOOGLE_CLIENT_ID:latest,OAUTH_GOOGLE_CLIENT_SECRET=OAUTH_GOOGLE_CLIENT_SECRET:latest,OAUTH_GITHUB_CLIENT_ID=OAUTH_GITHUB_CLIENT_ID:latest,OAUTH_GITHUB_CLIENT_SECRET=OAUTH_GITHUB_CLIENT_SECRET:latest,GITHUB_TOKEN=GITHUB_TOKEN:latest"
           if gcloud secrets describe SCHEDULER_TOKEN >/dev/null 2>&1; then
             SECRETS="$SECRETS,SCHEDULER_TOKEN=SCHEDULER_TOKEN:latest"
@@ -744,13 +827,61 @@ jobs:
             echo "::warning::Secret SCHEDULER_TOKEN absent de Secret Manager. L'API démarre sans, mais POST /api/v1/scheduler/event-reminders répondra 503 et les rappels de soirée ne partiront pas. Crée le secret puis relance ce déploiement."
           fi
           # --set-env-vars dict parsing treats ':' and ',' specially; ^##^ sets an alternate delimiter (gcloud topic escaping).
-          gcloud run deploy ${{ env.CLOUD_RUN_SERVICE_NAME }} \
-            --image ${{ env.GCP_REGION }}-docker.pkg.dev/$GCP_PROJECT_ID/${{ env.GCP_ARTIFACT_REPO }}/api:${{ github.sha }} \
-            --region ${{ env.GCP_REGION }} \
+          gcloud run deploy "$CLOUD_RUN_SERVICE_NAME" \
+            --image "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${GCP_ARTIFACT_REPO}/api@${IMAGE_DIGEST}" \
+            --region "$GCP_REGION" \
             --platform managed \
             --allow-unauthenticated \
+            --cpu-boost \
+            --no-traffic \
+            --tag "$TAG" \
             --set-secrets "$SECRETS" \
-            --set-env-vars "^##^ALLOWED_ORIGINS=$CORS##SENTRY_ENVIRONMENT=production##SENTRY_RELEASE=${{ github.sha }}##EMAIL_PROVIDER=resend"
+            --set-env-vars "^##^ALLOWED_ORIGINS=$CORS##SENTRY_ENVIRONMENT=production##SENTRY_RELEASE=${GITHUB_SHA}##EMAIL_PROVIDER=resend"
+          TAG_URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format=json \
+            | jq -r --arg t "$TAG" '[.status.traffic[]? | select(.tag == $t) | .url] | first // ""')"
+          if [ -z "$TAG_URL" ]; then
+            echo "::error::URL taguée introuvable pour '$TAG' : impossible de valider la révision avant de la promouvoir."
+            exit 1
+          fi
+          echo "Révision déployée sans trafic, joignable sur $TAG_URL"
+          echo "tag_url=$TAG_URL" >> "$GITHUB_OUTPUT"
+      # Sondes jouées sur l'URL taguée : la production sert encore l'ancienne révision. Un échec
+      # ici laisse la prod intacte, il n'y a rien à réparer.
+      #   --max-time : sans lui, une révision qui accepte la connexion sans jamais répondre épuise
+      #   le timeout du job, et un job *annulé* n'exécute aucune étape de rattrapage.
+      #   -o fichier plutôt que /dev/null : avec --retry, curl ne peut pas rembobiner /dev/null et
+      #   sort en 23 sans écrire le code HTTP, ce qui rendait les diagnostics suivants inatteignables.
+      - name: Valider la révision avant de l'exposer
+        env:
+          TAG_URL: ${{ steps.deploy.outputs.tag_url }}
+        run: |
+          set -eo pipefail
+          BODY="$RUNNER_TEMP/health.json"
+          curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 -o "$BODY" "$TAG_URL/health"
+          echo "Réponse /health : $(cat "$BODY")"
+          grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' "$BODY" || {
+            echo "::error::/health ne renvoie pas status=ok — révision non promue"
+            exit 1
+          }
+          curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 60 -o "$BODY" "$TAG_URL/health/ready"
+          echo "Réponse /health/ready : $(cat "$BODY")"
+          grep -qE '"status"[[:space:]]*:[[:space:]]*"ready"' "$BODY" || {
+            echo "::error::/health/ready ne renvoie pas status=ready (dépendance indisponible) — révision non promue"
+            exit 1
+          }
+          grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' "$BODY" || {
+            echo "::error::/health/ready signale MongoDB comme non joignable — révision non promue"
+            exit 1
+          }
+      # --to-latest rebranche `latestRevision: true` : c'est aussi ce qui désépingle le service si
+      # un retour arrière manuel l'avait figé sur une révision nommée.
+      - name: Promouvoir la révision validée
+        run: |
+          set -eo pipefail
+          gcloud run services update-traffic "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --to-latest
+      # Repris de master. Déplacé après la promotion : le job vise l'URL du service, il ne
+      # doit donc être (re)configuré que pour une révision réellement en ligne. Une révision
+      # recalée à la validation laisse le job pointer sur la production inchangée.
       - name: Rappels de soirée — Cloud Scheduler (toutes les 30 min)
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -776,29 +907,42 @@ jobs:
           else
             gcloud scheduler jobs create http "$JOB" "${COMMON[@]}" --headers "X-Scheduler-Token=$TOKEN"
           fi
-      - name: Smoke test API (GET /health puis /health/ready)
+      # La révision est déjà prouvée : ce qui est vérifié ici, c'est que le trafic a bien basculé et
+      # que le domaine public y mène. Un échec relève du routage, du DNS ou du certificat, pas du
+      # code — d'où l'absence de retour arrière. PUBLIC_API_URL est dérivé de VITE_API_URL, l'URL
+      # contre laquelle le front est construit : rien de nouveau à configurer, et la valeur reste
+      # juste après une migration de domaine.
+      - name: Vérifier la production après promotion
         env:
-          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          PUBLIC_API_URL: ${{ secrets.VITE_API_URL }}
         run: |
           set -eo pipefail
-          URL="$(gcloud run services describe ${{ env.CLOUD_RUN_SERVICE_NAME }} --region ${{ env.GCP_REGION }} --format='value(status.url)')"
-          echo "Service URL : $URL"
-          BODY="$(curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 "$URL/health")"
-          echo "Réponse /health : $BODY"
-          echo "$BODY" | grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' || {
-            echo "::error::/health ne renvoie pas status=ok"
+          BODY="$RUNNER_TEMP/prod-health.json"
+          URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format='value(status.url)')"
+          curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 -o "$BODY" "$URL/health/ready"
+          echo "Production (URL Cloud Run) : $(cat "$BODY")"
+          grep -qE '"status"[[:space:]]*:[[:space:]]*"ready"' "$BODY" || {
+            echo "::error::La production ne répond pas ready après promotion du trafic."
             exit 1
           }
-          READY="$(curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 "$URL/health/ready")"
-          echo "Réponse /health/ready : $READY"
-          echo "$READY" | grep -qE '"status"[[:space:]]*:[[:space:]]*"ready"' || {
-            echo "::error::/health/ready ne renvoie pas status=ready (dépendance indisponible)"
+          if [ -z "$PUBLIC_API_URL" ]; then
+            echo "::warning::VITE_API_URL absent — domaine public non vérifié."
+            exit 0
+          fi
+          curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 -o "$BODY" "$PUBLIC_API_URL/health"
+          echo "Domaine public : $(cat "$BODY")"
+          grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' "$BODY" || {
+            echo "::error::Le domaine public de l'API ne renvoie pas status=ok — DNS, certificat ou mapping de domaine."
             exit 1
           }
-          echo "$READY" | grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' || {
-            echo "::error::/health/ready signale MongoDB comme non joignable"
-            exit 1
-          }
+      # Les tags s'accumulent sur le service s'ils ne sont pas retirés, y compris ceux des
+      # déploiements qui ont échoué avant promotion.
+      - name: Retirer le tag de validation
+        if: always() && steps.deploy.outputs.tag != ''
+        env:
+          TAG: ${{ steps.deploy.outputs.tag }}
+        run: |
+          gcloud run services update-traffic "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --remove-tags "$TAG" || true
       - name: Enregistrer le déploiement Sentry (API)
         continue-on-error: true
         env:
@@ -822,13 +966,15 @@ jobs:
     name: Deploy Front → S3 & CloudFront
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    needs: [changes, gitleaks, lint-web, test-web, audit, lighthouse, e2e, e2e-mongo, sonar]
+    needs:
+      [changes, gitleaks, lint-workflows, lint-web, test-web, audit, lighthouse, e2e, e2e-mongo, sonar]
     if: >-
       always() &&
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master' &&
       needs.changes.outputs.web == 'true' &&
       needs.changes.result == 'success' &&
       needs.gitleaks.result == 'success' &&
+      needs.lint-workflows.result == 'success' &&
       needs.lint-web.result == 'success' &&
       needs.test-web.result == 'success' &&
       needs.audit.result == 'success' &&
@@ -909,6 +1055,19 @@ jobs:
         run: |
           aws s3 cp apps/web/dist/index.html "s3://$AWS_S3_BUCKET/index.html" \
             --cache-control "no-cache, no-store, must-revalidate" --content-type "text/html"
+      # Le front n'a aucun retour arrière côté hébergement : `aws s3 sync` écrase et le build
+      # précédent n'existe plus nulle part. Archiver le dist rend un retour arrière possible sans
+      # rejouer toute la chaîne de portes. Placé APRÈS l'envoi S3 : une archive de confort ne doit
+      # jamais pouvoir empêcher un déploiement. `overwrite` parce qu'un « Re-run failed jobs »
+      # rejoue l'étape dans le même run, où le nom d'artefact existe déjà.
+      - name: Archiver le build front (rend un retour arrière possible)
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: front-dist-${{ github.sha }}
+          path: apps/web/dist
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 30
       - name: Invalidation CloudFront
         if: vars.AWS_CLOUDFRONT_DISTRIBUTION_ID != ''
         run: |
@@ -924,9 +1083,33 @@ jobs:
         run: |
           DOMAIN="$(aws cloudfront get-distribution --id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }} --query 'Distribution.DomainName' --output text)"
           echo "CloudFront domain : $DOMAIN"
-          code="$(curl -sS -o /dev/null -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 "https://$DOMAIN/")"
+          # -o fichier plutôt que /dev/null : avec --retry, curl ne peut pas rembobiner /dev/null
+          # et sort en 23 sans jamais écrire le code HTTP.
+          code="$(curl -sS -o "$RUNNER_TEMP/cf.html" -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 "https://$DOMAIN/")"
           echo "GET / -> $code"
           test "$code" = "200"
+      # Le smoke test précédent interroge le domaine CloudFront : il ne dit rien du domaine public
+      # servi aux utilisateurs, dont le DNS, le certificat ou l'alias peuvent être cassés alors que
+      # la distribution répond très bien. L'origine est lue dans ALLOWED_ORIGINS — celle que l'API
+      # accepte, donc celle du front par construction — plutôt que réécrite ici : une valeur de plus
+      # à tenir à jour serait une valeur de plus à oublier lors d'une migration de domaine.
+      - name: Smoke test front (domaine public)
+        env:
+          ALLOWED_ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
+        run: |
+          set -eo pipefail
+          PUBLIC_WEB_URL="${ALLOWED_ORIGINS%%,*}"
+          if [ -z "$PUBLIC_WEB_URL" ]; then
+            echo "::warning::ALLOWED_ORIGINS absent — domaine public du front non vérifié."
+            exit 0
+          fi
+          echo "Domaine public : $PUBLIC_WEB_URL"
+          code="$(curl -sS -o "$RUNNER_TEMP/pub.html" -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 "$PUBLIC_WEB_URL/")"
+          echo "GET $PUBLIC_WEB_URL/ -> $code"
+          if [ "$code" != "200" ]; then
+            echo "::error::$PUBLIC_WEB_URL ne répond pas 200 — DNS, certificat ou alias de l'hébergement du front."
+            exit 1
+          fi
       - name: Enregistrer le déploiement Sentry (front)
         continue-on-error: true
         env:

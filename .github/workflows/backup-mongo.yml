@@ -1,0 +1,249 @@
+# Sauvegarde quotidienne de la base de production, avec restauration vérifiée avant publication.
+#
+# Pourquoi : le palier gratuit Atlas ne fournit aucun snapshot. Sans ce workflow, une migration
+# de données boguée (DataMigrationRunner applique les migrations au démarrage de chaque révision,
+# et rejoue celles qui ont échoué) ou une erreur d'exploitation est irrécupérable. Le retour
+# arrière Cloud Run restaure le code, jamais les données.
+#
+# L'archive est déposée sous `pending/`, **relue depuis Cloud Storage**, restaurée dans une MongoDB
+# jetable du runner, puis seulement déplacée à son emplacement définitif. C'est ce qui est testé qui
+# est publié : une archive qui échoue la restauration ne devient jamais la sauvegarde du jour, et
+# l'aller-retour couvre l'envoi partiel autant que le dump corrompu.
+#
+# Ce que la vérification prouve : l'objet présent dans le bucket se relit, se restaure, et contient
+# la base applicative non vide. Ce qu'elle ne prouve pas : la cohérence transactionnelle entre
+# collections — `mongodump` sans `--oplog` lit les collections l'une après l'autre, donc une
+# transaction validée pendant le dump peut y figurer à moitié. `--oplog` impose un dump de
+# l'instance entière et des droits supplémentaires ; à arbitrer si le volume d'écritures grandit.
+#
+# L'URI est lu dans Secret Manager plutôt que dupliqué en secret GitHub : une seule source.
+#
+# Prérequis, une fois pour toutes :
+#   gcloud storage buckets create gs://movie-picker-backups --location=europe-west1 \
+#     --uniform-bucket-level-access --public-access-prevention
+#   gcloud storage buckets update gs://movie-picker-backups --versioning
+#   printf '{"rule":[{"action":{"type":"Delete"},"condition":{"age":30}}]}' > /tmp/lifecycle.json
+#   gcloud storage buckets update gs://movie-picker-backups --lifecycle-file=/tmp/lifecycle.json
+#   gcloud secrets add-iam-policy-binding MONGODB_URI --member="serviceAccount:<SA_CI>" \
+#     --role=roles/secretmanager.secretAccessor
+#   gcloud storage buckets add-iam-policy-binding gs://movie-picker-backups \
+#     --member="serviceAccount:<SA_CI>" --role=roles/storage.objectAdmin
+# puis GitHub → Settings → Secrets and variables → Actions → Variables :
+#   BACKUP_BUCKET = movie-picker-backups
+#
+# Le bucket contient des données personnelles (adresses e-mail, empreintes de mots de passe) :
+# accès public interdit, et l'archive n'est jamais publiée en artefact GitHub.
+
+name: Sauvegarde MongoDB
+
+on:
+  schedule:
+    - cron: "31 2 * * *" # tous les jours, 02:31 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup-mongo
+  cancel-in-progress: false
+
+env:
+  MDB_TOOLS_VERSION: "100.12.0"
+  MDB_TOOLS_SHA256: "012f767812b84947a6378a3fc3be3a4dce19bfae096e1907470d20e5ff613da9"
+  # Épinglée par digest : cette instance reçoit une copie complète de la base de production.
+  MONGO_IMAGE: "mongo@sha256:5211c51171f57ae60842b11664bb244628971b3d35325762a97888337b9bb0db"
+
+jobs:
+  backup:
+    name: Dump, vérification par restauration, puis publication
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Vérifier la configuration
+        env:
+          BACKUP_BUCKET: ${{ vars.BACKUP_BUCKET }}
+        run: |
+          if [ -z "$BACKUP_BUCKET" ]; then
+            echo "::error::Variable BACKUP_BUCKET absente : aucune sauvegarde n'est effectuée."
+            echo "::error::Créer le bucket puis la variable — commandes en tête de ce fichier."
+            exit 1
+          fi
+          echo "Bucket de destination : gs://$BACKUP_BUCKET"
+
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      # Outils épinglés par version *et* par empreinte, comme les actions le sont par SHA et les
+      # images par digest : une archive substituée en amont ne passe pas.
+      - name: Installer mongodump / mongorestore
+        run: |
+          set -eo pipefail
+          ARCHIVE_NAME="mongodb-database-tools-ubuntu2404-x86_64-${MDB_TOOLS_VERSION}"
+          curl -sSL --retry 3 --retry-all-errors \
+            -o "$RUNNER_TEMP/mongotools.tgz" \
+            "https://fastdl.mongodb.org/tools/db/${ARCHIVE_NAME}.tgz"
+          echo "${MDB_TOOLS_SHA256}  $RUNNER_TEMP/mongotools.tgz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/mongotools"
+          tar xzf "$RUNNER_TEMP/mongotools.tgz" --strip-components=2 \
+            -C "$RUNNER_TEMP/mongotools" \
+            "${ARCHIVE_NAME}/bin/mongodump" "${ARCHIVE_NAME}/bin/mongorestore"
+          echo "$RUNNER_TEMP/mongotools" >> "$GITHUB_PATH"
+
+      - name: Dump de la production
+        id: dump
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        run: |
+          set -eo pipefail
+          if ! URI="$(gcloud secrets versions access latest --secret=MONGODB_URI --project="$GCP_PROJECT_ID")"; then
+            echo "::error::Lecture du secret MONGODB_URI refusée : accorder roles/secretmanager.secretAccessor au compte de service de la CI."
+            exit 1
+          fi
+          echo "::add-mask::$URI"
+          # Nom de la base porté par le chemin de l'URI. Le motif refuse un nom de machine (il
+          # contient des points) : sans base dans le chemin, on retombe sur le défaut qu'applique
+          # l'API elle-même (ServiceCollectionExtensions : mongoUrl.DatabaseName ?? "moviepicker").
+          DB_NAME="${URI##*/}"
+          DB_NAME="${DB_NAME%%\?*}"
+          if ! printf '%s' "$DB_NAME" | grep -qE '^[A-Za-z0-9_-]+$'; then
+            DB_NAME="moviepicker"
+            echo "::warning::Aucun nom de base dans l'URI — vérification alignée sur le défaut applicatif '$DB_NAME'."
+          fi
+          echo "Base sauvegardée et vérifiée : $DB_NAME"
+          STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+          ARCHIVE="$RUNNER_TEMP/moviepicker-${STAMP}.archive.gz"
+          mongodump --uri="$URI" --archive="$ARCHIVE" --gzip
+          SIZE="$(stat -c%s "$ARCHIVE")"
+          echo "Archive : $ARCHIVE ($SIZE octets)"
+          if [ "$SIZE" -lt 1024 ]; then
+            echo "::error::Archive suspecte (${SIZE} octets) : dump probablement vide."
+            exit 1
+          fi
+          {
+            echo "archive=$ARCHIVE"
+            echo "size=$SIZE"
+            echo "stamp=$STAMP"
+            echo "db_name=$DB_NAME"
+          } >> "$GITHUB_OUTPUT"
+
+      # Dépôt en zone d'attente : rien ne doit atterrir à l'emplacement définitif avant d'avoir été
+      # relu et restauré. Le préfixe est dérivé de STAMP, jamais d'un second appel à `date` — sinon
+      # une exécution à cheval sur un changement de mois classe l'archive dans le mauvais dossier.
+      - name: Déposer l'archive en zone d'attente
+        id: upload
+        env:
+          BACKUP_BUCKET: ${{ vars.BACKUP_BUCKET }}
+          ARCHIVE: ${{ steps.dump.outputs.archive }}
+          STAMP: ${{ steps.dump.outputs.stamp }}
+        run: |
+          set -eo pipefail
+          NAME="moviepicker-${STAMP}.archive.gz"
+          PENDING="gs://${BACKUP_BUCKET}/pending/${NAME}"
+          FINAL="gs://${BACKUP_BUCKET}/mongodb/${STAMP:0:4}/${STAMP:4:2}/${NAME}"
+          if ! gcloud storage cp "$ARCHIVE" "$PENDING"; then
+            echo "::error::Écriture refusée sur gs://${BACKUP_BUCKET} : accorder roles/storage.objectAdmin au compte de service de la CI."
+            exit 1
+          fi
+          {
+            echo "pending=$PENDING"
+            echo "final=$FINAL"
+          } >> "$GITHUB_OUTPUT"
+          echo "Déposée en attente : $PENDING"
+
+      # Ce qui distingue une sauvegarde d'un fichier : la preuve qu'elle se relit. La copie testée
+      # est celle relue depuis Cloud Storage, pas celle restée sur le runner — sinon un envoi
+      # tronqué passerait la vérification sans être vu.
+      - name: Relire et restaurer l'archive publiée
+        env:
+          PENDING: ${{ steps.upload.outputs.pending }}
+          EXPECTED_SIZE: ${{ steps.dump.outputs.size }}
+          DB_NAME: ${{ steps.dump.outputs.db_name }}
+        run: |
+          set -eo pipefail
+          FETCHED="$RUNNER_TEMP/relue.archive.gz"
+          gcloud storage cp "$PENDING" "$FETCHED"
+          FETCHED_SIZE="$(stat -c%s "$FETCHED")"
+          if [ "$FETCHED_SIZE" != "$EXPECTED_SIZE" ]; then
+            echo "::error::Objet relu de ${FETCHED_SIZE} octets contre ${EXPECTED_SIZE} déposés : envoi incomplet."
+            exit 1
+          fi
+          # Réplica set comme en production : c'est la seule topologie où les transactions de
+          # IUnitOfWork fonctionnent, donc la seule qui prouve que la restauration donne une base
+          # sur laquelle l'API peut réellement tourner.
+          docker run -d --name mongo-verify -p 27017:27017 "$MONGO_IMAGE" --replSet rs0 --bind_ip_all
+          READY=0
+          for _ in $(seq 1 30); do
+            if docker exec mongo-verify mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' >/dev/null 2>&1; then
+              READY=1; break
+            fi
+            sleep 2
+          done
+          if [ "$READY" != "1" ]; then
+            echo "::error::La MongoDB de vérification n'a jamais répondu : impossible de valider l'archive."
+            exit 1
+          fi
+          docker exec mongo-verify mongosh --quiet --eval \
+            'rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "127.0.0.1:27017" }] })'
+          PRIMARY=0
+          for _ in $(seq 1 30); do
+            if [ "$(docker exec mongo-verify mongosh --quiet --eval 'db.hello().isWritablePrimary')" = "true" ]; then
+              PRIMARY=1; break
+            fi
+            sleep 2
+          done
+          if [ "$PRIMARY" != "1" ]; then
+            echo "::error::Le réplica set de vérification n'est jamais devenu primaire."
+            exit 1
+          fi
+          mongorestore --uri="mongodb://127.0.0.1:27017/?directConnection=true" --archive="$FETCHED" --gzip
+          # Le nom de base est validé plus haut contre ^[A-Za-z0-9_-]+$ : injection impossible.
+          printf 'const BASE_ATTENDUE = "%s";\n' "$DB_NAME" > "$RUNNER_TEMP/verify.js"
+          cat >> "$RUNNER_TEMP/verify.js" <<'JS'
+          const cible = db.getSiblingDB(BASE_ATTENDUE);
+          const noms = cible.getCollectionNames();
+          let documents = 0;
+          for (const nom of noms) {
+            const n = cible.getCollection(nom).countDocuments();
+            documents += n;
+            print(`${BASE_ATTENDUE}.${nom} : ${n}`);
+          }
+          print(`TOTAL ${BASE_ATTENDUE} : ${noms.length} collection(s), ${documents} document(s)`);
+          if (noms.length === 0 || documents === 0) {
+            print(`La base ${BASE_ATTENDUE} est absente ou vide dans l'archive restaurée.`);
+            quit(1);
+          }
+          JS
+          docker cp "$RUNNER_TEMP/verify.js" mongo-verify:/verify.js
+          docker exec mongo-verify mongosh --quiet --file /verify.js
+
+      - name: Publier l'archive vérifiée
+        env:
+          PENDING: ${{ steps.upload.outputs.pending }}
+          FINAL: ${{ steps.upload.outputs.final }}
+        run: |
+          set -eo pipefail
+          gcloud storage mv "$PENDING" "$FINAL"
+          gcloud storage ls -l "$FINAL"
+          echo "Sauvegarde du jour : $FINAL"
+
+      # Une archive qui n'a pas passé la restauration ne doit pas rester dans le bucket : elle y
+      # serait le fichier le plus récent, donc celui qu'on saisirait en incident.
+      - name: Retirer l'archive non vérifiée
+        if: failure() && steps.upload.outputs.pending != ''
+        env:
+          PENDING: ${{ steps.upload.outputs.pending }}
+        run: |
+          echo "::warning::Vérification en échec — retrait de $PENDING"
+          gcloud storage rm "$PENDING" || true
+
+      - name: Arrêter la MongoDB de vérification
+        if: always()
+        run: docker rm -f mongo-verify 2>/dev/null || true

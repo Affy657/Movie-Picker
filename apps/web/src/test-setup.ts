@@ -1,8 +1,12 @@
 import '@testing-library/jest-dom/vitest';
 import { configure } from '@testing-library/react';
 import { beforeEach, vi } from 'vitest';
+import { loadLocale } from '@/shared/i18n';
 
 configure({ asyncUtilTimeout: 10000 });
+
+await loadLocale('fr');
+await loadLocale('en');
 
 const getComputedStyleOrig = window.getComputedStyle.bind(window);
 window.getComputedStyle = (elt: Element, _pseudoElt?: string | null): CSSStyleDeclaration =>

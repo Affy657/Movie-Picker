@@ -87,6 +87,18 @@
         }
       })();
     </script>
+    <script>
+      (function () {
+        var stored = null;
+        try {
+          stored = localStorage.getItem('moviepicker-locale');
+        } catch {}
+        var browser = (navigator.language || '').toLowerCase();
+        document.documentElement.lang =
+          stored === 'fr' || stored === 'en' ? stored : browser.indexOf('en') === 0 ? 'en' : 'fr';
+        if (location.pathname === '/') document.documentElement.dataset.startRoute = 'home';
+      })();
+    </script>
     <style>
       #splash {
         position: fixed;
@@ -119,13 +131,46 @@
       [data-theme='dark'] #splash span {
         color: #f8fafc;
       }
+      #splash-title {
+        max-width: 36rem;
+        margin: 0;
+        padding-inline: 1rem;
+        font-family:
+          'Overpass',
+          system-ui,
+          -apple-system,
+          sans-serif;
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 1.6;
+        text-align: center;
+        text-wrap: balance;
+        color: #0f172a;
+      }
+      #splash-title:empty {
+        display: none;
+      }
+      [data-theme='dark'] #splash-title {
+        color: #f8fafc;
+      }
     </style>
   </head>
   <body>
     <div id="splash">
       <img src="/logo.svg" alt="" width="72" height="72" />
-      <span>Movie Picker</span>
+      <span id="splash-brand">Movie Picker</span>
+      <p id="splash-title"></p>
     </div>
+    <script>
+      (function () {
+        if (document.documentElement.dataset.startRoute !== 'home') return;
+        document.getElementById('splash-brand').hidden = true;
+        document.getElementById('splash-title').textContent =
+          document.documentElement.lang === 'en'
+            ? 'What are we watching tonight?'
+            : "Qu'est-ce qu'on regarde ce soir ?";
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

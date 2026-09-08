@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { LocaleProvider, useLocale } from './LocaleContext';
+import { LocaleProvider, useLocale, preferredLocale } from './LocaleContext';
 import { useTranslation } from './useTranslation';
 
 function Wrapper({ children }: { children: ReactNode }) {
@@ -66,5 +66,31 @@ describe('useTranslation', () => {
     localStorage.removeItem('moviepicker-locale');
     const { result } = renderHook(() => useLocale(), { wrapper: Wrapper });
     expect(result.current.locale === 'fr' || result.current.locale === 'en').toBe(true);
+  });
+
+  it('charge la langue a la demande quand le registre est vierge', async () => {
+    vi.resetModules();
+    localStorage.setItem('moviepicker-locale', 'en');
+    const { LocaleProvider: FreshProvider } = await import('./LocaleContext');
+    const { useTranslation: freshUseTranslation } = await import('./useTranslation');
+
+    const { result } = renderHook(() => freshUseTranslation(), {
+      wrapper: ({ children }: { children: ReactNode }) => <FreshProvider>{children}</FreshProvider>,
+    });
+
+    await waitFor(() => expect(result.current.t('common.loading')).toBe('Loading\u2026'));
+  });
+
+  it('detecte la langue du navigateur quand rien n est stocke', () => {
+    const original = Object.getOwnPropertyDescriptor(navigator, 'language');
+    localStorage.removeItem('moviepicker-locale');
+
+    Object.defineProperty(navigator, 'language', { value: 'en-GB', configurable: true });
+    expect(preferredLocale()).toBe('en');
+
+    Object.defineProperty(navigator, 'language', { value: 'fr-FR', configurable: true });
+    expect(preferredLocale()).toBe('fr');
+
+    if (original) Object.defineProperty(navigator, 'language', original);
   });
 });
