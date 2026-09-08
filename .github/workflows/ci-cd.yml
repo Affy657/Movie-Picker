@@ -453,14 +453,14 @@ jobs:
         run: |
           set -eo pipefail
           docker run -d --name mongo-e2e -p 27017:27017 mongo:8 --replSet rs0 --bind_ip_all
-          for i in $(seq 1 30); do
+          for _ in $(seq 1 30); do
             if docker exec mongo-e2e mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' >/dev/null 2>&1; then
               break
             fi
             sleep 2
           done
           docker exec mongo-e2e mongosh --quiet --eval 'rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "127.0.0.1:27017" }] })'
-          for i in $(seq 1 30); do
+          for _ in $(seq 1 30); do
             if [ "$(docker exec mongo-e2e mongosh --quiet --eval 'db.hello().isWritablePrimary')" = "true" ]; then
               break
             fi
