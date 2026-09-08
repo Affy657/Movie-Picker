@@ -222,22 +222,39 @@ Ce JS arrivait en **79 requêtes dont 51 scripts** pour une seule page mobile, a
 2 Ko (`x-HtGcU3QY.js` : 154 octets ; `pluralizeCount` : 77 octets). Sous l'étranglement mobile
 simulé de Lighthouse, chacun paie un aller-retour réseau complet.
 
-### 7.3 Ce qui a été fait
+### 7.3 Ce qui a été fait — et ce qui a été essayé puis retiré
 
-Regroupement des chunks dans `apps/web/vite.config.ts` (`icons-vendor`, `shared`, `i18n` nommé
-explicitement). Mesure locale, médiane de 3 passages :
+`apps/web/vite.config.ts` regroupe désormais les **icônes** en un chunk `icons-vendor` : les
+81 icônes `lucide-react`, utilisées dans 102 fichiers, tenaient en une quarantaine de micro-chunks
+parce que Rollup les extrait dès qu'elles sont partagées entre deux routes paresseuses. Elles
+tiennent maintenant en 34 Ko. Mesure locale, médiane de **5** passages :
 
 ```
-watchlist   82 -> 84    76 requêtes -> 43    48 scripts -> 21
-my-events   86 -> 88    64 -> 35             42 -> 18
-home        95 -> 95    59 -> 40             34 -> 17
+watchlist   82 -> 84    my-events   86 -> 88    register  87 -> 87    login  96 -> 96
 ```
+
+Un second regroupement — toute la couche `shared/` en un chunk — **a été essayé puis retiré**.
+Il divisait les requêtes par deux (76 → 43 sur `watchlist`) mais ne gagnait aucun point, et il
+coûtait cher là où on ne regardait pas :
+
+```
+                avant   icônes   icônes + shared
+  watchlist        82       84        85
+  my-events        86       88        88
+  register         87       87        84   ← sous le plancher de 85
+  login            96       96        94
+```
+
+Regrouper `shared/` la rend *eager* : une page d'authentification, qui n'utilise qu'une poignée de
+composants, télécharge alors les 92 Ko de la couche entière. **Les pages lourdes y gagnent, les
+pages légères y perdent** — et la porte restait rouge, simplement sur une autre page. La leçon vaut
+pour toute tentative future : mesurer les pages légères autant que les lourdes.
 
 **Attention à deux pièges qui ont été évités et qu'il ne faut pas réintroduire :**
 
 1. `preloadCriticalAssetsPlugin` cherche `App-[hash].js`, `App-[hash].css` et `i18n-[hash].js`
    dans le bundle. Tout regroupement qui renomme ou absorbe ces chunks fait disparaître les
-   préchargements **en silence**, et le LCP empire. D'où le `return 'i18n'` explicite.
+   préchargements **en silence**, et le LCP empire.
 2. `@sentry`, `posthog-js`, `canvas-confetti` et `react-qr-code` sont chargés à la demande.
    Les placer dans un chunk partagé avec du code eager les rendrait eager à leur tour.
 
@@ -247,15 +264,14 @@ home        95 -> 95    59 -> 40             34 -> 17
 runners), il donne environ 81 et 85 pour des planchers de 80 et 85 : la porte repasserait au vert,
 mais de justesse, et resterait à la merci de la variance.
 
-Le chemin critique mesuré après regroupement, c'est **559 Ko de JS chargés au démarrage** :
+Le chemin critique mesuré, c'est environ **470 Ko de JS chargés au démarrage** :
 
 | chunk | poids | part |
 |--|--|--|
-| `react-vendor` | 220 Ko | 39 % |
-| **`i18n`** | **185 Ko** | **33 %** |
-| `shared` | 92 Ko | 16 % |
-| `App` | 47 Ko | 8 % |
-| `icons-vendor` | 27 Ko | 5 % |
+| `react-vendor` | 220 Ko | 47 % |
+| **`i18n`** | **185 Ko** | **39 %** |
+| `App` | 47 Ko | 10 % |
+| `icons-vendor` | 34 Ko | 7 % |
 
 `i18n` est l'anomalie : `src/shared/i18n/locales/fr.ts` (112 Ko) **et** `en.ts` (100 Ko) sont tous
 deux importés statiquement par `locales/index.ts`. Chaque visiteur télécharge et exécute les deux
