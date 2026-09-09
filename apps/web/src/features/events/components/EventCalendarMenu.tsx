@@ -1,5 +1,4 @@
 import { useCallback, useId, useRef, useState } from 'react';
-import clsx from 'clsx';
 import { CalendarPlus, Download, ExternalLink } from 'lucide-react';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useMenuFocus } from '@/shared/hooks/useMenuFocus';
@@ -13,6 +12,7 @@ import {
   type CalendarEvent,
 } from '@/shared/utils/icsCalendar';
 import styles from './MenuPanel.module.css';
+import Button from '@/shared/components/Button';
 
 type EventCalendarMenuProps = {
   title: string;
@@ -70,10 +70,10 @@ export default function EventCalendarMenu({
 
   return (
     <div className={styles.container} ref={containerRef}>
-      <button
+      <Button
         ref={triggerRef}
         type="button"
-        className={clsx('btn', styles.iconTrigger)}
+        className={styles.iconTrigger}
         onClick={() => setOpen((prev) => !prev)}
         aria-haspopup="menu"
         aria-expanded={open}
@@ -82,7 +82,7 @@ export default function EventCalendarMenu({
         title={t('events.calendar.addButton')}
       >
         <CalendarPlus size={16} aria-hidden />
-      </button>
+      </Button>
 
       {open ? (
         <div

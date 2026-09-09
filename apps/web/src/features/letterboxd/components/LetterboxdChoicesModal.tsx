@@ -16,6 +16,8 @@ import {
 } from '@/features/letterboxd/api/letterboxdApi';
 import styles from './LetterboxdChoicesModal.module.css';
 import Modal from '@/shared/components/Modal';
+import Button from '@/shared/components/Button';
+import IconButton from '@/shared/components/IconButton';
 
 interface LetterboxdChoicesModalProps {
   open: boolean;
@@ -179,14 +181,9 @@ export default function LetterboxdChoicesModal({
             ))}
           </span>
         </div>
-        <button
-          type="button"
-          className={styles.closeBtn}
-          onClick={onClose}
-          aria-label={t('common.close')}
-        >
+        <IconButton label={t('common.close')} onClick={onClose}>
           <X aria-hidden size={18} />
-        </button>
+        </IconButton>
       </div>
 
       <p className={styles.intro}>
@@ -284,22 +281,22 @@ export default function LetterboxdChoicesModal({
           {t('auth.account.letterboxd.choicesDecideLater')}
         </button>
         <div className={styles.footerActions}>
-          <button
+          <Button
             type="button"
-            className="btn btn-ghost"
+            variant="ghost"
             onClick={() => goToNext('skip')}
             disabled={confirming}
           >
             {t('auth.account.letterboxd.choicesSkipStep')}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="btn btn-primary"
+            variant="primary"
             onClick={() => goToNext()}
             disabled={confirming || currentAnswer === undefined}
           >
             {confirmStepLabel(confirming, isLast, t)}
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

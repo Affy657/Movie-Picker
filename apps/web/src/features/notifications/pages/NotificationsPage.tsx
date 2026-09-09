@@ -39,7 +39,7 @@ function notifDestination(item: UserNotificationItem): string | null {
   return item.eventSlug ? ROUTES.eventDetail(item.eventSlug) : null;
 }
 
-function notifText(item: UserNotificationItem, t: TFn): string {
+function notifText(item: UserNotificationItem, t: TFn, withinEventGroup = false): string {
   const eventTitle = item.eventTitle ?? '';
   const name = item.actorDisplayName ?? '';
   const movie = item.movieTitle ?? '';
@@ -47,25 +47,43 @@ function notifText(item: UserNotificationItem, t: TFn): string {
     case 'newfollower':
       return t('notifications.newFollowerText', { name });
     case 'participantjoined':
-      return t('notifications.participantJoinedText', { name, eventTitle });
+      return withinEventGroup
+        ? t('notifications.participantJoinedGroupedText', { name })
+        : t('notifications.participantJoinedText', { name, eventTitle });
     case 'movieadded':
-      return t('notifications.movieAddedText', { movie, eventTitle });
+      return withinEventGroup
+        ? t('notifications.movieAddedGroupedText', { movie })
+        : t('notifications.movieAddedText', { movie, eventTitle });
     case 'moviepicked':
-      return t('notifications.moviePickedText', { movie, eventTitle });
+      return withinEventGroup
+        ? t('notifications.moviePickedGroupedText', { movie })
+        : t('notifications.moviePickedText', { movie, eventTitle });
     case 'moviepickedmanually':
-      return t('notifications.moviePickedManuallyText', { movie, eventTitle });
+      return withinEventGroup
+        ? t('notifications.moviePickedManuallyGroupedText', { movie })
+        : t('notifications.moviePickedManuallyText', { movie, eventTitle });
     case 'eventdeleted':
-      return t('notifications.eventDeletedText', { eventTitle });
+      return withinEventGroup
+        ? t('notifications.eventDeletedGroupedText')
+        : t('notifications.eventDeletedText', { eventTitle });
     case 'eventdatechanged':
-      return t('notifications.eventDateChangedText', { eventTitle });
+      return withinEventGroup
+        ? t('notifications.eventDateChangedGroupedText')
+        : t('notifications.eventDateChangedText', { eventTitle });
     case 'eventreminder1h':
-      return t('notifications.eventReminder1hText', { eventTitle });
+      return withinEventGroup
+        ? t('notifications.eventReminder1hGroupedText')
+        : t('notifications.eventReminder1hText', { eventTitle });
     case 'eventreminder24h':
-      return t('notifications.eventReminder24hText', { eventTitle });
+      return withinEventGroup
+        ? t('notifications.eventReminder24hGroupedText')
+        : t('notifications.eventReminder24hText', { eventTitle });
     case 'eventinvitation':
       return t('notifications.eventInvitationText', { name, eventTitle });
     case 'eventpending':
-      return t('notifications.eventPendingText', { eventTitle });
+      return withinEventGroup
+        ? t('notifications.eventPendingGroupedText')
+        : t('notifications.eventPendingText', { eventTitle });
     case 'letterboxdreconciliationpending':
       return t('notifications.letterboxdReconciliationPendingText');
     default:
@@ -78,11 +96,13 @@ function NotifRow({
   t,
   locale,
   onRead,
+  withinEventGroup = false,
 }: Readonly<{
   item: UserNotificationItem;
   t: TFn;
   locale: LocaleCode;
   onRead: (id: string) => void;
+  withinEventGroup?: boolean;
 }>) {
   const to = notifDestination(item);
   const hasActor = !!item.actorDisplayName;
@@ -101,7 +121,7 @@ function NotifRow({
         )}
       </span>
       <span className={styles.itemBody}>
-        <p className={styles.itemText}>{renderWithBold(notifText(item, t))}</p>
+        <p className={styles.itemText}>{renderWithBold(notifText(item, t, withinEventGroup))}</p>
       </span>
       <span className={styles.itemTime}>{formatRelativeTime(item.createdAt, locale)}</span>
     </>
@@ -140,9 +160,13 @@ function NotifCard({
   const [expanded, setExpanded] = useState(false);
 
   if (group.kind === 'single') {
+    const readSingle = (id: string) => {
+      onRead(id);
+      for (const supersededId of group.supersededIds) onRead(supersededId);
+    };
     return (
       <div className={styles.card}>
-        <NotifRow item={group.item} t={t} locale={locale} onRead={onRead} />
+        <NotifRow item={group.item} t={t} locale={locale} onRead={readSingle} />
       </div>
     );
   }
@@ -154,7 +178,14 @@ function NotifCard({
     <div className={styles.card}>
       <p className={styles.cardHead}>{group.eventTitle}</p>
       {visible.map((item) => (
-        <NotifRow key={item.id} item={item} t={t} locale={locale} onRead={onRead} />
+        <NotifRow
+          key={item.id}
+          item={item}
+          t={t}
+          locale={locale}
+          onRead={onRead}
+          withinEventGroup
+        />
       ))}
       {hidden > 0 && (
         <button type="button" className={styles.seeMore} onClick={() => setExpanded(true)}>

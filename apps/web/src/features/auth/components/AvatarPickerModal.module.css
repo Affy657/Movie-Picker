@@ -13,34 +13,7 @@
   color: var(--color-text);
 }
 
-.closeBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  transition:
-    background var(--duration-base) var(--ease-default),
-    color var(--duration-base) var(--ease-default);
-}
-
 @media (hover: hover) {
-  .closeBtn:hover {
-    background: var(--color-border-subtle);
-    color: var(--color-text);
-  }
-}
-
-.hint {
-  margin: 0 0 var(--space-4);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
 }
 
 .tabs {

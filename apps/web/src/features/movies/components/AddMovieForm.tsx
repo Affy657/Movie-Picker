@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
-import { ImageOff, Search } from 'lucide-react';
+import { Film, Search } from 'lucide-react';
 import {
   addMovieToEvent,
   searchMovies,
@@ -26,7 +26,9 @@ import { useMovieSearchFilters } from '@/features/movies/hooks/useMovieSearchFil
 import MovieSearchFiltersPanel from '@/features/movies/components/MovieSearchFiltersPanel';
 import ActiveFilterChips from '@/features/movies/components/ActiveFilterChips';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
+import SearchHistoryDropdown from './SearchHistoryDropdown';
 import styles from './AddMovieForm.module.css';
+import Button from '@/shared/components/Button';
 
 const SEARCH_DEBOUNCE_MS = 350;
 const SEARCH_MIN_CHARS = 2;
@@ -451,55 +453,14 @@ export default function AddMovieForm({
         </div>
 
         {showHistory && (
-          <div className={styles.historyDropdown} id="add-movie-history" ref={historyDropdownRef}>
-            <div className={styles.historyHeader}>
-              <span className={styles.historyTitle}>{t('movies.search.historyTitle')}</span>
-              <button type="button" className={styles.historyClearBtn} onClick={clearHistory}>
-                {t('movies.search.historyClear')}
-              </button>
-            </div>
-            <ul className={styles.historyList}>
-              {history.map((q) => (
-                <li key={q} className={styles.historyItem}>
-                  <button
-                    type="button"
-                    className={styles.historyItemBtn}
-                    aria-label={t('movies.search.historySelectAria', { query: q })}
-                    onClick={() => selectHistoryItem(q)}
-                  >
-                    <svg
-                      className={styles.historyIcon}
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      aria-hidden="true"
-                    >
-                      <circle cx="6.5" cy="6.5" r="4.5" />
-                      <path d="M10.5 10.5 14 14" strokeLinecap="round" />
-                    </svg>
-                    <span className={styles.historyLabel}>{q}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.historyRemoveBtn}
-                    aria-label={t('movies.search.historyRemoveAria', { query: q })}
-                    onClick={() => removeFromHistory(q)}
-                  >
-                    <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">
-                      <path
-                        d="M1 1l10 10M11 1 1 11"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        fill="none"
-                      />
-                    </svg>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <SearchHistoryDropdown
+            id="add-movie-history"
+            ref={historyDropdownRef}
+            history={history}
+            onSelect={selectHistoryItem}
+            onRemove={removeFromHistory}
+            onClear={clearHistory}
+          />
         )}
       </div>
 
@@ -589,7 +550,7 @@ export default function AddMovieForm({
                       <img src={posterSrc} alt="" loading="lazy" decoding="async" />
                     ) : (
                       <div className={styles.posterPlaceholder} aria-hidden>
-                        <ImageOff size={20} />
+                        <Film size={20} />
                       </div>
                     )}
                   </div>
@@ -639,9 +600,11 @@ export default function AddMovieForm({
                       )}
                   </div>
                   <div className={styles.resultAction}>
-                    <button
+                    <Button
                       type="button"
-                      className={`btn btn-sm btn-primary ${styles.addButton}`}
+                      variant="primary"
+                      size="sm"
+                      className={styles.addButton}
                       onClick={() => addMovie(r)}
                       disabled={adding || alreadyAdded}
                       title={
@@ -653,7 +616,7 @@ export default function AddMovieForm({
                       {alreadyAdded
                         ? (alreadyAddedLabel ?? t('movies.search.alreadyListed'))
                         : t('movies.search.addButton')}
-                    </button>
+                    </Button>
                   </div>
                 </li>
               );

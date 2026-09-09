@@ -94,7 +94,7 @@ describe('whatsNewLinkPath', () => {
   });
 
   it('résout discover vers /decouvrir', () => {
-    expect(whatsNewLinkPath('discover', null)).toBe(ROUTES.discover);
+    expect(whatsNewLinkPath('howItWorks', null)).toBe(ROUTES.howItWorks);
   });
 });
 

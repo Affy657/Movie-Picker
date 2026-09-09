@@ -1,8 +1,10 @@
+import type { ReactNode } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
 import clsx from 'clsx';
 import SearchField from '@/shared/components/SearchField';
 import SortControl, { type SortOption } from '@/features/movies/components/SortControl';
 import styles from './ListToolbar.module.css';
+import LinkButton from '@/shared/components/LinkButton';
 
 export type { SortOption };
 
@@ -30,6 +32,7 @@ export interface ListToolbarProps<TSortKey extends string> {
   clearAllLabel: string;
   onClearAll: () => void;
   isMobile: boolean;
+  trailing?: ReactNode;
 }
 
 export default function ListToolbar<TSortKey extends string>({
@@ -56,6 +59,7 @@ export default function ListToolbar<TSortKey extends string>({
   clearAllLabel,
   onClearAll,
   isMobile,
+  trailing,
 }: Readonly<ListToolbarProps<TSortKey>>) {
   return (
     <div className={styles.toolbar}>
@@ -107,11 +111,11 @@ export default function ListToolbar<TSortKey extends string>({
         {isFiltered ? (
           <span className={styles.resultCount}>
             {resultCountText}
-            <button type="button" className={styles.linkReset} onClick={onClearAll}>
-              {clearAllLabel}
-            </button>
+            <LinkButton onClick={onClearAll}>{clearAllLabel}</LinkButton>
           </span>
         ) : null}
+
+        {trailing ? <span className={styles.trailing}>{trailing}</span> : null}
       </div>
     </div>
   );

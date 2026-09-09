@@ -296,7 +296,7 @@ describe('LetterboxdImportSection (MSW)', () => {
     renderAccount();
 
     expect(
-      await screen.findByText(/2 film\(s\) n.ont pas pu être identifiés automatiquement\./)
+      await screen.findByText(/2 films n.ont pas pu être identifiés automatiquement\./)
     ).toBeInTheDocument();
     const pendingButton = await screen.findByRole('button', { name: 'Les confirmer' });
     await user.click(pendingButton);

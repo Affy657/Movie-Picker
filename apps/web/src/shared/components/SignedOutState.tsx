@@ -4,6 +4,7 @@ import EmptyState from '@/shared/components/EmptyState';
 import { withReturnTo, ROUTES } from '@/app/routes';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { useTranslation } from '@/shared/i18n';
+import { buttonClass } from '@/shared/components/Button';
 
 type SignedOutStateProps = {
   icon: ReactNode;
@@ -34,14 +35,14 @@ export default function SignedOutState({
         <>
           <Link
             to={withReturnTo(ROUTES.login, returnTo)}
-            className="btn btn-primary"
+            className={buttonClass({ variant: 'primary' })}
             onClick={() => track('signed_out_cta_clicked', { page: returnTo, cta: 'login' })}
           >
             {t('home.ctaLogin')}
           </Link>
           <Link
             to={withReturnTo(ROUTES.register, returnTo)}
-            className="btn"
+            className={buttonClass()}
             onClick={() => track('signed_out_cta_clicked', { page: returnTo, cta: 'register' })}
           >
             {t('home.ctaRegister')}

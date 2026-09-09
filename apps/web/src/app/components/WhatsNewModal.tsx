@@ -13,6 +13,7 @@ import {
 } from '@/shared/whatsNew';
 import styles from './WhatsNewModal.module.css';
 import Modal from '@/shared/components/Modal';
+import Button from '@/shared/components/Button';
 
 type Props = {
   open: boolean;
@@ -132,9 +133,9 @@ export default function WhatsNewModal({
       </div>
 
       <div className={styles.actions}>
-        <button type="button" className="btn btn-primary" onClick={onClose}>
+        <Button type="button" variant="primary" onClick={onClose}>
           {t('whatsNew.close')}
-        </button>
+        </Button>
       </div>
     </Modal>
   );

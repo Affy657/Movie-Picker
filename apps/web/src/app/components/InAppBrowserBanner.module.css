@@ -78,30 +78,7 @@
   white-space: nowrap;
 }
 
-.closeBtn {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border: none;
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--color-text-muted);
-  cursor: pointer;
-}
-
 @media (hover: hover) {
-  .closeBtn:hover {
-    background: color-mix(in srgb, var(--color-text-muted) 14%, transparent);
-    color: var(--color-text);
-  }
-}
-
-.closeBtn:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
 }
 
 @media (max-width: 29.9375rem) {

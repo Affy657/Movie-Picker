@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import { Ban, Crown, Film, Trophy } from 'lucide-react';
+import { Crown, Film, Trophy } from 'lucide-react';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import { formatMyEventsListDate } from '@/shared/utils/formatMyEventsListDate';
 import { ParticipantStat, MoviesStat } from '@/features/events/components/EventSummaryCard';
@@ -8,6 +8,7 @@ import { useLocale, useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import type { MyEventSummary } from '@/features/events/types';
 import styles from './HistoryEventRow.module.css';
+import Card from '@/shared/components/Card';
 
 interface HistoryEventRowProps {
   event: MyEventSummary;
@@ -24,7 +25,7 @@ export default function HistoryEventRow({
   const { locale } = useLocale();
 
   return (
-    <article className={styles.row}>
+    <Card as="article" padding="none" elevated className={styles.row}>
       <Link
         to={ROUTES.eventDetail(event.slug)}
         className={styles.thumbLink}
@@ -42,7 +43,7 @@ export default function HistoryEventRow({
           />
         ) : (
           <span className={styles.posterFallback} aria-hidden>
-            {event.winnerMovieTitle ? <Film size={18} /> : <Ban size={18} />}
+            <Film size={18} />
           </span>
         )}
       </Link>
@@ -88,6 +89,6 @@ export default function HistoryEventRow({
           removeLabel={t('events.myEvents.historyRemoveAction')}
         />
       </div>
-    </article>
+    </Card>
   );
 }

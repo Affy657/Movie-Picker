@@ -15,6 +15,7 @@ import {
   type EligibleFollowItem,
 } from '@/features/events/api/eventsApi';
 import styles from './EventInviteFriendsTab.module.css';
+import Button from '@/shared/components/Button';
 
 type Props = {
   slug: string;
@@ -125,15 +126,16 @@ export default function EventInviteFriendsTab({ slug, onNavigate }: Readonly<Pro
                     {t('events.invite.invitedBadge')}
                   </span>
                 ) : (
-                  <button
+                  <Button
                     type="button"
-                    className="btn btn-sm btn-primary"
+                    variant="primary"
+                    size="sm"
                     onClick={() => handleInvite(item)}
                     disabled={isBusy}
                     aria-label={t('events.invite.inviteAriaLabel', { name: item.displayName })}
                   >
                     {isBusy ? '…' : t('events.invite.inviteAction')}
-                  </button>
+                  </Button>
                 );
 
                 return (

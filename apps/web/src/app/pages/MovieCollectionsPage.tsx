@@ -18,6 +18,7 @@ import ListToolbar from '@/features/movies/components/ListToolbar';
 import { useMovieCollections } from '@/features/movies/hooks/useMovieShowcase';
 import type { MovieCollection } from '@/features/movies/api/showcaseApi';
 import styles from './ShowcaseListPage.module.css';
+import { collectionDisplayName } from '@/features/movies/utils/collectionName';
 
 const SKELETON_CARDS = 6;
 
@@ -61,7 +62,9 @@ export default function MovieCollectionsPage() {
   const visibleItems = useMemo(() => {
     const rankById = new Map(items.map((collection, index) => [collection.id, index]));
     const matching = query
-      ? items.filter((collection) => collection.name.toLowerCase().includes(query))
+      ? items.filter((collection) =>
+          collectionDisplayName(collection.name).toLowerCase().includes(query)
+        )
       : items;
     const direction = sortDir === 'asc' ? 1 : -1;
     return [...matching].sort((a, b) => compareCollections(a, b, sortBy, rankById) * direction);
@@ -168,7 +171,7 @@ export default function MovieCollectionsPage() {
             <MovieCollectionCard
               key={collection.id}
               to={ROUTES.movieCollection(collection.id)}
-              name={collection.name}
+              name={collectionDisplayName(collection.name)}
               movieCountLabel={pluralizeCount(
                 collection.movieCount,
                 'showcase.collectionMoviesOne',

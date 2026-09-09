@@ -41,7 +41,7 @@ describe('groupInboxItems', () => {
 
     const groups = groupInboxItems(items);
 
-    expect(groups).toEqual([{ kind: 'single', item: items[0] }]);
+    expect(groups).toEqual([{ kind: 'single', item: items[0], supersededIds: [] }]);
   });
 
   it('never groups newfollower or eventinvitation even with a matching eventSlug', () => {
@@ -69,6 +69,36 @@ describe('groupInboxItems', () => {
 
     const ids = groups.map((g) => (g.kind === 'single' ? g.item.id : 'group:' + g.eventSlug));
     expect(ids).toEqual(['recent-single', 'group:s1', 'old-single']);
+  });
+
+  it('ne garde que la derniere synchro Letterboxd et rattache les precedentes', () => {
+    const items = [
+      item({
+        id: 'lb-recent',
+        type: 'letterboxdreconciliationpending',
+        createdAt: '2026-01-05T00:00:00Z',
+      }),
+      item({
+        id: 'lb-old',
+        type: 'letterboxdreconciliationpending',
+        createdAt: '2026-01-03T00:00:00Z',
+      }),
+      item({
+        id: 'lb-older',
+        type: 'letterboxdreconciliationpending',
+        createdAt: '2026-01-01T00:00:00Z',
+      }),
+    ];
+
+    const groups = groupInboxItems(items);
+
+    expect(groups).toHaveLength(1);
+    const [group] = groups;
+    expect(group).toMatchObject({ kind: 'single' });
+    if (group?.kind === 'single') {
+      expect(group.item.id).toBe('lb-recent');
+      expect(group.supersededIds).toEqual(['lb-old', 'lb-older']);
+    }
   });
 
   it('groups items from different events independently', () => {

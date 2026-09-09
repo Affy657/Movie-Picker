@@ -1,6 +1,6 @@
 import confetti from 'canvas-confetti';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ImageOff, X } from 'lucide-react';
+import { Film, X } from 'lucide-react';
 import type { MovieData } from '@/shared/types/movie';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import { useDialogOpen } from '@/shared/hooks/useDialogOpen';
@@ -9,6 +9,8 @@ import { useTranslation } from '@/shared/i18n';
 import SpinningWheel from './SpinningWheel';
 import Modal from '@/shared/components/Modal';
 import styles from './WheelModal.module.css';
+import Button from '@/shared/components/Button';
+import IconButton from '@/shared/components/IconButton';
 
 const noop = () => {};
 
@@ -172,14 +174,9 @@ export default function WheelModal({
                   ? t('events.wheel.modal.manualWinnerTitle')
                   : t('events.wheel.modal.winnerTitle')}
               </h2>
-              <button
-                type="button"
-                className={styles.closeIconBtn}
-                onClick={onClose}
-                aria-label={t('common.close')}
-              >
+              <IconButton label={t('common.close')} onClick={onClose}>
                 <X size={20} />
-              </button>
+              </IconButton>
             </div>
 
             <div className={styles.winnerArea}>
@@ -187,7 +184,7 @@ export default function WheelModal({
                 <img src={posterSrc} alt={winner.title} className={styles.poster} loading="lazy" />
               ) : (
                 <div className={styles.posterPlaceholder} aria-hidden>
-                  <ImageOff size={28} />
+                  <Film size={28} />
                 </div>
               )}
               <div className={styles.info}>
@@ -207,13 +204,13 @@ export default function WheelModal({
 
             <div className={styles.footer}>
               {onRelaunch && (
-                <button type="button" className="btn" onClick={onRelaunch}>
+                <Button type="button" onClick={onRelaunch}>
                   {t('events.wheel.relaunchButton')}
-                </button>
+                </Button>
               )}
-              <button type="button" className="btn btn-primary" onClick={onClose}>
+              <Button type="button" variant="primary" onClick={onClose}>
                 {t('events.wheel.modal.closeButton')}
-              </button>
+              </Button>
             </div>
           </>
         )}

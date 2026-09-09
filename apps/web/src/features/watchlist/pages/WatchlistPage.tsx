@@ -37,11 +37,32 @@ import WatchlistToolbar from '@/features/watchlist/components/WatchlistToolbar';
 import MovieListFiltersPanel from '@/features/movies/components/MovieListFiltersPanel';
 import WatchlistMovieCard from '@/features/watchlist/components/WatchlistMovieCard';
 import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
+import ViewModeToggle, { type MovieViewMode } from '@/shared/components/ViewModeToggle';
 import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventModal';
 import styles from './WatchlistPage.module.css';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
+import Button from '@/shared/components/Button';
 
 function itemKey(tmdbId: number, mediaType: MovieMediaType | undefined): string {
   return `${tmdbId}|${mediaType ?? 'movie'}`;
+}
+
+const VIEW_MODE_STORAGE_KEY = 'watchlist-view';
+
+function readStoredViewMode(): MovieViewMode {
+  try {
+    return localStorage.getItem(VIEW_MODE_STORAGE_KEY) === 'list' ? 'list' : 'grid';
+  } catch {
+    return 'grid';
+  }
+}
+
+function persistViewMode(mode: MovieViewMode) {
+  try {
+    localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
+  } catch {
+    return;
+  }
 }
 
 export default function WatchlistPage() {
@@ -55,11 +76,17 @@ export default function WatchlistPage() {
 
   const { data: items = [], isLoading, isError } = useWatchlist({ enabled: !!user });
 
+  const changeViewMode = (mode: MovieViewMode) => {
+    setViewMode(mode);
+    persistViewMode(mode);
+  };
+
   const [removeError, setRemoveError] = useState<string | null>(null);
   const [proposeTarget, setProposeTarget] = useState<WatchlistItem | null>(null);
   const [detailsTarget, setDetailsTarget] = useState<WatchlistItem | null>(null);
   const [addPanelOpen, setAddPanelOpen] = useState(false);
   const [letterboxdModalOpen, setLetterboxdModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<MovieViewMode>(readStoredViewMode);
   const addButtonRef = useRef<HTMLButtonElement>(null);
   const filtersPanelRef = useRef<HTMLDivElement>(null);
 
@@ -134,7 +161,7 @@ export default function WatchlistPage() {
       onToggleVoteMin={toolbar.toggleVoteMin}
       runtimeRange={toolbar.runtimeRange}
       onChangeRuntimeRange={toolbar.changeRuntimeRange}
-      onReset={toolbar.clearAllFilters}
+      onReset={isMobile ? undefined : toolbar.clearAllFilters}
     />
   );
   const subtitle =
@@ -182,46 +209,39 @@ export default function WatchlistPage() {
           {isMobile ? (
             <div className={styles.headerActionsMobile}>
               {!user?.letterboxdUsername && (
-                <button
+                <Button
                   type="button"
-                  className="btn btn-ghost btn-sm"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setLetterboxdModalOpen(true)}
                 >
                   <Import size={14} aria-hidden />
                   <span>{t('watchlist.letterboxdCtaShort')}</span>
-                </button>
+                </Button>
               )}
-              <button
+              <Button
                 type="button"
                 ref={addButtonRef}
-                className="btn btn-primary btn-sm"
+                variant="primary"
+                size="sm"
                 onClick={openAddPanel}
               >
                 <Plus size={15} aria-hidden />
                 <span>{t('watchlist.addPanel.triggerShort')}</span>
-              </button>
+              </Button>
             </div>
           ) : (
             <div className={styles.headerActions}>
               {!user?.letterboxdUsername && (
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  onClick={() => setLetterboxdModalOpen(true)}
-                >
+                <Button type="button" variant="ghost" onClick={() => setLetterboxdModalOpen(true)}>
                   <Import size={15} aria-hidden />
                   <span>{t('watchlist.letterboxdCta')}</span>
-                </button>
+                </Button>
               )}
-              <button
-                type="button"
-                ref={addButtonRef}
-                className="btn btn-primary"
-                onClick={openAddPanel}
-              >
+              <Button type="button" ref={addButtonRef} variant="primary" onClick={openAddPanel}>
                 <Plus size={16} aria-hidden />
                 <span>{t('watchlist.addPanel.trigger')}</span>
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -291,6 +311,7 @@ export default function WatchlistPage() {
                   activeFilterCount,
                   isMobile,
                 })}
+                trailing={<ViewModeToggle value={viewMode} onChange={changeViewMode} />}
               />
             }
             desktopFilters={
@@ -314,9 +335,12 @@ export default function WatchlistPage() {
                   title={t('watchlist.toolbar.filtersSheetTitle')}
                   onClose={() => toolbar.setFiltersOpen(false)}
                   resetLabel={t('watchlist.toolbar.filtersReset')}
-                  applyLabel={t('watchlist.toolbar.filtersApply', {
-                    count: toolbar.visibleCount,
-                  })}
+                  applyLabel={pluralizeCount(
+                    toolbar.visibleCount,
+                    'watchlist.toolbar.filtersApplyOne',
+                    'watchlist.toolbar.filtersApply',
+                    t
+                  )}
                   onReset={toolbar.clearAllFilters}
                 >
                   {filtersPanel}
@@ -334,7 +358,10 @@ export default function WatchlistPage() {
               ) : null
             }
           >
-            <ul className={styles.grid} aria-label={t('watchlist.listAria')}>
+            <ul
+              className={viewMode === 'list' ? styles.rows : styles.grid}
+              aria-label={t('watchlist.listAria')}
+            >
               {toolbar.visibleItems.map((item) => (
                 <WatchlistMovieCard
                   key={itemKey(item.tmdbId, item.mediaType)}
@@ -346,6 +373,7 @@ export default function WatchlistPage() {
                   onRemove={() => handleRemove(item.tmdbId, item.mediaType)}
                   onOpenDetails={() => setDetailsTarget(item)}
                   onProposeFallback={() => setProposeTarget(item)}
+                  layout={viewMode === 'list' ? 'row' : 'grid'}
                 />
               ))}
             </ul>

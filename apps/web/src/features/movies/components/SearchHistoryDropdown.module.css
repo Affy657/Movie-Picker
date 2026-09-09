@@ -1,0 +1,162 @@
+.historyDropdown {
+  margin-top: var(--space-1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  animation: historyDropdownIn 0.14s ease-out;
+}
+
+@keyframes historyDropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-0.3rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .historyDropdown {
+    animation: none;
+  }
+}
+
+.historyHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3-5);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.historyTitle {
+  font-size: var(--font-size-3xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.historyClearBtn {
+  font-size: var(--font-size-2xs);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  padding: var(--space-1) var(--space-1-5);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition:
+    color var(--duration-fast) var(--ease-default),
+    background var(--duration-fast) var(--ease-default);
+}
+
+@media (hover: hover) {
+  .historyClearBtn:hover {
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  }
+}
+
+.historyList {
+  list-style: none;
+  padding: var(--space-1);
+  margin: 0;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.historyItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  border-radius: var(--radius-sm);
+}
+
+@media (hover: hover) {
+  .historyItem:hover {
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  }
+}
+
+.historyItemBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2-5);
+  padding: var(--space-2) var(--space-2);
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  line-height: 1;
+  min-width: 0;
+}
+
+@media (hover: hover) {
+  .historyItemBtn:hover {
+    color: var(--color-primary);
+  }
+}
+
+.historyItemBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.historyLabel {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transform: translateY(var(--text-optical-nudge));
+}
+
+.historyIcon {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.historyRemoveBtn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-right: var(--space-1);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  opacity: 0.55;
+  transition:
+    opacity var(--duration-fast) var(--ease-default),
+    color var(--duration-fast) var(--ease-default),
+    background var(--duration-fast) var(--ease-default);
+}
+
+@media (hover: hover) {
+  .historyRemoveBtn:hover {
+    opacity: 1;
+    color: var(--color-error);
+    background: color-mix(in srgb, var(--color-error) 12%, transparent);
+  }
+}
+
+.historyRemoveBtn:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}

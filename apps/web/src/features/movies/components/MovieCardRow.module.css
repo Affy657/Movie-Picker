@@ -141,7 +141,7 @@
 
 .title {
   margin: 0;
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-md);
   font-weight: 600;
   letter-spacing: var(--tracking-snug);
   color: var(--color-text);
@@ -386,7 +386,7 @@
 }
 
 .mobileTitleRow .title {
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-md);
 }
 
 .mobileFacts {

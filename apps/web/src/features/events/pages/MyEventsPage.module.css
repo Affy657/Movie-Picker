@@ -128,15 +128,6 @@
   box-sizing: border-box;
 }
 
-.ctaNav {
-  margin-top: var(--space-7);
-  margin-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
-}
-
-.ctaButton {
-  border-radius: var(--radius-md);
-}
-
 .loadMoreBtn {
   display: block;
   width: fit-content;
@@ -181,7 +172,7 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  min-height: 6rem;
+  min-height: var(--space-24);
   height: 100%;
   padding: var(--space-4);
   border: 1px dashed var(--color-border);

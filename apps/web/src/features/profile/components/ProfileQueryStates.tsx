@@ -4,6 +4,7 @@ import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
 import { ApiError } from '@/shared/api/apiError';
 import { useTranslation } from '@/shared/i18n';
+import { buttonClass } from '@/shared/components/Button';
 
 export function ProfileNotFoundState() {
   const { t } = useTranslation();
@@ -15,7 +16,7 @@ export function ProfileNotFoundState() {
       <p className="errorStateMessage" role="alert">
         {t('profile.notFound')}
       </p>
-      <Link to={ROUTES.home} className="btn">
+      <Link to={ROUTES.home} className={buttonClass()}>
         {t('profile.backHome')}
       </Link>
     </PageLayout>

@@ -3,6 +3,7 @@ import { useTranslation } from '@/shared/i18n';
 import { useConsent } from '@/shared/contexts/ConsentContext';
 import ConsentDialog from '@/shared/components/ConsentDialog';
 import styles from './ConsentBanner.module.css';
+import Button from '@/shared/components/Button';
 
 export default function ConsentBanner() {
   const { t } = useTranslation();
@@ -19,23 +20,26 @@ export default function ConsentBanner() {
           <p className={styles.description}>{t('consent.banner.description')}</p>
         </div>
         <div className={styles.actions}>
-          <button type="button" className={`btn btn-sm ${styles.rejectBtn}`} onClick={rejectAll}>
+          <Button type="button" size="sm" className={styles.rejectBtn} onClick={rejectAll}>
             {t('consent.banner.rejectAll')}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className={`btn btn-sm ${styles.customizeBtn}`}
+            size="sm"
+            className={styles.customizeBtn}
             onClick={() => setDialogOpen(true)}
           >
             {t('consent.banner.customize')}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className={`btn btn-sm btn-primary ${styles.acceptBtn}`}
+            variant="primary"
+            size="sm"
+            className={styles.acceptBtn}
             onClick={acceptAll}
           >
             {t('consent.banner.acceptAll')}
-          </button>
+          </Button>
         </div>
       </section>
       <ConsentDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />

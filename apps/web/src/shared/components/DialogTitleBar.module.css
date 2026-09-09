@@ -13,29 +13,5 @@
   color: var(--color-text);
 }
 
-.closeBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text-muted);
-  cursor: pointer;
-}
-
-.closeBtn:focus-visible {
-  color: var(--color-text);
-  background: color-mix(in srgb, var(--color-text) 8%, transparent);
-}
-
 @media (hover: hover) {
-  .closeBtn:hover {
-    color: var(--color-text);
-    background: color-mix(in srgb, var(--color-text) 8%, transparent);
-  }
 }

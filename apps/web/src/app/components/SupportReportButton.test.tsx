@@ -40,7 +40,7 @@ describe('SupportReportButton', () => {
 
   it('la boîte de dialogue est fermée au départ', () => {
     const { container } = renderButton();
-    expect(container.querySelector('dialog')?.hasAttribute('open')).toBe(false);
+    expect(container.querySelector('dialog')).toBeNull();
   });
 
   it('ouvre la boîte de dialogue au clic', async () => {
@@ -121,7 +121,7 @@ describe('SupportReportButton', () => {
     await user.click(screen.getByRole('button', { name: /^fermer$/i }));
 
     await waitFor(() => {
-      expect(container.querySelector('dialog')?.hasAttribute('open')).toBe(false);
+      expect(container.querySelector('dialog')).toBeNull();
     });
   });
 });

@@ -13,6 +13,8 @@ import { useTranslation } from '@/shared/i18n';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { remainingWheelRevealDelayMs } from '@/shared/utils/wheelSpin';
 
+export type EventPrimaryAction = 'add' | 'spin' | 'close' | null;
+
 export type EventWheelState = {
   isHost: boolean;
   winner: MovieData | null;
@@ -25,6 +27,7 @@ export type EventWheelState = {
   canSpin: boolean;
 
   spinDisabled: boolean;
+  primaryAction: EventPrimaryAction;
   showRelaunch: boolean;
   showReset: boolean;
   showClose: boolean;
@@ -203,6 +206,17 @@ export function useEventWheel({
 
   const isOpenForActions = isHost && !!event && !event.isFinished;
   const isPendingWithoutWinner = isOpenForActions && !winner && event?.lifecycle === 'pending';
+  const spinDisabled = moviesCount === 0 || noEligibleMovie;
+
+  const eventIsLive = !!event && !event.isFinished;
+  let primaryAction: EventPrimaryAction = null;
+  if (isOpenForActions && !manualMode) {
+    if (winner) primaryAction = 'close';
+    else if (spinDisabled) primaryAction = 'add';
+    else primaryAction = 'spin';
+  } else if (!isHost && eventIsLive && !winner && !manualMode) {
+    primaryAction = 'add';
+  }
 
   return {
     isHost,
@@ -214,7 +228,8 @@ export function useEventWheel({
     error,
     isModalOpen,
     canSpin: isOpenForActions && !manualMode,
-    spinDisabled: moviesCount === 0 || noEligibleMovie,
+    spinDisabled,
+    primaryAction,
     showRelaunch: isOpenForActions && !!winner && moviesCount > 0 && !manualMode,
     showReset: isOpenForActions && !!winner && !manualMode,
     showClose: isOpenForActions && (!!winner || !!event?.closedAt || isPendingWithoutWinner),

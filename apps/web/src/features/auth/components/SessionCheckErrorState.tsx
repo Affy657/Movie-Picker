@@ -4,6 +4,7 @@ import PageLayout from '@/shared/components/PageLayout';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
+import Button, { buttonClass } from '@/shared/components/Button';
 
 export default function SessionCheckErrorState() {
   const { t } = useTranslation();
@@ -17,10 +18,10 @@ export default function SessionCheckErrorState() {
       <p className="errorStateMessage" role="alert">
         {t('auth.sessionCheck.failed')}
       </p>
-      <button type="button" className="btn btn-primary" onClick={retryAuthCheck}>
+      <Button type="button" variant="primary" onClick={retryAuthCheck}>
         {t('common.retry')}
-      </button>
-      <Link to={ROUTES.home} className="btn">
+      </Button>
+      <Link to={ROUTES.home} className={buttonClass()}>
         {t('auth.sessionCheck.backHome')}
       </Link>
     </PageLayout>

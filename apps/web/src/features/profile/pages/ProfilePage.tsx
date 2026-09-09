@@ -29,6 +29,7 @@ import {
   type PublicProfile,
 } from '@/features/profile/api/profileApi';
 import styles from './ProfilePage.module.css';
+import Button from '@/shared/components/Button';
 
 const FollowListModal = lazy(() => import('@/features/profile/components/FollowListModal'));
 const ProfileStatsSection = lazy(() => import('@/features/profile/components/ProfileStatsSection'));
@@ -189,10 +190,10 @@ export default function ProfilePage() {
               </span>
               <div className={styles.statsErrorBody}>
                 <p className={styles.statsErrorMessage}>{t('profile.stats.loadError')}</p>
-                <button type="button" className="btn btn-sm" onClick={() => statsQuery.refetch()}>
+                <Button type="button" size="sm" onClick={() => statsQuery.refetch()}>
                   <RefreshCw size={15} aria-hidden />
                   <span className={styles.btnLabel}>{t('profile.stats.retry')}</span>
-                </button>
+                </Button>
               </div>
             </div>
           )}

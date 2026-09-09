@@ -5,6 +5,8 @@ import { useTranslation } from '@/shared/i18n';
 import { useCopyFeedback } from '@/shared/hooks/useCopyFeedback';
 import { buildSystemBrowserOpenUrl, isKnownInAppBrowser } from '@/shared/utils/inAppBrowser';
 import styles from './InAppBrowserBanner.module.css';
+import Button, { buttonClass } from '@/shared/components/Button';
+import IconButton from '@/shared/components/IconButton';
 
 export default function InAppBrowserBanner() {
   const { t } = useTranslation();
@@ -24,29 +26,28 @@ export default function InAppBrowserBanner() {
           <p className={styles.title}>{t('inAppBrowser.banner.title')}</p>
           <p className={styles.description}>{t('inAppBrowser.banner.description')}</p>
         </div>
-        <button
-          type="button"
-          className={styles.closeBtn}
-          onClick={() => setDismissed(true)}
-          aria-label={t('common.close')}
-        >
+        <IconButton label={t('common.close')} onClick={() => setDismissed(true)}>
           <X size={18} aria-hidden />
-        </button>
+        </IconButton>
       </div>
       <div className={styles.actions}>
         {systemBrowserUrl ? (
-          <a className={`btn btn-sm btn-primary ${styles.openLink}`} href={systemBrowserUrl}>
+          <a
+            className={buttonClass({ variant: 'primary', size: 'sm', className: styles.openLink })}
+            href={systemBrowserUrl}
+          >
             {t('inAppBrowser.banner.openInBrowser')}
           </a>
         ) : null}
-        <button
+        <Button
           type="button"
-          className={`btn btn-sm ${styles.copyBtn}`}
+          size="sm"
+          className={styles.copyBtn}
           onClick={() => copy(currentUrl)}
           aria-live="polite"
         >
           {copied ? t('inAppBrowser.banner.copied') : t('inAppBrowser.banner.copyLink')}
-        </button>
+        </Button>
       </div>
     </section>
   );

@@ -10,7 +10,7 @@ export type WhatsNewLinkTarget =
   | 'profile'
   | 'donate'
   | 'home'
-  | 'discover'
+  | 'howItWorks'
   | 'notifications';
 
 export type WhatsNewAction = 'proposeIdea';
@@ -84,7 +84,7 @@ export const WHATS_NEW: readonly WhatsNewRelease[] = [
       entry('explorationHome', 'new', { link: 'home' }),
       entry('homeSearch', 'new', { link: 'home' }),
       entry('visitorNav', 'new', { link: 'home' }),
-      entry('landingRevamp', 'new', { link: 'discover' }),
+      entry('landingRevamp', 'new', { link: 'howItWorks' }),
       entry('personalRows', 'new', { link: 'home' }),
       entry('streamingRow', 'new', { link: 'home' }),
       entry('themeSelections', 'new', { link: 'home' }),
@@ -112,8 +112,8 @@ export function whatsNewLinkPath(
       return ROUTES.donate;
     case 'home':
       return ROUTES.home;
-    case 'discover':
-      return ROUTES.discover;
+    case 'howItWorks':
+      return ROUTES.howItWorks;
     case 'notifications':
       return ROUTES.notifications;
     case 'profile':

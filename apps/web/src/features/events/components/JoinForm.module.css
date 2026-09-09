@@ -31,14 +31,14 @@
 
 .intro {
   margin: 0 0 var(--space-4);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-md);
   line-height: var(--leading-base);
   color: var(--color-text-muted);
 }
 
 .fullMessage {
   margin: 0;
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-md);
   font-weight: 500;
   color: var(--color-error);
 }

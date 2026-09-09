@@ -13,6 +13,7 @@ import type { LocaleCode } from '@/shared/i18n/locales';
 import { ROUTES } from '@/app/routes';
 import type { MyEventSummary } from '@/features/events/types';
 import styles from './PendingEventCard.module.css';
+import Button, { buttonClass } from '@/shared/components/Button';
 
 const LOCALE_TAG: Record<LocaleCode, string> = {
   fr: 'fr-FR',
@@ -91,22 +92,25 @@ export default function PendingEventCard({
         <div className={styles.actions}>
           {event.isCreator ? (
             <>
-              <Link to={ROUTES.eventDetail(event.slug)} className="btn btn-primary">
+              <Link
+                to={ROUTES.eventDetail(event.slug)}
+                className={buttonClass({ variant: 'primary' })}
+              >
                 {t('events.myEvents.pendingChooseMovieAction')}
               </Link>
               {onCloseWithoutMovie ? (
-                <button
+                <Button
                   type="button"
-                  className="btn"
+
                   onClick={onCloseWithoutMovie}
                   disabled={closing}
                 >
                   {t('events.wheel.closeWithoutMovieButton')}
-                </button>
+                </Button>
               ) : null}
             </>
           ) : (
-            <Link to={ROUTES.eventDetail(event.slug)} className="btn">
+            <Link to={ROUTES.eventDetail(event.slug)} className={buttonClass()}>
               {t('events.myEvents.pendingViewEventAction')}
             </Link>
           )}

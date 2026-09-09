@@ -9,6 +9,7 @@ import EmptyState from '@/shared/components/EmptyState';
 import { ROUTES } from '@/app/routes';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
+import { useRecommendationSeed } from '@/app/pages/home/usePersonalRows';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
@@ -49,6 +50,7 @@ import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventM
 import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
 import type { MovieMediaType } from '@/shared/types/movie';
 import styles from './ShowcaseListPage.module.css';
+import { collectionDisplayName } from '@/features/movies/utils/collectionName';
 
 export type ShowcaseListVariant = ShowcaseSection | 'search';
 
@@ -116,6 +118,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
   const isMobile = useIsMobile();
   const hasHover = useHasHoverCapability();
   const filtersPanelId = useId();
+  const recommendationSeed = useRecommendationSeed(isLoggedIn && variant === 'recommendations');
 
   const searchQuery = (searchParams.get('q') ?? '').trim();
   const genreParam = Number(searchParams.get('genre'));
@@ -244,12 +247,21 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
       return t('showcase.searchHeading', { query: searchQuery });
     if (variant === 'theme' && themeKey) return t(THEME_LABEL_KEYS[themeKey]);
     if (variant === 'provider' && providerKey) return t(PROVIDER_LABEL_KEYS[providerKey]);
-    if (variant === 'collection' && collectionName) return collectionName;
+    if (variant === 'collection' && collectionName) return collectionDisplayName(collectionName);
     return t(TITLE_KEYS[variant]);
   }
 
   const headingText = resolveHeading();
-  const subtitleText = genreId ? genreLabel(genreId, tmdbLanguage) : t(SUBTITLE_KEYS[variant]);
+
+  function resolveSubtitle(): string {
+    if (genreId) return genreLabel(genreId, tmdbLanguage);
+    if (variant === 'recommendations' && recommendationSeed.seedTitle) {
+      return recommendationSeed.seedTitle;
+    }
+    return t(SUBTITLE_KEYS[variant]);
+  }
+
+  const subtitleText = resolveSubtitle();
 
   const canonicalPath = CANONICAL_PATHS[variant];
   usePageSeo({
@@ -274,7 +286,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
       onToggleMediaType={toolbar.toggleMediaType}
       selectedDecade={toolbar.selectedDecade}
       onToggleDecade={toolbar.toggleDecade}
-      onReset={toolbar.clearAllFilters}
+      onReset={isMobile ? undefined : toolbar.clearAllFilters}
     />
   );
 
@@ -332,7 +344,11 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
         <EmptyState
           icon={<Film aria-hidden size={28} />}
           title={t('showcase.empty')}
-          message={t('showcase.emptyMessage')}
+          message={
+            variant === 'most-proposed'
+              ? t('showcase.emptyMessageMostProposed')
+              : t('showcase.emptyMessage')
+          }
         />
       ) : null}
 
@@ -395,9 +411,12 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
                 title={t('profile.movies.toolbar.filtersSheetTitle')}
                 onClose={() => toolbar.setFiltersOpen(false)}
                 resetLabel={t('profile.movies.toolbar.filtersReset')}
-                applyLabel={t('profile.movies.toolbar.filtersApply', {
-                  count: toolbar.visibleCount,
-                })}
+                applyLabel={pluralizeCount(
+                  toolbar.visibleCount,
+                  'profile.movies.toolbar.filtersApplyOne',
+                  'profile.movies.toolbar.filtersApply',
+                  t
+                )}
                 onReset={toolbar.clearAllFilters}
               >
                 {filtersPanel}

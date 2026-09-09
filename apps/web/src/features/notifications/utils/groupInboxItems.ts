@@ -2,6 +2,8 @@ import type { UserNotificationItem } from '@/features/notifications/api/notifica
 
 const UNGROUPABLE_TYPES = new Set(['newfollower', 'eventinvitation']);
 
+const STANDING_TASK_TYPES = new Set(['letterboxdreconciliationpending']);
+
 export type InboxGroup =
   | {
       kind: 'event';
@@ -10,18 +12,51 @@ export type InboxGroup =
       items: UserNotificationItem[];
       latestCreatedAt: string;
     }
-  | { kind: 'single'; item: UserNotificationItem };
+  | { kind: 'single'; item: UserNotificationItem; supersededIds: string[] };
 
 function groupLatestCreatedAt(group: InboxGroup): string {
   return group.kind === 'event' ? group.latestCreatedAt : group.item.createdAt;
 }
 
+function keepLatestStandingTask(items: UserNotificationItem[]): {
+  visible: UserNotificationItem[];
+  supersededByItemId: Map<string, string[]>;
+} {
+  const latestPerType = new Map<string, UserNotificationItem>();
+  for (const item of items) {
+    if (!STANDING_TASK_TYPES.has(item.type)) continue;
+    const current = latestPerType.get(item.type);
+    if (!current || item.createdAt > current.createdAt) latestPerType.set(item.type, item);
+  }
+
+  const supersededByItemId = new Map<string, string[]>();
+  const visible: UserNotificationItem[] = [];
+  for (const item of items) {
+    if (!STANDING_TASK_TYPES.has(item.type)) {
+      visible.push(item);
+      continue;
+    }
+    const latest = latestPerType.get(item.type);
+    if (latest?.id === item.id) {
+      visible.push(item);
+      continue;
+    }
+    if (!latest) continue;
+    const superseded = supersededByItemId.get(latest.id) ?? [];
+    superseded.push(item.id);
+    supersededByItemId.set(latest.id, superseded);
+  }
+
+  return { visible, supersededByItemId };
+}
+
 export function groupInboxItems(items: UserNotificationItem[]): InboxGroup[] {
+  const { visible, supersededByItemId } = keepLatestStandingTask(items);
   const buckets = new Map<string, UserNotificationItem[]>();
   const singles: UserNotificationItem[] = [];
 
-  for (const item of items) {
-    if (UNGROUPABLE_TYPES.has(item.type) || !item.eventSlug) {
+  for (const item of visible) {
+    if (UNGROUPABLE_TYPES.has(item.type) || STANDING_TASK_TYPES.has(item.type) || !item.eventSlug) {
       singles.push(item);
       continue;
     }
@@ -50,7 +85,11 @@ export function groupInboxItems(items: UserNotificationItem[]): InboxGroup[] {
   }
 
   for (const item of singles) {
-    groups.push({ kind: 'single', item });
+    groups.push({
+      kind: 'single',
+      item,
+      supersededIds: supersededByItemId.get(item.id) ?? [],
+    });
   }
 
   return groups.sort((a, b) => groupLatestCreatedAt(b).localeCompare(groupLatestCreatedAt(a)));

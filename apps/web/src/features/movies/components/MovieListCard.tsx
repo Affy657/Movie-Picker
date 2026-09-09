@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import clsx from 'clsx';
-import { ImageOff } from 'lucide-react';
+import { Film } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
 import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
@@ -8,6 +8,7 @@ import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { metaGenresLabel } from '@/shared/utils/movieMetaLine';
 import type { RatingScale } from '@/shared/types/theme';
 import styles from './MovieListCard.module.css';
+import Card from '@/shared/components/Card';
 
 interface MovieListCardProps {
   title: string;
@@ -24,6 +25,7 @@ interface MovieListCardProps {
   kebab?: ReactNode;
   overlay?: ReactNode;
   className?: string;
+  layout?: 'grid' | 'row';
 }
 
 export default function MovieListCard({
@@ -41,6 +43,7 @@ export default function MovieListCard({
   kebab,
   overlay,
   className,
+  layout = 'grid',
 }: Readonly<MovieListCardProps>) {
   const { t } = useTranslation();
   const posterRaw = posterImageSrc(posterPath);
@@ -50,7 +53,12 @@ export default function MovieListCard({
   const genresLabel = metaGenresLabel(genreIds, tmdbLanguage) ?? '';
 
   return (
-    <li className={clsx(styles.card, className)}>
+    <Card
+      as="li"
+      padding="none"
+      elevated
+      className={clsx(styles.card, layout === 'row' && styles.cardAsRow, className)}
+    >
       <div className={styles.posterRegion}>
         <button
           type="button"
@@ -62,14 +70,14 @@ export default function MovieListCard({
             <img src={posterSrc} alt="" loading="lazy" decoding="async" />
           ) : (
             <div className={styles.posterPlaceholder} aria-hidden>
-              <ImageOff size={22} />
+              <Film size={22} />
             </div>
           )}
         </button>
 
         {badges}
 
-        {kebab && <div className={styles.kebabSlot}>{kebab}</div>}
+        {kebab && layout === 'grid' && <div className={styles.kebabSlot}>{kebab}</div>}
 
         {overlay && <div className={styles.overlay}>{overlay}</div>}
       </div>
@@ -83,6 +91,8 @@ export default function MovieListCard({
         </span>
         <span className={styles.cardGenres}>{genresLabel}</span>
       </div>
-    </li>
+
+      {kebab && layout === 'row' && <div className={styles.rowKebabSlot}>{kebab}</div>}
+    </Card>
   );
 }

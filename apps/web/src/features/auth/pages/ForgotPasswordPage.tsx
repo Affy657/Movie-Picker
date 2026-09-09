@@ -9,6 +9,7 @@ import { useTranslation } from '@/shared/i18n';
 import { ROUTES, withReturnTo } from '@/app/routes';
 import { safeReturnTo } from '@/shared/utils/returnTo';
 import { postPasswordResetRequest } from '@/features/auth/api/authApi';
+import Button from '@/shared/components/Button';
 
 export default function ForgotPasswordPage() {
   const { t, locale } = useTranslation();
@@ -78,9 +79,9 @@ export default function ForgotPasswordPage() {
             required
             aria-invalid={error ? true : undefined}
           />
-          <button type="submit" className="btn btn-primary" disabled={loading}>
+          <Button type="submit" variant="primary" disabled={loading}>
             {loading ? t('auth.forgotPassword.submitting') : t('auth.forgotPassword.submit')}
-          </button>
+          </Button>
         </form>
         <p className="muted">
           <Link to={loginTo}>{t('auth.forgotPassword.backToLogin')}</Link>

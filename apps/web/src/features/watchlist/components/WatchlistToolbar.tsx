@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import CollectionToolbar from '@/features/movies/components/CollectionToolbar';
 import { useTranslation } from '@/shared/i18n';
 import type {
@@ -20,6 +21,7 @@ interface WatchlistToolbarProps {
   totalCount: number;
   onClearAll: () => void;
   isMobile: boolean;
+  trailing?: ReactNode;
 }
 
 export default function WatchlistToolbar(props: Readonly<WatchlistToolbarProps>) {

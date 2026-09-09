@@ -9,6 +9,7 @@ import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import { postPasswordResetConfirm } from '@/features/auth/api/authApi';
 import { ApiError } from '@/shared/api/apiError';
+import Button, { buttonClass } from '@/shared/components/Button';
 
 const PASSWORD_MIN_LENGTH = 8;
 
@@ -71,7 +72,7 @@ export default function ResetPasswordPage() {
           )}
         >
           <p>
-            <Link className="btn btn-primary" to={ROUTES.forgotPassword}>
+            <Link className={buttonClass({ variant: 'primary' })} to={ROUTES.forgotPassword}>
               {t('auth.resetPassword.requestNewLink')}
             </Link>
           </p>
@@ -91,7 +92,7 @@ export default function ResetPasswordPage() {
           description={t('auth.resetPassword.successMessage')}
         >
           <p>
-            <Link className="btn btn-primary" to={ROUTES.login}>
+            <Link className={buttonClass({ variant: 'primary' })} to={ROUTES.login}>
               {t('auth.resetPassword.goToLogin')}
             </Link>
           </p>
@@ -148,9 +149,9 @@ export default function ResetPasswordPage() {
             required
             aria-invalid={error ? true : undefined}
           />
-          <button type="submit" className="btn btn-primary" disabled={loading}>
+          <Button type="submit" variant="primary" disabled={loading}>
             {loading ? t('auth.resetPassword.submitting') : t('auth.resetPassword.submit')}
-          </button>
+          </Button>
         </form>
       </AuthPageShell>
     </PageLayout>

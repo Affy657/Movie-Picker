@@ -15,6 +15,7 @@ import {
 } from '@/features/watchlist/hooks/useProposeMovieToEvent';
 import styles from './ProposeToEventModal.module.css';
 import Modal from '@/shared/components/Modal';
+import IconButton from '@/shared/components/IconButton';
 
 type RowState = { status: 'idle' | 'pending' | 'done' | 'error'; error?: string };
 
@@ -57,14 +58,9 @@ export default function ProposeToEventModal({
         <h2 id={titleId} className={styles.title}>
           {t('watchlist.propose.modalTitle', { title: movie.title })}
         </h2>
-        <button
-          type="button"
-          className={styles.closeBtn}
-          onClick={onClose}
-          aria-label={t('common.close')}
-        >
+        <IconButton label={t('common.close')} onClick={onClose}>
           <X aria-hidden size={18} />
-        </button>
+        </IconButton>
       </div>
 
       {isLoading && <p className="placeholder">{t('common.loading')}</p>}

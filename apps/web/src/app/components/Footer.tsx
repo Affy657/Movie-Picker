@@ -124,7 +124,7 @@ export default function Footer({ clearMobileNav = false, onOpenWhatsNew }: Reado
               </Link>
             </li>
             <li>
-              <Link to={ROUTES.discover} className={styles.colLink}>
+              <Link to={ROUTES.howItWorks} className={styles.colLink}>
                 {t('nav.landing.howItWorks')}
               </Link>
             </li>

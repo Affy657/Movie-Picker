@@ -53,3 +53,19 @@ export function formatEventDateLong(
   const datePart = new Intl.DateTimeFormat(LOCALE_TAG[locale], options).format(dt);
   return `${datePart} ${joiner} ${formatEventTime(time)}`;
 }
+
+export function formatEventTitleDate(isoDate: string, locale: LocaleCode): string {
+  const raw = isoDate.trim();
+  const parts = raw.split('-').map((p) => Number.parseInt(p, 10));
+  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return raw;
+  const y = parts[0]!;
+  const dt = new Date(y, parts[1]! - 1, parts[2]!);
+  if (Number.isNaN(dt.getTime())) return raw;
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    ...(y !== new Date().getFullYear() && { year: 'numeric' }),
+  };
+  return new Intl.DateTimeFormat(LOCALE_TAG[locale], options).format(dt);
+}

@@ -67,7 +67,7 @@ export function AppRoutes() {
     <SentryRoutes>
       <Route element={<AppShell />}>
         <Route path={ROUTES.home} element={<HomePage />} />
-        <Route path={ROUTES.discover} element={<LandingPage />} />
+        <Route path={ROUTES.howItWorks} element={<LandingPage />} />
         <Route path={ROUTES.movieSearch} element={<ShowcaseListPage variant="search" />} />
         <Route path={ROUTES.movieCollections} element={<MovieCollectionsPage />} />
         <Route path={ROUTES.showcaseTrending} element={<ShowcaseListPage variant="trending" />} />

@@ -24,8 +24,10 @@ import {
 import type { WheelMode } from '@/features/events/types';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
-import { useTranslation } from '@/shared/i18n';
+import { useLocale, useTranslation } from '@/shared/i18n';
+import { formatEventTitleDate } from '@/shared/utils/formatMyEventsListDate';
 import styles from './CreateEvent.module.css';
+import Button from '@/shared/components/Button';
 
 function getDefaultDate(): string {
   const d = new Date();
@@ -47,6 +49,7 @@ function getDefaultTime(): string {
 
 export default function CreateEvent() {
   const { t } = useTranslation();
+  const { locale } = useLocale();
   useNoindexPage(pageTitle(t('nav.createEvent')), ROUTES.createEvent);
   const wheelModeLabelId = useId();
 
@@ -54,17 +57,17 @@ export default function CreateEvent() {
   const queryClient = useQueryClient();
   const { user, isLoading: authLoading, authCheckFailed } = useAuth();
   const { track } = useAnalytics();
-  const [title, setTitle] = useState('');
-  const titleInitialized = useRef(false);
-
-  useEffect(() => {
-    if (user && !titleInitialized.current) {
-      titleInitialized.current = true;
-      setTitle(t('events.create.defaultTitle', { name: user.displayName }));
-    }
-  }, [user, t]);
   const [date, setDate] = useState(getDefaultDate);
   const [time, setTime] = useState(getDefaultTime);
+  const suggestedTitle = t('events.create.defaultTitle', {
+    date: formatEventTitleDate(date, locale),
+  });
+  const [title, setTitle] = useState(suggestedTitle);
+  const titleEdited = useRef(false);
+
+  useEffect(() => {
+    if (!titleEdited.current) setTitle(suggestedTitle);
+  }, [suggestedTitle]);
   const [themeEmoji, setThemeEmoji] = useState('');
   const [themeText, setThemeText] = useState('');
   const [maxParticipants, setMaxParticipants] = useState(String(MAX_EVENT_PARTICIPANTS));
@@ -179,7 +182,10 @@ export default function CreateEvent() {
             type="text"
             className="input"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              titleEdited.current = true;
+              setTitle(e.target.value);
+            }}
             required
             maxLength={200}
             placeholder={t('events.create.titlePlaceholder')}
@@ -284,9 +290,9 @@ export default function CreateEvent() {
             </div>
           </details>
 
-          <button type="submit" className={`btn btn-primary ${styles.submit}`} disabled={loading}>
+          <Button type="submit" variant="primary" className={styles.submit} disabled={loading}>
             {loading ? t('events.create.submitting') : t('events.create.submit')}
-          </button>
+          </Button>
         </form>
       </div>
     </PageLayout>

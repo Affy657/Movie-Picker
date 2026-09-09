@@ -31,6 +31,7 @@ import {
   MAX_PROPOSALS_PER_PARTICIPANT,
 } from '@/features/events/types';
 import { useLocale, useTranslation } from '@/shared/i18n';
+import Button from '@/shared/components/Button';
 
 type HostEventSettingsPanelProps = {
   slug: string;
@@ -545,9 +546,10 @@ export default function HostEventSettingsPanel({
                 {deleteError}
               </p>
             )}
-            <button
+            <Button
               type="button"
-              className={clsx('btn', 'btn-danger', styles.deleteBtn)}
+              variant="danger"
+              className={styles.deleteBtn}
               onClick={() => {
                 setDeleteError(null);
                 setConfirmDeleteOpen(true);
@@ -561,7 +563,7 @@ export default function HostEventSettingsPanel({
                   ? t('events.danger.deleting')
                   : t('events.danger.deleteButton')}
               </span>
-            </button>
+            </Button>
           </div>
         )}
 

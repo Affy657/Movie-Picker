@@ -8,6 +8,7 @@ import { ROUTES } from '@/app/routes';
 import Avatar from '@/shared/components/Avatar';
 import EmptyState from '@/shared/components/EmptyState';
 import styles from './EventParticipantsList.module.css';
+import Button from '@/shared/components/Button';
 
 type Props = {
   participants: EventParticipantSummary[] | undefined;
@@ -69,9 +70,10 @@ export default function EventParticipantsList({
           )}
         </h2>
         {canManage && (
-          <button
+          <Button
             type="button"
-            className={clsx('btn btn-sm', styles.manageBtn)}
+            size="sm"
+            className={styles.manageBtn}
             onClick={() => setManaging((value) => !value)}
             aria-pressed={managing}
             data-testid="manage-participants-toggle"
@@ -89,7 +91,7 @@ export default function EventParticipantsList({
                 </span>
               </>
             )}
-          </button>
+          </Button>
         )}
       </div>
 
@@ -176,15 +178,16 @@ export default function EventParticipantsList({
 
       {onLeave && (
         <div className={styles.leaveRow}>
-          <button
+          <Button
             type="button"
-            className="btn btn-sm btn-danger"
+            variant="danger"
+            size="sm"
             onClick={onLeave}
             disabled={leaveDisabled}
             data-testid="leave-event-button"
           >
             {t('events.participants.leaveAction')}
-          </button>
+          </Button>
         </div>
       )}
     </section>

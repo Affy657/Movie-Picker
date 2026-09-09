@@ -4,7 +4,7 @@ import Avatar from '@/shared/components/Avatar';
 import Tooltip from '@/shared/components/Tooltip';
 import type { Translate } from '@/features/movies/types';
 import type { MovieData } from '@/shared/types/movie';
-import styles from './movieCardParts.module.css';
+import styles from './SeenButton.module.css';
 
 export function SeenButton({
   m,

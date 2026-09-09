@@ -27,7 +27,7 @@ export default function LandingPage() {
     title: pageTitle(t('nav.landing.howItWorks')),
     description: t('landing.seoDescription'),
     imageAlt: t('landing.ogImageAlt'),
-    canonical: `${SITE_URL}${ROUTES.discover}`,
+    canonical: `${SITE_URL}${ROUTES.howItWorks}`,
     ogType: 'website',
   });
 

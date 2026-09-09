@@ -11,6 +11,8 @@ import {
 } from '@/shared/support/supportMailto';
 import Modal from '@/shared/components/Modal';
 import styles from './SupportReportButton.module.css';
+import Button, { buttonClass } from '@/shared/components/Button';
+import IconButton from '@/shared/components/IconButton';
 
 type CopyState = 'idle' | 'copied' | 'failed';
 
@@ -74,46 +76,49 @@ export default function SupportReportButton({ className }: Readonly<Props>) {
       >
         {t('footer.reportIssue')}
       </button>
-      <Modal open={open} onClose={() => setOpen(false)} size="md" labelledBy={titleId}>
-        <div className={styles.inner}>
-          <header className={styles.header}>
-            <h2 id={titleId} className={styles.title}>
-              {t('support.dialogTitle')}
-            </h2>
-            <button
-              type="button"
-              className={styles.close}
-              onClick={() => setOpen(false)}
-              aria-label={t('common.close')}
-            >
-              <X size={18} aria-hidden />
-            </button>
-          </header>
+      {open ? (
+        <Modal open={open} onClose={() => setOpen(false)} size="md" labelledBy={titleId}>
+          <div className={styles.inner}>
+            <header className={styles.header}>
+              <h2 id={titleId} className={styles.title}>
+                {t('support.dialogTitle')}
+              </h2>
+              <IconButton label={t('common.close')} onClick={() => setOpen(false)}>
+                <X size={18} aria-hidden />
+              </IconButton>
+            </header>
 
-          <p className={styles.intro}>{t('support.dialogIntro')}</p>
+            <p className={styles.intro}>{t('support.dialogIntro')}</p>
 
-          <label className={styles.reportLabel} htmlFor={reportId}>
-            {t('support.reportLabel')}
-          </label>
-          <textarea id={reportId} className={styles.report} value={reportText} readOnly rows={9} />
+            <label className={styles.reportLabel} htmlFor={reportId}>
+              {t('support.reportLabel')}
+            </label>
+            <textarea
+              id={reportId}
+              className={styles.report}
+              value={reportText}
+              readOnly
+              rows={9}
+            />
 
-          <div className={styles.actions}>
-            <a href={mailtoHref} className="btn btn-primary">
-              {t('support.openMailApp')}
-            </a>
-            <button type="button" className="btn" onClick={() => void handleCopy()}>
-              {t('support.copyReport')}
-            </button>
+            <div className={styles.actions}>
+              <a href={mailtoHref} className={buttonClass({ variant: 'primary' })}>
+                {t('support.openMailApp')}
+              </a>
+              <Button type="button" onClick={() => void handleCopy()}>
+                {t('support.copyReport')}
+              </Button>
+            </div>
+
+            <p className={styles.status} role="status" aria-live="polite">
+              {copyState === 'copied' ? t('support.copied') : null}
+              {copyState === 'failed' ? t('support.copyFailed') : null}
+            </p>
+
+            <p className={styles.hint}>{t('support.fallbackHint', { email: SUPPORT_EMAIL })}</p>
           </div>
-
-          <p className={styles.status} role="status" aria-live="polite">
-            {copyState === 'copied' ? t('support.copied') : null}
-            {copyState === 'failed' ? t('support.copyFailed') : null}
-          </p>
-
-          <p className={styles.hint}>{t('support.fallbackHint', { email: SUPPORT_EMAIL })}</p>
-        </div>
-      </Modal>
+        </Modal>
+      ) : null}
     </>
   );
 }

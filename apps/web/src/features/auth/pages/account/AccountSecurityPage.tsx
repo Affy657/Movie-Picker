@@ -16,6 +16,7 @@ import {
 import type { UserProfile } from '@/features/auth/types';
 import { isRegisterPasswordCompliant } from '@/shared/utils/authPasswordRules';
 import sharedStyles from './AccountShared.module.css';
+import Button from '@/shared/components/Button';
 
 const PROVIDER_LABELS: Record<string, string> = { google: 'Google', github: 'GitHub' };
 const POST_PASSWORD_CHANGE_REDIRECT_MS = 4000;
@@ -130,13 +131,13 @@ function PasswordRow({ user }: Readonly<{ user: UserProfile }>) {
                 })}
           </p>
         </div>
-        <button type="button" className="btn" onClick={() => setExpanded(true)}>
+        <Button type="button" onClick={() => setExpanded(true)}>
           {t(
             user.hasPassword
               ? 'auth.account.changePasswordRowButton'
               : 'auth.account.setPasswordRowButton'
           )}
-        </button>
+        </Button>
       </div>
     );
   }
@@ -211,12 +212,12 @@ function PasswordRow({ user }: Readonly<{ user: UserProfile }>) {
         <p className="hint">{t('auth.account.passwordChangeLogoutWarning')}</p>
 
         <div className="nav-actions">
-          <button type="submit" className="btn btn-primary" disabled={changing}>
+          <Button type="submit" variant="primary" disabled={changing}>
             {passwordSubmitLabel(changing, user.hasPassword, t)}
-          </button>
-          <button type="button" className="btn" onClick={cancel} disabled={changing}>
+          </Button>
+          <Button type="button" onClick={cancel} disabled={changing}>
             {t('common.cancel')}
-          </button>
+          </Button>
         </div>
       </form>
     </div>
@@ -244,9 +245,9 @@ function DataExportRow() {
           </p>
         )}
       </div>
-      <button type="button" className="btn" disabled={exporting} onClick={() => void runExport()}>
+      <Button type="button" disabled={exporting} onClick={() => void runExport()}>
         {exporting ? t('auth.account.exportDataSubmitting') : t('auth.account.exportDataButton')}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -273,9 +274,9 @@ function LogoutRow() {
           </p>
         )}
       </div>
-      <button type="button" className="btn" disabled={loggingOut} onClick={() => void runLogout()}>
+      <Button type="button" disabled={loggingOut} onClick={() => void runLogout()}>
         {loggingOut ? t('auth.logout.submitting') : t('auth.account.logoutButton')}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -344,9 +345,9 @@ function DeleteAccountZone({ hasPassword }: Readonly<{ hasPassword: boolean }>) 
       <p>{t('auth.account.deleteAccountDescription')}</p>
 
       {!confirming ? (
-        <button type="button" className="btn btn-danger" onClick={() => setConfirming(true)}>
+        <Button type="button" variant="danger" onClick={() => setConfirming(true)}>
           {t('auth.account.deleteAccountButton')}
-        </button>
+        </Button>
       ) : (
         <form onSubmit={handleSubmit} className="form" autoComplete="off">
           {errorMsg && (
@@ -375,14 +376,14 @@ function DeleteAccountZone({ hasPassword }: Readonly<{ hasPassword: boolean }>) 
             aria-describedby={errorMsg ? 'delete-account-error' : undefined}
           />
           <div className="nav-actions">
-            <button type="submit" className="btn btn-danger" disabled={deleting}>
+            <Button type="submit" variant="danger" disabled={deleting}>
               {deleting
                 ? t('auth.account.deleteAccountSubmitting')
                 : t('auth.account.deleteAccountConfirmButton')}
-            </button>
-            <button type="button" className="btn" onClick={cancel} disabled={deleting}>
+            </Button>
+            <Button type="button" onClick={cancel} disabled={deleting}>
               {t('auth.account.deleteAccountCancel')}
-            </button>
+            </Button>
           </div>
         </form>
       )}

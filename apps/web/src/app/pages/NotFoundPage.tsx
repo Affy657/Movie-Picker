@@ -5,6 +5,7 @@ import { ROUTES } from '@/app/routes';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useTranslation } from '@/shared/i18n';
+import { buttonClass } from '@/shared/components/Button';
 
 export default function NotFoundPage() {
   const { t } = useTranslation();
@@ -17,7 +18,7 @@ export default function NotFoundPage() {
       title={t('errors.notFound')}
       message={t('errors.notFoundMessage')}
       actions={
-        <Link to={ROUTES.home} className="btn btn-primary">
+        <Link to={ROUTES.home} className={buttonClass({ variant: 'primary' })}>
           {t('errors.backHome')}
         </Link>
       }

@@ -45,6 +45,8 @@ import {
 import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventModal';
 import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
 import styles from './ProfileMoviesPage.module.css';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
+import Button from '@/shared/components/Button';
 
 const MOVIES_TAKE = 200;
 
@@ -191,7 +193,7 @@ export default function ProfileMoviesPage() {
       onToggleMediaType={toolbar.toggleMediaType}
       selectedDecade={toolbar.selectedDecade}
       onToggleDecade={toolbar.toggleDecade}
-      onReset={toolbar.clearAllFilters}
+      onReset={isMobile ? undefined : toolbar.clearAllFilters}
     />
   );
 
@@ -230,10 +232,10 @@ export default function ProfileMoviesPage() {
           </span>
           <div className={styles.moviesErrorBody}>
             <p className={styles.moviesErrorMessage}>{t('profile.movies.loadError')}</p>
-            <button type="button" className="btn btn-sm" onClick={() => moviesQuery.refetch()}>
+            <Button type="button" size="sm" onClick={() => moviesQuery.refetch()}>
               <RefreshCw size={15} aria-hidden />
               <span className={styles.btnLabel}>{t('profile.stats.retry')}</span>
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -276,9 +278,12 @@ export default function ProfileMoviesPage() {
                 title={t('profile.movies.toolbar.filtersSheetTitle')}
                 onClose={() => toolbar.setFiltersOpen(false)}
                 resetLabel={t('profile.movies.toolbar.filtersReset')}
-                applyLabel={t('profile.movies.toolbar.filtersApply', {
-                  count: toolbar.visibleCount,
-                })}
+                applyLabel={pluralizeCount(
+                  toolbar.visibleCount,
+                  'profile.movies.toolbar.filtersApplyOne',
+                  'profile.movies.toolbar.filtersApply',
+                  t
+                )}
                 onReset={toolbar.clearAllFilters}
               >
                 {filtersPanel}

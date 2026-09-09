@@ -41,7 +41,7 @@
 .stepBtn {
   flex-shrink: 0;
   width: 2.25rem;
-  min-height: 44px;
+  min-height: var(--tap-target-min);
   font-size: var(--font-size-md-plus);
   font-weight: 500;
   line-height: var(--leading-none);

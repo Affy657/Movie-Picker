@@ -19,6 +19,8 @@ import Dropdown from '@/shared/components/Dropdown';
 import { createIdeaSuggestion, type IdeaSuggestionCategory } from '@/shared/api/ideaSuggestionsApi';
 import styles from './ProposeIdeaButton.module.css';
 import Modal from '@/shared/components/Modal';
+import Button from '@/shared/components/Button';
+import IconButton from '@/shared/components/IconButton';
 
 const TITLE_MAX_LENGTH = 100;
 const DESCRIPTION_MAX_LENGTH = 2000;
@@ -189,14 +191,9 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
           <h2 id={titleId} className={styles.title}>
             {t('proposeIdea.dialogTitle')}
           </h2>
-          <button
-            type="button"
-            className={styles.close}
-            onClick={onClose}
-            aria-label={t('common.close')}
-          >
+          <IconButton label={t('common.close')} onClick={onClose}>
             <X size={18} aria-hidden />
-          </button>
+          </IconButton>
         </header>
 
         {status === 'success' ? (
@@ -204,9 +201,9 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
             <p className={styles.successMessage} role="status" aria-live="polite">
               {t('proposeIdea.successMessage')}
             </p>
-            <button type="button" className="btn btn-primary" onClick={onClose}>
+            <Button type="button" variant="primary" onClick={onClose}>
               {t('common.close')}
-            </button>
+            </Button>
           </div>
         ) : (
           <form onSubmit={(e) => void handleSubmit(e)}>
@@ -274,15 +271,15 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
               >
-                <button
+                <Button
                   type="button"
-                  className="btn"
+
                   onClick={() => fileInputRef.current?.click()}
                   disabled={attachments.length >= MAX_ATTACHMENTS}
                 >
                   <ImagePlus size={16} aria-hidden />
                   {t('proposeIdea.attachmentsAddButton')}
-                </button>
+                </Button>
                 <p className={`hint ${styles.attachmentsHint}`}>
                   {t('proposeIdea.attachmentsDropHint', { max: MAX_ATTACHMENTS })}
                 </p>
@@ -318,9 +315,9 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
             ) : null}
 
             <div className={styles.actions}>
-              <button type="submit" className="btn btn-primary" disabled={status === 'submitting'}>
+              <Button type="submit" variant="primary" disabled={status === 'submitting'}>
                 {status === 'submitting' ? t('proposeIdea.submitting') : t('proposeIdea.submit')}
-              </button>
+              </Button>
             </div>
           </form>
         )}
@@ -348,7 +345,7 @@ export default function ProposeIdeaButton({ className, children }: Readonly<Butt
       >
         {children ?? t('proposeIdea.trigger')}
       </button>
-      <ProposeIdeaDialog open={open} onClose={() => setOpen(false)} />
+      {open ? <ProposeIdeaDialog open onClose={() => setOpen(false)} /> : null}
     </>
   );
 }

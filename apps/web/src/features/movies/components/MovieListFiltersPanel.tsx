@@ -15,6 +15,7 @@ import type { RatingScale } from '@/shared/types/theme';
 import type { MovieMediaType } from '@/shared/types/movie';
 import Chip from '@/shared/components/Chip';
 import styles from './MovieListFiltersPanel.module.css';
+import LinkButton from '@/shared/components/LinkButton';
 
 interface MovieListFiltersPanelLabels {
   genre: string;
@@ -159,9 +160,7 @@ export default function MovieListFiltersPanel({
 
       {onReset && labels.resetAll ? (
         <div className={styles.footerRow}>
-          <button type="button" className={styles.footerReset} onClick={onReset}>
-            {labels.resetAll}
-          </button>
+          <LinkButton onClick={onReset}>{labels.resetAll}</LinkButton>
         </div>
       ) : null}
     </div>

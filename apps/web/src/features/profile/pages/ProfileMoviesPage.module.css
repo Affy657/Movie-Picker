@@ -10,7 +10,7 @@
   align-items: center;
   gap: var(--space-1);
   align-self: flex-start;
-  min-height: 2rem;
+  min-height: var(--tap-target-min);
   font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--color-text);
@@ -102,7 +102,7 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-1-5);
-  min-height: 2.75rem;
+  min-height: var(--tap-target-min);
   padding: 0 var(--space-5);
   font-size: var(--font-size-sm);
   font-weight: 600;
