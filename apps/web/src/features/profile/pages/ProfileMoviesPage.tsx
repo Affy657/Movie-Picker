@@ -184,7 +184,6 @@ export default function ProfileMoviesPage() {
   const filtersPanel = (
     <MovieListFiltersPanel
       panelId={filtersPanelId}
-      boxed
       tmdbLanguage={tmdbLanguage}
       labels={filtersLabels}
       selectedGenres={toolbar.selectedGenres}
