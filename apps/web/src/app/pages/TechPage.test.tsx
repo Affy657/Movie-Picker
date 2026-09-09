@@ -167,7 +167,16 @@ describe('TechPage', () => {
       expect(section.textContent).toContain(fr.tech.ci[fact]);
     }
     expect(diagram).toContain(fr.tech.diagram.ciDocker);
-    for (const node of ['ciLintWorkflows', 'ciE2eMongo'] as const) {
+    for (const node of [
+      'ciTrigger',
+      'ciLintWorkflows',
+      'ciLintApi',
+      'ciLintWeb',
+      'ciTestApi',
+      'ciTestWeb',
+      'ciE2eMongo',
+      'ciBandBoth',
+    ] as const) {
       expect(diagram).toContain(fr.tech.diagram[node]);
     }
   });
