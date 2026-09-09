@@ -1,6 +1,11 @@
-import type { EventConfigData, MyEventLifecycle, WheelMode } from '@/shared/types/event';
+import type {
+  EventConfigData,
+  EventRecurrence,
+  MyEventLifecycle,
+  WheelMode,
+} from '@/shared/types/event';
 
-export type { WheelMode, EventConfigData, EventData } from '@/shared/types/event';
+export type { WheelMode, EventConfigData, EventData, EventRecurrence } from '@/shared/types/event';
 
 export const MAX_EVENT_PARTICIPANTS = 300;
 
@@ -13,7 +18,10 @@ export const DEFAULT_EVENT_CONFIG: EventConfigData = {
   wheelMode: 'weightedByVotes',
   richSharePreview: true,
   allowSeries: false,
+  recurrence: null,
 };
+
+export const EVENT_RECURRENCES: readonly EventRecurrence[] = ['weekly', 'biweekly', 'monthly'];
 
 export type EventConfigPatchPayload = {
   title?: string;
@@ -23,6 +31,8 @@ export type EventConfigPatchPayload = {
   wheelMode: WheelMode;
   richSharePreview: boolean;
   allowSeries: boolean;
+  recurrence?: EventRecurrence;
+  clearRecurrence?: boolean;
   date?: string;
   time?: string;
   notifyParticipantsOfDateChange?: boolean;

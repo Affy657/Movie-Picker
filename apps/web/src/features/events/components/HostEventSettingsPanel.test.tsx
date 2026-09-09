@@ -340,4 +340,121 @@ describe('HostEventSettingsPanel', () => {
       expect(screen.queryByTestId('route-my-events')).not.toBeInTheDocument();
     });
   });
+  describe('répétition de la soirée', () => {
+    function recurringEvent(config: Partial<EventData['config']> = {}): EventData {
+      return { ...baseEvent, config: { ...baseEvent.config!, ...config } };
+    }
+
+    function capturePatchBody() {
+      const bodies: Record<string, unknown>[] = [];
+      server.use(
+        http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+          bodies.push((await request.json()) as Record<string, unknown>);
+          return HttpResponse.json({});
+        })
+      );
+      return bodies;
+    }
+
+    it('activer la répétition envoie une récurrence hebdomadaire', async () => {
+      const user = userEvent.setup();
+      const bodies = capturePatchBody();
+
+      renderWithRouter(
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken="ht-1"
+          event={recurringEvent()}
+          open
+          onClose={() => {}}
+        />
+      );
+
+      await user.click(screen.getByRole('switch', { name: /répéter cette soirée/i }));
+
+      await waitFor(() => expect(bodies).toHaveLength(1));
+      expect(bodies[0]!.recurrence).toBe('weekly');
+      expect(bodies[0]!.clearRecurrence).toBeUndefined();
+    });
+
+    it('choisir un autre rythme envoie la fréquence correspondante', async () => {
+      const user = userEvent.setup();
+      const bodies = capturePatchBody();
+
+      renderWithRouter(
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken="ht-1"
+          event={recurringEvent({ recurrence: 'weekly' })}
+          open
+          onClose={() => {}}
+        />
+      );
+
+      expect(screen.getByText(/les participants ne sont pas réinscrits/i)).toBeInTheDocument();
+
+      await user.click(screen.getByRole('radio', { name: 'Mois' }));
+
+      await waitFor(() => expect(bodies).toHaveLength(1));
+      expect(bodies[0]!.recurrence).toBe('monthly');
+    });
+
+    it('couper la répétition demande explicitement son retrait', async () => {
+      const user = userEvent.setup();
+      const bodies = capturePatchBody();
+
+      renderWithRouter(
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken="ht-1"
+          event={recurringEvent({ recurrence: 'biweekly' })}
+          open
+          onClose={() => {}}
+        />
+      );
+
+      await user.click(screen.getByRole('switch', { name: /répéter cette soirée/i }));
+
+      await waitFor(() => expect(bodies).toHaveLength(1));
+      expect(bodies[0]!.clearRecurrence).toBe(true);
+      expect(bodies[0]!.recurrence).toBeUndefined();
+    });
+
+    it('un réglage sans rapport laisse la récurrence hors du PATCH', async () => {
+      const user = userEvent.setup();
+      const bodies = capturePatchBody();
+
+      renderWithRouter(
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken="ht-1"
+          event={recurringEvent({ recurrence: 'weekly' })}
+          open
+          onClose={() => {}}
+        />
+      );
+
+      await user.click(screen.getByRole('switch', { name: /autoriser les séries tv/i }));
+
+      await waitFor(() => expect(bodies).toHaveLength(1));
+      expect(bodies[0]!.recurrence).toBeUndefined();
+      expect(bodies[0]!.clearRecurrence).toBeUndefined();
+    });
+
+    it('occurrence suivante déjà créée : le réglage est verrouillé et expliqué', async () => {
+      renderWithRouter(
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken="ht-1"
+          event={recurringEvent({ recurrence: 'weekly', hasNextOccurrence: true })}
+          open
+          onClose={() => {}}
+        />
+      );
+
+      expect(screen.getByRole('switch', { name: /répéter cette soirée/i })).toBeDisabled();
+      expect(screen.queryByRole('radio', { name: 'Mois' })).not.toBeInTheDocument();
+      expect(screen.getByText(/la prochaine soirée est déjà créée/i)).toBeInTheDocument();
+    });
+  });
 });

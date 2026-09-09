@@ -20,5 +20,9 @@ public interface IEventRepository
 
     Task<IReadOnlyList<Event>> ListOpenEventsAsync(CancellationToken ct = default);
 
+    Task<IReadOnlyList<Event>> ListRecurringAwaitingNextOccurrenceAsync(
+        string? creatorUserId,
+        CancellationToken ct = default);
+
     Task<long> AnonymizeCreatorAsync(string creatorUserId, CancellationToken ct = default);
 }

@@ -903,6 +903,16 @@
         'Tous les films ont exactement la même chance, les votes ne comptent pas.',
       allowSeriesLabel: 'Autoriser les séries TV',
       allowSeriesDesc: 'Les séries apparaîtront dans la recherche et pourront être proposées.',
+      recurrenceLabel: 'Répéter cette soirée',
+      recurrenceDesc: 'À la clôture, la suivante est créée avec les mêmes réglages.',
+      recurrenceShareHint:
+        'Les participants ne sont pas réinscrits : à vous de repartager le lien.',
+      recurrenceGroupLabel: 'Rythme de la répétition',
+      recurrenceWeekly: 'Semaine',
+      recurrenceBiweekly: '2 semaines',
+      recurrenceMonthly: 'Mois',
+      recurrenceLockedHint:
+        'La prochaine soirée est déjà créée : la répétition se règle désormais depuis celle-ci.',
       saveStatusSaved: 'Enregistré',
       saveStatusPending: 'Enregistrement…',
       saveStatusError: 'Non enregistré',

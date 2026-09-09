@@ -5,6 +5,7 @@ using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.LetterboxdImport;
 using MoviePicker.Api.Application.UseCases.Notifications;
+using MoviePicker.Api.Application.UseCases.RecurringEvents;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
@@ -70,6 +71,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPushNotificationSender, WebPushSender>();
         services.AddSingleton<ISchedulerTokenValidator, SchedulerTokenValidator>();
         services.AddScoped<IEventReminderPass, EventReminderPass>();
+        services.AddScoped<IRecurringEventPass, RecurringEventPass>();
 
         var runsRemindersInProcess = environment.IsDevelopment()
             || IsInProcessRemindersEnabled(configuration);

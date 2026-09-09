@@ -4455,6 +4455,79 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/scheduler/recurring-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["RecurringEventPassResult"];
+                        "application/json": components["schemas"]["RecurringEventPassResult"];
+                        "text/json": components["schemas"]["RecurringEventPassResult"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Service Unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sitemap.xml": {
         parameters: {
             query?: never;
@@ -5585,6 +5658,8 @@ export interface components {
             wheelMode?: components["schemas"]["WheelMode"];
             richSharePreview?: boolean;
             allowSeries?: boolean;
+            recurrence?: components["schemas"]["RecurrenceFrequency"];
+            hasNextOccurrence?: boolean;
         };
         EventDetailResponse: {
             _id?: string | null;
@@ -6034,6 +6109,8 @@ export interface components {
             wheelMode?: components["schemas"]["WheelMode"];
             richSharePreview?: boolean | null;
             allowSeries?: boolean | null;
+            recurrence?: components["schemas"]["RecurrenceFrequency"];
+            clearRecurrence?: boolean | null;
             date?: string | null;
             time?: string | null;
             notifyParticipantsOfDateChange?: boolean | null;
@@ -6078,6 +6155,16 @@ export interface components {
         };
         /** @enum {string} */
         RatingScale: "five" | "ten";
+        /** @enum {string} */
+        RecurrenceFrequency: "weekly" | "biweekly" | "monthly";
+        RecurringEventPassResult: {
+            /** Format: int32 */
+            candidates?: number;
+            /** Format: int32 */
+            created?: number;
+            /** Format: int32 */
+            stopped?: number;
+        };
         RegisterRequest: {
             /** Format: email */
             email: string;

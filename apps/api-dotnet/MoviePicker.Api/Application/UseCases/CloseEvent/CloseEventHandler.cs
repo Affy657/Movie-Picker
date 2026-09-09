@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.RecurringEvents;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -15,6 +16,7 @@ public sealed class CloseEventHandler : ICloseEventHandler
     private readonly IWatchlistRepository _watchlistRepository;
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
+    private readonly IRecurringEventPass _recurringEvents;
     private readonly ILogger<CloseEventHandler> _logger;
 
     public CloseEventHandler(
@@ -24,6 +26,7 @@ public sealed class CloseEventHandler : ICloseEventHandler
         IWatchlistRepository watchlistRepository,
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
+        IRecurringEventPass recurringEvents,
         ILogger<CloseEventHandler> logger)
     {
         _eventRepository = eventRepository;
@@ -32,6 +35,7 @@ public sealed class CloseEventHandler : ICloseEventHandler
         _watchlistRepository = watchlistRepository;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
+        _recurringEvents = recurringEvents;
         _logger = logger;
     }
 
@@ -56,8 +60,17 @@ public sealed class CloseEventHandler : ICloseEventHandler
         _logger.LogInformation("Event closed: {EventId}", evt.Id);
 
         await RemoveWinnerFromParticipantsWatchlistAsync(saved, ct);
+        await OpenNextOccurrenceAsync(saved, ct);
 
         return ToResponse(saved, "Soirée clôturée.");
+    }
+
+    private async Task OpenNextOccurrenceAsync(Event evt, CancellationToken ct)
+    {
+        if (!evt.Recurrence.HasValue || string.IsNullOrEmpty(evt.CreatorUserId))
+            return;
+
+        await _recurringEvents.RunForCreatorAsync(evt.CreatorUserId, ct);
     }
 
     private async Task RemoveWinnerFromParticipantsWatchlistAsync(Event evt, CancellationToken ct)
