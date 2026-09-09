@@ -54,18 +54,11 @@ function flattenEvents(pages: Array<{ events: MyEventSummary[] }> | undefined): 
   return pages?.flatMap((p) => p.events) ?? [];
 }
 
-export default function MyEventsPage() {
+function useMyEventsActions() {
   const { t } = useTranslation();
-  useNoindexPage(pageTitle(t('events.myEvents.title')), ROUTES.myEvents);
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { user, isLoading: authLoading, authCheckFailed } = useAuth();
+  const queryClient = useQueryClient();
   const { track } = useAnalytics();
-  const { locale } = useLocale();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const tab: MyEventsTab = searchParams.get('tab') === 'history' ? 'history' : 'active';
-
-  const [historySearchQuery, setHistorySearchQuery] = useState('');
 
   const [confirmDeleteSlug, setConfirmDeleteSlug] = useState<string | null>(null);
   const [confirmLeave, setConfirmLeave] = useState<{ slug: string; participantId: string } | null>(
@@ -77,16 +70,13 @@ export default function MyEventsPage() {
     title: string;
   } | null>(null);
   const [confirmClose, setConfirmClose] = useState<{ slug: string; title: string } | null>(null);
-
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [leaveError, setLeaveError] = useState<string | null>(null);
   const [closeError, setCloseError] = useState<string | null>(null);
   const [historyRemoveError, setHistoryRemoveError] = useState<string | null>(null);
-
   const invalidateMyEvents = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
   }, [queryClient]);
-
   const deleteMutation = useMutation({
     mutationFn: (slug: string) => deleteEvent(slug),
     onSuccess: () => {
@@ -101,7 +91,6 @@ export default function MyEventsPage() {
       setConfirmDeleteSlug(null);
     },
   });
-
   const leaveMutation = useMutation({
     mutationFn: ({ slug, participantId }: { slug: string; participantId: string }) =>
       removeEventParticipant(slug, participantId, null),
@@ -118,7 +107,6 @@ export default function MyEventsPage() {
       setConfirmLeave(null);
     },
   });
-
   const historyRemoveMutation = useMutation({
     mutationFn: ({ slug, participantId }: { slug: string; participantId: string }) =>
       removeEventParticipant(slug, participantId, null),
@@ -134,7 +122,6 @@ export default function MyEventsPage() {
       setConfirmHistoryRemove(null);
     },
   });
-
   const closeMutation = useMutation({
     mutationFn: (slug: string) => postEventClose(slug, null),
     onSuccess: () => {
@@ -148,7 +135,6 @@ export default function MyEventsPage() {
       setConfirmClose(null);
     },
   });
-
   const handleLeaveEvent = useCallback(
     (slug: string) => {
       const stored = getStoredParticipant(slug);
@@ -161,7 +147,6 @@ export default function MyEventsPage() {
     },
     [navigate]
   );
-
   const handleHistoryRemove = useCallback(
     (slug: string, title: string) => {
       const stored = getStoredParticipant(slug);
@@ -174,6 +159,176 @@ export default function MyEventsPage() {
     },
     [navigate]
   );
+
+  return {
+    confirmDeleteSlug,
+    setConfirmDeleteSlug,
+    confirmLeave,
+    setConfirmLeave,
+    confirmHistoryRemove,
+    setConfirmHistoryRemove,
+    confirmClose,
+    setConfirmClose,
+    deleteError,
+    leaveError,
+    closeError,
+    historyRemoveError,
+    deleteMutation,
+    leaveMutation,
+    closeMutation,
+    historyRemoveMutation,
+    handleLeaveEvent,
+    handleHistoryRemove,
+    setDeleteError,
+    setLeaveError,
+    setCloseError,
+    setHistoryRemoveError,
+  };
+}
+type MyEventsActions = ReturnType<typeof useMyEventsActions>;
+
+function MyEventsConfirmDialogs({
+  t,
+  historyEvents,
+  confirmDeleteSlug,
+  setConfirmDeleteSlug,
+  deleteMutation,
+  confirmLeave,
+  setConfirmLeave,
+  leaveMutation,
+  confirmHistoryRemove,
+  setConfirmHistoryRemove,
+  historyRemoveMutation,
+  confirmClose,
+  setConfirmClose,
+  closeMutation,
+  setDeleteError,
+  setLeaveError,
+  setHistoryRemoveError,
+  setCloseError,
+}: Readonly<{
+  t: ReturnType<typeof useTranslation>['t'];
+  historyEvents: MyEventSummary[];
+  confirmDeleteSlug: MyEventsActions['confirmDeleteSlug'];
+  setConfirmDeleteSlug: MyEventsActions['setConfirmDeleteSlug'];
+  deleteMutation: MyEventsActions['deleteMutation'];
+  confirmLeave: MyEventsActions['confirmLeave'];
+  setConfirmLeave: MyEventsActions['setConfirmLeave'];
+  leaveMutation: MyEventsActions['leaveMutation'];
+  confirmHistoryRemove: MyEventsActions['confirmHistoryRemove'];
+  setConfirmHistoryRemove: MyEventsActions['setConfirmHistoryRemove'];
+  historyRemoveMutation: MyEventsActions['historyRemoveMutation'];
+  confirmClose: MyEventsActions['confirmClose'];
+  setConfirmClose: MyEventsActions['setConfirmClose'];
+  closeMutation: MyEventsActions['closeMutation'];
+  setDeleteError: MyEventsActions['setDeleteError'];
+  setLeaveError: MyEventsActions['setLeaveError'];
+  setHistoryRemoveError: MyEventsActions['setHistoryRemoveError'];
+  setCloseError: MyEventsActions['setCloseError'];
+}>) {
+  return (
+    <>
+      <ConfirmDialog
+        open={confirmDeleteSlug !== null}
+        title={t('events.danger.deleteConfirmTitle')}
+        message={t('events.danger.deleteConfirmMessage', {
+          title: historyEvents.find((e) => e.slug === confirmDeleteSlug)?.title ?? '',
+        })}
+        confirmLabel={t('events.danger.deleteConfirmAction')}
+        busy={deleteMutation.isPending}
+        onConfirm={() => {
+          if (confirmDeleteSlug) deleteMutation.mutate(confirmDeleteSlug);
+        }}
+        onCancel={() => {
+          setConfirmDeleteSlug(null);
+          setDeleteError(null);
+        }}
+      />
+      <ConfirmDialog
+        open={confirmLeave !== null}
+        title={t('events.participants.leaveConfirmTitle')}
+        message={t('events.participants.leaveConfirm')}
+        confirmLabel={t('events.participants.leaveConfirmAction')}
+        busy={leaveMutation.isPending}
+        onConfirm={() => {
+          if (confirmLeave) leaveMutation.mutate(confirmLeave);
+        }}
+        onCancel={() => {
+          setConfirmLeave(null);
+          setLeaveError(null);
+        }}
+      />
+      <ConfirmDialog
+        open={confirmHistoryRemove !== null}
+        title={t('events.myEvents.historyRemoveConfirmTitle')}
+        message={t('events.myEvents.historyRemoveConfirmMessage', {
+          title: confirmHistoryRemove?.title ?? '',
+        })}
+        confirmLabel={t('events.myEvents.historyRemoveConfirmAction')}
+        busy={historyRemoveMutation.isPending}
+        onConfirm={() => {
+          if (confirmHistoryRemove) historyRemoveMutation.mutate(confirmHistoryRemove);
+        }}
+        onCancel={() => {
+          setConfirmHistoryRemove(null);
+          setHistoryRemoveError(null);
+        }}
+      />
+      <ConfirmDialog
+        open={confirmClose !== null}
+        title={t('events.wheel.closeWithoutMovieConfirmTitle')}
+        message={t('events.wheel.closeWithoutMovieConfirmMessage', {
+          title: confirmClose?.title ?? '',
+        })}
+        confirmLabel={t('events.wheel.closeWithoutMovieConfirmAction')}
+        busy={closeMutation.isPending}
+        onConfirm={() => {
+          if (confirmClose) closeMutation.mutate(confirmClose.slug);
+        }}
+        onCancel={() => {
+          setConfirmClose(null);
+          setCloseError(null);
+        }}
+      />
+    </>
+  );
+}
+
+export default function MyEventsPage() {
+  const { t } = useTranslation();
+  useNoindexPage(pageTitle(t('events.myEvents.title')), ROUTES.myEvents);
+  const queryClient = useQueryClient();
+  const { user, isLoading: authLoading, authCheckFailed } = useAuth();
+  const { locale } = useLocale();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab: MyEventsTab = searchParams.get('tab') === 'history' ? 'history' : 'active';
+
+  const [historySearchQuery, setHistorySearchQuery] = useState('');
+
+  const {
+    confirmDeleteSlug,
+    setConfirmDeleteSlug,
+    confirmLeave,
+    setConfirmLeave,
+    confirmHistoryRemove,
+    setConfirmHistoryRemove,
+    confirmClose,
+    setConfirmClose,
+    deleteError,
+    leaveError,
+    closeError,
+    historyRemoveError,
+    deleteMutation,
+    leaveMutation,
+    closeMutation,
+    historyRemoveMutation,
+    handleLeaveEvent,
+    handleHistoryRemove,
+    setDeleteError,
+    setLeaveError,
+    setCloseError,
+    setHistoryRemoveError,
+  } = useMyEventsActions();
 
   const activeQuery = useInfiniteQuery({
     queryKey: queryKeys.myEvents.active,
@@ -597,67 +752,25 @@ export default function MyEventsPage() {
         </>
       )}
 
-      <ConfirmDialog
-        open={confirmDeleteSlug !== null}
-        title={t('events.danger.deleteConfirmTitle')}
-        message={t('events.danger.deleteConfirmMessage', {
-          title: historyEvents.find((e) => e.slug === confirmDeleteSlug)?.title ?? '',
-        })}
-        confirmLabel={t('events.danger.deleteConfirmAction')}
-        busy={deleteMutation.isPending}
-        onConfirm={() => {
-          if (confirmDeleteSlug) deleteMutation.mutate(confirmDeleteSlug);
-        }}
-        onCancel={() => {
-          setConfirmDeleteSlug(null);
-          setDeleteError(null);
-        }}
-      />
-      <ConfirmDialog
-        open={confirmLeave !== null}
-        title={t('events.participants.leaveConfirmTitle')}
-        message={t('events.participants.leaveConfirm')}
-        confirmLabel={t('events.participants.leaveConfirmAction')}
-        busy={leaveMutation.isPending}
-        onConfirm={() => {
-          if (confirmLeave) leaveMutation.mutate(confirmLeave);
-        }}
-        onCancel={() => {
-          setConfirmLeave(null);
-          setLeaveError(null);
-        }}
-      />
-      <ConfirmDialog
-        open={confirmHistoryRemove !== null}
-        title={t('events.myEvents.historyRemoveConfirmTitle')}
-        message={t('events.myEvents.historyRemoveConfirmMessage', {
-          title: confirmHistoryRemove?.title ?? '',
-        })}
-        confirmLabel={t('events.myEvents.historyRemoveConfirmAction')}
-        busy={historyRemoveMutation.isPending}
-        onConfirm={() => {
-          if (confirmHistoryRemove) historyRemoveMutation.mutate(confirmHistoryRemove);
-        }}
-        onCancel={() => {
-          setConfirmHistoryRemove(null);
-          setHistoryRemoveError(null);
-        }}
-      />
-      <ConfirmDialog
-        open={confirmClose !== null}
-        title={t('events.wheel.closeWithoutMovieConfirmTitle')}
-        message={t('events.wheel.closeWithoutMovieConfirmMessage', {
-          title: confirmClose?.title ?? '',
-        })}
-        confirmLabel={t('events.wheel.closeWithoutMovieConfirmAction')}
-        busy={closeMutation.isPending}
-        onConfirm={() => {
-          if (confirmClose) closeMutation.mutate(confirmClose.slug);
-        }}
-        onCancel={() => {
-          setConfirmClose(null);
-          setCloseError(null);
-        }}
+      <MyEventsConfirmDialogs
+        t={t}
+        historyEvents={historyEvents}
+        confirmDeleteSlug={confirmDeleteSlug}
+        setConfirmDeleteSlug={setConfirmDeleteSlug}
+        deleteMutation={deleteMutation}
+        confirmLeave={confirmLeave}
+        setConfirmLeave={setConfirmLeave}
+        leaveMutation={leaveMutation}
+        confirmHistoryRemove={confirmHistoryRemove}
+        setConfirmHistoryRemove={setConfirmHistoryRemove}
+        historyRemoveMutation={historyRemoveMutation}
+        confirmClose={confirmClose}
+        setConfirmClose={setConfirmClose}
+        closeMutation={closeMutation}
+        setDeleteError={setDeleteError}
+        setLeaveError={setLeaveError}
+        setHistoryRemoveError={setHistoryRemoveError}
+        setCloseError={setCloseError}
       />
     </PageLayout>
   );
