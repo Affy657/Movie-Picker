@@ -10,6 +10,7 @@ import {
   type ProposableMovie,
 } from '@/features/watchlist/hooks/useProposeMovieToEvent';
 import styles from './WatchlistProposeSubmenu.module.css';
+import Card from '@/shared/components/Card';
 
 type RowState = { status: 'idle' | 'pending' | 'done' | 'error'; error?: string };
 
@@ -97,7 +98,9 @@ export default function WatchlistProposeSubmenu({
         <span className={styles.triggerLabel}>{t('watchlist.card.proposeShortLabel')}</span>
       </button>
       {open && pos && (
-        <div
+        <Card
+          padding="none"
+          elevation="md"
           className={styles.flyout}
           role="menu"
           tabIndex={-1}
@@ -153,7 +156,7 @@ export default function WatchlistProposeSubmenu({
               {t('watchlist.propose.viewMore')}
             </Link>
           )}
-        </div>
+        </Card>
       )}
     </div>
   );

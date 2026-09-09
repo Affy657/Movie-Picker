@@ -5,6 +5,7 @@ import SearchField from '@/shared/components/SearchField';
 import SortControl, { type SortOption } from '@/features/movies/components/SortControl';
 import styles from './ListToolbar.module.css';
 import LinkButton from '@/shared/components/LinkButton';
+import Card from '@/shared/components/Card';
 
 export type { SortOption };
 
@@ -62,7 +63,7 @@ export default function ListToolbar<TSortKey extends string>({
   trailing,
 }: Readonly<ListToolbarProps<TSortKey>>) {
   return (
-    <div className={styles.toolbar}>
+    <Card padding="none" elevation="sm" className={styles.toolbar}>
       <SearchField
         className={styles.searchWrap}
         value={search}
@@ -117,6 +118,6 @@ export default function ListToolbar<TSortKey extends string>({
 
         {trailing ? <span className={styles.trailing}>{trailing}</span> : null}
       </div>
-    </div>
+    </Card>
   );
 }
