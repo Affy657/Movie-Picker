@@ -1,6 +1,4 @@
 import { useCallback, useId, useMemo, useState, type RefObject } from 'react';
-import clsx from 'clsx';
-import { LayoutGrid, List } from 'lucide-react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
@@ -15,6 +13,7 @@ import SortControl from '@/features/movies/components/SortControl';
 import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
 import EventActionErrorBanner from '@/features/events/pages/event-detail/EventActionErrorBanner';
 import { Skeleton } from '@/shared/components/Skeleton';
+import ViewModeToggle from '@/shared/components/ViewModeToggle';
 import {
   useAddToWatchlist,
   useRemoveFromWatchlist,
@@ -372,36 +371,11 @@ export default function EventMoviesSection({
             />
           )}
           {isMobile && (
-            <div
-              className={styles.viewToggle}
-              role="toolbar"
-              aria-label={t('movies.list.viewToggleAria')}
-            >
-              <button
-                type="button"
-                className={clsx(
-                  styles.viewToggleBtn,
-                  viewMode === 'list' && styles.viewToggleBtnActive
-                )}
-                aria-pressed={viewMode === 'list'}
-                aria-label={t('movies.list.viewListAria')}
-                onClick={() => onViewModeChange('list')}
-              >
-                <List aria-hidden size={15} />
-              </button>
-              <button
-                type="button"
-                className={clsx(
-                  styles.viewToggleBtn,
-                  viewMode === 'grid' && styles.viewToggleBtnActive
-                )}
-                aria-pressed={viewMode === 'grid'}
-                aria-label={t('movies.list.viewGridAria')}
-                onClick={() => onViewModeChange('grid')}
-              >
-                <LayoutGrid aria-hidden size={15} />
-              </button>
-            </div>
+            <ViewModeToggle
+              value={viewMode}
+              onChange={onViewModeChange}
+              className={styles.viewToggleAlign}
+            />
           )}
         </div>
       )}

@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import { LayoutGrid, List } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import styles from './ViewModeToggle.module.css';
+import Card from '@/shared/components/Card';
 
 export type MovieViewMode = 'grid' | 'list';
 
@@ -19,7 +20,8 @@ export default function ViewModeToggle({
   const { t } = useTranslation();
 
   return (
-    <div
+    <Card
+      padding="none"
       className={clsx(styles.root, className)}
       role="toolbar"
       aria-label={t('movies.list.viewToggleAria')}
@@ -42,6 +44,6 @@ export default function ViewModeToggle({
       >
         <LayoutGrid aria-hidden size={15} />
       </button>
-    </div>
+    </Card>
   );
 }

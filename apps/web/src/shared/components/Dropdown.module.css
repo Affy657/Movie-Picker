@@ -65,6 +65,7 @@
 }
 
 .menu {
+  composes: card radiusMd elevationLg from './Card.module.css';
   position: absolute;
   top: calc(100% + 0.35rem);
   left: 0;
@@ -73,10 +74,6 @@
   margin: 0;
   padding: var(--space-1);
   list-style: none;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
   max-height: 16rem;
   overflow-y: auto;
 }

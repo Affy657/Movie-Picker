@@ -57,7 +57,7 @@ export default function ProfileStatsSection({ stats }: Readonly<Props>) {
         <>
           <ul className={styles.heroGrid}>
             {counters.map(({ key, icon: Icon, label, value }) => (
-              <li key={key} className={styles.heroStat}>
+              <Card as="li" key={key} padding="none" className={styles.heroStat}>
                 <span className={styles.heroIcon} aria-hidden>
                   <Icon size={20} />
                 </span>
@@ -65,7 +65,7 @@ export default function ProfileStatsSection({ stats }: Readonly<Props>) {
                   <span className={styles.heroValue}>{value}</span>
                   <span className={styles.heroLabel}>{label}</span>
                 </span>
-              </li>
+              </Card>
             ))}
           </ul>
 
