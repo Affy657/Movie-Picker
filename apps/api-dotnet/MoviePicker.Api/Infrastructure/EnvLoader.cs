@@ -4,11 +4,19 @@ public static class EnvLoader
 {
     private const int MaxParentLevels = 8;
 
+    public const string TestContextVariable = "MOVIEPICKER_TEST_CONTEXT";
+
+    public static bool IsTestContext =>
+        !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(TestContextVariable));
+
     public static void LoadFromEnvFileIfExists() =>
         LoadFromEnvFileIfExists(Directory.GetCurrentDirectory());
 
     internal static void LoadFromEnvFileIfExists(string startDirectory)
     {
+        if (IsTestContext)
+            return;
+
         var dir = startDirectory;
         for (var i = 0; i < MaxParentLevels && !string.IsNullOrEmpty(dir); i++)
         {

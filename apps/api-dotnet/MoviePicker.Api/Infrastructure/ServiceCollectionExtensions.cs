@@ -45,7 +45,10 @@ public static class ServiceCollectionExtensions
                 p => p.ConfigureMoviePickerCors(configuration, environment)));
 
         var mongoUri = configuration["MONGODB_URI"] ?? string.Empty;
-        RegisterRepositories(services, mongoUri, environment);
+        var isTestContext =
+            !string.IsNullOrWhiteSpace(configuration[EnvLoader.TestContextVariable])
+            || EnvLoader.IsTestContext;
+        RegisterRepositories(services, mongoUri, environment, isTestContext);
         RegisterTmdbSearch(services, configuration);
 
         services.AddHttpClient(
@@ -222,10 +225,13 @@ public static class ServiceCollectionExtensions
             opts.VapidSubject = vapidSubject.Trim();
     }
 
+    private static readonly string[] SharedDatabaseNames = ["moviepicker", "moviepicker_dev"];
+
     private static void RegisterRepositories(
         IServiceCollection services,
         string mongoUri,
-        IHostEnvironment environment)
+        IHostEnvironment environment,
+        bool isTestContext)
     {
         if (string.IsNullOrWhiteSpace(mongoUri))
         {
@@ -252,6 +258,15 @@ public static class ServiceCollectionExtensions
 
         var mongoUrl = new MongoUrl(mongoUri);
         var databaseName = mongoUrl.DatabaseName ?? "moviepicker";
+        if (isTestContext
+            && SharedDatabaseNames.Contains(databaseName, StringComparer.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"Garde-fou : une suite de tests cible la base partagée '{databaseName}'. "
+                + "Les bases 'moviepicker' et 'moviepicker_dev' ne sont jamais accessibles aux tests. "
+                + "Fournis une base jetable via MONGODB_TEST_URI ou E2E_MONGODB_URI, "
+                + "ou laisse MONGODB_URI vide pour tourner en mémoire.");
+        }
         if (environment.IsDevelopment()
             && string.Equals(databaseName, "moviepicker", StringComparison.OrdinalIgnoreCase))
         {
