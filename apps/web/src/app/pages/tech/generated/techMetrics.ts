@@ -15,7 +15,7 @@ export const TECH_METRICS = {
   e2eTestCases: 15,
   e2eScenarios: 5,
   ciJobs: 17,
-  commits: 944,
+  commits: 950,
   monthsActive: 6,
   controllers: 15,
   ports: 29,
@@ -52,6 +52,9 @@ export const TECH_METRICS = {
   lighthouseWatchlistPerformance: 75,
   rateLimitPolicies: 29,
   assistantTools: 8,
+  apiCoverageLines: 90,
+  mongoCoverageLines: 86,
+  inventoriedIndexes: 37,
 } as const;
 
 export const TECH_METRICS_BUILD_DATE = '2026-09-09';

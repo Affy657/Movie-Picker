@@ -2183,6 +2183,11 @@ export const en: Locale = {
         '{{ttl}} expiring indexes do the cleaning inside the engine: sessions, password tokens, notifications, deduplication markers, rate-limit counters and the donation log.',
       expiryHint:
         'No background job runs for this, which is just as well since nothing lives inside the server process.',
+      inventory: 'Index inventory',
+      inventoryValue:
+        'A test compares the {{indexes}} indexes actually created against an expected list: name, uniqueness and expiry. Adding one without declaring it breaks the build.',
+      inventoryHint:
+        'Three guarantees rest on these indexes alone: session expiry, password reset token expiry and rate limiting counter expiry.',
       migrations: 'Migrations',
       migrationsValue:
         'Dated, idempotent, applied once at startup then recorded. {{migrations}} in production.',
@@ -2203,7 +2208,7 @@ export const en: Locale = {
       title: '{{tests}} automated tests, and coverage that blocks',
       lead: 'Three families, from the fastest to the slowest: the domain with no dependencies, the server against a real database, the product inside a browser. Each answers a question the others do not ask.',
       caption:
-        'Blocking coverage on the front end: {{lines}}% of lines, {{functions}}% of functions, {{branches}}% of branches. On the server it is measured and published, with no threshold that fails the pipeline.',
+        'Blocking coverage on the front end: {{lines}}% of lines, {{functions}}% of functions, {{branches}}% of branches. On the server too: {{apiLines}}% of lines on the unit suite, and {{mongoLines}}% on the Mongo adapters alone, which only the suite wired to a real database ever runs.',
       unit: 'Unit tests',
       unitValue: '{{count}} cases, no database or network, on in-memory doubles. A few seconds.',
       unitHint:
@@ -2253,7 +2258,7 @@ export const en: Locale = {
       title: '{{jobs}} checks before production',
       lead: 'A single graph, explicit dependencies, and a deployment that only happens if everything before it is green.',
       caption:
-        'The final link checks that the deployments actually ran, not merely that they did not fail.',
+        'A single job brings a real browser and a real database together, e2e mongo, and it blocks both deployments. The final link then checks that the deployments actually ran, not merely that they did not fail.',
       pipelineHeading: 'What holds the pipeline together',
       trigger: 'Trigger',
       triggerValue:
@@ -2618,12 +2623,14 @@ export const en: Locale = {
       ciTitle: 'Continuous integration job graph, from trigger to deployment',
       ciChanges: 'changes',
       ciGitleaks: 'gitleaks',
+      ciLintWorkflows: 'lint workflows',
       ciLint: 'lint web and api',
       ciAudit: 'audit deps',
       ciTest: 'test web and api',
       ciTestMongo: 'test api mongo',
       ciLighthouse: 'lighthouse',
       ciE2e: 'e2e',
+      ciE2eMongo: 'e2e mongo',
       ciDocker: 'API image',
       ciSonar: 'sonar',
       ciDeployApi: 'deploy api',

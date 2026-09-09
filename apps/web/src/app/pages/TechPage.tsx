@@ -4,6 +4,7 @@ import {
   Boxes,
   Braces,
   CalendarClock,
+  ClipboardCheck,
   Container,
   Database,
   FileJson,
@@ -126,6 +127,7 @@ const DATA_KEYS = [
   { key: 'uniqueness', Icon: Fingerprint },
   { key: 'atomicity', Icon: GitCommitVertical },
   { key: 'expiry', Icon: Timer },
+  { key: 'inventory', Icon: ClipboardCheck },
   { key: 'migrations', Icon: CalendarClock },
   { key: 'isolation', Icon: SplitSquareHorizontal },
   { key: 'posters', Icon: ImageDown },
@@ -403,6 +405,9 @@ export default function TechPage() {
                   unique: TECH_METRICS.uniqueIndexes,
                 }),
                 expiry: t('tech.data.expiryValue', { ttl: TECH_METRICS.ttlIndexes }),
+                inventory: t('tech.data.inventoryValue', {
+                  indexes: TECH_METRICS.inventoriedIndexes,
+                }),
                 migrations: t('tech.data.migrationsValue', {
                   migrations: TECH_METRICS.migrations,
                 }),
@@ -436,6 +441,8 @@ export default function TechPage() {
                 lines: TECH_METRICS.coverageLines,
                 functions: TECH_METRICS.coverageFunctions,
                 branches: TECH_METRICS.coverageBranches,
+                apiLines: TECH_METRICS.apiCoverageLines,
+                mongoLines: TECH_METRICS.mongoCoverageLines,
               })}
             >
               <TestPyramidDiagram />

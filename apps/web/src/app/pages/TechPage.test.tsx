@@ -167,6 +167,9 @@ describe('TechPage', () => {
       expect(section.textContent).toContain(fr.tech.ci[fact]);
     }
     expect(diagram).toContain(fr.tech.diagram.ciDocker);
+    for (const node of ['ciLintWorkflows', 'ciE2eMongo'] as const) {
+      expect(diagram).toContain(fr.tech.diagram[node]);
+    }
   });
 
   it('ne redit pas les familles de tests dans les pratiques', () => {
@@ -178,6 +181,8 @@ describe('TechPage', () => {
     expect(section.textContent).toContain(fr.tech.tests.network);
     expect(section.textContent).toContain(String(TECH_METRICS.mswTestFiles));
     expect(section.textContent).toMatch(/couverture bloquante côté front/i);
+    expect(section.textContent).toContain(String(TECH_METRICS.mongoCoverageLines));
+    expect(section.textContent).not.toMatch(/sans seuil qui fasse échouer/i);
     expect(section.textContent).not.toMatch(/un vrai navigateur/i);
   });
 
@@ -464,11 +469,12 @@ describe('TechPage', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#data') as HTMLElement;
 
-    expect(section.querySelectorAll('article')).toHaveLength(6);
-    for (const fact of ['uniqueness', 'expiry'] as const) {
+    expect(section.querySelectorAll('article')).toHaveLength(7);
+    for (const fact of ['uniqueness', 'expiry', 'inventory'] as const) {
       expect(section.textContent).toContain(fr.tech.data[fact]);
     }
     expect(section.textContent).toContain(String(TECH_METRICS.uniqueIndexes));
+    expect(section.textContent).toContain(String(TECH_METRICS.inventoriedIndexes));
     expect(section.textContent).toContain(String(TECH_METRICS.posterCacheTtlDays));
     expect(section.textContent).not.toMatch(/jamais rechargées/i);
   });
