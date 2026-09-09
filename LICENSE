@@ -1,0 +1,27 @@
+Copyright (c) 2026 Adrien Morand. Tous droits réservés.
+
+Le code de ce dépôt est publié pour être lu, pas pour être réutilisé. Le
+consulter, et le cloner pour le consulter, est libre. Toute autre utilisation
+demande un accord écrit préalable : reproduction, modification, distribution,
+mise en service de tout ou partie du logiciel, à titre commercial ou non.
+
+Cette réserve porte sur le code et la documentation de ce dépôt. Elle ne
+s'étend pas aux dépendances tierces, qui restent régies par leurs licences
+respectives.
+
+Movie Picker utilise l'API de The Movie Database sans être approuvé ni
+certifié par TMDB.
+
+---
+
+Copyright (c) 2026 Adrien Morand. All rights reserved.
+
+This source is published to be read, not reused. Viewing it, and cloning it in
+order to view it, is free. Any other use requires prior written permission:
+reproduction, modification, distribution, and deployment of all or part of the
+software, whether commercial or not.
+
+This reservation covers the code and documentation in this repository. It does
+not extend to third-party dependencies, which remain under their own licenses.
+
+Movie Picker uses the TMDB API but is not endorsed or certified by TMDB.
