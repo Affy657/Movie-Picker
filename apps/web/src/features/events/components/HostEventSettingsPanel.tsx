@@ -69,6 +69,80 @@ function normalizeConfig(c: EventConfigData | undefined): EventConfigData {
   };
 }
 
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+type SettingsDraft = {
+  eventTitle: string;
+  eventDateLocal: string;
+  maxProp: string;
+  maxParticipants: string;
+  currentParticipantCount: number;
+};
+
+function validateTitle(draft: SettingsDraft, t: Translate, errors: FieldErrors) {
+  if (!draft.eventTitle.trim()) errors.title = t('events.settings.titleRequired');
+}
+
+function validateDate(draft: SettingsDraft, t: Translate, errors: FieldErrors) {
+  const trimmed = draft.eventDateLocal.trim();
+  if (!trimmed) {
+    errors.date = t('events.settings.dateRequired');
+    return null;
+  }
+  const parsed = splitDateTimeLocal(draft.eventDateLocal);
+  if (!parsed) errors.date = t('events.settings.dateInvalid');
+  return parsed;
+}
+
+function validateMaxProposals(draft: SettingsDraft, t: Translate, errors: FieldErrors) {
+  const value = Number(draft.maxProp);
+  const valid =
+    draft.maxProp.trim() !== '' &&
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= MAX_PROPOSALS_PER_PARTICIPANT;
+  if (valid) return value;
+  errors.maxProposals = t('events.settings.maxProposalsInvalid', {
+    max: MAX_PROPOSALS_PER_PARTICIPANT,
+  });
+  return MAX_PROPOSALS_PER_PARTICIPANT;
+}
+
+function validateMaxParticipants(draft: SettingsDraft, t: Translate, errors: FieldErrors) {
+  const value = Number(draft.maxParticipants);
+  const withinBounds =
+    draft.maxParticipants.trim() !== '' &&
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= MAX_EVENT_PARTICIPANTS;
+
+  if (!withinBounds) {
+    errors.maxParticipants = t('events.settings.maxParticipantsInvalid', {
+      max: MAX_EVENT_PARTICIPANTS,
+    });
+    return MAX_EVENT_PARTICIPANTS;
+  }
+
+  if (value < draft.currentParticipantCount) {
+    errors.maxParticipants = t('events.settings.maxParticipantsBelowCurrent', {
+      value,
+      count: draft.currentParticipantCount,
+    });
+    return MAX_EVENT_PARTICIPANTS;
+  }
+
+  return value;
+}
+
+function validateSettingsDraft(draft: SettingsDraft, t: Translate) {
+  const errors: FieldErrors = {};
+  validateTitle(draft, t, errors);
+  const eventDateTime = validateDate(draft, t, errors);
+  const maxProposalsPerParticipant = validateMaxProposals(draft, t, errors);
+  const maxParticipantsValue = validateMaxParticipants(draft, t, errors);
+  return { errors, maxProposalsPerParticipant, maxParticipantsValue, eventDateTime };
+}
+
 export default function HostEventSettingsPanel({
   slug,
   hostToken,
@@ -186,54 +260,17 @@ export default function HostEventSettingsPanel({
   }, []);
 
   performSaveRef.current = () => {
-    const errors: FieldErrors = {};
-
-    if (!eventTitle.trim()) {
-      errors.title = t('events.settings.titleRequired');
-    }
-
-    const eventDateTime = eventDateLocal.trim() ? splitDateTimeLocal(eventDateLocal) : null;
-    if (!eventDateLocal.trim()) {
-      errors.date = t('events.settings.dateRequired');
-    } else if (!eventDateTime) {
-      errors.date = t('events.settings.dateInvalid');
-    }
-
-    let maxProposalsPerParticipant = MAX_PROPOSALS_PER_PARTICIPANT;
-    const maxPropNum = Number(maxProp);
-    if (
-      maxProp.trim() === '' ||
-      !Number.isInteger(maxPropNum) ||
-      maxPropNum < 1 ||
-      maxPropNum > MAX_PROPOSALS_PER_PARTICIPANT
-    ) {
-      errors.maxProposals = t('events.settings.maxProposalsInvalid', {
-        max: MAX_PROPOSALS_PER_PARTICIPANT,
-      });
-    } else {
-      maxProposalsPerParticipant = maxPropNum;
-    }
-
-    let maxParticipantsValue = MAX_EVENT_PARTICIPANTS;
-    const maxPartNum = Number(maxParticipants);
-    const currentCount = event.participantCount ?? 0;
-    if (
-      maxParticipants.trim() === '' ||
-      !Number.isInteger(maxPartNum) ||
-      maxPartNum < 1 ||
-      maxPartNum > MAX_EVENT_PARTICIPANTS
-    ) {
-      errors.maxParticipants = t('events.settings.maxParticipantsInvalid', {
-        max: MAX_EVENT_PARTICIPANTS,
-      });
-    } else if (maxPartNum < currentCount) {
-      errors.maxParticipants = t('events.settings.maxParticipantsBelowCurrent', {
-        value: maxPartNum,
-        count: currentCount,
-      });
-    } else {
-      maxParticipantsValue = maxPartNum;
-    }
+    const { errors, maxProposalsPerParticipant, maxParticipantsValue, eventDateTime } =
+      validateSettingsDraft(
+        {
+          eventTitle,
+          eventDateLocal,
+          maxProp,
+          maxParticipants,
+          currentParticipantCount: event.participantCount ?? 0,
+        },
+        t
+      );
 
     setFieldErrors(errors);
 

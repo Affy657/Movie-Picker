@@ -34,7 +34,12 @@ import listCardStyles from '@/features/movies/components/MovieListCard.module.cs
 import { useMovieListToolbar } from '@/features/movies/hooks/useMovieListToolbar';
 import { useMovieCollections, useMovieShowcase } from '@/features/movies/hooks/useMovieShowcase';
 import { searchMovies } from '@/features/movies/api/moviesApi';
-import type { ShowcaseQuery, ShowcaseSection } from '@/features/movies/api/showcaseApi';
+import type {
+  ShowcaseProvider,
+  ShowcaseQuery,
+  ShowcaseSection,
+  ShowcaseTheme,
+} from '@/features/movies/api/showcaseApi';
 import {
   isShowcaseProvider,
   isShowcaseTheme,
@@ -103,6 +108,38 @@ interface Props {
   variant: ShowcaseListVariant;
 }
 
+type ShowcaseRouteSelection = {
+  themeKey: ShowcaseTheme | undefined;
+  providerKey: ShowcaseProvider | undefined;
+  seedTmdbId: number | undefined;
+  collectionId: number | undefined;
+  genreId: number | undefined;
+};
+
+function buildShowcaseQuery(
+  variant: Props['variant'],
+  { themeKey, providerKey, seedTmdbId, collectionId, genreId }: ShowcaseRouteSelection
+): ShowcaseQuery {
+  if (variant === 'recommendations') return { section: 'recommendations', seedTmdbId };
+  if (variant === 'provider') return { section: 'provider', provider: providerKey };
+  if (variant === 'theme') return { section: 'theme', theme: themeKey };
+  if (variant === 'collection') return { section: 'collection', collectionId };
+  if (variant === 'trending' && genreId) return { section: 'trending', genreIds: [genreId] };
+  return { section: variant as ShowcaseSection };
+}
+
+function isShowcaseQueryEnabled(
+  variant: Props['variant'],
+  { themeKey, providerKey, seedTmdbId, collectionId }: ShowcaseRouteSelection
+): boolean {
+  if (variant === 'search') return false;
+  if (variant === 'theme') return themeKey != null;
+  if (variant === 'provider') return providerKey != null;
+  if (variant === 'recommendations') return seedTmdbId != null && Number.isFinite(seedTmdbId);
+  if (variant === 'collection') return collectionId != null && Number.isFinite(collectionId);
+  return true;
+}
+
 export default function ShowcaseListPage({ variant }: Readonly<Props>) {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
@@ -131,21 +168,17 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
   const seedTmdbId = params.seedTmdbId ? Number(params.seedTmdbId) : undefined;
   const collectionId = params.collectionId ? Number(params.collectionId) : undefined;
 
-  const showcaseQuery: ShowcaseQuery = useMemo(() => {
-    if (variant === 'recommendations') return { section: 'recommendations', seedTmdbId };
-    if (variant === 'provider') return { section: 'provider', provider: providerKey };
-    if (variant === 'theme') return { section: 'theme', theme: themeKey };
-    if (variant === 'collection') return { section: 'collection', collectionId };
-    if (variant === 'trending' && genreId) return { section: 'trending', genreIds: [genreId] };
-    return { section: variant as ShowcaseSection };
-  }, [variant, themeKey, collectionId, genreId, providerKey, seedTmdbId]);
+  const routeSelection: ShowcaseRouteSelection = useMemo(
+    () => ({ themeKey, providerKey, seedTmdbId, collectionId, genreId }),
+    [themeKey, providerKey, seedTmdbId, collectionId, genreId]
+  );
 
-  const showcaseEnabled =
-    variant !== 'search' &&
-    (variant !== 'theme' || themeKey != null) &&
-    (variant !== 'provider' || providerKey != null) &&
-    (variant !== 'recommendations' || (seedTmdbId != null && Number.isFinite(seedTmdbId))) &&
-    (variant !== 'collection' || (collectionId != null && Number.isFinite(collectionId)));
+  const showcaseQuery: ShowcaseQuery = useMemo(
+    () => buildShowcaseQuery(variant, routeSelection),
+    [variant, routeSelection]
+  );
+
+  const showcaseEnabled = isShowcaseQueryEnabled(variant, routeSelection);
   const searchEnabled = variant === 'search' && searchQuery.length > 0;
   const queryEnabled = variant === 'search' ? searchEnabled : showcaseEnabled;
 

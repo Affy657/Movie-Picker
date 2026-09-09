@@ -571,6 +571,70 @@ export default function EventDetailSession({
 
 type WheelApi = ReturnType<typeof useEventWheel>;
 
+function EventShareDialog({
+  open,
+  onClose,
+  slug,
+  event,
+  shareUrl,
+  dateFormatted,
+  timeFormatted,
+  dateLabel,
+  participantsLabel,
+  initialTab,
+  hostCanInvite,
+  friendsBadge,
+  t,
+}: Readonly<{
+  open: boolean;
+  onClose: () => void;
+  slug: string;
+  event: EventData;
+  shareUrl: string;
+  dateFormatted: string;
+  timeFormatted: string;
+  dateLabel: string;
+  participantsLabel: string;
+  initialTab: 'link' | 'friends' | undefined;
+  hostCanInvite: boolean;
+  friendsBadge: number | undefined;
+  t: ReturnType<typeof useTranslation>['t'];
+}>) {
+  const friendsTab = hostCanInvite
+    ? {
+        id: 'friends',
+        label: t('share.tabFriends'),
+        icon: <Users size={15} aria-hidden />,
+        badge: friendsBadge,
+        content: <EventInviteFriendsTab slug={slug} onNavigate={onClose} />,
+      }
+    : undefined;
+
+  return (
+    <ShareDialog
+      open={open}
+      onClose={onClose}
+      title={t('events.share.dialogTitle')}
+      url={shareUrl}
+      qrHint={t('events.share.qrHint')}
+      fileSlug={slug}
+      preview={{
+        icon: <Film size={20} aria-hidden />,
+        name: event.title,
+        meta: [dateFormatted, participantsLabel],
+      }}
+      shareText={t('events.share.shareText', {
+        title: event.title,
+        time: timeFormatted,
+        date: dateLabel,
+      })}
+      surface="event"
+      initialTab={initialTab}
+      extraTab={friendsTab}
+    />
+  );
+}
+
 function EventDetailSessionChrome({
   slug,
   hostToken,
@@ -710,36 +774,20 @@ function EventDetailSessionChrome({
           {wheel.error}
         </p>
       ) : null}
-      <ShareDialog
+      <EventShareDialog
         open={shareOpen}
         onClose={onCloseShare}
-        title={t('events.share.dialogTitle')}
-        url={shareUrl}
-        qrHint={t('events.share.qrHint')}
-        fileSlug={slug}
-        preview={{
-          icon: <Film size={20} aria-hidden />,
-          name: event.title,
-          meta: [dateFormatted, participantsLabel],
-        }}
-        shareText={t('events.share.shareText', {
-          title: event.title,
-          time: timeFormatted,
-          date: dateLabel,
-        })}
-        surface="event"
+        slug={slug}
+        event={event}
+        shareUrl={shareUrl}
+        dateFormatted={dateFormatted}
+        timeFormatted={timeFormatted}
+        dateLabel={dateLabel}
+        participantsLabel={participantsLabel}
         initialTab={shareInitialTab}
-        extraTab={
-          hostCanInvite
-            ? {
-                id: 'friends',
-                label: t('share.tabFriends'),
-                icon: <Users size={15} aria-hidden />,
-                badge: eligibleFollowsQuery.data?.follows.length,
-                content: <EventInviteFriendsTab slug={slug} onNavigate={onCloseShare} />,
-              }
-            : undefined
-        }
+        hostCanInvite={hostCanInvite}
+        friendsBadge={eligibleFollowsQuery.data?.follows.length}
+        t={t}
       />
       {moviesQuery.isError ? (
         <EventMoviesLoadError error={moviesQuery.error} onRetry={() => moviesQuery.refetch()} />
