@@ -12,6 +12,7 @@ import { KOFI_URL } from '@/shared/donations/kofi';
 import content from './ContentPage.module.css';
 import styles from './DonatePage.module.css';
 import { buttonClass } from '@/shared/components/Button';
+import Card from '@/shared/components/Card';
 
 export default function DonatePage() {
   const { t } = useTranslation();
@@ -28,7 +29,14 @@ export default function DonatePage() {
       <h1 className={content.title}>{t('donate.title')}</h1>
       <p className={content.intro}>{t('donate.intro')}</p>
 
-      <section className={styles.kofiCard} aria-labelledby="donate-kofi-heading">
+      <Card
+        as="section"
+        padding="none"
+        radius="lg"
+        elevation="sm"
+        className={styles.kofiCard}
+        aria-labelledby="donate-kofi-heading"
+      >
         <span className={styles.kofiIcon} aria-hidden>
           <HeartHandshake size={28} />
         </span>
@@ -47,7 +55,7 @@ export default function DonatePage() {
           {t('donate.kofiCta')}
         </a>
         <p className={styles.kofiNote}>{t('donate.kofiNote')}</p>
-      </section>
+      </Card>
 
       <section className={content.section}>
         <h2 className={content.sectionTitle}>{t('donate.costsTitle')}</h2>

@@ -56,7 +56,7 @@ export default function MovieListCard({
     <Card
       as="li"
       padding="none"
-      elevated
+      elevation="sm"
       className={clsx(styles.card, layout === 'row' && styles.cardAsRow, className)}
     >
       <div className={styles.posterRegion}>

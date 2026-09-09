@@ -15,6 +15,7 @@ import {
   voteMinLabel,
 } from './movieSearchFilterOptions';
 import styles from './AddMovieForm.module.css';
+import Card from '@/shared/components/Card';
 
 interface MovieSearchFiltersPanelProps {
   panelId: string;
@@ -55,7 +56,7 @@ export default function MovieSearchFiltersPanel({
   const inFrench = tmdbLanguage.startsWith('fr');
 
   return (
-    <div id={panelId} className={styles.filtersPanel}>
+    <Card id={panelId} padding="none" elevation="sm" className={styles.filtersPanel}>
       {onToggleGenre && (
         <div className={styles.filterGroup}>
           <span className={styles.filterLabel}>{t('movies.search.filterGenre')}</span>
@@ -159,6 +160,6 @@ export default function MovieSearchFiltersPanel({
           ariaLabelMax={t('movies.search.durationMaxAria')}
         />
       </div>
-    </div>
+    </Card>
   );
 }

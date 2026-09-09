@@ -147,7 +147,6 @@ export default function WatchlistPage() {
   const filtersPanel = (
     <MovieListFiltersPanel
       panelId={filtersPanelId}
-      boxed
       tmdbLanguage={tmdbLanguage}
       labels={filtersLabels}
       ratingScale={user?.ratingScale}

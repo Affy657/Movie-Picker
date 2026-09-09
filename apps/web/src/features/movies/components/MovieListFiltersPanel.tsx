@@ -13,6 +13,7 @@ import {
 } from '@/features/movies/components/movieSearchFilterOptions';
 import type { RatingScale } from '@/shared/types/theme';
 import type { MovieMediaType } from '@/shared/types/movie';
+import Card from '@/shared/components/Card';
 import Chip from '@/shared/components/Chip';
 import styles from './MovieListFiltersPanel.module.css';
 import LinkButton from '@/shared/components/LinkButton';
@@ -33,7 +34,6 @@ interface MovieListFiltersPanelLabels {
 interface MovieListFiltersPanelProps {
   panelId?: string;
   className?: string;
-  boxed?: boolean;
   onReset?: () => void;
   tmdbLanguage: string;
   labels: MovieListFiltersPanelLabels;
@@ -53,7 +53,6 @@ interface MovieListFiltersPanelProps {
 export default function MovieListFiltersPanel({
   panelId,
   className,
-  boxed = false,
   onReset,
   tmdbLanguage,
   labels,
@@ -70,7 +69,7 @@ export default function MovieListFiltersPanel({
   onChangeRuntimeRange,
 }: Readonly<MovieListFiltersPanelProps>) {
   return (
-    <div id={panelId} className={clsx(styles.panel, boxed && styles.boxed, className)}>
+    <Card id={panelId} elevation="sm" className={clsx(styles.panel, className)}>
       <div className={styles.group}>
         <span className={styles.groupLabel}>{labels.genre}</span>
         <div className={styles.chipRow}>
@@ -163,6 +162,6 @@ export default function MovieListFiltersPanel({
           <LinkButton onClick={onReset}>{labels.resetAll}</LinkButton>
         </div>
       ) : null}
-    </div>
+    </Card>
   );
 }

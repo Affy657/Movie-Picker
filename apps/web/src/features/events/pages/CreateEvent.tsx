@@ -28,6 +28,7 @@ import { useLocale, useTranslation } from '@/shared/i18n';
 import { formatEventTitleDate } from '@/shared/utils/formatMyEventsListDate';
 import styles from './CreateEvent.module.css';
 import Button from '@/shared/components/Button';
+import Card from '@/shared/components/Card';
 
 function getDefaultDate(): string {
   const d = new Date();
@@ -164,7 +165,7 @@ export default function CreateEvent() {
         <ArrowLeft size={16} aria-hidden />
         <span className={styles.backLinkLabel}>{t('nav.myEvents')}</span>
       </Link>
-      <div className={styles.card}>
+      <Card padding="none" radius="lg" elevation="md" className={styles.card}>
         <span className={styles.cardAccent} aria-hidden />
         <h1 className={styles.title}>{t('events.create.title')}</h1>
         <p className={styles.description}>{t('events.create.description')}</p>
@@ -294,7 +295,7 @@ export default function CreateEvent() {
             {loading ? t('events.create.submitting') : t('events.create.submit')}
           </Button>
         </form>
-      </div>
+      </Card>
     </PageLayout>
   );
 }

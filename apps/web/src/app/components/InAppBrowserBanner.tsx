@@ -7,6 +7,7 @@ import { buildSystemBrowserOpenUrl, isKnownInAppBrowser } from '@/shared/utils/i
 import styles from './InAppBrowserBanner.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
+import Card from '@/shared/components/Card';
 
 export default function InAppBrowserBanner() {
   const { t } = useTranslation();
@@ -20,7 +21,14 @@ export default function InAppBrowserBanner() {
   const systemBrowserUrl = buildSystemBrowserOpenUrl(currentUrl, navigator.userAgent);
 
   return (
-    <section className={styles.root} aria-label={t('inAppBrowser.banner.title')} aria-live="polite">
+    <Card
+      as="section"
+      padding="none"
+      elevation="lg"
+      className={styles.root}
+      aria-label={t('inAppBrowser.banner.title')}
+      aria-live="polite"
+    >
       <div className={styles.header}>
         <div className={styles.content}>
           <p className={styles.title}>{t('inAppBrowser.banner.title')}</p>
@@ -49,6 +57,6 @@ export default function InAppBrowserBanner() {
           {copied ? t('inAppBrowser.banner.copied') : t('inAppBrowser.banner.copyLink')}
         </Button>
       </div>
-    </section>
+    </Card>
   );
 }

@@ -25,7 +25,7 @@ export default function HistoryEventRow({
   const { locale } = useLocale();
 
   return (
-    <Card as="article" padding="none" elevated className={styles.row}>
+    <Card as="article" padding="none" elevation="sm" className={styles.row}>
       <Link
         to={ROUTES.eventDetail(event.slug)}
         className={styles.thumbLink}

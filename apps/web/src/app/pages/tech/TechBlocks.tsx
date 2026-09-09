@@ -94,11 +94,11 @@ export function FactGrid({
 
 export function Figure({ caption, children }: Readonly<{ caption?: string; children: ReactNode }>) {
   return (
-    <figure className={styles.figure}>
+    <Card as="figure" padding="none" radius="lg" elevation="sm" className={styles.figure}>
       <div className={styles.figureScroll} tabIndex={0}>
         {children}
       </div>
       {caption ? <figcaption className={styles.caption}>{caption}</figcaption> : null}
-    </figure>
+    </Card>
   );
 }

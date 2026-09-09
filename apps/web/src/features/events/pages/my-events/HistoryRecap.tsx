@@ -5,6 +5,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
 import styles from './HistoryRecap.module.css';
+import Card from '@/shared/components/Card';
 
 interface HistoryRecapProps {
   totalFinished: number;
@@ -22,7 +23,7 @@ export default function HistoryRecap({ totalFinished }: Readonly<HistoryRecapPro
   });
 
   return (
-    <div className={styles.recap}>
+    <Card padding="none" className={styles.recap}>
       <div className={styles.stat}>
         <span className={styles.value}>{totalFinished}</span>
         <span className={styles.label}>{t('events.myEvents.recapFinishedLabel')}</span>
@@ -40,6 +41,6 @@ export default function HistoryRecap({ totalFinished }: Readonly<HistoryRecapPro
         </span>
         <span className={styles.label}>{t('events.myEvents.recapStreakLabel')}</span>
       </div>
-    </div>
+    </Card>
   );
 }

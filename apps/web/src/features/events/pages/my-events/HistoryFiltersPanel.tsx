@@ -2,6 +2,7 @@ import Chip from '@/shared/components/Chip';
 import { useTranslation } from '@/shared/i18n';
 import type { HistoryOutcome, HistoryRole } from './useHistoryToolbar';
 import styles from './HistoryFiltersPanel.module.css';
+import Card from '@/shared/components/Card';
 
 interface HistoryFiltersPanelProps {
   panelId: string;
@@ -31,7 +32,7 @@ export default function HistoryFiltersPanel({
   ];
 
   return (
-    <div id={panelId} className={styles.panel}>
+    <Card id={panelId} elevation="sm" className={styles.panel}>
       <div className={styles.group} role="group" aria-labelledby={`${panelId}-role-label`}>
         <span id={`${panelId}-role-label`} className={styles.groupLabel}>
           {t('events.myEvents.filtersRoleLabel')}
@@ -67,6 +68,6 @@ export default function HistoryFiltersPanel({
           ))}
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

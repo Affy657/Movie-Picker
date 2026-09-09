@@ -277,7 +277,6 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
   const filtersPanel = (
     <MovieListFiltersPanel
       panelId={filtersPanelId}
-      boxed
       tmdbLanguage={tmdbLanguage}
       labels={filtersLabels}
       selectedGenres={toolbar.selectedGenres}
