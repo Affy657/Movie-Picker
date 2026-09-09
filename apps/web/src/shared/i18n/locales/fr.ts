@@ -1507,6 +1507,19 @@
       followAriaLabel: 'Suivre @{{handle}}',
       unfollowAriaLabel: 'Ne plus suivre @{{handle}}',
       error: 'Action impossible, réessayez.',
+      search: {
+        tab: 'Rechercher',
+        tabAriaLabel: 'Rechercher des utilisateurs',
+        placeholder: 'Pseudo ou @handle',
+        minLength: 'Tapez au moins {{count}} caractères.',
+        idleTitle: 'Cherchez un pseudo',
+        idleMessage: 'Tapez le pseudo ou le handle de la personne que vous voulez suivre.',
+        emptyTitle: 'Personne ne correspond',
+        emptyMessage:
+          "Vérifiez l'orthographe du pseudo. Les comptes dont le profil est privé n'apparaissent pas dans la recherche.",
+        loading: 'Recherche en cours',
+        error: 'Recherche impossible, réessayez.',
+      },
     },
     settings: {
       title: 'Profil public',

@@ -205,6 +205,8 @@
   --color-badge-host-text: #3730a3;
   --color-badge-me-bg: #dbeafe;
   --color-badge-me-text: #1e40af;
+  --color-search-highlight-bg: #fde68a;
+  --color-search-highlight-text: #422006;
   --color-wheel-bg: #e0e7ff;
   --color-wheel-label: #3730a3;
   --color-poster-placeholder: #e2e8f0;
@@ -335,6 +337,8 @@
   --color-badge-host-text: #c7d2fe;
   --color-badge-me-bg: #172554;
   --color-badge-me-text: #93c5fd;
+  --color-search-highlight-bg: #78350f;
+  --color-search-highlight-text: #fde68a;
   --color-wheel-bg: #1e1b4b;
   --color-wheel-label: #c7d2fe;
   --color-poster-placeholder: #1e293b;

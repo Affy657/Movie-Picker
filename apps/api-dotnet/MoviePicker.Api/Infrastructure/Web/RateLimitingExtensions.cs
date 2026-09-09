@@ -28,6 +28,7 @@ public static class RateLimitingExtensions
     public const string DeleteEventPolicy = "delete-event";
     public const string PostersPolicy = "posters-get";
     public const string PublicProfilePolicy = "public-profile";
+    public const string SearchUsersPolicy = "search-users";
     public const string FollowMutationPolicy = "follow-mutation";
     public const string InviteUserPolicy = "invite-user";
     public const string WatchlistReadPolicy = "watchlist-read";
@@ -60,6 +61,7 @@ public static class RateLimitingExtensions
         new(DeleteEventPolicy, 10, 1, false),
         new(PostersPolicy, 300, 1, false),
         new(PublicProfilePolicy, 120, 1, false),
+        new(SearchUsersPolicy, 40, 1, false),
         new(FollowMutationPolicy, 60, 1, false),
         new(InviteUserPolicy, 60, 1, false),
         new(WatchlistReadPolicy, 120, 1, false),

@@ -10,6 +10,8 @@ export const queryKeys = {
     followers: (handle: string | undefined) =>
       ['profile', 'followers', handle ?? '$pending'] as const,
     stats: (handle: string | undefined) => ['profile', 'stats', handle ?? '$pending'] as const,
+    userSearches: ['profile', 'user-search'] as const,
+    userSearch: (query: string) => ['profile', 'user-search', query] as const,
     watchedMovies: (handle: string | undefined, take: number) =>
       ['profile', 'watchedMovies', handle ?? '$pending', take] as const,
   },

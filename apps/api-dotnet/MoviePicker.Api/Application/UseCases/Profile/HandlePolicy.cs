@@ -13,7 +13,7 @@ public static partial class HandlePolicy
     private static readonly HashSet<string> Reserved = new(StringComparer.OrdinalIgnoreCase)
     {
         "me", "settings", "admin", "api", "new", "login", "register", "logout",
-        "u", "user", "users", "reset",
+        "u", "user", "users", "reset", "search",
         "account", "profile", "profiles", "auth", "event", "events", "home",
         "about", "help", "support", "null", "undefined", "root", "system"
     };

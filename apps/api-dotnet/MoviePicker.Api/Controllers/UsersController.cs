@@ -6,6 +6,7 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Follow;
 using MoviePicker.Api.Application.UseCases.Profile;
+using MoviePicker.Api.Application.UseCases.SearchUsers;
 using MoviePicker.Api.Application.UseCases.UserMovies;
 using MoviePicker.Api.Application.UseCases.UserStats;
 using MoviePicker.Api.Infrastructure.Web;
@@ -29,6 +30,22 @@ public sealed class UsersController : ControllerBase
     {
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var result = await handler.HandleAsync(handle ?? string.Empty, currentUserId, ct);
+        return Ok(result);
+    }
+
+    [HttpGet("search")]
+    [Authorize]
+    [EnableRateLimiting(RateLimitingExtensions.SearchUsersPolicy)]
+    [ProducesResponseType(typeof(FollowListResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> Search(
+        [FromQuery] string? q,
+        [FromServices] ISearchUsersHandler handler,
+        CancellationToken ct)
+    {
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var result = await handler.HandleAsync(q, currentUserId, ct);
         return Ok(result);
     }
 

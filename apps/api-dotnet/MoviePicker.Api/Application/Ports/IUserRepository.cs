@@ -13,6 +13,7 @@ public interface IUserRepository
     Task<User?> GetByIdentityAsync(string provider, string subject, CancellationToken ct = default);
     Task<IReadOnlyList<User>> ListMissingHandleAsync(CancellationToken ct = default);
     Task<IReadOnlyList<User>> ListWithLetterboxdSyncEnabledAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<User>> SearchPublicAsync(string query, int limit, CancellationToken ct = default);
 
     Task SetLetterboxdSyncStatusAsync(
         string userId,
