@@ -1,4 +1,4 @@
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { TECH_METRICS, TECH_METRICS_BUILD_DATE } from './generated/techMetrics';
 import { TechHint } from './TechBlocks';
 import styles from './techPage.module.css';
@@ -7,68 +7,62 @@ function formatNumber(value: number, locale: string) {
   return new Intl.NumberFormat(locale === 'en' ? 'en-GB' : 'fr-FR').format(value);
 }
 
+type HeroMetric = {
+  key: string;
+  value: number;
+  unitKey?: TranslationKey;
+};
+
+const METRIC_KEYS: readonly HeroMetric[] = [
+  { key: 'metricLines', value: TECH_METRICS.linesOfCode },
+  { key: 'metricEndpoints', value: TECH_METRICS.endpoints },
+  { key: 'metricTests', value: TECH_METRICS.testCases },
+  { key: 'metricCommits', value: TECH_METRICS.commits },
+  { key: 'metricMonths', value: TECH_METRICS.monthsActive, unitKey: 'tech.hero.metricMonthsUnit' },
+  {
+    key: 'metricCoverage',
+    value: TECH_METRICS.coverageLines,
+    unitKey: 'tech.hero.metricCoverageUnit',
+  },
+];
+
 export default function TechHero() {
   const { t, locale } = useTranslation();
 
-  const credits = [
-    { term: t('tech.hero.production'), value: t('tech.hero.productionValue') },
-    { term: t('tech.hero.period'), value: t('tech.hero.periodValue') },
-    { term: t('tech.hero.format'), value: t('tech.hero.formatValue') },
-    { term: t('tech.hero.ui'), value: t('tech.hero.uiValue') },
-    { term: t('tech.hero.server'), value: t('tech.hero.serverValue') },
-    { term: t('tech.hero.delivery'), value: t('tech.hero.deliveryValue') },
-  ];
-
-  const metrics = [
-    {
-      value: TECH_METRICS.linesOfCode,
-      label: t('tech.hero.metricLines'),
-      hint: t('tech.hero.metricLinesHint'),
-    },
-    {
-      value: TECH_METRICS.endpoints,
-      label: t('tech.hero.metricEndpoints'),
-      hint: t('tech.hero.metricEndpointsHint'),
-    },
-    {
-      value: TECH_METRICS.testFiles,
-      label: t('tech.hero.metricTests'),
-      hint: t('tech.hero.metricTestsHint'),
-    },
-    {
-      value: TECH_METRICS.ciJobs,
-      label: t('tech.hero.metricJobs'),
-      hint: t('tech.hero.metricJobsHint'),
-    },
-  ];
+  const metricHint = (key: string) =>
+    key === 'metricTests'
+      ? t('tech.hero.metricTestsHint', {
+          web: TECH_METRICS.webTestCases,
+          api: TECH_METRICS.apiTestCases,
+          files: TECH_METRICS.testFiles,
+        })
+      : t(`tech.hero.${key}Hint` as TranslationKey);
 
   return (
     <header className={`${styles.hero} on-dark`}>
       <div className={styles.heroInner}>
         <p className={styles.heroEyebrow}>{t('tech.hero.eyebrow')}</p>
-        <h1 className={styles.heroTitle}>
-          {t('tech.hero.titleLead')}
-          <br />
-          {t('tech.hero.titleAccent')}
-        </h1>
-        <p className={styles.heroLead}>{t('tech.hero.lead')}</p>
-
-        <dl className={styles.credits} aria-label={t('tech.hero.creditsLabel')}>
-          {credits.map((credit) => (
-            <div key={credit.term} className={styles.creditRow}>
-              <dt className={styles.creditTerm}>{credit.term}</dt>
-              <dd className={styles.creditValue}>{credit.value}</dd>
-            </div>
-          ))}
-        </dl>
+        <h1 className={styles.heroTitle}>{t('tech.hero.title')}</h1>
+        <div className={styles.heroLeadGroup}>
+          <p className={styles.heroLead}>{t('tech.hero.lead')}</p>
+          <p className={styles.heroLead}>{t('tech.hero.leadIntent')}</p>
+        </div>
 
         <ul className={styles.metrics}>
-          {metrics.map((metric) => (
-            <li className={styles.metric} key={metric.label}>
-              <span className={styles.metricValue}>{formatNumber(metric.value, locale)}</span>
+          {METRIC_KEYS.map(({ key, value, unitKey }) => (
+            <li className={styles.metric} key={key}>
+              <span className={styles.metricValue}>
+                {formatNumber(value, locale)}
+                {unitKey ? (
+                  <>
+                    {' '}
+                    <span className={styles.metricUnit}>{t(unitKey)}</span>
+                  </>
+                ) : null}
+              </span>
               <span className={styles.metricLabel}>
-                <TechHint label={metric.hint} placement="bottom">
-                  {metric.label}
+                <TechHint label={metricHint(key)} placement="bottom" className={styles.metricHint}>
+                  {t(`tech.hero.${key}` as TranslationKey)}
                 </TechHint>
               </span>
             </li>

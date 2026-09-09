@@ -100,6 +100,23 @@ export function GoogleCloudLogo(props: Readonly<LogoProps>) {
   return (
     <LogoFrame {...props} viewBox="0 0 24 24">
       <path
+        d="M12.6 4a6.4 6.4 0 0 0-5.9 3.9A5 5 0 0 0 7.6 18h9.6a4.7 4.7 0 0 0 1.2-9.2A6.4 6.4 0 0 0 12.6 4Z"
+        fill="#4285f4"
+      />
+      <path
+        d="M12.6 4a6.4 6.4 0 0 0-4.5 1.8l2.6 2.6a2.8 2.8 0 0 1 4.2.5l2.9-2.4A6.4 6.4 0 0 0 12.6 4Z"
+        fill="#ea4335"
+      />
+      <path d="M17.8 6.5 14.9 9a2.8 2.8 0 0 1 .5 2.9l3.4 1.1a6.4 6.4 0 0 0-1-6.5Z" fill="#fbbc05" />
+      <path d="M7.6 18h9.6a4.7 4.7 0 0 0 1.6-.3l-1.3-3.4a2.8 2.8 0 0 1-.9.2H7.6Z" fill="#34a853" />
+    </LogoFrame>
+  );
+}
+
+export function GoogleLogo(props: Readonly<LogoProps>) {
+  return (
+    <LogoFrame {...props} viewBox="0 0 24 24">
+      <path
         d="M14.7 8.3h.6l1.7-1.7.1-.7A7.7 7.7 0 0 0 4.6 5.6l1.5 2.6.7-.1a4.3 4.3 0 0 1 7.9.2Z"
         fill="#ea4335"
       />
@@ -225,6 +242,17 @@ export function WebPushLogo(props: Readonly<LogoProps>) {
         fill="#7b61ff"
       />
       <path d="M9.6 19.1h4.8a2.4 2.4 0 0 1-4.8 0Z" fill="#7b61ff" />
+    </LogoFrame>
+  );
+}
+
+export function AnthropicLogo(props: Readonly<LogoProps>) {
+  return (
+    <LogoFrame {...props} viewBox="0 0 24 24">
+      <path
+        d="M17.3 3.7h-3.6l6.5 16.6h3.6L17.3 3.7Zm-10.6 0L0.2 20.3h3.7l1.3-3.5h6.8l1.3 3.5h3.7L10.5 3.7H6.7Zm-0.3 10L8.6 8l2.2 5.7H6.4Z"
+        fill="#d97757"
+      />
     </LogoFrame>
   );
 }

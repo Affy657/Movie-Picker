@@ -33,7 +33,7 @@ Aucune valeur littérale dans les CSS modules : espacements, tailles de police, 
 - espacement : `var(--space-0-5 … --space-24)`, base 4 px avec demi-pas jusqu'à 14 px ;
 - typographie : `var(--font-size-4xs … --font-size-3xl)` ;
 - profondeur : `var(--z-below … --z-skip-link)`, jamais un nombre ;
-- largeur de page : `var(--container-xs … --container-2xl)` posé sur `--page-max-width` ;
+- largeur de page : `var(--container-xs … --container-3xl)` posé sur `--page-max-width` ;
 - couleur : `var(--color-*)`, `var(--on-poster-*)` pour ce qui se pose sur une affiche.
 
 Points de rupture, échelle fermée : `24.9375rem`, `29.9375rem`, `39.9375rem`, `47.9375rem`, `63.9375rem` en `max-width` ; `30rem`, `40rem`, `48rem`, `64rem`, `80rem` en `min-width`. Toute autre valeur est refusée.
@@ -64,6 +64,18 @@ Pour toute nouvelle barre sticky dont le contenu change de hauteur :
 2. poser `overflow-anchor: none` sur le conteneur de page concerné en filet de sécurité.
 
 ## Workflow
+
+**Le test est écrit avant le code.** Pour une fonctionnalité comme pour un correctif : d'abord un test qui échoue et qui décrit le comportement attendu, ensuite l'implémentation qui le fait passer. Sur un bug, le test doit reproduire le symptôme avant toute correction, sinon rien ne prouve que la cause a été traitée.
+
+Cinq procédures sont rappelées par leur nom plutôt que réexpliquées à chaque fois :
+
+| Procédure | Quand |
+|---|---|
+| `/design:design-critique` | sur la maquette, avant d'écrire le composant |
+| `/engineering:testing-strategy` | avant d'écrire les tests d'une fonctionnalité |
+| `/verify` | avant chaque envoi, suites complètes |
+| `/engineering:code-review` | à la relecture, avant fusion |
+| `/engineering:tech-debt` | passe périodique, hors du flot de livraison |
 
 **Avant tout push sur master, toujours exécuter `pnpm run verify:local` et corriger toute erreur avant de push.** Cette vérification couvre les règles d'architecture, lint, format, tests front et tests API — elle est obligatoire quelle que soit la conversation ou la feature.
 

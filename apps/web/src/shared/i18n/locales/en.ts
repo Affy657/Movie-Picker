@@ -1829,131 +1829,282 @@ export const en: Locale = {
     signatureText:
       'A personal project designed, built and operated alone, from the first line to production. Figures are measured in the repository at build time, not estimated.',
     hero: {
-      eyebrow: 'Engineering dossier',
-      titleLead: "What's under",
-      titleAccent: 'the wheel',
-      lead: 'Picking a film together usually takes longer than watching it. Movie Picker removes that negotiation: everyone suggests, everyone votes, a wheel settles it. This page describes what had to be built behind that, from the boundary between the two applications to the checks that decide whether a line of code reaches production.',
-      creditsLabel: 'Project spec sheet',
-      production: 'Production',
-      productionValue: 'Adrien Morand, sole developer',
-      period: 'Period',
-      periodValue: 'February to September 2026',
-      format: 'Format',
-      formatValue: 'pnpm monorepo, two deployed applications',
-      ui: 'Front end',
-      uiValue: 'React 19, TypeScript 6, Vite 8',
-      server: 'Server',
-      serverValue: '.NET 10, MongoDB Atlas',
-      delivery: 'Delivery',
-      deliveryValue: 'Cloud Run, CloudFront',
+      eyebrow: 'Technical dossier',
+      title: 'How Movie Picker is built',
+      lead: 'Movie Picker helps a group pick a film without spending the evening on it: everyone proposes, everyone votes, a wheel settles it. I started it in February 2026 for a real need among the people around me, and it was never meant to go beyond a small tool. It became a platform, then my final master project, and the service is now live, open to the public, and maintained by me alone.',
+      leadIntent:
+        "It also serves as my sandbox: I try out technologies and methods, I explore, I read the documentation. The goal is not to build the project of a lifetime but to gain experience, and to enjoy running a product that evolves with its users' feedback, covering the whole chain from business need to production.",
       metricLines: 'lines of code',
       metricLinesHint:
-        'Front-end .ts, .tsx and .css files plus the server .cs files, counted at build time and rounded to the thousand.',
+        'Front-end .ts, .tsx and .css files plus server .cs files, counted at build time and rounded to the thousand.',
       metricEndpoints: 'HTTP endpoints',
       metricEndpointsHint:
         '[HttpGet], [HttpPost] and similar attributes, counted across the server controllers.',
-      metricTests: 'test files',
+      metricTests: 'automated tests',
       metricTestsHint:
-        'Front-end and server test files, excluding end-to-end scenarios which are counted separately.',
-      metricJobs: 'CI jobs',
-      metricJobsHint:
-        'Jobs declared in the continuous integration pipeline, from the secret scan to the deployment guard.',
-      stamp: 'Figures measured at the {{date}} build',
+        'Test cases declared in the repository, counted at build time: {{web}} on the front end and {{api}} on the server, spread across {{files}} files.',
+      metricCommits: 'commits',
+      metricCommitsHint:
+        'Commits on the main branch since the first day of the project, counted at build time.',
+      metricMonths: 'of development',
+      metricMonthsUnit: 'months',
+      metricMonthsHint:
+        'Full months elapsed since the very first commit in the repository, computed at build time.',
+      metricCoverage: 'of required coverage',
+      metricCoverageUnit: '%',
+      metricCoverageHint:
+        'Share of lines the front-end tests must cover. Below that threshold the integration pipeline fails and nothing ships to production.',
+      stamp: 'Figures measured at the build of {{date}}',
     },
     nav: {
       architecture: 'Architecture',
-      trajectory: 'Trajectory',
+      choices: 'Technical choices',
       ui: 'Front end',
       server: 'Server',
       contract: 'The contract',
-      data: 'Data',
+      data: 'Data model',
+      feature: 'One feature',
       tests: 'Tests',
       ci: 'Continuous integration',
-      production: 'Production',
+      infra: 'Infrastructure',
+      quality: 'Measurements',
+      production: 'Security',
       method: 'Working method',
+      trajectory: 'Trajectory',
     },
     architecture: {
       title: 'Two applications, one clean boundary',
       lead: 'A static front on a CDN, a containerised API, a managed database. What matters: the boundary between them is a contract, not a habit.',
-      caption: 'The solid blue line is the only data path.',
-      servicesHeading: 'What comes from outside',
+      caption:
+        'The blue line is the only path between the front and the server. Dashed arrows follow the direction of the call.',
+      structureHeading: 'How the two halves hold together',
+      boundary: 'Boundary',
+      boundaryValue:
+        'The front knows nothing of the server beyond {{endpoints}} routes under /api/v1, described by a contract the pipeline replays on every push.',
+      boundaryHint:
+        'No direct database access from the browser: everything goes through those routes, and the contract makes the boundary verifiable.',
+      stateless: 'No state in memory',
+      statelessValue:
+        'The host can start several instances of the server, so nothing lives inside the process: no session, no timer, no background job. The one exception is the TMDB entry cache, private to each instance and without effect on what is returned.',
+      statelessHint:
+        'The keys that sign cookies are stored in the database, which avoids signing everyone out on each deployment.',
+      deploys: 'Two deployments',
+      deploysValue:
+        'The front ships to the CDN, the server ships as a container image. Either can go out without waiting for the other.',
+      deploysHint:
+        'Two separate steps in the pipeline: a styling fix does not redeploy the server.',
+      servicesHeading: 'The outside services wired to the server',
+      servicesNote:
+        'None of them is required for the service to work: each has a defined behaviour when its key is missing or when it stops answering, and the server starts without them.',
       tmdb: 'TMDB',
-      tmdbValue: 'Metadata, genres and posters.',
+      tmdbValue:
+        'Metadata, genres and posters. Entries and posters are cached, and an outage is remembered for a few minutes rather than retried on every request.',
       tmdbHint:
         'The Movie Database, the open catalogue supplying titles, synopses, genres and posters.',
       letterboxd: 'Letterboxd',
-      letterboxdValue: 'Watchlist import from the public profile.',
+      letterboxdValue:
+        'Watchlist import from the public profile. With no public API the page is read as it is: 300 films at most, once every 24 hours per account.',
       letterboxdHint:
         "A social network for film lovers: a profile's public list is read, then matched against the catalogue.",
       oauth: 'Google, GitHub',
       oauthValue:
-        'Delegated sign-in; an unconfigured provider disappears from the screen instead of failing.',
+        'Delegated sign-in. An unconfigured provider disappears from the screen instead of failing, and password sign-in stays available.',
       oauthHint:
         'Delegated identity: the password stays with the provider, the application only ever receives a token.',
       push: 'Web Push',
-      pushValue: 'Browser notifications, VAPID protocol.',
+      pushValue:
+        'Browser notifications, VAPID protocol. A subscription the browser reports as expired is deleted from the database on the first send that meets it.',
       pushHint:
         'VAPID signs every notification so the browser can prove which server it came from.',
+      email: 'Resend',
+      emailValue:
+        'Sends the password reset emails. With no key configured the message goes to the server logs instead of breaking startup.',
+      emailHint:
+        'A transactional sending service: the email leaves through an API call rather than a mail server to administer.',
       kofi: 'Ko-fi',
-      kofiValue: 'Donations, confirmed through a webhook.',
-      kofiHint: 'A donation platform; an outbound call from it confirms the payment to the server.',
+      kofiValue:
+        'Donations. Ko-fi calls the server: the call carries a shared token, it is rate limited, and it is refused when the token does not match.',
+      kofiHint:
+        'A donation platform for creators; a confirmed contribution then shows as a badge on the profile.',
+      scheduler: 'Cloud Scheduler',
+      schedulerValue:
+        'Calls the server on a fixed schedule to trigger movie night reminders. Same token protection, since the route is open on the internet.',
+      schedulerHint:
+        'Google Cloud scheduler: it calls an address at the appointed time, which replaces a timer living inside the server.',
       issues: 'GitHub Issues',
-      issuesValue: 'A suggestion sent from the app opens an issue, screenshot included.',
+      issuesValue:
+        'A suggestion sent from the app opens an issue, screenshot included. With no token the send is skipped and logged rather than returned as an error.',
       issuesHint:
         "GitHub's bug tracker, fed directly by the suggestion form inside the application.",
     },
     trajectory: {
-      title: 'Seven months, six milestones',
-      lead: '{{commits}} commits. Every milestone shipped to production before the next one opened.',
-      mvpWhen: 'Feb. to Mar. 2026',
+      title: '{{months}} months, {{shipped}} milestones shipped',
+      lead: '{{commits}} commits since February 2026. Every milestone reached production before the next one opened. The last {{planned}} markers are the plan ahead, not work already done.',
+      plannedBadge: 'ahead',
+      techHeading: 'The open technical work',
+      terraform: 'Infrastructure as code',
+      terraformHint:
+        'Cloud resources were created by hand. Terraform would describe them, with remote state and review by diff.',
+      staging: 'Staging environment',
+      stagingHint:
+        'Only production exists. An environment mirroring it would let a deployment be rehearsed before it counts.',
+      oidc: 'Federated identity for CI',
+      oidcHint:
+        'CI authenticates today with a service account key stored as a secret. Identity federation would remove the key.',
+      leastPrivilege: 'Least privilege',
+      leastPrivilegeHint:
+        'The deployment service account holds more rights than it needs; splitting it by purpose is the next step.',
+      consolidate: 'Front end to Google Cloud',
+      consolidateHint:
+        'Moving the front end from S3 and CloudFront to Cloud Storage and Cloud CDN would put both applications with the same provider, and remove one console, one permission model and one invoice.',
+      sharedCache: 'Cache shared across instances',
+      sharedCacheHint:
+        'The TMDB entry cache lives in the memory of each instance: two instances repeat the same call, and a restart starts cold. A shared cache would fix both.',
+      prerender: 'Pre-rendered public pages',
+      prerenderHint:
+        'Public pages are indexed today through metadata and a sitemap; pre-rendered HTML would do better.',
+      techLead: 'What is not done, named rather than left unsaid.',
+      mvpWhen: 'February 2026',
       mvpWhat: 'MVP',
       mvpDetail:
-        'The full flow of a movie night, a Node and Express API, automated deployment from day one.',
+        'The whole journey of a movie night, from the share link to the drawn film. The deployment pipeline exists before the first feature does.',
       mvpHint:
-        'The point was to validate the flow, not the technology: production exists from the first days.',
-      migrationWhen: 'March 2026',
-      migrationWhat: 'Server migration',
-      migrationDetail:
-        'Node replaced by ASP.NET Core without changing a single route or JSON field. Front end untouched.',
-      migrationHint:
-        'The switch happened behind an identical contract: the front end acts as the control, it does not move.',
-      v1When: 'April to May 2026',
-      v1What: 'V1 and V1.1',
-      v1Detail: 'Blocking static analysis, dependency and image scanning, PWA, push notifications.',
+        'The goal was to validate the journey, not the technology: production exists from the first days.',
+      mvpItem1: 'Create a night',
+      mvpItem2: 'Propose and vote',
+      mvpItem3: 'Wheel draw',
+      mvpItem4: 'Share link',
+      mvpItem5: 'Automated deployment',
+      dotnetWhen: 'March 2026',
+      dotnetWhat: 'Server migration',
+      dotnetDetail:
+        'Node and Express replaced by ASP.NET Core without changing a single route or JSON field. The front end acts as the witness and does not move.',
+      dotnetHint:
+        'The switch happens at an identical contract: if the front end keeps working untouched, the migration succeeded.',
+      dotnetItem1: 'ASP.NET Core',
+      dotnetItem2: 'Identical routes',
+      dotnetItem3: 'Layered architecture',
+      dotnetItem4: 'Docker image',
+      v1When: 'May 2026',
+      v1What: 'V1',
+      v1Detail:
+        'The demo becomes a service: accounts, host settings, two languages, and a pipeline that can refuse a push.',
       v1Hint:
-        'The first milestone where a push can be refused by a machine rather than by a reviewer.',
-      v12When: 'June to July 2026',
-      v12What: 'V1.2 and V1.3',
-      v12Detail: 'Consent, account export and deletion, audited accessibility, error capture.',
-      v12Hint:
-        'The regulatory milestone: the product can be opened to third parties without legal debt.',
+        'The first milestone where a machine, not a review, decides whether code reaches production.',
+      v1Item1: 'Accounts and password reset',
+      v1Item2: 'Host settings',
+      v1Item3: 'Already seen marker',
+      v1Item4: 'Streaming availability',
+      v1Item5: 'Dark theme',
+      v1Item6: 'French and English',
+      v1Item7: 'Blocking static analysis',
+      v11When: 'May 2026',
+      v11What: 'V1.1',
+      v11Detail:
+        'Richer film sheets, direct links into the streaming platforms, and the first notifications outside the tab.',
+      v11Hint:
+        'A comfort milestone: little new structure, a lot of perceived value on the user side.',
+      v11Item1: 'Rating, runtime, trailer',
+      v11Item2: 'Direct streaming links',
+      v11Item3: 'Past nights',
+      v11Item4: 'Custom accent colour',
+      v11Item5: 'VAPID push notifications',
+      v11Item6: 'Installable app',
+      v12When: 'June 2026',
+      v12What: 'V1.2',
+      v12Detail:
+        'The social side arrives, and consent arrives with it: no third-party script loads before an explicit choice.',
+      v12Hint: 'The consent banner is put in place before analytics, never the other way round.',
+      v12Item1: 'Public profiles',
+      v12Item2: 'Following between members',
+      v12Item3: 'In-app notifications',
+      v12Item4: 'Profile statistics',
+      v12Item5: 'Granular consent',
+      v12Item6: 'Product analytics',
+      v13When: 'June to July 2026',
+      v13What: 'V1.3',
+      v13Detail:
+        'The wheel becomes a real wheel, the account becomes exportable and deletable, and accessibility is audited screen by screen.',
+      v13Hint:
+        'A regulatory milestone: the product can be opened to third parties without legal debt.',
+      v13Item1: 'Animated wheel',
+      v13Item2: 'GDPR export and deletion',
+      v13Item3: 'Advanced search',
+      v13Item4: 'Rent and buy',
+      v13Item5: 'Night page redesign',
+      v13Item6: 'Audited accessibility',
+      v13Item7: 'Error capture',
       v14When: 'August 2026',
       v14What: 'V1.4',
-      v14Detail: 'External sign-in, Letterboxd import, public profiles.',
+      v14Detail:
+        'The product opens outwards: delegated identities, a personal library and data imported from a third-party service.',
       v14Hint:
-        'Opening outwards: delegated identities and data imported from a third-party service.',
+        'The largest milestone by volume: five new product surfaces and three external integrations.',
+      v14Item1: 'Personal watchlist',
+      v14Item2: 'Letterboxd sync',
+      v14Item3: 'Google and GitHub sign-in',
+      v14Item4: 'Manual winner pick',
+      v14Item5: 'Ko-fi donations',
+      v14Item6: 'Night streak',
+      v14Item7: 'Suggest an idea',
       v15When: 'September 2026',
       v15What: 'V1.5',
-      v15Detail: 'Closed-token design system, with an automated check on hard-coded values.',
+      v15Detail:
+        'Interface values become a closed set checked by a script, and the site root becomes a public page again.',
       v15Hint:
-        'Interface rules move from document to script: a hard-coded value now fails the build.',
+        'Interface rules move from a document to a script: a hard-coded value now fails the build.',
+      v15Item1: 'Closed design tokens',
+      v15Item2: 'Automated CSS checks',
+      v15Item3: 'Shared primitives',
+      v15Item4: 'Rebuilt public home',
+      v15Item5: 'This technical dossier',
+      v16When: 'Next milestone',
+      v16What: 'V1.6',
+      v16Detail:
+        'Close the social loop opened in V1.2 and add a second decision format alongside the wheel.',
+      v16Hint: 'Items ordered by decreasing user value, as on the previous milestones.',
+      v16Item1: 'User search',
+      v16Item2: 'Recurring nights',
+      v16Item3: 'Night templates',
+      v16Item4: 'Several winners',
+      v16Item5: 'Tournament mode',
+      v17When: 'After that',
+      v17What: 'V1.7',
+      v17Detail:
+        'Advanced host tools, and the periodic refresh replaced by a real real-time connection.',
+      v17Hint: 'Real time is the last platform project still open on the product trajectory.',
+      v17Item1: 'Co-host',
+      v17Item2: 'Enforced theme',
+      v17Item3: 'Content warnings',
+      v17Item4: 'Real time and presence',
+      v17Item5: 'Command palette',
+      v2When: 'No date announced',
+      v2What: 'V2',
+      v2Detail:
+        'A native mobile application, fully integrated with the platform. The coursework prototype was archived rather than patched up.',
+      v2Hint: 'No date announced: the scope will depend on what V1.7 leaves behind.',
+      v2Item1: 'Native application',
+      v2Item2: 'System notifications',
+      v2Item3: 'Full journey outside the browser',
     },
     ui: {
       title: 'Split by purpose, not by file type',
       lead: '{{features}} self-contained domains and a shared core that knows none of them. Checked mechanically: the core is a leaf of the graph, no cycle tolerated.',
-      stack: 'Core',
-      stackValue:
-        'React 19, TypeScript 6, Vite 8, React Router 8, TanStack Query for server state.',
-      stackHint:
-        'The libraries chosen once and for all; TanStack Query holds the cache of server data.',
-      domains: 'Domains',
-      domainsValue: 'auth, movie nights, films, watchlist, notifications, profiles, Letterboxd',
-      domainsHint:
-        'A domain gathers the pages, components and network calls of one purpose, without depending on the others.',
       design: 'Design',
-      designValue: 'Closed tokens: no literal value allowed in CSS.',
+      designValue:
+        'Closed tokens: no literal value allowed in CSS, and every hover state confined to devices that have one.',
       designHint:
-        'A token is a single CSS variable standing for a colour, a spacing step or a text size.',
+        'A token is a single CSS variable standing for a colour, a spacing step or a text size. A hover left unguarded stays stuck after a tap on mobile, hence the condition.',
+      data: 'Server data',
+      dataValue:
+        'A client cache holds the API responses. A write invalidates the affected views instead of reloading the page.',
+      dataHint:
+        'TanStack Query stores each response under a key, serves the cache while it refreshes in the background, and exposes loading and error states to the component.',
+      loading: 'Loaded on demand',
+      loadingValue:
+        '{{routes}} screens downloaded only when you go there, and dependencies kept apart from the application code.',
+      loadingHint:
+        'The first screen does not carry the rest of the application, and the dependency bundles stay in the browser cache from one version to the next.',
       offline: 'Offline',
       offlineValue: 'Installable, shell and posters cached, browsable without a network.',
       offlineHint:
@@ -1972,29 +2123,66 @@ export const en: Locale = {
       lead: 'Four layers, one rule: everything points inwards. Checked on every CI run, not merely written down.',
       caption:
         '{{ports}} ports, {{repositories}} repositories implemented twice: in memory and on MongoDB.',
-      noteLead: 'What it buys:',
-      unitSuite: 'Unit suite',
-      unitSuiteValue: 'Runs without a database, in seconds, on the in-memory doubles.',
-      unitSuiteHint: 'Without the doubled repositories, this suite could not be written at all.',
-      integrationSuite: 'Integration suite',
-      integrationSuiteValue:
-        'Replayed in CI against a real containerised MongoDB, transactions included.',
-      integrationSuiteHint:
-        'It is the only path that actually exercises the Mongo adapters and the transactions.',
+      noteLead: 'What holds the boundary',
+      requestHeading: 'The path of a request',
+      requestNote:
+        'The same {{useCases}} use cases serve the unit tests and production: what changes is the implementation plugged in behind the ports.',
+      rules: 'Enforced partitions',
+      rulesValue:
+        'The domain may import only System and itself. The application knows nothing of MongoDB, the web framework or the infrastructure. A controller never touches persistence.',
+      rulesHint:
+        'These are not guidelines: the checker reads the using directives of every file and fails the build on the first breach.',
+      versioning: 'The version in one place',
+      versioningValue:
+        'The /api/v1 prefix is a single constant, never retyped into a route. The exported contract and the front-end types inherit it.',
+      versioningHint:
+        'A route writing its own prefix could drift from the contract with nothing to signal it.',
+      health: 'Two health probes',
+      healthValue:
+        '/health answers straight away that a process is alive. /health/ready queries the database and returns 503 when it does not answer, with the measured duration and the deployed release.',
+      healthHint: 'The host can then tell an instance that is starting from one that cannot serve.',
     },
     contract: {
       title: 'The boundary is a file, not a convention',
-      lead: 'The OpenAPI contract is exported from the server and the front-end types are generated from it. If the server drops a field the front end reads, it no longer compiles.',
-      note: 'That contract is what made the full server replacement possible in March: rewriting an implementation behind an already frozen boundary, without touching the front end.',
+      lead: 'The OpenAPI contract is exported from the server on every build. The front end keeps its own types, and a type-level test checks that none of them reads a field the contract does not describe.',
+      export: 'Contract export',
+      exportValue:
+        'The server serialises its OpenAPI from the controllers; the file is a build artefact, not a hand-maintained document.',
+      exportHint:
+        'The openapi:export script boots the application and writes the contract to artifacts/openapi-v1.json.',
+      types: 'Front-end types confronted',
+      typesValue:
+        'The front end keeps its own types, written for its own use. A test confronts them with the contract and refuses to compile if one of them reads a field the server does not expose.',
+      typesHint:
+        'openapi-typescript produces openapiSchema.ts, imported by that single test: the schema is a reference, not a source for the application code.',
+      drift: 'Drift detection',
+      driftValue:
+        'CI regenerates the types and fails if the committed file no longer matches the exported contract.',
+      driftHint:
+        'openapi:types:check compares fresh output against the committed file; apiContract.test.ts additionally checks, at type level, that the fields the front end reads really exist.',
+      note: 'The net currently covers {{checked}} response types out of the {{total}} the contract describes, starting with the ones the front end reads most. Extending it to the rest is mechanical work, not a decision to make.',
     },
     data: {
-      title: 'All or nothing, and never twice',
+      title: 'Nine collections at the core, and all-or-nothing writes',
+      lead: 'Integrity does not come from the engine: it comes from the unique indexes declared at start-up and the transactions opened for any write touching several documents.',
+      modelCaption:
+        'The lines are the identifiers that link documents. Users and Events are outlined because everything else hangs off them: every other document carries one or the other.',
       caption:
-        'Deleting an account touches eight collections inside a single transaction: no intermediate state is ever observable.',
+        'Deleting an account touches eight collections inside a single transaction, two of them anonymised rather than emptied: no intermediate state is ever observable.',
       atomicity: 'Atomicity',
       atomicityValue: 'Every grouped write goes through a unit of work, and cannot stop halfway.',
       atomicityHint:
-        'A transaction groups several writes together: either all of them land, or none of them do.',
+        'A transaction groups several writes together: either all of them land, or none of them do. Created events and participations stay, minus the identity, so the other participants keep their data.',
+      uniqueness: 'Uniqueness',
+      uniquenessValue:
+        '{{unique}} unique indexes refuse duplicates inside the engine: one email, one handle, one event link, one vote per participant and per film.',
+      uniquenessHint:
+        'A document engine knows nothing of foreign keys: these indexes are what stops two accounts sharing an email or a participant voting twice.',
+      expiry: 'Automatic expiry',
+      expiryValue:
+        '{{ttl}} expiring indexes do the cleaning inside the engine: sessions, password tokens, notifications, deduplication markers, rate-limit counters and the donation log.',
+      expiryHint:
+        'No background job runs for this, which is just as well since nothing lives inside the server process.',
       migrations: 'Migrations',
       migrationsValue:
         'Dated, idempotent, applied once at startup then recorded. {{migrations}} in production.',
@@ -2006,14 +2194,356 @@ export const en: Locale = {
       isolationHint:
         'The guard compares the database name against the environment and refuses to start if they are mixed.',
       posters: 'Posters',
-      postersValue: 'Fetched once then stored server-side, never reloaded from the provider.',
+      postersValue:
+        'Fetched once then served from the server. Every view pushes their expiry back; with no access for {{days}} days they leave the cache.',
       postersHint:
-        'Images are copied server-side, so a URL change at the provider no longer breaks anything.',
+        'Images are copied server-side, so a URL change at the provider no longer breaks the display.',
     },
     tests: {
-      title: '{{tests}} files, and a linter written for the job',
+      title: '{{tests}} automated tests, and coverage that blocks',
+      lead: 'Three families, from the fastest to the slowest: the domain with no dependencies, the server against a real database, the product inside a browser. Each answers a question the others do not ask.',
       caption:
-        'Blocking coverage: {{lines}}% of lines, {{functions}}% of functions, {{branches}}% of branches.',
+        'Blocking coverage on the front end: {{lines}}% of lines, {{functions}}% of functions, {{branches}}% of branches. On the server it is measured and published, with no threshold that fails the pipeline.',
+      unit: 'Unit tests',
+      unitValue: '{{count}} cases, no database or network, on in-memory doubles. A few seconds.',
+      unitHint:
+        'They cover the domain, the use cases and interface components isolated from their dependencies.',
+      integration: 'Integration tests',
+      integrationValue: '{{count}} cases replayed against a real MongoDB, transactions included.',
+      integrationHint:
+        'It is the only path that actually exercises the Mongo adapters and the transactions; CI replays it in a dedicated job.',
+      e2e: 'End to end tests',
+      e2eValue:
+        '{{count}} Playwright cases driving Chromium against the built front end and the running server.',
+      e2eHint:
+        'Persistence there is the in-memory implementation and third parties are stubbed: the journey is real, the environment stays deterministic.',
+      howHeading: 'How they are written',
+      doubles: 'In-memory doubles',
+      doublesValue:
+        '{{repositories}} repositories implemented twice: on MongoDB for production, in memory for the unit tests.',
+      doublesHint:
+        'This is not a mocking library: they are real implementations, held to the same interfaces.',
+      harness: 'A real server under test',
+      harnessValue:
+        'The integration suite boots the whole application in memory and calls it over HTTP, against a MongoDB container.',
+      harnessHint:
+        'WebApplicationFactory brings up the real ASP.NET Core pipeline; only the database and third parties are substituted.',
+      replica: 'MongoDB as a replica set',
+      replicaValue:
+        'The test container is created on the fly as a replica set, otherwise transactions could not be tested at all.',
+      replicaHint:
+        'Each test class gets its own throwaway database: tests never tread on each other.',
+      stubs: 'Stubbed third parties',
+      stubsValue:
+        'TMDB and Letterboxd are replaced by stubs that two environment variables switch on.',
+      stubsHint:
+        'Without them the suite would depend on the availability and quotas of two external sites. Email delivery and GitHub issues, for their part, fall back on their own default when no key is configured.',
+      first: 'The test before the code',
+      firstValue:
+        'Feature or fix alike: the test describing the expected behaviour is written and fails before the implementation exists.',
+      firstHint:
+        'On a bug the test has to reproduce the symptom before the fix, otherwise nothing proves the cause was addressed.',
+      network: 'Simulated network on the front end',
+      networkValue:
+        '{{files}} test files bring up a simulated HTTP server and answer the real requests the screens make, never reaching the network.',
+      networkHint:
+        'Components call the API as they normally would: the network layer is intercepted, not the application code.',
+    },
+    ci: {
+      title: '{{jobs}} checks before production',
+      lead: 'A single graph, explicit dependencies, and a deployment that only happens if everything before it is green.',
+      caption:
+        'The final link checks that the deployments actually ran, not merely that they did not fail.',
+      pipelineHeading: 'What holds the pipeline together',
+      trigger: 'Trigger',
+      triggerValue:
+        'Every push and every pull request towards master starts the pipeline. Deployment, on the other hand, only leaves from master.',
+      triggerHint:
+        'Branches opened by the dependency bot are excluded from the push trigger, so the pipeline does not run twice.',
+      scope: 'Computed scope',
+      scopeValue:
+        'A first job compares the changed files and decides which branches of the graph run. A styling fix does not replay the server suite.',
+      scopeHint:
+        'It is what keeps the pipeline short, and it is also what made the deployment guard necessary.',
+      secrets: 'Secret scanning',
+      secretsValue:
+        'A scan looks for keys and tokens in the code before the image is built. A match stops everything.',
+      secretsHint:
+        'It runs on the working tree and blocks the image build; the platform also refuses a push carrying a recognised key.',
+      image: 'Tagged image',
+      imageValue:
+        'The server ships as a container image, tagged with the commit fingerprint and pushed to the registry before any deployment.',
+      imageHint:
+        'Deployment points at a precise image rather than a moving tag: rolling back means pointing at the previous one.',
+      guard: 'Deployment guard',
+      guardValue:
+        'A final job compares the changed scope against the result of each deployment and fails if the front end changed without reaching production.',
+      guardHint:
+        'It exists because it happened: skipped jobs left the pipeline green while production was half up to date, a skipped job not being a failed one.',
+      caches: 'A cached pipeline',
+      cachesValue:
+        'NuGet dependencies, Turbo tasks, Docker layers and the vulnerability database are kept from one run to the next.',
+      cachesHint:
+        'Every job also carries a time limit, so a stuck step cannot hold the pipeline indefinitely.',
+      otherPipelines: 'Three other pipelines, outside the main graph',
+      rollback: 'rollback',
+      rollbackHint: 'Manually triggered to put the previous image back online.',
+      registry: 'registry cleanup',
+      registryHint: 'Purges old Docker images so the registry does not grow forever.',
+      securityScan: 'security scan',
+      securityScanHint:
+        'Scheduled, independent of pushes, to catch vulnerabilities published after the fact.',
+    },
+    production: {
+      title: 'What protects production',
+      lead: 'Every guard rail is tied to a precise mechanism rather than to an intention.',
+      passwords: 'Passwords',
+      passwordsValue:
+        'Never stored, only their salted fingerprint from an iterated derivation. A format that has aged out is re-encoded on the next sign-in.',
+      passwordsHint:
+        'The salt makes two identical passwords indistinguishable in the database, and the iterations make brute force expensive.',
+      dependencies: 'Dependencies',
+      dependenciesValue:
+        'npm and NuGet audits on every push: a high or critical vulnerability stops the pipeline. The image is scanned before publishing, updates are automated.',
+      dependenciesHint:
+        'A CVE is a publicly identified vulnerability; the image is scanned before it is published.',
+      browser: 'Browser',
+      browserValue: 'Content security policy, protection headers, declared origins.',
+      browserHint:
+        'The content security policy lists the allowed origins and blocks everything else.',
+      sessions: 'Sessions',
+      sessionsValue: 'Signing keys persisted in the database, so a deployment signs nobody out.',
+      sessionsHint:
+        'Without persisted keys, every deployment would change the cookie signature and sign everyone out.',
+      abuse: 'Abuse',
+      abuseValue: '{{policies}} rate-limiting policies, one per family of sensitive routes.',
+      abuseHint:
+        'Rate limiting caps the number of calls per address on the sign-in and write routes.',
+      startup: 'Startup',
+      startupValue:
+        'Outside development, the server refuses to start without a list of allowed origins and a database address.',
+      startupHint:
+        'A visible failure at startup beats a service accepting any origin, or running with no persistence.',
+      gdpr: 'GDPR',
+      gdprValue: 'Self-service account export and deletion, consent before any third-party script.',
+      gdprHint:
+        'Export and deletion are triggered from the account page, with no written request needed.',
+      traces: 'Traces',
+      tracesValue:
+        'Structured logs and a request identifier, carried through to the logs and returned in every error response.',
+      tracesHint:
+        'A user reporting an error unknowingly carries the key that finds its exact trace on the server.',
+    },
+    method: {
+      title: 'Assisted execution, decisions that are not',
+      lead: 'This project is developed with an AI assistant. The principle fits in one sentence: I delegate execution, never the decision, and I make verification automatic rather than declarative.',
+      productCaption:
+        'Brainstorming feeds the backlog, the roadmap prioritises it. Every step is a conversation with a frontier model that has read the repository documentation and code before answering.',
+      featureCaption:
+        'The test is written before the code, and no line is pushed before I have tested the feature myself. What production reveals then feeds back into the product backlog.',
+      bugCaption:
+        'The test comes before the fix. Without it, nothing proves the cause was addressed.',
+      toolingCaption:
+        'The five procedures are recalled by name: the assistant reloads the steps instead of me describing them again.',
+      mcpNoteLead: 'The connected tools:',
+      mcpNote:
+        '{{tools}} connectors give the assistant a direct reading of the real state, rather than whatever I tell it. They exist to observe: none decides, and none bypasses the four approval points or the check pipeline.',
+      reliabilityKicker: 'Reliability',
+      reliabilityTitle: 'Executable rules',
+      reliabilityText: 'A rule no script enforces ends up being bypassed, whoever wrote the line.',
+      reliabilityHint: 'An untooled convention depends on vigilance; a script does not.',
+      memoryKicker: 'Memory',
+      memoryTitle: 'Pitfalls are versioned',
+      memoryText:
+        'Every pitfall diagnosed once is written down and reloaded. The same problem is not diagnosed twice.',
+      memoryHint:
+        'Pitfalls are written into versioned files that the assistant reloads at every session.',
+      controlKicker: 'Control',
+      controlTitle: 'Four approval points',
+      controlText:
+        'Scoping, mockup, technical plan, local acceptance. Nothing moves on without my approval.',
+      controlHint:
+        'Four moments where the machine halts and waits for a human decision before carrying on.',
+      arbitrationKicker: 'Arbitration',
+      arbitrationTitle: 'The pipeline, not trust',
+      arbitrationText:
+        '{{jobs}} checks separate a line of code from production, whatever its origin.',
+      arbitrationHint:
+        'The same mandatory path applies to a hand-written line and to a generated one.',
+    },
+    choices: {
+      title: 'Every building block was chosen against an alternative',
+      lead: 'A technical dossier that lists technologies says nothing. Here is the trade-off: what was picked, against what, and what it costs.',
+      runtime: '.NET 10 on the server',
+      runtimeValue:
+        'The server ran on Node and Express until March 2026, then was rewritten in ASP.NET Core against an identical contract. Compile-time typing, native dependency injection, xUnit.',
+      runtimeHint:
+        'The rewrite was affordable because the OpenAPI contract already froze the boundary: the front end did not change a single line.',
+      runtimeTrade: 'A full server rewrite, two months after the MVP.',
+      database: 'MongoDB rather than PostgreSQL',
+      databaseValue:
+        'An event document is read as a whole and its shape changes at every milestone. A document engine avoids one schema migration per feature.',
+      databaseHint:
+        'Multi-document transactions remain available: the cluster runs as a replica set, which is what makes them possible.',
+      databaseTrade:
+        'Referential integrity is carried by the code and by unique indexes, not by the engine.',
+      persistence: 'MongoDB driver rather than an ORM',
+      persistenceValue:
+        'The Node API went through Mongoose; the .NET version talks to the driver directly, and every document is translated by a hand-written mapper.',
+      persistenceHint:
+        'A document ORM reintroduces a schema where the engine imposes none, and hides the query actually sent.',
+      persistenceTrade:
+        'Each collection needs its own mapper and tests, where an ORM would have generated part of it.',
+      auth: 'Session cookie rather than JWT',
+      authValue:
+        'The browser receives a signed cookie, marked HttpOnly and SameSite, never a token to store somewhere. The signing keys live in the database.',
+      authHint:
+        'A token held in memory or local storage can be read from JavaScript; an HttpOnly cookie cannot, which removes one target for session theft.',
+      authTrade:
+        'The server has to answer under the same parent domain as the front end, and every call carries the cookie.',
+      front: 'React and Vite rather than Next.js',
+      frontValue:
+        'A fully client-side application shipped as static files: no rendering server to operate, scale or pay for.',
+      frontHint:
+        'Server rendering would have added infrastructure to maintain for a narrow set of public pages: the home page, profiles, this dossier and the legal pages.',
+      frontTrade:
+        'Those public pages are indexed through metadata and a sitemap rather than pre-rendered HTML, and pre-rendering is still an open piece of work.',
+      styling: 'CSS modules rather than Tailwind',
+      stylingValue:
+        'CSS modules and in-house tokens: spacing, sizes, colours and depths form a closed scale that the checker refuses to see bypassed.',
+      stylingHint:
+        'The check fails on a hard-coded value, a bare z-index or an off-scale breakpoint. It runs before every push and in continuous integration.',
+      stylingTrade:
+        'The CSS has to be written by hand rather than composed from ready-made utility classes.',
+      hosting: 'Cloud Run rather than Kubernetes',
+      hostingValue:
+        'One container, scaling down to zero, billing per request. No operating system to keep patched.',
+      hostingHint:
+        'Kubernetes meant disproportionate tooling for a single service; a virtual machine meant an OS to patch.',
+      hostingTrade:
+        'No in-memory state is reliable and no background work can live in the process. Reminders are triggered from outside.',
+      split: 'Two cloud providers, on purpose',
+      splitValue:
+        'The front end was born on AWS before the server moved to Google Cloud. Both now coexist, each on what it does best.',
+      splitHint:
+        'CloudFront and S3 serve static files; Cloud Run runs a container that scales to zero.',
+      splitTrade:
+        'Two consoles, two permission models, two invoices. Consolidating is an open piece of work, not an oversight.',
+      mono: 'A pnpm and Turbo monorepo',
+      monoValue:
+        'One repository, one delivery chain, one version tag for both applications. The API contract and the client that consumes it change in the same commit, so a break fails to compile instead of surfacing in production.',
+      monoHint: 'Turbo caches tasks by dependency graph: only what changed is rebuilt.',
+      monoTrade:
+        'Front end and server move through the same verification cycle, and one half of the code cannot be opened without the other.',
+      tradeLabel: 'The cost',
+    },
+    feature: {
+      title: 'One feature, end to end',
+      lead: 'The Letterboxd sync crosses every layer: a browser, a third-party service with no public API, a catalogue match, a write. And one case where the machine refuses to decide on its own.',
+      caption:
+        'A single write path, and an arbitration handed back to the user whenever the match is not certain.',
+      trigger: 'Trigger',
+      triggerValue:
+        'Automatic on application start, with a server cap of once every 24 hours. A sync asked for explicitly, when connecting the account or through the button, goes past that cap.',
+      triggerHint:
+        'The cap governs the automatic trigger, not a deliberate action by the user; repeated calls are bounded by the rate limit on the route.',
+      read: 'Reading',
+      readValue:
+        'Letterboxd publishes no API. The public watchlist is walked page by page, and an incomplete read cancels the whole sync.',
+      readHint:
+        'If one page is missing, applying the result would empty the user list: the code would rather write nothing.',
+      match: 'Matching',
+      matchValue:
+        'Each title is searched in TMDB with a one-year tolerance, then compared against both the original and the translated title of the candidate, accents and case stripped.',
+      matchHint:
+        'Up to five candidates are considered; the match is kept only if exactly one title is identical after normalisation.',
+      align: 'Alignment',
+      alignValue:
+        'The sync aligns both lists: it adds the films that are missing and removes those that left Letterboxd. Replaying it creates no duplicate, the unique index and the stored slug settle it.',
+      alignHint:
+        'The slug is kept on the watchlist item: it is what lets the next sync compute a difference instead of re-importing everything.',
+      human: 'Arbitration',
+      humanValue:
+        'An ambiguous title is handed back to the user with its candidates instead of being guessed. Nothing is written until they decide.',
+      humanHint:
+        'Two films sharing a title, or a title translated differently: the code knows that it does not know, and says so.',
+      tested: 'Tests',
+      testedValue:
+        'The third-party client is replaced by a stub in end to end tests, otherwise the suite would depend on an external site staying up.',
+      testedHint:
+        'The stub exposed a real defect: the cache was not invalidated after a manual arbitration.',
+    },
+    infra: {
+      title: 'Where it runs, and what is allowed to change it',
+      lead: 'Nothing is deployed by hand. One image per commit, secrets outside the repository, a rollback in one run.',
+      caption:
+        'The front end and the server live with two different providers, in eu-west-1 and europe-west1, joined by a single allowed origin.',
+      smoke: 'Deployment observed',
+      smokeValue:
+        'After every deployment the pipeline calls both health probes on the server and loads the front end behind the CDN. A silent service fails the deployment.',
+      smokeHint: 'Finishing without an error does not prove a service answers; these calls do.',
+      image: 'Image',
+      imageValue:
+        'One Docker image per commit, tagged with its Git fingerprint and pushed to a private registry.',
+      imageHint:
+        'The tag is the commit SHA: a production version always maps back to an exact line of code.',
+      secrets: 'Secrets',
+      secretsValue:
+        '{{secrets}} keys and connection strings live in Secret Manager, injected at deploy time, never in an image nor in the repository.',
+      secretsHint:
+        'A missing origin fails the deployment; a missing optional secret is reported as a warning and disables the feature that depends on it.',
+      rollback: 'Rollback',
+      rollbackValue:
+        'A manual run shifts all traffic to the previous revision, already online. No rebuild, no redeployment.',
+      rollbackHint:
+        'Revisions stay available at the host and old images in the registry, purged by a dedicated pipeline so that it does not grow forever.',
+      scheduler: 'Periodic work',
+      schedulerValue:
+        'No background work lives in the process. An external scheduler calls the server every 30 minutes for the event reminders, on a route protected by a token.',
+      schedulerHint:
+        'The job is created by the deployment pipeline, but only if the token exists: without it no reminder goes out and the deployment reports it as a warning.',
+      origins: 'Origins',
+      originsValue:
+        'The server only accepts declared origins. The deployment fails if the list is not set.',
+      originsHint:
+        'The list is a repository variable, checked before the deploy call, not a permissive default.',
+    },
+    quality: {
+      title: 'What is measured, and the threshold that fails the build',
+      lead: 'A metric without a threshold is decoration. The first four stop a release; the last two tell you what happens once it is live.',
+      blockingHeading: 'Blocking thresholds',
+      informativeHeading: 'What is observed in production',
+      coverage: 'Test coverage',
+      coverageValue:
+        '{{lines}} % of lines, {{functions}} % of functions, {{branches}} % of branches on the front end. Below that the suite fails; on the server, coverage is measured without a threshold.',
+      coverageHint:
+        'Thresholds were raised milestone after milestone; they never come back down, which is what makes them useful.',
+      lighthouse: 'Lighthouse',
+      lighthouseValue:
+        '{{pages}} pages audited on every push, with minimums of {{perf}} for performance, {{a11y}} for accessibility, {{bp}} for best practices and {{seo}} for SEO.',
+      lighthouseHint:
+        'Each page is measured three times and the median is kept. One page differs, the heaviest one, whose performance minimum drops to {{watchlist}}: the runner loses four points there without any real regression.',
+      axe: 'Automated accessibility',
+      axeValue:
+        '{{views}} views run through axe-core during the test suite. A violation fails the test, not a report.',
+      axeHint:
+        'axe replays the WCAG rules on the real render of each view, including the error screen.',
+
+      sonar: 'SonarCloud',
+      sonarValue:
+        'Analysis on every push, coverage ingested from CI. The pipeline waits for the quality gate verdict and fails when it is red.',
+      sonarHint:
+        'Both deployments depend on this job: a red gate stops the release, it does not merely annotate it.',
+      sentry: 'Sentry',
+      sentryValue:
+        'Browser and server errors, tied to the deployed version through the commit SHA.',
+      sentryHint:
+        'Always on in production with no personal data: this is service monitoring, not audience measurement.',
+      posthog: 'PostHog',
+      posthogValue:
+        'Product events and Web Vitals measured on real visitors, only after explicit consent.',
+      posthogHint:
+        'Events emitted before the consent choice are lost, and that is the intended behaviour.',
       noteLead: 'The architecture check',
       note: 'is a home-made script of about {{lines}} lines, run before every push and in CI. It fails the build on five families of mistakes no off-the-shelf linter can forbid:',
       ruleComment: 'a comment outside a functional directive',
@@ -2032,102 +2562,9 @@ export const en: Locale = {
       ruleCycleHint:
         'Rejects two modules that end up importing each other, directly or through a detour.',
     },
-    ci: {
-      title: '{{jobs}} checks before production',
-      lead: 'A single graph, explicit dependencies, and a deployment that only happens if everything before it is green.',
-      caption:
-        'The final link checks that the deployments actually ran, not merely that they did not fail.',
-      otherPipelines: 'Three other pipelines, outside the main graph',
-      rollback: 'rollback',
-      rollbackHint: 'Manually triggered to put the previous image back online.',
-      registry: 'registry cleanup',
-      registryHint: 'Purges old Docker images so the registry does not grow forever.',
-      securityScan: 'security scan',
-      securityScanHint:
-        'Scheduled, independent of pushes, to catch vulnerabilities published after the fact.',
-    },
-    production: {
-      title: 'Security and observability',
-      securityHeading: 'What protects',
-      observabilityHeading: 'What is measured',
-      secrets: 'Secrets',
-      secretsValue:
-        'Detection on every push, push protection, prod secrets in a dedicated manager.',
-      secretsHint:
-        'Every diff is scanned for keys, and the platform additionally blocks the push if it spots one.',
-      dependencies: 'Dependencies',
-      dependenciesValue:
-        'npm and NuGet audits, CVE scan of the image before publishing, automated updates.',
-      dependenciesHint:
-        'A CVE is a publicly identified vulnerability; the image is scanned before it is published.',
-      browser: 'Browser',
-      browserValue: 'Content security policy, protection headers, declared origins.',
-      browserHint:
-        'The content security policy lists the allowed origins and blocks everything else.',
-      sessions: 'Sessions',
-      sessionsValue: 'Signing keys persisted in the database, so a deployment signs nobody out.',
-      sessionsHint:
-        'Without persisted keys, every deployment would change the cookie signature and sign everyone out.',
-      abuse: 'Abuse',
-      abuseValue: 'Rate limiting on every sensitive route.',
-      abuseHint:
-        'Rate limiting caps the number of calls per address on the sign-in and write routes.',
-      startup: 'Startup',
-      startupValue:
-        'In production, the app refuses to start when a secret is missing rather than running degraded.',
-      startupHint:
-        'A visible failure at startup beats a service running without notifications or encryption.',
-      gdpr: 'GDPR',
-      gdprValue: 'Self-service account export and deletion, consent before any third-party script.',
-      gdprHint:
-        'Export and deletion are triggered from the account page, with no written request needed.',
-      errors: 'Errors',
-      errorsValue: 'Front and server capture into EU-hosted projects, with no personal data.',
-      errorsHint:
-        'Traces are scrubbed before they are sent: no email address, no session identifier.',
-      usage: 'Usage',
-      usageValue: 'Loaded only after acceptance, therefore blind before the user chooses.',
-      usageHint:
-        'The measurement script only loads after explicit consent, so nothing is measured before it.',
-      traces: 'Traces',
-      tracesValue: 'Structured logs, end-to-end correlation id, health probe.',
-      tracesHint:
-        'A single identifier follows one request from the browser through to the server logs.',
-    },
-    method: {
-      title: 'Assisted execution, decisions that are not',
-      lead: 'This project is developed with an AI assistant. The principle fits in one sentence: I delegate execution, never the decision, and I make verification automatic rather than declarative.',
-      featureCaption: 'No code is pushed before I have tested the feature myself.',
-      bugCaption:
-        'The test comes before the fix. Without it, nothing proves the cause was addressed.',
-      mcpNoteLead: 'The connected tools:',
-      mcpNote:
-        'eight connectors give the assistant a direct reading of the real state, rather than whatever I tell it. They exist to observe: none decides, and none bypasses the three stops or the check pipeline.',
-      reliabilityKicker: 'Reliability',
-      reliabilityTitle: 'Executable rules',
-      reliabilityText: 'A rule no script enforces ends up being bypassed, whoever wrote the line.',
-      reliabilityHint: 'An untooled convention depends on vigilance; a script does not.',
-      memoryKicker: 'Memory',
-      memoryTitle: 'Pitfalls are versioned',
-      memoryText:
-        'Every pitfall diagnosed once is written down and reloaded. The same problem is not diagnosed twice.',
-      memoryHint:
-        'Pitfalls are written into versioned files that the assistant reloads at every session.',
-      controlKicker: 'Control',
-      controlTitle: 'Three mandatory stops',
-      controlText: 'Scoping, mockup, manual test. That is where product decisions are made.',
-      controlHint:
-        'Three moments where the machine halts and waits for a human decision before carrying on.',
-      arbitrationKicker: 'Arbitration',
-      arbitrationTitle: 'The pipeline, not trust',
-      arbitrationText:
-        '{{jobs}} checks separate a line of code from production, whatever its origin.',
-      arbitrationHint:
-        'The same mandatory path applies to a hand-written line and to a generated one.',
-    },
     diagram: {
       architectureTitle:
-        'Browser, CDN, API on Cloud Run, MongoDB Atlas, external services and observability',
+        'Browser, CDN, API on Cloud Run, MongoDB Atlas, services called by the server and services calling it',
       browser: 'Browser',
       browserPwa: 'installable PWA',
       browserWorker: 'Service Worker',
@@ -2141,11 +2578,9 @@ export const en: Locale = {
       database: 'MongoDB Atlas',
       databaseReplica: 'replica set',
       databaseTransactions: 'transactions',
-      externalServices: 'EXTERNAL SERVICES',
-      observability: 'Observability',
-      observabilityErrors: 'Sentry front and API',
-      observabilityUsage: 'PostHog behind consent',
-      observabilityLogs: 'Cloud Run logs',
+      externalServices: 'CALLED BY THE API',
+      outboundCalls: 'outbound calls',
+      inboundCalls: 'THEY CALL THE API',
       layersTitle: 'The four API layers and the direction of dependencies',
       controllers: 'CONTROLLERS',
       controllersSub: '{{controllers}} controllers, validation, HTTP codes',
@@ -2166,19 +2601,19 @@ export const en: Locale = {
       contractApiSub: 'controllers and DTOs',
       contractFile: 'openapi-v1.json',
       contractFileSub: 'automatic export',
-      contractTypes: 'TypeScript types',
-      contractTypesSub: 'generated, never written',
+      contractTypes: 'Generated schema',
+      contractTypesSub: 'openapiSchema.ts',
       contractTest: 'Contract test',
-      contractTestSub1: 'does the front end read',
-      contractTestSub2: 'fields that exist?',
+      contractTestSub1: 'do the front-end types',
+      contractTestSub2: 'read a missing field?',
       contractFail: 'Otherwise CI fails',
       contractDrift: 'A check regenerates the types and fails if they have drifted.',
       testsPyramidTitle: 'Test pyramid: unit, integration, end to end',
-      testsE2e: '{{count}} Playwright scenarios',
+      testsE2e: '{{count}} Playwright tests, {{files}} files',
       testsE2eLabel: 'END TO END',
-      testsIntegration: 'real MongoDB replica set',
+      testsIntegration: '{{count}} tests, real MongoDB replica set',
       testsIntegrationLabel: 'INTEGRATION',
-      testsUnit: '{{total}} files: {{web}} front end, {{api}} server',
+      testsUnit: '{{total}} tests: {{web}} front end, {{api}} server',
       testsUnitLabel: 'UNIT',
       ciTitle: 'Continuous integration job graph, from trigger to deployment',
       ciChanges: 'changes',
@@ -2189,27 +2624,55 @@ export const en: Locale = {
       ciTestMongo: 'test api mongo',
       ciLighthouse: 'lighthouse',
       ciE2e: 'e2e',
+      ciDocker: 'API image',
       ciSonar: 'sonar',
       ciDeployApi: 'deploy api',
       ciDeployFront: 'deploy front',
       ciGuard1: 'deploy',
       ciGuard2: 'guard',
-      featureFlowTitle:
-        'Feature development cycle, its three human stops and the tools connected to the assistant',
-      featureFlowLabel: 'FEATURE FLOW',
+      featureFlowTitle: 'Four-phase development flow, from the need to deployment',
+      featureFlowLabel: 'DEVELOPMENT FLOW',
+      frontierModel: 'conversation with a frontier model',
+      frontierModelSub: 'it reads the repo docs and code before answering',
+      phaseSpec: 'specification',
+      phaseBuild: 'implementation',
+      phaseReview: 'review',
+      phaseShip: 'shipping',
+      skillStrategyWhen: 'before writing the tests',
+      devNeed: 'need, issue or bug',
+      devScoping: 'functional scoping',
+      devMockup: 'mockup if visual',
+      devPlan: 'technical plan',
+      devTdd: 'development in TDD',
+      devVerify: '/verify',
+      devLocalCheck: 'local acceptance',
+      devReview: 'code review',
+      devFixes: 'fixes',
+      devPrePush: 'pre-push checks',
+      devPush: 'push',
+      devCi: 'CI, {{jobs}} checks',
+      devMerge: 'merge onto master',
+      devDeploy: 'deploy to production',
+      devSignals: 'monitoring',
+      devSignalsSub: 'Sentry, PostHog',
+      flowBrainstorm: 'brainstorming',
+      flowBrainstormSub: 'feeds the backlog',
       flowRoadmap: 'roadmap',
-      flowScoping: 'scoping',
-      flowMockup: 'mockup',
-      flowImplementation: 'implementation',
-      flowManualTest: 'manual test',
-      flowReview: 'review',
-      flowStop: 'stop',
-      flowLocalSuites: 'local suites',
-      flowPush: 'push',
-      flowChecks: '{{jobs}} checks',
-      flowProduction: 'production',
-      flowNote1: 'The three amber blocks are stops.',
-      flowNote2: 'Nothing moves on without human sign-off.',
+      flowRoadmapSub: 'prioritisation',
+      flowSignals: 'monitoring and field feedback',
+      flowSignalsSub: 'Sentry, PostHog, GitHub Issues',
+      flowLoopProduct: 'real signals feed the product backlog again',
+      flowHandoff: 'a prioritised need then enters the development flow',
+      productFlowTitle:
+        'Product flow: production signals feed brainstorming, which feeds the roadmap',
+      productFlowLabel: 'PRODUCT FLOW',
+      flowNoteDev: 'The four boxed steps wait for my review and my approval before moving on.',
+      toolingTitle: 'Named procedures and read-only connectors plugged into the assistant.',
+      skillsLabel: 'TOOLED PROCEDURES, RECALLED BY NAME',
+      skillCritiqueWhen: 'on the mockup',
+      skillVerifyWhen: 'before every push',
+      skillReviewWhen: 'before merging',
+      skillDebtWhen: 'periodic pass',
       mcpLabel: 'TOOLS CONNECTED TO THE ASSISTANT (MCP AND COMMAND LINE)',
       mcpAssistant: 'assistant',
       mcpGithub: 'PRs and CI',
@@ -2253,16 +2716,126 @@ export const en: Locale = {
       bugGreen: 'test green',
       bugNote: 'note',
       bugNoteSub: 'in the repo',
-      controlPyramidTitle: 'The four levels of control, from broadest to most decisive',
-      controlPyramidLabel: 'CONTROL PYRAMID',
-      controlRules: 'Written rules',
-      controlRulesDetail: 'repository conventions, memory of pitfalls already met',
-      controlAssisted: 'Assisted execution',
-      controlAssistedDetail: 'a seven-step development procedure',
-      controlGuards: 'Automated guardrails',
-      controlGuardsDetail: 'architecture check, {{tests}} test files, {{jobs}} checks',
-      controlHuman: 'Human arbitration',
-      controlHumanDetail: 'scoping, mockup, manual test, going live',
+      dataModelTitle:
+        'Data model: the core collections and the unique indexes that hold them together',
+      collectionUsers: 'users',
+      collectionUsersField1: 'unique email',
+      collectionUsersField2: 'unique handle',
+      collectionUsersField3: 'OAuth identities',
+      collectionWatchlist: 'watchlist',
+      collectionWatchlistField1: 'user + film + type',
+      collectionWatchlistField2: 'unique',
+      collectionFollows: 'follows',
+      collectionFollowsField1: 'follower + followee',
+      collectionFollowsField2: 'unique',
+      collectionNotifications: 'user_notifications',
+      collectionNotificationsField1: 'user + date',
+      collectionNotificationsField2: 'expires after 90 days',
+      collectionParticipants: 'participants',
+      collectionParticipantsField1: 'event + user',
+      collectionParticipantsField2: 'unique nickname',
+      collectionEvents: 'events',
+      collectionEventsField1: 'unique slug',
+      collectionEventsField2: 'event settings',
+      collectionMovies: 'movies',
+      collectionMoviesField1: 'event + TMDB film',
+      collectionMoviesField2: 'unique',
+      collectionVotes: 'votes',
+      collectionVotesField1: 'event + film + voter',
+      collectionVotesField2: 'one vote each',
+      collectionSeenMarks: 'seen_marks',
+      collectionSeenMarksField1: 'event + film + voter',
+      collectionSeenMarksField2: 'one mark each',
+      dataModelNote:
+        '{{collections}} collections in total, {{indexes}} indexes declared at start-up, {{ttl}} of which expire automatically.',
+      letterboxdTitle:
+        'Letterboxd sync: from the click to the write, with the hand-back to the user when a title is ambiguous',
+      lbxLanebrowser: 'browser',
+      lbxLaneapi: 'server',
+      lbxLaneoutside: 'outside',
+      lbxLanestore: 'database',
+      lbxOpen: 'app opens',
+      lbxOpenSub: 'once per session',
+      lbxGuard: 'cap',
+      lbxGuardSub: '1 per 24 h, auto',
+      lbxScrape: 'public read',
+      lbxScrapeSub: 'no API, {{rows}} max',
+      lbxMatch: 'matching',
+      lbxMatchSub: 'TMDB, year ± 1',
+      lbxDiff: 'difference',
+      lbxDiffSub: 'additions and removals',
+      lbxWrite: 'write',
+      lbxWriteSub: 'never a duplicate',
+      lbxAmbiguous: 'arbitration',
+      lbxAmbiguousSub: 'the user decides',
+      lbxNote:
+        'An incomplete read cancels the whole sync: better to write nothing than to empty a list.',
+      infraTitle:
+        'Infrastructure: the front end on AWS, the server on Google Cloud, the database managed apart',
+      infraZoneAws: 'AWS, eu-west-1',
+      infraZoneGcp: 'Google Cloud, europe-west1',
+      infraDns: 'Domain',
+      infraDnsSub: 'movie-picker.fr',
+      infraDnsDetail: 'managed TLS certificate',
+      infraCdn: 'CloudFront',
+      infraCdnSub: 'cache and headers',
+      infraCdnDetail: 'purged on deploy',
+      infraBucket: 'S3',
+      infraBucketSub: 'front-end files',
+      infraBucketDetail: 'immutable cache',
+      infraSecrets: 'Secret Manager',
+      infraSecretsSub: 'keys and connections',
+      infraSecretsDetail: 'injected at deploy time',
+      infraRun: 'Cloud Run',
+      infraRunSub: 'container, scales to zero',
+      infraRunDetail: 'allowed origins checked',
+      infraRegistry: 'Artifact Registry',
+      infraRegistrySub: 'one image per commit',
+      infraRegistryDetail: 'tagged by SHA, purged',
+      infraScheduler: 'Cloud Scheduler',
+      infraSchedulerSub: 'every 30 minutes',
+      infraSchedulerDetail: 'event reminders',
+      infraAtlas: 'MongoDB Atlas',
+      infraAtlasSub: 'managed replica set',
+      infraAtlasDetail: 'transactions available',
+      infraSentry: 'Sentry',
+      infraSentrySub: 'front and server errors',
+      infraSentryDetail: 'European region',
+      infraGap: 'Resources created by hand: describing them in Terraform is the next step.',
+      infraNote: 'The line between CloudFront and Cloud Run is the only origin the server accepts.',
+      requestPathTitle:
+        'The path of a request through the four layers, and the direction of the dependencies',
+      requestPathLabel: 'POST /api/v1/events/{slug}/movies',
+      requestLayerEdge: 'entry',
+      requestLayerControllers: 'Controllers',
+      requestLayerApplication: 'Application',
+      requestLayerDomain: 'Domain',
+      requestLayerInfrastructure: 'Infrastructure',
+      requestMiddleware: 'HTTP pipeline',
+      requestMiddleware1: 'allowed origin',
+      requestMiddleware2: 'session and identity',
+      requestMiddleware3: 'rate limiting',
+      requestController: 'controller',
+      requestController1: 'route to use case',
+      requestController2: 'validates the shape',
+      requestController3: 'no business rule',
+      requestHandler: 'use case',
+      requestHandler1: 'orchestrates it',
+      requestHandler2: 'opens a transaction',
+      requestHandler3: 'ports only',
+      requestDomain: 'business rules',
+      requestDomain1: 'entities and rules',
+      requestDomain2: 'zero dependency',
+      requestDomain3: 'testable standalone',
+      requestRepository: 'adapter',
+      requestRepository1: 'implements a port',
+      requestRepository2: 'talks to MongoDB',
+      requestRepository3: 'doubled in memory',
+      requestPorts: 'the ports',
+      requestPortsSub:
+        '{{ports}} interfaces in Application, {{useCases}} use cases that see nothing else.',
+      requestPathNote:
+        'An arrow never points outward: the architecture check fails the build when one does.',
     },
   },
   inAppBrowser: {

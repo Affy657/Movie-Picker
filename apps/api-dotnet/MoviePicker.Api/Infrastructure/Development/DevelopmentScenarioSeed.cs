@@ -118,7 +118,7 @@ internal static class DevelopmentScenarioSeed
             new PatchUserProfileRequest
             {
                 UiTheme = "dark",
-                AccentColor = "indigo",
+                AccentColor = "default",
                 AvatarId = "bolt",
                 Bio = "Compte de dev principal — orga des soirées ciné.",
                 IsProfilePublic = true
