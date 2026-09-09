@@ -1491,6 +1491,19 @@ export const en: Locale = {
       followAriaLabel: 'Follow @{{handle}}',
       unfollowAriaLabel: 'Unfollow @{{handle}}',
       error: 'Action failed, please try again.',
+      search: {
+        tab: 'Search',
+        tabAriaLabel: 'Search for users',
+        placeholder: 'Name or @handle',
+        minLength: 'Type at least {{count}} characters.',
+        idleTitle: 'Search for someone',
+        idleMessage: 'Type the name or handle of the person you want to follow.',
+        emptyTitle: 'No one matches',
+        emptyMessage:
+          'Check the spelling. Accounts with a private profile do not appear in search.',
+        loading: 'Searching',
+        error: 'Search failed, try again.',
+      },
     },
     settings: {
       title: 'Public profile',
