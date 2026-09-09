@@ -6,15 +6,19 @@ import styles from './techPage.module.css';
 
 export const TECH_SECTIONS = [
   'architecture',
-  'trajectory',
+  'choices',
   'ui',
   'server',
   'contract',
   'data',
+  'feature',
   'tests',
   'ci',
+  'infra',
+  'quality',
   'production',
   'method',
+  'trajectory',
 ] as const;
 
 export type TechSectionId = (typeof TECH_SECTIONS)[number];

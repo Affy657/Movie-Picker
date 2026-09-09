@@ -1860,134 +1860,284 @@
       'Projet personnel conçu, développé et exploité seul, de la première ligne à la mise en production. Les chiffres sont mesurés dans le dépôt au build, pas estimés.',
     hero: {
       eyebrow: 'Dossier technique',
-      titleLead: "Ce qu'il y a",
-      titleAccent: 'sous la roue',
-      lead: "Choisir un film à plusieurs prend souvent plus de temps que le regarder. Movie Picker supprime cette négociation : chacun propose, tout le monde vote, une roue tranche. Cette page décrit ce qu'il a fallu construire derrière, de la frontière entre les deux applications jusqu'aux contrôles qui décident si une ligne de code atteint la production.",
-      creditsLabel: 'Fiche technique du projet',
-      production: 'Production',
-      productionValue: 'Adrien Morand, seul développeur',
-      period: 'Période',
-      periodValue: 'février à septembre 2026',
-      format: 'Format',
-      formatValue: 'monorepo pnpm, deux applications déployées',
-      ui: 'Interface',
-      uiValue: 'React 19, TypeScript 6, Vite 8',
-      server: 'Serveur',
-      serverValue: '.NET 10, MongoDB Atlas',
-      delivery: 'Diffusion',
-      deliveryValue: 'Cloud Run, CloudFront',
+      title: 'Comment Movie Picker est construit',
+      lead: "Movie Picker aide un groupe à choisir un film sans y passer la soirée : chacun propose, tout le monde vote, une roue tranche. Je l'ai commencé en février 2026 pour un besoin réel dans mon entourage, et ça ne devait pas dépasser le stade du petit outil. C'est devenu une plateforme, puis mon projet de fin de master, et le service est aujourd'hui en ligne, ouvert au public, maintenu par moi seul.",
+      leadIntent:
+        "Il me sert aussi de bac à sable : j'y essaie des technologies et des méthodes, j'explore, je lis les documentations. Le but n'est pas d'en faire le projet d'une vie, mais d'y gagner de l'expérience et de prendre plaisir à faire vivre un produit qui évolue avec les retours de ses utilisateurs, en couvrant toute la chaîne, du besoin métier à la mise en production.",
       metricLines: 'lignes de code',
       metricLinesHint:
         'Fichiers .ts, .tsx et .css du front plus les .cs du serveur, comptés au build et arrondis au millier.',
       metricEndpoints: 'endpoints HTTP',
       metricEndpointsHint:
         'Attributs [HttpGet], [HttpPost] et suivants, comptés dans les contrôleurs du serveur.',
-      metricTests: 'fichiers de test',
+      metricTests: 'tests automatisés',
       metricTestsHint:
-        'Fichiers de test du front et du serveur, hors scénarios de bout en bout qui sont comptés à part.',
-      metricJobs: 'jobs de CI',
-      metricJobsHint:
-        "Jobs déclarés dans la chaîne d'intégration continue, du scan de secrets au contrôle de déploiement.",
+        'Cas de test déclarés dans le dépôt, comptés au build : {{web}} côté front et {{api}} côté serveur, répartis sur {{files}} fichiers.',
+      metricCommits: 'commits',
+      metricCommitsHint:
+        'Commits de la branche principale depuis le premier jour du projet, comptés au build.',
+      metricMonths: 'de développement',
+      metricMonthsUnit: 'mois',
+      metricMonthsHint:
+        'Mois complets écoulés depuis le tout premier commit du dépôt, calculés au build.',
+      metricCoverage: 'de couverture exigée',
+      metricCoverageUnit: '%',
+      metricCoverageHint:
+        "Part de lignes que les tests du front doivent couvrir. En dessous de ce seuil, la chaîne d'intégration échoue et rien ne part en production.",
       stamp: 'Chiffres relevés au build du {{date}}',
     },
     nav: {
       architecture: 'Architecture',
-      trajectory: 'Trajectoire',
+      choices: 'Choix techniques',
       ui: 'Interface',
       server: 'Serveur',
       contract: 'Le contrat',
-      data: 'Données',
+      data: 'Modèle de données',
+      feature: 'Une fonctionnalité',
       tests: 'Tests',
       ci: 'Intégration continue',
-      production: 'Production',
+      infra: 'Infrastructure',
+      quality: 'Mesures',
+      production: 'Sécurité',
       method: 'Méthode de travail',
+      trajectory: 'Trajectoire',
     },
     architecture: {
       title: 'Deux applications, une frontière nette',
       lead: 'Un front statique sur CDN, une API conteneurisée, une base managée. Ce qui compte : la frontière entre les deux est un contrat, pas une habitude.',
-      caption: 'Le trait plein bleu est le seul chemin de données.',
-      servicesHeading: "Ce qui vient de l'extérieur",
+      caption:
+        "Le trait bleu est le seul chemin entre le front et le serveur. Les flèches en pointillés vont dans le sens de l'appel.",
+      structureHeading: 'Comment les deux moitiés tiennent ensemble',
+      boundary: 'Frontière',
+      boundaryValue:
+        'Le front ne connaît du serveur que {{endpoints}} routes sous /api/v1, décrites par un contrat que la chaîne rejoue à chaque envoi.',
+      boundaryHint:
+        'Aucun accès direct à la base depuis le navigateur : tout passe par ces routes, et le contrat sert de frontière vérifiable.',
+      stateless: 'Aucun état en mémoire',
+      statelessValue:
+        "L'hébergeur peut lancer plusieurs instances du serveur, alors rien ne vit dans le processus : ni session, ni minuterie, ni tâche de fond. Seule exception, le cache des fiches TMDB, propre à chaque instance et sans effet sur ce qui est renvoyé.",
+      statelessHint:
+        'Les clés qui signent les cookies sont rangées en base, ce qui évite de déconnecter tout le monde à chaque déploiement.',
+      deploys: 'Deux déploiements',
+      deploysValue:
+        "Le front part sur le CDN, le serveur part en image conteneurisée. Chacun peut sortir sans attendre l'autre.",
+      deploysHint:
+        'Deux étapes distinctes dans la chaîne : une correction de style ne redéploie pas le serveur.',
+      servicesHeading: 'Les services extérieurs branchés au serveur',
+      servicesNote:
+        "Aucun n'est indispensable au fonctionnement : chacun a un comportement défini quand sa clé manque ou quand il ne répond pas, et le serveur démarre sans eux.",
       tmdb: 'TMDB',
-      tmdbValue: 'Métadonnées, genres et affiches.',
+      tmdbValue:
+        'Métadonnées, genres et affiches. Les fiches et les affiches sont mises en cache, et une panne est retenue quelques minutes plutôt que réessayée à chaque requête.',
       tmdbHint:
         'The Movie Database, la base ouverte qui fournit titres, résumés, genres et affiches.',
       letterboxd: 'Letterboxd',
-      letterboxdValue: 'Import de watchlist depuis le profil public.',
+      letterboxdValue:
+        'Import de watchlist depuis le profil public. Sans API publique, la page est lue telle quelle : 300 films au plus, une fois par 24 heures et par compte.',
       letterboxdHint:
         "Réseau social de cinéphiles : la liste publique d'un profil est lue puis rapprochée du catalogue.",
       oauth: 'Google, GitHub',
       oauthValue:
-        "Connexion déléguée ; un fournisseur non configuré disparaît de l'écran au lieu d'échouer.",
+        "Connexion déléguée. Un fournisseur non configuré disparaît de l'écran au lieu d'échouer, et la connexion par mot de passe reste disponible.",
       oauthHint:
         "Délégation d'identité : le mot de passe reste chez le fournisseur, l'application ne reçoit qu'un jeton.",
       push: 'Web Push',
-      pushValue: 'Notifications navigateur, protocole VAPID.',
+      pushValue:
+        'Notifications navigateur, protocole VAPID. Un abonnement que le navigateur déclare expiré est effacé de la base au premier envoi qui le rencontre.',
       pushHint:
         "VAPID signe chaque notification pour prouver au navigateur quel serveur en est à l'origine.",
+      email: 'Resend',
+      emailValue:
+        'Envoi des courriels de réinitialisation de mot de passe. Sans clé configurée, le message part dans les journaux du serveur au lieu de faire échouer le démarrage.',
+      emailHint:
+        "Service d'envoi transactionnel : le courriel part par un appel d'API plutôt que par un serveur de messagerie à administrer.",
       kofi: 'Ko-fi',
-      kofiValue: 'Dons, confirmés par webhook.',
+      kofiValue:
+        "Dons. C'est Ko-fi qui appelle le serveur : l'appel porte un jeton partagé, il est limité en débit, et il est refusé si le jeton ne correspond pas.",
       kofiHint:
-        'Plateforme de dons ; un appel sortant de sa part vient confirmer le paiement au serveur.',
+        'Plateforme de dons pour créateurs ; le soutien confirmé apparaît ensuite comme un badge sur le profil.',
+      scheduler: 'Cloud Scheduler',
+      schedulerValue:
+        'Appelle le serveur à heure fixe pour déclencher les rappels de soirée. Même protection par jeton, puisque la route est ouverte sur internet.',
+      schedulerHint:
+        "Planificateur de Google Cloud : il appelle une adresse à l'heure dite, ce qui remplace une minuterie vivant dans le serveur.",
       issues: 'GitHub Issues',
-      issuesValue: "Une suggestion envoyée dans l'app ouvre une issue, capture d'écran comprise.",
+      issuesValue:
+        "Une suggestion envoyée dans l'app ouvre une issue, capture d'écran comprise. Sans jeton, l'envoi est ignoré et journalisé plutôt que renvoyé en erreur.",
       issuesHint:
         "Le suivi de bugs de GitHub, alimenté directement par le formulaire de suggestion de l'app.",
     },
     trajectory: {
-      title: 'Sept mois, six paliers',
-      lead: "{{commits}} commits. Chaque palier a livré en production avant d'ouvrir le suivant.",
-      mvpWhen: 'Fév. à mars 2026',
+      title: '{{months}} mois, {{shipped}} paliers livrés',
+      lead: "{{commits}} commits depuis février 2026. Chaque palier est parti en production avant que le suivant ne s'ouvre. Les {{planned}} derniers repères sont la suite prévue, pas du travail fait.",
+      plannedBadge: 'à venir',
+      techHeading: 'Les chantiers techniques ouverts',
+      terraform: 'Infrastructure en code',
+      terraformHint:
+        'Aujourd’hui les ressources cloud ont été créées à la main. Terraform les décrirait, avec un état distant et une revue par diff.',
+      staging: 'Environnement de recette',
+      stagingHint:
+        'Il n’existe qu’une production. Un environnement calqué dessus permettrait de rejouer un déploiement avant qu’il ne compte.',
+      oidc: 'Identité fédérée pour la CI',
+      oidcHint:
+        'La CI s’authentifie aujourd’hui avec une clé de compte de service stockée en secret. Une fédération d’identité supprimerait la clé.',
+      leastPrivilege: 'Droits au plus juste',
+      leastPrivilegeHint:
+        'Le compte de service de déploiement a plus de droits que nécessaire ; le découper par usage est le pas suivant.',
+      consolidate: 'Front vers Google Cloud',
+      consolidateHint:
+        'Déplacer le front de S3 et CloudFront vers Cloud Storage et Cloud CDN mettrait les deux applications chez le même fournisseur, et retirerait une console, un modèle de droits et une facture.',
+      sharedCache: 'Cache partagé entre instances',
+      sharedCacheHint:
+        'Le cache des fiches TMDB vit dans la mémoire de chaque instance : deux instances refont le même appel, et un redémarrage repart à froid. Un cache commun corrigerait les deux.',
+      prerender: 'Pré-rendu des pages publiques',
+      prerenderHint:
+        'Les pages publiques sont aujourd’hui référencées par métadonnées et sitemap ; du HTML pré-rendu ferait mieux.',
+      techLead: 'Ce qui n’est pas fait, et qui est nommé plutôt que passé sous silence.',
+      mvpWhen: 'Février 2026',
       mvpWhat: 'MVP',
       mvpDetail:
-        "Parcours complet d'une soirée, API Node et Express, déploiement automatisé dès le départ.",
+        "Le parcours entier d'une soirée, du lien de partage au film tiré. La chaîne de déploiement existe avant la première fonctionnalité.",
       mvpHint:
-        'Le but était de valider le parcours, pas la technique : la production existe dès les premiers jours.',
-      migrationWhen: 'Mars 2026',
-      migrationWhat: 'Migration du serveur',
-      migrationDetail:
-        'Node remplacé par ASP.NET Core sans changer une route ni un champ JSON. Front intact.',
-      migrationHint:
-        'La bascule est faite à contrat identique : le front sert de témoin, il ne bouge pas.',
-      v1When: 'Avril à mai 2026',
-      v1What: 'V1 et V1.1',
+        "L'objectif était de valider le parcours, pas la technique : la production existe dès les premiers jours.",
+      mvpItem1: 'Créer une soirée',
+      mvpItem2: 'Proposer et voter',
+      mvpItem3: 'Tirage à la roue',
+      mvpItem4: 'Lien de partage',
+      mvpItem5: 'Déploiement automatisé',
+      dotnetWhen: 'Mars 2026',
+      dotnetWhat: 'Migration du serveur',
+      dotnetDetail:
+        'Node et Express remplacés par ASP.NET Core sans changer une route ni un champ JSON. Le front sert de témoin et ne bouge pas.',
+      dotnetHint:
+        'La bascule est faite à contrat identique : si le front continue de fonctionner sans modification, la migration est réussie.',
+      dotnetItem1: 'ASP.NET Core',
+      dotnetItem2: 'Routes identiques',
+      dotnetItem3: 'Architecture en couches',
+      dotnetItem4: 'Image Docker',
+      v1When: 'Mai 2026',
+      v1What: 'V1',
       v1Detail:
-        "Analyse statique bloquante, scan des dépendances et de l'image, PWA, notifications push.",
+        'Le démonstrateur devient un service : comptes, réglages de soirée, deux langues, et une chaîne qui peut refuser un push.',
       v1Hint:
-        'Premier palier où un envoi de code peut être refusé par une machine plutôt que par une relecture.',
-      v12When: 'Juin à juil. 2026',
-      v12What: 'V1.2 et V1.3',
+        'Premier palier où une machine, et non une relecture, décide si le code atteint la production.',
+      v1Item1: 'Comptes et mot de passe oublié',
+      v1Item2: "Réglages de soirée par l'hôte",
+      v1Item3: 'Marqueur déjà vu',
+      v1Item4: 'Disponibilité streaming',
+      v1Item5: 'Thème sombre',
+      v1Item6: 'Français et anglais',
+      v1Item7: 'Analyse statique bloquante',
+      v11When: 'Mai 2026',
+      v11What: 'V1.1',
+      v11Detail:
+        "Fiches films enrichies, ouverture directe vers les plateformes, et les premières notifications hors de l'onglet.",
+      v11Hint:
+        'Palier de confort : peu de structure nouvelle, beaucoup de valeur perçue côté utilisateur.',
+      v11Item1: 'Note, durée, bande-annonce',
+      v11Item2: 'Liens streaming directs',
+      v11Item3: 'Soirées passées',
+      v11Item4: 'Couleur personnalisable',
+      v11Item5: 'Notifications push VAPID',
+      v11Item6: 'Application installable',
+      v12When: 'Juin 2026',
+      v12What: 'V1.2',
       v12Detail:
-        "Consentement, export et suppression de compte, accessibilité auditée, capture d'erreurs.",
-      v12Hint:
+        'La dimension sociale arrive, et avec elle le consentement : aucun script tiers ne se charge avant un choix explicite.',
+      v12Hint: "Le bandeau de consentement est posé avant l'analytics, jamais l'inverse.",
+      v12Item1: 'Profils publics',
+      v12Item2: 'Abonnements entre membres',
+      v12Item3: 'Notifications in-app',
+      v12Item4: 'Statistiques de profil',
+      v12Item5: 'Consentement granulaire',
+      v12Item6: 'Analytics produit',
+      v13When: 'Juin à juillet 2026',
+      v13What: 'V1.3',
+      v13Detail:
+        "La roue devient une vraie roue, le compte devient exportable et supprimable, et l'accessibilité est auditée écran par écran.",
+      v13Hint:
         'Palier réglementaire : le produit devient ouvrable à des tiers sans dette juridique.',
+      v13Item1: 'Roue animée',
+      v13Item2: 'Export et suppression RGPD',
+      v13Item3: 'Recherche avancée',
+      v13Item4: 'Location et achat',
+      v13Item5: 'Refonte de la page soirée',
+      v13Item6: 'Accessibilité auditée',
+      v13Item7: 'Capture des erreurs',
       v14When: 'Août 2026',
       v14What: 'V1.4',
-      v14Detail: 'Connexion externe, import Letterboxd, profils publics.',
+      v14Detail:
+        "Le produit s'ouvre sur l'extérieur : identités déléguées, bibliothèque personnelle et données importées d'un service tiers.",
       v14Hint:
-        "Ouverture vers l'extérieur : identités déléguées et données importées d'un service tiers.",
+        'Le plus gros palier en volume : cinq surfaces produit nouvelles et trois intégrations externes.',
+      v14Item1: 'Watchlist personnelle',
+      v14Item2: 'Synchronisation Letterboxd',
+      v14Item3: 'Connexion Google et GitHub',
+      v14Item4: 'Choix manuel du gagnant',
+      v14Item5: 'Dons Ko-fi',
+      v14Item6: 'Série de soirées',
+      v14Item7: 'Proposer une idée',
       v15When: 'Septembre 2026',
       v15What: 'V1.5',
       v15Detail:
-        'Système de design à jetons fermés, avec contrôle automatique des valeurs écrites en dur.',
+        "Les valeurs d'interface deviennent un jeu fermé vérifié par script, et la racine du site redevient une page publique.",
       v15Hint:
         "Les règles d'interface passent du document au script : une valeur en dur fait échouer la construction.",
+      v15Item1: 'Jetons de design fermés',
+      v15Item2: 'Contrôle automatique du CSS',
+      v15Item3: 'Primitives partagées',
+      v15Item4: 'Accueil public refondu',
+      v15Item5: 'Ce dossier technique',
+      v16When: 'Prochain palier',
+      v16What: 'V1.6',
+      v16Detail:
+        'Fermer la boucle sociale ouverte en V1.2 et ajouter un second format de décision à côté de la roue.',
+      v16Hint:
+        'Items classés par valeur utilisateur décroissante, comme sur les paliers précédents.',
+      v16Item1: "Recherche d'utilisateurs",
+      v16Item2: 'Soirées récurrentes',
+      v16Item3: 'Modèles de soirée',
+      v16Item4: 'Plusieurs gagnants',
+      v16Item5: 'Mode tournoi',
+      v17When: 'Ensuite',
+      v17What: 'V1.7',
+      v17Detail:
+        "Outils avancés pour l'hôte, et remplacement du rafraîchissement périodique par une vraie connexion temps réel.",
+      v17Hint:
+        'Le temps réel est le dernier chantier de plateforme encore ouvert sur la trajectoire produit.',
+      v17Item1: 'Co-hôte',
+      v17Item2: 'Thème imposé',
+      v17Item3: 'Avertissements de contenu',
+      v17Item4: 'Temps réel et présence',
+      v17Item5: 'Palette de commandes',
+      v2When: 'Sans date annoncée',
+      v2What: 'V2',
+      v2Detail:
+        'Une application mobile native, pleinement intégrée à la plateforme. Le prototype de cours a été archivé plutôt que rafistolé.',
+      v2Hint:
+        'Aucune date annoncée : le périmètre dépendra de ce que la V1.7 aura laissé derrière elle.',
+      v2Item1: 'Application native',
+      v2Item2: 'Notifications système',
+      v2Item3: 'Parcours complet hors navigateur',
     },
     ui: {
       title: 'Découpé par usage, pas par type de fichier',
       lead: "{{features}} domaines autonomes, un socle partagé qui n'en connaît aucun. Vérifié mécaniquement : le socle est une feuille du graphe, aucun cycle toléré.",
-      stack: 'Socle',
-      stackValue:
-        "React 19, TypeScript 6, Vite 8, React Router 8, TanStack Query pour l'état serveur.",
-      stackHint:
-        'Les bibliothèques choisies une fois pour toutes ; TanStack Query tient le cache des données du serveur.',
-      domains: 'Domaines',
-      domainsValue: 'auth, soirées, films, watchlist, notifications, profils, Letterboxd',
-      domainsHint:
-        "Un domaine réunit pages, composants et appels réseau d'un même usage, sans dépendre des autres.",
       design: 'Design',
-      designValue: 'Jetons fermés : aucune valeur littérale acceptée en CSS.',
+      designValue:
+        'Jetons fermés : aucune valeur littérale acceptée en CSS, et tout état de survol confiné aux appareils qui en ont un.',
       designHint:
-        'Un jeton est une variable CSS unique pour une couleur, un espacement ou une taille de texte.',
+        "Un jeton est une variable CSS unique pour une couleur, un espacement ou une taille de texte. Un survol laissé libre reste collé après un appui sur mobile, d'où la condition.",
+      data: 'Données serveur',
+      dataValue:
+        "Un cache client tient les réponses de l'API. Une écriture invalide les vues concernées au lieu de recharger la page.",
+      dataHint:
+        "TanStack Query range chaque réponse sous une clé, sert le cache pendant qu'il rafraîchit en arrière-plan, et expose les états de chargement et d'erreur au composant.",
+      loading: 'Chargement à la demande',
+      loadingValue:
+        '{{routes}} écrans téléchargés seulement quand on y va, et les dépendances rangées à part du code applicatif.',
+      loadingHint:
+        "Le premier écran n'emporte pas le reste de l'application, et les paquets de dépendances restent en cache du navigateur d'une version à la suivante.",
       offline: 'Hors ligne',
       offlineValue: 'Installable, coquille et affiches en cache, consultable sans réseau.',
       offlineHint:
@@ -2006,31 +2156,68 @@
       lead: "Quatre couches, une seule règle : tout pointe vers l'intérieur. Vérifiée à chaque exécution de la CI, pas seulement écrite.",
       caption:
         '{{ports}} ports, {{repositories}} dépôts implémentés deux fois : en mémoire et sur MongoDB.',
-      noteLead: 'Ce que ça achète :',
-      unitSuite: 'Suite unitaire',
-      unitSuiteValue: 'Tourne sans base, en quelques secondes, sur les doublures en mémoire.',
-      unitSuiteHint:
-        'Sans la double implémentation des dépôts, cette suite serait impossible à écrire.',
-      integrationSuite: "Suite d'intégration",
-      integrationSuiteValue:
-        'Rejouée en CI contre une vraie MongoDB en conteneur, transactions comprises.',
-      integrationSuiteHint:
-        "C'est le seul chemin qui exécute réellement les adaptateurs Mongo et les transactions.",
+      noteLead: 'Ce qui tient la frontière',
+      requestHeading: 'Le trajet d’une requête',
+      requestNote:
+        'Les mêmes {{useCases}} cas d’usage servent les tests unitaires et la production : ce qui change, c’est l’implémentation branchée derrière les ports.',
+      rules: 'Cloisons vérifiées',
+      rulesValue:
+        "Le domaine ne peut importer que System et lui-même. L'application ignore MongoDB, le framework web et l'infrastructure. Un contrôleur ne touche jamais la persistance.",
+      rulesHint:
+        'Ce ne sont pas des consignes : le contrôle lit les using de chaque fichier et fait échouer la construction au premier écart.',
+      versioning: 'La version en un seul endroit',
+      versioningValue:
+        'Le préfixe /api/v1 est une constante unique, jamais recopiée dans une route. Le contrat exporté et les types du front en héritent.',
+      versioningHint:
+        'Une route qui écrirait son préfixe à la main pourrait diverger du contrat sans que rien ne le signale.',
+      health: 'Deux sondes de santé',
+      healthValue:
+        "/health répond aussitôt qu'un processus est vivant. /health/ready interroge la base et renvoie 503 si elle ne répond pas, avec la durée mesurée et la version déployée.",
+      healthHint:
+        "L'hébergeur distingue ainsi une instance qui démarre d'une instance qui ne peut pas servir.",
     },
     contract: {
       title: 'La frontière est un fichier, pas une convention',
-      lead: 'Le contrat OpenAPI est exporté depuis le serveur, les types du front en sont générés. Si le serveur retire un champ que le front lit, ça ne compile plus.',
-      note: "C'est ce contrat qui a rendu possible le remplacement complet du serveur en mars : réécrire une implémentation derrière une frontière déjà figée, sans toucher au front.",
+      lead: "Le contrat OpenAPI est exporté depuis le serveur à chaque construction. Le front garde ses propres types, et un test au niveau des types vérifie qu'ils ne lisent aucun champ absent du contrat.",
+      export: 'Export du contrat',
+      exportValue:
+        'Le serveur sérialise son OpenAPI depuis les contrôleurs ; le fichier est un artefact de build, pas un document tenu à la main.',
+      exportHint:
+        "Le script openapi:export démarre l'application et écrit le contrat dans artifacts/openapi-v1.json.",
+      types: 'Types du front confrontés',
+      typesValue:
+        "Le front garde ses propres types, écrits pour son usage. Un test les confronte au contrat et refuse de compiler si l'un d'eux lit un champ que le serveur n'expose pas.",
+      typesHint:
+        'openapi-typescript produit openapiSchema.ts, importé par ce seul test : le schéma sert de référence, pas de source pour le code applicatif.',
+      drift: 'Détection de dérive',
+      driftValue:
+        'La CI régénère les types et échoue si le fichier versionné ne correspond plus au contrat exporté.',
+      driftHint:
+        'openapi:types:check compare la sortie fraîche au fichier commité ; apiContract.test.ts vérifie en plus, au niveau des types, que les champs lus par le front existent bien.',
+      note: "Le filet couvre aujourd'hui {{checked}} types de réponse sur les {{total}} que décrit le contrat, en commençant par ceux que le front lit le plus. L'étendre au reste est du travail mécanique, pas une décision à prendre.",
     },
     data: {
-      title: 'Tout ou rien, et jamais deux fois',
+      title: 'Neuf collections au cœur, et des écritures tout ou rien',
+      lead: 'L’intégrité ne vient pas du moteur : elle vient des index uniques posés au démarrage et des transactions ouvertes pour toute écriture qui touche plusieurs documents.',
+      modelCaption:
+        'Les traits sont les identifiants qui relient les documents. Users et Events sont encadrés parce que tout le reste s’y rattache : chaque autre document porte l’un ou l’autre.',
       caption:
-        "Supprimer un compte touche huit collections dans une seule transaction : aucun état intermédiaire n'est observable.",
+        "Supprimer un compte touche huit collections dans une seule transaction, dont deux anonymisées plutôt que vidées : aucun état intermédiaire n'est observable.",
       atomicity: 'Atomicité',
       atomicityValue:
         "Toute écriture groupée passe par une unité de travail, et ne peut pas s'arrêter à mi-chemin.",
       atomicityHint:
-        'Une transaction regroupe plusieurs écritures : soit toutes aboutissent, soit aucune.',
+        "Une transaction regroupe plusieurs écritures : soit toutes aboutissent, soit aucune. Les soirées créées et les participations restent, l'identité en moins, pour ne pas amputer les données des autres participants.",
+      uniqueness: 'Unicité',
+      uniquenessValue:
+        '{{unique}} index uniques refusent les doublons dans le moteur : un e-mail, un pseudo, un lien de soirée, un vote par participant et par film.',
+      uniquenessHint:
+        'Un moteur documentaire ne connaît pas les clés étrangères : ces index sont ce qui empêche deux comptes de partager un e-mail ou un participant de voter deux fois.',
+      expiry: 'Expirations automatiques',
+      expiryValue:
+        '{{ttl}} index à expiration font le ménage dans le moteur : sessions, jetons de mot de passe, notifications, marqueurs anti-doublon, compteurs de limitation et journal des dons.',
+      expiryHint:
+        'Aucune tâche de fond ne tourne pour ça, ce qui tombe bien puisque rien ne vit dans le processus du serveur.',
       migrations: 'Migrations',
       migrationsValue:
         'Datée, idempotente, appliquée une fois au démarrage puis consignée. {{migrations}} en production.',
@@ -2043,16 +2230,365 @@
         "Le garde-fou compare le nom de la base à l'environnement et refuse de démarrer en cas de mélange.",
       posters: 'Affiches',
       postersValue:
-        'Récupérées une fois puis stockées côté serveur, jamais rechargées chez le fournisseur.',
+        'Récupérées une fois puis servies depuis le serveur. Chaque consultation repousse leur expiration ; sans accès pendant {{days}} jours, elles sortent du cache.',
       postersHint:
-        "Les images sont copiées côté serveur : un changement d'URL chez le fournisseur ne casse plus rien.",
+        "Les images sont copiées côté serveur : un changement d'URL chez le fournisseur ne casse plus l'affichage.",
     },
     tests: {
-      title: '{{tests}} fichiers, et un linter écrit sur mesure',
+      title: '{{tests}} tests automatisés, et une couverture qui bloque',
+      lead: 'Trois familles, de la plus rapide à la plus lente : le domaine sans dépendances, le serveur contre une vraie base, le produit dans un navigateur. Chacune répond à une question que les autres ne posent pas.',
       caption:
-        'Couverture bloquante : {{lines}} % de lignes, {{functions}} % de fonctions, {{branches}} % de branches.',
+        'Couverture bloquante côté front : {{lines}} % de lignes, {{functions}} % de fonctions, {{branches}} % de branches. Côté serveur, elle est mesurée et publiée, sans seuil qui fasse échouer la chaîne.',
+      unit: 'Tests unitaires',
+      unitValue:
+        '{{count}} cas, sans base ni réseau, sur les doublures en mémoire. Quelques secondes.',
+      unitHint:
+        "Ils couvrent le domaine, les cas d'usage et les composants d'interface isolés de leurs dépendances.",
+      integration: "Tests d'intégration",
+      integrationValue: '{{count}} cas rejoués contre une vraie MongoDB, transactions comprises.',
+      integrationHint:
+        "C'est le seul chemin qui exécute réellement les adaptateurs Mongo et les transactions ; la CI le rejoue dans un job dédié.",
+      e2e: 'Tests end to end',
+      e2eValue:
+        '{{count}} cas Playwright qui pilotent Chromium contre le front compilé et le serveur démarré.',
+      e2eHint:
+        "La persistance y est l'implémentation en mémoire et les services tiers sont bouchonnés : le parcours est vrai, l'environnement reste déterministe.",
+      howHeading: 'Comment ils sont écrits',
+      doubles: 'Doublures en mémoire',
+      doublesValue:
+        '{{repositories}} dépôts implémentés deux fois : sur MongoDB pour la production, en mémoire pour les tests unitaires.',
+      doublesHint:
+        'Ce n’est pas une bibliothèque de simulacres : ce sont de vraies implémentations, tenues par les mêmes interfaces.',
+      harness: 'Serveur réel en test',
+      harnessValue:
+        'La suite d’intégration démarre l’application entière en mémoire et l’interroge en HTTP, contre une MongoDB en conteneur.',
+      harnessHint:
+        'WebApplicationFactory monte le vrai pipeline ASP.NET Core ; seule la base et les services tiers sont substitués.',
+      replica: 'MongoDB en replica set',
+      replicaValue:
+        'Le conteneur de test est créé à la volée en replica set, sinon les transactions ne pourraient pas être testées.',
+      replicaHint:
+        'Chaque classe de test reçoit sa propre base jetable : les tests ne se marchent pas dessus.',
+      stubs: 'Services tiers bouchonnés',
+      stubsValue:
+        'TMDB et Letterboxd sont remplacés par des bouchons que deux variables d’environnement activent.',
+      stubsHint:
+        "Sans cela, la suite dépendrait de la disponibilité et des quotas de deux sites externes. L'envoi d'e-mail et les issues GitHub, eux, tombent sur leur repli faute de clé configurée.",
+      first: 'Le test avant le code',
+      firstValue:
+        'Fonctionnalité comme correctif : le test qui décrit le comportement attendu est écrit et échoue avant l’implémentation.',
+      firstHint:
+        'Sur un bug, le test doit reproduire le symptôme avant la correction, sinon rien ne prouve que la cause a été traitée.',
+      network: 'Réseau simulé côté front',
+      networkValue:
+        '{{files}} fichiers de test montent un serveur HTTP simulé et répondent aux vraies requêtes des écrans, sans jamais sortir sur le réseau.',
+      networkHint:
+        "Les composants appellent l'API normalement : c'est la couche réseau qui est interceptée, pas le code de l'application.",
+    },
+    ci: {
+      title: '{{jobs}} checks de CI avant la production',
+      lead: "Un seul graphe, des dépendances explicites, un déploiement qui n'a lieu que si tout ce qui le précède est vert.",
+      caption:
+        "Le dernier maillon vérifie que les déploiements ont eu lieu, pas seulement qu'ils n'ont pas échoué.",
+      pipelineHeading: 'Ce qui tient la chaîne',
+      trigger: 'Déclenchement',
+      triggerValue:
+        'Toute poussée et toute demande de fusion vers master lancent la chaîne. Le déploiement, lui, ne part que depuis master.',
+      triggerHint:
+        'Les branches ouvertes par le robot de dépendances sont exclues du déclenchement par poussée, pour ne pas jouer la chaîne deux fois.',
+      scope: 'Périmètre calculé',
+      scopeValue:
+        'Un premier job compare les fichiers modifiés et décide quelles branches du graphe tournent. Une correction de style ne rejoue pas la suite serveur.',
+      scopeHint:
+        "C'est ce qui garde la chaîne courte, et c'est aussi ce qui a rendu le garde-fou de déploiement nécessaire.",
+      secrets: 'Recherche de secrets',
+      secretsValue:
+        "Un balayage cherche clés et jetons dans le code avant la construction de l'image. Une correspondance arrête tout.",
+      secretsHint:
+        "Il tourne sur l'arbre de travail et bloque la construction de l'image ; la plateforme refuse en plus un push qui contiendrait une clé reconnue.",
+      image: 'Image étiquetée',
+      imageValue:
+        "Le serveur part en image conteneurisée, étiquetée par l'empreinte du commit et poussée dans le registre avant tout déploiement.",
+      imageHint:
+        "Le déploiement pointe une image précise plutôt qu'une étiquette mouvante : revenir en arrière consiste à repointer la précédente.",
+      guard: 'Garde-fou de déploiement',
+      guardValue:
+        'Un dernier job compare le périmètre modifié au résultat de chaque déploiement et échoue si le front a changé sans partir en production.',
+      guardHint:
+        "Il existe parce que le cas s'est produit : des jobs sautés laissaient la chaîne verte alors que la production était à moitié à jour, un job sauté n'étant pas un job en échec.",
+      caches: 'Chaîne mise en cache',
+      cachesValue:
+        "Dépendances NuGet, tâches Turbo, couches Docker et base de vulnérabilités sont conservées d'une exécution à l'autre.",
+      cachesHint:
+        "Chaque job porte aussi un délai maximal, pour qu'une étape bloquée ne retienne pas la chaîne indéfiniment.",
+      otherPipelines: 'Trois autres chaînes, hors du graphe principal',
+      rollback: 'retour arrière',
+      rollbackHint: "Déclenchable à la main pour remettre en ligne l'image précédente.",
+      registry: 'nettoyage du registre',
+      registryHint:
+        'Purge les anciennes images Docker pour que le registre ne gonfle pas indéfiniment.',
+      securityScan: 'analyse de sécurité',
+      securityScanHint:
+        'Planifiée, indépendante des envois de code, pour attraper les failles publiées après coup.',
+    },
+    production: {
+      title: 'Ce qui protège la production',
+      lead: "Chaque garde-fou est rattaché à un mécanisme précis plutôt qu'à une intention.",
+      passwords: 'Mots de passe',
+      passwordsValue:
+        'Jamais stockés, seulement leur empreinte salée issue d’une dérivation à itérations. Un format devenu obsolète est réencodé à la connexion suivante.',
+      passwordsHint:
+        'Le sel rend deux mots de passe identiques indiscernables en base, et les itérations rendent une attaque par force brute coûteuse.',
+      dependencies: 'Dépendances',
+      dependenciesValue:
+        "Audit npm et NuGet à chaque envoi : une faille haute ou critique arrête la chaîne. L'image est scannée avant publication, les mises à jour sont automatisées.",
+      dependenciesHint:
+        "Une CVE est une faille publiée avec un identifiant public ; l'image est scannée avant publication.",
+      browser: 'Navigateur',
+      browserValue: 'Politique de sécurité du contenu, en-têtes de protection, origines déclarées.',
+      browserHint:
+        'La politique de sécurité du contenu liste les origines autorisées et bloque tout le reste.',
+      sessions: 'Sessions',
+      sessionsValue:
+        "Clés de signature persistées en base, pour qu'un déploiement ne déconnecte personne.",
+      sessionsHint:
+        'Sans clés persistées, chaque déploiement changerait la signature des cookies et déconnecterait tout le monde.',
+      abuse: 'Abus',
+      abuseValue:
+        '{{policies}} politiques de limitation de débit, une par famille de routes sensibles.',
+      abuseHint:
+        "La limitation plafonne le nombre d'appels par adresse sur les routes de connexion et d'écriture.",
+      startup: 'Démarrage',
+      startupValue:
+        "Hors développement, le serveur refuse de démarrer sans liste d'origines autorisées ni adresse de base de données.",
+      startupHint:
+        "Mieux vaut une panne visible au démarrage qu'un service qui accepte n'importe quelle origine ou qui tourne sans persistance.",
+      gdpr: 'RGPD',
+      gdprValue:
+        'Export et suppression de compte en autonomie, consentement avant tout script tiers.',
+      gdprHint:
+        'Export et suppression se déclenchent depuis la page de compte, sans passer par une demande écrite.',
+      traces: 'Traces',
+      tracesValue:
+        "Journaux structurés et identifiant de requête, propagé jusqu'aux journaux et renvoyé dans chaque réponse d'erreur.",
+      tracesHint:
+        "L'utilisateur qui signale une erreur porte sans le savoir la clé qui retrouve sa trace exacte côté serveur.",
+    },
+    method: {
+      title: 'Une exécution assistée, des décisions qui ne le sont pas',
+      lead: "Ce projet est développé avec un assistant IA. Le principe tient en une phrase : je délègue l'exécution, jamais la décision, et je rends la vérification automatique plutôt que déclarative.",
+      productCaption:
+        'Le brainstorming alimente le backlog, la roadmap le priorise. Chaque étape se mène en conversation avec un modèle frontière qui a lu la documentation et le code du dépôt avant de répondre.',
+      featureCaption:
+        "Le test est écrit avant le code, et aucune ligne n'est envoyée avant que j'aie testé la fonctionnalité moi-même. Ce que la production révèle repart ensuite vers le backlog produit.",
+      bugCaption:
+        'Le test précède le correctif. Sans lui, rien ne prouve que la cause a été traitée.',
+      toolingCaption:
+        "Les cinq procédures sont rappelées par leur nom : l'assistant recharge la marche à suivre au lieu que je la redécrive.",
+      mcpNoteLead: 'Les outils branchés :',
+      mcpNote:
+        "{{tools}} connecteurs donnent à l'assistant une lecture directe de l'état réel, au lieu de ce que je lui en raconte. Ils servent à constater : aucun ne décide, aucun ne court-circuite les quatre points de validation ni la chaîne de contrôle.",
+      reliabilityKicker: 'Fiabilité',
+      reliabilityTitle: 'Des règles exécutables',
+      reliabilityText:
+        "Une règle qu'aucun script ne vérifie finit par être contournée, quel que soit l'auteur de la ligne.",
+      reliabilityHint: 'Une convention non outillée dépend de la vigilance ; un script, non.',
+      memoryKicker: 'Mémoire',
+      memoryTitle: 'Les pièges sont versionnés',
+      memoryText:
+        'Chaque piège diagnostiqué une fois est consigné et rechargé. Le même problème ne se diagnostique pas deux fois.',
+      memoryHint:
+        "Les pièges sont écrits dans des fichiers versionnés que l'assistant relit à chaque session.",
+      controlKicker: 'Contrôle',
+      controlTitle: 'Quatre points de validation',
+      controlText:
+        'Cadrage, maquette, plan technique, recette locale. Rien ne continue sans mon accord.',
+      controlHint:
+        "Quatre moments où la machine s'arrête et attend une décision humaine avant de continuer.",
+      arbitrationKicker: 'Arbitrage',
+      arbitrationTitle: 'La chaîne, pas la confiance',
+      arbitrationText:
+        '{{jobs}} checks de CI séparent une ligne de la production, quelle que soit son origine.',
+      arbitrationHint:
+        "Le même passage obligé s'applique à une ligne écrite à la main et à une ligne générée.",
+    },
+    choices: {
+      title: 'Chaque brique a été choisie contre une alternative',
+      lead: "Un dossier technique qui liste des technologies ne dit rien. Voici l'arbitrage : ce qui a été retenu, contre quoi, et ce que ça coûte.",
+      runtime: '.NET 10 côté serveur',
+      runtimeValue:
+        "Le serveur était en Node et Express jusqu'en mars 2026, puis réécrit en ASP.NET Core à contrat identique. Typage à la compilation, injection de dépendances native, xUnit.",
+      runtimeHint:
+        "La réécriture était tenable parce que le contrat OpenAPI figeait déjà la frontière : le front n'a pas bougé d'une ligne.",
+      runtimeTrade: 'Une réécriture complète du serveur, deux mois après le MVP.',
+      database: 'MongoDB plutôt que PostgreSQL',
+      databaseValue:
+        "Le document d'une soirée est lu en bloc et sa forme change à chaque palier. Un moteur documentaire évite une migration de schéma par fonctionnalité.",
+      databaseHint:
+        'Les transactions multi-documents restent disponibles : le cluster tourne en replica set, condition nécessaire pour les ouvrir.',
+      databaseTrade:
+        "L'intégrité référentielle est portée par le code et par des index uniques, pas par le moteur.",
+      persistence: "Driver MongoDB plutôt qu'un ORM",
+      persistenceValue:
+        "L'API en Node passait par Mongoose ; la version .NET parle au driver directement, et chaque document est traduit par un mappeur écrit à la main.",
+      persistenceHint:
+        "Un ORM documentaire réintroduit un schéma là où le moteur n'en impose pas, et masque la requête réellement envoyée.",
+      persistenceTrade:
+        'Chaque collection demande son mappeur et ses tests, là où un ORM en aurait généré une partie.',
+      auth: 'Cookie de session plutôt que JWT',
+      authValue:
+        'Le navigateur reçoit un cookie signé, marqué HttpOnly et SameSite, jamais un jeton à ranger quelque part. Les clés de signature vivent en base.',
+      authHint:
+        'Un jeton gardé en mémoire ou en stockage local se lit depuis JavaScript ; un cookie HttpOnly ne se lit pas, ce qui retire une cible au vol de session.',
+      authTrade:
+        'Le serveur doit répondre sous le même domaine parent que le front, et chaque appel emporte le cookie.',
+      front: 'React et Vite plutôt que Next.js',
+      frontValue:
+        'Une application entièrement cliente, livrée en fichiers statiques : aucun serveur de rendu à exploiter, à mettre à échelle ni à payer.',
+      frontHint:
+        "Le rendu serveur aurait ajouté une infrastructure à tenir pour un catalogue de pages publiques restreint : l'accueil, les profils, le dossier technique et les pages légales.",
+      frontTrade:
+        'Ces pages publiques sont référencées par métadonnées et sitemap plutôt que par du HTML pré-rendu, et le pré-rendu reste un chantier ouvert.',
+      styling: 'Modules CSS plutôt que Tailwind',
+      stylingValue:
+        'Des modules CSS et des jetons maison : espacements, tailles, couleurs et profondeurs forment une échelle fermée que le contrôle refuse de voir contournée.',
+      stylingHint:
+        "Le contrôle échoue sur une valeur écrite en dur, un z-index nu ou un point de rupture hors échelle. Il tourne avant chaque envoi et dans l'intégration continue.",
+      stylingTrade:
+        'Il faut écrire le CSS soi-même plutôt que composer des classes utilitaires déjà prêtes.',
+      hosting: 'Cloud Run plutôt que Kubernetes',
+      hostingValue:
+        "Un conteneur, une mise à l'échelle jusqu'à zéro, une facturation à la requête. Aucun système d'exploitation à tenir à jour.",
+      hostingHint:
+        'Kubernetes demandait un outillage disproportionné pour un service ; une machine virtuelle demandait un OS à patcher.',
+      hostingTrade:
+        "Aucun état en mémoire n'est fiable et aucun travail de fond ne peut vivre dans le processus. Les rappels sont déclenchés de l'extérieur.",
+      split: 'Deux fournisseurs de cloud, assumé',
+      splitValue:
+        'Le front est né sur AWS avant que le serveur ne parte sur Google Cloud. Les deux coexistent aujourd’hui, chacun sur ce qu’il fait le mieux.',
+      splitHint:
+        'CloudFront et S3 servent des fichiers statiques ; Cloud Run exécute un conteneur avec mise à l’échelle à zéro.',
+      splitTrade:
+        'Deux consoles, deux modèles de droits, deux factures. La consolidation est un chantier ouvert, pas un oubli.',
+      mono: 'Monorepo pnpm et Turbo',
+      monoValue:
+        "Un dépôt, une chaîne de livraison, un seul tag de version pour les deux applications. Le contrat d'API et le client qui le consomme changent dans le même commit, donc une rupture ne compile pas au lieu de se découvrir en production.",
+      monoHint:
+        'Turbo met en cache les tâches par graphe de dépendances : seul ce qui a changé est reconstruit.',
+      monoTrade:
+        "Front et serveur avancent dans le même cycle de vérification, et une moitié du code ne peut pas être ouverte sans l'autre.",
+      tradeLabel: 'Le prix',
+    },
+    feature: {
+      title: 'Une fonctionnalité de bout en bout',
+      lead: 'La synchronisation Letterboxd traverse toutes les couches : un navigateur, un service tiers sans API publique, un rapprochement de catalogue, une écriture. Et un cas où la machine refuse de décider seule.',
+      caption:
+        "Un seul chemin d'écriture, et un arbitrage renvoyé à l'utilisateur quand la correspondance n'est pas certaine.",
+      trigger: 'Déclenchement',
+      triggerValue:
+        "Automatique à l'ouverture de l'application, avec un plafond serveur d'une fois par 24 heures. Une synchronisation demandée explicitement, à la connexion du compte ou par le bouton, passe outre ce plafond.",
+      triggerHint:
+        "Le plafond régule le déclenchement automatique, pas le geste volontaire de l'utilisateur ; c'est la limitation de débit de la route qui borne les appels répétés.",
+      read: 'Lecture',
+      readValue:
+        'Letterboxd ne publie pas d’API. La watchlist publique est parcourue page par page, et une lecture incomplète annule toute la synchronisation.',
+      readHint:
+        "Si une page manque, appliquer le résultat viderait la liste de l'utilisateur : le code préfère ne rien écrire.",
+      match: 'Rapprochement',
+      matchValue:
+        "Chaque titre est cherché dans TMDB avec une tolérance d'un an sur l'année, puis comparé au titre original comme au titre traduit du candidat, accents et casse retirés.",
+      matchHint:
+        'Jusqu’à cinq candidats sont examinés ; la correspondance n’est retenue que si exactement un titre est identique après normalisation.',
+      align: 'Alignement',
+      alignValue:
+        "La synchronisation aligne les deux listes : elle ajoute les films absents et retire ceux qui ont quitté Letterboxd. La rejouer ne crée aucun doublon, l'index unique et le slug conservé font foi.",
+      alignHint:
+        "Le slug est gardé sur l'élément de watchlist : c'est lui qui permet à la synchronisation suivante de calculer un écart au lieu de tout ré-importer.",
+      human: 'Arbitrage',
+      humanValue:
+        'Un titre ambigu remonte à l’utilisateur avec ses candidats au lieu d’être deviné. Rien n’est écrit tant qu’il n’a pas tranché.',
+      humanHint:
+        'Deux films au même titre, ou un titre traduit différemment : le code sait qu’il ne sait pas, et le dit.',
+      tested: 'Tests',
+      testedValue:
+        'Le client tiers est doublé par un bouchon en test de bout en bout, sinon la suite dépendrait de la disponibilité d’un site externe.',
+      testedHint:
+        'Le bouchon a révélé un vrai défaut : le cache n’était pas invalidé après un arbitrage manuel.',
+    },
+    infra: {
+      title: 'Où ça tourne, et ce qui a le droit de le changer',
+      lead: 'Rien n’est déployé à la main. Une image par commit, des secrets hors du dépôt, un retour arrière en une exécution.',
+      caption:
+        'Le front et le serveur vivent chez deux fournisseurs différents, en eu-west-1 et europe-west1, reliés par une seule origine autorisée.',
+      smoke: 'Déploiement constaté',
+      smokeValue:
+        'Après chaque déploiement, la chaîne interroge les deux sondes de santé du serveur et charge le front derrière le CDN. Un service muet fait échouer le déploiement.',
+      smokeHint:
+        "Se terminer sans erreur ne prouve pas qu'un service répond ; ces appels le prouvent.",
+      image: 'Image',
+      imageValue:
+        'Une image Docker par commit, taguée par son empreinte Git et poussée dans un registre privé.',
+      imageHint:
+        'Le tag est le SHA du commit : une version en production est toujours rattachable à une ligne de code exacte.',
+      secrets: 'Secrets',
+      secretsValue:
+        '{{secrets}} clés et chaînes de connexion vivent dans Secret Manager, injectées au déploiement, jamais dans une image ni dans le dépôt.',
+      secretsHint:
+        'Une origine manquante fait échouer le déploiement ; un secret optionnel absent se signale par un avertissement et désactive la fonctionnalité qui en dépend.',
+      rollback: 'Retour arrière',
+      rollbackValue:
+        'Un déclenchement manuel bascule tout le trafic vers la révision précédente, déjà en ligne. Aucune reconstruction, aucun redéploiement.',
+      rollbackHint:
+        'Les révisions restent disponibles chez l’hébergeur et les anciennes images dans le registre, purgées par une chaîne dédiée pour qu’il ne gonfle pas.',
+      scheduler: 'Travail périodique',
+      schedulerValue:
+        'Aucune tâche de fond ne vit dans le processus. Un planificateur externe appelle le serveur toutes les 30 minutes pour les rappels de soirée, sur une route protégée par jeton.',
+      schedulerHint:
+        'Le job est créé par la chaîne de déploiement, mais seulement si le jeton existe : sans lui, aucun rappel ne part et le déploiement le signale par un avertissement.',
+      origins: 'Origines',
+      originsValue:
+        'Le serveur n’accepte que les origines déclarées. Le déploiement échoue si la liste n’est pas renseignée.',
+      originsHint:
+        'La liste est une variable de dépôt, contrôlée avant l’appel de déploiement, pas une valeur par défaut permissive.',
+    },
+    quality: {
+      title: 'Ce qui est mesuré, et le seuil qui fait échouer',
+      lead: 'Une métrique sans seuil est une décoration. Les quatre premières arrêtent une livraison ; les deux dernières racontent ce qui se passe une fois en ligne.',
+      blockingHeading: 'Seuils bloquants',
+      informativeHeading: 'Ce qui est observé en production',
+      coverage: 'Couverture de tests',
+      coverageValue:
+        '{{lines}} % de lignes, {{functions}} % de fonctions, {{branches}} % de branches côté front. En dessous, la suite échoue ; côté serveur, la couverture est mesurée sans seuil.',
+      coverageHint:
+        'Les seuils sont montés au fil des paliers ; ils ne descendent jamais, c’est ce qui les rend utiles.',
+      lighthouse: 'Lighthouse',
+      lighthouseValue:
+        '{{pages}} pages auditées à chaque envoi, avec des minimums de {{perf}} en performance, {{a11y}} en accessibilité, {{bp}} en bonnes pratiques et {{seo}} en référencement.',
+      lighthouseHint:
+        'Chaque page est mesurée trois fois et c’est la médiane qui est retenue. Une seule page déroge, la plus lourde, dont le minimum de performance descend à {{watchlist}} : le runner y perd quatre points sans qu’il y ait de régression réelle.',
+      axe: 'Accessibilité automatisée',
+      axeValue:
+        '{{views}} vues passées à axe-core pendant la suite de tests. Une violation fait échouer le test, pas un rapport.',
+      axeHint:
+        'axe rejoue les règles WCAG sur le rendu réel de chaque vue, y compris l’écran d’erreur.',
+
+      sonar: 'SonarCloud',
+      sonarValue:
+        'Analyse à chaque envoi, couverture ingérée depuis la CI. La chaîne attend le verdict du portail qualité et échoue s’il est rouge.',
+      sonarHint:
+        'Les deux déploiements dépendent de ce job : un portail rouge arrête la livraison, il ne se contente pas de l’annoter.',
+      sentry: 'Sentry',
+      sentryValue:
+        'Erreurs du navigateur et du serveur, rattachées à la version déployée par le SHA du commit.',
+      sentryHint:
+        'Actif en permanence en production, sans donnée personnelle : c’est de la surveillance de service, pas de la mesure d’audience.',
+      posthog: 'PostHog',
+      posthogValue:
+        'Événements produit et Web Vitals mesurés chez de vrais visiteurs, uniquement après consentement explicite.',
+      posthogHint:
+        'Les événements émis avant le choix de consentement sont perdus, et c’est le comportement voulu.',
       noteLead: "Le contrôle d'architecture",
-      note: "est un script maison d'environ {{lines}} lignes, joué avant chaque envoi de code et en CI. Il fait échouer la construction sur cinq familles de fautes qu'aucun linter du marché ne sait interdire :",
+      note: "est un script maison d'environ {{lines}} lignes, joué avant chaque push et en CI. Il fait échouer la construction sur cinq familles de fautes qu'aucun linter du marché ne sait interdire :",
       ruleComment: 'un commentaire hors directive fonctionnelle',
       ruleCommentHint:
         'Rejette // et /* */, sauf les directives comme @ts-expect-error, eslint-disable ou un shebang.',
@@ -2069,110 +2605,9 @@
       ruleCycleHint:
         "Rejette deux modules qui finissent par s'importer l'un l'autre, directement ou par un détour.",
     },
-    ci: {
-      title: '{{jobs}} contrôles avant la production',
-      lead: "Un seul graphe, des dépendances explicites, un déploiement qui n'a lieu que si tout ce qui le précède est vert.",
-      caption:
-        "Le dernier maillon vérifie que les déploiements ont eu lieu, pas seulement qu'ils n'ont pas échoué.",
-      otherPipelines: 'Trois autres chaînes, hors du graphe principal',
-      rollback: 'retour arrière',
-      rollbackHint: "Déclenchable à la main pour remettre en ligne l'image précédente.",
-      registry: 'nettoyage du registre',
-      registryHint:
-        'Purge les anciennes images Docker pour que le registre ne gonfle pas indéfiniment.',
-      securityScan: 'analyse de sécurité',
-      securityScanHint:
-        'Planifiée, indépendante des envois de code, pour attraper les failles publiées après coup.',
-    },
-    production: {
-      title: 'Sécurité et observabilité',
-      securityHeading: 'Ce qui protège',
-      observabilityHeading: 'Ce qui se mesure',
-      secrets: 'Secrets',
-      secretsValue:
-        'Détection à chaque envoi, protection au push, secrets de prod dans un gestionnaire dédié.',
-      secretsHint:
-        'Chaque diff est relu à la recherche de clés, et la plateforme bloque le push si elle en repère une.',
-      dependencies: 'Dépendances',
-      dependenciesValue:
-        "Audit npm et NuGet, scan CVE de l'image avant publication, mises à jour automatisées.",
-      dependenciesHint:
-        "Une CVE est une faille publiée avec un identifiant public ; l'image est scannée avant publication.",
-      browser: 'Navigateur',
-      browserValue: 'Politique de sécurité du contenu, en-têtes de protection, origines déclarées.',
-      browserHint:
-        'La politique de sécurité du contenu liste les origines autorisées et bloque tout le reste.',
-      sessions: 'Sessions',
-      sessionsValue:
-        "Clés de signature persistées en base, pour qu'un déploiement ne déconnecte personne.",
-      sessionsHint:
-        'Sans clés persistées, chaque déploiement changerait la signature des cookies et déconnecterait tout le monde.',
-      abuse: 'Abus',
-      abuseValue: 'Limitation de débit sur chaque route sensible.',
-      abuseHint:
-        "La limitation plafonne le nombre d'appels par adresse sur les routes de connexion et d'écriture.",
-      startup: 'Démarrage',
-      startupValue:
-        "En production, l'app refuse de démarrer s'il manque un secret plutôt que de tourner dégradée.",
-      startupHint:
-        "Mieux vaut une panne visible au démarrage qu'un service qui tourne sans notification ni chiffrement.",
-      gdpr: 'RGPD',
-      gdprValue:
-        'Export et suppression de compte en autonomie, consentement avant tout script tiers.',
-      gdprHint:
-        'Export et suppression se déclenchent depuis la page de compte, sans passer par une demande écrite.',
-      errors: 'Erreurs',
-      errorsValue:
-        'Capture front et serveur vers des projets hébergés en UE, sans donnée personnelle.',
-      errorsHint:
-        'Les traces sont nettoyées avant envoi : ni adresse e-mail, ni identifiant de session.',
-      usage: 'Usage',
-      usageValue:
-        "Chargée seulement après acceptation, donc aveugle avant le choix de l'utilisateur.",
-      usageHint:
-        "Le script de mesure ne se charge qu'après un consentement explicite : rien n'est mesuré avant.",
-      traces: 'Traces',
-      tracesValue:
-        'Logs structurés, identifiant de corrélation de bout en bout, sonde de disponibilité.',
-      tracesHint:
-        "Un identifiant unique suit une requête du navigateur jusqu'aux journaux du serveur.",
-    },
-    method: {
-      title: 'Une exécution assistée, des décisions qui ne le sont pas',
-      lead: "Ce projet est développé avec un assistant IA. Le principe tient en une phrase : je délègue l'exécution, jamais la décision, et je rends la vérification automatique plutôt que déclarative.",
-      featureCaption: "Aucun code n'est envoyé avant que j'aie testé la fonctionnalité moi-même.",
-      bugCaption:
-        'Le test précède le correctif. Sans lui, rien ne prouve que la cause a été traitée.',
-      mcpNoteLead: 'Les outils branchés :',
-      mcpNote:
-        "huit connecteurs donnent à l'assistant une lecture directe de l'état réel, au lieu de ce que je lui en raconte. Ils servent à constater : aucun ne décide, aucun ne court-circuite les trois arrêts ni la chaîne de contrôle.",
-      reliabilityKicker: 'Fiabilité',
-      reliabilityTitle: 'Des règles exécutables',
-      reliabilityText:
-        "Une règle qu'aucun script ne vérifie finit par être contournée, quel que soit l'auteur de la ligne.",
-      reliabilityHint: 'Une convention non outillée dépend de la vigilance ; un script, non.',
-      memoryKicker: 'Mémoire',
-      memoryTitle: 'Les pièges sont versionnés',
-      memoryText:
-        'Chaque piège diagnostiqué une fois est consigné et rechargé. Le même problème ne se diagnostique pas deux fois.',
-      memoryHint:
-        "Les pièges sont écrits dans des fichiers versionnés que l'assistant relit à chaque session.",
-      controlKicker: 'Contrôle',
-      controlTitle: 'Trois arrêts obligatoires',
-      controlText:
-        "Cadrage, maquette, test manuel. C'est là que les décisions produit se prennent.",
-      controlHint:
-        "Trois moments où la machine s'arrête et attend une décision humaine avant de continuer.",
-      arbitrationKicker: 'Arbitrage',
-      arbitrationTitle: 'La chaîne, pas la confiance',
-      arbitrationText:
-        '{{jobs}} contrôles séparent une ligne de la production, quelle que soit son origine.',
-      arbitrationHint:
-        "Le même passage obligé s'applique à une ligne écrite à la main et à une ligne générée.",
-    },
     diagram: {
       architectureTitle:
-        'Navigateur, CDN, API sur Cloud Run, MongoDB Atlas, services externes et observabilité',
+        "Navigateur, CDN, API sur Cloud Run, MongoDB Atlas, services appelés par le serveur et services qui l'appellent",
       browser: 'Navigateur',
       browserPwa: 'PWA installable',
       browserWorker: 'Service Worker',
@@ -2186,11 +2621,9 @@
       database: 'MongoDB Atlas',
       databaseReplica: 'replica set',
       databaseTransactions: 'transactions',
-      externalServices: 'SERVICES EXTERNES',
-      observability: 'Observabilité',
-      observabilityErrors: 'Sentry front et API',
-      observabilityUsage: 'PostHog sous consentement',
-      observabilityLogs: 'logs Cloud Run',
+      externalServices: "APPELÉS PAR L'API",
+      outboundCalls: 'appels sortants',
+      inboundCalls: "APPELLENT L'API",
       layersTitle: "Les quatre couches de l'API et le sens des dépendances",
       controllers: 'CONTROLLERS',
       controllersSub: '{{controllers}} contrôleurs, validation, codes HTTP',
@@ -2211,19 +2644,19 @@
       contractApiSub: 'contrôleurs et DTO',
       contractFile: 'openapi-v1.json',
       contractFileSub: 'export automatique',
-      contractTypes: 'Types TypeScript',
-      contractTypesSub: 'générés, jamais écrits',
+      contractTypes: 'Schéma généré',
+      contractTypesSub: 'openapiSchema.ts',
       contractTest: 'Test de contrat',
-      contractTestSub1: 'le front lit-il des',
-      contractTestSub2: 'champs qui existent ?',
+      contractTestSub1: 'un type du front lit-il',
+      contractTestSub2: 'un champ inexistant ?',
       contractFail: 'Sinon la CI échoue',
       contractDrift: "Une vérification régénère les types et échoue s'ils ont dérivé.",
-      testsPyramidTitle: 'Pyramide de tests : unitaire, intégration, bout en bout',
-      testsE2e: '{{count}} scénarios Playwright',
-      testsE2eLabel: 'BOUT EN BOUT',
-      testsIntegration: 'vraie MongoDB en replica set',
+      testsPyramidTitle: 'Pyramide de tests : unitaires, intégration, end to end',
+      testsE2e: '{{count}} tests, {{files}} fichiers',
+      testsE2eLabel: 'END TO END',
+      testsIntegration: '{{count}} tests, vraie MongoDB en replica set',
       testsIntegrationLabel: 'INTÉGRATION',
-      testsUnit: '{{total}} fichiers : {{web}} interface, {{api}} serveur',
+      testsUnit: '{{total}} tests : {{web}} interface, {{api}} serveur',
       testsUnitLabel: 'UNITAIRE',
       ciTitle: "Graphe des jobs d'intégration continue, du déclenchement au déploiement",
       ciChanges: 'changes',
@@ -2234,27 +2667,56 @@
       ciTestMongo: 'test api mongo',
       ciLighthouse: 'lighthouse',
       ciE2e: 'e2e',
+      ciDocker: 'image API',
       ciSonar: 'sonar',
       ciDeployApi: 'deploy api',
       ciDeployFront: 'deploy front',
       ciGuard1: 'deploy',
       ciGuard2: 'guard',
-      featureFlowTitle:
-        "Cycle de développement d'une fonctionnalité, ses trois arrêts humains et les outils branchés sur l'assistant",
-      featureFlowLabel: "FLOT D'UNE FONCTIONNALITÉ",
+      featureFlowTitle: 'Flot de développement en quatre phases, du besoin au déploiement',
+      featureFlowLabel: 'FLOT DE DÉVELOPPEMENT',
+      frontierModel: 'conversation avec un modèle frontière',
+      frontierModelSub: 'il lit la doc et le code avant de répondre',
+      phaseSpec: 'spécification',
+      phaseBuild: 'implémentation',
+      phaseReview: 'revue',
+      phaseShip: 'livraison',
+      skillStrategyWhen: 'avant d’écrire les tests',
+      devNeed: 'besoin, issue ou bug',
+      devScoping: 'cadrage fonctionnel',
+      devMockup: 'maquette si besoin UI',
+      devPlan: 'plan technique',
+      devTdd: 'développement en TDD',
+      devVerify: '/verify',
+      devLocalCheck: 'recette locale',
+      devReview: 'code review',
+      devFixes: 'corrections',
+      devPrePush: 'checks pre-push',
+      devPush: 'push',
+      devCi: 'CI, {{jobs}} checks',
+      devMerge: 'merge sur master',
+      devDeploy: 'déploiement en prod',
+      devSignals: 'monitoring',
+      devSignalsSub: 'Sentry, PostHog',
+      flowBrainstorm: 'brainstorming',
+      flowBrainstormSub: 'alimente le backlog',
       flowRoadmap: 'roadmap',
-      flowScoping: 'cadrage',
-      flowMockup: 'maquette',
-      flowImplementation: 'implémentation',
-      flowManualTest: 'test manuel',
-      flowReview: 'relecture',
-      flowStop: 'arrêt',
-      flowLocalSuites: 'suites locales',
-      flowPush: 'envoi',
-      flowChecks: '{{jobs}} contrôles',
-      flowProduction: 'production',
-      flowNote1: 'Les trois blocs ambrés sont des arrêts.',
-      flowNote2: 'Rien ne continue sans validation humaine.',
+      flowRoadmapSub: 'priorisation',
+      flowSignals: 'monitoring et retours terrain',
+      flowSignalsSub: 'Sentry, PostHog, GitHub Issues',
+      flowLoopProduct: 'les signaux réels réalimentent le backlog produit',
+      flowHandoff: 'un besoin priorisé part ensuite dans le flot de développement',
+      productFlowTitle:
+        'Flot produit : les signaux de production alimentent le brainstorming, qui alimente la roadmap',
+      productFlowLabel: 'FLOT PRODUIT',
+      flowNoteDev:
+        'Les quatre étapes encadrées attendent ma relecture et mon accord avant de continuer.',
+      toolingTitle: "Procédures nommées et connecteurs de lecture branchés sur l'assistant.",
+      skillsLabel: 'PROCÉDURES OUTILLÉES, RAPPELÉES PAR LEUR NOM',
+      skillCritiqueWhen: 'sur la maquette',
+      skillVerifyWhen: 'avant chaque envoi',
+      skillReviewWhen: 'avant la fusion',
+      skillDebtWhen: 'passe périodique',
       mcpLabel: "OUTILS BRANCHÉS SUR L'ASSISTANT (MCP ET LIGNE DE COMMANDE)",
       mcpAssistant: 'assistant',
       mcpGithub: 'PR et CI',
@@ -2300,17 +2762,126 @@
       bugGreen: 'test au vert',
       bugNote: 'note',
       bugNoteSub: 'au dépôt',
-      controlPyramidTitle: 'Les quatre niveaux de contrôle, du plus large au plus décisif',
-      controlPyramidLabel: 'PYRAMIDE DE CONTRÔLE',
-      controlRules: 'Règles écrites',
-      controlRulesDetail: 'conventions du dépôt, mémoire des pièges rencontrés',
-      controlAssisted: 'Exécution assistée',
-      controlAssistedDetail: 'procédure de développement en sept étapes',
-      controlGuards: 'Garde-fous automatiques',
-      controlGuardsDetail:
-        "contrôle d'architecture, {{tests}} fichiers de test, {{jobs}} contrôles",
-      controlHuman: 'Arbitrage humain',
-      controlHumanDetail: 'cadrage, maquette, test manuel, mise en production',
+      dataModelTitle:
+        'Modèle de données : les collections du cœur métier et les index uniques qui les tiennent',
+      collectionUsers: 'users',
+      collectionUsersField1: 'email unique',
+      collectionUsersField2: 'handle unique',
+      collectionUsersField3: 'identités OAuth',
+      collectionWatchlist: 'watchlist',
+      collectionWatchlistField1: 'user + film + type',
+      collectionWatchlistField2: 'unique',
+      collectionFollows: 'follows',
+      collectionFollowsField1: 'suiveur + suivi',
+      collectionFollowsField2: 'unique',
+      collectionNotifications: 'user_notifications',
+      collectionNotificationsField1: 'user + date',
+      collectionNotificationsField2: 'expire à 90 jours',
+      collectionParticipants: 'participants',
+      collectionParticipantsField1: 'soirée + user',
+      collectionParticipantsField2: 'pseudo unique',
+      collectionEvents: 'events',
+      collectionEventsField1: 'slug unique',
+      collectionEventsField2: 'réglages de soirée',
+      collectionMovies: 'movies',
+      collectionMoviesField1: 'soirée + film TMDB',
+      collectionMoviesField2: 'unique',
+      collectionVotes: 'votes',
+      collectionVotesField1: 'soirée + film + votant',
+      collectionVotesField2: 'un vote chacun',
+      collectionSeenMarks: 'seen_marks',
+      collectionSeenMarksField1: 'soirée + film + votant',
+      collectionSeenMarksField2: 'une marque chacun',
+      dataModelNote:
+        '{{collections}} collections au total, {{indexes}} index déclarés au démarrage, dont {{ttl}} à expiration automatique.',
+      letterboxdTitle:
+        'Synchronisation Letterboxd : du clic à l’écriture, avec le retour vers l’utilisateur quand le titre est ambigu',
+      lbxLanebrowser: 'navigateur',
+      lbxLaneapi: 'serveur',
+      lbxLaneoutside: 'extérieur',
+      lbxLanestore: 'base',
+      lbxOpen: 'ouverture',
+      lbxOpenSub: 'une fois par session',
+      lbxGuard: 'plafond',
+      lbxGuardSub: '1 par 24 h, auto',
+      lbxScrape: 'lecture publique',
+      lbxScrapeSub: 'pas d’API, {{rows}} max',
+      lbxMatch: 'rapprochement',
+      lbxMatchSub: 'TMDB, année ± 1 an',
+      lbxDiff: 'écarts',
+      lbxDiffSub: 'ajouts et retraits',
+      lbxWrite: 'écriture',
+      lbxWriteSub: 'jamais de doublon',
+      lbxAmbiguous: 'arbitrage',
+      lbxAmbiguousSub: 'l’utilisateur tranche',
+      lbxNote:
+        'Une lecture incomplète annule toute la synchronisation : mieux vaut ne rien écrire que vider une liste.',
+      infraTitle:
+        'Infrastructure : le front sur AWS, le serveur sur Google Cloud, la base managée à part',
+      infraZoneAws: 'AWS, eu-west-1',
+      infraZoneGcp: 'Google Cloud, europe-west1',
+      infraDns: 'Domaine',
+      infraDnsSub: 'movie-picker.fr',
+      infraDnsDetail: 'certificat TLS géré',
+      infraCdn: 'CloudFront',
+      infraCdnSub: 'cache et en-têtes',
+      infraCdnDetail: 'purge au déploiement',
+      infraBucket: 'S3',
+      infraBucketSub: 'fichiers du front',
+      infraBucketDetail: 'cache immuable',
+      infraSecrets: 'Secret Manager',
+      infraSecretsSub: 'clés et connexions',
+      infraSecretsDetail: 'injectés au déploiement',
+      infraRun: 'Cloud Run',
+      infraRunSub: 'conteneur, échelle à zéro',
+      infraRunDetail: 'origines autorisées vérifiées',
+      infraRegistry: 'Artifact Registry',
+      infraRegistrySub: 'une image par commit',
+      infraRegistryDetail: 'taguée par SHA, purgée',
+      infraScheduler: 'Cloud Scheduler',
+      infraSchedulerSub: 'toutes les 30 minutes',
+      infraSchedulerDetail: 'rappels de soirée',
+      infraAtlas: 'MongoDB Atlas',
+      infraAtlasSub: 'replica set managé',
+      infraAtlasDetail: 'transactions disponibles',
+      infraSentry: 'Sentry',
+      infraSentrySub: 'erreurs front et serveur',
+      infraSentryDetail: 'région européenne',
+      infraGap: 'Ressources créées à la main : les décrire en Terraform est le chantier suivant.',
+      infraNote:
+        'Le trait entre CloudFront et Cloud Run est la seule origine que le serveur accepte.',
+      requestPathTitle:
+        'Le trajet d’une requête à travers les quatre couches, et le sens des dépendances',
+      requestPathLabel: 'POST /api/v1/events/{slug}/movies',
+      requestLayerEdge: 'entrée',
+      requestLayerControllers: 'Controllers',
+      requestLayerApplication: 'Application',
+      requestLayerDomain: 'Domain',
+      requestLayerInfrastructure: 'Infrastructure',
+      requestMiddleware: 'pipeline HTTP',
+      requestMiddleware1: 'origine autorisée',
+      requestMiddleware2: 'session et identité',
+      requestMiddleware3: 'limitation de débit',
+      requestController: 'contrôleur',
+      requestController1: 'route et cas d’usage',
+      requestController2: 'valide la forme',
+      requestController3: 'aucune règle métier',
+      requestHandler: 'cas d’usage',
+      requestHandler1: 'orchestre le cas',
+      requestHandler2: 'ouvre la transaction',
+      requestHandler3: 'ports uniquement',
+      requestDomain: 'règles métier',
+      requestDomain1: 'entités et règles',
+      requestDomain2: 'zéro dépendance',
+      requestDomain3: 'testable sans rien',
+      requestRepository: 'adaptateur',
+      requestRepository1: 'implémente un port',
+      requestRepository2: 'parle à MongoDB',
+      requestRepository3: 'doublé en mémoire',
+      requestPorts: 'les ports',
+      requestPortsSub: '{{ports}} interfaces dans Application, {{useCases}} cas d’usage derrière.',
+      requestPathNote:
+        'Une flèche ne pointe jamais vers l’extérieur : le contrôle d’architecture fait échouer la construction si elle le fait.',
     },
   },
   inAppBrowser: {
