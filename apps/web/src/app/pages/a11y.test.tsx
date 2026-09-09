@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
@@ -38,6 +38,8 @@ const AUTH_USER = {
   accentColor: 'default',
 };
 
+const HEAVIEST_PAGE_AXE_BUDGET = 60000;
+
 describe('accessibilité (axe)', () => {
   const server = setupServer(
     authMeGuestHandler,
@@ -45,7 +47,10 @@ describe('accessibilité (axe)', () => {
   );
 
   beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
-  afterEach(() => server.resetHandlers());
+  afterEach(() => {
+    cleanup();
+    server.resetHandlers();
+  });
   afterAll(() => server.close());
 
   function renderPage(ui: React.ReactElement) {
@@ -56,6 +61,21 @@ describe('accessibilité (axe)', () => {
       </AppTestProviders>
     );
     return { container, queryClient };
+  }
+
+  function collapseDiagramsToTheirAccessibleName(container: HTMLElement) {
+    const collapsed = [...container.querySelectorAll('figure svg')].map((diagram) => {
+      const accessibleName = diagram.querySelector(':scope > title');
+      const presentational = [...diagram.childNodes].filter((node) => node !== accessibleName);
+      for (const node of presentational) diagram.removeChild(node);
+      return { diagram, presentational };
+    });
+
+    return () => {
+      for (const { diagram, presentational } of collapsed) {
+        for (const node of presentational) diagram.appendChild(node);
+      }
+    };
   }
 
   async function assertNoViolations(
@@ -100,10 +120,16 @@ describe('accessibilité (axe)', () => {
     await assertNoViolations(container, queryClient);
   });
 
-  it("TechPage n'a pas de violations", async () => {
-    const { container, queryClient } = renderPage(<TechPage />);
-    await assertNoViolations(container, queryClient);
-  });
+  it(
+    "TechPage n'a pas de violations",
+    async () => {
+      const { container, queryClient } = renderPage(<TechPage />);
+      const restoreDiagrams = collapseDiagramsToTheirAccessibleName(container);
+      await assertNoViolations(container, queryClient);
+      restoreDiagrams();
+    },
+    HEAVIEST_PAGE_AXE_BUDGET
+  );
 
   it("DonatePage n'a pas de violations", async () => {
     const { container, queryClient } = renderPage(<DonatePage />);

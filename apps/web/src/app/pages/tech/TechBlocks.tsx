@@ -53,6 +53,7 @@ export type FactItem = {
   detail: string;
   hint: string;
   emphasis?: boolean;
+  trade?: { label: string; text: string };
 };
 
 export function FactGrid({
@@ -77,6 +78,12 @@ export function FactGrid({
                 <TechHint label={item.hint}>{item.term}</TechHint>
               </h3>
               <p className={styles.factDetail}>{item.detail}</p>
+              {item.trade ? (
+                <p className={styles.factTrade}>
+                  <span className={styles.factTradeLabel}>{item.trade.label}</span>{' '}
+                  {item.trade.text}
+                </p>
+              ) : null}
             </Card>
           </li>
         ))}

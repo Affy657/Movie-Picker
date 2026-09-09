@@ -37,6 +37,10 @@ function countMatches(file, pattern) {
   return (readText(file).match(pattern) ?? []).length;
 }
 
+function countIn(files, pattern) {
+  return files.reduce((total, file) => total + countMatches(file, pattern), 0);
+}
+
 function readPreviousMetrics() {
   if (!existsSync(outputFile)) return {};
   const raw = readFileSync(outputFile, 'utf8');
@@ -61,6 +65,31 @@ function countCommits(previous) {
   }
 }
 
+function countMonthsSinceFirstCommit(previous) {
+  try {
+    const shallow = execFileSync('git', ['rev-parse', '--is-shallow-repository'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    }).trim();
+    if (shallow === 'true') return previous.monthsActive ?? 0;
+    const rootCommitDates = execFileSync(
+      'git',
+      ['log', '--max-parents=0', '--reverse', '--format=%ad', '--date=short'],
+      { cwd: repoRoot, encoding: 'utf8' }
+    )
+      .trim()
+      .split('\n');
+    const [firstDate] = rootCommitDates;
+    if (!firstDate) return previous.monthsActive ?? 0;
+    const [year, month, day] = firstDate.split('-').map(Number);
+    const today = new Date();
+    const elapsed = (today.getFullYear() - year) * 12 + (today.getMonth() + 1 - month);
+    return today.getDate() < day ? elapsed - 1 : elapsed;
+  } catch {
+    return previous.monthsActive ?? 0;
+  }
+}
+
 function roundToThousand(value) {
   return Math.round(value / 1000) * 1000;
 }
@@ -71,6 +100,24 @@ function computeMetrics(previous) {
 
   const webTests = webSources.filter((file) => /\.test\.tsx?$/.test(file));
   const apiTests = apiSources.filter((file) => file.endsWith('Tests.cs'));
+
+  const xunitCases = (files) =>
+    countIn(files, /^\s*\[Fact[\]( ]/gm) + countIn(files, /^\s*\[InlineData/gm);
+  const apiUnitTests = apiTests.filter((file) => file.includes('MoviePicker.Api.Tests'));
+  const apiIntegrationTests = apiTests.filter((file) =>
+    file.includes('MoviePicker.Api.IntegrationTests')
+  );
+
+  const webTestCases = countIn(webTests, /^\s*(?:it|test)(?:\.\w+)?\(/gm);
+  const mswTestFiles = webTests.filter((file) => readText(file).includes('msw')).length;
+  const apiUnitTestCases = xunitCases(apiUnitTests);
+  const integrationTestCases = xunitCases(apiIntegrationTests);
+  const apiTestCases = apiUnitTestCases + integrationTestCases;
+  const unitTestCases = webTestCases + apiUnitTestCases;
+  const e2eTestCases = countIn(
+    walk(join(repoRoot, 'e2e'), (name) => name.endsWith('.spec.ts')),
+    /^\s*test(?:\.\w+)?\(/gm
+  );
 
   const controllersDir = join(repoRoot, 'apps/api-dotnet/MoviePicker.Api/Controllers');
   const controllers = walk(controllersDir, (name) => name.endsWith('Controller.cs'));
@@ -109,6 +156,8 @@ function computeMetrics(previous) {
 
   const workflow = readText(join(repoRoot, '.github/workflows/ci-cd.yml'));
   const jobsSection = workflow.slice(workflow.search(/^jobs:$/m));
+  const secretsLine = workflow.match(/SECRETS="[^"]+"/)?.[0] ?? '';
+  const deploySecrets = (secretsLine.match(/:latest/g) ?? []).length;
   const ciJobs = (jobsSection.match(/^ {2}[a-z][a-z0-9-]*:$/gm) ?? []).length;
 
   const architectureScriptLines = countLines(
@@ -118,8 +167,98 @@ function computeMetrics(previous) {
   const vitestConfig = readText(join(repoRoot, 'apps/web/vitest.config.ts'));
   const threshold = (key) => Number(vitestConfig.match(new RegExp(`${key}:\\s*(\\d+)`))?.[1] ?? 0);
 
+  const agentsDoc = readText(join(repoRoot, 'AGENTS.md'));
+  const toolsTable = agentsDoc.slice(agentsDoc.indexOf('| Outil | Accès | Usage |'));
+  const assistantTools = toolsTable
+    .split('\n')
+    .slice(2)
+    .findIndex((line) => !line.startsWith('|'));
+
+  const rateLimitPolicies = countMatches(
+    join(repoRoot, 'apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/RateLimitingExtensions.cs'),
+    /^\s+new\([A-Za-z]+Policy,/gm
+  );
+
   const migrationsDir = join(repoRoot, 'apps/api-dotnet/MoviePicker.Api/Infrastructure/Migrations');
   const migrations = walk(migrationsDir, (name) => name.endsWith('Migration.cs'));
+
+  const infrastructureDir = join(repoRoot, 'apps/api-dotnet/MoviePicker.Api/Infrastructure');
+  const collections = new Set();
+  for (const file of walk(infrastructureDir, (name) => name.endsWith('.cs'))) {
+    const source = readText(file);
+    for (const match of source.matchAll(/GetCollection<\w+>\("([a-z_]+)"\)/g)) {
+      collections.add(match[1]);
+    }
+    for (const match of source.matchAll(/const string CollectionName = "([a-z_]+)"/g)) {
+      collections.add(match[1]);
+    }
+  }
+
+  const indexInitializer = readText(
+    join(infrastructureDir, 'Persistence/Mongo/MongoIndexInitializer.cs')
+  );
+  const mongoIndexes = (indexInitializer.match(/new CreateIndexModel</g) ?? []).length;
+  const ttlIndexes = (indexInitializer.match(/ExpireAfter =/g) ?? []).length;
+  const uniqueIndexes = (indexInitializer.match(/Unique = true/g) ?? []).length;
+
+  const posterCacheTtlDays = Number(
+    readText(
+      join(repoRoot, 'apps/api-dotnet/MoviePicker.Api/Configuration/MoviePickerOptions.cs')
+    ).match(/PosterCacheTtlDays \{ get; set; \} = (\d+)/)?.[1] ?? 0
+  );
+
+  const budgets = JSON.parse(readText(join(repoRoot, 'configs/lighthouse-budgets.json')));
+  const lighthousePages = (
+    readText(join(repoRoot, 'scripts/lighthouse-run.mjs')).match(/^\s*\{ path: '/gm) ?? []
+  ).length;
+  const lighthouseWatchlistPerformance = budgets.perPageMinimumScores.watchlist.performance;
+
+  const webPackage = JSON.parse(readText(join(repoRoot, 'apps/web/package.json')));
+  const dependencyMajor = (name) => {
+    const range = webPackage.dependencies?.[name] ?? webPackage.devDependencies?.[name] ?? '';
+    return Number(range.replace(/^[^\d]*/, '').split('.')[0]);
+  };
+  const reactMajor = dependencyMajor('react');
+  const typescriptMajor = dependencyMajor('typescript');
+  const viteMajor = dependencyMajor('vite');
+  const routerMajor = dependencyMajor('react-router');
+  const queryMajor = dependencyMajor('@tanstack/react-query');
+
+  const lazyRoutes = countMatches(join(repoRoot, 'apps/web/src/app/App.tsx'), /lazy\(/g);
+
+  const contractResponses = countMatches(
+    join(repoRoot, 'apps/web/src/shared/api/generated/openapiSchema.ts'),
+    /^ {8}[A-Za-z0-9]+Response\??: /gm
+  );
+  const contractCheckedTypes = countMatches(
+    join(repoRoot, 'apps/web/src/shared/api/apiContract.test.ts'),
+    /^\s+ServedBy</gm
+  );
+
+  const measured = {
+    collections: collections.size,
+    mongoIndexes,
+    ttlIndexes,
+    lighthousePages,
+    uniqueIndexes,
+    posterCacheTtlDays,
+    reactMajor,
+    typescriptMajor,
+    viteMajor,
+    routerMajor,
+    queryMajor,
+    lazyRoutes,
+    contractResponses,
+    contractCheckedTypes,
+    mswTestFiles,
+    deploySecrets,
+    lighthouseWatchlistPerformance,
+    rateLimitPolicies,
+    assistantTools,
+  };
+  for (const [name, value] of Object.entries(measured)) {
+    if (value === 0) throw new Error(`mesure vide : ${name}`);
+  }
 
   return {
     linesOfCode: roundToThousand(countLines(webSources) + countLines(apiSources)),
@@ -127,9 +266,17 @@ function computeMetrics(previous) {
     testFiles: webTests.length + apiTests.length,
     webTestFiles: webTests.length,
     apiTestFiles: apiTests.length,
+    testCases: webTestCases + apiTestCases,
+    webTestCases,
+    apiTestCases,
+    unitTestCases,
+    apiUnitTestCases,
+    integrationTestCases,
+    e2eTestCases,
     e2eScenarios: e2eScenarios.length,
     ciJobs,
     commits: countCommits(previous),
+    monthsActive: countMonthsSinceFirstCommit(previous),
     controllers: controllers.length,
     ports: ports.length,
     useCases: useCases.length,
@@ -142,6 +289,29 @@ function computeMetrics(previous) {
     coverageLines: threshold('lines'),
     coverageFunctions: threshold('functions'),
     coverageBranches: threshold('branches'),
+    mongoCollections: collections.size,
+    mongoIndexes,
+    ttlIndexes,
+    uniqueIndexes,
+    posterCacheTtlDays,
+    lighthousePages,
+    lighthousePerformance: budgets.minimumScores.performance,
+    lighthouseAccessibility: budgets.minimumScores.accessibility,
+    lighthouseBestPractices: budgets.minimumScores['best-practices'],
+    lighthouseSeo: budgets.minimumScores.seo,
+    reactMajor,
+    typescriptMajor,
+    viteMajor,
+    routerMajor,
+    queryMajor,
+    lazyRoutes,
+    contractResponses,
+    contractCheckedTypes,
+    mswTestFiles,
+    deploySecrets,
+    lighthouseWatchlistPerformance,
+    rateLimitPolicies,
+    assistantTools,
   };
 }
 
