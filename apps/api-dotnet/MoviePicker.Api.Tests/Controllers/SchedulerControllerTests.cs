@@ -21,14 +21,16 @@ public sealed class SchedulerControllerTests
             .ReturnsAsync(new EventReminderPassResult(4, 1, 2, 0));
     }
 
-    private void PresentToken(string? token)
-    {
-        if (token is not null)
-            _sut.ControllerContext.HttpContext.Request.Headers["X-Scheduler-Token"] = token;
-    }
+    private string? _presentedToken;
+
+    private void PresentToken(string? token) => _presentedToken = token;
 
     private Task<IActionResult> Run() =>
-        _sut.RunEventReminders(_tokenValidator.Object, _pass.Object, CancellationToken.None);
+        _sut.RunEventReminders(
+            _tokenValidator.Object,
+            _pass.Object,
+            _presentedToken,
+            CancellationToken.None);
 
     [Fact]
     public async Task RunEventReminders_TokenNotConfigured_Returns503AndDoesNotRunThePass()
@@ -99,7 +101,11 @@ public sealed class SchedulerControllerTests
         PresentToken("bon-token");
         using var cts = new CancellationTokenSource();
 
-        await _sut.RunEventReminders(_tokenValidator.Object, _pass.Object, cts.Token);
+        await _sut.RunEventReminders(
+            _tokenValidator.Object,
+            _pass.Object,
+            _presentedToken,
+            cts.Token);
 
         _pass.Verify(p => p.RunAsync(cts.Token), Times.Once);
     }

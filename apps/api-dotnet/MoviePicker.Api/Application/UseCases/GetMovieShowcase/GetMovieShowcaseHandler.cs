@@ -155,7 +155,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
     }
 
     private async Task<IReadOnlyList<MovieShowcaseItemResponse>> WithRuntimesAsync(
-        IReadOnlyList<MovieShowcaseItemResponse> items,
+        List<MovieShowcaseItemResponse> items,
         CancellationToken ct)
     {
         var count = Math.Clamp(_options.MovieShowcaseEnrichedCount, 0, 60);
@@ -232,7 +232,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
             Disclaimer = TmdbIndicativeCopy.Disclaimer,
         };
 
-    private static IReadOnlyList<int> NormalizeGenreIds(IReadOnlyList<int>? genreIds) =>
+    private static List<int> NormalizeGenreIds(IReadOnlyList<int>? genreIds) =>
         genreIds is null ? [] : genreIds.Where(id => id > 0).Distinct().Order().ToList();
 
     private static string BuildCacheKey(

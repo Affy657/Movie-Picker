@@ -107,17 +107,29 @@ function countdownParams(countdown: EventCountdown) {
 
 type ConfirmBusyByKind = Record<NonNullable<ConfirmState>['kind'], boolean>;
 
-function buildConfirmDialogContent(
-  confirmState: ConfirmState,
-  t: ReturnType<typeof useTranslation>['t'],
-  eventTitle: string,
-  confirmRemove: (participantId: string, pseudo: string) => void,
-  confirmLeave: () => void,
-  confirmCloseWithoutMovie: () => void,
-  confirmResetWheel: () => void,
-  confirmRemoveMovie: (movieId: string) => void,
-  busyByKind: ConfirmBusyByKind
-) {
+type ConfirmDialogInputs = {
+  confirmState: ConfirmState;
+  t: ReturnType<typeof useTranslation>['t'];
+  eventTitle: string;
+  confirmRemove: (participantId: string, pseudo: string) => void;
+  confirmLeave: () => void;
+  confirmCloseWithoutMovie: () => void;
+  confirmResetWheel: () => void;
+  confirmRemoveMovie: (movieId: string) => void;
+  busyByKind: ConfirmBusyByKind;
+};
+
+function buildConfirmDialogContent({
+  confirmState,
+  t,
+  eventTitle,
+  confirmRemove,
+  confirmLeave,
+  confirmCloseWithoutMovie,
+  confirmResetWheel,
+  confirmRemoveMovie,
+  busyByKind,
+}: ConfirmDialogInputs) {
   if (!confirmState) return null;
   const busy = busyByKind[confirmState.kind];
   if (confirmState.kind === 'remove') {
@@ -412,17 +424,17 @@ export default function EventDetailSession({
 
   const confirmDialogContent = useMemo(
     () =>
-      buildConfirmDialogContent(
+      buildConfirmDialogContent({
         confirmState,
         t,
-        event.title,
+        eventTitle: event.title,
         confirmRemove,
         confirmLeave,
         confirmCloseWithoutMovie,
         confirmResetWheel,
         confirmRemoveMovie,
-        confirmBusyByKind
-      ),
+        busyByKind: confirmBusyByKind,
+      }),
     [
       confirmState,
       t,

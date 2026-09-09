@@ -21,6 +21,7 @@ import styles from './ProposeIdeaButton.module.css';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
+import clsx from 'clsx';
 
 const TITLE_MAX_LENGTH = 100;
 const DESCRIPTION_MAX_LENGTH = 2000;
@@ -69,7 +70,6 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
   const categoryFieldId = useId();
   const titleFieldId = useId();
   const descriptionFieldId = useId();
-  const attachmentsLabelId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounterRef = useRef(0);
   const addAttachments = (files: FileList | File[]) => {
@@ -254,10 +254,10 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
               })}
             </p>
 
-            <div className={styles.attachmentsSection}>
-              <span className="label" id={attachmentsLabelId}>
+            <fieldset className={styles.attachmentsSection}>
+              <legend className={clsx('label', styles.attachmentsLegend)}>
                 {t('proposeIdea.attachmentsLabel')}
-              </span>
+              </legend>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -267,9 +267,7 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
                 onChange={handleFileInputChange}
               />
               <div
-                className={`${styles.dropZone} ${isDraggingOver ? styles.dropZoneActive : ''}`}
-                role="group"
-                aria-labelledby={attachmentsLabelId}
+                className={clsx(styles.dropZone, isDraggingOver && styles.dropZoneActive)}
                 onDragOver={(e) => e.preventDefault()}
                 onDragEnter={handleDragEnter}
                 onDragLeave={handleDragLeave}
@@ -310,7 +308,7 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
                   {attachmentError}
                 </p>
               ) : null}
-            </div>
+            </fieldset>
 
             {error ? (
               <p className="error" role="alert">

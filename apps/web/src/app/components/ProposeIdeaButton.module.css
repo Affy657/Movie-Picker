@@ -58,7 +58,15 @@
 }
 
 .attachmentsSection {
-  margin-top: var(--space-3-5);
+  margin: var(--space-3-5) 0 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
+.attachmentsLegend {
+  padding: 0;
+  margin-bottom: var(--space-1-5);
 }
 
 .attachmentsLabel {
