@@ -5,7 +5,6 @@ import { useTranslation } from '@/shared/i18n';
 import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
 import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
-import { metaGenresLabel } from '@/shared/utils/movieMetaLine';
 import type { RatingScale } from '@/shared/types/theme';
 import styles from './MovieListCard.module.css';
 import Card from '@/shared/components/Card';
@@ -14,8 +13,6 @@ interface MovieListCardProps {
   title: string;
   year?: string;
   posterPath: string | null;
-  tmdbLanguage: string;
-  genreIds?: number[];
   voteAverage?: number | null;
   ratingScale?: RatingScale;
   runtimeMinutes?: number | null;
@@ -32,8 +29,6 @@ export default function MovieListCard({
   title,
   year,
   posterPath,
-  tmdbLanguage,
-  genreIds,
   voteAverage,
   ratingScale,
   runtimeMinutes,
@@ -50,25 +45,30 @@ export default function MovieListCard({
   const posterSrc = posterRaw ? tmdbPosterSrcForListDisplay(posterRaw) : undefined;
   const voteLabel = formatTmdbVote(voteAverage, ratingScale);
   const runtimeLabel = formatRuntimeMinutes(runtimeMinutes);
-  const genresLabel = metaGenresLabel(genreIds, tmdbLanguage) ?? '';
 
   const body = (
     <>
+      <button
+        type="button"
+        className={styles.cardTrigger}
+        onClick={onOpenDetails}
+        aria-label={openDetailsAriaLabel}
+      />
+
       <div className={styles.posterRegion}>
-        <button
-          type="button"
-          className={styles.posterBtn}
-          onClick={onOpenDetails}
-          aria-label={openDetailsAriaLabel}
-        >
-          {posterSrc ? (
-            <img src={posterSrc} alt="" loading="lazy" decoding="async" />
-          ) : (
-            <div className={styles.posterPlaceholder} aria-hidden>
-              <Film size={22} />
-            </div>
-          )}
-        </button>
+        {posterSrc ? (
+          <img
+            src={posterSrc}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className={styles.posterImg}
+          />
+        ) : (
+          <div className={styles.posterPlaceholder} aria-hidden>
+            <Film size={22} />
+          </div>
+        )}
 
         {badges}
 
@@ -80,11 +80,18 @@ export default function MovieListCard({
       <div className={styles.cardBody}>
         <h3 className={styles.cardTitle}>{title}</h3>
         <span className={styles.cardMeta}>
-          {year && <span>{year}</span>}
-          {voteLabel && <span title={t('movies.list.tmdbVoteTitle')}>{voteLabel}</span>}
-          {runtimeLabel && <span title={t('movies.list.runtimeTitle')}>{runtimeLabel}</span>}
+          {year && <span className={styles.metaStart}>{year}</span>}
+          {voteLabel && (
+            <span className={styles.metaCenter} title={t('movies.list.tmdbVoteTitle')}>
+              {voteLabel}
+            </span>
+          )}
+          {runtimeLabel && (
+            <span className={styles.metaEnd} title={t('movies.list.runtimeTitle')}>
+              {runtimeLabel}
+            </span>
+          )}
         </span>
-        <span className={styles.cardGenres}>{genresLabel}</span>
       </div>
 
       {kebab && layout === 'row' && <div className={styles.rowKebabSlot}>{kebab}</div>}
