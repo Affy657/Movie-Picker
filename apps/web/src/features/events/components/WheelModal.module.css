@@ -1,9 +1,3 @@
-.dialogSpin {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-}
-
 .spinPhase {
   display: flex;
   flex-direction: column;
@@ -20,11 +14,6 @@
 }
 
 .dialogDone {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  overflow: hidden;
   animation: popIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 

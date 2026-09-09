@@ -52,13 +52,8 @@ export default function MovieListCard({
   const runtimeLabel = formatRuntimeMinutes(runtimeMinutes);
   const genresLabel = metaGenresLabel(genreIds, tmdbLanguage) ?? '';
 
-  return (
-    <Card
-      as="li"
-      padding="none"
-      elevation="sm"
-      className={clsx(styles.card, layout === 'row' && styles.cardAsRow, className)}
-    >
+  const body = (
+    <>
       <div className={styles.posterRegion}>
         <button
           type="button"
@@ -93,6 +88,21 @@ export default function MovieListCard({
       </div>
 
       {kebab && layout === 'row' && <div className={styles.rowKebabSlot}>{kebab}</div>}
-    </Card>
+    </>
   );
+
+  if (layout === 'row') {
+    return (
+      <Card
+        as="li"
+        padding="none"
+        elevation="sm"
+        className={clsx(styles.card, styles.cardAsRow, className)}
+      >
+        {body}
+      </Card>
+    );
+  }
+
+  return <li className={clsx(styles.card, className)}>{body}</li>;
 }

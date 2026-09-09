@@ -38,8 +38,8 @@ export default function HistoryEventRow({
             alt=""
             aria-hidden
             className={styles.poster}
-            width={44}
-            height={66}
+            width={52}
+            height={78}
           />
         ) : (
           <span className={styles.posterFallback} aria-hidden>

@@ -104,6 +104,8 @@ export default function MovieDetailsModal({
       open={open}
       onClose={onClose}
       size="xl"
+      surface="borderless"
+      bottomSheetOnMobile
       column
       anchoredTop
       labelledBy={titleId}

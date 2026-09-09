@@ -1,10 +1,4 @@
 .dialog {
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  color: var(--color-text);
-  box-shadow: var(--shadow-lg);
   width: min(640px, calc(100vw - 2rem));
   max-height: min(75dvh, 620px);
   margin: max(1.5rem, env(safe-area-inset-top, 0px)) auto auto;
@@ -15,13 +9,7 @@
 
 @media (max-width: 47.9375rem) {
   .dialog {
-    position: fixed;
-    inset: auto 0 0 0;
-    margin: 0;
-    width: 100%;
-    max-width: 100%;
     max-height: 92dvh;
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   }
 
   .header {
