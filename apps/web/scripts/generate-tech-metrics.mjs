@@ -246,6 +246,10 @@ function computeMetrics(previous) {
     join(repoRoot, 'apps/web/src/shared/api/apiContract.test.ts'),
     /^\s+ServedBy</gm
   );
+  const contractRoutesChecked = countMatches(
+    join(repoRoot, 'apps/web/src/shared/api/apiContract.test.ts'),
+    /^ {2}'\/api\/v1\//gm
+  );
 
   const measured = {
     collections: collections.size,
@@ -262,6 +266,7 @@ function computeMetrics(previous) {
     lazyRoutes,
     contractResponses,
     contractCheckedTypes,
+    contractRoutesChecked,
     mswTestFiles,
     deploySecrets,
     lighthouseWatchlistPerformance,
@@ -322,6 +327,7 @@ function computeMetrics(previous) {
     lazyRoutes,
     contractResponses,
     contractCheckedTypes,
+    contractRoutesChecked,
     mswTestFiles,
     deploySecrets,
     lighthouseWatchlistPerformance,
