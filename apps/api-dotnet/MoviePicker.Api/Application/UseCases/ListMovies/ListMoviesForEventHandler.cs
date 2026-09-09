@@ -45,6 +45,38 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         _options = options.Value;
     }
 
+    private static User? ResolveProposerUser(
+        string participantId,
+        IReadOnlyDictionary<string, Participant> participantById,
+        IReadOnlyDictionary<string, User> userById)
+    {
+        if (!participantById.TryGetValue(participantId, out var participant))
+            return null;
+        if (participant.UserId is null)
+            return null;
+        return userById.TryGetValue(participant.UserId, out var user) ? user : null;
+    }
+
+    private static (int Count, IReadOnlyList<string> Pseudos) ResolveSeenSummary(
+        string movieId,
+        IReadOnlyDictionary<string, SeenMarkAggregate> seenAgg,
+        IReadOnlyDictionary<string, string> pseudos)
+    {
+        if (!seenAgg.TryGetValue(movieId, out var seen))
+            return (0, Array.Empty<string>());
+        return (seen.Count, ResolvePseudos(seen.ParticipantIds, pseudos));
+    }
+
+    private static IReadOnlyList<string> ResolveUpVoterPseudos(
+        string movieId,
+        IReadOnlyDictionary<string, IReadOnlyList<string>> upVotersAgg,
+        IReadOnlyDictionary<string, string> pseudos)
+    {
+        if (!upVotersAgg.TryGetValue(movieId, out var upVoters))
+            return Array.Empty<string>();
+        return ResolvePseudos(upVoters, pseudos);
+    }
+
     public async Task<IReadOnlyList<MovieWithScoreResponse>> HandleAsync(
         string idOrSlug,
         string? participantId = null,
@@ -98,26 +130,11 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
             scores.TryGetValue(m.Id, out var s);
             pseudos.TryGetValue(m.ParticipantId, out var pseudo);
 
-            User? proposerUser = participantById.TryGetValue(m.ParticipantId, out var proposerParticipant) &&
-                proposerParticipant.UserId is not null &&
-                userById.TryGetValue(proposerParticipant.UserId, out var pu)
-                    ? pu
-                    : null;
-            var proposerHandle = PublicHandleResolver.Resolve(proposerUser);
+            var proposerHandle = PublicHandleResolver.Resolve(
+                ResolveProposerUser(m.ParticipantId, participantById, userById));
 
-            var seenCount = 0;
-            IReadOnlyList<string> seenByPseudos = Array.Empty<string>();
-            if (seenAgg.TryGetValue(m.Id, out var seen))
-            {
-                seenCount = seen.Count;
-                seenByPseudos = ResolvePseudos(seen.ParticipantIds, pseudos);
-            }
-
-            IReadOnlyList<string> votersUpPseudos = Array.Empty<string>();
-            if (upVotersAgg.TryGetValue(m.Id, out var upVoters))
-            {
-                votersUpPseudos = ResolvePseudos(upVoters, pseudos);
-            }
+            var (seenCount, seenByPseudos) = ResolveSeenSummary(m.Id, seenAgg, pseudos);
+            var votersUpPseudos = ResolveUpVoterPseudos(m.Id, upVotersAgg, pseudos);
 
             enrichmentByKey.TryGetValue((m.TmdbId, m.MediaType.ToString()), out var enr);
             var posterOut = _posterImageStore.ToPublicPosterPath(m.PosterPath);

@@ -65,6 +65,47 @@ function persistViewMode(mode: MovieViewMode) {
   }
 }
 
+function watchlistSubtitle(count: number, t: ReturnType<typeof useTranslation>['t']) {
+  if (count === 1) return t('watchlist.header.subtitleOne', { count: 1 });
+  return t('watchlist.header.subtitle', { count });
+}
+
+function WatchlistFiltersPanel({
+  panelId,
+  tmdbLanguage,
+  labels,
+  ratingScale,
+  toolbar,
+  isMobile,
+}: Readonly<{
+  panelId: string;
+  tmdbLanguage: string;
+  labels: Parameters<typeof MovieListFiltersPanel>[0]['labels'];
+  ratingScale: Parameters<typeof MovieListFiltersPanel>[0]['ratingScale'];
+  toolbar: ReturnType<typeof useWatchlistToolbar>;
+  isMobile: boolean;
+}>) {
+  return (
+    <MovieListFiltersPanel
+      panelId={panelId}
+      tmdbLanguage={tmdbLanguage}
+      labels={labels}
+      ratingScale={ratingScale}
+      selectedGenres={toolbar.selectedGenres}
+      onToggleGenre={toolbar.toggleGenre}
+      selectedMediaTypes={toolbar.selectedMediaTypes}
+      onToggleMediaType={toolbar.toggleMediaType}
+      selectedDecade={toolbar.selectedDecade}
+      onToggleDecade={toolbar.toggleDecade}
+      voteMin={toolbar.voteMin}
+      onToggleVoteMin={toolbar.toggleVoteMin}
+      runtimeRange={toolbar.runtimeRange}
+      onChangeRuntimeRange={toolbar.changeRuntimeRange}
+      onReset={isMobile ? undefined : toolbar.clearAllFilters}
+    />
+  );
+}
+
 export default function WatchlistPage() {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
@@ -145,28 +186,16 @@ export default function WatchlistPage() {
 
   const activeFilterCount = toolbar.activeFilterChips.length;
   const filtersPanel = (
-    <MovieListFiltersPanel
+    <WatchlistFiltersPanel
       panelId={filtersPanelId}
       tmdbLanguage={tmdbLanguage}
       labels={filtersLabels}
       ratingScale={user?.ratingScale}
-      selectedGenres={toolbar.selectedGenres}
-      onToggleGenre={toolbar.toggleGenre}
-      selectedMediaTypes={toolbar.selectedMediaTypes}
-      onToggleMediaType={toolbar.toggleMediaType}
-      selectedDecade={toolbar.selectedDecade}
-      onToggleDecade={toolbar.toggleDecade}
-      voteMin={toolbar.voteMin}
-      onToggleVoteMin={toolbar.toggleVoteMin}
-      runtimeRange={toolbar.runtimeRange}
-      onChangeRuntimeRange={toolbar.changeRuntimeRange}
-      onReset={isMobile ? undefined : toolbar.clearAllFilters}
+      toolbar={toolbar}
+      isMobile={isMobile}
     />
   );
-  const subtitle =
-    items.length === 1
-      ? t('watchlist.header.subtitleOne', { count: 1 })
-      : t('watchlist.header.subtitle', { count: items.length });
+  const subtitle = watchlistSubtitle(items.length, t);
   const openAddPanel = () => setAddPanelOpen(true);
 
   if (authLoading) {

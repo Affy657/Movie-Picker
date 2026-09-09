@@ -54,6 +54,54 @@ function watchlistKey(tmdbId: number, mediaType: string): string {
   return `${tmdbId}|${mediaType}`;
 }
 
+function useWatchedMoviesWatchlist(isLoggedIn: boolean, t: ReturnType<typeof useTranslation>['t']) {
+  const [error, setError] = useState<string | null>(null);
+  const watchlistQuery = useWatchlist({ enabled: isLoggedIn });
+  const keys = useMemo(
+    () => new Set((watchlistQuery.data ?? []).map((i) => watchlistKey(i.tmdbId, i.mediaType))),
+    [watchlistQuery.data]
+  );
+  const { mutate: addToWatchlist } = useAddToWatchlist({
+    onError: (err) => setError(getErrorMessage(err, t('watchlist.card.addError'))),
+  });
+  const { mutate: removeFromWatchlist } = useRemoveFromWatchlist({
+    onError: (err) => setError(getErrorMessage(err, t('watchlist.card.removeError'))),
+  });
+
+  const toggle = (item: UserWatchedMovieItem) => {
+    setError(null);
+    if (keys.has(watchlistKey(item.tmdbId, item.mediaType))) {
+      removeFromWatchlist({ tmdbId: item.tmdbId, mediaType: item.mediaType });
+      return;
+    }
+    addToWatchlist({
+      tmdbId: item.tmdbId,
+      mediaType: item.mediaType,
+      title: item.title,
+      year: item.year,
+      posterPath: item.posterPath,
+    });
+  };
+
+  return { keys, error, toggle };
+}
+
+function profileMoviesSeo(
+  profile: { displayName: string; handle: string } | undefined,
+  isNotFound: boolean,
+  t: ReturnType<typeof useTranslation>['t']
+) {
+  if (!profile) return { title: pageTitle(t('profile.loading')), noindex: isNotFound };
+  return {
+    title: pageTitle(t('profile.movies.pageTitle', { name: profile.displayName })),
+    description: t('profile.movies.seoDescription', {
+      name: profile.displayName,
+      handle: profile.handle,
+    }),
+    canonical: absoluteUrl(ROUTES.profileMovies(profile.handle)),
+  };
+}
+
 export default function ProfileMoviesPage() {
   const { handle } = useParams<{ handle: string }>();
   const { t } = useTranslation();
@@ -116,47 +164,13 @@ export default function ProfileMoviesPage() {
 
   const [detailsTarget, setDetailsTarget] = useState<UserWatchedMovieItem | null>(null);
   const [proposeTarget, setProposeTarget] = useState<UserWatchedMovieItem | null>(null);
-  const [watchlistError, setWatchlistError] = useState<string | null>(null);
+  const {
+    keys: watchlistKeys,
+    error: watchlistError,
+    toggle: handleToggleWatchlist,
+  } = useWatchedMoviesWatchlist(isLoggedIn, t);
 
-  const watchlistQuery = useWatchlist({ enabled: isLoggedIn });
-  const watchlistKeys = useMemo(
-    () => new Set((watchlistQuery.data ?? []).map((i) => watchlistKey(i.tmdbId, i.mediaType))),
-    [watchlistQuery.data]
-  );
-  const { mutate: addToWatchlist } = useAddToWatchlist({
-    onError: (err) => setWatchlistError(getErrorMessage(err, t('watchlist.card.addError'))),
-  });
-  const { mutate: removeFromWatchlist } = useRemoveFromWatchlist({
-    onError: (err) => setWatchlistError(getErrorMessage(err, t('watchlist.card.removeError'))),
-  });
-
-  const handleToggleWatchlist = (item: UserWatchedMovieItem) => {
-    setWatchlistError(null);
-    if (watchlistKeys.has(watchlistKey(item.tmdbId, item.mediaType))) {
-      removeFromWatchlist({ tmdbId: item.tmdbId, mediaType: item.mediaType });
-    } else {
-      addToWatchlist({
-        tmdbId: item.tmdbId,
-        mediaType: item.mediaType,
-        title: item.title,
-        year: item.year,
-        posterPath: item.posterPath,
-      });
-    }
-  };
-
-  usePageSeo(
-    profile
-      ? {
-          title: pageTitle(t('profile.movies.pageTitle', { name: profile.displayName })),
-          description: t('profile.movies.seoDescription', {
-            name: profile.displayName,
-            handle: profile.handle,
-          }),
-          canonical: absoluteUrl(ROUTES.profileMovies(profile.handle)),
-        }
-      : { title: pageTitle(t('profile.loading')), noindex: isNotFound }
-  );
+  usePageSeo(profileMoviesSeo(profile, isNotFound, t));
 
   if (profileQuery.isPending && handle) {
     return (
