@@ -23,12 +23,12 @@ public sealed class GetMovieShowcaseHandlerTests
             _cache,
             Options.Create(new MoviePickerOptions { TmdbApiKey = apiKey }));
 
-    private static IReadOnlyList<TmdbSearchItem> Items(int count, int idBase = 1) =>
+    private static List<TmdbSearchItem> Items(int count, int idBase = 1) =>
         Enumerable.Range(0, count)
             .Select(i => new TmdbSearchItem(idBase + i, MovieMediaType.Movie, $"Film {i}", "2024", null, 7.5))
             .ToList();
 
-    private static IReadOnlyList<ProposedMovieRanking> Ranking(int count) =>
+    private static List<ProposedMovieRanking> Ranking(int count) =>
         Enumerable.Range(0, count)
             .Select(i => new ProposedMovieRanking(
                 1_000 + i, MovieMediaType.Movie, $"Film {i}", "2024", null, [18], count - i + 1))

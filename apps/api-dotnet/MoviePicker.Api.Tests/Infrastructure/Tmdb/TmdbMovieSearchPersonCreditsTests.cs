@@ -13,6 +13,11 @@ namespace MoviePicker.Api.Tests.Infrastructure.Tmdb;
 
 public sealed class TmdbMovieSearchPersonCreditsTests
 {
+    private static readonly string[] ParasiteSnowpiercerAndFuzzyTitles = ["Parasite", "Snowpiercer", "Titre approchant"];
+    private static readonly string[] InceptionThenFuzzyTitles = ["Inception", "Titre approchant"];
+    private static readonly string[] FuzzyThenInceptionTitles = ["Titre approchant", "Inception"];
+    private static readonly string[] FuzzyTitleOnly = ["Titre approchant"];
+
     private const string TitleMatchesJson = """
         {"results":[{"id":900,"title":"Titre approchant","release_date":"2001-01-01"}]}
         """;
@@ -66,7 +71,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
 
         var result = await sut.SearchAsync("Bong Joon-ho", false);
 
-        Assert.Equal(new[] { "Parasite", "Snowpiercer", "Titre approchant" }, result.Select(item => item.Title));
+        Assert.Equal(ParasiteSnowpiercerAndFuzzyTitles, result.Select(item => item.Title));
     }
 
     [Fact]
@@ -82,7 +87,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
 
         var result = await sut.SearchAsync("Nolan", false);
 
-        Assert.Equal(new[] { "Inception", "Titre approchant" }, result.Select(item => item.Title));
+        Assert.Equal(InceptionThenFuzzyTitles, result.Select(item => item.Title));
     }
 
     [Fact]
@@ -98,7 +103,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
 
         var result = await sut.SearchAsync("Christoph", false);
 
-        Assert.Equal(new[] { "Titre approchant", "Inception" }, result.Select(item => item.Title));
+        Assert.Equal(FuzzyThenInceptionTitles, result.Select(item => item.Title));
     }
 
     [Fact]
@@ -176,7 +181,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
 
         var result = await sut.SearchAsync("Bong Joon-ho", false);
 
-        Assert.Equal(new[] { "Titre approchant" }, result.Select(item => item.Title));
+        Assert.Equal(FuzzyTitleOnly, result.Select(item => item.Title));
     }
 
     [Fact]
@@ -192,7 +197,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
 
         var result = await sut.SearchAsync("Dune", false);
 
-        Assert.Equal(new[] { "Titre approchant" }, result.Select(item => item.Title));
+        Assert.Equal(FuzzyTitleOnly, result.Select(item => item.Title));
     }
 
     [Fact]
@@ -208,7 +213,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
 
         var result = await sut.SearchAsync("Bong Joon-ho", false);
 
-        Assert.Equal(new[] { "Titre approchant" }, result.Select(item => item.Title));
+        Assert.Equal(FuzzyTitleOnly, result.Select(item => item.Title));
     }
 
     [Fact]

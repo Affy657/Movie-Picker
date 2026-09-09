@@ -30,7 +30,7 @@ public static class MovieShowcaseCatalog
     private const int FamilyGenreId = 10_751;
     private const int AcclaimedVoteCountMin = 3_000;
 
-    private static readonly IReadOnlyDictionary<string, int> ProviderIds =
+    private static readonly Dictionary<string, int> ProviderIds =
         new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
         {
             ["netflix"] = 8,

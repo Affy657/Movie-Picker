@@ -125,6 +125,13 @@ public sealed class TransactionalCollection<TDocument>
             ? _inner.DeleteOneAsync(session, filter, null, cancellationToken)
             : _inner.DeleteOneAsync(filter, cancellationToken);
 
+    public Task<DeleteResult> DeleteOneAsync(
+        FilterDefinition<TDocument> filter,
+        CancellationToken cancellationToken = default) =>
+        Session is { } session
+            ? _inner.DeleteOneAsync(session, filter, null, cancellationToken)
+            : _inner.DeleteOneAsync(filter, cancellationToken);
+
     public Task<DeleteResult> DeleteManyAsync(
         Expression<Func<TDocument, bool>> filter,
         CancellationToken cancellationToken = default) =>
@@ -138,13 +145,6 @@ public sealed class TransactionalCollection<TDocument>
         Session is { } session
             ? _inner.DeleteManyAsync(session, filter, null, cancellationToken)
             : _inner.DeleteManyAsync(filter, cancellationToken);
-
-    public Task<DeleteResult> DeleteOneAsync(
-        FilterDefinition<TDocument> filter,
-        CancellationToken cancellationToken = default) =>
-        Session is { } session
-            ? _inner.DeleteOneAsync(session, filter, null, cancellationToken)
-            : _inner.DeleteOneAsync(filter, cancellationToken);
 
     public Task<IAsyncCursor<TResult>> AggregateAsync<TResult>(
         PipelineDefinition<TDocument, TResult> pipeline,

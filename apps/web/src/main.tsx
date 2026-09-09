@@ -35,4 +35,4 @@ async function boot(): Promise<void> {
   hideSplash();
 }
 
-void boot();
+await boot();
