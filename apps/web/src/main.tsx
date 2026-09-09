@@ -8,12 +8,17 @@ import './index.css';
 
 startPwaInstallRuntime();
 
+const SPLASH_REMOVAL_FALLBACK_MS = 1000;
+
 function hideSplash(): void {
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      document.getElementById('splash')?.remove();
-    });
-  });
+  let removed = false;
+  const removeSplash = (): void => {
+    if (removed) return;
+    removed = true;
+    document.getElementById('splash')?.remove();
+  };
+  requestAnimationFrame(() => requestAnimationFrame(removeSplash));
+  setTimeout(removeSplash, SPLASH_REMOVAL_FALLBACK_MS);
 }
 
 async function boot(): Promise<void> {
