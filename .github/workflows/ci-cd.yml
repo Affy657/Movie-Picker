@@ -24,9 +24,12 @@ name: CI/CD
 
 on:
   workflow_dispatch:
+  # Restreint aux branches durables : une branche éphémère avec une PR ouverte déclenchait
+  # deux runs pour le même commit (push + pull_request). Elle reste couverte par pull_request.
   push:
-    branches-ignore:
-      - "dependabot/**"
+    branches:
+      - master
+      - "v*"
   pull_request:
     branches: [master]
 
@@ -59,6 +62,7 @@ jobs:
     outputs:
       web: ${{ steps.filter.outputs.web == 'true' || github.event_name == 'workflow_dispatch' }}
       api: ${{ steps.filter.outputs.api == 'true' || github.event_name == 'workflow_dispatch' }}
+      e2e: ${{ steps.filter.outputs.e2e == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       # fetch-depth: 0 requis : sur push, paths-filter diffe contre le commit précédent
       # via git ; sans historique complet il devrait fetch, ce qui échoue avec
@@ -81,12 +85,13 @@ jobs:
               - 'turbo.json'
               - 'eslint.config.mjs'
               - 'prettier.config.cjs'
-              - 'playwright.config.ts'
               - 'configs/**'
-              - 'e2e/**'
               - 'scripts/**'
               - '.github/workflows/ci-cd.yml'
               - '.github/actions/**'
+            e2e:
+              - 'playwright.config.ts'
+              - 'e2e/**'
             api:
               - 'apps/api-dotnet/**'
               - 'scripts/**'
@@ -426,7 +431,7 @@ jobs:
   e2e:
     name: E2E Playwright (bloquant)
     needs: changes
-    if: needs.changes.outputs.web == 'true' || needs.changes.outputs.api == 'true'
+    if: needs.changes.outputs.web == 'true' || needs.changes.outputs.api == 'true' || needs.changes.outputs.e2e == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -456,7 +461,7 @@ jobs:
     # la combinaison qui tourne en production n'est reproduite nulle part avant le déploiement.
     name: E2E parcours critique sur MongoDB réel (bloquant)
     needs: changes
-    if: needs.changes.outputs.web == 'true' || needs.changes.outputs.api == 'true'
+    if: needs.changes.outputs.web == 'true' || needs.changes.outputs.api == 'true' || needs.changes.outputs.e2e == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     permissions:
