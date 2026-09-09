@@ -1,6 +1,14 @@
 # AGENTS.md
 
-Règles pour les agents IA travaillant sur ce repo.
+Règles pour les agents IA travaillant sur ce repo. **C'est la source unique** : `CLAUDE.md` ne fait que pointer ici, ne rien y dupliquer.
+
+## Nommage des fichiers
+
+**Tout fichier créé dans le dépôt porte un nom en anglais**, quelle que soit la langue de son contenu : `technical-debt.md`, pas `dette-technique.md`. Vaut pour les répertoires comme pour les fichiers, la documentation comme le code.
+
+Le **contenu** suit sa propre convention : documentation et messages de commit en français, chaînes affichées à l'utilisateur dans `apps/web/src/shared/i18n/locales/`, code et identifiants en anglais comme le veut l'usage du langage.
+
+Les fichiers déjà nommés en français restent en place tant qu'on ne les touche pas : ne pas lancer de renommage de masse, appliquer la règle aux fichiers créés à partir de maintenant.
 
 ## Style de code
 
@@ -16,34 +24,36 @@ Si on ne peut pas exprimer l'intention via le nommage ou la structure, refactori
 
 **Avant d'écrire du CSS ou un composant d'interface, chercher ce qui existe déjà.** Le réflexe par défaut est de réutiliser une primitive de `apps/web/src/shared/components/`, puis d'ajouter une variante à cette primitive, et seulement en dernier recours d'écrire un composant local.
 
-Primitives disponibles :
-
 | Besoin | Composant | Remarques |
 |---|---|---|
-| Bouton | `Button` (`buttonClass` pour un `<Link>`) | variantes `primary` / `secondary` / `danger` / `ghost`, tailles `sm` / `md` |
+| Bouton | `Button`, `buttonClass` pour un `<Link>`, `LinkButton` | variantes `primary` / `secondary` / `danger` / `ghost`, tailles `sm` / `md` |
+| Bouton à icône seule | `IconButton` | |
 | Fenêtre modale | `Modal` | seul endroit du projet où `<dialog>` et `::backdrop` sont autorisés |
+| Dialogue déjà câblé | `ConfirmDialog`, `ShareDialog`, `ConsentDialog`, `DialogTitleBar` | bâtis sur `Modal` |
 | Feuille mobile | `Sheet` | modale ancrée en bas, glissable |
 | Pastille, badge, filtre | `Chip` | centrage optique déjà intégré |
 | Surface de contenu | `Card` | `padding` `none`/`sm`/`md`/`lg`, `elevated`, `interactive` |
-| Champ de formulaire | `Field` | câble `label`, `aria-describedby`, message d'erreur |
-| Menu, onglets, info-bulle, état vide, squelette | `Menu`, `Dropdown`, `Tabs`, `Tooltip`, `InfoBubble`, `EmptyState`, `Skeleton` | |
+| Champ de formulaire | `Field`, `NumberInput`, `SearchField`, `Toggle` | `Field` câble `label`, `aria-describedby`, message d'erreur |
+| Gabarit de page | `PageLayout` | |
+| État de page | `EmptyState`, `ErrorState`, `SignedOutState`, `Skeleton`, `ErrorBoundary` | |
+| Menu, onglets, info-bulle | `Menu`, `Dropdown`, `Tabs`, `Tooltip`, `InfoBubble` | |
+| Divers | `Avatar`, `QrCode`, `EventLifecyclePill`, `ViewModeToggle` | |
 
-Aucune valeur littérale dans les CSS modules : espacements, tailles de police, `z-index` et couleurs passent par les jetons de `apps/web/src/styles/01-foundation.css`.
+Aucune valeur littérale dans les CSS modules, tout passe par les jetons de `apps/web/src/styles/01-foundation.css` :
 
-- espacement : `var(--space-0-5 … --space-24)`, base 4 px avec demi-pas jusqu'à 14 px ;
-- typographie : `var(--font-size-4xs … --font-size-3xl)` ;
+- espacement : `var(--space-0 … --space-24)`, base 4 px avec demi-pas jusqu'à `--space-3-5` (14 px) ;
+- typographie : `var(--font-size-3xs … --font-size-5xl)` ;
 - profondeur : `var(--z-below … --z-skip-link)`, jamais un nombre ;
-- largeur de page : `var(--container-xs … --container-3xl)` posé sur `--page-max-width` ;
-- couleur : `var(--color-*)`, `var(--on-poster-*)` pour ce qui se pose sur une affiche.
+- largeur de page : `var(--container-xs … --container-3xl)` posé sur `--page-max-width` (défaut `--layout-max`) ;
+- couleur : `var(--color-*)`, `var(--on-poster-*)` pour ce qui se pose sur une affiche ;
+- cible tactile : `var(--tap-target-min)`, 44 px, minimum sur tout élément cliquable.
 
-Points de rupture, échelle fermée : `24.9375rem`, `29.9375rem`, `39.9375rem`, `47.9375rem`, `63.9375rem` en `max-width` ; `30rem`, `40rem`, `48rem`, `64rem`, `80rem` en `min-width`. Toute autre valeur est refusée.
+Points de rupture, échelle fermée : `24.9375rem`, `29.9375rem`, `39.9375rem`, `47.9375rem`, `63.9375rem` en `max-width` ; `30rem`, `40rem`, `48rem`, `64rem`, `80rem` en `min-width`. Toute autre valeur est refusée. `(hover: hover)`, `(hover: none)` et `(prefers-reduced-motion: reduce)` sont les seules autres requêtes média admises.
 
-Deux règles de comportement :
+Deux règles de comportement, non outillées, à tenir à la main :
 
 1. tout bloc `:hover` vit dans `@media (hover: hover)`, sinon l'état reste collé après un tap sur mobile ;
 2. toute `animation` a son pendant `@media (prefers-reduced-motion: reduce)`.
-
-`pnpm run check:architecture` échoue sur chacun de ces points (valeur littérale, `z-index` nu, point de rupture hors échelle, `<dialog>` ou `::backdrop` écrit hors de `Modal`), et il tourne dans `verify:local`, au pre-push et dans le job `lint-web`.
 
 ## Centrage vertical du texte
 
@@ -67,19 +77,29 @@ Pour toute nouvelle barre sticky dont le contenu change de hauteur :
 
 **Le test est écrit avant le code.** Pour une fonctionnalité comme pour un correctif : d'abord un test qui échoue et qui décrit le comportement attendu, ensuite l'implémentation qui le fait passer. Sur un bug, le test doit reproduire le symptôme avant toute correction, sinon rien ne prouve que la cause a été traitée.
 
-Cinq procédures sont rappelées par leur nom plutôt que réexpliquées à chaque fois :
+**Avant tout push sur master, toujours exécuter `pnpm run verify:local` et corriger toute erreur avant de push.** Obligatoire quelle que soit la conversation ou la feature. Treize étapes, dans l'ordre : règles d'architecture, `pnpm lint`, ESLint, Prettier, `dotnet restore`, `dotnet format --verify-no-changes`, build Release avec `-warnaserror`, export OpenAPI, dérive des types OpenAPI, audit Trivy (Docker), tests front avec seuils de couverture, tests API unitaires, tests API d'intégration.
+
+- Ne jamais skip les hooks pre-push.
+- Préférer éditer les fichiers existants à en créer de nouveaux.
+
+Trois procédures sont rappelées par leur nom plutôt que réexpliquées à chaque fois. Ce sont des skills du dépôt, dans `.claude/skills/` :
 
 | Procédure | Quand |
 |---|---|
-| `/design:design-critique` | sur la maquette, avant d'écrire le composant |
-| `/engineering:testing-strategy` | avant d'écrire les tests d'une fonctionnalité |
-| `/verify` | avant chaque envoi, suites complètes |
-| `/engineering:code-review` | à la relecture, avant fusion |
-| `/engineering:tech-debt` | passe périodique, hors du flot de livraison |
+| `/dev-feature <feature>` | cycle complet d'une feature de roadmap, du scope au déploiement |
+| `/verify` | lancer web + API pour vérifier un changement à l'exécution |
+| `/weekly-maintenance` | passe hebdomadaire : Dependabot, SonarCloud, Sentry, alertes sécurité, métriques. À lancer depuis le checkout principal, pas depuis un worktree |
 
-**Avant tout push sur master, toujours exécuter `pnpm run verify:local` et corriger toute erreur avant de push.** Cette vérification couvre les règles d'architecture, lint, format, tests front et tests API — elle est obligatoire quelle que soit la conversation ou la feature.
+## Portes de qualité
 
-`pnpm run check:architecture` (premier pas de `verify:local`, rejoué au pre-push et dans le job `lint-web`) échoue sur : un commentaire hors directive fonctionnelle, un `using` interdit dans `Domain/`, `Application/` ou `Controllers/`, un import de `shared/` vers une feature, un cycle d'imports côté front.
+`pnpm run check:architecture` est le premier pas de `verify:local`, rejoué au pre-push et dans le job `lint-web`. Il échoue sur :
+
+- un commentaire hors directive fonctionnelle ;
+- un `using` interdit dans `Domain/`, `Application/` ou `Controllers/` ;
+- un import de `shared/` vers une feature, ou un cycle d'imports côté front ;
+- en CSS module : espacement, `font-size`, `z-index` ou couleur en valeur littérale ; point de rupture hors échelle ; `<dialog>` ou `::backdrop` écrit hors de `Modal` ;
+- une classe `btn`/`btn-*` écrite à la main hors de `Button` ;
+- un élément cliquable dont la `min-height` plafonne sous 44 px.
 
 `pnpm run test:api:mongo` rejoue la suite d'intégration API contre une vraie MongoDB en replica set (conteneur Docker créé à la volée, base jetable par classe de test) : c'est le seul chemin qui exécute les adaptateurs Mongo et les transactions. La CI le rejoue dans le job `test-api-mongo`, dont dépend le déploiement API. Il collecte sa propre couverture (`apps/api-dotnet/coverlet.integration.runsettings`) et `scripts/check-mongo-coverage.mjs` la contrôle sur le seul espace de noms `Infrastructure.Persistence.Mongo` : ces classes sont exclues du rapport du job `test-api`, donc sans cette porte la couche qui ne tourne qu'en production ne serait mesurée nulle part.
 
@@ -101,37 +121,37 @@ Une correction de données en base est une migration, pas un service de démarra
 
 Toute suite d'écritures qui doit être tout-ou-rien passe par `IUnitOfWork.ExecuteAsync` (transaction MongoDB côté Mongo, verrou côté InMemory). Les repositories participent automatiquement via `TransactionalCollection` : ne jamais injecter `IMongoDatabase` directement dans un repository, prendre `MongoCollectionFactory`.
 
-- Ne jamais skip les hooks pre-push.
-- Préférer éditer les fichiers existants à en créer de nouveaux.
-
-## Mémoire inter-sessions
-
-Quand un problème systématique est rencontré et résolu — erreur de config récurrente, comportement inattendu d'un outil, contrainte non documentée du projet — le sauvegarder en mémoire (`C:\Users\adrie\.claude\projects\C--ynov-movie-picker\memory\`) sous forme d'entrée `feedback` ou `project` selon le cas, pour que la prochaine session ne repart pas de zéro.
-
 ## Stack
 
 Monorepo pnpm + Turbo :
 - `apps/web` — Vite + React + TypeScript
-- `apps/mobile` — Expo + React Native
 - `apps/api-dotnet` — .NET + MongoDB
+
+L'application mobile Expo est archivée dans `archive/mobile` depuis mai 2026, il n'y a plus de `apps/mobile`. Le projet d'une vraie app mobile est porté par `docs/roadmap-product.md`.
 
 ## Documentation clé
 
 - **Roadmap produit** (features par version, statuts) → [`docs/roadmap-product.md`](docs/roadmap-product.md)
 - **Roadmap tech** (infra, CI/CD, qualité, sécurité) → [`docs/roadmap-tech.md`](docs/roadmap-tech.md)
-- **Passation CI/CD & sauvegarde** (état, gestes externes en attente, pièges connus) → [`docs/passation-ci-cd.md`](docs/passation-ci-cd.md) — à lire avant de toucher au déploiement ou à la sauvegarde
+- **Dette technique** → [`docs/technical-debt.md`](docs/technical-debt.md) : fichier de travail pour agent, pas de lecture humaine. Une entrée par dette, chacune avec sa commande `verify` de fraîcheur et son critère de fin, plus deux sections « Contraintes » et « Impasses » à lire avant toute optimisation front ou tout geste de déploiement. C'est là qu'atterrit toute dette constatée, jamais dans une roadmap ni en mémoire agent.
 
 ## Accès outils externes (autonomie agent)
 
-Outils configurés pour qu'un agent IA travaille sur le projet sans intervention manuelle. Les tokens et secrets sont en scope **local** (`~/.claude.json`), jamais versionnés.
+Outils configurés pour qu'un agent travaille sur le projet sans intervention manuelle. Les tokens et secrets sont en scope **local** (`~/.claude.json`), jamais versionnés.
 
 | Outil | Accès | Usage |
 |-------|-------|-------|
 | GitHub | CLI `gh` | PR, issues, runs CI, releases |
-| GCP | CLI `gcloud` | Cloud Run, Artifact Registry, Secret Manager, logs |
+| GCP | CLI `gcloud` | Cloud Run, Artifact Registry, Secret Manager, logs. Les écritures (`services enable`, `secrets create`) sont refusées à l'agent : les demander à l'utilisateur |
 | AWS | CLI `aws` | S3, CloudFront (déploiement front) |
 | SonarCloud | MCP `sonarqube` (Docker — requiert Docker Desktop lancé + image `mcp/sonarqube`) | consulter qualité / issues / hotspots ; l'analyse tourne en CI (job `sonar`, SonarScanner for .NET) |
-| PostHog | MCP `posthog` (HTTP) | analytics, events produit |
 | MongoDB | MCP `mongodb` | base dev `moviepicker_dev` |
-| Sentry | MCP `sentry` | erreurs front et API ; org `adrien-morand`, projets `movie-picker-web` et `movie-picker-api`, région UE |
-| Resend | MCP `resend` | e-mails transactionnels ; domaine `movie-picker.fr` vérifié, `eu-west-1`, envoi seul |
+| PostHog | MCP `posthog` (HTTP, scope global) | analytics, events produit |
+| Sentry | connecteur applicatif | erreurs front et API ; org `adrien-morand`, projets `movie-picker-web` et `movie-picker-api`, région UE |
+| Resend | connecteur applicatif | e-mails transactionnels ; domaine `movie-picker.fr` vérifié, `eu-west-1`, envoi seul |
+
+`sonarqube` et `mongodb` sont déclarés sur le projet `C:\ynov\movie-picker` : **ils ne sont pas montés dans un worktree**, qui a sa propre entrée de configuration. Y basculer depuis le checkout principal, ou passer par les CLI.
+
+## Mémoire inter-sessions
+
+Spécifique à Claude Code. Quand un problème systématique est rencontré et résolu — erreur de config récurrente, comportement inattendu d'un outil, contrainte non documentée du projet — le sauvegarder en mémoire (`C:\Users\adrie\.claude\projects\C--ynov-movie-picker\memory\`) sous forme d'entrée `feedback` ou `project` selon le cas, pour que la prochaine session ne reparte pas de zéro. La dette constatée ne va pas là, elle va dans `docs/technical-debt.md`.
