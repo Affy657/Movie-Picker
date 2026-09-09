@@ -10,6 +10,7 @@ import { useTranslation } from '@/shared/i18n';
 import { ROUTES, withReturnTo } from '@/app/routes';
 import styles from './JoinForm.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
+import Card from '@/shared/components/Card';
 
 interface JoinFormProps {
   slug: string;
@@ -104,12 +105,12 @@ export default function JoinForm({
   }
 
   return (
-    <section className={styles.root}>
+    <Card as="section" padding="lg" elevation="sm" className={styles.root}>
       <h2 className={styles.title}>
         <UserPlus size={18} aria-hidden className={styles.titleIcon} />
         <span className={styles.titleLabel}>{t('events.join.title')}</span>
       </h2>
       {body}
-    </section>
+    </Card>
   );
 }

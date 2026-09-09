@@ -9,6 +9,7 @@ import Avatar from '@/shared/components/Avatar';
 import EmptyState from '@/shared/components/EmptyState';
 import styles from './EventParticipantsList.module.css';
 import Button from '@/shared/components/Button';
+import Card from '@/shared/components/Card';
 
 type Props = {
   participants: EventParticipantSummary[] | undefined;
@@ -52,7 +53,9 @@ export default function EventParticipantsList({
   const canManage = !!isHost && !!onRemoveParticipant && participants.length > 1;
 
   return (
-    <section
+    <Card
+      as="section"
+      elevation="sm"
       id="event-participants-panel"
       className={styles.root}
       aria-labelledby="participants-heading"
@@ -190,6 +193,6 @@ export default function EventParticipantsList({
           </Button>
         </div>
       )}
-    </section>
+    </Card>
   );
 }

@@ -59,7 +59,12 @@ export default function LandingProblem() {
             <p className={styles.threadEnd}>{t('landing.problem.threadEnd')}</p>
           </Card>
 
-          <Card as="article" padding="none" elevated className={clsx(styles.panel, shared.reveal)}>
+          <Card
+            as="article"
+            padding="none"
+            elevation="sm"
+            className={clsx(styles.panel, shared.reveal)}
+          >
             <p className={clsx(styles.panelLabel, styles.panelLabelGood)}>
               <Check size={15} aria-hidden="true" />
               {t('landing.problem.timelineLabel')}

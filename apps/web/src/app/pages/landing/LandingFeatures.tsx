@@ -31,7 +31,7 @@ export default function LandingFeatures() {
           <Card
             as="article"
             padding="none"
-            elevated
+            elevation="sm"
             className={clsx(styles.tile, styles.tileWide, shared.reveal)}
           >
             <span className={styles.icon} aria-hidden="true">
@@ -56,7 +56,7 @@ export default function LandingFeatures() {
           <Card
             as="article"
             padding="none"
-            elevated
+            elevation="sm"
             className={clsx(styles.tile, styles.tileWide, shared.reveal)}
           >
             <span className={styles.icon} aria-hidden="true">
@@ -91,7 +91,12 @@ export default function LandingFeatures() {
             </div>
           </Card>
 
-          <Card as="article" padding="none" elevated className={clsx(styles.tile, shared.reveal)}>
+          <Card
+            as="article"
+            padding="none"
+            elevation="sm"
+            className={clsx(styles.tile, shared.reveal)}
+          >
             <span className={styles.icon} aria-hidden="true">
               <Bell size={18} />
             </span>
@@ -107,7 +112,12 @@ export default function LandingFeatures() {
             </div>
           </Card>
 
-          <Card as="article" padding="none" elevated className={clsx(styles.tile, shared.reveal)}>
+          <Card
+            as="article"
+            padding="none"
+            elevation="sm"
+            className={clsx(styles.tile, shared.reveal)}
+          >
             <span className={styles.icon} aria-hidden="true">
               <CalendarDays size={18} />
             </span>
@@ -121,7 +131,12 @@ export default function LandingFeatures() {
             </div>
           </Card>
 
-          <Card as="article" padding="none" elevated className={clsx(styles.tile, shared.reveal)}>
+          <Card
+            as="article"
+            padding="none"
+            elevation="sm"
+            className={clsx(styles.tile, shared.reveal)}
+          >
             <span className={styles.icon} aria-hidden="true">
               <Smartphone size={18} />
             </span>
@@ -135,7 +150,12 @@ export default function LandingFeatures() {
             </div>
           </Card>
 
-          <Card as="article" padding="none" elevated className={clsx(styles.tile, shared.reveal)}>
+          <Card
+            as="article"
+            padding="none"
+            elevation="sm"
+            className={clsx(styles.tile, shared.reveal)}
+          >
             <span className={styles.icon} aria-hidden="true">
               <Palette size={18} />
             </span>

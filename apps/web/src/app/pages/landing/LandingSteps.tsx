@@ -31,7 +31,12 @@ export default function LandingSteps() {
 
         <ol className={styles.steps} role="list">
           <li>
-            <Card as="div" padding="none" elevated className={clsx(styles.step, shared.reveal)}>
+            <Card
+              as="div"
+              padding="none"
+              elevation="sm"
+              className={clsx(styles.step, shared.reveal)}
+            >
               <p className={styles.num}>01</p>
               <h3 className={styles.title}>{t('landing.steps.create.title')}</h3>
               <p className={styles.text}>{t('landing.steps.create.text')}</p>
@@ -54,7 +59,12 @@ export default function LandingSteps() {
           </li>
 
           <li>
-            <Card as="div" padding="none" elevated className={clsx(styles.step, shared.reveal)}>
+            <Card
+              as="div"
+              padding="none"
+              elevation="sm"
+              className={clsx(styles.step, shared.reveal)}
+            >
               <p className={styles.num}>02</p>
               <h3 className={styles.title}>{t('landing.steps.share.title')}</h3>
               <p className={styles.text}>{t('landing.steps.share.text')}</p>
@@ -72,7 +82,12 @@ export default function LandingSteps() {
           </li>
 
           <li>
-            <Card as="div" padding="none" elevated className={clsx(styles.step, shared.reveal)}>
+            <Card
+              as="div"
+              padding="none"
+              elevation="sm"
+              className={clsx(styles.step, shared.reveal)}
+            >
               <p className={styles.num}>03</p>
               <h3 className={styles.title}>{t('landing.steps.vote.title')}</h3>
               <p className={styles.text}>{t('landing.steps.vote.text')}</p>
@@ -100,7 +115,12 @@ export default function LandingSteps() {
           </li>
 
           <li>
-            <Card as="div" padding="none" elevated className={clsx(styles.step, shared.reveal)}>
+            <Card
+              as="div"
+              padding="none"
+              elevation="sm"
+              className={clsx(styles.step, shared.reveal)}
+            >
               <p className={styles.num}>04</p>
               <h3 className={styles.title}>{t('landing.steps.wheel.title')}</h3>
               <p className={styles.text}>{t('landing.steps.wheel.text')}</p>

@@ -3,6 +3,7 @@ import { CalendarPlus, Film, Trophy, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import type { UserStats } from '@/features/profile/api/profileApi';
+import Card from '@/shared/components/Card';
 import styles from './ProfileStatsSection.module.css';
 
 const GenresBar = lazy(() => import('./GenresBar'));
@@ -71,20 +72,20 @@ export default function ProfileStatsSection({ stats }: Readonly<Props>) {
           {(hasGenres || hasActivity) && (
             <div className={styles.panels}>
               {hasActivity && (
-                <div className={styles.panel}>
+                <Card padding="lg" radius="lg" className={styles.panel}>
                   <h3 className={styles.panelTitle}>{t('profile.stats.activityTitle')}</h3>
                   <Suspense fallback={null}>
                     <ActivityWeeks points={stats.dailyActivity} />
                   </Suspense>
-                </div>
+                </Card>
               )}
               {hasGenres && (
-                <div className={styles.panel}>
+                <Card padding="lg" radius="lg" className={styles.panel}>
                   <h3 className={styles.panelTitle}>{t('profile.stats.genresTitle')}</h3>
                   <Suspense fallback={null}>
                     <GenresBar genres={stats.favoriteGenres} />
                   </Suspense>
-                </div>
+                </Card>
               )}
             </div>
           )}

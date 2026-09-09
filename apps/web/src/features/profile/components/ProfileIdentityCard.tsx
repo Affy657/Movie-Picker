@@ -6,6 +6,7 @@ import ProfileStreakFlame from '@/features/profile/components/ProfileStreakFlame
 import SupporterBadge from '@/features/profile/components/SupporterBadge';
 import type { PublicProfile } from '@/features/profile/api/profileApi';
 import styles from './ProfileIdentityCard.module.css';
+import Card from '@/shared/components/Card';
 
 type FollowTab = 'following' | 'followers';
 
@@ -32,7 +33,7 @@ export default function ProfileIdentityCard({
   const { t } = useTranslation();
 
   return (
-    <div className={styles.card}>
+    <Card padding="none" radius="lg" className={styles.card}>
       <Avatar
         avatarId={profile.avatarId}
         pseudo={profile.displayName}
@@ -87,6 +88,6 @@ export default function ProfileIdentityCard({
       <div className={styles.divider} />
 
       {children}
-    </div>
+    </Card>
   );
 }

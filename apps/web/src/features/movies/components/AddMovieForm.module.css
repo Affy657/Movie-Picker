@@ -374,11 +374,7 @@
   flex-direction: column;
   gap: var(--space-3-5);
   padding: var(--space-3-5) var(--space-4);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
   margin-bottom: var(--space-2-5);
-  box-shadow: var(--shadow-sm);
 }
 
 .filterGroup {
@@ -478,16 +474,6 @@
   background: color-mix(in srgb, var(--color-primary) 14%, transparent);
   border-color: var(--color-primary);
   color: var(--color-primary);
-}
-
-.yearRange :global(.input) {
-  flex: 0 0 5rem;
-  max-width: 5rem;
-  min-height: var(--tap-target-min);
-  text-align: center;
-  padding-inline: var(--space-2);
-  margin-bottom: 0;
-  box-sizing: border-box;
 }
 
 .voteChips {

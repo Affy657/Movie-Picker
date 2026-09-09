@@ -34,6 +34,7 @@ import {
   useWatchlistRow,
 } from './home/usePersonalRows';
 import styles from './HomePage.module.css';
+import Card from '@/shared/components/Card';
 
 type GenreTabKey = 'all' | `${number}`;
 
@@ -220,7 +221,13 @@ export default function HomePage() {
         onSelect={openDetails}
       />
 
-      <section className={styles.ctaBand} aria-labelledby="home-cta-title">
+      <Card
+        as="section"
+        padding="none"
+        radius="lg"
+        className={styles.ctaBand}
+        aria-labelledby="home-cta-title"
+      >
         <div className={styles.ctaText}>
           <p id="home-cta-title" className={styles.ctaTitle}>
             {t('home.ctaBand.title')}
@@ -230,7 +237,7 @@ export default function HomePage() {
         <Link to={ROUTES.createEvent} className={buttonClass({ variant: 'primary' })}>
           {t('home.ctaBand.action')}
         </Link>
-      </section>
+      </Card>
 
       {selected ? (
         <MovieDetailsModal

@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { ROUTES } from '@/app/routes';
 import { useTranslation } from '@/shared/i18n';
 import styles from './AuthPageShell.module.css';
+import Card from '@/shared/components/Card';
 
 type AuthPageShellProps = {
   title: string;
@@ -23,12 +24,12 @@ export default function AuthPageShell({
         <ArrowLeft size={16} aria-hidden />
         <span className={styles.backLinkLabel}>{t('nav.home')}</span>
       </Link>
-      <div className={styles.card}>
+      <Card padding="none" radius="lg" elevation="md" className={styles.card}>
         <span className={styles.cardAccent} aria-hidden />
         <h1 className={styles.title}>{title}</h1>
         {description ? <p className={styles.description}>{description}</p> : null}
         {children}
-      </div>
+      </Card>
     </>
   );
 }

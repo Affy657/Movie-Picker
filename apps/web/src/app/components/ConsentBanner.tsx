@@ -4,6 +4,7 @@ import { useConsent } from '@/shared/contexts/ConsentContext';
 import ConsentDialog from '@/shared/components/ConsentDialog';
 import styles from './ConsentBanner.module.css';
 import Button from '@/shared/components/Button';
+import Card from '@/shared/components/Card';
 
 export default function ConsentBanner() {
   const { t } = useTranslation();
@@ -14,7 +15,14 @@ export default function ConsentBanner() {
 
   return (
     <>
-      <section className={styles.root} aria-label={t('consent.banner.title')} aria-live="polite">
+      <Card
+        as="section"
+        padding="none"
+        elevation="lg"
+        className={styles.root}
+        aria-label={t('consent.banner.title')}
+        aria-live="polite"
+      >
         <div className={styles.content}>
           <p className={styles.title}>{t('consent.banner.title')}</p>
           <p className={styles.description}>{t('consent.banner.description')}</p>
@@ -41,7 +49,7 @@ export default function ConsentBanner() {
             {t('consent.banner.acceptAll')}
           </Button>
         </div>
-      </section>
+      </Card>
       <ConsentDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
     </>
   );

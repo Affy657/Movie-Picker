@@ -1,28 +1,39 @@
 .card {
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
   color: var(--color-text);
 }
 
-.none {
-  padding: 0;
-}
-
-.sm {
+.paddingSm {
   padding: var(--space-3);
 }
 
-.md {
+.paddingMd {
   padding: var(--space-4);
 }
 
-.lg {
+.paddingLg {
   padding: var(--space-5);
 }
 
-.elevated {
+.radiusMd {
+  border-radius: var(--radius-md);
+}
+
+.radiusLg {
+  border-radius: var(--radius-lg);
+}
+
+.elevationSm {
   box-shadow: var(--shadow-sm);
+}
+
+.elevationMd {
+  box-shadow: var(--shadow-md);
+}
+
+.elevationLg {
+  box-shadow: var(--shadow-lg);
 }
 
 .interactive {

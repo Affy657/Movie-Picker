@@ -34,7 +34,7 @@ export default function LandingSocial() {
         <Card
           as="article"
           padding="none"
-          elevated
+          elevation="sm"
           className={clsx(styles.profile, shared.reveal)}
           aria-label={t('landing.social.profileLabel')}
         >
