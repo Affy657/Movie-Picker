@@ -57,6 +57,12 @@ type UseEventWheelOptions = {
   onCloseDone: () => void;
 };
 
+function initialWinner(event: UseEventWheelOptions['event']): MovieData | null {
+  if (!event?.winnerMovie) return null;
+  if (remainingWheelRevealDelayMs(event.winnerPickMethod, event.winnerPickedAt) > 0) return null;
+  return event.winnerMovie;
+}
+
 export function useEventWheel({
   slug,
   event,
@@ -72,11 +78,7 @@ export function useEventWheel({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [winnerIndex, setWinnerIndex] = useState(-1);
   const [wheelKey, setWheelKey] = useState(0);
-  const [winner, setWinner] = useState<MovieData | null>(() => {
-    if (!event?.winnerMovie) return null;
-    if (remainingWheelRevealDelayMs(event.winnerPickMethod, event.winnerPickedAt) > 0) return null;
-    return event.winnerMovie;
-  });
+  const [winner, setWinner] = useState<MovieData | null>(() => initialWinner(event));
   const [spinWinner, setSpinWinner] = useState<MovieData | null>(null);
   const [pickMethod, setPickMethod] = useState<WinnerPickMethod | null>(
     event?.winnerPickMethod ?? null
@@ -98,20 +100,19 @@ export function useEventWheel({
     const movie = event?.winnerMovie ?? null;
     const method = event?.winnerPickMethod ?? null;
     const delay = remainingWheelRevealDelayMs(event?.winnerPickMethod, event?.winnerPickedAt);
-    if (delay <= 0) {
-      setWinner(movie);
+    const reveal = (revealed: MovieData | null) => {
+      setWinner(revealed);
       setPickMethod(method);
       setSpinWinner(null);
+    };
+
+    if (delay <= 0) {
+      reveal(movie);
       return undefined;
     }
-    setWinner(null);
-    setPickMethod(method);
-    setSpinWinner(null);
-    const timer = window.setTimeout(() => {
-      setWinner(movie);
-      setPickMethod(method);
-      setSpinWinner(null);
-    }, delay);
+
+    reveal(null);
+    const timer = window.setTimeout(() => reveal(movie), delay);
     return () => window.clearTimeout(timer);
   }, [event?.winnerMovie, event?.winnerPickMethod, event?.winnerPickedAt, isModalOpen]);
 

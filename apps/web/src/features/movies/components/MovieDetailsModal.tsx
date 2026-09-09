@@ -37,6 +37,32 @@ interface MovieDetailsModalProps {
   onClose: () => void;
 }
 
+function buildDetailsTabs(
+  hasEventContext: boolean,
+  providerCount: number,
+  t: ReturnType<typeof useTranslation>['t']
+) {
+  const eventTab = hasEventContext
+    ? [{ key: 'soiree' as const, label: t('movies.details.tabSoiree') }]
+    : [];
+  return [
+    ...eventTab,
+    { key: 'film' as const, label: t('movies.details.tabFilm') },
+    {
+      key: 'dispo' as const,
+      label: t('movies.details.tabDispo'),
+      badge: providerCount > 0 ? providerCount : undefined,
+    },
+  ];
+}
+
+function hasEventFooterActions(eventContext: MovieDetailsModalProps['eventContext']) {
+  if (!eventContext) return false;
+  return (
+    !!eventContext.onToggleWatchlist || !!eventContext.wheelExclusion || eventContext.canRemove
+  );
+}
+
 export default function MovieDetailsModal({
   open,
   title,
@@ -79,25 +105,17 @@ export default function MovieDetailsModal({
   const resolvedWatchPageUrl = needsProviderFetch
     ? (providerDetailsQuery.data?.tmdbWatchPageUrl ?? null)
     : watchPageUrl;
-  const tabs = [
-    ...(eventContext ? [{ key: 'soiree' as const, label: t('movies.details.tabSoiree') }] : []),
-    { key: 'film' as const, label: t('movies.details.tabFilm') },
-    {
-      key: 'dispo' as const,
-      label: t('movies.details.tabDispo'),
-      badge: providers.length > 0 ? providers.length : undefined,
-    },
-  ];
+  const tabs = buildDetailsTabs(!!eventContext, providers.length, t);
 
-  const wheelLabel = eventContext?.wheelExclusion?.excluded
-    ? t('movies.list.includeInWheelAction')
-    : t('movies.list.excludeFromWheelAction');
+  const wheelLabel = t(
+    eventContext?.wheelExclusion?.excluded
+      ? 'movies.list.includeInWheelAction'
+      : 'movies.list.excludeFromWheelAction'
+  );
   const removeAria = eventContext?.isMine
     ? `${t('movies.list.removeButton')} ${title}`
     : t('movies.list.removeAsHostAria', { title });
-  const hasFooterActions =
-    !!eventContext &&
-    (!!eventContext.onToggleWatchlist || !!eventContext.wheelExclusion || eventContext.canRemove);
+  const hasFooterActions = hasEventFooterActions(eventContext);
 
   return (
     <Modal
