@@ -5,6 +5,7 @@ import { ROUTES } from '@/app/routes';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useTranslation } from '@/shared/i18n';
+import Button, { buttonClass } from '@/shared/components/Button';
 
 type ServerErrorPageProps = {
   error?: Error | null;
@@ -29,11 +30,11 @@ export default function ServerErrorPage({ error, onRetry }: Readonly<ServerError
       actions={
         <>
           {onRetry ? (
-            <button type="button" className="btn btn-primary" onClick={onRetry}>
+            <Button type="button" variant="primary" onClick={onRetry}>
               {t('errors.boundary.retryButton')}
-            </button>
+            </Button>
           ) : null}
-          <Link to={ROUTES.home} className="btn">
+          <Link to={ROUTES.home} className={buttonClass()}>
             {t('errors.boundary.homeButton')}
           </Link>
         </>

@@ -11,6 +11,8 @@ import { safeReturnTo } from '@/shared/utils/returnTo';
 import { withReturnTo, ROUTES } from '@/app/routes';
 import { useTranslation } from '@/shared/i18n';
 import { isRegisterPasswordCompliant } from '@/shared/utils/authPasswordRules';
+import Button from '@/shared/components/Button';
+import Field from '@/shared/components/Field';
 
 export default function RegisterPage() {
   const { t } = useTranslation();
@@ -56,62 +58,67 @@ export default function RegisterPage() {
           className="form"
           aria-describedby={rulesError || error ? 'register-form-error' : undefined}
         >
-          {(rulesError || error) && (
+          {error && (
             <p id="register-form-error" className="error" role="alert">
-              {rulesError || error}
+              {error}
             </p>
           )}
-          <label className="label" htmlFor="register-displayName">
-            {t('auth.register.pseudoLabel')}
-          </label>
-          <input
-            id="register-displayName"
-            type="text"
-            className="input"
-            autoComplete="nickname"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            required
-            maxLength={80}
-            aria-invalid={error ? true : undefined}
-          />
-          <label className="label" htmlFor="register-email">
-            {t('auth.register.emailLabel')}
-          </label>
-          <input
-            id="register-email"
-            type="email"
-            className="input"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            aria-invalid={error ? true : undefined}
-          />
-          <label className="label" htmlFor="register-password">
-            {t('auth.register.passwordLabel')}
-          </label>
-          <input
-            id="register-password"
-            type="password"
-            className="input"
-            autoComplete="new-password"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              setRulesError(null);
-            }}
-            required
-            minLength={8}
-            aria-invalid={rulesError || error ? true : undefined}
-            aria-describedby="register-password-hint"
-          />
-          <p id="register-password-hint" className="hint">
-            {t('auth.register.passwordRulesHint')}
-          </p>
-          <button type="submit" className="btn btn-primary" disabled={loading}>
+          <Field label={t('auth.register.pseudoLabel')} htmlFor="register-displayName">
+            {({ id }) => (
+              <input
+                id={id}
+                type="text"
+                className="input"
+                autoComplete="nickname"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                required
+                maxLength={80}
+                aria-invalid={error ? true : undefined}
+              />
+            )}
+          </Field>
+          <Field label={t('auth.register.emailLabel')} htmlFor="register-email">
+            {({ id }) => (
+              <input
+                id={id}
+                type="email"
+                className="input"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                aria-invalid={error ? true : undefined}
+              />
+            )}
+          </Field>
+          <Field
+            label={t('auth.register.passwordLabel')}
+            htmlFor="register-password"
+            hint={t('auth.register.passwordRulesHint')}
+            error={rulesError ?? undefined}
+          >
+            {({ id, describedBy, invalid }) => (
+              <input
+                id={id}
+                type="password"
+                className="input"
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setRulesError(null);
+                }}
+                required
+                minLength={8}
+                aria-describedby={describedBy}
+                aria-invalid={invalid || error ? true : undefined}
+              />
+            )}
+          </Field>
+          <Button type="submit" variant="primary" disabled={loading}>
             {loading ? t('auth.register.submitting') : t('auth.register.submit')}
-          </button>
+          </Button>
         </form>
         <OAuthProviderButtons returnTo={returnTo} />
         <p className="muted">

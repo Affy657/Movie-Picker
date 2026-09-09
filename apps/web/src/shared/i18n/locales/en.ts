@@ -80,6 +80,8 @@ export const en: Locale = {
     retry: 'Try again',
     empty: 'No film in this selection yet.',
     emptyMessage: 'Come back later, the selection is refreshed several times a day.',
+    emptyMessageMostProposed:
+      'This ranking shows up once enough events have suggested the same movies. Create one to feed it.',
     unknownSelection: 'This selection does not exist.',
     unknownSelectionMessage:
       'The link may be stale. Head back to the home page to find the current selections.',
@@ -581,7 +583,8 @@ export const en: Locale = {
         reportUnmatched: 'Show the {{count}} film(s) not found on TMDB',
         reportUndecided: 'Show the {{count}} film(s) left undecided, due at the next sync',
         reportTruncated: '{{count}} film(s) skipped: too many films at once.',
-        attentionMessage: '{{count}} film(s) could not be identified automatically.',
+        attentionMessageOne: '1 movie could not be identified automatically.',
+        attentionMessage: '{{count}} movies could not be identified automatically.',
         attentionConfirm: 'Confirm them',
         syncPersistentHint: 'At most one read a day. Nothing is ever written back to Letterboxd.',
         choicesTitleOne: 'One title to confirm',
@@ -644,7 +647,7 @@ export const en: Locale = {
       fallbackError: 'Creation failed',
       signedOutTitle: 'Create your event',
       signedOutMessage: 'Log in or create an account to organize an event and invite friends.',
-      defaultTitle: 'Movie night at {{name}}’s',
+      defaultTitle: 'Movie night on {{date}}',
       description:
         'Give it a title, a date and a time. You can adjust the settings later if you need to.',
       advancedOptions: 'Advanced options (optional)',
@@ -997,7 +1000,8 @@ export const en: Locale = {
     },
     list: {
       emptyTitle: 'No movies suggested yet',
-      emptyPlaceholder: 'Use the search above to suggest the first movie and spin the wheel.',
+      emptyPlaceholder:
+        'Add the first movie with the “Suggest a movie” button, then spin the wheel.',
       proposedBy: 'Suggested by {{pseudo}}',
       proposedByMeLead: 'Suggested by ',
       proposedByMeSelf: 'you',
@@ -1195,7 +1199,8 @@ export const en: Locale = {
       filtersToggleAria: 'Filters',
       filtersLabel: 'Filters',
       filtersSheetTitle: 'Filter my list',
-      filtersApply: 'View {{count}} title(s)',
+      filtersApplyOne: 'View 1 title',
+      filtersApply: 'View {{count}} titles',
       filtersReset: 'Reset',
       filtersResetAll: 'Reset filters',
       clearAll: 'Clear all',
@@ -1297,6 +1302,15 @@ export const en: Locale = {
     eventDateChangedText: '**{{eventTitle}}** was rescheduled.',
     eventReminder1hText: '⏰ **{{eventTitle}}** is coming up fast!',
     eventReminder24hText: 'Tomorrow is **{{eventTitle}}**! Get the couch and popcorn ready 🍿',
+    participantJoinedGroupedText: '{{name}} just joined the event! 🎉',
+    movieAddedGroupedText: '**{{movie}}** was added to the event',
+    moviePickedGroupedText: 'The verdict is in: it will be **{{movie}}**!',
+    moviePickedManuallyGroupedText: 'The host has picked **{{movie}}**!',
+    eventDeletedGroupedText: 'The event was cancelled.',
+    eventDateChangedGroupedText: 'The event was rescheduled.',
+    eventReminder1hGroupedText: '⏰ The event is coming up fast!',
+    eventReminder24hGroupedText: 'It is tomorrow! Get the couch and popcorn ready 🍿',
+    eventPendingGroupedText: 'The event ended with no movie picked... catch it next time? 😅',
     eventInvitationText: '{{name}} invites you to join **{{eventTitle}}**',
     eventPendingText: '**{{eventTitle}}** ended with no movie picked... catch it next time? 😅',
     letterboxdReconciliationPendingText:
@@ -1326,6 +1340,7 @@ export const en: Locale = {
   },
 
   legal: {
+    updatedAt: 'Last updated: {{date}}',
     noticeTitle: 'Legal notice',
     noticeIntro: 'Movie Picker is a personal project developed and published by Adrien Morand.',
     noticeEditorTitle: 'Publisher',
@@ -1346,8 +1361,13 @@ export const en: Locale = {
     privacyIntro:
       'This page describes the personal data processed by Movie Picker and your rights over that data.',
     privacyDataTitle: 'Data collected',
-    privacyDataBody:
-      'Account: email, nickname, public handle, hashed password, or an identity linked via Google/GitHub. Service usage: events you create, votes, participations, watchlist, notifications, follows. Audience measurement: PostHog, only with your consent. PostHog receives a technical identifier, pages viewed and actions (creating an event, voting, sharing a link), without nickname, handle, email or precise location.',
+    privacyDataBody: 'Movie Picker processes three families of data:',
+    privacyDataAccount:
+      'Account: email, nickname, public handle, hashed password, or an identity linked via Google/GitHub.',
+    privacyDataUsage:
+      'Service usage: events you create, votes, participations, watchlist, notifications, follows.',
+    privacyDataAnalytics:
+      'Audience measurement: PostHog, only with your consent. PostHog receives a technical identifier, pages viewed and actions (creating an event, voting, sharing a link), without nickname, handle, email or precise location.',
     privacyOAuthTitle: 'Signing in with Google or GitHub',
     privacyOAuthBody:
       'If you choose to sign in with Google or GitHub, Movie Picker only receives your identifier, your email address (if verified by the provider) and your display name. No other data from the provider is requested or stored. You can link or unlink these accounts at any time from the Settings page.',
@@ -1525,7 +1545,8 @@ export const en: Locale = {
         filtersToggleAria: 'Filters',
         filtersLabel: 'Filters',
         filtersSheetTitle: 'Filter movies',
-        filtersApply: 'See {{count}} movie(s)',
+        filtersApplyOne: 'See 1 movie',
+        filtersApply: 'See {{count}} movies',
         filtersReset: 'Reset',
         filtersResetAll: 'Reset filters',
         clearAll: 'Clear all',

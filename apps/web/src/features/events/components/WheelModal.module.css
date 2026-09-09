@@ -13,7 +13,7 @@
 
 .spinLabel {
   margin: 0;
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-md);
   font-weight: 600;
   color: var(--on-poster-fg-soft);
   letter-spacing: var(--tracking-wide);
@@ -54,28 +54,7 @@
   color: var(--color-text);
 }
 
-.closeIconBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition:
-    background var(--duration-fast),
-    color var(--duration-fast);
-}
-
 @media (hover: hover) {
-  .closeIconBtn:hover {
-    background: var(--color-surface-raised);
-    color: var(--color-text);
-  }
 }
 
 .winnerArea {

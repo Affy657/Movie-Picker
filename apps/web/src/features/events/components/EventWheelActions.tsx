@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import type { EventWheelState } from '@/features/events/hooks/useEventWheel';
 import { useTranslation } from '@/shared/i18n';
 import styles from './EventWheelActions.module.css';
+import Button from '@/shared/components/Button';
 
 type EventWheelActionsProps = {
   wheel: EventWheelState;
@@ -17,6 +18,9 @@ export default function EventWheelActions({
 }: Readonly<EventWheelActionsProps>) {
   const { t } = useTranslation();
   if (!wheel.canSpin && !wheel.manualMode && !wheel.showClose) return null;
+
+  const spinIsPrimary = wheel.primaryAction === 'spin';
+  const closeIsPrimary = wheel.primaryAction === 'close';
 
   const spinLabel = wheel.showRelaunch
     ? t('events.wheel.relaunchButton')
@@ -37,79 +41,91 @@ export default function EventWheelActions({
     wheel.closeEvent();
   };
 
-  return (
-    <>
-      {wheel.manualMode ? (
+  const spinControls =
+    !wheel.manualMode && wheel.canSpin ? (
+      <>
+        <Button
+          type="button"
+          variant={spinIsPrimary ? 'primary' : 'secondary'}
+          className={clsx(styles.spin, spinIsPrimary && styles.primaryGrow)}
+          onClick={wheel.launch}
+          disabled={wheel.loading || wheel.spinDisabled}
+          title={disabledHint}
+        >
+          <Disc3 size={16} aria-hidden />
+          <span className={clsx(styles.spinLabel, !spinIsPrimary && styles.iconOnlyLabel)}>
+            {wheel.loading ? t('events.wheel.spinning') : spinLabel}
+          </span>
+          {spinIsPrimary && wheel.eligibleMovies.length > 0 ? (
+            <span className={styles.spinCount}>{wheel.eligibleMovies.length}</span>
+          ) : null}
+        </Button>
+        <Button
+          type="button"
+          className={styles.manualPick}
+          onClick={wheel.enterManualMode}
+          disabled={wheel.loading || wheel.spinDisabled}
+          title={disabledHint}
+        >
+          <MousePointerClick size={15} aria-hidden />
+          <span className={styles.manualPickLabel}>{t('events.wheel.manualPickButton')}</span>
+        </Button>
+      </>
+    ) : null;
+
+  const resetControl = wheel.showReset ? (
+    <Button
+      type="button"
+      className={styles.reset}
+      onClick={onRequestReset}
+      disabled={wheel.loading}
+    >
+      <Undo2 size={15} aria-hidden />
+      <span className={styles.resetLabel}>{t('events.wheel.resetButton')}</span>
+    </Button>
+  ) : null;
+
+  const closeControl = wheel.showClose ? (
+    <Button
+      type="button"
+      variant={closeIsPrimary ? 'primary' : 'secondary'}
+      className={clsx(styles.close, closeIsPrimary && styles.primaryGrow)}
+      onClick={handleCloseClick}
+      disabled={wheel.loading}
+    >
+      <Lock size={15} aria-hidden />
+      <span className={clsx(styles.closeLabel, !closeIsPrimary && styles.iconOnlyLabel)}>
+        {closeLabel}
+      </span>
+    </Button>
+  ) : null;
+
+  if (wheel.manualMode) {
+    return (
+      <>
         <output className={styles.manualBar}>
           <span className={styles.manualHint}>{t('events.wheel.manualPickHint')}</span>
-          <button
+          <Button
             type="button"
-            className={clsx('btn btn-sm', styles.manualCancel)}
+            size="sm"
+            className={styles.manualCancel}
             onClick={wheel.cancelManualMode}
           >
             {t('events.wheel.manualPickCancel')}
-          </button>
+          </Button>
         </output>
-      ) : (
-        wheel.canSpin && (
-          <>
-            <button
-              type="button"
-              className={clsx(
-                'btn',
-                !wheel.showRelaunch && 'btn-primary',
-                styles.spin,
-                !wheel.showRelaunch && styles.spinGrow
-              )}
-              onClick={wheel.launch}
-              disabled={wheel.loading || wheel.spinDisabled}
-              title={disabledHint ?? (wheel.showRelaunch ? spinLabel : undefined)}
-            >
-              <Disc3 size={16} aria-hidden />
-              <span className={clsx(styles.spinLabel, wheel.showRelaunch && styles.iconOnlyLabel)}>
-                {wheel.loading ? t('events.wheel.spinning') : spinLabel}
-              </span>
-              {!wheel.showRelaunch && wheel.eligibleMovies.length > 0 ? (
-                <span className={styles.spinCount}>{wheel.eligibleMovies.length}</span>
-              ) : null}
-            </button>
-            <button
-              type="button"
-              className={clsx('btn', styles.manualPick)}
-              onClick={wheel.enterManualMode}
-              disabled={wheel.loading || wheel.spinDisabled}
-              title={disabledHint}
-            >
-              <MousePointerClick size={15} aria-hidden />
-              <span className={styles.manualPickLabel}>{t('events.wheel.manualPickButton')}</span>
-            </button>
-          </>
-        )
-      )}
-      {wheel.showReset ? (
-        <button
-          type="button"
-          className={clsx('btn', styles.reset)}
-          onClick={onRequestReset}
-          disabled={wheel.loading}
-          title={t('events.wheel.resetButton')}
-        >
-          <Undo2 size={15} aria-hidden />
-          <span className={styles.resetLabel}>{t('events.wheel.resetButton')}</span>
-        </button>
-      ) : null}
-      {wheel.showClose && (
-        <button
-          type="button"
-          className={clsx('btn', styles.close)}
-          onClick={handleCloseClick}
-          disabled={wheel.loading}
-          title={closeLabel}
-        >
-          <Lock size={15} aria-hidden />
-          <span className={styles.closeLabel}>{closeLabel}</span>
-        </button>
-      )}
+        {resetControl}
+        {closeControl}
+      </>
+    );
+  }
+
+  return (
+    <>
+      {closeIsPrimary ? closeControl : null}
+      {spinControls}
+      {resetControl}
+      {closeIsPrimary ? null : closeControl}
     </>
   );
 }

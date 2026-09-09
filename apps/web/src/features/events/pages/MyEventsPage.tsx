@@ -40,6 +40,7 @@ import HistoryFiltersPanel from '@/features/events/pages/my-events/HistoryFilter
 import { useHistoryToolbar } from '@/features/events/pages/my-events/useHistoryToolbar';
 import HistoryEventRow from '@/features/events/pages/my-events/HistoryEventRow';
 import styles from './MyEventsPage.module.css';
+import Button, { buttonClass } from '@/shared/components/Button';
 
 const HISTORY_FILTERS_PANEL_ID = 'my-events-history-filters';
 
@@ -291,13 +292,9 @@ export default function MyEventsPage() {
                 {t('events.myEvents.reconnectLink')}
               </Link>
             ) : (
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => activeQuery.refetch()}
-              >
+              <Button type="button" variant="primary" onClick={() => activeQuery.refetch()}>
                 {t('common.retry')}
-              </button>
+              </Button>
             )
           }
         />
@@ -317,7 +314,7 @@ export default function MyEventsPage() {
           title={t('events.myEvents.emptyTitle')}
           message={t('events.myEvents.emptyDescription')}
           actions={
-            <Link to={ROUTES.createEvent} className="btn btn-primary">
+            <Link to={ROUTES.createEvent} className={buttonClass({ variant: 'primary' })}>
               {t('events.myEvents.createCta')}
             </Link>
           }
@@ -380,10 +377,10 @@ export default function MyEventsPage() {
                   message={t('events.myEvents.activeEmpty')}
                   actions={
                     <>
-                      <Link to={ROUTES.createEvent} className="btn btn-primary">
+                      <Link to={ROUTES.createEvent} className={buttonClass({ variant: 'primary' })}>
                         {t('events.myEvents.createCta')}
                       </Link>
-                      <Link to={ROUTES.watchlist} className="btn btn-ghost">
+                      <Link to={ROUTES.watchlist} className={buttonClass({ variant: 'ghost' })}>
                         {t('events.myEvents.discoverWatchlistCta')}
                       </Link>
                     </>

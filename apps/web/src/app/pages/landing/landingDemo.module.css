@@ -34,7 +34,7 @@
 .appUrl {
   margin-left: var(--space-2-5);
   font-family: var(--font-mono);
-  font-size: var(--font-size-5xs);
+  font-size: var(--font-size-demo-sm);
   color: var(--color-meta);
 }
 
@@ -88,7 +88,7 @@
   border: 1px dashed var(--color-border);
   color: var(--color-meta);
   font-family: var(--font-mono);
-  font-size: var(--font-size-4xs);
+  font-size: var(--font-size-3xs);
   font-weight: 700;
   line-height: var(--leading-none);
 }
@@ -111,7 +111,7 @@
 .movieTitle {
   display: block;
   font-weight: 700;
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-md);
   letter-spacing: var(--tracking-snug);
   line-height: var(--leading-compact);
 }
@@ -119,7 +119,7 @@
 .movieMeta {
   display: block;
   font-family: var(--font-mono);
-  font-size: var(--font-size-5xs);
+  font-size: var(--font-size-demo-sm);
   color: var(--color-meta);
 }
 
@@ -138,7 +138,7 @@
   background: var(--surface-sunken);
   color: var(--color-meta);
   font-family: var(--font-mono);
-  font-size: var(--font-size-5xs);
+  font-size: var(--font-size-demo-sm);
   font-weight: 700;
   line-height: var(--leading-none);
   white-space: nowrap;
@@ -205,7 +205,7 @@
   display: none;
   position: relative;
   font-family: var(--font-mono);
-  font-size: var(--font-size-6xs);
+  font-size: var(--font-size-demo-xs);
   font-weight: 700;
   line-height: var(--leading-compact);
   letter-spacing: var(--tracking-slight);
@@ -216,7 +216,7 @@
 
 .posterLg .posterLabel {
   display: block;
-  font-size: var(--font-size-5xs);
+  font-size: var(--font-size-demo-sm);
 }
 
 .floatNote {
@@ -284,13 +284,13 @@
 .listMeta {
   display: block;
   font-family: var(--font-mono);
-  font-size: var(--font-size-5xs);
+  font-size: var(--font-size-demo-sm);
   color: var(--color-text-muted);
 }
 
 .listSource {
   font-family: var(--font-mono);
-  font-size: var(--font-size-6xs);
+  font-size: var(--font-size-demo-xs);
   font-weight: 700;
   letter-spacing: var(--tracking-extra);
   text-transform: uppercase;
@@ -341,7 +341,7 @@
   display: grid;
   place-items: center;
   font-family: var(--font-mono);
-  font-size: var(--font-size-6xs);
+  font-size: var(--font-size-demo-xs);
   font-weight: 700;
   color: var(--color-fixed-white);
   line-height: var(--leading-none);
@@ -434,7 +434,7 @@
 
 .fieldLabel {
   font-family: var(--font-mono);
-  font-size: var(--font-size-6xs);
+  font-size: var(--font-size-demo-xs);
   font-weight: 700;
   letter-spacing: var(--tracking-extra);
   text-transform: uppercase;
@@ -451,7 +451,7 @@
   background: var(--color-surface);
   font-size: var(--font-size-xs);
   color: var(--color-text);
-  min-height: 32px;
+  min-height: var(--space-8);
 }
 
 .fieldInputFocus {
@@ -473,7 +473,7 @@
   border: 1px dashed var(--color-border);
   background: var(--color-surface);
   font-family: var(--font-mono);
-  font-size: var(--font-size-5xs);
+  font-size: var(--font-size-demo-sm);
   color: var(--color-text-muted);
   text-align: center;
 }
@@ -528,7 +528,7 @@
 .stepLegend {
   text-align: center;
   font-family: var(--font-mono);
-  font-size: var(--font-size-5xs);
+  font-size: var(--font-size-demo-sm);
   color: var(--color-text-muted);
 }
 

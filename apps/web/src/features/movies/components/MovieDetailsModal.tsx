@@ -1,6 +1,6 @@
 import { useEffect, useId, useState, useRef } from 'react';
 import clsx from 'clsx';
-import { Bookmark, BookmarkCheck, Disc3, ImageOff, RotateCcw, Trash2, X } from 'lucide-react';
+import { Bookmark, BookmarkCheck, Disc3, Film, RotateCcw, Trash2, X } from 'lucide-react';
 import { Tabs, TabPanel } from '@/shared/components/Tabs';
 import { useSheetDrag } from '@/shared/hooks/useSheetDrag';
 import { useMovieDetails } from '@/features/movies/hooks/useMovieDetails';
@@ -16,6 +16,7 @@ import TrailerModal from '@/features/movies/components/TrailerModal';
 import dragStyles from '@/shared/components/sheetDrag.module.css';
 import Modal from '@/shared/components/Modal';
 import styles from './MovieDetailsModal.module.css';
+import IconButton from '@/shared/components/IconButton';
 
 export type MovieDetailsTabKey = 'soiree' | 'film' | 'dispo';
 export type { MovieDetailsEventContext };
@@ -121,7 +122,7 @@ export default function MovieDetailsModal({
                 <img src={posterSrc} alt="" className={styles.poster} />
               ) : (
                 <div className={styles.posterPlaceholder} aria-hidden>
-                  <ImageOff size={18} />
+                  <Film size={18} />
                 </div>
               )}
               <div className={styles.headerInfo}>
@@ -134,14 +135,9 @@ export default function MovieDetailsModal({
                   {voteLabel ? <span>{voteLabel}</span> : null}
                 </p>
               </div>
-              <button
-                type="button"
-                className={styles.closeBtn}
-                onClick={onClose}
-                aria-label={t('common.close')}
-              >
+              <IconButton label={t('common.close')} onClick={onClose}>
                 <X aria-hidden size={18} />
-              </button>
+              </IconButton>
             </div>
           </div>
 

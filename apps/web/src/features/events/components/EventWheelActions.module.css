@@ -59,15 +59,15 @@
 }
 
 @media (max-width: 47.9375rem) {
-  .spinGrow {
+  .primaryGrow {
     flex: 1 1 auto;
     justify-content: center;
   }
 
   .reset,
   .manualPick,
-  .close,
-  .spin:not(.spinGrow) {
+  .close:not(.primaryGrow),
+  .spin:not(.primaryGrow) {
     flex: 0 0 auto;
     padding-left: var(--space-2);
     padding-right: var(--space-2);
@@ -75,7 +75,6 @@
 
   .iconOnlyLabel,
   .manualPickLabel,
-  .closeLabel,
   .resetLabel {
     position: absolute;
     width: 1px;

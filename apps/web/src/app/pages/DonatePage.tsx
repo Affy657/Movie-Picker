@@ -11,6 +11,7 @@ import { SUPPORT_EMAIL } from '@/shared/support/supportMailto';
 import { KOFI_URL } from '@/shared/donations/kofi';
 import content from './ContentPage.module.css';
 import styles from './DonatePage.module.css';
+import { buttonClass } from '@/shared/components/Button';
 
 export default function DonatePage() {
   const { t } = useTranslation();
@@ -39,7 +40,7 @@ export default function DonatePage() {
           href={KOFI_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn btn-primary"
+          className={buttonClass({ variant: 'primary' })}
           aria-label={t('donate.kofiCtaAria')}
           onClick={() => track('donation_link_clicked', { provider: 'kofi' })}
         >
@@ -70,7 +71,7 @@ export default function DonatePage() {
         <p>{t('donate.badgeMismatch', { email: SUPPORT_EMAIL })}</p>
       </section>
 
-      <Link to={ROUTES.home} className={`btn ${content.backLink}`}>
+      <Link to={ROUTES.home} className={buttonClass({ className: content.backLink })}>
         {t('donate.back')}
       </Link>
     </PageLayout>

@@ -6,6 +6,7 @@ import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import Sheet from '@/shared/components/Sheet';
 import AddMovieForm, { type AddMovieFormProps } from '@/features/movies/components/AddMovieForm';
 import styles from './AddMoviePanel.module.css';
+import Button from '@/shared/components/Button';
 
 type AddMoviePanelProps = AddMovieFormProps & {
   triggerLabel: string;
@@ -44,15 +45,10 @@ export default function AddMoviePanel({
   return (
     <div ref={rootRef} className={styles.root}>
       {!open && !hideTrigger && (
-        <button
-          ref={triggerRef}
-          type="button"
-          className="btn btn-primary"
-          onClick={() => setOpen(true)}
-        >
+        <Button ref={triggerRef} type="button" variant="primary" onClick={() => setOpen(true)}>
           <Plus size={16} aria-hidden />
           <span>{triggerLabel}</span>
-        </button>
+        </Button>
       )}
 
       {open && isMobile && (

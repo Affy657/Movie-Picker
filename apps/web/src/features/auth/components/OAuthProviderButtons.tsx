@@ -2,6 +2,7 @@ import { oauthStartUrl } from '@/features/auth/api/authApi';
 import { useOAuthProviders } from '@/features/auth/hooks/useOAuthProviders';
 import { useTranslation } from '@/shared/i18n';
 import styles from './OAuthProviderButtons.module.css';
+import { buttonClass } from '@/shared/components/Button';
 
 function GoogleIcon() {
   return (
@@ -73,7 +74,7 @@ export default function OAuthProviderButtons({ returnTo }: Readonly<OAuthProvide
             <a
               key={provider}
               href={oauthStartUrl(provider, returnTo)}
-              className={`btn ${styles.providerButton}`}
+              className={buttonClass({ className: styles.providerButton })}
             >
               {Icon ? <Icon /> : null}
               {t('auth.oauth.continueWith', { provider: PROVIDER_LABELS[provider] ?? provider })}

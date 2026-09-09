@@ -2,7 +2,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  min-height: 2.875rem;
+  min-height: var(--tap-target-min);
 }
 
 .connectionActions {
@@ -41,16 +41,7 @@
   padding: 0;
 }
 
-.iconBtnDanger {
-  border-color: color-mix(in srgb, var(--color-error) 40%, transparent);
-  color: var(--color-error);
-}
-
 @media (hover: hover) {
-  .iconBtnDanger:hover:not(:disabled) {
-    border-color: var(--color-error);
-    color: var(--color-error);
-  }
 }
 
 .status,

@@ -78,6 +78,8 @@
     retry: 'Réessayer',
     empty: 'Aucun film dans cette sélection pour le moment.',
     emptyMessage: 'Revenez plus tard, la sélection est mise à jour plusieurs fois par jour.',
+    emptyMessageMostProposed:
+      'Ce classement apparaît quand assez de soirées ont proposé les mêmes films. Créez-en une pour l’alimenter.',
     unknownSelection: 'Cette sélection n’existe pas.',
     unknownSelectionMessage:
       'Le lien est peut-être périmé. Repartez de l’accueil pour retrouver les sélections du moment.',
@@ -412,7 +414,7 @@
     forgotPassword: {
       title: 'Mot de passe oublié',
       description:
-        'Indique ton e-mail pour recevoir un lien de réinitialisation. Le lien est valable 30 minutes.',
+        'Indiquez votre e-mail pour recevoir un lien de réinitialisation. Le lien est valable 30 minutes.',
       emailLabel: 'E-mail',
       submit: 'Recevoir le lien',
       submitting: 'Envoi\u2026',
@@ -425,7 +427,7 @@
     },
     resetPassword: {
       title: 'Définir un nouveau mot de passe',
-      description: 'Choisis un nouveau mot de passe pour ton compte Movie Picker.',
+      description: 'Choisissez un nouveau mot de passe pour votre compte Movie Picker.',
       newPasswordLabel: 'Nouveau mot de passe',
       newPasswordHint: '8 caractères minimum, au moins une lettre et un chiffre.',
       confirmPasswordLabel: 'Confirme le mot de passe',
@@ -587,7 +589,8 @@
         reportUndecided:
           'Voir les {{count}} film(s) laissé(s) en attente, à décider à la prochaine synchronisation',
         reportTruncated: '{{count}} film(s) non traité(s) : trop de films pour une seule fois.',
-        attentionMessage: '{{count}} film(s) n’ont pas pu être identifiés automatiquement.',
+        attentionMessageOne: '1 film n’a pas pu être identifié automatiquement.',
+        attentionMessage: '{{count}} films n’ont pas pu être identifiés automatiquement.',
         attentionConfirm: 'Les confirmer',
         syncPersistentHint:
           'Une lecture par jour au maximum. Rien n’est jamais écrit sur Letterboxd.',
@@ -653,7 +656,7 @@
       signedOutTitle: 'Créez votre soirée',
       signedOutMessage:
         'Connectez-vous ou créez un compte pour organiser une soirée et inviter vos amis.',
-      defaultTitle: 'Soirée film chez {{name}}',
+      defaultTitle: 'Soirée du {{date}}',
       description:
         'Donnez-lui un titre, une date et une heure. Vous pourrez ajuster les paramètres plus tard si besoin.',
       advancedOptions: 'Options avancées (optionnel)',
@@ -1015,7 +1018,7 @@
     list: {
       emptyTitle: 'Aucun film proposé',
       emptyPlaceholder:
-        'Utilisez la recherche ci-dessus pour proposer le premier film et lancer la roue.',
+        'Proposez le premier film avec le bouton « Proposer un film », puis lancez la roue.',
       proposedBy: 'Proposé par {{pseudo}}',
       proposedByMeLead: 'Proposé par ',
       proposedByMeSelf: 'moi',
@@ -1215,7 +1218,8 @@
       filtersToggleAria: 'Filtres',
       filtersLabel: 'Filtres',
       filtersSheetTitle: 'Filtrer ma liste',
-      filtersApply: 'Voir {{count}} titre(s)',
+      filtersApplyOne: 'Voir 1 titre',
+      filtersApply: 'Voir {{count}} titres',
       filtersReset: 'Réinitialiser',
       filtersResetAll: 'Réinitialiser les filtres',
       clearAll: 'Tout effacer',
@@ -1317,7 +1321,17 @@
     eventDeletedText: '**{{eventTitle}}** a été annulée.',
     eventDateChangedText: '**{{eventTitle}}** a été reprogrammée.',
     eventReminder1hText: '⏰ **{{eventTitle}}** arrive à grands pas !',
-    eventReminder24hText: "Demain, c'est **{{eventTitle}}** ! Prépare le canapé et le popcorn 🍿",
+    eventReminder24hText: "Demain, c'est **{{eventTitle}}** ! Préparez le canapé et le popcorn 🍿",
+    participantJoinedGroupedText: '{{name}} vient de rejoindre la soirée ! 🎉',
+    movieAddedGroupedText: '**{{movie}}** a été ajouté à la soirée',
+    moviePickedGroupedText: 'Le verdict est tombé : ce sera **{{movie}}** !',
+    moviePickedManuallyGroupedText: "L'hôte a choisi **{{movie}}** !",
+    eventDeletedGroupedText: 'La soirée a été annulée.',
+    eventDateChangedGroupedText: 'La soirée a été reprogrammée.',
+    eventReminder1hGroupedText: '⏰ La soirée arrive à grands pas !',
+    eventReminder24hGroupedText: "C'est demain ! Préparez le canapé et le popcorn 🍿",
+    eventPendingGroupedText:
+      "La soirée s'est terminée sans qu'aucun film n'ait été choisi… on se rattrape la prochaine fois ? 😅",
     eventInvitationText: '{{name}} vous invite à rejoindre **{{eventTitle}}**',
     eventPendingText:
       "**{{eventTitle}}** s'est terminée sans qu'aucun film n'ait été choisi… on se rattrape la prochaine fois ? 😅",
@@ -1348,6 +1362,7 @@
   },
 
   legal: {
+    updatedAt: 'Dernière mise à jour : {{date}}',
     noticeTitle: 'Mentions légales',
     noticeIntro:
       'Movie Picker est un projet développé et édité à titre personnel par Adrien Morand.',
@@ -1369,8 +1384,13 @@
     privacyIntro:
       'Cette page décrit les données personnelles traitées par Movie Picker et vos droits sur ces données.',
     privacyDataTitle: 'Données collectées',
-    privacyDataBody:
-      'Compte : e-mail, pseudo, handle public, mot de passe (haché) ou identité liée via Google/GitHub. Usage du service : soirées créées, votes, participations, liste, notifications, abonnements. Mesure d’audience : PostHog, uniquement avec votre consentement. PostHog reçoit un identifiant technique, les pages visitées et les actions (créer une soirée, voter, partager un lien), sans pseudo, handle, e-mail ni localisation précise.',
+    privacyDataBody: 'Movie Picker traite trois familles de données :',
+    privacyDataAccount:
+      'Compte : e-mail, pseudo, handle public, mot de passe (haché) ou identité liée via Google/GitHub.',
+    privacyDataUsage:
+      'Usage du service : soirées créées, votes, participations, liste, notifications, abonnements.',
+    privacyDataAnalytics:
+      'Mesure d’audience : PostHog, uniquement avec votre consentement. PostHog reçoit un identifiant technique, les pages visitées et les actions (créer une soirée, voter, partager un lien), sans pseudo, handle, e-mail ni localisation précise.',
     privacyOAuthTitle: 'Connexion via Google ou GitHub',
     privacyOAuthBody:
       'Si vous choisissez de vous connecter via Google ou GitHub, Movie Picker reçoit uniquement votre identifiant, votre adresse e-mail (si vérifiée par le fournisseur) et votre nom affiché. Aucune autre donnée du fournisseur n’est demandée ni stockée. Vous pouvez lier ou délier ces comptes à tout moment depuis la page Paramètres.',
@@ -1549,7 +1569,8 @@
         filtersToggleAria: 'Filtres',
         filtersLabel: 'Filtres',
         filtersSheetTitle: 'Filtrer les films',
-        filtersApply: 'Voir {{count}} film(s)',
+        filtersApplyOne: 'Voir 1 film',
+        filtersApply: 'Voir {{count}} films',
         filtersReset: 'Réinitialiser',
         filtersResetAll: 'Réinitialiser les filtres',
         clearAll: 'Tout effacer',

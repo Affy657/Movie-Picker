@@ -4,6 +4,7 @@ import { useTranslation } from '@/shared/i18n';
 import { extractYouTubeId } from '@/shared/utils/youtube';
 import styles from './TrailerModal.module.css';
 import Modal from '@/shared/components/Modal';
+import IconButton from '@/shared/components/IconButton';
 
 interface TrailerModalProps {
   open: boolean;
@@ -33,14 +34,9 @@ export default function TrailerModal({
             <h2 id={titleId} className={styles.title}>
               {movieTitle}
             </h2>
-            <button
-              type="button"
-              className={styles.closeBtn}
-              onClick={onClose}
-              aria-label={t('common.close')}
-            >
+            <IconButton label={t('common.close')} onClick={onClose}>
               <X aria-hidden size={18} />
-            </button>
+            </IconButton>
           </div>
           <div className={styles.videoWrap}>
             <iframe

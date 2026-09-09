@@ -34,7 +34,7 @@
 .message {
   max-width: 34ch;
   margin: 0;
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-md);
   line-height: var(--leading-loose);
   color: var(--color-text-muted);
 }
@@ -61,7 +61,7 @@
 }
 
 .compact .title {
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-md);
 }
 
 .compact .message {

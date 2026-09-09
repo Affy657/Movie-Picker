@@ -11,6 +11,7 @@ import type { UserProfile } from '@/features/auth/types';
 import LetterboxdImportSection from '@/features/letterboxd/components/LetterboxdImportSection';
 import { ROUTES } from '@/app/routes';
 import sharedStyles from './AccountShared.module.css';
+import Button, { buttonClass } from '@/shared/components/Button';
 
 const PROVIDER_LABELS: Record<string, string> = { google: 'Google', github: 'GitHub' };
 
@@ -94,32 +95,32 @@ export default function AccountIntegrationsPage({ user }: Readonly<{ user: UserP
                 </div>
                 {confirmingProvider === provider ? (
                   <div className="nav-actions">
-                    <button
+                    <Button
                       type="button"
-                      className="btn btn-danger"
+                      variant="danger"
                       disabled={unlinking}
                       onClick={() => void runUnlink(provider)}
                     >
                       {t('common.confirm')}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
-                      className="btn"
+
                       disabled={unlinking}
                       onClick={() => setConfirmingProvider(null)}
                     >
                       {t('common.cancel')}
-                    </button>
+                    </Button>
                   </div>
                 ) : (
-                  <button
+                  <Button
                     type="button"
-                    className="btn"
+
                     disabled={lockedOut}
                     onClick={() => setConfirmingProvider(provider)}
                   >
                     {t('auth.account.connectionsUnlinkButton')}
-                  </button>
+                  </Button>
                 )}
               </div>
             );
@@ -129,7 +130,10 @@ export default function AccountIntegrationsPage({ user }: Readonly<{ user: UserP
               <div className={sharedStyles.rowMain}>
                 <p className={sharedStyles.rowLabel}>{PROVIDER_LABELS[provider] ?? provider}</p>
               </div>
-              <a href={oauthStartUrl(provider, ROUTES.accountIntegrations)} className="btn">
+              <a
+                href={oauthStartUrl(provider, ROUTES.accountIntegrations)}
+                className={buttonClass()}
+              >
                 {t('auth.account.connectionsLinkButton', {
                   provider: PROVIDER_LABELS[provider] ?? provider,
                 })}

@@ -23,7 +23,7 @@ describe('withReturnTo', () => {
 describe('ROUTES', () => {
   it('sert la landing sur la racine et conserve /decouvrir pour la redirection', () => {
     expect(ROUTES.home).toBe('/');
-    expect(ROUTES.discover).toBe('/decouvrir');
-    expect(ROUTES.discover).not.toBe(ROUTES.home);
+    expect(ROUTES.howItWorks).toBe('/decouvrir');
+    expect(ROUTES.howItWorks).not.toBe(ROUTES.home);
   });
 });

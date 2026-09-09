@@ -61,7 +61,7 @@
   background: var(--on-poster-scrim);
   color: var(--on-poster-badge-fg);
   border: 1px solid var(--on-poster-border);
-  font-size: var(--font-size-4xs);
+  font-size: var(--font-size-3xs);
   font-weight: 700;
   line-height: var(--leading-none);
 }

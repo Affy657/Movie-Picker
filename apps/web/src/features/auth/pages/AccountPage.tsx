@@ -18,6 +18,7 @@ import AccountIntegrationsPage from '@/features/auth/pages/account/AccountIntegr
 import AccountSecurityPage from '@/features/auth/pages/account/AccountSecurityPage';
 import AccountLoadingSkeleton from '@/features/auth/pages/account/AccountLoadingSkeleton';
 import styles from './AccountPage.module.css';
+import { buttonClass } from '@/shared/components/Button';
 
 function GuestPreferencesSection() {
   const { t } = useTranslation();
@@ -90,10 +91,13 @@ export default function AccountPage() {
         <GuestPreferencesSection />
 
         <nav className="nav-actions" aria-label={t('auth.account.guestNavAriaLabel')}>
-          <Link to={withReturnTo(ROUTES.login, ROUTES.account)} className="btn btn-primary">
+          <Link
+            to={withReturnTo(ROUTES.login, ROUTES.account)}
+            className={buttonClass({ variant: 'primary' })}
+          >
             {t('auth.account.loginCta')}
           </Link>
-          <Link to={withReturnTo(ROUTES.register, ROUTES.account)} className="btn">
+          <Link to={withReturnTo(ROUTES.register, ROUTES.account)} className={buttonClass()}>
             {t('auth.account.registerCta')}
           </Link>
         </nav>

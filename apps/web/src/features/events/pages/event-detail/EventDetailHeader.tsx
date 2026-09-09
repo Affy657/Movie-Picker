@@ -1,17 +1,19 @@
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowLeft, ChevronDown, LayoutGrid, List, Plus, Settings } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Plus, Settings } from 'lucide-react';
 import clsx from 'clsx';
 import EventShareButton from '@/features/events/components/EventShareButton';
 import EventCalendarMenu from '@/features/events/components/EventCalendarMenu';
 import EventThemeBanner from '@/features/events/components/EventThemeBanner';
 import EventLifecyclePill from '@/shared/components/EventLifecyclePill';
+import ViewModeToggle from '@/shared/components/ViewModeToggle';
 import Avatar from '@/shared/components/Avatar';
 import type { EventParticipantSummary, MyEventLifecycle } from '@/shared/types/event';
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { ROUTES } from '@/app/routes';
 import styles from './EventDetailHeader.module.css';
+import Button from '@/shared/components/Button';
 
 const MAX_STACKED_AVATARS = 4;
 const STICKY_BAR_MEDIA = '(min-width: 48rem)';
@@ -243,6 +245,19 @@ export default function EventDetailHeader({
   const isUpcoming = lifecycle === 'upcoming';
   const showLifecyclePill = !isUpcoming || !!countdownLabel;
 
+  const addMovieButton = onAddMovie ? (
+    <Button
+      ref={addMovieTriggerRef}
+      type="button"
+      variant={addMoviePrimary ? 'primary' : 'secondary'}
+      className={clsx(styles.addMovieBtn, addMoviePrimary && styles.addMovieBtnPrimary)}
+      onClick={onAddMovie}
+    >
+      <Plus size={16} aria-hidden />
+      <span className={styles.addMovieLabel}>{t('movies.search.label')}</span>
+    </Button>
+  ) : null;
+
   return (
     <>
       <div className={styles.top}>
@@ -291,18 +306,9 @@ export default function EventDetailHeader({
 
         <div className={styles.actions}>
           <div ref={wheelActionsRef} className={styles.wheelActions}>
-            {onAddMovie ? (
-              <button
-                ref={addMovieTriggerRef}
-                type="button"
-                className={clsx('btn', addMoviePrimary && 'btn-primary', styles.addMovieBtn)}
-                onClick={onAddMovie}
-              >
-                <Plus size={16} aria-hidden />
-                <span className={styles.addMovieLabel}>{t('movies.search.label')}</span>
-              </button>
-            ) : null}
+            {addMoviePrimary ? addMovieButton : null}
             {wheelActions}
+            {addMoviePrimary ? null : addMovieButton}
           </div>
           <div className={styles.utilityActions}>
             {shareUrl && onOpenShare ? (
@@ -312,16 +318,16 @@ export default function EventDetailHeader({
               <EventCalendarMenu title={title} date={rawDate} time={rawTime} url={shareUrl} />
             ) : null}
             {onOpenSettings ? (
-              <button
+              <Button
                 type="button"
-                className={clsx('btn', styles.settingsBtn)}
+                className={styles.settingsBtn}
                 onClick={onOpenSettings}
                 aria-haspopup="dialog"
                 aria-label={t('events.settings.title')}
                 title={t('events.settings.title')}
               >
                 <Settings size={16} aria-hidden />
-              </button>
+              </Button>
             ) : null}
           </div>
         </div>
@@ -352,37 +358,12 @@ export default function EventDetailHeader({
             </>
           ) : null}
         </span>
-        {onViewModeChange ? (
-          <div
+        {onViewModeChange && viewMode ? (
+          <ViewModeToggle
+            value={viewMode}
+            onChange={onViewModeChange}
             className={styles.viewToggle}
-            role="toolbar"
-            aria-label={t('movies.list.viewToggleAria')}
-          >
-            <button
-              type="button"
-              className={clsx(
-                styles.viewToggleBtn,
-                viewMode === 'list' && styles.viewToggleBtnActive
-              )}
-              aria-pressed={viewMode === 'list'}
-              aria-label={t('movies.list.viewListAria')}
-              onClick={() => onViewModeChange('list')}
-            >
-              <List aria-hidden size={15} />
-            </button>
-            <button
-              type="button"
-              className={clsx(
-                styles.viewToggleBtn,
-                viewMode === 'grid' && styles.viewToggleBtnActive
-              )}
-              aria-pressed={viewMode === 'grid'}
-              aria-label={t('movies.list.viewGridAria')}
-              onClick={() => onViewModeChange('grid')}
-            >
-              <LayoutGrid aria-hidden size={15} />
-            </button>
-          </div>
+          />
         ) : null}
       </div>
     </>

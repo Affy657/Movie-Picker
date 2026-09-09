@@ -96,7 +96,7 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
           logoutError={logoutError}
         />
       ) : null}
-      <ProposeIdeaDialog open={ideaDialogOpen} onClose={() => setIdeaDialogOpen(false)} />
+      {ideaDialogOpen ? <ProposeIdeaDialog open onClose={() => setIdeaDialogOpen(false)} /> : null}
       {installGuideOpen ? (
         <InstallPwaDialog open mode={installGuideMode} onClose={closeInstallGuide} />
       ) : null}

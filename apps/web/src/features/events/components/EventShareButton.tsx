@@ -1,7 +1,7 @@
-import clsx from 'clsx';
 import { Share2 } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import styles from './EventShareButton.module.css';
+import Button from '@/shared/components/Button';
 
 interface EventShareButtonProps {
   condensed?: boolean;
@@ -13,9 +13,9 @@ export default function EventShareButton({ condensed, onClick }: Readonly<EventS
   const label = t('share.trigger');
 
   return (
-    <button
+    <Button
       type="button"
-      className={clsx('btn', styles.trigger)}
+      className={styles.trigger}
       onClick={onClick}
       aria-haspopup="dialog"
       aria-label={condensed ? label : undefined}
@@ -23,6 +23,6 @@ export default function EventShareButton({ condensed, onClick }: Readonly<EventS
     >
       <Share2 size={16} aria-hidden />
       {!condensed ? <span className={styles.triggerLabel}>{label}</span> : null}
-    </button>
+    </Button>
   );
 }

@@ -37,12 +37,12 @@
 .handle {
   margin: 0;
   color: var(--color-text-muted);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-md);
 }
 
 .bio {
   margin: var(--space-3-5) 0 0;
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-md);
   line-height: var(--leading-base);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -71,7 +71,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-1-5);
-  min-height: 44px;
+  min-height: var(--tap-target-min);
   padding: var(--space-2) var(--space-3);
   background: var(--color-bg);
   border: 1px solid var(--color-border-subtle);

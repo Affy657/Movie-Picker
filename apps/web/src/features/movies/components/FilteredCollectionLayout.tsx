@@ -3,6 +3,8 @@ import { Search } from 'lucide-react';
 import EmptyState from '@/shared/components/EmptyState';
 import Sheet from '@/shared/components/Sheet';
 import styles from './FilteredCollectionLayout.module.css';
+import Button from '@/shared/components/Button';
+import LinkButton from '@/shared/components/LinkButton';
 
 type CollectionToolbarSource<TSort extends string> = {
   search: string;
@@ -64,12 +66,10 @@ export function FilterSheet({
       onClose={onClose}
       footer={
         <>
-          <button type="button" className={styles.sheetReset} onClick={onReset}>
-            {resetLabel}
-          </button>
-          <button type="button" className="btn btn-primary btn-sm" onClick={onClose}>
+          <LinkButton onClick={onReset}>{resetLabel}</LinkButton>
+          <Button type="button" variant="primary" size="sm" onClick={onClose}>
             {applyLabel}
-          </button>
+          </Button>
         </>
       }
     >
@@ -96,9 +96,9 @@ export function FilteredEmptyState({
       title={title}
       message={message}
       actions={
-        <button type="button" className="btn btn-sm" onClick={onReset}>
+        <Button type="button" size="sm" onClick={onReset}>
           {resetLabel}
-        </button>
+        </Button>
       }
     />
   );

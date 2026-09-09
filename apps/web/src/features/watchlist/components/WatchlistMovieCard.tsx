@@ -16,6 +16,7 @@ interface WatchlistMovieCardProps {
   onRemove: () => void;
   onOpenDetails: () => void;
   onProposeFallback: () => void;
+  layout?: 'grid' | 'row';
 }
 
 export default function WatchlistMovieCard({
@@ -27,9 +28,11 @@ export default function WatchlistMovieCard({
   onRemove,
   onOpenDetails,
   onProposeFallback,
+  layout,
 }: Readonly<WatchlistMovieCardProps>) {
   return (
     <MovieListCard
+      layout={layout}
       title={item.title}
       year={item.year}
       posterPath={item.posterPath}

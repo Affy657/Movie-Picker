@@ -103,6 +103,7 @@ function WheelHarness({
   });
   return (
     <>
+      <span data-testid="primary-action">{wheel.primaryAction ?? 'none'}</span>
       <EventWheelActions wheel={wheel} onRequestReset={onRequestReset} />
       <WheelSection movies={movies} wheel={wheel} />
       {wheel.manualMode && movies[0] && (
@@ -416,5 +417,62 @@ describe('WheelSection', () => {
     const spinButton = screen.getByRole('button', { name: /lancer la roue/i });
     expect(spinButton).toBeEnabled();
     expect(spinButton).not.toHaveAttribute('title');
+  });
+
+  it('des films et aucun tirage : Lancer la roue est la seule action primaire', () => {
+    const { container } = renderWheel(
+      <WheelHarness event={{ ...baseEvent, isHost: true }} movies={makeMovies(3)} hostToken="ht" />
+    );
+
+    const primaries = [...container.querySelectorAll('button.btn-primary')];
+    expect(primaries).toHaveLength(1);
+    expect(primaries[0]).toHaveAccessibleName(/lancer la roue/i);
+  });
+
+  it("aucun film : la roue n'est plus l'action primaire", () => {
+    const { container } = renderWheel(
+      <WheelHarness event={{ ...baseEvent, isHost: true }} movies={makeMovies(0)} hostToken="ht" />
+    );
+
+    expect(container.querySelectorAll('button.btn-primary')).toHaveLength(0);
+    expect(screen.getByRole('button', { name: /lancer la roue/i })).toBeDisabled();
+  });
+
+  it("participant non-hote : l'action primaire reste la proposition de film", () => {
+    renderWheel(<WheelHarness event={baseEvent} movies={makeMovies(3)} hostToken={null} />);
+
+    expect(screen.getByTestId('primary-action')).toHaveTextContent('add');
+  });
+
+  it('soiree terminee : plus aucune action primaire', () => {
+    renderWheel(
+      <WheelHarness
+        event={{ ...baseEvent, isFinished: true }}
+        movies={makeMovies(3)}
+        hostToken={null}
+      />
+    );
+
+    expect(screen.getByTestId('primary-action')).toHaveTextContent('none');
+  });
+
+  it('apres un tirage : Cloturer devient primaire et passe devant Relancer', () => {
+    const { container } = renderWheel(
+      <WheelHarness
+        event={{ ...baseEvent, isHost: true, winnerMovie: sampleWinner }}
+        movies={makeMovies(1)}
+        hostToken="ht"
+      />
+    );
+
+    const primaries = [...container.querySelectorAll('button.btn-primary')];
+    expect(primaries).toHaveLength(1);
+    expect(primaries[0]).toHaveAccessibleName(/clôturer/i);
+
+    const buttons = [...container.querySelectorAll('button')];
+    const closeIndex = buttons.findIndex((b) => /clôturer/i.test(b.textContent ?? ''));
+    const relaunchIndex = buttons.findIndex((b) => /relancer la roue/i.test(b.textContent ?? ''));
+    expect(closeIndex).toBeGreaterThanOrEqual(0);
+    expect(closeIndex).toBeLessThan(relaunchIndex);
   });
 });

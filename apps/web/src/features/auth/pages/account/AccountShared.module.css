@@ -96,7 +96,7 @@
 
 .rowLabel {
   margin: 0;
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-md);
   font-weight: 500;
 }
 
@@ -134,7 +134,7 @@
 }
 
 .attentionBtn {
-  min-height: 34px;
+  min-height: var(--tap-target-min);
   padding: var(--space-1-5) var(--space-3);
   font-size: var(--font-size-xs);
   border-color: color-mix(in srgb, var(--color-badge-pending-text) 50%, transparent);
@@ -169,7 +169,7 @@
 }
 
 .smallBtn {
-  min-height: 34px;
+  min-height: var(--tap-target-min);
   padding: var(--space-1-5) var(--space-3);
   font-size: var(--font-size-xs);
 }

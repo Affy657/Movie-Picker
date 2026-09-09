@@ -19,6 +19,7 @@ import WhatsNewNavChip from './WhatsNewNavChip';
 import { ProposeIdeaDialog } from './ProposeIdeaButton';
 import InAppBrowserBanner from './InAppBrowserBanner';
 import styles from './AppShell.module.css';
+import { buttonClass } from '@/shared/components/Button';
 
 function navLinkClass({ isActive }: { isActive: boolean }): string {
   return clsx(styles.navLink, isActive && styles.navLinkActive);
@@ -96,7 +97,7 @@ export default function AppShell() {
   const [proposeIdeaOpen, setProposeIdeaOpen] = useState(false);
 
   const isAuthenticated = !!user;
-  const isLandingRoute = location.pathname === ROUTES.discover && !isAuthenticated;
+  const isLandingRoute = location.pathname === ROUTES.howItWorks && !isAuthenticated;
   const returnTo = `${location.pathname}${location.search}`;
   const isOnAuthRoute = (
     [ROUTES.login, ROUTES.register, ROUTES.forgotPassword, ROUTES.resetPassword] as string[]
@@ -120,7 +121,7 @@ export default function AppShell() {
     ? [exploreItem, ...items]
     : [
         {
-          to: ROUTES.discover,
+          to: ROUTES.howItWorks,
           label: t('nav.landing.howItWorks'),
           Icon: HelpCircle,
           wideOnly: true,
@@ -170,13 +171,17 @@ export default function AppShell() {
             <div className={styles.navActions}>
               <Link
                 to={withReturnTo(ROUTES.login, returnTo)}
-                className={`btn btn-sm ${styles.guestLogin}`}
+                className={buttonClass({ size: 'sm', className: styles.guestLogin })}
               >
                 {t('home.ctaLogin')}
               </Link>
               <Link
                 to={withReturnTo(ROUTES.register, returnTo)}
-                className={`btn btn-primary btn-sm ${styles.guestRegister}`}
+                className={buttonClass({
+                  variant: 'primary',
+                  size: 'sm',
+                  className: styles.guestRegister,
+                })}
               >
                 {t('home.ctaRegister')}
               </Link>
@@ -211,7 +216,9 @@ export default function AppShell() {
               if (action === 'proposeIdea') setProposeIdeaOpen(true);
             }}
           />
-          <ProposeIdeaDialog open={proposeIdeaOpen} onClose={() => setProposeIdeaOpen(false)} />
+          {proposeIdeaOpen ? (
+            <ProposeIdeaDialog open onClose={() => setProposeIdeaOpen(false)} />
+          ) : null}
         </>
       ) : null}
       <InAppBrowserBanner />

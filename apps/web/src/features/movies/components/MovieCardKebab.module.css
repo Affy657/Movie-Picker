@@ -1,0 +1,120 @@
+.kebab {
+  position: relative;
+}
+
+.kebabBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--mc-kebab-bg, var(--on-poster-kebab-bg));
+  color: var(--mc-kebab-fg, var(--on-poster-kebab-fg));
+  cursor: pointer;
+  transition: background var(--duration-base) var(--ease-default);
+}
+
+.kebabBtn:focus-visible {
+  background: var(--mc-kebab-bg-hover, var(--on-poster-kebab-bg-hover));
+  color: var(--mc-kebab-fg-hover, var(--mc-kebab-fg, var(--on-poster-kebab-fg)));
+}
+
+@media (hover: hover) {
+  .kebabBtn:hover {
+    background: var(--mc-kebab-bg-hover, var(--on-poster-kebab-bg-hover));
+    color: var(--mc-kebab-fg-hover, var(--mc-kebab-fg, var(--on-poster-kebab-fg)));
+  }
+}
+
+.kebabBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.kebabMenu {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  right: 0;
+  z-index: var(--z-anchored-menu);
+  min-width: 10rem;
+  max-width: calc(100vw - 1rem);
+  padding: var(--space-1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0-5);
+}
+
+.kebabDivider {
+  display: block;
+  border: none;
+  height: 1px;
+  margin: var(--space-1) var(--space-1);
+  background: var(--color-border-subtle);
+}
+
+.kebabItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  line-height: 1;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--duration-base) var(--ease-default);
+  text-decoration: none;
+  width: 100%;
+  white-space: nowrap;
+}
+
+.kebabItem svg {
+  flex-shrink: 0;
+}
+
+.kebabItemLabel {
+  transform: translateY(var(--text-optical-nudge));
+}
+
+.kebabItemLabelCaps {
+  transform: translateY(var(--text-optical-nudge-caps));
+}
+
+.kebabItem:focus-visible {
+  background: color-mix(in srgb, var(--color-text) 10%, transparent);
+}
+
+@media (hover: hover) {
+  .kebabItem:hover {
+    background: color-mix(in srgb, var(--color-text) 10%, transparent);
+  }
+}
+
+.kebabItem:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.kebabItemDanger {
+  color: var(--color-error);
+}
+
+.kebabItemDanger:focus-visible {
+  background: color-mix(in srgb, var(--color-error) 12%, transparent);
+}
+
+@media (hover: hover) {
+  .kebabItemDanger:hover {
+    background: color-mix(in srgb, var(--color-error) 12%, transparent);
+  }
+}

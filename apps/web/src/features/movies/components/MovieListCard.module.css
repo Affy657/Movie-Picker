@@ -2,11 +2,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
 }
 
 .posterRegion {
@@ -163,7 +159,7 @@
   background: var(--on-poster-scrim);
   color: var(--on-poster-badge-fg);
   border: 1px solid var(--on-poster-border);
-  font-size: var(--font-size-4xs);
+  font-size: var(--font-size-3xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: var(--tracking-wide);
@@ -174,4 +170,57 @@
   position: static;
   top: auto;
   left: auto;
+}
+
+.cardAsRow {
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.cardAsRow .posterRegion {
+  flex: 0 0 auto;
+  width: 3.5rem;
+  aspect-ratio: 2 / 3;
+}
+
+.rowKebabSlot {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  padding-right: var(--space-2);
+}
+
+.cardAsRow .overlay {
+  display: none;
+}
+
+.cardAsRow .cardBody {
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: center;
+  gap: var(--space-0-5);
+}
+
+.cardAsRow .cardTitle {
+  height: auto;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
+
+.cardAsRow .badge {
+  display: none;
+}
+
+.cardAsRow .cardGenres {
+  display: none;
+}
+
+@media (min-width: 48rem) {
+  .cardAsRow .posterRegion {
+    width: 4rem;
+  }
+
+  .cardAsRow .cardGenres {
+    display: block;
+  }
 }

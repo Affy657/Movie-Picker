@@ -11,6 +11,8 @@ import { downloadQrPng } from '@/shared/utils/downloadQrPng';
 import { useTranslation } from '@/shared/i18n';
 import Modal from './Modal';
 import styles from './ShareDialog.module.css';
+import Button from '@/shared/components/Button';
+import IconButton from '@/shared/components/IconButton';
 
 type ShareSurface = 'event' | 'profile';
 
@@ -62,27 +64,25 @@ function ShareLinkPanel({
   };
 
   const copyButton = (
-    <button
+    <Button
       type="button"
-      className={clsx(
-        'btn btn-sm',
-        styles.actionBtn,
-        copied ? styles.actionCopied : !canNativeShare && 'btn-primary'
-      )}
+      size="sm"
+      variant={!copied && !canNativeShare ? 'primary' : 'secondary'}
+      className={clsx(styles.actionBtn, copied && styles.actionCopied)}
       onClick={() => void copyLink()}
     >
       {copied ? <Check size={15} aria-hidden /> : <Link2 size={15} aria-hidden />}
       <span className={styles.btnLabel}>{copied ? t('share.copied') : t('share.copy')}</span>
-    </button>
+    </Button>
   );
 
   const downloadButton = (
-    <button type="button" className={clsx('btn btn-sm', styles.actionBtn)} onClick={handleDownload}>
+    <Button type="button" size="sm" className={styles.actionBtn} onClick={handleDownload}>
       <Download size={15} aria-hidden />
       <span className={styles.btnLabel}>
         {canNativeShare ? t('share.downloadQr') : t('share.download')}
       </span>
-    </button>
+    </Button>
   );
 
   return (
@@ -113,14 +113,15 @@ function ShareLinkPanel({
 
       {canNativeShare ? (
         <div className={styles.actionsStack}>
-          <button
+          <Button
             type="button"
-            className={clsx('btn btn-primary', styles.actionBlock)}
+            variant="primary"
+            className={styles.actionBlock}
             onClick={() => void nativeShare()}
           >
             <Share2 size={16} aria-hidden />
             <span className={styles.btnLabel}>{t('share.trigger')}</span>
-          </button>
+          </Button>
           <div className={styles.actions}>
             {copyButton}
             {downloadButton}
@@ -245,14 +246,9 @@ export default function ShareDialog({
             <h2 id={titleId} className={styles.title}>
               {title}
             </h2>
-            <button
-              type="button"
-              className={styles.closeBtn}
-              onClick={onClose}
-              aria-label={t('common.close')}
-            >
+            <IconButton className={styles.closeBtn} label={t('common.close')} onClick={onClose}>
               <X size={20} aria-hidden />
-            </button>
+            </IconButton>
           </div>
           {tabsBar}
           <div className={styles.body}>{panels}</div>

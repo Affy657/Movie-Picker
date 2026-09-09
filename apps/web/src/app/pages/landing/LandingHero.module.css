@@ -69,14 +69,10 @@
   color: var(--color-text-muted);
 }
 
-.noteCenter {
-  justify-content: center;
-}
-
 .quietLink {
   display: inline-flex;
   align-items: center;
-  min-height: 24px;
+  min-height: var(--space-6);
   color: var(--color-accent-warm);
   font-weight: 700;
   text-decoration: underline;

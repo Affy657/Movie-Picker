@@ -9,6 +9,7 @@ import { setStoredParticipant } from '@/features/events/storage';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES, withReturnTo } from '@/app/routes';
 import styles from './JoinForm.module.css';
+import Button, { buttonClass } from '@/shared/components/Button';
 
 interface JoinFormProps {
   slug: string;
@@ -77,9 +78,9 @@ export default function JoinForm({
               {error}
             </p>
           )}
-          <button type="submit" className={`btn btn-primary ${styles.submit}`} disabled={loading}>
+          <Button type="submit" variant="primary" className={styles.submit} disabled={loading}>
             {loading ? t('events.join.submitting') : t('events.join.submit')}
-          </button>
+          </Button>
         </form>
       </>
     );
@@ -88,10 +89,13 @@ export default function JoinForm({
       <>
         <p className={styles.intro}>{t('events.join.signedOutIntro')}</p>
         <nav className="nav-actions">
-          <Link to={withReturnTo(ROUTES.login, returnTo)} className="btn btn-primary">
+          <Link
+            to={withReturnTo(ROUTES.login, returnTo)}
+            className={buttonClass({ variant: 'primary' })}
+          >
             {t('home.ctaLogin')}
           </Link>
-          <Link to={withReturnTo(ROUTES.register, returnTo)} className="btn">
+          <Link to={withReturnTo(ROUTES.register, returnTo)} className={buttonClass()}>
             {t('home.ctaRegister')}
           </Link>
         </nav>

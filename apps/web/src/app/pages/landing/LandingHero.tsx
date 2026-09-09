@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import Avatar from '@/shared/components/Avatar';
 import { buttonClass } from '@/shared/components/Button';
 import { useTranslation } from '@/shared/i18n';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { ROUTES } from '@/app/routes';
 import EventPreviewCard from './EventPreviewCard';
 import { LANDING_ANCHORS } from './anchors';
@@ -12,6 +13,8 @@ import styles from './LandingHero.module.css';
 
 export default function LandingHero() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isSignedIn = !!user;
 
   return (
     <section className={clsx('on-dark', shared.ink, styles.hero)} aria-labelledby="landing-hero">
@@ -32,8 +35,11 @@ export default function LandingHero() {
           <p className={shared.lead}>{t('landing.hero.lead')}</p>
 
           <div className={styles.ctas}>
-            <Link to={ROUTES.register} className={buttonClass({ variant: 'primary', size: 'lg' })}>
-              {t('home.ctaRegister')}
+            <Link
+              to={isSignedIn ? ROUTES.createEvent : ROUTES.register}
+              className={buttonClass({ variant: 'primary', size: 'lg' })}
+            >
+              {isSignedIn ? t('events.myEvents.createCta') : t('home.ctaRegister')}
             </Link>
             <a href={`#${LANDING_ANCHORS.steps}`} className={buttonClass({ size: 'lg' })}>
               {t('landing.hero.seeHow')}
@@ -42,12 +48,14 @@ export default function LandingHero() {
 
           <p className={styles.note}>
             <span>{t('landing.hero.free')}</span>
-            <span>
-              {t('landing.hero.alreadyAccount')}{' '}
-              <Link to={ROUTES.login} className={styles.quietLink}>
-                {t('home.ctaLogin')}
-              </Link>
-            </span>
+            {isSignedIn ? null : (
+              <span>
+                {t('landing.hero.alreadyAccount')}{' '}
+                <Link to={ROUTES.login} className={styles.quietLink}>
+                  {t('home.ctaLogin')}
+                </Link>
+              </span>
+            )}
           </p>
         </div>
 

@@ -5,6 +5,7 @@ import { useTranslation } from '@/shared/i18n';
 import { BOTTTS_IDS, EMOJI_IDS, avatarUrl } from '@/shared/utils/avatar';
 import Modal from '@/shared/components/Modal';
 import styles from './AvatarPickerModal.module.css';
+import IconButton from '@/shared/components/IconButton';
 
 type Category = 'bottts' | 'emoji';
 
@@ -36,14 +37,9 @@ export default function AvatarPickerModal({
         <h2 id={titleId} className={styles.title}>
           {t('auth.account.avatarLabel')}
         </h2>
-        <button
-          type="button"
-          className={styles.closeBtn}
-          onClick={onClose}
-          aria-label={t('common.close')}
-        >
+        <IconButton label={t('common.close')} onClick={onClose}>
           <X size={18} aria-hidden />
-        </button>
+        </IconButton>
       </div>
 
       <div className={styles.tabs} role="tablist">

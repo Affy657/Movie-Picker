@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import ListToolbar, { type SortOption } from '@/features/movies/components/ListToolbar';
 
 export type CollectionToolbarLabels = {
@@ -29,6 +30,7 @@ type CollectionToolbarProps<TSortKey extends string> = {
   totalCount: number;
   onClearAll: () => void;
   isMobile: boolean;
+  trailing?: ReactNode;
   labels: CollectionToolbarLabels;
 };
 
@@ -61,6 +63,7 @@ export default function CollectionToolbar<TSortKey extends string>({
       clearAllLabel={labels.clearAllLabel}
       onClearAll={rest.onClearAll}
       isMobile={rest.isMobile}
+      trailing={rest.trailing}
     />
   );
 }

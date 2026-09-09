@@ -3,6 +3,7 @@ import { useTranslation } from '@/shared/i18n';
 import { useConsent } from '@/shared/contexts/ConsentContext';
 import styles from './ConsentDialog.module.css';
 import Modal from './Modal';
+import Button from '@/shared/components/Button';
 
 type Props = {
   open: boolean;
@@ -79,23 +80,26 @@ export default function ConsentDialog({ open, onClose }: Readonly<Props>) {
       </ul>
 
       <div className={styles.actions}>
-        <button
+        <Button
           type="button"
-          className={`btn btn-sm ${styles.actionBtn} ${styles.rejectBtn}`}
+          size="sm"
+          className={`${styles.actionBtn} ${styles.rejectBtn}`}
           onClick={handleRejectAll}
         >
           {t('consent.dialog.rejectAll')}
-        </button>
-        <button type="button" className={`btn btn-sm ${styles.actionBtn}`} onClick={handleSave}>
+        </Button>
+        <Button type="button" size="sm" className={styles.actionBtn} onClick={handleSave}>
           {t('consent.dialog.save')}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className={`btn btn-sm btn-primary ${styles.actionBtn}`}
+          variant="primary"
+          size="sm"
+          className={styles.actionBtn}
           onClick={handleAcceptAll}
         >
           {t('consent.dialog.acceptAll')}
-        </button>
+        </Button>
       </div>
     </Modal>
   );

@@ -104,7 +104,7 @@
 
 .lastSeenLabel {
   font-family: var(--font-mono);
-  font-size: var(--font-size-4xs);
+  font-size: var(--font-size-3xs);
   font-weight: 700;
   letter-spacing: var(--tracking-extra);
   text-transform: uppercase;

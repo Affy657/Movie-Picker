@@ -17,6 +17,7 @@ import type { UserProfile } from '@/features/auth/types';
 import LetterboxdChoicesModal from './LetterboxdChoicesModal';
 import styles from './LetterboxdConnectModal.module.css';
 import Modal from '@/shared/components/Modal';
+import Button from '@/shared/components/Button';
 
 interface LetterboxdConnectModalProps {
   open: boolean;
@@ -144,12 +145,12 @@ function ConnectFormModal({
         )}
 
         <div className={styles.footer}>
-          <button type="button" className="btn btn-ghost" onClick={onClose} disabled={connecting}>
+          <Button type="button" variant="ghost" onClick={onClose} disabled={connecting}>
             {t('common.cancel')}
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            className="btn btn-primary"
+            variant="primary"
             disabled={connecting || username.trim().length === 0}
           >
             <Import size={15} aria-hidden />
@@ -158,7 +159,7 @@ function ConnectFormModal({
                 ? t('auth.account.letterboxd.connectSubmitting')
                 : t('auth.account.letterboxd.connectSubmit')}
             </span>
-          </button>
+          </Button>
         </div>
       </form>
     </Modal>
@@ -267,10 +268,10 @@ function DoneModal({
         <p className={styles.intro}>{t('auth.account.letterboxd.doneFooterNote')}</p>
 
         <div className={styles.footer}>
-          <button type="button" className="btn btn-primary" onClick={onClose}>
+          <Button type="button" variant="primary" onClick={onClose}>
             <Eye size={14} aria-hidden />
             <span>{t('auth.account.letterboxd.doneCta')}</span>
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

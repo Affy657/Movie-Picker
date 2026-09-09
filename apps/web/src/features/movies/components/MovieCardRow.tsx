@@ -7,7 +7,7 @@ import {
   ArrowDown,
   ArrowUp,
   ChevronRight,
-  ImageOff,
+  Film,
   RotateCcw,
   ThumbsDown,
   ThumbsUp,
@@ -118,7 +118,7 @@ function RowPoster({
   if (!src) {
     return (
       <div className={styles.posterPlaceholder} aria-hidden>
-        <ImageOff size={20} />
+        <Film size={20} />
       </div>
     );
   }

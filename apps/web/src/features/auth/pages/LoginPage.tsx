@@ -16,6 +16,8 @@ import { safeReturnTo } from '@/shared/utils/returnTo';
 import { withReturnTo, ROUTES } from '@/app/routes';
 import { useTranslation } from '@/shared/i18n';
 import styles from './LoginPage.module.css';
+import Button from '@/shared/components/Button';
+import Field from '@/shared/components/Field';
 
 type LoginSubmitMode = 'form' | 'devQuick';
 
@@ -75,46 +77,48 @@ export default function LoginPage() {
               {error || (oauthErrorKey ? t(oauthErrorKey) : null)}
             </p>
           )}
-          <label className="label" htmlFor="login-email">
-            {t('auth.login.emailLabel')}
-          </label>
-          <input
-            id="login-email"
-            type="email"
-            className="input"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            aria-invalid={error ? true : undefined}
-          />
-          <label className="label" htmlFor="login-password">
-            {t('auth.login.passwordLabel')}
-          </label>
-          <input
-            id="login-password"
-            type="password"
-            className="input"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            aria-invalid={error ? true : undefined}
-          />
-          <button type="submit" className="btn btn-primary" disabled={loading}>
+          <Field label={t('auth.login.emailLabel')} htmlFor="login-email">
+            {({ id }) => (
+              <input
+                id={id}
+                type="email"
+                className="input"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                aria-invalid={error ? true : undefined}
+              />
+            )}
+          </Field>
+          <Field label={t('auth.login.passwordLabel')} htmlFor="login-password">
+            {({ id }) => (
+              <input
+                id={id}
+                type="password"
+                className="input"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                aria-invalid={error ? true : undefined}
+              />
+            )}
+          </Field>
+          <Button type="submit" variant="primary" disabled={loading}>
             {loading ? t('auth.login.submitting') : t('auth.login.submit')}
-          </button>
+          </Button>
           {import.meta.env.DEV ? (
             <div className={styles.devQuickLogin}>
-              <button
+              <Button
                 type="button"
-                className="btn"
+
                 disabled={loading}
                 onClick={handleDevQuickLogin}
                 aria-label={t('auth.login.devQuickAriaLabel')}
               >
                 {t('auth.login.devQuickButton')}
-              </button>
+              </Button>
               <p className={`muted ${styles.devQuickLoginHint}`}>{t('auth.login.devQuickHint')}</p>
             </div>
           ) : null}

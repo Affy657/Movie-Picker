@@ -10,6 +10,7 @@ import MovieCollectionCard from '@/features/movies/components/MovieCollectionCar
 import { useMovieCollections } from '@/features/movies/hooks/useMovieShowcase';
 import { RAIL_PREVIEW_COUNT } from './HomeShowcaseRow';
 import styles from './HomeShowcaseRow.module.css';
+import { collectionDisplayName } from '@/features/movies/utils/collectionName';
 
 const SKELETON_CARDS = 6;
 const COLLECTION_CARD_HEIGHT = 102;
@@ -51,7 +52,7 @@ export default function HomeCollectionsRow() {
           <MovieCollectionCard
             key={collection.id}
             to={ROUTES.movieCollection(collection.id)}
-            name={collection.name}
+            name={collectionDisplayName(collection.name)}
             movieCountLabel={pluralizeCount(
               collection.movieCount,
               'showcase.collectionMoviesOne',

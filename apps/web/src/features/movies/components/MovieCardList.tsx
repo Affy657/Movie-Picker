@@ -1,7 +1,7 @@
 import SeenButton from '@/features/movies/components/SeenButton';
 import { memo } from 'react';
 import clsx from 'clsx';
-import { ImageOff } from 'lucide-react';
+import { Film } from 'lucide-react';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import {
   MovieCardKebab,
@@ -27,7 +27,7 @@ function ListPoster({
   if (!src) {
     return (
       <div className={styles.posterPlaceholder} aria-hidden>
-        <ImageOff size={28} />
+        <Film size={28} />
       </div>
     );
   }

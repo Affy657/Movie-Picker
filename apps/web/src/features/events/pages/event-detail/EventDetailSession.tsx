@@ -678,7 +678,7 @@ function EventDetailSessionChrome({
           ) : null
         }
         onAddMovie={canAddMovie ? onAddMovie : undefined}
-        addMoviePrimary={!wheel.winner}
+        addMoviePrimary={wheel.primaryAction === 'add'}
         addMovieTriggerRef={addMovieTriggerRef}
         viewMode={viewMode}
         onViewModeChange={onViewModeChange}

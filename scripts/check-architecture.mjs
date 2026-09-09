@@ -179,7 +179,8 @@ const ALLOWED_MEDIA = new Set([
   '(prefers-color-scheme: light)',
 ]);
 
-const SPACING_PROP = /(?:^|[;{\n])\s*(padding|margin|gap|row-gap|column-gap)(?:-[a-z-]+)?\s*:\s*([^;{}]+)/g;
+const SPACING_PROP =
+  /(?:^|[;{\n])\s*(padding|margin|gap|row-gap|column-gap)(?:-[a-z-]+)?\s*:\s*([^;{}]+)/g;
 const RAW_LENGTH = /(?<![\w-])\d*\.?\d+rem/;
 const RAW_COLOR = /#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/;
 
@@ -218,7 +219,9 @@ function checkDesignTokens(cssFiles) {
     }
 
     if (path.endsWith('.module.css') && RAW_COLOR.test(text))
-      violations.push(`${path} : couleur littérale — passer par un jeton --color-* / --on-poster-*`);
+      violations.push(
+        `${path} : couleur littérale — passer par un jeton --color-* / --on-poster-*`
+      );
 
     if (path !== MODAL_CSS && path !== SHEET_DRAG_CSS)
       for (const [, selector] of text.matchAll(/([^\s{},]+)::backdrop/g))
@@ -238,6 +241,46 @@ function checkModalPrimitive(files) {
   }
 }
 
+const BUTTON_TSX = 'apps/web/src/shared/components/Button.tsx';
+const BUTTON_CLASS_RE = /className\s*=\s*(?:"[^"]*"|\{(?:[^{}]|\{[^{}]*\})*\})/g;
+const RAW_BUTTON_CLASS = /(?<![\w.-])btn(?:-(?:primary|secondary|danger|ghost|sm|md|lg))?(?![\w-])/;
+
+function checkButtonPrimitive(files) {
+  for (const file of files) {
+    const path = rel(file);
+    if (path === BUTTON_TSX || file.includes('.test.')) continue;
+    const source = readFileSync(file, 'utf8');
+    for (const [attr] of source.matchAll(BUTTON_CLASS_RE)) {
+      if (RAW_BUTTON_CLASS.test(attr))
+        violations.push(
+          `${path} : classe « btn » écrite à la main — passer par shared/components/Button (composant Button ou buttonClass)`
+        );
+    }
+  }
+}
+
+const TAP_TARGET_MIN_PX = 44;
+const CSS_RULE_RE = /([^{}]+)\{([^{}]*)\}/g;
+const MIN_HEIGHT_DECL = /min-height:\s*([0-9.]+)(px|rem)/;
+
+function checkTapTargets(cssFiles) {
+  for (const file of cssFiles) {
+    const path = rel(file);
+    const source = readFileSync(file, 'utf8');
+    for (const [, selector, body] of source.matchAll(CSS_RULE_RE)) {
+      if (!/cursor:\s*pointer/.test(body)) continue;
+      const declared = MIN_HEIGHT_DECL.exec(body);
+      if (!declared) continue;
+      const value = Number.parseFloat(declared[1]);
+      const px = declared[2] === 'rem' ? value * 16 : value;
+      if (px >= TAP_TARGET_MIN_PX) continue;
+      violations.push(
+        `${path} : ${selector.trim()} est cliquable et plafonne à ${px}px — utiliser var(--tap-target-min)`
+      );
+    }
+  }
+}
+
 const webFiles = walk(webSrc, ['.ts', '.tsx', '.css']);
 const apiFiles = walk(join(root, 'apps/api-dotnet'), ['.cs']);
 const e2eFiles = walk(join(root, 'e2e'), ['.ts']);
@@ -247,6 +290,8 @@ checkSharedIsALeaf(webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'
 checkNoImportCycles(webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')));
 checkDesignTokens(webFiles.filter((f) => f.endsWith('.css')));
 checkModalPrimitive(webFiles.filter((f) => f.endsWith('.tsx')));
+checkButtonPrimitive(webFiles.filter((f) => f.endsWith('.tsx')));
+checkTapTargets(webFiles.filter((f) => f.endsWith('.css')));
 checkApiLayers();
 
 if (violations.length > 0) {
@@ -258,5 +303,5 @@ if (violations.length > 0) {
   process.exit(1);
 }
 console.log(
-  "Architecture : aucune violation (commentaires, couches API, shared/ feuille, cycles d'imports, jetons du design system)."
+  "Architecture : aucune violation (commentaires, couches API, shared/ feuille, cycles d'imports, jetons du design system, primitives Modal et Button, cibles tactiles)."
 );

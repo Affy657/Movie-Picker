@@ -7,14 +7,15 @@ import ShareDialog from '@/shared/components/ShareDialog';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
 import type { PublicProfile } from '@/features/profile/api/profileApi';
 import styles from './ProfileActions.module.css';
+import Button, { buttonClass } from '@/shared/components/Button';
+import clsx from 'clsx';
 
 function followButtonClass(
   isFollowedByMe: boolean | null,
   primary: string | undefined,
   unfollowBtn: string | undefined
 ): string {
-  if (isFollowedByMe) return `btn ${primary ?? ''} ${unfollowBtn ?? ''}`.trim();
-  return `btn ${primary ?? ''} btn-primary`.trim();
+  return clsx(primary, isFollowedByMe && unfollowBtn);
 }
 
 function FollowButtonIcon({
@@ -68,7 +69,7 @@ export default function ProfileActions({
   return (
     <div className={styles.actions}>
       {isOwnProfile && (
-        <Link to={ROUTES.account} className={`btn ${styles.primary}`}>
+        <Link to={ROUTES.account} className={buttonClass({ className: styles.primary })}>
           <Pencil size={16} aria-hidden />
           <span className={styles.btnLabel}>{t('profile.editProfile')}</span>
         </Link>
@@ -77,7 +78,7 @@ export default function ProfileActions({
       {!isOwnProfile && !isLoggedIn && (
         <Link
           to={withReturnTo(ROUTES.login, ROUTES.profile(profile.handle))}
-          className={`btn btn-primary ${styles.primary}`}
+          className={buttonClass({ variant: 'primary', className: styles.primary })}
         >
           <UserPlus size={16} aria-hidden />
           <span className={styles.btnLabel}>{t('profile.follow.follow')}</span>
@@ -85,8 +86,9 @@ export default function ProfileActions({
       )}
 
       {!isOwnProfile && isLoggedIn && (
-        <button
+        <Button
           type="button"
+          variant={profile.isFollowedByMe ? 'secondary' : 'primary'}
           className={followButtonClass(profile.isFollowedByMe, styles.primary, styles.unfollowBtn)}
           disabled={followPending}
           aria-label={
@@ -113,18 +115,14 @@ export default function ProfileActions({
               t('profile.follow.follow')
             )}
           </span>
-        </button>
+        </Button>
       )}
 
       <div className={styles.shareGroup}>
-        <button
-          type="button"
-          className={`btn ${styles.shareBtn}`}
-          onClick={() => setShareOpen(true)}
-        >
+        <Button type="button" className={styles.shareBtn} onClick={() => setShareOpen(true)}>
           <Share2 size={14} aria-hidden />
           <span className={styles.btnLabel}>{t('share.trigger')}</span>
-        </button>
+        </Button>
       </div>
 
       <ShareDialog

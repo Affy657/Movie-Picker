@@ -3,6 +3,7 @@ import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import { SUPPORT_EMAIL } from '@/shared/support/supportMailto';
+import { LEGAL_LAST_UPDATED } from '@/app/pages/legalMeta';
 
 export default function LegalNoticePage() {
   const { t } = useTranslation();
@@ -10,6 +11,7 @@ export default function LegalNoticePage() {
     <LegalContentPage
       heading={t('legal.noticeTitle')}
       intro={t('legal.noticeIntro')}
+      updatedAt={LEGAL_LAST_UPDATED}
       canonical={absoluteUrl(ROUTES.legalNotice)}
       sections={[
         {

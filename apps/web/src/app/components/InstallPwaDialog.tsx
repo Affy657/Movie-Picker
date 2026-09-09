@@ -5,6 +5,8 @@ import { useCopyFeedback } from '@/shared/hooks/useCopyFeedback';
 import type { PwaInstallGuideMode } from '@/shared/pwa/pwaInstall';
 import styles from './InstallPwaDialog.module.css';
 import Modal from '@/shared/components/Modal';
+import Button from '@/shared/components/Button';
+import IconButton from '@/shared/components/IconButton';
 
 const GUIDE_COPY: Record<
   PwaInstallGuideMode,
@@ -62,14 +64,9 @@ export default function InstallPwaDialog({ open, mode, onClose }: Readonly<Insta
           <h2 id={titleId} className={styles.title}>
             {title}
           </h2>
-          <button
-            type="button"
-            className={styles.close}
-            onClick={onClose}
-            aria-label={t('common.close')}
-          >
+          <IconButton label={t('common.close')} onClick={onClose}>
             <X size={18} aria-hidden />
-          </button>
+          </IconButton>
         </header>
         <p className={styles.intro}>{intro}</p>
         <ol className={styles.steps}>
@@ -81,19 +78,15 @@ export default function InstallPwaDialog({ open, mode, onClose }: Readonly<Insta
         </ol>
         {mode === 'in_app' ? (
           <div className={styles.actions}>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => copy(window.location.href)}
-            >
+            <Button type="button" variant="primary" onClick={() => copy(window.location.href)}>
               {copied ? t('pwaInstall.copied') : t('pwaInstall.copyLink')}
-            </button>
+            </Button>
           </div>
         ) : (
           <div className={styles.actions}>
-            <button type="button" className="btn btn-primary" onClick={onClose}>
+            <Button type="button" variant="primary" onClick={onClose}>
               {t('common.close')}
-            </button>
+            </Button>
           </div>
         )}
       </div>

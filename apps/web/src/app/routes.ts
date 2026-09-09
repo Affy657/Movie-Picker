@@ -21,7 +21,7 @@ export const ROUTES = {
   donate: '/soutenir',
   tech: '/tech',
   notifications: '/notifications',
-  discover: '/decouvrir',
+  howItWorks: '/decouvrir',
 
   movieSearch: '/films/recherche',
   movieCollections: '/films/collections',

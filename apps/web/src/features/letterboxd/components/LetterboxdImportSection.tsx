@@ -5,6 +5,7 @@ import { AlertTriangle, Check, RefreshCw, TriangleAlert, X } from 'lucide-react'
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import InfoBubble from '@/shared/components/InfoBubble';
 import {
@@ -17,6 +18,7 @@ import type { UserProfile } from '@/features/auth/types';
 import LetterboxdChoicesModal from './LetterboxdChoicesModal';
 import sharedStyles from '@/features/auth/pages/account/AccountShared.module.css';
 import styles from './LetterboxdImportSection.module.css';
+import Button from '@/shared/components/Button';
 
 function formatSyncDate(iso: string, locale: string): string {
   return new Date(iso).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' });
@@ -187,21 +189,18 @@ export default function LetterboxdImportSection() {
           <div className={styles.connectionRow}>
             <span className={styles.usernameValue}>{savedUsername}</span>
             <div className={styles.connectionActions}>
-              <button
-                type="button"
-                className={clsx('btn', sharedStyles.smallBtn)}
-                onClick={startEditing}
-              >
+              <Button type="button" className={sharedStyles.smallBtn} onClick={startEditing}>
                 {t('auth.account.letterboxd.usernameEdit')}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                className={clsx('btn', 'btn-danger', sharedStyles.smallBtn)}
+                variant="danger"
+                className={sharedStyles.smallBtn}
                 onClick={() => void runDisconnect()}
                 disabled={disconnecting}
               >
                 {t('auth.account.letterboxd.usernameDisconnect')}
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -233,18 +232,21 @@ export default function LetterboxdImportSection() {
         <div className={sharedStyles.attention} role="status">
           <TriangleAlert size={15} aria-hidden />
           <p>
-            {t('auth.account.letterboxd.attentionMessage', {
-              count: String(user.letterboxdPendingReconciliationCount),
-            })}
+            {pluralizeCount(
+              user.letterboxdPendingReconciliationCount,
+              'auth.account.letterboxd.attentionMessageOne',
+              'auth.account.letterboxd.attentionMessage',
+              t
+            )}
           </p>
-          <button
+          <Button
             type="button"
-            className={clsx('btn', sharedStyles.attentionBtn)}
+            className={sharedStyles.attentionBtn}
             onClick={() => void handleSync()}
             disabled={syncing}
           >
             {t('auth.account.letterboxd.attentionConfirm')}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -267,9 +269,10 @@ export default function LetterboxdImportSection() {
               {t('auth.account.letterboxd.syncPersistentHint')}
             </p>
           </div>
-          <button
+          <Button
             type="button"
-            className={clsx('btn', 'btn-primary', styles.syncBtn)}
+            variant="primary"
+            className={styles.syncBtn}
             onClick={() => void handleSync()}
             disabled={syncing}
           >
@@ -279,7 +282,7 @@ export default function LetterboxdImportSection() {
                 ? t('auth.account.letterboxd.syncSubmitting')
                 : t('auth.account.letterboxd.syncNow')}
             </span>
-          </button>
+          </Button>
         </div>
       )}
 

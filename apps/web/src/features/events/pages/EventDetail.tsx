@@ -10,6 +10,7 @@ import PageLayout from '@/shared/components/PageLayout';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useEventDetailPage } from '@/features/events/hooks/useEventDetailPage';
 import EventDetailSession from '@/features/events/pages/event-detail/EventDetailSession';
+import { buttonClass } from '@/shared/components/Button';
 
 function getDocumentTitle(
   slug: string | undefined,
@@ -76,7 +77,7 @@ export default function EventDetail() {
             fallback: t('errors.generic'),
           })}
         </p>
-        <Link to={ROUTES.home} className="btn">
+        <Link to={ROUTES.home} className={buttonClass()}>
           {t('events.detail.backHome')}
         </Link>
       </PageLayout>
