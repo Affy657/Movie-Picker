@@ -438,7 +438,6 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
               <MovieBrowseCard
                 key={`${item.tmdbId}|${item.mediaType}`}
                 item={item}
-                tmdbLanguage={tmdbLanguage}
                 hasHover={hasHover}
                 isLoggedIn={isLoggedIn}
                 inWatchlist={watchlistKeys.has(watchlistKey(item.tmdbId, item.mediaType))}

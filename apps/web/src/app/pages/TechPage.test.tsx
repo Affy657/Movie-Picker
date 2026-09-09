@@ -385,7 +385,7 @@ describe('TechPage', () => {
     }
   });
 
-  it('justifie chaque choix technique par son alternative et son coût', () => {
+  it('ne facture un prix que là où il y en a un, sans prétendre que tout a été arbitré', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#choices') as HTMLElement;
 
@@ -395,7 +395,8 @@ describe('TechPage', () => {
     );
 
     expect(cards).toHaveLength(9);
-    expect(trades).toHaveLength(cards.length);
+    expect(fr.tech.choices.title).not.toMatch(/chaque brique/i);
+
     for (const choice of [
       'runtime',
       'database',
@@ -408,10 +409,21 @@ describe('TechPage', () => {
       'mono',
     ] as const) {
       expect(section.textContent).toContain(fr.tech.choices[choice]);
+    }
+
+    const priced = ['runtime', 'database', 'auth', 'front', 'hosting', 'split'] as const;
+    expect(trades).toHaveLength(priced.length);
+    for (const choice of priced) {
       expect(trades.map((trade) => trade.textContent)).toContain(
         `${fr.tech.choices.tradeLabel} ${fr.tech.choices[`${choice}Trade`]}`
       );
     }
+  });
+
+  it('date la réécriture du serveur sans lui prêter un contrat qui n’existait pas', () => {
+    expect(fr.tech.choices.runtimeHint).not.toMatch(/OpenAPI/i);
+    expect(fr.tech.choices.runtimeTrade).not.toMatch(/deux mois/i);
+    expect(fr.tech.choices.persistenceValue).not.toMatch(/chaque document est traduit/i);
   });
 
   it('laisse les suites de tests à leur section et garde le serveur sur ses garanties', () => {

@@ -185,6 +185,8 @@ const CHOICE_KEYS = [
   { key: 'mono', Icon: FolderTree },
 ] as const;
 
+const PRICED_CHOICES = new Set(['runtime', 'database', 'auth', 'front', 'hosting', 'split']);
+
 const FEATURE_KEYS = [
   { key: 'trigger', Icon: Timer },
   { key: 'read', Icon: LetterboxdLogo },
@@ -309,7 +311,6 @@ export default function TechPage() {
               }))}
             />
           </TechSection>
-
           <TechSection
             id="choices"
             eyebrow={eyebrow('choices')}
@@ -317,16 +318,37 @@ export default function TechPage() {
             lead={t('tech.choices.lead')}
           >
             <FactGrid
-              items={iconFacts('choices', CHOICE_KEYS).map((fact) => ({
-                ...fact,
-                trade: {
-                  label: t('tech.choices.tradeLabel'),
-                  text: t(`tech.choices.${fact.key}Trade` as TranslationKey),
-                },
-              }))}
+              items={iconFacts('choices', CHOICE_KEYS).map((fact) =>
+                PRICED_CHOICES.has(fact.key)
+                  ? {
+                      ...fact,
+                      trade: {
+                        label: t('tech.choices.tradeLabel'),
+                        text: t(`tech.choices.${fact.key}Trade` as TranslationKey),
+                      },
+                    }
+                  : fact
+              )}
             />
           </TechSection>
-
+          <TechSection
+            id="contract"
+            eyebrow={eyebrow('contract')}
+            title={t('tech.contract.title')}
+            lead={t('tech.contract.lead')}
+          >
+            <Figure>
+              <ContractDiagram />
+            </Figure>
+            <FactGrid items={iconFacts('contract', CONTRACT_KEYS)} />
+            <p className={shared.note}>
+              {t('tech.contract.note', {
+                routes: TECH_METRICS.contractRoutesChecked,
+                checked: TECH_METRICS.contractCheckedTypes,
+                total: TECH_METRICS.contractResponses,
+              })}
+            </p>
+          </TechSection>
           <TechSection
             id="ui"
             eyebrow={eyebrow('ui')}
@@ -344,7 +366,6 @@ export default function TechPage() {
               })}
             />
           </TechSection>
-
           <TechSection
             id="server"
             eyebrow={eyebrow('server')}
@@ -368,32 +389,19 @@ export default function TechPage() {
               items={iconFacts('server', SERVER_KEYS)}
             />
           </TechSection>
-
-          <TechSection
-            id="contract"
-            eyebrow={eyebrow('contract')}
-            title={t('tech.contract.title')}
-            lead={t('tech.contract.lead')}
-          >
-            <Figure>
-              <ContractDiagram />
-            </Figure>
-            <FactGrid items={iconFacts('contract', CONTRACT_KEYS)} />
-            <p className={shared.note}>
-              {t('tech.contract.note', {
-                checked: TECH_METRICS.contractCheckedTypes,
-                total: TECH_METRICS.contractResponses,
-              })}
-            </p>
-          </TechSection>
-
           <TechSection
             id="data"
             eyebrow={eyebrow('data')}
             title={t('tech.data.title')}
             lead={t('tech.data.lead')}
           >
-            <Figure caption={t('tech.data.modelCaption')}>
+            <Figure
+              caption={`${t('tech.data.modelCaption')} ${t('tech.diagram.dataModelNote', {
+                collections: TECH_METRICS.mongoCollections,
+                indexes: TECH_METRICS.mongoIndexes,
+                ttl: TECH_METRICS.ttlIndexes,
+              })}`}
+            >
               <DataModelDiagram />
             </Figure>
             <Figure caption={t('tech.data.caption')}>
@@ -417,7 +425,6 @@ export default function TechPage() {
               })}
             />
           </TechSection>
-
           <TechSection
             id="feature"
             eyebrow={eyebrow('feature')}
@@ -429,7 +436,6 @@ export default function TechPage() {
             </Figure>
             <FactGrid items={iconFacts('feature', FEATURE_KEYS)} />
           </TechSection>
-
           <TechSection
             id="tests"
             eyebrow={eyebrow('tests')}
@@ -470,45 +476,6 @@ export default function TechPage() {
               })}
             />
           </TechSection>
-
-          <TechSection
-            id="ci"
-            eyebrow={eyebrow('ci')}
-            title={t('tech.ci.title', { jobs: TECH_METRICS.ciJobs })}
-            lead={t('tech.ci.lead')}
-          >
-            <Figure caption={t('tech.ci.caption')}>
-              <CiGraphDiagram />
-            </Figure>
-            <FactGrid heading={t('tech.ci.pipelineHeading')} items={iconFacts('ci', CI_KEYS)} />
-            <p className={shared.groupHeading}>{t('tech.ci.otherPipelines')}</p>
-            <ul className={shared.tags}>
-              {OTHER_PIPELINES.map((pipeline) => (
-                <li key={pipeline}>
-                  <TechHint label={t(`tech.ci.${pipeline}Hint` as TranslationKey)}>
-                    <span className={shared.tag}>{t(`tech.ci.${pipeline}` as TranslationKey)}</span>
-                  </TechHint>
-                </li>
-              ))}
-            </ul>
-          </TechSection>
-
-          <TechSection
-            id="infra"
-            eyebrow={eyebrow('infra')}
-            title={t('tech.infra.title')}
-            lead={t('tech.infra.lead')}
-          >
-            <Figure caption={t('tech.infra.caption')}>
-              <InfraDiagram />
-            </Figure>
-            <FactGrid
-              items={iconFacts('infra', INFRA_KEYS, {
-                secrets: t('tech.infra.secretsValue', { secrets: TECH_METRICS.deploySecrets }),
-              })}
-            />
-          </TechSection>
-
           <TechSection
             id="quality"
             eyebrow={eyebrow('quality')}
@@ -525,6 +492,8 @@ export default function TechPage() {
                     lines: TECH_METRICS.coverageLines,
                     functions: TECH_METRICS.coverageFunctions,
                     branches: TECH_METRICS.coverageBranches,
+                    apiLines: TECH_METRICS.apiCoverageLines,
+                    mongoLines: TECH_METRICS.mongoCoverageLines,
                   }),
                   lighthouse: t('tech.quality.lighthouseValue', {
                     pages: TECH_METRICS.lighthousePages,
@@ -562,7 +531,42 @@ export default function TechPage() {
               items={iconFacts('quality', QUALITY_OBSERVED_KEYS)}
             />
           </TechSection>
-
+          <TechSection
+            id="ci"
+            eyebrow={eyebrow('ci')}
+            title={t('tech.ci.title', { jobs: TECH_METRICS.ciJobs })}
+            lead={t('tech.ci.lead')}
+          >
+            <Figure caption={t('tech.ci.caption')}>
+              <CiGraphDiagram />
+            </Figure>
+            <FactGrid heading={t('tech.ci.pipelineHeading')} items={iconFacts('ci', CI_KEYS)} />
+            <p className={shared.groupHeading}>{t('tech.ci.otherPipelines')}</p>
+            <ul className={shared.tags}>
+              {OTHER_PIPELINES.map((pipeline) => (
+                <li key={pipeline}>
+                  <TechHint label={t(`tech.ci.${pipeline}Hint` as TranslationKey)}>
+                    <span className={shared.tag}>{t(`tech.ci.${pipeline}` as TranslationKey)}</span>
+                  </TechHint>
+                </li>
+              ))}
+            </ul>
+          </TechSection>
+          <TechSection
+            id="infra"
+            eyebrow={eyebrow('infra')}
+            title={t('tech.infra.title')}
+            lead={t('tech.infra.lead')}
+          >
+            <Figure caption={t('tech.infra.caption')}>
+              <InfraDiagram />
+            </Figure>
+            <FactGrid
+              items={iconFacts('infra', INFRA_KEYS, {
+                secrets: t('tech.infra.secretsValue', { secrets: TECH_METRICS.deploySecrets }),
+              })}
+            />
+          </TechSection>
           <TechSection
             id="production"
             eyebrow={eyebrow('production')}
@@ -577,7 +581,6 @@ export default function TechPage() {
               })}
             />
           </TechSection>
-
           <TechSection
             id="method"
             eyebrow={eyebrow('method')}
@@ -590,6 +593,9 @@ export default function TechPage() {
             <Figure caption={t('tech.method.featureCaption')}>
               <FeatureFlowDiagram />
             </Figure>
+            <Figure caption={t('tech.method.bugCaption')}>
+              <BugFlowDiagram />
+            </Figure>
             <Figure caption={t('tech.method.toolingCaption')}>
               <AssistantToolingDiagram />
             </Figure>
@@ -597,9 +603,6 @@ export default function TechPage() {
               <strong>{t('tech.method.mcpNoteLead')}</strong>{' '}
               {t('tech.method.mcpNote', { tools: TECH_METRICS.assistantTools })}
             </p>
-            <Figure caption={t('tech.method.bugCaption')}>
-              <BugFlowDiagram />
-            </Figure>
             <FactGrid
               items={METHOD_CARDS.map(({ key, Icon }) => ({
                 key,
@@ -613,7 +616,6 @@ export default function TechPage() {
               }))}
             />
           </TechSection>
-
           <TechSection
             id="trajectory"
             eyebrow={eyebrow('trajectory')}

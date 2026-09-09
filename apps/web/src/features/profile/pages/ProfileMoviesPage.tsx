@@ -309,7 +309,6 @@ export default function ProfileMoviesPage() {
                   title: item.title,
                 })}
                 ratingScale={user?.ratingScale}
-                tmdbLanguage={tmdbLanguage}
                 hasHover={hasHover}
                 isLoggedIn={isLoggedIn}
                 inWatchlist={watchlistKeys.has(watchlistKey(item.tmdbId, item.mediaType))}

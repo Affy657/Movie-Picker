@@ -310,8 +310,6 @@ export function LayersDiagram() {
       <text x="662" y="170" className={styles.svgLabel} fill={TEXT}>
         {t('tech.diagram.inwardLine3')}
       </text>
-      <DotNetLogo x={662} y={236} size={18} />
-      <MongoLogo x={690} y={236} size={18} />
       <text x="662" y="204" className={styles.svgSub} fill={META}>
         {t('tech.diagram.inwardNote1')}
       </text>
@@ -1412,8 +1410,7 @@ export function UnitOfWorkDiagram() {
         {t('tech.diagram.unitOfWorkRollbackSub')}
       </text>
 
-      <MongoLogo x={10} y={226} size={16} />
-      <text x="34" y="238" className={styles.svgSub} fill={META}>
+      <text x="10" y="238" className={styles.svgSub} fill={META}>
         {t('tech.diagram.unitOfWorkNote')}
       </text>
     </svg>
@@ -1440,7 +1437,7 @@ export function DataModelDiagram() {
   const { t } = useTranslation();
 
   return (
-    <svg viewBox="0 0 880 410" role="img" aria-labelledby="tech-datamodel-title">
+    <svg viewBox="0 0 880 392" role="img" aria-labelledby="tech-datamodel-title">
       <title id="tech-datamodel-title">{t('tech.diagram.dataModelTitle')}</title>
       <defs>
         <ArrowMarker id="tech-arrow-datamodel" fill={BORDER} />
@@ -1491,15 +1488,6 @@ export function DataModelDiagram() {
           ))}
         </g>
       ))}
-
-      <MongoLogo x={10} y={378} size={16} />
-      <text x="34" y="390" className={styles.svgSub} fill={META}>
-        {t('tech.diagram.dataModelNote', {
-          collections: TECH_METRICS.mongoCollections,
-          indexes: TECH_METRICS.mongoIndexes,
-          ttl: TECH_METRICS.ttlIndexes,
-        })}
-      </text>
     </svg>
   );
 }
@@ -1604,19 +1592,19 @@ const INFRA_NODES = [
   { key: 'Dns', x: 16, y: 34, w: 172, h: 74, Logo: Globe, hot: false },
   { key: 'Cdn', x: 16, y: 136, w: 172, h: 74, Logo: AwsLogo, hot: false },
   { key: 'Bucket', x: 16, y: 238, w: 172, h: 74, Logo: AwsLogo, hot: false },
-  { key: 'Secrets', x: 360, y: 34, w: 200, h: 74, Logo: GoogleCloudLogo, hot: false },
-  { key: 'Run', x: 360, y: 136, w: 200, h: 74, Logo: GoogleCloudLogo, hot: true },
-  { key: 'Registry', x: 360, y: 238, w: 200, h: 74, Logo: GoogleCloudLogo, hot: false },
-  { key: 'Scheduler', x: 604, y: 34, w: 180, h: 74, Logo: GoogleCloudLogo, hot: false },
-  { key: 'Atlas', x: 604, y: 136, w: 180, h: 74, Logo: MongoLogo, hot: false },
-  { key: 'Sentry', x: 604, y: 238, w: 180, h: 74, Logo: SentryLogo, hot: false },
+  { key: 'Secrets', x: 224, y: 34, w: 196, h: 74, Logo: GoogleCloudLogo, hot: false },
+  { key: 'Run', x: 224, y: 136, w: 196, h: 74, Logo: GoogleCloudLogo, hot: true },
+  { key: 'Registry', x: 448, y: 34, w: 196, h: 74, Logo: GoogleCloudLogo, hot: false },
+  { key: 'Scheduler', x: 448, y: 136, w: 196, h: 74, Logo: GoogleCloudLogo, hot: false },
+  { key: 'Atlas', x: 664, y: 136, w: 200, h: 74, Logo: MongoLogo, hot: false },
+  { key: 'Sentry', x: 664, y: 238, w: 200, h: 74, Logo: SentryLogo, hot: false },
 ] as const;
 
 export function InfraDiagram() {
   const { t } = useTranslation();
 
   return (
-    <svg viewBox="0 0 880 396" role="img" aria-labelledby="tech-infra-title">
+    <svg viewBox="0 0 880 400" role="img" aria-labelledby="tech-infra-title">
       <title id="tech-infra-title">{t('tech.diagram.infraTitle')}</title>
       <defs>
         <ArrowMarker id="tech-arrow-infra" fill={META} />
@@ -1637,29 +1625,36 @@ export function InfraDiagram() {
       </text>
 
       <rect
-        x="352"
-        y="16"
-        width="216"
-        height="314"
+        x="216"
+        y="8"
+        width="436"
+        height="232"
         rx="12"
         fill="none"
         stroke={BORDER}
         strokeDasharray="4 4"
       />
-      <text x="360" y="326" className={styles.svgSub} fill={META}>
+      <text x="224" y="234" className={styles.svgSub} fill={META}>
         {t('tech.diagram.infraZoneGcp')}
       </text>
 
       <g stroke={META} strokeWidth="1.3" fill="none" markerEnd="url(#tech-arrow-infra)">
         <path d="M 102 108 L 102 130" />
         <path d="M 102 238 L 102 216" />
-        <path d="M 188 173 L 354 173" />
-        <path d="M 460 238 L 460 216" />
-        <path d="M 460 108 L 460 130" />
-        <path d="M 604 71 C 582 71, 582 156, 560 156" />
-        <path d="M 560 173 L 598 173" />
-        <path d="M 560 190 C 586 190, 578 275, 598 275" />
+        <path d="M 322 108 L 322 130" />
+        <path d="M 490 108 C 490 122, 420 122, 386 130" />
+        <path d="M 448 173 L 432 173" />
+        <path d="M 412 210 C 470 226, 560 232, 700 216" />
+        <path d="M 406 210 C 436 258, 545 280, 658 272" />
       </g>
+
+      <path
+        d="M 188 173 L 220 173"
+        stroke={META}
+        strokeWidth="1.3"
+        strokeDasharray="4 4"
+        fill="none"
+      />
 
       {INFRA_NODES.map((node) => (
         <g key={node.key}>
@@ -1685,11 +1680,14 @@ export function InfraDiagram() {
         </g>
       ))}
 
-      <text x="10" y="360" className={styles.svgSub} fill={WARN}>
+      <text x="10" y="348" className={styles.svgSub} fill={WARN}>
         {t('tech.diagram.infraGap')}
       </text>
-      <text x="10" y="380" className={styles.svgSub} fill={META}>
+      <text x="10" y="370" className={styles.svgSub} fill={META}>
         {t('tech.diagram.infraNote')}
+      </text>
+      <text x="10" y="388" className={styles.svgSub} fill={META}>
+        {t('tech.diagram.infraNoteOrigin')}
       </text>
     </svg>
   );

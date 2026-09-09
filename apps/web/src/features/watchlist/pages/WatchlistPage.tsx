@@ -366,7 +366,6 @@ export default function WatchlistPage() {
                   key={itemKey(item.tmdbId, item.mediaType)}
                   item={item}
                   hasHover={hasHover}
-                  tmdbLanguage={tmdbLanguage}
                   ratingScale={user?.ratingScale}
                   t={t}
                   onRemove={() => handleRemove(item.tmdbId, item.mediaType)}

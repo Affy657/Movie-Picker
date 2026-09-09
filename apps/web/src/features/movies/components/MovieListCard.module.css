@@ -22,18 +22,25 @@
   }
 }
 
-.posterBtn {
+.cardTrigger {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
+  z-index: var(--z-base);
   padding: 0;
   border: none;
   background: none;
   cursor: pointer;
 }
 
-.posterBtn img {
+.cardTrigger:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.posterImg {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
@@ -71,51 +78,18 @@
   transition: opacity var(--duration-base) var(--ease-default);
 }
 
+.overlay > * {
+  pointer-events: auto;
+}
+
 .posterRegion:focus-within .overlay {
   opacity: 1;
-  pointer-events: auto;
 }
 
 @media (hover: hover) {
   .posterRegion:hover .overlay {
     opacity: 1;
-    pointer-events: auto;
   }
-}
-
-.overlayDetailsBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-1);
-  width: 100%;
-  padding: var(--space-1-5) var(--space-2);
-  font-family: inherit;
-  font-size: var(--font-size-2xs);
-  font-weight: 600;
-  line-height: var(--leading-none);
-  color: var(--on-poster-fg-strong);
-  background: var(--on-poster-surface);
-  border: 1px solid var(--on-poster-hairline);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: background var(--duration-base) var(--ease-default);
-}
-
-.overlayDetailsBtn:focus-visible {
-  background: var(--on-poster-overlay-strong);
-  outline: none;
-}
-
-@media (hover: hover) {
-  .overlayDetailsBtn:hover {
-    background: var(--on-poster-overlay-strong);
-    outline: none;
-  }
-}
-
-.overlayDetailsLabel {
-  transform: translateY(var(--text-optical-nudge));
 }
 
 .cardBody {
@@ -138,23 +112,28 @@
 }
 
 .cardMeta {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: var(--space-2);
   height: 1.1rem;
   font-size: var(--font-size-2xs);
   color: var(--color-meta);
   font-variant-numeric: tabular-nums;
 }
 
-.cardGenres {
-  display: block;
-  height: 1.05rem;
-  font-size: var(--font-size-3xs);
-  color: var(--color-text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.metaStart {
+  grid-column: 1;
+  justify-self: start;
+}
+
+.metaCenter {
+  grid-column: 2;
+  justify-self: center;
+}
+
+.metaEnd {
+  grid-column: 3;
+  justify-self: end;
 }
 
 .badge {
@@ -205,6 +184,8 @@
 }
 
 .rowKebabSlot {
+  position: relative;
+  z-index: var(--z-raised-above);
   display: flex;
   align-items: center;
   flex: 0 0 auto;
@@ -232,16 +213,8 @@
   display: none;
 }
 
-.cardAsRow .cardGenres {
-  display: none;
-}
-
 @media (min-width: 48rem) {
   .cardAsRow .posterRegion {
     width: 4rem;
-  }
-
-  .cardAsRow .cardGenres {
-    display: block;
   }
 }
