@@ -2217,7 +2217,7 @@
         'La CI régénère les types et échoue si le fichier versionné ne correspond plus au contrat exporté.',
       driftHint:
         'openapi:types:check compare la sortie fraîche au fichier commité ; apiContract.test.ts vérifie en plus, au niveau des types, que les champs lus par le front existent bien.',
-      note: "Le filet couvre aujourd'hui {{checked}} types de réponse sur les {{total}} que décrit le contrat, en commençant par ceux que le front lit le plus. L'étendre au reste est du travail mécanique, pas une décision à prendre.",
+      note: "Deux filets de portée différente. Le premier est complet : les {{routes}} routes appelées par le front sont listées une à une, et l'une qui disparaît du contrat fait échouer la compilation. Le second va plus loin mais couvre moins : il confronte champ par champ {{checked}} réponses sur les {{total}} du contrat, celles dont le front déclare son propre type. Les autres, il les lit sans leur donner de nom, et certaines ne le concernent pas, comme les sondes de santé. Les couvrir demande d'abord de nommer ces types : du travail mécanique, pas une décision à prendre.",
     },
     data: {
       title: 'Neuf collections au cœur, et des écritures tout ou rien',
@@ -2241,6 +2241,11 @@
         '{{ttl}} index à expiration font le ménage dans le moteur : sessions, jetons de mot de passe, notifications, marqueurs anti-doublon, compteurs de limitation et journal des dons.',
       expiryHint:
         'Aucune tâche de fond ne tourne pour ça, ce qui tombe bien puisque rien ne vit dans le processus du serveur.',
+      inventory: 'Inventaire des index',
+      inventoryValue:
+        'Un test compare les {{indexes}} index réellement créés à une liste attendue : nom, unicité et expiration. En ajouter un sans le déclarer casse la construction.',
+      inventoryHint:
+        "Trois garanties ne tiennent qu'à ces index : l'expiration des sessions, celle des jetons de réinitialisation et celle des compteurs de limitation de débit.",
       migrations: 'Migrations',
       migrationsValue:
         'Datée, idempotente, appliquée une fois au démarrage puis consignée. {{migrations}} en production.',
@@ -2261,7 +2266,7 @@
       title: '{{tests}} tests automatisés, et une couverture qui bloque',
       lead: 'Trois familles, de la plus rapide à la plus lente : le domaine sans dépendances, le serveur contre une vraie base, le produit dans un navigateur. Chacune répond à une question que les autres ne posent pas.',
       caption:
-        'Couverture bloquante côté front : {{lines}} % de lignes, {{functions}} % de fonctions, {{branches}} % de branches. Côté serveur, elle est mesurée et publiée, sans seuil qui fasse échouer la chaîne.',
+        'Couverture bloquante côté front : {{lines}} % de lignes, {{functions}} % de fonctions, {{branches}} % de branches. Côté serveur aussi : {{apiLines}} % de lignes sur la suite unitaire, et {{mongoLines}} % sur les seuls adaptateurs Mongo, que seule la suite branchée sur une vraie base exécute.',
       unit: 'Tests unitaires',
       unitValue:
         '{{count}} cas, sans base ni réseau, sur les doublures en mémoire. Quelques secondes.',
@@ -2312,7 +2317,7 @@
       title: '{{jobs}} checks de CI avant la production',
       lead: "Un seul graphe, des dépendances explicites, un déploiement qui n'a lieu que si tout ce qui le précède est vert.",
       caption:
-        "Le dernier maillon vérifie que les déploiements ont eu lieu, pas seulement qu'ils n'ont pas échoué.",
+        "Le filtre de périmètre décide quelles branches tournent ; gitleaks et lint workflows lui échappent et tournent à chaque fois. Un seul job réunit navigateur réel et vraie base, e2e mongo, et il bloque les deux déploiements. Le dernier maillon vérifie que les déploiements ont eu lieu, pas seulement qu'ils n'ont pas échoué.",
       pipelineHeading: 'Ce qui tient la chaîne',
       trigger: 'Déclenchement',
       triggerValue:
@@ -2436,14 +2441,14 @@
         "Le même passage obligé s'applique à une ligne écrite à la main et à une ligne générée.",
     },
     choices: {
-      title: 'Chaque brique a été choisie contre une alternative',
-      lead: "Un dossier technique qui liste des technologies ne dit rien. Voici l'arbitrage : ce qui a été retenu, contre quoi, et ce que ça coûte.",
+      title: 'Ce qui a été arbitré, et ce qui a été hérité',
+      lead: "Certaines de ces décisions ont été prises contre une alternative nommée. D'autres viennent de l'histoire du projet et sont gardées en connaissance de cause.",
       runtime: '.NET 10 côté serveur',
       runtimeValue:
         "Le serveur était en Node et Express jusqu'en mars 2026, puis réécrit en ASP.NET Core à contrat identique. Typage à la compilation, injection de dépendances native, xUnit.",
       runtimeHint:
-        "La réécriture était tenable parce que le contrat OpenAPI figeait déjà la frontière : le front n'a pas bougé d'une ligne.",
-      runtimeTrade: 'Une réécriture complète du serveur, deux mois après le MVP.',
+        "Les routes et les charges utiles n'ont pas changé : dans le commit de migration, les seules lignes touchées côté front sont du reformatage, pas un appel.",
+      runtimeTrade: 'Une réécriture complète du serveur, trois semaines après le premier commit.',
       database: 'MongoDB plutôt que PostgreSQL',
       databaseValue:
         "Le document d'une soirée est lu en bloc et sa forme change à chaque palier. Un moteur documentaire évite une migration de schéma par fonctionnalité.",
@@ -2453,11 +2458,9 @@
         "L'intégrité référentielle est portée par le code et par des index uniques, pas par le moteur.",
       persistence: "Driver MongoDB plutôt qu'un ORM",
       persistenceValue:
-        "L'API en Node passait par Mongoose ; la version .NET parle au driver directement, et chaque document est traduit par un mappeur écrit à la main.",
+        "L'API en Node passait par Mongoose ; la version .NET parle au driver directement. Chaque collection a sa classe de document, aux noms de champs explicites, et la conversion vers le domaine est écrite à la main.",
       persistenceHint:
         "Un ORM documentaire réintroduit un schéma là où le moteur n'en impose pas, et masque la requête réellement envoyée.",
-      persistenceTrade:
-        'Chaque collection demande son mappeur et ses tests, là où un ORM en aurait généré une partie.',
       auth: 'Cookie de session plutôt que JWT',
       authValue:
         'Le navigateur reçoit un cookie signé, marqué HttpOnly et SameSite, jamais un jeton à ranger quelque part. Les clés de signature vivent en base.',
@@ -2477,8 +2480,6 @@
         'Des modules CSS et des jetons maison : espacements, tailles, couleurs et profondeurs forment une échelle fermée que le contrôle refuse de voir contournée.',
       stylingHint:
         "Le contrôle échoue sur une valeur écrite en dur, un z-index nu ou un point de rupture hors échelle. Il tourne avant chaque envoi et dans l'intégration continue.",
-      stylingTrade:
-        'Il faut écrire le CSS soi-même plutôt que composer des classes utilitaires déjà prêtes.',
       hosting: 'Cloud Run plutôt que Kubernetes',
       hostingValue:
         "Un conteneur, une mise à l'échelle jusqu'à zéro, une facturation à la requête. Aucun système d'exploitation à tenir à jour.",
@@ -2498,8 +2499,6 @@
         "Un dépôt, une chaîne de livraison, un seul tag de version pour les deux applications. Le contrat d'API et le client qui le consomme changent dans le même commit, donc une rupture ne compile pas au lieu de se découvrir en production.",
       monoHint:
         'Turbo met en cache les tâches par graphe de dépendances : seul ce qui a changé est reconstruit.',
-      monoTrade:
-        "Front et serveur avancent dans le même cycle de vérification, et une moitié du code ne peut pas être ouverte sans l'autre.",
       tradeLabel: 'Le prix',
     },
     feature: {
@@ -2560,7 +2559,7 @@
         'Une origine manquante fait échouer le déploiement ; un secret optionnel absent se signale par un avertissement et désactive la fonctionnalité qui en dépend.',
       rollback: 'Retour arrière',
       rollbackValue:
-        'Un déclenchement manuel bascule tout le trafic vers la révision précédente, déjà en ligne. Aucune reconstruction, aucun redéploiement.',
+        "Un déclenchement manuel bascule tout le trafic du serveur vers la révision précédente, déjà en ligne : aucune reconstruction, aucun redéploiement. Le front n'a pas d'équivalent, l'hébergement statique ne garde aucune version.",
       rollbackHint:
         'Les révisions restent disponibles chez l’hébergeur et les anciennes images dans le registre, purgées par une chaîne dédiée pour qu’il ne gonfle pas.',
       scheduler: 'Travail périodique',
@@ -2581,7 +2580,7 @@
       informativeHeading: 'Ce qui est observé en production',
       coverage: 'Couverture de tests',
       coverageValue:
-        '{{lines}} % de lignes, {{functions}} % de fonctions, {{branches}} % de branches côté front. En dessous, la suite échoue ; côté serveur, la couverture est mesurée sans seuil.',
+        '{{lines}} % de lignes, {{functions}} % de fonctions, {{branches}} % de branches côté front. Côté serveur, {{apiLines}} % de lignes sur la suite unitaire et {{mongoLines}} % sur les seuls adaptateurs Mongo. En dessous, la suite échoue.',
       coverageHint:
         'Les seuils sont montés au fil des paliers ; ils ne descendent jamais, c’est ce qui les rend utiles.',
       lighthouse: 'Lighthouse',
@@ -2672,7 +2671,7 @@
       contractTest: 'Test de contrat',
       contractTestSub1: 'un type du front lit-il',
       contractTestSub2: 'un champ inexistant ?',
-      contractFail: 'Sinon la CI échoue',
+      contractFail: 'Si oui, la CI échoue',
       contractDrift: "Une vérification régénère les types et échoue s'ils ont dérivé.",
       testsPyramidTitle: 'Pyramide de tests : unitaires, intégration, end to end',
       testsE2e: '{{count}} tests, {{files}} fichiers',
@@ -2682,14 +2681,23 @@
       testsUnit: '{{total}} tests : {{web}} interface, {{api}} serveur',
       testsUnitLabel: 'UNITAIRE',
       ciTitle: "Graphe des jobs d'intégration continue, du déclenchement au déploiement",
+      ciTrigger: 'push / PR',
       ciChanges: 'changes',
       ciGitleaks: 'gitleaks',
-      ciLint: 'lint web et api',
+      ciLintWorkflows: 'lint workflows',
+      ciLintApi: 'lint api',
+      ciLintWeb: 'lint web',
       ciAudit: 'audit deps',
-      ciTest: 'test web et api',
+      ciTestApi: 'test api',
+      ciTestWeb: 'test web',
       ciTestMongo: 'test api mongo',
+      ciBandImage: 'vers l’image',
+      ciBandBoth: 'vers l’image et le front',
+      ciBandFront: 'vers le front',
+      ciBandDeploys: 'vers les deux déploiements',
       ciLighthouse: 'lighthouse',
       ciE2e: 'e2e',
+      ciE2eMongo: 'e2e mongo',
       ciDocker: 'image API',
       ciSonar: 'sonar',
       ciDeployApi: 'deploy api',
@@ -2844,7 +2852,7 @@
       infraZoneAws: 'AWS, eu-west-1',
       infraZoneGcp: 'Google Cloud, europe-west1',
       infraDns: 'Domaine',
-      infraDnsSub: 'movie-picker.fr',
+      infraDnsSub: 'web.movie-picker.fr',
       infraDnsDetail: 'certificat TLS géré',
       infraCdn: 'CloudFront',
       infraCdnSub: 'cache et en-têtes',
@@ -2857,13 +2865,13 @@
       infraSecretsDetail: 'injectés au déploiement',
       infraRun: 'Cloud Run',
       infraRunSub: 'conteneur, échelle à zéro',
-      infraRunDetail: 'origines autorisées vérifiées',
+      infraRunDetail: 'origines vérifiées',
       infraRegistry: 'Artifact Registry',
       infraRegistrySub: 'une image par commit',
       infraRegistryDetail: 'taguée par SHA, purgée',
       infraScheduler: 'Cloud Scheduler',
-      infraSchedulerSub: 'toutes les 30 minutes',
-      infraSchedulerDetail: 'rappels de soirée',
+      infraSchedulerSub: 'rappels de soirée',
+      infraSchedulerDetail: 'créé si le jeton existe',
       infraAtlas: 'MongoDB Atlas',
       infraAtlasSub: 'replica set managé',
       infraAtlasDetail: 'transactions disponibles',
@@ -2872,7 +2880,8 @@
       infraSentryDetail: 'région européenne',
       infraGap: 'Ressources créées à la main : les décrire en Terraform est le chantier suivant.',
       infraNote:
-        'Le trait entre CloudFront et Cloud Run est la seule origine que le serveur accepte.',
+        "Le pointillé n'est pas un chemin réseau : le navigateur appelle le serveur directement.",
+      infraNoteOrigin: "L'origine du front est la seule que le serveur accepte.",
       requestPathTitle:
         'Le trajet d’une requête à travers les quatre couches, et le sens des dépendances',
       requestPathLabel: 'POST /api/v1/events/{slug}/movies',

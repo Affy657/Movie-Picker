@@ -310,6 +310,7 @@ export function CardKebab({
             ref={menuRef}
             className={styles.kebabMenu}
             role="menu"
+            tabIndex={-1}
             onKeyDown={handleMenuKeyDown}
             style={{
               position: 'fixed',

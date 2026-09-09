@@ -2181,7 +2181,7 @@ export const en: Locale = {
         'CI regenerates the types and fails if the committed file no longer matches the exported contract.',
       driftHint:
         'openapi:types:check compares fresh output against the committed file; apiContract.test.ts additionally checks, at type level, that the fields the front end reads really exist.',
-      note: 'The net currently covers {{checked}} response types out of the {{total}} the contract describes, starting with the ones the front end reads most. Extending it to the rest is mechanical work, not a decision to make.',
+      note: 'Two safety nets with different reach. The first is complete: the {{routes}} routes the front end calls are listed one by one, and one disappearing from the contract fails the build. The second goes deeper but covers less: it confronts {{checked}} of the {{total}} responses the contract describes, field by field, the ones the front end declares its own type for. The rest it reads without naming them, and some do not concern it at all, such as the health probes. Covering them means naming those types first: mechanical work, not a decision to make.',
     },
     data: {
       title: 'Nine collections at the core, and all-or-nothing writes',
@@ -2204,6 +2204,11 @@ export const en: Locale = {
         '{{ttl}} expiring indexes do the cleaning inside the engine: sessions, password tokens, notifications, deduplication markers, rate-limit counters and the donation log.',
       expiryHint:
         'No background job runs for this, which is just as well since nothing lives inside the server process.',
+      inventory: 'Index inventory',
+      inventoryValue:
+        'A test compares the {{indexes}} indexes actually created against an expected list: name, uniqueness and expiry. Adding one without declaring it breaks the build.',
+      inventoryHint:
+        'Three guarantees rest on these indexes alone: session expiry, password reset token expiry and rate limiting counter expiry.',
       migrations: 'Migrations',
       migrationsValue:
         'Dated, idempotent, applied once at startup then recorded. {{migrations}} in production.',
@@ -2224,7 +2229,7 @@ export const en: Locale = {
       title: '{{tests}} automated tests, and coverage that blocks',
       lead: 'Three families, from the fastest to the slowest: the domain with no dependencies, the server against a real database, the product inside a browser. Each answers a question the others do not ask.',
       caption:
-        'Blocking coverage on the front end: {{lines}}% of lines, {{functions}}% of functions, {{branches}}% of branches. On the server it is measured and published, with no threshold that fails the pipeline.',
+        'Blocking coverage on the front end: {{lines}}% of lines, {{functions}}% of functions, {{branches}}% of branches. On the server too: {{apiLines}}% of lines on the unit suite, and {{mongoLines}}% on the Mongo adapters alone, which only the suite wired to a real database ever runs.',
       unit: 'Unit tests',
       unitValue: '{{count}} cases, no database or network, on in-memory doubles. A few seconds.',
       unitHint:
@@ -2274,7 +2279,7 @@ export const en: Locale = {
       title: '{{jobs}} checks before production',
       lead: 'A single graph, explicit dependencies, and a deployment that only happens if everything before it is green.',
       caption:
-        'The final link checks that the deployments actually ran, not merely that they did not fail.',
+        'The scope filter decides which branches run; gitleaks and lint workflows bypass it and run every time. A single job brings a real browser and a real database together, e2e mongo, and it blocks both deployments. The final link checks that the deployments actually ran, not merely that they did not fail.',
       pipelineHeading: 'What holds the pipeline together',
       trigger: 'Trigger',
       triggerValue:
@@ -2393,14 +2398,14 @@ export const en: Locale = {
         'The same mandatory path applies to a hand-written line and to a generated one.',
     },
     choices: {
-      title: 'Every building block was chosen against an alternative',
-      lead: 'A technical dossier that lists technologies says nothing. Here is the trade-off: what was picked, against what, and what it costs.',
+      title: 'What was arbitrated, and what was inherited',
+      lead: 'Some of these decisions were made against a named alternative. Others come from the history of the project and are kept knowingly.',
       runtime: '.NET 10 on the server',
       runtimeValue:
         'The server ran on Node and Express until March 2026, then was rewritten in ASP.NET Core against an identical contract. Compile-time typing, native dependency injection, xUnit.',
       runtimeHint:
-        'The rewrite was affordable because the OpenAPI contract already froze the boundary: the front end did not change a single line.',
-      runtimeTrade: 'A full server rewrite, two months after the MVP.',
+        'Routes and payloads did not change: in the migration commit, the only lines touched on the front end are reformatting, not a single call.',
+      runtimeTrade: 'A full server rewrite, three weeks after the first commit.',
       database: 'MongoDB rather than PostgreSQL',
       databaseValue:
         'An event document is read as a whole and its shape changes at every milestone. A document engine avoids one schema migration per feature.',
@@ -2410,11 +2415,9 @@ export const en: Locale = {
         'Referential integrity is carried by the code and by unique indexes, not by the engine.',
       persistence: 'MongoDB driver rather than an ORM',
       persistenceValue:
-        'The Node API went through Mongoose; the .NET version talks to the driver directly, and every document is translated by a hand-written mapper.',
+        'The Node API went through Mongoose; the .NET version talks to the driver directly. Every collection has its own document class with explicit field names, and the conversion to the domain is written by hand.',
       persistenceHint:
         'A document ORM reintroduces a schema where the engine imposes none, and hides the query actually sent.',
-      persistenceTrade:
-        'Each collection needs its own mapper and tests, where an ORM would have generated part of it.',
       auth: 'Session cookie rather than JWT',
       authValue:
         'The browser receives a signed cookie, marked HttpOnly and SameSite, never a token to store somewhere. The signing keys live in the database.',
@@ -2434,8 +2437,6 @@ export const en: Locale = {
         'CSS modules and in-house tokens: spacing, sizes, colours and depths form a closed scale that the checker refuses to see bypassed.',
       stylingHint:
         'The check fails on a hard-coded value, a bare z-index or an off-scale breakpoint. It runs before every push and in continuous integration.',
-      stylingTrade:
-        'The CSS has to be written by hand rather than composed from ready-made utility classes.',
       hosting: 'Cloud Run rather than Kubernetes',
       hostingValue:
         'One container, scaling down to zero, billing per request. No operating system to keep patched.',
@@ -2454,8 +2455,6 @@ export const en: Locale = {
       monoValue:
         'One repository, one delivery chain, one version tag for both applications. The API contract and the client that consumes it change in the same commit, so a break fails to compile instead of surfacing in production.',
       monoHint: 'Turbo caches tasks by dependency graph: only what changed is rebuilt.',
-      monoTrade:
-        'Front end and server move through the same verification cycle, and one half of the code cannot be opened without the other.',
       tradeLabel: 'The cost',
     },
     feature: {
@@ -2515,7 +2514,7 @@ export const en: Locale = {
         'A missing origin fails the deployment; a missing optional secret is reported as a warning and disables the feature that depends on it.',
       rollback: 'Rollback',
       rollbackValue:
-        'A manual run shifts all traffic to the previous revision, already online. No rebuild, no redeployment.',
+        'A manual run shifts all server traffic to the previous revision, already online: no rebuild, no redeployment. The front end has no equivalent, static hosting keeps no versions.',
       rollbackHint:
         'Revisions stay available at the host and old images in the registry, purged by a dedicated pipeline so that it does not grow forever.',
       scheduler: 'Periodic work',
@@ -2536,7 +2535,7 @@ export const en: Locale = {
       informativeHeading: 'What is observed in production',
       coverage: 'Test coverage',
       coverageValue:
-        '{{lines}} % of lines, {{functions}} % of functions, {{branches}} % of branches on the front end. Below that the suite fails; on the server, coverage is measured without a threshold.',
+        '{{lines}} % of lines, {{functions}} % of functions, {{branches}} % of branches on the front end. On the server, {{apiLines}} % of lines on the unit suite and {{mongoLines}} % on the Mongo adapters alone. Below that, the suite fails.',
       coverageHint:
         'Thresholds were raised milestone after milestone; they never come back down, which is what makes them useful.',
       lighthouse: 'Lighthouse',
@@ -2627,7 +2626,7 @@ export const en: Locale = {
       contractTest: 'Contract test',
       contractTestSub1: 'do the front-end types',
       contractTestSub2: 'read a missing field?',
-      contractFail: 'Otherwise CI fails',
+      contractFail: 'If so, CI fails',
       contractDrift: 'A check regenerates the types and fails if they have drifted.',
       testsPyramidTitle: 'Test pyramid: unit, integration, end to end',
       testsE2e: '{{count}} Playwright tests, {{files}} files',
@@ -2637,14 +2636,23 @@ export const en: Locale = {
       testsUnit: '{{total}} tests: {{web}} front end, {{api}} server',
       testsUnitLabel: 'UNIT',
       ciTitle: 'Continuous integration job graph, from trigger to deployment',
+      ciTrigger: 'push / PR',
       ciChanges: 'changes',
       ciGitleaks: 'gitleaks',
-      ciLint: 'lint web and api',
+      ciLintWorkflows: 'lint workflows',
+      ciLintApi: 'lint api',
+      ciLintWeb: 'lint web',
       ciAudit: 'audit deps',
-      ciTest: 'test web and api',
+      ciTestApi: 'test api',
+      ciTestWeb: 'test web',
       ciTestMongo: 'test api mongo',
+      ciBandImage: 'to the image',
+      ciBandBoth: 'to the image and the front',
+      ciBandFront: 'to the front',
+      ciBandDeploys: 'to both deployments',
       ciLighthouse: 'lighthouse',
       ciE2e: 'e2e',
+      ciE2eMongo: 'e2e mongo',
       ciDocker: 'API image',
       ciSonar: 'sonar',
       ciDeployApi: 'deploy api',
@@ -2796,7 +2804,7 @@ export const en: Locale = {
       infraZoneAws: 'AWS, eu-west-1',
       infraZoneGcp: 'Google Cloud, europe-west1',
       infraDns: 'Domain',
-      infraDnsSub: 'movie-picker.fr',
+      infraDnsSub: 'web.movie-picker.fr',
       infraDnsDetail: 'managed TLS certificate',
       infraCdn: 'CloudFront',
       infraCdnSub: 'cache and headers',
@@ -2809,13 +2817,13 @@ export const en: Locale = {
       infraSecretsDetail: 'injected at deploy time',
       infraRun: 'Cloud Run',
       infraRunSub: 'container, scales to zero',
-      infraRunDetail: 'allowed origins checked',
+      infraRunDetail: 'origins checked',
       infraRegistry: 'Artifact Registry',
       infraRegistrySub: 'one image per commit',
       infraRegistryDetail: 'tagged by SHA, purged',
       infraScheduler: 'Cloud Scheduler',
-      infraSchedulerSub: 'every 30 minutes',
-      infraSchedulerDetail: 'event reminders',
+      infraSchedulerSub: 'event reminders',
+      infraSchedulerDetail: 'created if the token exists',
       infraAtlas: 'MongoDB Atlas',
       infraAtlasSub: 'managed replica set',
       infraAtlasDetail: 'transactions available',
@@ -2823,7 +2831,8 @@ export const en: Locale = {
       infraSentrySub: 'front and server errors',
       infraSentryDetail: 'European region',
       infraGap: 'Resources created by hand: describing them in Terraform is the next step.',
-      infraNote: 'The line between CloudFront and Cloud Run is the only origin the server accepts.',
+      infraNote: 'The dotted line is not a network path: the browser calls the server directly.',
+      infraNoteOrigin: 'The front end origin is the only one the server accepts.',
       requestPathTitle:
         'The path of a request through the four layers, and the direction of the dependencies',
       requestPathLabel: 'POST /api/v1/events/{slug}/movies',

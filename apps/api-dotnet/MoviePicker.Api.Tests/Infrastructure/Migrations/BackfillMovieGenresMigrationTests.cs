@@ -9,6 +9,9 @@ namespace MoviePicker.Api.Tests.Infrastructure.Migrations;
 
 public sealed class BackfillMovieGenresMigrationTests
 {
+    private static readonly int[] ExpectedActionAdventureGenres = [28, 12];
+    private static readonly int[] ExpectedComedyGenres = [35];
+
     private readonly Mock<IMovieRepository> _movies = new();
     private readonly Mock<IWatchlistRepository> _watchlist = new();
     private readonly Mock<ITmdbMovieSearch> _tmdb = new();
@@ -71,10 +74,10 @@ public sealed class BackfillMovieGenresMigrationTests
 
         Assert.Equal(2, updated);
         _movies.Verify(
-            r => r.UpdateGenresAsync("m1", It.Is<IReadOnlyList<int>>(g => g.SequenceEqual(new[] { 28, 12 })), It.IsAny<CancellationToken>()),
+            r => r.UpdateGenresAsync("m1", It.Is<IReadOnlyList<int>>(g => g.SequenceEqual(ExpectedActionAdventureGenres)), It.IsAny<CancellationToken>()),
             Times.Once);
         _watchlist.Verify(
-            r => r.UpdateGenresAsync("w1", It.Is<IReadOnlyList<int>>(g => g.SequenceEqual(new[] { 35 })), It.IsAny<CancellationToken>()),
+            r => r.UpdateGenresAsync("w1", It.Is<IReadOnlyList<int>>(g => g.SequenceEqual(ExpectedComedyGenres)), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

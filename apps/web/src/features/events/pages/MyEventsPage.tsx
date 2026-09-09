@@ -324,6 +324,7 @@ export default function MyEventsPage() {
           <div
             className={styles.tabs}
             role="tablist"
+            tabIndex={-1}
             aria-label={t('events.myEvents.title')}
             onKeyDown={tablist.onKeyDown}
           >

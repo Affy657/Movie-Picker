@@ -26,7 +26,7 @@ public sealed class ServiceCollectionExtensionsBranchTests
 
     private const string DevMongoUri = "mongodb://localhost:27017/moviepicker_dev";
 
-    private static IServiceCollection Wire(
+    private static ServiceCollection Wire(
         Dictionary<string, string?> config,
         string? environmentName = null)
     {

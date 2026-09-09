@@ -126,7 +126,7 @@ export default function EventMoviesSection({
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   const sectionHeadingId = useId();
-  const [sortBy, setSortByKey] = useState<MovieRowSortKey>('score');
+  const [sortBy, setSortBy] = useState<MovieRowSortKey>('score');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   const handleSetSort = useCallback(
@@ -134,7 +134,7 @@ export default function EventMoviesSection({
       if (key === sortBy) {
         setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
       } else {
-        setSortByKey(key);
+        setSortBy(key);
         setSortDir(DEFAULT_SORT_DIRECTION[key]);
       }
     },

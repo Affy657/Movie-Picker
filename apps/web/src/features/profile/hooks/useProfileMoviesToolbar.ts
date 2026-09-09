@@ -1,15 +1,13 @@
 import { useCallback } from 'react';
 import {
   useMovieListToolbar,
-  type ActiveToolbarChip,
   type MovieListSortKey,
-  type SortDirection,
 } from '@/features/movies/hooks/useMovieListToolbar';
 import type { MovieMediaType } from '@/shared/types/movie';
 import type { UserWatchedMovieItem } from '@/features/profile/api/profileApi';
 
 export type ProfileMoviesSortKey = MovieListSortKey;
-export type { SortDirection, ActiveToolbarChip };
+export type { SortDirection, ActiveToolbarChip } from '@/features/movies/hooks/useMovieListToolbar';
 
 interface UseProfileMoviesToolbarOptions {
   items: UserWatchedMovieItem[];

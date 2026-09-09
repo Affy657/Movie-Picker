@@ -86,7 +86,7 @@ async function doInit(): Promise<void> {
 
 export function initPostHog(): Promise<void> {
   if (initialized) return Promise.resolve();
-  if (!initPromise) initPromise = doInit();
+  initPromise ??= doInit();
   return initPromise;
 }
 

@@ -119,7 +119,7 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
 
         var winnerTitles = winnerIds.Count > 0
             ? (await _movieRepository.ListByIdsAsync(winnerIds, ct)).ToDictionary(m => m.Id, m => m.Title)
-            : new Dictionary<string, string>();
+            : [];
 
         return events.Where(x =>
             x.Title.Contains(q, StringComparison.OrdinalIgnoreCase) ||

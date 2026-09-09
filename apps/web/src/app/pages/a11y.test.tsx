@@ -70,17 +70,17 @@ describe('accessibilité (axe)', () => {
     return { container, queryClient };
   }
 
-  function collapseDiagramsToTheirAccessibleName(container: HTMLElement) {
-    const collapsed = [...container.querySelectorAll('figure svg')].map((diagram) => {
-      const accessibleName = diagram.querySelector(':scope > title');
-      const presentational = [...diagram.childNodes].filter((node) => node !== accessibleName);
-      for (const node of presentational) diagram.removeChild(node);
-      return { diagram, presentational };
+  function collapseVectorsToTheirAccessibleName(container: HTMLElement) {
+    const collapsed = [...container.querySelectorAll('svg')].map((vector) => {
+      const accessibleName = vector.querySelector(':scope > title');
+      const presentational = [...vector.childNodes].filter((node) => node !== accessibleName);
+      for (const node of presentational) vector.removeChild(node);
+      return { vector, presentational };
     });
 
     return () => {
-      for (const { diagram, presentational } of collapsed) {
-        for (const node of presentational) diagram.appendChild(node);
+      for (const { vector, presentational } of collapsed) {
+        for (const node of presentational) vector.appendChild(node);
       }
     };
   }
@@ -184,9 +184,9 @@ describe('accessibilité (axe)', () => {
     "TechPage n'a pas de violations",
     async () => {
       const { container, queryClient } = renderPage(<TechPage />);
-      const restoreDiagrams = collapseDiagramsToTheirAccessibleName(container);
+      const restoreVectors = collapseVectorsToTheirAccessibleName(container);
       await assertNoViolations(container, queryClient);
-      restoreDiagrams();
+      restoreVectors();
     },
     HEAVIEST_PAGE_AXE_BUDGET
   );

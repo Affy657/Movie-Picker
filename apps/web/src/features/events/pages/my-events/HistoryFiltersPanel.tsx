@@ -33,10 +33,8 @@ export default function HistoryFiltersPanel({
 
   return (
     <Card id={panelId} elevation="sm" className={styles.panel}>
-      <div className={styles.group} role="group" aria-labelledby={`${panelId}-role-label`}>
-        <span id={`${panelId}-role-label`} className={styles.groupLabel}>
-          {t('events.myEvents.filtersRoleLabel')}
-        </span>
+      <fieldset className={styles.group}>
+        <legend className={styles.groupLabel}>{t('events.myEvents.filtersRoleLabel')}</legend>
         <div className={styles.chipRow}>
           {roleChips.map(([role, label]) => (
             <Chip
@@ -49,12 +47,10 @@ export default function HistoryFiltersPanel({
             </Chip>
           ))}
         </div>
-      </div>
+      </fieldset>
 
-      <div className={styles.group} role="group" aria-labelledby={`${panelId}-outcome-label`}>
-        <span id={`${panelId}-outcome-label`} className={styles.groupLabel}>
-          {t('events.myEvents.filtersOutcomeLabel')}
-        </span>
+      <fieldset className={styles.group}>
+        <legend className={styles.groupLabel}>{t('events.myEvents.filtersOutcomeLabel')}</legend>
         <div className={styles.chipRow}>
           {outcomeChips.map(([outcome, label]) => (
             <Chip
@@ -67,7 +63,7 @@ export default function HistoryFiltersPanel({
             </Chip>
           ))}
         </div>
-      </div>
+      </fieldset>
     </Card>
   );
 }

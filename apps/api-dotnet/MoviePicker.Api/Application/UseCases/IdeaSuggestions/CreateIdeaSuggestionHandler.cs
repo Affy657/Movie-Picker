@@ -90,7 +90,7 @@ public sealed class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionHandler
     }
 
     private static GitHubIssueDraft BuildDraft(
-        CreateIdeaSuggestionRequest request, string author, IReadOnlyList<string> screenshotUrls)
+        CreateIdeaSuggestionRequest request, string author, List<string> screenshotUrls)
     {
         var (prefix, label) = request.Category switch
         {

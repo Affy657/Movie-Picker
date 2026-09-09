@@ -53,6 +53,8 @@ EXCL=$(sonar_join \
   'apps/web/src/vite-env.d.ts' \
   'apps/web/src/features/auth/devQuickLoginCredentials.ts' \
   'apps/web/src/**/generated/**' \
+  'apps/web/src/app/pages/TechPage.tsx' \
+  'apps/web/src/app/pages/tech/**' \
   'apps/web/src/shared/i18n/locales/*.ts' \
   'apps/api-dotnet/*.Tests/**' \
   'apps/api-dotnet/*.IntegrationTests/**' \

@@ -30,7 +30,7 @@ const WHEEL_MOVIES: MovieData[] = DEMO_WHEEL_MOVIES.map((title, index) => ({
 
 function pickWinnerIndex(): number {
   const [value] = crypto.getRandomValues(new Uint32Array(1));
-  return Math.floor((value! / 0x1_0000_0000) * WHEEL_MOVIES.length);
+  return Math.floor((value! / 2 ** 32) * WHEEL_MOVIES.length);
 }
 
 export default function LandingWheel() {
@@ -94,6 +94,10 @@ export default function LandingWheel() {
     setRun((previous) => ({ id: previous.id + 1, winnerIndex: pickWinnerIndex() }));
   };
 
+  let spinButtonLabel = t('landing.wheel.spin');
+  if (spinning) spinButtonLabel = t('landing.wheel.spinning');
+  else if (winner) spinButtonLabel = t('landing.wheel.spinAgain');
+
   return (
     <section
       ref={sectionRef}
@@ -108,7 +112,7 @@ export default function LandingWheel() {
             {t('landing.wheel.title')}
           </h2>
           <p className={shared.lead}>{t('landing.wheel.lead')}</p>
-          <ul className={styles.tags} role="list">
+          <ul className={styles.tags}>
             <li>
               <Check size={18} className={styles.tagIcon} aria-hidden="true" />
               {t('landing.wheel.tag1')}
@@ -137,11 +141,7 @@ export default function LandingWheel() {
           </div>
 
           <Button variant="primary" size="lg" onClick={spinAgain} disabled={spinning}>
-            {spinning
-              ? t('landing.wheel.spinning')
-              : winner
-                ? t('landing.wheel.spinAgain')
-                : t('landing.wheel.spin')}
+            {spinButtonLabel}
           </Button>
 
           <div className={styles.result} aria-live="polite">

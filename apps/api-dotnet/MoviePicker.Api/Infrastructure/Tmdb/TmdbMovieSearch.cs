@@ -404,7 +404,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
             ? vaEl.GetDouble()
             : null;
 
-    private string BuildDiscoverUrl(string apiKey, TmdbDiscoveryCriteria criteria, int page)
+    private static string BuildDiscoverUrl(string apiKey, TmdbDiscoveryCriteria criteria, int page)
     {
         var sortBy = string.IsNullOrWhiteSpace(criteria.SortBy) ? "popularity.desc" : criteria.SortBy.Trim();
         var url = $"https://api.themoviedb.org/3/discover/movie?api_key={apiKey}&language=fr-FR"

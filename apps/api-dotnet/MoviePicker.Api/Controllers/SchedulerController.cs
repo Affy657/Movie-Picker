@@ -23,12 +23,13 @@ public sealed class SchedulerController : ControllerBase
     public async Task<IActionResult> RunEventReminders(
         [FromServices] ISchedulerTokenValidator tokenValidator,
         [FromServices] IEventReminderPass pass,
+        [FromHeader(Name = "X-Scheduler-Token")] string? schedulerToken,
         CancellationToken ct)
     {
         if (!tokenValidator.IsConfigured)
             return StatusCode(StatusCodes.Status503ServiceUnavailable);
 
-        if (!tokenValidator.IsValid(Request.Headers["X-Scheduler-Token"]))
+        if (!tokenValidator.IsValid(schedulerToken))
             return Unauthorized();
 
         var result = await pass.RunAsync(ct);

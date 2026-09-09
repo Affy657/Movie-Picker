@@ -1,7 +1,6 @@
-import { SITE_URL } from '@/shared/seo/siteMeta';
 import type { PosterTone } from './DemoPoster';
 
-export const DEMO_QR_URL = SITE_URL;
+export { SITE_URL as DEMO_QR_URL } from '@/shared/seo/siteMeta';
 
 export const DEMO_PARTICIPANTS = ['Léa', 'Sam', 'Nico', 'Inès'] as const;
 
