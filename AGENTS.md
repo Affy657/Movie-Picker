@@ -18,7 +18,7 @@ Les fichiers déjà nommés en français restent en place tant qu'on ne les touc
 - Les noms d'identifiants doivent porter l'intention.
 - Exception : directives fonctionnelles uniquement (`@ts-expect-error`, `eslint-disable-*`, `prettier-ignore`, `/// <reference ... />`, shebangs `#!`, headers de licence).
 
-Si on ne peut pas exprimer l'intention via le nommage ou la structure, refactoriser le code — pas ajouter un commentaire.
+Si on ne peut pas exprimer l'intention via le nommage ou la structure, refactoriser le code, pas ajouter un commentaire.
 
 ## Design system
 
@@ -103,7 +103,7 @@ Trois procédures sont rappelées par leur nom plutôt que réexpliquées à cha
 
 `pnpm run test:api:mongo` rejoue la suite d'intégration API contre une vraie MongoDB en replica set (conteneur Docker créé à la volée, base jetable par classe de test) : c'est le seul chemin qui exécute les adaptateurs Mongo et les transactions. La CI le rejoue dans le job `test-api-mongo`, dont dépend le déploiement API. Il collecte sa propre couverture (`apps/api-dotnet/coverlet.integration.runsettings`) et `scripts/check-mongo-coverage.mjs` la contrôle sur le seul espace de noms `Infrastructure.Persistence.Mongo` : ces classes sont exclues du rapport du job `test-api`, donc sans cette porte la couche qui ne tourne qu'en production ne serait mesurée nulle part.
 
-`MongoIndexInventoryTests` compare les index réellement créés à la liste attendue (nom, unicité, TTL). Trois garanties n'existent que dans ces index : l'expiration des compteurs de rate limiting, celle des sessions et celle des jetons de réinitialisation. Ajouter un index dans `MongoIndexInitializer` sans l'ajouter à cette liste fait échouer le test — c'est voulu. `MongoDuplicateKeyMappingTests` couvre l'autre moitié : `MongoUserRepository` distingue les conflits en cherchant le nom de l'index dans le message d'erreur Mongo, donc un renommage change le code d'erreur rendu au front.
+`MongoIndexInventoryTests` compare les index réellement créés à la liste attendue (nom, unicité, TTL). Trois garanties n'existent que dans ces index : l'expiration des compteurs de rate limiting, celle des sessions et celle des jetons de réinitialisation. Ajouter un index dans `MongoIndexInitializer` sans l'ajouter à cette liste fait échouer le test, c'est voulu. `MongoDuplicateKeyMappingTests` couvre l'autre moitié : `MongoUserRepository` distingue les conflits en cherchant le nom de l'index dans le message d'erreur Mongo, donc un renommage change le code d'erreur rendu au front.
 
 `pnpm run test:e2e:mongo` rejoue le seul parcours critique Playwright contre l'API branchée sur un vrai MongoDB (variable `E2E_MONGODB_URI`, base dédiée `moviepicker_e2e` : le garde-fou Development refuse la base `moviepicker`). La CI le rejoue dans le job `e2e-mongo`, bloquant pour les deux déploiements. C'est le seul endroit où navigateur réel et base réelle tournent ensemble : `e2e` tourne sur la base mémoire, `test-api-mongo` tourne sans navigateur.
 
@@ -124,13 +124,14 @@ Toute suite d'écritures qui doit être tout-ou-rien passe par `IUnitOfWork.Exec
 ## Stack
 
 Monorepo pnpm + Turbo :
-- `apps/web` — Vite + React + TypeScript
-- `apps/api-dotnet` — .NET + MongoDB
+- `apps/web` : Vite + React + TypeScript
+- `apps/api-dotnet` : .NET + MongoDB
 
 L'application mobile Expo est archivée dans `archive/mobile` depuis mai 2026, il n'y a plus de `apps/mobile`. Le projet d'une vraie app mobile est porté par `docs/roadmap-product.md`.
 
 ## Documentation clé
 
+- **Guide de développement** (installation, seed, scripts, tests, structure) → [`docs/development.md`](docs/development.md) : destiné à un humain qui arrive sur le dépôt, il porte aussi les pièges d'environnement local.
 - **Roadmap produit** (features par version, statuts) → [`docs/roadmap-product.md`](docs/roadmap-product.md)
 - **Roadmap tech** (infra, CI/CD, qualité, sécurité) → [`docs/roadmap-tech.md`](docs/roadmap-tech.md)
 - **Dette technique** → [`docs/technical-debt.md`](docs/technical-debt.md) : fichier de travail pour agent, pas de lecture humaine. Une entrée par dette, chacune avec sa commande `verify` de fraîcheur et son critère de fin, plus deux sections « Contraintes » et « Impasses » à lire avant toute optimisation front ou tout geste de déploiement. C'est là qu'atterrit toute dette constatée, jamais dans une roadmap ni en mémoire agent.
@@ -144,7 +145,7 @@ Outils configurés pour qu'un agent travaille sur le projet sans intervention ma
 | GitHub | CLI `gh` | PR, issues, runs CI, releases |
 | GCP | CLI `gcloud` | Cloud Run, Artifact Registry, Secret Manager, logs. Les écritures (`services enable`, `secrets create`) sont refusées à l'agent : les demander à l'utilisateur |
 | AWS | CLI `aws` | S3, CloudFront (déploiement front) |
-| SonarCloud | MCP `sonarqube` (Docker — requiert Docker Desktop lancé + image `mcp/sonarqube`) | consulter qualité / issues / hotspots ; l'analyse tourne en CI (job `sonar`, SonarScanner for .NET) |
+| SonarCloud | MCP `sonarqube` (Docker, requiert Docker Desktop lancé et l'image `mcp/sonarqube`) | consulter qualité / issues / hotspots ; l'analyse tourne en CI (job `sonar`, SonarScanner for .NET) |
 | MongoDB | MCP `mongodb` | base dev `moviepicker_dev` |
 | PostHog | MCP `posthog` (HTTP, scope global) | analytics, events produit |
 | Sentry | connecteur applicatif | erreurs front et API ; org `adrien-morand`, projets `movie-picker-web` et `movie-picker-api`, région UE |
@@ -154,4 +155,4 @@ Outils configurés pour qu'un agent travaille sur le projet sans intervention ma
 
 ## Mémoire inter-sessions
 
-Spécifique à Claude Code. Quand un problème systématique est rencontré et résolu — erreur de config récurrente, comportement inattendu d'un outil, contrainte non documentée du projet — le sauvegarder en mémoire (`C:\Users\adrie\.claude\projects\C--ynov-movie-picker\memory\`) sous forme d'entrée `feedback` ou `project` selon le cas, pour que la prochaine session ne reparte pas de zéro. La dette constatée ne va pas là, elle va dans `docs/technical-debt.md`.
+Spécifique à Claude Code. Quand un problème systématique est rencontré et résolu (erreur de config récurrente, comportement inattendu d'un outil, contrainte non documentée du projet), le sauvegarder en mémoire (`C:\Users\adrie\.claude\projects\C--ynov-movie-picker\memory\`) sous forme d'entrée `feedback` ou `project` selon le cas, pour que la prochaine session ne reparte pas de zéro. La dette constatée ne va pas là, elle va dans `docs/technical-debt.md`.
