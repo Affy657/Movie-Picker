@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { Info } from 'lucide-react';
 import clsx from 'clsx';
 import MovieListCard from '@/features/movies/components/MovieListCard';
 import styles from '@/features/movies/components/MovieListCard.module.css';
@@ -12,7 +11,6 @@ import badgeStyles from './MovieBrowseCard.module.css';
 
 interface MovieBrowseCardProps {
   item: MovieListItemLike;
-  tmdbLanguage: string;
   hasHover: boolean;
   isLoggedIn: boolean;
   inWatchlist: boolean;
@@ -27,7 +25,6 @@ interface MovieBrowseCardProps {
 
 export default function MovieBrowseCard({
   item,
-  tmdbLanguage,
   hasHover,
   isLoggedIn,
   inWatchlist,
@@ -47,8 +44,6 @@ export default function MovieBrowseCard({
       title={item.title}
       year={item.year}
       posterPath={item.posterPath}
-      tmdbLanguage={tmdbLanguage}
-      genreIds={item.genreIds}
       voteAverage={item.voteAverage}
       ratingScale={ratingScale}
       runtimeMinutes={item.runtimeMinutes}
@@ -84,15 +79,7 @@ export default function MovieBrowseCard({
         />
       }
       overlay={
-        hasHover && (
-          <>
-            {isLoggedIn && <WatchlistProposeSubmenu movie={item} onDone={() => undefined} />}
-            <button type="button" className={styles.overlayDetailsBtn} onClick={onOpenDetails}>
-              <Info aria-hidden size={13} />
-              <span className={styles.overlayDetailsLabel}>{t('movies.details.toggleShow')}</span>
-            </button>
-          </>
-        )
+        hasHover && isLoggedIn && <WatchlistProposeSubmenu movie={item} onDone={() => undefined} />
       }
     />
   );

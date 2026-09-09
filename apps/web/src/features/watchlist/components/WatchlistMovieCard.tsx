@@ -1,4 +1,3 @@
-import { Info } from 'lucide-react';
 import MovieListCard from '@/features/movies/components/MovieListCard';
 import styles from '@/features/movies/components/MovieListCard.module.css';
 import { CardKebab } from '@/features/movies/components/movieCardParts';
@@ -10,7 +9,6 @@ import type { RatingScale } from '@/shared/types/theme';
 interface WatchlistMovieCardProps {
   item: WatchlistItem;
   hasHover: boolean;
-  tmdbLanguage: string;
   ratingScale?: RatingScale;
   t: Translate;
   onRemove: () => void;
@@ -22,7 +20,6 @@ interface WatchlistMovieCardProps {
 export default function WatchlistMovieCard({
   item,
   hasHover,
-  tmdbLanguage,
   ratingScale,
   t,
   onRemove,
@@ -36,8 +33,6 @@ export default function WatchlistMovieCard({
       title={item.title}
       year={item.year}
       posterPath={item.posterPath}
-      tmdbLanguage={tmdbLanguage}
-      genreIds={item.genreIds}
       voteAverage={item.voteAverage}
       ratingScale={ratingScale}
       runtimeMinutes={item.runtimeMinutes}
@@ -61,17 +56,7 @@ export default function WatchlistMovieCard({
           t={t}
         />
       }
-      overlay={
-        hasHover && (
-          <>
-            <WatchlistProposeSubmenu movie={item} onDone={() => undefined} />
-            <button type="button" className={styles.overlayDetailsBtn} onClick={onOpenDetails}>
-              <Info aria-hidden size={13} />
-              <span className={styles.overlayDetailsLabel}>{t('movies.details.toggleShow')}</span>
-            </button>
-          </>
-        )
-      }
+      overlay={hasHover && <WatchlistProposeSubmenu movie={item} onDone={() => undefined} />}
     />
   );
 }
