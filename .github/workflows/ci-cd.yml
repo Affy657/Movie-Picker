@@ -369,11 +369,29 @@ jobs:
             fi
             sleep 2
           done
-      - name: Tests intégration sur MongoDB
-        run: dotnet test apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj -c Debug --verbosity normal
+      - name: Tests intégration sur MongoDB + couverture
+        run: |
+          set -eo pipefail
+          dotnet test apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj \
+            -c Debug --verbosity normal \
+            --collect:"XPlat Code Coverage" \
+            --settings apps/api-dotnet/coverlet.integration.runsettings \
+            --results-directory ./coverage-mongo
         env:
           MONGODB_URI: ""
           MONGODB_TEST_URI: mongodb://127.0.0.1:27017/?directConnection=true
+      # Les adaptateurs Mongo sont exclus du rapport du job test-api : ils ne tournent que sur une
+      # vraie base. Sans cette porte, la seule couche qui ne s'exécute qu'en production n'est
+      # mesurée nulle part.
+      - name: Gate couverture des adaptateurs Mongo
+        run: node scripts/check-mongo-coverage.mjs coverage-mongo
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always()
+        with:
+          name: coverage-api-mongo
+          path: coverage-mongo
+          if-no-files-found: warn
+          retention-days: 7
 
   lighthouse:
     name: Lighthouse front (seuils bloquants)
@@ -1093,7 +1111,10 @@ jobs:
       # la distribution répond très bien. L'origine est lue dans ALLOWED_ORIGINS — celle que l'API
       # accepte, donc celle du front par construction — plutôt que réécrite ici : une valeur de plus
       # à tenir à jour serait une valeur de plus à oublier lors d'une migration de domaine.
-      - name: Smoke test front (domaine public)
+      # Un 200 ne dit pas quelle version est servie : sans invalidation, le CDN répond 200 avec
+      # l'ancien index.html et le déploiement passe pour bon. On compare donc le point d'entrée
+      # haché du build qu'on vient d'envoyer à celui que le domaine public sert vraiment.
+      - name: Smoke test front (domaine public + version servie)
         env:
           ALLOWED_ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
         run: |
@@ -1108,6 +1129,16 @@ jobs:
           echo "GET $PUBLIC_WEB_URL/ -> $code"
           if [ "$code" != "200" ]; then
             echo "::error::$PUBLIC_WEB_URL ne répond pas 200 — DNS, certificat ou alias de l'hébergement du front."
+            exit 1
+          fi
+          ENTRY="$(grep -oE '/assets/[A-Za-z0-9._-]+\.js' apps/web/dist/index.html | head -1)"
+          if [ -z "$ENTRY" ]; then
+            echo "::error::Point d'entrée introuvable dans le build local — smoke test de version impossible."
+            exit 1
+          fi
+          echo "Point d'entrée attendu : $ENTRY"
+          if ! grep -qF "$ENTRY" "$RUNNER_TEMP/pub.html"; then
+            echo "::error::$PUBLIC_WEB_URL sert un index.html qui ne référence pas $ENTRY — build périmé en cache (invalidation CDN absente ou incomplète)."
             exit 1
           fi
       - name: Enregistrer le déploiement Sentry (front)
