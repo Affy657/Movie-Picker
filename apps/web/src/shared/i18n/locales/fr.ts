@@ -2218,6 +2218,11 @@
         '{{ttl}} index à expiration font le ménage dans le moteur : sessions, jetons de mot de passe, notifications, marqueurs anti-doublon, compteurs de limitation et journal des dons.',
       expiryHint:
         'Aucune tâche de fond ne tourne pour ça, ce qui tombe bien puisque rien ne vit dans le processus du serveur.',
+      inventory: 'Inventaire des index',
+      inventoryValue:
+        'Un test compare les {{indexes}} index réellement créés à une liste attendue : nom, unicité et expiration. En ajouter un sans le déclarer casse la construction.',
+      inventoryHint:
+        "Trois garanties ne tiennent qu'à ces index : l'expiration des sessions, celle des jetons de réinitialisation et celle des compteurs de limitation de débit.",
       migrations: 'Migrations',
       migrationsValue:
         'Datée, idempotente, appliquée une fois au démarrage puis consignée. {{migrations}} en production.',
@@ -2238,7 +2243,7 @@
       title: '{{tests}} tests automatisés, et une couverture qui bloque',
       lead: 'Trois familles, de la plus rapide à la plus lente : le domaine sans dépendances, le serveur contre une vraie base, le produit dans un navigateur. Chacune répond à une question que les autres ne posent pas.',
       caption:
-        'Couverture bloquante côté front : {{lines}} % de lignes, {{functions}} % de fonctions, {{branches}} % de branches. Côté serveur, elle est mesurée et publiée, sans seuil qui fasse échouer la chaîne.',
+        'Couverture bloquante côté front : {{lines}} % de lignes, {{functions}} % de fonctions, {{branches}} % de branches. Côté serveur aussi : {{apiLines}} % de lignes sur la suite unitaire, et {{mongoLines}} % sur les seuls adaptateurs Mongo, que seule la suite branchée sur une vraie base exécute.',
       unit: 'Tests unitaires',
       unitValue:
         '{{count}} cas, sans base ni réseau, sur les doublures en mémoire. Quelques secondes.',
@@ -2289,7 +2294,7 @@
       title: '{{jobs}} checks de CI avant la production',
       lead: "Un seul graphe, des dépendances explicites, un déploiement qui n'a lieu que si tout ce qui le précède est vert.",
       caption:
-        "Le dernier maillon vérifie que les déploiements ont eu lieu, pas seulement qu'ils n'ont pas échoué.",
+        "Le filtre de périmètre décide quelles branches tournent ; gitleaks et lint workflows lui échappent et tournent à chaque fois. Un seul job réunit navigateur réel et vraie base, e2e mongo, et il bloque les deux déploiements. Le dernier maillon vérifie que les déploiements ont eu lieu, pas seulement qu'ils n'ont pas échoué.",
       pipelineHeading: 'Ce qui tient la chaîne',
       trigger: 'Déclenchement',
       triggerValue:
@@ -2659,14 +2664,23 @@
       testsUnit: '{{total}} tests : {{web}} interface, {{api}} serveur',
       testsUnitLabel: 'UNITAIRE',
       ciTitle: "Graphe des jobs d'intégration continue, du déclenchement au déploiement",
+      ciTrigger: 'push / PR',
       ciChanges: 'changes',
       ciGitleaks: 'gitleaks',
-      ciLint: 'lint web et api',
+      ciLintWorkflows: 'lint workflows',
+      ciLintApi: 'lint api',
+      ciLintWeb: 'lint web',
       ciAudit: 'audit deps',
-      ciTest: 'test web et api',
+      ciTestApi: 'test api',
+      ciTestWeb: 'test web',
       ciTestMongo: 'test api mongo',
+      ciBandImage: 'vers l’image',
+      ciBandBoth: 'vers l’image et le front',
+      ciBandFront: 'vers le front',
+      ciBandDeploys: 'vers les deux déploiements',
       ciLighthouse: 'lighthouse',
       ciE2e: 'e2e',
+      ciE2eMongo: 'e2e mongo',
       ciDocker: 'image API',
       ciSonar: 'sonar',
       ciDeployApi: 'deploy api',
