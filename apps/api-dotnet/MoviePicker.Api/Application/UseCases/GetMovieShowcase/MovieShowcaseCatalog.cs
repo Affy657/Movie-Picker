@@ -86,13 +86,17 @@ public static class MovieShowcaseCatalog
         1_413_999, 10_517, 389_544, 52_835, 52_097, 103_001,
     ];
 
-    public static TmdbDiscoveryCriteria? CriteriaForProvider(string? provider, string region) =>
-        !string.IsNullOrWhiteSpace(provider) && ProviderIds.TryGetValue(provider.Trim(), out var id)
-            ? new TmdbDiscoveryCriteria(
-                VoteCountMin: 100,
-                WatchProviderIds: [id],
-                WatchRegion: string.IsNullOrWhiteSpace(region) ? "FR" : region.Trim().ToUpperInvariant())
-            : null;
+    public static TmdbDiscoveryCriteria? CriteriaForProvider(string? provider, string region)
+    {
+        if (string.IsNullOrWhiteSpace(provider) || !ProviderIds.TryGetValue(provider.Trim(), out var id))
+            return null;
+
+        var watchRegion = string.IsNullOrWhiteSpace(region) ? "FR" : region.Trim().ToUpperInvariant();
+        return new TmdbDiscoveryCriteria(
+            VoteCountMin: 100,
+            WatchProviderIds: [id],
+            WatchRegion: watchRegion);
+    }
 
     public static TmdbDiscoveryCriteria? CriteriaForTheme(string? theme) =>
         !string.IsNullOrWhiteSpace(theme) && ThemeCriteria.TryGetValue(theme.Trim(), out var criteria)

@@ -12,6 +12,7 @@ namespace MoviePicker.Api.Infrastructure.GitHub;
 
 public sealed class GitHubIssueClient : IGitHubIssueClient
 {
+    private const string BearerScheme = "Bearer";
     private const string UnavailableMessage =
         "Impossible de créer la suggestion pour le moment. Réessayez dans un instant.";
 
@@ -44,16 +45,16 @@ public sealed class GitHubIssueClient : IGitHubIssueClient
         }
 
         var res = await PostIssueAsync(draft.Title, draft.Body, draft.Labels, ct);
-        try
+        if (res.StatusCode == HttpStatusCode.UnprocessableEntity && draft.Labels.Count > 0)
         {
-            if (res.StatusCode == HttpStatusCode.UnprocessableEntity && draft.Labels.Count > 0)
-            {
-                _logger.LogWarning(
-                    "Création d'issue GitHub 422 avec labels, nouvel essai sans labels");
-                res.Dispose();
-                res = await PostIssueAsync(draft.Title, draft.Body, [], ct);
-            }
+            _logger.LogWarning(
+                "Création d'issue GitHub 422 avec labels, nouvel essai sans labels");
+            res.Dispose();
+            res = await PostIssueAsync(draft.Title, draft.Body, [], ct);
+        }
 
+        using (res)
+        {
             if (!res.IsSuccessStatusCode)
             {
                 string body;
@@ -65,10 +66,6 @@ public sealed class GitHubIssueClient : IGitHubIssueClient
                     Truncate(body, 256));
                 throw new ServiceUnavailableException(UnavailableMessage);
             }
-        }
-        finally
-        {
-            res.Dispose();
         }
     }
 
@@ -99,7 +96,7 @@ public sealed class GitHubIssueClient : IGitHubIssueClient
                     branch
                 })
             };
-            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _options.GitHubToken);
+            req.Headers.Authorization = new AuthenticationHeaderValue(BearerScheme, _options.GitHubToken);
 
             using var res = await _http.SendAsync(req, ct);
             if (!res.IsSuccessStatusCode)
@@ -126,14 +123,14 @@ public sealed class GitHubIssueClient : IGitHubIssueClient
         using var checkReq = new HttpRequestMessage(
             HttpMethod.Get,
             $"repos/{_options.GitHubRepoOwner}/{_options.GitHubRepoName}/git/ref/heads/{branch}");
-        checkReq.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _options.GitHubToken);
+        checkReq.Headers.Authorization = new AuthenticationHeaderValue(BearerScheme, _options.GitHubToken);
         using var checkRes = await _http.SendAsync(checkReq, ct);
         if (checkRes.StatusCode == HttpStatusCode.OK)
             return;
 
         using var repoReq = new HttpRequestMessage(
             HttpMethod.Get, $"repos/{_options.GitHubRepoOwner}/{_options.GitHubRepoName}");
-        repoReq.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _options.GitHubToken);
+        repoReq.Headers.Authorization = new AuthenticationHeaderValue(BearerScheme, _options.GitHubToken);
         using var repoRes = await _http.SendAsync(repoReq, ct);
         repoRes.EnsureSuccessStatusCode();
         var repoJson = await repoRes.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
@@ -142,7 +139,7 @@ public sealed class GitHubIssueClient : IGitHubIssueClient
         using var refReq = new HttpRequestMessage(
             HttpMethod.Get,
             $"repos/{_options.GitHubRepoOwner}/{_options.GitHubRepoName}/git/ref/heads/{defaultBranch}");
-        refReq.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _options.GitHubToken);
+        refReq.Headers.Authorization = new AuthenticationHeaderValue(BearerScheme, _options.GitHubToken);
         using var refRes = await _http.SendAsync(refReq, ct);
         refRes.EnsureSuccessStatusCode();
         var refJson = await refRes.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
@@ -154,7 +151,7 @@ public sealed class GitHubIssueClient : IGitHubIssueClient
         {
             Content = JsonContent.Create(new { @ref = $"refs/heads/{branch}", sha })
         };
-        createReq.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _options.GitHubToken);
+        createReq.Headers.Authorization = new AuthenticationHeaderValue(BearerScheme, _options.GitHubToken);
         using var createRes = await _http.SendAsync(createReq, ct);
         if (createRes.StatusCode != HttpStatusCode.UnprocessableEntity)
             createRes.EnsureSuccessStatusCode();
@@ -189,7 +186,7 @@ public sealed class GitHubIssueClient : IGitHubIssueClient
         {
             Content = JsonContent.Create(payload)
         };
-        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _options.GitHubToken);
+        req.Headers.Authorization = new AuthenticationHeaderValue(BearerScheme, _options.GitHubToken);
 
         try
         {

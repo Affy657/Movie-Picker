@@ -44,8 +44,12 @@ type DialogProps = {
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result).split(',')[1] ?? '');
-    reader.onerror = () => reject(reader.error);
+    reader.onload = () => {
+      const dataUrl = typeof reader.result === 'string' ? reader.result : '';
+      resolve(dataUrl.split(',')[1] ?? '');
+    };
+    reader.onerror = () =>
+      reject(reader.error ?? new Error('Lecture de la pièce jointe impossible'));
     reader.readAsDataURL(file);
   });
 }

@@ -29,7 +29,7 @@ export default function LandingSteps() {
           <p className={clsx(shared.lead, shared.center)}>{t('landing.steps.subtitle')}</p>
         </div>
 
-        <ol className={styles.steps} role="list">
+        <ol className={styles.steps}>
           <li>
             <Card
               as="div"

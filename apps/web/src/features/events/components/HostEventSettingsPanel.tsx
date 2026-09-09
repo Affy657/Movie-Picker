@@ -52,6 +52,12 @@ type FieldErrors = {
 
 type SaveState = 'saved' | 'pending' | 'error';
 
+const SAVE_STATUS_LABEL_KEYS = {
+  saved: 'events.settings.saveStatusSaved',
+  pending: 'events.settings.saveStatusPending',
+  error: 'events.settings.saveStatusError',
+} as const satisfies Record<SaveState, string>;
+
 function normalizeConfig(c: EventConfigData | undefined): EventConfigData {
   return {
     theme: c?.theme ?? DEFAULT_EVENT_CONFIG.theme,
@@ -256,12 +262,7 @@ export default function HostEventSettingsPanel({
   const dateWasEdited = eventDateLocal !== initialDateLocalRef.current;
   const themePreview = [themeEmoji, themeText.trim()].filter(Boolean).join(' ');
 
-  const saveStatusLabel =
-    saveState === 'pending'
-      ? t('events.settings.saveStatusPending')
-      : saveState === 'error'
-        ? t('events.settings.saveStatusError')
-        : t('events.settings.saveStatusSaved');
+  const saveStatusLabel = t(SAVE_STATUS_LABEL_KEYS[saveState]);
 
   return (
     <Modal

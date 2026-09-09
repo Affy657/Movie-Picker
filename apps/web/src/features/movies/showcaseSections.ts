@@ -28,13 +28,13 @@ export const PROVIDER_LABEL_KEYS: Record<ShowcaseProvider, TranslationKey> = {
   'apple-tv-plus': 'showcase.providers.appleTvPlus',
 };
 
-export const PROVIDER_KEYS = SHOWCASE_PROVIDERS;
+export { SHOWCASE_PROVIDERS as PROVIDER_KEYS } from '@/features/movies/api/showcaseApi';
 
 export function isShowcaseProvider(value: string | undefined): value is ShowcaseProvider {
   return value != null && (SHOWCASE_PROVIDERS as readonly string[]).includes(value);
 }
 
-export const THEME_KEYS = SHOWCASE_THEMES;
+export { SHOWCASE_THEMES as THEME_KEYS } from '@/features/movies/api/showcaseApi';
 
 export function isShowcaseTheme(value: string | undefined): value is ShowcaseTheme {
   return value != null && (SHOWCASE_THEMES as readonly string[]).includes(value);

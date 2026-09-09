@@ -58,11 +58,12 @@ export function useHistoryToolbar({ events }: UseHistoryToolbarOptions) {
   const [roles, setRoles] = useState<Set<HistoryRole>>(new Set());
   const [outcomes, setOutcomes] = useState<Set<HistoryOutcome>>(new Set());
 
+  const oppositeDirection = (direction: 'asc' | 'desc') => (direction === 'asc' ? 'desc' : 'asc');
+
   const setSortBy = useCallback((key: HistorySortKey) => {
     setSort((prev) => ({
       sortBy: key,
-      sortDir:
-        prev.sortBy === key ? (prev.sortDir === 'asc' ? 'desc' : 'asc') : DEFAULT_DIRECTION[key],
+      sortDir: prev.sortBy === key ? oppositeDirection(prev.sortDir) : DEFAULT_DIRECTION[key],
     }));
   }, []);
 
