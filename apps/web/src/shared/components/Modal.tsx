@@ -7,7 +7,7 @@ import styles from './Modal.module.css';
 
 export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
 
-export type ModalSurface = 'surface' | 'bare' | 'media';
+export type ModalSurface = 'surface' | 'bare' | 'media' | 'borderless';
 
 type ModalProps = {
   open: boolean;
@@ -22,6 +22,7 @@ type ModalProps = {
   padded?: boolean;
   column?: boolean;
   anchoredTop?: boolean;
+  bottomSheetOnMobile?: boolean;
   strongBackdrop?: boolean;
   closeLabel?: string;
   className?: string;
@@ -43,6 +44,7 @@ export default function Modal({
   padded = false,
   column = false,
   anchoredTop = false,
+  bottomSheetOnMobile = false,
   strongBackdrop = false,
   closeLabel,
   className,
@@ -63,9 +65,11 @@ export default function Modal({
         styles[size],
         surface === 'bare' && styles.bare,
         surface === 'media' && styles.media,
+        surface === 'borderless' && styles.borderless,
         padded && styles.padded,
         column && styles.column,
         anchoredTop && styles.anchoredTop,
+        bottomSheetOnMobile && styles.bottomSheet,
         strongBackdrop && styles.strongBackdrop,
         className
       )}

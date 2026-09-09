@@ -268,6 +268,8 @@ export default function HostEventSettingsPanel({
       open={open}
       onClose={onClose}
       size="lg"
+      surface="borderless"
+      bottomSheetOnMobile
       column
       labelledBy={titleId}
       dialogRef={dialogRef}

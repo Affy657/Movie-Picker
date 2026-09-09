@@ -147,10 +147,10 @@ export default function WheelModal({
         open={open}
         onClose={onClose}
         size="lg"
-        surface="bare"
+        surface={animDone ? 'surface' : 'bare'}
         strongBackdrop
         labelledBy="wheel-modal-title"
-        className={animDone ? styles.dialogDone : styles.dialogSpin}
+        className={animDone ? styles.dialogDone : undefined}
       >
         {!animDone && (
           <div className={styles.spinPhase}>

@@ -6,6 +6,7 @@ import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/post
 import MoviePreviewRow, { MoviePreviewRail } from '@/features/movies/components/MoviePreviewRow';
 import MoviePosterCard from '@/features/movies/components/MoviePosterCard';
 import { fetchUserWatchedMovies } from '@/features/profile/api/profileApi';
+import Card from '@/shared/components/Card';
 
 const PREVIEW_TAKE = 6;
 
@@ -24,24 +25,26 @@ export default function ProfileMoviesSection({ handle }: Readonly<Props>) {
   if (items.length === 0) return null;
 
   return (
-    <MoviePreviewRow
-      heading={t('profile.movies.title')}
-      seeAllTo={ROUTES.profileMovies(handle)}
-      seeAllLabel={t('profile.movies.seeAll')}
-    >
-      <MoviePreviewRail itemCount={items.length}>
-        {items.map((item) => {
-          const posterRaw = posterImageSrc(item.posterPath);
-          return (
-            <MoviePosterCard
-              key={`${item.tmdbId}|${item.mediaType}|${item.watchedAt}`}
-              title={item.title}
-              meta={item.year}
-              posterSrc={posterRaw ? tmdbPosterSrcForListDisplay(posterRaw) : undefined}
-            />
-          );
-        })}
-      </MoviePreviewRail>
-    </MoviePreviewRow>
+    <Card padding="lg" radius="lg">
+      <MoviePreviewRow
+        heading={t('profile.movies.title')}
+        seeAllTo={ROUTES.profileMovies(handle)}
+        seeAllLabel={t('profile.movies.seeAll')}
+      >
+        <MoviePreviewRail itemCount={items.length}>
+          {items.map((item) => {
+            const posterRaw = posterImageSrc(item.posterPath);
+            return (
+              <MoviePosterCard
+                key={`${item.tmdbId}|${item.mediaType}|${item.watchedAt}`}
+                title={item.title}
+                meta={item.year}
+                posterSrc={posterRaw ? tmdbPosterSrcForListDisplay(posterRaw) : undefined}
+              />
+            );
+          })}
+        </MoviePreviewRail>
+      </MoviePreviewRow>
+    </Card>
   );
 }
