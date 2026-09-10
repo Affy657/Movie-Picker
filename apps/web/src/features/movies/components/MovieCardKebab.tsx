@@ -23,6 +23,8 @@ import type { MovieData } from '@/shared/types/movie';
 import type { MovieWheelExclusion, Translate } from '@/features/movies/types';
 import styles from './MovieCardKebab.module.css';
 
+export type ExternalLinksMode = 'all' | 'letterboxd';
+
 interface CardKebabProps {
   title: string;
   year?: string;
@@ -36,7 +38,7 @@ interface CardKebabProps {
   onToggleWatchlist?: () => void;
   onProposeToEvent?: () => void;
   onViewDetails?: () => void;
-  showExternalLinks?: boolean;
+  externalLinks?: ExternalLinksMode;
   wheelExclusion?: MovieWheelExclusion;
   t: Translate;
 }
@@ -117,7 +119,7 @@ export function MovieCardKebab({
       year={movie.year}
       tmdbId={movie.tmdbId}
       mediaType={movie.mediaType}
-      showExternalLinks={false}
+      externalLinks="letterboxd"
       isMine={card.isMine}
       isHost={isHost}
       canRemove={card.canRemove}
@@ -179,7 +181,7 @@ export function CardKebab({
   onToggleWatchlist,
   onProposeToEvent,
   onViewDetails,
-  showExternalLinks = true,
+  externalLinks = 'all',
   wheelExclusion,
   t,
 }: Readonly<CardKebabProps>) {
@@ -279,7 +281,8 @@ export function CardKebab({
 
   const hasPrimaryGroup =
     !!onToggleWatchlist || !!onProposeToEvent || !!onViewDetails || !!wheelExclusion;
-  const hasLinksGroup = showExternalLinks && tmdbId > 0;
+  const hasLinksGroup = tmdbId > 0;
+  const showAllExternalLinks = externalLinks === 'all';
 
   const watchlistLabel = inWatchlist
     ? t('watchlist.card.removeAction')
@@ -392,21 +395,25 @@ export function CardKebab({
                   label={t('movies.list.letterboxdButton')}
                   onClose={close}
                 />
-                <ExternalMenuLink
-                  href={imdbHref}
-                  label={t('movies.list.imdbButton')}
-                  onClose={close}
-                />
-                <ExternalMenuLink
-                  href={allocineHref}
-                  label={t('movies.list.allocineButton')}
-                  onClose={close}
-                />
-                <ExternalMenuLink
-                  href={tmdbHref}
-                  label={t('movies.list.tmdbButton')}
-                  onClose={close}
-                />
+                {showAllExternalLinks ? (
+                  <>
+                    <ExternalMenuLink
+                      href={imdbHref}
+                      label={t('movies.list.imdbButton')}
+                      onClose={close}
+                    />
+                    <ExternalMenuLink
+                      href={allocineHref}
+                      label={t('movies.list.allocineButton')}
+                      onClose={close}
+                    />
+                    <ExternalMenuLink
+                      href={tmdbHref}
+                      label={t('movies.list.tmdbButton')}
+                      onClose={close}
+                    />
+                  </>
+                ) : null}
               </>
             )}
             {canRemove && (hasPrimaryGroup || hasLinksGroup) && (
