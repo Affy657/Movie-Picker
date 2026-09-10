@@ -1,14 +1,12 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router';
-import { ArrowLeft, CalendarPlus, Settings2 } from 'lucide-react';
+import { ArrowLeft, Settings2 } from 'lucide-react';
 import ThemeField from '@/features/events/components/ThemeField';
 import WheelModeField from '@/features/events/components/WheelModeField';
 import NumberInput from '@/shared/components/NumberInput';
 import Toggle from '@/shared/components/Toggle';
 import { useQueryClient } from '@tanstack/react-query';
 import PageLayout from '@/shared/components/PageLayout';
-import SignedOutState from '@/shared/components/SignedOutState';
-import SessionCheckErrorState from '@/features/auth/components/SessionCheckErrorState';
 import { createEvent as createEventApi, patchEventConfig } from '@/features/events/api/eventsApi';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
@@ -56,7 +54,7 @@ export default function CreateEvent() {
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user, isLoading: authLoading, authCheckFailed } = useAuth();
+  const { isLoading: authLoading } = useAuth();
   const { track } = useAnalytics();
   const [date, setDate] = useState(getDefaultDate);
   const [time, setTime] = useState(getDefaultTime);
@@ -133,28 +131,6 @@ export default function CreateEvent() {
     return (
       <PageLayout className={styles.layout}>
         <p className="placeholder">{t('common.loading')}</p>
-      </PageLayout>
-    );
-  }
-
-  if (!user && authCheckFailed) {
-    return <SessionCheckErrorState />;
-  }
-
-  if (!user) {
-    return (
-      <PageLayout className={styles.layout}>
-        <h1 className="visually-hidden">{t('nav.createEvent')}</h1>
-        <Link to={ROUTES.myEvents} className={styles.backLink}>
-          <ArrowLeft size={16} aria-hidden />
-          <span className={styles.backLinkLabel}>{t('nav.myEvents')}</span>
-        </Link>
-        <SignedOutState
-          icon={<CalendarPlus size={26} aria-hidden />}
-          title={t('events.create.signedOutTitle')}
-          message={t('events.create.signedOutMessage')}
-          returnTo={ROUTES.createEvent}
-        />
       </PageLayout>
     );
   }

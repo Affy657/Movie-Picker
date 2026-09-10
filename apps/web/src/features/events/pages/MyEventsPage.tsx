@@ -11,8 +11,6 @@ import {
 } from '@/features/events/api/eventsApi';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import EmptyState from '@/shared/components/EmptyState';
-import SignedOutState from '@/shared/components/SignedOutState';
-import SessionCheckErrorState from '@/features/auth/components/SessionCheckErrorState';
 import { getStoredParticipant, removeStoredParticipant } from '@/features/events/storage';
 import PageLayout from '@/shared/components/PageLayout';
 import MyEventsSkeleton from '@/features/events/pages/MyEventsSkeleton';
@@ -298,7 +296,7 @@ export default function MyEventsPage() {
   const { t } = useTranslation();
   useNoindexPage(pageTitle(t('events.myEvents.title')), ROUTES.myEvents);
   const queryClient = useQueryClient();
-  const { user, isLoading: authLoading, authCheckFailed } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { locale } = useLocale();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab: MyEventsTab = searchParams.get('tab') === 'history' ? 'history' : 'active';
@@ -401,24 +399,6 @@ export default function MyEventsPage() {
       <PageLayout className={styles.layout}>
         <h1 className="visually-hidden">{t('events.myEvents.title')}</h1>
         <MyEventsSkeleton label={t('events.myEvents.loadingDetail')} />
-      </PageLayout>
-    );
-  }
-
-  if (!user && authCheckFailed) {
-    return <SessionCheckErrorState />;
-  }
-
-  if (!user) {
-    return (
-      <PageLayout className={styles.layout}>
-        <h1 className={styles.pageTitle}>{t('events.myEvents.title')}</h1>
-        <SignedOutState
-          icon={<CalendarPlus size={26} aria-hidden />}
-          title={t('events.myEvents.signedOutTitle')}
-          message={t('events.myEvents.signedOutMessage')}
-          returnTo={ROUTES.myEvents}
-        />
       </PageLayout>
     );
   }

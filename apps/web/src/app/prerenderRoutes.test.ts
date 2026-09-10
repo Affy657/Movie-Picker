@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { ROUTES } from '@/app/routes';
-import { PRERENDERED_ROUTES } from '@/app/prerenderRoutes';
+import {
+  PRERENDERED_FOR_FIRST_PAINT_ONLY,
+  PRERENDERED_ROUTE_CHUNKS,
+  PRERENDERED_ROUTES,
+} from '@/app/prerenderRoutes';
 
 const PRIVATE_ROUTES = [
   ROUTES.account,
@@ -37,5 +41,18 @@ describe('PRERENDERED_ROUTES', () => {
 
   it('ne contient aucun doublon', () => {
     expect(new Set(PRERENDERED_ROUTES).size).toBe(PRERENDERED_ROUTES.length);
+  });
+
+  it('donne à chaque route le nom du chunk dont le document doit porter les styles', () => {
+    for (const route of PRERENDERED_ROUTES) {
+      expect(PRERENDERED_ROUTE_CHUNKS[route]).toBeTruthy();
+    }
+    expect(Object.keys(PRERENDERED_ROUTE_CHUNKS).sort()).toEqual([...PRERENDERED_ROUTES].sort());
+  });
+
+  it('ne dispense du référencement que des routes effectivement prérendues', () => {
+    for (const route of PRERENDERED_FOR_FIRST_PAINT_ONLY) {
+      expect(PRERENDERED_ROUTES).toContain(route);
+    }
   });
 });

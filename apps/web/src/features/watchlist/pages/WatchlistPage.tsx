@@ -2,8 +2,6 @@ import { useId, useMemo, useRef, useState } from 'react';
 import { Bookmark, Import, Plus } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import EmptyState from '@/shared/components/EmptyState';
-import SignedOutState from '@/shared/components/SignedOutState';
-import SessionCheckErrorState from '@/features/auth/components/SessionCheckErrorState';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -109,7 +107,7 @@ function WatchlistFiltersPanel({
 export default function WatchlistPage() {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
-  const { user, isLoading: authLoading, authCheckFailed } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   useNoindexPage(pageTitle(t('watchlist.title')), ROUTES.watchlist);
   const hasHover = useHasHoverCapability();
   const isMobile = useIsMobile();
@@ -203,24 +201,6 @@ export default function WatchlistPage() {
       <PageLayout className={styles.layout}>
         <h1 className="visually-hidden">{t('watchlist.title')}</h1>
         <WatchlistSkeleton label={t('watchlist.loadingDetail')} gridClassName={styles.grid} />
-      </PageLayout>
-    );
-  }
-
-  if (!user && authCheckFailed) {
-    return <SessionCheckErrorState />;
-  }
-
-  if (!user) {
-    return (
-      <PageLayout className={styles.layout}>
-        <h1 className={styles.pageTitle}>{t('watchlist.title')}</h1>
-        <SignedOutState
-          icon={<Bookmark aria-hidden size={28} />}
-          title={t('watchlist.signedOutTitle')}
-          message={t('watchlist.signedOutMessage')}
-          returnTo={ROUTES.watchlist}
-        />
       </PageLayout>
     );
   }

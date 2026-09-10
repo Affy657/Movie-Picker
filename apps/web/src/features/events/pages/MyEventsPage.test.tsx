@@ -5,7 +5,7 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import MyEventsPage from '@/features/events/pages/MyEventsPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
-import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
+import { TEST_API_V1 } from '@/mocks/handlers';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { setStoredParticipant } from '@/features/events/storage';
 
@@ -337,18 +337,5 @@ describe('MyEventsPage (MSW)', () => {
 
     expect(screen.getByRole('link', { name: /Soirée sans film/i })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Soirée avec film/i })).not.toBeInTheDocument();
-  });
-
-  it('non connecté : affiche un état déconnecté avec un CTA de connexion, pas la liste', async () => {
-    server.use(authMeGuestHandler);
-
-    renderMyEvents();
-
-    expect(await screen.findByRole('link', { name: /^se connecter$/i })).toHaveAttribute(
-      'href',
-      '/login?returnTo=%2Fmy-events'
-    );
-    expect(screen.queryByRole('link', { name: /Créer une soirée/i })).not.toBeInTheDocument();
-    expect(screen.queryByTestId('route-login')).not.toBeInTheDocument();
   });
 });

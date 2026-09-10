@@ -2,9 +2,14 @@ import { createRoot } from 'react-dom/client';
 import { StaticRouter } from 'react-router';
 import { AppProviders, AppRoutesWithErrorBoundary } from '@/app/App';
 import { loadLocale } from '@/shared/i18n';
-import { PRERENDER_LOCALE, PRERENDERED_ROUTES } from '@/app/prerenderRoutes';
+import {
+  PRERENDER_LOCALE,
+  PRERENDERED_ROUTES,
+  PRERENDERED_ROUTE_CHUNKS,
+  PRERENDERED_FOR_FIRST_PAINT_ONLY,
+} from '@/app/prerenderRoutes';
 
-export { PRERENDERED_ROUTES };
+export { PRERENDERED_ROUTES, PRERENDERED_ROUTE_CHUNKS, PRERENDERED_FOR_FIRST_PAINT_ONLY };
 
 export interface PrerenderedPage {
   head: string;

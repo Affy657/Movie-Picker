@@ -30,6 +30,10 @@ import type { UseQueryResult } from '@tanstack/react-query';
 import EventDetailSession from '@/features/events/pages/event-detail/EventDetailSession';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
+import { Bookmark, CalendarPlus } from 'lucide-react';
+import SessionGate from '@/app/components/SessionGate';
+import { ROUTES } from '@/app/routes';
+import { clearSessionHint, resetSessionHintMemoryForTests } from '@/features/auth/session-hint';
 
 vi.setConfig({ testTimeout: 60000, hookTimeout: 60000 });
 
@@ -376,27 +380,51 @@ describe('accessibilité (axe)', () => {
     await assertNoViolations(container, queryClient);
   });
 
-  describe('états déconnectés (C4)', () => {
-    it("MyEventsPage (déconnecté) n'a pas de violations", async () => {
-      const { container, queryClient } = renderPage(<MyEventsPage />);
-      await screen.findByRole('heading', { name: /^mes soirées$/i, level: 1 });
-      await assertNoViolations(container, queryClient);
-    });
+  it("NotificationsPage (boîte vide) n'a pas de violations", async () => {
+    const { container, queryClient } = renderPage(<NotificationsPage />);
+    await screen.findByRole('heading', { name: /^notifications$/i, level: 1 });
+    await assertNoViolations(container, queryClient);
+  });
 
-    it("WatchlistPage (déconnecté) n'a pas de violations", async () => {
-      const { container, queryClient } = renderPage(<WatchlistPage />);
+  describe('états déconnectés (portail de session, C9)', () => {
+    function renderGate(ui: React.ReactElement) {
+      resetSessionHintMemoryForTests();
+      clearSessionHint();
+      return renderPage(ui);
+    }
+
+    it("le portail avec titre visible n'a pas de violations", async () => {
+      const { container, queryClient } = renderGate(
+        <SessionGate
+          icon={<Bookmark aria-hidden size={28} />}
+          headingKey="watchlist.title"
+          titleKey="watchlist.signedOutTitle"
+          messageKey="watchlist.signedOutMessage"
+          returnTo={ROUTES.watchlist}
+          maxWidth="var(--container-base)"
+        >
+          <p>jamais rendu</p>
+        </SessionGate>
+      );
       await screen.findByRole('heading', { name: /^ma liste$/i, level: 1 });
       await assertNoViolations(container, queryClient);
     });
 
-    it("NotificationsPage (déconnecté) n'a pas de violations", async () => {
-      const { container, queryClient } = renderPage(<NotificationsPage />);
-      await screen.findByRole('heading', { name: /^notifications$/i, level: 1 });
-      await assertNoViolations(container, queryClient);
-    });
-
-    it("CreateEvent (déconnecté) n'a pas de violations", async () => {
-      const { container, queryClient } = renderPage(<CreateEvent />);
+    it("le portail avec titre masqué et lien de retour n'a pas de violations", async () => {
+      const { container, queryClient } = renderGate(
+        <SessionGate
+          icon={<CalendarPlus size={26} aria-hidden />}
+          headingKey="nav.createEvent"
+          headingHidden
+          titleKey="events.create.signedOutTitle"
+          messageKey="events.create.signedOutMessage"
+          returnTo={ROUTES.createEvent}
+          maxWidth="var(--container-sm)"
+          back={{ to: ROUTES.myEvents, labelKey: 'nav.myEvents' }}
+        >
+          <p>jamais rendu</p>
+        </SessionGate>
+      );
       await screen.findByRole('link', { name: /^se connecter$/i });
       await assertNoViolations(container, queryClient);
     });

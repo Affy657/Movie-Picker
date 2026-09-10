@@ -119,7 +119,12 @@ globalThis.localStorage.setItem('moviepicker-locale', 'fr');
 // La liste des routes sort du bundle SSR, pas d'une copie ici : elle est dérivée de `ROUTES` dans
 // `src/app/prerenderRoutes.ts`, donc un renommage de route casse le build au lieu de produire
 // silencieusement un fichier que personne ne sert.
-const { renderRoute, PRERENDERED_ROUTES: routes } = await import(ssrEntry);
+const {
+  renderRoute,
+  PRERENDERED_ROUTES: routes,
+  PRERENDERED_ROUTE_CHUNKS: chunkByRoute,
+  PRERENDERED_FOR_FIRST_PAINT_ONLY: firstPaintOnly,
+} = await import(ssrEntry);
 
 if (!Array.isArray(routes) || routes.length === 0) {
   console.error('[prerender] le bundle SSR ne rend aucune route à prérendre.');
@@ -137,6 +142,69 @@ function stripSplash(doc) {
   if (next?.tagName === 'SCRIPT' && next.textContent.includes('startRoute')) next.remove();
   splash.remove();
   return true;
+}
+
+// Les feuilles de style d'une page chargée à la demande sont posées par son JavaScript. Un
+// document prérendu qui ne les porte pas peint donc son contenu sans styles, se remet en page
+// quand le chunk arrive, et Chrome retient ce second rendu comme LCP : le prérendu ne rapporte
+// alors rien. Le manifeste `route-assets.json`, écrit par le plugin de build, donne la fermeture
+// des imports statiques de chaque page ; on en pose les styles dans le document et on précharge
+// son JavaScript, qui sans cela n'est découvert qu'après l'évaluation de la coquille.
+const routeAssetsPath = join(dist, 'route-assets.json');
+let routeAssets = {};
+try {
+  routeAssets = JSON.parse(readFileSync(routeAssetsPath, 'utf8'));
+} catch {
+  console.error(
+    `[prerender] ${routeAssetsPath} absent : le plugin de build ne publie plus le manifeste des routes.`
+  );
+  process.exit(1);
+}
+
+function assetsForRoute(route, chunkByRoute) {
+  const chunk = chunkByRoute[route];
+  if (!chunk) {
+    console.error(
+      `[prerender] ${route} n'a pas d'entrée dans PRERENDERED_ROUTE_CHUNKS : impossible de savoir quelles feuilles de style poser dans son document.`
+    );
+    process.exit(1);
+  }
+  const assets = routeAssets.chunks?.[chunk];
+  if (!assets) {
+    console.error(
+      `[prerender] le chunk « ${chunk} » de ${route} est absent de route-assets.json : nom périmé après un renommage de page ?`
+    );
+    process.exit(1);
+  }
+  return assets;
+}
+
+// Les styles de la route sont mis en ligne et pas liés : une feuille liée bloque le rendu et
+// n'est découverte qu'après le document, donc le contenu prérendu attendrait un aller-retour
+// réseau complet avant son premier pixel, ce qui annule une bonne part du prérendu. En ligne, le
+// premier rendu ne dépend plus que du document. Elles sont concaténées de la plus profonde à la
+// plus superficielle — la coquille d'abord, la page ensuite — comme le fait le chargement par
+// JavaScript : l'ordre inverse donnerait une cascade où la page perd contre la coquille sur les
+// règles de même spécificité.
+function appendRouteAssets(doc, assets) {
+  const inlined = new Set(routeAssets.inlinedCss ?? []);
+  for (const file of assets.js) {
+    if (doc.head.innerHTML.includes(`/${file}`)) continue;
+    const link = doc.createElement('link');
+    link.rel = 'modulepreload';
+    link.setAttribute('crossorigin', '');
+    link.href = `/${file}`;
+    doc.head.appendChild(link);
+  }
+  const css = [...assets.css]
+    .reverse()
+    .filter((file) => !inlined.has(file))
+    .map((file) => readFileSync(join(dist, file), 'utf8'))
+    .join('\n');
+  if (css.length === 0) return;
+  const style = doc.createElement('style');
+  style.textContent = css;
+  doc.head.appendChild(style);
 }
 
 // Clé d'unicité d'une balise de tête, alignée sur `upsertMeta` de `usePageSeo` : c'est ce qui
@@ -157,7 +225,7 @@ function headKey(el) {
   return null;
 }
 
-function documentFor(route, page) {
+function documentFor(route, page, assets) {
   const out = new JSDOM(indexHtml);
   const doc = out.window.document;
 
@@ -182,17 +250,22 @@ function documentFor(route, page) {
     else doc.head.appendChild(imported);
   }
 
-  // Prérendre une page qu'on demande aux moteurs d'ignorer est du travail jeté, et le fichier
-  // aurait l'air d'un gain. `/mentions-legales` et `/politique-de-confidentialite` sont dans ce
-  // cas, elles sont volontairement hors de la liste. La règle est vérifiée plutôt qu'écrite : un
-  // `noindex` posé plus tard sur une page prérendue casse le build au lieu de passer inaperçu.
+  // Le prérendu sert deux choses distinctes, et une page en `noindex` n'en tire que la seconde :
+  // l'indexation, et le premier rendu. Une page qu'on demande aux moteurs d'ignorer doit donc le
+  // déclarer dans `PRERENDERED_FOR_FIRST_PAINT_ONLY`, sinon le build échoue — un `noindex` posé
+  // plus tard sur une page prérendue pour son référencement reste une erreur, et elle est
+  // attrapée ici plutôt que découverte dans les journaux d'un moteur. Le prérendu **renforce**
+  // d'ailleurs le `noindex` : sans lui, un robot qui ne rend pas le JavaScript reçoit la coquille
+  // SPA, qui ne porte aucune balise `robots`.
   const robots = doc.head.querySelector('meta[name="robots"]')?.getAttribute('content') ?? '';
-  if (robots.includes('noindex')) {
+  if (robots.includes('noindex') && !firstPaintOnly.includes(route)) {
     console.error(
-      `[prerender] ${route} rend « robots: ${robots} » : la prérendre n'apporte rien. La retirer de PRERENDERED_ROUTES, ou retirer son noindex.`
+      `[prerender] ${route} rend « robots: ${robots} » sans figurer dans PRERENDERED_FOR_FIRST_PAINT_ONLY : soit la prérendre pour son premier rendu et l'y déclarer, soit la retirer de PRERENDERED_ROUTES, soit retirer son noindex.`
     );
     process.exit(1);
   }
+
+  appendRouteAssets(doc, assets);
 
   const root = doc.getElementById('root');
   if (!root) {
@@ -216,7 +289,7 @@ for (const route of routes) {
     console.error(`[prerender] ${route} a rendu un corps vide.`);
     process.exit(1);
   }
-  const html = documentFor(route, page);
+  const html = documentFor(route, page, assetsForRoute(route, chunkByRoute));
   const file = `${route.replace(/^\//, '').replaceAll('/', '__')}.html`;
   writeFileSync(join(outDir, file), html, 'utf8');
   manifest.push({ route, file });

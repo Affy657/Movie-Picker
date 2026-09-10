@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router';
+import { Bookmark, CalendarPlus, Inbox } from 'lucide-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/shared/contexts/ThemeContext';
 import { ConsentProvider } from '@/shared/contexts/ConsentContext';
@@ -10,6 +11,7 @@ import AnalyticsSync from '@/app/components/AnalyticsSync';
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
 import { getInstrumentedRoutes } from '@/shared/observability/sentry';
 import AppShell from '@/app/components/AppShell';
+import SessionGate from '@/app/components/SessionGate';
 import ScrollToTop from '@/app/components/ScrollToTop';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
@@ -92,7 +94,23 @@ export function AppRoutes() {
           path={ROUTES.movieCollectionPattern}
           element={<ShowcaseListPage variant="collection" />}
         />
-        <Route path={ROUTES.createEvent} element={<CreateEvent />} />
+        <Route
+          path={ROUTES.createEvent}
+          element={
+            <SessionGate
+              icon={<CalendarPlus size={26} aria-hidden />}
+              headingKey="nav.createEvent"
+              headingHidden
+              titleKey="events.create.signedOutTitle"
+              messageKey="events.create.signedOutMessage"
+              returnTo={ROUTES.createEvent}
+              maxWidth="var(--container-sm)"
+              back={{ to: ROUTES.myEvents, labelKey: 'nav.myEvents' }}
+            >
+              <CreateEvent />
+            </SessionGate>
+          }
+        />
         <Route path={ROUTES.login} element={<LoginPage />} />
         <Route path={ROUTES.register} element={<RegisterPage />} />
         <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
@@ -103,9 +121,50 @@ export function AppRoutes() {
         <Route path={ROUTES.donate} element={<DonatePage />} />
         <Route path={ROUTES.tech} element={<TechPage />} />
         <Route path={`${ROUTES.account}/*`} element={<AccountPage />} />
-        <Route path={ROUTES.myEvents} element={<MyEventsPage />} />
-        <Route path={ROUTES.watchlist} element={<WatchlistPage />} />
-        <Route path={ROUTES.notifications} element={<NotificationsPage />} />
+        <Route
+          path={ROUTES.myEvents}
+          element={
+            <SessionGate
+              icon={<CalendarPlus size={26} aria-hidden />}
+              headingKey="events.myEvents.title"
+              titleKey="events.myEvents.signedOutTitle"
+              messageKey="events.myEvents.signedOutMessage"
+              returnTo={ROUTES.myEvents}
+              maxWidth="min(var(--container-xl), 100%)"
+            >
+              <MyEventsPage />
+            </SessionGate>
+          }
+        />
+        <Route
+          path={ROUTES.watchlist}
+          element={
+            <SessionGate
+              icon={<Bookmark aria-hidden size={28} />}
+              headingKey="watchlist.title"
+              titleKey="watchlist.signedOutTitle"
+              messageKey="watchlist.signedOutMessage"
+              returnTo={ROUTES.watchlist}
+              maxWidth="var(--container-base)"
+            >
+              <WatchlistPage />
+            </SessionGate>
+          }
+        />
+        <Route
+          path={ROUTES.notifications}
+          element={
+            <SessionGate
+              icon={<Inbox size={26} aria-hidden />}
+              headingKey="notifications.inboxTitle"
+              titleKey="notifications.signedOutTitle"
+              messageKey="notifications.signedOutMessage"
+              returnTo={ROUTES.notifications}
+            >
+              <NotificationsPage />
+            </SessionGate>
+          }
+        />
         <Route path={ROUTES.eventDetailPattern} element={<EventDetail />} />
         <Route path={ROUTES.profileMoviesPattern} element={<ProfileMoviesPage />} />
         <Route path={ROUTES.profilePattern} element={<ProfilePage />} />

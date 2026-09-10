@@ -25,6 +25,9 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Changed
 
+- **Les pages qui demandent de se connecter s'affichent presque aussitôt** : un visiteur déconnecté qui ouvrait « Mes soirées », « Ma liste », ses notifications ou la création de soirée téléchargeait la page entière, une quarantaine de fichiers, avant de lire la phrase qui l'invitait à se connecter. L'invitation vient maintenant de l'ossature de l'application, et le code de la page n'est chargé qu'une fois la session confirmée.
+- **Le premier affichage est plus rapide sur toutes les pages** : la feuille de style principale voyage avec le document au lieu d'être réclamée dans un second aller-retour, les dépendances de l'ossature sont annoncées d'avance, et les polices ne prennent plus la bande passante du code dont l'affichage dépend.
+- **Les mentions légales et la politique de confidentialité sont servies en HTML complet**, comme les trois pages publiques déjà prérendues. Et chaque page prérendue emporte désormais ses styles, donc son contenu s'affiche directement dans sa mise en page finale au lieu d'apparaître brut puis de se réorganiser.
 - **Le dossier technique et toute sa page sortent de l'angle mort de l'analyse statique** : environ 3 000 lignes de code de production en avaient été exclues pour tenir sous le plafond de lignes du plan gratuit, plafond qui disparaît avec le passage du dépôt en public.
 - **Une pull request venue d'un fork ne déclenche plus aucun run** : les jobs d'entrée de la CI la sautent. Sans cette condition, un tel run échouerait de toute façon sur l'analyse SonarCloud, GitHub ne fournissant aucun secret à une PR externe, tout en dépensant des minutes de build.
 - **La CI n'accepte plus qu'une action épinglée par empreinte** : le réglage était déjà la pratique du dépôt, il est maintenant imposé côté GitHub, donc une action référencée par tag est refusée au lieu de passer inaperçue.

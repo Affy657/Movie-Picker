@@ -176,22 +176,18 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
   ```
 - refs: pendant GCP de DEBT-003 (AWS). Le lot Terraform 5 de `roadmap-tech.md` traite les deux au fond.
 
-## DEBT-016 le LCP de watchlist et my-events attend le montage de React
+## DEBT-016 deux planchers Lighthouse restent abaissés sous la mesure
 
 - state: differe
-- declencheur: une régression qui ramène l'une des deux pages sous son plancher. **Le levier attendu est arrivé et il a payé**, voir `refs` : les deux pages ont désormais de la marge, et les deux pistes de coquille restent mesurées et mortes, voir `piege`.
-- impact: leurs seuils restent **abaissés à 80 et 75** alors qu'elles mesurent 88 et 85 depuis le 2026-09-10. Le pansement est devenu du mou : une régression de 8 points sur `my-events` passerait sous le radar. Resserrer demande deux ou trois runs de plus pour connaître la dispersion, un seul point de mesure ne suffit pas à poser un plancher.
+- declencheur: le prochain déploiement, qui donnera les scores du runner après le portail de session (C9). Deux ou trois déploiements de plus suffisent alors à connaître la dispersion et à resserrer.
+- impact: les seuils de `my-events` et `watchlist` restent **abaissés à 80 et 75** alors que les deux pages mesuraient 88 et 85 sur le runner avant le portail, et 89 et 91 en local après. Le pansement est devenu du mou : une régression de 8 points sur `my-events` passerait sous le radar.
 - ou: `configs/lighthouse-budgets.json`, clé `perPageMinimumScores`
 - verify: `grep -A6 perPageMinimumScores configs/lighthouse-budgets.json` ; encore ouvert tant que les deux pages y figurent
-- fix: relever les deux planchers vers 85 quand deux ou trois runs auront confirmé la marge, puis supprimer les entrées de `perPageMinimumScores`.
-- fini-quand: les deux pages tiennent le plancher de 85 et leurs entrées disparaissent de `perPageMinimumScores`
-- piege: **mesuré le 2026-09-10 en local, médiane de 3 passes, les deux pages à 80.** Le diagnostic initial était faux sur deux points, et les deux erreurs mènent à un correctif qui ne peut pas marcher.
-  1. **Ce n'est pas une vue de données.** `scripts/lighthouse-run.mjs` ne connecte personne, son stub d'API répond 404 sur `/auth/me` : la porte mesure l'état **déconnecté**. L'élément LCP relevé est le paragraphe de `SignedOutState`, `<p class="_message_…">`, 330 × 50 px sur watchlist et 325 × 74 px sur my-events, et le LCP est presque entièrement du `elementRenderDelay` — 629 ms et 726 ms pour un TTFB de 10 ms.
-  2. **« Peindre un squelette » ne peut pas fonctionner.** Un bloc gris n'est pas un candidat LCP : Chrome ne retient que du texte, une image, ou un fond chargé par `url()`. Un dégradé CSS ne compte pas. Peindre un squelette vide dans la coquille ne déplacerait donc pas le LCP d'une milliseconde.
-
-  Et les deux échappatoires ne tiennent pas non plus. **Peindre le titre de page** dans la coquille, le geste de la page d'accueil (C2), échoue sur la condition de taille : le `h1` fait environ 2 900 px² contre 16 500 et 24 050 px² pour le paragraphe, donc Chrome remplacerait le titre par le message et le gain serait nul. **Peindre le message déconnecté** tiendrait le score, mais afficherait « Connectez-vous ou créez un compte » à chaque arrivée d'un utilisateur **déjà connecté** : la coquille ne peut pas connaître l'état de session avant que JavaScript tourne, le cookie étant HttpOnly. Échanger l'expérience du cas principal contre 5 points de score est un mauvais marché.
-- refs: Impasses I3 — le mur est le démarrage de `react-vendor`, environ 665 ms, et il ne se contourne pas par du découpage de bundle. C'est le même mur ici. Impasses I4 — ne pas desserrer la porte davantage.
-- refs: **le levier est arrivé d'un endroit qu'aucune des deux pistes n'avait envisagé.** Le 2026-09-10, le retrait d'un `await` de premier niveau dans `main.tsx` (Contrainte C8) a rendu 3 à 5 points à onze pages sur treize, dont celles-ci : `my-events` passe de 83 à **88** et `watchlist` de 79 à **85** sur le runner. Le coût de montage de React était bien le sujet, mais il n'était pas dans le bundle, il était dans la façon dont le module d'entrée s'évaluait. Leçon générale : avant de chercher à peindre plus tôt, vérifier que rien ne retarde le montage.
+- fix: relever les deux planchers quand deux ou trois runs du runner auront confirmé la marge, puis supprimer les entrées de `perPageMinimumScores`.
+- fini-quand: les deux pages tiennent le plancher global et leurs entrées disparaissent de `perPageMinimumScores`
+- piege: **ne pas poser un plancher sur un point de mesure unique, et jamais sur une mesure locale.** La machine de développement rend 67 là où le runner rend 96 sur la même page, et deux pages différentes qui rendent le même chiffre signalent la contention de l'hôte, pas une propriété du code. Sur le LCP en revanche, local et runner concordent à environ 0,3 s près, mesuré le 2026-09-10 : c'est la métrique à lire en local, pas le score.
+- refs: **la cause mécanique est traitée, voir C9.** L'élément LCP de ces deux pages n'attendait pas React, il attendait le chunk de la page et son évaluation, quadruplée par le simulateur. Les deux pistes de coquille examinées en 2026-09 restent mortes et pour des raisons qui n'ont pas bougé : peindre le titre de page échoue sur la condition de taille de C2 (le `h1` fait environ 2 900 px² contre 16 500 et 24 050 px² pour le paragraphe déconnecté), et peindre le message déconnecté dans la coquille afficherait « Connectez-vous ou créez un compte » à chaque arrivée d'un utilisateur **déjà connecté**, le cookie étant HttpOnly. Un squelette gris n'est pas un candidat LCP : Chrome ne retient que du texte, une image ou un fond chargé par `url()`.
+- refs: Impasses I3 et I4. I3 disait « le seul levier est de sortir le plus grand élément du rendu React » : C9 le sort du rendu de la **page** sans le sortir de React, ce qui est la troisième voie que ni I2 ni les deux pistes de coquille n'avaient envisagée.
 
 ## DEBT-019 quatre fonctions restent au-dessus du seuil de complexité cognitive
 
@@ -232,7 +228,9 @@ Le titre de la page d'accueil est écrit dans `apps/web/index.html`, dans l'écr
 
 1. **L'écran de démarrage couvre toute la page** (`position: fixed; inset: 0`, fond opaque) et n'est retiré qu'après `createRoot().render()`. Rien de ce qui est peint dessous ne peut compter comme LCP tant qu'il est là. C'est pour ça que peindre le titre *dans* la coquille fonctionne alors que le précharger n'avait rien donné.
 2. **La boîte du titre de la coquille reste au moins aussi grande que celle du `<h1>` réel.** Chrome ne remplace un candidat LCP que par un candidat *plus grand*. Mesuré : même police calculée des deux côtés (`700 32px / 51.2px Overpass`), hauteur identique de 51 px, 520 px de large pour la coquille contre 488 px pour le `<h1>`. Toucher `font-size`, `line-height`, `max-width` ou le texte d'un seul côté fait repasser le LCP après le montage.
-3. **La feuille de style de l'entrée est bloquante dans le `<head>`**, donc Overpass est déclarée quand la coquille est peinte. Sans ça, substitution de police tardive, taille de boîte changée, nouveau candidat LCP.
+3. **Les styles de l'entrée sont dans le document, pas derrière une requête.** Depuis le 2026-09-10 ils y sont **en ligne** (`inlineBlockingStyles`, `apps/web/vite.config.ts`) et non plus dans une feuille liée : Overpass est déclarée dès l'analyse du document, donc la coquille est peinte avec la police définitive. Ce qui compte est que la déclaration précède la peinture, pas la forme de la balise. La faire redevenir une requête, liée ou différée, ramène une substitution de police tardive, une boîte de taille différente et un nouveau candidat LCP après le montage.
+
+Les trois préchargements de police portent `fetchpriority="low"` depuis le 2026-09-10, et cette condition est la raison de vérifier `home` après y avoir touché : à priorité haute, 53 Ko de police partaient dans la première vague et prenaient la bande passante de `react-vendor`, ce qui coûtait environ 0,5 s de FCP sur toutes les pages. Retirer les préchargements gagne encore 0,2 s de FCP mais fait dépendre la police de la première peinture, donc la taille de la boîte du titre de la coquille : mesuré en local le 2026-09-10, `home` tient son LCP à 1,5 s avec la priorité basse, et le titre de la coquille reste le candidat retenu (`elementRenderDelay` de 184 ms). Ne pas descendre plus bas sans remesurer `home`.
 
 ## C3 deux duplications volontaires, gardées par un test
 
@@ -241,6 +239,12 @@ La configuration de build ne peut pas importer `src/`, donc `apps/web/vite.confi
 ## C4 ne pas renommer les chunks que le préchargement cherche
 
 `preloadCriticalAssetsPlugin` cherche `App-[hash].js`, `App-[hash].css` et `i18n-[hash].js` dans le bundle. Tout regroupement qui renomme ou absorbe ces chunks fait disparaître les préchargements **en silence**, et le LCP empire. Et `@sentry`, `posthog-js`, `canvas-confetti`, `react-qr-code` sont chargés à la demande : les placer dans un chunk partagé avec du code eager les rendrait eager.
+
+Le même plugin fait trois autres choses depuis le 2026-09-10, et deux d'entre elles échouent aussi en silence :
+
+- **Il ferme le graphe des imports statiques** de l'entrée et de `App` (`staticGraphClosure`) et pose un `modulepreload` sur chacun. Sans ces indices, les dépendances statiques de la coquille (`AuthContext`, `queryKeys`, `client`, `clsx`, `session-hint`) n'étaient découvertes qu'après l'évaluation de son chunk, soit une vague réseau complète de plus avant le montage. Vite ne les avait pas posées lui-même : `App` est un import dynamique, et l'injection ne remontait pas jusqu'à ses imports.
+- **Il met la feuille de style de l'entrée en ligne** dans le document, voir C2.
+- **Il publie `dist/route-assets.json`**, indexé par **nom de chunk** (`DonatePage`, `LegalNoticePage`, ...), avec la fermeture des imports statiques de chaque page chargée à la demande. `scripts/prerender.mjs` s'en sert, et cette moitié-là est gardée : renommer un composant de page renomme son chunk et **fait échouer le build**, avec le nom cherché dans le message.
 
 ## C5 le bucket de sauvegarde contient des données personnelles
 
@@ -323,6 +327,17 @@ done
 ```
 
 Le piège du piège : ce jour-là le blocage de facturation a commencé à 17:02, soit **entre le commit et le run qui l'aurait détecté**. Une porte qui ne tourne pas ne protège de rien, et son silence ressemble à du vert.
+
+## C9 l'état déconnecté d'une route protégée se rend depuis la coquille
+
+`apps/web/src/app/components/SessionGate.tsx` enveloppe `/my-events`, `/watchlist`, `/notifications` et `/new` dans `App.tsx`. Quand `hasSessionHint()` est faux, il rend l'état déconnecté **sans jamais rendre l'élément de page**, donc `React.lazy` ne demande pas le chunk de la route. Les quatre pages n'ont plus de branche `!user` ni de branche `authCheckFailed` : c'est le portail qui les porte, et `SessionGate.test.tsx` vérifie que la page n'est pas montée en comptant ses rendus.
+
+Pourquoi ça paie là où les quatre pistes de DEBT-016 avaient échoué : la porte mesure l'état **déconnecté**, et l'élément LCP y est le paragraphe de `SignedOutState`. Il n'attendait pas seulement React, il attendait le chunk de la page **et son évaluation**, soit 40 requêtes et environ 150 Ko sur `watchlist` pour afficher une phrase. Le simulateur de Lighthouse multiplie par 4 le travail du fil principal : c'est là que partaient les points, pas dans les allers-retours réseau, et c'est pourquoi précharger le chunk de la route n'aurait rien rendu (I2 le montrait déjà sur `/`). Mesuré en local, médiane de 3 passes : `watchlist` 78 vers 91, `my-events` 80 vers 89, `elementRenderDelay` de `watchlist` de 580 ms à 190 ms.
+
+Deux choses à ne pas casser :
+
+1. **Le discriminant est `hasSessionHint()`, pas `isLoading`.** Au premier rendu la requête de session est `isLoading` même quand aucune session n'est possible, et rendre les enfants dans ce cas suffit à déclencher l'import du chunk. La première version faisait exactement ça : l'affichage était juste, la mesure identique à l'avant, et rien ne signalait l'erreur. `fetchAuthMeForSession` rend `null` sans requête réseau quand l'indice est absent, donc l'état déconnecté est connu de façon synchrone.
+2. **Une page dont l'état déconnecté rend autre chose qu'un `SignedOutState` n'entre pas dans ce portail.** `/settings` rend `GuestPreferencesSection`, une vraie fonctionnalité pour visiteur anonyme : elle reste dehors, et son LCP reste derrière son chunk.
 
 ---
 
