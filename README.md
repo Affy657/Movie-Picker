@@ -156,9 +156,13 @@ vérifier avant de la publier, `rollback.yml` est la porte manuelle de retour ar
 | [`docs/roadmap-product.md`](docs/roadmap-product.md) | Roadmap produit |
 | [`docs/roadmap-tech.md`](docs/roadmap-tech.md) | Roadmap technique : infrastructure, CI/CD, sécurité |
 | [`docs/technical-debt.md`](docs/technical-debt.md) | Dette technique, contraintes et impasses connues |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Projet solo : ce qui est accepté, ce qui ne l'est pas, où signaler |
+| [`SECURITY.md`](SECURITY.md) | Signaler une faille, par un canal privé |
 
 ## Licence
 
 Code publié pour être lu, pas pour être réutilisé : tous droits réservés, voir
-[`LICENSE`](LICENSE). Movie Picker utilise l'API de The Movie Database sans être approuvé ni
-certifié par TMDB.
+[`LICENSE`](LICENSE). C'est un projet solo, et le dépôt n'accepte aucune contribution externe
+— [`CONTRIBUTING.md`](CONTRIBUTING.md) dit où adresser un signalement, et
+[`SECURITY.md`](SECURITY.md) une faille. Movie Picker utilise l'API de The Movie Database sans
+être approuvé ni certifié par TMDB.

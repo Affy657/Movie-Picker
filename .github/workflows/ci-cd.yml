@@ -54,10 +54,17 @@ env:
   ZIZMOR_SHA256: "ec8c95cd800845abb9bbc5f377ec7c57d2eb8e2386a00a201d3a74ee4092e5ed"
 
 jobs:
+  # Projet solo : aucune contribution externe n'est acceptée, la licence l'interdit et
+  # `CONTRIBUTING.md` le dit. Une PR issue d'un fork ne reçoit aucun secret, donc son run
+  # échouerait sur `sonar` pour une raison qui n'est pas le code proposé, tout en dépensant le
+  # quota de minutes. `fork != true` couvre les trois déclencheurs : sur `push` et
+  # `workflow_dispatch` l'objet `pull_request` est nul, et nul n'est pas `true`.
+  # Les autres jobs héritent du saut par leur `needs: changes`.
   changes:
     name: Détection des changements (path-filtering)
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    if: github.event.pull_request.head.repo.fork != true
     permissions:
       contents: read
       pull-requests: read
@@ -110,6 +117,7 @@ jobs:
   gitleaks:
     name: Secret scan (Gitleaks)
     runs-on: ubuntu-24.04
+    if: github.event.pull_request.head.repo.fork != true
     timeout-minutes: 5
     permissions:
       contents: read
@@ -139,6 +147,7 @@ jobs:
   lint-workflows:
     name: Lint workflows (actionlint + zizmor)
     runs-on: ubuntu-24.04
+    if: github.event.pull_request.head.repo.fork != true
     timeout-minutes: 10
     permissions:
       contents: read
@@ -498,6 +507,7 @@ jobs:
     timeout-minutes: 20
     if: >-
       always() &&
+      github.event.pull_request.head.repo.fork != true &&
       github.actor != 'dependabot[bot]' &&
       (github.event_name == 'pull_request' || github.ref == 'refs/heads/master') &&
       (needs.test-web.result == 'success' || needs.test-api.result == 'success')

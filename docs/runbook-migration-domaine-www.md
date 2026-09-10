@@ -35,15 +35,17 @@ L'apex `movie-picker.fr` redirige en 301 vers `www`. `web.movie-picker.fr` est r
 
 ## 3. État initial constaté (recon lecture seule, 2026-07-16)
 
-**AWS (front)** — compte `831680222380` :
+> Les identifiants de ce runbook sont des gabarits `<COMME_CECI>` : le dépôt est public. La table de correspondance, et la commande qui relève chaque valeur, sont dans [`../infra/README.md`](../infra/README.md).
 
-- Distribution CloudFront : **`E32M2PR26FCH96`** (`d1uc368ae7xu4s.cloudfront.net`), alias actuel : `web.movie-picker.fr`.
+**AWS (front)** — compte `<COMPTE_AWS>` :
+
+- Distribution CloudFront : **`<ID_DISTRIBUTION_CLOUDFRONT>`** (`d1uc368ae7xu4s.cloudfront.net`), alias actuel : `web.movie-picker.fr`.
 - Certificat ACM (us-east-1) : **wildcard `*.movie-picker.fr`**
-  (`arn:aws:acm:us-east-1:831680222380:certificate/1a9fed21-eedf-4089-b97d-557ad8fd8ece`).
+  (`arn:aws:acm:us-east-1:<COMPTE_AWS>:certificate/<ID_CERTIFICAT_ACM>`).
   → **`www.movie-picker.fr` est DÉJÀ couvert. Aucun nouveau certificat, aucune validation DNS.**
   (Le wildcard ne couvre PAS l'apex nu, mais l'apex ne fait qu'une redirection → pas besoin.)
 
-**GCP (API)** : projet `movie-picker-2026`, service Cloud Run `movie-picker-api`, région `europe-west1`.
+**GCP (API)** : projet `<PROJET_GCP>`, service Cloud Run `movie-picker-api`, région `europe-west1`.
 
 **DNS live (chez OVH, NS `ns14/dns14.ovh.net`)** :
 
@@ -60,8 +62,8 @@ L'apex `movie-picker.fr` redirige en 301 vers `www`. `web.movie-picker.fr` est r
 
 Vérifié disponible et authentifié en local le 2026-07-16 :
 
-- `aws` CLI — authentifié **en ROOT** (compte `831680222380`). ⚠️ Rayon d'action maximal : confirmer chaque commande mutante.
-- `gcloud` CLI — authentifié (`movie-picker-2026`).
+- `aws` CLI — authentifié **en ROOT** (compte `<COMPTE_AWS>`). ⚠️ Rayon d'action maximal : confirmer chaque commande mutante.
+- `gcloud` CLI — authentifié (`<PROJET_GCP>`).
 - `gh` CLI — authentifié (`Affy657`, scopes `repo` + `workflow`).
 - PostHog — via MCP (projet `movie-picker-prod`).
 - `jq` requis pour l'édition CloudFront (sinon éditer le JSON à la main).
@@ -126,10 +128,10 @@ git checkout master && git merge --no-ff feat/domaine-www
 Le cert wildcard couvre déjà `www`. Ajout de l'alias sans impact tant que le DNS ne pointe pas.
 
 ```bash
-aws cloudfront get-distribution-config --id E32M2PR26FCH96 > /tmp/dist.json
+aws cloudfront get-distribution-config --id <ID_DISTRIBUTION_CLOUDFRONT> > /tmp/dist.json
 ETAG=$(jq -r '.ETag' /tmp/dist.json)
 jq '.DistributionConfig | .Aliases = {"Quantity":2,"Items":["web.movie-picker.fr","www.movie-picker.fr"]}' /tmp/dist.json > /tmp/dist-config.json
-aws cloudfront update-distribution --id E32M2PR26FCH96 --distribution-config file:///tmp/dist-config.json --if-match "$ETAG"
+aws cloudfront update-distribution --id <ID_DISTRIBUTION_CLOUDFRONT> --distribution-config file:///tmp/dist-config.json --if-match "$ETAG"
 ```
 
 Attendre le déploiement de la distribution (`Status: Deployed`, ~5 min).
@@ -165,7 +167,7 @@ git push origin master
 - `deploy-front` (S3 + CloudFront) redéploie le front.
 
 > **Optionnel** (`PUBLIC_WEB_BASE_URL` explicite) : `gcloud run services update movie-picker-api
-> --project movie-picker-2026 --region europe-west1 --update-env-vars PUBLIC_WEB_BASE_URL=https://www.movie-picker.fr`.
+> --project <PROJET_GCP> --region europe-west1 --update-env-vars PUBLIC_WEB_BASE_URL=https://www.movie-picker.fr`.
 > ⚠️ **Piège** : le `deploy-api` de la CI utilise `--set-env-vars` (remplace tout le jeu d'env vars)
 > et n'inclut PAS `PUBLIC_WEB_BASE_URL` → il **écraserait** un réglage manuel. Le défaut code (§1)
 > est donc le mécanisme fiable ; le `gcloud` manuel n'est utile qu'en stopgap avant le merge.
@@ -193,10 +195,10 @@ Dans le manager OVH :
 Retirer `web` de CloudFront :
 
 ```bash
-aws cloudfront get-distribution-config --id E32M2PR26FCH96 > /tmp/dist.json
+aws cloudfront get-distribution-config --id <ID_DISTRIBUTION_CLOUDFRONT> > /tmp/dist.json
 ETAG=$(jq -r '.ETag' /tmp/dist.json)
 jq '.DistributionConfig | .Aliases = {"Quantity":1,"Items":["www.movie-picker.fr"]}' /tmp/dist.json > /tmp/dist-config.json
-aws cloudfront update-distribution --id E32M2PR26FCH96 --distribution-config file:///tmp/dist-config.json --if-match "$ETAG"
+aws cloudfront update-distribution --id <ID_DISTRIBUTION_CLOUDFRONT> --distribution-config file:///tmp/dist-config.json --if-match "$ETAG"
 ```
 
 Restreindre CORS à `www` seul :
@@ -248,7 +250,7 @@ Manuel :
 ## 9. Checklist
 
 - [ ] §1 Repo édité + tests verts + branche mergée (pas encore poussée)
-- [ ] §2 Alias `www` ajouté à CloudFront `E32M2PR26FCH96` (Deployed)
+- [ ] §2 Alias `www` ajouté à CloudFront `<ID_DISTRIBUTION_CLOUDFRONT>` (Deployed)
 - [ ] §3 OVH : CNAME `www` → `d1uc368ae7xu4s.cloudfront.net`
 - [ ] §4 `ALLOWED_ORIGINS` = `www,web`
 - [ ] §5 `git push` → `deploy-api` + `deploy-front` verts

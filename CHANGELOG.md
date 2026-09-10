@@ -10,6 +10,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Added
 
+- **Le dépôt est préparé pour être lu de l'extérieur** : `CONTRIBUTING.md` dit que le projet est solo et qu'aucune PR externe ne sera fusionnée, `SECURITY.md` détourne les failles vers un canal privé plutôt qu'un ticket public, et `infra/README.md` documente les fichiers de configuration appliqués à la main. Les identifiants d'infrastructure qui traînaient dans la documentation — compte, distribution, bucket, certificat, projet, organisation — sont remplacés par des gabarits, avec la commande qui relève chaque valeur.
 - **Sauvegarde quotidienne de la base de production** : le palier gratuit Atlas ne fournit aucun instantané, et rien ne sauvegardait la base. Un dump part chaque nuit vers un bucket Cloud Storage versionné, puis est relu depuis ce bucket et restauré dans une MongoDB jetable avant d'être publié — une archive qui échoue la restauration ne devient jamais la sauvegarde du jour.
 - **Archive du build front à chaque déploiement** (30 jours) : l'hébergement ne conserve aucune version, un retour arrière ne demande plus de rejouer toute la chaîne de portes.
 - Porte de qualité sur les workflows eux-mêmes (`actionlint`, `shellcheck`, `zizmor`), bloquante pour le déploiement : jusqu'ici la chaîne qui garde le code n'était gardée par rien.
@@ -17,6 +18,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Changed
 
+- **Une pull request venue d'un fork ne déclenche plus aucun run** : les jobs d'entrée de la CI la sautent. Sans cette condition, un tel run échouerait de toute façon sur l'analyse SonarCloud, GitHub ne fournissant aucun secret à une PR externe, tout en dépensant des minutes de build.
+- **La CI n'accepte plus qu'une action épinglée par empreinte** : le réglage était déjà la pratique du dépôt, il est maintenant imposé côté GitHub, donc une action référencée par tag est refusée au lieu de passer inaperçue.
 - **La mise en production est devenue un geste manuel** : un push sur `master` joue les portes de qualité et s'arrête là, le déploiement se déclenche depuis GitHub Actions en choisissant sa cible (tout, front seul, API seule). Il refuse de partir sur un commit dont la CI n'est pas verte, et un garde-fou final vérifie que chaque cible demandée est réellement en ligne. Motif : les minutes de build d'un dépôt privé sont facturées, et rejouer le chemin de déploiement à chaque commit en consommait la moitié pour des livraisons qui, en pratique, se groupent. Contrepartie assumée : la production est en retard sur `master` entre deux déclenchements.
 - La porte de performance Lighthouse est passée sur le chemin du déploiement, avec ses seuils inchangés : elle bloque toujours la mise en ligne du front, mais ne pèse plus sur chaque commit. Une régression de performance se voit donc au déploiement et non plus au push.
 - **Déploiement API validé avant exposition** : chaque révision est déployée sans trafic, éprouvée sur son URL taguée, et n'est promue qu'une fois ses sondes vertes. Une révision défaillante n'atteint plus aucun utilisateur, là où le trafic basculait auparavant avant toute vérification.
@@ -26,6 +29,11 @@ version publiée est associée à un tag Git et à une release GitHub.
 - Le front ne charge plus que la langue affichée : la langue inactive, environ 93 Ko, quitte le chemin de démarrage.
 - Les icônes sont regroupées en un seul fichier au lieu d'une quarantaine : autant d'allers-retours réseau en moins avant le premier rendu.
 - `<html lang>` porte la langue réelle du visiteur dès la première peinture, au lieu d'être corrigé après le montage de React.
+
+### Security
+
+- **`js-yaml` remonté en 4.3.2** : la version tirée par l'outillage de génération des types OpenAPI était vulnérable à une consommation de processeur non bornée. Dépendance de développement uniquement, donc jamais servie aux utilisateurs. Bornée au `4.x` : la contrainte ouverte résolvait un `5.4.1` majeur sur un outil qui garde le contrat d'API.
+
 
 ## [1.5.0] - 2026-09-07
 

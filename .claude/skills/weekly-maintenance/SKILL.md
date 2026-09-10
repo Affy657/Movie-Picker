@@ -31,7 +31,7 @@ Sources indépendantes, à interroger en parallèle.
 
 Récupérer ensuite les issues ouvertes de `master`, **en séparant celles du new code period du reste** : ce sont elles qui pilotent le Quality Gate, et c'est cette distinction qui rend le volume traitable.
 
-**4. Sentry.** Org `adrien-morand`, région UE, projets `movie-picker-web` et `movie-picker-api`. Issues non résolues des 7 derniers jours, triées par utilisateurs touchés. Une part des remontées ne vient pas de notre code (extension de navigateur, réseau coupé, bot) : celles-là se muent dans Sentry, elles n'entrent pas dans le périmètre de correction.
+**4. Sentry.** Org et projets se relèvent dans la console Sentry ou dans les variables Actions `SENTRY_ORG` et `SENTRY_PROJECT`, région UE. Issues non résolues des 7 derniers jours, triées par utilisateurs touchés. Une part des remontées ne vient pas de notre code (extension de navigateur, réseau coupé, bot) : celles-là se muent dans Sentry, elles n'entrent pas dans le périmètre de correction.
 
 **5. Google Cloud.** Trafic par classe de code de réponse, latence p95, erreurs applicatives des logs Cloud Run, révision active. Croiser les erreurs de logs avec Sentry : une erreur présente ici et absente de Sentry signale un trou d'instrumentation.
 

@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DISTRIBUTION_ID="${DISTRIBUTION_ID:-E32M2PR26FCH96}"
+# Aucune valeur par defaut : l'identifiant de la distribution ne vit pas dans le depot, il se
+# releve dans la variable Actions AWS_CLOUDFRONT_DISTRIBUTION_ID (Settings > Secrets and
+# variables > Actions) ou par `aws cloudfront list-distributions`.
+if [ -z "${DISTRIBUTION_ID:-}" ]; then
+  echo "DISTRIBUTION_ID manquant. Usage : DISTRIBUTION_ID=<id> $0" >&2
+  exit 2
+fi
 POLICY_NAME="movie-picker-front-security-headers"
 POLICY_CONFIG="infra/cloudfront-response-headers-policy.json"
 

@@ -79,6 +79,8 @@ Pour toute nouvelle barre sticky dont le contenu change de hauteur :
 
 **Avant tout push sur master, toujours exécuter `pnpm run verify:local` et corriger toute erreur avant de push.** Obligatoire quelle que soit la conversation ou la feature. Quatorze étapes, dans l'ordre : règles d'architecture, workflows (actionlint + shellcheck + zizmor), `pnpm lint`, ESLint, Prettier, `dotnet restore`, `dotnet format --verify-no-changes`, build Release avec `-warnaserror`, export OpenAPI, dérive des types OpenAPI, audit Trivy (Docker), tests front avec seuils de couverture, tests API unitaires, tests API d'intégration.
 
+**Aucune contribution externe.** Projet solo : `CONTRIBUTING.md` refuse les PR de fork et la licence les rend infusionnables. Les jobs d'entrée de `ci-cd.yml` portent `github.event.pull_request.head.repo.fork != true`, donc une PR de fork ne déclenche aucun run. Ne pas retirer cette condition ni l'oublier sur un job d'entrée ajouté plus tard : un job sans `needs: changes` ne l'hérite pas.
+
 **Pousser sur master ne déploie rien.** La mise en production est un geste manuel, `gh workflow run deploy.yml --ref master -f cible=tout` (cibles : `tout`, `front`, `api`), et elle refuse de partir si le run `ci-cd.yml` du commit visé n'est pas vert. Ne jamais la déclencher sans demande explicite de l'utilisateur : le découpage existe pour qu'il groupe plusieurs livraisons dans un seul déploiement, les minutes GitHub Actions d'un dépôt privé étant facturées. Corollaire à annoncer en fin de tâche : **la production est en retard sur master par défaut**, et rien ne le signale.
 
 - Ne jamais skip les hooks pre-push.
@@ -155,7 +157,7 @@ Outils configurés pour qu'un agent travaille sur le projet sans intervention ma
 | SonarCloud | MCP `sonarqube` (Docker, requiert Docker Desktop lancé et l'image `mcp/sonarqube`) | consulter qualité / issues / hotspots ; l'analyse tourne en CI (job `sonar`, SonarScanner for .NET) |
 | MongoDB | MCP `mongodb` | base dev `moviepicker_dev` |
 | PostHog | MCP `posthog` (HTTP, scope global) | analytics, events produit |
-| Sentry | connecteur applicatif | erreurs front et API ; org `adrien-morand`, projets `movie-picker-web` et `movie-picker-api`, région UE |
+| Sentry | connecteur applicatif | erreurs front et API ; org et projets se relèvent dans la console Sentry ou dans les variables Actions `SENTRY_ORG` et `SENTRY_PROJECT`, région UE |
 | Resend | connecteur applicatif | e-mails transactionnels ; domaine `movie-picker.fr` vérifié, `eu-west-1`, envoi seul |
 
 `sonarqube` et `mongodb` sont déclarés sur le projet `C:\ynov\movie-picker` : **ils ne sont pas montés dans un worktree**, qui a sa propre entrée de configuration. Y basculer depuis le checkout principal, ou passer par les CLI.

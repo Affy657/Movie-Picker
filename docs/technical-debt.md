@@ -9,7 +9,7 @@ Fichier de travail pour agent. Il n'est pas destiné à être lu par un humain :
 3. Fin de traitement : supprimer l'entrée entière. Ne pas la cocher, ne pas la garder en « fait », git porte l'historique.
 4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-023`.
 5. Ce fichier ne contient que de la dette, c'est-à-dire du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature à construire va dans `roadmap-product.md` ou `roadmap-tech.md`.
-6. **Aucun identifiant d'infrastructure ici** : pas d'adresse de compte de service, pas de nom de bucket, pas d'identifiant de compte. Le dépôt a vocation à devenir public, et une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou employer un espace réservé `<COMME_CECI>` dans les commandes.
+6. **Aucun identifiant d'infrastructure ici** : pas d'adresse de compte de service, pas de nom de bucket, pas d'identifiant de compte. Le dépôt a vocation à devenir public, et une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou employer un espace réservé `<COMME_CECI>` dans les commandes. La table des gabarits, et la commande qui relève chaque valeur, sont dans `infra/README.md`.
 7. Deux sections en fin de fichier n'obéissent pas à ce schéma et ne se traitent jamais : **Contraintes** liste ce qui casse en silence si on y touche, **Impasses** liste ce qui a déjà été essayé et mesuré sans gain. Les lire avant d'optimiser quoi que ce soit sur le front ou de toucher au déploiement.
 
 Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` / `refs`. Champs absents = sans objet.
@@ -22,11 +22,11 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - bloque: écritures `gcloud` refusées par le classifieur d'auto-mode ; l'utilisateur doit lancer les trois commandes
 - impact: prod. `POST /api/v1/scheduler/event-reminders` répond 503, aucun rappel J-1, 1 h ni « en suspens » ne part. Le 503 est volontaire, préféré à un échec silencieux.
 - ou: `.github/workflows/deploy.yml:288` et `:352` (les deux gardes qui émettent le warning)
-- verify: `gcloud secrets describe SCHEDULER_TOKEN --project movie-picker-2026` ; encore ouvert si NOT_FOUND
+- verify: `gcloud secrets describe SCHEDULER_TOKEN --project <PROJET_GCP>` ; encore ouvert si NOT_FOUND
 - fix:
   ```bash
-  gcloud services enable cloudscheduler.googleapis.com --project movie-picker-2026
-  python -c "import secrets,sys; sys.stdout.write(secrets.token_urlsafe(48))" | gcloud secrets create SCHEDULER_TOKEN --data-file=- --replication-policy=automatic --project movie-picker-2026
+  gcloud services enable cloudscheduler.googleapis.com --project <PROJET_GCP>
+  python -c "import secrets,sys; sys.stdout.write(secrets.token_urlsafe(48))" | gcloud secrets create SCHEDULER_TOKEN --data-file=- --replication-policy=automatic --project <PROJET_GCP>
   gh workflow run deploy.yml --ref master -f cible=api
   ```
 - fini-quand: l'endpoint ne répond plus 503 et le job Cloud Scheduler existe
@@ -43,22 +43,23 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fini-quand: plus aucun secret d'identifiant statique dans les secrets GitHub du dépôt
 - refs: recoupe DEBT-003 et le lot Terraform 5 de `roadmap-tech.md`, qui traite le même sujet au fond
 
-## DEBT-003 clés AWS de compte root et IAM non scopé
+## DEBT-003 une clé d'accès du compte root AWS existe encore
 
 - state: humain
-- bloque: console AWS
-- impact: compromission d'une clé donne un accès complet au compte
-- verify: inspecter les clés d'accès du compte AWS ; encore ouvert tant qu'une clé root existe
-- fix: identités scopées au moindre privilège, rotation des secrets exposés
-- fini-quand: aucune clé root active, chaque identité limitée à son usage
-- refs: DEBT-002 le supprime au fond en retirant AWS de la chaîne
+- bloque: la suppression d'une clé root ne se fait que dans « Security credentials » du compte root, aucune API n'y donne accès
+- impact: la clé root n'a aucune limite de périmètre. Sa compromission donne le compte entier, y compris la facturation et la suppression des sauvegardes.
+- verify: `aws iam get-account-summary --query 'SummaryMap.AccountAccessKeysPresent'` ; encore ouvert tant que la réponse vaut `1`
+- fix: configurer le profil `aws` local sur une identité IAM dédiée aux gestes d'exploitation, vérifier que plus aucun script local ne dépend du profil root, puis supprimer la clé root.
+- fini-quand: `AccountAccessKeysPresent` vaut `0` et `aws sts get-caller-identity` ne rend plus un ARN en `:root`
+- piege: **la moitié de l'intitulé d'origine était périmée, mesuré le 2026-09-10.** Le volet CI est déjà fait : l'utilisateur `movie-picker-github-actions` existe depuis le 2026-03-16, porte la politique gérée `MoviePickerDeploy` dont les trois déclarations correspondent au caractère près à `infra/iam-github-actions-deploy-policy.json`, et sa clé est active. Le bucket du front est fermé sur les quatre verrous (`BlockPublicAcls`, `IgnorePublicAcls`, `BlockPublicPolicy`, `RestrictPublicBuckets`) et sa politique n'est pas publique. Le MFA du compte root est actif. **Ce qui reste tient en un point** : `aws sts get-caller-identity` en local rend un ARN `:root`, donc la clé root est celle du poste de travail, pas celle de la CI. Le risque n'est pas dans le dépôt ni dans la chaîne de déploiement, il est dans le fichier d'identifiants local.
+- refs: DEBT-002 le supprime au fond en retirant AWS de la chaîne. Ne pas invoquer C7 comme motif : les identifiants d'infrastructure sont sortis du dépôt le 2026-09-10 et n'ont jamais été le sujet de cette entrée.
 
 ## DEBT-004 en-tête frame-ancestors absent du front
 
 - state: humain
 - bloque: aucune infrastructure CloudFront décrite dans le dépôt, la policy se pose en console ou en CLI AWS
 - impact: la page peut être embarquée dans une iframe tierce
-- ou: distribution CloudFront `E32M2PR26FCH96`, alias `web.movie-picker.fr`
+- ou: distribution CloudFront `<ID_DISTRIBUTION_CLOUDFRONT>`, alias `web.movie-picker.fr`
 - verify: `curl -sI https://web.movie-picker.fr | grep -i content-security-policy` ; encore ouvert si la directive `frame-ancestors` est absente
 - fix: Response Headers Policy sur la distribution, en repartant de `infra/cloudfront-response-headers-policy.json`
 - piege: le report initial était motivé par la remise du dossier RNCP Bloc 2, remis depuis le 2026-07-23. Le motif a expiré, ne pas le réinvoquer.
@@ -301,23 +302,38 @@ L'item « Passage du dépôt en public » (V1.6 de `roadmap-tech.md`) rend lisib
 **Ce qui reste, et qui se décide avant la bascule, jamais après :**
 
 1. **Le courriel personnel de l'auteur est l'adresse de 916 commits sur 1 003.** 28 commits utilisent déjà l'adresse `noreply` GitHub, donc l'identité est déjà incohérente. Après la bascule l'adresse est publique définitivement, moissonnée et miroitée. Trois issues : l'assumer, réécrire les 1 003 commits vers l'adresse `noreply` avant de basculer (change **tous** les SHA, casse les liens de commit des 86 PR fusionnées et toute référence externe), ou l'assumer en configurant `user.email` sur l'adresse `noreply` pour la suite.
-2. **Les identifiants d'infrastructure sont en clair dans les fichiers suivis** : compte AWS, distribution CloudFront, nom du bucket, ARN du certificat ACM, projet GCP, organisation Sentry, dans `docs/runbook-migration-domaine-www.md`, `infra/iam-github-actions-deploy-policy.json`, `scripts/apply-cloudfront-headers.sh`, `.claude/skills/weekly-maintenance/references/commandes.md` et `docs/technical-debt.md` lui-même, qui viole ainsi sa propre règle 6. Aucun n'est un secret et aucun ne justifie une réécriture d'historique ; ce qu'ils font, c'est dispenser un attaquant de l'étape de reconnaissance. Ils ne sont **pas** dans les PR ni les tickets, donc un remplacement par des espaces réservés au head suffit à ne plus les publier au présent. **DEBT-003 passe avant** : des clés root AWS actives derrière une cible nommée, c'est le mode d'emploi complet.
-3. **Les livrables RNCP et un support de cours Ynov sont suivis** : `docs/RNCP/` (dossiers PDF, captures, slides du Bloc 3) et `archive/docs/_ynov/`, qui contient une consigne de module, donc du matériel de l'école. Publier des livrables notés en verbatim les rend copiables, et l'oral du Bloc 3 est le 2026-09-16. Décider explicitement : publier, retirer du suivi, ou attendre le 17.
-4. **Une branche `master` sans protection et cinq branches distantes deviennent visibles**, dont trois branches de travail d'agent. Rien de secret, mais c'est ce que voit un visiteur en premier.
-5. **Les journaux et les artefacts des runs Actions deviennent publics eux aussi**, pas seulement le code. Vérifié : aucun `set -x`, aucun `echo` de secret dans les six workflows, seulement des contrôles de présence, et GitHub masque de lui-même tout secret déclaré. Le résidu est ailleurs, dans deux artefacts : `playwright-traces`, qui embarque corps de requêtes et cookies du run E2E, et `sbom-api`. La rétention est de 90 jours, donc attendre déplace le problème au lieu de le régler.
+2. **Les livrables RNCP et un support de cours Ynov sont suivis** : `docs/RNCP/` (dossiers PDF, captures, slides du Bloc 3) et `archive/docs/_ynov/`, qui contient une consigne de module, donc du matériel de l'école. Publier des livrables notés en verbatim les rend copiables, et l'oral du Bloc 3 est le 2026-09-16. Décider explicitement : publier, retirer du suivi, ou attendre le 17.
+3. **Cinq branches distantes deviennent visibles**, dont trois branches de travail d'agent, et `feedback-attachments` dont l'objet n'est plus identifiable. Rien de secret, mais c'est ce que voit un visiteur en premier. Ne pas les supprimer sans vérifier `git worktree list` : deux d'entre elles sauvegardent le travail en cours d'un worktree.
+4. **Les journaux et les artefacts des runs Actions deviennent publics eux aussi**, pas seulement le code. Vérifié : aucun `set -x`, aucun `echo` de secret dans les six workflows, seulement des contrôles de présence, et GitHub masque de lui-même tout secret déclaré. Le résidu est ailleurs, dans deux artefacts : `playwright-traces`, qui embarque corps de requêtes et cookies du run E2E, et `sbom-api`. La rétention est de 90 jours, donc attendre déplace le problème au lieu de le régler.
+
+**Traité le 2026-09-10, ne pas refaire :**
+
+- **Les identifiants d'infrastructure sont sortis des fichiers suivis** : compte AWS, distribution CloudFront, ARN du certificat ACM, nom du bucket, projet GCP et organisation Sentry sont remplacés par des gabarits `<COMME_CECI>`, et `infra/README.md` porte la table qui dit par quelle commande relever chaque valeur. `scripts/apply-cloudfront-headers.sh` n'a plus de valeur par défaut, il sort en 2 si `DISTRIBUTION_ID` manque. Aucun n'était un secret et aucun n'était dans les PR ni les tickets, donc le head suffisait, sans réécriture d'historique. **Ce qui reste de DEBT-003 n'en est pas dispensé pour autant** : des clés root AWS actives, même derrière une cible qui n'est plus nommée, restent le vrai sujet.
+- **Aucune contribution externe n'est possible sans un geste de l'auteur.** `CONTRIBUTING.md` le dit, la licence l'impose, et les jobs d'entrée de `ci-cd.yml` (`changes`, `gitleaks`, `lint-workflows`, plus `sonar` dont l'`always()` ignorerait un `changes` sauté) portent `github.event.pull_request.head.repo.fork != true`. Une PR de fork ne déclenche donc rien : ni minutes dépensées, ni `sonar` rouge faute de secrets. `SECURITY.md` détourne les failles vers un canal privé plutôt qu'un ticket public.
+- **`gh api` refuse `actions/permissions/fork-pr-contributor-approval` sur un dépôt privé** (« Fork PR approval is not allowed for private repositories », 422). Le réglage est donc pilotable par API, mais **seulement après la bascule** : c'est l'un des gestes de la liste ci-dessous, pas une fatalité de console.
 
 **Ce que la bascule débloque, et qui n'est pas dans l'item de roadmap :**
 
-- **Secret scanning et push protection**, aujourd'hui **désactivés** — l'API répond « Secret scanning is disabled on this repository », un dépôt privé les réservant à GitHub Advanced Security. La ligne V1 de `roadmap-tech.md` qui les annonce activés était fausse. Ils deviennent gratuits en public, et alors seulement la porte de CI cesse d'être le seul filet.
-- **CodeQL** et l'attestation SBOM.
+- **Secret scanning et push protection**, aujourd'hui **désactivés** — l'API répond « Secret scanning is disabled on this repository », un dépôt privé les réservant à GitHub Advanced Security. La ligne V1 de `roadmap-tech.md` qui les annonçait activés était fausse. Ils deviennent gratuits en public, et alors seulement la porte de CI cesse d'être le seul filet.
+- **CodeQL**, l'attestation SBOM, et le **signalement privé de vulnérabilité** que `SECURITY.md` désigne comme canal à préférer : il n'existe pas encore, l'onglet Security ne l'offre qu'en public.
+- **La protection de branche et les rulesets**, réservés aux dépôts publics sur le plan gratuit. Sur `master` ne poser que l'interdiction de `force push` et de suppression : **exiger un contrôle de statut casserait le workflow de poussée directe**, un commit tout juste poussé n'ayant encore aucun run attaché.
 - **SonarCloud sans plafond de lignes** : le palier gratuit est annoncé illimité sur un projet public, à relire sur la page de tarification avant d'en dépendre. Ce qui supprime la cause de l'exclusion de `TechPage.tsx` et de `app/pages/tech/` posée le 2026-09-09, soit ~3 000 lignes rendues à l'analyse, et la contrainte de marge de DEBT-021. Le projet doit être passé en public côté SonarCloud aussi, ce qui rend ses constats publics.
 - **Le bouton « Signaler un problème » du footer** passe par un `mailto:` vers `contact@movie-picker.fr` et ne dépend pas de la visibilité : la bascule ne le répare ni ne le casse.
 
-**Deux pièges de la CI en public, qui ne se voient qu'au premier contributeur externe :**
+**Les gestes à passer juste après la bascule.** Deux sont déjà faits et n'y sont plus : `sha_pinning_required` est posé depuis le 2026-09-10 (il a pris sans rien casser, tous les `uses:` étant déjà épinglés par SHA), et les correctifs de sécurité Dependabot automatiques étaient déjà actifs. Restent :
 
-- **Aucun secret n'est fourni à un run de PR issue d'un fork**, donc le job `sonar` de `ci-cd.yml` échouera sur toute PR externe. La porte deviendra rouge pour une raison qui n'est pas le code proposé.
-- `ci-cd.yml` se déclenche sur `pull_request`, donc **du code d'inconnu s'exécute sur les runners** dès la première PR. Aucun `pull_request_target`, aucun `issue_comment`, aucun `workflow_run` dans le dépôt et `default_workflow_permissions` est déjà `read` : la posture est saine, mais il faut régler l'approbation manuelle sur « tous les contributeurs externes », sinon le quota que la bascule est censée libérer se dépense en runs d'inconnus.
-- La licence interdit la réutilisation alors que le fork est activé et ne se désactive pas sur un dépôt public. Il n'existe pas de `SECURITY.md`, donc une faille se signalera dans un ticket public.
+```bash
+gh api -X PUT repos/<DEPOT>/actions/permissions/fork-pr-contributor-approval -f approval_policy=ALL_EXTERNAL_CONTRIBUTORS  # énumération à relire dans la réponse d'un GET sur le même chemin
+gh api -X PUT repos/<DEPOT>/private-vulnerability-reporting
+```
+
+Puis les deux qui n'ont pas d'API : activer **secret scanning et push protection** (Settings → Code security), et passer le projet **SonarCloud** en public.
+
+**Deux limites à connaître, qui ne se règlent pas :**
+
+- **Le fork ne se désactive pas sur un dépôt public.** Seuls les dépôts privés ou internes d'une organisation peuvent le restreindre. Forker pour lire est libre, comme cloner ; la licence ne réserve que l'usage qui suit.
+- **Les tickets restent ouverts à tout le monde.** GitHub ne sait pas les limiter aux collaborateurs de façon permanente, seulement les geler temporairement (6 mois au plus) ou les désactiver en bloc, ce qui ferait perdre le backlog. Un ticket est un signalement, pas une contribution : `CONTRIBUTING.md` dit où va chaque chose.
+
 ---
 
 # Impasses

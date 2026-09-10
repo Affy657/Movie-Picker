@@ -1,6 +1,6 @@
 # Commandes de la passe hebdomadaire
 
-Référence lue à la demande depuis [SKILL.md](../SKILL.md). Repo `Affy657/Movie-Picker`, projet GCP `movie-picker-2026`, région `europe-west1`.
+Référence lue à la demande depuis [SKILL.md](../SKILL.md). Repo `Affy657/Movie-Picker`, projet GCP `<PROJET_GCP>`, région `europe-west1`.
 
 Commandes POSIX : les lancer via l'outil Bash, pas PowerShell, qui ne comprend ni `$(...)` ni `date -d`.
 
@@ -54,7 +54,7 @@ Trafic par classe de code sur 7 jours :
 TOKEN=$(gcloud auth print-access-token)
 END=$(date -u +%Y-%m-%dT%H:%M:%SZ); START=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)
 curl -sS -G -H "Authorization: Bearer $TOKEN" \
-  "https://monitoring.googleapis.com/v3/projects/movie-picker-2026/timeSeries" \
+  "https://monitoring.googleapis.com/v3/projects/<PROJET_GCP>/timeSeries" \
   --data-urlencode 'filter=metric.type="run.googleapis.com/request_count" AND resource.labels.service_name="movie-picker-api"' \
   --data-urlencode "interval.startTime=$START" --data-urlencode "interval.endTime=$END" \
   --data-urlencode 'aggregation.alignmentPeriod=86400s' \
@@ -71,7 +71,7 @@ Erreurs applicatives :
 
 ```bash
 gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="movie-picker-api" AND severity>=ERROR' \
-  --project movie-picker-2026 --freshness=7d --limit=50 --format="value(timestamp,severity,textPayload)"
+  --project <PROJET_GCP> --freshness=7d --limit=50 --format="value(timestamp,severity,textPayload)"
 ```
 
 Révision active et image déployée :
