@@ -458,7 +458,6 @@ export default function EventDetailSession({
   );
   const shareUrl = eventFrontendUrl(slug);
   const needsJoin = !event.isFinished && !participant;
-  const showContent = event.isFinished || participant;
   const maxParticipants = event.config?.maxParticipants ?? null;
   const myParticipantSummary =
     participant && event.participants
@@ -506,7 +505,6 @@ export default function EventDetailSession({
         onOpenSettings={() => setSettingsOpen(true)}
         onAddMovie={() => setAddMovieOpen(true)}
         addMovieTriggerRef={addMovieTriggerRef}
-        showContent={!!showContent}
         wheel={wheel}
         onRequestCloseWithoutMovie={() => setConfirmState({ kind: 'closeWithoutMovie' })}
         onRequestResetWheel={() => setConfirmState({ kind: 'resetWheel' })}
@@ -523,38 +521,36 @@ export default function EventDetailSession({
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
       />
-      {showContent ? (
-        <EventDetailSessionBody
-          slug={slug}
-          event={event}
-          participant={participant}
-          hostToken={hostToken}
-          movies={movies}
-          moviesQuery={moviesQuery}
-          actionError={actionError}
-          setActionError={setActionError}
-          refreshAll={refreshAll}
-          viewMode={viewMode}
-          onViewModeChange={handleViewModeChange}
-          selection={selection}
-          addMovieOpen={addMovieOpen}
-          onAddMovieOpenChange={setAddMovieOpen}
-          addMovieTriggerRef={addMovieTriggerRef}
-          moviesSectionRef={moviesSectionRef}
-          participantsOpen={participantsOpen}
-          participantsRef={participantsRef}
-          pendingRemovalId={pendingRemovalId}
-          onRemoveParticipant={handleRemoveParticipant}
-          onRequestRemoveMovie={handleRequestRemoveMovie}
-          onInviteFriends={() => openShare('friends')}
-          onLeave={handleLeaveEvent}
-          canShowLeave={canShowLeave}
-          isConnectedSelf={isConnectedSelf}
-          removePending={removeParticipantMutation.isPending}
-          actionSuccess={actionSuccess}
-          wheel={wheel}
-        />
-      ) : null}
+      <EventDetailSessionBody
+        slug={slug}
+        event={event}
+        participant={participant}
+        hostToken={hostToken}
+        movies={movies}
+        moviesQuery={moviesQuery}
+        actionError={actionError}
+        setActionError={setActionError}
+        refreshAll={refreshAll}
+        viewMode={viewMode}
+        onViewModeChange={handleViewModeChange}
+        selection={selection}
+        addMovieOpen={addMovieOpen}
+        onAddMovieOpenChange={setAddMovieOpen}
+        addMovieTriggerRef={addMovieTriggerRef}
+        moviesSectionRef={moviesSectionRef}
+        participantsOpen={participantsOpen}
+        participantsRef={participantsRef}
+        pendingRemovalId={pendingRemovalId}
+        onRemoveParticipant={handleRemoveParticipant}
+        onRequestRemoveMovie={handleRequestRemoveMovie}
+        onInviteFriends={() => openShare('friends')}
+        onLeave={handleLeaveEvent}
+        canShowLeave={canShowLeave}
+        isConnectedSelf={isConnectedSelf}
+        removePending={removeParticipantMutation.isPending}
+        actionSuccess={actionSuccess}
+        wheel={wheel}
+      />
       <ConfirmDialog
         open={confirmDialogContent !== null}
         title={confirmDialogContent?.title ?? ''}
@@ -760,7 +756,6 @@ function EventDetailSessionChrome({
   onOpenSettings,
   onAddMovie,
   addMovieTriggerRef,
-  showContent,
   wheel,
   onRequestCloseWithoutMovie,
   onRequestResetWheel,
@@ -797,7 +792,6 @@ function EventDetailSessionChrome({
   onOpenSettings: () => void;
   onAddMovie: () => void;
   addMovieTriggerRef: RefObject<HTMLButtonElement | null>;
-  showContent: boolean;
   wheel: WheelApi;
   onRequestCloseWithoutMovie: () => void;
   onRequestResetWheel: () => void;
@@ -835,13 +829,11 @@ function EventDetailSessionChrome({
         onOpenShare={shareUrl ? () => onOpenShare('link') : undefined}
         onOpenSettings={canConfigure ? onOpenSettings : undefined}
         wheelActions={
-          showContent ? (
-            <EventWheelActions
-              wheel={wheel}
-              onRequestCloseWithoutMovie={onRequestCloseWithoutMovie}
-              onRequestReset={onRequestResetWheel}
-            />
-          ) : null
+          <EventWheelActions
+            wheel={wheel}
+            onRequestCloseWithoutMovie={onRequestCloseWithoutMovie}
+            onRequestReset={onRequestResetWheel}
+          />
         }
         onAddMovie={canAddMovie ? onAddMovie : undefined}
         addMoviePrimary={wheel.primaryAction === 'add'}

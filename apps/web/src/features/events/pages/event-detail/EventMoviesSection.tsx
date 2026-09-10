@@ -6,6 +6,7 @@ import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { clearMovieVote, setMovieWheelExclusion, voteMovie } from '@/features/movies/api/moviesApi';
 import { getErrorMessage } from '@/shared/api/apiError';
 import type { EventData } from '@/features/events/types';
+import { promptToJoinEvent } from '@/features/events/joinPrompt';
 import type { MovieData } from '@/shared/types/movie';
 import AddMoviePanel from '@/features/movies/components/AddMoviePanel';
 import MovieList, { type MovieRowSortKey } from '@/features/movies/components/MovieList';
@@ -195,7 +196,10 @@ export default function EventMoviesSection({
 
   const handleVote = useCallback(
     async (movieId: string, value: 1 | -1) => {
-      if (!participant) return;
+      if (!participant) {
+        promptToJoinEvent();
+        return;
+      }
       setActionError(null);
       clearVoteError(movieId);
       const current = movies.find((m) => m.id === movieId)?.myVote ?? null;
@@ -296,6 +300,7 @@ export default function EventMoviesSection({
   const sharedListProps = {
     slug,
     participantId: participant?.participantId ?? null,
+    canVote: !isFinished,
     participantPseudo: participant?.pseudo ?? null,
     isFinished,
     isHost: !!event.isHost,

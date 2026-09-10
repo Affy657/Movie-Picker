@@ -15,6 +15,7 @@ interface MovieListProps {
   movies: MovieData[];
   slug: string;
   participantId: string | null;
+  canVote?: boolean;
   participantPseudo: string | null;
   isFinished: boolean;
   isHost?: boolean;
@@ -46,6 +47,7 @@ export default function MovieList({
   movies,
   slug,
   participantId,
+  canVote,
   participantPseudo,
   isFinished,
   isHost = false,
@@ -88,6 +90,7 @@ export default function MovieList({
     movie: m,
     slug,
     participantId,
+    canVote,
     participantPseudo,
     isFinished,
     isHost,

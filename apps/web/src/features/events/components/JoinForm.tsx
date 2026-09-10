@@ -8,6 +8,7 @@ import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { setStoredParticipant } from '@/features/events/storage';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES, withReturnTo } from '@/app/routes';
+import { JOIN_PROMPT_ANCHOR_ID } from '@/features/events/joinPrompt';
 import styles from './JoinForm.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
@@ -105,7 +106,13 @@ export default function JoinForm({
   }
 
   return (
-    <Card as="section" padding="lg" elevation="sm" className={styles.root}>
+    <Card
+      as="section"
+      id={JOIN_PROMPT_ANCHOR_ID}
+      padding="lg"
+      elevation="sm"
+      className={styles.root}
+    >
       <h2 className={styles.title}>
         <UserPlus size={18} aria-hidden className={styles.titleIcon} />
         <span className={styles.titleLabel}>{t('events.join.title')}</span>

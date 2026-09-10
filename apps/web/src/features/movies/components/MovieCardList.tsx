@@ -58,6 +58,7 @@ export const MovieCardList = memo(function MovieCardList({
   movie: m,
   slug,
   participantId,
+  canVote,
   participantPseudo,
   isFinished,
   isHost,
@@ -81,6 +82,7 @@ export const MovieCardList = memo(function MovieCardList({
     movie: m,
     slug,
     participantId,
+    canVote,
     participantPseudo,
     isFinished,
     isHost,
@@ -185,19 +187,21 @@ export const MovieCardList = memo(function MovieCardList({
         )}
 
         <div className={styles.bottomSection}>
-          {s.canAct && (
+          {s.canVote && (
             <div className={styles.actions}>
               <VoteBar m={m} onVote={onVote} t={t} />
-              <SeenButton
-                m={m}
-                iMarkedSeen={s.iMarkedSeen}
-                seenPending={s.seenPending}
-                onToggle={() => void s.handleToggleSeen()}
-                others={s.others}
-                othersHint={s.othersHint}
-                avatarsByPseudo={participantAvatarsByPseudo}
-                t={t}
-              />
+              {s.canAct && (
+                <SeenButton
+                  m={m}
+                  iMarkedSeen={s.iMarkedSeen}
+                  seenPending={s.seenPending}
+                  onToggle={() => void s.handleToggleSeen()}
+                  others={s.others}
+                  othersHint={s.othersHint}
+                  avatarsByPseudo={participantAvatarsByPseudo}
+                  t={t}
+                />
+              )}
             </div>
           )}
 

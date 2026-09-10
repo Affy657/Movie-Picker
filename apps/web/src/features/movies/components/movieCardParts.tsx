@@ -37,6 +37,7 @@ export interface MovieCardCommonProps {
   movie: MovieData;
   slug: string;
   participantId: string | null;
+  canVote?: boolean;
   participantPseudo: string | null;
   isFinished: boolean;
   isHost: boolean;
@@ -79,6 +80,7 @@ export function useMovieCardState({
   movie: m,
   slug,
   participantId,
+  canVote,
   participantPseudo,
   isFinished,
   isHost,
@@ -91,6 +93,7 @@ export function useMovieCardState({
   movie: MovieData;
   slug: string;
   participantId: string | null;
+  canVote?: boolean;
   participantPseudo: string | null;
   isFinished: boolean;
   isHost: boolean;
@@ -104,6 +107,7 @@ export function useMovieCardState({
   const proposerAvatarId = participantAvatars?.[getParticipantId(m)] ?? '';
   const canRemove = !isFinished && (isMine || isHost);
   const canAct = !isFinished && !!participantId;
+  const votingAvailable = canVote ?? canAct;
   const iMarkedSeen = !!(participantPseudo && m.seenByPseudos?.includes(participantPseudo));
   const others = (m.seenByPseudos ?? []).filter((p) => p !== participantPseudo);
   const othersHint = othersAlreadySeenHint(m.seenByPseudos, participantPseudo, t);
@@ -152,6 +156,7 @@ export function useMovieCardState({
     proposerAvatarId,
     canRemove,
     canAct,
+    canVote: votingAvailable,
     iMarkedSeen,
     others,
     othersHint,

@@ -15,6 +15,7 @@ import {
 import { http, HttpResponse } from 'msw';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { setStoredParticipant, getStoredParticipant } from '@/features/events/storage';
+import { JOIN_PROMPT_ANCHOR_ID } from '@/features/events/joinPrompt';
 
 beforeAll(() => {
   if (!HTMLDialogElement.prototype.showModal) {
@@ -70,7 +71,7 @@ describe('EventDetail (MSW)', () => {
   });
   afterAll(() => server.close());
 
-  it('non connecté : affiche la soirée et les CTA pour rejoindre, pas les films', async () => {
+  it('non connecté : affiche la soirée, les films et les CTA pour rejoindre', async () => {
     renderEventDetail(`/e/${slug}`);
     expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /rejoindre la soirée/i })).toBeInTheDocument();
@@ -79,7 +80,43 @@ describe('EventDetail (MSW)', () => {
       `/login?returnTo=${encodeURIComponent(`/e/${slug}`)}`
     );
     expect(screen.getByRole('link', { name: /^créer un compte$/i })).toBeInTheDocument();
-    expect(screen.queryByRole('region', { name: /films proposés/i })).not.toBeInTheDocument();
+    expect(await screen.findByRole('region', { name: /films proposés/i })).toBeInTheDocument();
+  });
+
+  it('sans avoir rejoint : les films du lien partagé sont lisibles et le vote invite à rejoindre', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
+        HttpResponse.json([
+          {
+            _id: 'm-msw-1',
+            eventId: 'evt-msw',
+            participantId: 'p-msw-host',
+            tmdbId: 42,
+            mediaType: 'movie',
+            title: 'Matrix',
+            year: '1999',
+            posterPath: null,
+            proposerPseudo: 'Hôte',
+            score: 2,
+            up: 2,
+            down: 0,
+          },
+        ])
+      )
+    );
+
+    renderEventDetail(`/e/${slug}`);
+    expect(await screen.findByRole('heading', { name: 'Matrix' })).toBeInTheDocument();
+
+    const voteButton = await screen.findByRole('button', { name: /voter pour matrix/i });
+    await user.click(voteButton);
+
+    await waitFor(() =>
+      expect(document.getElementById(JOIN_PROMPT_ANCHOR_ID)).toContainElement(
+        document.activeElement as HTMLElement
+      )
+    );
   });
 
   it('affiche une erreur si la soirée est introuvable (404)', async () => {

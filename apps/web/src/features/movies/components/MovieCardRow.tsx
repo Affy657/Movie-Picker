@@ -374,7 +374,7 @@ function MovieCardRowMobile({
           </div>
           <div className={styles.mobileBottomSection}>
             <span className={styles.mobileVoteScore}>
-              {s.canAct ? <VoteBar m={m} onVote={onVote} t={t} /> : <VoteReadonly m={m} />}
+              {s.canVote ? <VoteBar m={m} onVote={onVote} t={t} /> : <VoteReadonly m={m} />}
               <ScoreBlock m={m} t={t} />
             </span>
             <div className={styles.mobileProposerRow}>
@@ -527,7 +527,7 @@ function MovieCardRowDesktop({
           />
         </div>
         <div className={styles.votesCol} inert={selecting}>
-          {s.canAct ? <VoteBar m={m} onVote={onVote} t={t} /> : <VoteReadonly m={m} />}
+          {s.canVote ? <VoteBar m={m} onVote={onVote} t={t} /> : <VoteReadonly m={m} />}
         </div>
         <div className={styles.seenCol} inert={selecting}>
           {s.canAct ? (
@@ -581,6 +581,7 @@ export const MovieCardRow = memo(function MovieCardRow({
   movie: m,
   slug,
   participantId,
+  canVote,
   participantPseudo,
   isFinished,
   isHost,
@@ -607,6 +608,7 @@ export const MovieCardRow = memo(function MovieCardRow({
     movie: m,
     slug,
     participantId,
+    canVote,
     participantPseudo,
     isFinished,
     isHost,
@@ -631,6 +633,7 @@ export const MovieCardRow = memo(function MovieCardRow({
       movie: m,
       slug,
       participantId,
+      canVote,
       participantPseudo,
       isFinished,
       isHost,
