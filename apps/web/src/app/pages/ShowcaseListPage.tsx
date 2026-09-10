@@ -1,11 +1,10 @@
 import { useCallback, useId, useMemo, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Film } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import clsx from 'clsx';
 import PageLayout from '@/shared/components/PageLayout';
-import Button, { buttonClass } from '@/shared/components/Button';
-import EmptyState from '@/shared/components/EmptyState';
+import Button from '@/shared/components/Button';
 import { ROUTES } from '@/app/routes';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
@@ -45,19 +44,20 @@ import {
   isShowcaseTheme,
   PROVIDER_LABEL_KEYS,
   THEME_LABEL_KEYS,
+  type ShowcaseListVariant,
 } from '@/features/movies/showcaseSections';
+
+export type { ShowcaseListVariant };
 import {
   useAddToWatchlist,
   useRemoveFromWatchlist,
   useWatchlist,
 } from '@/features/watchlist/hooks/useWatchlist';
 import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventModal';
-import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
+import ShowcaseListStates from './ShowcaseListStates';
 import type { MovieMediaType } from '@/shared/types/movie';
 import styles from './ShowcaseListPage.module.css';
 import { collectionDisplayName } from '@/features/movies/utils/collectionName';
-
-export type ShowcaseListVariant = ShowcaseSection | 'search';
 
 interface ShowcaseListItem {
   tmdbId: number;
@@ -140,6 +140,95 @@ function isShowcaseQueryEnabled(
   return true;
 }
 
+type ShowcaseRouteInputs = {
+  variant: ShowcaseListVariant;
+  theme: string | undefined;
+  provider: string | undefined;
+  seedTmdbId: string | undefined;
+  collectionId: string | undefined;
+  genreParam: number;
+};
+
+function parseRouteSelection({
+  variant,
+  theme,
+  provider,
+  seedTmdbId,
+  collectionId,
+  genreParam,
+}: ShowcaseRouteInputs): ShowcaseRouteSelection {
+  const genreUsable = Number.isInteger(genreParam) && genreParam > 0;
+  return {
+    themeKey: isShowcaseTheme(theme) ? theme : undefined,
+    providerKey: isShowcaseProvider(provider) ? provider : undefined,
+    seedTmdbId: seedTmdbId ? Number(seedTmdbId) : undefined,
+    collectionId: collectionId ? Number(collectionId) : undefined,
+    genreId: variant === 'trending' && genreUsable ? genreParam : undefined,
+  };
+}
+
+type ShowcaseRow =
+  | NonNullable<ReturnType<typeof useMovieShowcase>['data']>['items'][number]
+  | Awaited<ReturnType<typeof searchMovies>>['items'][number];
+
+function toShowcaseListItems(rows: readonly ShowcaseRow[]): ShowcaseListItem[] {
+  return rows.map((row, index) => ({
+    tmdbId: row.id,
+    title: row.title,
+    year: row.year,
+    posterPath: row.posterPath,
+    genreIds: row.genreIds ?? [],
+    mediaType: row.mediaType ?? 'movie',
+    voteAverage: row.voteAverage,
+    runtimeMinutes: 'runtimeMinutes' in row ? row.runtimeMinutes : null,
+    order: index,
+    rank: 'rank' in row && row.rank != null ? row.rank : null,
+  }));
+}
+
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+function resolveHeading({
+  variant,
+  searchQuery,
+  themeKey,
+  providerKey,
+  collectionName,
+  t,
+}: Readonly<{
+  variant: ShowcaseListVariant;
+  searchQuery: string;
+  themeKey: ShowcaseTheme | undefined;
+  providerKey: ShowcaseProvider | undefined;
+  collectionName: string | undefined;
+  t: Translate;
+}>): string {
+  if (variant === 'search' && searchQuery)
+    return t('showcase.searchHeading', { query: searchQuery });
+  if (variant === 'theme' && themeKey) return t(THEME_LABEL_KEYS[themeKey]);
+  if (variant === 'provider' && providerKey) return t(PROVIDER_LABEL_KEYS[providerKey]);
+  if (variant === 'collection' && collectionName) return collectionDisplayName(collectionName);
+  return t(TITLE_KEYS[variant]);
+}
+
+function resolveSubtitle({
+  variant,
+  genreId,
+  tmdbLanguage,
+  seedTitle,
+  t,
+}: Readonly<{
+  variant: ShowcaseListVariant;
+  genreId: number | undefined;
+  tmdbLanguage: string;
+  seedTitle: string | undefined;
+  t: Translate;
+}>): string {
+  if (genreId) return genreLabel(genreId, tmdbLanguage);
+  if (variant === 'recommendations' && seedTitle) return seedTitle;
+  return t(SUBTITLE_KEYS[variant]);
+}
+
 export default function ShowcaseListPage({ variant }: Readonly<Props>) {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
@@ -159,19 +248,21 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
 
   const searchQuery = (searchParams.get('q') ?? '').trim();
   const genreParam = Number(searchParams.get('genre'));
-  const genreId =
-    variant === 'trending' && Number.isInteger(genreParam) && genreParam > 0
-      ? genreParam
-      : undefined;
-  const themeKey = isShowcaseTheme(params.theme) ? params.theme : undefined;
-  const providerKey = isShowcaseProvider(params.provider) ? params.provider : undefined;
-  const seedTmdbId = params.seedTmdbId ? Number(params.seedTmdbId) : undefined;
-  const collectionId = params.collectionId ? Number(params.collectionId) : undefined;
+  const { theme, provider, seedTmdbId: seedParam, collectionId: collectionParam } = params;
 
   const routeSelection: ShowcaseRouteSelection = useMemo(
-    () => ({ themeKey, providerKey, seedTmdbId, collectionId, genreId }),
-    [themeKey, providerKey, seedTmdbId, collectionId, genreId]
+    () =>
+      parseRouteSelection({
+        variant,
+        theme,
+        provider,
+        seedTmdbId: seedParam,
+        collectionId: collectionParam,
+        genreParam,
+      }),
+    [variant, theme, provider, seedParam, collectionParam, genreParam]
   );
+  const { themeKey, providerKey, collectionId, genreId } = routeSelection;
 
   const showcaseQuery: ShowcaseQuery = useMemo(
     () => buildShowcaseQuery(variant, routeSelection),
@@ -194,21 +285,13 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
 
   const source = variant === 'search' ? search : showcase;
 
-  const items = useMemo<ShowcaseListItem[]>(() => {
-    const rows = variant === 'search' ? (search.data?.items ?? []) : (showcase.data?.items ?? []);
-    return rows.map((row, index) => ({
-      tmdbId: row.id,
-      title: row.title,
-      year: row.year,
-      posterPath: row.posterPath,
-      genreIds: row.genreIds ?? [],
-      mediaType: row.mediaType ?? 'movie',
-      voteAverage: row.voteAverage,
-      runtimeMinutes: 'runtimeMinutes' in row ? row.runtimeMinutes : null,
-      order: index,
-      rank: 'rank' in row && row.rank != null ? row.rank : null,
-    }));
-  }, [variant, search.data, showcase.data]);
+  const items = useMemo<ShowcaseListItem[]>(
+    () =>
+      toShowcaseListItems(
+        variant === 'search' ? (search.data?.items ?? []) : (showcase.data?.items ?? [])
+      ),
+    [variant, search.data, showcase.data]
+  );
 
   const mediaTypeLabels = useMemo(
     () => ({
@@ -275,26 +358,22 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
     }
   };
 
-  function resolveHeading(): string {
-    if (variant === 'search' && searchQuery)
-      return t('showcase.searchHeading', { query: searchQuery });
-    if (variant === 'theme' && themeKey) return t(THEME_LABEL_KEYS[themeKey]);
-    if (variant === 'provider' && providerKey) return t(PROVIDER_LABEL_KEYS[providerKey]);
-    if (variant === 'collection' && collectionName) return collectionDisplayName(collectionName);
-    return t(TITLE_KEYS[variant]);
-  }
+  const headingText = resolveHeading({
+    variant,
+    searchQuery,
+    themeKey,
+    providerKey,
+    collectionName,
+    t,
+  });
 
-  const headingText = resolveHeading();
-
-  function resolveSubtitle(): string {
-    if (genreId) return genreLabel(genreId, tmdbLanguage);
-    if (variant === 'recommendations' && recommendationSeed.seedTitle) {
-      return recommendationSeed.seedTitle;
-    }
-    return t(SUBTITLE_KEYS[variant]);
-  }
-
-  const subtitleText = resolveSubtitle();
+  const subtitleText = resolveSubtitle({
+    variant,
+    genreId,
+    tmdbLanguage,
+    seedTitle: recommendationSeed.seedTitle,
+    t,
+  });
 
   const canonicalPath = CANONICAL_PATHS[variant];
   usePageSeo({
@@ -342,47 +421,14 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
         </p>
       ) : null}
 
-      {!queryEnabled ? (
-        <EmptyState
-          icon={<Film aria-hidden size={28} />}
-          title={
-            variant === 'search' ? t('showcase.searchEmptyQuery') : t('showcase.unknownSelection')
-          }
-          message={variant === 'search' ? t('home.intro') : t('showcase.unknownSelectionMessage')}
-          actions={
-            variant === 'search' ? undefined : (
-              <Link to={ROUTES.home} className={buttonClass({ variant: 'primary', size: 'sm' })}>
-                {t('showcase.backToHome')}
-              </Link>
-            )
-          }
-        />
-      ) : null}
-
-      {queryEnabled && source.isPending ? (
-        <WatchlistSkeleton label={t('showcase.loading')} gridClassName={styles.grid} />
-      ) : null}
-
-      {queryEnabled && source.isError ? (
-        <p className={styles.state} role="alert">
-          {t('showcase.error')}
-          <Button size="sm" variant="secondary" onClick={() => void source.refetch()}>
-            {t('showcase.retry')}
-          </Button>
-        </p>
-      ) : null}
-
-      {queryEnabled && !source.isPending && !source.isError && totalCount === 0 ? (
-        <EmptyState
-          icon={<Film aria-hidden size={28} />}
-          title={t('showcase.empty')}
-          message={
-            variant === 'most-proposed'
-              ? t('showcase.emptyMessageMostProposed')
-              : t('showcase.emptyMessage')
-          }
-        />
-      ) : null}
+      <ShowcaseListStates
+        variant={variant}
+        queryEnabled={queryEnabled}
+        isPending={source.isPending}
+        isError={source.isError}
+        totalCount={totalCount}
+        onRetry={() => void source.refetch()}
+      />
 
       {queryEnabled && !source.isError && totalCount > 0 ? (
         <FilteredCollectionLayout

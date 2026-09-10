@@ -179,18 +179,19 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 ## DEBT-016 le LCP de watchlist et my-events attend le montage de React
 
 - state: differe
-- declencheur: un levier neuf sur le coût de montage de React lui-même. **Les deux pistes évidentes sont mesurées et mortes**, voir `piege` : ne pas rouvrir sans autre chose que « peindre dans la coquille ».
-- impact: ce sont les deux seules pages sous le plancher commun de 85. Leurs seuils sont **abaissés à 80 et 75**, ce qui est un pansement : le gate ne détecte plus de régression fine sur ces deux vues.
+- declencheur: une régression qui ramène l'une des deux pages sous son plancher. **Le levier attendu est arrivé et il a payé**, voir `refs` : les deux pages ont désormais de la marge, et les deux pistes de coquille restent mesurées et mortes, voir `piege`.
+- impact: leurs seuils restent **abaissés à 80 et 75** alors qu'elles mesurent 88 et 85 depuis le 2026-09-10. Le pansement est devenu du mou : une régression de 8 points sur `my-events` passerait sous le radar. Resserrer demande deux ou trois runs de plus pour connaître la dispersion, un seul point de mesure ne suffit pas à poser un plancher.
 - ou: `configs/lighthouse-budgets.json`, clé `perPageMinimumScores`
 - verify: `grep -A6 perPageMinimumScores configs/lighthouse-budgets.json` ; encore ouvert tant que les deux pages y figurent
-- fix: faire baisser le coût de montage de React. Aucun autre levier connu.
+- fix: relever les deux planchers vers 85 quand deux ou trois runs auront confirmé la marge, puis supprimer les entrées de `perPageMinimumScores`.
 - fini-quand: les deux pages tiennent le plancher de 85 et leurs entrées disparaissent de `perPageMinimumScores`
-- piege: **mesuré le 2026-09-10, médiane de 3 passes, les deux pages à 80.** Le diagnostic initial était faux sur deux points, et les deux erreurs mènent à un correctif qui ne peut pas marcher.
+- piege: **mesuré le 2026-09-10 en local, médiane de 3 passes, les deux pages à 80.** Le diagnostic initial était faux sur deux points, et les deux erreurs mènent à un correctif qui ne peut pas marcher.
   1. **Ce n'est pas une vue de données.** `scripts/lighthouse-run.mjs` ne connecte personne, son stub d'API répond 404 sur `/auth/me` : la porte mesure l'état **déconnecté**. L'élément LCP relevé est le paragraphe de `SignedOutState`, `<p class="_message_…">`, 330 × 50 px sur watchlist et 325 × 74 px sur my-events, et le LCP est presque entièrement du `elementRenderDelay` — 629 ms et 726 ms pour un TTFB de 10 ms.
   2. **« Peindre un squelette » ne peut pas fonctionner.** Un bloc gris n'est pas un candidat LCP : Chrome ne retient que du texte, une image, ou un fond chargé par `url()`. Un dégradé CSS ne compte pas. Peindre un squelette vide dans la coquille ne déplacerait donc pas le LCP d'une milliseconde.
 
   Et les deux échappatoires ne tiennent pas non plus. **Peindre le titre de page** dans la coquille, le geste de la page d'accueil (C2), échoue sur la condition de taille : le `h1` fait environ 2 900 px² contre 16 500 et 24 050 px² pour le paragraphe, donc Chrome remplacerait le titre par le message et le gain serait nul. **Peindre le message déconnecté** tiendrait le score, mais afficherait « Connectez-vous ou créez un compte » à chaque arrivée d'un utilisateur **déjà connecté** : la coquille ne peut pas connaître l'état de session avant que JavaScript tourne, le cookie étant HttpOnly. Échanger l'expérience du cas principal contre 5 points de score est un mauvais marché.
 - refs: Impasses I3 — le mur est le démarrage de `react-vendor`, environ 665 ms, et il ne se contourne pas par du découpage de bundle. C'est le même mur ici. Impasses I4 — ne pas desserrer la porte davantage.
+- refs: **le levier est arrivé d'un endroit qu'aucune des deux pistes n'avait envisagé.** Le 2026-09-10, le retrait d'un `await` de premier niveau dans `main.tsx` (Contrainte C8) a rendu 3 à 5 points à onze pages sur treize, dont celles-ci : `my-events` passe de 83 à **88** et `watchlist` de 79 à **85** sur le runner. Le coût de montage de React était bien le sujet, mais il n'était pas dans le bundle, il était dans la façon dont le module d'entrée s'évaluait. Leçon générale : avant de chercher à peindre plus tôt, vérifier que rien ne retarde le montage.
 
 ## DEBT-019 quatre fonctions restent au-dessus du seuil de complexité cognitive
 

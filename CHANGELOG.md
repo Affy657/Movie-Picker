@@ -18,6 +18,11 @@ version publiée est associée à un tag Git et à une release GitHub.
 - Porte de qualité sur les workflows eux-mêmes (`actionlint`, `shellcheck`, `zizmor`), bloquante pour le déploiement : jusqu'ici la chaîne qui garde le code n'était gardée par rien.
 - **Les pages publiques sont servies en HTML complet** : « Comment ça marche », « Soutenir » et le dossier technique sont rendus au moment du build, titre, description et données structurées compris. Un moteur d'indexation ou un aperçu de lien recevait jusqu'ici un document vide qu'il fallait exécuter pour lire ; il reçoit maintenant la page.
 
+### Fixed
+
+- **Le site entier était ralenti par un mot** : une ligne du point d'entrée attendait la fin du démarrage avant de laisser le reste s'exécuter, ce qui retardait l'affichage sur onze pages sur treize. Le plus grand élément de chaque page apparaît de nouveau 3 à 5 points de performance plus tôt. Les deux pages épargnées étaient l'accueil et la connexion, les seules dont le contenu principal n'attendait pas l'application.
+- **Un échec au démarrage laissait l'écran de lancement affiché indéfiniment.** Il est désormais retiré et l'erreur remontée, donc l'utilisateur voit l'application ou une erreur, plus un écran figé.
+
 ### Changed
 
 - **Le dossier technique et toute sa page sortent de l'angle mort de l'analyse statique** : environ 3 000 lignes de code de production en avaient été exclues pour tenir sous le plafond de lignes du plan gratuit, plafond qui disparaît avec le passage du dépôt en public.
