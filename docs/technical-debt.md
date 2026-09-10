@@ -21,13 +21,13 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - state: humain
 - bloque: écritures `gcloud` refusées par le classifieur d'auto-mode ; l'utilisateur doit lancer les trois commandes
 - impact: prod. `POST /api/v1/scheduler/event-reminders` répond 503, aucun rappel J-1, 1 h ni « en suspens » ne part. Le 503 est volontaire, préféré à un échec silencieux.
-- ou: `.github/workflows/ci-cd.yml:847` et `:913` (les deux gardes qui émettent le warning)
+- ou: `.github/workflows/deploy.yml:288` et `:352` (les deux gardes qui émettent le warning)
 - verify: `gcloud secrets describe SCHEDULER_TOKEN --project movie-picker-2026` ; encore ouvert si NOT_FOUND
 - fix:
   ```bash
   gcloud services enable cloudscheduler.googleapis.com --project movie-picker-2026
   python -c "import secrets,sys; sys.stdout.write(secrets.token_urlsafe(48))" | gcloud secrets create SCHEDULER_TOKEN --data-file=- --replication-policy=automatic --project movie-picker-2026
-  gh run rerun 34108220555
+  gh workflow run deploy.yml --ref master -f cible=api
   ```
 - fini-quand: l'endpoint ne répond plus 503 et le job Cloud Scheduler existe
 - piege: aucune IAM à ajouter, le compte de service a déjà `roles/editor` et `roles/secretmanager.secretAccessor` au niveau projet. Une session précédente a annoncé à tort qu'il fallait `cloudscheduler.admin`.
@@ -149,11 +149,11 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 ## DEBT-013 pseudo-ternaire dans le calcul de ce qui se déploie
 
 - state: agent
-- impact: aucun aujourd'hui, le bon comportement est obtenu par accident. Le risque est qu'une modification voisine le fasse basculer sans que personne ne comprenne pourquoi le périmètre de déploiement a changé.
-- ou: `.github/workflows/ci-cd.yml:78`, `base: ${{ github.ref == 'refs/heads/master' && '' || 'master' }}`
+- impact: aucun aujourd'hui, le bon comportement est obtenu par accident. Le risque est qu'une modification voisine le fasse basculer sans que personne ne comprenne pourquoi le périmètre **vérifié** a changé — et une porte qui saute laisse un run vert, donc un commit déployable.
+- ou: `.github/workflows/ci-cd.yml:80`, `base: ${{ github.ref == 'refs/heads/master' && '' || 'master' }}`
 - verify: `grep -n "refs/heads/master' && '' ||" .github/workflows/ci-cd.yml` ; encore ouvert si la ligne sort
 - fix: `''` est falsy, donc la branche « vraie » ne gagne jamais et l'expression vaut toujours `'master'`. Écrire l'intention explicitement plutôt que de s'appuyer sur le rattrapage.
-- piege: **ne pas corriger à l'aveugle**. Ça marche parce que `dorny/paths-filter` traite spécialement le cas « base égale la branche poussée » et compare alors au commit précédent. Toute correction doit être validée sur un push master réel **et** sur un push de branche, sinon elle change ce qui se déploie.
+- piege: **ne pas corriger à l'aveugle**. Ça marche parce que `dorny/paths-filter` traite spécialement le cas « base égale la branche poussée » et compare alors au commit précédent. Toute correction doit être validée sur un push master réel **et** sur un push de branche, sinon elle change ce qui est vérifié.
 - refs: préexistait au chantier CI/CD de septembre 2026
 
 ## DEBT-014 le domaine www ne répond pas
@@ -335,3 +335,4 @@ Mesuré, sans gain, retiré. Ne pas rejouer sans une raison neuve.
 - **I5 `mongodump --oplog`** pour la cohérence transactionnelle : impose un dump de l'instance entière et des droits supplémentaires.
 - **I6 factoriser `auth` + `setup-gcloud` (5 copies) et les smoke tests en actions composites.** Juste sur le fond, mais touche 4 workflows dont 2 hors périmètre. À faire dans un lot dédié, jamais en fin de diff.
 - **I7 descendre zizmor au seuil `low`** : 9 constats cosmétiques. Le seuil `medium` est vert et n'attrape que du sérieux.
+- **I8 espacer les workflows planifiés pour économiser des minutes GitHub Actions.** Mesuré au 2026-09-10 sur l'historique des runs : `security-scan.yml` tourne en 45 à 80 s une fois par semaine (≈ 5 min/mois), `registry-cleanup.yml` une fois par mois (≈ 1 min/mois), `backup-mongo.yml` en ≈ 90 s par nuit (≈ 45 min/mois). Total ≈ 51 min/mois, contre ≈ 450 min pour 20 runs de CI : les crons ne sont pas le poste de coût, et le seul qui pèse est le seul filet en cas de perte de données. Espacer la sauvegarde à deux jours économiserait 22 min/mois en doublant le point de restauration acceptable, ce qui est un mauvais échange sur des données personnelles non reconstituables. Ne pas rejouer sans un changement de cadran : soit le quota redevient contraignant après le passage du dépôt en public, soit la sauvegarde grossit assez pour changer l'ordre de grandeur.

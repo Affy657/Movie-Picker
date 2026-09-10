@@ -79,6 +79,8 @@ Pour toute nouvelle barre sticky dont le contenu change de hauteur :
 
 **Avant tout push sur master, toujours exécuter `pnpm run verify:local` et corriger toute erreur avant de push.** Obligatoire quelle que soit la conversation ou la feature. Treize étapes, dans l'ordre : règles d'architecture, `pnpm lint`, ESLint, Prettier, `dotnet restore`, `dotnet format --verify-no-changes`, build Release avec `-warnaserror`, export OpenAPI, dérive des types OpenAPI, audit Trivy (Docker), tests front avec seuils de couverture, tests API unitaires, tests API d'intégration.
 
+**Pousser sur master ne déploie rien.** La mise en production est un geste manuel, `gh workflow run deploy.yml --ref master -f cible=tout` (cibles : `tout`, `front`, `api`), et elle refuse de partir si le run `ci-cd.yml` du commit visé n'est pas vert. Ne jamais la déclencher sans demande explicite de l'utilisateur : le découpage existe pour qu'il groupe plusieurs livraisons dans un seul déploiement, les minutes GitHub Actions d'un dépôt privé étant facturées. Corollaire à annoncer en fin de tâche : **la production est en retard sur master par défaut**, et rien ne le signale.
+
 - Ne jamais skip les hooks pre-push.
 - Préférer éditer les fichiers existants à en créer de nouveaux.
 

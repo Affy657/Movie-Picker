@@ -31,17 +31,18 @@ rtk gh pr merge <n> --repo Affy657/Movie-Picker --merge
 
 ## Scores Lighthouse réels
 
-Le job archive les rapports en artefact `lighthouse-reports`, rétention 7 jours, ce qui couvre exactement une passe.
+Le job vit dans `deploy.yml` depuis le 2026-09-10, et le déploiement est manuel : le dernier rapport n'est pas celui du dernier master, c'est celui de la dernière livraison. La rétention de l'artefact `lighthouse-reports` est de 7 jours, donc au-delà d'une semaine sans déploiement il n'y a **rien** à télécharger. Le noter dans le rapport plutôt que de conclure au vert.
 
 ```bash
-rtk gh run download <run-id> --repo Affy657/Movie-Picker --name lighthouse-reports --dir "${TMPDIR:-/tmp}/lh"
+RUN=$(rtk gh run list --workflow=deploy.yml --repo Affy657/Movie-Picker --limit 1 --json databaseId --jq '.[0].databaseId')
+rtk gh run download "$RUN" --repo Affy657/Movie-Picker --name lighthouse-reports --dir "${TMPDIR:-/tmp}/lh"
 ```
 
 Un fichier `report-<slug>.json` par page. Lire `categories.performance.score`, `categories.accessibility.score`, `categories["best-practices"].score`, `categories.seo.score` (valeurs de 0 à 1, les seuils de [configs/lighthouse-budgets.json](../../../../configs/lighthouse-budgets.json) sont sur 100).
 
 Ce qui déclenche une alerte dans le rapport :
 
-- `accessibility` ou `best-practices` en dessous de 100 : seuil sans aucune marge, le gate rougit au prochain run et laisse `deploy-front` en `skipped` ;
+- `accessibility` ou `best-practices` en dessous de 100 : seuil sans aucune marge, le gate rougit au prochain déploiement et laisse `deploy-front` en `skipped` ;
 - `performance` à moins de 3 points de son seuil (85 en général, 80 pour `watchlist`) ;
 - `seo` sous 95 sur une page indexable.
 

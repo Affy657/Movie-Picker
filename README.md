@@ -113,13 +113,23 @@ Ce que la chaîne empêche, plutôt que ce qu'elle mesure :
 
 ## Déploiement
 
-GitHub Actions, `.github/workflows/ci-cd.yml`, déclenché sur `master` et sur les pull requests.
-Bloquent le déploiement : Gitleaks, le lint des workflows eux-mêmes (`actionlint`, `shellcheck`,
-`zizmor`), le lint et le build des deux applications, l'audit des dépendances npm et NuGet, les
-suites de tests, le scan Trivy de l'image, le Quality Gate SonarCloud et les seuils Lighthouse.
+Deux workflows GitHub Actions, séparés à dessein. `.github/workflows/ci-cd.yml` joue les portes de
+qualité sur `master` et sur les pull requests : Gitleaks, le lint des workflows eux-mêmes
+(`actionlint`, `shellcheck`, `zizmor`), le lint et le build des deux applications, l'audit des
+dépendances npm et NuGet, les suites de tests, les E2E et le Quality Gate SonarCloud.
 
-Deux choix structurent la mise en production :
+`.github/workflows/deploy.yml` met en production, et **seulement à la main** : un push sur `master`
+ne déploie rien. Le déclenchement choisit sa cible (tout, front seul, API seule), refuse de partir
+si le run de CI du commit visé n'est pas vert, puis ajoute les deux portes propres au déploiement,
+les seuils Lighthouse et le scan Trivy de l'image. Grouper plusieurs livraisons dans un seul
+déploiement est le but : les minutes GitHub Actions d'un dépôt privé sont facturées, et rejouer le
+chemin de déploiement à chaque commit en consommait la moitié.
 
+Trois choix structurent la mise en production :
+
+- **Rien ne part sans geste explicite**, donc la production est en retard sur `master` par défaut.
+  Un garde-fou final vérifie que chaque cible demandée est réellement déployée, parce qu'un job de
+  déploiement empêché par une porte rouge est *sauté* et non *en échec* : le run resterait vert.
 - **L'API n'est jamais promue avant d'être vérifiée.** Chaque révision est déployée sans trafic,
   éprouvée sur son URL taguée, et ne reçoit d'utilisateurs qu'une fois ses sondes vertes. Il n'y a
   donc pas de retour arrière à faire sur une révision défaillante, elle n'a servi personne.

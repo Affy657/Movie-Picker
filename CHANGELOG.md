@@ -16,6 +16,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Changed
 
+- **La mise en production est devenue un geste manuel** : un push sur `master` joue les portes de qualité et s'arrête là, le déploiement se déclenche depuis GitHub Actions en choisissant sa cible (tout, front seul, API seule). Il refuse de partir sur un commit dont la CI n'est pas verte, et un garde-fou final vérifie que chaque cible demandée est réellement en ligne. Motif : les minutes de build d'un dépôt privé sont facturées, et rejouer le chemin de déploiement à chaque commit en consommait la moitié pour des livraisons qui, en pratique, se groupent. Contrepartie assumée : la production est en retard sur `master` entre deux déclenchements.
+- La porte de performance Lighthouse est passée sur le chemin du déploiement, avec ses seuils inchangés : elle bloque toujours la mise en ligne du front, mais ne pèse plus sur chaque commit. Une régression de performance se voit donc au déploiement et non plus au push.
 - **Déploiement API validé avant exposition** : chaque révision est déployée sans trafic, éprouvée sur son URL taguée, et n'est promue qu'une fois ses sondes vertes. Une révision défaillante n'atteint plus aucun utilisateur, là où le trafic basculait auparavant avant toute vérification.
 - L'image de l'API est déployée par digest et non plus par tag : la révision en production désigne exactement les octets scannés par Trivy.
 - Les vérifications de fin de déploiement couvrent aussi les domaines publics de l'API et du front, et non plus seulement les URL internes.
