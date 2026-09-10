@@ -117,6 +117,7 @@ Tous se lancent à la racine du dépôt.
 | `pnpm run test:e2e`, `pnpm run test:e2e:ci` | Playwright, la seconde forme construisant le front avec un stub TMDB |
 | `pnpm run test:e2e:mongo` | Le seul parcours critique, sur base réelle |
 | `pnpm run openapi:export`, `pnpm run openapi:types:check` | Contrat OpenAPI et dérive des types |
+| `pnpm --filter web prerender` | Prérendu des routes publiques indexables, à lancer après un build |
 | `pnpm run lighthouse` | Lighthouse sur le build, demande Node 22+ et Chrome |
 | `pnpm run verify:local` | La chaîne complète, quatorze étapes |
 

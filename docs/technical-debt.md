@@ -135,17 +135,17 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fix: décider entre rebrancher et retirer. Le retrait impose `pnpm run openapi:export && pnpm run openapi:types` et le commit du schéma régénéré.
 - piege: `watched-movies` et `following-watched-movies` du même contrôleur sont bien utilisés par `usePersonalRows.ts`, ne pas les emporter.
 
-## DEBT-012 chantier SEO inachevé
+## DEBT-012 le site n'est pas enregistré dans Search Console
 
-- state: agent
-- impact: les pages restent servies sans rendu préalable, et le site n'est pas enregistré dans Search Console
-- ou: l'on-page (image OG, JSON-LD, hook `usePageSeo`) et le sitemap dynamique sont livrés, le reste ne l'est pas
-- verify: encore ouvert tant que la ligne sort, aucun prerendering n'est câblé au build.
-  ```bash
-  grep -rqE 'prerender|vite-plugin-ssr|react-snap' apps/web/vite.config.ts package.json || echo "OUVERT: aucun prerendering configure"
-  ```
-- fix: prerendering des routes publiques, puis enregistrement Search Console
-- piege: l'enregistrement Search Console demande un geste humain de vérification de propriété du domaine
+- state: humain
+- bloque: la vérification de propriété du domaine, qui passe par la console Google et un enregistrement DNS ou un fichier posé à la racine
+- impact: aucune remontée d'indexation, de requêtes ni d'erreurs de couverture. Le `sitemap.xml` est généré et servi, mais n'est déclaré nulle part.
+- ou: rien dans le dépôt, tout est côté console Google
+- verify: ouvrir Search Console sur la propriété `movie-picker.fr` ; encore ouvert si la propriété n'existe pas ou n'est pas vérifiée
+- fix: créer la propriété, la vérifier, puis y soumettre `https://web.movie-picker.fr/sitemap.xml`
+- fini-quand: la propriété est vérifiée et le sitemap soumis
+- piege: le front n'est ni sur l'apex ni sur `www` mais sur `web.movie-picker.fr` (voir DEBT-014). Déclarer la mauvaise propriété donne une console qui ne verra jamais aucun trafic.
+- refs: le volet prérendu du chantier SEO est livré depuis le 2026-09-10, `apps/web/scripts/prerender.mjs`. Il ne restait que cette moitié.
 
 ## DEBT-014 le domaine www ne répond pas
 

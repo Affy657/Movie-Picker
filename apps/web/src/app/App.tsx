@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useState, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/shared/contexts/ThemeContext';
@@ -115,7 +115,7 @@ export function AppRoutes() {
   );
 }
 
-function AppRoutesWithErrorBoundary() {
+export function AppRoutesWithErrorBoundary() {
   const location = useLocation();
   return (
     <>
@@ -129,7 +129,7 @@ function AppRoutesWithErrorBoundary() {
   );
 }
 
-function App() {
+export function AppProviders({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => createAppQueryClient());
 
   return (
@@ -140,14 +140,22 @@ function App() {
             <AuthProvider>
               <UserThemeSync />
               <AnalyticsSync />
-              <BrowserRouter>
-                <AppRoutesWithErrorBoundary />
-              </BrowserRouter>
+              {children}
             </AuthProvider>
           </ConsentProvider>
         </ThemeProvider>
       </LocaleProvider>
     </QueryClientProvider>
+  );
+}
+
+function App() {
+  return (
+    <AppProviders>
+      <BrowserRouter>
+        <AppRoutesWithErrorBoundary />
+      </BrowserRouter>
+    </AppProviders>
   );
 }
 
