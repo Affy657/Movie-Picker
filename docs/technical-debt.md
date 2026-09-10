@@ -193,27 +193,23 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
   Et les deux échappatoires ne tiennent pas non plus. **Peindre le titre de page** dans la coquille, le geste de la page d'accueil (C2), échoue sur la condition de taille : le `h1` fait environ 2 900 px² contre 16 500 et 24 050 px² pour le paragraphe, donc Chrome remplacerait le titre par le message et le gain serait nul. **Peindre le message déconnecté** tiendrait le score, mais afficherait « Connectez-vous ou créez un compte » à chaque arrivée d'un utilisateur **déjà connecté** : la coquille ne peut pas connaître l'état de session avant que JavaScript tourne, le cookie étant HttpOnly. Échanger l'expérience du cas principal contre 5 points de score est un mauvais marché.
 - refs: Impasses I3 — le mur est le démarrage de `react-vendor`, environ 665 ms, et il ne se contourne pas par du découpage de bundle. C'est le même mur ici. Impasses I4 — ne pas desserrer la porte davantage.
 
-## DEBT-019 huit fonctions restent au-dessus du seuil de complexité cognitive
+## DEBT-019 quatre fonctions restent au-dessus du seuil de complexité cognitive
 
 - state: agent
-- impact: qualité. Sonar refuse huit fonctions au-dessus de 15 de complexité cognitive, dont deux très loin : `MyEventsPage.tsx:297` à 85 et `ShowcaseListPage.tsx:143` à 44. Aucune n'est un bug, mais chacune est un endroit où une modification future se fait à l'aveugle.
-- ou: analyse du 2026-09-10 sur `e2dd0a7`
+- impact: qualité. Sonar refuse quatre fonctions au-dessus de 15 de complexité cognitive, dont deux très loin. Aucune n'est un bug, mais chacune est un endroit où une modification future se fait à l'aveugle.
+- ou: analyse du 2026-09-10 sur `25c58bd`
   - `apps/web/src/features/events/pages/MyEventsPage.tsx:297` (85)
   - `apps/web/src/app/pages/ShowcaseListPage.tsx:143` (44)
-  - `apps/web/src/features/profile/components/FollowListModal.tsx:41` (22)
-  - `apps/web/src/features/events/components/HostEventSettingsPanel.tsx:158` (19)
+  - `apps/web/src/features/events/components/HostEventSettingsPanel.tsx:177` (19)
   - `apps/web/src/features/events/pages/event-detail/EventDetailSession.tsx:638` (18)
-  - `apps/api-dotnet/MoviePicker.Api/Application/UseCases/EventConfiguration/PatchEventConfigHandler.cs:45` (18)
-  - `apps/web/src/features/events/hooks/useEventWheel.ts:66` (17)
-  - `apps/web/src/features/movies/components/MovieDetailsModal.tsx:66` (17)
 - verify: lire le total. Exporter `SONAR_TOKEN` d'abord, sa valeur se relevant dans la configuration MCP locale, serveur `sonarqube`.
   ```bash
   curl -sS -H "Authorization: Bearer $SONAR_TOKEN" "https://sonarcloud.io/api/issues/search?componentKeys=Affy657_Movie-Picker&resolved=false&rules=typescript:S3776,csharpsquid:S3776&ps=1"
   ```
-- fix: pour chaque fonction, extraire une responsabilité de plus. Déplacer du code sans réduire le nombre de branches ne fait pas baisser le compteur.
+- fix: **découper le composant**, pas extraire des expressions. Pour les quatre qui restent, le compteur est porté par les conditionnelles du rendu, pas par les valeurs dérivées : il faut sortir des blocs de JSX entiers dans des composants qui reçoivent les booléens et branchent chez eux. Sur `EventDetailSession`, le bloc cohérent est le groupe des dialogues, au prix d'une trentaine de props à faire descendre.
 - fini-quand: plus aucun `S3776` ouvert, ou ceux qui restent portent une justification « won't fix »
-- piege: **la complexité cognitive ne se mesure pas en local**, aucun outil du dépôt ne la calcule ; la seule boucle de retour est une analyse Sonar en CI. Second piège, à l'inverse du réflexe attendu : ces refactorisations **ajoutent** des lignes, +1357 pour -619 sur le chantier de septembre, parce qu'extraire un bloc coûte une déclaration de type et une liste de props. Ce n'est plus un problème de plafond depuis que le projet SonarCloud est public : mesuré le 2026-09-10, `ncloc` est passé de 49 231 à 52 196 en rendant `TechPage.tsx` et `app/pages/tech/` à l'analyse, soit au-dessus de l'ancien plafond de 50 000, et l'analyse est passée avec un Quality Gate vert.
-- refs: l'entrée précédente doutait que le chantier de septembre ait servi. Mesuré le 2026-09-10, il a servi : `S3776` est passé de 15 à 7 et les code smells de 42 à 20. Les trois findings dans `FollowListModal`, `HostEventSettingsPanel` et `PatchEventConfigHandler` sont neufs, apportés par la fusion de `feature/soiree-recurrente`.
+- piege: **la complexité cognitive ne se mesure pas en local**, aucun outil du dépôt ne la calcule ; la seule boucle de retour est une analyse Sonar en CI, soit un run par itération. Second piège, mesuré à ses dépens le 2026-09-10 : **extraire des expressions dérivées dans des fonctions de module marche, mais seulement quand le compteur vient de là.** Quatre fonctions sont passées sous le seuil de cette façon (`FollowListModal` 22, `PatchEventConfigHandler` 18, `useEventWheel` 17, `MovieDetailsModal` 17), et `HostEventSettingsPanel` est resté **exactement à 19** après trois extractions du même genre : son compteur vient de ses 400 lignes de JSX conditionnel, que déplacer trois expressions ne touche pas. Troisième piège, à l'inverse du réflexe attendu : ces refactorisations **ajoutent** des lignes, parce qu'extraire un bloc coûte une déclaration de type et une liste de props. Ce n'est plus un problème de plafond depuis que le projet SonarCloud est public : mesuré le 2026-09-10, `ncloc` est passé de 49 231 à 52 349 en rendant `TechPage.tsx` et `app/pages/tech/` à l'analyse, soit au-dessus de l'ancien plafond de 50 000, et l'analyse est passée avec un Quality Gate vert.
+- refs: le chantier de septembre a bien servi, contrairement à ce que l'entrée d'avant craignait : `S3776` est passé de 15 à 7, puis à 4 le 2026-09-10, et les code smells de 42 à 18.
 
 ---
 
