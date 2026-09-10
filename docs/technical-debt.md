@@ -178,13 +178,19 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 
 ## DEBT-016 le LCP de watchlist et my-events attend le montage de React
 
-- state: agent
-- impact: ce sont les deux seules pages sous le plancher commun de 85. Leurs seuils ont été **abaissés à 75 et 80** pour que la porte cesse de rougir, ce qui est un pansement : le gate ne détecte plus de régression sur ces deux vues.
+- state: differe
+- declencheur: un levier neuf sur le coût de montage de React lui-même. **Les deux pistes évidentes sont mesurées et mortes**, voir `piege` : ne pas rouvrir sans autre chose que « peindre dans la coquille ».
+- impact: ce sont les deux seules pages sous le plancher commun de 85. Leurs seuils sont **abaissés à 80 et 75**, ce qui est un pansement : le gate ne détecte plus de régression fine sur ces deux vues.
 - ou: `configs/lighthouse-budgets.json`, clé `perPageMinimumScores`
 - verify: `grep -A6 perPageMinimumScores configs/lighthouse-budgets.json` ; encore ouvert tant que les deux pages y figurent
-- fix: le même geste que la page d'accueil, qui est passée de 80 à 95 en peignant son titre dans la coquille de démarrage (voir Contraintes, C2). Ces deux vues étant authentifiées et leur plus grand élément dépendant des données, il faut peindre un **squelette**, pas un titre.
+- fix: faire baisser le coût de montage de React. Aucun autre levier connu.
 - fini-quand: les deux pages tiennent le plancher de 85 et leurs entrées disparaissent de `perPageMinimumScores`
-- piege: aucun découpage de bundle ne franchit ce mur, c'est mesuré et documenté en Impasses I3. Le coût est le démarrage de React lui-même, pas le poids téléchargé.
+- piege: **mesuré le 2026-09-10, médiane de 3 passes, les deux pages à 80.** Le diagnostic initial était faux sur deux points, et les deux erreurs mènent à un correctif qui ne peut pas marcher.
+  1. **Ce n'est pas une vue de données.** `scripts/lighthouse-run.mjs` ne connecte personne, son stub d'API répond 404 sur `/auth/me` : la porte mesure l'état **déconnecté**. L'élément LCP relevé est le paragraphe de `SignedOutState`, `<p class="_message_…">`, 330 × 50 px sur watchlist et 325 × 74 px sur my-events, et le LCP est presque entièrement du `elementRenderDelay` — 629 ms et 726 ms pour un TTFB de 10 ms.
+  2. **« Peindre un squelette » ne peut pas fonctionner.** Un bloc gris n'est pas un candidat LCP : Chrome ne retient que du texte, une image, ou un fond chargé par `url()`. Un dégradé CSS ne compte pas. Peindre un squelette vide dans la coquille ne déplacerait donc pas le LCP d'une milliseconde.
+
+  Et les deux échappatoires ne tiennent pas non plus. **Peindre le titre de page** dans la coquille, le geste de la page d'accueil (C2), échoue sur la condition de taille : le `h1` fait environ 2 900 px² contre 16 500 et 24 050 px² pour le paragraphe, donc Chrome remplacerait le titre par le message et le gain serait nul. **Peindre le message déconnecté** tiendrait le score, mais afficherait « Connectez-vous ou créez un compte » à chaque arrivée d'un utilisateur **déjà connecté** : la coquille ne peut pas connaître l'état de session avant que JavaScript tourne, le cookie étant HttpOnly. Échanger l'expérience du cas principal contre 5 points de score est un mauvais marché.
+- refs: Impasses I3 — le mur est le démarrage de `react-vendor`, environ 665 ms, et il ne se contourne pas par du découpage de bundle. C'est le même mur ici. Impasses I4 — ne pas desserrer la porte davantage.
 
 ## DEBT-018 GitHub Actions bloqué par la facturation, la production front est figée
 
