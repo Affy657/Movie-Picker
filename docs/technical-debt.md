@@ -244,6 +244,33 @@ La configuration de build ne peut pas importer `src/`, donc `apps/web/vite.confi
 
 Le bucket de sauvegarde MongoDB (europe-west1, versioning actif, suppression à 30 jours, nom dans `backup-mongo.yml`) porte des données personnelles. Accès public interdit, accès uniforme au niveau du bucket, et l'archive n'est **jamais** publiée en artefact GitHub. La limite connue est écrite dans l'en-tête de `backup-mongo.yml` : la vérification prouve que l'archive se restaure, pas qu'elle est cohérente entre collections.
 
+## C6 le choix d'hébergement du front sur GCP engage le budget
+
+Le chantier Terraform de `roadmap-tech.md` sort le front d'AWS (lots 3 et 4). Deux cibles GCP sont possibles et **une des deux fait sortir le projet du « 0 €/mois, tous les services dans leur palier gratuit »**, indicateur suivi au Bloc 3, sans qu'aucune alerte ne le dise avant la facture.
+
+- **Cloud Storage + Cloud CDN derrière un load balancer applicatif externe** est l'équivalent direct de S3 + CloudFront, mais sa règle de transfert est facturée à l'heure **sans palier gratuit** : ≈ 18 $/mois avant le moindre octet servi.
+- **Firebase Hosting** reste dans le gratuit (10 Go stockés, 360 Mo/jour transférés), porte nativement le repli SPA, les en-têtes personnalisés et le domaine sur mesure avec son certificat, et se décrit en Terraform (`google_firebase_hosting_site`, `google_firebase_hosting_custom_domain`, provider `google-beta`). **C'est la cible recommandée.** Seul point à surveiller, les 360 Mo/jour : le trafic mesuré (≈ 500 requêtes/jour) en est loin, et un dépassement bascule sur la facturation à l'octet, pas sur une coupure.
+
+Deux corollaires sur l'ordre des lots, qui ne se lisent pas dans leur numérotation :
+
+1. **Les lots qui sortent le front d'AWS passent avant ceux d'identités et de CI.** Décrire en Terraform, puis outiller, un hébergement qu'on s'apprête à supprimer est du travail jeté.
+2. **Le gain visé est la consolidation, pas l'économie.** Le palier gratuit de CloudFront (1 To/mois) est plus large que celui de la cible GCP. Ce que la migration supprime, c'est un second fournisseur, un second modèle d'identité, un second endroit où regarder pendant un incident, et les deux identifiants statiques du volet AWS. `GCP_SA_KEY` reste, c'est le lot 5 qui la retire.
+
+Deux pièges au décommissionnement d'AWS lui-même (lot 4) :
+
+- **le certificat ACM est un wildcard `*.movie-picker.fr`.** Vérifier qu'aucun autre sous-domaine ne s'en sert avant de le retirer, sinon la suppression casse un hôte qui n'était pas dans le périmètre ;
+- **le `CNAME` se repointe à la main chez OVH**, il n'y a pas de CLI. Ce que le dépôt doit perdre au passage, secrets, variables, scripts et mentions d'AWS, se relève par un `grep -rin aws` au moment du lot : ne pas travailler sur une liste écrite à l'avance, elle sera périmée.
+
+## C7 rendre le dépôt public expose tout l'historique, pas le head
+
+Le passage en public de `roadmap-tech.md` V1.6 rend lisible **chaque commit jamais poussé**, pas l'état actuel du dépôt. Ce qui a été exposé une fois doit être considéré comme compromis, et un `git rm` postérieur n'y change rien.
+
+Avant la bascule, et jamais après :
+
+1. `gitleaks` sur la **totalité** de l'historique, pas sur le diff. Aucun identifiant Atlas, GCP, AWS, Resend, TMDB ou VAPID n'a le droit d'avoir transité par un commit, et aucun `.env` d'avoir été versionné à un moment quelconque.
+2. Vérifier que les dumps de base et les captures des dossiers RNCP ne portent pas de données personnelles réelles.
+3. Tout secret trouvé impose sa **rotation** puis une réécriture d'historique. Dans cet ordre : réécrire sans faire tourner la clé ne protège rien, elle a déjà été publiée.
+
 ---
 
 # Impasses
