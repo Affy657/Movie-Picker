@@ -16,21 +16,20 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 
 ---
 
-## DEBT-001 rappels de soirée hors service en production
+## DEBT-001 l'API Cloud Scheduler est désactivée, les rappels et les soirées récurrentes ne partent pas
 
 - state: humain
-- bloque: écritures `gcloud` refusées par le classifieur d'auto-mode ; l'utilisateur doit lancer les trois commandes
-- impact: prod. Les deux routes `POST /api/v1/scheduler/*` répondent 503. Aucun rappel J-1, 1 h ni « en suspens » ne part, et le balayage des soirées récurrentes ne tourne pas — celles-ci ne se reconduisent qu'à la clôture ou à l'ouverture de « Mes soirées ». Le 503 est volontaire, préféré à un échec silencieux.
-- ou: `.github/workflows/deploy.yml:288` et `:355` (les deux gardes qui émettent le warning)
-- verify: `gcloud secrets describe SCHEDULER_TOKEN --project <PROJET_GCP>` ; encore ouvert si NOT_FOUND
+- bloque: écritures `gcloud` refusées par le classifieur d'auto-mode ; l'utilisateur doit lancer la commande
+- impact: prod. Les deux routes `POST /api/v1/scheduler/*` répondent 503 faute de planificateur. Aucun rappel J-1, 1 h ni « en suspens » ne part, et le balayage des soirées récurrentes ne tourne pas — celles-ci ne se reconduisent qu'à la clôture ou à l'ouverture de « Mes soirées ». Le 503 est volontaire, préféré à un échec silencieux.
+- ou: `.github/workflows/deploy.yml`, l'étape « Rappels de soirée et soirées récurrentes »
+- verify: `gcloud services list --enabled --filter="config.name:cloudscheduler.googleapis.com" --format='value(config.name)'` ; encore ouvert tant que la sortie est vide
 - fix:
   ```bash
-  gcloud services enable cloudscheduler.googleapis.com --project <PROJET_GCP>
-  python -c "import secrets,sys; sys.stdout.write(secrets.token_urlsafe(48))" | gcloud secrets create SCHEDULER_TOKEN --data-file=- --replication-policy=automatic --project <PROJET_GCP>
+  gcloud services enable cloudscheduler.googleapis.com
   gh workflow run deploy.yml --ref master -f cible=api
   ```
-- fini-quand: les deux endpoints ne répondent plus 503 et les deux jobs Cloud Scheduler existent, `movie-picker-event-reminders` et `movie-picker-recurring-events`
-- piege: aucune IAM à ajouter, le compte de service a déjà `roles/editor` et `roles/secretmanager.secretAccessor` au niveau projet. Une session précédente a annoncé à tort qu'il fallait `cloudscheduler.admin`.
+- fini-quand: les deux jobs Cloud Scheduler existent, `movie-picker-event-reminders` et `movie-picker-recurring-events`, et les deux endpoints ne répondent plus 503
+- piege: **la moitié de l'entrée d'origine était périmée, mesuré le 2026-09-10.** Le secret `SCHEDULER_TOKEN` **existe** depuis le 2026-09-09 17:04, il ne reste que l'activation de l'API. Second piège, payé le 2026-09-10 : l'étape ne gardait que l'existence du secret, donc avec un secret présent et l'API désactivée elle sortait en `SERVICE_DISABLED` et faisait **échouer le déploiement API après que la révision ait pris 100 % du trafic**. Le run affichait rouge alors que l'API était en ligne et servait. Une seconde garde a été posée, une planification absente est désormais un avertissement comme le secret absent. Troisième piège, celui de l'entrée d'origine : aucune IAM à ajouter, le compte de service a déjà `roles/editor` et `roles/secretmanager.secretAccessor` au niveau projet, et une session précédente avait annoncé à tort qu'il fallait `cloudscheduler.admin`.
 
 ## DEBT-002 authentification keyless écrite mais jamais fusionnée
 
@@ -304,6 +303,25 @@ Deux pièges d'énumération, payés une fois : `approval_policy` n'accepte que 
 
 - **Le fork ne se désactive pas sur un dépôt public.** Seuls les dépôts privés ou internes d'une organisation peuvent le restreindre. Forker pour lire est libre, comme cloner ; la licence ne réserve que l'usage qui suit.
 - **Les tickets restent ouverts à tout le monde.** GitHub ne sait pas les limiter aux collaborateurs de façon permanente, seulement les geler temporairement (6 mois au plus) ou les désactiver en bloc, ce qui ferait perdre le backlog. Un ticket est un signalement, pas une contribution : `CONTRIBUTING.md` dit où va chaque chose.
+
+## C8 jamais d'`await` de premier niveau dans `main.tsx`
+
+`apps/web/src/main.tsx` termine par `boot().catch(...)`, **pas** par `await boot()`. Le `.catch` existe pour que la promesse ne soit pas flottante, ce que Sonar refuse, et pour retirer la coquille de démarrage si `boot` échoue — sans lui, un échec laisse l'utilisateur sur un écran de démarrage permanent.
+
+**Un `await` de premier niveau y a coûté 3 à 5 points Lighthouse sur onze pages sur treize**, posé le 2026-09-09 par `86d8770` en soldant une promesse flottante, mesuré et retiré le 2026-09-10. Il rend l'évaluation du module d'entrée asynchrone et retarde tout le montage de React.
+
+**La signature du diagnostic vaut pour toute régression de ce type** : `home` et `login` n'avaient **pas** bougé, à 95 et 97, pendant que les onze autres perdaient 3 à 5 points. Ce sont exactement les deux pages dont le plus grand élément n'attend pas React, `home` parce que son titre est peint dans la coquille (C2) et `login` parce que son LCP est adossé à une ressource. Quand une régression épargne précisément ces deux pages, elle est dans le chemin de montage, pas dans une page.
+
+**Comment attribuer une régression Lighthouse à son commit**, la porte ne tournant qu'au déploiement : relever le score d'une page sur les runs passés, de part et d'autre du commit suspect.
+
+```bash
+for ID in $(gh run list --workflow ci-cd.yml --limit 30 --json databaseId --jq '.[].databaseId'); do
+  J=$(gh run view "$ID" --json jobs --jq '.jobs[]|select(.name|startswith("Lighthouse"))|.databaseId')
+  [ -n "$J" ] && gh api "repos/<DEPOT>/actions/jobs/$J/logs" | grep -E "— performance"
+done
+```
+
+Le piège du piège : ce jour-là le blocage de facturation a commencé à 17:02, soit **entre le commit et le run qui l'aurait détecté**. Une porte qui ne tourne pas ne protège de rien, et son silence ressemble à du vert.
 
 ---
 

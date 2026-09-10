@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { useNavigate } from 'react-router';
-import { AlertCircle, ChevronDown, Settings, Sparkles, Trash2, X } from 'lucide-react';
+import { AlertCircle, Settings, Trash2, X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import ThemeField, { parseTheme } from './ThemeField';
+import { parseTheme } from './ThemeField';
+import HostEventDateField from './HostEventDateField';
+import HostEventThemeField from './HostEventThemeField';
 import WheelModeField from './WheelModeField';
 import NumberInput from '@/shared/components/NumberInput';
 import Toggle from '@/shared/components/Toggle';
@@ -417,105 +419,41 @@ export default function HostEventSettingsPanel({
               )}
             </div>
 
-            <div className={styles.field}>
-              <label className="label" htmlFor="host-cfg-datetime">
-                {t('events.settings.dateTimeLabel')}
-              </label>
-              <input
-                id="host-cfg-datetime"
-                className="input"
-                type="datetime-local"
-                value={eventDateLocal}
-                onChange={(e) => {
-                  setEventDateLocal(e.target.value);
-                  scheduleAutoSave();
-                }}
-                aria-invalid={!!fieldErrors.date || undefined}
-                aria-describedby={!fieldErrors.date && relativeDateLabel ? dateHintId : undefined}
-              />
-              {fieldErrors.date ? (
-                <p className={styles.fieldError}>
-                  <AlertCircle size={12} aria-hidden />
-                  <span>{fieldErrors.date}</span>
-                </p>
-              ) : (
-                relativeDateLabel && (
-                  <p id={dateHintId} className="hint">
-                    {t('events.settings.dateHint', { relative: relativeDateLabel })}
-                  </p>
-                )
-              )}
-              {dateWasEdited && !fieldErrors.date && (
-                <label className={styles.notifyRow}>
-                  <input
-                    type="checkbox"
-                    className={styles.notifyCheckbox}
-                    checked={notifyDateChange}
-                    onChange={(e) => setNotifyDateChange(e.target.checked)}
-                  />
-                  <span>{t('events.settings.notifyDateChangeLabel')}</span>
-                </label>
-              )}
-            </div>
+            <HostEventDateField
+              value={eventDateLocal}
+              error={fieldErrors.date}
+              relativeDateLabel={relativeDateLabel}
+              hintId={dateHintId}
+              showNotifyRow={dateWasEdited && !fieldErrors.date}
+              notifyDateChange={notifyDateChange}
+              onValueChange={(v) => {
+                setEventDateLocal(v);
+                scheduleAutoSave();
+              }}
+              onNotifyChange={setNotifyDateChange}
+            />
 
-            <div className={styles.field}>
-              <div className={clsx(styles.themeCard, themeOpen && styles.themeCardOpen)}>
-                <button
-                  type="button"
-                  className={styles.themeTrigger}
-                  aria-expanded={themeOpen}
-                  aria-controls={themeCollapseId}
-                  onClick={() => setThemeOpen((v) => !v)}
-                >
-                  <span className={styles.themeBadge} aria-hidden>
-                    {themeEmoji || (themePreview ? '🎬' : <Sparkles size={18} />)}
-                  </span>
-                  <span className={styles.themeInfo}>
-                    <span className={styles.themeTitle}>
-                      {themePreview || t('events.settings.themeEmptyTitle')}
-                    </span>
-                    <span className={styles.themeSubtitle}>
-                      {themePreview
-                        ? t('events.settings.themeLabel')
-                        : t('events.settings.themeEmptySubtitle')}
-                    </span>
-                  </span>
-                  <ChevronDown size={18} aria-hidden className={styles.themeChevron} />
-                </button>
-                {themeOpen && (
-                  <div id={themeCollapseId} className={styles.themeExpanded}>
-                    {themePreview && (
-                      <button
-                        type="button"
-                        className={styles.clearThemeBtn}
-                        onClick={() => {
-                          setThemeEmoji('');
-                          setThemeText('');
-                          scheduleAutoSave();
-                        }}
-                        aria-label={t('events.settings.clearThemeAria')}
-                      >
-                        <X size={11} strokeWidth={2.5} />
-                        <span>{t('events.settings.clearThemeButton')}</span>
-                      </button>
-                    )}
-                    <ThemeField
-                      textInputId="host-cfg-theme"
-                      emoji={themeEmoji}
-                      text={themeText}
-                      onEmojiChange={(v) => {
-                        setThemeEmoji(v);
-                        scheduleAutoSave();
-                      }}
-                      onTextChange={(v) => {
-                        setThemeText(v);
-                        scheduleAutoSave();
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
+            <HostEventThemeField
+              emoji={themeEmoji}
+              text={themeText}
+              preview={themePreview}
+              open={themeOpen}
+              collapseId={themeCollapseId}
+              onToggle={() => setThemeOpen((v) => !v)}
+              onEmojiChange={(v) => {
+                setThemeEmoji(v);
+                scheduleAutoSave();
+              }}
+              onTextChange={(v) => {
+                setThemeText(v);
+                scheduleAutoSave();
+              }}
+              onClear={() => {
+                setThemeEmoji('');
+                setThemeText('');
+                scheduleAutoSave();
+              }}
+            />
           </div>
 
           <div className={styles.section}>

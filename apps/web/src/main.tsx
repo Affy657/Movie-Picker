@@ -2,7 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { startPwaInstallRuntime } from '@/shared/hooks/usePwaInstall';
 import { initPostHog } from '@/shared/analytics/posthog';
-import { initSentry } from '@/shared/observability/sentry';
+import { captureException, initSentry } from '@/shared/observability/sentry';
 import { loadLocale, preferredLocale } from '@/shared/i18n';
 import './index.css';
 
@@ -35,4 +35,7 @@ async function boot(): Promise<void> {
   hideSplash();
 }
 
-await boot();
+boot().catch((error: unknown) => {
+  hideSplash();
+  captureException(error);
+});

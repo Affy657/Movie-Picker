@@ -355,6 +355,15 @@ jobs:
             echo "::warning::Secret SCHEDULER_TOKEN absent : jobs Cloud Scheduler non configurés, les rappels de soirée ne partiront pas et les soirées récurrentes ne seront reconduites qu'à la clôture ou à l'ouverture de « Mes soirées »."
             exit 0
           fi
+          # Deuxième garde, et elle a coûté un déploiement rouge le 2026-09-10 : le secret peut exister
+          # alors que l'API Cloud Scheduler est désactivée sur le projet. `gcloud scheduler jobs
+          # describe` sort alors en SERVICE_DISABLED, et sans cette garde l'étape faisait échouer le
+          # job **après** que la révision ait pris 100 % du trafic. Une planification absente est un
+          # avertissement, comme le secret absent : elle ne dit rien sur la santé de l'API déployée.
+          if ! gcloud services list --enabled --filter="config.name:cloudscheduler.googleapis.com" --format='value(config.name)' | grep -q cloudscheduler; then
+            echo "::warning::API Cloud Scheduler désactivée sur le projet : jobs non configurés, mêmes conséquences qu'un secret absent. Lancer 'gcloud services enable cloudscheduler.googleapis.com' puis relancer ce déploiement."
+            exit 0
+          fi
           URL="$(gcloud run services describe ${{ env.CLOUD_RUN_SERVICE_NAME }} --region ${{ env.GCP_REGION }} --format='value(status.url)')"
           TOKEN="$(gcloud secrets versions access latest --secret=SCHEDULER_TOKEN)"
           upsert_job() {

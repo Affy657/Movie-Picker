@@ -635,6 +635,110 @@ function EventShareDialog({
   );
 }
 
+function EventDetailSessionOverlays({
+  slug,
+  hostToken,
+  event,
+  canConfigure,
+  settingsOpen,
+  onCloseSettings,
+  wheelError,
+  shareOpen,
+  shareInitialTab,
+  onCloseShare,
+  shareUrl,
+  dateFormatted,
+  timeFormatted,
+  dateLabel,
+  participantCount,
+  moviesQuery,
+  needsJoin,
+  setParticipant,
+  isFull,
+  maxParticipants,
+}: Readonly<{
+  slug: string;
+  hostToken: string | null;
+  event: EventData;
+  canConfigure: boolean;
+  settingsOpen: boolean;
+  onCloseSettings: () => void;
+  wheelError: string | null;
+  shareOpen: boolean;
+  shareInitialTab: 'link' | 'friends';
+  onCloseShare: () => void;
+  shareUrl: string;
+  dateFormatted: string;
+  timeFormatted: string;
+  dateLabel: string;
+  participantCount: number;
+  moviesQuery: UseQueryResult<MovieData[]>;
+  needsJoin: boolean;
+  setParticipant: Dispatch<SetStateAction<ParticipantRef | null>>;
+  isFull: boolean;
+  maxParticipants: number | null;
+}>) {
+  const { t } = useTranslation();
+  const hostCanInvite = !!event.isHost && !event.isFinished;
+  const eligibleFollowsQuery = useQuery({
+    queryKey: queryKeys.event.eligibleFollows(slug),
+    queryFn: () => getEligibleFollows(slug),
+    enabled: hostCanInvite,
+    staleTime: 30_000,
+  });
+  const participantsLabel = pluralizeCount(
+    participantCount,
+    'events.detail.participantsToggleOne',
+    'events.detail.participantsToggle',
+    t
+  );
+
+  return (
+    <>
+      {canConfigure ? (
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken={hostToken}
+          event={event}
+          open={settingsOpen}
+          onClose={onCloseSettings}
+        />
+      ) : null}
+      {wheelError ? (
+        <p className="error" role="alert">
+          {wheelError}
+        </p>
+      ) : null}
+      <EventShareDialog
+        open={shareOpen}
+        onClose={onCloseShare}
+        slug={slug}
+        event={event}
+        shareUrl={shareUrl}
+        dateFormatted={dateFormatted}
+        timeFormatted={timeFormatted}
+        dateLabel={dateLabel}
+        participantsLabel={participantsLabel}
+        initialTab={shareInitialTab}
+        hostCanInvite={hostCanInvite}
+        friendsBadge={eligibleFollowsQuery.data?.follows.length}
+        t={t}
+      />
+      {moviesQuery.isError ? (
+        <EventMoviesLoadError error={moviesQuery.error} onRetry={() => moviesQuery.refetch()} />
+      ) : null}
+      {needsJoin ? (
+        <JoinForm
+          slug={slug}
+          onJoined={(participantId, pseudo) => setParticipant({ participantId, pseudo })}
+          isFull={isFull}
+          maxParticipants={maxParticipants}
+        />
+      ) : null}
+    </>
+  );
+}
+
 function EventDetailSessionChrome({
   slug,
   hostToken,
@@ -710,20 +814,6 @@ function EventDetailSessionChrome({
   viewMode: 'grid' | 'list';
   onViewModeChange: (mode: 'grid' | 'list') => void;
 }>) {
-  const { t } = useTranslation();
-  const hostCanInvite = !!event.isHost && !event.isFinished;
-  const eligibleFollowsQuery = useQuery({
-    queryKey: queryKeys.event.eligibleFollows(slug),
-    queryFn: () => getEligibleFollows(slug),
-    enabled: hostCanInvite,
-    staleTime: 30_000,
-  });
-  const participantsLabel = pluralizeCount(
-    participantCount,
-    'events.detail.participantsToggleOne',
-    'events.detail.participantsToggle',
-    t
-  );
   return (
     <>
       <EventDetailHeader
@@ -760,46 +850,28 @@ function EventDetailSessionChrome({
         onViewModeChange={onViewModeChange}
       />
       {lifecycle === 'pending' ? <EventPendingBanner isHost={!!event.isHost} /> : null}
-      {canConfigure ? (
-        <HostEventSettingsPanel
-          slug={slug}
-          hostToken={hostToken}
-          event={event}
-          open={settingsOpen}
-          onClose={onCloseSettings}
-        />
-      ) : null}
-      {wheel.error ? (
-        <p className="error" role="alert">
-          {wheel.error}
-        </p>
-      ) : null}
-      <EventShareDialog
-        open={shareOpen}
-        onClose={onCloseShare}
+      <EventDetailSessionOverlays
         slug={slug}
+        hostToken={hostToken}
         event={event}
+        canConfigure={canConfigure}
+        settingsOpen={settingsOpen}
+        onCloseSettings={onCloseSettings}
+        wheelError={wheel.error}
+        shareOpen={shareOpen}
+        shareInitialTab={shareInitialTab}
+        onCloseShare={onCloseShare}
         shareUrl={shareUrl}
         dateFormatted={dateFormatted}
         timeFormatted={timeFormatted}
         dateLabel={dateLabel}
-        participantsLabel={participantsLabel}
-        initialTab={shareInitialTab}
-        hostCanInvite={hostCanInvite}
-        friendsBadge={eligibleFollowsQuery.data?.follows.length}
-        t={t}
+        participantCount={participantCount}
+        moviesQuery={moviesQuery}
+        needsJoin={needsJoin}
+        setParticipant={setParticipant}
+        isFull={isFull}
+        maxParticipants={maxParticipants}
       />
-      {moviesQuery.isError ? (
-        <EventMoviesLoadError error={moviesQuery.error} onRetry={() => moviesQuery.refetch()} />
-      ) : null}
-      {needsJoin ? (
-        <JoinForm
-          slug={slug}
-          onJoined={(participantId, pseudo) => setParticipant({ participantId, pseudo })}
-          isFull={isFull}
-          maxParticipants={maxParticipants}
-        />
-      ) : null}
     </>
   );
 }
