@@ -119,6 +119,21 @@ public sealed class MongoEventRepository : IEventRepository
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
     }
 
+    public async Task<IReadOnlyList<Event>> ListRecurringAwaitingNextOccurrenceAsync(
+        string? creatorUserId,
+        CancellationToken ct = default)
+    {
+        var builder = Builders<EventDocument>.Filter;
+        var filter = builder.Ne(x => x.Recurrence, null)
+                     & builder.Eq(x => x.NextOccurrenceEventId, (string?)null);
+
+        if (!string.IsNullOrWhiteSpace(creatorUserId))
+            filter &= builder.Eq(x => x.CreatorUserId, creatorUserId);
+
+        var docs = await _collection.Find(filter).ToListAsync(ct);
+        return docs.ConvertAll(EventDocumentMapper.ToDomain);
+    }
+
     public async Task<long> AnonymizeCreatorAsync(string creatorUserId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(creatorUserId))

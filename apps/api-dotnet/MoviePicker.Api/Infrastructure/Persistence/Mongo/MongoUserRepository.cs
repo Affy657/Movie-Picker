@@ -1,6 +1,7 @@
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.SearchUsers;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -80,6 +81,52 @@ public sealed class MongoUserRepository : IUserRepository
             Builders<UserDocument>.Filter.Ne(x => x.LetterboxdUsername, string.Empty));
         var docs = await _collection.Find(filter).ToListAsync(ct);
         return docs.ConvertAll(UserDocumentMapper.ToDomain);
+    }
+
+    public async Task<IReadOnlyList<User>> SearchPublicAsync(string query, int limit, CancellationToken ct = default)
+    {
+        var normalized = UserSearchPolicy.Normalize(query);
+        if (normalized.Length < UserSearchPolicy.MinQueryLength)
+            return [];
+
+        var body = UserSearchPolicy.ToRegexPattern(normalized);
+        var fromStart = await FindPublicMatchesAsync(new BsonRegularExpression("^" + body, "i"), limit, null, ct);
+        if (fromStart.Count >= limit)
+            return fromStart.ConvertAll(UserDocumentMapper.ToDomain);
+
+        var anywhere = await FindPublicMatchesAsync(
+            new BsonRegularExpression(body, "i"),
+            limit - fromStart.Count,
+            fromStart.ConvertAll(doc => doc.Id),
+            ct);
+
+        return fromStart.Concat(anywhere).Select(UserDocumentMapper.ToDomain).ToList();
+    }
+
+    private Task<List<UserDocument>> FindPublicMatchesAsync(
+        BsonRegularExpression pattern,
+        int limit,
+        IReadOnlyList<string>? excludedIds,
+        CancellationToken ct)
+    {
+        var clauses = new List<FilterDefinition<UserDocument>>
+        {
+            Builders<UserDocument>.Filter.Ne(x => x.IsProfilePublic, false),
+            Builders<UserDocument>.Filter.Ne(x => x.Handle, null),
+            Builders<UserDocument>.Filter.Ne(x => x.Handle, string.Empty),
+            Builders<UserDocument>.Filter.Or(
+                Builders<UserDocument>.Filter.Regex(x => x.DisplayName, pattern),
+                Builders<UserDocument>.Filter.Regex(x => x.Handle, pattern))
+        };
+
+        if (excludedIds is { Count: > 0 })
+            clauses.Add(Builders<UserDocument>.Filter.Nin(x => x.Id, excludedIds));
+
+        return _collection
+            .Find(Builders<UserDocument>.Filter.And(clauses))
+            .Sort(Builders<UserDocument>.Sort.Ascending(x => x.Handle))
+            .Limit(limit)
+            .ToListAsync(ct);
     }
 
     public async Task SetLetterboxdSyncStatusAsync(

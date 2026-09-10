@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.CloseEvent;
+using MoviePicker.Api.Application.UseCases.RecurringEvents;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
@@ -16,6 +17,7 @@ public sealed class CloseEventHandlerTests
     private readonly Mock<IWatchlistRepository> _watchlistRepo;
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor;
     private readonly Mock<ICurrentUserAccessor> _currentUser;
+    private readonly Mock<IRecurringEventPass> _recurringEvents = new();
     private readonly CloseEventHandler _sut;
 
     private static Event ActiveEvent(string hostToken = "ht1") => new()
@@ -46,6 +48,7 @@ public sealed class CloseEventHandlerTests
             _watchlistRepo.Object,
             _hostTokenAccessor.Object,
             _currentUser.Object,
+            _recurringEvents.Object,
             NullLogger<CloseEventHandler>.Instance);
     }
 

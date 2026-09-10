@@ -79,6 +79,10 @@ export async function fetchFollowers(handle: string): Promise<FollowListResponse
   return fetchApi<FollowListResponse>(`/users/${encodeURIComponent(handle)}/followers`);
 }
 
+export async function searchUsers(query: string): Promise<FollowListResponse> {
+  return fetchApi<FollowListResponse>(`/users/search?q=${encodeURIComponent(query)}`);
+}
+
 export async function fetchUserStats(handle: string, signal?: AbortSignal): Promise<UserStats> {
   return fetchApi<UserStats>(`/users/${encodeURIComponent(handle)}/stats`, { signal });
 }

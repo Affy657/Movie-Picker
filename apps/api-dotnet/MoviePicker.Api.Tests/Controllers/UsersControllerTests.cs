@@ -4,6 +4,7 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Follow;
 using MoviePicker.Api.Application.UseCases.Profile;
+using MoviePicker.Api.Application.UseCases.SearchUsers;
 using MoviePicker.Api.Application.UseCases.UserMovies;
 using MoviePicker.Api.Application.UseCases.UserStats;
 using MoviePicker.Api.Controllers;
@@ -36,6 +37,27 @@ public sealed class UsersControllerTests
         await Controller(null).HandleAvailable(null, handler.Object, CancellationToken.None);
 
         handler.Verify(h => h.HandleAsync("", null, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Search_ForwardsQueryAndCurrentUser()
+    {
+        var handler = new Mock<ISearchUsersHandler>();
+
+        var result = await Controller("u1").Search("mor", handler.Object, CancellationToken.None);
+
+        Assert.IsType<OkObjectResult>(result);
+        handler.Verify(h => h.HandleAsync("mor", "u1", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Search_NullQuery_IsForwardedAsIs()
+    {
+        var handler = new Mock<ISearchUsersHandler>();
+
+        await Controller("u1").Search(null, handler.Object, CancellationToken.None);
+
+        handler.Verify(h => h.HandleAsync(null, "u1", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

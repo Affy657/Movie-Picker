@@ -57,13 +57,18 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         var hasConfigChange = HasConfigChange(request);
         var hasDateTimeChange = request.Date is not null || request.Time is not null;
         var hasTitleChange = request.Title is not null;
+        var hasRecurrenceChange = request.Recurrence.HasValue || request.ClearRecurrence == true;
 
         EnsurePatchAllowed(evt, hasConfigChange, hasDateTimeChange);
 
         if (hasTitleChange && (evt.IsFinished(DateTimeOffset.UtcNow) || !string.IsNullOrEmpty(evt.WinnerMovieId)))
             throw new ConflictException("La soirée est terminée : le nom ne peut plus être modifié.");
 
-        if (!hasConfigChange && !hasDateTimeChange && !hasTitleChange)
+        if (hasRecurrenceChange && !string.IsNullOrEmpty(evt.NextOccurrenceEventId))
+            throw new ConflictException(
+                "L’occurrence suivante existe déjà : la récurrence se règle désormais sur cette nouvelle soirée.");
+
+        if (!hasConfigChange && !hasDateTimeChange && !hasTitleChange && !hasRecurrenceChange)
             return EventConfigResponse.FromEvent(evt);
 
         var current = evt.Config ?? new EventConfig();
@@ -98,7 +103,15 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         var title = ResolveTitle(request, evt.Title);
 
         var now = DateTimeOffset.UtcNow;
-        var updated = evt with { Title = title, Date = date, Time = time, Config = nextConfig, UpdatedAt = now };
+        var updated = evt with
+        {
+            Title = title,
+            Date = date,
+            Time = time,
+            Config = nextConfig,
+            Recurrence = ResolveRecurrence(request, evt.Recurrence),
+            UpdatedAt = now
+        };
 
         var saved = await _events.UpdateAsync(updated, ct);
 
@@ -174,6 +187,13 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         || request.WheelMode.HasValue
         || request.RichSharePreview.HasValue
         || request.AllowSeries.HasValue;
+
+    private static RecurrenceFrequency? ResolveRecurrence(PatchEventConfigRequest request, RecurrenceFrequency? current)
+    {
+        if (request.ClearRecurrence == true)
+            return null;
+        return request.Recurrence ?? current;
+    }
 
     private static void EnsurePatchAllowed(Event evt, bool hasConfigChange, bool hasDateTimeChange)
     {

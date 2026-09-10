@@ -285,7 +285,7 @@ jobs:
           if gcloud secrets describe SCHEDULER_TOKEN >/dev/null 2>&1; then
             SECRETS="$SECRETS,SCHEDULER_TOKEN=SCHEDULER_TOKEN:latest"
           else
-            echo "::warning::Secret SCHEDULER_TOKEN absent de Secret Manager. L'API démarre sans, mais POST /api/v1/scheduler/event-reminders répondra 503 et les rappels de soirée ne partiront pas. Crée le secret puis relance ce déploiement."
+            echo "::warning::Secret SCHEDULER_TOKEN absent de Secret Manager. L'API démarre sans, mais les routes POST /api/v1/scheduler/* répondront 503 : ni les rappels de soirée ni le balayage des soirées récurrentes ne tourneront. Crée le secret puis relance ce déploiement."
           fi
           # --set-env-vars dict parsing treats ':' and ',' specially; ^##^ sets an alternate delimiter (gcloud topic escaping).
           gcloud run deploy "$CLOUD_RUN_SERVICE_NAME" \
@@ -343,31 +343,38 @@ jobs:
       # Repris de master. Déplacé après la promotion : le job vise l'URL du service, il ne
       # doit donc être (re)configuré que pour une révision réellement en ligne. Une révision
       # recalée à la validation laisse le job pointer sur la production inchangée.
-      - name: Rappels de soirée — Cloud Scheduler (toutes les 30 min)
+      # Le balayage des soirées récurrentes n'est qu'un filet : la clôture d'une soirée et
+      # l'ouverture de « Mes soirées » créent déjà l'occurrence suivante. Une passe par nuit
+      # suffit donc à rattraper les séries que personne n'a rouvertes.
+      - name: Rappels de soirée et soirées récurrentes — Cloud Scheduler
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
           set -eo pipefail
           if ! gcloud secrets describe SCHEDULER_TOKEN >/dev/null 2>&1; then
-            echo "::warning::Secret SCHEDULER_TOKEN absent : job Cloud Scheduler non configuré, les rappels de soirée ne partiront pas."
+            echo "::warning::Secret SCHEDULER_TOKEN absent : jobs Cloud Scheduler non configurés, les rappels de soirée ne partiront pas et les soirées récurrentes ne seront reconduites qu'à la clôture ou à l'ouverture de « Mes soirées »."
             exit 0
           fi
           URL="$(gcloud run services describe ${{ env.CLOUD_RUN_SERVICE_NAME }} --region ${{ env.GCP_REGION }} --format='value(status.url)')"
           TOKEN="$(gcloud secrets versions access latest --secret=SCHEDULER_TOKEN)"
-          JOB=movie-picker-event-reminders
-          COMMON=(
-            --location "${{ env.GCP_REGION }}"
-            --schedule "*/30 * * * *"
-            --time-zone "Europe/Paris"
-            --uri "$URL/api/v1/scheduler/event-reminders"
-            --http-method POST
-            --attempt-deadline 300s
-          )
-          if gcloud scheduler jobs describe "$JOB" --location "${{ env.GCP_REGION }}" >/dev/null 2>&1; then
-            gcloud scheduler jobs update http "$JOB" "${COMMON[@]}" --update-headers "X-Scheduler-Token=$TOKEN"
-          else
-            gcloud scheduler jobs create http "$JOB" "${COMMON[@]}" --headers "X-Scheduler-Token=$TOKEN"
-          fi
+          upsert_job() {
+            local job="$1" schedule="$2" path="$3"
+            local common=(
+              --location "${{ env.GCP_REGION }}"
+              --schedule "$schedule"
+              --time-zone "Europe/Paris"
+              --uri "$URL$path"
+              --http-method POST
+              --attempt-deadline 300s
+            )
+            if gcloud scheduler jobs describe "$job" --location "${{ env.GCP_REGION }}" >/dev/null 2>&1; then
+              gcloud scheduler jobs update http "$job" "${common[@]}" --update-headers "X-Scheduler-Token=$TOKEN"
+            else
+              gcloud scheduler jobs create http "$job" "${common[@]}" --headers "X-Scheduler-Token=$TOKEN"
+            fi
+          }
+          upsert_job movie-picker-event-reminders "*/30 * * * *" /api/v1/scheduler/event-reminders
+          upsert_job movie-picker-recurring-events "15 3 * * *" /api/v1/scheduler/recurring-events
       # La révision est déjà prouvée : ce qui est vérifié ici, c'est que le trafic a bien basculé et
       # que le domaine public y mène. Un échec relève du routage, du DNS ou du certificat, pas du
       # code — d'où l'absence de retour arrière. PUBLIC_API_URL est dérivé de VITE_API_URL, l'URL

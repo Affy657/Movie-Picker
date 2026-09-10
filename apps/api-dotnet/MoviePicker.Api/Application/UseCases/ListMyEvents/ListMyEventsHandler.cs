@@ -1,6 +1,7 @@
 using System.Linq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.RecurringEvents;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 
@@ -11,15 +12,18 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
     private readonly IEventRepository _eventRepository;
     private readonly IParticipantRepository _participantRepository;
     private readonly IMovieRepository _movieRepository;
+    private readonly IRecurringEventPass _recurringEvents;
 
     public ListMyEventsHandler(
         IEventRepository eventRepository,
         IParticipantRepository participantRepository,
-        IMovieRepository movieRepository)
+        IMovieRepository movieRepository,
+        IRecurringEventPass recurringEvents)
     {
         _eventRepository = eventRepository;
         _participantRepository = participantRepository;
         _movieRepository = movieRepository;
+        _recurringEvents = recurringEvents;
     }
 
     public async Task<MyEventsListResponse> HandleAsync(
@@ -29,6 +33,8 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
         var lim = limit is null ? 20 : Math.Clamp(limit.Value, 1, 100);
         var skip = offset is null ? 0 : Math.Max(0, offset.Value);
         var utcNow = DateTimeOffset.UtcNow;
+
+        await _recurringEvents.RunForCreatorAsync(userId, ct);
 
         var created = await _eventRepository.ListByCreatorUserIdAsync(userId, 200, ct);
         var joinedIds = await _participantRepository.ListDistinctEventIdsByUserIdAsync(userId, ct);

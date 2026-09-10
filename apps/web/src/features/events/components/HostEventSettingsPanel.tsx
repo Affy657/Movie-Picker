@@ -7,6 +7,7 @@ import ThemeField, { parseTheme } from './ThemeField';
 import WheelModeField from './WheelModeField';
 import NumberInput from '@/shared/components/NumberInput';
 import Toggle from '@/shared/components/Toggle';
+import SegmentedRadioGroup from '@/app/components/SegmentedRadioGroup';
 import { deleteEvent, patchEventConfig } from '@/features/events/api/eventsApi';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
@@ -23,6 +24,7 @@ import type {
   EventConfigData,
   EventConfigPatchPayload,
   EventData,
+  EventRecurrence,
   WheelMode,
 } from '@/features/events/types';
 import {
@@ -58,6 +60,14 @@ const SAVE_STATUS_LABEL_KEYS = {
   error: 'events.settings.saveStatusError',
 } as const satisfies Record<SaveState, string>;
 
+function recurrencePatch(
+  next: EventRecurrence | null,
+  current: EventRecurrence | null
+): Partial<EventConfigPatchPayload> {
+  if (next === current) return {};
+  return next === null ? { clearRecurrence: true } : { recurrence: next };
+}
+
 function normalizeConfig(c: EventConfigData | undefined): EventConfigData {
   return {
     theme: c?.theme ?? DEFAULT_EVENT_CONFIG.theme,
@@ -66,6 +76,8 @@ function normalizeConfig(c: EventConfigData | undefined): EventConfigData {
     wheelMode: c?.wheelMode ?? DEFAULT_EVENT_CONFIG.wheelMode,
     richSharePreview: c?.richSharePreview ?? DEFAULT_EVENT_CONFIG.richSharePreview,
     allowSeries: c?.allowSeries ?? DEFAULT_EVENT_CONFIG.allowSeries,
+    recurrence: c?.recurrence ?? null,
+    hasNextOccurrence: c?.hasNextOccurrence ?? false,
   };
 }
 
@@ -169,6 +181,7 @@ export default function HostEventSettingsPanel({
   const [maxParticipants, setMaxParticipants] = useState<string>(String(cfg.maxParticipants));
   const [wheelMode, setWheelMode] = useState<WheelMode>(cfg.wheelMode);
   const [allowSeries, setAllowSeries] = useState<boolean>(cfg.allowSeries ?? false);
+  const [recurrence, setRecurrence] = useState<EventRecurrence | null>(cfg.recurrence ?? null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const performSaveRef = useRef<() => void>(() => {});
 
@@ -202,6 +215,7 @@ export default function HostEventSettingsPanel({
     setMaxParticipants(String(next.maxParticipants));
     setWheelMode(next.wheelMode);
     setAllowSeries(next.allowSeries ?? false);
+    setRecurrence(next.recurrence ?? null);
     setFieldErrors({});
     setSaveError(null);
     setSaveState('saved');
@@ -287,10 +301,21 @@ export default function HostEventSettingsPanel({
       wheelMode,
       richSharePreview: cfg.richSharePreview ?? true,
       allowSeries,
+      ...recurrencePatch(recurrence, cfg.recurrence ?? null),
       ...(eventDateTime ? { date: eventDateTime.date, time: eventDateTime.time } : {}),
       notifyParticipantsOfDateChange: notifyDateChange,
     });
   };
+
+  const recurrenceLocked = cfg.hasNextOccurrence ?? false;
+  const recurrenceOptions = useMemo(
+    () => [
+      { value: 'weekly' as const, label: t('events.settings.recurrenceWeekly') },
+      { value: 'biweekly' as const, label: t('events.settings.recurrenceBiweekly') },
+      { value: 'monthly' as const, label: t('events.settings.recurrenceMonthly') },
+    ],
+    [t]
+  );
 
   const liveDateTime = eventDateLocal.trim() ? splitDateTimeLocal(eventDateLocal) : null;
   const relativeDateLabel = liveDateTime
@@ -558,19 +583,58 @@ export default function HostEventSettingsPanel({
               />
             </div>
 
-            <div className={styles.toggleRow}>
-              <span>
-                <span className={styles.toggleName}>{t('events.settings.allowSeriesLabel')}</span>
-                <span className={styles.toggleDesc}>{t('events.settings.allowSeriesDesc')}</span>
-              </span>
-              <Toggle
-                checked={allowSeries}
-                label={t('events.settings.allowSeriesLabel')}
-                onChange={() => {
-                  setAllowSeries((v) => !v);
-                  scheduleAutoSave(true);
-                }}
-              />
+            <div className={styles.field}>
+              <div className={styles.toggleRow}>
+                <span>
+                  <span className={styles.toggleName}>{t('events.settings.allowSeriesLabel')}</span>
+                  <span className={styles.toggleDesc}>{t('events.settings.allowSeriesDesc')}</span>
+                </span>
+                <Toggle
+                  checked={allowSeries}
+                  label={t('events.settings.allowSeriesLabel')}
+                  onChange={() => {
+                    setAllowSeries((v) => !v);
+                    scheduleAutoSave(true);
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className={styles.field}>
+              <div className={styles.toggleRow}>
+                <span>
+                  <span className={styles.toggleName}>{t('events.settings.recurrenceLabel')}</span>
+                  <span className={styles.toggleDesc}>{t('events.settings.recurrenceDesc')}</span>
+                </span>
+                <Toggle
+                  checked={recurrence !== null}
+                  label={t('events.settings.recurrenceLabel')}
+                  disabled={recurrenceLocked}
+                  onChange={() => {
+                    setRecurrence((v) => (v === null ? 'weekly' : null));
+                    scheduleAutoSave(true);
+                  }}
+                />
+              </div>
+              {recurrence !== null && !recurrenceLocked && (
+                <div className={styles.recurrenceRhythm}>
+                  <SegmentedRadioGroup
+                    className={styles.recurrenceSegments}
+                    options={recurrenceOptions}
+                    value={recurrence}
+                    size="sm"
+                    ariaLabel={t('events.settings.recurrenceGroupLabel')}
+                    onChange={(value) => {
+                      setRecurrence(value);
+                      scheduleAutoSave(true);
+                    }}
+                  />
+                  <p className="hint">{t('events.settings.recurrenceShareHint')}</p>
+                </div>
+              )}
+              {recurrenceLocked && (
+                <p className="hint">{t('events.settings.recurrenceLockedHint')}</p>
+              )}
             </div>
           </div>
         </form>

@@ -192,4 +192,152 @@ describe('FollowListModal (MSW)', () => {
       expect(screen.getByText(/aucun utilisateur/i)).toBeInTheDocument();
     });
   });
+
+  it("affiche l'invitation a chercher sur l'onglet Rechercher", async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
+    );
+
+    renderModal();
+    await screen.findByText(/aucun utilisateur/i);
+
+    await user.click(screen.getByRole('button', { name: 'Rechercher' }));
+
+    expect(await screen.findByText('Cherchez un pseudo')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Pseudo ou @handle')).toBeInTheDocument();
+  });
+
+  it('demande deux caracteres avant de lancer la recherche', async () => {
+    const user = userEvent.setup();
+    const searchCalls: string[] = [];
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
+      http.get(`${TEST_API_V1}/users/search`, ({ request }) => {
+        searchCalls.push(new URL(request.url).searchParams.get('q') ?? '');
+        return HttpResponse.json({ items: [] });
+      })
+    );
+
+    renderModal();
+    await screen.findByText(/aucun utilisateur/i);
+    await user.click(screen.getByRole('button', { name: 'Rechercher' }));
+
+    await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'm');
+
+    expect(await screen.findByText('Tapez au moins 2 caractères.')).toBeInTheDocument();
+    expect(searchCalls).toEqual([]);
+  });
+
+  it('surligne la portion trouvee dans le pseudo et le handle', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
+      http.get(`${TEST_API_V1}/users/search`, () =>
+        HttpResponse.json({
+          items: [
+            { handle: 'lea_m', displayName: 'Léa Moreau', avatarId: '', isFollowedByMe: false },
+            {
+              handle: 'sofiamorgane',
+              displayName: 'Sofia Benali',
+              avatarId: '',
+              isFollowedByMe: true,
+            },
+          ],
+        })
+      )
+    );
+
+    renderModal();
+    await screen.findByText(/aucun utilisateur/i);
+    await user.click(screen.getByRole('button', { name: 'Rechercher' }));
+    await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'mor');
+
+    expect(await screen.findByText('Sofia Benali')).toBeInTheDocument();
+    const highlights = document.querySelectorAll('mark');
+    expect([...highlights].map((mark) => mark.textContent)).toEqual(['Mor', 'mor']);
+  });
+
+  it('propose de suivre un compte trouve qui ne l est pas encore', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u-alice',
+          displayName: 'Alice',
+          emailMasked: 'a***@test.local',
+          uiTheme: 'system',
+          accentColor: 'default',
+          avatarId: '',
+          handle: 'alice',
+          bio: null,
+          isProfilePublic: true,
+        })
+      ),
+      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
+      http.get(`${TEST_API_V1}/users/search`, () =>
+        HttpResponse.json({
+          items: [
+            { handle: 'lea_m', displayName: 'Léa Moreau', avatarId: '', isFollowedByMe: false },
+          ],
+        })
+      )
+    );
+
+    renderModal();
+    await screen.findByText(/aucun utilisateur/i);
+    await user.click(screen.getByRole('button', { name: 'Rechercher' }));
+    await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'mor');
+
+    expect(await screen.findByRole('button', { name: 'Suivre @lea_m' })).toBeInTheDocument();
+  });
+
+  it('explique une recherche sans resultat', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
+      http.get(`${TEST_API_V1}/users/search`, () => HttpResponse.json({ items: [] }))
+    );
+
+    renderModal();
+    await screen.findByText(/aucun utilisateur/i);
+    await user.click(screen.getByRole('button', { name: 'Rechercher' }));
+    await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'zephyrin');
+
+    expect(await screen.findByText('Personne ne correspond')).toBeInTheDocument();
+    expect(screen.getByText(/profil est privé/i)).toBeInTheDocument();
+  });
+
+  it('reduit l onglet Rechercher a une loupe sur mobile sans toucher aux compteurs', async () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn((query: string) => ({
+        matches: true,
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      }))
+    );
+    try {
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+        http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
+      );
+
+      renderModal();
+
+      expect(
+        await screen.findByRole('button', { name: 'Rechercher des utilisateurs' })
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Rechercher' })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /2 abonnements/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /5 abonnés/i })).toBeInTheDocument();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });

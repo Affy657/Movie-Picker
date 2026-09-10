@@ -49,6 +49,20 @@ public sealed class EventDocument
     [BsonIgnoreIfNull]
     public DateTime? WinnerPickedAt { get; set; }
 
+    [BsonElement("recurrence")]
+    [BsonIgnoreIfNull]
+    public string? Recurrence { get; set; }
+
+    [BsonElement("recurrenceParentEventId")]
+    [BsonIgnoreIfNull]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string? RecurrenceParentEventId { get; set; }
+
+    [BsonElement("nextOccurrenceEventId")]
+    [BsonIgnoreIfNull]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string? NextOccurrenceEventId { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 

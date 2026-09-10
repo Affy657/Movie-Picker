@@ -212,4 +212,98 @@ public sealed class InMemoryUserRepositoryTests
         Assert.Single(result);
         Assert.Equal("dave_v", result[0].LetterboxdUsername);
     }
+
+    [Fact]
+    public async Task SearchPublicAsync_MatchesDisplayNameAndHandleAnywhere()
+    {
+        await _repo.AddAsync(Mk(email: "lea@test.local", handle: "lea_m", displayName: "Léa Moreau"));
+        await _repo.AddAsync(Mk(email: "sofia@test.local", handle: "sofiamorgane", displayName: "Sofia Benali"));
+        await _repo.AddAsync(Mk(email: "paul@test.local", handle: "paulv", displayName: "Paul Vidal"));
+
+        var found = await _repo.SearchPublicAsync("mor", 20);
+
+        Assert.Equal(["lea_m", "sofiamorgane"], found.Select(u => u.Handle).Order());
+    }
+
+    [Fact]
+    public async Task SearchPublicAsync_IgnoresDiacritics()
+    {
+        await _repo.AddAsync(Mk(email: "lea@test.local", handle: "lea_m", displayName: "Léa Moreau"));
+
+        var found = await _repo.SearchPublicAsync("lea", 20);
+
+        Assert.Equal("lea_m", found.Single().Handle);
+    }
+
+    [Fact]
+    public async Task SearchPublicAsync_ExcludesPrivateProfiles()
+    {
+        var user = Mk(email: "lea@test.local", handle: "lea_m", displayName: "Léa Moreau") with { IsProfilePublic = false };
+        await _repo.AddAsync(user);
+
+        var found = await _repo.SearchPublicAsync("moreau", 20);
+
+        Assert.Empty(found);
+    }
+
+    [Fact]
+    public async Task SearchPublicAsync_ExcludesUsersWithoutHandle()
+    {
+        await _repo.AddAsync(Mk(email: "lea@test.local", handle: "", displayName: "Léa Moreau"));
+
+        var found = await _repo.SearchPublicAsync("moreau", 20);
+
+        Assert.Empty(found);
+    }
+
+    [Fact]
+    public async Task SearchPublicAsync_QueryTooShort_ReturnsEmpty()
+    {
+        await _repo.AddAsync(Mk(email: "lea@test.local", handle: "lea_m", displayName: "Léa Moreau"));
+
+        Assert.Empty(await _repo.SearchPublicAsync("m", 20));
+        Assert.Empty(await _repo.SearchPublicAsync("  ", 20));
+    }
+
+    [Fact]
+    public async Task SearchPublicAsync_HonoursTheLimit()
+    {
+        await _repo.AddAsync(Mk(email: "a@test.local", handle: "morgane_a", displayName: "Morgane A"));
+        await _repo.AddAsync(Mk(email: "b@test.local", handle: "morgane_b", displayName: "Morgane B"));
+
+        var found = await _repo.SearchPublicAsync("morgane", 1);
+
+        Assert.Single(found);
+    }
+
+    [Fact]
+    public async Task SearchPublicAsync_KeepsPrefixMatchesWhenTheLimitTruncates()
+    {
+        for (var index = 0; index < 300; index++)
+            await _repo.AddAsync(Mk(
+                email: $"noise{index}@test.local",
+                handle: $"contested{index}morgane",
+                displayName: $"Bruit {index}"));
+        await _repo.AddAsync(Mk(email: "lea@test.local", handle: "lea_m", displayName: "Morgane Leroy"));
+
+        var found = await _repo.SearchPublicAsync("morgane", 20);
+
+        Assert.Equal(20, found.Count);
+        Assert.Equal("lea_m", found[0].Handle);
+    }
+
+    [Fact]
+    public async Task SearchPublicAsync_OrdersDeterministicallyAcrossCalls()
+    {
+        for (var index = 0; index < 10; index++)
+            await _repo.AddAsync(Mk(
+                email: $"user{index}@test.local",
+                handle: $"morgane{index}",
+                displayName: $"Morgane {index}"));
+
+        var first = await _repo.SearchPublicAsync("morgane", 5);
+        var second = await _repo.SearchPublicAsync("morgane", 5);
+
+        Assert.Equal(first.Select(u => u.Handle), second.Select(u => u.Handle));
+    }
 }

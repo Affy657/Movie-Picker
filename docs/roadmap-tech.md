@@ -37,7 +37,7 @@ Découpage par version côté **plateforme, qualité, infra, observabilité, det
 - ✅ 🔒 `M` **Sécurité CI — Sonar** : analyse statique SonarCloud sur les deux applications, Quality Gate bloquante.
 - ✅ 🔒 `S` **Sécurité CI — Dépendances NuGet** : `dotnet list package --vulnerable` après restore, échec sur high et critical.
 - ✅ 🔒 `S` **Sécurité CI — Image Docker** : scan CVE de l'image taguée avant `docker push`.
-- ✅ 🔒 `S` **Sécurité CI — Secrets** : porte `gitleaks` bloquante sur l'arbre de travail, rotation documentée. Secret scanning et push protection restent hors de portée d'un dépôt privé sans Advanced Security, la bascule en public les ouvre.
+- ✅ 🔒 `S` **Sécurité CI — Secrets** : porte `gitleaks` bloquante sur l'arbre de travail, plus secret scanning et push protection GitHub depuis le passage en public le 2026-09-10, rotation documentée.
 
 ---
 
@@ -78,7 +78,7 @@ Découpage par version côté **plateforme, qualité, infra, observabilité, det
 
 **Objectif** : lever la contrainte de quota GitHub Actions à la racine.
 
-- ⬜ 🔒 `M` **Passage du dépôt en public** : minutes gratuites et illimitées, plus secret scanning, CodeQL, attestation SBOM et SonarCloud sans plafond de lignes, que le mode privé bloque. L'audit d'historique est fait et n'a trouvé aucun secret ; ce qui reste à décider avant la bascule est listé en Contrainte C7.
+- ✅ 🔒 `M` **Passage du dépôt en public** (2026-09-10) : minutes de runner gratuites et illimitées, secret scanning et push protection, CodeQL, signalement privé de vulnérabilité, et `master` protégé du force push. Aucune contribution externe n'est acceptée pour autant, voir Contrainte C7.
 
 ---
 

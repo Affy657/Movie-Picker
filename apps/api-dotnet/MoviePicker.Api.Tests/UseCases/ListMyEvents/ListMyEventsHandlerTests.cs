@@ -3,6 +3,7 @@ using System.Linq;
 using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.ListMyEvents;
+using MoviePicker.Api.Application.UseCases.RecurringEvents;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using Xunit;
@@ -14,6 +15,7 @@ public sealed class ListMyEventsHandlerTests
     private readonly Mock<IEventRepository> _eventRepo;
     private readonly Mock<IParticipantRepository> _participantRepo;
     private readonly Mock<IMovieRepository> _movieRepo;
+    private readonly Mock<IRecurringEventPass> _recurringEvents = new();
     private readonly ListMyEventsHandler _sut;
     private static readonly string[] value = new[] { "e1", "e2" };
 
@@ -30,7 +32,8 @@ public sealed class ListMyEventsHandlerTests
             .Setup(r => r.CountByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyCollection<string> ids, CancellationToken _) =>
                 ids.Distinct().ToDictionary(id => id, _ => 0));
-        _sut = new ListMyEventsHandler(_eventRepo.Object, _participantRepo.Object, _movieRepo.Object);
+        _sut = new ListMyEventsHandler(
+            _eventRepo.Object, _participantRepo.Object, _movieRepo.Object, _recurringEvents.Object);
     }
 
     [Fact]

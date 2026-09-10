@@ -1,3 +1,4 @@
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
@@ -37,6 +38,9 @@ public static class EventDocumentMapper
             WinnerPickedAt = doc.WinnerPickedAt.HasValue
                 ? new DateTimeOffset(doc.WinnerPickedAt.Value, TimeSpan.Zero)
                 : null,
+            Recurrence = ParseRecurrence(doc.Recurrence),
+            RecurrenceParentEventId = doc.RecurrenceParentEventId,
+            NextOccurrenceEventId = doc.NextOccurrenceEventId,
             CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero),
             UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)
         };
@@ -73,6 +77,9 @@ public static class EventDocumentMapper
             WinnerMovieId = evt.WinnerMovieId,
             WinnerPickMethod = ToWinnerPickMethodString(evt.WinnerPickMethod),
             WinnerPickedAt = evt.WinnerPickedAt?.UtcDateTime,
+            Recurrence = ToRecurrenceString(evt.Recurrence),
+            RecurrenceParentEventId = evt.RecurrenceParentEventId,
+            NextOccurrenceEventId = evt.NextOccurrenceEventId,
             CreatedAt = evt.CreatedAt.UtcDateTime,
             UpdatedAt = evt.UpdatedAt.UtcDateTime
         };
@@ -87,6 +94,24 @@ public static class EventDocumentMapper
 
     private static string ToWheelModeString(WheelMode mode) =>
         mode == WheelMode.WeightedByVotes ? "weightedByVotes" : "strictRandom";
+
+    private static RecurrenceFrequency? ParseRecurrence(string? raw) =>
+        raw?.Trim().ToLowerInvariant() switch
+        {
+            "weekly" => RecurrenceFrequency.Weekly,
+            "biweekly" => RecurrenceFrequency.Biweekly,
+            "monthly" => RecurrenceFrequency.Monthly,
+            _ => null
+        };
+
+    private static string? ToRecurrenceString(RecurrenceFrequency? frequency) =>
+        frequency switch
+        {
+            RecurrenceFrequency.Weekly => "weekly",
+            RecurrenceFrequency.Biweekly => "biweekly",
+            RecurrenceFrequency.Monthly => "monthly",
+            _ => null
+        };
 
     private static WinnerPickMethod? ParseWinnerPickMethod(string? raw) =>
         raw?.Trim().ToLowerInvariant() switch

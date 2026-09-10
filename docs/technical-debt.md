@@ -20,8 +20,8 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 
 - state: humain
 - bloque: écritures `gcloud` refusées par le classifieur d'auto-mode ; l'utilisateur doit lancer les trois commandes
-- impact: prod. `POST /api/v1/scheduler/event-reminders` répond 503, aucun rappel J-1, 1 h ni « en suspens » ne part. Le 503 est volontaire, préféré à un échec silencieux.
-- ou: `.github/workflows/deploy.yml:288` et `:352` (les deux gardes qui émettent le warning)
+- impact: prod. Les deux routes `POST /api/v1/scheduler/*` répondent 503. Aucun rappel J-1, 1 h ni « en suspens » ne part, et le balayage des soirées récurrentes ne tourne pas — celles-ci ne se reconduisent qu'à la clôture ou à l'ouverture de « Mes soirées ». Le 503 est volontaire, préféré à un échec silencieux.
+- ou: `.github/workflows/deploy.yml:288` et `:355` (les deux gardes qui émettent le warning)
 - verify: `gcloud secrets describe SCHEDULER_TOKEN --project <PROJET_GCP>` ; encore ouvert si NOT_FOUND
 - fix:
   ```bash
@@ -29,7 +29,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
   python -c "import secrets,sys; sys.stdout.write(secrets.token_urlsafe(48))" | gcloud secrets create SCHEDULER_TOKEN --data-file=- --replication-policy=automatic --project <PROJET_GCP>
   gh workflow run deploy.yml --ref master -f cible=api
   ```
-- fini-quand: l'endpoint ne répond plus 503 et le job Cloud Scheduler existe
+- fini-quand: les deux endpoints ne répondent plus 503 et les deux jobs Cloud Scheduler existent, `movie-picker-event-reminders` et `movie-picker-recurring-events`
 - piege: aucune IAM à ajouter, le compte de service a déjà `roles/editor` et `roles/secretmanager.secretAccessor` au niveau projet. Une session précédente a annoncé à tort qu'il fallait `cloudscheduler.admin`.
 
 ## DEBT-002 authentification keyless écrite mais jamais fusionnée
@@ -289,9 +289,9 @@ Deux pièges au décommissionnement d'AWS lui-même (lot 4) :
 - **le certificat ACM est un wildcard `*.movie-picker.fr`.** Vérifier qu'aucun autre sous-domaine ne s'en sert avant de le retirer, sinon la suppression casse un hôte qui n'était pas dans le périmètre ;
 - **le `CNAME` se repointe à la main chez OVH**, il n'y a pas de CLI. Ce que le dépôt doit perdre au passage, secrets, variables, scripts et mentions d'AWS, se relève par un `grep -rin aws` au moment du lot : ne pas travailler sur une liste écrite à l'avance, elle sera périmée.
 
-## C7 rendre le dépôt public expose tout l'historique, pas le head
+## C7 le dépôt est public depuis le 2026-09-10, et son historique entier avec lui
 
-L'item « Passage du dépôt en public » (V1.6 de `roadmap-tech.md`) rend lisible **chaque commit jamais poussé**, plus les 86 pull requests et les 7 tickets, pas l'état actuel du dépôt. Ce qui a été exposé une fois est compromis, et un `git rm` postérieur n'y change rien. **La bascule est réversible dans les réglages, pas dans les faits** : un clone ou un fork fait pendant la fenêtre publique survit au retour en privé.
+La bascule est **faite**. Ce qu'elle a rendu lisible, c'est **chaque commit jamais poussé**, plus les 86 pull requests et les 7 tickets, pas seulement l'état actuel du dépôt. Ce qui a été exposé une fois est compromis, et un `git rm` postérieur n'y change rien. **La bascule est réversible dans les réglages, pas dans les faits** : un clone ou un fork fait pendant la fenêtre publique survit au retour en privé.
 
 **Audit fait le 2026-09-10 sur les 1 003 commits de toutes les références, plus le corps et les commentaires de toutes les PR et de tous les tickets. Ne pas le rejouer à l'identique, lire ses résultats :**
 
@@ -299,35 +299,32 @@ L'item « Passage du dépôt en public » (V1.6 de `roadmap-tech.md`) rend lisib
 - **Aucune donnée personnelle** dans les captures RNCP ni les tickets. `05-compte.png` montre `a***@test.local` et « Alice test », le courriel y est masqué par l'UI. Aucun courriel réel, aucun cookie de session, aucun jeton dans les 2,2 Mo de texte des PR et tickets.
 - La porte `gitleaks` de la CI tourne en mode `dir` : elle regarde **l'arbre de travail, jamais l'historique**. Elle n'a donc jamais couvert ce que la bascule expose ; c'est l'audit ci-dessus qui l'a fait, une fois.
 
-**Ce qui reste, et qui se décide avant la bascule, jamais après :**
+**Ce que la bascule a publié, et qui ne se reprend pas. Assumé sciemment, ne pas y revenir comme si c'était un oubli :**
 
-1. **Le courriel personnel de l'auteur est l'adresse de 916 commits sur 1 003.** 28 commits utilisent déjà l'adresse `noreply` GitHub, donc l'identité est déjà incohérente. Après la bascule l'adresse est publique définitivement, moissonnée et miroitée. Trois issues : l'assumer, réécrire les 1 003 commits vers l'adresse `noreply` avant de basculer (change **tous** les SHA, casse les liens de commit des 86 PR fusionnées et toute référence externe), ou l'assumer en configurant `user.email` sur l'adresse `noreply` pour la suite.
-2. **Les livrables RNCP et un support de cours Ynov sont suivis** : `docs/RNCP/` (dossiers PDF, captures, slides du Bloc 3) et `archive/docs/_ynov/`, qui contient une consigne de module, donc du matériel de l'école. Publier des livrables notés en verbatim les rend copiables, et l'oral du Bloc 3 est le 2026-09-16. Décider explicitement : publier, retirer du suivi, ou attendre le 17.
-3. **Cinq branches distantes deviennent visibles**, dont trois branches de travail d'agent, et `feedback-attachments` dont l'objet n'est plus identifiable. Rien de secret, mais c'est ce que voit un visiteur en premier. Ne pas les supprimer sans vérifier `git worktree list` : deux d'entre elles sauvegardent le travail en cours d'un worktree.
-4. **Les journaux et les artefacts des runs Actions deviennent publics eux aussi**, pas seulement le code. Vérifié : aucun `set -x`, aucun `echo` de secret dans les six workflows, seulement des contrôles de présence, et GitHub masque de lui-même tout secret déclaré. Le résidu est ailleurs, dans deux artefacts : `playwright-traces`, qui embarque corps de requêtes et cookies du run E2E, et `sbom-api`. La rétention est de 90 jours, donc attendre déplace le problème au lieu de le régler.
+1. **Le courriel personnel de l'auteur est l'adresse de 916 commits sur 1 003**, désormais public, moissonnable et miroité. 28 commits utilisaient déjà l'adresse `noreply` GitHub, l'identité était donc déjà incohérente. Le seul recours restant serait de réécrire les 1 003 commits, ce qui change **tous** les SHA et casse les liens de commit des 86 PR fusionnées — pour une adresse déjà publiée, donc sans bénéfice. Ce qui reste utile, et pas fait : poser `user.email` sur l'adresse `noreply` pour les commits **à venir**.
+2. **Les livrables RNCP et un support de cours Ynov sont publiés** : `docs/RNCP/` (dossiers PDF, captures, slides du Bloc 3) et `archive/docs/_ynov/`, qui contient une consigne de module, donc du matériel de l'école. Des livrables notés en verbatim sont désormais copiables, et l'oral du Bloc 3 est le 2026-09-16. Un `git rm` maintenant ne retirerait que le head.
+3. **Cinq branches distantes sont visibles**, dont trois branches de travail d'agent, et `feedback-attachments` dont l'objet n'est plus identifiable. Rien de secret, mais c'est ce que voit un visiteur en premier. Ne pas les supprimer sans vérifier `git worktree list` : deux d'entre elles sauvegardent le travail en cours d'un worktree.
+4. **Les journaux et les artefacts des runs Actions sont publics eux aussi**, pas seulement le code. Vérifié : aucun `set -x`, aucun `echo` de secret dans les six workflows, seulement des contrôles de présence, et GitHub masque de lui-même tout secret déclaré. Le résidu est ailleurs, dans deux artefacts : `playwright-traces`, qui embarque corps de requêtes et cookies du run E2E, et `sbom-api`. La rétention est de 90 jours, donc attendre déplace le problème au lieu de le régler.
 
 **Traité le 2026-09-10, ne pas refaire :**
 
 - **Les identifiants d'infrastructure sont sortis des fichiers suivis** : compte AWS, distribution CloudFront, ARN du certificat ACM, nom du bucket, projet GCP et organisation Sentry sont remplacés par des gabarits `<COMME_CECI>`, et `infra/README.md` porte la table qui dit par quelle commande relever chaque valeur. `scripts/apply-cloudfront-headers.sh` n'a plus de valeur par défaut, il sort en 2 si `DISTRIBUTION_ID` manque. Aucun n'était un secret et aucun n'était dans les PR ni les tickets, donc le head suffisait, sans réécriture d'historique. **Ce qui reste de DEBT-003 n'en est pas dispensé pour autant** : des clés root AWS actives, même derrière une cible qui n'est plus nommée, restent le vrai sujet.
 - **Aucune contribution externe n'est possible sans un geste de l'auteur.** `CONTRIBUTING.md` le dit, la licence l'impose, et les jobs d'entrée de `ci-cd.yml` (`changes`, `gitleaks`, `lint-workflows`, plus `sonar` dont l'`always()` ignorerait un `changes` sauté) portent `github.event.pull_request.head.repo.fork != true`. Une PR de fork ne déclenche donc rien : ni minutes dépensées, ni `sonar` rouge faute de secrets. `SECURITY.md` détourne les failles vers un canal privé plutôt qu'un ticket public.
-- **`gh api` refuse `actions/permissions/fork-pr-contributor-approval` sur un dépôt privé** (« Fork PR approval is not allowed for private repositories », 422). Le réglage est donc pilotable par API, mais **seulement après la bascule** : c'est l'un des gestes de la liste ci-dessous, pas une fatalité de console.
 
-**Ce que la bascule débloque, et qui n'est pas dans l'item de roadmap :**
+**Les réglages posés le 2026-09-10, juste après la bascule.** Ne pas les reposer, les vérifier :
 
-- **Secret scanning et push protection**, aujourd'hui **désactivés** — l'API répond « Secret scanning is disabled on this repository », un dépôt privé les réservant à GitHub Advanced Security. La ligne V1 de `roadmap-tech.md` qui les annonçait activés était fausse. Ils deviennent gratuits en public, et alors seulement la porte de CI cesse d'être le seul filet.
-- **CodeQL**, l'attestation SBOM, et le **signalement privé de vulnérabilité** que `SECURITY.md` désigne comme canal à préférer : il n'existe pas encore, l'onglet Security ne l'offre qu'en public.
-- **La protection de branche et les rulesets**, réservés aux dépôts publics sur le plan gratuit. Sur `master` ne poser que l'interdiction de `force push` et de suppression : **exiger un contrôle de statut casserait le workflow de poussée directe**, un commit tout juste poussé n'ayant encore aucun run attaché.
-- **SonarCloud sans plafond de lignes** : le palier gratuit est annoncé illimité sur un projet public, à relire sur la page de tarification avant d'en dépendre. Ce qui supprime la cause de l'exclusion de `TechPage.tsx` et de `app/pages/tech/` posée le 2026-09-09, soit ~3 000 lignes rendues à l'analyse, et la contrainte de marge de DEBT-021. Le projet doit être passé en public côté SonarCloud aussi, ce qui rend ses constats publics.
-- **Le bouton « Signaler un problème » du footer** passe par un `mailto:` vers `contact@movie-picker.fr` et ne dépend pas de la visibilité : la bascule ne le répare ni ne le casse.
+| Réglage | Valeur | Vérification |
+|---|---|---|
+| approbation des PR de contributeurs externes | `all_external_contributors` | `gh api repos/<DEPOT>/actions/permissions/fork-pr-contributor-approval` |
+| secret scanning et push protection | activés | `gh api repos/<DEPOT> --jq .security_and_analysis` |
+| signalement privé de vulnérabilité | activé | `gh api repos/<DEPOT>/private-vulnerability-reporting` |
+| CodeQL, configuration par défaut | `configured` | `gh api repos/<DEPOT>/code-scanning/default-setup` |
+| épinglage des actions par SHA | obligatoire | `gh api repos/<DEPOT>/actions/permissions` |
+| `master` : ni force push ni suppression | ruleset actif | `gh api repos/<DEPOT>/rulesets` |
 
-**Les gestes à passer juste après la bascule.** Deux sont déjà faits et n'y sont plus : `sha_pinning_required` est posé depuis le 2026-09-10 (il a pris sans rien casser, tous les `uses:` étant déjà épinglés par SHA), et les correctifs de sécurité Dependabot automatiques étaient déjà actifs. Restent :
+Deux pièges d'énumération, payés une fois : `approval_policy` n'accepte que des valeurs **en minuscules** (`all_external_contributors`), et le ruleset ne demande **aucun contrôle de statut** — en exiger un casserait le workflow de poussée directe, un commit tout juste poussé n'ayant encore aucun run attaché.
 
-```bash
-gh api -X PUT repos/<DEPOT>/actions/permissions/fork-pr-contributor-approval -f approval_policy=ALL_EXTERNAL_CONTRIBUTORS  # énumération à relire dans la réponse d'un GET sur le même chemin
-gh api -X PUT repos/<DEPOT>/private-vulnerability-reporting
-```
-
-Puis les deux qui n'ont pas d'API : activer **secret scanning et push protection** (Settings → Code security), et passer le projet **SonarCloud** en public.
+**Il reste un geste, sans API : passer le projet SonarCloud en public.** C'est lui qui supprime le plafond de 50 000 lignes, donc la cause de l'exclusion de `TechPage.tsx` et de `app/pages/tech/` posée le 2026-09-09 — ~3 000 lignes rendues à l'analyse — et la contrainte de marge de DEBT-021. Le palier gratuit est annoncé illimité sur un projet public, à relire sur la page de tarification avant d'en dépendre. Contrepartie : les constats deviennent publics.
 
 **Deux limites à connaître, qui ne se règlent pas :**
 

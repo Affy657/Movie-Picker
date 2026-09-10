@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.SearchUsers;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.InMemory;
@@ -61,6 +62,25 @@ public sealed class InMemoryUserRepository : IUserRepository
     {
         IReadOnlyList<User> result = _byId.Values
             .Where(u => !string.IsNullOrWhiteSpace(u.LetterboxdUsername))
+            .ToList();
+        return Task.FromResult(result);
+    }
+
+    public Task<IReadOnlyList<User>> SearchPublicAsync(string query, int limit, CancellationToken ct = default)
+    {
+        var normalized = UserSearchPolicy.Normalize(query);
+        if (normalized.Length < UserSearchPolicy.MinQueryLength)
+            return Task.FromResult<IReadOnlyList<User>>([]);
+
+        IReadOnlyList<User> result = _byId.Values
+            .Where(u => u.IsProfilePublic
+                && !string.IsNullOrEmpty(u.Handle)
+                && (UserSearchPolicy.Contains(u.DisplayName, normalized)
+                    || UserSearchPolicy.Contains(u.Handle, normalized)))
+            .OrderByDescending(u => UserSearchPolicy.StartsWith(u.DisplayName, normalized)
+                || UserSearchPolicy.StartsWith(u.Handle, normalized))
+            .ThenBy(u => u.Handle, StringComparer.OrdinalIgnoreCase)
+            .Take(limit)
             .ToList();
         return Task.FromResult(result);
     }

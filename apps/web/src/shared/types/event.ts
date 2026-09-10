@@ -6,6 +6,8 @@ export type WheelMode = 'strictRandom' | 'weightedByVotes';
 
 export type WinnerPickMethod = 'wheel' | 'manual';
 
+export type EventRecurrence = 'weekly' | 'biweekly' | 'monthly';
+
 export interface EventConfigData {
   theme: string | null;
   maxProposalsPerParticipant: number | null;
@@ -16,6 +18,10 @@ export interface EventConfigData {
   richSharePreview?: boolean;
 
   allowSeries?: boolean;
+
+  recurrence?: EventRecurrence | null;
+
+  hasNextOccurrence?: boolean;
 }
 
 export interface EventParticipantSummary {

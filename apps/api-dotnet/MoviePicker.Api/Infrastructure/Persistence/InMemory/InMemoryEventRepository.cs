@@ -24,23 +24,7 @@ public sealed class InMemoryEventRepository : IEventRepository
     public Task<Event> AddAsync(Event evt, CancellationToken ct = default)
     {
         var id = string.IsNullOrEmpty(evt.Id) ? Guid.NewGuid().ToString("N")[..24] : evt.Id;
-        var created = new Event
-        {
-            Id = id,
-            Title = evt.Title,
-            Date = evt.Date,
-            Time = evt.Time,
-            HostToken = evt.HostToken,
-            Slug = evt.Slug,
-            CreatorUserId = evt.CreatorUserId,
-            Config = evt.Config,
-            ClosedAt = evt.ClosedAt,
-            WinnerMovieId = evt.WinnerMovieId,
-            WinnerPickMethod = evt.WinnerPickMethod,
-            WinnerPickedAt = evt.WinnerPickedAt,
-            CreatedAt = evt.CreatedAt,
-            UpdatedAt = evt.UpdatedAt
-        };
+        var created = evt with { Id = id };
         _byId[id] = created;
         if (!string.IsNullOrEmpty(created.Slug))
             _bySlug[created.Slug] = created;
@@ -126,6 +110,17 @@ public sealed class InMemoryEventRepository : IEventRepository
     {
         IReadOnlyList<Event> result = _byId.Values
             .Where(e => !e.ClosedAt.HasValue)
+            .ToList();
+        return Task.FromResult(result);
+    }
+
+    public Task<IReadOnlyList<Event>> ListRecurringAwaitingNextOccurrenceAsync(
+        string? creatorUserId,
+        CancellationToken ct = default)
+    {
+        IReadOnlyList<Event> result = _byId.Values
+            .Where(e => e.Recurrence.HasValue && string.IsNullOrEmpty(e.NextOccurrenceEventId))
+            .Where(e => string.IsNullOrEmpty(creatorUserId) || e.CreatorUserId == creatorUserId)
             .ToList();
         return Task.FromResult(result);
     }
