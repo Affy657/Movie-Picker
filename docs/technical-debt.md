@@ -122,7 +122,8 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 
 ## DEBT-011 endpoint de profil public orphelin
 
-- state: agent
+- state: humain
+- bloque: la décision, pas le geste. Cette route est très probablement le volet API de « **Watchlist d'un autre utilisateur** » du backlog de `roadmap-product.md` : la retirer supprimerait la moitié déjà écrite d'une feature planifiée. Trancher entre construire la feature et abandonner la route.
 - impact: surface d'API maintenue et testée sans aucun appelant
 - ou: `apps/api-dotnet/MoviePicker.Api/Controllers/UsersController.cs:66`, route `GET users/{handle}/movies`
 - verify: la route existe encore côté API et aucun fichier front ne l'appelle.
@@ -145,16 +146,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
   ```
 - fix: prerendering des routes publiques, puis enregistrement Search Console
 - piege: l'enregistrement Search Console demande un geste humain de vérification de propriété du domaine
-
-## DEBT-013 pseudo-ternaire dans le calcul de ce qui se déploie
-
-- state: agent
-- impact: aucun aujourd'hui, le bon comportement est obtenu par accident. Le risque est qu'une modification voisine le fasse basculer sans que personne ne comprenne pourquoi le périmètre **vérifié** a changé — et une porte qui saute laisse un run vert, donc un commit déployable.
-- ou: `.github/workflows/ci-cd.yml:80`, `base: ${{ github.ref == 'refs/heads/master' && '' || 'master' }}`
-- verify: `grep -n "refs/heads/master' && '' ||" .github/workflows/ci-cd.yml` ; encore ouvert si la ligne sort
-- fix: `''` est falsy, donc la branche « vraie » ne gagne jamais et l'expression vaut toujours `'master'`. Écrire l'intention explicitement plutôt que de s'appuyer sur le rattrapage.
-- piege: **ne pas corriger à l'aveugle**. Ça marche parce que `dorny/paths-filter` traite spécialement le cas « base égale la branche poussée » et compare alors au commit précédent. Toute correction doit être validée sur un push master réel **et** sur un push de branche, sinon elle change ce qui est vérifié.
-- refs: préexistait au chantier CI/CD de septembre 2026
 
 ## DEBT-014 le domaine www ne répond pas
 
@@ -195,19 +186,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fini-quand: les deux pages tiennent le plancher de 85 et leurs entrées disparaissent de `perPageMinimumScores`
 - piege: aucun découpage de bundle ne franchit ce mur, c'est mesuré et documenté en Impasses I3. Le coût est le démarrage de React lui-même, pas le poids téléchargé.
 
-## DEBT-017 les workflows ne sont couverts par aucune vérification locale
-
-- state: agent
-- impact: une erreur dans un workflow n'est vue qu'en CI, après le push. `check:architecture` ne lit que `apps/web/src` et `apps/api-dotnet`, et Prettier ignore `.github/`.
-- verify: `grep -nE "apps/|\.github" scripts/check-architecture.mjs | head` ; encore ouvert tant que `.github` n'y figure pas
-- fix: rejouer en local les portes du job `lint-workflows`, aux versions exactement épinglées dans les workflows, et les brancher sur `verify:local` :
-  ```bash
-  actionlint                                                                    # 1.7.7, délègue les blocs run: à shellcheck 0.10.0
-  zizmor --offline --no-progress --min-severity medium --format plain .github/workflows/
-  for f in .github/workflows/*.yml; do python3 -c "import yaml; yaml.safe_load(open('$f'))"; done
-  ```
-- fini-quand: les trois portes tournent dans `verify:local`
-- piege: les trois étaient à 0 constat au 2026-09-06, donc l'ajout ne doit rien casser. Vérifier que `shellcheck` est dans le PATH, `actionlint` échoue silencieusement sur les blocs `run:` sans lui.
 ## DEBT-018 GitHub Actions bloqué par la facturation, la production front est figée
 
 - state: humain
@@ -239,26 +217,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fini-quand: plus aucun `S3776` ouvert, ou ceux qui restent portent une justification « won't fix »
 - piege: **la complexité cognitive ne se mesure pas en local**, aucun outil du dépôt ne la calcule. Ne pas annoncer un seuil franchi sur la foi d'une lecture du diff, d'autant que cinq des seize fonctions n'étaient qu'à 16. Second piège, à l'inverse du réflexe attendu : ces refactorisations **ajoutent** des lignes, +1357 pour -619 sur les cinq commits, parce qu'extraire un bloc coûte une déclaration de type et une liste de props. Ce n'est pas un échec, mais ça consomme la marge de DEBT-021.
 
-## DEBT-020 aucune garde contre les classes CSS mortes
-
-- state: agent
-- impact: supprimer d'un module CSS une classe qui sert encore ne casse ni la compilation, ni le lint, ni les tests. C'est parti en production le 2026-09-09 : les cartes de `/my-events` ont perdu fond, bordure et `text-decoration`, et c'est l'utilisateur qui l'a vu. Symétriquement rien ne signale les classes réellement mortes, il en reste au moins deux.
-- ou: `scripts/check-architecture.mjs`. Classes mortes connues : `.credits` dans `apps/web/src/app/pages/tech/techPage.module.css:79` et `.attachmentsLabel` dans `apps/web/src/app/components/ProposeIdeaButton.module.css:72`, cette dernière restée après le passage du label en `<legend>`.
-- verify: encore ouvert tant que l'une des deux lignes sort.
-  ```bash
-  grep -n '^\.credits' apps/web/src/app/pages/tech/techPage.module.css
-  grep -n '^\.attachmentsLabel' apps/web/src/app/components/ProposeIdeaButton.module.css
-  ```
-- fix: supprimer les deux classes, puis ajouter à `check:architecture` une règle qui rapproche chaque classe déclarée dans un `*.module.css` de ses usages
-- fini-quand: la règle tourne dans `verify:local` et échoue sur une classe déclarée sans usage
-- piege: **une recherche naïve de `styles.<classe>` rend des faux positifs**, et c'est le premier des trois cas qui a cassé la production :
-  1. **import sous alias.** `import s from './X.module.css'` : chercher `styles.` ne voit rien. Résoudre le nom local de l'import avant de chercher.
-  2. **objet de styles ré-exporté.** `export { styles as eventSummaryCardStyles }` dans `EventSummaryCard.tsx:13`, consommé par `MyEventsPage.tsx:570` et `ProposeToEventModal.tsx:79`. C'est exactement la classe qui a été supprimée à tort.
-  3. **accès par crochets.** `styles[uneVariable]` rend le module inanalysable statiquement ; cinq fichiers sont dans ce cas, dont `Chip.tsx`, `Modal.tsx` et `Skeleton.tsx`. Les mettre en liste d'exclusion assumée, jamais en faux négatif silencieux.
-
-  Quatrième cas, de nature différente : `composes:` et les sélecteurs descendants sur classe globale, comme `.footer .btn`, sont des usages réels. Une classe peut n'apparaître nulle part en TypeScript et servir quand même.
-- refs: même constat en mémoire de session sous `feedback_classe_css_morte_alias`
-
 ## DEBT-021 du code de production est exclu de Sonar pour tenir sous le plafond de lignes
 
 - state: differe
@@ -272,21 +230,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fix: aucun candidat évident ne reste à exclure, tout ce qui était légitime l'est déjà. Les deux sorties réelles sont de payer un plan, ou de réduire le code analysé.
 - fini-quand: la marge redevient confortable sans qu'aucun code de production ne soit exclu
 - piege: **le symptôme est trompeur, le dépassement ne rend pas le job rouge.** L'analyse échoue côté serveur pendant que le Quality Gate reste vert sur les données de la veille : ne pas conclure « Sonar va bien » en voyant du vert. Au 2026-09-09, `ncloc` valait 47 864, soit 2 136 lignes de marge.
-## DEBT-022 le test axe de TechPage tient de justesse dans son budget
-
-- state: differe
-- declencheur: un échec de `a11y.test.tsx` sur TechPage alors que la machine est au repos
-- impact: c'est le test le plus lourd de la suite front et le seul à porter son propre budget. Mesuré à 43,7 s au calme pour un budget de 60 s, soit 27 % de marge. Sous charge il monte à 85 s et échoue, et il fait alors échouer `verify:local` entier.
-- ou: `apps/web/src/app/pages/a11y.test.tsx:48`, constante `HEAVIEST_PAGE_AXE_BUDGET`
-- verify: lire la durée du test TechPage, encore ouvert tant qu'elle dépasse 40 s sur une machine au repos.
-  ```bash
-  pnpm --filter web exec vitest run src/app/pages/a11y.test.tsx --reporter=verbose
-  ```
-- fix: la page rend plusieurs centaines de nœuds SVG et axe les parcourt tous. L'accélération en place, `collapseVectorsToTheirAccessibleName` à la ligne 73, remplace chaque `svg` par son nom accessible le temps de l'audit ; l'étendre au reste du décor est le levier suivant.
-- fini-quand: le test tient sous la moitié de son budget
-- piege: **un échec de ce test n'accuse pas le diff en cours.** Trois échecs consécutifs ont été imputés à tort à des modifications de composants, la cause réelle étant une vingtaine de processus node et dotnet orphelins laissés par des exécutions précédentes interrompues. Avant d'accuser du code, comparer les durées test par test : si des pages sans aucun rapport avec le diff ralentissent dans les mêmes proportions, c'est la machine. Ne jamais faire `taskkill //IM node.exe` pour nettoyer, ça tue la session de l'agent en cours ; viser les `dotnet.exe` et les ports 5173 et 4000.
-- refs: même racine que la famine des workers vitest, une suite lancée pendant qu'autre chose tourne rend de faux échecs
-
 ---
 
 # Contraintes

@@ -77,7 +77,14 @@ jobs:
         id: filter
         if: github.event_name != 'workflow_dispatch'
         with:
-          base: ${{ github.ref == 'refs/heads/master' && '' || 'master' }}
+          # `master` dans les deux cas, et ce n'est pas un oubli : dorny/paths-filter traite
+          # spécialement le cas « base égale la branche poussée » et compare alors au commit
+          # précédent. Un push master diffe donc contre son parent, un push de branche contre
+          # master. Un pseudo-ternaire vivait ici, censé passer une base vide sur master, et il
+          # rendait déjà cette même constante mais par accident : une chaîne vide est falsy en
+          # expression GitHub Actions, donc sa branche « vraie » ne gagnait jamais, pour aucune
+          # ref. Écrire la constante retire le piège sans rien changer à ce qui est vérifié.
+          base: master
           filters: |
             web:
               - 'apps/web/**'
@@ -126,6 +133,9 @@ jobs:
   #     donc la porte est verte aujourd'hui et n'attrape que du sérieux (injection depuis un
   #     contexte non fiable, secrets exposés). Descendre à `low` demanderait de traiter 9 constats
   #     cosmétiques. `--offline` pour que la porte ne dépende pas de l'API GitHub.
+  # `scripts/check-workflows.mjs` rejoue les deux outils en local dans `verify:local`, par Docker.
+  # Les versions des deux côtés doivent rester alignées : en changer une ici sans changer l'autre
+  # rend une porte locale verte sur ce que la CI refuse.
   lint-workflows:
     name: Lint workflows (actionlint + zizmor)
     runs-on: ubuntu-24.04

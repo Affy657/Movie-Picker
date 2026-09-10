@@ -77,7 +77,7 @@ Pour toute nouvelle barre sticky dont le contenu change de hauteur :
 
 **Le test est écrit avant le code.** Pour une fonctionnalité comme pour un correctif : d'abord un test qui échoue et qui décrit le comportement attendu, ensuite l'implémentation qui le fait passer. Sur un bug, le test doit reproduire le symptôme avant toute correction, sinon rien ne prouve que la cause a été traitée.
 
-**Avant tout push sur master, toujours exécuter `pnpm run verify:local` et corriger toute erreur avant de push.** Obligatoire quelle que soit la conversation ou la feature. Treize étapes, dans l'ordre : règles d'architecture, `pnpm lint`, ESLint, Prettier, `dotnet restore`, `dotnet format --verify-no-changes`, build Release avec `-warnaserror`, export OpenAPI, dérive des types OpenAPI, audit Trivy (Docker), tests front avec seuils de couverture, tests API unitaires, tests API d'intégration.
+**Avant tout push sur master, toujours exécuter `pnpm run verify:local` et corriger toute erreur avant de push.** Obligatoire quelle que soit la conversation ou la feature. Quatorze étapes, dans l'ordre : règles d'architecture, workflows (actionlint + shellcheck + zizmor), `pnpm lint`, ESLint, Prettier, `dotnet restore`, `dotnet format --verify-no-changes`, build Release avec `-warnaserror`, export OpenAPI, dérive des types OpenAPI, audit Trivy (Docker), tests front avec seuils de couverture, tests API unitaires, tests API d'intégration.
 
 **Pousser sur master ne déploie rien.** La mise en production est un geste manuel, `gh workflow run deploy.yml --ref master -f cible=tout` (cibles : `tout`, `front`, `api`), et elle refuse de partir si le run `ci-cd.yml` du commit visé n'est pas vert. Ne jamais la déclencher sans demande explicite de l'utilisateur : le découpage existe pour qu'il groupe plusieurs livraisons dans un seul déploiement, les minutes GitHub Actions d'un dépôt privé étant facturées. Corollaire à annoncer en fin de tâche : **la production est en retard sur master par défaut**, et rien ne le signale.
 
@@ -101,7 +101,10 @@ Trois procédures sont rappelées par leur nom plutôt que réexpliquées à cha
 - un import de `shared/` vers une feature, ou un cycle d'imports côté front ;
 - en CSS module : espacement, `font-size`, `z-index` ou couleur en valeur littérale ; point de rupture hors échelle ; `<dialog>` ou `::backdrop` écrit hors de `Modal` ;
 - une classe `btn`/`btn-*` écrite à la main hors de `Button` ;
-- un élément cliquable dont la `min-height` plafonne sous 44 px.
+- un élément cliquable dont la `min-height` plafonne sous 44 px ;
+- une classe déclarée dans un `*.module.css` et utilisée nulle part. La règle résout le nom local de l'import fichier par fichier, suit les ré-exports (`export { styles as xStyles }`), et compte comme usage un `composes:`, un `:global(...)` et une position descendante (`.footer .btn`). Les modules accédés par crochets (`styles[variable]`) sont inanalysables : ils sont exclus et **listés dans la sortie**, jamais passés en silence.
+
+`pnpm run check:workflows` rejoue les portes de `lint-workflows` en local, dans `verify:local`. Les deux outils passent par Docker épinglé au digest parce qu'`actionlint` **saute silencieusement** sa moitié shellcheck quand shellcheck n'est pas dans le PATH : l'image embarque shellcheck 0.10.0, la version de la CI. Changer une version d'un côté sans l'autre rend une porte locale verte sur ce que la CI refuse.
 
 `pnpm run test:api:mongo` rejoue la suite d'intégration API contre une vraie MongoDB en replica set (conteneur Docker créé à la volée, base jetable par classe de test) : c'est le seul chemin qui exécute les adaptateurs Mongo et les transactions. La CI le rejoue dans le job `test-api-mongo`, dont dépend le déploiement API. Il collecte sa propre couverture (`apps/api-dotnet/coverlet.integration.runsettings`) et `scripts/check-mongo-coverage.mjs` la contrôle sur le seul espace de noms `Infrastructure.Persistence.Mongo` : ces classes sont exclues du rapport du job `test-api`, donc sans cette porte la couche qui ne tourne qu'en production ne serait mesurée nulle part.
 

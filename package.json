@@ -16,6 +16,7 @@
     "lint": "turbo run lint",
     "lint:eslint": "eslint \"apps/web/src/**/*.{ts,tsx}\"",
     "check:architecture": "node scripts/check-architecture.mjs",
+    "check:workflows": "node scripts/check-workflows.mjs",
     "format": "prettier --write \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts eslint.config.mjs",
     "format:check": "prettier --check \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts eslint.config.mjs",
     "format:dotnet": "dotnet format apps/api-dotnet/MoviePicker.slnx --verbosity minimal",
