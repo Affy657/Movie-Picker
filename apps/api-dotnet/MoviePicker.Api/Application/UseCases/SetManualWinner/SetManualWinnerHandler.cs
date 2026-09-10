@@ -62,6 +62,7 @@ public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
             WinnerMovieId = winner.Id,
             WinnerPickMethod = WinnerPickMethod.Manual,
             WinnerPickedAt = now,
+            WinnerAnnouncedAt = now,
             UpdatedAt = now
         };
 

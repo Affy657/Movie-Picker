@@ -2,7 +2,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.LaunchWheel;
-using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
@@ -17,7 +16,6 @@ public sealed class LaunchWheelHandlerTests
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor;
     private readonly Mock<ICurrentUserAccessor> _currentUserAccessor;
     private readonly Mock<IPosterImageStore> _posterStore;
-    private readonly Mock<IWinnerAnnouncer> _winnerAnnouncer;
     private readonly LaunchWheelHandler _sut;
 
     private static Event ActiveEvent(string hostToken = "ht1") => new()
@@ -48,7 +46,6 @@ public sealed class LaunchWheelHandlerTests
         _posterStore
             .Setup(s => s.RegisterTmdbSourcesAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
-        _winnerAnnouncer = new Mock<IWinnerAnnouncer>();
         _sut = new LaunchWheelHandler(
             _eventRepo.Object,
             _movieRepo.Object,
@@ -56,7 +53,6 @@ public sealed class LaunchWheelHandlerTests
             _hostTokenAccessor.Object,
             _currentUserAccessor.Object,
             _posterStore.Object,
-            _winnerAnnouncer.Object,
             NullLogger<LaunchWheelHandler>.Instance);
     }
 
@@ -213,9 +209,7 @@ public sealed class LaunchWheelHandlerTests
         Assert.Equal(WinnerPickMethod.Wheel, captured.WinnerPickMethod);
         Assert.NotNull(captured.WinnerPickedAt);
         Assert.Contains("gagnant direct", result.Message);
-        _winnerAnnouncer.Verify(
-            a => a.AnnounceAsync(It.IsAny<Event>(), "Winner", WinnerPickMethod.Wheel, It.IsAny<CancellationToken>()),
-            Times.Once);
+        Assert.Null(captured.WinnerAnnouncedAt);
     }
 
     [Fact]

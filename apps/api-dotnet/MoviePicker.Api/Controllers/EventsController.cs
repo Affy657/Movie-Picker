@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
 using MoviePicker.Api.Application.UseCases.CloseEvent;
 using MoviePicker.Api.Application.UseCases.CreateEvent;
 using MoviePicker.Api.Application.UseCases.DeleteEvent;
@@ -166,6 +167,21 @@ public sealed class EventsController : ControllerBase
     {
         var result = await handler.HandleAsync(idOrSlug, ct);
         return Ok(result);
+    }
+
+    [HttpPost("{idOrSlug}/wheel/announce")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status415UnsupportedMediaType)]
+    public async Task<IActionResult> AnnounceWheelWinner(
+        string idOrSlug,
+        [FromBody] CsrfGuardRequest _,
+        [FromServices] IAnnounceWheelWinnerHandler handler,
+        CancellationToken ct)
+    {
+        await handler.HandleAsync(idOrSlug, ct);
+        return NoContent();
     }
 
     [HttpPost("{idOrSlug}/winner")]

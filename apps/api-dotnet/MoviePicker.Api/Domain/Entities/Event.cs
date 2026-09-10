@@ -16,6 +16,7 @@ public sealed record Event
     public string? WinnerMovieId { get; init; }
     public WinnerPickMethod? WinnerPickMethod { get; init; }
     public DateTimeOffset? WinnerPickedAt { get; init; }
+    public DateTimeOffset? WinnerAnnouncedAt { get; init; }
     public RecurrenceFrequency? Recurrence { get; init; }
     public string? RecurrenceParentEventId { get; init; }
     public string? NextOccurrenceEventId { get; init; }

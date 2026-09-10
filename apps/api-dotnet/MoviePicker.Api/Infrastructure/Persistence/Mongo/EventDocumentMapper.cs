@@ -35,6 +35,9 @@ public static class EventDocumentMapper
             ClosedAt = doc.ClosedAt.HasValue ? new DateTimeOffset(doc.ClosedAt.Value, TimeSpan.Zero) : null,
             WinnerMovieId = doc.WinnerMovieId,
             WinnerPickMethod = ParseWinnerPickMethod(doc.WinnerPickMethod),
+            WinnerAnnouncedAt = doc.WinnerAnnouncedAt.HasValue
+                ? new DateTimeOffset(doc.WinnerAnnouncedAt.Value, TimeSpan.Zero)
+                : null,
             WinnerPickedAt = doc.WinnerPickedAt.HasValue
                 ? new DateTimeOffset(doc.WinnerPickedAt.Value, TimeSpan.Zero)
                 : null,
@@ -77,6 +80,7 @@ public static class EventDocumentMapper
             WinnerMovieId = evt.WinnerMovieId,
             WinnerPickMethod = ToWinnerPickMethodString(evt.WinnerPickMethod),
             WinnerPickedAt = evt.WinnerPickedAt?.UtcDateTime,
+            WinnerAnnouncedAt = evt.WinnerAnnouncedAt?.UtcDateTime,
             Recurrence = ToRecurrenceString(evt.Recurrence),
             RecurrenceParentEventId = evt.RecurrenceParentEventId,
             NextOccurrenceEventId = evt.NextOccurrenceEventId,
