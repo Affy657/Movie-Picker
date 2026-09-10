@@ -39,7 +39,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - impact: les déploiements s'authentifient avec des identifiants statiques de longue durée (`GCP_SA_KEY`, clés AWS)
 - ou: branche `chore/ci-keyless-oidc`, commit `eb72fbb`, non fusionnée depuis le 2026-06-12
 - verify: `git merge-base --is-ancestor chore/ci-keyless-oidc master && echo REGLE || echo OUVERT`
-- fix: configurer WIF et le rôle AWS, puis fusionner. Rebaser d'abord, la branche a trois mois de retard.
+- fix: configurer WIF et le rôle AWS, puis réécrire le patch. **La branche ne se rebase plus** : ses huit lignes modifiaient les jobs `deploy-api` et `deploy-front` de `ci-cd.yml`, partis dans `deploy.yml` le 2026-09-10. `git merge-tree master chore/ci-keyless-oidc` rend un conflit sur `ci-cd.yml` dont le contexte n'existe plus. Prendre l'intention, pas le diff.
 - fini-quand: plus aucun secret d'identifiant statique dans les secrets GitHub du dépôt
 - refs: recoupe DEBT-003 et le lot Terraform 5 de `roadmap-tech.md`, qui traite le même sujet au fond
 
@@ -290,14 +290,34 @@ Deux pièges au décommissionnement d'AWS lui-même (lot 4) :
 
 ## C7 rendre le dépôt public expose tout l'historique, pas le head
 
-L'item « Passage du dépôt en public » (V1.6 de `roadmap-tech.md`) rend lisible **chaque commit jamais poussé**, pas l'état actuel du dépôt. Ce qui a été exposé une fois doit être considéré comme compromis, et un `git rm` postérieur n'y change rien.
+L'item « Passage du dépôt en public » (V1.6 de `roadmap-tech.md`) rend lisible **chaque commit jamais poussé**, plus les 86 pull requests et les 7 tickets, pas l'état actuel du dépôt. Ce qui a été exposé une fois est compromis, et un `git rm` postérieur n'y change rien. **La bascule est réversible dans les réglages, pas dans les faits** : un clone ou un fork fait pendant la fenêtre publique survit au retour en privé.
 
-Avant la bascule, et jamais après :
+**Audit fait le 2026-09-10 sur les 1 003 commits de toutes les références, plus le corps et les commentaires de toutes les PR et de tous les tickets. Ne pas le rejouer à l'identique, lire ses résultats :**
 
-1. `gitleaks` sur la **totalité** de l'historique, pas sur le diff. Aucun identifiant Atlas, GCP, AWS, Resend, TMDB ou VAPID n'a le droit d'avoir transité par un commit, et aucun `.env` d'avoir été versionné à un moment quelconque.
-2. Vérifier que les dumps de base et les captures des dossiers RNCP ne portent pas de données personnelles réelles.
-3. Tout secret trouvé impose sa **rotation** puis une réécriture d'historique. Dans cet ordre : réécrire sans faire tourner la clé ne protège rien, elle a déjà été publiée.
+- **Aucun secret.** `gitleaks` sur l'historique complet rend quatre constats, tous `curl-auth-user` sur des `<JETON_SONARCLOUD>` et `$SONAR_TOKEN` de documentation. Recherches ciblées vides pour `GOCSPX-`, `re_`, `sq[pau]_`, `ghp_`/`github_pat_`, `AKIA`, `AIza`, clé privée PEM, `mongodb+srv` avec mot de passe, JWT. Aucun `.env` versionné à aucun commit : seuls des `.env.example` ont jamais été ajoutés.
+- **Aucune donnée personnelle** dans les captures RNCP ni les tickets. `05-compte.png` montre `a***@test.local` et « Alice test », le courriel y est masqué par l'UI. Aucun courriel réel, aucun cookie de session, aucun jeton dans les 2,2 Mo de texte des PR et tickets.
+- La porte `gitleaks` de la CI tourne en mode `dir` : elle regarde **l'arbre de travail, jamais l'historique**. Elle n'a donc jamais couvert ce que la bascule expose ; c'est l'audit ci-dessus qui l'a fait, une fois.
 
+**Ce qui reste, et qui se décide avant la bascule, jamais après :**
+
+1. **Le courriel personnel de l'auteur est l'adresse de 916 commits sur 1 003.** 28 commits utilisent déjà l'adresse `noreply` GitHub, donc l'identité est déjà incohérente. Après la bascule l'adresse est publique définitivement, moissonnée et miroitée. Trois issues : l'assumer, réécrire les 1 003 commits vers l'adresse `noreply` avant de basculer (change **tous** les SHA, casse les liens de commit des 86 PR fusionnées et toute référence externe), ou l'assumer en configurant `user.email` sur l'adresse `noreply` pour la suite.
+2. **Les identifiants d'infrastructure sont en clair dans les fichiers suivis** : compte AWS, distribution CloudFront, nom du bucket, ARN du certificat ACM, projet GCP, organisation Sentry, dans `docs/runbook-migration-domaine-www.md`, `infra/iam-github-actions-deploy-policy.json`, `scripts/apply-cloudfront-headers.sh`, `.claude/skills/weekly-maintenance/references/commandes.md` et `docs/technical-debt.md` lui-même, qui viole ainsi sa propre règle 6. Aucun n'est un secret et aucun ne justifie une réécriture d'historique ; ce qu'ils font, c'est dispenser un attaquant de l'étape de reconnaissance. Ils ne sont **pas** dans les PR ni les tickets, donc un remplacement par des espaces réservés au head suffit à ne plus les publier au présent. **DEBT-003 passe avant** : des clés root AWS actives derrière une cible nommée, c'est le mode d'emploi complet.
+3. **Les livrables RNCP et un support de cours Ynov sont suivis** : `docs/RNCP/` (dossiers PDF, captures, slides du Bloc 3) et `archive/docs/_ynov/`, qui contient une consigne de module, donc du matériel de l'école. Publier des livrables notés en verbatim les rend copiables, et l'oral du Bloc 3 est le 2026-09-16. Décider explicitement : publier, retirer du suivi, ou attendre le 17.
+4. **Une branche `master` sans protection et cinq branches distantes deviennent visibles**, dont trois branches de travail d'agent. Rien de secret, mais c'est ce que voit un visiteur en premier.
+5. **Les journaux et les artefacts des runs Actions deviennent publics eux aussi**, pas seulement le code. Vérifié : aucun `set -x`, aucun `echo` de secret dans les six workflows, seulement des contrôles de présence, et GitHub masque de lui-même tout secret déclaré. Le résidu est ailleurs, dans deux artefacts : `playwright-traces`, qui embarque corps de requêtes et cookies du run E2E, et `sbom-api`. La rétention est de 90 jours, donc attendre déplace le problème au lieu de le régler.
+
+**Ce que la bascule débloque, et qui n'est pas dans l'item de roadmap :**
+
+- **Secret scanning et push protection**, aujourd'hui **désactivés** — l'API répond « Secret scanning is disabled on this repository », un dépôt privé les réservant à GitHub Advanced Security. La ligne V1 de `roadmap-tech.md` qui les annonce activés était fausse. Ils deviennent gratuits en public, et alors seulement la porte de CI cesse d'être le seul filet.
+- **CodeQL** et l'attestation SBOM.
+- **SonarCloud sans plafond de lignes** : le palier gratuit est annoncé illimité sur un projet public, à relire sur la page de tarification avant d'en dépendre. Ce qui supprime la cause de l'exclusion de `TechPage.tsx` et de `app/pages/tech/` posée le 2026-09-09, soit ~3 000 lignes rendues à l'analyse, et la contrainte de marge de DEBT-021. Le projet doit être passé en public côté SonarCloud aussi, ce qui rend ses constats publics.
+- **Le bouton « Signaler un problème » du footer** passe par un `mailto:` vers `contact@movie-picker.fr` et ne dépend pas de la visibilité : la bascule ne le répare ni ne le casse.
+
+**Deux pièges de la CI en public, qui ne se voient qu'au premier contributeur externe :**
+
+- **Aucun secret n'est fourni à un run de PR issue d'un fork**, donc le job `sonar` de `ci-cd.yml` échouera sur toute PR externe. La porte deviendra rouge pour une raison qui n'est pas le code proposé.
+- `ci-cd.yml` se déclenche sur `pull_request`, donc **du code d'inconnu s'exécute sur les runners** dès la première PR. Aucun `pull_request_target`, aucun `issue_comment`, aucun `workflow_run` dans le dépôt et `default_workflow_permissions` est déjà `read` : la posture est saine, mais il faut régler l'approbation manuelle sur « tous les contributeurs externes », sinon le quota que la bascule est censée libérer se dépense en runs d'inconnus.
+- La licence interdit la réutilisation alors que le fork est activé et ne se désactive pas sur un dépôt public. Il n'existe pas de `SECURITY.md`, donc une faille se signalera dans un ticket public.
 ---
 
 # Impasses
