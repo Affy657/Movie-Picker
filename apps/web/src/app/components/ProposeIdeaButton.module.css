@@ -69,11 +69,6 @@
   margin-bottom: var(--space-1-5);
 }
 
-.attachmentsLabel {
-  display: block;
-  margin-bottom: var(--space-1-5);
-}
-
 .dropZone {
   display: flex;
   flex-direction: column;

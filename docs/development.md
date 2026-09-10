@@ -108,6 +108,7 @@ Tous se lancent à la racine du dépôt.
 | `pnpm build` | Build du front par Turbo |
 | `pnpm lint`, `pnpm run lint:eslint` | Types et règles côté front |
 | `pnpm run check:architecture` | Règles d'architecture, aussi jouées au pre-push |
+| `pnpm run check:workflows` | actionlint (+ shellcheck) et zizmor sur `.github/workflows/`, par Docker |
 | `pnpm format`, `pnpm format:check` | Prettier |
 | `pnpm run format:dotnet`, `pnpm run format:dotnet:check` | Style C#, après `dotnet restore` |
 | `pnpm test`, `pnpm run test:coverage` | Tests front, Vitest |
@@ -117,7 +118,7 @@ Tous se lancent à la racine du dépôt.
 | `pnpm run test:e2e:mongo` | Le seul parcours critique, sur base réelle |
 | `pnpm run openapi:export`, `pnpm run openapi:types:check` | Contrat OpenAPI et dérive des types |
 | `pnpm run lighthouse` | Lighthouse sur le build, demande Node 22+ et Chrome |
-| `pnpm run verify:local` | La chaîne complète, treize étapes |
+| `pnpm run verify:local` | La chaîne complète, quatorze étapes |
 
 ## Tests
 

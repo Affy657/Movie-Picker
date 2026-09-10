@@ -76,14 +76,6 @@
   margin: var(--space-0);
 }
 
-.credits {
-  display: grid;
-  gap: var(--space-3);
-  max-width: var(--container-2xl);
-  margin-top: var(--space-10);
-  margin-bottom: var(--space-8);
-}
-
 .metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
