@@ -136,6 +136,10 @@ Trois choix structurent la mise en production :
 - **Le front est poussé en trois temps**, `index.html` et le service worker en dernier, puis
   CloudFront est invalidé, pour qu'aucun client ne se retrouve avec un service worker en avance sur
   ses bundles. Le `dist` est archivé trente jours, l'hébergement statique ne gardant aucune version.
+- **Les routes publiques indexables sont prérendues** au build et publiées sous une clé sans
+  extension égale à leur chemin, ce qui les fait servir en HTML complet au lieu de la coquille SPA.
+  Un client sans JavaScript — moteur d'indexation, aperçu de lien — reçoit le contenu et les
+  métadonnées de la page, pas un document vide.
 
 Workflows annexes : `backup-mongo.yml` sauvegarde la base chaque nuit et restaure l'archive pour la
 vérifier avant de la publier, `rollback.yml` est la porte manuelle de retour arrière,

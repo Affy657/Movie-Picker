@@ -117,6 +117,7 @@ Tous se lancent à la racine du dépôt.
 | `pnpm run test:e2e`, `pnpm run test:e2e:ci` | Playwright, la seconde forme construisant le front avec un stub TMDB |
 | `pnpm run test:e2e:mongo` | Le seul parcours critique, sur base réelle |
 | `pnpm run openapi:export`, `pnpm run openapi:types:check` | Contrat OpenAPI et dérive des types |
+| `pnpm --filter web prerender` | Prérendu des routes publiques indexables, à lancer après un build |
 | `pnpm run lighthouse` | Lighthouse sur le build, demande Node 22+ et Chrome |
 | `pnpm run verify:local` | La chaîne complète, quatorze étapes |
 
@@ -153,7 +154,7 @@ movie-picker/
 ├─ docs/              Roadmaps, dette technique, ce guide
 ├─ e2e/               Parcours Playwright
 ├─ infra/             Politiques IAM, CloudFront et rétention de registre
-└─ scripts/           verify:local, prérequis, export OpenAPI, seuils de couverture
+└─ scripts/           verify:local, lint des workflows, prérequis, export OpenAPI, seuils de couverture
 ```
 
 L'API suit un découpage hexagonal : `Domain` porte les entités et les règles sans dépendance au
@@ -163,8 +164,9 @@ implémentations concrètes (MongoDB, TMDB, e-mail, cookies), `Controllers` la t
 
 ## Deux pièges de build
 
-Le paquet `web` enchaîne `tsc`, `vite build`, puis un contrôle qui interdit d'embarquer les
-identifiants de démonstration dans `dist/assets/*.js`. Un `vite build` lancé à la main dans
+Le paquet `web` enchaîne `tsc`, `vite build`, un contrôle qui interdit d'embarquer les
+identifiants de démonstration dans `dist/assets/*.js`, puis le prérendu des routes publiques
+indexables dans `dist/prerendered/`. Un `vite build` lancé à la main dans
 `apps/web` saute ce contrôle.
 
 La racine force par override une version corrigée de plusieurs dépendances transitives, dont

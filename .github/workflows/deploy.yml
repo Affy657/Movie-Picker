@@ -481,6 +481,7 @@ jobs:
             --exclude "sw.js" \
             --exclude "manifest.webmanifest" \
             --exclude "sitemap.xml" \
+            --exclude "prerendered/*" \
             --exclude "*.map" \
             --cache-control "public, max-age=31536000, immutable"
       - name: "S3 — étape 2 : SW, manifest (no-cache)"
@@ -497,6 +498,39 @@ jobs:
         run: |
           aws s3 cp apps/web/dist/sitemap.xml "s3://$AWS_S3_BUCKET/sitemap.xml" \
             --cache-control "public, max-age=3600, must-revalidate" --content-type "application/xml; charset=utf-8"
+      # Routes prérendues. Chaque fichier part sous une clé S3 **sans extension**, égale au chemin
+      # de la route : `/decouvrir` devient la clé `decouvrir`. C'est ce qui les rend servies sans
+      # toucher à l'infrastructure — l'origine S3 est une origine REST, elle n'a pas de document
+      # d'index par dossier, donc `decouvrir/index.html` n'aurait jamais été servi pour
+      # `/decouvrir` : CloudFront serait tombé sur son repli 403/404 vers `/index.html`, la coquille
+      # SPA générique. Une clé exacte, elle, répond 200 directement.
+      # `Content-Type` est explicite pour la même raison que `sw.js` : une clé sans extension part
+      # sinon en `application/octet-stream`, que le navigateur télécharge au lieu de l'afficher.
+      # Le repli SPA reste en place pour toutes les autres routes, rien n'est retiré.
+      - name: "S3 — routes prérendues (clés sans extension, no-cache)"
+        env:
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+        run: |
+          set -eo pipefail
+          MANIFEST=apps/web/dist/prerendered/manifest.json
+          if [ ! -f "$MANIFEST" ]; then
+            echo "::error::$MANIFEST absent : le build n'a pas produit de routes prérendues."
+            exit 1
+          fi
+          count=0
+          while IFS=$'\t' read -r route file; do
+            key="${route#/}"
+            echo "prérendu $route → clé $key"
+            aws s3 cp "apps/web/dist/prerendered/$file" "s3://$AWS_S3_BUCKET/$key" \
+              --cache-control "no-cache, no-store, must-revalidate" \
+              --content-type "text/html; charset=utf-8"
+            count=$((count + 1))
+          done < <(jq -r '.[] | "\(.route)\t\(.file)"' "$MANIFEST")
+          if [ "$count" = "0" ]; then
+            echo "::error::Le manifeste de prérendu est vide."
+            exit 1
+          fi
+          echo "$count routes prérendues publiées."
       - name: "S3 — étape 3 : index.html en dernier (point d'entrée)"
         env:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
