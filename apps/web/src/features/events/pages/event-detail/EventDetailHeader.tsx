@@ -217,9 +217,7 @@ function HeaderActions({
         {addMoviePrimary ? null : addMovieButton}
       </div>
       <div className={styles.utilityActions}>
-        {shareUrl && onOpenShare ? (
-          <EventShareButton condensed={condensed} onClick={onOpenShare} />
-        ) : null}
+        {shareUrl && onOpenShare ? <EventShareButton onClick={onOpenShare} /> : null}
         {!condensed && !isFinished && shareUrl ? (
           <EventCalendarMenu title={title} date={rawDate} time={rawTime} url={shareUrl} />
         ) : null}
