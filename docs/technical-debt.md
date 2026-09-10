@@ -322,7 +322,7 @@ La configuration de build ne peut pas importer `src/`, donc `apps/web/vite.confi
 
 Le bucket de sauvegarde MongoDB (europe-west1, versioning actif, suppression à 30 jours, nom dans `backup-mongo.yml`) porte des données personnelles. Accès public interdit, accès uniforme au niveau du bucket, et l'archive n'est **jamais** publiée en artefact GitHub. La limite connue est écrite dans l'en-tête de `backup-mongo.yml` : la vérification prouve que l'archive se restaure, pas qu'elle est cohérente entre collections.
 
-## C6 le choix d'hébergement du front sur GCP engage le budget
+## C6 sortir le front d'AWS engage le budget et suit un ordre imposé
 
 Le chantier Terraform de `roadmap-tech.md` sort le front d'AWS (lots 3 et 4). Deux cibles GCP sont possibles et **une des deux fait sortir le projet du « 0 €/mois, tous les services dans leur palier gratuit »**, indicateur suivi au Bloc 3, sans qu'aucune alerte ne le dise avant la facture.
 
@@ -341,7 +341,7 @@ Deux pièges au décommissionnement d'AWS lui-même (lot 4) :
 
 ## C7 rendre le dépôt public expose tout l'historique, pas le head
 
-Le passage en public de `roadmap-tech.md` V1.6 rend lisible **chaque commit jamais poussé**, pas l'état actuel du dépôt. Ce qui a été exposé une fois doit être considéré comme compromis, et un `git rm` postérieur n'y change rien.
+L'item « Passage du dépôt en public » (V1.6 de `roadmap-tech.md`) rend lisible **chaque commit jamais poussé**, pas l'état actuel du dépôt. Ce qui a été exposé une fois doit être considéré comme compromis, et un `git rm` postérieur n'y change rien.
 
 Avant la bascule, et jamais après :
 
