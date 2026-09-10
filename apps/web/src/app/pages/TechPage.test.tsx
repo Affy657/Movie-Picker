@@ -7,6 +7,7 @@ import TechPage from '@/app/pages/TechPage';
 import { TECH_SECTIONS } from '@/app/pages/tech/TechRail';
 import { PLANNED_MILESTONES, SHIPPED_MILESTONES } from '@/app/pages/tech/TechTimeline';
 import { TECH_METRICS } from '@/app/pages/tech/generated/techMetrics';
+import { TECH_PAGE_LAST_UPDATE } from '@/app/pages/tech/lastUpdate';
 import { fr } from '@/shared/i18n/locales/fr';
 import { SITE_URL } from '@/shared/seo/siteMeta';
 import { ROUTES } from '@/app/routes';
@@ -555,5 +556,19 @@ describe('TechPage', () => {
     ] as const) {
       expect(tags).toContain(fr.tech.trajectory[work]);
     }
+  });
+
+  it('affiche la date de dernière mise à jour du document, tenue à la main', () => {
+    renderTechPage();
+    expect(
+      screen.getByText(new RegExp(`mis à jour le ${TECH_PAGE_LAST_UPDATE}`, 'i'))
+    ).toBeVisible();
+  });
+
+  it('garde la date de mise à jour au format ISO et jamais dans le futur', () => {
+    expect(TECH_PAGE_LAST_UPDATE).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    const update = new Date(`${TECH_PAGE_LAST_UPDATE}T00:00:00Z`);
+    expect(Number.isNaN(update.getTime())).toBe(false);
+    expect(update.getTime()).toBeLessThanOrEqual(Date.now());
   });
 });

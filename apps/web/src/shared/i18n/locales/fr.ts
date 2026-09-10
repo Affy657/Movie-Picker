@@ -1907,7 +1907,7 @@
       metricCoverageUnit: '%',
       metricCoverageHint:
         "Part de lignes que les tests du front doivent couvrir. En dessous de ce seuil, la chaîne d'intégration échoue et rien ne part en production.",
-      stamp: 'Chiffres relevés au build du {{date}}',
+      stamp: 'Document mis à jour le {{update}}, chiffres relevés au build du {{build}}',
     },
     nav: {
       architecture: 'Architecture',

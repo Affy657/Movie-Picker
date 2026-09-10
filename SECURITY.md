@@ -6,8 +6,8 @@
 
 Deux canaux privés, au choix :
 
-1. **Signalement privé GitHub** — onglet « Security » du dépôt, « Report a vulnerability ». C'est le canal à préférer : l'échange reste privé jusqu'au correctif.
-2. **Courriel** — `contact@movie-picker.fr`, avec `[securite]` en objet.
+1. **Signalement privé GitHub** : onglet « Security » du dépôt, « Report a vulnerability ». C'est le canal à préférer : l'échange reste privé jusqu'au correctif.
+2. **Courriel** : `contact@movie-picker.fr`, avec `[securite]` en objet.
 
 Ce qui aide, dans l'ordre d'utilité : l'URL ou l'endpoint touché, les étapes pour reproduire, ce que la faille permet d'obtenir, et la date de l'observation. Une capture ou une trace réseau vaut mieux qu'une description.
 

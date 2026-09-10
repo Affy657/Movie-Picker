@@ -145,6 +145,11 @@ L'application mobile Expo est archivée dans `archive/mobile` depuis mai 2026, i
 - **Roadmap tech** (infra, CI/CD, qualité, sécurité) → [`docs/roadmap-tech.md`](docs/roadmap-tech.md)
 - **Dette technique** → [`docs/technical-debt.md`](docs/technical-debt.md) : fichier de travail pour agent, pas de lecture humaine. Une entrée par dette, chacune avec sa commande `verify` de fraîcheur et son critère de fin, plus deux sections « Contraintes » et « Impasses » à lire avant toute optimisation front ou tout geste de déploiement. C'est là qu'atterrit toute dette constatée, jamais dans une roadmap ni en mémoire agent.
 
+**Dossier technique publié dans l'application** (`/tech`) → `apps/web/src/app/pages/tech/`. Deux dates s'affichent dans son en-tête et elles ne se maintiennent pas de la même façon :
+
+- **`TECH_METRICS_BUILD_DATE`** est générée à chaque build par `apps/web/scripts/generate-tech-metrics.mjs`, avec les chiffres. Ne jamais l'éditer.
+- **`TECH_PAGE_LAST_UPDATE`** (`apps/web/src/app/pages/tech/lastUpdate.ts`) est **tenue à la main** : c'est la date de la dernière relecture du contenu, pas celle du build. La mettre à jour **uniquement** quand le contenu du dossier a effectivement été relu et actualisé, jamais « au passage » : c'est sa fiabilité qui fait sa seule utilité. Pour savoir ce qu'il y a à actualiser, lire la date dans le fichier puis `git log --since=<date> --oneline`. Un test de `TechPage.test.tsx` garde le format ISO et refuse une date future.
+
 ## Accès outils externes (autonomie agent)
 
 Outils configurés pour qu'un agent travaille sur le projet sans intervention manuelle. Les tokens et secrets sont en scope **local** (`~/.claude.json`), jamais versionnés.

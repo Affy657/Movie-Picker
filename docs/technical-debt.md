@@ -193,36 +193,27 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
   Et les deux échappatoires ne tiennent pas non plus. **Peindre le titre de page** dans la coquille, le geste de la page d'accueil (C2), échoue sur la condition de taille : le `h1` fait environ 2 900 px² contre 16 500 et 24 050 px² pour le paragraphe, donc Chrome remplacerait le titre par le message et le gain serait nul. **Peindre le message déconnecté** tiendrait le score, mais afficherait « Connectez-vous ou créez un compte » à chaque arrivée d'un utilisateur **déjà connecté** : la coquille ne peut pas connaître l'état de session avant que JavaScript tourne, le cookie étant HttpOnly. Échanger l'expérience du cas principal contre 5 points de score est un mauvais marché.
 - refs: Impasses I3 — le mur est le démarrage de `react-vendor`, environ 665 ms, et il ne se contourne pas par du découpage de bundle. C'est le même mur ici. Impasses I4 — ne pas desserrer la porte davantage.
 
-## DEBT-018 GitHub Actions bloqué par la facturation, la production front est figée
+## DEBT-019 huit fonctions restent au-dessus du seuil de complexité cognitive
 
-- state: humain
-- bloque: régulariser la section « Billing & plans » du compte GitHub, aucun geste possible depuis le dépôt
-- impact: prod. Aucun runner ne démarre depuis le 2026-09-09 17:02 UTC, sur `master` comme sur les branches de version : les runs échouent en 3 secondes avec un `runner_name` vide. Rien de ce qui a été fusionné depuis n'est déployé, le front servi reste celui du build de 16:56 UTC.
-- verify: encore ouvert tant que la commande sort le message de facturation.
+- state: agent
+- impact: qualité. Sonar refuse huit fonctions au-dessus de 15 de complexité cognitive, dont deux très loin : `MyEventsPage.tsx:297` à 85 et `ShowcaseListPage.tsx:143` à 44. Aucune n'est un bug, mais chacune est un endroit où une modification future se fait à l'aveugle.
+- ou: analyse du 2026-09-10 sur `e2dd0a7`
+  - `apps/web/src/features/events/pages/MyEventsPage.tsx:297` (85)
+  - `apps/web/src/app/pages/ShowcaseListPage.tsx:143` (44)
+  - `apps/web/src/features/profile/components/FollowListModal.tsx:41` (22)
+  - `apps/web/src/features/events/components/HostEventSettingsPanel.tsx:158` (19)
+  - `apps/web/src/features/events/pages/event-detail/EventDetailSession.tsx:638` (18)
+  - `apps/api-dotnet/MoviePicker.Api/Application/UseCases/EventConfiguration/PatchEventConfigHandler.cs:45` (18)
+  - `apps/web/src/features/events/hooks/useEventWheel.ts:66` (17)
+  - `apps/web/src/features/movies/components/MovieDetailsModal.tsx:66` (17)
+- verify: lire le total. Exporter `SONAR_TOKEN` d'abord, sa valeur se relevant dans la configuration MCP locale, serveur `sonarqube`.
   ```bash
-  RUN=$(gh run list -b master -L1 --json databaseId --jq '.[0].databaseId')
-  JOB=$(gh api repos/Affy657/Movie-Picker/actions/runs/$RUN/jobs --jq '.jobs[0].id')
-  gh api repos/Affy657/Movie-Picker/check-runs/$JOB/annotations --jq '.[].message'
+  curl -sS -H "Authorization: Bearer $SONAR_TOKEN" "https://sonarcloud.io/api/issues/search?componentKeys=Affy657_Movie-Picker&resolved=false&rules=typescript:S3776,csharpsquid:S3776&ps=1"
   ```
-- fix: une fois la facturation régularisée, `gh run rerun $RUN`, puis vérifier la production elle-même et non le verdict du run
-- fini-quand: `curl -sI https://web.movie-picker.fr/index.html` rend un `Last-Modified` postérieur au dernier commit de `master`, et le hash du point d'entrée servi est celui du build courant
-- piege: **le verdict d'un job ne dit pas ce qui est en production.** Le 2026-09-09, `deploy-front` était rouge alors que la synchronisation S3 et l'invalidation CloudFront étaient passées : seul le smoke test avait échoué, sur une permission `cloudfront:GetDistribution` absente de la politique IAM, corrigée depuis. Vérifier la prod elle-même : `Last-Modified`, hash du point d'entrée, et présence d'une règle distinctive dans le chunk CSS servi. Second piège, **le message réel de la panne n'est pas dans les logs du job**, il n'existe que dans les annotations du check-run, d'où la commande ci-dessus.
-- refs: DEBT-019 ne peut pas être vérifiée tant que celle-ci est ouverte
-
-## DEBT-019 le travail Sonar de septembre n'a jamais été analysé
-
-- state: differe
-- declencheur: une analyse SonarCloud postérieure au commit `bbdf8b2`, c'est-à-dire le premier run vert après DEBT-018
-- impact: cinq commits ont soldé des constats Sonar, dont seize fonctions retravaillées pour repasser sous le seuil de complexité cognitive de 15. Aucun n'a été mesuré : la dernière analyse porte sur `3f99aef`, qui **précède** les cinq. Les 42 constats que SonarCloud affiche encore ouverts sont l'état d'avant le chantier, pas son résultat.
-- ou: commits `86d8770`, `8d75d5c`, `ba01a0a`, `56cd7c0`, `bbdf8b2` sur `master`
-- verify: lire les deux nombres. Encore ouvert tant que la première commande rend une révision antérieure à `bbdf8b2`, ou que la seconde rend un total non nul. Le jeton se relève dans la configuration MCP locale, serveur `sonarqube`.
-  ```bash
-  curl -sS -u "<JETON_SONARCLOUD>:" "https://sonarcloud.io/api/project_analyses/search?project=Affy657_Movie-Picker&ps=1"
-  curl -sS -u "<JETON_SONARCLOUD>:" "https://sonarcloud.io/api/issues/search?componentKeys=Affy657_Movie-Picker&resolved=false&rules=typescript:S3776&ps=1"
-  ```
-- fix: pour chaque `S3776` qui survit, extraire une responsabilité de plus. Déplacer du code sans réduire le nombre de branches ne fait pas baisser le compteur.
+- fix: pour chaque fonction, extraire une responsabilité de plus. Déplacer du code sans réduire le nombre de branches ne fait pas baisser le compteur.
 - fini-quand: plus aucun `S3776` ouvert, ou ceux qui restent portent une justification « won't fix »
-- piege: **la complexité cognitive ne se mesure pas en local**, aucun outil du dépôt ne la calcule. Ne pas annoncer un seuil franchi sur la foi d'une lecture du diff, d'autant que cinq des seize fonctions n'étaient qu'à 16. Second piège, à l'inverse du réflexe attendu : ces refactorisations **ajoutent** des lignes, +1357 pour -619 sur les cinq commits, parce qu'extraire un bloc coûte une déclaration de type et une liste de props. Ce n'est pas un échec, mais ça consomme la marge de DEBT-021.
+- piege: **la complexité cognitive ne se mesure pas en local**, aucun outil du dépôt ne la calcule ; la seule boucle de retour est une analyse Sonar en CI. Second piège, à l'inverse du réflexe attendu : ces refactorisations **ajoutent** des lignes, +1357 pour -619 sur le chantier de septembre, parce qu'extraire un bloc coûte une déclaration de type et une liste de props. Ce n'est plus un problème de plafond depuis que le projet SonarCloud est public.
+- refs: l'entrée précédente doutait que le chantier de septembre ait servi. Mesuré le 2026-09-10, il a servi : `S3776` est passé de 15 à 7 et les code smells de 42 à 20. Les trois findings dans `FollowListModal`, `HostEventSettingsPanel` et `PatchEventConfigHandler` sont neufs, apportés par la fusion de `feature/soiree-recurrente`.
 
 ## DEBT-021 du code de production est exclu de Sonar pour tenir sous le plafond de lignes
 
@@ -232,7 +223,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - ou: `configs/sonar-exclusions.sh:56` et `:57`
 - verify: lire le nombre, la marge est 50 000 moins la valeur rendue.
   ```bash
-  curl -sS -u "<JETON_SONARCLOUD>:" "https://sonarcloud.io/api/measures/component?component=Affy657_Movie-Picker&metricKeys=ncloc"
+  curl -sS -H "Authorization: Bearer $SONAR_TOKEN" "https://sonarcloud.io/api/measures/component?component=Affy657_Movie-Picker&metricKeys=ncloc"
   ```
 - fix: aucun candidat évident ne reste à exclure, tout ce qui était légitime l'est déjà. Les deux sorties réelles sont de payer un plan, ou de réduire le code analysé.
 - fini-quand: la marge redevient confortable sans qu'aucun code de production ne soit exclu

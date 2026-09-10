@@ -1875,7 +1875,7 @@ export const en: Locale = {
       metricCoverageUnit: '%',
       metricCoverageHint:
         'Share of lines the front-end tests must cover. Below that threshold the integration pipeline fails and nothing ships to production.',
-      stamp: 'Figures measured at the build of {{date}}',
+      stamp: 'Document updated on {{update}}, figures measured at the build of {{build}}',
     },
     nav: {
       architecture: 'Architecture',
