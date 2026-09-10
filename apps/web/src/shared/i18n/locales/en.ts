@@ -34,6 +34,7 @@ export const en: Locale = {
     watchlist: 'My watchlist',
     account: 'Settings',
     createEvent: 'New event',
+    createEventShort: 'Create',
     navLabel: 'Main navigation',
     accountMenu: 'Account menu',
     brandLabel: 'Movie Picker \u2014 Home',

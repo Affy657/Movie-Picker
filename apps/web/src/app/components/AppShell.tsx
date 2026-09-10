@@ -34,11 +34,19 @@ type NavItemDef = {
   Icon: IconComponent;
 };
 
-type NavItemSpec = Omit<NavItemDef, 'label'> & { labelKey: TranslationKey };
+type NavItemSpec = Omit<NavItemDef, 'label'> & {
+  labelKey: TranslationKey;
+  mobileLabelKey?: TranslationKey;
+};
 
 const NAV_ITEMS: ReadonlyArray<NavItemSpec> = [
   { to: ROUTES.myEvents, labelKey: 'nav.myEvents', Icon: CalendarDays },
-  { to: ROUTES.createEvent, labelKey: 'nav.createEvent', Icon: Plus },
+  {
+    to: ROUTES.createEvent,
+    labelKey: 'nav.createEvent',
+    mobileLabelKey: 'nav.createEventShort',
+    Icon: Plus,
+  },
   { to: ROUTES.watchlist, labelKey: 'nav.watchlist', Icon: Bookmark },
 ];
 
@@ -48,6 +56,10 @@ const LANDING_NAV_ITEMS: ReadonlyArray<{ anchor: string; labelKey: TranslationKe
   { anchor: LANDING_ANCHORS.features, labelKey: 'nav.landing.features' },
   { anchor: LANDING_ANCHORS.faq, labelKey: 'nav.landing.faq' },
 ];
+
+function toNavItem(spec: NavItemSpec, label: string): NavItemDef {
+  return { to: spec.to, end: spec.end, label, Icon: spec.Icon };
+}
 
 function DesktopNavItem({
   to,
@@ -165,12 +177,13 @@ export default function AppShell() {
     Icon: Compass,
   };
 
-  const items: NavItemDef[] = NAV_ITEMS.map(({ labelKey, ...rest }) => ({
-    ...rest,
-    label: t(labelKey),
-  }));
+  const items: NavItemDef[] = NAV_ITEMS.map((spec) => toNavItem(spec, t(spec.labelKey)));
 
-  const mobileItems: NavItemDef[] = isAuthenticated ? [exploreItem, ...items] : items;
+  const compactItems: NavItemDef[] = NAV_ITEMS.map((spec) =>
+    toNavItem(spec, t(spec.mobileLabelKey ?? spec.labelKey))
+  );
+
+  const mobileItems: NavItemDef[] = isAuthenticated ? [exploreItem, ...compactItems] : compactItems;
 
   const desktopItems: (NavItemDef & { wideOnly?: boolean })[] = isAuthenticated
     ? [exploreItem, ...items]

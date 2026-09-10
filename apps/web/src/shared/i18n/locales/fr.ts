@@ -32,6 +32,7 @@
     watchlist: 'Ma liste',
     account: 'Paramètres',
     createEvent: 'Nouvelle soirée',
+    createEventShort: 'Créer',
     navLabel: 'Navigation principale',
     accountMenu: 'Menu du compte',
     brandLabel: 'Movie Picker \u2014 Accueil',
