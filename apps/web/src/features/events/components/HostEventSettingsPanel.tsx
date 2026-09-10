@@ -68,6 +68,25 @@ function recurrencePatch(
   return next === null ? { clearRecurrence: true } : { recurrence: next };
 }
 
+function titlePatch(next: string, current: string): Partial<EventConfigPatchPayload> {
+  return next !== current ? { title: next } : {};
+}
+
+function dateTimePatch(
+  parsed: ReturnType<typeof splitDateTimeLocal>
+): Partial<EventConfigPatchPayload> {
+  return parsed ? { date: parsed.date, time: parsed.time } : {};
+}
+
+function isCreatorParticipant(
+  myParticipant: HostEventSettingsPanelProps['event']['myParticipant'],
+  participants: HostEventSettingsPanelProps['event']['participants']
+): boolean {
+  if (!myParticipant) return false;
+  const myId = myParticipant.id;
+  return !!participants?.find((p) => p.id === myId)?.isCreator;
+}
+
 function normalizeConfig(c: EventConfigData | undefined): EventConfigData {
   return {
     theme: c?.theme ?? DEFAULT_EVENT_CONFIG.theme,
@@ -194,11 +213,10 @@ export default function HostEventSettingsPanel({
   const navigate = useNavigate();
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const isConnectedCreator = useMemo(() => {
-    if (!event.myParticipant) return false;
-    const myId = event.myParticipant.id;
-    return !!event.participants?.find((p) => p.id === myId)?.isCreator;
-  }, [event.myParticipant, event.participants]);
+  const isConnectedCreator = useMemo(
+    () => isCreatorParticipant(event.myParticipant, event.participants),
+    [event.myParticipant, event.participants]
+  );
 
   const hydrateFromEvent = useCallback(() => {
     const next = normalizeConfig(event.config);
@@ -294,7 +312,7 @@ export default function HostEventSettingsPanel({
     }
 
     mutation.mutate({
-      ...(eventTitle.trim() !== event.title ? { title: eventTitle.trim() } : {}),
+      ...titlePatch(eventTitle.trim(), event.title),
       theme: [themeEmoji, themeText.trim()].filter(Boolean).join(' '),
       maxProposalsPerParticipant,
       maxParticipants: maxParticipantsValue,
@@ -302,7 +320,7 @@ export default function HostEventSettingsPanel({
       richSharePreview: cfg.richSharePreview ?? true,
       allowSeries,
       ...recurrencePatch(recurrence, cfg.recurrence ?? null),
-      ...(eventDateTime ? { date: eventDateTime.date, time: eventDateTime.time } : {}),
+      ...dateTimePatch(eventDateTime),
       notifyParticipantsOfDateChange: notifyDateChange,
     });
   };

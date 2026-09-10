@@ -212,22 +212,9 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
   ```
 - fix: pour chaque fonction, extraire une responsabilité de plus. Déplacer du code sans réduire le nombre de branches ne fait pas baisser le compteur.
 - fini-quand: plus aucun `S3776` ouvert, ou ceux qui restent portent une justification « won't fix »
-- piege: **la complexité cognitive ne se mesure pas en local**, aucun outil du dépôt ne la calcule ; la seule boucle de retour est une analyse Sonar en CI. Second piège, à l'inverse du réflexe attendu : ces refactorisations **ajoutent** des lignes, +1357 pour -619 sur le chantier de septembre, parce qu'extraire un bloc coûte une déclaration de type et une liste de props. Ce n'est plus un problème de plafond depuis que le projet SonarCloud est public.
+- piege: **la complexité cognitive ne se mesure pas en local**, aucun outil du dépôt ne la calcule ; la seule boucle de retour est une analyse Sonar en CI. Second piège, à l'inverse du réflexe attendu : ces refactorisations **ajoutent** des lignes, +1357 pour -619 sur le chantier de septembre, parce qu'extraire un bloc coûte une déclaration de type et une liste de props. Ce n'est plus un problème de plafond depuis que le projet SonarCloud est public : mesuré le 2026-09-10, `ncloc` est passé de 49 231 à 52 196 en rendant `TechPage.tsx` et `app/pages/tech/` à l'analyse, soit au-dessus de l'ancien plafond de 50 000, et l'analyse est passée avec un Quality Gate vert.
 - refs: l'entrée précédente doutait que le chantier de septembre ait servi. Mesuré le 2026-09-10, il a servi : `S3776` est passé de 15 à 7 et les code smells de 42 à 20. Les trois findings dans `FollowListModal`, `HostEventSettingsPanel` et `PatchEventConfigHandler` sont neufs, apportés par la fusion de `feature/soiree-recurrente`.
 
-## DEBT-021 du code de production est exclu de Sonar pour tenir sous le plafond de lignes
-
-- state: differe
-- declencheur: `ncloc` dépasse 49 000, ou l'analyse échoue à nouveau côté serveur pendant que le Quality Gate reste vert
-- impact: `TechPage.tsx` et tout `app/pages/tech/` sont sortis de l'analyse, soit environ 3 000 lignes de code de production que Sonar ne regarde plus. C'est le prix payé le 2026-09-09 pour repasser sous le plafond de 50 000 lignes du plan gratuit, que le dépôt avait franchi.
-- ou: `configs/sonar-exclusions.sh:56` et `:57`
-- verify: lire le nombre, la marge est 50 000 moins la valeur rendue.
-  ```bash
-  curl -sS -H "Authorization: Bearer $SONAR_TOKEN" "https://sonarcloud.io/api/measures/component?component=Affy657_Movie-Picker&metricKeys=ncloc"
-  ```
-- fix: aucun candidat évident ne reste à exclure, tout ce qui était légitime l'est déjà. Les deux sorties réelles sont de payer un plan, ou de réduire le code analysé.
-- fini-quand: la marge redevient confortable sans qu'aucun code de production ne soit exclu
-- piege: **le symptôme est trompeur, le dépassement ne rend pas le job rouge.** L'analyse échoue côté serveur pendant que le Quality Gate reste vert sur les données de la veille : ne pas conclure « Sonar va bien » en voyant du vert. Au 2026-09-09, `ncloc` valait 47 864, soit 2 136 lignes de marge.
 ---
 
 # Contraintes

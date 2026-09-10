@@ -56,6 +56,30 @@ function buildDetailsTabs(
   ];
 }
 
+function effectiveInitialTab(
+  initialTab: MovieDetailsTabKey | undefined,
+  hasEventContext: boolean
+): MovieDetailsTabKey {
+  if (initialTab === 'soiree' && !hasEventContext) return 'film';
+  if (initialTab) return initialTab;
+  return hasEventContext ? 'soiree' : 'film';
+}
+
+function wheelActionKey(eventContext: MovieDetailsModalProps['eventContext']) {
+  return eventContext?.wheelExclusion?.excluded
+    ? ('movies.list.includeInWheelAction' as const)
+    : ('movies.list.excludeFromWheelAction' as const);
+}
+
+function removeAriaLabel(
+  eventContext: MovieDetailsModalProps['eventContext'],
+  title: string,
+  t: ReturnType<typeof useTranslation>['t']
+) {
+  if (eventContext?.isMine) return `${t('movies.list.removeButton')} ${title}`;
+  return t('movies.list.removeAsHostAria', { title });
+}
+
 function hasEventFooterActions(eventContext: MovieDetailsModalProps['eventContext']) {
   if (!eventContext) return false;
   return (
@@ -86,12 +110,11 @@ export default function MovieDetailsModal({
   const filmPanelId = useId();
   const [trailerUrl, setTrailerUrl] = useState<string | null>(null);
 
-  const defaultTab: MovieDetailsTabKey = eventContext ? 'soiree' : 'film';
-  const resolvedInitialTab = initialTab === 'soiree' && !eventContext ? 'film' : initialTab;
-  const [activeTab, setActiveTab] = useState<MovieDetailsTabKey>(resolvedInitialTab ?? defaultTab);
+  const startingTab = effectiveInitialTab(initialTab, !!eventContext);
+  const [activeTab, setActiveTab] = useState<MovieDetailsTabKey>(startingTab);
 
   useEffect(() => {
-    if (open) setActiveTab(resolvedInitialTab ?? defaultTab);
+    if (open) setActiveTab(startingTab);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -107,14 +130,8 @@ export default function MovieDetailsModal({
     : watchPageUrl;
   const tabs = buildDetailsTabs(!!eventContext, providers.length, t);
 
-  const wheelLabel = t(
-    eventContext?.wheelExclusion?.excluded
-      ? 'movies.list.includeInWheelAction'
-      : 'movies.list.excludeFromWheelAction'
-  );
-  const removeAria = eventContext?.isMine
-    ? `${t('movies.list.removeButton')} ${title}`
-    : t('movies.list.removeAsHostAria', { title });
+  const wheelLabel = t(wheelActionKey(eventContext));
+  const removeAria = removeAriaLabel(eventContext, title, t);
   const hasFooterActions = hasEventFooterActions(eventContext);
 
   return (

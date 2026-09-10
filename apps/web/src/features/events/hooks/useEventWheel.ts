@@ -63,6 +63,32 @@ function initialWinner(event: UseEventWheelOptions['event']): MovieData | null {
   return event.winnerMovie;
 }
 
+type PrimaryActionInputs = {
+  isOpenForActions: boolean;
+  manualMode: boolean;
+  isHost: boolean;
+  eventIsLive: boolean;
+  hasWinner: boolean;
+  spinDisabled: boolean;
+};
+
+function resolvePrimaryAction({
+  isOpenForActions,
+  manualMode,
+  isHost,
+  eventIsLive,
+  hasWinner,
+  spinDisabled,
+}: PrimaryActionInputs): EventPrimaryAction {
+  if (isOpenForActions && !manualMode) {
+    if (hasWinner) return 'close';
+    if (spinDisabled) return 'add';
+    return 'spin';
+  }
+  if (!isHost && eventIsLive && !hasWinner && !manualMode) return 'add';
+  return null;
+}
+
 export function useEventWheel({
   slug,
   event,
@@ -210,14 +236,14 @@ export function useEventWheel({
   const spinDisabled = moviesCount === 0 || noEligibleMovie;
 
   const eventIsLive = !!event && !event.isFinished;
-  let primaryAction: EventPrimaryAction = null;
-  if (isOpenForActions && !manualMode) {
-    if (winner) primaryAction = 'close';
-    else if (spinDisabled) primaryAction = 'add';
-    else primaryAction = 'spin';
-  } else if (!isHost && eventIsLive && !winner && !manualMode) {
-    primaryAction = 'add';
-  }
+  const primaryAction = resolvePrimaryAction({
+    isOpenForActions,
+    manualMode,
+    isHost,
+    eventIsLive,
+    hasWinner: !!winner,
+    spinDisabled,
+  });
 
   return {
     isHost,

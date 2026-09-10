@@ -59,43 +59,22 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         var hasTitleChange = request.Title is not null;
         var hasRecurrenceChange = request.Recurrence.HasValue || request.ClearRecurrence == true;
 
-        EnsurePatchAllowed(evt, hasConfigChange, hasDateTimeChange);
-
-        if (hasTitleChange && (evt.IsFinished(DateTimeOffset.UtcNow) || !string.IsNullOrEmpty(evt.WinnerMovieId)))
-            throw new ConflictException("La soirée est terminée : le nom ne peut plus être modifié.");
-
-        if (hasRecurrenceChange && !string.IsNullOrEmpty(evt.NextOccurrenceEventId))
-            throw new ConflictException(
-                "L’occurrence suivante existe déjà : la récurrence se règle désormais sur cette nouvelle soirée.");
+        EnsurePatchAllowed(evt, hasConfigChange, hasDateTimeChange, hasTitleChange, hasRecurrenceChange);
 
         if (!hasConfigChange && !hasDateTimeChange && !hasTitleChange && !hasRecurrenceChange)
             return EventConfigResponse.FromEvent(evt);
 
         var current = evt.Config ?? new EventConfig();
 
-        var theme = current.Theme;
-        if (request.Theme is not null)
-            theme = string.IsNullOrWhiteSpace(request.Theme) ? null : request.Theme.Trim();
-
-        var wheelMode = request.WheelMode ?? current.WheelMode;
-
-        var richShare = current.RichSharePreview;
-        if (request.RichSharePreview.HasValue)
-            richShare = request.RichSharePreview.Value;
-
-        var allowSeries = current.AllowSeries;
-        if (request.AllowSeries.HasValue)
-            allowSeries = request.AllowSeries.Value;
-
         var nextConfig = new EventConfig
         {
-            Theme = theme,
+            Theme = ResolveTheme(request, current.Theme),
             ThemeColor = ResolveThemeColor(request, current.ThemeColor),
             MaxProposalsPerParticipant = ResolveMaxProposals(request, current.MaxProposalsPerParticipant),
             MaxParticipants = await ResolveMaxParticipantsAsync(request, current.MaxParticipants, evt, ct),
-            WheelMode = wheelMode,
-            RichSharePreview = richShare,
-            AllowSeries = allowSeries
+            WheelMode = request.WheelMode ?? current.WheelMode,
+            RichSharePreview = request.RichSharePreview ?? current.RichSharePreview,
+            AllowSeries = request.AllowSeries ?? current.AllowSeries
         };
 
         var date = ResolveDate(request, evt.Date);
@@ -195,7 +174,12 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         return request.Recurrence ?? current;
     }
 
-    private static void EnsurePatchAllowed(Event evt, bool hasConfigChange, bool hasDateTimeChange)
+    private static void EnsurePatchAllowed(
+        Event evt,
+        bool hasConfigChange,
+        bool hasDateTimeChange,
+        bool hasTitleChange,
+        bool hasRecurrenceChange)
     {
         if (hasConfigChange)
         {
@@ -207,6 +191,20 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
 
         if (hasDateTimeChange && (evt.IsFinished(DateTimeOffset.UtcNow) || !string.IsNullOrEmpty(evt.WinnerMovieId)))
             throw new ConflictException("La soirée est terminée : la date ne peut plus être modifiée.");
+
+        if (hasTitleChange && (evt.IsFinished(DateTimeOffset.UtcNow) || !string.IsNullOrEmpty(evt.WinnerMovieId)))
+            throw new ConflictException("La soirée est terminée : le nom ne peut plus être modifié.");
+
+        if (hasRecurrenceChange && !string.IsNullOrEmpty(evt.NextOccurrenceEventId))
+            throw new ConflictException(
+                "L’occurrence suivante existe déjà : la récurrence se règle désormais sur cette nouvelle soirée.");
+    }
+
+    private static string? ResolveTheme(PatchEventConfigRequest request, string? current)
+    {
+        if (request.Theme is null)
+            return current;
+        return string.IsNullOrWhiteSpace(request.Theme) ? null : request.Theme.Trim();
     }
 
     private static int? ResolveThemeColor(PatchEventConfigRequest request, int? current)
