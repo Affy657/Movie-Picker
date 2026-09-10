@@ -179,17 +179,15 @@ function assetsForRoute(route, chunkByRoute) {
   return assets;
 }
 
-// Les styles de la route sont **liés** et pas mis en ligne. Mesuré sur le runner le 2026-09-10 :
-// grossir le document coûte plus que l'aller-retour qu'on économise en l'évitant. La feuille en
-// ligne faisait passer `/soutenir` de 45 à 85 Ko et son FCP de 1,5 à 1,8 s, pour un score
-// inchangé. Ce qui compte est que les styles soient **dans le document**, découverts avec lui et
-// non par le JavaScript de la page : sans eux le contenu prérendu peint sans styles, se remet en
-// page à l'arrivée du chunk, et Chrome retient ce second rendu comme LCP. Elles sont posées de la
-// plus profonde à la plus superficielle, la coquille avant la page, comme le fait le chargement
-// par JavaScript : l'ordre inverse donnerait une cascade où la page perd contre la coquille sur
-// les règles de même spécificité.
+// Les styles de la route sont mis en ligne et pas liés : une feuille liée bloque le rendu et
+// n'est découverte qu'après le document, donc le contenu prérendu attendrait un aller-retour
+// réseau complet avant son premier pixel, ce qui annule une bonne part du prérendu. En ligne, le
+// premier rendu ne dépend plus que du document. Elles sont concaténées de la plus profonde à la
+// plus superficielle — la coquille d'abord, la page ensuite — comme le fait le chargement par
+// JavaScript : l'ordre inverse donnerait une cascade où la page perd contre la coquille sur les
+// règles de même spécificité.
 function appendRouteAssets(doc, assets) {
-  const alreadyInDocument = new Set(routeAssets.documentCss ?? []);
+  const inlined = new Set(routeAssets.inlinedCss ?? []);
   for (const file of assets.js) {
     if (doc.head.innerHTML.includes(`/${file}`)) continue;
     const link = doc.createElement('link');
@@ -198,14 +196,15 @@ function appendRouteAssets(doc, assets) {
     link.href = `/${file}`;
     doc.head.appendChild(link);
   }
-  for (const file of [...assets.css].reverse()) {
-    if (alreadyInDocument.has(file)) continue;
-    const link = doc.createElement('link');
-    link.rel = 'stylesheet';
-    link.setAttribute('crossorigin', '');
-    link.href = `/${file}`;
-    doc.head.appendChild(link);
-  }
+  const css = [...assets.css]
+    .reverse()
+    .filter((file) => !inlined.has(file))
+    .map((file) => readFileSync(join(dist, file), 'utf8'))
+    .join('\n');
+  if (css.length === 0) return;
+  const style = doc.createElement('style');
+  style.textContent = css;
+  doc.head.appendChild(style);
 }
 
 // Clé d'unicité d'une balise de tête, alignée sur `upsertMeta` de `usePageSeo` : c'est ce qui

@@ -112,6 +112,29 @@ function staticGraphClosure(
 
 const ROUTE_ASSETS_MANIFEST = 'route-assets.json';
 
+/**
+ * Remplace la feuille de style globale par son contenu en ligne.
+ * Elle bloque le rendu et n'est decouverte qu'apres le document : c'est un aller-retour reseau
+ * complet avant le premier pixel, sur toutes les pages. En ligne, le premier rendu ne depend plus
+ * que du document lui-meme, et une page prerendue peint alors sa mise en page finale du premier
+ * coup au lieu de peindre sans styles puis de se remettre en page.
+ */
+function inlineBlockingStyles(html: string, bundle: OutputBundleInfo, entry?: string): string {
+  if (!entry) return html;
+  let output = html;
+  for (const file of bundle[entry]?.viteMetadata?.importedCss ?? []) {
+    const source = bundle[file]?.source;
+    if (typeof source !== 'string') continue;
+    const hrefAt = output.indexOf('/' + file);
+    if (hrefAt < 0) continue;
+    const tagStart = output.lastIndexOf('<link', hrefAt);
+    const tagEnd = output.indexOf('>', hrefAt);
+    if (tagStart < 0 || tagEnd < 0) continue;
+    output = `${output.slice(0, tagStart)}<style>${source}</style>${output.slice(tagEnd + 1)}`;
+  }
+  return output;
+}
+
 function preloadCriticalAssetsPlugin(): Plugin {
   return {
     name: 'moviepicker-preload-critical-assets',
@@ -141,25 +164,20 @@ function preloadCriticalAssetsPlugin(): Plugin {
       const entryChunk = files.find(
         (file) => bundle[file]?.type === 'chunk' && bundle[file]?.isEntry
       );
-      const shell = staticGraphClosure(bundle, [appChunk, entryChunk]);
 
-      for (const file of shell.js) {
-        if (file === entryChunk || html.includes('/' + file)) continue;
+      if (appChunk) {
         tags.push({
           tag: 'link',
-          attrs: { rel: 'modulepreload', crossorigin: '', href: '/' + file },
+          attrs: { rel: 'modulepreload', crossorigin: '', href: '/' + appChunk },
           injectTo: 'head-prepend',
         });
       }
 
       const appStyles = files.find((file) => APP_SHELL_STYLES.test(file));
-      const styles = new Set(shell.css);
-      if (appStyles) styles.add(appStyles);
-      for (const file of styles) {
-        if (html.includes('/' + file)) continue;
+      if (appStyles && !html.includes('/' + appStyles)) {
         tags.push({
           tag: 'link',
-          attrs: { rel: 'preload', as: 'style', href: '/' + file },
+          attrs: { rel: 'preload', as: 'style', href: '/' + appStyles },
           injectTo: 'head-prepend',
         });
       }
@@ -173,14 +191,14 @@ function preloadCriticalAssetsPlugin(): Plugin {
         });
       }
 
-      return { html, tags };
+      return { html: inlineBlockingStyles(html, bundle, entryChunk), tags };
     },
     /**
      * Publie, pour chaque page chargee a la demande, la fermeture de ses imports statiques.
      * `scripts/prerender.mjs` s'en sert pour poser dans le document prerendu les feuilles de style
      * de la route : sans elles le contenu prerendu peint sans styles, se remet en page quand le
-     * JavaScript arrive, et le LCP se decale sur ce second rendu au lieu du premier. `documentCss`
-     * dit quelles feuilles le gabarit porte deja, pour ne pas les demander une seconde fois.
+     * JavaScript arrive, et le LCP se decale sur ce second rendu au lieu du premier. `inlinedCss`
+     * dit quelles feuilles sont deja dans le document en ligne, pour ne pas les redemander.
      */
     generateBundle(_options, outputBundle) {
       const bundle = outputBundle as unknown as OutputBundleInfo;
@@ -196,11 +214,11 @@ function preloadCriticalAssetsPlugin(): Plugin {
         if (!name) continue;
         chunks[name] = staticGraphClosure(bundle, [file]);
       }
-      const documentCss = [...(bundle[entryFile ?? '']?.viteMetadata?.importedCss ?? [])];
+      const inlinedCss = [...(bundle[entryFile ?? '']?.viteMetadata?.importedCss ?? [])];
       this.emitFile({
         type: 'asset',
         fileName: ROUTE_ASSETS_MANIFEST,
-        source: JSON.stringify({ documentCss, chunks }, null, 2),
+        source: JSON.stringify({ inlinedCss, chunks }, null, 2),
       });
     },
   };
