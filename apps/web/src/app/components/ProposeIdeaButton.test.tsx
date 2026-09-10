@@ -7,6 +7,7 @@ import { http, HttpResponse } from 'msw';
 import { LocaleProvider } from '@/shared/i18n';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import ProposeIdeaButton from '@/app/components/ProposeIdeaButton';
+import styles from '@/app/components/ProposeIdeaButton.module.css';
 
 function renderButton(path = '/e/soiree-cine') {
   return render(
@@ -145,6 +146,23 @@ describe('ProposeIdeaButton', () => {
     await user.click(screen.getByRole('button', { name: /retirer cette image/i }));
 
     expect(screen.queryByRole('button', { name: /retirer cette image/i })).not.toBeInTheDocument();
+  });
+
+  it("garde le bouton d'envoi hors de la zone défilante quand une image est ajoutée", async () => {
+    renderButton();
+    const user = await openDialog();
+
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(input, pngFile());
+    await screen.findByRole('button', { name: /retirer cette image/i });
+
+    const scrollArea = document.querySelector(`.${styles.body}`);
+    expect(scrollArea).not.toBeNull();
+    expect(scrollArea).toContainElement(screen.getByLabelText(/description/i));
+
+    const submit = screen.getByRole('button', { name: /envoyer/i });
+    expect(scrollArea).not.toContainElement(submit);
+    expect(submit.closest(`.${styles.actions}`)).not.toBeNull();
   });
 
   it("refuse un fichier d'un format non supporté", async () => {
