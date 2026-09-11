@@ -22,6 +22,12 @@ public sealed class EmailMaskingTests
     }
 
     [Fact]
+    public void Mask_StripsLineBreaks_SoTheOutputStaysOnOneLogLine()
+    {
+        Assert.Equal("b***@example.com", EmailMasking.Mask("bob@exam\r\nple.com\n"));
+    }
+
+    [Fact]
     public void Mask_NoAt_ReturnsPlaceholder()
     {
         Assert.Equal("***", EmailMasking.Mask("not-an-email"));

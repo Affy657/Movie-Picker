@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace MoviePicker.Api.Infrastructure.Web;
 
 public static class OAuthProviders
@@ -7,8 +9,16 @@ public static class OAuthProviders
 
     public static readonly IReadOnlyList<string> All = [Google, GitHub];
 
-    public static bool IsKnown(string? provider) =>
-        !string.IsNullOrWhiteSpace(provider) && All.Contains(provider, StringComparer.Ordinal);
+    public static bool TryResolve(string? input, [NotNullWhen(true)] out string? provider)
+    {
+        provider = input switch
+        {
+            Google => Google,
+            GitHub => GitHub,
+            _ => null
+        };
+        return provider is not null;
+    }
 }
 
 public sealed class OAuthProviderCatalog

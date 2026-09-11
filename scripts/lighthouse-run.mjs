@@ -101,8 +101,7 @@ function showcaseItems(ranked = false) {
  */
 function startApiStub(port) {
   const server = http.createServer((req, res) => {
-    const origin = req.headers.origin ?? BASE;
-    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Origin', BASE);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     if (req.method === 'OPTIONS') {

@@ -27,6 +27,25 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
     }
 
     [Fact]
+    public async Task InvokeAsync_KeepsPathAndQueryOnOneLine_WhenTheyCarryLineBreaks()
+    {
+        var logger = new CapturingLogger<StructuredHttpRequestLoggingMiddleware>();
+        var ctx = new DefaultHttpContext();
+        ctx.Request.Method = "GET";
+        ctx.Request.Path = "/api/v1/movies\r\nforged";
+        ctx.Request.QueryString = new QueryString("?q=a\nb");
+        var mw = new StructuredHttpRequestLoggingMiddleware(_ => Task.CompletedTask, logger);
+
+        await mw.InvokeAsync(ctx);
+
+        var entry = Assert.Single(logger.Entries);
+        Assert.DoesNotContain('\n', entry.Message);
+        Assert.DoesNotContain('\r', entry.Message);
+        Assert.Contains("/api/v1/movies forged", entry.Message);
+        Assert.Contains("?q=a b", entry.Message);
+    }
+
+    [Fact]
     public async Task InvokeAsync_StillLogs_WhenNextThrows()
     {
         var logger = new CapturingLogger<StructuredHttpRequestLoggingMiddleware>();

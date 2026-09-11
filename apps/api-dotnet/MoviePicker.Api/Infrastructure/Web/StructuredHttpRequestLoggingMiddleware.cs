@@ -21,12 +21,14 @@ public sealed class StructuredHttpRequestLoggingMiddleware(
             logger.LogInformation(
                 "HTTP {HttpMethod} {Path}{QueryString} → {StatusCode} en {ElapsedMs} ms ({Endpoint}) [kind={ApiRouteKind}]",
                 context.Request.Method,
-                context.Request.Path.Value,
-                context.Request.QueryString.HasValue ? context.Request.QueryString.Value : string.Empty,
+                SingleLine(context.Request.Path.Value),
+                SingleLine(context.Request.QueryString.Value),
                 context.Response.StatusCode,
                 sw.ElapsedMilliseconds,
                 endpoint ?? "n/a",
                 routeKind);
         }
     }
+
+    private static string SingleLine(string? value) => (value ?? string.Empty).ReplaceLineEndings(" ");
 }
