@@ -32,7 +32,7 @@ Le projet a été **exécuté seul**, et le support le dit dès la diapositive 2
 - **Le réel** : chiffré, daté, vérifiable dans le dépôt. Depuis le 11 septembre au soir, **aucune distinction entre l'auteur et ses outils d'assistance** : tout ce qui n'est pas exécuté par un prestataire est présenté comme le travail d'une personne, sans acteur intermédiaire, sur décision du propriétaire du projet (« moi et les agents IA, c'est la même personne »). L'affectation des missions se mesure dans le temps, sur les 833 commits classés par mission.
 - **Là où le référentiel exige une équipe** : la matrice RACI est construite sur les acteurs réels (moi, commanditaire, utilisateurs, prestataires), la grille de compétences est une auto-évaluation avant / après étalonnée sur le dépôt, le plan de développement est personnel, et le besoin en recrutement est une note « si le projet passait en équipe ».
 
-**Règle de rédaction** : on écrit *« à la main »*, *« confié à la chaîne »*, *« si le projet passait en équipe »*. Jamais *« l'organisation cible prévoit »*, jamais *« délégué aux agents »*, jamais un profil ou un acteur qui n'a pas existé.
+**Règle de rédaction** : on écrit *« à la main »*, *« confié à la chaîne »*, *« si le projet passait en équipe »*. Jamais *« l'organisation cible prévoit »*, jamais *« délégué aux agents »*, jamais un profil ou un acteur qui n'a pas existé. Les quatre rôles de la RACI (chef de projet, product owner, développeur, DevOps) sont des casquettes d'une même personne, jamais des personnes : on écrit *« le A et le R changent de casquette »*.
 
 ### 2.2 Ancrer sur une mesure, et dire la limite avant qu'on la trouve
 
@@ -86,6 +86,7 @@ Le support fait **30:00 pile**, exact chapitre par chapitre. Toute modification 
 | Couverture, Quality Gate | Dossier Bloc 2 | `docs/RNCP/bloc-2-conception-developpement/dossier-bloc-2.md` |
 | Mesures de production (17 comptes, 74 %, p95 207 ms) | Dossier Bloc 4 | `docs/RNCP/bloc-4-mco/`, **non recalculables depuis le dépôt** |
 | Items de feuille de route | `docs/roadmap-product.md`, `roadmap-tech.md` | § 5.2 ci-dessous |
+| Board GitHub Projects (152 tickets) | Projet 1 du compte `Affy657`, privé | `gh project item-list 1 --owner Affy657 --format json` ; rempli le 11/09/2026 depuis les deux feuilles de route par un script, champs Status, Version, Taille, Nature |
 | Libellés de l'interface (script de démo) | `apps/web/src/shared/i18n/locales/fr.ts` | Toujours citer le libellé **exact** |
 
 ---
@@ -290,6 +291,8 @@ PY
 | **Le cas « environnement de test rejeté malgré 30 % de gain » a été retiré** | Aucune trace dans le dépôt. Remplacé par l'abandon de l'application mobile (16/05 → 26/05), lui documenté | Si le propriétaire du projet confirme que c'est réel mais non tracé, le réintégrer en annexe A2 |
 | **Le chapitre 4 ne distingue pas l'auteur de ses outils d'assistance** : l'affectation des missions est mesurée dans le temps sur les 833 commits classés par mission, et entre ce qui reste à la main et ce qui est confié à la chaîne | Décision du propriétaire du projet le 11/09/2026 au soir : « moi et les agents IA, c'est la même personne, ne fais pas de différence ». La version précédente (délégation mesurée par les commits co-signés) est dans l'historique Git avant `5bd928e` | Recalculer la classification par mission (§ 14) plutôt que de réintroduire un acteur |
 | **Pas de frontmatter par diapositive** | Risque de décalage de numérotation (§ 4.3) | |
+| **Le financier est réel, aucune valorisation du temps** : 0 € de salaire, 100 €/mois d'assistant de code depuis juin 2026, une dizaine d'euros de domaine, paliers gratuits | Décision du propriétaire du projet le 11/09/2026 : « je ne me verse aucun salaire ». Le 34 300 € du Bloc 1 n'est plus cité que comme mesure d'effort en jours (98 J/H) | Ne pas réintroduire de TJM simulé |
+| **La méthode est un cycle en V par version et un flux pour le run**, l'outil est le board GitHub Projects | Décision du propriétaire du projet le 11/09/2026, après lecture des faits du dépôt (branches de version, PR de release, branches fix, roadmap par version) | Le board est réellement rempli (152 tickets) : ne pas le présenter vide |
 
 ---
 
@@ -385,3 +388,13 @@ Deux consignes du propriétaire du projet, dans l'ordre : **retirer tous les blo
 **Numérotation** : 1 titre, 2 sommaire, 3 démonstration, 4 à 8 planifier, 9 à 12 piloter, 13 arbitrage, 14 à 17 management, 18 et 19 compétences, 20 à 22 rendre compte, 23 bilan, 24 à 31 annexes A1 à A8. Correspondance avec la numérotation du matin : 4 → 4, 5 → 5, 6 + 7 → 6, 8 → 7, 9 → 8, 10 + 11 → 9, 12 → 10, 13 → 11, 14 → 12, 15 + 16 → 13, 17 → 14, 18 → 15, 19 → 16, 20 → 17, 21 + 22 → 18, 23 → 19, 24 → 20, 25 → 21, 26 → 22, 27 → 23, 28 à 35 → 24 à 31.
 
 **Annexe retirée, plus tard le 11 septembre** : l'ancienne A2, le logigramme complet avec le chemin suivi, doublonnait la diapositive 13, qui porte déjà le logigramme et dont la note dit le chemin réel. Le support passe à **30 diapositives, 23 présentées et 7 annexes** : A1 architecture 24, A2 arbitrages de réserve 25, A3 budget 26, A4 chaîne 27, A5 RACI 28, A6 journal des versions 29, A7 retours utilisateurs 30. Le script du § 5.3 attend 30.
+
+## 15. Reprise du chapitre 2, 11 septembre 2026 au soir
+
+Le propriétaire du projet a jugé les diapositives 4 à 6 vides ou incohérentes, et a demandé une reprise **sur les faits réels du dépôt** : moitié cycle en V pour les versions à fonctionnalités, moitié agile pour le run ; l'outil est le board GitHub ; les phases sont les versions 1.x ; il porte tous les rôles.
+
+**Ce qui a changé.** Diapositive 4 : le V d'une version (cadrage, conception, réalisation contre vérification, validation, livraison) et le run en flux, le board avec ses sept colonnes, trois libellés de bénéfice. Diapositive 5 : un Gantt à une ligne par version, chaque ligne en cinq phases aux dates arrondies du dépôt (`01-planification.md` § 3.1), plus les lignes « run » et les jalons du titre. Diapositive 6 : les 75 items livrés par version, les ressources avec les quatre rôles, le téléphone de test et l'assistant de code, et le financier **réel** (0 € de salaire, 100 €/mois d'assistant de code depuis juin, ≈ 10 €/an de domaine). Diapositive 7 et annexe A5 : la RACI par rôle, quatre colonnes de casquettes et trois d'acteurs. Diapositive 9 : l'adéquation de l'outil réécrite contre la nouvelle méthode, 152 tickets au board. Diapositive 11 et annexe A3 : la valeur de développement à 350 € le jour a disparu, remplacée par le coût réel. Diapositive 12 : 75 items dont 52 hors chiffrage (la 15e feature de la 1.5, cochée le 7 septembre). Chapitre 1 réécrit, chapitre 2 § 1.2, 1.3, 1.5, axe 3, § 4.1, § 5 réalignés.
+
+**Le board GitHub Projects** (projet 1 du compte, privé) a été rempli le 11/09 par un script : 152 tickets en brouillon, un par item des deux feuilles de route, avec les champs Status (Backlog, Cadrage, Maquette, Dev, Revue et tests, Recette, Livré), Version, Taille et Nature. Il est postérieur au travail qu'il consolide, ce qui est dit dans `02-suivi-indicateurs.md` § 1.5 et préparé en réponse dans la note de la diapositive 9 ; il n'est plus vide, et la diapositive 4 le décrit tel qu'il est.
+
+**Les dates des phases** de la diapositive 5 sont celles du dépôt (commits de roadmap pour l'étude, branches de version pour la conception et la réalisation, tags pour la restitution, fenêtre de production pour la mesure), arrondies à la semaine ; la table de `01-planification.md` § 3.1 est la source, et le générateur est un script de session (`gantt_gen.py`, colonne 1 = 16 février, 213 colonnes).

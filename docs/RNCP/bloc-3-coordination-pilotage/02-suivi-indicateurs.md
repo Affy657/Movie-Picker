@@ -31,7 +31,7 @@ Le critère de choix n'est pas la richesse fonctionnelle, c'est la **distance en
 
 En tenant le suivi dans la plateforme qui héberge le code, la trace est produite **par le geste de travail lui-même** : ouvrir une branche, la fusionner, publier une version, déclencher la chaîne de vérification. Aucun de ces indicateurs ne demande de saisie déclarative. C'est la propriété qui les rend fiables rétrospectivement, et vérifiables par un tiers.
 
-### 1.2 Les cinq surfaces et ce que chacune porte
+### 1.2 Les six surfaces et ce que chacune porte
 
 | Surface | Ce qu'elle porte | Volume au 05/09/2026 |
 |---------|------------------|---------------------|
@@ -39,23 +39,24 @@ En tenant le suivi dans la plateforme qui héberge le code, la trace est produit
 | **Pull requests** | La revue, la trace de décision d'intégration, et l'exécution des portes de qualité avant fusion | 77 ouvertes, 26 fusionnées |
 | **Actions** | La vérification automatisée : tests, analyse statique, sécurité, performance, déploiement | 449 exécutions du pipeline sur la branche principale |
 | **Releases et tags** | Les points de livraison datés, adossés au commit exact déployé | 10 versions publiées |
-| **Fichiers versionnés du dépôt** | Les feuilles de route produit et technique, le journal des versions, la carte de suivi du titre | 4 fichiers, **106 items** de feuille de route |
+| **Board GitHub Projects** | Un ticket par item de roadmap, avec sa version, sa taille et sa phase : Backlog, Cadrage, Maquette, Dev, Revue et tests, Recette, Livré | **152 tickets** au 11/09, dont 97 livrés |
+| **Fichiers versionnés du dépôt** | Les feuilles de route produit et technique, le journal des versions, la carte de suivi du titre | 4 fichiers, **106 items** de feuille de route au 05/09 |
 
 Les feuilles de route (`docs/roadmap-product.md`, `docs/roadmap-tech.md`) jouent le rôle du **backlog priorisé**, et le `CHANGELOG.md` celui du **journal d'avancement**. Les tenir en Markdown versionné plutôt que dans un service tiers a une conséquence directe sur le pilotage : chaque modification de périmètre est un commit daté, attribuable et diffable. La question « quand cet item est-il apparu dans le périmètre, et qu'est-ce qui l'y a mis ? » a une réponse mécanique.
 
 ### 1.3 L'adéquation avec le projet et avec la méthodologie
 
-Le critère est explicitement demandé par la grille. Il se vérifie point par point contre le Kanban léger retenu au chapitre 1.
+Le critère est explicitement demandé par la grille. Il se vérifie point par point contre la méthode du chapitre 1 : un cycle en V par version, un flux pour le run.
 
-| Propriété de la méthodologie (ch. 1) | Ce que l'outil fournit |
-|--------------------------------------|------------------------|
-| Flux continu, pas d'itération de durée fixe | Aucune notion de sprint n'est utilisée. Les fiches n'ont pas de date d'échéance, seules les **versions** en portent une |
-| Limite de travail en cours d'un seul sujet | Une branche fonctionnelle ouverte à la fois, observable dans l'historique : les branches ne se chevauchent pas |
-| Priorisation permanente | Les feuilles de route sont réordonnées par commit, sans replanification globale : le périmètre a été arrêté 10 fois, une par version, sans remise à plat |
+| Propriété de la méthode (ch. 1) | Ce que l'outil fournit |
+|--------------------------------|------------------------|
+| Une version est un lot fermé | Une branche de version, une pull request de release, une étiquette sur le commit déployé |
+| Un item passe par les phases du V | Un ticket par item sur le board, dont les colonnes sont les phases ; une branche par feature |
+| Priorisation permanente entre deux versions | Les feuilles de route sont réordonnées par commit, sans replanification globale : le périmètre a été arrêté 10 fois, une par version, sans remise à plat |
 | Critère de sortie « déployé et vérifié en production » | La fusion déclenche le déploiement, et le test de fumée post-déploiement vérifie la disponibilité réelle avant de considérer la livraison acquise |
-| Correctif de production prioritaire sur le flux | Les anomalies sont des issues étiquetées en sévérité, traitées hors du flux fonctionnel |
+| Le run en flux, hors version | Les anomalies sont des issues étiquetées en sévérité, corrigées sur une branche `fix/` et livrées en version corrective |
 
-Le point à dire à l'oral : **l'outil n'a pas été choisi puis la méthodologie adaptée à lui**. C'est l'inverse. Un outil de suivi à sprints (planification par itération, engagement de vélocité, burndown) aurait imposé une cadence que le rythme d'alternance ne permettait pas de tenir, et aurait produit des indicateurs faux, un burndown resté plat pendant trois semaines d'école ne dit rien sur le projet, il dit seulement que l'indicateur ne mesure pas la bonne chose.
+Le point à dire à l'oral : **l'outil n'a pas été choisi puis la méthodologie adaptée à lui**. C'est l'inverse. Un outil de suivi à sprints (planification par itération, engagement de vélocité, burndown) aurait imposé une cadence que le temps libre ne permettait pas de tenir, et aurait produit des indicateurs faux, un burndown resté plat pendant trois semaines d'école ne dit rien sur le projet, il dit seulement que l'indicateur ne mesure pas la bonne chose.
 
 ### 1.4 Le circuit d'un travail, de l'entrée à la mesure
 
@@ -83,7 +84,7 @@ Trois limites, énoncées ici plutôt que découvertes par le jury.
 |--------|----------------|--------------------------------|
 | **Le temps passé n'est pas saisi** | Aucun relevé d'heures n'a été tenu | La charge consommée est **reconstituée** à partir des jours d'activité du dépôt, avec la marge d'erreur assumée en 5.3. Ce n'est pas une mesure directe |
 | **Toutes les intégrations ne passent pas par une pull request** | 122 fusions sur la branche principale pour 26 pull requests fusionnées | L'indicateur « pull requests » mesure le travail **soumis à revue formelle**, pas le débit total. Le débit total se lit sur les fusions et les commits |
-| **Le tableau de flux n'a pas été tenu comme artefact permanent** | Le flux a vécu dans les branches, les issues et les feuilles de route | Le tableau consolidé est **postérieur** au travail qu'il représente. Il visualise une matière datée, il ne la crée pas |
+| **Le board consolidé est postérieur à une partie du travail** | Le flux a vécu dans les feuilles de route, les branches et les issues ; le board les consolide depuis le 11 septembre | Il visualise une matière datée au commit, il ne la crée pas |
 
 La troisième limite est celle qu'un jury de professionnels repère seul. La réponse tient en une phrase : **la matière de suivi est datée et vérifiable, sa mise en tableau ne l'est pas**. Les 833 commits, les 77 pull requests, les 449 exécutions du pipeline et les 10 versions portent tous un horodatage produit au moment du geste. Le tableau qui les agrège n'ajoute pas d'information, il en change la lisibilité.
 
@@ -137,7 +138,7 @@ C'est le même défaut que celui relevé au chapitre 1 sur les documents de cadr
 | Coût d'infrastructure récurrent | Dépense mensuelle réelle des services | Consoles GCP, AWS, Atlas | Mensuel | **0 €**, tous les services dans leur palier gratuit |
 | Coût annuel engagé | Dépense ferme hors infrastructure | Registraire du domaine | Annuel | **≈ 10 €** (nom de domaine) |
 | Coût de licences | Licences payantes | Inventaire des dépendances | À chaque montée de version | **0 €** |
-| Valeur de développement consommée | Charge reconstituée × TJM junior simulé de 350 € | Historique Git, chiffrage ch. 1 | Mensuel | **≈ 30 800 €** sur 34 300 € budgétés, soit **90 %** |
+| Outils payants | Abonnement à l'assistant de code | Facture mensuelle | Mensuel | **100 €/mois** depuis juin 2026, 300 € au 05/09 |
 
 #### Axe 4, risques
 
@@ -257,14 +258,16 @@ Les quatre échéances non négociables sont tenues. Ce n'est pas un effet de di
 | Envoi d'e-mails, supervision d'erreurs, chaîne d'intégration | 0 €/mois | **0 €/mois** | conforme |
 | Nom de domaine | ≈ 10 €/an | **≈ 10 €/an** | conforme |
 | Licences | 0 € | **0 €** | conforme |
-| **Trésorerie réelle** | **20 à 190 €/an** | **≈ 10 €/an à ce jour** | **borne basse** |
-| **Valeur de développement** | **34 300 €** (98 J/H × 350 €) | **≈ 30 800 €** (88 J/H reconstitués) | **−10 %** |
+| **Infrastructure et domaine** | **20 à 190 €/an** | **≈ 10 €/an à ce jour** | **borne basse** |
+| **Assistant de code** | non prévu au cadrage | **100 €/mois** depuis juin, 300 € au relevé | **+300 €**, seul poste non prévu |
 
 Trois commentaires de pilotage, plus utiles que le tableau lui-même.
 
 **Le budget d'infrastructure tient parce qu'il a été conçu pour tenir.** Le dimensionnement sur paliers gratuits est une décision de cadrage, pas une conséquence heureuse. Elle a un coût technique assumé : l'API démarre à froid en 3,8 s après inactivité, contrepartie directe du choix de ne pas payer d'instance permanente.
 
 **Deux échéances de coût sont identifiées et datées**, ce qui est la seule façon utile de suivre un coût qui vaut zéro aujourd'hui : la fin des 12 mois gratuits de l'hébergement du front, qui fait passer le poste à 1 à 5 €/mois, et le franchissement des 512 Mo de la base, qui ferait passer au premier palier payant à environ 9 $/mois. Aucune des deux n'est atteinte ; les deux sont dans le tableau parce qu'un budget qui ne suit que la dépense actuelle ne pilote rien.
+
+**Le seul poste non prévu est l'assistant de code.** 100 € par mois depuis juin, 300 € au relevé : c'est la seule dépense réelle du projet, et elle n'était pas au budget du cadrage, qui ne connaissait pas cet outil. Aucun salaire n'est versé ni valorisé, le temps est celui de l'auteur.
 
 **La sous-consommation de charge n'est pas une bonne performance.** Elle est analysée en 5.
 
@@ -298,7 +301,7 @@ La courbe raconte une décision et sa conséquence. Le creux de juin correspond 
 | Indicateur | Valeur | Lecture |
 |------------|--------|---------|
 | Jours actifs | **88 sur 191** jours calendaires | 46 % des jours du projet portent une trace de travail |
-| Densité hebdomadaire | **3,1** jours par semaine calendaire | Compatible avec une alternance école / entreprise |
+| Densité hebdomadaire | **3,1** jours par semaine calendaire | Compatible avec un projet mené sur le temps libre, soirs et week-ends |
 | Densité sur semaines actives | **3,8** jours | 23 semaines actives sur 28 |
 | Semaines sans activité | **5** | Toutes situées avant le 10 mai : le rythme s'est densifié ensuite sans retrouver de respiration |
 | Plus longue série continue | **10 jours consécutifs** | Signal de surcharge ponctuelle |
@@ -318,7 +321,7 @@ C'est la diapositive qui prouve que le suivi a servi à **décider**, et pas seu
 | | Prévu au cadrage | Réel reconstitué | Écart |
 |--|------------------|------------------|-------|
 | Charge | 98 J/H | ≈ 88 J/H | **−10 %** |
-| Périmètre | MVP + migration + V1 + clôture du titre | **+ 8 livraisons** après la V1 (V1.1.0 à V1.5.0), dont **5 versions mineures** apportant des fonctionnalités, aucune chiffrée | **+ 51 items** |
+| Périmètre | MVP + migration + V1 + clôture du titre | **+ 8 livraisons** après la V1 (V1.1.0 à V1.5.0), dont **5 versions mineures** apportant des fonctionnalités, aucune chiffrée | **+ 52 items** |
 | Délais | 4 échéances de restitution | 4 tenues | **0** |
 | Coûts d'infrastructure | 20 à 190 €/an | ≈ 10 €/an | **borne basse** |
 
@@ -333,7 +336,7 @@ Le chiffrage initial couvrait quatre lots s'arrêtant à la V1 et à la clôture
 | 27/02 au 19/05 | Lots 1 à 3, prototype, migration, V1 | 23 | 26 % |
 | 20/05 au 05/09 | **Hors chiffrage initial** : V1.1 à V1.5.0, plus le lot de clôture du titre | 65 | 74 % |
 
-Les huit livraisons qui suivent la V1 n'ont **jamais été chiffrées**. Les cinq versions mineures qu'elles contiennent (V1.1 à V1.5) portent à elles seules **51 des 74 items** de périmètre livrés, soit 69 % du produit final. Formulé sans détour : **le périmètre a triplé pendant que la charge totale restait dans l'enveloppe prévue.**
+Les huit livraisons qui suivent la V1 n'ont **jamais été chiffrées**. Les cinq versions mineures qu'elles contiennent (V1.1 à V1.5) portent à elles seules **52 des 75 items** de périmètre livrés, soit 69 % du produit final. Formulé sans détour : **le périmètre a triplé pendant que la charge totale restait dans l'enveloppe prévue.**
 
 Cela ne signifie pas qu'on a fait deux fois plus avec autant. Cela signifie que le chiffrage initial était **large sur les trois premiers lots** (la marge de 20 % a couvert la migration .NET) et que l'extension de périmètre a consommé cette marge plus la capacité libérée. Le suivi n'a pas détecté une dérive de charge, il a détecté un **glissement de périmètre invisible**, parce qu'aucun indicateur ne comparait le périmètre courant au périmètre chiffré.
 
@@ -368,7 +371,7 @@ Trois manques identifiés, avec la correction qui en découle. Ce sont des recom
 
 | Manque | Ce qu'il a coûté | Correction |
 |--------|------------------|-----------|
-| Aucun indicateur ne comparait le **périmètre courant au périmètre chiffré** | Le glissement de 51 items n'a été visible qu'a posteriori | Un compteur d'items hors chiffrage initial, relevé à chaque version |
+| Aucun indicateur ne comparait le **périmètre courant au périmètre chiffré** | Le glissement de 52 items n'a été visible qu'a posteriori | Un compteur d'items hors chiffrage initial, relevé à chaque version |
 | Le temps passé n'était pas saisi | La charge n'est reconstituable qu'avec 20 % d'incertitude | Un relevé déclaratif hebdomadaire à la demi-journée, suffisant et soutenable |
 | Le préfixe de commit ne distingue pas **finition** et **régression** | Le ratio correction / fonctionnalité de 1,5 n'est pas interprétable seul | Rattachement obligatoire d'une correction d'anomalie à une issue, déjà en place depuis juillet |
 

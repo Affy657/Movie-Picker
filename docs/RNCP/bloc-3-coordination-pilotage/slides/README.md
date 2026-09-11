@@ -53,7 +53,9 @@ npm run export
 | `.flow` | Logigramme : `.q` question, `.r` issue, `.r.no` refus, `.r.go` décision |
 | `.tl` | Frise |
 | `.chips` | Liste d'états valeur / verdict, ou sommaire |
-| `.horizons` | Deux échelles de temps emboîtées (outils de planification) |
+| `.vee` | Cycle en V, trois niveaux reliés (méthode par version) |
+| `.run` | Quatre pas fléchés du run en flux |
+| `.board` | Colonnes d'un board, cartes en placeholders |
 | `.raci` | Grille RACI colorée, une classe par lettre |
 | `.quad` | Quadrant 2 × 2, `.dom` sur la case dominante (styles managériaux) |
 | `.steps` | Trois pas numérotés (publics servis, niveaux de compte rendu) |

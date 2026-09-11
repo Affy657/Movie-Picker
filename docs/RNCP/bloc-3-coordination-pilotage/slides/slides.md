@@ -130,24 +130,50 @@ en silence se lit comme une defaillance du logiciel.
 
 ---
 
-# 2. Planifier : Kanban léger, deux horizons de temps
+# 2. Planifier : un V par version, un flux pour le run
 
-<div class="grid grid-cols-5 gap-6 mt-6">
-<div class="col-span-2">
-
-<div class="chips" style="font-size:0.85rem;gap:0.5rem 0">
-<div><span><b>Travail en cours</b></span><u>1 sujet, hors correctif</u></div>
-<div><span><b>Terminé</b></span><u>déployé et vérifié en production</u></div>
-<div><span><b>Cérémonies</b></span><u>aucune, les versions ont une date</u></div>
-<div><span><b>Écartés</b></span><u>Scrum, cycle en V</u></div>
-</div>
-
-</div>
+<div class="grid grid-cols-5 gap-6 mt-2">
 <div class="col-span-3">
 
-<div class="horizons">
-<div class="h"><b>Le mois, le trimestre</b><span>Rétroplanning et Gantt</span><i>Une date imposée devient une date de fin de lot : la capacité fixe le périmètre, jamais l'inverse</i></div>
-<div class="h day"><b>La journée, la semaine</b><span>Tableau de flux</span><i>Que fait-on maintenant, qu'est-ce qui bloque ? Aucune fiche ne porte de date de fin, <b>seules les versions en portent une</b></i></div>
+<div class="text-xs opacity-75 mb-1">Chaque version 1.x, de la roadmap à la release</div>
+<div class="vee">
+<div class="row"><div class="l"><b>Cadrage</b><span>objectif de version, items, tailles S à XL</span></div><div class="link"></div><div class="r"><b>Livraison</b><span>release datée, notes, nouveautés in-app</span></div></div>
+<div class="row r2"><div class="l"><b>Conception</b><span>questions de cadrage, maquette, contrat d'API</span></div><div class="link"></div><div class="r"><b>Validation</b><span>test manuel, go avant la fusion</span></div></div>
+<div class="row r3"><div class="l"><b>Réalisation</b><span>test écrit avant le code, branche de feature</span></div><div class="link"></div><div class="r"><b>Vérification</b><span>revue, 14 contrôles bloquants</span></div></div>
+<div class="base">une branche par version, une branche par feature</div>
+</div>
+
+<div class="text-xs opacity-75 mt-3 mb-1">Le run, en flux, hors version</div>
+<div class="run">
+<div>Signal<i>Sentry, sonde, utilisateur</i></div><span>→</span>
+<div>Fiche<i>issue étiquetée, sévérité</i></div><span>→</span>
+<div>Correctif<i>branche fix, sur master</i></div><span>→</span>
+<div>Livré<i>version corrective</i></div>
+</div>
+
+</div>
+<div class="col-span-2">
+
+<div class="text-xs opacity-75 mb-1">L'outil : le board GitHub Projects, une colonne par phase</div>
+<div class="board">
+<div><b>Backlog</b><i></i><i></i><i></i></div>
+<div><b>Cadrage</b><i></i><i></i></div>
+<div><b>Maquette</b><i></i></div>
+<div><b>Dev</b><i></i></div>
+<div><b>Revue, tests</b><i></i></div>
+<div><b>Recette</b><i></i></div>
+<div class="done"><b>Livré</b><i></i><i></i><i></i><i></i></div>
+</div>
+
+<div class="chips mt-3">
+<div><span>Un ticket par item de roadmap</span><u>version, taille, phase</u></div>
+<div><span>Au-dessus du board</span><u>rétroplanning, Gantt des versions</u></div>
+</div>
+
+<div class="chips mt-4">
+<div><span><b>Périmètre figé</b> par version</span><u>livrable daté, notes de version</u></div>
+<div><span><b>Correctif</b> sans attendre la version</span><u>bug corrigé en un jour</u></div>
+<div><span><b>Écartés</b></span><u>Scrum, cycle en V intégral</u></div>
 </div>
 
 </div>
@@ -158,182 +184,200 @@ DUREE 1:30. ELEMENTS IMPOSES 1 ET 2 : la methodologie choisie, et l'outil de
 planification. CRITERES : le choix est justifie AVEC LES BENEFICES ATTENDUS ;
 l'outil est argumente avec ses benefices ET compatible avec la methodologie.
 
-Deux temps : la colonne de gauche est la methode, la colonne de droite est
-l'outillage. Le schema de droite EST la reponse au critere de compatibilite, la
-phrase en gras est a dire mot pour mot.
+La methode se dit en une phrase : « un cycle en V pour chaque version, un flux
+pour le run ». Le V a gauche : une version part de la roadmap avec un objectif,
+des items et une taille par item, chaque item passe par un cadrage par
+questions, une maquette si l'ecran est nouveau, une realisation ou le test est
+ecrit avant le code, puis remonte la branche droite : verification par la chaine
+et la revue, validation par un test manuel avant la fusion, livraison par une
+release datee, avec ses notes et la fenetre de nouveautes. Le trait pointille
+entre les deux branches EST le cycle en V : chaque niveau de gauche est verifie
+par son vis-a-vis de droite, la livraison contre le cadrage, la validation
+contre la conception, la verification contre la realisation.
 
-CRITERE : le choix est justifie AVEC LES BENEFICES ATTENDUS.
+Le run, en bas : un signal de production ou d'un utilisateur, une fiche
+etiquetee avec sa severite, une branche de correctif fusionnee sur master, une
+version corrective. Il ne passe pas par le V, et c'est voulu.
 
-Ne pas definir Kanban, le jury connait. Aller au « pourquoi ici » et aux
-benefices constates, a dire : perimetre arrete 10 fois, une par version, sans
-replanification, le
-temps va a la production et a la revue, les anomalies traitees hors du flux.
+LES BENEFICES, a dire avec les chiffres : le V par version fige un perimetre,
+donc chaque version a une date et des notes, dix versions livrees ; le flux du
+run corrige sans attendre la version suivante, une anomalie de production
+ouverte et corrigee le meme jour en juillet, livree le lendemain.
 
-La formule a dire : « Kanban leger » n'est pas un Kanban degrade, c'est un Kanban
-dont l'outillage a ete dimensionne a la taille reelle du projet. Ce qui a ete
-ecarte du Kanban lui-meme, ce sont les metriques de flux, temps de cycle par
-classe de service, diagramme de flux cumule, qui exigent un volume de fiches que
-ce projet n'atteint pas.
-
-Le motif d'ecartement de Scrum doit etre dit sans mepris : ce n'est pas Scrum qui
-est mauvais, c'est son rapport cout / benefice a une personne.
-
-SI ON QUESTIONNE : « pourquoi pas Scrum en solo, juste pour la discipline ? »
-La discipline vient de la limite de travail en cours et du critere de sortie, qui
-sont conserves. Ce qui est ecarte, ce sont les rituels sans interlocuteur.
+ECARTES, sans mepris : Scrum, parce que ses ceremonies n'ont pas
+d'interlocuteur a une personne, on garde le decoupage et la revue, pas les
+rituels ; le cycle en V integral, parce qu'il aurait fige tout le perimetre
+avant les mesures de production, alors que la V1.4 corrige des hypotheses que
+l'usage reel a invalidees.
 
 = = =
 
 CRITERES : l'outil de planification est argumente avec ses benefices attendus,
 ET il est compatible avec la methodologie choisie.
 
-Le critere de compatibilite est celui que les candidats ratent : ils presentent
-un Gantt sur une methode agile sans expliquer comment les deux coexistent. Le
-schema de droite est la reponse, et la phrase en gras est a dire mot pour mot.
+L'outil est le board GitHub Projects : un ticket par item de roadmap, avec sa
+version, sa taille et sa phase ; les colonnes du board SONT les phases du V,
+c'est ce qui fait la compatibilite. Un ticket ne saute pas de colonne : il
+passe par la maquette quand l'ecran est nouveau, par la revue avant la recette.
+Benefice attendu : voir en un ecran ce qui est cadre, ce qui est en cours et ce
+qui est livre, sans double saisie, dans la plateforme ou le code vit.
 
-La contradiction classique entre Gantt et Kanban nait quand on tente de planifier
-des taches individuelles a date fixe dans un flux. Ce n'est pas ce qui est fait
-ici.
+Au-dessus du board, deux outils a l'echelle des versions : le retroplanning
+depuis les quatre echeances du titre, qui transforme une date imposee en date de
+fin de version, et le Gantt des versions, diapo suivante. Ils ne planifient pas
+les tickets, ils placent les versions ; le board ne porte pas de date, il porte
+l'etat. C'est cette difference d'echelle qui les rend compatibles.
 
-Ce que le retroplanning a produit concretement : le contenu de chaque version a
-ete arrete par la capacite restante avant la prochaine echeance, pas par une
-liste de souhaits.
+SI ON QUESTIONNE : « pourquoi pas Jira ? » Parce que le board vit la ou le code
+vit : la fiche, la branche, la PR et la release sont au meme endroit, la trace
+nait du geste. Le choix est developpe au chapitre 3.
 -->
 
 ---
 
-# Le planning en cinq phases
+# Le planning : chaque version parcourt les cinq phases
 
 <div class="gantt">
 
 <div class="row axis">
 <div class="lab"></div>
 <div class="track">
-<span style="grid-column:1/3">fév.</span>
-<span style="grid-column:3/34">mars</span>
-<span style="grid-column:34/64">avril</span>
-<span style="grid-column:64/95">mai</span>
-<span style="grid-column:95/125">juin</span>
-<span style="grid-column:125/156">juil.</span>
-<span style="grid-column:156/187">août</span>
-<span style="grid-column:187/203">sept.</span>
+<span style="grid-column:1/14">fév.</span>
+<span style="grid-column:14/45">mars</span>
+<span style="grid-column:45/75">avril</span>
+<span style="grid-column:75/106">mai</span>
+<span style="grid-column:106/136">juin</span>
+<span style="grid-column:136/167">juil.</span>
+<span style="grid-column:167/198">août</span>
+<span style="grid-column:198/214">sept.</span>
 </div>
 </div>
 
-<div class="sec">Étude</div>
-<div class="row"><div class="lab">Demande, parties prenantes</div><div class="track"><i style="grid-column:1/22"></i></div></div>
-<div class="row"><div class="lab">Comparatif de stack, faisabilité</div><div class="track"><i style="grid-column:3/48"></i></div></div>
-
-<div class="sec">Mesure</div>
-<div class="row"><div class="lab">Chiffrage 98 J/H, budget, risques</div><div class="track"><i style="grid-column:22/63"></i></div></div>
-<div class="row"><div class="lab">Usage réel en production</div><div class="track"><i style="grid-column:41/145"></i></div></div>
-
-<div class="sec">Conception</div>
-<div class="row"><div class="lab">Modèle de données, contrat d'API</div><div class="track"><i style="grid-column:3/43"></i></div></div>
-<div class="row"><div class="lab">Architecture hexagonale</div><div class="track"><i style="grid-column:17/63"></i></div></div>
-<div class="row"><div class="lab">Composants mobile-first</div><div class="track"><i style="grid-column:34/94"></i></div></div>
-
-<div class="sec">Réalisation</div>
-<div class="row"><div class="lab">Lot 1, MVP</div><div class="track"><i style="grid-column:1/18"></i></div></div>
-<div class="row"><div class="lab">Lot 2, migration de l'API</div><div class="track"><i style="grid-column:20/27"></i></div></div>
-<div class="row"><div class="lab">Lot 3, V1 produit</div><div class="track"><i style="grid-column:27/82"></i></div></div>
-<div class="row"><div class="lab">Lot 4, clôture du titre</div><div class="track"><i style="grid-column:83/180"></i></div></div>
-<div class="row"><div class="lab">V1.1 à V1.5.0, <i>hors chiffrage</i></div><div class="track"><i class="off" style="grid-column:83/194"></i></div></div>
-
-<div class="sec">Restitution</div>
-<div class="row"><div class="lab">Mises en production, v0.1.0 → v1.5.0</div><div class="track"><i style="grid-column:1/194"></i></div></div>
-<div class="row"><div class="lab">Restitutions au commanditaire</div><div class="track"><b style="grid-column:105/106"></b><b style="grid-column:147/148"></b><b style="grid-column:176/177"></b><b style="grid-column:202/203"></b></div></div>
+<div class="row"><div class="lab">0.1, MVP</div><div class="track"><i class="e" style="grid-column:1/8"></i><i class="c" style="grid-column:8/13"></i><i class="r" style="grid-column:13/30"></i><b style="grid-column:29/30"></b><i class="m" style="grid-column:30/32"></i></div></div>
+<div class="row"><div class="lab">1.0, socle .NET</div><div class="track"><i class="e" style="grid-column:29/31"></i><i class="c" style="grid-column:31/32"></i><i class="r" style="grid-column:31/33"></i><b style="grid-column:32/33"></b><i class="m" style="grid-column:33/49"></i></div></div>
+<div class="row"><div class="lab">1.0, V1 produit</div><div class="track"><i class="e" style="grid-column:33/50"></i><i class="c" style="grid-column:48/53"></i><i class="r" style="grid-column:51/93"></i><b style="grid-column:93/94"></b><i class="m" style="grid-column:94/100"></i></div></div>
+<div class="row"><div class="lab">1.1</div><div class="track"><i class="e" style="grid-column:89/92"></i><i class="c" style="grid-column:92/94"></i><i class="r" style="grid-column:94/99"></i><b style="grid-column:99/100"></b><i class="m" style="grid-column:100/117"></i></div></div>
+<div class="row"><div class="lab">1.2</div><div class="track"><i class="e" style="grid-column:94/100"></i><i class="c" style="grid-column:100/103"></i><i class="r" style="grid-column:101/116"></i><b style="grid-column:116/117"></b><i class="m" style="grid-column:117/125"></i></div></div>
+<div class="row"><div class="lab">1.3</div><div class="track"><i class="e" style="grid-column:109/114"></i><i class="c" style="grid-column:114/117"></i><i class="r" style="grid-column:116/124"></i><b style="grid-column:124/125"></b><i class="m" style="grid-column:125/144"></i></div></div>
+<div class="row"><div class="lab">1.3.1 et 1.3.2, run</div><div class="track"><i class="r" style="grid-column:130/143"></i><b style="grid-column:143/144"></b><i class="r" style="grid-column:144/160"></i><b style="grid-column:160/161"></b><i class="m" style="grid-column:161/192"></i></div></div>
+<div class="row"><div class="lab">1.4</div><div class="track"><i class="e" style="grid-column:135/152"></i><i class="c" style="grid-column:152/167"></i><i class="r" style="grid-column:171/191"></i><b style="grid-column:191/192"></b><i class="m" style="grid-column:192/202"></i></div></div>
+<div class="row"><div class="lab">1.4.1, run</div><div class="track"><i class="r" style="grid-column:193/201"></i><b style="grid-column:201/202"></b></div></div>
+<div class="row"><div class="lab">1.5</div><div class="track"><i class="e" style="grid-column:187/195"></i><i class="c" style="grid-column:198/201"></i><i class="r" style="grid-column:201/204"></i><b style="grid-column:204/205"></b><i class="m" style="grid-column:205/214"></i></div></div>
+<div class="row"><div class="lab">1.6, en cours</div><div class="track"><i class="e" style="grid-column:195/202"></i><i class="c" style="grid-column:205/206"></i><i class="r open" style="grid-column:206/214"></i></div></div>
+<div class="row"><div class="lab">Restitutions du titre</div><div class="track"><b style="grid-column:116/117"></b><b style="grid-column:158/159"></b><b style="grid-column:187/188"></b><b style="grid-column:213/214"></b></div></div>
 
 </div>
 
-<div class="text-xs opacity-70 mt-2 ml-2">
-Du 27 février au 16 septembre 2026. Jalons ◆ : Bloc 1 le 11/06, Bloc 2 le 23/07, Bloc 4 le 21/08, <b>Bloc 3 le 16/09</b>.
+<div class="legend mt-2 ml-2">
+<span style="--c:#cbd5e1">Étude</span>
+<span style="--c:var(--s3)">Conception</span>
+<span style="--c:var(--s1)">Réalisation</span>
+<span style="--c:#f59e0b">Restitution, release</span>
+<span style="--c:#99f6e4">Mesure en production</span>
 </div>
 
 <style>
-.gantt { font-size: 0.68rem; line-height: 1.1; margin-top: 0.4rem; }
-.gantt .row { display: flex; align-items: center; gap: 0.5rem; }
-.gantt .lab { width: 14rem; flex: none; text-align: right; opacity: 0.9; }
+.gantt { font-size: 0.78rem; line-height: 1.1; margin-top: 0.5rem; }
+.gantt .row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.34rem; }
+.gantt .lab { width: 11.5rem; flex: none; text-align: right; opacity: 0.9; }
 .gantt .track {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(202, 1fr);
+  grid-template-columns: repeat(213, 1fr);
   align-items: center;
-  height: 1.05rem;
+  height: 1.35rem;
   border-left: 1px solid currentColor;
   opacity: 0.95;
 }
-.gantt .track i { height: 0.6rem; border-radius: 3px; background: var(--slidev-theme-primary); }
-.gantt .track i.off { background: #d97706; }
+.gantt .track i { height: 0.82rem; border-radius: 3px; grid-row: 1; }
+.gantt .track i.e { background: #cbd5e1; }
+.gantt .track i.c { background: var(--s3); }
+.gantt .track i.r { background: var(--s1); }
+.gantt .track i.m { background: #99f6e4; }
+.gantt .track i.open { background: repeating-linear-gradient(135deg, var(--s1) 0 4px, #99f6e4 4px 8px); }
 .gantt .track b {
-  width: 0.55rem; height: 0.55rem;
+  width: 0.78rem; height: 0.78rem; grid-row: 1;
   transform: rotate(45deg);
   background: #f59e0b;
   justify-self: center;
+  z-index: 1;
 }
-.gantt .axis .track { border-left: none; height: 1.2rem; }
+.gantt .axis .track { border-left: none; height: 1.3rem; }
 .gantt .axis .track span {
   font-weight: 600; opacity: 0.6; padding-left: 3px;
   border-left: 1px solid currentColor; align-self: stretch;
   overflow: hidden; white-space: nowrap;
 }
-.gantt .sec {
-  font-weight: 700; color: var(--slidev-theme-primary);
-  margin: 0.28rem 0 0.08rem; padding-left: 0.1rem;
-}
 </style>
 
 <!--
-DUREE 1:10, la plus longue diapo du chapitre. ELEMENT IMPOSE 2 (suite).
-CRITERE : le planning permet de visualiser les phases d'ETUDE, de MESURE, de
-CONCEPTION, de REALISATION, de RESTITUTION. Les cinq mots sont dans la grille,
-les cinq sections sont a l'ecran. Les nommer a voix haute une par une.
+DUREE 1:10. ELEMENT IMPOSE 2 (suite). CRITERE : le planning est decoupe en
+phases, en taches ou lots, et permet de visualiser les phases d'ETUDE, de
+MESURE, de CONCEPTION, de REALISATION, de RESTITUTION. Les cinq mots sont dans
+la legende, et chaque ligne de version les porte dans l'ordre du V.
 
-Contenu de chaque phase, en balayant le diagramme :
-- ETUDE : demande, parties prenantes, comparatif de stack, faisabilite, veille,
-  hierarchisation MoSCoW.
-- MESURE : deux temps, et c'est volontaire. En amont le chiffrage en jours-homme,
-  le budget, la cartographie des risques. En production le releve de l'usage
-  reel, qui a alimente les arbitrages de la V1.4.
-- CONCEPTION : modele de donnees, architecture hexagonale, contrat d'interface,
-  systeme de composants mobile-first.
-- REALISATION : les 4 lots. La barre ORANGE est celle qui compte : les versions
-  V1.1 a V1.5.0 sont hors du chiffrage initial. On y revient en diapo 12.
-- RESTITUTION : deux registres, les 10 mises en production vers l'utilisateur, et
-  les 4 restitutions du titre vers le commanditaire.
+Une ligne par version, du 16 fevrier au 16 septembre 2026. Se lit de gauche a
+droite, une phrase par couleur :
+- ETUDE, gris : la version est cadree dans la roadmap, objectif, items,
+  tailles. Elle commence pendant que la version precedente est encore en
+  production : le cadrage de la 1.4 court de fin juin a mi-juillet, celui de
+  la 1.5 fin aout.
+- CONCEPTION, bleu : questions de cadrage, maquettes des ecrans nouveaux,
+  contrat d'API. Court, parce qu'une version tient en quelques items.
+- REALISATION, vert : la branche de version, une feature de un a trois jours.
+- RESTITUTION, losange : la release, avec ses notes et la fenetre de
+  nouveautes. Dix losanges, dix versions.
+- MESURE, vert clair : la version vit en production, sondes, erreurs, usage
+  et retours ; c'est ce qui alimente le cadrage de la suivante. Le
+  questionnaire du 18 aout tombe dans la mesure de la 1.3.2 et nourrit la
+  1.4.1.
 
-LE POINT A NE PAS MANQUER : dire explicitement que les barres se recouvrent, et
-pourquoi c'est la signature d'un pilotage en flux. Un Gantt dont les barres se
-suivent sans se recouvrir decrirait un cycle en V.
+LE POINT A NE PAS MANQUER : les lignes se chevauchent, l'etude de la suivante
+pendant la mesure de la precedente, et c'est ce qui distingue un V par version
+d'un cycle en V unique. Un seul V sur sept mois aurait fige en fevrier ce que
+la production a corrige en aout.
 
-SI ON QUESTIONNE : « vos documents de cadrage sont dates de juin, votre phase
-d'etude de fevrier. » Les DECISIONS d'etude ont ete prises en fevrier et mars,
-tracees dans l'historique du depot et dans les choix techniques eux-memes. Leur
-FORMALISATION documentaire est intervenue en juin pour le Bloc 1. La decision
-precede le document. Faiblesse de tracabilite assumee, corrigee depuis.
+Deux lignes n'ont pas d'etude : les versions correctives, 1.3.1, 1.3.2 et
+1.4.1, qui sont le run en flux de la diapo precedente. Elles n'ont que la
+realisation et la release.
+
+La derniere ligne : les quatre echeances du titre, qui sont les points fixes du
+retroplanning. Le Bloc 1 le 11 juin tombe le jour de la 1.2, le Bloc 4 le
+21 aout quatre jours avant la 1.4 : les versions ont ete calees sur ces dates.
+
+SI ON QUESTIONNE : « vos documents de cadrage sont dates de juin, votre etude de
+mars. » Les decisions ont ete prises en mars et avril, elles sont dans la
+roadmap et dans le code ; leur formalisation en dossier est de juin pour le
+Bloc 1. La decision precede le document.
 -->
 
 ---
 
-# Quatre lots, 98 jours-homme, et les ressources
+# Sept versions en lots, et les ressources réelles
 
-<div class="stack mt-4" style="height:2.3rem">
-<i style="width:27.5%;background:var(--s1)">Lot 1, MVP, 27 J/H</i>
-<i style="width:13.3%;background:var(--s3)">Lot 2, 13</i>
-<i style="width:35.7%;background:var(--s2)">Lot 3, V1 produit, 35 J/H</i>
-<i style="width:23.5%;background:var(--s4);color:#3b2f00">Lot 4, clôture, 23 J/H</i>
+<div class="text-xs opacity-75 mb-1">Les 75 items livrés, par version</div>
+<div class="stack" style="height:2rem">
+<i style="width:9.3%;background:var(--s1)">MVP, 7</i>
+<i style="width:21.3%;background:var(--s3)">V1, 16</i>
+<i style="width:10.7%;background:var(--s2)">1.1, 8</i>
+<i style="width:10.7%;background:var(--s4);color:#3b2f00">1.2, 8</i>
+<i style="width:14.7%;background:var(--s1)">1.3, 11</i>
+<i style="width:14.7%;background:var(--s3)">1.4, 11</i>
+<i style="width:18.6%;background:var(--s2)">1.5, 14</i>
 </div>
 
-<div class="grid grid-cols-3 gap-5 text-sm mt-8">
+<div class="grid grid-cols-3 gap-5 text-sm mt-5">
 <div>
 
 ### Humaines
 
 <div class="chips">
-<div><span><b>1 personne</b></span><u>dev, archi, exploitation, pilotage</u></div>
-<div><span>Commanditaire</span><u>formateur et jury, 4 échéances</u></div>
-<div><span>Utilisateurs</span><u>17 comptes, retours et recette</u></div>
-<div><span>Prestataires</span><u>hébergement, catalogue, e-mails</u></div>
+<div><span><b>1 personne</b>, temps libre</span><u>soirs et week-ends</u></div>
+<div><span>Chef de projet</span><u>versions, arbitrages, restitutions</u></div>
+<div><span>Product owner</span><u>cadrage, recette, retours</u></div>
+<div><span>Développeur front et back</span><u>conception, code, tests</u></div>
+<div><span>DevOps</span><u>chaîne, déploiement, supervision</u></div>
+<div><span>Commanditaire, utilisateurs</span><u>4 échéances, 17 comptes</u></div>
 </div>
 
 </div>
@@ -342,21 +386,22 @@ precede le document. Faiblesse de tracabilite assumee, corrigee depuis.
 ### Matérielles et techniques
 
 <div class="chips">
-<div><span>Un poste de développement</span><u>environnement reproductible</u></div>
+<div><span>Poste de développement</span><u>plus un téléphone de test</u></div>
+<div><span>Assistant de code</span><u>Claude Code, abonnement Max</u></div>
 <div><span>Monorepo outillé</span><u>tests, analyse, formatage</u></div>
-<div><span>Chaîne CI/CD</span><u>intégration et déploiement</u></div>
-<div><span>Hébergement</span><u>sans serveur, CDN, base managée</u></div>
-<div><span>Services tiers</span><u>catalogue, e-mails, supervision</u></div>
+<div><span>Chaîne CI/CD</span><u>18 jobs, 14 bloquants</u></div>
+<div><span>Hébergement, services tiers</span><u>sans serveur, paliers gratuits</u></div>
 </div>
 
 </div>
 <div>
 
-### Financières
+### Financières, réelles
 
-<div class="kpi grid-cols-1">
-<div><b>34 300 €</b><span>de valeur de développement HT, au taux journalier junior</span></div>
-<div><b>&lt; 200 €/an</b><span>de trésorerie réelle, 0 € de licence</span></div>
+<div class="kpi grid-cols-1" style="gap:0.4rem">
+<div><b>0 €</b><span>de salaire : le temps est le mien</span></div>
+<div><b>100 €/mois</b><span>l'assistant de code, depuis juin 2026 : 300 € à ce jour</span></div>
+<div><b>≈ 10 €/an</b><span>le nom de domaine ; hébergement, base, e-mails, supervision à 0 €</span></div>
 </div>
 
 </div>
@@ -366,64 +411,56 @@ precede le document. Faiblesse de tracabilite assumee, corrigee depuis.
 DUREE 1:40. CRITERES : le planning est decoupe en phases, en taches ou LOTS ;
 les ressources necessaires sont identifiees (ELEMENT IMPOSE 3).
 
-La barre du haut : dire les quatre intitules et les quatre charges, et en une
-phrase le contenu de chacun (MVP ; migration de l'API en ASP.NET Core ;
-comptes, historique, partage, temps reel, theme, i18n ; cadrage, pilotage,
-securite, accessibilite, recette, exploitation). Puis la methode d'estimation,
-qui est ce qu'un jury de professionnels va reellement interroger : analogique,
-par comparaison entre lots de complexite voisine, marge de 20 %, aucune
-methode parametrique applicable faute d'historique comparable.
-
-Annoncer des maintenant que l'ecart previsionnel / reel sera traite au chapitre 3.
-Cela evite la question « et ca a tenu ? » posee trop tot, et cela montre que le
-chiffrage a servi de reference de pilotage et pas seulement de piece a produire.
-
-Dire soi-meme que les lots 1 et 2 sont chiffres apres coup : le Gantt le montre,
-et les diapos 13 et 18 le redisent. Decouvert par le jury, c'est une
-dissimulation ; annonce, c'est une limite assumee.
-
-SI ON QUESTIONNE : « 20 % de marge, c'est beaucoup ou peu ? » C'est la marge
-usuelle d'une estimation analogique sans historique. Sur les lots documentaires
-elle s'est revelee insuffisante, c'est le point de vigilance 2.
-
-= = =
+La barre du haut : les lots sont les versions, et chaque version est un lot
+ferme, avec ses items et leur taille. Dire les ordres de grandeur, pas les
+sept chiffres : 75 items livres, entre 7 et 16 par version, une feature tient
+en un a trois jours, une version en une a trois semaines de realisation. Le
+chiffrage du cadrage, 98 jours-homme sur quatre lots, est celui du Bloc 1 ; il
+sert de reference a l'ecart du chapitre 3, pas de decoupage ici.
 
 Les ressources : trois familles, une phrase forte par famille, aucune lecture
 de liste.
 
-HUMAINES : une personne, et le dire sans detour. Les 98 J/H sont le chiffrage
-du cadrage, pas une repartition entre profils. Les trois autres acteurs sont
-reels : le commanditaire (le formateur, puis le jury) sur quatre echeances,
-les 17 utilisateurs qui remontent des retours et font la recette, et les
-prestataires qui executent l'hebergement, le catalogue et les e-mails.
+HUMAINES : une personne, sur son temps libre, et quatre roles qu'elle porte
+tour a tour ; ce sont les colonnes de la RACI qui suit. Autour d'elle, deux
+acteurs reels : le commanditaire, le formateur puis le jury, sur quatre
+echeances ; les 17 utilisateurs, qui font la recette et remontent des retours.
+Les prestataires executent l'hebergement, le catalogue et les e-mails.
 
-MATERIELLES : ne pas enumerer. Dire « poste de travail, outillage, chaine de
-livraison, hebergement, services tiers » et laisser lire.
+MATERIELLES : ne pas enumerer. Un poste, un telephone pour tester le mobile, un
+assistant de code, un monorepo outille, une chaine, un hebergement sans
+serveur. Dire que l'assistant de code est un outil, comme l'IDE : il ne
+decide rien, la revue et la recette restent a la main.
 
-FINANCIERES : le contraste entre 200 euros et 34 300 euros. L'absence de
-licence payante conditionne la soutenabilite du service au-dela du titre.
+FINANCIERES, et c'est la phrase a dire telle quelle : « ce projet n'a coute
+que ses outils ». Aucun salaire, le temps est le mien ; un abonnement de 100
+euros par mois depuis juin, 300 euros a ce jour ; une dizaine d'euros de nom de
+domaine par an ; tout le reste est dans son palier gratuit, hebergement de l'API
+et du front, base, e-mails, supervision. Soit environ 310 euros engages sur
+sept mois. L'absence de licence payante est une decision de conception, prise au
+cadrage : c'est ce qui rend le service soutenable au-dela du titre.
 
-SI ON QUESTIONNE le « 0 euro/mois » : l'hebergement du front est dans ses douze
-mois offerts. La ligne suivante du budget est donc datee, pas hypothetique.
+SI ON QUESTIONNE le « 0 euro » d'hebergement : le front est dans ses douze mois
+offerts, il passera a 1 a 5 euros par mois ensuite ; la base passerait a 9
+dollars par mois au-dela de 512 Mo. Les deux echeances sont suivies au tableau
+de bord, diapo 11.
 -->
 
 ---
 
-# La matrice RACI, avec les acteurs réels
+# La matrice RACI : quatre rôles, une personne
 
-<div class="grid grid-cols-5 gap-5">
-<div class="col-span-3">
-
-<div class="raci" style="grid-template-columns: 1fr 3.4rem 5.6rem 5.2rem 5.2rem">
-<div class="h"></div><div class="h">Moi</div><div class="h">Commanditaire</div><div class="h">Utilisateurs</div><div class="h">Prestataires</div>
-<div class="l">Cadrage et périmètre de version</div><div class="A">A R</div><div class="C">C</div><div class="C">C</div><div class="n"></div>
-<div class="l">Architecture et contrat d'API</div><div class="A">A R</div><div class="I">I</div><div class="n"></div><div class="n"></div>
-<div class="l">Développement, interface et API</div><div class="A">A R</div><div class="n"></div><div class="I">I</div><div class="n"></div>
-<div class="l">Revue, tests, intégration</div><div class="A">A R</div><div class="n"></div><div class="n"></div><div class="n"></div>
-<div class="l"><b>Accessibilité et inclusion</b></div><div class="A">A R</div><div class="n"></div><div class="C">C</div><div class="n"></div>
-<div class="l">Chaîne, supervision, sécurité</div><div class="A">A R</div><div class="n"></div><div class="I">I</div><div class="R">R</div>
-<div class="l">Arbitrage de périmètre ou de charge</div><div class="A">A R</div><div class="C">C</div><div class="C">C</div><div class="n"></div>
-<div class="l">Versions, recette, retours</div><div class="A">A R</div><div class="C">C</div><div class="C">C</div><div class="n"></div>
+<div class="raci mt-2" style="grid-template-columns: 1fr 4.6rem 4.6rem 4.6rem 4rem 5.6rem 5rem 5rem">
+<div class="h"></div><div class="h">Chef de projet</div><div class="h">Product owner</div><div class="h">Développeur</div><div class="h">DevOps</div><div class="h">Commanditaire</div><div class="h">Utilisateurs</div><div class="h">Prestataires</div>
+<div class="l">Cadrage et périmètre de version</div><div class="C">C</div><div class="A">A R</div><div class="n"></div><div class="n"></div><div class="C">C</div><div class="C">C</div><div class="n"></div>
+<div class="l">Architecture et contrat d'API</div><div class="I">I</div><div class="n"></div><div class="A">A R</div><div class="C">C</div><div class="I">I</div><div class="n"></div><div class="n"></div>
+<div class="l">Développement, interface et API</div><div class="n"></div><div class="A">A</div><div class="R">R</div><div class="n"></div><div class="n"></div><div class="I">I</div><div class="n"></div>
+<div class="l">Revue, tests, intégration</div><div class="n"></div><div class="n"></div><div class="R">R</div><div class="A">A</div><div class="n"></div><div class="n"></div><div class="n"></div>
+<div class="l"><b>Accessibilité et inclusion</b></div><div class="n"></div><div class="A">A</div><div class="R">R</div><div class="n"></div><div class="n"></div><div class="C">C</div><div class="n"></div>
+<div class="l">Chaîne, supervision, sécurité</div><div class="I">I</div><div class="n"></div><div class="I">I</div><div class="A">A R</div><div class="n"></div><div class="n"></div><div class="R">R</div>
+<div class="l">Arbitrage de périmètre ou de charge</div><div class="A">A R</div><div class="C">C</div><div class="C">C</div><div class="n"></div><div class="C">C</div><div class="C">C</div><div class="n"></div>
+<div class="l">Recette, release, retours</div><div class="C">C</div><div class="A">A R</div><div class="R">R</div><div class="n"></div><div class="C">C</div><div class="C">C</div><div class="n"></div>
+<div class="l">Mise en production</div><div class="A">A</div><div class="n"></div><div class="n"></div><div class="R">R</div><div class="I">I</div><div class="I">I</div><div class="R">R</div>
 </div>
 
 <div class="legend mt-2">
@@ -433,17 +470,9 @@ mois offerts. La ligne suivante du budget est donc datee, pas hypothetique.
 <span style="--c:rgb(0 0 0 / 9%)">I informé</span>
 </div>
 
-</div>
-<div class="col-span-2 text-sm">
-
-<div class="chips">
-<div><span><b>A et R</b>, toujours les miens</span><u>rien ne se partage à une personne</u></div>
-<div><span><b>Consultés</b> : périmètre, arbitrages, versions</span><u>commanditaire, utilisateurs</u></div>
-<div><span><b>Réalisé par un prestataire</b></span><u>hébergement, supervision</u></div>
-<div><span><b>Handicap</b> : aucune personne concernée</span><u>porte d'accessibilité bloquante</u></div>
-</div>
-
-</div>
+<div class="chips mt-4" style="max-width:44rem">
+<div><span><b>Quatre rôles</b>, une personne : le A et le R changent de casquette, pas de personne</span><u>affectation par compétence</u></div>
+<div><span><b>Handicap</b> : aucune personne concernée sur le projet</span><u>porte d'accessibilité bloquante</u></div>
 </div>
 
 <!--
@@ -451,21 +480,30 @@ DUREE 1:00. CRITERE : les taches sont assignees selon les competences (RACI) ET
 tiennent compte des personnes en situation de handicap. Le second point est un
 critere a part entiere, pas une remarque.
 
-Ne pas lire la matrice. Dire ce qu'elle montre : a une personne, les colonnes
-A et R ne bougent pas, et l'information est dans les autres colonnes. Les
-acteurs externes y figurent : le commanditaire consulte sur le perimetre et
-les arbitrages, les utilisateurs consultes sur l'accessibilite et sur chaque
-version, les prestataires qui executent l'hebergement et la supervision.
+Ne pas lire la matrice. Dire ce qu'elle montre : une personne, quatre roles, et
+l'affectation suit la competence que chaque activite exige. Le product owner
+approuve le cadrage et la recette parce qu'il porte le besoin ; le developpeur
+realise et approuve l'architecture ; le DevOps approuve l'integration et
+realise la mise en production ; le chef de projet arbitre et approuve la mise en
+production. Quand une ligne a un A et un R differents, c'est que la meme
+personne change de casquette entre la decision et le geste : c'est ce qui
+rend la revue possible a une personne.
+
+Les acteurs externes y figurent : le commanditaire consulte sur le perimetre et
+les arbitrages, informe des mises en production ; les utilisateurs consultes
+sur l'accessibilite et sur chaque version ; les prestataires qui executent
+l'hebergement et la supervision.
 
 Sur le handicap, dire la verite en une phrase : personne en situation de
-handicap sur le projet. Puis ce qui est verifiable : la porte d'accessibilite
-bloquante, le contexte en texte structure. La ligne existe et elle a un
-responsable, ce n'est pas une clause de style.
+handicap sur le projet. Puis ce qui est verifiable : la ligne accessibilite a
+un A et un R, la porte d'accessibilite est bloquante a chaque livraison, et le
+contexte du projet est en texte structure, lisible au lecteur d'ecran. La ligne
+existe et elle a un responsable, ce n'est pas une clause de style.
 
-SI ON QUESTIONNE « une RACI a une personne, a quoi ca sert ? » : a rendre
-visible qui est consulte et informe, et ce qu'un tiers execute. Le jour ou une
-personne rejoint le projet, la matrice est deja ecrite, et la ligne « revue,
-tests, integration » est celle qui changerait en premier.
+SI ON QUESTIONNE « une RACI a une personne, a quoi ca sert ? » : a ecrire qui
+decide et qui fait pour chaque activite, donc a savoir ce qu'on confierait en
+premier le jour ou quelqu'un rejoint le projet : la colonne Dev, puis DevOps.
+Le jour ou une personne rejoint le projet, la matrice est deja ecrite.
 -->
 
 ---
@@ -515,7 +553,7 @@ qu'un remplacant recevrait le premier jour est ecrit et versionne.
 <div><b>26 / 77</b><span>pull requests fusionnées : revue, intégration</span></div>
 <div><b>449</b><span>exécutions de la chaîne : vérification, déploiement</span></div>
 <div><b>10</b><span>releases : points de livraison datés</span></div>
-<div><b>106</b><span>items de feuille de route, versionnés</span></div>
+<div><b>152</b><span>tickets au board, un par item de roadmap</span></div>
 <div><b>0</b><span>saisie déclarative : la trace naît du geste</span></div>
 </div>
 
@@ -523,11 +561,11 @@ qu'un remplacant recevrait le premier jour est ecrit et versionne.
 <div>
 
 <div class="chips">
-<div><span>Flux continu, pas d'itération fixe</span><u>aucun sprint, les versions ont une date</u></div>
-<div><span>Travail en cours limité à 1</span><u>une branche fonctionnelle à la fois</u></div>
+<div><span>Une version = un lot fermé</span><u>branche de version, PR de release</u></div>
+<div><span>Un item = un ticket, phase par phase</span><u>board, une branche par feature</u></div>
 <div><span>Priorisation permanente</span><u>feuilles de route réordonnées par commit</u></div>
 <div><span>Sortie = déployé et vérifié</span><u>fusion → déploiement → test de fumée</u></div>
-<div><span>Correctif prioritaire</span><u>anomalies étiquetées, hors flux</u></div>
+<div><span>Le run en flux, hors version</span><u>fiche étiquetée, branche fix, version corrective</u></div>
 </div>
 
 </div>
@@ -545,20 +583,22 @@ besoin. »
 
 Puis la liste de droite, qui est celle que la grille demande : ligne par ligne,
 la propriete de la methode et ce que l'outil fournit. Insister sur la premiere :
-un outil a sprints aurait impose une cadence que l'alternance ne permet pas de
-tenir, et aurait produit des indicateurs faux.
+une version est un lot ferme, et l'outil le materialise par une branche de
+version et une pull request de release. Un outil a sprints aurait impose une
+cadence que le temps libre ne permet pas de tenir, et aurait produit des
+indicateurs faux.
 
-DIRE AUSSI LA LIMITE, avant qu'on la trouve : le tableau de flux consolide est
-POSTERIEUR au travail qu'il represente. La matiere, elle, est datee au geste
-pres, 833 commits, 77 pull requests, 449 executions, 10 releases, toutes
-horodatees au moment ou elles se sont produites. Le tableau change la lisibilite
-de cette matiere, il ne la cree pas.
+SI ON QUESTIONNE la date du board : il consolide les feuilles de route, qui
+sont versionnees et datees au commit. La matiere est datee au geste pres, 833
+commits, 77 pull requests, 449 executions, 10 releases, toutes horodatees au
+moment ou elles se sont produites. Le board change la lisibilite de cette
+matiere, il ne la cree pas.
 
 SI ON QUESTIONNE : « pourquoi pas Jira ou Trello ? » La saisie declarative. Pas
 « c'etait plus simple ».
 
-A PREPARER : capture du tableau de flux GitHub Projects, a inserer a gauche si le
-tableau est structure avant l'oral.
+Le board GitHub Projects porte 152 tickets depuis le 11 septembre : une capture
+peut remplacer les indicateurs de gauche si on prefere l'image au chiffre.
 
 = = =
 
@@ -677,8 +717,8 @@ perimetre produit se referme au profit des livrables de restitution du titre.
 | Poste | Prévu | Réel |
 |-------|------:|-----:|
 | Infrastructure | 1 à 5 €/mois | **0 €** |
-| Trésorerie | 20 à 190 €/an | **≈ 10 €** |
-| Valeur de dév. | 34 300 € | ≈ 30 800 € |
+| Nom de domaine | ≈ 10 €/an | **≈ 10 €** |
+| Assistant de code | non prévu | **100 €/mois**, 300 € |
 
 </div>
 <div>
@@ -734,8 +774,11 @@ DUREE 1:10. CRITERE : le tableau de bord integre le suivi des COUTS, des RISQUES
 et des RESSOURCES HUMAINES. Les trois axes restants du critere sont ici.
 
 COUTS, une phrase : le budget tient parce qu'il a ete concu pour tenir, avec une
-contrepartie technique assumee, le demarrage a froid de 3,8 s. Puis le point de
-pilotage : deux echeances de cout suivies alors qu'elles valent zero aujourd'hui.
+contrepartie technique assumee, le demarrage a froid de 3,8 s. Le seul poste
+non prevu au cadrage est l'assistant de code, 100 euros par mois depuis juin :
+c'est aussi la seule depense reelle du projet, et elle est dite comme telle.
+Puis le point de pilotage : deux echeances de cout suivies alors qu'elles
+valent zero aujourd'hui.
 
 RISQUES : ne pas parcourir la colonne. Aller aux DEUX voyants oranges. Le
 premier, la stabilite de la chaine, est celui qui prouve la boucle mesure ->
@@ -766,10 +809,10 @@ septembre porte sur huit executions.
 <i style="width:74%;background:#d97706">65 j, 74 %</i>
 </div>
 
-<div class="text-xs opacity-75 mt-4 mb-1">D'où viennent les 74 items de périmètre livrés</div>
+<div class="text-xs opacity-75 mt-4 mb-1">D'où viennent les 75 items de périmètre livrés</div>
 <div class="stack">
-<i style="width:31%;background:var(--s1)">23 items</i>
-<i style="width:69%;background:#d97706">51 items, 69 %</i>
+<i style="width:30.7%;background:var(--s1)">23 items</i>
+<i style="width:69.3%;background:#d97706">52 items, 69 %</i>
 </div>
 
 <div class="legend mt-2">
@@ -811,7 +854,7 @@ automatisme etait mal regle. L'indicateur a servi a regler la frequence de
 l'automatisme, pas a juger le travail.
 
 3. L'autocritique, sans support : aucun indicateur ne comparait le perimetre
-courant au perimetre chiffre, le glissement de 51 items n'a ete visible qu'a
+courant au perimetre chiffre, le glissement de 52 items n'a ete visible qu'a
 posteriori, et c'est le premier compteur que j'ajouterais. Ne pas l'escamoter,
 c'est elle qui rend les deux premiers temps credibles.
 
@@ -1635,7 +1678,7 @@ Les trois enseignements, tous demontres dans les chapitres precedents :
 commit est devenue la condition d'existence de l'indicateur d'avancement.
 2. Quand le cout d'une decision croit avec le temps, decider tot a une valeur
 propre : 944 lignes a migrer le 18 mars, 44 663 aujourd'hui.
-3. L'arbitrage n'a pas ete perdu, il n'a pas ete pose, deux fois : 51 items
+3. L'arbitrage n'a pas ete perdu, il n'a pas ete pose, deux fois : 52 items
 hors chiffrage que rien ne comparait au prevu, et dix jours consecutifs en
 aout plutot que decider ce qui ne serait pas livre.
 
@@ -1758,23 +1801,23 @@ Ces deux cas partagent le critère qui a tranché le cas principal : <b>la soute
 
 ---
 
-# Annexe A3 : Le budget prévisionnel détaillé
+# Annexe A3 : Le budget, prévu et réel
 
 <div class="grid grid-cols-2 gap-6 dense">
 <div>
 
-### Valeur de développement
+### Le coût réel du projet
 
-| Lot | Charge | TJM simulé | Coût HT |
-|-----|-------:|-----------:|--------:|
-| MVP | 27 J/H | 350 € | 9 450 € |
-| Migration .NET | 13 J/H | 350 € | 4 550 € |
-| V1 produit | 35 J/H | 350 € | 12 250 € |
-| Clôture du titre | 23 J/H | 350 € | 8 050 € |
-| **Total** | **98 J/H** | | **34 300 €** |
+| Poste | Montant | Nature |
+|-------|--------:|--------|
+| Temps de développement | **0 €** | temps libre de l'auteur, aucune valorisation |
+| Assistant de code | **100 €/mois** | Claude Max, depuis juin 2026 : 300 € |
+| Nom de domaine | ≈ 10 €/an | `movie-picker.fr` |
+| Licences | 0 € | libre ou palier gratuit |
+| **Engagé à ce jour** | **≈ 310 €** | sur sept mois |
 
 <div class="text-xs opacity-75 mt-1">
-Coût de trésorerie nul dans le cadre de la formation. Ce montant matérialise la valeur de l'effort pour le commanditaire.
+Le chiffrage du cadrage, 98 J/H sur quatre lots (MVP 27, migration 13, V1 produit 35, clôture 23), est une mesure d'effort, pas d'argent : l'écart prévisionnel / réel se lit en jours, diapositive 12.
 </div>
 
 </div>
@@ -1792,7 +1835,7 @@ Coût de trésorerie nul dans le cadre de la formation. Ce montant matérialise 
 | Supervision d'erreurs (Sentry) | 5 000 év./mois | ~0 € |
 | Nom de domaine | | ~10 €/an |
 | **Licences** | 100 % libre ou palier gratuit | **0 €** |
-| **Trésorerie réelle** | | **20 à 190 €/an** |
+| **Infrastructure et domaine** | | **20 à 190 €/an** |
 
 <div class="text-xs opacity-75 mt-1">
 Borne haute atteinte si la base passe au premier palier payant (~9 $/mois).
@@ -1846,34 +1889,34 @@ Mesures anti-chaîne d'approvisionnement : actions épinglées par SHA, images p
 
 ---
 
-# Annexe A5 : La matrice RACI complète
+# Annexe A5 : La matrice RACI complète, par rôle
 
 <div class="dense">
 
-**R** réalise, **A** approuve et rend compte, **C** consulté, **I** informé
+**R** réalise, **A** approuve et rend compte, **C** consulté, **I** informé. Les quatre premières colonnes sont les rôles d'une même personne.
 
-| Activité | Moi | Commanditaire | Utilisateurs | Prestataires |
-|----------|:---:|:-------------:|:------------:|:------------:|
-| Cadrage et périmètre de version | A, R | C | C | |
-| Architecture applicative | A, R | I | | |
-| Modèle de données et contrat d'interface | A, R | | | |
-| Développement de l'interface | A, R | | I | |
-| Développement de l'API | A, R | | | |
-| Revue, tests et intégration | A, R | | | |
-| Intégration des services tiers | A, R | | | C |
-| Accessibilité et inclusion | A, R | | C | |
-| Chaîne d'intégration et de déploiement | A, R | | | |
-| Supervision et exploitation | A, R | I | | R |
-| Sécurité applicative | A, R | I | | |
-| Recette et tests de bout en bout | A, R | C | C | |
-| Arbitrage de périmètre ou de charge | A, R | C | C | |
-| Mise en production | A, R | I | I | R |
-| Restitution et compte rendu | A, R | C | I | |
+| Activité | Chef de projet | Product owner | Développeur | DevOps | Commanditaire | Utilisateurs | Prestataires |
+|----------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| Cadrage et périmètre de version | C | A, R | | | C | C | |
+| Architecture applicative | I | | A, R | C | I | | |
+| Modèle de données et contrat d'interface | | C | A, R | | | | |
+| Développement de l'interface | | A | R | | | I | |
+| Développement de l'API | | A | R | | | | |
+| Revue, tests et intégration | | | R | A | | | |
+| Intégration des services tiers | | | A, R | C | | | C |
+| Accessibilité et inclusion | | A | R | | | C | |
+| Chaîne d'intégration et de déploiement | | | I | A, R | | | |
+| Supervision et exploitation | I | | | A, R | | | R |
+| Sécurité applicative | | | R | A | I | | |
+| Recette et tests de bout en bout | | A | R | | C | C | |
+| Arbitrage de périmètre ou de charge | A, R | C | C | | C | C | |
+| Mise en production | A | | | R | I | I | R |
+| Restitution et compte rendu | A, R | C | | | C | I | |
 
 </div>
 
 <div class="note mt-2 text-xs">
-<b>Le A et le R sont toujours les miens</b> : à une personne, la matrice ne répartit pas la responsabilité, elle rend visible qui est consulté et informé, et ce qu'un prestataire exécute. <b>Les acteurs externes y figurent</b> : le commanditaire consulté sur le périmètre et les arbitrages, les utilisateurs consultés sur l'accessibilité et sur chaque version, les prestataires qui exécutent l'hébergement et la supervision. Le jour où une personne rejoint le projet, la matrice est déjà écrite.
+<b>Quatre rôles, une personne</b> : l'affectation suit la compétence que l'activité exige, et le A et le R changent de casquette, pas de personne. <b>Les acteurs externes y figurent</b> : le commanditaire consulté sur le périmètre et les arbitrages, les utilisateurs consultés sur l'accessibilité et sur chaque version, les prestataires qui exécutent l'hébergement et la supervision. Le jour où une personne rejoint le projet, la colonne Développeur est celle qu'on lui confie en premier.
 </div>
 
 ---

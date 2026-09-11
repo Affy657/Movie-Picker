@@ -408,6 +408,112 @@ const REFS = {
   line-height: 1.3;
 }
 
+.vee {
+  font-size: 0.68rem;
+  line-height: 1.2;
+}
+.vee .row {
+  display: grid;
+  grid-template-columns: 1fr 1.4rem 1fr;
+  gap: 0.3rem;
+  align-items: center;
+  margin-bottom: 0.3rem;
+}
+.vee .row.r2 {
+  padding: 0 1.7rem;
+}
+.vee .row.r3 {
+  padding: 0 3.4rem;
+}
+.vee .l,
+.vee .r {
+  border: 1.5px solid var(--grid);
+  border-radius: 5px;
+  background: #f8fafc;
+  padding: 0.28rem 0.5rem;
+}
+.vee .l {
+  border-left: 4px solid var(--s3);
+}
+.vee .r {
+  border-right: 4px solid var(--s1);
+  text-align: right;
+}
+.vee b {
+  display: block;
+}
+.vee span {
+  display: block;
+  color: var(--ink-2);
+}
+.vee .link {
+  border-top: 1px dashed #94a3b8;
+  height: 0;
+}
+.vee .base {
+  text-align: center;
+  color: var(--ink-2);
+  font-style: italic;
+}
+
+.run {
+  display: flex;
+  align-items: stretch;
+  gap: 0.3rem;
+  font-size: 0.68rem;
+  line-height: 1.2;
+}
+.run > div {
+  flex: 1;
+  border: 1.5px solid #d97706;
+  background: #fef3c7;
+  color: #78350f;
+  border-radius: 5px;
+  padding: 0.28rem 0.4rem;
+  font-weight: 600;
+  text-align: center;
+}
+.run > div i {
+  display: block;
+  font-style: normal;
+  font-weight: 400;
+  color: var(--ink-2);
+}
+.run > span {
+  align-self: center;
+  color: var(--ink-2);
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.2rem;
+  font-size: 0.56rem;
+  line-height: 1.15;
+}
+.board > div {
+  border: 1px solid var(--grid);
+  border-radius: 4px;
+  background: #f8fafc;
+  padding: 0.25rem 0.15rem 0.3rem;
+  min-height: 4.4rem;
+  text-align: center;
+}
+.board > div > b {
+  display: block;
+  margin-bottom: 0.2rem;
+}
+.board i {
+  display: block;
+  height: 0.42rem;
+  margin: 0.16rem 0.12rem 0;
+  border-radius: 2px;
+  background: rgb(13 148 136 / 22%);
+}
+.board .done i {
+  background: var(--s1);
+}
+
 .raci {
   display: grid;
   grid-template-columns: 1fr repeat(5, 3.4rem);

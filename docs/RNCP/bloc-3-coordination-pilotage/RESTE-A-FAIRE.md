@@ -62,7 +62,7 @@ Ces quatre points portent **C3.4.2**, éliminatoire. Une démonstration qui éch
 
 | # | Action | Diapo | Compétence | Détail |
 |:-:|--------|:-----:|:----------:|--------|
-| 5 | **Structurer le tableau GitHub Projects** et en faire une capture | 9 | **C3.2.1** ÉLIM | La diapositive tient sans, mais une capture rendrait l'outil de suivi visible. Le chapitre 2 § 1.5 assume déjà que le tableau est postérieur au travail : ne pas le présenter autrement |
+| 5 | ~~Structurer le tableau GitHub Projects~~ ✅ rempli le 11/09 (152 tickets, colonnes Backlog → Livré, champs Version, Taille, Nature). Reste, facultatif : **une capture** pour la diapositive 9 | 9 | **C3.2.1** ÉLIM | La diapositive tient sans. Le board est privé : le rendre public est un clic dans ses réglages, à décider avant l'oral |
 | 6 | **Relever une capture de facturation** GCP et AWS | 11 | **C3.2.1** ÉLIM | Étaye la ligne « coût réel » du tableau de bord. Aujourd'hui la valeur *0 €/mois* repose sur les paliers gratuits documentés, pas sur une facture |
 
 ---
@@ -75,7 +75,7 @@ Ces quatre points portent **C3.4.2**, éliminatoire. Une démonstration qui éch
 | 8 | **Tester l'export sur le matériel de la salle** | Vidéoprojecteur, résolution, lisibilité depuis le fond. **Le seul bloc Mermaid restant est le schéma d'architecture de l'annexe A1 (diapositive 24)**, tous les autres schémas, dont le Gantt de la 5 et le logigramme de la 13, sont en HTML et CSS. Après le traitement du § 0, relancer `verifier-rendu.mjs` puis contrôler le PDF page à page |
 | 9 | **Répéter le minutage global** | 30 minutes, dont près de 19 sur les trois compétences éliminatoires. Deux passages complets. Le contrôle automatique donne **30:00 pile**, exact chapitre par chapitre |
 | 10 | **Mémoriser les numéros de page des annexes** | A1 = 24 ; A2 = 25 ; A3 = 26 ; A4 = 27 ; A5 = 28 ; A6 = 29 ; A7 = 30. En mode présentateur, taper le numéro puis `Entrée` |
-| 10 bis | **Décider si les chiffres d'activité sont réancrés une dernière fois** | Le 11/09, la **v1.5.0** (07/09) a été intégrée partout où une version est comptée : 10 versions, 74 items livrés dont 51 hors chiffrage, cadence, Gantt, frise, journal. En revanche les chiffres d'**activité** (833 commits, 88 jours actifs, 122 fusions, −10 % de charge) restent ancrés sur le commit `5ce0a05f` du **05/09**, deux jours avant le tag. `master` est déjà à 1 022 commits et 94 jours actifs le 11/09. Soit on assume la date d'arrêté du 05/09 à l'oral, soit on réancre tout **une seule fois, la veille**, en rejouant § 5.1 de `PASSATION.md` et le tableau mensuel du chapitre 2 |
+| 10 bis | **Décider si les chiffres d'activité sont réancrés une dernière fois** | Le 11/09, la **v1.5.0** (07/09) a été intégrée partout où une version est comptée : 10 versions, 75 items livrés dont 52 hors chiffrage, cadence, Gantt, frise, journal. En revanche les chiffres d'**activité** (833 commits, 88 jours actifs, 122 fusions, −10 % de charge) restent ancrés sur le commit `5ce0a05f` du **05/09**, deux jours avant le tag. `master` est déjà à 1 022 commits et 94 jours actifs le 11/09. Soit on assume la date d'arrêté du 05/09 à l'oral, soit on réancre tout **une seule fois, la veille**, en rejouant § 5.1 de `PASSATION.md` et le tableau mensuel du chapitre 2 |
 
 ---
 
@@ -133,5 +133,5 @@ Sans effet sur l'oral du 16 septembre, mais à ne pas perdre.
 |:-:|---------|-----|
 | 19 | **La chaîne d'intégration est à 38 % de succès sur les premiers jours de septembre** (8 exécutions). Une dette d'intégration est en cours de traitement sur la branche courante | Chapitre 2 § 4.2 |
 | 20 | Le dispositif de **satisfaction est ponctuel, pas continu** : un questionnaire diffusé une fois donne un point, pas une tendance. La boucle continue est instruite et chiffrée à 1 à 2 jours | Chapitre 6 § 4.3 |
-| 21 | **Aucun indicateur ne compare le périmètre courant au périmètre chiffré**, ce qui a laissé passer 51 items hors chiffrage. Un compteur d'items hors chiffrage initial est la correction proposée | Chapitre 2 § 5.5 |
+| 21 | **Aucun indicateur ne compare le périmètre courant au périmètre chiffré**, ce qui a laissé passer 52 items hors chiffrage. Un compteur d'items hors chiffrage initial est la correction proposée | Chapitre 2 § 5.5 |
 | 22 | ~~Deux liens cassés vers `../spec.md` dans `suivi-rncp.md`~~, le fichier avait été déplacé vers `archive/docs/` en juin sans que les liens suivent. **Corrigé** le 05/09/2026 | `suivi-rncp.md` |

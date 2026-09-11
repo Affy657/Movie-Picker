@@ -349,12 +349,13 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 > **Objectif RNCP — C3.1 (ÉLIM)** : « méthodologie de gestion de projet justifiée (Agile, Scrum, Kanban, V) ; outil de planification justifié (Gantt, PERT, rétroplanning) ; planning découpé en phases / tâches / lots ; tâches assignées via RACI / RASCI tenant compte des personnes en situation de handicap ; points de vigilance soulignés ».
 
-- [x] **`docs/RNCP/bloc-3-coordination-pilotage/01-planification.md`**, produit et fusionné, réaligné le 11/09/2026 sur le projet mené seul :
-  - [x] **Méthodologie retenue** : Kanban léger à revues de version, deux règles (travail en cours limité à un sujet, terminé = déployé et vérifié en production), bénéfices attendus et constatés, Scrum, cycle en V et Kanban outillé complet écartés avec leur motif
-  - [x] **Outils de planification** : rétroplanning depuis les échéances du titre et diagramme de Gantt, compatibles avec Kanban parce qu'ils n'opèrent pas au même horizon (le mois et le trimestre contre la journée et la semaine)
-  - [x] **Planning en cinq phases** qui se chevauchent (étude, mesure, conception, réalisation, restitution), 4 lots chiffrés à 98 J/H par méthode analogique, 10 jalons de version
-  - [x] **Ressources** : une personne et trois acteurs réels (commanditaire, utilisateurs, prestataires), matérielles et techniques, financières (34 300 € de valeur de développement, 20 à 190 €/an de trésorerie, 0 € de licence)
-  - [x] **Matrice RACI** sur les acteurs réels : le A et le R sont toujours ceux du candidat, les colonnes consulté et informé portent le commanditaire et les utilisateurs, les prestataires exécutent l'hébergement et la supervision. Handicap traité à trois niveaux (affectation, organisation, produit avec porte d'accessibilité bloquante), en disant que personne en situation de handicap n'a travaillé sur le projet
+- [x] **`docs/RNCP/bloc-3-coordination-pilotage/01-planification.md`**, produit et fusionné, repris le 11/09/2026 sur les faits réels du dépôt :
+  - [x] **Méthodologie retenue** : un cycle en V par version (cadrage, conception, réalisation contre vérification, validation, livraison) et un flux pour le run (signal, fiche, branche `fix/`, version corrective), bénéfices attendus et constatés, Scrum, cycle en V intégral et Kanban seul écartés avec leur motif
+  - [x] **Outils de planification** : le board GitHub Projects dont les colonnes sont les phases du V (152 tickets, un par item de roadmap, avec version, taille et phase), le rétroplanning depuis les échéances du titre, le Gantt des versions ; compatibles parce qu'ils n'opèrent pas au même horizon
+  - [x] **Planning** : une ligne par version 1.x, chaque version parcourant étude, conception, réalisation, restitution et mesure, aux dates du dépôt arrondies à la semaine ; les versions correctives en lignes « run » ; les 4 jalons du titre
+  - [x] **Lots** : les versions, avec leurs items livrés (75), leurs jours actifs et leurs commits ; le chiffrage de 98 J/H du Bloc 1 gardé comme référence d'effort pour l'écart du chapitre 2
+  - [x] **Ressources** : une personne sur son temps libre et ses quatre rôles (chef de projet, product owner, développeur, DevOps), trois acteurs réels autour, le matériel dont l'assistant de code, et le financier **réel** : 0 € de salaire, 100 €/mois d'assistant de code depuis juin, ≈ 10 €/an de domaine, tout le reste en palier gratuit
+  - [x] **Matrice RACI par rôle** : 15 activités, quatre colonnes de casquettes et trois d'acteurs ; le A et le R changent de casquette, pas de personne. Handicap traité à trois niveaux (affectation, organisation, produit avec porte d'accessibilité bloquante), en disant que personne en situation de handicap n'a travaillé sur le projet
   - [x] **Sept points de vigilance**, chacun avec indicateur et parade, dont un seul d'organisation : la concentration des rôles sur une personne
 
 ---
@@ -364,10 +365,10 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 > **Objectif RNCP — C3.2.1 (ÉLIM)** : « outil de suivi en adéquation avec le projet et la méthodologie ; indicateurs mesurables et quantifiables (délais, coûts, avancement) ; tableaux de bord intégrant avancement, coûts, délais, risques, RH ».
 
 - [x] **`docs/RNCP/bloc-3-coordination-pilotage/02-suivi-indicateurs.md`** — *fusionné sur `master` le 06/09/2026* :
-  - [x] **Outil de suivi** : GitHub comme plateforme unique, cinq surfaces (issues, pull requests, Actions, releases, feuilles de route versionnées) ; adéquation avec le Kanban léger du § 15 vérifiée propriété par propriété ; limites du dispositif énoncées (temps non saisi, toutes les intégrations ne passent pas par une PR, tableau de flux postérieur au travail)
+  - [x] **Outil de suivi** : GitHub comme plateforme unique, six surfaces (issues, pull requests, Actions, releases, board Projects à 152 tickets, feuilles de route versionnées) ; adéquation avec la méthode du § 15, un V par version et un flux pour le run, vérifiée propriété par propriété ; limites du dispositif énoncées (temps non saisi, toutes les intégrations ne passent pas par une PR, board consolidé après coup)
   - [x] **Indicateurs d'avancement** : items de feuille de route livrés (61 / 86 produit, 19 / 20 technique), poids livré en points t-shirt, versions publiées, commits intégrés, PR fusionnées / ouvertes
   - [x] **Indicateurs de délai** : cadence de livraison (médiane 17 j), échéances de restitution tenues (4 / 4), jours d'activité (88 / 191), délai de traitement d'anomalie
-  - [x] **Indicateurs de coût** : coût d'infrastructure réel contre budget, coût annuel engagé, licences, valeur de développement consommée (≈ 30 800 € / 34 300 €)
+  - [x] **Indicateurs de coût** : coût d'infrastructure réel contre budget, coût annuel engagé, licences, assistant de code (100 €/mois depuis juin 2026, seul poste non prévu)
   - [x] **Indicateurs de risque** : vulnérabilités ouvertes, stabilité de la chaîne (78 %, série mensuelle), couverture (86,6 %), Quality Gate, anomalies ouvertes, taux d'erreur serveur, disponibilité
   - [x] **Indicateurs RH** : densité d'activité (3,1 j/semaine), plus longue série continue (10 j), semaines sans activité (5 / 28), facteur de bus (1)
   - [x] **Tableaux de bord** : deux tableaux consolidés (avancement et délais ; coûts, risques et RH), plus l'analyse de l'écart prévisionnel / réel et les 3 décisions prises à partir d'une mesure
