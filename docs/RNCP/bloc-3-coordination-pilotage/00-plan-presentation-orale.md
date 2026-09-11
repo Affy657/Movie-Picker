@@ -77,7 +77,7 @@ Répartition volontaire : les trois compétences éliminatoires absorbent **17 d
 |:-:|-------|------:|------------------------------|
 | 1 | Movie Picker, piloter un projet de développement logiciel | 0:10 | Titre, Bloc 3 RNCP 39583, Adrien MORAND, 16 septembre 2026 |
 | 2 | Le produit : un logiciel exploité, pas une maquette | 0:40 | Capture de l'application en production. 10 versions livrées de février à septembre 2026, 17 comptes, 19 soirées, 74 % menées jusqu'au tirage. Objectif : établir qu'on parle d'un logiciel réellement exploité, pas d'une maquette |
-| 3 | Deux registres, annoncés maintenant | 0:40 | Les deux registres, réel et organisation cible. Plan en 7 temps |
+| 3 | Deux registres, annoncés maintenant | 0:40 | Les deux registres, réel et organisation cible. Sommaire : les 7 chapitres avec leur compétence, les 3 éliminatoires signalées, puis le bilan |
 
 ### Chapitre 1 : planifier l'exécution du projet (6:30, 7 diapos), C3.1 ÉLIMINATOIRE
 

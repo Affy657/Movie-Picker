@@ -85,15 +85,20 @@ Le projet a été <b>exécuté seul</b>. Commits, versions, mesures de productio
 </div>
 <div>
 
-### Les sept temps
+### Sommaire
 
-1. Planifier l'exécution
-2. Piloter l'avancement
-3. Un cas d'arbitrage
-4. Piloter l'équipe
-5. Les besoins en compétences
-6. Rendre compte au commanditaire
-7. **Démonstration en production**
+<div class="chips">
+<div><span><b>1.</b> Planifier l'exécution</span><u>C3.1, éliminatoire</u></div>
+<div><span><b>2.</b> Piloter l'avancement</span><u>C3.2.1, éliminatoire</u></div>
+<div><span><b>3.</b> Un cas d'arbitrage</span><u>C3.2.2</u></div>
+<div><span><b>4.</b> Piloter l'équipe</span><u>C3.3.1</u></div>
+<div><span><b>5.</b> Les besoins en compétences</span><u>C3.3.2</u></div>
+<div><span><b>6.</b> Rendre compte au commanditaire</span><u>C3.4.1</u></div>
+<div><span><b>7.</b> Démonstration en production</span><u>C3.4.2, éliminatoire</u></div>
+<div><span><b>8.</b> Bilan de pilotage, puis vos questions</span><u></u></div>
+</div>
+
+<div class="text-xs opacity-75 mt-2">L'ordre est celui du référentiel, une compétence par chapitre.</div>
 
 </div>
 </div>
