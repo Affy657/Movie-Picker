@@ -303,7 +303,7 @@ describe('MyEventsPage (MSW)', () => {
             lifecycle: 'finished',
             participantCount: 2,
             movieCount: 3,
-            winnerMovieTitle: 'Matrix',
+            winnerMovies: [{ title: 'Matrix', posterPath: null }],
           },
           {
             id: 'e6',
@@ -318,7 +318,7 @@ describe('MyEventsPage (MSW)', () => {
             lifecycle: 'finished',
             participantCount: 2,
             movieCount: 0,
-            winnerMovieTitle: null,
+            winnerMovies: [],
           },
         ],
         { active: 0, finished: 2 }

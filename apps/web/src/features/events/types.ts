@@ -1,6 +1,11 @@
-import type { EventConfigData, MyEventLifecycle, WheelMode } from '@/shared/types/event';
+import type {
+  EventConfigData,
+  EventRecurrence,
+  MyEventLifecycle,
+  WheelMode,
+} from '@/shared/types/event';
 
-export type { WheelMode, EventConfigData, EventData } from '@/shared/types/event';
+export type { WheelMode, EventConfigData, EventData, EventRecurrence } from '@/shared/types/event';
 
 export const MAX_EVENT_PARTICIPANTS = 300;
 
@@ -13,6 +18,10 @@ export const DEFAULT_EVENT_CONFIG: EventConfigData = {
   wheelMode: 'weightedByVotes',
   richSharePreview: true,
   allowSeries: false,
+  recurrence: null,
+  winnerCount: 1,
+  winnerCountMax: 10,
+  drawnWinnerCount: 0,
 };
 
 export const MAX_EVENT_TEMPLATES = 5;
@@ -28,18 +37,26 @@ export interface EventTemplateData {
   wheelMode: WheelMode;
   richSharePreview: boolean;
   allowSeries: boolean;
+  winnerCount: number;
 }
 
 export type SaveEventTemplateBody = Omit<EventTemplateData, 'id'>;
 
+export const EVENT_RECURRENCES: readonly EventRecurrence[] = ['weekly', 'biweekly', 'monthly'];
+
+export const MAX_WINNERS_PER_EVENT = 10;
+
 export type EventConfigPatchPayload = {
   title?: string;
-  theme: string;
-  maxProposalsPerParticipant: number;
-  maxParticipants: number;
-  wheelMode: WheelMode;
-  richSharePreview: boolean;
-  allowSeries: boolean;
+  theme?: string;
+  maxProposalsPerParticipant?: number;
+  maxParticipants?: number;
+  wheelMode?: WheelMode;
+  richSharePreview?: boolean;
+  allowSeries?: boolean;
+  winnerCount?: number;
+  recurrence?: EventRecurrence;
+  clearRecurrence?: boolean;
   date?: string;
   time?: string;
   notifyParticipantsOfDateChange?: boolean;
@@ -66,11 +83,14 @@ export interface MyEventSummary {
 
   theme?: string | null;
 
-  winnerMovieTitle?: string | null;
-
-  winnerMoviePosterPath?: string | null;
+  winnerMovies?: MyEventWinnerMovie[];
 
   autoCloseAt?: string | null;
+}
+
+export interface MyEventWinnerMovie {
+  title: string;
+  posterPath?: string | null;
 }
 
 export interface MyEventsListResponse {

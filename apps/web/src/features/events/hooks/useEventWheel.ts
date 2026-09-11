@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   deleteEventWheel,
-  postEventClose,
+  deleteEventWinner,
   postEventWheel,
   postEventWinner,
 } from '@/features/events/api/eventsApi';
@@ -13,12 +13,14 @@ import { useTranslation } from '@/shared/i18n';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { remainingWheelRevealDelayMs } from '@/shared/utils/wheelSpin';
 
-export type EventPrimaryAction = 'add' | 'spin' | 'close' | null;
+export type EventPrimaryAction = 'add' | 'spin' | null;
 
 export type EventWheelState = {
   isHost: boolean;
-  winner: MovieData | null;
+  winnerIds: string[];
+  winners: MovieData[];
   spinWinner: MovieData | null;
+  spinPool: MovieData[];
   winnerIndex: number;
   wheelKey: number;
   loading: boolean;
@@ -27,25 +29,31 @@ export type EventWheelState = {
   canSpin: boolean;
 
   spinDisabled: boolean;
+  spinDisabledHint: string | null;
+  remainingDraws: number;
+  winnerCount: number;
   primaryAction: EventPrimaryAction;
-  showRelaunch: boolean;
+  showRemoveWinner: boolean;
   showReset: boolean;
-  showClose: boolean;
-  closeWithoutMovie: boolean;
+  canRelaunchFromModal: boolean;
   launch: () => void;
   reset: () => void;
-  closeEvent: () => void;
   dismissModal: () => void;
   revealWinner: () => void;
 
   pickMethod: WinnerPickMethod | null;
   manualReveal: boolean;
   manualMode: boolean;
+  removalMode: boolean;
   eligibleMovies: MovieData[];
+  drawableMovies: MovieData[];
   noEligibleMovie: boolean;
   enterManualMode: () => void;
   cancelManualMode: () => void;
   pickWinnerManually: (movie: MovieData) => void;
+  enterRemovalMode: () => void;
+  cancelRemovalMode: () => void;
+  removeWinner: (movie: MovieData) => void;
 };
 
 type UseEventWheelOptions = {
@@ -54,8 +62,12 @@ type UseEventWheelOptions = {
   movies: MovieData[];
   hostToken: string | null;
   onWheelDone: () => void;
-  onCloseDone: () => void;
 };
+
+function lastPick(event: EventData | undefined) {
+  const winners = event?.winners ?? [];
+  return winners.length > 0 ? winners[winners.length - 1]! : null;
+}
 
 export function useEventWheel({
   slug,
@@ -63,7 +75,6 @@ export function useEventWheel({
   movies,
   hostToken,
   onWheelDone,
-  onCloseDone,
 }: UseEventWheelOptions): EventWheelState {
   const { t } = useTranslation();
   const { track } = useAnalytics();
@@ -72,17 +83,20 @@ export function useEventWheel({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [winnerIndex, setWinnerIndex] = useState(-1);
   const [wheelKey, setWheelKey] = useState(0);
-  const [winner, setWinner] = useState<MovieData | null>(() => {
-    if (!event?.winnerMovie) return null;
-    if (remainingWheelRevealDelayMs(event.winnerPickMethod, event.winnerPickedAt) > 0) return null;
-    return event.winnerMovie;
+  const [pendingRevealId, setPendingRevealId] = useState<string | null>(() => {
+    const last = lastPick(event);
+    if (!last) return null;
+    return remainingWheelRevealDelayMs(last.pickMethod, last.pickedAt) > 0 ? last.movieId : null;
   });
   const [spinWinner, setSpinWinner] = useState<MovieData | null>(null);
+  const [spinPool, setSpinPool] = useState<MovieData[]>([]);
   const [pickMethod, setPickMethod] = useState<WinnerPickMethod | null>(
-    event?.winnerPickMethod ?? null
+    () => lastPick(event)?.pickMethod ?? null
   );
+  const [locallyDrawnIds, setLocallyDrawnIds] = useState<string[]>([]);
   const [manualReveal, setManualReveal] = useState(false);
   const [manualMode, setManualMode] = useState(false);
+  const [removalMode, setRemovalMode] = useState(false);
 
   const isHost = event?.isHost === true || (event?.isHost == null && !!hostToken);
   const safeMovies = useMemo(() => movies ?? [], [movies]);
@@ -93,47 +107,90 @@ export function useEventWheel({
   );
   const noEligibleMovie = moviesCount > 0 && eligibleMovies.length === 0;
 
+  const allWinnerIds = useMemo(
+    () => (event?.winners ?? []).map((w) => w.movieId),
+    [event?.winners]
+  );
+  const winnerIds = useMemo(
+    () => allWinnerIds.filter((id) => id !== pendingRevealId),
+    [allWinnerIds, pendingRevealId]
+  );
+  const winners = useMemo(
+    () =>
+      winnerIds
+        .map((id) => safeMovies.find((m) => m.id === id) ?? null)
+        .filter((m): m is MovieData => m !== null),
+    [winnerIds, safeMovies]
+  );
+  const drawnIds = useMemo(() => {
+    const merged = [...allWinnerIds];
+    for (const id of locallyDrawnIds) {
+      if (!merged.includes(id)) merged.push(id);
+    }
+    return merged;
+  }, [allWinnerIds, locallyDrawnIds]);
+  const drawableMovies = useMemo(
+    () => eligibleMovies.filter((m) => !drawnIds.includes(m.id)),
+    [eligibleMovies, drawnIds]
+  );
+
+  const winnerCount = event?.config?.winnerCount ?? 1;
+  const remainingDraws = Math.max(0, winnerCount - drawnIds.length);
+
+  const lastPickedAt = lastPick(event)?.pickedAt;
+  const lastPickMethod = lastPick(event)?.pickMethod;
+  const lastMovieId = lastPick(event)?.movieId;
+
   useEffect(() => {
     if (isModalOpen) return undefined;
-    const movie = event?.winnerMovie ?? null;
-    const method = event?.winnerPickMethod ?? null;
-    const delay = remainingWheelRevealDelayMs(event?.winnerPickMethod, event?.winnerPickedAt);
+    setPickMethod(lastPickMethod ?? null);
+    const delay = remainingWheelRevealDelayMs(lastPickMethod, lastPickedAt);
     if (delay <= 0) {
-      setWinner(movie);
-      setPickMethod(method);
+      setPendingRevealId(null);
       setSpinWinner(null);
       return undefined;
     }
-    setWinner(null);
-    setPickMethod(method);
+    setPendingRevealId(lastMovieId ?? null);
     setSpinWinner(null);
     const timer = window.setTimeout(() => {
-      setWinner(movie);
-      setPickMethod(method);
+      setPendingRevealId(null);
       setSpinWinner(null);
     }, delay);
     return () => window.clearTimeout(timer);
-  }, [event?.winnerMovie, event?.winnerPickMethod, event?.winnerPickedAt, isModalOpen]);
+  }, [lastMovieId, lastPickMethod, lastPickedAt, isModalOpen]);
 
   const cancelManualMode = useCallback(() => setManualMode(false), []);
-  const enterManualMode = useCallback(() => setManualMode(true), []);
+  const enterManualMode = useCallback(() => {
+    setRemovalMode(false);
+    setManualMode(true);
+  }, []);
+  const cancelRemovalMode = useCallback(() => setRemovalMode(false), []);
+  const enterRemovalMode = useCallback(() => {
+    setManualMode(false);
+    setRemovalMode(true);
+  }, []);
 
   useEffect(() => {
-    if (!manualMode) return;
+    if (!manualMode && !removalMode) return undefined;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') cancelManualMode();
+      if (e.key !== 'Escape') return;
+      cancelManualMode();
+      cancelRemovalMode();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [manualMode, cancelManualMode]);
+  }, [manualMode, removalMode, cancelManualMode, cancelRemovalMode]);
 
   const launch = useCallback(() => {
     setError(null);
     setLoading(true);
     postEventWheel(slug, hostToken)
       .then((res) => {
-        const idx = eligibleMovies.findIndex((m) => m.id === res.winner.id);
-        setWinner(null);
+        const pool = drawableMovies;
+        const idx = pool.findIndex((m) => m.id === res.winner.id);
+        setSpinPool(pool);
+        setLocallyDrawnIds((ids) => (ids.includes(res.winner.id) ? ids : [...ids, res.winner.id]));
+        setPendingRevealId(res.winner.id);
         setSpinWinner(res.winner);
         setPickMethod('wheel');
         setWinnerIndex(Math.max(idx, 0));
@@ -144,7 +201,7 @@ export function useEventWheel({
       })
       .catch((err) => setError(getErrorMessage(err, t('events.wheel.launchError'))))
       .finally(() => setLoading(false));
-  }, [slug, hostToken, eligibleMovies, track, t]);
+  }, [slug, hostToken, drawableMovies, track, t]);
 
   const pickWinnerManually = useCallback(
     (movie: MovieData) => {
@@ -152,8 +209,12 @@ export function useEventWheel({
       setLoading(true);
       postEventWinner(slug, movie.id, hostToken)
         .then((res) => {
+          setPendingRevealId(null);
+          setSpinPool([res.winner]);
+          setLocallyDrawnIds((ids) =>
+            ids.includes(res.winner.id) ? ids : [...ids, res.winner.id]
+          );
           setSpinWinner(res.winner);
-          setWinner(res.winner);
           setPickMethod('manual');
           setWinnerIndex(0);
           setManualReveal(true);
@@ -168,85 +229,109 @@ export function useEventWheel({
     [slug, hostToken, track, t]
   );
 
+  const removeWinner = useCallback(
+    (movie: MovieData) => {
+      setError(null);
+      setLoading(true);
+      deleteEventWinner(slug, movie.id, hostToken)
+        .then(() => {
+          setPendingRevealId(null);
+          setSpinWinner(null);
+          setLocallyDrawnIds([]);
+          onWheelDone();
+        })
+        .catch((err) => setError(getErrorMessage(err, t('events.wheel.removeWinnerError'))))
+        .finally(() => setLoading(false));
+    },
+    [slug, hostToken, onWheelDone, t]
+  );
+
   const reset = useCallback(() => {
     setError(null);
     setLoading(true);
     deleteEventWheel(slug, hostToken)
       .then(() => {
-        setWinner(null);
+        setPendingRevealId(null);
         setSpinWinner(null);
+        setLocallyDrawnIds([]);
         setPickMethod(null);
+        setRemovalMode(false);
         onWheelDone();
       })
       .catch((err) => setError(getErrorMessage(err, t('events.wheel.resetError'))))
       .finally(() => setLoading(false));
   }, [slug, hostToken, onWheelDone, t]);
 
-  const closeEvent = useCallback(() => {
-    setError(null);
-    setLoading(true);
-    postEventClose(slug, hostToken)
-      .then(() => {
-        track('event_closed');
-        onCloseDone();
-      })
-      .catch((err) => setError(getErrorMessage(err, t('events.wheel.closeError'))))
-      .finally(() => setLoading(false));
-  }, [slug, hostToken, onCloseDone, track, t]);
-
   const revealWinner = useCallback(() => {
-    setWinner(spinWinner);
-  }, [spinWinner]);
+    setPendingRevealId(null);
+  }, []);
 
   const dismissModal = useCallback(() => {
     setIsModalOpen(false);
-    setWinner((current) => current ?? spinWinner);
+    setPendingRevealId(null);
     onWheelDone();
-  }, [onWheelDone, spinWinner]);
+  }, [onWheelDone]);
 
   const isOpenForActions = isHost && !!event && !event.isFinished;
-  const isPendingWithoutWinner = isOpenForActions && !winner && event?.lifecycle === 'pending';
-  const spinDisabled = moviesCount === 0 || noEligibleMovie;
+  const selecting = manualMode || removalMode;
+  const hasWinner = allWinnerIds.length > 0;
 
-  const eventIsLive = !!event && !event.isFinished;
+  let spinDisabledHint: string | null = null;
+  if (moviesCount === 0) spinDisabledHint = t('events.wheel.emptyPlaceholder');
+  else if (noEligibleMovie) spinDisabledHint = t('events.wheel.allExcludedHint');
+  else if (remainingDraws === 0)
+    spinDisabledHint =
+      winnerCount === 1
+        ? t('events.wheel.allDrawnHintOne')
+        : t('events.wheel.allDrawnHintMany', { count: winnerCount });
+  else if (drawableMovies.length === 0) spinDisabledHint = t('events.wheel.nothingLeftToDrawHint');
+  const spinDisabled = spinDisabledHint !== null;
+
   let primaryAction: EventPrimaryAction = null;
-  if (isOpenForActions && !manualMode) {
-    if (winner) primaryAction = 'close';
-    else if (spinDisabled) primaryAction = 'add';
-    else primaryAction = 'spin';
-  } else if (!isHost && eventIsLive && !winner && !manualMode) {
+  if (isOpenForActions && !selecting) {
+    primaryAction = spinDisabled && moviesCount === 0 ? 'add' : 'spin';
+  } else if (!isHost && !!event && !event.isFinished && !hasWinner && !selecting) {
     primaryAction = 'add';
   }
 
   return {
     isHost,
-    winner,
+    winnerIds,
+    winners,
     spinWinner,
+    spinPool,
     winnerIndex,
     wheelKey,
     loading,
     error,
     isModalOpen,
-    canSpin: isOpenForActions && !manualMode,
+    canSpin: isOpenForActions && !selecting,
     spinDisabled,
+    spinDisabledHint,
+    remainingDraws,
+    winnerCount,
     primaryAction,
-    showRelaunch: isOpenForActions && !!winner && moviesCount > 0 && !manualMode,
-    showReset: isOpenForActions && !!winner && !manualMode,
-    showClose: isOpenForActions && (!!winner || !!event?.closedAt || isPendingWithoutWinner),
-    closeWithoutMovie: isPendingWithoutWinner,
+    showRemoveWinner: isOpenForActions && hasWinner && !selecting,
+    showReset: isOpenForActions && hasWinner && !selecting,
+    canRelaunchFromModal:
+      isOpenForActions && !manualReveal && remainingDraws > 0 && drawableMovies.length > 0,
     launch,
     reset,
-    closeEvent,
     dismissModal,
     revealWinner,
 
     pickMethod,
     manualReveal,
     manualMode,
+    removalMode,
     eligibleMovies,
+    drawableMovies,
     noEligibleMovie,
     enterManualMode,
     cancelManualMode,
     pickWinnerManually,
+    enterRemovalMode,
+    cancelRemovalMode,
+    removeWinner,
   };
 }

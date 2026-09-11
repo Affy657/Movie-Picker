@@ -1,6 +1,6 @@
 import confetti from 'canvas-confetti';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Film, X } from 'lucide-react';
+import { Disc3, Film, X } from 'lucide-react';
 import type { MovieData } from '@/shared/types/movie';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import { useDialogOpen } from '@/shared/hooks/useDialogOpen';
@@ -203,11 +203,14 @@ export default function WheelModal({
             </div>
 
             <div className={styles.footer}>
-              {onRelaunch && (
+              {onRelaunch ? (
                 <Button type="button" onClick={onRelaunch}>
-                  {t('events.wheel.relaunchButton')}
+                  <Disc3 size={16} aria-hidden />
+                  <span className={styles.relaunchLabel}>
+                    {t('events.wheel.modalRelaunchButton')}
+                  </span>
                 </Button>
-              )}
+              ) : null}
               <Button type="button" variant="primary" onClick={onClose}>
                 {t('events.wheel.modal.closeButton')}
               </Button>

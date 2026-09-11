@@ -11,11 +11,13 @@ public sealed class MongoDatabaseGuardTests
 {
     private const string ProdCluster = "mongodb+srv://user:pwd@cluster0.example.mongodb.net";
 
-    private static IServiceCollection AddWith(string environment, string? mongoUri)
+    private static IServiceCollection AddWith(string environment, string? mongoUri, bool testContext = false)
     {
         var services = new ServiceCollection();
-        var cfg = new ConfigurationBuilder().AddInMemoryCollection(
-            new Dictionary<string, string?> { ["MONGODB_URI"] = mongoUri }).Build();
+        var settings = new Dictionary<string, string?> { ["MONGODB_URI"] = mongoUri };
+        if (testContext)
+            settings["MOVIEPICKER_TEST_CONTEXT"] = "1";
+        var cfg = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
         var env = new TestHostEnv { EnvironmentName = environment };
         return services.AddMoviePicker(cfg, env);
     }
@@ -48,6 +50,36 @@ public sealed class MongoDatabaseGuardTests
     public void Development_without_mongo_uri_is_allowed()
     {
         var record = Record.Exception(() => AddWith(Environments.Development, ""));
+        Assert.Null(record);
+    }
+
+    [Fact]
+    public void TestContext_targeting_shared_development_database_throws()
+    {
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => AddWith(Environments.Development, $"{ProdCluster}/moviepicker_dev", testContext: true));
+        Assert.Contains("moviepicker_dev", ex.Message);
+    }
+
+    [Fact]
+    public void TestContext_targeting_prod_database_throws()
+    {
+        Assert.Throws<InvalidOperationException>(
+            () => AddWith(Environments.Development, $"{ProdCluster}/moviepicker", testContext: true));
+    }
+
+    [Fact]
+    public void TestContext_targeting_isolated_database_is_allowed()
+    {
+        var record = Record.Exception(
+            () => AddWith(Environments.Development, $"{ProdCluster}/moviepicker_it_abc123", testContext: true));
+        Assert.Null(record);
+    }
+
+    [Fact]
+    public void TestContext_without_mongo_uri_is_allowed()
+    {
+        var record = Record.Exception(() => AddWith(Environments.Development, "", testContext: true));
         Assert.Null(record);
     }
 

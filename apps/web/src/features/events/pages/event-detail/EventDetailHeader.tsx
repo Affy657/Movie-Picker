@@ -14,6 +14,7 @@ import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { ROUTES } from '@/app/routes';
 import styles from './EventDetailHeader.module.css';
 import Button from '@/shared/components/Button';
+import Tooltip from '@/shared/components/Tooltip';
 
 const MAX_STACKED_AVATARS = 4;
 const STICKY_BAR_MEDIA = '(min-width: 48rem)';
@@ -245,18 +246,29 @@ export default function EventDetailHeader({
   const isUpcoming = lifecycle === 'upcoming';
   const showLifecyclePill = !isUpcoming || !!countdownLabel;
 
-  const addMovieButton = onAddMovie ? (
+  const addMovieLabel = t('movies.search.label');
+  const addMovieBtn = onAddMovie ? (
     <Button
       ref={addMovieTriggerRef}
       type="button"
       variant={addMoviePrimary ? 'primary' : 'secondary'}
       className={clsx(styles.addMovieBtn, addMoviePrimary && styles.addMovieBtnPrimary)}
       onClick={onAddMovie}
+      aria-label={addMoviePrimary ? undefined : addMovieLabel}
     >
       <Plus size={16} aria-hidden />
-      <span className={styles.addMovieLabel}>{t('movies.search.label')}</span>
+      {addMoviePrimary ? <span className={styles.addMovieLabel}>{addMovieLabel}</span> : null}
     </Button>
   ) : null;
+
+  const addMovieButton =
+    addMovieBtn && !addMoviePrimary ? (
+      <Tooltip label={addMovieLabel} placement="top">
+        {addMovieBtn}
+      </Tooltip>
+    ) : (
+      addMovieBtn
+    );
 
   return (
     <>

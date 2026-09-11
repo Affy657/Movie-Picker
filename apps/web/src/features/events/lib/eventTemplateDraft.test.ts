@@ -20,6 +20,7 @@ const baseFields = {
   wheelMode: 'weightedByVotes' as const,
   richSharePreview: true,
   allowSeries: false,
+  winnerCount: '1',
 };
 
 const baseDraft: TemplateConfigDraft = {
@@ -29,6 +30,7 @@ const baseDraft: TemplateConfigDraft = {
   wheelMode: 'weightedByVotes',
   richSharePreview: true,
   allowSeries: false,
+  winnerCount: 1,
 };
 
 describe('buildTemplateDraft', () => {
@@ -83,6 +85,7 @@ describe('templateToDraft', () => {
       wheelMode: 'strictRandom',
       richSharePreview: true,
       allowSeries: true,
+      winnerCount: 2,
     };
 
     expect(templateToDraft(template)).toEqual({
@@ -92,7 +95,19 @@ describe('templateToDraft', () => {
       wheelMode: 'strictRandom',
       richSharePreview: true,
       allowSeries: true,
+      winnerCount: 2,
     });
+  });
+});
+
+describe('buildTemplateDraft winner count', () => {
+  it('keeps the chosen winner count', () => {
+    expect(buildTemplateDraft({ ...baseFields, winnerCount: '4' }).winnerCount).toBe(4);
+  });
+
+  it('falls back to a single winner when the field is unusable', () => {
+    expect(buildTemplateDraft({ ...baseFields, winnerCount: '' }).winnerCount).toBe(1);
+    expect(buildTemplateDraft({ ...baseFields, winnerCount: '99' }).winnerCount).toBe(1);
   });
 });
 

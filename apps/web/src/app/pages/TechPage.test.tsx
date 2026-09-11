@@ -167,6 +167,18 @@ describe('TechPage', () => {
       expect(section.textContent).toContain(fr.tech.ci[fact]);
     }
     expect(diagram).toContain(fr.tech.diagram.ciDocker);
+    for (const node of [
+      'ciTrigger',
+      'ciLintWorkflows',
+      'ciLintApi',
+      'ciLintWeb',
+      'ciTestApi',
+      'ciTestWeb',
+      'ciE2eMongo',
+      'ciBandBoth',
+    ] as const) {
+      expect(diagram).toContain(fr.tech.diagram[node]);
+    }
   });
 
   it('ne redit pas les familles de tests dans les pratiques', () => {
@@ -178,6 +190,8 @@ describe('TechPage', () => {
     expect(section.textContent).toContain(fr.tech.tests.network);
     expect(section.textContent).toContain(String(TECH_METRICS.mswTestFiles));
     expect(section.textContent).toMatch(/couverture bloquante côté front/i);
+    expect(section.textContent).toContain(String(TECH_METRICS.mongoCoverageLines));
+    expect(section.textContent).not.toMatch(/sans seuil qui fasse échouer/i);
     expect(section.textContent).not.toMatch(/un vrai navigateur/i);
   });
 
@@ -371,7 +385,7 @@ describe('TechPage', () => {
     }
   });
 
-  it('justifie chaque choix technique par son alternative et son coût', () => {
+  it('ne facture un prix que là où il y en a un, sans prétendre que tout a été arbitré', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#choices') as HTMLElement;
 
@@ -381,7 +395,8 @@ describe('TechPage', () => {
     );
 
     expect(cards).toHaveLength(9);
-    expect(trades).toHaveLength(cards.length);
+    expect(fr.tech.choices.title).not.toMatch(/chaque brique/i);
+
     for (const choice of [
       'runtime',
       'database',
@@ -394,10 +409,21 @@ describe('TechPage', () => {
       'mono',
     ] as const) {
       expect(section.textContent).toContain(fr.tech.choices[choice]);
+    }
+
+    const priced = ['runtime', 'database', 'auth', 'front', 'hosting', 'split'] as const;
+    expect(trades).toHaveLength(priced.length);
+    for (const choice of priced) {
       expect(trades.map((trade) => trade.textContent)).toContain(
         `${fr.tech.choices.tradeLabel} ${fr.tech.choices[`${choice}Trade`]}`
       );
     }
+  });
+
+  it('date la réécriture du serveur sans lui prêter un contrat qui n’existait pas', () => {
+    expect(fr.tech.choices.runtimeHint).not.toMatch(/OpenAPI/i);
+    expect(fr.tech.choices.runtimeTrade).not.toMatch(/deux mois/i);
+    expect(fr.tech.choices.persistenceValue).not.toMatch(/chaque document est traduit/i);
   });
 
   it('laisse les suites de tests à leur section et garde le serveur sur ses garanties', () => {
@@ -464,11 +490,12 @@ describe('TechPage', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#data') as HTMLElement;
 
-    expect(section.querySelectorAll('article')).toHaveLength(6);
-    for (const fact of ['uniqueness', 'expiry'] as const) {
+    expect(section.querySelectorAll('article')).toHaveLength(7);
+    for (const fact of ['uniqueness', 'expiry', 'inventory'] as const) {
       expect(section.textContent).toContain(fr.tech.data[fact]);
     }
     expect(section.textContent).toContain(String(TECH_METRICS.uniqueIndexes));
+    expect(section.textContent).toContain(String(TECH_METRICS.inventoriedIndexes));
     expect(section.textContent).toContain(String(TECH_METRICS.posterCacheTtlDays));
     expect(section.textContent).not.toMatch(/jamais rechargées/i);
   });

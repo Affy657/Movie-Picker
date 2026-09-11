@@ -30,7 +30,14 @@ export type { MovieWheelExclusion } from '@/features/movies/types';
 export interface MovieCardSelection {
   active: boolean;
   pending?: boolean;
+  mode: 'pick' | 'remove';
+  selectableIds?: string[];
   onSelect: (movie: MovieData) => void;
+}
+
+export function isSelectable(movie: MovieData, selection?: MovieCardSelection): boolean {
+  if (!selection?.active) return false;
+  return !selection.selectableIds || selection.selectableIds.includes(movie.id);
 }
 
 export interface MovieCardCommonProps {
@@ -54,6 +61,7 @@ export interface MovieCardCommonProps {
   onToggleWheelExclusion?: (movie: MovieData) => void;
   selection?: MovieCardSelection;
   isWinner?: boolean;
+  winnerRank?: number;
   isMobile?: boolean;
   participantCount?: number;
 }
@@ -69,8 +77,13 @@ export function CardSelectionOverlay({
       className={styles.selectOverlay}
       onClick={() => selection.onSelect(movie)}
       disabled={selection.pending}
-      aria-label={t('events.wheel.manualPickCardAria', { title: movie.title })}
-      data-testid={`manual-pick-${movie.id}`}
+      aria-label={t(
+        selection.mode === 'remove'
+          ? 'events.wheel.removeWinnerCardAria'
+          : 'events.wheel.manualPickCardAria',
+        { title: movie.title }
+      )}
+      data-testid={`${selection.mode === 'remove' ? 'remove-winner' : 'manual-pick'}-${movie.id}`}
     />
   );
 }

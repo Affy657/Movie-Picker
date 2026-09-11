@@ -7,6 +7,8 @@ namespace MoviePicker.Api.Tests.Infrastructure.Persistence.InMemory;
 
 public sealed class InMemoryVoteRepositoryTests
 {
+    private static readonly string[] ExpectedUpVoters = ["p1", "p2"];
+
     private readonly InMemoryVoteRepository _repo = new();
 
     private static Vote Mk(
@@ -67,7 +69,7 @@ public sealed class InMemoryVoteRepositoryTests
 
         var upVoters = await _repo.AggregateUpVotersByMovieIdsAsync(["mov1", "mov2", "unknown"]);
 
-        Assert.Equal(new[] { "p1", "p2" }, upVoters["mov1"]);
+        Assert.Equal(ExpectedUpVoters, upVoters["mov1"]);
         Assert.False(upVoters.ContainsKey("mov2"));
         Assert.False(upVoters.ContainsKey("unknown"));
     }

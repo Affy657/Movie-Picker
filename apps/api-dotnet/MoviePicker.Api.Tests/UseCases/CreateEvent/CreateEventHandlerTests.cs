@@ -59,7 +59,7 @@ public sealed class CreateEventHandlerTests
                 CreatorUserId = e.CreatorUserId,
                 Config = e.Config,
                 ClosedAt = e.ClosedAt,
-                WinnerMovieId = e.WinnerMovieId,
+                Winners = e.Winners,
                 CreatedAt = e.CreatedAt,
                 UpdatedAt = e.UpdatedAt
             });
@@ -143,7 +143,7 @@ public sealed class CreateEventHandlerTests
                 CreatorUserId = e.CreatorUserId,
                 Config = e.Config,
                 ClosedAt = e.ClosedAt,
-                WinnerMovieId = e.WinnerMovieId,
+                Winners = e.Winners,
                 CreatedAt = e.CreatedAt,
                 UpdatedAt = e.UpdatedAt
             });

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -7,10 +8,18 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Infrastructure;
 using MoviePicker.Api.Infrastructure.Tmdb;
 using MoviePicker.Api.IntegrationTests.Helpers;
 
 namespace MoviePicker.Api.IntegrationTests;
+
+internal static class IntegrationTestContext
+{
+    [ModuleInitializer]
+    internal static void DeclareTestContext() =>
+        Environment.SetEnvironmentVariable(EnvLoader.TestContextVariable, "1");
+}
 
 public sealed class MoviePickerApplicationFactory : WebApplicationFactory<Program>
 {

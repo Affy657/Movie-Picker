@@ -5,6 +5,7 @@ using MoviePicker.Api.Application.UseCases.SetMovieWheelExclusion;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
+using MoviePicker.Api.Tests.Builders;
 
 namespace MoviePicker.Api.Tests.UseCases.SetMovieWheelExclusion;
 
@@ -138,7 +139,7 @@ public sealed class SetMovieWheelExclusionHandlerTests
     [Fact]
     public async Task HandleAsync_WheelAlreadyLaunched_StillAllowsExclusion()
     {
-        var evt = ActiveEvent() with { WinnerMovieId = "mov9", WinnerPickMethod = WinnerPickMethod.Wheel };
+        var evt = ActiveEvent() with { Winners = TestWinners.Won("mov9") };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", "evt1", It.IsAny<CancellationToken>())).ReturnsAsync(MovieOf("mov1"));

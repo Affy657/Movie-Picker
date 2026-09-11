@@ -5,6 +5,7 @@ using MoviePicker.Api.Application.UseCases.ResetWheel;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
+using MoviePicker.Api.Tests.Builders;
 
 namespace MoviePicker.Api.Tests.UseCases.ResetWheel;
 
@@ -26,7 +27,7 @@ public sealed class ResetWheelHandlerTests
         Id = "evt1",
         HostToken = "ht",
         CreatorUserId = "host",
-        WinnerMovieId = winnerMovieId,
+        Winners = TestWinners.Won(winnerMovieId),
         ClosedAt = closedAt
     };
 
@@ -85,7 +86,7 @@ public sealed class ResetWheelHandlerTests
         Assert.Equal("Tirage annulé.", result.Message);
         _events.Verify(
             e => e.UpdateAsync(
-                It.Is<Event>(x => x.WinnerMovieId == null && x.WinnerPickMethod == null && x.WinnerPickedAt == null),
+                It.Is<Event>(x => x.Winners.Count == 0),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }

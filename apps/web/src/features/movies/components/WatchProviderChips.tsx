@@ -51,6 +51,41 @@ interface WatchProviderChipsProps {
   showTypeIcon?: boolean;
 }
 
+type OverflowToggleProps = {
+  expanded: boolean;
+  hidden: number;
+  controls: string;
+  onMoreClick?: () => void;
+  onToggle: () => void;
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
+};
+
+function OverflowToggle({
+  expanded,
+  hidden,
+  controls,
+  onMoreClick,
+  onToggle,
+  t,
+}: Readonly<OverflowToggleProps>) {
+  const label = expanded
+    ? t('movies.watchProviders.showLessAria')
+    : t('movies.watchProviders.showMoreAria', { count: hidden });
+
+  return (
+    <button
+      type="button"
+      className={styles.more}
+      onClick={onMoreClick ?? onToggle}
+      aria-expanded={onMoreClick ? undefined : expanded}
+      aria-controls={onMoreClick ? undefined : controls}
+      aria-label={label}
+    >
+      {expanded ? <ChevronLeft aria-hidden size={14} /> : `+${hidden}`}
+    </button>
+  );
+}
+
 export default function WatchProviderChips({
   providers,
   className,
@@ -151,20 +186,14 @@ export default function WatchProviderChips({
             <dd className={styles.logos}>
               {limited.map(renderChip)}
               {hadOverflow ? (
-                <button
-                  type="button"
-                  className={styles.more}
-                  onClick={onMoreClick ?? (() => setExpanded((v) => !v))}
-                  aria-expanded={onMoreClick ? undefined : expanded}
-                  aria-controls={onMoreClick ? undefined : rootId}
-                  aria-label={
-                    expanded
-                      ? t('movies.watchProviders.showLessAria')
-                      : t('movies.watchProviders.showMoreAria', { count: hidden })
-                  }
-                >
-                  {expanded ? <ChevronLeft aria-hidden size={14} /> : `+${hidden}`}
-                </button>
+                <OverflowToggle
+                  expanded={expanded}
+                  hidden={hidden}
+                  controls={rootId}
+                  onMoreClick={onMoreClick}
+                  onToggle={() => setExpanded((v) => !v)}
+                  t={t}
+                />
               ) : null}
             </dd>
           </div>

@@ -25,7 +25,7 @@ export default defineConfig({
   // renvoie « temporairement indisponible » en CI (pas de clé), alors qu'en local une vraie clé masque le souci.
   webServer: [
     {
-      command: `cross-env E2E_STUB_TMDB=1 E2E_STUB_LETTERBOXD=1 TMDB_API_KEY=e2e-stub MONGODB_URI=${apiMongoUri} DevelopmentSeed__Enabled=false ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://127.0.0.1:5010 dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj --no-launch-profile`,
+      command: `cross-env MOVIEPICKER_TEST_CONTEXT=1 E2E_STUB_TMDB=1 E2E_STUB_LETTERBOXD=1 TMDB_API_KEY=e2e-stub MONGODB_URI=${apiMongoUri} DevelopmentSeed__Enabled=false ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://127.0.0.1:5010 dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj --no-launch-profile`,
       cwd: '.',
       url: 'http://127.0.0.1:5010/health',
       reuseExistingServer: !process.env.CI,

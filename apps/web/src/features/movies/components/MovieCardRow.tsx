@@ -23,6 +23,7 @@ import {
   ProposerBadge,
   VoteBar,
   WatchlistBadge,
+  isSelectable,
   useMovieCardState,
   type MovieCardCommonProps,
 } from '@/features/movies/components/movieCardParts';
@@ -308,6 +309,7 @@ export const MovieCardRow = memo(function MovieCardRow({
   onToggleWheelExclusion,
   selection,
   isWinner = false,
+  winnerRank,
   isMobile,
   rank,
   voteError,
@@ -333,7 +335,10 @@ export const MovieCardRow = memo(function MovieCardRow({
   const buyCount = s.providers.filter((p) => p.type === 'buy').length;
   const releaseDateLabel = formatReleaseYear(m.releaseDate);
   const excluded = !!m.excludedFromWheel;
-  const selecting = !!selection?.active && !excluded;
+  const selecting = isSelectable(m, selection) && !excluded;
+  const winnerLabel = winnerRank
+    ? t('events.wheel.winnerRankLabel', { rank: winnerRank })
+    : t('events.wheel.winnerLabel');
   const emptyDispoLabel = t('movies.watchProviders.emptyLabel');
 
   if (isMobile) {
@@ -351,7 +356,9 @@ export const MovieCardRow = memo(function MovieCardRow({
           {excluded && (
             <span className="visually-hidden">{t('movies.list.excludedFromWheelSr')}</span>
           )}
-          {selecting && <CardSelectionOverlay movie={m} selection={selection} t={t} />}
+          {selecting && selection ? (
+            <CardSelectionOverlay movie={m} selection={selection} t={t} />
+          ) : null}
           <div className={styles.mobilePosterCol} inert={selecting}>
             <RowPoster src={posterSrc} srcSet={posterSrcSet} eager={eager} />
             <WatchlistBadge inWatchlist={isInWatchlist} t={t} />
@@ -361,9 +368,7 @@ export const MovieCardRow = memo(function MovieCardRow({
               <h3 className={styles.title} title={m.title}>
                 {m.title}
               </h3>
-              {isWinner ? (
-                <span className={styles.winnerBadge}>{t('events.wheel.winnerLabel')}</span>
-              ) : null}
+              {isWinner ? <span className={styles.winnerBadge}>{winnerLabel}</span> : null}
             </div>
             <div className={styles.mobileFacts}>
               {m.year ? <span>{m.year}</span> : null}
@@ -457,7 +462,9 @@ export const MovieCardRow = memo(function MovieCardRow({
         {excluded && (
           <span className="visually-hidden">{t('movies.list.excludedFromWheelSr')}</span>
         )}
-        {selecting && <CardSelectionOverlay movie={m} selection={selection} t={t} />}
+        {selecting && selection ? (
+          <CardSelectionOverlay movie={m} selection={selection} t={t} />
+        ) : null}
         <span className={styles.rank} data-testid="movie-rank">
           {rank ?? ''}
         </span>
@@ -476,9 +483,7 @@ export const MovieCardRow = memo(function MovieCardRow({
               title={m.title}
               t={t}
             />
-            {isWinner ? (
-              <span className={styles.winnerBadge}>{t('events.wheel.winnerLabel')}</span>
-            ) : null}
+            {isWinner ? <span className={styles.winnerBadge}>{winnerLabel}</span> : null}
           </div>
           <div className={styles.metaRow}>
             <ProposerBadge

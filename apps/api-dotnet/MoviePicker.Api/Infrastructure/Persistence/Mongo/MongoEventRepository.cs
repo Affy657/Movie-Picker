@@ -98,9 +98,20 @@ public sealed class MongoEventRepository : IEventRepository
         if (ids.Count == 0)
             return 0;
 
-        var filter = Builders<EventDocument>.Filter.In(x => x.WinnerMovieId, ids);
+        var filter = Builders<EventDocument>.Filter.Or(
+            Builders<EventDocument>.Filter.In("winners.movieId", ToObjectIds(ids)),
+            Builders<EventDocument>.Filter.In(x => x.WinnerMovieId, ids));
         var c = await _collection.CountDocumentsAsync(filter, cancellationToken: ct);
         return (int)c;
+    }
+
+    private static IEnumerable<ObjectId> ToObjectIds(IEnumerable<string> ids)
+    {
+        foreach (var id in ids)
+        {
+            if (ObjectId.TryParse(id, out var parsed))
+                yield return parsed;
+        }
     }
 
     public async Task<bool> DeleteAsync(string eventId, CancellationToken ct = default)
@@ -115,6 +126,21 @@ public sealed class MongoEventRepository : IEventRepository
     public async Task<IReadOnlyList<Event>> ListOpenEventsAsync(CancellationToken ct = default)
     {
         var filter = Builders<EventDocument>.Filter.Eq(x => x.ClosedAt, (DateTime?)null);
+        var docs = await _collection.Find(filter).ToListAsync(ct);
+        return docs.ConvertAll(EventDocumentMapper.ToDomain);
+    }
+
+    public async Task<IReadOnlyList<Event>> ListRecurringAwaitingNextOccurrenceAsync(
+        string? creatorUserId,
+        CancellationToken ct = default)
+    {
+        var builder = Builders<EventDocument>.Filter;
+        var filter = builder.Ne(x => x.Recurrence, null)
+                     & builder.Eq(x => x.NextOccurrenceEventId, (string?)null);
+
+        if (!string.IsNullOrWhiteSpace(creatorUserId))
+            filter &= builder.Eq(x => x.CreatorUserId, creatorUserId);
+
         var docs = await _collection.Find(filter).ToListAsync(ct);
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
     }

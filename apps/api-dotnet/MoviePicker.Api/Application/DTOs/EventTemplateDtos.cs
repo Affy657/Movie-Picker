@@ -17,6 +17,8 @@ public sealed class EventTemplateResponse
 
     public bool AllowSeries { get; init; }
 
+    public int WinnerCount { get; init; }
+
     public static EventTemplateResponse FromTemplate(EventTemplate template)
     {
         var config = template.Config;
@@ -29,7 +31,8 @@ public sealed class EventTemplateResponse
             MaxParticipants = config.MaxParticipants,
             WheelMode = config.WheelMode,
             RichSharePreview = config.RichSharePreview,
-            AllowSeries = config.AllowSeries
+            AllowSeries = config.AllowSeries,
+            WinnerCount = config.WinnerCount
         };
     }
 }
@@ -52,4 +55,6 @@ public sealed class SaveEventTemplateRequest
     public bool? RichSharePreview { get; init; }
 
     public bool? AllowSeries { get; init; }
+
+    public int? WinnerCount { get; init; }
 }

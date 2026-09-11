@@ -30,7 +30,7 @@ public static class MovieShowcaseCatalog
     private const int FamilyGenreId = 10_751;
     private const int AcclaimedVoteCountMin = 3_000;
 
-    private static readonly IReadOnlyDictionary<string, int> ProviderIds =
+    private static readonly Dictionary<string, int> ProviderIds =
         new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
         {
             ["netflix"] = 8,
@@ -86,13 +86,17 @@ public static class MovieShowcaseCatalog
         1_413_999, 10_517, 389_544, 52_835, 52_097, 103_001,
     ];
 
-    public static TmdbDiscoveryCriteria? CriteriaForProvider(string? provider, string region) =>
-        !string.IsNullOrWhiteSpace(provider) && ProviderIds.TryGetValue(provider.Trim(), out var id)
-            ? new TmdbDiscoveryCriteria(
-                VoteCountMin: 100,
-                WatchProviderIds: [id],
-                WatchRegion: string.IsNullOrWhiteSpace(region) ? "FR" : region.Trim().ToUpperInvariant())
-            : null;
+    public static TmdbDiscoveryCriteria? CriteriaForProvider(string? provider, string region)
+    {
+        if (string.IsNullOrWhiteSpace(provider) || !ProviderIds.TryGetValue(provider.Trim(), out var id))
+            return null;
+
+        var watchRegion = string.IsNullOrWhiteSpace(region) ? "FR" : region.Trim().ToUpperInvariant();
+        return new TmdbDiscoveryCriteria(
+            VoteCountMin: 100,
+            WatchProviderIds: [id],
+            WatchRegion: watchRegion);
+    }
 
     public static TmdbDiscoveryCriteria? CriteriaForTheme(string? theme) =>
         !string.IsNullOrWhiteSpace(theme) && ThemeCriteria.TryGetValue(theme.Trim(), out var criteria)

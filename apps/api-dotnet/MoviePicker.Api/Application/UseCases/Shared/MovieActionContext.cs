@@ -24,7 +24,7 @@ internal static class MovieActionContext
         if (evt.IsFinished(DateTimeOffset.UtcNow))
             throw new ConflictException("Soirée terminée. Lecture seule.");
 
-        if (wheelLockedError is not null && !string.IsNullOrEmpty(evt.WinnerMovieId))
+        if (wheelLockedError is not null && evt.HasWinner)
             throw new ConflictException(wheelLockedError);
 
         var movie = await movieRepository.GetByIdAndEventIdAsync(movieId, evt.Id, ct);
@@ -57,7 +57,7 @@ internal static class MovieActionContext
         if (evt.IsFinished(DateTimeOffset.UtcNow))
             throw new ConflictException("Soirée terminée. Lecture seule.");
 
-        if (!string.IsNullOrEmpty(evt.WinnerMovieId))
+        if (evt.HasWinner)
             throw new ConflictException(wheelLockedError);
 
         var movie = await movieRepository.GetByIdAndEventIdAsync(movieId, evt.Id, ct);

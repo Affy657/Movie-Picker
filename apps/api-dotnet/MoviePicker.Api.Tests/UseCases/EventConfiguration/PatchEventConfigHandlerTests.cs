@@ -6,6 +6,7 @@ using MoviePicker.Api.Application.UseCases.EventConfiguration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
+using MoviePicker.Api.Tests.Builders;
 
 namespace MoviePicker.Api.Tests.UseCases.EventConfiguration;
 
@@ -75,7 +76,7 @@ public sealed class PatchEventConfigHandlerTests
             Time = evt.Time,
             Slug = evt.Slug,
             HostToken = evt.HostToken,
-            WinnerMovieId = "m1",
+            Winners = TestWinners.Won("m1"),
             CreatedAt = evt.CreatedAt,
             UpdatedAt = evt.UpdatedAt
         };

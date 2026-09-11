@@ -38,15 +38,13 @@ public sealed class ResetWheelHandler : IResetWheelHandler
         if (evt.IsFinished(DateTimeOffset.UtcNow))
             throw new ConflictException("Soirée terminée. Lecture seule.");
 
-        if (evt.WinnerMovieId is null)
+        if (!evt.HasWinner)
             return new ResetWheelResponse { Message = "Aucun tirage à annuler." };
 
         var now = DateTimeOffset.UtcNow;
         var updated = evt with
         {
-            WinnerMovieId = null,
-            WinnerPickMethod = null,
-            WinnerPickedAt = null,
+            Winners = [],
             UpdatedAt = now
         };
         await _eventRepository.UpdateAsync(updated, ct);

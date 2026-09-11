@@ -5,6 +5,7 @@ using MoviePicker.Api.Application.UseCases.RemoveParticipant;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
+using MoviePicker.Api.Tests.Builders;
 
 namespace MoviePicker.Api.Tests.UseCases.RemoveParticipant;
 
@@ -218,7 +219,7 @@ public sealed class RemoveParticipantHandlerTests
     [Fact]
     public async Task HandleAsync_WheelLaunched_ButNotClosed_ThrowsConflict()
     {
-        var withWinner = ActiveEvent() with { WinnerMovieId = "movie-winner" };
+        var withWinner = ActiveEvent() with { Winners = TestWinners.Won("movie-winner") };
         SetupEvent(withWinner);
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
 

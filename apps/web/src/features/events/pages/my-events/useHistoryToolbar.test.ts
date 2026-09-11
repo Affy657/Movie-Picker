@@ -28,7 +28,7 @@ const EVENTS: MyEventSummary[] = [
     isCreator: true,
     movieCount: 5,
     participantCount: 2,
-    winnerMovieTitle: 'Matrix',
+    winnerMovies: [{ title: 'Matrix' }],
   }),
   event({
     id: 'b',
@@ -37,7 +37,7 @@ const EVENTS: MyEventSummary[] = [
     isCreator: false,
     movieCount: 1,
     participantCount: 8,
-    winnerMovieTitle: null,
+    winnerMovies: [],
   }),
   event({
     id: 'c',
@@ -46,7 +46,7 @@ const EVENTS: MyEventSummary[] = [
     isCreator: true,
     movieCount: 3,
     participantCount: 5,
-    winnerMovieTitle: 'Inception',
+    winnerMovies: [{ title: 'Inception' }],
   }),
 ];
 

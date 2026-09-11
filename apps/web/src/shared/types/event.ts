@@ -6,6 +6,8 @@ export type WheelMode = 'strictRandom' | 'weightedByVotes';
 
 export type WinnerPickMethod = 'wheel' | 'manual';
 
+export type EventRecurrence = 'weekly' | 'biweekly' | 'monthly';
+
 export interface EventConfigData {
   theme: string | null;
   maxProposalsPerParticipant: number | null;
@@ -16,6 +18,23 @@ export interface EventConfigData {
   richSharePreview?: boolean;
 
   allowSeries?: boolean;
+
+  recurrence?: EventRecurrence | null;
+
+  hasNextOccurrence?: boolean;
+
+  winnerCount: number;
+
+  winnerCountMax: number;
+
+  drawnWinnerCount: number;
+}
+
+export interface EventWinnerData {
+  movieId: string;
+  pickMethod: WinnerPickMethod;
+  pickedAt: string;
+  movie?: MovieData | null;
 }
 
 export interface EventParticipantSummary {
@@ -36,10 +55,7 @@ export interface EventData {
   isFinished?: boolean;
   lifecycle?: MyEventLifecycle;
   closedAt?: string | null;
-  winnerMovie?: MovieData | null;
-
-  winnerPickMethod?: WinnerPickMethod | null;
-  winnerPickedAt?: string | null;
+  winners?: EventWinnerData[];
 
   config?: EventConfigData;
 

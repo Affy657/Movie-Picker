@@ -141,6 +141,20 @@ public sealed class EnvLoaderTests : IDisposable
     }
 
     [Fact]
+    public void LoadFromEnvFileIfExists_InTestContext_IgnoresEnvFile()
+    {
+        var dir = NewTempDir();
+        var key = UniqueKey();
+        File.WriteAllText(Path.Combine(dir, ".env"), $"{key}=from-file\n");
+        Environment.SetEnvironmentVariable(EnvLoader.TestContextVariable, "1");
+        _keysToClear.Add(EnvLoader.TestContextVariable);
+
+        EnvLoader.LoadFromEnvFileIfExists(dir);
+
+        Assert.Null(Environment.GetEnvironmentVariable(key));
+    }
+
+    [Fact]
     public void LoadFromEnvFileIfExists_NoEnvFile_DoesNothing()
     {
         var dir = NewTempDir();

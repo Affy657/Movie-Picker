@@ -4,6 +4,15 @@ import { useTablistKeyboard } from '@/shared/hooks/useTablistKeyboard';
 import { useRailScroll } from '@/shared/hooks/useRailScroll';
 import styles from './Tabs.module.css';
 
+type ScrollFade = 'both' | 'start' | 'end' | undefined;
+
+function scrollFade(canScrollBack: boolean, canScrollForward: boolean): ScrollFade {
+  if (canScrollBack && canScrollForward) return 'both';
+  if (canScrollBack) return 'start';
+  if (canScrollForward) return 'end';
+  return undefined;
+}
+
 export interface TabDef<T extends string> {
   key: T;
   label: string;
@@ -57,14 +66,7 @@ export function Tabs<T extends string>({
     list.scrollTo({ left: list.scrollLeft + delta, behavior: 'instant' });
   }, [active]);
 
-  const fade =
-    canScrollBack && canScrollForward
-      ? 'both'
-      : canScrollBack
-        ? 'start'
-        : canScrollForward
-          ? 'end'
-          : undefined;
+  const fade = scrollFade(canScrollBack, canScrollForward);
 
   return (
     <div className={clsx(styles.listWrap, isPill && styles.pillWrap, className)}>
@@ -72,6 +74,7 @@ export function Tabs<T extends string>({
         ref={listRef}
         className={clsx(styles.list, isPill && styles.pillList)}
         role="tablist"
+        tabIndex={-1}
         aria-label={ariaLabel}
         onKeyDown={onKeyDown}
         data-fade={fade}

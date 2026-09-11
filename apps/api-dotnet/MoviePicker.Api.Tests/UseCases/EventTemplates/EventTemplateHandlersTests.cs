@@ -40,7 +40,8 @@ internal static class TemplateFixtures
         int? maxParticipants = 8,
         WheelMode? wheelMode = WheelMode.WeightedByVotes,
         bool? allowSeries = false,
-        bool? richSharePreview = true) =>
+        bool? richSharePreview = true,
+        int? winnerCount = null) =>
         new()
         {
             Name = name,
@@ -49,7 +50,8 @@ internal static class TemplateFixtures
             MaxParticipants = maxParticipants,
             WheelMode = wheelMode,
             AllowSeries = allowSeries,
-            RichSharePreview = richSharePreview
+            RichSharePreview = richSharePreview,
+            WinnerCount = winnerCount
         };
 }
 
@@ -238,6 +240,37 @@ public sealed class CreateEventTemplateHandlerTests
 
         Assert.Null(created.MaxProposalsPerParticipant);
         Assert.Null(created.MaxParticipants);
+    }
+
+    [Fact]
+    public async Task HandleAsync_KeepsTheWinnerCount()
+    {
+        HasUser(new User { Id = "u1" });
+
+        var created = await _sut.HandleAsync("u1", TemplateFixtures.Request(winnerCount: 3));
+
+        Assert.Equal(3, created.WinnerCount);
+    }
+
+    [Fact]
+    public async Task HandleAsync_MissingWinnerCount_FallsBackToOne()
+    {
+        HasUser(new User { Id = "u1" });
+
+        var created = await _sut.HandleAsync("u1", TemplateFixtures.Request());
+
+        Assert.Equal(EventConfig.DefaultWinnerCount, created.WinnerCount);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(EventConfig.WinnerCountCap + 1)]
+    public async Task HandleAsync_WinnerCountOutOfRange_Throws(int value)
+    {
+        HasUser(new User { Id = "u1" });
+
+        await Assert.ThrowsAsync<BadRequestException>(
+            () => _sut.HandleAsync("u1", TemplateFixtures.Request(winnerCount: value)));
     }
 
     [Theory]

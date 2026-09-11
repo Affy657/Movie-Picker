@@ -7,6 +7,7 @@ import {
   MousePointerClick,
   PackageSearch,
   Ruler,
+  Workflow,
 } from 'lucide-react';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { TECH_METRICS } from './generated/techMetrics';
@@ -309,8 +310,6 @@ export function LayersDiagram() {
       <text x="662" y="170" className={styles.svgLabel} fill={TEXT}>
         {t('tech.diagram.inwardLine3')}
       </text>
-      <DotNetLogo x={662} y={236} size={18} />
-      <MongoLogo x={690} y={236} size={18} />
       <text x="662" y="204" className={styles.svgSub} fill={META}>
         {t('tech.diagram.inwardNote1')}
       </text>
@@ -478,122 +477,213 @@ export function TestPyramidDiagram() {
   );
 }
 
-const CI_LEFT_JOBS = [
-  { key: 'ciGitleaks', Logo: KeyRound },
-  { key: 'ciLint', Logo: Ruler },
-  { key: 'ciAudit', Logo: PackageSearch },
-  { key: 'ciTest', Logo: FlaskConical },
-  { key: 'ciTestMongo', Logo: MongoLogo },
-  { key: 'ciLighthouse', Logo: Gauge },
-  { key: 'ciE2e', Logo: MousePointerClick },
+const CI_BANDS = [
+  {
+    key: 'ciBandImage',
+    jobs: [
+      { key: 'ciLintApi', Logo: Ruler },
+      { key: 'ciTestMongo', Logo: MongoLogo },
+      { key: 'ciTestApi', Logo: FlaskConical },
+    ],
+  },
+  {
+    key: 'ciBandBoth',
+    jobs: [
+      { key: 'ciGitleaks', Logo: KeyRound },
+      { key: 'ciLintWorkflows', Logo: Workflow },
+      { key: 'ciAudit', Logo: PackageSearch },
+    ],
+  },
+  {
+    key: 'ciBandFront',
+    jobs: [
+      { key: 'ciTestWeb', Logo: FlaskConical },
+      { key: 'ciLintWeb', Logo: Ruler },
+      { key: 'ciLighthouse', Logo: Gauge },
+    ],
+  },
+  {
+    key: 'ciBandDeploys',
+    jobs: [
+      { key: 'ciE2e', Logo: MousePointerClick },
+      { key: 'ciE2eMongo', Logo: MongoLogo },
+    ],
+  },
 ] as const;
+
+const ciRowTop = (band: number, row: number) => 28 + band * 132 + row * 36;
+const ciRowCenter = (band: number, row: number) => ciRowTop(band, row) + 15;
+const ciBandMid = (band: number, rows: number) =>
+  (ciRowCenter(band, 0) + ciRowCenter(band, rows - 1)) / 2;
+
+const CI_FILTERED_JOBS = [
+  ciRowCenter(0, 0),
+  ciRowCenter(0, 1),
+  ciRowCenter(0, 2),
+  ciRowCenter(1, 2),
+  ciRowCenter(2, 0),
+  ciRowCenter(2, 1),
+  ciRowCenter(2, 2),
+  ciRowCenter(3, 0),
+  ciRowCenter(3, 1),
+];
 
 export function CiGraphDiagram() {
   const { t } = useTranslation();
   return (
-    <svg viewBox="0 0 880 330" role="img" aria-labelledby="tech-ci-title">
+    <svg viewBox="0 0 880 510" role="img" aria-labelledby="tech-ci-title">
       <title id="tech-ci-title">{t('tech.diagram.ciTitle')}</title>
       <defs>
         <ArrowMarker id="tech-arrow-ci" fill={BORDER} />
       </defs>
 
-      <rect x="10" y="140" width="112" height="46" rx="10" fill={SURFACE} stroke={BORDER} />
-      <GitHubLogo x={22} y={155} size={16} />
-      <text x="46" y="168" className={styles.svgLabel} fill={TEXT}>
+      <rect
+        x="10"
+        y="60"
+        width="112"
+        height="42"
+        rx="10"
+        fill={SURFACE}
+        stroke={BORDER}
+        strokeDasharray="4 3"
+      />
+      <text x="66" y="86" textAnchor="middle" className={styles.svgLabel} fill={META}>
+        {t('tech.diagram.ciTrigger')}
+      </text>
+
+      <rect x="10" y="230" width="112" height="42" rx="10" fill={SURFACE} stroke={BORDER} />
+      <GitHubLogo x={22} y={243} size={16} />
+      <text x="46" y="256" className={styles.svgLabel} fill={TEXT}>
         {t('tech.diagram.ciChanges')}
       </text>
 
       <g stroke={BORDER} strokeWidth="1.2" fill="none" markerEnd="url(#tech-arrow-ci)">
-        {CI_LEFT_JOBS.map((job, index) => (
+        <path d="M 66 104 L 66 224" />
+        <path d={`M 124 75 C 160 75, 160 ${ciRowCenter(1, 0)}, 196 ${ciRowCenter(1, 0)}`} />
+        <path d={`M 124 87 C 160 87, 160 ${ciRowCenter(1, 1)}, 196 ${ciRowCenter(1, 1)}`} />
+        {CI_FILTERED_JOBS.map((center, index) => (
           <path
-            key={job.key}
-            d={`M 124 ${156 + index * 2.5} C 160 ${156 + index * 2.5}, 160 ${30 + index * 44}, 196 ${30 + index * 44}`}
+            key={center}
+            d={`M 124 ${235 + index * 4} C 160 ${235 + index * 4}, 160 ${center}, 196 ${center}`}
           />
         ))}
       </g>
 
-      {CI_LEFT_JOBS.map((job, index) => (
-        <g key={job.key}>
-          <rect
-            x="200"
-            y={12 + index * 44}
-            width="150"
-            height="36"
-            rx="9"
-            fill={SURFACE}
-            stroke={BORDER}
-          />
-          <job.Logo x={208} y={22 + index * 44} size={16} color={META} />
-          <text x="230" y={35 + index * 44} className={styles.svgLabel} fill={MUTED}>
-            {t(`tech.diagram.${job.key}` as 'tech.diagram.ciGitleaks')}
+      {CI_BANDS.map((band, bandIndex) => (
+        <g key={band.key}>
+          <text x="200" y={ciRowTop(bandIndex, 0) - 11} className={styles.svgSub} fill={META}>
+            {t(`tech.diagram.${band.key}` as 'tech.diagram.ciBandImage')}
           </text>
+          {band.jobs.map((job, row) => (
+            <g key={job.key}>
+              <rect
+                x="200"
+                y={ciRowTop(bandIndex, row)}
+                width="150"
+                height="30"
+                rx="8"
+                fill={SURFACE}
+                stroke={BORDER}
+              />
+              <job.Logo x={208} y={ciRowTop(bandIndex, row) + 7} size={16} color={META} />
+              <text
+                x="230"
+                y={ciRowCenter(bandIndex, row) + 5}
+                className={styles.svgLabel}
+                fill={MUTED}
+              >
+                {t(`tech.diagram.${job.key}` as 'tech.diagram.ciGitleaks')}
+              </text>
+            </g>
+          ))}
         </g>
       ))}
 
-      <g stroke={BORDER} strokeWidth="1.2" fill="none" markerEnd="url(#tech-arrow-ci)">
-        <path d="M 352 30 C 400 30, 400 150, 442 150" />
-        <path d="M 352 163 C 400 163, 400 158, 442 158" />
-        <path d="M 352 296 C 400 296, 400 168, 442 168" />
+      <g stroke={BORDER} strokeWidth="1.2" fill="none">
+        {CI_BANDS.map((band, bandIndex) => (
+          <path
+            key={band.key}
+            d={`M 358 ${ciRowCenter(bandIndex, 0)} L 358 ${ciRowCenter(bandIndex, band.jobs.length - 1)}`}
+          />
+        ))}
+        {CI_BANDS.flatMap((band, bandIndex) =>
+          band.jobs.map((job, row) => (
+            <path
+              key={job.key}
+              d={`M 350 ${ciRowCenter(bandIndex, row)} L 358 ${ciRowCenter(bandIndex, row)}`}
+            />
+          ))
+        )}
       </g>
 
-      <rect x="446" y="62" width="112" height="46" rx="10" fill={SURFACE} stroke={BORDER} />
-      <Container x={460} y={77} size={16} color={META} />
-      <text x="484" y="90" className={styles.svgLabel} fill={TEXT}>
+      <g stroke={BORDER} strokeWidth="1.2" fill="none" markerEnd="url(#tech-arrow-ci)">
+        <path d={`M 358 ${ciBandMid(0, 3)} C 400 ${ciBandMid(0, 3)}, 400 62, 442 62`} />
+        <path d={`M 358 ${ciBandMid(1, 3)} C 400 ${ciBandMid(1, 3)}, 400 78, 442 78`} />
+        <path d={`M 358 ${ciBandMid(1, 3)} C 480 ${ciBandMid(1, 3)}, 520 356, 632 356`} />
+        <path d={`M 358 ${ciBandMid(2, 3)} C 480 ${ciBandMid(2, 3)}, 520 366, 632 366`} />
+        <path d={`M 358 ${ciBandMid(3, 2)} C 400 ${ciBandMid(3, 2)}, 410 240, 632 202`} />
+        <path d={`M 358 ${ciBandMid(3, 2)} C 480 ${ciBandMid(3, 2)}, 520 374, 632 374`} />
+        <path d={`M 352 ${ciRowCenter(0, 2)} C 400 ${ciRowCenter(0, 2)}, 400 138, 442 138`} />
+        <path d={`M 352 ${ciRowCenter(2, 0)} C 400 ${ciRowCenter(2, 0)}, 400 154, 442 154`} />
+      </g>
+
+      <rect x="446" y="48" width="112" height="44" rx="10" fill={SURFACE} stroke={BORDER} />
+      <Container x={460} y={62} size={16} color={META} />
+      <text x="484" y="75" className={styles.svgLabel} fill={TEXT}>
         {t('tech.diagram.ciDocker')}
       </text>
 
-      <rect x="446" y="140" width="112" height="46" rx="10" fill={SURFACE} stroke={BORDER} />
-      <SonarLogo x={460} y={155} size={16} />
-      <text x="484" y="168" className={styles.svgLabel} fill={TEXT}>
+      <rect x="446" y="124" width="112" height="44" rx="10" fill={SURFACE} stroke={BORDER} />
+      <SonarLogo x={460} y={138} size={16} />
+      <text x="484" y="151" className={styles.svgLabel} fill={TEXT}>
         {t('tech.diagram.ciSonar')}
       </text>
 
       <g stroke={BORDER} strokeWidth="1.2" fill="none" markerEnd="url(#tech-arrow-ci)">
-        <path d="M 352 118 C 400 118, 400 85, 442 85" />
-        <path d="M 560 85 C 596 85, 596 100, 632 100" />
-        <path d="M 560 156 C 596 156, 596 112, 632 112" />
-        <path d="M 560 170 C 596 170, 596 218, 632 218" />
+        <path d="M 560 70 C 596 70, 596 180, 632 180" />
+        <path d="M 560 142 C 596 142, 596 190, 632 190" />
+        <path d="M 560 152 C 596 152, 596 348, 632 348" />
       </g>
 
       <rect
         x="636"
-        y="86"
-        width="130"
+        y="170"
+        width="136"
         height="44"
         rx="10"
         fill={PRIMARY_SOFT}
         stroke={PRIMARY}
         strokeWidth="1.5"
       />
-      <GoogleCloudLogo x={650} y={100} size={16} />
-      <text x="674" y="113" className={styles.svgLabel} fill={TEXT}>
+      <GoogleCloudLogo x={650} y={184} size={16} />
+      <text x="674" y="197" className={styles.svgLabel} fill={TEXT}>
         {t('tech.diagram.ciDeployApi')}
       </text>
 
       <rect
         x="636"
-        y="196"
-        width="130"
+        y="338"
+        width="136"
         height="44"
         rx="10"
         fill={PRIMARY_SOFT}
         stroke={PRIMARY}
         strokeWidth="1.5"
       />
-      <AwsLogo x={650} y={210} size={16} />
-      <text x="674" y="223" className={styles.svgLabel} fill={TEXT}>
+      <AwsLogo x={650} y={352} size={16} />
+      <text x="674" y="365" className={styles.svgLabel} fill={TEXT}>
         {t('tech.diagram.ciDeployFront')}
       </text>
 
       <g stroke={BORDER} strokeWidth="1.2" fill="none" markerEnd="url(#tech-arrow-ci)">
-        <path d="M 768 108 C 788 108, 788 150, 800 150" />
-        <path d="M 768 218 C 788 218, 788 176, 800 176" />
+        <path d="M 774 192 C 790 192, 790 268, 800 268" />
+        <path d="M 774 360 C 790 360, 790 284, 800 284" />
       </g>
-      <rect x="804" y="140" width="68" height="46" rx="10" fill={SUCCESS_SOFT} stroke={SUCCESS} />
-      <text x="838" y="162" textAnchor="middle" className={styles.svgSub} fill={SUCCESS}>
+      <rect x="804" y="254" width="68" height="44" rx="10" fill={SUCCESS_SOFT} stroke={SUCCESS} />
+      <text x="838" y="275" textAnchor="middle" className={styles.svgSub} fill={SUCCESS}>
         {t('tech.diagram.ciGuard1')}
       </text>
-      <text x="838" y="176" textAnchor="middle" className={styles.svgSub} fill={SUCCESS}>
+      <text x="838" y="289" textAnchor="middle" className={styles.svgSub} fill={SUCCESS}>
         {t('tech.diagram.ciGuard2')}
       </text>
     </svg>
@@ -1320,8 +1410,7 @@ export function UnitOfWorkDiagram() {
         {t('tech.diagram.unitOfWorkRollbackSub')}
       </text>
 
-      <MongoLogo x={10} y={226} size={16} />
-      <text x="34" y="238" className={styles.svgSub} fill={META}>
+      <text x="10" y="238" className={styles.svgSub} fill={META}>
         {t('tech.diagram.unitOfWorkNote')}
       </text>
     </svg>
@@ -1348,7 +1437,7 @@ export function DataModelDiagram() {
   const { t } = useTranslation();
 
   return (
-    <svg viewBox="0 0 880 410" role="img" aria-labelledby="tech-datamodel-title">
+    <svg viewBox="0 0 880 392" role="img" aria-labelledby="tech-datamodel-title">
       <title id="tech-datamodel-title">{t('tech.diagram.dataModelTitle')}</title>
       <defs>
         <ArrowMarker id="tech-arrow-datamodel" fill={BORDER} />
@@ -1399,15 +1488,6 @@ export function DataModelDiagram() {
           ))}
         </g>
       ))}
-
-      <MongoLogo x={10} y={378} size={16} />
-      <text x="34" y="390" className={styles.svgSub} fill={META}>
-        {t('tech.diagram.dataModelNote', {
-          collections: TECH_METRICS.mongoCollections,
-          indexes: TECH_METRICS.mongoIndexes,
-          ttl: TECH_METRICS.ttlIndexes,
-        })}
-      </text>
     </svg>
   );
 }
@@ -1512,19 +1592,19 @@ const INFRA_NODES = [
   { key: 'Dns', x: 16, y: 34, w: 172, h: 74, Logo: Globe, hot: false },
   { key: 'Cdn', x: 16, y: 136, w: 172, h: 74, Logo: AwsLogo, hot: false },
   { key: 'Bucket', x: 16, y: 238, w: 172, h: 74, Logo: AwsLogo, hot: false },
-  { key: 'Secrets', x: 360, y: 34, w: 200, h: 74, Logo: GoogleCloudLogo, hot: false },
-  { key: 'Run', x: 360, y: 136, w: 200, h: 74, Logo: GoogleCloudLogo, hot: true },
-  { key: 'Registry', x: 360, y: 238, w: 200, h: 74, Logo: GoogleCloudLogo, hot: false },
-  { key: 'Scheduler', x: 604, y: 34, w: 180, h: 74, Logo: GoogleCloudLogo, hot: false },
-  { key: 'Atlas', x: 604, y: 136, w: 180, h: 74, Logo: MongoLogo, hot: false },
-  { key: 'Sentry', x: 604, y: 238, w: 180, h: 74, Logo: SentryLogo, hot: false },
+  { key: 'Secrets', x: 224, y: 34, w: 196, h: 74, Logo: GoogleCloudLogo, hot: false },
+  { key: 'Run', x: 224, y: 136, w: 196, h: 74, Logo: GoogleCloudLogo, hot: true },
+  { key: 'Registry', x: 448, y: 34, w: 196, h: 74, Logo: GoogleCloudLogo, hot: false },
+  { key: 'Scheduler', x: 448, y: 136, w: 196, h: 74, Logo: GoogleCloudLogo, hot: false },
+  { key: 'Atlas', x: 664, y: 136, w: 200, h: 74, Logo: MongoLogo, hot: false },
+  { key: 'Sentry', x: 664, y: 238, w: 200, h: 74, Logo: SentryLogo, hot: false },
 ] as const;
 
 export function InfraDiagram() {
   const { t } = useTranslation();
 
   return (
-    <svg viewBox="0 0 880 396" role="img" aria-labelledby="tech-infra-title">
+    <svg viewBox="0 0 880 400" role="img" aria-labelledby="tech-infra-title">
       <title id="tech-infra-title">{t('tech.diagram.infraTitle')}</title>
       <defs>
         <ArrowMarker id="tech-arrow-infra" fill={META} />
@@ -1545,29 +1625,36 @@ export function InfraDiagram() {
       </text>
 
       <rect
-        x="352"
-        y="16"
-        width="216"
-        height="314"
+        x="216"
+        y="8"
+        width="436"
+        height="232"
         rx="12"
         fill="none"
         stroke={BORDER}
         strokeDasharray="4 4"
       />
-      <text x="360" y="326" className={styles.svgSub} fill={META}>
+      <text x="224" y="234" className={styles.svgSub} fill={META}>
         {t('tech.diagram.infraZoneGcp')}
       </text>
 
       <g stroke={META} strokeWidth="1.3" fill="none" markerEnd="url(#tech-arrow-infra)">
         <path d="M 102 108 L 102 130" />
         <path d="M 102 238 L 102 216" />
-        <path d="M 188 173 L 354 173" />
-        <path d="M 460 238 L 460 216" />
-        <path d="M 460 108 L 460 130" />
-        <path d="M 604 71 C 582 71, 582 156, 560 156" />
-        <path d="M 560 173 L 598 173" />
-        <path d="M 560 190 C 586 190, 578 275, 598 275" />
+        <path d="M 322 108 L 322 130" />
+        <path d="M 490 108 C 490 122, 420 122, 386 130" />
+        <path d="M 448 173 L 432 173" />
+        <path d="M 412 210 C 470 226, 560 232, 700 216" />
+        <path d="M 406 210 C 436 258, 545 280, 658 272" />
       </g>
+
+      <path
+        d="M 188 173 L 220 173"
+        stroke={META}
+        strokeWidth="1.3"
+        strokeDasharray="4 4"
+        fill="none"
+      />
 
       {INFRA_NODES.map((node) => (
         <g key={node.key}>
@@ -1593,11 +1680,14 @@ export function InfraDiagram() {
         </g>
       ))}
 
-      <text x="10" y="360" className={styles.svgSub} fill={WARN}>
+      <text x="10" y="348" className={styles.svgSub} fill={WARN}>
         {t('tech.diagram.infraGap')}
       </text>
-      <text x="10" y="380" className={styles.svgSub} fill={META}>
+      <text x="10" y="370" className={styles.svgSub} fill={META}>
         {t('tech.diagram.infraNote')}
+      </text>
+      <text x="10" y="388" className={styles.svgSub} fill={META}>
+        {t('tech.diagram.infraNoteOrigin')}
       </text>
     </svg>
   );

@@ -78,7 +78,10 @@ public sealed class MongoIndexInitializer : IHostedService
         var creator = new CreateIndexModel<EventDocument>(
             Builders<EventDocument>.IndexKeys.Ascending(x => x.CreatorUserId),
             new CreateIndexOptions { Name = "events_creatorUserId", Sparse = true });
-        await col.Indexes.CreateManyAsync(new[] { slug, creator }, ct);
+        var recurrence = new CreateIndexModel<EventDocument>(
+            Builders<EventDocument>.IndexKeys.Ascending(x => x.Recurrence).Ascending(x => x.CreatorUserId),
+            new CreateIndexOptions { Name = "events_recurrence_creatorUserId", Sparse = true });
+        await col.Indexes.CreateManyAsync(new[] { slug, creator, recurrence }, ct);
     }
 
     private async Task EnsureMovieIndexesAsync(CancellationToken ct)

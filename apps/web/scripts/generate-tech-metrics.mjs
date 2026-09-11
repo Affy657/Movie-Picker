@@ -159,6 +159,14 @@ function computeMetrics(previous) {
   const secretsLine = workflow.match(/SECRETS="[^"]+"/)?.[0] ?? '';
   const deploySecrets = (secretsLine.match(/:latest/g) ?? []).length;
   const ciJobs = (jobsSection.match(/^ {2}[a-z][a-z0-9-]*:$/gm) ?? []).length;
+  const apiCoverageLines = Number(
+    workflow.match(/Gate couverture back \(lignes >= (\d+)%/)?.[1] ?? 0
+  );
+  const mongoCoverageLines = Number(
+    readText(join(repoRoot, 'scripts/check-mongo-coverage.mjs')).match(
+      /MONGO_COVERAGE_MIN_SEQUENCE \?\? (\d+)/
+    )?.[1] ?? 0
+  );
 
   const architectureScriptLines = countLines(
     [join(repoRoot, 'scripts/check-architecture.mjs')].filter((file) => existsSync(file))
@@ -200,6 +208,10 @@ function computeMetrics(previous) {
   const mongoIndexes = (indexInitializer.match(/new CreateIndexModel</g) ?? []).length;
   const ttlIndexes = (indexInitializer.match(/ExpireAfter =/g) ?? []).length;
   const uniqueIndexes = (indexInitializer.match(/Unique = true/g) ?? []).length;
+  const inventoriedIndexes = countMatches(
+    join(repoRoot, 'apps/api-dotnet/MoviePicker.Api.IntegrationTests/MongoIndexInventoryTests.cs'),
+    /new\("/g
+  );
 
   const posterCacheTtlDays = Number(
     readText(
@@ -234,6 +246,10 @@ function computeMetrics(previous) {
     join(repoRoot, 'apps/web/src/shared/api/apiContract.test.ts'),
     /^\s+ServedBy</gm
   );
+  const contractRoutesChecked = countMatches(
+    join(repoRoot, 'apps/web/src/shared/api/apiContract.test.ts'),
+    /^ {2}'\/api\/v1\//gm
+  );
 
   const measured = {
     collections: collections.size,
@@ -250,11 +266,15 @@ function computeMetrics(previous) {
     lazyRoutes,
     contractResponses,
     contractCheckedTypes,
+    contractRoutesChecked,
     mswTestFiles,
     deploySecrets,
     lighthouseWatchlistPerformance,
     rateLimitPolicies,
     assistantTools,
+    apiCoverageLines,
+    mongoCoverageLines,
+    inventoriedIndexes,
   };
   for (const [name, value] of Object.entries(measured)) {
     if (value === 0) throw new Error(`mesure vide : ${name}`);
@@ -307,11 +327,15 @@ function computeMetrics(previous) {
     lazyRoutes,
     contractResponses,
     contractCheckedTypes,
+    contractRoutesChecked,
     mswTestFiles,
     deploySecrets,
     lighthouseWatchlistPerformance,
     rateLimitPolicies,
     assistantTools,
+    apiCoverageLines,
+    mongoCoverageLines,
+    inventoriedIndexes,
   };
 }
 

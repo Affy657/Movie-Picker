@@ -61,8 +61,21 @@ public static class EventTemplatePolicy
             "maxParticipants"),
         WheelMode = request.WheelMode ?? WheelMode.WeightedByVotes,
         RichSharePreview = request.RichSharePreview ?? true,
-        AllowSeries = request.AllowSeries ?? false
+        AllowSeries = request.AllowSeries ?? false,
+        WinnerCount = ResolveWinnerCount(request.WinnerCount)
     };
+
+    private static int ResolveWinnerCount(int? value)
+    {
+        if (!value.HasValue)
+            return EventConfig.DefaultWinnerCount;
+
+        if (value.Value < EventConfig.DefaultWinnerCount || value.Value > EventConfig.WinnerCountCap)
+            throw new BadRequestException(
+                $"winnerCount doit être entre {EventConfig.DefaultWinnerCount} et {EventConfig.WinnerCountCap}.");
+
+        return value.Value;
+    }
 
     private static int? ResolveLimit(int? value, int cap, string field)
     {

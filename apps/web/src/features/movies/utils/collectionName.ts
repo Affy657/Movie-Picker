@@ -1,4 +1,8 @@
-const REDUNDANT_SUFFIXES = [/\s*[-–—]\s*saga$/i, /(?:\s+|\s*[-–—]\s*)collection$/i];
+const SEPARATOR = String.raw`[\s\-–—]`;
+const REDUNDANT_SUFFIXES = [
+  new RegExp(`${SEPARATOR}*[-–—]${SEPARATOR}*saga$`, 'i'),
+  new RegExp(`${SEPARATOR}+collection$`, 'i'),
+];
 
 export function collectionDisplayName(name: string): string {
   let trimmed = name.trim();

@@ -15,6 +15,7 @@ function makeTemplate(overrides: Partial<EventTemplateData> = {}): EventTemplate
     wheelMode: 'weightedByVotes',
     richSharePreview: true,
     allowSeries: false,
+    winnerCount: 1,
     ...overrides,
   };
 }

@@ -32,6 +32,7 @@ import {
   DEFAULT_EVENT_CONFIG,
   MAX_EVENT_PARTICIPANTS,
   MAX_PROPOSALS_PER_PARTICIPANT,
+  MAX_WINNERS_PER_EVENT,
 } from '@/features/events/types';
 import type { EventConfigData, EventTemplateData, WheelMode } from '@/features/events/types';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -60,6 +61,17 @@ function getDefaultTime(): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
+type ApplicableConfig = Pick<
+  EventConfigData,
+  | 'theme'
+  | 'maxProposalsPerParticipant'
+  | 'maxParticipants'
+  | 'wheelMode'
+  | 'richSharePreview'
+  | 'allowSeries'
+  | 'winnerCount'
+>;
+
 export default function CreateEvent() {
   const { t } = useTranslation();
   const { locale } = useLocale();
@@ -86,6 +98,7 @@ export default function CreateEvent() {
   const [themeText, setThemeText] = useState('');
   const [maxParticipants, setMaxParticipants] = useState(String(MAX_EVENT_PARTICIPANTS));
   const [maxProposals, setMaxProposals] = useState(String(MAX_PROPOSALS_PER_PARTICIPANT));
+  const [winnerCount, setWinnerCount] = useState(String(DEFAULT_EVENT_CONFIG.winnerCount));
   const [wheelMode, setWheelMode] = useState<WheelMode>(DEFAULT_EVENT_CONFIG.wheelMode);
   const [allowSeries, setAllowSeries] = useState(DEFAULT_EVENT_CONFIG.allowSeries ?? false);
   const [richSharePreview, setRichSharePreview] = useState(
@@ -100,7 +113,7 @@ export default function CreateEvent() {
       onSaved: (template) => setAppliedTemplateId(template.id),
     });
 
-  const applyConfig = useCallback((config: EventConfigData) => {
+  const applyConfig = useCallback((config: ApplicableConfig) => {
     const parsed = parseTheme(config.theme);
     setThemeEmoji(parsed.emoji);
     setThemeText(parsed.text);
@@ -111,6 +124,7 @@ export default function CreateEvent() {
     setWheelMode(config.wheelMode);
     setRichSharePreview(config.richSharePreview ?? true);
     setAllowSeries(config.allowSeries ?? false);
+    setWinnerCount(String(config.winnerCount));
   }, []);
 
   const applyTemplate = useCallback(
@@ -147,6 +161,7 @@ export default function CreateEvent() {
     wheelMode,
     richSharePreview,
     allowSeries,
+    winnerCount,
   });
   const storedAppliedTemplate =
     templates.find((template) => template.id === appliedTemplateId) ?? null;
@@ -167,6 +182,7 @@ export default function CreateEvent() {
     const themeTrimmed = [themeEmoji, themeText.trim()].filter(Boolean).join(' ');
     const maxPartParsed = maxParticipants.trim() === '' ? 0 : Number(maxParticipants);
     const maxPropParsed = maxProposals.trim() === '' ? 0 : Number(maxProposals);
+    const winnerCountParsed = Number(winnerCount);
 
     try {
       await patchEventConfig(res.slug, null, {
@@ -176,6 +192,12 @@ export default function CreateEvent() {
         wheelMode,
         richSharePreview,
         allowSeries,
+        winnerCount:
+          Number.isInteger(winnerCountParsed) &&
+          winnerCountParsed >= 1 &&
+          winnerCountParsed <= MAX_WINNERS_PER_EVENT
+            ? winnerCountParsed
+            : DEFAULT_EVENT_CONFIG.winnerCount,
       });
     } catch {}
 
@@ -191,6 +213,7 @@ export default function CreateEvent() {
     themeText,
     maxParticipants,
     maxProposals,
+    winnerCount,
     wheelMode,
     richSharePreview,
     allowSeries,
@@ -367,6 +390,22 @@ export default function CreateEvent() {
                     max={MAX_EVENT_PARTICIPANTS}
                   />
                 </div>
+              </div>
+
+              <div className={styles.field}>
+                <label className="label" htmlFor="create-winner-count">
+                  {t('events.settings.winnerCountLabel')}
+                </label>
+                <NumberInput
+                  id="create-winner-count"
+                  value={winnerCount}
+                  onChange={setWinnerCount}
+                  min={1}
+                  max={MAX_WINNERS_PER_EVENT}
+                />
+                <p className="hint">
+                  {t('events.settings.winnerCountHint', { max: MAX_WINNERS_PER_EVENT })}
+                </p>
               </div>
 
               <div className={styles.field}>
