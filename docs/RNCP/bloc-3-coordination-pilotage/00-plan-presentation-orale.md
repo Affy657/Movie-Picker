@@ -37,7 +37,7 @@ Le règlement énumère 14 éléments que la présentation doit comporter. Chacu
 | 11 | Les comptes rendus sur les évolutions et améliorations | C3.4.1 | 25 |
 | 12 | La planification des points de validation réalisés | C3.4.1 | 24 |
 | 13 | Les indicateurs de satisfaction mis en place | C3.4.1 | 26 |
-| 14 | Une démonstration des fonctionnalités du logiciel | C3.4.2 | 2, puis la démonstration en direct ; la demande de validation en 27 |
+| 14 | Une démonstration des fonctionnalités du logiciel | C3.4.2 | 3, puis la démonstration en direct ; la demande de validation en 27 |
 
 ## 2. Posture et fil rouge
 
@@ -56,7 +56,7 @@ Cette annonce explicite est ce qui protège les 15 minutes de questions. Un jury
 
 | Ch. | Séquence | Durée | Diapos | Compétence |
 |:---:|----------|------:|:------:|:----------:|
-| 0 | Titre, le produit, **démonstration en direct (4:50)**, cadre et sommaire | 6:30 | 3 | **C3.4.2** ÉLIM |
+| 0 | Titre, cadre et sommaire, **démonstration en direct (4:50)** | 6:30 | 3 | **C3.4.2** ÉLIM |
 | 1 | Méthodologie et outils, planning, lots, ressources, RACI, vigilance | 6:20 | 6 | **C3.1** ÉLIM |
 | 2 | Outil de suivi, indicateurs, tableaux de bord, écart | 5:20 | 5 | **C3.2.1** ÉLIM |
 | 3 | Cas d'arbitrage : dérive, options, logigramme, décision | 2:20 | 2 | C3.2.2 |
@@ -79,9 +79,9 @@ Critères visés par la démonstration : le logiciel est utilisable, la démonst
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
 | 1 | Movie Picker, coordonner et piloter un projet de développement logiciel | 0:10 | Titre, Bloc 3 RNCP 39583, Adrien MORAND, 16 septembre 2026 |
-| 2 | Le produit, en production | 0:50 | Quatre chiffres : 10 versions livrées de février à septembre 2026, 17 comptes, 74 % des soirées menées jusqu'au tirage, 100 % de disponibilité. Les 6 temps de la démonstration en vocabulaire client. Précision que la démonstration se déroule sur la version en production, avec deux appareils. Le plan de repli à 4 niveaux est en note de présentateur |
+| 2 | Deux registres, annoncés maintenant | 0:40 | Les deux registres, réel et organisation cible. Sommaire : la démonstration puis les 7 chapitres, chacun avec sa compétence, les 3 éliminatoires signalées |
+| 3 | Démonstration | 0:50 | Un seul mot et le lien du site en production, `web.movie-picker.fr`. Dit à voix haute, rien à l'écran : 10 versions livrées de février à septembre 2026, 17 comptes, 74 % des soirées menées jusqu'au tirage, puis les 6 temps du parcours en une phrase. Deux appareils. Le plan de repli à 4 niveaux est en note de présentateur |
 | | **Démonstration en direct** | 4:50 | Parcours détaillé au point 5 |
-| 3 | Deux registres, annoncés maintenant | 0:40 | Retour au registre jury. Les deux registres, réel et organisation cible. Sommaire des 7 chapitres avec leur compétence, les 3 éliminatoires signalées |
 
 ### Chapitre 1 : planifier l'exécution du projet (6:20, 6 diapos), C3.1 ÉLIMINATOIRE
 

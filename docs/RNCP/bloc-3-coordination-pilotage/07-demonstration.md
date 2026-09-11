@@ -12,7 +12,7 @@
 > - Le vocabulaire employé est adapté à une présentation client.
 > - La démonstration permet d'aboutir à une **validation** du projet.
 
-Alimente la diapositive 2, les 4 minutes 50 de démonstration en direct qui la suivent, et la demande de validation de la diapositive 27. **La démonstration ouvre la présentation** ; la validation la ferme.
+Alimente la diapositive 3, les 4 minutes 50 de démonstration en direct qui la suivent, et la demande de validation de la diapositive 27. **La démonstration ouvre la présentation** ; la validation la ferme.
 
 **Ce chapitre est différent des six autres.** Les autres se préparent en écrivant ; celui-ci se prépare en répétant. Le document ci-dessous n'est pas un livrable à lire au jury : c'est un **script d'exécution**, un glossaire, une liste de préparation et un plan de repli. Sa qualité se mesure au fait que la démonstration se déroule sans hésitation.
 
@@ -187,7 +187,7 @@ Trois temps, sur la diapositive 27, en fin de présentation.
 
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
-| 2 | Le produit, en production | 2.1, 3 |
+| 3 | Démonstration, le lien du site en production | 2.1, 3 |
 | — | **Démonstration en direct (4:50)** | 2.2 |
 | 27 | Bilan, et la validation du périmètre livré, en fin de présentation | 6.2 |
 | A1 | Architecture technique, si une question technique est posée | — |

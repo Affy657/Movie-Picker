@@ -72,7 +72,7 @@ npm run export
 
 | Chapitre | Diapos | Compétence | État |
 |----------|:------:|:----------:|------|
-| 0. Titre, le produit, **démonstration en direct**, cadre et sommaire | 1 à 3 | **C3.4.2** ÉLIM | ✅ |
+| 0. Titre, cadre et sommaire, **démonstration en direct** | 1 à 3 | **C3.4.2** ÉLIM | ✅ |
 | 1. Planifier l'exécution | 4 à 9 | **C3.1** ÉLIM | ✅ |
 | 2. Piloter l'avancement | 10 à 14 | **C3.2.1** ÉLIM | ✅ |
 | 3. Le cas d'arbitrage | 15, 16 | C3.2.2 | ✅ |

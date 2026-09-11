@@ -31,7 +31,7 @@ Le projet a été **exécuté seul**, comme les livrables des Blocs 1, 2 et 4 l'
 | C3.3.1 | Affectation des missions, styles managériaux, outils de communication | | ✅ [`04-management-equipe.md`](04-management-equipe.md) et diapos 17 à 20. Organisation cible à 4 profils **et** dispositif réel de délégation, analyse critique sur la série de 10 jours du 17 au 26/08/2026 |
 | C3.3.2 | Grille d'évaluation des compétences et plan de développement | | ✅ [`05-competences.md`](05-competences.md) et diapos 21 à 23. Grille étalonnée sur la chronologie d'introduction réelle des technologies dans le dépôt |
 | C3.4.1 | Comptes rendus, points de validation planifiés, indicateurs de satisfaction | | ✅ [`06-comptes-rendus.md`](06-comptes-rendus.md) et diapos 24 à 26. Deux commanditaires distingués, 3 niveaux de compte rendu, gabarit décisionnel, et la boucle retour → production mesurée à 17 jours |
-| C3.4.2 | Démonstration des fonctionnalités devant le jury | ✅ | ✅ [`07-demonstration.md`](07-demonstration.md) et diapo 2, la démonstration en direct qui ouvre la présentation, et la demande de validation en diapo 27. Parcours minuté en 6 étapes sur les libellés réels de l'interface, glossaire de vocabulaire client, préparation en 16 points, plan de repli à 4 niveaux, séquence de clôture qui **demande** la validation |
+| C3.4.2 | Démonstration des fonctionnalités devant le jury | ✅ | ✅ [`07-demonstration.md`](07-demonstration.md) et diapo 3, la démonstration en direct qui ouvre la présentation, et la demande de validation en diapo 27. Parcours minuté en 6 étapes sur les libellés réels de l'interface, glossaire de vocabulaire client, préparation en 16 points, plan de repli à 4 niveaux, séquence de clôture qui **demande** la validation |
 
 ## Fichiers du dossier
 
