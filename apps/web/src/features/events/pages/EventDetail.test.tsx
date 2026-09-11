@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import EventDetail from '@/features/events/pages/EventDetail';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { onlineManager, QueryClient } from '@tanstack/react-query';
 import {
   TEST_API_V1,
   authMeGuestHandler,
@@ -15,6 +16,7 @@ import {
 import { http, HttpResponse } from 'msw';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { setStoredParticipant, getStoredParticipant } from '@/features/events/storage';
+import { JOIN_PROMPT_ANCHOR_ID } from '@/features/events/joinPrompt';
 
 beforeAll(() => {
   if (!HTMLDialogElement.prototype.showModal) {
@@ -30,9 +32,9 @@ beforeAll(() => {
   }
 });
 
-function renderEventDetail(initialPath: string) {
+function renderEventDetail(initialPath: string, client?: QueryClient) {
   return render(
-    <AppTestProviders>
+    <AppTestProviders client={client}>
       <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
           <Route path="/e/:slug" element={<EventDetail />} />
@@ -70,7 +72,7 @@ describe('EventDetail (MSW)', () => {
   });
   afterAll(() => server.close());
 
-  it('non connecté : affiche la soirée et les CTA pour rejoindre, pas les films', async () => {
+  it('non connecté : affiche la soirée, les films et les CTA pour rejoindre', async () => {
     renderEventDetail(`/e/${slug}`);
     expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /rejoindre la soirée/i })).toBeInTheDocument();
@@ -79,8 +81,88 @@ describe('EventDetail (MSW)', () => {
       `/login?returnTo=${encodeURIComponent(`/e/${slug}`)}`
     );
     expect(screen.getByRole('link', { name: /^créer un compte$/i })).toBeInTheDocument();
-    expect(screen.queryByRole('region', { name: /films proposés/i })).not.toBeInTheDocument();
+    expect(await screen.findByRole('region', { name: /films proposés/i })).toBeInTheDocument();
   });
+
+  it('sans avoir rejoint : les films du lien partagé sont lisibles et le vote invite à rejoindre', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
+        HttpResponse.json([
+          {
+            _id: 'm-msw-1',
+            eventId: 'evt-msw',
+            participantId: 'p-msw-host',
+            tmdbId: 42,
+            mediaType: 'movie',
+            title: 'Matrix',
+            year: '1999',
+            posterPath: null,
+            proposerPseudo: 'Hôte',
+            score: 2,
+            up: 2,
+            down: 0,
+          },
+        ])
+      )
+    );
+
+    renderEventDetail(`/e/${slug}`);
+    expect(await screen.findByRole('heading', { name: 'Matrix' })).toBeInTheDocument();
+
+    const voteButton = await screen.findByRole('button', { name: /voter pour matrix/i });
+    await user.click(voteButton);
+
+    await waitFor(() =>
+      expect(document.getElementById(JOIN_PROMPT_ANCHOR_ID)).toContainElement(
+        document.activeElement as HTMLElement
+      )
+    );
+  });
+
+  it('affiche « Soirée introuvable » même avec la politique de retry de production', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/events/slug/:s`, () =>
+        HttpResponse.json({ error: 'Soirée introuvable' }, { status: 404 })
+      ),
+      http.get(`${TEST_API_V1}/events/:s/movies`, () => HttpResponse.json([]))
+    );
+    const productionLikeClient = new QueryClient({
+      defaultOptions: { queries: { retry: 1, staleTime: 1000 * 60 * 5, gcTime: 1000 * 60 * 30 } },
+    });
+
+    renderEventDetail('/e/inconnu', productionLikeClient);
+
+    expect(
+      await screen.findByText(/n'existe pas|introuvable/i, undefined, { timeout: 15000 })
+    ).toBeInTheDocument();
+  }, 20000);
+
+  it('sort du squelette quand le réseau est coupé, au lieu de charger indéfiniment', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/events/slug/:s`, () =>
+        HttpResponse.json({ error: 'nope' }, { status: 404 })
+      ),
+      http.get(`${TEST_API_V1}/events/:s/movies`, () => HttpResponse.json([]))
+    );
+    const productionLikeClient = new QueryClient({
+      defaultOptions: { queries: { retry: 1, staleTime: 1000 * 60 * 5 } },
+    });
+    onlineManager.setOnline(false);
+    try {
+      renderEventDetail(`/e/${slug}`, productionLikeClient);
+
+      expect(
+        await screen.findByText(/connexion au serveur|vérifiez votre réseau/i, undefined, {
+          timeout: 10000,
+        })
+      ).toBeInTheDocument();
+      expect(screen.queryByLabelText(/chargement de la soirée/i)).not.toBeInTheDocument();
+      expect(document.title).toBe(pageTitle('Connexion indisponible'));
+    } finally {
+      onlineManager.setOnline(true);
+    }
+  }, 15000);
 
   it('affiche une erreur si la soirée est introuvable (404)', async () => {
     server.use(

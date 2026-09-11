@@ -189,28 +189,28 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
   };
 
   return (
-    <Modal open={open} onClose={onClose} size="md" labelledBy={titleId}>
-      <div className={styles.inner}>
-        <header className={styles.header}>
-          <h2 id={titleId} className={styles.title}>
-            {t('proposeIdea.dialogTitle')}
-          </h2>
-          <IconButton label={t('common.close')} onClick={onClose}>
-            <X size={18} aria-hidden />
-          </IconButton>
-        </header>
+    <Modal open={open} onClose={onClose} size="md" column bottomSheetOnMobile labelledBy={titleId}>
+      <header className={styles.header}>
+        <h2 id={titleId} className={styles.title}>
+          {t('proposeIdea.dialogTitle')}
+        </h2>
+        <IconButton label={t('common.close')} onClick={onClose}>
+          <X size={18} aria-hidden />
+        </IconButton>
+      </header>
 
-        {status === 'success' ? (
-          <div className={styles.successState}>
-            <p className={styles.successMessage} role="status" aria-live="polite">
-              {t('proposeIdea.successMessage')}
-            </p>
-            <Button type="button" variant="primary" onClick={onClose}>
-              {t('common.close')}
-            </Button>
-          </div>
-        ) : (
-          <form onSubmit={(e) => void handleSubmit(e)}>
+      {status === 'success' ? (
+        <div className={styles.successState}>
+          <p className={styles.successMessage} role="status" aria-live="polite">
+            {t('proposeIdea.successMessage')}
+          </p>
+          <Button type="button" variant="primary" onClick={onClose}>
+            {t('common.close')}
+          </Button>
+        </div>
+      ) : (
+        <form className={styles.form} onSubmit={(e) => void handleSubmit(e)}>
+          <div className={styles.body}>
             <label className="label" htmlFor={categoryFieldId}>
               {t('proposeIdea.categoryLabel')}
             </label>
@@ -315,15 +315,15 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
                 {error}
               </p>
             ) : null}
+          </div>
 
-            <div className={styles.actions}>
-              <Button type="submit" variant="primary" disabled={status === 'submitting'}>
-                {status === 'submitting' ? t('proposeIdea.submitting') : t('proposeIdea.submit')}
-              </Button>
-            </div>
-          </form>
-        )}
-      </div>
+          <div className={styles.actions}>
+            <Button type="submit" variant="primary" disabled={status === 'submitting'}>
+              {status === 'submitting' ? t('proposeIdea.submitting') : t('proposeIdea.submit')}
+            </Button>
+          </div>
+        </form>
+      )}
     </Modal>
   );
 }

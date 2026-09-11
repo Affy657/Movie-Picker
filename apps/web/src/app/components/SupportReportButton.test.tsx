@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import SupportReportButton from '@/app/components/SupportReportButton';
+import styles from '@/app/components/SupportReportButton.module.css';
 import { LocaleProvider } from '@/shared/i18n';
 import { SUPPORT_EMAIL } from '@/shared/support/supportMailto';
 import { copyTextToClipboard } from '@/shared/utils/copyTextToClipboard';
@@ -108,6 +109,22 @@ describe('SupportReportButton', () => {
         element?.tagName === 'P' && (element.textContent ?? '').includes(SUPPORT_EMAIL)
     );
     expect(hint).toBeInTheDocument();
+  });
+
+  it('garde les actions hors de la zone défilante', async () => {
+    renderButton();
+    await openDialog();
+
+    const scrollArea = document.querySelector(`.${styles.body}`);
+    expect(scrollArea).not.toBeNull();
+    expect(scrollArea).toContainElement(await screen.findByLabelText(/message à envoyer/i));
+
+    const mailLink = screen.getByRole('link', { name: /ouvrir ma messagerie/i });
+    const copyButton = screen.getByRole('button', { name: /copier le message/i });
+    expect(scrollArea).not.toContainElement(mailLink);
+    expect(scrollArea).not.toContainElement(copyButton);
+    expect(mailLink.closest(`.${styles.footer}`)).not.toBeNull();
+    expect(copyButton.closest(`.${styles.footer}`)).not.toBeNull();
   });
 
   it('se ferme via le bouton de fermeture', async () => {

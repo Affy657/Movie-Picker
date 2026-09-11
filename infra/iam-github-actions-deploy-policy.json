@@ -4,12 +4,12 @@
     {
       "Effect": "Allow",
       "Action": ["s3:ListBucket"],
-      "Resource": "arn:aws:s3:::movie-picker-web"
+      "Resource": "arn:aws:s3:::<BUCKET_FRONT>"
     },
     {
       "Effect": "Allow",
       "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
-      "Resource": "arn:aws:s3:::movie-picker-web/*"
+      "Resource": "arn:aws:s3:::<BUCKET_FRONT>/*"
     },
     {
       "Effect": "Allow",
@@ -18,7 +18,7 @@
         "cloudfront:GetInvalidation",
         "cloudfront:GetDistribution"
       ],
-      "Resource": "arn:aws:cloudfront::831680222380:distribution/E32M2PR26FCH96"
+      "Resource": "arn:aws:cloudfront::<COMPTE_AWS>:distribution/<ID_DISTRIBUTION_CLOUDFRONT>"
     }
   ]
 }

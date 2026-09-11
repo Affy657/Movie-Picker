@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   deleteEventWheel,
   deleteEventWinner,
   postEventWheel,
+  postEventWheelAnnounce,
   postEventWinner,
 } from '@/features/events/api/eventsApi';
 import { getErrorMessage } from '@/shared/api/apiError';
@@ -11,7 +12,7 @@ import type { WinnerPickMethod } from '@/shared/types/event';
 import type { MovieData } from '@/shared/types/movie';
 import { useTranslation } from '@/shared/i18n';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
-import { remainingWheelRevealDelayMs } from '@/shared/utils/wheelSpin';
+import { remainingWheelRevealDelayMs, WHEEL_SPIN_DURATION_MS } from '@/shared/utils/wheelSpin';
 
 export type EventPrimaryAction = 'add' | 'spin' | null;
 
@@ -159,6 +160,26 @@ export function useEventWheel({
     return () => window.clearTimeout(timer);
   }, [lastMovieId, lastPickMethod, lastPickedAt, isModalOpen]);
 
+  const announceRef = useRef<{ timer: number | null; sent: boolean }>({ timer: null, sent: false });
+
+  const announceWinner = useCallback(() => {
+    const pending = announceRef.current;
+    if (pending.timer !== null) {
+      window.clearTimeout(pending.timer);
+      pending.timer = null;
+    }
+    if (pending.sent) return;
+    pending.sent = true;
+    postEventWheelAnnounce(slug, hostToken).catch(() => undefined);
+  }, [slug, hostToken]);
+
+  useEffect(
+    () => () => {
+      if (announceRef.current.timer !== null) window.clearTimeout(announceRef.current.timer);
+    },
+    []
+  );
+
   const cancelManualMode = useCallback(() => setManualMode(false), []);
   const enterManualMode = useCallback(() => {
     setRemovalMode(false);
@@ -197,11 +218,13 @@ export function useEventWheel({
         setManualReveal(false);
         setWheelKey((k) => k + 1);
         setIsModalOpen(true);
+        announceRef.current = { timer: null, sent: false };
+        announceRef.current.timer = window.setTimeout(announceWinner, WHEEL_SPIN_DURATION_MS);
         track('movie_picked', { method: 'wheel' });
       })
       .catch((err) => setError(getErrorMessage(err, t('events.wheel.launchError'))))
       .finally(() => setLoading(false));
-  }, [slug, hostToken, drawableMovies, track, t]);
+  }, [slug, hostToken, drawableMovies, announceWinner, track, t]);
 
   const pickWinnerManually = useCallback(
     (movie: MovieData) => {
@@ -264,13 +287,15 @@ export function useEventWheel({
 
   const revealWinner = useCallback(() => {
     setPendingRevealId(null);
-  }, []);
+    announceWinner();
+  }, [announceWinner]);
 
   const dismissModal = useCallback(() => {
     setIsModalOpen(false);
     setPendingRevealId(null);
+    announceWinner();
     onWheelDone();
-  }, [onWheelDone]);
+  }, [onWheelDone, announceWinner]);
 
   const isOpenForActions = isHost && !!event && !event.isFinished;
   const selecting = manualMode || removalMode;

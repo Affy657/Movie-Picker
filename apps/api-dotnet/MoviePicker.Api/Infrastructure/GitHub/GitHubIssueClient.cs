@@ -109,13 +109,19 @@ public sealed class GitHubIssueClient : IGitHubIssueClient
             }
 
             var json = await res.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
-            return GetRequiredString(json, "content", "download_url");
+            return WithoutTemporaryToken(GetRequiredString(json, "content", "download_url"));
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
         {
             _logger.LogWarning(ex, "Échec de l'upload de la pièce jointe GitHub {FileName}", attachment.FileName);
             return null;
         }
+    }
+
+    private static string WithoutTemporaryToken(string downloadUrl)
+    {
+        var queryStart = downloadUrl.IndexOfAny(['?', '#']);
+        return queryStart < 0 ? downloadUrl : downloadUrl[..queryStart];
     }
 
     private async Task EnsureAttachmentsBranchExistsAsync(string branch, CancellationToken ct)

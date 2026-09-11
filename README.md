@@ -1,240 +1,167 @@
-# 🎬 Movie Picker
+<p align="center">
+  <img src="apps/web/public/og-image.png" alt="Movie Picker" width="640">
+</p>
 
-**Organisez vos soirées film à plusieurs.** Créez une soirée, partagez le lien, proposez des films, votez — et laissez la roue trancher.
+<h1 align="center">Movie Picker</h1>
 
-🌐 **Production : [web.movie-picker.fr](https://web.movie-picker.fr/)**
+<p align="center">
+  Choisir un film à plusieurs sans y passer la soirée.<br>
+  <a href="https://web.movie-picker.fr/"><strong>Ouvrir l'application</strong></a>
+  &nbsp;&nbsp;&nbsp;
+  <a href="https://web.movie-picker.fr/tech"><strong>Lire le dossier technique</strong></a>
+</p>
 
----
+## Le produit
 
-## Sommaire
+On crée une soirée, on partage le lien, chacun propose des films et vote, la roue tranche.
 
-- [Fonctionnalités](#fonctionnalités)
-- [Architecture](#architecture)
-- [Prérequis](#prérequis)
-- [Démarrage](#démarrage)
-- [Scripts utiles](#scripts-utiles)
-- [Tests et qualité](#tests-et-qualité)
-- [Comptes de test et seed](#comptes-de-test-et-seed)
-- [Déploiement et CI/CD](#déploiement-et-cicd)
-- [Structure du projet](#structure-du-projet)
-- [Documentation](#documentation)
+1. **Créer une soirée** (titre, date, heure) et récupérer son lien de partage.
+2. **Rejoindre** depuis ce lien, avec un compte.
+3. **Proposer des films** via la recherche TMDB (affiches, métadonnées, disponibilité en streaming).
+4. **Voter** pour ou contre, et signaler un film déjà vu.
+5. **Lancer la roue**, en tirage strictement aléatoire ou pondéré par les votes, au choix de l'hôte.
+6. **Clôturer** sur le film gagnant.
 
----
+Autour de ce parcours : une page d'accueil d'exploration (rangées personnalisées, 120 sagas,
+sélections thématiques, ce qui passe ce soir en streaming), une liste de films personnelle avec
+notes sur 5 ou sur 10, des profils publics `/u/:handle` avec suivi entre comptes, l'import
+Letterboxd, les notifications push et in-app, l'export calendrier `.ics`, le thème clair ou sombre,
+l'installation en PWA, l'export et la suppression de compte au sens RGPD, et une navigation clavier
+vérifiée par axe sur les vues principales.
 
-## Fonctionnalités
+## La stack
 
-### Le parcours d'une soirée
-
-1. 🎬 **Créer une soirée** (titre, date, heure) et obtenir un lien de partage.
-2. 👥 **Rejoindre** la soirée depuis le lien partagé (compte requis).
-3. 🍿 **Proposer des films** via la recherche TMDB (affiches, métadonnées).
-4. 👍 **Voter** (up/down) et marquer un film « déjà vu ».
-5. 🎡 **Lancer la roue** pour tirer un film au sort (tirage pondérable).
-6. 🏆 **Clôturer** la soirée avec le film gagnant.
-
-### Et aussi
-
-- 📱 **PWA** installable (« Ajouter à l'écran d'accueil ») avec usage hors-ligne partiel
-- 🌓 Thème **clair / sombre**
-- 🔔 **Notifications** push et in-app
-- 👤 **Profils publics** (`/u/:handle`)
-- 📅 **Export calendrier** (`.ics`) des soirées à venir
-- 🔒 **Suppression de compte** et export des données (RGPD)
-- ♿ **Accessibilité** : navigation clavier, focus visible, skip link
-
----
-
-## Architecture
+| Couche | Technologies |
+| --- | --- |
+| Front | React 19, TypeScript, Vite, TanStack Query, React Router, PWA via Workbox. Build statique sur S3 derrière CloudFront |
+| API | ASP.NET Core sur .NET 10, architecture hexagonale, conteneur sur Cloud Run déployé par digest |
+| Données | MongoDB Atlas, transactions par `IUnitOfWork`, migrations versionnées en base |
+| Services | TMDB (films et affiches, proxifiées par l'API), Resend (mails), Sentry, PostHog |
+| Outillage | pnpm et Turbo, Vitest, xUnit, Playwright, Stryker.NET, SonarCloud, Lighthouse, Trivy |
 
 ```mermaid
 flowchart LR
-  subgraph clients [Clients]
-    Browser[Navigateur / PWA]
-  end
+  Browser[Navigateur ou PWA]
   subgraph aws [AWS]
-    CF[CloudFront]
-    S3[S3 statique]
-    CF --> S3
+    CF[CloudFront] --> S3[S3 statique]
   end
   subgraph gcp [GCP]
-    CR[Cloud Run · API .NET]
-    AR[Artifact Registry]
-    AR -.-> CR
+    AR[Artifact Registry] -.-> CR[Cloud Run, API .NET]
   end
   Browser --> CF
   Browser --> CR
   CR --> Mongo[(MongoDB Atlas)]
   CR --> TMDB[API TMDB]
-  CR --> Resend[Resend · Email]
+  CR --> Resend[Resend]
 ```
 
-- **Front** — React (Vite, TypeScript), **TanStack Query**, thème clair/sombre, PWA (Service Worker via `vite-plugin-pwa` / Workbox). Build statique hébergé sur **AWS**.
-- **Back** — API ASP.NET Core (C#, .NET 10) en **architecture hexagonale**, conteneurisée sur **GCP** Cloud Run.
-- **Données et services externes** — MongoDB Atlas ; TMDB (films, affiches proxifiées via `/api/v1/posters/{clé}`) ; Resend (mails de réinitialisation de mot de passe).
-- **API** — préfixe public `/api/v1`, Swagger en développement, schéma exporté vers `artifacts/openapi-v1.json`.
-- **Auth** — sessions par **cookie** ; actions hôte via jeton `?host=<token>`. En production, front (`web.movie-picker.fr`) et API (`api.movie-picker.fr`) partagent le même domaine racine → CORS (`ALLOWED_ORIGINS`) et cookies `SameSite=Lax; Secure`.
+L'API expose `/api/v1`, son contrat est exporté vers `artifacts/openapi-v1.json` et le front en
+dérive ses types : une route retirée côté API casse la compilation du front. L'authentification
+passe par cookie de session, les actions d'hôte par un jeton dans l'URL de partage.
 
-| Fournisseur | Service | Rôle |
-|-------------|---------|------|
-| **AWS** | S3 | Hébergement du build statique (front) |
-| **AWS** | CloudFront | CDN, HTTPS, URL publique du front |
-| **GCP** | Cloud Run | Exécution de l'API (conteneur) |
-| **GCP** | Artifact Registry | Stockage de l'image Docker de l'API |
-| **GCP** | Secret Manager | Secrets injectés au déploiement Cloud Run |
-| **MongoDB** | Atlas | Base de données |
-| **TMDB** | API | Recherche de films, affiches |
-| **Resend** | API email | Mails transactionnels (prod ; dev → logs si non configuré) |
+> **Le dossier technique du projet est publié en ligne, sur
+> [web.movie-picker.fr/tech](https://web.movie-picker.fr/tech).** Quatorze sections : architecture,
+> choix techniques, interface, serveur, contrat d'API, modèle de données, une fonctionnalité suivie
+> de bout en bout, tests, intégration continue, infrastructure, mesures, sécurité, méthode de
+> travail et trajectoire. Les chiffres y sont relevés dans le dépôt au moment du build, pas estimés.
+> Ce README en est la version courte.
 
-### Découpage de l'API (hexagonal)
+## Démarrer
 
-- **Domaine** — entités et règles métier, sans dépendance framework.
-- **Application** — cas d'usage (handlers), ports (interfaces) et DTOs.
-- **Infrastructure** — implémentations concrètes des ports : MongoDB, TMDB, email, cookies / jeton hôte.
-- **Entrée** — contrôleurs ASP.NET qui traduisent HTTP ↔ cas d'usage.
-
----
-
-## Prérequis
-
-- **Node.js** 20.19+, 22.13+ ou 24+ et **pnpm** (front)
-- **.NET 10 SDK** (API)
-- **MongoDB** (local ou Atlas) — **Docker** optionnel
-
-Vérification rapide : `node scripts/check-prereqs.js` et `dotnet --version`.
-
----
-
-## Démarrage
-
-**1. Configurer l'environnement.**
-
-- **MongoDB** — une base dédiée et jetable (jamais la prod) : soit un cluster **Atlas gratuit (M0)** via [mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas) (récupérer la chaîne de connexion), soit un conteneur local — `docker run -d --name moviepicker-mongo -p 27017:27017 mongo:7` → `MONGODB_URI=mongodb://localhost:27017/moviepicker_dev`.
-- **TMDB** — compte gratuit sur [themoviedb.org](https://www.themoviedb.org/), puis *Réglages → API* pour obtenir une **clé API (v3 auth)** → `TMDB_API_KEY`.
-
-Copier `.env.example` → `.env` à la racine et y renseigner ces deux valeurs (l'API .NET charge `.env` en remontant depuis le répertoire courant). Optionnel : `apps/web/.env` pour `VITE_API_URL` (voir `apps/web/.env.example`).
-
-> En **Development**, `localhost` / `127.0.0.1` sont autorisés sans configuration CORS. En **Production** / Docker, l'API exige aussi `ALLOWED_ORIGINS` (origines du front, séparées par des virgules).
-
-**2. Installer et lancer.**
+Node 20.19+, 22.13+ ou 24+, pnpm, et le SDK .NET 10. Rien d'autre.
 
 ```bash
 pnpm install
-
-pnpm dev:api-dotnet   # API .NET   → http://localhost:4000  (/health, /swagger)
-pnpm dev:web          # Front Vite → http://localhost:5173
+pnpm dev:full     # API sur :4000, front sur :5173
 ```
 
----
+Sans aucune configuration, l'API tourne entièrement en mémoire et sème comptes et soirées de
+démonstration : l'application est cliquable immédiatement, la page de connexion offrant un accès
+direct au compte de démonstration. En contrepartie les données repartent de zéro à chaque
+redémarrage, et la recherche de films reste vide faute de clé TMDB.
 
-## Scripts utiles
+Pour une vraie base et la recherche de films, copier `.env.example` en `.env` puis renseigner
+`MONGODB_URI` et `TMDB_API_KEY`. Le reste (lancer Mongo en conteneur, identifiants de
+démonstration, catalogue des scripts, structure du dépôt) est dans
+[`docs/development.md`](docs/development.md).
 
-Commandes à lancer à la racine du dépôt.
+## Qualité
 
-| Script | Description |
-|--------|-------------|
-| `pnpm dev:web` | Lance le front (Vite, port 5173) |
-| `pnpm dev:api-dotnet` | Lance l'API .NET (port 4000) |
-| `pnpm build` | Build du front (Turbo) |
-| `pnpm lint` | Lint du front (ESLint) |
-| `pnpm format` / `pnpm format:check` | Formatage Prettier (écriture / vérification) |
-| `pnpm format:dotnet:check` | Style C# (`dotnet format`, après `dotnet restore`) |
-| `pnpm test` | Tests front (Vitest, via Turbo) |
-| `pnpm run openapi:export` | Export OpenAPI → `artifacts/openapi-v1.json` |
-| `pnpm run test:e2e` | Tests E2E Playwright (local) |
-| `pnpm run test:e2e:ci` | E2E recommandé : build web + Playwright (stub TMDB sur `:5010`) |
-| `pnpm run lighthouse` | Lighthouse sur le build web (Node ≥ 22 + Chrome) |
-| `pnpm run verify:local` | Pipeline locale complète (≈ CI) — voir [Tests et qualité](#tests-et-qualité) |
+`pnpm run verify:local` rejoue la CI en local, en treize étapes : règles d'architecture, `pnpm lint`,
+ESLint, Prettier, `dotnet restore`, `dotnet format`, build Release en `-warnaserror`, export OpenAPI,
+contrôle de dérive des types, audit de vulnérabilités Trivy, tests front avec seuils de couverture,
+tests API unitaires, tests API d'intégration.
 
-> **Build du front** : le paquet `web` enchaîne `tsc`, `vite build`, puis un contrôle (`apps/web/scripts/check-prod-bundle-secrets.mjs`) qui interdit d'embarquer les identifiants du compte dev dans `dist/assets/*.js`. Un `vite build` lancé à la main dans `apps/web` n'effectue **pas** ce contrôle.
+Ce que la chaîne empêche, plutôt que ce qu'elle mesure :
 
-> **Override pnpm (`basic-ftp`)** : la racine force une version patchée de `basic-ftp` (dépendance transitive de `lighthouse`) pour garder `pnpm audit --audit-level=high` vert. À réévaluer lors d'une montée majeure de Lighthouse.
+- **`check:architecture`** refuse un commentaire dans le code, un `using` qui traverse une couche de
+  l'hexagone, un import de `shared/` vers une feature, une valeur littérale d'espacement, de taille
+  de police, de couleur ou de `z-index` dans un CSS module, un point de rupture hors de l'échelle
+  fermée, un `<dialog>` écrit ailleurs que dans `Modal`, une classe `btn` posée à la main, et une
+  cible tactile sous 44 px.
+- **Les tests d'intégration tournent contre une vraie MongoDB** en replica set, seul chemin qui
+  exécute les adaptateurs Mongo et les transactions. Un inventaire compare les index réellement
+  créés à la liste attendue : l'expiration des sessions, des jetons de réinitialisation et des
+  compteurs de quota n'existe que là.
+- **Le parcours critique tourne dans Playwright avec navigateur réel et base réelle ensemble**,
+  seul endroit de la chaîne où les deux sont vrais en même temps.
+- **Les seuils de couverture sont des portes**, pas des indicateurs : front 84 % d'instructions et
+  86 % de lignes, API 90 % de lignes, adaptateurs Mongo 86 % de lignes, mesurés séparément parce
+  qu'ils sont exclus du rapport principal.
+- **Stryker.NET** est disponible hors CI pour savoir si les tests d'une zone vérifient quelque
+  chose ou se contentent de la parcourir.
 
----
+## Déploiement
 
-## Tests et qualité
+Deux workflows GitHub Actions, séparés à dessein. `.github/workflows/ci-cd.yml` joue les portes de
+qualité sur `master` et sur les pull requests : Gitleaks, le lint des workflows eux-mêmes
+(`actionlint`, `shellcheck`, `zizmor`), le lint et le build des deux applications, l'audit des
+dépendances npm et NuGet, les suites de tests, les E2E et le Quality Gate SonarCloud.
 
-`pnpm run verify:local` reproduit localement l'essentiel de la CI : **lint** + **format** + **build API** + **export OpenAPI** + **`pnpm audit`** + **tests web et API**.
+`.github/workflows/deploy.yml` met en production, et **seulement à la main** : un push sur `master`
+ne déploie rien. Le déclenchement choisit sa cible (tout, front seul, API seule), refuse de partir
+si le run de CI du commit visé n'est pas vert, puis ajoute les deux portes propres au déploiement,
+les seuils Lighthouse et le scan Trivy de l'image. Grouper plusieurs livraisons dans un seul
+déploiement est le but : les minutes GitHub Actions d'un dépôt privé sont facturées, et rejouer le
+chemin de déploiement à chaque commit en consommait la moitié.
 
-```bash
-# API .NET
-dotnet test apps/api-dotnet/MoviePicker.Api.Tests/MoviePicker.Api.Tests.csproj             # unitaires
-dotnet test apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj  # intégration
+Trois choix structurent la mise en production :
 
-# E2E Playwright (une fois : installer le navigateur)
-pnpm exec playwright install chromium
-pnpm run test:e2e:ci
-```
+- **Rien ne part sans geste explicite**, donc la production est en retard sur `master` par défaut.
+  Un garde-fou final vérifie que chaque cible demandée est réellement déployée, parce qu'un job de
+  déploiement empêché par une porte rouge est *sauté* et non *en échec* : le run resterait vert.
+- **L'API n'est jamais promue avant d'être vérifiée.** Chaque révision est déployée sans trafic,
+  éprouvée sur son URL taguée, et ne reçoit d'utilisateurs qu'une fois ses sondes vertes. Il n'y a
+  donc pas de retour arrière à faire sur une révision défaillante, elle n'a servi personne.
+- **Le front est poussé en trois temps**, `index.html` et le service worker en dernier, puis
+  CloudFront est invalidé, pour qu'aucun client ne se retrouve avec un service worker en avance sur
+  ses bundles. Le `dist` est archivé trente jours, l'hébergement statique ne gardant aucune version.
+- **Les routes publiques indexables sont prérendues** au build et publiées sous une clé sans
+  extension égale à leur chemin, ce qui les fait servir en HTML complet au lieu de la coquille SPA.
+  Un client sans JavaScript — moteur d'indexation, aperçu de lien — reçoit le contenu et les
+  métadonnées de la page, pas un document vide.
 
-Les tests d'intégration incluent `OpenApiContractTests`, qui vérifie le JSON OpenAPI exporté pour éviter les dérives de contrat.
-
----
-
-## Comptes de test et seed
-
-En **Development**, l'API peut créer automatiquement des comptes et des données de démo si le seed est activé (`apps/api-dotnet/MoviePicker.Api/appsettings.Development.json` → section `DevelopmentSeed`, ou variables `DevelopmentSeed__*`).
-
-| Compte | E-mail | Mot de passe | Particularité |
-|--------|--------|--------------|---------------|
-| Principal | `dev@test.local` | `DevTest123!` | Hôte de plusieurs soirées |
-| Alice | `alice@test.local` | `AliceTest123!` | Profil public |
-| Bob | `bob@test.local` | `BobTest12345!` | Profil public |
-| Carla | `carla@test.local` | `CarlaTest123!` | Profil **privé** (teste le 404) |
-| David | `david@test.local` | `DavidTest123!` | Profil public |
-
-Chaque compte n'est créé que si son e-mail est absent en base.
-
-- **`SeedSampleEvents`** — quelques soirées de test pour le compte principal.
-- **`SeedScenarioDemos`** — un jeu de soirées de démo couvrant les états clés (multi-participants, roue & clôture, capacité atteinte, retrait / quitter, roue tirée « gelée », soirée passée, échéance, soirée vide, soirée annulée), plus un graphe de follows et des notifications.
-
-Désactivation : `DevelopmentSeed__Enabled=false`, ou plus finement `DevelopmentSeed__SeedSampleEvents=false` / `DevelopmentSeed__SeedScenarioDemos=false`. Les comptes secondaires sont configurables via `ExtraUsers` dans `appsettings.Development.json`.
-
----
-
-## Déploiement et CI/CD
-
-Pipeline GitHub Actions : `.github/workflows/ci-cd.yml`, déclenché sur `master` (push) et sur les PR.
-
-| Phase | Contenu |
-|-------|---------|
-| **Sécurité repo** | Gitleaks (scan de secrets dans l'arbre Git) ; `actionlint` + `shellcheck` + `zizmor` sur les workflows eux-mêmes |
-| **Lint / qualité** | ESLint + Prettier, `dotnet format`, build API Release, export OpenAPI, `pnpm audit`, audit NuGet (échec si High/Critical) |
-| **Tests** | Vitest + couverture (web) ; xUnit + intégration + `OpenApiContractTests` (API) |
-| **Qualité (Sonar)** | SonarScanner for .NET → SonarCloud (front + API, couverture lcov + opencover) ; Quality Gate **bloquant** (`sonar.qualitygate.wait`) |
-| **Lighthouse** | Seuils perf/a11y front — **bloquant** (médiane 3 passes) |
-| **Image API** *(push `master`)* | Build Docker → scan **Trivy** (HIGH/CRITICAL, bloquant) → push Artifact Registry, digest relevé |
-| **Déploiement** *(push `master`)* | **Cloud Run** déployé **par digest** (secrets Secret Manager + `ALLOWED_ORIGINS`) ; front → **S3** + invalidation **CloudFront** |
-| **Après déploiement** | L'API part **sans trafic**, est validée sur son URL taguée, et n'est promue qu'une fois verte ; puis smoke tests sur l'URL interne **et** sur le domaine public |
-
-- **Quality Gate SonarCloud** : calculé à chaque run (visible dans SonarCloud / sur les PR) ; **bloquant** pour le déploiement — un Quality Gate rouge échoue le pipeline. E2E Playwright et Lighthouse sont eux aussi **bloquants**.
-- **Déploiement front** : push S3 en 3 étapes (`index.html` et Service Worker en dernier, assets hachés en cache long) puis invalidation CloudFront, pour éviter toute désynchronisation Service Worker / bundles. Le `dist` est archivé en artefact (30 jours) : le front n'a pas de retour arrière côté hébergement, l'archive évite d'avoir à rejouer toute la chaîne.
-- **Déploiement API** : chaque révision est déployée sans trafic et validée sur son URL taguée avant promotion — une révision qui échoue ses sondes n'est jamais servie à un utilisateur, il n'y a donc rien à annuler. `rollback.yml` reste la porte manuelle pour une régression constatée après coup.
-
-Workflows annexes : `backup-mongo.yml` (sauvegarde quotidienne de la base, restaurée et vérifiée à chaque exécution), `rollback.yml` (retour arrière API manuel), `registry-cleanup.yml` (rétention Artifact Registry), `security-scan.yml` (scan de vulnérabilités hebdomadaire).
-
-Branche par défaut : **`master`**.
-
----
-
-## Structure du projet
-
-```
-movie-picker/
-├─ apps/
-│  ├─ web/            # Front React (Vite, TypeScript), PWA
-│  └─ api-dotnet/     # API ASP.NET Core (.NET 10) — solution MoviePicker.slnx
-├─ artifacts/         # Export OpenAPI, rapports Lighthouse
-├─ configs/           # tsconfig / Prettier partagés
-├─ docs/              # Documentation (roadmaps, correctifs, RNCP)
-├─ e2e/               # Tests E2E Playwright
-└─ scripts/           # Scripts utilitaires (verify:local, prérequis, OpenAPI…)
-```
-
----
+Workflows annexes : `backup-mongo.yml` sauvegarde la base chaque nuit et restaure l'archive pour la
+vérifier avant de la publier, `rollback.yml` est la porte manuelle de retour arrière,
+`registry-cleanup.yml` et `security-scan.yml` tiennent la rétention et la veille de vulnérabilités.
 
 ## Documentation
 
 | Document | Contenu |
-|----------|---------|
-| [`CHANGELOG.md`](CHANGELOG.md) | Journal des versions (Keep a Changelog + SemVer) |
-| [`docs/roadmap-product.md`](docs/roadmap-product.md) | Roadmap produit et tech, par version |
-| [`docs/RNCP/`](docs/RNCP/) | Livrables de certification (RNCP 39583) |
+| --- | --- |
+| [Dossier technique](https://web.movie-picker.fr/tech) | La version longue de tout ce qui précède, publiée dans l'application |
+| [`AGENTS.md`](AGENTS.md) | Règles du dépôt : conventions, design system, portes de qualité, workflow |
+| [`docs/development.md`](docs/development.md) | Installation détaillée, seed, scripts, tests, structure |
+| [`CHANGELOG.md`](CHANGELOG.md) | Journal des versions, Keep a Changelog et SemVer |
+| [`docs/roadmap-product.md`](docs/roadmap-product.md) | Roadmap produit et tech, version par version |
+| [`docs/technical-debt.md`](docs/technical-debt.md) | Dette technique, contraintes et impasses connues |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Projet solo : ce qui est accepté, ce qui ne l'est pas, où signaler |
+| [`SECURITY.md`](SECURITY.md) | Signaler une faille, par un canal privé |
+
+## Licence
+
+Code publié pour être lu, pas pour être réutilisé : tous droits réservés, voir
+[`LICENSE`](LICENSE). C'est un projet solo, et le dépôt n'accepte aucune contribution externe
+— [`CONTRIBUTING.md`](CONTRIBUTING.md) dit où adresser un signalement, et
+[`SECURITY.md`](SECURITY.md) une faille. Movie Picker utilise l'API de The Movie Database sans
+être approuvé ni certifié par TMDB.

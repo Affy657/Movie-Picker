@@ -77,17 +77,24 @@ export default function SupportReportButton({ className }: Readonly<Props>) {
         {t('footer.reportIssue')}
       </button>
       {open ? (
-        <Modal open={open} onClose={() => setOpen(false)} size="md" labelledBy={titleId}>
-          <div className={styles.inner}>
-            <header className={styles.header}>
-              <h2 id={titleId} className={styles.title}>
-                {t('support.dialogTitle')}
-              </h2>
-              <IconButton label={t('common.close')} onClick={() => setOpen(false)}>
-                <X size={18} aria-hidden />
-              </IconButton>
-            </header>
+        <Modal
+          open={open}
+          onClose={() => setOpen(false)}
+          size="md"
+          column
+          bottomSheetOnMobile
+          labelledBy={titleId}
+        >
+          <header className={styles.header}>
+            <h2 id={titleId} className={styles.title}>
+              {t('support.dialogTitle')}
+            </h2>
+            <IconButton label={t('common.close')} onClick={() => setOpen(false)}>
+              <X size={18} aria-hidden />
+            </IconButton>
+          </header>
 
+          <div className={styles.body}>
             <p className={styles.intro}>{t('support.dialogIntro')}</p>
 
             <label className={styles.reportLabel} htmlFor={reportId}>
@@ -100,7 +107,9 @@ export default function SupportReportButton({ className }: Readonly<Props>) {
               readOnly
               rows={9}
             />
+          </div>
 
+          <div className={styles.footer}>
             <div className={styles.actions}>
               <a href={mailtoHref} className={buttonClass({ variant: 'primary' })}>
                 {t('support.openMailApp')}

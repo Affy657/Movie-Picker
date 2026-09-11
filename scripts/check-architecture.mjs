@@ -281,6 +281,120 @@ function checkTapTargets(cssFiles) {
   }
 }
 
+/*
+ * Classes mortes dans les modules CSS. Une classe supprimée à tort est partie en production le
+ * 2026-09-09 parce qu'une recherche de `styles.<classe>` ne voyait pas son usage : le module
+ * était ré-exporté sous un autre nom. La règle est donc calibrée pour n'avoir aucun faux positif,
+ * quitte à laisser passer des classes réellement mortes, et les quatre cas connus sont traités.
+ *
+ * 1. Import sous alias — le nom local du binding est résolu par fichier, jamais supposé `styles`.
+ * 2. Objet de styles ré-exporté — `export { styles as xStyles }` ajoute `xStyles` aux noms cherchés.
+ * 3. Accès par crochets — `styles[variable]` rend le module inanalysable : il est exclu et **listé**
+ *    dans la sortie, pour que l'exclusion soit un choix visible et non un faux négatif silencieux.
+ * 4. Usage en CSS seul — une classe en position descendante (`.footer .btn`), cible d'un
+ *    `composes:` ou dans un `:global(...)` sert réellement sans apparaître en TypeScript.
+ */
+const CSS_MODULE_IMPORT_RE =
+  /import\s+(?:(\w+)|\*\s+as\s+(\w+))\s+from\s*['"]([^'"]+\.module\.css)['"]/g;
+const CLASS_IN_COMPOUND_RE = /\.(-?[A-Za-z_][\w-]*)/g;
+const GLOBAL_SELECTOR_RE = /:global\s*\(([^)]*)\)/g;
+const COMPOSES_RE = /composes\s*:\s*([^;}]+)/g;
+
+function selectorsOf(text) {
+  const selectors = [];
+  let buffer = '';
+  for (const character of text) {
+    if (character === '{') {
+      const selector = buffer.trim();
+      if (selector && !selector.startsWith('@')) selectors.push(selector);
+      buffer = '';
+    } else if (character === '}') buffer = '';
+    else buffer += character;
+  }
+  return selectors;
+}
+
+function classesOfCssModule(text) {
+  const leading = new Set();
+  const usedInCss = new Set();
+
+  for (const [, inside] of text.matchAll(GLOBAL_SELECTOR_RE))
+    for (const [, name] of inside.matchAll(CLASS_IN_COMPOUND_RE)) usedInCss.add(name);
+
+  for (const [, value] of text.matchAll(COMPOSES_RE))
+    for (const name of value.trim().split(/\s+/)) if (name !== 'from') usedInCss.add(name);
+
+  const withoutGlobals = text.replace(GLOBAL_SELECTOR_RE, ' ');
+  for (const selector of selectorsOf(withoutGlobals)) {
+    for (const alternative of selector.split(',')) {
+      const compounds = alternative.trim().split(/[\s>+~]+/).filter(Boolean);
+      compounds.forEach((compound, index) => {
+        for (const [, name] of compound.matchAll(CLASS_IN_COMPOUND_RE))
+          (index === 0 ? leading : usedInCss).add(name);
+      });
+    }
+  }
+  return { leading, usedInCss };
+}
+
+function checkDeadCssClasses(cssFiles, tsFiles) {
+  const modules = new Map();
+  for (const file of cssFiles) {
+    if (!file.endsWith('.module.css')) continue;
+    modules.set(file, { bindingsByFile: new Map(), aliases: new Set() });
+  }
+
+  const sources = new Map(tsFiles.map((file) => [file, readFileSync(file, 'utf8')]));
+
+  for (const [file, source] of sources) {
+    for (const [, defaultName, namespaceName, spec] of source.matchAll(CSS_MODULE_IMPORT_RE)) {
+      const binding = defaultName || namespaceName;
+      const target = resolveImport(spec, file);
+      const entry = target && modules.get(target);
+      if (!entry) continue;
+      entry.bindingsByFile.set(file, binding);
+      for (const [, clause] of source.matchAll(/export\s*\{([^}]*)\}/g))
+        for (const specifier of clause.split(',')) {
+          const [local, exported] = specifier.split(/\s+as\s+/).map((part) => part.trim());
+          if (local === binding && exported) entry.aliases.add(exported);
+        }
+    }
+  }
+
+  const excluded = [];
+  for (const [file, entry] of modules) {
+    const path = rel(file);
+    if (entry.bindingsByFile.size === 0) continue;
+
+    const names = new Set();
+    let bracketAccess = false;
+    for (const [source, text] of sources) {
+      const bindings = new Set();
+      const own = entry.bindingsByFile.get(source);
+      if (own) bindings.add(own);
+      for (const alias of entry.aliases) if (text.includes(alias)) bindings.add(alias);
+      for (const binding of bindings) {
+        if (new RegExp(`\\b${binding}\\s*\\[`).test(text)) bracketAccess = true;
+        for (const [, name] of text.matchAll(new RegExp(`\\b${binding}\\.(\\w+)`, 'g')))
+          names.add(name);
+      }
+    }
+    if (bracketAccess) {
+      excluded.push(path);
+      continue;
+    }
+
+    const { leading, usedInCss } = classesOfCssModule(readFileSync(file, 'utf8'));
+    for (const name of leading) {
+      if (usedInCss.has(name) || names.has(name)) continue;
+      const camel = name.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+      if (names.has(camel)) continue;
+      violations.push(`${path} : .${name} déclarée et jamais utilisée — supprimer la classe`);
+    }
+  }
+  return excluded;
+}
+
 const webFiles = walk(webSrc, ['.ts', '.tsx', '.css']);
 const apiFiles = walk(join(root, 'apps/api-dotnet'), ['.cs']);
 const e2eFiles = walk(join(root, 'e2e'), ['.ts']);
@@ -292,6 +406,10 @@ checkDesignTokens(webFiles.filter((f) => f.endsWith('.css')));
 checkModalPrimitive(webFiles.filter((f) => f.endsWith('.tsx')));
 checkButtonPrimitive(webFiles.filter((f) => f.endsWith('.tsx')));
 checkTapTargets(webFiles.filter((f) => f.endsWith('.css')));
+const cssModulesExcluded = checkDeadCssClasses(
+  webFiles.filter((f) => f.endsWith('.css')),
+  webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'))
+);
 checkApiLayers();
 
 if (violations.length > 0) {
@@ -303,5 +421,9 @@ if (violations.length > 0) {
   process.exit(1);
 }
 console.log(
-  "Architecture : aucune violation (commentaires, couches API, shared/ feuille, cycles d'imports, jetons du design system, primitives Modal et Button, cibles tactiles)."
+  "Architecture : aucune violation (commentaires, couches API, shared/ feuille, cycles d'imports, jetons du design system, primitives Modal et Button, cibles tactiles, classes CSS mortes)."
 );
+if (cssModulesExcluded.length > 0)
+  console.log(
+    `Classes mortes — ${cssModulesExcluded.length} module(s) exclus, accès par crochets donc inanalysables : ${cssModulesExcluded.join(', ')}`
+  );

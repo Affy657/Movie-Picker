@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { useNavigate } from 'react-router';
-import { AlertCircle, ChevronDown, Settings, Sparkles, Trash2, X } from 'lucide-react';
+import { AlertCircle, Settings, Trash2, X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import ThemeField, { parseTheme } from './ThemeField';
+import { parseTheme } from './ThemeField';
+import HostEventDateField from './HostEventDateField';
+import HostEventThemeField from './HostEventThemeField';
 import WheelModeField from './WheelModeField';
 import EventTemplateSaveBar from './EventTemplateSaveBar';
 import EventTemplatesRow from './EventTemplatesRow';
@@ -79,6 +81,25 @@ function recurrencePatch(
   return next === null ? { clearRecurrence: true } : { recurrence: next };
 }
 
+function titlePatch(next: string, current: string): Partial<EventConfigPatchPayload> {
+  return next !== current ? { title: next } : {};
+}
+
+function dateTimePatch(
+  parsed: ReturnType<typeof splitDateTimeLocal>
+): Partial<EventConfigPatchPayload> {
+  return parsed ? { date: parsed.date, time: parsed.time } : {};
+}
+
+function isCreatorParticipant(
+  myParticipant: HostEventSettingsPanelProps['event']['myParticipant'],
+  participants: HostEventSettingsPanelProps['event']['participants']
+): boolean {
+  if (!myParticipant) return false;
+  const myId = myParticipant.id;
+  return !!participants?.find((p) => p.id === myId)?.isCreator;
+}
+
 function normalizeConfig(c: EventConfigData | undefined): EventConfigData {
   return {
     theme: c?.theme ?? DEFAULT_EVENT_CONFIG.theme,
@@ -93,6 +114,80 @@ function normalizeConfig(c: EventConfigData | undefined): EventConfigData {
     winnerCountMax: c?.winnerCountMax ?? MAX_WINNERS_PER_EVENT,
     drawnWinnerCount: c?.drawnWinnerCount ?? 0,
   };
+}
+
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+type SettingsDraft = {
+  eventTitle: string;
+  eventDateLocal: string;
+  maxProp: string;
+  maxParticipants: string;
+  currentParticipantCount: number;
+};
+
+function validateTitle(draft: SettingsDraft, t: Translate, errors: FieldErrors) {
+  if (!draft.eventTitle.trim()) errors.title = t('events.settings.titleRequired');
+}
+
+function validateDate(draft: SettingsDraft, t: Translate, errors: FieldErrors) {
+  const trimmed = draft.eventDateLocal.trim();
+  if (!trimmed) {
+    errors.date = t('events.settings.dateRequired');
+    return null;
+  }
+  const parsed = splitDateTimeLocal(draft.eventDateLocal);
+  if (!parsed) errors.date = t('events.settings.dateInvalid');
+  return parsed;
+}
+
+function validateMaxProposals(draft: SettingsDraft, t: Translate, errors: FieldErrors) {
+  const value = Number(draft.maxProp);
+  const valid =
+    draft.maxProp.trim() !== '' &&
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= MAX_PROPOSALS_PER_PARTICIPANT;
+  if (valid) return value;
+  errors.maxProposals = t('events.settings.maxProposalsInvalid', {
+    max: MAX_PROPOSALS_PER_PARTICIPANT,
+  });
+  return MAX_PROPOSALS_PER_PARTICIPANT;
+}
+
+function validateMaxParticipants(draft: SettingsDraft, t: Translate, errors: FieldErrors) {
+  const value = Number(draft.maxParticipants);
+  const withinBounds =
+    draft.maxParticipants.trim() !== '' &&
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= MAX_EVENT_PARTICIPANTS;
+
+  if (!withinBounds) {
+    errors.maxParticipants = t('events.settings.maxParticipantsInvalid', {
+      max: MAX_EVENT_PARTICIPANTS,
+    });
+    return MAX_EVENT_PARTICIPANTS;
+  }
+
+  if (value < draft.currentParticipantCount) {
+    errors.maxParticipants = t('events.settings.maxParticipantsBelowCurrent', {
+      value,
+      count: draft.currentParticipantCount,
+    });
+    return MAX_EVENT_PARTICIPANTS;
+  }
+
+  return value;
+}
+
+function validateSettingsDraft(draft: SettingsDraft, t: Translate) {
+  const errors: FieldErrors = {};
+  validateTitle(draft, t, errors);
+  const eventDateTime = validateDate(draft, t, errors);
+  const maxProposalsPerParticipant = validateMaxProposals(draft, t, errors);
+  const maxParticipantsValue = validateMaxParticipants(draft, t, errors);
+  return { errors, maxProposalsPerParticipant, maxParticipantsValue, eventDateTime };
 }
 
 export default function HostEventSettingsPanel({
@@ -137,11 +232,10 @@ export default function HostEventSettingsPanel({
   const navigate = useNavigate();
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const isConnectedCreator = useMemo(() => {
-    if (!event.myParticipant) return false;
-    const myId = event.myParticipant.id;
-    return !!event.participants?.find((p) => p.id === myId)?.isCreator;
-  }, [event.myParticipant, event.participants]);
+  const isConnectedCreator = useMemo(
+    () => isCreatorParticipant(event.myParticipant, event.participants),
+    [event.myParticipant, event.participants]
+  );
 
   const {
     templates,
@@ -269,54 +363,17 @@ export default function HostEventSettingsPanel({
   );
 
   performSaveRef.current = () => {
-    const errors: FieldErrors = {};
-
-    if (!eventTitle.trim()) {
-      errors.title = t('events.settings.titleRequired');
-    }
-
-    const eventDateTime = eventDateLocal.trim() ? splitDateTimeLocal(eventDateLocal) : null;
-    if (!eventDateLocal.trim()) {
-      errors.date = t('events.settings.dateRequired');
-    } else if (!eventDateTime) {
-      errors.date = t('events.settings.dateInvalid');
-    }
-
-    let maxProposalsPerParticipant = MAX_PROPOSALS_PER_PARTICIPANT;
-    const maxPropNum = Number(maxProp);
-    if (
-      maxProp.trim() === '' ||
-      !Number.isInteger(maxPropNum) ||
-      maxPropNum < 1 ||
-      maxPropNum > MAX_PROPOSALS_PER_PARTICIPANT
-    ) {
-      errors.maxProposals = t('events.settings.maxProposalsInvalid', {
-        max: MAX_PROPOSALS_PER_PARTICIPANT,
-      });
-    } else {
-      maxProposalsPerParticipant = maxPropNum;
-    }
-
-    let maxParticipantsValue = MAX_EVENT_PARTICIPANTS;
-    const maxPartNum = Number(maxParticipants);
-    const currentCount = event.participantCount ?? 0;
-    if (
-      maxParticipants.trim() === '' ||
-      !Number.isInteger(maxPartNum) ||
-      maxPartNum < 1 ||
-      maxPartNum > MAX_EVENT_PARTICIPANTS
-    ) {
-      errors.maxParticipants = t('events.settings.maxParticipantsInvalid', {
-        max: MAX_EVENT_PARTICIPANTS,
-      });
-    } else if (maxPartNum < currentCount) {
-      errors.maxParticipants = t('events.settings.maxParticipantsBelowCurrent', {
-        value: maxPartNum,
-        count: currentCount,
-      });
-    } else {
-      maxParticipantsValue = maxPartNum;
-    }
+    const { errors, maxProposalsPerParticipant, maxParticipantsValue, eventDateTime } =
+      validateSettingsDraft(
+        {
+          eventTitle,
+          eventDateLocal,
+          maxProp,
+          maxParticipants,
+          currentParticipantCount: event.participantCount ?? 0,
+        },
+        t
+      );
 
     let winnerCountValue = cfg.winnerCount;
     const winnerCountNum = Number(winnerCount);
@@ -346,7 +403,7 @@ export default function HostEventSettingsPanel({
     const theme = [themeEmoji, themeText.trim()].filter(Boolean).join(' ');
 
     mutation.mutate({
-      ...(eventTitle.trim() !== event.title ? { title: eventTitle.trim() } : {}),
+      ...titlePatch(eventTitle.trim(), event.title),
       ...(theme !== (cfg.theme ?? '') ? { theme } : {}),
       ...(maxProposalsPerParticipant !== cfg.maxProposalsPerParticipant
         ? { maxProposalsPerParticipant }
@@ -359,7 +416,7 @@ export default function HostEventSettingsPanel({
       ...(richSharePreview !== (cfg.richSharePreview ?? true) ? { richSharePreview } : {}),
       ...(winnerCountValue !== cfg.winnerCount ? { winnerCount: winnerCountValue } : {}),
       ...recurrencePatch(recurrence, cfg.recurrence ?? null),
-      ...(eventDateTime ? { date: eventDateTime.date, time: eventDateTime.time } : {}),
+      ...dateTimePatch(eventDateTime),
       notifyParticipantsOfDateChange: notifyDateChange,
     });
   };
@@ -458,105 +515,41 @@ export default function HostEventSettingsPanel({
                 )}
               </div>
 
-              <div className={styles.field}>
-                <label className="label" htmlFor="host-cfg-datetime">
-                  {t('events.settings.dateTimeLabel')}
-                </label>
-                <input
-                  id="host-cfg-datetime"
-                  className="input"
-                  type="datetime-local"
-                  value={eventDateLocal}
-                  onChange={(e) => {
-                    setEventDateLocal(e.target.value);
-                    scheduleAutoSave();
-                  }}
-                  aria-invalid={!!fieldErrors.date || undefined}
-                  aria-describedby={!fieldErrors.date && relativeDateLabel ? dateHintId : undefined}
-                />
-                {fieldErrors.date ? (
-                  <p className={styles.fieldError}>
-                    <AlertCircle size={12} aria-hidden />
-                    <span>{fieldErrors.date}</span>
-                  </p>
-                ) : (
-                  relativeDateLabel && (
-                    <p id={dateHintId} className="hint">
-                      {t('events.settings.dateHint', { relative: relativeDateLabel })}
-                    </p>
-                  )
-                )}
-                {dateWasEdited && !fieldErrors.date && (
-                  <label className={styles.notifyRow}>
-                    <input
-                      type="checkbox"
-                      className={styles.notifyCheckbox}
-                      checked={notifyDateChange}
-                      onChange={(e) => setNotifyDateChange(e.target.checked)}
-                    />
-                    <span>{t('events.settings.notifyDateChangeLabel')}</span>
-                  </label>
-                )}
-              </div>
+              <HostEventDateField
+                value={eventDateLocal}
+                error={fieldErrors.date}
+                relativeDateLabel={relativeDateLabel}
+                hintId={dateHintId}
+                showNotifyRow={dateWasEdited && !fieldErrors.date}
+                notifyDateChange={notifyDateChange}
+                onValueChange={(v) => {
+                  setEventDateLocal(v);
+                  scheduleAutoSave();
+                }}
+                onNotifyChange={setNotifyDateChange}
+              />
 
-              <div className={styles.field}>
-                <div className={clsx(styles.themeCard, themeOpen && styles.themeCardOpen)}>
-                  <button
-                    type="button"
-                    className={styles.themeTrigger}
-                    aria-expanded={themeOpen}
-                    aria-controls={themeCollapseId}
-                    onClick={() => setThemeOpen((v) => !v)}
-                  >
-                    <span className={styles.themeBadge} aria-hidden>
-                      {themeEmoji || (themePreview ? '🎬' : <Sparkles size={18} />)}
-                    </span>
-                    <span className={styles.themeInfo}>
-                      <span className={styles.themeTitle}>
-                        {themePreview || t('events.settings.themeEmptyTitle')}
-                      </span>
-                      <span className={styles.themeSubtitle}>
-                        {themePreview
-                          ? t('events.settings.themeLabel')
-                          : t('events.settings.themeEmptySubtitle')}
-                      </span>
-                    </span>
-                    <ChevronDown size={18} aria-hidden className={styles.themeChevron} />
-                  </button>
-                  {themeOpen && (
-                    <div id={themeCollapseId} className={styles.themeExpanded}>
-                      {themePreview && (
-                        <button
-                          type="button"
-                          className={styles.clearThemeBtn}
-                          onClick={() => {
-                            setThemeEmoji('');
-                            setThemeText('');
-                            scheduleAutoSave();
-                          }}
-                          aria-label={t('events.settings.clearThemeAria')}
-                        >
-                          <X size={11} strokeWidth={2.5} />
-                          <span>{t('events.settings.clearThemeButton')}</span>
-                        </button>
-                      )}
-                      <ThemeField
-                        textInputId="host-cfg-theme"
-                        emoji={themeEmoji}
-                        text={themeText}
-                        onEmojiChange={(v) => {
-                          setThemeEmoji(v);
-                          scheduleAutoSave();
-                        }}
-                        onTextChange={(v) => {
-                          setThemeText(v);
-                          scheduleAutoSave();
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
+              <HostEventThemeField
+                emoji={themeEmoji}
+                text={themeText}
+                preview={themePreview}
+                open={themeOpen}
+                collapseId={themeCollapseId}
+                onToggle={() => setThemeOpen((v) => !v)}
+                onEmojiChange={(v) => {
+                  setThemeEmoji(v);
+                  scheduleAutoSave();
+                }}
+                onTextChange={(v) => {
+                  setThemeText(v);
+                  scheduleAutoSave();
+                }}
+                onClear={() => {
+                  setThemeEmoji('');
+                  setThemeText('');
+                  scheduleAutoSave();
+                }}
+              />
             </fieldset>
           </div>
 

@@ -11,6 +11,7 @@ import {
   SHIPPED_MILESTONES,
 } from '@/app/pages/tech/TechTimeline';
 import { TECH_METRICS } from '@/app/pages/tech/generated/techMetrics';
+import { TECH_PAGE_LAST_UPDATE } from '@/app/pages/tech/lastUpdate';
 import { fr } from '@/shared/i18n/locales/fr';
 import { SITE_URL } from '@/shared/seo/siteMeta';
 import { ROUTES } from '@/app/routes';
@@ -225,14 +226,14 @@ describe('TechPage', () => {
     const { container } = renderTechPage();
     const steps = [...container.querySelectorAll('section#trajectory > ol > li')];
 
-    expect(steps).toHaveLength(12);
+    expect(steps).toHaveLength(13);
     expect(steps[0]).toHaveTextContent(/MVP/);
     expect(steps.at(-1)).toHaveTextContent(/V2/);
     expect(steps.some((step) => step.querySelector('h3')?.textContent?.includes('V1.8'))).toBe(
       true
     );
 
-    for (const step of steps) {
+    for (const step of steps.filter((step) => step.getAttribute('data-state') !== 'unplanned')) {
       expect(step.querySelector('h3')).not.toBeNull();
       expect(step.querySelectorAll(':scope > ul > li').length).toBeGreaterThanOrEqual(3);
     }
@@ -248,9 +249,10 @@ describe('TechPage', () => {
     expect(steps.filter((step) => state(step) === 'planned')).toHaveLength(PLANNED_MILESTONES);
     expect(state(steps.at(-1) as Element)).toBe('planned');
 
-    const gapped = steps.filter((step) => step.getAttribute('data-gap') === 'before');
-    expect(gapped).toHaveLength(1);
-    expect(gapped[0]).toBe(steps.at(-1));
+    const unplanned = steps.filter((step) => state(step) === 'unplanned');
+    expect(unplanned).toHaveLength(1);
+    expect(unplanned[0]).toBe(steps.at(-2));
+    expect(unplanned[0]?.textContent).toMatch(/pas encore/i);
 
     const current = steps.find((step) => state(step) === 'current') as Element;
     expect(current).toHaveTextContent('V1.6');
@@ -571,5 +573,19 @@ describe('TechPage', () => {
     ] as const) {
       expect(tags).toContain(fr.tech.trajectory[work]);
     }
+  });
+
+  it('affiche la date de dernière mise à jour du document, tenue à la main', () => {
+    renderTechPage();
+    expect(
+      screen.getByText(new RegExp(`mis à jour le ${TECH_PAGE_LAST_UPDATE}`, 'i'))
+    ).toBeVisible();
+  });
+
+  it('garde la date de mise à jour au format ISO et jamais dans le futur', () => {
+    expect(TECH_PAGE_LAST_UPDATE).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    const update = new Date(`${TECH_PAGE_LAST_UPDATE}T00:00:00Z`);
+    expect(Number.isNaN(update.getTime())).toBe(false);
+    expect(update.getTime()).toBeLessThanOrEqual(Date.now());
   });
 });

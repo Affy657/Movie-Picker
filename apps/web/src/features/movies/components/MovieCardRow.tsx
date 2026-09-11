@@ -23,7 +23,6 @@ import {
   ProposerBadge,
   VoteBar,
   WatchlistBadge,
-  isSelectable,
   useMovieCardState,
   type MovieCardCommonProps,
 } from '@/features/movies/components/movieCardParts';
@@ -288,166 +287,186 @@ function VoteErrorBanner({
   );
 }
 
-export const MovieCardRow = memo(function MovieCardRow({
-  movie: m,
-  slug,
-  participantId,
-  participantPseudo,
-  isFinished,
+type MovieCardRowView = MovieCardRowProps & {
+  s: ReturnType<typeof useMovieCardState>;
+  posterSrc: string | undefined;
+  posterSrcSet: string | undefined;
+  flatrateProviders: MovieCardRowProps['movie']['watchProviders'];
+  rentCount: number;
+  buyCount: number;
+  releaseDateLabel: string | null;
+  excluded: boolean;
+  selecting: boolean;
+  emptyDispoLabel: string;
+  m: MovieCardRowProps['movie'];
+};
+
+function MovieCardRowMobile({
+  s,
+  posterSrc,
+  posterSrcSet,
+  flatrateProviders,
+  rentCount,
+  buyCount,
+  excluded,
+  selecting,
+  emptyDispoLabel,
+  m,
   isHost,
   onVote,
   onRemove,
-  refresh,
-  onActionError,
   t,
-  participantAvatars,
   participantAvatarsByPseudo,
-  ratingScale,
-  eager = false,
+  eager,
   isInWatchlist,
   onToggleWatchlist,
   onToggleWheelExclusion,
   selection,
-  isWinner = false,
+  isWinner,
   winnerRank,
-  isMobile,
+  voteError,
+  participantCount,
+}: Readonly<MovieCardRowView>) {
+  return (
+    <Fragment>
+      <li
+        className={clsx(
+          styles.mobileRow,
+          isWinner && styles.rowWinner,
+          !!voteError && styles.rowError,
+          excluded && cardPartsStyles.excluded,
+          selecting && cardPartsStyles.selectable
+        )}
+      >
+        {excluded && (
+          <span className="visually-hidden">{t('movies.list.excludedFromWheelSr')}</span>
+        )}
+        {selecting && selection ? (
+          <CardSelectionOverlay movie={m} selection={selection} t={t} />
+        ) : null}
+        <div className={styles.mobilePosterCol} inert={selecting}>
+          <RowPoster src={posterSrc} srcSet={posterSrcSet} eager={!!eager} />
+          <WatchlistBadge inWatchlist={!!isInWatchlist} t={t} />
+        </div>
+        <div className={styles.mobileContent} inert={selecting}>
+          <div className={styles.mobileTitleRow}>
+            <h3 className={styles.title} title={m.title}>
+              {m.title}
+            </h3>
+            {isWinner ? (
+              <span className={styles.winnerBadge}>
+                {winnerRank
+                  ? t('events.wheel.winnerRankLabel', { rank: winnerRank })
+                  : t('events.wheel.winnerLabel')}
+              </span>
+            ) : null}
+          </div>
+          <div className={styles.mobileFacts}>
+            {m.year ? <span>{m.year}</span> : null}
+            {s.runtimeLabel ? <span>{s.runtimeLabel}</span> : null}
+            {s.voteLabel ? <span>{s.voteLabel}</span> : null}
+            <RowDispo
+              flatrateProviders={flatrateProviders}
+              rentCount={rentCount}
+              buyCount={buyCount}
+              watchPageUrl={m.tmdbWatchPageUrl}
+              maxVisible={1}
+              onMoreClick={() => s.openDetails('dispo')}
+              emptyLabel={emptyDispoLabel}
+              title={m.title}
+              t={t}
+            />
+          </div>
+          <div className={styles.mobileBottomSection}>
+            <span className={styles.mobileVoteScore}>
+              {s.canVote ? <VoteBar m={m} onVote={onVote} t={t} /> : <VoteReadonly m={m} />}
+              <ScoreBlock m={m} t={t} />
+            </span>
+            <div className={styles.mobileProposerRow}>
+              <ProposerBadge
+                avatarId={s.proposerAvatarId}
+                pseudo={m.proposerPseudo}
+                handle={m.proposerHandle}
+                t={t}
+              />
+              <span className={styles.mobileSeenSlot}>
+                {s.canAct ? (
+                  <SeenButton
+                    m={m}
+                    iMarkedSeen={s.iMarkedSeen}
+                    seenPending={s.seenPending}
+                    onToggle={() => void s.handleToggleSeen()}
+                    others={s.others}
+                    othersHint={s.othersHint}
+                    avatarsByPseudo={participantAvatarsByPseudo}
+                    alwaysShowCount
+                    t={t}
+                  />
+                ) : (
+                  s.othersHint && <p className={styles.mobileSeenHint}>{s.othersHint}</p>
+                )}
+              </span>
+            </div>
+          </div>
+        </div>
+        {s.hasDetails ? (
+          <button
+            type="button"
+            className={styles.disclosure}
+            onClick={() => s.openDetails('soiree')}
+            aria-label={t('movies.details.toggleShow')}
+          >
+            <ChevronRight aria-hidden size={16} />
+          </button>
+        ) : (
+          <span className={styles.disclosure} aria-hidden />
+        )}
+        <CardModals
+          s={s}
+          m={m}
+          isHost={isHost}
+          onVote={onVote}
+          onRemove={onRemove}
+          isInWatchlist={isInWatchlist}
+          onToggleWatchlist={onToggleWatchlist}
+          onToggleWheelExclusion={onToggleWheelExclusion}
+          avatarsByPseudo={participantAvatarsByPseudo}
+          participantCount={participantCount}
+        />
+      </li>
+      {voteError ? <VoteErrorBanner voteError={voteError} t={t} /> : null}
+    </Fragment>
+  );
+}
+
+function MovieCardRowDesktop({
+  s,
+  posterSrc,
+  posterSrcSet,
+  flatrateProviders,
+  rentCount,
+  buyCount,
+  releaseDateLabel,
+  excluded,
+  selecting,
+  emptyDispoLabel,
+  m,
+  isHost,
+  onVote,
+  onRemove,
+  t,
+  participantAvatarsByPseudo,
+  eager,
+  isInWatchlist,
+  onToggleWatchlist,
+  onToggleWheelExclusion,
+  selection,
+  isWinner,
+  winnerRank,
   rank,
   voteError,
   participantCount,
-}: Readonly<MovieCardRowProps>) {
-  const s = useMovieCardState({
-    movie: m,
-    slug,
-    participantId,
-    participantPseudo,
-    isFinished,
-    isHost,
-    participantAvatars,
-    ratingScale,
-    refresh,
-    onActionError,
-    t,
-  });
-  const posterSrc = posterImageSrc(m.posterPath);
-  const posterSrcSet = tmdbPosterSrcSetForList(posterSrc);
-  const flatrateProviders = s.providers.filter((p) => p.type === 'flatrate');
-  const rentCount = s.providers.filter((p) => p.type === 'rent').length;
-  const buyCount = s.providers.filter((p) => p.type === 'buy').length;
-  const releaseDateLabel = formatReleaseYear(m.releaseDate);
-  const excluded = !!m.excludedFromWheel;
-  const selecting = isSelectable(m, selection) && !excluded;
-  const winnerLabel = winnerRank
-    ? t('events.wheel.winnerRankLabel', { rank: winnerRank })
-    : t('events.wheel.winnerLabel');
-  const emptyDispoLabel = t('movies.watchProviders.emptyLabel');
-
-  if (isMobile) {
-    return (
-      <Fragment>
-        <li
-          className={clsx(
-            styles.mobileRow,
-            isWinner && styles.rowWinner,
-            !!voteError && styles.rowError,
-            excluded && cardPartsStyles.excluded,
-            selecting && cardPartsStyles.selectable
-          )}
-        >
-          {excluded && (
-            <span className="visually-hidden">{t('movies.list.excludedFromWheelSr')}</span>
-          )}
-          {selecting && selection ? (
-            <CardSelectionOverlay movie={m} selection={selection} t={t} />
-          ) : null}
-          <div className={styles.mobilePosterCol} inert={selecting}>
-            <RowPoster src={posterSrc} srcSet={posterSrcSet} eager={eager} />
-            <WatchlistBadge inWatchlist={isInWatchlist} t={t} />
-          </div>
-          <div className={styles.mobileContent} inert={selecting}>
-            <div className={styles.mobileTitleRow}>
-              <h3 className={styles.title} title={m.title}>
-                {m.title}
-              </h3>
-              {isWinner ? <span className={styles.winnerBadge}>{winnerLabel}</span> : null}
-            </div>
-            <div className={styles.mobileFacts}>
-              {m.year ? <span>{m.year}</span> : null}
-              {s.runtimeLabel ? <span>{s.runtimeLabel}</span> : null}
-              {s.voteLabel ? <span>{s.voteLabel}</span> : null}
-              <RowDispo
-                flatrateProviders={flatrateProviders}
-                rentCount={rentCount}
-                buyCount={buyCount}
-                watchPageUrl={m.tmdbWatchPageUrl}
-                maxVisible={1}
-                onMoreClick={() => s.openDetails('dispo')}
-                emptyLabel={emptyDispoLabel}
-                title={m.title}
-                t={t}
-              />
-            </div>
-            <div className={styles.mobileBottomSection}>
-              <span className={styles.mobileVoteScore}>
-                {s.canAct ? <VoteBar m={m} onVote={onVote} t={t} /> : <VoteReadonly m={m} />}
-                <ScoreBlock m={m} t={t} />
-              </span>
-              <div className={styles.mobileProposerRow}>
-                <ProposerBadge
-                  avatarId={s.proposerAvatarId}
-                  pseudo={m.proposerPseudo}
-                  handle={m.proposerHandle}
-                  t={t}
-                />
-                <span className={styles.mobileSeenSlot}>
-                  {s.canAct ? (
-                    <SeenButton
-                      m={m}
-                      iMarkedSeen={s.iMarkedSeen}
-                      seenPending={s.seenPending}
-                      onToggle={() => void s.handleToggleSeen()}
-                      others={s.others}
-                      othersHint={s.othersHint}
-                      avatarsByPseudo={participantAvatarsByPseudo}
-                      alwaysShowCount
-                      t={t}
-                    />
-                  ) : (
-                    s.othersHint && <p className={styles.mobileSeenHint}>{s.othersHint}</p>
-                  )}
-                </span>
-              </div>
-            </div>
-          </div>
-          {s.hasDetails ? (
-            <button
-              type="button"
-              className={styles.disclosure}
-              onClick={() => s.openDetails('soiree')}
-              aria-label={t('movies.details.toggleShow')}
-            >
-              <ChevronRight aria-hidden size={16} />
-            </button>
-          ) : (
-            <span className={styles.disclosure} aria-hidden />
-          )}
-          <CardModals
-            s={s}
-            m={m}
-            isHost={isHost}
-            onVote={onVote}
-            onRemove={onRemove}
-            isInWatchlist={isInWatchlist}
-            onToggleWatchlist={onToggleWatchlist}
-            onToggleWheelExclusion={onToggleWheelExclusion}
-            avatarsByPseudo={participantAvatarsByPseudo}
-            participantCount={participantCount}
-          />
-        </li>
-        {voteError ? <VoteErrorBanner voteError={voteError} t={t} /> : null}
-      </Fragment>
-    );
-  }
-
+}: Readonly<MovieCardRowView>) {
   return (
     <Fragment>
       <li
@@ -469,8 +488,8 @@ export const MovieCardRow = memo(function MovieCardRow({
           {rank ?? ''}
         </span>
         <div className={styles.posterCol} inert={selecting}>
-          <RowPoster src={posterSrc} srcSet={posterSrcSet} eager={eager} />
-          <WatchlistBadge inWatchlist={isInWatchlist} t={t} />
+          <RowPoster src={posterSrc} srcSet={posterSrcSet} eager={!!eager} />
+          <WatchlistBadge inWatchlist={!!isInWatchlist} t={t} />
         </div>
         <div className={styles.titleCol} inert={selecting}>
           <div className={styles.titleRow}>
@@ -483,7 +502,13 @@ export const MovieCardRow = memo(function MovieCardRow({
               title={m.title}
               t={t}
             />
-            {isWinner ? <span className={styles.winnerBadge}>{winnerLabel}</span> : null}
+            {isWinner ? (
+              <span className={styles.winnerBadge}>
+                {winnerRank
+                  ? t('events.wheel.winnerRankLabel', { rank: winnerRank })
+                  : t('events.wheel.winnerLabel')}
+              </span>
+            ) : null}
           </div>
           <div className={styles.metaRow}>
             <ProposerBadge
@@ -512,7 +537,7 @@ export const MovieCardRow = memo(function MovieCardRow({
           />
         </div>
         <div className={styles.votesCol} inert={selecting}>
-          {s.canAct ? <VoteBar m={m} onVote={onVote} t={t} /> : <VoteReadonly m={m} />}
+          {s.canVote ? <VoteBar m={m} onVote={onVote} t={t} /> : <VoteReadonly m={m} />}
         </div>
         <div className={styles.seenCol} inert={selecting}>
           {s.canAct ? (
@@ -560,4 +585,102 @@ export const MovieCardRow = memo(function MovieCardRow({
       {voteError ? <VoteErrorBanner voteError={voteError} t={t} /> : null}
     </Fragment>
   );
+}
+
+export const MovieCardRow = memo(function MovieCardRow({
+  movie: m,
+  slug,
+  participantId,
+  canVote,
+  participantPseudo,
+  isFinished,
+  isHost,
+  onVote,
+  onRemove,
+  refresh,
+  onActionError,
+  t,
+  participantAvatars,
+  participantAvatarsByPseudo,
+  ratingScale,
+  eager = false,
+  isInWatchlist,
+  onToggleWatchlist,
+  onToggleWheelExclusion,
+  selection,
+  isWinner = false,
+  winnerRank,
+  isMobile,
+  rank,
+  voteError,
+  participantCount,
+}: Readonly<MovieCardRowProps>) {
+  const s = useMovieCardState({
+    movie: m,
+    slug,
+    participantId,
+    canVote,
+    participantPseudo,
+    isFinished,
+    isHost,
+    participantAvatars,
+    ratingScale,
+    refresh,
+    onActionError,
+    t,
+  });
+  const posterSrc = posterImageSrc(m.posterPath);
+  const posterSrcSet = tmdbPosterSrcSetForList(posterSrc);
+  const flatrateProviders = s.providers.filter((p) => p.type === 'flatrate');
+  const rentCount = s.providers.filter((p) => p.type === 'rent').length;
+  const buyCount = s.providers.filter((p) => p.type === 'buy').length;
+  const releaseDateLabel = formatReleaseYear(m.releaseDate);
+  const excluded = !!m.excludedFromWheel;
+  const selecting = !!selection?.active && !excluded;
+  const emptyDispoLabel = t('movies.watchProviders.emptyLabel');
+
+  const view: MovieCardRowView = {
+    ...({
+      movie: m,
+      slug,
+      participantId,
+      canVote,
+      participantPseudo,
+      isFinished,
+      isHost,
+      onVote,
+      onRemove,
+      refresh,
+      onActionError,
+      t,
+      participantAvatars,
+      participantAvatarsByPseudo,
+      ratingScale,
+      eager,
+      isInWatchlist,
+      onToggleWatchlist,
+      onToggleWheelExclusion,
+      selection,
+      isWinner,
+      winnerRank,
+      isMobile,
+      rank,
+      voteError,
+      participantCount,
+    } as MovieCardRowProps),
+    s,
+    posterSrc,
+    posterSrcSet,
+    flatrateProviders,
+    rentCount,
+    buyCount,
+    releaseDateLabel,
+    excluded,
+    selecting,
+    emptyDispoLabel,
+    m,
+  };
+
+  if (isMobile) return <MovieCardRowMobile {...view} />;
+  return <MovieCardRowDesktop {...view} />;
 });

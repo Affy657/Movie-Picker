@@ -241,6 +241,37 @@ public class GitHubIssueClientTests
         Assert.Null(url);
     }
 
+    [Fact]
+    public async Task UploadAttachmentAsync_DownloadUrlCarriesTemporaryToken_ReturnsUrlWithoutQuery()
+    {
+        var handler = new RoutingHandler(req =>
+        {
+            var path = req.RequestUri!.PathAndQuery;
+            if (req.Method == HttpMethod.Get && path.EndsWith("/git/ref/heads/feedback-attachments"))
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+            if (req.Method == HttpMethod.Put && path.Contains("/contents/"))
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Created)
+                {
+                    Content = JsonContent.Create(new
+                    {
+                        content = new
+                        {
+                            download_url = "https://raw.githubusercontent.com/Affy657/Movie-Picker/feedback-attachments/x.png?token=not-a-real-token"
+                        }
+                    })
+                });
+            throw new InvalidOperationException($"Unexpected request {req.Method} {path}");
+        });
+        var http = new HttpClient(handler) { BaseAddress = new Uri("https://api.github.com/") };
+        var client = new GitHubIssueClient(http, Options.Create(OptionsWith()), NullLogger<GitHubIssueClient>.Instance);
+
+        var url = await client.UploadAttachmentAsync(new GitHubAttachmentUpload("screenshot.png", "image/png", "QkFTRTY0"));
+
+        Assert.Equal(
+            "https://raw.githubusercontent.com/Affy657/Movie-Picker/feedback-attachments/x.png",
+            url);
+    }
+
     private static Task<HttpResponseMessage> RouteBranchExists(HttpRequestMessage req)
     {
         var path = req.RequestUri!.PathAndQuery;

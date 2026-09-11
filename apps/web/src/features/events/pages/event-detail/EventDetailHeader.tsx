@@ -181,6 +181,128 @@ export type EventDetailHeaderProps = {
   onViewModeChange?: (mode: 'grid' | 'list') => void;
 };
 
+function HeaderActions({
+  wheelActionsRef,
+  addMoviePrimary,
+  addMovieButton,
+  wheelActions,
+  condensed,
+  isFinished,
+  shareUrl,
+  title,
+  rawDate,
+  rawTime,
+  onOpenShare,
+  onOpenSettings,
+  t,
+}: Readonly<{
+  wheelActionsRef: RefObject<HTMLDivElement | null>;
+  addMoviePrimary: boolean;
+  addMovieButton: ReactNode;
+  wheelActions: ReactNode;
+  condensed: boolean;
+  isFinished: boolean;
+  shareUrl: string | undefined;
+  title: string;
+  rawDate: string;
+  rawTime: string;
+  onOpenShare: (() => void) | undefined;
+  onOpenSettings: (() => void) | undefined;
+  t: ReturnType<typeof useTranslation>['t'];
+}>) {
+  return (
+    <div className={styles.actions}>
+      <div ref={wheelActionsRef} className={styles.wheelActions}>
+        {addMoviePrimary ? addMovieButton : null}
+        {wheelActions}
+        {addMoviePrimary ? null : addMovieButton}
+      </div>
+      <div className={styles.utilityActions}>
+        {shareUrl && onOpenShare ? <EventShareButton onClick={onOpenShare} /> : null}
+        {!condensed && !isFinished && shareUrl ? (
+          <EventCalendarMenu title={title} date={rawDate} time={rawTime} url={shareUrl} />
+        ) : null}
+        {onOpenSettings ? (
+          <Button
+            type="button"
+            className={styles.settingsBtn}
+            onClick={onOpenSettings}
+            aria-haspopup="dialog"
+            aria-label={t('events.settings.title')}
+            title={t('events.settings.title')}
+          >
+            <Settings size={16} aria-hidden />
+          </Button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function HeaderRecap({
+  dateFormatted,
+  condensed,
+  stacked,
+  hiddenCount,
+  participantsLabel,
+  participantsOpen,
+  onToggleParticipants,
+  moviesLabel,
+  moviesCount,
+  votersLabel,
+  viewMode,
+  onViewModeChange,
+}: Readonly<{
+  dateFormatted: string;
+  condensed: boolean;
+  stacked: NonNullable<EventDetailHeaderProps['participants']>;
+  hiddenCount: number;
+  participantsLabel: string;
+  participantsOpen: boolean;
+  onToggleParticipants: () => void;
+  moviesLabel: string;
+  moviesCount: number;
+  votersLabel: string;
+  viewMode: EventDetailHeaderProps['viewMode'];
+  onViewModeChange: EventDetailHeaderProps['onViewModeChange'];
+}>) {
+  return (
+    <div className={styles.recap}>
+      <span className={styles.date}>{dateFormatted}</span>
+      {condensed ? null : (
+        <>
+          <span className={styles.sep} aria-hidden />
+          <ParticipantsStack
+            participants={stacked}
+            hiddenCount={hiddenCount}
+            label={participantsLabel}
+            open={participantsOpen}
+            onToggle={onToggleParticipants}
+            testId="participants-toggle"
+          />
+        </>
+      )}
+      <span className={styles.stats}>
+        <span className={styles.sep} aria-hidden />
+        <span>{moviesLabel}</span>
+        {moviesCount > 0 ? (
+          <>
+            <span className={styles.sep} aria-hidden />
+            <span>{votersLabel}</span>
+          </>
+        ) : null}
+      </span>
+      {onViewModeChange && viewMode ? (
+        <ViewModeToggle
+          value={viewMode}
+          onChange={onViewModeChange}
+          className={styles.viewToggle}
+        />
+      ) : null}
+    </div>
+  );
+}
+
 export default function EventDetailHeader({
   title,
   dateFormatted,
@@ -316,68 +438,37 @@ export default function EventDetailHeader({
           />
         ) : null}
 
-        <div className={styles.actions}>
-          <div ref={wheelActionsRef} className={styles.wheelActions}>
-            {addMoviePrimary ? addMovieButton : null}
-            {wheelActions}
-            {addMoviePrimary ? null : addMovieButton}
-          </div>
-          <div className={styles.utilityActions}>
-            {shareUrl && onOpenShare ? (
-              <EventShareButton condensed={condensed} onClick={onOpenShare} />
-            ) : null}
-            {!condensed && !isFinished && shareUrl ? (
-              <EventCalendarMenu title={title} date={rawDate} time={rawTime} url={shareUrl} />
-            ) : null}
-            {onOpenSettings ? (
-              <Button
-                type="button"
-                className={styles.settingsBtn}
-                onClick={onOpenSettings}
-                aria-haspopup="dialog"
-                aria-label={t('events.settings.title')}
-                title={t('events.settings.title')}
-              >
-                <Settings size={16} aria-hidden />
-              </Button>
-            ) : null}
-          </div>
-        </div>
+        <HeaderActions
+          wheelActionsRef={wheelActionsRef}
+          addMoviePrimary={addMoviePrimary}
+          addMovieButton={addMovieButton}
+          wheelActions={wheelActions}
+          condensed={condensed}
+          isFinished={isFinished}
+          shareUrl={shareUrl}
+          title={title}
+          rawDate={rawDate}
+          rawTime={rawTime}
+          onOpenShare={onOpenShare}
+          onOpenSettings={onOpenSettings}
+          t={t}
+        />
       </header>
 
-      <div className={styles.recap}>
-        <span className={styles.date}>{dateFormatted}</span>
-        {condensed ? null : (
-          <>
-            <span className={styles.sep} aria-hidden />
-            <ParticipantsStack
-              participants={stacked}
-              hiddenCount={hiddenCount}
-              label={participantsLabel}
-              open={participantsOpen}
-              onToggle={onToggleParticipants}
-              testId="participants-toggle"
-            />
-          </>
-        )}
-        <span className={styles.stats}>
-          <span className={styles.sep} aria-hidden />
-          <span>{moviesLabel}</span>
-          {moviesCount > 0 ? (
-            <>
-              <span className={styles.sep} aria-hidden />
-              <span>{votersLabel}</span>
-            </>
-          ) : null}
-        </span>
-        {onViewModeChange && viewMode ? (
-          <ViewModeToggle
-            value={viewMode}
-            onChange={onViewModeChange}
-            className={styles.viewToggle}
-          />
-        ) : null}
-      </div>
+      <HeaderRecap
+        dateFormatted={dateFormatted}
+        condensed={condensed}
+        stacked={stacked}
+        hiddenCount={hiddenCount}
+        participantsLabel={participantsLabel}
+        participantsOpen={participantsOpen}
+        onToggleParticipants={onToggleParticipants}
+        moviesLabel={moviesLabel}
+        moviesCount={moviesCount}
+        votersLabel={votersLabel}
+        viewMode={viewMode}
+        onViewModeChange={onViewModeChange}
+      />
     </>
   );
 }

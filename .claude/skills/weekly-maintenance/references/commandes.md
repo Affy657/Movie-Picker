@@ -1,6 +1,6 @@
 # Commandes de la passe hebdomadaire
 
-Référence lue à la demande depuis [SKILL.md](../SKILL.md). Repo `Affy657/Movie-Picker`, projet GCP `movie-picker-2026`, région `europe-west1`.
+Référence lue à la demande depuis [SKILL.md](../SKILL.md). Repo `Affy657/Movie-Picker`, projet GCP `<PROJET_GCP>`, région `europe-west1`.
 
 Commandes POSIX : les lancer via l'outil Bash, pas PowerShell, qui ne comprend ni `$(...)` ni `date -d`.
 
@@ -31,17 +31,18 @@ rtk gh pr merge <n> --repo Affy657/Movie-Picker --merge
 
 ## Scores Lighthouse réels
 
-Le job archive les rapports en artefact `lighthouse-reports`, rétention 7 jours, ce qui couvre exactement une passe.
+Le job vit dans `deploy.yml` depuis le 2026-09-10, et le déploiement est manuel : le dernier rapport n'est pas celui du dernier master, c'est celui de la dernière livraison. La rétention de l'artefact `lighthouse-reports` est de 7 jours, donc au-delà d'une semaine sans déploiement il n'y a **rien** à télécharger. Le noter dans le rapport plutôt que de conclure au vert.
 
 ```bash
-rtk gh run download <run-id> --repo Affy657/Movie-Picker --name lighthouse-reports --dir "${TMPDIR:-/tmp}/lh"
+RUN=$(rtk gh run list --workflow=deploy.yml --repo Affy657/Movie-Picker --limit 1 --json databaseId --jq '.[0].databaseId')
+rtk gh run download "$RUN" --repo Affy657/Movie-Picker --name lighthouse-reports --dir "${TMPDIR:-/tmp}/lh"
 ```
 
 Un fichier `report-<slug>.json` par page. Lire `categories.performance.score`, `categories.accessibility.score`, `categories["best-practices"].score`, `categories.seo.score` (valeurs de 0 à 1, les seuils de [configs/lighthouse-budgets.json](../../../../configs/lighthouse-budgets.json) sont sur 100).
 
 Ce qui déclenche une alerte dans le rapport :
 
-- `accessibility` ou `best-practices` en dessous de 100 : seuil sans aucune marge, le gate rougit au prochain run et laisse `deploy-front` en `skipped` ;
+- `accessibility` ou `best-practices` en dessous de 100 : seuil sans aucune marge, le gate rougit au prochain déploiement et laisse `deploy-front` en `skipped` ;
 - `performance` à moins de 3 points de son seuil (85 en général, 80 pour `watchlist`) ;
 - `seo` sous 95 sur une page indexable.
 
@@ -53,7 +54,7 @@ Trafic par classe de code sur 7 jours :
 TOKEN=$(gcloud auth print-access-token)
 END=$(date -u +%Y-%m-%dT%H:%M:%SZ); START=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)
 curl -sS -G -H "Authorization: Bearer $TOKEN" \
-  "https://monitoring.googleapis.com/v3/projects/movie-picker-2026/timeSeries" \
+  "https://monitoring.googleapis.com/v3/projects/<PROJET_GCP>/timeSeries" \
   --data-urlencode 'filter=metric.type="run.googleapis.com/request_count" AND resource.labels.service_name="movie-picker-api"' \
   --data-urlencode "interval.startTime=$START" --data-urlencode "interval.endTime=$END" \
   --data-urlencode 'aggregation.alignmentPeriod=86400s' \
@@ -70,7 +71,7 @@ Erreurs applicatives :
 
 ```bash
 gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="movie-picker-api" AND severity>=ERROR' \
-  --project movie-picker-2026 --freshness=7d --limit=50 --format="value(timestamp,severity,textPayload)"
+  --project <PROJET_GCP> --freshness=7d --limit=50 --format="value(timestamp,severity,textPayload)"
 ```
 
 Révision active et image déployée :

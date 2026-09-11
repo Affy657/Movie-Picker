@@ -2,8 +2,6 @@ import { useId, useMemo, useRef, useState } from 'react';
 import { Bookmark, Import, Plus } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import EmptyState from '@/shared/components/EmptyState';
-import SignedOutState from '@/shared/components/SignedOutState';
-import SessionCheckErrorState from '@/features/auth/components/SessionCheckErrorState';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -65,10 +63,51 @@ function persistViewMode(mode: MovieViewMode) {
   }
 }
 
+function watchlistSubtitle(count: number, t: ReturnType<typeof useTranslation>['t']) {
+  if (count === 1) return t('watchlist.header.subtitleOne', { count: 1 });
+  return t('watchlist.header.subtitle', { count });
+}
+
+function WatchlistFiltersPanel({
+  panelId,
+  tmdbLanguage,
+  labels,
+  ratingScale,
+  toolbar,
+  isMobile,
+}: Readonly<{
+  panelId: string;
+  tmdbLanguage: string;
+  labels: Parameters<typeof MovieListFiltersPanel>[0]['labels'];
+  ratingScale: Parameters<typeof MovieListFiltersPanel>[0]['ratingScale'];
+  toolbar: ReturnType<typeof useWatchlistToolbar>;
+  isMobile: boolean;
+}>) {
+  return (
+    <MovieListFiltersPanel
+      panelId={panelId}
+      tmdbLanguage={tmdbLanguage}
+      labels={labels}
+      ratingScale={ratingScale}
+      selectedGenres={toolbar.selectedGenres}
+      onToggleGenre={toolbar.toggleGenre}
+      selectedMediaTypes={toolbar.selectedMediaTypes}
+      onToggleMediaType={toolbar.toggleMediaType}
+      selectedDecade={toolbar.selectedDecade}
+      onToggleDecade={toolbar.toggleDecade}
+      voteMin={toolbar.voteMin}
+      onToggleVoteMin={toolbar.toggleVoteMin}
+      runtimeRange={toolbar.runtimeRange}
+      onChangeRuntimeRange={toolbar.changeRuntimeRange}
+      onReset={isMobile ? undefined : toolbar.clearAllFilters}
+    />
+  );
+}
+
 export default function WatchlistPage() {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
-  const { user, isLoading: authLoading, authCheckFailed } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   useNoindexPage(pageTitle(t('watchlist.title')), ROUTES.watchlist);
   const hasHover = useHasHoverCapability();
   const isMobile = useIsMobile();
@@ -145,28 +184,16 @@ export default function WatchlistPage() {
 
   const activeFilterCount = toolbar.activeFilterChips.length;
   const filtersPanel = (
-    <MovieListFiltersPanel
+    <WatchlistFiltersPanel
       panelId={filtersPanelId}
       tmdbLanguage={tmdbLanguage}
       labels={filtersLabels}
       ratingScale={user?.ratingScale}
-      selectedGenres={toolbar.selectedGenres}
-      onToggleGenre={toolbar.toggleGenre}
-      selectedMediaTypes={toolbar.selectedMediaTypes}
-      onToggleMediaType={toolbar.toggleMediaType}
-      selectedDecade={toolbar.selectedDecade}
-      onToggleDecade={toolbar.toggleDecade}
-      voteMin={toolbar.voteMin}
-      onToggleVoteMin={toolbar.toggleVoteMin}
-      runtimeRange={toolbar.runtimeRange}
-      onChangeRuntimeRange={toolbar.changeRuntimeRange}
-      onReset={isMobile ? undefined : toolbar.clearAllFilters}
+      toolbar={toolbar}
+      isMobile={isMobile}
     />
   );
-  const subtitle =
-    items.length === 1
-      ? t('watchlist.header.subtitleOne', { count: 1 })
-      : t('watchlist.header.subtitle', { count: items.length });
+  const subtitle = watchlistSubtitle(items.length, t);
   const openAddPanel = () => setAddPanelOpen(true);
 
   if (authLoading) {
@@ -174,24 +201,6 @@ export default function WatchlistPage() {
       <PageLayout className={styles.layout}>
         <h1 className="visually-hidden">{t('watchlist.title')}</h1>
         <WatchlistSkeleton label={t('watchlist.loadingDetail')} gridClassName={styles.grid} />
-      </PageLayout>
-    );
-  }
-
-  if (!user && authCheckFailed) {
-    return <SessionCheckErrorState />;
-  }
-
-  if (!user) {
-    return (
-      <PageLayout className={styles.layout}>
-        <h1 className={styles.pageTitle}>{t('watchlist.title')}</h1>
-        <SignedOutState
-          icon={<Bookmark aria-hidden size={28} />}
-          title={t('watchlist.signedOutTitle')}
-          message={t('watchlist.signedOutMessage')}
-          returnTo={ROUTES.watchlist}
-        />
       </PageLayout>
     );
   }

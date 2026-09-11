@@ -68,4 +68,14 @@ Dans cet ordre, et seulement une fois le go de l'utilisateur obtenu à l'étape 
 - Arrêter les serveurs de dev avant de lancer les suites : les laisser tourner sature le CPU et provoque de faux échecs par timeout.
 - `pnpm run verify:local` et corriger toute erreur **avant** de push (obligatoire, cf. AGENTS.md). Jamais skip les hooks.
 - Commit + push sur `master` (code + mise à jour roadmap en un seul commit).
-- Surveiller la CI (`gh run list` / `gh pr checks`), corriger jusqu'à ce que tout soit vert **et déployé**. Reboucler autant que nécessaire.
+- Surveiller la CI (`gh run list` / `gh pr checks`), corriger jusqu'à ce que tout soit vert. Reboucler autant que nécessaire.
+
+## Étape 8 — Déploiement (geste séparé, sur demande)
+
+**Un push sur `master` ne déploie plus.** La feature est livrée dans le dépôt, pas en production. Terminer en le disant à l'utilisateur, avec la commande à lancer quand il veut la mettre en ligne :
+
+```bash
+rtk gh workflow run deploy.yml --ref master -f cible=tout
+```
+
+Ne pas le déclencher soi-même sans demande explicite : grouper plusieurs features dans un seul déploiement est précisément ce que ce découpage permet, et c'est l'utilisateur qui décide du moment.

@@ -4,7 +4,7 @@ import { TechHint } from './TechBlocks';
 import shared from './techShared.module.css';
 import styles from './techPage.module.css';
 
-type MilestoneState = 'shipped' | 'current' | 'planned';
+type MilestoneState = 'shipped' | 'current' | 'planned' | 'unplanned';
 
 const MILESTONES: readonly {
   key: string;
@@ -23,6 +23,7 @@ const MILESTONES: readonly {
   { key: 'v16', items: 6, state: 'current' },
   { key: 'v17', items: 7, state: 'planned' },
   { key: 'v18', items: 6, state: 'planned' },
+  { key: 'unplanned', items: 0, state: 'unplanned', gapBefore: true },
   { key: 'v2', items: 3, state: 'planned', gapBefore: true },
 ];
 
@@ -42,38 +43,44 @@ export default function TechTimeline() {
     <ol className={styles.timeline}>
       {MILESTONES.map(({ key, items, state, gapBefore }) => (
         <li
-          className={styles.timelineItem}
+          className={clsx(styles.timelineItem, state === 'unplanned' && styles.timelineUnplanned)}
           key={key}
           data-state={state}
           data-gap={gapBefore ? 'before' : undefined}
         >
           <span className={styles.timelineMarker} aria-hidden="true" />
-          <p className={styles.timelineWhen}>
-            <span>{t(`tech.trajectory.${key}When` as TranslationKey)}</span>
-            {state === 'planned' ? (
-              <span className={styles.timelineBadge}>{t('tech.trajectory.plannedBadge')}</span>
-            ) : null}
-            {state === 'current' ? (
-              <span className={styles.timelineBadge}>{t('tech.trajectory.currentBadge')}</span>
-            ) : null}
-          </p>
-          <h3 className={styles.timelineWhat}>
-            <TechHint label={t(`tech.trajectory.${key}Hint` as TranslationKey)}>
-              {t(`tech.trajectory.${key}What` as TranslationKey)}
-            </TechHint>
-          </h3>
-          <p className={styles.timelineDetail}>
-            {t(`tech.trajectory.${key}Detail` as TranslationKey)}
-          </p>
-          <ul className={clsx(shared.tags, styles.timelineChips)}>
-            {Array.from({ length: items }, (_, index) => (
-              <li key={index}>
-                <span className={shared.tag}>
-                  {t(`tech.trajectory.${key}Item${index + 1}` as TranslationKey)}
-                </span>
-              </li>
-            ))}
-          </ul>
+          {state === 'unplanned' ? (
+            <p className={styles.timelineDetail}>{t('tech.trajectory.unplannedDetail')}</p>
+          ) : (
+            <>
+              <p className={styles.timelineWhen}>
+                <span>{t(`tech.trajectory.${key}When` as TranslationKey)}</span>
+                {state === 'planned' ? (
+                  <span className={styles.timelineBadge}>{t('tech.trajectory.plannedBadge')}</span>
+                ) : null}
+                {state === 'current' ? (
+                  <span className={styles.timelineBadge}>{t('tech.trajectory.currentBadge')}</span>
+                ) : null}
+              </p>
+              <h3 className={styles.timelineWhat}>
+                <TechHint label={t(`tech.trajectory.${key}Hint` as TranslationKey)}>
+                  {t(`tech.trajectory.${key}What` as TranslationKey)}
+                </TechHint>
+              </h3>
+              <p className={styles.timelineDetail}>
+                {t(`tech.trajectory.${key}Detail` as TranslationKey)}
+              </p>
+              <ul className={clsx(shared.tags, styles.timelineChips)}>
+                {Array.from({ length: items }, (_, index) => (
+                  <li key={index}>
+                    <span className={shared.tag}>
+                      {t(`tech.trajectory.${key}Item${index + 1}` as TranslationKey)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </li>
       ))}
     </ol>

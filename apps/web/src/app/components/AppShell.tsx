@@ -34,11 +34,19 @@ type NavItemDef = {
   Icon: IconComponent;
 };
 
-type NavItemSpec = Omit<NavItemDef, 'label'> & { labelKey: TranslationKey };
+type NavItemSpec = Omit<NavItemDef, 'label'> & {
+  labelKey: TranslationKey;
+  mobileLabelKey?: TranslationKey;
+};
 
 const NAV_ITEMS: ReadonlyArray<NavItemSpec> = [
   { to: ROUTES.myEvents, labelKey: 'nav.myEvents', Icon: CalendarDays },
-  { to: ROUTES.createEvent, labelKey: 'nav.createEvent', Icon: Plus },
+  {
+    to: ROUTES.createEvent,
+    labelKey: 'nav.createEvent',
+    mobileLabelKey: 'nav.createEventShort',
+    Icon: Plus,
+  },
   { to: ROUTES.watchlist, labelKey: 'nav.watchlist', Icon: Bookmark },
 ];
 
@@ -48,6 +56,10 @@ const LANDING_NAV_ITEMS: ReadonlyArray<{ anchor: string; labelKey: TranslationKe
   { anchor: LANDING_ANCHORS.features, labelKey: 'nav.landing.features' },
   { anchor: LANDING_ANCHORS.faq, labelKey: 'nav.landing.faq' },
 ];
+
+function toNavItem(spec: NavItemSpec, label: string): NavItemDef {
+  return { to: spec.to, end: spec.end, label, Icon: spec.Icon };
+}
 
 function DesktopNavItem({
   to,
@@ -83,6 +95,61 @@ function MobileNavItem({ to, end, label, Icon }: Readonly<NavItemDef>) {
   );
 }
 
+function HeaderNavActions({
+  isLoading,
+  isAuthenticated,
+  isOnAuthRoute,
+  user,
+  returnTo,
+  onOpenWhatsNew,
+  t,
+}: Readonly<{
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  isOnAuthRoute: boolean;
+  user: ReturnType<typeof useAuth>['user'];
+  returnTo: string;
+  onOpenWhatsNew: () => void;
+  t: ReturnType<typeof useTranslation>['t'];
+}>) {
+  if (isLoading || (!isAuthenticated && isOnAuthRoute)) {
+    return <div className={styles.navActions} />;
+  }
+
+  if (user) {
+    return (
+      <div className={styles.navActions}>
+        {shouldShowWhatsNewNavChip(user.createdAt) ? (
+          <WhatsNewNavChip onOpen={onOpenWhatsNew} />
+        ) : null}
+        <InboxBell />
+        <UserMenu user={user} />
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.navActions}>
+      <Link
+        to={withReturnTo(ROUTES.login, returnTo)}
+        className={buttonClass({ size: 'sm', className: styles.guestLogin })}
+      >
+        {t('home.ctaLogin')}
+      </Link>
+      <Link
+        to={withReturnTo(ROUTES.register, returnTo)}
+        className={buttonClass({
+          variant: 'primary',
+          size: 'sm',
+          className: styles.guestRegister,
+        })}
+      >
+        {t('home.ctaRegister')}
+      </Link>
+    </div>
+  );
+}
+
 export default function AppShell() {
   const { t } = useTranslation();
   const { user, isLoading } = useAuth();
@@ -110,12 +177,13 @@ export default function AppShell() {
     Icon: Compass,
   };
 
-  const items: NavItemDef[] = NAV_ITEMS.map(({ labelKey, ...rest }) => ({
-    ...rest,
-    label: t(labelKey),
-  }));
+  const items: NavItemDef[] = NAV_ITEMS.map((spec) => toNavItem(spec, t(spec.labelKey)));
 
-  const mobileItems: NavItemDef[] = isAuthenticated ? [exploreItem, ...items] : items;
+  const compactItems: NavItemDef[] = NAV_ITEMS.map((spec) =>
+    toNavItem(spec, t(spec.mobileLabelKey ?? spec.labelKey))
+  );
+
+  const mobileItems: NavItemDef[] = isAuthenticated ? [exploreItem, ...compactItems] : compactItems;
 
   const desktopItems: (NavItemDef & { wideOnly?: boolean })[] = isAuthenticated
     ? [exploreItem, ...items]
@@ -157,36 +225,15 @@ export default function AppShell() {
                 ))
               : desktopItems.map((item) => <DesktopNavItem key={item.to} {...item} />)}
           </nav>
-          {isLoading || (!isAuthenticated && isOnAuthRoute) ? (
-            <div className={styles.navActions} />
-          ) : isAuthenticated ? (
-            <div className={styles.navActions}>
-              {shouldShowWhatsNewNavChip(user.createdAt) ? (
-                <WhatsNewNavChip onOpen={openWhatsNew} />
-              ) : null}
-              <InboxBell />
-              <UserMenu user={user} />
-            </div>
-          ) : (
-            <div className={styles.navActions}>
-              <Link
-                to={withReturnTo(ROUTES.login, returnTo)}
-                className={buttonClass({ size: 'sm', className: styles.guestLogin })}
-              >
-                {t('home.ctaLogin')}
-              </Link>
-              <Link
-                to={withReturnTo(ROUTES.register, returnTo)}
-                className={buttonClass({
-                  variant: 'primary',
-                  size: 'sm',
-                  className: styles.guestRegister,
-                })}
-              >
-                {t('home.ctaRegister')}
-              </Link>
-            </div>
-          )}
+          <HeaderNavActions
+            isLoading={isLoading}
+            isAuthenticated={isAuthenticated}
+            isOnAuthRoute={isOnAuthRoute}
+            user={user}
+            returnTo={returnTo}
+            onOpenWhatsNew={openWhatsNew}
+            t={t}
+          />
         </div>
       </header>
       <div className={styles.content}>

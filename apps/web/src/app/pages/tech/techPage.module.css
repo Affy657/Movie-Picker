@@ -76,14 +76,6 @@
   margin: var(--space-0);
 }
 
-.credits {
-  display: grid;
-  gap: var(--space-3);
-  max-width: var(--container-2xl);
-  margin-top: var(--space-10);
-  margin-bottom: var(--space-8);
-}
-
 .metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -379,6 +371,27 @@
       transparent var(--space-1-5) var(--space-3)
     ),
     var(--color-bg);
+}
+
+.timelineUnplanned {
+  padding-bottom: var(--space-3);
+  border-bottom: none;
+}
+
+.timelineUnplanned .timelineMarker {
+  width: var(--space-2);
+  height: var(--space-2);
+  margin-top: var(--space-1);
+  margin-left: var(--space-0-5);
+  border-style: dashed;
+  border-color: var(--color-border);
+  background: var(--color-bg);
+  box-shadow: none;
+}
+
+.timelineUnplanned .timelineDetail {
+  font-style: italic;
+  color: var(--color-meta);
 }
 
 .timelineMarker {

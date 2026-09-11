@@ -1,14 +1,9 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, UserPlus, UserCheck, Users, Search, SearchX } from 'lucide-react';
-import { Link } from 'react-router';
-import Avatar from '@/shared/components/Avatar';
-import EmptyState from '@/shared/components/EmptyState';
-import SearchField from '@/shared/components/SearchField';
+import { useQuery, useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
+import { X } from 'lucide-react';
 import Sheet from '@/shared/components/Sheet';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
-import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -21,14 +16,32 @@ import {
   searchUsers,
   type FollowUserItem,
 } from '@/features/profile/api/profileApi';
-import { splitOnMatch } from '@/features/profile/lib/highlightMatch';
+import FollowListEmptyState from './FollowListEmptyState';
+import FollowListRow from './FollowListRow';
+import FollowListTabs from './FollowListTabs';
+import FollowSearchRow, { MIN_SEARCH_LENGTH } from './FollowSearchRow';
 import styles from './FollowListModal.module.css';
 import Modal from '@/shared/components/Modal';
 
 type Tab = 'following' | 'followers' | 'search';
 
-const MIN_SEARCH_LENGTH = 2;
 const SEARCH_DEBOUNCE_MS = 300;
+
+type FollowListQuery = UseQueryResult<{ items: FollowUserItem[] }>;
+
+function highlightTerm(searching: boolean, debouncedQuery: string) {
+  return searching && debouncedQuery.length >= MIN_SEARCH_LENGTH ? debouncedQuery : '';
+}
+
+function visibleItems(searching: boolean, searchEnabled: boolean, activeQuery: FollowListQuery) {
+  if (searching && !searchEnabled) return [];
+  return activeQuery.data?.items ?? [];
+}
+
+function isListPending(searching: boolean, searchEnabled: boolean, activeQuery: FollowListQuery) {
+  if (searching) return searchEnabled && activeQuery.isPending;
+  return activeQuery.isPending;
+}
 
 interface Props {
   handle: string;
@@ -53,7 +66,8 @@ export default function FollowListModal({
   const [followError, setFollowError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query.trim(), SEARCH_DEBOUNCE_MS);
-  const searchEnabled = tab === 'search' && debouncedQuery.length >= MIN_SEARCH_LENGTH;
+  const searching = tab === 'search';
+  const searchEnabled = searching && debouncedQuery.length >= MIN_SEARCH_LENGTH;
 
   const followingQuery = useQuery({
     queryKey: queryKeys.profile.following(handle),
@@ -80,178 +94,83 @@ export default function FollowListModal({
     queryClient.invalidateQueries({ queryKey: queryKeys.profile.userSearches });
   };
 
-  const followMutation = useMutation({
-    mutationFn: (h: string) => followUser(h),
+  const mutationHandlers = {
     onSuccess: () => {
       setFollowError(null);
       invalidateProfileQueries();
     },
-    onError: (err) => setFollowError(getErrorMessage(err, t('profile.follow.error'))),
+    onError: (err: unknown) => setFollowError(getErrorMessage(err, t('profile.follow.error'))),
+  };
+
+  const followMutation = useMutation({
+    mutationFn: (h: string) => followUser(h),
+    ...mutationHandlers,
   });
 
   const unfollowMutation = useMutation({
     mutationFn: (h: string) => unfollowUser(h),
-    onSuccess: () => {
-      setFollowError(null);
-      invalidateProfileQueries();
-    },
-    onError: (err) => setFollowError(getErrorMessage(err, t('profile.follow.error'))),
+    ...mutationHandlers,
   });
 
-  const activeQuery = { following: followingQuery, followers: followersQuery, search: searchQuery }[
-    tab
-  ];
-  const items = tab === 'search' && !searchEnabled ? [] : (activeQuery.data?.items ?? []);
-  const isPending =
-    tab === 'search' ? searchEnabled && searchQuery.isPending : activeQuery.isPending;
+  const activeQuery: FollowListQuery = {
+    following: followingQuery,
+    followers: followersQuery,
+    search: searchQuery,
+  }[tab];
+
+  const items = visibleItems(searching, searchEnabled, activeQuery);
+  const isPending = isListPending(searching, searchEnabled, activeQuery);
+  const highlight = highlightTerm(searching, debouncedQuery);
+  const togglePending = followMutation.isPending || unfollowMutation.isPending;
 
   const handleToggleFollow = (item: FollowUserItem) => {
-    if (item.isFollowedByMe) {
-      unfollowMutation.mutate(item.handle);
-    } else {
-      followMutation.mutate(item.handle);
-    }
+    const mutation = item.isFollowedByMe ? unfollowMutation : followMutation;
+    mutation.mutate(item.handle);
   };
 
-  const renderHighlighted = (value: string) =>
-    tab === 'search' && debouncedQuery.length >= MIN_SEARCH_LENGTH
-      ? splitOnMatch(value, debouncedQuery).map((segment, index) =>
-          segment.matched ? (
-            <mark key={index} className={styles.highlight}>
-              {segment.text}
-            </mark>
-          ) : (
-            <span key={index}>{segment.text}</span>
-          )
-        )
-      : value;
-
   const tabs = (
-    <div className={styles.tabs}>
-      <button
-        type="button"
-        className={tab === 'following' ? styles.tabActive : styles.tab}
-        onClick={() => setTab('following')}
-      >
-        {t('profile.follow.followingCount', { count: String(followingCount) })}
-      </button>
-      <button
-        type="button"
-        className={tab === 'followers' ? styles.tabActive : styles.tab}
-        onClick={() => setTab('followers')}
-      >
-        {t('profile.follow.followersCount', { count: String(followersCount) })}
-      </button>
-      <button
-        type="button"
-        className={tab === 'search' ? styles.tabActive : styles.tab}
-        onClick={() => setTab('search')}
-        aria-label={isMobile ? t('profile.follow.search.tabAriaLabel') : undefined}
-      >
-        {isMobile ? <UserPlus size={16} aria-hidden /> : t('profile.follow.search.tab')}
-      </button>
-    </div>
+    <FollowListTabs
+      tab={tab}
+      followingCount={followingCount}
+      followersCount={followersCount}
+      onSelect={setTab}
+    />
   );
 
-  const searchRow = tab === 'search' && (
-    <div className={styles.searchRow}>
-      <SearchField
-        value={query}
-        onChange={setQuery}
-        placeholder={t('profile.follow.search.placeholder')}
-        ariaLabel={t('profile.follow.search.tabAriaLabel')}
-      />
-      {query.trim().length > 0 && query.trim().length < MIN_SEARCH_LENGTH && (
-        <p className={styles.hint}>
-          {t('profile.follow.search.minLength', { count: String(MIN_SEARCH_LENGTH) })}
-        </p>
-      )}
-    </div>
-  );
-
-  const emptyState =
-    tab === 'search' ? (
-      <EmptyState
-        compact
-        icon={
-          debouncedQuery.length >= MIN_SEARCH_LENGTH ? (
-            <SearchX size={22} aria-hidden />
-          ) : (
-            <Search size={22} aria-hidden />
-          )
-        }
-        title={
-          debouncedQuery.length >= MIN_SEARCH_LENGTH
-            ? t('profile.follow.search.emptyTitle')
-            : t('profile.follow.search.idleTitle')
-        }
-        message={
-          debouncedQuery.length >= MIN_SEARCH_LENGTH
-            ? t('profile.follow.search.emptyMessage')
-            : t('profile.follow.search.idleMessage')
-        }
-      />
-    ) : (
-      <EmptyState
-        compact
-        icon={<Users size={22} aria-hidden />}
-        message={t('profile.follow.empty')}
-      />
-    );
+  const searchRow = searching && <FollowSearchRow value={query} onChange={setQuery} />;
 
   const list = (
     <ul className={styles.list}>
       {isPending && <li className={styles.placeholder}>{t('common.loading')}</li>}
-      {!isPending && items.length === 0 && <li>{emptyState}</li>}
-      {items.map((item) => {
-        const isMe = user?.handle === item.handle;
-        const pending = followMutation.isPending || unfollowMutation.isPending;
-        return (
-          <li key={item.handle} className={styles.item}>
-            <Link to={ROUTES.profile(item.handle)} className={styles.itemLink} onClick={onClose}>
-              <Avatar avatarId={item.avatarId} pseudo={item.displayName} size="md" />
-              <div className={styles.itemInfo}>
-                <span className={styles.itemName}>{renderHighlighted(item.displayName)}</span>
-                <span className={styles.itemHandle}>@{renderHighlighted(item.handle)}</span>
-              </div>
-            </Link>
-            {user && !isMe && item.isFollowedByMe !== null && (
-              <button
-                type="button"
-                className={item.isFollowedByMe ? styles.unfollowBtn : styles.followBtn}
-                disabled={pending}
-                onClick={() => handleToggleFollow(item)}
-                aria-label={
-                  item.isFollowedByMe
-                    ? t('profile.follow.unfollowAriaLabel', { handle: item.handle })
-                    : t('profile.follow.followAriaLabel', { handle: item.handle })
-                }
-              >
-                {item.isFollowedByMe ? (
-                  <UserCheck size={16} aria-hidden />
-                ) : (
-                  <UserPlus size={16} aria-hidden />
-                )}
-                <span className={styles.btnLabel}>
-                  {item.isFollowedByMe ? t('profile.follow.unfollow') : t('profile.follow.follow')}
-                </span>
-              </button>
-            )}
-            {isMe && <span className={styles.meBadge}>{t('profile.follow.isMeBadge')}</span>}
-          </li>
-        );
-      })}
+      {!isPending && items.length === 0 && (
+        <li>
+          <FollowListEmptyState searching={searching} hasSearchTerm={highlight.length > 0} />
+        </li>
+      )}
+      {items.map((item) => (
+        <FollowListRow
+          key={item.handle}
+          item={item}
+          isMe={user?.handle === item.handle}
+          canFollow={Boolean(user) && user?.handle !== item.handle && item.isFollowedByMe !== null}
+          pending={togglePending}
+          highlight={highlight}
+          onToggleFollow={handleToggleFollow}
+          onNavigate={onClose}
+        />
+      ))}
     </ul>
   );
 
-  const searchError =
-    tab === 'search' && searchQuery.isError
-      ? getErrorMessage(searchQuery.error, t('profile.follow.search.error'))
-      : null;
+  const searchError = searchQuery.isError
+    ? getErrorMessage(searchQuery.error, t('profile.follow.search.error'))
+    : null;
 
-  const errorBanner = (followError ?? searchError) && (
+  const bannerMessage = followError ?? (searching ? searchError : null);
+
+  const errorBanner = bannerMessage && (
     <p className="error" role="alert">
-      {followError ?? searchError}
+      {bannerMessage}
     </p>
   );
 

@@ -335,7 +335,7 @@ describe('App (routes)', () => {
       }
     });
 
-    it('AppShell expose Mes soirées + Nouvelle soirée dans la nav (Paramètres est dans le menu avatar)', async () => {
+    it('AppShell expose Mes soirées + le raccourci de création dans la nav (Paramètres est dans le menu avatar)', async () => {
       server.use(
         authedUserHandler,
         http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
@@ -348,9 +348,19 @@ describe('App (routes)', () => {
       if (!mobileNav) throw new Error('Mobile nav introuvable');
       expect(within(mobileNav).queryByRole('link', { name: /^Accueil$/i })).not.toBeInTheDocument();
       expect(within(mobileNav).getByRole('link', { name: /^Mes soirées$/i })).toBeInTheDocument();
+      expect(within(mobileNav).getByRole('link', { name: /^Créer$/i })).toHaveAttribute(
+        'href',
+        '/new'
+      );
       expect(
-        within(mobileNav).getByRole('link', { name: /^Nouvelle soirée$/i })
-      ).toBeInTheDocument();
+        within(mobileNav).queryByRole('link', { name: /^Nouvelle soirée$/i })
+      ).not.toBeInTheDocument();
+      const desktopNav = navs.at(0);
+      if (!desktopNav) throw new Error('Nav bureau introuvable');
+      expect(within(desktopNav).getByRole('link', { name: /^Nouvelle soirée$/i })).toHaveAttribute(
+        'href',
+        '/new'
+      );
       expect(
         within(mobileNav).queryByRole('link', { name: /^Paramètres$/i })
       ).not.toBeInTheDocument();

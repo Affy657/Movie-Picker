@@ -1,0 +1,680 @@
+# Déploiement Movie Picker — front Vite/React → S3+CloudFront ; API .NET → Cloud Run.
+#
+# **Manuel, jamais automatique.** Un push sur master ne déploie plus : il ne fait que jouer les
+# portes de `ci-cd.yml`. La production part quand ce workflow est déclenché à la main, ce qui
+# permet de grouper plusieurs livraisons dans un seul déploiement. Les minutes GitHub Actions
+# d'un dépôt privé sont facturées et 99 % du coût partait sur les pushes master : la moitié de
+# ce coût était le chemin de déploiement, rejoué à chaque commit qu'on ne livrait pas pour autant.
+#
+# Contrepartie assumée : la production est périmée par défaut entre deux déclenchements. Le
+# garde-fou final vérifie donc que chaque cible demandée est réellement partie, et non la couleur
+# du run — un job de déploiement sauté par un `needs:` rouge n'apparaît pas en échec.
+#
+# Les portes de qualité ne sont pas contournées, elles sont *consommées* : `verifier-ci` refuse de
+# déployer un commit dont le run `ci-cd.yml` n'est pas vert (gitleaks, lint, tests, E2E, Quality
+# Gate Sonar). Rejouer ces portes ici doublerait leur coût sans rien prouver de plus, puisqu'elles
+# ont déjà tourné sur exactement ce commit. Lighthouse, à l'inverse, tourne **ici** : le job pèse
+# 9 des 27 minutes d'un run master, il n'a donc plus sa place sur le chemin de chaque push, et il
+# garde son rôle de porte bloquante de `deploy-front` (voir Impasses I4 de docs/technical-debt.md,
+# desserrer cette porte est mesuré sans gain).
+#
+# Retour arrière : `rollback.yml` pour l'API (révision Cloud Run antérieure), l'artefact
+# `front-dist-<sha>` archivé par `deploy-front` pour le front.
+
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      cible:
+        description: "Ce qui est déployé"
+        type: choice
+        required: true
+        default: tout
+        options:
+          - tout
+          - front
+          - api
+
+permissions:
+  contents: read
+
+# Deux déploiements simultanés se marcheraient dessus sur S3 comme sur Cloud Run. Jamais
+# d'annulation en cours de route : un déploiement interrompu entre l'envoi S3 et l'invalidation
+# CloudFront laisse un état incohérent.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "22"
+  GCP_REGION: europe-west1
+  GCP_ARTIFACT_REPO: movie-picker
+  CLOUD_RUN_SERVICE_NAME: movie-picker-api
+
+jobs:
+  # Seule porte propre à ce workflow. Elle ne rejoue rien : elle exige que le run `ci-cd.yml` du
+  # commit visé soit vert. Un run absent (aucun push depuis, ou runners bloqués par la facturation)
+  # est traité comme un refus, pas comme un feu vert par défaut.
+  verifier-ci:
+    name: Exiger une CI verte sur le commit visé
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Refuser un déploiement hors master
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/master" ]; then
+            echo "::error::La production ne part que de master (ref demandée : $GITHUB_REF). Fusionner d'abord."
+            exit 1
+          fi
+      # `--jq` filtre côté serveur GitHub sur le SHA exact : un run de pull request porte le même
+      # head_sha que le push qui l'a suivi, d'où le filtre sur l'événement et la branche. Le run le
+      # plus récent gagne, c'est celui qu'un « Re-run failed jobs » a remis au vert.
+      - name: Lire la conclusion du run CI de ce commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eo pipefail
+          runs="$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/workflows/ci-cd.yml/runs?head_sha=$GITHUB_SHA&per_page=100" \
+            --jq '[.workflow_runs[]
+                   | select(.head_branch == "master")
+                   | select(.event == "push" or .event == "workflow_dispatch")]
+                  | sort_by(.run_started_at) | reverse')"
+          count="$(printf '%s' "$runs" | jq 'length')"
+          if [ "$count" = "0" ]; then
+            echo "::error::Aucun run ci-cd.yml sur $GITHUB_SHA. Lancer le workflow « CI » sur master, attendre le vert, puis redéclencher ce déploiement."
+            exit 1
+          fi
+          status="$(printf '%s' "$runs" | jq -r '.[0].status')"
+          conclusion="$(printf '%s' "$runs" | jq -r '.[0].conclusion')"
+          url="$(printf '%s' "$runs" | jq -r '.[0].html_url')"
+          echo "Run CI : $url"
+          echo "status=$status conclusion=$conclusion"
+          if [ "$status" != "completed" ]; then
+            echo "::error::Le run CI de ce commit est encore '$status'. Attendre qu'il finisse."
+            exit 1
+          fi
+          if [ "$conclusion" != "success" ]; then
+            echo "::error::Le run CI de ce commit conclut '$conclusion' : corriger puis relancer la CI avant de déployer. $url"
+            exit 1
+          fi
+          echo "Portes CI vertes sur $GITHUB_SHA."
+
+  # Porte bloquante de `deploy-front`, déplacée ici depuis `ci-cd.yml` : 9 minutes par push master
+  # dont la mesure n'était consommée que par un déploiement. Sur le chemin du déploiement, elle
+  # coûte 9 minutes par livraison réelle et garde exactement le même pouvoir de blocage.
+  # Contrepartie : une régression de performance ne se voit plus au push mais au déploiement.
+  lighthouse:
+    name: Lighthouse front (seuils bloquants)
+    needs: verifier-ci
+    if: inputs.cible == 'tout' || inputs.cible == 'front'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-web
+      - uses: browser-actions/setup-chrome@48ad923757ca74d66703209fe939badbdf80f2f4 # v2
+      # Médiane sur 5 passages au lieu de 3. Aucun seuil n'est abaissé : c'est la MESURE qui est
+      # fiabilisée, pas la barre. Sur un même commit, deux exécutions ont donné à la page d'accueil
+      # 82 puis 93, et fait échouer deux pages différentes — la variance des runners dépasse la
+      # marge qui sépare plusieurs pages de leur plancher, donc la porte virait au rouge au hasard,
+      # y compris sur un commit sans le moindre changement front. Depuis que la porte est sur le
+      # chemin du déploiement, un faux rouge coûte une livraison bloquée : la médiane sur 5 passages
+      # compte plus qu'avant, pas moins.
+      - run: pnpm run lighthouse
+        env:
+          LH_RUNS: 5
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always()
+        with:
+          name: lighthouse-reports
+          path: artifacts/lighthouse
+          if-no-files-found: warn
+          retention-days: 7
+
+  docker-api:
+    name: Docker API → Artifact Registry
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    needs: verifier-ci
+    outputs:
+      image_digest: ${{ steps.push.outputs.digest }}
+    if: inputs.cible == 'tout' || inputs.cible == 'api'
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+      - run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
+      - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+      - name: Build image API (buildx + cache GHA de layers)
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: apps/api-dotnet/MoviePicker.Api
+          tags: movie-picker-api
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      # § 25 — Scan CVE de l'image avant push. Politique :
+      #   - bloque sur CRITICAL inconditionnellement
+      #   - bloque sur HIGH **uniquement si un fix amont est disponible** (`ignore-unfixed: true`),
+      #     pour éviter de geler le déploiement sur des CVE base-image sans patch publié.
+      # Si un CVE bloque ici, soit on rebuild avec une base image plus récente, soit on
+      # documente le risque (workaround / mitigation) et on suppress côté Trivy
+      # (`.trivyignore` à la racine du contexte de build) avec une note de revue.
+      - name: Scan image Docker (Trivy)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: movie-picker-api
+          format: table
+          exit-code: '1'
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          vuln-type: os,library
+          cache: true
+      # Le digest est relevé après push et sert de cible au déploiement : un tag reste
+      # réinscriptible, un digest désigne exactement les octets que Trivy vient de scanner.
+      - name: Tag & push image
+        id: push
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        run: |
+          set -eo pipefail
+          IMAGE="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${GCP_ARTIFACT_REPO}/api:${GITHUB_SHA}"
+          docker tag movie-picker-api "$IMAGE"
+          docker push "$IMAGE"
+          # `|| true` est indispensable : sans lui, un RepoDigests vide fait échouer le template
+          # Go et `set -e` tue l'étape avant le diagnostic ci-dessous, qui ne s'afficherait jamais.
+          # Le digest est filtré sur le dépôt cible plutôt que pris à l'index 0.
+          REPO="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${GCP_ARTIFACT_REPO}/api"
+          DIGEST="$(docker inspect --format='{{range .RepoDigests}}{{println .}}{{end}}' "$IMAGE" 2>/dev/null \
+            | grep -F "${REPO}@" | head -1 | cut -d'@' -f2 || true)"
+          if ! printf '%s' "$DIGEST" | grep -qE '^sha256:[0-9a-f]{64}$'; then
+            echo "::error::Digest introuvable après push pour ${REPO} (relevé : '$DIGEST')"
+            exit 1
+          fi
+          echo "Image poussée : $IMAGE"
+          echo "Digest : $DIGEST"
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+      - name: SBOM de l'image (Trivy → CycloneDX, artefact)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: movie-picker-api
+          format: cyclonedx
+          output: sbom.cdx.json
+          cache: true
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: sbom-api
+          path: sbom.cdx.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  deploy-api:
+    name: Deploy API → Cloud Run
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    # Un `needs:` nu, sans `always()` ni test de `result` : les portes de qualité sont déjà
+    # exigées par `verifier-ci` en amont de `docker-api`, et un `always()` laissait le skip d'un
+    # job intermédiaire se propager en silence jusqu'ici — c'est exactement ce piège qui a laissé
+    # la prod dix jours en retard. Un docker-api rouge ou sauté saute ce job, et le garde-fou
+    # final le signale.
+    needs: docker-api
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: Activer l’API Secret Manager (obligatoire pour --set-secrets ; idempotent)
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        run: gcloud services enable secretmanager.googleapis.com --project="$GCP_PROJECT_ID"
+      # La révision est déployée SANS trafic puis validée sur son URL taguée : un conteneur qui
+      # échoue ses sondes n'atteint jamais un utilisateur. Ce schéma remplace « déployer, constater,
+      # revenir en arrière », qui exposait la mauvaise révision le temps des smoke tests et laissait
+      # ensuite le trafic épinglé sur une révision nommée — état dans lequel `gcloud run deploy`
+      # n'envoie plus aucun trafic aux révisions suivantes, sans que rien ne vire au rouge.
+      - name: Déployer sans trafic (secrets GCP + CORS)
+        id: deploy
+        env:
+          # Variables (recommandé) ou Secret de secours si tu as tout mis dans Secrets
+          ALLOWED_ORIGINS_VARS: ${{ vars.ALLOWED_ORIGINS }}
+          ALLOWED_ORIGINS_SECRET: ${{ secrets.ALLOWED_ORIGINS }}
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          IMAGE_DIGEST: ${{ needs.docker-api.outputs.image_digest }}
+        run: |
+          set -eo pipefail
+          CORS="${ALLOWED_ORIGINS_VARS:-$ALLOWED_ORIGINS_SECRET}"
+          if [ -z "$CORS" ]; then
+            echo "::error::ALLOWED_ORIGINS est vide. Définis-la au choix :"
+            echo "::error::  • GitHub → Settings → Secrets and variables → Actions → Variables → New repository variable : ALLOWED_ORIGINS = https://TON_DOMAINE (sans slash final ; plusieurs origines : virgules)"
+            echo "::error::  • ou Secret du même nom (ALLOWED_ORIGINS) si tu préfères."
+            exit 1
+          fi
+          # Le format est déjà validé côté docker-api ; ici on vérifie seulement que la valeur a
+          # bien traversé la frontière entre les deux jobs.
+          if [ -z "$IMAGE_DIGEST" ]; then
+            echo "::error::Digest d'image absent : le job docker-api ne l'a pas transmis."
+            exit 1
+          fi
+          TAG="s-${GITHUB_SHA:0:7}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          SECRETS="MONGODB_URI=MONGODB_URI:latest,TMDB_API_KEY=TMDB_API_KEY:latest,AUTH_DATAPROTECTION_KEYRING=AUTH_DATAPROTECTION_KEYRING:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest,RESEND_API_KEY=RESEND_API_KEY:latest,KOFI_WEBHOOK_TOKEN=KOFI_WEBHOOK_TOKEN:latest,OAUTH_GOOGLE_CLIENT_ID=OAUTH_GOOGLE_CLIENT_ID:latest,OAUTH_GOOGLE_CLIENT_SECRET=OAUTH_GOOGLE_CLIENT_SECRET:latest,OAUTH_GITHUB_CLIENT_ID=OAUTH_GITHUB_CLIENT_ID:latest,OAUTH_GITHUB_CLIENT_SECRET=OAUTH_GITHUB_CLIENT_SECRET:latest,GITHUB_TOKEN=GITHUB_TOKEN:latest"
+          if gcloud secrets describe SCHEDULER_TOKEN >/dev/null 2>&1; then
+            SECRETS="$SECRETS,SCHEDULER_TOKEN=SCHEDULER_TOKEN:latest"
+          else
+            echo "::warning::Secret SCHEDULER_TOKEN absent de Secret Manager. L'API démarre sans, mais les routes POST /api/v1/scheduler/* répondront 503 : ni les rappels de soirée ni le balayage des soirées récurrentes ne tourneront. Crée le secret puis relance ce déploiement."
+          fi
+          # --set-env-vars dict parsing treats ':' and ',' specially; ^##^ sets an alternate delimiter (gcloud topic escaping).
+          gcloud run deploy "$CLOUD_RUN_SERVICE_NAME" \
+            --image "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${GCP_ARTIFACT_REPO}/api@${IMAGE_DIGEST}" \
+            --region "$GCP_REGION" \
+            --platform managed \
+            --allow-unauthenticated \
+            --cpu-boost \
+            --no-traffic \
+            --tag "$TAG" \
+            --set-secrets "$SECRETS" \
+            --set-env-vars "^##^ALLOWED_ORIGINS=$CORS##SENTRY_ENVIRONMENT=production##SENTRY_RELEASE=${GITHUB_SHA}##EMAIL_PROVIDER=resend"
+          TAG_URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format=json \
+            | jq -r --arg t "$TAG" '[.status.traffic[]? | select(.tag == $t) | .url] | first // ""')"
+          if [ -z "$TAG_URL" ]; then
+            echo "::error::URL taguée introuvable pour '$TAG' : impossible de valider la révision avant de la promouvoir."
+            exit 1
+          fi
+          echo "Révision déployée sans trafic, joignable sur $TAG_URL"
+          echo "tag_url=$TAG_URL" >> "$GITHUB_OUTPUT"
+      # Sondes jouées sur l'URL taguée : la production sert encore l'ancienne révision. Un échec
+      # ici laisse la prod intacte, il n'y a rien à réparer.
+      #   --max-time : sans lui, une révision qui accepte la connexion sans jamais répondre épuise
+      #   le timeout du job, et un job *annulé* n'exécute aucune étape de rattrapage.
+      #   -o fichier plutôt que /dev/null : avec --retry, curl ne peut pas rembobiner /dev/null et
+      #   sort en 23 sans écrire le code HTTP, ce qui rendait les diagnostics suivants inatteignables.
+      - name: Valider la révision avant de l'exposer
+        env:
+          TAG_URL: ${{ steps.deploy.outputs.tag_url }}
+        run: |
+          set -eo pipefail
+          BODY="$RUNNER_TEMP/health.json"
+          curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 -o "$BODY" "$TAG_URL/health"
+          echo "Réponse /health : $(cat "$BODY")"
+          grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' "$BODY" || {
+            echo "::error::/health ne renvoie pas status=ok — révision non promue"
+            exit 1
+          }
+          curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 60 -o "$BODY" "$TAG_URL/health/ready"
+          echo "Réponse /health/ready : $(cat "$BODY")"
+          grep -qE '"status"[[:space:]]*:[[:space:]]*"ready"' "$BODY" || {
+            echo "::error::/health/ready ne renvoie pas status=ready (dépendance indisponible) — révision non promue"
+            exit 1
+          }
+          grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' "$BODY" || {
+            echo "::error::/health/ready signale MongoDB comme non joignable — révision non promue"
+            exit 1
+          }
+      # --to-latest rebranche `latestRevision: true` : c'est aussi ce qui désépingle le service si
+      # un retour arrière manuel l'avait figé sur une révision nommée.
+      - name: Promouvoir la révision validée
+        run: |
+          set -eo pipefail
+          gcloud run services update-traffic "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --to-latest
+      # Repris de master. Déplacé après la promotion : le job vise l'URL du service, il ne
+      # doit donc être (re)configuré que pour une révision réellement en ligne. Une révision
+      # recalée à la validation laisse le job pointer sur la production inchangée.
+      # Le balayage des soirées récurrentes n'est qu'un filet : la clôture d'une soirée et
+      # l'ouverture de « Mes soirées » créent déjà l'occurrence suivante. Une passe par nuit
+      # suffit donc à rattraper les séries que personne n'a rouvertes.
+      - name: Rappels de soirée et soirées récurrentes — Cloud Scheduler
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        run: |
+          set -eo pipefail
+          if ! gcloud secrets describe SCHEDULER_TOKEN >/dev/null 2>&1; then
+            echo "::warning::Secret SCHEDULER_TOKEN absent : jobs Cloud Scheduler non configurés, les rappels de soirée ne partiront pas et les soirées récurrentes ne seront reconduites qu'à la clôture ou à l'ouverture de « Mes soirées »."
+            exit 0
+          fi
+          # Deuxième garde, et elle a coûté un déploiement rouge le 2026-09-10 : le secret peut exister
+          # alors que l'API Cloud Scheduler est désactivée sur le projet. `gcloud scheduler jobs
+          # describe` sort alors en SERVICE_DISABLED, et sans cette garde l'étape faisait échouer le
+          # job **après** que la révision ait pris 100 % du trafic. Une planification absente est un
+          # avertissement, comme le secret absent : elle ne dit rien sur la santé de l'API déployée.
+          if ! gcloud services list --enabled --filter="config.name:cloudscheduler.googleapis.com" --format='value(config.name)' | grep -q cloudscheduler; then
+            echo "::warning::API Cloud Scheduler désactivée sur le projet : jobs non configurés, mêmes conséquences qu'un secret absent. Lancer 'gcloud services enable cloudscheduler.googleapis.com' puis relancer ce déploiement."
+            exit 0
+          fi
+          URL="$(gcloud run services describe ${{ env.CLOUD_RUN_SERVICE_NAME }} --region ${{ env.GCP_REGION }} --format='value(status.url)')"
+          TOKEN="$(gcloud secrets versions access latest --secret=SCHEDULER_TOKEN)"
+          upsert_job() {
+            local job="$1" schedule="$2" path="$3"
+            local common=(
+              --location "${{ env.GCP_REGION }}"
+              --schedule "$schedule"
+              --time-zone "Europe/Paris"
+              --uri "$URL$path"
+              --http-method POST
+              --attempt-deadline 300s
+            )
+            if gcloud scheduler jobs describe "$job" --location "${{ env.GCP_REGION }}" >/dev/null 2>&1; then
+              gcloud scheduler jobs update http "$job" "${common[@]}" --update-headers "X-Scheduler-Token=$TOKEN"
+            else
+              gcloud scheduler jobs create http "$job" "${common[@]}" --headers "X-Scheduler-Token=$TOKEN"
+            fi
+          }
+          upsert_job movie-picker-event-reminders "*/30 * * * *" /api/v1/scheduler/event-reminders
+          upsert_job movie-picker-recurring-events "15 3 * * *" /api/v1/scheduler/recurring-events
+      # La révision est déjà prouvée : ce qui est vérifié ici, c'est que le trafic a bien basculé et
+      # que le domaine public y mène. Un échec relève du routage, du DNS ou du certificat, pas du
+      # code — d'où l'absence de retour arrière. PUBLIC_API_URL est dérivé de VITE_API_URL, l'URL
+      # contre laquelle le front est construit : rien de nouveau à configurer, et la valeur reste
+      # juste après une migration de domaine.
+      - name: Vérifier la production après promotion
+        env:
+          PUBLIC_API_URL: ${{ secrets.VITE_API_URL }}
+        run: |
+          set -eo pipefail
+          BODY="$RUNNER_TEMP/prod-health.json"
+          URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format='value(status.url)')"
+          curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 -o "$BODY" "$URL/health/ready"
+          echo "Production (URL Cloud Run) : $(cat "$BODY")"
+          grep -qE '"status"[[:space:]]*:[[:space:]]*"ready"' "$BODY" || {
+            echo "::error::La production ne répond pas ready après promotion du trafic."
+            exit 1
+          }
+          if [ -z "$PUBLIC_API_URL" ]; then
+            echo "::warning::VITE_API_URL absent — domaine public non vérifié."
+            exit 0
+          fi
+          curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 -o "$BODY" "$PUBLIC_API_URL/health"
+          echo "Domaine public : $(cat "$BODY")"
+          grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' "$BODY" || {
+            echo "::error::Le domaine public de l'API ne renvoie pas status=ok — DNS, certificat ou mapping de domaine."
+            exit 1
+          }
+      # Les tags s'accumulent sur le service s'ils ne sont pas retirés, y compris ceux des
+      # déploiements qui ont échoué avant promotion.
+      - name: Retirer le tag de validation
+        if: always() && steps.deploy.outputs.tag != ''
+        env:
+          TAG: ${{ steps.deploy.outputs.tag }}
+        run: |
+          gcloud run services update-traffic "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --remove-tags "$TAG" || true
+      - name: Enregistrer le déploiement Sentry (API)
+        continue-on-error: true
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_URL: ${{ vars.SENTRY_URL }}
+          SENTRY_RELEASE: ${{ github.sha }}
+        run: |
+          if [ -z "$SENTRY_AUTH_TOKEN" ]; then
+            echo "SENTRY_AUTH_TOKEN absent — skip"
+            exit 0
+          fi
+          curl -sSfL "https://github.com/getsentry/sentry-cli/releases/download/2.58.6/sentry-cli-Linux-x86_64" -o sentry-cli
+          chmod +x sentry-cli
+          extra=()
+          if [ -n "$SENTRY_URL" ]; then extra+=(--url "$SENTRY_URL"); fi
+          ./sentry-cli "${extra[@]}" releases new "$SENTRY_RELEASE" || true
+          ./sentry-cli "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e production -n "api-${{ github.sha }}"
+
+  deploy-front:
+    name: Deploy Front → S3 & CloudFront
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    # Même raisonnement que `deploy-api` : la longue liste de gates est remplacée par
+    # `verifier-ci`, qui les exige toutes sur le commit visé. Il ne reste ici que Lighthouse,
+    # la seule porte qui tourne dans ce workflow.
+    needs: lighthouse
+    environment: production
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: |
+          if [ -z "$VITE_API_URL" ]; then
+            echo "::error::VITE_API_URL (secret) est vide."
+            exit 1
+          fi
+          if echo "$VITE_API_URL" | grep -qE 'cloudfront\.net|amazonaws'; then
+            echo "::error::VITE_API_URL doit être l'URL de l'API (Cloud Run)."
+            exit 1
+          fi
+          pnpm --filter web build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_POSTHOG_KEY: ${{ secrets.VITE_POSTHOG_KEY }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+          SENTRY_URL: ${{ vars.SENTRY_URL }}
+          SENTRY_RELEASE: ${{ github.sha }}
+      - name: "Sitemap dynamique (profils publics via l'API)"
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+        run: node apps/web/scripts/generate-sitemap.mjs
+      - uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION || 'eu-west-1' }}
+      - name: "S3 — étape 1 : assets hachés (hors entry-points)"
+        env:
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+        run: |
+          aws s3 sync apps/web/dist/ "s3://$AWS_S3_BUCKET/" \
+            --exclude "index.html" \
+            --exclude "sw.js" \
+            --exclude "manifest.webmanifest" \
+            --exclude "sitemap.xml" \
+            --exclude "prerendered/*" \
+            --exclude "route-assets.json" \
+            --exclude "*.map" \
+            --cache-control "public, max-age=31536000, immutable"
+      - name: "S3 — étape 2 : SW, manifest (no-cache)"
+        env:
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+        run: |
+          aws s3 cp apps/web/dist/sw.js "s3://$AWS_S3_BUCKET/sw.js" \
+            --cache-control "no-cache, no-store, must-revalidate" --content-type "application/javascript"
+          aws s3 cp apps/web/dist/manifest.webmanifest "s3://$AWS_S3_BUCKET/manifest.webmanifest" \
+            --cache-control "no-cache, must-revalidate" --content-type "application/manifest+json"
+      - name: "S3 — sitemap.xml (cache court, application/xml)"
+        env:
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+        run: |
+          aws s3 cp apps/web/dist/sitemap.xml "s3://$AWS_S3_BUCKET/sitemap.xml" \
+            --cache-control "public, max-age=3600, must-revalidate" --content-type "application/xml; charset=utf-8"
+      # Routes prérendues. Chaque fichier part sous une clé S3 **sans extension**, égale au chemin
+      # de la route : `/decouvrir` devient la clé `decouvrir`. C'est ce qui les rend servies sans
+      # toucher à l'infrastructure — l'origine S3 est une origine REST, elle n'a pas de document
+      # d'index par dossier, donc `decouvrir/index.html` n'aurait jamais été servi pour
+      # `/decouvrir` : CloudFront serait tombé sur son repli 403/404 vers `/index.html`, la coquille
+      # SPA générique. Une clé exacte, elle, répond 200 directement.
+      # `Content-Type` est explicite pour la même raison que `sw.js` : une clé sans extension part
+      # sinon en `application/octet-stream`, que le navigateur télécharge au lieu de l'afficher.
+      # Le repli SPA reste en place pour toutes les autres routes, rien n'est retiré.
+      - name: "S3 — routes prérendues (clés sans extension, no-cache)"
+        env:
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+        run: |
+          set -eo pipefail
+          MANIFEST=apps/web/dist/prerendered/manifest.json
+          if [ ! -f "$MANIFEST" ]; then
+            echo "::error::$MANIFEST absent : le build n'a pas produit de routes prérendues."
+            exit 1
+          fi
+          count=0
+          while IFS=$'\t' read -r route file; do
+            key="${route#/}"
+            echo "prérendu $route → clé $key"
+            aws s3 cp "apps/web/dist/prerendered/$file" "s3://$AWS_S3_BUCKET/$key" \
+              --cache-control "no-cache, no-store, must-revalidate" \
+              --content-type "text/html; charset=utf-8"
+            count=$((count + 1))
+          done < <(jq -r '.[] | "\(.route)\t\(.file)"' "$MANIFEST")
+          if [ "$count" = "0" ]; then
+            echo "::error::Le manifeste de prérendu est vide."
+            exit 1
+          fi
+          echo "$count routes prérendues publiées."
+      - name: "S3 — étape 3 : index.html en dernier (point d'entrée)"
+        env:
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+        run: |
+          aws s3 cp apps/web/dist/index.html "s3://$AWS_S3_BUCKET/index.html" \
+            --cache-control "no-cache, no-store, must-revalidate" --content-type "text/html"
+      # Le front n'a aucun retour arrière côté hébergement : `aws s3 sync` écrase et le build
+      # précédent n'existe plus nulle part. Archiver le dist rend un retour arrière possible sans
+      # rejouer toute la chaîne de portes. Placé APRÈS l'envoi S3 : une archive de confort ne doit
+      # jamais pouvoir empêcher un déploiement. `overwrite` parce qu'un « Re-run failed jobs »
+      # rejoue l'étape dans le même run, où le nom d'artefact existe déjà.
+      - name: Archiver le build front (rend un retour arrière possible)
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: front-dist-${{ github.sha }}
+          path: apps/web/dist
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 30
+      - name: Invalidation CloudFront
+        if: vars.AWS_CLOUDFRONT_DISTRIBUTION_ID != ''
+        run: |
+          INV_ID=$(aws cloudfront create-invalidation \
+            --distribution-id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*" \
+            --query 'Invalidation.Id' --output text)
+          aws cloudfront wait invalidation-completed \
+            --distribution-id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
+            --id "$INV_ID"
+      - name: Smoke test front (CloudFront)
+        if: vars.AWS_CLOUDFRONT_DISTRIBUTION_ID != ''
+        run: |
+          DOMAIN="$(aws cloudfront get-distribution --id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }} --query 'Distribution.DomainName' --output text)"
+          echo "CloudFront domain : $DOMAIN"
+          # -o fichier plutôt que /dev/null : avec --retry, curl ne peut pas rembobiner /dev/null
+          # et sort en 23 sans jamais écrire le code HTTP.
+          code="$(curl -sS -o "$RUNNER_TEMP/cf.html" -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 "https://$DOMAIN/")"
+          echo "GET / -> $code"
+          test "$code" = "200"
+      # Le smoke test précédent interroge le domaine CloudFront : il ne dit rien du domaine public
+      # servi aux utilisateurs, dont le DNS, le certificat ou l'alias peuvent être cassés alors que
+      # la distribution répond très bien. L'origine est lue dans ALLOWED_ORIGINS — celle que l'API
+      # accepte, donc celle du front par construction — plutôt que réécrite ici : une valeur de plus
+      # à tenir à jour serait une valeur de plus à oublier lors d'une migration de domaine.
+      # Un 200 ne dit pas quelle version est servie : sans invalidation, le CDN répond 200 avec
+      # l'ancien index.html et le déploiement passe pour bon. On compare donc le point d'entrée
+      # haché du build qu'on vient d'envoyer à celui que le domaine public sert vraiment.
+      - name: Smoke test front (domaine public + version servie)
+        env:
+          ALLOWED_ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
+        run: |
+          set -eo pipefail
+          PUBLIC_WEB_URL="${ALLOWED_ORIGINS%%,*}"
+          if [ -z "$PUBLIC_WEB_URL" ]; then
+            echo "::warning::ALLOWED_ORIGINS absent — domaine public du front non vérifié."
+            exit 0
+          fi
+          echo "Domaine public : $PUBLIC_WEB_URL"
+          code="$(curl -sS -o "$RUNNER_TEMP/pub.html" -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 "$PUBLIC_WEB_URL/")"
+          echo "GET $PUBLIC_WEB_URL/ -> $code"
+          if [ "$code" != "200" ]; then
+            echo "::error::$PUBLIC_WEB_URL ne répond pas 200 — DNS, certificat ou alias de l'hébergement du front."
+            exit 1
+          fi
+          ENTRY="$(grep -oE '/assets/[A-Za-z0-9._-]+\.js' apps/web/dist/index.html | head -1)"
+          if [ -z "$ENTRY" ]; then
+            echo "::error::Point d'entrée introuvable dans le build local — smoke test de version impossible."
+            exit 1
+          fi
+          echo "Point d'entrée attendu : $ENTRY"
+          if ! grep -qF "$ENTRY" "$RUNNER_TEMP/pub.html"; then
+            echo "::error::$PUBLIC_WEB_URL sert un index.html qui ne référence pas $ENTRY — build périmé en cache (invalidation CDN absente ou incomplète)."
+            exit 1
+          fi
+      - name: Enregistrer le déploiement Sentry (front)
+        continue-on-error: true
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_URL: ${{ vars.SENTRY_URL }}
+          SENTRY_RELEASE: ${{ github.sha }}
+        run: |
+          if [ -z "$SENTRY_AUTH_TOKEN" ]; then
+            echo "SENTRY_AUTH_TOKEN absent — skip"
+            exit 0
+          fi
+          extra=()
+          if [ -n "$SENTRY_URL" ]; then extra+=(--url "$SENTRY_URL"); fi
+          pnpm --filter web exec sentry-cli -- "${extra[@]}" releases new "$SENTRY_RELEASE" || true
+          pnpm --filter web exec sentry-cli -- "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e production -n "front-${{ github.sha }}"
+
+  # `always()` est ici indispensable et sans danger : le job ne déploie rien, il ne fait que
+  # comparer ce qui a été demandé à ce qui est parti. Sans lui, une cible sautée par un gate rouge
+  # laisserait le run vert avec une production périmée — le mode d'échec le plus coûteux de ce
+  # pipeline, et le seul qui ne se voit pas dans la couleur du run.
+  deploy-guard:
+    name: Garde-fou déploiement
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    needs: [deploy-api, deploy-front]
+    if: always()
+    permissions:
+      contents: read
+    steps:
+      - name: Vérifier que chaque cible demandée est bien partie
+        env:
+          CIBLE: ${{ inputs.cible }}
+          FRONT_RESULT: ${{ needs.deploy-front.result }}
+          API_RESULT: ${{ needs.deploy-api.result }}
+        run: |
+          echo "cible demandée : $CIBLE"
+          echo "front : déploiement=$FRONT_RESULT"
+          echo "api   : déploiement=$API_RESULT"
+          fail=0
+          if [ "$CIBLE" = "tout" ] || [ "$CIBLE" = "front" ]; then
+            if [ "$FRONT_RESULT" != "success" ]; then
+              echo "::error::Front demandé mais Deploy Front est '$FRONT_RESULT' : la production n'est pas à jour."
+              fail=1
+            fi
+          fi
+          if [ "$CIBLE" = "tout" ] || [ "$CIBLE" = "api" ]; then
+            if [ "$API_RESULT" != "success" ]; then
+              echo "::error::API demandée mais Deploy API est '$API_RESULT' : la production n'est pas à jour."
+              fail=1
+            fi
+          fi
+          if [ "$fail" = "0" ]; then
+            echo "Toutes les cibles demandées sont déployées."
+          fi
+          exit "$fail"

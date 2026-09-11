@@ -131,7 +131,7 @@
 
 .navMobile {
   position: fixed;
-  min-height: var(--mobile-nav-height);
+  height: var(--mobile-nav-height);
   bottom: 0;
   left: 0;
   right: 0;
@@ -179,6 +179,8 @@
 .navMobile .navLink {
   flex-direction: column;
   gap: var(--space-0-5);
+  padding-block: var(--space-1);
+  min-width: 0;
 }
 
 .navMobile .navIcon {
@@ -187,6 +189,10 @@
 }
 
 .navMobileLabel {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   font-size: var(--font-size-3xs);
   font-weight: 600;
   line-height: var(--leading-none);

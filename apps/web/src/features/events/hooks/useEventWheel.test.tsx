@@ -1,116 +1,104 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { ReactNode } from 'react';
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { createElement, type ReactNode } from 'react';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { LocaleProvider } from '@/shared/i18n';
+import { ConsentProvider } from '@/shared/contexts/ConsentContext';
 import { useEventWheel } from '@/features/events/hooks/useEventWheel';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
+import { WHEEL_SPIN_DURATION_MS } from '@/shared/utils/wheelSpin';
+import { postEventWheel, postEventWheelAnnounce } from '@/features/events/api/eventsApi';
 
 vi.mock('@/features/events/api/eventsApi', () => ({
   postEventWheel: vi.fn(),
+  postEventWheelAnnounce: vi.fn().mockResolvedValue(undefined),
   postEventWinner: vi.fn(),
+  postEventClose: vi.fn(),
   deleteEventWheel: vi.fn(),
-  deleteEventWinner: vi.fn(),
 }));
 
-import { postEventWheel } from '@/features/events/api/eventsApi';
+const winner = { id: 'mov1', title: 'Dune', tmdbId: 1 } as MovieData;
 
-const postEventWheelMock = vi.mocked(postEventWheel);
-
-function movie(id: string): MovieData {
-  return {
-    id,
-    eventId: 'e1',
-    participantId: 'p1',
-    tmdbId: Number(id.replace(/\D/g, '')) || 1,
-    title: `Film ${id}`,
-    year: '2020',
-    posterPath: null,
-    proposerPseudo: 'moi',
-    score: 0,
-    up: 0,
-    down: 0,
-  };
-}
-
-function buildEvent(winnerCount: number): EventData {
-  return {
-    id: 'e1',
-    slug: 'soiree',
-    title: 'Soirée',
-    date: '2030-01-01',
-    time: '20:00',
-    isHost: true,
-    isFinished: false,
-    winners: [],
-    config: {
-      theme: null,
-      maxProposalsPerParticipant: null,
-      maxParticipants: null,
-      wheelMode: 'strictRandom',
-      winnerCount,
-      winnerCountMax: 10,
-      drawnWinnerCount: 0,
-    },
-  };
-}
+const hostEvent = {
+  isHost: true,
+  isFinished: false,
+  date: '2030-06-01',
+  time: '20:00',
+} as EventData;
 
 function wrapper({ children }: Readonly<{ children: ReactNode }>) {
-  return <AppTestProviders>{children}</AppTestProviders>;
+  return createElement(LocaleProvider, null, createElement(ConsentProvider, null, children));
 }
 
-function renderWheel(winnerCount: number, movies: MovieData[]) {
+function renderWheel() {
   return renderHook(
     () =>
       useEventWheel({
         slug: 'soiree',
-        event: buildEvent(winnerCount),
-        movies,
-        hostToken: 'tok',
-        onWheelDone: vi.fn(),
+        event: hostEvent,
+        movies: [winner],
+        hostToken: 'ht1',
+        onWheelDone: () => {},
       }),
     { wrapper }
   );
 }
 
-describe('useEventWheel, tirages enchaînés depuis la modale', () => {
+describe('useEventWheel : annonce du gagnant', () => {
   beforeEach(() => {
-    postEventWheelMock.mockReset();
+    vi.mocked(postEventWheel).mockResolvedValue({ winner, message: 'Roue lancée.' });
+    vi.mocked(postEventWheelAnnounce).mockClear();
   });
 
-  it('retire de la roue le film qui vient de gagner, sans attendre le rafraîchissement', async () => {
-    const movies = [movie('m1'), movie('m2'), movie('m3')];
-    postEventWheelMock
-      .mockResolvedValueOnce({ winner: movies[0]!, message: 'Roue lancée.' })
-      .mockResolvedValueOnce({ winner: movies[1]!, message: 'Roue lancée.' });
-
-    const { result } = renderWheel(3, movies);
-
-    act(() => result.current.launch());
-    await waitFor(() => expect(result.current.spinPool).toHaveLength(3));
-
-    act(() => result.current.launch());
-    await waitFor(() => expect(result.current.spinPool).toHaveLength(2));
-
-    expect(result.current.spinPool.map((m) => m.id)).toEqual(['m2', 'm3']);
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.clearAllMocks();
   });
 
-  it('décompte les tirages déjà faits et ferme la relance une fois le quota atteint', async () => {
-    const movies = [movie('m1'), movie('m2'), movie('m3')];
-    postEventWheelMock
-      .mockResolvedValueOnce({ winner: movies[0]!, message: 'Roue lancée.' })
-      .mockResolvedValueOnce({ winner: movies[1]!, message: 'Roue lancée.' });
-
-    const { result } = renderWheel(2, movies);
-
-    expect(result.current.remainingDraws).toBe(2);
+  it("n'annonce rien tant que la roue tourne", async () => {
+    const { result } = renderWheel();
 
     act(() => result.current.launch());
-    await waitFor(() => expect(result.current.remainingDraws).toBe(1));
-    expect(result.current.canRelaunchFromModal).toBe(true);
+    await waitFor(() => expect(postEventWheel).toHaveBeenCalledTimes(1));
+
+    expect(postEventWheelAnnounce).not.toHaveBeenCalled();
+  });
+
+  it('annonce le gagnant quand la roue s’arrête', async () => {
+    const { result } = renderWheel();
 
     act(() => result.current.launch());
-    await waitFor(() => expect(result.current.remainingDraws).toBe(0));
-    expect(result.current.canRelaunchFromModal).toBe(false);
+    await waitFor(() => expect(postEventWheel).toHaveBeenCalledTimes(1));
+
+    act(() => result.current.revealWinner());
+
+    await waitFor(() => expect(postEventWheelAnnounce).toHaveBeenCalledWith('soiree', 'ht1'));
+  });
+
+  it('annonce une seule fois, même si la révélation et le repli se cumulent', async () => {
+    const { result } = renderWheel();
+
+    act(() => result.current.launch());
+    await waitFor(() => expect(postEventWheel).toHaveBeenCalledTimes(1));
+
+    act(() => result.current.revealWinner());
+    act(() => result.current.dismissModal());
+
+    await waitFor(() => expect(postEventWheelAnnounce).toHaveBeenCalledTimes(1));
+  });
+
+  it('annonce quand même si l’animation ne rend jamais la main', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const { result } = renderWheel();
+
+    act(() => result.current.launch());
+    await vi.waitFor(() => expect(postEventWheel).toHaveBeenCalledTimes(1));
+
+    expect(postEventWheelAnnounce).not.toHaveBeenCalled();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(WHEEL_SPIN_DURATION_MS + 100);
+    });
+
+    expect(postEventWheelAnnounce).toHaveBeenCalledTimes(1);
   });
 });

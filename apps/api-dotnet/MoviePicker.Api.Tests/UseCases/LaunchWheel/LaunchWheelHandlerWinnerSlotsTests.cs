@@ -18,7 +18,6 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
     private readonly Mock<IHostTokenAccessor> _hostToken = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<IPosterImageStore> _posters = new();
-    private readonly Mock<IWinnerAnnouncer> _announcer = new();
     private readonly LaunchWheelHandler _sut;
 
     public LaunchWheelHandlerWinnerSlotsTests()
@@ -43,7 +42,6 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
             _hostToken.Object,
             _currentUser.Object,
             _posters.Object,
-            _announcer.Object,
             NullLogger<LaunchWheelHandler>.Instance);
     }
 

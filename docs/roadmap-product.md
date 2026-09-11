@@ -2,7 +2,7 @@
 
 **Nom du projet : Movie Picker.**
 
-Découpage par version, côté **métier / utilisateur** puis côté **plateforme**. Chaque version liste d'abord ses features, puis une section **Tech** pour le travail transverse. Spec complète → [spec.md](spec.md).
+Découpage par version, côté **métier / utilisateur** puis côté **plateforme**. Chaque version liste d'abord ses features, puis une section **Tech** pour le travail transverse.
 
 ---
 

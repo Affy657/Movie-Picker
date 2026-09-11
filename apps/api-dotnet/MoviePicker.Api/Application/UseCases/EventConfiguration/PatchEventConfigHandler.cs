@@ -60,17 +60,10 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         var hasRecurrenceChange = request.Recurrence.HasValue || request.ClearRecurrence == true;
         var hasWinnerCountChange = request.WinnerCount.HasValue;
 
-        EnsurePatchAllowed(evt, hasConfigChange, hasDateTimeChange);
-
-        if (hasTitleChange && (evt.IsFinished(DateTimeOffset.UtcNow) || evt.HasWinner))
-            throw new ConflictException("La soirée est terminée : le nom ne peut plus être modifié.");
+        EnsurePatchAllowed(evt, hasConfigChange, hasDateTimeChange, hasTitleChange, hasRecurrenceChange);
 
         if (hasWinnerCountChange)
             EnsureWinnerCountAllowed(evt, request.WinnerCount!.Value);
-
-        if (hasRecurrenceChange && !string.IsNullOrEmpty(evt.NextOccurrenceEventId))
-            throw new ConflictException(
-                "L’occurrence suivante existe déjà : la récurrence se règle désormais sur cette nouvelle soirée.");
 
         if (!hasConfigChange && !hasDateTimeChange && !hasTitleChange && !hasRecurrenceChange
             && !hasWinnerCountChange)
@@ -78,29 +71,15 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
 
         var current = evt.Config ?? new EventConfig();
 
-        var theme = current.Theme;
-        if (request.Theme is not null)
-            theme = string.IsNullOrWhiteSpace(request.Theme) ? null : request.Theme.Trim();
-
-        var wheelMode = request.WheelMode ?? current.WheelMode;
-
-        var richShare = current.RichSharePreview;
-        if (request.RichSharePreview.HasValue)
-            richShare = request.RichSharePreview.Value;
-
-        var allowSeries = current.AllowSeries;
-        if (request.AllowSeries.HasValue)
-            allowSeries = request.AllowSeries.Value;
-
         var nextConfig = new EventConfig
         {
-            Theme = theme,
+            Theme = ResolveTheme(request, current.Theme),
             ThemeColor = ResolveThemeColor(request, current.ThemeColor),
             MaxProposalsPerParticipant = ResolveMaxProposals(request, current.MaxProposalsPerParticipant),
             MaxParticipants = await ResolveMaxParticipantsAsync(request, current.MaxParticipants, evt, ct),
-            WheelMode = wheelMode,
-            RichSharePreview = richShare,
-            AllowSeries = allowSeries,
+            WheelMode = request.WheelMode ?? current.WheelMode,
+            RichSharePreview = request.RichSharePreview ?? current.RichSharePreview,
+            AllowSeries = request.AllowSeries ?? current.AllowSeries,
             WinnerCount = request.WinnerCount ?? current.WinnerCount
         };
 
@@ -201,7 +180,12 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         return request.Recurrence ?? current;
     }
 
-    private static void EnsurePatchAllowed(Event evt, bool hasConfigChange, bool hasDateTimeChange)
+    private static void EnsurePatchAllowed(
+        Event evt,
+        bool hasConfigChange,
+        bool hasDateTimeChange,
+        bool hasTitleChange,
+        bool hasRecurrenceChange)
     {
         if (hasConfigChange)
         {
@@ -213,6 +197,20 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
 
         if (hasDateTimeChange && (evt.IsFinished(DateTimeOffset.UtcNow) || evt.HasWinner))
             throw new ConflictException("La soirée est terminée : la date ne peut plus être modifiée.");
+
+        if (hasTitleChange && (evt.IsFinished(DateTimeOffset.UtcNow) || evt.HasWinner))
+            throw new ConflictException("La soirée est terminée : le nom ne peut plus être modifié.");
+
+        if (hasRecurrenceChange && !string.IsNullOrEmpty(evt.NextOccurrenceEventId))
+            throw new ConflictException(
+                "L’occurrence suivante existe déjà : la récurrence se règle désormais sur cette nouvelle soirée.");
+    }
+
+    private static string? ResolveTheme(PatchEventConfigRequest request, string? current)
+    {
+        if (request.Theme is null)
+            return current;
+        return string.IsNullOrWhiteSpace(request.Theme) ? null : request.Theme.Trim();
     }
 
     private static void EnsureWinnerCountAllowed(Event evt, int winnerCount)

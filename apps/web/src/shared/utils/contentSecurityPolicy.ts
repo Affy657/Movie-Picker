@@ -30,6 +30,7 @@ export function toSentryIngestOrigin(dsn: string): string {
 }
 
 export function buildContentSecurityPolicy(apiOrigin: string, sentryOrigin: string): string {
+  const scriptSrc = ["'self'", "'unsafe-inline'", 'https://eu-assets.i.posthog.com'].join(' ');
   const connectSrc = [
     "'self'",
     apiOrigin,
@@ -52,7 +53,7 @@ export function buildContentSecurityPolicy(apiOrigin: string, sentryOrigin: stri
     .join(' ');
   return [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline'",
+    `script-src ${scriptSrc}`,
     "style-src 'self' 'unsafe-inline'",
     `img-src ${imgSrc}`,
     "font-src 'self' data:",

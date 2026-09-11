@@ -73,6 +73,68 @@ const ICON_VENDOR = /[\\/]lucide-react[\\/]/;
 const VENDORS_LOADED_ON_DEMAND = /[\\/](@sentry|posthog-js|canvas-confetti|react-qr-code)[\\/]/;
 const CHUNK_SIZE_NOT_WORTH_A_ROUND_TRIP = 12_000;
 
+type BundleChunkInfo = {
+  type?: string;
+  name?: string;
+  isEntry?: boolean;
+  imports?: ReadonlyArray<string>;
+  dynamicImports?: ReadonlyArray<string>;
+  source?: string | Uint8Array;
+  viteMetadata?: { importedCss?: ReadonlySet<string> };
+};
+
+type OutputBundleInfo = Record<string, BundleChunkInfo | undefined>;
+
+/**
+ * Ferme le graphe des imports statiques des chunks passes en racine.
+ * Sans ces indices, le navigateur ne decouvre les dependances statiques de la
+ * coquille qu'apres avoir evalue son chunk : un aller-retour reseau complet de
+ * plus avant le premier rendu de React, donc avant le LCP de chaque page.
+ */
+function staticGraphClosure(
+  bundle: OutputBundleInfo,
+  roots: ReadonlyArray<string | undefined>
+): { js: Array<string>; css: Array<string> } {
+  const js = new Set<string>();
+  const css = new Set<string>();
+  const queue = roots.filter((file): file is string => Boolean(file));
+  while (queue.length > 0) {
+    const file = queue.pop();
+    if (!file || js.has(file)) continue;
+    const chunk = bundle[file];
+    if (!chunk || chunk.type !== 'chunk') continue;
+    js.add(file);
+    for (const imported of chunk.imports ?? []) queue.push(imported);
+    for (const style of chunk.viteMetadata?.importedCss ?? []) css.add(style);
+  }
+  return { js: [...js], css: [...css] };
+}
+
+const ROUTE_ASSETS_MANIFEST = 'route-assets.json';
+
+/**
+ * Remplace la feuille de style globale par son contenu en ligne.
+ * Elle bloque le rendu et n'est decouverte qu'apres le document : c'est un aller-retour reseau
+ * complet avant le premier pixel, sur toutes les pages. En ligne, le premier rendu ne depend plus
+ * que du document lui-meme, et une page prerendue peint alors sa mise en page finale du premier
+ * coup au lieu de peindre sans styles puis de se remettre en page.
+ */
+function inlineBlockingStyles(html: string, bundle: OutputBundleInfo, entry?: string): string {
+  if (!entry) return html;
+  let output = html;
+  for (const file of bundle[entry]?.viteMetadata?.importedCss ?? []) {
+    const source = bundle[file]?.source;
+    if (typeof source !== 'string') continue;
+    const hrefAt = output.indexOf('/' + file);
+    if (hrefAt < 0) continue;
+    const tagStart = output.lastIndexOf('<link', hrefAt);
+    const tagEnd = output.indexOf('>', hrefAt);
+    if (tagStart < 0 || tagEnd < 0) continue;
+    output = `${output.slice(0, tagStart)}<style>${source}</style>${output.slice(tagEnd + 1)}`;
+  }
+  return output;
+}
+
 function preloadCriticalAssetsPlugin(): Plugin {
   return {
     name: 'moviepicker-preload-critical-assets',
@@ -92,11 +154,17 @@ function preloadCriticalAssetsPlugin(): Plugin {
             as: 'font',
             type: 'font/woff2',
             crossorigin: '',
+            fetchpriority: 'low',
           },
           injectTo: 'head-prepend',
         }));
 
+      const bundle = (ctx.bundle ?? {}) as unknown as OutputBundleInfo;
       const appChunk = files.find((file) => APP_SHELL_CHUNK.test(file));
+      const entryChunk = files.find(
+        (file) => bundle[file]?.type === 'chunk' && bundle[file]?.isEntry
+      );
+
       if (appChunk) {
         tags.push({
           tag: 'link',
@@ -106,7 +174,7 @@ function preloadCriticalAssetsPlugin(): Plugin {
       }
 
       const appStyles = files.find((file) => APP_SHELL_STYLES.test(file));
-      if (appStyles) {
+      if (appStyles && !html.includes('/' + appStyles)) {
         tags.push({
           tag: 'link',
           attrs: { rel: 'preload', as: 'style', href: '/' + appStyles },
@@ -123,7 +191,35 @@ function preloadCriticalAssetsPlugin(): Plugin {
         });
       }
 
-      return { html, tags };
+      return { html: inlineBlockingStyles(html, bundle, entryChunk), tags };
+    },
+    /**
+     * Publie, pour chaque page chargee a la demande, la fermeture de ses imports statiques.
+     * `scripts/prerender.mjs` s'en sert pour poser dans le document prerendu les feuilles de style
+     * de la route : sans elles le contenu prerendu peint sans styles, se remet en page quand le
+     * JavaScript arrive, et le LCP se decale sur ce second rendu au lieu du premier. `inlinedCss`
+     * dit quelles feuilles sont deja dans le document en ligne, pour ne pas les redemander.
+     */
+    generateBundle(_options, outputBundle) {
+      const bundle = outputBundle as unknown as OutputBundleInfo;
+      const files = Object.keys(bundle);
+      const appFile = files.find((file) => APP_SHELL_CHUNK.test(file));
+      if (!appFile) return;
+      const entryFile = files.find(
+        (file) => bundle[file]?.type === 'chunk' && bundle[file]?.isEntry
+      );
+      const chunks: Record<string, { js: Array<string>; css: Array<string> }> = {};
+      for (const file of bundle[appFile]?.dynamicImports ?? []) {
+        const name = bundle[file]?.name;
+        if (!name) continue;
+        chunks[name] = staticGraphClosure(bundle, [file]);
+      }
+      const inlinedCss = [...(bundle[entryFile ?? '']?.viteMetadata?.importedCss ?? [])];
+      this.emitFile({
+        type: 'asset',
+        fileName: ROUTE_ASSETS_MANIFEST,
+        source: JSON.stringify({ inlinedCss, chunks }, null, 2),
+      });
     },
   };
 }

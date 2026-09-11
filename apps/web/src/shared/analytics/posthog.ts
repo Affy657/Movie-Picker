@@ -75,6 +75,7 @@ async function doInit(): Promise<void> {
     capture_pageleave: true,
     capture_performance: { web_vitals: true },
     disable_session_recording: true,
+    disable_surveys: true,
     opt_out_capturing_by_default: true,
     person_profiles: 'identified_only',
     sanitize_properties: (properties) => stripPersonPii(properties) ?? {},

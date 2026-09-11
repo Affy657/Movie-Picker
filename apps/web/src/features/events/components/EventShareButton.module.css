@@ -5,7 +5,3 @@
   line-height: 1;
   white-space: nowrap;
 }
-
-.triggerLabel {
-  transform: translateY(var(--text-optical-nudge));
-}

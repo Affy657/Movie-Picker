@@ -34,6 +34,7 @@ export const en: Locale = {
     watchlist: 'My watchlist',
     account: 'Settings',
     createEvent: 'New event',
+    createEventShort: 'Create',
     navLabel: 'Main navigation',
     accountMenu: 'Account menu',
     brandLabel: 'Movie Picker \u2014 Home',
@@ -698,6 +699,7 @@ export const en: Locale = {
       skeletonLabel: 'Loading the event\u2026',
       moviesLoadError: 'Could not load the film list. Check your connection or try again.',
       errorFallback: 'Event not found',
+      errorOffline: 'Connection unavailable',
       missing: 'This event does not exist or has been deleted.',
       backHome: 'Back to home',
       backNav: 'Back',
@@ -1930,7 +1932,7 @@ export const en: Locale = {
       metricCoverageUnit: '%',
       metricCoverageHint:
         'Share of lines the front-end tests must cover. Below that threshold the integration pipeline fails and nothing ships to production.',
-      stamp: 'Figures measured at the build of {{date}}',
+      stamp: 'Document updated on {{update}}, figures measured at the build of {{build}}',
     },
     nav: {
       architecture: 'Architecture',
@@ -2018,6 +2020,8 @@ export const en: Locale = {
       lead: '{{commits}} commits since February 2026. Every milestone reached production before the next one opened. V1.6 is under way, and the last {{planned}} markers are the plan ahead, not work already done.',
       plannedBadge: 'ahead',
       currentBadge: 'in progress',
+      unplannedDetail:
+        'In between, versions that are not scoped yet. How many there are, and what they carry, will depend on how the product gets used.',
       techHeading: 'The open technical work',
       terraform: 'Infrastructure as code',
       terraformHint:

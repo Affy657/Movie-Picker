@@ -1,5 +1,6 @@
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { TECH_METRICS, TECH_METRICS_BUILD_DATE } from './generated/techMetrics';
+import { TECH_PAGE_LAST_UPDATE } from './lastUpdate';
 import { TechHint } from './TechBlocks';
 import styles from './techPage.module.css';
 
@@ -69,7 +70,12 @@ export default function TechHero() {
           ))}
         </ul>
 
-        <p className={styles.stamp}>{t('tech.hero.stamp', { date: TECH_METRICS_BUILD_DATE })}</p>
+        <p className={styles.stamp}>
+          {t('tech.hero.stamp', {
+            update: TECH_PAGE_LAST_UPDATE,
+            build: TECH_METRICS_BUILD_DATE,
+          })}
+        </p>
       </div>
     </header>
   );

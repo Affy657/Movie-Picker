@@ -4,8 +4,6 @@ import { Inbox } from 'lucide-react';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Avatar from '@/shared/components/Avatar';
 import EmptyState from '@/shared/components/EmptyState';
-import SignedOutState from '@/shared/components/SignedOutState';
-import SessionCheckErrorState from '@/features/auth/components/SessionCheckErrorState';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
@@ -39,56 +37,63 @@ function notifDestination(item: UserNotificationItem): string | null {
   return item.eventSlug ? ROUTES.eventDetail(item.eventSlug) : null;
 }
 
+const NOTIFICATION_TEXT_KEYS = {
+  newfollower: { plain: 'notifications.newFollowerText' },
+  participantjoined: {
+    plain: 'notifications.participantJoinedText',
+    grouped: 'notifications.participantJoinedGroupedText',
+  },
+  movieadded: {
+    plain: 'notifications.movieAddedText',
+    grouped: 'notifications.movieAddedGroupedText',
+  },
+  moviepicked: {
+    plain: 'notifications.moviePickedText',
+    grouped: 'notifications.moviePickedGroupedText',
+  },
+  moviepickedmanually: {
+    plain: 'notifications.moviePickedManuallyText',
+    grouped: 'notifications.moviePickedManuallyGroupedText',
+  },
+  eventdeleted: {
+    plain: 'notifications.eventDeletedText',
+    grouped: 'notifications.eventDeletedGroupedText',
+  },
+  eventdatechanged: {
+    plain: 'notifications.eventDateChangedText',
+    grouped: 'notifications.eventDateChangedGroupedText',
+  },
+  eventreminder1h: {
+    plain: 'notifications.eventReminder1hText',
+    grouped: 'notifications.eventReminder1hGroupedText',
+  },
+  eventreminder24h: {
+    plain: 'notifications.eventReminder24hText',
+    grouped: 'notifications.eventReminder24hGroupedText',
+  },
+  eventinvitation: { plain: 'notifications.eventInvitationText' },
+  eventpending: {
+    plain: 'notifications.eventPendingText',
+    grouped: 'notifications.eventPendingGroupedText',
+  },
+  letterboxdreconciliationpending: {
+    plain: 'notifications.letterboxdReconciliationPendingText',
+  },
+} as const satisfies Partial<
+  Record<UserNotificationItem['type'], { plain: TranslationKey; grouped?: TranslationKey }>
+>;
+
 function notifText(item: UserNotificationItem, t: TFn, withinEventGroup = false): string {
-  const eventTitle = item.eventTitle ?? '';
-  const name = item.actorDisplayName ?? '';
-  const movie = item.movieTitle ?? '';
-  switch (item.type) {
-    case 'newfollower':
-      return t('notifications.newFollowerText', { name });
-    case 'participantjoined':
-      return withinEventGroup
-        ? t('notifications.participantJoinedGroupedText', { name })
-        : t('notifications.participantJoinedText', { name, eventTitle });
-    case 'movieadded':
-      return withinEventGroup
-        ? t('notifications.movieAddedGroupedText', { movie })
-        : t('notifications.movieAddedText', { movie, eventTitle });
-    case 'moviepicked':
-      return withinEventGroup
-        ? t('notifications.moviePickedGroupedText', { movie })
-        : t('notifications.moviePickedText', { movie, eventTitle });
-    case 'moviepickedmanually':
-      return withinEventGroup
-        ? t('notifications.moviePickedManuallyGroupedText', { movie })
-        : t('notifications.moviePickedManuallyText', { movie, eventTitle });
-    case 'eventdeleted':
-      return withinEventGroup
-        ? t('notifications.eventDeletedGroupedText')
-        : t('notifications.eventDeletedText', { eventTitle });
-    case 'eventdatechanged':
-      return withinEventGroup
-        ? t('notifications.eventDateChangedGroupedText')
-        : t('notifications.eventDateChangedText', { eventTitle });
-    case 'eventreminder1h':
-      return withinEventGroup
-        ? t('notifications.eventReminder1hGroupedText')
-        : t('notifications.eventReminder1hText', { eventTitle });
-    case 'eventreminder24h':
-      return withinEventGroup
-        ? t('notifications.eventReminder24hGroupedText')
-        : t('notifications.eventReminder24hText', { eventTitle });
-    case 'eventinvitation':
-      return t('notifications.eventInvitationText', { name, eventTitle });
-    case 'eventpending':
-      return withinEventGroup
-        ? t('notifications.eventPendingGroupedText')
-        : t('notifications.eventPendingText', { eventTitle });
-    case 'letterboxdreconciliationpending':
-      return t('notifications.letterboxdReconciliationPendingText');
-    default:
-      return '';
-  }
+  const keys = NOTIFICATION_TEXT_KEYS[item.type as keyof typeof NOTIFICATION_TEXT_KEYS] as
+    { plain: TranslationKey; grouped?: TranslationKey } | undefined;
+  if (!keys) return '';
+
+  const key = withinEventGroup ? (keys.grouped ?? keys.plain) : keys.plain;
+  return t(key, {
+    name: item.actorDisplayName ?? '',
+    movie: item.movieTitle ?? '',
+    eventTitle: item.eventTitle ?? '',
+  });
 }
 
 function NotifRow({
@@ -200,7 +205,7 @@ export default function NotificationsPage() {
   const { t } = useTranslation();
   const { locale } = useLocale();
   useNoindexPage(pageTitle(t('notifications.inboxTitle')), ROUTES.notifications);
-  const { user, isLoading: authLoading, authCheckFailed } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -251,24 +256,6 @@ export default function NotificationsPage() {
       <PageLayout>
         <h1 className="visually-hidden">{t('notifications.inboxTitle')}</h1>
         <p className="placeholder">{t('common.loading')}</p>
-      </PageLayout>
-    );
-  }
-
-  if (!user && authCheckFailed) {
-    return <SessionCheckErrorState />;
-  }
-
-  if (!user) {
-    return (
-      <PageLayout>
-        <h1 className={styles.pageTitle}>{t('notifications.inboxTitle')}</h1>
-        <SignedOutState
-          icon={<Inbox size={26} aria-hidden />}
-          title={t('notifications.signedOutTitle')}
-          message={t('notifications.signedOutMessage')}
-          returnTo={ROUTES.notifications}
-        />
       </PageLayout>
     );
   }

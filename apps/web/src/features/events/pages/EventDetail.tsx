@@ -16,11 +16,13 @@ function getDocumentTitle(
   slug: string | undefined,
   isPending: boolean,
   isError: boolean,
+  isOffline: boolean,
   eventTitle: string | undefined,
   t: (key: TranslationKey) => string
 ): string {
   if (!slug) return APP_DOCUMENT_TITLE;
   if (isPending) return pageTitle(t('events.detail.loading'));
+  if (isOffline) return pageTitle(t('events.detail.errorOffline'));
   if (isError) return pageTitle(t('events.detail.errorFallback'));
   if (eventTitle) return pageTitle(eventTitle);
   return APP_DOCUMENT_TITLE;
@@ -42,10 +44,15 @@ export default function EventDetail() {
     refreshAll,
   } = useEventDetailPage(slug);
 
+  const isNetworkPaused = eventQuery.isPending && eventQuery.fetchStatus === 'paused';
+  const isLoadingEvent = eventQuery.isPending && !isNetworkPaused;
+  const isEventUnavailable = eventQuery.isError || isNetworkPaused;
+
   const documentTitle = getDocumentTitle(
     slug,
-    eventQuery.isPending,
-    eventQuery.isError,
+    isLoadingEvent,
+    isEventUnavailable,
+    isNetworkPaused,
     event?.title,
     t
   );
@@ -57,7 +64,7 @@ export default function EventDetail() {
 
   if (!slug) return null;
 
-  if (eventQuery.isPending) {
+  if (isLoadingEvent) {
     return (
       <PageLayout className="page-event">
         <EventDetailSkeleton />
@@ -65,17 +72,19 @@ export default function EventDetail() {
     );
   }
 
-  if (eventQuery.isError) {
+  if (isEventUnavailable) {
     return (
       <PageLayout className="page-event page--centered page--errorState">
         <span className="errorStateIcon" aria-hidden>
           <AlertCircle size={32} />
         </span>
         <p className="errorStateMessage" role="alert">
-          {friendlyEventError(eventQuery.error, {
-            notFound: t('events.detail.missing'),
-            fallback: t('errors.generic'),
-          })}
+          {isNetworkPaused
+            ? t('errors.network')
+            : friendlyEventError(eventQuery.error, {
+                notFound: t('events.detail.missing'),
+                fallback: t('errors.generic'),
+              })}
         </p>
         <Link to={ROUTES.home} className={buttonClass()}>
           {t('events.detail.backHome')}

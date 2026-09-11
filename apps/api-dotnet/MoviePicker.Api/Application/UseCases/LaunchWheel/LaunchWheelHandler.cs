@@ -17,7 +17,6 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IPosterImageStore _posterImageStore;
-    private readonly IWinnerAnnouncer _winnerAnnouncer;
     private readonly ILogger<LaunchWheelHandler> _logger;
 
     public LaunchWheelHandler(
@@ -27,7 +26,6 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
         IPosterImageStore posterImageStore,
-        IWinnerAnnouncer winnerAnnouncer,
         ILogger<LaunchWheelHandler> logger)
     {
         _eventRepository = eventRepository;
@@ -36,7 +34,6 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _posterImageStore = posterImageStore;
-        _winnerAnnouncer = winnerAnnouncer;
         _logger = logger;
     }
 
@@ -89,13 +86,13 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
                 Method = WinnerPickMethod.Wheel,
                 PickedAt = now
             }],
+            WinnerAnnouncedAt = null,
             UpdatedAt = now
         };
 
         await _eventRepository.UpdateAsync(updated, ct);
         _logger.LogInformation("Wheel launched for event {EventId}, winner: {MovieId} (mode: {WheelMode})", evt.Id, winner.Id, mode);
 
-        await _winnerAnnouncer.AnnounceAsync(evt, winner.Title, WinnerPickMethod.Wheel, CancellationToken.None);
 
         var message = drawableCount == 1
             ? "Un seul film dans le tirage : gagnant direct."

@@ -238,10 +238,37 @@ const perPageMins = budgets.perPageMinimumScores ?? {};
 
 fs.mkdirSync(OUT, { recursive: true });
 
+/**
+ * La production sert les routes prerendues comme des cles S3 exactes : `/soutenir` repond avec
+ * `prerendered/soutenir.html`, pas avec la coquille SPA. Sans ces reecritures, `serve -s` renvoie
+ * `index.html` et la mesure porte sur une page que personne ne recoit : son element LCP est rendu
+ * par React alors qu'il est dans le document en production. Le repli SPA reste en dernier, comme
+ * le repli 403/404 de CloudFront.
+ *
+ * Le repli est ecrit en negation et pas en `**` parce que `serve-handler` applique ses regles en
+ * cascade : il rejoue les regles restantes sur le chemin deja reecrit. Un `**` final rattraperait
+ * donc `/prerendered/soutenir.html` et le renverrait sur `index.html`, ce qui annule la premiere
+ * reecriture sans rien signaler. C'est aussi pour ca que `--single` n'est pas passe a `serve` :
+ * il insere son propre `**` en tete de liste.
+ */
+function prerenderRewrites() {
+  const manifestPath = path.join(DIST, 'prerendered', 'manifest.json');
+  if (!fs.existsSync(manifestPath)) return [];
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  return manifest.map(({ route, file }) => ({
+    source: route.replace(/^\//, ''),
+    destination: `/prerendered/${file}`,
+  }));
+}
+
 const serveConfigPath = path.join(DIST, 'serve.json');
 fs.writeFileSync(
   serveConfigPath,
   JSON.stringify({
+    rewrites: [
+      ...prerenderRewrites(),
+      { source: '!/prerendered/**', destination: '/index.html' },
+    ],
     headers: [
       {
         source: 'assets/**',
@@ -274,7 +301,7 @@ fs.writeFileSync(
   })
 );
 
-const serve = spawn(`pnpm exec serve -s "${DIST}" -l ${PORT} -c "${serveConfigPath}"`, {
+const serve = spawn(`pnpm exec serve "${DIST}" -l ${PORT} -c "${serveConfigPath}"`, {
   cwd: ROOT,
   stdio: 'ignore',
   shell: true,

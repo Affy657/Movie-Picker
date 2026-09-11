@@ -14,6 +14,7 @@ public sealed record Event
     public EventConfig? Config { get; init; }
     public DateTimeOffset? ClosedAt { get; init; }
     public IReadOnlyList<EventWinner> Winners { get; init; } = [];
+    public DateTimeOffset? WinnerAnnouncedAt { get; init; }
     public RecurrenceFrequency? Recurrence { get; init; }
     public string? RecurrenceParentEventId { get; init; }
     public string? NextOccurrenceEventId { get; init; }

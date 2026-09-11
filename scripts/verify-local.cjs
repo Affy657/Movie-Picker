@@ -27,6 +27,27 @@ function run(title, command, args, options = {}) {
 }
 
 run("Règles d'architecture", 'node', ['scripts/check-architecture.mjs']);
+run('Workflows (actionlint + shellcheck + zizmor)', 'node', ['scripts/check-workflows.mjs']);
+// Même image et même mode `dir` que le job `gitleaks` de la CI : cette porte scanne l'arbre de
+// travail, pas l'historique. Sans elle en local, une chaîne de forme secrète ne se découvre qu'en
+// CI, et c'est arrivé le 2026-09-10 — la règle `curl-auth-user` déclenche sur
+// `curl -u "$TOKEN:"` même quand la valeur est un nom de variable. Garder le digest aligné sur
+// celui de `.github/workflows/ci-cd.yml`.
+run('Secrets (Gitleaks, arbre de travail)', 'docker', [
+  'run',
+  '--rm',
+  '-v',
+  '.:/repo:ro',
+  'ghcr.io/gitleaks/gitleaks@sha256:e1b35e12a8c6fa8901f060459cfb6b2fc4c484d3afbe3b029733a3bbfab07055',
+  'dir',
+  '--no-banner',
+  '--redact',
+  '--verbose',
+  '--exit-code',
+  '1',
+  '/repo',
+]);
+
 run('pnpm lint (turbo)', 'pnpm', ['run', 'lint']);
 run('ESLint', 'pnpm', ['run', 'lint:eslint']);
 run('Prettier check', 'pnpm', ['run', 'format:check']);

@@ -31,7 +31,7 @@ Sources indépendantes, à interroger en parallèle.
 
 Récupérer ensuite les issues ouvertes de `master`, **en séparant celles du new code period du reste** : ce sont elles qui pilotent le Quality Gate, et c'est cette distinction qui rend le volume traitable.
 
-**4. Sentry.** Org `adrien-morand`, région UE, projets `movie-picker-web` et `movie-picker-api`. Issues non résolues des 7 derniers jours, triées par utilisateurs touchés. Une part des remontées ne vient pas de notre code (extension de navigateur, réseau coupé, bot) : celles-là se muent dans Sentry, elles n'entrent pas dans le périmètre de correction.
+**4. Sentry.** Org et projets se relèvent dans la console Sentry ou dans les variables Actions `SENTRY_ORG` et `SENTRY_PROJECT`, région UE. Issues non résolues des 7 derniers jours, triées par utilisateurs touchés. Une part des remontées ne vient pas de notre code (extension de navigateur, réseau coupé, bot) : celles-là se muent dans Sentry, elles n'entrent pas dans le périmètre de correction.
 
 **5. Google Cloud.** Trafic par classe de code de réponse, latence p95, erreurs applicatives des logs Cloud Run, révision active. Croiser les erreurs de logs avec Sentry : une erreur présente ici et absente de Sentry signale un trou d'instrumentation.
 
@@ -39,9 +39,9 @@ Récupérer ensuite les issues ouvertes de `master`, **en séparant celles du ne
 
 **7. Socle.** Trois vérifications courtes, invisibles autrement : expiration du certificat, joignabilité des domaines, et dernier statut des workflows planifiés (`security-scan.yml`, `registry-cleanup.yml`). Un job planifié qui échoue ne bloque rien et n'est donc vu par personne.
 
-**8. Scores Lighthouse.** Télécharger le dernier rapport archivé du run master et lire les scores réels, pas seulement le vert ou le rouge. `accessibility` et `best-practices` sont à 100, donc **sans aucune marge** : lire les scores permet de voir venir la régression avant qu'elle ne bloque `deploy-front`.
+**8. Scores Lighthouse.** Télécharger le dernier rapport archivé et lire les scores réels, pas seulement le vert ou le rouge. `accessibility` et `best-practices` sont à 100, donc **sans aucune marge** : lire les scores permet de voir venir la régression avant qu'elle ne bloque `deploy-front`. Le rapport vient du dernier run de `deploy.yml`, pas d'un run master : la porte est passée sur le chemin du déploiement le 2026-09-10. Comme le déploiement est manuel, la mesure peut avoir plusieurs semaines — noter sa date dans le rapport, un score de trois semaines ne dit rien du master d'aujourd'hui.
 
-**9. Bug reports et état de la prod.** Issues `bug` ouvertes, et les 3 derniers runs de master. Une prod déjà en retard avant la passe se traite en premier.
+**9. Bug reports et état de la prod.** Issues `bug` ouvertes, les 3 derniers runs de master, et **l'écart entre `master` et ce qui est déployé** : le déploiement étant manuel, la prod est en retard par défaut et personne ne le signale. Comparer le SHA de la révision Cloud Run active à `git rev-parse origin/master`. Une prod déjà en retard avant la passe se traite en premier.
 
 ## Étape 2 : rapport
 
@@ -98,21 +98,31 @@ Pendant le dev, vérifications ciblées seulement : `tsc --noEmit`, `eslint`, `v
 
 Pousser la branche, ouvrir la PR, corps listant ce qui a été corrigé par source et ce qui a été laissé.
 
-Attendre que les checks de la PR soient verts : ce sont eux qui conditionnent le déploiement une fois sur master.
+Attendre que les checks de la PR soient verts : ce sont eux que le déploiement exigera une fois sur master.
 
 **STOP. Attendre le go de l'utilisateur avant de merger sur master.**
 
-## Étape 6 : vérifier que le déploiement s'est bien passé
+## Étape 6 : déclencher le déploiement
 
-« La CI est verte » n'y suffit pas.
+**Merger ne déploie rien.** Le déploiement est manuel depuis le 2026-09-10, pour tenir le quota de minutes GitHub Actions. Attendre que le run `ci-cd.yml` du commit de merge soit **terminé et vert** — le workflow de déploiement le vérifie et refusera de partir sinon — puis :
 
-**1. Le run du merge est terminé et `deploy-guard` est vert.** Ce job échoue quand un périmètre a changé sans avoir été déployé : c'est lui qui attrape le déploiement resté en `skipped`.
+```bash
+rtk gh workflow run deploy.yml --ref master -f cible=tout
+```
 
-**2. Aucun job de déploiement en `skipped` alors que son périmètre a bougé.** `deploy-front` dépend de `gitleaks`, `lint-web`, `test-web`, `audit`, `lighthouse`, `e2e` et `sonar` ; `deploy-api` dépend de `docker-api`, `e2e` et `sonar`. Un seul de ces gates rouge laisse le déploiement en `skipped` : le run n'apparaît pas en échec et la prod reste périmée en silence. C'est comme ça que le front est resté dix jours en retard.
+**STOP. Le déploiement met la production à jour : attendre le go de l'utilisateur avant de le déclencher.**
+
+## Étape 7 : vérifier que le déploiement s'est bien passé
+
+« La CI est verte » n'y suffit pas, et « le déploiement est vert » non plus.
+
+**1. Le run de `deploy.yml` est terminé et `deploy-guard` est vert.** Ce job échoue quand une cible demandée n'est pas partie : c'est lui qui attrape le déploiement resté en `skipped`.
+
+**2. Aucun job de déploiement en `skipped`.** `deploy-front` dépend de `lighthouse`, `deploy-api` dépend de `docker-api`, et les deux dépendent de `verifier-ci`. Un seul de ces jobs rouge laisse le déploiement en `skipped` : le run n'apparaît pas en échec et la prod reste périmée en silence. C'est comme ça que le front est resté dix jours en retard. Les autres portes (gitleaks, lint, tests, E2E, Quality Gate Sonar) ne sont plus dans ce `needs:` : elles sont exigées en bloc par `verifier-ci`, qui refuse un commit dont le run de CI n'est pas vert.
 
 **3. La production sert bien le SHA de master.** Côté API, le signal qui fait foi est l'image de la révision Cloud Run active : elle est taguée par le SHA du commit, à comparer avec `git rev-parse origin/master`.
 
-Côté front, **le job vert ne prouve rien** : ses étapes d'invalidation CloudFront et de smoke test sont gardées par `vars.AWS_CLOUDFRONT_DISTRIBUTION_ID`, qui n'est pas définie dans le dépôt, donc elles sortent en `skipped` à chaque déploiement. La vérification doit se faire à la main sur `web.movie-picker.fr`, qui est le domaine du front.
+Côté front, `vars.AWS_CLOUDFRONT_DISTRIBUTION_ID` est posée depuis le 2026-09-08, donc l'invalidation CloudFront et les deux smoke tests tournent vraiment au lieu de sortir en `skipped`. Lire ces trois étapes une par une plutôt que la conclusion du job, et en particulier le smoke test « domaine public + version servie », qui est le seul à comparer le point d'entrée haché envoyé à celui que `web.movie-picker.fr` sert réellement.
 
 Le pipeline enregistre aussi une release Sentry par déploiement, nommée d'après le SHA. Elle corrobore, elle ne prouve pas : les deux étapes qui la publient sont en `continue-on-error: true` et sortent sans rien faire quand `SENTRY_AUTH_TOKEN` est absent. Une release manquante ne veut donc pas dire que le déploiement a échoué.
 
@@ -120,7 +130,7 @@ Le pipeline enregistre aussi une release Sentry par déploiement, nommée d'apr�
 
 Si un de ces quatre points échoue, **ne pas conclure que c'est déployé.** Dire lequel, et proposer soit de relancer le pipeline en `workflow_dispatch` (en sachant qu'il force les deux lanes et fait sauter `sonar`, que les déploiements acceptent alors en `skipped`), soit le rollback API via le workflow `Rollback API (Cloud Run)`, révision cible vide pour revenir à la précédente.
 
-## Étape 7 : clôture
+## Étape 8 : clôture
 
 Résumé final en terminal :
 

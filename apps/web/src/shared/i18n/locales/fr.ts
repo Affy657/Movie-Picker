@@ -32,6 +32,7 @@
     watchlist: 'Ma liste',
     account: 'Paramètres',
     createEvent: 'Nouvelle soirée',
+    createEventShort: 'Créer',
     navLabel: 'Navigation principale',
     accountMenu: 'Menu du compte',
     brandLabel: 'Movie Picker \u2014 Accueil',
@@ -708,6 +709,7 @@
       moviesLoadError:
         'Impossible de charger la liste des films. Vérifiez votre connexion ou réessayez.',
       errorFallback: 'Soirée introuvable',
+      errorOffline: 'Connexion indisponible',
       missing: "Cette soirée n'existe pas ou a été supprimée.",
       backHome: "Retour à l'accueil",
       backNav: 'Retour',
@@ -1963,7 +1965,7 @@
       metricCoverageUnit: '%',
       metricCoverageHint:
         "Part de lignes que les tests du front doivent couvrir. En dessous de ce seuil, la chaîne d'intégration échoue et rien ne part en production.",
-      stamp: 'Chiffres relevés au build du {{date}}',
+      stamp: 'Document mis à jour le {{update}}, chiffres relevés au build du {{build}}',
     },
     nav: {
       architecture: 'Architecture',
@@ -2051,6 +2053,8 @@
       lead: "{{commits}} commits depuis février 2026. Chaque palier est parti en production avant que le suivant ne s'ouvre. La V1.6 est en cours, et les {{planned}} derniers repères sont la suite prévue, pas du travail fait.",
       plannedBadge: 'à venir',
       currentBadge: 'en cours',
+      unplannedDetail:
+        'Entre les deux, des versions qui ne sont pas encore cadrées. Leur nombre et leur contenu dépendront des retours d’usage.',
       techHeading: 'Les chantiers techniques ouverts',
       terraform: 'Infrastructure en code',
       terraformHint:
@@ -2173,7 +2177,7 @@
       v16Detail:
         'Fermer la boucle sociale ouverte en V1.2 et ritualiser la soirée. Quatre des six repères sont en place, deux restent à poser.',
       v16Hint:
-        "Le mode tournoi a quitté ce palier pour le backlog : son coût dépassait à lui seul celui des cinq autres items réunis.",
+        'Le mode tournoi a quitté ce palier pour le backlog : son coût dépassait à lui seul celui des cinq autres items réunis.',
       v16Item1: "Recherche d'utilisateurs",
       v16Item2: 'Soirées récurrentes',
       v16Item3: 'Modèles de soirée',

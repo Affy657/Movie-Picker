@@ -115,6 +115,16 @@ export async function postEventWheel(
   return { winner: mapMovieData(raw.winner), message: raw.message };
 }
 
+export async function postEventWheelAnnounce(
+  slug: string,
+  hostToken: string | null
+): Promise<void> {
+  await fetchApi(`/events/${slug}/wheel/announce${hostQuery(hostToken)}`, {
+    method: 'POST',
+    body: '{}',
+  });
+}
+
 export async function postEventWinner(
   slug: string,
   movieId: string,
