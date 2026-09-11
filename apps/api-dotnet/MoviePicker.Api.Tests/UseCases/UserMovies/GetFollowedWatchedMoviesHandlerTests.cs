@@ -2,8 +2,8 @@ using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.UserMovies;
 using MoviePicker.Api.Domain.Entities;
-using Xunit;
 using MoviePicker.Api.Tests.Builders;
+using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.UserMovies;
 

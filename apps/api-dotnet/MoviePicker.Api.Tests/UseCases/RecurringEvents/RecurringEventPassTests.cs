@@ -5,8 +5,8 @@ using MoviePicker.Api.Application.UseCases.RecurringEvents;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
-using Xunit;
 using MoviePicker.Api.Tests.Builders;
+using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.RecurringEvents;
 

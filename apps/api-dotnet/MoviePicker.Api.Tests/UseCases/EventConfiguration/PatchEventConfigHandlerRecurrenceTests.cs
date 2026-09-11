@@ -6,8 +6,8 @@ using MoviePicker.Api.Application.UseCases.EventConfiguration;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
-using Xunit;
 using MoviePicker.Api.Tests.Builders;
+using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.EventConfiguration;
 

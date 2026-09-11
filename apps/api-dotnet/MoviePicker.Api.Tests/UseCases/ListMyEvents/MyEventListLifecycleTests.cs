@@ -1,7 +1,7 @@
 using MoviePicker.Api.Application.UseCases.ListMyEvents;
 using MoviePicker.Api.Domain.Entities;
-using Xunit;
 using MoviePicker.Api.Tests.Builders;
+using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.ListMyEvents;
 

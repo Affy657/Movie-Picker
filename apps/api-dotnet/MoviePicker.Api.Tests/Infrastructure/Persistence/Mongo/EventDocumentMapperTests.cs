@@ -1,7 +1,7 @@
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
-using Xunit;
 using MoviePicker.Api.Tests.Builders;
+using Xunit;
 
 namespace MoviePicker.Api.Tests.Infrastructure.Persistence.Mongo;
 

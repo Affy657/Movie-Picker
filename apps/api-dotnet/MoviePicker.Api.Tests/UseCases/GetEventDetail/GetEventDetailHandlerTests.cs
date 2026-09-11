@@ -3,9 +3,9 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.GetEventDetail;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 using ParticipantEntity = MoviePicker.Api.Domain.Entities.Participant;
-using MoviePicker.Api.Tests.Builders;
 
 namespace MoviePicker.Api.Tests.UseCases.GetEventDetail;
 

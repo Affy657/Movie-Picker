@@ -6,8 +6,8 @@ using MoviePicker.Api.Application.UseCases.SetManualWinner;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
-using Xunit;
 using MoviePicker.Api.Tests.Builders;
+using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.SetManualWinner;
 

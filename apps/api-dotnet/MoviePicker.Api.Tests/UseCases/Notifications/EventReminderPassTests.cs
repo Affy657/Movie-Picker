@@ -4,8 +4,8 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
-using Xunit;
 using MoviePicker.Api.Tests.Builders;
+using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.Notifications;
 

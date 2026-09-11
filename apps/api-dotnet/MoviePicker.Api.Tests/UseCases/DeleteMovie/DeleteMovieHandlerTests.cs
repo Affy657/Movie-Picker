@@ -3,8 +3,8 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.DeleteMovie;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
-using Xunit;
 using MoviePicker.Api.Tests.Builders;
+using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.DeleteMovie;
 
