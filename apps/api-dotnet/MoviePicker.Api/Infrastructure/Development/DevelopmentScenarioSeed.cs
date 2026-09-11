@@ -673,7 +673,7 @@ internal static class DevelopmentScenarioSeed
         {
             Date = FormatDate(utc.AddDays(-3)),
             Time = "20:00",
-            WinnerMovieId = winner.Id,
+            Winners = [SeedWinner(winner.Id, utc.AddDays(-3))],
             ClosedAt = utc.AddDays(-3),
             UpdatedAt = now
         };
@@ -1257,7 +1257,7 @@ internal static class DevelopmentScenarioSeed
         {
             Date = FormatDate(closedDate),
             Time = "20:00",
-            WinnerMovieId = winnerMovie.Id,
+            Winners = [SeedWinner(winnerMovie.Id, closedDate)],
             ClosedAt = closedDate,
             UpdatedAt = now
         };
@@ -1363,7 +1363,7 @@ internal static class DevelopmentScenarioSeed
         {
             Date = FormatDate(closedDate),
             Time = "19:30",
-            WinnerMovieId = winnerMovie.Id,
+            Winners = [SeedWinner(winnerMovie.Id, closedDate)],
             ClosedAt = closedDate,
             UpdatedAt = now
         };
@@ -1474,10 +1474,19 @@ internal static class DevelopmentScenarioSeed
         {
             Config = config ?? e.Config,
             ClosedAt = closedAt ?? e.ClosedAt,
-            WinnerMovieId = winnerMovieId ?? e.WinnerMovieId,
+            Winners = winnerMovieId is null
+                ? e.Winners
+                : [SeedWinner(winnerMovieId, updatedAt ?? DateTimeOffset.UtcNow)],
             UpdatedAt = updatedAt ?? DateTimeOffset.UtcNow
         };
     }
+
+    private static EventWinner SeedWinner(string movieId, DateTimeOffset pickedAt) => new()
+    {
+        MovieId = movieId,
+        Method = WinnerPickMethod.Wheel,
+        PickedAt = pickedAt
+    };
 
     private static void EnsureConfigBounds(EventConfig cfg)
     {

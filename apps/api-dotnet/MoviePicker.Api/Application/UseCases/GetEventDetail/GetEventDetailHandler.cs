@@ -52,7 +52,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         var isFinished = eventLifecycle == EventLifecycle.Finished;
         var lifecycle = MyEventListLifecycle.FromLifecycle(eventLifecycle);
 
-        var winner = await ResolveWinnerAsync(evt, ct);
+        var winners = await ResolveWinnersAsync(evt, ct);
 
         var participantsTask = _participantRepository.ListByEventIdAsync(evt.Id, ct);
         var movieCountTask = _movieRepository.CountByEventIdAsync(evt.Id, ct);
@@ -94,15 +94,12 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             Slug = evt.Slug,
             Config = EventConfigResponse.FromEvent(evt),
             ClosedAt = evt.ClosedAt,
-            WinnerMovieId = evt.WinnerMovieId,
-            WinnerPickMethod = ToWinnerPickMethodString(evt.WinnerPickMethod),
-            WinnerPickedAt = evt.WinnerPickedAt,
             CreatedAt = evt.CreatedAt,
             UpdatedAt = evt.UpdatedAt,
             IsHost = isHost,
             IsFinished = isFinished,
             Lifecycle = lifecycle,
-            WinnerMovie = winner,
+            Winners = winners,
             MyParticipant = myParticipant,
             ParticipantCount = participants.Count,
             MovieCount = movieCount,
@@ -119,18 +116,43 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             _ => null
         };
 
-    private async Task<WinnerMovieResponse?> ResolveWinnerAsync(Event evt, CancellationToken ct)
+    private async Task<IReadOnlyList<EventWinnerResponse>> ResolveWinnersAsync(Event evt, CancellationToken ct)
     {
-        if (string.IsNullOrEmpty(evt.WinnerMovieId))
-            return null;
-        var wm = await _movieRepository.GetByIdAsync(evt.WinnerMovieId, ct);
-        if (wm is null)
-            return null;
-        if (wm.PosterPath is not null &&
-            TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(wm.PosterPath, out var pNorm))
-            await _posterImageStore.RegisterTmdbSourceAsync(pNorm, ct);
-        var posterOut = _posterImageStore.ToPublicPosterPath(wm.PosterPath);
-        return WinnerMovieResponse.FromDomain(wm, posterOut);
+        if (!evt.HasWinner)
+            return [];
+
+        var movies = await _movieRepository.ListByIdsAsync(evt.WinnerMovieIds, ct);
+        var movieById = movies.ToDictionary(m => m.Id);
+
+        await RegisterWinnerPostersAsync(movies, ct);
+
+        return evt.Winners.Select(w =>
+        {
+            var movie = movieById.GetValueOrDefault(w.MovieId);
+            return new EventWinnerResponse
+            {
+                MovieId = w.MovieId,
+                PickMethod = ToWinnerPickMethodString(w.Method) ?? string.Empty,
+                PickedAt = w.PickedAt,
+                Movie = movie is null
+                    ? null
+                    : WinnerMovieResponse.FromDomain(movie, _posterImageStore.ToPublicPosterPath(movie.PosterPath))
+            };
+        }).ToList();
+    }
+
+    private async Task RegisterWinnerPostersAsync(IReadOnlyList<Movie> movies, CancellationToken ct)
+    {
+        var tmdbSources = new List<string>(movies.Count);
+        foreach (var movie in movies)
+        {
+            if (movie.PosterPath is not null &&
+                TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(movie.PosterPath, out var normalized))
+                tmdbSources.Add(normalized);
+        }
+
+        if (tmdbSources.Count > 0)
+            await _posterImageStore.RegisterTmdbSourcesAsync(tmdbSources, ct);
     }
 
     private static EventParticipantSummaryResponse ToParticipantSummary(

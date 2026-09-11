@@ -49,6 +49,9 @@ public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
         if (evt.IsFinished(DateTimeOffset.UtcNow))
             throw new ConflictException("Soirée terminée. Lecture seule.");
 
+        if (evt.RemainingWinnerSlots == 0)
+            throw new ConflictException(WinnerSlots.AllDrawnMessage(evt.TargetWinnerCount));
+
         var winner = await _movieRepository.GetByIdAsync(request.MovieId, ct);
         if (winner is null || winner.EventId != evt.Id)
             throw new NotFoundException("Film introuvable dans cette soirée");
@@ -56,12 +59,18 @@ public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
         if (winner.ExcludedFromWheel)
             throw new ConflictException("Ce film est exclu du tirage. Réintégrez-le pour pouvoir le choisir.");
 
+        if (evt.WinnerMovieIds.Contains(winner.Id))
+            throw new ConflictException(WinnerSlots.AlreadyAWinnerMessage);
+
         var now = DateTimeOffset.UtcNow;
         var updated = evt with
         {
-            WinnerMovieId = winner.Id,
-            WinnerPickMethod = WinnerPickMethod.Manual,
-            WinnerPickedAt = now,
+            Winners = [.. evt.Winners, new EventWinner
+            {
+                MovieId = winner.Id,
+                Method = WinnerPickMethod.Manual,
+                PickedAt = now
+            }],
             UpdatedAt = now
         };
 

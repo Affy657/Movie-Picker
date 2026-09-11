@@ -409,3 +409,7 @@
     animation: none;
   }
 }
+
+.lockable {
+  display: contents;
+}

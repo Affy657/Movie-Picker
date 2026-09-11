@@ -3,6 +3,7 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.UserMovies;
 using MoviePicker.Api.Domain.Entities;
 using Xunit;
+using MoviePicker.Api.Tests.Builders;
 
 namespace MoviePicker.Api.Tests.UseCases.UserMovies;
 
@@ -39,7 +40,7 @@ public sealed class GetFollowedWatchedMoviesHandlerTests
         Slug = id,
         HostToken = "ht",
         CreatorUserId = "friend",
-        WinnerMovieId = winnerMovieId,
+        Winners = TestWinners.Won(winnerMovieId),
         CreatedAt = DateTimeOffset.UtcNow,
         UpdatedAt = DateTimeOffset.UtcNow
     };

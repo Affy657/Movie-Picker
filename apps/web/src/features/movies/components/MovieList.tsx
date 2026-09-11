@@ -30,7 +30,7 @@ interface MovieListProps {
   onToggleWatchlist?: (movie: MovieData) => void;
   onToggleWheelExclusion?: (movie: MovieData) => void;
   selection?: MovieCardSelection;
-  winnerMovieId?: string;
+  winnerMovieIds?: string[];
   isMobile: boolean;
   showRank?: boolean;
   showHeader?: boolean;
@@ -61,7 +61,7 @@ export default function MovieList({
   onToggleWatchlist,
   onToggleWheelExclusion,
   selection,
-  winnerMovieId,
+  winnerMovieIds,
   isMobile,
   showRank = false,
   showHeader = true,
@@ -84,6 +84,21 @@ export default function MovieList({
     );
   }
 
+  const winners = winnerMovieIds ?? [];
+  const winnerRankOf = (movieId: string) => {
+    const index = winners.indexOf(movieId);
+    if (index < 0 || winners.length < 2) return undefined;
+    return index + 1;
+  };
+
+  const listRanks = new Map<string, number>();
+  let nextRank = 0;
+  for (const m of movies) {
+    if (winners.includes(m.id)) continue;
+    nextRank += 1;
+    listRanks.set(m.id, nextRank);
+  }
+
   const commonCardProps = (m: MovieData) => ({
     movie: m,
     slug,
@@ -102,7 +117,8 @@ export default function MovieList({
     onToggleWatchlist,
     onToggleWheelExclusion,
     selection,
-    isWinner: m.id === winnerMovieId,
+    isWinner: winners.includes(m.id),
+    winnerRank: winnerRankOf(m.id),
     isMobile,
     participantCount,
     t,
@@ -135,7 +151,7 @@ export default function MovieList({
                 key={m.id}
                 {...commonCardProps(m)}
                 eager={i < 3}
-                rank={showRank ? i + 1 : undefined}
+                rank={showRank ? listRanks.get(m.id) : undefined}
                 voteError={
                   rowError
                     ? { message: rowError.message, onRetry: () => onRetryVote?.(m.id) }

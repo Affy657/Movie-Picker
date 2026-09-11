@@ -58,7 +58,6 @@ public sealed class CreateEventHandler : ICreateEventHandler
                 RichSharePreview = true
             },
             ClosedAt = null,
-            WinnerMovieId = null,
             CreatedAt = now,
             UpdatedAt = now
         };

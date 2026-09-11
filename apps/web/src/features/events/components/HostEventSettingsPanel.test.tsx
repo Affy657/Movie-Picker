@@ -57,6 +57,9 @@ const baseEvent: EventData = {
     maxParticipants: null,
     wheelMode: 'strictRandom',
     richSharePreview: false,
+    winnerCount: 1,
+    winnerCountMax: 10,
+    drawnWinnerCount: 0,
   },
 };
 
@@ -67,6 +70,27 @@ describe('HostEventSettingsPanel', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
+  it('reste ouvert une fois un film tiré et ne laisse réglable que le nombre de gagnants', () => {
+    renderWithRouter(
+      <HostEventSettingsPanel
+        slug={slug}
+        hostToken={null}
+        event={{
+          ...baseEvent,
+          winners: [{ movieId: 'm1', pickMethod: 'wheel', pickedAt: '2030-01-01T20:00:00Z' }],
+          config: { ...baseEvent.config!, winnerCount: 3, drawnWinnerCount: 1 },
+        }}
+        open
+        onClose={() => {}}
+      />
+    );
+
+    expect(screen.getByLabelText(/nom de la soir/i)).toBeDisabled();
+    expect(screen.getByRole('radio', { name: /par les votes/i })).toBeDisabled();
+    expect(screen.getByLabelText(/films gagnants/i)).toBeEnabled();
+    expect(screen.getByText(/tirage a commenc/i)).toBeInTheDocument();
+  });
+
   it('ouvre le panneau et envoie un PATCH config', async () => {
     const user = userEvent.setup();
     let patched = false;
@@ -74,10 +98,9 @@ describe('HostEventSettingsPanel', () => {
       http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
         patched = true;
         const body = (await request.json()) as Record<string, unknown>;
-        expect(body.theme).toBe('SF');
         expect(body.wheelMode).toBe('weightedByVotes');
-        expect(body.richSharePreview).toBe(false);
-        expect(body.allowSeries).toBe(false);
+        expect(body.theme).toBeUndefined();
+        expect(body.allowSeries).toBeUndefined();
         expect(body.allowedReactionIds).toBeUndefined();
         return HttpResponse.json({
           theme: 'SF',
@@ -169,34 +192,69 @@ describe('HostEventSettingsPanel', () => {
     expect(patchCalled).toBe(false);
   });
 
-  it('reste fonctionnel quand winnerMovie est défini (masquage géré par EventDetail)', async () => {
+  it('envoie le nombre de films à tirer saisi par l hôte', async () => {
+    const user = userEvent.setup();
+    let seenWinnerCount: unknown;
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        seenWinnerCount = body.winnerCount;
+        return HttpResponse.json({ ...baseEvent.config, winnerCount: 3 });
+      })
+    );
+
     renderWithRouter(
       <HostEventSettingsPanel
+        slug={slug}
+        hostToken={null}
+        event={baseEvent}
         open
         onClose={() => {}}
+      />,
+      createTestQueryClient()
+    );
+
+    await user.clear(screen.getByLabelText(/films gagnants/i));
+    await user.type(screen.getByLabelText(/films gagnants/i), '3');
+
+    await waitFor(() => expect(seenWinnerCount).toBe(3), { timeout: 3000 });
+  });
+
+  it('refuse de descendre sous le nombre de films déjà tirés', async () => {
+    const user = userEvent.setup();
+    let patchCalled = false;
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async () => {
+        patchCalled = true;
+        return HttpResponse.json({ ...baseEvent.config });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
         slug={slug}
         hostToken={null}
         event={{
           ...baseEvent,
-          winnerMovie: {
-            id: 'm1',
-            eventId: 'e1',
-            participantId: 'p1',
-            tmdbId: 1,
-            title: 'Gagnant',
-            year: '2020',
-            posterPath: null,
-            proposerPseudo: 'A',
-            score: 0,
-            up: 0,
-            down: 0,
-          },
+          winners: [
+            { movieId: 'm1', pickMethod: 'wheel', pickedAt: '2030-01-01T20:00:00Z' },
+            { movieId: 'm2', pickMethod: 'wheel', pickedAt: '2030-01-01T20:10:00Z' },
+          ],
+          config: { ...baseEvent.config!, winnerCount: 3, drawnWinnerCount: 2 },
         }}
-      />
+        open
+        onClose={() => {}}
+      />,
+      createTestQueryClient()
     );
 
-    expect(screen.queryByText(/n'est plus modifiable/i)).not.toBeInTheDocument();
-    expect(screen.getByLabelText(/nom de la soirée/i)).not.toBeDisabled();
+    await user.clear(screen.getByLabelText(/films gagnants/i));
+    await user.type(screen.getByLabelText(/films gagnants/i), '1');
+
+    expect(
+      await screen.findByText(/déjà 2 films gagnants/i, {}, { timeout: 3000 })
+    ).toBeInTheDocument();
+    expect(patchCalled).toBe(false);
   });
 
   describe('zone de danger (suppression)', () => {

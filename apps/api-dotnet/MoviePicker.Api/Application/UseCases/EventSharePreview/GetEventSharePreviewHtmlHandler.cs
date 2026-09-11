@@ -90,10 +90,10 @@ public sealed class GetEventSharePreviewHtmlHandler : IGetEventSharePreviewHtmlH
     private async Task<string> ResolveOgImageAsync(Event evt, string apiBase, string webBase, CancellationToken ct)
     {
         var fallback = $"{webBase}/og-image.png";
-        if (string.IsNullOrEmpty(evt.WinnerMovieId))
+        if (!evt.HasWinner)
             return fallback;
 
-        var wm = await _movies.GetByIdAsync(evt.WinnerMovieId, ct);
+        var wm = await _movies.GetByIdAsync(evt.Winners[0].MovieId, ct);
         if (wm is null || string.IsNullOrEmpty(wm.PosterPath))
             return fallback;
 

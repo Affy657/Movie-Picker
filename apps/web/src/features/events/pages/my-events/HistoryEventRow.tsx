@@ -7,6 +7,7 @@ import EventCardMenu from '@/features/events/components/EventCardMenu';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import type { MyEventSummary } from '@/features/events/types';
+import { winnerPosterPaths, winnerTitles } from '@/features/events/utils/eventWinners';
 import styles from './HistoryEventRow.module.css';
 import Card from '@/shared/components/Card';
 
@@ -23,6 +24,9 @@ export default function HistoryEventRow({
 }: Readonly<HistoryEventRowProps>) {
   const { t } = useTranslation();
   const { locale } = useLocale();
+  const winners = event.winnerMovies ?? [];
+  const firstPoster = winnerPosterPaths(winners)[0] ?? null;
+  const titles = winnerTitles(winners, locale);
 
   return (
     <Card as="article" padding="none" elevation="sm" className={styles.row}>
@@ -32,15 +36,22 @@ export default function HistoryEventRow({
         tabIndex={-1}
         aria-hidden="true"
       >
-        {event.winnerMovieTitle && event.winnerMoviePosterPath ? (
-          <img
-            src={posterImageSrc(event.winnerMoviePosterPath)}
-            alt=""
-            aria-hidden
-            className={styles.poster}
-            width={52}
-            height={78}
-          />
+        {firstPoster ? (
+          <span className={styles.posterSlot}>
+            <img
+              src={posterImageSrc(firstPoster)}
+              alt=""
+              aria-hidden
+              className={styles.poster}
+              width={52}
+              height={78}
+            />
+            {winners.length > 1 ? (
+              <span className={styles.posterCount} aria-hidden>
+                {winners.length}
+              </span>
+            ) : null}
+          </span>
         ) : (
           <span className={styles.posterFallback} aria-hidden>
             <Film size={18} />
@@ -50,13 +61,13 @@ export default function HistoryEventRow({
 
       <Link to={ROUTES.eventDetail(event.slug)} className={styles.body}>
         <h3 className={styles.title}>{event.title}</h3>
-        {event.winnerMovieTitle ? (
+        {winners.length > 0 ? (
           <span
             className={styles.winner}
-            aria-label={t('events.myEvents.winnerMovieLabel', { title: event.winnerMovieTitle })}
+            aria-label={t('events.myEvents.winnerMoviesLabel', { titles })}
           >
             <Trophy aria-hidden size={13} />
-            <span aria-hidden="true">{event.winnerMovieTitle}</span>
+            <span aria-hidden="true">{titles}</span>
           </span>
         ) : (
           <span className={styles.noWinner}>

@@ -36,13 +36,14 @@ const DEFAULT_SORT_DIRECTION: Record<MovieRowSortKey, 'asc' | 'desc'> = {
   releaseDate: 'desc',
 };
 
-function pinWinnerFirst(movies: MovieData[], winnerMovieId?: string): MovieData[] {
-  if (!winnerMovieId) return movies;
-  const index = movies.findIndex((m) => m.id === winnerMovieId);
-  if (index <= 0) return movies;
-  const next = [...movies];
-  const [winner] = next.splice(index, 1);
-  return [winner!, ...next];
+function pinWinnersFirst(movies: MovieData[], winnerMovieIds?: string[]): MovieData[] {
+  const ids = winnerMovieIds ?? [];
+  if (ids.length === 0) return movies;
+  const byId = new Map(movies.map((m) => [m.id, m]));
+  const pinned = ids.map((id) => byId.get(id)).filter((m): m is MovieData => m !== undefined);
+  if (pinned.length === 0) return movies;
+  const pinnedIds = new Set(pinned.map((m) => m.id));
+  return [...pinned, ...movies.filter((m) => !pinnedIds.has(m.id))];
 }
 
 function compareMovies(a: MovieData, b: MovieData, sortBy: MovieRowSortKey): number {
@@ -96,7 +97,7 @@ export type EventMoviesSectionProps = {
   addMovieOpen: boolean;
   onAddMovieOpenChange: (open: boolean) => void;
   addMovieTriggerRef: RefObject<HTMLButtonElement | null>;
-  winnerMovieId?: string;
+  winnerMovieIds?: string[];
 };
 
 export default function EventMoviesSection({
@@ -117,7 +118,7 @@ export default function EventMoviesSection({
   addMovieOpen,
   onAddMovieOpenChange,
   addMovieTriggerRef,
-  winnerMovieId,
+  winnerMovieIds,
 }: Readonly<EventMoviesSectionProps>) {
   const isFinished = !!event.isFinished;
   const { track } = useAnalytics();
@@ -257,11 +258,11 @@ export default function EventMoviesSection({
   );
   const inWheelMovies = useMemo(
     () =>
-      pinWinnerFirst(
+      pinWinnersFirst(
         sortedMovies.filter((m) => !m.excludedFromWheel),
-        winnerMovieId
+        winnerMovieIds
       ),
-    [sortedMovies, winnerMovieId]
+    [sortedMovies, winnerMovieIds]
   );
   const excludedMovies = useMemo(
     () => sortedMovies.filter((m) => m.excludedFromWheel),
@@ -314,7 +315,7 @@ export default function EventMoviesSection({
     voteErrors,
     onRetryVote: handleRetryVote,
     selection,
-    winnerMovieId,
+    winnerMovieIds,
     participantCount: event.participants?.length ?? 0,
   };
 

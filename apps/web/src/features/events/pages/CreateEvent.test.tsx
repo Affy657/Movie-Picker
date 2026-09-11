@@ -75,6 +75,31 @@ describe('CreateEvent', () => {
     });
   });
 
+  it('envoie le nombre de films gagnants choisi à la création', async () => {
+    const user = userEvent.setup();
+    mockFetchApi.mockResolvedValueOnce({
+      slug: 'abc123',
+      shareUrl: '/e/abc123',
+      creatorParticipant: { _id: 'p-new', pseudo: 'Vitest' },
+    });
+    mockFetchApi.mockResolvedValueOnce({});
+    RenderCreateEvent();
+
+    await user.click(screen.getByText(/options/i));
+    const winnerCount = screen.getByLabelText(/films gagnants/i);
+    await user.clear(winnerCount);
+    await user.type(winnerCount, '4');
+    await user.click(screen.getByRole('button', { name: /créer la soirée/i }));
+
+    await waitFor(() => {
+      const configCall = mockFetchApi.mock.calls.find(
+        ([url]) => typeof url === 'string' && url.includes('/config')
+      );
+      expect(configCall).toBeDefined();
+      expect(JSON.parse(configCall![1].body).winnerCount).toBe(4);
+    });
+  });
+
   it("affiche un message d'erreur si l'API échoue", async () => {
     const user = userEvent.setup();
     mockFetchApi.mockRejectedValueOnce(new Error('Serveur indisponible'));

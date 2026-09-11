@@ -7,6 +7,7 @@ using MoviePicker.Api.Application.UseCases.RecurringEvents;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using Xunit;
+using MoviePicker.Api.Tests.Builders;
 
 namespace MoviePicker.Api.Tests.UseCases.ListMyEvents;
 
@@ -325,7 +326,7 @@ public sealed class ListMyEventsHandlerTests
             Slug = "f2",
             HostToken = "h",
             CreatorUserId = "u1",
-            WinnerMovieId = "m1",
+            Winners = TestWinners.Won("m1"),
             ClosedAt = DateTimeOffset.Parse("2025-02-02T00:00:00Z"),
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow

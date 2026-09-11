@@ -22,6 +22,19 @@ export interface EventConfigData {
   recurrence?: EventRecurrence | null;
 
   hasNextOccurrence?: boolean;
+
+  winnerCount: number;
+
+  winnerCountMax: number;
+
+  drawnWinnerCount: number;
+}
+
+export interface EventWinnerData {
+  movieId: string;
+  pickMethod: WinnerPickMethod;
+  pickedAt: string;
+  movie?: MovieData | null;
 }
 
 export interface EventParticipantSummary {
@@ -42,10 +55,7 @@ export interface EventData {
   isFinished?: boolean;
   lifecycle?: MyEventLifecycle;
   closedAt?: string | null;
-  winnerMovie?: MovieData | null;
-
-  winnerPickMethod?: WinnerPickMethod | null;
-  winnerPickedAt?: string | null;
+  winners?: EventWinnerData[];
 
   config?: EventConfigData;
 

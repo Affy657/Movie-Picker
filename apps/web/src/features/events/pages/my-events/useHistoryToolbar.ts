@@ -26,7 +26,7 @@ function matchesRoles(event: MyEventSummary, roles: Set<HistoryRole>): boolean {
 
 function matchesOutcomes(event: MyEventSummary, outcomes: Set<HistoryOutcome>): boolean {
   if (outcomes.size === 0) return true;
-  const hasWinner = !!event.winnerMovieTitle;
+  const hasWinner = (event.winnerMovies?.length ?? 0) > 0;
   if (outcomes.has('withWinner') && hasWinner) return true;
   if (outcomes.has('withoutWinner') && !hasWinner) return true;
   return false;

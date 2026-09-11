@@ -8,6 +8,7 @@ import { formatRelativeEventDate } from '@/shared/utils/formatRelativeEventDate'
 import EventLifecyclePill from '@/shared/components/EventLifecyclePill';
 import EventDateChip from '@/features/events/components/EventDateChip';
 import type { MyEventSummary } from '@/features/events/types';
+import { winnerPosterPaths, winnerTitles } from '@/features/events/utils/eventWinners';
 import styles from './EventSummaryCard.module.css';
 
 export { styles as eventSummaryCardStyles };
@@ -99,6 +100,12 @@ export function EventSummaryCardBody({
 }: Readonly<EventSummaryCardBodyProps>) {
   const { t } = useTranslation();
   const { locale } = useLocale();
+  const winners = event.winnerMovies ?? [];
+  const winnerPosters = winnerPosterPaths(winners);
+  const winnersLabel =
+    winners.length === 1
+      ? winners[0]!.title
+      : t('events.myEvents.winnerMoviesCount', { count: winners.length });
   const lifecycle = normalizeMyEventLifecycle(event.lifecycle);
   const dateLabel = formatMyEventsListDate(event.date, locale);
 
@@ -110,33 +117,35 @@ export function EventSummaryCardBody({
           {event.isCreator ? <HostBadge t={t} /> : null}
         </span>
         {event.theme ? <span className={styles.cardTheme}>{event.theme}</span> : null}
-        {event.winnerMovieTitle ? (
+        {winners.length > 0 ? (
           <span
             className={styles.winnerRow}
-            aria-label={t('events.myEvents.winnerMovieLabel', { title: event.winnerMovieTitle })}
+            aria-label={t('events.myEvents.winnerMoviesLabel', {
+              titles: winnerTitles(winners, locale),
+            })}
           >
-            {event.winnerMoviePosterPath ? (
-              <img
-                src={posterImageSrc(event.winnerMoviePosterPath)}
-                alt=""
-                aria-hidden
-                className={styles.winnerPoster}
-                width={28}
-                height={42}
-              />
+            {winnerPosters.length > 0 ? (
+              winnerPosters.map((posterPath) => (
+                <img
+                  key={posterPath}
+                  src={posterImageSrc(posterPath)}
+                  alt=""
+                  aria-hidden
+                  className={styles.winnerPoster}
+                  width={28}
+                  height={42}
+                />
+              ))
             ) : (
               <Trophy aria-hidden size={13} className={styles.winnerIcon} />
             )}
             <span className={styles.winnerTitle} aria-hidden="true">
-              {event.winnerMovieTitle}
+              {winnersLabel}
             </span>
           </span>
         ) : null}
         <div
-          className={clsx(
-            styles.linkFooter,
-            event.winnerMovieTitle && styles.linkFooterAfterWinner
-          )}
+          className={clsx(styles.linkFooter, winners.length > 0 && styles.linkFooterAfterWinner)}
         >
           <span className={styles.cardStats}>
             <ParticipantStat

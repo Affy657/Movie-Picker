@@ -16,6 +16,10 @@ public sealed class EventConfigResponse
     public bool RichSharePreview { get; init; }
     public bool AllowSeries { get; init; }
 
+    public int WinnerCount { get; init; }
+    public int WinnerCountMax { get; init; }
+    public int DrawnWinnerCount { get; init; }
+
     public RecurrenceFrequency? Recurrence { get; init; }
     public bool HasNextOccurrence { get; init; }
 
@@ -31,6 +35,9 @@ public sealed class EventConfigResponse
             WheelMode = c?.WheelMode ?? WheelMode.StrictRandom,
             RichSharePreview = c?.RichSharePreview ?? true,
             AllowSeries = c?.AllowSeries ?? false,
+            WinnerCount = evt.TargetWinnerCount,
+            WinnerCountMax = EventConfig.WinnerCountCap,
+            DrawnWinnerCount = evt.Winners.Count,
             Recurrence = evt.Recurrence,
             HasNextOccurrence = !string.IsNullOrEmpty(evt.NextOccurrenceEventId)
         };
@@ -52,6 +59,8 @@ public sealed class PatchEventConfigRequest
 
     public bool? RichSharePreview { get; init; }
     public bool? AllowSeries { get; init; }
+
+    public int? WinnerCount { get; init; }
 
     public RecurrenceFrequency? Recurrence { get; init; }
     public bool? ClearRecurrence { get; init; }

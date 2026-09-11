@@ -157,3 +157,7 @@
     animation: none;
   }
 }
+
+.relaunchLabel {
+  transform: translateY(var(--text-optical-nudge));
+}

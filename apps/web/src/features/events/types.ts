@@ -19,18 +19,24 @@ export const DEFAULT_EVENT_CONFIG: EventConfigData = {
   richSharePreview: true,
   allowSeries: false,
   recurrence: null,
+  winnerCount: 1,
+  winnerCountMax: 10,
+  drawnWinnerCount: 0,
 };
 
 export const EVENT_RECURRENCES: readonly EventRecurrence[] = ['weekly', 'biweekly', 'monthly'];
 
+export const MAX_WINNERS_PER_EVENT = 10;
+
 export type EventConfigPatchPayload = {
   title?: string;
-  theme: string;
-  maxProposalsPerParticipant: number;
-  maxParticipants: number;
-  wheelMode: WheelMode;
-  richSharePreview: boolean;
-  allowSeries: boolean;
+  theme?: string;
+  maxProposalsPerParticipant?: number;
+  maxParticipants?: number;
+  wheelMode?: WheelMode;
+  richSharePreview?: boolean;
+  allowSeries?: boolean;
+  winnerCount?: number;
   recurrence?: EventRecurrence;
   clearRecurrence?: boolean;
   date?: string;
@@ -59,11 +65,14 @@ export interface MyEventSummary {
 
   theme?: string | null;
 
-  winnerMovieTitle?: string | null;
-
-  winnerMoviePosterPath?: string | null;
+  winnerMovies?: MyEventWinnerMovie[];
 
   autoCloseAt?: string | null;
+}
+
+export interface MyEventWinnerMovie {
+  title: string;
+  posterPath?: string | null;
 }
 
 export interface MyEventsListResponse {

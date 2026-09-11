@@ -7,6 +7,7 @@ using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
+using MoviePicker.Api.Tests.Builders;
 
 namespace MoviePicker.Api.Tests.UseCases.EventConfiguration;
 
@@ -99,7 +100,7 @@ public sealed class PatchEventConfigHandlerRecurrenceTests
     [Fact]
     public async Task HandleAsync_WheelAlreadyLaunched_StillLetsTheHostStopTheRecurrence()
     {
-        GivenEvent(Upcoming() with { Recurrence = RecurrenceFrequency.Weekly, WinnerMovieId = "movie-1" });
+        GivenEvent(Upcoming() with { Recurrence = RecurrenceFrequency.Weekly, Winners = TestWinners.Won("movie-1") });
 
         var response = await _sut.HandleAsync("s", new PatchEventConfigRequest { ClearRecurrence = true });
 

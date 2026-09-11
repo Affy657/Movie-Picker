@@ -1,6 +1,7 @@
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using Xunit;
+using MoviePicker.Api.Tests.Builders;
 
 namespace MoviePicker.Api.Tests.Infrastructure.Persistence.InMemory;
 
@@ -24,7 +25,7 @@ public sealed class InMemoryEventRepositoryTests
             HostToken = "ht",
             Slug = slug,
             CreatorUserId = creatorUserId,
-            WinnerMovieId = winnerMovieId,
+            Winners = TestWinners.Won(winnerMovieId),
             ClosedAt = closedAt,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = updatedAt == default ? DateTimeOffset.UtcNow : updatedAt

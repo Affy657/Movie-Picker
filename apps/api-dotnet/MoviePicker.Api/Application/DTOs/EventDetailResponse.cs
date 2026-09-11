@@ -12,15 +12,14 @@ public sealed class EventDetailResponse
     public string Slug { get; init; } = string.Empty;
     public required EventConfigResponse Config { get; init; }
     public DateTimeOffset? ClosedAt { get; init; }
-    public string? WinnerMovieId { get; init; }
-    public string? WinnerPickMethod { get; init; }
-    public DateTimeOffset? WinnerPickedAt { get; init; }
+    public IReadOnlyList<EventWinnerResponse> Winners { get; init; } =
+        Array.Empty<EventWinnerResponse>();
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
     public bool IsHost { get; init; }
     public bool IsFinished { get; init; }
     public string Lifecycle { get; init; } = string.Empty;
-    public WinnerMovieResponse? WinnerMovie { get; init; }
+
 
     public ParticipantResponse? MyParticipant { get; init; }
 
@@ -32,6 +31,14 @@ public sealed class EventDetailResponse
 
     public IReadOnlyList<EventParticipantSummaryResponse> Participants { get; init; } =
         Array.Empty<EventParticipantSummaryResponse>();
+}
+
+public sealed class EventWinnerResponse
+{
+    public string MovieId { get; init; } = string.Empty;
+    public string PickMethod { get; init; } = string.Empty;
+    public DateTimeOffset PickedAt { get; init; }
+    public WinnerMovieResponse? Movie { get; init; }
 }
 
 public sealed class EventParticipantSummaryResponse

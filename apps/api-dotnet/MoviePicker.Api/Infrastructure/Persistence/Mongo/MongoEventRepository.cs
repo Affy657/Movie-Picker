@@ -98,9 +98,20 @@ public sealed class MongoEventRepository : IEventRepository
         if (ids.Count == 0)
             return 0;
 
-        var filter = Builders<EventDocument>.Filter.In(x => x.WinnerMovieId, ids);
+        var filter = Builders<EventDocument>.Filter.Or(
+            Builders<EventDocument>.Filter.In("winners.movieId", ToObjectIds(ids)),
+            Builders<EventDocument>.Filter.In(x => x.WinnerMovieId, ids));
         var c = await _collection.CountDocumentsAsync(filter, cancellationToken: ct);
         return (int)c;
+    }
+
+    private static IEnumerable<ObjectId> ToObjectIds(IEnumerable<string> ids)
+    {
+        foreach (var id in ids)
+        {
+            if (ObjectId.TryParse(id, out var parsed))
+                yield return parsed;
+        }
     }
 
     public async Task<bool> DeleteAsync(string eventId, CancellationToken ct = default)

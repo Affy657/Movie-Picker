@@ -7,6 +7,7 @@ using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
+using MoviePicker.Api.Tests.Builders;
 
 namespace MoviePicker.Api.Tests.UseCases.SetManualWinner;
 
@@ -142,25 +143,27 @@ public sealed class SetManualWinnerHandlerTests
 
         Assert.Equal("mov1", result.Winner.Id);
         Assert.NotNull(captured);
-        Assert.Equal("mov1", captured.WinnerMovieId);
-        Assert.Equal(WinnerPickMethod.Manual, captured.WinnerPickMethod);
-        Assert.NotNull(captured.WinnerPickedAt);
+        var winner = Assert.Single(captured.Winners);
+        Assert.Equal("mov1", winner.MovieId);
+        Assert.Equal(WinnerPickMethod.Manual, winner.Method);
         _winnerAnnouncer.Verify(
             a => a.AnnounceAsync(It.IsAny<Event>(), "Choisi", WinnerPickMethod.Manual, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
     [Fact]
-    public async Task HandleAsync_PreviousWinnerCanBePickedAgain()
+    public async Task HandleAsync_MovieAlreadyInThePalmares_Throws()
     {
-        var evt = ActiveEvent() with { WinnerMovieId = "mov1", WinnerPickMethod = WinnerPickMethod.Wheel };
+        var evt = ActiveEvent() with
+        {
+            Config = new EventConfig { WinnerCount = 3 },
+            Winners = TestWinners.Won("mov1")
+        };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
         _movieRepo.Setup(r => r.GetByIdAsync("mov1", It.IsAny<CancellationToken>())).ReturnsAsync(MovieOf("mov1", "evt1"));
 
-        var result = await _sut.HandleAsync("evt1", Request("mov1"));
-
-        Assert.Equal("mov1", result.Winner.Id);
+        await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request("mov1")));
     }
 
     [Fact]

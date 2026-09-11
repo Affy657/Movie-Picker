@@ -58,17 +58,22 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         var hasDateTimeChange = request.Date is not null || request.Time is not null;
         var hasTitleChange = request.Title is not null;
         var hasRecurrenceChange = request.Recurrence.HasValue || request.ClearRecurrence == true;
+        var hasWinnerCountChange = request.WinnerCount.HasValue;
 
         EnsurePatchAllowed(evt, hasConfigChange, hasDateTimeChange);
 
-        if (hasTitleChange && (evt.IsFinished(DateTimeOffset.UtcNow) || !string.IsNullOrEmpty(evt.WinnerMovieId)))
+        if (hasTitleChange && (evt.IsFinished(DateTimeOffset.UtcNow) || evt.HasWinner))
             throw new ConflictException("La soirée est terminée : le nom ne peut plus être modifié.");
+
+        if (hasWinnerCountChange)
+            EnsureWinnerCountAllowed(evt, request.WinnerCount!.Value);
 
         if (hasRecurrenceChange && !string.IsNullOrEmpty(evt.NextOccurrenceEventId))
             throw new ConflictException(
                 "L’occurrence suivante existe déjà : la récurrence se règle désormais sur cette nouvelle soirée.");
 
-        if (!hasConfigChange && !hasDateTimeChange && !hasTitleChange && !hasRecurrenceChange)
+        if (!hasConfigChange && !hasDateTimeChange && !hasTitleChange && !hasRecurrenceChange
+            && !hasWinnerCountChange)
             return EventConfigResponse.FromEvent(evt);
 
         var current = evt.Config ?? new EventConfig();
@@ -95,7 +100,8 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
             MaxParticipants = await ResolveMaxParticipantsAsync(request, current.MaxParticipants, evt, ct),
             WheelMode = wheelMode,
             RichSharePreview = richShare,
-            AllowSeries = allowSeries
+            AllowSeries = allowSeries,
+            WinnerCount = request.WinnerCount ?? current.WinnerCount
         };
 
         var date = ResolveDate(request, evt.Date);
@@ -201,12 +207,29 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         {
             if (evt.IsFinished(DateTimeOffset.UtcNow))
                 throw new ConflictException("La soirée est terminée : la configuration ne peut plus être modifiée.");
-            if (!string.IsNullOrEmpty(evt.WinnerMovieId))
+            if (evt.HasWinner)
                 throw new ConflictException("La roue a déjà été lancée : la configuration ne peut plus être modifiée.");
         }
 
-        if (hasDateTimeChange && (evt.IsFinished(DateTimeOffset.UtcNow) || !string.IsNullOrEmpty(evt.WinnerMovieId)))
+        if (hasDateTimeChange && (evt.IsFinished(DateTimeOffset.UtcNow) || evt.HasWinner))
             throw new ConflictException("La soirée est terminée : la date ne peut plus être modifiée.");
+    }
+
+    private static void EnsureWinnerCountAllowed(Event evt, int winnerCount)
+    {
+        if (winnerCount < EventConfig.DefaultWinnerCount || winnerCount > EventConfig.WinnerCountCap)
+            throw new BadRequestException(
+                $"Le nombre de films gagnants doit être compris entre {EventConfig.DefaultWinnerCount} et {EventConfig.WinnerCountCap}.");
+
+        if (evt.IsFinished(DateTimeOffset.UtcNow))
+            throw new ConflictException(
+                "La soirée est terminée : le nombre de films gagnants ne peut plus être modifié.");
+
+        if (winnerCount < evt.Winners.Count)
+            throw new ConflictException(
+                evt.Winners.Count == 1
+                    ? "Un film a déjà gagné. Retirez-le du palmarès d’abord."
+                    : $"{evt.Winners.Count} films ont déjà gagné. Retirez-en un du palmarès d’abord.");
     }
 
     private static int? ResolveThemeColor(PatchEventConfigRequest request, int? current)

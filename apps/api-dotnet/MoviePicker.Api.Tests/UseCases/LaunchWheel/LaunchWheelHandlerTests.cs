@@ -6,6 +6,7 @@ using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
+using MoviePicker.Api.Tests.Builders;
 
 namespace MoviePicker.Api.Tests.UseCases.LaunchWheel;
 
@@ -209,9 +210,9 @@ public sealed class LaunchWheelHandlerTests
         Assert.Equal("mov1", result.Winner.Id);
         Assert.Equal("Winner", result.Winner.Title);
         Assert.NotNull(captured);
-        Assert.Equal("mov1", captured.WinnerMovieId);
-        Assert.Equal(WinnerPickMethod.Wheel, captured.WinnerPickMethod);
-        Assert.NotNull(captured.WinnerPickedAt);
+        var winner = Assert.Single(captured.Winners);
+        Assert.Equal("mov1", winner.MovieId);
+        Assert.Equal(WinnerPickMethod.Wheel, winner.Method);
         Assert.Contains("gagnant direct", result.Message);
         _winnerAnnouncer.Verify(
             a => a.AnnounceAsync(It.IsAny<Event>(), "Winner", WinnerPickMethod.Wheel, It.IsAny<CancellationToken>()),
@@ -221,7 +222,11 @@ public sealed class LaunchWheelHandlerTests
     [Fact]
     public async Task HandleAsync_Relaunch_DoesNotPickPreviousWinner_WhenOtherCandidatesExist()
     {
-        var evt = ActiveEvent() with { WinnerMovieId = "mov1" };
+        var evt = ActiveEvent() with
+        {
+            Config = new EventConfig { WinnerCount = 3 },
+            Winners = TestWinners.Won("mov1")
+        };
         var movies = new List<Movie>
         {
             new() { Id = "mov1", EventId = evt.Id, ParticipantId = "p1", TmdbId = 1, Title = "Already Won", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },

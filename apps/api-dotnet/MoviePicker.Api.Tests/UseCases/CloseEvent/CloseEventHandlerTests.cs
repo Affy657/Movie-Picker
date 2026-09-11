@@ -6,6 +6,7 @@ using MoviePicker.Api.Application.UseCases.RecurringEvents;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
+using MoviePicker.Api.Tests.Builders;
 
 namespace MoviePicker.Api.Tests.UseCases.CloseEvent;
 
@@ -150,7 +151,7 @@ public sealed class CloseEventHandlerTests
             .ReturnsAsync((Event e, CancellationToken _) => e);
     }
 
-    private static Event EventWithWinner() => ActiveEvent() with { WinnerMovieId = "m-win" };
+    private static Event EventWithWinner() => ActiveEvent() with { Winners = TestWinners.Won("m-win") };
 
     private static Movie Winner() => new()
     {

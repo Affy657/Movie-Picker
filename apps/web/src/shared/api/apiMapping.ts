@@ -1,4 +1,4 @@
-import type { EventData, EventParticipantSummary } from '@/shared/types/event';
+import type { EventData, EventParticipantSummary, EventWinnerData } from '@/shared/types/event';
 import type { MovieData, ParticipantData } from '@/shared/types/movie';
 
 type RawMovieData = Omit<MovieData, 'id' | 'participantId'> & {
@@ -16,14 +16,16 @@ type RawEventParticipantSummary = {
   handle?: string | null;
 };
 
+type RawEventWinner = Omit<EventWinnerData, 'movie'> & { movie?: RawMovieData | null };
+
 type RawEventData = Omit<
   EventData,
-  'id' | 'isFinished' | 'myParticipant' | 'winnerMovie' | 'participants'
+  'id' | 'isFinished' | 'myParticipant' | 'winners' | 'participants'
 > & {
   _id: string;
   isFinished?: boolean;
   myParticipant?: { _id: string; pseudo: string } | null;
-  winnerMovie?: RawMovieData | null;
+  winners?: RawEventWinner[];
   participantCount?: number;
   movieCount?: number;
   participants?: RawEventParticipantSummary[];
@@ -44,7 +46,7 @@ export function mapParticipantData(raw: RawParticipantData): ParticipantData {
 }
 
 export function mapEventData(raw: RawEventData): EventData {
-  const { _id, isFinished, myParticipant, winnerMovie, participants, ...rest } = raw;
+  const { _id, isFinished, myParticipant, winners, participants, ...rest } = raw;
   const mappedParticipants: EventParticipantSummary[] | undefined = participants
     ? participants.map((p) => ({
         id: p._id,
@@ -61,7 +63,10 @@ export function mapEventData(raw: RawEventData): EventData {
     myParticipant: myParticipant
       ? { id: myParticipant._id, pseudo: myParticipant.pseudo }
       : myParticipant,
-    winnerMovie: winnerMovie ? mapMovieData(winnerMovie) : winnerMovie,
+    winners: (winners ?? []).map((w) => ({
+      ...w,
+      movie: w.movie ? mapMovieData(w.movie) : null,
+    })),
     participants: mappedParticipants,
   };
 }

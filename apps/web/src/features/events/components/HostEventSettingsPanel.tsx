@@ -31,6 +31,7 @@ import {
   DEFAULT_EVENT_CONFIG,
   MAX_EVENT_PARTICIPANTS,
   MAX_PROPOSALS_PER_PARTICIPANT,
+  MAX_WINNERS_PER_EVENT,
 } from '@/features/events/types';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import Button from '@/shared/components/Button';
@@ -50,6 +51,7 @@ type FieldErrors = {
   date?: string;
   maxProposals?: string;
   maxParticipants?: string;
+  winnerCount?: string;
 };
 
 type SaveState = 'saved' | 'pending' | 'error';
@@ -78,6 +80,9 @@ function normalizeConfig(c: EventConfigData | undefined): EventConfigData {
     allowSeries: c?.allowSeries ?? DEFAULT_EVENT_CONFIG.allowSeries,
     recurrence: c?.recurrence ?? null,
     hasNextOccurrence: c?.hasNextOccurrence ?? false,
+    winnerCount: c?.winnerCount ?? DEFAULT_EVENT_CONFIG.winnerCount,
+    winnerCountMax: c?.winnerCountMax ?? MAX_WINNERS_PER_EVENT,
+    drawnWinnerCount: c?.drawnWinnerCount ?? 0,
   };
 }
 
@@ -108,6 +113,7 @@ export default function HostEventSettingsPanel({
   const [wheelMode, setWheelMode] = useState<WheelMode>(cfg.wheelMode);
   const [allowSeries, setAllowSeries] = useState<boolean>(cfg.allowSeries ?? false);
   const [recurrence, setRecurrence] = useState<EventRecurrence | null>(cfg.recurrence ?? null);
+  const [winnerCount, setWinnerCount] = useState<string>(String(cfg.winnerCount));
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const performSaveRef = useRef<() => void>(() => {});
 
@@ -142,6 +148,7 @@ export default function HostEventSettingsPanel({
     setWheelMode(next.wheelMode);
     setAllowSeries(next.allowSeries ?? false);
     setRecurrence(next.recurrence ?? null);
+    setWinnerCount(String(next.winnerCount));
     setFieldErrors({});
     setSaveError(null);
     setSaveState('saved');
@@ -153,6 +160,7 @@ export default function HostEventSettingsPanel({
   const maxProposalsErrorId = useId();
   const maxParticipantsErrorId = useId();
   const wheelModeLabelId = useId();
+  const winnerCountErrorId = useId();
 
   const wasOpenRef = useRef(false);
   useEffect(() => {
@@ -249,6 +257,24 @@ export default function HostEventSettingsPanel({
       maxParticipantsValue = maxPartNum;
     }
 
+    let winnerCountValue = cfg.winnerCount;
+    const winnerCountNum = Number(winnerCount);
+    const minWinnerCount = Math.max(1, cfg.drawnWinnerCount);
+    if (
+      winnerCount.trim() === '' ||
+      !Number.isInteger(winnerCountNum) ||
+      winnerCountNum < 1 ||
+      winnerCountNum > cfg.winnerCountMax
+    ) {
+      errors.winnerCount = t('events.settings.winnerCountInvalid', { max: cfg.winnerCountMax });
+    } else if (winnerCountNum < minWinnerCount) {
+      errors.winnerCount = t('events.settings.winnerCountLockedHint', {
+        count: cfg.drawnWinnerCount,
+      });
+    } else {
+      winnerCountValue = winnerCountNum;
+    }
+
     setFieldErrors(errors);
 
     if (Object.keys(errors).length > 0) {
@@ -256,20 +282,27 @@ export default function HostEventSettingsPanel({
       return;
     }
 
+    const theme = [themeEmoji, themeText.trim()].filter(Boolean).join(' ');
+
     mutation.mutate({
       ...(eventTitle.trim() !== event.title ? { title: eventTitle.trim() } : {}),
-      theme: [themeEmoji, themeText.trim()].filter(Boolean).join(' '),
-      maxProposalsPerParticipant,
-      maxParticipants: maxParticipantsValue,
-      wheelMode,
-      richSharePreview: cfg.richSharePreview ?? true,
-      allowSeries,
+      ...(theme !== (cfg.theme ?? '') ? { theme } : {}),
+      ...(maxProposalsPerParticipant !== cfg.maxProposalsPerParticipant
+        ? { maxProposalsPerParticipant }
+        : {}),
+      ...(maxParticipantsValue !== cfg.maxParticipants
+        ? { maxParticipants: maxParticipantsValue }
+        : {}),
+      ...(wheelMode !== cfg.wheelMode ? { wheelMode } : {}),
+      ...(allowSeries !== (cfg.allowSeries ?? false) ? { allowSeries } : {}),
+      ...(winnerCountValue !== cfg.winnerCount ? { winnerCount: winnerCountValue } : {}),
       ...recurrencePatch(recurrence, cfg.recurrence ?? null),
       ...(eventDateTime ? { date: eventDateTime.date, time: eventDateTime.time } : {}),
       notifyParticipantsOfDateChange: notifyDateChange,
     });
   };
 
+  const configLocked = cfg.drawnWinnerCount > 0;
   const recurrenceLocked = cfg.hasNextOccurrence ?? false;
   const recurrenceOptions = useMemo(
     () => [
@@ -337,268 +370,313 @@ export default function HostEventSettingsPanel({
         )}
         <form className={`form ${styles.form}`}>
           <div className={styles.section}>
-            <div className={styles.field}>
-              <label className="label" htmlFor="host-cfg-title">
-                {t('events.settings.titleLabel')}
-              </label>
-              <input
-                id="host-cfg-title"
-                className="input"
-                type="text"
-                value={eventTitle}
-                onChange={(e) => {
-                  setEventTitle(e.target.value);
-                  scheduleAutoSave();
-                }}
-                maxLength={200}
-                placeholder={t('events.settings.titlePlaceholder')}
-                aria-invalid={!!fieldErrors.title || undefined}
-              />
-              {fieldErrors.title && (
-                <p className={styles.fieldError}>
-                  <AlertCircle size={12} aria-hidden />
-                  <span>{fieldErrors.title}</span>
-                </p>
-              )}
-            </div>
-
-            <div className={styles.field}>
-              <label className="label" htmlFor="host-cfg-datetime">
-                {t('events.settings.dateTimeLabel')}
-              </label>
-              <input
-                id="host-cfg-datetime"
-                className="input"
-                type="datetime-local"
-                value={eventDateLocal}
-                onChange={(e) => {
-                  setEventDateLocal(e.target.value);
-                  scheduleAutoSave();
-                }}
-                aria-invalid={!!fieldErrors.date || undefined}
-                aria-describedby={!fieldErrors.date && relativeDateLabel ? dateHintId : undefined}
-              />
-              {fieldErrors.date ? (
-                <p className={styles.fieldError}>
-                  <AlertCircle size={12} aria-hidden />
-                  <span>{fieldErrors.date}</span>
-                </p>
-              ) : (
-                relativeDateLabel && (
-                  <p id={dateHintId} className="hint">
-                    {t('events.settings.dateHint', { relative: relativeDateLabel })}
-                  </p>
-                )
-              )}
-              {dateWasEdited && !fieldErrors.date && (
-                <label className={styles.notifyRow}>
-                  <input
-                    type="checkbox"
-                    className={styles.notifyCheckbox}
-                    checked={notifyDateChange}
-                    onChange={(e) => setNotifyDateChange(e.target.checked)}
-                  />
-                  <span>{t('events.settings.notifyDateChangeLabel')}</span>
+            <fieldset className={styles.lockable} disabled={configLocked}>
+              <div className={styles.field}>
+                <label className="label" htmlFor="host-cfg-title">
+                  {t('events.settings.titleLabel')}
                 </label>
-              )}
-            </div>
-
-            <div className={styles.field}>
-              <div className={clsx(styles.themeCard, themeOpen && styles.themeCardOpen)}>
-                <button
-                  type="button"
-                  className={styles.themeTrigger}
-                  aria-expanded={themeOpen}
-                  aria-controls={themeCollapseId}
-                  onClick={() => setThemeOpen((v) => !v)}
-                >
-                  <span className={styles.themeBadge} aria-hidden>
-                    {themeEmoji || (themePreview ? '🎬' : <Sparkles size={18} />)}
-                  </span>
-                  <span className={styles.themeInfo}>
-                    <span className={styles.themeTitle}>
-                      {themePreview || t('events.settings.themeEmptyTitle')}
-                    </span>
-                    <span className={styles.themeSubtitle}>
-                      {themePreview
-                        ? t('events.settings.themeLabel')
-                        : t('events.settings.themeEmptySubtitle')}
-                    </span>
-                  </span>
-                  <ChevronDown size={18} aria-hidden className={styles.themeChevron} />
-                </button>
-                {themeOpen && (
-                  <div id={themeCollapseId} className={styles.themeExpanded}>
-                    {themePreview && (
-                      <button
-                        type="button"
-                        className={styles.clearThemeBtn}
-                        onClick={() => {
-                          setThemeEmoji('');
-                          setThemeText('');
-                          scheduleAutoSave();
-                        }}
-                        aria-label={t('events.settings.clearThemeAria')}
-                      >
-                        <X size={11} strokeWidth={2.5} />
-                        <span>{t('events.settings.clearThemeButton')}</span>
-                      </button>
-                    )}
-                    <ThemeField
-                      textInputId="host-cfg-theme"
-                      emoji={themeEmoji}
-                      text={themeText}
-                      onEmojiChange={(v) => {
-                        setThemeEmoji(v);
-                        scheduleAutoSave();
-                      }}
-                      onTextChange={(v) => {
-                        setThemeText(v);
-                        scheduleAutoSave();
-                      }}
-                    />
-                  </div>
+                <input
+                  id="host-cfg-title"
+                  className="input"
+                  type="text"
+                  value={eventTitle}
+                  onChange={(e) => {
+                    setEventTitle(e.target.value);
+                    scheduleAutoSave();
+                  }}
+                  maxLength={200}
+                  placeholder={t('events.settings.titlePlaceholder')}
+                  aria-invalid={!!fieldErrors.title || undefined}
+                />
+                {fieldErrors.title && (
+                  <p className={styles.fieldError}>
+                    <AlertCircle size={12} aria-hidden />
+                    <span>{fieldErrors.title}</span>
+                  </p>
                 )}
               </div>
-            </div>
+
+              <div className={styles.field}>
+                <label className="label" htmlFor="host-cfg-datetime">
+                  {t('events.settings.dateTimeLabel')}
+                </label>
+                <input
+                  id="host-cfg-datetime"
+                  className="input"
+                  type="datetime-local"
+                  value={eventDateLocal}
+                  onChange={(e) => {
+                    setEventDateLocal(e.target.value);
+                    scheduleAutoSave();
+                  }}
+                  aria-invalid={!!fieldErrors.date || undefined}
+                  aria-describedby={!fieldErrors.date && relativeDateLabel ? dateHintId : undefined}
+                />
+                {fieldErrors.date ? (
+                  <p className={styles.fieldError}>
+                    <AlertCircle size={12} aria-hidden />
+                    <span>{fieldErrors.date}</span>
+                  </p>
+                ) : (
+                  relativeDateLabel && (
+                    <p id={dateHintId} className="hint">
+                      {t('events.settings.dateHint', { relative: relativeDateLabel })}
+                    </p>
+                  )
+                )}
+                {dateWasEdited && !fieldErrors.date && (
+                  <label className={styles.notifyRow}>
+                    <input
+                      type="checkbox"
+                      className={styles.notifyCheckbox}
+                      checked={notifyDateChange}
+                      onChange={(e) => setNotifyDateChange(e.target.checked)}
+                    />
+                    <span>{t('events.settings.notifyDateChangeLabel')}</span>
+                  </label>
+                )}
+              </div>
+
+              <div className={styles.field}>
+                <div className={clsx(styles.themeCard, themeOpen && styles.themeCardOpen)}>
+                  <button
+                    type="button"
+                    className={styles.themeTrigger}
+                    aria-expanded={themeOpen}
+                    aria-controls={themeCollapseId}
+                    onClick={() => setThemeOpen((v) => !v)}
+                  >
+                    <span className={styles.themeBadge} aria-hidden>
+                      {themeEmoji || (themePreview ? '🎬' : <Sparkles size={18} />)}
+                    </span>
+                    <span className={styles.themeInfo}>
+                      <span className={styles.themeTitle}>
+                        {themePreview || t('events.settings.themeEmptyTitle')}
+                      </span>
+                      <span className={styles.themeSubtitle}>
+                        {themePreview
+                          ? t('events.settings.themeLabel')
+                          : t('events.settings.themeEmptySubtitle')}
+                      </span>
+                    </span>
+                    <ChevronDown size={18} aria-hidden className={styles.themeChevron} />
+                  </button>
+                  {themeOpen && (
+                    <div id={themeCollapseId} className={styles.themeExpanded}>
+                      {themePreview && (
+                        <button
+                          type="button"
+                          className={styles.clearThemeBtn}
+                          onClick={() => {
+                            setThemeEmoji('');
+                            setThemeText('');
+                            scheduleAutoSave();
+                          }}
+                          aria-label={t('events.settings.clearThemeAria')}
+                        >
+                          <X size={11} strokeWidth={2.5} />
+                          <span>{t('events.settings.clearThemeButton')}</span>
+                        </button>
+                      )}
+                      <ThemeField
+                        textInputId="host-cfg-theme"
+                        emoji={themeEmoji}
+                        text={themeText}
+                        onEmojiChange={(v) => {
+                          setThemeEmoji(v);
+                          scheduleAutoSave();
+                        }}
+                        onTextChange={(v) => {
+                          setThemeText(v);
+                          scheduleAutoSave();
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </fieldset>
           </div>
 
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>{t('events.settings.sectionFlow')}</h3>
 
-            <div className={styles.fieldRow}>
-              <div className={styles.field}>
-                <label className="label" htmlFor="host-cfg-max">
-                  {t('events.settings.maxProposalsLabel')}
-                </label>
-                <NumberInput
-                  id="host-cfg-max"
-                  value={maxProp}
-                  onChange={(v) => {
-                    setMaxProp(v);
-                    scheduleAutoSave();
-                  }}
-                  min={1}
-                  max={MAX_PROPOSALS_PER_PARTICIPANT}
-                  invalid={!!fieldErrors.maxProposals}
-                  ariaDescribedBy={fieldErrors.maxProposals ? maxProposalsErrorId : undefined}
-                />
-                {fieldErrors.maxProposals ? (
-                  <p id={maxProposalsErrorId} className={styles.fieldError}>
-                    <AlertCircle size={12} aria-hidden />
-                    <span>{fieldErrors.maxProposals}</span>
-                  </p>
-                ) : (
-                  <p className="hint">
-                    {t('events.settings.maxProposalsHint', { max: MAX_PROPOSALS_PER_PARTICIPANT })}
-                  </p>
-                )}
-              </div>
+            <fieldset className={styles.lockable} disabled={configLocked}>
+              <div className={styles.fieldRow}>
+                <div className={styles.field}>
+                  <label className="label" htmlFor="host-cfg-max">
+                    {t('events.settings.maxProposalsLabel')}
+                  </label>
+                  <NumberInput
+                    id="host-cfg-max"
+                    value={maxProp}
+                    onChange={(v) => {
+                      setMaxProp(v);
+                      scheduleAutoSave();
+                    }}
+                    min={1}
+                    max={MAX_PROPOSALS_PER_PARTICIPANT}
+                    invalid={!!fieldErrors.maxProposals}
+                    ariaDescribedBy={fieldErrors.maxProposals ? maxProposalsErrorId : undefined}
+                  />
+                  {fieldErrors.maxProposals ? (
+                    <p id={maxProposalsErrorId} className={styles.fieldError}>
+                      <AlertCircle size={12} aria-hidden />
+                      <span>{fieldErrors.maxProposals}</span>
+                    </p>
+                  ) : (
+                    <p className="hint">
+                      {t('events.settings.maxProposalsHint', {
+                        max: MAX_PROPOSALS_PER_PARTICIPANT,
+                      })}
+                    </p>
+                  )}
+                </div>
 
-              <div className={styles.field}>
-                <label className="label" htmlFor="host-cfg-max-participants">
-                  {t('events.settings.maxParticipantsLabel')}
-                </label>
-                <NumberInput
-                  id="host-cfg-max-participants"
-                  value={maxParticipants}
-                  onChange={(v) => {
-                    setMaxParticipants(v);
-                    scheduleAutoSave();
-                  }}
-                  min={1}
-                  max={MAX_EVENT_PARTICIPANTS}
-                  invalid={!!fieldErrors.maxParticipants}
-                  ariaDescribedBy={fieldErrors.maxParticipants ? maxParticipantsErrorId : undefined}
-                />
-                {fieldErrors.maxParticipants ? (
-                  <p id={maxParticipantsErrorId} className={styles.fieldError}>
-                    <AlertCircle size={12} aria-hidden />
-                    <span>{fieldErrors.maxParticipants}</span>
-                  </p>
-                ) : (
-                  <p className="hint">
-                    {(event.participantCount ?? 0) === 1
-                      ? t('events.settings.maxParticipantsHintOne', {
-                          max: MAX_EVENT_PARTICIPANTS,
-                        })
-                      : t('events.settings.maxParticipantsHintMany', {
-                          count: event.participantCount ?? 0,
-                          max: MAX_EVENT_PARTICIPANTS,
-                        })}
-                  </p>
-                )}
+                <div className={styles.field}>
+                  <label className="label" htmlFor="host-cfg-max-participants">
+                    {t('events.settings.maxParticipantsLabel')}
+                  </label>
+                  <NumberInput
+                    id="host-cfg-max-participants"
+                    value={maxParticipants}
+                    onChange={(v) => {
+                      setMaxParticipants(v);
+                      scheduleAutoSave();
+                    }}
+                    min={1}
+                    max={MAX_EVENT_PARTICIPANTS}
+                    invalid={!!fieldErrors.maxParticipants}
+                    ariaDescribedBy={
+                      fieldErrors.maxParticipants ? maxParticipantsErrorId : undefined
+                    }
+                  />
+                  {fieldErrors.maxParticipants ? (
+                    <p id={maxParticipantsErrorId} className={styles.fieldError}>
+                      <AlertCircle size={12} aria-hidden />
+                      <span>{fieldErrors.maxParticipants}</span>
+                    </p>
+                  ) : (
+                    <p className="hint">
+                      {(event.participantCount ?? 0) === 1
+                        ? t('events.settings.maxParticipantsHintOne', {
+                            max: MAX_EVENT_PARTICIPANTS,
+                          })
+                        : t('events.settings.maxParticipantsHintMany', {
+                            count: event.participantCount ?? 0,
+                            max: MAX_EVENT_PARTICIPANTS,
+                          })}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
+            </fieldset>
 
             <div className={styles.field}>
-              <span className="label" id={wheelModeLabelId}>
-                {t('events.settings.wheelModeLabel')}
-              </span>
-              <WheelModeField
-                name="host-cfg-wheel-mode"
-                value={wheelMode}
-                labelId={wheelModeLabelId}
-                onChange={(mode) => {
-                  setWheelMode(mode);
-                  scheduleAutoSave(true);
+              <label className="label" htmlFor="host-cfg-winner-count">
+                {t('events.settings.winnerCountLabel')}
+              </label>
+              <NumberInput
+                id="host-cfg-winner-count"
+                value={winnerCount}
+                onChange={(v) => {
+                  setWinnerCount(v);
+                  scheduleAutoSave();
                 }}
+                min={Math.max(1, cfg.drawnWinnerCount)}
+                max={cfg.winnerCountMax}
+                invalid={!!fieldErrors.winnerCount}
+                ariaDescribedBy={fieldErrors.winnerCount ? winnerCountErrorId : undefined}
               />
+              {fieldErrors.winnerCount ? (
+                <p id={winnerCountErrorId} className={styles.fieldError}>
+                  <AlertCircle size={12} aria-hidden />
+                  <span>{fieldErrors.winnerCount}</span>
+                </p>
+              ) : (
+                <p className="hint">
+                  {t('events.settings.winnerCountHint', { max: cfg.winnerCountMax })}
+                </p>
+              )}
             </div>
+            {configLocked ? <p className="hint">{t('events.settings.configLockedHint')}</p> : null}
 
-            <div className={styles.field}>
-              <div className={styles.toggleRow}>
-                <span>
-                  <span className={styles.toggleName}>{t('events.settings.allowSeriesLabel')}</span>
-                  <span className={styles.toggleDesc}>{t('events.settings.allowSeriesDesc')}</span>
+            <fieldset className={styles.lockable} disabled={configLocked}>
+              <div className={styles.field}>
+                <span className="label" id={wheelModeLabelId}>
+                  {t('events.settings.wheelModeLabel')}
                 </span>
-                <Toggle
-                  checked={allowSeries}
-                  label={t('events.settings.allowSeriesLabel')}
-                  onChange={() => {
-                    setAllowSeries((v) => !v);
+                <WheelModeField
+                  name="host-cfg-wheel-mode"
+                  value={wheelMode}
+                  labelId={wheelModeLabelId}
+                  onChange={(mode) => {
+                    setWheelMode(mode);
                     scheduleAutoSave(true);
                   }}
                 />
               </div>
-            </div>
 
-            <div className={styles.field}>
-              <div className={styles.toggleRow}>
-                <span>
-                  <span className={styles.toggleName}>{t('events.settings.recurrenceLabel')}</span>
-                  <span className={styles.toggleDesc}>{t('events.settings.recurrenceDesc')}</span>
-                </span>
-                <Toggle
-                  checked={recurrence !== null}
-                  label={t('events.settings.recurrenceLabel')}
-                  disabled={recurrenceLocked}
-                  onChange={() => {
-                    setRecurrence((v) => (v === null ? 'weekly' : null));
-                    scheduleAutoSave(true);
-                  }}
-                />
-              </div>
-              {recurrence !== null && !recurrenceLocked && (
-                <div className={styles.recurrenceRhythm}>
-                  <SegmentedRadioGroup
-                    className={styles.recurrenceSegments}
-                    options={recurrenceOptions}
-                    value={recurrence}
-                    size="sm"
-                    ariaLabel={t('events.settings.recurrenceGroupLabel')}
-                    onChange={(value) => {
-                      setRecurrence(value);
+              <div className={styles.field}>
+                <div className={styles.toggleRow}>
+                  <span>
+                    <span className={styles.toggleName}>
+                      {t('events.settings.allowSeriesLabel')}
+                    </span>
+                    <span className={styles.toggleDesc}>
+                      {t('events.settings.allowSeriesDesc')}
+                    </span>
+                  </span>
+                  <Toggle
+                    checked={allowSeries}
+                    label={t('events.settings.allowSeriesLabel')}
+                    onChange={() => {
+                      setAllowSeries((v) => !v);
                       scheduleAutoSave(true);
                     }}
                   />
-                  <p className="hint">{t('events.settings.recurrenceShareHint')}</p>
                 </div>
-              )}
-              {recurrenceLocked && (
-                <p className="hint">{t('events.settings.recurrenceLockedHint')}</p>
-              )}
-            </div>
+              </div>
+
+              <div className={styles.field}>
+                <div className={styles.toggleRow}>
+                  <span>
+                    <span className={styles.toggleName}>
+                      {t('events.settings.recurrenceLabel')}
+                    </span>
+                    <span className={styles.toggleDesc}>{t('events.settings.recurrenceDesc')}</span>
+                  </span>
+                  <Toggle
+                    checked={recurrence !== null}
+                    label={t('events.settings.recurrenceLabel')}
+                    disabled={recurrenceLocked}
+                    onChange={() => {
+                      setRecurrence((v) => (v === null ? 'weekly' : null));
+                      scheduleAutoSave(true);
+                    }}
+                  />
+                </div>
+                {recurrence !== null && !recurrenceLocked && (
+                  <div className={styles.recurrenceRhythm}>
+                    <SegmentedRadioGroup
+                      className={styles.recurrenceSegments}
+                      options={recurrenceOptions}
+                      value={recurrence}
+                      size="sm"
+                      ariaLabel={t('events.settings.recurrenceGroupLabel')}
+                      onChange={(value) => {
+                        setRecurrence(value);
+                        scheduleAutoSave(true);
+                      }}
+                    />
+                    <p className="hint">{t('events.settings.recurrenceShareHint')}</p>
+                  </div>
+                )}
+                {recurrenceLocked && (
+                  <p className="hint">{t('events.settings.recurrenceLockedHint')}</p>
+                )}
+              </div>
+            </fieldset>
           </div>
         </form>
 

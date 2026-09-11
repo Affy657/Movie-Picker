@@ -30,9 +30,15 @@ public sealed class MyEventSummaryDto
 
     public string? Theme { get; init; }
 
-    public string? WinnerMovieTitle { get; init; }
-
-    public string? WinnerMoviePosterPath { get; init; }
+    public IReadOnlyList<MyEventWinnerMovieDto> WinnerMovies { get; init; } =
+        Array.Empty<MyEventWinnerMovieDto>();
 
     public DateTimeOffset? AutoCloseAt { get; init; }
+}
+
+public sealed class MyEventWinnerMovieDto
+{
+    public string Title { get; init; } = string.Empty;
+
+    public string? PosterPath { get; init; }
 }

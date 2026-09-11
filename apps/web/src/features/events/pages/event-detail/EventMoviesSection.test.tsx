@@ -82,7 +82,7 @@ function renderSection(
     actionError?: string | null;
     viewMode?: 'grid' | 'list';
     onViewModeChange?: (mode: 'grid' | 'list') => void;
-    winnerMovieId?: string;
+    winnerMovieIds?: string[];
     onRequestRemove?: (movie: MovieData) => void;
   } = {}
 ) {
@@ -114,7 +114,7 @@ function renderSection(
           addMovieOpen={false}
           onAddMovieOpenChange={() => undefined}
           addMovieTriggerRef={{ current: null }}
-          winnerMovieId={props.winnerMovieId}
+          winnerMovieIds={props.winnerMovieIds}
         />
       </MemoryRouter>
     </AppTestProviders>
@@ -326,12 +326,29 @@ describe('EventMoviesSection (MSW)', () => {
     renderSection({
       movies: [earlier, later],
       viewMode: 'list',
-      winnerMovieId: 'm2',
+      winnerMovieIds: ['m2'],
     });
 
     const headings = screen.getAllByRole('heading', { level: 3 });
     expect(headings[0]).toHaveTextContent('Inception');
     expect(screen.getByText('Film gagnant')).toBeInTheDocument();
+  });
+
+  it('épingle les gagnants dans l ordre des tirages, pas dans celui du tri', () => {
+    server.use(authedUserHandler, watchlistHandler([]));
+    const second: MovieData = { ...MOVIE, id: 'm2', title: 'Inception', createdAt: '2030-01-02' };
+    const third: MovieData = { ...MOVIE, id: 'm3', title: 'Whiplash', createdAt: '2030-01-03' };
+    renderSection({
+      movies: [MOVIE, second, third],
+      viewMode: 'list',
+      winnerMovieIds: ['m3', 'm2'],
+    });
+
+    const headings = screen.getAllByRole('heading', { level: 3 });
+    expect(headings[0]).toHaveTextContent('Whiplash');
+    expect(headings[1]).toHaveTextContent('Inception');
+    expect(screen.getByText('Gagnant 1')).toBeInTheDocument();
+    expect(screen.getByText('Gagnant 2')).toBeInTheDocument();
   });
 
   it('envoie vote_cast après un vote pour un film', async () => {

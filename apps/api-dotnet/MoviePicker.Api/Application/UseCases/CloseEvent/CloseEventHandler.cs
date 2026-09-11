@@ -75,13 +75,20 @@ public sealed class CloseEventHandler : ICloseEventHandler
 
     private async Task RemoveWinnerFromParticipantsWatchlistAsync(Event evt, CancellationToken ct)
     {
-        if (string.IsNullOrEmpty(evt.WinnerMovieId))
+        if (!evt.HasWinner)
             return;
 
         try
         {
-            var winner = await _movieRepository.GetByIdAndEventIdAsync(evt.WinnerMovieId, evt.Id, ct);
-            if (winner is null)
+            var winners = new List<Movie>();
+            foreach (var movieId in evt.WinnerMovieIds)
+            {
+                var winner = await _movieRepository.GetByIdAndEventIdAsync(movieId, evt.Id, ct);
+                if (winner is not null)
+                    winners.Add(winner);
+            }
+
+            if (winners.Count == 0)
                 return;
 
             var participants = await _participantRepository.ListByEventIdAsync(evt.Id, ct);
@@ -93,7 +100,11 @@ public sealed class CloseEventHandler : ICloseEventHandler
             if (userIds.Count == 0)
                 return;
 
-            var removed = await _watchlistRepository.RemoveForUsersAsync(userIds, winner.TmdbId, winner.MediaType, ct);
+            var removed = 0L;
+            foreach (var winner in winners)
+                removed += await _watchlistRepository.RemoveForUsersAsync(
+                    userIds, winner.TmdbId, winner.MediaType, ct);
+
             if (removed > 0)
                 _logger.LogInformation(
                     "Film gagnant retiré de {Count} watchlist(s) à la clôture de la soirée {EventId}", removed, evt.Id);
@@ -113,7 +124,7 @@ public sealed class CloseEventHandler : ICloseEventHandler
         Slug = e.Slug,
         Config = EventConfigResponse.FromEvent(e),
         ClosedAt = e.ClosedAt,
-        WinnerMovieId = e.WinnerMovieId,
+        WinnerMovieIds = e.WinnerMovieIds,
         CreatedAt = e.CreatedAt,
         UpdatedAt = e.UpdatedAt,
         Message = message

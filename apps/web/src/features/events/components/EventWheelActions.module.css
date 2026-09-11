@@ -1,7 +1,4 @@
-.spin,
-.manualPick,
-.close,
-.reset {
+.spin {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
@@ -9,14 +6,8 @@
   white-space: nowrap;
 }
 
-.spinLabel,
-.manualPickLabel,
-.resetLabel {
+.spinLabel {
   white-space: nowrap;
-  transform: translateY(var(--text-optical-nudge));
-}
-
-.closeLabel {
   transform: translateY(var(--text-optical-nudge));
 }
 
@@ -36,12 +27,36 @@
   transform: translateY(var(--text-optical-nudge));
 }
 
-.manualBar {
+.iconAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: var(--tap-target-min);
+  padding-left: var(--space-2-5);
+  padding-right: var(--space-2-5);
+}
+
+.iconActionDanger {
+  color: var(--color-error);
+  border-color: color-mix(in srgb, var(--color-error) 40%, var(--color-border));
+}
+
+.selectionBar {
   display: flex;
   align-items: center;
   gap: var(--space-3);
   min-width: 0;
   margin: 0;
+  padding: var(--space-1-5) var(--space-1-5) var(--space-1-5) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.selectionBarRemoving {
+  border-color: color-mix(in srgb, var(--color-error) 40%, var(--color-border));
+  background: color-mix(in srgb, var(--color-error) 7%, transparent);
 }
 
 .manualHint {
@@ -64,18 +79,13 @@
     justify-content: center;
   }
 
-  .reset,
-  .manualPick,
-  .close:not(.primaryGrow),
   .spin:not(.primaryGrow) {
     flex: 0 0 auto;
     padding-left: var(--space-2);
     padding-right: var(--space-2);
   }
 
-  .iconOnlyLabel,
-  .manualPickLabel,
-  .resetLabel {
+  .iconOnlyLabel {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -84,5 +94,9 @@
     overflow: hidden;
     clip-path: inset(50%);
     white-space: nowrap;
+  }
+
+  .selectionBar {
+    flex: 1 1 auto;
   }
 }

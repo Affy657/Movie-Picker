@@ -1,4 +1,5 @@
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Tests.Builders;
 
 namespace MoviePicker.Api.Tests.Builders;
 
@@ -49,7 +50,7 @@ public sealed class EventEntityBuilder
             Time = _time,
             Config = new EventConfig(),
             ClosedAt = _closedAt,
-            WinnerMovieId = null,
+            Winners = [],
             CreatedAt = now,
             UpdatedAt = now,
         };

@@ -13,11 +13,36 @@
   line-height: 0;
 }
 
+.posterSlot {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  align-self: stretch;
+  line-height: 0;
+}
+
 .poster {
   display: block;
   width: 52px;
   height: 100%;
   object-fit: cover;
+}
+
+.posterCount {
+  position: absolute;
+  right: var(--space-0-5);
+  bottom: var(--space-0-5);
+  min-width: 1.125rem;
+  padding: calc(0.1rem + var(--text-optical-nudge)) var(--space-1)
+    calc(0.1rem - var(--text-optical-nudge));
+  border-radius: var(--radius-sm);
+  background: var(--on-poster-scrim-strong);
+  color: var(--on-poster-fg-strong);
+  font-size: var(--font-size-3xs);
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .posterFallback {

@@ -3,9 +3,7 @@ import type { components } from '@/shared/api/generated/openapiSchema';
 
 type Schemas = components['schemas'];
 
-type EventDetailPayload = Omit<Schemas['EventDetailResponse'], 'winnerMovie'> & {
-  winnerMovie: Schemas['WinnerMovieResponse'] | null;
-};
+type EventDetailPayload = Schemas['EventDetailResponse'];
 
 export const TEST_API_BASE = 'http://127.0.0.1:3999';
 
@@ -23,6 +21,7 @@ export interface MockEventOptions {
   isFinished?: boolean;
   lifecycle?: string;
   winnerMovie?: Schemas['WinnerMovieResponse'];
+  winnerCount?: number;
 
   theme?: string | null;
 }
@@ -43,7 +42,16 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
         isHost: !!host,
         isFinished: opts.isFinished ?? false,
         lifecycle: opts.lifecycle ?? (opts.isFinished ? 'finished' : 'live'),
-        winnerMovie: opts.winnerMovie ?? null,
+        winners: opts.winnerMovie
+          ? [
+              {
+                movieId: opts.winnerMovie._id ?? '',
+                pickMethod: 'wheel',
+                pickedAt: '2030-12-15T21:30:00Z',
+                movie: opts.winnerMovie,
+              },
+            ]
+          : [],
         participantCount: 3,
         movieCount: 2,
         participants: [
@@ -56,6 +64,9 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
           maxProposalsPerParticipant: null,
           maxParticipants: null,
           wheelMode: 'strictRandom',
+          winnerCount: opts.winnerCount ?? 1,
+          winnerCountMax: 10,
+          drawnWinnerCount: opts.winnerMovie ? 1 : 0,
         },
       };
       return HttpResponse.json(body);

@@ -13,7 +13,7 @@ public sealed class CloseEventResponse
     public string Slug { get; init; } = string.Empty;
     public EventConfigResponse? Config { get; init; }
     public DateTimeOffset? ClosedAt { get; init; }
-    public string? WinnerMovieId { get; init; }
+    public IReadOnlyList<string> WinnerMovieIds { get; init; } = Array.Empty<string>();
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
     public string Message { get; init; } = string.Empty;

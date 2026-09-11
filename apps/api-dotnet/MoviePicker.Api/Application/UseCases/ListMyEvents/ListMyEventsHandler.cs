@@ -79,7 +79,7 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
 
         var sliceWinnerIds = sliceIds
             .Where(winnerMovieIdByEventId.ContainsKey)
-            .Select(id => winnerMovieIdByEventId[id])
+            .SelectMany(id => winnerMovieIdByEventId[id])
             .Distinct()
             .ToList();
 
@@ -107,15 +107,11 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
 
     private async Task<List<MyEventSummaryDto>> FilterBySearchAsync(
         List<MyEventSummaryDto> events,
-        Dictionary<string, string> winnerMovieIdByEventId,
+        Dictionary<string, IReadOnlyList<string>> winnerMovieIdsByEventId,
         string q,
         CancellationToken ct)
     {
-        var winnerIds = events
-            .Where(x => winnerMovieIdByEventId.ContainsKey(x.Id))
-            .Select(x => winnerMovieIdByEventId[x.Id])
-            .Distinct()
-            .ToList();
+        var winnerIds = winnerMovieIdsByEventId.Values.SelectMany(ids => ids).Distinct().ToList();
 
         var winnerTitles = winnerIds.Count > 0
             ? (await _movieRepository.ListByIdsAsync(winnerIds, ct)).ToDictionary(m => m.Id, m => m.Title)
@@ -123,16 +119,16 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
 
         return events.Where(x =>
             x.Title.Contains(q, StringComparison.OrdinalIgnoreCase) ||
-            (winnerMovieIdByEventId.TryGetValue(x.Id, out var wid)
-                && winnerTitles.TryGetValue(wid, out var wt)
-                && wt.Contains(q, StringComparison.OrdinalIgnoreCase))
+            (winnerMovieIdsByEventId.TryGetValue(x.Id, out var wids)
+                && wids.Any(wid => winnerTitles.TryGetValue(wid, out var wt)
+                    && wt.Contains(q, StringComparison.OrdinalIgnoreCase)))
         ).ToList();
     }
 
     private static DateTimeOffset SortInstant(MyEventSummaryDto d) =>
         EventSchedule.TryGetStartUtc(d.Date, d.Time, out var startUtc) ? startUtc : d.CreatedAt;
 
-    private async Task<(Dictionary<string, MyEventSummaryDto> Merged, Dictionary<string, string> WinnerIds)>
+    private async Task<(Dictionary<string, MyEventSummaryDto> Merged, Dictionary<string, IReadOnlyList<string>> WinnerIds)>
         BuildMergedEventsAsync(
             IReadOnlyList<Event> created,
             IReadOnlyList<string> joinedIds,
@@ -142,13 +138,13 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
             CancellationToken ct)
     {
         var merged = new Dictionary<string, MyEventSummaryDto>();
-        var winnerMovieIdByEventId = new Dictionary<string, string>();
+        var winnerMovieIdByEventId = new Dictionary<string, IReadOnlyList<string>>();
 
         foreach (var e in created)
         {
             merged[e.Id] = ToDto(e, isCreator: true, isParticipant: joinedSet.Contains(e.Id), utcNow);
-            if (!string.IsNullOrEmpty(e.WinnerMovieId))
-                winnerMovieIdByEventId[e.Id] = e.WinnerMovieId;
+            if (e.HasWinner)
+                winnerMovieIdByEventId[e.Id] = e.WinnerMovieIds;
         }
 
         var onlyJoined = joinedIds.Where(id => !createdIds.Contains(id)).ToList();
@@ -159,8 +155,8 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
             {
                 if (!merged.ContainsKey(e.Id))
                     merged[e.Id] = ToDto(e, isCreator: false, isParticipant: true, utcNow);
-                if (!string.IsNullOrEmpty(e.WinnerMovieId))
-                    winnerMovieIdByEventId[e.Id] = e.WinnerMovieId;
+                if (e.HasWinner)
+                    winnerMovieIdByEventId[e.Id] = e.WinnerMovieIds;
             }
         }
 
@@ -169,15 +165,19 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
 
     private static MyEventSummaryDto EnrichSummary(
         MyEventSummaryDto d,
-        Dictionary<string, string> winnerMovieIdByEventId,
+        Dictionary<string, IReadOnlyList<string>> winnerMovieIdByEventId,
         Dictionary<string, Movie> winnerMovies,
         IReadOnlyDictionary<string, int> participantCounts,
         IReadOnlyDictionary<string, int> movieCounts)
     {
         var id = d.Id;
-        Movie? winner = winnerMovieIdByEventId.TryGetValue(id, out var wId) && winnerMovies.TryGetValue(wId, out var wm)
-            ? wm
-            : null;
+        var winners = winnerMovieIdByEventId.TryGetValue(id, out var wIds)
+            ? wIds
+                .Select(wId => winnerMovies.GetValueOrDefault(wId))
+                .Where(m => m is not null)
+                .Select(m => new MyEventWinnerMovieDto { Title = m!.Title, PosterPath = m.PosterPath })
+                .ToList()
+            : [];
         return new MyEventSummaryDto
         {
             Id = d.Id,
@@ -194,8 +194,7 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
             MovieCount = movieCounts.TryGetValue(id, out var mc) ? mc : 0,
             MaxParticipants = d.MaxParticipants,
             Theme = d.Theme,
-            WinnerMovieTitle = winner?.Title,
-            WinnerMoviePosterPath = winner?.PosterPath,
+            WinnerMovies = winners,
             AutoCloseAt = d.AutoCloseAt,
         };
     }

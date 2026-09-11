@@ -127,7 +127,7 @@ describe('WheelModal', () => {
     expect(screen.queryByTestId('provider-chips')).not.toBeInTheDocument();
   });
 
-  it('affiche le bouton Relancer si onRelaunch fourni et appelle le callback', () => {
+  it('propose de tirer un film de plus quand un nouveau tirage reste possible', () => {
     const onRelaunch = vi.fn();
     wrap(
       <WheelModal
@@ -141,13 +141,14 @@ describe('WheelModal', () => {
       />
     );
     fireEvent.click(screen.getByTestId('spin-done-trigger'));
-    const btn = screen.getByRole('button', { name: /relancer la roue/i });
-    expect(btn).toBeInTheDocument();
+
+    const btn = screen.getByRole('button', { name: /tirer un film de plus/i });
     fireEvent.click(btn);
+
     expect(onRelaunch).toHaveBeenCalledOnce();
   });
 
-  it("n'affiche pas le bouton Relancer si onRelaunch absent", () => {
+  it('ne propose pas de tirer un film de plus sans relance possible', () => {
     wrap(
       <WheelModal
         open
@@ -159,7 +160,10 @@ describe('WheelModal', () => {
       />
     );
     fireEvent.click(screen.getByTestId('spin-done-trigger'));
-    expect(screen.queryByRole('button', { name: /relancer la roue/i })).not.toBeInTheDocument();
+
+    expect(
+      screen.queryByRole('button', { name: /tirer un film de plus/i })
+    ).not.toBeInTheDocument();
   });
 
   it("remet l'etat a spinning quand wheelKey change", () => {

@@ -131,6 +131,14 @@ export async function deleteEventWheel(slug: string, hostToken: string | null): 
   await fetchApi(`/events/${slug}/wheel${hostQuery(hostToken)}`, { method: 'DELETE' });
 }
 
+export async function deleteEventWinner(
+  slug: string,
+  movieId: string,
+  hostToken: string | null
+): Promise<void> {
+  await fetchApi(`/events/${slug}/winners/${movieId}${hostQuery(hostToken)}`, { method: 'DELETE' });
+}
+
 export type RemoveParticipantResponse = {
   participantId: string;
   eventId: string;

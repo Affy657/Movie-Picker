@@ -10,7 +10,14 @@ public sealed class EventTests
     {
         Date = date,
         Time = time,
-        WinnerMovieId = winnerMovieId
+        Winners = winnerMovieId is null ? [] : [Winner(winnerMovieId)]
+    };
+
+    private static EventWinner Winner(string movieId) => new()
+    {
+        MovieId = movieId,
+        Method = WinnerPickMethod.Wheel,
+        PickedAt = new DateTimeOffset(2026, 6, 30, 20, 0, 0, TimeSpan.Zero)
     };
 
     [Fact]
@@ -113,5 +120,71 @@ public sealed class EventTests
 
         Assert.Equal(EventLifecycle.Upcoming, evt.Lifecycle(justBefore));
         Assert.Equal(EventLifecycle.Live, evt.Lifecycle(justAfter));
+    }
+
+    [Fact]
+    public void HasWinner_NoWinnerYet_False()
+    {
+        Assert.False(new Event().HasWinner);
+    }
+
+    [Fact]
+    public void HasWinner_AtLeastOneWinner_True()
+    {
+        Assert.True(new Event { Winners = [Winner("m1")] }.HasWinner);
+    }
+
+    [Fact]
+    public void TargetWinnerCount_NoConfig_IsOne()
+    {
+        Assert.Equal(1, new Event().TargetWinnerCount);
+    }
+
+    [Fact]
+    public void TargetWinnerCount_ReadsTheConfiguredValue()
+    {
+        var evt = new Event { Config = new EventConfig { WinnerCount = 4 } };
+
+        Assert.Equal(4, evt.TargetWinnerCount);
+    }
+
+    [Fact]
+    public void TargetWinnerCount_ConfiguredBelowOne_FallsBackToOne()
+    {
+        var evt = new Event { Config = new EventConfig { WinnerCount = 0 } };
+
+        Assert.Equal(1, evt.TargetWinnerCount);
+    }
+
+    [Fact]
+    public void RemainingWinnerSlots_CountsWhatIsLeftToDraw()
+    {
+        var evt = new Event
+        {
+            Config = new EventConfig { WinnerCount = 3 },
+            Winners = [Winner("m1")]
+        };
+
+        Assert.Equal(2, evt.RemainingWinnerSlots);
+    }
+
+    [Fact]
+    public void RemainingWinnerSlots_MoreWinnersThanConfigured_IsZero()
+    {
+        var evt = new Event
+        {
+            Config = new EventConfig { WinnerCount = 1 },
+            Winners = [Winner("m1"), Winner("m2")]
+        };
+
+        Assert.Equal(0, evt.RemainingWinnerSlots);
+    }
+
+    [Fact]
+    public void WinnerMovieIds_KeepsTheDrawOrder()
+    {
+        var evt = new Event { Winners = [Winner("m1"), Winner("m2"), Winner("m3")] };
+
+        Assert.Equal(new[] { "m1", "m2", "m3" }, evt.WinnerMovieIds);
     }
 }
