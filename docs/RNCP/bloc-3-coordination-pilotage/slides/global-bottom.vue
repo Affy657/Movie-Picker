@@ -1,13 +1,13 @@
 <script setup>
 const REFS = {
   3: 'C3.4.2',
-  4: 'C3.1', 5: 'C3.1', 6: 'C3.1', 7: 'C3.1', 8: 'C3.1', 9: 'C3.1',
-  10: 'C3.2.1', 11: 'C3.2.1', 12: 'C3.2.1', 13: 'C3.2.1', 14: 'C3.2.1',
-  15: 'C3.2.2', 16: 'C3.2.2',
-  17: 'C3.3.1', 18: 'C3.3.1', 19: 'C3.3.1', 20: 'C3.3.1',
-  21: 'C3.3.2', 22: 'C3.3.2', 23: 'C3.3.2',
-  24: 'C3.4.1', 25: 'C3.4.1', 26: 'C3.4.1',
-  27: 'C3.4.2',
+  4: 'C3.1', 5: 'C3.1', 6: 'C3.1', 7: 'C3.1', 8: 'C3.1',
+  9: 'C3.2.1', 10: 'C3.2.1', 11: 'C3.2.1', 12: 'C3.2.1',
+  13: 'C3.2.2',
+  14: 'C3.3.1', 15: 'C3.3.1', 16: 'C3.3.1', 17: 'C3.3.1',
+  18: 'C3.3.2', 19: 'C3.3.2',
+  20: 'C3.4.1', 21: 'C3.4.1', 22: 'C3.4.1',
+  23: 'C3.4.2',
 }
 </script>
 
@@ -20,7 +20,7 @@ const REFS = {
   </footer>
 
   <footer
-    v-else-if="$slidev.nav.currentPage > 27"
+    v-else-if="$slidev.nav.currentPage > 23"
     class="abs-bl m-3 text-xs font-mono opacity-60 select-none"
   >
     ANNEXE
@@ -159,6 +159,9 @@ const REFS = {
   border-radius: 4px 4px 0 0;
   background: var(--s1);
   display: block;
+}
+.cols.stacked i {
+  border-radius: 0;
 }
 .cols i.b {
   background: var(--s3);

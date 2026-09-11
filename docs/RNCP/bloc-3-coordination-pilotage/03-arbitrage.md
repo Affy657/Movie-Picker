@@ -11,7 +11,7 @@
 > - Les différentes options possibles pour y remédier sont détaillées.
 > - La décision d'arbitrage est argumentée et permet de résoudre la problématique.
 
-Alimente les diapositives 15 et 16.
+Alimente la diapositive 13.
 
 **Rappel de posture** : le cas exposé a réellement eu lieu, la décision a réellement été prise, et son résultat est mesuré dans le dépôt.
 
@@ -207,8 +207,7 @@ Un arbitrage dont on peut vérifier après coup que les inconvénients annoncés
 
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
-| 15 | La dérive constatée et ses conséquences | 1, 2 |
-| 16 | Les options, le logigramme, la décision et son résultat mesuré | 3, 4, 5, 6 |
+| 13 | Un cas d'arbitrage : migrer l'API, quand et comment | 1 à 6 |
 | A3 | Les deux arbitrages de réserve | 7 |
 
 ---

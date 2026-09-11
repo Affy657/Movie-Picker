@@ -2,9 +2,9 @@
 
 > Point de situation au **5 septembre 2026**. Oral le **16 septembre 2026**, soit **11 jours**.
 >
-> **La rédaction est terminée** : 7 chapitres de matière, 35 diapositives (27 présentées + 8 annexes), les 14 éléments imposés rattachés, les 7 compétences couvertes.
+> **La rédaction est terminée** : 7 chapitres de matière, 31 diapositives (23 présentées + 8 annexes), les 14 éléments imposés rattachés, les 7 compétences couvertes.
 >
-> ✅ **Restructuré le 11 septembre** : la démonstration ouvre la présentation, 35 diapositives (27 présentées), dix tableaux devenus des schémas, cinq fusions. Les numéros de diapositives cités dans les sections historiques ci-dessous sont ceux d'avant : la table de correspondance est en § 12 de `PASSATION.md`.
+> ✅ **Restructuré le 11 septembre** : la démonstration ouvre la présentation, 31 diapositives (23 présentées) après une seconde épure le soir même, les tableaux devenus des schémas, neuf fusions au total. Les numéros de diapositives cités dans les sections historiques ci-dessous sont ceux d'avant : la table de correspondance est en § 12 de `PASSATION.md`.
 >
 > ✅ **Le support a été rendu, corrigé puis refondu le 5 septembre.** Le premier rendu réel a montré que des diapositives étaient coupées par le bas du cadre, 17 à la première mesure, 22 au contrôle rejoué. Elles tiennent toutes désormais, et le support a été **épuré** dans la foulée. Détail en § 0.
 
@@ -27,13 +27,13 @@
 
 | | |
 |--|--|
-| **Toutes les diapositives tiennent** | Vérifié par [`slides/verifier-rendu.mjs`](slides/verifier-rendu.mjs) : *« les 35 diapositives tiennent dans le cadre »* |
+| **Toutes les diapositives tiennent** | Vérifié par [`slides/verifier-rendu.mjs`](slides/verifier-rendu.mjs) : *« les 31 diapositives tiennent dans le cadre »* |
 | **Le support est épuré** | Une idée par diapositive, énoncée dans le titre ; la preuve à l'écran, l'argumentation en note de présentateur. Densité maximale ramenée de 2 289 à 1 967 caractères, moyenne 1 217 |
 | **Sept tableaux remplacés par des schémas** | Histogrammes d'activité (13), stabilité de la chaîne (14), barres empilées du glissement de périmètre (15), **logigramme en HTML** (17 et A2), répartition de charge par lot (19), grille de compétences en haltères (25), frise des versions (27) |
 | **Le mur de 25 indicateurs a disparu** | La diapositive 12 porte désormais la *méthode* de sélection et les 5 axes ; les valeurs vivent sur les deux tableaux de bord, sans doublon |
 | **Répétitions supprimées** | *« l'affectation suit la compétence attestée »* (9 et 19), les quatre échéances (5 et 6), les 88 jours actifs (13 et 14). Le seul rappel littéral conservé est volontaire : *« l'arbitrage n'a pas été perdu, il n'a pas été posé »*, thèse de la 23 rappelée en conclusion |
 | **Ordre des chapitres** | La démonstration ouvre (C3.4.2), puis C3.1 → C3.2.1 → C3.2.2 → C3.3.1 → C3.3.2 → C3.4.1, et la demande de validation ferme (C3.4.2) ; chaque renvoi entre chapitres est une annonce vers l'avant |
-| **Numérotation** | 35 diapositives, 27 présentées, **30:00 pile** chapitre par chapitre, les 14 éléments imposés rattachés |
+| **Numérotation** | 31 diapositives, 23 présentées, **30:00 pile** chapitre par chapitre, les 14 éléments imposés rattachés |
 
 ### Ce qui reste, sur le rendu
 
@@ -62,7 +62,7 @@ Ces quatre points portent **C3.4.2**, éliminatoire. Une démonstration qui éch
 
 | # | Action | Diapo | Compétence | Détail |
 |:-:|--------|:-----:|:----------:|--------|
-| 5 | **Structurer le tableau GitHub Projects** et en faire une capture | 10 | **C3.2.1** ÉLIM | La diapositive tient sans, mais une capture rendrait l'outil de suivi visible. Le chapitre 2 § 1.5 assume déjà que le tableau est postérieur au travail : ne pas le présenter autrement |
+| 5 | **Structurer le tableau GitHub Projects** et en faire une capture | 9 | **C3.2.1** ÉLIM | La diapositive tient sans, mais une capture rendrait l'outil de suivi visible. Le chapitre 2 § 1.5 assume déjà que le tableau est postérieur au travail : ne pas le présenter autrement |
 | 6 | **Relever une capture de facturation** GCP et AWS | 13 | **C3.2.1** ÉLIM | Étaye la ligne « coût réel » du tableau de bord. Aujourd'hui la valeur *0 €/mois* repose sur les paliers gratuits documentés, pas sur une facture |
 
 ---
@@ -74,7 +74,7 @@ Ces quatre points portent **C3.4.2**, éliminatoire. Une démonstration qui éch
 | 7 | **Exporter le support en PDF** | `cd slides && npm install && npm run export`. Le premier export peut demander `npx playwright install chromium` |
 | 8 | **Tester l'export sur le matériel de la salle** | Vidéoprojecteur, résolution, lisibilité depuis le fond. **Le seul bloc Mermaid restant est le schéma d'architecture de l'annexe A1 (diapositive 28)**, tous les autres schémas, dont le Gantt de la 6 et le logigramme de la 17, sont en HTML et CSS. Après le traitement du § 0, relancer `verifier-rendu.mjs` puis contrôler le PDF page à page |
 | 9 | **Répéter le minutage global** | 30 minutes, dont 17 sur les trois compétences éliminatoires. Deux passages complets. Le contrôle automatique donne **30:00 pile**, exact chapitre par chapitre |
-| 10 | **Mémoriser les numéros de page des annexes** | A1 = 28 ; A2 = 29 ; A3 = 30 ; A4 = 31 ; A5 = 32 ; A6 = 33 ; A7 = 34 ; A8 = 35. En mode présentateur, taper le numéro puis `Entrée` |
+| 10 | **Mémoriser les numéros de page des annexes** | A1 = 24 ; A2 = 25 ; A3 = 26 ; A4 = 27 ; A5 = 28 ; A6 = 29 ; A7 = 30 ; A8 = 31. En mode présentateur, taper le numéro puis `Entrée` |
 | 10 bis | **Décider si les chiffres d'activité sont réancrés une dernière fois** | Le 11/09, la **v1.5.0** (07/09) a été intégrée partout où une version est comptée : 10 versions, 74 items livrés dont 51 hors chiffrage, cadence, Gantt, frise, journal. En revanche les chiffres d'**activité** (833 commits, 88 jours actifs, 122 fusions, −10 % de charge) restent ancrés sur le commit `5ce0a05f` du **05/09**, deux jours avant le tag. `master` est déjà à 1 022 commits et 94 jours actifs le 11/09. Soit on assume la date d'arrêté du 05/09 à l'oral, soit on réancre tout **une seule fois, la veille**, en rejouant § 5.1 de `PASSATION.md` et le tableau mensuel du chapitre 2 |
 
 ---

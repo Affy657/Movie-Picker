@@ -13,7 +13,7 @@
 > - Des formations sont préconisées en fonction des besoins du projet et du profil des membres de l'équipe.
 > - Les modalités de formation sont adaptées pour prendre en considération les spécificités liées au handicap des personnes formées.
 
-Alimente les diapositives 21 à 23.
+Alimente les diapositives 18 et 19.
 
 **Posture de ce chapitre.** Le projet a été mené seul : la grille évalue **la seule personne qui y a travaillé**, avant et après le projet, et le plan de développement est le sien. Tout est étalonné sur l'historique du dépôt : chaque compétence correspond à une technologie introduite à une date vérifiable, et les niveaux exigés sont ceux qu'il a réellement fallu atteindre pour livrer. Le besoin en recrutement, que le référentiel demande de transmettre, est instruit pour le jour où le projet passerait en équipe.
 
@@ -136,7 +136,7 @@ Le référentiel demande de **transmettre les besoins en recrutement**. Le proje
 | **Développeur front** | React et TypeScript niveau 3, **accessibilité niveau 3** : la porte de qualité échoue une livraison au niveau 1 | Conventions, procédures, service worker, internationalisation |
 | **DevOps, à mi-temps** | Intégration continue et conteneurisation niveau 2 | Supervision, exploitation, veille de vulnérabilités, sur les procédures existantes |
 
-**La note transmise tient en une phrase** : recruter sur le langage et l'expérience, former sur le contexte et la conformité. Ce que ces deux personnes recevraient le premier jour existe déjà : `AGENTS.md`, les procédures exécutables, les gabarits d'issue et de pull request, le journal des versions.
+**La note transmise tient en une phrase** : recruter sur le langage et l'expérience, former sur le contexte et la conformité. Ce que ces deux personnes recevraient le premier jour existe déjà : les conventions du dépôt, les procédures exécutables, les gabarits d'issue et de pull request, le journal des versions.
 
 ### 3.4 Les modalités adaptées au handicap
 
@@ -159,9 +159,8 @@ Le critère est explicite : les modalités de formation doivent prendre en compt
 
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
-| 21 | Les compétences que le projet a exigées | 1 |
-| 22 | La grille d'évaluation : moi, avant et après le projet | 2 |
-| 23 | Le plan de développement : ce qui reste à acquérir | 3 |
+| 18 | Les compétences : moi, avant et après le projet | 1, 2 |
+| 19 | Le plan de développement : ce qui reste à acquérir | 3 |
 
 ---
 

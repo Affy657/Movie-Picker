@@ -11,7 +11,7 @@
 > - Les indicateurs sélectionnés sont mesurables et quantifiables. Ils permettent de suivre les délais, les coûts et l'avancement du projet.
 > - Les tableaux de bord intègrent l'avancement du projet, le suivi des coûts, le suivi des délais, le suivi des risques, les ressources humaines, etc.
 
-Alimente les diapositives 10 à 14.
+Alimente les diapositives 9 à 12.
 
 **Date de relevé** : toutes les valeurs de ce document sont arrêtées au **5 septembre 2026**, sur l'état de `origin/master` au commit **`5ce0a05f`**, sauf mention contraire. Chacune porte sa source, et chaque source est interrogeable sans passer par la mémoire du candidat.
 
@@ -378,11 +378,10 @@ Trois manques identifiés, avec la correction qui en découle. Ce sont des recom
 
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
-| 10 | L'outil de suivi | 1 |
-| 11 | Les indicateurs retenus | 2 |
-| 12 | Tableau de bord : avancement et délais | 3 |
-| 13 | Tableau de bord : coûts, risques, ressources | 4 |
-| 14 | L'écart entre le prévisionnel et le réel | 5 |
+| 9 | Piloter l'avancement : le suivi est dans GitHub | 1, 2 |
+| 10 | Tableau de bord : avancement et délais | 3 |
+| 11 | Tableau de bord : coûts, risques, ressources | 4 |
+| 12 | L'écart n'est pas où on le cherche | 5 |
 
 ---
 

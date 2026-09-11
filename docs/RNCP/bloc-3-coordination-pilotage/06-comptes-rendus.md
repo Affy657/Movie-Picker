@@ -12,7 +12,7 @@
 > - Les points de validation sont organisés de manière à assurer le suivi qualité du projet.
 > - Les indicateurs de satisfaction sont définis et sont cohérents au regard du projet.
 
-Alimente les diapositives 24 à 26.
+Alimente les diapositives 20 à 22.
 
 **Rappel de posture** : ce chapitre est intégralement réel. Les points de validation sont datés, les comptes rendus sont versionnés ou publiés, et les indicateurs de satisfaction proviennent de mesures de production et d'un questionnaire réellement diffusé.
 
@@ -178,9 +178,9 @@ C'est la partie qui compte : un indicateur de satisfaction ne vaut que par la d�
 
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
-| 24 | La planification des points de validation | 1, 2 |
-| 25 | Le compte rendu type | 3 |
-| 26 | Les indicateurs de satisfaction | 4 |
+| 20 | Rendre compte : les points de validation | 1, 2 |
+| 21 | Le compte rendu qui fait décider | 3 |
+| 22 | Les indicateurs de satisfaction : trois familles | 4 |
 
 ---
 

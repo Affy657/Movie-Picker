@@ -12,7 +12,7 @@
 | | |
 |--|--|
 | **Épreuve** | Oral de 45 min (30 de présentation + 15 de questions), le **16 septembre 2026** |
-| **État** | ✅ Rédaction terminée et **support refondu** : 7 chapitres, 35 diapositives (27 présentées, 8 annexes), toutes vérifiées au rendu. Restructuré le 11/09 : la démonstration ouvre la présentation, 5 fusions, 9 tableaux devenus des schémas (§ 12). Épuré, schémas à la place des gros tableaux, sans répétition |
+| **État** | ✅ Rédaction terminée et **support refondu** : 7 chapitres, 31 diapositives (23 présentées, 8 annexes), toutes vérifiées au rendu. Restructuré le 11/09 : la démonstration ouvre la présentation, 5 fusions, 9 tableaux devenus des schémas (§ 12). Épuré, schémas à la place des gros tableaux, sans répétition |
 | **Branche** | `claude/rncp-03-title-crwwov`, head `a9c2859`, **10 commits** d'avance sur `master` |
 | **Pull request** | [#83](https://github.com/Affy657/Movie-Picker/pull/83), ✅ **fusionnée sur `master` le 06/09/2026**. Tout travail ultérieur repart de `master` : une PR fusionnée ne se réutilise pas |
 | **Reste** | Uniquement du **matériel** : répétitions minutées, jeu de données de démonstration, vidéo de repli, 2 captures, export PDF |
@@ -29,10 +29,10 @@ Elles ne sont pas cosmétiques : c'est ce qui distingue ce dossier d'un devoir g
 
 Le projet a été **exécuté seul**, et le support le dit dès la diapositive 2. Depuis le 11 septembre 2026, **aucune équipe n'est simulée** : l'organisation cible à 4 profils des versions précédentes a été retirée, sur décision du propriétaire du projet.
 
-- **Le réel** : chiffré, daté, vérifiable dans le dépôt, y compris la délégation aux agents d'assistance, mesurée par les commits co-signés (`git log --format=%b | grep -i co-authored-by`).
-- **Là où le référentiel exige une équipe** : la matrice RACI est construite sur les acteurs réels (moi, agents IA, commanditaire, utilisateurs, prestataires), la grille de compétences est une auto-évaluation avant / après étalonnée sur le dépôt, le plan de développement est personnel, et le besoin en recrutement est une note « si le projet passait en équipe ».
+- **Le réel** : chiffré, daté, vérifiable dans le dépôt. Depuis le 11 septembre au soir, **aucune distinction entre l'auteur et ses outils d'assistance** : tout ce qui n'est pas exécuté par un prestataire est présenté comme le travail d'une personne, sans acteur intermédiaire, sur décision du propriétaire du projet (« moi et les agents IA, c'est la même personne »). L'affectation des missions se mesure dans le temps, sur les 833 commits classés par mission.
+- **Là où le référentiel exige une équipe** : la matrice RACI est construite sur les acteurs réels (moi, commanditaire, utilisateurs, prestataires), la grille de compétences est une auto-évaluation avant / après étalonnée sur le dépôt, le plan de développement est personnel, et le besoin en recrutement est une note « si le projet passait en équipe ».
 
-**Règle de rédaction** : on écrit *« j'ai gardé »*, *« j'ai délégué »*, *« si le projet passait en équipe »*. Jamais *« l'organisation cible prévoit »*, jamais un profil qui n'a pas existé.
+**Règle de rédaction** : on écrit *« à la main »*, *« confié à la chaîne »*, *« si le projet passait en équipe »*. Jamais *« l'organisation cible prévoit »*, jamais *« délégué aux agents »*, jamais un profil ou un acteur qui n'a pas existé.
 
 ### 2.2 Ancrer sur une mesure, et dire la limite avant qu'on la trouve
 
@@ -53,7 +53,7 @@ Chaque chapitre part d'un fait vérifiable, puis **énonce lui-même sa faibless
 ### 2.3 La numérotation du support est contractuelle
 
 - **Aucune diapositive de séparation de chapitre.** La page `N` de Slidev correspond exactement à la diapositive `N` de [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md), et donc au rattachement des **14 éléments imposés** par le règlement.
-- Le titre de chapitre est porté par sa **première diapositive** (ex. diapo 10 : « 3. Piloter l'avancement : l'outil de suivi »).
+- Le titre de chapitre est porté par sa **première diapositive** (ex. diapo 9 : « 3. Piloter l'avancement : le suivi est dans GitHub »).
 - **Toute insertion ou suppression de diapositive** oblige à mettre à jour, dans le même commit : le plan (§ 1 et § 4), la table `REFS` de `slides/global-bottom.vue`, et le tableau d'avancement de `slides/README.md`.
 
 ### 2.4 Le support est épuré, et doit le rester
@@ -210,7 +210,7 @@ lines=s.split('\n'); idx=[i for i,l in enumerate(lines) if l.strip()=='---']
 start=idx[1]+1; chunks=[]
 for i in idx[2:]: chunks.append(lines[start:i]); start=i+1
 chunks.append(lines[start:])
-print('diapos :', len(chunks), '(attendu 35)')
+print('diapos :', len(chunks), '(attendu 31)')
 bad=0
 for n,c in enumerate(chunks,1):
     body=re.sub(r'<!--.*?-->','','\n'.join(c),flags=re.S)
@@ -218,15 +218,15 @@ for n,c in enumerate(chunks,1):
     if o!=cl: print(f'  !! diapo {n} : div {o}/{cl}'); bad+=1
     if not [l for l in c if l.startswith('# ')]: print(f'  !! diapo {n} sans titre H1')
 d=re.findall(r'DUREE (\d+):(\d\d)', s); tot=sum(int(a)*60+int(b) for a,b in d)
-print(f'durees : {len(d)} (attendu 27) ; total {(tot+290)//60}:{(tot+290)%60:02d} demo comprise (attendu 30:00)')
-for c,(a,b) in {0:(1,2),1:(3,3),2:(4,9),3:(10,14),4:(15,16),5:(17,20),6:(21,23),7:(24,26),8:(27,27)}.items():
+print(f'durees : {len(d)} (attendu 23) ; total {(tot+290)//60}:{(tot+290)%60:02d} demo comprise (attendu 30:00)')
+for c,(a,b) in {0:(1,2),1:(3,3),2:(4,8),3:(9,12),4:(13,13),5:(14,17),6:(18,19),7:(20,22),8:(23,23)}.items():
     t=sum(int(d[n-1][0])*60+int(d[n-1][1]) for n in range(a,b+1))+(290 if c==1 else 0)
     print(f'  ch.{c} : {t//60}:{t%60:02d}')
 print('desequilibres div :', bad)
 PY
 ```
 
-**Cibles** : 35 diapositives ; 27 durées ; total 30:00 ; chapitres 0:50 / 5:40 (démonstration comprise) / 6:20 / 5:20 / 2:20 / 3:30 / 2:40 / 2:40 / 0:40. Les numéros de chapitre des titres de diapositives sont ceux du sommaire, la démonstration étant le chapitre 1.
+**Cibles** : 31 diapositives ; 23 durées ; total 30:00 ; chapitres 0:50 / 5:40 (démonstration comprise) / 6:20 / 5:20 / 2:20 / 3:30 / 2:40 / 2:40 / 0:40. Les numéros de chapitre des titres de diapositives sont ceux du sommaire, la démonstration étant le chapitre 1.
 
 ### 5.4 Rendu du support, le contrôle que les autres ne font pas
 
@@ -266,7 +266,7 @@ PY
 
 | Fichier | Compétence | Alimente |
 |---------|:----------:|----------|
-| [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md) | | **Le cadre** : minutage, déroulé des 35 diapositives, rattachement des 14 éléments imposés, questions du jury |
+| [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md) | | **Le cadre** : minutage, déroulé des 23 diapositives présentées, rattachement des 14 éléments imposés, questions du jury |
 | [`01-planification.md`](01-planification.md) | C3.1 **ÉLIM** | Diapos 4 à 10 |
 | [`02-suivi-indicateurs.md`](02-suivi-indicateurs.md) | C3.2.1 **ÉLIM** | Diapos 11 à 15 |
 | [`03-arbitrage.md`](03-arbitrage.md) | C3.2.2 | Diapos 16 à 18 |
@@ -274,7 +274,7 @@ PY
 | [`05-competences.md`](05-competences.md) | C3.3.2 | Diapos 24 à 26 |
 | [`06-comptes-rendus.md`](06-comptes-rendus.md) | C3.4.1 | Diapos 27 à 29 |
 | [`07-demonstration.md`](07-demonstration.md) | C3.4.2 **ÉLIM** | Diapos 30 et 31, et la démonstration en direct |
-| [`slides/slides.md`](slides/slides.md) | | Le support, 35 diapositives |
+| [`slides/slides.md`](slides/slides.md) | | Le support, 31 diapositives |
 | [`RESTE-A-FAIRE.md`](RESTE-A-FAIRE.md) | | Ce qui reste, priorisé |
 
 **Le sens de la dépendance** : les fichiers de matière sont la **source de vérité**, le support en est dérivé. Modifier une diapositive sans mettre à jour le chapitre correspondant crée une divergence qui se paiera à la relecture suivante.
@@ -288,7 +288,7 @@ PY
 | **Le cas d'arbitrage est la migration .NET**, confirmée par le fait que la migration est absente de la feuille de route du MVP au moment où celui-ci est déclaré terminé (16/03 16:48), et ajoutée le 18/03 | C'est ce qui en fait un arbitrage et non l'exécution d'un plan | Deux cas de réserve documentés en § 7 de `03-arbitrage.md` |
 | **Ne pas écrire « 13 J/H non prévus au chiffrage »** | Faux : le lot figure au chiffrage du Bloc 1 (8+3+2). La formulation serait démentie par le dossier lui-même | |
 | **Le cas « environnement de test rejeté malgré 30 % de gain » a été retiré** | Aucune trace dans le dépôt. Remplacé par l'abandon de l'application mobile (16/05 → 26/05), lui documenté | Si le propriétaire du projet confirme que c'est réel mais non tracé, le réintégrer en annexe A3 |
-| **Le chapitre 4 s'appuie sur la délégation à des agents d'assistance** comme management réel du projet, mesuré (537 commits co-signés sur 833) | Depuis le 11/09, c'est le seul ancrage du chapitre : l'organisation cible a été retirée. Le texte dit explicitement qu'un agent n'est pas un membre d'équipe | Décision prise par le propriétaire le 11/09/2026 : dire la vérité du solo plutôt que simuler une équipe |
+| **Le chapitre 4 ne distingue pas l'auteur de ses outils d'assistance** : l'affectation des missions est mesurée dans le temps sur les 833 commits classés par mission, et entre ce qui reste à la main et ce qui est confié à la chaîne | Décision du propriétaire du projet le 11/09/2026 au soir : « moi et les agents IA, c'est la même personne, ne fais pas de différence ». La version précédente (délégation mesurée par les commits co-signés) est dans l'historique Git avant `5bd928e` | Recalculer la classification par mission (§ 14) plutôt que de réintroduire un acteur |
 | **Pas de frontmatter par diapositive** | Risque de décalage de numérotation (§ 4.3) | |
 
 ---
@@ -357,6 +357,8 @@ Trois consignes du propriétaire du projet, appliquées ensemble : **moins de te
 
 ## 13. La vérité du solo, 11 septembre 2026
 
+> Section historique : le contenu du chapitre 4 et de la diapositive 14 décrit ici a été remplacé le soir même, voir § 14. Les commandes de recalcul des commits co-signés ne servent plus.
+
 Question du propriétaire du projet : *« Je suis obligé de simuler une équipe ? »* Réponse : non, rien ne l'impose ; le référentiel est écrit pour une équipe, et c'est à la présentation de montrer comment chaque critère est couvert. Décision : **dire la vérité, retirer l'organisation cible**, et présenter la vraie façon de travailler.
 
 **Ce qui a changé.** Diapositive 2, le sommaire seul à l'écran (les trois blocs de texte sur le solo ont été retirés le 11 septembre, le message est dit à voix haute, il est en note), remplace les deux registres. Diapositive 7, une personne et les trois acteurs réels. Diapositive 8 et annexe A6, RACI sur les acteurs réels. Diapositive 17, ce qui est délégué et gardé, avec l'histogramme de la part des commits co-signés par mois. Diapositive 22, auto-évaluation février → septembre. Diapositive 23, plan personnel en 5 actions et note RH. Chapitres 1, 4 et 5 réécrits dans le même sens, plan § 2 réécrit.
@@ -365,3 +367,17 @@ Question du propriétaire du projet : *« Je suis obligé de simuler une équipe
 
 **Les niveaux de la grille sont une auto-évaluation** posée à partir des preuves du dépôt (date d'introduction, ce qui a été livré, ce qui a échoué). Ils appartiennent au propriétaire du projet, qui peut les ajuster ; la seule contrainte est que les deux écarts non comblés restent ceux que les indicateurs désignent, arbitrage et revue, sans quoi la grille cesse d'être crédible.
 
+
+---
+
+## 14. Épure et une seule personne, 11 septembre 2026 au soir
+
+Deux consignes du propriétaire du projet, dans l'ordre : **retirer tous les blocs de texte qui disent ce qui se dit à l'oral** (le jury ne les lit pas), réduire encore le nombre de diapositives et les répétitions ; puis **ne faire aucune différence entre lui et les agents d'assistance** : c'est la même personne.
+
+**Ce qui a changé sur le support.** 35 → 31 diapositives, 27 → 23 présentées. Fusions : lots + ressources (6), outil de suivi + méthode des indicateurs (9), dérive + options + logigramme (13), compétences exigées + grille (18). Plus aucun `.lede`, `.note` ou `.alert` sur une diapositive présentée, sauf la demande de validation de la 23, qui est la phrase à prononcer. Chaque diapositive : un titre qui porte l'idée, un schéma ou des chiffres, des libellés courts ; l'argumentation est en note de présentateur, et les notes disent explicitement ce qui « se dit ».
+
+**Ce qui a changé sur le fond.** Toute mention d'agents, de commits co-signés et de délégation a disparu du support et des chapitres. Le chapitre 4 et la diapositive 14 mesurent désormais **l'affectation des missions dans le temps** : les 833 commits classés en quatre missions (produit 24 %, fiabilité 51 %, chaîne et dépendances 13 %, documentation et pilotage 12 %), mois par mois, et la répartition entre ce qui reste à la main et ce qui est confié à la chaîne. Le style dominant devient le délégatif **à l'automatisation**. La RACI (diapositive 7, annexe A6, chapitre 1 § 5) n'a plus de colonne « Agents IA ».
+
+**Recalcul de la classification par mission** : `git log 5ce0a05f --format='%ad%x09%s' --date=format:%Y-%m`, puis classer par le préfixe conventionnel du message (`feat`/`perf`/`ui` → produit ; `fix`/`test`/`refactor`/`style` → fiabilité ; `ci`/`chore`/`build`/`config`/`release` → chaîne ; `docs`/`backlog`/`roadmap` → documentation) et, pour les 184 messages sans préfixe (mars et avril surtout, plus les fusions), par mots-clés dans le message ou le nom de branche.
+
+**Numérotation** : 1 titre, 2 sommaire, 3 démonstration, 4 à 8 planifier, 9 à 12 piloter, 13 arbitrage, 14 à 17 management, 18 et 19 compétences, 20 à 22 rendre compte, 23 bilan, 24 à 31 annexes A1 à A8. Correspondance avec la numérotation du matin : 4 → 4, 5 → 5, 6 + 7 → 6, 8 → 7, 9 → 8, 10 + 11 → 9, 12 → 10, 13 → 11, 14 → 12, 15 + 16 → 13, 17 → 14, 18 → 15, 19 → 16, 20 → 17, 21 + 22 → 18, 23 → 19, 24 → 20, 25 → 21, 26 → 22, 27 → 23, 28 à 35 → 24 à 31.

@@ -14,9 +14,9 @@
 > - Les tâches sont assignées aux membres de l'équipe selon leurs compétences (matrice RACI, RASCI) et tiennent compte des personnes en situation de handicap.
 > - Les points de vigilance sont soulignés.
 
-Alimente les diapositives 4 à 9.
+Alimente les diapositives 4 à 8.
 
-**Rappel de posture** : l'exécution a été menée seule, et aucune équipe n'est simulée. La matrice RACI est construite sur les acteurs réels du projet : moi, les agents d'assistance auxquels une partie de l'exécution a été déléguée, le commanditaire, les utilisateurs, les prestataires.
+**Rappel de posture** : l'exécution a été menée seule, et aucune équipe n'est simulée. La matrice RACI est construite sur les acteurs réels du projet : moi, le commanditaire, les utilisateurs, les prestataires.
 
 ---
 
@@ -174,7 +174,7 @@ Chiffrage établi au cadrage (Bloc 1) du 20 mars au 30 avril, rétrospectif sur 
 
 ## 4. Les ressources nécessaires
 
-### 4.1 Ressources humaines : une personne, et ce qu'elle délègue
+### 4.1 Ressources humaines : une personne, et trois acteurs autour d'elle
 
 Le projet a été mené par **une seule personne**, qui cumule le développement, l'architecture, l'exploitation et le pilotage. Les 98 J/H du chiffrage sont une charge totale, pas une répartition entre profils : le Bloc 1 les a chiffrés par lot, et c'est par lot qu'ils se lisent.
 
@@ -190,11 +190,11 @@ Trois autres acteurs sont réels, et ils figurent dans la matrice RACI du § 5 :
 
 | Acteur | Ce qu'il apporte | Depuis quand |
 |--------|------------------|--------------|
-| **Agents d'assistance au développement** | L'exécution déléguée sous cadre écrit : implémentation, tests, refactorisations, montées de dépendances. **537 des 833 commits** sont co-signés par un agent, soit 64 %, aucun avant le 13 mai 2026, 65 à 84 % par mois ensuite | 13 mai 2026 |
 | **Commanditaire** | Le formateur, puis le jury : quatre échéances de restitution, la validation de la conformité au référentiel | Cadrage |
 | **Utilisateurs** | 17 comptes : retours, recette informelle, questionnaire de satisfaction | 19 mai 2026, v1.0.0 |
+| **Prestataires** | L'hébergement, le catalogue de films, le transport des e-mails, la supervision : des services exécutés par des tiers, sous contrat d'usage | 27 février 2026 |
 
-Un agent n'est pas un membre d'équipe : il n'a ni motivation ni progression, et le dire fait partie de la présentation. Ce que sa délégation exige, en revanche, est exactement ce qu'exige une délégation à une personne : un cadre écrit avant, des points d'arrêt aux moments de décision, un contrôle en sortie. Le chapitre 4 en fait la matière du management réel du projet.
+Aucun acteur intermédiaire n'est ajouté : tout ce qui n'est pas exécuté par un prestataire l'a été par une personne, et le chapitre 4 montre comment cette personne a affecté ses missions dans le temps et à l'automatisation.
 
 ### 4.2 Ressources matérielles et techniques
 
@@ -225,34 +225,34 @@ Le point à souligner : **aucune licence payante**. C'est une décision de conce
 
 Convention : **R** réalise, **A** approuve et rend compte, **C** est consulté, **I** est informé. Les acteurs sont ceux qui ont réellement existé sur le projet.
 
-| Activité | Moi | Agents IA | Commanditaire | Utilisateurs | Prestataires |
-|----------|:---:|:---------:|:-------------:|:------------:|:------------:|
-| Cadrage et périmètre de version | A, R | I | C | C | |
-| Architecture applicative | A, R | C | I | | |
-| Modèle de données et contrat d'interface | A, R | C | | | |
-| Développement de l'interface | A | R | | I | |
-| Développement de l'API | A | R | | | |
-| Intégration des services tiers | A | R | | | C |
-| Accessibilité et inclusion | A, R | R | | C | |
-| Chaîne d'intégration et de déploiement | A, R | C | | | |
-| Supervision et exploitation | A, R | I | I | | R |
-| Sécurité applicative | A, R | C | I | | |
-| Recette et tests de bout en bout | A, R | R | C | C | |
-| Arbitrage de périmètre ou de charge | A, R | | C | C | |
-| Mise en production | A, R | | I | I | R |
-| Restitution et compte rendu | A, R | | C | I | |
+| Activité | Moi | Commanditaire | Utilisateurs | Prestataires |
+|----------|:---:|:-------------:|:------------:|:------------:|
+| Cadrage et périmètre de version | A, R | C | C | |
+| Architecture applicative | A, R | I | | |
+| Modèle de données et contrat d'interface | A, R | | | |
+| Développement de l'interface | A, R | | I | |
+| Développement de l'API | A, R | | | |
+| Intégration des services tiers | A, R | | | C |
+| Accessibilité et inclusion | A, R | | C | |
+| Chaîne d'intégration et de déploiement | A, R | | | |
+| Supervision et exploitation | A, R | I | | R |
+| Sécurité applicative | A, R | I | | |
+| Recette et tests de bout en bout | A, R | C | C | |
+| Arbitrage de périmètre ou de charge | A, R | C | C | |
+| Mise en production | A, R | I | I | R |
+| Restitution et compte rendu | A, R | C | I | |
 
 Trois propriétés de cette matrice, à dire explicitement :
 
-1. **Le A est toujours le mien.** À une personne, la matrice ne répartit pas la responsabilité : elle rend visible ce qui est délégué et ce qui ne l'est jamais. Cadrage, arbitrage, mise en production et restitution ne portent aucun R en dehors de ma colonne.
-2. **Le R des agents dit ce qui est délégué, et sous quel contrôle.** Développement, tests, intégration des services tiers : chaque ligne où un agent réalise porte aussi mon A sur la ligne « recette et tests », c'est-à-dire un contrôle en sortie. Un R sans ce contrôle serait de l'abandon, pas de la délégation.
+1. **Le A et le R sont toujours les miens.** À une personne, la matrice ne répartit pas la responsabilité : elle rend visible qui est consulté et informé, et ce qu'un prestataire exécute. Aucune ligne ne porte de R en dehors de ma colonne, sauf ce que des tiers exécutent sous contrat.
+2. **La matrice est écrite pour le jour où une personne rejoint le projet.** La ligne « revue, tests et intégration » est celle qui changerait en premier : c'est là que le R se partagerait, et c'est la faiblesse que la grille de compétences du chapitre 5 désigne.
 3. **Les acteurs externes figurent dans la matrice.** Le commanditaire est consulté sur le périmètre et les arbitrages, informé des mises en production ; les utilisateurs sont consultés sur l'accessibilité, la recette et chaque version ; les prestataires exécutent l'hébergement et la supervision. Un acteur absent de la matrice est un acteur qu'on oubliera de solliciter.
 
 ### 5.1 Prise en compte du handicap
 
 Le critère est explicitement demandé par la grille. Il est traité à trois niveaux, et le premier commence par la vérité : **personne en situation de handicap n'a travaillé sur le projet.**
 
-**Au niveau de l'affectation.** La ligne « accessibilité et inclusion » de la matrice porte un responsable identifié, moi, et un réalisateur, les agents qui écrivent et exécutent les tests d'accessibilité. Aucune activité de la matrice ne présuppose une capacité physique particulière : tout le travail du projet est écrit, versionné et asynchrone.
+**Au niveau de l'affectation.** La ligne « accessibilité et inclusion » de la matrice porte un responsable identifié, moi, et les utilisateurs y sont consultés. Aucune activité de la matrice ne présuppose une capacité physique particulière : tout le travail du projet est écrit, versionné et asynchrone.
 
 **Au niveau de l'organisation.** Ce qui est en place le permettrait sans réunion ni présence : le contexte du projet est intégralement en texte structuré, lisible au lecteur d'écran et au clavier, et aucun dispositif n'exige la simultanéité. Pour une personne en situation de handicap qui rejoindrait le projet, les aménagements seraient accordés à la demande et sans justification médicale à produire : poste adapté, outillage compatible lecteur d'écran et navigation exclusivement au clavier, télétravail et horaires aménagés, temps supplémentaire sur les activités de recette et de formation. C'est un engagement, pas un fait : il n'a jamais eu à s'appliquer.
 
@@ -282,12 +282,11 @@ Sept points, chacun avec son indicateur de contrôle et sa parade. Les deux prem
 
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
-| 4 | Planifier : un flux, deux horizons (méthodologie et outils) | 1, 2 |
+| 4 | Planifier : Kanban léger, deux horizons de temps | 1, 2 |
 | 5 | Le planning en cinq phases | 3.1, 3.2 |
-| 6 | Quatre lots, 98 jours-homme | 3.3, 3.4 |
-| 7 | Les ressources nécessaires : une personne, et ce qu'elle délègue | 4 |
-| 8 | La matrice RACI, avec les acteurs réels | 5 |
-| 9 | Sept points de vigilance, un seul d'organisation | 6 |
+| 6 | Quatre lots, 98 jours-homme, et les ressources | 3.3, 3.4, 4 |
+| 7 | La matrice RACI, avec les acteurs réels | 5 |
+| 8 | Sept points de vigilance, un seul d'organisation | 6 |
 
 ## 8. Questions probables sur ce chapitre
 
@@ -296,5 +295,5 @@ Sept points, chacun avec son indicateur de contrôle et sa parade. Les deux prem
 | Vos documents de cadrage sont datés de juin, votre phase d'étude de février. Comment l'expliquez-vous ? | Les décisions d'étude, comparatif de stack, périmètre MoSCoW, faisabilité, ont été prises en février et mars et sont tracées dans l'historique du dépôt et dans les choix techniques eux-mêmes. Leur **formalisation documentaire** est intervenue en juin pour la restitution du Bloc 1. La décision précède le document, ce qui est une faiblesse de traçabilité assumée et corrigée depuis, les arbitrages étant désormais consignés au moment où ils sont pris |
 | Comment avez-vous estimé les 98 J/H ? | Méthode analogique, par comparaison entre lots de complexité voisine, avec une marge d'incertitude de 20 % assumée au chiffrage. Aucune méthode paramétrique n'était applicable faute d'historique de projets comparables |
 | Un Gantt n'est-il pas contradictoire avec Kanban ? | Ils n'opèrent pas au même horizon. Le Gantt porte les phases et les jalons de version, le tableau de flux porte le travail de la semaine. Aucune fiche du tableau ne porte de date de fin engagée, seules les versions en portent |
-| Une matrice RACI à une personne, à quoi sert-elle ? | À rendre visible ce qui est délégué et sous quel contrôle. Le A ne bouge pas ; l'information est dans la colonne des agents, et dans les lignes qui n'en portent aucun : cadrer, arbitrer, mettre en production, rendre compte. Le jour où une personne rejoint le projet, la matrice est déjà écrite |
+| Une matrice RACI à une personne, à quoi sert-elle ? | À rendre visible qui est consulté et informé, et ce qu'un tiers exécute. Le A et le R ne bougent pas ; l'information est dans les autres colonnes. Le jour où une personne rejoint le projet, la matrice est déjà écrite, et la ligne « revue, tests et intégration » est celle qui changerait en premier |
 | La prise en compte du handicap n'est-elle pas une clause de style ? | Elle porte un responsable identifié dans la matrice, des aménagements nommés et accordés sans justification à produire, et une exigence d'accessibilité du produit vérifiée automatiquement à chaque livraison, à son niveau maximum sur tous les écrans |
