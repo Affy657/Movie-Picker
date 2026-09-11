@@ -2053,8 +2053,9 @@
       lead: "{{commits}} commits depuis février 2026. Chaque palier est parti en production avant que le suivant ne s'ouvre. La V1.6 est en cours, et les {{planned}} derniers repères sont la suite prévue, pas du travail fait.",
       plannedBadge: 'à venir',
       currentBadge: 'en cours',
+      unplannedSpan: 'Entre la V1.8 et la V2',
       unplannedDetail:
-        'Entre les deux, des versions qui ne sont pas encore cadrées. Leur nombre et leur contenu dépendront des retours d’usage.',
+        'Des versions qui ne sont pas encore cadrées. Leur nombre et leur contenu dépendront des retours d’usage.',
       techHeading: 'Les chantiers techniques ouverts',
       terraform: 'Infrastructure en code',
       terraformHint:

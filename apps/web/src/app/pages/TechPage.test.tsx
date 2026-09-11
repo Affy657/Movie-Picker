@@ -253,6 +253,9 @@ describe('TechPage', () => {
     expect(unplanned).toHaveLength(1);
     expect(unplanned[0]).toBe(steps.at(-2));
     expect(unplanned[0]?.textContent).toMatch(/pas encore/i);
+    expect(unplanned[0]?.textContent).toMatch(/V1\.8.*V2/);
+    expect(unplanned[0]?.querySelector('h3')).toBeNull();
+    expect(unplanned[0]?.querySelectorAll('li')).toHaveLength(0);
 
     const current = steps.find((step) => state(step) === 'current') as Element;
     expect(current).toHaveTextContent('V1.6');

@@ -2020,8 +2020,9 @@ export const en: Locale = {
       lead: '{{commits}} commits since February 2026. Every milestone reached production before the next one opened. V1.6 is under way, and the last {{planned}} markers are the plan ahead, not work already done.',
       plannedBadge: 'ahead',
       currentBadge: 'in progress',
+      unplannedSpan: 'Between V1.8 and V2',
       unplannedDetail:
-        'In between, versions that are not scoped yet. How many there are, and what they carry, will depend on how the product gets used.',
+        'Versions that are not scoped yet. How many there are, and what they carry, will depend on how the product gets used.',
       techHeading: 'The open technical work',
       terraform: 'Infrastructure as code',
       terraformHint:
