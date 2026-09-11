@@ -12,6 +12,7 @@ Découpage par version, côté **métier / utilisateur** puis côté **plateform
 - **V1, V1.1, V1.2** : releases produit progressives sur la spec complète, sans casser le cœur métier.
 - **V1.3 à V1.8** : polish, enrichissement, outils hôte et nouvelles surfaces produit.
 - **Backlog** : idées et sujets non planifiés sur une date de release, triés régulièrement. Un backlog produit et un backlog tech, séparés, à la fin du fichier.
+- **Une branche par version** : chaque version se développe sur une branche qui porte son nom (`v1.6`, `v1.7`, …). Toutes les features de la version sont livrées sur cette branche, et elle n'est fusionnée dans `master` qu'une fois la version complète. Sur cette branche, la CI GitHub Actions n'est pas bloquante ; la production part à la fusion.
 - **Tailles t-shirt** : chaque item porte une estimation de charge, indépendante de sa valeur produit, pour comparer les versions autrement qu'au nombre de tickets. Échelle calibrée sur l'empreinte réelle des features déjà livrées.
   - `S` : moins de 800 lignes, une seule couche (front ou API), pas de changement de modèle.
   - `M` : 800 à 2000 lignes, front et API, au plus un champ ajouté au modèle.
