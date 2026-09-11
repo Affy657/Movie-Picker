@@ -20,11 +20,12 @@ Découpage par version côté **métier / utilisateur**.
   - `L` : 2000 à 5000 lignes, nouvelle entité ou nouveaux endpoints, plusieurs écrans touchés.
   - `XL` : au-delà, chantier structurant à découper en sous-tâches. Aucune feature livrée n'a atteint cette bande à ce jour.
   - `?` : périmètre pas assez défini pour être estimé.
+- **Poids d'une version** : somme des tailles de ses items, reportée dans le titre. `S` vaut 1, `M` vaut 3, `L` vaut 8, `XL` vaut 20 ; un `?` ne compte pas. C'est ce nombre qui permet de comparer deux versions et de décider d'y ajouter ou d'en retirer une feature.
 - **Format d'une entrée** : une ligne, ``- <statut> `taille` **Titre** (version) : description``. La description tient en une à deux phrases et 300 caractères au plus, et dit ce que l'utilisateur obtient plutôt que comment c'est construit. Le détail vit dans le code, la spec et les tests.
 
 ---
 
-## ✅ MVP – Livré
+## ✅ MVP – Livré (32 points)
 
 **Objectif** : application démoable avec le parcours Movie Picker minimal.
 
@@ -38,7 +39,7 @@ Découpage par version côté **métier / utilisateur**.
 
 ---
 
-## ✅ V1 – Livré
+## ✅ V1 – Livré (42 points)
 
 **Objectif** : compte utilisateur, config hôte, marqueur « déjà vu », confort de partage, enrichissement film léger.
 
@@ -61,7 +62,7 @@ Découpage par version côté **métier / utilisateur**.
 
 ---
 
-## ✅ V1.1 – Livré
+## ✅ V1.1 – Livré (23 points)
 
 **Objectif** : contenu film riche, options de soirée, historique, UX avancée.
 
@@ -76,7 +77,7 @@ Découpage par version côté **métier / utilisateur**.
 
 ---
 
-## ✅ V1.2 – Livré
+## ✅ V1.2 – Livré (23 points)
 
 **Objectif** : vie sociale de l'app, identité utilisateur et engagement.
 
@@ -91,7 +92,7 @@ Découpage par version côté **métier / utilisateur**.
 
 ---
 
-## ✅ V1.3 – Livré
+## ✅ V1.3 – Livré (28 points)
 
 **Objectif** : polish et qualité perçue, avec roue visuelle, finitions UX, conformité légale et enrichissement des données film.
 
@@ -109,7 +110,7 @@ Découpage par version côté **métier / utilisateur**.
 
 ---
 
-## ✅ V1.4 – Livré
+## ✅ V1.4 – Livré (49 points)
 
 **Objectif** : outils hôte avancés, bibliothèque personnelle, engagement utilisateur et ouverture de la plateforme, avec watchlist, intégration Letterboxd, sélection manuelle, streak de soirées, connexion sociale, dons, bouton pour proposer une idée et modale de nouveautés.
 
@@ -126,7 +127,7 @@ Découpage par version côté **métier / utilisateur**.
 
 ---
 
-## ✅ V1.5 – Livré
+## ✅ V1.5 – Livré (36 points)
 
 **Objectif** : home page inspirationnelle, qui transforme l'accueil en vrai point d'entrée du produit, accessible sans compte et enrichi une fois connecté.
 
@@ -160,7 +161,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## 📋 V1.6 – Planifiée
+## 📋 V1.6 – Planifiée (26 points, 4 restants)
 
 **Objectif** : compléter la boucle sociale entamée en V1.2 et ritualiser la soirée. Items classés par valeur utilisateur décroissante.
 
@@ -173,35 +174,48 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## 📋 V1.7 – Planifiée
+## 📋 V1.7 – Planifiée (34 points)
 
-**Objectif** : outils hôte avancés, passage au temps réel, finitions du profil et sécurité du compte. Reprend les items de valeur utilisateur plus faible ou dépendants d'un chantier de plateforme.
+**Objectif** : faire passer la soirée en temps réel et armer l'hôte, avec la sécurité du compte en complément.
 
 - ⬜ `L` **Thème imposé par l'hôte** : contrainte de proposition posée par l'hôte (genre, décennie, acteur, réalisateur ou classification d'âge maximale) ; les films qui ne la respectent pas sont refusés avec un message explicite, et la contrainte s'affiche en bannière sur la page soirée.
 - ⬜ `M` **Avertissements de contenu** : badges violence / horreur / 18+ sur les fiches films ; option hôte « masquer les films 18+ » pour soirées familiales.
 - ⬜ `L` **Co-hôte** : l'hôte peut désigner un ou plusieurs participants comme co-hôtes ; mêmes droits que l'hôte (lancer la roue, expulser un participant, modifier les paramètres) sauf supprimer la soirée.
-- ⬜ `XL` **Synchronisation temps réel et présence** : remplacer le polling actuel par une connexion temps réel ; propositions, votes et arrivées de participants apparaissent instantanément sans délai perceptible ; indicateur de présence sur la page soirée (avatars des participants actuellement connectés, signal « en train de proposer un film »).
-- ⬜ `L` **Palette de commandes (Cmd+K)** : accès clavier global aux actions et à la navigation ; recherche floue sur les soirées, les films et les utilisateurs, création de soirée, changement de thème ; navigation entièrement au clavier dans la palette.
-- ⬜ `M` **Top 3 films préférés sur le profil** : sélectionner et afficher 3 films favoris sur son profil public `/u/:handle` via une recherche TMDB ; cartes visibles par tous les visiteurs, modifiables depuis les paramètres du profil.
-- ⬜ `S` **Détail des films vus** : le compteur « films vus » des statistiques du profil devient cliquable ; ouvre la liste des films marqués « déjà vu » par l'utilisateur sur Movie Picker.
-- ⬜ `M` **Photo de profil personnalisée** : téléverser une image comme photo de profil, en remplacement de l'avatar généré actuel.
+- ⬜ `L` **Synchronisation temps réel** : remplacer le polling par une connexion temps réel ; propositions, votes et arrivées de participants apparaissent sans délai perceptible.
+- ⬜ `M` **Présence sur la page soirée** : avatars des participants actuellement connectés et signal « en train de proposer un film », posés sur la connexion temps réel.
 - ⬜ `M` **Double authentification (2FA/TOTP)** : code à six chiffres généré par une application d'authentification, activable en option dans les paramètres de compte.
-- ⬜ `S` **Pioche aléatoire dans la watchlist** : bouton qui tire un film au hasard parmi les films à voir de la watchlist, proposable dans une soirée en un clic.
-- ⬜ `S` **Écart watchlist Movie Picker / Letterboxd** : pour les comptes synchronisés, badge sur les films de la watchlist Movie Picker absents de celle de Letterboxd, typiquement ceux ajoutés depuis une soirée. Dépend de l'intégration Letterboxd (V1.4).
 - ⬜ `S` **FAQ / Centre d'aide** : page qui répond aux questions récurrentes (fonctionnement de la roue, invitation, votes), accessible depuis le footer.
+
 
 ---
 
-## Backlog produit (non priorisé sur une release)
+---
+
+## 📋 V1.8 – Planifiée (39 points)
+
+**Objectif** : ce que chacun garde de ses soirées, des notes aux films vus, et le confort personnel au quotidien.
+
+- ⬜ `M` **Note d'un film vu** : noter un film qu'on vient de voir directement dans Movie Picker, sur l'échelle choisie dans les paramètres de compte. Un bouton renvoie vers sa fiche Letterboxd ou IMDb pour l'y noter aussi.
+- ⬜ `L` **Import des films vus depuis Letterboxd** : reprendre les films déjà vus d'un compte Letterboxd avec la note posée sur chacun, qui alimentent le marqueur « déjà vu » et les notes Movie Picker. Complète la synchronisation de watchlist livrée en V1.4.
+- ⬜ `L` **Partage de soirée en story** : carte recap partageable après la soirée, avec le ou les films gagnants, les participants et les notes de chacun, au format des stories des réseaux sociaux.
+- ⬜ `L` **Palette de commandes (Cmd+K)** : accès clavier global aux actions et à la navigation ; recherche floue sur les soirées, les films et les utilisateurs, création de soirée, changement de thème.
+- ⬜ `M` **Top 3 films préférés sur le profil** : sélectionner et afficher trois films favoris sur son profil public `/u/:handle` via une recherche TMDB, visibles par tous et modifiables depuis les paramètres.
+- ⬜ `M` **Photo de profil personnalisée** : téléverser une image comme photo de profil, en remplacement de l'avatar généré actuel.
+- ⬜ `M` **Consultation hors-ligne de la dernière soirée** : la dernière vue soirée reste lisible sans réseau, avec une bannière « Données en cache, reconnexion en cours ». Lecture seule : les actions attendent le retour du réseau.
+- ⬜ `S` **Détail des films vus** : le compteur « films vus » des statistiques du profil devient cliquable et ouvre la liste des films marqués « déjà vu ».
+- ⬜ `S` **Pioche aléatoire dans la watchlist** : bouton qui tire un film au hasard parmi les films à voir de la watchlist, proposable dans une soirée en un clic.
+- ⬜ `S` **Écart watchlist Movie Picker / Letterboxd** : pour les comptes synchronisés, badge sur les films de la watchlist Movie Picker absents de celle de Letterboxd, typiquement ceux ajoutés depuis une soirée.
+
+---
+
+## Backlog produit (non priorisé sur une release) (156 points, 1 non estimé)
 
 > **Note V2, application mobile** : l'app mobile (Expo / React Native) était un projet de cours, archivée dans `archive/mobile` (mai 2026). Pour la V2, l'objectif est une app mobile propre, pleinement intégrée à la plateforme. Pas d'engagement de date.
 
+- `L` **Reprise des actions faites hors-ligne** : file d'attente des votes et propositions passés sans réseau, rejoués et arbitrés à la reconnexion. Depend de la synchronisation temps réel (V1.7) et de la consultation hors-ligne (V1.8).
 - `XL` **Mode Battle / Tournoi** : alternative à la roue, l'hôte lance un tournoi en duels ; deux films s'affrontent, les participants votent, et le gagnant passe au tour suivant jusqu'au champion.
-- `XL` **Mode hors-ligne léger** : cache de la dernière vue soirée, bannière « Données en cache, reconnexion en cours ». Complexité élevée dans un contexte collaboratif temps réel, à traiter comme un sprint dédié.
 - `M` **i18n étendue** : langues supplémentaires au-delà de FR / EN ; variantes régionales, RTL si besoin.
 - `L` **Cercles d'amis** : groupes persistants d'utilisateurs réutilisables d'une soirée à l'autre ; invitation en un clic de tout le cercle.
-- `M` **Note d'un film vu** : noter sur 5 un film qu'on vient de voir directement dans Movie Picker ; bouton pour aller aussi le noter sur Letterboxd / IMDb (redirection vers la fiche film).
-- `L` **Partage de soirée (story)** : carte recap partageable (film gagnant, participants, note de chacun) à poster sur les réseaux.
 - `M` **Réactions rapides sur les films** : emojis (❤️ 🔥 😴…) posés sur une card film en complément des votes up/down, plus expressif, moins binaire.
 - `L` **Badges / achievements** : 4 badges (Organisateur, Cinéphile, Faiseur de rois, Juré assidu), code de calcul supprimé ; à concevoir avec un design abouti et réimplémenter.
 - `M` **Compatibilité ciné** : score de compatibilité cinématographique avec un ami basé sur les films « déjà vu » en commun ; nécessite les statistiques utilisateur et potentiellement l'intégration Letterboxd pour être complet.
