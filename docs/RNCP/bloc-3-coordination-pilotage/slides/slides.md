@@ -36,7 +36,7 @@ Ne rien commenter ici. Enchainer immediatement sur la diapo 2.
 <div class="lede">Movie Picker choisit à plusieurs quel film regarder. En ligne depuis février, et utilisé.</div>
 
 <div class="kpi grid-cols-4 mt-6">
-<div><b>9</b><span>versions en production<br>du 27/02 au 04/09/2026</span></div>
+<div><b>10</b><span>versions en production<br>du 27/02 au 07/09/2026</span></div>
 <div><b>17</b><span>comptes utilisateurs<br>19 soirées créées</span></div>
 <div><b>74 %</b><span>des soirées menées<br>jusqu'au tirage</span></div>
 <div><b>100 %</b><span>de disponibilité<br>sondes sur 3 continents</span></div>
@@ -265,10 +265,10 @@ liste de souhaits.
 <div class="row"><div class="lab">Lot 2, migration de l'API</div><div class="track"><i style="grid-column:20/27"></i></div></div>
 <div class="row"><div class="lab">Lot 3, V1 produit</div><div class="track"><i style="grid-column:27/82"></i></div></div>
 <div class="row"><div class="lab">Lot 4, clôture du titre</div><div class="track"><i style="grid-column:83/180"></i></div></div>
-<div class="row"><div class="lab">V1.1 à V1.4.1, <i>hors chiffrage</i></div><div class="track"><i class="off" style="grid-column:83/191"></i></div></div>
+<div class="row"><div class="lab">V1.1 à V1.5.0, <i>hors chiffrage</i></div><div class="track"><i class="off" style="grid-column:83/194"></i></div></div>
 
 <div class="sec">Restitution</div>
-<div class="row"><div class="lab">Mises en production, v0.1.0 → v1.4.1</div><div class="track"><i style="grid-column:1/191"></i></div></div>
+<div class="row"><div class="lab">Mises en production, v0.1.0 → v1.5.0</div><div class="track"><i style="grid-column:1/194"></i></div></div>
 <div class="row"><div class="lab">Restitutions au commanditaire</div><div class="track"><b style="grid-column:105/106"></b><b style="grid-column:147/148"></b><b style="grid-column:176/177"></b><b style="grid-column:202/203"></b></div></div>
 
 </div>
@@ -325,8 +325,8 @@ Contenu de chaque phase, en balayant le diagramme :
 - CONCEPTION : modele de donnees, architecture hexagonale, contrat d'interface,
   systeme de composants mobile-first.
 - REALISATION : les 4 lots. La barre ORANGE est celle qui compte : les versions
-  V1.1 a V1.4.1 sont hors du chiffrage initial. On y revient en diapo 15.
-- RESTITUTION : deux registres, les 9 mises en production vers l'utilisateur, et
+  V1.1 a V1.5.0 sont hors du chiffrage initial. On y revient en diapo 15.
+- RESTITUTION : deux registres, les 10 mises en production vers l'utilisateur, et
   les 4 restitutions du titre vers le commanditaire.
 
 LE POINT A NE PAS MANQUER : dire explicitement que les barres se recouvrent, et
@@ -728,6 +728,7 @@ dont tous les voyants sont au vert. C'est trente secondes bien depensees.
 | 1.0.0 → 1.3.2 | mai → juillet | 6 à 19 j |
 | 1.3.2 → 1.4.0 | 25/07 → 25/08 | 31 j |
 | 1.4.0 → 1.4.1 | 25/08 → 04/09 | 10 j |
+| 1.4.1 → 1.5.0 | 04/09 → 07/09 | 3 j |
 
 <div class="note mt-3 text-xs">
 Un seul intervalle est anormal : les <b>81 jours</b> entre le prototype et la première version de production. Il contient la migration de l'API — <b>c'est cet indicateur qui a transformé une dérive en arbitrage explicite.</b> C'est le chapitre 3.
@@ -867,19 +868,19 @@ septembre porte sur huit executions.
 <i style="width:74%;background:#d97706">65 j · 74 %</i>
 </div>
 
-<div class="text-xs opacity-75 mt-4 mb-1">D'où viennent les 61 items de périmètre livrés</div>
+<div class="text-xs opacity-75 mt-4 mb-1">D'où viennent les 74 items de périmètre livrés</div>
 <div class="stack">
-<i style="width:39%;background:var(--s1)">24 items</i>
-<i style="width:61%;background:#d97706">37 items · 61 %</i>
+<i style="width:31%;background:var(--s1)">23 items</i>
+<i style="width:69%;background:#d97706">51 items · 69 %</i>
 </div>
 
 <div class="legend mt-2">
 <span style="--c:var(--s1)">Lots 1 à 3, chiffrés au cadrage</span>
-<span style="color:#d97706">Hors chiffrage initial (V1.1 → V1.4.1)</span>
+<span style="color:#d97706">Hors chiffrage initial (V1.1 → V1.5.0)</span>
 </div>
 
 <div class="alert mt-4 text-sm">
-<b>Ce n'était pas une dérive de charge, c'était un glissement de périmètre.</b> Sept livraisons après la V1, dont quatre versions mineures, <b>jamais chiffrées</b>. Le périmètre a plus que doublé pendant que la charge restait dans l'enveloppe.
+<b>Ce n'était pas une dérive de charge, c'était un glissement de périmètre.</b> Huit livraisons après la V1, dont cinq versions mineures, <b>jamais chiffrées</b>. Le périmètre a triplé pendant que la charge restait dans l'enveloppe.
 </div>
 
 </div>
@@ -894,7 +895,7 @@ septembre porte sur huit executions.
 | 59 PR de dépendances pour 9 fusionnées | Regroupement mensuel, audit à chaque commit | **0 vulnérabilité** ouverte, sans fusion non relue |
 
 <div class="alert mt-4">
-<b>Ce que le suivi n'a pas vu.</b> Aucun indicateur ne comparait le périmètre courant au périmètre chiffré : le glissement de 37 items n'a été visible qu'<i>a posteriori</i>. <b>C'est le premier compteur que j'ajouterais.</b>
+<b>Ce que le suivi n'a pas vu.</b> Aucun indicateur ne comparait le périmètre courant au périmètre chiffré : le glissement de 51 items n'a été visible qu'<i>a posteriori</i>. <b>C'est le premier compteur que j'ajouterais.</b>
 </div>
 
 </div>
@@ -1094,7 +1095,7 @@ decoratif.
 | Réécrire à l'identique du contrat | 12 routes · 944 lignes TS → **4 653 lignes C#** |
 | Bascule sans double maintenance | Ancienne API retirée **15 min** après |
 | Ne pas décaler la V1 | **v1.0.0 le 19/05**, aucune échéance décalée |
-| Décision non rejouée | **Aucun retour arrière**, 8 versions depuis |
+| Décision non rejouée | **Aucun retour arrière**, 9 versions depuis |
 
 <div class="alert mt-3 text-xs">
 <b>Ce qui n'a pas été tenu.</b> L'objectif était « aucune modification du front » : le réel est <b>87 lignes sur 9 fichiers</b>. À plusieurs, c'était un incident d'intégration détecté en revue — à une personne, il est passé inaperçu. Et le lot est chiffré 13 J/H <b>a posteriori</b> : l'historique ne permet pas de le vérifier au jour près.
@@ -1111,7 +1112,7 @@ problematique. Les deux moities comptent.
 Diapo courte, ne pas deborder. Deux arguments seulement, ils sont a l'ecran : la
 fenetre qui se referme, et le cout non nul de l'option A. Ne pas les relire.
 
-Puis le tableau de droite en un seul geste : « aucun retour arriere, huit
+Puis le tableau de droite en un seul geste : « aucun retour arriere, neuf
 versions produit livrees sur ce socle depuis. »
 
 Le bandeau orange est OBLIGATOIRE, ne pas le sauter par manque de temps. C'est
@@ -1683,7 +1684,7 @@ projet dont on est proprietaire — ce n'est pas un modele.
 
 # 6. Rendre compte : les points de validation
 
-<div class="lede"><b>Deux commanditaires, deux rythmes.</b> Le jury valide la conformité au référentiel sur 4 échéances. Les 17 utilisateurs valident que ce qui est livré sert, sur 9 versions.</div>
+<div class="lede"><b>Deux commanditaires, deux rythmes.</b> Le jury valide la conformité au référentiel sur 4 échéances. Les 17 utilisateurs valident que ce qui est livré sert, sur 10 versions.</div>
 
 <div class="tl mt-3">
 <div><b>0.1.0</b><span>27/02<br>Parcours minimal</span></div>
@@ -1695,6 +1696,7 @@ projet dont on est proprietaire — ce n'est pas un modele.
 <div><b>1.3.2</b><span>25/07<br>Observable</span></div>
 <div><b>1.4.0</b><span>25/08<br>Au-delà de la soirée</span></div>
 <div><b>1.4.1</b><span>04/09<br>Sans compte</span></div>
+<div><b>1.5.0</b><span>07/09<br>Explorer</span></div>
 </div>
 
 <div class="grid grid-cols-2 gap-6 mt-4 text-sm">
@@ -1740,7 +1742,7 @@ demonstration de conformite, le second attend de savoir ce qui a change pour lui
 Un projet qui n'a qu'un seul format de compte rendu en sert mal au moins un des
 deux.
 
-Ne PAS lire les neuf versions. Balayer la frise d'un geste et dire que chaque
+Ne PAS lire les dix versions. Balayer la frise d'un geste et dire que chaque
 point est DATE et VERIFIABLE, adosse a une etiquette posee sur le commit exact
 deploye.
 
@@ -1813,7 +1815,7 @@ seul, 18 % conduit a « la fonctionnalite ne marche pas, on l'abandonne ».
 
 Souligner le niveau 1, le seul compte rendu POUSSE : un journal des versions que
 personne n'ouvre est une archive, pas un compte rendu. A DIRE HONNETEMENT : ce
-canal n'existe que depuis la v1.4.0. Les huit versions precedentes n'ont ete
+canal n'existe que depuis la v1.4.0. Les sept versions precedentes n'ont ete
 annoncees qu'au niveau 2. Le dispositif s'est corrige en cours de projet, il
 n'etait pas complet des le depart.
 -->
@@ -1969,7 +1971,7 @@ En ligne, utilisé, et couvrant **l'intégralité du parcours annoncé** :
 <div class="text-lg my-4">organiser · inviter · proposer · voter · trancher · garder une trace</div>
 
 <div class="text-sm opacity-80">
-Non montré faute de temps, accessible à la demande : la liste personnelle « Ma liste » et la synchronisation avec un service tiers, les notifications, l'installation sur téléphone, la connexion avec un compte Google ou GitHub.
+Non montré faute de temps, accessible à la demande : l'accueil d'exploration et ses sélections, la liste personnelle « Ma liste » et la synchronisation avec un service tiers, les notifications, l'installation sur téléphone, la connexion avec un compte Google ou GitHub.
 </div>
 
 </div>
@@ -2046,7 +2048,7 @@ La régularité du commit n'était pas une exigence de qualité au départ. Elle
 
 **L'arbitrage n'a pas été perdu : il n'a pas été posé.** Deux fois.
 
-Sur le **périmètre** — 37 items hors chiffrage, qu'aucun indicateur ne comparait au prévu. Sur la **charge** — dix jours consécutifs en août plutôt que décider ce qui ne serait pas livré.
+Sur le **périmètre** — 51 items hors chiffrage, qu'aucun indicateur ne comparait au prévu. Sur la **charge** — dix jours consécutifs en août plutôt que décider ce qui ne serait pas livré.
 
 </div>
 </div>
@@ -2347,7 +2349,8 @@ Mesures anti-chaîne d'approvisionnement : actions épinglées par SHA, images p
 
 | Version | Date | Contenu principal |
 |---------|------|-------------------|
-| **1.4.1** | 04/09/2026 | Navigation sans compte, landing bilingue |
+| **1.5.0** | 07/09/2026 | Accueil d'exploration, sagas, sélections, landing refondue |
+| 1.4.1 | 04/09/2026 | Navigation sans compte, landing bilingue |
 | 1.4.0 | 25/08/2026 | Watchlist, Letterboxd, choix manuel, flamme, OAuth |
 | 1.3.2 | 25/07/2026 | Supervision, sonde de readiness, canal de support |
 | 1.3.1 | 08/07/2026 | Filtre de durée, échelle de notes, CSP, refonte CI/CD |

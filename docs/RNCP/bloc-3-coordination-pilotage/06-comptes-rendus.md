@@ -28,7 +28,7 @@ Ces deux commanditaires n'attendent ni la même chose ni au même rythme, et c'e
 |--|---------------------------|------------------------------|
 | Qui | Formateur et jury | Les 17 utilisateurs inscrits |
 | Ce qu'il valide | La conformité aux compétences du référentiel | Que la fonctionnalité livrée sert réellement |
-| Rythme | 4 échéances de restitution | 9 versions livrées |
+| Rythme | 4 échéances de restitution | 10 versions livrées |
 | Forme du compte rendu | Dossiers écrits et présentations orales | Journal des versions, notes de version, résumé poussé dans l'application |
 | Ce qui prouve la validation | Acquisition prononcée compétence par compétence | Le comportement mesuré après la livraison |
 
@@ -38,7 +38,7 @@ Ces deux commanditaires n'attendent ni la même chose ni au même rythme, et c'e
 
 ## 2. La planification des points de validation
 
-### 2.1 Les 9 versions, points de validation du produit
+### 2.1 Les 10 versions, points de validation du produit
 
 Chaque version est un point de validation **daté, versionné et vérifiable**, adossé à une étiquette posée sur le commit exact déployé.
 
@@ -53,6 +53,7 @@ Chaque version est un point de validation **daté, versionné et vérifiable**, 
 | 1.3.2 | 25/07/2026 | Que la production est **observable** et qu'un utilisateur peut signaler un problème |
 | 1.4.0 | 25/08/2026 | Que le produit dépasse la soirée ponctuelle — watchlist, intégration tierce, identité fédérée |
 | 1.4.1 | 04/09/2026 | Que le produit est consultable **sans compte**, et que les frictions remontées sont levées |
+| 1.5.0 | 07/09/2026 | Que le produit donne envie **avant** la première soirée : un accueil d'exploration ouvert à tous, sagas et sélections thématiques |
 
 ### 2.2 Les 4 échéances, points de validation du titre
 

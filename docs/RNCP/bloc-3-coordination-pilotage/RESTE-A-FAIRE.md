@@ -73,6 +73,7 @@ Ces quatre points portent **C3.4.2**, éliminatoire. Une démonstration qui éch
 | 8 | **Tester l'export sur le matériel de la salle** | Vidéoprojecteur, résolution, lisibilité depuis le fond. **Le seul bloc Mermaid restant est le schéma d'architecture de l'annexe A1 (diapositive 33)** — tous les autres schémas, dont le Gantt de la 6 et le logigramme de la 17, sont en HTML et CSS. Après le traitement du § 0, relancer `verifier-rendu.mjs` puis contrôler le PDF page à page |
 | 9 | **Répéter le minutage global** | 30 minutes, dont 17 sur les trois compétences éliminatoires. Deux passages complets. Le contrôle automatique donne **30:00 pile**, exact chapitre par chapitre |
 | 10 | **Mémoriser les numéros de page des annexes** | A1 = 33 · A2 = 34 · A3 = 35 · A4 = 36 · A5 = 37 · A6 = 38 · A7 = 39 · A8 = 40. En mode présentateur, taper le numéro puis `Entrée` |
+| 10 bis | **Décider si les chiffres d'activité sont réancrés une dernière fois** | Le 11/09, la **v1.5.0** (07/09) a été intégrée partout où une version est comptée : 10 versions, 74 items livrés dont 51 hors chiffrage, cadence, Gantt, frise, journal. En revanche les chiffres d'**activité** (833 commits, 88 jours actifs, 122 fusions, −10 % de charge) restent ancrés sur le commit `5ce0a05f` du **05/09**, deux jours avant le tag. `master` est déjà à 1 022 commits et 94 jours actifs le 11/09. Soit on assume la date d'arrêté du 05/09 à l'oral, soit on réancre tout **une seule fois, la veille**, en rejouant § 5.1 de `PASSATION.md` et le tableau mensuel du chapitre 2 |
 
 ---
 
@@ -130,5 +131,5 @@ Sans effet sur l'oral du 16 septembre, mais à ne pas perdre.
 |:-:|---------|-----|
 | 19 | **La chaîne d'intégration est à 38 % de succès sur les premiers jours de septembre** (8 exécutions). Une dette d'intégration est en cours de traitement sur la branche courante | Chapitre 2 § 4.2 |
 | 20 | Le dispositif de **satisfaction est ponctuel, pas continu** : un questionnaire diffusé une fois donne un point, pas une tendance. La boucle continue est instruite et chiffrée à 1–2 jours | Chapitre 6 § 4.3 |
-| 21 | **Aucun indicateur ne compare le périmètre courant au périmètre chiffré**, ce qui a laissé passer 37 items hors chiffrage. Un compteur d'items hors chiffrage initial est la correction proposée | Chapitre 2 § 5.5 |
+| 21 | **Aucun indicateur ne compare le périmètre courant au périmètre chiffré**, ce qui a laissé passer 51 items hors chiffrage. Un compteur d'items hors chiffrage initial est la correction proposée | Chapitre 2 § 5.5 |
 | 22 | ~~Deux liens cassés vers `../spec.md` dans `suivi-rncp.md`~~ — le fichier avait été déplacé vers `archive/docs/` en juin sans que les liens suivent. **Corrigé** le 05/09/2026 | `suivi-rncp.md` |

@@ -43,7 +43,7 @@ Le règlement énumère 14 éléments que la présentation doit comporter. Chacu
 
 Le projet a été **exécuté seul**, ce qui est déjà écrit dans les livrables des Blocs 1, 2 et 4. Le Bloc 3, lui, évalue le pilotage d'une équipe. La présentation tient donc deux registres, distingués à voix haute dès la diapositive 3 et jamais confondus ensuite :
 
-- **Le réel**, chiffré et vérifiable : 833 commits du 27 février au 5 septembre 2026, 9 versions livrées en production, 77 pull requests dont 26 fusionnées, 3 fiches d'anomalie toutes fermées, 17 comptes utilisateurs, 19 soirées créées.
+- **Le réel**, chiffré et vérifiable : 833 commits du 27 février au 5 septembre 2026, 10 versions livrées en production, 77 pull requests dont 26 fusionnées, 3 fiches d'anomalie toutes fermées, 17 comptes utilisateurs, 19 soirées créées.
 - **L'organisation cible**, annoncée comme telle : une équipe de 4 profils sur laquelle sont construits la matrice RACI, l'affectation des missions, la grille de compétences et le plan de développement. C'est la projection d'industrialisation du projet, pas une équipe qui a existé.
 
 Cette annonce explicite est ce qui protège les 15 minutes de questions. Un jury qui découvre le caractère projeté en fin de présentation le vit comme une dissimulation ; un jury prévenu dès le début l'évalue comme un exercice de conception d'organisation.
@@ -76,7 +76,7 @@ Répartition volontaire : les trois compétences éliminatoires absorbent **17 d
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
 | 1 | Movie Picker, piloter un projet de développement logiciel | 0:10 | Titre, Bloc 3 RNCP 39583, Adrien MORAND, 16 septembre 2026 |
-| 2 | Le produit : un logiciel exploité, pas une maquette | 0:40 | Capture de l'application en production. 9 versions livrées de février à septembre 2026, 17 comptes, 19 soirées, 74 % menées jusqu'au tirage. Objectif : établir qu'on parle d'un logiciel réellement exploité, pas d'une maquette |
+| 2 | Le produit : un logiciel exploité, pas une maquette | 0:40 | Capture de l'application en production. 10 versions livrées de février à septembre 2026, 17 comptes, 19 soirées, 74 % menées jusqu'au tirage. Objectif : établir qu'on parle d'un logiciel réellement exploité, pas d'une maquette |
 | 3 | Deux registres, annoncés maintenant | 0:40 | Les deux registres, réel et organisation cible. Plan en 7 temps |
 
 ### Chapitre 1 : planifier l'exécution du projet (6:30, 7 diapos), C3.1 ÉLIMINATOIRE
@@ -101,9 +101,9 @@ Critères visés : outil de suivi en adéquation avec le projet et la méthodolo
 |:-:|-------|------:|------------------------------|
 | 11 | L'outil de suivi | 1:00 | GitHub comme outil unique, cinq surfaces : issues, pull requests, Actions, releases, fichiers de feuille de route versionnés. Le critère de choix énoncé : la distance entre le travail et sa trace, aucun indicateur ne reposant sur une saisie déclarative. Adéquation avec Kanban vérifiée propriété par propriété. Capture du tableau de flux si structuré avant l'oral |
 | 12 | Comment un indicateur entre au tableau de bord | 1:00 | La règle de sélection en quatre conditions, dont « rattaché à une décision ». Les cinq axes : avancement, délais, coûts, risques, ressources humaines. Et les trois indicateurs **écartés** faute de mesurabilité |
-| 13 | Tableau de bord : avancement et délais | 1:00 | Commits, jours actifs et fusions par mois (833, 88, 122), les 9 versions et leurs écarts réels, médiane de 17 jours, et les 4 échéances de restitution tenues. Deux lectures d'indicateur à porter à voix haute : le pic de fusions de juin est un changement de pratique, pas de production |
+| 13 | Tableau de bord : avancement et délais | 1:00 | Commits, jours actifs et fusions par mois (833, 88, 122), les 10 versions et leurs écarts réels, médiane de 17 jours, et les 4 échéances de restitution tenues. Deux lectures d'indicateur à porter à voix haute : le pic de fusions de juin est un changement de pratique, pas de production |
 | 14 | Tableau de bord : coûts, risques, ressources | 1:00 | Coût réel contre budget, les deux échéances de coût suivies bien qu'elles vaillent zéro, les huit indicateurs de risque dont deux en alerte, le détail mensuel de la stabilité de la chaîne (52 % → 94 % après correction), et la soutenabilité de la charge : 3,1 jours par semaine mais une amplitude de 1 à 7 |
-| 15 | L'écart n'est pas où on le cherche | 1:00 | 98 J/H prévus contre 88 reconstitués, mais un périmètre de +37 items jamais chiffrés : l'écart n'est pas un écart de charge, c'est un glissement de périmètre que rien ne mesurait. Les trois décisions prises à partir d'une mesure, et l'autocritique du dispositif. Elle amène naturellement le chapitre suivant |
+| 15 | L'écart n'est pas où on le cherche | 1:00 | 98 J/H prévus contre 88 reconstitués, mais un périmètre de +51 items jamais chiffrés : l'écart n'est pas un écart de charge, c'est un glissement de périmètre que rien ne mesurait. Les trois décisions prises à partir d'une mesure, et l'autocritique du dispositif. Elle amène naturellement le chapitre suivant |
 
 ### Chapitre 3 : le cas d'arbitrage (2:30, 3 diapos), C3.2.2
 

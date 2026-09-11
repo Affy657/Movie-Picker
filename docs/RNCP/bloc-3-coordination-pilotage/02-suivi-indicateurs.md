@@ -38,7 +38,7 @@ En tenant le suivi dans la plateforme qui héberge le code, la trace est produit
 | **Issues** | Les anomalies qualifiées et les demandes entrantes des utilisateurs, avec étiquettes de sévérité et d'origine | 5 fiches : 3 anomalies, 2 idées utilisateurs |
 | **Pull requests** | La revue, la trace de décision d'intégration, et l'exécution des portes de qualité avant fusion | 77 ouvertes, 26 fusionnées |
 | **Actions** | La vérification automatisée : tests, analyse statique, sécurité, performance, déploiement | 449 exécutions du pipeline sur la branche principale |
-| **Releases et tags** | Les points de livraison datés, adossés au commit exact déployé | 9 versions publiées |
+| **Releases et tags** | Les points de livraison datés, adossés au commit exact déployé | 10 versions publiées |
 | **Fichiers versionnés du dépôt** | Les feuilles de route produit et technique, le journal des versions, la carte de suivi du titre | 4 fichiers, **106 items** de feuille de route |
 
 Les feuilles de route (`docs/roadmap-product.md`, `docs/roadmap-tech.md`) jouent le rôle du **backlog priorisé**, et le `CHANGELOG.md` celui du **journal d'avancement**. Les tenir en Markdown versionné plutôt que dans un service tiers a une conséquence directe sur le pilotage : chaque modification de périmètre est un commit daté, attribuable et diffable. La question « quand cet item est-il apparu dans le périmètre, et qu'est-ce qui l'y a mis ? » a une réponse mécanique.
@@ -224,8 +224,9 @@ Le fait que le préfixe de commit ne permette pas de séparer ces trois causes e
 | 1.3.2 | 25/07/2026 | 17 j | Supervision de production, canal de support |
 | 1.4.0 | 25/08/2026 | 31 j | Watchlist, Letterboxd, choix manuel, connexion sociale |
 | 1.4.1 | 04/09/2026 | 10 j | Navigation ouverte sans compte, landing bilingue |
+| 1.5.0 | 07/09/2026 | 3 j | Accueil d'exploration, sagas, sélections, landing refondue |
 
-**Médiane de 17 jours, moyenne de 23,6.** L'écart entre les deux tient à un seul intervalle : les **81 jours** entre le prototype et la première version de production. Cet intervalle contient la migration de l'API vers .NET, c'est-à-dire l'arbitrage du chapitre 3. La cadence de livraison est donc le premier indicateur qui a rendu cet arbitrage visible, avant même qu'il soit formulé comme tel.
+**Médiane de 17 jours, moyenne de 21,3.** L'écart entre les deux tient à un seul intervalle : les **81 jours** entre le prototype et la première version de production. Cet intervalle contient la migration de l'API vers .NET, c'est-à-dire l'arbitrage du chapitre 3. La cadence de livraison est donc le premier indicateur qui a rendu cet arbitrage visible, avant même qu'il soit formulé comme tel.
 
 Les 31 jours de la v1.4.0 ont une autre cause, également identifiée par le suivi : la remise du dossier Bloc 4 le 21 août a mobilisé la capacité disponible.
 
@@ -317,7 +318,7 @@ C'est la diapositive qui prouve que le suivi a servi à **décider**, et pas seu
 | | Prévu au cadrage | Réel reconstitué | Écart |
 |--|------------------|------------------|-------|
 | Charge | 98 J/H | ≈ 88 J/H | **−10 %** |
-| Périmètre | MVP + migration + V1 + clôture du titre | **+ 7 livraisons** après la V1 (V1.1.0 à V1.4.1), dont **4 versions mineures** apportant des fonctionnalités — aucune chiffrée | **+ 37 items** |
+| Périmètre | MVP + migration + V1 + clôture du titre | **+ 8 livraisons** après la V1 (V1.1.0 à V1.5.0), dont **5 versions mineures** apportant des fonctionnalités — aucune chiffrée | **+ 51 items** |
 | Délais | 4 échéances de restitution | 4 tenues | **0** |
 | Coûts d'infrastructure | 20 à 190 €/an | ≈ 10 €/an | **borne basse** |
 
@@ -330,9 +331,9 @@ Le chiffrage initial couvrait quatre lots s'arrêtant à la V1 et à la clôture
 | Fenêtre | Contenu | Jours actifs | Part |
 |---------|---------|-------------:|-----:|
 | 27/02 au 19/05 | Lots 1 à 3, prototype, migration, V1 | 23 | 26 % |
-| 20/05 au 05/09 | **Hors chiffrage initial** : V1.1 à V1.4.1, plus le lot de clôture du titre | 65 | 74 % |
+| 20/05 au 05/09 | **Hors chiffrage initial** : V1.1 à V1.5.0, plus le lot de clôture du titre | 65 | 74 % |
 
-Les sept livraisons qui suivent la V1 n'ont **jamais été chiffrées**. Les quatre versions mineures qu'elles contiennent (V1.1 à V1.4) portent à elles seules **37 des 61 items** de périmètre livrés, soit 61 % du produit final. Formulé sans détour : **le périmètre a plus que doublé pendant que la charge totale restait dans l'enveloppe prévue.**
+Les huit livraisons qui suivent la V1 n'ont **jamais été chiffrées**. Les cinq versions mineures qu'elles contiennent (V1.1 à V1.5) portent à elles seules **51 des 74 items** de périmètre livrés, soit 69 % du produit final. Formulé sans détour : **le périmètre a triplé pendant que la charge totale restait dans l'enveloppe prévue.**
 
 Cela ne signifie pas qu'on a fait deux fois plus avec autant. Cela signifie que le chiffrage initial était **large sur les trois premiers lots** — la marge de 20 % a couvert la migration .NET — et que l'extension de périmètre a consommé cette marge plus la capacité libérée. Le suivi n'a pas détecté une dérive de charge, il a détecté un **glissement de périmètre invisible**, parce qu'aucun indicateur ne comparait le périmètre courant au périmètre chiffré.
 
@@ -367,7 +368,7 @@ Trois manques identifiés, avec la correction qui en découle. Ce sont des recom
 
 | Manque | Ce qu'il a coûté | Correction |
 |--------|------------------|-----------|
-| Aucun indicateur ne comparait le **périmètre courant au périmètre chiffré** | Le glissement de 37 items n'a été visible qu'a posteriori | Un compteur d'items hors chiffrage initial, relevé à chaque version |
+| Aucun indicateur ne comparait le **périmètre courant au périmètre chiffré** | Le glissement de 51 items n'a été visible qu'a posteriori | Un compteur d'items hors chiffrage initial, relevé à chaque version |
 | Le temps passé n'était pas saisi | La charge n'est reconstituable qu'avec 20 % d'incertitude | Un relevé déclaratif hebdomadaire à la demi-journée, suffisant et soutenable |
 | Le préfixe de commit ne distingue pas **finition** et **régression** | Le ratio correction / fonctionnalité de 1,5 n'est pas interprétable seul | Rattachement obligatoire d'une correction d'anomalie à une issue, déjà en place depuis juillet |
 

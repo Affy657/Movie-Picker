@@ -39,7 +39,7 @@ Deux règles structurent ce flux :
 |------------------|--------------------------|
 | Priorisation permanente plutôt que périmètre figé | Le périmètre a évolué 8 fois sans replanification globale, de la V0.1 à la V1.4 |
 | Absence de cérémonie non soutenable | Aucun rituel calibré pour un collectif imposé à une exécution solo : le temps va à la production et à la revue |
-| Délai de mise à disposition court | 9 mises en production entre le 27 février et le 4 septembre 2026, soit un point de livraison toutes les 3 semaines et demie en moyenne |
+| Délai de mise à disposition court | 10 mises en production entre le 27 février et le 7 septembre 2026, soit un point de livraison toutes les 3 semaines en moyenne |
 | Réponse rapide à un signal de production | Les anomalies remontées ont été traitées en dehors du flux fonctionnel, sans attendre une fin d'itération |
 
 ### 1.3 Les alternatives écartées, et pourquoi
@@ -100,7 +100,7 @@ Le Gantt fait apparaître les cinq phases exigées par la grille. Leur contenu s
 | **Mesure** | 20/03 au 30/04, puis 08/04 au 21/07 | Deux temps. En amont : chiffrage de la charge en jours-homme, budget prévisionnel, cartographie des risques, définition des indicateurs de pilotage. En production : instrumentation et relevé de l'usage réel, qui alimente les arbitrages de la V1.4 |
 | **Conception** | 01/03 au 31/05/2026 | Modèle de données, architecture hexagonale de l'API, contrat d'interface, système de composants mobile-first, parcours utilisateur |
 | **Réalisation** | 27/02 au 25/08/2026 | Les 4 lots de développement, du socle du MVP à la V1.4 |
-| **Restitution** | 27/02 au 16/09/2026 | Deux registres également. Vers l'utilisateur : les 9 mises en production, de la v0.1.0 à la v1.4.1. Vers le commanditaire : les restitutions du titre, oral Bloc 1, dossiers Blocs 2 et 4, oral Bloc 3 |
+| **Restitution** | 27/02 au 16/09/2026 | Deux registres également. Vers l'utilisateur : les 10 mises en production, de la v0.1.0 à la v1.5.0. Vers le commanditaire : les restitutions du titre, oral Bloc 1, dossiers Blocs 2 et 4, oral Bloc 3 |
 
 **Le point à dire à voix haute** : ces phases **se chevauchent**, elles ne se succèdent pas. La conception court jusqu'en mai alors que la réalisation a commencé en février, et la phase de mesure se rouvre en production. C'est précisément ce qu'un cycle en V interdit, et c'est la signature d'un pilotage en flux. Un Gantt dont les barres se suivent sans se recouvrir décrirait un autre projet que celui-ci.
 
@@ -131,10 +131,10 @@ gantt
     Lot 2 migration de l API vers .NET          :2026-03-18, 7d
     Lot 3 V1 produit                            :2026-03-25, 55d
     Lot 4 cloture du titre                      :2026-05-20, 97d
-    V1.1 a V1.4.1 hors chiffrage initial        :2026-05-20, 107d
+    V1.1 a V1.5.0 hors chiffrage initial        :2026-05-20, 110d
 
     section Restitution
-    Mises en production v0.1.0 a v1.4.1         :2026-02-27, 189d
+    Mises en production v0.1.0 a v1.5.0         :2026-02-27, 192d
     Restitution Bloc 1                         :milestone, 2026-06-11, 0d
     Remise Bloc 2                              :milestone, 2026-07-23, 0d
     Remise Bloc 4                              :milestone, 2026-08-21, 0d
@@ -156,6 +156,7 @@ Chaque version est un jalon daté, vérifiable dans le journal des versions et d
 | 1.3.2 | 25/07/2026 | Supervision de production, référencement, portes de qualité bloquantes |
 | 1.4.0 | 25/08/2026 | Watchlist, intégration Letterboxd, choix manuel du gagnant, flamme de participation, connexion sociale |
 | 1.4.1 | 04/09/2026 | Navigation ouverte sans compte, page de découverte bilingue, frictions remontées levées |
+| 1.5.0 | 07/09/2026 | Accueil d'exploration ouvert à tous, sagas, sélections thématiques, landing refondue |
 
 ### 3.4 Le découpage en lots et la charge
 
