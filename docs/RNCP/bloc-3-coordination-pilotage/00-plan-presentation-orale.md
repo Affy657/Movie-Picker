@@ -180,15 +180,14 @@ Placées après la diapositive 23, jamais présentées, appelées seulement si u
 | # | Page | Contenu |
 |:-:|:----:|---------|
 | A1 | **24** | Architecture technique : déploiement, découpage hexagonal de l'API, volume et qualité |
-| A2 | **25** | Le logigramme d'arbitrage en version complète, avec le chemin réellement suivi le 18/03/2026 |
-| A3 | **26** | Les deux arbitrages de réserve : la porte de qualité instable (52 % → 94 %), l'abandon de l'application mobile |
-| A4 | **27** | Le budget prévisionnel détaillé : valeur de développement par lot, infrastructure poste par poste |
-| A5 | **28** | La chaîne d'intégration et de déploiement, ses 18 jobs et leur caractère bloquant |
-| A6 | **29** | La matrice RACI complète, 15 lignes, sur les acteurs réels |
-| A7 | **30** | Le journal des versions et le détail de la v1.3.2, avec la traçabilité bidirectionnelle |
-| A8 | **31** | Les retours utilisateurs question par question, et ce qu'ils ont produit |
+| A2 | **25** | Les deux arbitrages de réserve : la porte de qualité instable (52 % → 94 %), l'abandon de l'application mobile |
+| A3 | **26** | Le budget prévisionnel détaillé : valeur de développement par lot, infrastructure poste par poste |
+| A4 | **27** | La chaîne d'intégration et de déploiement, ses 18 jobs et leur caractère bloquant |
+| A5 | **28** | La matrice RACI complète, 15 lignes, sur les acteurs réels |
+| A6 | **29** | Le journal des versions et le détail de la v1.3.2, avec la traçabilité bidirectionnelle |
+| A7 | **30** | Les retours utilisateurs question par question, et ce qu'ils ont produit |
 
-**Navigation pendant les échanges** : en mode présentateur, taper le numéro de page puis `Entrée`. Les huit annexes ne sont jamais présentées ; elles portent la mention `ANNEXE` en bas à gauche.
+**Navigation pendant les échanges** : en mode présentateur, taper le numéro de page puis `Entrée`. Les sept annexes ne sont jamais présentées ; elles portent la mention `ANNEXE` en bas à gauche. Le logigramme n'a pas d'annexe : il est intégralement sur la diapositive 13, et son chemin réel se dit.
 
 ## 7. Préparation des questions du jury
 
@@ -217,7 +216,7 @@ Un fichier source par chapitre, qui alimente les diapositives. Le support ne se 
 | `05-competences.md` | Diapos 18 et 19, C3.3.2 | ✅ Produit |
 | `06-comptes-rendus.md` | Diapos 20 à 22, C3.4.1 | ✅ Produit |
 | `07-demonstration.md` | Diapos 3 et 23, et la démonstration en direct, C3.4.2 | ✅ Produit |
-| `slides/slides.md` | Le support complet | ✅ **31 diapositives** : les 23 présentées et les 8 annexes |
+| `slides/slides.md` | Le support complet | ✅ **30 diapositives** : les 23 présentées et les 7 annexes |
 
 **Règle de numérotation du support** : aucune diapositive de séparation de chapitre. La page `N` de Slidev correspond exactement à la diapositive `N` de ce plan, et donc au rattachement des 14 éléments imposés du § 1. Le titre de chapitre est porté par la première diapositive du chapitre. Toute insertion impose de mettre à jour ce plan et la table `REFS` de `global-bottom.vue` dans le même mouvement.
 

@@ -77,7 +77,7 @@ Le critère demande que la démonstration reprenne **les fonctionnalités attend
 | Liste personnelle « Ma liste » et intégration tierce | ⬜ **citée, non montrée** |
 | Notifications, application installable, connexion sociale | ⬜ **citées, non montrées** |
 
-**Ce qui n'est pas montré est assumé et annoncé** : en 4 minutes 50, montrer plus reviendrait à montrer moins bien. Les fonctionnalités non démontrées apparaissent sur la frise des versions de la diapositive 20 et dans le journal des versions de l'annexe A7, et deux d'entre elles peuvent être ouvertes à la demande si le jury le souhaite pendant les questions.
+**Ce qui n'est pas montré est assumé et annoncé** : en 4 minutes 50, montrer plus reviendrait à montrer moins bien. Les fonctionnalités non démontrées apparaissent sur la frise des versions de la diapositive 20 et dans le journal des versions de l'annexe A6, et deux d'entre elles peuvent être ouvertes à la demande si le jury le souhaite pendant les questions.
 
 ---
 

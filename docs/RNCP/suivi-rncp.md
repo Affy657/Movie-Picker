@@ -429,8 +429,8 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 ### Conclusion et annexes du support
 
 - [x] **Diapositive 23, bilan et demande de validation**, trois enseignements dont un échec assumé : *un indicateur ne mesure que la pratique qui le produit* · *quand le coût d'une décision croît, décider tôt a une valeur propre* · *l'arbitrage n'a pas été perdu, il n'a pas été posé*
-- [x] **8 annexes** (pages 24 à 31), jamais présentées, appelées sur question : architecture, logigramme complet, arbitrages de réserve, budget détaillé, chaîne CI/CD, matrice RACI complète, journal des versions, retours utilisateurs question par question
-- [x] Le support Slidev est **complet** : 31 diapositives, dont 23 présentées, table `REFS` à jour, mention `ANNEXE` sur les pages 24 et suivantes
+- [x] **7 annexes** (pages 24 à 30), jamais présentées, appelées sur question : architecture, arbitrages de réserve, budget détaillé, chaîne CI/CD, matrice RACI complète, journal des versions, retours utilisateurs question par question
+- [x] Le support Slidev est **complet** : 30 diapositives, dont 23 présentées, table `REFS` à jour, mention `ANNEXE` sur les pages 24 et suivantes
 
 > **Le Bloc 3 est écrit.** Ce qui reste est matériel et ne peut pas être rédigé : répétitions minutées, jeu de données de démonstration, vidéo de repli, environnement local, tableau GitHub Projects, capture de facturation, export PDF testé sur le matériel de la salle. La liste complète et priorisée est dans [`bloc-3-coordination-pilotage/RESTE-A-FAIRE.md`](bloc-3-coordination-pilotage/RESTE-A-FAIRE.md), et la note de passation pour reprendre le travail dans [`bloc-3-coordination-pilotage/PASSATION.md`](bloc-3-coordination-pilotage/PASSATION.md).
 

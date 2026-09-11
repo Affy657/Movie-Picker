@@ -12,7 +12,7 @@
 | | |
 |--|--|
 | **Épreuve** | Oral de 45 min (30 de présentation + 15 de questions), le **16 septembre 2026** |
-| **État** | ✅ Rédaction terminée et **support refondu** : 7 chapitres, 31 diapositives (23 présentées, 8 annexes), toutes vérifiées au rendu. Restructuré le 11/09 : la démonstration ouvre la présentation, 5 fusions, 9 tableaux devenus des schémas (§ 12). Épuré, schémas à la place des gros tableaux, sans répétition |
+| **État** | ✅ Rédaction terminée et **support refondu** : 7 chapitres, 30 diapositives (23 présentées, 7 annexes), toutes vérifiées au rendu. Restructuré le 11/09 : la démonstration ouvre la présentation, 5 fusions, 9 tableaux devenus des schémas (§ 12). Épuré, schémas à la place des gros tableaux, sans répétition |
 | **Branche** | `master` directement, depuis la fusion de la PR #83 le 06/09/2026 |
 | **Pull request** | [#83](https://github.com/Affy657/Movie-Picker/pull/83), ✅ **fusionnée sur `master` le 06/09/2026**. Tout travail ultérieur repart de `master` : une PR fusionnée ne se réutilise pas |
 | **Reste** | Uniquement du **matériel** : répétitions minutées, jeu de données de démonstration, vidéo de repli, 2 captures, export PDF |
@@ -137,7 +137,7 @@ Le thème demande **Nunito Sans** à `fonts.googleapis.com` au moment où la pag
 
 ### 4.6 Le pipeline bouge, revérifier avant de citer un nombre de jobs
 
-L'annexe A5 énumère les jobs de `ci-cd.yml` et de `deploy.yml`. Ces fichiers évoluent : `test-api-mongo` a été ajouté le 5 septembre, et le 11 septembre le compte réel était de 18 (12 dans `ci-cd.yml`, 6 dans `deploy.yml`) alors que l'annexe en listait 15. **Avant toute relecture du dossier, recompter :**
+L'annexe A4 énumère les jobs de `ci-cd.yml` et de `deploy.yml`. Ces fichiers évoluent : `test-api-mongo` a été ajouté le 5 septembre, et le 11 septembre le compte réel était de 18 (12 dans `ci-cd.yml`, 6 dans `deploy.yml`) alors que l'annexe en listait 15. **Avant toute relecture du dossier, recompter :**
 
 ```bash
 for f in ci-cd deploy; do git show origin/master:.github/workflows/$f.yml | grep -cE '^  [a-z0-9-]+:$'; done   # retirer 1 sur ci-cd pour « push », qui est un déclencheur
@@ -210,7 +210,7 @@ lines=s.split('\n'); idx=[i for i,l in enumerate(lines) if l.strip()=='---']
 start=idx[1]+1; chunks=[]
 for i in idx[2:]: chunks.append(lines[start:i]); start=i+1
 chunks.append(lines[start:])
-print('diapos :', len(chunks), '(attendu 31)')
+print('diapos :', len(chunks), '(attendu 30)')
 bad=0
 for n,c in enumerate(chunks,1):
     body=re.sub(r'<!--.*?-->','','\n'.join(c),flags=re.S)
@@ -226,7 +226,7 @@ print('desequilibres div :', bad)
 PY
 ```
 
-**Cibles** : 31 diapositives ; 23 durées ; total 30:00 ; chapitres 0:50 / 5:40 (démonstration comprise) / 6:20 / 5:20 / 2:20 / 3:30 / 2:40 / 2:40 / 0:40. Les numéros de chapitre des titres de diapositives sont ceux du sommaire, la démonstration étant le chapitre 1.
+**Cibles** : 30 diapositives ; 23 durées ; total 30:00 ; chapitres 0:50 / 5:40 (démonstration comprise) / 6:20 / 5:20 / 2:20 / 3:30 / 2:40 / 2:40 / 0:40. Les numéros de chapitre des titres de diapositives sont ceux du sommaire, la démonstration étant le chapitre 1.
 
 ### 5.4 Rendu du support, le contrôle que les autres ne font pas
 
@@ -269,12 +269,12 @@ PY
 | [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md) | | **Le cadre** : minutage, déroulé des 23 diapositives présentées, rattachement des 14 éléments imposés, questions du jury |
 | [`01-planification.md`](01-planification.md) | C3.1 **ÉLIM** | Diapos 4 à 8 |
 | [`02-suivi-indicateurs.md`](02-suivi-indicateurs.md) | C3.2.1 **ÉLIM** | Diapos 9 à 12 |
-| [`03-arbitrage.md`](03-arbitrage.md) | C3.2.2 | Diapo 13, et l'annexe A3 |
+| [`03-arbitrage.md`](03-arbitrage.md) | C3.2.2 | Diapo 13, et l'annexe A2 |
 | [`04-management-equipe.md`](04-management-equipe.md) | C3.3.1 | Diapos 14 à 17 |
 | [`05-competences.md`](05-competences.md) | C3.3.2 | Diapos 18 et 19 |
 | [`06-comptes-rendus.md`](06-comptes-rendus.md) | C3.4.1 | Diapos 20 à 22 |
 | [`07-demonstration.md`](07-demonstration.md) | C3.4.2 **ÉLIM** | Diapos 3 et 23, et la démonstration en direct |
-| [`slides/slides.md`](slides/slides.md) | | Le support, 31 diapositives |
+| [`slides/slides.md`](slides/slides.md) | | Le support, 30 diapositives |
 | [`RESTE-A-FAIRE.md`](RESTE-A-FAIRE.md) | | Ce qui reste, priorisé |
 
 **Le sens de la dépendance** : les fichiers de matière sont la **source de vérité**, le support en est dérivé. Modifier une diapositive sans mettre à jour le chapitre correspondant crée une divergence qui se paiera à la relecture suivante.
@@ -287,7 +287,7 @@ PY
 |----------|----------|-----------------------|
 | **Le cas d'arbitrage est la migration .NET**, confirmée par le fait que la migration est absente de la feuille de route du MVP au moment où celui-ci est déclaré terminé (16/03 16:48), et ajoutée le 18/03 | C'est ce qui en fait un arbitrage et non l'exécution d'un plan | Deux cas de réserve documentés en § 7 de `03-arbitrage.md` |
 | **Ne pas écrire « 13 J/H non prévus au chiffrage »** | Faux : le lot figure au chiffrage du Bloc 1 (8+3+2). La formulation serait démentie par le dossier lui-même | |
-| **Le cas « environnement de test rejeté malgré 30 % de gain » a été retiré** | Aucune trace dans le dépôt. Remplacé par l'abandon de l'application mobile (16/05 → 26/05), lui documenté | Si le propriétaire du projet confirme que c'est réel mais non tracé, le réintégrer en annexe A3 |
+| **Le cas « environnement de test rejeté malgré 30 % de gain » a été retiré** | Aucune trace dans le dépôt. Remplacé par l'abandon de l'application mobile (16/05 → 26/05), lui documenté | Si le propriétaire du projet confirme que c'est réel mais non tracé, le réintégrer en annexe A2 |
 | **Le chapitre 4 ne distingue pas l'auteur de ses outils d'assistance** : l'affectation des missions est mesurée dans le temps sur les 833 commits classés par mission, et entre ce qui reste à la main et ce qui est confié à la chaîne | Décision du propriétaire du projet le 11/09/2026 au soir : « moi et les agents IA, c'est la même personne, ne fais pas de différence ». La version précédente (délégation mesurée par les commits co-signés) est dans l'historique Git avant `5bd928e` | Recalculer la classification par mission (§ 14) plutôt que de réintroduire un acteur |
 | **Pas de frontmatter par diapositive** | Risque de décalage de numérotation (§ 4.3) | |
 
@@ -383,3 +383,5 @@ Deux consignes du propriétaire du projet, dans l'ordre : **retirer tous les blo
 **Recalcul de la classification par mission** : `git log 5ce0a05f --format='%ad%x09%s' --date=format:%Y-%m`, puis classer par le préfixe conventionnel du message (`feat`/`perf`/`ui` → produit ; `fix`/`test`/`refactor`/`style` → fiabilité ; `ci`/`chore`/`build`/`config`/`release` → chaîne ; `docs`/`backlog`/`roadmap` → documentation) et, pour les 184 messages sans préfixe (mars et avril surtout, plus les fusions), par mots-clés dans le message ou le nom de branche.
 
 **Numérotation** : 1 titre, 2 sommaire, 3 démonstration, 4 à 8 planifier, 9 à 12 piloter, 13 arbitrage, 14 à 17 management, 18 et 19 compétences, 20 à 22 rendre compte, 23 bilan, 24 à 31 annexes A1 à A8. Correspondance avec la numérotation du matin : 4 → 4, 5 → 5, 6 + 7 → 6, 8 → 7, 9 → 8, 10 + 11 → 9, 12 → 10, 13 → 11, 14 → 12, 15 + 16 → 13, 17 → 14, 18 → 15, 19 → 16, 20 → 17, 21 + 22 → 18, 23 → 19, 24 → 20, 25 → 21, 26 → 22, 27 → 23, 28 à 35 → 24 à 31.
+
+**Annexe retirée, plus tard le 11 septembre** : l'ancienne A2, le logigramme complet avec le chemin suivi, doublonnait la diapositive 13, qui porte déjà le logigramme et dont la note dit le chemin réel. Le support passe à **30 diapositives, 23 présentées et 7 annexes** : A1 architecture 24, A2 arbitrages de réserve 25, A3 budget 26, A4 chaîne 27, A5 RACI 28, A6 journal des versions 29, A7 retours utilisateurs 30. Le script du § 5.3 attend 30.

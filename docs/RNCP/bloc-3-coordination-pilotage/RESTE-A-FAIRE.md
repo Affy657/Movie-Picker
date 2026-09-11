@@ -2,9 +2,9 @@
 
 > Point de situation au **5 septembre 2026**. Oral le **16 septembre 2026**, soit **11 jours**.
 >
-> **La rédaction est terminée** : 7 chapitres de matière, 31 diapositives (23 présentées + 8 annexes), les 14 éléments imposés rattachés, les 7 compétences couvertes.
+> **La rédaction est terminée** : 7 chapitres de matière, 30 diapositives (23 présentées + 7 annexes), les 14 éléments imposés rattachés, les 7 compétences couvertes.
 >
-> ✅ **Restructuré le 11 septembre** : la démonstration ouvre la présentation, 31 diapositives (23 présentées) après une seconde épure le soir même, les tableaux devenus des schémas, neuf fusions au total. Les numéros de diapositives cités dans les sections historiques ci-dessous sont ceux d'avant : la table de correspondance est en § 12 de `PASSATION.md`.
+> ✅ **Restructuré le 11 septembre** : la démonstration ouvre la présentation, 30 diapositives (23 présentées) après une seconde épure le soir même et le retrait d'une annexe en doublon, les tableaux devenus des schémas, neuf fusions au total. Les numéros de diapositives cités dans les sections historiques ci-dessous sont ceux d'avant : la table de correspondance est en § 12 de `PASSATION.md`.
 >
 > ✅ **Le support a été rendu, corrigé puis refondu le 5 septembre.** Le premier rendu réel a montré que des diapositives étaient coupées par le bas du cadre, 17 à la première mesure, 22 au contrôle rejoué. Elles tiennent toutes désormais, et le support a été **épuré** dans la foulée. Détail en § 0.
 
@@ -27,13 +27,13 @@
 
 | | |
 |--|--|
-| **Toutes les diapositives tiennent** | Vérifié par [`slides/verifier-rendu.mjs`](slides/verifier-rendu.mjs) : *« les 31 diapositives tiennent dans le cadre »* |
+| **Toutes les diapositives tiennent** | Vérifié par [`slides/verifier-rendu.mjs`](slides/verifier-rendu.mjs) : *« les 30 diapositives tiennent dans le cadre »* |
 | **Le support est épuré** | Une idée par diapositive, énoncée dans le titre ; la preuve à l'écran, l'argumentation en note de présentateur. Densité maximale ramenée de 2 289 à 1 967 caractères, moyenne 1 217 |
 | **Sept tableaux remplacés par des schémas** | Histogrammes d'activité (13), stabilité de la chaîne (14), barres empilées du glissement de périmètre (15), **logigramme en HTML** (17 et A2), répartition de charge par lot (19), grille de compétences en haltères (25), frise des versions (27) |
 | **Le mur de 25 indicateurs a disparu** | La diapositive 12 porte désormais la *méthode* de sélection et les 5 axes ; les valeurs vivent sur les deux tableaux de bord, sans doublon |
 | **Répétitions supprimées** | *« l'affectation suit la compétence attestée »* (9 et 19), les quatre échéances (5 et 6), les 88 jours actifs (13 et 14). Le seul rappel littéral conservé est volontaire : *« l'arbitrage n'a pas été perdu, il n'a pas été posé »*, thèse de la 23 rappelée en conclusion |
 | **Ordre des chapitres** | La démonstration ouvre (C3.4.2), puis C3.1 → C3.2.1 → C3.2.2 → C3.3.1 → C3.3.2 → C3.4.1, et la demande de validation ferme (C3.4.2) ; chaque renvoi entre chapitres est une annonce vers l'avant |
-| **Numérotation** | 31 diapositives, 23 présentées, **30:00 pile** chapitre par chapitre, les 14 éléments imposés rattachés |
+| **Numérotation** | 30 diapositives, 23 présentées, **30:00 pile** chapitre par chapitre, les 14 éléments imposés rattachés |
 
 ### Ce qui reste, sur le rendu
 
@@ -74,7 +74,7 @@ Ces quatre points portent **C3.4.2**, éliminatoire. Une démonstration qui éch
 | 7 | **Exporter le support en PDF** | `cd slides && npm install && npm run export`. Le premier export peut demander `npx playwright install chromium` |
 | 8 | **Tester l'export sur le matériel de la salle** | Vidéoprojecteur, résolution, lisibilité depuis le fond. **Le seul bloc Mermaid restant est le schéma d'architecture de l'annexe A1 (diapositive 24)**, tous les autres schémas, dont le Gantt de la 5 et le logigramme de la 13, sont en HTML et CSS. Après le traitement du § 0, relancer `verifier-rendu.mjs` puis contrôler le PDF page à page |
 | 9 | **Répéter le minutage global** | 30 minutes, dont près de 19 sur les trois compétences éliminatoires. Deux passages complets. Le contrôle automatique donne **30:00 pile**, exact chapitre par chapitre |
-| 10 | **Mémoriser les numéros de page des annexes** | A1 = 24 ; A2 = 25 ; A3 = 26 ; A4 = 27 ; A5 = 28 ; A6 = 29 ; A7 = 30 ; A8 = 31. En mode présentateur, taper le numéro puis `Entrée` |
+| 10 | **Mémoriser les numéros de page des annexes** | A1 = 24 ; A2 = 25 ; A3 = 26 ; A4 = 27 ; A5 = 28 ; A6 = 29 ; A7 = 30. En mode présentateur, taper le numéro puis `Entrée` |
 | 10 bis | **Décider si les chiffres d'activité sont réancrés une dernière fois** | Le 11/09, la **v1.5.0** (07/09) a été intégrée partout où une version est comptée : 10 versions, 74 items livrés dont 51 hors chiffrage, cadence, Gantt, frise, journal. En revanche les chiffres d'**activité** (833 commits, 88 jours actifs, 122 fusions, −10 % de charge) restent ancrés sur le commit `5ce0a05f` du **05/09**, deux jours avant le tag. `master` est déjà à 1 022 commits et 94 jours actifs le 11/09. Soit on assume la date d'arrêté du 05/09 à l'oral, soit on réancre tout **une seule fois, la veille**, en rejouant § 5.1 de `PASSATION.md` et le tableau mensuel du chapitre 2 |
 
 ---
@@ -121,7 +121,7 @@ Onze écarts trouvés en recoupant chaque chiffre contre le dépôt, et corrigé
 |:-:|----------|-------|
 | 16 | ~~Ouvrir puis fusionner une pull request~~ → **[PR #83](https://github.com/Affy657/Movie-Picker/pull/83) fusionnée** le 06/09/2026 | ✅ Fait. Les cases du Bloc 3 dans `suivi-rncp.md` sont cochées. Tout travail ultérieur repart de `master` : une PR fusionnée ne se réutilise pas |
 | 17 | ~~Garder ou retirer la partie A du chapitre 4~~ → **tranché le 11/09/2026** : l'organisation cible est retirée, l'affectation des missions dans le temps devient le cœur du chapitre (§ 14 de `PASSATION.md`) | ✅ Fait. Reste à **relire les niveaux de la grille** (diapositive 18, chapitre 5 § 2.2) : ce sont ceux que je t'ai proposés à partir du dépôt, à ajuster si tu te vois différemment en février ou en septembre |
-| 18 | **Le cas d'arbitrage de réserve « environnement de test rejeté malgré un gain de 30 % »**, envisagé au plan initial, n'a **aucune trace dans le dépôt** et a été remplacé par l'abandon de l'application mobile | S'il correspond à une décision réelle non tracée, le dire et il sera réintégré en annexe A3 |
+| 18 | **Le cas d'arbitrage de réserve « environnement de test rejeté malgré un gain de 30 % »**, envisagé au plan initial, n'a **aucune trace dans le dépôt** et a été remplacé par l'abandon de l'application mobile | S'il correspond à une décision réelle non tracée, le dire et il sera réintégré en annexe A2 |
 
 ---
 

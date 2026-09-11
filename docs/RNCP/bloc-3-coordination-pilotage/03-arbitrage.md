@@ -208,7 +208,7 @@ Un arbitrage dont on peut vérifier après coup que les inconvénients annoncés
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
 | 13 | Un cas d'arbitrage : migrer l'API, quand et comment | 1 à 6 |
-| A3 | Les deux arbitrages de réserve | 7 |
+| A2 | Les deux arbitrages de réserve | 7 |
 
 ---
 

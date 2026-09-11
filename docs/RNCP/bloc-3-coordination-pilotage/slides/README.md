@@ -19,7 +19,7 @@ npm run dev
 npm run verify:rendu
 ```
 
-Construit le support, le sert, le rend dans un navigateur et signale les diapositives dont le contenu est **coupé par le bas du cadre**, ce qu'aucun autre contrôle du dossier ne voit. Il **échoue** (code 1) si une diapositive déborde, si `dist/` manque, ou s'il n'a rien pu mesurer : un résultat vert signifie que les 31 pages ont réellement été rendues et mesurées.
+Construit le support, le sert, le rend dans un navigateur et signale les diapositives dont le contenu est **coupé par le bas du cadre**, ce qu'aucun autre contrôle du dossier ne voit. Il **échoue** (code 1) si une diapositive déborde, si `dist/` manque, ou s'il n'a rien pu mesurer : un résultat vert signifie que les 30 pages ont réellement été rendues et mesurées.
 
 > La police du thème est récupérée automatiquement dans `dist/`. Sans elle le navigateur retombe sur une police plus large et le contrôle signalerait de faux débordements, il refuse donc de tourner plutôt que de mentir. `CHROME_PATH` permet de désigner un Chromium déjà installé.
 
@@ -81,10 +81,10 @@ npm run export
 | 6. Les besoins en compétences | 18, 19 | C3.3.2 | ✅ |
 | 7. Rendre compte au commanditaire | 20 à 22 | C3.4.1 | ✅ |
 | 8. Bilan, et la demande de validation | 23 | **C3.4.2** ÉLIM | ✅ |
-| Annexes pour les questions | 24 à 31 | | ✅ |
+| Annexes pour les questions | 24 à 30 | | ✅ |
 
-**Support complet : 31 diapositives**, dont 23 présentées et 8 annexes appelées uniquement sur question. Les 31 **tiennent dans le cadre**, vérifié par `npm run verify:rendu`. Les annexes portent la mention `ANNEXE` en pied de page ; les diapositives présentées portent la compétence évaluée.
+**Support complet : 30 diapositives**, dont 23 présentées et 7 annexes appelées uniquement sur question. Les 30 **tiennent dans le cadre**, vérifié par `npm run verify:rendu`. Les annexes portent la mention `ANNEXE` en pied de page ; les diapositives présentées portent la compétence évaluée.
 
-**Navigation pendant les questions** : en mode présentateur, taper le numéro de page puis `Entrée` va directement à la diapositive. A1 architecture = **24**, A2 logigramme = **25**, A3 arbitrages de réserve = **26**, A4 budget = **27**, A5 chaîne = **28**, A6 RACI = **29**, A7 journal des versions = **30**, A8 retours utilisateurs = **31**.
+**Navigation pendant les questions** : en mode présentateur, taper le numéro de page puis `Entrée` va directement à la diapositive. A1 architecture = **24**, A2 arbitrages de réserve = **25**, A3 budget = **26**, A4 chaîne = **27**, A5 RACI = **28**, A6 journal des versions = **29**, A7 retours utilisateurs = **30**.
 
 **Règle de numérotation** : aucune diapositive de séparation de chapitre. La page `N` de Slidev correspond exactement à la diapositive `N` du plan, et donc au rattachement des 14 éléments imposés établi dans ce plan. Le titre de chapitre est porté par la première diapositive du chapitre. Toute insertion de diapositive impose de mettre à jour le plan et la table `REFS` dans le même mouvement.

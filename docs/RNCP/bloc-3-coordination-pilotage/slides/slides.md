@@ -1650,11 +1650,11 @@ non instruite n'est pas un arbitrage, c'est une absence de decision.
 Prononcer la phrase de cloture lentement, puis MARQUER UN TEMPS avant de
 remercier. C'est la derniere chose que le jury entendra avant les questions.
 
-Les huit annexes qui suivent ne sont JAMAIS presentees. Elles sont appelees
+Les sept annexes qui suivent ne sont JAMAIS presentees. Elles sont appelees
 uniquement si une question les demande. Connaitre leur ordre :
-A1 architecture 24, A2 logigramme complet 25, A3 arbitrages de reserve 26,
-A4 budget 27, A5 chaine CI/CD 28, A6 RACI complete 29, A7 journal des
-versions 30, A8 retours utilisateurs 31.
+A1 architecture 24, A2 arbitrages de reserve 25, A3 budget 26, A4 chaine
+CI/CD 27, A5 RACI complete 28, A6 journal des versions 29, A7 retours
+utilisateurs 30.
 
 = = =
 
@@ -1721,67 +1721,7 @@ Secrets injectés au déploiement par Secret Manager. Session par cookie, jamais
 
 ---
 
-# Annexe A2 : Le logigramme complet, et le chemin suivi
-
-<div class="grid grid-cols-2 gap-6">
-<div>
-
-<div class="flow tight">
-<div class="row"><div class="q">Un produit est-il déjà<br>déployé et utilisé ?</div><div class="r go" style="font-weight:400">Liberté<br>totale</div></div>
-<div class="arrow">↓ oui &nbsp;/&nbsp; non →</div>
-<div class="row"><div class="q">Contrat d'interface<br>intégralement préservable ?</div><div class="r no">REFUS</div></div>
-<div class="arrow">↓ oui &nbsp;/&nbsp; non →</div>
-<div class="row"><div class="q">Périmètre à réécrire<br>connu et figé <i>maintenant</i> ?</div><div class="r">DIFFÉRER</div></div>
-<div class="arrow">↓ oui &nbsp;/&nbsp; non →</div>
-<div class="row"><div class="q">Le coût de la décision<br>croît-il avec le temps ?</div><div class="r">DIFFÉRER</div></div>
-<div class="arrow">↓ oui &nbsp;/&nbsp; non →</div>
-<div class="row"><div class="q">Charge soutenable<br>par l'effectif <i>réel</i> ?</div><div class="r">RÉDUIRE</div></div>
-<div class="arrow">↓ oui &nbsp;/&nbsp; non →</div>
-<div class="row"><div class="q">Critère de bascule<br>mesurable définissable ?</div><div class="r no">REFUS</div></div>
-<div class="arrow">↓ oui</div>
-<div class="r go">DÉCIDER MAINTENANT</div>
-<div class="arrow">↓</div>
-<div class="row"><div class="q">Parité vérifiée<br>sur tout le contrat ?</div><div class="r">RETOUR<br>ARRIÈRE</div></div>
-<div class="arrow">↓ oui</div>
-<div class="r go">BASCULE, retrait de l'ancien socle</div>
-</div>
-
-</div>
-<div class="text-sm">
-
-### Le chemin réellement suivi, le 18 mars 2026
-
-<div class="dense">
-
-| Question | Ce qui fonde le « oui » |
-|----------|-------------------------|
-| Produit déployé ? | Le MVP est en ligne depuis le 16/03 |
-| Contrat préservable ? | Le contrat OpenAPI de l'API Node sert de spécification |
-| Périmètre figé ? | Le MVP venait d'être déclaré terminé |
-| Coût croissant ? | Chaque jour de V1 augmente le volume à réécrire |
-| Charge soutenable ? | 13 J/H pour un exécutant |
-| Critère de bascule ? | La parité sur les **12 routes** |
-| **Parité vérifiée ?** | D'où le retrait de l'ancien socle, 15 min après |
-
-</div>
-
-<div class="note mt-2 text-xs">
-Aucune technologie n'y figure. Il énonce les questions qu'un changement de socle impose de trancher, <b>dans l'ordre où elles doivent l'être</b>, la question éliminatoire du contrat vient avant toute considération de coût.
-</div>
-
-</div>
-</div>
-
-<style>
-.flow.tight { font-size: 0.6rem; }
-.flow.tight .q, .flow.tight .r { padding: 0.16rem 0.35rem; }
-.flow.tight .arrow { font-size: 0.56rem; line-height: 0.8; }
-.flow.tight .row { gap: 0.25rem; grid-template-columns: 1fr 4.6rem; }
-</style>
-
----
-
-# Annexe A3 : Les deux arbitrages de réserve
+# Annexe A2 : Les deux arbitrages de réserve
 
 <div class="grid grid-cols-2 gap-6 text-sm">
 <div>
@@ -1818,7 +1758,7 @@ Ces deux cas partagent le critère qui a tranché le cas principal : <b>la soute
 
 ---
 
-# Annexe A4 : Le budget prévisionnel détaillé
+# Annexe A3 : Le budget prévisionnel détaillé
 
 <div class="grid grid-cols-2 gap-6 dense">
 <div>
@@ -1863,7 +1803,7 @@ Borne haute atteinte si la base passe au premier palier payant (~9 $/mois).
 
 ---
 
-# Annexe A5 : La chaîne d'intégration et de déploiement
+# Annexe A4 : La chaîne d'intégration et de déploiement
 
 <div class="lede text-sm"><b>18 jobs</b> sur deux chaînes, dont <b>14 bloquants</b>. Un contrôle rouge refuse le déploiement, ce n'est pas une recommandation.</div>
 
@@ -1906,7 +1846,7 @@ Mesures anti-chaîne d'approvisionnement : actions épinglées par SHA, images p
 
 ---
 
-# Annexe A6 : La matrice RACI complète
+# Annexe A5 : La matrice RACI complète
 
 <div class="dense">
 
@@ -1938,7 +1878,7 @@ Mesures anti-chaîne d'approvisionnement : actions épinglées par SHA, images p
 
 ---
 
-# Annexe A7 : Le journal des versions
+# Annexe A6 : Le journal des versions
 
 <div class="grid grid-cols-2 gap-6 text-sm">
 <div class="dense">
@@ -1978,7 +1918,7 @@ Format <b>Keep a Changelog</b>, versionnage sémantique. Un tag et une release p
 
 ---
 
-# Annexe A8 : Les retours utilisateurs, question par question
+# Annexe A7 : Les retours utilisateurs, question par question
 
 <div class="text-sm mb-2">
 <b>7 réponses pour 17 comptes.</b> Échantillon réduit et orienté : 5 des 7 répondants utilisent l'application à chaque soirée.
