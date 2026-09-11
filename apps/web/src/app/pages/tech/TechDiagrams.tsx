@@ -734,7 +734,7 @@ const SKILLS = [
   { key: 'verify', command: '/verify', when: 'tech.diagram.skillVerifyWhen', origin: 'project' },
   {
     key: 'review',
-    command: '/code-review',
+    command: '/engineering:code-review',
     when: 'tech.diagram.skillReviewWhen',
     origin: 'anthropic',
   },

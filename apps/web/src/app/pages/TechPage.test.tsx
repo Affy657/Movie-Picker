@@ -280,7 +280,7 @@ describe('TechPage', () => {
       '/design:design-critique',
       '/engineering:testing-strategy',
       '/verify',
-      '/code-review',
+      '/engineering:code-review',
       '/simplify',
       '/security-review',
       '/engineering:deploy-checklist',
@@ -288,7 +288,7 @@ describe('TechPage', () => {
     ]) {
       expect(labels).toContain(command);
     }
-    expect(labels).not.toContain('/engineering:code-review');
+    expect(labels).not.toContain('/code-review');
     expect(labels).not.toContain('/engineering:tech-debt');
     expect(labels.some((label) => label?.includes('TDD'))).toBe(true);
   });
@@ -309,7 +309,7 @@ describe('TechPage', () => {
       '/product-management:write-spec',
       '/design:design-critique',
       '/engineering:testing-strategy',
-      '/code-review',
+      '/engineering:code-review',
       '/simplify',
       '/security-review',
       '/engineering:deploy-checklist',

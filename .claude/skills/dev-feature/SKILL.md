@@ -87,7 +87,7 @@ Corriger ce qui sort de ces contrôles (par un test d'abord quand c'est du compo
 
 ## Étape 7. Revue et roadmap
 
-- Invoquer `/code-review` (bugs de correctness) puis `/simplify` (réutilisation, simplification) ; `/security-review` en plus dès que la feature touche l'authentification, les droits, un nouvel endpoint ou une entrée utilisateur. Appliquer les retours pertinents (un bug relevé en revue passe par un test qui le reproduit d'abord), relancer les tests ciblés, et rejouer les quatre contrôles de l'étape 6 si le diff a bougé de façon notable ; si le comportement visible a changé, redonner la main à l'utilisateur pour re-tester, avec STOP, avant de continuer.
+- Invoquer `engineering:code-review` (bugs de correctness) puis `/simplify` (réutilisation, simplification) ; `/security-review` en plus dès que la feature touche l'authentification, les droits, un nouvel endpoint ou une entrée utilisateur. Appliquer les retours pertinents (un bug relevé en revue passe par un test qui le reproduit d'abord), relancer les tests ciblés, et rejouer les quatre contrôles de l'étape 6 si le diff a bougé de façon notable ; si le comportement visible a changé, redonner la main à l'utilisateur pour re-tester, avec STOP, avant de continuer.
 - Marquer la feature livrée dans `docs/roadmap.md` : `⬜` devient `✅`, la version s'ajoute après le titre (`**Titre** (V1.6)`), et le compte « N restants » du titre de la version baisse du poids de l'item (`S` 1, `M` 3, `L` 8, `XL` 20). Une entrée venue du backlog rejoint la section de sa version, poids compris.
 - Une dette repérée en route va dans `docs/technical-debt.md`, jamais dans la roadmap ni en mémoire.
 
