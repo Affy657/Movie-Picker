@@ -22,6 +22,7 @@ import {
   KofiLogo,
   LetterboxdLogo,
   MongoLogo,
+  MoviePickerLogo,
   PostHogLogo,
   ReactLogo,
   ResendLogo,
@@ -707,27 +708,77 @@ const MCP_TOOLS = [
   column: number;
 }[];
 
+const SKILL_COLUMNS = 3;
+const SKILL_ROW_HEIGHT = 62;
+
 const SKILLS = [
-  { key: 'critique', command: '/design:design-critique', when: 'tech.diagram.skillCritiqueWhen' },
+  { key: 'flow', command: '/dev-feature', when: 'tech.diagram.skillFlowWhen', origin: 'project' },
+  {
+    key: 'spec',
+    command: '/product-management:write-spec',
+    when: 'tech.diagram.devFunctionalSpec',
+    origin: 'anthropic',
+  },
+  {
+    key: 'critique',
+    command: '/design:design-critique',
+    when: 'tech.diagram.skillCritiqueWhen',
+    origin: 'anthropic',
+  },
   {
     key: 'strategy',
     command: '/engineering:testing-strategy',
     when: 'tech.diagram.skillStrategyWhen',
+    origin: 'anthropic',
   },
-  { key: 'verify', command: '/verify', when: 'tech.diagram.skillVerifyWhen' },
-  { key: 'review', command: '/engineering:code-review', when: 'tech.diagram.skillReviewWhen' },
-  { key: 'debt', command: '/engineering:tech-debt', when: 'tech.diagram.skillDebtWhen' },
+  { key: 'verify', command: '/verify', when: 'tech.diagram.skillVerifyWhen', origin: 'project' },
+  {
+    key: 'review',
+    command: '/code-review',
+    when: 'tech.diagram.skillReviewWhen',
+    origin: 'anthropic',
+  },
+  {
+    key: 'simplify',
+    command: '/simplify',
+    when: 'tech.diagram.skillSimplifyWhen',
+    origin: 'anthropic',
+  },
+  {
+    key: 'security',
+    command: '/security-review',
+    when: 'tech.diagram.skillSecurityWhen',
+    origin: 'anthropic',
+  },
+  {
+    key: 'deploy',
+    command: '/engineering:deploy-checklist',
+    when: 'tech.diagram.skillDeployWhen',
+    origin: 'anthropic',
+  },
+  {
+    key: 'maintenance',
+    command: '/weekly-maintenance',
+    when: 'tech.diagram.skillMaintenanceWhen',
+    origin: 'project',
+  },
 ].map((skill, index) => ({
   ...skill,
-  column: 10 + (index % 3) * 290,
-  row: Math.floor(index / 3),
+  column: 10 + (index % SKILL_COLUMNS) * 290,
+  row: Math.floor(index / SKILL_COLUMNS),
 })) as readonly {
   key: string;
   command: string;
   when: TranslationKey;
+  origin: 'anthropic' | 'project';
   column: number;
   row: number;
 }[];
+
+export const SKILL_COUNT = SKILLS.length;
+const SKILL_ROWS = Math.ceil(SKILL_COUNT / SKILL_COLUMNS);
+const MCP_TOP = 34 + SKILL_ROWS * SKILL_ROW_HEIGHT + 26;
+const SKILL_LOGOS = { anthropic: AnthropicLogo, project: MoviePickerLogo } as const;
 
 const BOX_W = 160;
 const BOX_H = 44;
@@ -860,15 +911,16 @@ const DEV_PHASES = [
     steps: [
       { key: 'devNeed', approved: false },
       { key: 'devScoping', approved: true },
+      { key: 'devFunctionalSpec', approved: true },
       { key: 'devMockup', approved: true },
-      { key: 'devPlan', approved: true },
     ],
   },
   {
     key: 'phaseBuild',
     steps: [
+      { key: 'devTestPlan', approved: false },
       { key: 'devTdd', approved: false },
-      { key: 'devVerify', approved: false },
+      { key: 'devBrowserCheck', approved: false },
       { key: 'devLocalCheck', approved: true },
     ],
   },
@@ -877,6 +929,7 @@ const DEV_PHASES = [
     steps: [
       { key: 'devReview', approved: false },
       { key: 'devFixes', approved: false },
+      { key: 'devRoadmap', approved: false },
       { key: 'devPrePush', approved: false },
     ],
   },
@@ -891,8 +944,12 @@ const DEV_PHASES = [
   },
 ] as const;
 
-const PHASE_X = [10, 230, 450, 670] as const;
-const PHASE_W = 200;
+const PHASE_W = 203;
+const PHASE_GAP = 15;
+const PHASE_X = [0, 1, 2, 3].map((index) => 10 + index * (PHASE_W + PHASE_GAP));
+const LAST_PHASE_CENTER = (PHASE_X[3] as number) + PHASE_W / 2;
+const MONITORING_X = PHASE_X[2] as number;
+const MONITORING_W = (PHASE_X[3] as number) + PHASE_W - MONITORING_X;
 
 export function FeatureFlowDiagram() {
   const { t } = useTranslation();
@@ -911,7 +968,7 @@ export function FeatureFlowDiagram() {
 
       <g stroke={BORDER} strokeWidth="1.4" fill="none" markerEnd="url(#tech-arrow-feature)">
         {PHASE_X.slice(0, 3).map((x) => (
-          <path key={x} d={`M ${x + PHASE_W} 100 L ${x + PHASE_W + 14} 100`} />
+          <path key={x} d={`M ${x + PHASE_W + 1} 100 L ${x + PHASE_W + PHASE_GAP - 3} 100`} />
         ))}
       </g>
 
@@ -966,16 +1023,24 @@ export function FeatureFlowDiagram() {
         );
       })}
 
-      <rect x="450" y="196" width="420" height="44" rx="10" fill={SURFACE} stroke={BORDER} />
-      <text x="466" y="218" className={styles.svgLabel} fill={TEXT}>
+      <rect
+        x={MONITORING_X}
+        y="196"
+        width={MONITORING_W}
+        height="44"
+        rx="10"
+        fill={SURFACE}
+        stroke={BORDER}
+      />
+      <text x={MONITORING_X + 16} y="218" className={styles.svgLabel} fill={TEXT}>
         {t('tech.diagram.devSignals')}
       </text>
-      <text x="466" y="232" className={styles.svgSub} fill={META}>
+      <text x={MONITORING_X + 16} y="232" className={styles.svgSub} fill={META}>
         {t('tech.diagram.devSignalsSub')}
       </text>
 
       <g stroke={BORDER} strokeWidth="1.4" fill="none" markerEnd="url(#tech-arrow-feature)">
-        <path d="M 770 166 L 770 190" />
+        <path d={`M ${LAST_PHASE_CENTER} 166 L ${LAST_PHASE_CENTER} 190`} />
       </g>
 
       <g
@@ -985,7 +1050,7 @@ export function FeatureFlowDiagram() {
         fill="none"
         markerEnd="url(#tech-arrow-back)"
       >
-        <path d="M 450 218 L 24 218 L 24 174" />
+        <path d={`M ${MONITORING_X} 218 L 24 218 L 24 174`} />
       </g>
       <text x="14" y="240" className={styles.svgSub} fill={PRIMARY}>
         {t('tech.diagram.flowLoopProduct')}
@@ -1002,7 +1067,7 @@ export function FeatureFlowDiagram() {
 export function AssistantToolingDiagram() {
   const { t } = useTranslation();
   return (
-    <svg viewBox="0 0 880 372" role="img" aria-labelledby="tech-tooling-title">
+    <svg viewBox={`0 0 880 ${MCP_TOP + 188}`} role="img" aria-labelledby="tech-tooling-title">
       <title id="tech-tooling-title">{t('tech.diagram.toolingTitle')}</title>
 
       <text x="10" y="20" className={styles.svgSub} fill={META}>
@@ -1010,9 +1075,10 @@ export function AssistantToolingDiagram() {
       </text>
 
       {SKILLS.map((skill) => {
-        const y = 34 + skill.row * 62;
+        const y = 34 + skill.row * SKILL_ROW_HEIGHT;
+        const Logo = SKILL_LOGOS[skill.origin];
         return (
-          <g key={skill.key}>
+          <g key={skill.key} data-origin={skill.origin}>
             <rect
               x={skill.column}
               y={y}
@@ -1022,7 +1088,7 @@ export function AssistantToolingDiagram() {
               fill={SURFACE}
               stroke={BORDER}
             />
-            <AnthropicLogo x={skill.column + 14} y={y + 10} size={16} />
+            <Logo x={skill.column + 14} y={y + 10} size={16} />
             <text x={skill.column + 38} y={y + 23} className={styles.svgLabel} fill={TEXT}>
               {skill.command}
             </text>
@@ -1033,14 +1099,14 @@ export function AssistantToolingDiagram() {
         );
       })}
 
-      <line x1="10" y1="184" x2="870" y2="184" stroke={BORDER} strokeDasharray="4 4" />
-      <text x="10" y="208" className={styles.svgSub} fill={META}>
+      <line x1="10" y1={MCP_TOP} x2="870" y2={MCP_TOP} stroke={BORDER} strokeDasharray="4 4" />
+      <text x="10" y={MCP_TOP + 24} className={styles.svgSub} fill={META}>
         {t('tech.diagram.mcpLabel')}
       </text>
 
       <rect
         x="374"
-        y="222"
+        y={MCP_TOP + 38}
         width="132"
         height="42"
         rx="10"
@@ -1048,8 +1114,8 @@ export function AssistantToolingDiagram() {
         stroke={PRIMARY}
         strokeWidth="1.5"
       />
-      <ClaudeLogo x={386} y={233} size={20} />
-      <text x="414" y="248" className={styles.svgLabel} fill={TEXT}>
+      <ClaudeLogo x={386} y={MCP_TOP + 49} size={20} />
+      <text x="414" y={MCP_TOP + 64} className={styles.svgLabel} fill={TEXT}>
         {t('tech.diagram.mcpAssistant')}
       </text>
 
@@ -1057,7 +1123,7 @@ export function AssistantToolingDiagram() {
         {MCP_TOOLS.map((tool) => (
           <path
             key={tool.key}
-            d={`M 440 264 C 440 278, ${tool.column + 49} 274, ${tool.column + 49} 284`}
+            d={`M 440 ${MCP_TOP + 80} C 440 ${MCP_TOP + 94}, ${tool.column + 49} ${MCP_TOP + 90}, ${tool.column + 49} ${MCP_TOP + 100}`}
           />
         ))}
       </g>
@@ -1066,17 +1132,17 @@ export function AssistantToolingDiagram() {
         <g key={tool.key}>
           <rect
             x={tool.column}
-            y="284"
+            y={MCP_TOP + 100}
             width="98"
             height="62"
             rx="10"
             fill={SURFACE}
             stroke={BORDER}
           />
-          <tool.Logo x={tool.column + 40} y={292} size={18} />
+          <tool.Logo x={tool.column + 40} y={MCP_TOP + 108} size={18} />
           <text
             x={tool.column + 49}
-            y="326"
+            y={MCP_TOP + 142}
             textAnchor="middle"
             className={styles.svgLabel}
             fill={TEXT}
@@ -1085,7 +1151,7 @@ export function AssistantToolingDiagram() {
           </text>
           <text
             x={tool.column + 49}
-            y="341"
+            y={MCP_TOP + 157}
             textAnchor="middle"
             className={styles.svgSub}
             fill={META}

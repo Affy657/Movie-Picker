@@ -11,6 +11,7 @@ import {
   SHIPPED_MILESTONES,
 } from '@/app/pages/tech/TechTimeline';
 import { TECH_METRICS } from '@/app/pages/tech/generated/techMetrics';
+import { SKILL_COUNT } from '@/app/pages/tech/TechDiagrams';
 import { TECH_PAGE_LAST_UPDATE } from '@/app/pages/tech/lastUpdate';
 import { fr } from '@/shared/i18n/locales/fr';
 import { SITE_URL } from '@/shared/seo/siteMeta';
@@ -115,8 +116,8 @@ describe('TechPage', () => {
 
     expect(section.querySelectorAll('article')).toHaveLength(4);
     expect(section.querySelectorAll('figure')).toHaveLength(4);
-    expect(section.textContent).toMatch(/cinq procédures/i);
-    expect(section.textContent).not.toMatch(/quatre procédures/i);
+    expect(section.textContent).toContain(`${SKILL_COUNT} procédures`);
+    expect(section.querySelectorAll('svg g[data-origin]')).toHaveLength(SKILL_COUNT);
     expect(section.textContent).toContain(String(TECH_METRICS.assistantTools));
   });
 
@@ -267,22 +268,74 @@ describe('TechPage', () => {
     }
   });
 
-  it('nomme les quatre procédures outillées et affiche le TDD dans le flot', () => {
+  it('nomme chaque procédure outillée du flot et affiche le TDD', () => {
     const { container } = renderTechPage();
     const labels = [...container.querySelectorAll('#method svg text')].map(
       (node) => node.textContent
     );
 
     for (const command of [
+      '/dev-feature',
+      '/product-management:write-spec',
       '/design:design-critique',
       '/engineering:testing-strategy',
       '/verify',
-      '/engineering:code-review',
-      '/engineering:tech-debt',
+      '/code-review',
+      '/simplify',
+      '/security-review',
+      '/engineering:deploy-checklist',
+      '/weekly-maintenance',
     ]) {
       expect(labels).toContain(command);
     }
+    expect(labels).not.toContain('/engineering:code-review');
+    expect(labels).not.toContain('/engineering:tech-debt');
     expect(labels.some((label) => label?.includes('TDD'))).toBe(true);
+  });
+
+  it('réserve la marque Anthropic aux procédures Anthropic, les procédures maison portent le clap', () => {
+    const { container } = renderTechPage();
+    const boxes = [...container.querySelectorAll('svg g[data-origin]')];
+    const boxOf = (command: string) =>
+      boxes.find((box) => box.querySelector('text')?.textContent === command) as SVGGElement;
+
+    for (const homemade of ['/dev-feature', '/verify', '/weekly-maintenance']) {
+      const box = boxOf(homemade);
+      expect(box.dataset.origin).toBe('project');
+      expect(box.querySelector('image')?.getAttribute('href')).toBe('/logo.svg');
+      expect(box.querySelector('svg')).toBeNull();
+    }
+    for (const anthropic of [
+      '/product-management:write-spec',
+      '/design:design-critique',
+      '/engineering:testing-strategy',
+      '/code-review',
+      '/simplify',
+      '/security-review',
+      '/engineering:deploy-checklist',
+    ]) {
+      const box = boxOf(anthropic);
+      expect(box.dataset.origin).toBe('anthropic');
+      expect(box.querySelector('image')).toBeNull();
+      expect(box.querySelector('svg')).not.toBeNull();
+    }
+  });
+
+  it('place le compte rendu fonctionnel dans le flot, à la place du plan technique', () => {
+    const { container } = renderTechPage();
+    const flow = container.querySelector(
+      'svg[aria-labelledby="tech-featureflow-title"]'
+    ) as SVGSVGElement;
+    const labels = [...flow.querySelectorAll('text')].map((node) => node.textContent);
+
+    expect(labels).toContain('compte rendu fonctionnel');
+    expect(labels).toContain('plan de tests');
+    expect(labels).toContain('contrôle en navigateur');
+    expect(labels).not.toContain('plan technique');
+    expect(flow.querySelectorAll('rect[width="8"]')).toHaveLength(5);
+    expect(container.querySelector('#method')?.textContent).toContain(
+      'Cadrage, compte rendu fonctionnel, maquette, recette locale.'
+    );
   });
 
   it('ouvre sur le contexte et les chiffres, sans fiche technique', () => {

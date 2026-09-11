@@ -64,6 +64,7 @@ import {
   LetterboxdFlowDiagram,
   ProductFlowDiagram,
   RequestPathDiagram,
+  SKILL_COUNT,
   TestPyramidDiagram,
   UnitOfWorkDiagram,
 } from './tech/TechDiagrams';
@@ -596,7 +597,7 @@ export default function TechPage() {
             <Figure caption={t('tech.method.bugCaption')}>
               <BugFlowDiagram />
             </Figure>
-            <Figure caption={t('tech.method.toolingCaption')}>
+            <Figure caption={t('tech.method.toolingCaption', { count: SKILL_COUNT })}>
               <AssistantToolingDiagram />
             </Figure>
             <p className={shared.note}>
