@@ -31,7 +31,7 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
     {
         var logger = new CapturingLogger<StructuredHttpRequestLoggingMiddleware>();
         var ctx = new DefaultHttpContext();
-        ctx.Request.Method = "GET";
+        ctx.Request.Method = "GET" + Environment.NewLine + "forged";
         ctx.Request.Path = "/api/v1/movies\r\nforged";
         ctx.Request.QueryString = new QueryString("?q=a\nb");
         var mw = new StructuredHttpRequestLoggingMiddleware(_ => Task.CompletedTask, logger);
@@ -41,7 +41,7 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
         var entry = Assert.Single(logger.Entries);
         Assert.DoesNotContain('\n', entry.Message);
         Assert.DoesNotContain('\r', entry.Message);
-        Assert.Contains("/api/v1/movies forged", entry.Message);
+        Assert.Contains("HTTP GET forged /api/v1/movies forged", entry.Message);
         Assert.Contains("?q=a b", entry.Message);
     }
 

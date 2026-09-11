@@ -20,7 +20,7 @@ public sealed class StructuredHttpRequestLoggingMiddleware(
             var routeKind = ObservabilityRouteKind.ForPath(context.Request.Path);
             logger.LogInformation(
                 "HTTP {HttpMethod} {Path}{QueryString} → {StatusCode} en {ElapsedMs} ms ({Endpoint}) [kind={ApiRouteKind}]",
-                context.Request.Method,
+                SingleLine(context.Request.Method),
                 SingleLine(context.Request.Path.Value),
                 SingleLine(context.Request.QueryString.Value),
                 context.Response.StatusCode,
