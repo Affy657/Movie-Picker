@@ -400,8 +400,6 @@ describe('EventMoviesSection (MSW)', () => {
         maxVotesPerParticipant: max,
         wheelMode: 'weightedByVotes',
         winnerCount: 1,
-        winnerCountMax: 10,
-        drawnWinnerCount: 0,
       },
     });
 

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.UseCases.FinishedEvents;
@@ -75,14 +76,7 @@ public sealed class FinishedEventWatchlistPass : IFinishedEventWatchlistPass
 
     private async Task RemoveWinnersFromParticipantsWatchlistsAsync(Event evt, CancellationToken ct)
     {
-        var winners = new List<Movie>();
-        foreach (var movieId in evt.WinnerMovieIds)
-        {
-            var winner = await _movies.GetByIdAndEventIdAsync(movieId, evt.Id, ct);
-            if (winner is not null)
-                winners.Add(winner);
-        }
-
+        var winners = await WinnerMovies.ListAsync(_movies, evt, ct);
         if (winners.Count == 0)
             return;
 

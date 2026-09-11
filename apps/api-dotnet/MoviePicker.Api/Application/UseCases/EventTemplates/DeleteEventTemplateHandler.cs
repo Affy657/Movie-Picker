@@ -17,7 +17,6 @@ public sealed class DeleteEventTemplateHandler : IDeleteEventTemplateHandler
     public async Task HandleAsync(string userId, string templateId, CancellationToken ct = default)
     {
         var user = await EventTemplatePolicy.RequireUserAsync(_users, userId, ct);
-        EventTemplatePolicy.RequireIndexOf(user.EventTemplates, templateId);
 
         var removed = await _users.RemoveEventTemplateAsync(user.Id, templateId, _clock.GetUtcNow(), ct);
         if (!removed)

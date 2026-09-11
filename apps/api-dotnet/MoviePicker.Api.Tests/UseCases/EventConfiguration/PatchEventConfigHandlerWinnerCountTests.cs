@@ -65,7 +65,6 @@ public sealed class PatchEventConfigHandlerWinnerCountTests
         var response = await _sut.HandleAsync("s", new PatchEventConfigRequest());
 
         Assert.Equal(EventConfig.DefaultWinnerCount, response.WinnerCount);
-        Assert.Equal(EventConfig.WinnerCountCap, response.WinnerCountMax);
     }
 
     [Fact]
@@ -132,7 +131,6 @@ public sealed class PatchEventConfigHandlerWinnerCountTests
         var response = await _sut.HandleAsync("s", new PatchEventConfigRequest { WinnerCount = 4 });
 
         Assert.Equal(4, response.WinnerCount);
-        Assert.Equal(1, response.DrawnWinnerCount);
     }
 
     [Fact]

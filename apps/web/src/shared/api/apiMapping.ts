@@ -1,4 +1,4 @@
-import type { EventData, EventParticipantSummary, EventWinnerData } from '@/shared/types/event';
+import type { EventData, EventParticipantSummary } from '@/shared/types/event';
 import type { MovieData, ParticipantData } from '@/shared/types/movie';
 
 type RawMovieData = Omit<MovieData, 'id' | 'participantId'> & {
@@ -16,16 +16,10 @@ type RawEventParticipantSummary = {
   handle?: string | null;
 };
 
-type RawEventWinner = Omit<EventWinnerData, 'movie'> & { movie?: RawMovieData | null };
-
-type RawEventData = Omit<
-  EventData,
-  'id' | 'isFinished' | 'myParticipant' | 'winners' | 'participants'
-> & {
+type RawEventData = Omit<EventData, 'id' | 'isFinished' | 'myParticipant' | 'participants'> & {
   _id: string;
   isFinished?: boolean;
   myParticipant?: { _id: string; pseudo: string } | null;
-  winners?: RawEventWinner[];
   participantCount?: number;
   movieCount?: number;
   participants?: RawEventParticipantSummary[];
@@ -63,10 +57,7 @@ export function mapEventData(raw: RawEventData): EventData {
     myParticipant: myParticipant
       ? { id: myParticipant._id, pseudo: myParticipant.pseudo }
       : myParticipant,
-    winners: (winners ?? []).map((w) => ({
-      ...w,
-      movie: w.movie ? mapMovieData(w.movie) : null,
-    })),
+    winners: winners ?? [],
     participants: mappedParticipants,
   };
 }

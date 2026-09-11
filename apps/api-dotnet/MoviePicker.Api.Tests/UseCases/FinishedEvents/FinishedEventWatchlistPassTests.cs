@@ -25,12 +25,16 @@ public sealed class FinishedEventWatchlistPassTests
     private readonly Mock<IMovieRepository> _movieRepo = new();
     private readonly Mock<IParticipantRepository> _participantRepo = new();
     private readonly Mock<IWatchlistRepository> _watchlistRepo = new();
+    private readonly List<Movie> _movies = [];
     private readonly FinishedEventWatchlistPass _sut;
 
     public FinishedEventWatchlistPassTests()
     {
         _eventRepo.Setup(r => r.MarkWatchlistCleanedAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
+        _movieRepo.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<string> ids, CancellationToken _) =>
+                _movies.Where(m => ids.Contains(m.Id)).ToList());
         _sut = new FinishedEventWatchlistPass(
             _eventRepo.Object,
             _movieRepo.Object,
@@ -64,8 +68,7 @@ public sealed class FinishedEventWatchlistPassTests
 
     private void GivenWinnerAndParticipants(params Participant[] participants)
     {
-        _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("m-win", "evt1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Winner());
+        _movies.Add(Winner());
         _participantRepo.Setup(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(participants);
         _watchlistRepo.Setup(r => r.RemoveForUsersAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
@@ -142,7 +145,7 @@ public sealed class FinishedEventWatchlistPassTests
 
         Assert.False(cleaned);
         _movieRepo.Verify(
-            r => r.GetByIdAndEventIdAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()),
             Times.Never);
         VerifyNoWatchlistTouched();
     }
@@ -161,9 +164,6 @@ public sealed class FinishedEventWatchlistPassTests
     [Fact]
     public async Task RunForEventAsync_WinnerMovieGone_RemovesNothingButStillStamps()
     {
-        _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("m-win", "evt1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Movie?)null);
-
         var cleaned = await _sut.RunForEventAsync(FinishedWithWinner());
 
         Assert.True(cleaned);
@@ -198,8 +198,8 @@ public sealed class FinishedEventWatchlistPassTests
     public async Task RunForEventAsync_WinnerIsASeries_RemovesItWithTheRightMediaType()
     {
         GivenWinnerAndParticipants(new Participant { Id = "p1", EventId = "evt1", Pseudo = "Alice", UserId = "u1" });
-        _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("m-win", "evt1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Winner() with { MediaType = MovieMediaType.Tv, TmdbId = 1396 });
+        _movies.Clear();
+        _movies.Add(Winner() with { MediaType = MovieMediaType.Tv, TmdbId = 1396 });
 
         await _sut.RunForEventAsync(FinishedWithWinner());
 
@@ -213,8 +213,7 @@ public sealed class FinishedEventWatchlistPassTests
     {
         var evt = FinishedWithWinner() with { Winners = TestWinners.Won("m-win", "m-two") };
         GivenWinnerAndParticipants(new Participant { Id = "p1", EventId = "evt1", Pseudo = "Alice", UserId = "u1" });
-        _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("m-two", "evt1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Winner() with { Id = "m-two", TmdbId = 603 });
+        _movies.Add(Winner() with { Id = "m-two", TmdbId = 603 });
 
         await _sut.RunForEventAsync(evt);
 

@@ -6230,10 +6230,6 @@ export interface components {
             allowSeries?: boolean;
             /** Format: int32 */
             winnerCount?: number;
-            /** Format: int32 */
-            winnerCountMax?: number;
-            /** Format: int32 */
-            drawnWinnerCount?: number;
             recurrence?: components["schemas"]["RecurrenceFrequency"];
             hasNextOccurrence?: boolean;
         };
@@ -6304,7 +6300,6 @@ export interface components {
             pickMethod?: string | null;
             /** Format: date-time */
             pickedAt?: string;
-            movie?: components["schemas"]["WinnerMovieResponse"];
         };
         ExportedConnection: {
             handle?: string | null;

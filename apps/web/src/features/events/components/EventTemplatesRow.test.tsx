@@ -24,7 +24,7 @@ function makeTemplate(overrides: Partial<EventTemplateData> = {}): EventTemplate
 function renderRow(
   overrides: Partial<{
     templates: EventTemplateData[];
-    appliedTemplateId: string | null;
+    appliedTemplate: EventTemplateData | null;
   }> = {}
 ) {
   const onApply = vi.fn();
@@ -34,7 +34,7 @@ function renderRow(
     <LocaleProvider>
       <EventTemplatesRow
         templates={overrides.templates ?? [makeTemplate()]}
-        appliedTemplateId={overrides.appliedTemplateId ?? null}
+        appliedTemplate={overrides.appliedTemplate ?? null}
         onApply={onApply}
         onRename={onRename}
         onDelete={onDelete}
@@ -50,7 +50,7 @@ describe('EventTemplatesRow', () => {
       <LocaleProvider>
         <EventTemplatesRow
           templates={[]}
-          appliedTemplateId={null}
+          appliedTemplate={null}
           onApply={vi.fn()}
           onRename={vi.fn()}
           onDelete={vi.fn()}
@@ -80,7 +80,7 @@ describe('EventTemplatesRow', () => {
   });
 
   it('marque la pastille appliquée et annonce la configuration', () => {
-    renderRow({ appliedTemplateId: 't1' });
+    renderRow({ appliedTemplate: makeTemplate() });
 
     expect(screen.getByRole('button', { name: /Soirée horreur/ })).toHaveAttribute(
       'aria-pressed',
@@ -190,7 +190,7 @@ describe('EventTemplatesRow', () => {
       <LocaleProvider>
         <EventTemplatesRow
           templates={[makeTemplate()]}
-          appliedTemplateId={null}
+          appliedTemplate={null}
           onApply={vi.fn()}
           onRename={vi.fn()}
           onDelete={vi.fn()}
@@ -202,7 +202,7 @@ describe('EventTemplatesRow', () => {
       <LocaleProvider>
         <EventTemplatesRow
           templates={[]}
-          appliedTemplateId={null}
+          appliedTemplate={null}
           onApply={vi.fn()}
           onRename={vi.fn()}
           onDelete={vi.fn()}

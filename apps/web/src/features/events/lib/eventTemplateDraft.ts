@@ -1,9 +1,13 @@
+import { parseTheme } from '@/features/events/components/ThemeField';
 import {
+  DEFAULT_VOTE_LIMIT,
   MAX_EVENT_PARTICIPANTS,
   MAX_EVENT_TEMPLATE_NAME_LENGTH,
   MAX_PROPOSALS_PER_PARTICIPANT,
   MAX_WINNERS_PER_EVENT,
   DEFAULT_EVENT_CONFIG,
+  type EventConfigData,
+  type EventConfigPatchPayload,
   type EventTemplateData,
   type WheelMode,
 } from '@/features/events/types';
@@ -19,11 +23,24 @@ export interface TemplateConfigDraft {
   winnerCount: number;
 }
 
+export type ApplicableConfig = Pick<
+  EventConfigData,
+  | 'theme'
+  | 'maxProposalsPerParticipant'
+  | 'maxParticipants'
+  | 'maxVotesPerParticipant'
+  | 'wheelMode'
+  | 'richSharePreview'
+  | 'allowSeries'
+  | 'winnerCount'
+>;
+
 export interface TemplateFormFields {
   themeEmoji: string;
   themeText: string;
   maxProposals: string;
   maxParticipants: string;
+  voteLimitEnabled: boolean;
   maxVotes: string;
   wheelMode: WheelMode;
   richSharePreview: boolean;
@@ -50,11 +67,42 @@ export function buildTemplateDraft(fields: TemplateFormFields): TemplateConfigDr
     theme: theme.length > 0 ? theme : null,
     maxProposalsPerParticipant: parseLimit(fields.maxProposals),
     maxParticipants: parseLimit(fields.maxParticipants),
-    maxVotesPerParticipant: parseLimit(fields.maxVotes),
+    maxVotesPerParticipant: fields.voteLimitEnabled
+      ? (parseLimit(fields.maxVotes) ?? DEFAULT_VOTE_LIMIT)
+      : null,
     wheelMode: fields.wheelMode,
     richSharePreview: fields.richSharePreview,
     allowSeries: fields.allowSeries,
     winnerCount: parseWinnerCount(fields.winnerCount),
+  };
+}
+
+export function configToFields(config: ApplicableConfig): TemplateFormFields {
+  const theme = parseTheme(config.theme);
+  return {
+    themeEmoji: theme.emoji,
+    themeText: theme.text,
+    maxProposals: String(config.maxProposalsPerParticipant ?? MAX_PROPOSALS_PER_PARTICIPANT),
+    maxParticipants: String(config.maxParticipants ?? MAX_EVENT_PARTICIPANTS),
+    voteLimitEnabled: config.maxVotesPerParticipant != null,
+    maxVotes: String(config.maxVotesPerParticipant ?? DEFAULT_VOTE_LIMIT),
+    wheelMode: config.wheelMode,
+    richSharePreview: config.richSharePreview ?? true,
+    allowSeries: config.allowSeries ?? false,
+    winnerCount: String(config.winnerCount),
+  };
+}
+
+export function draftToConfigPatch(draft: TemplateConfigDraft): EventConfigPatchPayload {
+  return {
+    theme: draft.theme ?? '',
+    maxProposalsPerParticipant: draft.maxProposalsPerParticipant ?? 0,
+    maxParticipants: draft.maxParticipants ?? 0,
+    maxVotesPerParticipant: draft.maxVotesPerParticipant ?? 0,
+    wheelMode: draft.wheelMode,
+    richSharePreview: draft.richSharePreview,
+    allowSeries: draft.allowSeries,
+    winnerCount: draft.winnerCount,
   };
 }
 

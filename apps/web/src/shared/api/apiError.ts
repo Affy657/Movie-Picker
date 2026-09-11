@@ -1,3 +1,7 @@
+export const API_ERROR_REASONS = {
+  voteLimitReached: 'vote-limit-reached',
+} as const;
+
 export class ApiError extends Error {
   readonly code?: number;
 

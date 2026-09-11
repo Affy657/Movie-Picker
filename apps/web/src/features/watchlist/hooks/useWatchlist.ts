@@ -6,12 +6,16 @@ import {
   type AddWatchlistItemBody,
 } from '@/features/watchlist/api/watchlistApi';
 import type { MovieMediaType } from '@/shared/types/movie';
+import type { UserProfile } from '@/features/auth/types';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 
 export function invalidateWatchlist(queryClient: QueryClient): Promise<void> {
+  const ownHandle = queryClient.getQueryData<UserProfile | null>(queryKeys.auth.me)?.handle;
   return Promise.all([
     queryClient.invalidateQueries({ queryKey: queryKeys.watchlist.list }),
-    queryClient.invalidateQueries({ queryKey: queryKeys.profile.publicAll }),
+    ownHandle
+      ? queryClient.invalidateQueries({ queryKey: queryKeys.profile.public(ownHandle) })
+      : Promise.resolve(),
   ]).then(() => undefined);
 }
 

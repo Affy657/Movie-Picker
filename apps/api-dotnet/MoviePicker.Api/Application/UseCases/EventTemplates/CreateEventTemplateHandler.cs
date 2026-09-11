@@ -22,13 +22,9 @@ public sealed class CreateEventTemplateHandler : ICreateEventTemplateHandler
         CancellationToken ct = default)
     {
         var user = await EventTemplatePolicy.RequireUserAsync(_users, userId, ct);
-        var existing = user.EventTemplates;
-
-        if (existing.Count >= EventTemplate.MaxPerUser)
-            throw CapReached();
 
         var name = EventTemplatePolicy.NormalizeName(request.Name);
-        EventTemplatePolicy.EnsureNameIsFree(existing, name, exceptTemplateId: null);
+        EventTemplatePolicy.EnsureNameIsFree(user.EventTemplates, name, exceptTemplateId: null);
 
         var now = _clock.GetUtcNow();
         var created = new EventTemplate
@@ -41,11 +37,9 @@ public sealed class CreateEventTemplateHandler : ICreateEventTemplateHandler
 
         var added = await _users.AddEventTemplateAsync(user.Id, created, EventTemplate.MaxPerUser, now, ct);
         if (!added)
-            throw CapReached();
+            throw new ConflictException(
+                $"Vous avez atteint la limite de {EventTemplate.MaxPerUser} templates. Supprimez-en un pour en enregistrer un nouveau.");
 
         return EventTemplateResponse.FromTemplate(created);
     }
-
-    private static ConflictException CapReached() => new(
-        $"Vous avez atteint la limite de {EventTemplate.MaxPerUser} templates. Supprimez-en un pour en enregistrer un nouveau.");
 }

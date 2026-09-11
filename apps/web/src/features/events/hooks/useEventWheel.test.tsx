@@ -107,7 +107,7 @@ describe('useEventWheel : créneaux restants', () => {
   const second = { id: 'mov2', title: 'Alien', tmdbId: 2 } as MovieData;
   const twoSlots = {
     ...hostEvent,
-    config: { winnerCount: 2, winnerCountMax: 10, drawnWinnerCount: 0 },
+    config: { winnerCount: 2 },
   } as EventData;
 
   beforeEach(() => {

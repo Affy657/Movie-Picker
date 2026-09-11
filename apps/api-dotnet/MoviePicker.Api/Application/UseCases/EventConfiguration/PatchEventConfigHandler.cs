@@ -208,18 +208,12 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
                 "L’occurrence suivante existe déjà : la récurrence se règle désormais sur cette nouvelle soirée.");
     }
 
-    private static string? ResolveTheme(PatchEventConfigRequest request, string? current)
-    {
-        if (request.Theme is null)
-            return current;
-        return string.IsNullOrWhiteSpace(request.Theme) ? null : request.Theme.Trim();
-    }
+    private static string? ResolveTheme(PatchEventConfigRequest request, string? current) =>
+        request.Theme is null ? current : EventConfigLimits.NormalizeTheme(request.Theme);
 
     private static void EnsureWinnerCountAllowed(Event evt, int winnerCount)
     {
-        if (winnerCount < EventConfig.DefaultWinnerCount || winnerCount > EventConfig.WinnerCountCap)
-            throw new BadRequestException(
-                $"Le nombre de films gagnants doit être compris entre {EventConfig.DefaultWinnerCount} et {EventConfig.WinnerCountCap}.");
+        EventConfigLimits.ResolveWinnerCount(winnerCount);
 
         if (evt.IsFinished(DateTimeOffset.UtcNow))
             throw new ConflictException(
@@ -245,28 +239,18 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         return hue;
     }
 
-    private static int? ResolveMaxProposals(PatchEventConfigRequest request, int? current)
-    {
-        if (!request.MaxProposalsPerParticipant.HasValue)
-            return current;
+    private static int? ResolveMaxProposals(PatchEventConfigRequest request, int? current) =>
+        request.MaxProposalsPerParticipant.HasValue
+            ? EventConfigLimits.ResolveLimit(
+                request.MaxProposalsPerParticipant.Value,
+                EventConfig.MaxProposalsPerParticipantCap,
+                "maxProposalsPerParticipant")
+            : current;
 
-        var v = request.MaxProposalsPerParticipant.Value;
-        if (v < 0 || v > EventConfig.MaxProposalsPerParticipantCap)
-            throw new BadRequestException(
-                $"maxProposalsPerParticipant doit être entre 0 (pas de limite) et {EventConfig.MaxProposalsPerParticipantCap}.");
-        return v == 0 ? null : v;
-    }
-
-    private static int? ResolveMaxVotes(PatchEventConfigRequest request, int? current)
-    {
-        if (!request.MaxVotesPerParticipant.HasValue)
-            return current;
-
-        var v = request.MaxVotesPerParticipant.Value;
-        if (v < 0)
-            throw new BadRequestException("maxVotesPerParticipant doit être 0 (pas de limite) ou un entier positif.");
-        return v == 0 ? null : v;
-    }
+    private static int? ResolveMaxVotes(PatchEventConfigRequest request, int? current) =>
+        request.MaxVotesPerParticipant.HasValue
+            ? EventConfigLimits.ResolveLimit(request.MaxVotesPerParticipant.Value, null, "maxVotesPerParticipant")
+            : current;
 
     private async Task<int?> ResolveMaxParticipantsAsync(
         PatchEventConfigRequest request,
@@ -277,20 +261,20 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         if (!request.MaxParticipants.HasValue)
             return current;
 
-        var v = request.MaxParticipants.Value;
-        if (v < 0 || v > EventConfig.MaxParticipantsCap)
-            throw new BadRequestException(
-                $"maxParticipants doit être entre 0 (pas de limite) et {EventConfig.MaxParticipantsCap}.");
+        var limit = EventConfigLimits.ResolveLimit(
+            request.MaxParticipants.Value,
+            EventConfig.MaxParticipantsCap,
+            "maxParticipants");
 
-        if (v > 0)
+        if (limit.HasValue)
         {
             var currentCount = await _participants.CountByEventIdAsync(evt.Id, ct);
-            if (v < currentCount)
+            if (limit.Value < currentCount)
                 throw new ConflictException(
-                    $"La limite ({v}) est inférieure au nombre de participants déjà inscrits ({currentCount}).");
+                    $"La limite ({limit.Value}) est inférieure au nombre de participants déjà inscrits ({currentCount}).");
         }
 
-        return v == 0 ? null : v;
+        return limit;
     }
 
     private static string ResolveTitle(PatchEventConfigRequest request, string current)

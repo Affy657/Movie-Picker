@@ -1,9 +1,7 @@
-import { forwardRef, useCallback, useId, useRef, useState } from 'react';
+import { forwardRef } from 'react';
 import clsx from 'clsx';
 import { Check } from 'lucide-react';
-import { useClickOutside } from '@/shared/hooks/useClickOutside';
-import { useMenuFocus } from '@/shared/hooks/useMenuFocus';
-import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
+import { useMenuState } from '@/shared/hooks/useMenuState';
 import styles from './Menu.module.css';
 
 interface MenuPanelProps {
@@ -58,41 +56,22 @@ export default function Menu({
   panelClassName,
   children,
 }: Readonly<MenuProps>) {
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
-  const menuId = useId();
-
-  const close = useCallback(() => setOpen(false), []);
-  useClickOutside(containerRef, close, open);
-  useMenuFocus(open, panelRef, triggerRef);
-  const fitLeft = useMenuHorizontalFit(open, containerRef, panelRef);
+  const menu = useMenuState();
 
   return (
-    <div ref={containerRef} className={styles.container}>
+    <div ref={menu.containerRef} className={styles.container}>
       <button
-        ref={triggerRef}
+        {...menu.triggerProps}
         type="button"
         className={clsx(styles.trigger, triggerClassName)}
-        onClick={() => setOpen((prev) => !prev)}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-controls={open ? menuId : undefined}
       >
         {triggerIcon}
         <span className={styles.triggerLabel}>{triggerLabel}</span>
       </button>
 
-      {open ? (
-        <MenuPanel
-          ref={panelRef}
-          id={menuId}
-          label={panelLabel}
-          className={panelClassName}
-          style={fitLeft !== null ? { left: fitLeft, right: 'auto' } : undefined}
-        >
-          {children(close)}
+      {menu.open ? (
+        <MenuPanel {...menu.panelProps} label={panelLabel} className={panelClassName}>
+          {children(menu.close)}
         </MenuPanel>
       ) : null}
     </div>

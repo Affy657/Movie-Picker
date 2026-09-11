@@ -23,8 +23,6 @@ export const DEFAULT_EVENT_CONFIG: EventConfigData = {
   allowSeries: false,
   recurrence: null,
   winnerCount: 1,
-  winnerCountMax: 10,
-  drawnWinnerCount: 0,
 };
 
 export const MAX_EVENT_TEMPLATES = 5;

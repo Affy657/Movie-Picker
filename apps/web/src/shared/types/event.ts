@@ -1,5 +1,3 @@
-import type { MovieData } from '@/shared/types/movie';
-
 export type MyEventLifecycle = 'upcoming' | 'live' | 'pending' | 'finished';
 
 export type WheelMode = 'strictRandom' | 'weightedByVotes';
@@ -26,17 +24,12 @@ export interface EventConfigData {
   hasNextOccurrence?: boolean;
 
   winnerCount: number;
-
-  winnerCountMax: number;
-
-  drawnWinnerCount: number;
 }
 
 export interface EventWinnerData {
   movieId: string;
   pickMethod: WinnerPickMethod;
   pickedAt: string;
-  movie?: MovieData | null;
 }
 
 export interface EventParticipantSummary {

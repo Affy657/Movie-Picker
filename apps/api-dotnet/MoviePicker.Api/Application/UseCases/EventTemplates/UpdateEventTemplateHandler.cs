@@ -22,13 +22,12 @@ public sealed class UpdateEventTemplateHandler : IUpdateEventTemplateHandler
         CancellationToken ct = default)
     {
         var user = await EventTemplatePolicy.RequireUserAsync(_users, userId, ct);
-        var existing = user.EventTemplates;
-        var index = EventTemplatePolicy.RequireIndexOf(existing, templateId);
+        var template = EventTemplatePolicy.RequireTemplate(user.EventTemplates, templateId);
 
         var name = EventTemplatePolicy.NormalizeName(request.Name);
-        EventTemplatePolicy.EnsureNameIsFree(existing, name, exceptTemplateId: templateId);
+        EventTemplatePolicy.EnsureNameIsFree(user.EventTemplates, name, exceptTemplateId: templateId);
 
-        var updated = existing[index] with
+        var updated = template with
         {
             Name = name,
             Config = EventTemplatePolicy.ToConfig(request)

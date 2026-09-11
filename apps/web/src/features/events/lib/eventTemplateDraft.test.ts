@@ -1,12 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import {
   buildTemplateDraft,
+  configToFields,
+  draftToConfigPatch,
   isSameTemplateConfig,
   suggestTemplateName,
   templateToDraft,
   type TemplateConfigDraft,
 } from './eventTemplateDraft';
 import {
+  DEFAULT_VOTE_LIMIT,
   MAX_EVENT_PARTICIPANTS,
   MAX_PROPOSALS_PER_PARTICIPANT,
   type EventTemplateData,
@@ -17,6 +20,7 @@ const baseFields = {
   themeText: '',
   maxProposals: '3',
   maxParticipants: '8',
+  voteLimitEnabled: false,
   maxVotes: '',
   wheelMode: 'weightedByVotes' as const,
   richSharePreview: true,
@@ -57,10 +61,58 @@ describe('buildTemplateDraft', () => {
     expect(draft.maxParticipants).toBeNull();
   });
 
-  it('reads the vote budget, empty meaning no limit', () => {
-    expect(buildTemplateDraft({ ...baseFields, maxVotes: '4' }).maxVotesPerParticipant).toBe(4);
-    expect(buildTemplateDraft({ ...baseFields, maxVotes: '' }).maxVotesPerParticipant).toBeNull();
-    expect(buildTemplateDraft({ ...baseFields, maxVotes: '0' }).maxVotesPerParticipant).toBeNull();
+  it('reads the vote budget only when the limit is enabled, falling back to the default', () => {
+    const enabled = { ...baseFields, voteLimitEnabled: true };
+    expect(buildTemplateDraft({ ...enabled, maxVotes: '4' }).maxVotesPerParticipant).toBe(4);
+    expect(buildTemplateDraft({ ...enabled, maxVotes: '' }).maxVotesPerParticipant).toBe(
+      DEFAULT_VOTE_LIMIT
+    );
+    expect(buildTemplateDraft({ ...enabled, maxVotes: '0' }).maxVotesPerParticipant).toBe(
+      DEFAULT_VOTE_LIMIT
+    );
+    expect(buildTemplateDraft({ ...baseFields, maxVotes: '4' }).maxVotesPerParticipant).toBeNull();
+  });
+
+  it('turns a config back into form fields, caps standing for no limit', () => {
+    const fields = configToFields({
+      theme: '🎃 Halloween',
+      maxProposalsPerParticipant: null,
+      maxParticipants: 8,
+      maxVotesPerParticipant: 2,
+      wheelMode: 'strictRandom',
+      richSharePreview: false,
+      allowSeries: true,
+      winnerCount: 3,
+    });
+
+    expect(fields).toEqual({
+      themeEmoji: '🎃',
+      themeText: 'Halloween',
+      maxProposals: String(MAX_PROPOSALS_PER_PARTICIPANT),
+      maxParticipants: '8',
+      voteLimitEnabled: true,
+      maxVotes: '2',
+      wheelMode: 'strictRandom',
+      richSharePreview: false,
+      allowSeries: true,
+      winnerCount: '3',
+    });
+    expect(buildTemplateDraft(fields).maxProposalsPerParticipant).toBe(
+      MAX_PROPOSALS_PER_PARTICIPANT
+    );
+  });
+
+  it('projects a draft onto the config patch, null limits sent as zero', () => {
+    expect(draftToConfigPatch({ ...baseDraft, theme: null, maxParticipants: null })).toEqual({
+      theme: '',
+      maxProposalsPerParticipant: 3,
+      maxParticipants: 0,
+      maxVotesPerParticipant: 0,
+      wheelMode: 'weightedByVotes',
+      richSharePreview: true,
+      allowSeries: false,
+      winnerCount: 1,
+    });
   });
 
   it('rejects a non-numeric limit as no limit', () => {

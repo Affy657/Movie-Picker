@@ -3,7 +3,6 @@ import clsx from 'clsx';
 import { useNavigate } from 'react-router';
 import { AlertCircle, Lock, Settings, Trash2, X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { parseTheme } from './ThemeField';
 import HostEventDateField from './HostEventDateField';
 import HostEventThemeField from './HostEventThemeField';
 import WheelModeField from './WheelModeField';
@@ -12,8 +11,8 @@ import EventTemplatesRow from './EventTemplatesRow';
 import { useEventTemplates } from '@/features/events/hooks/useEventTemplates';
 import {
   buildTemplateDraft,
-  isSameTemplateConfig,
-  templateToDraft,
+  configToFields,
+  type ApplicableConfig,
 } from '@/features/events/lib/eventTemplateDraft';
 import NumberInput from '@/shared/components/NumberInput';
 import Toggle from '@/shared/components/Toggle';
@@ -32,7 +31,6 @@ import { eventDateTimeToLocal, splitDateTimeLocal } from '@/shared/utils/eventDa
 import { formatRelativeEventDate } from '@/shared/utils/formatRelativeEventDate';
 import type {
   EventConfigData,
-  EventTemplateData,
   EventConfigPatchPayload,
   EventData,
   EventRecurrence,
@@ -40,7 +38,6 @@ import type {
 } from '@/features/events/types';
 import {
   DEFAULT_EVENT_CONFIG,
-  DEFAULT_VOTE_LIMIT,
   MAX_EVENT_PARTICIPANTS,
   MAX_PROPOSALS_PER_PARTICIPANT,
   MAX_WINNERS_PER_EVENT,
@@ -121,8 +118,6 @@ function normalizeConfig(c: EventConfigData | undefined): EventConfigData {
     recurrence: c?.recurrence ?? null,
     hasNextOccurrence: c?.hasNextOccurrence ?? false,
     winnerCount: c?.winnerCount ?? DEFAULT_EVENT_CONFIG.winnerCount,
-    winnerCountMax: c?.winnerCountMax ?? MAX_WINNERS_PER_EVENT,
-    drawnWinnerCount: c?.drawnWinnerCount ?? 0,
   };
 }
 
@@ -135,7 +130,9 @@ type SettingsDraft = {
   maxParticipants: string;
   voteLimitEnabled: boolean;
   maxVotes: string;
+  winnerCount: string;
   currentParticipantCount: number;
+  drawnWinnerCount: number;
 };
 
 function validateTitle(draft: SettingsDraft, t: Translate, errors: FieldErrors) {
@@ -201,6 +198,29 @@ function validateMaxVotes(draft: SettingsDraft, t: Translate, errors: FieldError
   return null;
 }
 
+function validateWinnerCount(draft: SettingsDraft, t: Translate, errors: FieldErrors) {
+  const value = Number(draft.winnerCount);
+  const withinBounds =
+    draft.winnerCount.trim() !== '' &&
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= MAX_WINNERS_PER_EVENT;
+
+  if (!withinBounds) {
+    errors.winnerCount = t('events.settings.winnerCountInvalid', { max: MAX_WINNERS_PER_EVENT });
+    return null;
+  }
+
+  if (value < draft.drawnWinnerCount) {
+    errors.winnerCount = t('events.settings.winnerCountLockedHint', {
+      count: draft.drawnWinnerCount,
+    });
+    return null;
+  }
+
+  return value;
+}
+
 function validateSettingsDraft(draft: SettingsDraft, t: Translate) {
   const errors: FieldErrors = {};
   validateTitle(draft, t, errors);
@@ -208,17 +228,15 @@ function validateSettingsDraft(draft: SettingsDraft, t: Translate) {
   const maxProposalsPerParticipant = validateMaxProposals(draft, t, errors);
   const maxParticipantsValue = validateMaxParticipants(draft, t, errors);
   const maxVotesPerParticipant = validateMaxVotes(draft, t, errors);
+  const winnerCount = validateWinnerCount(draft, t, errors);
   return {
     errors,
     maxProposalsPerParticipant,
     maxParticipantsValue,
     maxVotesPerParticipant,
+    winnerCount,
     eventDateTime,
   };
-}
-
-function voteLimitToString(value: number | null | undefined): string {
-  return String(value ?? DEFAULT_VOTE_LIMIT);
 }
 
 export default function HostEventSettingsPanel({
@@ -232,27 +250,27 @@ export default function HostEventSettingsPanel({
   const { locale } = useLocale();
   const queryClient = useQueryClient();
   const cfg = normalizeConfig(event.config);
+  const drawnWinnerCount = event.winners?.length ?? 0;
+  const initialFields = configToFields(cfg);
 
   const [eventTitle, setEventTitle] = useState(event.title);
-  const initialTheme = parseTheme(cfg.theme);
-  const [themeEmoji, setThemeEmoji] = useState(initialTheme.emoji);
-  const [themeText, setThemeText] = useState(initialTheme.text);
+  const [themeEmoji, setThemeEmoji] = useState(initialFields.themeEmoji);
+  const [themeText, setThemeText] = useState(initialFields.themeText);
   const [themeOpen, setThemeOpen] = useState(false);
   const [eventDateLocal, setEventDateLocal] = useState(
     eventDateTimeToLocal(event.date, event.time)
   );
   const initialDateLocalRef = useRef(eventDateTimeToLocal(event.date, event.time));
   const [notifyDateChange, setNotifyDateChange] = useState(true);
-  const [maxProp, setMaxProp] = useState<string>(String(cfg.maxProposalsPerParticipant));
-  const [maxParticipants, setMaxParticipants] = useState<string>(String(cfg.maxParticipants));
-  const [voteLimitEnabled, setVoteLimitEnabled] = useState(cfg.maxVotesPerParticipant != null);
-  const [maxVotes, setMaxVotes] = useState<string>(voteLimitToString(cfg.maxVotesPerParticipant));
-  const [wheelMode, setWheelMode] = useState<WheelMode>(cfg.wheelMode);
-  const [allowSeries, setAllowSeries] = useState<boolean>(cfg.allowSeries ?? false);
-  const [richSharePreview, setRichSharePreview] = useState<boolean>(cfg.richSharePreview ?? true);
+  const [maxProp, setMaxProp] = useState(initialFields.maxProposals);
+  const [maxParticipants, setMaxParticipants] = useState(initialFields.maxParticipants);
+  const [voteLimitEnabled, setVoteLimitEnabled] = useState(initialFields.voteLimitEnabled);
+  const [maxVotes, setMaxVotes] = useState(initialFields.maxVotes);
+  const [wheelMode, setWheelMode] = useState<WheelMode>(initialFields.wheelMode);
+  const [allowSeries, setAllowSeries] = useState(initialFields.allowSeries);
+  const [richSharePreview, setRichSharePreview] = useState(initialFields.richSharePreview);
   const [recurrence, setRecurrence] = useState<EventRecurrence | null>(cfg.recurrence ?? null);
-  const [winnerCount, setWinnerCount] = useState<string>(String(cfg.winnerCount));
-  const [appliedTemplateId, setAppliedTemplateId] = useState<string | null>(null);
+  const [winnerCount, setWinnerCount] = useState(initialFields.winnerCount);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const performSaveRef = useRef<() => void>(() => {});
 
@@ -270,63 +288,32 @@ export default function HostEventSettingsPanel({
     [event.myParticipant, event.participants]
   );
 
-  const {
-    templates,
-    lastSaved: lastSavedTemplate,
-    isBusy: isTemplateBusy,
-    saveTemplate,
-    updateTemplate,
-    removeTemplate,
-  } = useEventTemplates(open && isConnectedCreator, {
-    onError: setSaveError,
-    onSaved: (template) => setAppliedTemplateId(template.id),
-  });
-
   const templateDraft = buildTemplateDraft({
     themeEmoji,
     themeText,
     maxProposals: maxProp,
     maxParticipants,
-    maxVotes: voteLimitEnabled ? maxVotes : '',
+    voteLimitEnabled,
+    maxVotes,
     wheelMode,
     richSharePreview,
     allowSeries,
     winnerCount,
   });
 
-  const storedAppliedTemplate =
-    templates.find((template) => template.id === appliedTemplateId) ?? null;
-  const matchingTemplate =
-    storedAppliedTemplate !== null &&
-    isSameTemplateConfig(templateDraft, templateToDraft(storedAppliedTemplate))
-      ? storedAppliedTemplate
-      : null;
-
-  const hydrateFromEvent = useCallback(() => {
-    const next = normalizeConfig(event.config);
-    setEventTitle(event.title);
-    const parsed = parseTheme(next.theme);
-    setThemeEmoji(parsed.emoji);
-    setThemeText(parsed.text);
-    setThemeOpen(false);
-    const nextDateLocal = eventDateTimeToLocal(event.date, event.time);
-    setEventDateLocal(nextDateLocal);
-    initialDateLocalRef.current = nextDateLocal;
-    setNotifyDateChange(true);
-    setMaxProp(String(next.maxProposalsPerParticipant));
-    setMaxParticipants(String(next.maxParticipants));
-    setVoteLimitEnabled(next.maxVotesPerParticipant != null);
-    setMaxVotes(voteLimitToString(next.maxVotesPerParticipant));
+  const applyFields = useCallback((config: ApplicableConfig) => {
+    const next = configToFields(config);
+    setThemeEmoji(next.themeEmoji);
+    setThemeText(next.themeText);
+    setMaxProp(next.maxProposals);
+    setMaxParticipants(next.maxParticipants);
+    setVoteLimitEnabled(next.voteLimitEnabled);
+    setMaxVotes(next.maxVotes);
     setWheelMode(next.wheelMode);
-    setAllowSeries(next.allowSeries ?? false);
-    setRichSharePreview(next.richSharePreview ?? true);
-    setRecurrence(next.recurrence ?? null);
-    setWinnerCount(String(next.winnerCount));
-    setAppliedTemplateId(null);
-    setFieldErrors({});
-    setSaveError(null);
-    setSaveState('saved');
-  }, [event.title, event.config, event.date, event.time]);
+    setAllowSeries(next.allowSeries);
+    setRichSharePreview(next.richSharePreview);
+    setWinnerCount(next.winnerCount);
+  }, []);
 
   const titleId = useId();
   const themeCollapseId = useId();
@@ -336,12 +323,6 @@ export default function HostEventSettingsPanel({
   const maxVotesErrorId = useId();
   const wheelModeLabelId = useId();
   const winnerCountErrorId = useId();
-
-  const wasOpenRef = useRef(false);
-  useEffect(() => {
-    if (open && !wasOpenRef.current) hydrateFromEvent();
-    wasOpenRef.current = open;
-  }, [open, hydrateFromEvent]);
 
   const dialogRef = useRef<HTMLDialogElement>(null);
   const dragBind = useSheetDrag(dialogRef, onClose, open);
@@ -384,24 +365,36 @@ export default function HostEventSettingsPanel({
     saveTimerRef.current = setTimeout(() => performSaveRef.current(), immediate ? 0 : 600);
   }, []);
 
-  const applyTemplate = useCallback(
-    (template: EventTemplateData) => {
-      const parsed = parseTheme(template.theme);
-      setThemeEmoji(parsed.emoji);
-      setThemeText(parsed.text);
-      setMaxProp(String(template.maxProposalsPerParticipant ?? MAX_PROPOSALS_PER_PARTICIPANT));
-      setMaxParticipants(String(template.maxParticipants ?? MAX_EVENT_PARTICIPANTS));
-      setVoteLimitEnabled(template.maxVotesPerParticipant != null);
-      setMaxVotes(voteLimitToString(template.maxVotesPerParticipant));
-      setWheelMode(template.wheelMode);
-      setAllowSeries(template.allowSeries);
-      setRichSharePreview(template.richSharePreview);
-      setWinnerCount(String(template.winnerCount));
-      setAppliedTemplateId(template.id);
+  const eventTemplates = useEventTemplates(open && isConnectedCreator, {
+    draft: templateDraft,
+    onError: setSaveError,
+    onApply: (template) => {
+      applyFields(template);
       scheduleAutoSave(true);
     },
-    [scheduleAutoSave]
-  );
+  });
+  const forgetAppliedTemplate = eventTemplates.forget;
+
+  const hydrateFromEvent = useCallback(() => {
+    setEventTitle(event.title);
+    applyFields(normalizeConfig(event.config));
+    setThemeOpen(false);
+    const nextDateLocal = eventDateTimeToLocal(event.date, event.time);
+    setEventDateLocal(nextDateLocal);
+    initialDateLocalRef.current = nextDateLocal;
+    setNotifyDateChange(true);
+    setRecurrence(event.config?.recurrence ?? null);
+    forgetAppliedTemplate();
+    setFieldErrors({});
+    setSaveError(null);
+    setSaveState('saved');
+  }, [event.title, event.config, event.date, event.time, applyFields, forgetAppliedTemplate]);
+
+  const wasOpenRef = useRef(false);
+  useEffect(() => {
+    if (open && !wasOpenRef.current) hydrateFromEvent();
+    wasOpenRef.current = open;
+  }, [open, hydrateFromEvent]);
 
   performSaveRef.current = () => {
     const {
@@ -409,6 +402,7 @@ export default function HostEventSettingsPanel({
       maxProposalsPerParticipant,
       maxParticipantsValue,
       maxVotesPerParticipant,
+      winnerCount: winnerCountValue,
       eventDateTime,
     } = validateSettingsDraft(
       {
@@ -418,28 +412,12 @@ export default function HostEventSettingsPanel({
         maxParticipants,
         voteLimitEnabled,
         maxVotes,
+        winnerCount,
         currentParticipantCount: event.participantCount ?? 0,
+        drawnWinnerCount,
       },
       t
     );
-
-    let winnerCountValue = cfg.winnerCount;
-    const winnerCountNum = Number(winnerCount);
-    const minWinnerCount = Math.max(1, cfg.drawnWinnerCount);
-    if (
-      winnerCount.trim() === '' ||
-      !Number.isInteger(winnerCountNum) ||
-      winnerCountNum < 1 ||
-      winnerCountNum > cfg.winnerCountMax
-    ) {
-      errors.winnerCount = t('events.settings.winnerCountInvalid', { max: cfg.winnerCountMax });
-    } else if (winnerCountNum < minWinnerCount) {
-      errors.winnerCount = t('events.settings.winnerCountLockedHint', {
-        count: cfg.drawnWinnerCount,
-      });
-    } else {
-      winnerCountValue = winnerCountNum;
-    }
 
     setFieldErrors(errors);
 
@@ -465,7 +443,9 @@ export default function HostEventSettingsPanel({
       ...(wheelMode !== cfg.wheelMode ? { wheelMode } : {}),
       ...(allowSeries !== (cfg.allowSeries ?? false) ? { allowSeries } : {}),
       ...(richSharePreview !== (cfg.richSharePreview ?? true) ? { richSharePreview } : {}),
-      ...(winnerCountValue !== cfg.winnerCount ? { winnerCount: winnerCountValue } : {}),
+      ...(winnerCountValue !== null && winnerCountValue !== cfg.winnerCount
+        ? { winnerCount: winnerCountValue }
+        : {}),
       ...recurrencePatch(recurrence, cfg.recurrence ?? null),
       ...dateTimePatch(
         eventDateTime,
@@ -475,7 +455,7 @@ export default function HostEventSettingsPanel({
     });
   };
 
-  const configLocked = cfg.drawnWinnerCount > 0;
+  const configLocked = drawnWinnerCount > 0;
   const recurrenceLocked = cfg.hasNextOccurrence ?? false;
   const recurrenceOptions = useMemo(
     () => [
@@ -695,8 +675,8 @@ export default function HostEventSettingsPanel({
                     setWinnerCount(v);
                     scheduleAutoSave();
                   }}
-                  min={Math.max(1, cfg.drawnWinnerCount)}
-                  max={cfg.winnerCountMax}
+                  min={Math.max(1, drawnWinnerCount)}
+                  max={MAX_WINNERS_PER_EVENT}
                   invalid={!!fieldErrors.winnerCount}
                   ariaDescribedBy={fieldErrors.winnerCount ? winnerCountErrorId : undefined}
                 />
@@ -707,7 +687,7 @@ export default function HostEventSettingsPanel({
                   </p>
                 ) : (
                   <p className="hint">
-                    {t('events.settings.winnerCountHint', { max: cfg.winnerCountMax })}
+                    {t('events.settings.winnerCountHint', { max: MAX_WINNERS_PER_EVENT })}
                   </p>
                 )}
               </div>
@@ -834,28 +814,24 @@ export default function HostEventSettingsPanel({
             <section className={styles.templatesSection} data-testid="event-templates-section">
               <EventTemplatesRow
                 className={styles.templatesRow}
-                templates={templates}
-                appliedTemplateId={matchingTemplate?.id ?? null}
-                disabled={isTemplateBusy}
+                templates={eventTemplates.templates}
+                appliedTemplate={eventTemplates.matchingTemplate}
+                disabled={eventTemplates.isBusy}
                 applyLockedHint={configLocked ? t('events.settings.templates.lockedHint') : null}
-                onApply={applyTemplate}
-                onRename={(template, name) =>
-                  updateTemplate(template.id, { ...templateToDraft(template), name })
-                }
-                onDelete={(template) => removeTemplate(template.id)}
+                onApply={eventTemplates.apply}
+                onRename={eventTemplates.rename}
+                onDelete={eventTemplates.remove}
               />
               <EventTemplateSaveBar
                 className={styles.templatesSaveBar}
                 variant="event"
                 draft={templateDraft}
-                templates={templates}
-                appliedTemplate={storedAppliedTemplate}
-                lastSaved={lastSavedTemplate}
-                disabled={isTemplateBusy}
-                onSave={(name) => saveTemplate({ ...templateDraft, name })}
-                onUpdate={(template) =>
-                  updateTemplate(template.id, { ...templateDraft, name: template.name })
-                }
+                templates={eventTemplates.templates}
+                appliedTemplate={eventTemplates.appliedTemplate}
+                lastSaved={eventTemplates.lastSaved}
+                disabled={eventTemplates.isBusy}
+                onSave={eventTemplates.saveAs}
+                onUpdate={eventTemplates.updateApplied}
               />
             </section>
           )}

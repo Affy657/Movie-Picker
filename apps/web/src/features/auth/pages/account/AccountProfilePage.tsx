@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
 import { getErrorMessage } from '@/shared/api/apiError';
 import Toggle from '@/shared/components/Toggle';
@@ -18,7 +16,6 @@ const AUTOSAVE_DELAY_MS = 800;
 export default function AccountProfilePage({ user }: Readonly<{ user: UserProfile }>) {
   const { t } = useTranslation();
   const { patchProfile } = useAuth();
-  const queryClient = useQueryClient();
 
   const [displayName, setDisplayName] = useState(user.displayName);
   const [bio, setBio] = useState(user.bio ?? '');
@@ -72,7 +69,6 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
           isProfilePublic: nextIsPublic,
           isWatchlistPublic: nextIsWatchlistPublic,
         });
-        void queryClient.invalidateQueries({ queryKey: queryKeys.profile.public(user.handle) });
         flashSaved();
       } catch (err) {
         setSaveError(getErrorMessage(err, t('profile.settings.fallbackError')));
@@ -84,7 +80,7 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
         }
       }
     },
-    [displayName, bio, isPublic, isWatchlistPublic, user, patchProfile, queryClient, flashSaved, t]
+    [displayName, bio, isPublic, isWatchlistPublic, user, patchProfile, flashSaved, t]
   );
 
   const scheduleSave = () => {

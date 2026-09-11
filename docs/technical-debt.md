@@ -7,7 +7,7 @@ Fichier de travail pour agent. Il n'est pas destiné à être lu par un humain :
 1. Avant d'agir sur une entrée, exécuter son `verify`. Ce fichier vieillit ; **sauf mention contraire dans l'entrée**, une sortie signifie « encore ouvert » et une sortie vide signifie « déjà réglé, supprimer l'entrée sans rien faire d'autre ». Une entrée qui demande de lire un nombre plutôt qu'une présence le dit dans son `verify`.
 2. Une entrée `state: agent` peut être traitée en autonomie. `state: humain` demande un geste que l'agent ne peut pas faire (le champ `bloque` dit lequel). `state: differe` ne se traite pas tant que son `declencheur` n'est pas observé.
 3. Fin de traitement : supprimer l'entrée entière. Ne pas la cocher, ne pas la garder en « fait », git porte l'historique.
-4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-024`.
+4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-025`.
 5. Ce fichier ne contient que de la dette, c'est-à-dire du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature à construire va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure ici** : pas d'adresse de compte de service, pas de nom de bucket, pas d'identifiant de compte. Le dépôt a vocation à devenir public, et une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou employer un espace réservé `<COMME_CECI>` dans les commandes. La table des gabarits, et la commande qui relève chaque valeur, sont dans `infra/README.md`.
 7. Deux sections en fin de fichier n'obéissent pas à ce schéma et ne se traitent jamais : **Contraintes** liste ce qui casse en silence si on y touche, **Impasses** liste ce qui a déjà été essayé et mesuré sans gain. Les lire avant d'optimiser quoi que ce soit sur le front ou de toucher au déploiement.
@@ -206,6 +206,20 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fix: porter un compteur `voteCount` sur le document participant, incrémenté par un `UpdateOne` conditionnel (`voteCount < max`) dans la même transaction que l'insertion du vote, et décrémenté quand un vote est retiré. Le front garde sa vérification locale, qui couvre le cas courant.
 - fini-quand: deux votes concurrents au-delà de la limite ne laissent qu'un vote en base, prouvé par un test d'intégration Mongo
 - piege: le compteur doit ignorer le changement de sens d'un vote déjà posé sur le même film, seul un vote sur un film nouveau consomme un créneau.
+
+## DEBT-024 le premier gagnant s'écrit encore dans l'ancien champ `winnerMovieId`
+
+- state: differe
+- declencheur: la V1.6 est en prod depuis au moins un cycle de retour arrière possible (`rollback.yml` ne peut plus viser une révision antérieure à la liste `winners`)
+- impact: aucune fonctionnalité en jeu, deux vérités en base. `EventDocumentMapper.ToDocument` recopie `Winners[0]` dans `winnerMovieId` pour qu'une révision antérieure lise encore un gagnant, alors que `winnerPickMethod` et `winnerPickedAt` ne sont plus écrits. Le compteur de soirées gagnées par film doit interroger les deux formes, et tout lecteur futur du document a deux champs à réconcilier.
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/Mongo/EventDocumentMapper.cs` (`ToDocument`, `ToWinners`), `MongoEventRepository.CountByWinnerMovieIdsAsync`
+- verify: la double écriture est toujours là.
+  ```bash
+  grep -n "WinnerMovieId" apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/Mongo/EventDocumentMapper.cs
+  ```
+- fix: un script de reprise qui copie `winnerMovieId` + `winnerPickMethod` + `winnerPickedAt` dans `winners` sur les documents qui n'ont pas encore la liste, puis retirer la ligne de `ToDocument`, le repli de lecture de `ToWinners`, les trois champs de `EventDocument` et le `Or` du compteur. Le test `ToDocument_KeepsTheFirstWinnerInTheLegacyField` se retourne à ce moment.
+- fini-quand: `EventDocument` ne porte plus que `winners`, et un document de prod pris au hasard n'a plus de champ `winnerMovieId`
+- piege: ne pas retirer la lecture de repli avant la reprise, les soirées terminées avant la V1.6 perdraient leur gagnant dans l'historique.
 
 ---
 

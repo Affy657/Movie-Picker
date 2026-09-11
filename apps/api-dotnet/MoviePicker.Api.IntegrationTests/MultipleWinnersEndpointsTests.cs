@@ -70,7 +70,6 @@ public sealed class MultipleWinnersEndpointsTests : IClassFixture<MoviePickerApp
         var config = await (await client.GetAsync($"/api/v1/events/{slug}/config"))
             .Content.ReadFromJsonAsync<EventConfigResponse>(JsonOptions);
         Assert.Equal(3, config!.WinnerCount);
-        Assert.Equal(0, config.DrawnWinnerCount);
     }
 
     [Fact]

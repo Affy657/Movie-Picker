@@ -142,7 +142,7 @@ describe('AccountProfilePage (MSW)', () => {
     await user.click(screen.getByRole('switch', { name: /watchlist visible sur mon profil/i }));
 
     await waitFor(() =>
-      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.profile.public('alice') })
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.profile.publicAll })
     );
   });
 

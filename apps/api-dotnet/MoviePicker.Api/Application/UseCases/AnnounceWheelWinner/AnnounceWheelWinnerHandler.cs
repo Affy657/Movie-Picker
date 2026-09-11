@@ -45,14 +45,11 @@ public sealed class AnnounceWheelWinnerHandler : IAnnounceWheelWinnerHandler
         if (pending.Count == 0)
             return;
 
-        var winners = new List<Movie>();
-        foreach (var pick in pending)
-        {
-            var winner = await _movieRepository.GetByIdAsync(pick.MovieId, ct);
-            if (winner is not null && winner.EventId == evt.Id)
-                winners.Add(winner);
-        }
-
+        var winners = await WinnerMovies.ListAsync(
+            _movieRepository,
+            evt,
+            pending.ConvertAll(pick => pick.MovieId),
+            ct);
         if (winners.Count == 0)
             return;
 

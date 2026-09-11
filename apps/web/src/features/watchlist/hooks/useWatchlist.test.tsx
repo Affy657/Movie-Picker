@@ -12,8 +12,9 @@ vi.mock('@/features/watchlist/api/watchlistApi', () => ({
   removeFromWatchlist: vi.fn().mockResolvedValue(undefined),
 }));
 
-function setup<T>(hook: () => T) {
+function setup<T>(hook: () => T, ownHandle?: string) {
   const client = createTestQueryClient();
+  if (ownHandle) client.setQueryData(queryKeys.auth.me, { id: 'u1', handle: ownHandle });
   const invalidateSpy = vi.spyOn(client, 'invalidateQueries');
   const wrapper = ({ children }: { children: ReactNode }) =>
     withQueryClient(<>{children}</>, client);
@@ -22,8 +23,8 @@ function setup<T>(hook: () => T) {
 }
 
 describe('useWatchlist mutations', () => {
-  it('un ajout rafraîchit ma liste et les profils publics en cache', async () => {
-    const { result, invalidateSpy } = setup(() => useAddToWatchlist());
+  it('un ajout rafraîchit ma liste et mon profil public, pas ceux des autres', async () => {
+    const { result, invalidateSpy } = setup(() => useAddToWatchlist(), 'alice');
 
     act(() =>
       result.current.mutate({ tmdbId: 1, title: 'Matrix', year: '1999', posterPath: null })
@@ -31,16 +32,17 @@ describe('useWatchlist mutations', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.watchlist.list });
-    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.profile.publicAll });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.profile.public('alice') });
+    expect(invalidateSpy).not.toHaveBeenCalledWith({ queryKey: queryKeys.profile.publicAll });
   });
 
-  it('un retrait rafraîchit ma liste et les profils publics en cache', async () => {
+  it('un retrait sans compte en cache ne rafraîchit que ma liste', async () => {
     const { result, invalidateSpy } = setup(() => useRemoveFromWatchlist());
 
     act(() => result.current.mutate({ tmdbId: 1 }));
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(invalidateSpy).toHaveBeenCalledTimes(1);
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.watchlist.list });
-    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.profile.publicAll });
   });
 });

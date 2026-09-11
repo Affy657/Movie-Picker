@@ -88,14 +88,6 @@
   transform: translateY(var(--text-optical-nudge));
 }
 
-.nameInput {
-  flex: 1;
-  min-width: 0;
-  margin-bottom: 0;
-  padding: var(--space-2) var(--space-2-5);
-  font-size: var(--font-size-2xs);
-}
-
 .iconSquare {
   display: inline-flex;
   flex-shrink: 0;

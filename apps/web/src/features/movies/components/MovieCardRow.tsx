@@ -26,6 +26,7 @@ import {
   WinnerRibbon,
   isSelectable,
   useMovieCardState,
+  winnerBadgeLabel,
   type MovieCardCommonProps,
 } from '@/features/movies/components/movieCardParts';
 import Tooltip from '@/shared/components/Tooltip';
@@ -505,11 +506,7 @@ function MovieCardRowDesktop({
               t={t}
             />
             {isWinner ? (
-              <span className={styles.winnerBadge}>
-                {winnerRank
-                  ? t('events.wheel.winnerRankLabel', { rank: winnerRank })
-                  : t('events.wheel.winnerLabel')}
-              </span>
+              <span className={styles.winnerBadge}>{winnerBadgeLabel(t, winnerRank)}</span>
             ) : null}
           </div>
           <div className={styles.metaRow}>

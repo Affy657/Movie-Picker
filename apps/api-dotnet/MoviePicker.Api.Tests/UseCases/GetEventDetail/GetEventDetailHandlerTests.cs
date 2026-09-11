@@ -19,7 +19,6 @@ public sealed class GetEventDetailHandlerTests
     private readonly Mock<IUserRepository> _userRepo;
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor;
     private readonly Mock<ICurrentUserAccessor> _currentUserAccessor;
-    private readonly Mock<IPosterImageStore> _posterStore;
     private readonly Mock<IFinishedEventWatchlistPass> _watchlistCleanup = new();
     private readonly GetEventDetailHandler _sut;
 
@@ -46,12 +45,6 @@ public sealed class GetEventDetailHandlerTests
         _hostTokenAccessor = new Mock<IHostTokenAccessor>();
         _currentUserAccessor = new Mock<ICurrentUserAccessor>();
         _currentUserAccessor.Setup(c => c.GetUserId()).Returns((string?)null);
-        _posterStore = new Mock<IPosterImageStore>();
-        _posterStore.Setup(s => s.ToPublicPosterPath(It.IsAny<string?>())).Returns((string? u) => u);
-        _posterStore.Setup(s => s.RegisterTmdbSourceAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
-        _posterStore
-            .Setup(s => s.RegisterTmdbSourcesAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
         _participantRepo
             .Setup(r => r.CountByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
@@ -77,7 +70,6 @@ public sealed class GetEventDetailHandlerTests
             _userRepo.Object,
             _hostTokenAccessor.Object,
             _currentUserAccessor.Object,
-            _posterStore.Object,
             _watchlistCleanup.Object);
     }
 
@@ -143,27 +135,26 @@ public sealed class GetEventDetailHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_WithAWinner_LoadsTheWinnerMovie()
+    public async Task HandleAsync_WithAWinner_ProjectsThePickWithoutLoadingTheMovie()
     {
         var pickedAt = new DateTimeOffset(2026, 5, 1, 18, 0, 0, TimeSpan.Zero);
         var evt = new Event { Id = "evt1", Title = "Soirée", Date = "2030-01-01", Time = "20:00", Slug = "soiree", HostToken = "ht1", Winners = [TestWinners.Pick("mov1", WinnerPickMethod.Wheel, pickedAt)], CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
-        var winnerMovie = new Movie { Id = "mov1", EventId = evt.Id, Title = "Inception", TmdbId = 27205, Year = "2010", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
-        _movieRepo.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([winnerMovie]);
 
         var result = await _sut.HandleAsync("evt1");
 
         var winner = Assert.Single(result.Winners);
-        Assert.NotNull(winner.Movie);
-        Assert.Equal("mov1", winner.Movie.Id);
-        Assert.Equal("Inception", winner.Movie.Title);
+        Assert.Equal("mov1", winner.MovieId);
+        Assert.Equal("wheel", winner.PickMethod);
         Assert.Equal(pickedAt, winner.PickedAt);
+        _movieRepo.Verify(
+            r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
-    public async Task HandleAsync_WithSeveralWinners_RegistersPostersInASingleBatch()
+    public async Task HandleAsync_WithSeveralWinners_KeepsThePickOrder()
     {
         var pickedAt = new DateTimeOffset(2026, 5, 1, 18, 0, 0, TimeSpan.Zero);
         var evt = new Event
@@ -183,27 +174,13 @@ public sealed class GetEventDetailHandlerTests
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
-        var winners = new List<Movie>
-        {
-            new() { Id = "mov1", EventId = evt.Id, Title = "Inception", TmdbId = 27205, Year = "2010", PosterPath = "https://image.tmdb.org/t/p/w500/a.jpg", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
-            new() { Id = "mov2", EventId = evt.Id, Title = "Parasite", TmdbId = 496243, Year = "2019", PosterPath = "https://image.tmdb.org/t/p/w500/b.jpg", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
-            new() { Id = "mov3", EventId = evt.Id, Title = "Whiplash", TmdbId = 244786, Year = "2014", PosterPath = "https://image.tmdb.org/t/p/w500/c.jpg", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
-        };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
-        _movieRepo.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(winners);
 
         var result = await _sut.HandleAsync("evt1");
 
-        Assert.Equal(3, result.Winners.Count);
         Assert.Equal(["mov1", "mov2", "mov3"], result.Winners.Select(w => w.MovieId));
-        _posterStore.Verify(
-            s => s.RegisterTmdbSourcesAsync(It.Is<IReadOnlyCollection<string>>(u => u.Count == 3), It.IsAny<CancellationToken>()),
-            Times.Once);
-        _posterStore.Verify(
-            s => s.RegisterTmdbSourceAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
-            Times.Never);
+        Assert.Equal(["wheel", "manual", "wheel"], result.Winners.Select(w => w.PickMethod));
     }
 
     [Fact]

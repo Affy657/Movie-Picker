@@ -8,9 +8,9 @@ import {
 } from '@/features/events/api/eventsApi';
 import { getErrorMessage } from '@/shared/api/apiError';
 import type { EventData } from '@/features/events/types';
-import type { WinnerPickMethod } from '@/shared/types/event';
 import type { MovieData } from '@/shared/types/movie';
 import { useTranslation } from '@/shared/i18n';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { remainingWheelRevealDelayMs, WHEEL_SPIN_DURATION_MS } from '@/shared/utils/wheelSpin';
 
@@ -19,7 +19,6 @@ export type EventPrimaryAction = 'add' | 'spin' | null;
 export type EventWheelState = {
   isHost: boolean;
   winnerIds: string[];
-  winners: MovieData[];
   spinWinner: MovieData | null;
   spinPool: MovieData[];
   winnerIndex: number;
@@ -42,13 +41,10 @@ export type EventWheelState = {
   dismissModal: () => void;
   revealWinner: () => void;
 
-  pickMethod: WinnerPickMethod | null;
   manualReveal: boolean;
   manualMode: boolean;
   removalMode: boolean;
-  eligibleMovies: MovieData[];
   drawableMovies: MovieData[];
-  noEligibleMovie: boolean;
   enterManualMode: () => void;
   cancelManualMode: () => void;
   pickWinnerManually: (movie: MovieData) => void;
@@ -84,16 +80,12 @@ export function useEventWheel({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [winnerIndex, setWinnerIndex] = useState(-1);
   const [wheelKey, setWheelKey] = useState(0);
-  const [pendingRevealId, setPendingRevealId] = useState<string | null>(() => {
-    const last = lastPick(event);
-    if (!last) return null;
-    return remainingWheelRevealDelayMs(last.pickMethod, last.pickedAt) > 0 ? last.movieId : null;
-  });
+  const last = lastPick(event);
+  const [pendingRevealId, setPendingRevealId] = useState<string | null>(() =>
+    last && remainingWheelRevealDelayMs(last.pickMethod, last.pickedAt) > 0 ? last.movieId : null
+  );
   const [spinWinner, setSpinWinner] = useState<MovieData | null>(null);
   const [spinPool, setSpinPool] = useState<MovieData[]>([]);
-  const [pickMethod, setPickMethod] = useState<WinnerPickMethod | null>(
-    () => lastPick(event)?.pickMethod ?? null
-  );
   const [locallyDrawnIds, setLocallyDrawnIds] = useState<string[]>([]);
   const [manualReveal, setManualReveal] = useState(false);
   const [manualMode, setManualMode] = useState(false);
@@ -115,13 +107,6 @@ export function useEventWheel({
   const winnerIds = useMemo(
     () => allWinnerIds.filter((id) => id !== pendingRevealId),
     [allWinnerIds, pendingRevealId]
-  );
-  const winners = useMemo(
-    () =>
-      winnerIds
-        .map((id) => safeMovies.find((m) => m.id === id) ?? null)
-        .filter((m): m is MovieData => m !== null),
-    [winnerIds, safeMovies]
   );
   useEffect(() => {
     setLocallyDrawnIds((ids) =>
@@ -146,13 +131,12 @@ export function useEventWheel({
   const winnerCount = event?.config?.winnerCount ?? 1;
   const remainingDraws = Math.max(0, winnerCount - drawnIds.length);
 
-  const lastPickedAt = lastPick(event)?.pickedAt;
-  const lastPickMethod = lastPick(event)?.pickMethod;
-  const lastMovieId = lastPick(event)?.movieId;
+  const lastPickedAt = last?.pickedAt;
+  const lastPickMethod = last?.pickMethod;
+  const lastMovieId = last?.movieId;
 
   useEffect(() => {
     if (isModalOpen) return undefined;
-    setPickMethod(lastPickMethod ?? null);
     const delay = remainingWheelRevealDelayMs(lastPickMethod, lastPickedAt);
     if (delay <= 0) {
       setPendingRevealId(null);
@@ -221,7 +205,6 @@ export function useEventWheel({
         setLocallyDrawnIds((ids) => (ids.includes(res.winner.id) ? ids : [...ids, res.winner.id]));
         setPendingRevealId(res.winner.id);
         setSpinWinner(res.winner);
-        setPickMethod('wheel');
         setWinnerIndex(Math.max(idx, 0));
         setManualReveal(false);
         setWheelKey((k) => k + 1);
@@ -246,7 +229,6 @@ export function useEventWheel({
             ids.includes(res.winner.id) ? ids : [...ids, res.winner.id]
           );
           setSpinWinner(res.winner);
-          setPickMethod('manual');
           setWinnerIndex(0);
           setManualReveal(true);
           setWheelKey((k) => k + 1);
@@ -285,7 +267,6 @@ export function useEventWheel({
         setPendingRevealId(null);
         setSpinWinner(null);
         setLocallyDrawnIds([]);
-        setPickMethod(null);
         setRemovalMode(false);
         onWheelDone();
       })
@@ -313,10 +294,12 @@ export function useEventWheel({
   if (moviesCount === 0) spinDisabledHint = t('events.wheel.emptyPlaceholder');
   else if (noEligibleMovie) spinDisabledHint = t('events.wheel.allExcludedHint');
   else if (remainingDraws === 0)
-    spinDisabledHint =
-      winnerCount === 1
-        ? t('events.wheel.allDrawnHintOne')
-        : t('events.wheel.allDrawnHintMany', { count: winnerCount });
+    spinDisabledHint = pluralizeCount(
+      winnerCount,
+      'events.wheel.allDrawnHintOne',
+      'events.wheel.allDrawnHintMany',
+      t
+    );
   else if (drawableMovies.length === 0) spinDisabledHint = t('events.wheel.nothingLeftToDrawHint');
   const spinDisabled = spinDisabledHint !== null;
 
@@ -330,7 +313,6 @@ export function useEventWheel({
   return {
     isHost,
     winnerIds,
-    winners,
     spinWinner,
     spinPool,
     winnerIndex,
@@ -353,13 +335,10 @@ export function useEventWheel({
     dismissModal,
     revealWinner,
 
-    pickMethod,
     manualReveal,
     manualMode,
     removalMode,
-    eligibleMovies,
     drawableMovies,
-    noEligibleMovie,
     enterManualMode,
     cancelManualMode,
     pickWinnerManually,

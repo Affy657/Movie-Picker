@@ -178,7 +178,7 @@ public sealed class CreateEventTemplateHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_CapReachedConcurrently_Throws()
+    public async Task HandleAsync_CapReached_Throws()
     {
         HasUser(new User { Id = "u1" });
         _users.Setup(u => u.AddEventTemplateAsync(
@@ -232,18 +232,6 @@ public sealed class CreateEventTemplateHandlerTests
 
         await Assert.ThrowsAsync<ConflictException>(
             () => _sut.HandleAsync("u1", TemplateFixtures.Request(name: "SOIRÉE HORREUR")));
-    }
-
-    [Fact]
-    public async Task HandleAsync_CapReached_Throws()
-    {
-        var full = Enumerable.Range(1, EventTemplate.MaxPerUser)
-            .Select(i => TemplateFixtures.Template($"t{i}", $"Template {i}"))
-            .ToArray();
-        HasUser(TemplateFixtures.WithTemplates(full));
-
-        await Assert.ThrowsAsync<ConflictException>(
-            () => _sut.HandleAsync("u1", TemplateFixtures.Request(name: "Un de trop")));
     }
 
     [Fact]
@@ -530,15 +518,6 @@ public sealed class DeleteEventTemplateHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_UnknownTemplate_Throws()
-    {
-        _users.Setup(u => u.GetByIdAsync("u1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(TemplateFixtures.WithTemplates(TemplateFixtures.Template("t1", "Soirée horreur")));
-
-        await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("u1", "nope"));
-    }
-
-    [Fact]
     public async Task HandleAsync_RemovesThatTemplateThroughTheRepository()
     {
         _users.Setup(u => u.GetByIdAsync("u1", It.IsAny<CancellationToken>()))
@@ -555,7 +534,7 @@ public sealed class DeleteEventTemplateHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_TemplateGoneMeanwhile_Throws()
+    public async Task HandleAsync_UnknownTemplate_Throws()
     {
         _users.Setup(u => u.GetByIdAsync("u1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(TemplateFixtures.WithTemplates(TemplateFixtures.Template("t1", "Soirée horreur")));

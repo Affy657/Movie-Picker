@@ -3,15 +3,16 @@ import { useNavigate, useLocation, Link } from 'react-router';
 import clsx from 'clsx';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Settings2, Sparkles } from 'lucide-react';
-import ThemeField, { parseTheme } from '@/features/events/components/ThemeField';
+import ThemeField from '@/features/events/components/ThemeField';
 import WheelModeField from '@/features/events/components/WheelModeField';
 import EventTemplatesRow from '@/features/events/components/EventTemplatesRow';
 import EventTemplateSaveBar from '@/features/events/components/EventTemplateSaveBar';
 import { useEventTemplates } from '@/features/events/hooks/useEventTemplates';
 import {
   buildTemplateDraft,
-  isSameTemplateConfig,
-  templateToDraft,
+  configToFields,
+  draftToConfigPatch,
+  type ApplicableConfig,
 } from '@/features/events/lib/eventTemplateDraft';
 import NumberInput from '@/shared/components/NumberInput';
 import Toggle from '@/shared/components/Toggle';
@@ -34,7 +35,7 @@ import {
   MAX_PROPOSALS_PER_PARTICIPANT,
   MAX_WINNERS_PER_EVENT,
 } from '@/features/events/types';
-import type { EventConfigData, EventTemplateData, WheelMode } from '@/features/events/types';
+import type { WheelMode } from '@/features/events/types';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { useLocale, useTranslation } from '@/shared/i18n';
@@ -60,18 +61,6 @@ function getDefaultTime(): string {
   const m = ceil % 60;
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
-
-type ApplicableConfig = Pick<
-  EventConfigData,
-  | 'theme'
-  | 'maxProposalsPerParticipant'
-  | 'maxParticipants'
-  | 'maxVotesPerParticipant'
-  | 'wheelMode'
-  | 'richSharePreview'
-  | 'allowSeries'
-  | 'winnerCount'
->;
 
 export default function CreateEvent() {
   const { t } = useTranslation();
@@ -107,41 +96,41 @@ export default function CreateEvent() {
   const [richSharePreview, setRichSharePreview] = useState(
     DEFAULT_EVENT_CONFIG.richSharePreview ?? true
   );
-  const [appliedTemplateId, setAppliedTemplateId] = useState<string | null>(null);
   const [templateError, setTemplateError] = useState<string | null>(null);
-
-  const { templates, lastSaved, isBusy, saveTemplate, updateTemplate, removeTemplate } =
-    useEventTemplates(!!user, {
-      onError: setTemplateError,
-      onSaved: (template) => setAppliedTemplateId(template.id),
-    });
-
-  const applyConfig = useCallback((config: ApplicableConfig) => {
-    const parsed = parseTheme(config.theme);
-    setThemeEmoji(parsed.emoji);
-    setThemeText(parsed.text);
-    setMaxProposals(
-      config.maxProposalsPerParticipant === null ? '' : String(config.maxProposalsPerParticipant)
-    );
-    setMaxParticipants(config.maxParticipants === null ? '' : String(config.maxParticipants));
-    setVoteLimitEnabled(config.maxVotesPerParticipant != null);
-    setMaxVotes(String(config.maxVotesPerParticipant ?? DEFAULT_VOTE_LIMIT));
-    setWheelMode(config.wheelMode);
-    setRichSharePreview(config.richSharePreview ?? true);
-    setAllowSeries(config.allowSeries ?? false);
-    setWinnerCount(String(config.winnerCount));
-  }, []);
-
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
-  const applyTemplate = useCallback(
-    (template: EventTemplateData) => {
-      applyConfig(template);
-      setAppliedTemplateId(template.id);
-      setAdvancedOpen(true);
-    },
-    [applyConfig]
-  );
+  const applyConfig = useCallback((config: ApplicableConfig) => {
+    const fields = configToFields(config);
+    setThemeEmoji(fields.themeEmoji);
+    setThemeText(fields.themeText);
+    setMaxProposals(fields.maxProposals);
+    setMaxParticipants(fields.maxParticipants);
+    setVoteLimitEnabled(fields.voteLimitEnabled);
+    setMaxVotes(fields.maxVotes);
+    setWheelMode(fields.wheelMode);
+    setRichSharePreview(fields.richSharePreview);
+    setAllowSeries(fields.allowSeries);
+    setWinnerCount(fields.winnerCount);
+    setAdvancedOpen(true);
+  }, []);
+
+  const templateDraft = buildTemplateDraft({
+    themeEmoji,
+    themeText,
+    maxProposals,
+    maxParticipants,
+    voteLimitEnabled,
+    maxVotes,
+    wheelMode,
+    richSharePreview,
+    allowSeries,
+    winnerCount,
+  });
+  const eventTemplates = useEventTemplates(!!user, {
+    draft: templateDraft,
+    onError: setTemplateError,
+    onApply: applyConfig,
+  });
 
   const reuseState = location.state as { reuseEventSlug?: string; reuseEventTitle?: string } | null;
   const reuseEventSlug = reuseState?.reuseEventSlug;
@@ -159,28 +148,9 @@ export default function CreateEvent() {
     reusedConfigApplied.current = true;
     applyConfig(reusedConfig);
     setReusedFrom(reuseState?.reuseEventTitle ?? '');
-    setAdvancedOpen(true);
   }, [reusedConfig, applyConfig, reuseState?.reuseEventTitle]);
 
-  const templateDraft = buildTemplateDraft({
-    themeEmoji,
-    themeText,
-    maxProposals,
-    maxParticipants,
-    maxVotes: voteLimitEnabled ? maxVotes : '',
-    wheelMode,
-    richSharePreview,
-    allowSeries,
-    winnerCount,
-  });
-  const storedAppliedTemplate =
-    templates.find((template) => template.id === appliedTemplateId) ?? null;
-  const matchingTemplate =
-    storedAppliedTemplate !== null &&
-    isSameTemplateConfig(templateDraft, templateToDraft(storedAppliedTemplate))
-      ? storedAppliedTemplate
-      : null;
-
+  const configPatch = draftToConfigPatch(templateDraft);
   const createAction = useCallback(async () => {
     const res = await createEventApi({ title, date, time });
     track('event_created');
@@ -189,54 +159,15 @@ export default function CreateEvent() {
       setStoredParticipant(res.slug, res.creatorParticipant.id, res.creatorParticipant.pseudo);
     }
 
-    const themeTrimmed = [themeEmoji, themeText.trim()].filter(Boolean).join(' ');
-    const maxPartParsed = maxParticipants.trim() === '' ? 0 : Number(maxParticipants);
-    const maxPropParsed = maxProposals.trim() === '' ? 0 : Number(maxProposals);
-    const maxVotesParsed = Number(maxVotes);
-    const maxVotesValue =
-      Number.isInteger(maxVotesParsed) && maxVotesParsed >= 1 ? maxVotesParsed : DEFAULT_VOTE_LIMIT;
-    const winnerCountParsed = Number(winnerCount);
-
     try {
-      await patchEventConfig(res.slug, null, {
-        theme: themeTrimmed,
-        maxProposalsPerParticipant: Number.isFinite(maxPropParsed) ? maxPropParsed : 0,
-        maxParticipants: Number.isFinite(maxPartParsed) ? maxPartParsed : 0,
-        maxVotesPerParticipant: voteLimitEnabled ? maxVotesValue : 0,
-        wheelMode,
-        richSharePreview,
-        allowSeries,
-        winnerCount:
-          Number.isInteger(winnerCountParsed) &&
-          winnerCountParsed >= 1 &&
-          winnerCountParsed <= MAX_WINNERS_PER_EVENT
-            ? winnerCountParsed
-            : DEFAULT_EVENT_CONFIG.winnerCount,
-      });
+      await patchEventConfig(res.slug, null, configPatch);
     } catch {}
 
     queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
     navigate(ROUTES.eventDetail(res.slug), {
       state: { shareUrl: publicUrl, justCreated: true },
     });
-  }, [
-    title,
-    date,
-    time,
-    themeEmoji,
-    themeText,
-    maxParticipants,
-    maxProposals,
-    voteLimitEnabled,
-    maxVotes,
-    winnerCount,
-    wheelMode,
-    richSharePreview,
-    allowSeries,
-    queryClient,
-    navigate,
-    track,
-  ]);
+  }, [title, date, time, configPatch, queryClient, navigate, track]);
 
   const {
     run: submit,
@@ -321,14 +252,12 @@ export default function CreateEvent() {
 
           <EventTemplatesRow
             className={styles.templatesRow}
-            templates={templates}
-            appliedTemplateId={matchingTemplate?.id ?? null}
-            disabled={isBusy || loading}
-            onApply={applyTemplate}
-            onRename={(template, name) =>
-              updateTemplate(template.id, { ...templateToDraft(template), name })
-            }
-            onDelete={(template) => removeTemplate(template.id)}
+            templates={eventTemplates.templates}
+            appliedTemplate={eventTemplates.matchingTemplate}
+            disabled={eventTemplates.isBusy || loading}
+            onApply={eventTemplates.apply}
+            onRename={eventTemplates.rename}
+            onDelete={eventTemplates.remove}
           />
 
           {reusedFrom !== null && (
@@ -457,14 +386,12 @@ export default function CreateEvent() {
 
               <EventTemplateSaveBar
                 draft={templateDraft}
-                templates={templates}
-                appliedTemplate={storedAppliedTemplate}
-                lastSaved={lastSaved}
-                disabled={isBusy || loading}
-                onSave={(name) => saveTemplate({ ...templateDraft, name })}
-                onUpdate={(template) =>
-                  updateTemplate(template.id, { ...templateDraft, name: template.name })
-                }
+                templates={eventTemplates.templates}
+                appliedTemplate={eventTemplates.appliedTemplate}
+                lastSaved={eventTemplates.lastSaved}
+                disabled={eventTemplates.isBusy || loading}
+                onSave={eventTemplates.saveAs}
+                onUpdate={eventTemplates.updateApplied}
               />
             </div>
           </details>

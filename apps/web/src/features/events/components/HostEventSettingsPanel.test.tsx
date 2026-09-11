@@ -58,8 +58,6 @@ const baseEvent: EventData = {
     wheelMode: 'strictRandom',
     richSharePreview: false,
     winnerCount: 1,
-    winnerCountMax: 10,
-    drawnWinnerCount: 0,
   },
 };
 
@@ -78,7 +76,7 @@ describe('HostEventSettingsPanel', () => {
         event={{
           ...baseEvent,
           winners: [{ movieId: 'm1', pickMethod: 'wheel', pickedAt: '2030-01-01T20:00:00Z' }],
-          config: { ...baseEvent.config!, winnerCount: 3, drawnWinnerCount: 1 },
+          config: { ...baseEvent.config!, winnerCount: 3 },
         }}
         open
         onClose={() => {}}
@@ -338,7 +336,7 @@ describe('HostEventSettingsPanel', () => {
         event={{
           ...baseEvent,
           winners: [{ movieId: 'm1', pickMethod: 'wheel', pickedAt: '2030-01-01T20:00:00Z' }],
-          config: { ...baseEvent.config!, winnerCount: 2, drawnWinnerCount: 1 },
+          config: { ...baseEvent.config!, winnerCount: 2 },
         }}
         open
         onClose={() => {}}
@@ -406,7 +404,7 @@ describe('HostEventSettingsPanel', () => {
             { movieId: 'm1', pickMethod: 'wheel', pickedAt: '2030-01-01T20:00:00Z' },
             { movieId: 'm2', pickMethod: 'wheel', pickedAt: '2030-01-01T20:10:00Z' },
           ],
-          config: { ...baseEvent.config!, winnerCount: 3, drawnWinnerCount: 2 },
+          config: { ...baseEvent.config!, winnerCount: 3 },
         }}
         open
         onClose={() => {}}
@@ -793,7 +791,7 @@ describe('HostEventSettingsPanel', () => {
         event={{
           ...creatorEvent,
           winners: [{ movieId: 'm1', pickMethod: 'wheel', pickedAt: '2030-01-01T20:00:00Z' }],
-          config: { ...creatorEvent.config!, winnerCount: 2, drawnWinnerCount: 1 },
+          config: { ...creatorEvent.config!, winnerCount: 2 },
         }}
       />
     );

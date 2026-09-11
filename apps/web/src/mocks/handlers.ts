@@ -20,7 +20,6 @@ export interface MockEventOptions {
   title?: string;
   isFinished?: boolean;
   lifecycle?: string;
-  winnerMovie?: Schemas['WinnerMovieResponse'];
   winnerCount?: number;
 
   theme?: string | null;
@@ -42,16 +41,7 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
         isHost: !!host,
         isFinished: opts.isFinished ?? false,
         lifecycle: opts.lifecycle ?? (opts.isFinished ? 'finished' : 'live'),
-        winners: opts.winnerMovie
-          ? [
-              {
-                movieId: opts.winnerMovie._id ?? '',
-                pickMethod: 'wheel',
-                pickedAt: '2030-12-15T21:30:00Z',
-                movie: opts.winnerMovie,
-              },
-            ]
-          : [],
+        winners: [],
         participantCount: 3,
         movieCount: 2,
         participants: [
@@ -66,8 +56,6 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
           maxVotesPerParticipant: null,
           wheelMode: 'strictRandom',
           winnerCount: opts.winnerCount ?? 1,
-          winnerCountMax: 10,
-          drawnWinnerCount: opts.winnerMovie ? 1 : 0,
         },
       };
       return HttpResponse.json(body);

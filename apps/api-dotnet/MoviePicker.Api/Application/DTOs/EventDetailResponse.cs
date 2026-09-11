@@ -38,7 +38,6 @@ public sealed class EventWinnerResponse
     public string MovieId { get; init; } = string.Empty;
     public string PickMethod { get; init; } = string.Empty;
     public DateTimeOffset PickedAt { get; init; }
-    public WinnerMovieResponse? Movie { get; init; }
 }
 
 public sealed class EventParticipantSummaryResponse

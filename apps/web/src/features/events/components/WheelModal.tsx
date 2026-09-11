@@ -6,6 +6,7 @@ import WatchProviderChips from '@/features/movies/components/WatchProviderChips'
 import { useDialogOpen } from '@/shared/hooks/useDialogOpen';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import { useTranslation } from '@/shared/i18n';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import SpinningWheel from './SpinningWheel';
 import Modal from '@/shared/components/Modal';
 import styles from './WheelModal.module.css';
@@ -56,10 +57,15 @@ export default function WheelModal({
         ? t('events.wheel.modal.winnerTitleOfMany', titleParams)
         : t('events.wheel.modal.winnerTitle');
   }
-  let remainingLabel: string | null = null;
-  if (remainingDraws === 1) remainingLabel = t('events.wheel.modal.remainingOne');
-  else if (remainingDraws > 1)
-    remainingLabel = t('events.wheel.modal.remainingMany', { count: remainingDraws });
+  const remainingLabel =
+    remainingDraws > 0
+      ? pluralizeCount(
+          remainingDraws,
+          'events.wheel.modal.remainingOne',
+          'events.wheel.modal.remainingMany',
+          t
+        )
+      : null;
   const dialogRef = useRef<HTMLDialogElement>(null);
   const confettiOverlayRef = useRef<HTMLDivElement>(null);
   const [animDone, setAnimDone] = useState(skipSpin);

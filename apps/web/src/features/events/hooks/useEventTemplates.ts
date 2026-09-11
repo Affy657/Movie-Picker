@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createEventTemplate,
@@ -6,19 +6,26 @@ import {
   fetchEventTemplates,
   updateEventTemplate,
 } from '@/features/events/api/eventTemplatesApi';
+import {
+  isSameTemplateConfig,
+  templateToDraft,
+  type TemplateConfigDraft,
+} from '@/features/events/lib/eventTemplateDraft';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useTranslation } from '@/shared/i18n';
 import type { EventTemplateData, SaveEventTemplateBody } from '@/features/events/types';
 
 type Options = {
+  draft: TemplateConfigDraft;
   onError: (message: string | null) => void;
-  onSaved?: (template: EventTemplateData) => void;
+  onApply: (template: EventTemplateData) => void;
 };
 
-export function useEventTemplates(enabled: boolean, { onError, onSaved }: Options) {
+export function useEventTemplates(enabled: boolean, { draft, onError, onApply }: Options) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const [appliedId, setAppliedId] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<EventTemplateData | null>(null);
 
   const templatesQuery = useQuery({
@@ -38,7 +45,7 @@ export function useEventTemplates(enabled: boolean, { onError, onSaved }: Option
   const succeed = (template: EventTemplateData) => {
     onError(null);
     setLastSaved(template);
-    onSaved?.(template);
+    setAppliedId(template.id);
     invalidate();
   };
 
@@ -66,14 +73,28 @@ export function useEventTemplates(enabled: boolean, { onError, onSaved }: Option
   });
 
   const templates: EventTemplateData[] = templatesQuery.data ?? [];
+  const appliedTemplate = templates.find((template) => template.id === appliedId) ?? null;
+  const matchingTemplate =
+    appliedTemplate !== null && isSameTemplateConfig(draft, templateToDraft(appliedTemplate))
+      ? appliedTemplate
+      : null;
 
   return {
     templates,
+    appliedTemplate,
+    matchingTemplate,
     lastSaved,
     isBusy: createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
-    saveTemplate: (body: SaveEventTemplateBody) => createMutation.mutate(body),
-    updateTemplate: (id: string, body: SaveEventTemplateBody) =>
-      updateMutation.mutate({ id, body }),
-    removeTemplate: (id: string) => deleteMutation.mutate(id),
+    apply: (template: EventTemplateData) => {
+      setAppliedId(template.id);
+      onApply(template);
+    },
+    saveAs: (name: string) => createMutation.mutate({ ...draft, name }),
+    updateApplied: (template: EventTemplateData) =>
+      updateMutation.mutate({ id: template.id, body: { ...draft, name: template.name } }),
+    rename: (template: EventTemplateData, name: string) =>
+      updateMutation.mutate({ id: template.id, body: { ...templateToDraft(template), name } }),
+    remove: (template: EventTemplateData) => deleteMutation.mutate(template.id),
+    forget: useCallback(() => setAppliedId(null), []),
   };
 }

@@ -3,6 +3,7 @@ import { useParams } from 'react-router';
 import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import {
   fetchUserWatchedMovies,
   type UserWatchedMovieItem,
@@ -36,7 +37,7 @@ export default function ProfileMoviesPage() {
       seoDescription: (profile) =>
         t('profile.movies.seoDescription', { name: profile.displayName, handle: profile.handle }),
       subtitle: (count) =>
-        t(count === 1 ? 'profile.movies.pageSubtitleOne' : 'profile.movies.pageSubtitle', {
+        pluralizeCount(count, 'profile.movies.pageSubtitleOne', 'profile.movies.pageSubtitle', t, {
           count,
         }),
       listAria: t('profile.movies.listAria'),

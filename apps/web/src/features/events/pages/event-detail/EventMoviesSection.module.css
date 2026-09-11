@@ -19,7 +19,7 @@
 }
 
 .voteQuotaReached {
-  border-color: color-mix(in srgb, var(--color-primary) 42%, var(--color-border));
+  border-color: var(--color-primary-border-soft);
   color: var(--color-primary-text);
 }
 

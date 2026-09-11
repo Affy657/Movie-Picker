@@ -1,4 +1,3 @@
-import { useCallback, useId, useRef, useState } from 'react';
 import {
   CircleMinus,
   Disc3,
@@ -11,9 +10,8 @@ import clsx from 'clsx';
 import type { ReactNode } from 'react';
 import type { EventWheelState } from '@/features/events/hooks/useEventWheel';
 import { useTranslation } from '@/shared/i18n';
-import { useClickOutside } from '@/shared/hooks/useClickOutside';
-import { useMenuFocus } from '@/shared/hooks/useMenuFocus';
-import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
+import { useMenuState } from '@/shared/hooks/useMenuState';
 import { MenuItem, MenuPanel } from '@/shared/components/Menu';
 import styles from './EventWheelActions.module.css';
 import Button from '@/shared/components/Button';
@@ -83,46 +81,27 @@ function MoreActionsMenu({
   onRequestReset,
   t,
 }: Readonly<{ wheel: EventWheelState; onRequestReset: () => void; t: Translate }>) {
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
-  const menuId = useId();
-
-  const close = useCallback(() => setOpen(false), []);
-  useClickOutside(containerRef, close, open);
-  useMenuFocus(open, panelRef, triggerRef);
-  const fitLeft = useMenuHorizontalFit(open, containerRef, panelRef);
-
+  const menu = useMenuState();
   const label = t('events.wheel.moreActionsLabel');
 
   return (
-    <div ref={containerRef} className={styles.menuContainer}>
+    <div ref={menu.containerRef} className={styles.menuContainer}>
       <Button
-        ref={triggerRef}
+        {...menu.triggerProps}
         type="button"
         className={styles.iconAction}
-        onClick={() => setOpen((value) => !value)}
         disabled={wheel.loading}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-controls={open ? menuId : undefined}
         aria-label={label}
       >
         <MoreHorizontal size={16} aria-hidden />
       </Button>
-      {open ? (
-        <MenuPanel
-          ref={panelRef}
-          id={menuId}
-          label={label}
-          style={fitLeft !== null ? { left: fitLeft, right: 'auto' } : undefined}
-        >
+      {menu.open ? (
+        <MenuPanel {...menu.panelProps} label={label}>
           {wheel.showRemoveWinner ? (
             <MenuItem
               icon={<CircleMinus size={14} aria-hidden />}
               onClick={() => {
-                close();
+                menu.close();
                 wheel.enterRemovalMode();
               }}
             >
@@ -134,7 +113,7 @@ function MoreActionsMenu({
               danger
               icon={<RotateCcw size={14} aria-hidden />}
               onClick={() => {
-                close();
+                menu.close();
                 onRequestReset();
               }}
             >
@@ -147,12 +126,6 @@ function MoreActionsMenu({
   );
 }
 
-function remainingDrawsLabel(count: number, t: Translate): string {
-  return count === 1
-    ? t('events.wheel.remainingDrawsOne')
-    : t('events.wheel.remainingDrawsMany', { count });
-}
-
 function SpinButton({ wheel, t }: Readonly<{ wheel: EventWheelState; t: Translate }>) {
   const spinIsPrimary = wheel.primaryAction === 'spin';
   const hasWinner = wheel.winnerIds.length > 0;
@@ -160,7 +133,12 @@ function SpinButton({ wheel, t }: Readonly<{ wheel: EventWheelState; t: Translat
     ? t('events.wheel.drawOneMoreButton')
     : t('events.wheel.launchButton');
   const showCount = spinIsPrimary && wheel.winnerCount > 1 && wheel.remainingDraws > 0;
-  const remaining = remainingDrawsLabel(wheel.remainingDraws, t);
+  const remaining = pluralizeCount(
+    wheel.remainingDraws,
+    'events.wheel.remainingDrawsOne',
+    'events.wheel.remainingDrawsMany',
+    t
+  );
 
   return (
     <Button
@@ -180,9 +158,12 @@ function SpinButton({ wheel, t }: Readonly<{ wheel: EventWheelState; t: Translat
         <span className={styles.spinCount} aria-hidden>
           <span>{wheel.remainingDraws}</span>
           <span className={styles.spinCountWord}>
-            {wheel.remainingDraws === 1
-              ? t('events.wheel.remainingWordOne')
-              : t('events.wheel.remainingWordMany')}
+            {pluralizeCount(
+              wheel.remainingDraws,
+              'events.wheel.remainingWordOne',
+              'events.wheel.remainingWordMany',
+              t
+            )}
           </span>
         </span>
       ) : null}
@@ -195,9 +176,12 @@ function AllDrawnStatus({ wheel, t }: Readonly<{ wheel: EventWheelState; t: Tran
     <output className={styles.doneStatus} title={wheel.spinDisabledHint ?? undefined}>
       <Trophy size={16} aria-hidden className={styles.doneIcon} />
       <span className={styles.doneLabel}>
-        {wheel.winnerCount === 1
-          ? t('events.wheel.allDrawnStatusOne')
-          : t('events.wheel.allDrawnStatusMany', { count: wheel.winnerCount })}
+        {pluralizeCount(
+          wheel.winnerCount,
+          'events.wheel.allDrawnStatusOne',
+          'events.wheel.allDrawnStatusMany',
+          t
+        )}
       </span>
     </output>
   );

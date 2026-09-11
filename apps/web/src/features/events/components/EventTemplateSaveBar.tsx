@@ -1,13 +1,10 @@
 import { useId, useState } from 'react';
 import clsx from 'clsx';
-import { BadgeCheck, Check, Plus, RotateCcw, Sparkles, X } from 'lucide-react';
+import { BadgeCheck, Plus, RotateCcw, Sparkles } from 'lucide-react';
 import Button from '@/shared/components/Button';
+import TemplateNameEditor from '@/features/events/components/TemplateNameEditor';
 import { useTranslation } from '@/shared/i18n';
-import {
-  MAX_EVENT_TEMPLATES,
-  MAX_EVENT_TEMPLATE_NAME_LENGTH,
-  type EventTemplateData,
-} from '@/features/events/types';
+import { MAX_EVENT_TEMPLATES, type EventTemplateData } from '@/features/events/types';
 import {
   isSameTemplateConfig,
   suggestTemplateName,
@@ -100,43 +97,13 @@ export default function EventTemplateSaveBar({
       )}
 
       {naming ? (
-        <div className={styles.nameRow}>
-          <label className="visually-hidden" htmlFor={nameFieldId}>
-            {t('events.settings.templates.nameLabel')}
-          </label>
-          <input
-            id={nameFieldId}
-            type="text"
-            className={`input ${styles.nameInput}`}
-            value={draftName}
-            maxLength={MAX_EVENT_TEMPLATE_NAME_LENGTH}
-            placeholder={t('events.settings.templates.namePlaceholder')}
-            onChange={(event) => setDraftName(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.preventDefault();
-                confirmNaming();
-              }
-              if (event.key === 'Escape') cancelNaming();
-            }}
-          />
-          <Button
-            variant="primary"
-            className={styles.iconSquare}
-            aria-label={t('events.settings.templates.confirmAriaLabel')}
-            onClick={confirmNaming}
-          >
-            <Check size={16} aria-hidden />
-          </Button>
-          <button
-            type="button"
-            className={`icon-btn-outline ${styles.iconSquare}`}
-            aria-label={t('events.settings.templates.cancelAriaLabel')}
-            onClick={cancelNaming}
-          >
-            <X size={16} aria-hidden />
-          </button>
-        </div>
+        <TemplateNameEditor
+          id={nameFieldId}
+          value={draftName}
+          onChange={setDraftName}
+          onConfirm={confirmNaming}
+          onCancel={cancelNaming}
+        />
       ) : (
         <div className={styles.actions}>
           {hasDrifted && onUpdate && (

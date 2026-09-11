@@ -556,7 +556,6 @@ describe('accessibilité (axe)', () => {
             movieId: MOVIES[0]!.id,
             pickMethod: 'wheel',
             pickedAt: '2035-08-01T23:29:00Z',
-            movie: MOVIES[0],
           },
         ],
       });

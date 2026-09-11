@@ -64,7 +64,6 @@ describe('mapEventData', () => {
           movieId: 'm1',
           pickMethod: 'wheel',
           pickedAt: '2030-01-01T20:00:00Z',
-          movie: { _id: 'm1', participantId: 'p1', title: 'A' },
         },
       ],
       participants: [{ _id: 'p1', pseudo: 'Bob' }],
@@ -72,7 +71,7 @@ describe('mapEventData', () => {
 
     expect(res.isFinished).toBe(true);
     expect(res.myParticipant).toEqual({ id: 'p1', pseudo: 'Bob' });
-    expect(res.winners?.[0]?.movie?.id).toBe('m1');
+    expect(res.winners?.[0]?.movieId).toBe('m1');
     expect(res.participants).toEqual([
       { id: 'p1', pseudo: 'Bob', isCreator: false, avatarId: undefined, handle: null },
     ]);

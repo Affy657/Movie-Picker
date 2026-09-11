@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -15,16 +16,9 @@ public static class EventTemplatePolicy
         CancellationToken ct) =>
         await users.GetByIdAsync(userId, ct) ?? throw new NotFoundException("Utilisateur introuvable");
 
-    public static int RequireIndexOf(IReadOnlyList<EventTemplate> templates, string templateId)
-    {
-        for (var index = 0; index < templates.Count; index++)
-        {
-            if (templates[index].Id == templateId)
-                return index;
-        }
-
-        throw new NotFoundException(NotFoundMessage);
-    }
+    public static EventTemplate RequireTemplate(IReadOnlyList<EventTemplate> templates, string templateId) =>
+        templates.FirstOrDefault(template => template.Id == templateId)
+        ?? throw new NotFoundException(NotFoundMessage);
 
     public static string NormalizeName(string? raw)
     {
@@ -52,45 +46,22 @@ public static class EventTemplatePolicy
 
     public static EventConfig ToConfig(SaveEventTemplateRequest request) => new()
     {
-        Theme = string.IsNullOrWhiteSpace(request.Theme) ? null : request.Theme.Trim(),
-        MaxProposalsPerParticipant = ResolveLimit(
-            request.MaxProposalsPerParticipant,
+        Theme = EventConfigLimits.NormalizeTheme(request.Theme),
+        MaxProposalsPerParticipant = EventConfigLimits.ResolveLimit(
+            request.MaxProposalsPerParticipant ?? 0,
             EventConfig.MaxProposalsPerParticipantCap,
             "maxProposalsPerParticipant"),
-        MaxParticipants = ResolveLimit(
-            request.MaxParticipants,
+        MaxParticipants = EventConfigLimits.ResolveLimit(
+            request.MaxParticipants ?? 0,
             EventConfig.MaxParticipantsCap,
             "maxParticipants"),
-        MaxVotesPerParticipant = ResolveLimit(request.MaxVotesPerParticipant, null, "maxVotesPerParticipant"),
+        MaxVotesPerParticipant = EventConfigLimits.ResolveLimit(
+            request.MaxVotesPerParticipant ?? 0,
+            null,
+            "maxVotesPerParticipant"),
         WheelMode = request.WheelMode ?? WheelMode.WeightedByVotes,
         RichSharePreview = request.RichSharePreview ?? true,
         AllowSeries = request.AllowSeries ?? false,
-        WinnerCount = ResolveWinnerCount(request.WinnerCount)
+        WinnerCount = EventConfigLimits.ResolveWinnerCount(request.WinnerCount ?? EventConfig.DefaultWinnerCount)
     };
-
-    private static int ResolveWinnerCount(int? value)
-    {
-        if (!value.HasValue)
-            return EventConfig.DefaultWinnerCount;
-
-        if (value.Value < EventConfig.DefaultWinnerCount || value.Value > EventConfig.WinnerCountCap)
-            throw new BadRequestException(
-                $"winnerCount doit être entre {EventConfig.DefaultWinnerCount} et {EventConfig.WinnerCountCap}.");
-
-        return value.Value;
-    }
-
-    private static int? ResolveLimit(int? value, int? cap, string field)
-    {
-        if (!value.HasValue)
-            return null;
-
-        if (value.Value < 0)
-            throw new BadRequestException($"{field} doit être 0 (pas de limite) ou un entier positif.");
-
-        if (cap.HasValue && value.Value > cap.Value)
-            throw new BadRequestException($"{field} doit être entre 0 (pas de limite) et {cap.Value}.");
-
-        return value.Value == 0 ? null : value.Value;
-    }
 }
