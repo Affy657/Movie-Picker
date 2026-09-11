@@ -8,7 +8,7 @@ Fichier de travail pour agent. Il n'est pas destiné à être lu par un humain :
 2. Une entrée `state: agent` peut être traitée en autonomie. `state: humain` demande un geste que l'agent ne peut pas faire (le champ `bloque` dit lequel). `state: differe` ne se traite pas tant que son `declencheur` n'est pas observé.
 3. Fin de traitement : supprimer l'entrée entière. Ne pas la cocher, ne pas la garder en « fait », git porte l'historique.
 4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-023`.
-5. Ce fichier ne contient que de la dette, c'est-à-dire du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature à construire va dans `roadmap-product.md` ou `roadmap-tech.md`.
+5. Ce fichier ne contient que de la dette, c'est-à-dire du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature à construire va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure ici** : pas d'adresse de compte de service, pas de nom de bucket, pas d'identifiant de compte. Le dépôt a vocation à devenir public, et une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou employer un espace réservé `<COMME_CECI>` dans les commandes. La table des gabarits, et la commande qui relève chaque valeur, sont dans `infra/README.md`.
 7. Deux sections en fin de fichier n'obéissent pas à ce schéma et ne se traitent jamais : **Contraintes** liste ce qui casse en silence si on y touche, **Impasses** liste ce qui a déjà été essayé et mesuré sans gain. Les lire avant d'optimiser quoi que ce soit sur le front ou de toucher au déploiement.
 
@@ -40,7 +40,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - verify: `git merge-base --is-ancestor chore/ci-keyless-oidc master && echo REGLE || echo OUVERT`
 - fix: configurer WIF et le rôle AWS, puis réécrire le patch. **La branche ne se rebase plus** : ses huit lignes modifiaient les jobs `deploy-api` et `deploy-front` de `ci-cd.yml`, partis dans `deploy.yml` le 2026-09-10. `git merge-tree master chore/ci-keyless-oidc` rend un conflit sur `ci-cd.yml` dont le contexte n'existe plus. Prendre l'intention, pas le diff.
 - fini-quand: plus aucun secret d'identifiant statique dans les secrets GitHub du dépôt
-- refs: recoupe DEBT-003 et le lot Terraform 5 de `roadmap-tech.md`, qui traite le même sujet au fond
+- refs: recoupe DEBT-003 et le lot Terraform 5 de `roadmap.md`, qui traite le même sujet au fond
 
 ## DEBT-003 une clé d'accès du compte root AWS existe encore
 
@@ -123,7 +123,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 ## DEBT-011 endpoint de profil public orphelin
 
 - state: humain
-- bloque: la décision, pas le geste. Cette route est très probablement le volet API de « **Watchlist d'un autre utilisateur** » du backlog de `roadmap-product.md` : la retirer supprimerait la moitié déjà écrite d'une feature planifiée. Trancher entre construire la feature et abandonner la route.
+- bloque: la décision, pas le geste. Cette route est très probablement le volet API de « **Watchlist d'un autre utilisateur** » du backlog de `roadmap.md` : la retirer supprimerait la moitié déjà écrite d'une feature planifiée. Trancher entre construire la feature et abandonner la route.
 - impact: surface d'API maintenue et testée sans aucun appelant
 - ou: `apps/api-dotnet/MoviePicker.Api/Controllers/UsersController.cs:66`, route `GET users/{handle}/movies`
 - verify: la route existe encore côté API et aucun fichier front ne l'appelle.
@@ -160,7 +160,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fix: suivre le runbook. Élargir `ALLOWED_ORIGINS` aux deux origines, repointer le CNAME, observer les sondes. Puis reprendre les littéraux `web.movie-picker.fr` du dépôt, dont les deux liens du README et le bandeau `apps/web/public/og-image.png` qu'il affiche, l'URL y étant gravée dans l'image : la régénérer avec `node apps/web/scripts/generate-og-image.mjs`.
 - fini-quand: `www.movie-picker.fr` sert le front, plus aucun littéral `web.movie-picker.fr` hors `archive/`, et `docs/runbook-migration-domaine-www.md` est supprimé, il n'a plus d'objet
 - piege: les smoke tests de la CI ne référencent aucun de ces hôtes en dur, l'API vient de `secrets.VITE_API_URL` et le front de la première entrée de `vars.ALLOWED_ORIGINS` : ils restent justes après la migration sans qu'on y touche. Le certificat ACM est un wildcard `*.movie-picker.fr`, il couvre déjà `www`.
-- refs: le lot Terraform 4 de `roadmap-tech.md` fait la même bascule DNS en décommissionnant AWS. Si ce lot est engagé, traiter la dette ici serait du travail jeté.
+- refs: le lot Terraform 4 de `roadmap.md` fait la même bascule DNS en décommissionnant AWS. Si ce lot est engagé, traiter la dette ici serait du travail jeté.
 
 ## DEBT-015 le compte de service GCP de la CI porte roles/editor
 
@@ -174,7 +174,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
   gcloud secrets add-iam-policy-binding MONGODB_URI --member="serviceAccount:<SA_CI>" --role=roles/secretmanager.secretAccessor
   gcloud storage buckets add-iam-policy-binding gs://<BUCKET_SAUVEGARDE> --member="serviceAccount:<SA_CI>" --role=roles/storage.objectAdmin
   ```
-- refs: pendant GCP de DEBT-003 (AWS). Le lot Terraform 5 de `roadmap-tech.md` traite les deux au fond.
+- refs: pendant GCP de DEBT-003 (AWS). Le lot Terraform 5 de `roadmap.md` traite les deux au fond.
 
 ## DEBT-019 quatre fonctions restent au-dessus du seuil de complexité cognitive
 
@@ -238,7 +238,7 @@ Le bucket de sauvegarde MongoDB (europe-west1, versioning actif, suppression à 
 
 ## C6 sortir le front d'AWS engage le budget et suit un ordre imposé
 
-Le chantier Terraform de `roadmap-tech.md` sort le front d'AWS (lots 3 et 4). Deux cibles GCP sont possibles et **une des deux fait sortir le projet du « 0 €/mois, tous les services dans leur palier gratuit »**, indicateur suivi au Bloc 3, sans qu'aucune alerte ne le dise avant la facture.
+Le chantier Terraform de `roadmap.md` sort le front d'AWS (lots 3 et 4). Deux cibles GCP sont possibles et **une des deux fait sortir le projet du « 0 €/mois, tous les services dans leur palier gratuit »**, indicateur suivi au Bloc 3, sans qu'aucune alerte ne le dise avant la facture.
 
 - **Cloud Storage + Cloud CDN derrière un load balancer applicatif externe** est l'équivalent direct de S3 + CloudFront, mais sa règle de transfert est facturée à l'heure **sans palier gratuit** : ≈ 18 $/mois avant le moindre octet servi.
 - **Firebase Hosting** reste dans le gratuit (10 Go stockés, 360 Mo/jour transférés), porte nativement le repli SPA, les en-têtes personnalisés et le domaine sur mesure avec son certificat, et se décrit en Terraform (`google_firebase_hosting_site`, `google_firebase_hosting_custom_domain`, provider `google-beta`). **C'est la cible recommandée.** Seul point à surveiller, les 360 Mo/jour : le trafic mesuré (≈ 500 requêtes/jour) en est loin, et un dépassement bascule sur la facturation à l'octet, pas sur une coupure.

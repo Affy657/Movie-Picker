@@ -41,7 +41,7 @@ En tenant le suivi dans la plateforme qui héberge le code, la trace est produit
 | **Releases et tags** | Les points de livraison datés, adossés au commit exact déployé | 9 versions publiées |
 | **Fichiers versionnés du dépôt** | Les feuilles de route produit et technique, le journal des versions, la carte de suivi du titre | 4 fichiers, **106 items** de feuille de route |
 
-Les feuilles de route (`docs/roadmap-product.md`, `docs/roadmap-tech.md`) jouent le rôle du **backlog priorisé**, et le `CHANGELOG.md` celui du **journal d'avancement**. Les tenir en Markdown versionné plutôt que dans un service tiers a une conséquence directe sur le pilotage : chaque modification de périmètre est un commit daté, attribuable et diffable. La question « quand cet item est-il apparu dans le périmètre, et qu'est-ce qui l'y a mis ? » a une réponse mécanique.
+La feuille de route (`docs/roadmap.md`) joue le rôle du **backlog priorisé**, et le `CHANGELOG.md` celui du **journal d'avancement**. Les tenir en Markdown versionné plutôt que dans un service tiers a une conséquence directe sur le pilotage : chaque modification de périmètre est un commit daté, attribuable et diffable. La question « quand cet item est-il apparu dans le périmètre, et qu'est-ce qui l'y a mis ? » a une réponse mécanique.
 
 ### 1.3 L'adéquation avec le projet et avec la méthodologie
 
@@ -110,8 +110,8 @@ L'échelle de taille t-shirt citée ci-dessous est celle des feuilles de route (
 
 | Indicateur | Définition | Source | Fréquence | Valeur au 05/09/2026 |
 |------------|------------|--------|-----------|----------------------|
-| Items de périmètre livrés | Items cochés / total, feuille de route produit | `roadmap-product.md` | À chaque version | **61 / 86, soit 71 %** |
-| Items techniques livrés | Idem, feuille de route technique | `roadmap-tech.md` | À chaque version | **19 / 20, soit 95 %** |
+| Items de périmètre livrés | Items cochés / total, feuille de route produit | `roadmap.md` | À chaque version | **61 / 86, soit 71 %** |
+| Items techniques livrés | Idem, sections Tech de la feuille de route | `roadmap.md` | À chaque version | **19 / 20, soit 95 %** |
 | Poids livré | Somme des points t-shirt des items livrés | Feuilles de route | À chaque version | **110 points** livrés, 51 restants |
 | Versions publiées | Releases adossées à un tag | Releases GitHub | Continu | **9** |
 | Commits intégrés | Commits sur la branche principale | Historique Git | Continu | **833** |

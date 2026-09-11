@@ -1,4 +1,4 @@
-# Movie Picker – Roadmap produit 
+# Movie Picker – Roadmap
 
 **Nom du projet : Movie Picker.**
 

@@ -153,7 +153,7 @@ vérifier avant de la publier, `rollback.yml` est la porte manuelle de retour ar
 | [`AGENTS.md`](AGENTS.md) | Règles du dépôt : conventions, design system, portes de qualité, workflow |
 | [`docs/development.md`](docs/development.md) | Installation détaillée, seed, scripts, tests, structure |
 | [`CHANGELOG.md`](CHANGELOG.md) | Journal des versions, Keep a Changelog et SemVer |
-| [`docs/roadmap-product.md`](docs/roadmap-product.md) | Roadmap produit et tech, version par version |
+| [`docs/roadmap.md`](docs/roadmap.md) | Roadmap produit et tech, version par version |
 | [`docs/technical-debt.md`](docs/technical-debt.md) | Dette technique, contraintes et impasses connues |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Projet solo : ce qui est accepté, ce qui ne l'est pas, où signaler |
 | [`SECURITY.md`](SECURITY.md) | Signaler une faille, par un canal privé |

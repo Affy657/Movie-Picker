@@ -85,7 +85,7 @@ Le support fait **30:00 pile**, exact chapitre par chapitre. Toute modification 
 | Anomalies | GitHub Issues | `list_issues`, étiquette `bug` |
 | Couverture, Quality Gate | Dossier Bloc 2 | `docs/RNCP/bloc-2-conception-developpement/dossier-bloc-2.md` |
 | Mesures de production (17 comptes, 74 %, p95 207 ms) | Dossier Bloc 4 | `docs/RNCP/bloc-4-mco/` — **non recalculables depuis le dépôt** |
-| Items de feuille de route | `docs/roadmap-product.md`, `roadmap-tech.md` | § 5.2 ci-dessous |
+| Items de feuille de route | `docs/roadmap.md` | § 5.2 ci-dessous |
 | Libellés de l'interface (script de démo) | `apps/web/src/shared/i18n/locales/fr.ts` | Toujours citer le libellé **exact** |
 
 ---
@@ -190,12 +190,12 @@ cd /home/user/Movie-Picker
 python3 - <<'PY'
 import re
 W={'S':1,'M':2,'L':3,'XL':5}; d=t=dp=tp=0
-for l in open('docs/roadmap-product.md',encoding='utf-8'):
+for l in open('docs/roadmap.md',encoding='utf-8'):
     if l.startswith(('- ✅','- ⬜')):
         sz=re.search(r'`(S|M|L|XL)`',l); p=W.get(sz.group(1),0) if sz else 0
         if l.startswith('- ✅'): d+=1; dp+=p
         else: t+=1; tp+=p
-print(f'livres {d} ({dp} pts) · restants {t} ({tp} pts) · total {d+t}')
+print(f'livres {d} ({dp} pts), restants {t} ({tp} pts), total {d+t}')
 PY
 ```
 

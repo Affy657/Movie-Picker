@@ -1,6 +1,6 @@
 # infra
 
-Documents de configuration appliqués à la main sur les fournisseurs, en attendant le chantier Terraform de [`../docs/roadmap-tech.md`](../docs/roadmap-tech.md). Aucun n'est appliqué par la CI.
+Documents de configuration appliqués à la main sur les fournisseurs, en attendant le chantier Terraform de [`../docs/roadmap.md`](../docs/roadmap.md). Aucun n'est appliqué par la CI.
 
 | Fichier | Ce qu'il décrit | Comment il s'applique |
 |---|---|---|
