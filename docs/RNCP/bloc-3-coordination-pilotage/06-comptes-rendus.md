@@ -94,7 +94,7 @@ Le critère de la grille est précis : les points de validation doivent être **
 
 Le niveau 1 mérite d'être souligné : c'est le seul compte rendu **poussé** et non disponible. Rendre compte suppose que le destinataire reçoive l'information ; un journal des versions que personne n'ouvre n'est pas un compte rendu, c'est une archive.
 
-À dire honnêtement : ce canal n'existe que depuis la version 1.4.0 du 25 août 2026. Les huit versions précédentes n'ont été annoncées qu'au niveau 2, c'est-à-dire mises à disposition sans être poussées. **Le dispositif s'est corrigé en cours de projet, il n'a pas été conçu complet dès le départ.**
+À dire honnêtement : ce canal n'existe que depuis la version 1.4.0 du 25 août 2026. Les sept versions précédentes n'ont été annoncées qu'au niveau 2, c'est-à-dire mises à disposition sans être poussées. **Le dispositif s'est corrigé en cours de projet, il n'a pas été conçu complet dès le départ.**
 
 ### 3.2 Le gabarit du compte rendu décisionnel
 
@@ -188,7 +188,7 @@ C'est la partie qui compte : un indicateur de satisfaction ne vaut que par la d�
 
 | Question | Ligne de réponse |
 |----------|------------------|
-| Qui est votre commanditaire ? | Il y en a deux, et ils n'attendent pas la même chose. Le formateur et le jury valident la conformité au référentiel, sur quatre échéances de restitution. Les 17 utilisateurs valident que ce qui est livré sert, sur neuf versions. Un projet qui n'a qu'un seul format de compte rendu en sert mal au moins un des deux |
+| Qui est votre commanditaire ? | Il y en a deux, et ils n'attendent pas la même chose. Le formateur et le jury valident la conformité au référentiel, sur quatre échéances de restitution. Les 17 utilisateurs valident que ce qui est livré sert, sur dix versions. Un projet qui n'a qu'un seul format de compte rendu en sert mal au moins un des deux |
 | Sept réponses, est-ce un échantillon valable ? | Non, et c'est écrit tel quel. Il est réduit et orienté vers les plus engagés, cinq des sept utilisent l'application à chaque soirée. C'est pourquoi je ne présente pas le 9,6 comme une mesure de satisfaction, mais comme **l'absence de détracteur parmi les utilisateurs engagés**. Les indicateurs comportementaux pèsent plus lourd : ils mesurent ce que les gens font |
 | En quoi vos comptes rendus facilitent-ils une décision ? | Par trois propriétés : aucun constat sans proposition, aucune proposition sans coût, et un **critère d'arrêt énoncé d'avance**. Sur les notifications, le compte rendu ne dit pas « l'adoption est faible », il dit « au-delà de 40 % sous deux mois on garde, en deçà le gel devient défendable ». Le destinataire sait à quoi il s'engage en validant |
 | Vos utilisateurs lisent-ils vraiment le journal des versions ? | Probablement pas, et c'est pour cela qu'il existe un second canal : une fenêtre présente les nouveautés à la première visite suivant une mise à jour. C'est le seul compte rendu **poussé** du dispositif. Un journal que personne n'ouvre est une archive, pas un compte rendu |

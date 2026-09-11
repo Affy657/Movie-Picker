@@ -63,7 +63,7 @@ Ces quatre points portent **C3.4.2**, éliminatoire. Une démonstration qui éch
 | # | Action | Diapo | Compétence | Détail |
 |:-:|--------|:-----:|:----------:|--------|
 | 5 | **Structurer le tableau GitHub Projects** et en faire une capture | 9 | **C3.2.1** ÉLIM | La diapositive tient sans, mais une capture rendrait l'outil de suivi visible. Le chapitre 2 § 1.5 assume déjà que le tableau est postérieur au travail : ne pas le présenter autrement |
-| 6 | **Relever une capture de facturation** GCP et AWS | 13 | **C3.2.1** ÉLIM | Étaye la ligne « coût réel » du tableau de bord. Aujourd'hui la valeur *0 €/mois* repose sur les paliers gratuits documentés, pas sur une facture |
+| 6 | **Relever une capture de facturation** GCP et AWS | 11 | **C3.2.1** ÉLIM | Étaye la ligne « coût réel » du tableau de bord. Aujourd'hui la valeur *0 €/mois* repose sur les paliers gratuits documentés, pas sur une facture |
 
 ---
 
@@ -72,8 +72,8 @@ Ces quatre points portent **C3.4.2**, éliminatoire. Une démonstration qui éch
 | # | Action | Détail |
 |:-:|--------|--------|
 | 7 | **Exporter le support en PDF** | `cd slides && npm install && npm run export`. Le premier export peut demander `npx playwright install chromium` |
-| 8 | **Tester l'export sur le matériel de la salle** | Vidéoprojecteur, résolution, lisibilité depuis le fond. **Le seul bloc Mermaid restant est le schéma d'architecture de l'annexe A1 (diapositive 28)**, tous les autres schémas, dont le Gantt de la 6 et le logigramme de la 17, sont en HTML et CSS. Après le traitement du § 0, relancer `verifier-rendu.mjs` puis contrôler le PDF page à page |
-| 9 | **Répéter le minutage global** | 30 minutes, dont 17 sur les trois compétences éliminatoires. Deux passages complets. Le contrôle automatique donne **30:00 pile**, exact chapitre par chapitre |
+| 8 | **Tester l'export sur le matériel de la salle** | Vidéoprojecteur, résolution, lisibilité depuis le fond. **Le seul bloc Mermaid restant est le schéma d'architecture de l'annexe A1 (diapositive 24)**, tous les autres schémas, dont le Gantt de la 5 et le logigramme de la 13, sont en HTML et CSS. Après le traitement du § 0, relancer `verifier-rendu.mjs` puis contrôler le PDF page à page |
+| 9 | **Répéter le minutage global** | 30 minutes, dont près de 19 sur les trois compétences éliminatoires. Deux passages complets. Le contrôle automatique donne **30:00 pile**, exact chapitre par chapitre |
 | 10 | **Mémoriser les numéros de page des annexes** | A1 = 24 ; A2 = 25 ; A3 = 26 ; A4 = 27 ; A5 = 28 ; A6 = 29 ; A7 = 30 ; A8 = 31. En mode présentateur, taper le numéro puis `Entrée` |
 | 10 bis | **Décider si les chiffres d'activité sont réancrés une dernière fois** | Le 11/09, la **v1.5.0** (07/09) a été intégrée partout où une version est comptée : 10 versions, 74 items livrés dont 51 hors chiffrage, cadence, Gantt, frise, journal. En revanche les chiffres d'**activité** (833 commits, 88 jours actifs, 122 fusions, −10 % de charge) restent ancrés sur le commit `5ce0a05f` du **05/09**, deux jours avant le tag. `master` est déjà à 1 022 commits et 94 jours actifs le 11/09. Soit on assume la date d'arrêté du 05/09 à l'oral, soit on réancre tout **une seule fois, la veille**, en rejouant § 5.1 de `PASSATION.md` et le tableau mensuel du chapitre 2 |
 
@@ -106,7 +106,7 @@ Onze écarts trouvés en recoupant chaque chiffre contre le dépôt, et corrigé
 | 27 | **La phase de restitution était datée du 03/06**, alors que son propre contenu et le Gantt la font commencer au 27/02 avec la première mise en production | Corrigé en 27/02 |
 | 28 | **La ligne « infrastructure : 1 à 5 €/mois » de la diapositive 8** contredisait le « 0 €/mois » de la diapositive 14, faute de rappeler les 12 mois offerts | Les deux diapositives et le chapitre 1 portent désormais la même formulation que l'annexe A4 |
 | 29 | **Les commits de documentation ne sont pas concentrés en août-septembre** : 50 des 80 tombent en juillet et août, autour des remises des Blocs 2 et 4. L'affirmation était contredite par l'historique | Reformulé sur la mesure réelle, l'argument en sort renforcé |
-| 30 | **La vague 1 des compétences était datée « 16 au 18 mars »**, soit une fenêtre fermée le jour de la décision, avant que le travail .NET commence (18–19 mars au chapitre 3) | Fenêtre portée au 16–19 mars, « trois jours » devient « quatre jours » |
+| 30 | **La vague 1 des compétences était datée « 16 au 18 mars »**, soit une fenêtre fermée le jour de la décision, avant que le travail .NET commence (18 et 19 mars au chapitre 3) | Fenêtre portée au 16 au 19 mars, « trois jours » devient « quatre jours » |
 | 31 | **La densité hebdomadaire valait 3,2 dans le plan et 3,1 partout ailleurs** (88 jours / 28 semaines) | Plan aligné sur 3,1 |
 | 32 | **Le plan n'avait pas suivi le rééquilibrage du minutage** : son tableau diapositive par diapositive gardait 1:20 pour la 6, 0:25 pour la 22 et 0:40 pour la 23, en contradiction avec son propre § 3 et avec le support | Les trois lignes sont alignées sur le support |
 | 33 | **Les chiffres n'étaient datés que par le jour**, alors que `master` a avancé de 5 commits dans la journée du 5 septembre | Le chapitre 2 ancre désormais son relevé sur le commit `5ce0a05f`, ce qui rend chaque comptage reproductible |
@@ -120,7 +120,7 @@ Onze écarts trouvés en recoupant chaque chiffre contre le dépôt, et corrigé
 | # | Décision | Enjeu |
 |:-:|----------|-------|
 | 16 | ~~Ouvrir puis fusionner une pull request~~ → **[PR #83](https://github.com/Affy657/Movie-Picker/pull/83) fusionnée** le 06/09/2026 | ✅ Fait. Les cases du Bloc 3 dans `suivi-rncp.md` sont cochées. Tout travail ultérieur repart de `master` : une PR fusionnée ne se réutilise pas |
-| 17 | ~~Garder ou retirer la partie A du chapitre 4~~ → **tranché le 11/09/2026** : l'organisation cible est retirée, la délégation réelle devient le cœur du chapitre | ✅ Fait. Reste à **relire les niveaux de la grille** (diapositive 22, chapitre 5 § 2.2) : ce sont ceux que je t'ai proposés à partir du dépôt, à ajuster si tu te vois différemment en février ou en septembre |
+| 17 | ~~Garder ou retirer la partie A du chapitre 4~~ → **tranché le 11/09/2026** : l'organisation cible est retirée, l'affectation des missions dans le temps devient le cœur du chapitre (§ 14 de `PASSATION.md`) | ✅ Fait. Reste à **relire les niveaux de la grille** (diapositive 18, chapitre 5 § 2.2) : ce sont ceux que je t'ai proposés à partir du dépôt, à ajuster si tu te vois différemment en février ou en septembre |
 | 18 | **Le cas d'arbitrage de réserve « environnement de test rejeté malgré un gain de 30 % »**, envisagé au plan initial, n'a **aucune trace dans le dépôt** et a été remplacé par l'abandon de l'application mobile | S'il correspond à une décision réelle non tracée, le dire et il sera réintégré en annexe A3 |
 
 ---
@@ -132,6 +132,6 @@ Sans effet sur l'oral du 16 septembre, mais à ne pas perdre.
 | # | Constat | Où |
 |:-:|---------|-----|
 | 19 | **La chaîne d'intégration est à 38 % de succès sur les premiers jours de septembre** (8 exécutions). Une dette d'intégration est en cours de traitement sur la branche courante | Chapitre 2 § 4.2 |
-| 20 | Le dispositif de **satisfaction est ponctuel, pas continu** : un questionnaire diffusé une fois donne un point, pas une tendance. La boucle continue est instruite et chiffrée à 1–2 jours | Chapitre 6 § 4.3 |
+| 20 | Le dispositif de **satisfaction est ponctuel, pas continu** : un questionnaire diffusé une fois donne un point, pas une tendance. La boucle continue est instruite et chiffrée à 1 à 2 jours | Chapitre 6 § 4.3 |
 | 21 | **Aucun indicateur ne compare le périmètre courant au périmètre chiffré**, ce qui a laissé passer 51 items hors chiffrage. Un compteur d'items hors chiffrage initial est la correction proposée | Chapitre 2 § 5.5 |
 | 22 | ~~Deux liens cassés vers `../spec.md` dans `suivi-rncp.md`~~, le fichier avait été déplacé vers `archive/docs/` en juin sans que les liens suivent. **Corrigé** le 05/09/2026 | `suivi-rncp.md` |

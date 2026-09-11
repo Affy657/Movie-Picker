@@ -13,7 +13,7 @@
 |--|--|
 | **Épreuve** | Oral de 45 min (30 de présentation + 15 de questions), le **16 septembre 2026** |
 | **État** | ✅ Rédaction terminée et **support refondu** : 7 chapitres, 31 diapositives (23 présentées, 8 annexes), toutes vérifiées au rendu. Restructuré le 11/09 : la démonstration ouvre la présentation, 5 fusions, 9 tableaux devenus des schémas (§ 12). Épuré, schémas à la place des gros tableaux, sans répétition |
-| **Branche** | `claude/rncp-03-title-crwwov`, head `a9c2859`, **10 commits** d'avance sur `master` |
+| **Branche** | `master` directement, depuis la fusion de la PR #83 le 06/09/2026 |
 | **Pull request** | [#83](https://github.com/Affy657/Movie-Picker/pull/83), ✅ **fusionnée sur `master` le 06/09/2026**. Tout travail ultérieur repart de `master` : une PR fusionnée ne se réutilise pas |
 | **Reste** | Uniquement du **matériel** : répétitions minutées, jeu de données de démonstration, vidéo de repli, 2 captures, export PDF |
 
@@ -44,7 +44,7 @@ Chaque chapitre part d'un fait vérifiable, puis **énonce lui-même sa faibless
 | 2 | Le tableau de suivi est **postérieur** au travail qu'il représente |
 | 3 | L'objectif « aucune modification du front » a été manqué de **87 lignes** |
 | 3 | Le lot est chiffré 13 J/H **a posteriori**, non vérifiable au jour près |
-| 4 | La posture critiquée du 17–26 août a **réussi**, c'est ce qui la rend dangereuse |
+| 4 | La posture critiquée du 17 au 26 août a **réussi**, c'est ce qui la rend dangereuse |
 | 6 | Deux des trois fiches d'anomalie ont été ouvertes et closes à **dix secondes** d'intervalle |
 | 6 | Le dispositif de satisfaction est **ponctuel**, il donne un point et pas une tendance |
 
@@ -267,13 +267,13 @@ PY
 | Fichier | Compétence | Alimente |
 |---------|:----------:|----------|
 | [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md) | | **Le cadre** : minutage, déroulé des 23 diapositives présentées, rattachement des 14 éléments imposés, questions du jury |
-| [`01-planification.md`](01-planification.md) | C3.1 **ÉLIM** | Diapos 4 à 10 |
-| [`02-suivi-indicateurs.md`](02-suivi-indicateurs.md) | C3.2.1 **ÉLIM** | Diapos 11 à 15 |
-| [`03-arbitrage.md`](03-arbitrage.md) | C3.2.2 | Diapos 16 à 18 |
-| [`04-management-equipe.md`](04-management-equipe.md) | C3.3.1 | Diapos 19 à 23 |
-| [`05-competences.md`](05-competences.md) | C3.3.2 | Diapos 24 à 26 |
-| [`06-comptes-rendus.md`](06-comptes-rendus.md) | C3.4.1 | Diapos 27 à 29 |
-| [`07-demonstration.md`](07-demonstration.md) | C3.4.2 **ÉLIM** | Diapos 30 et 31, et la démonstration en direct |
+| [`01-planification.md`](01-planification.md) | C3.1 **ÉLIM** | Diapos 4 à 8 |
+| [`02-suivi-indicateurs.md`](02-suivi-indicateurs.md) | C3.2.1 **ÉLIM** | Diapos 9 à 12 |
+| [`03-arbitrage.md`](03-arbitrage.md) | C3.2.2 | Diapo 13, et l'annexe A3 |
+| [`04-management-equipe.md`](04-management-equipe.md) | C3.3.1 | Diapos 14 à 17 |
+| [`05-competences.md`](05-competences.md) | C3.3.2 | Diapos 18 et 19 |
+| [`06-comptes-rendus.md`](06-comptes-rendus.md) | C3.4.1 | Diapos 20 à 22 |
+| [`07-demonstration.md`](07-demonstration.md) | C3.4.2 **ÉLIM** | Diapos 3 et 23, et la démonstration en direct |
 | [`slides/slides.md`](slides/slides.md) | | Le support, 31 diapositives |
 | [`RESTE-A-FAIRE.md`](RESTE-A-FAIRE.md) | | Ce qui reste, priorisé |
 
@@ -302,6 +302,8 @@ PY
 ---
 
 ## 9. Historique de la session du 5 septembre 2026
+
+> Les sections 9 à 13 sont historiques : elles décrivent l'état du dossier à leur date, et leurs chiffres, numéros de diapositives et dispositifs (organisation cible, délégation, commits co-signés) ont été remplacés depuis. L'état courant est en § 1 et § 14.
 
 ```
 ab565a8  chapitre 2, pilotage de l'avancement (C3.2.1 ÉLIM)

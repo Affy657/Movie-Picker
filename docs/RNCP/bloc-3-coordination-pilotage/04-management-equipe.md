@@ -1,4 +1,4 @@
-# 04 Piloter l'équipe
+# 04 Piloter le travail, seul
 
 > **RNCP 39583 Bloc 3, C3.3.1**
 >
@@ -36,7 +36,7 @@ Le critère demande **l'affectation des missions réalisée au cours du projet**
 
 | Mois | Commits | Produit | Fiabilité | Chaîne | Documentation |
 |------|--------:|--------:|----------:|-------:|--------------:|
-| Mars | 28 | 14 % | 71 % | 14 % | 0 % |
+| Mars | 28 | 14 % | 72 % | 14 % | 0 % |
 | Avril | 72 | 44 % | 35 % | 8 % | 13 % |
 | Mai | 150 | 33 % | 50 % | 13 % | 4 % |
 | Juin | 227 | 19 % | 64 % | 9 % | 8 % |
@@ -118,7 +118,7 @@ Le critère nomme l'empathie, l'écoute, la bienveillance et le leadership. Chac
 | **Dépôt unique en monorepo** | Une seule source de vérité pour le code, la documentation, les feuilles de route et l'infrastructure | L'ensemble du contexte projet, en un lieu, versionné |
 | **Conventions du dépôt** | Rendre les règles opposables sans arbitrage au cas par cas | Le référentiel de règles et leurs motifs |
 | **Gabarits d'issue** (anomalie, idée) | Qualifier une demande entrante de façon homogène, quel qu'en soit l'émetteur | Un formulaire structuré, donc une qualification comparable |
-| **Gabarit de pull request** | Ne pas dépendre de la mémoire pour les contrôles d'intégration | Une liste de six vérifications, identique pour tous |
+| **Gabarit de pull request** | Ne pas dépendre de la mémoire pour les contrôles d'intégration | Une liste de six vérifications, identique à chaque changement |
 | **Actions composites de la chaîne** | Ne pas dupliquer la configuration d'environnement entre les jobs | Des briques d'intégration réutilisables |
 | **Procédures exécutables** | Transformer une connaissance orale en procédure suivable | Le flux de réalisation et la méthode de vérification |
 | **`CHANGELOG.md` et releases** | Rendre compte sans exiger la lecture du code | L'état livré, version par version |
@@ -169,7 +169,7 @@ C'est le critère le plus discriminant du chapitre. Il porte sur une situation *
 | **La dette n'a pas été absorbée, elle a été déplacée** | **38 %** de succès sur les premiers jours de septembre, et une série de correctifs d'intégration à traiter ensuite |
 | **Le découpage du travail s'est relâché** | Taille moyenne d'une branche avant intégration : **2,7 commits en juillet, 6,1 en août**, soit des branches 2,3 fois plus grosses au moment d'être relues. C'est le mécanisme qui, en mars, avait laissé passer les 87 lignes de front non prévues (chapitre 3) |
 
-**Pourquoi c'est une faute managériale et pas seulement une fatigue personnelle.** Appliquée à une équipe, cette posture porte un nom : demander un effort exceptionnel plutôt qu'arbitrer le périmètre. Elle fonctionne une fois. À la deuxième, elle est perçue comme la norme, et le responsable qui l'a instaurée n'a plus d'argument pour la refuser. **Le pilotage consistait ici à décider ce qui ne serait pas livré le 25 août ; il a consisté à décider que tout le serait.**
+**Pourquoi c'est une faute managériale et pas seulement une fatigue personnelle.** Transposée à une équipe, cette posture porterait un nom : demander un effort exceptionnel plutôt qu'arbitrer le périmètre. Elle fonctionne une fois. À la deuxième, elle est perçue comme la norme, et le responsable qui l'a instaurée n'a plus d'argument pour la refuser. **Le pilotage consistait ici à décider ce qui ne serait pas livré le 25 août ; il a consisté à décider que tout le serait.**
 
 Il faut aussi nommer ce qui a bien fonctionné, sans quoi l'autocritique n'est pas une analyse mais une flagellation : les deux échéances étaient réelles et non négociables, et le périmètre de la 1.4.0 avait une valeur produit vérifiée. La faute n'est pas d'avoir travaillé dix jours, elle est de **ne pas avoir instruit l'option de décaler**, l'arbitrage n'a pas été perdu, il n'a pas été posé.
 
@@ -181,7 +181,7 @@ Réalistes signifie ici : applicables sans moyen supplémentaire, et vérifiable
 |:-:|----------------|------------------------|------------------------|
 | **1** | **Traiter un chevauchement d'échéances comme un arbitrage, pas comme une contrainte** | Dès que deux échéances tombent dans la même quinzaine, poser explicitement les trois options (décaler la version, réduire son périmètre, ou absorber) et écrire celle qui est retenue et pourquoi | Nombre de chevauchements ayant donné lieu à une décision écrite |
 | **2** | **Poser une limite de charge comme on pose une limite de travail en cours** | Au-delà de **5 jours consécutifs**, c'est la version qui décale, pas la semaine de travail qui s'allonge. La limite est une règle, pas une intention | Plus longue série de jours consécutifs, relevée mensuellement, indicateur déjà au tableau de bord |
-| **3** | **Rendre la revue croisée obligatoire sur les changements structurants** | Migration, changement de contrat d'interface, modification de la chaîne : aucune intégration sans une relecture par un tiers, humaine ou outillée | Part des changements structurants passés par une revue formelle |
+| **3** | **Rendre obligatoire une relecture par un tiers sur les changements structurants** | Migration, changement de contrat d'interface, modification de la chaîne : aucune intégration sans une relecture par un tiers, humaine ou outillée | Part des changements structurants passés par une revue formelle |
 
 La recommandation 2 est la seule qui aurait empêché la situation de C.1. Les deux autres en réduisent les conséquences. **C'est celle qui est la plus difficile à tenir, parce qu'elle oblige à annoncer un décalage avant d'avoir essayé d'y échapper.**
 

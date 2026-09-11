@@ -165,7 +165,8 @@ phrase en gras est a dire mot pour mot.
 CRITERE : le choix est justifie AVEC LES BENEFICES ATTENDUS.
 
 Ne pas definir Kanban, le jury connait. Aller au « pourquoi ici » et aux
-benefices constates, a dire : perimetre revu 10 fois sans replanification, le
+benefices constates, a dire : perimetre arrete 10 fois, une par version, sans
+replanification, le
 temps va a la production et a la revue, les anomalies traitees hors du flux.
 
 La formule a dire : « Kanban leger » n'est pas un Kanban degrade, c'est un Kanban
@@ -413,8 +414,8 @@ mois offerts. La ligne suivante du budget est donc datee, pas hypothetique.
 <div class="grid grid-cols-5 gap-5">
 <div class="col-span-3">
 
-<div class="raci" style="grid-template-columns: 1fr repeat(4, 4.2rem)">
-<div class="h"></div><div class="h">Moi</div><div class="h">Client</div><div class="h">Utilisateurs</div><div class="h">Prestataires</div>
+<div class="raci" style="grid-template-columns: 1fr 3.4rem 5.6rem 5.2rem 5.2rem">
+<div class="h"></div><div class="h">Moi</div><div class="h">Commanditaire</div><div class="h">Utilisateurs</div><div class="h">Prestataires</div>
 <div class="l">Cadrage et périmètre de version</div><div class="A">A R</div><div class="C">C</div><div class="C">C</div><div class="n"></div>
 <div class="l">Architecture et contrat d'API</div><div class="A">A R</div><div class="I">I</div><div class="n"></div><div class="n"></div>
 <div class="l">Développement, interface et API</div><div class="A">A R</div><div class="n"></div><div class="I">I</div><div class="n"></div>
@@ -487,8 +488,8 @@ C3.1, competence ELIMINATOIRE : le chapitre ne peut pas se terminer sans lui.
 
 Ne pas lire les sept lignes. Deux temps :
 
-1. « Six de ces points sont techniques, chacun porte un indicateur et une
-parade. » Citer le point 5 comme exemple, parce qu'il s'est REALISE en
+1. « Six de ces points sont des risques de projet, chacun porte un indicateur
+et une parade. » Citer le point 5 comme exemple, parce qu'il s'est REALISE en
 production : un durcissement de la politique de securite du contenu a bloque les
 affiches de films et les avatars. L'incident et sa correction sont traces. Un
 point de vigilance qui s'est realise et qui a ete traite vaut mieux qu'une liste
@@ -743,7 +744,7 @@ droite, et c'est la seule chose a commenter de ce cote.
 
 RH : c'est la transition vers le chapitre 5. La phrase a dire : « une semaine a
 sept jours travailles suivie d'une semaine a zero tient sur sept mois de projet
-etudiant, elle ne tient pas sur une equipe et une exploitation dans la duree. »
+etudiant, elle ne tient pas sur une exploitation dans la duree. »
 
 SI ON QUESTIONNE : « votre chaine echoue une fois sur cinq. » Sur la fenetre
 complete oui, 78 %. La serie mensuelle est plus parlante, et la valeur de
@@ -1055,7 +1056,7 @@ prefixe, surtout ceux de mars et d'avril. Recalculable depuis le depot.
 <div class="ay">Soutien relationnel →</div>
 <div class="cell"><b>Persuasif</b><i>Les conventions du dépôt : chaque règle est accompagnée de <b>son motif</b></i></div>
 <div class="cell"><b>Participatif</b><i>Les utilisateurs : questionnaire, fiches ouvertes, retours intégrés à la feuille de route</i></div>
-<div class="cell"><b>Directif</b><i>Juillet : portes de qualité rendues <b>bloquantes</b> sur une chaîne à 52 %, sans négociation</i></div>
+<div class="cell"><b>Directif</b><i>Juillet : portes de qualité rendues <b>bloquantes</b> sur une chaîne à 52 %, sans dérogation</i></div>
 <div class="cell dom"><b>Délégatif, dominant</b><i>À l'automatisation : ce qu'une machine vérifie n'est jamais contrôlé à la main, <b>la décision reste humaine</b></i></div>
 <div></div><div class="ax">← directivité forte</div><div class="ax">autonomie forte →</div>
 </div>
@@ -1118,7 +1119,7 @@ sur le processus et sur soi-meme, et c'est dit sans detour.
 <div class="text-xs opacity-75 mt-4 mb-1">Les outils, et ce que chacun partage</div>
 <div class="chips">
 <div><span>Monorepo unique</span><u>tout le contexte projet, versionné</u></div>
-<div><span>Gabarits d'issue et de PR</span><u>les mêmes contrôles pour tous</u></div>
+<div><span>Gabarits d'issue et de PR</span><u>les mêmes contrôles à chaque changement</u></div>
 <div><span>Procédures exécutables</span><u>le flux, pas un savoir oral</u></div>
 <div><span>Journal des versions, feuilles de route</span><u>l'état livré et le périmètre, datés</u></div>
 </div>
@@ -1182,13 +1183,13 @@ diapo suivante est celle qui compte pour ce chapitre.
 
 ---
 
-# Analyse critique : une posture qui a réussi, 17 au 26 août
+# Analyse critique : une posture qui a réussi
 
 <div class="grid grid-cols-2 gap-8 text-sm mt-2">
 <div>
 
 <div class="chips">
-<div><span>Fait mesuré</span><u><b>10 jours travaillés consécutifs</b></u></div>
+<div><span>Fait mesuré</span><u><b>10 jours travaillés consécutifs</b>, 17 au 26 août</u></div>
 <div><span>Cause</span><u>Bloc 4 le <b>21/08</b>, v1.4.0 le <b>25/08</b></u></div>
 <div><span>Posture</span><u><b>absorber</b>, sans arbitrer le périmètre</u></div>
 <div><span>Résultat</span><u>les deux échéances tenues</u></div>
@@ -1208,7 +1209,7 @@ diapo suivante est celle qui compte pour ce chapitre.
 <div class="chips">
 <div><span><b>1.</b> Un chevauchement d'échéances est un <b>arbitrage</b> : décaler, réduire ou absorber, et l'écrire</span><u>décisions écrites</u></div>
 <div><span><b>2.</b> Une <b>limite de charge</b> : au-delà de <b>5 jours consécutifs</b>, la version décale</span><u>série maximale</u></div>
-<div><span><b>3.</b> <b>Revue croisée</b> obligatoire sur le structurant</span><u>part du structurant revu</u></div>
+<div><span><b>3.</b> <b>Relecture par un tiers</b>, humain ou outillé, sur le structurant</span><u>part du structurant relu</u></div>
 </div>
 
 </div>
@@ -1226,7 +1227,7 @@ succes, donc c'est credible.
 
 La these se dit, elle n'est pas a l'ecran : la posture a reussi, et c'est
 exactement le probleme. Une posture qui produit le resultat attendu ne
-s'auto-corrige pas, elle se repete. Appliquee a une equipe, elle porte un nom :
+s'auto-corrige pas, elle se repete. Transposee a une equipe, elle porterait un nom :
 demander un effort exceptionnel plutot qu'arbitrer le perimetre. Elle
 fonctionne une fois ; a la deuxieme, elle devient la norme.
 
@@ -1235,7 +1236,8 @@ Dans l'ordre :
 2. Le cout mesure, en designant la ligne 94, 78, 38. La chaine a paye le
 mois meme, et la dette a ete deplacee, pas absorbee.
 3. La phrase centrale : « l'arbitrage n'a pas ete perdu, il n'a pas ete pose. »
-4. La transposition equipe : demander un effort exceptionnel plutot qu'arbitrer
+4. La transposition, si le projet passait en equipe : demander un effort
+exceptionnel plutot qu'arbitrer
 le perimetre. Ca marche une fois ; a la deuxieme c'est la norme, et le
 responsable qui l'a instauree n'a plus d'argument pour la refuser.
 
@@ -1357,7 +1359,7 @@ reconstitution de charge est faible sur mars, voir diapo 12.
 <div class="bars">
 <div class="p1"><span>P1 Arbitrage, chiffrage</span><div class="t"><i style="width:27%">3 j</i><em>formation courte, puis pratique à chaque version. Chiffrage <b>avant</b>, arbitrage consigné <b>quand il est pris</b></em></div></div>
 <div class="p1"><span>P1 Revue, transmission</span><div class="t"><i class="cont" style="width:14%">continu</i><em>revue par un tiers, humain ou outillé, obligatoire sur le structurant. 100 % du structurant relu</em></div></div>
-<div><span>P2 Sécurité applicative</span><div class="t"><i style="width:36%">4 j</i><em>autoformation OWASP, revue croisée. Aucune vulnérabilité sur un trimestre</em></div></div>
+<div><span>P2 Sécurité applicative</span><div class="t"><i style="width:36%">4 j</i><em>autoformation OWASP, revue outillée. Aucune vulnérabilité sur un trimestre</em></div></div>
 <div><span>P2 Accessibilité</span><div class="t"><i style="width:27%">3 j</i><em>certification externe. Une livraison passe la porte <b>sans reprise</b></em></div></div>
 <div class="p3"><span>P3 Management d'équipe</span><div class="t"><i style="width:18%">2 j</i><em>formation courte, utile le jour où le projet passe en équipe. Un contributeur opérationnel en une journée sur le cadre écrit</em></div></div>
 </div>
@@ -1368,7 +1370,7 @@ reconstitution de charge est faible sur mars, voir diapo 12.
 <span style="--c:var(--s3)">P3, prépare la suite</span>
 </div>
 
-<div class="text-xs opacity-75 mt-2">12 jours, autoformation sauf la certification, qui est le seul poste payant.</div>
+<div class="text-xs opacity-75 mt-2">12 jours. Un seul poste payant, la certification d'accessibilité.</div>
 
 </div>
 <div class="col-span-2 text-sm">
@@ -1917,6 +1919,7 @@ Mesures anti-chaîne d'approvisionnement : actions épinglées par SHA, images p
 | Modèle de données et contrat d'interface | A, R | | | |
 | Développement de l'interface | A, R | | I | |
 | Développement de l'API | A, R | | | |
+| Revue, tests et intégration | A, R | | | |
 | Intégration des services tiers | A, R | | | C |
 | Accessibilité et inclusion | A, R | | C | |
 | Chaîne d'intégration et de déploiement | A, R | | | |
@@ -1954,7 +1957,7 @@ Mesures anti-chaîne d'approvisionnement : actions épinglées par SHA, images p
 | 0.1.0 | 27/02/2026 | Prototype initial |
 
 <div class="text-xs opacity-75 mt-1">
-Format <b>Keep a Changelog</b>, versionnage sémantique. Un tag annoté et une release par version. La version est en pied de page et exposée par la sonde de readiness.
+Format <b>Keep a Changelog</b>, versionnage sémantique. Un tag et une release par version. La version est en pied de page et exposée par la sonde de readiness.
 </div>
 
 </div>

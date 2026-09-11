@@ -19,7 +19,7 @@ npm run dev
 npm run verify:rendu
 ```
 
-Construit le support, le sert, le rend dans un navigateur et signale les diapositives dont le contenu est **coupé par le bas du cadre**, ce qu'aucun autre contrôle du dossier ne voit. Il **échoue** (code 1) si une diapositive déborde, si `dist/` manque, ou s'il n'a rien pu mesurer : un résultat vert signifie que les 40 pages ont réellement été rendues et mesurées.
+Construit le support, le sert, le rend dans un navigateur et signale les diapositives dont le contenu est **coupé par le bas du cadre**, ce qu'aucun autre contrôle du dossier ne voit. Il **échoue** (code 1) si une diapositive déborde, si `dist/` manque, ou s'il n'a rien pu mesurer : un résultat vert signifie que les 31 pages ont réellement été rendues et mesurées.
 
 > La police du thème est récupérée automatiquement dans `dist/`. Sans elle le navigateur retombe sur une police plus large et le contrôle signalerait de faux débordements, il refuse donc de tourner plutôt que de mentir. `CHROME_PATH` permet de désigner un Chromium déjà installé.
 
@@ -56,7 +56,7 @@ npm run export
 | `.horizons` | Deux échelles de temps emboîtées (outils de planification) |
 | `.raci` | Grille RACI colorée, une classe par lettre |
 | `.quad` | Quadrant 2 × 2, `.dom` sur la case dominante (styles managériaux) |
-| `.steps` | Trois pas numérotés (délégation, niveaux de compte rendu) |
+| `.steps` | Trois pas numérotés (publics servis, niveaux de compte rendu) |
 | `.bars` | Barres horizontales étiquetées, `.p1` / `.p3` pour la priorité, `.cont` pour une action continue (plan de formation) |
 
 **Contraintes de rendu.** Les blocs Mermaid ignorent leur `{scale: …}` dans cette version de Slidev : le SVG est contraint par `max-height` en **pixels** et non en `vh`, la toile Slidev fait 552 px de haut et n'est que mise à l'échelle par `transform`, donc une unité de fenêtre cesserait de contraindre dès que la fenêtre dépasse 1062 px.
@@ -77,7 +77,7 @@ npm run export
 | 2. Planifier l'exécution | 4 à 8 | **C3.1** ÉLIM | ✅ |
 | 3. Piloter l'avancement | 9 à 12 | **C3.2.1** ÉLIM | ✅ |
 | 4. Le cas d'arbitrage | 13 | C3.2.2 | ✅ |
-| 5. Piloter l'équipe | 14 à 17 | C3.3.1 | ✅ |
+| 5. Piloter le travail, seul | 14 à 17 | C3.3.1 | ✅ |
 | 6. Les besoins en compétences | 18, 19 | C3.3.2 | ✅ |
 | 7. Rendre compte au commanditaire | 20 à 22 | C3.4.1 | ✅ |
 | 8. Bilan, et la demande de validation | 23 | **C3.4.2** ÉLIM | ✅ |

@@ -13,7 +13,7 @@
 
 Alimente les diapositives 9 à 12.
 
-**Date de relevé** : toutes les valeurs de ce document sont arrêtées au **5 septembre 2026**, sur l'état de `origin/master` au commit **`5ce0a05f`**, sauf mention contraire. Chacune porte sa source, et chaque source est interrogeable sans passer par la mémoire du candidat.
+**Date de relevé** : toutes les valeurs de ce document sont arrêtées au **5 septembre 2026**, sur l'état de `origin/master` au commit **`5ce0a05f`**, sauf mention contraire, et sauf les versions, comptées jusqu'à la **v1.5.0** du 7 septembre, publiée deux jours après ce relevé. Chacune porte sa source, et chaque source est interrogeable sans passer par la mémoire du candidat.
 
 Nommer le commit de référence n'est pas une précaution de style : la branche principale continue d'avancer, et un recomptage fait un autre jour donnera d'autres valeurs sans qu'aucune des deux soit fausse. C'est ce qui rend les chiffres de ce chapitre **reproductibles** plutôt que simplement affirmés.
 
@@ -51,7 +51,7 @@ Le critère est explicitement demandé par la grille. Il se vérifie point par p
 |--------------------------------------|------------------------|
 | Flux continu, pas d'itération de durée fixe | Aucune notion de sprint n'est utilisée. Les fiches n'ont pas de date d'échéance, seules les **versions** en portent une |
 | Limite de travail en cours d'un seul sujet | Une branche fonctionnelle ouverte à la fois, observable dans l'historique : les branches ne se chevauchent pas |
-| Priorisation permanente | Les feuilles de route sont réordonnées par commit, sans replanification globale : le périmètre a évolué 9 fois sans remise à plat |
+| Priorisation permanente | Les feuilles de route sont réordonnées par commit, sans replanification globale : le périmètre a été arrêté 10 fois, une par version, sans remise à plat |
 | Critère de sortie « déployé et vérifié en production » | La fusion déclenche le déploiement, et le test de fumée post-déploiement vérifie la disponibilité réelle avant de considérer la livraison acquise |
 | Correctif de production prioritaire sur le flux | Les anomalies sont des issues étiquetées en sévérité, traitées hors du flux fonctionnel |
 
@@ -113,7 +113,7 @@ L'échelle de taille t-shirt citée ci-dessous est celle des feuilles de route (
 | Items de périmètre livrés | Items cochés / total, feuille de route produit | `roadmap-product.md` | À chaque version | **61 / 86, soit 71 %** |
 | Items techniques livrés | Idem, feuille de route technique | `roadmap-tech.md` | À chaque version | **19 / 20, soit 95 %** |
 | Poids livré | Somme des points t-shirt des items livrés | Feuilles de route | À chaque version | **110 points** livrés, 51 restants |
-| Versions publiées | Releases adossées à un tag | Releases GitHub | Continu | **9** |
+| Versions publiées | Releases adossées à un tag | Releases GitHub | Continu | **10**, v1.5.0 du 07/09 comprise |
 | Commits intégrés | Commits sur la branche principale | Historique Git | Continu | **833** |
 | Travail soumis à revue | Pull requests fusionnées / ouvertes | GitHub | Continu | **26 / 77** |
 
@@ -121,7 +121,7 @@ L'échelle de taille t-shirt citée ci-dessous est celle des feuilles de route (
 
 | Indicateur | Définition | Source | Fréquence | Valeur au 05/09/2026 |
 |------------|------------|--------|-----------|----------------------|
-| Cadence de livraison | Écart médian entre deux versions consécutives | Dates des releases | À chaque version | **17 jours** (moyenne 23,6) |
+| Cadence de livraison | Écart médian entre deux versions consécutives | Dates des releases | À chaque version | **17 jours** (moyenne 21,3) |
 | Échéances de restitution tenues | Jalons du titre livrés à la date | Rétroplanning, ch. 1 | Par jalon | **4 / 4** |
 | Jours d'activité | Jours distincts portant au moins un commit | Historique Git | Mensuel | **88 sur 191 jours calendaires, soit 46 %** |
 | Délai de traitement d'une anomalie | Ouverture → clôture de l'issue | GitHub Issues | Par anomalie | **7 jours** sur la seule fiche au cycle complet (voir ci-dessous) |
@@ -178,13 +178,13 @@ Les trois premiers indicateurs de cet axe mesurent la **soutenabilité**, pas la
 | Juillet | 194 | 18 | 52 | v1.3.1 et v1.3.2, portes de qualité rendues bloquantes |
 | Août | 127 | 17 | 18 | v1.4.0 |
 | Septembre (5 j.) | 34 | 5 | 6 | v1.4.1 |
-| **Total** | **833** | **88** | **122** | **9 versions** |
+| **Total** | **833** | **88** | **122** | **9 versions**, la v1.5.0 suit le 07/09 |
 
 Deux lectures à porter à l'oral.
 
 **Le pic de juin n'est pas un pic de production, c'est un changement de pratique.** Les fusions passent de 6 à 39 d'un mois sur l'autre alors que les commits ne font que passer de 150 à 227. Ce qui a changé, c'est le découpage : le travail est passé d'une série de commits directs à des branches courtes fusionnées une par une. L'indicateur de fusions ne mesure donc pas la même chose avant et après juin, et il faut le dire avant qu'on le remarque.
 
-**La décroissance d'août et septembre est voulue.** Le périmètre produit se referme au profit des livrables de restitution du titre. Les 80 commits de documentation du projet le montrent : **50 d'entre eux tombent en juillet et en août**, autour des deux remises de dossier, Bloc 2 le 23 juillet, Bloc 4 le 21 août. La documentation n'est pas un lot de fin de projet, c'est un lot qui suit les échéances de restitution.
+**La décroissance d'août et septembre est voulue.** Le périmètre produit se referme au profit des livrables de restitution du titre. Les 80 commits préfixés `docs` le montrent : **50 d'entre eux tombent en juillet et en août**, autour des deux remises de dossier, Bloc 2 le 23 juillet, Bloc 4 le 21 août. La documentation n'est pas un lot de fin de projet, c'est un lot qui suit les échéances de restitution.
 
 ### 3.2 La nature du travail intégré
 
@@ -305,7 +305,7 @@ La courbe raconte une décision et sa conséquence. Le creux de juin correspond 
 | Répartition hebdomadaire | 1 j : 2 sem. ; 2 j : 1 ; 3 j : 8 ; 4 j : 4 ; 5 j : 5 ; 6 j : 2 ; 7 j : 1 | Amplitude de 1 à 7 : la charge n'est pas lissée |
 | Facteur de bus | **1** | Aucune redondance de compétence ni d'accès |
 
-**Ce que cet axe démontre, et c'est l'enchaînement vers le chapitre 4** : la charge a été absorbée, pas pilotée. La plus longue série, **10 jours consécutifs du 17 au 26 août 2026**, encadre deux échéances superposées : la remise du dossier Bloc 4 le 21 août et la version 1.4.0 le 25. Une semaine à sept jours travaillés suivie d'une semaine à zéro tient sur sept mois de projet étudiant ; elle ne tient pas sur une équipe et une exploitation dans la durée. C'est la mesure, pas une intuition, qui fonde l'analyse critique et la limite de charge proposées au chapitre 4.
+**Ce que cet axe démontre, et c'est l'enchaînement vers le chapitre 4** : la charge a été absorbée, pas pilotée. La plus longue série, **10 jours consécutifs du 17 au 26 août 2026**, encadre deux échéances superposées : la remise du dossier Bloc 4 le 21 août et la version 1.4.0 le 25. Une semaine à sept jours travaillés suivie d'une semaine à zéro tient sur sept mois de projet étudiant ; elle ne tient pas sur une exploitation dans la durée. C'est la mesure, pas une intuition, qui fonde l'analyse critique et la limite de charge proposées au chapitre 4.
 
 ---
 
@@ -356,7 +356,7 @@ L'indicateur ne vaut que par la décision qu'il déclenche. Trois décisions son
 
 | Mesure qui a déclenché | Décision | Effet mesuré ensuite |
 |------------------------|----------|---------------------|
-| Cadence de livraison : 81 jours entre le prototype et la V1 | Arbitrer la migration de l'API plutôt que la poursuivre en arrière-plan, **cas d'arbitrage du chapitre 3** | Retour à une médiane de 17 jours sur les 7 versions suivantes |
+| Cadence de livraison : 81 jours entre le prototype et la V1 | Arbitrer la migration de l'API plutôt que la poursuivre en arrière-plan, **cas d'arbitrage du chapitre 3** | Retour à une médiane de 17 jours entre deux versions sur l'ensemble du projet |
 | Taux de succès de la chaîne à 52 % en juin, échecs sans cause réelle sur le contrôle de performance | Rendre les portes de qualité bloquantes **et** déterministes (médiane de trois exécutions, seuils recalibrés), livré en v1.3.1 | Passage à 94 % en juillet |
 | Salves de pull requests de mise à jour de dépendances, 59 ouvertes pour 9 fusionnées | Regrouper les mises à jour en une pull request mensuelle par écosystème, et déplacer le filet de sécurité sur l'audit à chaque commit et le scan hebdomadaire | 0 vulnérabilité HIGH ou CRITICAL ouverte, sans fusion non relue |
 
@@ -394,5 +394,5 @@ Trois manques identifiés, avec la correction qui en découle. Ce sont des recom
 | 33 % de vos commits sont des corrections. C'est beaucoup | Oui, et le chiffre est présenté tel quel. Trois causes distinctes s'y mélangent : des finitions de version, une salve de mise en conformité après le durcissement des portes de qualité en juillet, et de la dette réelle. Que le dispositif ne sache pas les séparer est une limite de mesure, corrigée depuis par le rattachement des corrections à une issue |
 | Votre chaîne d'intégration échoue une fois sur cinq | Sur la fenêtre complète, oui : 78 %. La série mensuelle est plus parlante, 52 % en juin, 94 % en juillet après une correction décidée à partir de cet indicateur, 78 % en août. La valeur de septembre porte sur 8 exécutions et ne se lit pas comme une tendance |
 | Comment reconstituez-vous 88 J/H sans relevé de temps ? | Par les jours distincts portant au moins un commit, avec une conversion de 1 jour actif pour 1 J/H et une incertitude d'au moins 20 %. La reconstitution est faible sur les cinq premières semaines, où les commits étaient groupés : la charge réelle est vraisemblablement supérieure. C'est écrit en 5.3, et c'est le premier manque que je corrigerais |
-| Vous êtes à 90 % du budget de charge, c'est une bonne estimation ? | Non, et c'est le point du chapitre. Pris seul, l'écart de −10 % est dans la marge. Mis en regard du périmètre, il dit qu'on a livré quatre versions non chiffrées avec l'enveloppe prévue pour la V1. Ce que le suivi a raté, ce n'est pas une dérive de charge, c'est un glissement de périmètre qu'aucun indicateur ne comparait au chiffrage |
+| Vous êtes à 90 % du budget de charge, c'est une bonne estimation ? | Non, et c'est le point du chapitre. Pris seul, l'écart de −10 % est dans la marge. Mis en regard du périmètre, il dit qu'on a livré cinq versions mineures non chiffrées avec l'enveloppe prévue pour la V1. Ce que le suivi a raté, ce n'est pas une dérive de charge, c'est un glissement de périmètre qu'aucun indicateur ne comparait au chiffrage |
 | Quel indicateur vous a le plus servi ? | La cadence de livraison. C'est elle qui a rendu visible l'intervalle anormal de 81 jours entre le prototype et la première version de production, et qui a transformé la migration de l'API en arbitrage explicite plutôt qu'en dérive silencieuse. C'est le sujet du chapitre suivant |

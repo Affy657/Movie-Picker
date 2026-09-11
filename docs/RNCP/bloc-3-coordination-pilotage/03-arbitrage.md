@@ -26,7 +26,7 @@ Trois cas d'arbitrage réels étaient candidats. Le tableau ci-dessous justifie 
 | Cas | Écart déclencheur | Pourquoi il est, ou n'est pas, retenu |
 |-----|-------------------|---------------------------------------|
 | **Le changement de stack de l'API** | Le MVP est livré sur une pile qui ne satisfait pas les exigences retenues pour la suite, et le coût de la corriger augmente chaque jour | **Retenu.** C'est le seul des trois où la décision engage l'architecture du produit, où les options ont été instruites par écrit **avant** la décision, et où le résultat se mesure encore aujourd'hui |
-| La porte de qualité de performance instable | Chaîne d'intégration à 52 % de succès en juin 2026, échecs sans cause réelle bloquant les fusions | Réserve. Excellent cas mesure → décision → effet remesuré (52 % puis 94 %), déjà exposé en diapositive 14. Le garder ici ferait doublon |
+| La porte de qualité de performance instable | Chaîne d'intégration à 52 % de succès en juin 2026, échecs sans cause réelle bloquant les fusions | Réserve. Excellent cas mesure → décision → effet remesuré (52 % puis 94 %), déjà exposé en diapositives 11 et 12. Le garder ici ferait doublon |
 | L'abandon de l'application mobile | Application mobile démarrée le 16 mai 2026, archivée le 26 mai | Réserve. La décision est saine mais le motif est extérieur au projet, ce qui affaiblit l'exercice d'arbitrage |
 
 ---
@@ -171,7 +171,7 @@ Quatre arguments, dans l'ordre où ils ont pesé.
 | Réécrire l'API à l'identique du contrat | 12 routes migrées, 944 lignes TypeScript remplacées par **4 653 lignes C# sur 111 fichiers** | Historique du dépôt |
 | Bascule en une fois, sans double maintenance | Ancienne API retirée **15 minutes** après le début de la bascule | Commit `clean migration` |
 | Ne pas décaler la V1 | **v1.0.0 livrée le 19/05/2026**, deux mois après la bascule. Aucune échéance de restitution du titre n'a glissé | Journal des versions |
-| Décision non rejouée | **Aucun retour arrière**, aucune seconde migration. 8 versions produit livrées sur ce socle depuis | Journal des versions |
+| Décision non rejouée | **Aucun retour arrière**, aucune seconde migration. 9 versions livrées sur ce socle depuis | Journal des versions |
 | Socle tenable dans la durée | 44 663 lignes aujourd'hui, couverture **86,6 %**, Quality Gate **A / A / A**, architecture hexagonale | SonarCloud, dossier Bloc 2 |
 
 ### 6.2 Ce qui n'a pas été tenu, et qu'il faut dire

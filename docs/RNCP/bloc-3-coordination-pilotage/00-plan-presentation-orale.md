@@ -120,7 +120,7 @@ Deux cas de réserve pour les questions : le contrôle de performance instable q
 |:-:|-------|------:|------------------------------|
 | 13 | 4. Un cas d'arbitrage : migrer l'API, quand et comment | 2:20 | Frise à l'heure près du 16 au 19 mars. Les quatre options avec coût et risque. Cinq chiffres de résultat : le coût de la décision de 1 à 47, 12 routes à l'identique, v1.0.0 à la date, 0 retour arrière, et les 87 lignes de front modifiées contre un objectif de 0. **Logigramme** en HTML et CSS, parcouru à voix haute sur le chemin réellement suivi. Les quatre exigences non tenues par l'API du MVP, l'option D démontée et le lot chiffré a posteriori se disent |
 
-### Chapitre 5 : piloter l'équipe (3:30, 4 diapos), C3.3.1
+### Chapitre 5 : piloter le travail, seul (3:30, 4 diapos), C3.3.1
 
 Critères visés : handicap pris en compte, charge répartie de manière équilibrée, style managérial identifié et décrit, principes et techniques d'animation présentés et adaptés au projet, analyse critique d'une situation ou d'une posture, recommandations réalistes, outils collaboratifs intégrant le partage de ressources et choix pertinents.
 
@@ -129,7 +129,7 @@ Critères visés : handicap pris en compte, charge répartie de manière équili
 | 14 | 5. Une personne, toutes les missions | 0:50 | Histogramme empilé à 100 % des 833 commits par mission, mois par mois : produit 24 %, fiabilité 51 %, chaîne et dépendances 13 %, documentation et pilotage 12 %. À droite, ce qui reste à la main (cadrage, arbitrages, revue, mise en production, restitutions) et ce qui est confié à la chaîne (tests et scans bloquants, déploiement et test de fumée, dépendances, alertes). **Aucune charge à répartir sur une équipe**, et c'est dit |
 | 15 | Les quatre styles managériaux, situés | 0:55 | Quadrant directivité × soutien : persuasif, participatif, directif, délégatif, chacun sur une situation réelle du projet, le délégatif à l'automatisation en dominant. Trois preuves : 52 → 94 % après la décision directive, 3 canaux entrants, 14 contrôles bloquants |
 | 16 | Animer, partager, inclure : écrit, versionné, asynchrone | 0:50 | Les trois publics et ce que chacun reçoit (utilisateurs, commanditaire, contributeur à venir), les outils avec ce que chacun partage, et les trois contraintes servies par la même propriété : handicap, fuseaux horaires, langue. Sur le produit : bilingue, porte d'accessibilité bloquante. Sur le réel, personne dans ces situations sur le projet, et c'est dit |
-| 17 | Analyse critique : une posture qui a réussi, 17 au 26 août | 0:55 | 10 jours travaillés consécutifs pour deux échéances superposées, les deux tenues. Ce que la chaîne a payé : 94 → 78 → 38 %, et 2,7 → 6,1 commits par branche. Trois recommandations, chacune avec son indicateur. La thèse, la posture a réussi et c'est le problème, se dit |
+| 17 | Analyse critique : une posture qui a réussi | 0:55 | 10 jours travaillés consécutifs pour deux échéances superposées, les deux tenues. Ce que la chaîne a payé : 94 → 78 → 38 %, et 2,7 → 6,1 commits par branche. Trois recommandations, chacune avec son indicateur. La thèse, la posture a réussi et c'est le problème, se dit |
 
 ### Chapitre 6 : les besoins en compétences (2:40, 2 diapos), C3.3.2
 
@@ -184,7 +184,7 @@ Placées après la diapositive 23, jamais présentées, appelées seulement si u
 | A3 | **26** | Les deux arbitrages de réserve : la porte de qualité instable (52 % → 94 %), l'abandon de l'application mobile |
 | A4 | **27** | Le budget prévisionnel détaillé : valeur de développement par lot, infrastructure poste par poste |
 | A5 | **28** | La chaîne d'intégration et de déploiement, ses 18 jobs et leur caractère bloquant |
-| A6 | **29** | La matrice RACI complète, 14 lignes, sur les acteurs réels |
+| A6 | **29** | La matrice RACI complète, 15 lignes, sur les acteurs réels |
 | A7 | **30** | Le journal des versions et le détail de la v1.3.2, avec la traçabilité bidirectionnelle |
 | A8 | **31** | Les retours utilisateurs question par question, et ce qu'ils ont produit |
 

@@ -81,7 +81,7 @@ Une échelle en pourcentage ou en « débutant / intermédiaire / avancé » n'e
 | Architecture applicative | 2 | 3 | 3 | Découpage hexagonal de l'API, 111 fichiers ; contrat OpenAPI tenu depuis le MVP |
 | **Arbitrage et chiffrage** | 2 | **2** | 4 | Chiffrage formalisé après coup, lot de migration chiffré a posteriori, dix jours d'août sans arbitrage posé |
 | **Revue de code et transmission** | 1 | **2** | 4 | 87 lignes de front intégrées sans revue en mars ; gabarit de PR et conventions écrites depuis |
-| React et TypeScript | 3 | 3 | 3 | Front du MVP livré en trois semaines, février 2026 |
+| React et TypeScript | 3 | 3 | 3 | Front du MVP livré en trois semaines, du 27 février au 16 mars 2026 |
 | Accessibilité | 1 | 3 | 3 | Porte de qualité bloquante, tests automatisés sur 9 vues, avril à juin 2026 |
 | Application installable, i18n | 1 | 2 | 2 | v1.1.0, notifications push ; produit bilingue |
 | C# et ASP.NET Core | 2 | 3 | 3 | Migration de l'API en quatre jours, 16 au 19 mars 2026 |
@@ -121,11 +121,11 @@ Les actions ne sont pas classées par ordre d'importance mais par **coût d'un �
 |--------|----------|-------|------|------------------------|:-----:|
 | **Arbitrage et chiffrage** : méthodes d'estimation, écriture d'une décision | Formation courte externe **gestion de projet logiciel**, puis pratique à chaque version : chiffrer avant, consigner l'arbitrage quand il est pris | 3 j | externe | Chaque version est chiffrée **avant** d'être ouverte ; chaque arbitrage est consigné **au moment où il est pris** | **1** |
 | **Revue et transmission** | Revue par un tiers, humain ou outillé, obligatoire sur les changements structurants : migration, contrat d'interface, chaîne | continu | interne | Part des changements structurants passés en revue, cible 100 % | **1** |
-| Sécurité applicative | Autoformation cadrée sur le référentiel **OWASP Top 10**, revue croisée sécurité outillée | 4 j | interne | Aucune vulnérabilité de catégorie OWASP introduite sur un trimestre | 2 |
+| Sécurité applicative | Autoformation cadrée sur le référentiel **OWASP Top 10**, revue de sécurité outillée | 4 j | interne | Aucune vulnérabilité de catégorie OWASP introduite sur un trimestre | 2 |
 | Accessibilité | Formation certifiante externe **Opquast**, pour formaliser un acquis construit sur le projet | 3 j | ≈ 900 € | Une livraison passe la porte d'accessibilité **sans reprise** | 2 |
 | Management d'équipe | Formation courte, utile le jour où le projet passe en équipe | 2 j | interne ou externe | Un contributeur opérationnel en une journée sur le cadre écrit | 3 |
 
-**Charge et budget** : **12 jours**, en autoformation ou en pratique sur du travail productif, sauf les deux formations externes. Les deux priorités 1 passent avant tout le technique parce qu'elles ont déjà coûté au projet, et parce que le technique, lui, a été acquis sur le projet.
+**Charge et budget** : **12 jours**, en autoformation ou en pratique sur du travail productif, sauf les deux formations externes ; un seul poste payant, la certification. Les deux priorités 1 passent avant tout le technique parce qu'elles ont déjà coûté au projet, et parce que le technique, lui, a été acquis sur le projet.
 
 ### 3.3 Les besoins en recrutement, à transmettre aux ressources humaines
 
@@ -149,7 +149,7 @@ Le critère est explicite : les modalités de formation doivent prendre en compt
 | **Aménagement matériel** | Poste, périphériques et outillage adaptés, compatibles lecteur d'écran et navigation exclusivement au clavier, disponibles **pendant** la formation et pas seulement au poste de travail |
 | **Format et rythme** | Distanciel possible sur toute action, découpage en séquences courtes, enregistrement des sessions pour révision asynchrone |
 | **Choix du prestataire** | L'accessibilité de la plateforme de formation est un **critère de sélection** du prestataire, au même titre que le contenu |
-| **Compagnonnage** | Les actions internes se font en binôme écrit et asynchrone, ce qui n'impose ni la simultanéité ni l'oral |
+| **Compagnonnage** | Les actions internes se font par écrit et en asynchrone, sur les procédures du dépôt, ce qui n'impose ni la simultanéité ni l'oral |
 
 **Le point à dire** : la dernière ligne n'est pas un aménagement particulier, c'est le mode de travail normal du projet décrit au chapitre 4. **Une organisation dont le fonctionnement courant est déjà accessible n'a pas à produire d'aménagement exceptionnel**, c'est ce qui distingue une inclusion conçue d'une inclusion rapportée.
 
@@ -172,5 +172,5 @@ Le critère est explicite : les modalités de formation doivent prendre en compt
 | Comment avez-vous étalonné les niveaux cibles ? | Sur ce que le projet a réellement exigé, pas sur un référentiel. Chaque compétence de la cartographie correspond à une technologie présente dans le dépôt, avec une date d'introduction vérifiable, la chronologie des quatre vagues |
 | Pourquoi une certification d'accessibilité, si le niveau est atteint ? | Parce que l'acquis a été construit sur un seul produit, avec des outils automatisés. Une certification le formalise et le rend transférable. Et parce que c'est le seul domaine où un écart a un effet immédiat et bloquant : la porte de qualité échoue le déploiement |
 | Pourquoi si peu de technique dans le plan ? | Parce que le technique a été acquis sur le projet, en production, et que la grille le montre. Ce qui reste et qui a déjà coûté est du pilotage : chiffrer avant, arbitrer quand il le faut, faire relire le structurant |
-| Vos deux plus gros écarts sur le lead ne sont pas techniques | Non, et c'est volontaire. Arbitrage, chiffrage et transmission sont les deux compétences que le projet a le plus sollicitées et le moins bien exercées : le chiffrage a été formalisé a posteriori, et 87 lignes ont été intégrées sans revue. La grille désigne les mêmes faiblesses que les indicateurs, sinon elle serait de complaisance |
+| Vos deux plus gros écarts ne sont pas techniques | Non, et c'est volontaire. Arbitrage, chiffrage et transmission sont les deux compétences que le projet a le plus sollicitées et le moins bien exercées : le chiffrage a été formalisé a posteriori, et 87 lignes ont été intégrées sans revue. La grille désigne les mêmes faiblesses que les indicateurs, sinon elle serait de complaisance |
 | Les modalités handicap ne sont-elles pas des clauses de style ? | Trois d'entre elles ont un coût réel et sont donc vérifiables : le tiers-temps accordé de droit, la fourniture systématique d'un support en texte structuré, et l'accessibilité de la plateforme comme critère de sélection du prestataire. Et le compagnonnage interne est déjà asynchrone et écrit, c'est le mode de travail normal du projet, pas un aménagement rapporté |

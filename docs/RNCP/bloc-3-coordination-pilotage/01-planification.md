@@ -37,7 +37,7 @@ Deux règles structurent ce flux :
 
 | Bénéfice attendu | Traduction sur le projet |
 |------------------|--------------------------|
-| Priorisation permanente plutôt que périmètre figé | Le périmètre a évolué 8 fois sans replanification globale, de la V0.1 à la V1.4 |
+| Priorisation permanente plutôt que périmètre figé | Le périmètre a été arrêté 10 fois, une par version, sans replanification globale, de la v0.1.0 à la v1.5.0 |
 | Absence de cérémonie non soutenable | Aucun rituel calibré pour un collectif imposé à une exécution solo : le temps va à la production et à la revue |
 | Délai de mise à disposition court | 10 mises en production entre le 27 février et le 7 septembre 2026, soit un point de livraison toutes les 3 semaines en moyenne |
 | Réponse rapide à un signal de production | Les anomalies remontées ont été traitées en dehors du flux fonctionnel, sans attendre une fin d'itération |
@@ -99,7 +99,7 @@ Le Gantt fait apparaître les cinq phases exigées par la grille. Leur contenu s
 | **Étude** | 27/02 au 15/04/2026 | Analyse de la demande, identification des parties prenantes, étude comparative des stacks, faisabilité technique, veille technologique, hiérarchisation fonctionnelle MoSCoW |
 | **Mesure** | 20/03 au 30/04, puis 08/04 au 21/07 | Deux temps. En amont : chiffrage de la charge en jours-homme, budget prévisionnel, cartographie des risques, définition des indicateurs de pilotage. En production : instrumentation et relevé de l'usage réel, qui alimente les arbitrages de la V1.4 |
 | **Conception** | 01/03 au 31/05/2026 | Modèle de données, architecture hexagonale de l'API, contrat d'interface, système de composants mobile-first, parcours utilisateur |
-| **Réalisation** | 27/02 au 25/08/2026 | Les 4 lots de développement, du socle du MVP à la V1.4 |
+| **Réalisation** | 27/02 au 07/09/2026 | Les 4 lots chiffrés, du socle du MVP à la clôture du titre, puis les versions hors chiffrage jusqu'à la v1.5.0 |
 | **Restitution** | 27/02 au 16/09/2026 | Deux registres également. Vers l'utilisateur : les 10 mises en production, de la v0.1.0 à la v1.5.0. Vers le commanditaire : les restitutions du titre, oral Bloc 1, dossiers Blocs 2 et 4, oral Bloc 3 |
 
 **Le point à dire à voix haute** : ces phases **se chevauchent**, elles ne se succèdent pas. La conception court jusqu'en mai alors que la réalisation a commencé en février, et la phase de mesure se rouvre en production. C'est précisément ce qu'un cycle en V interdit, et c'est la signature d'un pilotage en flux. Un Gantt dont les barres se suivent sans se recouvrir décrirait un autre projet que celui-ci.
@@ -200,7 +200,7 @@ Aucun acteur intermédiaire n'est ajouté : tout ce qui n'est pas exécuté par 
 
 | Famille | Ressource |
 |---------|-----------|
-| Poste de travail | Un poste de développement par profil, environnement local reproductible, exécution de la chaîne de vérification en local avant toute remontée |
+| Poste de travail | Un poste de développement, environnement local reproductible, exécution de la chaîne de vérification en local avant toute remontée |
 | Outillage de développement | Dépôt unique en monorepo, gestionnaire de paquets et orchestrateur de tâches, environnement de test, analyse statique, formatage automatisé |
 | Chaîne de livraison | Intégration continue, analyse de qualité et de sécurité, tests de bout en bout, mesure de performance, déploiement automatisé |
 | Hébergement | Exécution conteneurisée de l'API sans serveur, distribution du front par réseau de diffusion de contenu, base de données managée |
@@ -232,6 +232,7 @@ Convention : **R** réalise, **A** approuve et rend compte, **C** est consulté,
 | Modèle de données et contrat d'interface | A, R | | | |
 | Développement de l'interface | A, R | | I | |
 | Développement de l'API | A, R | | | |
+| Revue, tests et intégration | A, R | | | |
 | Intégration des services tiers | A, R | | | C |
 | Accessibilité et inclusion | A, R | | C | |
 | Chaîne d'intégration et de déploiement | A, R | | | |
@@ -262,7 +263,7 @@ Le critère est explicitement demandé par la grille. Il est traité à trois ni
 
 ## 6. Les points de vigilance
 
-Sept points, chacun avec son indicateur de contrôle et sa parade. Les deux premiers sont structurels, les cinq suivants sont techniques.
+Sept points, chacun avec son indicateur de contrôle et sa parade. Le premier est un risque d'organisation, les six autres sont des risques de projet, dont cinq techniques.
 
 | # | Point de vigilance | Ce qu'il menace | Indicateur de contrôle | Parade |
 |:-:|--------------------|-----------------|------------------------|--------|
