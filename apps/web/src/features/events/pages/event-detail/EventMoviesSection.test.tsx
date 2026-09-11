@@ -424,30 +424,29 @@ describe('EventMoviesSection (MSW)', () => {
       expect(screen.getByTestId('vote-limit-dialog')).not.toHaveAttribute('open');
     });
 
-    it('limite atteinte : voter pour un autre film ouvre la fenêtre et ne part pas', async () => {
-      let posted = false;
-      server.use(
-        authedUserHandler,
-        watchlistHandler([]),
-        http.post(`${TEST_API_V1}/events/soiree-cine/movies/m2/vote`, () => {
-          posted = true;
-          return new HttpResponse(null, { status: 204 });
-        })
-      );
+    it('affiche le quota de votes du participant', () => {
+      server.use(authedUserHandler, watchlistHandler([]));
+      renderSection({ event: limitedEvent(2), movies: [{ ...MOVIE, myVote: 1 }, SECOND_MOVIE] });
+
+      expect(screen.getByTestId('vote-quota')).toHaveTextContent('Votes posés : 1 sur 2');
+    });
+
+    it('limite atteinte : les pouces des autres films sont désactivés et expliqués', () => {
+      server.use(authedUserHandler, watchlistHandler([]));
       renderSection({ event: limitedEvent(1), movies: [{ ...MOVIE, myVote: -1 }, SECOND_MOVIE] });
-      const user = userEvent.setup();
 
-      await user.click(screen.getByRole('button', { name: /voter pour alien/i }));
-
-      const dialog = screen.getByTestId('vote-limit-dialog');
-      expect(dialog).toHaveAttribute('open');
-      expect(dialog).toHaveTextContent(/limite de votes atteinte/i);
-      expect(dialog).toHaveTextContent(/déjà posé votre vote/i);
-      expect(posted).toBe(false);
-      expect(track).not.toHaveBeenCalled();
-
-      await user.click(screen.getByTestId('vote-limit-dialog-confirm'));
-      expect(dialog).not.toHaveAttribute('open');
+      const upvote = screen.getByRole('button', { name: /voter pour alien/i });
+      expect(upvote).toBeDisabled();
+      expect(screen.getByRole('button', { name: /voter contre alien/i })).toBeDisabled();
+      expect(screen.getByRole('toolbar', { name: /votes pour « alien »/i })).toHaveAttribute(
+        'title',
+        'Votre vote est posé. Retirez-le pour voter pour ce film.'
+      );
+      expect(
+        screen.getByRole('button', { name: /retirer mon vote contre « matrix »/i })
+      ).toBeEnabled();
+      expect(screen.getByTestId('vote-quota')).toHaveTextContent('Votes posés : 1 sur 1');
+      expect(screen.getByTestId('vote-limit-dialog')).not.toHaveAttribute('open');
     });
 
     it('limite atteinte : retirer ou changer un vote déjà posé reste possible', async () => {
@@ -537,7 +536,7 @@ describe('EventMoviesSection (MSW)', () => {
       expect(screen.getByTestId('vote-limit-dialog')).not.toHaveAttribute('open');
     });
 
-    it('le message parle au pluriel quand la limite dépasse un vote', async () => {
+    it('le message parle au pluriel quand la limite dépasse un vote', () => {
       server.use(authedUserHandler, watchlistHandler([]));
       renderSection({
         event: limitedEvent(2),
@@ -547,11 +546,12 @@ describe('EventMoviesSection (MSW)', () => {
           { ...MOVIE, id: 'm3', title: 'Heat' },
         ],
       });
-      const user = userEvent.setup();
 
-      await user.click(screen.getByRole('button', { name: /voter pour heat/i }));
-
-      expect(screen.getByTestId('vote-limit-dialog')).toHaveTextContent(/vos 2 votes/i);
+      expect(screen.getByRole('button', { name: /voter pour heat/i })).toBeDisabled();
+      expect(screen.getByRole('toolbar', { name: /votes pour « heat »/i })).toHaveAttribute(
+        'title',
+        'Vos 2 votes sont posés. Retirez-en un pour voter pour ce film.'
+      );
     });
   });
 

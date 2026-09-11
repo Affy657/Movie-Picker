@@ -97,6 +97,13 @@
   margin-top: var(--space-3);
 }
 
+.remaining {
+  margin: 0;
+  padding: 0 var(--space-6) var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
 .footer {
   display: flex;
   justify-content: flex-end;

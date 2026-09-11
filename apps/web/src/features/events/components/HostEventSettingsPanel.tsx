@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { useNavigate } from 'react-router';
-import { AlertCircle, Settings, Trash2, X } from 'lucide-react';
+import { AlertCircle, Lock, Settings, Trash2, X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { parseTheme } from './ThemeField';
 import HostEventDateField from './HostEventDateField';
@@ -536,6 +536,12 @@ export default function HostEventSettingsPanel({
         </div>
       </div>
       <div className={styles.dialogBody}>
+        {configLocked ? (
+          <p className={styles.lockBanner} role="status">
+            <Lock size={14} aria-hidden />
+            <span className={styles.lockBannerLabel}>{t('events.settings.configLockedHint')}</span>
+          </p>
+        ) : null}
         {saveError && (
           <p className="error" role="alert">
             {saveError}
@@ -610,105 +616,102 @@ export default function HostEventSettingsPanel({
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>{t('events.settings.sectionFlow')}</h3>
 
-            <fieldset className={styles.lockable} disabled={configLocked}>
-              <div className={styles.fieldRow}>
-                <div className={styles.field}>
-                  <label className="label" htmlFor="host-cfg-max">
-                    {t('events.settings.maxProposalsLabel')}
-                  </label>
-                  <NumberInput
-                    id="host-cfg-max"
-                    value={maxProp}
-                    onChange={(v) => {
-                      setMaxProp(v);
-                      scheduleAutoSave();
-                    }}
-                    min={1}
-                    max={MAX_PROPOSALS_PER_PARTICIPANT}
-                    invalid={!!fieldErrors.maxProposals}
-                    ariaDescribedBy={fieldErrors.maxProposals ? maxProposalsErrorId : undefined}
-                  />
-                  {fieldErrors.maxProposals ? (
-                    <p id={maxProposalsErrorId} className={styles.fieldError}>
-                      <AlertCircle size={12} aria-hidden />
-                      <span>{fieldErrors.maxProposals}</span>
-                    </p>
-                  ) : (
-                    <p className="hint">
-                      {t('events.settings.maxProposalsHint', {
-                        max: MAX_PROPOSALS_PER_PARTICIPANT,
-                      })}
-                    </p>
-                  )}
-                </div>
-
-                <div className={styles.field}>
-                  <label className="label" htmlFor="host-cfg-max-participants">
-                    {t('events.settings.maxParticipantsLabel')}
-                  </label>
-                  <NumberInput
-                    id="host-cfg-max-participants"
-                    value={maxParticipants}
-                    onChange={(v) => {
-                      setMaxParticipants(v);
-                      scheduleAutoSave();
-                    }}
-                    min={1}
-                    max={MAX_EVENT_PARTICIPANTS}
-                    invalid={!!fieldErrors.maxParticipants}
-                    ariaDescribedBy={
-                      fieldErrors.maxParticipants ? maxParticipantsErrorId : undefined
-                    }
-                  />
-                  {fieldErrors.maxParticipants ? (
-                    <p id={maxParticipantsErrorId} className={styles.fieldError}>
-                      <AlertCircle size={12} aria-hidden />
-                      <span>{fieldErrors.maxParticipants}</span>
-                    </p>
-                  ) : (
-                    <p className="hint">
-                      {(event.participantCount ?? 0) === 1
-                        ? t('events.settings.maxParticipantsHintOne', {
-                            max: MAX_EVENT_PARTICIPANTS,
-                          })
-                        : t('events.settings.maxParticipantsHintMany', {
-                            count: event.participantCount ?? 0,
-                            max: MAX_EVENT_PARTICIPANTS,
-                          })}
-                    </p>
-                  )}
-                </div>
+            <div className={styles.counterGrid}>
+              <div className={styles.field}>
+                <label className="label" htmlFor="host-cfg-max">
+                  {t('events.settings.maxProposalsLabel')}
+                </label>
+                <NumberInput
+                  id="host-cfg-max"
+                  value={maxProp}
+                  onChange={(v) => {
+                    setMaxProp(v);
+                    scheduleAutoSave();
+                  }}
+                  min={1}
+                  max={MAX_PROPOSALS_PER_PARTICIPANT}
+                  disabled={configLocked}
+                  invalid={!!fieldErrors.maxProposals}
+                  ariaDescribedBy={fieldErrors.maxProposals ? maxProposalsErrorId : undefined}
+                />
+                {fieldErrors.maxProposals ? (
+                  <p id={maxProposalsErrorId} className={styles.fieldError}>
+                    <AlertCircle size={12} aria-hidden />
+                    <span>{fieldErrors.maxProposals}</span>
+                  </p>
+                ) : (
+                  <p className="hint">
+                    {t('events.settings.maxProposalsHint', {
+                      max: MAX_PROPOSALS_PER_PARTICIPANT,
+                    })}
+                  </p>
+                )}
               </div>
-            </fieldset>
 
-            <div className={styles.field}>
-              <label className="label" htmlFor="host-cfg-winner-count">
-                {t('events.settings.winnerCountLabel')}
-              </label>
-              <NumberInput
-                id="host-cfg-winner-count"
-                value={winnerCount}
-                onChange={(v) => {
-                  setWinnerCount(v);
-                  scheduleAutoSave();
-                }}
-                min={Math.max(1, cfg.drawnWinnerCount)}
-                max={cfg.winnerCountMax}
-                invalid={!!fieldErrors.winnerCount}
-                ariaDescribedBy={fieldErrors.winnerCount ? winnerCountErrorId : undefined}
-              />
-              {fieldErrors.winnerCount ? (
-                <p id={winnerCountErrorId} className={styles.fieldError}>
-                  <AlertCircle size={12} aria-hidden />
-                  <span>{fieldErrors.winnerCount}</span>
-                </p>
-              ) : (
-                <p className="hint">
-                  {t('events.settings.winnerCountHint', { max: cfg.winnerCountMax })}
-                </p>
-              )}
+              <div className={styles.field}>
+                <label className="label" htmlFor="host-cfg-max-participants">
+                  {t('events.settings.maxParticipantsLabel')}
+                </label>
+                <NumberInput
+                  id="host-cfg-max-participants"
+                  value={maxParticipants}
+                  onChange={(v) => {
+                    setMaxParticipants(v);
+                    scheduleAutoSave();
+                  }}
+                  min={1}
+                  max={MAX_EVENT_PARTICIPANTS}
+                  disabled={configLocked}
+                  invalid={!!fieldErrors.maxParticipants}
+                  ariaDescribedBy={fieldErrors.maxParticipants ? maxParticipantsErrorId : undefined}
+                />
+                {fieldErrors.maxParticipants ? (
+                  <p id={maxParticipantsErrorId} className={styles.fieldError}>
+                    <AlertCircle size={12} aria-hidden />
+                    <span>{fieldErrors.maxParticipants}</span>
+                  </p>
+                ) : (
+                  <p className="hint">
+                    {(event.participantCount ?? 0) === 1
+                      ? t('events.settings.maxParticipantsHintOne', {
+                          max: MAX_EVENT_PARTICIPANTS,
+                        })
+                      : t('events.settings.maxParticipantsHintMany', {
+                          count: event.participantCount ?? 0,
+                          max: MAX_EVENT_PARTICIPANTS,
+                        })}
+                  </p>
+                )}
+              </div>
+
+              <div className={styles.field}>
+                <label className="label" htmlFor="host-cfg-winner-count">
+                  {t('events.settings.winnerCountLabel')}
+                </label>
+                <NumberInput
+                  id="host-cfg-winner-count"
+                  value={winnerCount}
+                  onChange={(v) => {
+                    setWinnerCount(v);
+                    scheduleAutoSave();
+                  }}
+                  min={Math.max(1, cfg.drawnWinnerCount)}
+                  max={cfg.winnerCountMax}
+                  invalid={!!fieldErrors.winnerCount}
+                  ariaDescribedBy={fieldErrors.winnerCount ? winnerCountErrorId : undefined}
+                />
+                {fieldErrors.winnerCount ? (
+                  <p id={winnerCountErrorId} className={styles.fieldError}>
+                    <AlertCircle size={12} aria-hidden />
+                    <span>{fieldErrors.winnerCount}</span>
+                  </p>
+                ) : (
+                  <p className="hint">
+                    {t('events.settings.winnerCountHint', { max: cfg.winnerCountMax })}
+                  </p>
+                )}
+              </div>
             </div>
-            {configLocked ? <p className="hint">{t('events.settings.configLockedHint')}</p> : null}
 
             <fieldset className={styles.lockable} disabled={configLocked}>
               <div className={styles.field}>
@@ -787,46 +790,44 @@ export default function HostEventSettingsPanel({
                   </div>
                 )}
               </div>
+            </fieldset>
 
-              <div className={styles.field}>
-                <div className={styles.toggleRow}>
-                  <span>
-                    <span className={styles.toggleName}>
-                      {t('events.settings.recurrenceLabel')}
-                    </span>
-                    <span className={styles.toggleDesc}>{t('events.settings.recurrenceDesc')}</span>
-                  </span>
-                  <Toggle
-                    checked={recurrence !== null}
-                    label={t('events.settings.recurrenceLabel')}
-                    disabled={recurrenceLocked}
-                    onChange={() => {
-                      setRecurrence((v) => (v === null ? 'weekly' : null));
+            <div className={styles.field}>
+              <div className={styles.toggleRow}>
+                <span>
+                  <span className={styles.toggleName}>{t('events.settings.recurrenceLabel')}</span>
+                  <span className={styles.toggleDesc}>{t('events.settings.recurrenceDesc')}</span>
+                </span>
+                <Toggle
+                  checked={recurrence !== null}
+                  label={t('events.settings.recurrenceLabel')}
+                  disabled={recurrenceLocked}
+                  onChange={() => {
+                    setRecurrence((v) => (v === null ? 'weekly' : null));
+                    scheduleAutoSave(true);
+                  }}
+                />
+              </div>
+              {recurrence !== null && !recurrenceLocked && (
+                <div className={styles.recurrenceRhythm}>
+                  <SegmentedRadioGroup
+                    className={styles.recurrenceSegments}
+                    options={recurrenceOptions}
+                    value={recurrence}
+                    size="sm"
+                    ariaLabel={t('events.settings.recurrenceGroupLabel')}
+                    onChange={(value) => {
+                      setRecurrence(value);
                       scheduleAutoSave(true);
                     }}
                   />
+                  <p className="hint">{t('events.settings.recurrenceShareHint')}</p>
                 </div>
-                {recurrence !== null && !recurrenceLocked && (
-                  <div className={styles.recurrenceRhythm}>
-                    <SegmentedRadioGroup
-                      className={styles.recurrenceSegments}
-                      options={recurrenceOptions}
-                      value={recurrence}
-                      size="sm"
-                      ariaLabel={t('events.settings.recurrenceGroupLabel')}
-                      onChange={(value) => {
-                        setRecurrence(value);
-                        scheduleAutoSave(true);
-                      }}
-                    />
-                    <p className="hint">{t('events.settings.recurrenceShareHint')}</p>
-                  </div>
-                )}
-                {recurrenceLocked && (
-                  <p className="hint">{t('events.settings.recurrenceLockedHint')}</p>
-                )}
-              </div>
-            </fieldset>
+              )}
+              {recurrenceLocked && (
+                <p className="hint">{t('events.settings.recurrenceLockedHint')}</p>
+              )}
+            </div>
           </div>
 
           {isConnectedCreator && (
@@ -836,7 +837,8 @@ export default function HostEventSettingsPanel({
                 templates={templates}
                 appliedTemplateId={matchingTemplate?.id ?? null}
                 disabled={isTemplateBusy}
-                onApply={configLocked ? undefined : applyTemplate}
+                applyLockedHint={configLocked ? t('events.settings.templates.lockedHint') : null}
+                onApply={applyTemplate}
                 onRename={(template, name) =>
                   updateTemplate(template.id, { ...templateToDraft(template), name })
                 }

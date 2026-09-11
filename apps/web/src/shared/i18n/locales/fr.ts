@@ -918,9 +918,10 @@
         cancelAriaLabel: 'Annuler',
         saveHint: 'Réutiliser cette configuration plus tard',
         savedAs: 'Enregistré comme « {{name}} ».',
-        saveAction: 'Enregistrer cette configuration',
+        saveAction: 'Enregistrer en template',
         saveFromEventHint: 'Cette configuration marche bien ?',
-        saveFromEventAction: 'En faire un template',
+        saveFromEventAction: 'Enregistrer en template',
+        lockedHint: 'Le tirage a commencé : les templates ne s’appliquent plus à cette soirée.',
         saved: 'Template « {{name}} » enregistré.',
         modifiedHint: 'Vous avez modifié la configuration de {{name}}.',
         updateAction: 'Mettre à jour',
@@ -941,8 +942,7 @@
       maxVotesInvalid: 'Votes par participant : nombre entier à partir de 1.',
       winnerCountLabel: 'Films gagnants',
       winnerCountInvalid: 'Indiquez un nombre entre 1 et {{max}}.',
-      winnerCountHint:
-        'Combien de films seront désignés gagnants dans cette soirée, {{max}} au maximum.',
+      winnerCountHint: '{{max}} au maximum.',
       winnerCountLockedHint:
         'Déjà {{count}} films gagnants\u00a0: retirez-en un du palmarès pour descendre plus bas.',
       configLockedHint: 'Le tirage a commencé : seul le nombre de films gagnants reste réglable.',
@@ -1016,12 +1016,24 @@
       manualPickError: 'Sélection impossible',
       allExcludedHint:
         'Tous les films sont exclus du tirage. Réintégrez-en au moins un pour désigner un gagnant.',
-      modalRelaunchButton: 'Tirer un film de plus',
+      modalRelaunchButton: 'Tirer le suivant',
+      moreActionsLabel: 'Autres actions sur le tirage',
+      remainingDrawsOne: '1 tirage restant',
+      remainingDrawsMany: '{{count}} tirages restants',
+      remainingWordOne: 'restant',
+      remainingWordMany: 'restants',
+      allDrawnStatusOne: 'Film gagnant désigné',
+      allDrawnStatusMany: '{{count}} films gagnants désignés',
       modal: {
         manualWinnerTitle: 'Film choisi par l’hôte !',
+        manualWinnerTitleOfMany: 'Film {{index}} sur {{total}}, choisi par l’hôte !',
         spinningTitle: 'Tirage en cours…',
         winnerTitle: 'Film sélectionné !',
+        winnerTitleOfMany: 'Film {{index}} sur {{total}} sélectionné !',
+        remainingOne: 'Encore 1 film à tirer.',
+        remainingMany: 'Encore {{count}} films à tirer.',
         closeButton: "C'est parti !",
+        finishHereButton: 'Terminer ici',
       },
     },
     reminder: {
@@ -1108,6 +1120,9 @@
       voteLimitReachedMany:
         'Vous avez déjà posé vos {{max}} votes pour cette soirée. Retirez-en un pour voter pour un autre film.',
       voteLimitReachedOk: 'Compris',
+      voteQuota: 'Votes posés : {{used}} sur {{max}}',
+      voteQuotaLockedOne: 'Votre vote est posé. Retirez-le pour voter pour ce film.',
+      voteQuotaLockedMany: 'Vos {{max}} votes sont posés. Retirez-en un pour voter pour ce film.',
       letterboxdButton: 'Ouvrir sur Letterboxd',
       imdbButton: 'Ouvrir sur IMDb',
       allocineButton: 'Ouvrir sur AlloCiné',
@@ -1648,6 +1663,7 @@
       count: '{{count}} films à voir',
       empty: 'Aucun film à voir',
       hidden: 'Masquée',
+      makeVisible: 'Rendre visible',
       pageTitle: 'La watchlist de {{name}}',
       seoDescription:
         'Watchlist de {{name}} (@{{handle}}) sur Movie Picker\u00a0: ses films à voir, à proposer pour une prochaine soirée.',
@@ -2208,7 +2224,7 @@
       v16When: 'Septembre 2026',
       v16What: 'V1.6',
       v16Detail:
-        'Fermer la boucle sociale ouverte en V1.2 et ritualiser la soirée. Quatre des six repères sont en place, deux restent à poser.',
+        'Fermer la boucle sociale ouverte en V1.2 et ritualiser la soirée. Les six repères sont en place, la version part en production à la fusion dans master.',
       v16Hint:
         'Le mode tournoi a quitté ce palier pour le backlog : son coût dépassait à lui seul celui des cinq autres items réunis.',
       v16Item1: "Recherche d'utilisateurs",

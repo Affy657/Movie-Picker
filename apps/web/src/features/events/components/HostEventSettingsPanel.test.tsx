@@ -87,8 +87,10 @@ describe('HostEventSettingsPanel', () => {
 
     expect(screen.getByLabelText(/nom de la soir/i)).toBeDisabled();
     expect(screen.getByRole('radio', { name: /par les votes/i })).toBeDisabled();
+    expect(screen.getByLabelText(/films max par personne/i)).toBeDisabled();
     expect(screen.getByLabelText(/films gagnants/i)).toBeEnabled();
-    expect(screen.getByText(/tirage a commenc/i)).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: /répéter cette soirée/i })).toBeEnabled();
+    expect(screen.getByRole('status')).toHaveTextContent(/tirage a commenc/i);
   });
 
   it('ouvre le panneau et envoie un PATCH config', async () => {
@@ -797,12 +799,13 @@ describe('HostEventSettingsPanel', () => {
     );
 
     const section = screen.getByTestId('event-templates-section');
-    await waitFor(() => expect(section).toHaveTextContent('Soirée horreur'));
-    expect(screen.queryByRole('button', { name: /Soirée horreur/ })).not.toBeInTheDocument();
+    const chip = await screen.findByRole('button', { name: /Soirée horreur/ });
+    expect(chip).toBeDisabled();
+    expect(section).toHaveTextContent(/les templates ne s’appliquent plus/i);
     expect(screen.getByRole('button', { name: 'Gérer' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'En faire un template' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeEnabled();
 
-    await user.click(screen.getByText('Soirée horreur'));
+    await user.click(chip);
     expect(patched).toBe(false);
   });
 
@@ -827,7 +830,9 @@ describe('HostEventSettingsPanel', () => {
     const section = screen.getByTestId('event-templates-section');
 
     expect(section).toContainElement(chip);
-    expect(section).toContainElement(screen.getByRole('button', { name: 'En faire un template' }));
+    expect(section).toContainElement(
+      screen.getByRole('button', { name: 'Enregistrer en template' })
+    );
 
     const lastSetting = screen.getByRole('radio', { name: /aléatoire strict/i });
     expect(

@@ -146,6 +146,15 @@
   color: var(--color-text-muted);
 }
 
+.watchlistSettingLink {
+  display: inline-block;
+  margin-top: var(--space-1-5);
+  padding: var(--space-1) 0;
+  font-size: var(--font-size-2xs);
+  font-weight: 600;
+  color: var(--color-primary-text);
+}
+
 .hiddenPill {
   display: inline-flex;
   align-items: center;

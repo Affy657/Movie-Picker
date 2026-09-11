@@ -445,6 +445,13 @@
   color: var(--color-meta);
 }
 
+.timelineBadgeCurrent {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--color-primary) 55%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary-text);
+}
+
 .timelineChips {
   margin-top: var(--space-2);
 }

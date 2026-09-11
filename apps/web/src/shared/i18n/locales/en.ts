@@ -903,9 +903,10 @@ export const en: Locale = {
         cancelAriaLabel: 'Cancel',
         saveHint: 'Reuse this configuration later',
         savedAs: 'Saved as “{{name}}”.',
-        saveAction: 'Save this configuration',
+        saveAction: 'Save as a template',
         saveFromEventHint: 'Is this configuration working well?',
         saveFromEventAction: 'Save as a template',
+        lockedHint: 'The draw has started: templates no longer apply to this event.',
         saved: 'Template “{{name}}” saved.',
         modifiedHint: 'You changed the configuration of {{name}}.',
         updateAction: 'Update',
@@ -926,7 +927,7 @@ export const en: Locale = {
       maxVotesInvalid: 'Votes per participant: whole number of 1 or more.',
       winnerCountLabel: 'Winning movies',
       winnerCountInvalid: 'Enter a number between 1 and {{max}}.',
-      winnerCountHint: 'How many movies will be picked as winners for this event, {{max}} at most.',
+      winnerCountHint: '{{max}} at most.',
       winnerCountLockedHint:
         '{{count}} winning movies already: take one out of the results to go lower.',
       configLockedHint:
@@ -997,12 +998,24 @@ export const en: Locale = {
       manualPickError: 'Pick failed',
       allExcludedHint:
         'Every movie is excluded from the draw. Put at least one back to pick a winner.',
-      modalRelaunchButton: 'Draw one more movie',
+      modalRelaunchButton: 'Draw the next one',
+      moreActionsLabel: 'More draw actions',
+      remainingDrawsOne: '1 draw left',
+      remainingDrawsMany: '{{count}} draws left',
+      remainingWordOne: 'left',
+      remainingWordMany: 'left',
+      allDrawnStatusOne: 'Winning movie set',
+      allDrawnStatusMany: '{{count}} winning movies set',
       modal: {
         manualWinnerTitle: 'Movie picked by the host!',
+        manualWinnerTitleOfMany: 'Movie {{index}} of {{total}}, picked by the host!',
         spinningTitle: 'Draw in progress…',
         winnerTitle: 'Movie selected!',
+        winnerTitleOfMany: 'Movie {{index}} of {{total}} selected!',
+        remainingOne: '1 more movie to draw.',
+        remainingMany: '{{count}} more movies to draw.',
         closeButton: "Let's watch!",
+        finishHereButton: 'Stop here',
       },
     },
     reminder: {
@@ -1088,6 +1101,9 @@ export const en: Locale = {
       voteLimitReachedMany:
         'You have already placed your {{max}} votes for this event. Remove one to vote for another movie.',
       voteLimitReachedOk: 'Got it',
+      voteQuota: 'Votes placed: {{used}} of {{max}}',
+      voteQuotaLockedOne: 'Your vote is placed. Remove it to vote for this movie.',
+      voteQuotaLockedMany: 'Your {{max}} votes are placed. Remove one to vote for this movie.',
       letterboxdButton: 'Open on Letterboxd',
       imdbButton: 'Open on IMDb',
       allocineButton: 'Open on AlloCiné',
@@ -1620,6 +1636,7 @@ export const en: Locale = {
       count: '{{count}} movies to watch',
       empty: 'No movie to watch',
       hidden: 'Hidden',
+      makeVisible: 'Make it visible',
       pageTitle: "{{name}}'s watchlist",
       seoDescription:
         "{{name}}'s (@{{handle}}) watchlist on Movie Picker: movies to watch, ready to propose for a next night.",
@@ -2174,7 +2191,7 @@ export const en: Locale = {
       v16When: 'September 2026',
       v16What: 'V1.6',
       v16Detail:
-        'Close the social loop opened in V1.2 and turn the movie night into a ritual. Four of the six markers are in place, two are left to set.',
+        'Close the social loop opened in V1.2 and turn the movie night into a ritual. All six markers are in place; the version ships once merged into master.',
       v16Hint:
         'Tournament mode left this milestone for the backlog: on its own it cost more than the five other items combined.',
       v16Item1: 'User search',

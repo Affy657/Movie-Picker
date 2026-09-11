@@ -75,10 +75,20 @@ describe('EventWheelActions', () => {
     expect(screen.getByRole('button', { name: /tirer un film de plus/i })).toBeInTheDocument();
   });
 
-  it('affiche le nombre de tirages restants sur le bouton principal', () => {
+  it('annonce les tirages restants dans le nom du bouton et sur le badge', () => {
     renderActions(wheelState({ winnerIds: ['m1'], remainingDraws: 2, winnerCount: 3 }));
 
-    expect(screen.getByRole('button', { name: /tirer un film de plus/i })).toHaveTextContent('2');
+    const button = screen.getByRole('button', {
+      name: 'Tirer un film de plus, 2 tirages restants',
+    });
+    expect(button).toHaveTextContent('2');
+    expect(button).toHaveTextContent(/restants/);
+  });
+
+  it('ne pose pas de badge sur une soirée à un seul gagnant', () => {
+    renderActions(wheelState({ remainingDraws: 1, winnerCount: 1 }));
+
+    expect(screen.getByRole('button', { name: 'Lancer la roue' })).not.toHaveTextContent(/1/);
   });
 
   it('désactive le tirage et porte la raison en infobulle', () => {
@@ -86,7 +96,6 @@ describe('EventWheelActions', () => {
       wheelState({
         spinDisabled: true,
         spinDisabledHint: 'Tous les films proposés ont déjà été tirés.',
-        remainingDraws: 0,
       })
     );
 
@@ -95,27 +104,52 @@ describe('EventWheelActions', () => {
     expect(button).toHaveAttribute('title', 'Tous les films proposés ont déjà été tirés.');
   });
 
-  it('cache le retrait et la remise à zéro tant qu’il n’y a pas de gagnant', () => {
-    renderActions(wheelState());
+  it('remplace le bouton de tirage par le palmarès complet quand tout est tiré', () => {
+    renderActions(
+      wheelState({
+        winnerIds: ['m1', 'm2', 'm3'],
+        remainingDraws: 0,
+        winnerCount: 3,
+        spinDisabled: true,
+        spinDisabledHint: 'Les 3 films gagnants de la soirée sont déjà désignés.',
+        showRemoveWinner: true,
+        showReset: true,
+      })
+    );
 
-    expect(screen.queryByRole('button', { name: /retirer un gagnant/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /repartir de zéro/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /tirer un film de plus/i })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /choisir moi-même/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('3 films gagnants désignés');
+    expect(screen.getByRole('button', { name: /autres actions sur le tirage/i })).toBeEnabled();
   });
 
-  it('arme le mode retrait au clic', async () => {
+  it('cache le menu du palmarès tant qu’il n’y a pas de gagnant', () => {
+    renderActions(wheelState());
+
+    expect(
+      screen.queryByRole('button', { name: /autres actions sur le tirage/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it('arme le mode retrait depuis le menu', async () => {
     const enterRemovalMode = vi.fn();
     renderActions(wheelState({ winnerIds: ['m1'], showRemoveWinner: true, enterRemovalMode }));
 
-    await userEvent.click(screen.getByRole('button', { name: /retirer un gagnant/i }));
+    await userEvent.click(screen.getByRole('button', { name: /autres actions sur le tirage/i }));
+    await userEvent.click(screen.getByRole('menuitem', { name: /retirer un gagnant/i }));
 
     expect(enterRemovalMode).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
-  it('demande confirmation avant de repartir de zéro', async () => {
+  it('demande confirmation avant de repartir de zéro, depuis le menu', async () => {
     const onRequestReset = vi.fn();
     renderActions(wheelState({ winnerIds: ['m1'], showReset: true }), onRequestReset);
 
-    await userEvent.click(screen.getByRole('button', { name: /repartir de zéro/i }));
+    await userEvent.click(screen.getByRole('button', { name: /autres actions sur le tirage/i }));
+    await userEvent.click(screen.getByRole('menuitem', { name: /repartir de zéro/i }));
 
     expect(onRequestReset).toHaveBeenCalledOnce();
   });

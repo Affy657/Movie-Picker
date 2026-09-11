@@ -940,6 +940,8 @@ function EventDetailSessionBody({
           onSpinComplete={wheel.revealWinner}
           onRelaunch={wheel.canRelaunchFromModal ? wheel.launch : undefined}
           skipSpin={wheel.manualReveal}
+          winnerCount={wheel.winnerCount}
+          remainingDraws={wheel.remainingDraws}
         />
       ) : null}
       <div ref={moviesSectionRef}>

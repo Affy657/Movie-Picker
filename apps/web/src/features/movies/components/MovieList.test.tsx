@@ -162,6 +162,15 @@ describe('MovieList', () => {
       expect(screen.getAllByText('Film gagnant')).toHaveLength(1);
     });
 
+    it('en grille, le marqueur gagnant est posé sur l affiche, hors du titre', () => {
+      renderWithLocale(
+        <MovieList movies={movies} {...baseProps()} viewMode="grid" winnerMovieIds={['m2', 'm1']} />
+      );
+      const badge = screen.getByText('Gagnant 1');
+      expect(badge.closest('h3')).toBeNull();
+      expect(badge.closest('[class*=posterCol]')).not.toBeNull();
+    });
+
     it('numérote les gagnants dès qu il y en a plusieurs', () => {
       renderWithLocale(
         <MovieList movies={movies} {...baseProps()} viewMode="list" winnerMovieIds={['m2', 'm1']} />

@@ -23,6 +23,7 @@ import {
   ProposerBadge,
   VoteBar,
   WatchlistBadge,
+  WinnerRibbon,
   isSelectable,
   useMovieCardState,
   type MovieCardCommonProps,
@@ -325,6 +326,7 @@ function MovieCardRowMobile({
   selection,
   isWinner,
   winnerRank,
+  voteLockedHint,
   voteError,
   participantCount,
 }: Readonly<MovieCardRowView>) {
@@ -348,19 +350,13 @@ function MovieCardRowMobile({
         <div className={styles.mobilePosterCol} inert={selecting}>
           <RowPoster src={posterSrc} srcSet={posterSrcSet} eager={!!eager} />
           <WatchlistBadge inWatchlist={!!isInWatchlist} t={t} />
+          <WinnerRibbon isWinner={isWinner} winnerRank={winnerRank} compact t={t} />
         </div>
         <div className={styles.mobileContent} inert={selecting}>
           <div className={styles.mobileTitleRow}>
             <h3 className={styles.title} title={m.title}>
               {m.title}
             </h3>
-            {isWinner ? (
-              <span className={styles.winnerBadge}>
-                {winnerRank
-                  ? t('events.wheel.winnerRankLabel', { rank: winnerRank })
-                  : t('events.wheel.winnerLabel')}
-              </span>
-            ) : null}
           </div>
           <div className={styles.mobileFacts}>
             {m.year ? <span>{m.year}</span> : null}
@@ -380,7 +376,11 @@ function MovieCardRowMobile({
           </div>
           <div className={styles.mobileBottomSection}>
             <span className={styles.mobileVoteScore}>
-              {s.canVote ? <VoteBar m={m} onVote={onVote} t={t} /> : <VoteReadonly m={m} />}
+              {s.canVote ? (
+                <VoteBar m={m} onVote={onVote} t={t} lockedHint={voteLockedHint} />
+              ) : (
+                <VoteReadonly m={m} />
+              )}
               <ScoreBlock m={m} t={t} />
             </span>
             <div className={styles.mobileProposerRow}>
@@ -464,6 +464,7 @@ function MovieCardRowDesktop({
   selection,
   isWinner,
   winnerRank,
+  voteLockedHint,
   rank,
   voteError,
   participantCount,
@@ -538,7 +539,11 @@ function MovieCardRowDesktop({
           />
         </div>
         <div className={styles.votesCol} inert={selecting}>
-          {s.canVote ? <VoteBar m={m} onVote={onVote} t={t} /> : <VoteReadonly m={m} />}
+          {s.canVote ? (
+            <VoteBar m={m} onVote={onVote} t={t} lockedHint={voteLockedHint} />
+          ) : (
+            <VoteReadonly m={m} />
+          )}
         </div>
         <div className={styles.seenCol} inert={selecting}>
           {s.canAct ? (
@@ -611,6 +616,7 @@ export const MovieCardRow = memo(function MovieCardRow({
   selection,
   isWinner = false,
   winnerRank,
+  voteLockedHint,
   isMobile,
   rank,
   voteError,
@@ -664,6 +670,7 @@ export const MovieCardRow = memo(function MovieCardRow({
       selection,
       isWinner,
       winnerRank,
+      voteLockedHint,
       isMobile,
       rank,
       voteError,

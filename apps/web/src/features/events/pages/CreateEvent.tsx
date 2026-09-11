@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router';
+import clsx from 'clsx';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Settings2, Sparkles } from 'lucide-react';
 import ThemeField, { parseTheme } from '@/features/events/components/ThemeField';
@@ -131,10 +132,13 @@ export default function CreateEvent() {
     setWinnerCount(String(config.winnerCount));
   }, []);
 
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+
   const applyTemplate = useCallback(
     (template: EventTemplateData) => {
       applyConfig(template);
       setAppliedTemplateId(template.id);
+      setAdvancedOpen(true);
     },
     [applyConfig]
   );
@@ -155,6 +159,7 @@ export default function CreateEvent() {
     reusedConfigApplied.current = true;
     applyConfig(reusedConfig);
     setReusedFrom(reuseState?.reuseEventTitle ?? '');
+    setAdvancedOpen(true);
   }, [reusedConfig, applyConfig, reuseState?.reuseEventTitle]);
 
   const templateDraft = buildTemplateDraft({
@@ -269,17 +274,6 @@ export default function CreateEvent() {
             </p>
           )}
 
-          <EventTemplatesRow
-            templates={templates}
-            appliedTemplateId={matchingTemplate?.id ?? null}
-            disabled={isBusy || loading}
-            onApply={applyTemplate}
-            onRename={(template, name) =>
-              updateTemplate(template.id, { ...templateToDraft(template), name })
-            }
-            onDelete={(template) => removeTemplate(template.id)}
-          />
-
           <label className="label" htmlFor="create-title">
             {t('events.create.titleLabel')}
           </label>
@@ -325,6 +319,18 @@ export default function CreateEvent() {
             </div>
           </div>
 
+          <EventTemplatesRow
+            className={styles.templatesRow}
+            templates={templates}
+            appliedTemplateId={matchingTemplate?.id ?? null}
+            disabled={isBusy || loading}
+            onApply={applyTemplate}
+            onRename={(template, name) =>
+              updateTemplate(template.id, { ...templateToDraft(template), name })
+            }
+            onDelete={(template) => removeTemplate(template.id)}
+          />
+
           {reusedFrom !== null && (
             <p className={styles.reused} role="status">
               <Sparkles size={14} aria-hidden />
@@ -336,7 +342,11 @@ export default function CreateEvent() {
             </p>
           )}
 
-          <details className={styles.advanced} open={reusedFrom !== null}>
+          <details
+            className={styles.advanced}
+            open={advancedOpen}
+            onToggle={(e) => setAdvancedOpen(e.currentTarget.open)}
+          >
             <summary className={styles.advancedSummary}>
               <Settings2 size={16} aria-hidden className={styles.advancedIcon} />
               <span className={styles.advancedLabel}>{t('events.create.advancedOptions')}</span>
@@ -354,7 +364,7 @@ export default function CreateEvent() {
                 onTextChange={setThemeText}
               />
 
-              <div className={styles.fieldGrid}>
+              <div className={clsx(styles.fieldGrid, styles.counterGrid)}>
                 <div>
                   <label className="label" htmlFor="create-max-proposals">
                     {t('events.settings.maxProposalsLabel')}
@@ -379,22 +389,21 @@ export default function CreateEvent() {
                     max={MAX_EVENT_PARTICIPANTS}
                   />
                 </div>
-              </div>
-
-              <div className={styles.field}>
-                <label className="label" htmlFor="create-winner-count">
-                  {t('events.settings.winnerCountLabel')}
-                </label>
-                <NumberInput
-                  id="create-winner-count"
-                  value={winnerCount}
-                  onChange={setWinnerCount}
-                  min={1}
-                  max={MAX_WINNERS_PER_EVENT}
-                />
-                <p className="hint">
-                  {t('events.settings.winnerCountHint', { max: MAX_WINNERS_PER_EVENT })}
-                </p>
+                <div>
+                  <label className="label" htmlFor="create-winner-count">
+                    {t('events.settings.winnerCountLabel')}
+                  </label>
+                  <NumberInput
+                    id="create-winner-count"
+                    value={winnerCount}
+                    onChange={setWinnerCount}
+                    min={1}
+                    max={MAX_WINNERS_PER_EVENT}
+                  />
+                  <p className="hint">
+                    {t('events.settings.winnerCountHint', { max: MAX_WINNERS_PER_EVENT })}
+                  </p>
+                </div>
               </div>
 
               <div className={styles.field}>

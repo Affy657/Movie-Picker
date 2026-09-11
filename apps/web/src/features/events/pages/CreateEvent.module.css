@@ -72,6 +72,15 @@
   margin-top: var(--space-4);
 }
 
+.counterGrid {
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--space-3) var(--space-4);
+}
+
+.templatesRow {
+  margin: var(--space-2) 0 var(--space-3);
+}
+
 .fieldGrid > .field {
   margin-bottom: 0;
 }

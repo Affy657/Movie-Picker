@@ -16,8 +16,9 @@ type Props = {
   templates: EventTemplateData[];
   appliedTemplateId: string | null;
   disabled?: boolean;
+  applyLockedHint?: string | null;
   className?: string;
-  onApply?: (template: EventTemplateData) => void;
+  onApply: (template: EventTemplateData) => void;
   onRename: (template: EventTemplateData, name: string) => void;
   onDelete: (template: EventTemplateData) => void;
 };
@@ -26,6 +27,7 @@ export default function EventTemplatesRow({
   templates,
   appliedTemplateId,
   disabled = false,
+  applyLockedHint = null,
   className,
   onApply,
   onRename,
@@ -81,8 +83,11 @@ export default function EventTemplatesRow({
           max: String(MAX_EVENT_TEMPLATES),
         });
 
+  const applyLocked = applyLockedHint !== null;
+
   const hint = () => {
     if (managing) return <p className={styles.hint}>{countLabel}</p>;
+    if (applyLocked) return <p className={styles.hint}>{applyLockedHint}</p>;
     if (appliedTemplate)
       return (
         <p className={styles.hintApplied} role="status">
@@ -204,13 +209,10 @@ export default function EventTemplatesRow({
                 pressed={applied}
                 icon={applied ? Check : undefined}
                 className={styles.chip}
-                onClick={
-                  onApply
-                    ? () => {
-                        if (!disabled) onApply(template);
-                      }
-                    : undefined
-                }
+                disabled={disabled || applyLocked}
+                onClick={() => {
+                  if (!disabled && !applyLocked) onApply(template);
+                }}
               >
                 {template.name}
               </Chip>

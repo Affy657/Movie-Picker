@@ -1,4 +1,5 @@
 import { useCallback, useId, useMemo, useState, type RefObject } from 'react';
+import clsx from 'clsx';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
@@ -191,6 +192,15 @@ export default function EventMoviesSection({
   const [voteLimitReached, setVoteLimitReached] = useState(false);
   const maxVotes = event.config?.maxVotesPerParticipant ?? null;
   const votesUsed = useMemo(() => movies.filter((m) => m.myVote != null).length, [movies]);
+  const voteQuota =
+    maxVotes !== null && participant && !isFinished ? { used: votesUsed, max: maxVotes } : null;
+  let voteQuotaLockedHint: string | null = null;
+  if (voteQuota && voteQuota.used >= voteQuota.max) {
+    voteQuotaLockedHint =
+      voteQuota.max === 1
+        ? t('movies.list.voteQuotaLockedOne')
+        : t('movies.list.voteQuotaLockedMany', { max: voteQuota.max });
+  }
 
   const clearVoteError = useCallback((movieId: string) => {
     setVoteErrors((prev) => {
@@ -210,10 +220,6 @@ export default function EventMoviesSection({
       setActionError(null);
       clearVoteError(movieId);
       const current = movies.find((m) => m.id === movieId)?.myVote ?? null;
-      if (current === null && maxVotes !== null && votesUsed >= maxVotes) {
-        setVoteLimitReached(true);
-        return;
-      }
       try {
         if (current === value) {
           await clearMovieVote(slug, movieId, participant.participantId);
@@ -237,19 +243,7 @@ export default function EventMoviesSection({
         }
       }
     },
-    [
-      slug,
-      participant,
-      movies,
-      maxVotes,
-      votesUsed,
-      setActionError,
-      refreshAll,
-      track,
-      t,
-      viewMode,
-      clearVoteError,
-    ]
+    [slug, participant, movies, setActionError, refreshAll, track, t, viewMode, clearVoteError]
   );
 
   const handleRetryVote = useCallback(
@@ -348,6 +342,7 @@ export default function EventMoviesSection({
     onRetryVote: handleRetryVote,
     selection,
     winnerMovieIds,
+    voteQuotaLockedHint,
     participantCount: event.participants?.length ?? 0,
   };
 
@@ -412,6 +407,15 @@ export default function EventMoviesSection({
           )}
         </div>
       )}
+
+      {moviesQuery.isSuccess && voteQuota ? (
+        <output
+          className={clsx(styles.voteQuota, voteQuotaLockedHint && styles.voteQuotaReached)}
+          data-testid="vote-quota"
+        >
+          {t('movies.list.voteQuota', { used: voteQuota.used, max: voteQuota.max })}
+        </output>
+      ) : null}
 
       {moviesQuery.isSuccess && (
         <>

@@ -392,6 +392,31 @@ describe('ProfilePage (MSW)', () => {
       const link = await screen.findByRole('link', { name: /ma watchlist/i });
       expect(link).toHaveAttribute('href', '/watchlist');
       expect(link).toHaveTextContent(/masquée/i);
+      expect(screen.getByRole('link', { name: /rendre visible/i })).toHaveAttribute(
+        'href',
+        '/settings/profil'
+      );
+    });
+
+    it('ne propose pas le raccourci vers le réglage quand ma watchlist est visible', async () => {
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+        http.get(`${TEST_API_V1}/users/moi`, () =>
+          HttpResponse.json({
+            ...ALICE_PROFILE,
+            handle: 'moi',
+            displayName: 'Moi',
+            isFollowedByMe: null,
+            isWatchlistPublic: true,
+            watchlistCount: 3,
+          })
+        )
+      );
+
+      renderProfile('moi');
+
+      await screen.findByRole('link', { name: /ma watchlist/i });
+      expect(screen.queryByRole('link', { name: /rendre visible/i })).not.toBeInTheDocument();
     });
   });
 

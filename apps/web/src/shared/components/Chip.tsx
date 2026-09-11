@@ -17,6 +17,7 @@ type ChipProps = {
   onRemove?: () => void;
   removeLabel?: string;
   pressed?: boolean;
+  disabled?: boolean;
   className?: string;
   testId?: string;
   children: ReactNode;
@@ -31,6 +32,7 @@ export default function Chip({
   onRemove,
   removeLabel,
   pressed,
+  disabled = false,
   className,
   testId,
   children,
@@ -63,6 +65,7 @@ export default function Chip({
         className={classes}
         onClick={onClick}
         aria-pressed={pressed}
+        disabled={disabled}
         data-testid={testId}
       >
         {content}

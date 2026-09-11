@@ -32,13 +32,13 @@
   position: absolute;
   right: var(--space-0-5);
   bottom: var(--space-0-5);
-  min-width: 1.125rem;
-  padding: calc(0.1rem + var(--text-optical-nudge)) var(--space-1)
-    calc(0.1rem - var(--text-optical-nudge));
+  min-width: 1.375rem;
+  padding: calc(0.15rem + var(--text-optical-nudge)) var(--space-1-5)
+    calc(0.15rem - var(--text-optical-nudge));
   border-radius: var(--radius-sm);
   background: var(--on-poster-scrim-strong);
   color: var(--on-poster-fg-strong);
-  font-size: var(--font-size-3xs);
+  font-size: var(--font-size-2xs);
   font-weight: 700;
   line-height: 1;
   text-align: center;

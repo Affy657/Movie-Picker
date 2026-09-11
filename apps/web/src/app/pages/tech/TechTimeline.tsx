@@ -54,7 +54,9 @@ export default function TechTimeline() {
                 <span className={styles.timelineBadge}>{t('tech.trajectory.plannedBadge')}</span>
               ) : null}
               {state === 'current' ? (
-                <span className={styles.timelineBadge}>{t('tech.trajectory.currentBadge')}</span>
+                <span className={clsx(styles.timelineBadge, styles.timelineBadgeCurrent)}>
+                  {t('tech.trajectory.currentBadge')}
+                </span>
               ) : null}
             </p>
             <h3 className={styles.timelineWhat}>

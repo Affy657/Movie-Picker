@@ -24,6 +24,8 @@ interface WheelModalProps {
   onRelaunch?: () => void;
   onSpinComplete?: () => void;
   skipSpin?: boolean;
+  winnerCount?: number;
+  remainingDraws?: number;
 }
 
 export default function WheelModal({
@@ -36,8 +38,28 @@ export default function WheelModal({
   onRelaunch,
   onSpinComplete,
   skipSpin = false,
+  winnerCount = 1,
+  remainingDraws = 0,
 }: Readonly<WheelModalProps>) {
   const { t } = useTranslation();
+  const drawIndex = Math.max(1, winnerCount - remainingDraws);
+  const titleParams = { index: drawIndex, total: winnerCount };
+  let title: string;
+  if (skipSpin) {
+    title =
+      winnerCount > 1
+        ? t('events.wheel.modal.manualWinnerTitleOfMany', titleParams)
+        : t('events.wheel.modal.manualWinnerTitle');
+  } else {
+    title =
+      winnerCount > 1
+        ? t('events.wheel.modal.winnerTitleOfMany', titleParams)
+        : t('events.wheel.modal.winnerTitle');
+  }
+  let remainingLabel: string | null = null;
+  if (remainingDraws === 1) remainingLabel = t('events.wheel.modal.remainingOne');
+  else if (remainingDraws > 1)
+    remainingLabel = t('events.wheel.modal.remainingMany', { count: remainingDraws });
   const dialogRef = useRef<HTMLDialogElement>(null);
   const confettiOverlayRef = useRef<HTMLDivElement>(null);
   const [animDone, setAnimDone] = useState(skipSpin);
@@ -170,9 +192,7 @@ export default function WheelModal({
           <>
             <div className={styles.header}>
               <h2 id="wheel-modal-title" className={styles.title}>
-                {skipSpin
-                  ? t('events.wheel.modal.manualWinnerTitle')
-                  : t('events.wheel.modal.winnerTitle')}
+                {title}
               </h2>
               <IconButton label={t('common.close')} onClick={onClose}>
                 <X size={20} />
@@ -202,18 +222,26 @@ export default function WheelModal({
               </div>
             </div>
 
+            {remainingLabel ? <p className={styles.remaining}>{remainingLabel}</p> : null}
+
             <div className={styles.footer}>
               {onRelaunch ? (
-                <Button type="button" onClick={onRelaunch}>
-                  <Disc3 size={16} aria-hidden />
-                  <span className={styles.relaunchLabel}>
-                    {t('events.wheel.modalRelaunchButton')}
-                  </span>
+                <>
+                  <Button type="button" onClick={onClose}>
+                    {t('events.wheel.modal.finishHereButton')}
+                  </Button>
+                  <Button type="button" variant="primary" onClick={onRelaunch}>
+                    <Disc3 size={16} aria-hidden />
+                    <span className={styles.relaunchLabel}>
+                      {t('events.wheel.modalRelaunchButton')}
+                    </span>
+                  </Button>
+                </>
+              ) : (
+                <Button type="button" variant="primary" onClick={onClose}>
+                  {t('events.wheel.modal.closeButton')}
                 </Button>
-              ) : null}
-              <Button type="button" variant="primary" onClick={onClose}>
-                {t('events.wheel.modal.closeButton')}
-              </Button>
+              )}
             </div>
           </>
         )}

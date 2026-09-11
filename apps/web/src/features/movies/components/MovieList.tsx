@@ -32,6 +32,7 @@ interface MovieListProps {
   onToggleWheelExclusion?: (movie: MovieData) => void;
   selection?: MovieCardSelection;
   winnerMovieIds?: string[];
+  voteQuotaLockedHint?: string | null;
   isMobile: boolean;
   showRank?: boolean;
   showHeader?: boolean;
@@ -64,6 +65,7 @@ export default function MovieList({
   onToggleWheelExclusion,
   selection,
   winnerMovieIds,
+  voteQuotaLockedHint = null,
   isMobile,
   showRank = false,
   showHeader = true,
@@ -122,6 +124,7 @@ export default function MovieList({
     selection,
     isWinner: winners.includes(m.id),
     winnerRank: winnerRankOf(m.id),
+    voteLockedHint: voteQuotaLockedHint && m.myVote == null ? voteQuotaLockedHint : undefined,
     isMobile,
     participantCount,
     t,

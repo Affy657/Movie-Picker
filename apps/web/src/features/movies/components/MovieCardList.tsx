@@ -13,6 +13,7 @@ import {
   PaidOfferChip,
   VoteBar,
   WatchlistBadge,
+  WinnerRibbon,
   isSelectable,
   useMovieCardState,
   type MovieCardCommonProps,
@@ -78,6 +79,7 @@ export const MovieCardList = memo(function MovieCardList({
   selection,
   isWinner = false,
   winnerRank,
+  voteLockedHint,
   participantCount,
 }: MovieCardCommonProps) {
   const s = useMovieCardState({
@@ -102,9 +104,6 @@ export const MovieCardList = memo(function MovieCardList({
 
   const excluded = !!m.excludedFromWheel;
   const selecting = isSelectable(m, selection) && !excluded;
-  const winnerLabel = winnerRank
-    ? t('events.wheel.winnerRankLabel', { rank: winnerRank })
-    : t('events.wheel.winnerLabel');
 
   return (
     <li
@@ -123,6 +122,7 @@ export const MovieCardList = memo(function MovieCardList({
         <ListPoster src={s.posterSrc} srcSet={s.posterSrcSet} eager={eager} />
         {m.mediaType === 'tv' && <span className={styles.tvBadge}>{t('movies.list.tvBadge')}</span>}
         <WatchlistBadge inWatchlist={isInWatchlist} t={t} />
+        <WinnerRibbon isWinner={isWinner} winnerRank={winnerRank} t={t} />
       </div>
 
       <div className={styles.info} inert={selecting}>
@@ -141,7 +141,6 @@ export const MovieCardList = memo(function MovieCardList({
           <h3 className={styles.title} title={m.title}>
             {m.title}
           </h3>
-          {isWinner ? <span className={styles.winnerBadge}>{winnerLabel}</span> : null}
         </div>
 
         <p className={styles.metaLine}>
@@ -194,7 +193,7 @@ export const MovieCardList = memo(function MovieCardList({
         <div className={styles.bottomSection}>
           {s.canVote && (
             <div className={styles.actions}>
-              <VoteBar m={m} onVote={onVote} t={t} />
+              <VoteBar m={m} onVote={onVote} t={t} lockedHint={voteLockedHint} />
               {s.canAct && (
                 <SeenButton
                   m={m}

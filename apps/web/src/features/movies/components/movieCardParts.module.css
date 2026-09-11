@@ -107,6 +107,34 @@
   outline-offset: 2px;
 }
 
+.winnerRibbon {
+  position: absolute;
+  bottom: 0.35rem;
+  left: 0.35rem;
+  z-index: var(--z-raised);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: calc(100% - 0.7rem);
+  padding: calc(0.2rem + var(--text-optical-nudge-caps)) 0.4rem
+    calc(0.2rem - var(--text-optical-nudge-caps));
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+  font-size: var(--font-size-3xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.winnerRibbonLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .watchlistBadge {
   position: absolute;
   top: 0.35rem;
@@ -159,6 +187,11 @@
 .voteBtn:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+.votesLocked .voteBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .voteActive {
@@ -278,6 +311,19 @@
 .selectOverlay:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+.selectOverlayRemove:focus-visible {
+  border-color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 12%, transparent);
+  outline-color: var(--color-error);
+}
+
+@media (hover: hover) {
+  .selectOverlayRemove:hover {
+    border-color: var(--color-error);
+    background: color-mix(in srgb, var(--color-error) 12%, transparent);
+  }
 }
 
 .selectOverlay:disabled {

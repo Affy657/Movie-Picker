@@ -40,31 +40,38 @@ function WatchlistCell({
   const Icon = hidden ? Lock : Bookmark;
 
   return (
-    <Link
-      to={isOwnProfile ? ROUTES.watchlist : ROUTES.profileWatchlist(profile.handle)}
-      className={clsx(styles.statCell, styles.watchlistCell)}
-    >
-      <Icon
-        size={16}
-        className={clsx(styles.watchlistIcon, hidden && styles.watchlistIconMuted)}
-        aria-hidden
-      />
-      <span className={styles.watchlistText}>
-        <span className={styles.watchlistLabel}>
-          {isOwnProfile ? t('profile.watchlist.mine') : t('profile.watchlist.theirs')}
-        </span>
-        {hidden ? (
-          <span className={styles.hiddenPill}>{t('profile.watchlist.hidden')}</span>
-        ) : (
-          <span className={styles.watchlistCount}>
-            {count === 0
-              ? t('profile.watchlist.empty')
-              : pluralizeCount(count, 'profile.watchlist.countOne', 'profile.watchlist.count', t)}
+    <>
+      <Link
+        to={isOwnProfile ? ROUTES.watchlist : ROUTES.profileWatchlist(profile.handle)}
+        className={clsx(styles.statCell, styles.watchlistCell)}
+      >
+        <Icon
+          size={16}
+          className={clsx(styles.watchlistIcon, hidden && styles.watchlistIconMuted)}
+          aria-hidden
+        />
+        <span className={styles.watchlistText}>
+          <span className={styles.watchlistLabel}>
+            {isOwnProfile ? t('profile.watchlist.mine') : t('profile.watchlist.theirs')}
           </span>
-        )}
-      </span>
-      <ChevronRight size={16} className={styles.chevron} aria-hidden />
-    </Link>
+          {hidden ? (
+            <span className={styles.hiddenPill}>{t('profile.watchlist.hidden')}</span>
+          ) : (
+            <span className={styles.watchlistCount}>
+              {count === 0
+                ? t('profile.watchlist.empty')
+                : pluralizeCount(count, 'profile.watchlist.countOne', 'profile.watchlist.count', t)}
+            </span>
+          )}
+        </span>
+        <ChevronRight size={16} className={styles.chevron} aria-hidden />
+      </Link>
+      {hidden ? (
+        <Link to={ROUTES.accountProfile} className={styles.watchlistSettingLink}>
+          {t('profile.watchlist.makeVisible')}
+        </Link>
+      ) : null}
+    </>
   );
 }
 

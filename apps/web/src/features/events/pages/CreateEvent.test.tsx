@@ -165,7 +165,7 @@ describe('CreateEvent', () => {
     await user.click(chip);
 
     expect(chip).toHaveAttribute('aria-pressed', 'true');
-    await user.click(screen.getByText(/options avancées/i));
+    expect(screen.getByText(/options avancées/i).closest('details')).toHaveAttribute('open');
     expect(screen.getByLabelText(/films max par personne/i)).toHaveValue(4);
     expect(screen.getByLabelText(/participants max/i)).toHaveValue(12);
     expect(screen.getByRole('radio', { name: /aléatoire strict/i })).toBeChecked();
