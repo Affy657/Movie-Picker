@@ -709,6 +709,7 @@
       moviesLoadError:
         'Impossible de charger la liste des films. Vérifiez votre connexion ou réessayez.',
       errorFallback: 'Soirée introuvable',
+      errorOffline: 'Connexion indisponible',
       missing: "Cette soirée n'existe pas ou a été supprimée.",
       backHome: "Retour à l'accueil",
       backNav: 'Retour',

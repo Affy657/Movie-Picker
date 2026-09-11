@@ -699,6 +699,7 @@ export const en: Locale = {
       skeletonLabel: 'Loading the event\u2026',
       moviesLoadError: 'Could not load the film list. Check your connection or try again.',
       errorFallback: 'Event not found',
+      errorOffline: 'Connection unavailable',
       missing: 'This event does not exist or has been deleted.',
       backHome: 'Back to home',
       backNav: 'Back',
