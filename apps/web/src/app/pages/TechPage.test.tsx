@@ -5,7 +5,11 @@ import { MemoryRouter } from 'react-router';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import TechPage from '@/app/pages/TechPage';
 import { TECH_SECTIONS } from '@/app/pages/tech/TechRail';
-import { PLANNED_MILESTONES, SHIPPED_MILESTONES } from '@/app/pages/tech/TechTimeline';
+import {
+  CURRENT_MILESTONES,
+  PLANNED_MILESTONES,
+  SHIPPED_MILESTONES,
+} from '@/app/pages/tech/TechTimeline';
 import { TECH_METRICS } from '@/app/pages/tech/generated/techMetrics';
 import { fr } from '@/shared/i18n/locales/fr';
 import { SITE_URL } from '@/shared/seo/siteMeta';
@@ -221,9 +225,12 @@ describe('TechPage', () => {
     const { container } = renderTechPage();
     const steps = [...container.querySelectorAll('section#trajectory > ol > li')];
 
-    expect(steps).toHaveLength(11);
+    expect(steps).toHaveLength(12);
     expect(steps[0]).toHaveTextContent(/MVP/);
     expect(steps.at(-1)).toHaveTextContent(/V2/);
+    expect(steps.some((step) => step.querySelector('h3')?.textContent?.includes('V1.8'))).toBe(
+      true
+    );
 
     for (const step of steps) {
       expect(step.querySelector('h3')).not.toBeNull();
@@ -231,14 +238,23 @@ describe('TechPage', () => {
     }
   });
 
-  it('sépare les paliers livrés de ceux qui restent à faire', () => {
+  it('sépare les paliers livrés, le palier en cours et ceux qui restent à faire', () => {
     const { container } = renderTechPage();
     const steps = [...container.querySelectorAll('section#trajectory > ol > li')];
     const state = (step: Element) => step.getAttribute('data-state');
 
+    expect(steps.filter((step) => state(step) === 'shipped')).toHaveLength(SHIPPED_MILESTONES);
+    expect(steps.filter((step) => state(step) === 'current')).toHaveLength(CURRENT_MILESTONES);
     expect(steps.filter((step) => state(step) === 'planned')).toHaveLength(PLANNED_MILESTONES);
-    expect(steps.filter((step) => state(step) !== 'planned')).toHaveLength(SHIPPED_MILESTONES);
     expect(state(steps.at(-1) as Element)).toBe('planned');
+
+    const gapped = steps.filter((step) => step.getAttribute('data-gap') === 'before');
+    expect(gapped).toHaveLength(1);
+    expect(gapped[0]).toBe(steps.at(-1));
+
+    const current = steps.find((step) => state(step) === 'current') as Element;
+    expect(current).toHaveTextContent('V1.6');
+    expect(current.textContent).toMatch(/en cours/i);
 
     for (const step of steps) {
       const badge = /à venir/i.test(step.textContent ?? '');
