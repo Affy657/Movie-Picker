@@ -154,4 +154,26 @@ public sealed class GetUserProfileHandlerTests
 
         Assert.Equal(createdAt, res.CreatedAt);
     }
+
+    [Fact]
+    public async Task HandleAsync_ReturnsTheWatchlistVisibility()
+    {
+        var user = new User
+        {
+            Id = "id1",
+            Email = "bob@example.com",
+            PasswordHash = "h",
+            DisplayName = "Bob",
+            IsWatchlistPublic = false,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("id1", It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var handler = new GetUserProfileHandler(users.Object);
+
+        var res = await handler.HandleAsync("id1");
+
+        Assert.False(res.IsWatchlistPublic);
+    }
 }
