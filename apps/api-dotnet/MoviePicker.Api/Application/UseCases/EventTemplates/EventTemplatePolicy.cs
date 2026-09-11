@@ -7,6 +7,8 @@ namespace MoviePicker.Api.Application.UseCases.EventTemplates;
 
 public static class EventTemplatePolicy
 {
+    public const string NotFoundMessage = "Template de soirée introuvable";
+
     public static async Task<User> RequireUserAsync(
         IUserRepository users,
         string userId,
@@ -21,7 +23,7 @@ public static class EventTemplatePolicy
                 return index;
         }
 
-        throw new NotFoundException("Template de soirée introuvable");
+        throw new NotFoundException(NotFoundMessage);
     }
 
     public static string NormalizeName(string? raw)

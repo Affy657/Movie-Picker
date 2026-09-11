@@ -24,6 +24,9 @@ public static class EventDocumentMapper
             WinnerAnnouncedAt = doc.WinnerAnnouncedAt.HasValue
                 ? new DateTimeOffset(doc.WinnerAnnouncedAt.Value, TimeSpan.Zero)
                 : null,
+            WatchlistCleanedAt = doc.WatchlistCleanedAt.HasValue
+                ? new DateTimeOffset(doc.WatchlistCleanedAt.Value, TimeSpan.Zero)
+                : null,
             Recurrence = ParseRecurrence(doc.Recurrence),
             RecurrenceParentEventId = doc.RecurrenceParentEventId,
             NextOccurrenceEventId = doc.NextOccurrenceEventId,
@@ -57,6 +60,7 @@ public static class EventDocumentMapper
                 })
                 .ToList(),
             WinnerAnnouncedAt = evt.WinnerAnnouncedAt?.UtcDateTime,
+            WatchlistCleanedAt = evt.WatchlistCleanedAt?.UtcDateTime,
             Recurrence = ToRecurrenceString(evt.Recurrence),
             RecurrenceParentEventId = evt.RecurrenceParentEventId,
             NextOccurrenceEventId = evt.NextOccurrenceEventId,

@@ -7,7 +7,7 @@ Fichier de travail pour agent. Il n'est pas destiné à être lu par un humain :
 1. Avant d'agir sur une entrée, exécuter son `verify`. Ce fichier vieillit ; **sauf mention contraire dans l'entrée**, une sortie signifie « encore ouvert » et une sortie vide signifie « déjà réglé, supprimer l'entrée sans rien faire d'autre ». Une entrée qui demande de lire un nombre plutôt qu'une présence le dit dans son `verify`.
 2. Une entrée `state: agent` peut être traitée en autonomie. `state: humain` demande un geste que l'agent ne peut pas faire (le champ `bloque` dit lequel). `state: differe` ne se traite pas tant que son `declencheur` n'est pas observé.
 3. Fin de traitement : supprimer l'entrée entière. Ne pas la cocher, ne pas la garder en « fait », git porte l'historique.
-4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-023`.
+4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-024`.
 5. Ce fichier ne contient que de la dette, c'est-à-dire du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature à construire va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure ici** : pas d'adresse de compte de service, pas de nom de bucket, pas d'identifiant de compte. Le dépôt a vocation à devenir public, et une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou employer un espace réservé `<COMME_CECI>` dans les commandes. La table des gabarits, et la commande qui relève chaque valeur, sont dans `infra/README.md`.
 7. Deux sections en fin de fichier n'obéissent pas à ce schéma et ne se traitent jamais : **Contraintes** liste ce qui casse en silence si on y touche, **Impasses** liste ce qui a déjà été essayé et mesuré sans gain. Les lire avant d'optimiser quoi que ce soit sur le front ou de toucher au déploiement.
@@ -122,9 +122,8 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 
 ## DEBT-011 endpoint de profil public orphelin
 
-- state: humain
-- bloque: la décision, pas le geste. Cette route est très probablement le volet API de « **Watchlist d'un autre utilisateur** » du backlog de `roadmap.md` : la retirer supprimerait la moitié déjà écrite d'une feature planifiée. Trancher entre construire la feature et abandonner la route.
-- impact: surface d'API maintenue et testée sans aucun appelant
+- state: agent
+- impact: surface d'API maintenue et testée sans aucun appelant. L'hypothèse d'origine, « volet API de la watchlist d'un autre utilisateur », est tombée le 2026-09-11 : cette feature a été livrée en V1.6 avec sa propre route `GET users/{handle}/watchlist`, et `GET users/{handle}/movies` rend autre chose, les films proposés par un compte avec leur statut gagnant. La route est définitivement orpheline.
 - ou: `apps/api-dotnet/MoviePicker.Api/Controllers/UsersController.cs:66`, route `GET users/{handle}/movies`
 - verify: la route existe encore côté API et aucun fichier front ne l'appelle.
   ```bash
@@ -132,7 +131,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
     && ! grep -rqE '`/users/[^`]*/movies`' apps/web/src --include=*.ts --include=*.tsx --exclude-dir=generated \
     && echo "ORPHELIN: la route existe et aucun appelant front"
   ```
-- fix: décider entre rebrancher et retirer. Le retrait impose `pnpm run openapi:export && pnpm run openapi:types` et le commit du schéma régénéré.
+- fix: retirer la route, son handler `GetUserMoviesHandler` et leurs tests, puis `pnpm run openapi:export && pnpm run openapi:types` et le commit du schéma régénéré.
 - piege: `watched-movies` et `following-watched-movies` du même contrôleur sont bien utilisés par `usePersonalRows.ts`, ne pas les emporter.
 
 ## DEBT-012 le site n'est pas enregistré dans Search Console
@@ -193,6 +192,20 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fini-quand: plus aucun `S3776` ouvert, ou ceux qui restent portent une justification « won't fix »
 - piege: **la complexité cognitive ne se mesure pas en local**, aucun outil du dépôt ne la calcule ; la seule boucle de retour est une analyse Sonar en CI, soit un run par itération. Second piège, mesuré à ses dépens le 2026-09-10 : **extraire des expressions dérivées dans des fonctions de module marche, mais seulement quand le compteur vient de là.** Quatre fonctions sont passées sous le seuil de cette façon (`FollowListModal` 22, `PatchEventConfigHandler` 18, `useEventWheel` 17, `MovieDetailsModal` 17), et `HostEventSettingsPanel` est resté **exactement à 19** après trois extractions du même genre : son compteur vient de ses 400 lignes de JSX conditionnel, que déplacer trois expressions ne touche pas. Troisième piège, à l'inverse du réflexe attendu : ces refactorisations **ajoutent** des lignes, parce qu'extraire un bloc coûte une déclaration de type et une liste de props. Ce n'est plus un problème de plafond depuis que le projet SonarCloud est public : mesuré le 2026-09-10, `ncloc` est passé de 49 231 à 52 349 en rendant `TechPage.tsx` et `app/pages/tech/` à l'analyse, soit au-dessus de l'ancien plafond de 50 000, et l'analyse est passée avec un Quality Gate vert.
 - refs: le chantier de septembre a bien servi, contrairement à ce que l'entrée d'avant craignait : `S3776` est passé de 15 à 7, puis à 4 le 2026-09-10, et les code smells de 42 à 18.
+
+## DEBT-023 la limite de votes par participant se vérifie puis s'écrit, sans verrou
+
+- state: differe
+- declencheur: un participant dépasse sa limite en prod, visible dans la base par un compte de votes supérieur à `maxVotesPerParticipant` sur une soirée où le réglage est actif
+- impact: contournable, pas de corruption. `VoteMovieHandler.EnsureWithinVoteLimitAsync` compte les votes existants puis insère le nouveau ; deux premiers votes envoyés en parallèle passent tous les deux la vérification. Une transaction Mongo n'y changerait rien, l'isolation par instantané ne protège pas d'une lecture fantôme sur deux documents distincts.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/VoteMovie/VoteMovieHandler.cs`, méthode `EnsureWithinVoteLimitAsync`
+- verify: la vérification est toujours un compte suivi d'un `UpsertAsync` sans garde atomique.
+  ```bash
+  grep -n "GetParticipantVotesByEventAsync\|UpsertAsync" apps/api-dotnet/MoviePicker.Api/Application/UseCases/VoteMovie/VoteMovieHandler.cs
+  ```
+- fix: porter un compteur `voteCount` sur le document participant, incrémenté par un `UpdateOne` conditionnel (`voteCount < max`) dans la même transaction que l'insertion du vote, et décrémenté quand un vote est retiré. Le front garde sa vérification locale, qui couvre le cas courant.
+- fini-quand: deux votes concurrents au-delà de la limite ne laissent qu'un vote en base, prouvé par un test d'intégration Mongo
+- piege: le compteur doit ignorer le changement de sens d'un vote déjà posé sur le même film, seul un vote sur un film nouveau consomme un créneau.
 
 ---
 

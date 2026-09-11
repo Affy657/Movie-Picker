@@ -71,7 +71,6 @@ public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
                 Method = WinnerPickMethod.Manual,
                 PickedAt = now
             }],
-            WinnerAnnouncedAt = now,
             UpdatedAt = now
         };
 

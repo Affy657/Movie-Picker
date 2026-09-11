@@ -333,4 +333,90 @@ public sealed class InMemoryUserRepositoryTests
         Assert.Equal("🎃 Halloween", template.Config.Theme);
         Assert.Equal(3, template.Config.MaxProposalsPerParticipant);
     }
+
+    private static EventTemplate Template(string id, string name) => new()
+    {
+        Id = id,
+        Name = name,
+        Config = new EventConfig(),
+        CreatedAt = DateTimeOffset.UtcNow
+    };
+
+    private static readonly DateTimeOffset TemplateNow = new(2030, 1, 1, 12, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public async Task AddEventTemplateAsync_AppendsAndTouchesUpdatedAt()
+    {
+        var added = await _repo.AddAsync(Mk());
+
+        var ok = await _repo.AddEventTemplateAsync(added.Id, Template("t1", "Un"), 5, TemplateNow);
+        var reloaded = await _repo.GetByIdAsync(added.Id);
+
+        Assert.True(ok);
+        Assert.Equal(["Un"], reloaded!.EventTemplates.Select(t => t.Name));
+        Assert.Equal(TemplateNow, reloaded.UpdatedAt);
+    }
+
+    [Fact]
+    public async Task AddEventTemplateAsync_RefusesBeyondTheCap()
+    {
+        var added = await _repo.AddAsync(Mk());
+        await _repo.AddEventTemplateAsync(added.Id, Template("t1", "Un"), 2, TemplateNow);
+        await _repo.AddEventTemplateAsync(added.Id, Template("t2", "Deux"), 2, TemplateNow);
+
+        var ok = await _repo.AddEventTemplateAsync(added.Id, Template("t3", "Trois"), 2, TemplateNow);
+
+        Assert.False(ok);
+        Assert.Equal(2, (await _repo.GetByIdAsync(added.Id))!.EventTemplates.Count);
+    }
+
+    [Fact]
+    public async Task AddEventTemplateAsync_UnknownUser_ReturnsFalse()
+    {
+        Assert.False(await _repo.AddEventTemplateAsync("nope", Template("t1", "Un"), 5, TemplateNow));
+    }
+
+    [Fact]
+    public async Task ReplaceEventTemplateAsync_KeepsThePosition()
+    {
+        var added = await _repo.AddAsync(Mk());
+        await _repo.AddEventTemplateAsync(added.Id, Template("t1", "Un"), 5, TemplateNow);
+        await _repo.AddEventTemplateAsync(added.Id, Template("t2", "Deux"), 5, TemplateNow);
+        await _repo.AddEventTemplateAsync(added.Id, Template("t3", "Trois"), 5, TemplateNow);
+
+        var ok = await _repo.ReplaceEventTemplateAsync(added.Id, Template("t2", "Deux bis"), TemplateNow);
+
+        Assert.True(ok);
+        Assert.Equal(["Un", "Deux bis", "Trois"], (await _repo.GetByIdAsync(added.Id))!.EventTemplates.Select(t => t.Name));
+    }
+
+    [Fact]
+    public async Task ReplaceEventTemplateAsync_UnknownTemplate_ReturnsFalse()
+    {
+        var added = await _repo.AddAsync(Mk());
+        await _repo.AddEventTemplateAsync(added.Id, Template("t1", "Un"), 5, TemplateNow);
+
+        Assert.False(await _repo.ReplaceEventTemplateAsync(added.Id, Template("nope", "X"), TemplateNow));
+    }
+
+    [Fact]
+    public async Task RemoveEventTemplateAsync_RemovesOnlyThatTemplate()
+    {
+        var added = await _repo.AddAsync(Mk());
+        await _repo.AddEventTemplateAsync(added.Id, Template("t1", "Un"), 5, TemplateNow);
+        await _repo.AddEventTemplateAsync(added.Id, Template("t2", "Deux"), 5, TemplateNow);
+
+        var ok = await _repo.RemoveEventTemplateAsync(added.Id, "t1", TemplateNow);
+
+        Assert.True(ok);
+        Assert.Equal(["Deux"], (await _repo.GetByIdAsync(added.Id))!.EventTemplates.Select(t => t.Name));
+    }
+
+    [Fact]
+    public async Task RemoveEventTemplateAsync_UnknownTemplate_ReturnsFalse()
+    {
+        var added = await _repo.AddAsync(Mk());
+
+        Assert.False(await _repo.RemoveEventTemplateAsync(added.Id, "nope", TemplateNow));
+    }
 }

@@ -8,6 +8,8 @@ namespace MoviePicker.Api.Application.UseCases.VoteMovie;
 
 public sealed class VoteMovieHandler : IVoteMovieHandler
 {
+    public const string VoteLimitReachedReason = "vote-limit-reached";
+
     private readonly IEventRepository _eventRepository;
     private readonly IMovieRepository _movieRepository;
     private readonly IParticipantRepository _participantRepository;
@@ -77,6 +79,8 @@ public sealed class VoteMovieHandler : IVoteMovieHandler
         if (votes.ContainsKey(movie.Id))
             return;
         if (votes.Count >= maxVotes)
-            throw new ConflictException($"Limite de {maxVotes} vote(s) par participant atteinte.");
+            throw new ConflictException(
+                $"Limite de {maxVotes} vote(s) par participant atteinte.",
+                VoteLimitReachedReason);
     }
 }

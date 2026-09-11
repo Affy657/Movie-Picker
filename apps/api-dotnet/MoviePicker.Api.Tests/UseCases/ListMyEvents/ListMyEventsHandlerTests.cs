@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Moq;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.FinishedEvents;
 using MoviePicker.Api.Application.UseCases.ListMyEvents;
 using MoviePicker.Api.Application.UseCases.RecurringEvents;
 using MoviePicker.Api.Domain;
@@ -17,6 +18,7 @@ public sealed class ListMyEventsHandlerTests
     private readonly Mock<IParticipantRepository> _participantRepo;
     private readonly Mock<IMovieRepository> _movieRepo;
     private readonly Mock<IRecurringEventPass> _recurringEvents = new();
+    private readonly Mock<IFinishedEventWatchlistPass> _watchlistCleanup = new();
     private readonly ListMyEventsHandler _sut;
     private static readonly string[] value = new[] { "e1", "e2" };
 
@@ -34,7 +36,34 @@ public sealed class ListMyEventsHandlerTests
             .ReturnsAsync((IReadOnlyCollection<string> ids, CancellationToken _) =>
                 ids.Distinct().ToDictionary(id => id, _ => 0));
         _sut = new ListMyEventsHandler(
-            _eventRepo.Object, _participantRepo.Object, _movieRepo.Object, _recurringEvents.Object);
+            _eventRepo.Object,
+            _participantRepo.Object,
+            _movieRepo.Object,
+            _recurringEvents.Object,
+            _watchlistCleanup.Object);
+    }
+
+    [Fact]
+    public async Task HandleAsync_HandsEveryCreatedAndJoinedEventToTheWatchlistCleanup()
+    {
+        var created = new EventEntityBuilder().WithId("e1").Build();
+        var joined = new EventEntityBuilder().WithId("e2").Build();
+        _eventRepo.Setup(r => r.ListByCreatorUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([created]);
+        _participantRepo.Setup(r => r.ListDistinctEventIdsByUserIdAsync("u1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(["e1", "e2"]);
+        _eventRepo.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([joined]);
+
+        await _sut.HandleAsync("u1", null, null, null, null);
+
+        _watchlistCleanup.Verify(
+            p => p.RunForEventsAsync(
+                It.Is<IReadOnlyList<Event>>(events => events.Count == 2
+                    && events.Any(e => e.Id == "e1")
+                    && events.Any(e => e.Id == "e2")),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]

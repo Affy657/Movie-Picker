@@ -1,6 +1,7 @@
 using System.Linq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.FinishedEvents;
 using MoviePicker.Api.Application.UseCases.RecurringEvents;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
@@ -13,17 +14,20 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
     private readonly IParticipantRepository _participantRepository;
     private readonly IMovieRepository _movieRepository;
     private readonly IRecurringEventPass _recurringEvents;
+    private readonly IFinishedEventWatchlistPass _watchlistCleanup;
 
     public ListMyEventsHandler(
         IEventRepository eventRepository,
         IParticipantRepository participantRepository,
         IMovieRepository movieRepository,
-        IRecurringEventPass recurringEvents)
+        IRecurringEventPass recurringEvents,
+        IFinishedEventWatchlistPass watchlistCleanup)
     {
         _eventRepository = eventRepository;
         _participantRepository = participantRepository;
         _movieRepository = movieRepository;
         _recurringEvents = recurringEvents;
+        _watchlistCleanup = watchlistCleanup;
     }
 
     public async Task<MyEventsListResponse> HandleAsync(
@@ -40,9 +44,11 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
         var joinedIds = await _participantRepository.ListDistinctEventIdsByUserIdAsync(userId, ct);
         var joinedSet = new HashSet<string>(joinedIds);
         var createdIds = new HashSet<string>(created.Select(e => e.Id));
+        var onlyJoined = await ListOnlyJoinedAsync(joinedIds, createdIds, ct);
 
-        var (merged, winnerMovieIdByEventId) =
-            await BuildMergedEventsAsync(created, joinedIds, joinedSet, createdIds, utcNow, ct);
+        await _watchlistCleanup.RunForEventsAsync([.. created, .. onlyJoined], ct);
+
+        var (merged, winnerMovieIdByEventId) = BuildMergedEvents(created, onlyJoined, joinedSet, utcNow);
 
         var all = merged.Values.ToList();
         var totalActive = all.Count(x => x.Lifecycle != MyEventListLifecycle.Finished);
@@ -128,14 +134,23 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
     private static DateTimeOffset SortInstant(MyEventSummaryDto d) =>
         EventSchedule.TryGetStartUtc(d.Date, d.Time, out var startUtc) ? startUtc : d.CreatedAt;
 
-    private async Task<(Dictionary<string, MyEventSummaryDto> Merged, Dictionary<string, IReadOnlyList<string>> WinnerIds)>
-        BuildMergedEventsAsync(
+    private async Task<IReadOnlyList<Event>> ListOnlyJoinedAsync(
+        IReadOnlyList<string> joinedIds,
+        HashSet<string> createdIds,
+        CancellationToken ct)
+    {
+        var onlyJoinedIds = joinedIds.Where(id => !createdIds.Contains(id)).ToList();
+        return onlyJoinedIds.Count == 0
+            ? []
+            : await _eventRepository.ListByIdsAsync(onlyJoinedIds, ct);
+    }
+
+    private static (Dictionary<string, MyEventSummaryDto> Merged, Dictionary<string, IReadOnlyList<string>> WinnerIds)
+        BuildMergedEvents(
             IReadOnlyList<Event> created,
-            IReadOnlyList<string> joinedIds,
+            IReadOnlyList<Event> onlyJoined,
             HashSet<string> joinedSet,
-            HashSet<string> createdIds,
-            DateTimeOffset utcNow,
-            CancellationToken ct)
+            DateTimeOffset utcNow)
     {
         var merged = new Dictionary<string, MyEventSummaryDto>();
         var winnerMovieIdByEventId = new Dictionary<string, IReadOnlyList<string>>();
@@ -147,17 +162,12 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
                 winnerMovieIdByEventId[e.Id] = e.WinnerMovieIds;
         }
 
-        var onlyJoined = joinedIds.Where(id => !createdIds.Contains(id)).ToList();
-        if (onlyJoined.Count > 0)
+        foreach (var e in onlyJoined)
         {
-            var extra = await _eventRepository.ListByIdsAsync(onlyJoined, ct);
-            foreach (var e in extra)
-            {
-                if (!merged.ContainsKey(e.Id))
-                    merged[e.Id] = ToDto(e, isCreator: false, isParticipant: true, utcNow);
-                if (e.HasWinner)
-                    winnerMovieIdByEventId[e.Id] = e.WinnerMovieIds;
-            }
+            if (!merged.ContainsKey(e.Id))
+                merged[e.Id] = ToDto(e, isCreator: false, isParticipant: true, utcNow);
+            if (e.HasWinner)
+                winnerMovieIdByEventId[e.Id] = e.WinnerMovieIds;
         }
 
         return (merged, winnerMovieIdByEventId);

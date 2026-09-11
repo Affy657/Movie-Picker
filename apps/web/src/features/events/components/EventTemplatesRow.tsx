@@ -17,7 +17,7 @@ type Props = {
   appliedTemplateId: string | null;
   disabled?: boolean;
   className?: string;
-  onApply: (template: EventTemplateData) => void;
+  onApply?: (template: EventTemplateData) => void;
   onRename: (template: EventTemplateData, name: string) => void;
   onDelete: (template: EventTemplateData) => void;
 };
@@ -204,9 +204,13 @@ export default function EventTemplatesRow({
                 pressed={applied}
                 icon={applied ? Check : undefined}
                 className={styles.chip}
-                onClick={() => {
-                  if (!disabled) onApply(template);
-                }}
+                onClick={
+                  onApply
+                    ? () => {
+                        if (!disabled) onApply(template);
+                      }
+                    : undefined
+                }
               >
                 {template.name}
               </Chip>

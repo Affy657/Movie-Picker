@@ -145,6 +145,22 @@ public sealed class MongoEventRepository : IEventRepository
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
     }
 
+    public async Task<bool> MarkWatchlistCleanedAsync(string eventId, DateTimeOffset cleanedAt, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(eventId))
+            return false;
+
+        var filter = Builders<EventDocument>.Filter.And(
+            Builders<EventDocument>.Filter.Eq(x => x.Id, eventId),
+            Builders<EventDocument>.Filter.Eq(x => x.WatchlistCleanedAt, null));
+        var update = Builders<EventDocument>.Update
+            .Set(x => x.WatchlistCleanedAt, cleanedAt.UtcDateTime)
+            .Set(x => x.UpdatedAt, cleanedAt.UtcDateTime);
+
+        var result = await _collection.UpdateOneAsync(filter, update, cancellationToken: ct);
+        return result.ModifiedCount > 0;
+    }
+
     public async Task<long> AnonymizeCreatorAsync(string creatorUserId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(creatorUserId))

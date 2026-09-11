@@ -206,4 +206,34 @@ public sealed class MultipleWinnersEndpointsTests : IClassFixture<MoviePickerApp
 
         Assert.Empty(WinnerIdsOf(await DetailAsync(client, slug)));
     }
+
+    [Fact]
+    public async Task CloseEvent_RemovesEveryWinnerFromTheParticipantsWatchlistsOnce()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
+        var (slug, participantId) = await CreateEventAsync(client, "Ciné-club clôturé");
+        var first = await AddMovieAsync(client, slug, participantId, 603, "The Matrix");
+        var second = await AddMovieAsync(client, slug, participantId, 27205, "Inception");
+        foreach (var (tmdbId, title) in new[] { (603, "The Matrix"), (27205, "Inception"), (550, "Fight Club") })
+            (await client.PostAsJsonAsync("/api/v1/watchlist", new { tmdbId, title, year = "2020" })).EnsureSuccessStatusCode();
+        await client.PatchAsJsonAsync($"/api/v1/events/{slug}/config", new { winnerCount = 2 });
+        await client.PostAsJsonAsync($"/api/v1/events/{slug}/winner", new { movieId = first });
+        await client.PostAsJsonAsync($"/api/v1/events/{slug}/winner", new { movieId = second });
+
+        var close = await client.PostAsJsonAsync($"/api/v1/events/{slug}/close", new { });
+        Assert.Equal(HttpStatusCode.OK, close.StatusCode);
+
+        var watchlist = await (await client.GetAsync("/api/v1/watchlist"))
+            .Content.ReadFromJsonAsync<WatchlistResponse>(JsonOptions);
+        Assert.Equal(new[] { 550 }, watchlist!.Items.Select(i => i.TmdbId));
+
+        (await client.PostAsJsonAsync("/api/v1/watchlist", new { tmdbId = 603, title = "The Matrix", year = "2020" }))
+            .EnsureSuccessStatusCode();
+        (await client.GetAsync($"/api/v1/events/slug/{slug}")).EnsureSuccessStatusCode();
+        (await client.GetAsync("/api/v1/events/mine?scope=finished")).EnsureSuccessStatusCode();
+
+        var afterReopening = await (await client.GetAsync("/api/v1/watchlist"))
+            .Content.ReadFromJsonAsync<WatchlistResponse>(JsonOptions);
+        Assert.Contains(afterReopening!.Items, i => i.TmdbId == 603);
+    }
 }

@@ -88,9 +88,16 @@ function titlePatch(next: string, current: string): Partial<EventConfigPatchPayl
 }
 
 function dateTimePatch(
-  parsed: ReturnType<typeof splitDateTimeLocal>
+  parsed: ReturnType<typeof splitDateTimeLocal>,
+  edited: boolean,
+  notifyParticipants: boolean
 ): Partial<EventConfigPatchPayload> {
-  return parsed ? { date: parsed.date, time: parsed.time } : {};
+  if (!parsed || !edited) return {};
+  return {
+    date: parsed.date,
+    time: parsed.time,
+    notifyParticipantsOfDateChange: notifyParticipants,
+  };
 }
 
 function isCreatorParticipant(
@@ -341,7 +348,9 @@ export default function HostEventSettingsPanel({
 
   const mutation = useMutation({
     mutationFn: (body: EventConfigPatchPayload) => patchEventConfig(slug, hostToken, body),
-    onSuccess: async () => {
+    onSuccess: async (_config, body) => {
+      if (body.date && body.time)
+        initialDateLocalRef.current = eventDateTimeToLocal(body.date, body.time);
       setSaveState('saved');
       setSaveError(null);
       await queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
@@ -458,8 +467,11 @@ export default function HostEventSettingsPanel({
       ...(richSharePreview !== (cfg.richSharePreview ?? true) ? { richSharePreview } : {}),
       ...(winnerCountValue !== cfg.winnerCount ? { winnerCount: winnerCountValue } : {}),
       ...recurrencePatch(recurrence, cfg.recurrence ?? null),
-      ...dateTimePatch(eventDateTime),
-      notifyParticipantsOfDateChange: notifyDateChange,
+      ...dateTimePatch(
+        eventDateTime,
+        eventDateLocal !== initialDateLocalRef.current,
+        notifyDateChange
+      ),
     });
   };
 
@@ -824,7 +836,7 @@ export default function HostEventSettingsPanel({
                 templates={templates}
                 appliedTemplateId={matchingTemplate?.id ?? null}
                 disabled={isTemplateBusy}
-                onApply={applyTemplate}
+                onApply={configLocked ? undefined : applyTemplate}
                 onRename={(template, name) =>
                   updateTemplate(template.id, { ...templateToDraft(template), name })
                 }

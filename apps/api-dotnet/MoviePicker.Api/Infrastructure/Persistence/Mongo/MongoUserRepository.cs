@@ -167,6 +167,67 @@ public sealed class MongoUserRepository : IUserRepository
         return result.ModifiedCount > 0;
     }
 
+    public async Task<bool> AddEventTemplateAsync(
+        string userId,
+        EventTemplate template,
+        int maxPerUser,
+        DateTimeOffset now,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId) || maxPerUser < 1)
+            return false;
+
+        var filter = Builders<UserDocument>.Filter.And(
+            Builders<UserDocument>.Filter.Eq(x => x.Id, userId),
+            Builders<UserDocument>.Filter.Exists($"eventTemplates.{maxPerUser - 1}", false));
+        var update = Builders<UserDocument>.Update
+            .Push(x => x.EventTemplates, UserDocumentMapper.ToTemplateDocument(template))
+            .Set(x => x.UpdatedAt, now.UtcDateTime);
+
+        var result = await _collection.UpdateOneAsync(filter, update, cancellationToken: ct);
+        return result.MatchedCount > 0;
+    }
+
+    public async Task<bool> ReplaceEventTemplateAsync(
+        string userId,
+        EventTemplate template,
+        DateTimeOffset now,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(template.Id))
+            return false;
+
+        var filter = Builders<UserDocument>.Filter.And(
+            Builders<UserDocument>.Filter.Eq(x => x.Id, userId),
+            Builders<UserDocument>.Filter.ElemMatch(x => x.EventTemplates, t => t.Id == template.Id));
+        var update = Builders<UserDocument>.Update
+            .Set("eventTemplates.$", UserDocumentMapper.ToTemplateDocument(template))
+            .Set(x => x.UpdatedAt, now.UtcDateTime);
+
+        var result = await _collection.UpdateOneAsync(filter, update, cancellationToken: ct);
+        return result.MatchedCount > 0;
+    }
+
+    public async Task<bool> RemoveEventTemplateAsync(
+        string userId,
+        string templateId,
+        DateTimeOffset now,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(templateId))
+            return false;
+
+        var filter = Builders<UserDocument>.Filter.And(
+            Builders<UserDocument>.Filter.Eq(x => x.Id, userId),
+            Builders<UserDocument>.Filter.ElemMatch(x => x.EventTemplates, t => t.Id == templateId));
+        var update = Builders<UserDocument>.Update
+            .PullFilter(x => x.EventTemplates, t => t.Id == templateId)
+            .Set(x => x.UpdatedAt, now.UtcDateTime);
+
+        var result = await _collection.UpdateOneAsync(filter, update, cancellationToken: ct);
+        return result.MatchedCount > 0;
+    }
+
     public async Task<IReadOnlyList<PublicProfileRef>> ListPublicProfilesAsync(int limit, CancellationToken ct = default)
     {
         var filter = Builders<UserDocument>.Filter.And(

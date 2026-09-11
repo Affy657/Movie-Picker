@@ -150,6 +150,7 @@ public sealed class VoteMovieHandlerTests
             _sut.HandleAsync("evt1", "mov3", new VoteRequest { ParticipantId = participant.Id, Value = 1 }));
 
         Assert.Contains("2 vote(s)", ex.Message);
+        Assert.Equal(VoteMovieHandler.VoteLimitReachedReason, ex.Reason);
         _voteRepo.Verify(r => r.UpsertAsync(It.IsAny<Vote>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 

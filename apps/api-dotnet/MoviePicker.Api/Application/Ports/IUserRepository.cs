@@ -25,6 +25,22 @@ public interface IUserRepository
         int pendingCount,
         CancellationToken ct = default);
     Task<bool> MarkSupporterAsync(string userId, DateTimeOffset since, CancellationToken ct = default);
+    Task<bool> AddEventTemplateAsync(
+        string userId,
+        EventTemplate template,
+        int maxPerUser,
+        DateTimeOffset now,
+        CancellationToken ct = default);
+    Task<bool> ReplaceEventTemplateAsync(
+        string userId,
+        EventTemplate template,
+        DateTimeOffset now,
+        CancellationToken ct = default);
+    Task<bool> RemoveEventTemplateAsync(
+        string userId,
+        string templateId,
+        DateTimeOffset now,
+        CancellationToken ct = default);
     Task<IReadOnlyList<PublicProfileRef>> ListPublicProfilesAsync(int limit, CancellationToken ct = default);
     Task<User> AddAsync(User user, CancellationToken ct = default);
     Task<User> UpdateAsync(User user, CancellationToken ct = default);

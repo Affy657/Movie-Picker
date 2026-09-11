@@ -118,6 +118,8 @@ public sealed class RecurringEventPass : IRecurringEventPass
             HostToken = SlugGenerator.NewHostToken(),
             ClosedAt = null,
             Winners = [],
+            WinnerAnnouncedAt = null,
+            WatchlistCleanedAt = null,
             RecurrenceParentEventId = parent.Id,
             NextOccurrenceEventId = null,
             CreatedAt = now,

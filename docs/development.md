@@ -70,6 +70,11 @@ pnpm dev:web           # front seul, http://localhost:5173
 
 Les variantes `dev:web:log` et `dev:api-dotnet:log` écrivent dans `logs/` au lieu du terminal.
 
+Les variantes `dev:full:b`, `dev:web:b` et `dev:api-dotnet:b` lancent une seconde paire sur
+`http://localhost:5273` et `http://localhost:4100`, pour faire tourner deux agents ou deux worktrees
+côte à côte sans se marcher sur les ports. Elles partagent la même base `moviepicker_dev` que la
+première paire ; les configurations `full-b`, `web-b` et `api-b` de `.claude/launch.json` les reprennent.
+
 En Development, la page de connexion affiche un bouton qui ouvre directement la session du compte
 de démonstration, sans saisir d'identifiants.
 

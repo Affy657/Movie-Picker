@@ -171,6 +171,39 @@ describe('MovieList', () => {
       expect(screen.queryByText('Film gagnant')).not.toBeInTheDocument();
     });
 
+    it('en vue liste, le mode retrait ne propose que les films désignés comme sélectionnables', () => {
+      renderWithLocale(
+        <MovieList
+          movies={movies}
+          {...baseProps()}
+          viewMode="list"
+          winnerMovieIds={['m1']}
+          selection={{
+            active: true,
+            mode: 'remove',
+            selectableIds: ['m1'],
+            onSelect: vi.fn(),
+          }}
+        />
+      );
+      expect(screen.getByTestId('remove-winner-m1')).toBeInTheDocument();
+      expect(screen.queryByTestId('remove-winner-m2')).not.toBeInTheDocument();
+    });
+
+    it('en vue liste, le choix manuel ignore les films déjà gagnants', () => {
+      renderWithLocale(
+        <MovieList
+          movies={movies}
+          {...baseProps()}
+          viewMode="list"
+          winnerMovieIds={['m1']}
+          selection={{ active: true, mode: 'pick', selectableIds: ['m2'], onSelect: vi.fn() }}
+        />
+      );
+      expect(screen.queryByTestId('manual-pick-m1')).not.toBeInTheDocument();
+      expect(screen.getByTestId('manual-pick-m2')).toBeInTheDocument();
+    });
+
     it('laisse la colonne rang vide sur les lignes gagnantes', () => {
       renderWithLocale(
         <MovieList

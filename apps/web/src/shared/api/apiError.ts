@@ -1,10 +1,13 @@
 export class ApiError extends Error {
   readonly code?: number;
 
-  constructor(message: string, options?: { code?: number; cause?: unknown }) {
+  readonly reason?: string;
+
+  constructor(message: string, options?: { code?: number; reason?: string; cause?: unknown }) {
     super(message, options?.cause === undefined ? undefined : { cause: options.cause });
     this.name = 'ApiError';
     this.code = options?.code;
+    this.reason = options?.reason;
   }
 
   static is(e: unknown): e is ApiError {

@@ -319,6 +319,71 @@ describe('HostEventSettingsPanel', () => {
     await waitFor(() => expect(seenWinnerCount).toBe(3), { timeout: 3000 });
   });
 
+  it("n'envoie que le nombre de gagnants quand c'est le seul champ modifié après un tirage", async () => {
+    const user = userEvent.setup();
+    let body: Record<string, unknown> | null = null;
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        body = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ ...baseEvent.config, winnerCount: 3 });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        slug={slug}
+        hostToken={null}
+        event={{
+          ...baseEvent,
+          winners: [{ movieId: 'm1', pickMethod: 'wheel', pickedAt: '2030-01-01T20:00:00Z' }],
+          config: { ...baseEvent.config!, winnerCount: 2, drawnWinnerCount: 1 },
+        }}
+        open
+        onClose={() => {}}
+      />,
+      createTestQueryClient()
+    );
+
+    await user.clear(screen.getByLabelText(/films gagnants/i));
+    await user.type(screen.getByLabelText(/films gagnants/i), '3');
+
+    await waitFor(() => expect(body).not.toBeNull(), { timeout: 3000 });
+    expect(body).toEqual({ winnerCount: 3 });
+  });
+
+  it("envoie la date, l'heure et le choix de notification seulement quand la date change", async () => {
+    const user = userEvent.setup();
+    let body: Record<string, unknown> | null = null;
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        body = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ ...baseEvent.config });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        slug={slug}
+        hostToken={null}
+        event={baseEvent}
+        open
+        onClose={() => {}}
+      />,
+      createTestQueryClient()
+    );
+
+    const dateField = screen.getByLabelText(/date et heure/i);
+    await user.clear(dateField);
+    await user.type(dateField, '2030-02-01T21:30');
+
+    await waitFor(() => expect(body).not.toBeNull(), { timeout: 3000 });
+    expect(body).toEqual({
+      date: '2030-02-01',
+      time: '21:30',
+      notifyParticipantsOfDateChange: true,
+    });
+  });
+
   it('refuse de descendre sous le nombre de films déjà tirés', async () => {
     const user = userEvent.setup();
     let patchCalled = false;
@@ -702,6 +767,43 @@ describe('HostEventSettingsPanel', () => {
 
     await waitFor(() => expect(chip).toHaveAttribute('aria-pressed', 'true'));
     expect(screen.queryByRole('button', { name: 'Mettre à jour' })).not.toBeInTheDocument();
+  });
+
+  it("une fois un film tiré, les templates se gèrent encore mais ne s'appliquent plus", async () => {
+    const user = userEvent.setup();
+    let patched = false;
+    server.use(
+      http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
+        HttpResponse.json({ items: [templateFixture] })
+      ),
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, () => {
+        patched = true;
+        return HttpResponse.json({ ...baseEvent.config });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={{
+          ...creatorEvent,
+          winners: [{ movieId: 'm1', pickMethod: 'wheel', pickedAt: '2030-01-01T20:00:00Z' }],
+          config: { ...creatorEvent.config!, winnerCount: 2, drawnWinnerCount: 1 },
+        }}
+      />
+    );
+
+    const section = screen.getByTestId('event-templates-section');
+    await waitFor(() => expect(section).toHaveTextContent('Soirée horreur'));
+    expect(screen.queryByRole('button', { name: /Soirée horreur/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Gérer' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'En faire un template' })).toBeEnabled();
+
+    await user.click(screen.getByText('Soirée horreur'));
+    expect(patched).toBe(false);
   });
 
   it('regroupe la gestion des templates en bas du panneau', async () => {

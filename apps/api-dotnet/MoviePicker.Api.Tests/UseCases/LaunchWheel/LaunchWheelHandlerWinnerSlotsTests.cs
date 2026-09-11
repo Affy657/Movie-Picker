@@ -57,7 +57,10 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
         UpdatedAt = DateTimeOffset.UtcNow
     };
 
-    private void GivenEvent(int winnerCount, params string[] alreadyWon)
+    private void GivenEvent(int winnerCount, params string[] alreadyWon) =>
+        GivenEvent(winnerCount, announcedAt: null, alreadyWon);
+
+    private void GivenEvent(int winnerCount, DateTimeOffset? announcedAt, params string[] alreadyWon)
     {
         var evt = new Event
         {
@@ -69,10 +72,28 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
             HostToken = "ht1",
             Config = new EventConfig { WinnerCount = winnerCount },
             Winners = TestWinners.Won(alreadyWon),
+            WinnerAnnouncedAt = announcedAt,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
         _events.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+    }
+
+    [Fact]
+    public async Task HandleAsync_NextDraw_KeepsTheAnnouncementMarkOfThePreviousPicks()
+    {
+        var announcedAt = new DateTimeOffset(2030, 6, 1, 20, 5, 0, TimeSpan.Zero);
+        GivenEvent(3, announcedAt, "m1");
+        GivenMovies("m1", "m2");
+        Event? saved = null;
+        _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Event e, CancellationToken _) => e)
+            .Callback((Event e, CancellationToken _) => saved = e);
+
+        await _sut.HandleAsync("evt1");
+
+        Assert.NotNull(saved);
+        Assert.Equal(announcedAt, saved!.WinnerAnnouncedAt);
     }
 
     private void GivenMovies(params string[] ids) =>

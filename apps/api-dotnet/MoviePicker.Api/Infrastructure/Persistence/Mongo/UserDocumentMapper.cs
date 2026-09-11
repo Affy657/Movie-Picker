@@ -74,7 +74,7 @@ public static class UserDocumentMapper
         CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero)
     };
 
-    private static EventTemplateDocument ToTemplateDocument(EventTemplate template) => new()
+    internal static EventTemplateDocument ToTemplateDocument(EventTemplate template) => new()
     {
         Id = template.Id,
         Name = template.Name,

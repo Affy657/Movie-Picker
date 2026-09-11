@@ -15,6 +15,7 @@ public sealed record Event
     public DateTimeOffset? ClosedAt { get; init; }
     public IReadOnlyList<EventWinner> Winners { get; init; } = [];
     public DateTimeOffset? WinnerAnnouncedAt { get; init; }
+    public DateTimeOffset? WatchlistCleanedAt { get; init; }
     public RecurrenceFrequency? Recurrence { get; init; }
     public string? RecurrenceParentEventId { get; init; }
     public string? NextOccurrenceEventId { get; init; }

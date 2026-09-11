@@ -102,3 +102,62 @@ describe('useEventWheel : annonce du gagnant', () => {
     expect(postEventWheelAnnounce).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('useEventWheel : créneaux restants', () => {
+  const second = { id: 'mov2', title: 'Alien', tmdbId: 2 } as MovieData;
+  const twoSlots = {
+    ...hostEvent,
+    config: { winnerCount: 2, winnerCountMax: 10, drawnWinnerCount: 0 },
+  } as EventData;
+
+  beforeEach(() => {
+    vi.mocked(postEventWheel).mockResolvedValue({ winner, message: 'Roue lancée.' });
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  function renderWithEvent(initial: EventData) {
+    return renderHook(
+      ({ event }: { event: EventData }) =>
+        useEventWheel({
+          slug: 'soiree',
+          event,
+          movies: [winner, second],
+          hostToken: 'ht1',
+          onWheelDone: () => {},
+        }),
+      { wrapper, initialProps: { event: initial } }
+    );
+  }
+
+  it('réserve le créneau du film tiré en attendant le rafraîchissement', async () => {
+    const { result } = renderWithEvent(twoSlots);
+
+    act(() => result.current.launch());
+    await waitFor(() => expect(result.current.remainingDraws).toBe(1));
+
+    expect(result.current.drawableMovies.map((m) => m.id)).toEqual(['mov2']);
+  });
+
+  it('rend le créneau dès que le serveur ne compte plus ce film au palmarès', async () => {
+    const { result, rerender } = renderWithEvent(twoSlots);
+
+    act(() => result.current.launch());
+    await waitFor(() => expect(result.current.remainingDraws).toBe(1));
+
+    rerender({
+      event: {
+        ...twoSlots,
+        winners: [{ movieId: 'mov1', pickMethod: 'wheel', pickedAt: '2030-06-01T20:00:00Z' }],
+      } as EventData,
+    });
+    await waitFor(() => expect(result.current.remainingDraws).toBe(1));
+
+    rerender({ event: { ...twoSlots, winners: [] } as EventData });
+
+    await waitFor(() => expect(result.current.remainingDraws).toBe(2));
+    expect(result.current.drawableMovies.map((m) => m.id)).toEqual(['mov1', 'mov2']);
+  });
+});

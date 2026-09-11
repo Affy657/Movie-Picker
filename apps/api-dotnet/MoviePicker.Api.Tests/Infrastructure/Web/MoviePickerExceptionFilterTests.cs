@@ -56,6 +56,32 @@ public sealed class MoviePickerExceptionFilterTests
     }
 
     [Fact]
+    public void OnException_ConflictWithReason_CarriesTheReasonInTheEnvelope()
+    {
+        var filter = new MoviePickerExceptionFilter(new StubHostEnvironment { EnvironmentName = "Production" });
+        var context = CreateContext(new ConflictException("Limite atteinte.", "vote-limit-reached"));
+
+        filter.OnException(context);
+
+        var result = Assert.IsType<JsonResult>(context.Result);
+        Assert.Equal(409, result.StatusCode);
+        var envelope = Assert.IsType<ApiErrorResponse>(result.Value);
+        Assert.Equal("vote-limit-reached", envelope.Reason);
+    }
+
+    [Fact]
+    public void OnException_ConflictWithoutReason_LeavesTheReasonEmpty()
+    {
+        var filter = new MoviePickerExceptionFilter(new StubHostEnvironment { EnvironmentName = "Production" });
+        var context = CreateContext(new ConflictException("Soirée terminée."));
+
+        filter.OnException(context);
+
+        var envelope = Assert.IsType<ApiErrorResponse>(Assert.IsType<JsonResult>(context.Result).Value);
+        Assert.Null(envelope.Reason);
+    }
+
+    [Fact]
     public void OnException_ForbiddenException_Sets403()
     {
         var env = new StubHostEnvironment();

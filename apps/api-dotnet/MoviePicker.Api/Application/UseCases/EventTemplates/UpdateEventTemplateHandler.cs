@@ -1,6 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.EventTemplates;
 
@@ -34,12 +34,9 @@ public sealed class UpdateEventTemplateHandler : IUpdateEventTemplateHandler
             Config = EventTemplatePolicy.ToConfig(request)
         };
 
-        var next = existing.ToList();
-        next[index] = updated;
-
-        await _users.UpdateAsync(
-            user with { EventTemplates = next, UpdatedAt = _clock.GetUtcNow() },
-            ct);
+        var replaced = await _users.ReplaceEventTemplateAsync(user.Id, updated, _clock.GetUtcNow(), ct);
+        if (!replaced)
+            throw new NotFoundException(EventTemplatePolicy.NotFoundMessage);
 
         return EventTemplateResponse.FromTemplate(updated);
     }

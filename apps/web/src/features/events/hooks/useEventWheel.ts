@@ -123,6 +123,14 @@ export function useEventWheel({
         .filter((m): m is MovieData => m !== null),
     [winnerIds, safeMovies]
   );
+  useEffect(() => {
+    setLocallyDrawnIds((ids) =>
+      ids.some((id) => allWinnerIds.includes(id))
+        ? ids.filter((id) => !allWinnerIds.includes(id))
+        : ids
+    );
+  }, [allWinnerIds]);
+
   const drawnIds = useMemo(() => {
     const merged = [...allWinnerIds];
     for (const id of locallyDrawnIds) {

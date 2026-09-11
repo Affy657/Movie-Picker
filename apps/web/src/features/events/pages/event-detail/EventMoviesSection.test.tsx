@@ -489,7 +489,11 @@ describe('EventMoviesSection (MSW)', () => {
         watchlistHandler([]),
         http.post(`${TEST_API_V1}/events/soiree-cine/movies/m2/vote`, () =>
           HttpResponse.json(
-            { error: 'Limite de 2 vote(s) par participant atteinte.', code: 409 },
+            {
+              error: 'Limite de 2 vote(s) par participant atteinte.',
+              code: 409,
+              reason: 'vote-limit-reached',
+            },
             { status: 409 }
           )
         )
@@ -507,6 +511,30 @@ describe('EventMoviesSection (MSW)', () => {
       await waitFor(() => expect(screen.getByTestId('vote-limit-dialog')).toHaveAttribute('open'));
       expect(refreshAll).toHaveBeenCalled();
       expect(screen.queryByText(/limite de 2 vote\(s\)/i)).not.toBeInTheDocument();
+    });
+
+    it("un autre 409 sur un nouveau vote n'ouvre pas la fenêtre de limite mais affiche l'erreur", async () => {
+      server.use(
+        authedUserHandler,
+        watchlistHandler([]),
+        http.post(`${TEST_API_V1}/events/soiree-cine/movies/m2/vote`, () =>
+          HttpResponse.json(
+            { error: 'La roue a déjà été lancée : les votes sont figés.', code: 409 },
+            { status: 409 }
+          )
+        )
+      );
+      renderSection({
+        event: limitedEvent(2),
+        movies: [{ ...MOVIE, myVote: 1 }, SECOND_MOVIE],
+        viewMode: 'list',
+      });
+      const user = userEvent.setup();
+
+      await user.click(screen.getByRole('button', { name: /voter pour alien/i }));
+
+      expect(await screen.findByText(/la roue a déjà été lancée/i)).toBeInTheDocument();
+      expect(screen.getByTestId('vote-limit-dialog')).not.toHaveAttribute('open');
     });
 
     it('le message parle au pluriel quand la limite dépasse un vote', async () => {

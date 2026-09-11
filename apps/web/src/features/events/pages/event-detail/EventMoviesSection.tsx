@@ -28,6 +28,8 @@ function watchlistKey(tmdbId: number, mediaType: MovieData['mediaType']): string
   return `${tmdbId}|${mediaType ?? 'movie'}`;
 }
 
+const VOTE_LIMIT_REACHED_REASON = 'vote-limit-reached';
+
 const DEFAULT_SORT_DIRECTION: Record<MovieRowSortKey, 'asc' | 'desc'> = {
   score: 'desc',
   voteAverage: 'desc',
@@ -222,7 +224,7 @@ export default function EventMoviesSection({
         }
         refreshAll();
       } catch (e) {
-        if (current === null && maxVotes !== null && ApiError.is(e) && e.code === 409) {
+        if (ApiError.is(e) && e.reason === VOTE_LIMIT_REACHED_REASON) {
           setVoteLimitReached(true);
           refreshAll();
           return;

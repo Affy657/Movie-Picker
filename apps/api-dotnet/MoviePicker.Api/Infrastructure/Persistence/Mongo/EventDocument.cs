@@ -58,6 +58,10 @@ public sealed class EventDocument
     [BsonIgnoreIfNull]
     public DateTime? WinnerAnnouncedAt { get; set; }
 
+    [BsonElement("watchlistCleanedAt")]
+    [BsonIgnoreIfNull]
+    public DateTime? WatchlistCleanedAt { get; set; }
+
     [BsonElement("recurrence")]
     [BsonIgnoreIfNull]
     public string? Recurrence { get; set; }

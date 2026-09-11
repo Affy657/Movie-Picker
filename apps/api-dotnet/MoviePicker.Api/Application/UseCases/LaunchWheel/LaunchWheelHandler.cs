@@ -86,7 +86,6 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
                 Method = WinnerPickMethod.Wheel,
                 PickedAt = now
             }],
-            WinnerAnnouncedAt = null,
             UpdatedAt = now
         };
 

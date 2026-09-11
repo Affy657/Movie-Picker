@@ -34,6 +34,22 @@ describe('fetchApi', () => {
     }
   });
 
+  it('réponse 4xx porte la raison métier quand le serveur en donne une', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      status: 409,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      text: () =>
+        Promise.resolve(
+          JSON.stringify({ error: 'Limite atteinte.', code: 409, reason: 'vote-limit-reached' })
+        ),
+    });
+    await expect(fetchApi('/events/slug/x')).rejects.toMatchObject({
+      code: 409,
+      reason: 'vote-limit-reached',
+    });
+  });
+
   it('réponse 5xx renvoie une erreur', async () => {
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: false,

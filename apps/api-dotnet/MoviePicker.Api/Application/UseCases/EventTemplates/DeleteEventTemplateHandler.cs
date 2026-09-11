@@ -1,4 +1,5 @@
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.EventTemplates;
 
@@ -16,13 +17,10 @@ public sealed class DeleteEventTemplateHandler : IDeleteEventTemplateHandler
     public async Task HandleAsync(string userId, string templateId, CancellationToken ct = default)
     {
         var user = await EventTemplatePolicy.RequireUserAsync(_users, userId, ct);
-        var index = EventTemplatePolicy.RequireIndexOf(user.EventTemplates, templateId);
+        EventTemplatePolicy.RequireIndexOf(user.EventTemplates, templateId);
 
-        var next = user.EventTemplates.ToList();
-        next.RemoveAt(index);
-
-        await _users.UpdateAsync(
-            user with { EventTemplates = next, UpdatedAt = _clock.GetUtcNow() },
-            ct);
+        var removed = await _users.RemoveEventTemplateAsync(user.Id, templateId, _clock.GetUtcNow(), ct);
+        if (!removed)
+            throw new NotFoundException(EventTemplatePolicy.NotFoundMessage);
     }
 }

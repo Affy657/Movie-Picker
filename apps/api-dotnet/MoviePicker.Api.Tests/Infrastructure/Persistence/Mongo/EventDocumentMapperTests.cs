@@ -201,6 +201,46 @@ public sealed class EventDocumentMapperTests
     }
 
     [Fact]
+    public void ToDocument_WithWatchlistCleanedAt_RoundTrips()
+    {
+        var cleanedAt = new DateTimeOffset(2026, 5, 2, 9, 0, 0, TimeSpan.Zero);
+        var evt = new Event
+        {
+            Id = "evt1",
+            Title = "Soirée",
+            Date = "2030-01-01",
+            Time = "20:00",
+            HostToken = "ht",
+            Slug = "s",
+            WatchlistCleanedAt = cleanedAt,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+
+        var doc = EventDocumentMapper.ToDocument(evt);
+        var back = EventDocumentMapper.ToDomain(doc);
+
+        Assert.Equal(cleanedAt.UtcDateTime, doc.WatchlistCleanedAt);
+        Assert.Equal(cleanedAt, back.WatchlistCleanedAt);
+    }
+
+    [Fact]
+    public void ToDomain_WithoutWatchlistCleanedAt_LeavesItNull()
+    {
+        var doc = new EventDocument
+        {
+            Id = "evt1",
+            Title = "Soirée",
+            Date = "2030-01-01",
+            Time = "20:00",
+            HostToken = "ht",
+            Slug = "s"
+        };
+
+        Assert.Null(EventDocumentMapper.ToDomain(doc).WatchlistCleanedAt);
+    }
+
+    [Fact]
     public void ToDomain_LegacySingleWinnerFields_BecomeAOneEntryPalmares()
     {
         var pickedAt = new DateTime(2026, 5, 1, 18, 0, 0, DateTimeKind.Utc);

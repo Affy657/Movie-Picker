@@ -131,11 +131,19 @@ public sealed class CreateEventTemplateHandlerTests
 {
     private readonly Mock<IUserRepository> _users = new();
     private readonly CreateEventTemplateHandler _sut;
+    private EventTemplate? _added;
+    private DateTimeOffset? _addedAt;
 
     public CreateEventTemplateHandlerTests()
     {
-        _users.Setup(u => u.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((User u, CancellationToken _) => u);
+        _users.Setup(u => u.AddEventTemplateAsync(
+                It.IsAny<string>(), It.IsAny<EventTemplate>(), It.IsAny<int>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .Callback((string _, EventTemplate t, int _, DateTimeOffset now, CancellationToken _) =>
+            {
+                _added = t;
+                _addedAt = now;
+            })
+            .ReturnsAsync(true);
         _sut = new CreateEventTemplateHandler(_users.Object, new FrozenClock(TemplateFixtures.Now));
     }
 
@@ -152,20 +160,35 @@ public sealed class CreateEventTemplateHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_AppendsToTheList()
+    public async Task HandleAsync_AppendsTheTemplateAtomicallyUnderTheCap()
     {
         HasUser(TemplateFixtures.WithTemplates(TemplateFixtures.Template("t1", "Ciné du dimanche")));
-        User? saved = null;
-        _users.Setup(u => u.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
-            .Callback((User u, CancellationToken _) => saved = u)
-            .ReturnsAsync((User u, CancellationToken _) => u);
 
         var created = await _sut.HandleAsync("u1", TemplateFixtures.Request());
 
-        Assert.NotNull(saved);
-        Assert.Equal(["Ciné du dimanche", "Soirée horreur"], saved!.EventTemplates.Select(t => t.Name));
+        Assert.NotNull(_added);
+        Assert.Equal("Soirée horreur", _added!.Name);
+        Assert.Equal(created.Id, _added.Id);
         Assert.False(string.IsNullOrEmpty(created.Id));
-        Assert.Equal(TemplateFixtures.Now, saved.EventTemplates[1].CreatedAt);
+        Assert.Equal(TemplateFixtures.Now, _added.CreatedAt);
+        _users.Verify(
+            u => u.AddEventTemplateAsync("u1", It.IsAny<EventTemplate>(), EventTemplate.MaxPerUser, TemplateFixtures.Now, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _users.Verify(u => u.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_CapReachedConcurrently_Throws()
+    {
+        HasUser(new User { Id = "u1" });
+        _users.Setup(u => u.AddEventTemplateAsync(
+                It.IsAny<string>(), It.IsAny<EventTemplate>(), It.IsAny<int>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(
+            () => _sut.HandleAsync("u1", TemplateFixtures.Request()));
+
+        Assert.Contains("limite", ex.Message);
     }
 
     [Fact]
@@ -353,14 +376,10 @@ public sealed class CreateEventTemplateHandlerTests
     public async Task HandleAsync_TouchesUpdatedAt()
     {
         HasUser(new User { Id = "u1", UpdatedAt = TemplateFixtures.Now.AddDays(-5) });
-        User? saved = null;
-        _users.Setup(u => u.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
-            .Callback((User u, CancellationToken _) => saved = u)
-            .ReturnsAsync((User u, CancellationToken _) => u);
 
         await _sut.HandleAsync("u1", TemplateFixtures.Request());
 
-        Assert.Equal(TemplateFixtures.Now, saved!.UpdatedAt);
+        Assert.Equal(TemplateFixtures.Now, _addedAt);
     }
 }
 
@@ -368,13 +387,14 @@ public sealed class UpdateEventTemplateHandlerTests
 {
     private readonly Mock<IUserRepository> _users = new();
     private readonly UpdateEventTemplateHandler _sut;
-    private User? _saved;
+    private EventTemplate? _replaced;
 
     public UpdateEventTemplateHandlerTests()
     {
-        _users.Setup(u => u.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
-            .Callback((User u, CancellationToken _) => _saved = u)
-            .ReturnsAsync((User u, CancellationToken _) => u);
+        _users.Setup(u => u.ReplaceEventTemplateAsync(
+                It.IsAny<string>(), It.IsAny<EventTemplate>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .Callback((string _, EventTemplate t, DateTimeOffset _, CancellationToken _) => _replaced = t)
+            .ReturnsAsync(true);
         _sut = new UpdateEventTemplateHandler(_users.Object, new FrozenClock(TemplateFixtures.Now));
     }
 
@@ -409,22 +429,39 @@ public sealed class UpdateEventTemplateHandlerTests
 
         Assert.Equal("t1", updated.Id);
         Assert.Equal("Soirée frissons", updated.Name);
-        Assert.Equal(original.CreatedAt, _saved!.EventTemplates.Single().CreatedAt);
+        Assert.Equal("t1", _replaced!.Id);
+        Assert.Equal(original.CreatedAt, _replaced.CreatedAt);
     }
 
     [Fact]
-    public async Task HandleAsync_KeepsPositionInTheList()
+    public async Task HandleAsync_ReplacesInPlaceThroughTheRepository()
     {
         HasUser(TemplateFixtures.WithTemplates(
             TemplateFixtures.Template("t1", "Soirée horreur"),
-            TemplateFixtures.Template("t2", "Ciné du dimanche"),
-            TemplateFixtures.Template("t3", "Marathon série")));
+            TemplateFixtures.Template("t2", "Ciné du dimanche")));
 
         await _sut.HandleAsync("u1", "t2", TemplateFixtures.Request(name: "Ciné du soir"));
 
-        Assert.Equal(
-            ["Soirée horreur", "Ciné du soir", "Marathon série"],
-            _saved!.EventTemplates.Select(t => t.Name));
+        _users.Verify(
+            u => u.ReplaceEventTemplateAsync(
+                "u1",
+                It.Is<EventTemplate>(t => t.Id == "t2" && t.Name == "Ciné du soir"),
+                TemplateFixtures.Now,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+        _users.Verify(u => u.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TemplateGoneMeanwhile_Throws()
+    {
+        HasUser(TemplateFixtures.WithTemplates(TemplateFixtures.Template("t1", "Soirée horreur")));
+        _users.Setup(u => u.ReplaceEventTemplateAsync(
+                It.IsAny<string>(), It.IsAny<EventTemplate>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        await Assert.ThrowsAsync<NotFoundException>(
+            () => _sut.HandleAsync("u1", "t1", TemplateFixtures.Request()));
     }
 
     [Fact]
@@ -475,13 +512,12 @@ public sealed class DeleteEventTemplateHandlerTests
 {
     private readonly Mock<IUserRepository> _users = new();
     private readonly DeleteEventTemplateHandler _sut;
-    private User? _saved;
 
     public DeleteEventTemplateHandlerTests()
     {
-        _users.Setup(u => u.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
-            .Callback((User u, CancellationToken _) => _saved = u)
-            .ReturnsAsync((User u, CancellationToken _) => u);
+        _users.Setup(u => u.RemoveEventTemplateAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
         _sut = new DeleteEventTemplateHandler(_users.Object, new FrozenClock(TemplateFixtures.Now));
     }
 
@@ -503,7 +539,7 @@ public sealed class DeleteEventTemplateHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_RemovesOnlyThatTemplate()
+    public async Task HandleAsync_RemovesThatTemplateThroughTheRepository()
     {
         _users.Setup(u => u.GetByIdAsync("u1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(TemplateFixtures.WithTemplates(
@@ -512,7 +548,21 @@ public sealed class DeleteEventTemplateHandlerTests
 
         await _sut.HandleAsync("u1", "t1");
 
-        Assert.Equal(["Ciné du dimanche"], _saved!.EventTemplates.Select(t => t.Name));
-        Assert.Equal(TemplateFixtures.Now, _saved.UpdatedAt);
+        _users.Verify(
+            u => u.RemoveEventTemplateAsync("u1", "t1", TemplateFixtures.Now, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _users.Verify(u => u.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TemplateGoneMeanwhile_Throws()
+    {
+        _users.Setup(u => u.GetByIdAsync("u1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(TemplateFixtures.WithTemplates(TemplateFixtures.Template("t1", "Soirée horreur")));
+        _users.Setup(u => u.RemoveEventTemplateAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("u1", "t1"));
     }
 }

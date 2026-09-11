@@ -1,5 +1,6 @@
 using Moq;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.FinishedEvents;
 using MoviePicker.Api.Application.UseCases.GetEventDetail;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -19,6 +20,7 @@ public sealed class GetEventDetailHandlerTests
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor;
     private readonly Mock<ICurrentUserAccessor> _currentUserAccessor;
     private readonly Mock<IPosterImageStore> _posterStore;
+    private readonly Mock<IFinishedEventWatchlistPass> _watchlistCleanup = new();
     private readonly GetEventDetailHandler _sut;
 
     private static Event Event(string hostToken = "ht1") => new()
@@ -75,7 +77,21 @@ public sealed class GetEventDetailHandlerTests
             _userRepo.Object,
             _hostTokenAccessor.Object,
             _currentUserAccessor.Object,
-            _posterStore.Object);
+            _posterStore.Object,
+            _watchlistCleanup.Object);
+    }
+
+    [Fact]
+    public async Task HandleAsync_HandsTheEventToTheWatchlistCleanup()
+    {
+        var evt = new EventEntityBuilder().WithId("evt-1").Build();
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt-1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+
+        await _sut.HandleAsync("evt-1");
+
+        _watchlistCleanup.Verify(
+            p => p.RunForEventAsync(It.Is<Event>(e => e.Id == "evt-1"), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]

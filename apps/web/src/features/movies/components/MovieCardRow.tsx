@@ -23,6 +23,7 @@ import {
   ProposerBadge,
   VoteBar,
   WatchlistBadge,
+  isSelectable,
   useMovieCardState,
   type MovieCardCommonProps,
 } from '@/features/movies/components/movieCardParts';
@@ -636,7 +637,7 @@ export const MovieCardRow = memo(function MovieCardRow({
   const buyCount = s.providers.filter((p) => p.type === 'buy').length;
   const releaseDateLabel = formatReleaseYear(m.releaseDate);
   const excluded = !!m.excludedFromWheel;
-  const selecting = !!selection?.active && !excluded;
+  const selecting = isSelectable(m, selection) && !excluded;
   const emptyDispoLabel = t('movies.watchProviders.emptyLabel');
 
   const view: MovieCardRowView = {
