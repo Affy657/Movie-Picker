@@ -12,7 +12,7 @@
 > - Le vocabulaire employé est adapté à une présentation client.
 > - La démonstration permet d'aboutir à une **validation** du projet.
 
-Alimente les diapositives 30 et 31, et les 4 minutes 50 de démonstration en direct.
+Alimente la diapositive 2, les 4 minutes 50 de démonstration en direct qui la suivent, et la demande de validation de la diapositive 27. **La démonstration ouvre la présentation** ; la validation la ferme.
 
 **Ce chapitre est différent des six autres.** Les autres se préparent en écrivant ; celui-ci se prépare en répétant. Le document ci-dessous n'est pas un livrable à lire au jury : c'est un **script d'exécution**, un glossaire, une liste de préparation et un plan de repli. Sa qualité se mesure au fait que la démonstration se déroule sans hésitation.
 
@@ -77,7 +77,7 @@ Le critère demande que la démonstration reprenne **les fonctionnalités attend
 | Liste personnelle « Ma liste » et intégration tierce | ⬜ **citée, non montrée** |
 | Notifications, application installable, connexion sociale | ⬜ **citées, non montrées** |
 
-**Ce qui n'est pas montré est assumé et annoncé** : en 4 minutes 50, montrer plus reviendrait à montrer moins bien. Les fonctionnalités non démontrées sont citées d'une phrase en diapositive 31, et deux d'entre elles peuvent être ouvertes à la demande si le jury le souhaite pendant les questions.
+**Ce qui n'est pas montré est assumé et annoncé** : en 4 minutes 50, montrer plus reviendrait à montrer moins bien. Les fonctionnalités non démontrées sont citées d'une phrase en diapositive 27, et deux d'entre elles peuvent être ouvertes à la demande si le jury le souhaite pendant les questions.
 
 ---
 
@@ -171,7 +171,7 @@ Une démonstration qui se termine par « voilà, c'est tout » laisse le jury sa
 
 ### 6.2 La séquence de clôture
 
-Trois temps, sur la diapositive 31, en moins de vingt secondes.
+Trois temps, sur la diapositive 27, en fin de présentation.
 
 **1. Ce qui est validé.** « Ce que vous venez de voir est en ligne, utilisé, et couvre l'intégralité du parcours annoncé : organiser, inviter, proposer, voter, trancher, garder une trace. »
 
@@ -187,9 +187,9 @@ Trois temps, sur la diapositive 31, en moins de vingt secondes.
 
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
-| 30 | Ce que je vais vous montrer | 2.1, 3 |
+| 2 | Le produit, en production | 2.1, 3 |
 | — | **Démonstration en direct (4:50)** | 2.2 |
-| 31 | Ce qui est validé, ce qui vient ensuite | 6.2 |
+| 27 | Bilan, et la validation du périmètre livré, en fin de présentation | 6.2 |
 | A1 | Architecture technique, si une question technique est posée | — |
 
 ---

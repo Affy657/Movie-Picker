@@ -2,7 +2,9 @@
 
 > Point de situation au **5 septembre 2026**. Oral le **16 septembre 2026**, soit **11 jours**.
 >
-> **La rédaction est terminée** : 7 chapitres de matière, 40 diapositives (32 présentées + 8 annexes), les 14 éléments imposés rattachés, les 7 compétences couvertes.
+> **La rédaction est terminée** : 7 chapitres de matière, 35 diapositives (27 présentées + 8 annexes), les 14 éléments imposés rattachés, les 7 compétences couvertes.
+>
+> ✅ **Restructuré le 11 septembre** : la démonstration ouvre la présentation, 35 diapositives (27 présentées), dix tableaux devenus des schémas, cinq fusions. Les numéros de diapositives cités dans les sections historiques ci-dessous sont ceux d'avant : la table de correspondance est en § 12 de `PASSATION.md`.
 >
 > ✅ **Le support a été rendu, corrigé puis refondu le 5 septembre.** Le premier rendu réel a montré que des diapositives étaient coupées par le bas du cadre — 17 à la première mesure, 22 au contrôle rejoué. Elles tiennent toutes désormais, et le support a été **épuré** dans la foulée. Détail en § 0.
 
@@ -47,7 +49,7 @@ Ces quatre points portent **C3.4.2**, éliminatoire. Une démonstration qui éch
 
 | # | Action | Détail | Quand |
 |:-:|--------|--------|-------|
-| 1 | **Répéter le parcours de démonstration** | 4 min 50, chronomètre en main. Le script est en [§ 2.2 de `07-demonstration.md`](07-demonstration.md). **Trois passages minimum** — le minutage ne tient pas au premier essai | Dès maintenant |
+| 1 | **Répéter le parcours de démonstration** | 4 min 50, chronomètre en main, **en ouverture de présentation** : elle commence à la minute 1, sur un réseau et des appareils frais. Le script est en [§ 2.2 de `07-demonstration.md`](07-demonstration.md). **Trois passages minimum** — le minutage ne tient pas au premier essai | Dès maintenant |
 | 2 | **Créer le jeu de données de démonstration** | Compte principal (pseudo neutre, avatar, profil public activé), second compte connecté sur le second appareil, **deux soirées terminées** dont une avec gagnant, flamme de participation active. Liste complète en [§ 4.1](07-demonstration.md) | La veille, 15/09 |
 | 3 | **Enregistrer la vidéo de repli** | Parcours complet commenté. C'est le repli de niveau 3 : sans elle, une panne de réseau et de poste met la compétence en échec | La veille, 15/09 |
 | 4 | **Préparer l'environnement local** | Application et base prêtes à démarrer sur le poste. Repli de niveau 2. Vérifier qu'il démarre **sans réseau** | La veille, 15/09 |
@@ -60,8 +62,8 @@ Ces quatre points portent **C3.4.2**, éliminatoire. Une démonstration qui éch
 
 | # | Action | Diapo | Compétence | Détail |
 |:-:|--------|:-----:|:----------:|--------|
-| 5 | **Structurer le tableau GitHub Projects** et en faire une capture | 11 | **C3.2.1** ÉLIM | La diapositive tient sans, mais une capture rendrait l'outil de suivi visible. Le chapitre 2 § 1.5 assume déjà que le tableau est postérieur au travail : ne pas le présenter autrement |
-| 6 | **Relever une capture de facturation** GCP et AWS | 14 | **C3.2.1** ÉLIM | Étaye la ligne « coût réel » du tableau de bord. Aujourd'hui la valeur *0 €/mois* repose sur les paliers gratuits documentés, pas sur une facture |
+| 5 | **Structurer le tableau GitHub Projects** et en faire une capture | 10 | **C3.2.1** ÉLIM | La diapositive tient sans, mais une capture rendrait l'outil de suivi visible. Le chapitre 2 § 1.5 assume déjà que le tableau est postérieur au travail : ne pas le présenter autrement |
+| 6 | **Relever une capture de facturation** GCP et AWS | 13 | **C3.2.1** ÉLIM | Étaye la ligne « coût réel » du tableau de bord. Aujourd'hui la valeur *0 €/mois* repose sur les paliers gratuits documentés, pas sur une facture |
 
 ---
 
@@ -70,9 +72,9 @@ Ces quatre points portent **C3.4.2**, éliminatoire. Une démonstration qui éch
 | # | Action | Détail |
 |:-:|--------|--------|
 | 7 | **Exporter le support en PDF** | `cd slides && npm install && npm run export`. Le premier export peut demander `npx playwright install chromium` |
-| 8 | **Tester l'export sur le matériel de la salle** | Vidéoprojecteur, résolution, lisibilité depuis le fond. **Le seul bloc Mermaid restant est le schéma d'architecture de l'annexe A1 (diapositive 33)** — tous les autres schémas, dont le Gantt de la 6 et le logigramme de la 17, sont en HTML et CSS. Après le traitement du § 0, relancer `verifier-rendu.mjs` puis contrôler le PDF page à page |
+| 8 | **Tester l'export sur le matériel de la salle** | Vidéoprojecteur, résolution, lisibilité depuis le fond. **Le seul bloc Mermaid restant est le schéma d'architecture de l'annexe A1 (diapositive 28)** — tous les autres schémas, dont le Gantt de la 6 et le logigramme de la 17, sont en HTML et CSS. Après le traitement du § 0, relancer `verifier-rendu.mjs` puis contrôler le PDF page à page |
 | 9 | **Répéter le minutage global** | 30 minutes, dont 17 sur les trois compétences éliminatoires. Deux passages complets. Le contrôle automatique donne **30:00 pile**, exact chapitre par chapitre |
-| 10 | **Mémoriser les numéros de page des annexes** | A1 = 33 · A2 = 34 · A3 = 35 · A4 = 36 · A5 = 37 · A6 = 38 · A7 = 39 · A8 = 40. En mode présentateur, taper le numéro puis `Entrée` |
+| 10 | **Mémoriser les numéros de page des annexes** | A1 = 28 · A2 = 29 · A3 = 30 · A4 = 31 · A5 = 32 · A6 = 33 · A7 = 34 · A8 = 35. En mode présentateur, taper le numéro puis `Entrée` |
 | 10 bis | **Décider si les chiffres d'activité sont réancrés une dernière fois** | Le 11/09, la **v1.5.0** (07/09) a été intégrée partout où une version est comptée : 10 versions, 74 items livrés dont 51 hors chiffrage, cadence, Gantt, frise, journal. En revanche les chiffres d'**activité** (833 commits, 88 jours actifs, 122 fusions, −10 % de charge) restent ancrés sur le commit `5ce0a05f` du **05/09**, deux jours avant le tag. `master` est déjà à 1 022 commits et 94 jours actifs le 11/09. Soit on assume la date d'arrêté du 05/09 à l'oral, soit on réancre tout **une seule fois, la veille**, en rejouant § 5.1 de `PASSATION.md` et le tableau mensuel du chapitre 2 |
 
 ---

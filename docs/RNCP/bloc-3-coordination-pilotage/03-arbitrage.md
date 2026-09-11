@@ -11,7 +11,7 @@
 > - Les différentes options possibles pour y remédier sont détaillées.
 > - La décision d'arbitrage est argumentée et permet de résoudre la problématique.
 
-Alimente les diapositives 16 à 18.
+Alimente les diapositives 15 et 16.
 
 **Rappel de posture** : ce chapitre ne comporte aucun volet d'organisation cible. Le cas exposé a réellement eu lieu, la décision a réellement été prise, et son résultat est mesuré dans le dépôt.
 
@@ -207,9 +207,8 @@ Un arbitrage dont on peut vérifier après coup que les inconvénients annoncés
 
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
-| 16 | La dérive constatée et ses conséquences | 1, 2 |
-| 17 | Les options et le logigramme de décision | 3, 4 |
-| 18 | La décision et son résultat mesuré | 5, 6 |
+| 15 | La dérive constatée et ses conséquences | 1, 2 |
+| 16 | Les options, le logigramme, la décision et son résultat mesuré | 3, 4, 5, 6 |
 | A3 | Les deux arbitrages de réserve | 7 |
 
 ---

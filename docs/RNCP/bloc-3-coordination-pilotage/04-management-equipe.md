@@ -15,7 +15,7 @@
 > - Les recommandations sont réalistes et réalisables dans leur mise en œuvre.
 > - Les outils collaboratifs utilisés intègrent le partage de ressources, et les choix d'outils sont pertinents au regard de l'objectif poursuivi.
 
-Alimente les diapositives 19 à 23.
+Alimente les diapositives 17 à 20.
 
 **Posture de ce chapitre.** C'est celui où les deux registres se croisent le plus, donc celui où ils doivent être séparés le plus nettement. Le chapitre est écrit en trois parties : **A, ce qui a réellement été managé**, avec ses traces ; **B, l'organisation cible**, annoncée comme projection ; **C, l'analyse critique**, qui porte sur le réel et non sur la projection. Une autocritique d'une équipe qui n'a pas existé ne vaudrait rien.
 
@@ -195,11 +195,10 @@ La recommandation 2 est la seule qui aurait empêché la situation de C.1. Les d
 
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
-| 19 | L'organisation cible et l'affectation des missions | B.1, B.2 |
-| 20 | Les quatre styles managériaux | B.3 |
-| 21 | Techniques d'animation et outils de communication | A.2, B.4 |
-| 22 | Inclusion : handicap et contexte international | B.5 |
-| 23 | Analyse critique d'une posture et recommandations | C |
+| 17 | L'organisation cible et l'affectation des missions | B.1, B.2 |
+| 18 | Les quatre styles managériaux | B.3 |
+| 19 | Animer, partager, inclure : animation, outils, handicap et contexte international | A.2, B.4, B.5 |
+| 20 | Analyse critique d'une posture et recommandations | C |
 
 ---
 

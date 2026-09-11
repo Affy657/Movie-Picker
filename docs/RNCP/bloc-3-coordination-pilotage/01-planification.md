@@ -14,7 +14,7 @@
 > - Les tâches sont assignées aux membres de l'équipe selon leurs compétences (matrice RACI, RASCI) et tiennent compte des personnes en situation de handicap.
 > - Les points de vigilance sont soulignés.
 
-Alimente les diapositives 4 à 10.
+Alimente les diapositives 4 à 9.
 
 **Rappel de posture** : l'exécution a été menée seule. Les affectations de la matrice RACI et la répartition de charge par profil décrivent l'**organisation cible**, annoncée comme projection d'industrialisation dès l'ouverture de la présentation. Elles ne décrivent pas une équipe qui a existé.
 
@@ -283,13 +283,12 @@ Sept points, chacun avec son indicateur de contrôle et sa parade. Les deux prem
 
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
-| 4 | La méthodologie : Kanban léger à revues de version | 1 |
-| 5 | Les outils de planification et leur compatibilité | 2 |
-| 6 | Le planning en cinq phases | 3.1, 3.2 |
-| 7 | Le découpage en lots et la charge | 3.3, 3.4 |
-| 8 | Les ressources nécessaires | 4 |
-| 9 | La matrice RACI et la prise en compte du handicap | 5 |
-| 10 | Les points de vigilance | 6 |
+| 4 | Planifier : un flux, deux horizons (méthodologie et outils) | 1, 2 |
+| 5 | Le planning en cinq phases | 3.1, 3.2 |
+| 6 | Quatre lots, 98 jours-homme | 3.3, 3.4 |
+| 7 | Les ressources nécessaires | 4 |
+| 8 | La matrice RACI, et le handicap dedans | 5 |
+| 9 | Sept points de vigilance, un seul d'organisation | 6 |
 
 ## 8. Questions probables sur ce chapitre
 

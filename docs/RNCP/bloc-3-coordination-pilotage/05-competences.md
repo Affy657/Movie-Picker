@@ -13,7 +13,7 @@
 > - Des formations sont préconisées en fonction des besoins du projet et du profil des membres de l'équipe.
 > - Les modalités de formation sont adaptées pour prendre en considération les spécificités liées au handicap des personnes formées.
 
-Alimente les diapositives 24 à 26.
+Alimente les diapositives 21 à 23.
 
 **Posture de ce chapitre.** La grille et le plan sont construits sur l'**organisation cible** à 4 profils. Mais une colonne de ce chapitre est entièrement réelle : **la montée en compétences que le projet a effectivement exigée**, datée par l'historique du dépôt. C'est elle qui donne à la grille son étalonnage — les niveaux cibles ne sont pas déclaratifs, ils correspondent à ce qu'il a réellement fallu savoir faire pour livrer.
 
@@ -173,9 +173,9 @@ Le critère est explicite : les modalités de formation doivent prendre en compt
 
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
-| 24 | Les compétences à mobiliser | 1 |
-| 25 | La grille d'évaluation des compétences | 2 |
-| 26 | Le plan de développement des compétences | 3 |
+| 21 | Les compétences à mobiliser | 1 |
+| 22 | La grille d'évaluation des compétences | 2 |
+| 23 | Le plan de développement des compétences | 3 |
 
 ---
 

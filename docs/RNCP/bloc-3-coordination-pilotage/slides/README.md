@@ -52,7 +52,12 @@ npm run export
 | `.dumb` | Écart actuel → cible (haltères) |
 | `.flow` | Logigramme : `.q` question, `.r` issue, `.r.no` refus, `.r.go` décision |
 | `.tl` | Frise |
-| `.chips` | Liste d'états valeur / verdict |
+| `.chips` | Liste d'états valeur / verdict, ou sommaire |
+| `.horizons` | Deux échelles de temps emboîtées (outils de planification) |
+| `.raci` | Grille RACI colorée, une classe par lettre |
+| `.quad` | Quadrant 2 × 2, `.dom` sur la case dominante (styles managériaux) |
+| `.steps` | Trois pas numérotés (délégation, niveaux de compte rendu) |
+| `.bars` | Barres horizontales étiquetées, `.p1` / `.p3` pour la priorité, `.cont` pour une action continue (plan de formation) |
 
 **Contraintes de rendu.** Les blocs Mermaid ignorent leur `{scale: …}` dans cette version de Slidev : le SVG est contraint par `max-height` en **pixels** et non en `vh` — la toile Slidev fait 552 px de haut et n'est que mise à l'échelle par `transform`, donc une unité de fenêtre cesserait de contraindre dès que la fenêtre dépasse 1062 px.
 
@@ -67,19 +72,18 @@ npm run export
 
 | Chapitre | Diapos | Compétence | État |
 |----------|:------:|:----------:|------|
-| 0. Ouverture, produit, cadre | 1 à 3 | | ✅ |
-| 1. Planifier l'exécution | 4 à 10 | **C3.1** ÉLIM | ✅ |
-| 2. Piloter l'avancement | 11 à 15 | **C3.2.1** ÉLIM | ✅ |
-| 3. Le cas d'arbitrage | 16 à 18 | C3.2.2 | ✅ |
-| 4. Piloter l'équipe | 19 à 23 | C3.3.1 | ✅ |
-| 5. Les besoins en compétences | 24 à 26 | C3.3.2 | ✅ |
-| 6. Rendre compte au commanditaire | 27 à 29 | C3.4.1 | ✅ |
-| 7. La démonstration | 30, 31 | **C3.4.2** ÉLIM | ✅ |
-| 8. Conclusion | 32 | | ✅ |
-| Annexes pour les questions | 33 à 40 | | ✅ |
+| 0. Titre, le produit, **démonstration en direct**, cadre et sommaire | 1 à 3 | **C3.4.2** ÉLIM | ✅ |
+| 1. Planifier l'exécution | 4 à 9 | **C3.1** ÉLIM | ✅ |
+| 2. Piloter l'avancement | 10 à 14 | **C3.2.1** ÉLIM | ✅ |
+| 3. Le cas d'arbitrage | 15, 16 | C3.2.2 | ✅ |
+| 4. Piloter l'équipe | 17 à 20 | C3.3.1 | ✅ |
+| 5. Les besoins en compétences | 21 à 23 | C3.3.2 | ✅ |
+| 6. Rendre compte au commanditaire | 24 à 26 | C3.4.1 | ✅ |
+| 7. Bilan, et la demande de validation | 27 | **C3.4.2** ÉLIM | ✅ |
+| Annexes pour les questions | 28 à 35 | | ✅ |
 
-**Support complet : 40 diapositives**, dont 32 présentées et 8 annexes appelées uniquement sur question. Les 40 **tiennent dans le cadre**, vérifié par `npm run verify:rendu`. Les annexes portent la mention `ANNEXE` en bas à gauche à la place du code de compétence.
+**Support complet : 35 diapositives**, dont 27 présentées et 8 annexes appelées uniquement sur question. Les 35 **tiennent dans le cadre**, vérifié par `npm run verify:rendu`. Les annexes portent la mention `ANNEXE` en bas à gauche à la place du code de compétence.
 
-**Navigation pendant les questions** : en mode présentateur, taper le numéro de page puis `Entrée` va directement à la diapositive. A1 architecture = **33**, A2 logigramme = **34**, A3 arbitrages de réserve = **35**, A4 budget = **36**, A5 chaîne CI/CD = **37**, A6 RACI = **38**, A7 journal des versions = **39**, A8 retours utilisateurs = **40**.
+**Navigation pendant les questions** : en mode présentateur, taper le numéro de page puis `Entrée` va directement à la diapositive. A1 architecture = **28**, A2 logigramme = **29**, A3 arbitrages de réserve = **30**, A4 budget = **31**, A5 chaîne CI/CD = **32**, A6 RACI = **33**, A7 journal des versions = **34**, A8 retours utilisateurs = **35**.
 
 **Règle de numérotation** : aucune diapositive de séparation de chapitre. La page `N` de Slidev correspond exactement à la diapositive `N` du plan, et donc au rattachement des 14 éléments imposés établi dans ce plan. Le titre de chapitre est porté par la première diapositive du chapitre. Toute insertion de diapositive impose de mettre à jour le plan et la table `REFS` dans le même mouvement.

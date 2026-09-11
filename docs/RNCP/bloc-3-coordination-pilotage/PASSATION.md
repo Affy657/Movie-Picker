@@ -12,7 +12,7 @@
 | | |
 |--|--|
 | **Épreuve** | Oral de 45 min (30 de présentation + 15 de questions), le **16 septembre 2026** |
-| **État** | ✅ Rédaction terminée et **support refondu** : 7 chapitres, 40 diapositives, toutes vérifiées au rendu. Épuré, schémas à la place des gros tableaux, sans répétition |
+| **État** | ✅ Rédaction terminée et **support refondu** : 7 chapitres, 35 diapositives (27 présentées, 8 annexes), toutes vérifiées au rendu. Restructuré le 11/09 : la démonstration ouvre la présentation, 5 fusions, 9 tableaux devenus des schémas (§ 12). Épuré, schémas à la place des gros tableaux, sans répétition |
 | **Branche** | `claude/rncp-03-title-crwwov`, head `a9c2859`, **10 commits** d'avance sur `master` |
 | **Pull request** | [#83](https://github.com/Affy657/Movie-Picker/pull/83) — ✅ **fusionnée sur `master` le 06/09/2026**. Tout travail ultérieur repart de `master` : une PR fusionnée ne se réutilise pas |
 | **Reste** | Uniquement du **matériel** : répétitions minutées, jeu de données de démonstration, vidéo de repli, 2 captures, export PDF |
@@ -53,7 +53,7 @@ Chaque chapitre part d'un fait vérifiable, puis **énonce lui-même sa faibless
 ### 2.3 La numérotation du support est contractuelle
 
 - **Aucune diapositive de séparation de chapitre.** La page `N` de Slidev correspond exactement à la diapositive `N` de [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md), et donc au rattachement des **14 éléments imposés** par le règlement.
-- Le titre de chapitre est porté par sa **première diapositive** (ex. diapo 11 : « 2. Piloter l'avancement : l'outil de suivi »).
+- Le titre de chapitre est porté par sa **première diapositive** (ex. diapo 10 : « 2. Piloter l'avancement : l'outil de suivi »).
 - **Toute insertion ou suppression de diapositive** oblige à mettre à jour, dans le même commit : le plan (§ 1 et § 4), la table `REFS` de `slides/global-bottom.vue`, et le tableau d'avancement de `slides/README.md`.
 
 ### 2.4 Le support est épuré, et doit le rester
@@ -113,7 +113,7 @@ git log origin/master --date=format:'%Y-%m' --pretty=format:'%ad' | sort | uniq 
 
 ### 4.3 Le frontmatter par diapositive Slidev est un piège
 
-Un bloc `---\nlayout: center\n---` mal interprété crée une **diapositive vide** et décale toute la numérotation — donc la table `REFS` et le rattachement des 14 éléments imposés. Il a été **retiré** de la diapositive 30 au profit de classes utilitaires (`text-center`, `mx-auto`). **Ne pas le réintroduire** sans revérifier le compte de diapositives.
+Un bloc `---\nlayout: center\n---` mal interprété crée une **diapositive vide** et décale toute la numérotation — donc la table `REFS` et le rattachement des 14 éléments imposés. Il a été **retiré** de l'ancienne diapositive 30, aujourd'hui fusionnée dans la 2, au profit de classes utilitaires (`text-center`, `mx-auto`). **Ne pas le réintroduire** sans revérifier le compte de diapositives.
 
 ### 4.4 `npm install` échoue sur le téléchargement du navigateur
 
@@ -210,7 +210,7 @@ lines=s.split('\n'); idx=[i for i,l in enumerate(lines) if l.strip()=='---']
 start=idx[1]+1; chunks=[]
 for i in idx[2:]: chunks.append(lines[start:i]); start=i+1
 chunks.append(lines[start:])
-print('diapos :', len(chunks), '(attendu 40)')
+print('diapos :', len(chunks), '(attendu 35)')
 bad=0
 for n,c in enumerate(chunks,1):
     body=re.sub(r'<!--.*?-->','','\n'.join(c),flags=re.S)
@@ -218,15 +218,15 @@ for n,c in enumerate(chunks,1):
     if o!=cl: print(f'  !! diapo {n} : div {o}/{cl}'); bad+=1
     if not [l for l in c if l.startswith('# ')]: print(f'  !! diapo {n} sans titre H1')
 d=re.findall(r'DUREE (\d+):(\d\d)', s); tot=sum(int(a)*60+int(b) for a,b in d)
-print(f'durees : {len(d)} (attendu 32) · total {(tot+290)//60}:{(tot+290)%60:02d} demo comprise (attendu 30:00)')
-for c,(a,b) in {0:(1,3),1:(4,10),2:(11,15),3:(16,18),4:(19,23),5:(24,26),6:(27,29),7:(30,31),8:(32,32)}.items():
-    t=sum(int(d[n-1][0])*60+int(d[n-1][1]) for n in range(a,b+1))+(290 if c==7 else 0)
+print(f'durees : {len(d)} (attendu 27) · total {(tot+290)//60}:{(tot+290)%60:02d} demo comprise (attendu 30:00)')
+for c,(a,b) in {0:(1,3),1:(4,9),2:(10,14),3:(15,16),4:(17,20),5:(21,23),6:(24,26),7:(27,27)}.items():
+    t=sum(int(d[n-1][0])*60+int(d[n-1][1]) for n in range(a,b+1))+(290 if c==0 else 0)
     print(f'  ch.{c} : {t//60}:{t%60:02d}')
 print('desequilibres div :', bad)
 PY
 ```
 
-**Cibles** : 40 diapositives · 32 durées · total 30:00 · chapitres 1:30 / 6:30 / 5:00 / 2:30 / 3:30 / 2:30 / 2:30 / 5:30 / 0:30.
+**Cibles** : 35 diapositives · 27 durées · total 30:00 · chapitres 6:30 (démonstration comprise) / 6:20 / 5:20 / 2:20 / 3:30 / 2:40 / 2:40 / 0:40.
 
 ### 5.4 Rendu du support — le contrôle que les autres ne font pas
 
@@ -274,7 +274,7 @@ PY
 | [`05-competences.md`](05-competences.md) | C3.3.2 | Diapos 24 à 26 |
 | [`06-comptes-rendus.md`](06-comptes-rendus.md) | C3.4.1 | Diapos 27 à 29 |
 | [`07-demonstration.md`](07-demonstration.md) | C3.4.2 **ÉLIM** | Diapos 30 et 31, et la démonstration en direct |
-| [`slides/slides.md`](slides/slides.md) | — | Le support, 40 diapositives |
+| [`slides/slides.md`](slides/slides.md) | — | Le support, 35 diapositives |
 | [`RESTE-A-FAIRE.md`](RESTE-A-FAIRE.md) | — | Ce qui reste, priorisé |
 
 **Le sens de la dépendance** : les fichiers de matière sont la **source de vérité**, le support en est dérivé. Modifier une diapositive sans mettre à jour le chapitre correspondant crée une divergence qui se paiera à la relecture suivante.
@@ -340,3 +340,16 @@ Déclenchée par une remarque du propriétaire du projet, et elle change la règ
 **Ce qui n'a pas changé, et ne doit pas changer** : les 40 diapositives, la numérotation, le rattachement des 14 éléments imposés, le minutage à 30:00 exact chapitre par chapitre, et l'ordre des chapitres — qui est celui du référentiel, ce qui permet au jury de cocher compétence par compétence sans chercher.
 
 **Le piège de rédaction à connaître** : dans un bloc HTML, une ligne qui commence par une balise **inline** (`<b>`, `<span>`) après une ligne vide est enveloppée dans un `<p>` par markdown, ce qui casse la grille CSS. Commencer chaque ligne par `<div>`. C'est ce qui avait cassé la grille de compétences au premier essai.
+
+## 12. Restructuration du 11 septembre 2026
+
+Trois consignes du propriétaire du projet, appliquées ensemble : **moins de texte, moins de diapositives et de répétitions, le plus de schémas possible** ; et **la démonstration ouvre la présentation**, parce qu'un jury qui a vu le produit comprend mieux le pilotage qui a mené là. L'ordre des chapitres 1 à 6 reste celui du référentiel, qui est aussi l'ordre chronologique du projet ; la demande de validation, elle, ferme la présentation.
+
+**Ce qui a changé.** 40 → 35 diapositives, 32 → 27 présentées, volume de texte des diapositives présentées en baisse de 16 % (35 200 → 29 400 caractères). La densité moyenne par diapositive reste proche de 1 100 caractères, les fusions concentrant ce qu'elles regroupent : les plus lourdes sont désormais la 16 (options + logigramme + décision), la 19 et la 23, à alléger encore si la relecture le demande. Cinq fusions : méthode + outils de planification (ancienne 4 + 5 → 4), logigramme + décision (17 + 18 → 16), animation + inclusion (21 + 22 → 19), annonce de la démonstration absorbée dans la diapositive produit (30 → 2), validation + bilan (31 + 32 → 27). Dix tableaux devenus des schémas : lots en barre empilée (6), ressources en indicateurs (7), RACI en grille colorée (8), vigilance en cartes (9), outil de suivi en indicateurs (10), dérive en frise (15), styles en quadrant (18), plan de développement en barres (23), compte rendu en pas et en barre (25), satisfaction en indicateurs et frise (26). Répétitions retirées : « une version tous les 17 jours » et les « 9 livraisons » de l'ancienne diapositive 4, les 98 J/H par profil ne sont plus qu'en 17.
+
+**Correspondance ancienne → nouvelle numérotation**, pour lire les sections historiques de ce fichier et de `RESTE-A-FAIRE.md` : 1 → 1 · 2 + 30 → 2 · 3 → 3 · 4 + 5 → 4 · 6 → 5 · 7 → 6 · 8 → 7 · 9 → 8 · 10 → 9 · 11 → 10 · 12 → 11 · 13 → 12 · 14 → 13 · 15 → 14 · 16 → 15 · 17 + 18 → 16 · 19 → 17 · 20 → 18 · 21 + 22 → 19 · 23 → 20 · 24 → 21 · 25 → 22 · 26 → 23 · 27 → 24 · 28 → 25 · 29 → 26 · 31 + 32 → 27 · annexes 33 à 40 → 28 à 35.
+
+**Ce qui n'a pas changé** : le minutage à 30:00 exact chapitre par chapitre, les 14 éléments imposés tous rattachés (le plan § 1 porte la nouvelle table), les deux registres annoncés en diapositive 3, les limites assumées.
+
+**Piège de rendu découvert** : les primitives `.kpi`, `.tl`, `.steps` et `.quad` stylent leur `<b>` de titre en bloc. Un `<b>` imbriqué dans le texte d'une de ces primitives cassait la ligne et changeait de taille : les sélecteurs sont désormais `> b` pour le titre, et `span b` / `i b` héritent. Toute nouvelle primitive doit suivre la même règle.
+
