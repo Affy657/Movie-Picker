@@ -79,7 +79,7 @@ Critères visés par la démonstration : le logiciel est utilisable, la démonst
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
 | 1 | Movie Picker, coordonner et piloter un projet de développement logiciel | 0:10 | Titre, Bloc 3 RNCP 39583, Adrien MORAND, 16 septembre 2026 |
-| 2 | Un projet mené seul | 0:40 | Une personne, pas d'équipe ; 64 % des commits du projet co-signés par un agent, aucun avant le 13 mai, sous cadre écrit ; là où le référentiel parle d'équipe, ce qui a été fait réellement. Sommaire : la démonstration puis les 7 chapitres, chacun avec sa compétence, les 3 éliminatoires signalées |
+| 2 | Sommaire | 0:40 | Les 8 chapitres, chacun avec sa compétence, les 3 éliminatoires signalées. Rien d'autre à l'écran : le solo est dit à voix haute, une personne, pas d'équipe, 64 % des commits co-signés par un agent sous cadre écrit, et là où le référentiel parle d'équipe, ce qui a été fait réellement |
 | 3 | 1. Démonstration | 0:50 | Un seul mot et le lien du site en production, `web.movie-picker.fr`. Dit à voix haute, rien à l'écran : 10 versions livrées de février à septembre 2026, 17 comptes, 74 % des soirées menées jusqu'au tirage, puis les 6 temps du parcours en une phrase. Deux appareils. Le plan de repli à 4 niveaux est en note de présentateur |
 | | **Démonstration en direct** | 4:50 | Parcours détaillé au point 5 |
 

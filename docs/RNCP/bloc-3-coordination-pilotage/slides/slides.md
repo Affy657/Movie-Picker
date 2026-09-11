@@ -30,29 +30,9 @@ Ne rien commenter ici. Enchainer immediatement sur la diapo 2.
 
 ---
 
-# Un projet mené seul
+# Sommaire
 
-<div class="grid grid-cols-2 gap-8 mt-2 text-sm">
-<div>
-
-<div class="note mb-3">
-<b>Une personne</b>, développeur, architecte, exploitant et chef de projet, du 27 février au 16 septembre 2026. Les chiffres, les décisions et les erreurs qui suivent sont les miens.
-</div>
-
-<div class="note mb-3">
-<b>Pas sans déléguer.</b> <b>64 % des commits</b> du projet sont co-signés par un agent IA, aucun avant le 13 mai, sous un cadre écrit : conventions opposables, trois points d'arrêt, contrôle en sortie.
-</div>
-
-<div class="alert">
-Là où le référentiel parle d'équipe, je montre ce que j'ai réellement fait, et je dis ce qui n'a pas d'équivalent à une personne.
-</div>
-
-</div>
-<div>
-
-### Sommaire
-
-<div class="chips">
+<div class="chips mt-6" style="font-size:1.05rem;gap:0.55rem 0;max-width:44rem;margin-left:auto;margin-right:auto">
 <div><span><b>1.</b> Démonstration en production</span><u>C3.4.2, éliminatoire</u></div>
 <div><span><b>2.</b> Planifier l'exécution</span><u>C3.1, éliminatoire</u></div>
 <div><span><b>3.</b> Piloter l'avancement</span><u>C3.2.1, éliminatoire</u></div>
@@ -63,11 +43,9 @@ Là où le référentiel parle d'équipe, je montre ce que j'ai réellement fait
 <div><span><b>8.</b> Bilan, et la validation du périmètre livré</span><u>C3.4.2, éliminatoire</u></div>
 </div>
 
-</div>
-</div>
-
 <!--
-DUREE 0:40. AVANT LA DEMONSTRATION. DIAPO CRITIQUE POUR LES 15 MINUTES DE
+DUREE 0:40. AVANT LA DEMONSTRATION. RIEN D'AUTRE A L'ECRAN QUE LE SOMMAIRE :
+TOUT CE QUI SUIT SE DIT. DIAPO CRITIQUE POUR LES 15 MINUTES DE
 QUESTIONS.
 
 Dire la phrase telle quelle : « Le projet a ete mene seul. Je ne vais pas vous
