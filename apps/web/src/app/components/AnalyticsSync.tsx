@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useConsent } from '@/shared/contexts/ConsentContext';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import { identify, resetIdentity, optIn, optOut } from '@/shared/analytics/posthog';
+import { identify, initPostHog, resetIdentity, optIn, optOut } from '@/shared/analytics/posthog';
 
 export default function AnalyticsSync() {
   const { analytics, decided } = useConsent();
@@ -9,11 +9,11 @@ export default function AnalyticsSync() {
 
   useEffect(() => {
     if (!decided) return;
-    if (analytics) {
-      optIn();
-    } else {
+    if (!analytics) {
       optOut();
+      return;
     }
+    void initPostHog().then(optIn);
   }, [analytics, decided]);
 
   useEffect(() => {

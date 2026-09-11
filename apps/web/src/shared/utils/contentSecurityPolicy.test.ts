@@ -67,6 +67,10 @@ describe('buildContentSecurityPolicy', () => {
     expect(connectSrc).toContain('https://image.tmdb.org');
   });
 
+  it('autorise les modules distants de PostHog comme scripts', () => {
+    expect(directive(policy, 'script-src')).toContain('https://eu-assets.i.posthog.com');
+  });
+
   it('garde les directives de verrouillage', () => {
     expect(directive(policy, 'default-src')).toBe("default-src 'self'");
     expect(directive(policy, 'object-src')).toBe("object-src 'none'");
