@@ -43,7 +43,10 @@ export async function spinWheelAndDismissWinner(page: Page): Promise<void> {
   const dialog = page.getByRole('dialog').filter({ hasText: /film sélectionné/i });
   await expect(dialog).toBeVisible({ timeout: 20_000 });
   await dialog.getByRole('button', { name: /c.est parti/i }).click();
-  await expect(page.getByText(/film gagnant/i).first()).toBeVisible({ timeout: 15_000 });
+  const winnerBadge = page
+    .getByRole('region', { name: 'Films proposés' })
+    .getByText('Film gagnant', { exact: true });
+  await expect(winnerBadge.first()).toBeVisible({ timeout: 15_000 });
 }
 
 export async function registerAccount(page: Page, displayName: string): Promise<void> {
