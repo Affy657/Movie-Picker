@@ -15,7 +15,7 @@
 | **Pull request** | [#85](https://github.com/Affy657/Movie-Picker/pull/85) — fusionnée le 2026-09-08 (`9fb24df`). Une PR fusionnée ne se réutilise pas : tout travail ultérieur repart de `master` |
 | **Contenu** | 2 commits de roadmap (découpage Terraform en 8 lots), 2 commits de CI/CD livrés, ce document |
 | **État CI** | verte, déploiements API et front passés (§ 6) |
-| **Reste** | rien sur ce chantier ; les 8 lots Terraform de [`roadmap-tech.md`](roadmap-tech.md) restent à ouvrir |
+| **Reste** | rien sur ce chantier ; les 8 lots Terraform du backlog tech de [`roadmap-product.md`](roadmap-product.md) restent à ouvrir |
 
 Ce qui est **livré et vérifiable dans le dépôt** :
 
@@ -25,7 +25,7 @@ Ce qui est **livré et vérifiable dans le dépôt** :
 - `.github/workflows/rollback.yml` — en-tête corrigé (procédure de restauration front, épinglage du trafic).
 
 Ce qui est **planifié mais pas commencé** : les 8 lots Terraform de
-[`roadmap-tech.md`](roadmap-tech.md), dont la migration du front d'AWS vers GCP.
+le backlog tech de [`roadmap-product.md`](roadmap-product.md), dont la migration du front d'AWS vers GCP.
 
 ---
 

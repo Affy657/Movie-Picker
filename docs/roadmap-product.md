@@ -2,9 +2,7 @@
 
 **Nom du projet : Movie Picker.**
 
-Découpage par version côté **métier / utilisateur**.
-- Spec complète → [spec.md](spec.md).
-- Roadmap **plateforme & qualité** → [roadmap-tech.md](roadmap-tech.md).
+Découpage par version, côté **métier / utilisateur** puis côté **plateforme**. Chaque version liste d'abord ses features, puis une section **Tech** pour le travail transverse. Spec complète → [spec.md](spec.md).
 
 ---
 
@@ -12,8 +10,8 @@ Découpage par version côté **métier / utilisateur**.
 
 - **MVP** : parcours minimal utilisable côté utilisateur.
 - **V1, V1.1, V1.2** : releases produit progressives sur la spec complète, sans casser le cœur métier.
-- **V1.3, V1.4, V1.5, V1.6, V1.7** : polish, enrichissement, outils hôte et nouvelles surfaces produit.
-- **Backlog** : idées et sujets non planifiés sur une date de release (tri régulier).
+- **V1.3 à V1.8** : polish, enrichissement, outils hôte et nouvelles surfaces produit.
+- **Backlog** : idées et sujets non planifiés sur une date de release, triés régulièrement. Un backlog produit et un backlog tech, séparés, à la fin du fichier.
 - **Tailles t-shirt** : chaque item porte une estimation de charge, indépendante de sa valeur produit, pour comparer les versions autrement qu'au nombre de tickets. Échelle calibrée sur l'empreinte réelle des features déjà livrées.
   - `S` : moins de 800 lignes, une seule couche (front ou API), pas de changement de modèle.
   - `M` : 800 à 2000 lignes, front et API, au plus un champ ajouté au modèle.
@@ -21,11 +19,13 @@ Découpage par version côté **métier / utilisateur**.
   - `XL` : au-delà, chantier structurant à découper en sous-tâches. Aucune feature livrée n'a atteint cette bande à ce jour.
   - `?` : périmètre pas assez défini pour être estimé.
 - **Poids d'une version** : somme des tailles de ses items, reportée dans le titre. `S` vaut 1, `M` vaut 3, `L` vaut 8, `XL` vaut 20 ; un `?` ne compte pas. C'est ce nombre qui permet de comparer deux versions et de décider d'y ajouter ou d'en retirer une feature.
-- **Format d'une entrée** : une ligne, ``- <statut> `taille` **Titre** (version) : description``. La description tient en une à deux phrases et 300 caractères au plus, et dit ce que l'utilisateur obtient plutôt que comment c'est construit. Le détail vit dans le code, la spec et les tests.
+- **Produit ou tech** : une entrée va en section Tech si elle est **transverse et indépendante de toute feature** (CI/CD, infra, sécurité de la chaîne, observabilité, outillage qualité). L'implémentation technique d'une feature (schéma, endpoints, cache) appartient à la feature elle-même.
+- **Types d'entrée tech** : 🏗️ infra et déploiement, ⚙️ CI/CD et qualité, 🔒 sécurité, 📊 observabilité, ♿ accessibilité.
+- **Format d'une entrée** : une ligne, ``- <statut> `type` `taille` **Titre** (version) : description``, le type n'étant porté que par les entrées tech. La description tient en une à deux phrases et 300 caractères au plus, et dit ce que l'utilisateur obtient plutôt que comment c'est construit. Le détail vit dans le code, la spec et les tests.
 
 ---
 
-## ✅ MVP – Livré (32 points)
+## ✅ MVP – Livré (32 points produit, 34 points tech)
 
 **Objectif** : application démoable avec le parcours Movie Picker minimal.
 
@@ -37,9 +37,19 @@ Découpage par version côté **métier / utilisateur**.
 - ✅ `M` **Roue** : lancement par l'hôte ; tirage parmi les films ; animation puis film gagnant ; « Clôturer la soirée » ; cas limites (0 film, 1 film) gérés.
 - ✅ `S` **Expiration & lecture seule** : soirée terminée à date/heure ; UI en lecture seule avec message adapté.
 
+**Tech**
+
+- ✅ 🏗️ `L` **Déploiement** : API en conteneur sur Cloud Run, front statique sur S3 et CloudFront avec repli SPA, variables et secrets documentés.
+- ✅ ⚙️ `L` **CI/CD** : GitHub Actions pour la construction, les tests, l'image Docker de l'API et les deux déploiements.
+- ✅ ⚙️ `M` **Qualité de code** : ESLint et Prettier côté front, `dotnet format` et analyzers côté API, `pnpm audit` en CI.
+- ✅ ⚙️ `L` **Tests** : Vitest et Testing Library avec couverture côté front ; unitaires, intégration et contrat OpenAPI côté API, Playwright en local.
+- ✅ 🔒 `M` **Sécurité de production** : HTTPS, CORS par liste blanche, rate limiting, secrets dans Secret Manager et en-têtes de sécurité.
+- ✅ 📊 `M` **Observabilité** : journal structuré, identifiant de corrélation, erreurs JSON homogènes et métriques Cloud Run et CloudFront.
+- ✅ ⚙️ `S` **Vérification locale** : `pnpm run verify:local` rejoue architecture, lint, format et les deux suites de tests avant tout envoi.
+
 ---
 
-## ✅ V1 – Livré (42 points)
+## ✅ V1 – Livré (42 points produit, 26 points tech)
 
 **Objectif** : compte utilisateur, config hôte, marqueur « déjà vu », confort de partage, enrichissement film léger.
 
@@ -60,9 +70,17 @@ Découpage par version côté **métier / utilisateur**.
 - ✅ `S` **Suppression d'événement** : l'hôte peut supprimer une soirée depuis les paramètres (zone danger).
 - ✅ `S` **Expulsion d'un participant** : l'hôte peut retirer un participant de la soirée.
 
+**Tech**
+
+- ✅ 🏗️ `XL` **Migration de l'API vers .NET** : l'API Node.js est remplacée par ASP.NET Core entre le MVP et la V1, à routes et contrat JSON identiques.
+- ✅ 🔒 `M` **Analyse statique SonarCloud** : API et front analysés à chaque envoi, quality gate bloquante sur les bugs, les vulnérabilités et les points chauds.
+- ✅ 🔒 `S` **Audit des dépendances NuGet** : `dotnet list package --vulnerable` après restauration, en échec sur une faille haute ou critique.
+- ✅ 🔒 `S` **Scan de l'image Docker** : recherche de CVE sur l'image taguée avant sa publication au registre.
+- ✅ 🔒 `S` **Protection des secrets** : détection et blocage au push côté GitHub, procédure de rotation documentée.
+
 ---
 
-## ✅ V1.1 – Livré (23 points)
+## ✅ V1.1 – Livré (23 points produit, 3 points tech)
 
 **Objectif** : contenu film riche, options de soirée, historique, UX avancée.
 
@@ -75,9 +93,13 @@ Découpage par version côté **métier / utilisateur**.
 - ✅ `S` **Liens critiques & bases de données** : boutons « Ouvrir sur Letterboxd », « Ouvrir sur IMDb » et « Ouvrir sur AlloCiné » dans le menu d'actions d'une card film ; redirection directe via l'ID TMDB pour Letterboxd, recherche titre + année pour IMDb et AlloCiné.
 - ✅ `L` **Notifications push PWA** : abonnement VAPID depuis la page compte ; notification quand un participant rejoint la soirée (hôte) ; rappel automatique 1 h avant l'heure prévue (participants) ; préférences par notification configurables.
 
+**Tech**
+
+- ✅ 🏗️ `M` **PWA** : manifeste, icônes, écran de démarrage et service worker, pour l'installation sur l'écran d'accueil et un chargement partiel sans réseau.
+
 ---
 
-## ✅ V1.2 – Livré (23 points)
+## ✅ V1.2 – Livré (23 points produit, 7 points tech)
 
 **Objectif** : vie sociale de l'app, identité utilisateur et engagement.
 
@@ -90,9 +112,15 @@ Découpage par version côté **métier / utilisateur**.
 - ✅ `M` **Follow léger entre utilisateurs** : retrouver facilement ses potes sur l'app pour les réinviter ; brique de base des invitations in-app.
 - ✅ `S` **Historique de recherche dans la barre de film** : dans la page soirée, la barre de recherche de films affiche les dernières recherches effectuées par l'utilisateur ; sélection rapide d'une recherche passée en un clic ; effacement individuel ou global de l'historique ; persistance locale (localStorage) par utilisateur.
 
+**Tech**
+
+- ✅ ♿ `S` **Accessibilité étendue** : lien d'évitement, focus visible global, navigation clavier complète et couverture axe sur sept pages.
+- ✅ 🔒 `M` **Bandeau de consentement** : choix granulaire au premier accès, persistant et modifiable depuis le footer ; il conditionne le chargement de tout SDK tiers.
+- ✅ 📊 `M` **Analytics produit** : mesure d'usage et entonnoirs via PostHog, en production seule et seulement après consentement.
+
 ---
 
-## ✅ V1.3 – Livré (28 points)
+## ✅ V1.3 – Livré (28 points produit, 4 points tech)
 
 **Objectif** : polish et qualité perçue, avec roue visuelle, finitions UX, conformité légale et enrichissement des données film.
 
@@ -108,9 +136,14 @@ Découpage par version côté **métier / utilisateur**.
 - ✅ `S` **Export calendrier (.ics)** : bouton « Ajouter au calendrier » sur la soirée, compatible Google Calendar, Outlook, Apple Calendar.
 - ✅ `L` **Refonte de la page soirée** : barre de soirée avec état et compte à rebours, actions de décision toujours à portée, participants repliés derrière une pile d'avatars, réglages hôte derrière un engrenage et partage regroupé dans un menu « Inviter ».
 
+**Tech**
+
+- ✅ ⚙️ `S` **Dependabot** : mises à jour groupées mensuelles sur npm, NuGet, Docker et les actions, plus les correctifs de sécurité automatiques.
+- ✅ 📊 `M` **Sentry** : erreurs front et API remontées dans deux projets SaaS européens, sans donnée personnelle, source maps et version liées au commit.
+
 ---
 
-## ✅ V1.4 – Livré (49 points)
+## ✅ V1.4 – Livré (49 points produit, 3 points tech)
 
 **Objectif** : outils hôte avancés, bibliothèque personnelle, engagement utilisateur et ouverture de la plateforme, avec watchlist, intégration Letterboxd, sélection manuelle, streak de soirées, connexion sociale, dons, bouton pour proposer une idée et modale de nouveautés.
 
@@ -124,6 +157,10 @@ Découpage par version côté **métier / utilisateur**.
 - ✅ `S` **Modale de nouveautés** : à la première visite suivant une mise à jour, une modale résume ce qui a changé dans la version. Affichée une seule fois par version, et consultable ensuite à la demande.
 - ✅ `M` **Bouton « Proposer une idée »** : action unique accessible depuis le footer ou le menu compte, titre et description libre ; la soumission crée automatiquement une GitHub Issue sur le dépôt via l'API GitHub (token serveur, aucune credential exposée côté client) ; confirmation visuelle après envoi.
 - ✅ `S` **Bouton d'installation PWA** (2026-08-24) : « Installer l'app » dans le footer et le menu compte ; prompt natif Chrome/Edge/Android, guide iOS et navigateurs in-app, masqué une fois l'app ouverte en standalone.
+
+**Tech**
+
+- ✅ 🔒 `M` **OAuth, volet infra** : bibliothèque OAuth côté API et secrets dédiés par fournisseur, un fournisseur sans secret étant masqué sans erreur. Les applications Google et GitHub restent à créer hors du dépôt.
 
 ---
 
@@ -241,3 +278,20 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 - `S` **Contact / Support** : formulaire ou adresse dédiée pour signaler un problème, distinct du bouton « Proposer une idée » réservé aux suggestions de features.
 - `M` **Onboarding pour nouveaux utilisateurs** : mini tour guidé ou écran de bienvenue à la première connexion, expliquant le concept (créer une soirée, voter, la roue).
 - `M` **Statut du service** : page publique indiquant si l'API et le site sont opérationnels.
+
+---
+
+## Backlog tech (non priorisé sur une release) (23 points)
+
+> **Note, découpage du chantier Terraform** : l'item `XL` d'origine est coupé en huit lots livrables un par un, dans leur ordre de dépendance. Les lots 3 et 4 sortent le front d'AWS avant les lots d'identité et de CI : décrire puis outiller un hébergement qu'on s'apprête à supprimer serait du travail jeté. Le gain visé est la consolidation, pas l'économie.
+
+- ⬜ 🏗️ `S` **Terraform 1, socle et état distant** : arborescence dédiée, versions épinglées, état distant versionné et verrouillé, `fmt` et `validate` ajoutés à la vérification locale et à la CI. Aucune ressource décrite à ce stade.
+- ⬜ 🏗️ `M` **Terraform 2, prod GCP décrite et importée** : registre d'images, service Cloud Run et entrées Secret Manager décrits puis **importés**, jamais recréés. Le lot est fini quand `terraform plan` revient vide sur la prod en service.
+- ⬜ 🏗️ `M` **Terraform 3, front hébergé sur GCP** : cible GCP décrite avec parité stricte sur le repli SPA, les en-têtes de sécurité et les trois paliers de cache de CloudFront. Publiée en parallèle et vérifiée sur un sous-domaine temporaire, sans impact utilisateur.
+- ⬜ 🏗️ `S` **Terraform 4, bascule DNS et sortie d'AWS** : élargir les origines autorisées, repointer le CNAME chez OVH, observer les sondes, puis supprimer distribution, bucket, certificat et utilisateur IAM. Le certificat est un wildcard : vérifier qu'aucun autre sous-domaine ne s'en sert.
+- ⬜ 🔒 `M` **Terraform 5, IAM décrit et clés longue durée retirées** : comptes de service au moindre privilège pour l'exécution comme pour le pipeline, et la clé JSON de déploiement remplacée par une fédération d'identité.
+- ⬜ ⚙️ `S` **Terraform 6, plan en PR et apply sur master** : job dédié, `plan` publié en commentaire de PR, `apply` derrière l'environnement de production. Une dérive de configuration se voit alors en revue plutôt qu'en incident.
+- ⬜ 📊 `M` **Terraform 7, supervision décrite en IaC** : les trois sondes de disponibilité, les cinq politiques d'alerte, le canal de notification et le tableau de bord, aujourd'hui créés par appels d'API et non versionnés.
+- ⬜ 🏗️ `L` **Terraform 8, environnement de recette** : seconde instanciation des modules des lots 2, 3 et 5, avec son entrée DNS et un déploiement qui passe par la recette avant la prod. Son coût dépend entièrement des lots précédents.
+
+> **Note, cible d'hébergement du front (lot 3)** : Firebase Hosting plutôt que Cloud Storage et Cloud CDN, dont la règle de transfert coûte près de 18 $ par mois avant le premier octet servi et ferait sortir le projet du « 0 €/mois » suivi comme indicateur. Seul point à surveiller : 360 Mo par jour, loin du trafic mesuré.

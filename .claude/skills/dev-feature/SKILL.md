@@ -1,6 +1,6 @@
 ---
 name: dev-feature
-description: Flow de dev complet d'une feature roadmap Movie Picker, de la lecture du scope au déploiement. Déclenché avec « /dev-feature <nom de la feature> ». L'argument est le nom (ou un extrait) d'une feature présente dans une roadmap (docs/roadmap-product.md, docs/roadmap-tech.md).
+description: Flow de dev complet d'une feature roadmap Movie Picker, de la lecture du scope au déploiement. Déclenché avec « /dev-feature <nom de la feature> ». L'argument est le nom (ou un extrait) d'une feature présente dans la roadmap (docs/roadmap-product.md).
 ---
 
 # /dev-feature — flow de dev d'une feature
@@ -15,7 +15,7 @@ Les règles de style et de workflow du repo (zéro commentaire, `verify:local` a
 
 ## Étape 1 — Lire la feature
 
-- Chercher `$ARGUMENTS` dans, par ordre : [docs/roadmap-product.md](../../../docs/roadmap-product.md), [docs/roadmap-tech.md](../../../docs/roadmap-tech.md).
+- Chercher `$ARGUMENTS` dans [docs/roadmap-product.md](../../../docs/roadmap-product.md), features d'abord, puis les sections Tech.
 - Lire la ligne trouvée + tout doc lié qu'elle référence (ex. `docs/parcours-soiree.md`) pour comprendre le scope réel.
 - Si rien ne correspond, ne pas inventer : lister les features approchantes trouvées et demander laquelle.
 

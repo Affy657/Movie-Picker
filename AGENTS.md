@@ -117,8 +117,7 @@ Monorepo pnpm + Turbo :
 
 ## Documentation clé
 
-- **Roadmap produit** (features par version, statuts) → [`docs/roadmap-product.md`](docs/roadmap-product.md)
-- **Roadmap tech** (infra, CI/CD, qualité, sécurité) → [`docs/roadmap-tech.md`](docs/roadmap-tech.md)
+- **Roadmap** (features par version et statuts, puis une section Tech par version pour l'infra, la CI/CD, la qualité et la sécurité) → [`docs/roadmap-product.md`](docs/roadmap-product.md)
 - **Passation CI/CD & sauvegarde** (état, gestes externes en attente, pièges connus) → [`docs/passation-ci-cd.md`](docs/passation-ci-cd.md) — à lire avant de toucher au déploiement ou à la sauvegarde
 
 ## Accès outils externes (autonomie agent)
