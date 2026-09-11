@@ -13,6 +13,8 @@ export interface EventConfigData {
   maxProposalsPerParticipant: number | null;
 
   maxParticipants: number | null;
+
+  maxVotesPerParticipant?: number | null;
   wheelMode: WheelMode;
 
   richSharePreview?: boolean;

@@ -935,6 +935,10 @@
       maxProposalsLabel: 'Films max par personne',
       maxProposalsHint: '{{max}} au maximum.',
       maxProposalsInvalid: 'Films par personne : nombre entier entre 1 et {{max}}.',
+      voteLimitLabel: 'Limiter les votes par participant',
+      voteLimitDesc: 'Chaque participant ne peut voter que pour un nombre fixe de films.',
+      maxVotesLabel: 'Votes par participant',
+      maxVotesInvalid: 'Votes par participant : nombre entier à partir de 1.',
       winnerCountLabel: 'Films gagnants',
       winnerCountInvalid: 'Indiquez un nombre entre 1 et {{max}}.',
       winnerCountHint:
@@ -1098,6 +1102,12 @@
       voteErrorRow: 'Ton vote n’a pas été enregistré. Vérifie ta connexion.',
       retryVoteAction: 'Réessayer',
       voteToolbarAria: 'Votes pour « {{title}} »',
+      voteLimitReachedTitle: 'Limite de votes atteinte',
+      voteLimitReachedOne:
+        'Vous avez déjà posé votre vote pour cette soirée. Retirez-le pour voter pour un autre film.',
+      voteLimitReachedMany:
+        'Vous avez déjà posé vos {{max}} votes pour cette soirée. Retirez-en un pour voter pour un autre film.',
+      voteLimitReachedOk: 'Compris',
       letterboxdButton: 'Ouvrir sur Letterboxd',
       imdbButton: 'Ouvrir sur IMDb',
       allocineButton: 'Ouvrir sur AlloCiné',

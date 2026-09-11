@@ -11,6 +11,8 @@ public sealed class EventTemplateResponse
 
     public int? MaxParticipants { get; init; }
 
+    public int? MaxVotesPerParticipant { get; init; }
+
     public WheelMode WheelMode { get; init; }
 
     public bool RichSharePreview { get; init; }
@@ -29,6 +31,7 @@ public sealed class EventTemplateResponse
             Theme = config.Theme,
             MaxProposalsPerParticipant = config.MaxProposalsPerParticipant,
             MaxParticipants = config.MaxParticipants,
+            MaxVotesPerParticipant = config.MaxVotesPerParticipant,
             WheelMode = config.WheelMode,
             RichSharePreview = config.RichSharePreview,
             AllowSeries = config.AllowSeries,
@@ -49,6 +52,8 @@ public sealed class SaveEventTemplateRequest
     public int? MaxProposalsPerParticipant { get; init; }
 
     public int? MaxParticipants { get; init; }
+
+    public int? MaxVotesPerParticipant { get; init; }
 
     public WheelMode? WheelMode { get; init; }
 

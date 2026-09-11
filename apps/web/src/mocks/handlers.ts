@@ -63,6 +63,7 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
           theme: opts.theme ?? null,
           maxProposalsPerParticipant: null,
           maxParticipants: null,
+          maxVotesPerParticipant: null,
           wheelMode: 'strictRandom',
           winnerCount: opts.winnerCount ?? 1,
           winnerCountMax: 10,

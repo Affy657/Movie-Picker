@@ -28,6 +28,7 @@ import { setStoredParticipant } from '@/features/events/storage';
 import { ROUTES } from '@/app/routes';
 import {
   DEFAULT_EVENT_CONFIG,
+  DEFAULT_VOTE_LIMIT,
   MAX_EVENT_PARTICIPANTS,
   MAX_PROPOSALS_PER_PARTICIPANT,
   MAX_WINNERS_PER_EVENT,
@@ -64,6 +65,7 @@ type ApplicableConfig = Pick<
   | 'theme'
   | 'maxProposalsPerParticipant'
   | 'maxParticipants'
+  | 'maxVotesPerParticipant'
   | 'wheelMode'
   | 'richSharePreview'
   | 'allowSeries'
@@ -96,6 +98,8 @@ export default function CreateEvent() {
   const [themeText, setThemeText] = useState('');
   const [maxParticipants, setMaxParticipants] = useState(String(MAX_EVENT_PARTICIPANTS));
   const [maxProposals, setMaxProposals] = useState(String(MAX_PROPOSALS_PER_PARTICIPANT));
+  const [voteLimitEnabled, setVoteLimitEnabled] = useState(false);
+  const [maxVotes, setMaxVotes] = useState(String(DEFAULT_VOTE_LIMIT));
   const [winnerCount, setWinnerCount] = useState(String(DEFAULT_EVENT_CONFIG.winnerCount));
   const [wheelMode, setWheelMode] = useState<WheelMode>(DEFAULT_EVENT_CONFIG.wheelMode);
   const [allowSeries, setAllowSeries] = useState(DEFAULT_EVENT_CONFIG.allowSeries ?? false);
@@ -119,6 +123,8 @@ export default function CreateEvent() {
       config.maxProposalsPerParticipant === null ? '' : String(config.maxProposalsPerParticipant)
     );
     setMaxParticipants(config.maxParticipants === null ? '' : String(config.maxParticipants));
+    setVoteLimitEnabled(config.maxVotesPerParticipant != null);
+    setMaxVotes(String(config.maxVotesPerParticipant ?? DEFAULT_VOTE_LIMIT));
     setWheelMode(config.wheelMode);
     setRichSharePreview(config.richSharePreview ?? true);
     setAllowSeries(config.allowSeries ?? false);
@@ -156,6 +162,7 @@ export default function CreateEvent() {
     themeText,
     maxProposals,
     maxParticipants,
+    maxVotes: voteLimitEnabled ? maxVotes : '',
     wheelMode,
     richSharePreview,
     allowSeries,
@@ -180,6 +187,9 @@ export default function CreateEvent() {
     const themeTrimmed = [themeEmoji, themeText.trim()].filter(Boolean).join(' ');
     const maxPartParsed = maxParticipants.trim() === '' ? 0 : Number(maxParticipants);
     const maxPropParsed = maxProposals.trim() === '' ? 0 : Number(maxProposals);
+    const maxVotesParsed = Number(maxVotes);
+    const maxVotesValue =
+      Number.isInteger(maxVotesParsed) && maxVotesParsed >= 1 ? maxVotesParsed : DEFAULT_VOTE_LIMIT;
     const winnerCountParsed = Number(winnerCount);
 
     try {
@@ -187,6 +197,7 @@ export default function CreateEvent() {
         theme: themeTrimmed,
         maxProposalsPerParticipant: Number.isFinite(maxPropParsed) ? maxPropParsed : 0,
         maxParticipants: Number.isFinite(maxPartParsed) ? maxPartParsed : 0,
+        maxVotesPerParticipant: voteLimitEnabled ? maxVotesValue : 0,
         wheelMode,
         richSharePreview,
         allowSeries,
@@ -211,6 +222,8 @@ export default function CreateEvent() {
     themeText,
     maxParticipants,
     maxProposals,
+    voteLimitEnabled,
+    maxVotes,
     winnerCount,
     wheelMode,
     richSharePreview,
@@ -407,6 +420,31 @@ export default function CreateEvent() {
                   onChange={() => setAllowSeries((v) => !v)}
                 />
               </div>
+
+              <div className={styles.toggleRow}>
+                <span>
+                  <span className={styles.toggleName}>{t('events.settings.voteLimitLabel')}</span>
+                  <span className={styles.toggleDesc}>{t('events.settings.voteLimitDesc')}</span>
+                </span>
+                <Toggle
+                  checked={voteLimitEnabled}
+                  label={t('events.settings.voteLimitLabel')}
+                  onChange={() => setVoteLimitEnabled((v) => !v)}
+                />
+              </div>
+              {voteLimitEnabled && (
+                <div className={styles.subField}>
+                  <label className="label" htmlFor="create-max-votes">
+                    {t('events.settings.maxVotesLabel')}
+                  </label>
+                  <NumberInput
+                    id="create-max-votes"
+                    value={maxVotes}
+                    onChange={setMaxVotes}
+                    min={1}
+                  />
+                </div>
+              )}
 
               <EventTemplateSaveBar
                 draft={templateDraft}

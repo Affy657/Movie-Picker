@@ -108,7 +108,7 @@ public sealed class EventDocumentMapperTests
             Time = "20:00",
             HostToken = "ht",
             Slug = "s",
-            Config = new EventConfig { Theme = "Comédie", MaxProposalsPerParticipant = 3 },
+            Config = new EventConfig { Theme = "Comédie", MaxProposalsPerParticipant = 3, MaxVotesPerParticipant = 4 },
             ClosedAt = null,
             Winners = [],
             CreatedAt = DateTimeOffset.UtcNow,
@@ -119,6 +119,7 @@ public sealed class EventDocumentMapperTests
         Assert.Equal(evt.Id, back.Id);
         Assert.Equal(evt.Config?.Theme, back.Config?.Theme);
         Assert.Equal(evt.Config?.MaxProposalsPerParticipant, back.Config?.MaxProposalsPerParticipant);
+        Assert.Equal(4, back.Config?.MaxVotesPerParticipant);
         Assert.Equal(WheelMode.WeightedByVotes, back.Config?.WheelMode);
     }
 

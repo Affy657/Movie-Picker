@@ -163,6 +163,105 @@ describe('HostEventSettingsPanel', () => {
     await waitFor(() => expect(seenMax).toBe(8), { timeout: 3000 });
   });
 
+  it('activer la limite de votes envoie la valeur par défaut, puis la valeur saisie', async () => {
+    const user = userEvent.setup();
+    const seen: unknown[] = [];
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        seen.push(body.maxVotesPerParticipant);
+        return HttpResponse.json({ ...baseEvent.config, maxVotesPerParticipant: 3 });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={baseEvent}
+      />
+    );
+
+    const toggle = screen.getByRole('switch', { name: /limiter les votes par participant/i });
+    expect(toggle).toHaveAttribute('aria-checked', 'false');
+    expect(screen.queryByLabelText(/^votes par participant$/i)).not.toBeInTheDocument();
+
+    await user.click(toggle);
+
+    await waitFor(() => expect(seen).toEqual([3]), { timeout: 3000 });
+    const field = screen.getByLabelText(/^votes par participant$/i);
+    expect(field).toHaveValue(3);
+
+    await user.clear(field);
+    await user.type(field, '5');
+
+    await waitFor(() => expect(seen.at(-1)).toBe(5), { timeout: 3000 });
+  });
+
+  it('désactiver la limite de votes envoie 0', async () => {
+    const user = userEvent.setup();
+    let seenMaxVotes: unknown;
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        seenMaxVotes = body.maxVotesPerParticipant;
+        return HttpResponse.json({ ...baseEvent.config, maxVotesPerParticipant: null });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={{ ...baseEvent, config: { ...baseEvent.config!, maxVotesPerParticipant: 4 } }}
+      />
+    );
+
+    const toggle = screen.getByRole('switch', { name: /limiter les votes par participant/i });
+    expect(toggle).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByLabelText(/^votes par participant$/i)).toHaveValue(4);
+
+    await user.click(toggle);
+
+    await waitFor(() => expect(seenMaxVotes).toBe(0), { timeout: 3000 });
+    expect(screen.queryByLabelText(/^votes par participant$/i)).not.toBeInTheDocument();
+  });
+
+  it('refuse une limite de votes en dessous de 1 sans appeler l’API', async () => {
+    const user = userEvent.setup();
+    let patchCalled = false;
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, () => {
+        patchCalled = true;
+        return HttpResponse.json({});
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={{ ...baseEvent, config: { ...baseEvent.config!, maxVotesPerParticipant: 4 } }}
+      />
+    );
+
+    const field = screen.getByLabelText(/^votes par participant$/i);
+    await user.clear(field);
+    await user.type(field, '0');
+
+    expect(
+      await screen.findByText(/votes par participant : nombre entier à partir de 1/i)
+    ).toBeInTheDocument();
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    expect(patchCalled).toBe(false);
+  });
+
   it('refuse une capacité inférieure au nombre de participants déjà inscrits', async () => {
     const user = userEvent.setup();
     let patchCalled = false;

@@ -367,6 +367,63 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
     }
 
     [Fact]
+    public async Task VoteBudget_RejectsTheVoteBeyondTheLimit_UntilOneIsFreed()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "VoteBudget");
+
+        var createRes = await client.PostAsJsonAsync(
+            "/api/v1/events",
+            new { title = "Soirée budget de votes", date = "2030-07-01", time = "20:00" });
+        createRes.EnsureSuccessStatusCode();
+        var created = await createRes.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
+        var slug = created!.Slug;
+        var participantId = created.CreatorParticipant!.Id;
+
+        var patch = await client.PatchAsJsonAsync($"/api/v1/events/{slug}/config", new { maxVotesPerParticipant = 1 });
+        patch.EnsureSuccessStatusCode();
+
+        var movieIds = new List<string>();
+        foreach (var tmdbId in new[] { 9101, 9102 })
+        {
+            var addRes = await client.PostAsJsonAsync($"/api/v1/events/{slug}/movies", new
+            {
+                tmdbId,
+                title = $"Budget {tmdbId}",
+                year = "2024",
+                posterPath = (string?)null,
+                participantId
+            });
+            addRes.EnsureSuccessStatusCode();
+            var movieJson = await addRes.Content.ReadFromJsonAsync<JsonElement>();
+            movieIds.Add(movieJson.GetProperty("_id").GetString()!);
+        }
+
+        var first = await client.PostAsJsonAsync(
+            $"/api/v1/events/{slug}/movies/{movieIds[0]}/vote",
+            new { participantId, value = 1 });
+        first.EnsureSuccessStatusCode();
+
+        var second = await client.PostAsJsonAsync(
+            $"/api/v1/events/{slug}/movies/{movieIds[1]}/vote",
+            new { participantId, value = 1 });
+        Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
+
+        var flip = await client.PostAsJsonAsync(
+            $"/api/v1/events/{slug}/movies/{movieIds[0]}/vote",
+            new { participantId, value = -1 });
+        flip.EnsureSuccessStatusCode();
+
+        var free = await client.DeleteAsync(
+            $"/api/v1/events/{slug}/movies/{movieIds[0]}/vote?participantId={Uri.EscapeDataString(participantId)}");
+        Assert.Equal(HttpStatusCode.NoContent, free.StatusCode);
+
+        var retry = await client.PostAsJsonAsync(
+            $"/api/v1/events/{slug}/movies/{movieIds[1]}/vote",
+            new { participantId, value = 1 });
+        retry.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
     public async Task Wheel_DrawsEachMovieAtMostOnce_UpToTheConfiguredCount()
     {
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "WheelRelaunch");

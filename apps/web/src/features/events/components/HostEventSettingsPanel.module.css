@@ -370,7 +370,8 @@
   background: var(--color-surface);
 }
 
-.recurrenceRhythm {
+.recurrenceRhythm,
+.subField {
   margin-top: var(--space-3);
   padding-left: var(--space-3);
   border-left: 2px solid var(--color-border-subtle);

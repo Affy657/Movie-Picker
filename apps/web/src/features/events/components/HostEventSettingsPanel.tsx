@@ -40,6 +40,7 @@ import type {
 } from '@/features/events/types';
 import {
   DEFAULT_EVENT_CONFIG,
+  DEFAULT_VOTE_LIMIT,
   MAX_EVENT_PARTICIPANTS,
   MAX_PROPOSALS_PER_PARTICIPANT,
   MAX_WINNERS_PER_EVENT,
@@ -62,6 +63,7 @@ type FieldErrors = {
   date?: string;
   maxProposals?: string;
   maxParticipants?: string;
+  maxVotes?: string;
   winnerCount?: string;
 };
 
@@ -105,6 +107,7 @@ function normalizeConfig(c: EventConfigData | undefined): EventConfigData {
     theme: c?.theme ?? DEFAULT_EVENT_CONFIG.theme,
     maxProposalsPerParticipant: c?.maxProposalsPerParticipant ?? MAX_PROPOSALS_PER_PARTICIPANT,
     maxParticipants: c?.maxParticipants ?? MAX_EVENT_PARTICIPANTS,
+    maxVotesPerParticipant: c?.maxVotesPerParticipant ?? null,
     wheelMode: c?.wheelMode ?? DEFAULT_EVENT_CONFIG.wheelMode,
     richSharePreview: c?.richSharePreview ?? DEFAULT_EVENT_CONFIG.richSharePreview,
     allowSeries: c?.allowSeries ?? DEFAULT_EVENT_CONFIG.allowSeries,
@@ -123,6 +126,8 @@ type SettingsDraft = {
   eventDateLocal: string;
   maxProp: string;
   maxParticipants: string;
+  voteLimitEnabled: boolean;
+  maxVotes: string;
   currentParticipantCount: number;
 };
 
@@ -181,13 +186,32 @@ function validateMaxParticipants(draft: SettingsDraft, t: Translate, errors: Fie
   return value;
 }
 
+function validateMaxVotes(draft: SettingsDraft, t: Translate, errors: FieldErrors) {
+  if (!draft.voteLimitEnabled) return null;
+  const value = Number(draft.maxVotes.trim());
+  if (draft.maxVotes.trim() !== '' && Number.isInteger(value) && value >= 1) return value;
+  errors.maxVotes = t('events.settings.maxVotesInvalid');
+  return null;
+}
+
 function validateSettingsDraft(draft: SettingsDraft, t: Translate) {
   const errors: FieldErrors = {};
   validateTitle(draft, t, errors);
   const eventDateTime = validateDate(draft, t, errors);
   const maxProposalsPerParticipant = validateMaxProposals(draft, t, errors);
   const maxParticipantsValue = validateMaxParticipants(draft, t, errors);
-  return { errors, maxProposalsPerParticipant, maxParticipantsValue, eventDateTime };
+  const maxVotesPerParticipant = validateMaxVotes(draft, t, errors);
+  return {
+    errors,
+    maxProposalsPerParticipant,
+    maxParticipantsValue,
+    maxVotesPerParticipant,
+    eventDateTime,
+  };
+}
+
+function voteLimitToString(value: number | null | undefined): string {
+  return String(value ?? DEFAULT_VOTE_LIMIT);
 }
 
 export default function HostEventSettingsPanel({
@@ -214,6 +238,8 @@ export default function HostEventSettingsPanel({
   const [notifyDateChange, setNotifyDateChange] = useState(true);
   const [maxProp, setMaxProp] = useState<string>(String(cfg.maxProposalsPerParticipant));
   const [maxParticipants, setMaxParticipants] = useState<string>(String(cfg.maxParticipants));
+  const [voteLimitEnabled, setVoteLimitEnabled] = useState(cfg.maxVotesPerParticipant != null);
+  const [maxVotes, setMaxVotes] = useState<string>(voteLimitToString(cfg.maxVotesPerParticipant));
   const [wheelMode, setWheelMode] = useState<WheelMode>(cfg.wheelMode);
   const [allowSeries, setAllowSeries] = useState<boolean>(cfg.allowSeries ?? false);
   const [richSharePreview, setRichSharePreview] = useState<boolean>(cfg.richSharePreview ?? true);
@@ -254,6 +280,7 @@ export default function HostEventSettingsPanel({
     themeText,
     maxProposals: maxProp,
     maxParticipants,
+    maxVotes: voteLimitEnabled ? maxVotes : '',
     wheelMode,
     richSharePreview,
     allowSeries,
@@ -281,6 +308,8 @@ export default function HostEventSettingsPanel({
     setNotifyDateChange(true);
     setMaxProp(String(next.maxProposalsPerParticipant));
     setMaxParticipants(String(next.maxParticipants));
+    setVoteLimitEnabled(next.maxVotesPerParticipant != null);
+    setMaxVotes(voteLimitToString(next.maxVotesPerParticipant));
     setWheelMode(next.wheelMode);
     setAllowSeries(next.allowSeries ?? false);
     setRichSharePreview(next.richSharePreview ?? true);
@@ -297,6 +326,7 @@ export default function HostEventSettingsPanel({
   const dateHintId = useId();
   const maxProposalsErrorId = useId();
   const maxParticipantsErrorId = useId();
+  const maxVotesErrorId = useId();
   const wheelModeLabelId = useId();
   const winnerCountErrorId = useId();
 
@@ -352,6 +382,8 @@ export default function HostEventSettingsPanel({
       setThemeText(parsed.text);
       setMaxProp(String(template.maxProposalsPerParticipant ?? MAX_PROPOSALS_PER_PARTICIPANT));
       setMaxParticipants(String(template.maxParticipants ?? MAX_EVENT_PARTICIPANTS));
+      setVoteLimitEnabled(template.maxVotesPerParticipant != null);
+      setMaxVotes(voteLimitToString(template.maxVotesPerParticipant));
       setWheelMode(template.wheelMode);
       setAllowSeries(template.allowSeries);
       setRichSharePreview(template.richSharePreview);
@@ -363,17 +395,24 @@ export default function HostEventSettingsPanel({
   );
 
   performSaveRef.current = () => {
-    const { errors, maxProposalsPerParticipant, maxParticipantsValue, eventDateTime } =
-      validateSettingsDraft(
-        {
-          eventTitle,
-          eventDateLocal,
-          maxProp,
-          maxParticipants,
-          currentParticipantCount: event.participantCount ?? 0,
-        },
-        t
-      );
+    const {
+      errors,
+      maxProposalsPerParticipant,
+      maxParticipantsValue,
+      maxVotesPerParticipant,
+      eventDateTime,
+    } = validateSettingsDraft(
+      {
+        eventTitle,
+        eventDateLocal,
+        maxProp,
+        maxParticipants,
+        voteLimitEnabled,
+        maxVotes,
+        currentParticipantCount: event.participantCount ?? 0,
+      },
+      t
+    );
 
     let winnerCountValue = cfg.winnerCount;
     const winnerCountNum = Number(winnerCount);
@@ -410,6 +449,9 @@ export default function HostEventSettingsPanel({
         : {}),
       ...(maxParticipantsValue !== cfg.maxParticipants
         ? { maxParticipants: maxParticipantsValue }
+        : {}),
+      ...(maxVotesPerParticipant !== (cfg.maxVotesPerParticipant ?? null)
+        ? { maxVotesPerParticipant: maxVotesPerParticipant ?? 0 }
         : {}),
       ...(wheelMode !== cfg.wheelMode ? { wheelMode } : {}),
       ...(allowSeries !== (cfg.allowSeries ?? false) ? { allowSeries } : {}),
@@ -691,6 +733,47 @@ export default function HostEventSettingsPanel({
                     }}
                   />
                 </div>
+              </div>
+
+              <div className={styles.field}>
+                <div className={styles.toggleRow}>
+                  <span>
+                    <span className={styles.toggleName}>{t('events.settings.voteLimitLabel')}</span>
+                    <span className={styles.toggleDesc}>{t('events.settings.voteLimitDesc')}</span>
+                  </span>
+                  <Toggle
+                    checked={voteLimitEnabled}
+                    label={t('events.settings.voteLimitLabel')}
+                    onChange={() => {
+                      setVoteLimitEnabled((v) => !v);
+                      scheduleAutoSave(true);
+                    }}
+                  />
+                </div>
+                {voteLimitEnabled && (
+                  <div className={styles.subField}>
+                    <label className="label" htmlFor="host-cfg-max-votes">
+                      {t('events.settings.maxVotesLabel')}
+                    </label>
+                    <NumberInput
+                      id="host-cfg-max-votes"
+                      value={maxVotes}
+                      onChange={(v) => {
+                        setMaxVotes(v);
+                        scheduleAutoSave();
+                      }}
+                      min={1}
+                      invalid={!!fieldErrors.maxVotes}
+                      ariaDescribedBy={fieldErrors.maxVotes ? maxVotesErrorId : undefined}
+                    />
+                    {fieldErrors.maxVotes && (
+                      <p id={maxVotesErrorId} className={styles.fieldError}>
+                        <AlertCircle size={12} aria-hidden />
+                        <span>{fieldErrors.maxVotes}</span>
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className={styles.field}>

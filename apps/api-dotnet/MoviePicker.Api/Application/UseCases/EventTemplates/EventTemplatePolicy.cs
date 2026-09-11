@@ -59,6 +59,7 @@ public static class EventTemplatePolicy
             request.MaxParticipants,
             EventConfig.MaxParticipantsCap,
             "maxParticipants"),
+        MaxVotesPerParticipant = ResolveLimit(request.MaxVotesPerParticipant, null, "maxVotesPerParticipant"),
         WheelMode = request.WheelMode ?? WheelMode.WeightedByVotes,
         RichSharePreview = request.RichSharePreview ?? true,
         AllowSeries = request.AllowSeries ?? false,
@@ -77,13 +78,16 @@ public static class EventTemplatePolicy
         return value.Value;
     }
 
-    private static int? ResolveLimit(int? value, int cap, string field)
+    private static int? ResolveLimit(int? value, int? cap, string field)
     {
         if (!value.HasValue)
             return null;
 
-        if (value.Value < 0 || value.Value > cap)
-            throw new BadRequestException($"{field} doit être entre 0 (pas de limite) et {cap}.");
+        if (value.Value < 0)
+            throw new BadRequestException($"{field} doit être 0 (pas de limite) ou un entier positif.");
+
+        if (cap.HasValue && value.Value > cap.Value)
+            throw new BadRequestException($"{field} doit être entre 0 (pas de limite) et {cap.Value}.");
 
         return value.Value == 0 ? null : value.Value;
     }

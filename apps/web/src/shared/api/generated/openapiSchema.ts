@@ -6152,6 +6152,8 @@ export interface components {
             maxProposalsPerParticipant?: number | null;
             /** Format: int32 */
             maxParticipants?: number | null;
+            /** Format: int32 */
+            maxVotesPerParticipant?: number | null;
             wheelMode?: components["schemas"]["WheelMode"];
             richSharePreview?: boolean;
             allowSeries?: boolean;
@@ -6218,6 +6220,8 @@ export interface components {
             maxProposalsPerParticipant?: number | null;
             /** Format: int32 */
             maxParticipants?: number | null;
+            /** Format: int32 */
+            maxVotesPerParticipant?: number | null;
             wheelMode?: components["schemas"]["WheelMode"];
             richSharePreview?: boolean;
             allowSeries?: boolean;
@@ -6632,6 +6636,8 @@ export interface components {
             maxProposalsPerParticipant?: number | null;
             /** Format: int32 */
             maxParticipants?: number | null;
+            /** Format: int32 */
+            maxVotesPerParticipant?: number | null;
             wheelMode?: components["schemas"]["WheelMode"];
             richSharePreview?: boolean | null;
             allowSeries?: boolean | null;
@@ -6720,6 +6726,8 @@ export interface components {
             maxProposalsPerParticipant?: number | null;
             /** Format: int32 */
             maxParticipants?: number | null;
+            /** Format: int32 */
+            maxVotesPerParticipant?: number | null;
             wheelMode?: components["schemas"]["WheelMode"];
             richSharePreview?: boolean | null;
             allowSeries?: boolean | null;

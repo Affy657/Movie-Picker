@@ -77,6 +77,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
             ThemeColor = ResolveThemeColor(request, current.ThemeColor),
             MaxProposalsPerParticipant = ResolveMaxProposals(request, current.MaxProposalsPerParticipant),
             MaxParticipants = await ResolveMaxParticipantsAsync(request, current.MaxParticipants, evt, ct),
+            MaxVotesPerParticipant = ResolveMaxVotes(request, current.MaxVotesPerParticipant),
             WheelMode = request.WheelMode ?? current.WheelMode,
             RichSharePreview = request.RichSharePreview ?? current.RichSharePreview,
             AllowSeries = request.AllowSeries ?? current.AllowSeries,
@@ -169,6 +170,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         || request.ClearThemeColor == true
         || request.MaxProposalsPerParticipant.HasValue
         || request.MaxParticipants.HasValue
+        || request.MaxVotesPerParticipant.HasValue
         || request.WheelMode.HasValue
         || request.RichSharePreview.HasValue
         || request.AllowSeries.HasValue;
@@ -252,6 +254,17 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         if (v < 0 || v > EventConfig.MaxProposalsPerParticipantCap)
             throw new BadRequestException(
                 $"maxProposalsPerParticipant doit être entre 0 (pas de limite) et {EventConfig.MaxProposalsPerParticipantCap}.");
+        return v == 0 ? null : v;
+    }
+
+    private static int? ResolveMaxVotes(PatchEventConfigRequest request, int? current)
+    {
+        if (!request.MaxVotesPerParticipant.HasValue)
+            return current;
+
+        var v = request.MaxVotesPerParticipant.Value;
+        if (v < 0)
+            throw new BadRequestException("maxVotesPerParticipant doit être 0 (pas de limite) ou un entier positif.");
         return v == 0 ? null : v;
     }
 

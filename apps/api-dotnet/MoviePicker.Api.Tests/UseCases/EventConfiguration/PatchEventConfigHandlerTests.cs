@@ -116,6 +116,74 @@ public sealed class PatchEventConfigHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_MaxVotes_ValidValue_Updates()
+    {
+        var evt = Evt();
+        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
+        _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+
+        var res = await _sut.HandleAsync("s", new PatchEventConfigRequest { MaxVotesPerParticipant = 3 });
+
+        Assert.Equal(3, res.MaxVotesPerParticipant);
+    }
+
+    [Fact]
+    public async Task HandleAsync_MaxVotes_Zero_ClearsLimit()
+    {
+        var evt = Evt() with { Config = new EventConfig { MaxVotesPerParticipant = 3 } };
+        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
+        _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+
+        var res = await _sut.HandleAsync("s", new PatchEventConfigRequest { MaxVotesPerParticipant = 0 });
+
+        Assert.Null(res.MaxVotesPerParticipant);
+    }
+
+    [Fact]
+    public async Task HandleAsync_MaxVotes_Omitted_KeepsCurrent()
+    {
+        var evt = Evt() with { Config = new EventConfig { MaxVotesPerParticipant = 3 } };
+        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
+        _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+
+        var res = await _sut.HandleAsync("s", new PatchEventConfigRequest { Theme = "Polars" });
+
+        Assert.Equal(3, res.MaxVotesPerParticipant);
+    }
+
+    [Fact]
+    public async Task HandleAsync_MaxVotes_Negative_ThrowsBadRequest()
+    {
+        var evt = Evt();
+        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
+
+        await Assert.ThrowsAsync<BadRequestException>(() =>
+            _sut.HandleAsync("s", new PatchEventConfigRequest { MaxVotesPerParticipant = -1 }));
+        _events.Verify(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_MaxVotes_HasNoUpperBound()
+    {
+        var evt = Evt();
+        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
+        _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+
+        var res = await _sut.HandleAsync("s", new PatchEventConfigRequest { MaxVotesPerParticipant = 500 });
+
+        Assert.Equal(500, res.MaxVotesPerParticipant);
+    }
+
+    [Fact]
     public async Task HandleAsync_MaxParticipants_ValidValue_Updates()
     {
         var evt = Evt();

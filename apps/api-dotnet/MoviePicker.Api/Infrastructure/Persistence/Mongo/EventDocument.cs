@@ -98,6 +98,10 @@ public sealed class EventConfigDocument
     [BsonIgnoreIfNull]
     public int? MaxParticipants { get; set; }
 
+    [BsonElement("maxVotesPerParticipant")]
+    [BsonIgnoreIfNull]
+    public int? MaxVotesPerParticipant { get; set; }
+
     [BsonElement("wheelMode")]
     public string WheelMode { get; set; } = "weightedByVotes";
 

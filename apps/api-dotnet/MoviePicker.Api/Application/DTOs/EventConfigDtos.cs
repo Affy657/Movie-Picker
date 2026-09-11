@@ -11,6 +11,8 @@ public sealed class EventConfigResponse
 
     public int? MaxParticipants { get; init; }
 
+    public int? MaxVotesPerParticipant { get; init; }
+
     public WheelMode WheelMode { get; init; }
 
     public bool RichSharePreview { get; init; }
@@ -32,6 +34,7 @@ public sealed class EventConfigResponse
             ThemeColor = c?.ThemeColor,
             MaxProposalsPerParticipant = c?.MaxProposalsPerParticipant,
             MaxParticipants = c?.MaxParticipants,
+            MaxVotesPerParticipant = c?.MaxVotesPerParticipant,
             WheelMode = c?.WheelMode ?? WheelMode.StrictRandom,
             RichSharePreview = c?.RichSharePreview ?? true,
             AllowSeries = c?.AllowSeries ?? false,
@@ -54,6 +57,8 @@ public sealed class PatchEventConfigRequest
     public int? MaxProposalsPerParticipant { get; init; }
 
     public int? MaxParticipants { get; init; }
+
+    public int? MaxVotesPerParticipant { get; init; }
 
     public WheelMode? WheelMode { get; init; }
 

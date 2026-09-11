@@ -10,11 +10,8 @@
   margin-bottom: var(--space-3);
 }
 
-
 @media (hover: hover) {
-  
 }
-
 
 .wheelDivider {
   display: flex;

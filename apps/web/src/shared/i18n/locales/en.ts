@@ -920,6 +920,10 @@ export const en: Locale = {
       maxProposalsLabel: 'Max movies per person',
       maxProposalsHint: '{{max}} at most.',
       maxProposalsInvalid: 'Movies per person: whole number between 1 and {{max}}.',
+      voteLimitLabel: 'Limit votes per participant',
+      voteLimitDesc: 'Each participant can only vote for a fixed number of movies.',
+      maxVotesLabel: 'Votes per participant',
+      maxVotesInvalid: 'Votes per participant: whole number of 1 or more.',
       winnerCountLabel: 'Winning movies',
       winnerCountInvalid: 'Enter a number between 1 and {{max}}.',
       winnerCountHint: 'How many movies will be picked as winners for this event, {{max}} at most.',
@@ -1078,6 +1082,12 @@ export const en: Locale = {
       voteErrorRow: 'Your vote was not saved. Check your connection.',
       retryVoteAction: 'Retry',
       voteToolbarAria: 'Votes for "{{title}}"',
+      voteLimitReachedTitle: 'Vote limit reached',
+      voteLimitReachedOne:
+        'You have already placed your vote for this event. Remove it to vote for another movie.',
+      voteLimitReachedMany:
+        'You have already placed your {{max}} votes for this event. Remove one to vote for another movie.',
+      voteLimitReachedOk: 'Got it',
       letterboxdButton: 'Open on Letterboxd',
       imdbButton: 'Open on IMDb',
       allocineButton: 'Open on AlloCiné',

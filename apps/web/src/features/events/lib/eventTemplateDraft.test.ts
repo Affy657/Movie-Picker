@@ -17,6 +17,7 @@ const baseFields = {
   themeText: '',
   maxProposals: '3',
   maxParticipants: '8',
+  maxVotes: '',
   wheelMode: 'weightedByVotes' as const,
   richSharePreview: true,
   allowSeries: false,
@@ -27,6 +28,7 @@ const baseDraft: TemplateConfigDraft = {
   theme: null,
   maxProposalsPerParticipant: 3,
   maxParticipants: 8,
+  maxVotesPerParticipant: null,
   wheelMode: 'weightedByVotes',
   richSharePreview: true,
   allowSeries: false,
@@ -53,6 +55,12 @@ describe('buildTemplateDraft', () => {
 
     expect(draft.maxProposalsPerParticipant).toBeNull();
     expect(draft.maxParticipants).toBeNull();
+  });
+
+  it('reads the vote budget, empty meaning no limit', () => {
+    expect(buildTemplateDraft({ ...baseFields, maxVotes: '4' }).maxVotesPerParticipant).toBe(4);
+    expect(buildTemplateDraft({ ...baseFields, maxVotes: '' }).maxVotesPerParticipant).toBeNull();
+    expect(buildTemplateDraft({ ...baseFields, maxVotes: '0' }).maxVotesPerParticipant).toBeNull();
   });
 
   it('rejects a non-numeric limit as no limit', () => {
@@ -82,6 +90,7 @@ describe('templateToDraft', () => {
       theme: '🎃 Halloween',
       maxProposalsPerParticipant: 3,
       maxParticipants: 8,
+      maxVotesPerParticipant: 2,
       wheelMode: 'strictRandom',
       richSharePreview: true,
       allowSeries: true,
@@ -92,6 +101,7 @@ describe('templateToDraft', () => {
       theme: '🎃 Halloween',
       maxProposalsPerParticipant: 3,
       maxParticipants: 8,
+      maxVotesPerParticipant: 2,
       wheelMode: 'strictRandom',
       richSharePreview: true,
       allowSeries: true,
@@ -120,6 +130,7 @@ describe('isSameTemplateConfig', () => {
     ['theme', { theme: '🎃 Halloween' }],
     ['maxProposalsPerParticipant', { maxProposalsPerParticipant: 5 }],
     ['maxParticipants', { maxParticipants: null }],
+    ['maxVotesPerParticipant', { maxVotesPerParticipant: 3 }],
     ['wheelMode', { wheelMode: 'strictRandom' as const }],
     ['richSharePreview', { richSharePreview: false }],
     ['allowSeries', { allowSeries: true }],

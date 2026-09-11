@@ -18,6 +18,8 @@ type ConfirmDialogProps = {
   confirmVariant?: 'danger' | 'primary';
 
   busy?: boolean;
+
+  hideCancel?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 
@@ -32,6 +34,7 @@ export default function ConfirmDialog({
   cancelLabel,
   confirmVariant = 'danger',
   busy = false,
+  hideCancel = false,
   onConfirm,
   onCancel,
   testId = 'confirm-dialog',
@@ -61,9 +64,11 @@ export default function ConfirmDialog({
         {message}
       </p>
       <div className={styles.actions}>
-        <Button size="sm" onClick={onCancel} data-testid={`${testId}-cancel`}>
-          {cancelText}
-        </Button>
+        {!hideCancel && (
+          <Button size="sm" onClick={onCancel} data-testid={`${testId}-cancel`}>
+            {cancelText}
+          </Button>
+        )}
         <Button
           size="sm"
           variant={confirmVariant}

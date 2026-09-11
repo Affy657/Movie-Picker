@@ -4,7 +4,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { clearMovieVote, setMovieWheelExclusion, voteMovie } from '@/features/movies/api/moviesApi';
-import { getErrorMessage } from '@/shared/api/apiError';
+import { ApiError, getErrorMessage } from '@/shared/api/apiError';
 import type { EventData } from '@/features/events/types';
 import { promptToJoinEvent } from '@/features/events/joinPrompt';
 import type { MovieData } from '@/shared/types/movie';
@@ -12,6 +12,7 @@ import AddMoviePanel from '@/features/movies/components/AddMoviePanel';
 import MovieList, { type MovieRowSortKey } from '@/features/movies/components/MovieList';
 import SortControl from '@/features/movies/components/SortControl';
 import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import EventActionErrorBanner from '@/features/events/pages/event-detail/EventActionErrorBanner';
 import { Skeleton } from '@/shared/components/Skeleton';
 import ViewModeToggle from '@/shared/components/ViewModeToggle';
@@ -185,6 +186,9 @@ export default function EventMoviesSection({
   const [voteErrors, setVoteErrors] = useState<Record<string, { message: string; value: 1 | -1 }>>(
     {}
   );
+  const [voteLimitReached, setVoteLimitReached] = useState(false);
+  const maxVotes = event.config?.maxVotesPerParticipant ?? null;
+  const votesUsed = useMemo(() => movies.filter((m) => m.myVote != null).length, [movies]);
 
   const clearVoteError = useCallback((movieId: string) => {
     setVoteErrors((prev) => {
@@ -204,6 +208,10 @@ export default function EventMoviesSection({
       setActionError(null);
       clearVoteError(movieId);
       const current = movies.find((m) => m.id === movieId)?.myVote ?? null;
+      if (current === null && maxVotes !== null && votesUsed >= maxVotes) {
+        setVoteLimitReached(true);
+        return;
+      }
       try {
         if (current === value) {
           await clearMovieVote(slug, movieId, participant.participantId);
@@ -214,6 +222,11 @@ export default function EventMoviesSection({
         }
         refreshAll();
       } catch (e) {
+        if (current === null && maxVotes !== null && ApiError.is(e) && e.code === 409) {
+          setVoteLimitReached(true);
+          refreshAll();
+          return;
+        }
         if (viewMode === 'list') {
           const message = getErrorMessage(e, t('movies.list.voteErrorRow'));
           setVoteErrors((prev) => ({ ...prev, [movieId]: { message, value } }));
@@ -222,7 +235,19 @@ export default function EventMoviesSection({
         }
       }
     },
-    [slug, participant, movies, setActionError, refreshAll, track, t, viewMode, clearVoteError]
+    [
+      slug,
+      participant,
+      movies,
+      maxVotes,
+      votesUsed,
+      setActionError,
+      refreshAll,
+      track,
+      t,
+      viewMode,
+      clearVoteError,
+    ]
   );
 
   const handleRetryVote = useCallback(
@@ -415,6 +440,22 @@ export default function EventMoviesSection({
           )}
         </>
       )}
+
+      <ConfirmDialog
+        open={voteLimitReached}
+        title={t('movies.list.voteLimitReachedTitle')}
+        message={
+          maxVotes === 1
+            ? t('movies.list.voteLimitReachedOne')
+            : t('movies.list.voteLimitReachedMany', { max: maxVotes ?? 0 })
+        }
+        confirmLabel={t('movies.list.voteLimitReachedOk')}
+        confirmVariant="primary"
+        hideCancel
+        onConfirm={() => setVoteLimitReached(false)}
+        onCancel={() => setVoteLimitReached(false)}
+        testId="vote-limit-dialog"
+      />
     </section>
   );
 }

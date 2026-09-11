@@ -12,6 +12,7 @@ function makeTemplate(overrides: Partial<EventTemplateData> = {}): EventTemplate
     theme: '🎃 Halloween',
     maxProposalsPerParticipant: 3,
     maxParticipants: 8,
+    maxVotesPerParticipant: null,
     wheelMode: 'weightedByVotes',
     richSharePreview: true,
     allowSeries: false,

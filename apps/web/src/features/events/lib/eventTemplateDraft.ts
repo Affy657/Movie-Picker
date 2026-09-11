@@ -12,6 +12,7 @@ export interface TemplateConfigDraft {
   theme: string | null;
   maxProposalsPerParticipant: number | null;
   maxParticipants: number | null;
+  maxVotesPerParticipant: number | null;
   wheelMode: WheelMode;
   richSharePreview: boolean;
   allowSeries: boolean;
@@ -23,6 +24,7 @@ export interface TemplateFormFields {
   themeText: string;
   maxProposals: string;
   maxParticipants: string;
+  maxVotes: string;
   wheelMode: WheelMode;
   richSharePreview: boolean;
   allowSeries: boolean;
@@ -48,6 +50,7 @@ export function buildTemplateDraft(fields: TemplateFormFields): TemplateConfigDr
     theme: theme.length > 0 ? theme : null,
     maxProposalsPerParticipant: parseLimit(fields.maxProposals),
     maxParticipants: parseLimit(fields.maxParticipants),
+    maxVotesPerParticipant: parseLimit(fields.maxVotes),
     wheelMode: fields.wheelMode,
     richSharePreview: fields.richSharePreview,
     allowSeries: fields.allowSeries,
@@ -60,6 +63,7 @@ export function templateToDraft(template: EventTemplateData): TemplateConfigDraf
     theme: template.theme,
     maxProposalsPerParticipant: template.maxProposalsPerParticipant,
     maxParticipants: template.maxParticipants,
+    maxVotesPerParticipant: template.maxVotesPerParticipant ?? null,
     wheelMode: template.wheelMode,
     richSharePreview: template.richSharePreview,
     allowSeries: template.allowSeries,
@@ -80,6 +84,7 @@ export function isSameTemplateConfig(a: TemplateConfigDraft, b: TemplateConfigDr
       MAX_PROPOSALS_PER_PARTICIPANT
     ) &&
     isSameLimit(a.maxParticipants, b.maxParticipants, MAX_EVENT_PARTICIPANTS) &&
+    a.maxVotesPerParticipant === b.maxVotesPerParticipant &&
     a.wheelMode === b.wheelMode &&
     a.richSharePreview === b.richSharePreview &&
     a.allowSeries === b.allowSeries &&

@@ -41,13 +41,15 @@ internal static class TemplateFixtures
         WheelMode? wheelMode = WheelMode.WeightedByVotes,
         bool? allowSeries = false,
         bool? richSharePreview = true,
-        int? winnerCount = null) =>
+        int? winnerCount = null,
+        int? maxVotes = 2) =>
         new()
         {
             Name = name,
             Theme = theme,
             MaxProposalsPerParticipant = maxProposals,
             MaxParticipants = maxParticipants,
+            MaxVotesPerParticipant = maxVotes,
             WheelMode = wheelMode,
             AllowSeries = allowSeries,
             RichSharePreview = richSharePreview,
@@ -107,6 +109,7 @@ public sealed class ListEventTemplatesHandlerTests
                     Theme = "🎃 Halloween",
                     MaxProposalsPerParticipant = 3,
                     MaxParticipants = 8,
+                    MaxVotesPerParticipant = 2,
                     WheelMode = WheelMode.StrictRandom,
                     AllowSeries = true
                 })));
@@ -118,6 +121,7 @@ public sealed class ListEventTemplatesHandlerTests
         Assert.Equal("🎃 Halloween", item.Theme);
         Assert.Equal(3, item.MaxProposalsPerParticipant);
         Assert.Equal(8, item.MaxParticipants);
+        Assert.Equal(2, item.MaxVotesPerParticipant);
         Assert.Equal(WheelMode.StrictRandom, item.WheelMode);
         Assert.True(item.AllowSeries);
     }
@@ -236,10 +240,30 @@ public sealed class CreateEventTemplateHandlerTests
 
         var created = await _sut.HandleAsync(
             "u1",
-            TemplateFixtures.Request(maxProposals: 0, maxParticipants: 0));
+            TemplateFixtures.Request(maxProposals: 0, maxParticipants: 0, maxVotes: 0));
 
         Assert.Null(created.MaxProposalsPerParticipant);
         Assert.Null(created.MaxParticipants);
+        Assert.Null(created.MaxVotesPerParticipant);
+    }
+
+    [Fact]
+    public async Task HandleAsync_MaxVotes_IsStoredInTheTemplate()
+    {
+        HasUser(new User { Id = "u1" });
+
+        var created = await _sut.HandleAsync("u1", TemplateFixtures.Request(maxVotes: 4));
+
+        Assert.Equal(4, created.MaxVotesPerParticipant);
+    }
+
+    [Fact]
+    public async Task HandleAsync_MaxVotesNegative_Throws()
+    {
+        HasUser(new User { Id = "u1" });
+
+        await Assert.ThrowsAsync<BadRequestException>(
+            () => _sut.HandleAsync("u1", TemplateFixtures.Request(maxVotes: -1)));
     }
 
     [Fact]

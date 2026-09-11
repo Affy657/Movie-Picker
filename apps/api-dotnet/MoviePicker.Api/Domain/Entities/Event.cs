@@ -70,6 +70,8 @@ public sealed record EventConfig
 
     public int? MaxParticipants { get; init; }
 
+    public int? MaxVotesPerParticipant { get; init; }
+
     public WheelMode WheelMode { get; init; } = WheelMode.WeightedByVotes;
 
     public bool RichSharePreview { get; init; }

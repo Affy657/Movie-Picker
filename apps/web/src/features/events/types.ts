@@ -11,10 +11,13 @@ export const MAX_EVENT_PARTICIPANTS = 300;
 
 export const MAX_PROPOSALS_PER_PARTICIPANT = 15;
 
+export const DEFAULT_VOTE_LIMIT = 3;
+
 export const DEFAULT_EVENT_CONFIG: EventConfigData = {
   theme: null,
   maxProposalsPerParticipant: null,
   maxParticipants: null,
+  maxVotesPerParticipant: null,
   wheelMode: 'weightedByVotes',
   richSharePreview: true,
   allowSeries: false,
@@ -34,6 +37,7 @@ export interface EventTemplateData {
   theme: string | null;
   maxProposalsPerParticipant: number | null;
   maxParticipants: number | null;
+  maxVotesPerParticipant: number | null;
   wheelMode: WheelMode;
   richSharePreview: boolean;
   allowSeries: boolean;
@@ -51,6 +55,7 @@ export type EventConfigPatchPayload = {
   theme?: string;
   maxProposalsPerParticipant?: number;
   maxParticipants?: number;
+  maxVotesPerParticipant?: number;
   wheelMode?: WheelMode;
   richSharePreview?: boolean;
   allowSeries?: boolean;

@@ -283,6 +283,7 @@ internal static class DevelopmentScenarioSeed
                 ThemeColor = 265,
                 MaxProposalsPerParticipant = 5,
                 MaxParticipants = 8,
+                MaxVotesPerParticipant = 2,
                 WheelMode = WheelMode.WeightedByVotes,
                 RichSharePreview = true,
                 AllowSeries = true

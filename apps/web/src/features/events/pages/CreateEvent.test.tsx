@@ -245,6 +245,86 @@ describe('CreateEvent', () => {
     expect(screen.getByLabelText(/films max par personne/i)).toHaveValue(4);
   });
 
+  it('sans limite de votes activée, la soirée est créée sans limite', async () => {
+    const user = userEvent.setup();
+    mockFetchApi.mockImplementation((path: unknown) => {
+      if (isTemplatesCall(path)) return Promise.resolve({ items: [] });
+      if (path === '/events') return Promise.resolve({ slug: 'abc', shareUrl: 'x' });
+      return Promise.resolve({});
+    });
+    RenderCreateEvent();
+
+    await user.click(screen.getByText(/options avancées/i));
+    expect(
+      screen.getByRole('switch', { name: /limiter les votes par participant/i })
+    ).toHaveAttribute('aria-checked', 'false');
+    expect(screen.queryByLabelText(/^votes par participant$/i)).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /créer la soirée/i }));
+
+    await waitFor(() => {
+      const configCall = mockFetchApi.mock.calls.find(
+        ([path]) => typeof path === 'string' && path.startsWith('/events/abc/config')
+      );
+      expect(configCall).toBeDefined();
+      expect(JSON.parse((configCall![1] as { body: string }).body)).toEqual(
+        expect.objectContaining({ maxVotesPerParticipant: 0 })
+      );
+    });
+  });
+
+  it('activer la limite de votes envoie la valeur choisie', async () => {
+    const user = userEvent.setup();
+    mockFetchApi.mockImplementation((path: unknown) => {
+      if (isTemplatesCall(path)) return Promise.resolve({ items: [] });
+      if (path === '/events') return Promise.resolve({ slug: 'abc', shareUrl: 'x' });
+      return Promise.resolve({});
+    });
+    RenderCreateEvent();
+
+    await user.click(screen.getByText(/options avancées/i));
+    await user.click(screen.getByRole('switch', { name: /limiter les votes par participant/i }));
+    const field = screen.getByLabelText(/^votes par participant$/i);
+    expect(field).toHaveValue(3);
+    await user.clear(field);
+    await user.type(field, '2');
+    await user.click(screen.getByRole('button', { name: /créer la soirée/i }));
+
+    await waitFor(() => {
+      const configCall = mockFetchApi.mock.calls.find(
+        ([path]) => typeof path === 'string' && path.startsWith('/events/abc/config')
+      );
+      expect(configCall).toBeDefined();
+      expect(JSON.parse((configCall![1] as { body: string }).body)).toEqual(
+        expect.objectContaining({ maxVotesPerParticipant: 2 })
+      );
+    });
+  });
+
+  it('limite activée mais compteur vidé : la valeur par défaut part quand même', async () => {
+    const user = userEvent.setup();
+    mockFetchApi.mockImplementation((path: unknown) => {
+      if (isTemplatesCall(path)) return Promise.resolve({ items: [] });
+      if (path === '/events') return Promise.resolve({ slug: 'abc', shareUrl: 'x' });
+      return Promise.resolve({});
+    });
+    RenderCreateEvent();
+
+    await user.click(screen.getByText(/options avancées/i));
+    await user.click(screen.getByRole('switch', { name: /limiter les votes par participant/i }));
+    await user.clear(screen.getByLabelText(/^votes par participant$/i));
+    await user.click(screen.getByRole('button', { name: /créer la soirée/i }));
+
+    await waitFor(() => {
+      const configCall = mockFetchApi.mock.calls.find(
+        ([path]) => typeof path === 'string' && path.startsWith('/events/abc/config')
+      );
+      expect(configCall).toBeDefined();
+      expect(JSON.parse((configCall![1] as { body: string }).body)).toEqual(
+        expect.objectContaining({ maxVotesPerParticipant: 3 })
+      );
+    });
+  });
+
   it('transmet toute la configuration du template à la soirée créée', async () => {
     const user = userEvent.setup();
     mockFetchApi.mockImplementation((path: unknown) => {
@@ -257,6 +337,7 @@ describe('CreateEvent', () => {
               theme: '🎃 Halloween',
               maxProposalsPerParticipant: 4,
               maxParticipants: 12,
+              maxVotesPerParticipant: 2,
               wheelMode: 'strictRandom',
               richSharePreview: false,
               allowSeries: true,
@@ -282,6 +363,7 @@ describe('CreateEvent', () => {
           theme: '🎃 Halloween',
           maxProposalsPerParticipant: 4,
           maxParticipants: 12,
+          maxVotesPerParticipant: 2,
           wheelMode: 'strictRandom',
           richSharePreview: false,
           allowSeries: true,
