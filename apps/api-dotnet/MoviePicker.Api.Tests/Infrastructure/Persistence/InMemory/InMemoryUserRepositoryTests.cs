@@ -306,4 +306,31 @@ public sealed class InMemoryUserRepositoryTests
 
         Assert.Equal(first.Select(u => u.Handle), second.Select(u => u.Handle));
     }
+
+    [Fact]
+    public async Task UpdateAsync_KeepsEventTemplates()
+    {
+        var added = await _repo.AddAsync(Mk());
+
+        await _repo.UpdateAsync(added with
+        {
+            EventTemplates =
+            [
+                new EventTemplate
+                {
+                    Id = "tpl1",
+                    Name = "Soirée horreur",
+                    Config = new EventConfig { Theme = "🎃 Halloween", MaxProposalsPerParticipant = 3 },
+                    CreatedAt = DateTimeOffset.UtcNow
+                }
+            ]
+        });
+
+        var reloaded = await _repo.GetByIdAsync(added.Id);
+
+        var template = Assert.Single(reloaded!.EventTemplates);
+        Assert.Equal("Soirée horreur", template.Name);
+        Assert.Equal("🎃 Halloween", template.Config.Theme);
+        Assert.Equal(3, template.Config.MaxProposalsPerParticipant);
+    }
 }

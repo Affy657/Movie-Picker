@@ -162,6 +162,13 @@ export default function MyEventsPage() {
     [navigate]
   );
 
+  const handleReuseEvent = useCallback(
+    (slug: string, title: string) => {
+      navigate(ROUTES.createEvent, { state: { reuseEventSlug: slug, reuseEventTitle: title } });
+    },
+    [navigate]
+  );
+
   const handleHistoryRemove = useCallback(
     (slug: string, title: string) => {
       const stored = getStoredParticipant(slug);
@@ -545,6 +552,11 @@ export default function MyEventsPage() {
                                       ? () => handleHistoryRemove(ev.slug, ev.title)
                                       : undefined
                                   }
+                                  onReuse={
+                                    ev.isCreator
+                                      ? () => handleReuseEvent(ev.slug, ev.title)
+                                      : undefined
+                                  }
                                 />
                               ))}
                             </div>
@@ -568,6 +580,9 @@ export default function MyEventsPage() {
                                 !ev.isCreator
                                   ? () => handleHistoryRemove(ev.slug, ev.title)
                                   : undefined
+                              }
+                              onReuse={
+                                ev.isCreator ? () => handleReuseEvent(ev.slug, ev.title) : undefined
                               }
                             />
                           ))}

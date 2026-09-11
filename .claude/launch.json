@@ -22,6 +22,24 @@
       "port": 4000
     },
     {
+      "name": "full-b",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["run", "dev:full:b"],
+      "port": 5273
+    },
+    {
+      "name": "web-b",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["run", "dev:web:b"],
+      "port": 5273
+    },
+    {
+      "name": "api-b",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["run", "dev:api-dotnet:b"],
+      "port": 4100
+    },
+    {
       "name": "web-preview",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": [

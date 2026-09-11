@@ -89,6 +89,10 @@ export async function joinEvent(slug: string, pseudo: string): Promise<JoinEvent
   };
 }
 
+export function fetchEventConfig(slug: string): Promise<EventConfigData> {
+  return fetchApi<EventConfigData>(`/events/${slug}/config`);
+}
+
 export function patchEventConfig(
   slug: string,
   hostToken: string | null,

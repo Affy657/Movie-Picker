@@ -20,6 +20,7 @@ public static class UserDocumentMapper
             RatingScale = ParseRatingScale(doc.RatingScale),
             AvatarId = doc.AvatarId ?? string.Empty,
             NotificationPreferences = BuildNotificationPreferences(doc),
+            EventTemplates = (doc.EventTemplates ?? []).ConvertAll(ToTemplateDomain),
             SupporterSince = doc.SupporterSince is null
                 ? null
                 : new DateTimeOffset(doc.SupporterSince.Value, TimeSpan.Zero),
@@ -51,6 +52,9 @@ public static class UserDocumentMapper
             NotificationPreferences = user.NotificationPreferences
                 .Select(kv => new NotificationPreferenceEntryDocument { Type = (int)kv.Key, Enabled = kv.Value })
                 .ToList(),
+            EventTemplates = user.EventTemplates.Count == 0
+                ? null
+                : user.EventTemplates.Select(ToTemplateDocument).ToList(),
             SupporterSince = user.SupporterSince?.UtcDateTime,
             LetterboxdUsername = string.IsNullOrEmpty(user.LetterboxdUsername) ? null : user.LetterboxdUsername,
             LetterboxdLastSyncAt = user.LetterboxdLastSyncAt?.UtcDateTime,
@@ -59,6 +63,22 @@ public static class UserDocumentMapper
             CreatedAt = user.CreatedAt.UtcDateTime,
             UpdatedAt = user.UpdatedAt.UtcDateTime
         };
+
+    private static EventTemplate ToTemplateDomain(EventTemplateDocument doc) => new()
+    {
+        Id = doc.Id,
+        Name = doc.Name,
+        Config = EventDocumentMapper.ToConfigDomain(doc.Config),
+        CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero)
+    };
+
+    private static EventTemplateDocument ToTemplateDocument(EventTemplate template) => new()
+    {
+        Id = template.Id,
+        Name = template.Name,
+        Config = EventDocumentMapper.ToConfigDocument(template.Config),
+        CreatedAt = template.CreatedAt.UtcDateTime
+    };
 
     private static LinkedIdentity ToIdentityDomain(UserIdentityDocument doc) => new()
     {

@@ -199,6 +199,7 @@ public sealed class InMemoryUserRepository : IUserRepository
             RatingScale = user.RatingScale,
             AvatarId = user.AvatarId,
             NotificationPreferences = user.NotificationPreferences,
+            EventTemplates = user.EventTemplates,
             SupporterSince = user.SupporterSince,
             LetterboxdUsername = user.LetterboxdUsername,
             LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,

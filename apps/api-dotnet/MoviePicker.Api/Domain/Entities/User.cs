@@ -50,6 +50,7 @@ public sealed record User
     public string AvatarId { get; init; } = string.Empty;
     public IReadOnlyDictionary<UserNotificationType, bool> NotificationPreferences { get; init; }
         = NotificationPreferenceDefaults.All();
+    public IReadOnlyList<EventTemplate> EventTemplates { get; init; } = Array.Empty<EventTemplate>();
     public DateTimeOffset? SupporterSince { get; init; }
     public string? LetterboxdUsername { get; init; }
     public DateTimeOffset? LetterboxdLastSyncAt { get; init; }

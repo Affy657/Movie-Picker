@@ -6,20 +6,7 @@ public static class EventDocumentMapper
 {
     public static Event ToDomain(EventDocument doc)
     {
-        EventConfig? config = null;
-        if (doc.Config is not null)
-        {
-            config = new EventConfig
-            {
-                Theme = doc.Config.Theme,
-                ThemeColor = doc.Config.ThemeColor,
-                MaxProposalsPerParticipant = doc.Config.MaxProposalsPerParticipant,
-                MaxParticipants = doc.Config.MaxParticipants,
-                WheelMode = ParseWheelMode(doc.Config.WheelMode),
-                RichSharePreview = doc.Config.RichSharePreview,
-                AllowSeries = doc.Config.AllowSeries
-            };
-        }
+        var config = doc.Config is null ? null : ToConfigDomain(doc.Config);
 
         return new Event
         {
@@ -44,20 +31,7 @@ public static class EventDocumentMapper
 
     public static EventDocument ToDocument(Event evt)
     {
-        EventConfigDocument? config = null;
-        if (evt.Config is not null)
-        {
-            config = new EventConfigDocument
-            {
-                Theme = evt.Config.Theme,
-                ThemeColor = evt.Config.ThemeColor,
-                MaxProposalsPerParticipant = evt.Config.MaxProposalsPerParticipant,
-                MaxParticipants = evt.Config.MaxParticipants,
-                WheelMode = ToWheelModeString(evt.Config.WheelMode),
-                RichSharePreview = evt.Config.RichSharePreview,
-                AllowSeries = evt.Config.AllowSeries
-            };
-        }
+        var config = evt.Config is null ? null : ToConfigDocument(evt.Config);
 
         return new EventDocument
         {
@@ -77,6 +51,28 @@ public static class EventDocumentMapper
             UpdatedAt = evt.UpdatedAt.UtcDateTime
         };
     }
+
+    internal static EventConfig ToConfigDomain(EventConfigDocument doc) => new()
+    {
+        Theme = doc.Theme,
+        ThemeColor = doc.ThemeColor,
+        MaxProposalsPerParticipant = doc.MaxProposalsPerParticipant,
+        MaxParticipants = doc.MaxParticipants,
+        WheelMode = ParseWheelMode(doc.WheelMode),
+        RichSharePreview = doc.RichSharePreview,
+        AllowSeries = doc.AllowSeries
+    };
+
+    internal static EventConfigDocument ToConfigDocument(EventConfig config) => new()
+    {
+        Theme = config.Theme,
+        ThemeColor = config.ThemeColor,
+        MaxProposalsPerParticipant = config.MaxProposalsPerParticipant,
+        MaxParticipants = config.MaxParticipants,
+        WheelMode = ToWheelModeString(config.WheelMode),
+        RichSharePreview = config.RichSharePreview,
+        AllowSeries = config.AllowSeries
+    };
 
     private static WheelMode ParseWheelMode(string? raw) =>
         raw?.Trim().ToLowerInvariant() switch

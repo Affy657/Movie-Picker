@@ -1,15 +1,27 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { useNavigate, Link } from 'react-router';
-import { ArrowLeft, CalendarPlus, Settings2 } from 'lucide-react';
-import ThemeField from '@/features/events/components/ThemeField';
+import { useNavigate, useLocation, Link } from 'react-router';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft, CalendarPlus, Settings2, Sparkles } from 'lucide-react';
+import ThemeField, { parseTheme } from '@/features/events/components/ThemeField';
 import WheelModeField from '@/features/events/components/WheelModeField';
+import EventTemplatesRow from '@/features/events/components/EventTemplatesRow';
+import EventTemplateSaveBar from '@/features/events/components/EventTemplateSaveBar';
+import { useEventTemplates } from '@/features/events/hooks/useEventTemplates';
+import {
+  buildTemplateDraft,
+  isSameTemplateConfig,
+  templateToDraft,
+} from '@/features/events/lib/eventTemplateDraft';
 import NumberInput from '@/shared/components/NumberInput';
 import Toggle from '@/shared/components/Toggle';
-import { useQueryClient } from '@tanstack/react-query';
 import PageLayout from '@/shared/components/PageLayout';
 import SignedOutState from '@/shared/components/SignedOutState';
 import SessionCheckErrorState from '@/features/auth/components/SessionCheckErrorState';
-import { createEvent as createEventApi, patchEventConfig } from '@/features/events/api/eventsApi';
+import {
+  createEvent as createEventApi,
+  fetchEventConfig,
+  patchEventConfig,
+} from '@/features/events/api/eventsApi';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
@@ -21,7 +33,7 @@ import {
   MAX_EVENT_PARTICIPANTS,
   MAX_PROPOSALS_PER_PARTICIPANT,
 } from '@/features/events/types';
-import type { WheelMode } from '@/features/events/types';
+import type { EventConfigData, EventTemplateData, WheelMode } from '@/features/events/types';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { useLocale, useTranslation } from '@/shared/i18n';
@@ -55,6 +67,7 @@ export default function CreateEvent() {
   const wheelModeLabelId = useId();
 
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { user, isLoading: authLoading, authCheckFailed } = useAuth();
   const { track } = useAnalytics();
@@ -75,6 +88,73 @@ export default function CreateEvent() {
   const [maxProposals, setMaxProposals] = useState(String(MAX_PROPOSALS_PER_PARTICIPANT));
   const [wheelMode, setWheelMode] = useState<WheelMode>(DEFAULT_EVENT_CONFIG.wheelMode);
   const [allowSeries, setAllowSeries] = useState(DEFAULT_EVENT_CONFIG.allowSeries ?? false);
+  const [richSharePreview, setRichSharePreview] = useState(
+    DEFAULT_EVENT_CONFIG.richSharePreview ?? true
+  );
+  const [appliedTemplateId, setAppliedTemplateId] = useState<string | null>(null);
+  const [templateError, setTemplateError] = useState<string | null>(null);
+
+  const { templates, lastSaved, isBusy, saveTemplate, updateTemplate, removeTemplate } =
+    useEventTemplates(!!user, {
+      onError: setTemplateError,
+      onSaved: (template) => setAppliedTemplateId(template.id),
+    });
+
+  const applyConfig = useCallback((config: EventConfigData) => {
+    const parsed = parseTheme(config.theme);
+    setThemeEmoji(parsed.emoji);
+    setThemeText(parsed.text);
+    setMaxProposals(
+      config.maxProposalsPerParticipant === null ? '' : String(config.maxProposalsPerParticipant)
+    );
+    setMaxParticipants(config.maxParticipants === null ? '' : String(config.maxParticipants));
+    setWheelMode(config.wheelMode);
+    setRichSharePreview(config.richSharePreview ?? true);
+    setAllowSeries(config.allowSeries ?? false);
+  }, []);
+
+  const applyTemplate = useCallback(
+    (template: EventTemplateData) => {
+      applyConfig(template);
+      setAppliedTemplateId(template.id);
+    },
+    [applyConfig]
+  );
+
+  const reuseState = location.state as { reuseEventSlug?: string; reuseEventTitle?: string } | null;
+  const reuseEventSlug = reuseState?.reuseEventSlug;
+  const reusedConfigQuery = useQuery({
+    queryKey: queryKeys.event.reusableConfig(reuseEventSlug),
+    queryFn: () => fetchEventConfig(reuseEventSlug!),
+    enabled: !!reuseEventSlug && !!user,
+  });
+
+  const reusedConfig = reusedConfigQuery.data;
+  const reusedConfigApplied = useRef(false);
+  const [reusedFrom, setReusedFrom] = useState<string | null>(null);
+  useEffect(() => {
+    if (!reusedConfig || reusedConfigApplied.current) return;
+    reusedConfigApplied.current = true;
+    applyConfig(reusedConfig);
+    setReusedFrom(reuseState?.reuseEventTitle ?? '');
+  }, [reusedConfig, applyConfig, reuseState?.reuseEventTitle]);
+
+  const templateDraft = buildTemplateDraft({
+    themeEmoji,
+    themeText,
+    maxProposals,
+    maxParticipants,
+    wheelMode,
+    richSharePreview,
+    allowSeries,
+  });
+  const storedAppliedTemplate =
+    templates.find((template) => template.id === appliedTemplateId) ?? null;
+  const matchingTemplate =
+    storedAppliedTemplate !== null &&
+    isSameTemplateConfig(templateDraft, templateToDraft(storedAppliedTemplate))
+      ? storedAppliedTemplate
+      : null;
 
   const createAction = useCallback(async () => {
     const res = await createEventApi({ title, date, time });
@@ -94,7 +174,7 @@ export default function CreateEvent() {
         maxProposalsPerParticipant: Number.isFinite(maxPropParsed) ? maxPropParsed : 0,
         maxParticipants: Number.isFinite(maxPartParsed) ? maxPartParsed : 0,
         wheelMode,
-        richSharePreview: true,
+        richSharePreview,
         allowSeries,
       });
     } catch {}
@@ -112,6 +192,7 @@ export default function CreateEvent() {
     maxParticipants,
     maxProposals,
     wheelMode,
+    richSharePreview,
     allowSeries,
     queryClient,
     navigate,
@@ -170,11 +251,23 @@ export default function CreateEvent() {
         <h1 className={styles.title}>{t('events.create.title')}</h1>
         <p className={styles.description}>{t('events.create.description')}</p>
         <form onSubmit={handleSubmit} className="form">
-          {error && (
+          {(error ?? templateError) && (
             <p className="error" role="alert">
-              {error}
+              {error ?? templateError}
             </p>
           )}
+
+          <EventTemplatesRow
+            templates={templates}
+            appliedTemplateId={matchingTemplate?.id ?? null}
+            disabled={isBusy || loading}
+            onApply={applyTemplate}
+            onRename={(template, name) =>
+              updateTemplate(template.id, { ...templateToDraft(template), name })
+            }
+            onDelete={(template) => removeTemplate(template.id)}
+          />
+
           <label className="label" htmlFor="create-title">
             {t('events.create.titleLabel')}
           </label>
@@ -220,7 +313,18 @@ export default function CreateEvent() {
             </div>
           </div>
 
-          <details className={styles.advanced}>
+          {reusedFrom !== null && (
+            <p className={styles.reused} role="status">
+              <Sparkles size={14} aria-hidden />
+              <span className={styles.reusedLabel}>
+                {reusedFrom.length > 0
+                  ? t('events.settings.templates.reusedFrom', { title: reusedFrom })
+                  : t('events.settings.templates.reusedFromUnnamed')}
+              </span>
+            </p>
+          )}
+
+          <details className={styles.advanced} open={reusedFrom !== null}>
             <summary className={styles.advancedSummary}>
               <Settings2 size={16} aria-hidden className={styles.advancedIcon} />
               <span className={styles.advancedLabel}>{t('events.create.advancedOptions')}</span>
@@ -288,6 +392,18 @@ export default function CreateEvent() {
                   onChange={() => setAllowSeries((v) => !v)}
                 />
               </div>
+
+              <EventTemplateSaveBar
+                draft={templateDraft}
+                templates={templates}
+                appliedTemplate={storedAppliedTemplate}
+                lastSaved={lastSaved}
+                disabled={isBusy || loading}
+                onSave={(name) => saveTemplate({ ...templateDraft, name })}
+                onUpdate={(template) =>
+                  updateTemplate(template.id, { ...templateDraft, name: template.name })
+                }
+              />
             </div>
           </details>
 

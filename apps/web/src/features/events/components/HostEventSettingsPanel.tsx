@@ -5,6 +5,14 @@ import { AlertCircle, ChevronDown, Settings, Sparkles, Trash2, X } from 'lucide-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import ThemeField, { parseTheme } from './ThemeField';
 import WheelModeField from './WheelModeField';
+import EventTemplateSaveBar from './EventTemplateSaveBar';
+import EventTemplatesRow from './EventTemplatesRow';
+import { useEventTemplates } from '@/features/events/hooks/useEventTemplates';
+import {
+  buildTemplateDraft,
+  isSameTemplateConfig,
+  templateToDraft,
+} from '@/features/events/lib/eventTemplateDraft';
 import NumberInput from '@/shared/components/NumberInput';
 import Toggle from '@/shared/components/Toggle';
 import { deleteEvent, patchEventConfig } from '@/features/events/api/eventsApi';
@@ -21,6 +29,7 @@ import { eventDateTimeToLocal, splitDateTimeLocal } from '@/shared/utils/eventDa
 import { formatRelativeEventDate } from '@/shared/utils/formatRelativeEventDate';
 import type {
   EventConfigData,
+  EventTemplateData,
   EventConfigPatchPayload,
   EventData,
   WheelMode,
@@ -89,6 +98,8 @@ export default function HostEventSettingsPanel({
   const [maxParticipants, setMaxParticipants] = useState<string>(String(cfg.maxParticipants));
   const [wheelMode, setWheelMode] = useState<WheelMode>(cfg.wheelMode);
   const [allowSeries, setAllowSeries] = useState<boolean>(cfg.allowSeries ?? false);
+  const [richSharePreview, setRichSharePreview] = useState<boolean>(cfg.richSharePreview ?? true);
+  const [appliedTemplateId, setAppliedTemplateId] = useState<string | null>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const performSaveRef = useRef<() => void>(() => {});
 
@@ -107,6 +118,36 @@ export default function HostEventSettingsPanel({
     return !!event.participants?.find((p) => p.id === myId)?.isCreator;
   }, [event.myParticipant, event.participants]);
 
+  const {
+    templates,
+    lastSaved: lastSavedTemplate,
+    isBusy: isTemplateBusy,
+    saveTemplate,
+    updateTemplate,
+    removeTemplate,
+  } = useEventTemplates(open && isConnectedCreator, {
+    onError: setSaveError,
+    onSaved: (template) => setAppliedTemplateId(template.id),
+  });
+
+  const templateDraft = buildTemplateDraft({
+    themeEmoji,
+    themeText,
+    maxProposals: maxProp,
+    maxParticipants,
+    wheelMode,
+    richSharePreview,
+    allowSeries,
+  });
+
+  const storedAppliedTemplate =
+    templates.find((template) => template.id === appliedTemplateId) ?? null;
+  const matchingTemplate =
+    storedAppliedTemplate !== null &&
+    isSameTemplateConfig(templateDraft, templateToDraft(storedAppliedTemplate))
+      ? storedAppliedTemplate
+      : null;
+
   const hydrateFromEvent = useCallback(() => {
     const next = normalizeConfig(event.config);
     setEventTitle(event.title);
@@ -122,6 +163,8 @@ export default function HostEventSettingsPanel({
     setMaxParticipants(String(next.maxParticipants));
     setWheelMode(next.wheelMode);
     setAllowSeries(next.allowSeries ?? false);
+    setRichSharePreview(next.richSharePreview ?? true);
+    setAppliedTemplateId(null);
     setFieldErrors({});
     setSaveError(null);
     setSaveState('saved');
@@ -178,6 +221,22 @@ export default function HostEventSettingsPanel({
     clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => performSaveRef.current(), immediate ? 0 : 600);
   }, []);
+
+  const applyTemplate = useCallback(
+    (template: EventTemplateData) => {
+      const parsed = parseTheme(template.theme);
+      setThemeEmoji(parsed.emoji);
+      setThemeText(parsed.text);
+      setMaxProp(String(template.maxProposalsPerParticipant ?? MAX_PROPOSALS_PER_PARTICIPANT));
+      setMaxParticipants(String(template.maxParticipants ?? MAX_EVENT_PARTICIPANTS));
+      setWheelMode(template.wheelMode);
+      setAllowSeries(template.allowSeries);
+      setRichSharePreview(template.richSharePreview);
+      setAppliedTemplateId(template.id);
+      scheduleAutoSave(true);
+    },
+    [scheduleAutoSave]
+  );
 
   performSaveRef.current = () => {
     const errors: FieldErrors = {};
@@ -242,7 +301,7 @@ export default function HostEventSettingsPanel({
       maxProposalsPerParticipant,
       maxParticipants: maxParticipantsValue,
       wheelMode,
-      richSharePreview: cfg.richSharePreview ?? true,
+      richSharePreview,
       allowSeries,
       ...(eventDateTime ? { date: eventDateTime.date, time: eventDateTime.time } : {}),
       notifyParticipantsOfDateChange: notifyDateChange,
@@ -535,6 +594,35 @@ export default function HostEventSettingsPanel({
               />
             </div>
           </div>
+
+          {isConnectedCreator && (
+            <section className={styles.templatesSection} data-testid="event-templates-section">
+              <EventTemplatesRow
+                className={styles.templatesRow}
+                templates={templates}
+                appliedTemplateId={matchingTemplate?.id ?? null}
+                disabled={isTemplateBusy}
+                onApply={applyTemplate}
+                onRename={(template, name) =>
+                  updateTemplate(template.id, { ...templateToDraft(template), name })
+                }
+                onDelete={(template) => removeTemplate(template.id)}
+              />
+              <EventTemplateSaveBar
+                className={styles.templatesSaveBar}
+                variant="event"
+                draft={templateDraft}
+                templates={templates}
+                appliedTemplate={storedAppliedTemplate}
+                lastSaved={lastSavedTemplate}
+                disabled={isTemplateBusy}
+                onSave={(name) => saveTemplate({ ...templateDraft, name })}
+                onUpdate={(template) =>
+                  updateTemplate(template.id, { ...templateDraft, name: template.name })
+                }
+              />
+            </section>
+          )}
         </form>
 
         {isConnectedCreator && (

@@ -15,6 +15,23 @@ export const DEFAULT_EVENT_CONFIG: EventConfigData = {
   allowSeries: false,
 };
 
+export const MAX_EVENT_TEMPLATES = 5;
+
+export const MAX_EVENT_TEMPLATE_NAME_LENGTH = 60;
+
+export interface EventTemplateData {
+  id: string;
+  name: string;
+  theme: string | null;
+  maxProposalsPerParticipant: number | null;
+  maxParticipants: number | null;
+  wheelMode: WheelMode;
+  richSharePreview: boolean;
+  allowSeries: boolean;
+}
+
+export type SaveEventTemplateBody = Omit<EventTemplateData, 'id'>;
+
 export type EventConfigPatchPayload = {
   title?: string;
   theme: string;

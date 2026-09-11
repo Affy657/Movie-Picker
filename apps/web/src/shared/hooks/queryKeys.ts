@@ -24,6 +24,9 @@ export const queryKeys = {
     active: ['events', 'mine', 'active'] as const,
     finished: (q: string) => ['events', 'mine', 'finished', q] as const,
   },
+  eventTemplates: {
+    list: ['event-templates', 'list'] as const,
+  },
   event: {
     all: ['event'] as const,
 
@@ -32,6 +35,9 @@ export const queryKeys = {
 
     eligibleFollows: (slug: string | undefined) =>
       ['event', 'eligible-follows', slug ?? '$pending'] as const,
+
+    reusableConfig: (slug: string | undefined) =>
+      ['event', 'reusable-config', slug ?? '$pending'] as const,
   },
   movies: {
     all: ['movies'] as const,

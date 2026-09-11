@@ -340,4 +340,214 @@ describe('HostEventSettingsPanel', () => {
       expect(screen.queryByTestId('route-my-events')).not.toBeInTheDocument();
     });
   });
+
+  const creatorEvent: EventData = {
+    ...baseEvent,
+    myParticipant: { id: 'p1', pseudo: 'Hôte' },
+    participants: [{ id: 'p1', pseudo: 'Hôte', isCreator: true }],
+  };
+
+  const templateFixture = {
+    id: 'tpl1',
+    name: 'Soirée horreur',
+    theme: '🎃 Halloween',
+    maxProposalsPerParticipant: 4,
+    maxParticipants: 12,
+    wheelMode: 'weightedByVotes',
+    richSharePreview: false,
+    allowSeries: true,
+  };
+
+  it('applique un template aux réglages de la soirée', async () => {
+    const user = userEvent.setup();
+    let patchedBody: Record<string, unknown> | null = null;
+    server.use(
+      http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
+        HttpResponse.json({ items: [templateFixture] })
+      ),
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        patchedBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({
+          theme: '🎃 Halloween',
+          maxProposalsPerParticipant: 4,
+          maxParticipants: 12,
+          wheelMode: 'weightedByVotes',
+          richSharePreview: false,
+          allowSeries: true,
+        });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={creatorEvent}
+      />
+    );
+
+    await user.click(await screen.findByRole('button', { name: /Soirée horreur/ }));
+
+    await waitFor(() => expect(patchedBody).not.toBeNull());
+    expect(patchedBody).toMatchObject({
+      theme: '🎃 Halloween',
+      maxProposalsPerParticipant: 4,
+      maxParticipants: 12,
+      wheelMode: 'weightedByVotes',
+      richSharePreview: false,
+      allowSeries: true,
+    });
+  });
+
+  it('permet de gérer les templates depuis le panneau', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
+        HttpResponse.json({ items: [templateFixture] })
+      )
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={creatorEvent}
+      />
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Gérer' }));
+
+    expect(
+      screen.getByRole('button', { name: /Renommer le template « Soirée horreur »/ })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Supprimer le template « Soirée horreur »/ })
+    ).toBeInTheDocument();
+  });
+
+  it('met à jour le template appliqué après une retouche des réglages', async () => {
+    const user = userEvent.setup();
+    let putBody: Record<string, unknown> | null = null;
+    server.use(
+      http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
+        HttpResponse.json({ items: [templateFixture] })
+      ),
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, () =>
+        HttpResponse.json({
+          theme: '🎃 Halloween',
+          maxProposalsPerParticipant: 4,
+          maxParticipants: 12,
+          wheelMode: 'weightedByVotes',
+          richSharePreview: false,
+          allowSeries: true,
+        })
+      ),
+      http.put(`${TEST_API_V1}/users/me/event-templates/tpl1`, async ({ request }) => {
+        putBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ ...templateFixture, wheelMode: 'strictRandom' });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={creatorEvent}
+      />
+    );
+
+    await user.click(await screen.findByRole('button', { name: /Soirée horreur/ }));
+    await waitFor(() =>
+      expect(screen.getByRole('radio', { name: /pondéré par les votes/i })).toBeChecked()
+    );
+
+    await user.click(screen.getByRole('radio', { name: /aléatoire strict/i }));
+
+    const updateButton = await screen.findByRole('button', { name: 'Mettre à jour' });
+    await user.click(updateButton);
+
+    await waitFor(() => expect(putBody).not.toBeNull());
+    expect(putBody).toMatchObject({
+      name: 'Soirée horreur',
+      theme: '🎃 Halloween',
+      wheelMode: 'strictRandom',
+      richSharePreview: false,
+      allowSeries: true,
+    });
+  });
+
+  it('garde le template appliqué coché quand il n’a aucune limite', async () => {
+    const user = userEvent.setup();
+    const noLimitTemplate = {
+      ...templateFixture,
+      maxProposalsPerParticipant: null,
+      maxParticipants: null,
+    };
+    server.use(
+      http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
+        HttpResponse.json({ items: [noLimitTemplate] })
+      ),
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, () =>
+        HttpResponse.json({
+          theme: '🎃 Halloween',
+          maxProposalsPerParticipant: null,
+          maxParticipants: null,
+          wheelMode: 'weightedByVotes',
+          richSharePreview: false,
+          allowSeries: true,
+        })
+      )
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={creatorEvent}
+      />
+    );
+
+    const chip = await screen.findByRole('button', { name: /Soirée horreur/ });
+    await user.click(chip);
+
+    await waitFor(() => expect(chip).toHaveAttribute('aria-pressed', 'true'));
+    expect(screen.queryByRole('button', { name: 'Mettre à jour' })).not.toBeInTheDocument();
+  });
+
+  it('regroupe la gestion des templates en bas du panneau', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
+        HttpResponse.json({ items: [templateFixture] })
+      )
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={creatorEvent}
+      />
+    );
+
+    const chip = await screen.findByRole('button', { name: /Soirée horreur/ });
+    const section = screen.getByTestId('event-templates-section');
+
+    expect(section).toContainElement(chip);
+    expect(section).toContainElement(screen.getByRole('button', { name: 'En faire un template' }));
+
+    const lastSetting = screen.getByRole('radio', { name: /aléatoire strict/i });
+    expect(
+      lastSetting.compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+  });
 });

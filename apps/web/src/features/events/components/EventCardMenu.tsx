@@ -1,6 +1,6 @@
 import { useCallback, useId, useRef, useState } from 'react';
 import clsx from 'clsx';
-import { LogOut, MoreVertical, Trash2 } from 'lucide-react';
+import { LogOut, MoreVertical, RotateCcw, Trash2 } from 'lucide-react';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useMenuFocus } from '@/shared/hooks/useMenuFocus';
 import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
@@ -14,6 +14,7 @@ interface EventCardMenuProps {
   onDelete?: () => void;
   onRemove?: () => void;
   removeLabel?: string;
+  onReuse?: () => void;
 }
 
 export default function EventCardMenu({
@@ -22,6 +23,7 @@ export default function EventCardMenu({
   onDelete,
   onRemove,
   removeLabel,
+  onReuse,
 }: Readonly<EventCardMenuProps>) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -35,7 +37,7 @@ export default function EventCardMenu({
   useMenuFocus(open, panelRef, triggerRef);
   const fitLeft = useMenuHorizontalFit(open, containerRef, panelRef);
 
-  if (!onDelete && !onRemove) return null;
+  if (!onDelete && !onRemove && !onReuse) return null;
 
   const label = t('events.myEvents.eventOptionsLabel', { title });
 
@@ -60,6 +62,17 @@ export default function EventCardMenu({
           label={label}
           style={fitLeft !== null ? { left: fitLeft, right: 'auto' } : undefined}
         >
+          {onReuse && (
+            <MenuItem
+              icon={<RotateCcw size={14} aria-hidden />}
+              onClick={() => {
+                close();
+                onReuse();
+              }}
+            >
+              {t('events.settings.templates.reuseEventAction')}
+            </MenuItem>
+          )}
           {onDelete && (
             <MenuItem
               danger

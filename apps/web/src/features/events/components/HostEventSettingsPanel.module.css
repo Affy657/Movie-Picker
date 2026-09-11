@@ -152,6 +152,30 @@
   line-height: 1;
 }
 
+.templatesSection .templatesRow {
+  margin-bottom: 0;
+}
+
+.templatesSection .templatesRow:not(:last-child) {
+  border-bottom: none;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.templatesSection .templatesSaveBar {
+  margin-top: 0;
+  padding: var(--space-3-5);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.templatesSection .templatesRow + .templatesSaveBar {
+  border-top-style: dashed;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
 .field {
   margin-bottom: var(--space-3-5);
 }
