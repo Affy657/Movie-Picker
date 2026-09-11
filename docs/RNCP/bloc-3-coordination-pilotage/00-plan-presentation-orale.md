@@ -52,18 +52,19 @@ Cette annonce explicite est ce qui protège les 15 minutes de questions. Un jury
 
 ## 3. Minutage global
 
-**La présentation ouvre sur la démonstration.** Le jury voit le logiciel en production avant d'entendre comment il a été piloté ; la demande de validation, elle, ferme la présentation, une fois le pilotage démontré. L'ordre des chapitres 1 à 6 reste celui du référentiel : c'est aussi l'ordre chronologique du projet, planifier, suivre, décider, organiser, rendre compte.
+**La présentation ouvre sur la démonstration.** Le jury voit le logiciel en production avant d'entendre comment il a été piloté ; la demande de validation, elle, ferme la présentation, une fois le pilotage démontré. L'ordre des chapitres 2 à 7 reste celui du référentiel : c'est aussi l'ordre chronologique du projet, planifier, suivre, décider, organiser, rendre compte.
 
 | Ch. | Séquence | Durée | Diapos | Compétence |
 |:---:|----------|------:|:------:|:----------:|
-| 0 | Titre, cadre et sommaire, **démonstration en direct (4:50)** | 6:30 | 3 | **C3.4.2** ÉLIM |
-| 1 | Méthodologie et outils, planning, lots, ressources, RACI, vigilance | 6:20 | 6 | **C3.1** ÉLIM |
-| 2 | Outil de suivi, indicateurs, tableaux de bord, écart | 5:20 | 5 | **C3.2.1** ÉLIM |
-| 3 | Cas d'arbitrage : dérive, options, logigramme, décision | 2:20 | 2 | C3.2.2 |
-| 4 | Missions, styles managériaux, animation et inclusion, analyse critique | 3:30 | 4 | C3.3.1 |
-| 5 | Compétences, grille, plan de développement | 2:40 | 3 | C3.3.2 |
-| 6 | Points de validation, comptes rendus, satisfaction | 2:40 | 3 | C3.4.1 |
-| 7 | Bilan, et la demande de validation du périmètre livré | 0:40 | 1 | **C3.4.2** ÉLIM |
+| 0 | Titre, cadre et sommaire | 0:50 | 2 | |
+| 1 | **Démonstration en direct (4:50)** | 5:40 | 1 | **C3.4.2** ÉLIM |
+| 2 | Méthodologie et outils, planning, lots, ressources, RACI, vigilance | 6:20 | 6 | **C3.1** ÉLIM |
+| 3 | Outil de suivi, indicateurs, tableaux de bord, écart | 5:20 | 5 | **C3.2.1** ÉLIM |
+| 4 | Cas d'arbitrage : dérive, options, logigramme, décision | 2:20 | 2 | C3.2.2 |
+| 5 | Missions, styles managériaux, animation et inclusion, analyse critique | 3:30 | 4 | C3.3.1 |
+| 6 | Compétences, grille, plan de développement | 2:40 | 3 | C3.3.2 |
+| 7 | Points de validation, comptes rendus, satisfaction | 2:40 | 3 | C3.4.1 |
+| 8 | Bilan, et la demande de validation du périmètre livré | 0:40 | 1 | **C3.4.2** ÉLIM |
 | | **Total** | **30:00** | **27** | |
 
 **Contrôle du minutage réel du support** (somme des durées portées en note de présentateur, démonstration comprise) : **30 minutes exactement**, et le minutage est exact **chapitre par chapitre**.
@@ -72,43 +73,43 @@ Répartition volontaire : les trois compétences éliminatoires absorbent **18 m
 
 ## 4. Déroulé diapositive par diapositive
 
-### Chapitre 0 : ouverture et démonstration (6:30, 3 diapos), C3.4.2 ÉLIMINATOIRE
+### Chapitres 0 et 1 : ouverture, puis démonstration (6:30, 3 diapos), C3.4.2 ÉLIMINATOIRE
 
-Critères visés par la démonstration : le logiciel est utilisable, la démonstration reprend les fonctionnalités attendues, le vocabulaire est adapté à une présentation client. Le quatrième critère, la validation, est porté par la diapositive 27.
+Critères visés par la démonstration : le logiciel est utilisable, la démonstration reprend les fonctionnalités attendues, le vocabulaire est adapté à une présentation client. Le quatrième critère, la validation, est porté par la diapositive 27. Les numéros de chapitre des titres de diapositives sont ceux du sommaire : la démonstration est le chapitre 1.
 
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
 | 1 | Movie Picker, coordonner et piloter un projet de développement logiciel | 0:10 | Titre, Bloc 3 RNCP 39583, Adrien MORAND, 16 septembre 2026 |
 | 2 | Deux registres, annoncés maintenant | 0:40 | Les deux registres, réel et organisation cible. Sommaire : la démonstration puis les 7 chapitres, chacun avec sa compétence, les 3 éliminatoires signalées |
-| 3 | Démonstration | 0:50 | Un seul mot et le lien du site en production, `web.movie-picker.fr`. Dit à voix haute, rien à l'écran : 10 versions livrées de février à septembre 2026, 17 comptes, 74 % des soirées menées jusqu'au tirage, puis les 6 temps du parcours en une phrase. Deux appareils. Le plan de repli à 4 niveaux est en note de présentateur |
+| 3 | 1. Démonstration | 0:50 | Un seul mot et le lien du site en production, `web.movie-picker.fr`. Dit à voix haute, rien à l'écran : 10 versions livrées de février à septembre 2026, 17 comptes, 74 % des soirées menées jusqu'au tirage, puis les 6 temps du parcours en une phrase. Deux appareils. Le plan de repli à 4 niveaux est en note de présentateur |
 | | **Démonstration en direct** | 4:50 | Parcours détaillé au point 5 |
 
-### Chapitre 1 : planifier l'exécution du projet (6:20, 6 diapos), C3.1 ÉLIMINATOIRE
+### Chapitre 2 : planifier l'exécution du projet (6:20, 6 diapos), C3.1 ÉLIMINATOIRE
 
 Critères visés : méthodologie justifiée avec bénéfices attendus, outil de planification argumenté et compatible avec la méthodologie, planning découpé en phases et lots faisant apparaître étude, mesure, conception, réalisation et restitution, tâches affectées selon les compétences via une matrice RACI tenant compte du handicap, points de vigilance soulignés.
 
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
-| 4 | Planifier : un flux, deux horizons | 1:30 | Kanban léger à revues de version : les deux règles, les bénéfices constatés en quatre lignes, Scrum et cycle en V écartés avec le motif. Le schéma des deux horizons : rétroplanning et Gantt au mois, tableau de flux à la journée. C'est le schéma qui répond au critère de **compatibilité** entre l'outil et la méthode |
+| 4 | 2. Planifier : un flux, deux horizons | 1:30 | Kanban léger à revues de version : les deux règles, les bénéfices constatés en quatre lignes, Scrum et cycle en V écartés avec le motif. Le schéma des deux horizons : rétroplanning et Gantt au mois, tableau de flux à la journée. C'est le schéma qui répond au critère de **compatibilité** entre l'outil et la méthode |
 | 5 | Le planning en cinq phases | 1:10 | Diagramme de Gantt en HTML et CSS, du 27 février au 16 septembre 2026, avec les 5 phases exigées. Dire explicitement que les phases se **chevauchent**, propriété d'un flux Kanban |
 | 6 | Quatre lots, 98 jours-homme | 0:50 | Barre empilée des 4 lots : MVP 27 J/H, migration 13, V1 produit 35, clôture 23. Méthode analogique, marge de 20 %. Source : chiffrage du Bloc 1 |
 | 7 | Les ressources nécessaires | 0:50 | Trois familles. Humaines : les 4 profils de l'organisation cible et leur compétence pivot. Matérielles : poste, outillage, chaîne, hébergement, services tiers. Financières : 34 300 € de valeur de développement, moins de 200 € par an de trésorerie, 0 € de licence |
 | 8 | La matrice RACI, et le handicap dedans | 1:00 | Grille colorée 8 activités × 5 acteurs, R, A, C, I. Trois propriétés. Ligne dédiée « inclusion et adaptation des postes » avec un responsable identifié |
 | 9 | Sept points de vigilance, un seul d'organisation | 1:00 | Les deux risques structurels en cartes, dont la concentration des rôles sur une personne, indicateur à 1. Les cinq risques techniques avec leur parade, dont celui qui s'est réalisé en production |
 
-### Chapitre 2 : piloter l'avancement (5:20, 5 diapos), C3.2.1 ÉLIMINATOIRE
+### Chapitre 3 : piloter l'avancement (5:20, 5 diapos), C3.2.1 ÉLIMINATOIRE
 
 Critères visés : outil de suivi en adéquation avec le projet et la méthodologie, indicateurs mesurables et quantifiables couvrant délais, coûts et avancement, tableaux de bord intégrant avancement, coûts, délais, risques et ressources humaines.
 
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
-| 10 | Piloter l'avancement : l'outil de suivi | 1:10 | GitHub comme outil unique, cinq surfaces en indicateurs : 5 issues, 26 pull requests fusionnées sur 77, 449 exécutions, 10 releases, feuilles de route versionnées. Le critère de choix : la distance entre le travail et sa trace. Adéquation avec Kanban propriété par propriété |
+| 10 | 3. Piloter l'avancement : l'outil de suivi | 1:10 | GitHub comme outil unique, cinq surfaces en indicateurs : 5 issues, 26 pull requests fusionnées sur 77, 449 exécutions, 10 releases, feuilles de route versionnées. Le critère de choix : la distance entre le travail et sa trace. Adéquation avec Kanban propriété par propriété |
 | 11 | Comment un indicateur entre au tableau de bord | 1:00 | La règle de sélection en quatre conditions, dont « rattaché à une décision ». Les cinq axes. Les trois indicateurs **écartés** faute de mesurabilité |
 | 12 | Tableau de bord : avancement et délais | 1:00 | Commits, jours actifs et fusions par mois (833, 88, 122 au 05/09), les 10 versions et leurs écarts, médiane de 17 jours, les 4 échéances tenues |
 | 13 | Tableau de bord : coûts, risques, ressources | 1:00 | Coût réel contre budget, les huit indicateurs de risque dont deux en alerte, la stabilité de la chaîne mois par mois (52 % → 94 %), la soutenabilité de la charge |
 | 14 | L'écart n'est pas où on le cherche | 1:10 | 98 J/H prévus contre 88 reconstitués, mais 74 items livrés dont 51 hors chiffrage : l'écart est un glissement de périmètre que rien ne mesurait. Les trois décisions prises à partir d'une mesure, et l'autocritique du dispositif |
 
-### Chapitre 3 : le cas d'arbitrage (2:20, 2 diapos), C3.2.2
+### Chapitre 4 : le cas d'arbitrage (2:20, 2 diapos), C3.2.2
 
 Critères visés : problématique exposée avec ses conséquences, options détaillées, décision argumentée qui résout la problématique. La grille nomme explicitement le **logigramme** comme outil d'aide à la décision.
 
@@ -118,45 +119,45 @@ Deux cas de réserve pour les questions : le contrôle de performance instable q
 
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
-| 15 | Un cas d'arbitrage : la dérive constatée | 1:00 | Frise à l'heure près du 16 au 19 mars, les 4 exigences que l'API du MVP ne satisfaisait pas, et la conséquence qui tranche : 944 lignes à réécrire le 18 mars, 44 663 aujourd'hui. Le coût de la décision croissait chaque jour |
+| 15 | 4. Un cas d'arbitrage : la dérive constatée | 1:00 | Frise à l'heure près du 16 au 19 mars, les 4 exigences que l'API du MVP ne satisfaisait pas, et la conséquence qui tranche : 944 lignes à réécrire le 18 mars, 44 663 aujourd'hui. Le coût de la décision croissait chaque jour |
 | 16 | Quatre options, le logigramme tranche | 1:20 | Les quatre options avec coût et risque, l'option D démontée. **Logigramme** en HTML et CSS, parcouru à voix haute sur le chemin réellement suivi. La décision B avec son critère de succès défini avant, les trois résultats mesurés (12 routes à l'identique, v1.0.0 à la date, 0 retour arrière), et le bandeau d'honnêteté : 87 lignes de front modifiées, lot chiffré a posteriori |
 
-### Chapitre 4 : piloter l'équipe (3:30, 4 diapos), C3.3.1
+### Chapitre 5 : piloter l'équipe (3:30, 4 diapos), C3.3.1
 
 Critères visés : handicap pris en compte, charge répartie de manière équilibrée, style managérial identifié et décrit, principes et techniques d'animation présentés et adaptés au projet, analyse critique d'une situation ou d'une posture, recommandations réalistes, outils collaboratifs intégrant le partage de ressources et choix pertinents.
 
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
-| 17 | Piloter l'équipe : l'affectation des missions | 0:50 | Les 4 profils et leur mission, le critère d'affectation (compétence attestée), la répartition des 98 J/H en barres empilées par lot. **Une somme équilibrée n'est pas un équilibre** : le back porte 36 %, mais les pics ne se superposent pas |
+| 17 | 5. Piloter l'équipe : l'affectation des missions | 0:50 | Les 4 profils et leur mission, le critère d'affectation (compétence attestée), la répartition des 98 J/H en barres empilées par lot. **Une somme équilibrée n'est pas un équilibre** : le back porte 36 %, mais les pics ne se superposent pas |
 | 18 | Les quatre styles managériaux, situés | 0:55 | Quadrant directivité × soutien : directif, persuasif, participatif, délégatif, chacun placé sur une situation réelle du projet. Style dominant, le délégatif encadré, et sa condition de validité |
 | 19 | Animer, partager, inclure : un seul dispositif | 0:50 | Le dispositif réel de délégation en trois pas (cadre écrit, points d'arrêt, contrôle en sortie), les outils avec ce que chacun partage, et les trois contraintes servies par la même propriété : handicap, fuseaux horaires, langue. Aménagements de l'organisation cible, accessibilité du produit comme porte bloquante |
 | 20 | Analyse critique : une posture qui a réussi | 0:55 | Du 17 au 26 août 2026, 10 jours travaillés consécutifs pour deux échéances superposées. Les deux sont tenues, la chaîne chute ensuite. La posture est critiquée précisément parce qu'elle a réussi, et les recommandations sont chiffrées |
 
-### Chapitre 5 : les besoins en compétences (2:40, 3 diapos), C3.3.2
+### Chapitre 6 : les besoins en compétences (2:40, 3 diapos), C3.3.2
 
 Critères visés : compétences à mobiliser identifiées, grille des compétences actuelles et à acquérir commentée, plan de développement établi et détaillé, formations préconisées selon les besoins et les profils, modalités de formation adaptées au handicap.
 
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
-| 21 | Les compétences, déduites des lots | 0:40 | La méthode avant le catalogue : chaque compétence correspond à une technologie présente dans le dépôt avec une date d'introduction vérifiable. La chronologie en 4 vagues |
+| 21 | 6. Les compétences, déduites des lots | 0:40 | La méthode avant le catalogue : chaque compétence correspond à une technologie présente dans le dépôt avec une date d'introduction vérifiable. La chronologie en 4 vagues |
 | 22 | La grille d'évaluation, et ce qu'elle avoue | 1:10 | Échelle comportementale en 5 niveaux, écarts en haltères par profil, et la phrase d'ouverture obligatoire : le niveau actuel n'évalue personne, c'est le socle attendu au recrutement. **Commentée à l'oral** en trois lectures |
 | 23 | Le plan de développement des compétences | 0:50 | 8 actions en barres, classées par coût d'un écart non comblé, chacune avec sa modalité, sa durée et son indicateur de réussite. 20 J/H, 2 100 €. La logique recruter ou former transmise aux RH. Modalités handicap posées par défaut |
 
-### Chapitre 6 : rendre compte au commanditaire (2:40, 3 diapos), C3.4.1
+### Chapitre 7 : rendre compte au commanditaire (2:40, 3 diapos), C3.4.1
 
 Critères visés : comptes rendus clairs et ordonnés, facilitant la prise de décision du client, points de validation organisés pour assurer le suivi qualité, indicateurs de satisfaction définis et cohérents.
 
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
-| 24 | Rendre compte : les points de validation | 0:50 | **Deux commanditaires, deux rythmes** : le jury valide la conformité sur 4 échéances, les 17 utilisateurs valident l'usage sur 10 versions. Frise des versions, et ce qui fait d'une livraison un point de validation qualité : 5 contrôles bloquants puis un test de fumée |
+| 24 | 7. Rendre compte : les points de validation | 0:50 | **Deux commanditaires, deux rythmes** : le jury valide la conformité sur 4 échéances, les 17 utilisateurs valident l'usage sur 10 versions. Frise des versions, et ce qui fait d'une livraison un point de validation qualité : 5 contrôles bloquants puis un test de fumée |
 | 25 | Le compte rendu qui fait décider | 0:50 | Le gabarit en 5 blocs dont 3 de décision, sur le cas réel de l'adoption des notifications. Les trois niveaux de compte rendu, du poussé au décisionnel, et la limite : le niveau poussé n'existe que depuis la v1.4.0 |
 | 26 | Les indicateurs de satisfaction | 1:00 | Trois familles en trois indicateurs : 74 % comportemental, 9,6 déclaratif sur 7 réponses, 100 % opérationnel. Le 9,6 présenté pour ce qu'il est. La boucle mesurée en frise, 17 jours du retour à la production, et ce que les retours ont produit |
 
-### Chapitre 7 : bilan et validation (0:40, 1 diapo), C3.4.2 ÉLIMINATOIRE
+### Chapitre 8 : bilan et validation (0:40, 1 diapo), C3.4.2 ÉLIMINATOIRE
 
 | # | Titre | Durée | Contenu |
 |:-:|-------|------:|---------|
-| 27 | Bilan, et la validation du périmètre livré | 0:40 | Trois enseignements de pilotage dont un échec assumé, les 3 évolutions suivantes chiffrées et priorisées, puis **la demande de validation formulée telle quelle** : *sur cette base, je vous demande de valider le périmètre livré, pour engager le lot suivant*. C'est ce geste qui satisfait le quatrième critère de C3.4.2. Ouverture sur les 15 minutes d'échange |
+| 27 | 8. Bilan, et la validation du périmètre livré | 0:40 | Trois enseignements de pilotage dont un échec assumé, les 3 évolutions suivantes chiffrées et priorisées, puis **la demande de validation formulée telle quelle** : *sur cette base, je vous demande de valider le périmètre livré, pour engager le lot suivant*. C'est ce geste qui satisfait le quatrième critère de C3.4.2. Ouverture sur les 15 minutes d'échange |
 
 ## 5. La démonstration en direct (4:50)
 

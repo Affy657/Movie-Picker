@@ -72,14 +72,15 @@ npm run export
 
 | Chapitre | Diapos | Compétence | État |
 |----------|:------:|:----------:|------|
-| 0. Titre, cadre et sommaire, **démonstration en direct** | 1 à 3 | **C3.4.2** ÉLIM | ✅ |
-| 1. Planifier l'exécution | 4 à 9 | **C3.1** ÉLIM | ✅ |
-| 2. Piloter l'avancement | 10 à 14 | **C3.2.1** ÉLIM | ✅ |
-| 3. Le cas d'arbitrage | 15, 16 | C3.2.2 | ✅ |
-| 4. Piloter l'équipe | 17 à 20 | C3.3.1 | ✅ |
-| 5. Les besoins en compétences | 21 à 23 | C3.3.2 | ✅ |
-| 6. Rendre compte au commanditaire | 24 à 26 | C3.4.1 | ✅ |
-| 7. Bilan, et la demande de validation | 27 | **C3.4.2** ÉLIM | ✅ |
+| 0. Titre, cadre et sommaire | 1, 2 | | ✅ |
+| 1. Démonstration en direct | 3 | **C3.4.2** ÉLIM | ✅ |
+| 2. Planifier l'exécution | 4 à 9 | **C3.1** ÉLIM | ✅ |
+| 3. Piloter l'avancement | 10 à 14 | **C3.2.1** ÉLIM | ✅ |
+| 4. Le cas d'arbitrage | 15, 16 | C3.2.2 | ✅ |
+| 5. Piloter l'équipe | 17 à 20 | C3.3.1 | ✅ |
+| 6. Les besoins en compétences | 21 à 23 | C3.3.2 | ✅ |
+| 7. Rendre compte au commanditaire | 24 à 26 | C3.4.1 | ✅ |
+| 8. Bilan, et la demande de validation | 27 | **C3.4.2** ÉLIM | ✅ |
 | Annexes pour les questions | 28 à 35 | | ✅ |
 
 **Support complet : 35 diapositives**, dont 27 présentées et 8 annexes appelées uniquement sur question. Les 35 **tiennent dans le cadre**, vérifié par `npm run verify:rendu`. Les annexes portent la mention `ANNEXE` en bas à gauche à la place du code de compétence.

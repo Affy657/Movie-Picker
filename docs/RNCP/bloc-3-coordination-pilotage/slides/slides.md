@@ -82,7 +82,7 @@ Ne pas s'excuser, ne pas justifier longuement. Annoncer, puis avancer.
 
 ---
 
-# Démonstration
+# 1. Démonstration
 
 <div class="text-center" style="font-size:1.9rem"><a href="https://web.movie-picker.fr" target="_blank">web.movie-picker.fr</a></div>
 
@@ -153,7 +153,7 @@ en silence se lit comme une defaillance du logiciel.
 
 ---
 
-# 1. Planifier : un flux, deux horizons
+# 2. Planifier : un flux, deux horizons
 
 <div class="lede"><b>Kanban léger à revues de version.</b> Deux règles, aucune cérémonie, et deux outils qui ne se contredisent pas parce qu'ils n'opèrent pas à la même échelle de temps.</div>
 
@@ -566,7 +566,7 @@ rend l'organisation cible necessaire.
 
 ---
 
-# 2. Piloter l'avancement : l'outil de suivi
+# 3. Piloter l'avancement : l'outil de suivi
 
 <div class="lede">Le suivi est tenu <b>dans GitHub</b>, là où le travail se produit. Le critère de choix est la <b>distance entre le travail et sa trace</b>.</div>
 
@@ -935,7 +935,7 @@ Un indicateur ne mesure que la pratique qui le produit.
 
 ---
 
-# 3. Un cas d'arbitrage : la dérive constatée
+# 4. Un cas d'arbitrage : la dérive constatée
 
 <div class="lede">Le MVP est livré sur une pile qui ne portera pas la suite. Et le coût de la corriger croît chaque jour.</div>
 
@@ -1111,7 +1111,7 @@ instruit. »
 
 ---
 
-# 4. Piloter l'équipe : l'affectation des missions
+# 5. Piloter l'équipe : l'affectation des missions
 
 <div class="lede">L'affectation suit la <b>compétence attestée</b>, jamais la disponibilité. <span class="opacity-70">Organisation cible, projection.</span></div>
 
@@ -1411,7 +1411,7 @@ Terminer sur la recommandation 2 en disant qu'elle est la plus difficile a tenir
 
 ---
 
-# 5. Les compétences, déduites des lots
+# 6. Les compétences, déduites des lots
 
 <div class="lede">Pour chaque lot : <b>que faut-il savoir faire pour qu'il soit livrable et exploitable ?</b> Chaque compétence correspond ainsi à une technologie du dépôt, avec une date d'introduction vérifiable.</div>
 
@@ -1634,7 +1634,7 @@ projet dont on est proprietaire, ce n'est pas un modele.
 
 ---
 
-# 6. Rendre compte : les points de validation
+# 7. Rendre compte : les points de validation
 
 <div class="lede"><b>Deux commanditaires, deux rythmes.</b> Le jury valide la conformité au référentiel sur 4 échéances. Les 17 utilisateurs valident que ce qui est livré sert, sur 10 versions.</div>
 
@@ -1851,7 +1851,7 @@ demonstration : changement de registre.
 
 ---
 
-# 7. Bilan, et la validation du périmètre livré
+# 8. Bilan, et la validation du périmètre livré
 
 <div class="lede"><b>Ce qui n'est pas mesuré ne se pilote pas, et ce qui n'est pas arbitré se décide tout seul.</b></div>
 

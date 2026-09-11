@@ -53,7 +53,7 @@ Chaque chapitre part d'un fait vérifiable, puis **énonce lui-même sa faibless
 ### 2.3 La numérotation du support est contractuelle
 
 - **Aucune diapositive de séparation de chapitre.** La page `N` de Slidev correspond exactement à la diapositive `N` de [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md), et donc au rattachement des **14 éléments imposés** par le règlement.
-- Le titre de chapitre est porté par sa **première diapositive** (ex. diapo 10 : « 2. Piloter l'avancement : l'outil de suivi »).
+- Le titre de chapitre est porté par sa **première diapositive** (ex. diapo 10 : « 3. Piloter l'avancement : l'outil de suivi »).
 - **Toute insertion ou suppression de diapositive** oblige à mettre à jour, dans le même commit : le plan (§ 1 et § 4), la table `REFS` de `slides/global-bottom.vue`, et le tableau d'avancement de `slides/README.md`.
 
 ### 2.4 Le support est épuré, et doit le rester
@@ -219,14 +219,14 @@ for n,c in enumerate(chunks,1):
     if not [l for l in c if l.startswith('# ')]: print(f'  !! diapo {n} sans titre H1')
 d=re.findall(r'DUREE (\d+):(\d\d)', s); tot=sum(int(a)*60+int(b) for a,b in d)
 print(f'durees : {len(d)} (attendu 27) · total {(tot+290)//60}:{(tot+290)%60:02d} demo comprise (attendu 30:00)')
-for c,(a,b) in {0:(1,3),1:(4,9),2:(10,14),3:(15,16),4:(17,20),5:(21,23),6:(24,26),7:(27,27)}.items():
-    t=sum(int(d[n-1][0])*60+int(d[n-1][1]) for n in range(a,b+1))+(290 if c==0 else 0)
+for c,(a,b) in {0:(1,2),1:(3,3),2:(4,9),3:(10,14),4:(15,16),5:(17,20),6:(21,23),7:(24,26),8:(27,27)}.items():
+    t=sum(int(d[n-1][0])*60+int(d[n-1][1]) for n in range(a,b+1))+(290 if c==1 else 0)
     print(f'  ch.{c} : {t//60}:{t%60:02d}')
 print('desequilibres div :', bad)
 PY
 ```
 
-**Cibles** : 35 diapositives · 27 durées · total 30:00 · chapitres 6:30 (démonstration comprise) / 6:20 / 5:20 / 2:20 / 3:30 / 2:40 / 2:40 / 0:40.
+**Cibles** : 35 diapositives · 27 durées · total 30:00 · chapitres 0:50 / 5:40 (démonstration comprise) / 6:20 / 5:20 / 2:20 / 3:30 / 2:40 / 2:40 / 0:40. Les numéros de chapitre des titres de diapositives sont ceux du sommaire, la démonstration étant le chapitre 1.
 
 ### 5.4 Rendu du support — le contrôle que les autres ne font pas
 
