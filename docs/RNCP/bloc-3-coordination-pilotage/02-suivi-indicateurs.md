@@ -17,7 +17,7 @@ Alimente les diapositives 10 à 14.
 
 Nommer le commit de référence n'est pas une précaution de style : la branche principale continue d'avancer, et un recomptage fait un autre jour donnera d'autres valeurs sans qu'aucune des deux soit fausse. C'est ce qui rend les chiffres de ce chapitre **reproductibles** plutôt que simplement affirmés.
 
-**Rappel de posture** : l'exécution a été menée seule. Les indicateurs de ce chapitre sont donc des **mesures réelles**, pas une projection. L'axe « ressources humaines » du tableau de bord mesure la soutenabilité de la charge d'un exécutant unique, et c'est précisément ce qu'il révèle qui justifie l'organisation cible présentée au chapitre 4.
+**Rappel de posture** : l'exécution a été menée seule. Les indicateurs de ce chapitre sont des **mesures réelles**. L'axe « ressources humaines » du tableau de bord mesure la soutenabilité de la charge d'un exécutant unique, et c'est précisément ce qu'il révèle que l'analyse critique du chapitre 4 traite.
 
 ---
 
@@ -305,7 +305,7 @@ La courbe raconte une décision et sa conséquence. Le creux de juin correspond 
 | Répartition hebdomadaire | 1 j : 2 sem. · 2 j : 1 · 3 j : 8 · 4 j : 4 · 5 j : 5 · 6 j : 2 · 7 j : 1 | Amplitude de 1 à 7 : la charge n'est pas lissée |
 | Facteur de bus | **1** | Aucune redondance de compétence ni d'accès |
 
-**Ce que cet axe démontre, et c'est l'enchaînement vers le chapitre 4** : la charge a été absorbée, pas pilotée. La plus longue série, **10 jours consécutifs du 17 au 26 août 2026**, encadre deux échéances superposées : la remise du dossier Bloc 4 le 21 août et la version 1.4.0 le 25. Une semaine à sept jours travaillés suivie d'une semaine à zéro tient sur sept mois de projet étudiant ; elle ne tient pas sur une équipe et une exploitation dans la durée. C'est la mesure — pas une intuition — qui justifie l'organisation cible à quatre profils et le lissage de charge présenté au chapitre 4.
+**Ce que cet axe démontre, et c'est l'enchaînement vers le chapitre 4** : la charge a été absorbée, pas pilotée. La plus longue série, **10 jours consécutifs du 17 au 26 août 2026**, encadre deux échéances superposées : la remise du dossier Bloc 4 le 21 août et la version 1.4.0 le 25. Une semaine à sept jours travaillés suivie d'une semaine à zéro tient sur sept mois de projet étudiant ; elle ne tient pas sur une équipe et une exploitation dans la durée. C'est la mesure, pas une intuition, qui fonde l'analyse critique et la limite de charge proposées au chapitre 4.
 
 ---
 

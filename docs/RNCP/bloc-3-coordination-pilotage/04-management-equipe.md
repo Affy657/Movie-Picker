@@ -17,7 +17,7 @@
 
 Alimente les diapositives 17 à 20.
 
-**Posture de ce chapitre.** C'est celui où les deux registres se croisent le plus, donc celui où ils doivent être séparés le plus nettement. Le chapitre est écrit en trois parties : **A, ce qui a réellement été managé**, avec ses traces ; **B, l'organisation cible**, annoncée comme projection ; **C, l'analyse critique**, qui porte sur le réel et non sur la projection. Une autocritique d'une équipe qui n'a pas existé ne vaudrait rien.
+**Posture de ce chapitre.** Le projet a été mené seul, et le chapitre le dit sans détour. Il est écrit en trois parties : **A, le dispositif de délégation**, la seule délégation réelle du projet, avec ses traces ; **B, piloter seul**, ce qui a été délégué et gardé, les styles, l'animation, l'inclusion, avec la vérité sur ce qui n'a pas d'équivalent à une personne ; **C, l'analyse critique**, qui porte sur une situation réelle et mesurée.
 
 ---
 
@@ -53,45 +53,47 @@ Ce n'est pas du management d'équipe humaine, et il serait malhonnête de le pr�
 
 ---
 
-## Partie B. L'organisation cible
+## Partie B. Piloter seul
 
-> **Rappel** : les quatre profils ci-dessous sont une **projection d'industrialisation**, annoncée comme telle depuis la diapositive 3. Aucune de ces personnes n'a existé.
+### B.1 L'affectation des missions : ce qui est délégué, ce qui ne l'est pas
 
-### B.1 L'affectation des missions
+La seule affectation réelle du projet est celle qui sépare ce que je fais de ce que je fais faire.
 
-L'affectation suit la **compétence attestée**, jamais la disponibilité. La matrice RACI complète figure au chapitre 1 § 5 ; voici la mission confiée à chaque profil et le critère qui la justifie.
+| Gardé | Pourquoi |
+|-------|----------|
+| Cadrage et maquette, avant toute ligne de code | C'est là que se décide ce qui sera livré, et une erreur d'interprétation y coûte le plus cher |
+| Arbitrages de périmètre, de charge et de socle | Ils engagent le projet, et ils sont consignés par écrit |
+| Revue avant intégration | Six contrôles du gabarit de pull request, portes de qualité bloquantes : un travail non conforme est repris, jamais intégré |
+| Mise en production et incidents | Geste manuel depuis la chaîne, vérifié par un test de fumée et des sondes |
+| Restitutions | Au commanditaire sur quatre échéances, aux utilisateurs à chaque version |
 
-| Profil | Mission confiée | Critère d'affectation |
-|--------|-----------------|-----------------------|
-| **Lead développeur, chef de projet** | Conception d'ensemble, arbitrages de périmètre et de charge, planning, restitutions au commanditaire | Seul rôle qui porte l'approbation : chaque activité a un responsable unique qui rend compte |
-| **Développeur front** | Interface, parcours utilisateur, accessibilité, application installable | Compétence React et TypeScript, conception mobile-first, maîtrise des critères d'accessibilité |
-| **Développeur back** | API, modèle de données, règles métier, intégrations externes | Compétence C# et ASP.NET Core, architecture hexagonale, driver MongoDB |
-| **DevOps et QA, mi-temps** | Chaîne de livraison, infrastructure, supervision, recette et tests de bout en bout | Compétence intégration continue, conteneurisation, sécurité applicative |
+| Délégué aux agents, sous cadre écrit | Cadre |
+|--------------------------------------|-------|
+| Implémentation d'une fonctionnalité cadrée et maquettée | Conventions de `AGENTS.md`, procédure `dev-feature` en 7 étapes |
+| Tests et refactorisations | Relus en sortie, couverts par les portes de qualité |
+| Montées de dépendances | Dependabot, regroupées mensuellement, auditées à chaque commit |
 
-### B.2 L'équilibrage de la charge, et sa vérification
+**La mesure.** Sur les 833 commits de la branche principale au 5 septembre 2026, **537 sont co-signés par un agent**, soit 64 %. Le premier date du **13 mai 2026**, à la veille de la V1 ; avant, tout a été fait à la main, migration de l'API comprise.
 
-| Lot | Total | Lead, CDP | Front | Back | DevOps, QA |
-|-----|------:|----------:|------:|-----:|-----------:|
-| Lot 1, MVP | 27 | 2 | 9 | 11 | 5 |
-| Lot 2, migration | 13 | 3 | 0 | 8 | 2 |
-| Lot 3, V1 produit | 35 | 3 | 12 | 16 | 4 |
-| Lot 4, clôture du titre | 23 | 11 | 4 | 0 | 8 |
-| **Total** | **98** | **19** | **25** | **35** | **19** |
-| **Part** | | 19 % | 26 % | 36 % | 19 % |
+| Mois | Commits | Co-signés | Part |
+|------|--------:|----------:|-----:|
+| Février à avril | 101 | 0 | 0 % |
+| Mai | 150 | 110 | 73 % |
+| Juin | 227 | 190 | 84 % |
+| Juillet | 194 | 127 | 65 % |
+| Août | 127 | 93 | 73 % |
+| Septembre, 5 jours | 34 | 17 | 50 % |
 
-Le critère de la grille est l'équilibre. Il est **atteint dans le temps, pas dans le total**, et c'est la nuance à porter à l'oral.
+### B.2 La charge, et ce que le critère ne peut pas mesurer ici
 
-| Constat | Traitement |
-|---------|-----------|
-| Le profil back porte 36 % de la charge, conséquence directe du lot de migration intégralement back | Le déséquilibre est **décalé dans le temps** : le pic back se situe en mars et avril, le pic front en avril et mai. À aucun moment un profil n'est saturé pendant qu'un autre attend |
-| Le profil DevOps et QA est à 19 J/H seulement | Il est dimensionné à **mi-temps**, et sa charge est étalée sur toute la durée plutôt que concentrée : la chaîne de livraison se construit tôt et s'entretient ensuite |
-| Le lot 4 est porté à 48 % par le lead | C'est le lot de restitution : il relève de la relation au commanditaire, qui n'est pas délégable |
+Le critère demande une charge **répartie sur l'ensemble de l'équipe de manière équilibrée**. Il n'y a pas d'équipe, donc pas de répartition entre personnes, et le dire vaut mieux qu'une répartition inventée. Ce qui existe et se mesure :
 
-**Une somme équilibrée n'est pas un équilibre.** Quatre profils à 24,5 J/H chacun décriraient une répartition parfaite sur le papier et impossible dans le calendrier, puisque les compétences requises ne sont pas interchangeables. L'équilibre se vérifie sur le **profil de charge dans le temps**, pas sur la colonne des totaux.
+- **La répartition entre faire et faire faire**, ci-dessus. Elle n'a de sens que parce que le contrôle est en sortie : la part déléguée peut monter à 84 % sans que la responsabilité bouge.
+- **La charge dans le temps**, mesurée au chapitre 2 : 88 jours actifs sur 191, une amplitude de 1 à 7 jours par semaine, une série de 10 jours consécutifs. C'est cette charge, absorbée plutôt que pilotée, qui fait l'objet de l'analyse critique de la partie C.
 
 ### B.3 Les quatre styles managériaux, situés
 
-Le critère demande que le style soit **identifié et décrit**. Les quatre styles du management situationnel sont ici rattachés à une situation réelle du projet, pas définis en théorie.
+Le critère demande que le style soit **identifié et décrit**. À une personne, le management s'exerce sur ce qu'on délègue et sur soi-même. Les quatre styles du management situationnel sont ici rattachés à une situation réelle du projet, pas définis en théorie.
 
 | Style | Situation du projet où il s'applique | Pourquoi celui-là |
 |-------|--------------------------------------|-------------------|
@@ -144,9 +146,9 @@ Le chapitre 1 § 5.1 traite la prise en compte du handicap à trois niveaux — 
 
 **Le volet international, sur le réel** : l'application est **bilingue français / anglais** (`apps/web/src/shared/i18n/locales/fr.ts` et `en.ts`), et la page publique de présentation est indexable dans les deux langues. Le produit ne suppose donc pas un utilisateur francophone.
 
-**Aménagements de l'organisation cible**, accordés à la demande et sans justification médicale à produire à l'équipe : poste adapté, outillage compatible lecteur d'écran et navigation exclusivement au clavier, télétravail et horaires aménagés, temps supplémentaire sur les activités de recette et de formation.
+**Sur le réel** : personne en situation de handicap, d'un autre fuseau horaire ou d'une autre langue n'a travaillé sur le projet. Le dispositif le permettrait sans réunion ni présence, et c'est ce qui est vérifiable. Pour une personne en situation de handicap qui rejoindrait le projet, les aménagements seraient accordés à la demande et sans justification médicale à produire : poste adapté, outillage compatible lecteur d'écran et navigation exclusivement au clavier, télétravail et horaires aménagés, temps supplémentaire sur les activités de recette et de formation. C'est un engagement écrit ici, pas un fait vécu.
 
-**Et sur le produit** : l'accessibilité est une porte de qualité **bloquante** dans la chaîne, au niveau maximum mesuré sur l'ensemble des écrans. Une équipe qui livre un produit inaccessible ne peut pas prétendre à une organisation inclusive.
+**Et sur le produit** : l'accessibilité est une porte de qualité **bloquante** dans la chaîne, au niveau maximum mesuré sur l'ensemble des écrans. Livrer un produit inaccessible et se dire inclusif ne tiendrait pas.
 
 ---
 
@@ -195,7 +197,7 @@ La recommandation 2 est la seule qui aurait empêché la situation de C.1. Les d
 
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
-| 17 | L'organisation cible et l'affectation des missions | B.1, B.2 |
+| 17 | Piloter seul : ce qui est délégué, ce qui ne l'est pas | A, B.1, B.2 |
 | 18 | Les quatre styles managériaux | B.3 |
 | 19 | Animer, partager, inclure : animation, outils, handicap et contexte international | A.2, B.4, B.5 |
 | 20 | Analyse critique d'une posture et recommandations | C |
@@ -206,9 +208,9 @@ La recommandation 2 est la seule qui aurait empêché la situation de C.1. Les d
 
 | Question | Ligne de réponse |
 |----------|------------------|
-| Vous n'avez managé personne. Que vaut ce chapitre ? | Deux choses distinctes. L'organisation cible est une **projection assumée**, annoncée depuis la première diapositive, et elle démontre la conception des outils de pilotage. Mais il y a eu une délégation réelle, à des agents d'assistance au développement, avec un cadre écrit, trois points d'arrêt et une revue en sortie. Les enseignements que j'en tire sont transposables, et l'analyse critique porte sur le réel, pas sur la projection |
+| Vous n'avez managé personne. Que vaut ce chapitre ? | Je n'ai managé personne, et je ne présente aucune équipe. Il y a eu une délégation réelle et mesurée, à des agents d'assistance au développement : 537 commits sur 833 co-signés, avec un cadre écrit, trois points d'arrêt et une revue en sortie. Le chapitre montre ce que cette délégation exige, ce qui se transpose à une équipe et ce qui ne se transpose pas, et l'analyse critique porte sur ma propre posture, mesurée |
 | Déléguer à un agent, est-ce comparable à manager une personne ? | Non, et je ne le présente pas ainsi. Un agent n'a ni motivation ni progression, ce qui retire au management sa moitié humaine. Ce qui se transpose est l'autre moitié : écrire le cadre avant de déléguer, placer le contrôle en sortie plutôt qu'en cours d'exécution, et accepter qu'une règle non écrite ne soit pas une règle |
-| Votre back porte 36 % de la charge. Est-ce équilibré ? | La somme ne l'est pas, le profil de charge dans le temps l'est. Le pic back est en mars et avril, le pic front en avril et mai : à aucun moment un profil n'est saturé pendant qu'un autre attend. Quatre profils à 24,5 J/H seraient équilibrés sur le papier et impossibles dans le calendrier, les compétences n'étant pas interchangeables |
+| La charge est-elle répartie de manière équilibrée ? | Il n'y a pas d'équipe, donc pas de répartition entre personnes, et je préfère le dire que l'inventer. Ce qui se mesure : la part déléguée aux agents, 65 à 84 % des commits par mois depuis mai, sous contrôle en sortie ; et la charge dans le temps, 88 jours actifs, une amplitude de 1 à 7 jours par semaine, dix jours consécutifs en août. C'est cette dernière que l'analyse critique traite |
 | Quel est votre style managérial dominant ? | Le délégatif encadré : déléguer l'exécution, garder la décision, contrôler en sortie par des portes automatisées. Sa condition de validité est que le cadre soit écrit avant. Un délégatif sans référentiel de conventions n'est pas de la délégation, c'est de l'abandon |
 | Vos outils de communication n'incluent aucune messagerie. Pourquoi ? | C'est délibéré. Aucun dispositif du projet n'exige la simultanéité, et c'est ce qui le rend compatible à la fois avec un contributeur d'un autre fuseau horaire et avec une personne qui ne peut pas suivre une réunion en direct. L'écrit versionné reste consultable après coup, un fil de discussion non |
 | La prise en compte du handicap n'est-elle pas une clause de style ? | Elle porte un responsable identifié dans la matrice RACI, des aménagements nommés et accordés sans justification à produire, une documentation en texte structuré compatible lecteur d'écran, et une exigence d'accessibilité du produit **bloquante** dans la chaîne de livraison, au niveau maximum sur tous les écrans |

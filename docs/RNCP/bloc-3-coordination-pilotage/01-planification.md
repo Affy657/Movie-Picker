@@ -16,7 +16,7 @@
 
 Alimente les diapositives 4 à 9.
 
-**Rappel de posture** : l'exécution a été menée seule. Les affectations de la matrice RACI et la répartition de charge par profil décrivent l'**organisation cible**, annoncée comme projection d'industrialisation dès l'ouverture de la présentation. Elles ne décrivent pas une équipe qui a existé.
+**Rappel de posture** : l'exécution a été menée seule, et aucune équipe n'est simulée. La matrice RACI est construite sur les acteurs réels du projet : moi, les agents d'assistance auxquels une partie de l'exécution a été déléguée, le commanditaire, les utilisateurs, les prestataires.
 
 ---
 
@@ -174,27 +174,27 @@ Chiffrage établi au cadrage (Bloc 1), méthode **analogique** par comparaison e
 
 ## 4. Les ressources nécessaires
 
-### 4.1 Ressources humaines : les quatre profils de l'organisation cible
+### 4.1 Ressources humaines : une personne, et ce qu'elle délègue
 
-| Profil | Compétences requises | Périmètre confié |
-|--------|---------------------|------------------|
-| **Lead développeur, chef de projet** | Architecture, arbitrage technique, planification, relation commanditaire | Conception d'ensemble, arbitrages, planning, restitutions |
-| **Développeur front** | React, TypeScript, accessibilité, conception d'interface mobile-first | Interface, parcours utilisateur, accessibilité, application installable |
-| **Développeur back** | C# et ASP.NET Core, MongoDB, architecture hexagonale, intégration de services tiers | API, modèle de données, intégrations externes, règles métier |
-| **DevOps et QA, mi-temps** | Intégration et déploiement continus, conteneurisation, supervision, sécurité applicative, recette | Chaîne de livraison, infrastructure, supervision, recette et tests de bout en bout |
+Le projet a été mené par **une seule personne**, qui cumule le développement, l'architecture, l'exploitation et le pilotage. Les 98 J/H du chiffrage sont une charge totale, pas une répartition entre profils : le Bloc 1 les a chiffrés par lot, et c'est par lot qu'ils se lisent.
 
-Répartition de la charge par lot et par profil :
+| Lot | Charge |
+|-----|-------:|
+| Lot 1, MVP | 27 J/H |
+| Lot 2, migration de l'API | 13 J/H |
+| Lot 3, V1 produit | 35 J/H |
+| Lot 4, clôture du titre | 23 J/H |
+| **Total** | **98 J/H** |
 
-| Lot | Total | Lead, CDP | Front | Back | DevOps, QA |
-|-----|------:|----------:|------:|-----:|-----------:|
-| Lot 1, MVP | 27 | 2 | 9 | 11 | 5 |
-| Lot 2, migration | 13 | 3 | 0 | 8 | 2 |
-| Lot 3, V1 produit | 35 | 3 | 12 | 16 | 4 |
-| Lot 4, clôture du titre | 23 | 11 | 4 | 0 | 8 |
-| **Total** | **98** | **19** | **25** | **35** | **19** |
-| **Part** | | 19 % | 26 % | 36 % | 19 % |
+Trois autres acteurs sont réels, et ils figurent dans la matrice RACI du § 5 :
 
-Le profil back porte la charge la plus lourde, conséquence directe du lot de migration. Le déséquilibre est assumé et instruit : il est absorbé par le décalage temporel des lots, le pic back se situant en mars et avril quand le front monte en charge en avril et mai. Le profil DevOps et QA est dimensionné à mi-temps, sa charge de 19 J/H étant étalée sur toute la durée du projet et non concentrée.
+| Acteur | Ce qu'il apporte | Depuis quand |
+|--------|------------------|--------------|
+| **Agents d'assistance au développement** | L'exécution déléguée sous cadre écrit : implémentation, tests, refactorisations, montées de dépendances. **537 des 833 commits** sont co-signés par un agent, soit 64 %, aucun avant le 13 mai 2026, 65 à 84 % par mois ensuite | 13 mai 2026 |
+| **Commanditaire** | Le formateur, puis le jury : quatre échéances de restitution, la validation de la conformité au référentiel | Cadrage |
+| **Utilisateurs** | 17 comptes : retours, recette informelle, questionnaire de satisfaction | 19 mai 2026, v1.0.0 |
+
+Un agent n'est pas un membre d'équipe : il n'a ni motivation ni progression, et le dire fait partie de la présentation. Ce que sa délégation exige, en revanche, est exactement ce qu'exige une délégation à une personne : un cadre écrit avant, des points d'arrêt aux moments de décision, un contrôle en sortie. Le chapitre 4 en fait la matière du management réel du projet.
 
 ### 4.2 Ressources matérielles et techniques
 
@@ -223,41 +223,40 @@ Le point à souligner : **aucune licence payante**. C'est une décision de conce
 
 ## 5. La matrice RACI
 
-Convention : **R** réalise, **A** approuve et rend compte, **C** est consulté, **I** est informé.
+Convention : **R** réalise, **A** approuve et rend compte, **C** est consulté, **I** est informé. Les acteurs sont ceux qui ont réellement existé sur le projet.
 
-| Activité | Lead, CDP | Front | Back | DevOps, QA | Commanditaire | Utilisateurs |
-|----------|:---------:|:-----:|:----:|:----------:|:-------------:|:------------:|
-| Cadrage et périmètre de version | A, R | C | C | C | C | I |
-| Architecture applicative | A, R | C | R | C | I | |
-| Modèle de données et contrat d'interface | A | C | R | C | | |
-| Développement de l'interface | A | R | C | C | | I |
-| Développement de l'API | A | C | R | C | | |
-| Intégration des services tiers | A | C | R | C | | |
-| Accessibilité du produit | A | R | C | C | C | C |
-| Chaîne d'intégration et de déploiement | A | C | C | R | | |
-| Supervision et exploitation | A | I | C | R | I | |
-| Sécurité applicative | A | C | C | R | I | |
-| Recette et tests de bout en bout | A | C | C | R | C | C |
-| Arbitrage de périmètre ou de charge | A, R | C | C | C | C | I |
-| Mise en production | A | I | I | R | I | I |
-| Restitution et compte rendu | A, R | C | C | C | C | I |
-| Inclusion et adaptation des postes | A, R | C | C | C | I | |
+| Activité | Moi | Agents IA | Commanditaire | Utilisateurs | Prestataires |
+|----------|:---:|:---------:|:-------------:|:------------:|:------------:|
+| Cadrage et périmètre de version | A, R | I | C | C | |
+| Architecture applicative | A, R | C | I | | |
+| Modèle de données et contrat d'interface | A, R | C | | | |
+| Développement de l'interface | A | R | | I | |
+| Développement de l'API | A | R | | | |
+| Intégration des services tiers | A | R | | | C |
+| Accessibilité et inclusion | A, R | R | | C | |
+| Chaîne d'intégration et de déploiement | A, R | C | | | |
+| Supervision et exploitation | A, R | I | I | | R |
+| Sécurité applicative | A, R | C | I | | |
+| Recette et tests de bout en bout | A, R | R | C | C | |
+| Arbitrage de périmètre ou de charge | A, R | | C | C | |
+| Mise en production | A, R | | I | I | R |
+| Restitution et compte rendu | A, R | | C | I | |
 
 Trois propriétés de cette matrice, à dire explicitement :
 
-1. **Une seule approbation par ligne.** Le rôle A n'est jamais partagé : chaque activité a un responsable unique qui rend compte, ce qui est la condition pour qu'un arbitrage puisse être tranché.
-2. **L'affectation suit la compétence, pas la disponibilité.** Le développement de l'API est confié au profil back parce qu'il porte la compétence C# et architecture hexagonale, et le lead ne réalise que ce qui relève de la conception d'ensemble et de l'arbitrage.
-3. **Les acteurs externes figurent dans la matrice.** Le commanditaire est consulté sur le périmètre et informé des mises en production ; les utilisateurs sont consultés sur l'accessibilité et la recette, et informés du reste. Un acteur absent de la matrice est un acteur qu'on oubliera de solliciter.
+1. **Le A est toujours le mien.** À une personne, la matrice ne répartit pas la responsabilité : elle rend visible ce qui est délégué et ce qui ne l'est jamais. Cadrage, arbitrage, mise en production et restitution ne portent aucun R en dehors de ma colonne.
+2. **Le R des agents dit ce qui est délégué, et sous quel contrôle.** Développement, tests, intégration des services tiers : chaque ligne où un agent réalise porte aussi mon A sur la ligne « recette et tests », c'est-à-dire un contrôle en sortie. Un R sans ce contrôle serait de l'abandon, pas de la délégation.
+3. **Les acteurs externes figurent dans la matrice.** Le commanditaire est consulté sur le périmètre et les arbitrages, informé des mises en production ; les utilisateurs sont consultés sur l'accessibilité, la recette et chaque version ; les prestataires exécutent l'hébergement et la supervision. Un acteur absent de la matrice est un acteur qu'on oubliera de solliciter.
 
 ### 5.1 Prise en compte du handicap
 
-Le critère est explicitement demandé par la grille. Il est traité à trois niveaux, et non par une mention de principe.
+Le critère est explicitement demandé par la grille. Il est traité à trois niveaux, et le premier commence par la vérité : **personne en situation de handicap n'a travaillé sur le projet.**
 
-**Au niveau de l'affectation.** Aucune activité de la matrice ne présuppose une capacité physique particulière. L'affectation se fait sur la compétence attestée, jamais sur une aptitude supposée. Une ligne dédiée, « inclusion et adaptation des postes », porte un responsable identifié : ce n'est pas un sujet diffus dont personne ne répond.
+**Au niveau de l'affectation.** La ligne « accessibilité et inclusion » de la matrice porte un responsable identifié, moi, et un réalisateur, les agents qui écrivent et exécutent les tests d'accessibilité. Aucune activité de la matrice ne présuppose une capacité physique particulière : tout le travail du projet est écrit, versionné et asynchrone.
 
-**Au niveau du poste de travail et de l'organisation.** L'organisation cible prévoit, à la demande et sans justification médicale à produire à l'équipe : poste adapté (périphériques, écran, siège, réglage de la station), compatibilité de l'outillage avec un lecteur d'écran et une navigation exclusivement au clavier, télétravail et horaires aménagés, temps supplémentaire accordé sur les activités de recette et de formation, et supports de travail accessibles (documentation en texte structuré et versionnée plutôt qu'en présentations non balisées, comptes rendus écrits systématiques permettant de suivre sans participer en direct).
+**Au niveau de l'organisation.** Ce qui est en place le permettrait sans réunion ni présence : le contexte du projet est intégralement en texte structuré, lisible au lecteur d'écran et au clavier, et aucun dispositif n'exige la simultanéité. Pour une personne en situation de handicap qui rejoindrait le projet, les aménagements seraient accordés à la demande et sans justification médicale à produire : poste adapté, outillage compatible lecteur d'écran et navigation exclusivement au clavier, télétravail et horaires aménagés, temps supplémentaire sur les activités de recette et de formation. C'est un engagement, pas un fait : il n'a jamais eu à s'appliquer.
 
-**Au niveau du produit lui-même.** L'accessibilité est traitée comme une exigence de conformité et non comme une option d'amélioration : elle figure dans la matrice avec un réalisateur et un approbateur, elle est vérifiée automatiquement à chaque livraison, et la mesure d'accessibilité du produit est à son maximum sur l'ensemble des écrans. Une équipe qui livre un produit inaccessible ne peut pas prétendre à une organisation inclusive.
+**Au niveau du produit lui-même.** C'est le niveau vérifiable. L'accessibilité est traitée comme une exigence de conformité et non comme une option d'amélioration : elle figure dans la matrice avec un réalisateur et un approbateur, elle est vérifiée automatiquement à chaque livraison par une porte de qualité **bloquante**, et la mesure d'accessibilité du produit est à son maximum sur l'ensemble des écrans. Livrer un produit inaccessible et se dire inclusif ne tiendrait pas.
 
 ---
 
@@ -267,7 +266,7 @@ Sept points, chacun avec son indicateur de contrôle et sa parade. Les deux prem
 
 | # | Point de vigilance | Ce qu'il menace | Indicateur de contrôle | Parade |
 |:-:|--------------------|-----------------|------------------------|--------|
-| 1 | **Concentration des rôles sur une personne** | La continuité du projet. Un seul acteur détient la connaissance de l'architecture, des accès et des procédures | Nombre de personnes capables de mener une mise en production, aujourd'hui 1 | Procédures d'exploitation écrites et versionnées, infrastructure décrite en code, décisions d'architecture consignées. C'est ce qui rend l'organisation cible réalisable et non théorique |
+| 1 | **Concentration des rôles sur une personne** | La continuité du projet. Un seul acteur détient la connaissance de l'architecture, des accès et des procédures | Nombre de personnes capables de mener une mise en production, aujourd'hui 1 | Procédures d'exploitation écrites et versionnées, infrastructure décrite en code, décisions d'architecture consignées. C'est tout ce qu'un remplaçant recevrait le premier jour |
 | 2 | **Sous-estimation des lots documentaires** | Le calendrier du titre. Les lots de documentation sont les plus difficiles à chiffrer par analogie, faute de comparable | Écart entre charge prévue et charge consommée sur le lot de clôture | Rétroplanning à rebours depuis les échéances de restitution, périmètre de version ajusté sur la capacité restante |
 | 3 | **Dépendance au catalogue de films externe** | Le cœur du produit. Une rupture de contrat, un changement de conditions d'usage ou un dépassement de quota rend la recherche de films inopérante | Taux d'erreur des appels au catalogue | Cache des affiches et des métadonnées avec durée de vie, limitation du débit de recherche, repli de saisie manuelle |
 | 4 | **Transport des e-mails transactionnels** | La réinitialisation de mot de passe et les invitations. Le palier gratuit du service d'envoi plafonne le volume quotidien | Volume d'e-mails envoyés par jour rapporté au plafond | Envoi limité aux messages indispensables, surveillance du volume, fournisseur substituable derrière un port applicatif |
@@ -275,7 +274,7 @@ Sept points, chacun avec son indicateur de contrôle et sa parade. Les deux prem
 | 6 | **Absence de déploiement progressif** | La disponibilité au moment d'une mise en production. Une révision défectueuse est exposée à tous les utilisateurs en même temps | Résultat du test de fumée post-déploiement, taux d'erreur serveur | Arbitrage assumé et réversible : test de fumée bloquant, vérification de la joignabilité de la base avant bascule, retour arrière par redéploiement de la révision précédente |
 | 7 | **Instabilité de la chaîne de vérification** | La cadence de livraison. Un contrôle intermittent qui échoue sans cause réelle érode la confiance dans la chaîne et pousse à la contourner | Taux d'échec de la chaîne sur la branche principale, part des échecs sans cause réelle | Contrôle de performance rendu déterministe par médiane de trois exécutions, seuils recalibrés, exécution de la chaîne en local avant remontée |
 
-**La phrase de conclusion du chapitre** : le point 1 est celui qui compte. Les six autres sont des risques de projet, celui-là est un risque d'organisation, et c'est lui qui justifie la conception de l'organisation cible présentée dans la suite de cette présentation.
+**La phrase de conclusion du chapitre** : le point 1 est celui qui compte. Les six autres sont des risques de projet, celui-là est un risque d'organisation, et la seule parade réelle est d'écrire tout ce qu'un remplaçant devrait savoir : la parade ne le supprime pas, elle le rend survivable.
 
 ---
 
@@ -286,8 +285,8 @@ Sept points, chacun avec son indicateur de contrôle et sa parade. Les deux prem
 | 4 | Planifier : un flux, deux horizons (méthodologie et outils) | 1, 2 |
 | 5 | Le planning en cinq phases | 3.1, 3.2 |
 | 6 | Quatre lots, 98 jours-homme | 3.3, 3.4 |
-| 7 | Les ressources nécessaires | 4 |
-| 8 | La matrice RACI, et le handicap dedans | 5 |
+| 7 | Les ressources nécessaires : une personne, et ce qu'elle délègue | 4 |
+| 8 | La matrice RACI, avec les acteurs réels | 5 |
 | 9 | Sept points de vigilance, un seul d'organisation | 6 |
 
 ## 8. Questions probables sur ce chapitre
@@ -297,5 +296,5 @@ Sept points, chacun avec son indicateur de contrôle et sa parade. Les deux prem
 | Vos documents de cadrage sont datés de juin, votre phase d'étude de février. Comment l'expliquez-vous ? | Les décisions d'étude, comparatif de stack, périmètre MoSCoW, faisabilité, ont été prises en février et mars et sont tracées dans l'historique du dépôt et dans les choix techniques eux-mêmes. Leur **formalisation documentaire** est intervenue en juin pour la restitution du Bloc 1. La décision précède le document, ce qui est une faiblesse de traçabilité assumée et corrigée depuis, les arbitrages étant désormais consignés au moment où ils sont pris |
 | Comment avez-vous estimé les 98 J/H ? | Méthode analogique, par comparaison entre lots de complexité voisine, avec une marge d'incertitude de 20 % assumée au chiffrage. Aucune méthode paramétrique n'était applicable faute d'historique de projets comparables |
 | Un Gantt n'est-il pas contradictoire avec Kanban ? | Ils n'opèrent pas au même horizon. Le Gantt porte les phases et les jalons de version, le tableau de flux porte le travail de la semaine. Aucune fiche du tableau ne porte de date de fin engagée, seules les versions en portent |
-| Pourquoi le profil back porte-t-il 36 % de la charge ? | Le lot de migration de l'API, 13 J/H, est intégralement back. Le déséquilibre est décalé dans le temps, le pic back se situant en mars et avril et le pic front en avril et mai |
+| Une matrice RACI à une personne, à quoi sert-elle ? | À rendre visible ce qui est délégué et sous quel contrôle. Le A ne bouge pas ; l'information est dans la colonne des agents, et dans les lignes qui n'en portent aucun : cadrer, arbitrer, mettre en production, rendre compte. Le jour où une personne rejoint le projet, la matrice est déjà écrite |
 | La prise en compte du handicap n'est-elle pas une clause de style ? | Elle porte un responsable identifié dans la matrice, des aménagements nommés et accordés sans justification à produire, et une exigence d'accessibilité du produit vérifiée automatiquement à chaque livraison, à son niveau maximum sur tous les écrans |

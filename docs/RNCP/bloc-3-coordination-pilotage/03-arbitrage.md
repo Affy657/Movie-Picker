@@ -13,7 +13,7 @@
 
 Alimente les diapositives 15 et 16.
 
-**Rappel de posture** : ce chapitre ne comporte aucun volet d'organisation cible. Le cas exposé a réellement eu lieu, la décision a réellement été prise, et son résultat est mesuré dans le dépôt.
+**Rappel de posture** : le cas exposé a réellement eu lieu, la décision a réellement été prise, et son résultat est mesuré dans le dépôt.
 
 ---
 
@@ -178,7 +178,7 @@ Quatre arguments, dans l'ordre où ils ont pesé.
 
 Deux écarts, énoncés ici plutôt que laissés à découvrir.
 
-**Le front a bougé de 87 lignes.** L'objectif annoncé était « aucune modification du front ». Le commit de migration — celui de 11 h 57, et non le retrait de l'ancienne API à 12 h 12 — touche 9 fichiers de l'interface, pour 87 insertions et 34 suppressions, essentiellement des ajustements de typage et d'affichage sur l'écran de détail d'une soirée. Le critère de succès était donc **presque** tenu : le contrat des URL a été respecté, celui des types ne l'a pas été à la ligne près. Sur un projet à plusieurs, ces 87 lignes auraient été un incident d'intégration entre deux personnes ; à une seule, elles sont passées inaperçues. C'est un argument de plus pour la revue croisée de l'organisation cible.
+**Le front a bougé de 87 lignes.** L'objectif annoncé était « aucune modification du front ». Le commit de migration — celui de 11 h 57, et non le retrait de l'ancienne API à 12 h 12 — touche 9 fichiers de l'interface, pour 87 insertions et 34 suppressions, essentiellement des ajustements de typage et d'affichage sur l'écran de détail d'une soirée. Le critère de succès était donc **presque** tenu : le contrat des URL a été respecté, celui des types ne l'a pas été à la ligne près. Sur un projet à plusieurs, ces 87 lignes auraient été un incident d'intégration entre deux personnes ; à une seule, elles sont passées inaperçues. C'est un argument de plus pour la revue par un tiers, humain ou outillé, sur les changements structurants.
 
 **Le lot est chiffré 13 J/H, l'exécution du cœur tient sur deux journées.** Le chiffrage du Bloc 1 (8 de réécriture, 3 de tests et de contrat, 2 de redéploiement) a été formalisé en juin 2026, donc après coup. L'historique montre une exécution concentrée du 18 mars à 11 h 57 au 19 mars à 16 h 52. Trois raisons à l'écart, aucune ne l'annule complètement : la reconstitution de charge est **faible sur mars**, les commits de cette période étant groupés (chapitre 2, § 5.3) ; le travail préparatoire — contrat OpenAPI, analyse des options, architecture cible — précède le premier commit et n'y figure pas ; et les tests d'intégration comme l'adaptation complète de la chaîne se sont étalés au-delà de mars. **Formulé honnêtement : le lot a été chiffré a posteriori sur son périmètre complet, et l'historique ne permet pas de le vérifier au jour près.**
 

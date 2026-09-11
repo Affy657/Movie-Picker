@@ -15,7 +15,7 @@
 
 Alimente les diapositives 21 à 23.
 
-**Posture de ce chapitre.** La grille et le plan sont construits sur l'**organisation cible** à 4 profils. Mais une colonne de ce chapitre est entièrement réelle : **la montée en compétences que le projet a effectivement exigée**, datée par l'historique du dépôt. C'est elle qui donne à la grille son étalonnage — les niveaux cibles ne sont pas déclaratifs, ils correspondent à ce qu'il a réellement fallu savoir faire pour livrer.
+**Posture de ce chapitre.** Le projet a été mené seul : la grille évalue **la seule personne qui y a travaillé**, avant et après le projet, et le plan de développement est le sien. Tout est étalonné sur l'historique du dépôt : chaque compétence correspond à une technologie introduite à une date vérifiable, et les niveaux exigés sont ceux qu'il a réellement fallu atteindre pour livrer. Le besoin en recrutement, que le référentiel demande de transmettre, est instruit pour le jour où le projet passerait en équipe.
 
 ---
 
@@ -72,43 +72,34 @@ Une échelle en pourcentage ou en « débutant / intermédiaire / avancé » n'e
 
 **Le niveau 2 est le seuil d'autonomie, le niveau 3 le seuil de responsabilité.** Un profil qui porte le rôle *réalise* de la matrice RACI doit être à 3 sur son domaine ; un profil consulté peut être à 2.
 
-### 2.2 La grille, par profil
+### 2.2 La grille : moi, en février et en septembre 2026
 
-**Convention de lecture, à énoncer avant le tableau** : le *niveau actuel* est celui attendu d'un profil **au moment du recrutement** — un développeur junior confirmé, deux à trois ans d'expérience. Ce n'est pas l'évaluation d'une personne existante. L'écart mesure donc ce que le projet exige **au-delà du socle de recrutement**, et c'est lui qui détermine ce qui relève du recrutement et ce qui relève de la formation.
+**Convention de lecture, à énoncer avant le tableau** : c'est une auto-évaluation, et elle est étalonnée sur des preuves. *Février* est le niveau au démarrage du projet, *septembre* le niveau atteint, *exigé* le niveau que le projet a réellement demandé. Un R de la matrice RACI exige le niveau 3.
 
-| Profil | Compétence | Actuel | Cible | Écart |
-|--------|------------|:------:|:-----:|:-----:|
-| **Lead, CDP** | Architecture applicative | 3 | 4 | **+1** |
-| | Arbitrage et chiffrage | 2 | 4 | **+2** |
-| | Communication au commanditaire | 2 | 3 | +1 |
-| | Revue de code et transmission | 2 | 4 | **+2** |
-| **Front** | React et TypeScript | 3 | 3 | 0 |
-| | Conception mobile-first | 2 | 3 | +1 |
-| | **Accessibilité** | **1** | **3** | **+2** |
-| | Application installable et service worker | 1 | 2 | +1 |
-| | Internationalisation | 1 | 2 | +1 |
-| **Back** | C# et ASP.NET Core | 3 | 3 | 0 |
-| | **Architecture hexagonale** | **1** | **3** | **+2** |
-| | Modélisation documentaire | 2 | 3 | +1 |
-| | Sécurité applicative et identité | 1 | 3 | **+2** |
-| | Intégration de services tiers | 2 | 3 | +1 |
-| **DevOps, QA** | Intégration et déploiement continus | 2 | 3 | +1 |
-| | Conteneurisation et exécution sans serveur | 2 | 3 | +1 |
-| | **Supervision et exploitation** | **1** | **3** | **+2** |
-| | Tests de bout en bout | 2 | 3 | +1 |
-| | Veille de vulnérabilités | 1 | 3 | **+2** |
+| Compétence | Février | Septembre | Exigé | Preuve dans le dépôt |
+|------------|:-------:|:---------:|:-----:|----------------------|
+| Architecture applicative | 2 | 3 | 4 | Découpage hexagonal de l'API, 111 fichiers ; contrat OpenAPI tenu depuis le MVP |
+| **Arbitrage et chiffrage** | 2 | **2** | 4 | Chiffrage formalisé après coup, lot de migration chiffré a posteriori, dix jours d'août sans arbitrage posé |
+| **Revue de code et transmission** | 1 | **2** | 4 | 87 lignes de front intégrées sans revue en mars ; gabarit de PR et conventions écrites depuis |
+| React et TypeScript | 3 | 3 | 3 | Front du MVP livré en trois semaines, février 2026 |
+| Accessibilité | 1 | 3 | 3 | Porte de qualité bloquante, tests automatisés sur 9 vues, avril à juin 2026 |
+| Application installable, i18n | 1 | 2 | 2 | v1.1.0, notifications push ; produit bilingue |
+| C# et ASP.NET Core | 2 | 3 | 3 | Migration de l'API en quatre jours, 16 au 19 mars 2026 |
+| Architecture hexagonale | 1 | 3 | 3 | Même migration, ports et adaptateurs, tests d'intégration |
+| Sécurité applicative et identité | 1 | 3 | 3 | Session par cookie, identité fédérée, politique de sécurité du contenu, août 2026 |
+| Intégration et déploiement continus, conteneurs | 2 | 3 | 3 | Chaîne à 15 jobs, déploiement par digest, exécution sans serveur |
+| Supervision et exploitation | 1 | 3 | 3 | Sondes sur trois continents, politiques d'alerte, juillet 2026 |
+| Veille de vulnérabilités | 1 | 3 | 3 | Dependabot regroupé, scans de secrets et d'images, alertes d'analyse statique traitées |
 
 ### 2.3 Le commentaire de la grille
 
-Le critère exige que la grille soit **commentée**, pas seulement affichée. Quatre lectures.
+Le critère exige que la grille soit **commentée**, pas seulement affichée. Trois lectures.
 
-**1. Les écarts ne sont pas répartis au hasard : ils se concentrent sur ce que le marché ne fournit pas.** Les deux compétences où l'écart est nul — React et TypeScript, C# et ASP.NET Core — sont celles qu'un recrutement apporte naturellement. Les **sept** écarts à +2 portent sur l'architecture hexagonale, l'accessibilité, la sécurité applicative, la supervision, la veille de vulnérabilités, l'arbitrage et la transmission. **Ce sont des compétences de contexte, pas de langage** : elles ne s'achètent pas sur une fiche de poste, elles se construisent sur le projet.
+**1. Neuf écarts ont été comblés par autoformation, en production, sans plan ni budget.** Ce sont des compétences de contexte, pas de langage : hexagonal, accessibilité, sécurité, supervision, veille. La vague 1 du § 1.2 en donne le coût, quatre jours pour absorber un changement de socle complet. C'est faisable une fois, seul, sur un projet dont on est propriétaire ; ce n'est pas une méthode.
 
-**2. L'accessibilité à +2 sur le profil front est l'écart le plus structurant.** Le produit en fait une exigence de conformité vérifiée automatiquement à chaque livraison, avec une porte bloquante. Un profil front recruté au niveau 1 ferait échouer la chaîne à sa première livraison. C'est le seul écart qui a un effet immédiat et bloquant sur la production.
+**2. Les deux écarts qui restent ne sont pas techniques.** Arbitrage et chiffrage, revue et transmission : ce sont les compétences que le projet a le plus sollicitées et le moins bien exercées. Le chapitre 2 montre un chiffrage formalisé a posteriori, le chapitre 3 montre 87 lignes intégrées sans revue, le chapitre 4 montre dix jours d'août sans arbitrage. **La grille désigne les mêmes faiblesses que les indicateurs, ce qui la rend crédible.**
 
-**3. Les deux écarts à +2 du lead ne sont pas techniques.** Arbitrage et chiffrage, revue de code et transmission : ce sont les deux compétences que le projet réel a le plus sollicitées et le moins bien exercées. Le chapitre 2 montre un chiffrage formalisé a posteriori ; le chapitre 3 montre 87 lignes intégrées sans revue. **La grille désigne donc les mêmes faiblesses que les indicateurs, ce qui la rend crédible.**
-
-**4. Ce que la colonne réelle apprend.** Sur le projet, ces écarts ont été franchis par autoformation, en production, sans plan et sans budget. La vague 1 du § 1.2 en donne le coût : quatre jours pour absorber un changement de socle complet. **C'est faisable une fois, à une personne, sur un projet dont on est propriétaire. Ce n'est pas un modèle transposable à une équipe** — d'où le plan qui suit.
+**3. Le niveau 3 est le seuil de responsabilité.** Sur un projet à une personne, il faut y être partout où l'on porte le R de la matrice, et c'est le cas sur le technique en septembre. Là où le niveau exigé est 4, c'est que le projet demandait de définir le standard, pas seulement de l'appliquer : c'est précisément ce qui manque sur l'arbitrage et la revue.
 
 ---
 
@@ -124,37 +115,32 @@ Les actions ne sont pas classées par ordre d'importance mais par **coût d'un �
 | **2** | L'écart crée un point de dépendance unique (facteur de bus) |
 | **3** | L'écart ralentit la production sans la bloquer |
 
-### 3.2 Les actions, par profil
+### 3.2 Les actions
 
-| Profil | Action | Modalité | Durée | Coût | Indicateur de réussite | Prio. |
-|--------|--------|----------|-------|------|------------------------|:-----:|
-| **Front** | Accessibilité : critères, tests automatisés, navigation clavier et lecteur d'écran | Formation certifiante externe **Opquast**, puis mise en pratique encadrée | 3 j + 2 semaines de pratique | ≈ 900 € | Une livraison passe la porte d'accessibilité **sans reprise** | **1** |
-| **DevOps, QA** | Supervision et exploitation : sondes, seuils, politiques d'alerte, conduite à tenir | Compagnonnage sur les procédures existantes, puis astreinte simulée | 5 j | interne | Traite seul une alerte de bout en bout, de la détection à la clôture | **1** |
-| **Back** | Architecture hexagonale : ports, adaptateurs, inversion de dépendance, testabilité | Lecture guidée du code existant + revue de code systématique pendant 1 mois | 1 mois à temps partiel | interne | Livre un cas d'usage complet sans violation de couche détectée en revue | **2** |
-| **Back** | Sécurité applicative et identité fédérée | Autoformation cadrée sur le référentiel **OWASP Top 10**, puis revue croisée sécurité | 4 j | interne | Aucune vulnérabilité de catégorie OWASP introduite sur un trimestre | **2** |
-| **DevOps, QA** | Veille de vulnérabilités : qualifier l'exploitabilité réelle d'un avis | Compagnonnage sur le processus existant de traitement des alertes | 2 j | interne | Qualifie seul un avis de sécurité et décide de son traitement | **2** |
-| **Lead** | Chiffrage et arbitrage : méthodes d'estimation, écriture d'une décision | Formation courte externe **gestion de projet logiciel** + pratique documentée | 3 j | ≈ 1 200 € | Chaque arbitrage est consigné **au moment où il est pris** | **2** |
-| **Lead** | Revue de code et transmission | Pratique encadrée : revue croisée obligatoire sur les changements structurants | continu | interne | Part des changements structurants passés en revue, cible 100 % | **2** |
-| **Front** | Application installable, service worker, internationalisation | Autoformation sur la documentation officielle + pratique sur une fonctionnalité dédiée | 3 j | interne | Livre une fonctionnalité hors ligne fonctionnelle et traduite | **3** |
+| Action | Modalité | Durée | Coût | Indicateur de réussite | Prio. |
+|--------|----------|-------|------|------------------------|:-----:|
+| **Arbitrage et chiffrage** : méthodes d'estimation, écriture d'une décision | Formation courte externe **gestion de projet logiciel**, puis pratique à chaque version : chiffrer avant, consigner l'arbitrage quand il est pris | 3 j | externe | Chaque version est chiffrée **avant** d'être ouverte ; chaque arbitrage est consigné **au moment où il est pris** | **1** |
+| **Revue et transmission** | Revue par un tiers, humain ou outillé, obligatoire sur les changements structurants : migration, contrat d'interface, chaîne | continu | interne | Part des changements structurants passés en revue, cible 100 % | **1** |
+| Sécurité applicative | Autoformation cadrée sur le référentiel **OWASP Top 10**, revue croisée sécurité outillée | 4 j | interne | Aucune vulnérabilité de catégorie OWASP introduite sur un trimestre | 2 |
+| Accessibilité | Formation certifiante externe **Opquast**, pour formaliser un acquis construit sur le projet | 3 j | ≈ 900 € | Une livraison passe la porte d'accessibilité **sans reprise** | 2 |
+| Management d'équipe | Formation courte, utile le jour où le projet passe en équipe | 2 j | interne ou externe | Un contributeur opérationnel en une journée sur le cadre écrit | 3 |
 
-**Charge et budget total** : **20 jours-homme** d'actions de formation identifiées — hors pratique encadrée, qui se déroule sur du travail productif — dont 6 jours en formation externe — 3 sur un parcours certifiant, 3 sur une formation courte — pour un coût direct de **2 100 €**. Rapporté aux 98 J/H du projet, cela représente **20 % de la charge** — un ordre de grandeur assumé, et qui est le prix de la conversion d'un projet à une personne en projet d'équipe.
+**Charge et budget** : **12 jours**, en autoformation ou en pratique sur du travail productif, sauf les deux formations externes. Les deux priorités 1 passent avant tout le technique parce qu'elles ont déjà coûté au projet, et parce que le technique, lui, a été acquis sur le projet.
 
-### 3.3 La logique recruter / former, à transmettre aux ressources humaines
+### 3.3 Les besoins en recrutement, à transmettre aux ressources humaines
 
-La compétence demande de **transmettre les besoins en recrutement**. La grille du § 2.2 fournit directement l'arbitrage : ce qui est à 0 d'écart relève du recrutement, ce qui est à +2 relève de la formation interne.
+Le référentiel demande de **transmettre les besoins en recrutement**. Le projet n'en a pas aujourd'hui : il tient à une personne, et c'est le premier point de vigilance du chapitre 1. La question est instruite pour le jour où il passerait en équipe, à partir de la grille du § 2.2 et du facteur de bus.
 
-| Profil | Exigé **au recrutement**, non négociable | Construit **en interne**, après embauche |
-|--------|------------------------------------------|------------------------------------------|
-| **Lead, CDP** | Architecture applicative niveau 3, expérience de conduite de projet | Arbitrage, chiffrage, transmission |
-| **Front** | React et TypeScript niveau 3, conception d'interface | Accessibilité, service worker, internationalisation |
-| **Back** | C# et ASP.NET Core niveau 3 | Architecture hexagonale, sécurité applicative |
-| **DevOps, QA** | Intégration continue et conteneurisation niveau 2 | Supervision, exploitation, veille de vulnérabilités |
+| Profil à recruter | Exigé au recrutement | Construit en interne, sur le cadre écrit |
+|-------------------|----------------------|------------------------------------------|
+| **Développeur front** | React et TypeScript niveau 3, **accessibilité niveau 3** : la porte de qualité échoue une livraison au niveau 1 | Conventions, procédures, service worker, internationalisation |
+| **DevOps, à mi-temps** | Intégration continue et conteneurisation niveau 2 | Supervision, exploitation, veille de vulnérabilités, sur les procédures existantes |
 
-**La note transmise aux ressources humaines tient en une phrase** : recruter sur le langage et l'expérience de conduite, former sur le contexte et la conformité. Exiger l'accessibilité et l'architecture hexagonale dès le recrutement restreindrait le vivier sans nécessité, puisque ces deux compétences se construisent en un mois de pratique encadrée.
+**La note transmise tient en une phrase** : recruter sur le langage et l'expérience, former sur le contexte et la conformité. Ce que ces deux personnes recevraient le premier jour existe déjà : `AGENTS.md`, les procédures exécutables, les gabarits d'issue et de pull request, le journal des versions.
 
 ### 3.4 Les modalités adaptées au handicap
 
-Le critère est explicite : les modalités de formation doivent prendre en compte les spécificités liées au handicap des personnes formées. Elles sont posées **par défaut**, sans demande à formuler ni justification à produire.
+Le critère est explicite : les modalités de formation doivent prendre en compte les spécificités liées au handicap des personnes formées. Elles sont posées **par défaut**, sans demande à formuler ni justification à produire, pour moi comme pour quiconque rejoindrait le projet.
 
 | Modalité | Mise en œuvre |
 |----------|---------------|
@@ -173,9 +159,9 @@ Le critère est explicite : les modalités de formation doivent prendre en compt
 
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
-| 21 | Les compétences à mobiliser | 1 |
-| 22 | La grille d'évaluation des compétences | 2 |
-| 23 | Le plan de développement des compétences | 3 |
+| 21 | Les compétences que le projet a exigées | 1 |
+| 22 | La grille d'évaluation : moi, avant et après le projet | 2 |
+| 23 | Le plan de développement : ce qui reste à acquérir | 3 |
 
 ---
 
@@ -183,9 +169,9 @@ Le critère est explicite : les modalités de formation doivent prendre en compt
 
 | Question | Ligne de réponse |
 |----------|------------------|
-| Vous évaluez des compétences de personnes qui n'existent pas | Le *niveau actuel* de la grille n'est l'évaluation de personne : c'est le socle attendu d'un profil **au recrutement**, un junior confirmé de deux à trois ans. L'écart mesure ce que le projet exige au-delà de ce socle, et c'est lui qui sépare ce qui relève du recrutement de ce qui relève de la formation |
+| Une auto-évaluation, est-ce évaluable ? | Elle est étalonnée ligne par ligne sur le dépôt : la date d'introduction de chaque technologie, ce qui a été livré avec, et ce qui a échoué. Elle avoue deux écarts non comblés, sur les compétences que les indicateurs désignent aussi. Une grille flatteuse n'en avouerait aucun |
 | Comment avez-vous étalonné les niveaux cibles ? | Sur ce que le projet a réellement exigé, pas sur un référentiel. Chaque compétence de la cartographie correspond à une technologie présente dans le dépôt, avec une date d'introduction vérifiable — la chronologie des quatre vagues |
-| Pourquoi l'accessibilité est-elle l'écart le plus important ? | Parce que c'est le seul dont l'effet est immédiat et bloquant : le produit en fait une exigence vérifiée automatiquement, avec une porte qui échoue le déploiement. Un profil front recruté au niveau 1 ferait échouer la chaîne à sa première livraison |
-| 20 % de la charge en formation, n'est-ce pas beaucoup ? | C'est le prix de la conversion d'un projet à une personne en projet d'équipe, et il est payé une fois. Sur le projet réel, ces mêmes écarts ont été franchis sans plan ni budget, en autoformation et en production. C'est faisable une fois, à une personne, sur un projet dont on est propriétaire — ce n'est pas un modèle |
+| Pourquoi une certification d'accessibilité, si le niveau est atteint ? | Parce que l'acquis a été construit sur un seul produit, avec des outils automatisés. Une certification le formalise et le rend transférable. Et parce que c'est le seul domaine où un écart a un effet immédiat et bloquant : la porte de qualité échoue le déploiement |
+| Pourquoi si peu de technique dans le plan ? | Parce que le technique a été acquis sur le projet, en production, et que la grille le montre. Ce qui reste et qui a déjà coûté est du pilotage : chiffrer avant, arbitrer quand il le faut, faire relire le structurant |
 | Vos deux plus gros écarts sur le lead ne sont pas techniques | Non, et c'est volontaire. Arbitrage, chiffrage et transmission sont les deux compétences que le projet a le plus sollicitées et le moins bien exercées : le chiffrage a été formalisé a posteriori, et 87 lignes ont été intégrées sans revue. La grille désigne les mêmes faiblesses que les indicateurs, sinon elle serait de complaisance |
 | Les modalités handicap ne sont-elles pas des clauses de style ? | Trois d'entre elles ont un coût réel et sont donc vérifiables : le tiers-temps accordé de droit, la fourniture systématique d'un support en texte structuré, et l'accessibilité de la plateforme comme critère de sélection du prestataire. Et le compagnonnage interne est déjà asynchrone et écrit — c'est le mode de travail normal du projet, pas un aménagement rapporté |

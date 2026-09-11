@@ -30,19 +30,21 @@ Ne rien commenter ici. Enchainer immediatement sur la diapo 2.
 
 ---
 
-# Deux registres, annoncés maintenant
+# Un projet mené seul
 
-<div class="grid grid-cols-2 gap-8 mt-6 text-sm">
+<div class="grid grid-cols-2 gap-8 mt-2 text-sm">
 <div>
 
 <div class="note mb-3">
-<b>Le réel</b> : chiffré, daté, vérifiable.<br>
-Le projet a été <b>exécuté seul</b>. Commits, versions, mesures de production et retours utilisateurs sont ceux d'un projet à une personne.
+<b>Une personne</b>, développeur, architecte, exploitant et chef de projet, du 27 février au 16 septembre 2026. Les chiffres, les décisions et les erreurs qui suivent sont les miens.
+</div>
+
+<div class="note mb-3">
+<b>Pas sans déléguer.</b> Depuis le 13 mai, <b>64 % des commits</b> sont co-signés par un agent IA, sous un cadre écrit : conventions opposables, trois points d'arrêt, contrôle en sortie.
 </div>
 
 <div class="alert">
-<b>L'organisation cible</b> : une projection, jamais une équipe qui a existé.<br>
-4 profils, sur lesquels sont construits la matrice RACI, l'affectation des missions, la grille de compétences et le plan de développement.
+Là où le référentiel parle d'équipe, je montre ce que j'ai réellement fait, et je dis ce qui n'a pas d'équivalent à une personne.
 </div>
 
 </div>
@@ -55,12 +57,11 @@ Le projet a été <b>exécuté seul</b>. Commits, versions, mesures de productio
 <div><span><b>2.</b> Planifier l'exécution</span><u>C3.1, éliminatoire</u></div>
 <div><span><b>3.</b> Piloter l'avancement</span><u>C3.2.1, éliminatoire</u></div>
 <div><span><b>4.</b> Un cas d'arbitrage</span><u>C3.2.2</u></div>
-<div><span><b>5.</b> Piloter l'équipe</span><u>C3.3.1</u></div>
-<div><span><b>6.</b> Les besoins en compétences</span><u>C3.3.2</u></div>
+<div><span><b>5.</b> Piloter le travail, seul</span><u>C3.3.1</u></div>
+<div><span><b>6.</b> Les compétences, avant et après</span><u>C3.3.2</u></div>
 <div><span><b>7.</b> Rendre compte au commanditaire</span><u>C3.4.1</u></div>
 <div><span><b>8.</b> Bilan, et la validation du périmètre livré</span><u>C3.4.2, éliminatoire</u></div>
 </div>
-
 
 </div>
 </div>
@@ -69,15 +70,19 @@ Le projet a été <b>exécuté seul</b>. Commits, versions, mesures de productio
 DUREE 0:40. AVANT LA DEMONSTRATION. DIAPO CRITIQUE POUR LES 15 MINUTES DE
 QUESTIONS.
 
-Dire la phrase telle quelle : « Le projet a ete execute seul. Chaque fois que je
-parlerai d'affectation de missions ou de montee en competences, je decrirai
-l'organisation cible du projet, et je le signalerai. »
+Dire la phrase telle quelle : « Le projet a ete mene seul. Je ne vais pas vous
+presenter une equipe que je n'ai pas eue. Je vais vous montrer comment j'ai
+travaille seul, ce que j'ai delegue a des agents d'assistance et sous quel
+cadre, et, la ou le referentiel suppose une equipe, ce que j'ai fait a la
+place et ce qui n'a pas d'equivalent. »
 
-Un jury qui decouvre le caractere projete en fin de presentation le vit comme
-une dissimulation. Un jury prevenu des le debut l'evalue comme un exercice de
-conception d'organisation. C'est le meme contenu, ce n'est pas la meme note.
+Le chiffre a retenir : 64 % des commits co-signes par un agent depuis le
+13 mai. C'est mesurable dans l'historique du depot, et c'est ce qui donne au
+chapitre 5 un contenu reel : deleguer, cadrer, controler en sortie.
 
-Ne pas s'excuser, ne pas justifier longuement. Annoncer, puis avancer.
+Ne pas s'excuser d'etre seul, ne pas justifier longuement. Annoncer, puis
+avancer. Un jury previent des le debut evalue la methode ; un jury qui
+decouvre en cours de route qu'une equipe etait fictive sanctionne.
 -->
 
 ---
@@ -391,15 +396,16 @@ elle s'est revelee insuffisante, c'est le point de vigilance 2.
 
 ### Humaines
 
-<div class="text-xs opacity-75 mb-2">Organisation cible, 4 profils</div>
-
-<div class="chips">
-<div><span>Lead, chef de projet</span><u>architecture, arbitrage</u></div>
-<div><span>Développeur front</span><u>React, accessibilité</u></div>
-<div><span>Développeur back</span><u>C#, hexagonal</u></div>
-<div><span>DevOps et QA, mi-temps</span><u>CI/CD, supervision</u></div>
+<div class="kpi grid-cols-1">
+<div><b>1</b><span>personne : développement, architecture, exploitation, pilotage</span></div>
+<div><b>98 J/H</b><span>chiffrés au cadrage, sur quatre lots</span></div>
 </div>
 
+<div class="chips mt-3">
+<div><span>Agents IA</span><u>exécution déléguée, depuis le 13/05</u></div>
+<div><span>Commanditaire</span><u>formateur et jury, 4 échéances</u></div>
+<div><span>Utilisateurs</span><u>17 comptes, retours et recette</u></div>
+</div>
 
 </div>
 <div>
@@ -407,7 +413,7 @@ elle s'est revelee insuffisante, c'est le point de vigilance 2.
 ### Matérielles et techniques
 
 <div class="chips">
-<div><span>Un poste par profil</span><u>environnement reproductible</u></div>
+<div><span>Un poste de développement</span><u>environnement reproductible</u></div>
 <div><span>Monorepo outillé</span><u>tests, analyse, formatage</u></div>
 <div><span>Chaîne CI/CD</span><u>intégration et déploiement</u></div>
 <div><span>Hébergement</span><u>sans serveur, CDN, base managée</u></div>
@@ -420,7 +426,7 @@ elle s'est revelee insuffisante, c'est le point de vigilance 2.
 ### Financières
 
 <div class="kpi grid-cols-1">
-<div><b>34 300 €</b><span>de valeur de développement, HT</span></div>
+<div><b>34 300 €</b><span>de valeur de développement, HT, au taux journalier junior</span></div>
 <div><b>&lt; 200 €/an</b><span>de trésorerie réelle : infrastructure 0 €/mois puis 1 à 5 €, domaine 10 €/an</span></div>
 <div><b>0 €</b><span>de licence. Une décision de conception prise sous contrainte de budget, pas une conséquence</span></div>
 </div>
@@ -431,41 +437,41 @@ elle s'est revelee insuffisante, c'est le point de vigilance 2.
 <!--
 DUREE 0:50. ELEMENT IMPOSE 3 : les ressources necessaires.
 
-Trois familles, une phrase forte par famille, aucune lecture de tableau.
+Trois familles, une phrase forte par famille, aucune lecture de liste.
 
-HUMAINES : rappeler d'un mot qu'il s'agit de l'organisation cible. C'est le
-deuxieme rappel apres la diapo 3, il doit etre naturel, pas defensif. Le critere
-d'affectation est la COMPETENCE PIVOT, pas la disponibilite.
+HUMAINES : une personne, et le dire sans detour. Les 98 J/H sont le chiffrage
+du cadrage, pas une repartition entre profils. Les trois autres acteurs sont
+reels : les agents d'assistance a partir du 13 mai, le commanditaire (le
+formateur, puis le jury) sur quatre echeances, les 17 utilisateurs qui
+remontent des retours et font la recette.
 
 MATERIELLES : ne pas enumerer. Dire « poste de travail, outillage, chaine de
 livraison, hebergement, services tiers » et laisser lire.
 
-FINANCIERES : la phrase a dire est celle du bandeau, le contraste entre 200 euros
-et 34 300 euros. C'est ce qui parle a un jury de professionnels. L'absence de
+FINANCIERES : le contraste entre 200 euros et 34 300 euros. L'absence de
 licence payante conditionne la soutenabilite du service au-dela du titre.
 
 SI ON QUESTIONNE le « 0 euro/mois » : l'hebergement du front est dans ses douze
-mois offerts. La ligne suivante du budget est donc datee, pas hypothetique, voir
-diapo 13.
+mois offerts. La ligne suivante du budget est donc datee, pas hypothetique.
 -->
 
 ---
 
-# La matrice RACI, et le handicap dedans
+# La matrice RACI, avec les acteurs réels
 
 <div class="grid grid-cols-5 gap-5">
 <div class="col-span-3">
 
-<div class="raci">
-<div class="h"></div><div class="h">Lead</div><div class="h">Front</div><div class="h">Back</div><div class="h">DevOps</div><div class="h">Client</div>
-<div class="l">Cadrage et périmètre de version</div><div class="A">A R</div><div class="C">C</div><div class="C">C</div><div class="C">C</div><div class="C">C</div>
-<div class="l">Architecture applicative</div><div class="A">A R</div><div class="C">C</div><div class="R">R</div><div class="C">C</div><div class="I">I</div>
-<div class="l">Développement de l'interface</div><div class="A">A</div><div class="R">R</div><div class="C">C</div><div class="C">C</div><div class="n"></div>
-<div class="l">Développement de l'API</div><div class="A">A</div><div class="C">C</div><div class="R">R</div><div class="C">C</div><div class="n"></div>
-<div class="l">Accessibilité du produit</div><div class="A">A</div><div class="R">R</div><div class="C">C</div><div class="C">C</div><div class="C">C</div>
-<div class="l">Chaîne, supervision, sécurité</div><div class="A">A</div><div class="C">C</div><div class="C">C</div><div class="R">R</div><div class="I">I</div>
-<div class="l">Arbitrage de périmètre ou de charge</div><div class="A">A R</div><div class="C">C</div><div class="C">C</div><div class="C">C</div><div class="C">C</div>
-<div class="l"><b>Inclusion et adaptation des postes</b></div><div class="A">A R</div><div class="C">C</div><div class="C">C</div><div class="C">C</div><div class="I">I</div>
+<div class="raci" style="grid-template-columns: 1fr repeat(4, 4.2rem)">
+<div class="h"></div><div class="h">Moi</div><div class="h">Agents IA</div><div class="h">Client</div><div class="h">Utilisateurs</div>
+<div class="l">Cadrage et périmètre de version</div><div class="A">A R</div><div class="I">I</div><div class="C">C</div><div class="C">C</div>
+<div class="l">Architecture et contrat d'API</div><div class="A">A R</div><div class="C">C</div><div class="I">I</div><div class="n"></div>
+<div class="l">Développement, interface et API</div><div class="A">A</div><div class="R">R</div><div class="n"></div><div class="n"></div>
+<div class="l">Revue, tests, intégration</div><div class="A">A R</div><div class="R">R</div><div class="n"></div><div class="n"></div>
+<div class="l"><b>Accessibilité et inclusion</b></div><div class="A">A R</div><div class="R">R</div><div class="n"></div><div class="C">C</div>
+<div class="l">Chaîne, supervision, sécurité</div><div class="A">A R</div><div class="C">C</div><div class="n"></div><div class="I">I</div>
+<div class="l">Arbitrage de périmètre ou de charge</div><div class="A">A R</div><div class="n"></div><div class="C">C</div><div class="C">C</div>
+<div class="l">Versions, recette, retours</div><div class="A">A R</div><div class="n"></div><div class="C">C</div><div class="C">C</div>
 </div>
 
 <div class="legend mt-2">
@@ -478,16 +484,16 @@ diapo 13.
 </div>
 <div class="col-span-2 text-sm">
 
-### Trois propriétés
+### Ce que la matrice montre
 
 <div class="chips">
-<div><span><b>Un seul A par ligne</b>, jamais partagé</span></div>
-<div><span><b>Le R se lit avec le A</b> : qui réalise n'est pas qui rend compte</span></div>
-<div><span><b>Les acteurs externes y figurent</b>, sinon on oublie de les solliciter</span></div>
+<div><span><b>Le A est toujours le mien</b> : la responsabilité ne se partage pas à une personne</span></div>
+<div><span><b>Le R des agents</b> dit ce qui est délégué : le développement, les tests, l'intégration</span></div>
+<div><span><b>Jamais délégué</b> : le cadrage, l'arbitrage, la restitution</span></div>
 </div>
 
 <div class="note mt-3 text-xs">
-<b>Le handicap n'est pas une mention, c'est une ligne.</b> Aucune activité ne présuppose une capacité physique, et « inclusion et adaptation des postes » porte un <b>responsable identifié</b>, pas un sujet diffus dont personne ne répond.
+<b>Le handicap est une ligne, avec un responsable.</b> Personne en situation de handicap n'a travaillé sur le projet. Ce qui est vérifiable : le produit passe une porte d'accessibilité <b>bloquante</b> à chaque livraison, et tout le contexte est en texte structuré, lisible au lecteur d'écran et au clavier.
 </div>
 
 </div>
@@ -498,15 +504,22 @@ DUREE 1:00. CRITERE : les taches sont assignees selon les competences (RACI) ET
 tiennent compte des personnes en situation de handicap. Le second point est un
 critere a part entiere, pas une remarque.
 
-Ne pas lire la matrice. Dire les trois proprietes, puis la ligne handicap.
+Ne pas lire la matrice. Dire ce qu'elle montre : a une personne, la colonne A
+ne bouge pas, et l'information est dans la colonne des agents. Ce qui porte un
+R chez eux est ce que je fais faire ; ce qui n'en porte pas est ce que je ne
+delegue jamais : cadrer, arbitrer, rendre compte. Les acteurs externes y
+figurent : le commanditaire consulte sur le perimetre et les arbitrages, les
+utilisateurs consultes sur l'accessibilite et sur chaque version.
 
-Sur le handicap ici, une seule idee : le sujet porte un RESPONSABLE IDENTIFIE
-dans la matrice. C'est ce qui distingue une prise en compte reelle d'une clause
-de style. Les amenagements concrets et l'accessibilite du produit sont en diapo
-19, ne pas les anticiper ici, ce serait la meme chose dite deux fois.
+Sur le handicap, dire la verite en une phrase : personne en situation de
+handicap sur le projet. Puis ce qui est verifiable : la porte d'accessibilite
+bloquante, le contexte en texte structure. La ligne existe et elle a un
+responsable, ce n'est pas une clause de style.
 
-Rappel de posture : c'est l'organisation cible. Troisieme et dernier rappel avant
-le chapitre 4.
+SI ON QUESTIONNE « une RACI a une personne, a quoi ca sert ? » : a rendre
+visible ce qui est delegue et sous quel controle. Le R des agents sans le A de
+la ligne « revue, tests, integration » serait de l'abandon. Le jour ou une
+personne rejoint le projet, la matrice est deja ecrite.
 -->
 
 ---
@@ -521,7 +534,7 @@ le chapitre 4.
 <div class="alert">
 <b>1. Concentration des rôles sur une personne</b><br>
 <span class="text-3xl font-bold" style="color:#b45309">1</span> <span class="text-xs">personne capable de mener une mise en production.</span><br>
-<span class="text-xs">Parade : procédures écrites et versionnées, infrastructure en code, décisions consignées. <b>C'est ce risque qui rend l'organisation cible nécessaire, et non décorative.</b></span>
+<span class="text-xs">Parade : procédures écrites et versionnées, infrastructure en code, décisions consignées. <b>Tout ce qu'un remplaçant recevrait le premier jour est écrit.</b></span>
 </div>
 
 <div class="alert mt-2 text-xs">
@@ -559,9 +572,9 @@ theorique.
 Le point 6, absence de deploiement progressif, est une faiblesse assumee. La dire
 ici plutot que de la laisser decouvrir.
 
-2. « Le point 1 est d'une autre nature. » C'est la transition : l'indicateur vaut
-1, et cette valeur EST le probleme. Enchainer sur le fait que c'est ce risque qui
-rend l'organisation cible necessaire.
+2. « Le point 1 est d'une autre nature. » L'indicateur vaut 1, et cette valeur
+EST le probleme. La parade ne le supprime pas, elle le rend survivable : tout ce
+qu'un remplacant recevrait le premier jour est ecrit et versionne.
 -->
 
 ---
@@ -830,7 +843,7 @@ Le passage de <b>52 à 94 %</b> suit une correction <b>décidée à partir de ce
 </div>
 
 <div class="alert mt-3 text-sm">
-<b>Ressources humaines : 88 jours actifs sur 191, soit 3,1 par semaine, mais une amplitude de 1 à 7, une série de 10 jours consécutifs, 5 semaines à zéro.</b> La charge a été <b>absorbée, pas pilotée</b>. C'est cette mesure, et non une intuition, qui justifie l'organisation cible.
+<b>Ressources humaines : 88 jours actifs sur 191, soit 3,1 par semaine, mais une amplitude de 1 à 7, une série de 10 jours consécutifs, 5 semaines à zéro.</b> La charge a été <b>absorbée, pas pilotée</b>.
 </div>
 
 <!--
@@ -1111,94 +1124,87 @@ instruit. »
 
 ---
 
-# 5. Piloter l'équipe : l'affectation des missions
+# 5. Piloter seul : ce qui est délégué, ce qui ne l'est pas
 
-<div class="lede">L'affectation suit la <b>compétence attestée</b>, jamais la disponibilité. <span class="opacity-70">Organisation cible, projection.</span></div>
-
-<div class="grid grid-cols-5 gap-5 text-sm">
+<div class="grid grid-cols-5 gap-6 text-sm">
 <div class="col-span-2">
 
-| Profil | Mission confiée |
-|--------|-----------------|
-| **Lead, chef de projet** | Conception d'ensemble, arbitrages, planning, restitutions |
-| **Développeur front** | Interface, parcours, accessibilité, app installable |
-| **Développeur back** | API, modèle, règles métier, intégrations |
-| **DevOps et QA** | Chaîne de livraison, infra, supervision, recette |
+<div class="text-xs opacity-75 mb-1">Gardé</div>
+<div class="chips">
+<div><span>Cadrage et maquette</span><u>avant toute ligne de code</u></div>
+<div><span>Arbitrages</span><u>périmètre, charge, socle</u></div>
+<div><span>Revue avant intégration</span><u>6 contrôles, portes bloquantes</u></div>
+<div><span>Mise en production, incidents</span><u>geste manuel, vérifié</u></div>
+<div><span>Restitutions</span><u>commanditaire, utilisateurs</u></div>
+</div>
+
+<div class="text-xs opacity-75 mt-3 mb-1">Délégué aux agents IA, sous cadre écrit</div>
+<div class="chips">
+<div><span>Implémentation</span><u>conventions d'AGENTS.md</u></div>
+<div><span>Tests et refactorisations</span><u>relus en sortie</u></div>
+<div><span>Montées de dépendances</span><u>Dependabot, regroupées</u></div>
+</div>
 
 </div>
 <div class="col-span-3">
 
-<div class="text-xs opacity-75 mb-2">Répartition des 98 J/H par lot et par profil</div>
-
-<div class="lots">
-<div>1. MVP</div>
-<div><div class="stack" style="width:77%"><i style="width:7.4%;background:var(--s1)"></i><i style="width:33.3%;background:var(--s2)">9</i><i style="width:40.7%;background:var(--s3)">11</i><i style="width:18.5%;background:var(--s4)">5</i></div></div>
-<div><b>27</b></div>
-
-<div>2. Migration</div>
-<div><div class="stack" style="width:37%"><i style="width:23.1%;background:var(--s1)">3</i><i style="width:61.5%;background:var(--s3)">8</i><i style="width:15.4%;background:var(--s4)"></i></div></div>
-<div><b>13</b></div>
-
-<div>3. V1 produit</div>
-<div><div class="stack" style="width:100%"><i style="width:8.6%;background:var(--s1)"></i><i style="width:34.3%;background:var(--s2)">12</i><i style="width:45.7%;background:var(--s3)">16</i><i style="width:11.4%;background:var(--s4)">4</i></div></div>
-<div><b>35</b></div>
-
-<div>4. Clôture</div>
-<div><div class="stack" style="width:66%"><i style="width:47.8%;background:var(--s1)">11</i><i style="width:17.4%;background:var(--s2)">4</i><i style="width:34.8%;background:var(--s4)">8</i></div></div>
-<div><b>23</b></div>
+<div class="text-xs opacity-75 mb-1">Part des commits co-signés par un agent, par mois</div>
+<div class="cols" style="height:6.5rem">
+<div><em>0 %</em><i style="height:2%"></i></div>
+<div><em>0 %</em><i style="height:2%"></i></div>
+<div><em>0 %</em><i style="height:2%"></i></div>
+<div><em>73 %</em><i style="height:73%"></i></div>
+<div><em>84 %</em><i style="height:84%"></i></div>
+<div><em>65 %</em><i style="height:65%"></i></div>
+<div><em>73 %</em><i style="height:73%"></i></div>
+<div><em>50 %</em><i style="height:50%"></i></div>
+</div>
+<div class="xlab">
+<div>fév.</div><div>mars</div><div>avril</div><div>mai</div><div>juin</div><div>juil.</div><div>août</div><div>sept.</div>
 </div>
 
-<div class="legend">
-<span style="--c:var(--s1)">Lead 19 J/H, 19 %</span>
-<span style="--c:var(--s2)">Front 25, 26 %</span>
-<span style="--c:var(--s3)">Back 35, 36 %</span>
-<span style="--c:var(--s4)">DevOps 19, 19 %</span>
+<div class="note mt-3 text-xs">
+<b>537 commits sur 833 co-signés par un agent</b>, premier le 13 mai, à la veille de la V1. Avant : tout à la main, dont la migration de l'API. Après : l'exécution est déléguée, la décision et le contrôle ne le sont pas.
 </div>
 
-<div class="alert mt-3 text-xs">
-<b>Une somme équilibrée n'est pas un équilibre.</b> Le back porte 36 %, conséquence du lot de migration, mais le déséquilibre est <b>décalé dans le temps</b> : pic back en mars-avril, pic front en avril-mai. À aucun moment un profil n'est saturé pendant qu'un autre attend.
+<div class="alert mt-2 text-xs">
+<b>Aucune charge à répartir sur une équipe.</b> La seule répartition réelle est entre ce que je fais et ce que je fais faire, et le contrôle reste en sortie : un travail non conforme est repris, jamais intégré.
 </div>
 
 </div>
 </div>
-
-<style>
-.lots { display: grid; grid-template-columns: max-content 1fr 2.2rem; gap: 0.35rem 0.6rem; align-items: center; font-size: 0.74rem; }
-.lots > div:nth-child(3n+1) { color: var(--ink-2); white-space: nowrap; }
-.lots > div:nth-child(3n) { text-align: right; }
-.lots .stack { height: 1.3rem; }
-</style>
 
 <!--
-DUREE 0:50. ELEMENT IMPOSE 6 : l'affectation des missions.
-CRITERE : la charge est repartie de maniere EQUILIBREE sur l'ensemble de
-l'equipe.
+DUREE 0:50. ELEMENT IMPOSE 6 : l'affectation des missions realisee au cours du
+projet. CRITERE : la charge est repartie de maniere equilibree sur l'ensemble
+de l'equipe.
 
-Premier mot : rappeler que c'est l'organisation cible. Quatrieme rappel, il doit
-rester naturel.
+Dire d'abord ce que le critere ne peut pas mesurer ici : il n'y a pas d'equipe,
+donc pas de repartition entre personnes. Puis montrer la seule affectation
+reelle du projet : ce que je garde, ce que je delegue aux agents, et la
+mesure. 537 commits sur 833 co-signes, 0 % jusqu'en avril, 73 a 84 % ensuite.
 
-Ne pas lire les profils. Dire le critere d'affectation, la competence attestee,
-pas la disponibilite.
+Le graphique se lit en une phrase : la migration de l'API en mars a ete faite
+entierement a la main ; a partir du 13 mai, l'execution est deleguee. Ce qui
+n'a jamais ete delegue est a gauche : cadrer, arbitrer, relire, deployer,
+rendre compte.
 
-Tout le temps utile va au graphique et au bandeau. Le back a 36 %, un jury de
-professionnels va poser la question, autant y repondre avant. La reponse est que
-l'equilibre se verifie sur le PROFIL DE CHARGE DANS LE TEMPS, pas sur la colonne
-des totaux. Designer la barre du lot 2, entierement back, et celle du lot 4,
-majoritairement lead : les pics ne se superposent pas.
+Le bandeau orange est la reponse honnete au critere « charge repartie » : la
+repartition est entre faire et faire faire, et le controle en sortie est ce
+qui la rend sure. La charge dans le temps, elle, est analysee en fin de
+chapitre : dix jours consecutifs en aout.
 
-La phrase qui ferme : quatre profils a 24,5 J/H seraient equilibres sur le papier
-et impossibles dans le calendrier, les competences n'etant pas interchangeables.
-
-SI ON QUESTIONNE le DevOps a mi-temps : ses 19 J/H sont etales sur toute la duree
-et non concentres, la chaine de livraison se construit tot et s'entretient
-ensuite.
+SI ON QUESTIONNE « un agent, ce n'est pas une equipe » : exact, et c'est dit.
+Un agent n'a ni motivation ni progression. Ce qui se transpose, c'est l'autre
+moitie du management : ecrire le cadre avant de deleguer, placer le controle
+en sortie, accepter qu'une regle non ecrite ne soit pas une regle.
 -->
 
 ---
 
 # Les quatre styles managériaux, situés
 
-<div class="lede">Chaque style est rattaché à une situation réelle du projet, pas défini en théorie. Style dominant : le <b>délégatif encadré</b>.</div>
+<div class="lede">À une personne, le management s'exerce sur ce qu'on délègue et sur soi-même. Chaque style est rattaché à une situation réelle du projet. Style dominant : le <b>délégatif encadré</b>.</div>
 
 <div class="grid grid-cols-5 gap-5">
 <div class="col-span-3">
@@ -1285,11 +1291,11 @@ SI ON QUESTIONNE : « delegue a qui ? » Reponse honnete, elle est en diapo 19.
 </div>
 
 <div class="note mt-3 text-xs">
-<b>Aménagements de l'organisation cible</b>, à la demande et sans justification médicale à produire à l'équipe : poste adapté, outillage compatible lecteur d'écran et clavier, télétravail et horaires aménagés, temps supplémentaire en recette et en formation.
+<b>Sur le réel</b> : personne en situation de handicap, ni d'un autre fuseau, ni d'une autre langue n'a travaillé sur le projet. Ce qui est en place le permettrait sans réunion ni présence : tout le contexte est écrit, versionné, lisible au lecteur d'écran.
 </div>
 
 <div class="alert mt-2 text-xs">
-<b>Sur le produit livré</b> : bilingue FR / EN, et l'accessibilité est une porte de qualité <b>bloquante</b>. Une équipe qui livre un produit inaccessible ne peut pas prétendre à une organisation inclusive.
+<b>Sur le produit livré</b> : bilingue FR / EN, et l'accessibilité est une porte de qualité <b>bloquante</b>. Livrer un produit inaccessible et se dire inclusif ne tient pas.
 </div>
 
 
@@ -1326,9 +1332,12 @@ simultaneite, c'est ce qui les rend compatibles avec la colonne de droite.
 Colonne de droite, une seule idee : le meme dispositif, l'ecrit
 asynchrone versionne, repond au handicap, aux fuseaux horaires et a la langue.
 
-Puis deux preuves rapides, en dix secondes : les amenagements sont
-accordes SANS justification a produire, et l'accessibilite du produit est une
-porte BLOQUANTE, pas une intention.
+Puis la verite en une phrase, personne dans ces situations sur le projet, et
+la preuve qui reste : l'accessibilite du produit est une porte BLOQUANTE, pas
+une intention. Si on demande ce que je ferais pour une personne en situation
+de handicap qui rejoindrait le projet : poste adapte, outillage compatible
+lecteur d'ecran et clavier, horaires amenages, temps supplementaire en recette
+et en formation, accordes a la demande et sans justification a produire.
 
 Fermer sur la phrase du bandeau orange et enchainer : la diapo suivante est
 celle qui compte pour ce chapitre.
@@ -1411,7 +1420,7 @@ Terminer sur la recommandation 2 en disant qu'elle est la plus difficile a tenir
 
 ---
 
-# 6. Les compétences, déduites des lots
+# 6. Les compétences que le projet a exigées
 
 <div class="lede">Pour chaque lot : <b>que faut-il savoir faire pour qu'il soit livrable et exploitable ?</b> Chaque compétence correspond ainsi à une technologie du dépôt, avec une date d'introduction vérifiable.</div>
 
@@ -1470,11 +1479,10 @@ reconstitution de charge est faible sur mars, voir diapo 14.
 
 ---
 
-# La grille d'évaluation, et ce qu'elle avoue
+# La grille d'évaluation : moi, avant et après le projet
 
 <div class="text-xs opacity-80 mb-1">
 <b>0</b> non acquis ; <b>1</b> lit et modifie accompagné ; <b>2</b> autonome sur une tâche courante ; <b>3</b> conçoit, arbitre, traite le cas non nominal ; <b>4</b> définit le standard et forme.
-Le <b>2</b> est le seuil d'autonomie, le <b>3</b> le seuil de responsabilité : un profil qui porte le « R » de la matrice RACI doit être à 3.
 </div>
 
 <div class="grid grid-cols-5 gap-5 mt-3">
@@ -1482,117 +1490,104 @@ Le <b>2</b> est le seuil d'autonomie, le <b>3</b> le seuil de responsabilité : 
 
 <div class="dumb">
 <div class="lbl"></div><div class="scale"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div>
-<div class="lbl">Lead, Architecture</div><div class="track"><i class="bar" style="left:75%;width:25%"></i><u class="a" style="left:75%"></u><u class="c" style="left:100%"></u></div>
-<div class="lbl">Lead, Arbitrage, chiffrage</div><div class="track"><i class="bar big" style="left:50%;width:50%"></i><u class="a" style="left:50%"></u><u class="c" style="left:100%"></u></div>
-<div class="lbl">Lead, Revue, transmission</div><div class="track"><i class="bar big" style="left:50%;width:50%"></i><u class="a" style="left:50%"></u><u class="c" style="left:100%"></u></div>
-<div class="lbl">Front, React, TypeScript</div><div class="track"><u class="c" style="left:75%"></u></div>
-<div class="lbl">Front, Accessibilité</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
-<div class="lbl">Front, App installable, i18n</div><div class="track"><i class="bar" style="left:25%;width:25%"></i><u class="a" style="left:25%"></u><u class="c" style="left:50%"></u></div>
-<div class="lbl">Back, C#, ASP.NET Core</div><div class="track"><u class="c" style="left:75%"></u></div>
-<div class="lbl">Back, Architecture hexagonale</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
-<div class="lbl">Back, Sécurité, identité</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
-<div class="lbl">DevOps, CI/CD, conteneurs</div><div class="track"><i class="bar" style="left:50%;width:25%"></i><u class="a" style="left:50%"></u><u class="c" style="left:75%"></u></div>
-<div class="lbl">DevOps, Supervision</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
-<div class="lbl">DevOps, Veille de vulnérabilités</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
+<div class="lbl">Architecture applicative</div><div class="track"><i class="bar" style="left:50%;width:25%"></i><u class="a" style="left:50%"></u><u class="c" style="left:75%"></u><u class="t" style="left:100%"></u></div>
+<div class="lbl">Arbitrage, chiffrage</div><div class="track"><u class="a" style="left:50%"></u><u class="c" style="left:50%"></u><u class="t" style="left:100%"></u></div>
+<div class="lbl">Revue, transmission</div><div class="track"><i class="bar" style="left:25%;width:25%"></i><u class="a" style="left:25%"></u><u class="c" style="left:50%"></u><u class="t" style="left:100%"></u></div>
+<div class="lbl">React, TypeScript</div><div class="track"><u class="a" style="left:75%"></u><u class="c" style="left:75%"></u></div>
+<div class="lbl">Accessibilité</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
+<div class="lbl">App installable, i18n</div><div class="track"><i class="bar" style="left:25%;width:25%"></i><u class="a" style="left:25%"></u><u class="c" style="left:50%"></u></div>
+<div class="lbl">C#, ASP.NET Core</div><div class="track"><i class="bar" style="left:50%;width:25%"></i><u class="a" style="left:50%"></u><u class="c" style="left:75%"></u></div>
+<div class="lbl">Architecture hexagonale</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
+<div class="lbl">Sécurité, identité</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
+<div class="lbl">CI/CD, conteneurs</div><div class="track"><i class="bar" style="left:50%;width:25%"></i><u class="a" style="left:50%"></u><u class="c" style="left:75%"></u></div>
+<div class="lbl">Supervision, exploitation</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
+<div class="lbl">Veille de vulnérabilités</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
 </div>
 
 <div class="legend mt-1">
-<span style="color:#a7b0ae">Socle attendu au recrutement</span>
-<span style="--c:var(--s1)">Niveau que le projet exige</span>
-<span class="nokey" style="opacity:.75">trait épais : écart de +2</span>
+<span style="color:#a7b0ae">Février 2026</span>
+<span style="--c:var(--s1)">Septembre 2026</span>
+<span class="nokey" style="opacity:.8">cercle orange : niveau que le projet exige, quand il n'est pas atteint</span>
 </div>
 
 </div>
 <div class="col-span-2 text-sm">
 
 <div class="note mb-2">
-<b>Le niveau « actuel » n'évalue personne</b> : c'est le socle attendu d'un profil <b>au recrutement</b>, junior confirmé de 2 à 3 ans. L'écart mesure ce que le projet exige au-delà.
+<b>Auto-évaluation, étalonnée sur le dépôt</b> : la date d'introduction de chaque technologie, et ce qui a été livré avec.
 </div>
 
-**Les écarts nuls sont sur les langages.** React/TypeScript et C#/ASP.NET Core : un recrutement les apporte.
-
-**Les sept écarts à +2 sont des compétences de contexte**, pas de langage. Elles ne s'achètent pas sur une fiche de poste, elles se construisent sur le projet.
+**Neuf écarts comblés par autoformation**, en production, sans plan ni budget : quatre jours pour le socle .NET, puis l'accessibilité, la supervision, la sécurité.
 
 <div class="alert mt-2 text-xs">
-<b>Les deux plus gros écarts du lead ne sont pas techniques.</b> Arbitrage, chiffrage, transmission : ce sont les compétences que le projet réel a le plus sollicitées et le moins bien exercées, chiffrage formalisé <i>a posteriori</i> (ch. 2), 87 lignes intégrées sans revue (ch. 3). <b>La grille désigne les mêmes faiblesses que les indicateurs</b>, sinon elle serait de complaisance.
+<b>Deux écarts restent, et ils ne sont pas techniques.</b> Arbitrage et chiffrage, revue et transmission : chiffrage formalisé <i>a posteriori</i>, 87 lignes intégrées sans revue, dix jours d'août sans arbitrage. <b>La grille désigne les mêmes faiblesses que les indicateurs</b>, sinon elle serait de complaisance.
 </div>
 
 </div>
 </div>
-
-<style>
-.dumb .scale { position: relative; display: flex; justify-content: space-between; font-size: 0.66rem; color: var(--ink-2); }
-</style>
 
 <!--
-DUREE 1:10. ELEMENT IMPOSE 9 : l'evaluation des besoins en competences via
-grille. CRITERE : la grille est COMMENTEE, le mot est dans la grille officielle,
-un tableau affiche sans commentaire ne suffit pas.
+DUREE 1:10. ELEMENT IMPOSE 9 : l'evaluation des besoins en competences via une
+grille. CRITERE : la grille des competences actuelles et a acquerir est
+COMMENTEE. Le mot est « commentee » : afficher ne suffit pas.
 
-PREMIERE PHRASE OBLIGATOIRE, avant tout le reste : « le niveau actuel n'est
-l'evaluation de personne, c'est le socle attendu d'un profil au recrutement ».
-Sans cette phrase, le jury entend qu'on note des collaborateurs fictifs.
+Convention a enoncer avant le graphique : c'est une auto-evaluation, et elle
+est etalonnee sur des preuves. Chaque ligne correspond a une technologie
+presente dans le depot, avec une date d'introduction et ce qui a ete livre
+avec. Le point gris est fevrier 2026, le point vert septembre, le cercle
+orange le niveau que le projet exige quand il n'est pas atteint.
 
-Puis COMMENTER, en designant le graphique, les traits epais sautent aux yeux,
-c'est le but :
-1. Les deux lignes sans trait sont les langages. Un recrutement les apporte.
-2. Les sept traits epais sont des competences de CONTEXTE : hexagonal,
-accessibilite, securite, supervision, veille, arbitrage, transmission. Un
-recrutement n'apporte pas une conformite.
-3. L'accessibilite est le seul ecart a effet bloquant IMMEDIAT : la porte de
-qualite echoue le deploiement, un front recrute au niveau 1 casse la chaine a sa
-premiere livraison.
-4. Le bandeau, le plus important : les deux plus gros ecarts du lead ne sont pas
-techniques, et ils designent exactement les faiblesses deja montrees aux
-chapitres 2 et 3. C'est ce qui rend la grille credible plutot que flatteuse.
+Puis COMMENTER, en designant le graphique :
+1. Les traits epais sont les competences de contexte : hexagonal,
+accessibilite, securite, supervision, veille. Elles ont ete franchies par
+autoformation, en production. La vague 1 a coute quatre jours (chapitre
+precedent).
+2. Les deux lignes sans progression suffisante ne sont pas techniques :
+arbitrage et chiffrage, revue et transmission. Ce sont exactement les
+faiblesses montrees aux chapitres 3, 4 et 5. C'est ce qui rend la grille
+credible plutot que flatteuse.
+3. Le 3 est le seuil de responsabilite. Sur un projet a une personne, il
+faut y etre partout ou l'on porte le R, et c'est le cas sur le technique.
 
-SI ON QUESTIONNE l'etalonnage des cibles : sur ce que le projet a reellement
-exige, chaque competence correspondant a une techno presente dans le depot avec
-une date d'introduction verifiable.
+SI ON QUESTIONNE l'auto-evaluation : elle est verifiable ligne par ligne dans
+le depot, et elle avoue deux ecarts. Une grille flatteuse n'en avouerait
+aucun.
 -->
 
 ---
 
-# Le plan de développement des compétences
+# Le plan de développement : ce qui reste à acquérir
 
-<div class="lede">Classé par <b>coût d'un écart non comblé</b> : bloque une porte de qualité (P1), crée une dépendance unique (P2), ralentit sans bloquer (P3). <b>20 J/H, 2 100 €</b>, 20 % de la charge projet, payés une fois.</div>
+<div class="lede">Classé par <b>coût d'un écart non comblé</b>. Les écarts techniques ont été franchis sur le projet ; les deux qui restent ont déjà coûté.</div>
 
 <div class="grid grid-cols-5 gap-5">
 <div class="col-span-3">
 
 <div class="bars">
-<div class="p1"><span>P1 Front, accessibilité</span><div class="t"><i style="width:27%">3 j</i><em>certifiante externe. Une livraison passe la porte <b>sans reprise</b></em></div></div>
-<div class="p1"><span>P1 DevOps, supervision</span><div class="t"><i style="width:45%">5 j</i><em>compagnonnage, astreinte simulée. Traite seul une alerte</em></div></div>
-<div><span>P2 Back, hexagonal</span><div class="t"><i class="cont" style="width:14%">1 mois</i><em>lecture guidée, revue. Un cas d'usage sans violation de couche</em></div></div>
-<div><span>P2 Back, sécurité</span><div class="t"><i style="width:36%">4 j</i><em>OWASP, revue croisée. Aucune vulnérabilité sur un trimestre</em></div></div>
-<div><span>P2 DevOps, veille</span><div class="t"><i style="width:18%">2 j</i><em>compagnonnage. Qualifie seul un avis et décide</em></div></div>
-<div><span>P2 Lead, chiffrage</span><div class="t"><i style="width:27%">3 j</i><em>formation courte. Arbitrage consigné <b>quand il est pris</b></em></div></div>
-<div><span>P2 Lead, revue</span><div class="t"><i class="cont" style="width:14%">continu</i><em>revue croisée obligatoire. 100 % du structurant passé en revue</em></div></div>
-<div class="p3"><span>P3 Front, installable, i18n</span><div class="t"><i style="width:27%">3 j</i><em>autoformation. Une fonctionnalité hors ligne et traduite</em></div></div>
+<div class="p1"><span>P1 Arbitrage, chiffrage</span><div class="t"><i style="width:27%">3 j</i><em>formation courte, puis pratique à chaque version. Chiffrage <b>avant</b>, arbitrage consigné <b>quand il est pris</b></em></div></div>
+<div class="p1"><span>P1 Revue, transmission</span><div class="t"><i class="cont" style="width:14%">continu</i><em>revue par un tiers, humain ou outillé, obligatoire sur le structurant. 100 % du structurant relu</em></div></div>
+<div><span>P2 Sécurité applicative</span><div class="t"><i style="width:36%">4 j</i><em>autoformation OWASP, revue croisée. Aucune vulnérabilité sur un trimestre</em></div></div>
+<div><span>P2 Accessibilité</span><div class="t"><i style="width:27%">3 j</i><em>certification externe. Une livraison passe la porte <b>sans reprise</b></em></div></div>
+<div class="p3"><span>P3 Management d'équipe</span><div class="t"><i style="width:18%">2 j</i><em>formation courte, utile le jour où le projet passe en équipe. Un contributeur opérationnel en une journée sur le cadre écrit</em></div></div>
 </div>
 
 <div class="legend mt-2">
-<span style="--c:#d97706">P1, bloque une porte de qualité</span>
-<span style="--c:var(--s1)">P2, dépendance unique</span>
-<span style="--c:var(--s3)">P3, ralentit sans bloquer</span>
+<span style="--c:#d97706">P1, a déjà coûté au projet</span>
+<span style="--c:var(--s1)">P2, consolide un acquis</span>
+<span style="--c:var(--s3)">P3, prépare la suite</span>
 </div>
+
+<div class="text-xs opacity-75 mt-2">12 jours, autoformation sauf la certification, qui est le seul poste payant.</div>
 
 </div>
 <div class="col-span-2 text-sm">
 
 <div class="note">
-<b>Note aux RH</b> : recruter sur le langage et l'expérience de conduite, former sur le contexte et la conformité.
-</div>
-
-<div class="chips mt-2">
-<div><span>Lead</span><u>architecture n. 3, formé arbitrage</u></div>
-<div><span>Front</span><u>React n. 3, formé accessibilité, i18n</u></div>
-<div><span>Back</span><u>C# n. 3, formé hexagonal, sécurité</u></div>
-<div><span>DevOps</span><u>CI/CD n. 2, formé supervision, veille</u></div>
+<b>Besoins en recrutement, si le projet passait en équipe</b> : un développeur front au niveau 3 en accessibilité, un profil DevOps à mi-temps. Ce qu'ils recevraient le premier jour est déjà écrit : les conventions, les procédures, les gabarits.
 </div>
 
 <div class="alert mt-3 text-xs">
-<b>Modalités handicap, posées par défaut</b>, sans demande ni justification : tiers-temps de droit sur toute formation et son évaluation, support en texte structuré, matériel adapté pendant la formation, accessibilité de la plateforme comme critère de sélection du prestataire.
+<b>Modalités de formation, posées par défaut</b> : tiers-temps de droit sur toute formation et son évaluation, support en texte structuré, matériel adapté pendant la formation, accessibilité de la plateforme comme critère de choix du prestataire.
 </div>
 
 </div>
@@ -1600,36 +1595,27 @@ une date d'introduction verifiable.
 
 <!--
 DUREE 0:50. ELEMENT IMPOSE 10 : le plan de developpement des competences.
-CRITERES : le plan est etabli et DETAILLE, des FORMATIONS sont preconisees selon
-les besoins et les profils, et les MODALITES sont adaptees au handicap.
+CRITERES : le plan est etabli et DETAILLE, des FORMATIONS sont preconisees
+selon les besoins du projet et le profil, et les MODALITES sont adaptees au
+handicap. Et le besoin en recrutement est transmis aux RH.
 
 Trois choses, une par bloc :
 
-1. Le principe d'ordonnancement. Les actions ne sont pas classees par importance
-mais par COUT D'UN ECART NON COMBLE. Citer les deux priorites 1 : l'accessibilite
-bloque une porte de qualite, la supervision laisse une production sans
-surveillance.
+1. Le principe d'ordonnancement, par cout d'un ecart non comble. Les deux
+priorites 1 ont deja coute : un chiffrage formalise apres coup, 87 lignes
+integrees sans revue, dix jours d'aout sans arbitrage. Elles passent avant
+tout ce qui est technique, parce que le technique a ete acquis sur le projet.
 
-2. La colonne « indicateur de reussite ». C'est elle qui distingue un plan d'une
-liste de vux : chaque action se termine par un fait verifiable, pas par une
-attestation de presence. La designer d'un geste.
+2. La colonne « indicateur » de chaque ligne. C'est elle qui distingue un plan
+d'une liste de voeux : chaque action se termine par un fait verifiable, pas
+par une attestation de presence.
 
-3. La logique recruter / former, qui est la reponse a « transmettre les besoins
-en recrutement au service RH ». Exiger l'accessibilite et l'hexagonal des le
-recrutement restreindrait le vivier sans necessite : ces deux competences se
-construisent en un mois de pratique encadree.
+3. La note RH : je ne recruterais pas aujourd'hui, mais la question est
+instruite. Deux profils, et ce qu'ils recevraient le premier jour existe deja.
 
-Sur le handicap, ne citer que les modalites qui ont un COUT REEL, donc
-verifiables : le tiers-temps de droit, le support en texte structure
-systematique, et l'accessibilite de la plateforme comme critere de selection du
-prestataire. Ajouter que le compagnonnage interne est deja ecrit et asynchrone ,
-c'est le mode de travail normal du projet, pas un amenagement rapporte.
-
-SI ON QUESTIONNE : « 20 % de la charge en formation, n'est-ce pas beaucoup ? »
-C'est le prix de la conversion d'un projet a une personne en projet d'equipe. Sur
-le projet reel, ces memes ecarts ont ete franchis sans plan ni budget, en
-autoformation et en production. C'est faisable une fois, a une personne, sur un
-projet dont on est proprietaire, ce n'est pas un modele.
+Sur le handicap, ne citer que les modalites qui ont un cout reel, donc
+verifiables : le tiers-temps de droit, le support en texte structure,
+l'accessibilite de la plateforme comme critere de choix du prestataire.
 -->
 
 ---
@@ -2175,28 +2161,27 @@ Mesures anti-chaîne d'approvisionnement : actions épinglées par SHA, images p
 
 **R** réalise, **A** approuve et rend compte, **C** consulté, **I** informé
 
-| Activité | Lead, CDP | Front | Back | DevOps, QA | Commanditaire | Utilisateurs |
-|----------|:---------:|:-----:|:----:|:----------:|:-------------:|:------------:|
-| Cadrage et périmètre de version | A, R | C | C | C | C | I |
-| Architecture applicative | A, R | C | R | C | I | |
-| Modèle de données et contrat d'interface | A | C | R | C | | |
-| Développement de l'interface | A | R | C | C | | I |
-| Développement de l'API | A | C | R | C | | |
-| Intégration des services tiers | A | C | R | C | | |
-| Accessibilité du produit | A | R | C | C | C | C |
-| Chaîne d'intégration et de déploiement | A | C | C | R | | |
-| Supervision et exploitation | A | I | C | R | I | |
-| Sécurité applicative | A | C | C | R | I | |
-| Recette et tests de bout en bout | A | C | C | R | C | C |
-| Arbitrage de périmètre ou de charge | A, R | C | C | C | C | I |
-| Mise en production | A | I | I | R | I | I |
-| Restitution et compte rendu | A, R | C | C | C | C | I |
-| **Inclusion et adaptation des postes** | **A, R** | C | C | C | I | |
+| Activité | Moi | Agents IA | Commanditaire | Utilisateurs | Prestataires |
+|----------|:---:|:---------:|:-------------:|:------------:|:------------:|
+| Cadrage et périmètre de version | A, R | I | C | C | |
+| Architecture applicative | A, R | C | I | | |
+| Modèle de données et contrat d'interface | A, R | C | | | |
+| Développement de l'interface | A | R | | I | |
+| Développement de l'API | A | R | | | |
+| Intégration des services tiers | A | R | | | C |
+| Accessibilité et inclusion | A, R | R | | C | |
+| Chaîne d'intégration et de déploiement | A, R | C | | | |
+| Supervision et exploitation | A, R | I | I | | R |
+| Sécurité applicative | A, R | C | I | | |
+| Recette et tests de bout en bout | A, R | R | C | C | |
+| Arbitrage de périmètre ou de charge | A, R | | C | C | |
+| Mise en production | A, R | | I | I | R |
+| Restitution et compte rendu | A, R | | C | I | |
 
 </div>
 
 <div class="note mt-2 text-xs">
-<b>Une seule approbation par ligne</b> : le rôle A n'est jamais partagé, condition pour qu'un arbitrage puisse être tranché. <b>L'affectation suit la compétence, pas la disponibilité.</b> <b>Les acteurs externes y figurent</b> : un acteur absent de la matrice est un acteur qu'on oubliera de solliciter.
+<b>Le A est toujours le mien</b> : à une personne, la matrice ne répartit pas la responsabilité, elle rend visible ce qui est délégué, sous cadre écrit et contrôle en sortie, et ce qui ne l'est jamais. <b>Les acteurs externes y figurent</b> : le commanditaire consulté sur le périmètre et les arbitrages, les utilisateurs consultés sur l'accessibilité et sur chaque version, les prestataires qui exécutent l'hébergement et la supervision.
 </div>
 
 ---

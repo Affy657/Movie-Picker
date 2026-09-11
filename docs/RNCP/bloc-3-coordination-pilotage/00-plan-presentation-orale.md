@@ -41,14 +41,13 @@ Le règlement énumère 14 éléments que la présentation doit comporter. Chacu
 
 ## 2. Posture et fil rouge
 
-Le projet a été **exécuté seul**, ce qui est déjà écrit dans les livrables des Blocs 1, 2 et 4. Le Bloc 3, lui, évalue le pilotage d'une équipe. La présentation tient donc deux registres, distingués à voix haute dès la diapositive 3 et jamais confondus ensuite :
+Le projet a été **exécuté seul**, ce qui est écrit dans les livrables des Blocs 1, 2 et 4 et se dit dès la diapositive 2. Le Bloc 3 évalue le pilotage d'une équipe ; la présentation ne simule aucune équipe. Elle montre **comment le projet a été piloté seul**, ce qui a été délégué à des agents d'assistance et sous quel cadre, et, là où le référentiel suppose une équipe, ce qui a été fait à la place et ce qui n'a pas d'équivalent à une personne.
 
-- **Le réel**, chiffré et vérifiable : 833 commits du 27 février au 5 septembre 2026, 10 versions livrées en production, 77 pull requests dont 26 fusionnées, 3 fiches d'anomalie toutes fermées, 17 comptes utilisateurs, 19 soirées créées.
-- **L'organisation cible**, annoncée comme telle : une équipe de 4 profils sur laquelle sont construits la matrice RACI, l'affectation des missions, la grille de compétences et le plan de développement. C'est la projection d'industrialisation du projet, pas une équipe qui a existé.
+- **Le réel**, chiffré et vérifiable : 833 commits du 27 février au 5 septembre 2026, dont 537 co-signés par un agent depuis le 13 mai, 10 versions livrées en production, 77 pull requests dont 26 fusionnées, 3 fiches d'anomalie toutes fermées, 17 comptes utilisateurs, 19 soirées créées.
+- **La seule délégation** : des agents d'assistance au développement, cadrés par des conventions écrites, trois points d'arrêt et un contrôle en sortie. Un agent n'est pas un membre d'équipe, et c'est dit ; ce qui se transpose est la moitié du management qui consiste à écrire le cadre avant de déléguer et à contrôler en sortie.
+- **Là où le référentiel exige une équipe** : la matrice RACI est construite sur les acteurs réels, la grille de compétences évalue la seule personne du projet avant et après, le plan de développement est le sien, et le besoin en recrutement est instruit en une note pour le jour où le projet passerait en équipe.
 
-Cette annonce explicite est ce qui protège les 15 minutes de questions. Un jury qui découvre le caractère projeté en fin de présentation le vit comme une dissimulation ; un jury prévenu dès le début l'évalue comme un exercice de conception d'organisation.
-
-**Règle de rédaction du support** : aucune formule qui laisse croire à une équipe salariée réelle. On écrit « l'organisation cible prévoit », « la mission serait affectée à », jamais « mon développeur front a livré ».
+**Règle de rédaction du support** : aucune formule qui laisse croire à une équipe, ni réelle ni projetée. On écrit « j'ai gardé », « j'ai délégué », « si le projet passait en équipe ».
 
 ## 3. Minutage global
 
@@ -80,7 +79,7 @@ Critères visés par la démonstration : le logiciel est utilisable, la démonst
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
 | 1 | Movie Picker, coordonner et piloter un projet de développement logiciel | 0:10 | Titre, Bloc 3 RNCP 39583, Adrien MORAND, 16 septembre 2026 |
-| 2 | Deux registres, annoncés maintenant | 0:40 | Les deux registres, réel et organisation cible. Sommaire : la démonstration puis les 7 chapitres, chacun avec sa compétence, les 3 éliminatoires signalées |
+| 2 | Un projet mené seul | 0:40 | Une personne, pas d'équipe ; 64 % des commits co-signés par un agent depuis le 13 mai, sous cadre écrit ; là où le référentiel parle d'équipe, ce qui a été fait réellement. Sommaire : la démonstration puis les 7 chapitres, chacun avec sa compétence, les 3 éliminatoires signalées |
 | 3 | 1. Démonstration | 0:50 | Un seul mot et le lien du site en production, `web.movie-picker.fr`. Dit à voix haute, rien à l'écran : 10 versions livrées de février à septembre 2026, 17 comptes, 74 % des soirées menées jusqu'au tirage, puis les 6 temps du parcours en une phrase. Deux appareils. Le plan de repli à 4 niveaux est en note de présentateur |
 | | **Démonstration en direct** | 4:50 | Parcours détaillé au point 5 |
 
@@ -93,8 +92,8 @@ Critères visés : méthodologie justifiée avec bénéfices attendus, outil de 
 | 4 | 2. Planifier : un flux, deux horizons | 1:30 | Kanban léger à revues de version : les deux règles, les bénéfices constatés en quatre lignes, Scrum et cycle en V écartés avec le motif. Le schéma des deux horizons : rétroplanning et Gantt au mois, tableau de flux à la journée. C'est le schéma qui répond au critère de **compatibilité** entre l'outil et la méthode |
 | 5 | Le planning en cinq phases | 1:10 | Diagramme de Gantt en HTML et CSS, du 27 février au 16 septembre 2026, avec les 5 phases exigées. Dire explicitement que les phases se **chevauchent**, propriété d'un flux Kanban |
 | 6 | Quatre lots, 98 jours-homme | 0:50 | Barre empilée des 4 lots : MVP 27 J/H, migration 13, V1 produit 35, clôture 23. Méthode analogique, marge de 20 %. Source : chiffrage du Bloc 1 |
-| 7 | Les ressources nécessaires | 0:50 | Trois familles. Humaines : les 4 profils de l'organisation cible et leur compétence pivot. Matérielles : poste, outillage, chaîne, hébergement, services tiers. Financières : 34 300 € de valeur de développement, moins de 200 € par an de trésorerie, 0 € de licence |
-| 8 | La matrice RACI, et le handicap dedans | 1:00 | Grille colorée 8 activités × 5 acteurs, R, A, C, I. Trois propriétés. Ligne dédiée « inclusion et adaptation des postes » avec un responsable identifié |
+| 7 | Les ressources nécessaires | 0:50 | Trois familles. Humaines : une personne, 98 J/H chiffrés au cadrage, et les trois acteurs réels, agents IA depuis le 13/05, commanditaire, utilisateurs. Matérielles : poste, outillage, chaîne, hébergement, services tiers. Financières : 34 300 € de valeur de développement, moins de 200 € par an de trésorerie, 0 € de licence |
+| 8 | La matrice RACI, avec les acteurs réels | 1:00 | Grille colorée 8 activités × 4 acteurs réels : moi, agents IA, commanditaire, utilisateurs. Le A toujours le mien, le R des agents dit ce qui est délégué, ce qui ne l'est jamais. Ligne « accessibilité et inclusion » avec un responsable, et la vérité : personne en situation de handicap sur le projet, ce qui est vérifiable est le produit |
 | 9 | Sept points de vigilance, un seul d'organisation | 1:00 | Les deux risques structurels en cartes, dont la concentration des rôles sur une personne, indicateur à 1. Les cinq risques techniques avec leur parade, dont celui qui s'est réalisé en production |
 
 ### Chapitre 3 : piloter l'avancement (5:20, 5 diapos), C3.2.1 ÉLIMINATOIRE
@@ -128,9 +127,9 @@ Critères visés : handicap pris en compte, charge répartie de manière équili
 
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
-| 17 | 5. Piloter l'équipe : l'affectation des missions | 0:50 | Les 4 profils et leur mission, le critère d'affectation (compétence attestée), la répartition des 98 J/H en barres empilées par lot. **Une somme équilibrée n'est pas un équilibre** : le back porte 36 %, mais les pics ne se superposent pas |
+| 17 | 5. Piloter seul : ce qui est délégué, ce qui ne l'est pas | 0:50 | Gardé : cadrage, arbitrages, revue, mise en production, restitutions. Délégué aux agents sous cadre écrit : implémentation, tests, dépendances. Histogramme de la part des commits co-signés par mois, 0 % jusqu'en avril, 65 à 84 % ensuite, 537 sur 833. **Aucune charge à répartir sur une équipe** : la répartition réelle est entre faire et faire faire, contrôle en sortie |
 | 18 | Les quatre styles managériaux, situés | 0:55 | Quadrant directivité × soutien : directif, persuasif, participatif, délégatif, chacun placé sur une situation réelle du projet. Style dominant, le délégatif encadré, et sa condition de validité |
-| 19 | Animer, partager, inclure : un seul dispositif | 0:50 | Le dispositif réel de délégation en trois pas (cadre écrit, points d'arrêt, contrôle en sortie), les outils avec ce que chacun partage, et les trois contraintes servies par la même propriété : handicap, fuseaux horaires, langue. Aménagements de l'organisation cible, accessibilité du produit comme porte bloquante |
+| 19 | Animer, partager, inclure : un seul dispositif | 0:50 | Le dispositif réel de délégation en trois pas (cadre écrit, points d'arrêt, contrôle en sortie), les outils avec ce que chacun partage, et les trois contraintes servies par la même propriété : handicap, fuseaux horaires, langue. Sur le réel : personne dans ces situations sur le projet, ce qui est vérifiable est le produit, porte d'accessibilité bloquante |
 | 20 | Analyse critique : une posture qui a réussi | 0:55 | Du 17 au 26 août 2026, 10 jours travaillés consécutifs pour deux échéances superposées. Les deux sont tenues, la chaîne chute ensuite. La posture est critiquée précisément parce qu'elle a réussi, et les recommandations sont chiffrées |
 
 ### Chapitre 6 : les besoins en compétences (2:40, 3 diapos), C3.3.2
@@ -139,9 +138,9 @@ Critères visés : compétences à mobiliser identifiées, grille des compétenc
 
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
-| 21 | 6. Les compétences, déduites des lots | 0:40 | La méthode avant le catalogue : chaque compétence correspond à une technologie présente dans le dépôt avec une date d'introduction vérifiable. La chronologie en 4 vagues |
-| 22 | La grille d'évaluation, et ce qu'elle avoue | 1:10 | Échelle comportementale en 5 niveaux, écarts en haltères par profil, et la phrase d'ouverture obligatoire : le niveau actuel n'évalue personne, c'est le socle attendu au recrutement. **Commentée à l'oral** en trois lectures |
-| 23 | Le plan de développement des compétences | 0:50 | 8 actions en barres, classées par coût d'un écart non comblé, chacune avec sa modalité, sa durée et son indicateur de réussite. 20 J/H, 2 100 €. La logique recruter ou former transmise aux RH. Modalités handicap posées par défaut |
+| 21 | 6. Les compétences que le projet a exigées | 0:40 | La méthode avant le catalogue : chaque compétence correspond à une technologie présente dans le dépôt avec une date d'introduction vérifiable. La chronologie en 4 vagues |
+| 22 | La grille d'évaluation : moi, avant et après le projet | 1:10 | Échelle comportementale en 5 niveaux, auto-évaluation étalonnée sur le dépôt, haltères février → septembre par compétence, cercle sur le niveau exigé quand il n'est pas atteint. Neuf écarts comblés par autoformation ; deux restent, non techniques : arbitrage et chiffrage, revue et transmission. **Commentée à l'oral** en trois lectures |
+| 23 | Le plan de développement : ce qui reste à acquérir | 0:50 | 5 actions en barres, classées par coût d'un écart non comblé, chacune avec sa modalité, sa durée et son indicateur de réussite, 12 jours. Note RH : les deux profils à recruter si le projet passait en équipe, et ce qu'ils recevraient le premier jour. Modalités handicap posées par défaut |
 
 ### Chapitre 7 : rendre compte au commanditaire (2:40, 3 diapos), C3.4.1
 
@@ -199,7 +198,7 @@ Les questions les plus probables sont celles qui touchent aux points faibles con
 
 | Question probable | Ligne de réponse |
 |-------------------|------------------|
-| Combien de personnes dans l'équipe ? | Le projet a été exécuté seul. L'organisation cible à 4 profils est annoncée comme projection dès le début de la présentation. Elle sert à démontrer la conception des outils de pilotage, pas à faire croire à une équipe |
+| Combien de personnes dans l'équipe ? | Une, et c'est dit dès la diapositive 2. Ce qui a été délégué l'a été à des agents d'assistance, sous un cadre écrit et un contrôle en sortie : 64 % des commits co-signés depuis le 13 mai. Là où le référentiel suppose une équipe, la présentation montre ce qui a été fait à la place et dit ce qui n'a pas d'équivalent. Elle sert à démontrer la conception des outils de pilotage, pas à faire croire à une équipe |
 | Vos étiquettes de version ont-elles été posées au fil de l'eau ? | Les dates de livraison réelles sont celles du journal des versions, vérifiables dans l'historique des commits et des déploiements. La formalisation du versionnage est intervenue en juillet 2026, les six premières étiquettes ont donc été posées à ce moment-là |
 | Votre tableau de suivi semble récent | Le suivi quotidien s'est fait sur les issues, les pull requests, les exécutions du pipeline et les releases, toutes horodatées au moment du geste. Le tableau consolide cette matière, il ne la crée pas. La limite est écrite en 1.5 du chapitre 2 |
 | Comment avez-vous estimé les 98 J/H ? | Méthode analogique par comparaison entre lots de complexité voisine, marge d'incertitude de 20 % assumée au chiffrage |

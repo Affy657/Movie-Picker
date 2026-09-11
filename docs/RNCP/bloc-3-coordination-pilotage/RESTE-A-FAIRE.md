@@ -120,7 +120,7 @@ Onze écarts trouvés en recoupant chaque chiffre contre le dépôt, et corrigé
 | # | Décision | Enjeu |
 |:-:|----------|-------|
 | 16 | ~~Ouvrir puis fusionner une pull request~~ → **[PR #83](https://github.com/Affy657/Movie-Picker/pull/83) fusionnée** le 06/09/2026 | ✅ Fait. Les cases du Bloc 3 dans `suivi-rncp.md` sont cochées. Tout travail ultérieur repart de `master` : une PR fusionnée ne se réutilise pas |
-| 17 | **Garder ou retirer la partie A du chapitre 4** (la délégation à des agents d'assistance comme ancrage réel du management) | C'est un pari : il donne au chapitre le plus théorique un ancrage vérifiable, mais tous les jurys ne le recevront pas de la même façon. Le chapitre tient sans — il perd son volet réel. Retrait en deux minutes si besoin |
+| 17 | ~~Garder ou retirer la partie A du chapitre 4~~ → **tranché le 11/09/2026** : l'organisation cible est retirée, la délégation réelle devient le cœur du chapitre | ✅ Fait. Reste à **relire les niveaux de la grille** (diapositive 22, chapitre 5 § 2.2) : ce sont ceux que je t'ai proposés à partir du dépôt, à ajuster si tu te vois différemment en février ou en septembre |
 | 18 | **Le cas d'arbitrage de réserve « environnement de test rejeté malgré un gain de 30 % »**, envisagé au plan initial, n'a **aucune trace dans le dépôt** et a été remplacé par l'abandon de l'application mobile | S'il correspond à une décision réelle non tracée, le dire et il sera réintégré en annexe A3 |
 
 ---

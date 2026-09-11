@@ -25,14 +25,14 @@ Les cases du Bloc 3 dans [`../suivi-rncp.md`](../suivi-rncp.md) sont **cochées*
 
 Elles ne sont pas cosmétiques : c'est ce qui distingue ce dossier d'un devoir générique, et c'est sur elles que la note se joue.
 
-### 2.1 Les deux registres, jamais confondus
+### 2.1 La vérité sur le solo, sans équipe simulée
 
-Le projet a été **exécuté seul**. Mais le Bloc 3 évalue le pilotage d'une équipe. Le dossier tient donc deux registres, annoncés à voix haute dès la diapositive 3 :
+Le projet a été **exécuté seul**, et le support le dit dès la diapositive 2. Depuis le 11 septembre 2026, **aucune équipe n'est simulée** : l'organisation cible à 4 profils des versions précédentes a été retirée, sur décision du propriétaire du projet.
 
-- **Le réel** : chiffré, daté, vérifiable dans le dépôt.
-- **L'organisation cible** : 4 profils, sur lesquels sont construits la matrice RACI, l'affectation des missions, la grille de compétences et le plan de développement. **Annoncée comme projection, jamais présentée comme une équipe qui a existé.**
+- **Le réel** : chiffré, daté, vérifiable dans le dépôt, y compris la délégation aux agents d'assistance, mesurée par les commits co-signés (`git log --format=%b | grep -i co-authored-by`).
+- **Là où le référentiel exige une équipe** : la matrice RACI est construite sur les acteurs réels (moi, agents IA, commanditaire, utilisateurs, prestataires), la grille de compétences est une auto-évaluation avant / après étalonnée sur le dépôt, le plan de développement est personnel, et le besoin en recrutement est une note « si le projet passait en équipe ».
 
-**Règle de rédaction** : on écrit *« l'organisation cible prévoit »*, *« la mission serait affectée à »*. Jamais *« mon développeur front a livré »*.
+**Règle de rédaction** : on écrit *« j'ai gardé »*, *« j'ai délégué »*, *« si le projet passait en équipe »*. Jamais *« l'organisation cible prévoit »*, jamais un profil qui n'a pas existé.
 
 ### 2.2 Ancrer sur une mesure, et dire la limite avant qu'on la trouve
 
@@ -288,14 +288,14 @@ PY
 | **Le cas d'arbitrage est la migration .NET**, confirmée par le fait que la migration est absente de la feuille de route du MVP au moment où celui-ci est déclaré terminé (16/03 16:48), et ajoutée le 18/03 | C'est ce qui en fait un arbitrage et non l'exécution d'un plan | Deux cas de réserve documentés en § 7 de `03-arbitrage.md` |
 | **Ne pas écrire « 13 J/H non prévus au chiffrage »** | Faux : le lot figure au chiffrage du Bloc 1 (8+3+2). La formulation serait démentie par le dossier lui-même | — |
 | **Le cas « environnement de test rejeté malgré 30 % de gain » a été retiré** | Aucune trace dans le dépôt. Remplacé par l'abandon de l'application mobile (16/05 → 26/05), lui documenté | Si le propriétaire du projet confirme que c'est réel mais non tracé, le réintégrer en annexe A3 |
-| **Le chapitre 4 s'appuie sur la délégation à des agents d'assistance** comme ancrage réel du management | Sans elle, le chapitre est 100 % théorique. Le texte dit explicitement que ce n'est pas du management humain | **Décision ouverte** : le propriétaire peut demander son retrait. Le chapitre tient sans, il perd son volet réel |
+| **Le chapitre 4 s'appuie sur la délégation à des agents d'assistance** comme management réel du projet, mesuré (537 commits co-signés sur 833) | Depuis le 11/09, c'est le seul ancrage du chapitre : l'organisation cible a été retirée. Le texte dit explicitement qu'un agent n'est pas un membre d'équipe | Décision prise par le propriétaire le 11/09/2026 : dire la vérité du solo plutôt que simuler une équipe |
 | **Pas de frontmatter par diapositive** | Risque de décalage de numérotation (§ 4.3) | — |
 
 ---
 
 ## 8. Questions encore ouvertes pour le propriétaire du projet
 
-1. **Garder ou retirer la partie A du chapitre 4** (délégation aux agents).
+1. ~~Garder ou retirer la partie A du chapitre 4~~ : tranché le 11/09/2026, elle est devenue le cœur du chapitre, et l'organisation cible a été retirée.
 2. **Le cas d'arbitrage « environnement de test / 30 % »** correspond-il à une décision réelle non tracée ?
 3. ~~Fusionner la PR #83~~ — ✅ fait le 06/09/2026, les cases de `suivi-rncp.md` sont cochées.
 
@@ -354,4 +354,14 @@ Trois consignes du propriétaire du projet, appliquées ensemble : **moins de te
 **Piège de rendu découvert** : les primitives `.kpi`, `.tl`, `.steps` et `.quad` stylent leur `<b>` de titre en bloc. Un `<b>` imbriqué dans le texte d'une de ces primitives cassait la ligne et changeait de taille : les sélecteurs sont désormais `> b` pour le titre, et `span b` / `i b` héritent. Toute nouvelle primitive doit suivre la même règle.
 
 **Consignes d'épure du 11 septembre, à respecter dans toute retouche** : aucun tiret cadratin ni point médian dans le support, remplacés par deux-points, virgules ou barres obliques ; aucun texte d'aide qui renvoie à une autre diapositive, à un chapitre ou à une annexe (ces renvois vivent dans les notes de présentateur) ; aucune phrase de liaison qui n'apporte pas une information demandée par le barème. La diapositive 3 ne porte qu'un mot et le lien `web.movie-picker.fr`, qui est le domaine réellement servi (`www` ne répond pas, voir `DEBT-014`).
+
+## 13. La vérité du solo, 11 septembre 2026
+
+Question du propriétaire du projet : *« Je suis obligé de simuler une équipe ? »* Réponse : non, rien ne l'impose ; le référentiel est écrit pour une équipe, et c'est à la présentation de montrer comment chaque critère est couvert. Décision : **dire la vérité, retirer l'organisation cible**, et présenter la vraie façon de travailler.
+
+**Ce qui a changé.** Diapositive 2, « Un projet mené seul », remplace les deux registres. Diapositive 7, une personne et les trois acteurs réels. Diapositive 8 et annexe A6, RACI sur les acteurs réels. Diapositive 17, ce qui est délégué et gardé, avec l'histogramme de la part des commits co-signés par mois. Diapositive 22, auto-évaluation février → septembre. Diapositive 23, plan personnel en 5 actions et note RH. Chapitres 1, 4 et 5 réécrits dans le même sens, plan § 2 réécrit.
+
+**Le fait nouveau, mesuré** : 537 des 833 commits au 5 septembre (64 %) sont co-signés par un agent d'assistance, aucun avant le 13 mai 2026, 73 / 84 / 65 / 73 % de mai à août. Recalcul : `git log 5ce0a05f --format='%H%x00%ad%x00%b%x01' --date=format:%Y-%m`, puis compter les corps contenant `co-authored-by`.
+
+**Les niveaux de la grille sont une auto-évaluation** posée à partir des preuves du dépôt (date d'introduction, ce qui a été livré, ce qui a échoué). Ils appartiennent au propriétaire du projet, qui peut les ajuster ; la seule contrainte est que les deux écarts non comblés restent ceux que les indicateurs désignent, arbitrage et revue, sans quoi la grille cesse d'être crédible.
 

@@ -260,6 +260,18 @@ const REFS = {
 .dumb .track .c {
   background: var(--s1);
 }
+.dumb .track .t {
+  background: #fff;
+  border: 2px solid var(--s2);
+  box-sizing: border-box;
+}
+.dumb .scale {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.66rem;
+  color: var(--ink-2);
+}
 .dumb .track .bar {
   position: absolute;
   top: 50%;
